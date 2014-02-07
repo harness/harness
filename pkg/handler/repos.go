@@ -93,6 +93,7 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	}
 
 	repo.UserID = u.ID
+	repo.Private = githubRepo.Private
 
 	// if the user chose to assign to a team account
 	// we need to retrieve the team, verify the user
@@ -123,6 +124,8 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 		if err != nil {
 			return fmt.Errorf("Unable to add Private Key to your GitHub repository")
 		}
+	} else {
+
 	}
 
 	// create a hook so that we get notified when code

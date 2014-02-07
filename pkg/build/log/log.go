@@ -30,7 +30,7 @@ var output io.Writer = os.Stdout
 var prefix string
 
 // the log suffix
-var suffix string = "/n"
+var suffix string = "\n"
 
 // SetPriority sets the default log level.
 func SetPriority(level int) {
