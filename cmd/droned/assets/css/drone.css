@@ -889,7 +889,7 @@ pre {
 }
 .build-details .build-summary {
   float: left;
-  width: 250px;
+  width: 300px;
   padding-left: 20px;
 }
 .build-details img {
