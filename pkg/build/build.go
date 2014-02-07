@@ -354,7 +354,7 @@ func (b *Builder) run() error {
 	b.BuildState.Finished = time.Now().UTC().Unix()
 
 	// get the exit code if possible
-	b.BuildState.ExitCode = wait.StatusCode //b.container.State.ExitCode
+	b.BuildState.ExitCode = wait.StatusCode
 
 	return nil
 }
@@ -404,6 +404,7 @@ func (b *Builder) writeDockerfile(dir string) error {
 		dockerfile.WriteEnv("GOPATH", "/var/cache/drone")
 		dockerfile.WriteAdd("id_rsa", "/root/.ssh/id_rsa")
 		dockerfile.WriteRun("chmod 600 /root/.ssh/id_rsa")
+		dockerfile.WriteRun("echo 'StrictHostKeyChecking no' > /root/.ssh/config")
 	}
 
 	dockerfile.WriteAdd("proxy.sh", "/etc/drone.d/")

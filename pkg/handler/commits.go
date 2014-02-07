@@ -48,7 +48,7 @@ func CommitShow(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 
 	// generate a token to connect with the websocket
 	// handler and stream output, if the build is running.
-	data.Token = channel.Token(fmt.Sprintf(
+	data.Token = channel.CreateStream(fmt.Sprintf(
 		"%s/commit/%s/builds/%s", repo.Slug, commit.Hash, builds[0].Slug))
 
 	// render the repository template.

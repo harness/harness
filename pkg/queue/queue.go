@@ -106,9 +106,9 @@ func (b *BuildTask) execute() error {
 
 	// make sure a channel exists for the repository,
 	// the commit, and the commit output (TODO)
-	reposlug := fmt.Sprintf("%s/%s/%s", b.Repo.Host, b.Repo.Owner, b.Repo.Slug)
-	commitslug := fmt.Sprintf("%s/%s/%s/commit/%s", b.Repo.Host, b.Repo.Owner, b.Repo.Slug, b.Commit.Hash)
-	consoleslug := fmt.Sprintf("%s/%s/%s/commit/%s/builds/%s", b.Repo.Host, b.Repo.Owner, b.Repo.Slug, b.Commit.Hash, b.Build.Slug)
+	reposlug := fmt.Sprintf("%s/%s/%s", b.Repo.Host, b.Repo.Owner, b.Repo.Name)
+	commitslug := fmt.Sprintf("%s/%s/%s/commit/%s", b.Repo.Host, b.Repo.Owner, b.Repo.Name, b.Commit.Hash)
+	consoleslug := fmt.Sprintf("%s/%s/%s/commit/%s/builds/%s", b.Repo.Host, b.Repo.Owner, b.Repo.Name, b.Commit.Hash, b.Build.Slug)
 	channel.Create(reposlug)
 	channel.Create(commitslug)
 	channel.CreateStream(consoleslug)
@@ -223,7 +223,7 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 	}
 
 	client := github.New(user.GithubToken)
-	return client.Repos.CreateStatus(repo.Owner, repo.Slug, status, settings.URL().String(), message, commit.Hash)
+	return client.Repos.CreateStatus(repo.Owner, repo.Name, status, settings.URL().String(), message, commit.Hash)
 }
 
 func (t *BuildTask) sendEmail(c *notification.Context) error {
@@ -250,7 +250,7 @@ func (t *BuildTask) sendFailureEmail(c *notification.Context) error {
 
 	// loop through and email recipients
 	for _, email := range t.Script.Notifications.Email.Recipients {
-		if err := mail.SendFailure(t.Repo.Slug, email, c); err != nil {
+		if err := mail.SendFailure(t.Repo.Name, email, c); err != nil {
 			return err
 		}
 	}
@@ -263,7 +263,7 @@ func (t *BuildTask) sendSuccessEmail(c *notification.Context) error {
 
 	// loop through and email recipients
 	for _, email := range t.Script.Notifications.Email.Recipients {
-		if err := mail.SendSuccess(t.Repo.Slug, email, c); err != nil {
+		if err := mail.SendSuccess(t.Repo.Name, email, c); err != nil {
 			return err
 		}
 	}

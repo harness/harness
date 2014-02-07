@@ -64,7 +64,7 @@
 		outputWS.onclose = function (e) { window.location.reload(); };
 		outputWS.onmessage = function (e) { 
 			outputBox.innerHTML += formatLine(e.data);
-			window.scrollTo(0, document.body.scrollHeight)
+			//window.scrollTo(0, document.body.scrollHeight)
 		};
 		var re = /\u001B\[([0-9]+;?)*[Km]/g;
 		var styles = new Array();
