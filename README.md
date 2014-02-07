@@ -30,6 +30,11 @@ and follow the steps in the setup wizard.
 * Set the callback URL to http://$YOUR_IP_ADDRESS/auth/login/github
 * Copy the Client ID and Secret into the Drone admin console http://localhost:80/account/admin/settings
 
+I'm working on a getting started video. Having issues with volume, but hopefully
+you can still get a feel for the steps:
+
+https://docs.google.com/file/d/0By8deR1ROz8memUxV0lTSGZPQUk
+
 ### Builds
 
 Drone use a **.drone.yml** configuration file in the root of your
