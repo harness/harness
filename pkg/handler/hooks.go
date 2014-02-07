@@ -102,7 +102,7 @@ func Hook(w http.ResponseWriter, r *http.Request) error {
 
 	// get the drone.yml file from GitHub
 	client := github.New(user.GithubToken)
-	content, err := client.Contents.FindRef(repo.Owner, repo.Slug, ".drone.yml", commit.Branch) // TODO should this really be the hash??
+	content, err := client.Contents.FindRef(repo.Owner, repo.Slug, ".drone.yml", commit.Hash)
 	if err != nil {
 		msg := "No .drone.yml was found in this repository.  You need to add one.\n"
 		if err := saveFailedBuild(commit, msg); err != nil {
