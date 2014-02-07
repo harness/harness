@@ -1,0 +1,1 @@
+This is where Drone binaries go after running `make` in the Drone root directory.

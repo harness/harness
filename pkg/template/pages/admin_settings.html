@@ -1,0 +1,114 @@
+{{ define "title" }}Profile{{ end }}
+
+{{ define "content" }}
+
+	<div class="subhead">
+		<div class="container">
+			<h1>Sysadmin</h1>
+		</div><!-- ./container -->
+	</div><!-- ./subhead -->
+
+
+	<div class="container">
+		<div class="row">
+			<div class="col-xs-3">
+				<ul class="nav nav-pills nav-stacked">
+					<li class="active"><a href="/account/admin/settings">Settings</a></li>
+					<li><a href="/account/admin/users">Users</a></li>
+				</ul>
+			</div><!-- ./col-xs-3 -->
+
+			<div class="col-xs-9" role="main" style="padding-left:20px;">
+				<form action="/account/admin/settings" method="POST">
+					<div class="form-group">
+						<div class="alert">Website Information</div>
+						<label>Scheme and Hostname:</label>
+						<select class="form-control form-control-small" name="Scheme">
+						{{ if eq .Settings.Scheme "https" }}
+							<option value="http">http://</option>
+							<option value="https" selected="True">https://</option>
+						{{ else }}
+							<option value="http" selected="True">http://</option>
+							<option value="https">https://</option>
+						{{ end }}
+						</select>
+						<input class="form-control form-control-xlarge" type="text" name="Domain" value="{{.Settings.Domain}}" />
+					</div>
+					<div class="form-group">
+						<div class="alert">GitHub OAuth Consumer Key and Secret</div>
+						<label>GitHub Client ID and Secret:</label>
+						<div>
+							<input class="form-control form-control-large" type="text" name="GitHubKey" value="{{.Settings.GitHubKey}}" />
+							<input class="form-control form-control-large" type="password" name="GitHubSecret" value="{{.Settings.GitHubSecret}}" />
+						</div>
+					</div>
+					<div class="form-group hide">
+						<div class="alert">Bitbucket OAuth Consumer Key and Secret.</div>
+						<label>Bitbucket Key and Secret:</label>
+						<div>
+							<input class="form-control form-control-large" type="text" name="BitbucketKey" value="" />
+							<input class="form-control form-control-large" type="password" name="BitbucketSecret" value="" />
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="alert">SMTP Server Settings.</div>
+						<label>SMTP Server and Port:</label>
+						<div>
+							<input class="form-control form-control-xlarge" type="text" name="SmtpServer" value="{{.Settings.SmtpServer}}" />
+							<input class="form-control form-control-small" type="text" name="SmtpPort" value="{{.Settings.SmtpPort}}" />
+						</div>
+						<label>SMTP From Address:</label>
+						<div>
+							<input class="form-control form-control-xlarge" type="text" name="SmtpAddress" value="{{.Settings.SmtpAddress}}" />
+						</div>
+						<label>SMTP Username and Password:</label>
+						<div>
+							<input class="form-control form-control-large" type="text" name="SmtpUsername" value="{{.Settings.SmtpUsername}}" />
+							<input class="form-control form-control-large" type="password" name="SmtpPassword" value="{{.Settings.SmtpPassword}}" />
+						</div>
+					</div>
+					<div class="alert alert-success hide" id="successAlert"></div>
+					<div class="alert alert-error hide" id="failureAlert"></div>
+					<div class="form-actions">
+						<input class="btn btn-primary" id="submitButton" type="submit" value="Save" data-loading-text="Saving .." />
+						<a class="btn btn-default" href="/account/admin/settings">Cancel</a>
+					</div>
+				</form>
+			</div><!-- ./col-xs-9 -->
+		</div><!-- ./row -->
+
+	</div><!-- ./container -->
+{{ end }}
+
+{{ define "script" }}
+	<script>
+	if ($("input[name=Domain]").val() == "") {
+		$("input[name=Domain]").val(window.location.host);
+	}
+	</script>
+	<script>
+		document.forms[0].onsubmit = function(event) {
+			$("#successAlert").hide();
+			$("#failureAlert").hide();
+			$('#submitButton').button('loading')
+
+			var form = event.target;
+			var formData = new FormData(form);
+			xhr = new XMLHttpRequest();
+			xhr.open('POST', form.action);
+			xhr.onload = function() {
+				if (this.status == 200) {
+					$("#successAlert").text("Settings were successfully updated");
+					$("#successAlert").show().removeClass("hide")
+					$('#submitButton').button('reset')
+				} else {
+					$("#failureAlert").text("Failed to update settings. " + this.response);
+					$("#failureAlert").show().removeClass("hide")
+					$('#submitButton').button('reset')
+				};
+			};
+			xhr.send(formData);
+			return false;
+		};
+	</script>
+{{ end }}

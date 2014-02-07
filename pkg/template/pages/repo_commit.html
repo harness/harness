@@ -1,0 +1,80 @@
+{{ define "title" }}{{.Repo.Slug}} · {{ .Commit.HashShort }}{{ end }}
+
+{{ define "content" }}
+
+	<div class="subhead">
+		<div class="container">
+			<ul class="nav nav-tabs pull-right">
+				<li class="active"><a href="/{{.Repo.Slug}}/commit/{{ .Commit.Hash }}">{{ .Commit.HashShort }}</a></li>
+				<li><a href="/{{.Repo.Slug}}">Commits</a></li>
+				<li><a href="/{{.Repo.Slug}}/settings">Settings</a></li>
+			</ul> <!-- ./nav -->
+			<h1>
+				<span>{{.Repo.Name}}</span>
+				<small>{{.Repo.Owner}}</small>
+			</h1>
+		</div><!-- ./container -->
+	</div><!-- ./subhead -->
+
+	<div class="container">
+		<div class="alert alert-build-{{ .Build.Status }}">
+			<a href="/{{.Repo.Slug}}/commit/{{.Commit.Hash }}" class="btn btn-{{ .Build.Status }}"></a>
+			{{ if .Commit.PullRequest }}
+			<span>opened pull request <span># {{ .Commit.PullRequest }}</span></span>
+			{{ else }}
+			<span>commit <span>{{ .Commit.HashShort }}</span> to <span>{{.Commit.Branch}}</span> branch</span>
+			{{ end }}
+		</div>
+		<div class="build-details container affix-top" data-spy="affix" data-offset-top="248">
+			<div class="build-summary">
+				<dt>Status</dt>
+				<dd>{{.Build.Status}}</dd>
+				<dt>Started</dt>
+				<dd><span class="timeago" title="{{ .Build.StartedString }}"></span></dd>
+				<dt>Duration</dt>
+				<dd>{{ if .Build.IsRunning }}--{{else}}{{ .Build.HumanDuration }}{{end}}</dd>
+			</div>
+			<img src="{{.Commit.Image}}?d=identicon">
+			<div class="commit-summary">
+				<dt>Commit</dt>
+				<dd><u>{{ .Commit.HashShort }}</u></dd>
+				<dt>Committer</dt>
+				<dd>{{ .Commit.Author }}</dd>
+				<dt>Message</dt>
+				<dd>{{ .Commit.Message }}</dd>
+			</div>
+		</div>
+		<pre id="stdout"></pre>
+	</div><!-- ./container -->
+{{ end }}
+
+{{ define "script" }}
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"></script>
+	<script>
+		$(document).ready(function() {
+			$(".timeago").timeago();
+		});
+	</script>
+	<script>
+	{{ if .Build.IsRunning }}
+		var outputBox = document.getElementById('stdout');
+		var outputWS = new WebSocket((window.location.protocol=='http:'?'ws':'wss')+'://'+window.location.host+'/feed?token='+{{ .Token }});
+		outputWS.onopen = function () { console.log('output websocket open'); };
+		outputWS.onerror = function (e) { console.log('websocket error: ' + e); };
+		outputWS.onclose = function (e) { window.location.reload(); };
+		outputWS.onmessage = function (e) { 
+			outputBox.innerHTML += formatLine(e.data);
+			window.scrollTo(0, document.body.scrollHeight)
+		};
+		var re = /\u001B\[([0-9]+;?)*[Km]/g;
+		var styles = new Array();
+		var formatLine = function(s) {
+			return s;
+		};
+	{{ else }} 
+		$.get("/{{ .Repo.Slug }}/commit/{{ .Commit.Hash }}/build/{{ .Build.Slug }}/out.txt", function( data ) {
+			$( "#stdout" ).html( data );
+		});
+	{{ end }}
+	</script>
+{{ end }}

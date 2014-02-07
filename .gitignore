@@ -1,0 +1,14 @@
+drone.sublime-project
+drone.sublime-workspace
+*~
+~*
+*.sqlite
+*.deb
+*.rice-box.go
+
+bin/drone
+bin/droned
+cmd/drone/drone
+cmd/droned/droned
+deb/drone/usr/local/bin/drone
+deb/drone/usr/local/bin/droned

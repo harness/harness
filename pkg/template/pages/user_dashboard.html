@@ -1,0 +1,110 @@
+{{ define "title" }}Dashboard{{ end }}
+
+{{ define "content" }}
+
+	<div class="subhead">
+		<div class="container">
+			<ul class="nav nav-tabs pull-right">
+				<li class="active"><a href="dashboard">Dashboard</a></li>
+				<li><a href="/account/user/profile">Settings</a></li>
+			</ul> <!-- ./nav -->
+			<h1 class="user">
+				<img src="{{.User.Image}}">
+				<span>{{.User.Name}}</span>
+			</h1>
+		</div><!-- ./container -->
+	</div><!-- ./subhead -->
+
+
+	<div class="container">
+		<div class="row">
+			<div class="col-xs-8" role="main">
+
+				<div class="alert alert-feed">
+					<ul class="thumbnails pull-right">
+						<li>
+							<a class="thumbnail" href="/dashboard">
+								<img src="{{.User.Image}}" />
+							</a>
+						</li>
+						{{ range .Teams }}
+						<li>
+							<a class="thumbnail" href="/dashboard/team/{{.Slug}}">
+								<img src="{{.Image}}" />
+							</a>
+						</li>
+						{{ end }}
+					</ul>
+					<span class="label">switch dashboard</span>
+					<span>Recent Builds</span>
+				</div><!-- ./alert -->
+
+				{{ if .Commits }}
+				<ul class="commit-list">
+					{{ range $commit := .Commits }}
+					<li>
+						<a href="/{{$commit.Name}}/commit/{{$commit.Hash}}" class="btn btn-{{$commit.Status}}"></a>
+						<h3>
+							<a href="/{{$commit.Slug}}">{{$commit.Owner}} / {{$commit.Name}}</a>
+							<small class="timeago" title="{{$commit.CreatedString}}"></small>
+							{{ if $commit.PullRequest }}
+								<p>opened pull request <a href="/{{$commit.Slug}}/commit/{{$commit.Hash}}"># {{$commit.PullRequest}}</a></p>
+							{{ else }}
+								<p>commit <a href="/{{$commit.Slug}}/commit/{{$commit.Hash}}">{{$commit.HashShort}}</a> to <a href="/{{$commit.Slug}}/tree/{{$commit.Branch}}">{{$commit.Branch}}</a> branch</p>
+							{{ end }}
+						</h3>
+					</li>
+					{{ end }}
+				</ul>
+				{{ end }}
+			</div><!-- ./col-xs-8 -->
+
+			<div class="col-xs-4" style="padding-left:20px;">
+				<ul class="nav nav-pills nav-stacked nav-repos">
+					{{ range $repo := .Repos }}
+					<li>
+						<a href="/{{$repo.Slug}}">
+							<span>{{$repo.Owner}} / </span>
+							<span>{{$repo.Name}}</span>
+						</a>
+					</li>
+					{{ end }}
+				</ul>
+			</div><!-- ./col-xs-4 -->
+		</div><!-- ./row -->
+
+	</div><!-- ./container -->
+{{ end }}
+
+{{ define "script" }}
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"></script>
+	<script>
+		$(document).ready(function() {
+			$(".timeago").timeago();
+		});
+	</script>
+	<script>
+		if (window.localStorage) {
+			// get the last visited date from local storage
+			var lastVisited = localStorage["lastVisited"]; 
+			
+			if (lastVisited == "null" || lastVisited == NaN || !lastVisited) {
+				lastVisited = Date.parse("1970-01-01T00:00:00Z");
+			} else {
+				lastVisited = Date.parse(lastVisited);
+			}
+
+			// get created dates for repositories
+			var commits = $(".timeago");
+			$('.timeago').each(function(){
+				var date = Date.parse($(this).attr("title"));
+				if (date > lastVisited) {
+					$(this).parent().parent().append('<span style="position: absolute;left: -60px;background: #f7f7f7;padding: 5px 10px;color: #999;border-radius: 5px;top: 26px;">New</span>');
+				}
+
+				// update the last visited date
+				localStorage["lastVisited"] = Date();
+			});
+		}
+	</script>
+{{ end }}
