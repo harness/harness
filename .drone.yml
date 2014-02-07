@@ -13,6 +13,7 @@ notify:
   email:
     recipients:
       - brad@drone.io
+
 publish:
   s3:
     acl: public-read
