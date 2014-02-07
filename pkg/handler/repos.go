@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/drone/drone/pkg/channel"
@@ -99,6 +100,7 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	if len(teamName) > 0 {
 		team, err := database.GetTeamSlug(teamName)
 		if err != nil {
+			log.Printf("error retrieving team %s", teamName)
 			return err
 		}
 
@@ -134,6 +136,7 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 
 	// Save to the database
 	if err := database.SaveRepo(repo); err != nil {
+		log.Print("error saving new repository to the database")
 		return err
 	}
 
