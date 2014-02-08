@@ -16,7 +16,7 @@ using the following commands:
 
 ```sh
 $ wget http://downloads.drone.io/latest/drone.deb
-$ dpkg -i drone.deb
+$ sudo dpkg -i drone.deb
 $ sudo start drone
 ```
 
@@ -47,7 +47,7 @@ env:
 script:
   - go build
   - go test -v
-service:
+services:
   - redis
 notify:
   email:
@@ -147,7 +147,7 @@ if you are using a custom Docker image.
 Drone can launch database containers for your build: 
 
 ```
-service:
+services:
   - cassandra
   - couchdb
   - elasticsearch
