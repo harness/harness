@@ -1,0 +1,10 @@
+# Upstart configuration file for droned.
+
+# Command line options:
+#
+#   -datasource="drone.sqlite":
+#   -driver="sqlite3":
+#   -path="":
+#   -port=":8080":
+#         
+#DRONED_OPTS="--port=:80"
