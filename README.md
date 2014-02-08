@@ -72,7 +72,7 @@ image: go1.2   # same as bradrydzewski/go:1.2
 Here is a list of our official images:
 
 ```sh
-# these are the base images for all Drone containers.
+# these two are base images. all Drone images are built on top of these
 # these are BIG (~3GB) so make sure you have a FAST internet connection
 docker pull bradrydzewski/ubuntu
 docker pull bradrydzewski/base
