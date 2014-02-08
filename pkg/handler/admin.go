@@ -140,7 +140,7 @@ func AdminUserDelete(w http.ResponseWriter, r *http.Request, u *User) error {
 	return nil
 }
 
-// Display a list of ALL users in the system
+// Return an HTML form for the User to update the site settings.
 func AdminSettings(w http.ResponseWriter, r *http.Request, u *User) error {
 	// get settings from database
 	settings := database.SettingsMust()
@@ -153,7 +153,6 @@ func AdminSettings(w http.ResponseWriter, r *http.Request, u *User) error {
 	return RenderTemplate(w, "admin_settings.html", &data)
 }
 
-// Display a list of ALL users in the system
 func AdminSettingsUpdate(w http.ResponseWriter, r *http.Request, u *User) error {
 	// get settings from database
 	settings := database.SettingsMust()
