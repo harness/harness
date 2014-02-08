@@ -16,7 +16,7 @@ using the following commands:
 
 ```sh
 $ wget http://downloads.drone.io/latest/drone.deb
-$ dpkg -i drone.deb
+$ sudo dpkg -i drone.deb
 $ sudo start drone
 ```
 
