@@ -138,9 +138,6 @@ func ResetPost(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// add the user to the session object
-	//session, _ := store.Get(r, "_sess")
-	//session.Values["username"] = user.Email
-	//session.Save(r, w)
 	SetCookie(w, r, "_sess", user.Email)
 
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
@@ -156,9 +153,7 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// set the email and name
-	user := User{}
-	user.SetEmail(email)
-	user.Name = r.FormValue("name")
+	user := NewUser(r.FormValue("name"), email)
 
 	// set the new password
 	password := r.FormValue("password")
@@ -172,7 +167,7 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// save to the database
-	if err := database.SaveUser(&user); err != nil {
+	if err := database.SaveUser(user); err != nil {
 		return err
 	}
 
