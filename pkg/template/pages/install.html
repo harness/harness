@@ -17,5 +17,6 @@
 {{ define "script" }}
 	<script>
 	$("input[name=Domain]").val(window.location.host)
+	$("input[name=Scheme]").val(window.location.protocol == "https:"?"https":"http")
 	</script>
 {{ end }}
