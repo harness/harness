@@ -33,7 +33,7 @@
 							<a href="/{{$repo.Slug}}/commit/{{.Hash}}">{{.HashShort}}</a>
 							<small class="timeago" title="{{.CreatedString}}"></small>
 							{{ if .PullRequest }}
-								<p>opened pull request <a href="/{{.Slug}}/commit/{{.Hash}}"># {{.PullRequest}}</a></p>
+								<p>opened pull request <a href="/{{$repo.Slug}}/commit/{{.Hash}}"># {{.PullRequest}}</a></p>
 							{{ else }}
 								<p>{{.Message}} &nbsp;</p>
 							{{ end }}
