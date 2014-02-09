@@ -100,8 +100,13 @@ func Hook(w http.ResponseWriter, r *http.Request) error {
 		commit.SetAuthor(hook.Commits[0].Author.Email)
 	}
 
+	// get the github settings from the database
+	settings := database.SettingsMust()
+
 	// get the drone.yml file from GitHub
 	client := github.New(user.GithubToken)
+	client.ApiUrl = settings.GitHubApiUrl
+
 	content, err := client.Contents.FindRef(repo.Owner, repo.Name, ".drone.yml", commit.Hash)
 	if err != nil {
 		msg := "No .drone.yml was found in this repository.  You need to add one.\n"
@@ -216,8 +221,13 @@ func PullRequestHook(w http.ResponseWriter, r *http.Request) {
 	commit.Message = hook.PullRequest.Title
 	// label := p.PullRequest.Head.Labe
 
+	// get the github settings from the database
+	settings := database.SettingsMust()
+
 	// get the drone.yml file from GitHub
 	client := github.New(user.GithubToken)
+	client.ApiUrl = settings.GitHubApiUrl
+
 	content, err := client.Contents.FindRef(repo.Owner, repo.Name, ".drone.yml", commit.Hash) // TODO should this really be the hash??
 	if err != nil {
 		println(err.Error())
