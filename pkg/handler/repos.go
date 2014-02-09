@@ -87,7 +87,7 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 		return err
 	}
 
-	repo, err := NewGitHubRepo(owner, name, githubRepo.Private)
+	repo, err := NewGitHubRepo(settings.GitHubDomain, owner, name, githubRepo.Private)
 	if err != nil {
 		return err
 	}
