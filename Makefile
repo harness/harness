@@ -48,6 +48,7 @@ test:
 
 install:
 	cp deb/drone/etc/init/drone.conf /etc/init/drone.conf
+	test -f /etc/default/drone || cp deb/drone/etc/default/drone /etc/default/drone
 	cd bin && install -t /usr/local/bin drone
 	cd bin && install -t /usr/local/bin droned
 	mkdir -p /var/lib/drone
