@@ -82,6 +82,7 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 
 	// create the GitHub client
 	client := github.New(u.GithubToken)
+	client.ApiUrl = settings.GitHubApiUrl
 	githubRepo, err := client.Repos.Find(owner, name)
 	if err != nil {
 		return err
