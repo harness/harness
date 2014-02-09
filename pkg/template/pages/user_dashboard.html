@@ -43,7 +43,7 @@
 				<ul class="commit-list">
 					{{ range $commit := .Commits }}
 					<li>
-						<a href="/{{$commit.Name}}/commit/{{$commit.Hash}}" class="btn btn-{{$commit.Status}}"></a>
+						<a href="/{{$commit.Slug}}/commit/{{$commit.Hash}}" class="btn btn-{{$commit.Status}}"></a>
 						<h3>
 							<a href="/{{$commit.Slug}}">{{$commit.Owner}} / {{$commit.Name}}</a>
 							<small class="timeago" title="{{$commit.CreatedString}}"></small>
