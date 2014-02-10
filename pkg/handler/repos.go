@@ -53,7 +53,7 @@ func RepoDashboard(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) 
 	return RenderTemplate(w, "repo_dashboard.html", &data)
 }
 
-func RepoAdd(w http.ResponseWriter, r *http.Request, u *User) error {
+func RepoAddGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	teams, err := database.ListTeams(u.ID)
 	if err != nil {
 		return err
@@ -135,6 +135,58 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	// add the hook
 	if _, err := client.Hooks.CreateUpdate(owner, name, link); err != nil {
 		return fmt.Errorf("Unable to add Hook to your GitHub repository. %s", err.Error())
+	}
+
+	// Save to the database
+	if err := database.SaveRepo(repo); err != nil {
+		log.Print("error saving new repository to the database")
+		return err
+	}
+
+	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+}
+
+func RepoAddCustomGit(w http.ResponseWriter, r *http.Request, u *User) error {
+	teams, err := database.ListTeams(u.ID)
+	if err != nil {
+		return err
+	}
+	data := struct {
+		User  *User
+		Teams []*Team
+	}{u, teams}
+	return RenderTemplate(w, "custom_git_add.html", &data)
+}
+
+func RepoCreateCustomGit(w http.ResponseWriter, r *http.Request, u *User) error {
+	teamName := r.FormValue("team")
+	url := r.FormValue("url")
+	name := r.FormValue("name")
+
+	repo, err := NewRepo(HostCustom, UserCustomGit, name, ScmGit, url)
+	if err != nil {
+		return err
+	}
+
+	repo.UserID = u.ID
+	repo.Private = true
+
+	// if the user chose to assign to a team account
+	// we need to retrieve the team, verify the user
+	// has access, and then set the team id.
+	if len(teamName) > 0 {
+		team, err := database.GetTeamSlug(teamName)
+		if err != nil {
+			log.Printf("error retrieving team %s", teamName)
+			return err
+		}
+
+		// user must be an admin member of the team
+		if ok, _ := database.IsMemberAdmin(u.ID, team.ID); !ok {
+			return fmt.Errorf("Forbidden")
+		}
+
+		repo.TeamID = team.ID
 	}
 
 	// Save to the database

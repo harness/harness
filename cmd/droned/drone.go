@@ -92,7 +92,9 @@ func setupHandlers() {
 
 	// handlers for setting up your GitHub repository
 	m.Post("/new/github.com", handler.UserHandler(handler.RepoCreateGithub))
-	m.Get("/new/github.com", handler.UserHandler(handler.RepoAdd))
+	m.Get("/new/github.com", handler.UserHandler(handler.RepoAddGithub))
+	m.Post("/new/custom_git", handler.UserHandler(handler.RepoCreateCustomGit))
+	m.Get("/new/custom_git", handler.UserHandler(handler.RepoAddCustomGit))
 
 	// handlers for linking your GitHub account
 	m.Get("/auth/login/github", handler.UserHandler(handler.LinkGithub))
