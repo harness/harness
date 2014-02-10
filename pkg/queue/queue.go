@@ -225,6 +225,7 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 	}
 
 	client := github.New(user.GithubToken)
+	client.ApiUrl = settings.GitHubApiUrl;
 
 	var url string
 	url = settings.URL().String() + "/" + repo.Slug + "/commit/" + commit.Hash
