@@ -164,7 +164,7 @@ func run(path string) {
 	if len(*identity) != 0 {
 		key, err = ioutil.ReadFile(*identity)
 		if err != nil {
-			fmt.Printf("[Error] Could not find or read identity file %s\n", identity)
+			fmt.Printf("[Error] Could not find or read identity file %s\n", *identity)
 			os.Exit(1)
 			return
 		}
