@@ -274,7 +274,7 @@ func RepoDelete(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 	// the user must confirm their password before deleting
 	password := r.FormValue("password")
 	if err := u.ComparePassword(password); err != nil {
-		return err
+		return RenderError(w, err, http.StatusBadRequest)
 	}
 
 	// delete the repo
