@@ -218,7 +218,7 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 	// get the user from the database
 	// since we need his / her GitHub token
 	user, err := database.GetUser(repo.UserID)
-	if err == nil {
+	if err != nil {
 		return err
 	}
 
