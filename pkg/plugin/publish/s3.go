@@ -65,8 +65,8 @@ func (s *S3) Write(f *buildfile.Buildfile) {
 
 	// make sure a default access is set
 	// let's be conservative and assume private
-	if len(s.Region) == 0 {
-		s.Region = "private"
+	if len(s.Access) == 0 {
+		s.Access = "private"
 	}
 
 	// if the target starts with a "/" we need
