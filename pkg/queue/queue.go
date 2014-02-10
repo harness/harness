@@ -201,7 +201,7 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 
 	// convert from drone status to github status
 	var message, status string
-	switch status {
+	switch commit.Status {
 	case "Success":
 		status = "success"
 		message = "The build succeeded on drone.io"
