@@ -12,6 +12,7 @@ import (
 	"github.com/drone/drone/pkg/mail"
 	. "github.com/drone/drone/pkg/model"
 	"github.com/drone/go-github/github"
+	"log"
 	"path/filepath"
 	"time"
 )
@@ -134,6 +135,15 @@ func (b *BuildTask) execute() error {
 	builder.Key = []byte(b.Repo.PrivateKey)
 	builder.Stdout = buf
 	builder.Timeout = 300 * time.Minute
+
+	defer func() {
+		// update the status of the commit using the
+		// GitHub status API.
+		if err := updateGitHubStatus(b.Repo, b.Commit); err != nil {
+			log.Printf("error updating github status: %s\n", err.Error())
+		}
+	}()
+
 	buildErr := builder.Run()
 
 	b.Build.Finished = time.Now().UTC()
@@ -181,12 +191,6 @@ func (b *BuildTask) execute() error {
 		b.Script.Notifications.Send(context)
 	}
 
-	// update the status of the commit using the
-	// GitHub status API.
-	if err := updateGitHubStatus(b.Repo, b.Commit); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -218,7 +222,7 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 	// get the user from the database
 	// since we need his / her GitHub token
 	user, err := database.GetUser(repo.UserID)
-	if err == nil {
+	if err != nil {
 		return err
 	}
 
