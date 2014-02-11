@@ -59,7 +59,7 @@ func (c *ImageService) List() ([]*Images, error) {
 
 // Create an image, either by pull it from the registry or by importing it.
 func (c *ImageService) Create(image string) error {
-	return c.do("POST", fmt.Sprintf("/images/create?fromImage=%s"), nil, nil)
+	return c.do("POST", fmt.Sprintf("/images/create?fromImage=%s", image), nil, nil)
 }
 
 func (c *ImageService) Pull(image string) error {
