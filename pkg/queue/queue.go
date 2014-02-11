@@ -105,6 +105,11 @@ func (b *BuildTask) execute() error {
 		b.Script.Notifications.Send(context)
 	}
 
+	// Send "started" notification to Github
+	if err := updateGitHubStatus(b.Repo, b.Commit); err != nil {
+		log.Printf("error updating github status: %s\n", err.Error())
+	}
+
 	// make sure a channel exists for the repository,
 	// the commit, and the commit output (TODO)
 	reposlug := fmt.Sprintf("%s/%s/%s", b.Repo.Host, b.Repo.Owner, b.Repo.Name)
@@ -208,7 +213,7 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 	case "Failure":
 		status = "failure"
 		message = "The build failed on drone.io"
-	case "Pending":
+	case "Started":
 		status = "pending"
 		message = "The build is pending on drone.io"
 	default:
