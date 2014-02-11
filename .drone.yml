@@ -1,5 +1,10 @@
 image: go1.2
+env:
+  - GOROOT=/usr/local/go
+  - GOPATH=/var/cache/drone
+  - PATH=$GOPATH/bin:$GOPATH/bin:$PATH
 script:
+  - sudo apt-get -y install libsqlite3-dev sqlite3 mercurial bzr 1> /dev/null 2> /dev/null
   - make deps
   - make
   - make test
