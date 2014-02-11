@@ -6,11 +6,10 @@ import (
 	bldr "github.com/drone/drone/pkg/build"
 	r "github.com/drone/drone/pkg/build/repo"
 	"github.com/drone/drone/pkg/build/script"
-	"github.com/drone/drone/pkg/build/script/notification"
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
-	"github.com/drone/drone/pkg/mail"
 	. "github.com/drone/drone/pkg/model"
+	"github.com/drone/drone/pkg/plugin/notify"
 	"github.com/drone/go-github/github"
 	"log"
 	"path/filepath"
@@ -94,7 +93,7 @@ func (b *BuildTask) execute() error {
 	settings, _ := database.GetSettings()
 
 	// notification context
-	context := &notification.Context{
+	context := &notify.Context{
 		Repo:   b.Repo,
 		Commit: b.Commit,
 		Host:   settings.URL().String(),
@@ -184,15 +183,8 @@ func (b *BuildTask) execute() error {
 	channel.SendJSON(commitslug, b.Build)
 	channel.Close(consoleslug)
 
-	// add the smtp address to the notificaitons
-	//if b.Script.Notifications != nil && b.Script.Notifications.Email != nil {
-	//	b.Script.Notifications.Email.SetServer(settings.SmtpServer, settings.SmtpPort,
-	//		settings.SmtpUsername, settings.SmtpPassword, settings.SmtpAddress)
-	//}
-
 	// send all "finished" notifications
 	if b.Script.Notifications != nil {
-		b.sendEmail(context) // send email from queue, not from inside /build/script package
 		b.Script.Notifications.Send(context)
 	}
 
@@ -233,50 +225,6 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 
 	client := github.New(user.GithubToken)
 	return client.Repos.CreateStatus(repo.Owner, repo.Name, status, settings.URL().String(), message, commit.Hash)
-}
-
-func (t *BuildTask) sendEmail(c *notification.Context) error {
-	// make sure a notifications object exists
-	if t.Script.Notifications == nil && t.Script.Notifications.Email != nil {
-		return nil
-	}
-
-	switch {
-	case t.Commit.Status == "Success" && t.Script.Notifications.Email.Success != "never":
-		return t.sendSuccessEmail(c)
-	case t.Commit.Status == "Failure" && t.Script.Notifications.Email.Failure != "never":
-		return t.sendFailureEmail(c)
-	default:
-		println("sending nothing")
-	}
-
-	return nil
-}
-
-// sendFailure sends email notifications to the list of
-// recipients indicating the build failed.
-func (t *BuildTask) sendFailureEmail(c *notification.Context) error {
-
-	// loop through and email recipients
-	for _, email := range t.Script.Notifications.Email.Recipients {
-		if err := mail.SendFailure(t.Repo.Name, email, c); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// sendSuccess sends email notifications to the list of
-// recipients indicating the build was a success.
-func (t *BuildTask) sendSuccessEmail(c *notification.Context) error {
-
-	// loop through and email recipients
-	for _, email := range t.Script.Notifications.Email.Recipients {
-		if err := mail.SendSuccess(t.Repo.Name, email, c); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 type bufferWrapper struct {

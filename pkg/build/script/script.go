@@ -7,9 +7,9 @@ import (
 	"launchpad.net/goyaml"
 
 	"github.com/drone/drone/pkg/build/buildfile"
-	"github.com/drone/drone/pkg/build/script/deployment"
-	"github.com/drone/drone/pkg/build/script/notification"
-	"github.com/drone/drone/pkg/build/script/publish"
+	"github.com/drone/drone/pkg/plugin/deploy"
+	"github.com/drone/drone/pkg/plugin/notify"
+	"github.com/drone/drone/pkg/plugin/publish"
 )
 
 func ParseBuild(data []byte) (*Build, error) {
@@ -51,9 +51,9 @@ type Build struct {
 	// linked to the build environment.
 	Services []string
 
-	Deploy        *deployment.Deploy         `yaml:"deploy,omitempty"`
-	Publish       *publish.Publish           `yaml:"publish,omitempty"`
-	Notifications *notification.Notification `yaml:"notify,omitempty"`
+	Deploy        *deploy.Deploy       `yaml:"deploy,omitempty"`
+	Publish       *publish.Publish     `yaml:"publish,omitempty"`
+	Notifications *notify.Notification `yaml:"notify,omitempty"`
 }
 
 // Write adds all the steps to the build script, including
