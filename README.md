@@ -1,4 +1,4 @@
-Drone is a Continuous Integration platform built on Docker
+Drone is a [Continuous Integration](http://en.wikipedia.org/wiki/Continuous_integration) platform built on [Docker](https://www.docker.io/)
 
 ### System
 
@@ -189,8 +189,8 @@ publish:
 
 ### Notifications
 
-Drone can trigger email, hipchat and web hook notification at the completion
-of your build:
+Drone can trigger email, hipchat and web hook notification at the beginning and
+completion of your build:
 
 ```
 notify:
@@ -204,7 +204,10 @@ notify:
 
   hipchat:
     room: support
-	token: 3028700e5466d375
+    token: 3028700e5466d375
+    on_started: true
+    on_success: true
+    on_failure: true
 ```
 
 ### Docs
