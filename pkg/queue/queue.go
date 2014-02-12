@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	bldr "github.com/drone/drone/pkg/build"
+	"github.com/drone/drone/pkg/build/git"
 	r "github.com/drone/drone/pkg/build/repo"
 	"github.com/drone/drone/pkg/build/script"
 	"github.com/drone/drone/pkg/channel"
@@ -135,7 +136,7 @@ func (b *BuildTask) execute() error {
 	// execute the build
 	builder := bldr.Builder{}
 	builder.Build = b.Script
-	builder.Repo = &r.Repo{Path: b.Repo.URL, Branch: b.Commit.Branch, Commit: b.Commit.Hash, PR: b.Commit.PullRequest, Dir: filepath.Join("/var/cache/drone/src", b.Repo.Slug)}
+	builder.Repo = &r.Repo{Path: b.Repo.URL, Branch: b.Commit.Branch, Commit: b.Commit.Hash, PR: b.Commit.PullRequest, Dir: filepath.Join("/var/cache/drone/src", b.Repo.Slug), Depth: git.GitDepth(b.Script.Git)}
 	builder.Key = []byte(b.Repo.PrivateKey)
 	builder.Stdout = buf
 	builder.Timeout = 300 * time.Minute
