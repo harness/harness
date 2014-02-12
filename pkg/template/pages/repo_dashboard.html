@@ -49,7 +49,7 @@
 				<ul class="nav nav-pills nav-stacked nav-branches">
 					{{ range .Branches }}
 					<li{{ if eq $branch .Branch }} class="active"{{end}}>
-						<a href="/{{ $repo.Slug }}/tree/{{.Branch}}">
+						<a href="/{{ $repo.Slug }}/tree?branch={{.Branch}}">
 							<span class="btn btn-mini btn-{{.Status}} "></span>
 							<span>{{.Branch}}</span>
 						</a>

@@ -15,7 +15,7 @@ import (
 
 // Display a Repository dashboard.
 func RepoDashboard(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) error {
-	branch := r.FormValue(":branch")
+	branch := r.FormValue("branch")
 
 	// get a list of all branches
 	branches, err := database.ListBranches(repo.ID)
