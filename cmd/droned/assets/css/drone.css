@@ -1074,3 +1074,6 @@ ul.account-radio-group li img {
   padding: 20px;
   margin-bottom: 30px;
 }
+.url {
+  word-break: break-all;
+}
