@@ -1,4 +1,4 @@
-Drone is a Continuous Integration platform built on Docker
+Drone is a [Continuous Integration](http://en.wikipedia.org/wiki/Continuous_integration) platform built on [Docker](https://www.docker.io/)
 
 ### System
 
