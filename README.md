@@ -207,6 +207,16 @@ notify:
 	token: 3028700e5466d375
 ```
 
+### SCM Command Options
+
+You can specify the `--depth` option of the `git clone` command (Defalut value is `50`):
+
+```
+scm:
+  git:
+    depth: 1
+```
+
 ### Docs
 
 Coming Soon to [drone.readthedocs.org](http://drone.readthedocs.org/)

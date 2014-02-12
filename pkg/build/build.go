@@ -424,7 +424,7 @@ func (b *Builder) writeBuildScript(dir string) error {
 	// add the commands to the build script to
 	// clone the repository
 	if b.Repo.IsRemote() {
-		for _, cmd := range b.Repo.Commands() {
+		for _, cmd := range b.Repo.Commands(b.Build.Scm) {
 			f.WriteCmd(cmd)
 		}
 	}
