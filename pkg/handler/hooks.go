@@ -122,7 +122,7 @@ func Hook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// parse the build script
-	buildscript, err := script.ParseBuild(raw)
+	buildscript, err := script.ParseBuild(raw, repo.Params)
 	if err != nil {
 		msg := "Could not parse your .drone.yml file.  It needs to be a valid drone yaml file.\n\n" + err.Error() + "\n"
 		if err := saveFailedBuild(commit, msg); err != nil {
@@ -233,7 +233,7 @@ func PullRequestHook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse the build script
-	buildscript, err := script.ParseBuild(raw)
+	buildscript, err := script.ParseBuild(raw, repo.Params)
 	if err != nil {
 		// TODO if the YAML is invalid we should create a commit record
 		// with an ERROR status so that the user knows why a build wasn't
