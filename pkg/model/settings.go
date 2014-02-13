@@ -27,6 +27,8 @@ type Settings struct {
 
 	// Scheme of the server, eg https
 	Scheme string `meddler:"scheme"`
+
+	OpenInvitations bool `meddler:"open_invitations"`
 }
 
 func (s *Settings) URL() *url.URL {
