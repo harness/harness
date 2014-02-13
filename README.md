@@ -210,6 +210,15 @@ notify:
     on_failure: true
 ```
 
+### Git Command Options
+
+You can specify the `--depth` option of the `git clone` command (Defalut value is `50`):
+
+```
+git:
+  depth: 1
+```
+
 ### Docs
 
 Coming Soon to [drone.readthedocs.org](http://drone.readthedocs.org/)
