@@ -32,15 +32,8 @@ var Logging = true
 // New creates an instance of the Docker Client
 func New() *Client {
 	c := &Client{}
-	c.proto = DEFAULTPROTOCOL
-	c.addr = DEFAULTUNIXSOCKET
 
-	// if the default socket doesn't exist then
-	// we'll try to connect to the default tcp address
-	if _, err := os.Stat(DEFAULTUNIXSOCKET); err != nil {
-		c.proto = "tcp"
-		c.addr = "0.0.0.0:4243"
-	}
+	c.setHost(DEFAULTUNIXSOCKET)
 
 	c.Images = &ImageService{c}
 	c.Containers = &ContainerService{c}
@@ -75,6 +68,26 @@ var (
 	// the caller can receive this return if you forget a required parameter.
 	ErrBadRequest = errors.New("Bad Request")
 )
+
+func (c *Client) setHost(defaultUnixSocket string) {
+	c.proto = DEFAULTPROTOCOL
+	c.addr = defaultUnixSocket
+
+	if os.Getenv("DOCKER_HOST") != "" {
+		pieces := strings.Split(os.Getenv("DOCKER_HOST"), "://")
+		if len(pieces) == 2 {
+			c.proto = pieces[0]
+			c.addr = pieces[1]
+		}
+	} else {
+		// if the default socket doesn't exist then
+		// we'll try to connect to the default tcp address
+		if _, err := os.Stat(defaultUnixSocket); err != nil {
+			c.proto = "tcp"
+			c.addr = "0.0.0.0:4243"
+		}
+	}
+}
 
 // helper function used to make HTTP requests to the Docker daemon.
 func (c *Client) do(method, path string, in, out interface{}) error {
