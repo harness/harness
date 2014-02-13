@@ -127,6 +127,7 @@ CREATE TABLE settings (
   ,smtp_password    VARCHAR(1024)
   ,hostname         VARCHAR(1024)
   ,scheme           VARCHAR(5)
+  ,open_invitations INTEGER
 );
 `
 

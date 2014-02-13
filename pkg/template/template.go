@@ -45,6 +45,7 @@ func init() {
 		"forgot.html",
 		"forgot_sent.html",
 		"reset.html",
+		"signup.html",
 		"register.html",
 		"install.html",
 

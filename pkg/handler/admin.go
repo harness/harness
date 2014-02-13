@@ -33,8 +33,7 @@ func AdminUserAdd(w http.ResponseWriter, r *http.Request, u *User) error {
 	return RenderTemplate(w, "admin_users_add.html", &struct{ User *User }{u})
 }
 
-// Invite a user to join the system
-func AdminUserInvite(w http.ResponseWriter, r *http.Request, u *User) error {
+func UserInvite(w http.ResponseWriter, r *http.Request) error {
 	// generate the password reset token
 	email := r.FormValue("email")
 	token := authcookie.New(email, time.Now().Add(12*time.Hour), secret)
@@ -64,6 +63,11 @@ func AdminUserInvite(w http.ResponseWriter, r *http.Request, u *User) error {
 	}()
 
 	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+}
+
+// Invite a user to join the system
+func AdminUserInvite(w http.ResponseWriter, r *http.Request, u *User) error {
+	return UserInvite(w, r)
 }
 
 // Form to edit a user
@@ -175,6 +179,8 @@ func AdminSettingsUpdate(w http.ResponseWriter, r *http.Request, u *User) error 
 	settings.SmtpAddress = r.FormValue("SmtpAddress")
 	settings.SmtpUsername = r.FormValue("SmtpUsername")
 	settings.SmtpPassword = r.FormValue("SmtpPassword")
+
+	settings.OpenInvitations = (r.FormValue("OpenInvitations") == "on")
 
 	// persist changes
 	if err := database.SaveSettings(settings); err != nil {
