@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	"github.com/drone/drone/pkg/build/scm"
 	"strings"
 )
 
@@ -87,8 +88,7 @@ func (r *Repo) IsGit() bool {
 // to clone the repository.
 //
 // TODO we should also enable Mercurial projects and SVN projects
-func (r *Repo) Commands() []string {
-
+func (r *Repo) Commands(s *scm.Scm) []string {
 	// get the branch. default to master
 	// if no branch exists.
 	branch := r.Branch
@@ -97,7 +97,7 @@ func (r *Repo) Commands() []string {
 	}
 
 	cmds := []string{}
-	cmds = append(cmds, fmt.Sprintf("git clone --recursive --branch=%s %s %s", branch, r.Path, r.Dir))
+	cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", scm.GitDepth(s), branch, r.Path, r.Dir))
 
 	switch {
 	// if a specific commit is provided then we'll

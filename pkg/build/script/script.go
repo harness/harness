@@ -7,6 +7,7 @@ import (
 	"launchpad.net/goyaml"
 
 	"github.com/drone/drone/pkg/build/buildfile"
+	"github.com/drone/drone/pkg/build/scm"
 	"github.com/drone/drone/pkg/plugin/deploy"
 	"github.com/drone/drone/pkg/plugin/notify"
 	"github.com/drone/drone/pkg/plugin/publish"
@@ -54,6 +55,7 @@ type Build struct {
 	Deploy        *deploy.Deploy       `yaml:"deploy,omitempty"`
 	Publish       *publish.Publish     `yaml:"publish,omitempty"`
 	Notifications *notify.Notification `yaml:"notify,omitempty"`
+	Scm           *scm.Scm             `yaml:"scm,omitempty"`
 }
 
 // Write adds all the steps to the build script, including
