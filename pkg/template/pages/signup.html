@@ -4,7 +4,7 @@
 	<h1>Sign up</h1>
 	<form action="/signup" method="POST" role="form">
 		<div>
-			<input type="text" name="email" placeholder="Email address" autocomplete="off" spellcheck="false" class="form-control" />
+			<input type="text" name="email" placeholder="Email address" autocomplete="off" spellcheck="false" class="form-control only-child" />
 		</div>
 		<div>
 			<div class="alert alert-success hide" id="successAlert"></div>
@@ -32,7 +32,7 @@
 					if (this.status == 200) {
 							var msg = "User Invitation was sent successfully";
 							if (this.responseText != "OK") {
-									msg = "Email is not currently enabled.  In order to invite the user, you'll need to provide them the following link:<br><span class='url'>" + this.responseText + "</span>";
+									msg = "Email is not currently enables. Follow the link:<br><a href='" + this.responseText + "'>" + this.responseText + "</a>";
 							}
 							$("#successAlert").html(msg);
 							$("#successAlert").show().removeClass("hide");
