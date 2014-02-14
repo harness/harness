@@ -152,16 +152,29 @@ Drone can launch database containers for your build:
 services:
   - cassandra
   - couchdb
+  - couchdb:1.0
+  - couchdb:1.4
+  - couchdb:1.5
   - elasticsearch
+  - elasticsearch:0.20
+  - elasticsearch:0.90
   - neo4j
+  - neo4j:1.9
   - mongodb
+  - mongodb:2.2
+  - mongodb:2.4
   - mysql
+  - mysql:5.5
   - postgres
+  - postgres:9.1
   - rabbitmq
+  - rabbitmq:3.2
   - redis
   - riak
   - zookeeper
 ```
+
+If you omit the version, Drone will launch the latest version of the database. (For example, if you set `mongodb`, Drone wil launch MongoDB 2.4.)
 
 **NOTE:** database and service containers are exposed over TCP connections and
 have their own local IP address. If the **socat** utility is installed inside your
