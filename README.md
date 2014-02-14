@@ -163,6 +163,14 @@ services:
   - zookeeper
 ```
 
+You can also have Drone launch containers on your custom images by specifying the images' name, repository and ports:
+
+```
+sevices:
+  - customMongoDB yosssi/mongodb:2.4 27017
+  - customSomeDB foo/bar 8087,8098
+```
+
 **NOTE:** database and service containers are exposed over TCP connections and
 have their own local IP address. If the **socat** utility is installed inside your
 Docker image, Drone will automatically proxy localhost connections to the correct

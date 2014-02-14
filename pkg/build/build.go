@@ -168,14 +168,14 @@ func (b *Builder) setup() error {
 
 	// start all services required for the build
 	// that will get linked to the container.
-	for _, service := range b.Build.Services {
-		image, ok := services[service]
-		if !ok {
-			return fmt.Errorf("Error: Invalid or unknown service %s", service)
+	for i, service := range b.Build.Services {
+		image, err := getImage(service)
+		if err != nil {
+			return err
 		}
 
 		// debugging
-		log.Infof("starting service container %s", image.Tag)
+		log.Infof("starting service container %s", b.Build.Services[i])
 
 		// Run the contianer
 		run, err := client.Containers.RunDaemonPorts(image.Tag, image.Ports...)
@@ -312,9 +312,9 @@ func (b *Builder) run() error {
 
 	// link service containers
 	for i, service := range b.services {
-		image, ok := services[b.Build.Services[i]]
-		if !ok {
-			continue // THIS SHOULD NEVER HAPPEN
+		image, err := getImage(b.Build.Services[i])
+		if err != nil {
+			return err
 		}
 		// link the service container to our
 		// build container.
@@ -469,4 +469,27 @@ func (b *Builder) writeProxyScript(dir string) error {
 func (b *Builder) writeIdentifyFile(dir string) error {
 	keyfilePath := filepath.Join(dir, "id_rsa")
 	return ioutil.WriteFile(keyfilePath, b.Key, 0700)
+}
+
+func getImage(service string) (*image, error) {
+	tokens := strings.Split(service, " ")
+	l := len(tokens)
+	switch {
+	// When service is a Drone official service
+	case l == 1:
+		image, ok := services[service]
+		if !ok {
+			return nil, fmt.Errorf("Error: Invalid or unknown service %s", service)
+		}
+		return image, nil
+	// When service is a custom service
+	case l == 2 || l == 3:
+		ports := []string{}
+		if l == 3 {
+			ports = strings.Split(tokens[2], ",")
+		}
+		return &image{Name: tokens[0], Tag: tokens[1], Ports: ports}, nil
+	default:
+		return nil, fmt.Errorf("Error: Invalid service %s", service)
+	}
 }
