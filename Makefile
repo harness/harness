@@ -19,6 +19,7 @@ deps:
 	go get github.com/drone/go-bitbucket/bitbucket
 	go get github.com/GeertJohan/go.rice
 	go get github.com/GeertJohan/go.rice/rice
+	go get github.com/hoisie/mustache
 	go get github.com/mattn/go-sqlite3
 	go get github.com/russross/meddler
 
