@@ -225,7 +225,11 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 	}
 
 	client := github.New(user.GithubToken)
-	return client.Repos.CreateStatus(repo.Owner, repo.Name, status, settings.URL().String(), message, commit.Hash)
+
+	var url string
+	url = settings.URL().String() + "/" + repo.Slug + "/commit/" + commit.Hash
+
+	return client.Repos.CreateStatus(repo.Owner, repo.Name, status, url, message, commit.Hash)
 }
 
 type bufferWrapper struct {

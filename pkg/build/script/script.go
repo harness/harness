@@ -1,6 +1,8 @@
 package script
 
 import (
+	"bytes"
+	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -13,11 +15,11 @@ import (
 	"github.com/drone/drone/pkg/plugin/publish"
 )
 
-func ParseBuild(data []byte) (*Build, error) {
+func ParseBuild(data []byte, params map[string]string) (*Build, error) {
 	build := Build{}
 
 	// parse the build configuration file
-	err := goyaml.Unmarshal(data, &build)
+	err := goyaml.Unmarshal(injectParams(data, params), &build)
 	return &build, err
 }
 
@@ -27,7 +29,15 @@ func ParseBuildFile(filename string) (*Build, error) {
 		return nil, err
 	}
 
-	return ParseBuild(data)
+	return ParseBuild(data, nil)
+}
+
+// injectParams injects params into data.
+func injectParams(data []byte, params map[string]string) []byte {
+	for k, v := range params {
+		data = bytes.Replace(data, []byte(fmt.Sprintf("{{%s}}", k)), []byte(v), -1)
+	}
+	return data
 }
 
 // Build stores the configuration details for

@@ -50,7 +50,7 @@
 							{{ if $commit.PullRequest }}
 								<p>opened pull request <a href="/{{$commit.Slug}}/commit/{{$commit.Hash}}"># {{$commit.PullRequest}}</a></p>
 							{{ else }}
-								<p>commit <a href="/{{$commit.Slug}}/commit/{{$commit.Hash}}">{{$commit.HashShort}}</a> to <a href="/{{$commit.Slug}}/tree/{{$commit.Branch}}">{{$commit.Branch}}</a> branch</p>
+								<p>commit <a href="/{{$commit.Slug}}/commit/{{$commit.Hash}}">{{$commit.HashShort}}</a> to <a href="/{{$commit.Slug}}?branch={{$commit.Branch}}">{{$commit.Branch}}</a> branch</p>
 							{{ end }}
 						</h3>
 					</li>
