@@ -221,9 +221,9 @@ git:
   depth: 1
 ```
 
-### Params Injection
+### Parameters Injection
 
-You can inject params into .drone.yml.
+You can inject parameters into .drone.yml.
 
 ```
 notify:
@@ -235,7 +235,15 @@ notify:
     on_failure: true
 ```
 
+You can set the parameters via Drone web app:
+
 ![params-injection](https://f.cloud.github.com/assets/1583973/2161187/2905077e-94c3-11e3-8499-a3844682c8af.png)
+
+You can also do via Drone cli:
+
+```sh
+$ drone -param hipchatRoom=support -param hipchatToken=3028700e5466d375 build
+```
 
 ### Docs
 
