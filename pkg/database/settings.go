@@ -9,11 +9,7 @@ import (
 const settingsTable = "settings"
 
 // SQL Queries to retrieve the system settings
-const settingsStmt = `
-SELECT id, github_key, github_secret, bitbucket_key, bitbucket_secret,
-smtp_server, smtp_port, smtp_address, smtp_username, smtp_password, hostname, scheme
-FROM settings WHERE id = 1
-`
+const settingsStmt = `SELECT * FROM settings WHERE id = 1`
 
 //var (
 //	// mutex for locking the local settings cache
