@@ -221,6 +221,22 @@ git:
   depth: 1
 ```
 
+### Params Injection
+
+You can inject params into .drone.yml.
+
+```
+notify:
+  hipchat:
+    room: {{hipchatRoom}}
+    token: {{hipchatToken}}
+    on_started: true
+    on_success: true
+    on_failure: true
+```
+
+![params-injection](https://f.cloud.github.com/assets/1583973/2161187/2905077e-94c3-11e3-8499-a3844682c8af.png)
+
 ### Docs
 
 Coming Soon to [drone.readthedocs.org](http://drone.readthedocs.org/)
