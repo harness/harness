@@ -168,6 +168,8 @@ func AdminSettingsUpdate(w http.ResponseWriter, r *http.Request, u *User) error 
 	// update github settings
 	settings.GitHubKey = r.FormValue("GitHubKey")
 	settings.GitHubSecret = r.FormValue("GitHubSecret")
+	settings.GitHubDomain = r.FormValue("GitHubDomain")
+	settings.GitHubApiUrl = r.FormValue("GitHubApiUrl")
 
 	// update smtp settings
 	settings.SmtpServer = r.FormValue("SmtpServer")
@@ -242,6 +244,8 @@ func InstallPost(w http.ResponseWriter, r *http.Request) error {
 	settings := Settings{}
 	settings.Domain = r.FormValue("Domain")
 	settings.Scheme = r.FormValue("Scheme")
+	settings.GitHubApiUrl = "https://api.github.com";
+	settings.GitHubDomain = "github.com";
 	database.SaveSettings(&settings)
 
 	// add the user to the session object

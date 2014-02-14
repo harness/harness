@@ -73,9 +73,9 @@ func (r *Repo) IsGit() bool {
 		return true
 	case strings.HasPrefix(r.Path, "ssh://git@"):
 		return true
-	case strings.HasPrefix(r.Path, "https://github.com/"):
+	case strings.HasPrefix(r.Path, "https://github"):
 		return true
-	case strings.HasPrefix(r.Path, "http://github.com"):
+	case strings.HasPrefix(r.Path, "http://github"):
 		return true
 	case strings.HasSuffix(r.Path, ".git"):
 		return true

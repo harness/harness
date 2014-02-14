@@ -103,6 +103,8 @@ CREATE TABLE settings (
      id               INTEGER PRIMARY KEY
     ,github_key       VARCHAR(255)
     ,github_secret    VARCHAR(255)
+    ,github_domain    VARCHAR(255)
+    ,github_apiurl    VARCHAR(255)
     ,bitbucket_key    VARCHAR(255)
     ,bitbucket_secret VARCHAR(255)
     ,smtp_server      VARCHAR(1024)

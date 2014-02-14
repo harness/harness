@@ -17,6 +17,8 @@ type Settings struct {
 	// GitHub Consumer key and secret.
 	GitHubKey    string `meddler:"github_key"`
 	GitHubSecret string `meddler:"github_secret"`
+	GitHubDomain string `meddler:"github_domain"`
+	GitHubApiUrl string `meddler:"github_apiurl"`
 
 	// Bitbucket Consumer Key and secret.
 	BitbucketKey    string `meddler:"bitbucket_key"`
