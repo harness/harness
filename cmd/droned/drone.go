@@ -73,7 +73,18 @@ func setupDatabase() {
 func setupStatic() {
 	box := rice.MustFindBox("assets")
 	http.Handle("/css/", http.FileServer(box.HTTPBox()))
-	http.Handle("/img/", http.FileServer(box.HTTPBox()))
+
+	// we need to intercept all attempts to serve images
+	// so that we can add a cache-control settings
+	var images = http.FileServer(box.HTTPBox())
+	http.HandleFunc("/img/", func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/img/build_") {
+			w.Header().Add("Cache-Control", "no-cache")
+		}
+
+		// serce images
+		images.ServeHTTP(w, r)
+	})
 }
 
 // setup routes for serving dynamic content.
@@ -166,8 +177,6 @@ func setupHandlers() {
 	// the first time a page is requested we should record
 	// the scheme and hostname.
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// get the hostname and scheme
-
 		// our multiplexer is a bit finnicky and therefore requires
 		// us to strip any trailing slashes in order to correctly
 		// find and match a route.
