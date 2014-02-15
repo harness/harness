@@ -76,6 +76,29 @@ func (r *revision2) Revision() int64 {
 
 // ---------- end of revision 2
 
+// ---------- revision 3
+
+type revision3 struct{}
+
+func (r *revision3) Up(op Operation) error {
+	if _, err := op.AddColumn("samples", "url VARCHAR(255)"); err != nil {
+		return err
+	}
+	_, err := op.AddColumn("samples", "likes INTEGER")
+	return err
+}
+
+func (r *revision3) Down(op Operation) error {
+	_, err := op.DropColumns("samples", []string{"likes", "url"})
+	return err
+}
+
+func (r *revision3) Revision() int64 {
+	return 3
+}
+
+// ---------- end of revision 3
+
 var db *sql.DB
 
 var testSchema = `
@@ -141,6 +164,51 @@ func TestMigrateRenameTable(t *testing.T) {
 
 	if sample.Imel != "foo@bar.com" {
 		t.Errorf("Column doesn't match\n\texpect:\t%s\n\tget:\t%s", "foo@bar.com", sample.Imel)
+	}
+}
+
+type TableInfo struct {
+	CID       int64       `meddler:"cid,pk"`
+	Name      string      `meddler:"name"`
+	Type      string      `meddler:"type"`
+	Notnull   bool        `meddler:"notnull"`
+	DfltValue interface{} `meddler:"dflt_value"`
+	PK        bool        `meddler:"pk"`
+}
+
+func TestMigrateAddRemoveColumns(t *testing.T) {
+	defer tearDown()
+	if err := setUp(); err != nil {
+		t.Fatalf("Error preparing database: %q", err)
+	}
+
+	Driver = SQLite
+
+	mgr := New(db)
+	if err := mgr.Add(&revision1{}).Add(&revision3{}).Migrate(); err != nil {
+		t.Errorf("Can not migrate: %q", err)
+	}
+
+	var columns []*TableInfo
+	if err := meddler.QueryAll(db, &columns, `PRAGMA table_info(samples);`); err != nil {
+		t.Errorf("Can not access table info: %q", err)
+	}
+
+	if len(columns) < 5 {
+		t.Errorf("Expect length columns: %d\nGot: %d", 5, len(columns))
+	}
+
+	if err := mgr.MigrateTo(1); err != nil {
+		t.Errorf("Can not migrate: %q", err)
+	}
+
+	var another_columns []*TableInfo
+	if err := meddler.QueryAll(db, &another_columns, `PRAGMA table_info(samples);`); err != nil {
+		t.Errorf("Can not access table info: %q", err)
+	}
+
+	if len(another_columns) != 3 {
+		t.Errorf("Expect length columns: %d\nGot: %d", 3, len(columns))
 	}
 }
 

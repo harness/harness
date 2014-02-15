@@ -53,7 +53,6 @@ DELETE FROM migration where revision = ?
 // Implementation details is specific for each database,
 // see migrate/sqlite.go for implementation reference.
 type Operation interface {
-
 	CreateTable(tableName string, args []string) (sql.Result, error)
 
 	RenameTable(tableName, newName string) (sql.Result, error)
@@ -147,7 +146,7 @@ func (m *Migration) up(target, current int64) error {
 
 	// loop through and execute revisions
 	for _, rev := range m.revs {
-		if rev.Revision() >= target {
+		if rev.Revision() > current {
 			current = rev.Revision()
 			// execute the revision Upgrade.
 			if err := rev.Up(op); err != nil {
@@ -191,7 +190,7 @@ func (m *Migration) down(target, current int64) error {
 			current = rev.Revision()
 			// execute the revision Upgrade.
 			if err := rev.Down(op); err != nil {
-				log.Printf("Failed to downgrade to Revision Number %v\n", current)
+				log.Printf("Failed to downgrade from Revision Number %v\n", current)
 				log.Println(err)
 				return tx.Rollback()
 			}
@@ -202,7 +201,7 @@ func (m *Migration) down(target, current int64) error {
 				return tx.Rollback()
 			}
 
-			log.Printf("Successfully downgraded to Revision %v\n", current)
+			log.Printf("Successfully downgraded from Revision %v\n", current)
 		}
 	}
 
