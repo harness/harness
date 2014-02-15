@@ -85,7 +85,7 @@ func (s *SQLiteDriver) DropColumns(tableName string, columnsToDrop []string) (sq
 	}
 
 	// Clean up proxy table
-	return s.Tx.Exec(fmt.Sprintf("DROP TABLE %s;", proxyName))
+	return s.DropTable(proxyName)
 }
 
 func (s *SQLiteDriver) RenameColumns(tableName string, columnChanges map[string]string) (sql.Result, error) {
@@ -99,30 +99,46 @@ func (s *SQLiteDriver) RenameColumns(tableName string, columnChanges map[string]
 		return nil, err
 	}
 
-	var oldColumns []string
+	// We need a list of columns name to migrate data to the new table
+	var oldColumnsName = selectName(columns)
+
+	// newColumns will be used to create the new table
 	var newColumns []string
-	for k, column := range selectName(columns) {
+
+	for k, column := range oldColumnsName {
+		added := false
 		for Old, New := range columnChanges {
 			if column == Old {
 				columnToAdd := strings.Replace(columns[k], Old, New, 1)
-
-				if results, err := s.AddColumn(tableName, columnToAdd); err != nil {
-					return results, err
-				}
-
-				oldColumns = append(oldColumns, Old)
-				newColumns = append(newColumns, New)
+				newColumns = append(newColumns, columnToAdd)
+				added = true
 				break
 			}
 		}
+		if !added {
+			newColumns = append(newColumns, columns[k])
+		}
 	}
 
-	statement := fmt.Sprintf("UPDATE %s SET %s;", tableName, setForUpdate(oldColumns, newColumns))
-	if results, err := s.Tx.Exec(statement); err != nil {
-		return results, err
+	// Rename current table
+	proxyName := fmt.Sprintf("%s_%s", tableName, uniuri.NewLen(16))
+	if result, err := s.RenameTable(tableName, proxyName); err != nil {
+		return result, err
 	}
 
-	return s.DropColumns(tableName, oldColumns)
+	// Create new table with the new columns
+	if result, err := s.CreateTable(tableName, newColumns); err != nil {
+		return result, err
+	}
+
+	// Migrate data
+	if result, err := s.Tx.Exec(fmt.Sprintf("INSERT INTO %s SELECT %s FROM %s", tableName,
+		strings.Join(oldColumnsName, ", "), proxyName)); err != nil {
+		return result, err
+	}
+
+	// Clean up proxy table
+	return s.DropTable(proxyName)
 }
 
 func (s *SQLiteDriver) getDDLFromTable(tableName string) (string, error) {

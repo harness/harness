@@ -24,12 +24,8 @@ type AddColumnSample struct {
 	ID   int64  `meddler:"id,pk"`
 	Imel string `meddler:"imel"`
 	Name string `meddler:"name"`
+	Url  string `meddler:"url"`
 	Num  int64  `meddler:"num"`
-}
-
-type RemoveColumnSample struct {
-	ID   int64  `meddler:"id,pk"`
-	Name string `meddler:"name"`
 }
 
 // ---------- revision 1
@@ -84,12 +80,12 @@ func (r *revision3) Up(op Operation) error {
 	if _, err := op.AddColumn("samples", "url VARCHAR(255)"); err != nil {
 		return err
 	}
-	_, err := op.AddColumn("samples", "likes INTEGER")
+	_, err := op.AddColumn("samples", "num INTEGER")
 	return err
 }
 
 func (r *revision3) Down(op Operation) error {
-	_, err := op.DropColumns("samples", []string{"likes", "url"})
+	_, err := op.DropColumns("samples", []string{"num", "url"})
 	return err
 }
 
@@ -98,6 +94,30 @@ func (r *revision3) Revision() int64 {
 }
 
 // ---------- end of revision 3
+
+// ---------- revision 4
+
+type revision4 struct{}
+
+func (r *revision4) Up(op Operation) error {
+	_, err := op.RenameColumns("samples", map[string]string{
+		"imel": "email",
+	})
+	return err
+}
+
+func (r *revision4) Down(op Operation) error {
+	_, err := op.RenameColumns("samples", map[string]string{
+		"email": "imel",
+	})
+	return err
+}
+
+func (r *revision4) Revision() int64 {
+	return 4
+}
+
+// ----------
 
 var db *sql.DB
 
@@ -163,7 +183,7 @@ func TestMigrateRenameTable(t *testing.T) {
 	}
 
 	if sample.Imel != "foo@bar.com" {
-		t.Errorf("Column doesn't match\n\texpect:\t%s\n\tget:\t%s", "foo@bar.com", sample.Imel)
+		t.Errorf("Column doesn't match. Expect: %s, got: %s", "foo@bar.com", sample.Imel)
 	}
 }
 
@@ -198,6 +218,17 @@ func TestMigrateAddRemoveColumns(t *testing.T) {
 		t.Errorf("Expect length columns: %d\nGot: %d", 5, len(columns))
 	}
 
+	var row = AddColumnSample{
+		ID:   33,
+		Name: "Foo",
+		Imel: "foo@bar.com",
+		Url:  "http://example.com",
+		Num:  42,
+	}
+	if err := meddler.Save(db, "samples", &row); err != nil {
+		t.Errorf("Can not save into database: %q", err)
+	}
+
 	if err := mgr.MigrateTo(1); err != nil {
 		t.Errorf("Can not migrate: %q", err)
 	}
@@ -208,7 +239,36 @@ func TestMigrateAddRemoveColumns(t *testing.T) {
 	}
 
 	if len(another_columns) != 3 {
-		t.Errorf("Expect length columns: %d\nGot: %d", 3, len(columns))
+		t.Errorf("Expect length columns = %d, got: %d", 3, len(columns))
+	}
+}
+
+func TestRenameColumn(t *testing.T) {
+	defer tearDown()
+	if err := setUp(); err != nil {
+		t.Fatalf("Error preparing database: %q", err)
+	}
+
+	Driver = SQLite
+
+	mgr := New(db)
+	if err := mgr.Add(&revision1{}).Add(&revision4{}).MigrateTo(1); err != nil {
+		t.Errorf("Can not migrate: %q", err)
+	}
+
+	loadFixture(t)
+
+	if err := mgr.MigrateTo(4); err != nil {
+		t.Errorf("Can not migrate: %q", err)
+	}
+
+	row := RenameSample{}
+	if err := meddler.QueryRow(db, &row, `SELECT * FROM samples WHERE id = 3;`); err != nil {
+		t.Errorf("Can not query database: %q", err)
+	}
+
+	if row.Email != "crash@bandicoot.io" {
+		t.Errorf("Expect %s, got %s", "crash@bandicoot.io", row.Email)
 	}
 }
 
