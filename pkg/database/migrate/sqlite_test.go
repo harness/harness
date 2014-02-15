@@ -123,9 +123,9 @@ var db *sql.DB
 
 var testSchema = `
 CREATE TABLE samples (
-	id	INTEGER	PRIMARY KEY AUTOINCREMENT,
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	imel VARCHAR(255) UNIQUE,
-	name VARCHAR(255),
+	name VARCHAR(255)
 );
 `
 
@@ -205,7 +205,7 @@ func TestMigrateAddRemoveColumns(t *testing.T) {
 	Driver = SQLite
 
 	mgr := New(db)
-	if err := mgr.Add(&revision1{}).Add(&revision3{}).Migrate(); err != nil {
+	if err := mgr.Add(&revision1{}, &revision3{}).Migrate(); err != nil {
 		t.Errorf("Can not migrate: %q", err)
 	}
 
@@ -252,7 +252,7 @@ func TestRenameColumn(t *testing.T) {
 	Driver = SQLite
 
 	mgr := New(db)
-	if err := mgr.Add(&revision1{}).Add(&revision4{}).MigrateTo(1); err != nil {
+	if err := mgr.Add(&revision1{}, &revision4{}).MigrateTo(1); err != nil {
 		t.Errorf("Can not migrate: %q", err)
 	}
 
@@ -269,6 +269,39 @@ func TestRenameColumn(t *testing.T) {
 
 	if row.Email != "crash@bandicoot.io" {
 		t.Errorf("Expect %s, got %s", "crash@bandicoot.io", row.Email)
+	}
+}
+
+func TestMigrateExistingTable(t *testing.T) {
+	defer tearDown()
+	if err := setUp(); err != nil {
+		t.Fatalf("Error preparing database: %q", err)
+	}
+
+	Driver = SQLite
+
+	if _, err := db.Exec(testSchema); err != nil {
+		t.Errorf("Can not create database: %q", err)
+	}
+
+	loadFixture(t)
+
+	mgr := New(db)
+	if err := mgr.Add(&revision4{}).Migrate(); err != nil {
+		t.Errorf("Can not migrate: %q", err)
+	}
+
+	var rows []*RenameSample
+	if err := meddler.QueryAll(db, &rows, `SELECT * from samples;`); err != nil {
+		t.Errorf("Can not query database: %q", err)
+	}
+
+	if len(rows) != 3 {
+		t.Errorf("Expect rows length = %d, got %d", 3, len(rows))
+	}
+
+	if rows[1].Email != "foo@bar.com" {
+		t.Errorf("Expect email = %s, got %s", "foo@bar.com", rows[1].Email)
 	}
 }
 
