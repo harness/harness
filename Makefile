@@ -41,6 +41,7 @@ test:
 	go test -v github.com/drone/drone/pkg/channel
 	go test -v github.com/drone/drone/pkg/database
 	go test -v github.com/drone/drone/pkg/database/encrypt
+	go test -v github.com/drone/drone/pkg/database/migrate
 	go test -v github.com/drone/drone/pkg/database/testing
 	go test -v github.com/drone/drone/pkg/mail
 	go test -v github.com/drone/drone/pkg/model
