@@ -146,7 +146,7 @@ func (m *Migration) up(target, current int64) error {
 
 	// loop through and execute revisions
 	for _, rev := range m.revs {
-		if rev.Revision() > current {
+		if rev.Revision() > current && rev.Revision() <= target {
 			current = rev.Revision()
 			// execute the revision Upgrade.
 			if err := rev.Up(op); err != nil {
