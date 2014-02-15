@@ -15,7 +15,7 @@ func fetchColumns(sql string) ([]string, error) {
 }
 
 func selectName(columns []string) []string {
-	results := make([]string, len(columns))
+	var results []string
 	for _, column := range columns {
 		col := strings.SplitN(strings.Trim(column, " \n\t"), " ", 2)
 		results = append(results, col[0])
@@ -24,7 +24,7 @@ func selectName(columns []string) []string {
 }
 
 func setForUpdate(left []string, right []string) string {
-	results := make([]string, len(left))
+	var results []string
 	for k, str := range left {
 		results = append(results, fmt.Sprintf("%s = %s", str, right[k]))
 	}

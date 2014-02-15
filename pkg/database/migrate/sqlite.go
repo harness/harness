@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/dchest/uniuri"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type SQLiteDriver MigrationDriver
@@ -48,7 +48,8 @@ func (s *SQLiteDriver) DropColumns(tableName string, columnsToDrop []string) (sq
 	}
 
 	columnNames := selectName(columns)
-	preparedColumns := make([]string, len(columnNames)-len(columnsToDrop))
+
+	var preparedColumns []string
 	for k, column := range columnNames {
 		listed := false
 		for _, dropped := range columnsToDrop {
@@ -98,8 +99,8 @@ func (s *SQLiteDriver) RenameColumns(tableName string, columnChanges map[string]
 		return nil, err
 	}
 
-	oldColumns := make([]string, len(columnChanges))
-	newColumns := make([]string, len(columnChanges))
+	var oldColumns []string
+	var newColumns []string
 	for k, column := range selectName(columns) {
 		for Old, New := range columnChanges {
 			if column == Old {
@@ -126,7 +127,7 @@ func (s *SQLiteDriver) RenameColumns(tableName string, columnChanges map[string]
 
 func (s *SQLiteDriver) getDDLFromTable(tableName string) (string, error) {
 	var sql string
-	query := `SELECT sql FROM sqlite_master WHERE type='table' and name='?';`
+	query := `SELECT sql FROM sqlite_master WHERE type='table' and name=?;`
 	err := s.Tx.QueryRow(query, tableName).Scan(&sql)
 	if err != nil {
 		return "", err
