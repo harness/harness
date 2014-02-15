@@ -15,6 +15,7 @@ import (
 
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
+	"github.com/drone/drone/pkg/database/migrate"
 	"github.com/drone/drone/pkg/handler"
 )
 
@@ -55,8 +56,9 @@ func main() {
 // setup the database connection and register with the
 // global database package.
 func setupDatabase() {
-	// inform meddler we're using sqlite
+	// inform meddler and migration we're using sqlite
 	meddler.Default = meddler.SQLite
+	migrate.Driver = migrate.SQLite
 
 	// connect to the SQLite database
 	db, err := sql.Open(driver, datasource)
@@ -65,6 +67,9 @@ func setupDatabase() {
 	}
 
 	database.Set(db)
+
+	migration := migrate.New(db)
+	migration.All().Migrate()
 }
 
 // setup routes for static assets. These assets may
