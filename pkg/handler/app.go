@@ -47,7 +47,7 @@ func Index(w http.ResponseWriter, r *http.Request) error {
 
 // Return an HTML form for the User to login.
 func Login(w http.ResponseWriter, r *http.Request) error {
-	var settings = database.SettingsMust()
+	var settings, _ = database.GetSettings()
 
 	data := struct {
 		Settings *Settings
@@ -78,10 +78,13 @@ func Reset(w http.ResponseWriter, r *http.Request) error {
 
 // Return an HTML form for the User to signup.
 func SignUp(w http.ResponseWriter, r *http.Request) error {
-	if !database.SettingsMust().OpenInvitations {
+	var settings, _ = database.GetSettings()
+
+	if settings == nil || !settings.OpenInvitations {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return nil
 	}
+
 	return RenderTemplate(w, "signup.html", nil)
 }
 
