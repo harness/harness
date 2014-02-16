@@ -97,6 +97,8 @@ func setupHandlers() {
 	m.Post("/forgot", handler.ErrorHandler(handler.ForgotPost))
 	m.Get("/reset", handler.ErrorHandler(handler.Reset))
 	m.Post("/reset", handler.ErrorHandler(handler.ResetPost))
+	m.Get("/signup", handler.ErrorHandler(handler.SignUp))
+	m.Post("/signup", handler.ErrorHandler(handler.SignUpPost))
 	m.Get("/register", handler.ErrorHandler(handler.Register))
 	m.Post("/register", handler.ErrorHandler(handler.RegisterPost))
 	m.Get("/accept", handler.UserHandler(handler.TeamMemberAccept))

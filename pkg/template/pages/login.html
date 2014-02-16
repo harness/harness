@@ -10,6 +10,9 @@
 		<input type="submit" value="Sign in" />
 	</div>
 	<div>
+        {{ if .Settings ne nil and .Settings.OpenInvitations }}
+        <a href="/signup">request invitation</a>&nbsp;·&nbsp;
+        {{ end }}
 		<a href="/forgot">forgot password</a>
 	</div>
 {{ end }}

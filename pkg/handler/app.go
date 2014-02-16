@@ -47,7 +47,13 @@ func Index(w http.ResponseWriter, r *http.Request) error {
 
 // Return an HTML form for the User to login.
 func Login(w http.ResponseWriter, r *http.Request) error {
-	return RenderTemplate(w, "login.html", nil)
+	var settings, _ = database.GetSettings()
+
+	data := struct {
+		Settings *Settings
+	}{settings}
+
+	return RenderTemplate(w, "login.html", &data)
 }
 
 // Terminate the User session.
@@ -68,6 +74,18 @@ func Forgot(w http.ResponseWriter, r *http.Request) error {
 // contains a hash to verify the User's identity.
 func Reset(w http.ResponseWriter, r *http.Request) error {
 	return RenderTemplate(w, "reset.html", &struct{ Error string }{""})
+}
+
+// Return an HTML form for the User to signup.
+func SignUp(w http.ResponseWriter, r *http.Request) error {
+	var settings, _ = database.GetSettings()
+
+	if settings == nil || !settings.OpenInvitations {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return nil
+	}
+
+	return RenderTemplate(w, "signup.html", nil)
 }
 
 // Return an HTML form to register for a new account. This
@@ -142,6 +160,15 @@ func ResetPost(w http.ResponseWriter, r *http.Request) error {
 
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 	return nil
+}
+
+func SignUpPost(w http.ResponseWriter, r *http.Request) error {
+	if !database.SettingsMust().OpenInvitations {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return nil
+	}
+
+	return UserInvite(w, r)
 }
 
 func RegisterPost(w http.ResponseWriter, r *http.Request) error {
