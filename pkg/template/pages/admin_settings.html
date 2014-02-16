@@ -33,6 +33,9 @@
 						{{ end }}
 						</select>
 						<input class="form-control form-control-xlarge" type="text" name="Domain" value="{{.Settings.Domain}}" />
+						<label class="checkbox">
+							Open invitations <input type="checkbox" name="OpenInvitations" {{ if .Settings.OpenInvitations }} checked {{ end }} />
+						</label>
 					</div>
 					<div class="form-group">
 						<div class="alert">GitHub OAuth Consumer Key and Secret</div>
