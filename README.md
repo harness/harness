@@ -175,7 +175,7 @@ services:
   - zookeeper
 ```
 
-If you omit the version, Drone will launch the latest version of the database. (For example, if you set `mongodb`, Drone wil launch MongoDB 2.4.)
+If you omit the version, Drone will launch the latest version of the database. (For example, if you set `mongodb`, Drone will launch MongoDB 2.4.)
 
 **NOTE:** database and service containers are exposed over TCP connections and
 have their own local IP address. If the **socat** utility is installed inside your
