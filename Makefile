@@ -76,4 +76,4 @@ dpkg:
 	dpkg-deb --build deb/drone
 
 run:
-	bin/droned --port=":8080" --datasource="/tmp/drone.sqlite"
+	bin/droned --port=":8080" --datasource="drone.sqlite"
