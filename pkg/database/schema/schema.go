@@ -127,7 +127,7 @@ CREATE TABLE settings (
   ,smtp_password    VARCHAR(1024)
   ,hostname         VARCHAR(1024)
   ,scheme           VARCHAR(5)
-  ,open_invitations INTEGER
+  ,open_invitations BOOLEAN
 );
 `
 
@@ -194,6 +194,10 @@ func Load(db *sql.DB) error {
 	db.Exec(repoUserIndex)
 	db.Exec(buildCommitIndex)
 	db.Exec(buildSlugIndex)
+
+	// migrations for backward compatibility
+	db.Exec("ALTER TABLE settings ADD COLUMN open_invitations BOOLEAN")
+	db.Exec("UPDATE settings SET open_invitations=0 WHERE open_invitations IS NULL")
 
 	return nil
 }

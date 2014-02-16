@@ -3,15 +3,13 @@
 {{ define "content" }}
 	<h1>Sign up</h1>
 	<form action="/signup" method="POST" role="form">
+		<div class="alert alert-success hide" id="successAlert"></div>
+		<div class="alert alert-error hide" id="failureAlert"></div>
 		<div>
 			<input type="text" name="email" placeholder="Email address" autocomplete="off" spellcheck="false" class="form-control only-child" />
 		</div>
 		<div>
-			<div class="alert alert-success hide" id="successAlert"></div>
-			<div class="alert alert-error hide" id="failureAlert"></div>
-		</div>
-		<div>
-			<input type="submit" id="submitButton" value="Request invite" />
+			<input type="submit" id="submitButton" value="Request invite" data-loading-text="Sending Invite .." />
 		</div>
     </form>
 {{ end }}
@@ -30,11 +28,7 @@
 			xhr.open('POST', form.action);
 			xhr.onload = function() {
 					if (this.status == 200) {
-							var msg = "User Invitation was sent successfully";
-							if (this.responseText != "OK") {
-									msg = "Email is not currently enables. Follow the link:<br><a href='" + this.responseText + "'>" + this.responseText + "</a>";
-							}
-							$("#successAlert").html(msg);
+							$("#successAlert").text("User Invitation was sent successfully");
 							$("#successAlert").show().removeClass("hide");
 							$('#submitButton').button('reset')
 
@@ -46,6 +40,6 @@
 			};
 			xhr.send(formData);
 			return false;
-				}
+		}
 	</script>
 {{ end }}

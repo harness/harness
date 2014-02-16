@@ -112,7 +112,7 @@ CREATE TABLE settings (
     ,smtp_password    VARCHAR(1024)
     ,hostname         VARCHAR(1024)
     ,scheme           VARCHAR(5)
-    ,open_invitations INTEGER
+    ,open_invitations BOOLEAN
 );
 
 CREATE UNIQUE INDEX member_uix       ON members  (team_id, user_id);

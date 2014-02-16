@@ -163,12 +163,31 @@ func ResetPost(w http.ResponseWriter, r *http.Request) error {
 }
 
 func SignUpPost(w http.ResponseWriter, r *http.Request) error {
+	// if self-registration is disabled we should display an
+	// error message to the user.
 	if !database.SettingsMust().OpenInvitations {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return nil
 	}
 
-	return UserInvite(w, r)
+	// generate the password reset token
+	email := r.FormValue("email")
+	token := authcookie.New(email, time.Now().Add(12*time.Hour), secret)
+
+	// get the hostname from the database for use in the email
+	hostname := database.SettingsMust().URL().String()
+
+	// data used to generate the email template
+	data := struct {
+		Host  string
+		Email string
+		Token string
+	}{hostname, email, token}
+
+	// send the email message async
+	go mail.SendActivation(email, data)
+
+	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
 }
 
 func RegisterPost(w http.ResponseWriter, r *http.Request) error {
