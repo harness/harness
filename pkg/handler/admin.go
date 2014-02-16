@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -56,11 +55,7 @@ func UserInvite(w http.ResponseWriter, r *http.Request) error {
 	}{hostname, email, token}
 
 	// send the email message async
-	go func() {
-		if err := mail.SendActivation(email, data); err != nil {
-			log.Printf("error sending account activation email to %s. %s", email, err)
-		}
-	}()
+	go mail.SendActivation(email, data)
 
 	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
 }
