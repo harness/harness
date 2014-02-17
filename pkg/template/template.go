@@ -79,6 +79,7 @@ func init() {
 		"admin_settings.html",
 		"github_add.html",
 		"github_link.html",
+		"custom_git_add.html",
 	}
 
 	// extract the base template as a string

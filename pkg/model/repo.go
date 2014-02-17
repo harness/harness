@@ -25,6 +25,10 @@ const (
 )
 
 const (
+	UserCustomGit    = "Custom"
+)
+
+const (
 	githubRepoPattern           = "git://github.com/%s/%s.git"
 	githubRepoPatternPrivate    = "git@github.com:%s/%s.git"
 	bitbucketRepoPattern        = "https://bitbucket.org/%s/%s.git"
