@@ -54,6 +54,7 @@ func RepoDashboard(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) 
 }
 
 func RepoAdd(w http.ResponseWriter, r *http.Request, u *User) error {
+	settings := database.SettingsMust()
 	teams, err := database.ListTeams(u.ID)
 	if err != nil {
 		return err
@@ -61,7 +62,8 @@ func RepoAdd(w http.ResponseWriter, r *http.Request, u *User) error {
 	data := struct {
 		User  *User
 		Teams []*Team
-	}{u, teams}
+		Settings *Settings
+	}{u, teams, settings}
 	// if the user hasn't linked their GitHub account
 	// render a different template
 	if len(u.GithubToken) == 0 {
@@ -82,12 +84,13 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 
 	// create the GitHub client
 	client := github.New(u.GithubToken)
+	client.ApiUrl = settings.GitHubApiUrl
 	githubRepo, err := client.Repos.Find(owner, name)
 	if err != nil {
 		return err
 	}
 
-	repo, err := NewGitHubRepo(owner, name, githubRepo.Private)
+	repo, err := NewGitHubRepo(settings.GitHubDomain, owner, name, githubRepo.Private)
 	if err != nil {
 		return err
 	}

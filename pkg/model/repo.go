@@ -12,7 +12,6 @@ const (
 )
 
 const (
-	HostGithub    = "github.com"
 	HostBitbucket = "bitbucket.org"
 	HostGoogle    = "code.google.com"
 	HostCustom    = "custom"
@@ -25,8 +24,8 @@ const (
 )
 
 const (
-	githubRepoPattern           = "git://github.com/%s/%s.git"
-	githubRepoPatternPrivate    = "git@github.com:%s/%s.git"
+	githubRepoPattern           = "git://%s/%s/%s.git"
+	githubRepoPatternPrivate    = "git@%s:%s/%s.git"
 	bitbucketRepoPattern        = "https://bitbucket.org/%s/%s.git"
 	bitbucketRepoPatternPrivate = "git@bitbucket.org:%s/%s.git"
 )
@@ -122,15 +121,15 @@ func NewRepo(host, owner, name, scm, url string) (*Repo, error) {
 }
 
 // Creates a new GitHub repository
-func NewGitHubRepo(owner, name string, private bool) (*Repo, error) {
+func NewGitHubRepo(domain, owner, name string, private bool) (*Repo, error) {
 	var url string
 	switch private {
 	case false:
-		url = fmt.Sprintf(githubRepoPattern, owner, name)
+		url = fmt.Sprintf(githubRepoPattern, domain, owner, name)
 	case true:
-		url = fmt.Sprintf(githubRepoPatternPrivate, owner, name)
+		url = fmt.Sprintf(githubRepoPatternPrivate, domain, owner, name)
 	}
-	return NewRepo(HostGithub, owner, name, ScmGit, url)
+	return NewRepo(domain, owner, name, ScmGit, url)
 }
 
 // Creates a new Bitbucket repository
@@ -142,7 +141,7 @@ func NewBitbucketRepo(owner, name string, private bool) (*Repo, error) {
 	case true:
 		url = fmt.Sprintf(bitbucketRepoPatternPrivate, owner, name)
 	}
-	return NewRepo(HostGithub, owner, name, ScmGit, url)
+	return NewRepo(HostBitbucket, owner, name, ScmGit, url)
 }
 
 func (r *Repo) DefaultBranch() string {
