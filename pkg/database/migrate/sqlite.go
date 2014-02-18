@@ -79,6 +79,22 @@ func (s *SQLiteDriver) DropColumns(tableName string, columnsToDrop []string) (sq
 		return nil, fmt.Errorf("No columns match, drops nothing.")
 	}
 
+	// fetch indices for this table
+	var indices []string
+	oldSQLIndices := s.getDdlFromIndex(tableName)
+	for _, idx := range oldSQLIndices {
+		listed := false
+		for _, cols := range columnsToDrop {
+			if strings.Contains(idx, cols) {
+				listed = true
+				break
+			}
+		}
+		if !listed {
+			indices = append(indices, idx)
+		}
+	}
+
 	// Rename old table, here's our proxy
 	proxyName := fmt.Sprintf("%s_%s", tableName, uniuri.NewLen(16))
 	if result, err := s.RenameTable(tableName, proxyName); err != nil {
@@ -97,7 +113,19 @@ func (s *SQLiteDriver) DropColumns(tableName string, columnsToDrop []string) (sq
 	}
 
 	// Clean up proxy table
-	return s.DropTable(proxyName)
+	if result, err := s.DropTable(proxyName); err != nil {
+		return result, err
+	}
+
+	// Recreate Indices
+	var err error
+	var result sql.Result
+	for _, idx := range indices {
+		if result, err = s.Tx.Exec(idx); err != nil {
+			return result, err
+		}
+	}
+	return result, err
 }
 
 func (s *SQLiteDriver) RenameColumns(tableName string, columnChanges map[string]string) (sql.Result, error) {
@@ -132,6 +160,24 @@ func (s *SQLiteDriver) RenameColumns(tableName string, columnChanges map[string]
 		}
 	}
 
+	// fetch indices for this table
+	oldSQLIndices := s.getDDLFromIndex(tableName)
+	var indices []string
+	for _, idx := range oldSQLIndices {
+		added := false
+		for Old, New := range columnChanges {
+			if strings.Contains(idx, Old) {
+				indx := strings.Replace(idx, Old, New, 2)
+				indices = append(indices, indx)
+				added = true
+				break
+			}
+		}
+		if !added {
+			indices = append(indices, idx)
+		}
+	}
+
 	// Rename current table
 	proxyName := fmt.Sprintf("%s_%s", tableName, uniuri.NewLen(16))
 	if result, err := s.RenameTable(tableName, proxyName); err != nil {
@@ -150,7 +196,18 @@ func (s *SQLiteDriver) RenameColumns(tableName string, columnChanges map[string]
 	}
 
 	// Clean up proxy table
-	return s.DropTable(proxyName)
+	if result, err := s.DropTable(proxyName); err != nil {
+		return result, err
+	}
+
+	var err error
+	var result sql.Result
+	for _, idx := range indices {
+		if result, err = s.Tx.Exec(idx); err != nil {
+			return result, err
+		}
+	}
+	return result, err
 }
 
 func (s *SQLiteDriver) getDDLFromTable(tableName string) (string, error) {
