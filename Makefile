@@ -2,8 +2,8 @@
 all: embed build
 
 deps:
-	[ -d $GOPATH/src/code.google.com/p/go ]       || hg clone -u default https://code.google.com/p/go $GOPATH/src/code.google.com/p/go
-	[ -d $GOPATH/src/github.com/dotcloud/docker ] || git clone git://github.com/dotcloud/docker $GOPATH/src/github.com/dotcloud/docker
+	[ -d $$GOPATH/src/code.google.com/p/go ]       || hg clone -u default https://code.google.com/p/go $$GOPATH/src/code.google.com/p/go
+	[ -d $$GOPATH/src/github.com/dotcloud/docker ] || git clone git://github.com/dotcloud/docker $$GOPATH/src/github.com/dotcloud/docker
 	go get code.google.com/p/go.crypto/bcrypt
 	go get code.google.com/p/go.crypto/ssh
 	go get code.google.com/p/go.net/websocket
