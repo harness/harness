@@ -58,7 +58,7 @@ CREATE TABLE repos (
   ,private     BOOLEAN
   ,disabled    BOOLEAN
   ,disabled_pr BOOLEAN
-  ,priveleged  BOOLEAN
+  ,privileged  BOOLEAN
   ,timeout     INTEGER
   ,scm         VARCHAR(25)
   ,url         VARCHAR(1024)
