@@ -10,7 +10,7 @@ func (r *Rev3) Revision() int64 {
 
 func (r *Rev3) Up(op Operation) error {
 	_, err := op.AddColumn("settings", "github_domain VARCHAR(255)")
-	if err {
+	if err != nil {
 		return err
 	}
 	_, err = op.AddColumn("settings", "github_apiurl VARCHAR(255)")
