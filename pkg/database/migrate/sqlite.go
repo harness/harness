@@ -16,15 +16,15 @@ func SQLite(tx *sql.Tx) Operation {
 }
 
 func (s *SQLiteDriver) Exec(query string, args ...interface{}) (sql.Result, error) {
-	return s.Tx.Exec(query, args)
+	return s.Tx.Exec(query, args...)
 }
 
 func (s *SQLiteDriver) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	return s.Tx.Query(query, args)
+	return s.Tx.Query(query, args...)
 }
 
 func (s *SQLiteDriver) QueryRow(query string, args ...interface{}) *sql.Row {
-	return s.Tx.QueryRow(query, args)
+	return s.Tx.QueryRow(query, args...)
 }
 
 func (s *SQLiteDriver) CreateTable(tableName string, args []string) (sql.Result, error) {
@@ -241,14 +241,14 @@ func (s *SQLiteDriver) getDDLFromIndex(tableName string) ([]string, error) {
 	for rows.Next() {
 		var sql string
 		if err := rows.Scan(&sql); err != nil {
+			// This error came from autoindex, since its sql value is null,
+			// we want to continue.
 			if strings.Contains(err.Error(), "Scan pair: <nil> -> *string") {
 				continue
 			}
 			return sqls, err
 		}
-		if len(sql) > 0 {
-			sqls = append(sqls, sql)
-		}
+		sqls = append(sqls, sql)
 	}
 
 	if err := rows.Err(); err != nil {

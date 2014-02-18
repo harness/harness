@@ -6,12 +6,12 @@ import (
 )
 
 func fetchColumns(sql string) ([]string, error) {
-	if !strings.HasPrefix(sql, "CREATE TABLE ") {
+	if !strings.HasPrefix(sql, "CREATE ") {
 		return []string{}, fmt.Errorf("Sql input is not a DDL statement.")
 	}
 
 	parenIdx := strings.Index(sql, "(")
-	return strings.Split(sql[parenIdx+1:len(sql)-1], ","), nil
+	return strings.Split(sql[parenIdx+1:strings.LastIndex(sql, ")")], ","), nil
 }
 
 func selectName(columns []string) []string {
