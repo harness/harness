@@ -13,7 +13,7 @@ const repoTable = "repos"
 // SQL Queries to retrieve a list of all repos belonging to a User.
 const repoStmt = `
 SELECT id, slug, host, owner, name, private, disabled, disabled_pr, scm, url, username, password,
-public_key, private_key, params, timeout, priveleged, created, updated, user_id, team_id
+public_key, private_key, params, timeout, privileged, created, updated, user_id, team_id
 FROM repos
 WHERE user_id = ? AND team_id = 0
 ORDER BY slug ASC
@@ -22,7 +22,7 @@ ORDER BY slug ASC
 // SQL Queries to retrieve a list of all repos belonging to a Team.
 const repoTeamStmt = `
 SELECT id, slug, host, owner, name, private, disabled, disabled_pr, scm, url, username, password,
-public_key, private_key, params, timeout, priveleged, created, updated, user_id, team_id
+public_key, private_key, params, timeout, privileged, created, updated, user_id, team_id
 FROM repos
 WHERE team_id = ?
 ORDER BY slug ASC
@@ -31,7 +31,7 @@ ORDER BY slug ASC
 // SQL Queries to retrieve a repo by id.
 const repoFindStmt = `
 SELECT id, slug, host, owner, name, private, disabled, disabled_pr, scm, url, username, password,
-public_key, private_key, params, timeout, priveleged, created, updated, user_id, team_id
+public_key, private_key, params, timeout, privileged, created, updated, user_id, team_id
 FROM repos
 WHERE id = ?
 `
@@ -39,7 +39,7 @@ WHERE id = ?
 // SQL Queries to retrieve a repo by name.
 const repoFindSlugStmt = `
 SELECT id, slug, host, owner, name, private, disabled, disabled_pr, scm, url, username, password,
-public_key, private_key, params, timeout, priveleged, created, updated, user_id, team_id
+public_key, private_key, params, timeout, privileged, created, updated, user_id, team_id
 FROM repos
 WHERE slug = ?
 `
