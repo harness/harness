@@ -88,9 +88,9 @@ type Repo struct {
 	// before exceeding its timelimit and being killed.
 	Timeout int64 `meddler:"timeout" json:"timeout"`
 
-	// Indicates the build should be executed in priveleged
+	// Indicates the build should be executed in privileged
 	// mode. This could, for example, be used to run Docker in Docker.
-	Priveleged bool `meddler:"priveleged" json:"priveleged"`
+	Privileged bool `meddler:"privileged" json:"privileged"`
 
 	// Foreign keys signify the User that created
 	// the repository and team account linked to

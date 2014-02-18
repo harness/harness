@@ -41,7 +41,7 @@ func (h UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // AdminHandler wraps the default http.HandlerFunc to include
 // the currently authenticated User in the method signature,
 // in addition to handling an error as the return value. It also
-// verifies the user has Administrative priveleges.
+// verifies the user has Administrative privileges.
 type AdminHandler func(w http.ResponseWriter, r *http.Request, user *User) error
 
 func (h AdminHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +51,7 @@ func (h AdminHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// User MUST have administrative priveleges in order
+	// User MUST have administrative privileges in order
 	// to execute the handler.
 	if user.Admin == false {
 		RenderNotFound(w)
