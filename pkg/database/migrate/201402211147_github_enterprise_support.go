@@ -14,6 +14,9 @@ func (r *Rev3) Up(op Operation) error {
 		return err
 	}
 	_, err = op.AddColumn("settings", "github_apiurl VARCHAR(255)")
+
+	op.Exec("update settings set github_domain=?", "github.com")
+	op.Exec("update settings set github_apiurl=?", "https://api.github.com")
 	return err
 }
 
