@@ -64,6 +64,12 @@ type Operation interface {
 	DropColumns(tableName string, columnsToDrop []string) (sql.Result, error)
 
 	RenameColumns(tableName string, columnChanges map[string]string) (sql.Result, error)
+
+	Exec(query string, args ...interface{}) (sql.Result, error)
+
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+
+	QueryRow(query string, args ...interface{}) *sql.Row
 }
 
 type Revision interface {

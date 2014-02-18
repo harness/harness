@@ -15,6 +15,18 @@ func SQLite(tx *sql.Tx) Operation {
 	return &SQLiteDriver{Tx: tx}
 }
 
+func (s *SQLiteDriver) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return s.Tx.Exec(query, args)
+}
+
+func (s *SQLiteDriver) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	return s.Tx.Query(query, args)
+}
+
+func (s *SQLiteDriver) QueryRow(query string, args ...interface{}) *sql.Row {
+	return s.Tx.QueryRow(query, args)
+}
+
 func (s *SQLiteDriver) CreateTable(tableName string, args []string) (sql.Result, error) {
 	return s.Tx.Exec(fmt.Sprintf("CREATE TABLE %s (%s);", tableName, strings.Join(args, ", ")))
 }
