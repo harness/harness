@@ -25,6 +25,7 @@
 						<a class="btn btn-default pull-right" href="/auth/login/github" style="font-size: 18px;background:#f4f4f4;">Re-Link Account</a>
 					</div>
 					<form class="form-repo" method="POST" action="/new/github.com">
+						<input type="hidden" name="domain" autocomplete="off" value="{{.Settings.GitHubDomain}}">
 						<div class="field-group">
 							<div>
 								<label>GitHub Owner</label>
@@ -85,7 +86,8 @@
 				if (this.status == 200) {
 					var name = $("input[name=name]").val()
 					var owner = $("input[name=owner]").val()
-					window.location.pathname = "/github.com/"+owner+"/"+name
+					var domain = $("input[name=domain]").val()
+					window.location.pathname = "/" + domain + "/"+owner+"/"+name
 				} else {
 					$("#failureAlert").text("Unable to setup the Repository");
 					$("#failureAlert").show().removeClass("hide");

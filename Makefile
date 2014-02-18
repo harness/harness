@@ -69,6 +69,7 @@ clean:
 	rm -rf usr/local/bin/drone
 	rm -rf usr/local/bin/droned
 	rm -rf drone.sqlite
+	rm -rf /tmp/drone.sqlite
 
 # creates a debian package for drone
 # to install `sudo dpkg -i drone.deb`
