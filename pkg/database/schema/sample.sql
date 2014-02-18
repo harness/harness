@@ -49,7 +49,7 @@ insert into builds values (9, 3, 'node_0.80', 'Success', '2013-09-16 00:00:00','
 
 -- insert default, dummy settings
 
-insert into settings values (1,'','','','','','','','','','localhost:8080','http', 0);
+insert into settings values (1,'','','github.com','https://api.github.com','','','','','','','','localhost:8080','http',0);
 
 -- add public & private keys to all repositories
 
