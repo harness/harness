@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+REV=$(date -u +%Y%m%d%H%M%S)
+filename=$1
+
+TAB="$(printf '\t')"
+
+titleize() {
+    echo "$1" | sed -r -e "s/-|_/ /g" -e 's/\b(.)/\U\1/g' -e 's/ //g'
+}
+
+cat > ${REV}_$filename.go << EOF
+package migrate
+
+type rev${REV} struct{}
+
+var $(titleize $filename) = &rev${REV}{}
+
+func (r *rev$REV) Revision() int64 {
+${TAB}return $REV
+}
+
+func (r *rev$REV) Up(op Operation) error {
+${TAB}// Migration steps here
+}
+
+func (r *rev$REV) Down(op Operation) error {
+${TAB}// Revert migration steps here
+}
+EOF
