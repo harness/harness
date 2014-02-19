@@ -3,6 +3,7 @@ package migrate
 import (
 	"database/sql"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/russross/meddler"
@@ -117,7 +118,117 @@ func (r *revision4) Revision() int64 {
 	return 4
 }
 
-// ----------
+// ---------- end of revision 4
+
+// ---------- revision 5
+
+type revision5 struct{}
+
+func (r *revision5) Up(op Operation) error {
+	_, err := op.Exec(`CREATE INDEX samples_url_name_ix ON samples (url, name)`)
+	return err
+}
+
+func (r *revision5) Down(op Operation) error {
+	_, err := op.Exec(`DROP INDEX samples_url_name_ix`)
+	return err
+}
+
+func (r *revision5) Revision() int64 {
+	return 5
+}
+
+// ---------- end of revision 5
+
+// ---------- revision 6
+type revision6 struct{}
+
+func (r *revision6) Up(op Operation) error {
+	_, err := op.RenameColumns("samples", map[string]string{
+		"url": "host",
+	})
+	return err
+}
+
+func (r *revision6) Down(op Operation) error {
+	_, err := op.RenameColumns("samples", map[string]string{
+		"host": "url",
+	})
+	return err
+}
+
+func (r *revision6) Revision() int64 {
+	return 6
+}
+
+// ---------- end of revision 6
+
+// ---------- revision 7
+type revision7 struct{}
+
+func (r *revision7) Up(op Operation) error {
+	_, err := op.DropColumns("samples", []string{"host", "num"})
+	return err
+}
+
+func (r *revision7) Down(op Operation) error {
+	if _, err := op.AddColumn("samples", "host VARCHAR(255)"); err != nil {
+		return err
+	}
+	_, err := op.AddColumn("samples", "num INSTEGER")
+	return err
+}
+
+func (r *revision7) Revision() int64 {
+	return 7
+}
+
+// ---------- end of revision 7
+
+// ---------- revision 8
+type revision8 struct{}
+
+func (r *revision8) Up(op Operation) error {
+	if _, err := op.AddColumn("samples", "repo_id INTEGER"); err != nil {
+		return err
+	}
+	_, err := op.AddColumn("samples", "repo VARCHAR(255)")
+	return err
+}
+
+func (r *revision8) Down(op Operation) error {
+	_, err := op.DropColumns("samples", []string{"repo", "repo_id"})
+	return err
+}
+
+func (r *revision8) Revision() int64 {
+	return 8
+}
+
+// ---------- end of revision 8
+
+// ---------- revision 9
+type revision9 struct{}
+
+func (r *revision9) Up(op Operation) error {
+	_, err := op.RenameColumns("samples", map[string]string{
+		"repo": "repository",
+	})
+	return err
+}
+
+func (r *revision9) Down(op Operation) error {
+	_, err := op.RenameColumns("samples", map[string]string{
+		"repository": "repo",
+	})
+	return err
+}
+
+func (r *revision9) Revision() int64 {
+	return 9
+}
+
+// ---------- end of revision 9
 
 var db *sql.DB
 
@@ -302,6 +413,90 @@ func TestMigrateExistingTable(t *testing.T) {
 
 	if rows[1].Email != "foo@bar.com" {
 		t.Errorf("Expect email = %s, got %s", "foo@bar.com", rows[1].Email)
+	}
+}
+
+type sqliteMaster struct {
+	Sql interface{} `meddler:"sql"`
+}
+
+func TestIndexOperations(t *testing.T) {
+	defer tearDown()
+	if err := setUp(); err != nil {
+		t.Fatalf("Error preparing database: %q", err)
+	}
+
+	Driver = SQLite
+
+	mgr := New(db)
+
+	// Migrate, create index
+	if err := mgr.Add(&revision1{}, &revision3{}, &revision5{}).Migrate(); err != nil {
+		t.Errorf("Can not migrate: %q", err)
+	}
+
+	var esquel []*sqliteMaster
+	// Query sqlite_master, check if index is exists.
+	query := `SELECT sql FROM sqlite_master WHERE type='index' and tbl_name='samples'`
+	if err := meddler.QueryAll(db, &esquel, query); err != nil {
+		t.Errorf("Can not find index: %q", err)
+	}
+
+	indexStatement := `CREATE INDEX samples_url_name_ix ON samples (url, name)`
+	if string(esquel[1].Sql.([]byte)) != indexStatement {
+		t.Errorf("Can not find index")
+	}
+
+	// Migrate, rename indexed columns
+	if err := mgr.Add(&revision6{}).Migrate(); err != nil {
+		t.Errorf("Can not migrate: %q", err)
+	}
+
+	var esquel1 []*sqliteMaster
+	if err := meddler.QueryAll(db, &esquel1, query); err != nil {
+		t.Errorf("Can not find index: %q", err)
+	}
+
+	indexStatement = `CREATE INDEX samples_host_name_ix ON samples (host, name)`
+	if string(esquel1[1].Sql.([]byte)) != indexStatement {
+		t.Errorf("Can not find index, got: %s", esquel[0])
+	}
+
+	if err := mgr.Add(&revision7{}).Migrate(); err != nil {
+		t.Errorf("Can not migrate: %q", err)
+	}
+
+	var esquel2 []*sqliteMaster
+	if err := meddler.QueryAll(db, &esquel2, query); err != nil {
+		t.Errorf("Can not find index: %q", err)
+	}
+
+	if len(esquel2) != 1 {
+		t.Errorf("Expect row length equal to %d, got %d", 1, len(esquel2))
+	}
+}
+
+func TestColumnRedundancy(t *testing.T) {
+	defer tearDown()
+	if err := setUp(); err != nil {
+		t.Fatalf("Error preparing database: %q", err)
+	}
+
+	Driver = SQLite
+
+	migr := New(db)
+	if err := migr.Add(&revision1{}, &revision8{}, &revision9{}).Migrate(); err != nil {
+		t.Errorf("Can not migrate: %q", err)
+	}
+
+	var tableSql string
+	query := `SELECT sql FROM sqlite_master where type='table' and name='samples'`
+	if err := db.QueryRow(query).Scan(&tableSql); err != nil {
+		t.Errorf("Can not query sqlite_master: %q", err)
+	}
+
+	if !strings.Contains(tableSql, "repository ") {
+		t.Errorf("Expect column with name repository")
 	}
 }
 
