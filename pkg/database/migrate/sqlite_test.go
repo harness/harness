@@ -3,6 +3,7 @@ package migrate
 import (
 	"database/sql"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/russross/meddler"
@@ -183,6 +184,51 @@ func (r *revision7) Revision() int64 {
 }
 
 // ---------- end of revision 7
+
+// ---------- revision 8
+type revision8 struct{}
+
+func (r *revision8) Up(op Operation) error {
+	if _, err := op.AddColumn("samples", "repo_id INTEGER"); err != nil {
+		return err
+	}
+	_, err := op.AddColumn("samples", "repo VARCHAR(255)")
+	return err
+}
+
+func (r *revision8) Down(op Operation) error {
+	_, err := op.DropColumns("samples", []string{"repo", "repo_id"})
+	return err
+}
+
+func (r *revision8) Revision() int64 {
+	return 8
+}
+
+// ---------- end of revision 8
+
+// ---------- revision 9
+type revision9 struct{}
+
+func (r *revision9) Up(op Operation) error {
+	_, err := op.RenameColumns("samples", map[string]string{
+		"repo": "repository",
+	})
+	return err
+}
+
+func (r *revision9) Down(op Operation) error {
+	_, err := op.RenameColumns("samples", map[string]string{
+		"repository": "repo",
+	})
+	return err
+}
+
+func (r *revision9) Revision() int64 {
+	return 9
+}
+
+// ---------- end of revision 9
 
 var db *sql.DB
 
@@ -427,6 +473,30 @@ func TestIndexOperations(t *testing.T) {
 
 	if len(esquel2) != 1 {
 		t.Errorf("Expect row length equal to %d, got %d", 1, len(esquel2))
+	}
+}
+
+func TestColumnRedundancy(t *testing.T) {
+	defer tearDown()
+	if err := setUp(); err != nil {
+		t.Fatalf("Error preparing database: %q", err)
+	}
+
+	Driver = SQLite
+
+	migr := New(db)
+	if err := migr.Add(&revision1{}, &revision8{}, &revision9{}).Migrate(); err != nil {
+		t.Errorf("Can not migrate: %q", err)
+	}
+
+	var tableSql string
+	query := `SELECT sql FROM sqlite_master where type='table' and name='samples'`
+	if err := db.QueryRow(query).Scan(&tableSql); err != nil {
+		t.Errorf("Can not query sqlite_master: %q", err)
+	}
+
+	if !strings.Contains(tableSql, "repository ") {
+		t.Errorf("Expect column with name repository")
 	}
 }
 
