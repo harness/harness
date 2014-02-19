@@ -62,6 +62,8 @@ type Build struct {
 	// linked to the build environment.
 	Services []string
 
+	PostBuild []string `yaml:"post-build,omitempty"`
+
 	Deploy        *deploy.Deploy       `yaml:"deploy,omitempty"`
 	Publish       *publish.Publish     `yaml:"publish,omitempty"`
 	Notifications *notify.Notification `yaml:"notify,omitempty"`

@@ -350,6 +350,17 @@ func (b *Builder) run() error {
 		return err
 	}
 
+	// execute any post-build steps outside of the container
+	for _, command := range b.Build.PostBuild {
+		cmd := exec.Command("/bin/bash", "-c", command)
+		cmd.Env = append(os.Environ(), "CONTAINER_ID="+run.ID)
+		if err = cmd.Run(); err != nil {
+			b.BuildState.ExitCode = 1
+			b.BuildState.Finished = time.Now().UTC().Unix()
+			return err
+		}
+	}
+
 	// set completion time
 	b.BuildState.Finished = time.Now().UTC().Unix()
 
