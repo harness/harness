@@ -87,13 +87,25 @@ func (s *SQLiteDriver) DropColumns(tableName string, columnsToDrop []string) (sq
 		return nil, err
 	}
 
-	var indices []string
+	var oldIdxColumns [][]string
 	for _, idx := range oldSQLIndices {
+		idxCols, err := fetchColumns(idx)
+		if err != nil {
+			return nil, err
+		}
+		oldIdxColumns = append(oldIdxColumns, idxCols)
+	}
+
+	var indices []string
+	for k, idx := range oldSQLIndices {
 		listed := false
-		for _, cols := range columnsToDrop {
-			if strings.Contains(idx, cols) {
-				listed = true
-				break
+	OIdxLoop:
+		for _, oidx := range oldIdxColumns[k] {
+			for _, cols := range columnsToDrop {
+				if oidx == cols {
+					listed = true
+					break OIdxLoop
+				}
 			}
 		}
 		if !listed {
@@ -173,15 +185,27 @@ func (s *SQLiteDriver) RenameColumns(tableName string, columnChanges map[string]
 		return nil, err
 	}
 
-	var indices []string
+	var idxColumns [][]string
 	for _, idx := range oldSQLIndices {
+		idxCols, err := fetchColumns(idx)
+		if err != nil {
+			return nil, err
+		}
+		idxColumns = append(idxColumns, idxCols)
+	}
+
+	var indices []string
+	for k, idx := range oldSQLIndices {
 		added := false
-		for Old, New := range columnChanges {
-			if strings.Contains(idx, Old) {
-				indx := strings.Replace(idx, Old, New, 2)
-				indices = append(indices, indx)
-				added = true
-				break
+	IdcLoop:
+		for _, oldIdx := range idxColumns[k] {
+			for Old, New := range columnChanges {
+				if oldIdx == Old {
+					indx := strings.Replace(idx, Old, New, 2)
+					indices = append(indices, indx)
+					added = true
+					break IdcLoop
+				}
 			}
 		}
 		if !added {
