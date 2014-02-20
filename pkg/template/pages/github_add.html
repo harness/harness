@@ -14,16 +14,18 @@
 		<div class="row">
 			<div class="col-xs-3">
 				<ul class="nav nav-pills nav-stacked">
-					<li class="active"><a href="/github.com/drone/drone/settings">GitHub</a></li>
-					<li><a href="/github.com/drone/drone/secure">Bitbucket <small>(coming soon)</small></a></li>
-				</div><!-- ./col-xs-3 -->
+					<li class="active"><a href="/new/github.com">GitHub</a></li>
+					<li><a href="/new/bitbucket.org">Bitbucket <small>(coming soon)</small></a></li>
+				</ul>
+			</div><!-- ./col-xs-3 -->
 
-				<div class="col-xs-9" role="main">
+			<div class="col-xs-9" role="main">
 					<div class="alert">
 						Enter your repository details
 						<a class="btn btn-default pull-right" href="/auth/login/github" style="font-size: 18px;background:#f4f4f4;">Re-Link Account</a>
 					</div>
 					<form class="form-repo" method="POST" action="/new/github.com">
+						<input type="hidden" name="domain" autocomplete="off" value="{{.Settings.GitHubDomain}}">
 						<div class="field-group">
 							<div>
 								<label>GitHub Owner</label>
@@ -84,7 +86,8 @@
 				if (this.status == 200) {
 					var name = $("input[name=name]").val()
 					var owner = $("input[name=owner]").val()
-					window.location.pathname = "/github.com/"+owner+"/"+name
+					var domain = $("input[name=domain]").val()
+					window.location.pathname = "/" + domain + "/"+owner+"/"+name
 				} else {
 					$("#failureAlert").text("Unable to setup the Repository");
 					$("#failureAlert").show().removeClass("hide");

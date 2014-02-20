@@ -47,7 +47,13 @@ func Index(w http.ResponseWriter, r *http.Request) error {
 
 // Return an HTML form for the User to login.
 func Login(w http.ResponseWriter, r *http.Request) error {
-	return RenderTemplate(w, "login.html", nil)
+	var settings, _ = database.GetSettings()
+
+	data := struct {
+		Settings *Settings
+	}{settings}
+
+	return RenderTemplate(w, "login.html", &data)
 }
 
 // Terminate the User session.
@@ -68,6 +74,18 @@ func Forgot(w http.ResponseWriter, r *http.Request) error {
 // contains a hash to verify the User's identity.
 func Reset(w http.ResponseWriter, r *http.Request) error {
 	return RenderTemplate(w, "reset.html", &struct{ Error string }{""})
+}
+
+// Return an HTML form for the User to signup.
+func SignUp(w http.ResponseWriter, r *http.Request) error {
+	var settings, _ = database.GetSettings()
+
+	if settings == nil || !settings.OpenInvitations {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return nil
+	}
+
+	return RenderTemplate(w, "signup.html", nil)
 }
 
 // Return an HTML form to register for a new account. This
@@ -138,13 +156,38 @@ func ResetPost(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// add the user to the session object
-	//session, _ := store.Get(r, "_sess")
-	//session.Values["username"] = user.Email
-	//session.Save(r, w)
 	SetCookie(w, r, "_sess", user.Email)
 
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 	return nil
+}
+
+func SignUpPost(w http.ResponseWriter, r *http.Request) error {
+	// if self-registration is disabled we should display an
+	// error message to the user.
+	if !database.SettingsMust().OpenInvitations {
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return nil
+	}
+
+	// generate the password reset token
+	email := r.FormValue("email")
+	token := authcookie.New(email, time.Now().Add(12*time.Hour), secret)
+
+	// get the hostname from the database for use in the email
+	hostname := database.SettingsMust().URL().String()
+
+	// data used to generate the email template
+	data := struct {
+		Host  string
+		Email string
+		Token string
+	}{hostname, email, token}
+
+	// send the email message async
+	go mail.SendActivation(email, data)
+
+	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
 }
 
 func RegisterPost(w http.ResponseWriter, r *http.Request) error {
@@ -156,9 +199,7 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// set the email and name
-	user := User{}
-	user.SetEmail(email)
-	user.Name = r.FormValue("name")
+	user := NewUser(r.FormValue("name"), email)
 
 	// set the new password
 	password := r.FormValue("password")
@@ -172,7 +213,7 @@ func RegisterPost(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// save to the database
-	if err := database.SaveUser(&user); err != nil {
+	if err := database.SaveUser(user); err != nil {
 		return err
 	}
 

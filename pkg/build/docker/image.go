@@ -59,7 +59,7 @@ func (c *ImageService) List() ([]*Images, error) {
 
 // Create an image, either by pull it from the registry or by importing it.
 func (c *ImageService) Create(image string) error {
-	return c.do("POST", fmt.Sprintf("/images/create?fromImage=%s"), nil, nil)
+	return c.do("POST", fmt.Sprintf("/images/create?fromImage=%s", image), nil, nil)
 }
 
 func (c *ImageService) Pull(image string) error {
@@ -110,7 +110,7 @@ func (c *ImageService) Build(tag, dir string) error {
 	v := url.Values{}
 	v.Set("t", tag)
 	v.Set("q", "1")
-	//v.Set("rm", "1")
+	v.Set("rm", "1")
 
 	// url path
 	path := fmt.Sprintf("/build?%s", v.Encode())
@@ -120,5 +120,5 @@ func (c *ImageService) Build(tag, dir string) error {
 	headers.Set("Content-Type", "application/tar")
 
 	// make the request
-	return c.stream("POST", path, body, nil, headers)
+	return c.stream("POST", path, body, os.Stdout, headers)
 }

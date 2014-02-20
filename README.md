@@ -1,4 +1,7 @@
-Drone is a Continuous Integration platform built on Docker
+Drone is a [Continuous Integration](http://en.wikipedia.org/wiki/Continuous_integration) platform built on [Docker](https://www.docker.io/)
+
+[![Build Status](http://beta.drone.io/github.com/drone/drone/status.png?branch=master)](http://beta.drone.io/github.com/drone/drone)
+[![GoDoc](https://godoc.org/github.com/drone/drone?status.png)](https://godoc.org/github.com/drone/drone)
 
 ### System
 
@@ -16,12 +19,24 @@ using the following commands:
 
 ```sh
 $ wget http://downloads.drone.io/latest/drone.deb
-$ dpkg -i drone.deb
+$ sudo dpkg -i drone.deb
 $ sudo start drone
 ```
 
 Once Drone is running (by default on :80) navigate to **http://localhost:80/install**
 and follow the steps in the setup wizard.
+
+**IMPORTANT** You will also need a GitHub Client ID and Secret:
+
+* Register a new application https://github.com/settings/applications
+* Set the homepage URL to http://$YOUR_IP_ADDRESS/
+* Set the callback URL to http://$YOUR_IP_ADDRESS/auth/login/github
+* Copy the Client ID and Secret into the Drone admin console http://localhost:80/account/admin/settings
+
+I'm working on a getting started video. Having issues with volume, but hopefully
+you can still get a feel for the steps:
+
+https://docs.google.com/file/d/0By8deR1ROz8memUxV0lTSGZPQUk
 
 ### Builds
 
@@ -35,7 +50,7 @@ env:
 script:
   - go build
   - go test -v
-service:
+services:
   - redis
 notify:
   email:
@@ -60,7 +75,7 @@ image: go1.2   # same as bradrydzewski/go:1.2
 Here is a list of our official images:
 
 ```sh
-# these are the base images for all Drone containers.
+# these two are base images. all Drone images are built on top of these
 # these are BIG (~3GB) so make sure you have a FAST internet connection
 docker pull bradrydzewski/ubuntu
 docker pull bradrydzewski/base
@@ -135,19 +150,32 @@ if you are using a custom Docker image.
 Drone can launch database containers for your build: 
 
 ```
-service:
+services:
   - cassandra
   - couchdb
+  - couchdb:1.0
+  - couchdb:1.4
+  - couchdb:1.5
   - elasticsearch
+  - elasticsearch:0.20
+  - elasticsearch:0.90
   - neo4j
+  - neo4j:1.9
   - mongodb
+  - mongodb:2.2
+  - mongodb:2.4
   - mysql
+  - mysql:5.5
   - postgres
+  - postgres:9.1
   - rabbitmq
+  - rabbitmq:3.2
   - redis
   - riak
   - zookeeper
 ```
+
+If you omit the version, Drone will launch the latest version of the database. (For example, if you set `mongodb`, Drone will launch MongoDB 2.4.)
 
 **NOTE:** database and service containers are exposed over TCP connections and
 have their own local IP address. If the **socat** utility is installed inside your
@@ -177,8 +205,8 @@ publish:
 
 ### Notifications
 
-Drone can trigger email, hipchat and web hook notification at the completion
-of your build:
+Drone can trigger email, hipchat and web hook notification at the beginning and
+completion of your build:
 
 ```
 notify:
@@ -192,11 +220,39 @@ notify:
 
   hipchat:
     room: support
-	token: 3028700e5466d375
+    token: 3028700e5466d375
+    on_started: true
+    on_success: true
+    on_failure: true
 ```
+
+### Git Command Options
+
+You can specify the `--depth` option of the `git clone` command (default value is `50`):
+
+```
+git:
+  depth: 1
+```
+
+### Params Injection
+
+You can inject params into .drone.yml.
+
+```
+notify:
+  hipchat:
+    room: {{hipchatRoom}}
+    token: {{hipchatToken}}
+    on_started: true
+    on_success: true
+    on_failure: true
+```
+
+![params-injection](https://f.cloud.github.com/assets/1583973/2161187/2905077e-94c3-11e3-8499-a3844682c8af.png)
 
 ### Docs
 
-Coming Soon to [drone.readthedocs.org](http://drone.readthedocs.org/)
-
+* [drone.readthedocs.org](http://drone.readthedocs.org/) (Coming Soon)
+* [GoDoc](http://godoc.org/github.com/drone/drone)
 

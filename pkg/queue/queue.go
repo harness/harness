@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"fmt"
 	bldr "github.com/drone/drone/pkg/build"
+	"github.com/drone/drone/pkg/build/git"
 	r "github.com/drone/drone/pkg/build/repo"
 	"github.com/drone/drone/pkg/build/script"
-	"github.com/drone/drone/pkg/build/script/notification"
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
-	"github.com/drone/drone/pkg/mail"
 	. "github.com/drone/drone/pkg/model"
+	"github.com/drone/drone/pkg/plugin/notify"
 	"github.com/drone/go-github/github"
+	"log"
 	"path/filepath"
 	"time"
 )
@@ -93,7 +94,7 @@ func (b *BuildTask) execute() error {
 	settings, _ := database.GetSettings()
 
 	// notification context
-	context := &notification.Context{
+	context := &notify.Context{
 		Repo:   b.Repo,
 		Commit: b.Commit,
 		Host:   settings.URL().String(),
@@ -102,6 +103,11 @@ func (b *BuildTask) execute() error {
 	// send all "started" notifications
 	if b.Script.Notifications != nil {
 		b.Script.Notifications.Send(context)
+	}
+
+	// Send "started" notification to Github
+	if err := updateGitHubStatus(b.Repo, b.Commit); err != nil {
+		log.Printf("error updating github status: %s\n", err.Error())
 	}
 
 	// make sure a channel exists for the repository,
@@ -130,10 +136,19 @@ func (b *BuildTask) execute() error {
 	// execute the build
 	builder := bldr.Builder{}
 	builder.Build = b.Script
-	builder.Repo = &r.Repo{Path: b.Repo.URL, Branch: b.Commit.Branch, Commit: b.Commit.Hash, PR: b.Commit.PullRequest, Dir: filepath.Join("/var/cache/drone/src", b.Repo.Slug)}
+	builder.Repo = &r.Repo{Path: b.Repo.URL, Branch: b.Commit.Branch, Commit: b.Commit.Hash, PR: b.Commit.PullRequest, Dir: filepath.Join("/var/cache/drone/src", b.Repo.Slug), Depth: git.GitDepth(b.Script.Git)}
 	builder.Key = []byte(b.Repo.PrivateKey)
 	builder.Stdout = buf
 	builder.Timeout = 300 * time.Minute
+
+	defer func() {
+		// update the status of the commit using the
+		// GitHub status API.
+		if err := updateGitHubStatus(b.Repo, b.Commit); err != nil {
+			log.Printf("error updating github status: %s\n", err.Error())
+		}
+	}()
+
 	buildErr := builder.Run()
 
 	b.Build.Finished = time.Now().UTC()
@@ -169,22 +184,9 @@ func (b *BuildTask) execute() error {
 	channel.SendJSON(commitslug, b.Build)
 	channel.Close(consoleslug)
 
-	// add the smtp address to the notificaitons
-	//if b.Script.Notifications != nil && b.Script.Notifications.Email != nil {
-	//	b.Script.Notifications.Email.SetServer(settings.SmtpServer, settings.SmtpPort,
-	//		settings.SmtpUsername, settings.SmtpPassword, settings.SmtpAddress)
-	//}
-
 	// send all "finished" notifications
 	if b.Script.Notifications != nil {
-		b.sendEmail(context) // send email from queue, not from inside /build/script package
 		b.Script.Notifications.Send(context)
-	}
-
-	// update the status of the commit using the
-	// GitHub status API.
-	if err := updateGitHubStatus(b.Repo, b.Commit); err != nil {
-		return err
 	}
 
 	return nil
@@ -197,14 +199,14 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 
 	// convert from drone status to github status
 	var message, status string
-	switch status {
+	switch commit.Status {
 	case "Success":
 		status = "success"
 		message = "The build succeeded on drone.io"
 	case "Failure":
 		status = "failure"
 		message = "The build failed on drone.io"
-	case "Pending":
+	case "Started":
 		status = "pending"
 		message = "The build is pending on drone.io"
 	default:
@@ -218,56 +220,17 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 	// get the user from the database
 	// since we need his / her GitHub token
 	user, err := database.GetUser(repo.UserID)
-	if err == nil {
+	if err != nil {
 		return err
 	}
 
 	client := github.New(user.GithubToken)
-	return client.Repos.CreateStatus(repo.Owner, repo.Name, status, settings.URL().String(), message, commit.Hash)
-}
+	client.ApiUrl = settings.GitHubApiUrl;
 
-func (t *BuildTask) sendEmail(c *notification.Context) error {
-	// make sure a notifications object exists
-	if t.Script.Notifications == nil && t.Script.Notifications.Email != nil {
-		return nil
-	}
+	var url string
+	url = settings.URL().String() + "/" + repo.Slug + "/commit/" + commit.Hash
 
-	switch {
-	case t.Commit.Status == "Success" && t.Script.Notifications.Email.Success != "never":
-		return t.sendSuccessEmail(c)
-	case t.Commit.Status == "Failure" && t.Script.Notifications.Email.Failure != "never":
-		return t.sendFailureEmail(c)
-	default:
-		println("sending nothing")
-	}
-
-	return nil
-}
-
-// sendFailure sends email notifications to the list of
-// recipients indicating the build failed.
-func (t *BuildTask) sendFailureEmail(c *notification.Context) error {
-
-	// loop through and email recipients
-	for _, email := range t.Script.Notifications.Email.Recipients {
-		if err := mail.SendFailure(t.Repo.Name, email, c); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// sendSuccess sends email notifications to the list of
-// recipients indicating the build was a success.
-func (t *BuildTask) sendSuccessEmail(c *notification.Context) error {
-
-	// loop through and email recipients
-	for _, email := range t.Script.Notifications.Email.Recipients {
-		if err := mail.SendSuccess(t.Repo.Name, email, c); err != nil {
-			return err
-		}
-	}
-	return nil
+	return client.Repos.CreateStatus(repo.Owner, repo.Name, status, url, message, commit.Hash)
 }
 
 type bufferWrapper struct {

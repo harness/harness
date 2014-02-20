@@ -45,6 +45,7 @@ func init() {
 		"forgot.html",
 		"forgot_sent.html",
 		"reset.html",
+		"signup.html",
 		"register.html",
 		"install.html",
 
@@ -103,7 +104,7 @@ func init() {
 		// HACK: choose which base template to use FOR THE RECORD I
 		// don't really like this, but it works for now.
 		var baseTemplate = base
-		if i < 7 {
+		if i < 8 {
 			baseTemplate = form
 		}
 

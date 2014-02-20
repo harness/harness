@@ -69,9 +69,9 @@
 								if (this.status == 200) {
 										var msg = "An invitation has been sent (via email) to join the Team.";
 										if (this.responseText != "OK") {
-												msg = "Email is not currently enabled.  In order to invite this team member user, you'll need to provide them the following link: " + this.responseText;
+												msg = "Email is not currently enabled.  In order to invite this team member user, you'll need to provide them the following link:<br><span class='url'>" + this.responseText + "</span>";
 										}
-										$("#successAlert").text(msg);
+										$("#successAlert").html(msg);
 										$("#successAlert").show().removeClass("hide");
 										$('#submitButton').button('reset')
 								} else {

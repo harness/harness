@@ -40,6 +40,7 @@
 					<div>
 						<input class="form-control" type="password" name="password" value="" />
 					</div>
+					<div class="alert alert-error hide" id="failureAlert"></div>
 					<div class="form-actions">
 						<input class="btn btn-danger" id="submitButton" type="submit" value="Delete Repository" />
 						<a class="btn btn-default" href="/{{.Repo.Slug}}/settings">Cancel</a>
@@ -51,4 +52,27 @@
 {{ end }}
 
 {{ define "script" }}
+	<script>
+		document.forms[0].onsubmit = function(event) {
+
+						$("#failureAlert").hide();
+						$('#submitButton').button('loading');
+
+						var form = event.target
+						var formData = new FormData(form);
+						xhr = new XMLHttpRequest();
+						xhr.open('POST', form.action);
+						xhr.onload = function() {
+								if (this.status == 400) {
+										$("#failureAlert").text("The password you entered was incorrect.");
+										$("#failureAlert").show().removeClass("hide");
+										$('#submitButton').button('reset')
+								} else {
+										window.location.href = "/dashboard";
+								}
+						};
+						xhr.send(formData);
+						return false;
+				}
+	</script>
 {{ end }}

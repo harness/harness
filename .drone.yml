@@ -1,10 +1,10 @@
-image: mischief/docker-golang
+image: go1.2
 env:
   - GOROOT=/usr/local/go
   - GOPATH=/var/cache/drone
   - PATH=$GOPATH/bin:$GOPATH/bin:$PATH
 script:
-  - apt-get -y install libsqlite3-dev sqlite3 mercurial bzr 1> /dev/null 2> /dev/null
+  - sudo apt-get -y install libsqlite3-dev sqlite3 mercurial bzr 1> /dev/null 2> /dev/null
   - make deps
   - make
   - make test
@@ -21,5 +21,5 @@ publish:
     bucket: downloads.drone.io
     access_key: $AWS_KEY
     secret_key: $AWS_SECRET
-    source: /tmp/drone.deb
+    source: deb/drone.deb
     target: latest/

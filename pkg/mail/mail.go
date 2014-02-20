@@ -122,7 +122,11 @@ func Send(msg *Message) error {
 
 	// format the raw email message body
 	body := fmt.Sprintf(emailTemplate, msg.Sender, msg.To, msg.Subject, msg.Body)
-	auth := smtp.PlainAuth("", s.SmtpUsername, s.SmtpPassword, s.SmtpServer)
+
+	var auth smtp.Auth
+	if len(s.SmtpUsername) > 0 {
+		auth = smtp.PlainAuth("", s.SmtpUsername, s.SmtpPassword, s.SmtpServer)
+	}
 	addr := fmt.Sprintf("%s:%s", s.SmtpServer, s.SmtpPort)
 
 	err = smtp.SendMail(addr, auth, msg.Sender, []string{msg.To}, []byte(body))

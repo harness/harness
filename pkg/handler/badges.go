@@ -11,7 +11,7 @@ import (
 // repository and an optional branch.
 // TODO this needs to implement basic caching
 func Badge(w http.ResponseWriter, r *http.Request) error {
-	branchParam := r.FormValue(":branch")
+	branchParam := r.FormValue("branch")
 	hostParam := r.FormValue(":host")
 	ownerParam := r.FormValue(":owner")
 	nameParam := r.FormValue(":name")

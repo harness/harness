@@ -116,7 +116,7 @@ var services = map[string]*image{
 	// couchdb
 	"couchdb": {
 		Ports: []string{"5984"},
-		Tag:   "bradrydzewski/couchdb:1.0",
+		Tag:   "bradrydzewski/couchdb:1.5",
 		Name:  "couchdb",
 	},
 	"couchdb:1.0": {
