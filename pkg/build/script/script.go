@@ -11,6 +11,7 @@ import (
 	"github.com/drone/drone/pkg/build/buildfile"
 	"github.com/drone/drone/pkg/build/git"
 	"github.com/drone/drone/pkg/plugin/deploy"
+	"github.com/drone/drone/pkg/plugin/docker_cmd"
 	"github.com/drone/drone/pkg/plugin/notify"
 	"github.com/drone/drone/pkg/plugin/publish"
 )
@@ -66,6 +67,7 @@ type Build struct {
 	Publish       *publish.Publish     `yaml:"publish,omitempty"`
 	Notifications *notify.Notification `yaml:"notify,omitempty"`
 	Git           *git.Git             `yaml:"git,omitempty"`
+	Docker        *docker_cmd.Commands `yaml:"docker,omitempty"`
 }
 
 // Write adds all the steps to the build script, including

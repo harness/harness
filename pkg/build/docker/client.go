@@ -67,6 +67,9 @@ var (
 	// Returned if the caller submits a badly formed request. For example,
 	// the caller can receive this return if you forget a required parameter.
 	ErrBadRequest = errors.New("Bad Request")
+
+	// Returned if an unexpected error occurs on the server
+	ErrInternalServerError = errors.New("Internal Server Error")
 )
 
 func (c *Client) setHost(defaultUnixSocket string) {
@@ -216,7 +219,9 @@ func (c *Client) stream(method, path string, in io.Reader, out io.Writer, header
 	// set default headers
 	req.Header = headers
 	req.Header.Set("User-Agent", "Docker-Client/0.6.4")
-	req.Header.Set("Content-Type", "plain/text")
+	if req.Header == nil {
+		req.Header.Set("Content-Type", "plain/text")
+	}
 
 	// dial the host server
 	req.Host = c.addr
@@ -246,6 +251,8 @@ func (c *Client) stream(method, path string, in io.Reader, out io.Writer, header
 		return ErrNotAuthorized
 	case 400:
 		return ErrBadRequest
+	case 500:
+		return ErrInternalServerError
 	}
 
 	// If no output we exit now with no errors

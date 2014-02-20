@@ -350,6 +350,18 @@ func (b *Builder) run() error {
 		return err
 	}
 
+	if wait.StatusCode == 0 {
+		// if docker:cp is defined in config, copy the files out of the stopped container
+		if b.Build.Docker != nil && b.Build.Docker.Copy != nil {
+			log.Noticef("performing docker copy from '%s' on container to '%s' on host", b.Build.Docker.Copy.Source, b.Build.Docker.Copy.Destination)
+			if err := client.Containers.Copy(run.ID, b.Build.Docker.Copy.Source, b.Build.Docker.Copy.Destination); err != nil {
+				b.BuildState.ExitCode = 1
+				b.BuildState.Finished = time.Now().UTC().Unix()
+				return err
+			}
+		}
+	}
+
 	// set completion time
 	b.BuildState.Finished = time.Now().UTC().Unix()
 
