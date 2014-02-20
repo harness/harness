@@ -19,10 +19,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Drone by default runs on port 80. Forward from host to guest
   config.vm.network :forwarded_port, guest: 80, host: 8080
-  config.vm.network :private_network, ip: "192.168.56.101"
+
+  # Sync this repo
+  config.vm.synced_folder ".", "/opt/drone"
 
   # system-level initial setup
-  config.vm.provision "shell" do |s|
-    s.path = "scripts/provision.sh"
-  end
+  config.vm.provision "shell", path: "scripts/provision.sh"
 end

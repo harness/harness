@@ -15,68 +15,69 @@ else
 fi
 
 # apt-get update.
-if [ -e /root/package-list-updated ]; then
-    echo "Skipping package cache update. To force, remove /root/package-list-updated and re-provision."
-else
-    echo "Updating package cache."
-    sudo apt-get update -qq
-	touch /root/package-list-updated
-fi
+#if [ -e /root/package-list-updated ]; then
+#    echo "Skipping package cache update. To force, remove /root/package-list-updated and re-provision."
+#else
+#    echo "Updating package cache."
+#    sudo apt-get update -qq
+#	touch /root/package-list-updated
+#fi
 
-echo "Installing Packages..."
+# FIXME: Don't run this every time?
+sudo apt-get update -qq
+
+echo "Installing Base Packages"
 export DEBIAN_FRONTEND=noninteractive
 ( sed -e 's/#.*$//' | xargs sudo apt-get install -qqy --force-yes ) <<-EOF
+	build-essential
+
+    # These are needed for go get
+    bzr
 	git
+    mercurial
+
+    # Other
+    vim
 
 	# Stuff required by medley
-	python-software-properties	# TODO why do we need this?
-	build-essential				# needed to compile parts of packages
-	curl						# many scripts expect this to fetch urls.
-	python-dev					# for compiling python modules
-	python-imaging				# Useful if you do not want to compile PIL
-	python-pip					# for installing things
-	python-psycopg2				# python postgresql library
-	python-setuptools			# for installing/making packages
-	python-unittest2			# standard unit testing library
-	python-virtualenv			# for partioning python projects
-	pv							# "pipe viewer", for nice progressbars in med
-    exuberant-ctags             # required by 'med tags'
+	#python-software-properties	# TODO why do we need this?
+	#curl						# many scripts expect this to fetch urls.
+	#python-dev					# for compiling python modules
+	#python-setuptools			# for installing/making packages
+	#python-unittest2			# standard unit testing library
+	#python-virtualenv			# for partioning python projects
 
-	# geospatial libraries
-	libgdal1-dev
-	libgdal1-1.7.0
-	libgeos-3.2.2
-	libgeos-c1
-	libgeos-dev
-
-	python-lxml					# TODO why do we need this?
-	libxml2						# TODO why do we need this?
-	libxml2-dev					# TODO why do we need this?
-	libxslt1-dev				# TODO why do we need this?
-
-	postgresql-9.0				# our database.
-	postgresql-contrib-9.0		# django wants this
-	postgresql-server-dev-9.0	# TODO why do we need this?
-
-	# postgresql-9.0-postgis is not available in standard repos, so we install
-	# my custom package later.
-	#postgresql-9.0-postgis 	# utilize geo stuff in postgres
-
-
-	# Development helpers that I'm asserting don't need to be installed by
-	# default for everyone using this thing, they can just install them when
-	# they need them.
-	# ack-grep					# adreyer thinks you should have it
-	# ipython					# adreyer thinks you should have it
-	# bpython					# nksmith thinks you should have it
-	# memcached					# django can work around not having this
-	# proj						# TODO apt says it is transitional. wtf is it for?
-	# pyflakes					# adreyer thinks you should have it
-	# pylint					# adreyer thinks you should have it
-	# python-pycryptopp			# adreyer thinks you should have it
-	# virtualenvwrapper			# convenience tool
-	# rabbitmq-server			# adreyer thinks you should have it
-	# vim						# adreyer thinks you should have it
-
-	openjdk-7-jre-headless		# needed to run solr
+	#python-lxml					# TODO why do we need this?
+	#libxml2						# TODO why do we need this?
+	#libxml2-dev					# TODO why do we need this?
+	#libxslt1-dev				# TODO why do we need this?
 EOF
+
+
+# Install Go
+go_version="1.2"
+go_tarball="go${go_version}.linux-amd64.tar.gz"
+go_root=/usr/local/go
+go_path=/opt/go
+
+echo "Installing Go $go_version"
+if [ ! $(which go) ]; then
+    echo "    Downloading $go_tarball"
+    wget --quiet --directory-prefix=/tmp https://go.googlecode.com/files/$go_tarball
+
+    echo "    Extracting $go_tarball to $go_root"
+    sudo tar -C /usr/local -xzf /tmp/$go_tarball
+
+    echo "    Configuring GOPATH"
+    sudo mkdir -p $go_path/src $go_path/bin $go_path/pkg
+    sudo chown -R vagrant $go_path
+
+    echo "    Configuring env vars"
+    echo "export PATH=\$PATH:$go_root/bin" | sudo tee /etc/profile.d/golang.sh > /dev/null
+    echo "export GOROOT=$go_root" | sudo tee --append /etc/profile.d/golang.sh > /dev/null
+    echo "export GOPATH=$go_path" | sudo tee --append /etc/profile.d/golang.sh > /dev/null
+fi
+
+
+# Cleanup
+sudo apt-get autoremove
