@@ -33,6 +33,9 @@
 						{{ end }}
 						</select>
 						<input class="form-control form-control-xlarge" type="text" name="Domain" value="{{.Settings.Domain}}" />
+						<label class="checkbox">
+							Open invitations <input type="checkbox" name="OpenInvitations" {{ if .Settings.OpenInvitations }} checked {{ end }} />
+						</label>
 					</div>
 					<div class="form-group">
 						<div class="alert">GitHub OAuth Consumer Key and Secret</div>
@@ -40,6 +43,11 @@
 						<div>
 							<input class="form-control form-control-large" type="text" name="GitHubKey" value="{{.Settings.GitHubKey}}" />
 							<input class="form-control form-control-large" type="password" name="GitHubSecret" value="{{.Settings.GitHubSecret}}" />
+						</div>
+						<label>GitHub Settings:</label>
+						<div>
+							<input class="form-control form-control-large" type="text" name="GitHubDomain" value="{{.Settings.GitHubDomain}}" />
+							<input class="form-control form-control-large" type="text" name="GitHubApiUrl" value="{{.Settings.GitHubApiUrl}}" />
 						</div>
 					</div>
 					<div class="form-group hide">

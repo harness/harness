@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -33,8 +32,7 @@ func AdminUserAdd(w http.ResponseWriter, r *http.Request, u *User) error {
 	return RenderTemplate(w, "admin_users_add.html", &struct{ User *User }{u})
 }
 
-// Invite a user to join the system
-func AdminUserInvite(w http.ResponseWriter, r *http.Request, u *User) error {
+func UserInvite(w http.ResponseWriter, r *http.Request) error {
 	// generate the password reset token
 	email := r.FormValue("email")
 	token := authcookie.New(email, time.Now().Add(12*time.Hour), secret)
@@ -57,13 +55,14 @@ func AdminUserInvite(w http.ResponseWriter, r *http.Request, u *User) error {
 	}{hostname, email, token}
 
 	// send the email message async
-	go func() {
-		if err := mail.SendActivation(email, data); err != nil {
-			log.Printf("error sending account activation email to %s. %s", email, err)
-		}
-	}()
+	go mail.SendActivation(email, data)
 
 	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+}
+
+// Invite a user to join the system
+func AdminUserInvite(w http.ResponseWriter, r *http.Request, u *User) error {
+	return UserInvite(w, r)
 }
 
 // Form to edit a user
@@ -140,7 +139,7 @@ func AdminUserDelete(w http.ResponseWriter, r *http.Request, u *User) error {
 	return nil
 }
 
-// Display a list of ALL users in the system
+// Return an HTML form for the User to update the site settings.
 func AdminSettings(w http.ResponseWriter, r *http.Request, u *User) error {
 	// get settings from database
 	settings := database.SettingsMust()
@@ -153,7 +152,6 @@ func AdminSettings(w http.ResponseWriter, r *http.Request, u *User) error {
 	return RenderTemplate(w, "admin_settings.html", &data)
 }
 
-// Display a list of ALL users in the system
 func AdminSettingsUpdate(w http.ResponseWriter, r *http.Request, u *User) error {
 	// get settings from database
 	settings := database.SettingsMust()
@@ -169,6 +167,8 @@ func AdminSettingsUpdate(w http.ResponseWriter, r *http.Request, u *User) error 
 	// update github settings
 	settings.GitHubKey = r.FormValue("GitHubKey")
 	settings.GitHubSecret = r.FormValue("GitHubSecret")
+	settings.GitHubDomain = r.FormValue("GitHubDomain")
+	settings.GitHubApiUrl = r.FormValue("GitHubApiUrl")
 
 	// update smtp settings
 	settings.SmtpServer = r.FormValue("SmtpServer")
@@ -176,6 +176,8 @@ func AdminSettingsUpdate(w http.ResponseWriter, r *http.Request, u *User) error 
 	settings.SmtpAddress = r.FormValue("SmtpAddress")
 	settings.SmtpUsername = r.FormValue("SmtpUsername")
 	settings.SmtpPassword = r.FormValue("SmtpPassword")
+
+	settings.OpenInvitations = (r.FormValue("OpenInvitations") == "on")
 
 	// persist changes
 	if err := database.SaveSettings(settings); err != nil {
@@ -243,6 +245,8 @@ func InstallPost(w http.ResponseWriter, r *http.Request) error {
 	settings := Settings{}
 	settings.Domain = r.FormValue("Domain")
 	settings.Scheme = r.FormValue("Scheme")
+	settings.GitHubApiUrl = "https://api.github.com";
+	settings.GitHubDomain = "github.com";
 	database.SaveSettings(&settings)
 
 	// add the user to the session object

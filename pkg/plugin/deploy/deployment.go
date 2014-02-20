@@ -12,6 +12,7 @@ type Deploy struct {
 	CloudControl *CloudControl `yaml:"cloudcontrol,omitempty"`
 	CloudFoundry *CloudFoundry `yaml:"cloudfoundry,omitempty"`
 	EngineYard   *EngineYard   `yaml:"engineyard,omitempty"`
+	Git          *Git          `yaml:"git,omitempty"`
 	Heroku       *Heroku       `yaml:"heroku,omitempty"`
 	Nodejitsu    *Nodejitsu    `yaml:"nodejitsu,omitempty"`
 	Openshift    *Openshift    `yaml:"openshift,omitempty"`
@@ -29,6 +30,9 @@ func (d *Deploy) Write(f *buildfile.Buildfile) {
 	}
 	if d.EngineYard != nil {
 		d.EngineYard.Write(f)
+	}
+	if d.Git != nil {
+		d.Git.Write(f)
 	}
 	if d.Heroku != nil {
 		d.Heroku.Write(f)

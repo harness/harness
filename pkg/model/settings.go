@@ -17,6 +17,8 @@ type Settings struct {
 	// GitHub Consumer key and secret.
 	GitHubKey    string `meddler:"github_key"`
 	GitHubSecret string `meddler:"github_secret"`
+	GitHubDomain string `meddler:"github_domain"`
+	GitHubApiUrl string `meddler:"github_apiurl"`
 
 	// Bitbucket Consumer Key and secret.
 	BitbucketKey    string `meddler:"bitbucket_key"`
@@ -27,6 +29,8 @@ type Settings struct {
 
 	// Scheme of the server, eg https
 	Scheme string `meddler:"scheme"`
+
+	OpenInvitations bool `meddler:"open_invitations"`
 }
 
 func (s *Settings) URL() *url.URL {

@@ -34,11 +34,11 @@
 					<div class="form-group">
 						<img class="pull-right" src="{{.Host}}/{{.Repo.Slug}}/status.png?branch=master">
 						<label>Badge, Markdown format</label>
-						<textarea class="form-control" rows="3">[![Build Status]({{.Host}}/{{.Repo.Name}}/status.png?branch=master)]({{.Host}}/{{.Repo.Name}}/tree/master)</textarea>
+						<textarea class="form-control" rows="3">[![Build Status]({{.Host}}/{{.Repo.Slug}}/status.png?branch=master)]({{.Host}}/{{.Repo.Slug}})</textarea>
 					</div>
 					<div class="form-group">
 						<label>Badge, HTML format</label>
-						<textarea class="form-control" rows="3">&lt;a href="{{.Host}}/{{.Repo.Slug}}/tree/master"&gt;&lt;img src="{{.Host}}/{{.Repo.Slug}}/status.png?branch=master" /&gt;&lt;/a&gt;</textarea>
+						<textarea class="form-control" rows="3">&lt;a href="{{.Host}}/{{.Repo.Slug}}"&gt;&lt;img src="{{.Host}}/{{.Repo.Slug}}/status.png?branch=master" /&gt;&lt;/a&gt;</textarea>
 					</div>
 				</form>
 			</div><!-- ./col-xs-9 -->

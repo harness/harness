@@ -28,6 +28,10 @@ func TestGetUser(t *testing.T) {
 		t.Errorf("Exepected Password %s, got %s", "$2a$10$b8d63QsTL38vx7lj0HEHfOdbu1PCAg6Gfca74UavkXooIBx9YxopS", u.Password)
 	}
 
+	if u.Token != "123" {
+		t.Errorf("Exepected Token %s, got %s", "123", u.Token)
+	}
+
 	if u.Name != "Brad Rydzewski" {
 		t.Errorf("Exepected Name %s, got %s", "Brad Rydzewski", u.Name)
 	}
@@ -58,6 +62,10 @@ func TestGetUserEmail(t *testing.T) {
 
 	if u.Password != "$2a$10$b8d63QsTL38vx7lj0HEHfOdbu1PCAg6Gfca74UavkXooIBx9YxopS" {
 		t.Errorf("Exepected Password %s, got %s", "$2a$10$b8d63QsTL38vx7lj0HEHfOdbu1PCAg6Gfca74UavkXooIBx9YxopS", u.Password)
+	}
+
+	if u.Token != "123" {
+		t.Errorf("Exepected Token %s, got %s", "123", u.Token)
 	}
 
 	if u.Name != "Brad Rydzewski" {
@@ -153,6 +161,10 @@ func TestListUsers(t *testing.T) {
 
 	if u.Password != "$2a$10$b8d63QsTL38vx7lj0HEHfOdbu1PCAg6Gfca74UavkXooIBx9YxopS" {
 		t.Errorf("Exepected Password %s, got %s", "$2a$10$b8d63QsTL38vx7lj0HEHfOdbu1PCAg6Gfca74UavkXooIBx9YxopS", u.Password)
+	}
+
+	if u.Token != "123" {
+		t.Errorf("Exepected Token %s, got %s", "123", u.Token)
 	}
 
 	if u.Name != "Brad Rydzewski" {

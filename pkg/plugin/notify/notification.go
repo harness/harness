@@ -8,7 +8,7 @@ import (
 // in-progress build request.
 type Context struct {
 	// Global settings
-	Settings *model.Settings
+	Host string
 
 	// User that owns the repository
 	User *model.User
@@ -35,9 +35,9 @@ type Notification struct {
 
 func (n *Notification) Send(context *Context) error {
 	// send email notifications
-	//if n.Email != nil && n.Email.Enabled {
-	//	n.Email.Send(context)
-	//}
+	if n.Email != nil {
+		n.Email.Send(context)
+	}
 
 	// send email notifications
 	if n.Webhook != nil {

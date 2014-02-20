@@ -15,6 +15,7 @@ import (
 
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
+	"github.com/drone/drone/pkg/database/migrate"
 	"github.com/drone/drone/pkg/handler"
 )
 
@@ -55,8 +56,9 @@ func main() {
 // setup the database connection and register with the
 // global database package.
 func setupDatabase() {
-	// inform meddler we're using sqlite
+	// inform meddler and migration we're using sqlite
 	meddler.Default = meddler.SQLite
+	migrate.Driver = migrate.SQLite
 
 	// connect to the SQLite database
 	db, err := sql.Open(driver, datasource)
@@ -65,6 +67,9 @@ func setupDatabase() {
 	}
 
 	database.Set(db)
+
+	migration := migrate.New(db)
+	migration.All().Migrate()
 }
 
 // setup routes for static assets. These assets may
@@ -73,7 +78,18 @@ func setupDatabase() {
 func setupStatic() {
 	box := rice.MustFindBox("assets")
 	http.Handle("/css/", http.FileServer(box.HTTPBox()))
-	http.Handle("/img/", http.FileServer(box.HTTPBox()))
+
+	// we need to intercept all attempts to serve images
+	// so that we can add a cache-control settings
+	var images = http.FileServer(box.HTTPBox())
+	http.HandleFunc("/img/", func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/img/build_") {
+			w.Header().Add("Cache-Control", "no-cache")
+		}
+
+		// serce images
+		images.ServeHTTP(w, r)
+	})
 }
 
 // setup routes for serving dynamic content.
@@ -86,6 +102,8 @@ func setupHandlers() {
 	m.Post("/forgot", handler.ErrorHandler(handler.ForgotPost))
 	m.Get("/reset", handler.ErrorHandler(handler.Reset))
 	m.Post("/reset", handler.ErrorHandler(handler.ResetPost))
+	m.Get("/signup", handler.ErrorHandler(handler.SignUp))
+	m.Post("/signup", handler.ErrorHandler(handler.SignUpPost))
 	m.Get("/register", handler.ErrorHandler(handler.Register))
 	m.Post("/register", handler.ErrorHandler(handler.RegisterPost))
 	m.Get("/accept", handler.UserHandler(handler.TeamMemberAccept))
@@ -145,8 +163,7 @@ func setupHandlers() {
 	m.Get("/:host/:owner/:name/commit/:commit/build/:label/out.txt", handler.RepoHandler(handler.BuildOut))
 	m.Get("/:host/:owner/:name/commit/:commit/build/:label", handler.RepoHandler(handler.CommitShow))
 	m.Get("/:host/:owner/:name/commit/:commit", handler.RepoHandler(handler.CommitShow))
-	m.Get("/:host/:owner/:name/tree/:branch/status.png", handler.ErrorHandler(handler.Badge))
-	m.Get("/:host/:owner/:name/tree/:branch", handler.RepoHandler(handler.RepoDashboard))
+	m.Get("/:host/:owner/:name/tree", handler.RepoHandler(handler.RepoDashboard))
 	m.Get("/:host/:owner/:name/status.png", handler.ErrorHandler(handler.Badge))
 	m.Get("/:host/:owner/:name/settings", handler.RepoAdminHandler(handler.RepoSettingsForm))
 	m.Get("/:host/:owner/:name/params", handler.RepoAdminHandler(handler.RepoParamsForm))
@@ -165,8 +182,6 @@ func setupHandlers() {
 	// the first time a page is requested we should record
 	// the scheme and hostname.
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// get the hostname and scheme
-
 		// our multiplexer is a bit finnicky and therefore requires
 		// us to strip any trailing slashes in order to correctly
 		// find and match a route.

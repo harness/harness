@@ -55,6 +55,66 @@
 			$(".timeago").timeago();
 		});
 	</script>
+
+	<script>
+		var re = /\u001B\[([0-9]+;?)*[Km]/g;
+
+		var styles = new Array();
+		var formatLine = function(s) {
+			// Check for newline and early exit?
+			s = s.replace(/</g, "&lt;");
+			s = s.replace(/>/g, "&gt;");
+
+			var final = "";
+			var current = 0;
+			while (m = re.exec(s)) {	
+					var part = s.substring(current, m.index+1);
+					current = re.lastIndex;
+
+					var token = s.substr(m.index, re.lastIndex - m.index);
+					var code = token.substr(2, token.length-2);
+
+					var pre = "";
+					var post = "";
+
+					switch (code) {
+					case 'm': 
+					case '0m':
+						var len = styles.length;
+						for (var i=0; i < len; i++) {
+							styles.pop();
+							post += "</span>"
+						}
+						break;
+					case '30;42m': pre = '<span style="color:black;background:lime">'; break;
+					case '36m':
+					case '36;1m': pre = '<span style="color:cyan;">'; break;
+					case '31m':
+					case '31;31m': pre = '<span style="color:red;">'; break;
+					case '33m': 
+					case '33;33m': pre = '<span style="color:yellow;">'; break;
+					case '32m':
+					case '0;32m': pre = '<span style="color:lime;">'; break;
+					case '90m': pre = '<span style="color:gray;">'; break;
+					case 'K': 
+					case '0K': 
+					case '1K':
+					case '2K': break;
+					}		
+
+					if (pre !== "") {
+						styles.push(pre);
+					}
+
+					final += part + pre + post;
+			}
+
+			var part = s.substring(current, s.length);
+			final += part;
+			return final;
+		};
+	</script>
+
 	<script>
 	{{ if .Build.IsRunning }}
 		var outputBox = document.getElementById('stdout');
@@ -64,16 +124,11 @@
 		outputWS.onclose = function (e) { window.location.reload(); };
 		outputWS.onmessage = function (e) { 
 			outputBox.innerHTML += formatLine(e.data);
-			//window.scrollTo(0, document.body.scrollHeight)
-		};
-		var re = /\u001B\[([0-9]+;?)*[Km]/g;
-		var styles = new Array();
-		var formatLine = function(s) {
-			return s;
+			window.scrollTo(0, document.body.scrollHeight)
 		};
 	{{ else }} 
 		$.get("/{{ .Repo.Slug }}/commit/{{ .Commit.Hash }}/build/{{ .Build.Slug }}/out.txt", function( data ) {
-			$( "#stdout" ).html( data );
+			$( "#stdout" ).html(formatLine(data));
 		});
 	{{ end }}
 	</script>

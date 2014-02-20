@@ -173,7 +173,7 @@ func TeamMemberInvite(w http.ResponseWriter, r *http.Request, u *User) error {
 	}
 
 	// generate a token that is valid for 3 days to join the team
-	token := authcookie.New(team.Name, time.Now().Add(72*time.Hour), secret)
+	token := authcookie.New(strconv.Itoa(int(team.ID)), time.Now().Add(72*time.Hour), secret)
 
 	// hostname from settings
 	hostname := database.SettingsMust().URL().String()
@@ -202,14 +202,14 @@ func TeamMemberInvite(w http.ResponseWriter, r *http.Request, u *User) error {
 func TeamMemberAccept(w http.ResponseWriter, r *http.Request, u *User) error {
 	// get the team name from the token
 	token := r.FormValue("token")
-	teamName := authcookie.Login(token, secret)
-	if len(teamName) == 0 {
+	teamToken := authcookie.Login(token, secret)
+	teamId, err := strconv.Atoi(teamToken)
+	if err != nil || teamId == 0 {
 		return ErrInvalidTeamName
 	}
 
 	// get the team from the database
-	// TODO it might make more sense to use the ID in case the Slug changes
-	team, err := database.GetTeamSlug(teamName)
+	team, err := database.GetTeam(int64(teamId))
 	if err != nil {
 		return RenderError(w, err, http.StatusNotFound)
 	}
@@ -222,6 +222,6 @@ func TeamMemberAccept(w http.ResponseWriter, r *http.Request, u *User) error {
 	}
 
 	// send the user to the dashboard
-	http.Redirect(w, r, "/dashboard/team/"+team.Name, http.StatusSeeOther)
+	http.Redirect(w, r, "/dashboard/team/"+team.Slug, http.StatusSeeOther)
 	return nil
 }

@@ -1,22 +1,25 @@
 package script
 
 import (
+	"bytes"
+	"fmt"
 	"io/ioutil"
 	"strings"
 
 	"launchpad.net/goyaml"
 
 	"github.com/drone/drone/pkg/build/buildfile"
-	"github.com/drone/drone/pkg/build/script/deployment"
-	"github.com/drone/drone/pkg/build/script/notification"
-	"github.com/drone/drone/pkg/build/script/publish"
+	"github.com/drone/drone/pkg/build/git"
+	"github.com/drone/drone/pkg/plugin/deploy"
+	"github.com/drone/drone/pkg/plugin/notify"
+	"github.com/drone/drone/pkg/plugin/publish"
 )
 
-func ParseBuild(data []byte) (*Build, error) {
+func ParseBuild(data []byte, params map[string]string) (*Build, error) {
 	build := Build{}
 
 	// parse the build configuration file
-	err := goyaml.Unmarshal(data, &build)
+	err := goyaml.Unmarshal(injectParams(data, params), &build)
 	return &build, err
 }
 
@@ -26,7 +29,15 @@ func ParseBuildFile(filename string) (*Build, error) {
 		return nil, err
 	}
 
-	return ParseBuild(data)
+	return ParseBuild(data, nil)
+}
+
+// injectParams injects params into data.
+func injectParams(data []byte, params map[string]string) []byte {
+	for k, v := range params {
+		data = bytes.Replace(data, []byte(fmt.Sprintf("{{%s}}", k)), []byte(v), -1)
+	}
+	return data
 }
 
 // Build stores the configuration details for
@@ -51,9 +62,10 @@ type Build struct {
 	// linked to the build environment.
 	Services []string
 
-	Deploy        *deployment.Deploy         `yaml:"deploy,omitempty"`
-	Publish       *publish.Publish           `yaml:"publish,omitempty"`
-	Notifications *notification.Notification `yaml:"notify,omitempty"`
+	Deploy        *deploy.Deploy       `yaml:"deploy,omitempty"`
+	Publish       *publish.Publish     `yaml:"publish,omitempty"`
+	Notifications *notify.Notification `yaml:"notify,omitempty"`
+	Git           *git.Git             `yaml:"git,omitempty"`
 }
 
 // Write adds all the steps to the build script, including

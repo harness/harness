@@ -51,6 +51,14 @@ type S3 struct {
 }
 
 func (s *S3) Write(f *buildfile.Buildfile) {
+
+	// skip if AWS key or SECRET are empty. A good example for this would
+	// be forks building a project. S3 might be configured in the source
+	// repo, but not in the fork
+	if len(s.Key) == 0 || len(s.Secret) == 0 {
+		return
+	}
+
 	// install the AWS cli using PIP
 	f.WriteCmdSilent("[ -f /usr/bin/sudo ] || pip install awscli 1> /dev/null 2> /dev/null")
 	f.WriteCmdSilent("[ -f /usr/bin/sudo ] && sudo pip install awscli 1> /dev/null 2> /dev/null")
@@ -65,8 +73,8 @@ func (s *S3) Write(f *buildfile.Buildfile) {
 
 	// make sure a default access is set
 	// let's be conservative and assume private
-	if len(s.Region) == 0 {
-		s.Region = "private"
+	if len(s.Access) == 0 {
+		s.Access = "private"
 	}
 
 	// if the target starts with a "/" we need

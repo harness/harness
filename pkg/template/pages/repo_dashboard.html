@@ -19,7 +19,7 @@
 	<div class="container">
 		<div class="row">
 			<div class="col-xs-8" role="main">
-				<a class="btn btn-refresh hide" href="/{{.Repo.Slug}}/tree/{{.Branch}}">
+				<a class="btn btn-refresh hide" href="/{{.Repo.Slug}}/tree?branch={{.Branch}}">
 					<i class="fa fa-rotate-right"></i>
 					<span>0 new</span>
 				</a>
@@ -33,7 +33,7 @@
 							<a href="/{{$repo.Slug}}/commit/{{.Hash}}">{{.HashShort}}</a>
 							<small class="timeago" title="{{.CreatedString}}"></small>
 							{{ if .PullRequest }}
-								<p>opened pull request <a href="/{{.Slug}}/commit/{{.Hash}}"># {{.PullRequest}}</a></p>
+								<p>opened pull request <a href="/{{$repo.Slug}}/commit/{{.Hash}}"># {{.PullRequest}}</a></p>
 							{{ else }}
 								<p>{{.Message}} &nbsp;</p>
 							{{ end }}
@@ -49,7 +49,7 @@
 				<ul class="nav nav-pills nav-stacked nav-branches">
 					{{ range .Branches }}
 					<li{{ if eq $branch .Branch }} class="active"{{end}}>
-						<a href="/{{ $repo.Slug }}/tree/{{.Branch}}">
+						<a href="/{{ $repo.Slug }}/tree?branch={{.Branch}}">
 							<span class="btn btn-mini btn-{{.Status}} "></span>
 							<span>{{.Branch}}</span>
 						</a>

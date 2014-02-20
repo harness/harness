@@ -33,6 +33,9 @@ type Repo struct {
 	// will be cloned into (or copied to) inside the
 	// host system (Docker Container).
 	Dir string
+
+	// (optional) The depth of the `git clone` command.
+	Depth int
 }
 
 // IsRemote returns true if the Repository is located
@@ -70,9 +73,9 @@ func (r *Repo) IsGit() bool {
 		return true
 	case strings.HasPrefix(r.Path, "ssh://git@"):
 		return true
-	case strings.HasPrefix(r.Path, "https://github.com/"):
+	case strings.HasPrefix(r.Path, "https://github"):
 		return true
-	case strings.HasPrefix(r.Path, "http://github.com"):
+	case strings.HasPrefix(r.Path, "http://github"):
 		return true
 	case strings.HasSuffix(r.Path, ".git"):
 		return true
@@ -88,7 +91,6 @@ func (r *Repo) IsGit() bool {
 //
 // TODO we should also enable Mercurial projects and SVN projects
 func (r *Repo) Commands() []string {
-
 	// get the branch. default to master
 	// if no branch exists.
 	branch := r.Branch
@@ -97,7 +99,7 @@ func (r *Repo) Commands() []string {
 	}
 
 	cmds := []string{}
-	cmds = append(cmds, fmt.Sprintf("git clone --branch=%s %s %s", branch, r.Path, r.Dir))
+	cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
 
 	switch {
 	// if a specific commit is provided then we'll
