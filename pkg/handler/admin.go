@@ -179,6 +179,11 @@ func AdminSettingsUpdate(w http.ResponseWriter, r *http.Request, u *User) error 
 
 	settings.OpenInvitations = (r.FormValue("OpenInvitations") == "on")
 
+	// validate user input
+	if err := settings.Validate(); err != nil {
+		return RenderError(w, err, http.StatusBadRequest)
+	}
+
 	// persist changes
 	if err := database.SaveSettings(settings); err != nil {
 		return RenderError(w, err, http.StatusBadRequest)
@@ -245,8 +250,8 @@ func InstallPost(w http.ResponseWriter, r *http.Request) error {
 	settings := Settings{}
 	settings.Domain = r.FormValue("Domain")
 	settings.Scheme = r.FormValue("Scheme")
-	settings.GitHubApiUrl = "https://api.github.com";
-	settings.GitHubDomain = "github.com";
+	settings.GitHubApiUrl = "https://api.github.com"
+	settings.GitHubDomain = "github.com"
 	database.SaveSettings(&settings)
 
 	// add the user to the session object
