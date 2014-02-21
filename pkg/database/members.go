@@ -33,7 +33,7 @@ WHERE user_id = ? AND team_id = ?
 
 // SQL Queries to retrieve a member's role by id and user.
 const roleFindStmt = `
-SELECT role FROM members
+SELECT id, team_id, user_id, role FROM members
 WHERE user_id = ? AND team_id = ?
 `
 
