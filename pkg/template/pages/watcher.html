@@ -1,0 +1,56 @@
+<!doctype html>
+
+<html x-ng-app="drone">
+
+	<head>
+		<title>Drone Watcher</title>
+		<meta charset="utf-8">
+		
+		<link rel="stylesheet" href="/css/normalize.css">
+		<link rel="stylesheet" href="/css/watcher.css">
+		<link rel="stylesheet" href="/css/fonts.css">
+		
+	</head>
+	
+	<body>
+	
+		<main x-ng-controller="Projects">
+		
+			<ul>
+			
+				<li x-ng-repeat="project in projects | orderBy:projectName">
+		
+					<section class="project">
+						
+						<h1>{{ project.projectName }}</h1>
+						<div class="owner">{{ project.projectOwner }}</div>
+						
+						<div class="master-status" x-ng-class="{passed: project.masterStatus == 'Success', failed: project.masterStatus == 'Failure', progress: project.masterStatus == 'Started'}"></div>
+						
+						<ul class="updates">
+
+							<li x-ng-class="{master: build.hash == project.masterHash, passed: build.status == 'Success', failed: build.status == 'Failure', progress: build.status == 'Started'}" x-ng-class="build.status.toLowerCase()" x-ng-repeat="build in project.builds | orderBy:buildTime | limitTo:5">
+								<div class="type"><img x-ng-src="https://gravatar.com/avatar/{{ build.gravatar }}">{{ build.pull ? 'Pull Request #' + build.pull : build.message }}</div>
+								<div class="date">{{ build.buildTime | date:'M/d, h:mm a' }}</div>
+							</li>
+
+						</ul>			
+						
+					</section>
+					
+				</li>
+				
+			</ul>
+		
+		</main>
+
+		<script src="/js/lib/angular/angular.min.js"></script>
+		<script src="/js/app.js"></script>
+		<script src="/js/services.js"></script>
+		<script src="/js/controllers.js"></script>
+		<script src="/js/filters.js"></script>
+		<script src="/js/directives.js"></script>
+
+	</body>
+
+</html>
