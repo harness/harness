@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -149,4 +150,48 @@ func TeamDelete(w http.ResponseWriter, r *http.Request, u *User) error {
 	database.DeleteTeam(team.ID)
 	http.Redirect(w, r, "/account/user/teams", http.StatusSeeOther)
 	return nil
+}
+
+// Wall display for the team
+func TeamWall(w http.ResponseWriter, r *http.Request, u *User) error {
+	teamParam := r.FormValue(":team")
+	team, err := database.GetTeamSlug(teamParam)
+	if err != nil {
+		return err
+	}
+
+	if member, _ := database.IsMember(u.ID, team.ID); !member {
+		return fmt.Errorf("Forbidden")
+	}
+
+	// list of recent commits
+	commits, err := database.ListCommitsTeam(team.ID)
+	if err != nil {
+		return err
+	}
+
+	w.WriteHeader(http.StatusOK)
+	return json.NewEncoder(w).Encode(commits)
+}
+
+// API endpoint for fetching the initial wall display data via AJAX
+func TeamWallData(w http.ResponseWriter, r *http.Request, u *User) error {
+	teamParam := r.FormValue(":team")
+	team, err := database.GetTeamSlug(teamParam)
+	if err != nil {
+		return err
+	}
+
+	if member, _ := database.IsMember(u.ID, team.ID); !member {
+		return fmt.Errorf("Forbidden")
+	}
+
+	// list of recent commits
+	commits, err := database.ListCommitsTeam(team.ID)
+	if err != nil {
+		return err
+	}
+
+	w.WriteHeader(http.StatusOK)
+	return json.NewEncoder(w).Encode(commits)
 }

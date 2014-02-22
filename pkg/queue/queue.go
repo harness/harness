@@ -121,6 +121,7 @@ func (b *BuildTask) execute() error {
 
 	// notify the channels that the commit and build started
 	channel.SendJSON(reposlug, b.Commit)
+	channel.SendJSON(channel.WallDisplay, b.Commit)
 	channel.SendJSON(commitslug, b.Build)
 
 	var buf = &bufferWrapper{channel: consoleslug}
@@ -181,6 +182,7 @@ func (b *BuildTask) execute() error {
 
 	// notify the channels that the commit and build finished
 	channel.SendJSON(reposlug, b.Commit)
+	channel.SendJSON(channel.WallDisplay, b.Commit)
 	channel.SendJSON(commitslug, b.Build)
 	channel.Close(consoleslug)
 
