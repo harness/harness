@@ -17,5 +17,5 @@ func (m *Modulus) Write(f *buildfile.Buildfile) {
 	// project.
 	f.WriteCmdSilent("[ -f /usr/bin/sudo ] || npm install -g modulus")
 	f.WriteCmdSilent("[ -f /usr/bin/sudo ] && sudo npm install -g modulus")
-	f.WriteCmd(fmt.Sprintf("modulus deploy -p '%s'", m.App))
+	f.WriteCmd(fmt.Sprintf("modulus deploy -p '%s'", m.Project))
 }
