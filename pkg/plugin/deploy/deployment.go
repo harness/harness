@@ -16,6 +16,7 @@ type Deploy struct {
 	Heroku       *Heroku       `yaml:"heroku,omitempty"`
 	Nodejitsu    *Nodejitsu    `yaml:"nodejitsu,omitempty"`
 	Openshift    *Openshift    `yaml:"openshift,omitempty"`
+	SSH          *SSH          `yaml:"ssh,omitempty"`
 }
 
 func (d *Deploy) Write(f *buildfile.Buildfile) {
@@ -42,5 +43,8 @@ func (d *Deploy) Write(f *buildfile.Buildfile) {
 	}
 	if d.Openshift != nil {
 		d.Openshift.Write(f)
+	}
+	if d.SSH != nil {
+		d.SSH.Write(f)
 	}
 }
