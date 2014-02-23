@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -17,6 +18,34 @@ import (
 
 	"launchpad.net/goyaml"
 )
+
+// A buildParams represents build parameters which are
+// injected into the yaml configuration file.
+type buildParams []string
+
+// String returns the string value of the buildParams.
+func (p *buildParams) String() string {
+	return fmt.Sprint(*p)
+}
+
+// Set sets the value into the buildParams.
+func (p *buildParams) Set(value string) error {
+	for _, v := range strings.Split(value, ",") {
+		*p = append(*p, v)
+	}
+	return nil
+}
+
+// Map returns a map of the buildParams.
+func (p *buildParams) Map() map[string]string {
+	m := map[string]string{}
+	for _, prm := range *p {
+		if kv := strings.SplitN(prm, "=", 2); len(kv) == 2 {
+			m[kv[0]] = kv[1]
+		}
+	}
+	return m
+}
 
 var (
 	// identity file (id_rsa) that will be injected
@@ -35,6 +64,9 @@ var (
 
 	// displays the help / usage if True
 	help = flag.Bool("h", false, "")
+
+	// build parameters
+	params buildParams
 )
 
 func init() {
@@ -43,6 +75,8 @@ func init() {
 	log.SetSuffix("\033[0m\n")
 	log.SetOutput(os.Stdout)
 	log.SetPriority(log.LOG_NOTICE)
+
+	flag.Var(&params, "param", "")
 }
 
 func main() {
@@ -72,7 +106,7 @@ func main() {
 	case args[0] == "build" && len(args) == 1:
 		path, _ := os.Getwd()
 		path = filepath.Join(path, ".drone.yml")
-		run(path)
+		run(path, params)
 
 	// run drone build where the path to the
 	// source directory is provided
@@ -81,7 +115,7 @@ func main() {
 		path = filepath.Clean(path)
 		path, _ = filepath.Abs(path)
 		path = filepath.Join(path, ".drone.yml")
-		run(path)
+		run(path, params)
 
 	// run drone vet where the path to the
 	// source directory is provided
@@ -90,14 +124,14 @@ func main() {
 		path = filepath.Clean(path)
 		path, _ = filepath.Abs(path)
 		path = filepath.Join(path, ".drone.yml")
-		vet(path)
+		vet(path, params)
 
 	// run drone vet assuming the current
 	// working directory contains the drone.yml
 	case args[0] == "vet" && len(args) == 1:
 		path, _ := os.Getwd()
 		path = filepath.Join(path, ".drone.yml")
-		vet(path)
+		vet(path, params)
 
 	// print the help message
 	case args[0] == "help" && len(args) == 1:
@@ -107,9 +141,9 @@ func main() {
 	os.Exit(0)
 }
 
-func vet(path string) {
+func vet(path string, params buildParams) {
 	// parse the Drone yml file
-	script, err := script.ParseBuildFile(path)
+	script, err := script.ParseBuildFile(path, params.Map())
 	if err != nil {
 		log.Err(err.Error())
 		os.Exit(1)
@@ -121,13 +155,19 @@ func vet(path string) {
 	log.Noticef("parsed yaml:\n%s", string(out))
 }
 
-func run(path string) {
+func run(path string, params buildParams) {
+	paramsMap := params.Map()
 	// parse the Drone yml file
-	s, err := script.ParseBuildFile(path)
+	s, err := script.ParseBuildFile(path, paramsMap)
 	if err != nil {
 		log.Err(err.Error())
 		os.Exit(1)
 		return
+	}
+
+	// set environment variables
+	for k, v := range paramsMap {
+		s.Env = append(s.Env, k+"="+v)
 	}
 
 	// get the repository root directory
@@ -270,14 +310,15 @@ Usage:
 
 The commands are:
 
-   build           build and test the repository
-   version         print the version number
-   vet             validate the yaml configuration file
+   build                      build and test the repository
+   version                    print the version number
+   vet                        validate the yaml configuration file
 
-  -v               runs drone with verbose output
-  -h               display this help and exit
-  --parallel       runs drone build tasks in parallel
-  --timeout=300ms  timeout build after 300 milliseconds
+  -v                          runs drone with verbose output
+  -h                          display this help and exit
+  --parallel                  runs drone build tasks in parallel
+  --timeout=300ms             timeout build after 300 milliseconds
+  -param 'key=value'          Parameter for the yaml configuration file, can be used multiple times.
 
 Examples:
   drone build                 builds the source in the pwd
