@@ -49,6 +49,7 @@ test:
 	go test -v github.com/drone/drone/pkg/database/testing
 	go test -v github.com/drone/drone/pkg/mail
 	go test -v github.com/drone/drone/pkg/model
+	go test -v github.com/drone/drone/pkg/plugin/deploy
 	go test -v github.com/drone/drone/pkg/queue
 
 install:
