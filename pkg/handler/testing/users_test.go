@@ -6,10 +6,10 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/drone/drone/database"
-	. "github.com/drone/drone/database/testing"
-	"github.com/drone/drone/handler"
-	. "github.com/drone/drone/model"
+	"github.com/drone/drone/pkg/database"
+	. "github.com/drone/drone/pkg/database/testing"
+	"github.com/drone/drone/pkg/handler"
+	. "github.com/drone/drone/pkg/model"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
