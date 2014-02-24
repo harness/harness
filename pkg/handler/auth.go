@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/drone/drone/pkg/database"
@@ -67,6 +68,7 @@ func LinkGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	// exchange code for an auth token
 	token, err := oauth.GrantToken(code)
 	if err != nil {
+		log.Println("Error granting GitHub authorization token")
 		return err
 	}
 
@@ -77,6 +79,7 @@ func LinkGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	// get the user information
 	githubUser, err := client.Users.Current()
 	if err != nil {
+		log.Println("Error retrieving currently authenticated GitHub user")
 		return err
 	}
 
@@ -84,6 +87,7 @@ func LinkGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	u.GithubToken = token.AccessToken
 	u.GithubLogin = githubUser.Login
 	if err := database.SaveUser(u); err != nil {
+		log.Println("Error persisting user's GitHub auth token to the database")
 		return err
 	}
 

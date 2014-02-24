@@ -15,6 +15,7 @@ deps:
 	go get github.com/dchest/authcookie
 	go get github.com/dchest/passwordreset
 	go get github.com/dchest/uniuri
+	go get github.com/fluffle/goirc
 	#go get github.com/dotcloud/docker/archive
 	#go get github.com/dotcloud/docker/utils
 	#go get github.com/dotcloud/docker/pkg/term
@@ -48,6 +49,7 @@ test:
 	go test -v github.com/drone/drone/pkg/database/testing
 	go test -v github.com/drone/drone/pkg/mail
 	go test -v github.com/drone/drone/pkg/model
+	go test -v github.com/drone/drone/pkg/plugin/deploy
 	go test -v github.com/drone/drone/pkg/queue
 
 install:
