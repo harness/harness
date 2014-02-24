@@ -74,6 +74,18 @@ ORDER BY c.created desc
 LIMIT 10
 `
 
+// SQL Query to retrieve a list of recent commits by team.
+const teamCommitWallStmt = `
+SELECT r.slug, r.host, r.owner, r.name,
+c.status, c.started, c.finished, c.duration, c.hash, c.branch, c.pull_request,
+c.author, c.gravatar, c.timestamp, c.message, c.created, c.updated
+FROM repos r, commits c
+WHERE r.team_id = ?
+AND   r.id = c.repo_id
+ORDER BY c.created desc
+LIMIT 20
+`
+
 // SQL Queries to delete a Commit.
 const commitDeleteStmt = `
 DELETE FROM commits WHERE id = ?
@@ -163,6 +175,14 @@ func ListCommitsUser(user int64) ([]*RepoCommit, error) {
 func ListCommitsTeam(team int64) ([]*RepoCommit, error) {
 	var commits []*RepoCommit
 	err := meddler.QueryAll(db, &commits, teamCommitRecentStmt, team)
+	return commits, err
+}
+
+// Returns a list of recent Commits associated
+// with the specified Team ID for the wall display
+func ListCommitsTeamWall(team int64) ([]*RepoCommit, error) {
+	var commits []*RepoCommit
+	err := meddler.QueryAll(db, &commits, teamCommitWallStmt, team)
 	return commits, err
 }
 
