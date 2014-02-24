@@ -33,6 +33,7 @@ ctlMod.controller( "Projects", [ "$scope", "$rootScope", "$http", function ( $sc
 	$http.get( url ).success( function ( result )
 	{
 		$scope.projects = [];
+		$scope.firstRun = true;
  		var currentProject, build;
 		
 		$scope.addBuild = function ( newBuild )
@@ -79,8 +80,10 @@ ctlMod.controller( "Projects", [ "$scope", "$rootScope", "$http", function ( $sc
 			build.gravatar  = newBuild.gravatar;
 			build.message   = newBuild.message;
 			
-			currentProject.masterHash   = !currentProject.masterHash   && !build.pull ? build.hash   : currentProject.masterHash;
-			currentProject.masterStatus = !currentProject.masterStatus && !build.pull ? build.status : currentProject.masterStatus;
+			currentProject.masterHash   = !build.pull && ( ( $scope.firstRun && !currentProject.masterHash ) || !$scope.firstRun )
+		                                  ? build.hash : currentProject.masterHash;
+			currentProject.masterStatus = !build.pull && ( ( $scope.firstRun && !currentProject.masterStatus ) || !$scope.firstRun )
+		                                  ? build.status : currentProject.masterStatus;
 			
 			if( build.fresh )
 			{
@@ -93,6 +96,8 @@ ctlMod.controller( "Projects", [ "$scope", "$rootScope", "$http", function ( $sc
 		{
 			$scope.addBuild( result[i] );
 		}
+		
+		$scope.firstRun = false;
 		
 	} ).error( function ()
 	{
