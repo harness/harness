@@ -174,7 +174,7 @@ func run(path string) {
 
 	// loop through and create builders
 	for _, b := range builds { //script.Builds {
-		builder := build.Builder{}
+		builder := build.New()
 		builder.Build = b
 		builder.Repo = &code
 		builder.Key = key
@@ -186,7 +186,7 @@ func run(path string) {
 			builder.Stdout = &buf
 		}
 
-		builders = append(builders, &builder)
+		builders = append(builders, builder)
 	}
 
 	switch *parallel {

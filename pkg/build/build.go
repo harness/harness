@@ -35,6 +35,10 @@ type BuildState struct {
 	// Max RAM, Max Swap, Disk space, and more.
 }
 
+func New() *Builder {
+	return &Builder{}
+}
+
 // Builder represents a build process being prepared
 // to run.
 type Builder struct {
