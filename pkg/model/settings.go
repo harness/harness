@@ -1,7 +1,13 @@
 package model
 
 import (
+	"errors"
 	"net/url"
+	"strings"
+)
+
+var (
+	ErrInvalidGitHubTrailingSlash = errors.New("GitHub URL should not have a trailing slash")
 )
 
 type Settings struct {
@@ -37,4 +43,14 @@ func (s *Settings) URL() *url.URL {
 	return &url.URL{
 		Scheme: s.Scheme,
 		Host:   s.Domain}
+}
+
+// Validate verifies all required fields are correctly populated.
+func (s *Settings) Validate() error {
+	switch {
+	case strings.HasSuffix(s.GitHubApiUrl, "/"):
+		return ErrInvalidGitHubTrailingSlash
+	default:
+		return nil
+	}
 }

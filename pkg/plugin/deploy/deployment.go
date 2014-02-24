@@ -14,8 +14,10 @@ type Deploy struct {
 	EngineYard   *EngineYard   `yaml:"engineyard,omitempty"`
 	Git          *Git          `yaml:"git,omitempty"`
 	Heroku       *Heroku       `yaml:"heroku,omitempty"`
+	Modulus      *Modulus      `yaml:"modulus,omitempty"`
 	Nodejitsu    *Nodejitsu    `yaml:"nodejitsu,omitempty"`
 	Openshift    *Openshift    `yaml:"openshift,omitempty"`
+	SSH          *SSH          `yaml:"ssh,omitempty"`
 }
 
 func (d *Deploy) Write(f *buildfile.Buildfile) {
@@ -37,10 +39,16 @@ func (d *Deploy) Write(f *buildfile.Buildfile) {
 	if d.Heroku != nil {
 		d.Heroku.Write(f)
 	}
+	if d.Modulus != nil {
+		d.Modulus.Write(f)
+	}
 	if d.Nodejitsu != nil {
 		d.Nodejitsu.Write(f)
 	}
 	if d.Openshift != nil {
 		d.Openshift.Write(f)
+	}
+	if d.SSH != nil {
+		d.SSH.Write(f)
 	}
 }
