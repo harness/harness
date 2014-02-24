@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
 )
@@ -164,14 +165,12 @@ func TeamWall(w http.ResponseWriter, r *http.Request, u *User) error {
 		return fmt.Errorf("Forbidden")
 	}
 
-	// list of recent commits
-	commits, err := database.ListCommitsTeam(team.ID)
-	if err != nil {
-		return err
-	}
+	data := struct {
+		Token string
+	}{channel.CreateStream(fmt.Sprintf("%s", 
+        channel.WallDisplay))}
 
-	w.WriteHeader(http.StatusOK)
-	return json.NewEncoder(w).Encode(commits)
+	return RenderTemplate(w, "watcher.html", &data)
 }
 
 // API endpoint for fetching the initial wall display data via AJAX
@@ -187,7 +186,7 @@ func TeamWallData(w http.ResponseWriter, r *http.Request, u *User) error {
 	}
 
 	// list of recent commits
-	commits, err := database.ListCommitsTeam(team.ID)
+	commits, err := database.ListCommitsTeamWall(team.ID)
 	if err != nil {
 		return err
 	}

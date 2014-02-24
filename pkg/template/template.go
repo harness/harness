@@ -112,6 +112,14 @@ func init() {
 		registry[file] = template.Must(template.Must(template.New("_").Parse(baseTemplate)).Parse(page))
 	}
 
+	// parse the wall display template and then add to the global map
+	page, err := box.String("watcher.html")
+	if err != nil {
+		panic(err)
+	}
+
+	registry["watcher.html"] = template.Must(template.New("_").Parse(page))
+
 	// location of templates
 	box = rice.MustFindBox("emails")
 

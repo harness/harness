@@ -6,4 +6,7 @@ var angMod = angular.module( "drone", [
 	"drone.services",
 	"drone.directives",
 	"drone.controllers"
-] );
+], function($interpolateProvider) {
+    $interpolateProvider.startSymbol('[[');
+    $interpolateProvider.endSymbol(']]');
+} );
