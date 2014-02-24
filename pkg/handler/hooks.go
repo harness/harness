@@ -17,6 +17,11 @@ import (
 // attempts to trigger a build.
 func Hook(w http.ResponseWriter, r *http.Request) error {
 
+	// handle github ping
+	if r.Header.Get("X-Github-Event") == "ping" {
+		return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+	}
+
 	// if this is a pull request route
 	// to a different handler
 	if r.Header.Get("X-Github-Event") == "pull_request" {
