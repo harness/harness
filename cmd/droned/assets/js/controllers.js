@@ -11,13 +11,13 @@ ctlMod.controller( "Projects", [ "$scope", "$rootScope", "$http", function ( $sc
 		$scope.projects = [];
 		var currentProject, build;
 		
-		for( var i = 0; i < result.length; i++ )
+		$scope.addBuild = function ( newBuild )
 		{
 			currentProject = '';
 			
 			for( var j = 0; j < $scope.projects.length; j++ )
 			{
-				if( $scope.projects[j].projectOwner == result[i].owner && $scope.projects[j].projectName == result[i].name )
+				if( $scope.projects[j].projectOwner == newBuild.owner && $scope.projects[j].projectName == newBuild.name )
 				{
 					currentProject = $scope.projects[j];
 					break;
@@ -27,27 +27,46 @@ ctlMod.controller( "Projects", [ "$scope", "$rootScope", "$http", function ( $sc
 			if( !currentProject )
 			{
 				currentProject = {};
-				currentProject.projectOwner = result[i].owner;
-				currentProject.projectName  = result[i].name;
+				currentProject.projectOwner = newBuild.owner;
+				currentProject.projectName  = newBuild.name;
 				currentProject.builds       = [];
 				
 				$scope.projects.push( currentProject );
 				currentProject = $scope.projects[ $scope.projects.length - 1 ];
 			}
-			
+	
 			build = {};
-			build.hash      = result[i].hash;
-			build.status    = result[i].status;
-			build.buildTime = result[i].created;
-			build.pull      = result[i].pull_request;
-			build.gravatar  = result[i].gravatar;
-			build.message   = result[i].message;
+			build.fresh = true;
+			
+			for( var k = 0; k < currentProject.builds.length; k++ )
+			{
+				if( currentProject.builds[k].hash == newBuild.hash )
+				{
+					build       = currentProject.builds[k];
+					build.fresh = false;
+					break;
+				}
+			}
+			
+			build.hash      = newBuild.hash;
+			build.status    = newBuild.status;
+			build.buildTime = newBuild.created;
+			build.pull      = newBuild.pull_request;
+			build.gravatar  = newBuild.gravatar;
+			build.message   = newBuild.message;
 			
 			currentProject.masterHash   = !currentProject.masterHash   && !build.pull ? build.hash   : currentProject.masterHash;
 			currentProject.masterStatus = !currentProject.masterStatus && !build.pull ? build.status : currentProject.masterStatus;
 			
-			currentProject.builds.push( build );
-			
+			if( build.fresh )
+			{
+				currentProject.builds.push( build );
+			}
+		};
+		
+		for( var i = 0; i < result.length; i++ )
+		{
+			$scope.addBuild( result[i] );
 		}
 		
 	} ).error( function ()
