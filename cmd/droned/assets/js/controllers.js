@@ -6,10 +6,31 @@ var ctlMod = angular.module( "drone.controllers", [] );
 
 ctlMod.controller( "Projects", [ "$scope", "$rootScope", "$http", function ( $scope, $rootScope, $http )
 {
-	$http.get( "/drone/url/path" ).success( function ( result )
+    var url = window.location.pathname + "/commits"
+
+    ws.onopen = function(){  
+        console.log("Socket has been opened!");  
+    };
+    
+    ws.onmessage = function(message) {
+        var payload = {};
+        var task = JSON.parse(message.data);
+
+        payload.owner        = task.Repo.owner 
+        payload.name         = task.Repo.name
+        payload.hash         = task.Commit.hash;
+        payload.status       = task.Commit.status;
+        payload.created      = task.Commit.created;
+        payload.pull_request = task.Commit.pull_request;
+        payload.gravatar     = task.Commit.gravatar;
+        payload.message      = task.Commit.message;
+
+        $scope.addBuild(payload)
+    };
+
+	$http.get( url ).success( function ( result )
 	{
 		$scope.projects = [];
-		var currentProject, build;
 		
 		$scope.addBuild = function ( newBuild )
 		{
