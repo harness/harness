@@ -25,12 +25,15 @@ ctlMod.controller( "Projects", [ "$scope", "$rootScope", "$http", function ( $sc
         payload.gravatar     = task.Commit.gravatar;
         payload.message      = task.Commit.message;
 
-        $scope.addBuild(payload)
+        $scope.addBuild(payload);
+        console.log(payload);
+        $scope.$digest();
     };
 
 	$http.get( url ).success( function ( result )
 	{
 		$scope.projects = [];
+ 		var currentProject, build;
 		
 		$scope.addBuild = function ( newBuild )
 		{
@@ -82,6 +85,7 @@ ctlMod.controller( "Projects", [ "$scope", "$rootScope", "$http", function ( $sc
 			if( build.fresh )
 			{
 				currentProject.builds.push( build );
+                console.log($scope.projects);
 			}
 		};
 		
