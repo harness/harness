@@ -3,7 +3,7 @@ package queue
 import (
 	"bytes"
 	"fmt"
-	bldr "github.com/drone/drone/pkg/build"
+	"github.com/drone/drone/pkg/build"
 	"github.com/drone/drone/pkg/build/git"
 	r "github.com/drone/drone/pkg/build/repo"
 	"github.com/drone/drone/pkg/build/script"
@@ -134,7 +134,7 @@ func (b *BuildTask) execute() error {
 	}
 
 	// execute the build
-	builder := bldr.Builder{}
+	builder := build.New()
 	builder.Build = b.Script
 	builder.Repo = &r.Repo{Path: b.Repo.URL, Branch: b.Commit.Branch, Commit: b.Commit.Hash, PR: b.Commit.PullRequest, Dir: filepath.Join("/var/cache/drone/src", b.Repo.Slug), Depth: git.GitDepth(b.Script.Git)}
 	builder.Key = []byte(b.Repo.PrivateKey)
@@ -225,7 +225,7 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 	}
 
 	client := github.New(user.GithubToken)
-	client.ApiUrl = settings.GitHubApiUrl;
+	client.ApiUrl = settings.GitHubApiUrl
 
 	var url string
 	url = settings.URL().String() + "/" + repo.Slug + "/commit/" + commit.Hash
