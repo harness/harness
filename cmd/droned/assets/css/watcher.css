@@ -38,10 +38,19 @@ main > ul > li {
 	border-radius: 15px;
 	box-shadow: inset 3px 3px 7px -2px rgba(0,0,0,.7);
 }
-.project h1 { margin: -3px 0px 10px; font-size: 20px; text-shadow: 1px 1px 3px #000000; }
+.project h1 {
+	position: relative;
+	z-index: 5;
+	margin: -7px 0px 10px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-size: 48px;
+	text-shadow: 1px 1px 3px #000000;
+}
 .project .owner {
 	position: absolute;
-	top: 19px;
+	z-index: 4;
+	top: 43px;
 	right: 15px;
 	font-size: 16px;
 	color: #999;
@@ -53,13 +62,12 @@ main > ul > li {
 
 .project .master-status {
 	float: left;
-	width: 270px;
-	height: 270px;
+	width: 239px;
+	height: 239px;
 	border-radius: 10px 0px 0px 10px;
 	background-color: #777777;
 	text-align: center;
-	font-size: 200px;
-	line-height: 270px;
+	font-size: 160px;
 	text-shadow: -1px -1px 1px #000000,
 	              1px  1px 0px #AAAAAA;
 	color: #222222;	
@@ -74,7 +82,7 @@ main > ul > li {
 	font-weight: normal;
 	font-variant: normal;
 	text-transform: none;
-	line-height: 270px;
+	line-height: 239px;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
@@ -84,7 +92,7 @@ main > ul > li {
 
 .project .updates {
 	list-style: none;
-	margin: 0px 0px 0px 270px;
+	margin: 0px 0px 0px 239px;
 	padding: 0px;
 	font-size: 16px;
 	color: #EEEEEE;
@@ -92,7 +100,7 @@ main > ul > li {
 .project .updates li {
 	opacity: .5;
 	display: block;
-	height: 50px;
+	height: 56px;
 	margin-top: 5px;
 	overflow: hidden;
 	background-color: #777777;
@@ -101,19 +109,19 @@ main > ul > li {
 .project .updates li.progress { opacity: 1; }
 .project .updates li:first-child { margin-top: 0px; border-top-right-radius: 10px; }
 .project .updates li:last-child { border-bottom-right-radius: 10px; }
-.project .updates li div { float: left; height: 50px; }
+.project .updates li div { float: left; height: 56px; }
 .project .updates li { border-left-width: 5px; border-left-style: solid; }
 .project .updates li:not(.master) { border-color: #222222; }
 
-.project .updates li .type { width: 75%; overflow: hidden; line-height: 50px; white-space: nowrap; text-overflow: ellipsis; }
-.project .updates li .type img { float: left; width: 26px; height: 26px; margin: 12px 12px 0px 0px; border-radius: 100px; }
-.project .updates li .date { -webkit-box-sizing: border-box; width: 25%; padding-right: 12px; line-height: 50px; text-align: right; }
+.project .updates li .type { width: 78%; overflow: hidden; line-height: 56px; white-space: nowrap; text-overflow: ellipsis; }
+.project .updates li .type img { float: left; width: 26px; height: 26px; margin: 15px 12px 0px 0px; border-radius: 100px; }
+.project .updates li .date { -webkit-box-sizing: border-box; width: 22%; padding-right: 12px; line-height: 56px; text-align: right; }
 
 .project .updates li .type:before {
 	content: "\e603";
 	display: block;
 	float: left;
-	height: 50px;
+	height: 56px;
 	width: 50px;
 	font-family: 'icons';
 	speak: none;
@@ -122,7 +130,7 @@ main > ul > li {
 	font-variant: normal;
 	text-transform: none;
 	text-align: center;
-	line-height: 50px;
+	line-height: 56px;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	font-size: 22px;
