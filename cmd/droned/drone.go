@@ -34,6 +34,10 @@ var (
 	// driver specific connection information. In this
 	// case, it should be the location of the SQLite file
 	datasource string
+
+	// optional flags for tls listener
+	sslcert string
+	sslkey  string
 )
 
 func main() {
@@ -42,15 +46,35 @@ func main() {
 	flag.StringVar(&port, "port", ":8080", "")
 	flag.StringVar(&driver, "driver", "sqlite3", "")
 	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
+	flag.StringVar(&sslcert, "sslcert", "", "")
+	flag.StringVar(&sslkey, "sslkey", "", "")
 	flag.Parse()
+
+	// validate the TLS arguments
+	checkTLSFlags()
 
 	// setup database and handlers
 	setupDatabase()
 	setupStatic()
 	setupHandlers()
 
-	// start the webserver on the default port.
-	panic(http.ListenAndServe(port, nil))
+	// start webserver using HTTPS or HTTP
+	if sslcert != "" && sslkey != "" {
+		panic(http.ListenAndServeTLS(port, sslcert, sslkey, nil))
+	} else {
+		panic(http.ListenAndServe(port, nil))
+	}
+}
+
+// checking if the TLS flags where supplied correctly.
+func checkTLSFlags() {
+
+	if sslcert != "" && sslkey == "" {
+		log.Fatal("invalid configuration: -sslkey unspecified, but -sslcert was specified.")
+	} else if sslcert == "" && sslkey != "" {
+		log.Fatal("invalid configuration: -sslcert unspecified, but -sslkey was specified.")
+	}
+
 }
 
 // setup the database connection and register with the
