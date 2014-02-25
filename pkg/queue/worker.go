@@ -108,8 +108,9 @@ func (w *worker) execute(task *BuildTask) error {
 	var buf = &bufferWrapper{channel: consoleslug}
 
 	// append private parameters to the environment
-	// variable section of the .drone.yml file
-	if task.Repo.Params != nil {
+	// variable section of the .drone.yml file, iff
+	// this is not a pull request (for security purposes)
+	if task.Repo.Params != nil && len(task.Commit.PullRequest) == 0 {
 		for k, v := range task.Repo.Params {
 			task.Script.Env = append(task.Script.Env, k+"="+v)
 		}
