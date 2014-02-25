@@ -125,7 +125,7 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 		// create the github key, or update if one already exists
 		_, err := client.RepoKeys.CreateUpdate(owner, name, repo.PublicKey, keyName)
 		if err != nil {
-			return fmt.Errorf("Unable to add Private Key to your GitHub repository")
+			return fmt.Errorf("Unable to add Public Key to your GitHub repository")
 		}
 	} else {
 
