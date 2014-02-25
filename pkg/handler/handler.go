@@ -90,8 +90,9 @@ func (h RepoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// The User must own the repository OR be a member
-	// of the Team that owns the repository.
-	if user.ID != repo.UserID {
+	// of the Team that owns the repository OR the repo
+	// must not be private.
+	if user.ID != repo.UserID && repo.Private == false {
 		if member, _ := database.IsMember(user.ID, repo.TeamID); !member {
 			RenderNotFound(w)
 			return
