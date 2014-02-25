@@ -3,11 +3,8 @@ package queue
 import (
 	"bytes"
 	"fmt"
-	"github.com/drone/drone/pkg/build"
-	"github.com/drone/drone/pkg/build/docker"
 	"github.com/drone/drone/pkg/build/git"
 	r "github.com/drone/drone/pkg/build/repo"
-	"github.com/drone/drone/pkg/build/script"
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
@@ -19,7 +16,9 @@ import (
 	"time"
 )
 
-type worker struct{}
+type worker struct {
+	runner Runner
+}
 
 // work is a function that will infinitely
 // run in the background waiting for tasks that
@@ -125,7 +124,7 @@ func (w *worker) execute(task *BuildTask) error {
 	}()
 
 	// execute the build
-	passed, buildErr := runBuild(task, buf) //w.builder.Build(script, repo, task.Repo.PrivateKey, buf)
+	passed, buildErr := w.runBuild(task, buf)
 
 	task.Build.Finished = time.Now().UTC()
 	task.Commit.Finished = time.Now().UTC()
@@ -168,47 +167,20 @@ func (w *worker) execute(task *BuildTask) error {
 	return nil
 }
 
-type runner struct {
-	dockerClient *docker.Client
-	timeout      time.Duration
-}
-
-func (r *runner) Build(buildScript *script.Build, repo *r.Repo, key []byte, buildOutput io.Writer) (bool, error) {
-	builder := build.New(r.dockerClient)
-	builder.Build = buildScript
-	builder.Repo = repo
-	builder.Key = key
-	builder.Stdout = buildOutput
-	builder.Timeout = r.timeout
-
-	err := builder.Run()
-
-	return builder.BuildState == nil || builder.BuildState.ExitCode != 0, err
-}
-
-func newRunner(dockerClient *docker.Client, timeout time.Duration) *runner {
-	return &runner{
-		dockerClient: dockerClient,
-		timeout:      timeout,
-	}
-}
-
-func runBuild(b *BuildTask, buf io.Writer) (bool, error) {
-	runner := newRunner(docker.DefaultClient, 300*time.Minute)
-
+func (w *worker) runBuild(task *BuildTask, buf io.Writer) (bool, error) {
 	repo := &r.Repo{
-		Path:   b.Repo.URL,
-		Branch: b.Commit.Branch,
-		Commit: b.Commit.Hash,
-		PR:     b.Commit.PullRequest,
-		Dir:    filepath.Join("/var/cache/drone/src", b.Repo.Slug),
-		Depth:  git.GitDepth(b.Script.Git),
+		Path:   task.Repo.URL,
+		Branch: task.Commit.Branch,
+		Commit: task.Commit.Hash,
+		PR:     task.Commit.PullRequest,
+		Dir:    filepath.Join("/var/cache/drone/src", task.Repo.Slug),
+		Depth:  git.GitDepth(task.Script.Git),
 	}
 
-	return runner.Build(
-		b.Script,
+	return w.runner.Run(
+		task.Script,
 		repo,
-		[]byte(b.Repo.PrivateKey),
+		[]byte(task.Repo.PrivateKey),
 		buf,
 	)
 }
