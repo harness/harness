@@ -16,6 +16,8 @@ ctlMod.controller( "Projects", [ "$scope", "$rootScope", "$http", function ( $sc
         var payload = {};
         var task = JSON.parse(message.data);
 
+        console.log("Message received");
+
         payload.owner        = task.Repo.owner 
         payload.name         = task.Repo.name
         payload.hash         = task.Commit.hash;
@@ -26,7 +28,6 @@ ctlMod.controller( "Projects", [ "$scope", "$rootScope", "$http", function ( $sc
         payload.message      = task.Commit.message;
 
         $scope.addBuild(payload);
-        console.log(payload);
         $scope.$digest();
     };
 

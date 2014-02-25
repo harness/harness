@@ -165,10 +165,10 @@ func TeamWall(w http.ResponseWriter, r *http.Request, u *User) error {
 		return fmt.Errorf("Forbidden")
 	}
 
+	wallslug := fmt.Sprintf("wall/team/%d", team.ID)
 	data := struct {
 		Token string
-	}{channel.CreateStream(fmt.Sprintf("%s", 
-        channel.WallDisplay))}
+	}{channel.Create(wallslug)}
 
 	return RenderTemplate(w, "watcher.html", &data)
 }

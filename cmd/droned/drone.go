@@ -48,15 +48,9 @@ func main() {
 	setupDatabase()
 	setupStatic()
 	setupHandlers()
-    setupWall()
 
 	// start the webserver on the default port.
 	panic(http.ListenAndServe(port, nil))
-}
-
-// setup the websocket channel for the wall display
-func setupWall() {
-    channel.Create(channel.WallDisplay)
 }
 
 // setup the database connection and register with the
@@ -126,6 +120,8 @@ func setupHandlers() {
     // handlers for wall display
 	m.Get("/dashboard/team/:team/wall/commits", handler.UserHandler(handler.TeamWallData))
 	m.Get("/dashboard/team/:team/wall", handler.UserHandler(handler.TeamWall))
+	m.Get("/dashboard/user/wall/commits", handler.UserHandler(handler.UserWallData))
+	m.Get("/dashboard/user/wall", handler.UserHandler(handler.UserWall))
 
 	// handlers for dashboard pages
 	m.Get("/dashboard/team/:team", handler.UserHandler(handler.TeamShow))

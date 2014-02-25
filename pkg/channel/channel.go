@@ -11,10 +11,6 @@ import (
 	"github.com/dchest/authcookie"
 )
 
-const (
-	WallDisplay = "wall/display"
-)
-
 // secret key used to generate tokens
 var secret = make([]byte, 32)
 
