@@ -19,9 +19,6 @@ import (
 	"github.com/drone/drone/pkg/build/script"
 )
 
-// instance of the Docker client
-var client = docker.New()
-
 // BuildState stores information about a build
 // process including the Exit status and various
 // Runtime statistics (coming soon).
@@ -35,8 +32,10 @@ type BuildState struct {
 	// Max RAM, Max Swap, Disk space, and more.
 }
 
-func New() *Builder {
-	return &Builder{}
+func New(dockerClient *docker.Client) *Builder {
+	return &Builder{
+		dockerClient: dockerClient,
+	}
 }
 
 // Builder represents a build process being prepared
@@ -86,6 +85,8 @@ type Builder struct {
 	// specified services and linked to
 	// this build.
 	services []*docker.Container
+
+	dockerClient *docker.Client
 }
 
 func (b *Builder) Run() error {
@@ -182,19 +183,19 @@ func (b *Builder) setup() error {
 		log.Infof("starting service container %s", image.Tag)
 
 		// Run the contianer
-		run, err := client.Containers.RunDaemonPorts(image.Tag, image.Ports...)
+		run, err := b.dockerClient.Containers.RunDaemonPorts(image.Tag, image.Ports...)
 		if err != nil {
 			return err
 		}
 
 		// Get the container info
-		info, err := client.Containers.Inspect(run.ID)
+		info, err := b.dockerClient.Containers.Inspect(run.ID)
 		if err != nil {
 			// on error kill the container since it hasn't yet been
 			// added to the array and would therefore not get
 			// removed in the defer statement.
-			client.Containers.Stop(run.ID, 10)
-			client.Containers.Remove(run.ID)
+			b.dockerClient.Containers.Stop(run.ID, 10)
+			b.dockerClient.Containers.Remove(run.ID)
 			return err
 		}
 
@@ -224,16 +225,16 @@ func (b *Builder) setup() error {
 
 	// check for build container (ie bradrydzewski/go:1.2)
 	// and download if it doesn't already exist
-	if _, err := client.Images.Inspect(b.Build.Image); err == docker.ErrNotFound {
+	if _, err := b.dockerClient.Images.Inspect(b.Build.Image); err == docker.ErrNotFound {
 		// download the image if it doesn't exist
-		if err := client.Images.Pull(b.Build.Image); err != nil {
+		if err := b.dockerClient.Images.Pull(b.Build.Image); err != nil {
 			return err
 		}
 	}
 
 	// create the Docker image
 	id := createUID()
-	if err := client.Images.Build(id, dir); err != nil {
+	if err := b.dockerClient.Images.Build(id, dir); err != nil {
 		return err
 	}
 
@@ -241,11 +242,11 @@ func (b *Builder) setup() error {
 	log.Infof("copying repository to %s", b.Repo.Dir)
 
 	// get the image details
-	b.image, err = client.Images.Inspect(id)
+	b.image, err = b.dockerClient.Images.Inspect(id)
 	if err != nil {
 		// if we have problems with the image make sure
 		// we remove it before we exit
-		client.Images.Remove(id)
+		b.dockerClient.Images.Remove(id)
 		return err
 	}
 
@@ -264,10 +265,10 @@ func (b *Builder) teardown() error {
 		log.Info("removing build container")
 
 		// stop the container, ignore error message
-		client.Containers.Stop(b.container.ID, 15)
+		b.dockerClient.Containers.Stop(b.container.ID, 15)
 
 		// remove the container, ignore error message
-		if err := client.Containers.Remove(b.container.ID); err != nil {
+		if err := b.dockerClient.Containers.Remove(b.container.ID); err != nil {
 			log.Errf("failed to delete build container %s", b.container.ID)
 		}
 	}
@@ -278,10 +279,10 @@ func (b *Builder) teardown() error {
 		log.Infof("removing service container %s", b.Build.Services[i])
 
 		// stop the service container, ignore the error
-		client.Containers.Stop(container.ID, 15)
+		b.dockerClient.Containers.Stop(container.ID, 15)
 
 		// remove the service container, ignore the error
-		if err := client.Containers.Remove(container.ID); err != nil {
+		if err := b.dockerClient.Containers.Remove(container.ID); err != nil {
 			log.Errf("failed to delete service container %s", container.ID)
 		}
 	}
@@ -291,7 +292,7 @@ func (b *Builder) teardown() error {
 		// debugging
 		log.Info("removing build image")
 
-		if _, err := client.Images.Remove(b.image.ID); err != nil {
+		if _, err := b.dockerClient.Images.Remove(b.image.ID); err != nil {
 			log.Errf("failed to completely delete build image %s. %s", b.image.ID, err.Error())
 		}
 	}
@@ -326,7 +327,7 @@ func (b *Builder) run() error {
 	}
 
 	// create the container from the image
-	run, err := client.Containers.Create(&conf)
+	run, err := b.dockerClient.Containers.Create(&conf)
 	if err != nil {
 		return err
 	}
@@ -336,18 +337,18 @@ func (b *Builder) run() error {
 
 	// attach to the container
 	go func() {
-		client.Containers.Attach(run.ID, &writer{b.Stdout})
+		b.dockerClient.Containers.Attach(run.ID, &writer{b.Stdout})
 	}()
 
 	// start the container
-	if err := client.Containers.Start(run.ID, &host); err != nil {
+	if err := b.dockerClient.Containers.Start(run.ID, &host); err != nil {
 		b.BuildState.ExitCode = 1
 		b.BuildState.Finished = time.Now().UTC().Unix()
 		return err
 	}
 
 	// wait for the container to stop
-	wait, err := client.Containers.Wait(run.ID)
+	wait, err := b.dockerClient.Containers.Wait(run.ID)
 	if err != nil {
 		b.BuildState.ExitCode = 1
 		b.BuildState.Finished = time.Now().UTC().Unix()

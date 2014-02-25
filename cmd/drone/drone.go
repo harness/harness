@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/drone/drone/pkg/build"
+	"github.com/drone/drone/pkg/build/docker"
 	"github.com/drone/drone/pkg/build/log"
 	"github.com/drone/drone/pkg/build/repo"
 	"github.com/drone/drone/pkg/build/script"
@@ -174,7 +175,7 @@ func run(path string) {
 
 	// loop through and create builders
 	for _, b := range builds { //script.Builds {
-		builder := build.New()
+		builder := build.New(docker.DefaultClient)
 		builder.Build = b
 		builder.Repo = &code
 		builder.Key = key

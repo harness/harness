@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/drone/drone/pkg/build"
+	"github.com/drone/drone/pkg/build/docker"
 	"github.com/drone/drone/pkg/build/git"
 	r "github.com/drone/drone/pkg/build/repo"
 	"github.com/drone/drone/pkg/channel"
@@ -167,7 +168,7 @@ func (w *worker) execute(task *BuildTask) error {
 }
 
 func runBuild(b *BuildTask, buf io.Writer) (bool, error) {
-	builder := build.New()
+	builder := build.New(docker.DefaultClient)
 	builder.Build = b.Script
 	builder.Repo = &r.Repo{Path: b.Repo.URL, Branch: b.Commit.Branch, Commit: b.Commit.Hash, PR: b.Commit.PullRequest, Dir: filepath.Join("/var/cache/drone/src", b.Repo.Slug), Depth: git.GitDepth(b.Script.Git)}
 	builder.Key = []byte(b.Repo.PrivateKey)
