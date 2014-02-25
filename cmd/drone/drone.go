@@ -31,6 +31,9 @@ var (
 	// this will default to 500 minutes (6 hours)
 	timeout = flag.Duration("timeout", 300*time.Minute, "")
 
+	// build will run in a privileged container
+	privileged = flag.Bool("privileged", false, "")
+
 	// runs Drone with verbose output if True
 	verbose = flag.Bool("v", false, "")
 
@@ -187,6 +190,7 @@ func run(path string) {
 		builder.Key = key
 		builder.Stdout = os.Stdout
 		builder.Timeout = *timeout
+		builder.Privileged = *privileged
 
 		if *parallel == true {
 			var buf bytes.Buffer
@@ -285,6 +289,7 @@ The commands are:
   -h               display this help and exit
   --parallel       runs drone build tasks in parallel
   --timeout=300ms  timeout build after 300 milliseconds
+  --privileged     runs drone build in a privileged container
 
 Examples:
   drone build                 builds the source in the pwd
