@@ -101,7 +101,9 @@ func setupDatabase() {
 // the `rice embed` command, else they are served from disk.
 func setupStatic() {
 	box := rice.MustFindBox("assets")
+	http.Handle("/fonts/", http.FileServer(box.HTTPBox()))
 	http.Handle("/css/", http.FileServer(box.HTTPBox()))
+	http.Handle("/js/", http.FileServer(box.HTTPBox()))
 
 	// we need to intercept all attempts to serve images
 	// so that we can add a cache-control settings
@@ -138,6 +140,12 @@ func setupHandlers() {
 
 	// handlers for linking your GitHub account
 	m.Get("/auth/login/github", handler.UserHandler(handler.LinkGithub))
+
+    // handlers for wall display
+	m.Get("/dashboard/team/:team/wall/commits", handler.UserHandler(handler.TeamWallData))
+	m.Get("/dashboard/team/:team/wall", handler.UserHandler(handler.TeamWall))
+	m.Get("/dashboard/user/wall/commits", handler.UserHandler(handler.UserWallData))
+	m.Get("/dashboard/user/wall", handler.UserHandler(handler.UserWall))
 
 	// handlers for dashboard pages
 	m.Get("/dashboard/team/:team", handler.UserHandler(handler.TeamShow))

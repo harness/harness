@@ -112,15 +112,24 @@ func (b *BuildTask) execute() error {
 
 	// make sure a channel exists for the repository,
 	// the commit, and the commit output (TODO)
+	var wallslug string
+	if b.Repo.TeamID != 0 {
+		wallslug = fmt.Sprintf("wall/team/%d", b.Repo.TeamID)
+	} else {
+		wallslug = fmt.Sprintf("wall/user/%d", b.Repo.UserID)
+	}
+
 	reposlug := fmt.Sprintf("%s/%s/%s", b.Repo.Host, b.Repo.Owner, b.Repo.Name)
 	commitslug := fmt.Sprintf("%s/%s/%s/commit/%s", b.Repo.Host, b.Repo.Owner, b.Repo.Name, b.Commit.Hash)
 	consoleslug := fmt.Sprintf("%s/%s/%s/commit/%s/builds/%s", b.Repo.Host, b.Repo.Owner, b.Repo.Name, b.Commit.Hash, b.Build.Slug)
 	channel.Create(reposlug)
 	channel.Create(commitslug)
+	channel.Create(wallslug)
 	channel.CreateStream(consoleslug)
 
 	// notify the channels that the commit and build started
 	channel.SendJSON(reposlug, b.Commit)
+	channel.SendJSON(wallslug, b)
 	channel.SendJSON(commitslug, b.Build)
 
 	var buf = &bufferWrapper{channel: consoleslug}
@@ -181,6 +190,7 @@ func (b *BuildTask) execute() error {
 
 	// notify the channels that the commit and build finished
 	channel.SendJSON(reposlug, b.Commit)
+	channel.SendJSON(wallslug, b)
 	channel.SendJSON(commitslug, b.Build)
 	channel.Close(consoleslug)
 
@@ -225,7 +235,7 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 	}
 
 	client := github.New(user.GithubToken)
-	client.ApiUrl = settings.GitHubApiUrl;
+	client.ApiUrl = settings.GitHubApiUrl
 
 	var url string
 	url = settings.URL().String() + "/" + repo.Slug + "/commit/" + commit.Hash

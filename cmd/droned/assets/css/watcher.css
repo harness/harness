@@ -1,0 +1,154 @@
+body {
+	padding: 10px;
+	background-color: #313131;
+	color: #FFFFFF;	
+	font-family: Verdana;
+}
+
+body > header h1 {
+	margin: 0px 0px 10px;
+	text-align: center;
+	font-size: 18px;
+}
+body > header h1:before {
+	padding-right: 10px;
+	font-size: 16px;
+}
+
+main > ul {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+	overflow: hidden;
+}
+main > ul > li {
+	-webkit-box-sizing: border-box;
+	float: left;
+	width: 50%;
+	padding: 10px;
+}
+
+.project {
+	position: relative;
+	padding: 15px;
+	overflow: hidden;
+	background-color: #222222;
+	border-right: 1px solid #555555;
+	border-bottom: 1px solid #555555;
+	border-radius: 15px;
+	box-shadow: inset 3px 3px 7px -2px rgba(0,0,0,.7);
+}
+.project h1 {
+	position: relative;
+	z-index: 5;
+	margin: -7px 0px 10px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-size: 48px;
+	text-shadow: 1px 1px 3px #000000;
+}
+.project .owner {
+	position: absolute;
+	z-index: 4;
+	top: 43px;
+	right: 15px;
+	font-size: 16px;
+	color: #999;
+}
+
+.passed { background-color: #1A8831 !important; border-color: #1A8831; }
+.failed { background-color: #D02C2E !important; border-color: #D02C2E; }
+.progress { background-color: #777777 !important; border-color: #777777; }
+
+.project .master-status {
+	float: left;
+	width: 239px;
+	height: 239px;
+	border-radius: 10px 0px 0px 10px;
+	background-color: #777777;
+	text-align: center;
+	font-size: 160px;
+	text-shadow: -1px -1px 1px #000000,
+	              1px  1px 0px #AAAAAA;
+	color: #222222;	
+}
+.project .master-status.progress { text-shadow: none; }
+.project .master-status:after {
+	content: "\e603";
+	display: block;
+	font-family: 'icons';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 239px;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+.project .master-status.passed:after { content: "\e601"; }
+.project .master-status.failed:after { content: "\e600"; }
+.project .master-status.progress:after { content: "\e602"; }
+
+.project .updates {
+	list-style: none;
+	margin: 0px 0px 0px 239px;
+	padding: 0px;
+	font-size: 16px;
+	color: #EEEEEE;
+}
+.project .updates li {
+	opacity: .5;
+	display: block;
+	height: 56px;
+	margin-top: 5px;
+	overflow: hidden;
+	background-color: #777777;
+}
+.project .updates li.master,
+.project .updates li.progress { opacity: 1; }
+.project .updates li:first-child { margin-top: 0px; border-top-right-radius: 10px; }
+.project .updates li:last-child { border-bottom-right-radius: 10px; }
+.project .updates li div { float: left; height: 56px; }
+.project .updates li { border-left-width: 5px; border-left-style: solid; }
+.project .updates li:not(.master) { border-color: #222222; }
+
+.project .updates li .type { width: 78%; overflow: hidden; line-height: 56px; white-space: nowrap; text-overflow: ellipsis; }
+.project .updates li .type img { float: left; width: 26px; height: 26px; margin: 15px 12px 0px 0px; border-radius: 100px; }
+.project .updates li .date { -webkit-box-sizing: border-box; width: 22%; padding-right: 12px; line-height: 56px; text-align: right; }
+
+.project .updates li .type:before {
+	content: "\e603";
+	display: block;
+	float: left;
+	height: 56px;
+	width: 50px;
+	font-family: 'icons';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	text-align: center;
+	line-height: 56px;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	font-size: 22px;
+	color: #EEEEEE;	
+}
+.project .updates li.passed .type:before { content: "\e601"; }
+.project .updates li.failed .type:before { content: "\e600"; }
+.project .updates li.progress .type:before { content: "\e602"; }
+
+.project .updates li a { color: #EEEEEE; text-decoration: none; }
+.project .updates li a:hover { text-decoration: underline; }
+
+.project .master-status.progress:after,
+.project .updates li.progress .type:before {
+	-webkit-animation: spin 1.5s infinite linear;
+}
+
+@-webkit-keyframes spin {
+	0%   { -webkit-transform: rotate(0deg); }
+	100% { -webkit-transform: rotate(360deg); }
+}

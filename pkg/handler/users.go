@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 
+	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
 )
@@ -108,4 +111,26 @@ func UserTeams(w http.ResponseWriter, r *http.Request, u *User) error {
 		Teams []*Team
 	}{u, teams}
 	return RenderTemplate(w, "user_teams.html", &data)
+}
+
+// Wall display for the user
+func UserWall(w http.ResponseWriter, r *http.Request, u *User) error {
+	wallslug := fmt.Sprintf("wall/user/%d", u.ID)
+	data := struct {
+		Token string
+	}{channel.Create(wallslug)}
+
+	return RenderTemplate(w, "watcher.html", &data)
+}
+
+// API endpoint for fetching the initial wall display data via AJAX
+func UserWallData(w http.ResponseWriter, r *http.Request, u *User) error {
+	// list of recent commits
+	commits, err := database.ListCommitsUser(u.ID)
+	if err != nil {
+		return err
+	}
+
+	w.WriteHeader(http.StatusOK)
+	return json.NewEncoder(w).Encode(commits)
 }
