@@ -12,3 +12,5 @@ cmd/drone/drone
 cmd/droned/droned
 deb/drone/usr/local/bin/drone
 deb/drone/usr/local/bin/droned
+
+.vagrant
