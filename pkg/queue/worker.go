@@ -7,6 +7,7 @@ import (
 	"github.com/drone/drone/pkg/build/docker"
 	"github.com/drone/drone/pkg/build/git"
 	r "github.com/drone/drone/pkg/build/repo"
+	"github.com/drone/drone/pkg/build/script"
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
@@ -167,17 +168,49 @@ func (w *worker) execute(task *BuildTask) error {
 	return nil
 }
 
+type runner struct {
+	dockerClient *docker.Client
+	timeout      time.Duration
+}
+
+func (r *runner) Build(buildScript *script.Build, repo *r.Repo, key []byte, buildOutput io.Writer) (bool, error) {
+	builder := build.New(r.dockerClient)
+	builder.Build = buildScript
+	builder.Repo = repo
+	builder.Key = key
+	builder.Stdout = buildOutput
+	builder.Timeout = r.timeout
+
+	err := builder.Run()
+
+	return builder.BuildState == nil || builder.BuildState.ExitCode != 0, err
+}
+
+func newRunner(dockerClient *docker.Client, timeout time.Duration) *runner {
+	return &runner{
+		dockerClient: dockerClient,
+		timeout:      timeout,
+	}
+}
+
 func runBuild(b *BuildTask, buf io.Writer) (bool, error) {
-	builder := build.New(docker.DefaultClient)
-	builder.Build = b.Script
-	builder.Repo = &r.Repo{Path: b.Repo.URL, Branch: b.Commit.Branch, Commit: b.Commit.Hash, PR: b.Commit.PullRequest, Dir: filepath.Join("/var/cache/drone/src", b.Repo.Slug), Depth: git.GitDepth(b.Script.Git)}
-	builder.Key = []byte(b.Repo.PrivateKey)
-	builder.Stdout = buf
-	builder.Timeout = 300 * time.Minute
+	runner := newRunner(docker.DefaultClient, 300*time.Minute)
 
-	buildErr := builder.Run()
+	repo := &r.Repo{
+		Path:   b.Repo.URL,
+		Branch: b.Commit.Branch,
+		Commit: b.Commit.Hash,
+		PR:     b.Commit.PullRequest,
+		Dir:    filepath.Join("/var/cache/drone/src", b.Repo.Slug),
+		Depth:  git.GitDepth(b.Script.Git),
+	}
 
-	return builder.BuildState == nil || builder.BuildState.ExitCode != 0, buildErr
+	return runner.Build(
+		b.Script,
+		repo,
+		[]byte(b.Repo.PrivateKey),
+		buf,
+	)
 }
 
 // updateGitHubStatus is a helper function that will send
