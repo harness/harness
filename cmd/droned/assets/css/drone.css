@@ -904,6 +904,11 @@ pre {
 .build-details .commit-summary {
   float: left;
 }
+.build-details .commit-summary dd {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 450px;
+}
 .build-details.affix {
   top: 0px;
   padding-top: 15px;
