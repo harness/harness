@@ -10,29 +10,29 @@ import (
 	"github.com/drone/drone/pkg/build/script"
 )
 
-type Runner interface {
+type BuildRunner interface {
 	Run(buildScript *script.Build, repo *repo.Repo, key []byte, buildOutput io.Writer) (success bool, err error)
 }
 
-type runner struct {
+type buildRunner struct {
 	dockerClient *docker.Client
 	timeout      time.Duration
 }
 
-func newRunner(dockerClient *docker.Client, timeout time.Duration) *runner {
-	return &runner{
+func NewBuildRunner(dockerClient *docker.Client, timeout time.Duration) BuildRunner {
+	return &buildRunner{
 		dockerClient: dockerClient,
 		timeout:      timeout,
 	}
 }
 
-func (r *runner) Run(buildScript *script.Build, repo *repo.Repo, key []byte, buildOutput io.Writer) (bool, error) {
-	builder := build.New(r.dockerClient)
+func (runner *buildRunner) Run(buildScript *script.Build, repo *repo.Repo, key []byte, buildOutput io.Writer) (bool, error) {
+	builder := build.New(runner.dockerClient)
 	builder.Build = buildScript
 	builder.Repo = repo
 	builder.Key = key
 	builder.Stdout = buildOutput
-	builder.Timeout = r.timeout
+	builder.Timeout = runner.timeout
 
 	err := builder.Run()
 
