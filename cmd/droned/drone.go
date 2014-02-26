@@ -122,7 +122,7 @@ func setupStatic() {
 
 // setup routes for serving dynamic content.
 func setupHandlers() {
-	queueRunner := queue.NewRunner(docker.New(), 300*time.Second)
+	queueRunner := queue.NewBuildRunner(docker.New(), 300*time.Second)
 	queue := queue.Start(runtime.NumCPU(), queueRunner)
 
 	hookHandler := handler.NewHookHandler(queue)
