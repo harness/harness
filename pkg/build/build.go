@@ -412,6 +412,13 @@ func (b *Builder) writeDockerfile(dir string) error {
 		dockerfile.WriteRun("echo 'StrictHostKeyChecking no' > /root/.ssh/config")
 	}
 
+	dockerfile.WriteEnv("CI", "true")
+	dockerfile.WriteEnv("DRONE", "true")
+	dockerfile.WriteEnv("DRONE_BRANCH", b.Repo.Branch)
+	dockerfile.WriteEnv("DRONE_COMMIT", b.Repo.Commit)
+	dockerfile.WriteEnv("DRONE_PR", b.Repo.PR)
+	dockerfile.WriteEnv("DRONE_BUILD_DIR", b.Repo.Dir)
+
 	dockerfile.WriteAdd("proxy.sh", "/etc/drone.d/")
 	dockerfile.WriteEntrypoint("/bin/bash -e /usr/local/bin/drone")
 
