@@ -83,6 +83,9 @@ func (b *Build) Write(f *buildfile.Buildfile) {
 	if b.Deploy != nil {
 		b.Deploy.Write(f)
 	}
+
+	// write exit value
+	f.WriteCmd("exit 0")
 }
 
 // WriteBuild adds only the build steps to the build script,
