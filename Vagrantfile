@@ -31,8 +31,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # System packages
     echo "Installing Base Packages"
     export DEBIAN_FRONTEND=noninteractive
-    sudo apt-get update -qq
-    sudo apt-get install -qqy --force-yes build-essential bzr git mercurial vim
+    apt-get update -qq
+    apt-get install -qqy --force-yes build-essential bzr git mercurial vim
 
 
     # Install Go
@@ -48,11 +48,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         wget --quiet --directory-prefix=/tmp https://go.googlecode.com/files/$GOTARBALL
 
         echo "    Extracting $GOTARBALL to $GOROOT"
-        sudo tar -C /usr/local -xzf /tmp/$GOTARBALL
+        tar -C /usr/local -xzf /tmp/$GOTARBALL
 
         echo "    Configuring GOPATH"
-        sudo mkdir -p $GOPATH/src $GOPATH/bin $GOPATH/pkg
-        sudo chown -R vagrant $GOPATH
+        mkdir -p $GOPATH/src $GOPATH/bin $GOPATH/pkg
 
         echo "    Configuring env vars"
         echo "export PATH=\$PATH:$GOROOT/bin:$GOPATH/bin" | sudo tee /etc/profile.d/golang.sh > /dev/null
@@ -67,6 +66,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     make deps
     make embed
     make build
+
+    # Make sure vagrant user can access go dirs
+    chown -R vagrant $GOPATH
+    chgrp -R vagrant $GOPATH
 
 
     # Auto cd to drone install dir
