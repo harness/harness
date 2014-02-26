@@ -1,11 +1,8 @@
 package queue
 
 import (
-	"github.com/drone/drone/pkg/build/docker"
 	"github.com/drone/drone/pkg/build/script"
 	. "github.com/drone/drone/pkg/model"
-	"runtime"
-	"time"
 )
 
 // A Queue dispatches tasks to workers.
@@ -24,10 +21,6 @@ type BuildTask struct {
 	// file, unmarshalled.
 	Script *script.Build
 }
-
-var defaultQueue = Start(runtime.NumCPU(), newRunner(docker.DefaultClient, 300*time.Second)) // TEMPORARY; INJECT PLEASE
-
-var Add = defaultQueue.Add // TEMPORARY; INJECT PLEASE
 
 func Start(workers int, runner Runner) *Queue {
 	// get the number of CPUs. Since builds

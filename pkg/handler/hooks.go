@@ -13,10 +13,19 @@ import (
 	"github.com/drone/go-github/github"
 )
 
+type HookHandler struct {
+	queue *queue.Queue
+}
+
+func NewHookHandler(queue *queue.Queue) *HookHandler {
+	return &HookHandler{
+		queue: queue,
+	}
+}
+
 // Processes a generic POST-RECEIVE hook and
 // attempts to trigger a build.
-func Hook(w http.ResponseWriter, r *http.Request) error {
-
+func (h *HookHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 	// handle github ping
 	if r.Header.Get("X-Github-Event") == "ping" {
 		return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
@@ -25,7 +34,7 @@ func Hook(w http.ResponseWriter, r *http.Request) error {
 	// if this is a pull request route
 	// to a different handler
 	if r.Header.Get("X-Github-Event") == "pull_request" {
-		PullRequestHook(w, r)
+		h.PullRequestHook(w, r)
 		return nil
 	}
 
@@ -160,14 +169,13 @@ func Hook(w http.ResponseWriter, r *http.Request) error {
 	//realtime.CommitPending(repo.UserID, repo.TeamID, repo.ID, commit.ID, repo.Private)
 	//realtime.BuildPending(repo.UserID, repo.TeamID, repo.ID, commit.ID, build.ID, repo.Private)
 
-	queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript}) //Push(repo, commit, build, buildscript)
+	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript}) //Push(repo, commit, build, buildscript)
 
 	// OK!
 	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
 }
 
-func PullRequestHook(w http.ResponseWriter, r *http.Request) {
-
+func (h *HookHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) {
 	// get the payload of the message
 	// this should contain a json representation of the
 	// repository and commit details
@@ -276,7 +284,7 @@ func PullRequestHook(w http.ResponseWriter, r *http.Request) {
 
 	// notify websocket that a new build is pending
 	// TODO we should, for consistency, just put this inside Queue.Add()
-	queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript})
+	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript})
 
 	// OK!
 	RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)

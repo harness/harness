@@ -19,7 +19,7 @@ type runner struct {
 	timeout      time.Duration
 }
 
-func newRunner(dockerClient *docker.Client, timeout time.Duration) *runner {
+func NewRunner(dockerClient *docker.Client, timeout time.Duration) Runner {
 	return &runner{
 		dockerClient: dockerClient,
 		timeout:      timeout,
