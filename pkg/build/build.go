@@ -414,10 +414,18 @@ func (b *Builder) writeDockerfile(dir string) error {
 
 	dockerfile.WriteEnv("CI", "true")
 	dockerfile.WriteEnv("DRONE", "true")
-	dockerfile.WriteEnv("DRONE_BRANCH", b.Repo.Branch)
-	dockerfile.WriteEnv("DRONE_COMMIT", b.Repo.Commit)
-	dockerfile.WriteEnv("DRONE_PR", b.Repo.PR)
-	dockerfile.WriteEnv("DRONE_BUILD_DIR", b.Repo.Dir)
+	if b.Repo.Branch != "" {
+		dockerfile.WriteEnv("DRONE_BRANCH", b.Repo.Branch)
+	}
+	if b.Repo.Commit != "" {
+		dockerfile.WriteEnv("DRONE_COMMIT", b.Repo.Commit)
+	}
+	if b.Repo.PR != "" {
+		dockerfile.WriteEnv("DRONE_PR", b.Repo.PR)
+	}
+	if b.Repo.Dir != "" {
+		dockerfile.WriteEnv("DRONE_BUILD_DIR", b.Repo.Dir)
+	}
 
 	dockerfile.WriteAdd("proxy.sh", "/etc/drone.d/")
 	dockerfile.WriteEntrypoint("/bin/bash -e /usr/local/bin/drone")
