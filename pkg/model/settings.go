@@ -54,3 +54,10 @@ func (s *Settings) Validate() error {
 		return nil
 	}
 }
+
+// Ensure some settings values have a proper default (i.e. SmtpPort = 25)
+func (s *Settings) SetDefaults() {
+	if s.SmtpPort == "" {
+		s.SmtpPort = "25"
+	}
+}

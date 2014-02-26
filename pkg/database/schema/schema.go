@@ -121,7 +121,7 @@ CREATE TABLE settings (
   ,bitbucket_key    VARCHAR(255)
   ,bitbucket_secret VARCHAR(255)
   ,smtp_server      VARCHAR(1024)
-  ,smtp_port        VARCHAR(5)
+  ,smtp_port        VARCHAR(5) DEFAULT '25'
   ,smtp_address     VARCHAR(1024)
   ,smtp_username    VARCHAR(1024)
   ,smtp_password    VARCHAR(1024)

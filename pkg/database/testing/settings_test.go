@@ -17,6 +17,11 @@ func TestGetSettings(t *testing.T) {
 	//	t.Error(err)
 	//}
 
+	// verify that defaults are set
+	if settings.SmtpPort == "" {
+		t.Error("Expected a non-empty default value for SMTP port")
+	}
+
 	// add some settings
 	//settings := &modelSettings{}
 	settings.Scheme = "https"
@@ -30,9 +35,17 @@ func TestGetSettings(t *testing.T) {
 	settings.SmtpUsername = "username"
 	settings.SmtpPassword = "password"
 
+	// This will be reset to a default value
+	settings.SmtpPort = ""
+
 	// save the updated settings
 	if err := database.SaveSettings(settings); err != nil {
 		t.Error(err)
+	}
+
+	// verify that defaults are set
+	if settings.SmtpPort == "" {
+		t.Error("Expected a non-empty default value for SMTP port")
 	}
 
 	// re-retrieve the settings post-save
