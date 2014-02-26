@@ -42,6 +42,7 @@ func GetSettings() (*Settings, error) {
 	//	// is the first time the system is being used
 	//	err = nil
 	//}
+	settings.SetDefaults()
 	return &settings, err
 }
 
@@ -57,6 +58,7 @@ func SettingsMust() *Settings {
 
 // Saves the system Settings.
 func SaveSettings(settings *Settings) error {
+	settings.SetDefaults()
 	//settingsLock.Lock()
 	//defer settingsLock.Unlock()
 
