@@ -71,11 +71,6 @@ func (h AdminHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type RepoHandler func(w http.ResponseWriter, r *http.Request, user *User, repo *Repo) error
 
 func (h RepoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	user, err := readUser(r)
-	if err != nil {
-		redirectLogin(w, r)
-		return
-	}
 
 	// repository name from the URL parameters
 	hostParam := r.FormValue(":host")
@@ -84,15 +79,30 @@ func (h RepoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	repoName := fmt.Sprintf("%s/%s/%s", hostParam, userParam, nameParam)
 
 	repo, err := database.GetRepoSlug(repoName)
-	if err != nil {
+	if err != nil || repo == nil {
 		RenderNotFound(w)
+		return
+	}
+
+	// retrieve the user from the database
+	user, err := readUser(r)
+
+	// if the user is not found, we can still
+	// serve the page assuming the repository
+	// is public.
+	switch {
+	case err != nil && repo.Private == true:
+		redirectLogin(w, r)
+		return
+	case err != nil && repo.Private == false:
+		h(w, r, nil, repo)
 		return
 	}
 
 	// The User must own the repository OR be a member
 	// of the Team that owns the repository OR the repo
 	// must not be private.
-	if user.ID != repo.UserID && repo.Private == false {
+	if repo.Private == false && user.ID != repo.UserID {
 		if member, _ := database.IsMember(user.ID, repo.TeamID); !member {
 			RenderNotFound(w)
 			return
