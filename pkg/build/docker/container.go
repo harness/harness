@@ -1,8 +1,13 @@
 package docker
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/dotcloud/docker/archive"
 	"io"
+	"net/http"
 )
 
 type ContainerService struct {
@@ -86,6 +91,38 @@ func (c *ContainerService) Inspect(id string) (*Container, error) {
 	container := Container{}
 	err := c.do("GET", fmt.Sprintf("/containers/%s/json", id), nil, &container)
 	return &container, err
+}
+
+type CopyParams struct {
+	Resource string
+}
+
+// Copy from the container
+func (c *ContainerService) Copy(id string, source string, destination string) error {
+	if source == "" {
+		return errors.New("docker:cp source must not be empty")
+	}
+
+	buf, err := json.Marshal(CopyParams{Resource: source})
+	if err != nil {
+		return err
+	}
+	payload := bytes.NewBuffer(buf)
+
+	headers := http.Header{}
+	headers.Set("Content-Type", "application/json")
+
+	out := new(bytes.Buffer)
+	err = c.stream("POST", fmt.Sprintf("/containers/%s/copy", id), payload, out, headers)
+	if err != nil {
+		return err
+	}
+
+	if err := archive.Untar(out, destination, nil); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Run the container

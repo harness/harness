@@ -251,6 +251,15 @@ notify:
 
 ![params-injection](https://f.cloud.github.com/assets/1583973/2161187/2905077e-94c3-11e3-8499-a3844682c8af.png)
 
+### Post-build Docker Command
+
+```
+docker:
+  cp:
+    source: <path inside container>
+    destination: <path on host>
+```
+
 ### Docs
 
 * [drone.readthedocs.org](http://drone.readthedocs.org/) (Coming Soon)
