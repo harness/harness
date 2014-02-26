@@ -59,6 +59,9 @@ func (s *S3) Write(f *buildfile.Buildfile) {
 		return
 	}
 
+	// debugging purposes so we can see if / where something is failing
+	f.WriteCmdSilent("echo 'publishing to Amazon S3 ...'")
+
 	// install the AWS cli using PIP
 	f.WriteCmdSilent("[ -f /usr/bin/sudo ] || pip install awscli 1> /dev/null 2> /dev/null")
 	f.WriteCmdSilent("[ -f /usr/bin/sudo ] && sudo pip install awscli 1> /dev/null 2> /dev/null")
