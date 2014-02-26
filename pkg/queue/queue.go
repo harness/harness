@@ -22,20 +22,12 @@ type BuildTask struct {
 	Script *script.Build
 }
 
-func Start(workers int, runner Runner) *Queue {
-	// get the number of CPUs. Since builds
-	// tend to be CPU-intensive we should only
-	// execute 1 build per CPU.
-	// must be at least 1
-	// if ncpu < 1 {
-	// 	ncpu = 1
-	// }
-
+// Start N workers with the given build runner.
+func Start(workers int, runner BuildRunner) *Queue {
 	tasks := make(chan *BuildTask)
 
 	queue := &Queue{tasks: tasks}
 
-	// spawn a worker for each CPU
 	for i := 0; i < workers; i++ {
 		worker := worker{
 			runner: runner,

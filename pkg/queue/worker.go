@@ -17,7 +17,7 @@ import (
 )
 
 type worker struct {
-	runner Runner
+	runner BuildRunner
 }
 
 // work is a function that will infinitely
