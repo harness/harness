@@ -123,6 +123,8 @@ func vet(path string) {
 }
 
 func run(path string) {
+	dockerClient := docker.New()
+
 	// parse the Drone yml file
 	s, err := script.ParseBuildFile(path)
 	if err != nil {
@@ -175,7 +177,7 @@ func run(path string) {
 
 	// loop through and create builders
 	for _, b := range builds { //script.Builds {
-		builder := build.New(docker.DefaultClient)
+		builder := build.New(dockerClient)
 		builder.Build = b
 		builder.Repo = &code
 		builder.Key = key

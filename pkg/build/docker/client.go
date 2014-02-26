@@ -29,8 +29,6 @@ const (
 // Enables verbose logging to the Terminal window
 var Logging = true
 
-var DefaultClient = New() // TEMPORARY; PLEASE CONSTRUCT/INJECT YOURSELF
-
 // New creates an instance of the Docker Client
 func New() *Client {
 	c := &Client{}
