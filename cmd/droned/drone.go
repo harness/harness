@@ -5,7 +5,9 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"runtime"
 	"strings"
+	"time"
 
 	"code.google.com/p/go.net/websocket"
 	"github.com/GeertJohan/go.rice"
@@ -13,10 +15,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/russross/meddler"
 
+	"github.com/drone/drone/pkg/build/docker"
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
 	"github.com/drone/drone/pkg/database/migrate"
 	"github.com/drone/drone/pkg/handler"
+	"github.com/drone/drone/pkg/queue"
 )
 
 var (
@@ -118,6 +122,11 @@ func setupStatic() {
 
 // setup routes for serving dynamic content.
 func setupHandlers() {
+	queueRunner := queue.NewRunner(docker.New(), 300*time.Second)
+	queue := queue.Start(runtime.NumCPU(), queueRunner)
+
+	hookHandler := handler.NewHookHandler(queue)
+
 	m := pat.New()
 	m.Get("/login", handler.ErrorHandler(handler.Login))
 	m.Post("/login", handler.ErrorHandler(handler.Authorize))
@@ -177,7 +186,7 @@ func setupHandlers() {
 	m.Get("/account/admin/users", handler.AdminHandler(handler.AdminUserList))
 
 	// handlers for GitHub post-commit hooks
-	m.Post("/hook/github.com", handler.ErrorHandler(handler.Hook))
+	m.Post("/hook/github.com", handler.ErrorHandler(hookHandler.Hook))
 
 	// handlers for first-time installation
 	m.Get("/install", handler.ErrorHandler(handler.Install))
