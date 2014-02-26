@@ -80,7 +80,7 @@ dpkg:
 	mkdir -p deb/drone/var/lib/drone
 	cp bin/drone  deb/drone/usr/local/bin
 	cp bin/droned deb/drone/usr/local/bin
-	dpkg-deb --build deb/drone
+	-dpkg-deb --build deb/drone
 
 run:
 	bin/droned --port=":8080" --datasource="drone.sqlite"
