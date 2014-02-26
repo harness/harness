@@ -42,6 +42,10 @@ var (
 	// optional flags for tls listener
 	sslcert string
 	sslkey  string
+
+	// build will timeout after N milliseconds.
+	// this will default to 500 minutes (6 hours)
+	timeout time.Duration
 )
 
 func main() {
@@ -52,6 +56,7 @@ func main() {
 	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
 	flag.StringVar(&sslcert, "sslcert", "", "")
 	flag.StringVar(&sslkey, "sslkey", "", "")
+	flag.DurationVar(&timeout, "timeout", 300*time.Minute, "")
 	flag.Parse()
 
 	// validate the TLS arguments
@@ -122,7 +127,7 @@ func setupStatic() {
 
 // setup routes for serving dynamic content.
 func setupHandlers() {
-	queueRunner := queue.NewBuildRunner(docker.New(), 300*time.Second)
+	queueRunner := queue.NewBuildRunner(docker.New(), timeout)
 	queue := queue.Start(runtime.NumCPU(), queueRunner)
 
 	hookHandler := handler.NewHookHandler(queue)
