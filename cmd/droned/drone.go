@@ -5,7 +5,9 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"runtime"
 	"strings"
+	"time"
 
 	"code.google.com/p/go.net/websocket"
 	"github.com/GeertJohan/go.rice"
@@ -13,10 +15,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/russross/meddler"
 
+	"github.com/drone/drone/pkg/build/docker"
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
 	"github.com/drone/drone/pkg/database/migrate"
 	"github.com/drone/drone/pkg/handler"
+	"github.com/drone/drone/pkg/queue"
 )
 
 var (
@@ -34,6 +38,10 @@ var (
 	// driver specific connection information. In this
 	// case, it should be the location of the SQLite file
 	datasource string
+
+	// optional flags for tls listener
+	sslcert string
+	sslkey  string
 )
 
 func main() {
@@ -42,15 +50,35 @@ func main() {
 	flag.StringVar(&port, "port", ":8080", "")
 	flag.StringVar(&driver, "driver", "sqlite3", "")
 	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
+	flag.StringVar(&sslcert, "sslcert", "", "")
+	flag.StringVar(&sslkey, "sslkey", "", "")
 	flag.Parse()
+
+	// validate the TLS arguments
+	checkTLSFlags()
 
 	// setup database and handlers
 	setupDatabase()
 	setupStatic()
 	setupHandlers()
 
-	// start the webserver on the default port.
-	panic(http.ListenAndServe(port, nil))
+	// start webserver using HTTPS or HTTP
+	if sslcert != "" && sslkey != "" {
+		panic(http.ListenAndServeTLS(port, sslcert, sslkey, nil))
+	} else {
+		panic(http.ListenAndServe(port, nil))
+	}
+}
+
+// checking if the TLS flags where supplied correctly.
+func checkTLSFlags() {
+
+	if sslcert != "" && sslkey == "" {
+		log.Fatal("invalid configuration: -sslkey unspecified, but -sslcert was specified.")
+	} else if sslcert == "" && sslkey != "" {
+		log.Fatal("invalid configuration: -sslcert unspecified, but -sslkey was specified.")
+	}
+
 }
 
 // setup the database connection and register with the
@@ -94,6 +122,11 @@ func setupStatic() {
 
 // setup routes for serving dynamic content.
 func setupHandlers() {
+	queueRunner := queue.NewBuildRunner(docker.New(), 300*time.Second)
+	queue := queue.Start(runtime.NumCPU(), queueRunner)
+
+	hookHandler := handler.NewHookHandler(queue)
+
 	m := pat.New()
 	m.Get("/login", handler.ErrorHandler(handler.Login))
 	m.Post("/login", handler.ErrorHandler(handler.Authorize))
@@ -153,7 +186,7 @@ func setupHandlers() {
 	m.Get("/account/admin/users", handler.AdminHandler(handler.AdminUserList))
 
 	// handlers for GitHub post-commit hooks
-	m.Post("/hook/github.com", handler.ErrorHandler(handler.Hook))
+	m.Post("/hook/github.com", handler.ErrorHandler(hookHandler.Hook))
 
 	// handlers for first-time installation
 	m.Get("/install", handler.ErrorHandler(handler.Install))

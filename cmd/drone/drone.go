@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/drone/drone/pkg/build"
+	"github.com/drone/drone/pkg/build/docker"
 	"github.com/drone/drone/pkg/build/log"
 	"github.com/drone/drone/pkg/build/repo"
 	"github.com/drone/drone/pkg/build/script"
@@ -122,6 +123,8 @@ func vet(path string) {
 }
 
 func run(path string) {
+	dockerClient := docker.New()
+
 	// parse the Drone yml file
 	s, err := script.ParseBuildFile(path)
 	if err != nil {
@@ -174,7 +177,7 @@ func run(path string) {
 
 	// loop through and create builders
 	for _, b := range builds { //script.Builds {
-		builder := build.Builder{}
+		builder := build.New(dockerClient)
 		builder.Build = b
 		builder.Repo = &code
 		builder.Key = key
@@ -186,7 +189,7 @@ func run(path string) {
 			builder.Stdout = &buf
 		}
 
-		builders = append(builders, &builder)
+		builders = append(builders, builder)
 	}
 
 	switch *parallel {
