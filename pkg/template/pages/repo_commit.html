@@ -44,15 +44,37 @@
 				<dd>{{ .Commit.Message }}</dd>
 			</div>
 		</div>
-		<pre id="stdout"></pre>
+		<div id="follow-container">
+			<span id="follow">Follow</span>
+			<pre id="stdout"></pre>
+		</div>
 	</div><!-- ./container -->
 {{ end }}
 
 {{ define "script" }}
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"></script>
 	<script>
+		window.autofollow = false;
+		window.autofollow_ignore = false;
 		$(document).ready(function() {
 			$(".timeago").timeago();
+			$("#follow").bind("click", function(ev) {
+				if (window.autofollow) {
+					window.autofollow = false;
+					$("#follow").text("Follow");
+				} else {
+					window.autofollow = true;
+					$("#follow").text("Stop following");
+				}
+			});
+			$(window).bind("scroll", function(ev) {
+				if (window.autofollow_ignore) {
+					window.autofollow_ignore = false;
+				} else {
+					window.autofollow = false;
+					$("#follow").text("Follow");
+				}
+			});
 		});
 	</script>
 
@@ -124,7 +146,10 @@
 		outputWS.onclose = function (e) { window.location.reload(); };
 		outputWS.onmessage = function (e) { 
 			outputBox.innerHTML += formatLine(e.data);
-			window.scrollTo(0, document.body.scrollHeight)
+			if (window.autofollow) {
+				window.autofollow_ignore = true;
+				window.scrollTo(0, document.body.scrollHeight);
+			}
 		};
 	{{ else }} 
 		$.get("/{{ .Repo.Slug }}/commit/{{ .Commit.Hash }}/build/{{ .Build.Slug }}/out.txt", function( data ) {
