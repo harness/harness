@@ -44,10 +44,8 @@
 				<dd>{{ .Commit.Message }}</dd>
 			</div>
 		</div>
-		<div id="follow-container">
-			<span id="follow">Follow</span>
-			<pre id="stdout"></pre>
-		</div>
+		<pre id="stdout"></pre>
+		<span id="follow">Follow</span>
 	</div><!-- ./container -->
 {{ end }}
 
@@ -55,7 +53,6 @@
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"></script>
 	<script>
 		window.autofollow = false;
-		window.autofollow_ignore = false;
 		$(document).ready(function() {
 			$(".timeago").timeago();
 			$("#follow").bind("click", function(ev) {
@@ -65,14 +62,6 @@
 				} else {
 					window.autofollow = true;
 					$("#follow").text("Stop following");
-				}
-			});
-			$(window).bind("scroll", function(ev) {
-				if (window.autofollow_ignore) {
-					window.autofollow_ignore = false;
-				} else {
-					window.autofollow = false;
-					$("#follow").text("Follow");
 				}
 			});
 		});
@@ -147,7 +136,6 @@
 		outputWS.onmessage = function (e) { 
 			outputBox.innerHTML += formatLine(e.data);
 			if (window.autofollow) {
-				window.autofollow_ignore = true;
 				window.scrollTo(0, document.body.scrollHeight);
 			}
 		};
