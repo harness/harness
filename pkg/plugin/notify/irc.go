@@ -20,8 +20,8 @@ type IRC struct {
 	Success bool   `yaml:"on_success,omitempty"`
 	Failure bool   `yaml:"on_failure,omitempty"`
     SSL bool `yaml:"ssl,omitempty"`
-    ClientStarted bool
-    Client *irc.Conn
+	ClientStarted bool
+	Client *irc.Conn
 }
 
 func (i *IRC) Connect() {
@@ -30,20 +30,15 @@ func (i *IRC) Connect() {
     connected := make(chan bool)
     c.AddHandler(irc.CONNECTED,
         func(conn *irc.Conn, line *irc.Line) { 
-            conn.Join(i.Channel)
+	    conn.Join(i.Channel)
             connected <- true})
     c.Connect(i.Server)
     <-connected
-    i.Client = c
     i.ClientStarted = true
+    i.Client = c
 }
 
 func (i *IRC) Send(context *Context) error {
-       
-        if !i.ClientStarted {
-            i.Connect()
-        }
-
 	switch {
 	case context.Commit.Status == "Started" && i.Started:
 		return i.sendStarted(context)
@@ -57,24 +52,33 @@ func (i *IRC) Send(context *Context) error {
 
 func (i *IRC) sendStarted(context *Context) error {
 	msg := fmt.Sprintf(ircStartedMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
-	 i.send(i.Channel, msg)
-        return nil
+	i.send(i.Channel, msg)
+    return nil
 }
 
 func (i *IRC) sendFailure(context *Context) error {
 	msg := fmt.Sprintf(ircFailureMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
-	 i.send(i.Channel, msg)
-        return nil
+	i.send(i.Channel, msg)
+	if i.ClientStarted {
+		i.Client.Quit()
+	}
+    return nil
 }
 
 func (i *IRC) sendSuccess(context *Context) error {
 	msg := fmt.Sprintf(ircSuccessMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
-	 i.send(i.Channel, msg)
-        return nil
+	i.send(i.Channel, msg)
+	if i.ClientStarted {
+	    i.Client.Quit()
+	}
+    return nil
 }
 
 
 func (i *IRC) send(channel string, message string) error {
-    i.Client.Notice(channel, message)
+	if !i.ClientStarted {
+		i.Connect()
+	}
+	i.Client.Notice(channel, message)
     return nil
 }
