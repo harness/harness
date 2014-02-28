@@ -1082,3 +1082,14 @@ ul.account-radio-group li img {
 .url {
   word-break: break-all;
 }
+#follow {
+  position: relative;
+  z-index: 100;
+  float: right;
+  right: 1em;
+  top: -2.5em;
+  padding: 0 1em;
+  border-radius: 7px;
+  background: #999;
+  cursor: pointer;
+}
