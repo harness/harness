@@ -187,6 +187,17 @@ publish:
 
 ```
 
+Drone currently has these `deploy` and `publish` plugins implemented (more to come!):
+
+**deploy**
+- [heroku](#docs)
+- [git](#docs)
+- [modulus](#docs)
+- [ssh](#docs)
+
+**publish**
+- [Amazon s3](#docs)
+
 ### Notifications
 
 Drone can trigger email, hipchat and web hook notification at the beginning and
