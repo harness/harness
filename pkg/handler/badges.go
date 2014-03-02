@@ -7,10 +7,18 @@ import (
 	"github.com/drone/drone/pkg/database"
 )
 
+const (
+	badgeSuccess = "https://img.shields.io/badge/build-success-brightgreen.png"
+	badgeFailure = "https://img.shields.io/badge/build-failure-red.png"
+	badgeUnknown = "https://img.shields.io/badge/build-unknown-lightgray.png"
+)
+
 // Display a static badge (png format) for a specific
 // repository and an optional branch.
 // TODO this needs to implement basic caching
 func Badge(w http.ResponseWriter, r *http.Request) error {
+	successParam := r.FormValue("success")
+	failureParam := r.FormValue("failure")
 	branchParam := r.FormValue("branch")
 	hostParam := r.FormValue(":host")
 	ownerParam := r.FormValue(":owner")
@@ -30,18 +38,30 @@ func Badge(w http.ResponseWriter, r *http.Request) error {
 		branchParam = repo.DefaultBranch()
 	}
 
-	// default badge of "unknown"
-	badge := "/img/build_unknown.png"
+	var badge string
 
 	// get the latest commit from the database
 	// for the requested branch
 	commit, err := database.GetBranch(repo.ID, branchParam)
 	if err == nil {
-		switch commit.Status {
-		case "Success":
-			badge = "/img/build_success.png"
-		case "Failing", "Failure":
-			badge = "/img/build_failing.png"
+		switch {
+		case commit.Status == "Success" && len(successParam) == 0:
+			// if no success image is provided, we serve a
+			// badge using the shields.io service
+			badge = badgeSuccess
+		case commit.Status == "Success" && len(successParam) != 0:
+			// otherwise we serve the user defined success badge
+			badge = successParam
+		case commit.Status == "Failure" && len(failureParam) == 0:
+			// if no failure image is provided, we serve a
+			// badge using the shields.io service
+			badge = badgeFailure
+		case commit.Status == "Failure" && len(failureParam) != 0:
+			// otherwise we serve the user defined failure badge
+			badge = failureParam
+		default:
+			// otherwise load unknown image
+			badge = badgeUnknown
 		}
 	}
 
