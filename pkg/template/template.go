@@ -4,6 +4,9 @@ import (
 	"errors"
 	"html/template"
 	"io"
+	"crypto/md5"
+	"strings"
+	"fmt"
 
 	"github.com/GeertJohan/go.rice"
 )
@@ -86,6 +89,17 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	assets := rice.MustFindBox("../../cmd/droned/assets")
+	mainjs, err := assets.String("js/main.js")
+	if err != nil {
+		panic(err)
+	}
+
+	h := md5.New()
+	io.WriteString(h, mainjs)
+	jshash := fmt.Sprintf("%x", h.Sum(nil))
+	base = strings.Replace(base, "main.js", "main.js?h=" + jshash, 1)
 
 	// extract the base form template as a string
 	form, err := box.String("form.html")

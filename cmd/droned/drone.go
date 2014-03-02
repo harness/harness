@@ -111,6 +111,7 @@ func setupDatabase() {
 func setupStatic() {
 	box := rice.MustFindBox("assets")
 	http.Handle("/css/", http.FileServer(box.HTTPBox()))
+	http.Handle("/js/", http.FileServer(box.HTTPBox()))
 
 	// we need to intercept all attempts to serve images
 	// so that we can add a cache-control settings
