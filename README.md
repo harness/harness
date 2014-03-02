@@ -3,6 +3,18 @@ Drone is a [Continuous Integration](http://en.wikipedia.org/wiki/Continuous_inte
 [![Build Status](http://beta.drone.io/github.com/drone/drone/status.png?branch=master)](http://beta.drone.io/github.com/drone/drone)
 [![GoDoc](https://godoc.org/github.com/drone/drone?status.png)](https://godoc.org/github.com/drone/drone)
 
+* [System Requirements](#system)
+* [Installation](#setup)
+* [Builds](#builds)
+* [Images](#images)
+* [Application Environment](#environment)
+* [Git Command Options](#git-command-options)
+* [Deployments](#deployments)
+* [Notifications](#notifications)
+* [Database Services](#databases)
+* [Params Injection](#params-injection)
+* [Documentation and References](#docs)
+
 ### System
 
 Drone is tested on the following versions of Ubuntu:
@@ -145,9 +157,73 @@ at the following location:
 Please take this into consideration when setting up your build commands, or
 if you are using a custom Docker image.
 
+### Git Command Options
+
+You can specify the `--depth` option of the `git clone` command (default value is `50`):
+
+```
+git:
+  depth: 1
+```
+
+### Deployments
+
+Drone can trigger a deployment at the successful completion of your build:
+
+```
+deploy:
+  heroku:
+    app: safe-island-6261
+
+publish:
+  s3:
+    acl: public-read
+    region: us-east-1
+    bucket: downloads.drone.io
+    access_key: C24526974F365C3B
+    secret_key: 2263c9751ed084a68df28fd2f658b127
+    source: /tmp/drone.deb
+    target: latest/
+
+```
+
+Drone currently has these `deploy` and `publish` plugins implemented (more to come!):
+
+**deploy**
+- [heroku](#docs)
+- [git](#docs)
+- [modulus](#docs)
+- [ssh](#docs)
+
+**publish**
+- [Amazon s3](#docs)
+
+### Notifications
+
+Drone can trigger email, hipchat and web hook notification at the beginning and
+completion of your build:
+
+```
+notify:
+  email:
+    recipients:
+      - brad@drone.io
+      - burke@drone.io
+
+  urls:
+    - http://my-deploy-hook.com
+
+  hipchat:
+    room: support
+    token: 3028700e5466d375
+    on_started: true
+    on_success: true
+    on_failure: true
+```
+
 ### Databases
 
-Drone can launch database containers for your build: 
+Drone can launch database containers for your build:
 
 ```
 services:
@@ -181,59 +257,6 @@ If you omit the version, Drone will launch the latest version of the database. (
 have their own local IP address. If the **socat** utility is installed inside your
 Docker image, Drone will automatically proxy localhost connections to the correct
 IP address.
-
-### Deployments
-
-Drone can trigger a deployment at the successful completion of your build:
-
-```
-deploy:
-  heroku:
-    app: safe-island-6261
-
-publish:
-  s3:
-    acl: public-read
-    region: us-east-1
-    bucket: downloads.drone.io
-    access_key: C24526974F365C3B
-    secret_key: 2263c9751ed084a68df28fd2f658b127
-    source: /tmp/drone.deb
-    target: latest/
-
-```
-
-### Notifications
-
-Drone can trigger email, hipchat and web hook notification at the beginning and
-completion of your build:
-
-```
-notify:
-  email:
-    recipients:
-      - brad@drone.io
-      - burke@drone.io
-
-  urls:
-    - http://my-deploy-hook.com
-
-  hipchat:
-    room: support
-    token: 3028700e5466d375
-    on_started: true
-    on_success: true
-    on_failure: true
-```
-
-### Git Command Options
-
-You can specify the `--depth` option of the `git clone` command (default value is `50`):
-
-```
-git:
-  depth: 1
-```
 
 ### Params Injection
 
