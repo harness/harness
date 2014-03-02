@@ -46,6 +46,9 @@ var (
 	// build will timeout after N milliseconds.
 	// this will default to 500 minutes (6 hours)
 	timeout time.Duration
+
+	// commit sha for the current build.
+	version string
 )
 
 func main() {
@@ -66,6 +69,9 @@ func main() {
 	setupDatabase()
 	setupStatic()
 	setupHandlers()
+
+	// debug
+	log.Printf("starting drone version %s on port %s\n", version, port)
 
 	// start webserver using HTTPS or HTTP
 	if sslcert != "" && sslkey != "" {

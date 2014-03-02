@@ -1,3 +1,5 @@
+SHA := $(shell git rev-parse --short HEAD)
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 
 all: embed build
 
@@ -32,7 +34,7 @@ embed:
 
 build:
 	cd cmd/drone  && go build -o ../../bin/drone
-	cd cmd/droned && go build -o ../../bin/droned
+	cd cmd/droned && go build -ldflags "-X main.version $(SHA)" -o ../../bin/droned
 
 test:
 	go test -v github.com/drone/drone/pkg/build
