@@ -3,6 +3,18 @@ Drone is a [Continuous Integration](http://en.wikipedia.org/wiki/Continuous_inte
 [![Build Status](http://beta.drone.io/github.com/drone/drone/status.png?branch=master)](http://beta.drone.io/github.com/drone/drone)
 [![GoDoc](https://godoc.org/github.com/drone/drone?status.png)](https://godoc.org/github.com/drone/drone)
 
+* [System Requirements](#system)
+* [Installation](#setup)
+* [Builds](#builds)
+* [Images](#images)
+* [Application Environment](#environment)
+* [Git Command Options](#git-command-options)
+* [Deployments](#deployments)
+* [Notifications](#notifications)
+* [Database Services](#databases)
+* [Params Injection](#params-injection)
+* [Documentation and References](#docs)
+
 ### System
 
 Drone is tested on the following versions of Ubuntu:
@@ -145,42 +157,14 @@ at the following location:
 Please take this into consideration when setting up your build commands, or
 if you are using a custom Docker image.
 
-### Databases
+### Git Command Options
 
-Drone can launch database containers for your build: 
+You can specify the `--depth` option of the `git clone` command (default value is `50`):
 
 ```
-services:
-  - cassandra
-  - couchdb
-  - couchdb:1.0
-  - couchdb:1.4
-  - couchdb:1.5
-  - elasticsearch
-  - elasticsearch:0.20
-  - elasticsearch:0.90
-  - neo4j
-  - neo4j:1.9
-  - mongodb
-  - mongodb:2.2
-  - mongodb:2.4
-  - mysql
-  - mysql:5.5
-  - postgres
-  - postgres:9.1
-  - rabbitmq
-  - rabbitmq:3.2
-  - redis
-  - riak
-  - zookeeper
+git:
+  depth: 1
 ```
-
-If you omit the version, Drone will launch the latest version of the database. (For example, if you set `mongodb`, Drone will launch MongoDB 2.4.)
-
-**NOTE:** database and service containers are exposed over TCP connections and
-have their own local IP address. If the **socat** utility is installed inside your
-Docker image, Drone will automatically proxy localhost connections to the correct
-IP address.
 
 ### Deployments
 
@@ -226,14 +210,42 @@ notify:
     on_failure: true
 ```
 
-### Git Command Options
+### Databases
 
-You can specify the `--depth` option of the `git clone` command (default value is `50`):
+Drone can launch database containers for your build:
 
 ```
-git:
-  depth: 1
+services:
+  - cassandra
+  - couchdb
+  - couchdb:1.0
+  - couchdb:1.4
+  - couchdb:1.5
+  - elasticsearch
+  - elasticsearch:0.20
+  - elasticsearch:0.90
+  - neo4j
+  - neo4j:1.9
+  - mongodb
+  - mongodb:2.2
+  - mongodb:2.4
+  - mysql
+  - mysql:5.5
+  - postgres
+  - postgres:9.1
+  - rabbitmq
+  - rabbitmq:3.2
+  - redis
+  - riak
+  - zookeeper
 ```
+
+If you omit the version, Drone will launch the latest version of the database. (For example, if you set `mongodb`, Drone will launch MongoDB 2.4.)
+
+**NOTE:** database and service containers are exposed over TCP connections and
+have their own local IP address. If the **socat** utility is installed inside your
+Docker image, Drone will automatically proxy localhost connections to the correct
+IP address.
 
 ### Params Injection
 
