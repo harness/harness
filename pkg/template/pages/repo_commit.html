@@ -133,13 +133,36 @@
 		outputWS.onopen = function () { console.log('output websocket open'); };
 		outputWS.onerror = function (e) { console.log('websocket error: ' + e); };
 		outputWS.onclose = function (e) { window.location.reload(); };
-		outputWS.onmessage = function (e) { 
-			outputBox.innerHTML += formatLine(e.data);
-			if (window.autofollow) {
-				window.scrollTo(0, document.body.scrollHeight);
-			}
+
+		window.requestAnimationFrame = window.requestAnimationFrame ||
+			window.webkitRequestAnimationFrame ||
+			function(callback, element) {
+				return window.setTimeout(function() {
+					callback(+new Date());
+				}, 1000 / 60);
+			};
+
+		var lineBuffer = "";
+
+		outputWS.onmessage = function (e) {
+			lineBuffer += formatLine(e.data);
 		};
-	{{ else }} 
+
+		function updateScreen() {
+			if(lineBuffer.length > 0) {
+				outputBox.innerHTML += lineBuffer;
+				lineBuffer = '';
+
+				if (window.autofollow) {
+					window.scrollTo(0, document.body.scrollHeight);
+				}
+			}
+			requestAnimationFrame(updateScreen);
+		}
+
+		requestAnimationFrame(updateScreen);
+
+	{{ else }}
 		$.get("/{{ .Repo.Slug }}/commit/{{ .Commit.Hash }}/build/{{ .Build.Slug }}/out.txt", function( data ) {
 			$( "#stdout" ).html(formatLine(data));
 		});
