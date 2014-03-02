@@ -34,7 +34,7 @@ func (c *Commit) HashShort() string {
 }
 
 // Returns the Gravatar Image URL.
-func (c *Commit) Image() string      { return fmt.Sprintf(GravatarPattern, c.Gravatar, 42) }
+func (c *Commit) Image() string      { return fmt.Sprintf(GravatarPattern, c.Gravatar, 58) }
 func (c *Commit) ImageSmall() string { return fmt.Sprintf(GravatarPattern, c.Gravatar, 32) }
 func (c *Commit) ImageLarge() string { return fmt.Sprintf(GravatarPattern, c.Gravatar, 160) }
 
