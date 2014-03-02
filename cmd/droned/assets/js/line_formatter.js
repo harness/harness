@@ -17,7 +17,7 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 			var output = "";
 			var current = 0;
 			while (m = this.regex.exec(s)) {
-				var part = s.substring(current, m.index+1);
+				var part = s.substring(current, m.index);
 				current = this.regex.lastIndex;
 
 				var token = s.substr(m.index, this.regex.lastIndex - m.index);
@@ -29,9 +29,9 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 				switch (code) {
 					case 'm':
 					case '0m':
-						var len = styles.length;
+						var len = this.styles.length;
 						for (var i=0; i < len; i++) {
-							styles.pop();
+							this.styles.pop();
 							post += "</span>"
 						}
 						break;
@@ -52,7 +52,7 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 				}
 
 				if (pre !== "") {
-					styles.push(pre);
+					this.styles.push(pre);
 				}
 
 				output += part + pre + post;

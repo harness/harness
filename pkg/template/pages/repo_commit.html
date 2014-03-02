@@ -60,7 +60,7 @@
 	<script>
 	{{ if .Build.IsRunning }}
 		$(document).ready(function() {
-			var commitUpdates = new Drone.CommitUpdates('feed?token='+{{ .Token }});
+			var commitUpdates = new Drone.CommitUpdates('/feed?token='+{{ .Token }});
 			var outputBox = document.getElementById('stdout');
 			commitUpdates.startOutput(outputBox);
 
