@@ -61,6 +61,10 @@ type Build struct {
 	// hostname mappings.
 	Hosts []string
 
+	// Cache lists a set of directories that should
+	// persisted between builds.
+	Cache []string
+
 	// Services specifies external services, such as
 	// database or messaging queues, that should be
 	// linked to the build environment.
@@ -107,6 +111,12 @@ func (b *Build) WriteBuild(f *buildfile.Buildfile) {
 		}
 		f.WriteEnv(parts[0], parts[1])
 	}
+
+	// add hostfile definitions
+	//for _, mapping := range b.Hosts {
+	//	f.WriteCmdSilent(fmt.Sprintf("[ -f /usr/bin/sudo ] || echo %q | tee -a /etc/hosts", mapping))
+	//	f.WriteCmdSilent(fmt.Sprintf("[ -f /usr/bin/sudo ] && echo %q | sudo tee -a /etc/hosts", mapping))
+	//}
 
 	// append build commands
 	for _, cmd := range b.Script {

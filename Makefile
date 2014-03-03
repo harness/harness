@@ -80,6 +80,7 @@ clean:
 dpkg:
 	mkdir -p deb/drone/usr/local/bin
 	mkdir -p deb/drone/var/lib/drone
+	mkdir -p deb/drone/var/cache/drone
 	cp bin/drone  deb/drone/usr/local/bin
 	cp bin/droned deb/drone/usr/local/bin
 	-dpkg-deb --build deb/drone

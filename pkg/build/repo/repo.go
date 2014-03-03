@@ -6,6 +6,10 @@ import (
 )
 
 type Repo struct {
+	// The name of the Repository. This should be the
+	// canonical name, for example, github.com/drone/drone.
+	Name string
+
 	// The path of the Repoisotry. This could be
 	// the remote path of a Git repository or the path of
 	// of the repository on the local file system.
