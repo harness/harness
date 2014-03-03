@@ -170,6 +170,7 @@ func (w *worker) execute(task *BuildTask) error {
 
 func (w *worker) runBuild(task *BuildTask, buf io.Writer) (bool, error) {
 	repo := &r.Repo{
+		Name:   task.Repo.Slug,
 		Path:   task.Repo.URL,
 		Branch: task.Commit.Branch,
 		Commit: task.Commit.Hash,

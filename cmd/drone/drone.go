@@ -135,7 +135,11 @@ func run(path string) {
 
 	// get the repository root directory
 	dir := filepath.Dir(path)
-	code := repo.Repo{Path: dir}
+	code := repo.Repo{
+		Name:   dir,
+		Branch: "HEAD", // should we do this?
+		Path:   dir,
+	}
 
 	// does the local repository match the
 	// $GOPATH/src/{package} pattern? This is
