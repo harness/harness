@@ -326,6 +326,37 @@ func (b *Builder) run() error {
 		host.Links = append(host.Links, service.Name[1:]+":"+image.Name)
 	}
 
+	// link cached volumes
+	conf.Volumes = make(map[string]struct{})
+	for _, volume := range b.Build.Cache {
+		name := filepath.Clean(b.Repo.Name)
+		branch := filepath.Clean(b.Repo.Branch)
+		volume := filepath.Clean(volume)
+
+		// with Docker, volumes must be an absolute path. If an absolute
+		// path is not provided, then assume it is for the repository
+		// working directory.
+		if strings.HasPrefix(volume, "/") == false {
+			volume = filepath.Join(b.Repo.Dir, volume)
+		}
+
+		// local cache path on the host machine
+		// this path is going to be really long
+		hostpath := filepath.Join("/tmp/drone", name, branch, volume)
+
+		// check if the volume is created
+		if _, err := os.Stat(hostpath); err != nil {
+			// if does not exist then create
+			os.MkdirAll(hostpath, 0777)
+		}
+
+		host.Binds = append(host.Binds, hostpath+":"+volume)
+		conf.Volumes[volume]=struct{}{}
+
+		// debugging
+		log.Infof("mounting volume %s:%s", hostpath, volume)
+	}
+
 	// create the container from the image
 	run, err := b.dockerClient.Containers.Create(&conf)
 	if err != nil {
