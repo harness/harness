@@ -57,6 +57,10 @@ type Build struct {
 	// Env specifies the environment of the build.
 	Env []string
 
+	// Hosts specifies the custom IP address and
+	// hostname mappings.
+	Hosts []string
+
 	// Services specifies external services, such as
 	// database or messaging queues, that should be
 	// linked to the build environment.
@@ -65,7 +69,10 @@ type Build struct {
 	Deploy        *deploy.Deploy       `yaml:"deploy,omitempty"`
 	Publish       *publish.Publish     `yaml:"publish,omitempty"`
 	Notifications *notify.Notification `yaml:"notify,omitempty"`
-	Git           *git.Git             `yaml:"git,omitempty"`
+
+	// Git specified git-specific parameters, such as
+	// the clone depth and path
+	Git *git.Git `yaml:"git,omitempty"`
 }
 
 // Write adds all the steps to the build script, including
