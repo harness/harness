@@ -230,6 +230,7 @@ func (h *HookHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) {
 	commit.Status = "Pending"
 	commit.Created = time.Now().UTC()
 	commit.Gravatar = hook.PullRequest.User.GravatarId
+	commit.Author = hook.PullRequest.User.Login
 	commit.PullRequest = strconv.Itoa(hook.Number)
 	commit.Message = hook.PullRequest.Title
 	// label := p.PullRequest.Head.Labe

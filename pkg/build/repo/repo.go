@@ -107,7 +107,7 @@ func (r *Repo) Commands() []string {
 	case len(r.PR) > 0:
 
 		cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
-		cmds = append(cmds, fmt.Sprintf("git checkout -qf pr/%s", r.PR))
+		cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
 		//cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/merge:", r.PR))
 		//cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", "FETCH_HEAD"))
 	// if a specific commit is provided then we'll
