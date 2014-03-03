@@ -12,6 +12,7 @@ Drone is a [Continuous Integration](http://en.wikipedia.org/wiki/Continuous_inte
 * [Deployments](#deployments)
 * [Notifications](#notifications)
 * [Database Services](#databases)
+* [Caching](#caching)
 * [Params Injection](#params-injection)
 * [Documentation and References](#docs)
 
@@ -257,6 +258,25 @@ If you omit the version, Drone will launch the latest version of the database. (
 have their own local IP address. If the **socat** utility is installed inside your
 Docker image, Drone will automatically proxy localhost connections to the correct
 IP address.
+
+### Caching
+
+Drone can persist directories between builds. This should be used for caching dependencies to
+decrease overall build time. Examples include your `.npm`, `.m2`, `bundler`, etc.
+
+```
+cache:
+  - /usr/local/bin/go/pkg                  
+```
+
+This will cache the directory relative to the root directory of your repository:
+
+```
+cache:
+  - .npm
+```
+
+**NOTE:** this is an alpha quality feature and still has some quirks. See https://github.com/drone/drone/issues/147
 
 ### Params Injection
 
