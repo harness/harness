@@ -8,7 +8,6 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 			var url = [(window.location.protocol == 'https:' ? 'wss' : 'ws'),
 								 '://',
 								 window.location.host,
-								 '/',
 								 socket].join('')
 			this.socket = new WebSocket(url);
 		} else {
@@ -30,14 +29,20 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 				this.el = el;
 			}
 
-			this.updateScreen();
+			if(!this.reqId) {
+				this.updateScreen();
+			}
+		},
+
+		stopOutput: function() {
+			this.stoppingRefresh = true;
 		},
 
 		attach: function() {
-			this.socket.onopen = this.onOpen;
-			this.socket.onerror = this.onError;
+			this.socket.onopen    = this.onOpen;
+			this.socket.onerror   = this.onError;
 			this.socket.onmessage = this.onMessage.bind(this);
-			this.socket.onclose = this.onClose;
+			this.socket.onclose   = this.onClose;
 		},
 
 		updateScreen: function() {
@@ -50,7 +55,11 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 				}
 			}
 
-			requestAnimationFrame(this.updateScreen.bind(this));
+			if(this.stoppingRefresh) {
+				this.stoppingRefresh = false;
+			} else {
+				window.requestAnimationFrame(this.updateScreen.bind(this));
+			}
 		},
 
 		onOpen: function() {
@@ -67,7 +76,7 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 
 		onClose: function(e) {
 			console.log('output websocket closed: ' + JSON.stringify(e));
-			//window.location.reload();
+			window.location.reload();
 		}
 	};
 
@@ -78,6 +87,12 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 			return window.setTimeout(function() {
 				callback(+new Date());
 			}, 1000 / 60);
+		};
+
+	window.cancelRequestAnimationFrame = window.cancelRequestAnimationFrame ||
+		window.cancelWebkitRequestAnimationFrame ||
+		function(fn) {
+			window.clearTimeout(fn);
 		};
 
 })();
@@ -100,7 +115,7 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 			var output = "";
 			var current = 0;
 			while (m = this.regex.exec(s)) {
-				var part = s.substring(current, m.index+1);
+				var part = s.substring(current, m.index);
 				current = this.regex.lastIndex;
 
 				var token = s.substr(m.index, this.regex.lastIndex - m.index);
@@ -112,9 +127,9 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 				switch (code) {
 					case 'm':
 					case '0m':
-						var len = styles.length;
+						var len = this.styles.length;
 						for (var i=0; i < len; i++) {
-							styles.pop();
+							this.styles.pop();
 							post += "</span>"
 						}
 						break;
@@ -135,7 +150,7 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 				}
 
 				if (pre !== "") {
-					styles.push(pre);
+					this.styles.push(pre);
 				}
 
 				output += part + pre + post;
