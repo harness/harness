@@ -43,6 +43,15 @@
 				<dt>Message</dt>
 				<dd>{{ .Commit.Message }}</dd>
 			</div>
+
+			<div class="actions">
+				{{ if not .Build.IsRunning }}
+					<form action="/{{.Repo.Slug}}/commit/{{.Commit.Hash}}/rebuild"
+								method="POST">
+						<input class="btn btn-default" type="submit" value="Rebuild"/>
+					</form>
+				{{end}}
+			</div>
 		</div>
 		<pre id="stdout"></pre>
 		<span id="follow">Follow</span>
@@ -78,7 +87,7 @@
 
 			var final = "";
 			var current = 0;
-			while (m = re.exec(s)) {	
+			while (m = re.exec(s)) {
 					var part = s.substring(current, m.index+1);
 					current = re.lastIndex;
 
@@ -89,7 +98,7 @@
 					var post = "";
 
 					switch (code) {
-					case 'm': 
+					case 'm':
 					case '0m':
 						var len = styles.length;
 						for (var i=0; i < len; i++) {
@@ -102,16 +111,16 @@
 					case '36;1m': pre = '<span style="color:cyan;">'; break;
 					case '31m':
 					case '31;31m': pre = '<span style="color:red;">'; break;
-					case '33m': 
+					case '33m':
 					case '33;33m': pre = '<span style="color:yellow;">'; break;
 					case '32m':
 					case '0;32m': pre = '<span style="color:lime;">'; break;
 					case '90m': pre = '<span style="color:gray;">'; break;
-					case 'K': 
-					case '0K': 
+					case 'K':
+					case '0K':
 					case '1K':
 					case '2K': break;
-					}		
+					}
 
 					if (pre !== "") {
 						styles.push(pre);
