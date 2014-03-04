@@ -443,21 +443,6 @@ func (b *Builder) writeDockerfile(dir string) error {
 		dockerfile.WriteRun("echo 'StrictHostKeyChecking no' > /root/.ssh/config")
 	}
 
-	dockerfile.WriteEnv("CI", "true")
-	dockerfile.WriteEnv("DRONE", "true")
-	if b.Repo.Branch != "" {
-		dockerfile.WriteEnv("DRONE_BRANCH", b.Repo.Branch)
-	}
-	if b.Repo.Commit != "" {
-		dockerfile.WriteEnv("DRONE_COMMIT", b.Repo.Commit)
-	}
-	if b.Repo.PR != "" {
-		dockerfile.WriteEnv("DRONE_PR", b.Repo.PR)
-	}
-	if b.Repo.Dir != "" {
-		dockerfile.WriteEnv("DRONE_BUILD_DIR", b.Repo.Dir)
-	}
-
 	dockerfile.WriteAdd("proxy.sh", "/etc/drone.d/")
 	dockerfile.WriteEntrypoint("/bin/bash -e /usr/local/bin/drone")
 
@@ -470,6 +455,19 @@ func (b *Builder) writeDockerfile(dir string) error {
 // temp directory to be added to the Image.
 func (b *Builder) writeBuildScript(dir string) error {
 	f := buildfile.New()
+
+	// add environment variables about the build
+	f.WriteEnv("CI", "true")
+	f.WriteEnv("DRONE", "true")
+	f.WriteEnv("DRONE_BRANCH", b.Repo.Branch)
+	f.WriteEnv("DRONE_COMMIT", b.Repo.Commit)
+	f.WriteEnv("DRONE_PR", b.Repo.PR)
+	f.WriteEnv("DRONE_BUILD_DIR", b.Repo.Dir)
+
+	// add /etc/hosts entries
+	for _, mapping := range b.Build.Hosts {
+		f.WriteHost(mapping)
+	}
 
 	// if the repository is remote then we should
 	// add the commands to the build script to
