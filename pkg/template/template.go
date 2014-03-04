@@ -2,6 +2,7 @@ package template
 
 import (
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 
@@ -109,7 +110,16 @@ func init() {
 		}
 
 		// parse the template and then add to the global map
-		registry[file] = template.Must(template.Must(template.New("_").Parse(baseTemplate)).Parse(page))
+		baseParsed, err := template.New("_").Parse(baseTemplate)
+		if err != nil {
+			panic(fmt.Errorf("Error parsing base.html template: %s", err))
+		}
+		pageParsed, err := baseParsed.Parse(page)
+		if err != nil {
+			panic(fmt.Errorf("Error parsing page template for %s: %s", file, err))
+		}
+
+		registry[file] = pageParsed
 	}
 
 	// location of templates
@@ -136,8 +146,16 @@ func init() {
 		if err != nil {
 			panic(err)
 		}
+		baseParsed, err := template.New("_").Parse(base)
+		if err != nil {
+			panic(fmt.Errorf("Error parsing base_email.html template: %s", err))
+		}
+		emailParsed, err := baseParsed.Parse(email)
+		if err != nil {
+			panic(fmt.Errorf("Error parsing email template for %s: %s", file, err))
+		}
 
 		// parse the template and then add to the global map
-		registry[file] = template.Must(template.Must(template.New("_").Parse(base)).Parse(email))
+		registry[file] = emailParsed
 	}
 }
