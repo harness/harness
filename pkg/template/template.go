@@ -7,7 +7,6 @@ import (
 	"io"
 	"crypto/md5"
 	"strings"
-	"fmt"
 
 	"github.com/GeertJohan/go.rice"
 )
