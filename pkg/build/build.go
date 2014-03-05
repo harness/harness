@@ -326,6 +326,18 @@ func (b *Builder) run() error {
 		host.Links = append(host.Links, service.Name[1:]+":"+image.Name)
 	}
 
+	// where are temp files going to go?
+	tmp_path := "/tmp/drone"
+	if len(os.Getenv("DRONE_TMP")) > 0 {
+		tmp_path = os.Getenv("DRONE_TMP")
+	}
+
+	log.Infof("temp directory is %s", tmp_path)
+
+	if err := os.MkdirAll(tmp_path, 0777); err != nil {
+		return fmt.Errorf("Failed to create temp directory at %s: %s", tmp_path, err)
+	}
+
 	// link cached volumes
 	conf.Volumes = make(map[string]struct{})
 	for _, volume := range b.Build.Cache {
@@ -342,7 +354,7 @@ func (b *Builder) run() error {
 
 		// local cache path on the host machine
 		// this path is going to be really long
-		hostpath := filepath.Join("/tmp/drone", name, branch, volume)
+		hostpath := filepath.Join(tmp_path, name, branch, volume)
 
 		// check if the volume is created
 		if _, err := os.Stat(hostpath); err != nil {
@@ -351,7 +363,7 @@ func (b *Builder) run() error {
 		}
 
 		host.Binds = append(host.Binds, hostpath+":"+volume)
-		conf.Volumes[volume]=struct{}{}
+		conf.Volumes[volume] = struct{}{}
 
 		// debugging
 		log.Infof("mounting volume %s:%s", hostpath, volume)
