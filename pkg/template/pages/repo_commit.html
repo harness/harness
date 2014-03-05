@@ -34,7 +34,7 @@
 				<dt>Duration</dt>
 				<dd>{{ if .Build.IsRunning }}--{{else}}{{ .Build.HumanDuration }}{{end}}</dd>
 			</div>
-			<img src="{{.Commit.Image}}?d=identicon">
+			<img src="{{.Commit.Image}}">
 			<div class="commit-summary">
 				<dt>Commit</dt>
 				<dd><u>{{ .Commit.HashShort }}</u></dd>
