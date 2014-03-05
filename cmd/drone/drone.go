@@ -24,6 +24,9 @@ var (
 	// into the container if specified
 	identity = flag.String("identity", "", "")
 
+	// override the default name
+	override_name = flag.String("name", "", "")
+
 	// runs Drone in parallel mode if True
 	parallel = flag.Bool("parallel", false, "")
 
@@ -135,8 +138,16 @@ func run(path string) {
 
 	// get the repository root directory
 	dir := filepath.Dir(path)
+
+	rname := dir
+
+	if len(*override_name) != 0 {
+		log.Infof("using provided repo name: %s", rname)
+		rname = *override_name
+	}
+
 	code := repo.Repo{
-		Name:   dir,
+		Name:   rname,
 		Branch: "HEAD", // should we do this?
 		Path:   dir,
 	}
