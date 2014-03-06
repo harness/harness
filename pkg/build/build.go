@@ -121,8 +121,6 @@ func (b *Builder) Run() error {
 		b.BuildState.Finished = time.Now().UTC().Unix()
 		return nil
 	}
-
-	return nil
 }
 
 func (b *Builder) setup() error {
@@ -514,7 +512,7 @@ func (b *Builder) writeProxyScript(dir string) error {
 	// map ip address to localhost
 	for _, container := range b.services {
 		// create an entry for each port
-		for port, _ := range container.NetworkSettings.Ports {
+		for port := range container.NetworkSettings.Ports {
 			proxyfile.Set(port.Port(), container.NetworkSettings.IPAddress)
 		}
 	}

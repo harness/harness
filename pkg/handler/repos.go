@@ -60,8 +60,8 @@ func RepoAdd(w http.ResponseWriter, r *http.Request, u *User) error {
 		return err
 	}
 	data := struct {
-		User  *User
-		Teams []*Team
+		User     *User
+		Teams    []*Team
 		Settings *Settings
 	}{u, teams, settings}
 	// if the user hasn't linked their GitHub account

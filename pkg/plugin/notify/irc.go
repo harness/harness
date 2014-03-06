@@ -1,9 +1,9 @@
 package notify
 
 import (
-    "fmt"
+	"fmt"
 
-    irc "github.com/fluffle/goirc/client"
+	irc "github.com/fluffle/goirc/client"
 )
 
 const (
@@ -13,29 +13,30 @@ const (
 )
 
 type IRC struct {
-	Channel string `yaml:"channel,omitempty"`
-	Nick string `yaml:"nick,omitempty"`
-    Server string `yaml:"server,omitempty"`
-	Started bool   `yaml:"on_started,omitempty"`
-	Success bool   `yaml:"on_success,omitempty"`
-	Failure bool   `yaml:"on_failure,omitempty"`
-    SSL bool `yaml:"ssl,omitempty"`
+	Channel       string `yaml:"channel,omitempty"`
+	Nick          string `yaml:"nick,omitempty"`
+	Server        string `yaml:"server,omitempty"`
+	Started       bool   `yaml:"on_started,omitempty"`
+	Success       bool   `yaml:"on_success,omitempty"`
+	Failure       bool   `yaml:"on_failure,omitempty"`
+	SSL           bool   `yaml:"ssl,omitempty"`
 	ClientStarted bool
-	Client *irc.Conn
+	Client        *irc.Conn
 }
 
 func (i *IRC) Connect() {
-    c := irc.SimpleClient(i.Nick)
-    c.SSL = i.SSL
-    connected := make(chan bool)
-    c.AddHandler(irc.CONNECTED,
-        func(conn *irc.Conn, line *irc.Line) { 
-	    conn.Join(i.Channel)
-            connected <- true})
-    c.Connect(i.Server)
-    <-connected
-    i.ClientStarted = true
-    i.Client = c
+	c := irc.SimpleClient(i.Nick)
+	c.SSL = i.SSL
+	connected := make(chan bool)
+	c.AddHandler(irc.CONNECTED,
+		func(conn *irc.Conn, line *irc.Line) {
+			conn.Join(i.Channel)
+			connected <- true
+		})
+	c.Connect(i.Server)
+	<-connected
+	i.ClientStarted = true
+	i.Client = c
 }
 
 func (i *IRC) Send(context *Context) error {
@@ -53,7 +54,7 @@ func (i *IRC) Send(context *Context) error {
 func (i *IRC) sendStarted(context *Context) error {
 	msg := fmt.Sprintf(ircStartedMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
 	i.send(i.Channel, msg)
-    return nil
+	return nil
 }
 
 func (i *IRC) sendFailure(context *Context) error {
@@ -62,23 +63,22 @@ func (i *IRC) sendFailure(context *Context) error {
 	if i.ClientStarted {
 		i.Client.Quit()
 	}
-    return nil
+	return nil
 }
 
 func (i *IRC) sendSuccess(context *Context) error {
 	msg := fmt.Sprintf(ircSuccessMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
 	i.send(i.Channel, msg)
 	if i.ClientStarted {
-	    i.Client.Quit()
+		i.Client.Quit()
 	}
-    return nil
+	return nil
 }
-
 
 func (i *IRC) send(channel string, message string) error {
 	if !i.ClientStarted {
 		i.Connect()
 	}
 	i.Client.Notice(channel, message)
-    return nil
+	return nil
 }
