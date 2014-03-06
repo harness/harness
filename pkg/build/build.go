@@ -121,8 +121,6 @@ func (b *Builder) Run() error {
 		b.BuildState.Finished = time.Now().UTC().Unix()
 		return nil
 	}
-
-	return nil
 }
 
 func (b *Builder) setup() error {
