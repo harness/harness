@@ -1093,3 +1093,17 @@ ul.account-radio-group li img {
   background: #999;
   cursor: pointer;
 }
+.github-projects .spinner {
+  padding-top: 14px;
+  padding-bottom: 10px;
+}
+.github-projects .projects-list .item {
+  display: inline-block;
+  padding: 2px 3px;
+  margin: 2px 3px;
+  background-color: #F4F4F4;
+}
+.github-projects .projects-list .item a {
+  font-size: 12px;
+  color: #777;
+}
