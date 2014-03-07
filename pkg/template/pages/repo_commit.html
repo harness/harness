@@ -45,12 +45,14 @@
 			</div>
 
 			<div class="actions">
-				{{ if not .Build.IsRunning }}
+				{{ if .IsAdmin }}
+					{{ if not .Build.IsRunning }}
 					<form action="/{{.Repo.Slug}}/commit/{{.Commit.Hash}}/rebuild"
 								method="POST">
 						<input class="btn btn-default" type="submit" value="Rebuild"/>
 					</form>
-				{{end}}
+					{{	end	 }}
+				{{ end }}
 			</div>
 		</div>
 		<pre id="stdout"></pre>

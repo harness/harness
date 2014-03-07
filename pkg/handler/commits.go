@@ -30,14 +30,20 @@ func CommitShow(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 		return err
 	}
 
+	admin, err := database.IsRepoAdmin(u, repo)
+	if err != nil {
+		return err
+	}
+
 	data := struct {
-		User   *User
-		Repo   *Repo
-		Commit *Commit
-		Build  *Build
-		Builds []*Build
-		Token  string
-	}{u, repo, commit, builds[0], builds, ""}
+		User    *User
+		Repo    *Repo
+		Commit  *Commit
+		Build   *Build
+		Builds  []*Build
+		Token   string
+		IsAdmin bool
+	}{u, repo, commit, builds[0], builds, "", admin}
 
 	// get the specific build requested by the user. instead
 	// of a database round trip, we can just loop through the
