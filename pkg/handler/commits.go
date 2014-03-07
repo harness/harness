@@ -95,14 +95,21 @@ func (h *CommitRebuildHandler) CommitRebuild(w http.ResponseWriter, r *http.Requ
 
 	build := builds[0]
 
-	// get the specific build requested by the user. instead
-	// of a database round trip, we can just loop through the
-	// list and extract the requested build.
-	for _, b := range builds {
-		if b.Slug == labl {
-			build = b
-			break
+	if labl != "" {
+		// get the specific build requested by the user. instead
+		// of a database round trip, we can just loop through the
+		// list and extract the requested build.
+		build = nil
+		for _, b := range builds {
+			if b.Slug == labl {
+				build = b
+				break
+			}
 		}
+	}
+
+	if build == nil {
+		return fmt.Errorf("Could not find build: %s", labl)
 	}
 
 	// get the github settings from the database
@@ -112,30 +119,24 @@ func (h *CommitRebuildHandler) CommitRebuild(w http.ResponseWriter, r *http.Requ
 	client := github.New(u.GithubToken)
 	client.ApiUrl = settings.GitHubApiUrl
 
-	content, err := client.Contents.FindRef(repo.Owner, repo.Name, ".drone.yml", commit.Hash) // TODO should this really be the hash??
+	content, err := client.Contents.FindRef(repo.Owner, repo.Name, ".drone.yml", commit.Hash)
 	if err != nil {
-		println(err.Error())
-		RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return nil
+		return err;
 	}
 
 	raw, err := content.DecodeContent()
 	if err != nil {
 		msg := "Could not decode the yaml from GitHub.	Check that your .drone.yml is a valid yaml file.\n"
 		if err := saveFailedBuild(commit, msg); err != nil {
-			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return err;
 		}
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return err;
 	}
 
 	// parse the build script
 	buildscript, err := script.ParseBuild(raw, repo.Params)
 	if err != nil {
-		// TODO if the YAML is invalid we should create a commit record
-		// with an ERROR status so that the user knows why a build wasn't
-		// triggered in the system
-		RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return nil
+		return err;
 	}
 
 	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript})
@@ -145,5 +146,6 @@ func (h *CommitRebuildHandler) CommitRebuild(w http.ResponseWriter, r *http.Requ
 	} else {
 		http.Redirect(w, r, fmt.Sprintf("/%s/%s/%s/commit/%s", host, repo.Owner, repo.Name, hash), http.StatusSeeOther)
 	}
+
 	return nil
 }
