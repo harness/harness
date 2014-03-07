@@ -8,8 +8,6 @@ import (
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
 	"github.com/drone/drone/pkg/queue"
-	"github.com/drone/go-github/github"
-	"github.com/drone/drone/pkg/build/script"
 )
 
 // Display a specific Commit.
@@ -121,29 +119,7 @@ func (h *CommitRebuildHandler) CommitRebuild(w http.ResponseWriter, r *http.Requ
 		return fmt.Errorf("Could not find build: %s", labl)
 	}
 
-	// get the github settings from the database
-	settings := database.SettingsMust()
-
-	// get the drone.yml file from GitHub
-	client := github.New(u.GithubToken)
-	client.ApiUrl = settings.GitHubApiUrl
-
-	content, err := client.Contents.FindRef(repo.Owner, repo.Name, ".drone.yml", commit.Hash)
-	if err != nil {
-		return err;
-	}
-
-	raw, err := content.DecodeContent()
-	if err != nil {
-		msg := "Could not decode the yaml from GitHub.	Check that your .drone.yml is a valid yaml file.\n"
-		if err := saveFailedBuild(commit, msg); err != nil {
-			return err;
-		}
-		return err;
-	}
-
-	// parse the build script
-	buildscript, err := script.ParseBuild(raw, repo.Params)
+	buildscript, err := fetchBuildScript(repo, commit, u.GithubToken)
 	if err != nil {
 		return err;
 	}
