@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"encoding/json"
 
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
@@ -12,6 +13,13 @@ import (
 
 	"launchpad.net/goyaml"
 )
+
+type GithubRepo struct {
+	Name string  `json:"name"`
+	Owner string `json:"owner"`
+	Private bool `json:"private"`
+	Fork bool    `json:"form"`
+}
 
 // Display a Repository dashboard.
 func RepoDashboard(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) error {
@@ -286,5 +294,40 @@ func RepoDelete(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 	}
 
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	return nil
+}
+
+func AvailableGithubRepos(w http.ResponseWriter, r *http.Request, u *User) error {
+	settings := database.SettingsMust()
+
+	if u.GithubToken == "" {
+		log.Printf("empty user GithubToken")
+		fmt.Fprintf(w, "[]")
+
+		return nil
+	}
+
+	client := github.New(u.GithubToken)
+	client.ApiUrl = settings.GitHubApiUrl
+	repos, err := client.Repos.ListAll()
+
+	if err != nil {
+		return err
+	}
+
+	collection := make([]GithubRepo, len(repos))
+
+	for i, repo := range(repos) {
+		item := GithubRepo{repo.Name, repo.Owner.Login, repo.Private, repo.Fork}
+		collection[i] = item
+	}
+
+	b, err := json.Marshal(collection)
+
+	if err != nil {
+		return err
+	}
+
+	w.Write(b)
 	return nil
 }
