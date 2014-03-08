@@ -63,7 +63,7 @@ func main() {
 
 	// setup database and handlers
 	if err := database.Init(driver, datasource); err != nil {
-		log.Fatal("Can't initialize database:", err)
+		log.Fatal("Can't initialize database: ", err)
 	}
 	setupStatic()
 	setupHandlers()
