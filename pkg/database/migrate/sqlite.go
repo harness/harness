@@ -9,41 +9,34 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type SQLiteDriver MigrationDriver
-
-func SQLite(tx *sql.Tx) Operation {
-	return &SQLiteDriver{Tx: tx}
+type sqliteDriver struct {
+	Tx *sql.Tx
 }
 
-func (s *SQLiteDriver) Exec(query string, args ...interface{}) (sql.Result, error) {
-	return s.Tx.Exec(query, args...)
+func SQLite(tx *sql.Tx) *MigrationDriver {
+	return &MigrationDriver{
+		Tx:        tx,
+		Operation: &sqliteDriver{Tx: tx},
+	}
 }
 
-func (s *SQLiteDriver) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	return s.Tx.Query(query, args...)
-}
-
-func (s *SQLiteDriver) QueryRow(query string, args ...interface{}) *sql.Row {
-	return s.Tx.QueryRow(query, args...)
-}
-
-func (s *SQLiteDriver) CreateTable(tableName string, args []string) (sql.Result, error) {
+func (s *sqliteDriver) CreateTable(tableName string, args []string) (sql.Result, error) {
 	return s.Tx.Exec(fmt.Sprintf("CREATE TABLE %s (%s);", tableName, strings.Join(args, ", ")))
 }
 
-func (s *SQLiteDriver) RenameTable(tableName, newName string) (sql.Result, error) {
+func (s *sqliteDriver) RenameTable(tableName, newName string) (sql.Result, error) {
 	return s.Tx.Exec(fmt.Sprintf("ALTER TABLE %s RENAME TO %s;", tableName, newName))
 }
 
-func (s *SQLiteDriver) DropTable(tableName string) (sql.Result, error) {
+func (s *sqliteDriver) DropTable(tableName string) (sql.Result, error) {
 	return s.Tx.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName))
 }
 
-func (s *SQLiteDriver) AddColumn(tableName, columnSpec string) (sql.Result, error) {
+func (s *sqliteDriver) AddColumn(tableName, columnSpec string) (sql.Result, error) {
 	return s.Tx.Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s;", tableName, columnSpec))
 }
 
-func (s *SQLiteDriver) DropColumns(tableName string, columnsToDrop []string) (sql.Result, error) {
+func (s *sqliteDriver) DropColumns(tableName string, columnsToDrop []string) (sql.Result, error) {
 	var err error
 	var result sql.Result
 
@@ -144,7 +137,7 @@ func (s *SQLiteDriver) DropColumns(tableName string, columnsToDrop []string) (sq
 	return result, err
 }
 
-func (s *SQLiteDriver) RenameColumns(tableName string, columnChanges map[string]string) (sql.Result, error) {
+func (s *sqliteDriver) RenameColumns(tableName string, columnChanges map[string]string) (sql.Result, error) {
 	var err error
 	var result sql.Result
 
@@ -243,7 +236,7 @@ func (s *SQLiteDriver) RenameColumns(tableName string, columnChanges map[string]
 	return result, err
 }
 
-func (s *SQLiteDriver) getDDLFromTable(tableName string) (string, error) {
+func (s *sqliteDriver) getDDLFromTable(tableName string) (string, error) {
 	var sql string
 	query := `SELECT sql FROM sqlite_master WHERE type='table' and name=?;`
 	err := s.Tx.QueryRow(query, tableName).Scan(&sql)
@@ -253,7 +246,7 @@ func (s *SQLiteDriver) getDDLFromTable(tableName string) (string, error) {
 	return sql, nil
 }
 
-func (s *SQLiteDriver) getDDLFromIndex(tableName string) ([]string, error) {
+func (s *sqliteDriver) getDDLFromIndex(tableName string) ([]string, error) {
 	var sqls []string
 
 	query := `SELECT sql FROM sqlite_master WHERE type='index' and tbl_name=?;`

@@ -33,8 +33,8 @@ type AddColumnSample struct {
 
 type revision1 struct{}
 
-func (r *revision1) Up(op Operation) error {
-	_, err := op.CreateTable("samples", []string{
+func (r *revision1) Up(mg *MigrationDriver) error {
+	_, err := mg.CreateTable("samples", []string{
 		"id INTEGER PRIMARY KEY AUTOINCREMENT",
 		"imel VARCHAR(255) UNIQUE",
 		"name VARCHAR(255)",
@@ -42,8 +42,8 @@ func (r *revision1) Up(op Operation) error {
 	return err
 }
 
-func (r *revision1) Down(op Operation) error {
-	_, err := op.DropTable("samples")
+func (r *revision1) Down(mg *MigrationDriver) error {
+	_, err := mg.DropTable("samples")
 	return err
 }
 
@@ -57,13 +57,13 @@ func (r *revision1) Revision() int64 {
 
 type revision2 struct{}
 
-func (r *revision2) Up(op Operation) error {
-	_, err := op.RenameTable("samples", "examples")
+func (r *revision2) Up(mg *MigrationDriver) error {
+	_, err := mg.RenameTable("samples", "examples")
 	return err
 }
 
-func (r *revision2) Down(op Operation) error {
-	_, err := op.RenameTable("examples", "samples")
+func (r *revision2) Down(mg *MigrationDriver) error {
+	_, err := mg.RenameTable("examples", "samples")
 	return err
 }
 
@@ -77,16 +77,16 @@ func (r *revision2) Revision() int64 {
 
 type revision3 struct{}
 
-func (r *revision3) Up(op Operation) error {
-	if _, err := op.AddColumn("samples", "url VARCHAR(255)"); err != nil {
+func (r *revision3) Up(mg *MigrationDriver) error {
+	if _, err := mg.AddColumn("samples", "url VARCHAR(255)"); err != nil {
 		return err
 	}
-	_, err := op.AddColumn("samples", "num INTEGER")
+	_, err := mg.AddColumn("samples", "num INTEGER")
 	return err
 }
 
-func (r *revision3) Down(op Operation) error {
-	_, err := op.DropColumns("samples", []string{"num", "url"})
+func (r *revision3) Down(mg *MigrationDriver) error {
+	_, err := mg.DropColumns("samples", []string{"num", "url"})
 	return err
 }
 
@@ -100,15 +100,15 @@ func (r *revision3) Revision() int64 {
 
 type revision4 struct{}
 
-func (r *revision4) Up(op Operation) error {
-	_, err := op.RenameColumns("samples", map[string]string{
+func (r *revision4) Up(mg *MigrationDriver) error {
+	_, err := mg.RenameColumns("samples", map[string]string{
 		"imel": "email",
 	})
 	return err
 }
 
-func (r *revision4) Down(op Operation) error {
-	_, err := op.RenameColumns("samples", map[string]string{
+func (r *revision4) Down(mg *MigrationDriver) error {
+	_, err := mg.RenameColumns("samples", map[string]string{
 		"email": "imel",
 	})
 	return err
@@ -124,13 +124,13 @@ func (r *revision4) Revision() int64 {
 
 type revision5 struct{}
 
-func (r *revision5) Up(op Operation) error {
-	_, err := op.Exec(`CREATE INDEX samples_url_name_ix ON samples (url, name)`)
+func (r *revision5) Up(mg *MigrationDriver) error {
+	_, err := mg.Tx.Exec(`CREATE INDEX samples_url_name_ix ON samples (url, name)`)
 	return err
 }
 
-func (r *revision5) Down(op Operation) error {
-	_, err := op.Exec(`DROP INDEX samples_url_name_ix`)
+func (r *revision5) Down(mg *MigrationDriver) error {
+	_, err := mg.Tx.Exec(`DROP INDEX samples_url_name_ix`)
 	return err
 }
 
@@ -143,15 +143,15 @@ func (r *revision5) Revision() int64 {
 // ---------- revision 6
 type revision6 struct{}
 
-func (r *revision6) Up(op Operation) error {
-	_, err := op.RenameColumns("samples", map[string]string{
+func (r *revision6) Up(mg *MigrationDriver) error {
+	_, err := mg.RenameColumns("samples", map[string]string{
 		"url": "host",
 	})
 	return err
 }
 
-func (r *revision6) Down(op Operation) error {
-	_, err := op.RenameColumns("samples", map[string]string{
+func (r *revision6) Down(mg *MigrationDriver) error {
+	_, err := mg.RenameColumns("samples", map[string]string{
 		"host": "url",
 	})
 	return err
@@ -166,16 +166,16 @@ func (r *revision6) Revision() int64 {
 // ---------- revision 7
 type revision7 struct{}
 
-func (r *revision7) Up(op Operation) error {
-	_, err := op.DropColumns("samples", []string{"host", "num"})
+func (r *revision7) Up(mg *MigrationDriver) error {
+	_, err := mg.DropColumns("samples", []string{"host", "num"})
 	return err
 }
 
-func (r *revision7) Down(op Operation) error {
-	if _, err := op.AddColumn("samples", "host VARCHAR(255)"); err != nil {
+func (r *revision7) Down(mg *MigrationDriver) error {
+	if _, err := mg.AddColumn("samples", "host VARCHAR(255)"); err != nil {
 		return err
 	}
-	_, err := op.AddColumn("samples", "num INSTEGER")
+	_, err := mg.AddColumn("samples", "num INSTEGER")
 	return err
 }
 
@@ -188,16 +188,16 @@ func (r *revision7) Revision() int64 {
 // ---------- revision 8
 type revision8 struct{}
 
-func (r *revision8) Up(op Operation) error {
-	if _, err := op.AddColumn("samples", "repo_id INTEGER"); err != nil {
+func (r *revision8) Up(mg *MigrationDriver) error {
+	if _, err := mg.AddColumn("samples", "repo_id INTEGER"); err != nil {
 		return err
 	}
-	_, err := op.AddColumn("samples", "repo VARCHAR(255)")
+	_, err := mg.AddColumn("samples", "repo VARCHAR(255)")
 	return err
 }
 
-func (r *revision8) Down(op Operation) error {
-	_, err := op.DropColumns("samples", []string{"repo", "repo_id"})
+func (r *revision8) Down(mg *MigrationDriver) error {
+	_, err := mg.DropColumns("samples", []string{"repo", "repo_id"})
 	return err
 }
 
@@ -210,15 +210,15 @@ func (r *revision8) Revision() int64 {
 // ---------- revision 9
 type revision9 struct{}
 
-func (r *revision9) Up(op Operation) error {
-	_, err := op.RenameColumns("samples", map[string]string{
+func (r *revision9) Up(mg *MigrationDriver) error {
+	_, err := mg.RenameColumns("samples", map[string]string{
 		"repo": "repository",
 	})
 	return err
 }
 
-func (r *revision9) Down(op Operation) error {
-	_, err := op.RenameColumns("samples", map[string]string{
+func (r *revision9) Down(mg *MigrationDriver) error {
+	_, err := mg.RenameColumns("samples", map[string]string{
 		"repository": "repo",
 	})
 	return err
