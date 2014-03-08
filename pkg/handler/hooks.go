@@ -256,7 +256,7 @@ func fetchBuildScript(repo *Repo, commit *Commit, token string) (*script.Build, 
 		if err := saveFailedBuild(commit, msg); err != nil {
 			return nil, err
 		}
-    return nil, err
+		return nil, err
 	}
 
 	// decode the content.  Note: Not sure this will ever happen...it basically means a GitHub API issue
@@ -264,9 +264,9 @@ func fetchBuildScript(repo *Repo, commit *Commit, token string) (*script.Build, 
 	if err != nil {
 		msg := "Could not decode the yaml from GitHub.  Check that your .drone.yml is a valid yaml file.\n"
 		if err := saveFailedBuild(commit, msg); err != nil {
-      return nil, err
+			return nil, err
 		}
-    return nil, err
+		return nil, err
 	}
 
 	// parse the build script

@@ -121,7 +121,7 @@ func (h *CommitRebuildHandler) CommitRebuild(w http.ResponseWriter, r *http.Requ
 
 	buildscript, err := fetchBuildScript(repo, commit, u.GithubToken)
 	if err != nil {
-		return err;
+		return err
 	}
 
 	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript})
