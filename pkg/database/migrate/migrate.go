@@ -64,22 +64,17 @@ type Operation interface {
 	DropColumns(tableName string, columnsToDrop []string) (sql.Result, error)
 
 	RenameColumns(tableName string, columnChanges map[string]string) (sql.Result, error)
-
-	Exec(query string, args ...interface{}) (sql.Result, error)
-
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-
-	QueryRow(query string, args ...interface{}) *sql.Row
 }
 
 type Revision interface {
-	Up(op Operation) error
-	Down(op Operation) error
+	Up(mg *MigrationDriver) error
+	Down(mg *MigrationDriver) error
 	Revision() int64
 }
 
 type MigrationDriver struct {
 	Tx *sql.Tx
+	Operation
 }
 
 type Migration struct {
@@ -87,7 +82,9 @@ type Migration struct {
 	revs []Revision
 }
 
-var Driver func(tx *sql.Tx) Operation
+type DriverFunction func(tx *sql.Tx) *MigrationDriver
+
+var Driver DriverFunction
 
 func New(db *sql.DB) *Migration {
 	return &Migration{db: db}
@@ -148,14 +145,14 @@ func (m *Migration) up(target, current int64) error {
 		return err
 	}
 
-	op := Driver(tx)
+	mg := Driver(tx)
 
 	// loop through and execute revisions
 	for _, rev := range m.revs {
 		if rev.Revision() > current && rev.Revision() <= target {
 			current = rev.Revision()
 			// execute the revision Upgrade.
-			if err := rev.Up(op); err != nil {
+			if err := rev.Up(mg); err != nil {
 				log.Printf("Failed to upgrade to Revision Number %v\n", current)
 				log.Println(err)
 				return tx.Rollback()
@@ -181,7 +178,7 @@ func (m *Migration) down(target, current int64) error {
 		return err
 	}
 
-	op := Driver(tx)
+	mg := Driver(tx)
 
 	// reverse the list of revisions
 	revs := []Revision{}
@@ -195,7 +192,7 @@ func (m *Migration) down(target, current int64) error {
 		if rev.Revision() > target {
 			current = rev.Revision()
 			// execute the revision Upgrade.
-			if err := rev.Down(op); err != nil {
+			if err := rev.Down(mg); err != nil {
 				log.Printf("Failed to downgrade from Revision Number %v\n", current)
 				log.Println(err)
 				return tx.Rollback()
