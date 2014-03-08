@@ -237,11 +237,9 @@ func (h *HookHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) {
 	RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
 }
 
-// Helper method for retrieving a build script from GitHub
-//   If the .drone.yml file is missing, returns an error
-//   If the .drone.yml file is incorrectly formatted, returns an error
-//   Otherwise, returns a buildscript suitable for adding to the queue
-//
+// fetchBuildScript retrieves a build script from GitHub. If the .drone.yml
+// file is missing or incorrectly formatted, it returns an error.  Otherwise,
+// it returns a Build suitable for adding to the queue
 func fetchBuildScript(repo *Repo, commit *Commit, token string) (*script.Build, error) {
 	// get the github settings from the database
 	settings := database.SettingsMust()

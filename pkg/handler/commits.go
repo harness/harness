@@ -72,16 +72,13 @@ func NewCommitRebuildHandler(queue *queue.Queue) *CommitRebuildHandler {
 	}
 }
 
-// Rebuilds a commit
-//
-// Finds the existing commit and build and injects them back into the queue.
-//	 If the commit doesn't exist or has no builds, prints an error
-//   If a build label has been passed but can't be located, prints an error
-//	 If the .drone.yml doesn't exist in the repo, prints an error
-//	 If the .drone.yml can't be parsed, saves a failed build and prints an error
-//	 Otherwise, adds the build/commit to the queue and redirects back to the
-//		 commit page.
-//
+// CommitRebuild re-queues a previously built commit. It finds the existing
+// commit and build and injects them back into the queue.  If the commit
+// doesn't exist or has no builds, or if a build label has been passed but
+// can't be located, it prints an error. If the .drone.yml doesn't exist in
+// the repo or can't be parsed, it saves a failed build and prints an error.
+// Otherwise, it adds the build/commit to the queue and redirects back to the
+// commit page.
 func (h *CommitRebuildHandler) CommitRebuild(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) error {
 	hash := r.FormValue(":commit")
 	labl := r.FormValue(":label")
