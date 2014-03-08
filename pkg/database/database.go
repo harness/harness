@@ -2,13 +2,13 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/drone/drone/pkg/database/migrate"
 	"github.com/drone/drone/pkg/database/schema"
 
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/russross/meddler"
@@ -17,6 +17,13 @@ import (
 // global instance of our database connection.
 var db *sql.DB
 
+// Init connects to database and performs migration if necessary.
+//
+// Database driver name and data source information is provided by user
+// from within command line, and error checking is deferred to sql.Open.
+//
+// Init will just bail out and returns error if driver name
+// is not listed, no fallback nor default driver sets here.
 func Init(name, datasource string) error {
 	driver := map[string]struct {
 		Md *meddler.Database
@@ -30,14 +37,14 @@ func Init(name, datasource string) error {
 			meddler.MySQL,
 			migrate.MySQL,
 		},
-		"postgresql": {
-			meddler.PostgreSQL,
-			migrate.PostgreSQL,
-		},
 	}
 
-	meddler.Default = driver[name].Md
-	migrate.Driver = driver[name].Mg
+	if drv, ok := driver[name]; ok {
+		meddler.Default = drv.Md
+		migrate.Driver = drv.Mg
+	} else {
+		return fmt.Errorf("%s driver not found", name)
+	}
 
 	db, err := sql.Open(name, datasource)
 	if err != nil {

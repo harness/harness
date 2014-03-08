@@ -26,7 +26,6 @@ deps:
 	go get github.com/GeertJohan/go.rice
 	go get github.com/GeertJohan/go.rice/rice
 	go get github.com/go-sql-driver/mysql
-	go get github.com/lib/pq
 	go get github.com/mattn/go-sqlite3
 	go get github.com/russross/meddler
 
