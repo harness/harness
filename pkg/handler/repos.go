@@ -60,8 +60,8 @@ func RepoAdd(w http.ResponseWriter, r *http.Request, u *User) error {
 		return err
 	}
 	data := struct {
-		User  *User
-		Teams []*Team
+		User     *User
+		Teams    []*Team
 		Settings *Settings
 	}{u, teams, settings}
 	// if the user hasn't linked their GitHub account
@@ -120,7 +120,7 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	// to upload a github key to the repository
 	if repo.Private {
 		// name the key
-		keyName := fmt.Sprintf("%s@%s", repo.Owner, settings.Domain)
+		keyName := buildKeyName(repo.Owner, settings.Domain)
 
 		// create the github key, or update if one already exists
 		_, err := client.RepoKeys.CreateUpdate(owner, name, repo.PublicKey, keyName)
@@ -133,10 +133,10 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 
 	// create a hook so that we get notified when code
 	// is pushed to the repository and can execute a build.
-	link := fmt.Sprintf("%s://%s/hook/github.com?id=%s", settings.Scheme, settings.Domain, repo.Slug)
+	hookUrl := buildHookUrl(settings.Scheme, settings.Domain, repo.Slug)
 
 	// add the hook
-	if _, err := client.Hooks.CreateUpdate(owner, name, link); err != nil {
+	if _, err := client.Hooks.CreateUpdate(owner, name, hookUrl); err != nil {
 		return fmt.Errorf("Unable to add Hook to your GitHub repository. %s", err.Error())
 	}
 
@@ -274,10 +274,36 @@ func RepoDeleteForm(w http.ResponseWriter, r *http.Request, u *User, repo *Repo)
 
 // Deletes a specific repository.
 func RepoDelete(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) error {
+	settings := database.SettingsMust()
+
 	// the user must confirm their password before deleting
 	password := r.FormValue("password")
 	if err := u.ComparePassword(password); err != nil {
 		return RenderError(w, err, http.StatusBadRequest)
+	}
+
+	client := github.New(u.GithubToken)
+	client.ApiUrl = settings.GitHubApiUrl
+
+	// if the repository is private we'll need
+	// to remove a github key to the repository
+	if repo.Private {
+		keyName := buildKeyName(repo.Owner, settings.Domain)
+
+		err := client.RepoKeys.DeleteName(repo.Owner, repo.Name, keyName)
+		if err != nil {
+			return fmt.Errorf("Unable to remove Public Key from your GitHub repository")
+		}
+	} else {
+
+	}
+
+	// remove the hook added on create
+	hookUrl := buildHookUrl(settings.Scheme, settings.Domain, repo.Slug)
+
+	// add the hook
+	if err := client.Hooks.DeleteUrl(repo.Owner, repo.Name, hookUrl); err != nil {
+		return fmt.Errorf("Unable to delete Hook from your GitHub repository. %s", err.Error())
 	}
 
 	// delete the repo
@@ -287,4 +313,12 @@ func RepoDelete(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 	return nil
+}
+
+func buildHookUrl(scheme, domain, slug string) string {
+	return fmt.Sprintf("%s://%s/hook/github.com?id=%s", scheme, domain, slug)
+}
+
+func buildKeyName(owner, domain string) string {
+	return fmt.Sprintf("%s@%s", owner, domain)
 }
