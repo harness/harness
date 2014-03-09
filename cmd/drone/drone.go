@@ -134,9 +134,9 @@ func run(path string) {
 	}
 
 	// get the repository root directory
-	dir := filepath.Base(filepath.Dir(path))
+	dir := filepath.Dir(path)
 	code := repo.Repo{
-		Name:   dir,
+		Name:   filepath.Base(dir),
 		Branch: "HEAD", // should we do this?
 		Path:   dir,
 	}
