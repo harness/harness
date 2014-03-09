@@ -123,7 +123,7 @@ func (c *Client) do(method, path string, in, out interface{}) error {
 
 	// make the request
 	conn := httputil.NewClientConn(dial, nil)
-	resp, err := conn.Do(req)el
+	resp, err := conn.Do(req)
 	defer conn.Close()
 	if err != nil {
 		return err
