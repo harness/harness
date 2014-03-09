@@ -78,6 +78,8 @@ func (c *Client) setHost(defaultUnixSocket string) {
 		if len(pieces) == 2 {
 			c.proto = pieces[0]
 			c.addr = pieces[1]
+		} else if len(pieces) == 1 {
+			c.addr = pieces[0]
 		}
 	} else {
 		// if the default socket doesn't exist then
@@ -121,7 +123,7 @@ func (c *Client) do(method, path string, in, out interface{}) error {
 
 	// make the request
 	conn := httputil.NewClientConn(dial, nil)
-	resp, err := conn.Do(req)
+	resp, err := conn.Do(req)el
 	defer conn.Close()
 	if err != nil {
 		return err
