@@ -125,12 +125,12 @@ func (r *revision4) Revision() int64 {
 type revision5 struct{}
 
 func (r *revision5) Up(mg *MigrationDriver) error {
-	_, err := mg.Tx.Exec(`CREATE INDEX samples_url_name_ix ON samples (url, name)`)
+	_, err := mg.AddIndex("samples", []string{"url", "name"}, "")
 	return err
 }
 
 func (r *revision5) Down(mg *MigrationDriver) error {
-	_, err := mg.Tx.Exec(`DROP INDEX samples_url_name_ix`)
+	_, err := mg.DropIndex("samples", []string{"url", "name"})
 	return err
 }
 
@@ -442,9 +442,9 @@ func TestIndexOperations(t *testing.T) {
 		t.Errorf("Can not find index: %q", err)
 	}
 
-	indexStatement := `CREATE INDEX samples_url_name_ix ON samples (url, name)`
+	indexStatement := `CREATE INDEX idx_samples_on_url_and_name ON samples (url, name)`
 	if string(esquel[1].Sql.([]byte)) != indexStatement {
-		t.Errorf("Can not find index")
+		t.Errorf("Can not find index, got: %q", esquel[1])
 	}
 
 	// Migrate, rename indexed columns
@@ -457,9 +457,9 @@ func TestIndexOperations(t *testing.T) {
 		t.Errorf("Can not find index: %q", err)
 	}
 
-	indexStatement = `CREATE INDEX samples_host_name_ix ON samples (host, name)`
+	indexStatement = `CREATE INDEX idx_samples_on_host_and_name ON samples (host, name)`
 	if string(esquel1[1].Sql.([]byte)) != indexStatement {
-		t.Errorf("Can not find index, got: %s", esquel[0])
+		t.Errorf("Can not find index, got: %q", esquel1[1])
 	}
 
 	if err := mgr.Add(&revision7{}).Migrate(); err != nil {
