@@ -27,7 +27,7 @@ var db *sql.DB
 func Init(name, datasource string) error {
 	driver := map[string]struct {
 		Md *meddler.Database
-		Mg migrate.DriverFunction
+		Mg migrate.DriverBuilder
 	}{
 		"sqlite3": {
 			meddler.SQLite,
