@@ -16,26 +16,38 @@ func MySQL(tx *sql.Tx) *MigrationDriver {
 	}
 }
 
-func (p *mysqlDriver) CreateTable(tableName string, args []string) (sql.Result, error) {
+func (m *mysqlDriver) CreateTable(tableName string, args []string) (sql.Result, error) {
 	return nil, errors.New("not implemented yet")
 }
 
-func (p *mysqlDriver) RenameTable(tableName, newName string) (sql.Result, error) {
+func (m *mysqlDriver) RenameTable(tableName, newName string) (sql.Result, error) {
 	return nil, errors.New("not implemented yet")
 }
 
-func (p *mysqlDriver) DropTable(tableName string) (sql.Result, error) {
+func (m *mysqlDriver) DropTable(tableName string) (sql.Result, error) {
 	return nil, errors.New("not implemented yet")
 }
 
-func (p *mysqlDriver) AddColumn(tableName, columnSpec string) (sql.Result, error) {
+func (m *mysqlDriver) AddColumn(tableName, columnSpec string) (sql.Result, error) {
 	return nil, errors.New("not implemented yet")
 }
 
-func (p *mysqlDriver) DropColumns(tableName string, columnsToDrop []string) (sql.Result, error) {
+func (m *mysqlDriver) ChangeColumn(tableName, columnName, newSpecs string) (sql.Result, error) {
 	return nil, errors.New("not implemented yet")
 }
 
-func (p *mysqlDriver) RenameColumns(tableName string, columnChanges map[string]string) (sql.Result, error) {
+func (m *mysqlDriver) DropColumns(tableName string, columnsToDrop []string) (sql.Result, error) {
+	return nil, errors.New("not implemented yet")
+}
+
+func (m *mysqlDriver) RenameColumns(tableName string, columnChanges map[string]string) (sql.Result, error) {
+	return nil, errors.New("not implemented yet")
+}
+
+func (m *mysqlDriver) AddIndex(tableName string, columns []string, flag string) (sql.Result, error) {
+	return nil, errors.New("not implemented yet")
+}
+
+func (m *mysqlDriver) DropIndex(tableName string, columns []string) (sql.Result, error) {
 	return nil, errors.New("not implemented yet")
 }
