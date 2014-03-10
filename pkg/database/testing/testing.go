@@ -37,13 +37,7 @@ func init() {
 
 func Setup() {
 	// create an in-memory database
-	db, _ = sql.Open("sqlite3", ":memory:")
-
-	// make sure all the tables and indexes are created
-	database.Set(db)
-
-	migration := migrate.New(db)
-	migration.All().Migrate()
+	database.Init("sqlite3", ":memory:")
 
 	// create dummy user data
 	user1 := User{
@@ -208,5 +202,5 @@ func Setup() {
 }
 
 func Teardown() {
-	db.Close()
+	database.Close()
 }

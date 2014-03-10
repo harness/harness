@@ -25,6 +25,7 @@ var db *sql.DB
 // Init will just bail out and returns error if driver name
 // is not listed, no fallback nor default driver sets here.
 func Init(name, datasource string) error {
+	var err error
 	driver := map[string]struct {
 		Md *meddler.Database
 		Mg migrate.DriverBuilder
@@ -46,12 +47,10 @@ func Init(name, datasource string) error {
 		return fmt.Errorf("%s driver not found", name)
 	}
 
-	db, err := sql.Open(name, datasource)
+	db, err = sql.Open(name, datasource)
 	if err != nil {
 		return err
 	}
-
-	Set(db)
 
 	migration := migrate.New(db)
 	migration.All().Migrate()
@@ -69,4 +68,8 @@ func Set(database *sql.DB) {
 	if err := schema.Load(db); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func Close() {
+	db.Close()
 }
