@@ -24,7 +24,7 @@ type Operation interface {
 
 	AddIndex(tableName string, columns []string, flag string) (sql.Result, error)
 
-	DropIndex(tableName string, columns[]string) (sql.Result, error)
+	DropIndex(tableName string, columns []string) (sql.Result, error)
 }
 
 type MigrationDriver struct {
@@ -33,4 +33,3 @@ type MigrationDriver struct {
 }
 
 type DriverBuilder func(tx *sql.Tx) *MigrationDriver
-

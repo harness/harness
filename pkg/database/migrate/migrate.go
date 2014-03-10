@@ -48,6 +48,7 @@ INSERT INTO migration (revision) VALUES (?)
 const deleteRevisionStmt = `
 DELETE FROM migration where revision = ?
 `
+
 type Revision interface {
 	Up(mg *MigrationDriver) error
 	Down(mg *MigrationDriver) error
@@ -58,8 +59,6 @@ type Migration struct {
 	db   *sql.DB
 	revs []Revision
 }
-
-type DriverFunction func(tx *sql.Tx) *MigrationDriver
 
 var Driver DriverBuilder
 
