@@ -48,33 +48,10 @@ INSERT INTO migration (revision) VALUES (?)
 const deleteRevisionStmt = `
 DELETE FROM migration where revision = ?
 `
-
-// Operation interface covers basic migration operations.
-// Implementation details is specific for each database,
-// see migrate/sqlite.go for implementation reference.
-type Operation interface {
-	CreateTable(tableName string, args []string) (sql.Result, error)
-
-	RenameTable(tableName, newName string) (sql.Result, error)
-
-	DropTable(tableName string) (sql.Result, error)
-
-	AddColumn(tableName, columnSpec string) (sql.Result, error)
-
-	DropColumns(tableName string, columnsToDrop []string) (sql.Result, error)
-
-	RenameColumns(tableName string, columnChanges map[string]string) (sql.Result, error)
-}
-
 type Revision interface {
 	Up(mg *MigrationDriver) error
 	Down(mg *MigrationDriver) error
 	Revision() int64
-}
-
-type MigrationDriver struct {
-	Tx *sql.Tx
-	Operation
 }
 
 type Migration struct {
@@ -84,7 +61,7 @@ type Migration struct {
 
 type DriverFunction func(tx *sql.Tx) *MigrationDriver
 
-var Driver DriverFunction
+var Driver DriverBuilder
 
 func New(db *sql.DB) *Migration {
 	return &Migration{db: db}
