@@ -32,10 +32,22 @@ func (p *postgresqlDriver) AddColumn(tableName, columnSpec string) (sql.Result, 
 	return nil, errors.New("not implemented yet")
 }
 
+func (p *postgresqlDriver) ChangeColumn(tableName, columnName, newSpecs string) (sql.Result, error) {
+	return nil, errors.New("not implemented yet")
+}
+
 func (p *postgresqlDriver) DropColumns(tableName string, columnsToDrop []string) (sql.Result, error) {
 	return nil, errors.New("not implemented yet")
 }
 
 func (p *postgresqlDriver) RenameColumns(tableName string, columnChanges map[string]string) (sql.Result, error) {
+	return nil, errors.New("not implemented yet")
+}
+
+func (p *postgresqlDriver) AddIndex(tableName string, columns []string, flag string) (sql.Result, error) {
+	return nil, errors.New("not implemented yet")
+}
+
+func (p *postgresqlDriver) DropIndex(tableName string, columns []string) (sql.Result, error) {
 	return nil, errors.New("not implemented yet")
 }

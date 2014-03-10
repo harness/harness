@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dchest/uniuri"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -36,6 +35,61 @@ func (s *sqliteDriver) AddColumn(tableName, columnSpec string) (sql.Result, erro
 	return s.Tx.Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s;", tableName, columnSpec))
 }
 
+func (s *sqliteDriver) ChangeColumn(tableName, columnName, newType string) (sql.Result, error) {
+	var result sql.Result
+	var err error
+
+	tableSQL, err := s.getTableDefinition(tableName)
+	if err != nil {
+		return nil, err
+	}
+
+	columns, err := fetchColumns(tableSQL)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, column := range columns {
+		if columnName == strings.SplitN(column, " ", 2)[0] {
+			column = fmt.Sprintf("%s %s", columnName, newType)
+			break
+		}
+	}
+
+	indices, err := s.getIndexDefinition(tableName)
+	if err != nil {
+		return nil, err
+	}
+
+	proxy := proxyName(tableName)
+	if result, err = s.RenameTable(tableName, proxy); err != nil {
+		return nil, err
+	}
+
+	if result, err = s.CreateTable(tableName, columns); err != nil {
+		return nil, err
+	}
+
+	// Migrate data
+	if result, err = s.Tx.Exec(fmt.Sprintf("INSERT INTO %s SELECT %s FROM %s", tableName,
+		strings.Join(columns, ", "), proxy)); err != nil {
+		return result, err
+	}
+
+	// Clean up proxy table
+	if result, err = s.DropTable(proxy); err != nil {
+		return result, err
+	}
+
+	for _, idx := range indices {
+		if result, err = s.Tx.Exec(idx); err != nil {
+			return result, err
+		}
+	}
+	return result, err
+
+}
+
 func (s *sqliteDriver) DropColumns(tableName string, columnsToDrop []string) (sql.Result, error) {
 	var err error
 	var result sql.Result
@@ -44,7 +98,7 @@ func (s *sqliteDriver) DropColumns(tableName string, columnsToDrop []string) (sq
 		return nil, fmt.Errorf("No columns to drop.")
 	}
 
-	tableSQL, err := s.getDDLFromTable(tableName)
+	tableSQL, err := s.getTableDefinition(tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +129,7 @@ func (s *sqliteDriver) DropColumns(tableName string, columnsToDrop []string) (sq
 	}
 
 	// fetch indices for this table
-	oldSQLIndices, err := s.getDDLFromIndex(tableName)
+	oldSQLIndices, err := s.getIndexDefinition(tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +161,8 @@ func (s *sqliteDriver) DropColumns(tableName string, columnsToDrop []string) (sq
 	}
 
 	// Rename old table, here's our proxy
-	proxyName := fmt.Sprintf("%s_%s", tableName, uniuri.NewLen(16))
-	if result, err := s.RenameTable(tableName, proxyName); err != nil {
+	proxy := proxyName(tableName)
+	if result, err := s.RenameTable(tableName, proxy); err != nil {
 		return result, err
 	}
 
@@ -119,12 +173,12 @@ func (s *sqliteDriver) DropColumns(tableName string, columnsToDrop []string) (sq
 
 	// Move data from old table
 	if result, err = s.Tx.Exec(fmt.Sprintf("INSERT INTO %s SELECT %s FROM %s;", tableName,
-		strings.Join(selectName(preparedColumns), ", "), proxyName)); err != nil {
+		strings.Join(selectName(preparedColumns), ", "), proxy)); err != nil {
 		return result, err
 	}
 
 	// Clean up proxy table
-	if result, err = s.DropTable(proxyName); err != nil {
+	if result, err = s.DropTable(proxy); err != nil {
 		return result, err
 	}
 
@@ -141,7 +195,7 @@ func (s *sqliteDriver) RenameColumns(tableName string, columnChanges map[string]
 	var err error
 	var result sql.Result
 
-	tableSQL, err := s.getDDLFromTable(tableName)
+	tableSQL, err := s.getTableDefinition(tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +227,7 @@ func (s *sqliteDriver) RenameColumns(tableName string, columnChanges map[string]
 	}
 
 	// fetch indices for this table
-	oldSQLIndices, err := s.getDDLFromIndex(tableName)
+	oldSQLIndices, err := s.getIndexDefinition(tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -207,8 +261,8 @@ func (s *sqliteDriver) RenameColumns(tableName string, columnChanges map[string]
 	}
 
 	// Rename current table
-	proxyName := fmt.Sprintf("%s_%s", tableName, uniuri.NewLen(16))
-	if result, err := s.RenameTable(tableName, proxyName); err != nil {
+	proxy := proxyName(tableName)
+	if result, err := s.RenameTable(tableName, proxy); err != nil {
 		return result, err
 	}
 
@@ -219,12 +273,12 @@ func (s *sqliteDriver) RenameColumns(tableName string, columnChanges map[string]
 
 	// Migrate data
 	if result, err = s.Tx.Exec(fmt.Sprintf("INSERT INTO %s SELECT %s FROM %s", tableName,
-		strings.Join(oldColumnsName, ", "), proxyName)); err != nil {
+		strings.Join(oldColumnsName, ", "), proxy)); err != nil {
 		return result, err
 	}
 
 	// Clean up proxy table
-	if result, err = s.DropTable(proxyName); err != nil {
+	if result, err = s.DropTable(proxy); err != nil {
 		return result, err
 	}
 
@@ -236,7 +290,19 @@ func (s *sqliteDriver) RenameColumns(tableName string, columnChanges map[string]
 	return result, err
 }
 
-func (s *sqliteDriver) getDDLFromTable(tableName string) (string, error) {
+func (s *sqliteDriver) AddIndex(tableName string, columns []string, flag string) (sql.Result, error) {
+	if strings.ToUpper(flag) != "UNIQUE" {
+		flag = ""
+	}
+	return s.Tx.Exec(fmt.Sprintf("CREATE %s INDEX %s ON %s (%s)", flag, indexName(tableName, columns),
+		tableName, strings.Join(columns, ", ")))
+}
+
+func (s *sqliteDriver) DropIndex(tableName string, columns []string) (sql.Result, error) {
+	return s.Tx.Exec(fmt.Sprintf("DROP INDEX %s", indexName(tableName, columns)))
+}
+
+func (s *sqliteDriver) getTableDefinition(tableName string) (string, error) {
 	var sql string
 	query := `SELECT sql FROM sqlite_master WHERE type='table' and name=?;`
 	err := s.Tx.QueryRow(query, tableName).Scan(&sql)
@@ -246,7 +312,7 @@ func (s *sqliteDriver) getDDLFromTable(tableName string) (string, error) {
 	return sql, nil
 }
 
-func (s *sqliteDriver) getDDLFromIndex(tableName string) ([]string, error) {
+func (s *sqliteDriver) getIndexDefinition(tableName string) ([]string, error) {
 	var sqls []string
 
 	query := `SELECT sql FROM sqlite_master WHERE type='index' and tbl_name=?;`
