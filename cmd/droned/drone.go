@@ -20,11 +20,6 @@ import (
 )
 
 var (
-	// local path where the SQLite database
-	// should be stored. By default this is
-	// in the current working directory.
-	path string
-
 	// port the server will run on
 	port string
 
@@ -49,7 +44,6 @@ var (
 
 func main() {
 	// parse command line flags
-	flag.StringVar(&path, "path", "", "")
 	flag.StringVar(&port, "port", ":8080", "")
 	flag.StringVar(&driver, "driver", "sqlite3", "")
 	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
