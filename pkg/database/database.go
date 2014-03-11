@@ -3,10 +3,8 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	"github.com/drone/drone/pkg/database/migrate"
-	"github.com/drone/drone/pkg/database/schema"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
@@ -55,19 +53,6 @@ func Init(name, datasource string) error {
 	migration := migrate.New(db)
 	migration.All().Migrate()
 	return nil
-}
-
-// Set sets the default database.
-func Set(database *sql.DB) {
-	// set the global database
-	db = database
-
-	// load the database schema. If this is
-	// a new database all the tables and
-	// indexes will be created.
-	if err := schema.Load(db); err != nil {
-		log.Fatal(err)
-	}
 }
 
 func Close() {
