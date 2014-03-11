@@ -209,7 +209,7 @@ func setupHandlers() {
 	m.Get("/:host/:owner/:name/commit/:commit/build/:label", handler.RepoHandler(handler.CommitShow))
 	m.Get("/:host/:owner/:name/commit/:commit", handler.RepoHandler(handler.CommitShow))
 	m.Get("/:host/:owner/:name/tree", handler.RepoHandler(handler.RepoDashboard))
-	m.Get("/:host/:owner/:name/status.png", handler.ErrorHandler(handler.Badge))
+	m.Get("/:host/:owner/:name/status.svg", handler.ErrorHandler(handler.Badge))
 	m.Get("/:host/:owner/:name/settings", handler.RepoAdminHandler(handler.RepoSettingsForm))
 	m.Get("/:host/:owner/:name/params", handler.RepoAdminHandler(handler.RepoParamsForm))
 	m.Get("/:host/:owner/:name/badges", handler.RepoAdminHandler(handler.RepoBadges))
