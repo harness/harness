@@ -1,7 +1,7 @@
 Drone is a [Continuous Integration](http://en.wikipedia.org/wiki/Continuous_integration) platform built on [Docker](https://www.docker.io/)
 
-[![Build Status](http://beta.drone.io/github.com/drone/drone/status.png?branch=master)](http://beta.drone.io/github.com/drone/drone)
-[![GoDoc](https://godoc.org/github.com/drone/drone?status.png)](https://godoc.org/github.com/drone/drone)
+[![Build Status](http://beta.drone.io/github.com/drone/drone/status.svg?branch=master)](http://beta.drone.io/github.com/drone/drone)
+[![GoDoc](https://godoc.org/github.com/drone/drone?status.svg)](https://godoc.org/github.com/drone/drone)
 
 ### Getting Started
 
