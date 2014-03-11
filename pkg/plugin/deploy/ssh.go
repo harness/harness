@@ -63,11 +63,13 @@ func (s *SSH) Write(f *buildfile.Buildfile) {
 		}
 	}
 
-	if len(s.Artifacts) > 1 && !artifact {
-		artifact = compress(f, s.Artifacts)
-	} else if len(s.Artifacts) == 1 {
-		f.WriteCmdSilent(fmt.Sprintf("ARTIFACT=%s", s.Artifacts[0]))
-		artifact = true
+	if !artifact {
+		if len(s.Artifacts) > 1 {
+			artifact = compress(f, s.Artifacts)
+		} else if len(s.Artifacts) == 1 {
+			f.WriteCmdSilent(fmt.Sprintf("ARTIFACT=%s", s.Artifacts[0]))
+			artifact = true
+		}
 	}
 
 	if artifact {
