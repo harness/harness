@@ -8,12 +8,12 @@ import (
 )
 
 const (
-	badgeSuccess = "https://img.shields.io/badge/build-success-brightgreen.png"
-	badgeFailure = "https://img.shields.io/badge/build-failure-red.png"
-	badgeUnknown = "https://img.shields.io/badge/build-unknown-lightgray.png"
+	badgeSuccess = "https://img.shields.io/badge/build-success-brightgreen.svg"
+	badgeFailure = "https://img.shields.io/badge/build-failure-red.svg"
+	badgeUnknown = "https://img.shields.io/badge/build-unknown-lightgray.svg"
 )
 
-// Display a static badge (png format) for a specific
+// Display a static badge (svg format) for a specific
 // repository and an optional branch.
 // TODO this needs to implement basic caching
 func Badge(w http.ResponseWriter, r *http.Request) error {
