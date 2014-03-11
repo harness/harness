@@ -119,6 +119,10 @@ func TestSSHGitArchive(t *testing.T) {
 		t.Errorf("Expect script to contains artifact")
 	}
 
+	if strings.Contains(bscr, "=GITARCHIVE") {
+		t.Errorf("Doesn't expect script to contains GITARCHIVE literals")
+	}
+
 	if !strings.Contains(bscr, "git archive --format=tar.gz --prefix=${PWD##*/}/ ${COMMIT} > ${ARTIFACT}") {
 		t.Errorf("Expect script to run git archive")
 	}
