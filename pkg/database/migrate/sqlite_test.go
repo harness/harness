@@ -1,10 +1,12 @@
-package migrate
+package migrate_test
 
 import (
 	"database/sql"
 	"os"
 	"strings"
 	"testing"
+
+	. "github.com/drone/drone/pkg/database/migrate"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/russross/meddler"
@@ -231,6 +233,26 @@ func (r *revision9) Revision() int64 {
 
 // ---------- end of revision 9
 
+// ---------- revision 10
+
+type revision10 struct{}
+
+func (r *revision10) Revision() int64 {
+	return 10
+}
+
+func (r *revision10) Up(mg *MigrationDriver) error {
+	_, err := mg.ChangeColumn("samples", "email", "varchar(512) UNIQUE")
+	return err
+}
+
+func (r *revision10) Down(mg *MigrationDriver) error {
+	_, err := mg.ChangeColumn("samples", "email", "varchar(255) unique")
+	return err
+}
+
+// ---------- end of revision 10
+
 var db *sql.DB
 
 var testSchema = `
@@ -253,11 +275,9 @@ func TestMigrateCreateTable(t *testing.T) {
 		t.Fatalf("Error preparing database: %q", err)
 	}
 
-	Driver = SQLite
-
 	mgr := New(db)
 	if err := mgr.Add(&revision1{}).Migrate(); err != nil {
-		t.Errorf("Can not migrate: %q", err)
+		t.Fatalf("Can not migrate: %q", err)
 	}
 
 	sample := Sample{
@@ -266,7 +286,7 @@ func TestMigrateCreateTable(t *testing.T) {
 		Name: "Test Tester",
 	}
 	if err := meddler.Save(db, "samples", &sample); err != nil {
-		t.Errorf("Can not save data: %q", err)
+		t.Fatalf("Can not save data: %q", err)
 	}
 }
 
@@ -276,22 +296,20 @@ func TestMigrateRenameTable(t *testing.T) {
 		t.Fatalf("Error preparing database: %q", err)
 	}
 
-	Driver = SQLite
-
 	mgr := New(db)
 	if err := mgr.Add(&revision1{}).Migrate(); err != nil {
-		t.Errorf("Can not migrate: %q", err)
+		t.Fatalf("Can not migrate: %q", err)
 	}
 
 	loadFixture(t)
 
 	if err := mgr.Add(&revision2{}).Migrate(); err != nil {
-		t.Errorf("Can not migrate: %q", err)
+		t.Fatalf("Can not migrate: %q", err)
 	}
 
 	sample := Sample{}
 	if err := meddler.QueryRow(db, &sample, `SELECT * FROM examples WHERE id = ?`, 2); err != nil {
-		t.Errorf("Can not fetch data: %q", err)
+		t.Fatalf("Can not fetch data: %q", err)
 	}
 
 	if sample.Imel != "foo@bar.com" {
@@ -314,16 +332,14 @@ func TestMigrateAddRemoveColumns(t *testing.T) {
 		t.Fatalf("Error preparing database: %q", err)
 	}
 
-	Driver = SQLite
-
 	mgr := New(db)
 	if err := mgr.Add(&revision1{}, &revision3{}).Migrate(); err != nil {
-		t.Errorf("Can not migrate: %q", err)
+		t.Fatalf("Can not migrate: %q", err)
 	}
 
 	var columns []*TableInfo
 	if err := meddler.QueryAll(db, &columns, `PRAGMA table_info(samples);`); err != nil {
-		t.Errorf("Can not access table info: %q", err)
+		t.Fatalf("Can not access table info: %q", err)
 	}
 
 	if len(columns) < 5 {
@@ -338,16 +354,16 @@ func TestMigrateAddRemoveColumns(t *testing.T) {
 		Num:  42,
 	}
 	if err := meddler.Save(db, "samples", &row); err != nil {
-		t.Errorf("Can not save into database: %q", err)
+		t.Fatalf("Can not save into database: %q", err)
 	}
 
 	if err := mgr.MigrateTo(1); err != nil {
-		t.Errorf("Can not migrate: %q", err)
+		t.Fatalf("Can not migrate: %q", err)
 	}
 
 	var another_columns []*TableInfo
 	if err := meddler.QueryAll(db, &another_columns, `PRAGMA table_info(samples);`); err != nil {
-		t.Errorf("Can not access table info: %q", err)
+		t.Fatalf("Can not access table info: %q", err)
 	}
 
 	if len(another_columns) != 3 {
@@ -361,22 +377,20 @@ func TestRenameColumn(t *testing.T) {
 		t.Fatalf("Error preparing database: %q", err)
 	}
 
-	Driver = SQLite
-
 	mgr := New(db)
 	if err := mgr.Add(&revision1{}, &revision4{}).MigrateTo(1); err != nil {
-		t.Errorf("Can not migrate: %q", err)
+		t.Fatalf("Can not migrate: %q", err)
 	}
 
 	loadFixture(t)
 
 	if err := mgr.MigrateTo(4); err != nil {
-		t.Errorf("Can not migrate: %q", err)
+		t.Fatalf("Can not migrate: %q", err)
 	}
 
 	row := RenameSample{}
 	if err := meddler.QueryRow(db, &row, `SELECT * FROM samples WHERE id = 3;`); err != nil {
-		t.Errorf("Can not query database: %q", err)
+		t.Fatalf("Can not query database: %q", err)
 	}
 
 	if row.Email != "crash@bandicoot.io" {
@@ -390,22 +404,20 @@ func TestMigrateExistingTable(t *testing.T) {
 		t.Fatalf("Error preparing database: %q", err)
 	}
 
-	Driver = SQLite
-
 	if _, err := db.Exec(testSchema); err != nil {
-		t.Errorf("Can not create database: %q", err)
+		t.Fatalf("Can not create database: %q", err)
 	}
 
 	loadFixture(t)
 
 	mgr := New(db)
 	if err := mgr.Add(&revision4{}).Migrate(); err != nil {
-		t.Errorf("Can not migrate: %q", err)
+		t.Fatalf("Can not migrate: %q", err)
 	}
 
 	var rows []*RenameSample
 	if err := meddler.QueryAll(db, &rows, `SELECT * from samples;`); err != nil {
-		t.Errorf("Can not query database: %q", err)
+		t.Fatalf("Can not query database: %q", err)
 	}
 
 	if len(rows) != 3 {
@@ -427,20 +439,18 @@ func TestIndexOperations(t *testing.T) {
 		t.Fatalf("Error preparing database: %q", err)
 	}
 
-	Driver = SQLite
-
 	mgr := New(db)
 
 	// Migrate, create index
 	if err := mgr.Add(&revision1{}, &revision3{}, &revision5{}).Migrate(); err != nil {
-		t.Errorf("Can not migrate: %q", err)
+		t.Fatalf("Can not migrate: %q", err)
 	}
 
 	var esquel []*sqliteMaster
 	// Query sqlite_master, check if index is exists.
 	query := `SELECT sql FROM sqlite_master WHERE type='index' and tbl_name='samples'`
 	if err := meddler.QueryAll(db, &esquel, query); err != nil {
-		t.Errorf("Can not find index: %q", err)
+		t.Fatalf("Can not find index: %q", err)
 	}
 
 	indexStatement := `CREATE INDEX idx_samples_on_url_and_name ON samples (url, name)`
@@ -450,12 +460,12 @@ func TestIndexOperations(t *testing.T) {
 
 	// Migrate, rename indexed columns
 	if err := mgr.Add(&revision6{}).Migrate(); err != nil {
-		t.Errorf("Can not migrate: %q", err)
+		t.Fatalf("Can not migrate: %q", err)
 	}
 
 	var esquel1 []*sqliteMaster
 	if err := meddler.QueryAll(db, &esquel1, query); err != nil {
-		t.Errorf("Can not find index: %q", err)
+		t.Fatalf("Can not find index: %q", err)
 	}
 
 	indexStatement = `CREATE INDEX idx_samples_on_host_and_name ON samples (host, name)`
@@ -464,12 +474,12 @@ func TestIndexOperations(t *testing.T) {
 	}
 
 	if err := mgr.Add(&revision7{}).Migrate(); err != nil {
-		t.Errorf("Can not migrate: %q", err)
+		t.Fatalf("Can not migrate: %q", err)
 	}
 
 	var esquel2 []*sqliteMaster
 	if err := meddler.QueryAll(db, &esquel2, query); err != nil {
-		t.Errorf("Can not find index: %q", err)
+		t.Fatalf("Can not find index: %q", err)
 	}
 
 	if len(esquel2) != 1 {
@@ -483,17 +493,15 @@ func TestColumnRedundancy(t *testing.T) {
 		t.Fatalf("Error preparing database: %q", err)
 	}
 
-	Driver = SQLite
-
 	migr := New(db)
 	if err := migr.Add(&revision1{}, &revision8{}, &revision9{}).Migrate(); err != nil {
-		t.Errorf("Can not migrate: %q", err)
+		t.Fatalf("Can not migrate: %q", err)
 	}
 
 	var tableSql string
 	query := `SELECT sql FROM sqlite_master where type='table' and name='samples'`
 	if err := db.QueryRow(query).Scan(&tableSql); err != nil {
-		t.Errorf("Can not query sqlite_master: %q", err)
+		t.Fatalf("Can not query sqlite_master: %q", err)
 	}
 
 	if !strings.Contains(tableSql, "repository ") {
@@ -501,8 +509,31 @@ func TestColumnRedundancy(t *testing.T) {
 	}
 }
 
+func TestChangeColumnType(t *testing.T) {
+	defer tearDown()
+	if err := setUp(); err != nil {
+		t.Fatalf("Error preparing database: %q", err)
+	}
+
+	migr := New(db)
+	if err := migr.Add(&revision1{}, &revision4{}, &revision10{}).Migrate(); err != nil {
+		t.Fatalf("Can not migrate: %q", err)
+	}
+
+	var tableSql string
+	query := `SELECT sql FROM sqlite_master where type='table' and name='samples'`
+	if err := db.QueryRow(query).Scan(&tableSql); err != nil {
+		t.Fatalf("Can not query sqlite_master: %q", err)
+	}
+
+	if !strings.Contains(tableSql, "email varchar(512) UNIQUE") {
+		t.Errorf("Expect email type to changed: %q", tableSql)
+	}
+}
+
 func setUp() error {
 	var err error
+	Driver = SQLite
 	db, err = sql.Open("sqlite3", "migration_tests.sqlite")
 	return err
 }
@@ -515,7 +546,7 @@ func tearDown() {
 func loadFixture(t *testing.T) {
 	for _, sql := range dataDump {
 		if _, err := db.Exec(sql); err != nil {
-			t.Errorf("Can not insert into database: %q", err)
+			t.Fatalf("Can not insert into database: %q", err)
 		}
 	}
 }

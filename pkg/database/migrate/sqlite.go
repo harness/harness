@@ -47,9 +47,11 @@ func (s *sqliteDriver) ChangeColumn(tableName, columnName, newType string) (sql.
 		return nil, err
 	}
 
-	for _, column := range columns {
-		if columnName == strings.SplitN(column, " ", 2)[0] {
-			column = fmt.Sprintf("%s %s", columnName, newType)
+	columnNames := selectName(columns)
+
+	for k, column := range columnNames {
+		if columnName == column {
+			columns[k] = fmt.Sprintf("%s %s", columnName, newType)
 			break
 		}
 	}
@@ -70,7 +72,7 @@ func (s *sqliteDriver) ChangeColumn(tableName, columnName, newType string) (sql.
 
 	// Migrate data
 	if result, err = s.Tx.Exec(fmt.Sprintf("INSERT INTO %s SELECT %s FROM %s", tableName,
-		strings.Join(columns, ", "), proxy)); err != nil {
+		strings.Join(columnNames, ", "), proxy)); err != nil {
 		return result, err
 	}
 
