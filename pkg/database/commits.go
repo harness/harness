@@ -101,10 +101,17 @@ WHERE id IN (
     SELECT MAX(id)
     FROM commits
     WHERE repo_id = ?
-    AND   branch  = ? 
+    AND   branch  = ?
     GROUP BY branch)
 LIMIT 1
  `
+
+// SQL Queries to fail all commits that are currently building
+const commitFailStartedStmt = `
+UPDATE commits
+SET status = 'Failure'
+WHERE status = 'Started'
+`
 
 // Returns the Commit with the given ID.
 func GetCommit(id int64) (*Commit, error) {
@@ -171,4 +178,9 @@ func ListBranches(repo int64) ([]*Commit, error) {
 	var commits []*Commit
 	err := meddler.QueryAll(db, &commits, commitBranchesStmt, repo)
 	return commits, err
+}
+
+func FailStartedCommits() error {
+	_, err := db.Exec(commitFailStartedStmt)
+	return err
 }
