@@ -9,10 +9,9 @@ func (r *rev20140310104446) Revision() int64 {
 }
 
 func (r *rev20140310104446) Up(mg *MigrationDriver) error {
-	if _, err := mg.AddColumn("settings", "open_invitations BOOLEAN"); err != nil {
-		return err
-	}
-	_, err := mg.Tx.Exec("UPDATE settings SET open_invitations=0 WHERE open_invitations IS NULL")
+	// Suppress error here for backward compatibility
+	_, err := mg.AddColumn("settings", "open_invitations BOOLEAN")
+	_, err = mg.Tx.Exec("UPDATE settings SET open_invitations=0 WHERE open_invitations IS NULL")
 	return err
 }
 
