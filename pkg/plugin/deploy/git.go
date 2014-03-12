@@ -6,9 +6,10 @@ import (
 )
 
 type Git struct {
-	Target string `yaml:"target,omitempty"`
-	Force  bool   `yaml:"force,omitempty"`
-	Branch string `yaml:"branch,omitempty"`
+	Target   string            `yaml:"target,omitempty"`
+	Force    bool              `yaml:"force,omitempty"`
+	Branch   string            `yaml:"branch,omitempty"`
+	Branches map[string]string `yaml:"branches,omitempty"`
 }
 
 func (g *Git) Write(f *buildfile.Buildfile) {
@@ -23,9 +24,10 @@ func (g *Git) Write(f *buildfile.Buildfile) {
 	// add target as a git remote
 	f.WriteCmd(fmt.Sprintf("git remote add deploy %s", g.Target))
 
-	destinationBranch := g.Branch
-	if destinationBranch == "" {
-		destinationBranch = "master"
+	branches := g.Branches
+
+	if g.Branch != "" {
+		branches[g.Branch] = g.Branch
 	}
 
 	switch g.Force {
@@ -34,10 +36,15 @@ func (g *Git) Write(f *buildfile.Buildfile) {
 		// by the build script, such as less files converted to css,
 		// that need to be deployed to git remote.
 		f.WriteCmd(fmt.Sprintf("git add -A"))
-		f.WriteCmd(fmt.Sprintf("git commit -m 'add build artifacts'"))
-		f.WriteCmd(fmt.Sprintf("git push deploy $COMMIT:%s --force", destinationBranch))
+		f.WriteCmd(fmt.Sprintf("git commit --amend --reset-author -C HEAD"))
+
+		for src, dest := range branches {
+			f.WriteCmd(fmt.Sprintf(`[ "$DRONE_BRANCH" = "%s" ] && git push deploy HEAD:refs/heads/%s --force`, src, dest))
+		}
 	case false:
 		// otherwise we just do a standard git push
-		f.WriteCmd(fmt.Sprintf("git push deploy $COMMIT:%s", destinationBranch))
+		for src, dest := range branches {
+			f.WriteCmd(fmt.Sprintf(`[ "$DRONE_BRANCH" = "%s" ] && git push deploy $COMMIT:%s"`, src, dest))
+		}
 	}
 }
