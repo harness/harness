@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/drone/drone/pkg/channel"
@@ -87,7 +86,7 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	client.ApiUrl = settings.GitHubApiUrl
 	githubRepo, err := client.Repos.Find(owner, name)
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to find GitHub repository %s/%s.", owner, name)
 	}
 
 	repo, err := NewGitHubRepo(settings.GitHubDomain, owner, name, githubRepo.Private)
@@ -104,13 +103,12 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	if len(teamName) > 0 {
 		team, err := database.GetTeamSlug(teamName)
 		if err != nil {
-			log.Printf("error retrieving team %s", teamName)
-			return err
+			return fmt.Errorf("Unable to find Team %s.", teamName)
 		}
 
 		// user must be an admin member of the team
 		if ok, _ := database.IsMemberAdmin(u.ID, team.ID); !ok {
-			return fmt.Errorf("Forbidden")
+			return fmt.Errorf("Invalid permission to access Team %s.", teamName)
 		}
 
 		repo.TeamID = team.ID
@@ -125,7 +123,7 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 		// create the github key, or update if one already exists
 		_, err := client.RepoKeys.CreateUpdate(owner, name, repo.PublicKey, keyName)
 		if err != nil {
-			return fmt.Errorf("Unable to add Public Key to your GitHub repository")
+			return fmt.Errorf("Unable to add Public Key to your GitHub repository.")
 		}
 	} else {
 
@@ -137,13 +135,12 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 
 	// add the hook
 	if _, err := client.Hooks.CreateUpdate(owner, name, link); err != nil {
-		return fmt.Errorf("Unable to add Hook to your GitHub repository. %s", err.Error())
+		return fmt.Errorf("Unable to add Hook to your GitHub repository.")
 	}
 
 	// Save to the database
 	if err := database.SaveRepo(repo); err != nil {
-		log.Print("error saving new repository to the database")
-		return err
+		return fmt.Errorf("Error saving repository to the database. %s", err)
 	}
 
 	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
