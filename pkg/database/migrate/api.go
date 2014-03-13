@@ -28,8 +28,9 @@ type Operation interface {
 }
 
 type MigrationDriver struct {
-	Tx *sql.Tx
 	Operation
+	T  *columnType
+	Tx *sql.Tx
 }
 
 type DriverBuilder func(tx *sql.Tx) *MigrationDriver

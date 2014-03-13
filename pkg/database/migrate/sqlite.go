@@ -14,6 +14,7 @@ func SQLite(tx *sql.Tx) *MigrationDriver {
 	return &MigrationDriver{
 		Tx:        tx,
 		Operation: &sqliteDriver{Tx: tx},
+		T:         &columnType{},
 	}
 }
 
