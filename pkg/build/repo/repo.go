@@ -44,20 +44,17 @@ type Repo struct {
 
 // IsRemote returns true if the Repository is located
 // on a remote server (ie Github, Bitbucket)
+var remote_prefixes = []string{
+	"git://",
+	"git@",
+	"http://",
+	"https://",
+	"ssh://",
+}
 func (r *Repo) IsRemote() bool {
-	switch {
-	case strings.HasPrefix(r.Path, "git://"):
-		return true
-	case strings.HasPrefix(r.Path, "git@"):
-		return true
-	case strings.HasPrefix(r.Path, "http://"):
-		return true
-	case strings.HasPrefix(r.Path, "https://"):
-		return true
-	case strings.HasPrefix(r.Path, "ssh://"):
-		return true
+	for _,prefix := range remote_prefixes {
+		if strings.HasPrefix(r.Path, prefix) { return true }
 	}
-
 	return false
 }
 
@@ -67,26 +64,28 @@ func (r *Repo) IsLocal() bool {
 	return !r.IsRemote()
 }
 
+var git_prefixes = []string{
+	"git://",
+	"git@",
+	"ssh://git@",
+	"http://github",
+}
+
+// Checks to see if repo is git
+func (r *Repo) HasGitPrefix() bool {
+	for _,prefix := range git_prefixes {
+		if strings.HasPrefix(r.Path, prefix) { return true }
+	}
+	return false
+}
+
 // IsGit returns true if the Repository is
 // a Git repoisitory.
 func (r *Repo) IsGit() bool {
-	switch {
-	case strings.HasPrefix(r.Path, "git://"):
-		return true
-	case strings.HasPrefix(r.Path, "git@"):
-		return true
-	case strings.HasPrefix(r.Path, "ssh://git@"):
-		return true
-	case strings.HasPrefix(r.Path, "https://github"):
-		return true
-	case strings.HasPrefix(r.Path, "http://github"):
-		return true
-	case strings.HasSuffix(r.Path, ".git"):
+	if r.HasGitPrefix() || strings.HasSuffix(r.Path, ".git") {
 		return true
 	}
-
 	// we could also ping the repository to check
-
 	return false
 }
 
