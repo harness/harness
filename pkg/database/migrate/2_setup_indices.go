@@ -13,11 +13,11 @@ func (r *rev2nd) Up(mg *MigrationDriver) error {
 		return err
 	}
 
-	if _, err := mg.AddIndex("members", []string{"team_id"}, ""); err != nil {
+	if _, err := mg.AddIndex("members", []string{"team_id"}); err != nil {
 		return err
 	}
 
-	if _, err := mg.AddIndex("members", []string{"user_id"}, ""); err != nil {
+	if _, err := mg.AddIndex("members", []string{"user_id"}); err != nil {
 		return err
 	}
 
@@ -25,27 +25,27 @@ func (r *rev2nd) Up(mg *MigrationDriver) error {
 		return err
 	}
 
-	if _, err := mg.AddIndex("commits", []string{"repo_id"}, ""); err != nil {
+	if _, err := mg.AddIndex("commits", []string{"repo_id"}); err != nil {
 		return err
 	}
 
-	if _, err := mg.AddIndex("commits", []string{"repo_id", "branch"}, ""); err != nil {
+	if _, err := mg.AddIndex("commits", []string{"repo_id", "branch"}); err != nil {
 		return err
 	}
 
-	if _, err := mg.AddIndex("repos", []string{"team_id"}, ""); err != nil {
+	if _, err := mg.AddIndex("repos", []string{"team_id"}); err != nil {
 		return err
 	}
 
-	if _, err := mg.AddIndex("repos", []string{"user_id"}, ""); err != nil {
+	if _, err := mg.AddIndex("repos", []string{"user_id"}); err != nil {
 		return err
 	}
 
-	if _, err := mg.AddIndex("builds", []string{"commit_id"}, ""); err != nil {
+	if _, err := mg.AddIndex("builds", []string{"commit_id"}); err != nil {
 		return err
 	}
 
-	_, err := mg.AddIndex("builds", []string{"commit_id", "slug"}, "")
+	_, err := mg.AddIndex("builds", []string{"commit_id", "slug"})
 
 	return err
 }

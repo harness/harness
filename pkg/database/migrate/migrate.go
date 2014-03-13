@@ -28,7 +28,7 @@ import (
 
 const migrationTableStmt = `
 CREATE TABLE IF NOT EXISTS migration (
-	revision NUMBER PRIMARY KEY
+	revision BIGINT PRIMARY KEY
 )
 `
 
