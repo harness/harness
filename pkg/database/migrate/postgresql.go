@@ -44,7 +44,7 @@ func (p *postgresqlDriver) RenameColumns(tableName string, columnChanges map[str
 	return nil, errors.New("not implemented yet")
 }
 
-func (p *postgresqlDriver) AddIndex(tableName string, columns []string, flag string) (sql.Result, error) {
+func (p *postgresqlDriver) AddIndex(tableName string, columns []string, flags ...string) (sql.Result, error) {
 	return nil, errors.New("not implemented yet")
 }
 

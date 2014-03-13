@@ -22,7 +22,7 @@ type Operation interface {
 
 	RenameColumns(tableName string, columnChanges map[string]string) (sql.Result, error)
 
-	AddIndex(tableName string, columns []string, flag string) (sql.Result, error)
+	AddIndex(tableName string, columns []string, flags ...string) (sql.Result, error)
 
 	DropIndex(tableName string, columns []string) (sql.Result, error)
 }

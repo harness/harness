@@ -51,7 +51,9 @@ func Init(name, datasource string) error {
 	}
 
 	migration := migrate.New(db)
-	migration.All().Migrate()
+	if err := migration.All().Migrate(); err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -52,7 +52,7 @@ func (r *rev1st) Up(mg *MigrationDriver) error {
 
 	if _, err := mg.CreateTable("repos", []string{
 		t.Integer("id", PRIMARYKEY, AUTOINCREMENT),
-		t.Varchar("slug", 1024, UNIQUE),
+		t.String("slug", UNIQUE),
 		t.String("host"),
 		t.String("owner"),
 		t.String("name"),
@@ -113,7 +113,7 @@ func (r *rev1st) Up(mg *MigrationDriver) error {
 	}
 
 	_, err := mg.CreateTable("settings", []string{
-		t.Integer("id", PRIMARYKEY),
+		t.Integer("id", PRIMARYKEY, AUTOINCREMENT),
 		t.String("github_key"),
 		t.String("github_secret"),
 		t.String("bitbucket_key"),
