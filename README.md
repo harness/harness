@@ -51,6 +51,27 @@ you can still get a feel for the steps:
 
 https://docs.google.com/file/d/0By8deR1ROz8memUxV0lTSGZPQUk
 
+**Using MySQL**
+
+By default, Drone use sqlite as its database storage. To use MySQL/MariaDB instead, use `-driver` flag
+and set it to `mysql`. You will need to set your DSN (`-datasource`) in this form: 
+```
+    user:password@tcp(hostname:port)/dbname?parseTime=true
+```
+Change it according to your database settings. The parseTime above is required since drone using
+`time.Time` to represents `TIMESTAMP` data. Please refer to [1] for more options on mysql driver.
+
+You may also need to tweak some innodb options, especially if you're using `utf8mb4` collation type.
+```
+    innodb_file_format = Barracuda
+    innodb_file_per_table = On
+    innodb_large_prefix = On
+```
+Please consult to the MySQL/MariaDB documentation for further information
+regarding large prefix for index column and dynamic row format (which is used in Drone).
+
+[1] https://github.com/go-sql-driver/mysql
+
 ### Builds
 
 Drone use a **.drone.yml** configuration file in the root of your
