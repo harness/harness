@@ -42,6 +42,10 @@ func (c *columnType) Text(colName string, spec ...interface{}) string {
 	return fmt.Sprintf("%s TEXT %s", colName, c.parseAttr(spec))
 }
 
+func (c *columnType) Blob(colName string, spec ...interface{}) string {
+	return fmt.Sprintf("%s BLOB %s", colName, c.parseAttr(spec))
+}
+
 func (c *columnType) Timestamp(colName string, spec ...interface{}) string {
 	return fmt.Sprintf("%s TIMESTAMP %s", colName, c.parseAttr(spec))
 }

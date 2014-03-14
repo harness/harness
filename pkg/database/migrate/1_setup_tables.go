@@ -45,7 +45,7 @@ func (r *rev1st) Up(mg *MigrationDriver) error {
 		t.Integer("id", PRIMARYKEY, AUTOINCREMENT),
 		t.Integer("team_id"),
 		t.Integer("user_id"),
-		t.Integer("role"),
+		t.String("role"),
 	}); err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func (r *rev1st) Up(mg *MigrationDriver) error {
 		t.String("password"),
 		t.Varchar("public_key", 1024),
 		t.Varchar("private_key", 1024),
-		t.Varchar("params", 2000),
+		t.Blob("params"),
 		t.Timestamp("created"),
 		t.Timestamp("updated"),
 		t.Integer("user_id"),
