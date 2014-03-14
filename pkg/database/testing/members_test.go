@@ -64,21 +64,21 @@ func TestIsMemberAdmin(t *testing.T) {
 	if ok, err := database.IsMemberAdmin(1, 1); err != nil {
 		t.Error(err)
 	} else if !ok {
-		t.Errorf("Expected IsMemberAdmin to return true, returned false")
+		t.Errorf("Expected user id 1 IsMemberAdmin to return true, returned false")
 	}
 
 	// expecting user is Admin
 	if ok, err := database.IsMemberAdmin(2, 1); err != nil {
 		t.Error(err)
 	} else if !ok {
-		t.Errorf("Expected IsMemberAdmin to return true, returned false")
+		t.Errorf("Expected user id 2 IsMemberAdmin to return true, returned false")
 	}
 
 	// expecting user is NOT Admin (Write role)
 	if ok, err := database.IsMemberAdmin(3, 1); err != nil {
 		t.Error(err)
 	} else if ok {
-		t.Errorf("Expected IsMemberAdmin to return false, returned true")
+		t.Errorf("Expected user id 3 IsMemberAdmin to return false, returned true")
 	}
 }
 

@@ -2,21 +2,15 @@ package database
 
 import (
 	"crypto/aes"
-	"database/sql"
 	"log"
 
 	"github.com/drone/drone/pkg/database"
 	"github.com/drone/drone/pkg/database/encrypt"
-	"github.com/drone/drone/pkg/database/migrate"
 	. "github.com/drone/drone/pkg/model"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/russross/meddler"
 )
-
-// in-memory database used for
-// unit testing purposes.
-var db *sql.DB
 
 func init() {
 	// create a cipher for ecnrypting and decrypting
@@ -30,9 +24,6 @@ func init() {
 	// decrypt database fields.
 	meddler.Register("gobencrypt", &encrypt.EncryptedField{cipher})
 
-	// notify meddler that we are working with sqlite
-	meddler.Default = meddler.SQLite
-	migrate.Driver = migrate.SQLite
 }
 
 func Setup() {
