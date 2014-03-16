@@ -21,6 +21,6 @@ func (r *Rev3) Up(mg *MigrationDriver) error {
 }
 
 func (r *Rev3) Down(mg *MigrationDriver) error {
-	_, err := mg.DropColumns("settings", []string{"github_domain", "github_apiurl"})
+	_, err := mg.DropColumns("settings", "github_domain", "github_apiurl")
 	return err
 }

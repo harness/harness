@@ -1,24 +1,3 @@
-// Usage
-//    migrate.To(2)
-//    	.Add(Version_1)
-//    	.Add(Version_2)
-//    	.Add(Version_3)
-//    	.Exec(db)
-//
-//    migrate.ToLatest()
-//    	.Add(Version_1)
-//    	.Add(Version_2)
-//    	.Add(Version_3)
-//    	.SetDialect(migrate.MySQL)
-//    	.Exec(db)
-//
-//    migrate.ToLatest()
-//    	.Add(Version_1)
-//    	.Add(Version_2)
-//    	.Add(Version_3)
-//		.Backup(path)
-//		.Exec()
-
 package migrate
 
 import (
@@ -72,7 +51,7 @@ func (m *Migration) Add(rev ...Revision) *Migration {
 	return m
 }
 
-// Execute the full list of migrations.
+// Migrate executes the full list of migrations.
 func (m *Migration) Migrate() error {
 	var target int64
 	if len(m.revs) > 0 {
@@ -84,7 +63,7 @@ func (m *Migration) Migrate() error {
 	return m.MigrateTo(target)
 }
 
-// Execute all database migration until
+// MigrateTo executes all database migration until
 // you are at the specified revision number.
 // If the revision number is less than the
 // current revision, then we will downgrade.

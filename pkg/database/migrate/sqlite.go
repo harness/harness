@@ -91,7 +91,7 @@ func (s *sqliteDriver) ChangeColumn(tableName, columnName, newType string) (sql.
 
 }
 
-func (s *sqliteDriver) DropColumns(tableName string, columnsToDrop []string) (sql.Result, error) {
+func (s *sqliteDriver) DropColumns(tableName string, columnsToDrop ...string) (sql.Result, error) {
 	var err error
 	var result sql.Result
 
