@@ -326,16 +326,13 @@ func (s *sqliteDriver) getIndexDefinition(tableName string) ([]string, error) {
 	}
 
 	for rows.Next() {
-		var sql string
+		var sql sql.NullString
 		if err := rows.Scan(&sql); err != nil {
-			// This error came from autoindex, since its sql value is null,
-			// we want to continue.
-			if strings.Contains(err.Error(), "Scan pair: <nil> -> *string") {
-				continue
-			}
 			return sqls, err
 		}
-		sqls = append(sqls, sql)
+		if sql.Valid {
+			sqls = append(sqls, sql.String)
+		}
 	}
 
 	if err := rows.Err(); err != nil {
