@@ -89,7 +89,7 @@ func (r *revision3) Up(mg *MigrationDriver) error {
 }
 
 func (r *revision3) Down(mg *MigrationDriver) error {
-	_, err := mg.DropColumns("samples", []string{"num", "url"})
+	_, err := mg.DropColumns("samples", "num", "url")
 	return err
 }
 
@@ -128,7 +128,7 @@ func (r *revision4) Revision() int64 {
 type revision5 struct{}
 
 func (r *revision5) Up(mg *MigrationDriver) error {
-	_, err := mg.AddIndex("samples", []string{"url", "name"}, "")
+	_, err := mg.AddIndex("samples", []string{"url", "name"})
 	return err
 }
 
@@ -170,7 +170,7 @@ func (r *revision6) Revision() int64 {
 type revision7 struct{}
 
 func (r *revision7) Up(mg *MigrationDriver) error {
-	_, err := mg.DropColumns("samples", []string{"host", "num"})
+	_, err := mg.DropColumns("samples", "host", "num")
 	return err
 }
 
@@ -200,7 +200,7 @@ func (r *revision8) Up(mg *MigrationDriver) error {
 }
 
 func (r *revision8) Down(mg *MigrationDriver) error {
-	_, err := mg.DropColumns("samples", []string{"repo", "repo_id"})
+	_, err := mg.DropColumns("samples", "repo", "repo_id")
 	return err
 }
 

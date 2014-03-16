@@ -16,6 +16,6 @@ func (r *rev20140310104446) Up(mg *MigrationDriver) error {
 }
 
 func (r *rev20140310104446) Down(mg *MigrationDriver) error {
-	_, err := mg.DropColumns("settings", []string{"open_invitations"})
+	_, err := mg.DropColumns("settings", "open_invitations")
 	return err
 }

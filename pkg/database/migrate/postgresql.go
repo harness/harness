@@ -36,7 +36,7 @@ func (p *postgresqlDriver) ChangeColumn(tableName, columnName, newSpecs string) 
 	return nil, errors.New("not implemented yet")
 }
 
-func (p *postgresqlDriver) DropColumns(tableName string, columnsToDrop []string) (sql.Result, error) {
+func (p *postgresqlDriver) DropColumns(tableName string, columnsToDrop ...string) (sql.Result, error) {
 	return nil, errors.New("not implemented yet")
 }
 

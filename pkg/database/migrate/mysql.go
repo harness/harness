@@ -40,7 +40,7 @@ func (m *mysqlDriver) ChangeColumn(tableName, columnName, newSpecs string) (sql.
 	return m.Tx.Exec(fmt.Sprintf("ALTER TABLE %s MODIFY %s %s", tableName, columnName, newSpecs))
 }
 
-func (m *mysqlDriver) DropColumns(tableName string, columnsToDrop []string) (sql.Result, error) {
+func (m *mysqlDriver) DropColumns(tableName string, columnsToDrop ...string) (sql.Result, error) {
 	for k, v := range columnsToDrop {
 		columnsToDrop[k] = fmt.Sprintf("DROP %s", v)
 	}

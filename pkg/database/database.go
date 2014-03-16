@@ -57,6 +57,7 @@ func Init(name, datasource string) error {
 	return nil
 }
 
+// Close database connection.
 func Close() {
 	db.Close()
 }
