@@ -28,12 +28,12 @@
 				<ul class="commit-list commit-list-alt">
 					{{ range .Commits }}
 					<li>
-						<a href="/{{$repo.Slug}}/commit/{{.Branch}}/{{.Hash}}" class="btn btn-{{.Status}}"></a>
+						<a href="/{{$repo.Slug}}/commit/{{.Hash}}" class="btn btn-{{.Status}}"></a>
 						<h3>
-							<a href="/{{$repo.Slug}}/commit/{{.Branch}}/{{.Hash}}">{{.HashShort}}</a>
+							<a href="/{{$repo.Slug}}/commit/{{.Hash}}">{{.HashShort}}</a>
 							<small class="timeago" title="{{.CreatedString}}"></small>
 							{{ if .PullRequest }}
-								<p>opened pull request <a href="/{{$repo.Slug}}/commit/{{.Branch}}/{{.Hash}}"># {{.PullRequest}}</a></p>
+								<p>opened pull request <a href="/{{$repo.Slug}}/commit/{{.Hash}}"># {{.PullRequest}}</a></p>
 							{{ else }}
 								<p>{{.Message}} &nbsp;</p>
 							{{ end }}

@@ -205,9 +205,9 @@ func setupHandlers() {
 	m.Post("/install", handler.ErrorHandler(handler.InstallPost))
 
 	// handlers for repository, commits and build details
-	m.Get("/:host/:owner/:name/commit/:branch/:commit/build/:label/out.txt", handler.RepoHandler(handler.BuildOut))
-	m.Get("/:host/:owner/:name/commit/:branch/:commit/build/:label", handler.RepoHandler(handler.CommitShow))
-	m.Get("/:host/:owner/:name/commit/:branch/:commit", handler.RepoHandler(handler.CommitShow))
+	m.Get("/:host/:owner/:name/commit/:commit/build/:label/out.txt", handler.RepoHandler(handler.BuildOut))
+	m.Get("/:host/:owner/:name/commit/:commit/build/:label", handler.RepoHandler(handler.CommitShow))
+	m.Get("/:host/:owner/:name/commit/:commit", handler.RepoHandler(handler.CommitShow))
 	m.Get("/:host/:owner/:name/tree", handler.RepoHandler(handler.RepoDashboard))
 	m.Get("/:host/:owner/:name/status.svg", handler.ErrorHandler(handler.Badge))
 	m.Get("/:host/:owner/:name/settings", handler.RepoAdminHandler(handler.RepoSettingsForm))

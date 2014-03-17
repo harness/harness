@@ -45,14 +45,14 @@
 				<ul class="commit-list">
 					{{ range $commit := .Commits }}
 					<li>
-						<a href="/{{$commit.Slug}}/commit/{{$commit.Branch}}/{{$commit.Hash}}" class="btn btn-{{$commit.Status}}"></a>
+						<a href="/{{$commit.Slug}}/commit/{{$commit.Hash}}" class="btn btn-{{$commit.Status}}"></a>
 						<h3>
 							<a href="/{{$commit.Slug}}">{{$commit.Owner}} / {{$commit.Name}}</a>
 							<small class="timeago" title="{{$commit.CreatedString}}"></small>
 							{{ if $commit.PullRequest }}
-								<p>opened pull request <a href="/{{$commit.Slug}}/commit/{{$commit.Branch}}/{{$commit.Hash}}"># {{$commit.PullRequest}}</a></p>
+								<p>opened pull request <a href="/{{$commit.Slug}}/commit/{{$commit.Hash}}"># {{$commit.PullRequest}}</a></p>
 							{{ else }}
-								<p>commit <a href="/{{$commit.Slug}}/commit/{{$commit.Branch}}/{{$commit.Hash}}">{{$commit.HashShort}}</a> to <a href="/{{$commit.Slug}}?branch={{$commit.Branch}}">{{$commit.Branch}}</a> branch</p>
+								<p>commit <a href="/{{$commit.Slug}}/commit/{{$commit.Hash}}">{{$commit.HashShort}}</a> to <a href="/{{$commit.Slug}}?branch={{$commit.Branch}}">{{$commit.Branch}}</a> branch</p>
 							{{ end }}
 						</h3>
 					</li>
@@ -88,7 +88,7 @@
 	<script>
 		if (window.localStorage) {
 			// get the last visited date from local storage
-			var lastVisited = localStorage["lastVisited"];
+			var lastVisited = localStorage["lastVisited"]; 
 			if (lastVisited == "null" || lastVisited == NaN || !lastVisited) {
 				lastVisited = Date.parse("1970-01-01T00:00:00Z");
 			} else {
