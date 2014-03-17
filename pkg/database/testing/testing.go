@@ -100,7 +100,7 @@ func Setup() {
 	database.SaveMember(user1.ID, team2.ID, RoleOwner)
 	database.SaveMember(user2.ID, team2.ID, RoleAdmin)
 	database.SaveMember(user3.ID, team2.ID, RoleWrite)
-	database.SaveMember(user1.ID, team3.ID, RoleOwner)
+	database.SaveMember(user1.ID, team3.ID, RoleRead)
 
 	// create dummy repo data
 	repo1 := Repo{

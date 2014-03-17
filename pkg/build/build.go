@@ -474,7 +474,7 @@ func (b *Builder) writeBuildScript(dir string) error {
 	f.WriteEnv("DRONE_PR", b.Repo.PR)
 	f.WriteEnv("DRONE_BUILD_DIR", b.Repo.Dir)
 
-	// add /etc/hosts entries
+ 	// add /etc/hosts entries
 	for _, mapping := range b.Build.Hosts {
 		f.WriteHost(mapping)
 	}
