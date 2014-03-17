@@ -274,15 +274,74 @@ func TestSetupErrorBuildInspect(t *testing.T) {
 
 // TestTeardown will test our ability to sucessfully teardown a
 // Docker-based build environment.
-func TestTeardown(t *testing.T) {}
+func TestTeardown(t *testing.T) {
+	setup()
+	defer teardown()
 
-// TestTeardownContainerFail will test our ability to handle a
-// failure to stop and remove the build container.
-func TestTeardownContainerFail(t *testing.T) {}
+	var (
+		containerStopped = false
+		containerRemoved = false
+		serviceStopped   = false
+		serviceRemoved   = false
+		imageRemoved     = false
+	)
 
-// TestTeardownImageFail will test our ability to handle a
-// failure to stop and remove the build image.
-func TestTeardownImageFail(t *testing.T) {}
+	mux.HandleFunc("/v1.9/containers/7bf9ce0ffb/stop", func(w http.ResponseWriter, r *http.Request) {
+		containerStopped = true
+		w.WriteHeader(http.StatusOK)
+	})
+
+	mux.HandleFunc("/v1.9/containers/7bf9ce0ffb", func(w http.ResponseWriter, r *http.Request) {
+		containerRemoved = true
+		w.WriteHeader(http.StatusOK)
+	})
+
+	mux.HandleFunc("/v1.9/containers/ec62dcc736/stop", func(w http.ResponseWriter, r *http.Request) {
+		serviceStopped = true
+		w.WriteHeader(http.StatusOK)
+	})
+
+	mux.HandleFunc("/v1.9/containers/ec62dcc736", func(w http.ResponseWriter, r *http.Request) {
+		serviceRemoved = true
+		w.WriteHeader(http.StatusOK)
+	})
+
+	mux.HandleFunc("/v1.9/images/c3ab8ff137", func(w http.ResponseWriter, r *http.Request) {
+		imageRemoved = true
+		w.Write([]byte(`[{"Untagged":"c3ab8ff137"},{"Deleted":"c3ab8ff137"}]`))
+	})
+
+	b := Builder{}
+	b.dockerClient = client
+	b.services = append(b.services, &docker.Container{ID: "ec62dcc736"})
+	b.container = &docker.Run{ID: "7bf9ce0ffb"}
+	b.image = &docker.Image{ID: "c3ab8ff137"}
+	b.Build = &script.Build{Services: []string{"mysql"}}
+	b.teardown()
+
+	if !containerStopped {
+		t.Errorf("Expected Docker container was stopped")
+	}
+
+	if !containerRemoved {
+		t.Errorf("Expected Docker container was removed")
+	}
+
+	if !serviceStopped {
+		t.Errorf("Expected Docker mysql container was stopped")
+	}
+
+	if !serviceRemoved {
+		t.Errorf("Expected Docker mysql container was removed")
+	}
+
+	if !imageRemoved {
+		t.Errorf("Expected Docker image was removed")
+	}
+
+	// TODO test service container stop
+	// TODO test service container remove
+}
 
 func TestWriteIdentifyFile(t *testing.T) {
 	// temporary directory to store file

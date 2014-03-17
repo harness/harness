@@ -58,10 +58,12 @@ type Builder struct {
 	Key []byte
 
 	// Timeout is the maximum amount of to will wait for a process
-	// to exit.
-	//
-	// The default is no timeout.
+	// to exit. The default is no timeout.
 	Timeout time.Duration
+
+	// Privileged indicates the build should be executed in privileged
+	// mode. The default is false.
+	Privileged bool
 
 	// Stdout specifies the builds's standard output.
 	//
@@ -306,9 +308,12 @@ func (b *Builder) run() error {
 		AttachStdout: true,
 		AttachStderr: true,
 	}
-	host := docker.HostConfig{
-		Privileged: false,
-	}
+
+	// configure if Docker should run in privileged mode.
+	// by default, this is disabled for pull requests for
+	// security reasons.
+	host := docker.HostConfig{}
+	host.Privileged = b.Privileged && len(b.Repo.PR) == 0
 
 	// debugging
 	log.Noticef("starting build %s", b.Build.Name)
@@ -325,15 +330,15 @@ func (b *Builder) run() error {
 	}
 
 	// where are temp files going to go?
-	tmp_path := "/tmp/drone"
+	tmpPath := "/tmp/drone"
 	if len(os.Getenv("DRONE_TMP")) > 0 {
-		tmp_path = os.Getenv("DRONE_TMP")
+		tmpPath = os.Getenv("DRONE_TMP")
 	}
 
-	log.Infof("temp directory is %s", tmp_path)
+	log.Infof("temp directory is %s", tmpPath)
 
-	if err := os.MkdirAll(tmp_path, 0777); err != nil {
-		return fmt.Errorf("Failed to create temp directory at %s: %s", tmp_path, err)
+	if err := os.MkdirAll(tmpPath, 0777); err != nil {
+		return fmt.Errorf("Failed to create temp directory at %s: %s", tmpPath, err)
 	}
 
 	// link cached volumes
@@ -352,7 +357,7 @@ func (b *Builder) run() error {
 
 		// local cache path on the host machine
 		// this path is going to be really long
-		hostpath := filepath.Join(tmp_path, name, branch, volume)
+		hostpath := filepath.Join(tmpPath, name, branch, volume)
 
 		// check if the volume is created
 		if _, err := os.Stat(hostpath); err != nil {
@@ -474,7 +479,7 @@ func (b *Builder) writeBuildScript(dir string) error {
 	f.WriteEnv("DRONE_PR", b.Repo.PR)
 	f.WriteEnv("DRONE_BUILD_DIR", b.Repo.Dir)
 
- 	// add /etc/hosts entries
+	// add /etc/hosts entries
 	for _, mapping := range b.Build.Hosts {
 		f.WriteHost(mapping)
 	}
