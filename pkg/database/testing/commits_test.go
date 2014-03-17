@@ -44,6 +44,32 @@ func TestGetCommit(t *testing.T) {
 	}
 }
 
+func TestGetCommitBranchHash(t *testing.T) {
+	Setup()
+	defer Teardown()
+
+	commit, err := database.GetCommitBranchHash("develop", "5f32ec7b08dfe3a097c1a5316de5b5069fb35ff9", 2)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if commit.ID != 5 {
+		t.Errorf("Exepected ID %d, got %d", 5, commit.ID)
+	}
+
+	if commit.Branch != "develop" {
+		t.Errorf("Exepected Branch %s, got %s", "develop", commit.Branch)
+	}
+
+	if commit.Hash != "5f32ec7b08dfe3a097c1a5316de5b5069fb35ff9" {
+		t.Errorf("Exepected Hash %s, got %s", "5f32ec7b08dfe3a097c1a5316de5b5069fb35ff9", commit.Hash)
+	}
+
+	if commit.Status != "Success" {
+		t.Errorf("Exepected Status %s, got %s", "Success", commit.Status)
+	}
+}
+
 func TestGetCommitHash(t *testing.T) {
 	Setup()
 	defer Teardown()

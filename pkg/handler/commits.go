@@ -11,11 +11,12 @@ import (
 
 // Display a specific Commit.
 func CommitShow(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) error {
+	branch := r.FormValue(":branch")
 	hash := r.FormValue(":commit")
 	labl := r.FormValue(":label")
 
 	// get the commit from the database
-	commit, err := database.GetCommitHash(hash, repo.ID)
+	commit, err := database.GetCommitBranchHash(branch, hash, repo.ID)
 	if err != nil {
 		return err
 	}
@@ -49,7 +50,7 @@ func CommitShow(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 	// generate a token to connect with the websocket
 	// handler and stream output, if the build is running.
 	data.Token = channel.Token(fmt.Sprintf(
-		"%s/%s/%s/commit/%s/builds/%s", repo.Host, repo.Owner, repo.Name, commit.Hash, builds[0].Slug))
+		"%s/%s/%s/commit/%s/%s/builds/%s", repo.Host, repo.Owner, repo.Name, commit.Branch, commit.Hash, builds[0].Slug))
 
 	// render the repository template.
 	return RenderTemplate(w, "repo_commit.html", &data)
