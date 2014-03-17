@@ -2,7 +2,11 @@ package database
 
 import (
 	"crypto/aes"
+	"database/sql"
+	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/drone/drone/pkg/database"
 	"github.com/drone/drone/pkg/database/encrypt"
@@ -10,6 +14,11 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/russross/meddler"
+)
+
+var (
+	dbname, driver, dsn, login string
+	db *sql.DB
 )
 
 func init() {
@@ -24,11 +33,31 @@ func init() {
 	// decrypt database fields.
 	meddler.Register("gobencrypt", &encrypt.EncryptedField{cipher})
 
+	// Check for $DB_ENV
+	dbenv := os.Getenv("DB_ENV")
+	if dbenv == "mysql" {
+		driver = dbenv
+		dbname = "drone_test"
+		login = os.Getenv("MYSQL_LOGIN")
+		if len(login) == 0 {
+			login = "root"
+		}
+		log.Println("Using mysql database ...")
+	} else {
+		driver = "sqlite3"
+		dsn = ":memory:"
+		log.Println("Using sqlite3 database ...")
+	}
+
 }
 
 func Setup() {
 	// create an in-memory database
-	database.Init("sqlite3", ":memory:")
+	if driver == "mysql" {
+		idsn := fmt.Sprintf("%s@/?parseTime=true", login)
+		db, dsn = createDB(dbname, idsn)
+	}
+	database.Init(driver, dsn)
 
 	// create dummy user data
 	user1 := User{
@@ -197,4 +226,19 @@ func Setup() {
 
 func Teardown() {
 	database.Close()
+	if driver == "mysql" {
+		db.Exec(fmt.Sprintf("DROP DATABASE %s", dbname))
+	}
+}
+
+func createDB(name, datasource string) (*sql.DB, string) {
+	db, err := sql.Open(driver, datasource)
+	if err != nil {
+		panic("Can't connect to database")
+	}
+	if _, err := db.Exec(fmt.Sprintf("CREATE DATABASE %s", name)); err != nil {
+		panic("Can't create database")
+	}
+	dsn := strings.Replace(datasource, "/", fmt.Sprintf("/%s", name), 1)
+	return db, dsn
 }
