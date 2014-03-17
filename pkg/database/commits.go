@@ -38,21 +38,12 @@ FROM commits
 WHERE id = ?
 `
 
-// SQL Queries to retrieve a Commit by hash and repo id.
+// SQL Queries to retrieve a Commit by name and repo id.
 const commitFindHashStmt = `
 SELECT id, repo_id, status, started, finished, duration,
 hash, branch, pull_request, author, gravatar, timestamp, message, created, updated
 FROM commits
 WHERE hash = ? AND repo_id = ?
-LIMIT 1
-`
-
-// SQL Queries to retrieve a Commit by branch, hash, and repo id.
-const commitFindBranchHashStmt = `
-SELECT id, repo_id, status, started, finished, duration,
-hash, branch, pull_request, author, gravatar, timestamp, message, created, updated
-FROM commits
-WHERE branch = ? AND hash = ? AND repo_id = ?
 LIMIT 1
 `
 
@@ -110,7 +101,7 @@ WHERE id IN (
     SELECT MAX(id)
     FROM commits
     WHERE repo_id = ?
-    AND   branch  = ?
+    AND   branch  = ? 
     GROUP BY branch)
 LIMIT 1
  `
@@ -126,13 +117,6 @@ func GetCommit(id int64) (*Commit, error) {
 func GetCommitHash(hash string, repo int64) (*Commit, error) {
 	commit := Commit{}
 	err := meddler.QueryRow(db, &commit, commitFindHashStmt, hash, repo)
-	return &commit, err
-}
-
-// Returns the Commit on the given branch with the given hash.
-func GetCommitBranchHash(branch string, hash string, repo int64) (*Commit, error) {
-	commit := Commit{}
-	err := meddler.QueryRow(db, &commit, commitFindBranchHashStmt, branch, hash, repo)
 	return &commit, err
 }
 

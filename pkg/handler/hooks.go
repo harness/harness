@@ -74,7 +74,7 @@ func (h *HookHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 
 	// Verify that the commit doesn't already exist.
 	// We should never build the same commit twice.
-	_, err = database.GetCommitBranchHash(hook.Branch(), hook.Head.Id, repo.ID)
+	_, err = database.GetCommitHash(hook.Head.Id, repo.ID)
 	if err != nil && err != sql.ErrNoRows {
 		println("commit already exists")
 		return RenderText(w, http.StatusText(http.StatusBadGateway), http.StatusBadGateway)
