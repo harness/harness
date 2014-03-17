@@ -95,8 +95,8 @@ func TestSetup(t *testing.T) {
 	}
 }
 
-// Expected behavior is that a build script with no docker image
-// specified will thrown an error.
+// TestSetupEmptyImage will test our ability to handle a nil or
+// blank Docker build image. We expect this to return an error.
 func TestSetupEmptyImage(t *testing.T) {
 	b := Builder{Build: &script.Build{}}
 	var got, want = b.setup(), "Error: missing Docker image"
@@ -106,8 +106,8 @@ func TestSetupEmptyImage(t *testing.T) {
 	}
 }
 
-// Expected behavior is that a build script with an unknown
-// service (ie mysql)
+// TestSetupUnknownService will test our ability to handle an
+// unknown or unsupported service (i.e. mysql).
 func TestSetupUnknownService(t *testing.T) {
 	b := Builder{}
 	b.Repo = &repo.Repo{}
@@ -122,6 +122,8 @@ func TestSetupUnknownService(t *testing.T) {
 	}
 }
 
+// TestSetupErrorRunDaemonPorts will test our ability to handle a
+// failure when starting a service (i.e. mysql) as a daemon.
 func TestSetupErrorRunDaemonPorts(t *testing.T) {
 	setup()
 	defer teardown()
@@ -144,6 +146,9 @@ func TestSetupErrorRunDaemonPorts(t *testing.T) {
 	}
 }
 
+// TestSetupErrorServiceInspect will test our ability to handle a
+// failure when a service (i.e. mysql) is started successfully,
+// but cannot be queried post-start with the Docker remote API.
 func TestSetupErrorServiceInspect(t *testing.T) {
 	setup()
 	defer teardown()
@@ -175,6 +180,8 @@ func TestSetupErrorServiceInspect(t *testing.T) {
 	}
 }
 
+// TestSetupErrorImagePull will test our ability to handle a
+// failure when a the build image cannot be pulled from the index.
 func TestSetupErrorImagePull(t *testing.T) {
 	setup()
 	defer teardown()
@@ -201,6 +208,9 @@ func TestSetupErrorImagePull(t *testing.T) {
 	}
 }
 
+// TestSetupErrorBuild will test our ability to handle a failure
+// when creating a Docker image with the injected build script,
+// ssh keys, etc.
 func TestSetupErrorBuild(t *testing.T) {
 	setup()
 	defer teardown()
@@ -227,6 +237,10 @@ func TestSetupErrorBuild(t *testing.T) {
 	}
 }
 
+// TestSetupErrorBuildInspect will test our ability to handle a failure
+// when we successfully create a Docker image with the injected build script,
+// ssh keys, etc, however, we cannot inspect it post-creation using
+// the Docker remote API.
 func TestSetupErrorBuildInspect(t *testing.T) {
 	setup()
 	defer teardown()
@@ -258,10 +272,16 @@ func TestSetupErrorBuildInspect(t *testing.T) {
 	}
 }
 
+// TestTeardown will test our ability to sucessfully teardown a
+// Docker-based build environment.
 func TestTeardown(t *testing.T) {}
 
+// TestTeardownContainerFail will test our ability to handle a
+// failure to stop and remove the build container.
 func TestTeardownContainerFail(t *testing.T) {}
 
+// TestTeardownImageFail will test our ability to handle a
+// failure to stop and remove the build image.
 func TestTeardownImageFail(t *testing.T) {}
 
 func TestWriteIdentifyFile(t *testing.T) {
