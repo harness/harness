@@ -3,6 +3,10 @@ $(function() {
   var repoOwnerField = projectForm.find("select[name=owner]")
   var repoNameField = projectForm.find("select[name=name]")
 
+  if(projectForm.length == 0) {
+    return
+  }
+
   repoNameField.selectize({
     valueField: 'name',
     labelField: 'name',
