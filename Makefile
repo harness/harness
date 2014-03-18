@@ -28,15 +28,12 @@ deps:
 	go get github.com/mattn/go-sqlite3
 	go get github.com/russross/meddler
 
-embed: js css
+embed: js
 	cd cmd/droned   && rice embed
 	cd pkg/template && rice embed
 
 js:
 	cd cmd/droned/assets && find js -name "*.js" ! -name '.*' ! -name "main.js" -exec cat {} \; > js/main.js
-
-css:
-	cd cmd/droned/assets && find css -name "*.css" ! -name '.*' ! -name "main.css" -exec cat {} \; > css/main.css
 
 build:
 	cd cmd/drone  && go build -o ../../bin/drone
