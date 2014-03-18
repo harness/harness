@@ -1,96 +1,122 @@
-$(function() {
-  var projectForm = $(".form-repo")
-  var repoOwnerField = projectForm.find("select[name=owner]")
-  var repoNameField = projectForm.find("select[name=name]")
+AddGithubRepo = {
+  formSelector: ".form-repo",
+  ownerFieldSelector: "select[name=owner]",
+  nameFieldSelector: "select[name=name]",
+  orgsUrl: '/new/github.com/available_orgs',
+  reposUrl: '/new/github.com/available_repos',
 
-  if(projectForm.length == 0) {
-    return
-  }
+  selectize: function() {
+    var that = this
 
-  repoNameField.selectize({
-    valueField: 'name',
-    labelField: 'name',
-    searchField: ['name'],
-    create: true
-  })
+    this.nameField.selectize({
+      valueField: 'name',
+      labelField: 'name',
+      searchField: ['name'],
+      create: true
+    })
 
-  repoOwnerField.selectize({
-    valueField: 'name',
-    labelField: 'name',
-    searchField: ['name'],
-    create: true,
-    preload: true,
-    load: function(query, callback) {
-      var control = repoOwnerField[0].selectize
+    this.ownerField.selectize({
+      valueField: 'name',
+      labelField: 'name',
+      searchField: ['name'],
+      create: true,
+      preload: true,
+      load: function(query, callback) {
+        var control = that.ownerField[0].selectize
+        control.disable()
+        that.nameField[0].selectize.disable()
+
+        $.ajax({
+          url: that.orgsUrl,
+          type: 'GET',
+          error: function() {
+            callback();
+          },
+          success: function(orgs) {
+            orgs = $.map(orgs, function(o) {
+              return { name: o }
+            })
+
+            control.enable()
+            callback(orgs)
+          }
+        })
+      }
+    })
+
+    this.bindSwitcher()
+  },
+
+  bindSwitcher: function() {
+    var that = this
+    this.ownerField.on('change', function() {
+      control = that.nameField[0].selectize
       control.disable()
-      repoNameField[0].selectize.disable()
+      control.clearOptions()
+      orgname = that.ownerField.val()
 
-      $.ajax({
-        url: '/new/github.com/available_orgs',
-        type: 'GET',
-        error: function() {
-          callback();
-        },
-        success: function(orgs) {
-          orgs = $.map(orgs, function(o) {
-            return { name: o }
+      if(orgname == "") return
+
+      $.get(that.reposUrl,
+        { org: orgname },
+        function(repos) {
+          control.enable()
+
+          $.each(repos, function(i, r) {
+            control.addOption({
+              name: r.name
+            });
           })
 
-          control.enable()
-          callback(orgs)
+          if(repos.length > 0) {
+            control.open()
+          }
         }
-      })
+      )
+    })
+  },
+
+  validation: function() {
+    var that = this
+    this.form.on('submit', function() {
+      $("#successAlert").hide();
+      $("#failureAlert").hide();
+      $('#submitButton').button('loading');
+
+      $.ajax({
+        type: 'POST',
+        url: that.form.attr("target"),
+        data: that.form.serialize(),
+        success: function(response, status) {
+          var name = that.nameField.val()
+          var owner = that.ownerField.val()
+          var domain = $("input[name=domain]").val()
+          window.location.pathname = "/" + domain + "/"+owner+"/"+name
+        },
+        error: function() {
+          $("#failureAlert").text("Unable to setup the Repository");
+          $("#failureAlert").show().removeClass("hide");
+          $('#submitButton').button('reset');
+        }
+      });
+
+      return false;
+    })
+  },
+  start: function() {
+    this.form = $(this.formSelector)
+    if(this.form.length == 0) {
+      return
     }
-  })
 
-  repoOwnerField.on('change', function() {
-    control = repoNameField[0].selectize
-    control.disable()
-    control.clearOptions()
-    orgname = repoOwnerField.val()
+    this.nameField = this.form.find(this.nameFieldSelector)
+    this.ownerField = this.form.find(this.ownerFieldSelector)
 
-    if(orgname == "") return
+    this.validation()
+    this.selectize()
+  }
+}
 
-    $.get('/new/github.com/available_repos',
-      { org: orgname },
-      function(repos) {
-        control.enable()
-
-        $.each(repos, function(i, r) {
-          control.addOption({
-            name: r.name
-          });
-        })
-
-        if(repos.length > 0) {
-          control.open()
-        }
-      }
-    )
-  })
-
-  projectForm.on('submit', function() {
-    $("#successAlert").hide();
-    $("#failureAlert").hide();
-    $('#submitButton').button('loading');
-
-    $.ajax({
-      type: 'POST',
-      url: projectForm.attr("target"),
-      data: projectForm.serialize(),
-      success: function(response, status) {
-        var name = repoNameField.val()
-        var owner = repoOwnerField.val()
-        var domain = $("input[name=domain]").val()
-        window.location.pathname = "/" + domain + "/"+owner+"/"+name
-      },
-      error: function() {
-        $("#failureAlert").text("Unable to setup the Repository");
-        $("#failureAlert").show().removeClass("hide");
-        $('#submitButton').button('reset');
-      }
-    });
-
-    return false;
-  })
+$(function() {
+  AddGithubRepo.start()
 })
