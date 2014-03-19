@@ -1,6 +1,9 @@
 package build
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -338,9 +341,72 @@ func TestTeardown(t *testing.T) {
 	if !imageRemoved {
 		t.Errorf("Expected Docker image was removed")
 	}
+}
 
-	// TODO test service container stop
-	// TODO test service container remove
+func TestRun(t *testing.T) {
+	t.Skip()
+}
+
+func TestRunPrivileged(t *testing.T) {
+	setup()
+	defer teardown()
+
+	var conf = docker.HostConfig{}
+
+	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
+		body := `{ "Id":"e90e34656806", "Warnings":[] }`
+		w.Write([]byte(body))
+	})
+
+	mux.HandleFunc("/v1.9/containers/e90e34656806/start", func(w http.ResponseWriter, r *http.Request) {
+		err := json.NewDecoder(r.Body).Decode(&conf)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		w.WriteHeader(http.StatusBadRequest)
+	})
+
+	b := Builder{}
+	b.BuildState = &BuildState{}
+	b.dockerClient = client
+	b.Stdout = new(bytes.Buffer)
+	b.image = &docker.Image{ID: "c3ab8ff137"}
+	b.Build = &script.Build{}
+	b.Repo = &repo.Repo{}
+	b.run()
+
+	if conf.Privileged != false {
+		t.Errorf("Expected container NOT started in Privileged mode")
+	}
+
+	// now lets set priviliged mode
+	b.Privileged = true
+	b.run()
+
+	if conf.Privileged != true {
+		t.Errorf("Expected container IS started in Privileged mode")
+	}
+
+	// now lets set priviliged mode but for a pull request
+	b.Privileged = true
+	b.Repo.PR = "55"
+	b.run()
+
+	if conf.Privileged != false {
+		t.Errorf("Expected container NOT started in Privileged mode when PR")
+	}
+}
+
+func TestRunErrorCreate(t *testing.T) {
+	t.Skip()
+}
+
+func TestRunErrorStart(t *testing.T) {
+	t.Skip()
+}
+
+func TestRunErrorWait(t *testing.T) {
+	t.Skip()
 }
 
 func TestWriteIdentifyFile(t *testing.T) {
