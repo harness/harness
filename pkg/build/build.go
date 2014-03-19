@@ -309,11 +309,10 @@ func (b *Builder) run() error {
 		AttachStderr: true,
 	}
 
-	// configure if Docker should run in privileged mode.
-	// by default, this is disabled for pull requests for
-	// security reasons.
-	host := docker.HostConfig{}
-	host.Privileged = b.Privileged && len(b.Repo.PR) == 0
+	// configure if Docker should run in privileged mode
+	host := docker.HostConfig{
+		Privileged: (b.Privileged && len(b.Repo.PR) == 0),
+	}
 
 	// debugging
 	log.Noticef("starting build %s", b.Build.Name)
