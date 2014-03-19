@@ -96,128 +96,140 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 		};
 
 })();
-AddGithubRepo = {
-  formSelector: ".form-repo",
-  ownerFieldSelector: "select[name=owner]",
-  nameFieldSelector: "select[name=name]",
-  orgsUrl: '/new/github.com/available_orgs',
-  reposUrl: '/new/github.com/available_repos',
+;(function ($) {
 
-  selectize: function() {
-    var that = this
+  "use strict";
 
-    this.nameField.selectize({
-      valueField: 'name',
-      labelField: 'name',
-      searchField: ['name'],
-      create: true
-    })
+  var AddGithubRepo;
 
-    this.ownerField.selectize({
-      valueField: 'name',
-      labelField: 'name',
-      searchField: ['name'],
-      create: true,
-      preload: true,
-      load: function(query, callback) {
-        var control = that.ownerField[0].selectize
-        control.disable()
-        that.nameField[0].selectize.disable()
+  AddGithubRepo = {
+    formSelector:       ".form-repo",
+    ownerFieldSelector: "select[name=owner]",
+    nameFieldSelector:  "select[name=name]",
+    orgsUrl:            "/new/github.com/available_orgs",
+    reposUrl:           "/new/github.com/available_repos",
 
-        $.ajax({
-          url: that.orgsUrl,
-          type: 'GET',
-          error: function() {
-            callback();
-          },
-          success: function(orgs) {
-            orgs = $.map(orgs, function(o) {
-              return { name: o }
-            })
+    initialize: function() {
+      this.form = $(this.formSelector);
 
-            control.enable()
-            callback(orgs)
-          }
-        })
+      if (this.form.length === 0) {
+        return;
       }
-    })
 
-    this.bindSwitcher()
-  },
+      this.nameField  = this.form.find(this.nameFieldSelector);
+      this.ownerField = this.form.find(this.ownerFieldSelector);
 
-  bindSwitcher: function() {
-    var that = this
-    this.ownerField.on('change', function() {
-      control = that.nameField[0].selectize
-      control.disable()
-      control.clearOptions()
-      orgname = that.ownerField.val()
+      this.initValidation();
+      this.initSelectize();
+      this.initSwitcher();
+    },
 
-      if(orgname == "") return
+    initSelectize: function() {
+      var that = this;
 
-      $.get(that.reposUrl,
-        { org: orgname },
-        function(repos) {
-          control.enable()
-
-          $.each(repos, function(i, r) {
-            control.addOption({
-              name: r.name
-            });
-          })
-
-          if(repos.length > 0) {
-            control.open()
-          }
-        }
-      )
-    })
-  },
-
-  validation: function() {
-    var that = this
-    this.form.on('submit', function() {
-      $("#successAlert").hide();
-      $("#failureAlert").hide();
-      $('#submitButton').button('loading');
-
-      $.ajax({
-        type: 'POST',
-        url: that.form.attr("target"),
-        data: that.form.serialize(),
-        success: function(response, status) {
-          var name = that.nameField.val()
-          var owner = that.ownerField.val()
-          var domain = $("input[name=domain]").val()
-          window.location.pathname = "/" + domain + "/"+owner+"/"+name
-        },
-        error: function() {
-          $("#failureAlert").text("Unable to setup the Repository");
-          $("#failureAlert").show().removeClass("hide");
-          $('#submitButton').button('reset');
-        }
+      this.nameField.selectize({
+        valueField:  "name",
+        labelField:  "name",
+        searchField: [ "name" ],
+        create:      true
       });
 
-      return false;
-    })
-  },
-  start: function() {
-    this.form = $(this.formSelector)
-    if(this.form.length == 0) {
-      return
+      this.ownerField.selectize({
+        valueField:  "name",
+        labelField:  "name",
+        searchField: [ "name" ],
+        create:      true,
+        preload:     true,
+        load: function(query, callback) {
+          var control;
+
+          control = that.ownerField[0].selectize;
+          control.disable();
+          that.nameField[0].selectize.disable();
+
+          $.get(that.orgsUrl, function (orgs) {
+            control.enable();
+
+            callback($.map(orgs, function (org) {
+              return { name: org };
+            }));
+          }).fail(function () {
+            callback({ });
+          });
+        }
+      });
+    },
+
+    initValidation: function() {
+      var that = this;
+
+      this.form.on("submit", function() {
+        $("#successAlert").hide();
+        $("#failureAlert").hide();
+        $("#submitButton").button("loading");
+
+        $.ajax({
+          type: "POST",
+          url:  that.form.attr("target"),
+          data: that.form.serialize(),
+          success: function(response, status) {
+            var name, owner, domain;
+
+            name   = that.nameField.val();
+            owner  = that.ownerField.val();
+            domain = $("input[name=domain]").val();
+
+            window.location.pathname = "/" + domain + "/" + owner + "/" + name;
+          },
+          error: function() {
+            $("#failureAlert").text("Unable to setup the Repository");
+            $("#failureAlert").show().removeClass("hide");
+            $("#submitButton").button("reset");
+          }
+        });
+
+        return false;
+      });
+    },
+
+    initSwitcher: function() {
+      var that = this;
+
+      this.ownerField.on("change", function() {
+        var control, orgname;
+
+        control = that.nameField[0].selectize;
+        control.disable();
+        control.clearOptions();
+
+        orgname = that.ownerField.val();
+
+        if (orgname === "") {
+          return;
+        }
+
+        $.get(that.reposUrl, { org: orgname }, function (repos) {
+          control.enable();
+
+          $.each(repos, function (i, repo) {
+            control.addOption({ name: repo.name });
+          });
+
+          if (repos.length > 0) {
+            control.open();
+          }
+        });
+      });
     }
+  };
 
-    this.nameField = this.form.find(this.nameFieldSelector)
-    this.ownerField = this.form.find(this.ownerFieldSelector)
+  // Init on DOM ready
 
-    this.validation()
-    this.selectize()
-  }
-}
+  $(function () {
+    AddGithubRepo.initialize();
+  });
 
-$(function() {
-  AddGithubRepo.start()
-})
+})(jQuery);
 ;// Format ANSI to HTML
 
 if(typeof(Drone) === 'undefined') { Drone = {}; }
