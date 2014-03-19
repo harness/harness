@@ -3,7 +3,6 @@ package build
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -359,10 +358,7 @@ func TestRunPrivileged(t *testing.T) {
 	})
 
 	mux.HandleFunc("/v1.9/containers/e90e34656806/start", func(w http.ResponseWriter, r *http.Request) {
-		err := json.NewDecoder(r.Body).Decode(&conf)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
+		json.NewDecoder(r.Body).Decode(&conf)
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
@@ -398,11 +394,69 @@ func TestRunPrivileged(t *testing.T) {
 }
 
 func TestRunErrorCreate(t *testing.T) {
-	t.Skip()
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+	})
+
+	b := Builder{}
+	b.BuildState = &BuildState{}
+	b.dockerClient = client
+	b.Stdout = new(bytes.Buffer)
+	b.image = &docker.Image{ID: "c3ab8ff137"}
+	b.Build = &script.Build{}
+	b.Repo = &repo.Repo{}
+
+	if err := b.run(); err != docker.ErrBadRequest {
+		t.Errorf("Expected error when trying to create build container")
+	}
 }
 
 func TestRunErrorStart(t *testing.T) {
-	t.Skip()
+	setup()
+	defer teardown()
+
+	var (
+		containerCreated = false
+		containerStarted = false
+	)
+
+	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
+		containerCreated = true
+		body := `{ "Id":"e90e34656806", "Warnings":[] }`
+		w.Write([]byte(body))
+	})
+
+	mux.HandleFunc("/v1.9/containers/e90e34656806/start", func(w http.ResponseWriter, r *http.Request) {
+		containerStarted = true
+		w.WriteHeader(http.StatusBadRequest)
+	})
+
+	b := Builder{}
+	b.BuildState = &BuildState{}
+	b.dockerClient = client
+	b.Stdout = new(bytes.Buffer)
+	b.image = &docker.Image{ID: "c3ab8ff137"}
+	b.Build = &script.Build{}
+	b.Repo = &repo.Repo{}
+
+	if err := b.run(); err != docker.ErrBadRequest {
+		t.Errorf("Expected error when trying to start build container")
+	}
+
+	if !containerCreated {
+		t.Errorf("Expected Docker endpoint was invoked to create container")
+	}
+
+	if !containerStarted {
+		t.Errorf("Expected Docker endpoint was invoked to start container")
+	}
+
+	if b.container == nil || b.container.ID != "e90e34656806" {
+		t.Errorf("Expected build container was created with ID e90e34656806")
+	}
 }
 
 func TestRunErrorWait(t *testing.T) {
