@@ -63,11 +63,13 @@ func (s *SSH) Write(f *buildfile.Buildfile) {
 		}
 	}
 
-	if len(s.Artifacts) > 1 && !artifact {
-		artifact = compress(f, s.Artifacts)
-	} else if len(s.Artifacts) == 1 {
-		f.WriteCmdSilent(fmt.Sprintf("ARTIFACT=%s", s.Artifacts[0]))
-		artifact = true
+	if !artifact {
+		if len(s.Artifacts) > 1 {
+			artifact = compress(f, s.Artifacts)
+		} else if len(s.Artifacts) == 1 {
+			f.WriteEnv("ARTIFACT", s.Artifacts[0])
+			artifact = true
+		}
 	}
 
 	if artifact {
@@ -82,15 +84,15 @@ func (s *SSH) Write(f *buildfile.Buildfile) {
 }
 
 func createGitArchive(f *buildfile.Buildfile) bool {
-	f.WriteCmdSilent("COMMIT=$(git rev-parse HEAD)")
-	f.WriteCmdSilent("ARTIFACT=${PWD##*/}-${COMMIT}.tar.gz")
+	f.WriteEnv("COMMIT", "$(git rev-parse HEAD)")
+	f.WriteEnv("ARTIFACT", "${PWD##*/}-${COMMIT}.tar.gz")
 	f.WriteCmdSilent("git archive --format=tar.gz --prefix=${PWD##*/}/ ${COMMIT} > ${ARTIFACT}")
 	return true
 }
 
 func compress(f *buildfile.Buildfile, files []string) bool {
 	cmd := "tar -cf ${ARTIFACT} %s"
-	f.WriteCmdSilent("ARTIFACT=${PWD##*/}.tar.gz")
+	f.WriteEnv("ARTIFACT", "${PWD##*/}.tar.gz")
 	f.WriteCmdSilent(fmt.Sprintf(cmd, strings.Join(files, " ")))
 	return true
 }
