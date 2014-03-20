@@ -6,5 +6,6 @@
 #   -driver="sqlite3":
 #   -path="":
 #   -port=":8080":
+#   -workers="4":
 #         
 #DRONED_OPTS="--port=:80"
