@@ -84,4 +84,14 @@ PROVISIONING COMPLETE:
     Visit http://localhost:8080/install
 DONE
   EOF
+
+  config.vm.provision "shell", inline: <<-EOF
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
+    sudo sh -c 'echo deb http://get.docker.io/ubuntu docker main' > /etc/apt/sources.list.d/docker.list
+    sudo apt-get update
+    sudo apt-get install -y linux-image-generic-lts-raring linux-headers-generic-lts-raring
+    sudo apt-get install -y lxc-docker-0.9.0
+  EOF
+
+
 end
