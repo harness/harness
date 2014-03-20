@@ -1,7 +1,6 @@
 package deploy
 
 import (
-	"fmt"
 	"github.com/drone/drone/pkg/build/buildfile"
 )
 
@@ -12,8 +11,8 @@ type Nodejitsu struct {
 }
 
 func (n *Nodejitsu) Write(f *buildfile.Buildfile) {
-	f.WriteEnv("username", m.User)
-	f.WriteEnv("apiToken", m.Token)
+	f.WriteEnv("username", n.User)
+	f.WriteEnv("apiToken", n.Token)
 
 	// Install the jitsu command line interface then
 	// deploy the configured app.
