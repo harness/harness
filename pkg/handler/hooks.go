@@ -66,12 +66,6 @@ func (h *HookHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
 
-	// Get the user that owns the repository
-	user, err := database.GetUser(repo.UserID)
-	if err != nil {
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	}
-
 	// Verify that the commit doesn't already exist.
 	// We should never build the same commit twice.
 	_, err = database.GetCommitHash(hook.Head.Id, repo.ID)
@@ -114,7 +108,7 @@ func (h *HookHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 		commit.SetAuthor(hook.Commits[0].Author.Email)
 	}
 
-	buildscript, err := fetchBuildScript(repo, commit, user.GithubToken)
+	buildscript, err := fetchBuildScript(repo, commit)
 	if err != nil {
 		println(err.Error())
 		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -176,13 +170,6 @@ func (h *HookHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the user that owns the repository
-	user, err := database.GetUser(repo.UserID)
-	if err != nil {
-		RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
 	// Verify that the commit doesn't already exist.
 	// We should enver build the same commit twice.
 	_, err = database.GetCommitHash(hook.PullRequest.Head.Sha, repo.ID)
@@ -203,9 +190,8 @@ func (h *HookHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) {
 	commit.Author = hook.PullRequest.User.Login
 	commit.PullRequest = strconv.Itoa(hook.Number)
 	commit.Message = hook.PullRequest.Title
-	// label := p.PullRequest.Head.Labe
 
-	buildscript, err := fetchBuildScript(repo, commit, user.GithubToken)
+	buildscript, err := fetchBuildScript(repo, commit)
 	if err != nil {
 		println(err.Error())
 		RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -240,12 +226,18 @@ func (h *HookHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) {
 // fetchBuildScript retrieves a build script from GitHub. If the .drone.yml
 // file is missing or incorrectly formatted, it returns an error.  Otherwise,
 // it returns a Build suitable for adding to the queue
-func fetchBuildScript(repo *Repo, commit *Commit, token string) (*script.Build, error) {
+func fetchBuildScript(repo *Repo, commit *Commit) (*script.Build, error) {
 	// get the github settings from the database
 	settings := database.SettingsMust()
 
+	// Get the user that owns the repository
+	user, err := database.GetUser(repo.UserID)
+	if err != nil {
+		return nil, err
+	}
+
 	// get the drone.yml file from GitHub
-	client := github.New(token)
+	client := github.New(user.GithubToken)
 	client.ApiUrl = settings.GitHubApiUrl
 
 	content, err := client.Contents.FindRef(repo.Owner, repo.Name, ".drone.yml", commit.Hash)

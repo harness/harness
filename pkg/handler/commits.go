@@ -116,7 +116,7 @@ func (h *CommitRebuildHandler) CommitRebuild(w http.ResponseWriter, r *http.Requ
 		return fmt.Errorf("Could not find build: %s", labl)
 	}
 
-	buildscript, err := fetchBuildScript(repo, commit, u.GithubToken)
+	buildscript, err := fetchBuildScript(repo, commit)
 	if err != nil {
 		return err
 	}
