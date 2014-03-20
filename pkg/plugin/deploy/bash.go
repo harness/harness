@@ -5,9 +5,14 @@ import (
 )
 
 type Bash struct {
-	Command string `yaml:"command,omitempty"`
+	Script  []string `yaml:"script,omitempty"`
+	Command string   `yaml:"command,omitempty"`
 }
 
 func (g *Bash) Write(f *buildfile.Buildfile) {
-	f.WriteCmd(g.Command)
+	g.Script = append(g.Script, g.Command)
+
+	for _, cmd := range g.Script {
+		f.WriteCmd(cmd)
+	}
 }
