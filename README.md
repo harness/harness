@@ -206,6 +206,7 @@ Drone currently has these `deploy` and `publish` plugins implemented (more to co
 - [heroku](#docs)
 - [git](#docs)
 - [modulus](#docs)
+- [nodejitsu](#docs)
 - [ssh](#docs)
 
 **publish**
