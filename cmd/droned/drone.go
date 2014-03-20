@@ -49,6 +49,10 @@ var (
 
 	// commit sha for the current build.
 	version string
+
+	// Number of concurrent build workers to run
+	// default to number of CPUs on machine
+	workers int
 )
 
 func main() {
@@ -60,6 +64,7 @@ func main() {
 	flag.StringVar(&sslcert, "sslcert", "", "")
 	flag.StringVar(&sslkey, "sslkey", "", "")
 	flag.DurationVar(&timeout, "timeout", 300*time.Minute, "")
+	flag.IntVar(&workers, "workers", runtime.NumCPU(), "")
 	flag.Parse()
 
 	// validate the TLS arguments
@@ -135,7 +140,7 @@ func setupStatic() {
 // setup routes for serving dynamic content.
 func setupHandlers() {
 	queueRunner := queue.NewBuildRunner(docker.New(), timeout)
-	queue := queue.Start(runtime.NumCPU(), queueRunner)
+	queue := queue.Start(workers, queueRunner)
 
 	hookHandler := handler.NewHookHandler(queue)
 
