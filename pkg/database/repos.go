@@ -95,6 +95,10 @@ func ListReposTeam(id int64) ([]*Repo, error) {
 // Returns true if user owns repo or is on team that owns repo
 // Returns true is the user is an admin member of the team.
 func IsRepoAdmin(user *User, repo *Repo) (bool, error) {
+	if user == nil {
+		return false, nil
+	}
+
 	if user.ID == repo.UserID {
 		return true, nil
 	}
