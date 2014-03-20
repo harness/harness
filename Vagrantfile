@@ -14,7 +14,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # FIXME: Maybe this is enough
   config.vm.provider "virtualbox" do |v|
-      v.customize ["modifyvm", :id, "--memory", "1024"]
+      v.customize ["modifyvm", :id, "--memory", "2048"]
   end
 
   # Drone by default runs on port 80. Forward from host to guest

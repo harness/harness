@@ -26,6 +26,7 @@ Interested in contributing? Great! Please read our [contributor guidelines](http
 * [Database Services](#databases)
 * [Caching](#caching)
 * [Params Injection](#params-injection)
+* [Local development](#local-development)
 * [Documentation and References](#docs)
 
 ### System
@@ -278,7 +279,7 @@ decrease overall build time. Examples include your `.npm`, `.m2`, `bundler`, etc
 
 ```
 cache:
-  - /usr/local/bin/go/pkg                  
+  - /usr/local/bin/go/pkg
 ```
 
 This will cache the directory relative to the root directory of your repository:
@@ -305,6 +306,15 @@ notify:
 ```
 
 ![params-injection](https://f.cloud.github.com/assets/1583973/2161187/2905077e-94c3-11e3-8499-a3844682c8af.png)
+
+### Local development
+
+Local Drone setup for development is pretty straightforward.
+
+You will need to clone the repo, install Vagrant and run `vagrant up`.
+This command will download base Ubuntu image, setup the virtual machine and build Drone.
+
+Afterwards, you will need to [install Docker in this VM manually](http://docs.docker.io/en/latest/installation/ubuntulinux/).
 
 ### Docs
 
