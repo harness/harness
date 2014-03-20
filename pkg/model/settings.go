@@ -8,6 +8,8 @@ import (
 
 var (
 	ErrInvalidGitHubTrailingSlash = errors.New("GitHub URL should not have a trailing slash")
+	ErrInvalidSmtpAddress         = errors.New("SMTP From Address must be provided")
+	ErrInvalidSmtpPort            = errors.New("SMTP Port must be provided")
 )
 
 type Settings struct {
@@ -50,6 +52,10 @@ func (s *Settings) Validate() error {
 	switch {
 	case strings.HasSuffix(s.GitHubApiUrl, "/"):
 		return ErrInvalidGitHubTrailingSlash
+	case len(s.SmtpServer) != 0 && len(s.SmtpPort) == 0:
+		return ErrInvalidSmtpPort
+	case len(s.SmtpServer) != 0 && len(s.SmtpAddress) == 0:
+		return ErrInvalidSmtpAddress
 	default:
 		return nil
 	}

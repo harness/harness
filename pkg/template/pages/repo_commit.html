@@ -34,7 +34,7 @@
 				<dt>Duration</dt>
 				<dd>{{ if .Build.IsRunning }}--{{else}}{{ .Build.HumanDuration }}{{end}}</dd>
 			</div>
-			<img src="{{.Commit.Image}}?d=identicon">
+			<img src="{{.Commit.Image}}">
 			<div class="commit-summary">
 				<dt>Commit</dt>
 				<dd><u>{{ .Commit.HashShort }}</u></dd>
@@ -63,119 +63,35 @@
 {{ define "script" }}
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"></script>
 	<script>
-		window.autofollow = false;
 		$(document).ready(function() {
 			$(".timeago").timeago();
-			$("#follow").bind("click", function(ev) {
-				if (window.autofollow) {
-					window.autofollow = false;
-					$("#follow").text("Follow");
-				} else {
-					window.autofollow = true;
-					$("#follow").text("Stop following");
-				}
-			});
 		});
 	</script>
 
 	<script>
-		var re = /\u001B\[([0-9]+;?)*[Km]/g;
-
-		var styles = new Array();
-		var formatLine = function(s) {
-			// Check for newline and early exit?
-			s = s.replace(/</g, "&lt;");
-			s = s.replace(/>/g, "&gt;");
-
-			var final = "";
-			var current = 0;
-			while (m = re.exec(s)) {
-					var part = s.substring(current, m.index+1);
-					current = re.lastIndex;
-
-					var token = s.substr(m.index, re.lastIndex - m.index);
-					var code = token.substr(2, token.length-2);
-
-					var pre = "";
-					var post = "";
-
-					switch (code) {
-					case 'm':
-					case '0m':
-						var len = styles.length;
-						for (var i=0; i < len; i++) {
-							styles.pop();
-							post += "</span>"
-						}
-						break;
-					case '30;42m': pre = '<span style="color:black;background:lime">'; break;
-					case '36m':
-					case '36;1m': pre = '<span style="color:cyan;">'; break;
-					case '31m':
-					case '31;31m': pre = '<span style="color:red;">'; break;
-					case '33m':
-					case '33;33m': pre = '<span style="color:yellow;">'; break;
-					case '32m':
-					case '0;32m': pre = '<span style="color:lime;">'; break;
-					case '90m': pre = '<span style="color:gray;">'; break;
-					case 'K':
-					case '0K':
-					case '1K':
-					case '2K': break;
-					}
-
-					if (pre !== "") {
-						styles.push(pre);
-					}
-
-					final += part + pre + post;
-			}
-
-			var part = s.substring(current, s.length);
-			final += part;
-			return final;
-		};
-	</script>
-
-	<script>
 	{{ if .Build.IsRunning }}
-		var outputBox = document.getElementById('stdout');
-		var outputWS = new WebSocket((window.location.protocol=='http:'?'ws':'wss')+'://'+window.location.host+'/feed?token='+{{ .Token }});
-		outputWS.onopen = function () { console.log('output websocket open'); };
-		outputWS.onerror = function (e) { console.log('websocket error: ' + e); };
-		outputWS.onclose = function (e) { window.location.reload(); };
+		$(document).ready(function() {
+			var commitUpdates = new Drone.CommitUpdates('/feed?token='+{{ .Token }});
+			var outputBox = document.getElementById('stdout');
+			commitUpdates.startOutput(outputBox);
 
-		window.requestAnimationFrame = window.requestAnimationFrame ||
-			window.webkitRequestAnimationFrame ||
-			function(callback, element) {
-				return window.setTimeout(function() {
-					callback(+new Date());
-				}, 1000 / 60);
-			};
+			$("#follow").on("click", function(e) {
+				e.preventDefault();
 
-		var lineBuffer = "";
-
-		outputWS.onmessage = function (e) {
-			lineBuffer += formatLine(e.data);
-		};
-
-		function updateScreen() {
-			if(lineBuffer.length > 0) {
-				outputBox.innerHTML += lineBuffer;
-				lineBuffer = '';
-
-				if (window.autofollow) {
-					window.scrollTo(0, document.body.scrollHeight);
+				if(commitUpdates.autoFollow) {
+					commitUpdates.autoFollow = false;
+					$(this).text("Follow");
+				} else {
+					commitUpdates.autoFollow = true;
+					$(this).text("Stop following");
 				}
-			}
-			requestAnimationFrame(updateScreen);
-		}
-
-		requestAnimationFrame(updateScreen);
+			});
+		});
 
 	{{ else }}
 		$.get("/{{ .Repo.Slug }}/commit/{{ .Commit.Hash }}/build/{{ .Build.Slug }}/out.txt", function( data ) {
-			$( "#stdout" ).html(formatLine(data));
+			var lineFormatter = new Drone.LineFormatter();
+			$( "#stdout" ).html(lineFormatter.format(data));
 		});
 	{{ end }}
 	</script>

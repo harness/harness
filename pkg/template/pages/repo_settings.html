@@ -43,6 +43,15 @@
 							Enable Pull Hooks
 						</label>
 					</div>
+					{{ if .User.Admin }}
+					<div class="alert alert-min">Admin-only settings.</div>
+					<div class="checkbox form-group">
+						<label>
+							<input class="" type="checkbox" name="Privileged" {{ if .Repo.Privileged }}checked="True" {{ end }}/>
+							Enable Privileged Builds
+						</label>
+					</div>
+					{{ end }}
 					<div class="alert alert-min">Choose the account owner.</div>
 					<div>
 						<ul class="account-radio-group">

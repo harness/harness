@@ -16,7 +16,7 @@ var (
 )
 
 // Gravatar URL pattern
-var GravatarPattern = "https://gravatar.com/avatar/%s?s=%v"
+var GravatarPattern = "https://gravatar.com/avatar/%s?s=%v&d=identicon"
 
 // Simple regular expression used to verify that an email
 // address matches the expected standard format.

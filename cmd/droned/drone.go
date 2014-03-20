@@ -117,6 +117,7 @@ func setupDatabase() {
 func setupStatic() {
 	box := rice.MustFindBox("assets")
 	http.Handle("/css/", http.FileServer(box.HTTPBox()))
+	http.Handle("/js/", http.FileServer(box.HTTPBox()))
 
 	// we need to intercept all attempts to serve images
 	// so that we can add a cache-control settings
@@ -211,7 +212,7 @@ func setupHandlers() {
 	m.Post("/:host/:owner/:name/commit/:commit/rebuild", handler.RepoAdminHandler(commitRebuildHandler.CommitRebuild))
 	m.Get("/:host/:owner/:name/commit/:commit", handler.RepoHandler(handler.CommitShow))
 	m.Get("/:host/:owner/:name/tree", handler.RepoHandler(handler.RepoDashboard))
-	m.Get("/:host/:owner/:name/status.png", handler.ErrorHandler(handler.Badge))
+	m.Get("/:host/:owner/:name/status.svg", handler.ErrorHandler(handler.Badge))
 	m.Get("/:host/:owner/:name/settings", handler.RepoAdminHandler(handler.RepoSettingsForm))
 	m.Get("/:host/:owner/:name/params", handler.RepoAdminHandler(handler.RepoParamsForm))
 	m.Get("/:host/:owner/:name/badges", handler.RepoAdminHandler(handler.RepoBadges))
