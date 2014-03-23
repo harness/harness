@@ -18,6 +18,7 @@ type Deploy struct {
 	Nodejitsu    *Nodejitsu    `yaml:"nodejitsu,omitempty"`
 	Openshift    *Openshift    `yaml:"openshift,omitempty"`
 	SSH          *SSH          `yaml:"ssh,omitempty"`
+	Tsuru        *Tsuru        `yaml:"tsuru,omitempty"`
 }
 
 func (d *Deploy) Write(f *buildfile.Buildfile) {
@@ -50,5 +51,8 @@ func (d *Deploy) Write(f *buildfile.Buildfile) {
 	}
 	if d.SSH != nil {
 		d.SSH.Write(f)
+	}
+	if d.Tsuru != nil {
+		d.Tsuru.Write(f)
 	}
 }
