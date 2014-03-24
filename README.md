@@ -269,10 +269,21 @@ services:
 
 If you omit the version, Drone will launch the latest version of the database. (For example, if you set `mongodb`, Drone will launch MongoDB 2.4.)
 
-**NOTE:** database and service containers are exposed over TCP connections and
+You can also launch custom Docker containers using standard docker notation:
+
+```sh
+services:
+  - dockerfile/rethinkdb # same as dockerfile/rethinkdb:latest
+  - barnybug/elasticsearch:1.0.1
+```
+
+**NOTE 1:** database and service containers are exposed over TCP connections and
 have their own local IP address. If the **socat** utility is installed inside your
 Docker image, Drone will automatically proxy localhost connections to the correct
 IP address.
+
+**NOTE 2:** avoid running services that use the same ports. For example, don't specify
+multiple versions of Elastic Search since the port will already be in use.
 
 ### Caching
 
