@@ -108,11 +108,29 @@ func TestSetupEmptyImage(t *testing.T) {
 	}
 }
 
+// TestSetupErrorInspectImage will test our ability to handle a
+// failure when inspecting an image (i.e. bradrydzewski/mysql:latest),
+// which should trigger a `docker pull`.
+func TestSetupErrorInspectImage(t *testing.T) {
+	t.Skip()
+}
+
+// TestSetupErrorPullImage will test our ability to handle a
+// failure when pulling an image (i.e. bradrydzewski/mysql:latest)
+func TestSetupErrorPullImage(t *testing.T) {
+	t.Skip()
+}
+
 // TestSetupErrorRunDaemonPorts will test our ability to handle a
 // failure when starting a service (i.e. mysql) as a daemon.
 func TestSetupErrorRunDaemonPorts(t *testing.T) {
 	setup()
 	defer teardown()
+
+	mux.HandleFunc("/v1.9/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
+		data := []byte(`{"config": { "ExposedPorts": { "6379/tcp": {}}}}`)
+		w.Write(data)
+	})
 
 	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
@@ -138,6 +156,11 @@ func TestSetupErrorRunDaemonPorts(t *testing.T) {
 func TestSetupErrorServiceInspect(t *testing.T) {
 	setup()
 	defer teardown()
+
+	mux.HandleFunc("/v1.9/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
+		data := []byte(`{"config": { "ExposedPorts": { "6379/tcp": {}}}}`)
+		w.Write(data)
+	})
 
 	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
 		body := `{ "Id":"e90e34656806", "Warnings":[] }`
