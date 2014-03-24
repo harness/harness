@@ -122,12 +122,12 @@ func setupDatabase() {
 // the drone process was shut down mid-build and thus the
 // builds will never complete.
 func discardOldBuilds() {
-	err := database.FailStartedBuilds()
+	err := database.FailUnfinishedBuilds()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = database.FailStartedCommits()
+	err = database.FailUnfinishedCommits()
 	if err != nil {
 		log.Fatal(err)
 	}

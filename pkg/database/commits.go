@@ -113,6 +113,13 @@ SET status = 'Failure'
 WHERE status = 'Started'
 `
 
+// SQL Queries to fail all commits that are currently pending
+const commitFailPendingStmt = `
+UPDATE commits
+SET status = 'Failure'
+WHERE status = 'Started'
+`
+
 // Returns the Commit with the given ID.
 func GetCommit(id int64) (*Commit, error) {
 	commit := Commit{}
@@ -180,7 +187,12 @@ func ListBranches(repo int64) ([]*Commit, error) {
 	return commits, err
 }
 
-func FailStartedCommits() error {
+func FailUnfinishedCommits() error {
 	_, err := db.Exec(commitFailStartedStmt)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(commitFailPendingStmt)
 	return err
 }

@@ -39,6 +39,13 @@ SET status = 'Failure'
 WHERE status = 'Started'
 `
 
+// SQL Queries to fail all builds that are pending
+const buildFailPendingStmt = `
+UPDATE builds
+SET status = 'Failure'
+WHERE status = 'Pending'
+`
+
 // SQL Queries to delete a Commit.
 const buildDeleteStmt = `
 DELETE FROM builds WHERE id = ?
@@ -77,7 +84,12 @@ func ListBuilds(id int64) ([]*Build, error) {
 	return builds, err
 }
 
-func FailStartedBuilds() error {
+func FailUnfinishedBuilds() error {
 	_, err := db.Exec(buildFailStartedStmt)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(buildFailPendingStmt)
 	return err
 }
