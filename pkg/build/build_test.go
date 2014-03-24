@@ -3,6 +3,7 @@ package build
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -118,7 +119,13 @@ func TestSetupErrorInspectImage(t *testing.T) {
 // TestSetupErrorPullImage will test our ability to handle a
 // failure when pulling an image (i.e. bradrydzewski/mysql:latest)
 func TestSetupErrorPullImage(t *testing.T) {
-	t.Skip()
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/v1.9/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
 }
 
 // TestSetupErrorRunDaemonPorts will test our ability to handle a
@@ -195,12 +202,11 @@ func TestSetupErrorImagePull(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/v1.9/images/bradrydzewski/go:1.2/json", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.9/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	mux.HandleFunc("/v1.9/images/create", func(w http.ResponseWriter, r *http.Request) {
-		// validate ?fromImage=bradrydzewski/go&tag=1.2
+	mux.HandleFunc("/v1.9/images/create?fromImage=bradrydzewski/mysql&tag=5.5", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
@@ -209,10 +215,11 @@ func TestSetupErrorImagePull(t *testing.T) {
 	b.Repo.Path = "git://github.com/drone/drone.git"
 	b.Build = &script.Build{}
 	b.Build.Image = "go1.2"
+	b.Build.Services = append(b.Build.Services, "mysql")
 	b.dockerClient = client
 
-	var got, want = b.setup(), docker.ErrBadRequest
-	if got == nil || got != want {
+	var got, want = b.setup(), fmt.Errorf("Error: Unable to pull image bradrydzewski/mysql:5.5")
+	if got == nil || got.Error() != want.Error() {
 		t.Errorf("Expected error %s, got %s", want, got)
 	}
 }
