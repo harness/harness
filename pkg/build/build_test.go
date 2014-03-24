@@ -108,22 +108,6 @@ func TestSetupEmptyImage(t *testing.T) {
 	}
 }
 
-// TestSetupUnknownService will test our ability to handle an
-// unknown or unsupported service (i.e. mysql).
-func TestSetupUnknownService(t *testing.T) {
-	b := Builder{}
-	b.Repo = &repo.Repo{}
-	b.Repo.Path = "git://github.com/drone/drone.git"
-	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
-	b.Build.Services = append(b.Build.Services, "not-found")
-
-	var got, want = b.setup(), "Error: Invalid or unknown service not-found"
-	if got == nil || got.Error() != want {
-		t.Errorf("Expected error %s, got %s", want, got)
-	}
-}
-
 // TestSetupErrorRunDaemonPorts will test our ability to handle a
 // failure when starting a service (i.e. mysql) as a daemon.
 func TestSetupErrorRunDaemonPorts(t *testing.T) {
