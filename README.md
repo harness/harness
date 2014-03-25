@@ -210,6 +210,7 @@ Drone currently has these `deploy` and `publish` plugins implemented (more to co
 - [nodejitsu](#docs)
 - [ssh](#docs)
 - [tsuru](#docs)
+- [bash](#docs)
 
 **publish**
 - [Amazon s3](#docs)
