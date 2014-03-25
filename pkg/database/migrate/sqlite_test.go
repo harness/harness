@@ -2,6 +2,7 @@ package migrate_test
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -38,9 +39,9 @@ type revision1 struct{}
 
 func (r *revision1) Up(mg *MigrationDriver) error {
 	_, err := mg.CreateTable("samples", []string{
-		"id INTEGER PRIMARY KEY AUTOINCREMENT",
-		"imel VARCHAR(255) UNIQUE",
-		"name VARCHAR(255)",
+		mg.T.Integer("id", PRIMARYKEY, AUTOINCREMENT),
+		mg.T.String("imel", UNIQUE),
+		mg.T.String("name"),
 	})
 	return err
 }
@@ -253,7 +254,12 @@ func (r *revision10) Down(mg *MigrationDriver) error {
 
 // ---------- end of revision 10
 
-var db *sql.DB
+var (
+	db          *sql.DB
+	driver, dsn string
+
+	dbname = "drone_test"
+)
 
 var testSchema = `
 CREATE TABLE samples (
@@ -554,16 +560,38 @@ func TestChangeColumnType(t *testing.T) {
 	}
 }
 
+func init() {
+	if driver = os.Getenv("DB_ENV"); len(driver) == 0 {
+		driver = "sqlite3"
+	}
+	if dsn = os.Getenv("MYSQL_LOGIN"); len(dsn) == 0 {
+		dsn = ":memory:"
+	}
+}
+
 func setUp() error {
 	var err error
 	Driver = SQLite
-	db, err = sql.Open("sqlite3", "migration_tests.sqlite")
+	if db, err = sql.Open(driver, dsn); err != nil {
+		panic("Can't connect to database: ")
+	}
+	if driver == "mysql" {
+		Driver = MySQL
+		if _, err := db.Exec(fmt.Sprintf("CREATE DATABASE %s", dbname)); err != nil {
+			panic("Can't create database: ")
+		}
+		if _, err := db.Exec(fmt.Sprintf("USE %s", dbname)); err != nil {
+			panic("Can't use database: ")
+		}
+	}
 	return err
 }
 
 func tearDown() {
+	if driver == "mysql" {
+		db.Exec(fmt.Sprintf("DROP DATABASE %s", dbname))
+	}
 	db.Close()
-	os.Remove("migration_tests.sqlite")
 }
 
 func loadFixture(t *testing.T) {
