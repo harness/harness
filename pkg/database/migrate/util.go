@@ -3,6 +3,8 @@ package migrate
 import (
 	"fmt"
 	"strings"
+
+	"github.com/dchest/uniuri"
 )
 
 func fetchColumns(sql string) ([]string, error) {
@@ -29,4 +31,12 @@ func setForUpdate(left []string, right []string) string {
 		results = append(results, fmt.Sprintf("%s = %s", str, right[k]))
 	}
 	return strings.Join(results, ", ")
+}
+
+func proxyName(tableName string) string {
+	return fmt.Sprintf("%s_%s", tableName, uniuri.NewLen(16))
+}
+
+func indexName(tableName string, columns []string) string {
+	return fmt.Sprintf("idx_%s_on_%s", tableName, strings.Join(columns, "_and_"))
 }
