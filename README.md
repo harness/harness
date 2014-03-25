@@ -328,7 +328,11 @@ Local Drone setup for development is pretty straightforward.
 You will need to clone the repo, install Vagrant and run `vagrant up`.
 This command will download base Ubuntu image, setup the virtual machine and build Drone.
 
-Afterwards, you will need to [install Docker in this VM manually](http://docs.docker.io/en/latest/installation/ubuntulinux/).
+Afterwards, you may `vagrant ssh` into the vagrant instance, where docker is already installed and ready to go.
+
+Once in the vagrant instance, run `make run`, the visit http://localhost:8080/install in your browser.
+
+The Makefile has other targets so check that out for more build, test, run configurations.
 
 ### Docs
 
