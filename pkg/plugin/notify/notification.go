@@ -32,6 +32,7 @@ type Notification struct {
 	Webhook *Webhook `yaml:"webhook,omitempty"`
 	Hipchat *Hipchat `yaml:"hipchat,omitempty"`
 	Irc     *IRC     `yaml:"irc,omitempty"`
+	Slack   *Slack   `yaml:"slack,omitempty"`
 }
 
 func (n *Notification) Send(context *Context) error {
@@ -53,6 +54,11 @@ func (n *Notification) Send(context *Context) error {
 	// send irc notifications
 	if n.Irc != nil {
 		n.Irc.Send(context)
+	}
+
+	// send slack notifications
+	if n.Slack != nil {
+		n.Slack.Send(context)
 	}
 
 	return nil
