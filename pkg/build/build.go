@@ -491,6 +491,14 @@ func (b *Builder) writeBuildScript(dir string) error {
 	f.WriteEnv("DRONE_PR", b.Repo.PR)
 	f.WriteEnv("DRONE_BUILD_DIR", b.Repo.Dir)
 
+	// add environment variables for code coverage
+	// systems, like coveralls.
+	f.WriteEnv("CI_NAME", "DRONE")
+	f.WriteEnv("CI_BUILD_NUMBER", b.Repo.Commit)
+	f.WriteEnv("CI_BUILD_URL", "")
+	f.WriteEnv("CI_BRANCH", b.Repo.Branch)
+	f.WriteEnv("CI_PULL_REQUEST", b.Repo.PR)
+
 	// add /etc/hosts entries
 	for _, mapping := range b.Build.Hosts {
 		f.WriteHost(mapping)
