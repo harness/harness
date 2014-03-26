@@ -290,6 +290,29 @@ func TestMigrateCreateTable(t *testing.T) {
 	}
 }
 
+func TestMigrateExistingCreateTable(t *testing.T) {
+	defer tearDown()
+	if err := setUp(); err != nil {
+		t.Fatalf("Error preparing database: %q", err)
+	}
+
+	if _, err := db.Exec(testSchema); err != nil {
+		t.Fatalf("Can not create database: %q", err)
+	}
+
+	mgr := New(db)
+	rev := &revision1{}
+	if err := mgr.Add(rev).Migrate(); err != nil {
+		t.Fatalf("Can not migrate: %q", err)
+	}
+
+	var current int64
+	db.QueryRow("SELECT max(revision) FROM migration").Scan(&current)
+	if current != rev.Revision() {
+		t.Fatalf("Did not successfully migrate")
+	}
+}
+
 func TestMigrateRenameTable(t *testing.T) {
 	defer tearDown()
 	if err := setUp(); err != nil {
