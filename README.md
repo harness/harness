@@ -220,6 +220,15 @@ publish:
     source: /tmp/drone.deb
     target: latest/
 
+  swift:
+    username: someuser
+    password: 030e39a1278a18828389b194b93211aa
+    auth_url: https://identity.api.rackspacecloud.com/v2.0
+    region: DFW
+    container: drone
+    source: /tmp/drone.deb
+    target: latest/drone.deb
+
 ```
 
 Drone currently has these `deploy` and `publish` plugins implemented (more to come!):
@@ -235,6 +244,7 @@ Drone currently has these `deploy` and `publish` plugins implemented (more to co
 
 **publish**
 - [Amazon s3](#docs)
+- [OpenStack Swift](#docs)
 
 ### Notifications
 
