@@ -16,31 +16,31 @@ func TestGetCommit(t *testing.T) {
 	}
 
 	if commit.ID != 1 {
-		t.Errorf("Exepected ID %d, got %d", 1, commit.ID)
+		t.Errorf("Expected ID %d, got %d", 1, commit.ID)
 	}
 
 	if commit.Status != "Success" {
-		t.Errorf("Exepected Status %s, got %s", "Success", commit.Status)
+		t.Errorf("Expected Status %s, got %s", "Success", commit.Status)
 	}
 
 	if commit.Hash != "4f4c4594be6d6ddbc1c0dd521334f7ecba92b608" {
-		t.Errorf("Exepected Hash %s, got %s", "4f4c4594be6d6ddbc1c0dd521334f7ecba92b608", commit.Hash)
+		t.Errorf("Expected Hash %s, got %s", "4f4c4594be6d6ddbc1c0dd521334f7ecba92b608", commit.Hash)
 	}
 
 	if commit.Branch != "master" {
-		t.Errorf("Exepected Branch %s, got %s", "master", commit.Branch)
+		t.Errorf("Expected Branch %s, got %s", "master", commit.Branch)
 	}
 
 	if commit.Author != "brad.rydzewski@gmail.com" {
-		t.Errorf("Exepected Author %s, got %s", "master", commit.Author)
+		t.Errorf("Expected Author %s, got %s", "master", commit.Author)
 	}
 
 	if commit.Message != "commit message" {
-		t.Errorf("Exepected Message %s, got %s", "master", commit.Message)
+		t.Errorf("Expected Message %s, got %s", "master", commit.Message)
 	}
 
 	if commit.Gravatar != "8c58a0be77ee441bb8f8595b7f1b4e87" {
-		t.Errorf("Exepected Gravatar %s, got %s", "8c58a0be77ee441bb8f8595b7f1b4e87", commit.Gravatar)
+		t.Errorf("Expected Gravatar %s, got %s", "8c58a0be77ee441bb8f8595b7f1b4e87", commit.Gravatar)
 	}
 }
 
@@ -54,15 +54,15 @@ func TestGetCommitHash(t *testing.T) {
 	}
 
 	if commit.ID != 1 {
-		t.Errorf("Exepected ID %d, got %d", 1, commit.ID)
+		t.Errorf("Expected ID %d, got %d", 1, commit.ID)
 	}
 
 	if commit.Hash != "4f4c4594be6d6ddbc1c0dd521334f7ecba92b608" {
-		t.Errorf("Exepected Hash %s, got %s", "4f4c4594be6d6ddbc1c0dd521334f7ecba92b608", commit.Hash)
+		t.Errorf("Expected Hash %s, got %s", "4f4c4594be6d6ddbc1c0dd521334f7ecba92b608", commit.Hash)
 	}
 
 	if commit.Status != "Success" {
-		t.Errorf("Exepected Status %s, got %s", "Success", commit.Status)
+		t.Errorf("Expected Status %s, got %s", "Success", commit.Status)
 	}
 }
 
@@ -91,11 +91,11 @@ func TestSaveCommit(t *testing.T) {
 	}
 
 	if commit.Hash != updatedCommit.Hash {
-		t.Errorf("Exepected Hash %s, got %s", updatedCommit.Hash, commit.Hash)
+		t.Errorf("Expected Hash %s, got %s", updatedCommit.Hash, commit.Hash)
 	}
 
 	if commit.Status != "Failing" {
-		t.Errorf("Exepected Status %s, got %s", updatedCommit.Status, commit.Status)
+		t.Errorf("Expected Status %s, got %s", updatedCommit.Status, commit.Status)
 	}
 }
 
@@ -126,7 +126,7 @@ func TestListCommits(t *testing.T) {
 
 	// verify commit count
 	if len(commits) != 2 {
-		t.Errorf("Exepected %d commits in database, got %d", 2, len(commits))
+		t.Errorf("Expected %d commits in database, got %d", 2, len(commits))
 		return
 	}
 
@@ -135,30 +135,30 @@ func TestListCommits(t *testing.T) {
 	commit := commits[1] // TODO something strange is happening with ordering here
 
 	if commit.ID != 1 {
-		t.Errorf("Exepected ID %d, got %d", 1, commit.ID)
+		t.Errorf("Expected ID %d, got %d", 1, commit.ID)
 	}
 
 	if commit.Status != "Success" {
-		t.Errorf("Exepected Status %s, got %s", "Success", commit.Status)
+		t.Errorf("Expected Status %s, got %s", "Success", commit.Status)
 	}
 
 	if commit.Hash != "4f4c4594be6d6ddbc1c0dd521334f7ecba92b608" {
-		t.Errorf("Exepected Hash %s, got %s", "4f4c4594be6d6ddbc1c0dd521334f7ecba92b608", commit.Hash)
+		t.Errorf("Expected Hash %s, got %s", "4f4c4594be6d6ddbc1c0dd521334f7ecba92b608", commit.Hash)
 	}
 
 	if commit.Branch != "master" {
-		t.Errorf("Exepected Branch %s, got %s", "master", commit.Branch)
+		t.Errorf("Expected Branch %s, got %s", "master", commit.Branch)
 	}
 
 	if commit.Author != "brad.rydzewski@gmail.com" {
-		t.Errorf("Exepected Author %s, got %s", "master", commit.Author)
+		t.Errorf("Expected Author %s, got %s", "master", commit.Author)
 	}
 
 	if commit.Message != "commit message" {
-		t.Errorf("Exepected Message %s, got %s", "master", commit.Message)
+		t.Errorf("Expected Message %s, got %s", "master", commit.Message)
 	}
 
 	if commit.Gravatar != "8c58a0be77ee441bb8f8595b7f1b4e87" {
-		t.Errorf("Exepected Gravatar %s, got %s", "8c58a0be77ee441bb8f8595b7f1b4e87", commit.Gravatar)
+		t.Errorf("Expected Gravatar %s, got %s", "8c58a0be77ee441bb8f8595b7f1b4e87", commit.Gravatar)
 	}
 }
