@@ -10,7 +10,7 @@
 	<table class="commit-table" style="font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; width: 100%; margin: 0; padding: 0;">
 		<tr style="font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; margin: 0; padding: 0;">
 			<th style="font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; text-align: left; color: #333; margin: 0; padding: 0 30px 0 20px;" align="left">commit:</th>
-			<td style="font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; width: 99%; color: #333; margin: 0; padding: 0;"><a href="{{.Host}}/{{.Repo.Slug}}/commit/{{ .Commit.Hash }}" style="font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; color: #2a6496; font-weight: normal; margin: 0; padding: 0;">{{ .Commit.HashShort }}</a></td>
+			<td style="font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; width: 99%; color: #333; margin: 0; padding: 0;"><a href="{{.Host}}/{{.Repo.Slug}}/commit/{{.Commit.Branch}}/{{ .Commit.Hash }}" style="font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; color: #2a6496; font-weight: normal; margin: 0; padding: 0;">{{ .Commit.HashShort }}</a></td>
 		</tr>
 		<tr style="font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; margin: 0; padding: 0;">
 			<th style="font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; text-align: left; color: #333; margin: 0; padding: 0 30px 0 20px;" align="left">branch:</th>
