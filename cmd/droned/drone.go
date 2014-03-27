@@ -16,6 +16,7 @@ import (
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
 	"github.com/drone/drone/pkg/handler"
+	"github.com/drone/drone/pkg/handler/gitlab"
 	"github.com/drone/drone/pkg/queue"
 )
 
@@ -135,6 +136,10 @@ func setupHandlers() {
 	m.Post("/new/github.com", handler.UserHandler(handler.RepoCreateGithub))
 	m.Get("/new/github.com", handler.UserHandler(handler.RepoAdd))
 
+	// handlers for setting up your GitLab repository
+	m.Post("/new/gitlab", handler.UserHandler(gitlab.RepoCreate))
+	m.Get("/new/gitlab", handler.UserHandler(gitlab.RepoAdd))
+
 	// handlers for linking your GitHub account
 	m.Get("/auth/login/github", handler.UserHandler(handler.LinkGithub))
 
@@ -177,6 +182,9 @@ func setupHandlers() {
 
 	// handlers for GitHub post-commit hooks
 	m.Post("/hook/github.com", handler.ErrorHandler(hookHandler.Hook))
+
+	// handlers for GitLab post-commit hooks
+	m.Post("/hook/gitlab", handler.ErrorHandler(gitlab.Hook))
 
 	// handlers for first-time installation
 	m.Get("/install", handler.ErrorHandler(handler.Install))

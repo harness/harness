@@ -42,6 +42,7 @@ deps:
 	#go get github.com/dotcloud/docker/pkg/term
 	go get github.com/drone/go-github/github
 	go get github.com/drone/go-bitbucket/bitbucket
+	go get github.com/plouc/go-gitlab-client
 	go get github.com/GeertJohan/go.rice
 	go get github.com/GeertJohan/go.rice/rice
 	go get github.com/go-sql-driver/mysql
