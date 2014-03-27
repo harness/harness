@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"flag"
 	"log"
 	"net/http"
@@ -12,23 +11,15 @@ import (
 	"code.google.com/p/go.net/websocket"
 	"github.com/GeertJohan/go.rice"
 	"github.com/bmizerany/pat"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/russross/meddler"
 
 	"github.com/drone/drone/pkg/build/docker"
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
-	"github.com/drone/drone/pkg/database/migrate"
 	"github.com/drone/drone/pkg/handler"
 	"github.com/drone/drone/pkg/queue"
 )
 
 var (
-	// local path where the SQLite database
-	// should be stored. By default this is
-	// in the current working directory.
-	path string
-
 	// port the server will run on
 	port string
 
@@ -57,7 +48,6 @@ var (
 
 func main() {
 	// parse command line flags
-	flag.StringVar(&path, "path", "", "")
 	flag.StringVar(&port, "port", ":8080", "")
 	flag.StringVar(&driver, "driver", "sqlite3", "")
 	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
@@ -71,7 +61,9 @@ func main() {
 	checkTLSFlags()
 
 	// setup database and handlers
-	setupDatabase()
+	if err := database.Init(driver, datasource); err != nil {
+		log.Fatal("Can't initialize database: ", err)
+	}
 	setupStatic()
 	setupHandlers()
 
@@ -95,25 +87,6 @@ func checkTLSFlags() {
 		log.Fatal("invalid configuration: -sslcert unspecified, but -sslkey was specified.")
 	}
 
-}
-
-// setup the database connection and register with the
-// global database package.
-func setupDatabase() {
-	// inform meddler and migration we're using sqlite
-	meddler.Default = meddler.SQLite
-	migrate.Driver = migrate.SQLite
-
-	// connect to the SQLite database
-	db, err := sql.Open(driver, datasource)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	database.Set(db)
-
-	migration := migrate.New(db)
-	migration.All().Migrate()
 }
 
 // setup routes for static assets. These assets may

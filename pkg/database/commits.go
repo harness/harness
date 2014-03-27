@@ -16,7 +16,7 @@ SELECT id, repo_id, status, started, finished, duration,
 hash, branch, pull_request, author, gravatar, timestamp, message, created, updated
 FROM commits
 WHERE repo_id = ? AND branch = ?
-ORDER BY created DESC
+ORDER BY created DESC, id DESC
 LIMIT 10
 `
 
@@ -26,7 +26,7 @@ SELECT id, repo_id, status, started, finished, duration,
 hash, branch, pull_request, author, gravatar, timestamp, message, created, updated
 FROM commits
 WHERE repo_id = ? AND branch = ?
-ORDER BY created DESC
+ORDER BY created DESC, id DESC
 LIMIT 1
 `
 
@@ -57,7 +57,7 @@ WHERE r.user_id = ?
 AND   r.team_id = 0
 AND   r.id = c.repo_id
 AND   c.status IN ('Success', 'Failure')
-ORDER BY c.created desc
+ORDER BY c.created desc, c.id desc
 LIMIT 10
 `
 
@@ -70,7 +70,7 @@ FROM repos r, commits c
 WHERE r.team_id = ?
 AND   r.id = c.repo_id
 AND   c.status IN ('Success', 'Failure')
-ORDER BY c.created desc
+ORDER BY c.created desc, c.id desc
 LIMIT 10
 `
 
