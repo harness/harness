@@ -19,7 +19,7 @@ func SQLite(tx *sql.Tx) *MigrationDriver {
 }
 
 func (s *sqliteDriver) CreateTable(tableName string, args []string) (sql.Result, error) {
-	return s.Tx.Exec(fmt.Sprintf("CREATE TABLE %s (%s)", tableName, strings.Join(args, ", ")))
+	return s.Tx.Exec(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", tableName, strings.Join(args, ", ")))
 }
 
 func (s *sqliteDriver) RenameTable(tableName, newName string) (sql.Result, error) {
