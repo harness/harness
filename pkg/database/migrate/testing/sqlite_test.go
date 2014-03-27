@@ -3,12 +3,14 @@ package migrate_test
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"testing"
 
 	. "github.com/drone/drone/pkg/database/migrate"
 
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/russross/meddler"
 )
@@ -476,43 +478,48 @@ func TestIndexOperations(t *testing.T) {
 	}
 
 	var esquel []*sqliteMaster
-	// Query sqlite_master, check if index is exists.
-	query := `SELECT sql FROM sqlite_master WHERE type='index' and tbl_name='samples'`
-	if err := meddler.QueryAll(db, &esquel, query); err != nil {
-		t.Fatalf("Can not find index: %q", err)
-	}
+	switch {
+	case driver == "mysql":
 
-	indexStatement := `CREATE INDEX idx_samples_on_url_and_name ON samples (url, name)`
-	if string(esquel[1].Sql.([]byte)) != indexStatement {
-		t.Errorf("Can not find index, got: %q", esquel[1])
-	}
+	default:
+		// Query sqlite_master, check if index is exists.
+		query := `SELECT sql FROM sqlite_master WHERE type='index' and tbl_name='samples'`
+		if err := meddler.QueryAll(db, &esquel, query); err != nil {
+			t.Fatalf("Can not find index: %q", err)
+		}
 
-	// Migrate, rename indexed columns
-	if err := mgr.Add(&revision6{}).Migrate(); err != nil {
-		t.Fatalf("Can not migrate: %q", err)
-	}
+		indexStatement := `CREATE INDEX idx_samples_on_url_and_name ON samples (url, name)`
+		if string(esquel[1].Sql.([]byte)) != indexStatement {
+			t.Errorf("Can not find index, got: %q", esquel[1])
+		}
 
-	var esquel1 []*sqliteMaster
-	if err := meddler.QueryAll(db, &esquel1, query); err != nil {
-		t.Fatalf("Can not find index: %q", err)
-	}
+		// Migrate, rename indexed columns
+		if err := mgr.Add(&revision6{}).Migrate(); err != nil {
+			t.Fatalf("Can not migrate: %q", err)
+		}
 
-	indexStatement = `CREATE INDEX idx_samples_on_host_and_name ON samples (host, name)`
-	if string(esquel1[1].Sql.([]byte)) != indexStatement {
-		t.Errorf("Can not find index, got: %q", esquel1[1])
-	}
+		var esquel1 []*sqliteMaster
+		if err := meddler.QueryAll(db, &esquel1, query); err != nil {
+			t.Fatalf("Can not find index: %q", err)
+		}
 
-	if err := mgr.Add(&revision7{}).Migrate(); err != nil {
-		t.Fatalf("Can not migrate: %q", err)
-	}
+		indexStatement = `CREATE INDEX idx_samples_on_host_and_name ON samples (host, name)`
+		if string(esquel1[1].Sql.([]byte)) != indexStatement {
+			t.Errorf("Can not find index, got: %q", esquel1[1])
+		}
 
-	var esquel2 []*sqliteMaster
-	if err := meddler.QueryAll(db, &esquel2, query); err != nil {
-		t.Fatalf("Can not find index: %q", err)
-	}
+		if err := mgr.Add(&revision7{}).Migrate(); err != nil {
+			t.Fatalf("Can not migrate: %q", err)
+		}
 
-	if len(esquel2) != 1 {
-		t.Errorf("Expect row length equal to %d, got %d", 1, len(esquel2))
+		var esquel2 []*sqliteMaster
+		if err := meddler.QueryAll(db, &esquel2, query); err != nil {
+			t.Fatalf("Can not find index: %q", err)
+		}
+
+		if len(esquel2) != 1 {
+			t.Errorf("Expect row length equal to %d, got %d", 1, len(esquel2))
+		}
 	}
 }
 
@@ -527,14 +534,24 @@ func TestColumnRedundancy(t *testing.T) {
 		t.Fatalf("Can not migrate: %q", err)
 	}
 
-	var tableSql string
-	query := `SELECT sql FROM sqlite_master where type='table' and name='samples'`
-	if err := db.QueryRow(query).Scan(&tableSql); err != nil {
-		t.Fatalf("Can not query sqlite_master: %q", err)
-	}
-
-	if !strings.Contains(tableSql, "repository ") {
-		t.Errorf("Expect column with name repository")
+	var dummy, query, tableSql string
+	switch {
+	case driver == "mysql":
+		query = `SHOW CREATE TABLE samples`
+		if err := db.QueryRow(query).Scan(&dummy, &tableSql); err != nil {
+			t.Fatalf("Can not query table's definition: %q", err)
+		}
+		if !strings.Contains(tableSql, "`repository`") {
+			t.Errorf("Expect column with name repository")
+		}
+	default:
+		query = `SELECT sql FROM sqlite_master where type='table' and name='samples'`
+		if err := db.QueryRow(query).Scan(&tableSql); err != nil {
+			t.Fatalf("Can not query sqlite_master: %q", err)
+		}
+		if !strings.Contains(tableSql, "repository ") {
+			t.Errorf("Expect column with name repository")
+		}
 	}
 }
 
@@ -549,14 +566,24 @@ func TestChangeColumnType(t *testing.T) {
 		t.Fatalf("Can not migrate: %q", err)
 	}
 
-	var tableSql string
-	query := `SELECT sql FROM sqlite_master where type='table' and name='samples'`
-	if err := db.QueryRow(query).Scan(&tableSql); err != nil {
-		t.Fatalf("Can not query sqlite_master: %q", err)
-	}
-
-	if !strings.Contains(tableSql, "email varchar(512) UNIQUE") {
-		t.Errorf("Expect email type to changed: %q", tableSql)
+	var dummy, tableSql, query string
+	switch {
+	case driver == "mysql":
+		query = `SHOW CREATE TABLE samples`
+		if err := db.QueryRow(query).Scan(&dummy, &tableSql); err != nil {
+			t.Fatalf("Can not query table's definition: %q", err)
+		}
+		if !strings.Contains(tableSql, "`email` varchar(512)") {
+			t.Errorf("Expect email type to changed: %q", tableSql)
+		}
+	default:
+		query = `SELECT sql FROM sqlite_master where type='table' and name='samples'`
+		if err := db.QueryRow(query).Scan(&tableSql); err != nil {
+			t.Fatalf("Can not query sqlite_master: %q", err)
+		}
+		if !strings.Contains(tableSql, "email varchar(512) UNIQUE") {
+			t.Errorf("Expect email type to changed: %q", tableSql)
+		}
 	}
 }
 
@@ -573,15 +600,15 @@ func setUp() error {
 	var err error
 	Driver = SQLite
 	if db, err = sql.Open(driver, dsn); err != nil {
-		panic("Can't connect to database: ")
+		log.Fatalf("Can't connect to database: %q", err)
 	}
 	if driver == "mysql" {
 		Driver = MySQL
 		if _, err := db.Exec(fmt.Sprintf("CREATE DATABASE %s", dbname)); err != nil {
-			panic("Can't create database: ")
+			panic("Can't create database")
 		}
 		if _, err := db.Exec(fmt.Sprintf("USE %s", dbname)); err != nil {
-			panic("Can't use database: ")
+			panic("Can't use database")
 		}
 	}
 	return err
