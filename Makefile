@@ -1,5 +1,24 @@
 SHA := $(shell git rev-parse --short HEAD)
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+PKGS := \
+build \
+build/buildfile \
+build/docker \
+build/dockerfile \
+build/proxy \
+build/repo \
+build/script \
+channel \
+database \
+database/encrypt \
+database/migrate \
+database/testing \
+mail \
+model \
+plugin/deploy \
+queue
+PKGS := $(addprefix github.com/drone/drone/pkg/,$(PKGS))
+.PHONY := test $(PKGS)
 
 all: embed build
 
@@ -40,23 +59,10 @@ build:
 	cd cmd/drone  && go build -o ../../bin/drone
 	cd cmd/droned && go build -ldflags "-X main.version $(SHA)" -o ../../bin/droned
 
-test:
-	go test -v github.com/drone/drone/pkg/build
-	go test -v github.com/drone/drone/pkg/build/buildfile
-	go test -v github.com/drone/drone/pkg/build/docker
-	go test -v github.com/drone/drone/pkg/build/dockerfile
-	go test -v github.com/drone/drone/pkg/build/proxy
-	go test -v github.com/drone/drone/pkg/build/repo
-	go test -v github.com/drone/drone/pkg/build/script
-	go test -v github.com/drone/drone/pkg/channel
-	go test -v github.com/drone/drone/pkg/database
-	go test -v github.com/drone/drone/pkg/database/encrypt
-	go test -v github.com/drone/drone/pkg/database/migrate
-	go test -v github.com/drone/drone/pkg/database/testing
-	go test -v github.com/drone/drone/pkg/mail
-	go test -v github.com/drone/drone/pkg/model
-	go test -v github.com/drone/drone/pkg/plugin/deploy
-	go test -v github.com/drone/drone/pkg/queue
+test: $(PKGS)
+
+$(PKGS):
+	go test -v $@
 
 install:
 	cp deb/drone/etc/init/drone.conf /etc/init/drone.conf
