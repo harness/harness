@@ -66,12 +66,6 @@ func (h *HookHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
 
-	// Get the user that owns the repository
-	user, err := database.GetUser(repo.UserID)
-	if err != nil {
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	}
-
 	// Verify that the commit doesn't already exist.
 	// We should never build the same commit twice.
 	_, err = database.GetCommitHash(hook.Head.Id, repo.ID)
@@ -114,40 +108,10 @@ func (h *HookHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 		commit.SetAuthor(hook.Commits[0].Author.Email)
 	}
 
-	// get the github settings from the database
-	settings := database.SettingsMust()
-
-	// get the drone.yml file from GitHub
-	client := github.New(user.GithubToken)
-	client.ApiUrl = settings.GitHubApiUrl
-
-	content, err := client.Contents.FindRef(repo.Owner, repo.Name, ".drone.yml", commit.Hash)
+	buildscript, err := fetchBuildScript(repo, commit)
 	if err != nil {
-		msg := "No .drone.yml was found in this repository.  You need to add one.\n"
-		if err := saveFailedBuild(commit, msg); err != nil {
-			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		}
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	}
-
-	// decode the content.  Note: Not sure this will ever happen...it basically means a GitHub API issue
-	raw, err := content.DecodeContent()
-	if err != nil {
-		msg := "Could not decode the yaml from GitHub.  Check that your .drone.yml is a valid yaml file.\n"
-		if err := saveFailedBuild(commit, msg); err != nil {
-			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		}
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	}
-
-	// parse the build script
-	buildscript, err := script.ParseBuild(raw, repo.Params)
-	if err != nil {
-		msg := "Could not parse your .drone.yml file.  It needs to be a valid drone yaml file.\n\n" + err.Error() + "\n"
-		if err := saveFailedBuild(commit, msg); err != nil {
-			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		}
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		println(err.Error())
+		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 
 	// save the commit to the database
@@ -206,13 +170,6 @@ func (h *HookHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the user that owns the repository
-	user, err := database.GetUser(repo.UserID)
-	if err != nil {
-		RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
 	// Verify that the commit doesn't already exist.
 	// We should enver build the same commit twice.
 	_, err = database.GetCommitHash(hook.PullRequest.Head.Sha, repo.ID)
@@ -233,36 +190,11 @@ func (h *HookHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) {
 	commit.Author = hook.PullRequest.User.Login
 	commit.PullRequest = strconv.Itoa(hook.Number)
 	commit.Message = hook.PullRequest.Title
-	// label := p.PullRequest.Head.Labe
 
-	// get the github settings from the database
-	settings := database.SettingsMust()
-
-	// get the drone.yml file from GitHub
-	client := github.New(user.GithubToken)
-	client.ApiUrl = settings.GitHubApiUrl
-
-	content, err := client.Contents.FindRef(repo.Owner, repo.Name, ".drone.yml", commit.Hash) // TODO should this really be the hash??
+	buildscript, err := fetchBuildScript(repo, commit)
 	if err != nil {
 		println(err.Error())
-		RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
-	// decode the content
-	raw, err := content.DecodeContent()
-	if err != nil {
-		RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
-	// parse the build script
-	buildscript, err := script.ParseBuild(raw, repo.Params)
-	if err != nil {
-		// TODO if the YAML is invalid we should create a commit record
-		// with an ERROR status so that the user knows why a build wasn't
-		// triggered in the system
-		RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
@@ -289,6 +221,55 @@ func (h *HookHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) {
 
 	// OK!
 	RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+}
+
+// fetchBuildScript retrieves a build script from GitHub. If the .drone.yml
+// file is missing or incorrectly formatted, it returns an error.  Otherwise,
+// it returns a Build suitable for adding to the queue
+func fetchBuildScript(repo *Repo, commit *Commit) (*script.Build, error) {
+	// get the github settings from the database
+	settings := database.SettingsMust()
+
+	// Get the user that owns the repository
+	user, err := database.GetUser(repo.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	// get the drone.yml file from GitHub
+	client := github.New(user.GithubToken)
+	client.ApiUrl = settings.GitHubApiUrl
+
+	content, err := client.Contents.FindRef(repo.Owner, repo.Name, ".drone.yml", commit.Hash)
+	if err != nil {
+		msg := "No .drone.yml was found in this repository.  You need to add one.\n"
+		if err := saveFailedBuild(commit, msg); err != nil {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	// decode the content.  Note: Not sure this will ever happen...it basically means a GitHub API issue
+	raw, err := content.DecodeContent()
+	if err != nil {
+		msg := "Could not decode the yaml from GitHub.  Check that your .drone.yml is a valid yaml file.\n"
+		if err := saveFailedBuild(commit, msg); err != nil {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	// parse the build script
+	buildscript, err := script.ParseBuild(raw, repo.Params)
+	if err != nil {
+		msg := "Could not parse your .drone.yml file.  It needs to be a valid drone yaml file.\n\n" + err.Error() + "\n"
+		if err := saveFailedBuild(commit, msg); err != nil {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	return buildscript, nil
 }
 
 // Helper method for saving a failed build or commit in the case where it never starts to build.

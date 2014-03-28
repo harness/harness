@@ -909,6 +909,10 @@ pre {
   text-overflow: ellipsis;
   max-width: 450px;
 }
+.build-details .actions {
+  float: left;
+  margin-left: 20px;
+}
 .build-details.affix {
   top: 0px;
   padding-top: 15px;
