@@ -8,6 +8,7 @@ import (
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
 	"github.com/drone/go-github/github"
+	"github.com/drone/go-bitbucket/bitbucket"
 
 	"launchpad.net/goyaml"
 )
@@ -52,7 +53,7 @@ func RepoDashboard(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) 
 	return RenderTemplate(w, "repo_dashboard.html", &data)
 }
 
-func RepoAdd(w http.ResponseWriter, r *http.Request, u *User) error {
+func RepoAddGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	settings := database.SettingsMust()
 	teams, err := database.ListTeams(u.ID)
 	if err != nil {
@@ -71,6 +72,27 @@ func RepoAdd(w http.ResponseWriter, r *http.Request, u *User) error {
 	// otherwise display the template for adding
 	// a new GitHub repository.
 	return RenderTemplate(w, "github_add.html", &data)
+}
+
+func RepoAddBitbucket(w http.ResponseWriter, r *http.Request, u *User) error {
+	settings := database.SettingsMust()
+	teams, err := database.ListTeams(u.ID)
+	if err != nil {
+		return err
+	}
+	data := struct {
+		User     *User
+		Teams    []*Team
+		Settings *Settings
+	}{u, teams, settings}
+	// if the user hasn't linked their Bitbucket account
+	// render a different template
+	if len(u.BitbucketToken) == 0 {
+		return RenderTemplate(w, "bitbucket_link.html", &data)
+	}
+	// otherwise display the template for adding
+	// a new Bitbucket repository.
+	return RenderTemplate(w, "bitbucket_add.html", &data)
 }
 
 func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
@@ -136,6 +158,84 @@ func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	// add the hook
 	if _, err := client.Hooks.CreateUpdate(owner, name, link); err != nil {
 		return fmt.Errorf("Unable to add Hook to your GitHub repository.")
+	}
+
+	// Save to the database
+	if err := database.SaveRepo(repo); err != nil {
+		return fmt.Errorf("Error saving repository to the database. %s", err)
+	}
+
+	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+}
+
+func RepoCreateBitbucket(w http.ResponseWriter, r *http.Request, u *User) error {
+	teamName := r.FormValue("team")
+	owner := r.FormValue("owner")
+	name := r.FormValue("name")
+
+	// get the bitbucket settings from the database
+	settings := database.SettingsMust()
+
+	// create the Bitbucket client
+	client := bitbucket.New(
+		settings.BitbucketKey,
+		settings.BitbucketSecret,
+		u.BitbucketToken,
+		u.BitbucketSecret,
+	)
+
+	bitbucketRepo, err := client.Repos.Find(owner, name)
+	if err != nil {
+		return fmt.Errorf("Unable to find Bitbucket repository %s/%s.", owner, name)
+	}
+
+	repo, err := NewBitbucketRepo(owner, name, bitbucketRepo.Private)
+	if err != nil {
+		return err
+	}
+
+	repo.UserID = u.ID
+	repo.Private = bitbucketRepo.Private
+
+	// if the user chose to assign to a team account
+	// we need to retrieve the team, verify the user
+	// has access, and then set the team id.
+	if len(teamName) > 0 {
+		team, err := database.GetTeamSlug(teamName)
+		if err != nil {
+			return fmt.Errorf("Unable to find Team %s.", teamName)
+		}
+
+		// user must be an admin member of the team
+		if ok, _ := database.IsMemberAdmin(u.ID, team.ID); !ok {
+			return fmt.Errorf("Invalid permission to access Team %s.", teamName)
+		}
+
+		repo.TeamID = team.ID
+	}
+
+	// if the repository is private we'll need
+	// to upload a bitbucket key to the repository
+	if repo.Private {
+		// name the key
+		keyName := fmt.Sprintf("%s@%s", repo.Owner, settings.Domain)
+
+		// create the bitbucket key, or update if one already exists
+		_, err := client.RepoKeys.CreateUpdate(owner, name, repo.PublicKey, keyName)
+		if err != nil {
+			return fmt.Errorf("Unable to add Public Key to your Bitbucket repository: %s", err)
+		}
+	} else {
+
+	}
+
+	// create a hook so that we get notified when code
+	// is pushed to the repository and can execute a build.
+	link := fmt.Sprintf("%s://%s/hook/bitbucket.org?id=%s", settings.Scheme, settings.Domain, repo.Slug)
+
+	// add the hook
+	if _, err := client.Brokers.CreateUpdate(owner, name, link, bitbucket.BrokerTypePost); err != nil {
+		return fmt.Errorf("Unable to add Hook to your Bitbucket repository. %s", err.Error())
 	}
 
 	// Save to the database
