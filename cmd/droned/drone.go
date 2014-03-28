@@ -133,10 +133,17 @@ func setupHandlers() {
 
 	// handlers for setting up your GitHub repository
 	m.Post("/new/github.com", handler.UserHandler(handler.RepoCreateGithub))
-	m.Get("/new/github.com", handler.UserHandler(handler.RepoAdd))
+	m.Get("/new/github.com", handler.UserHandler(handler.RepoAddGithub))
+
+	// handlers for setting up your Bitbucket repository
+	m.Post("/new/bitbucket.org", handler.UserHandler(handler.RepoCreateBitbucket))
+	m.Get("/new/bitbucket.org", handler.UserHandler(handler.RepoAddBitbucket))
 
 	// handlers for linking your GitHub account
 	m.Get("/auth/login/github", handler.UserHandler(handler.LinkGithub))
+
+	// handlers for linking your Bitbucket account
+	m.Get("/auth/login/bitbucket", handler.UserHandler(handler.LinkBitbucket))
 
 	// handlers for dashboard pages
 	m.Get("/dashboard/team/:team", handler.UserHandler(handler.TeamShow))
@@ -176,7 +183,10 @@ func setupHandlers() {
 	m.Get("/account/admin/users", handler.AdminHandler(handler.AdminUserList))
 
 	// handlers for GitHub post-commit hooks
-	m.Post("/hook/github.com", handler.ErrorHandler(hookHandler.Hook))
+	m.Post("/hook/github.com", handler.ErrorHandler(hookHandler.HookGithub))
+
+	// handlers for Bitbucket post-commit hooks
+	m.Post("/hook/bitbucket.org", handler.ErrorHandler(hookHandler.HookBitbucket))
 
 	// handlers for first-time installation
 	m.Get("/install", handler.ErrorHandler(handler.Install))
