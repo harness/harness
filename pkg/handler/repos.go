@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/drone/drone/pkg/channel"
@@ -285,5 +287,79 @@ func RepoDelete(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 	}
 
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	return nil
+}
+
+func AvailableGithubOrgs(w http.ResponseWriter, r *http.Request, u *User) error {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+	settings := database.SettingsMust()
+
+	if u.GithubToken == "" {
+		log.Printf("empty user GithubToken")
+		fmt.Fprintf(w, "[]")
+
+		return nil
+	}
+
+	client := github.New(u.GithubToken)
+	client.ApiUrl = settings.GitHubApiUrl
+	orgs, err := client.Orgs.List()
+
+	if err != nil {
+		return err
+	}
+
+	current_user, _ := client.Users.Current()
+
+	collection := make([]string, len(orgs)+1)
+
+	collection[0] = current_user.Login
+
+	for i, org := range orgs {
+		collection[i+1] = org.Login
+	}
+
+	b, err := json.Marshal(collection)
+
+	if err != nil {
+		return err
+	}
+
+	w.Write(b)
+	return nil
+}
+
+func AvailableGithubRepos(w http.ResponseWriter, r *http.Request, u *User) error {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+	settings := database.SettingsMust()
+
+	orgname := r.FormValue("org")
+
+	if u.GithubToken == "" || orgname == "" {
+		fmt.Fprintf(w, "[]")
+
+		return nil
+	}
+
+	client := github.New(u.GithubToken)
+	client.ApiUrl = settings.GitHubApiUrl
+	repos, err := client.Repos.ListOrg(orgname)
+
+	if err != nil {
+		repos, err = client.Repos.ListUser(orgname)
+		if err != nil {
+			return err
+		}
+	}
+
+	b, err := json.Marshal(repos)
+
+	if err != nil {
+		return err
+	}
+
+	w.Write(b)
 	return nil
 }

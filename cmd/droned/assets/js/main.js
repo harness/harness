@@ -1,69 +1,3 @@
-;// Format ANSI to HTML
-
-if(typeof(Drone) === 'undefined') { Drone = {}; }
-
-(function() {
-	Drone.LineFormatter = function() {};
-
-	Drone.LineFormatter.prototype = {
-		regex: /\u001B\[([0-9]+;?)*[Km]/g,
-		styles: [],
-
-		format: function(s) {
-			// Check for newline and early exit?
-			s = s.replace(/</g, "&lt;");
-			s = s.replace(/>/g, "&gt;");
-
-			var output = "";
-			var current = 0;
-			while (m = this.regex.exec(s)) {
-				var part = s.substring(current, m.index);
-				current = this.regex.lastIndex;
-
-				var token = s.substr(m.index, this.regex.lastIndex - m.index);
-				var code = token.substr(2, token.length-2);
-
-				var pre = "";
-				var post = "";
-
-				switch (code) {
-					case 'm':
-					case '0m':
-						var len = this.styles.length;
-						for (var i=0; i < len; i++) {
-							this.styles.pop();
-							post += "</span>"
-						}
-						break;
-					case '30;42m': pre = '<span style="color:black;background:lime">'; break;
-					case '36m':
-					case '36;1m': pre = '<span style="color:cyan;">'; break;
-					case '31m':
-					case '31;31m': pre = '<span style="color:red;">'; break;
-					case '33m':
-					case '33;33m': pre = '<span style="color:yellow;">'; break;
-					case '32m':
-					case '0;32m': pre = '<span style="color:lime;">'; break;
-					case '90m': pre = '<span style="color:gray;">'; break;
-					case 'K':
-					case '0K':
-					case '1K':
-					case '2K': break;
-				}
-
-				if (pre !== "") {
-					this.styles.push(pre);
-				}
-
-				output += part + pre + post;
-			}
-
-			var part = s.substring(current, s.length);
-			output += part;
-			return output;
-		}
-	};
-})();
 ;// Live commit updates
 
 if(typeof(Drone) === 'undefined') { Drone = {}; }
@@ -161,4 +95,204 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 			window.clearTimeout(fn);
 		};
 
+})();
+;(function ($) {
+
+  "use strict";
+
+  var AddGithubRepo;
+
+  AddGithubRepo = {
+    formSelector:       ".form-repo",
+    ownerFieldSelector: "select[name=owner]",
+    nameFieldSelector:  "select[name=name]",
+    orgsUrl:            "/new/github.com/available_orgs",
+    reposUrl:           "/new/github.com/available_repos",
+
+    initialize: function() {
+      this.form = $(this.formSelector);
+
+      if (this.form.length === 0) {
+        return;
+      }
+
+      this.nameField  = this.form.find(this.nameFieldSelector);
+      this.ownerField = this.form.find(this.ownerFieldSelector);
+
+      this.initValidation();
+      this.initSelectize();
+      this.initSwitcher();
+    },
+
+    initSelectize: function() {
+      var that = this;
+
+      this.nameField.selectize({
+        valueField:  "name",
+        labelField:  "name",
+        searchField: [ "name" ],
+        create:      true
+      });
+
+      this.ownerField.selectize({
+        valueField:  "name",
+        labelField:  "name",
+        searchField: [ "name" ],
+        create:      true,
+        preload:     true,
+        load: function(query, callback) {
+          var control;
+
+          control = that.ownerField[0].selectize;
+          control.disable();
+          that.nameField[0].selectize.disable();
+
+          $.get(that.orgsUrl, function (orgs) {
+            control.enable();
+
+            callback($.map(orgs, function (org) {
+              return { name: org };
+            }));
+          }).fail(function () {
+            callback({ });
+          });
+        }
+      });
+    },
+
+    initValidation: function() {
+      var that = this;
+
+      this.form.on("submit", function() {
+        $("#successAlert").hide();
+        $("#failureAlert").hide();
+        $("#submitButton").button("loading");
+
+        $.ajax({
+          type: "POST",
+          url:  that.form.attr("target"),
+          data: that.form.serialize(),
+          success: function(response, status) {
+            var name, owner, domain;
+
+            name   = that.nameField.val();
+            owner  = that.ownerField.val();
+            domain = $("input[name=domain]").val();
+
+            window.location.pathname = "/" + domain + "/" + owner + "/" + name;
+          },
+          error: function() {
+            $("#failureAlert").text("Unable to setup the Repository");
+            $("#failureAlert").show().removeClass("hide");
+            $("#submitButton").button("reset");
+          }
+        });
+
+        return false;
+      });
+    },
+
+    initSwitcher: function() {
+      var that = this;
+
+      this.ownerField.on("change", function() {
+        var control, orgname;
+
+        control = that.nameField[0].selectize;
+        control.disable();
+        control.clearOptions();
+
+        orgname = that.ownerField.val();
+
+        if (orgname === "") {
+          return;
+        }
+
+        $.get(that.reposUrl, { org: orgname }, function (repos) {
+          control.enable();
+
+          $.each(repos, function (i, repo) {
+            control.addOption({ name: repo.name });
+          });
+
+          if (repos.length > 0) {
+            control.open();
+          }
+        });
+      });
+    }
+  };
+
+  // Init on DOM ready
+
+  $(function () {
+    AddGithubRepo.initialize();
+  });
+
+})(jQuery);
+;// Format ANSI to HTML
+
+if(typeof(Drone) === 'undefined') { Drone = {}; }
+
+(function() {
+	Drone.LineFormatter = function() {};
+
+	Drone.LineFormatter.prototype = {
+		regex: /\u001B\[([0-9]+;?)*[Km]/g,
+		styles: [],
+
+		format: function(s) {
+			// Check for newline and early exit?
+			s = s.replace(/</g, "&lt;");
+			s = s.replace(/>/g, "&gt;");
+
+			var output = "";
+			var current = 0;
+			while (m = this.regex.exec(s)) {
+				var part = s.substring(current, m.index);
+				current = this.regex.lastIndex;
+
+				var token = s.substr(m.index, this.regex.lastIndex - m.index);
+				var code = token.substr(2, token.length-2);
+
+				var pre = "";
+				var post = "";
+
+				switch (code) {
+					case 'm':
+					case '0m':
+						var len = this.styles.length;
+						for (var i=0; i < len; i++) {
+							this.styles.pop();
+							post += "</span>"
+						}
+						break;
+					case '30;42m': pre = '<span style="color:black;background:lime">'; break;
+					case '36m':
+					case '36;1m': pre = '<span style="color:cyan;">'; break;
+					case '31m':
+					case '31;31m': pre = '<span style="color:red;">'; break;
+					case '33m':
+					case '33;33m': pre = '<span style="color:yellow;">'; break;
+					case '32m':
+					case '0;32m': pre = '<span style="color:lime;">'; break;
+					case '90m': pre = '<span style="color:gray;">'; break;
+					case 'K':
+					case '0K':
+					case '1K':
+					case '2K': break;
+				}
+
+				if (pre !== "") {
+					this.styles.push(pre);
+				}
+
+				output += part + pre + post;
+			}
+
+			var part = s.substring(current, s.length);
+			output += part;
+			return output;
+		}
+	};
 })();
