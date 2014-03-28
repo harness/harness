@@ -21,7 +21,8 @@ func MySQL(tx *sql.Tx) *MigrationDriver {
 }
 
 func (m *mysqlDriver) CreateTable(tableName string, args []string) (sql.Result, error) {
-	return m.Tx.Exec(fmt.Sprintf("CREATE TABLE %s (%s) ROW_FORMAT=DYNAMIC", tableName, strings.Join(args, ", ")))
+	return m.Tx.Exec(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s) ROW_FORMAT=DYNAMIC",
+		tableName, strings.Join(args, ", ")))
 }
 
 func (m *mysqlDriver) RenameTable(tableName, newName string) (sql.Result, error) {
@@ -41,6 +42,9 @@ func (m *mysqlDriver) ChangeColumn(tableName, columnName, newSpecs string) (sql.
 }
 
 func (m *mysqlDriver) DropColumns(tableName string, columnsToDrop ...string) (sql.Result, error) {
+	if len(columnsToDrop) == 0 {
+		return nil, fmt.Errorf("No columns to drop.")
+	}
 	for k, v := range columnsToDrop {
 		columnsToDrop[k] = fmt.Sprintf("DROP %s", v)
 	}
