@@ -183,6 +183,7 @@ func (w *worker) runBuild(task *BuildTask, buf io.Writer) (bool, error) {
 		task.Script,
 		repo,
 		[]byte(task.Repo.PrivateKey),
+		task.Repo.Privileged,
 		buf,
 	)
 }
