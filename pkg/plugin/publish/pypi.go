@@ -58,7 +58,7 @@ func (p *PyPI) BuildFormatStr() string {
 		// omit the format string completely.
 		return ""
 	}
-	fmtStr := "--format "
+	fmtStr := "--formats "
 	for i := range p.Formats {
 		fmtStr += p.Formats[i] + ","
 	}
