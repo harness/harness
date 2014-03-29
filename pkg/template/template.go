@@ -84,6 +84,8 @@ func init() {
 		"github_link.html",
 		"gitlab_add.html",
 		"gitlab_link.html",
+		"bitbucket_add.html",
+		"bitbucket_link.html",
 	}
 
 	// extract the base template as a string

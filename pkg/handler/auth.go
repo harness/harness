@@ -8,6 +8,8 @@ import (
 	. "github.com/drone/drone/pkg/model"
 	"github.com/drone/go-github/github"
 	"github.com/drone/go-github/oauth2"
+	"github.com/drone/go-bitbucket/bitbucket"
+	"github.com/drone/go-bitbucket/oauth1"
 )
 
 // Create the User session.
@@ -92,5 +94,80 @@ func LinkGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	}
 
 	http.Redirect(w, r, "/new/github.com", http.StatusSeeOther)
+	return nil
+}
+
+func LinkBitbucket(w http.ResponseWriter, r *http.Request, u *User) error {
+
+	// get settings from database
+	settings := database.SettingsMust()
+
+	// bitbucket oauth1 consumer
+	var consumer = oauth1.Consumer{
+		RequestTokenURL:  "https://bitbucket.org/api/1.0/oauth/request_token/",
+		AuthorizationURL: "https://bitbucket.org/!api/1.0/oauth/authenticate",
+		AccessTokenURL:   "https://bitbucket.org/api/1.0/oauth/access_token/",
+		CallbackURL:      settings.URL().String() + "/auth/login/bitbucket",
+		ConsumerKey:      settings.BitbucketKey,
+		ConsumerSecret:   settings.BitbucketSecret,
+	}
+
+	// get the oauth verifier
+	verifier := r.FormValue("oauth_verifier")
+	if len(verifier) == 0 {
+		// Generate a Request Token
+		requestToken, err := consumer.RequestToken()
+		if err != nil {
+			return err
+		}
+
+		// add the request token as a signed cookie
+		SetCookie(w, r, "bitbucket_token", requestToken.Encode())
+
+		url, _ := consumer.AuthorizeRedirect(requestToken)
+		http.Redirect(w, r, url, http.StatusSeeOther)
+		return nil
+	}
+
+	// remove bitbucket token data once before redirecting
+	// back to the application.
+	defer DelCookie(w, r, "bitbucket_token")
+
+	// get the tokens from the request
+	requestTokenStr := GetCookie(r, "bitbucket_token")
+	requestToken, err := oauth1.ParseRequestTokenStr(requestTokenStr)
+	if err != nil {
+		return err
+	}
+
+	// exchange for an access token
+	accessToken, err := consumer.AuthorizeToken(requestToken, verifier)
+	if err != nil {
+		return err
+	}
+
+	// create the Bitbucket client
+	client := bitbucket.New(
+		settings.BitbucketKey,
+		settings.BitbucketSecret,
+		accessToken.Token(),
+		accessToken.Secret(),
+	)
+
+	// get the currently authenticated Bitbucket User
+	user, err := client.Users.Current()
+	if err != nil {
+		return err
+	}
+
+	// update the user account
+	u.BitbucketLogin = user.User.Username
+	u.BitbucketToken = accessToken.Token()
+	u.BitbucketSecret = accessToken.Secret()
+	if err := database.SaveUser(u); err != nil {
+		return err
+	}
+
+	http.Redirect(w, r, "/new/bitbucket.org", http.StatusSeeOther)
 	return nil
 }
