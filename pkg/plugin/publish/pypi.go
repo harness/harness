@@ -29,9 +29,9 @@ fi
 `
 
 type PyPI struct {
-	Username string `yaml:"username,omitempty"`
-	Password string `yaml:"password,omitempty"`
-	Formats []string `yaml:"formats,omitempty"`
+	Username string   `yaml:"username,omitempty"`
+	Password string   `yaml:"password,omitempty"`
+	Formats  []string `yaml:"formats,omitempty"`
 }
 
 func (p *PyPI) Write(f *buildfile.Buildfile) {
@@ -62,5 +62,5 @@ func (p *PyPI) BuildFormatStr() string {
 	for i := range p.Formats {
 		fmtStr += p.Formats[i] + ","
 	}
-	return fmtStr[:len(fmtStr) - 1]
+	return fmtStr[:len(fmtStr)-1]
 }
