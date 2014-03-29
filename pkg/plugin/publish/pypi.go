@@ -8,9 +8,11 @@ import (
 // set up the .pypirc file
 var pypirc = `
 cat <<EOF > $HOME/.pypirc
-[pypirc]
-servers = pypi
-[server-login]
+[distutils]
+index-servers = 
+    pypi
+
+[pypi]
 username:%s
 password:%s
 EOF`
