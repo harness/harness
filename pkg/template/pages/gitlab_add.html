@@ -8,14 +8,14 @@
 				<small>GitHub</small>
 			</h1>
 		</div><!-- ./container -->
- 	</div><!-- ./subhead -->
+	</div><!-- ./subhead -->
 
 	<div class="container">
 		<div class="row">
 			<div class="col-xs-3">
 				<ul class="nav nav-pills nav-stacked">
-					<li class="active"><a href="/new/github.com">GitHub</a></li>
-					<li><a href="/new/gitlab">GitLab</a></li>
+                    <li><a href="/new/github.com">GitHub</a></li>
+                    <li class="active"><a href="/new/gitlab">GitLab</a></li>
 					<li><a href="/new/bitbucket.org">Bitbucket <small>(coming soon)</small></a></li>
 				</ul>
 			</div><!-- ./col-xs-3 -->
@@ -78,7 +78,7 @@
 			$("#successAlert").hide();
 			$("#failureAlert").hide();
 			$('#submitButton').button('loading')
-			
+
 			var form = event.target
 			var formData = new FormData(form);
 			xhr = new XMLHttpRequest();

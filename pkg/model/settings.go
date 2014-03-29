@@ -32,6 +32,10 @@ type Settings struct {
 	BitbucketKey    string `meddler:"bitbucket_key"`
 	BitbucketSecret string `meddler:"bitbucket_secret"`
 
+	// GitLab Domain
+	GitlabDomain string `meddler:"gitlab_domain"`
+	GitlabApiUrl string `meddler:"gitlab_apiurl"`
+
 	// Domain of the server, eg drone.io
 	Domain string `meddler:"hostname"`
 

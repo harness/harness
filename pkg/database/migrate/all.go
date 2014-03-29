@@ -12,6 +12,7 @@ func (m *Migration) All() *Migration {
 	m.Add(RenamePrivelegedToPrivileged)
 	m.Add(GitHubEnterpriseSupport)
 	m.Add(AddOpenInvitationColumn)
+	m.Add(AddGitlabColumns)
 
 	// m.Add(...)
 	// ...
