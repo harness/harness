@@ -8,7 +8,7 @@ import (
 // for publishing build artifacts when
 // a Build has succeeded
 type Publish struct {
-	S3 *S3 `yaml:"s3,omitempty"`
+	S3    *S3    `yaml:"s3,omitempty"`
 	Swift *Swift `yaml:"swift,omitempty"`
 }
 
