@@ -44,8 +44,22 @@ func (g *GitlabHandler) Add(w http.ResponseWriter, r *http.Request, u *User) err
 }
 
 func (g *GitlabHandler) Link(w http.ResponseWriter, r *http.Request, u *User) error {
-	var err error
-	return err
+	token := r.FormValue("token")
+	u.GitlabToken = token
+
+	if err := database.SaveUser(u); err != nil {
+		return RenderError(w, err, http.StatusBadRequest)
+	}
+
+	settings := database.SettingsMust()
+	gl := gogitlab.NewGitlab(settings.GitlabApiUrl, g.apiPath, u.GitlabToken)
+	_, err := gl.CurrentUser()
+	if err != nil {
+		return fmt.Errorf("Private Token is not valid: %q", err)
+	}
+
+	http.Redirect(w, r, "/new/gitlab", http.StatusSeeOther)
+	return nil
 }
 
 func (g *GitlabHandler) Create(w http.ResponseWriter, r *http.Request, u *User) error {
@@ -125,5 +139,5 @@ func (g *GitlabHandler) newGitlabRepo(u *User, owner, name string) (*Repo, error
 // ns namespaces user and repo.
 // Returns user%2Frepo
 func ns(user, repo string) string {
-	return fmt.Sprintf("%s%%252F%s", user, repo)
+	return fmt.Sprintf("%s%%2F%s", user, repo)
 }

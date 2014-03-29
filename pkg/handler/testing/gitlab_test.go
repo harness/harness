@@ -10,8 +10,8 @@ import (
 
 	"github.com/drone/drone/pkg/database"
 	"github.com/drone/drone/pkg/handler"
-	"github.com/drone/drone/pkg/queue"
 	"github.com/drone/drone/pkg/model"
+	"github.com/drone/drone/pkg/queue"
 
 	dbtest "github.com/drone/drone/pkg/database/testing"
 	. "github.com/smartystreets/goconvey/convey"
@@ -190,10 +190,8 @@ func Test_GitLabCreate(t *testing.T) {
 // it is just proof-of-concepting a testing strategy, so we'll
 // revisit later.
 
-
 // server is a test HTTP server used to provide mock API responses.
 var glServer *httptest.Server
-
 
 func SetupGitlabFixtures() {
 	dbtest.Setup()
