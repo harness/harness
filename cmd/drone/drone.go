@@ -39,6 +39,10 @@ var (
 
 	// displays the help / usage if True
 	help = flag.Bool("h", false, "")
+
+	// version number, currently deterined by the
+	// git revision number (sha)
+	version string
 )
 
 func init() {
@@ -102,6 +106,10 @@ func main() {
 		path, _ := os.Getwd()
 		path = filepath.Join(path, ".drone.yml")
 		vet(path)
+
+	// print the version / revision number
+	case args[0] == "version" && len(args) == 1:
+		println(version)
 
 	// print the help message
 	case args[0] == "help" && len(args) == 1:

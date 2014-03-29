@@ -57,7 +57,7 @@ js:
 	cd cmd/droned/assets && find js -name "*.js" ! -name '.*' ! -name "main.js" -exec cat {} \; > js/main.js
 
 build:
-	cd cmd/drone  && go build -o ../../bin/drone
+	cd cmd/drone  && go build -ldflags "-X main.version $(SHA)" -o ../../bin/drone
 	cd cmd/droned && go build -ldflags "-X main.version $(SHA)" -o ../../bin/droned
 
 test: $(PKGS)

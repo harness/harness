@@ -1,11 +1,11 @@
-{{ define "title" }}GitHub · Add Repository{{ end }}
+{{ define "title" }}Bitbucket · Add Repository{{ end }}
 
 {{ define "content" }}
 	<div class="subhead">
 		<div class="container">
 			<h1>
 				<span>Repository Setup</span>
-				<small>GitHub</small>
+				<small>Bitbucket</small>
 			</h1>
 		</div><!-- ./container -->
  	</div><!-- ./subhead -->
@@ -14,22 +14,20 @@
 		<div class="row">
 			<div class="col-xs-3">
 				<ul class="nav nav-pills nav-stacked">
-					<li class="active"><a href="/new/github.com">GitHub</a></li>
-					<li><a href="/new/gitlab">GitLab</a></li>
-					<li><a href="/new/bitbucket.org">Bitbucket</a></li>
+					<li><a href="/new/github.com">GitHub</a></li>
+					<li class="active"><a href="/new/bitbucket.org">Bitbucket</a></li>
 				</ul>
 			</div><!-- ./col-xs-3 -->
 
 			<div class="col-xs-9" role="main">
 					<div class="alert">
 						Enter your repository details
-						<a class="btn btn-default pull-right" href="/auth/login/github" style="font-size: 18px;background:#f4f4f4;">Re-Link Account</a>
+						<a class="btn btn-default pull-right" href="/auth/login/bitbucket" style="font-size: 18px;background:#f4f4f4;">Re-Link Account</a>
 					</div>
-					<form class="form-repo" method="POST" action="/new/github.com">
-						<input type="hidden" name="domain" autocomplete="off" value="{{.Settings.GitHubDomain}}">
+					<form class="form-repo" method="POST" action="/new/bitbucket.org">
 						<div class="field-group">
 							<div>
-								<label>GitHub Owner</label>
+								<label>Bitbucket Owner</label>
 								<div>
 									<input class="form-control form-control-large" type="text" name="owner" autocomplete="off">
 								</div>
@@ -87,8 +85,7 @@
 				if (this.status == 200) {
 					var name = $("input[name=name]").val()
 					var owner = $("input[name=owner]").val()
-					var domain = $("input[name=domain]").val()
-					window.location.pathname = "/" + domain + "/"+owner+"/"+name
+					window.location.pathname = "/bitbucket.org/"+owner+"/"+name
 				} else {
 					$("#failureAlert").text("Unable to setup the Repository");
 					$("#failureAlert").show().removeClass("hide");
