@@ -17,9 +17,14 @@ func (r *rev20140328201430) Up(mg *MigrationDriver) error {
 		return err
 	}
 
-	if _, err := mg.Tx.Exec(`update settings set gitlab_domain='gitlab.com', gitlab_apiurl='https://gitlab.com'`); err != nil {
+	if _, err := mg.Tx.Exec(`update settings set gitlab_domain=?`, "gitlab.com"); err != nil {
 		return err
 	}
+
+	if _, err := mg.Tx.Exec(`update settings set gitlab_apiurl=?`, "https://gitlab.com"); err != nil {
+		return err
+	}
+
 	_, err := mg.AddColumn("users", mg.T.String("gitlab_token"))
 	return err
 }
@@ -29,6 +34,6 @@ func (r *rev20140328201430) Down(mg *MigrationDriver) error {
 	if _, err := mg.DropColumns("users", "gitlab_token"); err != nil {
 		return err
 	}
-	_, err:= mg.DropColumns("settings", "gitlab_domain", "gitlab_apiurl")
+	_, err := mg.DropColumns("settings", "gitlab_domain", "gitlab_apiurl")
 	return err
 }

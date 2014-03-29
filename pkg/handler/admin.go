@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -170,6 +171,14 @@ func AdminSettingsUpdate(w http.ResponseWriter, r *http.Request, u *User) error 
 	settings.GitHubDomain = r.FormValue("GitHubDomain")
 	settings.GitHubApiUrl = r.FormValue("GitHubApiUrl")
 
+	// update gitlab settings
+	settings.GitlabApiUrl = r.FormValue("GitlabApiUrl")
+	glUrl, err := url.Parse(settings.GitlabApiUrl)
+	if err != nil {
+		return RenderError(w, err, http.StatusBadRequest)
+	}
+	settings.GitlabDomain = glUrl.Host
+
 	// update smtp settings
 	settings.SmtpServer = r.FormValue("SmtpServer")
 	settings.SmtpPort = r.FormValue("SmtpPort")
@@ -252,6 +261,8 @@ func InstallPost(w http.ResponseWriter, r *http.Request) error {
 	settings.Scheme = r.FormValue("Scheme")
 	settings.GitHubApiUrl = "https://api.github.com"
 	settings.GitHubDomain = "github.com"
+	settings.GitlabApiUrl = "https://gitlab.com"
+	settings.GitlabDomain = "gitlab.com"
 	database.SaveSettings(&settings)
 
 	// add the user to the session object
