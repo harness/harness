@@ -197,7 +197,7 @@ func setupHandlers() {
 	m.Post("/hook/bitbucket.org", handler.ErrorHandler(hookHandler.HookBitbucket))
 
 	// handlers for GitLab post-commit hooks
-	//m.Post("/hook/gitlab", handler.ErrorHandler(gitlab.Hook))
+	m.Post("/hook/gitlab", handler.ErrorHandler(gitlab.Hook))
 
 	// handlers for first-time installation
 	m.Get("/install", handler.ErrorHandler(handler.Install))
