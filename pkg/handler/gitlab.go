@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/drone/drone/pkg/build/script"
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
 	"github.com/drone/drone/pkg/queue"
@@ -134,6 +137,112 @@ func (g *GitlabHandler) newGitlabRepo(u *User, owner, name string) (*Repo, error
 	}
 
 	return repo, err
+}
+
+func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
+	var payload []byte
+	n, err := r.Body.Read(payload)
+	if n == 0 {
+		return fmt.Errorf("Request Empty: %q", err)
+	}
+	parsed, err := gogitlab.ParseHook(payload)
+	if err != nil {
+		return err
+	}
+	if parsed.ObjectKind == "merge_request" {
+		return g.PullRequestHook(parsed)
+	}
+
+	if len(parsed.After) == 0 {
+		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	}
+
+	rID := r.FormValue("id")
+	repo, err := database.GetRepoSlug(rID)
+	if err != nil {
+		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	}
+
+	user, err := database.GetUser(repo.UserID)
+	if err != nil {
+		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	}
+
+	_, err = database.GetCommitHash(parsed.After, repo.ID)
+	if err != nil && err != sql.ErrNoRows {
+		println("commit already exists")
+		return RenderText(w, http.StatusText(http.StatusBadGateway), http.StatusBadGateway)
+	}
+
+	commit := &Commit{}
+	commit.RepoID = repo.ID
+	commit.Branch = parsed.Branch()
+	commit.Hash = parsed.After
+	commit.Status = "Pending"
+	commit.Created = time.Now().UTC()
+
+	head := parsed.Head()
+	commit.Message = head.Message
+	commit.Timestamp = head.Timestamp
+	if head.Author != nil {
+		commit.SetAuthor(head.Author.Email)
+	} else {
+		commit.SetAuthor(parsed.UserName)
+	}
+
+	// get the github settings from the database
+	settings := database.SettingsMust()
+
+	// get the drone.yml file from GitHub
+	client := gogitlab.NewGitlab(settings.GitlabApiUrl, g.apiPath, user.GitlabToken)
+
+	content, err := client.RepoRawFile(ns(repo.Owner, repo.Name), commit.Hash, ".drone.yml")
+	if err != nil {
+		msg := "No .drone.yml was found in this repository.  You need to add one.\n"
+		if err := saveFailedBuild(commit, msg); err != nil {
+			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	}
+
+	// parse the build script
+	buildscript, err := script.ParseBuild(content, repo.Params)
+	if err != nil {
+		msg := "Could not parse your .drone.yml file.  It needs to be a valid drone yaml file.\n\n" + err.Error() + "\n"
+		if err := saveFailedBuild(commit, msg); err != nil {
+			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	}
+
+	// save the commit to the database
+	if err := database.SaveCommit(commit); err != nil {
+		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
+
+	// save the build to the database
+	build := &Build{}
+	build.Slug = "1" // TODO
+	build.CommitID = commit.ID
+	build.Created = time.Now().UTC()
+	build.Status = "Pending"
+	if err := database.SaveBuild(build); err != nil {
+		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
+
+	// notify websocket that a new build is pending
+	//realtime.CommitPending(repo.UserID, repo.TeamID, repo.ID, commit.ID, repo.Private)
+	//realtime.BuildPending(repo.UserID, repo.TeamID, repo.ID, commit.ID, build.ID, repo.Private)
+
+	g.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript}) //Push(repo, commit, build, buildscript)
+
+	// OK!
+	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+
+}
+
+func (g *GitlabHandler) PullRequestHook(p *gogitlab.HookPayload) error {
+	return fmt.Errorf("Not implemented yet")
 }
 
 // ns namespaces user and repo.
