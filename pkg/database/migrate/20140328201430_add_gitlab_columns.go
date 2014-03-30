@@ -25,7 +25,11 @@ func (r *rev20140328201430) Up(mg *MigrationDriver) error {
 		return err
 	}
 
-	_, err := mg.AddColumn("users", mg.T.String("gitlab_token"))
+	if _, err := mg.AddColumn("users", mg.T.String("gitlab_token")); err != nil {
+		return err
+	}
+
+	_, err := mg.Tx.Exec(`update users set gitlab_token=?`, "")
 	return err
 }
 
