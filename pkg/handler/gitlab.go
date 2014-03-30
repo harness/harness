@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -140,11 +141,7 @@ func (g *GitlabHandler) newGitlabRepo(u *User, owner, name string) (*Repo, error
 }
 
 func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
-	var payload []byte
-	n, err := r.Body.Read(payload)
-	if n == 0 {
-		return fmt.Errorf("Request Empty: %q", err)
-	}
+	payload, _ := ioutil.ReadAll(r.Body)
 	parsed, err := gogitlab.ParseHook(payload)
 	if err != nil {
 		return err
