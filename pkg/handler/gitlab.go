@@ -49,7 +49,7 @@ func (g *GitlabHandler) Add(w http.ResponseWriter, r *http.Request, u *User) err
 }
 
 func (g *GitlabHandler) Link(w http.ResponseWriter, r *http.Request, u *User) error {
-	token := strings.Trim(r.FormValue("token"), " \n\t")
+	token := strings.TrimSpace(r.FormValue("token"))
 
 	if len(u.GitlabToken) == 0 || token != u.GitlabToken && len(token) > 0 {
 		u.GitlabToken = token
@@ -156,7 +156,7 @@ func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	if parsed.ObjectKind == "merge_request" {
-		return g.PullRequestHook(parsed)
+		return g.PullRequestHook(w, parsed)
 	}
 
 	if len(parsed.After) == 0 {
@@ -236,19 +236,15 @@ func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 
-	// notify websocket that a new build is pending
-	//realtime.CommitPending(repo.UserID, repo.TeamID, repo.ID, commit.ID, repo.Private)
-	//realtime.BuildPending(repo.UserID, repo.TeamID, repo.ID, commit.ID, build.ID, repo.Private)
-
-	g.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript}) //Push(repo, commit, build, buildscript)
+	g.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript})
 
 	// OK!
 	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
 
 }
 
-func (g *GitlabHandler) PullRequestHook(p *gogitlab.HookPayload) error {
-	return fmt.Errorf("Not implemented yet")
+func (g *GitlabHandler) PullRequestHook(w http.ResponseWriter, p *gogitlab.HookPayload) error {
+	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
 }
 
 // ns namespaces user and repo.
