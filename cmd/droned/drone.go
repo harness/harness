@@ -152,6 +152,7 @@ func setupHandlers() {
 
 	// handler for linking GitLab account
 	m.Post("/link/gitlab", handler.UserHandler(gitlab.Link))
+	m.Get("/link/gitlab", handler.UserHandler(gitlab.ReLink))
 
 	// handlers for dashboard pages
 	m.Get("/dashboard/team/:team", handler.UserHandler(handler.TeamShow))

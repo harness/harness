@@ -25,7 +25,7 @@
                 <form class="form-repo" method="POST" action="/link/gitlab">
                 <div class="field-group">
                     <div><label>GitLab Private Token</label>
-                    <div><input class="form-control form-control-large" type="text" name="token" autocomplete="off"></div>
+                        <div><input class="form-control form-control-large" type="text" name="token" autocomplete="off" value="{{.User.GitlabToken}}"></div>
                     </div>
                 </div>
                     <div class="form-actions">

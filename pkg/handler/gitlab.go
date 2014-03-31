@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/drone/drone/pkg/build/script"
@@ -48,22 +49,30 @@ func (g *GitlabHandler) Add(w http.ResponseWriter, r *http.Request, u *User) err
 }
 
 func (g *GitlabHandler) Link(w http.ResponseWriter, r *http.Request, u *User) error {
-	token := r.FormValue("token")
-	u.GitlabToken = token
+	token := strings.Trim(r.FormValue("token"), " \n\t")
 
-	if err := database.SaveUser(u); err != nil {
-		return RenderError(w, err, http.StatusBadRequest)
-	}
-
-	settings := database.SettingsMust()
-	gl := gogitlab.NewGitlab(settings.GitlabApiUrl, g.apiPath, u.GitlabToken)
-	_, err := gl.CurrentUser()
-	if err != nil {
-		return fmt.Errorf("Private Token is not valid: %q", err)
+	if len(u.GitlabToken) == 0 || token != u.GitlabToken && len(token) > 0 {
+		u.GitlabToken = token
+		settings := database.SettingsMust()
+		gl := gogitlab.NewGitlab(settings.GitlabApiUrl, g.apiPath, u.GitlabToken)
+		_, err := gl.CurrentUser()
+		if err != nil {
+			return fmt.Errorf("Private Token is not valid: %q", err)
+		}
+		if err := database.SaveUser(u); err != nil {
+			return RenderError(w, err, http.StatusBadRequest)
+		}
 	}
 
 	http.Redirect(w, r, "/new/gitlab", http.StatusSeeOther)
 	return nil
+}
+
+func (g *GitlabHandler) ReLink(w http.ResponseWriter, r *http.Request, u *User) error {
+	data := struct {
+		User *User
+	}{u}
+	return RenderTemplate(w, "gitlab_link.html", &data)
 }
 
 func (g *GitlabHandler) Create(w http.ResponseWriter, r *http.Request, u *User) error {
