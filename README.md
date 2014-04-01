@@ -26,6 +26,7 @@ Interested in contributing? Great! Please read our [contributor guidelines](http
 * [Database Services](#databases)
 * [Caching](#caching)
 * [Params Injection](#params-injection)
+* [Wall display](#wall-display)
 * [Local development](#local-development)
 * [Documentation and References](#docs)
 
@@ -351,6 +352,11 @@ notify:
 ```
 
 ![params-injection](https://f.cloud.github.com/assets/1583973/2161187/2905077e-94c3-11e3-8499-a3844682c8af.png)
+
+### Wall display
+
+A wall display for Drone is available as a separate service. See [Drone Wall](https://github.com/drone/drone-wall)
+for details.
 
 ### Local development
 
