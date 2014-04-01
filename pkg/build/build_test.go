@@ -3,6 +3,7 @@ package build
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -108,20 +109,23 @@ func TestSetupEmptyImage(t *testing.T) {
 	}
 }
 
-// TestSetupUnknownService will test our ability to handle an
-// unknown or unsupported service (i.e. mysql).
-func TestSetupUnknownService(t *testing.T) {
-	b := Builder{}
-	b.Repo = &repo.Repo{}
-	b.Repo.Path = "git://github.com/drone/drone.git"
-	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
-	b.Build.Services = append(b.Build.Services, "not-found")
+// TestSetupErrorInspectImage will test our ability to handle a
+// failure when inspecting an image (i.e. bradrydzewski/mysql:latest),
+// which should trigger a `docker pull`.
+func TestSetupErrorInspectImage(t *testing.T) {
+	t.Skip()
+}
 
-	var got, want = b.setup(), "Error: Invalid or unknown service not-found"
-	if got == nil || got.Error() != want {
-		t.Errorf("Expected error %s, got %s", want, got)
-	}
+// TestSetupErrorPullImage will test our ability to handle a
+// failure when pulling an image (i.e. bradrydzewski/mysql:latest)
+func TestSetupErrorPullImage(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/v1.9/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
 }
 
 // TestSetupErrorRunDaemonPorts will test our ability to handle a
@@ -129,6 +133,11 @@ func TestSetupUnknownService(t *testing.T) {
 func TestSetupErrorRunDaemonPorts(t *testing.T) {
 	setup()
 	defer teardown()
+
+	mux.HandleFunc("/v1.9/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
+		data := []byte(`{"config": { "ExposedPorts": { "6379/tcp": {}}}}`)
+		w.Write(data)
+	})
 
 	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
@@ -154,6 +163,11 @@ func TestSetupErrorRunDaemonPorts(t *testing.T) {
 func TestSetupErrorServiceInspect(t *testing.T) {
 	setup()
 	defer teardown()
+
+	mux.HandleFunc("/v1.9/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
+		data := []byte(`{"config": { "ExposedPorts": { "6379/tcp": {}}}}`)
+		w.Write(data)
+	})
 
 	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
 		body := `{ "Id":"e90e34656806", "Warnings":[] }`
@@ -188,12 +202,11 @@ func TestSetupErrorImagePull(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/v1.9/images/bradrydzewski/go:1.2/json", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.9/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	mux.HandleFunc("/v1.9/images/create", func(w http.ResponseWriter, r *http.Request) {
-		// validate ?fromImage=bradrydzewski/go&tag=1.2
+	mux.HandleFunc("/v1.9/images/create?fromImage=bradrydzewski/mysql&tag=5.5", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
@@ -202,10 +215,11 @@ func TestSetupErrorImagePull(t *testing.T) {
 	b.Repo.Path = "git://github.com/drone/drone.git"
 	b.Build = &script.Build{}
 	b.Build.Image = "go1.2"
+	b.Build.Services = append(b.Build.Services, "mysql")
 	b.dockerClient = client
 
-	var got, want = b.setup(), docker.ErrBadRequest
-	if got == nil || got != want {
+	var got, want = b.setup(), fmt.Errorf("Error: Unable to pull image bradrydzewski/mysql:5.5")
+	if got == nil || got.Error() != want.Error() {
 		t.Errorf("Expected error %s, got %s", want, got)
 	}
 }
@@ -548,6 +562,11 @@ func TestWriteBuildScript(t *testing.T) {
 	f.WriteEnv("DRONE_COMMIT", "e7e046b35")
 	f.WriteEnv("DRONE_PR", "123")
 	f.WriteEnv("DRONE_BUILD_DIR", "/var/cache/drone/github.com/drone/drone")
+	f.WriteEnv("CI_NAME", "DRONE")
+	f.WriteEnv("CI_BUILD_NUMBER", "e7e046b35")
+	f.WriteEnv("CI_BUILD_URL", "")
+	f.WriteEnv("CI_BRANCH", "master")
+	f.WriteEnv("CI_PULL_REQUEST", "123")
 	f.WriteHost("127.0.0.1")
 	f.WriteCmd("git clone --depth=0 --recursive --branch=master git://github.com/drone/drone.git /var/cache/drone/github.com/drone/drone")
 	f.WriteCmd("git fetch origin +refs/pull/123/head:refs/remotes/origin/pr/123")
