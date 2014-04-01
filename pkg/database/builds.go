@@ -32,18 +32,11 @@ WHERE slug = ? AND commit_id = ?
 LIMIT 1
 `
 
-// SQL Queries to fail all builds that are running
-const buildFailStartedStmt = `
+// SQL Queries to fail all builds that are running or pending
+const buildFailUnfinishedStmt = `
 UPDATE builds
 SET status = 'Failure'
-WHERE status = 'Started'
-`
-
-// SQL Queries to fail all builds that are pending
-const buildFailPendingStmt = `
-UPDATE builds
-SET status = 'Failure'
-WHERE status = 'Pending'
+WHERE status IN ('Started', 'Pending')
 `
 
 // SQL Queries to delete a Commit.
@@ -84,12 +77,9 @@ func ListBuilds(id int64) ([]*Build, error) {
 	return builds, err
 }
 
+// FailUnfinishedBuilds sets status=Failure to all builds
+// in the Pending and Started states
 func FailUnfinishedBuilds() error {
-	_, err := db.Exec(buildFailStartedStmt)
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Exec(buildFailPendingStmt)
+	_, err := db.Exec(buildFailUnfinishedStmt)
 	return err
 }
