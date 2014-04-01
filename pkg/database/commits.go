@@ -101,10 +101,17 @@ WHERE id IN (
     SELECT MAX(id)
     FROM commits
     WHERE repo_id = ?
-    AND   branch  = ? 
+    AND   branch  = ?
     GROUP BY branch)
 LIMIT 1
  `
+
+// SQL Queries to fail all commits that are currently building
+const commitFailUnfinishedStmt = `
+UPDATE commits
+SET status = 'Failure'
+WHERE status IN ('Started', 'Pending')
+`
 
 // Returns the Commit with the given ID.
 func GetCommit(id int64) (*Commit, error) {
@@ -171,4 +178,9 @@ func ListBranches(repo int64) ([]*Commit, error) {
 	var commits []*Commit
 	err := meddler.QueryAll(db, &commits, commitBranchesStmt, repo)
 	return commits, err
+}
+
+func FailUnfinishedCommits() error {
+	_, err := db.Exec(commitFailUnfinishedStmt)
+	return err
 }

@@ -64,6 +64,7 @@ func main() {
 	if err := database.Init(driver, datasource); err != nil {
 		log.Fatal("Can't initialize database: ", err)
 	}
+	discardOldBuilds()
 	setupStatic()
 	setupHandlers()
 
@@ -87,6 +88,22 @@ func checkTLSFlags() {
 		log.Fatal("invalid configuration: -sslcert unspecified, but -sslkey was specified.")
 	}
 
+}
+
+// discardOldBuilds sets builds that are in the 'Started'
+// state to 'Failure' on startup. The assumption is that
+// the drone process was shut down mid-build and thus the
+// builds will never complete.
+func discardOldBuilds() {
+	err := database.FailUnfinishedBuilds()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = database.FailUnfinishedCommits()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // setup routes for static assets. These assets may
