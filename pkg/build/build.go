@@ -174,16 +174,31 @@ func (b *Builder) setup() error {
 	// start all services required for the build
 	// that will get linked to the container.
 	for _, service := range b.Build.Services {
-		image, ok := services[service]
-		if !ok {
-			return fmt.Errorf("Error: Invalid or unknown service %s", service)
+
+		// Parse the name of the Docker image
+		// And then construct a fully qualified image name
+		owner, name, tag := parseImageName(service)
+		cname := fmt.Sprintf("%s/%s:%s", owner, name, tag)
+
+		// Get the image info
+		img, err := b.dockerClient.Images.Inspect(cname)
+		if err != nil {
+			// Get the image if it doesn't exist
+			if err := b.dockerClient.Images.Pull(cname); err != nil {
+				return fmt.Errorf("Error: Unable to pull image %s", cname)
+			}
+
+			img, err = b.dockerClient.Images.Inspect(cname)
+			if err != nil {
+				return fmt.Errorf("Error: Invalid or unknown image %s", cname)
+			}
 		}
 
 		// debugging
-		log.Infof("starting service container %s", image.Tag)
+		log.Infof("starting service container %s", cname)
 
 		// Run the contianer
-		run, err := b.dockerClient.Containers.RunDaemonPorts(image.Tag, image.Ports...)
+		run, err := b.dockerClient.Containers.RunDaemonPorts(cname, img.Config.ExposedPorts)
 		if err != nil {
 			return err
 		}
@@ -201,7 +216,6 @@ func (b *Builder) setup() error {
 
 		// Add the running service to the list
 		b.services = append(b.services, info)
-
 	}
 
 	if err := b.writeIdentifyFile(dir); err != nil {
@@ -319,13 +333,12 @@ func (b *Builder) run() error {
 
 	// link service containers
 	for i, service := range b.services {
-		image, ok := services[b.Build.Services[i]]
-		if !ok {
-			continue // THIS SHOULD NEVER HAPPEN
-		}
+		// convert name of the image to a slug
+		_, name, _ := parseImageName(b.Build.Services[i])
+
 		// link the service container to our
 		// build container.
-		host.Links = append(host.Links, service.Name[1:]+":"+image.Name)
+		host.Links = append(host.Links, service.Name[1:]+":"+name)
 	}
 
 	// where are temp files going to go?
@@ -477,6 +490,14 @@ func (b *Builder) writeBuildScript(dir string) error {
 	f.WriteEnv("DRONE_COMMIT", b.Repo.Commit)
 	f.WriteEnv("DRONE_PR", b.Repo.PR)
 	f.WriteEnv("DRONE_BUILD_DIR", b.Repo.Dir)
+
+	// add environment variables for code coverage
+	// systems, like coveralls.
+	f.WriteEnv("CI_NAME", "DRONE")
+	f.WriteEnv("CI_BUILD_NUMBER", b.Repo.Commit)
+	f.WriteEnv("CI_BUILD_URL", "")
+	f.WriteEnv("CI_BRANCH", b.Repo.Branch)
+	f.WriteEnv("CI_PULL_REQUEST", b.Repo.PR)
 
 	// add /etc/hosts entries
 	for _, mapping := range b.Build.Hosts {

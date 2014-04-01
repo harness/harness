@@ -127,19 +127,18 @@ func (c *ContainerService) RunDaemon(conf *Config, host *HostConfig) (*Run, erro
 	return run, err
 }
 
-func (c *ContainerService) RunDaemonPorts(image string, ports ...string) (*Run, error) {
+func (c *ContainerService) RunDaemonPorts(image string, ports map[Port]struct{}) (*Run, error) {
 	// setup configuration
 	config := Config{Image: image}
-	config.ExposedPorts = make(map[Port]struct{})
+	config.ExposedPorts = ports
 
 	// host configuration
 	host := HostConfig{}
 	host.PortBindings = make(map[Port][]PortBinding)
 
 	// loop through and add ports
-	for _, port := range ports {
-		config.ExposedPorts[Port(port+"/tcp")] = struct{}{}
-		host.PortBindings[Port(port+"/tcp")] = []PortBinding{{HostIp: "127.0.0.1", HostPort: ""}}
+	for port, _ := range ports {
+		host.PortBindings[port] = []PortBinding{{HostIp: "127.0.0.1", HostPort: ""}}
 	}
 	//127.0.0.1::%s
 	//map[3306/tcp:{}] map[3306/tcp:[{127.0.0.1 }]]

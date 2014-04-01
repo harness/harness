@@ -1,24 +1,3 @@
-// Usage
-//    migrate.To(2)
-//    	.Add(Version_1)
-//    	.Add(Version_2)
-//    	.Add(Version_3)
-//    	.Exec(db)
-//
-//    migrate.ToLatest()
-//    	.Add(Version_1)
-//    	.Add(Version_2)
-//    	.Add(Version_3)
-//    	.SetDialect(migrate.MySQL)
-//    	.Exec(db)
-//
-//    migrate.ToLatest()
-//    	.Add(Version_1)
-//    	.Add(Version_2)
-//    	.Add(Version_3)
-//		.Backup(path)
-//		.Exec()
-
 package migrate
 
 import (
@@ -28,7 +7,7 @@ import (
 
 const migrationTableStmt = `
 CREATE TABLE IF NOT EXISTS migration (
-	revision NUMBER PRIMARY KEY
+	revision BIGINT PRIMARY KEY
 )
 `
 
@@ -49,37 +28,10 @@ const deleteRevisionStmt = `
 DELETE FROM migration where revision = ?
 `
 
-// Operation interface covers basic migration operations.
-// Implementation details is specific for each database,
-// see migrate/sqlite.go for implementation reference.
-type Operation interface {
-	CreateTable(tableName string, args []string) (sql.Result, error)
-
-	RenameTable(tableName, newName string) (sql.Result, error)
-
-	DropTable(tableName string) (sql.Result, error)
-
-	AddColumn(tableName, columnSpec string) (sql.Result, error)
-
-	DropColumns(tableName string, columnsToDrop []string) (sql.Result, error)
-
-	RenameColumns(tableName string, columnChanges map[string]string) (sql.Result, error)
-
-	Exec(query string, args ...interface{}) (sql.Result, error)
-
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-
-	QueryRow(query string, args ...interface{}) *sql.Row
-}
-
 type Revision interface {
-	Up(op Operation) error
-	Down(op Operation) error
+	Up(mg *MigrationDriver) error
+	Down(mg *MigrationDriver) error
 	Revision() int64
-}
-
-type MigrationDriver struct {
-	Tx *sql.Tx
 }
 
 type Migration struct {
@@ -87,7 +39,7 @@ type Migration struct {
 	revs []Revision
 }
 
-var Driver func(tx *sql.Tx) Operation
+var Driver DriverBuilder
 
 func New(db *sql.DB) *Migration {
 	return &Migration{db: db}
@@ -99,7 +51,7 @@ func (m *Migration) Add(rev ...Revision) *Migration {
 	return m
 }
 
-// Execute the full list of migrations.
+// Migrate executes the full list of migrations.
 func (m *Migration) Migrate() error {
 	var target int64
 	if len(m.revs) > 0 {
@@ -111,7 +63,7 @@ func (m *Migration) Migrate() error {
 	return m.MigrateTo(target)
 }
 
-// Execute all database migration until
+// MigrateTo executes all database migration until
 // you are at the specified revision number.
 // If the revision number is less than the
 // current revision, then we will downgrade.
@@ -148,14 +100,14 @@ func (m *Migration) up(target, current int64) error {
 		return err
 	}
 
-	op := Driver(tx)
+	mg := Driver(tx)
 
 	// loop through and execute revisions
 	for _, rev := range m.revs {
 		if rev.Revision() > current && rev.Revision() <= target {
 			current = rev.Revision()
 			// execute the revision Upgrade.
-			if err := rev.Up(op); err != nil {
+			if err := rev.Up(mg); err != nil {
 				log.Printf("Failed to upgrade to Revision Number %v\n", current)
 				log.Println(err)
 				return tx.Rollback()
@@ -181,7 +133,7 @@ func (m *Migration) down(target, current int64) error {
 		return err
 	}
 
-	op := Driver(tx)
+	mg := Driver(tx)
 
 	// reverse the list of revisions
 	revs := []Revision{}
@@ -195,7 +147,7 @@ func (m *Migration) down(target, current int64) error {
 		if rev.Revision() > target {
 			current = rev.Revision()
 			// execute the revision Upgrade.
-			if err := rev.Down(op); err != nil {
+			if err := rev.Down(mg); err != nil {
 				log.Printf("Failed to downgrade from Revision Number %v\n", current)
 				log.Println(err)
 				return tx.Rollback()
