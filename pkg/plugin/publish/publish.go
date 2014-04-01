@@ -8,8 +8,9 @@ import (
 // for publishing build artifacts when
 // a Build has succeeded
 type Publish struct {
-	S3 *S3 `yaml:"s3,omitempty"`
+	S3    *S3    `yaml:"s3,omitempty"`
 	Swift *Swift `yaml:"swift,omitempty"`
+	PyPI  *PyPI  `yaml:"pypi,omitempty"`
 }
 
 func (p *Publish) Write(f *buildfile.Buildfile) {
@@ -18,5 +19,8 @@ func (p *Publish) Write(f *buildfile.Buildfile) {
 	}
 	if p.Swift != nil {
 		p.Swift.Write(f)
+	}
+	if p.PyPI != nil {
+		p.PyPI.Write(f)
 	}
 }
