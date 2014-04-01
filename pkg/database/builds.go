@@ -32,6 +32,13 @@ WHERE slug = ? AND commit_id = ?
 LIMIT 1
 `
 
+// SQL Queries to fail all builds that are running or pending
+const buildFailUnfinishedStmt = `
+UPDATE builds
+SET status = 'Failure'
+WHERE status IN ('Started', 'Pending')
+`
+
 // SQL Queries to delete a Commit.
 const buildDeleteStmt = `
 DELETE FROM builds WHERE id = ?
@@ -68,4 +75,11 @@ func ListBuilds(id int64) ([]*Build, error) {
 	var builds []*Build
 	err := meddler.QueryAll(db, &builds, buildStmt, id)
 	return builds, err
+}
+
+// FailUnfinishedBuilds sets status=Failure to all builds
+// in the Pending and Started states
+func FailUnfinishedBuilds() error {
+	_, err := db.Exec(buildFailUnfinishedStmt)
+	return err
 }
