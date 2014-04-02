@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -156,7 +157,8 @@ func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	if parsed.ObjectKind == "merge_request" {
-		return g.PullRequestHook(w, parsed)
+		fmt.Println(string(payload))
+		return g.PullRequestHook(w, r)
 	}
 
 	if len(parsed.After) == 0 {
@@ -243,7 +245,96 @@ func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 
 }
 
-func (g *GitlabHandler) PullRequestHook(w http.ResponseWriter, p *gogitlab.HookPayload) error {
+func (g *GitlabHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) error {
+	payload, _ := ioutil.ReadAll(r.Body)
+	p, err := gogitlab.ParseHook(payload)
+	if err != nil {
+		return err
+	}
+
+	obj := p.ObjectAttributes
+
+	// Gitlab may trigger multiple hooks upon updating merge requests status
+	// only build when it was just opened and the merge hasn't been checked yet.
+	if !(obj.State == "opened" && obj.MergeStatus == "unchecked") {
+		fmt.Printf("Ignore GitLab Merge Requests")
+		return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+	}
+
+	repo, err := database.GetRepoSlug(r.FormValue("id"))
+	if err != nil {
+		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	}
+
+	user, err := database.GetUser(repo.UserID)
+	if err != nil {
+		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	}
+
+	settings := database.SettingsMust()
+
+	client := gogitlab.NewGitlab(settings.GitlabApiUrl, g.apiPath, user.GitlabToken)
+
+	// GitLab merge-requests hook doesn't include repository data.
+	// Have to fetch it manually
+	src, err := client.RepoBranch(strconv.Itoa(obj.SourceProjectId), obj.SourceBranch)
+	if err != nil {
+		return err
+	}
+
+	_, err = database.GetCommitHash(src.Commit.Id, repo.ID)
+	if err != nil && err != sql.ErrNoRows {
+		println("commit already exists")
+		return RenderText(w, http.StatusText(http.StatusBadGateway), http.StatusBadGateway)
+	}
+
+	commit := &Commit{}
+	commit.RepoID = repo.ID
+	commit.Branch = src.Name
+	commit.Hash = src.Commit.Id
+	commit.Status = "Pending"
+	commit.Created = time.Now().UTC()
+
+	commit.Message = src.Commit.Message
+	commit.Timestamp = src.Commit.AuthoredDateRaw
+	commit.SetAuthor(src.Commit.Author.Email)
+
+	content, err := client.RepoRawFile(strconv.Itoa(obj.SourceProjectId), commit.Hash, ".drone.yml")
+	if err != nil {
+		msg := "No .drone.yml was found in this repository.  You need to add one.\n"
+		if err := saveFailedBuild(commit, msg); err != nil {
+			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	}
+
+	// parse the build script
+	buildscript, err := script.ParseBuild(content, repo.Params)
+	if err != nil {
+		msg := "Could not parse your .drone.yml file.  It needs to be a valid drone yaml file.\n\n" + err.Error() + "\n"
+		if err := saveFailedBuild(commit, msg); err != nil {
+			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	}
+
+	// save the commit to the database
+	if err := database.SaveCommit(commit); err != nil {
+		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
+
+	// save the build to the database
+	build := &Build{}
+	build.Slug = "1" // TODO
+	build.CommitID = commit.ID
+	build.Created = time.Now().UTC()
+	build.Status = "Pending"
+	if err := database.SaveBuild(build); err != nil {
+		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
+
+	g.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript})
+
 	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
 }
 
