@@ -328,7 +328,7 @@ func RepoUpdate(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 	default:
 		repo.Disabled = len(r.FormValue("Disabled")) == 0
 		repo.DisabledPullRequest = len(r.FormValue("DisabledPullRequest")) == 0
-
+		repo.Private = len(r.FormValue("Private")) > 0
 		repo.Privileged = u.Admin && len(r.FormValue("Privileged")) > 0
 
 		// value of "" indicates the currently authenticated user

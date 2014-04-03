@@ -31,7 +31,7 @@
 		<div class="col-xs-9" role="main">
 			<div class="alert">Manage your repository settings.</div>
 				<form method="POST" action="/{{.Repo.Slug}}" role="form">
-					<div class="checkbox">
+					<div class="checkbox form-group">
 						<label>
 							<input class="" type="checkbox" name="Disabled" {{ if not .Repo.Disabled }}checked="True" {{ end }}/>
 							Enable Build Hooks
@@ -41,6 +41,12 @@
 						<label>
 							<input class="" type="checkbox" name="DisabledPullRequest" {{ if not .Repo.DisabledPullRequest }}checked="True" {{ end }}/>
 							Enable Pull Hooks
+						</label>
+					</div>
+					<div class="checkbox form-group">
+						<label>
+							<input class="" type="checkbox" name="Private" {{ if .Repo.Private }}checked="True" {{ end }}/>
+							Private
 						</label>
 					</div>
 					{{ if .User.Admin }}
