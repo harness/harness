@@ -151,20 +151,6 @@ func (g *GitlabHandler) newGitlabRepo(u *User, owner, name string) (*Repo, error
 }
 
 func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
-	payload, _ := ioutil.ReadAll(r.Body)
-	parsed, err := gogitlab.ParseHook(payload)
-	if err != nil {
-		return err
-	}
-	if parsed.ObjectKind == "merge_request" {
-		fmt.Println(string(payload))
-		return g.PullRequestHook(w, r)
-	}
-
-	if len(parsed.After) == 0 {
-		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-	}
-
 	rID := r.FormValue("id")
 	repo, err := database.GetRepoSlug(rID)
 	if err != nil {
@@ -173,6 +159,23 @@ func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 
 	user, err := database.GetUser(repo.UserID)
 	if err != nil {
+		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	}
+
+	payload, _ := ioutil.ReadAll(r.Body)
+	parsed, err := gogitlab.ParseHook(payload)
+	if err != nil {
+		return err
+	}
+	if parsed.ObjectKind == "merge_request" {
+		fmt.Println(string(payload))
+		if err := g.PullRequestHook(parsed, repo, user); err != nil {
+			return err
+		}
+		return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+	}
+
+	if len(parsed.After) == 0 {
 		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
 
@@ -245,30 +248,14 @@ func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 
 }
 
-func (g *GitlabHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) error {
-	payload, _ := ioutil.ReadAll(r.Body)
-	p, err := gogitlab.ParseHook(payload)
-	if err != nil {
-		return err
-	}
-
+func (g *GitlabHandler) PullRequestHook(p *gogitlab.HookPayload, repo *Repo, user *User) error {
 	obj := p.ObjectAttributes
 
 	// Gitlab may trigger multiple hooks upon updating merge requests status
 	// only build when it was just opened and the merge hasn't been checked yet.
 	if !(obj.State == "opened" && obj.MergeStatus == "unchecked") {
-		fmt.Printf("Ignore GitLab Merge Requests")
-		return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
-	}
-
-	repo, err := database.GetRepoSlug(r.FormValue("id"))
-	if err != nil {
-		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-	}
-
-	user, err := database.GetUser(repo.UserID)
-	if err != nil {
-		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		println("Ignore GitLab Merge Requests")
+		return nil
 	}
 
 	settings := database.SettingsMust()
@@ -285,7 +272,7 @@ func (g *GitlabHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) 
 	_, err = database.GetCommitHash(src.Commit.Id, repo.ID)
 	if err != nil && err != sql.ErrNoRows {
 		println("commit already exists")
-		return RenderText(w, http.StatusText(http.StatusBadGateway), http.StatusBadGateway)
+		return err
 	}
 
 	commit := &Commit{}
@@ -303,9 +290,9 @@ func (g *GitlabHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		msg := "No .drone.yml was found in this repository.  You need to add one.\n"
 		if err := saveFailedBuild(commit, msg); err != nil {
-			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return fmt.Errorf("Failed to save build: %q", err)
 		}
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return fmt.Errorf("Error to fetch build script: %q", err)
 	}
 
 	// parse the build script
@@ -313,14 +300,14 @@ func (g *GitlabHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		msg := "Could not parse your .drone.yml file.  It needs to be a valid drone yaml file.\n\n" + err.Error() + "\n"
 		if err := saveFailedBuild(commit, msg); err != nil {
-			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return fmt.Errorf("Failed to save build: %q", err)
 		}
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return fmt.Errorf("Failed to parse build script: %q", err)
 	}
 
 	// save the commit to the database
 	if err := database.SaveCommit(commit); err != nil {
-		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return fmt.Errorf("Failed to save commit: %q", err)
 	}
 
 	// save the build to the database
@@ -330,12 +317,12 @@ func (g *GitlabHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) 
 	build.Created = time.Now().UTC()
 	build.Status = "Pending"
 	if err := database.SaveBuild(build); err != nil {
-		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return fmt.Errorf("Failed to save build: %q", err)
 	}
 
 	g.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript})
 
-	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+	return nil
 }
 
 // ns namespaces user and repo.
