@@ -181,7 +181,7 @@ func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 
 	_, err = database.GetCommitHash(parsed.After, repo.ID)
 	if err != nil && err != sql.ErrNoRows {
-		println("commit already exists")
+		fmt.Println("commit already exists")
 		return RenderText(w, http.StatusText(http.StatusBadGateway), http.StatusBadGateway)
 	}
 
@@ -254,7 +254,7 @@ func (g *GitlabHandler) PullRequestHook(p *gogitlab.HookPayload, repo *Repo, use
 	// Gitlab may trigger multiple hooks upon updating merge requests status
 	// only build when it was just opened and the merge hasn't been checked yet.
 	if !(obj.State == "opened" && obj.MergeStatus == "unchecked") {
-		println("Ignore GitLab Merge Requests")
+		fmt.Println("Ignore GitLab Merge Requests")
 		return nil
 	}
 
@@ -271,7 +271,7 @@ func (g *GitlabHandler) PullRequestHook(p *gogitlab.HookPayload, repo *Repo, use
 
 	_, err = database.GetCommitHash(src.Commit.Id, repo.ID)
 	if err != nil && err != sql.ErrNoRows {
-		println("commit already exists")
+		fmt.Println("commit already exists")
 		return err
 	}
 
@@ -281,6 +281,7 @@ func (g *GitlabHandler) PullRequestHook(p *gogitlab.HookPayload, repo *Repo, use
 	commit.Hash = src.Commit.Id
 	commit.Status = "Pending"
 	commit.Created = time.Now().UTC()
+	commit.PullRequest = strconv.Itoa(obj.IId)
 
 	commit.Message = src.Commit.Message
 	commit.Timestamp = src.Commit.AuthoredDateRaw
