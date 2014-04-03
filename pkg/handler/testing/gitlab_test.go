@@ -88,7 +88,7 @@ func Test_GitLabCreate(t *testing.T) {
 
 			Convey("The result is an error", func() {
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "*Gitlab.buildAndExecRequest failed: 404 Not Found")
+				So(err.Error(), ShouldStartWith, "*Gitlab.buildAndExecRequestRaw")
 			})
 
 			Convey("The repository is not created", func() {
@@ -213,7 +213,7 @@ func SetupGitlabFixtures() {
 	// fixture to return a public repository and successfully
 	// create a commit hook.
 
-	mux.HandleFunc("/api/v3/projects/example%2Fpublic", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/public", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{
 			"name": "public",
 			"path_with_namespace": "example/public",
@@ -221,7 +221,7 @@ func SetupGitlabFixtures() {
 		}`)
 	})
 
-	mux.HandleFunc("/api/v3/projects/example%2Fpublic/hooks", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/public/hooks", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{
 			"url": "https://example.com/example/public/hooks/1",
 			"id": 1
@@ -232,7 +232,7 @@ func SetupGitlabFixtures() {
 	// fixture to return a private repository and successfully
 	// create a commit hook and ssh deploy key
 
-	mux.HandleFunc("/api/v3/projects/example%2Fprivate", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/private", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{
 			"name": "private",
 			"path_with_namespace": "example/private",
@@ -240,14 +240,14 @@ func SetupGitlabFixtures() {
 		}`)
 	})
 
-	mux.HandleFunc("/api/v3/projects/example%2Fprivate/hooks", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/private/hooks", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{
 			"url": "https://example.com/example/private/hooks/1",
 			"id": 1
 		}`)
 	})
 
-	mux.HandleFunc("/api/v3/projects/example%2Fprivate/keys", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/private/keys", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{
 			"id": 1,
 			"key": "ssh-rsa AAA...",
@@ -259,7 +259,7 @@ func SetupGitlabFixtures() {
 	// -----------------------------------------------------------------------------------
 	// fixture to return a not found when accessing a github repository.
 
-	mux.HandleFunc("/api/v3/projects/example%2Fnotfound", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/notfound", func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	})
 
@@ -267,7 +267,7 @@ func SetupGitlabFixtures() {
 	// fixture to return a public repository and successfully
 	// create a commit hook.
 
-	mux.HandleFunc("/api/v3/projects/example%2Fhookerr", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/hookerr", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{
 			"name": "hookerr",
 			"path_with_namespace": "example/hookerr",
@@ -275,7 +275,7 @@ func SetupGitlabFixtures() {
 		}`)
 	})
 
-	mux.HandleFunc("/api/v3/projects/example%2Fhookerr/hooks", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/hookerr/hooks", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 	})
 
@@ -283,7 +283,7 @@ func SetupGitlabFixtures() {
 	// fixture to return a private repository and successfully
 	// create a commit hook and ssh deploy key
 
-	mux.HandleFunc("/api/v3/projects/example%2Fkeyerr", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/keyerr", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{
 			"name": "keyerr",
 			"path_with_namespace": "example/keyerr",
@@ -291,14 +291,14 @@ func SetupGitlabFixtures() {
 		}`)
 	})
 
-	mux.HandleFunc("/api/v3/projects/example%2Fkeyerr/hooks", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/keyerr/hooks", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{
 			"url": "https://api.github.com/api/v3/projects/example/keyerr/hooks/1",
 			"id": 1
 		}`)
 	})
 
-	mux.HandleFunc("/api/v3/projects/example%2Fkeyerr/keys", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/keyerr/keys", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 	})
 
@@ -306,7 +306,7 @@ func SetupGitlabFixtures() {
 	// fixture to return a public repository and successfully to
 	// test adding a team.
 
-	mux.HandleFunc("/api/v3/projects/example%2Fteam", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/team", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{
 			"name": "team",
 			"path_with_namespace": "example/team",
@@ -314,7 +314,7 @@ func SetupGitlabFixtures() {
 		}`)
 	})
 
-	mux.HandleFunc("/api/v3/projects/example%2Fteam/hooks", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v3/projects/example/team/hooks", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{
 			"url": "https://api.github.com/api/v3/projects/example/team/hooks/1",
 			"id": 1
