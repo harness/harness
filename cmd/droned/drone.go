@@ -152,8 +152,8 @@ func setupHandlers() {
 	m.Post("/new/github.com", handler.UserHandler(handler.RepoCreateGithub))
 	m.Get("/new/github.com", handler.UserHandler(handler.RepoAddGithub))
 
-	m.Post("/new/safegithub.com", handler.UserHandler(handler.RepoCreateGithubSafe))
-	m.Get("/new/safegithub.com", handler.UserHandler(handler.RepoAddGithubSafe))
+	m.Post("/new/limitedgithub.com", handler.UserHandler(handler.RepoCreateGithubLimited))
+	m.Get("/new/limitedgithub.com", handler.UserHandler(handler.RepoAddGithubLimited))
 
 
 	// handlers for setting up your Bitbucket repository

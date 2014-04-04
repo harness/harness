@@ -95,7 +95,7 @@ func RepoAddBitbucket(w http.ResponseWriter, r *http.Request, u *User) error {
 	return RenderTemplate(w, "bitbucket_add.html", &data)
 }
 
-func RepoAddGithubSafe(w http.ResponseWriter, r *http.Request, u *User) error {
+func RepoAddGithubLimited(w http.ResponseWriter, r *http.Request, u *User) error {
 	settings := database.SettingsMust()
 	teams, err := database.ListTeams(u.ID)
 	if err != nil {
@@ -109,10 +109,10 @@ func RepoAddGithubSafe(w http.ResponseWriter, r *http.Request, u *User) error {
 
 	// display the template for adding
 	// a new GitHub repository with read only access.
-	return RenderTemplate(w, "github_safe_add.html", &data)
+	return RenderTemplate(w, "github_limited_add.html", &data)
 }
 
-func RepoCreateGithubSafe(w http.ResponseWriter, r *http.Request, u *User) error {
+func RepoCreateGithubLimited(w http.ResponseWriter, r *http.Request, u *User) error {
 	teamName := r.FormValue("team")
 	owner := r.FormValue("owner")
 	name := r.FormValue("name")
