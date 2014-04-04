@@ -220,7 +220,13 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 		return err
 	}
 
-	client := github.New(user.GithubToken)
+	var userToken string
+	if user.GithubWriteToken != "" {
+		userToken = user.GithubWriteToken
+	} else {
+		userToken = user.GithubToken
+	}
+	client := github.New(userToken)
 	client.ApiUrl = settings.GitHubApiUrl
 
 	var url string
