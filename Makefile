@@ -22,7 +22,7 @@ PKGS := $(addprefix github.com/drone/drone/pkg/,$(PKGS))
 
 all: embed build
 
-deps:
+deps: go-gitlab-client
 	[ -d $$GOPATH/src/code.google.com/p/go ]       || hg clone -u default https://code.google.com/p/go $$GOPATH/src/code.google.com/p/go
 	[ -d $$GOPATH/src/github.com/dotcloud/docker ] || git clone git://github.com/dotcloud/docker $$GOPATH/src/github.com/dotcloud/docker
 	go get code.google.com/p/go.crypto/bcrypt
@@ -97,3 +97,7 @@ dpkg:
 
 run:
 	bin/droned --port=":8080" --datasource="drone.sqlite"
+
+go-gitlab-client:
+	rm -rf $$GOPATH/src/github.com/plouc/go-gitlab-client
+	git clone -b raw-request https://github.com/fudanchii/go-gitlab-client $$GOPATH/src/github.com/plouc/go-gitlab-client

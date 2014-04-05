@@ -41,6 +41,8 @@ type User struct {
 	BitbucketLogin  string `meddler:"bitbucket_login"  json:"-"`
 	BitbucketToken  string `meddler:"bitbucket_token"  json:"-"`
 	BitbucketSecret string `meddler:"bitbucket_secret" json:"-"`
+
+	GitlabToken string `meddler:"gitlab_token" json:"-"`
 }
 
 // Creates a new User from the given Name and Email.
