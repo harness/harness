@@ -28,13 +28,20 @@
 				</ul>
 			</div><!-- ./col-xs-3 -->
 
-			<div class="col-xs-9" role="main">
-				<div class="alert">Public Key, used for Deployments</div>
-				<form>
-					<label>You can add this Key to your Heroku account, SSH <code>.ssh/authorized_keys</code> file, and more.</label>
+			<div class="col-xs-9" role="main"><div class="alert">Public Key, used for Deployments</div>
+				<form method="POST" action="/{{.Repo.Slug}}/keys">
+					<label>You can add this Key to your Heroku account, SSH <code>.ssh/authorized_keys</code> file, and more. Drone also use this key to fetch private repositories.</label>
 					<div>
 						<textarea name="PublicKey" class="form-control" rows="8" spellcheck="false">{{.Repo.PublicKey}}</textarea>
 					</div>
+
+					<div class="form-actions">
+						{{if .Repo.Private }}
+						<label>This repository is private.<br>You may have to manually add the new public key to your upstream host if you regenerate them here.</label>
+						{{end}}
+						<input class="btn btn-primary" id="submitButton" type="submit" value="Regenerate Key">
+					</div>
+
 				</form>
 			</div><!-- ./col-xs-9 -->
 		</div><!-- ./row -->
