@@ -18,37 +18,27 @@ model \
 plugin/deploy \
 queue
 PKGS := $(addprefix github.com/drone/drone/pkg/,$(PKGS))
-.PHONY := test $(PKGS)
+.PHONY : test $(PKGS) godep rice Godeps/Godeps.json
 
 all: embed build
 
-deps: go-gitlab-client
-	[ -d $$GOPATH/src/code.google.com/p/go ]       || hg clone -u default https://code.google.com/p/go $$GOPATH/src/code.google.com/p/go
-	[ -d $$GOPATH/src/github.com/dotcloud/docker ] || git clone git://github.com/dotcloud/docker $$GOPATH/src/github.com/dotcloud/docker
-	go get code.google.com/p/go.crypto/bcrypt
-	go get code.google.com/p/go.crypto/ssh
-	go get code.google.com/p/go.net/websocket
-	go get code.google.com/p/go.text/unicode/norm
-	#go get code.google.com/p/go/src/pkg/archive/tar
-	go get launchpad.net/goyaml
-	go get github.com/andybons/hipchat
-	go get github.com/bmizerany/pat
-	go get github.com/dchest/authcookie
-	go get github.com/dchest/passwordreset
-	go get github.com/dchest/uniuri
-	go get github.com/fluffle/goirc
-	#go get github.com/dotcloud/docker/archive
-	#go get github.com/dotcloud/docker/utils
-	#go get github.com/dotcloud/docker/pkg/term
-	go get github.com/drone/go-github/github
-	go get github.com/drone/go-bitbucket/bitbucket
-	go get github.com/GeertJohan/go.rice
-	go get github.com/GeertJohan/go.rice/rice
-	go get github.com/go-sql-driver/mysql
-	go get github.com/mattn/go-sqlite3
-	go get github.com/russross/meddler
+godep:
+	go get github.com/tools/godep
 
-embed: js
+rice:
+	go get github.com/GeertJohan/go.rice/rice
+
+Godeps/Godeps.json: godep
+	# can switch to copy=false once https://github.com/tools/godep/issues/28 is resolved
+	# or if drone no longer has deps that use bzr
+	godep save -copy=true $(PKGS)
+	rm -r Godeps/_workspace Godeps/Readme # undo copying, give up dep tracking for bzr deps
+
+deps: go-gitlab-client godep
+	go get -d ./...
+	godep restore
+
+embed: js rice
 	cd cmd/droned   && rice embed
 	cd pkg/template && rice embed
 
@@ -71,7 +61,7 @@ install:
 	cd bin && install -t /usr/local/bin droned
 	mkdir -p /var/lib/drone
 
-clean:
+clean: rice
 	cd cmd/droned   && rice clean
 	cd pkg/template && rice clean
 	rm -rf cmd/drone/drone
