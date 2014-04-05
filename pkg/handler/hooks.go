@@ -10,8 +10,8 @@ import (
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
 	"github.com/drone/drone/pkg/queue"
-	"github.com/drone/go-github/github"
 	"github.com/drone/go-bitbucket/bitbucket"
+	"github.com/drone/go-github/github"
 )
 
 type HookHandler struct {
