@@ -1,0 +1,152 @@
+{
+	"ImportPath": "github.com/drone/drone",
+	"GoVersion": "go1.2",
+	"Packages": [
+		"github.com/drone/drone/pkg/build",
+		"github.com/drone/drone/pkg/build/buildfile",
+		"github.com/drone/drone/pkg/build/docker",
+		"github.com/drone/drone/pkg/build/dockerfile",
+		"github.com/drone/drone/pkg/build/proxy",
+		"github.com/drone/drone/pkg/build/repo",
+		"github.com/drone/drone/pkg/build/script",
+		"github.com/drone/drone/pkg/channel",
+		"github.com/drone/drone/pkg/database",
+		"github.com/drone/drone/pkg/database/encrypt",
+		"github.com/drone/drone/pkg/database/migrate",
+		"github.com/drone/drone/pkg/database/testing",
+		"github.com/drone/drone/pkg/mail",
+		"github.com/drone/drone/pkg/model",
+		"github.com/drone/drone/pkg/plugin/deploy",
+		"github.com/drone/drone/pkg/queue"
+	],
+	"Deps": [
+		{
+			"ImportPath": "bitbucket.org/kardianos/osext",
+			"Comment": "null-9",
+			"Rev": "364fb577de68fb646c4cb39cc0e09c887ee16376"
+		},
+		{
+			"ImportPath": "code.google.com/p/go.crypto/bcrypt",
+			"Comment": "null-191",
+			"Rev": "7aa593ce8ceaf0199504fff27455bbb60eedabc7"
+		},
+		{
+			"ImportPath": "code.google.com/p/go.crypto/blowfish",
+			"Comment": "null-191",
+			"Rev": "7aa593ce8ceaf0199504fff27455bbb60eedabc7"
+		},
+		{
+			"ImportPath": "code.google.com/p/go.crypto/ssh",
+			"Comment": "null-191",
+			"Rev": "7aa593ce8ceaf0199504fff27455bbb60eedabc7"
+		},
+		{
+			"ImportPath": "code.google.com/p/go.net/websocket",
+			"Comment": "null-117",
+			"Rev": "c17ad62118ea511e1051721b429779fa40bddc74"
+		},
+		{
+			"ImportPath": "code.google.com/p/go.text/transform",
+			"Comment": "null-81",
+			"Rev": "9cbe983aed9b0dfc73954433fead5e00866342ac"
+		},
+		{
+			"ImportPath": "code.google.com/p/go.text/unicode/norm",
+			"Comment": "null-81",
+			"Rev": "9cbe983aed9b0dfc73954433fead5e00866342ac"
+		},
+		{
+			"ImportPath": "code.google.com/p/gomock/gomock",
+			"Rev": "f465e13c1a71273ab234f1e40a327556b6518a27"
+		},
+		{
+			"ImportPath": "github.com/GeertJohan/go.rice",
+			"Rev": "799d27592ba90d1c712d6022a7c58d013887c8ff"
+		},
+		{
+			"ImportPath": "github.com/andybons/hipchat",
+			"Rev": "3276a607ebc8e1fe4013eeeca921b9ef72387b02"
+		},
+		{
+			"ImportPath": "github.com/daaku/go.zipexe",
+			"Rev": "44882fc939f4c58d87a60de34796c6cfb9623269"
+		},
+		{
+			"ImportPath": "github.com/dchest/authcookie",
+			"Comment": "weekly.2012-02-07-1-gfbdef6e",
+			"Rev": "fbdef6e998665bcb27a2227f39d840dbfc62a918"
+		},
+		{
+			"ImportPath": "github.com/dchest/uniuri",
+			"Rev": "bc4af7603a3e0ce9d58009f82fca481555182e1c"
+		},
+		{
+			"ImportPath": "github.com/dotcloud/docker/archive",
+			"Comment": "v0.9.0-314-gab00619",
+			"Rev": "ab00619c56738c0704374c68fb43f4dd90b8887e"
+		},
+		{
+			"ImportPath": "github.com/dotcloud/docker/dockerversion",
+			"Comment": "v0.9.0-314-gab00619",
+			"Rev": "ab00619c56738c0704374c68fb43f4dd90b8887e"
+		},
+		{
+			"ImportPath": "github.com/dotcloud/docker/pkg/system",
+			"Comment": "v0.9.0-314-gab00619",
+			"Rev": "ab00619c56738c0704374c68fb43f4dd90b8887e"
+		},
+		{
+			"ImportPath": "github.com/dotcloud/docker/pkg/term",
+			"Comment": "v0.9.0-314-gab00619",
+			"Rev": "ab00619c56738c0704374c68fb43f4dd90b8887e"
+		},
+		{
+			"ImportPath": "github.com/dotcloud/docker/utils",
+			"Comment": "v0.9.0-314-gab00619",
+			"Rev": "ab00619c56738c0704374c68fb43f4dd90b8887e"
+		},
+		{
+			"ImportPath": "github.com/dotcloud/docker/vendor/src/code.google.com/p/go/src/pkg/archive/tar",
+			"Comment": "v0.9.0-314-gab00619",
+			"Rev": "ab00619c56738c0704374c68fb43f4dd90b8887e"
+		},
+		{
+			"ImportPath": "github.com/drone/go-github/github",
+			"Rev": "1d31b1373d615a3cdef6eaa87d94e1601e6ee798"
+		},
+		{
+			"ImportPath": "github.com/fluffle/goevent/event",
+			"Rev": "972f9141f4868fad5cd0704bb998b56b18742133"
+		},
+		{
+			"ImportPath": "github.com/fluffle/goirc/client",
+			"Rev": "7923e280912752ebfda045cc68cbfb82cf5dd016"
+		},
+		{
+			"ImportPath": "github.com/fluffle/goirc/state",
+			"Rev": "7923e280912752ebfda045cc68cbfb82cf5dd016"
+		},
+		{
+			"ImportPath": "github.com/fluffle/golog/logging",
+			"Rev": "0fad4c8c24e6827252a9ea621274adeb67e17182"
+		},
+		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "go1",
+			"Rev": "9a7aa3606b82e2081a13a008ada88dfdb96c20fd"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-sqlite3",
+			"Rev": "58c62dc30cda06e4a74e18f6489bb6c112fc6e5d"
+		},
+		{
+			"ImportPath": "github.com/russross/meddler",
+			"Rev": "308c3d0e5e45f543a2eb6c787cbfe0db3880e220"
+		},
+		{
+			"ImportPath": "launchpad.net/goyaml",
+			"Comment": "51",
+			"Rev": "gustavo@niemeyer.net-20140305200416-7gh64vkcckre5mob"
+		}
+	]
+}
