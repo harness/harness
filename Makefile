@@ -20,7 +20,7 @@ model \
 plugin/deploy \
 queue
 PKGS := $(addprefix github.com/drone/drone/pkg/,$(PKGS))
-.PHONY := test $(PKGS)
+.PHONY : test $(PKGS) godep rice Godeps/Godeps.json
 
 all: embed build
 
@@ -43,6 +43,16 @@ vendor: godep
 
 
 # Embed static assets
+Godeps/Godeps.json: godep
+	# can switch to copy=false once https://github.com/tools/godep/issues/28 is resolved
+	# or if drone no longer has deps that use bzr
+	godep save -copy=true $(PKGS)
+	rm -r Godeps/_workspace Godeps/Readme # undo copying, give up dep tracking for bzr deps
+
+deps: go-gitlab-client godep
+	go get -d ./...
+	godep restore
+
 embed: js rice
 	cd cmd/droned   && rice embed
 	cd pkg/template && rice embed
@@ -93,4 +103,4 @@ godep:
 	go get github.com/tools/godep
 
 rice:
-	go install github.com/GeertJohan/go.rice/rice
+	go get github.com/GeertJohan/go.rice/rice
