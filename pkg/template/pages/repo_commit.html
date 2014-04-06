@@ -5,7 +5,7 @@
 	<div class="subhead">
 		<div class="container">
 			<ul class="nav nav-tabs pull-right">
-				<li class="active"><a href="/{{.Repo.Slug}}/commit/{{ .Commit.Branch }}/{{ .Commit.Hash }}">{{ .Commit.HashShort }}</a></li>
+				<li class="active"><a href="/{{.Repo.Slug}}/commit/{{ .Commit.Hash }}?branch={{ .Commit.Branch }}">{{ .Commit.HashShort }}</a></li>
 				<li><a href="/{{.Repo.Slug}}">Commits</a></li>
 				<li><a href="/{{.Repo.Slug}}/settings">Settings</a></li>
 			</ul> <!-- ./nav -->
@@ -18,7 +18,7 @@
 
 	<div class="container">
 		<div class="alert alert-build-{{ .Build.Status }}">
-			<a href="/{{.Repo.Slug}}/{{.Commit.Branch}}/commit/{{ .Commit.Branch }}/{{ .Commit.Hash }}" class="btn btn-{{ .Build.Status }}"></a>
+			<a href="/{{.Repo.Slug}}/commit/{{ .Commit.Hash }}?branch={{ .Commit.Branch }}" class="btn btn-{{ .Build.Status }}"></a>
 			{{ if .Commit.PullRequest }}
 			<span>opened pull request <span># {{ .Commit.PullRequest }}</span></span>
 			{{ else }}
@@ -78,7 +78,7 @@
 		});
 
 	{{ else }}
-		$.get("/{{ .Repo.Slug }}/commit/{{ .Commit.Branch }}/{{ .Commit.Hash }}/build/{{ .Build.Slug }}/out.txt", function( data ) {
+		$.get("/{{ .Repo.Slug }}/commit/{{ .Commit.Hash }}/build/{{ .Build.Slug }}/out.txt?branch={{ .Commit.Branch }}", function( data ) {
 			var lineFormatter = new Drone.LineFormatter();
 			$( "#stdout" ).html(lineFormatter.format(data));
 		});
