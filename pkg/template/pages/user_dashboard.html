@@ -43,14 +43,14 @@
 				<ul class="commit-list">
 					{{ range $commit := .Commits }}
 					<li>
-						<a href="/{{$commit.Slug}}/commit/{{$commit.Branch}}/{{$commit.Hash}}" class="btn btn-{{$commit.Status}}"></a>
+						<a href="/{{$commit.Slug}}/commit/{{$commit.Hash}}?branch={{$commit.Branch}}" class="btn btn-{{$commit.Status}}"></a>
 						<h3>
 							<a href="/{{$commit.Slug}}">{{$commit.Owner}} / {{$commit.Name}}</a>
 							<small class="timeago" title="{{$commit.CreatedString}}"></small>
 							{{ if $commit.PullRequest }}
-								<p>opened pull request <a href="/{{$commit.Slug}}/commit/{{$commit.Branch}}/{{$commit.Hash}}"># {{$commit.PullRequest}}</a></p>
+								<p>opened pull request <a href="/{{$commit.Slug}}/commit/{{$commit.Hash}}?branch={{$commit.Branch}}"># {{$commit.PullRequest}}</a></p>
 							{{ else }}
-								<p>commit <a href="/{{$commit.Slug}}/commit/{{$commit.Branch}}/{{$commit.Hash}}">{{$commit.HashShort}}</a> to <a href="/{{$commit.Slug}}?branch={{$commit.Branch}}">{{$commit.Branch}}</a> branch</p>
+								<p>commit <a href="/{{$commit.Slug}}/commit/{{$commit.Hash}}?branch={{$commit.Branch}}">{{$commit.HashShort}}</a> to <a href="/{{$commit.Slug}}?branch={{$commit.Branch}}">{{$commit.Branch}}</a> branch</p>
 							{{ end }}
 						</h3>
 					</li>
