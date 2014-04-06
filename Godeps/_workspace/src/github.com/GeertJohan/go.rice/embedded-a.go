@@ -1,0 +1,3 @@
+package rice
+
+//++ object embedding
