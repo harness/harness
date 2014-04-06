@@ -47,7 +47,7 @@ func (h *HookHandler) HookGithub(w http.ResponseWriter, r *http.Request) error {
 	// parse the github Hook payload
 	hook, err := github.ParseHook([]byte(payload))
 	if err != nil {
-		println("could not parse hook")
+		println("could not parse hook:", err.Error())
 		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
