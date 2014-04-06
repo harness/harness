@@ -1,0 +1,28 @@
+# This is the official list of Go-MySQL-Driver authors for copyright purposes.
+
+# If you are submitting a patch, please add your name or the name of the
+# organization which holds the copyright to this list in alphabetical order.
+
+# Names should be added to this file as
+#	Name <email address>
+# The email address is not required for organizations.
+# Please keep the list sorted.
+
+
+# Individual Persons
+
+Arne Hormann <arnehormann at gmail.com>
+Carlos Nieto <jose.carlos at menteslibres.net>
+Hanno Braun <mail at hannobraun.com>
+James Harr <james.harr at gmail.com>
+Julien Schmidt <go-sql-driver at julienschmidt.com>
+Leonardo YongUk Kim <dalinaum at gmail.com>
+Lucas Liu <extrafliu at gmail.com>
+Luke Scott <luke at webconnex.com>
+Michael Woolnough <michael.woolnough at gmail.com>
+Nicola Peduzzi <thenikso at gmail.com>
+Xiaobing Jiang <s7v7nislands at gmail.com>
+
+# Organizations
+
+Google Inc.
