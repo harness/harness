@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	slackEndpoint  = "https://%s.slack.com/services/hooks/incoming-webhook?token=%s"
+	slackEndpoint       = "https://%s.slack.com/services/hooks/incoming-webhook?token=%s"
 	slackStartedMessage = "Building %s, commit %s, author %s"
-	slackSuccessMessage = "<b>Success</b> %s, commit %s, author %s"
-	slackFailureMessage = "<b>Failed</b> %s, commit %s, author %s"
+	slackSuccessMessage = "*Success* %s, commit %s, author %s"
+	slackFailureMessage = "*Failed* %s, commit %s, author %s"
 )
 
 type Slack struct {
@@ -73,4 +73,3 @@ func (s *Slack) send(msg string) error {
 
 	return nil
 }
-
