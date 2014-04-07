@@ -1,18 +1,17 @@
 package notify
 
 import (
-	"bytes"
 	"encoding/json"
-	"net/http"
+	"fmt"
 
-	"github.com/drone/drone/pkg/model"
+	//"github.com/drone/drone/pkg/model"
 )
 
 const (
-	slackEndpoint  = "https://%s.slack.com/services/hooks/incoming-webhook?token=%s"
-	startedMessage = "Building %s, commit %s, author %s"
-	successMessage = "<b>Success</b> %s, commit %s, author %s"
-	failureMessage = "<b>Failed</b> %s, commit %s, author %s"
+	slackEndpoint       = "https://%s.slack.com/services/hooks/incoming-webhook?token=%s"
+	slackStartedMessage = "Building %s, commit %s, author %s"
+	slackSuccessMessage = "*Success* %s, commit %s, author %s"
+	slackFailureMessage = "*Failed* %s, commit %s, author %s"
 )
 
 type Slack struct {
@@ -39,17 +38,17 @@ func (s *Slack) Send(context *Context) error {
 }
 
 func (s *Slack) sendStarted(context *Context) error {
-	msg := fmt.Sprintf(startedMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
+	msg := fmt.Sprintf(slackStartedMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
 	return s.send(msg)
 }
 
 func (s *Slack) sendSuccess(context *Context) error {
-	msg := fmt.Sprintf(successMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
+	msg := fmt.Sprintf(slackSuccessMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
 	return s.send(msg)
 }
 
 func (s *Slack) sendFailure(context *Context) error {
-	msg := fmt.Sprintf(failureMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
+	msg := fmt.Sprintf(slackFailureMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
 	return s.send(msg)
 }
 
@@ -69,19 +68,8 @@ func (s *Slack) send(msg string) error {
 	}
 
 	// send payload
-	url = fmt.Sprintf(slackEndpoint, s.Team, s.Token)
+	url := fmt.Sprintf(slackEndpoint, s.Team, s.Token)
 	go sendJson(url, payload)
 
 	return nil
-}
-
-// helper fuction to sent HTTP Post requests
-// with JSON data as the payload.
-func sendJson(url string, payload []byte) {
-	buf := bytes.NewBuffer(payload)
-	resp, err := http.Post(url, "application/json", buf)
-	if err != nil {
-		return
-	}
-	resp.Body.Close()
 }
