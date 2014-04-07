@@ -14,8 +14,9 @@
         <div class="row">
             <div class="col-xs-3">
                 <ul class="nav nav-pills nav-stacked">
-                    <li class="active"><a href="/new/github.com">GitHub</a></li>
-                    <li><a href="/new/bitbucket.org">Bitbucket <small>(coming soon)</small></a></li>
+                    <li><a href="/new/github.com">GitHub</a></li>
+                    <li><a href="/new/bitbucket.org">Bitbucket</a></li>
+                    <li class="active"><a href="/new/limitedgithub.com">GitHub with Limited Permissions</a></li>
                 </ul>
             </div><!-- ./col-xs-3 -->
 
@@ -23,7 +24,7 @@
                     <div class="alert">
                         Enter your repository details
                     </div>
-                    <form class="form-repo" method="POST" action="/new/safegithub.com">
+                    <form class="form-repo" method="POST" action="/new/limitedgithub.com">
                         <input type="hidden" name="domain" autocomplete="off" value="{{.Settings.GitHubDomain}}">
                         <div class="field-group">
                             <div>

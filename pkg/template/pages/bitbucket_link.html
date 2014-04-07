@@ -1,31 +1,32 @@
 {{ define "title" }}Bitbucket · Add Repository{{ end }}
 
 {{ define "content" }}
-	<div class="subhead">
-		<div class="container">
-			<h1>
-				<span>Repository Setup</span>
-				<small>Bitbucket</small>
-			</h1>
-		</div><!-- ./container -->
- 	</div><!-- ./subhead -->
+    <div class="subhead">
+        <div class="container">
+            <h1>
+                <span>Repository Setup</span>
+                <small>Bitbucket</small>
+            </h1>
+        </div><!-- ./container -->
+    </div><!-- ./subhead -->
 
-	<div class="container">
-		<div class="row">
-			<div class="col-xs-3">
-				<ul class="nav nav-pills nav-stacked">
-					<li><a href="/new/github.com">GitHub</a></li>
-					<li class="active"><a href="/new/bitbucket.org">Bitbucket</a></li>
-				</ul>
-			</div><!-- ./col-xs-3 -->
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-3">
+                <ul class="nav nav-pills nav-stacked">
+                    <li><a href="/new/github.com">GitHub</a></li>
+                    <li class="active"><a href="/new/bitbucket.org">Bitbucket</a></li>
+                    <li><a href="/new/limitedgithub.com">GitHub with Limited Permissions</a></li>
+                </ul>
+            </div><!-- ./col-xs-3 -->
 
-			<div class="col-xs-9" role="main">
-					<div class="alert">Link Your Bitbucket Account
-						<a class="btn btn-primary pull-right" href="/auth/login/bitbucket" style="font-size: 18px;">Link Now</a>
-					</div>
-			</div><!-- ./col-xs-9 -->
-		</div><!-- ./row -->
-	</div><!-- ./container -->
+            <div class="col-xs-9" role="main">
+                    <div class="alert">Link Your Bitbucket Account
+                        <a class="btn btn-primary pull-right" href="/auth/login/bitbucket" style="font-size: 18px;">Link Now</a>
+                    </div>
+            </div><!-- ./col-xs-9 -->
+        </div><!-- ./row -->
+    </div><!-- ./container -->
 {{ end }}
 
 {{ define "script" }}{{ end }}
