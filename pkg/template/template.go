@@ -83,6 +83,8 @@ func init() {
 		"github_add.html",
 		"github_limited_add.html",
 		"github_link.html",
+		"gitlab_add.html",
+		"gitlab_link.html",
 		"bitbucket_add.html",
 		"bitbucket_link.html",
 	}

@@ -10,8 +10,8 @@ import (
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
 	"github.com/drone/drone/pkg/queue"
-	"github.com/drone/go-github/github"
 	"github.com/drone/go-bitbucket/bitbucket"
+	"github.com/drone/go-github/github"
 )
 
 type HookHandler struct {
@@ -47,7 +47,7 @@ func (h *HookHandler) HookGithub(w http.ResponseWriter, r *http.Request) error {
 	// parse the github Hook payload
 	hook, err := github.ParseHook([]byte(payload))
 	if err != nil {
-		println("could not parse hook")
+		println("could not parse hook:", err.Error())
 		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 

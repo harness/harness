@@ -6,10 +6,10 @@ import (
 
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
-	"github.com/drone/go-github/github"
-	"github.com/drone/go-github/oauth2"
 	"github.com/drone/go-bitbucket/bitbucket"
 	"github.com/drone/go-bitbucket/oauth1"
+	"github.com/drone/go-github/github"
+	"github.com/drone/go-github/oauth2"
 )
 
 // Create the User session.

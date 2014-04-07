@@ -133,6 +133,7 @@ func setupHandlers() {
 	queue := queue.Start(workers, queueRunner)
 
 	hookHandler := handler.NewHookHandler(queue)
+	gitlab := handler.NewGitlabHandler(queue)
 
 	m := pat.New()
 	m.Get("/login", handler.ErrorHandler(handler.Login))
@@ -155,16 +156,23 @@ func setupHandlers() {
 	m.Post("/new/limitedgithub.com", handler.UserHandler(handler.RepoCreateGithubLimited))
 	m.Get("/new/limitedgithub.com", handler.UserHandler(handler.RepoAddGithubLimited))
 
+	// handlers for linking your GitHub account
+	m.Get("/auth/login/github", handler.UserHandler(handler.LinkGithub))
 
 	// handlers for setting up your Bitbucket repository
 	m.Post("/new/bitbucket.org", handler.UserHandler(handler.RepoCreateBitbucket))
 	m.Get("/new/bitbucket.org", handler.UserHandler(handler.RepoAddBitbucket))
 
-	// handlers for linking your GitHub account
-	m.Get("/auth/login/github", handler.UserHandler(handler.LinkGithub))
-
 	// handlers for linking your Bitbucket account
 	m.Get("/auth/login/bitbucket", handler.UserHandler(handler.LinkBitbucket))
+
+	// handlers for setting up your GitLab repository
+	m.Post("/new/gitlab", handler.UserHandler(gitlab.Create))
+	m.Get("/new/gitlab", handler.UserHandler(gitlab.Add))
+
+	// handler for linking GitLab account
+	m.Post("/link/gitlab", handler.UserHandler(gitlab.Link))
+	m.Get("/link/gitlab", handler.UserHandler(gitlab.ReLink))
 
 	// handlers for dashboard pages
 	m.Get("/dashboard/team/:team", handler.UserHandler(handler.TeamShow))
@@ -208,6 +216,9 @@ func setupHandlers() {
 
 	// handlers for Bitbucket post-commit hooks
 	m.Post("/hook/bitbucket.org", handler.ErrorHandler(hookHandler.HookBitbucket))
+
+	// handlers for GitLab post-commit hooks
+	m.Post("/hook/gitlab", handler.ErrorHandler(gitlab.Hook))
 
 	// handlers for first-time installation
 	m.Get("/install", handler.ErrorHandler(handler.Install))

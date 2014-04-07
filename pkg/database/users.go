@@ -13,21 +13,24 @@ const userTable = "users"
 // SQL Queries to retrieve a user by their unique database key
 const userFindIdStmt = `
 SELECT id, email, password, token, name, gravatar, created, updated, admin,
-github_login, github_token, github_write_token, bitbucket_login, bitbucket_token, bitbucket_secret
+github_login, github_token, github_write_token, bitbucket_login, bitbucket_token, bitbucket_secret,
+gitlab_token
 FROM users WHERE id = ?
 `
 
 // SQL Queries to retrieve a user by their email address
 const userFindEmailStmt = `
 SELECT id, email, password, token, name, gravatar, created, updated, admin,
-github_login, github_token, github_write_token, bitbucket_login, bitbucket_token, bitbucket_secret
+github_login, github_token, github_write_token, bitbucket_login, bitbucket_token, bitbucket_secret,
+gitlab_token
 FROM users WHERE email = ?
 `
 
 // SQL Queries to retrieve a list of all users
 const userStmt = `
 SELECT id, email, password, token, name, gravatar, created, updated, admin,
-github_login, github_token, github_write_token, bitbucket_login, bitbucket_token, bitbucket_secret
+github_login, github_token, github_write_token, bitbucket_login, bitbucket_token, bitbucket_secret,
+gitlab_token
 FROM users
 ORDER BY name ASC
 `
