@@ -9,7 +9,7 @@ import (
 
 const (
 	slackEndpoint       = "https://%s.slack.com/services/hooks/incoming-webhook?token=%s"
-	slackStartedMessage = "Building %s, commit %s, author %s"
+	slackStartedMessage = "*Building* %s, commit %s, author %s"
 	slackSuccessMessage = "*Success* %s, commit %s, author %s"
 	slackFailureMessage = "*Failed* %s, commit %s, author %s"
 )
