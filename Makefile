@@ -11,7 +11,7 @@ build/script \
 channel \
 database \
 database/encrypt \
-database/migrate \
+database/migrate/testing \
 database/testing \
 mail \
 model \
