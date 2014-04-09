@@ -3,15 +3,14 @@ package notify
 import (
 	"encoding/json"
 	"fmt"
-
-	//"github.com/drone/drone/pkg/model"
+	"path"
 )
 
 const (
 	slackEndpoint       = "https://%s.slack.com/services/hooks/incoming-webhook?token=%s"
-	slackStartedMessage = "*Building* %s, commit %s, author %s"
-	slackSuccessMessage = "*Success* %s, commit %s, author %s"
-	slackFailureMessage = "*Failed* %s, commit %s, author %s"
+	slackStartedMessage = "*Building* %s, commit <%s|%s>, author %s"
+	slackSuccessMessage = "*Success* %s, commit <%s|%s>, author %s"
+	slackFailureMessage = "*Failed* %s, commit <%s|%s>, author %s"
 )
 
 type Slack struct {
@@ -37,19 +36,25 @@ func (s *Slack) Send(context *Context) error {
 	return nil
 }
 
+func getBuildUrl(context *Context) string {
+	return context.Host + path.Join("/", context.Repo.Slug, "commit", context.Commit.Hash)
+}
+
+func getMessage(context *Context, message string) string {
+	url := getBuildUrl(context)
+	return fmt.Sprintf(message, context.Repo.Name, url, context.Commit.HashShort(), context.Commit.Author)
+}
+
 func (s *Slack) sendStarted(context *Context) error {
-	msg := fmt.Sprintf(slackStartedMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
-	return s.send(msg)
+	return s.send(getMessage(context, slackStartedMessage))
 }
 
 func (s *Slack) sendSuccess(context *Context) error {
-	msg := fmt.Sprintf(slackSuccessMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
-	return s.send(msg)
+	return s.send(getMessage(context, slackSuccessMessage))
 }
 
 func (s *Slack) sendFailure(context *Context) error {
-	msg := fmt.Sprintf(slackFailureMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
-	return s.send(msg)
+	return s.send(getMessage(context, slackFailureMessage))
 }
 
 // helper function to send HTTP requests
