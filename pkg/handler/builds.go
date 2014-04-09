@@ -9,11 +9,16 @@ import (
 
 // Returns the combined stdout / stderr for an individual Build.
 func BuildOut(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) error {
+	branch := r.FormValue("branch")
+	if branch == "" {
+		branch = "master"
+	}
+
 	hash := r.FormValue(":commit")
 	labl := r.FormValue(":label")
 
 	// get the commit from the database
-	commit, err := database.GetCommitHash(hash, repo.ID)
+	commit, err := database.GetCommitBranchHash(branch, hash, repo.ID)
 	if err != nil {
 		return err
 	}
