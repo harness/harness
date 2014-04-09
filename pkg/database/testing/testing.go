@@ -179,12 +179,22 @@ func Setup() {
 		Gravatar: user1.Gravatar,
 		Message:  "commit message",
 	}
+	commit5 := Commit{
+		RepoID:   repo2.ID,
+		Status:   "Success",
+		Hash:     "5f32ec7b08dfe3a097c1a5316de5b5069fb35ff9",
+		Branch:   "develop",
+		Author:   user1.Email,
+		Gravatar: user1.Gravatar,
+		Message:  "commit message",
+	}
 
 	// create dummy commit data
 	database.SaveCommit(&commit1)
 	database.SaveCommit(&commit2)
 	database.SaveCommit(&commit3)
 	database.SaveCommit(&commit4)
+	database.SaveCommit(&commit5)
 
 	// create dummy build data
 	database.SaveBuild(&Build{CommitID: commit1.ID, Slug: "node_0.10", Status: "Success", Duration: 60})

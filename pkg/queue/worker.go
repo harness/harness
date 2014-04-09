@@ -95,8 +95,8 @@ func (w *worker) execute(task *BuildTask) error {
 	// make sure a channel exists for the repository,
 	// the commit, and the commit output (TODO)
 	reposlug := fmt.Sprintf("%s/%s/%s", task.Repo.Host, task.Repo.Owner, task.Repo.Name)
-	commitslug := fmt.Sprintf("%s/%s/%s/commit/%s", task.Repo.Host, task.Repo.Owner, task.Repo.Name, task.Commit.Hash)
-	consoleslug := fmt.Sprintf("%s/%s/%s/commit/%s/builds/%s", task.Repo.Host, task.Repo.Owner, task.Repo.Name, task.Commit.Hash, task.Build.Slug)
+	commitslug := fmt.Sprintf("%s/%s/%s/commit/%s/%s", task.Repo.Host, task.Repo.Owner, task.Repo.Name, task.Commit.Branch, task.Commit.Hash)
+	consoleslug := fmt.Sprintf("%s/%s/%s/commit/%s/%s/builds/%s", task.Repo.Host, task.Repo.Owner, task.Repo.Name, task.Commit.Branch, task.Commit.Hash, task.Build.Slug)
 	channel.Create(reposlug)
 	channel.Create(commitslug)
 	channel.CreateStream(consoleslug)
@@ -230,7 +230,7 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 	client.ApiUrl = settings.GitHubApiUrl
 
 	var url string
-	url = settings.URL().String() + "/" + repo.Slug + "/commit/" + commit.Hash
+	url = settings.URL().String() + "/" + repo.Slug + "/commit/" + commit.Branch + "/" + commit.Hash
 
 	return client.Repos.CreateStatus(repo.Owner, repo.Name, status, url, message, commit.Hash)
 }
