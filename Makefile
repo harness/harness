@@ -1,3 +1,5 @@
+SELFPKG := github.com/drone/drone
+VERSION := 0.2
 SHA := $(shell git rev-parse --short HEAD)
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 PKGS := \
@@ -11,7 +13,7 @@ build/script \
 channel \
 database \
 database/encrypt \
-database/migrate \
+database/migrate/testing \
 database/testing \
 mail \
 model \
@@ -22,10 +24,25 @@ PKGS := $(addprefix github.com/drone/drone/pkg/,$(PKGS))
 
 all: embed build
 
+build:
+	go build -o bin/drone -ldflags "-X main.version $(VERSION)dev-$(SHA)" $(SELFPKG)/cmd/drone
+	go build -o bin/droned -ldflags "-X main.version $(VERSION)dev-$(SHA)" $(SELFPKG)/cmd/droned
+
+build-dist: godep
+	godep go build -o bin/drone -ldflags "-X main.version $(VERSION)-$(SHA)" $(SELFPKG)/cmd/drone
+	godep go build -o bin/droned -ldflags "-X main.version $(VERSION)-$(SHA)" $(SELFPKG)/cmd/droned
+
+bump-deps: deps vendor
+
+deps:
+	go get -u -t -v ./...
+
 vendor: godep
 	git submodule update --init --recursive
 	godep save ./...
 
+
+# Embed static assets
 embed: js rice
 	cd cmd/droned   && rice embed
 	cd pkg/template && rice embed
@@ -33,14 +50,10 @@ embed: js rice
 js:
 	cd cmd/droned/assets && find js -name "*.js" ! -name '.*' ! -name "main.js" -exec cat {} \; > js/main.js
 
-build:
-	cd cmd/drone  && go build -ldflags "-X main.version $(SHA)" -o ../../bin/drone
-	cd cmd/droned && go build -ldflags "-X main.version $(SHA)" -o ../../bin/droned
-
 test: $(PKGS)
 
-$(PKGS):
-	go test -v $@
+$(PKGS): godep
+	godep go test -v $@
 
 install:
 	cp deb/drone/etc/init/drone.conf /etc/init/drone.conf
@@ -75,10 +88,6 @@ dpkg:
 
 run:
 	bin/droned --port=":8080" --datasource="drone.sqlite"
-
-go-gitlab-client:
-	rm -rf $$GOPATH/src/github.com/plouc/go-gitlab-client
-	git clone -b raw-request https://github.com/fudanchii/go-gitlab-client $$GOPATH/src/github.com/plouc/go-gitlab-client
 
 godep:
 	go get github.com/tools/godep
