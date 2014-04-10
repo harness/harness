@@ -147,7 +147,6 @@ func RepoCreateGithubLimited(w http.ResponseWriter, r *http.Request, u *User) er
 	}
 
 	repo.URL = fmt.Sprintf("https://%s@%s/%s/%s", readToken, settings.GitHubDomain, owner, name)
-	fmt.Printf("new url: %s\n", repo.URL)
 
 	repo.UserID = u.ID
 	repo.Private = githubRepo.Private
