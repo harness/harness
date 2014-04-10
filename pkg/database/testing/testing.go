@@ -2,7 +2,11 @@ package database
 
 import (
 	"crypto/aes"
+	"database/sql"
+	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/drone/drone/pkg/database"
 	"github.com/drone/drone/pkg/database/encrypt"
@@ -10,6 +14,42 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/russross/meddler"
+)
+
+const (
+	pubkey  = `sh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQClp9+xjhYj2Wz0nwLNhUiR1RkqfoVZwlJoxdubQy8GskZtY7C7YGa/PeKfdfaKOWtVgg37r/OYS3kc7bIKVup4sx/oW59FMwCZYQ2nxoaPZpPwUJs8D0Wy0b2VSP+vAnJ6jZQEIEiClrzyYafSfqN6L9T/BTkn28ktWalOHqWVKejKeD6M0uhlpyIZFsQ1K2wNt32ACwT/rbanx/r/jfczqxSkLzvIKXXs/RdKQgwRRUYnKkl4Lh6r22n9n3m2VwRor5wdsPK8sr57OsqdRpnvsFs3lxwM8w5ZiAZV3T0xTMGVs3W8Uy5HexAD6TgWBWFjSrgdXF1pE83wmUtJtVBf`
+	privkey = `-----BEGIN RSA PRIVATE KEY-----
+MIIEogIBAAKCAQEApaffsY4WI9ls9J8CzYVIkdUZKn6FWcJSaMXbm0MvBrJGbWOw
+u2Bmvz3in3X2ijlrVYIN+6/zmEt5HO2yClbqeLMf6FufRTMAmWENp8aGj2aT8FCb
+PA9FstG9lUj/rwJyeo2UBCBIgpa88mGn0n6jei/U/wU5J9vJLVmpTh6llSnoyng+
+jNLoZaciGRbENStsDbd9gAsE/622p8f6/433M6sUpC87yCl17P0XSkIMEUVGJypJ
+eC4eq9tp/Z95tlcEaK+cHbDyvLK+ezrKnUaZ77BbN5ccDPMOWYgGVd09MUzBlbN1
+vFMuR3sQA+k4FgVhY0q4HVxdaRPN8JlLSbVQXwIDAQABAoIBAA3EqSPxwkdSf+rI
++IuqY0CzrHbKszylmQHaSAlciSEOWionWf4I4iFM/HPycv5EDXa663yawC1NQJC1
+9NFFLhHAGYvPaapvtcIJvf/O0UpD5VHY8T4JqupU4mPxAEdEdc1XzRCWulAYRTYE
+BdXJ7r5uEU7s2TZF3y+kvxyeEXcXNWK1I4kGBSgH4KI5WIODtNJ6vaIk5Yugqt1N
+cg5Sprk4bUMRTBH6GmSiJUleA0f/k6MCCmhETKXGt9mmfJ1PXpVlfDn5m26MX6vZ
+XgaoIHUCy4sh1Fq6vbEI831JcO4kdvl4TtX90SzSadHjewNHy0V2gjAysvqbEDhw
+Hn8D+MkCgYEA00tTKPp3AUTxT9ZgfPBD3DY7tk7+xp2R2lA6H9TUWe79TRfncFtS
+8bCfEXd8xALL5cFyzi4q4YJ77mJjlWE7AMYdsFoAW1l3Q71JRRBSwsyIwp4hU8AV
+K48SDjqecDzY42UvuKGp3opPWb0PzJixJNUgawU/ZGPxqN8jlr0o+K0CgYEAyLSO
+rZqOvyE5wu8yadHLlQC4usoYtnyDC8PG2SgnZnlnZnkgNy3yLmHYvTvYSQsAv7rA
+fFsKMt2MJhlclx+sTds/LLHKj/RfVDFenFf6ajBNZ1k+KRcwrV1A4iWinWmBxiEi
+A8aM9rGs7WRBkqaCONSUQHcmLRRz7hqDtsBpkrsCgYBY2FJ2Z6LEmN2zCVx3DHws
+S22eQeclUroyhwt5uP81daVy1jtN5kihMfgg2xJORTLBQC9q/MSxIDHGUf63oDO0
+JpnzPlTqFFtu01fMv4ldOa3Dz8QJuDnun/EipIlcfmlgbHq9ctS/q36kKDhNemL6
+Lte7yHAYYWIK9RC84Hsq3QKBgAfDbC1s6A6ek2Rl6jZLpitKTtryzEfqwwrmdL+b
+nQKKuaQuFT/tKAwBPuf685/HrCy+ZYmp39gd17j1jC5QTFLqoyPwcJxm4HUaP8We
+ZZJL8gKIYi4mtnxOOh9FQ2gBV8K5L16kBHnaX40DLsIkbK8UEfP4Z+Kggud34RZl
+lO/XAoGAFFZdolsVbSieFhJt7ypzp/19dKJ8Sk6QGCk3uQpTuLJMvwcBT8X5XCTD
+zFfYARarx87mbD2k5GZ7F0fmGYTUV14qlxJCGMythLM/xZ6EJuJWBz69puNj4yhn
+exWM7t1BDHy2zIoPfIQLDH2h1zNTRjismMeErOCy0Uha7jrZhW8=
+-----END RSA PRIVATE KEY-----`
+)
+
+var (
+	dbname, driver, dsn, login string
+	db                         *sql.DB
 )
 
 func init() {
@@ -24,11 +64,31 @@ func init() {
 	// decrypt database fields.
 	meddler.Register("gobencrypt", &encrypt.EncryptedField{cipher})
 
+	// Check for $DB_ENV
+	dbenv := os.Getenv("DB_ENV")
+	if dbenv == "mysql" {
+		driver = dbenv
+		dbname = "drone_test"
+		login = os.Getenv("MYSQL_LOGIN")
+		if len(login) == 0 {
+			login = "root"
+		}
+		log.Println("Using mysql database ...")
+	} else {
+		driver = "sqlite3"
+		dsn = ":memory:"
+		log.Println("Using sqlite3 database ...")
+	}
+
 }
 
 func Setup() {
 	// create an in-memory database
-	database.Init("sqlite3", ":memory:")
+	if driver == "mysql" {
+		idsn := fmt.Sprintf("%s@/?parseTime=true", login)
+		db, dsn = createDB(dbname, idsn)
+	}
+	database.Init(driver, dsn)
 
 	// create dummy user data
 	user1 := User{
@@ -102,8 +162,8 @@ func Setup() {
 		URL:        "git@github.com:drone/drone.git",
 		Username:   "no username",
 		Password:   "no password",
-		PublicKey:  "public key",
-		PrivateKey: "private key",
+		PublicKey:  pubkey,
+		PrivateKey: privkey,
 		UserID:     user1.ID,
 		TeamID:     team1.ID,
 	}
@@ -118,8 +178,8 @@ func Setup() {
 		URL:        "https://bitbucket.org/drone/test",
 		Username:   "no username",
 		Password:   "no password",
-		PublicKey:  "public key",
-		PrivateKey: "private key",
+		PublicKey:  pubkey,
+		PrivateKey: privkey,
 		UserID:     user1.ID,
 		TeamID:     team1.ID,
 	}
@@ -134,8 +194,8 @@ func Setup() {
 		URL:        "https://bitbucket.org/brydzewski/test",
 		Username:   "no username",
 		Password:   "no password",
-		PublicKey:  "public key",
-		PrivateKey: "private key",
+		PublicKey:  pubkey,
+		PrivateKey: privkey,
 		UserID:     user2.ID,
 	}
 
@@ -207,4 +267,19 @@ func Setup() {
 
 func Teardown() {
 	database.Close()
+	if driver == "mysql" {
+		db.Exec(fmt.Sprintf("DROP DATABASE %s", dbname))
+	}
+}
+
+func createDB(name, datasource string) (*sql.DB, string) {
+	db, err := sql.Open(driver, datasource)
+	if err != nil {
+		panic("Can't connect to database")
+	}
+	if _, err := db.Exec(fmt.Sprintf("CREATE DATABASE %s", name)); err != nil {
+		panic("Can't create database")
+	}
+	dsn := strings.Replace(datasource, "/", fmt.Sprintf("/%s", name), 1)
+	return db, dsn
 }

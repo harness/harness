@@ -63,11 +63,11 @@ func TestGetRepo(t *testing.T) {
 		t.Errorf("Exepected Password %s, got %s", "no password", repo.Password)
 	}
 
-	if repo.PublicKey != "public key" {
+	if repo.PublicKey != pubkey {
 		t.Errorf("Exepected PublicKey %s, got %s", "public key", repo.PublicKey)
 	}
 
-	if repo.PrivateKey != "private key" {
+	if repo.PrivateKey != privkey {
 		t.Errorf("Exepected PrivateKey %s, got %s", "private key", repo.PrivateKey)
 	}
 
@@ -135,11 +135,11 @@ func TestGetRepoSlug(t *testing.T) {
 		t.Errorf("Exepected Password %s, got %s", "no password", repo.Password)
 	}
 
-	if repo.PublicKey != "public key" {
+	if repo.PublicKey != pubkey {
 		t.Errorf("Exepected PublicKey %s, got %s", "public key", repo.PublicKey)
 	}
 
-	if repo.PrivateKey != "private key" {
+	if repo.PrivateKey != privkey {
 		t.Errorf("Exepected PrivateKey %s, got %s", "private key", repo.PrivateKey)
 	}
 
@@ -385,11 +385,11 @@ func TestListReposTeam(t *testing.T) {
 		t.Errorf("Exepected Password %s, got %s", "no password", repo.Password)
 	}
 
-	if repo.PublicKey != "public key" {
+	if repo.PublicKey != pubkey {
 		t.Errorf("Exepected PublicKey %s, got %s", "public key", repo.PublicKey)
 	}
 
-	if repo.PrivateKey != "private key" {
+	if repo.PrivateKey != privkey {
 		t.Errorf("Exepected PrivateKey %s, got %s", "private key", repo.PrivateKey)
 	}
 
