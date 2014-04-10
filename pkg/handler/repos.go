@@ -317,6 +317,19 @@ func RepoKeys(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) error
 	return RenderTemplate(w, "repo_keys.html", &data)
 }
 
+func RepoRegenerateKeys(w http.ResponseWriter, r * http.Request, u *User, repo *Repo) error {
+	if err := repo.AddKeyPair(); err != nil {
+		return fmt.Errorf("Unable to regenerate key pairs: %q", err)
+	}
+
+	if err := database.SaveRepo(repo); err != nil {
+		return err
+	}
+
+	http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
+	return nil
+}
+
 // Updates an existing repository.
 func RepoUpdate(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) error {
 	switch r.FormValue("action") {

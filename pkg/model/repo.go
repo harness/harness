@@ -110,13 +110,9 @@ func NewRepo(host, owner, name, scm, url string) (*Repo, error) {
 	repo.Owner = owner
 	repo.Name = name
 	repo.Slug = fmt.Sprintf("%s/%s/%s", host, owner, name)
-	key, err := generatePrivateKey()
-	if err != nil {
+	if err := repo.AddKeyPair(); err != nil {
 		return nil, err
 	}
-
-	repo.PublicKey = marshalPublicKey(&key.PublicKey)
-	repo.PrivateKey = marshalPrivateKey(key)
 	return &repo, nil
 }
 
@@ -155,4 +151,25 @@ func (r *Repo) DefaultBranch() string {
 	default:
 		return DefaultBranchGit
 	}
+}
+
+// AddKeyPair effectively replacing key pair for current repo.
+// Optionally accepts `public key` and `private key` respectively
+func (r *Repo) AddKeyPair(keys ...[]byte) error {
+	switch len(keys) {
+	case 0:
+		key, err := generatePrivateKey()
+		if err != nil {
+			return err
+		}
+		r.PublicKey = marshalPublicKey(&key.PublicKey)
+		r.PrivateKey = marshalPrivateKey(key)
+	case 2:
+		//XXX: Could use some key checking
+		r.PublicKey = string(keys[0])
+		r.PrivateKey = string(keys[1])
+	default:
+		return fmt.Errorf("Parameters not match. Should supply key pairs or none (keys will be auto-generated)")
+	}
+	return nil
 }
