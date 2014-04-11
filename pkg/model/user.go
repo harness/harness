@@ -36,6 +36,7 @@ type User struct {
 	// GitHub OAuth2 token for accessing public repositories.
 	GithubLogin string `meddler:"github_login" json:"-"`
 	GithubToken string `meddler:"github_token" json:"-"`
+	GithubWriteToken string `meddler:"github_write_token" json:"-"`
 
 	// Bitbucket OAuth1.0a token and token secret.
 	BitbucketLogin  string `meddler:"bitbucket_login"  json:"-"`

@@ -81,6 +81,7 @@ func init() {
 		"admin_users_add.html",
 		"admin_settings.html",
 		"github_add.html",
+		"github_limited_add.html",
 		"github_link.html",
 		"gitlab_add.html",
 		"gitlab_link.html",

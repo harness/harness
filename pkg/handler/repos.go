@@ -95,6 +95,99 @@ func RepoAddBitbucket(w http.ResponseWriter, r *http.Request, u *User) error {
 	return RenderTemplate(w, "bitbucket_add.html", &data)
 }
 
+func RepoAddGithubLimited(w http.ResponseWriter, r *http.Request, u *User) error {
+	settings := database.SettingsMust()
+	teams, err := database.ListTeams(u.ID)
+	if err != nil {
+		return err
+	}
+	data := struct {
+		User  *User
+		Teams []*Team
+		Settings *Settings
+	}{u, teams, settings}
+
+	// display the template for adding
+	// a new GitHub repository with read only access.
+	return RenderTemplate(w, "github_limited_add.html", &data)
+}
+
+func RepoCreateGithubLimited(w http.ResponseWriter, r *http.Request, u *User) error {
+	teamName := r.FormValue("team")
+	owner := r.FormValue("owner")
+	name := r.FormValue("name")
+
+	readToken := r.FormValue("read-token")
+	writeToken := r.FormValue("write-token")
+
+	u.GithubToken = readToken
+	u.GithubWriteToken = writeToken
+
+	// get the github settings from the database
+	settings := database.SettingsMust()
+	fmt.Printf("got settings: %s\n", settings)
+
+	// create the GitHub client
+	rClient := github.New(readToken)
+	wClient := github.New(writeToken)
+	rClient.ApiUrl = settings.GitHubApiUrl
+	wClient.ApiUrl = settings.GitHubApiUrl
+
+	githubRepo, err := rClient.Repos.Find(owner, name)
+	if err != nil {
+		fmt.Printf("err1, %s\n", err)
+		return err
+	}
+
+	repo, err := NewGitHubRepo(settings.GitHubDomain, owner, name, githubRepo.Private)
+
+	if err != nil {
+		fmt.Printf("err2, %s\n", err)
+		return err
+	}
+
+	repo.URL = fmt.Sprintf("https://%s@%s/%s/%s", readToken, settings.GitHubDomain, owner, name)
+
+	repo.UserID = u.ID
+	repo.Private = githubRepo.Private
+
+	// if the user chose to assign to a team account
+	// we need to retrieve the team, verify the user
+	// has access, and then set the team id.
+	if len(teamName) > 0 {
+		team, err := database.GetTeamSlug(teamName)
+		if err != nil {
+			return fmt.Errorf("Unable to find Team %s.", teamName)
+		}
+
+		// user must be an admin member of the team
+		if ok, _ := database.IsMemberAdmin(u.ID, team.ID); !ok {
+			return fmt.Errorf("Invalid permission to access Team %s.", teamName)
+		}
+		repo.TeamID = team.ID
+	}
+
+    // create a hook so that we get notified when code                                                                                                                                                                                            // is pushed to the repository and can execute a build.
+    link := fmt.Sprintf("%s://%s/hook/github.com?id=%s", settings.Scheme, settings.Domain, repo.Slug)
+
+	// add the hook
+	if _, err := wClient.Hooks.CreateUpdate(owner, name, link); err != nil {
+		return fmt.Errorf("Unable to add Hook to your GitHub repository. %s", err.Error())
+	}
+
+	// Save to the database
+	if err := database.SaveRepo(repo); err != nil {
+		return fmt.Errorf("Error saving repository to the database. %s", err)
+	}
+	// Save user to the database
+	if err := database.SaveUser(u); err != nil {
+		return fmt.Errorf("Error saving user to the database. %s", err)
+	}
+
+	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+
+}
+
 func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
 	teamName := r.FormValue("team")
 	owner := r.FormValue("owner")

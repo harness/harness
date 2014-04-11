@@ -153,6 +153,9 @@ func setupHandlers() {
 	m.Post("/new/github.com", handler.UserHandler(handler.RepoCreateGithub))
 	m.Get("/new/github.com", handler.UserHandler(handler.RepoAddGithub))
 
+	m.Post("/new/limitedgithub.com", handler.UserHandler(handler.RepoCreateGithubLimited))
+	m.Get("/new/limitedgithub.com", handler.UserHandler(handler.RepoAddGithubLimited))
+
 	// handlers for linking your GitHub account
 	m.Get("/auth/login/github", handler.UserHandler(handler.LinkGithub))
 

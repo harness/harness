@@ -11,6 +11,7 @@ func (m *Migration) All() *Migration {
 	m.Add(SetupIndices)
 	m.Add(RenamePrivelegedToPrivileged)
 	m.Add(GitHubEnterpriseSupport)
+	m.Add(AddWriteTokenField)
 	m.Add(AddOpenInvitationColumn)
 	m.Add(AddGitlabColumns)
 

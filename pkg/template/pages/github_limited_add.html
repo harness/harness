@@ -1,0 +1,120 @@
+{{ define "title" }}GitHub · Add Repository{{ end }}
+
+{{ define "content" }}
+    <div class="subhead">
+        <div class="container">
+            <h1>
+                <span>Repository Setup</span>
+                <small>GitHub</small>
+            </h1>
+        </div><!-- ./container -->
+    </div><!-- ./subhead -->
+
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-3">
+                <ul class="nav nav-pills nav-stacked">
+                    <li><a href="/new/github.com">GitHub</a></li>
+                    <li><a href="/new/bitbucket.org">Bitbucket</a></li>
+                    <li class="active"><a href="/new/limitedgithub.com">GitHub with Limited Permissions</a></li>
+                    <li><a href="/new/gitlab">GitLab</a></li>
+                </ul>
+            </div><!-- ./col-xs-3 -->
+
+            <div class="col-xs-9" role="main">
+                    <div class="alert">
+                        Enter your repository details
+                    </div>
+                    <form class="form-repo" method="POST" action="/new/limitedgithub.com">
+                        <input type="hidden" name="domain" autocomplete="off" value="{{.Settings.GitHubDomain}}">
+                        <div class="field-group">
+                            <div>
+                                <label>GitHub Owner</label>
+                                <div>
+                                    <input class="form-control form-control-large" type="text" name="owner">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field-separator">/</div>
+                            <div class="field-group">
+                                <div>
+                                    <label>GitHub Repo</label>
+                                <div>
+                                    <input class="form-control form-control-large" type="text" name="name">
+                                </div>
+                            </div>
+                        </div>
+                        <br/>
+                        <div class="alert">Enter your repo read access token</div>
+                        <div class="field-group">
+                            <div>
+                                <label>Token</label>
+                                <div>
+                                    <input class="form-control form-control-large" type="text" name="read-token">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert">Enter your commit status and webhook write access token</div>
+                        <div class="field-group">
+                            <div>
+                                <label>Token</label>
+                                <div>
+                                    <input class="form-control form-control-large" type="text" name="write-token">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert">Select your Drone account</div>
+                        <ul>
+                            <li>
+                                <input type="radio" name="team" checked="True" value="">
+                                <img src="{{ .User.Image }}?s=32">
+                                <span>Me</span>
+                            </li>
+                            {{ range .Teams }}
+                            <li>
+                                <input type="radio" name="team" value="{{ .Slug }}">
+                                <img src="{{ .Image }}?s=32">
+                                <span>{{ .Name }}</span>
+                            </li>
+                            {{ end }}
+                        </ul>
+                        <div class="alert alert-success hide" id="successAlert"></div>
+                        <div class="alert alert-error hide" id="failureAlert"></div>
+                        <div class="form-actions">
+                            <input class="btn btn-primary" id="submitButton" type="submit" value="Add" data-loading-text="Saving ..">
+                            <a class="btn btn-default" href="/dashboard">Cancel</a>
+                        </div>
+                    </form>
+            </div><!-- ./col-xs-9 -->
+        </div><!-- ./row -->
+    </div><!-- ./container -->
+{{ end }}
+
+{{ define "script" }}
+    <script>
+        document.forms[0].onsubmit = function(event) {
+            $("#successAlert").hide();
+            $("#failureAlert").hide();
+            $('#submitButton').button('loading')
+
+            var form = event.target
+            var formData = new FormData(form);
+            xhr = new XMLHttpRequest();
+            xhr.open('POST', form.action);
+            xhr.onload = function() {
+                if (this.status == 200) {
+                    var name = $("input[name=name]").val()
+                    var owner = $("input[name=owner]").val()
+                    var domain = $("input[name=domain]").val()
+                    window.location.pathname = "/" + domain + "/"+owner+"/"+name
+                } else {
+                    $("#failureAlert").text("Unable to setup the Repository");
+                    $("#failureAlert").show().removeClass("hide");
+                    $('#submitButton').button('reset')
+                };
+            };
+            xhr.send(formData);
+            return false;
+        }
+    </script>
+{{ end }}
