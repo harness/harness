@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -109,4 +110,40 @@ func DelCookie(w http.ResponseWriter, r *http.Request, name string) {
 	}
 
 	http.SetCookie(w, &cookie)
+}
+
+// FileFetchingProxy is a reverse proxy for a single file that
+// can rewrite outgoing headers, and obeys If-Modified-Since
+type FileFetchingProxy struct {
+	Url            string
+	HeaderRewrites map[string]string
+	ModTime        time.Time
+}
+
+func (p *FileFetchingProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	// Give the client NotModified if ModTime is provided and the client asks
+	ifModTime := req.Header.Get("If-Modified-Since")
+	if !p.ModTime.IsZero() && ifModTime != "" {
+		t, err := time.Parse(http.TimeFormat, ifModTime)
+		if err == nil && p.ModTime.After(t) {
+			rw.WriteHeader(http.StatusNotModified)
+			return
+		}
+	}
+	res, err := http.Get(p.Url)
+	if err != nil {
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer res.Body.Close()
+	for k, v := range res.Header {
+		for _, vv := range v {
+			rw.Header().Add(k, vv)
+		}
+	}
+	for k, v := range p.HeaderRewrites {
+		rw.Header().Set(k, v)
+	}
+	rw.WriteHeader(res.StatusCode)
+	io.Copy(rw, res.Body)
 }

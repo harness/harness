@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/drone/drone/pkg/database"
 )
@@ -39,6 +40,7 @@ func Badge(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	var badge string
+	modTime := time.Now()
 
 	// get the latest commit from the database
 	// for the requested branch
@@ -48,6 +50,7 @@ func Badge(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
+	modTime = commit.Updated
 	switch {
 	case commit.Status == "Success" && len(successParam) == 0:
 		// if no success image is provided, we serve a
@@ -68,6 +71,15 @@ func Badge(w http.ResponseWriter, r *http.Request) error {
 		badge = badgeUnknown
 	}
 
-	http.Redirect(w, r, badge, http.StatusSeeOther)
+	proxy := &FileFetchingProxy{
+		Url: badge,
+		HeaderRewrites: map[string]string{
+			"Cache-Control": "no-cache",
+			"Last-Modified": modTime.UTC().Format(http.TimeFormat),
+			"Expires":       time.Unix(0, 0).UTC().Format(http.TimeFormat),
+		},
+		ModTime: modTime.UTC(),
+	}
+	proxy.ServeHTTP(w, r)
 	return nil
 }
