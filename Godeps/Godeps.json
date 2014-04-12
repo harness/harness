@@ -1,8 +1,23 @@
 {
 	"ImportPath": "github.com/drone/drone",
-	"GoVersion": "go1.2.1",
+	"GoVersion": "go1.2",
 	"Packages": [
-		"./..."
+		"github.com/drone/drone/pkg/build",
+		"github.com/drone/drone/pkg/build/buildfile",
+		"github.com/drone/drone/pkg/build/docker",
+		"github.com/drone/drone/pkg/build/dockerfile",
+		"github.com/drone/drone/pkg/build/proxy",
+		"github.com/drone/drone/pkg/build/repo",
+		"github.com/drone/drone/pkg/build/script",
+		"github.com/drone/drone/pkg/channel",
+		"github.com/drone/drone/pkg/database",
+		"github.com/drone/drone/pkg/database/encrypt",
+		"github.com/drone/drone/pkg/database/migrate",
+		"github.com/drone/drone/pkg/database/testing",
+		"github.com/drone/drone/pkg/mail",
+		"github.com/drone/drone/pkg/model",
+		"github.com/drone/drone/pkg/plugin/deploy",
+		"github.com/drone/drone/pkg/queue"
 	],
 	"Deps": [
 		{
