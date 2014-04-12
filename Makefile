@@ -22,13 +22,13 @@ queue
 PKGS := $(addprefix github.com/drone/drone/pkg/,$(PKGS))
 .PHONY := test $(PKGS)
 
-all: embed build
+all: build
 
-build:
+build: embed
 	go build -o bin/drone -ldflags "-X main.version $(VERSION)dev-$(SHA)" $(SELFPKG)/cmd/drone
 	go build -o bin/droned -ldflags "-X main.version $(VERSION)dev-$(SHA)" $(SELFPKG)/cmd/droned
 
-build-dist: godep
+build-dist: embed godep
 	godep go build -o bin/drone -ldflags "-X main.version $(VERSION)-$(SHA)" $(SELFPKG)/cmd/drone
 	godep go build -o bin/droned -ldflags "-X main.version $(VERSION)-$(SHA)" $(SELFPKG)/cmd/droned
 
@@ -78,7 +78,7 @@ clean: rice
 
 # creates a debian package for drone
 # to install `sudo dpkg -i drone.deb`
-dpkg:
+dpkg: build-dist
 	mkdir -p deb/drone/usr/local/bin
 	mkdir -p deb/drone/var/lib/drone
 	mkdir -p deb/drone/var/cache/drone
