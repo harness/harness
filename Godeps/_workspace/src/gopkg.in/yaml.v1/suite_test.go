@@ -1,4 +1,4 @@
-package goyaml_test
+package yaml_test
 
 import (
 	. "launchpad.net/gocheck"

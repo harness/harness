@@ -16,7 +16,7 @@ import (
 	"github.com/drone/drone/pkg/build/repo"
 	"github.com/drone/drone/pkg/build/script"
 
-	"launchpad.net/goyaml"
+	"gopkg.in/yaml.v1"
 )
 
 var (
@@ -129,7 +129,7 @@ func vet(path string) {
 	}
 
 	// print the Drone yml as parsed
-	out, _ := goyaml.Marshal(script)
+	out, _ := yaml.Marshal(script)
 	log.Noticef("parsed yaml:\n%s", string(out))
 }
 

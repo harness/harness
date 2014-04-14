@@ -1,9 +1,9 @@
-package goyaml_test
+package yaml_test
 
 import (
 	"fmt"
 	. "launchpad.net/gocheck"
-	"launchpad.net/goyaml"
+	"gopkg.in/yaml.v1"
 	"math"
 	"strconv"
 	"strings"
@@ -216,7 +216,7 @@ var marshalTests = []struct {
 
 func (s *S) TestMarshal(c *C) {
 	for _, item := range marshalTests {
-		data, err := goyaml.Marshal(item.value)
+		data, err := yaml.Marshal(item.value)
 		c.Assert(err, IsNil)
 		c.Assert(string(data), Equals, item.data)
 	}
@@ -237,7 +237,7 @@ var marshalErrorTests = []struct {
 
 func (s *S) TestMarshalErrors(c *C) {
 	for _, item := range marshalErrorTests {
-		_, err := goyaml.Marshal(item.value)
+		_, err := yaml.Marshal(item.value)
 		c.Assert(err, ErrorMatches, item.error)
 	}
 }
@@ -269,12 +269,12 @@ func (s *S) TestMarshalTypeCache(c *C) {
 	var err error
 	func() {
 		type T struct{ A int }
-		data, err = goyaml.Marshal(&T{})
+		data, err = yaml.Marshal(&T{})
 		c.Assert(err, IsNil)
 	}()
 	func() {
 		type T struct{ B int }
-		data, err = goyaml.Marshal(&T{})
+		data, err = yaml.Marshal(&T{})
 		c.Assert(err, IsNil)
 	}()
 	c.Assert(string(data), Equals, "b: 0\n")
@@ -298,7 +298,7 @@ func (s *S) TestMashalWithGetter(c *C) {
 		obj := &typeWithGetterField{}
 		obj.Field.tag = item.tag
 		obj.Field.value = item.value
-		data, err := goyaml.Marshal(obj)
+		data, err := yaml.Marshal(obj)
 		c.Assert(err, IsNil)
 		c.Assert(string(data), Equals, string(item.data))
 	}
@@ -308,7 +308,7 @@ func (s *S) TestUnmarshalWholeDocumentWithGetter(c *C) {
 	obj := &typeWithGetter{}
 	obj.tag = ""
 	obj.value = map[string]string{"hello": "world!"}
-	data, err := goyaml.Marshal(obj)
+	data, err := yaml.Marshal(obj)
 	c.Assert(err, IsNil)
 	c.Assert(string(data), Equals, "hello: world!\n")
 }
@@ -356,7 +356,7 @@ func (s *S) TestSortedOutput(c *C) {
 	for _, k := range order {
 		m[k] = 1
 	}
-	data, err := goyaml.Marshal(m)
+	data, err := yaml.Marshal(m)
 	c.Assert(err, IsNil)
 	out := "\n" + string(data)
 	last := 0

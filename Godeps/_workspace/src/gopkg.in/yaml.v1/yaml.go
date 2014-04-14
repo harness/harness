@@ -1,12 +1,10 @@
-// Package goyaml implements YAML support for the Go language.
+// Package yaml implements YAML support for the Go language.
 //
-// WARNING: You are using an out of date import path. Please update your code and import the following instead:
+// Source code and other details for the project are available at GitHub:
 //
-//   gonuts.org/v1/yaml
+//   https://github.com/go-yaml/yaml
 //
-// The package name has changed from "yaml" from "goyaml", but the package API has not changed.
-//
-package goyaml
+package yaml
 
 import (
 	"errors"
@@ -35,32 +33,31 @@ func handleErr(err *error) {
 	}
 }
 
-// Objects implementing the goyaml.Setter interface will receive the YAML
-// tag and value via the SetYAML method during unmarshaling, rather than
-// being implicitly assigned by the goyaml machinery.  If setting the value
-// works, the method should return true.  If it returns false, the given
-// value will be omitted from maps and slices.
+// The Setter interface may be implemented by types to do their own custom
+// unmarshalling of YAML values, rather than being implicitly assigned by
+// the yaml package machinery. If setting the value works, the method should
+// return true.  If it returns false, the value is considered unsupported
+// and is omitted from maps and slices.
 type Setter interface {
 	SetYAML(tag string, value interface{}) bool
 }
 
-// Objects implementing the goyaml.Getter interface will get the GetYAML()
-// method called when goyaml is requested to marshal the given value, and
-// the result of this method will be marshaled in place of the actual object.
+// The Setter interface is implemented by types to do their own custom
+// marshalling into a YAML tag and value.
 type Getter interface {
 	GetYAML() (tag string, value interface{})
 }
 
 // Unmarshal decodes the first document found within the in byte slice
-// and assigns decoded values into the object pointed by out.
+// and assigns decoded values into the out value.
 //
-// Maps, pointers to structs and ints, etc, may all be used as out values.
-// If an internal pointer within a struct is not initialized, goyaml
-// will initialize it if necessary for unmarshalling the provided data,
-// but the struct provided as out must not be a nil pointer.
+// Maps and pointers (to a struct, string, int, etc) are accepted as out
+// values.  If an internal pointer within a struct is not initialized,
+// the yaml package will initialize it if necessary for unmarshalling
+// the provided data. The out parameter must not be nil.
 //
 // The type of the decoded values and the type of out will be considered,
-// and Unmarshal() will do the best possible job to unmarshal values
+// and Unmarshal will do the best possible job to unmarshal values
 // appropriately.  It is NOT considered an error, though, to skip values
 // because they are not available in the decoded YAML, or if they are not
 // compatible with the out value. To ensure something was properly
@@ -68,11 +65,11 @@ type Getter interface {
 // field (usually the zero value).
 //
 // Struct fields are only unmarshalled if they are exported (have an
-// upper case first letter), and will be unmarshalled using the field
-// name lowercased by default. When custom field names are desired, the
-// tag value may be used to tweak the name. Everything before the first
-// comma in the field tag will be used as the name. The values following
-// the comma are used to tweak the marshalling process (see Marshal).
+// upper case first letter), and are unmarshalled using the field name
+// lowercased as the default key. Custom keys may be defined via the
+// "yaml" name in the field tag: the content preceding the first comma
+// is used as the key, and the following comma-separated options are
+// used to tweak the marshalling process (see Marshal).
 // Conflicting names result in a runtime error.
 //
 // For example:
@@ -82,7 +79,7 @@ type Getter interface {
 //         B int
 //     }
 //     var T t
-//     goyaml.Unmarshal([]byte("a: 1\nb: 2"), &t)
+//     yaml.Unmarshal([]byte("a: 1\nb: 2"), &t)
 //
 // See the documentation of Marshal for the format of tags and a list of
 // supported tag options.
@@ -101,14 +98,16 @@ func Unmarshal(in []byte, out interface{}) (err error) {
 
 // Marshal serializes the value provided into a YAML document. The structure
 // of the generated document will reflect the structure of the value itself.
-// Maps, pointers to structs and ints, etc, may all be used as the in value.
+// Maps and pointers (to struct, string, int, etc) are accepted as the in value.
 //
-// In the case of struct values, only exported fields will be serialized.
-// The lowercased field name is used as the key for each exported field,
-// but this behavior may be changed using the respective field tag.
-// The tag may also contain flags to tweak the marshalling behavior for
-// the field. Conflicting names result in a runtime error. The tag format
-// accepted is:
+// Struct fields are only unmarshalled if they are exported (have an upper case
+// first letter), and are unmarshalled using the field name lowercased as the
+// default key. Custom keys may be defined via the "yaml" name in the field
+// tag: the content preceding the first comma is used as the key, and the
+// following comma-separated options are used to tweak the marshalling process.
+// Conflicting names result in a runtime error.
+//
+// The field tag format accepted is:
 //
 //     `(...) yaml:"[<key>][,<flag1>[,<flag2>]]" (...)`
 //
@@ -133,8 +132,8 @@ func Unmarshal(in []byte, out interface{}) (err error) {
 //         F int "a,omitempty"
 //         B int
 //     }
-//     goyaml.Marshal(&T{B: 2}) // Returns "b: 2\n"
-//     goyaml.Marshal(&T{F: 1}} // Returns "a: 1\nb: 0\n"
+//     yaml.Marshal(&T{B: 2}) // Returns "b: 2\n"
+//     yaml.Marshal(&T{F: 1}} // Returns "a: 1\nb: 0\n"
 //
 func Marshal(in interface{}) (out []byte, err error) {
 	defer handleErr(&err)
@@ -149,7 +148,7 @@ func Marshal(in interface{}) (out []byte, err error) {
 // --------------------------------------------------------------------------
 // Maintain a mapping of keys to structure field indexes
 
-// The code in this section was copied from gobson.
+// The code in this section was copied from mgo/bson.
 
 // structInfo holds details for the serialization of fields of
 // a given struct.

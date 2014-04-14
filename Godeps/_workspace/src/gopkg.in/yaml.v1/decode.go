@@ -1,4 +1,4 @@
-package goyaml
+package yaml
 
 import (
 	"reflect"
@@ -283,12 +283,13 @@ func (d *decoder) scalar(n *node, out reflect.Value) (good bool) {
 	var tag string
 	var resolved interface{}
 	if n.tag == "" && !n.implicit {
+		tag = "!!str"
 		resolved = n.value
 	} else {
 		tag, resolved = resolve(n.tag, n.value)
-		if set := d.setter(tag, &out, &good); set != nil {
-			defer set()
-		}
+	}
+	if set := d.setter(tag, &out, &good); set != nil {
+		defer set()
 	}
 	switch out.Kind() {
 	case reflect.String:
@@ -437,6 +438,10 @@ func (d *decoder) mapping(n *node, out reflect.Value) (good bool) {
 	}
 	l := len(n.children)
 	for i := 0; i < l; i += 2 {
+		if isMerge(n.children[i]) {
+			d.merge(n.children[i+1], out)
+			continue
+		}
 		k := reflect.New(kt).Elem()
 		if d.unmarshal(n.children[i], k) {
 			e := reflect.New(et).Elem()
@@ -456,7 +461,12 @@ func (d *decoder) mappingStruct(n *node, out reflect.Value) (good bool) {
 	name := settableValueOf("")
 	l := len(n.children)
 	for i := 0; i < l; i += 2 {
-		if !d.unmarshal(n.children[i], name) {
+		ni := n.children[i]
+		if isMerge(ni) {
+			d.merge(n.children[i+1], out)
+			continue
+		}
+		if !d.unmarshal(ni, name) {
 			continue
 		}
 		if info, ok := sinfo.FieldsMap[name.String()]; ok {
@@ -470,4 +480,38 @@ func (d *decoder) mappingStruct(n *node, out reflect.Value) (good bool) {
 		}
 	}
 	return true
+}
+
+func (d *decoder) merge(n *node, out reflect.Value) {
+	const wantMap = "map merge requires map or sequence of maps as the value"
+	switch n.kind {
+	case mappingNode:
+		d.unmarshal(n, out)
+	case aliasNode:
+		an, ok := d.doc.anchors[n.value]
+		if ok && an.kind != mappingNode {
+			panic(wantMap)
+		}
+		d.unmarshal(n, out)
+	case sequenceNode:
+		// Step backwards as earlier nodes take precedence.
+		for i := len(n.children)-1; i >= 0; i-- {
+			ni := n.children[i]
+			if ni.kind == aliasNode {
+				an, ok := d.doc.anchors[ni.value]
+				if ok && an.kind != mappingNode {
+					panic(wantMap)
+				}
+			} else if ni.kind != mappingNode {
+				panic(wantMap)
+			}
+			d.unmarshal(ni, out)
+		}
+	default:
+		panic(wantMap)
+	}
+}
+
+func isMerge(n *node) bool {
+	return n.kind == scalarNode && n.value == "<<" && (n.implicit == true || n.tag == "!!merge" || n.tag == "tag:yaml.org,2002:merge")
 }
