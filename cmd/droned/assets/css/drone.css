@@ -1019,6 +1019,7 @@ ul.account-radio-group li img {
   -moz-border-radius: 5px;
 }
 .form-centered input[type="text"],
+.form-centered input[type="email"],
 .form-centered input[type="password"] {
   margin-bottom: 0px;
   font-size: 16px;
@@ -1027,17 +1028,20 @@ ul.account-radio-group li img {
   height: 40px;
 }
 .form-centered input[type="text"]:last-child,
+.form-centered input[type="email"]:last-child,
 .form-centered input[type="password"]:last-child {
   border-top-width: 0px;
   border-top-right-radius: 0px;
   border-top-left-radius: 0px;
 }
 .form-centered input[type="text"]:first-child,
+.form-centered input[type="email"]:first-child,
 .form-centered input[type="password"]:first-child {
   border-bottom-right-radius: 0px;
   border-bottom-left-radius: 0px;
 }
 .form-centered input[type="text"][disabled],
+.form-centered input[type="email"][disabled],
 .form-centered input[type="password"][disabled] {
   box-shadow: none;
   background: #f7f7f7;
@@ -1045,6 +1049,7 @@ ul.account-radio-group li img {
   text-shadow: none;
 }
 .form-centered input[type="text"].only-child,
+.form-centered input[type="email"].only-child,
 .form-centered input[type="password"].only-child {
   border-bottom-right-radius: 4px;
   border-bottom-left-radius: 4px;
