@@ -132,8 +132,11 @@ func setupHandlers() {
 	queueRunner := queue.NewBuildRunner(docker.New(), timeout)
 	queue := queue.Start(workers, queueRunner)
 
-	hookHandler := handler.NewHookHandler(queue)
-	gitlab := handler.NewGitlabHandler(queue)
+	var (
+		github    = handler.NewGithubHandler(queue)
+		gitlab    = handler.NewGitlabHandler(queue)
+		bitbucket = handler.NewBitbucketHandler(queue)
+	)
 
 	m := pat.New()
 	m.Get("/login", handler.ErrorHandler(handler.Login))
@@ -209,10 +212,10 @@ func setupHandlers() {
 	m.Get("/account/admin/users", handler.AdminHandler(handler.AdminUserList))
 
 	// handlers for GitHub post-commit hooks
-	m.Post("/hook/github.com", handler.ErrorHandler(hookHandler.HookGithub))
+	m.Post("/hook/github.com", handler.ErrorHandler(github.Hook))
 
 	// handlers for Bitbucket post-commit hooks
-	m.Post("/hook/bitbucket.org", handler.ErrorHandler(hookHandler.HookBitbucket))
+	m.Post("/hook/bitbucket.org", handler.ErrorHandler(bitbucket.Hook))
 
 	// handlers for GitLab post-commit hooks
 	m.Post("/hook/gitlab", handler.ErrorHandler(gitlab.Hook))

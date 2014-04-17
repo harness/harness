@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
@@ -58,4 +59,38 @@ func CommitShow(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 
 	// render the repository template.
 	return RenderTemplate(w, "repo_commit.html", &data)
+}
+
+// Helper method for saving a failed build or commit in the case where it never starts to build.
+// This can happen if the yaml is bad or doesn't exist.
+func saveFailedBuild(commit *Commit, msg string) error {
+
+	// Set the commit to failed
+	commit.Status = "Failure"
+	commit.Created = time.Now().UTC()
+	commit.Finished = commit.Created
+	commit.Duration = 0
+	if err := database.SaveCommit(commit); err != nil {
+		return err
+	}
+
+	// save the build to the database
+	build := &Build{}
+	build.Slug = "1" // TODO: This should not be hardcoded
+	build.CommitID = commit.ID
+	build.Created = time.Now().UTC()
+	build.Finished = build.Created
+	commit.Duration = 0
+	build.Status = "Failure"
+	build.Stdout = msg
+	if err := database.SaveBuild(build); err != nil {
+		return err
+	}
+
+	// TODO: Should the status be Error instead of Failure?
+
+	// TODO: Do we need to update the branch table too?
+
+	return nil
+
 }
