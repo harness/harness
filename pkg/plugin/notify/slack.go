@@ -3,7 +3,7 @@ package notify
 import (
 	"encoding/json"
 	"fmt"
-	"path"
+	"net/url"
 )
 
 const (
@@ -37,7 +37,12 @@ func (s *Slack) Send(context *Context) error {
 }
 
 func getBuildUrl(context *Context) string {
-	return context.Host + path.Join("/", context.Repo.Slug, "commit", context.Commit.Hash)
+	branchQuery := url.Values{}
+	if context.Commit.Branch != "" {
+		branchQuery.Set("branch", context.Commit.Branch)
+	}
+
+	return fmt.Sprintf("%s/%s/commit/%s?%s", context.Host, context.Repo.Slug, context.Commit.Hash, branchQuery.Encode())
 }
 
 func getMessage(context *Context, message string) string {

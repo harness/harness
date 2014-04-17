@@ -12,6 +12,7 @@ import (
 	"github.com/drone/go-github/github"
 	"io"
 	"log"
+	"net/url"
 	"path/filepath"
 	"time"
 )
@@ -222,11 +223,16 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 
 	client := github.New(user.GithubToken)
 	client.ApiUrl = settings.GitHubApiUrl
+	buildUrl := getBuildUrl(settings.URL().String(), repo, commit)
 
-	var url string
-	url = settings.URL().String() + "/" + repo.Slug + "/commit/" + commit.Branch + "/" + commit.Hash
+	return client.Repos.CreateStatus(repo.Owner, repo.Name, status, buildUrl, message, commit.Hash)
+}
 
-	return client.Repos.CreateStatus(repo.Owner, repo.Name, status, url, message, commit.Hash)
+func getBuildUrl(host string, repo *Repo, commit *Commit) string {
+	branchQuery := url.Values{}
+	branchQuery.Set("branch", commit.Branch)
+	buildUrl := fmt.Sprintf("%s/%s/commit/%s?%s", host, repo.Slug, commit.Hash, branchQuery.Encode())
+	return buildUrl
 }
 
 type bufferWrapper struct {
