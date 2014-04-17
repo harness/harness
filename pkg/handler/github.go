@@ -10,23 +10,22 @@ import (
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
 	"github.com/drone/drone/pkg/queue"
-	"github.com/drone/go-bitbucket/bitbucket"
 	"github.com/drone/go-github/github"
 )
 
-type HookHandler struct {
+type GithubHandler struct {
 	queue *queue.Queue
 }
 
-func NewHookHandler(queue *queue.Queue) *HookHandler {
-	return &HookHandler{
+func NewGithubHandler(queue *queue.Queue) *GithubHandler {
+	return &GithubHandler{
 		queue: queue,
 	}
 }
 
 // Processes a generic POST-RECEIVE GitHub hook and
 // attempts to trigger a build.
-func (h *HookHandler) HookGithub(w http.ResponseWriter, r *http.Request) error {
+func (h *GithubHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 	// handle github ping
 	if r.Header.Get("X-Github-Event") == "ping" {
 		return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
@@ -35,7 +34,7 @@ func (h *HookHandler) HookGithub(w http.ResponseWriter, r *http.Request) error {
 	// if this is a pull request route
 	// to a different handler
 	if r.Header.Get("X-Github-Event") == "pull_request" {
-		h.PullRequestHookGithub(w, r)
+		h.PullRequestHook(w, r)
 		return nil
 	}
 
@@ -176,7 +175,7 @@ func (h *HookHandler) HookGithub(w http.ResponseWriter, r *http.Request) error {
 	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
 }
 
-func (h *HookHandler) PullRequestHookGithub(w http.ResponseWriter, r *http.Request) {
+func (h *GithubHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) {
 	// get the payload of the message
 	// this should contain a json representation of the
 	// repository and commit details
@@ -290,131 +289,4 @@ func (h *HookHandler) PullRequestHookGithub(w http.ResponseWriter, r *http.Reque
 
 	// OK!
 	RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
-}
-
-// Processes a generic POST-RECEIVE Bitbucket hook and
-// attempts to trigger a build.
-func (h *HookHandler) HookBitbucket(w http.ResponseWriter, r *http.Request) error {
-	// get the payload from the request
-	payload := r.FormValue("payload")
-
-	// parse the post-commit hook
-	hook, err := bitbucket.ParseHook([]byte(payload))
-	if err != nil {
-		return err
-	}
-
-	// get the repo from the URL
-	repoId := r.FormValue("id")
-
-	// get the repo from the database, return error if not found
-	repo, err := database.GetRepoSlug(repoId)
-	if err != nil {
-		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-	}
-
-	// Get the user that owns the repository
-	user, err := database.GetUser(repo.UserID)
-	if err != nil {
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	}
-
-	// Verify that the commit doesn't already exist.
-	// We should never build the same commit twice.
-	_, err = database.GetCommitHash(hook.Commits[len(hook.Commits)-1].Hash, repo.ID)
-	if err != nil && err != sql.ErrNoRows {
-		return RenderText(w, http.StatusText(http.StatusBadGateway), http.StatusBadGateway)
-	}
-
-	commit := &Commit{}
-	commit.RepoID = repo.ID
-	commit.Branch = hook.Commits[len(hook.Commits)-1].Branch
-	commit.Hash = hook.Commits[len(hook.Commits)-1].Hash
-	commit.Status = "Pending"
-	commit.Created = time.Now().UTC()
-	commit.Message = hook.Commits[len(hook.Commits)-1].Message
-	commit.Timestamp = time.Now().UTC().String()
-	commit.SetAuthor(hook.Commits[len(hook.Commits)-1].Author)
-
-	// get the github settings from the database
-	settings := database.SettingsMust()
-
-	// create the Bitbucket client
-	client := bitbucket.New(
-		settings.BitbucketKey,
-		settings.BitbucketSecret,
-		user.BitbucketToken,
-		user.BitbucketSecret,
-	)
-
-	// get the yaml from the database
-	raw, err := client.Sources.Find(repo.Owner, repo.Name, commit.Hash, ".drone.yml")
-	if err != nil {
-		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-	}
-
-	// parse the build script
-	buildscript, err := script.ParseBuild([]byte(raw.Data), repo.Params)
-	if err != nil {
-		msg := "Could not parse your .drone.yml file.  It needs to be a valid drone yaml file.\n\n" + err.Error() + "\n"
-		if err := saveFailedBuild(commit, msg); err != nil {
-			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		}
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	}
-
-	// save the commit to the database
-	if err := database.SaveCommit(commit); err != nil {
-		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	}
-
-	// save the build to the database
-	build := &Build{}
-	build.Slug = "1" // TODO
-	build.CommitID = commit.ID
-	build.Created = time.Now().UTC()
-	build.Status = "Pending"
-	if err := database.SaveBuild(build); err != nil {
-		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	}
-
-	// send the build to the queue
-	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript})
-
-	// OK!
-	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
-}
-
-// Helper method for saving a failed build or commit in the case where it never starts to build.
-// This can happen if the yaml is bad or doesn't exist.
-func saveFailedBuild(commit *Commit, msg string) error {
-
-	// Set the commit to failed
-	commit.Status = "Failure"
-	commit.Created = time.Now().UTC()
-	commit.Finished = commit.Created
-	commit.Duration = 0
-	if err := database.SaveCommit(commit); err != nil {
-		return err
-	}
-
-	// save the build to the database
-	build := &Build{}
-	build.Slug = "1" // TODO: This should not be hardcoded
-	build.CommitID = commit.ID
-	build.Created = time.Now().UTC()
-	build.Finished = build.Created
-	commit.Duration = 0
-	build.Status = "Failure"
-	build.Stdout = msg
-	if err := database.SaveBuild(build); err != nil {
-		return err
-	}
-
-	// TODO: Should the status be Error instead of Failure?
-
-	// TODO: Do we need to update the branch table too?
-
-	return nil
-
 }
