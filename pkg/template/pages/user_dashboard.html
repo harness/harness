@@ -79,9 +79,20 @@
 {{ define "script" }}
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"></script>
 	<script>
-		$(document).ready(function() {
-			$(".timeago").timeago();
-		});
+        $( document ).ready( function ()
+        {
+            $( ".timeago" ).each( function ()
+            {
+                if ( ( new Date( $( this ).attr( "title" ) ) ).getFullYear() > 2000 )
+                {
+                    $( this ).timeago();
+                }
+                else
+                {
+                    $( this ).text( "Pending" );
+                }
+            } );
+        } );
 	</script>
 	<script>
 		if (window.localStorage) {
