@@ -1,4 +1,4 @@
-body {
+﻿body {
   background: #FFF;
 }
 .container {
@@ -894,15 +894,16 @@ pre {
 }
 .build-details img {
   float: left;
-  border-radius: 50%;
   -webkit-border-radius: 50%;
   -moz-border-radius: 50%;
+  border-radius: 50%;
   margin-right: 30px;
   width: 58px;
   height: 58px;
 }
 .build-details .commit-summary {
   float: left;
+  width: 500px;
 }
 .build-details .commit-summary dd {
   overflow: hidden;
