@@ -78,22 +78,8 @@
 
 {{ define "script" }}
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"></script>
-	<script>
-        $( document ).ready( function ()
-        {
-            $( ".timeago" ).each( function ()
-            {
-                if ( ( new Date( $( this ).attr( "title" ) ) ).getFullYear() > 2000 )
-                {
-                    $( this ).timeago();
-                }
-                else
-                {
-                    $( this ).text( "Pending" );
-                }
-            } );
-        } );
-	</script>
+	<script src="/js/dashboard-timeago.js" type="text/javascript"></script>
+
 	<script>
 		if (window.localStorage) {
 			// get the last visited date from local storage
