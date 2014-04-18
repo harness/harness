@@ -74,9 +74,9 @@ func SendPassword(to string, data interface{}) error {
 }
 
 // Sends a build success email to the user.
-func SendSuccess(repo, to string, data interface{}) error {
+func SendSuccess(repo, sha, to string, data interface{}) error {
 	msg := Message{}
-	msg.Subject = "[SUCCESS] " + repo
+	msg.Subject = fmt.Sprintf("[%s] SUCCESS building %s", repo, sha)
 	msg.To = to
 
 	var buf bytes.Buffer
@@ -91,9 +91,9 @@ func SendSuccess(repo, to string, data interface{}) error {
 }
 
 // Sends a build failure email to the user.
-func SendFailure(repo, to string, data interface{}) error {
+func SendFailure(repo, sha, to string, data interface{}) error {
 	msg := Message{}
-	msg.Subject = "[FAILURE] " + repo
+	msg.Subject = fmt.Sprintf("[%s] FAILURE building %s", repo, sha)
 	msg.To = to
 
 	var buf bytes.Buffer
