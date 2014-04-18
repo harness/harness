@@ -26,7 +26,7 @@ func (e *Email) Send(context *Context) error {
 func (e *Email) sendFailure(context *Context) error {
 	// loop through and email recipients
 	for _, email := range e.Recipients {
-		if err := mail.SendFailure(context.Repo.Name, email, context); err != nil {
+		if err := mail.SendFailure(context.Repo.Name, context.Commit.HashShort(), email, context); err != nil {
 			return err
 		}
 	}
@@ -38,7 +38,7 @@ func (e *Email) sendFailure(context *Context) error {
 func (e *Email) sendSuccess(context *Context) error {
 	// loop through and email recipients
 	for _, email := range e.Recipients {
-		if err := mail.SendSuccess(context.Repo.Name, email, context); err != nil {
+		if err := mail.SendSuccess(context.Repo.Name, context.Commit.HashShort(), email, context); err != nil {
 			return err
 		}
 	}
