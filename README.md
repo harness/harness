@@ -259,8 +259,11 @@ notify:
       - brad@drone.io
       - burke@drone.io
 
-  urls:
-    - http://my-deploy-hook.com
+  webhook:
+    on_success: true
+    on_failure: true
+    urls:
+      - http://my-deploy-hook.com
 
   hipchat:
     room: support
