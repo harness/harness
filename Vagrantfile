@@ -64,13 +64,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # Install drone
     echo "Building Drone"
     cd $GOPATH/src/github.com/drone/drone
-    make deps
+    make godep
+    export GOPATH=`godep path`:$GOPATH
+    export PATH=$PATH:$GOPATH/bin:`godep path`/bin
     make embed
     make build
 
 
     # Auto cd to drone install dir
-    echo "cd $GOPATH/src/github.com/drone/drone" >> /home/vagrant/.bashrc
+    echo "cd /opt/go/src/github.com/drone/drone" >> /home/vagrant/.bashrc
 
 
     # Cleanup
