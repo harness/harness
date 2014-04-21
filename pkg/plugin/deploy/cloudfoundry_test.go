@@ -61,6 +61,21 @@ func setUpWithCF(input string) (string, error) {
     return bf.String(), err
 }
 
+func TestCloudFoundryToolInstall(t *testing.T) {
+    bscr, err := setUpWithCF(sampleYmlBasic)
+    if err != nil {
+        t.Fatalf("Can't unmarshal deploy script: %s", err)
+    }
+
+    if !strings.Contains(bscr, "curl -sLO http://go-cli.s3-website-us-east-1.amazonaws.com/releases/latest/cf-cli_amd64.deb") {
+        t.Error("Expect script to contain download command")
+    }
+
+    if !strings.Contains(bscr, "dpkg -i cf-cli_amd64.deb") {
+        t.Error("Expect script to contain install command")
+    }
+}
+
 func TestCloudFoundryDeployment(t *testing.T) {
     bscr, err := setUpWithCF(sampleYmlBasic)
     if err != nil {
@@ -68,11 +83,11 @@ func TestCloudFoundryDeployment(t *testing.T) {
     }
 
     if !strings.Contains(bscr, "cf login -a https://api.example.com -u foo -p bar") {
-        t.Error("Expect login script to contains username and password")
+        t.Error("Expect login script to contain username and password")
     }
 
     if !strings.Contains(bscr, "cf push") {
-        t.Error("Expect script to contains push")
+        t.Error("Expect script to contain push")
     }
 }
 
@@ -83,7 +98,7 @@ func TestCloudFoundryDeploymentWithOrg(t *testing.T) {
     }
 
     if !strings.Contains(bscr, "cf login -a https://api.example.com -u foo -p bar -o custom-org") {
-        t.Error("Expect login script to contains organization")
+        t.Error("Expect login script to contain organization")
     }
 }
 
@@ -94,7 +109,7 @@ func TestCloudFoundryDeploymentWithSpace(t *testing.T) {
     }
 
     if !strings.Contains(bscr, "cf login -a https://api.example.com -u foo -p bar -o custom-org -s dev") {
-        t.Error("Expect login script to contains space")
+        t.Error("Expect login script to contain space")
     }
 }
 
@@ -105,6 +120,6 @@ func TestCloudFoundryDeploymentWithApp(t *testing.T) {
     }
 
     if !strings.Contains(bscr, "cf push test-app") {
-        t.Error("Expect login script to contains app name")
+        t.Error("Expect login script to contain app name")
     }
 }
