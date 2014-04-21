@@ -16,6 +16,13 @@ type CloudFoundry struct {
 }
 
 func (cf *CloudFoundry) Write(f *buildfile.Buildfile) {
+    downloadCmd := "curl -sLO http://go-cli.s3-website-us-east-1.amazonaws.com/releases/latest/cf-cli_amd64.deb"
+    installCmd  := "dpkg -i cf-cli_amd64.deb 1> /dev/null 2> /dev/null"
+
+    // download and install the cf tool
+    f.WriteCmdSilent(fmt.Sprintf("[ -f /usr/bin/sudo ] && sudo %s || %s", downloadCmd, downloadCmd))
+    f.WriteCmdSilent(fmt.Sprintf("[ -f /usr/bin/sudo ] && sudo %s || %s", installCmd, installCmd))
+
     // login
     loginCmd := "cf login -a %s -u %s -p %s"
 
