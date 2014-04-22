@@ -78,11 +78,8 @@
 
 {{ define "script" }}
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"></script>
-	<script>
-		$(document).ready(function() {
-			$(".timeago").timeago();
-		});
-	</script>
+	<script src="/js/dashboard-timeago.js" type="text/javascript"></script>
+
 	<script>
 		if (window.localStorage) {
 			// get the last visited date from local storage
