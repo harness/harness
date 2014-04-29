@@ -53,6 +53,14 @@
 			"Rev": "387fd3d63f391b3155205bdc6cc089b0741273df"
 		},
 		{
+			"ImportPath": "github.com/GeertJohan/go.incremental",
+			"Rev": "92fd0ce4a694213e8b3dfd2d39b16e51d26d0fbf"
+		},
+		{
+			"ImportPath": "github.com/jessevdk/go-flags",
+			"Rev": "cee4db96aec1f7382a0b09d8249c09a8bb8d160b"
+		},
+		{
 			"ImportPath": "github.com/andybons/hipchat",
 			"Rev": "3276a607ebc8e1fe4013eeeca921b9ef72387b02"
 		},
