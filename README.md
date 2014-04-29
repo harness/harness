@@ -246,6 +246,7 @@ Drone currently has these `deploy` and `publish` plugins implemented (more to co
 **publish**
 - [Amazon s3](#docs)
 - [OpenStack Swift](#docs)
+- [PyPI](#docs)
 
 ### Notifications
 
