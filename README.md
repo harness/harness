@@ -229,6 +229,7 @@ publish:
     container: drone
     source: /tmp/drone.deb
     target: latest/drone.deb
+    branch: master
 
 ```
 
@@ -247,6 +248,10 @@ Drone currently has these `deploy` and `publish` plugins implemented (more to co
 - [Amazon s3](#docs)
 - [OpenStack Swift](#docs)
 - [PyPI](#docs)
+
+Publish plugins can be limited to a specific branch using the `branch` configuration
+as seen above in the `swift` example. If you do not specify a `branch` all branches
+will be published, with the exception of Pull Requests.
 
 ### Notifications
 
