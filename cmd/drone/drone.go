@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"strings"
 	"time"
 
 	"github.com/drone/drone/pkg/build"
@@ -120,8 +121,9 @@ func main() {
 }
 
 func vet(path string) {
+	params := getParamMap()
 	// parse the Drone yml file
-	script, err := script.ParseBuildFile(path)
+	script, err := script.ParseBuildFile(path, params)
 	if err != nil {
 		log.Err(err.Error())
 		os.Exit(1)
@@ -136,8 +138,10 @@ func vet(path string) {
 func run(path string) {
 	dockerClient := docker.New()
 
+	params := getParamMap()
+
 	// parse the Drone yml file
-	s, err := script.ParseBuildFile(path)
+	s, err := script.ParseBuildFile(path, params)
 	if err != nil {
 		log.Err(err.Error())
 		os.Exit(1)
@@ -278,6 +282,18 @@ func runParallel(builders []*build.Builder) {
 
 	// wait for the workers to finish
 	wg.Wait()
+}
+
+// returns a map of environment variables
+func getParamMap() map[string]string {
+	m := map[string]string{}
+
+	for _, prm := range os.Environ() {
+		if kv := strings.SplitN(prm, "=", 2); len(kv) == 2 {
+			m[kv[0]] = kv[1]
+		}
+	}
+	return m
 }
 
 var usage = func() {
