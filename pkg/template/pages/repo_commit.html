@@ -37,7 +37,7 @@
 			<img src="{{.Commit.Image}}">
 			<div class="commit-summary">
 				<dt>Commit</dt>
-				<dd><u>{{ .Commit.HashShort }}</u></dd>
+				<dd><a href="{{ .Repo.CommitHostBaseUrl }}/{{ .Commit.Hash }}">{{ .Commit.HashShort }}</a></dd>
 				<dt>Committer</dt>
 				<dd>{{ .Commit.Author }}</dd>
 				<dt>Message</dt>
