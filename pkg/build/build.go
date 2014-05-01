@@ -517,7 +517,7 @@ func (b *Builder) writeBuildScript(dir string) error {
 	// we should only execute the build commands,
 	// and omit the deploy and publish commands.
 	if len(b.Repo.PR) == 0 {
-		b.Build.Write(f)
+		b.Build.Write(f, b.Repo)
 	} else {
 		// only write the build commands
 		b.Build.WriteBuild(f)
