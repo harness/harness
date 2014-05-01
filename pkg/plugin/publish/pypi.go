@@ -2,6 +2,7 @@ package publish
 
 import (
 	"fmt"
+
 	"github.com/drone/drone/pkg/build/buildfile"
 )
 
@@ -36,6 +37,7 @@ type PyPI struct {
 	Password   string   `yaml:"password,omitempty"`
 	Formats    []string `yaml:"formats,omitempty"`
 	Repository string   `yaml:"repository,omitempty"`
+	Branch     string   `yaml:"branch,omitempty"`
 }
 
 func (p *PyPI) Write(f *buildfile.Buildfile) {
