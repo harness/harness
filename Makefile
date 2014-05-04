@@ -18,6 +18,7 @@ database/testing \
 mail \
 model \
 plugin/deploy \
+plugin/publish \
 queue
 PKGS := $(addprefix github.com/drone/drone/pkg/,$(PKGS))
 .PHONY := test $(PKGS)
