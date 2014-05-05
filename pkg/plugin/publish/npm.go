@@ -6,11 +6,11 @@ import (
     "github.com/drone/drone/pkg/build/buildfile"
 )
 
+// use npm trick instead of running npm adduser that requires stdin
 var npmLoginCmd = `
-npm login <<EOF
-%s
-%s
-%s
+cat <<EOF > ~/.npmrc
+_auth = $(echo "%s:%s" | tr -d "\r\n" | base64)
+email = %s
 EOF
 `
 

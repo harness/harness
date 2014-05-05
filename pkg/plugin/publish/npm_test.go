@@ -59,10 +59,6 @@ func TestNPMPublish(t *testing.T) {
         t.Fatalf("Can't unmarshal publish script: %s", err)
     }
 
-    if !strings.Contains(bscr, "npm login") {
-        t.Error("Expect script to contain login command")
-    }
-
     if !strings.Contains(bscr, "npm publish") {
         t.Error("Expect script to contain install command")
     }
