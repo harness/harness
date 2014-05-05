@@ -12,6 +12,7 @@ type Publish struct {
 	S3    *S3    `yaml:"s3,omitempty"`
 	Swift *Swift `yaml:"swift,omitempty"`
 	PyPI  *PyPI  `yaml:"pypi,omitempty"`
+	NPM   *NPM   `yaml:"npm,omitempty"`
 }
 
 func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
@@ -28,5 +29,10 @@ func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	// PyPI
 	if p.PyPI != nil && (len(p.PyPI.Branch) == 0 || (len(p.PyPI.Branch) > 0 && r.Branch == p.PyPI.Branch)) {
 		p.PyPI.Write(f)
+	}
+
+	// NPM
+	if p.NPM != nil && (len(p.NPM.Branch) == 0 || (len(p.NPM.Branch) > 0 && r.Branch == p.NPM.Branch)) {
+		p.NPM.Write(f)
 	}
 }
