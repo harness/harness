@@ -51,11 +51,6 @@ func (n *NPM) Write(f *buildfile.Buildfile) {
 
     npmPublishCmd := "npm publish %s"
 
-    // Setup custom npm registry
-    if n.Registry != "" {
-        f.WriteCmdSilent(fmt.Sprintf("npm config set registry %s", n.Registry))
-    }
-
     if n.Tag != "" {
         npmPublishCmd += fmt.Sprintf(" --tag %s", n.Tag)
     }
@@ -68,6 +63,11 @@ func (n *NPM) Write(f *buildfile.Buildfile) {
 
     // Login to registry
     f.WriteCmdSilent(fmt.Sprintf(npmLoginCmd, n.Username, n.Password, n.Email))
+
+    // Setup custom npm registry
+    if n.Registry != "" {
+        f.WriteCmdSilent(fmt.Sprintf("npm config set registry %s", n.Registry))
+    }
 
     f.WriteCmd(fmt.Sprintf(npmPublishCmd, n.Folder))
 }
