@@ -73,7 +73,7 @@ func (s *SSH) Write(f *buildfile.Buildfile) {
 	}
 
 	if artifact {
-		scpCmd := "scp -o StrictHostKeyChecking=no -P %s ${ARTIFACT} %s"
+		scpCmd := "scp -o StrictHostKeyChecking=no -P %s -r ${ARTIFACT} %s"
 		f.WriteCmd(fmt.Sprintf(scpCmd, host[1], host[0]))
 	}
 
