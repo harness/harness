@@ -115,10 +115,20 @@ func Setup() {
 		Token:       "789",
 		GitlabToken: "789",
 		Admin:       false}
+	user4 := User{
+		Password:    "$2a$10$b8d63QsTL38vx7lj0HEHfOdbu1PCAg6Gfca74UavkXooIBx9YxopS",
+		Name:        "Rick El Toro",
+		Email:       "rick@el.to.ro",
+		Gravatar:    "c2180a539620d90d68eaeb848364f1c2",
+		Token:       "987",
+		GitlabToken: "987",
+		Admin:       false}
+
 
 	database.SaveUser(&user1)
 	database.SaveUser(&user2)
 	database.SaveUser(&user3)
+	database.SaveUser(&user4)
 
 	// create dummy team data
 	team1 := Team{
