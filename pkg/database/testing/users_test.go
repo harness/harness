@@ -146,8 +146,8 @@ func TestListUsers(t *testing.T) {
 	}
 
 	// verify user count
-	if len(users) != 3 {
-		t.Errorf("Exepected %d users in database, got %d", 3, len(users))
+	if len(users) != 4 {
+		t.Errorf("Exepected %d users in database, got %d", 4, len(users))
 		return
 	}
 

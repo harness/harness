@@ -10,6 +10,7 @@ import (
 
 	"github.com/drone/drone/pkg/build/buildfile"
 	"github.com/drone/drone/pkg/build/git"
+	"github.com/drone/drone/pkg/build/repo"
 	"github.com/drone/drone/pkg/plugin/deploy"
 	"github.com/drone/drone/pkg/plugin/notify"
 	"github.com/drone/drone/pkg/plugin/publish"
@@ -81,13 +82,13 @@ type Build struct {
 
 // Write adds all the steps to the build script, including
 // build commands, deploy and publish commands.
-func (b *Build) Write(f *buildfile.Buildfile) {
+func (b *Build) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	// append build commands
 	b.WriteBuild(f)
 
 	// write publish commands
 	if b.Publish != nil {
-		b.Publish.Write(f)
+		b.Publish.Write(f, r)
 	}
 
 	// write deployment commands
