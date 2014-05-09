@@ -85,7 +85,7 @@ func TestSSHOneArtifact(t *testing.T) {
 		t.Errorf("Expect script to contains artifact")
 	}
 
-	if !strings.Contains(bscr, "scp -o StrictHostKeyChecking=no -P 2212 ${ARTIFACT} user@test.example.com:/srv/app/location") {
+	if !strings.Contains(bscr, "scp -o StrictHostKeyChecking=no -P 2212 -r ${ARTIFACT} user@test.example.com:/srv/app/location") {
 		t.Errorf("Expect script to contains scp command, got:\n%s", bscr)
 	}
 }
