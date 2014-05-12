@@ -15,7 +15,9 @@ func TestIsRemote(t *testing.T) {
 		{"git@github.com:foo/far.git", true},
 		{"http://github.com/foo/far.git", true},
 		{"https://github.com/foo/far.git", true},
+		{"https://bitbucket.org/owner/name.git", true},
 		{"ssh://baz.com/foo/far.git", true},
+		{"https://bitbucket.org/jespern/django-piston", true},
 		{"/var/lib/src", false},
 		{"/home/ubuntu/src", false},
 		{"src", false},
@@ -40,9 +42,11 @@ func TestIsGit(t *testing.T) {
 		{"git@github.com:foo/far.git", true},
 		{"http://github.com/foo/far.git", true},
 		{"https://github.com/foo/far.git", true},
+		{"https://bitbucket.org/owner/name.git", true},
 		{"ssh://baz.com/foo/far.git", true},
 		{"svn://gcc.gnu.org/svn/gcc/branches/gccgo", false},
 		{"https://code.google.com/p/go", false},
+		{"https://bitbucket.org/jespern/django-piston", false},
 	}
 
 	for _, r := range repos {
