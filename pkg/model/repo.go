@@ -12,6 +12,7 @@ const (
 )
 
 const (
+	HostGithub    = "github.com"
 	HostBitbucket = "bitbucket.org"
 	HostGoogle    = "code.google.com"
 	HostCustom    = "custom"
@@ -28,6 +29,12 @@ const (
 	githubRepoPatternPrivate    = "git@%s:%s/%s.git"
 	bitbucketRepoPattern        = "https://bitbucket.org/%s/%s.git"
 	bitbucketRepoPatternPrivate = "git@bitbucket.org:%s/%s.git"
+)
+
+const (
+	githubCommitUrlPattern = "https://%s/commit"
+	bitbucketCommitUrlPattern = "https://%s/commits"
+	gitlabCommitUrlPattern = "http://%s/commit"
 )
 
 type Repo struct {
@@ -154,5 +161,16 @@ func (r *Repo) DefaultBranch() string {
 		return DefaultBranchSvn
 	default:
 		return DefaultBranchGit
+	}
+}
+
+func (r *Repo) CommitHostBaseUrl() string {
+	switch r.Host {
+	case HostGithub:
+		return fmt.Sprintf(githubCommitUrlPattern, r.Slug)
+	case HostBitbucket:
+		return fmt.Sprintf(bitbucketCommitUrlPattern, r.Slug)
+	default:
+		return fmt.Sprintf(gitlabCommitUrlPattern, r.Slug)
 	}
 }

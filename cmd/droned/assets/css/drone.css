@@ -1,4 +1,4 @@
-﻿body {
+body {
   background: #FFF;
 }
 .container {
@@ -909,6 +909,13 @@ pre {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 450px;
+}
+.build-details .commit-summary a {
+  text-decoration: underline;
+  color: inherit;
+}
+.build-details .commit-summary a:hover {
+  color: #000;
 }
 .build-details.affix {
   top: 0px;
