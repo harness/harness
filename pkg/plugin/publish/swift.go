@@ -2,6 +2,7 @@ package publish
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/drone/drone/pkg/build/buildfile"
 )
@@ -37,10 +38,16 @@ type Swift struct {
 }
 
 func (s *Swift) Write(f *buildfile.Buildfile) {
+	var target string
 	// All options are required, so ensure they are present
-	if len(s.Username) == 0 || len(s.Password) == 0 || len(s.AuthURL) == 0 || len(s.Region) == 0 || len(s.Source) == 0 || len(s.Container) == 0 || len(s.Target) == 0 {
+	if len(s.Username) == 0 || len(s.Password) == 0 || len(s.AuthURL) == 0 || len(s.Region) == 0 || len(s.Source) == 0 || len(s.Container) == 0 {
 		f.WriteCmdSilent(`echo "Swift: Missing argument(s)"`)
 		return
+	}
+
+	// If a target was provided, prefix it with a /
+	if len(s.Target) > 0 {
+		target = fmt.Sprintf("/%s", strings.TrimPrefix(s.Target, "/"))
 	}
 
 	// debugging purposes so we can see if / where something is failing
@@ -56,5 +63,5 @@ func (s *Swift) Write(f *buildfile.Buildfile) {
 	f.WriteEnv("SWIFTLY_AUTH_KEY", s.Password)
 	f.WriteEnv("SWIFTLY_REGION", s.Region)
 
-	f.WriteCmd(fmt.Sprintf(`swiftly put -i %s %s/%s`, s.Source, s.Container, s.Target))
+	f.WriteCmd(fmt.Sprintf(`swiftly put -i %s %s%s`, s.Source, s.Container, target))
 }
