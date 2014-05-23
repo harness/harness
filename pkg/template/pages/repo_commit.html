@@ -28,7 +28,7 @@
       <div class="actions">
 				{{ if .IsAdmin }}
 					{{ if not .Build.IsRunning }}
-					<form action="/{{.Repo.Slug}}/commit/{{.Commit.Hash}}/rebuild"
+					<form action="/{{.Repo.Slug}}/commit/{{.Commit.Hash}}/rebuild?branch={{ .Commit.Branch }}"
 								method="POST">
 						<input class="btn btn-default" type="submit" value="Rebuild"/>
 					</form>
