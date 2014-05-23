@@ -121,9 +121,13 @@ func (h *CommitRebuildHandler) CommitRebuild(w http.ResponseWriter, r *http.Requ
 	hash := r.FormValue(":commit")
 	labl := r.FormValue(":label")
 	host := r.FormValue(":host")
+	branch := r.FormValue("branch")
+	if branch == "" {
+		branch = "master"
+	}
 
 	// get the commit from the database
-	commit, err := database.GetCommitHash(hash, repo.ID)
+	commit, err := database.GetCommitBranchHash(branch, hash, repo.ID)
 	if err != nil {
 		return err
 	}
@@ -157,9 +161,9 @@ func (h *CommitRebuildHandler) CommitRebuild(w http.ResponseWriter, r *http.Requ
 	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build})
 
 	if labl != "" {
-		http.Redirect(w, r, fmt.Sprintf("/%s/%s/%s/commit/%s/build/%s", host, repo.Owner, repo.Name, hash, labl), http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("/%s/%s/%s/commit/%s/build/%s?branch=%s", host, repo.Owner, repo.Name, hash, labl, branch), http.StatusSeeOther)
 	} else {
-		http.Redirect(w, r, fmt.Sprintf("/%s/%s/%s/commit/%s", host, repo.Owner, repo.Name, hash), http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("/%s/%s/%s/commit/%s?branch=%s", host, repo.Owner, repo.Name, hash, branch), http.StatusSeeOther)
 	}
 
 	return nil
