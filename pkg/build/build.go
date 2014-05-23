@@ -244,6 +244,8 @@ func (b *Builder) setup() error {
 		if err := b.dockerClient.Images.Pull(b.Build.Image); err != nil {
 			return err
 		}
+	} else if err != nil {
+		log.Errf("failed to inspect image %s", b.Build.Image)
 	}
 
 	// create the Docker image
