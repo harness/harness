@@ -45,7 +45,7 @@ func TestRepoHandler(t *testing.T) {
 			So(rec.Code, ShouldEqual, 303)
 		})
 		Convey("Private repo can not be viewed by a non team member", func() {
-			req,  err := http.NewRequest("GET", "/github.com/drone/drone", nil)
+			req, err := http.NewRequest("GET", "/github.com/drone/drone", nil)
 			So(err, ShouldBeNil)
 			rec := httptest.NewRecorder()
 			setUserSession(rec, req, "rick@el.to.ro")
@@ -61,7 +61,7 @@ func dummyUserRepo(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) 
 
 func setUserSession(w http.ResponseWriter, r *http.Request, username string) {
 	handler.SetCookie(w, r, "_sess", username)
-	resp := http.Response{Header: w.Header()} 
+	resp := http.Response{Header: w.Header()}
 	for _, v := range resp.Cookies() {
 		r.AddCookie(v)
 	}
