@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"github.com/drone/drone/pkg/build/script"
 	. "github.com/drone/drone/pkg/model"
 )
 
@@ -16,10 +15,6 @@ type BuildTask struct {
 	Repo   *Repo
 	Commit *Commit
 	Build  *Build
-
-	// Build instructions from the .drone.yml
-	// file, unmarshalled.
-	Script *script.Build
 }
 
 // Start N workers with the given build runner.
