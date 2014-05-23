@@ -44,6 +44,11 @@ var (
 	// Number of concurrent build workers to run
 	// default to number of CPUs on machine
 	workers int
+
+	// Secret key to use when signing session cookies. If
+	// none specified, generate a unique one on every
+	// start
+	secret string
 )
 
 func main() {
@@ -55,6 +60,7 @@ func main() {
 	flag.StringVar(&sslkey, "sslkey", "", "")
 	flag.DurationVar(&timeout, "timeout", 300*time.Minute, "")
 	flag.IntVar(&workers, "workers", runtime.NumCPU(), "")
+	flag.StringVar(&secret, "secret", "", "")
 	flag.Parse()
 
 	// validate the TLS arguments
@@ -66,6 +72,7 @@ func main() {
 	}
 	discardOldBuilds()
 	setupStatic()
+	setupSecret()
 	setupHandlers()
 
 	// debug
@@ -125,6 +132,17 @@ func setupStatic() {
 		// serce images
 		images.ServeHTTP(w, r)
 	})
+}
+
+// sets the secret, if it exists
+func setupSecret() {
+	if secret != "" {
+		if len(secret) < 30 {
+			log.Fatal("Secret keys less than 30 characters are insecure!")
+		}
+
+		handler.SetSecret(secret)
+	}
 }
 
 // setup routes for serving dynamic content.

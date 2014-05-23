@@ -7,5 +7,6 @@
 #   -path="":
 #   -port=":8080":
 #   -workers="4":
+#   -secret="c27e8eb83be1f23dd55977198bdc32e63dd581b99df97497af"
 #         
 #DRONED_OPTS="--port=:80"
