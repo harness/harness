@@ -24,6 +24,18 @@
 			{{ else }}
 			<span>commit <span>{{ .Commit.HashShort }}</span> to <span>{{.Commit.Branch}}</span> branch</span>
 			{{ end }}
+
+      <div class="actions">
+				{{ if .IsAdmin }}
+					{{ if not .Build.IsRunning }}
+					<form action="/{{.Repo.Slug}}/commit/{{.Commit.Hash}}/rebuild?branch={{ .Commit.Branch }}"
+								method="POST">
+						<input class="btn btn-default" type="submit" value="Rebuild"/>
+					</form>
+					{{	end	 }}
+				{{ end }}
+			</div>
+
 		</div>
 		<div class="build-details container affix-top" data-spy="affix" data-offset-top="248">
 			<div class="build-summary">

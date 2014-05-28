@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/drone/drone/pkg/build/git"
 	r "github.com/drone/drone/pkg/build/repo"
+	"github.com/drone/drone/pkg/build/script"
 	"github.com/drone/drone/pkg/channel"
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
@@ -83,9 +84,16 @@ func (w *worker) execute(task *BuildTask) error {
 		Host:   settings.URL().String(),
 	}
 
+	// parse the build script
+	buildscript, err := script.ParseBuild([]byte(task.Build.BuildScript), task.Repo.Params)
+	if err != nil {
+		log.Printf("Could not parse your .drone.yml file.  It needs to be a valid drone yaml file.\n\n" + err.Error() + "\n")
+		return err
+	}
+
 	// send all "started" notifications
-	if task.Script.Notifications != nil {
-		task.Script.Notifications.Send(context)
+	if buildscript.Notifications != nil {
+		buildscript.Notifications.Send(context)
 	}
 
 	// Send "started" notification to Github
@@ -113,7 +121,7 @@ func (w *worker) execute(task *BuildTask) error {
 	// this is not a pull request (for security purposes)
 	if task.Repo.Params != nil && len(task.Commit.PullRequest) == 0 {
 		for k, v := range task.Repo.Params {
-			task.Script.Env = append(task.Script.Env, k+"="+v)
+			buildscript.Env = append(buildscript.Env, k+"="+v)
 		}
 	}
 
@@ -126,7 +134,7 @@ func (w *worker) execute(task *BuildTask) error {
 	}()
 
 	// execute the build
-	passed, buildErr := w.runBuild(task, buf)
+	passed, buildErr := w.runBuild(task, buildscript, buf)
 
 	task.Build.Finished = time.Now().UTC()
 	task.Commit.Finished = time.Now().UTC()
@@ -162,14 +170,14 @@ func (w *worker) execute(task *BuildTask) error {
 	channel.Close(consoleslug)
 
 	// send all "finished" notifications
-	if task.Script.Notifications != nil {
-		task.Script.Notifications.Send(context)
+	if buildscript.Notifications != nil {
+		buildscript.Notifications.Send(context)
 	}
 
 	return nil
 }
 
-func (w *worker) runBuild(task *BuildTask, buf io.Writer) (bool, error) {
+func (w *worker) runBuild(task *BuildTask, buildscript *script.Build, buf io.Writer) (bool, error) {
 	repo := &r.Repo{
 		Name:   task.Repo.Slug,
 		Path:   task.Repo.URL,
@@ -177,11 +185,11 @@ func (w *worker) runBuild(task *BuildTask, buf io.Writer) (bool, error) {
 		Commit: task.Commit.Hash,
 		PR:     task.Commit.PullRequest,
 		Dir:    filepath.Join("/var/cache/drone/src", task.Repo.Slug),
-		Depth:  git.GitDepth(task.Script.Git),
+		Depth:  git.GitDepth(buildscript.Git),
 	}
 
 	return w.runner.Run(
-		task.Script,
+		buildscript,
 		repo,
 		[]byte(task.Repo.PrivateKey),
 		task.Repo.Privileged,

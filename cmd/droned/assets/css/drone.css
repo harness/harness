@@ -870,6 +870,14 @@ pre {
   font-size: 22px !IMPORTANT;
   line-height: 32px !IMPORTANT;
 }
+.alert.alert-build-Success .actions,
+.alert.alert-build-Error .actions,
+.alert.alert-build-Failure .actions,
+.alert.alert-build-Pending .actions,
+.alert.alert-build-Started .actions {
+  float: right;
+  margin-top: -2px;
+}
 .build-details {
   background: #FFF;
   margin-bottom: 40px;
