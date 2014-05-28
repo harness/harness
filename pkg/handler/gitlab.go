@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drone/drone/pkg/build/script"
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
 	"github.com/drone/drone/pkg/queue"
@@ -207,19 +206,9 @@ func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 	// get the drone.yml file from GitHub
 	client := gogitlab.NewGitlab(settings.GitlabApiUrl, g.apiPath, user.GitlabToken)
 
-	content, err := client.RepoRawFile(ns(repo.Owner, repo.Name), commit.Hash, ".drone.yml")
+	buildscript, err := client.RepoRawFile(ns(repo.Owner, repo.Name), commit.Hash, ".drone.yml")
 	if err != nil {
 		msg := "No .drone.yml was found in this repository.  You need to add one.\n"
-		if err := saveFailedBuild(commit, msg); err != nil {
-			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		}
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	}
-
-	// parse the build script
-	buildscript, err := script.ParseBuild(content, repo.Params)
-	if err != nil {
-		msg := "Could not parse your .drone.yml file.  It needs to be a valid drone yaml file.\n\n" + err.Error() + "\n"
 		if err := saveFailedBuild(commit, msg); err != nil {
 			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
@@ -237,11 +226,12 @@ func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 	build.CommitID = commit.ID
 	build.Created = time.Now().UTC()
 	build.Status = "Pending"
+	build.BuildScript = string(buildscript)
 	if err := database.SaveBuild(build); err != nil {
 		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 
-	g.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript})
+	g.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build})
 
 	// OK!
 	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
@@ -287,23 +277,13 @@ func (g *GitlabHandler) PullRequestHook(p *gogitlab.HookPayload, repo *Repo, use
 	commit.Timestamp = src.Commit.AuthoredDateRaw
 	commit.SetAuthor(src.Commit.Author.Email)
 
-	content, err := client.RepoRawFile(strconv.Itoa(obj.SourceProjectId), commit.Hash, ".drone.yml")
+	buildscript, err := client.RepoRawFile(strconv.Itoa(obj.SourceProjectId), commit.Hash, ".drone.yml")
 	if err != nil {
 		msg := "No .drone.yml was found in this repository.  You need to add one.\n"
 		if err := saveFailedBuild(commit, msg); err != nil {
 			return fmt.Errorf("Failed to save build: %q", err)
 		}
 		return fmt.Errorf("Error to fetch build script: %q", err)
-	}
-
-	// parse the build script
-	buildscript, err := script.ParseBuild(content, repo.Params)
-	if err != nil {
-		msg := "Could not parse your .drone.yml file.  It needs to be a valid drone yaml file.\n\n" + err.Error() + "\n"
-		if err := saveFailedBuild(commit, msg); err != nil {
-			return fmt.Errorf("Failed to save build: %q", err)
-		}
-		return fmt.Errorf("Failed to parse build script: %q", err)
 	}
 
 	// save the commit to the database
@@ -317,11 +297,12 @@ func (g *GitlabHandler) PullRequestHook(p *gogitlab.HookPayload, repo *Repo, use
 	build.CommitID = commit.ID
 	build.Created = time.Now().UTC()
 	build.Status = "Pending"
+	build.BuildScript = string(buildscript)
 	if err := database.SaveBuild(build); err != nil {
 		return fmt.Errorf("Failed to save build: %q", err)
 	}
 
-	g.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript})
+	g.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build})
 
 	return nil
 }

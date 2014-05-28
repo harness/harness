@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/drone/drone/pkg/build/script"
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
 	"github.com/drone/drone/pkg/queue"
@@ -131,22 +130,8 @@ func (h *GithubHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// decode the content.  Note: Not sure this will ever happen...it basically means a GitHub API issue
-	raw, err := content.DecodeContent()
+	buildscript, err := content.DecodeContent()
 	if err != nil {
-		msg := "Could not decode the yaml from GitHub.  Check that your .drone.yml is a valid yaml file.\n"
-		if err := saveFailedBuild(commit, msg); err != nil {
-			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		}
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	}
-
-	// parse the build script
-	buildscript, err := script.ParseBuild(raw, repo.Params)
-	if err != nil {
-		msg := "Could not parse your .drone.yml file.  It needs to be a valid drone yaml file.\n\n" + err.Error() + "\n"
-		if err := saveFailedBuild(commit, msg); err != nil {
-			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		}
 		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
@@ -161,6 +146,7 @@ func (h *GithubHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 	build.CommitID = commit.ID
 	build.Created = time.Now().UTC()
 	build.Status = "Pending"
+	build.BuildScript = string(buildscript)
 	if err := database.SaveBuild(build); err != nil {
 		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
@@ -169,7 +155,7 @@ func (h *GithubHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 	//realtime.CommitPending(repo.UserID, repo.TeamID, repo.ID, commit.ID, repo.Private)
 	//realtime.BuildPending(repo.UserID, repo.TeamID, repo.ID, commit.ID, build.ID, repo.Private)
 
-	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript}) //Push(repo, commit, build, buildscript)
+	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build}) //Push(repo, commit, build)
 
 	// OK!
 	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
@@ -250,18 +236,8 @@ func (h *GithubHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// decode the content
-	raw, err := content.DecodeContent()
+	buildscript, err := content.DecodeContent()
 	if err != nil {
-		RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
-	// parse the build script
-	buildscript, err := script.ParseBuild(raw, repo.Params)
-	if err != nil {
-		// TODO if the YAML is invalid we should create a commit record
-		// with an ERROR status so that the user knows why a build wasn't
-		// triggered in the system
 		RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
@@ -278,6 +254,7 @@ func (h *GithubHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) 
 	build.CommitID = commit.ID
 	build.Created = time.Now().UTC()
 	build.Status = "Pending"
+	build.BuildScript = string(buildscript)
 	if err := database.SaveBuild(build); err != nil {
 		RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
@@ -285,7 +262,7 @@ func (h *GithubHandler) PullRequestHook(w http.ResponseWriter, r *http.Request) 
 
 	// notify websocket that a new build is pending
 	// TODO we should, for consistency, just put this inside Queue.Add()
-	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript})
+	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build})
 
 	// OK!
 	RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
