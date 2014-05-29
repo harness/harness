@@ -10,6 +10,7 @@ func (r *rev20140522205400) Revision() int64 {
 
 func (r *rev20140522205400) Up(mg *MigrationDriver) error {
 	_, err := mg.AddColumn("builds", "buildscript TEXT")
+	_, err = mg.Tx.Exec("UPDATE builds SET buildscript = '' WHERE buildscript IS NULL")
 	return err
 }
 
