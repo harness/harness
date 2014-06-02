@@ -122,7 +122,7 @@ func setupStatic() {
 			w.Header().Add("Cache-Control", "no-cache")
 		}
 
-		// serce images
+		// serve images
 		images.ServeHTTP(w, r)
 	})
 }
