@@ -43,26 +43,29 @@ func Badge(w http.ResponseWriter, r *http.Request) error {
 	// get the latest commit from the database
 	// for the requested branch
 	commit, err := database.GetBranch(repo.ID, branchParam)
-	if err == nil {
-		switch {
-		case commit.Status == "Success" && len(successParam) == 0:
-			// if no success image is provided, we serve a
-			// badge using the shields.io service
-			badge = badgeSuccess
-		case commit.Status == "Success" && len(successParam) != 0:
-			// otherwise we serve the user defined success badge
-			badge = successParam
-		case commit.Status == "Failure" && len(failureParam) == 0:
-			// if no failure image is provided, we serve a
-			// badge using the shields.io service
-			badge = badgeFailure
-		case commit.Status == "Failure" && len(failureParam) != 0:
-			// otherwise we serve the user defined failure badge
-			badge = failureParam
-		default:
-			// otherwise load unknown image
-			badge = badgeUnknown
-		}
+	if err != nil {
+		http.NotFound(w, r)
+		return nil
+	}
+
+	switch {
+	case commit.Status == "Success" && len(successParam) == 0:
+		// if no success image is provided, we serve a
+		// badge using the shields.io service
+		badge = badgeSuccess
+	case commit.Status == "Success" && len(successParam) != 0:
+		// otherwise we serve the user defined success badge
+		badge = successParam
+	case commit.Status == "Failure" && len(failureParam) == 0:
+		// if no failure image is provided, we serve a
+		// badge using the shields.io service
+		badge = badgeFailure
+	case commit.Status == "Failure" && len(failureParam) != 0:
+		// otherwise we serve the user defined failure badge
+		badge = failureParam
+	default:
+		// otherwise load unknown image
+		badge = badgeUnknown
 	}
 
 	http.Redirect(w, r, badge, http.StatusSeeOther)
