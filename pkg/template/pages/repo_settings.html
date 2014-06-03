@@ -31,6 +31,10 @@
 		<div class="col-xs-9" role="main">
 			<div class="alert">Manage your repository settings.</div>
 				<form method="POST" action="/{{.Repo.Slug}}" role="form">
+					<div class="form-group">
+						<label>Repository URL</label>
+						<input class="form-control form-control-xlarge" type="text" name="URL" value="{{.Repo.URL}}" />
+					</div>
 					<div class="checkbox form-group">
 						<label>
 							<input class="" type="checkbox" name="Disabled" {{ if not .Repo.Disabled }}checked="True" {{ end }}/>

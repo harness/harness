@@ -326,6 +326,7 @@ func RepoUpdate(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 			return err
 		}
 	default:
+		repo.URL = r.FormValue("URL")
 		repo.Disabled = len(r.FormValue("Disabled")) == 0
 		repo.DisabledPullRequest = len(r.FormValue("DisabledPullRequest")) == 0
 		repo.Private = len(r.FormValue("Private")) > 0
