@@ -43,6 +43,11 @@ type User struct {
 	BitbucketSecret string `meddler:"bitbucket_secret" json:"-"`
 
 	GitlabToken string `meddler:"gitlab_token" json:"-"`
+
+	// Stash OAuth1.0a token and token secret.
+	StashLogin  string `meddler:"stash_login"  json:"-"`
+	StashToken  string `meddler:"stash_token"  json:"-"`
+	StashSecret string `meddler:"stash_secret" json:"-"`
 }
 
 // Creates a new User from the given Name and Email.

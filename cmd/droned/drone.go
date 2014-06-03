@@ -137,6 +137,7 @@ func setupHandlers() {
 		gitlab    = handler.NewGitlabHandler(queue)
 		bitbucket = handler.NewBitbucketHandler(queue)
 		rebuild   = handler.NewCommitRebuildHandler(queue)
+		stash     = handler.NewStashHandler(queue)
 	)
 
 	m := pat.New()
@@ -174,6 +175,13 @@ func setupHandlers() {
 	// handler for linking GitLab account
 	m.Post("/link/gitlab", handler.UserHandler(gitlab.Link))
 	m.Get("/link/gitlab", handler.UserHandler(gitlab.ReLink))
+
+	// handlers for linking your Stash account
+	m.Post("/new/stash", handler.UserHandler(handler.RepoCreateStash))
+	m.Get("/new/stash", handler.UserHandler(handler.RepoAddStash))
+
+	// handlers for setting up your Stash repository
+	m.Get("/auth/login/stash", handler.UserHandler(handler.LinkStash))
 
 	// handlers for dashboard pages
 	m.Get("/dashboard/team/:team", handler.UserHandler(handler.TeamShow))
@@ -220,6 +228,9 @@ func setupHandlers() {
 
 	// handlers for GitLab post-commit hooks
 	m.Post("/hook/gitlab", handler.ErrorHandler(gitlab.Hook))
+
+	// handlers for Stash post-commit hooks
+	m.Get("/hook/stash", handler.ErrorHandler(stash.Hook))
 
 	// handlers for first-time installation
 	m.Get("/install", handler.ErrorHandler(handler.Install))

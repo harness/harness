@@ -14,7 +14,7 @@ const userTable = "users"
 const userFindIdStmt = `
 SELECT id, email, password, token, name, gravatar, created, updated, admin,
 github_login, github_token, bitbucket_login, bitbucket_token, bitbucket_secret,
-gitlab_token
+gitlab_token, stash_login, stash_token, stash_secret
 FROM users WHERE id = ?
 `
 
@@ -22,7 +22,7 @@ FROM users WHERE id = ?
 const userFindEmailStmt = `
 SELECT id, email, password, token, name, gravatar, created, updated, admin,
 github_login, github_token, bitbucket_login, bitbucket_token, bitbucket_secret,
-gitlab_token
+gitlab_token, stash_login, stash_token, stash_secret
 FROM users WHERE email = ?
 `
 
@@ -30,7 +30,7 @@ FROM users WHERE email = ?
 const userStmt = `
 SELECT id, email, password, token, name, gravatar, created, updated, admin,
 github_login, github_token, bitbucket_login, bitbucket_token, bitbucket_secret,
-gitlab_token
+gitlab_token, stash_login, stash_token, stash_secret
 FROM users
 ORDER BY name ASC
 `

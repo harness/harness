@@ -11,7 +11,8 @@ const settingsTable = "settings"
 // SQL Queries to retrieve the system settings
 const settingsStmt = `
 SELECT id, github_key, github_secret, github_domain, github_apiurl, bitbucket_key, bitbucket_secret,
-gitlab_domain, gitlab_apiurl, smtp_server, smtp_port, smtp_address, smtp_username, smtp_password,
+gitlab_domain, gitlab_apiurl, stash_key, stash_secret, stash_domain, stash_sshport, stash_hookkey, stash_privatekey,
+smtp_server, smtp_port, smtp_address, smtp_username, smtp_password,
 hostname, scheme, open_invitations FROM settings WHERE id = 1
 `
 

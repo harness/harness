@@ -98,6 +98,8 @@ func Setup() {
 		Gravatar:    "8c58a0be77ee441bb8f8595b7f1b4e87",
 		Token:       "123",
 		GitlabToken: "123",
+		StashToken:  "123",
+		StashSecret: "123",
 		Admin:       true}
 	user2 := User{
 		Password:    "$2a$10$b8d63QsTL38vx7lj0HEHfOdbu1PCAg6Gfca74UavkXooIBx9YxopS",
@@ -106,6 +108,8 @@ func Setup() {
 		Gravatar:    "c62f7126273f7fa786274274a5dec8ce",
 		Token:       "456",
 		GitlabToken: "456",
+		StashToken:  "123",
+		StashSecret: "123",
 		Admin:       false}
 	user3 := User{
 		Password:    "$2a$10$b8d63QsTL38vx7lj0HEHfOdbu1PCAg6Gfca74UavkXooIBx9YxopS",
@@ -114,6 +118,8 @@ func Setup() {
 		Gravatar:    "c2180a539620d90d68eaeb848364f1c2",
 		Token:       "789",
 		GitlabToken: "789",
+		StashToken:  "123",
+		StashSecret: "123",
 		Admin:       false}
 	user4 := User{
 		Password:    "$2a$10$b8d63QsTL38vx7lj0HEHfOdbu1PCAg6Gfca74UavkXooIBx9YxopS",
@@ -122,8 +128,9 @@ func Setup() {
 		Gravatar:    "c2180a539620d90d68eaeb848364f1c2",
 		Token:       "987",
 		GitlabToken: "987",
+		StashToken:  "123",
+		StashSecret: "123",
 		Admin:       false}
-
 
 	database.SaveUser(&user1)
 	database.SaveUser(&user2)

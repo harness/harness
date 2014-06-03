@@ -10,6 +10,7 @@ import (
 	"github.com/drone/go-bitbucket/oauth1"
 	"github.com/drone/go-github/github"
 	"github.com/drone/go-github/oauth2"
+	oauth1_stash "github.com/reinbach/go-stash/oauth1"
 )
 
 // Create the User session.
@@ -169,5 +170,81 @@ func LinkBitbucket(w http.ResponseWriter, r *http.Request, u *User) error {
 	}
 
 	http.Redirect(w, r, "/new/bitbucket.org", http.StatusSeeOther)
+	return nil
+}
+
+func LinkStash(w http.ResponseWriter, r *http.Request, u *User) error {
+
+	// get settings from database
+	settings := database.SettingsMust()
+
+	// stash oauth1 consumer
+	var consumer = oauth1_stash.Consumer{
+		RequestTokenURL:       settings.StashDomain + "/plugins/servlet/oauth/request-token",
+		AuthorizationURL:      settings.StashDomain + "/plugins/servlet/oauth/authorize",
+		AccessTokenURL:        settings.StashDomain + "/plugins/servlet/oauth/access-token",
+		CallbackURL:           settings.URL().String() + "/auth/login/stash",
+		ConsumerKey:           settings.StashKey,
+		ConsumerPrivateKeyPem: settings.StashPrivateKey,
+	}
+
+	// get the oauth verifier
+	verifier := r.FormValue("oauth_verifier")
+	if len(verifier) == 0 {
+		// Generate a Request Token
+		requestToken, err := consumer.RequestToken()
+		if err != nil {
+			return err
+		}
+
+		// add the request token as a signed cookie
+		SetCookie(w, r, "stash_token", requestToken.Encode())
+
+		url, _ := consumer.AuthorizeRedirect(requestToken)
+		http.Redirect(w, r, url, http.StatusSeeOther)
+		return nil
+	}
+
+	// remove stash token data once before redirecting
+	// back to the application.
+	defer DelCookie(w, r, "stash_token")
+
+	// get the tokens from the request
+	requestTokenStr := GetCookie(r, "stash_token")
+	requestToken, err := oauth1_stash.ParseRequestTokenStr(requestTokenStr)
+	if err != nil {
+		return err
+	}
+
+	// exchange for an access token
+	accessToken, err := consumer.AuthorizeToken(requestToken, verifier)
+	if err != nil {
+		return err
+	}
+
+	// create the Stash client
+	// client := stash.New(
+	// 	settings.StashKey,
+	// 	settings.StashSecret,
+	// 	accessToken.Token(),
+	// 	accessToken.Secret(),
+	// 	settings.StashPrivateKey,
+	// )
+
+	// get the currently authenticated Stash User
+	// user, err := client.Users.Current()
+	// if err != nil {
+	// 	return err
+	// }
+
+	// update the user account
+	//u.StashLogin = user.Username
+	u.StashToken = accessToken.Token()
+	u.StashSecret = accessToken.Secret()
+	if err := database.SaveUser(u); err != nil {
+		return err
+	}
+
+	http.Redirect(w, r, "/new/stash", http.StatusSeeOther)
 	return nil
 }
