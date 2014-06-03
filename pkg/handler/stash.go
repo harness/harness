@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/drone/drone/pkg/build/script"
 	"github.com/drone/drone/pkg/database"
 	. "github.com/drone/drone/pkg/model"
 	"github.com/drone/drone/pkg/queue"
@@ -79,16 +78,6 @@ func (h *StashHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
 
-	// parse the build script
-	buildscript, err := script.ParseBuild([]byte(raw), repo.Params)
-	if err != nil {
-		msg := "Could not parse your .drone.yml file.  It needs to be a valid drone yaml file.\n\n" + err.Error() + "\n"
-		if err := saveFailedBuild(commit, msg); err != nil {
-			return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		}
-		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	}
-
 	// save the commit to the database
 	if err := database.SaveCommit(commit); err != nil {
 		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -100,12 +89,13 @@ func (h *StashHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 	build.CommitID = commit.ID
 	build.Created = time.Now().UTC()
 	build.Status = "Pending"
+	build.BuildScript = raw
 	if err := database.SaveBuild(build); err != nil {
 		return RenderText(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 
 	// send the build to the queue
-	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: buildscript})
+	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build})
 
 	// OK!
 	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
