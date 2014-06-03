@@ -174,7 +174,7 @@ func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 		return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
 	}
 
-	if len(parsed.After) == 0 {
+	if len(parsed.After) == 0 || parsed.TotalCommitsCount == 0 {
 		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
 
