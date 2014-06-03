@@ -179,6 +179,14 @@ func AdminSettingsUpdate(w http.ResponseWriter, r *http.Request, u *User) error 
 	}
 	settings.GitlabDomain = glUrl.Host
 
+	// update stash settings
+	settings.StashKey = r.FormValue("StashKey")
+	settings.StashSecret = r.FormValue("StashSecret")
+	settings.StashDomain = r.FormValue("StashDomain")
+	settings.StashSshPort = r.FormValue("StashSshPort")
+	settings.StashHookKey = r.FormValue("StashHookKey")
+	settings.StashPrivateKey = r.FormValue("StashPrivateKey")
+
 	// update smtp settings
 	settings.SmtpServer = r.FormValue("SmtpServer")
 	settings.SmtpPort = r.FormValue("SmtpPort")
@@ -263,6 +271,10 @@ func InstallPost(w http.ResponseWriter, r *http.Request) error {
 	settings.GitHubDomain = "github.com"
 	settings.GitlabApiUrl = "https://gitlab.com"
 	settings.GitlabDomain = "gitlab.com"
+	settings.StashDomain = "https://stash.com"
+	settings.StashSshPort = "7999"
+	settings.StashHookKey = "de.aeffle.stash.plugin.stash-http-get-post-receive-hook:http-get-post-receive-hook"
+	settings.StashPrivateKey = "/path/to/app_private_key.pem"
 	database.SaveSettings(&settings)
 
 	// add the user to the session object

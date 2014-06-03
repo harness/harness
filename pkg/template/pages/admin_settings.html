@@ -57,6 +57,24 @@
                             <input class="form-control form-control-xlarge" type="text" name="GitlabApiUrl" value="{{.Settings.GitlabApiUrl}}" />
                         </div>
                     </div>
+                    <div class="form-group">
+                        <div class="alert">Stash Settings</div>
+                        <label>Base URL and SSH Port for Stash</label>
+                        <div>
+                            <input class="form-control form-control-xlarge" type="text" name="StashDomain" value="{{.Settings.StashDomain}}" />
+                            <input class="form-control form-control-large" type="text" name="StashSshPort" value="{{.Settings.StashSshPort}}" />
+                        </div>
+						<label>Stash OAuth Key and Drone Private Key:</label>
+						<div>
+							<input class="form-control form-control-large" type="text" name="StashKey" value="{{.Settings.StashKey}}" />
+							<input type="hidden" name="StashSecret" value="{{.Settings.StashSecret}}" />
+                            <input class="form-control form-control-large" type="text" name="StashPrivateKey" value="{{.Settings.StashPrivateKey}}" />
+                        </div>
+                        <label>Stash Hook Key:</label>
+                        <div>
+                            <input class="form-control form-control-xlarge" type="text" name="StashHookKey" value="{{.Settings.StashHookKey}}" />
+						</div>
+                    </div>
 					<div class="form-group">
 						<div class="alert">Bitbucket OAuth Consumer Key and Secret.</div>
 						<label>Bitbucket Key and Secret:</label>

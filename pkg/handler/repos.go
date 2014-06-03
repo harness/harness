@@ -9,6 +9,7 @@ import (
 	. "github.com/drone/drone/pkg/model"
 	"github.com/drone/go-bitbucket/bitbucket"
 	"github.com/drone/go-github/github"
+	"github.com/reinbach/go-stash/stash"
 
 	"launchpad.net/goyaml"
 )
@@ -93,6 +94,27 @@ func RepoAddBitbucket(w http.ResponseWriter, r *http.Request, u *User) error {
 	// otherwise display the template for adding
 	// a new Bitbucket repository.
 	return RenderTemplate(w, "bitbucket_add.html", &data)
+}
+
+func RepoAddStash(w http.ResponseWriter, r *http.Request, u *User) error {
+	settings := database.SettingsMust()
+	teams, err := database.ListTeams(u.ID)
+	if err != nil {
+		return err
+	}
+	data := struct {
+		User     *User
+		Teams    []*Team
+		Settings *Settings
+	}{u, teams, settings}
+	// if the user hasn't linked their Stash account
+	// render a different template
+	if len(u.StashToken) == 0 {
+		return RenderTemplate(w, "stash_link.html", &data)
+	}
+	// otherwise display the template for adding
+	// a new Stash repository.
+	return RenderTemplate(w, "stash_add.html", &data)
 }
 
 func RepoCreateGithub(w http.ResponseWriter, r *http.Request, u *User) error {
@@ -236,6 +258,84 @@ func RepoCreateBitbucket(w http.ResponseWriter, r *http.Request, u *User) error 
 	// add the hook
 	if _, err := client.Brokers.CreateUpdate(owner, name, link, bitbucket.BrokerTypePost); err != nil {
 		return fmt.Errorf("Unable to add Hook to your Bitbucket repository. %s", err.Error())
+	}
+
+	// Save to the database
+	if err := database.SaveRepo(repo); err != nil {
+		return fmt.Errorf("Error saving repository to the database. %s", err)
+	}
+
+	return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+}
+
+func RepoCreateStash(w http.ResponseWriter, r *http.Request, u *User) error {
+	teamName := r.FormValue("team")
+	project := r.FormValue("project")
+	name := r.FormValue("name")
+
+	// get the stash settings from the database
+	settings := database.SettingsMust()
+
+	// create the Stash client
+	client := stash.New(
+		settings.StashDomain,
+		settings.StashKey,
+		u.StashToken,
+		u.StashSecret,
+		settings.StashPrivateKey,
+	)
+
+	stashRepo, err := client.Repos.Find(project, name)
+	if err != nil {
+		return fmt.Errorf("Unable to find Stash repository projects/%s/repos/%s.", project, name)
+	}
+
+	repo, err := NewStashRepo(settings.StashDomain, settings.StashSshPort, project, name, stashRepo.Public)
+	if err != nil {
+		return err
+	}
+
+	repo.UserID = u.ID
+	repo.Private = !stashRepo.Public
+
+	// if the user chose to assign to a team account
+	// we need to retrieve the team, verify the user
+	// has access, and then set the team id.
+	if len(teamName) > 0 {
+		team, err := database.GetTeamSlug(teamName)
+		if err != nil {
+			return fmt.Errorf("Unable to find Team %s.", teamName)
+		}
+
+		// user must be an admin member of the team
+		if ok, _ := database.IsMemberAdmin(u.ID, team.ID); !ok {
+			return fmt.Errorf("Invalid permission to access Team %s.", teamName)
+		}
+
+		repo.TeamID = team.ID
+	}
+
+	// ensure we have public keys on repo
+	if repo.Private {
+		// create the stash key, or update if one already exists
+		//TODO at the moment the stash SSH API for keys do not work
+		// so adding key to user account instead
+		_, err := client.Keys.CreateUpdate(repo.PublicKey)
+		if err != nil {
+			return fmt.Errorf("Unable to add Public Key to your Stash repository: %s", err)
+		}
+	} else {
+
+	}
+
+	// create a hook so that we get notified when code
+	// is pushed to the repository and can execute a build.
+	link := fmt.Sprintf("%s://%s/hook/stash?id=%s&branch=${refChange.name}&hash=${refChange.toHash}&message=${refChange.type}&author=${user.displayName}",
+		settings.Scheme, settings.Domain, repo.Slug)
+
+	// add the hook
+	if _, err := client.Repos.CreateHook(project, name, settings.StashHookKey, link); err != nil {
+		return fmt.Errorf("Unable to add Hook to your Stash repository.")
 	}
 
 	// Save to the database

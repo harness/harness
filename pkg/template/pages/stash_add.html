@@ -1,45 +1,44 @@
-{{ define "title" }}GitLab · Add Repository{{ end }}
+{{ define "title" }}Stash · Add Repository{{ end }}
 
 {{ define "content" }}
 	<div class="subhead">
 		<div class="container">
 			<h1>
 				<span>Repository Setup</span>
-				<small>GitLab</small>
+				<small>Stash</small>
 			</h1>
 		</div><!-- ./container -->
-	</div><!-- ./subhead -->
+ 	</div><!-- ./subhead -->
 
 	<div class="container">
 		<div class="row">
 			<div class="col-xs-3">
 				<ul class="nav nav-pills nav-stacked">
-                    <li><a href="/new/github.com">GitHub</a></li>
-					<li><a href="/new/bitbucket.org">Bitbucket</a></li>
-                    <li class="active"><a href="/new/gitlab">GitLab</a></li>
-                    <li><a href="/new/stash">Stash</a></li>
+					<li><a href="/new/github.com">GitHub</a></li>
+                    <li><a href="/new/bitbucket.org">Bitbucket</a></li>
+                    <li><a href="/new/gitlab">GitLab</a></li>
+                    <li class="active"><a href="/new/stash">Stash</a></li>
 				</ul>
 			</div><!-- ./col-xs-3 -->
 
 			<div class="col-xs-9" role="main">
 					<div class="alert">
 						Enter your repository details
-						<a class="btn btn-default pull-right" href="/link/gitlab" style="font-size: 18px;background:#f4f4f4;">Re-Link Account</a>
+						<a class="btn btn-default pull-right" href="/auth/login/stash" style="font-size: 18px;background:#f4f4f4;">Re-Link Account</a>
 					</div>
-					<form class="form-repo" method="POST" action="/new/gitlab">
-						<input type="hidden" name="domain" autocomplete="off" value="{{.Settings.GitlabDomain}}">
+					<form class="form-repo" method="POST" action="/new/stash">
 						<div class="field-group">
 							<div>
-								<label>GitLab Owner</label>
+								<label>Project Key</label>
 								<div>
-									<input class="form-control form-control-large" type="text" name="owner" autocomplete="off">
+									<input class="form-control form-control-large" type="text" name="project" autocomplete="off">
 								</div>
 							</div>
 						</div>
-						<div class="field-separator">/</div>
+						<div class="field-separator">/repos/</div>
 							<div class="field-group">
 								<div>
-									<label>Repository Name</label>
+									<label>Repository Slug</label>
 								<div>
 									<input class="form-control form-control-large" type="text" name="name" autocomplete="off">
 								</div>
@@ -87,9 +86,8 @@
 			xhr.onload = function() {
 				if (this.status == 200) {
 					var name = $("input[name=name]").val()
-					var owner = $("input[name=owner]").val()
-					var domain = $("input[name=domain]").val()
-					window.location.pathname = "/" + domain + "/"+owner+"/"+name
+					var project = $("input[name=project]").val()
+					window.location.pathname = "/stash/"+project+"/"+name
 				} else {
 					$("#failureAlert").text("Unable to setup the Repository");
 					$("#failureAlert").show().removeClass("hide");

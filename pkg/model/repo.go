@@ -2,6 +2,8 @@ package model
 
 import (
 	"fmt"
+	net_url "net/url"
+	"strings"
 	"time"
 )
 
@@ -28,6 +30,8 @@ const (
 	githubRepoPatternPrivate    = "git@%s:%s/%s.git"
 	bitbucketRepoPattern        = "https://bitbucket.org/%s/%s.git"
 	bitbucketRepoPatternPrivate = "git@bitbucket.org:%s/%s.git"
+	stashRepoPattern            = "%s/scm/%s/%s.git"
+	stashRepoPatternPrivate     = "ssh://git@%s:%s/%s/%s.git"
 )
 
 type Repo struct {
@@ -142,6 +146,20 @@ func NewBitbucketRepo(owner, name string, private bool) (*Repo, error) {
 		url = fmt.Sprintf(bitbucketRepoPatternPrivate, owner, name)
 	}
 	return NewRepo(HostBitbucket, owner, name, ScmGit, url)
+}
+
+// Creates a new Stash repository
+func NewStashRepo(domain, sshPort, project, name string, public bool) (*Repo, error) {
+	var url string
+	switch public {
+	case false:
+		parsedDomain, _ := net_url.Parse(domain)
+		host := strings.Split(parsedDomain.Host, ":")[0]
+		url = fmt.Sprintf(stashRepoPatternPrivate, host, sshPort, project, name)
+	case true:
+		url = fmt.Sprintf(stashRepoPattern, domain, project, name)
+	}
+	return NewRepo("stash", project, name, ScmGit, url)
 }
 
 func (r *Repo) DefaultBranch() string {

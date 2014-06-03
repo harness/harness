@@ -14,6 +14,7 @@ func (m *Migration) All() *Migration {
 	m.Add(AddOpenInvitationColumn)
 	m.Add(AddGitlabColumns)
 	m.Add(SaveDroneYml)
+	m.Add(AddStashColumns)
 
 	// m.Add(...)
 	// ...

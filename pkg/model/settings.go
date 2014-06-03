@@ -36,6 +36,14 @@ type Settings struct {
 	GitlabDomain string `meddler:"gitlab_domain"`
 	GitlabApiUrl string `meddler:"gitlab_apiurl"`
 
+	// Stash Consumer Key and secret.
+	StashKey        string `meddler:"stash_key"`
+	StashSecret     string `meddler:"stash_secret"`
+	StashDomain     string `meddler:"stash_domain"`
+	StashSshPort    string `meddler:"stash_sshport"`
+	StashHookKey    string `meddler:"stash_hookkey"`
+	StashPrivateKey string `meddler:"stash_privatekey"`
+
 	// Domain of the server, eg drone.io
 	Domain string `meddler:"hostname"`
 
