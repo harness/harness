@@ -1,0 +1,6 @@
+extends base
+block link
+	$link = "/admin/users"
+block content
+	div
+		| admin users

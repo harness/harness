@@ -1,0 +1,221 @@
+.commit {
+
+}
+
+.commit-item {
+	display:block;
+	margin-bottom:20px;
+	border:1px solid @border-light;
+	padding:25px 15px;
+	text-decoration:none;
+	font-size:15px;
+}
+
+.commit-item h2 {
+	color: @darker;
+	font-size:16px;
+	margin-bottom: 5px;
+	margin-top:5px;
+	max-width: 100%;
+	.text-overflow();
+}
+
+.commit-sha {
+	color:@darker;
+	font-size:15px;
+}
+
+.commit-branch,
+.commit-date {
+	color: #999;
+	font-size:15px;
+}
+
+
+.commit-branch:before,
+.commit-date:before {
+	content: '\2022';
+	opacity: 0.5;
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+.commit-item img {
+	border-radius:@circle;
+	width:32px;
+	height:32px;
+	margin-left:15px;
+}
+
+.commit-item .fa {
+	float: right;
+	width: 48px;
+	height: 48px;
+	font-size: 36px;
+	line-height: 50px;
+	vertical-align: middle;
+	&:before{
+		display: inline-block;
+	}
+}
+
+
+.commit-item-Success .fa {
+	color: @green;
+}
+
+.commit-item-Error,
+.commit-item-Failure {
+	border:1px solid @red-border;
+	background: @red-background;
+	color: @red;
+
+	p, span {
+		color: @red-text-light;
+	}
+	h2 {
+		color: @red-text;
+	}
+}
+
+.commit-item-Started,
+.commit-item-Pending {
+	border:1px solid #FEF0B8;
+	position:relative;
+	padding-bottom:30px;
+	/*
+	border: 1px solid @yellow-border;
+	background: @yellow-background;
+	color: @yellow-text-light;
+
+	p, span {
+		color: @yellow-text-light;
+	}
+	h2 span {
+		color: @yellow-text;
+	}
+
+	.fa-refresh:before {
+		animation: spin 1.5s infinite linear;
+			-webkit-animation: spin 1.5s infinite linear;
+			-moz-animation: spin 1.5s infinite linear;
+			-ms-animation: spin 1.5s infinite linear;
+			-o-animation: spin 1.5s infinite linear;
+	}*/
+	.fa {
+		display:none;
+	}
+
+	&:before {
+		text-transform: uppercase;
+		content: attr(data-status);
+		position: absolute;
+		top: 0px;
+		right: 0px;
+		font-family: 'Open Sans';
+		letter-spacing: 0;
+		background: #fef9e5;
+		color: #CBB45B;
+		padding: 5px 10px;
+	}
+
+	&:after {
+		-webkit-animation: progress 1s linear infinite;
+			-moz-animation: progress 1s linear infinite;
+			animation: progress 1s linear infinite;
+		position:absolute;
+		content:' ';
+		height:10px;
+		bottom:0px;
+		left:0px;
+		right:0px;
+		background: #fee172;
+		background-image: -webkit-linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0.55) 75%, transparent 75%, transparent);
+		background-image: linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0.55) 75%, transparent 75%, transparent);
+		background-repeat: repeat-x;
+		background-size: 30px 30px;
+	}
+}
+
+
+.commit-item {
+	&:after {
+		font-family: 'FontAwesome';
+		font-size:22px;
+		min-width:32px;
+		display:inline-block;
+		text-align:center;
+
+		margin-left: 20px;
+		margin-top: 10px;
+		font-size: 32px;
+	}
+
+	&[data-status="Success"]{
+		&:after {
+			color: @green;
+			content: "\f00c";
+		}
+	}
+
+	&[data-status="Error"],
+	&[data-status="Failure"] {
+		border:1px solid @red-border;
+		background: @red-background;
+		color: @red;
+
+		p, span {
+			color: @red-text-light;
+		}
+		h2 {
+			color: @red-text;
+		}
+		
+		&:after {
+			color: @red;
+			content: "\f00d";
+		}
+	}
+
+	&[data-status="Started"],
+	&[data-status="Pending"] {
+		border:1px solid #FEF0B8;
+		padding-bottom:40px;
+		position:relative;
+
+		/* not sure if this makes sense here
+		&:before {
+			text-transform: uppercase;
+			content: attr(data-status);
+			position: absolute;
+			top: 0px;
+			right: 0px;
+			font-family: 'Open Sans';
+			font-size:14px;
+			letter-spacing: 0;
+			background: #fef9e5;
+			color: #CBB45B;
+			padding: 5px 10px;
+			margin:0px;
+		}
+		*/
+
+		&:after {
+			-webkit-animation: progress 1s linear infinite;
+				-moz-animation: progress 1s linear infinite;
+				animation: progress 1s linear infinite;
+			position:absolute;
+			content:' ';
+			height:10px;
+			bottom:0px;
+			left:0px;
+			right:0px;
+			margin:0px;
+			background: #fee172;
+			background-image: -webkit-linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0.55) 75%, transparent 75%, transparent);
+			background-image: linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0.55) 75%, transparent 75%, transparent);
+			background-repeat: repeat-x;
+			background-size: 30px 30px;
+		}
+	}
+}

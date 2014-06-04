@@ -1,0 +1,71 @@
+
+.user-account h3 {
+	font-size: 16px;
+	text-transform: uppercase;
+	color: #777;
+	margin-bottom: 20px;
+
+	&[data-remote="github.com"]:before {
+		content: "GitHub ";
+	}
+
+	&[data-remote="enterprise.github.com"]:before {
+		content: "GitHub Enterprise ";
+	}
+
+	&[data-remote="bitbucket.org"]:before {
+		content: "Bitbucket ";
+	}
+
+	&[data-remote="gitlab.com"]:before {
+		content: "GitLab ";
+	}
+
+	&[data-remote="stash.atlassian.com"]:before {
+		content: "Stash ";
+	}
+}
+
+.user-account > section {
+	border:1px solid @border-light;
+	margin-bottom:20px;
+	padding:20px 30px;
+}
+
+.user-account pre {
+	padding:20px;
+	background:#f7f7f7;
+	color:#555;
+	//font-family: @font-family-mono;
+}
+
+.user-account input[type="text"] {
+	color:#555;
+	border: 1px solid @border-light;
+	border-radius: 0px;
+	box-shadow: none;
+	padding: 12px;
+}
+
+.user-account .user-avatar {
+	display:inline-block;
+	width:64px;
+	height:64px;
+	img {
+		width:64px;
+		height:64px;
+		border-radius: @circle;
+		display:inline-block;
+	}
+}
+
+.user-account .user-login {
+	font-size:22px;
+	margin-bottom:5px;
+	color:#555;
+}
+
+.user-account .user-fullname,
+.user-account .user-email, {
+	color:#999;
+}

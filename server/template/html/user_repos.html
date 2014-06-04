@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="{{"utf-8"}}" />
+		<meta name="{{"author"}}" content="{{"Brad Rydzewski"}}" />
+		<link rel="{{"shortcut icon"}}" href="{{"/static/images/favicon.png"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//yui.yahooapis.com/pure/0.4.2/pure-min.css"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//fonts.googleapis.com/css?family=Open+Sans"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//fonts.googleapis.com/css?family=Orbitron"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//fonts.googleapis.com/css?family=Droid+Sans+Mono"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"/static/styles/drone.css"}}" />
+		<title>Repos
+		</title>{{$link := ""}}
+	</head>
+	<body>
+		<header>
+			<a class="{{"header-brand"}}" href="{{"/"}}">Drone</a>{{if .User}}
+			<a href="{{"/account/profile"}}" class="{{"header-user"}}">{{$__amber_1 := .User.Gravatar}}{{$__amber_2 := __amber_add "//secure.gravatar.com/avatar/" $__amber_1}}{{$__amber_3 := __amber_add $__amber_2 "?s=64"}}
+				<img class="{{"header-avatar"}}" src="{{$__amber_3}}" />
+				<span class="{{"header-username"}}">{{$__amber_4 := .User.Login}}{{$__amber_4}}</span>
+			</a>{{else}}
+			<span>Login</span>{{end}}
+		</header>
+		<div>
+			<article>
+				<header>
+					<h1>My Repos</h1>
+					<a href="{{"/"}}" class="{{"pure-button"}}">
+						<i class="{{"fa"}} {{"fa-rss"}}"></i>
+					</a>
+				</header>
+				<section>
+					<form class="{{"pure-form"}} {{"search-form"}}">
+						<input type="{{"search"}}" placeholder="{{"Filter List"}}" class="{{"pure-u-1"}}" />
+					</form>
+					<div class="{{"repo-list"}}">{{range $repo := .Repos}}{{$__amber_5 := __amber_add "/" .Remote}}{{$__amber_6 := __amber_add $__amber_5 "/"}}{{$__amber_7 := __amber_add $__amber_6 .Owner}}{{$__amber_8 := __amber_add $__amber_7 "/"}}{{$__amber_9 := __amber_add $__amber_8 .Name}}
+						<a class="{{"pure-g"}} {{"repo-item"}}" data-status="{{.Active}}" href="{{$__amber_9}}">
+							<div class="{{"pure-u-11-12"}}">
+								<h2>
+									<span>{{.Owner}}</span>
+									<span class="{{"divider"}}">/</span>
+									<span>{{.Name}}</span>
+								</h2>
+							</div>
+							<div class="{{"pure-u-1-12"}}">{{if .Active}}
+								<span class="{{"repo-active"}}">On</span>{{else}}
+								<span class="{{"repo-inactive"}}">Off</span>{{end}}
+							</div>
+						</a>{{end}}
+					</div>
+				</section>
+			</article>
+		</div>
+		<script src="{{"//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"}}"></script>
+		<script src="{{"//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"}}"></script>
+		<script src="{{"/static/scripts/main.js"}}"></script>
+	</body>
+</html>

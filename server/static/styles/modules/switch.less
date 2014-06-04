@@ -1,0 +1,124 @@
+details {
+  padding:20px 30px;
+  margin-bottom:20px;
+  border: 1px solid #EEE;
+
+  &[open] summary {
+    margin-bottom:30px;
+  }
+}
+summary {
+  display: block;
+  color: #777;
+  padding: 0px;
+  margin:0px;
+  font-weight: normal;
+  font-size: 16px;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select:none;
+  cursor:pointer;
+  text-transform: uppercase;
+
+}
+summary::-webkit-details-marker {
+  display:none;
+}
+summary:before {
+  font-family:'FontAwesome';
+  content:"\f055";
+  margin-right:15px;
+  color:#CCC;
+}
+details[open] summary:before {
+  font-family:'FontAwesome';
+  content:"\f056";
+  margin-right:15px;
+  color:#CCC;
+}
+summary:focus {
+  outline-style: none;
+}
+details textarea {
+  width:100%;
+  height:70px;
+  white-space: pre;
+  font-family:'Ubuntu Mono';
+}
+
+
+/* http://proto.io/freebies/onoff/ */
+.pure-form .onoffswitch-label {
+  margin:0px;
+}
+.onoffswitch + span {
+  vertical-align: middle;
+  display: inline-block;
+  line-height: 30px;
+  margin-left:15px;
+  font-size:14px;
+  color:#777;
+}
+
+.pure-form .pure-control-group {
+  margin-bottom:15px;
+}
+
+
+.onoffswitch {
+  float:left;
+  display:inline-block;
+    position: relative; width: 100px;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+}
+.onoffswitch-checkbox {
+    display: none;
+}
+.onoffswitch-label {
+    display: block;
+    overflow: hidden;
+    cursor: pointer;
+    border: 0px solid #999999;
+    border-radius: 0px;
+}
+.onoffswitch-inner {
+    width: 200%; margin-left: -100%;
+    -moz-transition: margin 0.3s ease-in 0s; -webkit-transition: margin 0.3s ease-in 0s;
+    -o-transition: margin 0.3s ease-in 0s; transition: margin 0.3s ease-in 0s;
+}
+.onoffswitch-inner > div {
+    float: left; position: relative; width: 50%; height: 30px; padding: 0; line-height: 30px;
+    font-size: 14px; color: white; font-family: Trebuchet, Arial, sans-serif; font-weight: bold;
+    -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+}
+.onoffswitch-inner .onoffswitch-active {
+    padding-left: 15px;
+    background-color: #E9E9E9; color: #FFFFFF;
+}
+.onoffswitch-inner .onoffswitch-inactive {
+    padding-right: 15px;
+    background-color: #E9E9E9; color: #FFFFFF;
+    text-align: right;
+}
+.onoffswitch-switch {
+    width: 40px; margin: 0px; text-align: center; 
+    border: 0px solid #999999;border-radius: 0px; 
+    position: absolute; top: 0; bottom: 0;
+}
+.onoffswitch-active .onoffswitch-switch {
+    background: #5BC0DE; left: 0;
+}
+.onoffswitch-inactive .onoffswitch-switch {
+    background: #BDBEBE; right: 0;
+}
+.onoffswitch-active .onoffswitch-switch:before {
+    content: " "; position: absolute; top: 0; left: 40px; 
+    border-style: solid; border-color: #5BC0DE transparent transparent #5BC0DE; border-width: 15px 10px;
+}
+.onoffswitch-inactive .onoffswitch-switch:before {
+    content: " "; position: absolute; top: 0; right: 40px; 
+    border-style: solid; border-color: transparent #BDBEBE #BDBEBE transparent; border-width: 15px 10px;
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner {
+    margin-left: 0;
+}

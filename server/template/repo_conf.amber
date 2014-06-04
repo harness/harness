@@ -1,0 +1,56 @@
+extends base
+
+block title
+	| #{Repo.Name} · Config
+
+block content
+	article.pure-g
+		header.pure-u-1
+			h1
+				span #{Repo.Owner}
+				span /
+				a[href="/"+Repo.Remote+"/"+Repo.Owner+"/"+Repo.Name] #{Repo.Name}
+				span /
+				a[href="#"] settings
+			a.pure-button[href="/"+Repo.Remote+"/"+Repo.Owner+"/"+Repo.Name]
+				i.fa.fa-dashboard
+
+		section.pure-u-1
+			form.pure-form.pure-form-stacked
+				fieldset
+					details[open]
+						summary Commit Hooks
+						div.pure-control-group
+							div.onoffswitch
+								input[type="checkbox"][name="post_commits"][checked=Repo.PostCommit].onoffswitch-checkbox#post_commits
+								label.onoffswitch-label[for="post_commits"]
+									div.onoffswitch-inner
+										div.onoffswitch-active
+											div.onoffswitch-switch ON
+										div.onoffswitch-inactive
+											div.onoffswitch-switch OFF
+							span Post Commit Hooks
+						div.pure-control-group
+							div.onoffswitch
+								input[type="checkbox"][name="pull_requests"][checked=Repo.PullRequest].onoffswitch-checkbox#pull_requests
+								label.onoffswitch-label[for="pull_requests"]
+									div.onoffswitch-inner
+										div.onoffswitch-active
+											div.onoffswitch-switch ON
+										div.onoffswitch-inactive
+											div.onoffswitch-switch OFF
+							span Pull Request Hooks
+
+					details
+						summary Badges
+						textarea[spellcheck="false"] [![Build Status](#{Scheme}://#{Host}/v1/badge/#{Repo.Remote}/#{Repo.Owner}/#{Repo.Name}/status.svg)](#{Scheme}://#{Host}/#{Repo.Remote}/#{Repo.Owner}/#{Repo.Name})
+					details
+						summary Private Variables
+						textarea[spellcheck="false"][placeholder="FOO: BAR"] #{Repo.Params}
+					details
+						summary Public Key
+						textarea[spellcheck="false"][rows="5"] #{Repo.PublicKey}
+
+					div.pure-controls
+						button.pure-button.pure-button-primary Save
+						button.pure-button.pure-button-secondary[type="reset"] Reset

@@ -1,7 +1,0 @@
-{{ define "title" }}TEAM INVITATION{{ end }}
-
-{{ define "content" }}
-<p class="lead" style="font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; font-weight: normal; font-size: 17px; line-height: 1.3; margin: 0 0 10px; padding: 0; color: #333;">You are invited to join team <b>{{ .Team.Name }}</b>. Please follow this link to join:
-	<div><a href="{{.Host}}/accept?token={{.Token}}" style="font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; color: #2a6496; font-weight: normal; margin: 0; padding: 0;">{{.Host}}/accept?token={{.Token}}</a></div>
-</p>
-{{ end }}
