@@ -4,10 +4,10 @@ import (
 	"io"
 	"time"
 
-	"github.com/drone/drone/pkg/build"
-	"github.com/drone/drone/pkg/build/docker"
-	"github.com/drone/drone/pkg/build/repo"
-	"github.com/drone/drone/pkg/build/script"
+	"github.com/drone/drone/shared/build"
+	"github.com/drone/drone/shared/build/docker"
+	"github.com/drone/drone/shared/build/repo"
+	"github.com/drone/drone/shared/build/script"
 )
 
 type BuildRunner interface {
