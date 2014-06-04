@@ -3,21 +3,17 @@ package queue
 import (
 	"bytes"
 	"fmt"
-	"github.com/drone/drone/pkg/build/git"
-	r "github.com/drone/drone/pkg/build/repo"
-	"github.com/drone/drone/pkg/channel"
-	"github.com/drone/drone/pkg/database"
-	. "github.com/drone/drone/pkg/model"
+	"github.com/drone/drone/server/channel"
+	"github.com/drone/drone/shared/build/git"
+	r "github.com/drone/drone/shared/build/repo"
 	//"github.com/drone/drone/pkg/plugin/notify"
-	"github.com/drone/go-github/github"
 	"io"
-	//"log"
-	"net/url"
 	"path/filepath"
 	"time"
 
-	"github.com/drone/drone/pkg/resource/build"
-	"github.com/drone/drone/pkg/resource/commit"
+	"github.com/drone/drone/server/resource/build"
+	"github.com/drone/drone/server/resource/commit"
+	"github.com/drone/drone/server/resource/repo"
 )
 
 type worker struct {
@@ -206,48 +202,52 @@ func (w *worker) runBuild(task *BuildTask, buf io.Writer) (bool, error) {
 // updateGitHubStatus is a helper function that will send
 // the build status to GitHub using the Status API.
 // see https://github.com/blog/1227-commit-status-api
-func updateGitHubStatus(repo *Repo, commit *Commit) error {
+func updateGitHubStatus(repo *repo.Repo, commit *commit.Commit) error {
+	/*
+		// convert from drone status to github status
+		var message, status string
+		switch commit.Status {
+		case "Success":
+			status = "success"
+			message = "The build succeeded on drone.io"
+		case "Failure":
+			status = "failure"
+			message = "The build failed on drone.io"
+		case "Started":
+			status = "pending"
+			message = "The build is pending on drone.io"
+		default:
+			status = "error"
+			message = "The build errored on drone.io"
+		}
 
-	// convert from drone status to github status
-	var message, status string
-	switch commit.Status {
-	case "Success":
-		status = "success"
-		message = "The build succeeded on drone.io"
-	case "Failure":
-		status = "failure"
-		message = "The build failed on drone.io"
-	case "Started":
-		status = "pending"
-		message = "The build is pending on drone.io"
-	default:
-		status = "error"
-		message = "The build errored on drone.io"
-	}
+		// get the system settings
+		settings, _ := database.GetSettings()
 
-	// get the system settings
-	settings, _ := database.GetSettings()
+		// get the user from the database
+		// since we need his / her GitHub token
+		user, err := database.GetUser(repo.UserID)
+		if err != nil {
+			return err
+		}
 
-	// get the user from the database
-	// since we need his / her GitHub token
-	user, err := database.GetUser(repo.UserID)
-	if err != nil {
-		return err
-	}
+		client := github.New(user.GithubToken)
+		client.ApiUrl = settings.GitHubApiUrl
+		buildUrl := getBuildUrl(settings.URL().String(), repo, commit)
 
-	client := github.New(user.GithubToken)
-	client.ApiUrl = settings.GitHubApiUrl
-	buildUrl := getBuildUrl(settings.URL().String(), repo, commit)
-
-	return client.Repos.CreateStatus(repo.Owner, repo.Name, status, buildUrl, message, commit.Hash)
+		return client.Repos.CreateStatus(repo.Owner, repo.Name, status, buildUrl, message, commit.Hash)
+	*/
+	return nil
 }
 
-func getBuildUrl(host string, repo *Repo, commit *Commit) string {
+/*
+func getBuildUrl(host string, repo *repo.Repo, commit *commit.Commit) string {
 	branchQuery := url.Values{}
 	branchQuery.Set("branch", commit.Branch)
 	buildUrl := fmt.Sprintf("%s/%s/commit/%s?%s", host, repo.Slug, commit.Hash, branchQuery.Encode())
 	return buildUrl
 }
+*/
 
 type bufferWrapper struct {
 	buf bytes.Buffer

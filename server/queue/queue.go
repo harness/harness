@@ -1,12 +1,12 @@
 package queue
 
 import (
-	"github.com/drone/drone/pkg/resource/build"
-	"github.com/drone/drone/pkg/resource/commit"
-	"github.com/drone/drone/pkg/resource/repo"
-	"github.com/drone/drone/pkg/resource/user"
+	"github.com/drone/drone/server/resource/build"
+	"github.com/drone/drone/server/resource/commit"
+	"github.com/drone/drone/server/resource/repo"
+	"github.com/drone/drone/server/resource/user"
 
-	"github.com/drone/drone/pkg/build/script"
+	"github.com/drone/drone/shared/build/script"
 )
 
 // A Queue dispatches tasks to workers.
