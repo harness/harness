@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="{{"utf-8"}}" />
+		<meta name="{{"author"}}" content="{{"Brad Rydzewski"}}" />
+		<link rel="{{"shortcut icon"}}" href="{{"/static/images/favicon.png"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//yui.yahooapis.com/pure/0.4.2/pure-min.css"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//fonts.googleapis.com/css?family=Open+Sans"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//fonts.googleapis.com/css?family=Orbitron"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//fonts.googleapis.com/css?family=Droid+Sans+Mono"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"/static/styles/drone.css"}}" />
+		<title>{{$__amber_1 := .Repo.Name}}{{$__amber_1}} · Config
+		</title>{{$link := ""}}
+	</head>
+	<body>
+		<header>
+			<a class="{{"header-brand"}}" href="{{"/"}}">Drone</a>{{if .User}}
+			<a href="{{"/account/profile"}}" class="{{"header-user"}}">{{$__amber_2 := .User.Gravatar}}{{$__amber_3 := __amber_add "//secure.gravatar.com/avatar/" $__amber_2}}{{$__amber_4 := __amber_add $__amber_3 "?s=64"}}
+				<img class="{{"header-avatar"}}" src="{{$__amber_4}}" />
+				<span class="{{"header-username"}}">{{$__amber_5 := .User.Login}}{{$__amber_5}}</span>
+			</a>{{else}}
+			<span>Login</span>{{end}}
+		</header>
+		<div>
+			<article class="{{"pure-g"}}">
+				<header class="{{"pure-u-1"}}">
+					<h1>
+						<span>{{$__amber_6 := .Repo.Owner}}{{$__amber_6}}</span>
+						<span>/</span>{{$__amber_7 := .Repo.Name}}{{$__amber_8 := .Repo.Owner}}{{$__amber_9 := .Repo.Remote}}{{$__amber_10 := __amber_add "/" $__amber_9}}{{$__amber_11 := __amber_add $__amber_10 "/"}}{{$__amber_12 := __amber_add $__amber_11 $__amber_8}}{{$__amber_13 := __amber_add $__amber_12 "/"}}{{$__amber_14 := __amber_add $__amber_13 $__amber_7}}
+						<a href="{{$__amber_14}}">{{$__amber_15 := .Repo.Name}}{{$__amber_15}}</a>
+						<span>/</span>
+						<a href="{{"#"}}">settings</a>
+					</h1>{{$__amber_16 := .Repo.Name}}{{$__amber_17 := .Repo.Owner}}{{$__amber_18 := .Repo.Remote}}{{$__amber_19 := __amber_add "/" $__amber_18}}{{$__amber_20 := __amber_add $__amber_19 "/"}}{{$__amber_21 := __amber_add $__amber_20 $__amber_17}}{{$__amber_22 := __amber_add $__amber_21 "/"}}{{$__amber_23 := __amber_add $__amber_22 $__amber_16}}
+					<a class="{{"pure-button"}}" href="{{$__amber_23}}">
+						<i class="{{"fa"}} {{"fa-dashboard"}}"></i>
+					</a>
+				</header>
+				<section class="{{"pure-u-1"}}">
+					<form class="{{"pure-form"}} {{"pure-form-stacked"}}">
+						<fieldset>
+							<details open>
+								<summary>Commit Hooks</summary>
+								<div class="{{"pure-control-group"}}">
+									<div class="{{"onoffswitch"}}">{{$__amber_24 := .Repo.PostCommit}}
+										<input type="{{"checkbox"}}" name="{{"post_commits"}}" checked="{{$__amber_24}}" class="{{"onoffswitch-checkbox"}}" id="{{"post_commits"}}" />
+										<label class="{{"onoffswitch-label"}}" for="{{"post_commits"}}">
+											<div class="{{"onoffswitch-inner"}}">
+												<div class="{{"onoffswitch-active"}}">
+													<div class="{{"onoffswitch-switch"}}">ON</div>
+												</div>
+												<div class="{{"onoffswitch-inactive"}}">
+													<div class="{{"onoffswitch-switch"}}">OFF</div>
+												</div>
+											</div>
+										</label>
+									</div>
+									<span>Post Commit Hooks</span>
+								</div>
+								<div class="{{"pure-control-group"}}">
+									<div class="{{"onoffswitch"}}">{{$__amber_25 := .Repo.PullRequest}}
+										<input type="{{"checkbox"}}" name="{{"pull_requests"}}" checked="{{$__amber_25}}" class="{{"onoffswitch-checkbox"}}" id="{{"pull_requests"}}" />
+										<label class="{{"onoffswitch-label"}}" for="{{"pull_requests"}}">
+											<div class="{{"onoffswitch-inner"}}">
+												<div class="{{"onoffswitch-active"}}">
+													<div class="{{"onoffswitch-switch"}}">ON</div>
+												</div>
+												<div class="{{"onoffswitch-inactive"}}">
+													<div class="{{"onoffswitch-switch"}}">OFF</div>
+												</div>
+											</div>
+										</label>
+									</div>
+									<span>Pull Request Hooks</span>
+								</div>
+							</details>
+							<details>
+								<summary>Badges</summary>
+								<textarea spellcheck="{{"false"}}">{{$__amber_26 := .Repo.Remote}}{{$__amber_27 := .Repo.Owner}}{{$__amber_28 := .Repo.Name}}{{$__amber_29 := .Repo.Remote}}{{$__amber_30 := .Repo.Owner}}{{$__amber_31 := .Repo.Name}}[![Build Status]({{.Scheme}}://{{.Host}}/v1/badge/{{$__amber_26}}/{{$__amber_27}}/{{$__amber_28}}/status.svg)]({{.Scheme}}://{{.Host}}/{{$__amber_29}}/{{$__amber_30}}/{{$__amber_31}})</textarea>
+							</details>
+							<details>
+								<summary>Private Variables</summary>
+								<textarea spellcheck="{{"false"}}" placeholder="{{"FOO: BAR"}}">{{$__amber_32 := .Repo.Params}}{{$__amber_32}}</textarea>
+							</details>
+							<details>
+								<summary>Public Key</summary>
+								<textarea spellcheck="{{"false"}}" rows="{{"5"}}">{{$__amber_33 := .Repo.PublicKey}}{{$__amber_33}}</textarea>
+							</details>
+							<div class="{{"pure-controls"}}">
+								<button class="{{"pure-button"}} {{"pure-button-primary"}}">Save</button>
+								<button class="{{"pure-button"}} {{"pure-button-secondary"}}" type="{{"reset"}}">Reset</button>
+							</div>
+						</fieldset>
+					</form>
+				</section>
+			</article>
+		</div>
+		<script src="{{"//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"}}"></script>
+		<script src="{{"//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"}}"></script>
+		<script src="{{"/static/scripts/main.js"}}"></script>
+	</body>
+</html>

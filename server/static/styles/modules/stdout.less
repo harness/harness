@@ -1,0 +1,35 @@
+pre {
+	position:relative;
+	white-space: pre-wrap;
+	overflow: hidden;
+	line-height: 20px;
+	font-size: 12px;
+	font-family: @font-family-mono;
+	color:#FFFFFF;
+	background: #383C44;
+	padding:20px;
+	margin-top:25px;
+}
+
+pre[data-status="Pending"] {
+	display:none;
+}
+
+pre[data-status="Started"] {
+	&:after {
+		-webkit-animation: progress 1s linear infinite;
+			-moz-animation: progress 1s linear infinite;
+			animation: progress 1s linear infinite;
+		position:absolute;
+		content:' ';
+		height:10px;
+		bottom:-1px;
+		left:0px;
+		right:0px;
+		background: #383C44;
+		background-image: -webkit-linear-gradient(-45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+		background-image: linear-gradient(-45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+		background-repeat: repeat-x;
+		background-size: 30px 30px;
+	}
+}

@@ -1,0 +1,77 @@
+extends base
+
+block title
+	| #{Repo.Name} · #{Commit.Sha}
+
+block content
+	article.pure-g
+		header.pure-u-1
+			h1
+				span #{Repo.Owner}
+				span /
+				a[href="/"+Repo.Remote+"/"+Repo.Owner+"/"+Repo.Name] #{Repo.Name}
+				span /
+				a[href="#"] #{Commit.ShaShort}
+
+			a.pure-button[href="/"+Repo.Remote+"/"+Repo.Owner+"/"+Repo.Name]
+				i.fa.fa-dashboard
+		section.pure-u-3-4
+			div.alert[data-status=Commit.Status]
+				| commit
+				u #{Commit.ShaShort}
+				| to
+				u #{Commit.Branch}
+				| branch
+				div.progress
+
+			pre#stdout[data-status=Commit.Status]
+		div.pure-u-1-4.sticky
+			section.pure-g.build
+				div.pure-u-1
+					img[src="//secure.gravatar.com/avatar/" +Commit.Gravatar+"?s=64&d=identicon"][style="border-radius:50%;float:left;margin-right:10px;"]
+
+					header
+						h3 #{Commit.ShaShort}
+						h4 #{Commit.Branch}
+					div
+						span finished:
+						span.timeago[title=Commit.FinishedString]
+					div
+						span duration:
+						span #{Commit.Duration} seconds
+
+					div
+						span message:
+						p #{Commit.Message}
+
+block append scripts
+	script
+		$(document).ready(function() {
+			$(".timeago").timeago();
+		});
+
+	if Build.Status == "Started" || Build.Status == "Pending"
+		script
+			$(document).ready(function() {
+				var commitUpdates = new Drone.CommitUpdates('/feed?token='+ #{Token});
+				var outputBox = document.getElementById('stdout');
+				commitUpdates.startOutput(outputBox);
+
+				$("#follow").on("click", function(e) {
+					e.preventDefault();
+
+					if(commitUpdates.autoFollow) {
+						commitUpdates.autoFollow = false;
+						$(this).text("Follow");
+					} else {
+						commitUpdates.autoFollow = true;
+						$(this).text("Stop following");
+					}
+				});
+			});
+	else
+		script
+			$.get("/v1/repos/"+#{Repo.Remote}+"/"+#{Repo.Owner}+"/"+#{Repo.Name}+"/branches/"+#{Commit.Branch}+"/commits/"+#{Commit.Sha}+"/builds/1/console", function( data ) {
+				var lineFormatter = new Drone.LineFormatter();
+				$( "#stdout" ).html(lineFormatter.format(data));
+			});

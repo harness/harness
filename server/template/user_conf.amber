@@ -1,0 +1,26 @@
+extends base
+
+block title
+	| #{User.Login} · Profile
+
+block content
+	article
+		header
+			h1 Account Profile
+		section.user-account
+			section.pure-g
+				div.pure-u-1
+					h3.user-remote[data-remote=User.Remote] Account
+				div.pure-u-1-6
+					a.user-avatar[href="https://gravatar.com/"][target="_blank"]
+						img[src="https://gravatar.com/avatar/"+User.Gravatar+"?s=160&d=identicon"]
+
+				div.pure-u-5-6
+					h4.user-login #{User.Login}
+					div.user-fullname #{User.Name}
+					div.user-email #{User.Email}
+
+			section
+				h3 API Key
+				form.pure-form
+					input.pure-u-1[type="text"][spellcheck="false"][value=User.Token]

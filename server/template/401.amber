@@ -1,0 +1,4 @@
+extends base
+block content
+	div
+		| 401 NOT AUTHORIZED

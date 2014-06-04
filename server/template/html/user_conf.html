@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="{{"utf-8"}}" />
+		<meta name="{{"author"}}" content="{{"Brad Rydzewski"}}" />
+		<link rel="{{"shortcut icon"}}" href="{{"/static/images/favicon.png"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//yui.yahooapis.com/pure/0.4.2/pure-min.css"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//fonts.googleapis.com/css?family=Open+Sans"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//fonts.googleapis.com/css?family=Orbitron"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//fonts.googleapis.com/css?family=Droid+Sans+Mono"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"/static/styles/drone.css"}}" />
+		<title>{{$__amber_1 := .User.Login}}{{$__amber_1}} · Profile
+		</title>{{$link := ""}}
+	</head>
+	<body>
+		<header>
+			<a class="{{"header-brand"}}" href="{{"/"}}">Drone</a>{{if .User}}
+			<a href="{{"/account/profile"}}" class="{{"header-user"}}">{{$__amber_2 := .User.Gravatar}}{{$__amber_3 := __amber_add "//secure.gravatar.com/avatar/" $__amber_2}}{{$__amber_4 := __amber_add $__amber_3 "?s=64"}}
+				<img class="{{"header-avatar"}}" src="{{$__amber_4}}" />
+				<span class="{{"header-username"}}">{{$__amber_5 := .User.Login}}{{$__amber_5}}</span>
+			</a>{{else}}
+			<span>Login</span>{{end}}
+		</header>
+		<div>
+			<article>
+				<header>
+					<h1>Account Profile</h1>
+				</header>
+				<section class="{{"user-account"}}">
+					<section class="{{"pure-g"}}">
+						<div class="{{"pure-u-1"}}">{{$__amber_6 := .User.Remote}}
+							<h3 class="{{"user-remote"}}" data-remote="{{$__amber_6}}">Account</h3>
+						</div>
+						<div class="{{"pure-u-1-6"}}">
+							<a class="{{"user-avatar"}}" href="{{"https://gravatar.com/"}}" target="{{"_blank"}}">{{$__amber_7 := .User.Gravatar}}{{$__amber_8 := __amber_add "https://gravatar.com/avatar/" $__amber_7}}{{$__amber_9 := __amber_add $__amber_8 "?s=160&d=identicon"}}
+								<img src="{{$__amber_9}}" />
+							</a>
+						</div>
+						<div class="{{"pure-u-5-6"}}">
+							<h4 class="{{"user-login"}}">{{$__amber_10 := .User.Login}}{{$__amber_10}}</h4>
+							<div class="{{"user-fullname"}}">{{$__amber_11 := .User.Name}}{{$__amber_11}}</div>
+							<div class="{{"user-email"}}">{{$__amber_12 := .User.Email}}{{$__amber_12}}</div>
+						</div>
+					</section>
+					<section>
+						<h3>API Key</h3>
+						<form class="{{"pure-form"}}">{{$__amber_13 := .User.Token}}
+							<input class="{{"pure-u-1"}}" type="{{"text"}}" spellcheck="{{"false"}}" value="{{$__amber_13}}" />
+						</form>
+					</section>
+				</section>
+			</article>
+		</div>
+		<script src="{{"//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"}}"></script>
+		<script src="{{"//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"}}"></script>
+		<script src="{{"/static/scripts/main.js"}}"></script>
+	</body>
+</html>

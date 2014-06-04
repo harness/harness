@@ -1,0 +1,32 @@
+doctype 5
+html
+	head
+		meta[charset="utf-8"]
+		meta[name="author"][content="Brad Rydzewski"]
+		link[rel="shortcut icon"][href="/static/images/favicon.png"]
+		link[rel="stylesheet"][href="//yui.yahooapis.com/pure/0.4.2/pure-min.css"]
+		link[rel="stylesheet"][href="//fonts.googleapis.com/css?family=Open+Sans"]
+		link[rel="stylesheet"][href="//fonts.googleapis.com/css?family=Orbitron"]
+		link[rel="stylesheet"][href="//fonts.googleapis.com/css?family=Droid+Sans+Mono"]
+		link[rel="stylesheet"][href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css"]
+		link[rel="stylesheet"][href="/static/styles/drone.css"]
+		title
+			block title
+		block link
+			$link=""
+	body
+		header
+			a.header-brand[href="/"]
+				| Drone
+			if User
+				a[href="/account/profile"].header-user
+					img.header-avatar[src="//secure.gravatar.com/avatar/"+User.Gravatar+"?s=64"]
+					span.header-username #{User.Login}
+			else
+				span Login
+		div
+			block content
+		block scripts
+			script[src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"]
+			script[src="//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"]
+			script[src="/static/scripts/main.js"]

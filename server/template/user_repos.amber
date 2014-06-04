@@ -1,0 +1,27 @@
+extends base
+
+block title
+	| Repos
+
+block content
+	article
+		header
+			h1 My Repos
+			a[href="/"].pure-button
+				i.fa.fa-rss
+		section
+			form.pure-form.search-form
+				input[type="search"][placeholder="Filter List"].pure-u-1
+			div.repo-list
+				each $repo in Repos
+					a.pure-g.repo-item[data-status=Active][href="/"+Remote+"/"+Owner+"/"+Name]
+						div.pure-u-11-12
+							h2
+								span #{Owner}
+								span.divider /
+								span #{Name}
+						div.pure-u-1-12
+							if Active
+								span.repo-active On
+							else
+								span.repo-inactive Off

@@ -1,0 +1,6 @@
+extends base
+block link
+	$link = "/admin/settings"
+block content
+	div
+		| admin config

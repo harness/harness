@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="{{"utf-8"}}" />
+		<meta name="{{"author"}}" content="{{"Brad Rydzewski"}}" />
+		<link rel="{{"shortcut icon"}}" href="{{"/static/images/favicon.png"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//yui.yahooapis.com/pure/0.4.2/pure-min.css"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//fonts.googleapis.com/css?family=Open+Sans"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//fonts.googleapis.com/css?family=Orbitron"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//fonts.googleapis.com/css?family=Droid+Sans+Mono"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css"}}" />
+		<link rel="{{"stylesheet"}}" href="{{"/static/styles/drone.css"}}" />
+		<title>{{$__amber_1 := .Repo.Name}}{{$__amber_1}} · {{.Branch}}
+		</title>{{$link := ""}}
+	</head>
+	<body>
+		<header>
+			<a class="{{"header-brand"}}" href="{{"/"}}">Drone</a>{{if .User}}
+			<a href="{{"/account/profile"}}" class="{{"header-user"}}">{{$__amber_2 := .User.Gravatar}}{{$__amber_3 := __amber_add "//secure.gravatar.com/avatar/" $__amber_2}}{{$__amber_4 := __amber_add $__amber_3 "?s=64"}}
+				<img class="{{"header-avatar"}}" src="{{$__amber_4}}" />
+				<span class="{{"header-username"}}">{{$__amber_5 := .User.Login}}{{$__amber_5}}</span>
+			</a>{{else}}
+			<span>Login</span>{{end}}
+		</header>
+		<div>
+			<article class="{{"pure-g"}}">
+				<header class="{{"pure-u-1"}}">
+					<h1>
+						<span>{{$__amber_6 := .Repo.Owner}}{{$__amber_6}}</span>
+						<span>/</span>{{$__amber_7 := .Repo.Name}}{{$__amber_8 := .Repo.Owner}}{{$__amber_9 := .Repo.Remote}}{{$__amber_10 := __amber_add "/" $__amber_9}}{{$__amber_11 := __amber_add $__amber_10 "/"}}{{$__amber_12 := __amber_add $__amber_11 $__amber_8}}{{$__amber_13 := __amber_add $__amber_12 "/"}}{{$__amber_14 := __amber_add $__amber_13 $__amber_7}}
+						<a href="{{$__amber_14}}">{{$__amber_15 := .Repo.Name}}{{$__amber_15}}</a>
+						<span>/</span>
+						<a href="{{"#"}}">{{.Branch}}</a>
+					</h1>{{$__amber_16 := .Repo.Name}}{{$__amber_17 := .Repo.Owner}}{{$__amber_18 := .Repo.Remote}}{{$__amber_19 := __amber_add "/" $__amber_18}}{{$__amber_20 := __amber_add $__amber_19 "/"}}{{$__amber_21 := __amber_add $__amber_20 $__amber_17}}{{$__amber_22 := __amber_add $__amber_21 "/"}}{{$__amber_23 := __amber_add $__amber_22 $__amber_16}}{{$__amber_24 := __amber_add $__amber_23 "/settings"}}
+					<a class="{{"pure-button"}}" href="{{$__amber_24}}">
+						<i class="{{"fa"}} {{"fa-cog"}}"></i>
+					</a>
+				</header>
+				<section class="{{"pure-u-3-5"}}">{{$repo := .Repo}}{{$branch := .Branch}}
+					<div class="{{"commit-list"}}">{{range $commit := .Commits}}{{$__amber_25 := $repo.Name}}{{$__amber_26 := $repo.Owner}}{{$__amber_27 := $repo.Remote}}{{$__amber_28 := __amber_add "/" $__amber_27}}{{$__amber_29 := __amber_add $__amber_28 "/"}}{{$__amber_30 := __amber_add $__amber_29 $__amber_26}}{{$__amber_31 := __amber_add $__amber_30 "/"}}{{$__amber_32 := __amber_add $__amber_31 $__amber_25}}{{$__amber_33 := __amber_add $__amber_32 "/branch/"}}{{$__amber_34 := __amber_add $__amber_33 .Branch}}{{$__amber_35 := __amber_add $__amber_34 "/commit/"}}{{$__amber_36 := __amber_add $__amber_35 .Sha}}
+						<a class="{{"pure-g"}} {{"commit-item"}}" data-status="{{.Status}}" href="{{$__amber_36}}">
+							<div class="{{"pure-u-1-8"}}">{{$__amber_37 := __amber_add "https://secure.gravatar.com/avatar/" .Gravatar}}{{$__amber_38 := __amber_add $__amber_37 "?s=48&d=identicon"}}
+								<img src="{{$__amber_38}}" />
+							</div>
+							<div class="{{"pure-u-3-4"}}">
+								<h2>{{.Message}}</h2>
+								<span class="{{"commit-sha"}}">{{.ShaShort}}</span>
+								<span class="{{"commit-branch"}}">{{.Branch}}</span>
+								<span class="{{"commit-date"}} {{"timeago"}}" title="{{.FinishedString}}"></span>
+							</div>
+						</a>{{end}}
+					</div>
+				</section>
+				<div class="{{"pure-u-2-5"}}">
+					<section class="{{"pure-g"}} {{"branches"}}">
+						<div class="{{"pure-u-1"}} {{"pure-menu"}} {{"pure-menu-open"}}">
+							<a class="{{"pure-menu-heading"}}">Recent Branches</a>
+							<ul>{{range $commit := .Branches}}{{$__amber_39 := __amber_eql $branch .Branch}}
+								<li{{if $__amber_39}} class="{{"pure-menu-selected"}}"{{end}}>{{$__amber_40 := $repo.Name}}{{$__amber_41 := $repo.Owner}}{{$__amber_42 := $repo.Remote}}{{$__amber_43 := __amber_add "/" $__amber_42}}{{$__amber_44 := __amber_add $__amber_43 "/"}}{{$__amber_45 := __amber_add $__amber_44 $__amber_41}}{{$__amber_46 := __amber_add $__amber_45 "/"}}{{$__amber_47 := __amber_add $__amber_46 $__amber_40}}{{$__amber_48 := __amber_add $__amber_47 "/branch/"}}{{$__amber_49 := __amber_add $__amber_48 .Branch}}
+									<a data-status="{{.Status}}" href="{{$__amber_49}}">{{.Branch}}</a>
+								</li>{{end}}
+							</ul>
+						</div>
+					</section>
+				</div>
+			</article>
+		</div>
+		<script src="{{"//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"}}"></script>
+		<script src="{{"//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"}}"></script>
+		<script src="{{"/static/scripts/main.js"}}"></script>
+		<script>
+			$(document).ready(function() {
+				$(".timeago").timeago();
+			});
+		</script>
+	</body>
+</html>
