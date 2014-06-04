@@ -15,16 +15,17 @@ const (
 )
 
 type Build struct {
-	ID       int64     `meddler:"id,pk"            json:"id"`
-	CommitID int64     `meddler:"commit_id"        json:"-"`
-	Slug     string    `meddler:"slug"             json:"slug"`
-	Status   string    `meddler:"status"           json:"status"`
-	Started  time.Time `meddler:"started,utctime"  json:"started"`
-	Finished time.Time `meddler:"finished,utctime" json:"finished"`
-	Duration int64     `meddler:"duration"         json:"duration"`
-	Created  time.Time `meddler:"created,utctime"  json:"created"`
-	Updated  time.Time `meddler:"updated,utctime"  json:"updated"`
-	Stdout   string    `meddler:"stdout"           json:"-"`
+	ID          int64     `meddler:"id,pk"            json:"id"`
+	CommitID    int64     `meddler:"commit_id"        json:"-"`
+	Slug        string    `meddler:"slug"             json:"slug"`
+	Status      string    `meddler:"status"           json:"status"`
+	Started     time.Time `meddler:"started,utctime"  json:"started"`
+	Finished    time.Time `meddler:"finished,utctime" json:"finished"`
+	Duration    int64     `meddler:"duration"         json:"duration"`
+	Created     time.Time `meddler:"created,utctime"  json:"created"`
+	Updated     time.Time `meddler:"updated,utctime"  json:"updated"`
+	Stdout      string    `meddler:"stdout"           json:"-"`
+	BuildScript string    `meddler:"buildscript"      json:"-"`
 }
 
 // HumanDuration returns a human-readable approximation of a duration

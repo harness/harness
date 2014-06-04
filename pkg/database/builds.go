@@ -10,7 +10,7 @@ const buildTable = "builds"
 
 // SQL Queries to retrieve a list of all Commits belonging to a Repo.
 const buildStmt = `
-SELECT id, commit_id, slug, status, started, finished, duration, created, updated, stdout
+SELECT id, commit_id, slug, status, started, finished, duration, created, updated, stdout, buildscript
 FROM builds
 WHERE commit_id = ?
 ORDER BY slug ASC
@@ -18,7 +18,7 @@ ORDER BY slug ASC
 
 // SQL Queries to retrieve a Build by id.
 const buildFindStmt = `
-SELECT id, commit_id, slug, status, started, finished, duration, created, updated, stdout
+SELECT id, commit_id, slug, status, started, finished, duration, created, updated, stdout, buildscript
 FROM builds
 WHERE id = ?
 LIMIT 1
@@ -26,7 +26,7 @@ LIMIT 1
 
 // SQL Queries to retrieve a Commit by name and repo id.
 const buildFindSlugStmt = `
-SELECT id, commit_id, slug, status, started, finished, duration, created, updated, stdout
+SELECT id, commit_id, slug, status, started, finished, duration, created, updated, stdout, buildscript
 FROM builds
 WHERE slug = ? AND commit_id = ?
 LIMIT 1
