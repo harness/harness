@@ -90,3 +90,18 @@ func ListReposTeam(id int64) ([]*Repo, error) {
 	err := meddler.QueryAll(db, &repos, repoTeamStmt, id)
 	return repos, err
 }
+
+// Checks whether a user is admin of a repo
+// Returns true if user owns repo or is on team that owns repo
+// Returns true if the user is an admin member of the team.
+func IsRepoAdmin(user *User, repo *Repo) (bool, error) {
+	if user == nil {
+		return false, nil
+	}
+
+	if user.ID == repo.UserID {
+		return true, nil
+	}
+
+	return IsMemberAdmin(user.ID, repo.TeamID)
+}
