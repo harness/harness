@@ -1,0 +1,21 @@
+extends base
+
+block title
+	| Login
+
+block content
+	article
+		header
+			h1 Login
+		section
+			section.pure-g
+				div.pure-u-1
+					a[href="/login/github.com"] GitHub
+				div.pure-u-1
+					a[href="/login/enterprise.github.com"] GitHub Enterprise
+				div.pure-u-1
+					a[href="/login/bitbucket.org"] Bitbucket
+				div.pure-u-1
+					a[href="/login/stash.atlassian.com"] Stash
+				div.pure-u-1
+					a[href="/login/gitlab.com"] GitLab
