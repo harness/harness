@@ -105,7 +105,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 			for _, remoteRepo := range repos {
 				repo, _ := repo.New(remote.GetName(), remoteRepo.Owner, remoteRepo.Name)
 				repo.Private = remoteRepo.Private
-				// TODO set the repo.Host
+				repo.Host = remoteRepo.Host
 				repo.CloneURL = remoteRepo.Clone
 				repo.GitURL = remoteRepo.Git
 				repo.SSHURL = remoteRepo.SSH
