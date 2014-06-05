@@ -13,29 +13,44 @@ block content
 			a.pure-button[href="/"+Repo.Remote+"/"+Repo.Owner+"/"+Repo.Name+"/settings"]
 				i.fa.fa-cog
 
-		section.pure-u-3-5
-			$repo=Repo
-			div.commit-list
-				each $commit in Commits
-					a.pure-g.commit-item[data-status=Status][href="/"+$repo.Remote+"/"+$repo.Owner+"/"+$repo.Name+"/branch/"+Branch+"/commit/"+Sha]
-						div.pure-u-1-8
-							img[src="https://secure.gravatar.com/avatar/"+Gravatar+"?s=48&d=identicon"]
+		$repo=Repo
+		if Repo.Active
+			if Commits
+				section.pure-u-3-5
+					div.commit-list
+						each $commit in Commits
+							a.pure-g.commit-item[data-status=Status][href="/"+$repo.Remote+"/"+$repo.Owner+"/"+$repo.Name+"/branch/"+Branch+"/commit/"+Sha]
+								div.pure-u-1-8
+									img[src="https://secure.gravatar.com/avatar/"+Gravatar+"?s=48&d=identicon"]
 
-						div.pure-u-3-4
-							h2 #{Message}
-							span.commit-sha #{ShaShort}
-							span.commit-branch #{Branch}
-							span.commit-date.timeago[title=FinishedString]
+								div.pure-u-3-4
+									h2 #{Message}
+									span.commit-sha #{ShaShort}
+									span.commit-branch #{Branch}
+									span.commit-date.timeago[title=FinishedString]
+				div.pure-u-2-5
+					section.pure-g.branches
+						div.pure-u-1.pure-menu.pure-menu-open
+							a.pure-menu-heading Recent Branches
+							ul
+								each $commit in Branches
+									li
+										a[data-status=Status][href="/"+$repo.Remote+"/"+$repo.Owner+"/"+$repo.Name+"/branch/"+Branch] #{Branch}
 
-		div.pure-u-2-5
-			section.pure-g.branches
-				div.pure-u-1.pure-menu.pure-menu-open
-					a.pure-menu-heading Recent Branches
-					ul
-						each $commit in Branches
-							li
-								a[data-status=Status][href="/"+$repo.Remote+"/"+$repo.Owner+"/"+$repo.Name+"/branch/"+Branch] #{Branch}
+			else
+				section.pure-u-1
+					div.alert.alert-info
+						| Your Build history is empty. Push to your remote repository to trigger a build. 
 
+
+		else
+			section.pure-u-1
+				div.alert.alert-info
+					| This Repository is not yet active. Please activate to start testing commits.
+				br
+				form.pure-form.pure-form-stacked
+					div.pure-controls
+						button.pure-button.pure-button-primary Click to Active Repository
 
 block append scripts
 	script

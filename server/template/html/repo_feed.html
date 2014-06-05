@@ -33,12 +33,12 @@
 					<a class="{{"pure-button"}}" href="{{$__amber_16}}">
 						<i class="{{"fa"}} {{"fa-cog"}}"></i>
 					</a>
-				</header>
-				<section class="{{"pure-u-3-5"}}">{{$repo := .Repo}}
-					<div class="{{"commit-list"}}">{{range $commit := .Commits}}{{$__amber_17 := $repo.Name}}{{$__amber_18 := $repo.Owner}}{{$__amber_19 := $repo.Remote}}{{$__amber_20 := __amber_add "/" $__amber_19}}{{$__amber_21 := __amber_add $__amber_20 "/"}}{{$__amber_22 := __amber_add $__amber_21 $__amber_18}}{{$__amber_23 := __amber_add $__amber_22 "/"}}{{$__amber_24 := __amber_add $__amber_23 $__amber_17}}{{$__amber_25 := __amber_add $__amber_24 "/branch/"}}{{$__amber_26 := __amber_add $__amber_25 .Branch}}{{$__amber_27 := __amber_add $__amber_26 "/commit/"}}{{$__amber_28 := __amber_add $__amber_27 .Sha}}
-						<a class="{{"pure-g"}} {{"commit-item"}}" data-status="{{.Status}}" href="{{$__amber_28}}">
-							<div class="{{"pure-u-1-8"}}">{{$__amber_29 := __amber_add "https://secure.gravatar.com/avatar/" .Gravatar}}{{$__amber_30 := __amber_add $__amber_29 "?s=48&d=identicon"}}
-								<img src="{{$__amber_30}}" />
+				</header>{{$repo := .Repo}}{{$__amber_17 := .Repo.Active}}{{if $__amber_17}}{{if .Commits}}
+				<section class="{{"pure-u-3-5"}}">
+					<div class="{{"commit-list"}}">{{range $commit := .Commits}}{{$__amber_18 := $repo.Name}}{{$__amber_19 := $repo.Owner}}{{$__amber_20 := $repo.Remote}}{{$__amber_21 := __amber_add "/" $__amber_20}}{{$__amber_22 := __amber_add $__amber_21 "/"}}{{$__amber_23 := __amber_add $__amber_22 $__amber_19}}{{$__amber_24 := __amber_add $__amber_23 "/"}}{{$__amber_25 := __amber_add $__amber_24 $__amber_18}}{{$__amber_26 := __amber_add $__amber_25 "/branch/"}}{{$__amber_27 := __amber_add $__amber_26 .Branch}}{{$__amber_28 := __amber_add $__amber_27 "/commit/"}}{{$__amber_29 := __amber_add $__amber_28 .Sha}}
+						<a class="{{"pure-g"}} {{"commit-item"}}" data-status="{{.Status}}" href="{{$__amber_29}}">
+							<div class="{{"pure-u-1-8"}}">{{$__amber_30 := __amber_add "https://secure.gravatar.com/avatar/" .Gravatar}}{{$__amber_31 := __amber_add $__amber_30 "?s=48&d=identicon"}}
+								<img src="{{$__amber_31}}" />
 							</div>
 							<div class="{{"pure-u-3-4"}}">
 								<h2>{{.Message}}</h2>
@@ -54,13 +54,25 @@
 						<div class="{{"pure-u-1"}} {{"pure-menu"}} {{"pure-menu-open"}}">
 							<a class="{{"pure-menu-heading"}}">Recent Branches</a>
 							<ul>{{range $commit := .Branches}}
-								<li>{{$__amber_31 := $repo.Name}}{{$__amber_32 := $repo.Owner}}{{$__amber_33 := $repo.Remote}}{{$__amber_34 := __amber_add "/" $__amber_33}}{{$__amber_35 := __amber_add $__amber_34 "/"}}{{$__amber_36 := __amber_add $__amber_35 $__amber_32}}{{$__amber_37 := __amber_add $__amber_36 "/"}}{{$__amber_38 := __amber_add $__amber_37 $__amber_31}}{{$__amber_39 := __amber_add $__amber_38 "/branch/"}}{{$__amber_40 := __amber_add $__amber_39 .Branch}}
-									<a data-status="{{.Status}}" href="{{$__amber_40}}">{{.Branch}}</a>
+								<li>{{$__amber_32 := $repo.Name}}{{$__amber_33 := $repo.Owner}}{{$__amber_34 := $repo.Remote}}{{$__amber_35 := __amber_add "/" $__amber_34}}{{$__amber_36 := __amber_add $__amber_35 "/"}}{{$__amber_37 := __amber_add $__amber_36 $__amber_33}}{{$__amber_38 := __amber_add $__amber_37 "/"}}{{$__amber_39 := __amber_add $__amber_38 $__amber_32}}{{$__amber_40 := __amber_add $__amber_39 "/branch/"}}{{$__amber_41 := __amber_add $__amber_40 .Branch}}
+									<a data-status="{{.Status}}" href="{{$__amber_41}}">{{.Branch}}</a>
 								</li>{{end}}
 							</ul>
 						</div>
 					</section>
-				</div>
+				</div>{{else}}
+				<section class="{{"pure-u-1"}}">
+					<div class="{{"alert"}} {{"alert-info"}}">Your Build history is empty. Push to your remote repository to trigger a build. </div>
+				</section>{{end}}{{else}}
+				<section class="{{"pure-u-1"}}">
+					<div class="{{"alert"}} {{"alert-info"}}">This Repository is not yet active. Please activate to start testing commits.</div>
+					<br />
+					<form class="{{"pure-form"}} {{"pure-form-stacked"}}">
+						<div class="{{"pure-controls"}}">
+							<button class="{{"pure-button"}} {{"pure-button-primary"}}">Click to Active Repository</button>
+						</div>
+					</form>
+				</section>{{end}}
 			</article>
 		</div>
 		<script src="{{"//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"}}"></script>
