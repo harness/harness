@@ -40,7 +40,7 @@ func init() {
 var defaultConfig = `
 # Enables user self-registration. If false, the system administrator
 # will need to manually add users to the system.
-registration: true
+registration = true
 
 [smtp]
 host = ""
