@@ -80,17 +80,17 @@ type User struct {
 // Repo represents a standard subset of repository meta-data
 // returned by REST API endpoints (ie github repo api).
 type Repo struct {
-	ID       int64
-	Owner    string
-	Name     string
-	FullName string
-	Kind     string
-	Clone    string
-	Git      string
-	SSH      string
-	URL      string
-	Private  bool
-	Pull     bool
-	Push     bool
-	Admin    bool
+	ID      int64
+	Host    string
+	Owner   string
+	Name    string
+	Kind    string
+	Clone   string
+	Git     string
+	SSH     string
+	URL     string
+	Private bool
+	Pull    bool
+	Push    bool
+	Admin   bool
 }

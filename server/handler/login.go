@@ -76,6 +76,10 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 
 	// look at the last synchronized date to determine if
 	// we need to re-sync the account.
+	//
+	// TODO this should move to a server/sync package and
+	//      should be injected into this struct, just like
+	//      the database code.
 	if u.Stale() {
 		log.Println("sync user account.", u.Login)
 
@@ -101,10 +105,10 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 			for _, remoteRepo := range repos {
 				repo, _ := repo.New(remote.GetName(), remoteRepo.Owner, remoteRepo.Name)
 				repo.Private = remoteRepo.Private
-				repo.FullName = remoteRepo.FullName
-				repo.Clone = remoteRepo.Clone
-				repo.Git = remoteRepo.Git
-				repo.SSH = remoteRepo.SSH
+				// TODO set the repo.Host
+				repo.CloneURL = remoteRepo.Clone
+				repo.GitURL = remoteRepo.Git
+				repo.SSHURL = remoteRepo.SSH
 				repo.URL = remoteRepo.URL
 
 				if err := h.repos.Insert(repo); err != nil {

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/drone/drone/pkg/database"
-	"github.com/drone/drone/pkg/database/testdata"
+	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/server/database/testdata"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -172,7 +172,7 @@ func testRepo(t *testing.T, repo *Repo) {
 		t.Errorf("Want Name %v, got %v", want, got)
 	}
 
-	got, want = repo.URL, "git://github.com/lhofstadter/lenwoloppali.git"
+	got, want = repo.CloneURL, "git://github.com/lhofstadter/lenwoloppali.git"
 	if got != want {
 		t.Errorf("Want URL %v, got %v", want, got)
 	}

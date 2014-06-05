@@ -16,15 +16,15 @@ type Repo struct {
 	ID     int64  `meddler:"repo_id,pk"        json:"-"`
 	UserID int64  `meddler:"user_id"           json:"-"`
 	Remote string `meddler:"repo_remote"       json:"remote"`
+	Host   string `meddler:"repo_host"         json:"host"`
 	Owner  string `meddler:"repo_owner"        json:"owner"`
 	Name   string `meddler:"repo_name"         json:"name"`
 
-	FullName string `meddler:"-" json:"full_name"`
-	Clone    string `meddler:"-" json:"clone_url"`
-	Git      string `meddler:"-" json:"git_url"`
-	SSH      string `meddler:"-" json:"ssh_url"`
+	URL      string `meddler:"repo_url"       json:"url"`
+	CloneURL string `meddler:"repo_clone_url" json:"clone_url"`
+	GitURL   string `meddler:"repo_git_url"   json:"git_url"`
+	SSHURL   string `meddler:"repo_ssh_url"   json:"ssh_url"`
 
-	URL         string `meddler:"repo_url"          json:"url"`
 	Active      bool   `meddler:"repo_active"       json:"active"`
 	Private     bool   `meddler:"repo_private"      json:"private"`
 	Privileged  bool   `meddler:"repo_privileged"   json:"privileged"`

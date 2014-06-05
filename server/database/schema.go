@@ -41,9 +41,13 @@ var stmts = []string{`
 		 repo_id           INTEGER PRIMARY KEY AUTOINCREMENT
 		,user_id           INTEGER
 		,repo_remote       VARCHAR(255)
+		,repo_host         VARCHAR(255)
 		,repo_owner        VARCHAR(255)
 		,repo_name         VARCHAR(255)
-		,repo_url          VARCHAR(255)
+		,repo_url          VARCHAR(1024)
+		,repo_clone_url    VARCHAR(255)
+		,repo_git_url      VARCHAR(255)
+		,repo_ssh_url      VARCHAR(255)
 		,repo_active       BOOLEAN
 		,repo_private      BOOLEAN
 		,repo_privileged   BOOLEAN
