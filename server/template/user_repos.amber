@@ -11,10 +11,10 @@ block content
 				i.fa.fa-rss
 		section
 			form.pure-form.search-form
-				input[type="search"][placeholder="Filter List"].pure-u-1
+				input[type="search"][placeholder="Filter List"].pure-u-1#search
 			div.repo-list
 				each $repo in Repos
-					a.pure-g.repo-item[data-status=Active][href="/"+Remote+"/"+Owner+"/"+Name]
+					a.pure-g.repo-item.searchable[data-status=Active][href="/"+Host+"/"+Owner+"/"+Name][data-index=Owner+"/"+Name]
 						div.pure-u-11-12
 							h2
 								span #{Owner}
@@ -25,3 +25,16 @@ block content
 								span.repo-active On
 							else
 								span.repo-inactive Off
+
+block append scripts
+	style#search_style
+	script[type="text/javascript"]
+		var searchStyle = document.getElementById('search_style');
+		document.getElementById('search').addEventListener('input', function() {
+			if (!this.value) {
+				searchStyle.innerHTML = "";
+				return;
+			}
+			// look ma, no indexOf!
+			searchStyle.innerHTML = ".searchable:not([data-index*=\"" + this.value + "\"]) { display: none; }";
+		});
