@@ -32,10 +32,10 @@
 				</header>
 				<section>
 					<form class="{{"pure-form"}} {{"search-form"}}">
-						<input type="{{"search"}}" placeholder="{{"Filter List"}}" class="{{"pure-u-1"}}" />
+						<input type="{{"search"}}" placeholder="{{"Filter List"}}" class="{{"pure-u-1"}}" id="{{"search"}}" />
 					</form>
-					<div class="{{"repo-list"}}">{{range $repo := .Repos}}{{$__amber_5 := __amber_add "/" .Remote}}{{$__amber_6 := __amber_add $__amber_5 "/"}}{{$__amber_7 := __amber_add $__amber_6 .Owner}}{{$__amber_8 := __amber_add $__amber_7 "/"}}{{$__amber_9 := __amber_add $__amber_8 .Name}}
-						<a class="{{"pure-g"}} {{"repo-item"}}" data-status="{{.Active}}" href="{{$__amber_9}}">
+					<div class="{{"repo-list"}}">{{range $repo := .Repos}}{{$__amber_5 := __amber_add "/" .Host}}{{$__amber_6 := __amber_add $__amber_5 "/"}}{{$__amber_7 := __amber_add $__amber_6 .Owner}}{{$__amber_8 := __amber_add $__amber_7 "/"}}{{$__amber_9 := __amber_add $__amber_8 .Name}}{{$__amber_10 := __amber_add .Owner "/"}}{{$__amber_11 := __amber_add $__amber_10 .Name}}
+						<a class="{{"pure-g"}} {{"repo-item"}} {{"searchable"}}" data-status="{{.Active}}" href="{{$__amber_9}}" data-index="{{$__amber_11}}">
 							<div class="{{"pure-u-11-12"}}">
 								<h2>
 									<span>{{.Owner}}</span>
@@ -55,5 +55,17 @@
 		<script src="{{"//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"}}"></script>
 		<script src="{{"//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.1.0/jquery.timeago.js"}}"></script>
 		<script src="{{"/static/scripts/main.js"}}"></script>
+		<style id="{{"search_style"}}"></style>
+		<script type="{{"text/javascript"}}">
+			var searchStyle = document.getElementById('search_style');
+			document.getElementById('search').addEventListener('input', function() {
+				if (!this.value) {
+					searchStyle.innerHTML = "";
+					return;
+				}
+				// look ma, no indexOf!
+				searchStyle.innerHTML = ".searchable:not([data-index*=\"" + this.value + "\"]) { display: none; }";
+			});
+		</script>
 	</body>
 </html>
