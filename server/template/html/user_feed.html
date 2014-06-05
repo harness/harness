@@ -30,7 +30,7 @@
 						<i class="{{"fa"}} {{"fa-plus"}}"></i>
 					</a>
 				</header>
-				<section>
+				<section>{{if .Feed}}
 					<div class="{{"activity-list"}}">{{range $commit := .Feed}}{{$__amber_5 := __amber_add "/" .Remote}}{{$__amber_6 := __amber_add $__amber_5 "/"}}{{$__amber_7 := __amber_add $__amber_6 .Owner}}{{$__amber_8 := __amber_add $__amber_7 "/"}}{{$__amber_9 := __amber_add $__amber_8 .Name}}{{$__amber_10 := __amber_add $__amber_9 "/branch/"}}{{$__amber_11 := __amber_add $__amber_10 .Branch}}{{$__amber_12 := __amber_add $__amber_11 "/commit/"}}{{$__amber_13 := __amber_add $__amber_12 .Sha}}
 						<a class="{{"pure-g"}} {{"activity-item"}}" data-status="{{.Status}}" href="{{$__amber_13}}">
 							<div class="{{"pure-u-1-8"}}">{{$__amber_14 := __amber_add "https://secure.gravatar.com/avatar/" .Gravatar}}{{$__amber_15 := __amber_add $__amber_14 "?s=48&d=identicon"}}
@@ -48,7 +48,12 @@
 								<span class="{{"activity-date"}} {{"timeago"}}" title="{{.FinishedString}}"></span>
 							</div>
 						</a>{{end}}
-					</div>
+					</div>{{else}}
+					<div class="{{"alert"}} {{"alert-info"}}">
+						Your build feed is empty.
+						<a href="{{"/account/repos"}}">Setup</a>
+						your repositories to get started.
+					</div>{{end}}
 				</section>
 			</article>
 		</div>

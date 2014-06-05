@@ -3461,6 +3461,19 @@ article.pure-g > .pure-u-3-4 {
   margin-right: 15px;
   display: inline-block;
 }
+.alert a:visited,
+.alert a:active,
+.alert a {
+  color: inherit;
+}
+.alert-info {
+  background: #f4f8fa;
+  color: #5bc0de;
+  border-left: 5px solid #5bc0de;
+}
+.alert-info:before {
+  content: "\f05a";
+}
 .alert[data-status="Success"] {
   background: #D9F3EA;
   border-left: 5px solid #40C598;
