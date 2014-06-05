@@ -19,3 +19,6 @@ Some of the fundamental changes include
 
 Normally I wouldn't post experimental code in such disarray, but given the amount of activity around
 the project I wanted to give the community visibility into these changes. I could also use the help!
+
+I'm tracking my TODO list here:
+https://gist.github.com/bradrydzewski/85b7720c276a70a1bed5
