@@ -10,21 +10,27 @@ block content
 			a[href="/account/repos"].pure-button
 				i.fa.fa-plus
 		section
-			div.activity-list
-				each $commit in Feed
-					a.pure-g.activity-item[data-status=Status][href="/"+Remote+"/"+Owner+"/"+Name+"/branch/"+Branch+"/commit/"+Sha]
-						div.pure-u-1-8
-							img[src="https://secure.gravatar.com/avatar/" + Gravatar + "?s=48&d=identicon"]
+			if Feed
+				div.activity-list
+					each $commit in Feed
+						a.pure-g.activity-item[data-status=Status][href="/"+Remote+"/"+Owner+"/"+Name+"/branch/"+Branch+"/commit/"+Sha]
+							div.pure-u-1-8
+								img[src="https://secure.gravatar.com/avatar/" + Gravatar + "?s=48&d=identicon"]
 
-						div.pure-u-3-4
-							h2
-								span #{Owner}
-								span.divider /
-								span #{Name}
-							p.activity-message #{Message}
-							span.activity-sha #{ShaShort}
-							span.activity-branch #{Branch}
-							span.activity-date.timeago[title=FinishedString]
+							div.pure-u-3-4
+								h2
+									span #{Owner}
+									span.divider /
+									span #{Name}
+								p.activity-message #{Message}
+								span.activity-sha #{ShaShort}
+								span.activity-branch #{Branch}
+								span.activity-date.timeago[title=FinishedString]
+			else
+				div.alert.alert-info
+					| Your build feed is empty.
+					a[href="/account/repos"] Setup
+					| your repositories to get started.
 							
 block append scripts
 	script
