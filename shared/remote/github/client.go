@@ -41,22 +41,19 @@ func (c *Client) GetRepos(owner string) ([]*remote.Repo, error) {
 
 	// loop throught the list and convert to the standard repo format
 	for _, repo := range repos {
-		// get the full name / path of the repository
-		fullName := fmt.Sprintf("%s/%s/%s", githuburl.Host, repo.Owner, repo.Name)
-
 		result = append(result, &remote.Repo{
-			ID:       repo.ID,
-			Owner:    repo.Owner.Login,
-			Name:     repo.Name,
-			FullName: fullName,
-			Kind:     "git",
-			Clone:    repo.CloneUrl,
-			Git:      repo.GitUrl,
-			SSH:      repo.SshUrl,
-			Private:  repo.Private,
-			Push:     repo.Permissions.Push,
-			Pull:     repo.Permissions.Pull,
-			Admin:    repo.Permissions.Admin,
+			ID:      repo.ID,
+			Host:    githuburl.Host,
+			Owner:   repo.Owner.Login,
+			Name:    repo.Name,
+			Kind:    "git",
+			Clone:   repo.CloneUrl,
+			Git:     repo.GitUrl,
+			SSH:     repo.SshUrl,
+			Private: repo.Private,
+			Push:    repo.Permissions.Push,
+			Pull:    repo.Permissions.Pull,
+			Admin:   repo.Permissions.Admin,
 		})
 	}
 

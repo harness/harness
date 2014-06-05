@@ -29,6 +29,12 @@ func (c *Client) GetRepos(owner string) ([]*remote.Repo, error) {
 		c.secret,
 	)
 
+	// parse the hostname from the bitbucket url
+	bitbucketurl, err := url.Parse(c.config.URL)
+	if err != nil {
+		return nil, err
+	}
+
 	repos, err := client.Repos.List()
 	if err != nil {
 		return nil, err
@@ -45,22 +51,25 @@ func (c *Client) GetRepos(owner string) ([]*remote.Repo, error) {
 		}
 
 		// these are the urls required to clone the repository
+		// TODO use the bitbucketurl.Host and bitbucketurl.Scheme instead of hardcoding
+		//      so that we can support Stash.
 		clone := fmt.Sprintf("https://bitbucket.org/%s/%s.git", repo.Owner, repo.Name)
 		ssh := fmt.Sprintf("git@bitbucket.org:%s/%s.git", repo.Owner, repo.Name)
 
-		// create a full name
-		fullName := fmt.Sprintf("bitbucket.org/%s/%s", repo.Owner, repo.Name)
-
 		result = append(result, &remote.Repo{
-			Owner:    repo.Owner,
-			Name:     repo.Name,
-			FullName: fullName,
-			Kind:     repo.Scm,
-			Private:  repo.Private,
-			Clone:    clone,
-			SSH:      ssh,
+			Host:    bitbucketurl.Host,
+			Owner:   repo.Owner,
+			Name:    repo.Name,
+			Kind:    repo.Scm,
+			Private: repo.Private,
+			Clone:   clone,
+			SSH:     ssh,
 			// Bitbucket doesn't return permissions with repository
 			// lists, so we're going to grant full access.
+			//
+			// TODO we need to verify this API call only returns
+			//      repositories that we can access (ie not repos we just follow).
+			//      otherwise this would cause a security flaw.
 			Push:  true,
 			Pull:  true,
 			Admin: true,

@@ -13,9 +13,9 @@ var stmts = []string{
 	"insert into users values (4, 4, 'github.com', 'mrwolowitz',    '1f6a80bde960e6913bf9b7e61eadd068', '74c40472494ba7f9f6c3ae061ff799ed', 'Mr. Wolowitz',     'wolowitz@caltech.edu', 'ea250570c794d84dc583421bb717be82', '3bd7e7d7411b2978e45919c9ad419984', 1, 1, 1398065343, 1398065344, 1398065345);",
 
 	// insert repository entries
-	"insert into repos values (1, 0, 'github.com', 'lhofstadter',   'lenwoloppali', 'git://github.com/lhofstadter/lenwoloppali.git', 1, 1, 1, 1, 1, 'publickey', 'privatekey', 'params', 900, 1398065343, 1398065344);",
-	"insert into repos values (2, 0, 'github.com', 'browndynamite', 'lenwoloppali', 'git://github.com/browndynamite/lenwoloppali.git', 1, 1, 1, 1, 1, 'publickey', 'privatekey', 'params', 900, 1398065343, 1398065344);",
-	"insert into repos values (3, 0, 'gitlab.com', 'browndynamite', 'lenwoloppali', 'git://gitlab.com/browndynamite/lenwoloppali.git', 1, 1, 1, 1, 1, 'publickey', 'privatekey', 'params', 900, 1398065343, 1398065344);",
+	"insert into repos values (1, 0, 'github.com', 'github.com', 'lhofstadter',   'lenwoloppali', '', 'git://github.com/lhofstadter/lenwoloppali.git', '', '', 1, 1, 1, 1, 1, 'publickey', 'privatekey', 'params', 900, 1398065343, 1398065344);",
+	"insert into repos values (2, 0, 'github.com', 'github.com', 'browndynamite', 'lenwoloppali', '', 'git://github.com/browndynamite/lenwoloppali.git', '', '', 1, 1, 1, 1, 1, 'publickey', 'privatekey', 'params', 900, 1398065343, 1398065344);",
+	"insert into repos values (3, 0, 'gitlab.com', 'github.com', 'browndynamite', 'lenwoloppali', '', 'git://gitlab.com/browndynamite/lenwoloppali.git', '', '', 1, 1, 1, 1, 1, 'publickey', 'privatekey', 'params', 900, 1398065343, 1398065344);",
 
 	// insert user + repository permission entries
 	"insert into perms values (1, 101, 200, 1, 1, 1, 1398065343, 1398065344);",
