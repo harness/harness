@@ -61,6 +61,10 @@ func (s *SiteHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 	return s.render(w, "user_conf.html", struct{ User *user.User }{u})
 }
 
+func (s *SiteHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
+	return s.render(w, "login.html", struct{ User *user.User }{nil})
+}
+
 func (s *SiteHandler) GetUsers(w http.ResponseWriter, r *http.Request) error {
 	u := s.sess.User(r)
 	if u == nil || u.Admin == false {
@@ -176,6 +180,7 @@ func (s *SiteHandler) Register(r *pat.Router) {
 	r.Get("/admin/settings", errorHandler(s.GetConfig))
 	r.Get("/account/profile", errorHandler(s.GetUser))
 	r.Get("/account/repos", errorHandler(s.GetRepos))
+	r.Get("/login", errorHandler(s.GetLogin))
 	r.Get("/{host}/{owner}/{name}/settings", errorHandler(s.GetRepoAdmin))
 	r.Get("/{host}/{owner}/{name}/branch/{branch}/commit/{commit}", errorHandler(s.GetRepo))
 	r.Get("/{host}/{owner}/{name}/branch/{branch}", errorHandler(s.GetRepo))
