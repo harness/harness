@@ -16,7 +16,7 @@ block content
 				i.fa.fa-dashboard
 
 		section.pure-u-1
-			form.pure-form.pure-form-stacked
+			form.pure-form.pure-form-stacked[action="/v1/repos/"+Repo.Host+"/"+Repo.Owner+"/"+Repo.Name]
 				fieldset
 					details[open]
 						summary Commit Hooks
@@ -40,17 +40,41 @@ block content
 										div.onoffswitch-inactive
 											div.onoffswitch-switch OFF
 							span Pull Request Hooks
-
 					details
 						summary Badges
 						textarea[spellcheck="false"] [![Build Status](#{Scheme}://#{Host}/v1/badge/#{Repo.Remote}/#{Repo.Owner}/#{Repo.Name}/status.svg)](#{Scheme}://#{Host}/#{Repo.Remote}/#{Repo.Owner}/#{Repo.Name})
 					details
 						summary Private Variables
-						textarea[spellcheck="false"][placeholder="FOO: BAR"] #{Repo.Params}
+						textarea[spellcheck="false"][placeholder="FOO: BAR"][name="params"] #{Repo.Params}
 					details
 						summary Public Key
 						textarea[spellcheck="false"][rows="5"] #{Repo.PublicKey}
 
 					div.pure-controls
-						button.pure-button.pure-button-primary Save
+						button.pure-button.pure-button-primary[type="submit"] Save
 						button.pure-button.pure-button-secondary[type="reset"] Reset
+
+block append scripts
+	script
+		document.getElementById("post_commits").checked = #{Repo.PostCommit};
+		document.getElementById("pull_requests").checked = #{Repo.PullRequest};
+		document.forms[0].onsubmit = function(event) {
+			event.preventDefault();
+			var form = event.target;
+			$.ajax({
+				url: form.action,
+				type: 'PUT',
+				contentType: 'application/json',
+				data: JSON.stringify({
+					post_commits:  form.elements.post_commits.checked,
+					pull_requests: form.elements.pull_requests.checked,
+					params: form.elements.params.value
+				}),
+				dataType: 'json'
+			}).done(function() {
+				alert( "success" );
+			}).fail(function() {
+				alert( "error" );
+			});
+			return false;
+		}

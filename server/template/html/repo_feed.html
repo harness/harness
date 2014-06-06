@@ -87,13 +87,12 @@
 		<script></script>{{else}}
 		<script>
 			document.forms[0].onsubmit = function(event) {
-			
-				var form = event.target
+				var form = event.target;
 				var formData = new FormData(form);
 				xhr = new XMLHttpRequest();
 				xhr.open('POST', form.action);
 				xhr.onload = function() {
-					if (this.status == 200) {
+					if (this.status == 201) {
 						window.location.reload();
 					} else {
 						$("#alert").text("Failed to activate the repository settings. Please try again");
