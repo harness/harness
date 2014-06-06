@@ -50,7 +50,7 @@ func (h *RepoHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
 	return json.NewEncoder(w).Encode(repo)
 }
 
-// PostRepo gets the named repository.
+// PostRepo activates the named repository.
 // POST /v1/repos/:host/:owner/:name
 func (h *RepoHandler) PostRepo(w http.ResponseWriter, r *http.Request) error {
 	var host, owner, name = parseRepo(r)
