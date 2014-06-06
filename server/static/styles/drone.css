@@ -3482,12 +3482,14 @@ article.pure-g > .pure-u-3-4 {
 .alert[data-status="Success"]:before {
   content: "\f00c";
 }
+.alert-danger,
 .alert[data-status="Error"],
 .alert[data-status="Failure"] {
   background: #fdf7f7;
   border-left: 5px solid #ed5564;
   color: #ed5564;
 }
+.alert-danger:before,
 .alert[data-status="Error"]:before,
 .alert[data-status="Failure"]:before {
   content: "\f00d";
