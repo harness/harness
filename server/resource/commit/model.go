@@ -56,6 +56,7 @@ func (c *Commit) FinishedString() string {
 
 type CommitRepo struct {
 	Remote string `meddler:"repo_remote" json:"remote"`
+	Host   string `meddler:"repo_host"   json:"host"`
 	Owner  string `meddler:"repo_owner"  json:"owner"`
 	Name   string `meddler:"repo_name"   json:"name"`
 
