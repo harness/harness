@@ -81,7 +81,7 @@ LIMIT 20
 
 // SQL query to retrieve the latest Commits for a user's repositories.
 const listUserQuery = `
-SELECT r.repo_remote, r.repo_owner, r.repo_name, c.*
+SELECT r.repo_remote, r.repo_host, r.repo_owner, r.repo_name, c.*
 FROM commits c, repos r, perms p
 WHERE c.repo_id=r.repo_id
 AND   r.repo_id=p.repo_id
