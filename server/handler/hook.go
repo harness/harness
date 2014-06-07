@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/drone/drone/server/resource/build"
 	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/config"
 	"github.com/drone/drone/server/resource/repo"
@@ -16,13 +15,11 @@ type HookHandler struct {
 	users   user.UserManager
 	repos   repo.RepoManager
 	commits commit.CommitManager
-	builds  build.BuildManager
 	conf    *config.Config
 }
 
-func NewHookHandler(users user.UserManager, repos repo.RepoManager, commits commit.CommitManager,
-	builds build.BuildManager, conf *config.Config) *HookHandler {
-	return &HookHandler{users, repos, commits, builds, conf}
+func NewHookHandler(users user.UserManager, repos repo.RepoManager, commits commit.CommitManager, conf *config.Config) *HookHandler {
+	return &HookHandler{users, repos, commits, conf}
 }
 
 // PostHook receives a post-commit hook from GitHub, Bitbucket, etc
@@ -88,16 +85,6 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	// inser the commit into the database
 	if err := h.commits.Insert(&c); err != nil {
 		return badRequest{err}
-	}
-
-	b := build.Build{
-		CommitID: c.ID,
-		Status:   c.Status,
-		Number:   1,
-	}
-	// inser the build entry into the database
-	if err := h.builds.Insert(&b); err != nil {
-		return internalServerError{err}
 	}
 
 	fmt.Printf("%#v", hook)

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drone/drone/pkg/database"
-	"github.com/drone/drone/pkg/resource/commit/committest"
+	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/server/database/testdata"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -18,7 +18,7 @@ var db *sql.DB
 func setup() {
 	db, _ = sql.Open("sqlite3", ":memory:")
 	database.Load(db)
-	committest.Load(db)
+	testdata.Load(db)
 }
 
 // teardown the test database
@@ -63,6 +63,22 @@ func TestFindLatest(t *testing.T) {
 	}
 
 	testCommit(t, commit)
+}
+
+func TestFindOutput(t *testing.T) {
+	setup()
+	defer teardown()
+
+	commits := NewManager(db)
+	out, err := commits.FindOutput(1)
+	if err != nil {
+		t.Errorf("Want Commit stdout, got %s", err)
+	}
+
+	var want, got = "sample console output", string(out)
+	if want != got {
+		t.Errorf("Want stdout %v, got %v", want, got)
+	}
 }
 
 func TestList(t *testing.T) {

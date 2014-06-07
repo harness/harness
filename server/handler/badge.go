@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/drone/drone/server/resource/build"
 	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/repo"
 	"github.com/gorilla/pat"
@@ -59,24 +58,24 @@ func (h *BadgeHandler) GetStatus(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// get the latest commit
-	commit, _ := h.commits.FindLatest(arepo.ID, branch)
+	c, _ := h.commits.FindLatest(arepo.ID, branch)
 
 	// if no commit was found then display
 	// the 'none' badge
-	if commit == nil {
+	if c == nil {
 		w.Write(badgeNone)
 		return nil
 	}
 
 	// determine which badge to load
-	switch commit.Status {
-	case build.StatusSuccess:
+	switch c.Status {
+	case commit.StatusSuccess:
 		w.Write(badgeSuccess)
-	case build.StatusFailure:
+	case commit.StatusFailure:
 		w.Write(badgeFailure)
-	case build.StatusError:
+	case commit.StatusError:
 		w.Write(badgeError)
-	case build.StatusEnqueue, build.StatusStarted:
+	case commit.StatusEnqueue, commit.StatusStarted:
 		w.Write(badgeStarted)
 	default:
 		w.Write(badgeNone)

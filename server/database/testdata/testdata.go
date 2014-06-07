@@ -31,12 +31,9 @@ var stmts = []string{
 	"insert into commits values (4, 1, 'Success', 1398065345, 1398069999, 854, 'd12c9e5a11982f71796ad909c93551b16fba053e', 'dev',     '', 'drcooper@caltech.edu', 'ab23a88a3ed77ecdfeb894c0eaf2817a', 'Wed Apr 23 02:00:00 2014 -0700', 'a commit message', '', 1398065343, 1398065344);",
 	"insert into commits values (5, 1, 'Started', 1398065345,          0,   0, '85f8c029b902ed9400bc600bac301a0aadb144ac', 'master',  '', 'drcooper@caltech.edu', 'ab23a88a3ed77ecdfeb894c0eaf2817a', 'Wed Apr 23 03:00:00 2014 -0700', 'a commit message', '', 1398065343, 1398065344);",
 
-	// insert build entries
-	"insert into builds values (1, 2, 1, '', 'Success', 'some output', 1398065345, 1398069999, 854, 1398065343, 1398065344);",
-	"insert into builds values (2, 2, 2, '', 'Success', 'some output', 1398065345, 1398069999, 854, 1398065343, 1398065344);",
-	"insert into builds values (3, 2, 3, '', 'Success', 'some output', 1398065345, 1398069999, 854, 1398065343, 1398065344);",
-	"insert into builds values (4, 1, 1, '', 'Success', 'some output', 1398065345, 1398069999, 854, 1398065343, 1398065344);",
-	"insert into builds values (5, 3, 1, '', 'Started', 'some output', 1398065345,          0,   0, 1398065343, 1398065344);",
+	// insert commit console output
+	"insert into output values (1, 1, 'sample console output');",
+	"insert into output values (2, 2, 'sample console output.....');",
 }
 
 // Load will populate the database with a fixed dataset for

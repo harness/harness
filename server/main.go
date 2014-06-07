@@ -9,7 +9,6 @@ import (
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/handler"
 	"github.com/drone/drone/server/render"
-	"github.com/drone/drone/server/resource/build"
 	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/config"
 	"github.com/drone/drone/server/resource/perm"
@@ -72,7 +71,6 @@ func main() {
 	repos := repo.NewManager(db)
 	users := user.NewManager(db)
 	perms := perm.NewManager(db)
-	builds := build.NewManager(db)
 	commits := commit.NewManager(db)
 
 	// setup the session managers
@@ -82,15 +80,14 @@ func main() {
 	router := pat.New()
 	handler.NewUsersHandler(users, sess).Register(router)
 	handler.NewUserHandler(users, repos, commits, sess).Register(router)
-	handler.NewHookHandler(users, repos, commits, builds, &conf).Register(router)
+	handler.NewHookHandler(users, repos, commits, &conf).Register(router)
 	handler.NewLoginHandler(users, repos, perms, sess, &conf).Register(router)
-	handler.NewBuildHandler(repos, commits, builds, perms, sess).Register(router)
 	handler.NewCommitHandler(repos, commits, perms, sess).Register(router)
 	handler.NewBranchHandler(repos, commits, perms, sess).Register(router)
 	handler.NewRepoHandler(repos, commits, perms, sess, &conf).Register(router)
 	handler.NewBadgeHandler(repos, commits).Register(router)
 	handler.NewConfigHandler(conf, sess).Register(router)
-	handler.NewSiteHandler(users, repos, commits, builds, perms, sess, templ).Register(router)
+	handler.NewSiteHandler(users, repos, commits, perms, sess, templ).Register(router)
 
 	// serve static assets
 	// TODO we need to replace this with go.rice

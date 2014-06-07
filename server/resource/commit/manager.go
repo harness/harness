@@ -18,7 +18,7 @@ type CommitManager interface {
 	FindLatest(repo int64, branch string) (*Commit, error)
 
 	// FindOutput finds the commit's output.
-	//FindOutput(id int64) ([]byte, error)
+	FindOutput(commit int64) ([]byte, error)
 
 	// List finds recent commits for the repository
 	List(repo int64) ([]*Commit, error)
@@ -39,7 +39,7 @@ type CommitManager interface {
 	Update(commit *Commit) error
 
 	// UpdateOutput persists a commit's stdout to the datastore.
-	//UpdateOutput(commit *Commit, out []byte) error
+	UpdateOutput(commit *Commit, out []byte) error
 
 	// Delete removes the commit from the datastore.
 	Delete(commit *Commit) error
@@ -121,6 +121,23 @@ WHERE commit_id IN (
     AND commit_branch=?)
 `
 
+// SQL query to retrieve a Commit's stdout.
+const findOutputQuery = `
+SELECT output_raw
+FROM output
+WHERE commit_id = ?
+`
+
+// SQL statement to insert a Commit's stdout.
+const insertOutputStmt = `
+INSERT INTO output (commit_id, output_raw) values (?,?);
+`
+
+// SQL statement to update a Commit's stdout.
+const updateOutputStmt = `
+UPDATE output SET output_raw = ? WHERE commit_id = ?;
+`
+
 // SQL statement to delete a Commit by ID.
 const deleteStmt = `
 DELETE FROM commits WHERE commit_id = ?
@@ -142,6 +159,12 @@ func (db *commitManager) FindLatest(repo int64, branch string) (*Commit, error) 
 	dst := Commit{}
 	err := meddler.QueryRow(db, &dst, findLatestQuery, repo, branch)
 	return &dst, err
+}
+
+func (db *commitManager) FindOutput(commit int64) ([]byte, error) {
+	var dst string
+	err := db.QueryRow(findOutputQuery, commit).Scan(&dst)
+	return []byte(dst), err
 }
 
 func (db *commitManager) List(repo int64) ([]*Commit, error) {
@@ -177,6 +200,15 @@ func (db *commitManager) Insert(commit *Commit) error {
 func (db *commitManager) Update(commit *Commit) error {
 	commit.Updated = time.Now().Unix()
 	return meddler.Update(db, "commits", commit)
+}
+
+func (db *commitManager) UpdateOutput(commit *Commit, out []byte) error {
+	_, err := db.Exec(insertOutputStmt, commit.ID, out)
+	if err != nil {
+		return nil
+	}
+	_, err = db.Exec(updateOutputStmt, out, commit.ID)
+	return err
 }
 
 func (db *commitManager) Delete(commit *Commit) error {

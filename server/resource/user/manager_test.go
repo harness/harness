@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/drone/drone/pkg/database"
-	"github.com/drone/drone/pkg/database/testdata"
+	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/server/database/testdata"
 	_ "github.com/mattn/go-sqlite3"
 )
 
