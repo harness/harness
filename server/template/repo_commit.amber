@@ -9,11 +9,11 @@ block content
 			h1
 				span #{Repo.Owner}
 				span /
-				a[href="/"+Repo.Remote+"/"+Repo.Owner+"/"+Repo.Name] #{Repo.Name}
+				a[href="/"+Repo.Host+"/"+Repo.Owner+"/"+Repo.Name] #{Repo.Name}
 				span /
 				a[href="#"] #{Commit.ShaShort}
 
-			a.pure-button[href="/"+Repo.Remote+"/"+Repo.Owner+"/"+Repo.Name]
+			a.pure-button[href="/"+Repo.Host+"/"+Repo.Owner+"/"+Repo.Name]
 				i.fa.fa-dashboard
 		section.pure-u-3-4
 			div.alert[data-status=Commit.Status]
@@ -71,7 +71,7 @@ block append scripts
 			});
 	else
 		script
-			$.get("/v1/repos/"+#{Repo.Remote}+"/"+#{Repo.Owner}+"/"+#{Repo.Name}+"/branches/"+#{Commit.Branch}+"/commits/"+#{Commit.Sha}+"/console", function( data ) {
+			$.get("/v1/repos/"+#{Repo.Host}+"/"+#{Repo.Owner}+"/"+#{Repo.Name}+"/branches/"+#{Commit.Branch}+"/commits/"+#{Commit.Sha}+"/console", function( data ) {
 				var lineFormatter = new Drone.LineFormatter();
 				$( "#stdout" ).html(lineFormatter.format(data));
 			});

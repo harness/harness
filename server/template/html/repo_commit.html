@@ -27,11 +27,11 @@
 				<header class="{{"pure-u-1"}}">
 					<h1>
 						<span>{{$__amber_7 := .Repo.Owner}}{{$__amber_7}}</span>
-						<span>/</span>{{$__amber_8 := .Repo.Name}}{{$__amber_9 := .Repo.Owner}}{{$__amber_10 := .Repo.Remote}}{{$__amber_11 := __amber_add "/" $__amber_10}}{{$__amber_12 := __amber_add $__amber_11 "/"}}{{$__amber_13 := __amber_add $__amber_12 $__amber_9}}{{$__amber_14 := __amber_add $__amber_13 "/"}}{{$__amber_15 := __amber_add $__amber_14 $__amber_8}}
+						<span>/</span>{{$__amber_8 := .Repo.Name}}{{$__amber_9 := .Repo.Owner}}{{$__amber_10 := .Repo.Host}}{{$__amber_11 := __amber_add "/" $__amber_10}}{{$__amber_12 := __amber_add $__amber_11 "/"}}{{$__amber_13 := __amber_add $__amber_12 $__amber_9}}{{$__amber_14 := __amber_add $__amber_13 "/"}}{{$__amber_15 := __amber_add $__amber_14 $__amber_8}}
 						<a href="{{$__amber_15}}">{{$__amber_16 := .Repo.Name}}{{$__amber_16}}</a>
 						<span>/</span>
 						<a href="{{"#"}}">{{$__amber_17 := .Commit.ShaShort}}{{$__amber_17}}</a>
-					</h1>{{$__amber_18 := .Repo.Name}}{{$__amber_19 := .Repo.Owner}}{{$__amber_20 := .Repo.Remote}}{{$__amber_21 := __amber_add "/" $__amber_20}}{{$__amber_22 := __amber_add $__amber_21 "/"}}{{$__amber_23 := __amber_add $__amber_22 $__amber_19}}{{$__amber_24 := __amber_add $__amber_23 "/"}}{{$__amber_25 := __amber_add $__amber_24 $__amber_18}}
+					</h1>{{$__amber_18 := .Repo.Name}}{{$__amber_19 := .Repo.Owner}}{{$__amber_20 := .Repo.Host}}{{$__amber_21 := __amber_add "/" $__amber_20}}{{$__amber_22 := __amber_add $__amber_21 "/"}}{{$__amber_23 := __amber_add $__amber_22 $__amber_19}}{{$__amber_24 := __amber_add $__amber_23 "/"}}{{$__amber_25 := __amber_add $__amber_24 $__amber_18}}
 					<a class="{{"pure-button"}}" href="{{$__amber_25}}">
 						<i class="{{"fa"}} {{"fa-dashboard"}}"></i>
 					</a>
@@ -100,7 +100,7 @@
 			});
 		</script>{{else}}
 		<script>
-			{{$__amber_43 := .Repo.Remote}}{{$__amber_44 := .Repo.Owner}}{{$__amber_45 := .Repo.Name}}{{$__amber_46 := .Commit.Branch}}{{$__amber_47 := .Commit.Sha}}$.get("/v1/repos/"+{{$__amber_43}}+"/"+{{$__amber_44}}+"/"+{{$__amber_45}}+"/branches/"+{{$__amber_46}}+"/commits/"+{{$__amber_47}}+"/builds/1/console", function( data ) {
+			{{$__amber_43 := .Repo.Host}}{{$__amber_44 := .Repo.Owner}}{{$__amber_45 := .Repo.Name}}{{$__amber_46 := .Commit.Branch}}{{$__amber_47 := .Commit.Sha}}$.get("/v1/repos/"+{{$__amber_43}}+"/"+{{$__amber_44}}+"/"+{{$__amber_45}}+"/branches/"+{{$__amber_46}}+"/commits/"+{{$__amber_47}}+"/console", function( data ) {
 				var lineFormatter = new Drone.LineFormatter();
 				$( "#stdout" ).html(lineFormatter.format(data));
 			});
