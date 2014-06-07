@@ -11,13 +11,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/drone/drone/server/resource/build"
 	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/repo"
 )
 
 type worker struct {
-	builds  build.BuildManager
 	commits commit.CommitManager
 
 	runner BuildRunner
@@ -48,30 +46,19 @@ func (w *worker) execute(task *BuildTask) error {
 	// to avoid brining down the entire application
 	defer func() {
 		if e := recover(); e != nil {
-			task.Build.Finished = time.Now().Unix()
 			task.Commit.Finished = time.Now().Unix()
-			task.Build.Duration = task.Build.Finished - task.Build.Started
-			task.Commit.Duration = task.Build.Finished - task.Build.Started
-			task.Commit.Status = "Error"
-			task.Build.Status = "Error"
-			w.builds.Update(task.Build)
+			task.Commit.Duration = task.Commit.Finished - task.Commit.Started
+			task.Commit.Status = commit.StatusError
 			w.commits.Update(task.Commit)
 		}
 	}()
 
 	// update commit and build status
-	task.Commit.Status = "Started"
-	task.Build.Status = "Started"
-	task.Build.Started = time.Now().Unix()
+	task.Commit.Status = commit.StatusStarted
 	task.Commit.Started = time.Now().Unix()
 
 	// persist the commit to the database
 	if err := w.commits.Update(task.Commit); err != nil {
-		return err
-	}
-
-	// persist the build to the database
-	if err := w.builds.Update(task.Build); err != nil {
 		return err
 	}
 
@@ -97,16 +84,16 @@ func (w *worker) execute(task *BuildTask) error {
 
 	// make sure a channel exists for the repository,
 	// the commit, and the commit output (TODO)
-	reposlug := fmt.Sprintf("%s/%s/%s", task.Repo.Remote, task.Repo.Owner, task.Repo.Name)
-	commitslug := fmt.Sprintf("%s/%s/%s/commit/%s/%s", task.Repo.Remote, task.Repo.Owner, task.Repo.Name, task.Commit.Branch, task.Commit.Sha)
-	consoleslug := fmt.Sprintf("%s/%s/%s/commit/%s/%s/builds/%d", task.Repo.Remote, task.Repo.Owner, task.Repo.Name, task.Commit.Branch, task.Commit.Sha, task.Build.Number)
+	reposlug := fmt.Sprintf("%s/%s/%s", task.Repo.Host, task.Repo.Owner, task.Repo.Name)
+	commitslug := fmt.Sprintf("%s/%s/%s/commit/%s/%s", task.Repo.Host, task.Repo.Owner, task.Repo.Name, task.Commit.Branch, task.Commit.Sha)
+	consoleslug := fmt.Sprintf("%s/%s/%s/commit/%s/%s/console", task.Repo.Host, task.Repo.Owner, task.Repo.Name, task.Commit.Branch, task.Commit.Sha)
 	channel.Create(reposlug)
 	channel.Create(commitslug)
 	channel.CreateStream(consoleslug)
 
 	// notify the channels that the commit and build started
 	channel.SendJSON(reposlug, task.Commit)
-	channel.SendJSON(commitslug, task.Build)
+	channel.SendJSON(commitslug, task.Commit)
 
 	var buf = &bufferWrapper{channel: consoleslug}
 
@@ -130,33 +117,24 @@ func (w *worker) execute(task *BuildTask) error {
 	// execute the build
 	passed, buildErr := w.runBuild(task, buf)
 
-	task.Build.Finished = time.Now().Unix()
 	task.Commit.Finished = time.Now().Unix()
-	task.Build.Duration = task.Build.Finished - task.Build.Started
-	task.Commit.Duration = task.Build.Finished - task.Build.Started
-	task.Commit.Status = "Success"
-	task.Build.Status = "Success"
+	task.Commit.Duration = task.Commit.Finished - task.Commit.Started
+	task.Commit.Status = commit.StatusSuccess
 
 	// capture build output
 	stdout := buf.buf.String()
 
 	// if exit code != 0 set to failure
 	if passed {
-		task.Commit.Status = "Failure"
-		task.Build.Status = "Failure"
+		task.Commit.Status = commit.StatusFailure
 		if buildErr != nil && len(stdout) == 0 {
 			// TODO: If you wanted to have very friendly error messages, you could do that here
 			stdout = fmt.Sprintf("%s\n", buildErr.Error())
 		}
 	}
 
-	// persist the build to the database
-	if err := w.builds.Update(task.Build); err != nil {
-		return err
-	}
-
 	// persist the build output
-	if err := w.builds.UpdateOutput(task.Build, []byte(stdout)); err != nil {
+	if err := w.commits.UpdateOutput(task.Commit, []byte(stdout)); err != nil {
 		return nil
 	}
 
@@ -167,7 +145,7 @@ func (w *worker) execute(task *BuildTask) error {
 
 	// notify the channels that the commit and build finished
 	channel.SendJSON(reposlug, task.Commit)
-	channel.SendJSON(commitslug, task.Build)
+	channel.SendJSON(commitslug, task.Commit)
 	channel.Close(consoleslug)
 
 	// send all "finished" notifications
@@ -180,13 +158,13 @@ func (w *worker) execute(task *BuildTask) error {
 
 func (w *worker) runBuild(task *BuildTask, buf io.Writer) (bool, error) {
 	repo := &r.Repo{
-		Name:   task.Repo.FullName,
+		Name:   task.Repo.Host + task.Repo.Owner + task.Repo.Name,
 		Path:   task.Repo.URL,
 		Branch: task.Commit.Branch,
 		Commit: task.Commit.Sha,
 		PR:     task.Commit.PullRequest,
 		//TODO the builder should handle this
-		Dir:   filepath.Join("/var/cache/drone/src", task.Repo.FullName),
+		Dir:   filepath.Join("/var/cache/drone/src", task.Repo.Host, task.Repo.Owner, task.Repo.Name),
 		Depth: git.GitDepth(task.Script.Git),
 	}
 
