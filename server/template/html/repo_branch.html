@@ -56,7 +56,7 @@
 						<div class="{{"pure-u-1"}} {{"pure-menu"}} {{"pure-menu-open"}}">
 							<a class="{{"pure-menu-heading"}}">Recent Branches</a>
 							<ul>{{range $commit := .Branches}}{{$__amber_39 := __amber_eql $branch .Branch}}
-								<li{{if $__amber_39}} class="{{"pure-menu-selected"}}"{{end}}>{{$__amber_40 := $repo.Name}}{{$__amber_41 := $repo.Owner}}{{$__amber_42 := $repo.Remote}}{{$__amber_43 := __amber_add "/" $__amber_42}}{{$__amber_44 := __amber_add $__amber_43 "/"}}{{$__amber_45 := __amber_add $__amber_44 $__amber_41}}{{$__amber_46 := __amber_add $__amber_45 "/"}}{{$__amber_47 := __amber_add $__amber_46 $__amber_40}}{{$__amber_48 := __amber_add $__amber_47 "/branch/"}}{{$__amber_49 := __amber_add $__amber_48 .Branch}}
+								<li{{if $__amber_39}} class="{{"pure-menu-selected"}}"{{end}}>{{$__amber_40 := $repo.Name}}{{$__amber_41 := $repo.Owner}}{{$__amber_42 := $repo.Host}}{{$__amber_43 := __amber_add "/" $__amber_42}}{{$__amber_44 := __amber_add $__amber_43 "/"}}{{$__amber_45 := __amber_add $__amber_44 $__amber_41}}{{$__amber_46 := __amber_add $__amber_45 "/"}}{{$__amber_47 := __amber_add $__amber_46 $__amber_40}}{{$__amber_48 := __amber_add $__amber_47 "/branch/"}}{{$__amber_49 := __amber_add $__amber_48 .Branch}}
 									<a data-status="{{.Status}}" href="{{$__amber_49}}">{{.Branch}}</a>
 								</li>{{end}}
 							</ul>

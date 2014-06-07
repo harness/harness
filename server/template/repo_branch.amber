@@ -38,7 +38,7 @@ block content
 						each $commit in Branches
 							li
 								.pure-menu-selected ? $branch == Branch
-									a[data-status=Status][href="/"+$repo.Remote+"/"+$repo.Owner+"/"+$repo.Name+"/branch/"+Branch] #{Branch}
+									a[data-status=Status][href="/"+$repo.Host+"/"+$repo.Owner+"/"+$repo.Name+"/branch/"+Branch] #{Branch}
 
 
 block append scripts
