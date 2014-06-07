@@ -80,8 +80,8 @@ func TestInsert(t *testing.T) {
 	}
 
 	// verify unique remote + owner + name login constraint
-	var err = repos.Insert(&Repo{Remote: repo.Remote, Owner: repo.Owner, Name: repo.Name})
-	if err == nil || !strings.Contains(err.Error(), "repo_remote, repo_owner, repo_name are not unique") {
+	var err = repos.Insert(&Repo{Host: repo.Host, Owner: repo.Owner, Name: repo.Name})
+	if err == nil || !strings.Contains(err.Error(), "repo_host, repo_owner, repo_name are not unique") {
 		t.Errorf("Want unique constraint violated, got %s", err)
 	}
 }
@@ -160,6 +160,11 @@ func testRepo(t *testing.T, repo *Repo) {
 	var got, want = repo.Remote, "github.com"
 	if got != want {
 		t.Errorf("Want Remote %v, got %v", want, got)
+	}
+
+	got, want = repo.Host, "github.com"
+	if got != want {
+		t.Errorf("Want Host %v, got %v", want, got)
 	}
 
 	got, want = repo.Owner, "lhofstadter"

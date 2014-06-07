@@ -59,7 +59,7 @@ var stmts = []string{`
 		,repo_timeout      INTEGER
 		,repo_created      INTEGER
 		,repo_updated      INTEGER
-		,UNIQUE(repo_remote, repo_owner, repo_name)
+		,UNIQUE(repo_host, repo_owner, repo_name)
 	);`, `
 	CREATE TABLE IF NOT EXISTS commits (
 		 commit_id         INTEGER PRIMARY KEY AUTOINCREMENT

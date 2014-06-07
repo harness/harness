@@ -46,7 +46,7 @@ func (db *repoManager) Find(id int64) (*Repo, error) {
 }
 
 func (db *repoManager) FindName(remote, owner, name string) (*Repo, error) {
-	const query = "select * from repos where repo_remote = ? and repo_owner = ? and repo_name = ?"
+	const query = "select * from repos where repo_host = ? and repo_owner = ? and repo_name = ?"
 	var repo = Repo{}
 	var err = meddler.QueryRow(db, &repo, query, remote, owner, name)
 	return &repo, err
