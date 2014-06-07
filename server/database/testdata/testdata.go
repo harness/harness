@@ -15,7 +15,7 @@ var stmts = []string{
 	// insert repository entries
 	"insert into repos values (1, 0, 'github.com', 'github.com', 'lhofstadter',   'lenwoloppali', '', 'git://github.com/lhofstadter/lenwoloppali.git', '', '', 1, 1, 1, 1, 1, 'publickey', 'privatekey', 'params', 900, 1398065343, 1398065344);",
 	"insert into repos values (2, 0, 'github.com', 'github.com', 'browndynamite', 'lenwoloppali', '', 'git://github.com/browndynamite/lenwoloppali.git', '', '', 1, 1, 1, 1, 1, 'publickey', 'privatekey', 'params', 900, 1398065343, 1398065344);",
-	"insert into repos values (3, 0, 'gitlab.com', 'github.com', 'browndynamite', 'lenwoloppali', '', 'git://gitlab.com/browndynamite/lenwoloppali.git', '', '', 1, 1, 1, 1, 1, 'publickey', 'privatekey', 'params', 900, 1398065343, 1398065344);",
+	"insert into repos values (3, 0, 'gitlab.com', 'gitlab.com', 'browndynamite', 'lenwoloppali', '', 'git://gitlab.com/browndynamite/lenwoloppali.git', '', '', 1, 1, 1, 1, 1, 'publickey', 'privatekey', 'params', 900, 1398065343, 1398065344);",
 
 	// insert user + repository permission entries
 	"insert into perms values (1, 101, 200, 1, 1, 1, 1398065343, 1398065344);",
