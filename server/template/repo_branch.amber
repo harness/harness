@@ -9,10 +9,10 @@ block content
 			h1
 				span #{Repo.Owner}
 				span /
-				a[href="/"+Repo.Remote+"/"+Repo.Owner+"/"+Repo.Name] #{Repo.Name}
+				a[href="/"+Repo.Host+"/"+Repo.Owner+"/"+Repo.Name] #{Repo.Name}
 				span /
 				a[href="#"] #{Branch}
-			a.pure-button[href="/"+Repo.Remote+"/"+Repo.Owner+"/"+Repo.Name+"/settings"]
+			a.pure-button[href="/"+Repo.Host+"/"+Repo.Owner+"/"+Repo.Name+"/settings"]
 				i.fa.fa-cog
 
 		section.pure-u-3-5
@@ -20,7 +20,7 @@ block content
 			$branch=Branch
 			div.commit-list
 				each $commit in Commits
-					a.pure-g.commit-item[data-status=Status][href="/"+$repo.Remote+"/"+$repo.Owner+"/"+$repo.Name+"/branch/"+Branch+"/commit/"+Sha]
+					a.pure-g.commit-item[data-status=Status][href="/"+$repo.Host+"/"+$repo.Owner+"/"+$repo.Name+"/branch/"+Branch+"/commit/"+Sha]
 						div.pure-u-1-8
 							img[src="https://secure.gravatar.com/avatar/"+Gravatar+"?s=48&d=identicon"]
 

@@ -9,10 +9,10 @@ block content
 			h1
 				span #{Repo.Owner}
 				span /
-				a[href="/"+Repo.Remote+"/"+Repo.Owner+"/"+Repo.Name] #{Repo.Name}
+				a[href="/"+Repo.Host+"/"+Repo.Owner+"/"+Repo.Name] #{Repo.Name}
 				span /
 				a[href="#"] settings
-			a.pure-button[href="/"+Repo.Remote+"/"+Repo.Owner+"/"+Repo.Name]
+			a.pure-button[href="/"+Repo.Host+"/"+Repo.Owner+"/"+Repo.Name]
 				i.fa.fa-dashboard
 
 		section.pure-u-1
@@ -42,7 +42,7 @@ block content
 							span Pull Request Hooks
 					details
 						summary Badges
-						textarea[spellcheck="false"] [![Build Status](#{Scheme}://#{Host}/v1/badge/#{Repo.Remote}/#{Repo.Owner}/#{Repo.Name}/status.svg)](#{Scheme}://#{Host}/#{Repo.Remote}/#{Repo.Owner}/#{Repo.Name})
+						textarea[spellcheck="false"] [![Build Status](#{Scheme}://#{Host}/v1/badge/#{Repo.Host}/#{Repo.Owner}/#{Repo.Name}/status.svg)](#{Scheme}://#{Host}/#{Repo.Host}/#{Repo.Owner}/#{Repo.Name})
 					details
 						summary Private Variables
 						textarea[spellcheck="false"][placeholder="FOO: BAR"][name="params"] #{Repo.Params}

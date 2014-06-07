@@ -27,11 +27,11 @@
 				<header class="{{"pure-u-1"}}">
 					<h1>
 						<span>{{$__amber_6 := .Repo.Owner}}{{$__amber_6}}</span>
-						<span>/</span>{{$__amber_7 := .Repo.Name}}{{$__amber_8 := .Repo.Owner}}{{$__amber_9 := .Repo.Remote}}{{$__amber_10 := __amber_add "/" $__amber_9}}{{$__amber_11 := __amber_add $__amber_10 "/"}}{{$__amber_12 := __amber_add $__amber_11 $__amber_8}}{{$__amber_13 := __amber_add $__amber_12 "/"}}{{$__amber_14 := __amber_add $__amber_13 $__amber_7}}
+						<span>/</span>{{$__amber_7 := .Repo.Name}}{{$__amber_8 := .Repo.Owner}}{{$__amber_9 := .Repo.Host}}{{$__amber_10 := __amber_add "/" $__amber_9}}{{$__amber_11 := __amber_add $__amber_10 "/"}}{{$__amber_12 := __amber_add $__amber_11 $__amber_8}}{{$__amber_13 := __amber_add $__amber_12 "/"}}{{$__amber_14 := __amber_add $__amber_13 $__amber_7}}
 						<a href="{{$__amber_14}}">{{$__amber_15 := .Repo.Name}}{{$__amber_15}}</a>
 						<span>/</span>
 						<a href="{{"#"}}">settings</a>
-					</h1>{{$__amber_16 := .Repo.Name}}{{$__amber_17 := .Repo.Owner}}{{$__amber_18 := .Repo.Remote}}{{$__amber_19 := __amber_add "/" $__amber_18}}{{$__amber_20 := __amber_add $__amber_19 "/"}}{{$__amber_21 := __amber_add $__amber_20 $__amber_17}}{{$__amber_22 := __amber_add $__amber_21 "/"}}{{$__amber_23 := __amber_add $__amber_22 $__amber_16}}
+					</h1>{{$__amber_16 := .Repo.Name}}{{$__amber_17 := .Repo.Owner}}{{$__amber_18 := .Repo.Host}}{{$__amber_19 := __amber_add "/" $__amber_18}}{{$__amber_20 := __amber_add $__amber_19 "/"}}{{$__amber_21 := __amber_add $__amber_20 $__amber_17}}{{$__amber_22 := __amber_add $__amber_21 "/"}}{{$__amber_23 := __amber_add $__amber_22 $__amber_16}}
 					<a class="{{"pure-button"}}" href="{{$__amber_23}}">
 						<i class="{{"fa"}} {{"fa-dashboard"}}"></i>
 					</a>
@@ -76,7 +76,7 @@
 							</details>
 							<details>
 								<summary>Badges</summary>
-								<textarea spellcheck="{{"false"}}">{{$__amber_34 := .Repo.Remote}}{{$__amber_35 := .Repo.Owner}}{{$__amber_36 := .Repo.Name}}{{$__amber_37 := .Repo.Remote}}{{$__amber_38 := .Repo.Owner}}{{$__amber_39 := .Repo.Name}}[![Build Status]({{.Scheme}}://{{.Host}}/v1/badge/{{$__amber_34}}/{{$__amber_35}}/{{$__amber_36}}/status.svg)]({{.Scheme}}://{{.Host}}/{{$__amber_37}}/{{$__amber_38}}/{{$__amber_39}})</textarea>
+								<textarea spellcheck="{{"false"}}">{{$__amber_34 := .Repo.Host}}{{$__amber_35 := .Repo.Owner}}{{$__amber_36 := .Repo.Name}}{{$__amber_37 := .Repo.Host}}{{$__amber_38 := .Repo.Owner}}{{$__amber_39 := .Repo.Name}}[![Build Status]({{.Scheme}}://{{.Host}}/v1/badge/{{$__amber_34}}/{{$__amber_35}}/{{$__amber_36}}/status.svg)]({{.Scheme}}://{{.Host}}/{{$__amber_37}}/{{$__amber_38}}/{{$__amber_39}})</textarea>
 							</details>
 							<details>
 								<summary>Private Variables</summary>
