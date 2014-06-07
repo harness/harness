@@ -10,5 +10,7 @@ drone.sublime-workspace
 *.out
 *.rice-box.go
 
+client/client
+server/server
 debian/drone/usr/local/bin/drone
 debian/drone/usr/local/bin/droned
