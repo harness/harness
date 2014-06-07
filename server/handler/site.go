@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/server/render"
-	"github.com/drone/drone/server/resource/build"
 	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/perm"
 	"github.com/drone/drone/server/resource/repo"
@@ -18,16 +17,13 @@ type SiteHandler struct {
 	users   user.UserManager
 	repos   repo.RepoManager
 	commits commit.CommitManager
-	builds  build.BuildManager
 	perms   perm.PermManager
 	sess    session.Session
 	render  render.Render
 }
 
-func NewSiteHandler(users user.UserManager,
-	repos repo.RepoManager, commits commit.CommitManager, builds build.BuildManager,
-	perms perm.PermManager, sess session.Session, render render.Render) *SiteHandler {
-	return &SiteHandler{users, repos, commits, builds, perms, sess, render}
+func NewSiteHandler(users user.UserManager, repos repo.RepoManager, commits commit.CommitManager, perms perm.PermManager, sess session.Session, render render.Render) *SiteHandler {
+	return &SiteHandler{users, repos, commits, perms, sess, render}
 }
 
 // GetIndex serves the root domain request. This is forwarded to the dashboard
@@ -102,18 +98,12 @@ func (s *SiteHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
 		Branches []*commit.Commit
 		Commits  []*commit.Commit
 		Commit   *commit.Commit
-		Builds   []*build.Build
-		Build    *build.Build
 	}{User: usr, Repo: arepo}
 
 	// if commit details are provided we should retrieve the build details
 	// and serve the build page.
 	if len(sha) != 0 {
 		data.Commit, err = s.commits.FindSha(data.Repo.ID, branch, sha)
-		if err != nil {
-			return s.render(w, "404.html", nil)
-		}
-		data.Build, err = s.builds.FindNumber(data.Commit.ID, 1)
 		if err != nil {
 			return s.render(w, "404.html", nil)
 		}

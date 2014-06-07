@@ -5,10 +5,10 @@ import (
 	//"strings"
 	"testing"
 
-	"github.com/drone/drone/pkg/database"
-	"github.com/drone/drone/pkg/resource/perm/permdata"
-	"github.com/drone/drone/pkg/resource/repo"
-	"github.com/drone/drone/pkg/resource/user"
+	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/server/database/testdata"
+	"github.com/drone/drone/server/resource/repo"
+	"github.com/drone/drone/server/resource/user"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -19,7 +19,7 @@ var db *sql.DB
 func setup() {
 	db, _ = sql.Open("sqlite3", ":memory:")
 	database.Load(db)
-	permdata.Load(db)
+	testdata.Load(db)
 }
 
 // teardown the test database

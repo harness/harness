@@ -71,7 +71,7 @@ block append scripts
 			});
 	else
 		script
-			$.get("/v1/repos/"+#{Repo.Remote}+"/"+#{Repo.Owner}+"/"+#{Repo.Name}+"/branches/"+#{Commit.Branch}+"/commits/"+#{Commit.Sha}+"/builds/1/console", function( data ) {
+			$.get("/v1/repos/"+#{Repo.Remote}+"/"+#{Repo.Owner}+"/"+#{Repo.Name}+"/branches/"+#{Commit.Branch}+"/commits/"+#{Commit.Sha}+"/console", function( data ) {
 				var lineFormatter = new Drone.LineFormatter();
 				$( "#stdout" ).html(lineFormatter.format(data));
 			});

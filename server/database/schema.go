@@ -80,21 +80,12 @@ var stmts = []string{`
 		,commit_updated    INTEGER
 		,UNIQUE(commit_sha, commit_branch, repo_id)
 	);`, `
-	CREATE TABLE IF NOT EXISTS builds (
-		 build_id          INTEGER PRIMARY KEY AUTOINCREMENT
+	CREATE TABLE IF NOT EXISTS output (
+		 output_id         INTEGER PRIMARY KEY AUTOINCREMENT
 		,commit_id         INTEGER
-		,build_number      INTEGER
-		,build_matrix      VARCHAR(255)
-		,build_status      VARCHAR(255)
-		,build_console     BLOB
-		,build_started     INTEGER
-		,build_finished    INTEGER
-		,build_duration    INTEGER
-		,build_created     INTEGER
-		,build_updated     INTEGER
-		,UNIQUE(commit_id, build_number)
+		,output_raw        BLOB
+		,UNIQUE(commit_id)
 	);`,
-	`CREATE INDEX IF NOT EXISTS builds_commit_id ON builds (commit_id)`,
 }
 
 func Load(db *sql.DB) {
