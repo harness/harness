@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"github.com/drone/drone/server/resource/build"
 	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/repo"
 	"github.com/drone/drone/server/resource/user"
@@ -17,10 +16,9 @@ type Queue struct {
 // BuildTasks represents a build that is pending
 // execution.
 type BuildTask struct {
+	User   *user.User
 	Repo   *repo.Repo
 	Commit *commit.Commit
-	Build  *build.Build
-	User   *user.User
 
 	// Build instructions from the .drone.yml
 	// file, unmarshalled.
