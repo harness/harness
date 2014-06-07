@@ -12,8 +12,6 @@ html
 		link[rel="stylesheet"][href="/static/styles/drone.css"]
 		title
 			block title
-		block link
-			$link=""
 	body
 		header
 			a.header-brand[href="/"]
@@ -23,7 +21,10 @@ html
 					img.header-avatar[src="//secure.gravatar.com/avatar/"+User.Gravatar+"?s=64"]
 					span.header-username #{User.Login}
 			else
-				span Login
+				a[href="/login"].header-login
+					| Login
+
+
 		div
 			block content
 		block scripts

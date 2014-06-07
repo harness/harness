@@ -11,7 +11,7 @@
 		<link rel="{{"stylesheet"}}" href="{{"//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css"}}" />
 		<link rel="{{"stylesheet"}}" href="{{"/static/styles/drone.css"}}" />
 		<title>
-		</title>{{$link := ""}}
+		</title>
 	</head>
 	<body>
 		<header>
@@ -20,7 +20,7 @@
 				<img class="{{"header-avatar"}}" src="{{$__amber_3}}" />
 				<span class="{{"header-username"}}">{{$__amber_4 := .User.Login}}{{$__amber_4}}</span>
 			</a>{{else}}
-			<span>Login</span>{{end}}
+			<a href="{{"/login"}}" class="{{"header-login"}}">Login</a>{{end}}
 		</header>
 		<div>
 			<div>403 FORBIDDEN</div>
