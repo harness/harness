@@ -49,6 +49,12 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	// get the user from the database
 	u, err := h.users.FindLogin(host, login.Login)
 	if err != nil {
+		// if self-registration is disabled we should
+		// return a notAuthorized error
+		if !h.conf.Registration {
+			return notAuthorized{}
+		}
+
 		// create the user account
 		u = user.New(remote.GetName(), login.Login, login.Email)
 		u.Name = login.Name
