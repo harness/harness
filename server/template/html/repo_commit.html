@@ -81,22 +81,17 @@
 			});
 		</script>{{$__amber_38 := .Build.Status}}{{$__amber_39 := __amber_eql $__amber_38 "Pending"}}{{$__amber_40 := .Build.Status}}{{$__amber_41 := __amber_eql $__amber_40 "Started"}}{{$__amber_42 := or $__amber_41 $__amber_39}}{{if $__amber_42}}
 		<script>
+			var ws = new WebSocket((window.location.protocol=='http:'?'ws':'wss')+'://'+window.location.host+'/feed?token={{.Channel}}');
+			ws.onmessage = function (e) {
+				console.log(e);
+			};
+		</script>
+		<script>
 			$(document).ready(function() {
-				var commitUpdates = new Drone.CommitUpdates('/feed?token='+ {{.Token}});
+				var commitUpdates = new Drone.CommitUpdates('/feed?token={{.Stream}}');
 				var outputBox = document.getElementById('stdout');
+				commitUpdates.autoFollow = true;
 				commitUpdates.startOutput(outputBox);
-			
-				$("#follow").on("click", function(e) {
-					e.preventDefault();
-			
-					if(commitUpdates.autoFollow) {
-						commitUpdates.autoFollow = false;
-						$(this).text("Follow");
-					} else {
-						commitUpdates.autoFollow = true;
-						$(this).text("Stop following");
-					}
-				});
 			});
 		</script>{{else}}
 		<script>

@@ -82,9 +82,13 @@
 			$(document).ready(function() {
 				$(".timeago").timeago();
 			});
-			
 		</script>{{$__amber_50 := .Repo.Active}}{{if $__amber_50}}
-		<script></script>{{else}}
+		<script>
+			var ws = new WebSocket((window.location.protocol=='http:'?'ws':'wss')+'://'+window.location.host+'/feed?token={{.Channel}}');
+			ws.onmessage = function (e) {
+				console.log(e);
+			};
+		</script>{{else}}
 		<script>
 			document.forms[0].onsubmit = function(event) {
 				var form = event.target;

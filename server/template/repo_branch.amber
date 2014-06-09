@@ -46,3 +46,9 @@ block append scripts
 		$(document).ready(function() {
 			$(".timeago").timeago();
 		});
+
+	script
+		var ws = new WebSocket((window.location.protocol=='http:'?'ws':'wss')+'://'+window.location.host+'/feed?token='+#{Channel});
+		ws.onmessage = function (e) {
+			console.log(e);
+		};

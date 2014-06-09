@@ -76,7 +76,6 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 
 		onClose: function(e) {
 			console.log('output websocket closed: ' + JSON.stringify(e));
-			window.location.reload();
 		}
 	};
 

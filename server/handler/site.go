@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/drone/drone/server/channel"
 	"github.com/drone/drone/server/render"
 	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/perm"
@@ -94,11 +95,16 @@ func (s *SiteHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
 		User     *user.User
 		Repo     *repo.Repo
 		Branch   string
-		Token    string
+		Channel  string
+		Stream   string
 		Branches []*commit.Commit
 		Commits  []*commit.Commit
 		Commit   *commit.Commit
 	}{User: usr, Repo: arepo}
+
+	// generate a token for connecting to the streaming server
+	// to get notified of feed items.
+	data.Channel = channel.Create(host + "/" + owner + "/" + name + "/")
 
 	// if commit details are provided we should retrieve the build details
 	// and serve the build page.
@@ -107,6 +113,11 @@ func (s *SiteHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			return s.render(w, "404.html", nil)
 		}
+
+		// generate a token for connecting to the streaming server
+		// to get notified of feed items.
+		data.Stream = channel.Create(host + "/" + owner + "/" + name + "/" + branch + "/" + sha)
+
 		return s.render(w, "repo_commit.html", &data)
 	}
 
