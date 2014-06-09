@@ -58,9 +58,12 @@ block append scripts
 			$(".timeago").timeago();
 		});
 
-
 	if Repo.Active
 		script
+			var ws = new WebSocket((window.location.protocol=='http:'?'ws':'wss')+'://'+window.location.host+'/feed?token=#{Channel}');
+			ws.onmessage = function (e) {
+				console.log(e);
+			};
 	else
 		script
 			document.forms[0].onsubmit = function(event) {

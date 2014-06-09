@@ -85,15 +85,15 @@ func (w *worker) execute(task *BuildTask) error {
 	// make sure a channel exists for the repository,
 	// the commit, and the commit output (TODO)
 	reposlug := fmt.Sprintf("%s/%s/%s", task.Repo.Host, task.Repo.Owner, task.Repo.Name)
-	commitslug := fmt.Sprintf("%s/%s/%s/commit/%s/%s", task.Repo.Host, task.Repo.Owner, task.Repo.Name, task.Commit.Branch, task.Commit.Sha)
-	consoleslug := fmt.Sprintf("%s/%s/%s/commit/%s/%s/console", task.Repo.Host, task.Repo.Owner, task.Repo.Name, task.Commit.Branch, task.Commit.Sha)
+	//commitslug := fmt.Sprintf("%s/%s/%s/%s/%s", task.Repo.Host, task.Repo.Owner, task.Repo.Name, task.Commit.Branch, task.Commit.Sha)
+	consoleslug := fmt.Sprintf("%s/%s/%s/%s/%s", task.Repo.Host, task.Repo.Owner, task.Repo.Name, task.Commit.Branch, task.Commit.Sha)
 	channel.Create(reposlug)
-	channel.Create(commitslug)
+	//channel.Create(commitslug)
 	channel.CreateStream(consoleslug)
 
 	// notify the channels that the commit and build started
 	channel.SendJSON(reposlug, task.Commit)
-	channel.SendJSON(commitslug, task.Commit)
+	//channel.SendJSON(commitslug, task.Commit)
 
 	var buf = &bufferWrapper{channel: consoleslug}
 
@@ -145,7 +145,7 @@ func (w *worker) execute(task *BuildTask) error {
 
 	// notify the channels that the commit and build finished
 	channel.SendJSON(reposlug, task.Commit)
-	channel.SendJSON(commitslug, task.Commit)
+	//channel.SendJSON(commitslug, task.Commit)
 	channel.Close(consoleslug)
 
 	// send all "finished" notifications

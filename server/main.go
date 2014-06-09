@@ -6,6 +6,8 @@ import (
 	"html/template"
 	"net/http"
 
+	"code.google.com/p/go.net/websocket"
+	"github.com/drone/drone/server/channel"
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/handler"
 	"github.com/drone/drone/server/render"
@@ -92,6 +94,9 @@ func main() {
 	// serve static assets
 	// TODO we need to replace this with go.rice
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
+	// server websocket data
+	http.Handle("/feed", websocket.Handler(channel.Read))
 
 	// register the router
 	// TODO we disabled nosurf because it was impacting API calls.

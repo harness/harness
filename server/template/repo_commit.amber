@@ -52,22 +52,16 @@ block append scripts
 
 	if Build.Status == "Started" || Build.Status == "Pending"
 		script
+			var ws = new WebSocket((window.location.protocol=='http:'?'ws':'wss')+'://'+window.location.host+'/feed?token=#{Channel}');
+			ws.onmessage = function (e) {
+				console.log(e);
+			};
+		script
 			$(document).ready(function() {
-				var commitUpdates = new Drone.CommitUpdates('/feed?token='+ #{Token});
+				var commitUpdates = new Drone.CommitUpdates('/feed?token=#{Stream}');
 				var outputBox = document.getElementById('stdout');
+				commitUpdates.autoFollow = true;
 				commitUpdates.startOutput(outputBox);
-
-				$("#follow").on("click", function(e) {
-					e.preventDefault();
-
-					if(commitUpdates.autoFollow) {
-						commitUpdates.autoFollow = false;
-						$(this).text("Follow");
-					} else {
-						commitUpdates.autoFollow = true;
-						$(this).text("Stop following");
-					}
-				});
 			});
 	else
 		script
