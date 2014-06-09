@@ -48,7 +48,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// fetch the repository from the database
-	repo, err := h.repos.FindName(remote.GetName(), hook.Owner, hook.Repo)
+	repo, err := h.repos.FindName(host, hook.Owner, hook.Repo)
 	if err != nil {
 		return notFound{}
 	}
