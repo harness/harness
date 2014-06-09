@@ -5,8 +5,11 @@ import (
 )
 
 type Remote interface {
-	// Name returns the name of this remote system.
+	// GetName returns the name of this remote system.
 	GetName() string
+
+	// GetHost returns the URL hostname of this remote system.
+	GetHost() (host string)
 
 	// GetHook parses the post-commit hook from the Request body
 	// and returns the required data in a standard format.

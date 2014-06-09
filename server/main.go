@@ -5,11 +5,14 @@ import (
 	"flag"
 	"html/template"
 	"net/http"
+	"runtime"
+	"time"
 
 	"code.google.com/p/go.net/websocket"
 	"github.com/drone/drone/server/channel"
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/handler"
+	"github.com/drone/drone/server/queue"
 	"github.com/drone/drone/server/render"
 	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/config"
@@ -17,6 +20,7 @@ import (
 	"github.com/drone/drone/server/resource/repo"
 	"github.com/drone/drone/server/resource/user"
 	"github.com/drone/drone/server/session"
+	"github.com/drone/drone/shared/build/docker"
 
 	"github.com/gorilla/pat"
 	//"github.com/justinas/nosurf"
@@ -42,6 +46,14 @@ var (
 	// commit sha for the current build.
 	version  string = "0.2-dev"
 	revision string
+
+	// build will timeout after N milliseconds.
+	// this will default to 500 minutes (6 hours)
+	timeout time.Duration
+
+	// Number of concurrent build workers to run
+	// default to number of CPUs on machine
+	workers int
 )
 
 // drone cofiguration data, loaded from the
@@ -56,6 +68,8 @@ func main() {
 	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
 	flag.StringVar(&sslcert, "sslcert", "", "")
 	flag.StringVar(&sslkey, "sslkey", "", "")
+	flag.DurationVar(&timeout, "timeout", 300*time.Minute, "")
+	flag.IntVar(&workers, "workers", runtime.NumCPU(), "")
 	flag.Parse()
 
 	// parse the template files
@@ -68,6 +82,10 @@ func main() {
 	meddler.Default = meddler.SQLite
 	db, _ := sql.Open(driver, datasource)
 	database.Load(db)
+
+	// setup the build queue
+	queueRunner := queue.NewBuildRunner(docker.New(), timeout)
+	queue := queue.Start(workers, queueRunner)
 
 	// setup the database managers
 	repos := repo.NewManager(db)
@@ -82,7 +100,7 @@ func main() {
 	router := pat.New()
 	handler.NewUsersHandler(users, sess).Register(router)
 	handler.NewUserHandler(users, repos, commits, sess).Register(router)
-	handler.NewHookHandler(users, repos, commits, &conf).Register(router)
+	handler.NewHookHandler(users, repos, commits, &conf, queue).Register(router)
 	handler.NewLoginHandler(users, repos, perms, sess, &conf).Register(router)
 	handler.NewCommitHandler(repos, commits, perms, sess).Register(router)
 	handler.NewBranchHandler(repos, commits, perms, sess).Register(router)

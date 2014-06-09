@@ -3,6 +3,7 @@ package bitbucket
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/drone/drone/shared/remote"
@@ -22,6 +23,15 @@ type Bitbucket struct {
 // GetName returns the name of this remote system.
 func (b *Bitbucket) GetName() string {
 	return "bitbucket.org"
+}
+
+// GetHost returns the url.Host of this remote system.
+func (b *Bitbucket) GetHost() (host string) {
+	u, err := url.Parse(b.URL)
+	if err != nil {
+		return
+	}
+	return u.Host
 }
 
 // GetHook parses the post-commit hook from the Request body

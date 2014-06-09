@@ -3,6 +3,7 @@ package github
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -34,6 +35,15 @@ func (g *Github) GetName() string {
 	default:
 		return "enterprise.github.com"
 	}
+}
+
+// GetHost returns the url.Host of this remote system.
+func (g *Github) GetHost() (host string) {
+	u, err := url.Parse(g.URL)
+	if err != nil {
+		return
+	}
+	return u.Host
 }
 
 // GetHook parses the post-commit hook from the Request body
