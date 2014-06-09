@@ -2,6 +2,7 @@ package gitlab
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/drone/drone/shared/remote"
@@ -15,6 +16,15 @@ type Gitlab struct {
 // GetName returns the name of this remote system.
 func (g *Gitlab) GetName() string {
 	return "gitlab.com"
+}
+
+// GetHost returns the url.Host of this remote system.
+func (g *Gitlab) GetHost() (host string) {
+	u, err := url.Parse(g.URL)
+	if err != nil {
+		return
+	}
+	return u.Host
 }
 
 // GetHook parses the post-commit hook from the Request body

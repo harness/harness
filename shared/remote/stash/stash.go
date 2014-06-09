@@ -2,6 +2,7 @@ package stash
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/drone/drone/shared/remote"
@@ -18,6 +19,15 @@ type Stash struct {
 // GetName returns the name of this remote system.
 func (s *Stash) GetName() string {
 	return "stash.atlassian.com"
+}
+
+// GetHost returns the url.Host of this remote system.
+func (s *Stash) GetHost() (host string) {
+	u, err := url.Parse(s.URL)
+	if err != nil {
+		return
+	}
+	return u.Host
 }
 
 // GetHook parses the post-commit hook from the Request body

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/drone/drone/server/queue"
 	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/config"
 	"github.com/drone/drone/server/resource/repo"
@@ -15,11 +16,12 @@ type HookHandler struct {
 	users   user.UserManager
 	repos   repo.RepoManager
 	commits commit.CommitManager
+	queue   *queue.Queue
 	conf    *config.Config
 }
 
-func NewHookHandler(users user.UserManager, repos repo.RepoManager, commits commit.CommitManager, conf *config.Config) *HookHandler {
-	return &HookHandler{users, repos, commits, conf}
+func NewHookHandler(users user.UserManager, repos repo.RepoManager, commits commit.CommitManager, conf *config.Config, queue *queue.Queue) *HookHandler {
+	return &HookHandler{users, repos, commits, queue, conf}
 }
 
 // PostHook receives a post-commit hook from GitHub, Bitbucket, etc
@@ -48,7 +50,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// fetch the repository from the database
-	repo, err := h.repos.FindName(host, hook.Owner, hook.Repo)
+	repo, err := h.repos.FindName(remote.GetHost(), hook.Owner, hook.Repo)
 	if err != nil {
 		return notFound{}
 	}
@@ -91,7 +93,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	fmt.Printf("%s", script)
 
 	// drop the items on the queue
-	//h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build, Script: script})
+	//h.queue.Add(&queue.BuildTask{Repo: repo, Commit: &c, Script: script})
 	return nil
 }
 
