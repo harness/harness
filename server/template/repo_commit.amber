@@ -50,7 +50,7 @@ block append scripts
 			$(".timeago").timeago();
 		});
 
-	if Build.Status == "Started" || Build.Status == "Pending"
+	if Commit.Status == "Started" || Commit.Status == "Pending"
 		script
 			var ws = new WebSocket((window.location.protocol=='http:'?'ws':'wss')+'://'+window.location.host+'/feed?token=#{Channel}');
 			ws.onmessage = function (e) {

@@ -41,25 +41,20 @@ func (s *SiteHandler) GetIndex(w http.ResponseWriter, r *http.Request) error {
 		Feed []*commit.CommitRepo
 	}{u, feed}
 	return s.render(w, "user_feed.html", &data)
-	/*
-		u := s.sess.User(r)
-		data := struct {
-			User *user.User
-		}{u}
-		return s.render(w, "index.html", &data)
-	*/
 }
 
+// GetLogin serves the account login page
+func (s *SiteHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
+	return s.render(w, "login.html", struct{ User *user.User }{nil})
+}
+
+// GetUser serves the account settings page.
 func (s *SiteHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 	u := s.sess.User(r)
 	if u == nil {
 		return s.render(w, "404.html", nil)
 	}
 	return s.render(w, "user_conf.html", struct{ User *user.User }{u})
-}
-
-func (s *SiteHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
-	return s.render(w, "login.html", struct{ User *user.User }{nil})
 }
 
 func (s *SiteHandler) GetUsers(w http.ResponseWriter, r *http.Request) error {
@@ -159,6 +154,7 @@ func (s *SiteHandler) GetRepoAdmin(w http.ResponseWriter, r *http.Request) error
 	return s.render(w, "repo_conf.html", &data)
 }
 
+// GetRepos serves a page that lists all user repositories.
 func (s *SiteHandler) GetRepos(w http.ResponseWriter, r *http.Request) error {
 	u := s.sess.User(r)
 	if u == nil || u.Admin == false {
