@@ -93,6 +93,9 @@ func main() {
 	perms := perm.NewManager(db)
 	commits := commit.NewManager(db)
 
+	// cancel all previously running builds
+	go commits.CancelAll()
+
 	// setup the session managers
 	sess := session.NewSession(users)
 

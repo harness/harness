@@ -43,6 +43,10 @@ type CommitManager interface {
 
 	// Delete removes the commit from the datastore.
 	Delete(commit *Commit) error
+
+	// CancelAll will update the status of all Started or Pending
+	// builds to a status of Killed (cancelled).
+	CancelAll() error
 }
 
 // commitManager manages a list of commits in a SQL database.
@@ -140,7 +144,16 @@ UPDATE output SET output_raw = ? WHERE commit_id = ?;
 
 // SQL statement to delete a Commit by ID.
 const deleteStmt = `
-DELETE FROM commits WHERE commit_id = ?
+DELETE FROM commits WHERE commit_id = ?;
+`
+
+// SQL statement to cancel all running Commits.
+const cancelStmt = `
+UPDATE commits SET
+commit_status = ?,
+commit_started = ?,
+commit_finished = ?
+WHERE commit_status IN ('Started', 'Pending');
 `
 
 func (db *commitManager) Find(id int64) (*Commit, error) {
@@ -213,5 +226,10 @@ func (db *commitManager) UpdateOutput(commit *Commit, out []byte) error {
 
 func (db *commitManager) Delete(commit *Commit) error {
 	_, err := db.Exec(deleteStmt, commit.ID)
+	return err
+}
+
+func (db *commitManager) CancelAll() error {
+	_, err := db.Exec(cancelStmt, StatusKilled, time.Now().Unix(), time.Now().Unix())
 	return err
 }
