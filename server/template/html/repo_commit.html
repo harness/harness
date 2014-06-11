@@ -79,7 +79,7 @@
 			$(document).ready(function() {
 				$(".timeago").timeago();
 			});
-		</script>{{$__amber_38 := .Build.Status}}{{$__amber_39 := __amber_eql $__amber_38 "Pending"}}{{$__amber_40 := .Build.Status}}{{$__amber_41 := __amber_eql $__amber_40 "Started"}}{{$__amber_42 := or $__amber_41 $__amber_39}}{{if $__amber_42}}
+		</script>{{$__amber_38 := .Commit.Status}}{{$__amber_39 := __amber_eql $__amber_38 "Pending"}}{{$__amber_40 := .Commit.Status}}{{$__amber_41 := __amber_eql $__amber_40 "Started"}}{{$__amber_42 := or $__amber_41 $__amber_39}}{{if $__amber_42}}
 		<script>
 			var ws = new WebSocket((window.location.protocol=='http:'?'ws':'wss')+'://'+window.location.host+'/feed?token={{.Channel}}');
 			ws.onmessage = function (e) {
