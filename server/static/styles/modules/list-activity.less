@@ -65,7 +65,8 @@
 }
 
 .activity-item-Error,
-.activity-item-Failure {
+.activity-item-Failure, 
+.activity-item-Killed {
 	border:1px solid @red-border;
 	background: @red-background;
 	color: @red;
@@ -100,7 +101,8 @@
 	}
 
 	&[data-status="Error"],
-	&[data-status="Failure"] {
+	&[data-status="Failure"],
+	&[data-status="Killed"] {
 		border:1px solid @red-border;
 		background: @red-background;
 		color: @red;

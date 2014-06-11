@@ -3043,19 +3043,23 @@ article.pure-g > .pure-u-3-4 {
   color: #40c598;
 }
 .activity-item-Error,
-.activity-item-Failure {
+.activity-item-Failure,
+.activity-item-Killed {
   border: 1px solid #f6aab2;
   background: #fdf7f7;
   color: #ed5564;
 }
 .activity-item-Error p,
 .activity-item-Failure p,
+.activity-item-Killed p,
 .activity-item-Error span,
-.activity-item-Failure span {
+.activity-item-Failure span,
+.activity-item-Killed span {
   color: #e48784;
 }
 .activity-item-Error h2 span,
-.activity-item-Failure h2 span {
+.activity-item-Failure h2 span,
+.activity-item-Killed h2 span {
   color: #d9534f;
 }
 .activity-item:after {
@@ -3073,23 +3077,28 @@ article.pure-g > .pure-u-3-4 {
   content: "\f00c";
 }
 .activity-item[data-status="Error"],
-.activity-item[data-status="Failure"] {
+.activity-item[data-status="Failure"],
+.activity-item[data-status="Killed"] {
   border: 1px solid #f6aab2;
   background: #fdf7f7;
   color: #ed5564;
 }
 .activity-item[data-status="Error"] p,
 .activity-item[data-status="Failure"] p,
+.activity-item[data-status="Killed"] p,
 .activity-item[data-status="Error"] span,
-.activity-item[data-status="Failure"] span {
+.activity-item[data-status="Failure"] span,
+.activity-item[data-status="Killed"] span {
   color: #e48784;
 }
 .activity-item[data-status="Error"] h2,
-.activity-item[data-status="Failure"] h2 {
+.activity-item[data-status="Failure"] h2,
+.activity-item[data-status="Killed"] h2 {
   color: #d9534f;
 }
 .activity-item[data-status="Error"]:after,
-.activity-item[data-status="Failure"]:after {
+.activity-item[data-status="Failure"]:after,
+.activity-item[data-status="Killed"]:after {
   color: #ed5564;
   content: "\f00d";
 }
@@ -3185,19 +3194,23 @@ article.pure-g > .pure-u-3-4 {
   color: #40c598;
 }
 .commit-item-Error,
-.commit-item-Failure {
+.commit-item-Failure,
+.commit-item-Killed {
   border: 1px solid #f6aab2;
   background: #fdf7f7;
   color: #ed5564;
 }
 .commit-item-Error p,
 .commit-item-Failure p,
+.commit-item-Killed p,
 .commit-item-Error span,
-.commit-item-Failure span {
+.commit-item-Failure span,
+.commit-item-Killed span {
   color: #e48784;
 }
 .commit-item-Error h2,
-.commit-item-Failure h2 {
+.commit-item-Failure h2,
+.commit-item-Killed h2 {
   color: #d9534f;
 }
 .commit-item-Started,
@@ -3274,23 +3287,28 @@ article.pure-g > .pure-u-3-4 {
   content: "\f00c";
 }
 .commit-item[data-status="Error"],
-.commit-item[data-status="Failure"] {
+.commit-item[data-status="Failure"],
+.commit-item[data-status="Killed"] {
   border: 1px solid #f6aab2;
   background: #fdf7f7;
   color: #ed5564;
 }
 .commit-item[data-status="Error"] p,
 .commit-item[data-status="Failure"] p,
+.commit-item[data-status="Killed"] p,
 .commit-item[data-status="Error"] span,
-.commit-item[data-status="Failure"] span {
+.commit-item[data-status="Failure"] span,
+.commit-item[data-status="Killed"] span {
   color: #e48784;
 }
 .commit-item[data-status="Error"] h2,
-.commit-item[data-status="Failure"] h2 {
+.commit-item[data-status="Failure"] h2,
+.commit-item[data-status="Killed"] h2 {
   color: #d9534f;
 }
 .commit-item[data-status="Error"]:after,
-.commit-item[data-status="Failure"]:after {
+.commit-item[data-status="Failure"]:after,
+.commit-item[data-status="Killed"]:after {
   color: #ed5564;
   content: "\f00d";
 }
@@ -3491,14 +3509,16 @@ article.pure-g > .pure-u-3-4 {
 }
 .alert-danger,
 .alert[data-status="Error"],
-.alert[data-status="Failure"] {
+.alert[data-status="Failure"],
+.alert[data-status="Killed"] {
   background: #fdf7f7;
   border-left: 5px solid #ed5564;
   color: #ed5564;
 }
 .alert-danger:before,
 .alert[data-status="Error"]:before,
-.alert[data-status="Failure"]:before {
+.alert[data-status="Failure"]:before,
+.alert[data-status="Killed"]:before {
   content: "\f00d";
 }
 .alert[data-status="Pending"],
