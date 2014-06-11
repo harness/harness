@@ -12,6 +12,7 @@ const (
 	StatusSuccess = "Success"
 	StatusFailure = "Failure"
 	StatusError   = "Error"
+	StatusKilled  = "Killed"
 )
 
 type Commit struct {
