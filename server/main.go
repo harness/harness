@@ -13,7 +13,6 @@ import (
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/handler"
 	"github.com/drone/drone/server/queue"
-	"github.com/drone/drone/server/render"
 	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/config"
 	"github.com/drone/drone/server/resource/perm"
@@ -84,7 +83,7 @@ func main() {
 
 	templateBox := rice.MustFindBox("template/html")
 	templateFiles := []string{"login.html", "repo_branch.html", "repo_commit.html", "repo_conf.html", "repo_feed.html", "user_conf.html", "user_feed.html", "user_login.html", "user_repos.html", "404.html", "400.html"}
-	templ := template.New("_").Funcs(render.FuncMap)
+	templ := template.New("_").Funcs(funcMap)
 	for _, file := range templateFiles {
 		templateData, _ := templateBox.String(file)
 		templ, _ = templ.New(file).Parse(templateData)

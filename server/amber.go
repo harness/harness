@@ -1,4 +1,4 @@
-package render
+package main
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"reflect"
 )
 
-var FuncMap = template.FuncMap{
+var funcMap = template.FuncMap{
 	"__amber_add":   runtime_add,
 	"__amber_sub":   runtime_sub,
 	"__amber_mul":   runtime_mul,
