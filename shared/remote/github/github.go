@@ -81,6 +81,10 @@ func (g *Github) GetHook(r *http.Request) (*remote.Hook, error) {
 	hook.Sha = data.Head.Id
 	hook.Branch = data.Branch()
 
+	if len(hook.Owner) == 0 {
+		hook.Owner = data.Repo.Owner.Name
+	}
+
 	// extract the author and message from the commit
 	// this is kind of experimental, since I don't know
 	// what I'm doing here.
@@ -114,8 +118,7 @@ func (g *Github) GetPullRequestHook(r *http.Request) (*remote.Hook, error) {
 
 	// TODO we should also store the pull request branch (ie from x to y)
 	//      we can find it here: data.PullRequest.Head.Ref
-
-	return &remote.Hook{
+	hook := remote.Hook{
 		Owner:       data.Repo.Owner.Login,
 		Repo:        data.Repo.Name,
 		Sha:         data.PullRequest.Head.Sha,
@@ -125,7 +128,13 @@ func (g *Github) GetPullRequestHook(r *http.Request) (*remote.Hook, error) {
 		Timestamp:   time.Now().UTC().String(),
 		Message:     data.PullRequest.Title,
 		PullRequest: strconv.Itoa(data.Number),
-	}, nil
+	}
+
+	if len(hook.Owner) == 0 {
+		hook.Owner = data.Repo.Owner.Name
+	}
+
+	return &hook, nil
 }
 
 // GetLogin handles authentication to third party, remote services

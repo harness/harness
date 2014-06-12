@@ -56,6 +56,7 @@ func (b *Buildfile) WriteHost(mapping string) {
 // code at the start.
 var base = `
 #!/bin/bash
+set +e
 
 # drone configuration files are stored in /etc/drone.d
 # execute these files prior to our build to set global

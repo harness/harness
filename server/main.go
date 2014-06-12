@@ -21,6 +21,7 @@ import (
 	"github.com/drone/drone/server/resource/user"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/shared/build/docker"
+	"github.com/drone/drone/shared/build/log"
 
 	"github.com/gorilla/pat"
 	//"github.com/justinas/nosurf"
@@ -63,6 +64,8 @@ var conf config.Config
 
 func main() {
 
+	log.SetPriority(log.LOG_NOTICE)
+
 	// parse command line flags
 	flag.StringVar(&port, "port", ":8080", "")
 	flag.StringVar(&driver, "driver", "sqlite3", "")
@@ -92,10 +95,6 @@ func main() {
 	db, _ := sql.Open(driver, datasource)
 	database.Load(db)
 
-	// setup the build queue
-	queueRunner := queue.NewBuildRunner(docker.New(), timeout)
-	queue := queue.Start(workers, queueRunner)
-
 	// setup the database managers
 	repos := repo.NewManager(db)
 	users := user.NewManager(db)
@@ -104,6 +103,10 @@ func main() {
 
 	// cancel all previously running builds
 	go commits.CancelAll()
+
+	// setup the build queue
+	queueRunner := queue.NewBuildRunner(docker.New(), timeout)
+	queue := queue.Start(workers, commits, queueRunner)
 
 	// setup the session managers
 	sess := session.NewSession(users)
