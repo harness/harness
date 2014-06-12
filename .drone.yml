@@ -7,7 +7,7 @@ env:
 script:
   - sudo apt-get -y install libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
   - make deps
-  - make
+  - make build
   - make test
   - make dpkg
 notify:
