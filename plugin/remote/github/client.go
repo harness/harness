@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/drone/drone/shared/remote"
+	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/go-github/github"
 )
 

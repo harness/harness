@@ -1,12 +1,13 @@
-package gitlab
+package stash
 
 import (
-	"github.com/drone/drone/shared/remote"
+	"github.com/drone/drone/plugin/remote"
 )
 
 type Client struct {
-	config *Gitlab
+	config *Stash
 	access string // user access token
+	secret string // user access token secret
 }
 
 // GetUser fetches the user by ID (login name).
