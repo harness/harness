@@ -10,8 +10,8 @@ import (
 	"github.com/drone/drone/server/resource/perm"
 	"github.com/drone/drone/server/resource/repo"
 	"github.com/drone/drone/server/session"
-	"github.com/drone/drone/shared/util/httputil"
-	"github.com/drone/drone/shared/util/sshutil"
+	"github.com/drone/drone/shared/httputil"
+	"github.com/drone/drone/shared/sshutil"
 	"github.com/gorilla/pat"
 )
 
