@@ -13,10 +13,7 @@ type Git struct {
 	Depth *int `yaml:"depth,omitempty"`
 
 	// The name of a directory to clone into.
-	// TODO this still needs to be implemented. this field is
-	//      critical for forked Go projects, that need to clone
-	//      to a specific repository.
-	Path string `yaml:"path,omitempty"`
+	Path *string `yaml:"path,omitempty"`
 }
 
 // GitDepth returns GitDefaultDepth
@@ -28,4 +25,15 @@ func GitDepth(g *Git) int {
 		return DefaultGitDepth
 	}
 	return *g.Depth
+}
+
+// GitPath returns the given default path
+// when Git.Path is empty.
+// GitPath returns Git.Path
+// when it is not empty.
+func GitPath(g *Git, defaultPath string) string {
+	if g == nil || g.Path == nil {
+		return defaultPath
+	}
+	return *g.Path
 }

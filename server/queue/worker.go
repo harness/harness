@@ -170,6 +170,9 @@ func (w *worker) execute(task *BuildTask) error {
 }
 
 func (w *worker) runBuild(task *BuildTask, buf io.Writer) (bool, error) {
+	var path = filepath.Join(task.Repo.Host, task.Repo.Owner, task.Repo.Name)
+	path = git.GitPath(task.Script.Git, path)
+
 	repo := &r.Repo{
 		Name:   task.Repo.Host + task.Repo.Owner + task.Repo.Name,
 		Path:   task.Repo.CloneURL,
@@ -177,7 +180,7 @@ func (w *worker) runBuild(task *BuildTask, buf io.Writer) (bool, error) {
 		Commit: task.Commit.Sha,
 		PR:     task.Commit.PullRequest,
 		//TODO the builder should handle this
-		Dir:   filepath.Join("/var/cache/drone/src", task.Repo.Host, task.Repo.Owner, task.Repo.Name),
+		Dir:   filepath.Join("/var/cache/drone/src", path),
 		Depth: git.GitDepth(task.Script.Git),
 	}
 

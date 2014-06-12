@@ -1,4 +1,6 @@
 image: go1.2
+git:
+  path: github.com/drone/drone
 env:
   - GOROOT=/usr/local/go
 script:
