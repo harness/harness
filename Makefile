@@ -1,6 +1,6 @@
 SHA := $(shell git rev-parse --short HEAD)
 
-all: build
+all: rice amberc lessc build
 
 deps:
 	go list github.com/drone/drone/... | xargs go get -t 
@@ -23,6 +23,10 @@ clean:
 	#cd cmd/droned/static   && rice clean
 	#cd cmd/droned/template && rice clean
 
+rice:
+	cd server               && rice embed
+	#cd server/template/html && rice embed
+
 amberc:
 	@for f in server/template/*.amber; do $$GOPATH/bin/amberc -pp=true "$$f" > "$${f%.amber}.html"; done
 	@mkdir -p server/template/html
@@ -40,9 +44,9 @@ uglify:
 
 # creates a debian package for drone
 # to install `sudo dpkg -i drone.deb`
-dpkg: build
+dpkg:
 	mkdir -p debian/drone/usr/local/bin
 	-dpkg-deb --build debian/drone
 
 run:
-	@cd server && go run main.go conf.go
+	@cd server && go run main.go conf.gomake

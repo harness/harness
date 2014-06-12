@@ -24,6 +24,7 @@ import (
 
 	"github.com/gorilla/pat"
 	//"github.com/justinas/nosurf"
+	"github.com/GeertJohan/go.rice"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/russross/meddler"
 )
@@ -74,9 +75,17 @@ func main() {
 
 	// parse the template files
 	// TODO we need to retrieve these from go.rice
-	templ := template.Must(
-		template.New("_").Funcs(render.FuncMap).ParseGlob("template/html/*.html"),
-	).ExecuteTemplate
+	//templ := template.Must(
+	//	template.New("_").Funcs(render.FuncMap).ParseGlob("template/html/*.html"),
+	//).ExecuteTemplate
+
+	templateBox := rice.MustFindBox("template/html")
+	templateFiles := []string{"login.html", "repo_branch.html", "repo_commit.html", "repo_conf.html", "repo_feed.html", "user_conf.html", "user_feed.html", "user_login.html", "user_repos.html", "404.html", "400.html"}
+	templ := template.New("_").Funcs(render.FuncMap)
+	for _, file := range templateFiles {
+		templateData, _ := templateBox.String(file)
+		templ, _ = templ.New(file).Parse(templateData)
+	}
 
 	// setup the database
 	meddler.Default = meddler.SQLite
@@ -105,16 +114,16 @@ func main() {
 	handler.NewUserHandler(users, repos, commits, sess).Register(router)
 	handler.NewHookHandler(users, repos, commits, &conf, queue).Register(router)
 	handler.NewLoginHandler(users, repos, perms, sess, &conf).Register(router)
-	handler.NewCommitHandler(repos, commits, perms, sess).Register(router)
+	handler.NewCommitHandler(repos, commits, perms, sess, queue).Register(router)
 	handler.NewBranchHandler(repos, commits, perms, sess).Register(router)
 	handler.NewRepoHandler(repos, commits, perms, sess, &conf).Register(router)
 	handler.NewBadgeHandler(repos, commits).Register(router)
 	handler.NewConfigHandler(conf, sess).Register(router)
-	handler.NewSiteHandler(users, repos, commits, perms, sess, templ).Register(router)
+	handler.NewSiteHandler(users, repos, commits, perms, sess, templ.ExecuteTemplate).Register(router)
 
 	// serve static assets
 	// TODO we need to replace this with go.rice
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(rice.MustFindBox("static/").HTTPBox())))
 
 	// server websocket data
 	http.Handle("/feed", websocket.Handler(channel.Read))

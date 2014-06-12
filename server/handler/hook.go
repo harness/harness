@@ -70,7 +70,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 
 	// featch the .drone.yml file from the database
 	client := remote.GetClient(user.Access, user.Secret)
-	script, err := client.GetScript(hook)
+	yml, err := client.GetScript(hook)
 	if err != nil {
 		return badRequest{err}
 	}
@@ -82,7 +82,8 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 		Branch:      hook.Branch,
 		PullRequest: hook.PullRequest,
 		Timestamp:   hook.Timestamp,
-		Message:     hook.Message}
+		Message:     hook.Message,
+		Config:      yml}
 	c.SetAuthor(hook.Author)
 	// inser the commit into the database
 	if err := h.commits.Insert(&c); err != nil {
@@ -90,10 +91,10 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	fmt.Printf("%#v", hook)
-	fmt.Printf("%s", script)
+	fmt.Printf("%s", yml)
 
 	// drop the items on the queue
-	//h.queue.Add(&queue.BuildTask{Repo: repo, Commit: &c, Script: script})
+	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: &c})
 	return nil
 }
 

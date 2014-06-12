@@ -1,9 +1,15 @@
 package repo
 
-var DefaultBranch = "master"
+import (
+	"gopkg.in/yaml.v1"
+)
 
-// default build timeout, in seconds
-var DefaultTimeout int64 = 7200
+var (
+	DefaultBranch = "master"
+
+	// default build timeout, in seconds
+	DefaultTimeout int64 = 7200
+)
 
 const (
 	HostGitlab           = "gitlab.com"
@@ -64,4 +70,10 @@ func New(remote, owner, name string) (*Repo, error) {
 	repo.PullRequest = true
 	repo.Timeout = DefaultTimeout
 	return &repo, nil
+}
+
+func (r *Repo) ParamMap() (map[string]string, error) {
+	out := map[string]string{}
+	err := yaml.Unmarshal([]byte(r.Params), out)
+	return out, err
 }

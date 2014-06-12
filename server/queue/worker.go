@@ -6,7 +6,7 @@ import (
 	"github.com/drone/drone/server/channel"
 	"github.com/drone/drone/shared/build/git"
 	r "github.com/drone/drone/shared/build/repo"
-	//"github.com/drone/drone/pkg/plugin/notify"
+	"github.com/drone/drone/shared/build/script"
 	"io"
 	"path/filepath"
 	"time"
@@ -52,6 +52,13 @@ func (w *worker) execute(task *BuildTask) error {
 			w.commits.Update(task.Commit)
 		}
 	}()
+
+	// parse the build script
+	params, err := task.Repo.ParamMap()
+	task.Script, err = script.ParseBuild(task.Commit.Config, params)
+	if err != nil {
+		return err
+	}
 
 	// update commit and build status
 	task.Commit.Status = commit.StatusStarted

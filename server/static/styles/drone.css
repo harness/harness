@@ -3317,22 +3317,6 @@ article.pure-g > .pure-u-3-4 {
   border: 1px solid #FEF0B8;
   padding-bottom: 40px;
   position: relative;
-  /* not sure if this makes sense here
-		&:before {
-			text-transform: uppercase;
-			content: attr(data-status);
-			position: absolute;
-			top: 0px;
-			right: 0px;
-			font-family: 'Open Sans';
-			font-size:14px;
-			letter-spacing: 0;
-			background: #fef9e5;
-			color: #CBB45B;
-			padding: 5px 10px;
-			margin:0px;
-		}
-		*/
 }
 .commit-item[data-status="Started"]:after,
 .commit-item[data-status="Pending"]:after {

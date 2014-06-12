@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"launchpad.net/goyaml"
+	"gopkg.in/yaml.v1"
 
 	"github.com/drone/drone/shared/build/buildfile"
 	"github.com/drone/drone/shared/build/git"
@@ -16,11 +16,11 @@ import (
 	"github.com/drone/drone/shared/publish"
 )
 
-func ParseBuild(data []byte, params map[string]string) (*Build, error) {
+func ParseBuild(data string, params map[string]string) (*Build, error) {
 	build := Build{}
 
 	// parse the build configuration file
-	err := goyaml.Unmarshal(injectParams(data, params), &build)
+	err := yaml.Unmarshal(injectParams([]byte(data), params), &build)
 	return &build, err
 }
 
@@ -30,7 +30,7 @@ func ParseBuildFile(filename string) (*Build, error) {
 		return nil, err
 	}
 
-	return ParseBuild(data, nil)
+	return ParseBuild(string(data), nil)
 }
 
 // injectParams injects params into data.
