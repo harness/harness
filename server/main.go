@@ -10,7 +10,7 @@ import (
 
 	"code.google.com/p/go.net/websocket"
 	"github.com/drone/drone/server/channel"
-	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/server/database/schema"
 	"github.com/drone/drone/server/handler"
 	"github.com/drone/drone/server/queue"
 	"github.com/drone/drone/server/resource/commit"
@@ -92,7 +92,7 @@ func main() {
 	// setup the database
 	meddler.Default = meddler.SQLite
 	db, _ := sql.Open(driver, datasource)
-	database.Load(db)
+	schema.Load(db)
 
 	// setup the database managers
 	repos := repo.NewManager(db)

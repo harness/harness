@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/server/database/schema"
 	"github.com/drone/drone/server/database/testdata"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -16,7 +16,7 @@ var db *sql.DB
 // setup the test database and test fixtures
 func setup() {
 	db, _ = sql.Open("sqlite3", ":memory:")
-	database.Load(db)
+	schema.Load(db)
 	testdata.Load(db)
 }
 
