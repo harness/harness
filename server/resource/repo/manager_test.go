@@ -2,7 +2,6 @@ package repo
 
 import (
 	"database/sql"
-	"strings"
 	"testing"
 
 	"github.com/drone/drone/server/database"
@@ -81,8 +80,8 @@ func TestInsert(t *testing.T) {
 
 	// verify unique remote + owner + name login constraint
 	var err = repos.Insert(&Repo{Host: repo.Host, Owner: repo.Owner, Name: repo.Name})
-	if err == nil || !strings.Contains(err.Error(), "repo_host, repo_owner, repo_name are not unique") {
-		t.Errorf("Want unique constraint violated, got %s", err)
+	if err == nil {
+		t.Error("Want unique constraint violated")
 	}
 }
 

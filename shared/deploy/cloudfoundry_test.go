@@ -6,7 +6,7 @@ import (
 
 	"github.com/drone/drone/shared/build/buildfile"
 
-	"launchpad.net/goyaml"
+	"gopkg.in/yaml.v1"
 )
 
 // emulate Build struct
@@ -52,7 +52,7 @@ deploy:
 
 func setUpWithCF(input string) (string, error) {
 	var buildStruct DeployToCF
-	err := goyaml.Unmarshal([]byte(input), &buildStruct)
+	err := yaml.Unmarshal([]byte(input), &buildStruct)
 	if err != nil {
 		return "", err
 	}

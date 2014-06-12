@@ -6,7 +6,7 @@ import (
 
 	"github.com/drone/drone/shared/build/buildfile"
 
-	"launchpad.net/goyaml"
+	"gopkg.in/yaml.v1"
 )
 
 // emulate Build struct
@@ -44,7 +44,7 @@ publish:
 
 func setUpWithNPM(input string) (string, error) {
 	var buildStruct PublishToNPM
-	err := goyaml.Unmarshal([]byte(input), &buildStruct)
+	err := yaml.Unmarshal([]byte(input), &buildStruct)
 	if err != nil {
 		return "", err
 	}
