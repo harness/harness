@@ -82,7 +82,7 @@ func TestSSHOneArtifact(t *testing.T) {
 	}
 
 	if !strings.Contains(bscr, "ARTIFACT=build.result") {
-		t.Errorf("Expect script to contains artifact")
+		t.Error("Expect script to contains artifact")
 	}
 
 	if !strings.Contains(bscr, "scp -o StrictHostKeyChecking=no -P 2212 -r ${ARTIFACT} user@test.example.com:/srv/app/location") {
@@ -101,7 +101,7 @@ func TestSSHMultiArtifact(t *testing.T) {
 	}
 
 	if !strings.Contains(bscr, "tar -cf ${ARTIFACT} build.result config/file") {
-		t.Errorf("Expect script to contains tar command. got:\n", bscr)
+		t.Errorf("Expect script to contains tar command. got: %s\n", bscr)
 	}
 }
 

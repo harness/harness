@@ -36,7 +36,7 @@ func (s *Slack) Send(context *Context) error {
 }
 
 func getBuildUrl(context *Context) string {
-	return fmt.Sprintf("%s/%s/%s/%s/branch/%s/commit/%s", context.Host, context.Repo.Remote, context.Repo.Owner, context.Repo.Name, context.Commit.Sha, context.Commit.Branch)
+	return fmt.Sprintf("%s/%s/%s/%s/branch/%s/commit/%s", context.Host, context.Repo.Host, context.Repo.Owner, context.Repo.Name, context.Commit.Branch, context.Commit.Sha)
 }
 
 func getMessage(context *Context, message string) string {

@@ -161,8 +161,6 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 	// drop the items on the queue
 	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: c})
 	return nil
-
-	return notImplemented{}
 }
 
 func (h *CommitHandler) Register(r *pat.Router) {
