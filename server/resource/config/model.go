@@ -1,12 +1,12 @@
 package config
 
 import (
-	"github.com/drone/drone/shared/remote"
-	"github.com/drone/drone/shared/remote/bitbucket"
-	"github.com/drone/drone/shared/remote/github"
-	"github.com/drone/drone/shared/remote/gitlab"
-	"github.com/drone/drone/shared/remote/stash"
-	"github.com/drone/drone/shared/smtp"
+	"github.com/drone/drone/plugin/remote"
+	"github.com/drone/drone/plugin/remote/bitbucket"
+	"github.com/drone/drone/plugin/remote/github"
+	"github.com/drone/drone/plugin/remote/gitlab"
+	"github.com/drone/drone/plugin/remote/stash"
+	"github.com/drone/drone/plugin/smtp"
 )
 
 type Config struct {

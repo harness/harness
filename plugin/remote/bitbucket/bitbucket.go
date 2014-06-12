@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/drone/drone/shared/remote"
+	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/shared/util/httputil"
 	"github.com/drone/go-bitbucket/bitbucket"
 	"github.com/drone/go-bitbucket/oauth1"

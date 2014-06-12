@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/drone/drone/shared/remote"
+	"github.com/drone/drone/plugin/remote"
 )
 
 type Gitlab struct {

@@ -2,7 +2,7 @@ package bitbucket
 
 import (
 	"fmt"
-	"github.com/drone/drone/shared/remote"
+	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/go-bitbucket/bitbucket"
 	"net/url"
 )
