@@ -1,9 +1,8 @@
 package queue
 
 import (
-	"github.com/drone/drone/server/resource/commit"
-	"github.com/drone/drone/server/resource/repo"
-	"github.com/drone/drone/server/resource/user"
+	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/shared/model"
 
 	"github.com/drone/drone/shared/build/script"
 )
@@ -16,9 +15,9 @@ type Queue struct {
 // BuildTasks represents a build that is pending
 // execution.
 type BuildTask struct {
-	User   *user.User
-	Repo   *repo.Repo
-	Commit *commit.Commit
+	User   *model.User
+	Repo   *model.Repo
+	Commit *model.Commit
 
 	// Build instructions from the .drone.yml
 	// file, unmarshalled.
@@ -26,7 +25,7 @@ type BuildTask struct {
 }
 
 // Start N workers with the given build runner.
-func Start(workers int, commits commit.CommitManager, runner BuildRunner) *Queue {
+func Start(workers int, commits database.CommitManager, runner BuildRunner) *Queue {
 	tasks := make(chan *BuildTask)
 	queue := &Queue{tasks: tasks}
 

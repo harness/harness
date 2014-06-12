@@ -1,4 +1,4 @@
-package user
+package database
 
 import (
 	"database/sql"
@@ -7,6 +7,7 @@ import (
 	"github.com/drone/drone/server/database/schema"
 	"github.com/drone/drone/server/database/testdata"
 	"github.com/drone/drone/server/database/testdatabase"
+	"github.com/drone/drone/shared/model"
 )
 
 // in-memory database instance for unit testing
@@ -24,11 +25,11 @@ func teardown() {
 	db.Close()
 }
 
-func TestFind(t *testing.T) {
+func TestUserFind(t *testing.T) {
 	setup()
 	defer teardown()
 
-	users := NewManager(db)
+	users := NewUserManager(db)
 	user, err := users.Find(1)
 	if err != nil {
 		t.Errorf("Want User from ID, got %s", err)
@@ -37,11 +38,11 @@ func TestFind(t *testing.T) {
 	testUser(t, user)
 }
 
-func TestFindLogin(t *testing.T) {
+func TestUserFindLogin(t *testing.T) {
 	setup()
 	defer teardown()
 
-	users := NewManager(db)
+	users := NewUserManager(db)
 	user, err := users.FindLogin("github.com", "smellypooper")
 	if err != nil {
 		t.Errorf("Want User from Login, got %s", err)
@@ -50,11 +51,11 @@ func TestFindLogin(t *testing.T) {
 	testUser(t, user)
 }
 
-func TestFindToken(t *testing.T) {
+func TestUserFindToken(t *testing.T) {
 	setup()
 	defer teardown()
 
-	users := NewManager(db)
+	users := NewUserManager(db)
 	user, err := users.FindToken("e42080dddf012c718e476da161d21ad5")
 	if err != nil {
 		t.Errorf("Want User from Token, got %s", err)
@@ -63,11 +64,11 @@ func TestFindToken(t *testing.T) {
 	testUser(t, user)
 }
 
-func TestList(t *testing.T) {
+func TestUserList(t *testing.T) {
 	setup()
 	defer teardown()
 
-	users := NewManager(db)
+	users := NewUserManager(db)
 	all, err := users.List()
 	if err != nil {
 		t.Errorf("Want Users, got %s", err)
@@ -81,12 +82,12 @@ func TestList(t *testing.T) {
 	testUser(t, all[0])
 }
 
-func TestInsert(t *testing.T) {
+func TestUserInsert(t *testing.T) {
 	setup()
 	defer teardown()
 
-	user := New("github.com", "winkle", "winkle@caltech.edu")
-	users := NewManager(db)
+	user := model.NewUser("github.com", "winkle", "winkle@caltech.edu")
+	users := NewUserManager(db)
 	if err := users.Insert(user); err != nil {
 		t.Errorf("Want User created, got %s", err)
 	}
@@ -97,23 +98,23 @@ func TestInsert(t *testing.T) {
 	}
 
 	// verify unique remote + remote login constraint
-	var err = users.Insert(&User{Remote: user.Remote, Login: user.Login, Token: "f71eb4a81a2cca56035dd7f6f2942e41"})
+	var err = users.Insert(&model.User{Remote: user.Remote, Login: user.Login, Token: "f71eb4a81a2cca56035dd7f6f2942e41"})
 	if err == nil {
 		t.Error("Want Token unique constraint violated")
 	}
 
 	// verify unique token constraint
-	err = users.Insert(&User{Remote: "gitlab.com", Login: user.Login, Token: user.Token})
+	err = users.Insert(&model.User{Remote: "gitlab.com", Login: user.Login, Token: user.Token})
 	if err == nil {
 		t.Error("Want Token unique constraint violated")
 	}
 }
 
-func TestUpdate(t *testing.T) {
+func TestUserUpdate(t *testing.T) {
 	setup()
 	defer teardown()
 
-	users := NewManager(db)
+	users := NewUserManager(db)
 	user, err := users.Find(4)
 	if err != nil {
 		t.Errorf("Want User from ID, got %s", err)
@@ -138,11 +139,11 @@ func TestUpdate(t *testing.T) {
 	}
 }
 
-func TestDelete(t *testing.T) {
+func TestUserDelete(t *testing.T) {
 	setup()
 	defer teardown()
 
-	users := NewManager(db)
+	users := NewUserManager(db)
 	user, err := users.Find(1)
 	if err != nil {
 		t.Errorf("Want User from ID, got %s", err)
@@ -161,7 +162,7 @@ func TestDelete(t *testing.T) {
 
 // testUser is a helper function that compares the user
 // to an expected set of fixed field values.
-func testUser(t *testing.T, user *User) {
+func testUser(t *testing.T, user *model.User) {
 	var got, want = user.Login, "smellypooper"
 	if got != want {
 		t.Errorf("Want Token %v, got %v", want, got)

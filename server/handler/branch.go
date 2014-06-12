@@ -4,21 +4,19 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/drone/drone/server/resource/commit"
-	"github.com/drone/drone/server/resource/perm"
-	"github.com/drone/drone/server/resource/repo"
+	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/session"
 	"github.com/gorilla/pat"
 )
 
 type BranchHandler struct {
-	perms   perm.PermManager
-	repos   repo.RepoManager
-	commits commit.CommitManager
+	perms   database.PermManager
+	repos   database.RepoManager
+	commits database.CommitManager
 	sess    session.Session
 }
 
-func NewBranchHandler(repos repo.RepoManager, commits commit.CommitManager, perms perm.PermManager, sess session.Session) *BranchHandler {
+func NewBranchHandler(repos database.RepoManager, commits database.CommitManager, perms database.PermManager, sess session.Session) *BranchHandler {
 	return &BranchHandler{perms, repos, commits, sess}
 }
 

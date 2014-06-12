@@ -4,23 +4,22 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/queue"
-	"github.com/drone/drone/server/resource/commit"
-	"github.com/drone/drone/server/resource/perm"
-	"github.com/drone/drone/server/resource/repo"
 	"github.com/drone/drone/server/session"
+	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
 )
 
 type CommitHandler struct {
-	perms   perm.PermManager
-	repos   repo.RepoManager
-	commits commit.CommitManager
+	perms   database.PermManager
+	repos   database.RepoManager
+	commits database.CommitManager
 	sess    session.Session
 	queue   *queue.Queue
 }
 
-func NewCommitHandler(repos repo.RepoManager, commits commit.CommitManager, perms perm.PermManager, sess session.Session, queue *queue.Queue) *CommitHandler {
+func NewCommitHandler(repos database.RepoManager, commits database.CommitManager, perms database.PermManager, sess session.Session, queue *queue.Queue) *CommitHandler {
 	return &CommitHandler{perms, repos, commits, sess, queue}
 }
 
@@ -146,11 +145,11 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 	}
 
 	// we can't start an already started build
-	if c.Status == commit.StatusStarted || c.Status == commit.StatusEnqueue {
+	if c.Status == model.StatusStarted || c.Status == model.StatusEnqueue {
 		return badRequest{}
 	}
 
-	c.Status = commit.StatusEnqueue
+	c.Status = model.StatusEnqueue
 	c.Started = 0
 	c.Finished = 0
 	c.Duration = 0

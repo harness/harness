@@ -1,20 +1,19 @@
 package notify
 
 import (
-	"github.com/drone/drone/server/resource/commit"
-	"github.com/drone/drone/server/resource/repo"
+	"github.com/drone/drone/shared/model"
 	"testing"
 )
 
 func Test_getBuildUrl(t *testing.T) {
 	c := &Context{
 		Host: "http://examplehost.com",
-		Repo: &repo.Repo{
+		Repo: &model.Repo{
 			Host:  "examplegit.com",
 			Owner: "owner",
 			Name:  "repo",
 		},
-		Commit: &commit.Commit{
+		Commit: &model.Commit{
 			Sha:    "abc",
 			Branch: "example",
 		},

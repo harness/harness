@@ -3,7 +3,8 @@ package session
 import (
 	"net/http"
 
-	"github.com/drone/drone/server/resource/user"
+	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 )
@@ -13,25 +14,25 @@ var cookies = sessions.NewCookieStore(
 	securecookie.GenerateRandomKey(64))
 
 type Session interface {
-	User(r *http.Request) *user.User
-	UserToken(r *http.Request) *user.User
-	UserCookie(r *http.Request) *user.User
-	SetUser(w http.ResponseWriter, r *http.Request, u *user.User)
+	User(r *http.Request) *model.User
+	UserToken(r *http.Request) *model.User
+	UserCookie(r *http.Request) *model.User
+	SetUser(w http.ResponseWriter, r *http.Request, u *model.User)
 	Clear(w http.ResponseWriter, r *http.Request)
 }
 
 type session struct {
-	users user.UserManager
+	users database.UserManager
 }
 
-func NewSession(users user.UserManager) Session {
+func NewSession(users database.UserManager) Session {
 	return &session{
 		users: users,
 	}
 }
 
 // User gets the currently authenticated user from the secure cookie session.
-func (s *session) User(r *http.Request) *user.User {
+func (s *session) User(r *http.Request) *model.User {
 	//if true {
 	//	user, _ := s.users.Find(1)
 	//	return user
@@ -47,14 +48,14 @@ func (s *session) User(r *http.Request) *user.User {
 }
 
 // UserToken gets the currently authenticated user for the given auth token.
-func (s *session) UserToken(r *http.Request) *user.User {
+func (s *session) UserToken(r *http.Request) *model.User {
 	token := r.FormValue("access_token")
 	user, _ := s.users.FindToken(token)
 	return user
 }
 
 // UserCookie gets the currently authenticated user from the secure cookie session.
-func (s *session) UserCookie(r *http.Request) *user.User {
+func (s *session) UserCookie(r *http.Request) *model.User {
 	sess, err := cookies.Get(r, "_sess")
 	if err != nil {
 		return nil
@@ -70,7 +71,7 @@ func (s *session) UserCookie(r *http.Request) *user.User {
 }
 
 // SetUser writes the specified username to the session.
-func (s *session) SetUser(w http.ResponseWriter, r *http.Request, u *user.User) {
+func (s *session) SetUser(w http.ResponseWriter, r *http.Request, u *model.User) {
 	sess, _ := cookies.Get(r, "_sess")
 	sess.Values["uid"] = u.ID
 	sess.Save(r, w)

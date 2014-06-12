@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/drone/drone/server/resource/commit"
-	"github.com/drone/drone/server/resource/repo"
+	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
 )
 
@@ -20,11 +20,11 @@ var (
 )
 
 type BadgeHandler struct {
-	commits commit.CommitManager
-	repos   repo.RepoManager
+	commits database.CommitManager
+	repos   database.RepoManager
 }
 
-func NewBadgeHandler(repos repo.RepoManager, commits commit.CommitManager) *BadgeHandler {
+func NewBadgeHandler(repos database.RepoManager, commits database.CommitManager) *BadgeHandler {
 	return &BadgeHandler{commits, repos}
 }
 
@@ -54,7 +54,7 @@ func (h *BadgeHandler) GetStatus(w http.ResponseWriter, r *http.Request) error {
 
 	// if no branch, use the default
 	if len(branch) == 0 {
-		branch = repo.DefaultBranch
+		branch = model.DefaultBranch
 	}
 
 	// get the latest commit
@@ -69,13 +69,13 @@ func (h *BadgeHandler) GetStatus(w http.ResponseWriter, r *http.Request) error {
 
 	// determine which badge to load
 	switch c.Status {
-	case commit.StatusSuccess:
+	case model.StatusSuccess:
 		w.Write(badgeSuccess)
-	case commit.StatusFailure:
+	case model.StatusFailure:
 		w.Write(badgeFailure)
-	case commit.StatusError:
+	case model.StatusError:
 		w.Write(badgeError)
-	case commit.StatusEnqueue, commit.StatusStarted:
+	case model.StatusEnqueue, model.StatusStarted:
 		w.Write(badgeStarted)
 	default:
 		w.Write(badgeNone)

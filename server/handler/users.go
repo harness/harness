@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/drone/drone/server/resource/user"
+	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/session"
 	"github.com/gorilla/pat"
 )
 
 type UsersHandler struct {
-	users user.UserManager
+	users database.UserManager
 	sess  session.Session
 }
 
-func NewUsersHandler(users user.UserManager, sess session.Session) *UsersHandler {
+func NewUsersHandler(users database.UserManager, sess session.Session) *UsersHandler {
 	return &UsersHandler{users, sess}
 }
 

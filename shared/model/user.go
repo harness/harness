@@ -1,7 +1,6 @@
-package user
+package model
 
 import (
-	"github.com/drone/drone/server/resource/util"
 	"time"
 )
 
@@ -23,9 +22,9 @@ type User struct {
 	Synced   int64  `meddler:"user_synced"    json:"synced_at"`
 }
 
-func New(remote, login, email string) *User {
+func NewUser(remote, login, email string) *User {
 	user := User{}
-	user.Token = util.GenerateToken()
+	user.Token = generateToken()
 	user.Login = login
 	user.Remote = remote
 	user.Active = true
@@ -36,15 +35,15 @@ func New(remote, login, email string) *User {
 // SetEmail sets the email address and calculate the Gravatar hash.
 func (u *User) SetEmail(email string) {
 	u.Email = email
-	u.Gravatar = util.CreateGravatar(email)
+	u.Gravatar = createGravatar(email)
 }
 
-func (u *User) Stale() bool {
+func (u *User) IsStale() bool {
 	switch {
 	case u.Synced == 0:
 		return true
 	// refresh every 24 hours
-	case u.Synced+expires < time.Now().Unix():
+	case u.Synced+DefaultExpires < time.Now().Unix():
 		return true
 	default:
 		return false
@@ -53,4 +52,4 @@ func (u *User) Stale() bool {
 
 // by default, let's expire the user
 // cache after 72 hours
-var expires = int64(time.Hour.Seconds() * 72)
+var DefaultExpires = int64(time.Hour.Seconds() * 72)

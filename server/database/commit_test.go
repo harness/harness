@@ -1,35 +1,18 @@
-package commit
+package database
 
 import (
 	"database/sql"
 	"testing"
 	"time"
 
-	"github.com/drone/drone/server/database/schema"
-	"github.com/drone/drone/server/database/testdata"
-	"github.com/drone/drone/server/database/testdatabase"
+	"github.com/drone/drone/shared/model"
 )
 
-// in-memory database instance for unit testing
-var db *sql.DB
-
-// setup the test database and test fixtures
-func setup() {
-	db, _ = testdatabase.Open()
-	schema.Load(db)
-	testdata.Load(db)
-}
-
-// teardown the test database
-func teardown() {
-	db.Close()
-}
-
-func TestFind(t *testing.T) {
+func TestCommitFind(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewManager(db)
+	commits := NewCommitManager(db)
 	commit, err := commits.Find(3)
 	if err != nil {
 		t.Errorf("Want Commit from ID, got %s", err)
@@ -38,11 +21,11 @@ func TestFind(t *testing.T) {
 	testCommit(t, commit)
 }
 
-func TestFindSha(t *testing.T) {
+func TestCommitFindSha(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewManager(db)
+	commits := NewCommitManager(db)
 	commit, err := commits.FindSha(2, "master", "7253f6545caed41fb8f5a6fcdb3abc0b81fa9dbf")
 	if err != nil {
 		t.Errorf("Want Commit from SHA, got %s", err)
@@ -51,11 +34,11 @@ func TestFindSha(t *testing.T) {
 	testCommit(t, commit)
 }
 
-func TestFindLatest(t *testing.T) {
+func TestCommitFindLatest(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewManager(db)
+	commits := NewCommitManager(db)
 	commit, err := commits.FindLatest(2, "master")
 	if err != nil {
 		t.Errorf("Want Latest Commit, got %s", err)
@@ -64,11 +47,11 @@ func TestFindLatest(t *testing.T) {
 	testCommit(t, commit)
 }
 
-func TestFindOutput(t *testing.T) {
+func TestCommitFindOutput(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewManager(db)
+	commits := NewCommitManager(db)
 	out, err := commits.FindOutput(1)
 	if err != nil {
 		t.Errorf("Want Commit stdout, got %s", err)
@@ -80,11 +63,11 @@ func TestFindOutput(t *testing.T) {
 	}
 }
 
-func TestList(t *testing.T) {
+func TestCommitList(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewManager(db)
+	commits := NewCommitManager(db)
 	list, err := commits.List(2)
 	if err != nil {
 		t.Errorf("Want List from RepoID, got %s", err)
@@ -98,11 +81,11 @@ func TestList(t *testing.T) {
 	testCommit(t, list[0])
 }
 
-func TestListBranch(t *testing.T) {
+func TestCommitListBranch(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewManager(db)
+	commits := NewCommitManager(db)
 	list, err := commits.ListBranch(2, "master")
 	if err != nil {
 		t.Errorf("Want List from RepoID, got %s", err)
@@ -116,11 +99,11 @@ func TestListBranch(t *testing.T) {
 	testCommit(t, list[0])
 }
 
-func TestListBranches(t *testing.T) {
+func TestCommitListBranches(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewManager(db)
+	commits := NewCommitManager(db)
 	list, err := commits.ListBranches(2)
 	if err != nil {
 		t.Errorf("Want Branch List from RepoID, got %s", err)
@@ -134,35 +117,35 @@ func TestListBranches(t *testing.T) {
 	testCommit(t, list[1])
 }
 
-func TestInsert(t *testing.T) {
+func TestCommitInsert(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commit := Commit{RepoID: 3, Branch: "foo", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"}
-	commits := NewManager(db)
+	commit := model.Commit{RepoID: 3, Branch: "foo", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"}
+	commits := NewCommitManager(db)
 	if err := commits.Insert(&commit); err != nil {
 		t.Errorf("Want Commit created, got %s", err)
 	}
 
 	// verify that it is ok to add same sha for different branch
-	var err = commits.Insert(&Commit{RepoID: 3, Branch: "bar", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"})
+	var err = commits.Insert(&model.Commit{RepoID: 3, Branch: "bar", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"})
 	if err != nil {
 		t.Errorf("Want Commit created, got %s", err)
 	}
 
 	// verify unique remote + remote id constraint
-	err = commits.Insert(&Commit{RepoID: 3, Branch: "bar", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"})
+	err = commits.Insert(&model.Commit{RepoID: 3, Branch: "bar", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"})
 	if err == nil {
 		t.Error("Want unique constraint violated")
 	}
 
 }
 
-func TestUpdate(t *testing.T) {
+func TestCommitUpdate(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewManager(db)
+	commits := NewCommitManager(db)
 	commit, err := commits.Find(5)
 	if err != nil {
 		t.Errorf("Want Commit from ID, got %s", err)
@@ -198,11 +181,11 @@ func TestUpdate(t *testing.T) {
 	}
 }
 
-func TestDelete(t *testing.T) {
+func TestCommitDelete(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewManager(db)
+	commits := NewCommitManager(db)
 	commit, err := commits.Find(1)
 	if err != nil {
 		t.Errorf("Want Commit from ID, got %s", err)
@@ -221,7 +204,7 @@ func TestDelete(t *testing.T) {
 
 // testCommit is a helper function that compares the commit
 // to an expected set of fixed field values.
-func testCommit(t *testing.T, commit *Commit) {
+func testCommit(t *testing.T, commit *model.Commit) {
 	var got, want = commit.Status, "Success"
 	if got != want {
 		t.Errorf("Want Status %v, got %v", want, got)

@@ -1,4 +1,4 @@
-package repo
+package model
 
 import (
 	"gopkg.in/yaml.v1"
@@ -11,12 +11,9 @@ var (
 	DefaultTimeout int64 = 7200
 )
 
-const (
-	HostGitlab           = "gitlab.com"
-	HostGithub           = "github.com"
-	HostGithubEnterprise = "enterprise.github.com"
-	HostBitbucket        = "bitbucket.org"
-)
+// RepoParams represents a set of private key value parameters
+// for each Repository.
+type RepoParams map[string]string
 
 type Repo struct {
 	ID     int64  `meddler:"repo_id,pk"        json:"-"`
@@ -44,23 +41,7 @@ type Repo struct {
 	Updated     int64  `meddler:"repo_updated"      json:"updated_at"`
 }
 
-func NewGithub(owner, name string) (*Repo, error) {
-	return New(HostGithub, owner, name)
-}
-
-func NewGithubEnterprise(owner, name string) (*Repo, error) {
-	return New(HostGithubEnterprise, owner, name)
-}
-
-func NewGitlab(owner, name string) (*Repo, error) {
-	return New(HostGitlab, owner, name)
-}
-
-func NewBitbucket(owner, name string) (*Repo, error) {
-	return New(HostBitbucket, owner, name)
-}
-
-func New(remote, owner, name string) (*Repo, error) {
+func NewRepo(remote, owner, name string) (*Repo, error) {
 	repo := Repo{}
 	repo.Remote = remote
 	repo.Owner = owner

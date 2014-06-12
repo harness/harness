@@ -1,9 +1,7 @@
 package notify
 
 import (
-	"github.com/drone/drone/server/resource/commit"
-	"github.com/drone/drone/server/resource/repo"
-	"github.com/drone/drone/server/resource/user"
+	"github.com/drone/drone/shared/model"
 )
 
 // Context represents the context of an
@@ -13,13 +11,13 @@ type Context struct {
 	Host string
 
 	// User that owns the repository
-	User *user.User
+	User *model.User
 
 	// Repository being built.
-	Repo *repo.Repo
+	Repo *model.Repo
 
 	// Commit being built
-	Commit *commit.Commit
+	Commit *model.Commit
 }
 
 type Sender interface {
