@@ -1,34 +1,17 @@
-package repo
+package database
 
 import (
 	"database/sql"
 	"testing"
 
-	"github.com/drone/drone/server/database/schema"
-	"github.com/drone/drone/server/database/testdata"
-	"github.com/drone/drone/server/database/testdatabase"
+	"github.com/drone/drone/shared/model"
 )
 
-// in-memory database instance for unit testing
-var db *sql.DB
-
-// setup the test database and test fixtures
-func setup() {
-	db, _ = testdatabase.Open()
-	schema.Load(db)
-	testdata.Load(db)
-}
-
-// teardown the test database
-func teardown() {
-	db.Close()
-}
-
-func TestFind(t *testing.T) {
+func TestRepoFind(t *testing.T) {
 	setup()
 	defer teardown()
 
-	repos := NewManager(db)
+	repos := NewRepoManager(db)
 	repo, err := repos.Find(1)
 	if err != nil {
 		t.Errorf("Want Repo from ID, got %s", err)
@@ -37,11 +20,11 @@ func TestFind(t *testing.T) {
 	testRepo(t, repo)
 }
 
-func TestName(t *testing.T) {
+func TestRepoFindName(t *testing.T) {
 	setup()
 	defer teardown()
 
-	repos := NewManager(db)
+	repos := NewRepoManager(db)
 	user, err := repos.FindName("github.com", "lhofstadter", "lenwoloppali")
 	if err != nil {
 		t.Errorf("Want Repo by Name, got %s", err)
@@ -50,11 +33,11 @@ func TestName(t *testing.T) {
 	testRepo(t, user)
 }
 
-func TestList(t *testing.T) {
+func TestRepoList(t *testing.T) {
 	setup()
 	defer teardown()
 
-	repos := NewManager(db)
+	repos := NewRepoManager(db)
 	all, err := repos.List(1)
 	if err != nil {
 		t.Errorf("Want Repos, got %s", err)
@@ -68,28 +51,28 @@ func TestList(t *testing.T) {
 	testRepo(t, all[0])
 }
 
-func TestInsert(t *testing.T) {
+func TestRepoInsert(t *testing.T) {
 	setup()
 	defer teardown()
 
-	repo, _ := New("github.com", "mrwolowitz", "lenwoloppali")
-	repos := NewManager(db)
+	repo, _ := model.NewRepo("github.com", "mrwolowitz", "lenwoloppali")
+	repos := NewRepoManager(db)
 	if err := repos.Insert(repo); err != nil {
 		t.Errorf("Want Repo created, got %s", err)
 	}
 
 	// verify unique remote + owner + name login constraint
-	var err = repos.Insert(&Repo{Host: repo.Host, Owner: repo.Owner, Name: repo.Name})
+	var err = repos.Insert(&model.Repo{Host: repo.Host, Owner: repo.Owner, Name: repo.Name})
 	if err == nil {
 		t.Error("Want unique constraint violated")
 	}
 }
 
-func TestUpdate(t *testing.T) {
+func TestRepoUpdate(t *testing.T) {
 	setup()
 	defer teardown()
 
-	repos := NewManager(db)
+	repos := NewRepoManager(db)
 	repo, err := repos.Find(1)
 	if err != nil {
 		t.Errorf("Want Repo from ID, got %s", err)
@@ -132,11 +115,11 @@ func TestUpdate(t *testing.T) {
 	}
 }
 
-func TestDelete(t *testing.T) {
+func TestRepoDelete(t *testing.T) {
 	setup()
 	defer teardown()
 
-	repos := NewManager(db)
+	repos := NewRepoManager(db)
 	repo, err := repos.Find(1)
 	if err != nil {
 		t.Errorf("Want Repo from ID, got %s", err)
@@ -155,7 +138,7 @@ func TestDelete(t *testing.T) {
 
 // testRepo is a helper function that compares the repo
 // to an expected set of fixed field values.
-func testRepo(t *testing.T, repo *Repo) {
+func testRepo(t *testing.T, repo *model.Repo) {
 	var got, want = repo.Remote, "github.com"
 	if got != want {
 		t.Errorf("Want Remote %v, got %v", want, got)

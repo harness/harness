@@ -1,48 +1,49 @@
-package commit
+package database
 
 import (
 	"database/sql"
 	"time"
 
+	"github.com/drone/drone/shared/model"
 	"github.com/russross/meddler"
 )
 
 type CommitManager interface {
 	// Find finds the commit by ID.
-	Find(id int64) (*Commit, error)
+	Find(id int64) (*model.Commit, error)
 
 	// FindSha finds the commit for the branch and sha.
-	FindSha(repo int64, branch, sha string) (*Commit, error)
+	FindSha(repo int64, branch, sha string) (*model.Commit, error)
 
 	// FindLatest finds the most recent commit for the branch.
-	FindLatest(repo int64, branch string) (*Commit, error)
+	FindLatest(repo int64, branch string) (*model.Commit, error)
 
 	// FindOutput finds the commit's output.
 	FindOutput(commit int64) ([]byte, error)
 
 	// List finds recent commits for the repository
-	List(repo int64) ([]*Commit, error)
+	List(repo int64) ([]*model.Commit, error)
 
 	// ListBranch finds recent commits for the repository and branch.
-	ListBranch(repo int64, branch string) ([]*Commit, error)
+	ListBranch(repo int64, branch string) ([]*model.Commit, error)
 
 	// ListBranches finds most recent commit for each branch.
-	ListBranches(repo int64) ([]*Commit, error)
+	ListBranches(repo int64) ([]*model.Commit, error)
 
 	// ListUser finds most recent commits for a user.
-	ListUser(repo int64) ([]*CommitRepo, error)
+	ListUser(repo int64) ([]*model.CommitRepo, error)
 
 	// Insert persists the commit to the datastore.
-	Insert(commit *Commit) error
+	Insert(commit *model.Commit) error
 
 	// Update persists changes to the commit to the datastore.
-	Update(commit *Commit) error
+	Update(commit *model.Commit) error
 
 	// UpdateOutput persists a commit's stdout to the datastore.
-	UpdateOutput(commit *Commit, out []byte) error
+	UpdateOutput(commit *model.Commit, out []byte) error
 
 	// Delete removes the commit from the datastore.
-	Delete(commit *Commit) error
+	Delete(commit *model.Commit) error
 
 	// CancelAll will update the status of all Started or Pending
 	// builds to a status of Killed (cancelled).
@@ -54,9 +55,9 @@ type commitManager struct {
 	*sql.DB
 }
 
-// NewManager initiales a new CommitManager intended to
+// NewCommitManager initiales a new CommitManager intended to
 // manage and persist commits.
-func NewManager(db *sql.DB) CommitManager {
+func NewCommitManager(db *sql.DB) CommitManager {
 	return &commitManager{db}
 }
 
@@ -84,7 +85,7 @@ LIMIT 20
  `
 
 // SQL query to retrieve the latest Commits for a user's repositories.
-const listUserQuery = `
+const listUserCommitsQuery = `
 SELECT r.repo_remote, r.repo_host, r.repo_owner, r.repo_name, c.*
 FROM commits c, repos r, perms p
 WHERE c.repo_id=r.repo_id
@@ -96,7 +97,7 @@ LIMIT 20
 `
 
 // SQL query to retrieve the latest Commits across all branches.
-const listQuery = `
+const listCommitsQuery = `
 SELECT *
 FROM commits
 WHERE repo_id=? 
@@ -105,7 +106,7 @@ LIMIT 20
 `
 
 // SQL query to retrieve a Commit by branch and sha.
-const findQuery = `
+const findCommitQuery = `
 SELECT *
 FROM commits
 WHERE repo_id=?
@@ -115,7 +116,7 @@ LIMIT 1
 `
 
 // SQL query to retrieve the most recent Commit for a branch.
-const findLatestQuery = `
+const findLatestCommitQuery = `
 SELECT *
 FROM commits
 WHERE commit_id IN (
@@ -143,12 +144,12 @@ UPDATE output SET output_raw = ? WHERE commit_id = ?;
 `
 
 // SQL statement to delete a Commit by ID.
-const deleteStmt = `
+const deleteCommitStmt = `
 DELETE FROM commits WHERE commit_id = ?;
 `
 
 // SQL statement to cancel all running Commits.
-const cancelStmt = `
+const cancelCommitStmt = `
 UPDATE commits SET
 commit_status = ?,
 commit_started = ?,
@@ -156,21 +157,21 @@ commit_finished = ?
 WHERE commit_status IN ('Started', 'Pending');
 `
 
-func (db *commitManager) Find(id int64) (*Commit, error) {
-	dst := Commit{}
+func (db *commitManager) Find(id int64) (*model.Commit, error) {
+	dst := model.Commit{}
 	err := meddler.Load(db, "commits", &dst, id)
 	return &dst, err
 }
 
-func (db *commitManager) FindSha(repo int64, branch, sha string) (*Commit, error) {
-	dst := Commit{}
-	err := meddler.QueryRow(db, &dst, findQuery, repo, branch, sha)
+func (db *commitManager) FindSha(repo int64, branch, sha string) (*model.Commit, error) {
+	dst := model.Commit{}
+	err := meddler.QueryRow(db, &dst, findCommitQuery, repo, branch, sha)
 	return &dst, err
 }
 
-func (db *commitManager) FindLatest(repo int64, branch string) (*Commit, error) {
-	dst := Commit{}
-	err := meddler.QueryRow(db, &dst, findLatestQuery, repo, branch)
+func (db *commitManager) FindLatest(repo int64, branch string) (*model.Commit, error) {
+	dst := model.Commit{}
+	err := meddler.QueryRow(db, &dst, findLatestCommitQuery, repo, branch)
 	return &dst, err
 }
 
@@ -180,42 +181,42 @@ func (db *commitManager) FindOutput(commit int64) ([]byte, error) {
 	return []byte(dst), err
 }
 
-func (db *commitManager) List(repo int64) ([]*Commit, error) {
-	var dst []*Commit
-	err := meddler.QueryAll(db, &dst, listQuery, repo)
+func (db *commitManager) List(repo int64) ([]*model.Commit, error) {
+	var dst []*model.Commit
+	err := meddler.QueryAll(db, &dst, listCommitsQuery, repo)
 	return dst, err
 }
 
-func (db *commitManager) ListBranch(repo int64, branch string) ([]*Commit, error) {
-	var dst []*Commit
+func (db *commitManager) ListBranch(repo int64, branch string) ([]*model.Commit, error) {
+	var dst []*model.Commit
 	err := meddler.QueryAll(db, &dst, listBranchQuery, repo, branch)
 	return dst, err
 }
 
-func (db *commitManager) ListBranches(repo int64) ([]*Commit, error) {
-	var dst []*Commit
+func (db *commitManager) ListBranches(repo int64) ([]*model.Commit, error) {
+	var dst []*model.Commit
 	err := meddler.QueryAll(db, &dst, listBranchesQuery, repo)
 	return dst, err
 }
 
-func (db *commitManager) ListUser(user int64) ([]*CommitRepo, error) {
-	var dst []*CommitRepo
-	err := meddler.QueryAll(db, &dst, listUserQuery, user)
+func (db *commitManager) ListUser(user int64) ([]*model.CommitRepo, error) {
+	var dst []*model.CommitRepo
+	err := meddler.QueryAll(db, &dst, listUserCommitsQuery, user)
 	return dst, err
 }
 
-func (db *commitManager) Insert(commit *Commit) error {
+func (db *commitManager) Insert(commit *model.Commit) error {
 	commit.Created = time.Now().Unix()
 	commit.Updated = time.Now().Unix()
 	return meddler.Insert(db, "commits", commit)
 }
 
-func (db *commitManager) Update(commit *Commit) error {
+func (db *commitManager) Update(commit *model.Commit) error {
 	commit.Updated = time.Now().Unix()
 	return meddler.Update(db, "commits", commit)
 }
 
-func (db *commitManager) UpdateOutput(commit *Commit, out []byte) error {
+func (db *commitManager) UpdateOutput(commit *model.Commit, out []byte) error {
 	_, err := db.Exec(insertOutputStmt, commit.ID, out)
 	if err != nil {
 		return nil
@@ -224,12 +225,12 @@ func (db *commitManager) UpdateOutput(commit *Commit, out []byte) error {
 	return err
 }
 
-func (db *commitManager) Delete(commit *Commit) error {
-	_, err := db.Exec(deleteStmt, commit.ID)
+func (db *commitManager) Delete(commit *model.Commit) error {
+	_, err := db.Exec(deleteCommitStmt, commit.ID)
 	return err
 }
 
 func (db *commitManager) CancelAll() error {
-	_, err := db.Exec(cancelStmt, StatusKilled, time.Now().Unix(), time.Now().Unix())
+	_, err := db.Exec(cancelCommitStmt, model.StatusKilled, time.Now().Unix(), time.Now().Unix())
 	return err
 }

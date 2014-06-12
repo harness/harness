@@ -5,23 +5,22 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/resource/config"
-	"github.com/drone/drone/server/resource/perm"
-	"github.com/drone/drone/server/resource/repo"
-	"github.com/drone/drone/server/resource/user"
 	"github.com/drone/drone/server/session"
+	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
 )
 
 type LoginHandler struct {
-	users user.UserManager
-	repos repo.RepoManager
-	perms perm.PermManager
+	users database.UserManager
+	repos database.RepoManager
+	perms database.PermManager
 	sess  session.Session
 	conf  *config.Config
 }
 
-func NewLoginHandler(users user.UserManager, repos repo.RepoManager, perms perm.PermManager, sess session.Session, conf *config.Config) *LoginHandler {
+func NewLoginHandler(users database.UserManager, repos database.RepoManager, perms database.PermManager, sess session.Session, conf *config.Config) *LoginHandler {
 	return &LoginHandler{users, repos, perms, sess, conf}
 }
 
@@ -56,7 +55,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 		}
 
 		// create the user account
-		u = user.New(remote.GetName(), login.Login, login.Email)
+		u = model.NewUser(remote.GetName(), login.Login, login.Email)
 		u.Name = login.Name
 		u.SetEmail(login.Email)
 
@@ -86,7 +85,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	// TODO this should move to a server/sync package and
 	//      should be injected into this struct, just like
 	//      the database code.
-	if u.Stale() {
+	if u.IsStale() {
 		log.Println("sync user account.", u.Login)
 
 		// sync inside a goroutine. This should eventually be moved to
@@ -109,7 +108,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 
 			// insert all repositories
 			for _, remoteRepo := range repos {
-				repo, _ := repo.New(remote.GetName(), remoteRepo.Owner, remoteRepo.Name)
+				repo, _ := model.NewRepo(remote.GetName(), remoteRepo.Owner, remoteRepo.Name)
 				repo.Private = remoteRepo.Private
 				repo.Host = remoteRepo.Host
 				repo.CloneURL = remoteRepo.Clone

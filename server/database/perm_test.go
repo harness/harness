@@ -1,37 +1,18 @@
-package perm
+package database
 
 import (
 	"database/sql"
 	"testing"
 
-	"github.com/drone/drone/server/database/schema"
-	"github.com/drone/drone/server/database/testdata"
-	"github.com/drone/drone/server/database/testdatabase"
-	"github.com/drone/drone/server/resource/repo"
-	"github.com/drone/drone/server/resource/user"
+	"github.com/drone/drone/shared/model"
 )
-
-// in-memory database instance for unit testing
-var db *sql.DB
-
-// setup the test database and test fixtures
-func setup() {
-	db, _ = testdatabase.Open()
-	schema.Load(db)
-	testdata.Load(db)
-}
-
-// teardown the test database
-func teardown() {
-	db.Close()
-}
 
 func Test_find(t *testing.T) {
 	setup()
 	defer teardown()
 
-	manager := NewManager(db).(*permManager)
-	perm, err := manager.find(&user.User{ID: 101}, &repo.Repo{ID: 200})
+	manager := NewPermManager(db).(*permManager)
+	perm, err := manager.find(&model.User{ID: 101}, &model.Repo{ID: 200})
 	if err != nil {
 		t.Errorf("Want permission, got %s", err)
 	}
@@ -78,20 +59,20 @@ func Test_find(t *testing.T) {
 
 	// test that we get the appropriate error message when
 	// no permissions are found in the database.
-	_, err = manager.find(&user.User{ID: 102}, &repo.Repo{ID: 201})
+	_, err = manager.find(&model.User{ID: 102}, &model.Repo{ID: 201})
 	if err != sql.ErrNoRows {
 		t.Errorf("Want ErrNoRows, got %s", err)
 	}
 }
 
-func TestRead(t *testing.T) {
+func TestPermRead(t *testing.T) {
 	setup()
 	defer teardown()
-	var manager = NewManager(db)
+	var manager = NewPermManager(db)
 
 	// dummy admin and repo
-	u := user.User{ID: 101, Admin: false}
-	r := repo.Repo{ID: 201, Private: false}
+	u := model.User{ID: 101, Admin: false}
+	r := model.Repo{ID: 201, Private: false}
 
 	// public repos should always be accessible
 	if read, err := manager.Read(&u, &r); !read || err != nil {
@@ -131,14 +112,14 @@ func TestRead(t *testing.T) {
 	}
 }
 
-func TestWrite(t *testing.T) {
+func TestPermWrite(t *testing.T) {
 	setup()
 	defer teardown()
-	var manager = NewManager(db)
+	var manager = NewPermManager(db)
 
 	// dummy admin and repo
-	u := user.User{ID: 101, Admin: false}
-	r := repo.Repo{ID: 201, Private: false}
+	u := model.User{ID: 101, Admin: false}
+	r := model.Repo{ID: 201, Private: false}
 
 	// repos should not be accessible to nil users
 	r.Private = true
@@ -172,14 +153,14 @@ func TestWrite(t *testing.T) {
 	}
 }
 
-func TestAdmin(t *testing.T) {
+func TestPermAdmin(t *testing.T) {
 	setup()
 	defer teardown()
-	var manager = NewManager(db)
+	var manager = NewPermManager(db)
 
 	// dummy admin and repo
-	u := user.User{ID: 101, Admin: false}
-	r := repo.Repo{ID: 201, Private: false}
+	u := model.User{ID: 101, Admin: false}
+	r := model.Repo{ID: 201, Private: false}
 
 	// repos should not be accessible to nil users
 	r.Private = true
@@ -213,15 +194,15 @@ func TestAdmin(t *testing.T) {
 	}
 }
 
-func TestRevoke(t *testing.T) {
+func TestPermRevoke(t *testing.T) {
 	setup()
 	defer teardown()
 
 	// dummy admin and repo
-	u := user.User{ID: 101}
-	r := repo.Repo{ID: 200}
+	u := model.User{ID: 101}
+	r := model.Repo{ID: 200}
 
-	manager := NewManager(db)
+	manager := NewPermManager(db)
 	admin, err := manager.Admin(&u, &r)
 	if !admin || err != nil {
 		t.Errorf("Want Admin permission, got Admin %v, error %s", admin, err)
@@ -238,15 +219,15 @@ func TestRevoke(t *testing.T) {
 	}
 }
 
-func TestGrant(t *testing.T) {
+func TestPermGrant(t *testing.T) {
 	setup()
 	defer teardown()
 
 	// dummy admin and repo
-	u := user.User{ID: 104}
-	r := repo.Repo{ID: 200}
+	u := model.User{ID: 104}
+	r := model.Repo{ID: 200}
 
-	manager := NewManager(db).(*permManager)
+	manager := NewPermManager(db).(*permManager)
 	if err := manager.Grant(&u, &r, true, true, true); err != nil {
 		t.Errorf("Want permissions granted, got %s", err)
 	}

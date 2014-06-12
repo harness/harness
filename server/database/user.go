@@ -1,33 +1,34 @@
-package user
+package database
 
 import (
 	"database/sql"
 	"time"
 
+	"github.com/drone/drone/shared/model"
 	"github.com/russross/meddler"
 )
 
 type UserManager interface {
 	// Find finds the User by ID.
-	Find(id int64) (*User, error)
+	Find(id int64) (*model.User, error)
 
 	// FindLogin finds the User by remote login.
-	FindLogin(remote, login string) (*User, error)
+	FindLogin(remote, login string) (*model.User, error)
 
 	// FindToken finds the User by token.
-	FindToken(token string) (*User, error)
+	FindToken(token string) (*model.User, error)
 
 	// List finds all registered users of the system.
-	List() ([]*User, error)
+	List() ([]*model.User, error)
 
 	// Insert persists the User to the datastore.
-	Insert(user *User) error
+	Insert(user *model.User) error
 
 	// Update persists changes to the User to the datastore.
-	Update(user *User) error
+	Update(user *model.User) error
 
 	// Delete removes the User from the datastore.
-	Delete(user *User) error
+	Delete(user *model.User) error
 }
 
 // userManager manages a list of users in a SQL database.
@@ -36,7 +37,7 @@ type userManager struct {
 }
 
 // SQL query to retrieve a User by remote login.
-const findLoginQuery = `
+const findUserLoginQuery = `
 SELECT *
 FROM users
 WHERE user_remote=?
@@ -45,7 +46,7 @@ LIMIT 1
 `
 
 // SQL query to retrieve a User by remote login.
-const findTokenQuery = `
+const findUserTokenQuery = `
 SELECT *
 FROM users
 WHERE user_token=?
@@ -53,59 +54,59 @@ LIMIT 1
 `
 
 // SQL query to retrieve a list of all users.
-const listQuery = `
+const listUserQuery = `
 SELECT *
 FROM users
 ORDER BY user_name ASC
 `
 
 // SQL statement to delete a User by ID.
-const deleteStmt = `
+const deleteUserStmt = `
 DELETE FROM users WHERE user_id=?
 `
 
-// NewManager initiales a new UserManager intended to
+// NewUserManager initiales a new UserManager intended to
 // manage and persist commits.
-func NewManager(db *sql.DB) UserManager {
+func NewUserManager(db *sql.DB) UserManager {
 	return &userManager{db}
 }
 
-func (db *userManager) Find(id int64) (*User, error) {
-	dst := User{}
+func (db *userManager) Find(id int64) (*model.User, error) {
+	dst := model.User{}
 	err := meddler.Load(db, "users", &dst, id)
 	return &dst, err
 }
 
-func (db *userManager) FindLogin(remote, login string) (*User, error) {
-	dst := User{}
-	err := meddler.QueryRow(db, &dst, findLoginQuery, remote, login)
+func (db *userManager) FindLogin(remote, login string) (*model.User, error) {
+	dst := model.User{}
+	err := meddler.QueryRow(db, &dst, findUserLoginQuery, remote, login)
 	return &dst, err
 }
 
-func (db *userManager) FindToken(token string) (*User, error) {
-	dst := User{}
-	err := meddler.QueryRow(db, &dst, findTokenQuery, token)
+func (db *userManager) FindToken(token string) (*model.User, error) {
+	dst := model.User{}
+	err := meddler.QueryRow(db, &dst, findUserTokenQuery, token)
 	return &dst, err
 }
 
-func (db *userManager) List() ([]*User, error) {
-	var dst []*User
-	err := meddler.QueryAll(db, &dst, listQuery)
+func (db *userManager) List() ([]*model.User, error) {
+	var dst []*model.User
+	err := meddler.QueryAll(db, &dst, listUserQuery)
 	return dst, err
 }
 
-func (db *userManager) Insert(user *User) error {
+func (db *userManager) Insert(user *model.User) error {
 	user.Created = time.Now().Unix()
 	user.Updated = time.Now().Unix()
 	return meddler.Insert(db, "users", user)
 }
 
-func (db *userManager) Update(user *User) error {
+func (db *userManager) Update(user *model.User) error {
 	user.Updated = time.Now().Unix()
 	return meddler.Update(db, "users", user)
 }
 
-func (db *userManager) Delete(user *User) error {
-	_, err := db.Exec(deleteStmt, user.ID)
+func (db *userManager) Delete(user *model.User) error {
+	_, err := db.Exec(deleteUserStmt, user.ID)
 	return err
 }

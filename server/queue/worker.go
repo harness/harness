@@ -4,20 +4,19 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/drone/drone/server/channel"
+	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/shared/build/git"
-	r "github.com/drone/drone/shared/build/repo"
+	"github.com/drone/drone/shared/build/repo"
 	"github.com/drone/drone/shared/build/script"
+	"github.com/drone/drone/shared/model"
 	"io"
 	"log"
 	"path/filepath"
 	"time"
-
-	"github.com/drone/drone/server/resource/commit"
-	"github.com/drone/drone/server/resource/repo"
 )
 
 type worker struct {
-	commits commit.CommitManager
+	commits database.CommitManager
 
 	runner BuildRunner
 }
@@ -52,7 +51,7 @@ func (w *worker) execute(task *BuildTask) error {
 		if e := recover(); e != nil {
 			task.Commit.Finished = time.Now().Unix()
 			task.Commit.Duration = task.Commit.Finished - task.Commit.Started
-			task.Commit.Status = commit.StatusError
+			task.Commit.Status = model.StatusError
 			w.commits.Update(task.Commit)
 		}
 	}()
@@ -66,7 +65,7 @@ func (w *worker) execute(task *BuildTask) error {
 	}
 
 	// update commit and build status
-	task.Commit.Status = commit.StatusStarted
+	task.Commit.Status = model.StatusStarted
 	task.Commit.Started = time.Now().Unix()
 
 	// persist the commit to the database
@@ -132,14 +131,14 @@ func (w *worker) execute(task *BuildTask) error {
 
 	task.Commit.Finished = time.Now().Unix()
 	task.Commit.Duration = task.Commit.Finished - task.Commit.Started
-	task.Commit.Status = commit.StatusSuccess
+	task.Commit.Status = model.StatusSuccess
 
 	// capture build output
 	stdout := buf.buf.String()
 
 	// if exit code != 0 set to failure
 	if passed {
-		task.Commit.Status = commit.StatusFailure
+		task.Commit.Status = model.StatusFailure
 		if buildErr != nil && len(stdout) == 0 {
 			// TODO: If you wanted to have very friendly error messages, you could do that here
 			stdout = fmt.Sprintf("%s\n", buildErr.Error())
@@ -173,7 +172,7 @@ func (w *worker) runBuild(task *BuildTask, buf io.Writer) (bool, error) {
 	var path = filepath.Join(task.Repo.Host, task.Repo.Owner, task.Repo.Name)
 	path = git.GitPath(task.Script.Git, path)
 
-	repo := &r.Repo{
+	repo := &repo.Repo{
 		Name:   task.Repo.Host + task.Repo.Owner + task.Repo.Name,
 		Path:   task.Repo.CloneURL,
 		Branch: task.Commit.Branch,
@@ -200,7 +199,7 @@ func (w *worker) runBuild(task *BuildTask, buf io.Writer) (bool, error) {
 // updateGitHubStatus is a helper function that will send
 // the build status to GitHub using the Status API.
 // see https://github.com/blog/1227-commit-status-api
-func updateGitHubStatus(repo *repo.Repo, commit *commit.Commit) error {
+func updateGitHubStatus(repo *repo.Repo, commit *model.Commit) error {
 	/*
 		// convert from drone status to github status
 		var message, status string

@@ -4,21 +4,20 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/drone/drone/server/resource/commit"
-	"github.com/drone/drone/server/resource/repo"
-	"github.com/drone/drone/server/resource/user"
+	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/session"
+	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
 )
 
 type UserHandler struct {
-	commits commit.CommitManager
-	repos   repo.RepoManager
-	users   user.UserManager
+	commits database.CommitManager
+	repos   database.RepoManager
+	users   database.UserManager
 	sess    session.Session
 }
 
-func NewUserHandler(users user.UserManager, repos repo.RepoManager, commits commit.CommitManager, sess session.Session) *UserHandler {
+func NewUserHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, sess session.Session) *UserHandler {
 	return &UserHandler{commits, repos, users, sess}
 }
 
@@ -35,7 +34,7 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 	// requesting their own data, and will need to display
 	// the Token on the website.
 	data := struct {
-		*user.User
+		*model.User
 		Token string `json:"token"`
 	}{u, u.Token}
 	return json.NewEncoder(w).Encode(&data)
@@ -52,7 +51,7 @@ func (h *UserHandler) PutUser(w http.ResponseWriter, r *http.Request) error {
 
 	// unmarshal the repository from the payload
 	defer r.Body.Close()
-	in := user.User{}
+	in := model.User{}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		return badRequest{err}
 	}

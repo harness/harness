@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/drone/drone/server/resource/commit"
-	"github.com/drone/drone/server/resource/repo"
-	"github.com/drone/drone/server/resource/user"
+	"github.com/drone/drone/shared/model"
 )
 
 type Webhook struct {
@@ -31,9 +29,9 @@ func (w *Webhook) Send(context *Context) error {
 func (w *Webhook) send(context *Context) error {
 	// data will get posted in this format
 	data := struct {
-		Owner  *user.User     `json:"owner"`
-		Repo   *repo.Repo     `json:"repository"`
-		Commit *commit.Commit `json:"commit"`
+		Owner  *model.User   `json:"owner"`
+		Repo   *model.Repo   `json:"repository"`
+		Commit *model.Commit `json:"commit"`
 	}{context.User, context.Repo, context.Commit}
 
 	// data json encoded

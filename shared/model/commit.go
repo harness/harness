@@ -1,18 +1,7 @@
-package commit
+package model
 
 import (
-	"github.com/drone/drone/server/resource/util"
 	"time"
-)
-
-const (
-	StatusNone    = "None"
-	StatusEnqueue = "Pending"
-	StatusStarted = "Started"
-	StatusSuccess = "Success"
-	StatusFailure = "Failure"
-	StatusError   = "Error"
-	StatusKilled  = "Killed"
 )
 
 type Commit struct {
@@ -37,7 +26,7 @@ type Commit struct {
 // SetAuthor sets the author's email address and calculate the Gravatar hash.
 func (c *Commit) SetAuthor(email string) {
 	c.Author = email
-	c.Gravatar = util.CreateGravatar(email)
+	c.Gravatar = createGravatar(email)
 }
 
 // Returns the Short (--short) Commit Hash.

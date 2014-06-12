@@ -3,23 +3,22 @@ package handler
 import (
 	"net/http"
 
+	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/queue"
-	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/config"
-	"github.com/drone/drone/server/resource/repo"
-	"github.com/drone/drone/server/resource/user"
+	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
 )
 
 type HookHandler struct {
-	users   user.UserManager
-	repos   repo.RepoManager
-	commits commit.CommitManager
+	users   database.UserManager
+	repos   database.RepoManager
+	commits database.CommitManager
 	queue   *queue.Queue
 	conf    *config.Config
 }
 
-func NewHookHandler(users user.UserManager, repos repo.RepoManager, commits commit.CommitManager, conf *config.Config, queue *queue.Queue) *HookHandler {
+func NewHookHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, conf *config.Config, queue *queue.Queue) *HookHandler {
 	return &HookHandler{users, repos, commits, queue, conf}
 }
 
@@ -76,9 +75,9 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 		return badRequest{err}
 	}
 
-	c := commit.Commit{
+	c := model.Commit{
 		RepoID:      repo.ID,
-		Status:      commit.StatusEnqueue,
+		Status:      model.StatusEnqueue,
 		Sha:         hook.Sha,
 		Branch:      hook.Branch,
 		PullRequest: hook.PullRequest,

@@ -5,27 +5,25 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/server/channel"
-	"github.com/drone/drone/server/resource/commit"
-	"github.com/drone/drone/server/resource/perm"
-	"github.com/drone/drone/server/resource/repo"
-	"github.com/drone/drone/server/resource/user"
+	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/shared/httputil"
+	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
 )
 
 type Renderer func(wr io.Writer, name string, data interface{}) error
 
 type SiteHandler struct {
-	users   user.UserManager
-	repos   repo.RepoManager
-	commits commit.CommitManager
-	perms   perm.PermManager
+	users   database.UserManager
+	repos   database.RepoManager
+	commits database.CommitManager
+	perms   database.PermManager
 	sess    session.Session
 	render  Renderer
 }
 
-func NewSiteHandler(users user.UserManager, repos repo.RepoManager, commits commit.CommitManager, perms perm.PermManager, sess session.Session, render Renderer) *SiteHandler {
+func NewSiteHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, perms database.PermManager, sess session.Session, render Renderer) *SiteHandler {
 	return &SiteHandler{users, repos, commits, perms, sess, render}
 }
 
@@ -39,15 +37,15 @@ func (s *SiteHandler) GetIndex(w http.ResponseWriter, r *http.Request) error {
 	}
 	feed, _ := s.commits.ListUser(u.ID)
 	data := struct {
-		User *user.User
-		Feed []*commit.CommitRepo
+		User *model.User
+		Feed []*model.CommitRepo
 	}{u, feed}
 	return s.render(w, "user_feed.html", &data)
 }
 
 // GetLogin serves the account login page
 func (s *SiteHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
-	return s.render(w, "login.html", struct{ User *user.User }{nil})
+	return s.render(w, "login.html", struct{ User *model.User }{nil})
 }
 
 // GetUser serves the account settings page.
@@ -56,7 +54,7 @@ func (s *SiteHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 	if u == nil {
 		return s.render(w, "404.html", nil)
 	}
-	return s.render(w, "user_conf.html", struct{ User *user.User }{u})
+	return s.render(w, "user_conf.html", struct{ User *model.User }{u})
 }
 
 func (s *SiteHandler) GetUsers(w http.ResponseWriter, r *http.Request) error {
@@ -64,7 +62,7 @@ func (s *SiteHandler) GetUsers(w http.ResponseWriter, r *http.Request) error {
 	if u == nil || u.Admin == false {
 		return s.render(w, "404.html", nil)
 	}
-	return s.render(w, "admin_users.html", struct{ User *user.User }{u})
+	return s.render(w, "admin_users.html", struct{ User *model.User }{u})
 }
 
 func (s *SiteHandler) GetConfig(w http.ResponseWriter, r *http.Request) error {
@@ -72,7 +70,7 @@ func (s *SiteHandler) GetConfig(w http.ResponseWriter, r *http.Request) error {
 	if u == nil || u.Admin == false {
 		return s.render(w, "404.html", nil)
 	}
-	return s.render(w, "admin_conf.html", struct{ User *user.User }{u})
+	return s.render(w, "admin_conf.html", struct{ User *model.User }{u})
 }
 
 func (s *SiteHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
@@ -89,14 +87,14 @@ func (s *SiteHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
 		return s.render(w, "404.html", nil)
 	}
 	data := struct {
-		User     *user.User
-		Repo     *repo.Repo
+		User     *model.User
+		Repo     *model.Repo
 		Branch   string
 		Channel  string
 		Stream   string
-		Branches []*commit.Commit
-		Commits  []*commit.Commit
-		Commit   *commit.Commit
+		Branches []*model.Commit
+		Commits  []*model.Commit
+		Commit   *model.Commit
 	}{User: usr, Repo: arepo}
 
 	// generate a token for connecting to the streaming server
@@ -148,8 +146,8 @@ func (s *SiteHandler) GetRepoAdmin(w http.ResponseWriter, r *http.Request) error
 		return s.render(w, "404.html", nil)
 	}
 	data := struct {
-		User   *user.User
-		Repo   *repo.Repo
+		User   *model.User
+		Repo   *model.Repo
 		Host   string
 		Scheme string
 	}{u, arepo, httputil.GetHost(r), httputil.GetScheme(r)}
@@ -167,8 +165,8 @@ func (s *SiteHandler) GetRepos(w http.ResponseWriter, r *http.Request) error {
 		s.render(w, "500.html", nil)
 	}
 	data := struct {
-		User  *user.User
-		Repos []*repo.Repo
+		User  *model.User
+		Repos []*model.Repo
 	}{u, repos}
 	return s.render(w, "user_repos.html", &data)
 }

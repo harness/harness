@@ -10,14 +10,11 @@ import (
 
 	"code.google.com/p/go.net/websocket"
 	"github.com/drone/drone/server/channel"
+	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/database/schema"
 	"github.com/drone/drone/server/handler"
 	"github.com/drone/drone/server/queue"
-	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/config"
-	"github.com/drone/drone/server/resource/perm"
-	"github.com/drone/drone/server/resource/repo"
-	"github.com/drone/drone/server/resource/user"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/shared/build/docker"
 	"github.com/drone/drone/shared/build/log"
@@ -95,10 +92,10 @@ func main() {
 	schema.Load(db)
 
 	// setup the database managers
-	repos := repo.NewManager(db)
-	users := user.NewManager(db)
-	perms := perm.NewManager(db)
-	commits := commit.NewManager(db)
+	repos := database.NewRepoManager(db)
+	users := database.NewUserManager(db)
+	perms := database.NewPermManager(db)
+	commits := database.NewCommitManager(db)
 
 	// cancel all previously running builds
 	go commits.CancelAll()

@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/drone/drone/server/resource/commit"
+	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/resource/config"
-	"github.com/drone/drone/server/resource/perm"
-	"github.com/drone/drone/server/resource/repo"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/sshutil"
@@ -17,14 +15,14 @@ import (
 
 type RepoHandler struct {
 	conf    *config.Config
-	commits commit.CommitManager
-	perms   perm.PermManager
-	repos   repo.RepoManager
+	commits database.CommitManager
+	perms   database.PermManager
+	repos   database.RepoManager
 	sess    session.Session
 }
 
-func NewRepoHandler(repos repo.RepoManager, commits commit.CommitManager,
-	perms perm.PermManager, sess session.Session, conf *config.Config) *RepoHandler {
+func NewRepoHandler(repos database.RepoManager, commits database.CommitManager,
+	perms database.PermManager, sess session.Session, conf *config.Config) *RepoHandler {
 	return &RepoHandler{conf, commits, perms, repos, sess}
 }
 
