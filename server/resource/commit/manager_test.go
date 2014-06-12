@@ -2,7 +2,6 @@ package commit
 
 import (
 	"database/sql"
-	"strings"
 	"testing"
 	"time"
 
@@ -153,8 +152,8 @@ func TestInsert(t *testing.T) {
 
 	// verify unique remote + remote id constraint
 	err = commits.Insert(&Commit{RepoID: 3, Branch: "bar", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"})
-	if err == nil || !strings.Contains(err.Error(), "commit_sha, commit_branch, repo_id are not unique") {
-		t.Errorf("Want unique constraint violated, got %s", err)
+	if err == nil {
+		t.Error("Want unique constraint violated")
 	}
 
 }
