@@ -3,6 +3,7 @@ SHA := $(shell git rev-parse --short HEAD)
 all: rice amberc lessc build
 
 deps:
+	go get github.com/GeertJohan/go.rice/rice
 	go list github.com/drone/drone/... | xargs go get -t -v
 
 build:
