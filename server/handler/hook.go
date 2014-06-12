@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/drone/drone/server/queue"
@@ -49,6 +48,8 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
+	//fmt.Printf("%#v", hook)
+
 	// fetch the repository from the database
 	repo, err := h.repos.FindName(remote.GetHost(), hook.Owner, hook.Repo)
 	if err != nil {
@@ -90,8 +91,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 		return badRequest{err}
 	}
 
-	fmt.Printf("%#v", hook)
-	fmt.Printf("%s", yml)
+	//fmt.Printf("%s", yml)
 
 	// drop the items on the queue
 	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: &c})

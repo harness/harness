@@ -26,13 +26,14 @@ type BuildTask struct {
 }
 
 // Start N workers with the given build runner.
-func Start(workers int, runner BuildRunner) *Queue {
+func Start(workers int, commits commit.CommitManager, runner BuildRunner) *Queue {
 	tasks := make(chan *BuildTask)
 	queue := &Queue{tasks: tasks}
 
 	for i := 0; i < workers; i++ {
 		worker := worker{
-			runner: runner,
+			runner:  runner,
+			commits: commits,
 		}
 
 		go worker.work(tasks)

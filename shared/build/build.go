@@ -167,7 +167,7 @@ func (b *Builder) setup() error {
 		src := filepath.Join(dir, "src")
 		cmd := exec.Command("cp", "-a", b.Repo.Path, src)
 		if err := cmd.Run(); err != nil {
-			return err
+			return fmt.Errorf("Error: Unable to copy repository. %s", err)
 		}
 	}
 

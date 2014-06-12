@@ -8,6 +8,7 @@ import (
 	r "github.com/drone/drone/shared/build/repo"
 	"github.com/drone/drone/shared/build/script"
 	"io"
+	"log"
 	"path/filepath"
 	"time"
 
@@ -34,7 +35,10 @@ func (w *worker) work(queue <-chan *BuildTask) {
 		}
 
 		// execute the task
-		w.execute(task)
+		err := w.execute(task)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
@@ -57,6 +61,7 @@ func (w *worker) execute(task *BuildTask) error {
 	params, err := task.Repo.ParamMap()
 	task.Script, err = script.ParseBuild(task.Commit.Config, params)
 	if err != nil {
+		log.Printf("Error parsing repository params. %s\n", err)
 		return err
 	}
 
@@ -66,6 +71,7 @@ func (w *worker) execute(task *BuildTask) error {
 
 	// persist the commit to the database
 	if err := w.commits.Update(task.Commit); err != nil {
+		log.Printf("Error updating commit. %s\n", err)
 		return err
 	}
 
@@ -166,13 +172,17 @@ func (w *worker) execute(task *BuildTask) error {
 func (w *worker) runBuild(task *BuildTask, buf io.Writer) (bool, error) {
 	repo := &r.Repo{
 		Name:   task.Repo.Host + task.Repo.Owner + task.Repo.Name,
-		Path:   task.Repo.URL,
+		Path:   task.Repo.CloneURL,
 		Branch: task.Commit.Branch,
 		Commit: task.Commit.Sha,
 		PR:     task.Commit.PullRequest,
 		//TODO the builder should handle this
 		Dir:   filepath.Join("/var/cache/drone/src", task.Repo.Host, task.Repo.Owner, task.Repo.Name),
 		Depth: git.GitDepth(task.Script.Git),
+	}
+
+	if task.Repo.Private {
+		repo.Path = task.Repo.SSHURL
 	}
 
 	return w.runner.Run(
