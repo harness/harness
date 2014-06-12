@@ -5,7 +5,7 @@ import (
 	//"strings"
 	"testing"
 
-	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/server/database/schema"
 	"github.com/drone/drone/server/database/testdata"
 	"github.com/drone/drone/server/resource/repo"
 	"github.com/drone/drone/server/resource/user"
@@ -18,7 +18,7 @@ var db *sql.DB
 // setup the test database and test fixtures
 func setup() {
 	db, _ = sql.Open("sqlite3", ":memory:")
-	database.Load(db)
+	schema.Load(db)
 	testdata.Load(db)
 }
 
