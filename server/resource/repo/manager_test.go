@@ -6,7 +6,7 @@ import (
 
 	"github.com/drone/drone/server/database/schema"
 	"github.com/drone/drone/server/database/testdata"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/drone/drone/server/database/testdatabase"
 )
 
 // in-memory database instance for unit testing
@@ -14,7 +14,7 @@ var db *sql.DB
 
 // setup the test database and test fixtures
 func setup() {
-	db, _ = sql.Open("sqlite3", ":memory:")
+	db, _ = testdatabase.Open()
 	schema.Load(db)
 	testdata.Load(db)
 }

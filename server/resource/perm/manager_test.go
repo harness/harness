@@ -2,14 +2,13 @@ package perm
 
 import (
 	"database/sql"
-	//"strings"
 	"testing"
 
 	"github.com/drone/drone/server/database/schema"
 	"github.com/drone/drone/server/database/testdata"
+	"github.com/drone/drone/server/database/testdatabase"
 	"github.com/drone/drone/server/resource/repo"
 	"github.com/drone/drone/server/resource/user"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // in-memory database instance for unit testing
@@ -17,7 +16,7 @@ var db *sql.DB
 
 // setup the test database and test fixtures
 func setup() {
-	db, _ = sql.Open("sqlite3", ":memory:")
+	db, _ = testdatabase.Open()
 	schema.Load(db)
 	testdata.Load(db)
 }
