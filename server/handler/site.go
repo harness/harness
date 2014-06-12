@@ -1,10 +1,10 @@
 package handler
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/drone/drone/server/channel"
-	"github.com/drone/drone/server/render"
 	"github.com/drone/drone/server/resource/commit"
 	"github.com/drone/drone/server/resource/perm"
 	"github.com/drone/drone/server/resource/repo"
@@ -14,16 +14,18 @@ import (
 	"github.com/gorilla/pat"
 )
 
+type Renderer func(wr io.Writer, name string, data interface{}) error
+
 type SiteHandler struct {
 	users   user.UserManager
 	repos   repo.RepoManager
 	commits commit.CommitManager
 	perms   perm.PermManager
 	sess    session.Session
-	render  render.Render
+	render  Renderer
 }
 
-func NewSiteHandler(users user.UserManager, repos repo.RepoManager, commits commit.CommitManager, perms perm.PermManager, sess session.Session, render render.Render) *SiteHandler {
+func NewSiteHandler(users user.UserManager, repos repo.RepoManager, commits commit.CommitManager, perms perm.PermManager, sess session.Session, render Renderer) *SiteHandler {
 	return &SiteHandler{users, repos, commits, perms, sess, render}
 }
 
