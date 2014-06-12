@@ -3,7 +3,7 @@ SHA := $(shell git rev-parse --short HEAD)
 all: rice amberc lessc build
 
 deps:
-	go list github.com/drone/drone/... | xargs go get -t 
+	go list github.com/drone/drone/... | xargs go get -t -v
 
 build:
 	go build -o debian/drone/usr/local/bin/drone  -ldflags "-X main.revision $(SHA)" github.com/drone/drone/client

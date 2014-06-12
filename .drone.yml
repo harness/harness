@@ -3,6 +3,7 @@ git:
   path: github.com/drone/drone
 env:
   - GOROOT=/usr/local/go
+  - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 script:
   - sudo apt-get -y install libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
   - make deps
