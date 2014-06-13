@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/server/database"
-	"github.com/drone/drone/server/resource/config"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/sshutil"
@@ -14,7 +13,7 @@ import (
 )
 
 type RepoHandler struct {
-	conf    *config.Config
+	conf    database.ConfigManager
 	commits database.CommitManager
 	perms   database.PermManager
 	repos   database.RepoManager
@@ -22,7 +21,7 @@ type RepoHandler struct {
 }
 
 func NewRepoHandler(repos database.RepoManager, commits database.CommitManager,
-	perms database.PermManager, sess session.Session, conf *config.Config) *RepoHandler {
+	perms database.PermManager, sess session.Session, conf database.ConfigManager) *RepoHandler {
 	return &RepoHandler{conf, commits, perms, repos, sess}
 }
 
@@ -87,7 +86,7 @@ func (h *RepoHandler) PostRepo(w http.ResponseWriter, r *http.Request) error {
 	repo.PrivateKey = sshutil.MarshalPrivateKey(key)
 
 	// get the remote and client
-	remote := h.conf.GetRemote(host)
+	remote := h.conf.Find().GetRemote(host)
 	if remote == nil {
 		return notFound{}
 	}

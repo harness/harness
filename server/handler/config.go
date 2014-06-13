@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/drone/drone/server/resource/config"
+	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/session"
 	"github.com/gorilla/pat"
 )
 
 type ConfigHandler struct {
-	conf config.Config
+	conf database.ConfigManager
 	sess session.Session
 }
 
-func NewConfigHandler(conf config.Config, sess session.Session) *ConfigHandler {
+func NewConfigHandler(conf database.ConfigManager, sess session.Session) *ConfigHandler {
 	return &ConfigHandler{conf, sess}
 }
 
@@ -27,7 +27,7 @@ func (h *ConfigHandler) GetConfig(w http.ResponseWriter, r *http.Request) error 
 		return notAuthorized{}
 	}
 
-	return json.NewEncoder(w).Encode(h.conf)
+	return json.NewEncoder(w).Encode(h.conf.Find())
 }
 
 func (h *ConfigHandler) Register(r *pat.Router) {

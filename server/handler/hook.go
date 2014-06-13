@@ -5,7 +5,6 @@ import (
 
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/queue"
-	"github.com/drone/drone/server/resource/config"
 	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
 )
@@ -14,12 +13,12 @@ type HookHandler struct {
 	users   database.UserManager
 	repos   database.RepoManager
 	commits database.CommitManager
+	conf    database.ConfigManager
 	queue   *queue.Queue
-	conf    *config.Config
 }
 
-func NewHookHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, conf *config.Config, queue *queue.Queue) *HookHandler {
-	return &HookHandler{users, repos, commits, queue, conf}
+func NewHookHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, conf database.ConfigManager, queue *queue.Queue) *HookHandler {
+	return &HookHandler{users, repos, commits, conf, queue}
 }
 
 // PostHook receives a post-commit hook from GitHub, Bitbucket, etc
@@ -28,7 +27,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	host := r.FormValue(":host")
 
 	// get the remote system's client.
-	remote := h.conf.GetRemote(host)
+	remote := h.conf.Find().GetRemote(host)
 	if remote == nil {
 		return notFound{}
 	}
