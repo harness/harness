@@ -16,11 +16,14 @@ test:
 	go test -cover -short ./...
 
 clean:
-	@find ./ -name '*.out'    | xargs rm  # remove go coverage output
-	@find ./ -name '*.sqlite' | xargs rm  # remove sqlite databases
+	@find ./ -name '*.out'         | xargs rm  # remove go coverage output
+	@find ./ -name '*.sqlite'      | xargs rm  # remove sqlite databases
+	@find ./ -name '*.rice-box.go' | xargs rm
 	rm -rf debian/drone/usr/local/bin/drone
 	rm -rf debian/drone/usr/local/bin/droned
 	rm -rf debian/drone.deb
+	rm server/server
+	rm client/client
 
 	#cd cmd/droned/static   && rice clean
 	#cd cmd/droned/template && rice clean
