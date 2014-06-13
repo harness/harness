@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/drone/drone/server/database"
-	"github.com/drone/drone/server/resource/config"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
@@ -16,12 +15,12 @@ type LoginHandler struct {
 	users database.UserManager
 	repos database.RepoManager
 	perms database.PermManager
+	conf  database.ConfigManager
 	sess  session.Session
-	conf  *config.Config
 }
 
-func NewLoginHandler(users database.UserManager, repos database.RepoManager, perms database.PermManager, sess session.Session, conf *config.Config) *LoginHandler {
-	return &LoginHandler{users, repos, perms, sess, conf}
+func NewLoginHandler(users database.UserManager, repos database.RepoManager, perms database.PermManager, sess session.Session, conf database.ConfigManager) *LoginHandler {
+	return &LoginHandler{users, repos, perms, conf, sess}
 }
 
 // GetLogin gets the login to the 3rd party remote system.
@@ -30,7 +29,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	host := r.FormValue(":host")
 
 	// get the remote system's client.
-	remote := h.conf.GetRemote(host)
+	remote := h.conf.Find().GetRemote(host)
 	if remote == nil {
 		return notFound{}
 	}
@@ -50,7 +49,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		// if self-registration is disabled we should
 		// return a notAuthorized error
-		if !h.conf.Registration {
+		if !h.conf.Find().Registration {
 			return notAuthorized{}
 		}
 

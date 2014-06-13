@@ -51,4 +51,4 @@ dpkg:
 	-dpkg-deb --build debian/drone
 
 run:
-	@cd server && go run main.go conf.gomake
+	@cd server && go run main.go amber.go

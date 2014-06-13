@@ -4,7 +4,11 @@ import (
 	"database/sql"
 	"flag"
 	"html/template"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"os/user"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -14,7 +18,6 @@ import (
 	"github.com/drone/drone/server/database/schema"
 	"github.com/drone/drone/server/handler"
 	"github.com/drone/drone/server/queue"
-	"github.com/drone/drone/server/resource/config"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/shared/build/docker"
 	"github.com/drone/drone/shared/build/log"
@@ -27,6 +30,9 @@ import (
 )
 
 var (
+	// home directory for the application.
+	home string
+
 	// port the server will run on
 	port string
 
@@ -54,10 +60,6 @@ var (
 	workers int
 )
 
-// drone cofiguration data, loaded from the
-// $HOME/.drone/config.toml file.
-var conf config.Config
-
 func main() {
 
 	log.SetPriority(log.LOG_NOTICE)
@@ -78,6 +80,7 @@ func main() {
 	//	template.New("_").Funcs(render.FuncMap).ParseGlob("template/html/*.html"),
 	//).ExecuteTemplate
 
+	// load the html templates
 	templateBox := rice.MustFindBox("template/html")
 	templateFiles := []string{"login.html", "repo_branch.html", "repo_commit.html", "repo_conf.html", "repo_feed.html", "user_conf.html", "user_feed.html", "user_login.html", "user_repos.html", "404.html", "400.html"}
 	templ := template.New("_").Funcs(funcMap)
@@ -96,6 +99,7 @@ func main() {
 	users := database.NewUserManager(db)
 	perms := database.NewPermManager(db)
 	commits := database.NewCommitManager(db)
+	configs := database.NewConfigManager(filepath.Join(home, "config.toml"))
 
 	// cancel all previously running builds
 	go commits.CancelAll()
@@ -111,13 +115,13 @@ func main() {
 	router := pat.New()
 	handler.NewUsersHandler(users, sess).Register(router)
 	handler.NewUserHandler(users, repos, commits, sess).Register(router)
-	handler.NewHookHandler(users, repos, commits, &conf, queue).Register(router)
-	handler.NewLoginHandler(users, repos, perms, sess, &conf).Register(router)
+	handler.NewHookHandler(users, repos, commits, configs, queue).Register(router)
+	handler.NewLoginHandler(users, repos, perms, sess, configs).Register(router)
 	handler.NewCommitHandler(repos, commits, perms, sess, queue).Register(router)
 	handler.NewBranchHandler(repos, commits, perms, sess).Register(router)
-	handler.NewRepoHandler(repos, commits, perms, sess, &conf).Register(router)
+	handler.NewRepoHandler(repos, commits, perms, sess, configs).Register(router)
 	handler.NewBadgeHandler(repos, commits).Register(router)
-	handler.NewConfigHandler(conf, sess).Register(router)
+	handler.NewConfigHandler(configs, sess).Register(router)
 	handler.NewSiteHandler(users, repos, commits, perms, sess, templ.ExecuteTemplate).Register(router)
 
 	// serve static assets
@@ -139,3 +143,74 @@ func main() {
 		panic(http.ListenAndServe(port, nil))
 	}
 }
+
+// initialize the .drone directory and create a skeleton config
+// file if one does not already exist.
+func init() {
+	// load the current user
+	u, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+
+	// set .drone home dir
+	home = filepath.Join(u.HomeDir, ".drone")
+
+	// create the .drone home directory
+	os.MkdirAll(home, 0777)
+
+	// check for the config file
+	filename := filepath.Join(u.HomeDir, ".drone", "config.toml")
+	if _, err := os.Stat(filename); err != nil {
+		// if not exists, create
+		ioutil.WriteFile(filename, []byte(defaultConfig), 0777)
+	}
+}
+
+var defaultConfig = `
+# Enables user self-registration. If false, the system administrator
+# will need to manually add users to the system.
+registration = true
+
+[smtp]
+host = ""
+port = ""
+from = ""
+username = ""
+password = ""
+
+[bitbucket]
+url = "https://bitbucket.org"
+api = "https://bitbucket.org"
+client = ""
+secret = ""
+enabled = false
+
+[github]
+url = "https://github.com"
+api = "https://api.github.com"
+client = ""
+secret = ""
+enabled = false
+
+[githubenterprise]
+url = ""
+api = ""
+client = ""
+secret = ""
+enabled = false
+
+[gitlab]
+url = ""
+api = ""
+client = ""
+secret = ""
+enabled = false
+
+[stash]
+url = ""
+api = ""
+client = ""
+secret = ""
+enabled = false
+`
