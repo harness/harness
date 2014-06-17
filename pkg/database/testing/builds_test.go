@@ -87,18 +87,25 @@ func TestSaveBbuild(t *testing.T) {
 	}
 }
 
-func TestDeleteBuild(t *testing.T) {
+func TestDeleteByBranchBuild(t *testing.T) {
 	Setup()
 	defer Teardown()
 
-	if err := database.DeleteBuild(1); err != nil {
+	var repo int64 = 1
+	var branch = "dev"
+
+	builds, _ := database.ListBuildsByBranch(repo, branch)
+	if len(builds) == 0 {
+		t.Errorf("Expected builds in repo %d, with branch '%s' in database", repo, branch)
+	}
+
+	if err := database.DeleteBuildByBranch(repo, branch); err != nil {
 		t.Error(err)
 	}
 
-	// try to get the deleted row
-	_, err := database.GetBuild(1)
-	if err == nil {
-		t.Fail()
+	builds, _ = database.ListBuildsByBranch(repo, branch)
+	if len(builds) > 0 {
+		t.Errorf("Expected builds in repo %d, with branch '%s' will be deleted", repo, branch)
 	}
 }
 
