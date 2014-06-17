@@ -178,6 +178,14 @@ func (g *GitlabHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 		return RenderText(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
 
+	// FIXME: when the helper is added to the client, it will be possible to rewrite this place that will be below
+	// https://github.com/drone/drone/issues/335#issuecomment-45055442
+	if parsed.After == "0000000000000000000000000000000000000000" {
+		database.DeleteBuildByBranch(repo.ID, parsed.Branch())
+		database.DeleteCommitByBranch(repo.ID, parsed.Branch())
+		return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
+	}
+
 	_, err = database.GetCommitHash(parsed.After, repo.ID)
 	if err != nil && err != sql.ErrNoRows {
 		fmt.Println("commit already exists")
