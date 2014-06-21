@@ -1,0 +1,64 @@
+<div ng-include src=" '/views/header.html' "></div>
+
+<h1>User Account</h1>
+
+<div class="row">
+
+	<!-- summary column -->
+	<div class="col-xs-6 col-sm-3">
+		What to show here?
+	</div>
+
+	<!-- primary column -->
+	<div class="col-xs-12 col-sm-9">
+
+		<div>
+			<label>Remote</label>
+			<span>{{ user.remote }}</span>
+		</div>
+
+		<div>
+			<label>Login</label>
+			<span>{{ user.login }}</span>
+		</div>
+
+		<div>
+			<label>Gravatar</label>
+			<img class="gravatar" ng-src="https://secure.gravatar.com/avatar/{{ user.gravatar }}?s=32&d=mm" />
+		</div>
+
+		<div>
+			<label>Email</label>
+			<input type="text" ng-model="userTemp.email" />
+		</div>
+
+		<div>
+			<label>Full Name</label>
+			<input type="text" ng-model="userTemp.name" />
+		</div>
+
+		<div>
+			<label>Created</label>
+			<span>{{ user.created_at | fromNow }}</span>
+		</div>
+
+		<div>
+			<label>Updated</label>
+			<span>{{ user.updated_at | fromNow }}</span>
+		</div>
+
+		<div>
+			<label>Synced</label>
+			<span>{{ user.synced_at | fromNow }}</span>
+		</div>
+
+		<div>
+			{{failure}}
+		</div>
+
+		<div>
+			<button ng-click="save()">Save</button>
+			<button ng-click="cancel()">Cancel</button>
+		</div>
+	</div>
+</div>

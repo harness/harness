@@ -1,0 +1,53 @@
+<div ng-include src=" '/views/header.html' "></div>
+
+<h1>Dashboard</h1>
+
+<div class="row">
+
+	<!-- primary column -->
+	<div class="col-xs-12 col-sm-9">
+		<table class="table table-bordered">
+			<tr>
+				<th>Name</th>
+				<th>Status</th>
+				<th>Branch</th>
+				<th>Sha</th>
+				<th>PR</th>
+				<th colspan=2>Author</th>
+				<th>Message</th>
+				<th>Started</th>
+				<th>Finished</th>	
+			</tr>
+			<tr ng-repeat="commit in feed">
+				<td>
+					<a href="/{{ commit | fullPath }}">
+						<span>{{ commit.owner }}</span>
+						<span>/</span>
+						<span>{{ commit.name }}</span>
+					</a>
+				</td>
+				<td>
+					<a href="/{{ commit | fullPath }}/{{ commit.branch }}/{{ commit.sha }}">
+						<span>{{ commit.status }}</span>
+					</a>
+				</td>
+				<td>
+					<a href="/{{ commit | fullPath }}/{{ commit.branch }}">
+						<span>{{ commit.branch }}</span>
+					</a>
+				</td>
+				<td>
+					<a href="/{{ commit | fullPath }}/{{ commit.branch }}/{{ commit.sha }}">
+						<span>{{ commit.sha | shortHash }}</span>
+					</a>
+				</td>
+				<td>{{ commit.pull_request }}</td>
+				<td>{{ commit.author }}</td>
+				<td><img class="gravatar" ng-src="{{ commit.gravatar | gravatar }}" /></td>
+				<td>{{ commit.message }}</td>
+				<td>{{ commit.started_at  | fromNow }}</td>
+				<td>{{ commit.finished_at | fromNow }}</td>	
+			</tr>
+		</table>
+	</div>
+</div>

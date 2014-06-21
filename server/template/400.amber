@@ -1,4 +1,0 @@
-extends base
-block content
-	div
-		| 400 BAD REQUEST!

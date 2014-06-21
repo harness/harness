@@ -85,6 +85,35 @@ var stmts = []string{`
 		,commit_id         INTEGER
 		,output_raw        BLOB
 		,UNIQUE(commit_id)
+	);`, `
+	CREATE TABLE IF NOT EXISTS remotes (
+		 remote_id         INTEGER PRIMARY KEY AUTOINCREMENT
+		,remote_type       VARCHAR(255)
+		,remote_host       VARCHAR(255)
+		,remote_url        VARCHAR(255)
+		,remote_api        VARCHAR(255)
+		,remote_client     VARCHAR(255)
+		,remote_secret     VARCHAR(255)
+		,remote_open       BOOLEAN
+		,UNIQUE(remote_host)
+		,UNIQUE(remote_type)
+	);`, `
+	CREATE TABLE IF NOT EXISTS servers (
+		 server_id         INTEGER PRIMARY KEY AUTOINCREMENT
+		,server_name       VARCHAR(255)
+		,server_host       VARCHAR(255)
+		,server_user       VARCHAR(255)
+		,server_pass       VARCHAR(255)
+		,server_cert       VARCHAR(4000)
+		,UNIQUE(server_name)
+	);`, `
+	CREATE TABLE IF NOT EXISTS smtp (
+		 smtp_id           INTEGER PRIMARY KEY AUTOINCREMENT
+		,smtp_from         VARCHAR(255)
+		,smtp_host         VARCHAR(255)
+		,smtp_port         VARCHAR(255)
+		,smtp_user         VARCHAR(255)
+		,smtp_pass         VARCHAR(255)
 	);`,
 }
 

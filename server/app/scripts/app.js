@@ -1,0 +1,395 @@
+'use strict';
+
+var app = angular.module('app', [
+  'ngRoute',
+  'ui.filters'
+]);
+
+app.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
+	$routeProvider.when('/', {
+			templateUrl: '/views/index.html',
+			controller: 'HomeController',
+			title: 'Dashboard',
+			resolve: {
+				user: function(authService) {
+					return authService.getUser();
+				}
+			}
+		})
+		.when('/login', {
+			templateUrl: '/views/login.html',
+			title: 'Login',
+		})
+		.when('/setup', {
+			templateUrl: '/views/setup.html',
+			controller: 'SetupController',
+			title: 'Setup'
+		})
+		.when('/setup/:remote', {
+			templateUrl: '/views/setup.html',
+			controller: 'SetupController',
+			title: 'Setup'
+		})
+		.when('/account/profile', {
+			templateUrl: '/views/account.html',
+			controller: 'UserController',
+			title: 'Profile',
+			resolve: {
+				user: function(authService) {
+					return authService.getUser();
+				}
+			}
+		})
+		.when('/account/repos', {
+			templateUrl: '/views/repo_list.html',
+			controller: 'AccountReposController',
+			title: 'Repositories',
+			resolve: {
+				user: function(authService) {
+					return authService.getUser();
+				}
+			}
+		})
+		.when('/admin/users', {
+			templateUrl: '/views/sys_users.html',
+			controller: 'UsersController',
+			title: 'System Users',
+			resolve: {
+				user: function(authService) {
+					return authService.getUser();
+				}
+			}
+		})
+		.when('/admin/settings', {
+			templateUrl: '/views/sys_config.html',
+			controller: 'ConfigController',
+			title: 'System Settings',
+			resolve: {
+				user: function(authService) {
+					return authService.getUser();
+				},
+				conf: function(confService) {
+					return confService.getConfig();
+				}
+			}
+		})
+		.when('/:remote/:owner/:name/settings', {
+			templateUrl: '/views/repo_conf.html',
+			controller: 'RepoConfigController',
+			title: 'Repository Settings',
+			resolve: {
+				user: function(authService) {
+					return authService.getUser();
+				}
+			}
+		})
+		.when('/:remote/:owner/:name/:branch/:commit', {
+			templateUrl: '/views/commit.html',
+			controller: 'CommitController',
+			title: 'Recent Commits',
+			resolve: {
+				user: function(authService) {
+					return authService.getUser();
+				}
+			}
+		})
+		.when('/:remote/:owner/:name/:branch', {
+			templateUrl: '/views/branch.html',
+			controller: 'BranchController',
+			title: 'Recent Commits',
+			resolve: {
+				user: function(authService) {
+					return authService.getUser();
+				}
+			}
+		})
+		.when('/:remote/:owner/:name', {
+			templateUrl: '/views/repo.html',
+			controller: 'RepoController',
+			title: 'Recent Commits',
+			resolve: {
+				user: function(authService) {
+					return authService.getUser();
+				},
+				repo: function($route, repoService) {
+					var remote = $route.current.params.remote;
+					var owner  = $route.current.params.owner;
+					var name   = $route.current.params.name;
+					return repoService.getRepo(remote, owner, name);
+				}
+			}
+		});
+
+	// use the HTML5 History API
+	$locationProvider.html5Mode(true);
+}]);
+
+/* Directives */
+
+/* also see https://coderwall.com/p/vcfo4q */
+app.run(['$location', '$rootScope', '$routeParams', function($location, $rootScope, $routeParams) {
+    $rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
+        document.title = current.$$route.title + ' · drone.io';
+    });
+}]);
+
+
+
+
+/* Controllers */
+
+
+
+
+app.controller("AccountReposController", function($scope, $http, user) {
+
+	$scope.user = user;
+
+	// get the user details
+	$http({method: 'GET', url: '/v1/user/repos'}).
+		success(function(data, status, headers, config) {
+			$scope.repos = (typeof data==='string')?[]:data;
+		}).
+		error(function(data, status, headers, config) {
+			console.log(data);
+		});
+
+	$scope.active="";
+	$scope.remote="";
+	$scope.byActive = function(entry){
+			switch (true) {
+			case $scope.active == "true"  && !entry.active: return false;
+			case $scope.active == "false" &&  entry.active: return false;
+			}
+			return true;
+		};
+	$scope.byRemote = function(entry){
+			return $scope.remote == "" || $scope.remote == entry.remote; 
+		}; 
+});
+
+
+
+app.controller("ConfigController", function($scope, $http, user) {
+
+	$scope.user = user;
+
+	$http({method: 'GET', url: '/v1/config'}).
+		success(function(data, status, headers, config) {
+			$scope.config = data;
+		}).
+		error(function(data, status, headers, config) {
+			console.log(data);
+		});
+});
+
+app.controller("RepoConfigController", function($scope, $http, $routeParams, user) {
+
+	$scope.user = user;
+
+	var remote = $routeParams.remote;
+	var owner  = $routeParams.owner;
+	var name   = $routeParams.name;
+
+
+
+	// load the repo meta-data
+	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name}).
+		success(function(data, status, headers, config) {
+			$scope.repo = data;
+			$scope.repoTemp = {
+				pull_requests : $scope.repo.pull_requests,
+				post_commits  : $scope.repo.post_commits,
+				params        : $scope.repo.params,
+				timeout       : $scope.repo.timeout,
+				privileged    : $scope.repo.privileged
+			};
+
+			$scope.badgeMarkdown = badgeMarkdown(data.remote+"/"+data.owner+"/"+data.name)
+			$scope.badgeMarkup = badgeMarkup(data.remote+"/"+data.owner+"/"+data.name)
+		}).
+		error(function(data, status, headers, config) {
+			console.log(data);
+		});
+
+	$scope.save = function() {
+		// request to create a new repository
+		$http({method: 'PUT', url: '/v1/repos/'+remote+'/'+owner+"/"+name, data: $scope.repoTemp }).
+			success(function(data, status, headers, config) {
+				delete $scope.failure;
+				$scope.repo = data;
+			}).
+			error(function(data, status, headers, config) {
+				$scope.failure = data;
+			});
+	};
+	$scope.cancel = function() {
+		delete $scope.failure;
+		$scope.repoTemp = {
+			pull_requests : $scope.repo.pull_requests,
+			post_commits  : $scope.repo.post_commits,
+			params        : $scope.repo.params,
+			timeout       : $scope.repo.timeout,
+			privileged    : $scope.repo.privileged
+		};
+	};
+});
+
+function badgeMarkdown(repo) {
+	var scheme = window.location.protocol;
+	var host = window.location.host;
+	return '[![Build Status]('+scheme+'//'+host+'/v1/badge/'+repo+'/status.svg?branch=master)]('+scheme+'//'+host+'/'+repo+')'
+}
+
+function badgeMarkup(repo) {
+	var scheme = window.location.protocol;
+	var host = window.location.host;
+	return '<a href="'+scheme+'//'+host+'/'+repo+'"><img src="'+scheme+'//'+host+'/v1/badge/'+repo+'/status.svg?branch=master" /></a>'
+}
+
+app.controller("RepoController", function($scope, $http, $routeParams, user, repo) {
+	$scope.user = user;
+	$scope.repo = repo;
+
+	// load the repo branch list
+	$http({method: 'GET', url: '/v1/repos/'+repo.host+'/'+repo.owner+"/"+repo.name+"/branches"}).
+		success(function(data, status, headers, config) {
+			$scope.branches = (typeof data==='string')?[]:data;
+		}).
+		error(function(data, status, headers, config) {
+			console.log(data);
+		});
+
+	// load the repo commit feed
+	$http({method: 'GET', url: '/v1/repos/'+repo.host+'/'+repo.owner+"/"+repo.name+"/feed"}).
+		success(function(data, status, headers, config) {
+			$scope.commits = (typeof data==='string')?[]:data;
+		}).
+		error(function(data, status, headers, config) {
+			console.log(data);
+		});
+
+	$scope.activate = function() {
+		// request to create a new repository
+		$http({method: 'POST', url: '/v1/repos/'+repo.host+'/'+repo.owner+"/"+repo.name }).
+			success(function(data, status, headers, config) {
+				$scope.repo = data;
+			}).
+			error(function(data, status, headers, config) {
+				$scope.failure = data;
+			});
+	};
+
+	$scope.options={
+		barColor:"#40C598",
+		trackColor:'#EEEEEE',
+		scaleColor:false,
+		lineWidth:10,
+		lineCap:'butt',
+		size:130
+	};
+});
+
+app.controller("BranchController", function($scope, $http, $routeParams, user) {
+
+	$scope.user = user;
+	var remote = $routeParams.remote;
+	var owner  = $routeParams.owner;
+	var name   = $routeParams.name;
+	var branch = $routeParams.branch;
+	$scope.branch = branch;
+
+	// load the repo meta-data
+	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name}).
+		success(function(data, status, headers, config) {
+			$scope.repo = data;
+		}).
+		error(function(data, status, headers, config) {
+			console.log(data);
+		});
+
+	// load the repo branch list
+	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches"}).
+		success(function(data, status, headers, config) {
+			$scope.branches = (typeof data==='string')?[]:data;
+		}).
+		error(function(data, status, headers, config) {
+			console.log(data);
+		});
+
+	// load the repo commit feed
+	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits"}).
+		success(function(data, status, headers, config) {
+			$scope.commits = data;
+		}).
+		error(function(data, status, headers, config) {
+			console.log(data);
+		});
+});
+
+app.controller("CommitController", function($scope, $http, $routeParams, user) {
+
+	$scope.user = user;
+	var remote = $routeParams.remote;
+	var owner  = $routeParams.owner;
+	var name   = $routeParams.name;
+	var branch = $routeParams.branch;
+	var commit = $routeParams.commit;
+
+	// load the repo meta-data
+	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name}).
+		success(function(data, status, headers, config) {
+			$scope.repo = data;
+		}).
+		error(function(data, status, headers, config) {
+			console.log(data);
+		});
+
+	// load the repo commit data
+	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit}).
+		success(function(data, status, headers, config) {
+			$scope.commit = data;
+			$scope.coverage=45;
+			$scope.passing=100;
+		}).
+		error(function(data, status, headers, config) {
+			console.log(data);
+		});
+
+	// load the repo build data
+	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/builds/1"}).
+		success(function(data, status, headers, config) {
+			$scope.build = data;
+		}).
+		error(function(data, status, headers, config) {
+			console.log(data);
+		});
+
+	// load the repo build stdout
+	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/builds/1/console"}).
+		success(function(data, status, headers, config) {
+			$scope.console = data;
+		}).
+		error(function(data, status, headers, config) {
+			console.log(data);
+		});
+
+
+	$scope.options={
+		barColor:"#40C598",
+		trackColor:'#EEEEEE',
+		scaleColor:false,
+		lineWidth:10,
+		lineCap:'butt',
+		size:130
+	};
+
+});
+
+function barColor(percent) {
+	switch(true) {
+		case percent > 80: return "#40C598";
+		case percent < 50: return "rgba(189, 54, 47, 0.8)";
+		default: return "#f0ad4e";
+	}
+}

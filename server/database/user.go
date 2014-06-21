@@ -29,6 +29,9 @@ type UserManager interface {
 
 	// Delete removes the User from the datastore.
 	Delete(user *model.User) error
+
+	// Exist returns true if Users exist in the system.
+	Exist() bool
 }
 
 // userManager manages a list of users in a SQL database.
@@ -63,6 +66,11 @@ ORDER BY user_name ASC
 // SQL statement to delete a User by ID.
 const deleteUserStmt = `
 DELETE FROM users WHERE user_id=?
+`
+
+// SQL statement to check if users exist.
+const confirmUserStmt = `
+select 0 from users limit 1
 `
 
 // NewUserManager initiales a new UserManager intended to
@@ -109,4 +117,11 @@ func (db *userManager) Update(user *model.User) error {
 func (db *userManager) Delete(user *model.User) error {
 	_, err := db.Exec(deleteUserStmt, user.ID)
 	return err
+}
+
+func (db *userManager) Exist() bool {
+	row := db.QueryRow(confirmUserStmt)
+	var result int
+	row.Scan(&result)
+	return result == 1
 }

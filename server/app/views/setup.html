@@ -1,0 +1,57 @@
+<h1>First Time Setup</h1>
+
+<div class="row">
+	<div class="col-xs-6 col-sm-3">
+		<table border="1">
+			<tr>
+				<td><a href="/setup/github.com">GitHub</a></td>
+				<td><a href="/setup/enterprise.github.com">GitHub Enterprise</a></td>
+				<td><a href="/setup/gitlab.com">Gitlab</a></td>
+				<td><a href="/setup/bitbucket.org">Bitbucket</a></td>
+				<td><a href="/setup/stash.atlassian.com">Stash</a></td>
+			</tr>
+		</table>
+	</div>
+
+	<!-- primary column -->
+	<div class="col-xs-12 col-sm-9">
+
+		<div>
+			<label>Registration</label>
+			<input type="radio" ng-model="remote.register" ng-value="true" />
+			<input type="radio" ng-model="remote.register" ng-value="false" />
+		</div>
+
+		<div>
+			<label>URL</label>
+			<div ng-switch="remote.type">
+				<input ng-switch-when="github.com"    ng-model="remote.url" type="text" readonly />
+				<input ng-switch-when="bitbucket.org" ng-model="remote.url" type="text" readonly />
+				<input ng-switch-default              ng-model="remote.url" type="text" />
+			</div>
+		</div>
+
+		<div ng-if="remote.type != 'gitlab.com'">
+			<label>API</label>
+			<div ng-switch="remote.type">
+				<input ng-switch-when="github.com"    ng-model="remote.api" type="text" readonly />
+				<input ng-switch-when="bitbucket.org" ng-model="remote.api" type="text" readonly />
+				<input ng-switch-default              ng-model="remote.api" type="text" />
+			</div>
+		</div>
+
+		<div ng-if="remote.type != 'gitlab.com'">
+			<label>Client</label>
+			<input type="text" ng-model="remote.client" />
+		</div>
+
+		<div ng-if="remote.type != 'gitlab.com'">
+			<label>Secret</label>
+			<input type="text" ng-model="remote.secret" />
+		</div>
+
+		<div>
+			<button ng-click="save()">Save</button>
+		</div>
+	</div>
+</div>

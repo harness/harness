@@ -48,8 +48,9 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	u, err := h.users.FindLogin(host, login.Login)
 	if err != nil {
 		// if self-registration is disabled we should
-		// return a notAuthorized error
-		if !h.conf.Find().Registration {
+		// return a notAuthorized error. the only exception
+		// is if no users exist yet in the system we'll proceed.
+		if h.conf.Find().Registration == false && h.users.Exist() {
 			return notAuthorized{}
 		}
 

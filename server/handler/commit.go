@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/server/database"
-	"github.com/drone/drone/server/queue"
 	"github.com/drone/drone/server/session"
+	"github.com/drone/drone/server/worker"
 	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
 )
@@ -16,10 +16,10 @@ type CommitHandler struct {
 	repos   database.RepoManager
 	commits database.CommitManager
 	sess    session.Session
-	queue   *queue.Queue
+	queue   chan *worker.Request
 }
 
-func NewCommitHandler(repos database.RepoManager, commits database.CommitManager, perms database.PermManager, sess session.Session, queue *queue.Queue) *CommitHandler {
+func NewCommitHandler(repos database.RepoManager, commits database.CommitManager, perms database.PermManager, sess session.Session, queue chan *worker.Request) *CommitHandler {
 	return &CommitHandler{perms, repos, commits, sess, queue}
 }
 
@@ -158,7 +158,13 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 	}
 
 	// drop the items on the queue
-	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: c})
+	// drop the items on the queue
+	go func() {
+		h.queue <- &worker.Request{
+			Repo:   repo,
+			Commit: c,
+		}
+	}()
 	return nil
 }
 
