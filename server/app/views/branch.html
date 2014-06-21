@@ -1,0 +1,51 @@
+<div ng-include src=" '/views/header.html' "></div>
+
+
+<h1>{{ repo.name }}</h1>
+<a href="/{{ repo.remote }}/{{ repo.owner}}/{{ repo.name }}">Back</a>
+<a href="/{{ repo.remote }}/{{ repo.owner}}/{{ repo.name }}/settings">Settings</a>
+
+<div class="row">
+	<div class="col-xs-6 col-sm-3">
+		What to show here?
+	</div>
+
+	<!-- primary column -->
+	<div class="col-xs-12 col-sm-9">
+		<table class="table table-bordered">
+			<tr>
+				<th>Status</th>
+				<th>Branch</th>
+				<th>Sha</th>
+				<th>PR</th>
+				<th colspan=2>Author</th>
+				<th>Message</th>
+				<th>Started</th>
+				<th>Finished</th>	
+			</tr>
+			<tr ng-repeat="commit in commits">
+				<td>
+					<a href="/{{ $parent.repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}">
+						<span>{{ commit.status }}</span>
+					</a>
+				</td>
+				<td>
+					<a href="/{{ $parent.repo | fullPath }}/{{ commit.branch }}">
+						<span>{{ commit.branch }}</span>
+					</a>
+				</td>
+				<td>
+					<a href="/{{ $parent.repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}">
+						<span>{{ commit.sha | shortHash }}</span>
+					</a>
+				</td>
+				<td>{{ commit.pull_request }}</td>
+				<td>{{ commit.author }}</td>
+				<td><img class="gravatar" ng-src="https://secure.gravatar.com/avatar/{{ commit.gravatar }}?s=32&d=mm" /></td>
+				<td>{{ commit.message }}</td>
+				<td>{{ commit.started_at  | fromNow }}</td>
+				<td>{{ commit.finished_at | fromNow }}</td>	
+			</tr>
+		</table>
+	</div>
+</div>

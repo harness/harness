@@ -40,6 +40,23 @@ func New() *Client {
 	return c
 }
 
+func NewHost(address string) *Client {
+	c := &Client{}
+
+	// parse the address and split
+	pieces := strings.Split(address, "://")
+	if len(pieces) == 2 {
+		c.proto = pieces[0]
+		c.addr = pieces[1]
+	} else if len(pieces) == 1 {
+		c.addr = pieces[0]
+	}
+
+	c.Images = &ImageService{c}
+	c.Containers = &ContainerService{c}
+	return c
+}
+
 type Client struct {
 	proto string
 	addr  string

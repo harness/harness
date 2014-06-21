@@ -3,24 +3,22 @@ package main
 import (
 	"database/sql"
 	"flag"
-	"html/template"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/user"
 	"path/filepath"
 	"runtime"
-	"time"
+	"strings"
 
-	"code.google.com/p/go.net/websocket"
-	"github.com/drone/drone/server/channel"
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/database/schema"
 	"github.com/drone/drone/server/handler"
-	"github.com/drone/drone/server/queue"
+	"github.com/drone/drone/server/pubsub"
 	"github.com/drone/drone/server/session"
-	"github.com/drone/drone/shared/build/docker"
+	"github.com/drone/drone/server/worker"
 	"github.com/drone/drone/shared/build/log"
+	"github.com/drone/drone/shared/model"
 
 	"github.com/gorilla/pat"
 	//"github.com/justinas/nosurf"
@@ -51,10 +49,6 @@ var (
 	version  string = "0.2-dev"
 	revision string
 
-	// build will timeout after N milliseconds.
-	// this will default to 500 minutes (6 hours)
-	timeout time.Duration
-
 	// Number of concurrent build workers to run
 	// default to number of CPUs on machine
 	workers int
@@ -70,24 +64,8 @@ func main() {
 	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
 	flag.StringVar(&sslcert, "sslcert", "", "")
 	flag.StringVar(&sslkey, "sslkey", "", "")
-	flag.DurationVar(&timeout, "timeout", 300*time.Minute, "")
 	flag.IntVar(&workers, "workers", runtime.NumCPU(), "")
 	flag.Parse()
-
-	// parse the template files
-	// TODO we need to retrieve these from go.rice
-	//templ := template.Must(
-	//	template.New("_").Funcs(render.FuncMap).ParseGlob("template/html/*.html"),
-	//).ExecuteTemplate
-
-	// load the html templates
-	templateBox := rice.MustFindBox("template/html")
-	templateFiles := []string{"login.html", "repo_branch.html", "repo_commit.html", "repo_conf.html", "repo_feed.html", "user_conf.html", "user_feed.html", "user_login.html", "user_repos.html", "404.html", "400.html"}
-	templ := template.New("_").Funcs(funcMap)
-	for _, file := range templateFiles {
-		templateData, _ := templateBox.String(file)
-		templ, _ = templ.New(file).Parse(templateData)
-	}
 
 	// setup the database
 	meddler.Default = meddler.SQLite
@@ -99,14 +77,24 @@ func main() {
 	users := database.NewUserManager(db)
 	perms := database.NewPermManager(db)
 	commits := database.NewCommitManager(db)
+	servers := database.NewServerManager(db)
+	remotes := database.NewRemoteManager(db)
 	configs := database.NewConfigManager(filepath.Join(home, "config.toml"))
+
+	// message broker
+	pubsub := pubsub.NewPubSub()
 
 	// cancel all previously running builds
 	go commits.CancelAll()
 
 	// setup the build queue
-	queueRunner := queue.NewBuildRunner(docker.New(), timeout)
-	queue := queue.Start(workers, commits, queueRunner)
+	//queueRunner := queue.NewBuildRunner(docker.New(), timeout)
+	//queue := queue.Start(work	ers, commits, queueRunner)
+
+	queue := make(chan *worker.Request)
+	workers := make(chan chan *worker.Request)
+	worker.NewDispatch(queue, workers).Start()
+	worker.NewWorker(workers, users, repos, commits, configs, pubsub, &model.Server{Host: "unix:///tmp/sock.sock"}).Start()
 
 	// setup the session managers
 	sess := session.NewSession(users)
@@ -122,26 +110,49 @@ func main() {
 	handler.NewRepoHandler(repos, commits, perms, sess, configs).Register(router)
 	handler.NewBadgeHandler(repos, commits).Register(router)
 	handler.NewConfigHandler(configs, sess).Register(router)
-	handler.NewSiteHandler(users, repos, commits, perms, sess, templ.ExecuteTemplate).Register(router)
+	handler.NewServerHandler(servers, sess).Register(router)
+	handler.NewRemoteHandler(users, remotes, sess).Register(router)
+	handler.NewWsHandler(repos, commits, perms, sess, pubsub).Register(router)
+	//handler.NewSiteHandler(users, repos, commits, perms, sess, templ.ExecuteTemplate).Register(router)
 
-	// serve static assets
-	// TODO we need to replace this with go.rice
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(rice.MustFindBox("static/").HTTPBox())))
-
-	// server websocket data
-	http.Handle("/feed", websocket.Handler(channel.Read))
-
-	// register the router
-	// TODO we disabled nosurf because it was impacting API calls.
-	//      we need to disable nosurf for api calls (ie not coming from website).
-	http.Handle("/", router)
+	box := rice.MustFindBox("app/")
+	fserver := http.FileServer(box.HTTPBox())
+	index, _ := box.Bytes("index.html")
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/favicon.ico"),
+			strings.HasPrefix(r.URL.Path, "/scripts/"),
+			strings.HasPrefix(r.URL.Path, "/styles/"),
+			strings.HasPrefix(r.URL.Path, "/views/"):
+			fserver.ServeHTTP(w, r)
+		case strings.HasPrefix(r.URL.Path, "/logout"),
+			strings.HasPrefix(r.URL.Path, "/login/"),
+			strings.HasPrefix(r.URL.Path, "/v1/"),
+			strings.HasPrefix(r.URL.Path, "/ws/"):
+			router.ServeHTTP(w, r)
+		default:
+			w.Write(index)
+		}
+	})
 
 	// start webserver using HTTPS or HTTP
-	if len(sslcert) != 0 && len(sslkey) != 0 {
+	if len(sslcert) != 0 {
 		panic(http.ListenAndServeTLS(port, sslcert, sslkey, nil))
 	} else {
 		panic(http.ListenAndServe(port, nil))
 	}
+}
+
+func setupDatabase() {
+
+}
+
+func setupQueue() {
+
+}
+
+func setupHandlers() {
+
 }
 
 // initialize the .drone directory and create a skeleton config

@@ -1,4 +1,0 @@
-extends base
-block content
-	div
-		| 403 FORBIDDEN

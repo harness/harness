@@ -1,0 +1,115 @@
+<div ng-include src=" '/views/header.html' "></div>
+
+
+<div class="row">
+	<div class="col-xs-6 col-sm-3">
+		<ul>
+			<li><a href="/admin/settings">Config</a></li>
+			<li><a href="/admin/users">Users</a></li>
+			<li><a href="/admin/workers">Workers</a></li>
+			<li><a href="/admin/queue">Queue</a></li>
+		</ul>
+	</div>
+
+	<!-- primary column -->
+	<div class="col-xs-12 col-sm-9">
+		<table class="table table-bordered">
+			<tr>
+				<th>Host</th>
+				<td>{{ config.host }}</td>
+			</tr>
+			<tr>
+				<th>Scheme</th>
+				<td>{{ config.scheme }}</td>
+			</tr>
+			<tr>
+				<th>Registration</th>
+				<td>{{ config.registration }}</td>
+			</tr>
+		</table>
+
+		<h2>GitHub</h2>
+		<table class="table table-bordered">
+			<tr>
+				<th>Enabled</th>
+				<td>{{ config.github.enabled }}</td>
+			</tr>
+			<tr>
+				<th>URL</th>
+				<td>{{ config.github.url }}</td>
+			</tr>
+			<tr>
+				<th>API</th>
+				<td>{{ config.github.api }}</td>
+			</tr>
+			<tr>
+				<th>Client</th>
+				<td>{{ config.github.client }}</td>
+			</tr>
+			<tr>
+				<th>Secret</th>
+				<td>{{ config.github.secret }}</td>
+			</tr>
+		</table>
+
+		<h2>GitHub Enterprise</h2>
+		<table class="table table-bordered">
+			<tr>
+				<th>Enabled</th>
+				<td>{{ config.githubEnterprise.enabled }}</td>
+			</tr>
+			<tr>
+				<th>URL</th>
+				<td>{{ config.githubEnterprise.url }}</td>
+			</tr>
+			<tr>
+				<th>API</th>
+				<td>{{ config.githubEnterprise.api }}</td>
+			</tr>
+			<tr>
+				<th>Client</th>
+				<td>{{ config.githubEnterprise.client }}</td>
+			</tr>
+			<tr>
+				<th>Secret</th>
+				<td>{{ config.githubEnterprise.secret }}</td>
+			</tr>
+		</table>
+
+		<h2>Bitbucket</h2>
+		<table class="table table-bordered">
+			<tr>
+				<th>Enabled</th>
+				<td>{{ config.bitbucket.enabled }}</td>
+			</tr>
+			<tr>
+				<th>URL</th>
+				<td>{{ config.bitbucket.url }}</td>
+			</tr>
+			<tr>
+				<th>API</th>
+				<td>{{ config.bitbucket.api }}</td>
+			</tr>
+			<tr>
+				<th>Client</th>
+				<td>{{ config.bitbucket.client }}</td>
+			</tr>
+			<tr>
+				<th>Secret</th>
+				<td>{{ config.bitbucket.secret }}</td>
+			</tr>
+		</table>
+
+		<h2>Gitlab</h2>
+		<table class="table table-bordered">
+			<tr>
+				<th>Enabled</th>
+				<td>{{ config.bitbucket.enabled }}</td>
+			</tr>
+			<tr>
+				<th>URL</th>
+				<td>{{ config.bitbucket.url }}</td>
+			</tr>
+		</table>
+	</div>
+</div>

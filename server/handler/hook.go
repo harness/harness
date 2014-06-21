@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/server/database"
-	"github.com/drone/drone/server/queue"
+	"github.com/drone/drone/server/worker"
 	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
 )
@@ -14,10 +14,10 @@ type HookHandler struct {
 	repos   database.RepoManager
 	commits database.CommitManager
 	conf    database.ConfigManager
-	queue   *queue.Queue
+	queue   chan *worker.Request
 }
 
-func NewHookHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, conf database.ConfigManager, queue *queue.Queue) *HookHandler {
+func NewHookHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, conf database.ConfigManager, queue chan *worker.Request) *HookHandler {
 	return &HookHandler{users, repos, commits, conf, queue}
 }
 
@@ -92,11 +92,16 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	//fmt.Printf("%s", yml)
 
 	// drop the items on the queue
-	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: &c})
+	go func() {
+		h.queue <- &worker.Request{
+			Repo:   repo,
+			Commit: &c,
+		}
+	}()
 	return nil
 }
 
 func (h *HookHandler) Register(r *pat.Router) {
-	r.Post("/hook/{host}", errorHandler(h.PostHook))
-	r.Put("/hook/{host}", errorHandler(h.PostHook))
+	r.Post("/v1/hook/{host}", errorHandler(h.PostHook))
+	r.Put("/v1/hook/{host}", errorHandler(h.PostHook))
 }

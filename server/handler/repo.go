@@ -92,7 +92,7 @@ func (h *RepoHandler) PostRepo(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// post commit hook url
-	hook := fmt.Sprintf("%s://%s/hook/%s", httputil.GetScheme(r), httputil.GetHost(r), remote.GetName())
+	hook := fmt.Sprintf("%s://%s/v1/hook/%s", httputil.GetScheme(r), httputil.GetHost(r), remote.GetName())
 
 	// activate the repository in the remote system
 	client := remote.GetClient(user.Access, user.Secret)

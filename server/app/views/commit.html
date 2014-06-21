@@ -1,0 +1,18 @@
+<div ng-include src=" '/views/header.html' "></div>
+
+
+<h1>{{ repo.name }}</h1>
+<a href="/{{ repo.remote }}/{{ repo.owner}}/{{ repo.name }}">Back</a>
+<a href="/{{ repo.remote }}/{{ repo.owner}}/{{ repo.name }}/settings">Settings</a>
+
+<div class="row">
+	<div class="col-xs-6 col-sm-3">
+		<span>Commit</span>
+		<span>{{ commit.sha }}</span>
+	</div>
+
+	<!-- primary column -->
+	<div class="col-xs-12 col-sm-9">
+		<pre>{{ console }}</pre>
+	</div>
+</div>

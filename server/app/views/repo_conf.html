@@ -1,0 +1,71 @@
+<div ng-include src=" '/views/header.html' "></div>
+
+
+<h1>{{ repo.name }}</h1>
+<h2>Config</h2>
+
+<a href="/{{ repo.remote }}/{{ repo.owner}}/{{ repo.name }}">Back</a>
+
+<div class="row">
+
+	<!-- summary column -->
+	<div class="col-xs-6 col-sm-3">
+		<!-- badge -->
+		<a href="/{{ repo.remote }}/{{ repo.owner}}/{{ repo.name }}">
+			<img ng-src="/v1/badge/{{ repo.remote }}/{{ repo.owner}}/{{ repo.name }}/status.svg" />
+		</a>
+	</div>
+
+	<!-- primary column -->
+	<div class="col-xs-12 col-sm-9">
+
+		<div>
+			<label>Post Commit Hook</label>
+			<input type="checkbox" ng-model="repoTemp.post_commits" />
+		</div>
+
+		<div>
+			<label>Pull Reqest Hook</label>
+			<input type="checkbox" ng-model="repoTemp.pull_requests" />
+		</div>
+
+		<div>
+			<label>Private Variables</label>
+			<div>--</div>
+		</div>
+
+		<div>
+			<label>Privileged</label>
+			<input type="checkbox" ng-model="repoTemp.privileged" />
+		</div>
+
+		<div>
+			<label>Timeout</label>
+			<input type="number" ng-model="repoTemp.timeout" />
+		</div>
+
+		<div>
+			<label>URL</label>
+			<span>{{ repo.url }}</span>
+		</div>
+
+		<div>
+			<label>Created</label>
+			<span>{{ repo.created_at | fromNow }}</span>
+		</div>
+
+		<div>
+			<label>Updated</label>
+			<span>{{ repo.updated_at | fromNow }}</span>
+		</div>
+
+		<div>
+			{{failure}}
+		</div>
+
+		<div>
+			<button ng-click="save()">Save</button>
+			<button ng-click="cancel()">Cancel</button>
+		</div>
+	</div>
+</div>

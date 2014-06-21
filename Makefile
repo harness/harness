@@ -1,9 +1,10 @@
 SHA := $(shell git rev-parse --short HEAD)
 
-all: rice amberc lessc build
+all: build
 
 deps:
-	go get github.com/eknkc/amber/amberc
+	# npm install -g uglify-js
+	# npm install -g less
 	go get github.com/GeertJohan/go.rice/rice
 	go list github.com/drone/drone/... | xargs go get -t -v
 
@@ -15,43 +16,29 @@ test:
 	go vet ./...
 	go test -cover -short ./...
 
+run:
+	@cd server && go run main.go
+
 clean:
-	@find ./ -name '*.out'         | xargs rm  # remove go coverage output
-	@find ./ -name '*.sqlite'      | xargs rm  # remove sqlite databases
-	@find ./ -name '*.rice-box.go' | xargs rm
-	rm -rf debian/drone/usr/local/bin/drone
-	rm -rf debian/drone/usr/local/bin/droned
-	rm -rf debian/drone.deb
-	rm server/server
-	rm client/client
+	@find . -name "*.out"         -delete # remove go coverage output
+	@find . -name "*.sqlite"      -delete # remove sqlite databases
+	@find . -name '*.rice-box.go' -delete # remove go rice files & embedded content
+	#@find . -name '*.css' -delete
+	@rm -r debian/drone/usr/local/bin debian/drone.deb server/server client/client server/template/html
 
-	#cd cmd/droned/static   && rice clean
-	#cd cmd/droned/template && rice clean
+dpkg: lessc rice build deb
 
+# embeds content in go source code so that it is compiled
+# and packaged inside the go binary file.
 rice:
-	cd server               && rice embed
-	#cd server/template/html && rice embed
-
-amberc:
-	@for f in server/template/*.amber; do $$GOPATH/bin/amberc -pp=true "$$f" > "$${f%.amber}.html"; done
-	@mkdir -p server/template/html
-	@mv server/template/*.html server/template/html
+	cd server && rice embed
 
 lessc:
-	@lessc server/static/styles/drone.less > server/static/styles/drone.css
+	lessc server/app/styles/drone.less server/app/styles/drone.css
+	lessc --clean-css server/app/styles/drone.less server/app/styles/drone.min.css
 
-uglify:
-	yui-compressor --type='css' -o 'server/static/styles/drone.min.css' server/static/styles/drone.css
-
-# npm install -g uglifycss
-# npm install -g uglify-js
-# npm install -g less
-
-# creates a debian package for drone
-# to install `sudo dpkg -i drone.deb`
-dpkg:
+# creates a debian package for drone to install
+# `sudo dpkg -i drone.deb`
+deb:
 	mkdir -p debian/drone/usr/local/bin
-	-dpkg-deb --build debian/drone
-
-run:
-	@cd server && go run main.go amber.go
+	dpkg-deb --build debian/drone

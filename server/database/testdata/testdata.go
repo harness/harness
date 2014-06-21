@@ -34,6 +34,14 @@ var stmts = []string{
 	// insert commit console output
 	"insert into output values (1, 1, 'sample console output');",
 	"insert into output values (2, 2, 'sample console output.....');",
+
+	// insert server entries
+	"insert into servers values (1, 'docker1', 'tcp://127.0.0.1:4243', 'root', 'pa55word', '/path/to/cert.key');",
+	"insert into servers values (2, 'docker2', 'tcp://127.0.0.1:4243', 'root', 'pa55word', '/path/to/cert.key');",
+
+	// insert remote entries
+	"insert into remotes values (1, 'enterprise.github.com', 'github.drone.io', 'https://github.drone.io', 'https://github.drone.io/v3/api', 'f0b461ca586c27872b43a0685cbc2847', '976f22a5eef7caacb7e678d6c52f49b1', '1');",
+	"insert into remotes values (2, 'github.com',            'github.com',      'https://github.io',       'https://api.github.com',          'a0b461ca586c27872b43a0685cbc2847', 'a76f22a5eef7caacb7e678d6c52f49b1', '0');",
 }
 
 // Load will populate the database with a fixed dataset for
