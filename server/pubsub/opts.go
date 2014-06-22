@@ -19,3 +19,8 @@ var DefaultOpts = &Opts{
 	Timeout: 0,
 	Record:  false,
 }
+
+var ConsoleOpts = &Opts{
+	Timeout: time.Minute * 60,
+	Record:  true,
+}

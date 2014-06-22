@@ -6,6 +6,8 @@ env:
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 script:
   - sudo apt-get -y install libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
+  - sudo npm install -g uglify-js
+  - sudo npm install -g less
   - make deps
   - make build
   - make test

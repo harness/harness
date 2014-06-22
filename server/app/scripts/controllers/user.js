@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('app').controller("UserController", function($scope, $http, user) {
+angular.module('app').controller("UserController", function($scope, $http, user, notify) {
 
 	$scope.user = user;
 
@@ -16,6 +16,10 @@ angular.module('app').controller("UserController", function($scope, $http, user)
 		error(function(data, status, headers, config) {
 			console.log(data);
 		});
+
+	$scope.notifications = {}
+	$scope.notifications.supported = notify.supported();
+	$scope.notifications.granted = notify.granted();
 
 	$scope.save = function() {
 		// request to create a new repository
@@ -34,5 +38,8 @@ angular.module('app').controller("UserController", function($scope, $http, user)
 			email : $scope.user.email,
 			name  : $scope.user.name
 		};
+	};
+	$scope.enableNotifications = function() {
+		notify.requestPermission();
 	};
 });

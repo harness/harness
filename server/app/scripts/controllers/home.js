@@ -1,11 +1,9 @@
 'use strict';
 
-angular.module('app').controller("HomeController", function($scope, $http, user, websocket) {
+angular.module('app').controller("HomeController", function($scope, $http, feed, notify) {
 
-	$scope.user = user;
-
-	websocket.subscribeRepos(function(repos) {
-		console.log(repos);
+	feed.subscribe(function(message) {
+		notify.send(message.repo.name);
 	});
 
 	$http({method: 'GET', url: '/v1/user/feed'}).

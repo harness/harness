@@ -54,6 +54,10 @@
 			{{failure}}
 		</div>
 
+		<div ng-if="notifications.supported && !notifications.granted">
+			<button ng-click="enableNotifications()">Enable Notifications</button>
+		</div>
+
 		<div>
 			<button ng-click="save()">Save</button>
 			<button ng-click="cancel()">Cancel</button>
