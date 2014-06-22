@@ -1,10 +1,10 @@
 <table border="1">
-	<tr ng-if="user != null">
+	<tr ng-if="user != undefined">
 		<td><a href="/">Home</a></td>
 		<td><a href="/account/profile">{{ user.login }}</a></td>
 		<td><img ng-src="{{ user.gravatar | gravatar }}" /></td>
 	</tr>
-	<tr ng-if="user == null">
+	<tr ng-if="user == undefined">
 		<td>
 			<a href="/login">Login</a>
 		</td>

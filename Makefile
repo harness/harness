@@ -8,6 +8,7 @@ deps:
 	# npm -g install karma
 	# npm -g install karma-jasmine
 	# npm -g install karma-chrome-launcher
+	# npm -g install karma-phantomjs-launcher 
 	go get github.com/GeertJohan/go.rice/rice
 	go list github.com/drone/drone/... | xargs go get -t -v
 
