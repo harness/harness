@@ -200,8 +200,8 @@ func readWebsocket(ws *websocket.Conn) {
 func (h *WsHandler) Ping(w http.ResponseWriter, r *http.Request) error {
 	channel := h.pubsub.Register("_global")
 	msg := worker.Request{
-		Repo:   &model.Repo{ID: 1, Private: false, Host: "github.com", Owner: "ping", Name: "pong"},
-		Commit: &model.Commit{ID: 1, Sha: "000000000000000000000", Message: "hello world"},
+		Repo:   &model.Repo{ID: 1, Private: false, Host: "github.com", Owner: "drone", Name: "drone"},
+		Commit: &model.Commit{ID: 1, Status: "Started", Branch: "master", Sha: "113f4917ff9174945388d86395f902cd154074cb", Message: "Remove branches by SCM hook", Author: "bradrydzewski", Gravatar: "8c58a0be77ee441bb8f8595b7f1b4e87"},
 	}
 	channel.Publish(&msg)
 	w.WriteHeader(http.StatusOK)
