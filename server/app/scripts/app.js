@@ -319,7 +319,7 @@ app.controller("BranchController", function($scope, $http, $routeParams, user) {
 		});
 });
 
-app.controller("CommitController", function($scope, $http, $routeParams, stdout, feed) {
+app.controller("CommitController", function($scope, $http, $routeParams, stdout, feed, notify) {
 
 	var remote = $routeParams.remote;
 	var owner  = $routeParams.owner;
@@ -327,10 +327,19 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 	var branch = $routeParams.branch;
 	var commit = $routeParams.commit;
 
-	feed.subscribe(function(event) {
-		if (event.commit.sha == commit
-				&& event.commit.branch == branch) {
-			$scope.commit = event.commit;
+	feed.subscribe(function(item) {
+		// if the
+		if (item.commit.sha == commit
+				&& item.commit.branch == branch) {
+			$scope.commit = item.commit;
+			$scope.$apply();
+		} else {
+			// we trigger an html5 notification so the
+			// user is aware another build started
+			notify.sendCommit(
+				item.repo,
+				item.commit
+			);
 		}
 	});
 
@@ -347,8 +356,6 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit}).
 		success(function(data, status, headers, config) {
 			$scope.commit = data;
-			$scope.coverage=45;
-			$scope.passing=100;
 
 			if (data.status!='Started' && data.status!='Pending') {
 				return;

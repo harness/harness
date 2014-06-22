@@ -2,8 +2,11 @@
 
 angular.module('app').controller("HomeController", function($scope, $http, feed, notify) {
 
-	feed.subscribe(function(message) {
-		notify.send(message.repo.name);
+	feed.subscribe(function(item) {
+		notify.sendCommit(
+			item.repo,
+			item.commit
+		);
 	});
 
 	$http({method: 'GET', url: '/v1/user/feed'}).
