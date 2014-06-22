@@ -5,6 +5,9 @@ all: build
 deps:
 	# npm install -g uglify-js
 	# npm install -g less
+	# npm -g install karma
+	# npm -g install karma-jasmine
+	# npm -g install karma-chrome-launcher
 	go get github.com/GeertJohan/go.rice/rice
 	go list github.com/drone/drone/... | xargs go get -t -v
 

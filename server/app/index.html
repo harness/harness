@@ -12,7 +12,11 @@
 		<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Droid+Sans+Mono" />
 
 	</head>
-	<body>
+	<body ng-controller="MainCtrl">
+
+		<h1>
+			{{ user }}
+		</h1>
 
 		<div ng-view></div>
 
@@ -30,10 +34,12 @@
 		<script src="/scripts/controllers/user.js"></script>
 		<script src="/scripts/controllers/users.js"></script>
 		<script src="/scripts/controllers/setup.js"></script>
+		<script src="/scripts/controllers/main.js"></script>
 		<script src="/scripts/services/auth.js"></script>
 		<script src="/scripts/services/conf.js"></script>
 		<script src="/scripts/services/repo.js"></script>
 		<script src="/scripts/services/user.js"></script>
+		<script src="/scripts/services/ws.js"></script>
 		<script src="/scripts/filters/filters.js"></script>
 	</body>
 </html>
