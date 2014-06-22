@@ -84,9 +84,9 @@ func (w *worker) Execute(r *Request) {
 	w.commits.Update(r.Commit)
 
 	// notify all listeners that the build is started
-	commitc := w.pubsub.Register("_")
+	commitc := w.pubsub.Register("_global")
 	commitc.Publish(r)
-	stdoutc := w.pubsub.Register(r.Commit.ID)
+	stdoutc := w.pubsub.RegisterOpts(r.Commit.ID, pubsub.ConsoleOpts)
 	defer stdoutc.Close()
 
 	// create a special buffer that will also

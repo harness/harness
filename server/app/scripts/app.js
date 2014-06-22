@@ -280,14 +280,6 @@ app.controller("RepoController", function($scope, $http, $routeParams, user, rep
 			});
 	};
 
-	$scope.options={
-		barColor:"#40C598",
-		trackColor:'#EEEEEE',
-		scaleColor:false,
-		lineWidth:10,
-		lineCap:'butt',
-		size:130
-	};
 });
 
 app.controller("BranchController", function($scope, $http, $routeParams, user) {
@@ -327,14 +319,20 @@ app.controller("BranchController", function($scope, $http, $routeParams, user) {
 		});
 });
 
-app.controller("CommitController", function($scope, $http, $routeParams, user) {
+app.controller("CommitController", function($scope, $http, $routeParams, stdout, feed) {
 
-	$scope.user = user;
 	var remote = $routeParams.remote;
 	var owner  = $routeParams.owner;
 	var name   = $routeParams.name;
 	var branch = $routeParams.branch;
 	var commit = $routeParams.commit;
+
+	feed.subscribe(function(event) {
+		if (event.commit.sha == commit
+				&& event.commit.branch == branch) {
+			$scope.commit = event.commit;
+		}
+	});
 
 	// load the repo meta-data
 	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name}).
@@ -351,6 +349,14 @@ app.controller("CommitController", function($scope, $http, $routeParams, user) {
 			$scope.commit = data;
 			$scope.coverage=45;
 			$scope.passing=100;
+
+			if (data.status!='Started' && data.status!='Pending') {
+				return;
+			}
+
+			stdout.subscribe(data.id, function(out){
+				console.log(out);
+			});
 		}).
 		error(function(data, status, headers, config) {
 			console.log(data);
@@ -375,21 +381,6 @@ app.controller("CommitController", function($scope, $http, $routeParams, user) {
 		});
 
 
-	$scope.options={
-		barColor:"#40C598",
-		trackColor:'#EEEEEE',
-		scaleColor:false,
-		lineWidth:10,
-		lineCap:'butt',
-		size:130
-	};
+
 
 });
-
-function barColor(percent) {
-	switch(true) {
-		case percent > 80: return "#40C598";
-		case percent < 50: return "rgba(189, 54, 47, 0.8)";
-		default: return "#f0ad4e";
-	}
-}

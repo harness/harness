@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/drone/drone/server/database"
@@ -77,7 +78,7 @@ func (h *WsHandler) WsUser(w http.ResponseWriter, r *http.Request) error {
 
 				// user must have read access to the repository
 				// in order to pass this message along
-				if ok, _ := h.perms.Read(user, work.Repo); !ok {
+				if ok, _ := h.perms.Member(user, work.Repo); !ok {
 					break
 				}
 
@@ -109,15 +110,13 @@ func (h *WsHandler) WsUser(w http.ResponseWriter, r *http.Request) error {
 // WsConsole will upgrade the connection to a Websocket and will stream
 // the build output to the browser.
 func (h *WsHandler) WsConsole(w http.ResponseWriter, r *http.Request) error {
-	var host, owner, name = parseRepo(r)
-	var branch = r.FormValue(":branch")
-	var sha = r.FormValue(":commit")
+	var commitID, _ = strconv.Atoi(r.FormValue(":id"))
 
-	repo, err := h.repos.FindName(host, owner, name)
+	commit, err := h.commits.Find(int64(commitID))
 	if err != nil {
 		return notFound{err}
 	}
-	commit, err := h.commits.FindSha(repo.ID, branch, sha)
+	repo, err := h.repos.Find(commit.RepoID)
 	if err != nil {
 		return notFound{err}
 	}
@@ -212,5 +211,5 @@ func (h *WsHandler) Ping(w http.ResponseWriter, r *http.Request) error {
 func (h *WsHandler) Register(r *pat.Router) {
 	r.Post("/ws/ping", errorHandler(h.Ping))
 	r.Get("/ws/user", errorHandler(h.WsUser))
-	r.Get("/ws/{host}/{owner}/{name}/branches/{branch}/commits/{commit}", errorHandler(h.WsConsole))
+	r.Get("/ws/stdout/{id}", errorHandler(h.WsConsole))
 }

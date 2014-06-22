@@ -5,8 +5,8 @@ import (
 )
 
 type Request struct {
-	User   *model.User
-	Repo   *model.Repo
-	Commit *model.Commit
+	User   *model.User   `json:"-"`
+	Repo   *model.Repo   `json:"repo"`
+	Commit *model.Commit `json:"commit"`
 	server *model.Server
 }

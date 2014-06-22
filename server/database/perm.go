@@ -27,6 +27,10 @@ type PermManager interface {
 	// Admin returns true if the specified user is an
 	// administrator of the repository.
 	Admin(u *model.User, r *model.Repo) (bool, error)
+
+	// Member returns true if the specified user is a
+	// collaborator on the repository.
+	Member(u *model.User, r *model.Repo) (bool, error)
 }
 
 // permManager manages user permissions to access repositories.
@@ -145,6 +149,20 @@ func (db *permManager) Admin(u *model.User, r *model.Repo) (bool, error) {
 	// get the permissions from the database
 	perm, err := db.find(u, r)
 	return perm.Admin, err
+}
+
+func (db *permManager) Member(u *model.User, r *model.Repo) (bool, error) {
+	switch {
+	// if the user is nil, deny access
+	case u == nil:
+		return false, nil
+	case u.ID == r.UserID:
+		return true, nil
+	}
+
+	// get the permissions from the database
+	perm, err := db.find(u, r)
+	return perm.Read, err
 }
 
 func (db *permManager) find(u *model.User, r *model.Repo) (*perm, error) {
