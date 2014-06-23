@@ -3,6 +3,7 @@ package publish
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/drone/drone/pkg/build/buildfile"
 	"github.com/drone/drone/pkg/build/repo"
@@ -48,7 +49,8 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	f.WriteCmd("sudo apt-get --yes install lxc-docker-" + d.DockerVersion)
 
 	dockerServerUrl := d.Server + ":" + strconv.Itoa(d.Port)
-	dockerRepo := d.RepoBaseName + "/" + r.Name
+	splitRepoName := strings.Split(r.Name, "/")
+	dockerRepo := d.RepoBaseName + "/" + splitRepoName[len(splitRepoName) - 1]
 	// Run the command commands to build and deploy the image. Note that the image is tagged
 	// with the git hash.
 	f.WriteCmd(fmt.Sprintf("docker -H %s build -t %s:$(git rev-parse --short HEAD) - < %s",
