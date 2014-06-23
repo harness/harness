@@ -55,7 +55,7 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 		dockerServerUrl, dockerRepo, d.Dockerfile))
 
 	// Login and push to index.docker.io
-	f.WriteCmd(fmt.Sprintf("docker -H %s login -u %s -p %s -e %s",
+	f.WriteCmdSilent(fmt.Sprintf("docker -H %s login -u %s -p %s -e %s",
 		dockerServerUrl, d.Username, d.Password, d.Email))
 	f.WriteCmd(fmt.Sprintf("docker -H %s push %s", dockerServerUrl, dockerRepo))
 
