@@ -51,8 +51,9 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	dockerServerUrl := d.Server + ":" + strconv.Itoa(d.Port)
 	splitRepoName := strings.Split(r.Name, "/")
 	dockerRepo := d.RepoBaseName + "/" + splitRepoName[len(splitRepoName) - 1]
-	// Run the command commands to build and deploy the image. Note that the image is tagged
-	// with the git hash.
+	// Run the command commands to build and deploy the image. Note that we both create a new image
+	// tagged with the git hash as well as update the "latest" image.
+	f.WriteCmd(fmt.Sprintf("docker -H %s build -t %s - < %s", dockerServerUrl, dockerRepo, d.Dockerfile))
 	f.WriteCmd(fmt.Sprintf("docker -H %s build -t %s:$(git rev-parse --short HEAD) - < %s",
 		dockerServerUrl, dockerRepo, d.Dockerfile))
 
