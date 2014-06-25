@@ -58,9 +58,13 @@ func TestValidYaml(t *testing.T) {
     if err != nil {
         t.Fatalf("Can't unmarshal script: %s", err.Error())
     }
+
+    if !strings.Contains(response, "docker -H server:1000 build -t base_repo/name - <") {
+        t.Fatalf("Response: " + response + " doesn't contain build command for latest")
+    }
     if !strings.Contains(response, "docker -H server:1000 build -t base_repo/name" +
         ":$(git rev-parse --short HEAD)") {
-        t.Fatalf("Response: " + response + "doesn't contain build command")
+        t.Fatalf("Response: " + response + "doesn't contain build command for commit hash")
     }
     if !strings.Contains(response, "docker -H server:1000 login -u user -p password -e email") {
         t.Fatalf("Response: " + response + " doesn't contain login command")
