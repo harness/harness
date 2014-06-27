@@ -77,3 +77,26 @@ func TestValidYaml(t *testing.T) {
         t.Fatalf("Response: " + response + " doesn't contain remove image command")
     }
 }
+
+var withoutDockerFileYaml = `
+publish:
+  docker:
+    docker_server: server
+    docker_port: 1000
+    docker_version: 1.0
+    repo_base_name: base_repo
+    username: user
+    password: password
+    email: email
+`
+
+func TestWithoutDockerFile(t *testing.T) {
+	response, err := setUpWithDrone(withoutDockerFileYaml)
+	if err != nil {
+		t.Fatalf("Can't unmarshal script: %s", err.Error())
+	}
+
+	if !strings.Contains(response, "docker -H server:1000 build -t base_repo/name .") {
+		t.Fatalf("Response: " + response + " doesn't contain build command")
+	}
+}

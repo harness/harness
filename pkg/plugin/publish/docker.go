@@ -10,7 +10,8 @@ import (
 )
 
 type Docker struct {
-	// The path to the dockerfile to create the image from
+	// The path to the dockerfile to create the image from. If the path is empty or no
+	// path is specified then the docker file will be built from the base directory.
 	Dockerfile string `yaml:"docker_file"`
 
 	// Connection information for the docker server that will build the image
@@ -35,9 +36,8 @@ type Docker struct {
 // 3. Push that docker image to index.docker.io.
 // 4. Delete the docker image on the server it was build on so we conserve disk space.
 func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
-	if len(d.Dockerfile) == 0 || len(d.Server) == 0 || d.Port == 0 || len(d.DockerVersion) == 0 ||
-		len(d.RepoBaseName) == 0 || len(d.Username) == 0 || len(d.Password) == 0 ||
-		len(d.Email) == 0 {
+	if len(d.Email) == 0 || len(d.Server) == 0 || d.Port == 0 || len(d.DockerVersion) == 0 ||
+		len(d.RepoBaseName) == 0 || len(d.Username) == 0 || len(d.Password) == 0 {
 		f.WriteCmdSilent(`echo "Docker Plugin: Missing argument(s)"`)
 		return
 	}
@@ -51,11 +51,16 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	dockerServerUrl := d.Server + ":" + strconv.Itoa(d.Port)
 	splitRepoName := strings.Split(r.Name, "/")
 	dockerRepo := d.RepoBaseName + "/" + splitRepoName[len(splitRepoName) - 1]
+	dockerPath := "."
+	if len(d.Dockerfile) != 0 {
+		dockerPath = fmt.Sprintf("- < %s", d.Dockerfile)
+	}
+
 	// Run the command commands to build and deploy the image. Note that we both create a new image
 	// tagged with the git hash as well as update the "latest" image.
-	f.WriteCmd(fmt.Sprintf("docker -H %s build -t %s - < %s", dockerServerUrl, dockerRepo, d.Dockerfile))
-	f.WriteCmd(fmt.Sprintf("docker -H %s build -t %s:$(git rev-parse --short HEAD) - < %s",
-		dockerServerUrl, dockerRepo, d.Dockerfile))
+	f.WriteCmd(fmt.Sprintf("docker -H %s build -t %s %s", dockerServerUrl, dockerRepo, dockerPath))
+	f.WriteCmd(fmt.Sprintf("docker -H %s build -t %s:$(git rev-parse --short HEAD) %s",
+		dockerServerUrl, dockerRepo, dockerPath))
 
 	// Login and push to index.docker.io
 	f.WriteCmdSilent(fmt.Sprintf("docker -H %s login -u %s -p %s -e %s",
