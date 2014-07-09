@@ -821,6 +821,11 @@ nav {
 		h4 {
 			margin:10px 0px;
 			font-size:22px;
+			small {
+				opacity:0.6;
+				font-size:16px;
+				margin-left:10px;
+			}
 		}
 
 		img {
@@ -835,6 +840,20 @@ nav {
 			right:0px;
 			margin:20px;
 		}
+
+		.button-error {
+			color:#FFF;
+            background: rgb(202, 60, 60);
+            padding:10px 20px;
+            float:right;
+        }
+
+		.pure-button-primary {
+			color:#FFF;
+            background: @link2;
+            padding:10px 20px;
+            float:right;
+        }
 	}
 }
 
@@ -1028,5 +1047,24 @@ nav {
 			white-space: pre-wrap;
 			overflow: hidden;
 		}
+	}
+}
+
+.pure-form.pure-form-stacked {
+	label {
+		font-size:14px;
+		color:#666;
+		margin-top:20px;
+		margin-bottom:5px;
+		&:first-child {
+			margin-top:0px;
+		}
+	}
+
+	input[type="text"],
+	select {
+		min-width:300px;
+		box-shadow:none;
+		padding:10px 10px;
 	}
 }

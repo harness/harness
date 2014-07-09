@@ -75,6 +75,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	// in case it changed in GitHub
 	u.Access = login.Access
 	u.Secret = login.Secret
+	u.SetEmail(login.Email)
 	if err := h.users.Update(u); err != nil {
 		return badRequest{err}
 	}
