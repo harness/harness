@@ -1,68 +1,24 @@
-<h1>{{ repo.name }}</h1>
+<article id="repopage">
+	<nav>
+		<a href="/"><span class="fa fa-th"></span></a>
+		<span>{{ repo.owner }}</span>
+		<span>/</span>
+		<a href="/{{ repo | fullPath}}">{{ repo.name }}</a>
+	</nav>
 
 
-<div class="row" ng-if="repo.active == false">
-	This repo is not active
-	<div>URL: {{ repo.url }}</div>
-	<div>Private: {{ repo.private }}</div>
-	<div>remote: {{ repo.remote }}</div>
-	<div>owner: {{ repo.owner }}</div>
-	<div>name: {{ repo.name }}</div>
-
-	<div>
-		<button ng-click="activate()">Activate</button>
-	</div>
-</div>
-
-<div class="row" ng-if="repo.active == true">
-	<div class="col-xs-6 col-sm-3">
-		<a href="/{{ repo.remote }}/{{ repo.owner}}/{{ repo.name }}/settings">Settings</a><br/>
-		Recently Updated Branches
-		<ul ng-repeat="commit in branches">
-			<li>
-				<a href="/{{ $parent.repo | fullPath }}/{{ commit.branch }}">
-					<span>{{ commit.branch }}</span>
+		<section ng-repeat="group in commits | unique: 'branch'">
+			<div class="pure-g cards">
+				<h2 class="pure-u-1" style="font-size:22px;margin-bottom:20px;"><i class="fa fa-code-fork"></i> {{group.branch}}</h2>
+				<a class="pure-u-1 pure-u-md-1-2 pure-u-lg-1-4 pure-u-xl-1-4 card card" href="/{{ repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}" ng-repeat="commit in commits | filter: { branch: group.branch } | limitTo:4" data-status="{{ commit.status }}">
+					<div class="l-box">
+						<h2>{{ commit.message }}</h2>
+						<em ng-if="commit.finished_at != 0">{{ commit.finished_at | fromNow }}</em>
+						<em ng-if="commit.finished_at == 0 && commit.started_at != 0">Started {{ commit.started_at | fromNow }}</em>
+						<em ng-if="commit.finished_at == 0 && commit.started_at == 0">Created {{ commit.created_at}}</em>
+						<img ng-src="{{ commit.gravatar | gravatar }}" />
+					</div>
 				</a>
-			</li>
-		</ul>
-	</div>
-
-	<!-- primary column -->
-	<div class="col-xs-12 col-sm-9">
-		<table class="table table-bordered">
-			<tr>
-				<th>Status</th>
-				<th>Branch</th>
-				<th>Sha</th>
-				<th>PR</th>
-				<th colspan=2>Author</th>
-				<th>Message</th>
-				<th>Started</th>
-				<th>Finished</th>	
-			</tr>
-			<tr ng-repeat="commit in commits">
-				<td>
-					<a href="/{{ $parent.repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}">
-						<span>{{ commit.status }}</span>
-					</a>
-				</td>
-				<td>
-					<a href="/{{ $parent.repo | fullPath }}/{{ commit.branch }}">
-						<span>{{ commit.branch }}</span>
-					</a>
-				</td>
-				<td>
-					<a href="/{{ $parent.repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}">
-						<span>{{ commit.sha | shortHash }}</span>
-					</a>
-				</td>
-				<td>{{ commit.pull_request }}</td>
-				<td>{{ commit.author }}</td>
-				<td><img class="gravatar" ng-src="https://secure.gravatar.com/avatar/{{ commit.gravatar }}?s=32&d=mm" /></td>
-				<td>{{ commit.message }}</td>
-				<td>{{ commit.started_at  | fromNow }}</td>
-				<td>{{ commit.finished_at | fromNow }}</td>	
-			</tr>
-		</table>
-	</div>
-</div>
+			</div>
+		</section>
+</article>

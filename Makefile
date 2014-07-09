@@ -30,7 +30,7 @@ clean:
 	#@find . -name '*.css' -delete
 	@rm -r debian/drone/usr/local/bin debian/drone.deb server/server client/client server/template/html
 
-dpkg: lessc rice build deb
+dpkg: rice build deb
 
 # embeds content in go source code so that it is compiled
 # and packaged inside the go binary file.

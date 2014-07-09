@@ -1,12 +1,16 @@
-<table border="1">
-	<tr ng-if="user != undefined">
-		<td><a href="/">Home</a></td>
-		<td><a href="/account/profile">{{ user.login }}</a></td>
-		<td><img ng-src="{{ user.gravatar | gravatar }}" /></td>
-	</tr>
-	<tr ng-if="user == undefined">
-		<td>
-			<a href="/login">Login</a>
-		</td>
-	</tr>
-</table>
+<a class="burger" href="/" ng-if="user != undefined">
+	<i class="fa fa-bars"></i>
+</a>
+
+<a class="brand" href="/">Drone</a>
+
+<div class="user" ng-if="user != undefined">
+	<a href="/account/profile">
+		<img class="avatar" ng-src="{{ user.gravatar | gravatar }}" />
+		<span class="username">{{ user.login }}</span>
+	</a>
+</div>
+
+<div class="user" ng-if="user == undefined">
+	<a href="/login">Login</a>
+</div>

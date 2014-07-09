@@ -1,32 +1,22 @@
-<div class="row">
-	<div class="col-xs-6 col-sm-3">
-		<ul>
-			<li><a href="/admin/settings">Config</a></li>
-			<li><a href="/admin/users">Users</a></li>
-			<li><a href="/admin/workers">Workers</a></li>
-			<li><a href="/admin/queue">Queue</a></li>
-		</ul>
-	</div>
+<div id="userspage">
+	<nav>
+		<a href="/"><span class="fa fa-th"></span></a>
+		<a href="/">users</a>
+	</nav>
 
-	<!-- primary column -->
-	<div class="col-xs-12 col-sm-9">
-		<table class="table table-bordered" border="1">
-			<tr>
-				<th>Remote</th>
-				<th>Login</th>
-				<th>Gravatar</th>
-				<th>Email</th>
-				<th>Created</th>
-				<th>Updated</th>	
-			</tr>
-			<tr ng-repeat="user in users">
-				<td>{{ user.remote }}</td>
-				<td>{{ user.login }}</td>
-				<td><img class="gravatar" ng-src="{{ user.gravatar | gravatar }}" /></td>
-				<td>{{ user.email }}</td>
-				<td>{{ user.created_at | toDate}}</td>
-				<td>{{ user.updated_at | toDate}}</td>	
-			</tr>
-		</table>
-	</div>
+	<section>
+		<a class="pure-g user" ng-repeat="user in users" href="/admin/users/{{ user.remote }}/{{ user.login}}">
+			<div class="pure-u-1-8">
+				<div>
+					<img class="gravatar" ng-src="{{ user.gravatar | gravatar }}" />
+				</div>
+			</div>
+			<div class="pure-u-7-8">
+				<div>
+					<h4>{{ user.login }} <small>{{ user.remote }}</small></h4>
+					<span class="email">{{ user.email }}</span>
+				</div>
+			</div>
+		</a>
+	</section>
 </div>

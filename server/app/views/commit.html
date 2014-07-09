@@ -1,18 +1,34 @@
-<h1>{{ repo.name }}</h1>
-<a href="/{{ repo.remote }}/{{ repo.owner}}/{{ repo.name }}">Back</a>
-<a href="/{{ repo.remote }}/{{ repo.owner}}/{{ repo.name }}/settings">Settings</a>
-
-<div class="row">
-	<div class="col-xs-6 col-sm-3">
-		<span>Commit</span>
-		<span>{{ commit.sha }}</span>
-		<br/>
-		<span>Status</span>
-		<span>{{ commit.status }}</span>
+<aside id="sidebar">
+	<div class="result" data-result="{{ commit.status }}">
+		<dl>
+			<dd><span class="status">{{ commit.status }}</span></dd>
+			<dd><strong>{{ commit.message }}</strong></dd>
+		</dl>
 	</div>
+		
+	<dl>
+		<dd><h1>3.5 ms</h1></dd>
+	</dl>
 
-	<!-- primary column -->
-	<div class="col-xs-12 col-sm-9">
+	<dl>
+		<dd class="large"><strong>commit <u>{{ commit.sha | shortHash}}</u> to <u>{{ commit.branch}}</u> branch</strong></dd>
+		<dd ng-if="commit.finished_at != 0">{{ commit.finished_at | fromNow }}</dd>
+		<dd ng-if="commit.finished_at == 0 && commit.started_at != 0">Started {{ commit.started_at | fromNow }}</dd>
+		<dd ng-if="commit.finished_at == 0 && commit.started_at == 0">Created {{ commit.created_at}}</dd>
+	</dl>
+</aside>
+
+<div id="main" class="output">
+	<div id="main" class="output" data-result="Failure">
+		<nav>
+			<a href="/"><span class="fa fa-th"></span></a>
+			<span>{{ repo.owner }}</span>
+			<span>/</span>
+			<a href="/{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}">{{ repo.name }}</a>
+			<span>/</span>
+			<a href="#">{{ commit.sha | shortHash}}</a>
+		</nav>
+
 		<pre>{{ console }}</pre>
 	</div>
 </div>

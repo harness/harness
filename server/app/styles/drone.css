@@ -1,2848 +1,139 @@
-@font-face {
-  font-family: 'FontAwesome';
-  src: url('//netdna.bootstrapcdn.com/font-awesome/4.1.0/fonts/fontawesome-webfont.eot?v=4.1.0');
-  src: url('//netdna.bootstrapcdn.com/font-awesome/4.1.0/fonts/fontawesome-webfont.eot?#iefix&v=4.1.0') format('embedded-opentype'), url('//netdna.bootstrapcdn.com/font-awesome/4.1.0/fonts/fontawesome-webfont.woff?v=4.1.0') format('woff'), url('//netdna.bootstrapcdn.com/font-awesome/4.1.0/fonts/fontawesome-webfont.ttf?v=4.1.0') format('truetype'), url('//netdna.bootstrapcdn.com/font-awesome/4.1.0/fonts/fontawesome-webfont.svg?v=4.1.0#fontawesomeregular') format('svg');
-  font-weight: normal;
-  font-style: normal;
-}
-.fa {
-  display: inline-block;
-  font-family: 'FontAwesome';
-  font-style: normal;
-  font-weight: normal;
-  line-height: 1;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-.fa-glass:before {
-  content: "\f000";
-}
-.fa-music:before {
-  content: "\f001";
-}
-.fa-search:before {
-  content: "\f002";
-}
-.fa-envelope-o:before {
-  content: "\f003";
-}
-.fa-heart:before {
-  content: "\f004";
-}
-.fa-star:before {
-  content: "\f005";
-}
-.fa-star-o:before {
-  content: "\f006";
-}
-.fa-user:before {
-  content: "\f007";
-}
-.fa-film:before {
-  content: "\f008";
-}
-.fa-th-large:before {
-  content: "\f009";
-}
-.fa-th:before {
-  content: "\f00a";
-}
-.fa-th-list:before {
-  content: "\f00b";
-}
-.fa-check:before {
-  content: "\f00c";
-}
-.fa-times:before {
-  content: "\f00d";
-}
-.fa-search-plus:before {
-  content: "\f00e";
-}
-.fa-search-minus:before {
-  content: "\f010";
-}
-.fa-power-off:before {
-  content: "\f011";
-}
-.fa-signal:before {
-  content: "\f012";
-}
-.fa-gear:before,
-.fa-cog:before {
-  content: "\f013";
-}
-.fa-trash-o:before {
-  content: "\f014";
-}
-.fa-home:before {
-  content: "\f015";
-}
-.fa-file-o:before {
-  content: "\f016";
-}
-.fa-clock-o:before {
-  content: "\f017";
-}
-.fa-road:before {
-  content: "\f018";
-}
-.fa-download:before {
-  content: "\f019";
-}
-.fa-arrow-circle-o-down:before {
-  content: "\f01a";
-}
-.fa-arrow-circle-o-up:before {
-  content: "\f01b";
-}
-.fa-inbox:before {
-  content: "\f01c";
-}
-.fa-play-circle-o:before {
-  content: "\f01d";
-}
-.fa-rotate-right:before,
-.fa-repeat:before {
-  content: "\f01e";
-}
-.fa-refresh:before {
-  content: "\f021";
-}
-.fa-list-alt:before {
-  content: "\f022";
-}
-.fa-lock:before {
-  content: "\f023";
-}
-.fa-flag:before {
-  content: "\f024";
-}
-.fa-headphones:before {
-  content: "\f025";
-}
-.fa-volume-off:before {
-  content: "\f026";
-}
-.fa-volume-down:before {
-  content: "\f027";
-}
-.fa-volume-up:before {
-  content: "\f028";
-}
-.fa-qrcode:before {
-  content: "\f029";
-}
-.fa-barcode:before {
-  content: "\f02a";
-}
-.fa-tag:before {
-  content: "\f02b";
-}
-.fa-tags:before {
-  content: "\f02c";
-}
-.fa-book:before {
-  content: "\f02d";
-}
-.fa-bookmark:before {
-  content: "\f02e";
-}
-.fa-print:before {
-  content: "\f02f";
-}
-.fa-camera:before {
-  content: "\f030";
-}
-.fa-font:before {
-  content: "\f031";
-}
-.fa-bold:before {
-  content: "\f032";
-}
-.fa-italic:before {
-  content: "\f033";
-}
-.fa-text-height:before {
-  content: "\f034";
-}
-.fa-text-width:before {
-  content: "\f035";
-}
-.fa-align-left:before {
-  content: "\f036";
-}
-.fa-align-center:before {
-  content: "\f037";
-}
-.fa-align-right:before {
-  content: "\f038";
-}
-.fa-align-justify:before {
-  content: "\f039";
-}
-.fa-list:before {
-  content: "\f03a";
-}
-.fa-dedent:before,
-.fa-outdent:before {
-  content: "\f03b";
-}
-.fa-indent:before {
-  content: "\f03c";
-}
-.fa-video-camera:before {
-  content: "\f03d";
-}
-.fa-photo:before,
-.fa-image:before,
-.fa-picture-o:before {
-  content: "\f03e";
-}
-.fa-pencil:before {
-  content: "\f040";
-}
-.fa-map-marker:before {
-  content: "\f041";
-}
-.fa-adjust:before {
-  content: "\f042";
-}
-.fa-tint:before {
-  content: "\f043";
-}
-.fa-edit:before,
-.fa-pencil-square-o:before {
-  content: "\f044";
-}
-.fa-share-square-o:before {
-  content: "\f045";
-}
-.fa-check-square-o:before {
-  content: "\f046";
-}
-.fa-arrows:before {
-  content: "\f047";
-}
-.fa-step-backward:before {
-  content: "\f048";
-}
-.fa-fast-backward:before {
-  content: "\f049";
-}
-.fa-backward:before {
-  content: "\f04a";
-}
-.fa-play:before {
-  content: "\f04b";
-}
-.fa-pause:before {
-  content: "\f04c";
-}
-.fa-stop:before {
-  content: "\f04d";
-}
-.fa-forward:before {
-  content: "\f04e";
-}
-.fa-fast-forward:before {
-  content: "\f050";
-}
-.fa-step-forward:before {
-  content: "\f051";
-}
-.fa-eject:before {
-  content: "\f052";
-}
-.fa-chevron-left:before {
-  content: "\f053";
-}
-.fa-chevron-right:before {
-  content: "\f054";
-}
-.fa-plus-circle:before {
-  content: "\f055";
-}
-.fa-minus-circle:before {
-  content: "\f056";
-}
-.fa-times-circle:before {
-  content: "\f057";
-}
-.fa-check-circle:before {
-  content: "\f058";
-}
-.fa-question-circle:before {
-  content: "\f059";
-}
-.fa-info-circle:before {
-  content: "\f05a";
-}
-.fa-crosshairs:before {
-  content: "\f05b";
-}
-.fa-times-circle-o:before {
-  content: "\f05c";
-}
-.fa-check-circle-o:before {
-  content: "\f05d";
-}
-.fa-ban:before {
-  content: "\f05e";
-}
-.fa-arrow-left:before {
-  content: "\f060";
-}
-.fa-arrow-right:before {
-  content: "\f061";
-}
-.fa-arrow-up:before {
-  content: "\f062";
-}
-.fa-arrow-down:before {
-  content: "\f063";
-}
-.fa-mail-forward:before,
-.fa-share:before {
-  content: "\f064";
-}
-.fa-expand:before {
-  content: "\f065";
-}
-.fa-compress:before {
-  content: "\f066";
-}
-.fa-plus:before {
-  content: "\f067";
-}
-.fa-minus:before {
-  content: "\f068";
-}
-.fa-asterisk:before {
-  content: "\f069";
-}
-.fa-exclamation-circle:before {
-  content: "\f06a";
-}
-.fa-gift:before {
-  content: "\f06b";
-}
-.fa-leaf:before {
-  content: "\f06c";
-}
-.fa-fire:before {
-  content: "\f06d";
-}
-.fa-eye:before {
-  content: "\f06e";
-}
-.fa-eye-slash:before {
-  content: "\f070";
-}
-.fa-warning:before,
-.fa-exclamation-triangle:before {
-  content: "\f071";
-}
-.fa-plane:before {
-  content: "\f072";
-}
-.fa-calendar:before {
-  content: "\f073";
-}
-.fa-random:before {
-  content: "\f074";
-}
-.fa-comment:before {
-  content: "\f075";
-}
-.fa-magnet:before {
-  content: "\f076";
-}
-.fa-chevron-up:before {
-  content: "\f077";
-}
-.fa-chevron-down:before {
-  content: "\f078";
-}
-.fa-retweet:before {
-  content: "\f079";
-}
-.fa-shopping-cart:before {
-  content: "\f07a";
-}
-.fa-folder:before {
-  content: "\f07b";
-}
-.fa-folder-open:before {
-  content: "\f07c";
-}
-.fa-arrows-v:before {
-  content: "\f07d";
-}
-.fa-arrows-h:before {
-  content: "\f07e";
-}
-.fa-bar-chart-o:before {
-  content: "\f080";
-}
-.fa-twitter-square:before {
-  content: "\f081";
-}
-.fa-facebook-square:before {
-  content: "\f082";
-}
-.fa-camera-retro:before {
-  content: "\f083";
-}
-.fa-key:before {
-  content: "\f084";
-}
-.fa-gears:before,
-.fa-cogs:before {
-  content: "\f085";
-}
-.fa-comments:before {
-  content: "\f086";
-}
-.fa-thumbs-o-up:before {
-  content: "\f087";
-}
-.fa-thumbs-o-down:before {
-  content: "\f088";
-}
-.fa-star-half:before {
-  content: "\f089";
-}
-.fa-heart-o:before {
-  content: "\f08a";
-}
-.fa-sign-out:before {
-  content: "\f08b";
-}
-.fa-linkedin-square:before {
-  content: "\f08c";
-}
-.fa-thumb-tack:before {
-  content: "\f08d";
-}
-.fa-external-link:before {
-  content: "\f08e";
-}
-.fa-sign-in:before {
-  content: "\f090";
-}
-.fa-trophy:before {
-  content: "\f091";
-}
-.fa-github-square:before {
-  content: "\f092";
-}
-.fa-upload:before {
-  content: "\f093";
-}
-.fa-lemon-o:before {
-  content: "\f094";
-}
-.fa-phone:before {
-  content: "\f095";
-}
-.fa-square-o:before {
-  content: "\f096";
-}
-.fa-bookmark-o:before {
-  content: "\f097";
-}
-.fa-phone-square:before {
-  content: "\f098";
-}
-.fa-twitter:before {
-  content: "\f099";
-}
-.fa-facebook:before {
-  content: "\f09a";
-}
-.fa-github:before {
-  content: "\f09b";
-}
-.fa-unlock:before {
-  content: "\f09c";
-}
-.fa-credit-card:before {
-  content: "\f09d";
-}
-.fa-rss:before {
-  content: "\f09e";
-}
-.fa-hdd-o:before {
-  content: "\f0a0";
-}
-.fa-bullhorn:before {
-  content: "\f0a1";
-}
-.fa-bell:before {
-  content: "\f0f3";
-}
-.fa-certificate:before {
-  content: "\f0a3";
-}
-.fa-hand-o-right:before {
-  content: "\f0a4";
-}
-.fa-hand-o-left:before {
-  content: "\f0a5";
-}
-.fa-hand-o-up:before {
-  content: "\f0a6";
-}
-.fa-hand-o-down:before {
-  content: "\f0a7";
-}
-.fa-arrow-circle-left:before {
-  content: "\f0a8";
-}
-.fa-arrow-circle-right:before {
-  content: "\f0a9";
-}
-.fa-arrow-circle-up:before {
-  content: "\f0aa";
-}
-.fa-arrow-circle-down:before {
-  content: "\f0ab";
-}
-.fa-globe:before {
-  content: "\f0ac";
-}
-.fa-wrench:before {
-  content: "\f0ad";
-}
-.fa-tasks:before {
-  content: "\f0ae";
-}
-.fa-filter:before {
-  content: "\f0b0";
-}
-.fa-briefcase:before {
-  content: "\f0b1";
-}
-.fa-arrows-alt:before {
-  content: "\f0b2";
-}
-.fa-group:before,
-.fa-users:before {
-  content: "\f0c0";
-}
-.fa-chain:before,
-.fa-link:before {
-  content: "\f0c1";
-}
-.fa-cloud:before {
-  content: "\f0c2";
-}
-.fa-flask:before {
-  content: "\f0c3";
-}
-.fa-cut:before,
-.fa-scissors:before {
-  content: "\f0c4";
-}
-.fa-copy:before,
-.fa-files-o:before {
-  content: "\f0c5";
-}
-.fa-paperclip:before {
-  content: "\f0c6";
-}
-.fa-save:before,
-.fa-floppy-o:before {
-  content: "\f0c7";
-}
-.fa-square:before {
-  content: "\f0c8";
-}
-.fa-navicon:before,
-.fa-reorder:before,
-.fa-bars:before {
-  content: "\f0c9";
-}
-.fa-list-ul:before {
-  content: "\f0ca";
-}
-.fa-list-ol:before {
-  content: "\f0cb";
-}
-.fa-strikethrough:before {
-  content: "\f0cc";
-}
-.fa-underline:before {
-  content: "\f0cd";
-}
-.fa-table:before {
-  content: "\f0ce";
-}
-.fa-magic:before {
-  content: "\f0d0";
-}
-.fa-truck:before {
-  content: "\f0d1";
-}
-.fa-pinterest:before {
-  content: "\f0d2";
-}
-.fa-pinterest-square:before {
-  content: "\f0d3";
-}
-.fa-google-plus-square:before {
-  content: "\f0d4";
-}
-.fa-google-plus:before {
-  content: "\f0d5";
-}
-.fa-money:before {
-  content: "\f0d6";
-}
-.fa-caret-down:before {
-  content: "\f0d7";
-}
-.fa-caret-up:before {
-  content: "\f0d8";
-}
-.fa-caret-left:before {
-  content: "\f0d9";
-}
-.fa-caret-right:before {
-  content: "\f0da";
-}
-.fa-columns:before {
-  content: "\f0db";
-}
-.fa-unsorted:before,
-.fa-sort:before {
-  content: "\f0dc";
-}
-.fa-sort-down:before,
-.fa-sort-desc:before {
-  content: "\f0dd";
-}
-.fa-sort-up:before,
-.fa-sort-asc:before {
-  content: "\f0de";
-}
-.fa-envelope:before {
-  content: "\f0e0";
-}
-.fa-linkedin:before {
-  content: "\f0e1";
-}
-.fa-rotate-left:before,
-.fa-undo:before {
-  content: "\f0e2";
-}
-.fa-legal:before,
-.fa-gavel:before {
-  content: "\f0e3";
-}
-.fa-dashboard:before,
-.fa-tachometer:before {
-  content: "\f0e4";
-}
-.fa-comment-o:before {
-  content: "\f0e5";
-}
-.fa-comments-o:before {
-  content: "\f0e6";
-}
-.fa-flash:before,
-.fa-bolt:before {
-  content: "\f0e7";
-}
-.fa-sitemap:before {
-  content: "\f0e8";
-}
-.fa-umbrella:before {
-  content: "\f0e9";
-}
-.fa-paste:before,
-.fa-clipboard:before {
-  content: "\f0ea";
-}
-.fa-lightbulb-o:before {
-  content: "\f0eb";
-}
-.fa-exchange:before {
-  content: "\f0ec";
-}
-.fa-cloud-download:before {
-  content: "\f0ed";
-}
-.fa-cloud-upload:before {
-  content: "\f0ee";
-}
-.fa-user-md:before {
-  content: "\f0f0";
-}
-.fa-stethoscope:before {
-  content: "\f0f1";
-}
-.fa-suitcase:before {
-  content: "\f0f2";
-}
-.fa-bell-o:before {
-  content: "\f0a2";
-}
-.fa-coffee:before {
-  content: "\f0f4";
-}
-.fa-cutlery:before {
-  content: "\f0f5";
-}
-.fa-file-text-o:before {
-  content: "\f0f6";
-}
-.fa-building-o:before {
-  content: "\f0f7";
-}
-.fa-hospital-o:before {
-  content: "\f0f8";
-}
-.fa-ambulance:before {
-  content: "\f0f9";
-}
-.fa-medkit:before {
-  content: "\f0fa";
-}
-.fa-fighter-jet:before {
-  content: "\f0fb";
-}
-.fa-beer:before {
-  content: "\f0fc";
-}
-.fa-h-square:before {
-  content: "\f0fd";
-}
-.fa-plus-square:before {
-  content: "\f0fe";
-}
-.fa-angle-double-left:before {
-  content: "\f100";
-}
-.fa-angle-double-right:before {
-  content: "\f101";
-}
-.fa-angle-double-up:before {
-  content: "\f102";
-}
-.fa-angle-double-down:before {
-  content: "\f103";
-}
-.fa-angle-left:before {
-  content: "\f104";
-}
-.fa-angle-right:before {
-  content: "\f105";
-}
-.fa-angle-up:before {
-  content: "\f106";
-}
-.fa-angle-down:before {
-  content: "\f107";
-}
-.fa-desktop:before {
-  content: "\f108";
-}
-.fa-laptop:before {
-  content: "\f109";
-}
-.fa-tablet:before {
-  content: "\f10a";
-}
-.fa-mobile-phone:before,
-.fa-mobile:before {
-  content: "\f10b";
-}
-.fa-circle-o:before {
-  content: "\f10c";
-}
-.fa-quote-left:before {
-  content: "\f10d";
-}
-.fa-quote-right:before {
-  content: "\f10e";
-}
-.fa-spinner:before {
-  content: "\f110";
-}
-.fa-circle:before {
-  content: "\f111";
-}
-.fa-mail-reply:before,
-.fa-reply:before {
-  content: "\f112";
-}
-.fa-github-alt:before {
-  content: "\f113";
-}
-.fa-folder-o:before {
-  content: "\f114";
-}
-.fa-folder-open-o:before {
-  content: "\f115";
-}
-.fa-smile-o:before {
-  content: "\f118";
-}
-.fa-frown-o:before {
-  content: "\f119";
-}
-.fa-meh-o:before {
-  content: "\f11a";
-}
-.fa-gamepad:before {
-  content: "\f11b";
-}
-.fa-keyboard-o:before {
-  content: "\f11c";
-}
-.fa-flag-o:before {
-  content: "\f11d";
-}
-.fa-flag-checkered:before {
-  content: "\f11e";
-}
-.fa-terminal:before {
-  content: "\f120";
-}
-.fa-code:before {
-  content: "\f121";
-}
-.fa-mail-reply-all:before,
-.fa-reply-all:before {
-  content: "\f122";
-}
-.fa-star-half-empty:before,
-.fa-star-half-full:before,
-.fa-star-half-o:before {
-  content: "\f123";
-}
-.fa-location-arrow:before {
-  content: "\f124";
-}
-.fa-crop:before {
-  content: "\f125";
-}
-.fa-code-fork:before {
-  content: "\f126";
-}
-.fa-unlink:before,
-.fa-chain-broken:before {
-  content: "\f127";
-}
-.fa-question:before {
-  content: "\f128";
-}
-.fa-info:before {
-  content: "\f129";
-}
-.fa-exclamation:before {
-  content: "\f12a";
-}
-.fa-superscript:before {
-  content: "\f12b";
-}
-.fa-subscript:before {
-  content: "\f12c";
-}
-.fa-eraser:before {
-  content: "\f12d";
-}
-.fa-puzzle-piece:before {
-  content: "\f12e";
-}
-.fa-microphone:before {
-  content: "\f130";
-}
-.fa-microphone-slash:before {
-  content: "\f131";
-}
-.fa-shield:before {
-  content: "\f132";
-}
-.fa-calendar-o:before {
-  content: "\f133";
-}
-.fa-fire-extinguisher:before {
-  content: "\f134";
-}
-.fa-rocket:before {
-  content: "\f135";
-}
-.fa-maxcdn:before {
-  content: "\f136";
-}
-.fa-chevron-circle-left:before {
-  content: "\f137";
-}
-.fa-chevron-circle-right:before {
-  content: "\f138";
-}
-.fa-chevron-circle-up:before {
-  content: "\f139";
-}
-.fa-chevron-circle-down:before {
-  content: "\f13a";
-}
-.fa-html5:before {
-  content: "\f13b";
-}
-.fa-css3:before {
-  content: "\f13c";
-}
-.fa-anchor:before {
-  content: "\f13d";
-}
-.fa-unlock-alt:before {
-  content: "\f13e";
-}
-.fa-bullseye:before {
-  content: "\f140";
-}
-.fa-ellipsis-h:before {
-  content: "\f141";
-}
-.fa-ellipsis-v:before {
-  content: "\f142";
-}
-.fa-rss-square:before {
-  content: "\f143";
-}
-.fa-play-circle:before {
-  content: "\f144";
-}
-.fa-ticket:before {
-  content: "\f145";
-}
-.fa-minus-square:before {
-  content: "\f146";
-}
-.fa-minus-square-o:before {
-  content: "\f147";
-}
-.fa-level-up:before {
-  content: "\f148";
-}
-.fa-level-down:before {
-  content: "\f149";
-}
-.fa-check-square:before {
-  content: "\f14a";
-}
-.fa-pencil-square:before {
-  content: "\f14b";
-}
-.fa-external-link-square:before {
-  content: "\f14c";
-}
-.fa-share-square:before {
-  content: "\f14d";
-}
-.fa-compass:before {
-  content: "\f14e";
-}
-.fa-toggle-down:before,
-.fa-caret-square-o-down:before {
-  content: "\f150";
-}
-.fa-toggle-up:before,
-.fa-caret-square-o-up:before {
-  content: "\f151";
-}
-.fa-toggle-right:before,
-.fa-caret-square-o-right:before {
-  content: "\f152";
-}
-.fa-euro:before,
-.fa-eur:before {
-  content: "\f153";
-}
-.fa-gbp:before {
-  content: "\f154";
-}
-.fa-dollar:before,
-.fa-usd:before {
-  content: "\f155";
-}
-.fa-rupee:before,
-.fa-inr:before {
-  content: "\f156";
-}
-.fa-cny:before,
-.fa-rmb:before,
-.fa-yen:before,
-.fa-jpy:before {
-  content: "\f157";
-}
-.fa-ruble:before,
-.fa-rouble:before,
-.fa-rub:before {
-  content: "\f158";
-}
-.fa-won:before,
-.fa-krw:before {
-  content: "\f159";
-}
-.fa-bitcoin:before,
-.fa-btc:before {
-  content: "\f15a";
-}
-.fa-file:before {
-  content: "\f15b";
-}
-.fa-file-text:before {
-  content: "\f15c";
-}
-.fa-sort-alpha-asc:before {
-  content: "\f15d";
-}
-.fa-sort-alpha-desc:before {
-  content: "\f15e";
-}
-.fa-sort-amount-asc:before {
-  content: "\f160";
-}
-.fa-sort-amount-desc:before {
-  content: "\f161";
-}
-.fa-sort-numeric-asc:before {
-  content: "\f162";
-}
-.fa-sort-numeric-desc:before {
-  content: "\f163";
-}
-.fa-thumbs-up:before {
-  content: "\f164";
-}
-.fa-thumbs-down:before {
-  content: "\f165";
-}
-.fa-youtube-square:before {
-  content: "\f166";
-}
-.fa-youtube:before {
-  content: "\f167";
-}
-.fa-xing:before {
-  content: "\f168";
-}
-.fa-xing-square:before {
-  content: "\f169";
-}
-.fa-youtube-play:before {
-  content: "\f16a";
-}
-.fa-dropbox:before {
-  content: "\f16b";
-}
-.fa-stack-overflow:before {
-  content: "\f16c";
-}
-.fa-instagram:before {
-  content: "\f16d";
-}
-.fa-flickr:before {
-  content: "\f16e";
-}
-.fa-adn:before {
-  content: "\f170";
-}
-.fa-bitbucket:before {
-  content: "\f171";
-}
-.fa-bitbucket-square:before {
-  content: "\f172";
-}
-.fa-tumblr:before {
-  content: "\f173";
-}
-.fa-tumblr-square:before {
-  content: "\f174";
-}
-.fa-long-arrow-down:before {
-  content: "\f175";
-}
-.fa-long-arrow-up:before {
-  content: "\f176";
-}
-.fa-long-arrow-left:before {
-  content: "\f177";
-}
-.fa-long-arrow-right:before {
-  content: "\f178";
-}
-.fa-apple:before {
-  content: "\f179";
-}
-.fa-windows:before {
-  content: "\f17a";
-}
-.fa-android:before {
-  content: "\f17b";
-}
-.fa-linux:before {
-  content: "\f17c";
-}
-.fa-dribbble:before {
-  content: "\f17d";
-}
-.fa-skype:before {
-  content: "\f17e";
-}
-.fa-foursquare:before {
-  content: "\f180";
-}
-.fa-trello:before {
-  content: "\f181";
-}
-.fa-female:before {
-  content: "\f182";
-}
-.fa-male:before {
-  content: "\f183";
-}
-.fa-gittip:before {
-  content: "\f184";
-}
-.fa-sun-o:before {
-  content: "\f185";
-}
-.fa-moon-o:before {
-  content: "\f186";
-}
-.fa-archive:before {
-  content: "\f187";
-}
-.fa-bug:before {
-  content: "\f188";
-}
-.fa-vk:before {
-  content: "\f189";
-}
-.fa-weibo:before {
-  content: "\f18a";
-}
-.fa-renren:before {
-  content: "\f18b";
-}
-.fa-pagelines:before {
-  content: "\f18c";
-}
-.fa-stack-exchange:before {
-  content: "\f18d";
-}
-.fa-arrow-circle-o-right:before {
-  content: "\f18e";
-}
-.fa-arrow-circle-o-left:before {
-  content: "\f190";
-}
-.fa-toggle-left:before,
-.fa-caret-square-o-left:before {
-  content: "\f191";
-}
-.fa-dot-circle-o:before {
-  content: "\f192";
-}
-.fa-wheelchair:before {
-  content: "\f193";
-}
-.fa-vimeo-square:before {
-  content: "\f194";
-}
-.fa-turkish-lira:before,
-.fa-try:before {
-  content: "\f195";
-}
-.fa-plus-square-o:before {
-  content: "\f196";
-}
-.fa-space-shuttle:before {
-  content: "\f197";
-}
-.fa-slack:before {
-  content: "\f198";
-}
-.fa-envelope-square:before {
-  content: "\f199";
-}
-.fa-wordpress:before {
-  content: "\f19a";
-}
-.fa-openid:before {
-  content: "\f19b";
-}
-.fa-institution:before,
-.fa-bank:before,
-.fa-university:before {
-  content: "\f19c";
-}
-.fa-mortar-board:before,
-.fa-graduation-cap:before {
-  content: "\f19d";
-}
-.fa-yahoo:before {
-  content: "\f19e";
-}
-.fa-google:before {
-  content: "\f1a0";
-}
-.fa-reddit:before {
-  content: "\f1a1";
-}
-.fa-reddit-square:before {
-  content: "\f1a2";
-}
-.fa-stumbleupon-circle:before {
-  content: "\f1a3";
-}
-.fa-stumbleupon:before {
-  content: "\f1a4";
-}
-.fa-delicious:before {
-  content: "\f1a5";
-}
-.fa-digg:before {
-  content: "\f1a6";
-}
-.fa-pied-piper-square:before,
-.fa-pied-piper:before {
-  content: "\f1a7";
-}
-.fa-pied-piper-alt:before {
-  content: "\f1a8";
-}
-.fa-drupal:before {
-  content: "\f1a9";
-}
-.fa-joomla:before {
-  content: "\f1aa";
-}
-.fa-language:before {
-  content: "\f1ab";
-}
-.fa-fax:before {
-  content: "\f1ac";
-}
-.fa-building:before {
-  content: "\f1ad";
-}
-.fa-child:before {
-  content: "\f1ae";
-}
-.fa-paw:before {
-  content: "\f1b0";
-}
-.fa-spoon:before {
-  content: "\f1b1";
-}
-.fa-cube:before {
-  content: "\f1b2";
-}
-.fa-cubes:before {
-  content: "\f1b3";
-}
-.fa-behance:before {
-  content: "\f1b4";
-}
-.fa-behance-square:before {
-  content: "\f1b5";
-}
-.fa-steam:before {
-  content: "\f1b6";
-}
-.fa-steam-square:before {
-  content: "\f1b7";
-}
-.fa-recycle:before {
-  content: "\f1b8";
-}
-.fa-automobile:before,
-.fa-car:before {
-  content: "\f1b9";
-}
-.fa-cab:before,
-.fa-taxi:before {
-  content: "\f1ba";
-}
-.fa-tree:before {
-  content: "\f1bb";
-}
-.fa-spotify:before {
-  content: "\f1bc";
-}
-.fa-deviantart:before {
-  content: "\f1bd";
-}
-.fa-soundcloud:before {
-  content: "\f1be";
-}
-.fa-database:before {
-  content: "\f1c0";
-}
-.fa-file-pdf-o:before {
-  content: "\f1c1";
-}
-.fa-file-word-o:before {
-  content: "\f1c2";
-}
-.fa-file-excel-o:before {
-  content: "\f1c3";
-}
-.fa-file-powerpoint-o:before {
-  content: "\f1c4";
-}
-.fa-file-photo-o:before,
-.fa-file-picture-o:before,
-.fa-file-image-o:before {
-  content: "\f1c5";
-}
-.fa-file-zip-o:before,
-.fa-file-archive-o:before {
-  content: "\f1c6";
-}
-.fa-file-sound-o:before,
-.fa-file-audio-o:before {
-  content: "\f1c7";
-}
-.fa-file-movie-o:before,
-.fa-file-video-o:before {
-  content: "\f1c8";
-}
-.fa-file-code-o:before {
-  content: "\f1c9";
-}
-.fa-vine:before {
-  content: "\f1ca";
-}
-.fa-codepen:before {
-  content: "\f1cb";
-}
-.fa-jsfiddle:before {
-  content: "\f1cc";
-}
-.fa-life-bouy:before,
-.fa-life-saver:before,
-.fa-support:before,
-.fa-life-ring:before {
-  content: "\f1cd";
-}
-.fa-circle-o-notch:before {
-  content: "\f1ce";
-}
-.fa-ra:before,
-.fa-rebel:before {
-  content: "\f1d0";
-}
-.fa-ge:before,
-.fa-empire:before {
-  content: "\f1d1";
-}
-.fa-git-square:before {
-  content: "\f1d2";
-}
-.fa-git:before {
-  content: "\f1d3";
-}
-.fa-hacker-news:before {
-  content: "\f1d4";
-}
-.fa-tencent-weibo:before {
-  content: "\f1d5";
-}
-.fa-qq:before {
-  content: "\f1d6";
-}
-.fa-wechat:before,
-.fa-weixin:before {
-  content: "\f1d7";
-}
-.fa-send:before,
-.fa-paper-plane:before {
-  content: "\f1d8";
-}
-.fa-send-o:before,
-.fa-paper-plane-o:before {
-  content: "\f1d9";
-}
-.fa-history:before {
-  content: "\f1da";
-}
-.fa-circle-thin:before {
-  content: "\f1db";
-}
-.fa-header:before {
-  content: "\f1dc";
-}
-.fa-paragraph:before {
-  content: "\f1dd";
-}
-.fa-sliders:before {
-  content: "\f1de";
-}
-.fa-share-alt:before {
-  content: "\f1e0";
-}
-.fa-share-alt-square:before {
-  content: "\f1e1";
-}
-.fa-bomb:before {
-  content: "\f1e2";
-}
-/*!
-Pure v0.4.2
-Copyright 2014 Yahoo! Inc. All rights reserved.
-Licensed under the BSD License.
-https://github.com/yui/pure/blob/master/LICENSE.md
-*/
-/*!
-normalize.css v1.1.3 | MIT License | git.io/normalize
-Copyright (c) Nicolas Gallagher and Jonathan Neal
-*/
-/*! normalize.css v1.1.3 | MIT License | git.io/normalize */
-/* ==========================================================================
-   HTML5 display definitions
-   ========================================================================== */
-/**
- * Correct `block` display not defined in IE 6/7/8/9 and Firefox 3.
- */
+html,
+body,
+div,
+span,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+abbr,
+address,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+samp,
+small,
+strong,
+sub,
+sup,
+var,
+b,
+i,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
 article,
 aside,
+canvas,
 details,
 figcaption,
 figure,
 footer,
 header,
 hgroup,
-main,
+menu,
 nav,
 section,
-summary {
-  display: block;
-}
-/**
- * Correct `inline-block` display not defined in IE 6/7/8/9 and Firefox 3.
- */
+summary,
+time,
+mark,
 audio,
-canvas,
 video {
-  display: inline-block;
-  *display: inline;
-  *zoom: 1;
-}
-/**
- * Prevent modern browsers from displaying `audio` without controls.
- * Remove excess height in iOS 5 devices.
- */
-audio:not([controls]) {
-  display: none;
-  height: 0;
-}
-/**
- * Address styling not present in IE 7/8/9, Firefox 3, and Safari 4.
- * Known issue: no IE 6 support.
- */
-[hidden] {
-  display: none;
-}
-/* ==========================================================================
-   Base
-   ========================================================================== */
-/**
- * 1. Correct text resizing oddly in IE 6/7 when body `font-size` is set using
- *    `em` units.
- * 2. Prevent iOS text size adjust after orientation change, without disabling
- *    user zoom.
- */
-html {
-  font-size: 100%;
-  /* 1 */
-  -ms-text-size-adjust: 100%;
-  /* 2 */
-  -webkit-text-size-adjust: 100%;
-  /* 2 */
-}
-/**
- * Address `font-family` inconsistency between `textarea` and other form
- * elements.
- */
-html,
-button,
-input,
-select,
-textarea {
-  font-family: sans-serif;
-}
-/**
- * Address margins handled incorrectly in IE 6/7.
- */
-body {
   margin: 0;
-}
-/* ==========================================================================
-   Links
-   ========================================================================== */
-/**
- * Address `outline` inconsistency between Chrome and other browsers.
- */
-a:focus {
-  outline: thin dotted;
-}
-/**
- * Improve readability when focused and also mouse hovered in all browsers.
- */
-a:active,
-a:hover {
-  outline: 0;
-}
-/* ==========================================================================
-   Typography
-   ========================================================================== */
-/**
- * Address font sizes and margins set differently in IE 6/7.
- * Address font sizes within `section` and `article` in Firefox 4+, Safari 5,
- * and Chrome.
- */
-h1 {
-  font-size: 2em;
-  margin: 0.67em 0;
-}
-h2 {
-  font-size: 1.5em;
-  margin: 0.83em 0;
-}
-h3 {
-  font-size: 1.17em;
-  margin: 1em 0;
-}
-h4 {
-  font-size: 1em;
-  margin: 1.33em 0;
-}
-h5 {
-  font-size: 0.83em;
-  margin: 1.67em 0;
-}
-h6 {
-  font-size: 0.67em;
-  margin: 2.33em 0;
-}
-/**
- * Address styling not present in IE 7/8/9, Safari 5, and Chrome.
- */
-abbr[title] {
-  border-bottom: 1px dotted;
-}
-/**
- * Address style set to `bolder` in Firefox 3+, Safari 4/5, and Chrome.
- */
-b,
-strong {
-  font-weight: bold;
-}
-blockquote {
-  margin: 1em 40px;
-}
-/**
- * Address styling not present in Safari 5 and Chrome.
- */
-dfn {
-  font-style: italic;
-}
-/**
- * Address differences between Firefox and other browsers.
- * Known issue: no IE 6/7 normalization.
- */
-hr {
-  -moz-box-sizing: content-box;
-  box-sizing: content-box;
-  height: 0;
-}
-/**
- * Address styling not present in IE 6/7/8/9.
- */
-mark {
-  background: #ff0;
-  color: #000;
-}
-/**
- * Address margins set differently in IE 6/7.
- */
-p,
-pre {
-  margin: 1em 0;
-}
-/**
- * Correct font family set oddly in IE 6, Safari 4/5, and Chrome.
- */
-code,
-kbd,
-pre,
-samp {
-  font-family: monospace, serif;
-  _font-family: 'courier new', monospace;
-  font-size: 1em;
-}
-/**
- * Improve readability of pre-formatted text in all browsers.
- */
-pre {
-  white-space: pre;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-/**
- * Address CSS quotes not supported in IE 6/7.
- */
-q {
-  quotes: none;
-}
-/**
- * Address `quotes` property not supported in Safari 4.
- */
-q:before,
-q:after {
-  content: '';
-  content: none;
-}
-/**
- * Address inconsistent and variable font size in all browsers.
- */
-small {
-  font-size: 80%;
-}
-/**
- * Prevent `sub` and `sup` affecting `line-height` in all browsers.
- */
-sub,
-sup {
-  font-size: 75%;
-  line-height: 0;
-  position: relative;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
   vertical-align: baseline;
-}
-sup {
-  top: -0.5em;
-}
-sub {
-  bottom: -0.25em;
-}
-/* ==========================================================================
-   Lists
-   ========================================================================== */
-/**
- * Address margins set differently in IE 6/7.
- */
-dl,
-menu,
-ol,
-ul {
-  margin: 1em 0;
-}
-dd {
-  margin: 0 0 0 40px;
-}
-/**
- * Address paddings set differently in IE 6/7.
- */
-menu,
-ol,
-ul {
-  padding: 0 0 0 40px;
-}
-/**
- * Correct list images handled incorrectly in IE 7.
- */
-nav ul,
-nav ol {
   list-style: none;
-  list-style-image: none;
 }
-/* ==========================================================================
-   Embedded content
-   ========================================================================== */
-/**
- * 1. Remove border when inside `a` element in IE 6/7/8/9 and Firefox 3.
- * 2. Improve image quality when scaled in IE 7.
- */
-img {
-  border: 0;
-  /* 1 */
-  -ms-interpolation-mode: bicubic;
-  /* 2 */
-}
-/**
- * Correct overflow displayed oddly in IE 9.
- */
-svg:not(:root) {
-  overflow: hidden;
-}
-/* ==========================================================================
-   Figures
-   ========================================================================== */
-/**
- * Address margin not present in IE 6/7/8/9, Safari 5, and Opera 11.
- */
-figure {
-  margin: 0;
-}
-/* ==========================================================================
-   Forms
-   ========================================================================== */
-/**
- * Correct margin displayed oddly in IE 6/7.
- */
-form {
-  margin: 0;
-}
-/**
- * Define consistent border, margin, and padding.
- */
-fieldset {
-  border: 1px solid #c0c0c0;
-  margin: 0 2px;
-  padding: 0.35em 0.625em 0.75em;
-}
-/**
- * 1. Correct color not being inherited in IE 6/7/8/9.
- * 2. Correct text not wrapping in Firefox 3.
- * 3. Correct alignment displayed oddly in IE 6/7.
- */
-legend {
-  border: 0;
-  /* 1 */
-  padding: 0;
-  white-space: normal;
-  /* 2 */
-  *margin-left: -7px;
-  /* 3 */
-}
-/**
- * 1. Correct font size not being inherited in all browsers.
- * 2. Address margins set differently in IE 6/7, Firefox 3+, Safari 5,
- *    and Chrome.
- * 3. Improve appearance and consistency in all browsers.
- */
-button,
-input,
-select,
-textarea {
-  font-size: 100%;
-  /* 1 */
-  margin: 0;
-  /* 2 */
-  vertical-align: baseline;
-  /* 3 */
-  *vertical-align: middle;
-  /* 3 */
-}
-/**
- * Address Firefox 3+ setting `line-height` on `input` using `!important` in
- * the UA stylesheet.
- */
-button,
-input {
-  line-height: normal;
-}
-/**
- * Address inconsistent `text-transform` inheritance for `button` and `select`.
- * All other form control elements do not inherit `text-transform` values.
- * Correct `button` style inheritance in Chrome, Safari 5+, and IE 6+.
- * Correct `select` style inheritance in Firefox 4+ and Opera.
- */
-button,
-select {
-  text-transform: none;
-}
-/**
- * 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio`
- *    and `video` controls.
- * 2. Correct inability to style clickable `input` types in iOS.
- * 3. Improve usability and consistency of cursor style between image-type
- *    `input` and others.
- * 4. Remove inner spacing in IE 7 without affecting normal text inputs.
- *    Known issue: inner spacing remains in IE 6.
- */
-button,
-html input[type="button"],
-input[type="reset"],
-input[type="submit"] {
-  -webkit-appearance: button;
-  /* 2 */
-  cursor: pointer;
-  /* 3 */
-  *overflow: visible;
-  /* 4 */
-}
-/**
- * Re-set default cursor for disabled elements.
- */
-button[disabled],
-html input[disabled] {
-  cursor: default;
-}
-/**
- * 1. Address box sizing set to content-box in IE 8/9.
- * 2. Remove excess padding in IE 8/9.
- * 3. Remove excess padding in IE 7.
- *    Known issue: excess padding remains in IE 6.
- */
-input[type="checkbox"],
-input[type="radio"] {
-  box-sizing: border-box;
-  /* 1 */
-  padding: 0;
-  /* 2 */
-  *height: 13px;
-  /* 3 */
-  *width: 13px;
-  /* 3 */
-}
-/**
- * 1. Address `appearance` set to `searchfield` in Safari 5 and Chrome.
- * 2. Address `box-sizing` set to `border-box` in Safari 5 and Chrome
- *    (include `-moz` to future-proof).
- */
-input[type="search"] {
-  -webkit-appearance: textfield;
-  /* 1 */
-  -moz-box-sizing: content-box;
-  -webkit-box-sizing: content-box;
-  /* 2 */
-  box-sizing: content-box;
-}
-/**
- * Remove inner padding and search cancel button in Safari 5 and Chrome
- * on OS X.
- */
-input[type="search"]::-webkit-search-cancel-button,
-input[type="search"]::-webkit-search-decoration {
-  -webkit-appearance: none;
-}
-/**
- * Remove inner padding and border in Firefox 3+.
- */
-button::-moz-focus-inner,
-input::-moz-focus-inner {
-  border: 0;
-  padding: 0;
-}
-/**
- * 1. Remove default vertical scrollbar in IE 6/7/8/9.
- * 2. Improve readability and alignment in all browsers.
- */
-textarea {
-  overflow: auto;
-  /* 1 */
-  vertical-align: top;
-  /* 2 */
-}
-/* ==========================================================================
-   Tables
-   ========================================================================== */
-/**
- * Remove most spacing between table cells.
- */
-table {
-  border-collapse: collapse;
-  border-spacing: 0;
-}
-/*csslint important:false*/
-/* ==========================================================================
-   Pure Base Extras
-   ========================================================================== */
-/**
- * Extra rules that Pure adds on top of Normalize.css
- */
-/**
- * Always hide an element when it has the `hidden` HTML attribute.
- */
-[hidden] {
+.hidden {
   display: none !important;
-}
-/*!
-Pure v0.4.2
-Copyright 2014 Yahoo! Inc. All rights reserved.
-Licensed under the BSD License.
-https://github.com/yui/pure/blob/master/LICENSE.md
-*/
-/*csslint regex-selectors:false, known-properties:false, duplicate-properties:false*/
-.pure-g {
-  letter-spacing: -0.31em;
-  /* Webkit: collapse white-space between units */
-  *letter-spacing: normal;
-  /* reset IE < 8 */
-  *word-spacing: -0.43em;
-  /* IE < 8: collapse white-space between units */
-  text-rendering: optimizespeed;
-  /* Webkit: fixes text-rendering: optimizeLegibility */
-  /*
-    Sets the font stack to fonts known to work properly with the above letter
-    and word spacings. See: https://github.com/yui/pure/issues/41/
-
-    The following font stack makes Pure Grids work on all known environments.
-
-    * FreeSans: Ships with many Linux distros, including Ubuntu
-
-    * Arimo: Ships with Chrome OS. Arimo has to be defined before Helvetica and
-      Arial to get picked up by the browser, even though neither is available
-      in Chrome OS.
-
-    * Droid Sans: Ships with all versions of Android.
-
-    * Helvetica, Arial, sans-serif: Common font stack on OS X and Windows.
-    */
-  font-family: FreeSans, Arimo, "Droid Sans", Helvetica, Arial, sans-serif;
-  /*
-    Use flexbox when possible to avoid `letter-spacing` side-effects.
-
-    NOTE: Firefox (as of 25) does not currently support flex-wrap, so the
-    `-moz-` prefix version is omitted.
-    */
-  display: -webkit-flex;
-  -webkit-flex-flow: row wrap;
-  /* IE10 uses display: flexbox */
-  display: -ms-flexbox;
-  -ms-flex-flow: row wrap;
-}
-/* Opera as of 12 on Windows needs word-spacing.
-   The ".opera-only" selector is used to prevent actual prefocus styling
-   and is not required in markup.
-*/
-.opera-only :-o-prefocus,
-.pure-g {
-  word-spacing: -0.43em;
-}
-.pure-u {
-  display: inline-block;
-  *display: inline;
-  /* IE < 8: fake inline-block */
-  zoom: 1;
-  letter-spacing: normal;
-  word-spacing: normal;
-  vertical-align: top;
-  text-rendering: auto;
-}
-/*
-Resets the font family back to the OS/browser's default sans-serif font,
-this the same font stack that Normalize.css sets for the `body`.
-*/
-.pure-g [class*="pure-u"] {
-  font-family: sans-serif;
-}
-.pure-u-1,
-.pure-u-1-1,
-.pure-u-1-2,
-.pure-u-1-3,
-.pure-u-2-3,
-.pure-u-1-4,
-.pure-u-3-4,
-.pure-u-1-5,
-.pure-u-2-5,
-.pure-u-3-5,
-.pure-u-4-5,
-.pure-u-5-5,
-.pure-u-1-6,
-.pure-u-5-6,
-.pure-u-1-8,
-.pure-u-3-8,
-.pure-u-5-8,
-.pure-u-7-8,
-.pure-u-1-12,
-.pure-u-5-12,
-.pure-u-7-12,
-.pure-u-11-12,
-.pure-u-1-24,
-.pure-u-2-24,
-.pure-u-3-24,
-.pure-u-4-24,
-.pure-u-5-24,
-.pure-u-6-24,
-.pure-u-7-24,
-.pure-u-8-24,
-.pure-u-9-24,
-.pure-u-10-24,
-.pure-u-11-24,
-.pure-u-12-24,
-.pure-u-13-24,
-.pure-u-14-24,
-.pure-u-15-24,
-.pure-u-16-24,
-.pure-u-17-24,
-.pure-u-18-24,
-.pure-u-19-24,
-.pure-u-20-24,
-.pure-u-21-24,
-.pure-u-22-24,
-.pure-u-23-24,
-.pure-u-24-24 {
-  display: inline-block;
-  *display: inline;
-  zoom: 1;
-  letter-spacing: normal;
-  word-spacing: normal;
-  vertical-align: top;
-  text-rendering: auto;
-}
-.pure-u-1-24 {
-  width: 4.1667%;
-  *width: 4.1357%;
-}
-.pure-u-1-12,
-.pure-u-2-24 {
-  width: 8.3333%;
-  *width: 8.3023%;
-}
-.pure-u-1-8,
-.pure-u-3-24 {
-  width: 12.5000%;
-  *width: 12.4690%;
-}
-.pure-u-1-6,
-.pure-u-4-24 {
-  width: 16.6667%;
-  *width: 16.6357%;
-}
-.pure-u-1-5 {
-  width: 20%;
-  *width: 19.9690%;
-}
-.pure-u-5-24 {
-  width: 20.8333%;
-  *width: 20.8023%;
-}
-.pure-u-1-4,
-.pure-u-6-24 {
-  width: 25%;
-  *width: 24.9690%;
-}
-.pure-u-7-24 {
-  width: 29.1667%;
-  *width: 29.1357%;
-}
-.pure-u-1-3,
-.pure-u-8-24 {
-  width: 33.3333%;
-  *width: 33.3023%;
-}
-.pure-u-3-8,
-.pure-u-9-24 {
-  width: 37.5000%;
-  *width: 37.4690%;
-}
-.pure-u-2-5 {
-  width: 40%;
-  *width: 39.9690%;
-}
-.pure-u-5-12,
-.pure-u-10-24 {
-  width: 41.6667%;
-  *width: 41.6357%;
-}
-.pure-u-11-24 {
-  width: 45.8333%;
-  *width: 45.8023%;
-}
-.pure-u-1-2,
-.pure-u-12-24 {
-  width: 50%;
-  *width: 49.9690%;
-}
-.pure-u-13-24 {
-  width: 54.1667%;
-  *width: 54.1357%;
-}
-.pure-u-7-12,
-.pure-u-14-24 {
-  width: 58.3333%;
-  *width: 58.3023%;
-}
-.pure-u-3-5 {
-  width: 60%;
-  *width: 59.9690%;
-}
-.pure-u-5-8,
-.pure-u-15-24 {
-  width: 62.5000%;
-  *width: 62.4690%;
-}
-.pure-u-2-3,
-.pure-u-16-24 {
-  width: 66.6667%;
-  *width: 66.6357%;
-}
-.pure-u-17-24 {
-  width: 70.8333%;
-  *width: 70.8023%;
-}
-.pure-u-3-4,
-.pure-u-18-24 {
-  width: 75%;
-  *width: 74.9690%;
-}
-.pure-u-19-24 {
-  width: 79.1667%;
-  *width: 79.1357%;
-}
-.pure-u-4-5 {
-  width: 80%;
-  *width: 79.9690%;
-}
-.pure-u-5-6,
-.pure-u-20-24 {
-  width: 83.3333%;
-  *width: 83.3023%;
-}
-.pure-u-7-8,
-.pure-u-21-24 {
-  width: 87.5000%;
-  *width: 87.4690%;
-}
-.pure-u-11-12,
-.pure-u-22-24 {
-  width: 91.6667%;
-  *width: 91.6357%;
-}
-.pure-u-23-24 {
-  width: 95.8333%;
-  *width: 95.8023%;
-}
-.pure-u-1,
-.pure-u-1-1,
-.pure-u-5-5,
-.pure-u-24-24 {
-  width: 100%;
-}
-/*csslint regex-selectors:false, known-properties:false, duplicate-properties:false*/
-.pure-g-r {
-  letter-spacing: -0.31em;
-  *letter-spacing: normal;
-  *word-spacing: -0.43em;
-  /*
-    Sets the font stack to fonts known to work properly with the above letter
-    and word spacings. See: https://github.com/yui/pure/issues/41/
-
-    The following font stack makes Pure Grids work on all known environments.
-
-    * FreeSans: Ships with many Linux distros, including Ubuntu
-
-    * Arimo: Ships with Chrome OS. Arimo has to be defined before Helvetica and
-      Arial to get picked up by the browser, even though neither is available
-      in Chrome OS.
-
-    * Droid Sans: Ships with all versions of Android.
-
-    * Helvetica, Arial, sans-serif: Common font stack on OS X and Windows.
-    */
-  font-family: FreeSans, Arimo, "Droid Sans", Helvetica, Arial, sans-serif;
-  /*
-    Use flexbox when possible to avoid `letter-spacing` side-effects.
-
-    NOTE: Firefox (as of 25) does not currently support flex-wrap, so the
-    `-moz-` prefix version is omitted.
-    */
-  display: -webkit-flex;
-  -webkit-flex-flow: row wrap;
-  /* IE10 uses display: flexbox */
-  display: -ms-flexbox;
-  -ms-flex-flow: row wrap;
-}
-/* Opera as of 12 on Windows needs word-spacing.
-   The ".opera-only" selector is used to prevent actual prefocus styling
-   and is not required in markup.
-*/
-.opera-only :-o-prefocus,
-.pure-g-r {
-  word-spacing: -0.43em;
-}
-/*
-Resets the font family back to the OS/browser's default sans-serif font,
-this the same font stack that Normalize.css sets for the `body`.
-*/
-.pure-g-r [class*="pure-u"] {
-  font-family: sans-serif;
-}
-.pure-g-r img {
-  max-width: 100%;
-  height: auto;
-}
-@media (min-width: 980px) {
-  .pure-visible-phone {
-    display: none;
-  }
-  .pure-visible-tablet {
-    display: none;
-  }
-  .pure-hidden-desktop {
-    display: none;
-  }
-}
-@media (max-width: 480px) {
-  .pure-g-r > .pure-u,
-  .pure-g-r > [class*="pure-u-"] {
-    width: 100%;
-  }
-}
-@media (max-width: 767px) {
-  .pure-g-r > .pure-u,
-  .pure-g-r > [class*="pure-u-"] {
-    width: 100%;
-  }
-  .pure-hidden-phone {
-    display: none;
-  }
-  .pure-visible-desktop {
-    display: none;
-  }
-}
-@media (min-width: 768px) and (max-width: 979px) {
-  .pure-hidden-tablet {
-    display: none;
-  }
-  .pure-visible-desktop {
-    display: none;
-  }
-}
-/*!
-Pure v0.4.2
-Copyright 2014 Yahoo! Inc. All rights reserved.
-Licensed under the BSD License.
-https://github.com/yui/pure/blob/master/LICENSE.md
-*/
-.pure-form input[type="text"],
-.pure-form input[type="password"],
-.pure-form input[type="email"],
-.pure-form input[type="url"],
-.pure-form input[type="date"],
-.pure-form input[type="month"],
-.pure-form input[type="time"],
-.pure-form input[type="datetime"],
-.pure-form input[type="datetime-local"],
-.pure-form input[type="week"],
-.pure-form input[type="number"],
-.pure-form input[type="search"],
-.pure-form input[type="tel"],
-.pure-form input[type="color"],
-.pure-form select,
-.pure-form textarea {
-  padding: 0.5em 0.6em;
-  display: inline-block;
-  border: 1px solid #ccc;
-  box-shadow: inset 0 1px 3px #ddd;
-  border-radius: 4px;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-}
-/*
-Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
-since IE8 won't execute CSS that contains a CSS3 selector.
-*/
-.pure-form input:not([type]) {
-  padding: 0.5em 0.6em;
-  display: inline-block;
-  border: 1px solid #ccc;
-  box-shadow: inset 0 1px 3px #ddd;
-  border-radius: 4px;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-}
-/* Chrome (as of v.32/34 on OS X) needs additional room for color to display. */
-/* May be able to remove this tweak as color inputs become more standardized across browsers. */
-.pure-form input[type="color"] {
-  padding: 0.2em 0.5em;
-}
-.pure-form input[type="text"]:focus,
-.pure-form input[type="password"]:focus,
-.pure-form input[type="email"]:focus,
-.pure-form input[type="url"]:focus,
-.pure-form input[type="date"]:focus,
-.pure-form input[type="month"]:focus,
-.pure-form input[type="time"]:focus,
-.pure-form input[type="datetime"]:focus,
-.pure-form input[type="datetime-local"]:focus,
-.pure-form input[type="week"]:focus,
-.pure-form input[type="number"]:focus,
-.pure-form input[type="search"]:focus,
-.pure-form input[type="tel"]:focus,
-.pure-form input[type="color"]:focus,
-.pure-form select:focus,
-.pure-form textarea:focus {
-  outline: 0;
-  outline: thin dotted \9;
-  /* IE6-9 */
-  border-color: #129FEA;
-}
-/*
-Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
-since IE8 won't execute CSS that contains a CSS3 selector.
-*/
-.pure-form input:not([type]):focus {
-  outline: 0;
-  outline: thin dotted \9;
-  /* IE6-9 */
-  border-color: #129FEA;
-}
-.pure-form input[type="file"]:focus,
-.pure-form input[type="radio"]:focus,
-.pure-form input[type="checkbox"]:focus {
-  outline: thin dotted #333;
-  outline: 1px auto #129FEA;
-}
-.pure-form .pure-checkbox,
-.pure-form .pure-radio {
-  margin: 0.5em 0;
-  display: block;
-}
-.pure-form input[type="text"][disabled],
-.pure-form input[type="password"][disabled],
-.pure-form input[type="email"][disabled],
-.pure-form input[type="url"][disabled],
-.pure-form input[type="date"][disabled],
-.pure-form input[type="month"][disabled],
-.pure-form input[type="time"][disabled],
-.pure-form input[type="datetime"][disabled],
-.pure-form input[type="datetime-local"][disabled],
-.pure-form input[type="week"][disabled],
-.pure-form input[type="number"][disabled],
-.pure-form input[type="search"][disabled],
-.pure-form input[type="tel"][disabled],
-.pure-form input[type="color"][disabled],
-.pure-form select[disabled],
-.pure-form textarea[disabled] {
-  cursor: not-allowed;
-  background-color: #eaeded;
-  color: #cad2d3;
-}
-/*
-Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
-since IE8 won't execute CSS that contains a CSS3 selector.
-*/
-.pure-form input:not([type])[disabled] {
-  cursor: not-allowed;
-  background-color: #eaeded;
-  color: #cad2d3;
-}
-.pure-form input[readonly],
-.pure-form select[readonly],
-.pure-form textarea[readonly] {
-  background: #eee;
-  /* menu hover bg color */
-  color: #777;
-  /* menu text color */
-  border-color: #ccc;
-}
-.pure-form input:focus:invalid,
-.pure-form textarea:focus:invalid,
-.pure-form select:focus:invalid {
-  color: #b94a48;
-  border-color: #ee5f5b;
-}
-.pure-form input:focus:invalid:focus,
-.pure-form textarea:focus:invalid:focus,
-.pure-form select:focus:invalid:focus {
-  border-color: #e9322d;
-}
-.pure-form input[type="file"]:focus:invalid:focus,
-.pure-form input[type="radio"]:focus:invalid:focus,
-.pure-form input[type="checkbox"]:focus:invalid:focus {
-  outline-color: #e9322d;
-}
-.pure-form select {
-  border: 1px solid #ccc;
-  background-color: white;
-}
-.pure-form select[multiple] {
-  height: auto;
-}
-.pure-form label {
-  margin: 0.5em 0 0.2em;
-}
-.pure-form fieldset {
-  margin: 0;
-  padding: 0.35em 0 0.75em;
-  border: 0;
-}
-.pure-form legend {
-  display: block;
-  width: 100%;
-  padding: 0.3em 0;
-  margin-bottom: 0.3em;
-  color: #333;
-  border-bottom: 1px solid #e5e5e5;
-}
-.pure-form-stacked input[type="text"],
-.pure-form-stacked input[type="password"],
-.pure-form-stacked input[type="email"],
-.pure-form-stacked input[type="url"],
-.pure-form-stacked input[type="date"],
-.pure-form-stacked input[type="month"],
-.pure-form-stacked input[type="time"],
-.pure-form-stacked input[type="datetime"],
-.pure-form-stacked input[type="datetime-local"],
-.pure-form-stacked input[type="week"],
-.pure-form-stacked input[type="number"],
-.pure-form-stacked input[type="search"],
-.pure-form-stacked input[type="tel"],
-.pure-form-stacked input[type="color"],
-.pure-form-stacked select,
-.pure-form-stacked label,
-.pure-form-stacked textarea {
-  display: block;
-  margin: 0.25em 0;
-}
-/*
-Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
-since IE8 won't execute CSS that contains a CSS3 selector.
-*/
-.pure-form-stacked input:not([type]) {
-  display: block;
-  margin: 0.25em 0;
-}
-.pure-form-aligned input,
-.pure-form-aligned textarea,
-.pure-form-aligned select,
-.pure-form-aligned .pure-help-inline,
-.pure-form-message-inline {
-  display: inline-block;
-  *display: inline;
-  *zoom: 1;
-  vertical-align: middle;
-}
-.pure-form-aligned textarea {
-  vertical-align: top;
-}
-/* Aligned Forms */
-.pure-form-aligned .pure-control-group {
-  margin-bottom: 0.5em;
-}
-.pure-form-aligned .pure-control-group label {
-  text-align: right;
-  display: inline-block;
-  vertical-align: middle;
-  width: 10em;
-  margin: 0 1em 0 0;
-}
-.pure-form-aligned .pure-controls {
-  margin: 1.5em 0 0 10em;
-}
-/* Rounded Inputs */
-.pure-form input.pure-input-rounded,
-.pure-form .pure-input-rounded {
-  border-radius: 2em;
-  padding: 0.5em 1em;
-}
-/* Grouped Inputs */
-.pure-form .pure-group fieldset {
-  margin-bottom: 10px;
-}
-.pure-form .pure-group input {
-  display: block;
-  padding: 10px;
-  margin: 0;
-  border-radius: 0;
-  position: relative;
-  top: -1px;
-}
-.pure-form .pure-group input:focus {
-  z-index: 2;
-}
-.pure-form .pure-group input:first-child {
-  top: 1px;
-  border-radius: 4px 4px 0 0;
-}
-.pure-form .pure-group input:last-child {
-  top: -2px;
-  border-radius: 0 0 4px 4px;
-}
-.pure-form .pure-group button {
-  margin: 0.35em 0;
-}
-.pure-form .pure-input-1 {
-  width: 100%;
-}
-.pure-form .pure-input-2-3 {
-  width: 66%;
-}
-.pure-form .pure-input-1-2 {
-  width: 50%;
-}
-.pure-form .pure-input-1-3 {
-  width: 33%;
-}
-.pure-form .pure-input-1-4 {
-  width: 25%;
-}
-/* Inline help for forms */
-/* NOTE: pure-help-inline is deprecated. Use .pure-form-message-inline instead. */
-.pure-form .pure-help-inline,
-.pure-form-message-inline {
-  display: inline-block;
-  padding-left: 0.3em;
-  color: #666;
-  vertical-align: middle;
-  font-size: 0.875em;
-}
-/* Block help for forms */
-.pure-form-message {
-  display: block;
-  color: #666;
-  font-size: 0.875em;
-}
-@media only screen and (max-width: 480px) {
-  .pure-form button[type="submit"] {
-    margin: 0.7em 0 0;
-  }
-  .pure-form input:not([type]),
-  .pure-form input[type="text"],
-  .pure-form input[type="password"],
-  .pure-form input[type="email"],
-  .pure-form input[type="url"],
-  .pure-form input[type="date"],
-  .pure-form input[type="month"],
-  .pure-form input[type="time"],
-  .pure-form input[type="datetime"],
-  .pure-form input[type="datetime-local"],
-  .pure-form input[type="week"],
-  .pure-form input[type="number"],
-  .pure-form input[type="search"],
-  .pure-form input[type="tel"],
-  .pure-form input[type="color"],
-  .pure-form label {
-    margin-bottom: 0.3em;
-    display: block;
-  }
-  .pure-group input:not([type]),
-  .pure-group input[type="text"],
-  .pure-group input[type="password"],
-  .pure-group input[type="email"],
-  .pure-group input[type="url"],
-  .pure-group input[type="date"],
-  .pure-group input[type="month"],
-  .pure-group input[type="time"],
-  .pure-group input[type="datetime"],
-  .pure-group input[type="datetime-local"],
-  .pure-group input[type="week"],
-  .pure-group input[type="number"],
-  .pure-group input[type="search"],
-  .pure-group input[type="tel"],
-  .pure-group input[type="color"] {
-    margin-bottom: 0;
-  }
-  .pure-form-aligned .pure-control-group label {
-    margin-bottom: 0.3em;
-    text-align: left;
-    display: block;
-    width: 100%;
-  }
-  .pure-form-aligned .pure-controls {
-    margin: 1.5em 0 0 0;
-  }
-  /* NOTE: pure-help-inline is deprecated. Use .pure-form-message-inline instead. */
-  .pure-form .pure-help-inline,
-  .pure-form-message-inline,
-  .pure-form-message {
-    display: block;
-    font-size: 0.75em;
-    /* Increased bottom padding to make it group with its related input element. */
-    padding: 0.2em 0 0.8em;
-  }
-}
-/*!
-Pure v0.4.2
-Copyright 2014 Yahoo! Inc. All rights reserved.
-Licensed under the BSD License.
-https://github.com/yui/pure/blob/master/LICENSE.md
-*/
-/*csslint adjoining-classes:false, outline-none:false*/
-/*TODO: Remove this lint rule override after a refactor of this code.*/
-.pure-menu ul {
-  position: absolute;
   visibility: hidden;
 }
-.pure-menu.pure-menu-open {
-  visibility: visible;
-  z-index: 2;
-  width: 100%;
+.invisible {
+  visibility: hidden;
 }
-.pure-menu ul {
-  left: -10000px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  top: -10000px;
-  z-index: 1;
+.clearfix {
+  *zoom: 1;
 }
-.pure-menu > ul {
-  position: relative;
+.clearfix:before,
+.clearfix:after {
+  content: "";
+  display: table;
 }
-.pure-menu-open > ul {
-  left: 0;
-  top: 0;
-  visibility: visible;
+.clearfix:after {
+  clear: both;
 }
-.pure-menu-open > ul:focus {
-  outline: 0;
-}
-.pure-menu li {
-  position: relative;
-}
-.pure-menu a,
-.pure-menu .pure-menu-heading {
-  display: block;
-  color: inherit;
-  line-height: 1.5em;
-  padding: 5px 20px;
-  text-decoration: none;
+.nowrap {
   white-space: nowrap;
 }
-.pure-menu.pure-menu-horizontal > .pure-menu-heading {
-  display: inline-block;
-  *display: inline;
-  zoom: 1;
-  margin: 0;
-  vertical-align: middle;
+.border_box {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
 }
-.pure-menu.pure-menu-horizontal > ul {
-  display: inline-block;
-  *display: inline;
-  zoom: 1;
-  vertical-align: middle;
+.fix3d {
+  -webkit-transform: translate3D(0, 0, 0);
 }
-.pure-menu li a {
-  padding: 5px 20px;
+.border_box {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
 }
-.pure-menu-can-have-children > .pure-menu-label:after {
-  content: '\25B8';
-  float: right;
-  /* These specific fonts have the Unicode char we need. */
-  font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'DejaVu Sans', sans-serif;
-  margin-right: -20px;
-  margin-top: -1px;
+.invert {
+  -webkit-filter: invert(100%);
+  -moz-filter: invert(100%);
+  -ms-filter: invert(100%);
+  -o-filter: invert(100%);
+  filter: invert(100%);
 }
-.pure-menu-can-have-children > .pure-menu-label {
-  padding-right: 30px;
-}
-.pure-menu-separator {
-  background-color: #dfdfdf;
-  display: block;
-  height: 1px;
-  font-size: 0;
-  margin: 7px 2px;
-  overflow: hidden;
-}
-.pure-menu-hidden {
-  display: none;
-}
-/* FIXED MENU */
-.pure-menu-fixed {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-}
-/* HORIZONTAL MENU CODE */
-/* Initial menus should be inline-block so that they are horizontal */
-.pure-menu-horizontal li {
-  display: inline-block;
-  *display: inline;
-  zoom: 1;
-  vertical-align: middle;
-}
-/* Submenus should still be display: block; */
-.pure-menu-horizontal li li {
-  display: block;
-}
-/* Content after should be down arrow */
-.pure-menu-horizontal > .pure-menu-children > .pure-menu-can-have-children > .pure-menu-label:after {
-  content: "\25BE";
-}
-/*Add extra padding to elements that have the arrow so that the hover looks nice */
-.pure-menu-horizontal > .pure-menu-children > .pure-menu-can-have-children > .pure-menu-label {
-  padding-right: 30px;
-}
-/* Adjusting separator for vertical menus */
-.pure-menu-horizontal li.pure-menu-separator {
-  height: 50%;
-  width: 1px;
-  margin: 0 7px;
-}
-/* Submenus should be horizontal separator again */
-.pure-menu-horizontal li li.pure-menu-separator {
-  height: 1px;
-  width: auto;
-  margin: 7px 2px;
-}
-/*csslint adjoining-classes:false*/
-/*TODO: Remove this lint rule override after a refactor of this code.*/
-/* MAIN MENU STYLING */
-.pure-menu.pure-menu-open,
-.pure-menu.pure-menu-horizontal li .pure-menu-children {
-  background: #fff;
-  /* Old browsers */
-  border: 1px solid #b7b7b7;
-}
-/* remove borders for horizontal menus */
-.pure-menu.pure-menu-horizontal,
-.pure-menu.pure-menu-horizontal .pure-menu-heading {
-  border: none;
-}
-/* LINK STYLES */
-.pure-menu a {
-  border: 1px solid transparent;
-  border-left: none;
-  border-right: none;
-}
-.pure-menu a,
-.pure-menu .pure-menu-can-have-children > li:after {
-  color: #777;
-}
-.pure-menu .pure-menu-can-have-children > li:hover:after {
-  color: #fff;
-}
-/* Focus style for a dropdown menu-item when the parent has been opened */
-.pure-menu .pure-menu-open {
-  background: #dedede;
-}
-.pure-menu li a:hover,
-.pure-menu li a:focus {
-  background: #eee;
-}
-/* DISABLED STATES */
-.pure-menu li.pure-menu-disabled a:hover,
-.pure-menu li.pure-menu-disabled a:focus {
-  background: #fff;
-  color: #bfbfbf;
-}
-.pure-menu .pure-menu-disabled > a {
-  background-image: none;
-  border-color: transparent;
-  cursor: default;
-}
-.pure-menu .pure-menu-disabled > a,
-.pure-menu .pure-menu-can-have-children.pure-menu-disabled > a:after {
-  color: #bfbfbf;
-}
-/* HEADINGS */
-.pure-menu .pure-menu-heading {
-  color: #565d64;
-  text-transform: uppercase;
-  font-size: 90%;
-  margin-top: 0.5em;
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
-  border-bottom-color: #dfdfdf;
-}
-/* ACTIVE MENU ITEM */
-.pure-menu .pure-menu-selected a {
-  color: #000;
-}
-/* FIXED MENU */
-.pure-menu.pure-menu-open.pure-menu-fixed {
-  border: none;
-  border-bottom: 1px solid #b7b7b7;
-}
-/*csslint box-model:false*/
-/*TODO: Remove this lint rule override after a refactor of this code.*/
-.pure-paginator {
-  /* `pure-g` Grid styles */
-  letter-spacing: -0.31em;
-  /* Webkit: collapse white-space between units */
-  *letter-spacing: normal;
-  /* reset IE < 8 */
-  *word-spacing: -0.43em;
-  /* IE < 8: collapse white-space between units */
-  text-rendering: optimizespeed;
-  /* Webkit: fixes text-rendering: optimizeLegibility */
-  /* `pure-paginator` Specific styles */
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.opera-only :-o-prefocus,
-.pure-paginator {
-  word-spacing: -0.43em;
-}
-/* `pure-u` Grid styles */
-.pure-paginator li {
-  display: inline-block;
-  *display: inline;
-  /* IE < 8: fake inline-block */
-  zoom: 1;
-  letter-spacing: normal;
-  word-spacing: normal;
-  vertical-align: top;
-  text-rendering: auto;
-}
-.pure-paginator .pure-button {
-  border-radius: 0;
-  padding: 0.8em 1.4em;
-  vertical-align: top;
-  height: 1.1em;
-}
-.pure-paginator .pure-button:focus,
-.pure-paginator .pure-button:active {
-  outline-style: none;
-}
-.pure-paginator .prev,
-.pure-paginator .next {
-  color: #C0C1C3;
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.45);
-}
-.pure-paginator .prev {
-  border-radius: 2px 0 0 2px;
-}
-.pure-paginator .next {
-  border-radius: 0 2px 2px 0;
-}
-@media (max-width: 480px) {
-  .pure-menu-horizontal {
-    width: 100%;
-  }
-  .pure-menu-children li {
-    display: block;
-    border-bottom: 1px solid black;
-  }
-}
-html,
-body {
-  margin: 0px;
-  padding: 0px;
+html {
+  height: 100%;
 }
 body {
-  padding-top: 90px;
-  padding-bottom: 40px;
-}
-html,
-body,
-button,
-input,
-select,
-textarea,
-h1,
-h2,
-h3,
-h4,
-h5,
-.pure-g [class*="pure-u"] {
   font-family: 'Open Sans';
-  font-size: 14px;
-}
-h1,
-h2,
-h3,
-h4,
-h5 {
-  margin: 0px;
-  padding: 0px;
   font-weight: normal;
+  margin: 0px;
+  color: #262626;
+  background: #fff;
+  font-size: 13px;
+  line-height: 1.3;
+  -webkit-font-smoothing: antialiased;
+  height: 100%;
+  position: relative;
 }
 [ng\:cloak],
 [ng-cloak],
@@ -2852,43 +143,34 @@ h5 {
 .x-ng-cloak {
   display: none;
 }
-.pure-controls .pure-button-primary {
-  border-radius: 0px;
-  background: #5bc0de;
-  border: 1px solid #5bc0de;
-  color: #FFF;
-  min-width: 100px;
-  font-size: 14px;
-  margin-right: 10px;
+#container {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  padding-top: 55px;
+  position: relative;
+  min-width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
 }
-.pure-controls .pure-button-secondary {
-  border-radius: 0px;
-  background: none;
-  border: 1px solid #5bc0de;
-  color: #5bc0de;
-  min-width: 100px;
-  font-size: 14px;
-}
-.pure-form textarea {
-  border: 1px solid #EEE;
-  box-shadow: none;
-  border-radius: 0px;
-  color: #777;
-  font-family: 'Droid Sans Mono';
-  min-height: 70px;
-  height: auto;
-}
-body > header {
+#header {
+  background: #262626;
   position: fixed;
-  top: 0px;
-  left: 0px;
-  right: 0px;
   height: 55px;
-  background: #222625;
-  z-index: 999;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9;
+  color: #fff;
+  font-size: 15px;
+  line-height: 55px;
   text-align: center;
 }
-.header-brand {
+#header .brand {
   display: inline-block;
   font-family: 'Orbitron';
   font-size: 26px;
@@ -2897,23 +179,37 @@ body > header {
   text-transform: uppercase;
   color: #CCC;
 }
-.header-login,
-.header-user {
+#header .burger {
+  position: absolute;
+  top: 0px;
+  left: 31px;
+  height: 55px;
+  font-size: 22px;
+  color: #CCC;
+}
+#header .burger i.fa {
+  line-height: 55px;
+}
+#header .login,
+#header .user {
   position: absolute;
   right: 0px;
   top: 0px;
   bottom: 0px;
   white-space: nowrap;
-  color: #CCC;
   margin-right: 20px;
   display: inline-block;
+}
+#header .login a,
+#header .user a {
+  color: #CCC;
+  text-decoration: none;
+  text-transform: uppercase;
   line-height: 55px;
   font-size: 15px;
-  text-decoration: none;
-  text-transform: uppercase;
 }
-.header-login img,
-.header-user img {
+#header .login a img,
+#header .user a img {
   border-radius: 50%;
   float: right;
   width: 32px;
@@ -2921,412 +217,634 @@ body > header {
   margin-top: 10px;
   margin-left: 20px;
 }
-.header-login {
-  padding-left: 20px;
-  padding-right: 20px;
-  background: #383C44;
+#body {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  display: flex;
+  min-width: 100%;
+  flex-direction: row-reverse;
+  justify-content: space-between;
 }
-article {
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 680px;
+#body article {
+  width: 100%;
 }
-article > header {
-  position: relative;
+#drawer {
+  visibility: hidden;
+  position: fixed;
+  z-index: 10;
+  left: 0px;
+  top: 55px;
+  bottom: 0px;
+  width: 255px;
+  background: #363636;
+  -webkit-transition: all 0.2s;
+  -moz-transition: all 0.2s;
+  transition: all 0.2s;
+  -webkit-transform: translate3d(-100%, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  transform: translate3d(-100%, 0, 0);
 }
-article > header > h1 {
-  font-weight: normal;
-  margin: 0px 0px 25px 0px;
-  text-align: center;
-  text-transform: uppercase;
-  line-height: 41px;
-  font-size: 22px;
-  color: #383c3b;
-}
-article > header > a.pure-button {
-  border: 1px solid #dddddd;
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  background: #FFF;
-  color: #999;
-  padding: 13px 15px;
-  font-size: 15px;
-}
-article > header > a.pure-button:hover {
-  box-shadow: 1px 1px 5px #eeeeee, -1px -1px 5px #eeeeee;
-  background: #FFF;
-}
-article > header > a.pure-button:active {
-  border-color: #dddddd;
-  background: #fbfbfb;
-}
-article.pure-g {
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 980px;
-}
-article.pure-g > header > h1 {
-  text-transform: none;
-  text-align: left;
-  color: #383c3b;
-}
-article.pure-g > header > h1 * {
-  text-decoration: none;
-  color: #383c3b;
-  opacity: 0.8;
-}
-article.pure-g > header > h1 *:last-child {
-  opacity: 1.0;
-}
-article.pure-g > header > h1 a:hover {
-  text-decoration: underline;
-}
-article.pure-g > .pure-u-1-4 {
-  width: 30%;
-}
-article.pure-g > .pure-u-3-4 {
-  width: 70%;
-}
-.activity-item {
-  display: block;
-  position: relative;
-  margin-bottom: 20px;
-  border: 1px solid #eeeeee;
-  padding: 20px;
-  text-decoration: none;
-}
-.activity-item h2 {
-  color: #383c3b;
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-.activity-item p {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin: 0px;
-  margin-bottom: 2px;
-  max-width: 100%;
-  color: #999;
-}
-.activity-sha,
-.activity-branch,
-.activity-date {
-  color: #999;
-}
-.activity-branch:before,
-.activity-date:before {
-  content: '\2022';
-  opacity: 0.5;
-  margin-left: 5px;
-  margin-right: 5px;
-}
-.activity-item img {
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  margin-left: 15px;
-}
-.activity-item .fa {
-  float: right;
-  width: 48px;
-  height: 48px;
-  font-size: 36px;
-  line-height: 74px;
-  vertical-align: middle;
-}
-.activity-item .fa:before {
-  display: inline-block;
-}
-.activity-item-Success .fa {
-  color: #40c598;
-}
-.activity-item-Error,
-.activity-item-Failure,
-.activity-item-Killed {
-  border: 1px solid #f6aab2;
-  background: #fdf7f7;
-  color: #ed5564;
-}
-.activity-item-Error p,
-.activity-item-Failure p,
-.activity-item-Killed p,
-.activity-item-Error span,
-.activity-item-Failure span,
-.activity-item-Killed span {
-  color: #e48784;
-}
-.activity-item-Error h2 span,
-.activity-item-Failure h2 span,
-.activity-item-Killed h2 span {
-  color: #d9534f;
-}
-.activity-item:after {
-  font-family: 'FontAwesome';
-  font-size: 22px;
-  min-width: 32px;
-  display: inline-block;
-  text-align: center;
-  margin-left: 30px;
+#drawer ul {
   margin-top: 20px;
-  font-size: 32px;
 }
-.activity-item[data-status="Success"]:after {
-  color: #40c598;
-  content: "\f00c";
-}
-.activity-item[data-status="Error"],
-.activity-item[data-status="Failure"],
-.activity-item[data-status="Killed"] {
-  border: 1px solid #f6aab2;
-  background: #fdf7f7;
-  color: #ed5564;
-}
-.activity-item[data-status="Error"] p,
-.activity-item[data-status="Failure"] p,
-.activity-item[data-status="Killed"] p,
-.activity-item[data-status="Error"] span,
-.activity-item[data-status="Failure"] span,
-.activity-item[data-status="Killed"] span {
-  color: #e48784;
-}
-.activity-item[data-status="Error"] h2,
-.activity-item[data-status="Failure"] h2,
-.activity-item[data-status="Killed"] h2 {
-  color: #d9534f;
-}
-.activity-item[data-status="Error"]:after,
-.activity-item[data-status="Failure"]:after,
-.activity-item[data-status="Killed"]:after {
-  color: #ed5564;
-  content: "\f00d";
-}
-.repo-item {
-  padding: 10px 20px;
-  border-style: solid;
-  border-width: 0px 1px 1px 1px;
-  border-color: #eeeeee;
-  text-decoration: none;
-  display: block;
-}
-.repo-item:first-child {
-  border-top-width: 1px;
-}
-.repo-item h2 {
-  color: #333;
-  font-size: 14px;
-  line-height: 29px;
-}
-.repo-item .repo-active {
-  background: #40c598;
-  color: #FFFFFF;
-  padding: 5px;
-  display: block;
-  text-align: center;
-  border-radius: 15px;
-  text-transform: uppercase;
-}
-.repo-item .repo-inactive {
-  background: #EEE;
+#drawer ul a {
   color: #CCC;
-  padding: 5px;
-  display: block;
-  text-align: center;
-  border-radius: 15px;
-  text-transform: uppercase;
-}
-.repo-item .pure-u-1-12 {
-  text-align: center;
-}
-.commit-item {
-  display: block;
-  margin-bottom: 20px;
-  border: 1px solid #eeeeee;
-  padding: 25px 15px;
   text-decoration: none;
-  font-size: 15px;
+  padding: 10px 0px 10px 30px;
+  display: block;
+  font-size: 14px;
 }
-.commit-item h2 {
-  color: #383c3b;
+#drawer ul a i {
+  margin-right: 10px;
   font-size: 16px;
-  margin-bottom: 5px;
-  margin-top: 5px;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.commit-sha {
-  color: #383c3b;
-  font-size: 15px;
-}
-.commit-branch,
-.commit-date {
-  color: #999;
-  font-size: 15px;
-}
-.commit-branch:before,
-.commit-date:before {
-  content: '\2022';
-  opacity: 0.5;
-  margin-left: 5px;
-  margin-right: 5px;
-}
-.commit-item img {
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  margin-left: 15px;
-}
-.commit-item .fa {
-  float: right;
-  width: 48px;
-  height: 48px;
-  font-size: 36px;
-  line-height: 50px;
-  vertical-align: middle;
-}
-.commit-item .fa:before {
+  opacity: 0.3;
+  min-width: 16px;
   display: inline-block;
 }
-.commit-item-Success .fa {
-  color: #40c598;
+#drawer ul span.divider {
+  display: block;
+  height: 1px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 15px;
+  margin-bottom: 15px;
 }
-.commit-item-Error,
-.commit-item-Failure,
-.commit-item-Killed {
-  border: 1px solid #f6aab2;
-  background: #fdf7f7;
-  color: #ed5564;
+#drawer .signout {
+  position: absolute;
+  bottom: 20px;
+  right: 30px;
+  color: #CCC;
+  font-size: 16px;
+  text-transform: uppercase;
+  text-decoration: none;
 }
-.commit-item-Error p,
-.commit-item-Failure p,
-.commit-item-Killed p,
-.commit-item-Error span,
-.commit-item-Failure span,
-.commit-item-Killed span {
-  color: #e48784;
+#drawer .signout i {
+  margin-left: 20px;
 }
-.commit-item-Error h2,
-.commit-item-Failure h2,
-.commit-item-Killed h2 {
-  color: #d9534f;
+#drawer-checkbox {
+  position: fixed;
+  top: 7px;
+  left: 10px;
+  width: 45px;
+  height: 40px;
+  display: block;
+  z-index: 9999;
+  opacity: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
-.commit-item-Started,
-.commit-item-Pending {
-  border: 1px solid #FEF0B8;
+#drawer-checkbox:checked ~ #drawer {
+  visibility: visible;
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+#drawer-checkbox:checked ~ #drawer {
+  visibility: visible;
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+#drawer-checkbox:checked ~ #header .fa-bars:before {
+  content: "\f00d";
+  color: #999;
+}
+nav {
+  padding-left: 30px;
+  background: #FFF;
+  min-height: 77px;
+  max-height: 77px;
+  line-height: 77px;
+  font-family: 'Open Sans';
+  font-size: 22px;
+  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.7);
+  border-bottom: 1px solid #EEE;
   position: relative;
-  padding-bottom: 30px;
-  /*
-	border: 1px solid @yellow-border;
-	background: @yellow-background;
-	color: @yellow-text-light;
-
-	p, span {
-		color: @yellow-text-light;
-	}
-	h2 span {
-		color: @yellow-text;
-	}
-
-	.fa-refresh:before {
-		animation: spin 1.5s infinite linear;
-			-webkit-animation: spin 1.5s infinite linear;
-			-moz-animation: spin 1.5s infinite linear;
-			-ms-animation: spin 1.5s infinite linear;
-			-o-animation: spin 1.5s infinite linear;
-	}*/
+  z-index: 2;
 }
-.commit-item-Started .fa,
-.commit-item-Pending .fa {
+nav a {
+  text-decoration: none;
+  color: rgba(0, 0, 0, 0.7);
+}
+nav a:last-child {
+  color: #000;
+}
+nav a span.fa {
+  margin-right: 20px;
+}
+@supports (position:sticky) {
+  nav {
+    position: sticky;
+    top: 55px;
+  }
+}
+@supports (position:-moz-sticky) {
+  nav {
+    position: -moz-sticky;
+    top: 55px;
+  }
+}
+@supports (position:-webkit-sticky) {
+  nav {
+    position: -webkit-sticky;
+    top: 55px;
+  }
+}
+.cards .card {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  padding-right: 20px;
+  padding-bottom: 20px;
+  text-decoration: none;
+  position: relative;
+  color: #262626;
+  font-family: 'Open Sans';
+}
+.cards .card .l-box {
+  background: #FFF;
+  border: 1px solid #DDD;
+  position: relative;
+  padding: 30px 20px;
+  height: 200px;
+  -webkit-transition: 0.4s border linear;
+  -moz-transition: 0.4s border linear;
+  -ms-transition: 0.4s border linear;
+  -o-transition: 0.4s border linear;
+  transition: 0.4s border linear;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+}
+.cards .card .l-box:hover {
+  border: 1px solid #262626;
+}
+.cards .card .l-box em {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  left: 20px;
+  height: 30px;
+  line-height: 30px;
+  vertical-align: middle;
+  text-align: right;
+  padding-right: 45px;
+  padding-top: 20px;
+  font-size: 14px;
+  color: #666;
+}
+.cards .card .l-box img {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+}
+.cards .card .l-box .timeago {
+  position: absolute;
+  bottom: 85px;
+  left: 25px;
+  right: 25px;
+  text-align: right;
+  font-size: 14px;
+  color: #849299;
   display: none;
 }
-.commit-item-Started:before,
-.commit-item-Pending:before {
+.cards .card h2 {
+  font-size: 18px;
+  font-weight: normal;
+  min-height: 52px;
+  max-height: 52px;
+  height: 52px;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 26px;
+  color: #262626;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  overflow: hidden;
+}
+.cards .card h2 .separator {
+  margin: 0px 0px;
+}
+.cards .card.card-inactive .l-box {
+  position: relative;
+  box-shadow: none;
+  background: #4ab1ce;
+  color: #FFF;
+  height: 180px;
+  border-color: #4ab1ce;
+}
+.cards .card.card-inactive .l-box:hover {
+  background: #3197b4;
+}
+.cards .card.card-inactive .l-box:hover:before {
+  background: #3197b4;
+}
+.cards .card.card-inactive h2 {
+  padding-top: 10px;
+  color: #FFF;
+}
+.cards .card.card-inactive em {
+  position: absolute;
+  border-top: 1px solid rgba(255, 255, 255, 0.5);
+  bottom: 15px;
+  font-size: 13px;
+  left: 25px;
+  right: 25px;
+  line-height: 1.3;
+  padding: 0px;
+  padding-top: 20px;
+  text-align: center;
+  display: block;
+  height: 30px;
   text-transform: uppercase;
-  content: attr(data-status);
+  color: #FFF;
+}
+.cards .card.card-browse-inactive,
+.cards .card.card-browse {
+  text-align: center;
+  color: #4ab1ce;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.cards .card.card-browse-inactive .l-box,
+.cards .card.card-browse .l-box {
+  padding-top: 75px;
+  background: #FFF;
+  height: 180px;
+}
+.cards .card.card-browse-inactive .l-box {
+  box-shadow: none;
+}
+.cards .progressContainer {
+  height: 5px;
+  background-color: #e97041;
+  position: absolute;
+  bottom: 65px;
+  left: 20px;
+  right: 20px;
+}
+.cards .progressContainer .activeProgress,
+.cards .progressContainer .secondaryProgress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+}
+.cards .progressContainer .activeProgress {
+  background-color: #68c598;
+}
+.cards .progressContainer .secondaryProgress {
+  background-color: #68c598;
+}
+#commitpage {
+  max-width: 1180px;
+  margin: 0px auto;
+  margin-bottom: 50px;
+  margin-top: 70px;
+}
+#commitpage section {
+  margin-top: 30px;
+}
+#commitpage section .commits {
+  border: 1px solid #DDD;
+  border-bottom: 0px solid #DDD;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+}
+#commitpage section .commits a {
+  padding: 20px 45px;
+  display: block;
+  border-bottom: 1px solid #dadcdd;
+  color: #262626;
+  text-decoration: none;
+  position: relative;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+}
+#commitpage section .commits a h2 {
+  font-family: 'Open Sans';
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+#commitpage section .commits a img {
+  border-radius: 50%;
+  margin-right: 10px;
+  float: left;
+  display: none;
+}
+#commitpage section .commits a p {
+  color: #363636;
+  line-height: 22px;
+  vertical-align: middle;
+}
+#commitpage section .commits a[data-status]:before {
+  background: transparent;
+  width: 7px;
+  min-width: 7px;
+  max-width: 7px;
+  position: absolute;
+  left: -1px;
+  top: 0px;
+  bottom: 0px;
+  text-align: left;
+  color: #fff;
+  font-size: 20px;
+  line-height: 50px;
+  font-family: 'Open Sans';
+  padding-left: 2px;
+  overflow: hidden;
+  content: " ";
+}
+#commitpage section .commits a[data-result="Killed"],
+#commitpage section .commits a[data-status="Error"],
+#commitpage section .commits a[data-status="Failure"] {
+  background: #fff9f5;
+}
+#commitpage section .commits a[data-result="Killed"]:before,
+#commitpage section .commits a[data-status="Error"]:before,
+#commitpage section .commits a[data-status="Failure"]:before {
+  background: #e97041;
+  content: "!";
+}
+#commitpage section .commits a[data-status="Success"]:before {
+  background: #68c598;
+}
+#commitpage .date span {
+  display: inline-block;
+  text-align: right;
+  font-size: 14px;
+  width: 100%;
+  padding-right: 30px;
+  margin-top: 15px;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+}
+#loginpage .pure-g {
+  padding: 30px;
+  border: 1px solid #DDD;
+  max-width: 400px;
+  margin: 0px auto;
+  margin-top: 50px;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+}
+#loginpage .pure-g a {
+  display: block;
+  background: #45494b;
+  color: #fff;
+  padding: 14px 20px;
+  font-size: 15px;
+  border-radius: 5px;
+  text-decoration: none;
+}
+#loginpage .pure-g a:hover {
+  background: #262626;
+}
+#loginpage .pure-g [class*="fa-"] {
+  float: left;
+  font-size: 20px;
+  position: relative;
+  top: -3px;
+  left: -3px;
+  padding-right: 10px;
+  min-width: 27px;
+  min-height: 20px;
+}
+#loginpage .pure-g .pure-u-1 a {
+  margin-bottom: 10px;
+}
+#loginpage .pure-g .pure-u-1:last-child a {
+  margin-bottom: 0px;
+}
+#homepage {
+  width: 100%;
+  background: #f2f5f8;
+}
+#homepage section {
+  padding: 40px 0px 20px 0px;
+  border-bottom: 1px solid #EEE;
+}
+#homepage section div {
+  max-width: 1180px;
+  margin: 0px auto;
+}
+#homepage section:nth-child(2) {
+  background: #FFF;
+  padding: 40px 0px 20px 0px;
+}
+#homepage section:nth-child(3) {
+  border-bottom: 0px solid #EEE;
+}
+#repospage {
+  width: 100%;
+}
+#repospage section {
+  max-width: 1180px;
+  margin: 0px auto;
+  margin-top: 30px;
+}
+#userspage {
+  width: 100%;
+}
+#userspage section {
+  border-bottom: 1px solid #eee;
+  max-width: 768px;
+  margin: 0px auto;
+  margin-top: 30px;
+}
+#userspage section .user {
+  -webkit-transition: 0.4s border linear;
+  -moz-transition: 0.4s border linear;
+  -ms-transition: 0.4s border linear;
+  -o-transition: 0.4s border linear;
+  transition: 0.4s border linear;
+  border: 1px solid #eee;
+  border-bottom: 1px solid #fff;
+  text-decoration: none;
+}
+#userspage section .user:last-child {
+  border-bottom: 1px solid #fff;
+}
+#userspage section .user > div {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  padding: 20px 25px;
+  padding-right: 0px;
+}
+#userspage section .user img {
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+}
+#userspage section .user h4 {
+  font-size: 24px;
+  margin-bottom: 2px;
+  color: #262626;
+}
+#userspage section .user h4 small {
+  font-size: 16px;
+  color: #666;
+  margin-left: 5px;
+}
+#userspage section .user span {
+  color: #666;
+  font-size: 14px;
+}
+#userspage section .user:hover {
+  border: 1px solid #262626;
+}
+#accountpage {
+  width: 100%;
+}
+#accountpage section {
+  position: relative;
+  max-width: 768px;
+  margin: 0px auto;
+  margin-top: 30px;
+  border: 1px solid #eee;
+}
+#accountpage section.profile > div:first-child {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  padding: 20px;
+  text-align: center;
+}
+#accountpage section.profile > div:last-child {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  padding: 20px;
+}
+#accountpage section.profile .fullname {
+  font-size: 14px;
+  margin-bottom: 2px;
+  color: #666;
+  display: block;
+}
+#accountpage section.profile .email {
+  font-size: 14px;
+  color: #666;
+  display: block;
+}
+#accountpage section.token > div:first-child div {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 16px;
+  line-height: 22px;
+}
+#accountpage section.token > div:first-child i {
+  margin-right: 7px;
+}
+#accountpage section.token > div:last-child {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  padding: 20px;
+  color: #666;
+  line-height: 22px;
+  font-size: 14px;
+}
+#accountpage section h4 {
+  margin: 10px 0px;
+  font-size: 22px;
+}
+#accountpage section img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+}
+#accountpage section .notifications {
   position: absolute;
   top: 0px;
   right: 0px;
-  font-family: 'Open Sans';
-  letter-spacing: 0;
-  background: #fef9e5;
-  color: #CBB45B;
-  padding: 5px 10px;
+  margin: 20px;
 }
-.commit-item-Started:after,
-.commit-item-Pending:after {
+#repopage {
+  width: 100%;
+  background: #f2f5f8;
+}
+#repopage section {
+  padding: 40px 0px 20px 0px;
+  border-bottom: 1px solid #EEE;
+}
+#repopage section > div {
+  max-width: 1180px;
+  margin: 0px auto;
+}
+#repopage section:nth-child(even) {
+  background: #FFF;
+}
+#repopage section:first-child {
+  background: #FFF;
+}
+#repopage section .card[data-status="Success"]:nth-child(2) .l-box {
+  border-color: #68c598;
+}
+#repopage section .card[data-status="Success"] em {
+  border-top: 5px solid #68c598;
+}
+#repopage section .card[data-status="Killed"]:nth-child(2) .l-box,
+#repopage section .card[data-status="Failure"]:nth-child(2) .l-box,
+#repopage section .card[data-status="Error"]:nth-child(2) .l-box {
+  border-color: #e97041;
+}
+#repopage section .card[data-status="Killed"] em,
+#repopage section .card[data-status="Failure"] em,
+#repopage section .card[data-status="Error"] em {
+  border-top: 5px solid #e97041;
+}
+#repopage section .card[data-status="Started"] em:before,
+#repopage section .card[data-status="Pending"] em:before {
   -webkit-animation: progress 1s linear infinite;
   -moz-animation: progress 1s linear infinite;
   animation: progress 1s linear infinite;
   position: absolute;
   content: ' ';
-  height: 10px;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
-  background: #fee172;
-  background-image: -webkit-linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0.55) 75%, transparent 75%, transparent);
-  background-image: linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0.55) 75%, transparent 75%, transparent);
-  background-repeat: repeat-x;
-  background-size: 30px 30px;
-}
-.commit-item:after {
-  font-family: 'FontAwesome';
-  font-size: 22px;
-  min-width: 32px;
-  display: inline-block;
-  text-align: center;
-  margin-left: 20px;
-  margin-top: 10px;
-  font-size: 32px;
-}
-.commit-item[data-status="Success"]:after {
-  color: #40c598;
-  content: "\f00c";
-}
-.commit-item[data-status="Error"],
-.commit-item[data-status="Failure"],
-.commit-item[data-status="Killed"] {
-  border: 1px solid #f6aab2;
-  background: #fdf7f7;
-  color: #ed5564;
-}
-.commit-item[data-status="Error"] p,
-.commit-item[data-status="Failure"] p,
-.commit-item[data-status="Killed"] p,
-.commit-item[data-status="Error"] span,
-.commit-item[data-status="Failure"] span,
-.commit-item[data-status="Killed"] span {
-  color: #e48784;
-}
-.commit-item[data-status="Error"] h2,
-.commit-item[data-status="Failure"] h2,
-.commit-item[data-status="Killed"] h2 {
-  color: #d9534f;
-}
-.commit-item[data-status="Error"]:after,
-.commit-item[data-status="Failure"]:after,
-.commit-item[data-status="Killed"]:after {
-  color: #ed5564;
-  content: "\f00d";
-}
-.commit-item[data-status="Started"],
-.commit-item[data-status="Pending"] {
-  border: 1px solid #FEF0B8;
-  padding-bottom: 40px;
-  position: relative;
-}
-.commit-item[data-status="Started"]:after,
-.commit-item[data-status="Pending"]:after {
-  -webkit-animation: progress 1s linear infinite;
-  -moz-animation: progress 1s linear infinite;
-  animation: progress 1s linear infinite;
-  position: absolute;
-  content: ' ';
-  height: 10px;
-  bottom: 0px;
+  height: 5px;
+  top: -5px;
   left: 0px;
   right: 0px;
   margin: 0px;
@@ -3336,205 +854,19 @@ article.pure-g > .pure-u-3-4 {
   background-repeat: repeat-x;
   background-size: 30px 30px;
 }
-.user-item {
-  padding: 10px 20px;
-  border-style: solid;
-  border-width: 0px 1px 1px 1px;
-  border-color: #eeeeee;
-  text-decoration: none;
-}
-.user-item:first-child {
-  border-top-width: 1px;
-}
-.user-item h2 {
-  color: #333;
-  font-size: 16px;
-  line-height: 32px;
-}
-.user-item h2 span {
-  display: inline-block;
-  min-width: 150px;
-}
-.user-item h2 small {
-  margin-left: 20px;
-  color: #999;
-  font-size: 14px;
-}
-.user-item .user-remote {
-  color: #333;
-  font-size: 14px;
-  line-height: 29px;
-}
-.user-item i {
-  color: #CCC;
-  display: inline-block;
-  text-align: center;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
-}
-.user-item img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-}
-.user-item .pure-u-1-12 {
-  text-align: center;
-}
-.user-item .pure-u-1-12:first-child {
-  text-align: left;
-}
-.user-item .pure-u-1-12:last-child {
-  text-align: right;
-}
-.user-account h3 {
-  font-size: 16px;
-  text-transform: uppercase;
-  color: #777;
-  margin-bottom: 20px;
-}
-.user-account h3[data-remote="github.com"]:before {
-  content: "GitHub ";
-}
-.user-account h3[data-remote="enterprise.github.com"]:before {
-  content: "GitHub Enterprise ";
-}
-.user-account h3[data-remote="bitbucket.org"]:before {
-  content: "Bitbucket ";
-}
-.user-account h3[data-remote="gitlab.com"]:before {
-  content: "GitLab ";
-}
-.user-account h3[data-remote="stash.atlassian.com"]:before {
-  content: "Stash ";
-}
-.user-account > section {
-  border: 1px solid #eeeeee;
-  margin-bottom: 20px;
-  padding: 20px 30px;
-}
-.user-account pre {
-  padding: 20px;
-  background: #f7f7f7;
-  color: #555;
-}
-.user-account input[type="text"] {
-  color: #555;
-  border: 1px solid #eeeeee;
-  border-radius: 0px;
-  box-shadow: none;
-  padding: 12px;
-}
-.user-account .user-avatar {
-  display: inline-block;
-  width: 64px;
-  height: 64px;
-}
-.user-account .user-avatar img {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  display: inline-block;
-}
-.user-account .user-login {
-  font-size: 22px;
-  margin-bottom: 5px;
-  color: #555;
-}
-.user-account .user-fullname,
-.user-account .user-email {
-  color: #999;
-}
-.search-form {
-  margin-bottom: 20px;
-}
-.search-form input[type="text"],
-.search-form input[type="search"] {
-  border: 1px solid #dddddd;
-  border-radius: 0px;
-  box-shadow: none;
-  padding: 12px;
-  text-transform: uppercase;
-}
-.alert {
-  line-height: 23px;
-  padding: 20px;
-  border: none;
-}
-.alert:before {
+#repopage section .l-box:after {
   font-family: 'FontAwesome';
-  font-size: 22px;
-  min-width: 32px;
-  margin-left: 10px;
-  margin-right: 15px;
-  display: inline-block;
-}
-.alert a:visited,
-.alert a:active,
-.alert a {
-  color: inherit;
-}
-.alert-info {
-  background: #f4f8fa;
-  color: #5bc0de;
-  border-left: 5px solid #5bc0de;
-}
-.alert-info:before {
-  content: "\f05a";
-}
-.alert[data-status="Success"] {
-  background: #D9F3EA;
-  border-left: 5px solid #40C598;
-  color: #339E7A;
-}
-.alert[data-status="Success"]:before {
-  content: "\f00c";
-}
-.alert-danger,
-.alert[data-status="Error"],
-.alert[data-status="Failure"],
-.alert[data-status="Killed"] {
-  background: #fdf7f7;
-  border-left: 5px solid #ed5564;
-  color: #ed5564;
-}
-.alert-danger:before,
-.alert[data-status="Error"]:before,
-.alert[data-status="Failure"]:before,
-.alert[data-status="Killed"]:before {
-  content: "\f00d";
-}
-.alert[data-status="Pending"],
-.alert[data-status="Started"] {
-  position: relative;
-  margin-bottom: 10px;
-  padding-bottom: 30px;
-  background: #fef9e5;
-  border-left: none;
-  color: #CBB45B;
-}
-.alert[data-status="Pending"]:before,
-.alert[data-status="Started"]:before {
-  x-display: none;
-  content: "\f126";
-}
-.alert[data-status="Pending"]:after,
-.alert[data-status="Started"]:after {
-  -webkit-animation: progress 1s linear infinite;
-  -moz-animation: progress 1s linear infinite;
-  animation: progress 1s linear infinite;
+  content: "\f104";
+  content: "\f0d9";
   position: absolute;
-  content: ' ';
-  height: 10px;
-  bottom: -1px;
-  left: 0px;
-  right: 0px;
-  background: #fee172;
-  background-image: -webkit-linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0.55) 75%, transparent 75%, transparent);
-  background-image: linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0.55) 75%, transparent 75%, transparent);
-  background-repeat: repeat-x;
-  background-size: 30px 30px;
+  right: -20px;
+  width: 20px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.1);
+  font-size: 22px;
+}
+#repopage section .card:last-child .l-box:after {
+  content: '';
 }
 @-webkit-keyframes progress {
   to {
@@ -3551,326 +883,152 @@ article.pure-g > .pure-u-3-4 {
     background-position: 30px 0;
   }
 }
-.sticky {
-  position: -webkit-sticky;
-  position: -moz-sticky;
-  position: sticky;
-  top: 70px;
-}
-.pure-g.build {
-  padding-left: 20px;
-  margin-bottom: 20px;
-  display: inline-block;
-}
-.build .pure-u-1 {
-  border: 1px solid #eeeeee;
-  padding: 20px;
-}
-.build img {
-  border-radius: 50%;
-  margin-right: 10px;
-  float: left;
-  width: 64px;
-  height: 64px;
-}
-.build header:before,
-.build header:after {
-  content: " ";
-  display: table;
-}
-.build header:after {
-  clear: both;
-}
-.build h3 {
-  margin-top: 10px;
-  font-size: 18px;
-  color: #777;
-}
-.build h4 {
-  font-size: 14px;
-  color: #777;
-}
-.build .pure-u-1 > div {
-  display: block;
-  color: #777;
-}
-.build .pure-u-1 > div span:nth-child(odd) {
-  color: #333;
-}
-.build .pure-u-1 > div p {
-  margin: 0px;
-  padding: 0px;
-  display: block;
-}
-.build .pure-u-1 > div:nth-child(3),
-.build .pure-u-1 > div:last-child {
-  margin-top: 20px;
-}
-/*	
-
-						<div style="">{{commit.sha | shortHash}}</div>
-						<div style="">{{commit.branch}}</div>
-						<div style="clear:both;"></div>
-						<div style="margin-top:20px;"><span style="color:#333;">finished:</span> {{ commit.finished_at | fromNow }}</div>
-						<div><span style="color:#333;">duration:</span> {{ commit.duration | toDuration}}</div>
-
-						<div style="margin-top:20px;">
-							<span style="color:#333;">message:</span>
-							<p>{{commit.message}}
-						</div>
-*/
-.pure-g.authors {
-  padding-left: 20px;
-  margin-bottom: 20px;
-}
-.authors .pure-menu.pure-menu-horizontal {
-  border: 1px solid #eeeeee;
-  padding: 20px;
-}
-.authors .pure-menu.pure-menu-horizontal > .pure-menu-heading {
-  display: block;
-  color: #777;
-  font-size: 16px;
-  text-transform: uppercase;
-  margin-bottom: 20px;
-  padding: 0px;
-}
-.authors img {
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  margin-right: 10px;
-}
-.pure-g.branches {
-  padding-left: 20px;
-  margin-bottom: 20px;
-}
-.branches .pure-menu {
-  border: 1px solid #eeeeee;
-  padding: 20px;
-}
-.branches .pure-menu > .pure-menu-heading {
-  display: block;
-  color: #777;
-  font-size: 16px;
-  text-transform: uppercase;
-  margin: 0px;
-  margin-bottom: 20px;
-  padding: 0px;
-  border: none;
-}
-.branches .pure-menu li {
-  margin: 0px;
-  padding: 0px;
-}
-.branches .pure-menu li a {
-  color: #555;
-  margin: 0px;
-  padding: 8px;
-  font-size: 14px;
-  display: block;
-}
-.branches .pure-menu li a:hover {
-  background: #f4f4f4;
-}
-.branches .pure-menu li.pure-menu-selected a {
-  background: #f4f4f4;
-}
-.branches li a:before {
-  display: inline-block;
-  font-family: 'FontAwesome';
-  font-size: 18px;
-  margin-right: 15px;
-  min-width: 22px;
-  text-align: center;
-  color: #40c598;
-  content: "\f00c";
-}
-.branches li a[data-status="Error"]:before,
-.branches li a[data-status="Failure"]:before {
-  color: #ed5564;
-  content: "\f00d";
-}
-pre {
+#sidebar {
+  width: 240px;
+  min-width: 240px;
   position: relative;
-  white-space: pre-wrap;
-  overflow: hidden;
-  line-height: 20px;
-  font-size: 12px;
-  font-family: 'Droid Sans Mono';
-  color: #FFFFFF;
-  background: #383C44;
-  padding: 20px;
-  margin-top: 25px;
-}
-pre[data-status="Pending"] {
-  display: none;
-}
-pre[data-status="Started"]:after {
-  -webkit-animation: progress 1s linear infinite;
-  -moz-animation: progress 1s linear infinite;
-  animation: progress 1s linear infinite;
-  position: absolute;
-  content: ' ';
-  height: 10px;
-  bottom: -1px;
-  left: 0px;
-  right: 0px;
-  background: #383C44;
-  background-image: -webkit-linear-gradient(-45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
-  background-image: linear-gradient(-45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
-  background-repeat: repeat-x;
-  background-size: 30px 30px;
-}
-details {
-  padding: 20px 30px;
-  margin-bottom: 20px;
-  border: 1px solid #EEE;
-}
-details[open] summary {
-  margin-bottom: 30px;
-}
-summary {
   display: block;
-  color: #777;
-  padding: 0px;
-  margin: 0px;
-  font-weight: normal;
-  font-size: 16px;
-  -moz-user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  cursor: pointer;
-  text-transform: uppercase;
-}
-summary::-webkit-details-marker {
-  display: none;
-}
-summary:before {
-  font-family: 'FontAwesome';
-  content: "\f055";
-  margin-right: 15px;
-  color: #CCC;
-}
-details[open] summary:before {
-  font-family: 'FontAwesome';
-  content: "\f056";
-  margin-right: 15px;
-  color: #CCC;
-}
-summary:focus {
-  outline-style: none;
-}
-details textarea {
-  width: 100%;
-  height: 70px;
-  white-space: pre;
-  font-family: 'Ubuntu Mono';
-}
-/* http://proto.io/freebies/onoff/ */
-.pure-form .onoffswitch-label {
-  margin: 0px;
-}
-.onoffswitch + span {
-  vertical-align: middle;
-  display: inline-block;
-  line-height: 30px;
-  margin-left: 15px;
-  font-size: 14px;
-  color: #777;
-}
-.pure-form .pure-control-group {
-  margin-bottom: 15px;
-}
-.onoffswitch {
-  float: left;
-  display: inline-block;
-  position: relative;
-  width: 100px;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-.onoffswitch-checkbox {
-  display: none;
-}
-.onoffswitch-label {
-  display: block;
-  overflow: hidden;
-  cursor: pointer;
-  border: 0px solid #999999;
-  border-radius: 0px;
-}
-.onoffswitch-inner {
-  width: 200%;
-  margin-left: -100%;
-  -moz-transition: margin 0.3s ease-in 0s;
-  -webkit-transition: margin 0.3s ease-in 0s;
-  -o-transition: margin 0.3s ease-in 0s;
-  transition: margin 0.3s ease-in 0s;
-}
-.onoffswitch-inner > div {
-  float: left;
-  position: relative;
-  width: 50%;
-  height: 30px;
-  padding: 0;
-  line-height: 30px;
-  font-size: 14px;
-  color: white;
-  font-family: Trebuchet, Arial, sans-serif;
-  font-weight: bold;
-  -moz-box-sizing: border-box;
+  z-index: 5;
+  padding: 30px;
   -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
   box-sizing: border-box;
 }
-.onoffswitch-inner .onoffswitch-active {
-  padding-left: 15px;
-  background-color: #E9E9E9;
-  color: #FFFFFF;
+#sidebar h1 {
+  font-size: 28px;
+  font-weight: 300;
 }
-.onoffswitch-inner .onoffswitch-inactive {
-  padding-right: 15px;
-  background-color: #E9E9E9;
-  color: #FFFFFF;
-  text-align: right;
+#sidebar h2 {
+  font-size: 22px;
+  font-weight: 300;
+  margin-bottom: 20px;
 }
-.onoffswitch-switch {
-  width: 40px;
-  margin: 0px;
+#sidebar dl {
+  padding-top: 23px;
+  border-top: 1px solid #ddd;
+  margin-top: 5px;
+}
+#sidebar dl:first-child {
+  padding-top: 0;
+  border-top: none;
+  margin-top: 0;
+}
+#sidebar dl dt {
+  font-size: 12px;
+  color: #849299;
+  text-transform: uppercase;
+  padding: 3px 0;
+}
+#sidebar dl dd {
+  font-size: 14px;
+  padding: 3px 0 20px;
+}
+#sidebar dl a {
+  text-transform: none;
+}
+#sidebar dl small {
+  font-size: 12px;
+}
+#sidebar dl .large {
+  font-size: 18px;
+  padding-bottom: 5px;
+}
+#sidebar dl .time {
+  float: right;
+  margin-left: 8px;
+}
+#sidebar dl .photo {
+  margin-right: 4px;
+}
+#sidebar dl .negative {
+  color: #e97041;
+}
+#sidebar dl .photoline {
+  display: inline-block;
+  position: relative;
+  top: -10px;
+  font-weight: bold;
+}
+#sidebar dl .small {
+  padding-bottom: 5px;
+  font-weight: bold;
+  font-size: 12px;
+}
+#sidebar .status {
+  border: 1px solid transparent;
+  display: block;
   text-align: center;
-  border: 0px solid #999999;
-  border-radius: 0px;
-  position: absolute;
-  top: 0;
-  bottom: 0;
+  padding: 5px 20px;
+  border-radius: 50px;
+  text-transform: uppercase;
+  margin: 0 -5px 10px;
+  font-weight: bold;
 }
-.onoffswitch-active .onoffswitch-switch {
-  background: #5BC0DE;
-  left: 0;
+#sidebar .status:before {
+  float: left;
+  margin-left: -5px;
 }
-.onoffswitch-inactive .onoffswitch-switch {
-  background: #BDBEBE;
-  right: 0;
+#sidebar .status.status_ok {
+  color: #68c598;
+  border-color: #68c598;
 }
-.onoffswitch-active .onoffswitch-switch:before {
-  content: " ";
-  position: absolute;
-  top: 0;
-  left: 40px;
-  border-style: solid;
-  border-color: #5BC0DE transparent transparent #5BC0DE;
-  border-width: 15px 10px;
+#sidebar .status.status_ok:before {
+  content: "\f00c";
+  font-family: 'FontAwesome';
 }
-.onoffswitch-inactive .onoffswitch-switch:before {
-  content: " ";
-  position: absolute;
-  top: 0;
-  right: 40px;
-  border-style: solid;
-  border-color: transparent #BDBEBE #BDBEBE transparent;
-  border-width: 15px 10px;
+#sidebar .status.status_error {
+  color: #e97041;
+  border-color: #e97041;
 }
-.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner {
-  margin-left: 0;
+#sidebar .status.status_error:before {
+  content: "!";
+}
+#sidebar .result {
+  background: #4ab1ce;
+  background: #68c598;
+  color: #fff;
+  margin: -30px -30px -6px;
+  padding: 30px;
+  position: relative;
+}
+#sidebar .result .status {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+}
+#sidebar .result .status:before {
+  content: "\f00c";
+  font-family: 'FontAwesome';
+}
+#sidebar .result dl dd {
+  padding: 7px 0;
+}
+#sidebar .result dl dd strong {
+  font-size: 16px;
+}
+#sidebar .result[data-result="Killed"],
+#sidebar .result[data-result="Failure"],
+#sidebar .result[data-result="Error"] {
+  background: #e97041;
+}
+#sidebar .result[data-result="Killed"] .status:before,
+#sidebar .result[data-result="Failure"] .status:before,
+#sidebar .result[data-result="Error"] .status:before {
+  content: "!";
+}
+#main {
+  flex-grow: 2;
+}
+#main.output {
+  background: #525252;
+}
+#main.output pre {
+  margin: 0px auto;
+  padding: 30px;
+  color: #FFF;
+  font-family: 'Droid Sans Mono';
+  font-size: 13px;
+  white-space: pre-wrap;
+  overflow: hidden;
 }

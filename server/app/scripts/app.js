@@ -252,6 +252,7 @@ app.controller("RepoController", function($scope, $http, $routeParams, user, rep
 	$scope.repo = repo;
 
 	// load the repo branch list
+	/*
 	$http({method: 'GET', url: '/v1/repos/'+repo.host+'/'+repo.owner+"/"+repo.name+"/branches"}).
 		success(function(data, status, headers, config) {
 			$scope.branches = (typeof data==='string')?[]:data;
@@ -259,6 +260,7 @@ app.controller("RepoController", function($scope, $http, $routeParams, user, rep
 		error(function(data, status, headers, config) {
 			console.log(data);
 		});
+	*/
 
 	// load the repo commit feed
 	$http({method: 'GET', url: '/v1/repos/'+repo.host+'/'+repo.owner+"/"+repo.name+"/feed"}).
@@ -379,7 +381,7 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 		});
 
 	// load the repo build stdout
-	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/builds/1/console"}).
+	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/console"}).
 		success(function(data, status, headers, config) {
 			$scope.console = data;
 		}).
