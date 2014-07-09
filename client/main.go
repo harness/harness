@@ -51,6 +51,7 @@ func init() {
 	log.SetSuffix("\033[0m\n")
 	log.SetOutput(os.Stdout)
 	log.SetPriority(log.LOG_NOTICE)
+	docker.Logging = false
 }
 
 func main() {
@@ -143,6 +144,11 @@ func run(path string) {
 		os.Exit(1)
 		return
 	}
+
+	// remove deploy & publish sections
+	// for now, until I fix bug
+	s.Publish = nil
+	s.Deploy = nil
 
 	// get the repository root directory
 	dir := filepath.Dir(path)

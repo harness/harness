@@ -2,7 +2,7 @@
 
 angular.module('app').filter('gravatar', function() {
   return function(gravatar) {
-    return "https://secure.gravatar.com/avatar/"+gravatar+"?s=32&d=mm"
+    return "https://secure.gravatar.com/avatar/"+gravatar+"?s=48&d=mm"
   }
 });
 
@@ -59,4 +59,18 @@ angular.module('app').filter('badgeMarkup', function() {
     var path = repo.host+'/'+repo.owner+'/'+repo.name;
     return '<a href="'+scheme+'//'+host+'/'+path+'"><img src="'+scheme+'//'+host+'/v1/badge/'+path+'/status.svg?branch=master" /></a>'
   }
+});
+
+angular.module('app').filter('unique', function() {
+    return function(input, key) {
+        var unique = {};
+        var uniqueList = [];
+        for(var i = 0; i < input.length; i++){
+            if(typeof unique[input[i][key]] == "undefined"){
+                unique[input[i][key]] = "";
+                uniqueList.push(input[i]);
+            }
+        }
+        return uniqueList;
+    };
 });

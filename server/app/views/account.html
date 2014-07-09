@@ -1,66 +1,41 @@
-<h1>User Account</h1>
+<article id="accountpage">
+	<nav>
+		<a href="/"><span class="fa fa-th"></span></a>
+		<a href="/account/profile">my account</a>
+	</nav>
 
-<div class="row">
-
-	<!-- summary column -->
-	<div class="col-xs-6 col-sm-3">
-		What to show here?
-	</div>
-
-	<!-- primary column -->
-	<div class="col-xs-12 col-sm-9">
-
-		<div>
-			<label>Remote</label>
-			<span>{{ user.remote }}</span>
+	<section class="pure-g profile">
+		<div class="pure-u-1-6">
+			<div>
+				<a href="https://gravatar.com/" target="_blank">
+					<img ng-src="https://gravatar.com/avatar/{{ user.gravatar }}?d=identicon" />
+				</a>
+			</div>
 		</div>
+		<div class="pure-u-5-6">
+			<div>
+				<h4>bradrydzewski</h4>
+				<span class="fullname">Brad Rydzewski</span>
+				<span class="email">brad.rydzewski@gmail.com</span>
+			</div>
 
-		<div>
-			<label>Login</label>
-			<span>{{ user.login }}</span>
+			<!-- button to toggle HTML5 desktop notifications for build events -->
+			<div ng-if="notifications.supported && !notifications.granted" class="notifications">
+				<button ng-click="enableNotifications()" class="pure-button">Enable Notifications</button>
+			</div>
 		</div>
+	</section>
 
-		<div>
-			<label>Gravatar</label>
-			<img class="gravatar" ng-src="https://secure.gravatar.com/avatar/{{ user.gravatar }}?s=32&d=mm" />
+	<section class="pure-g token">
+		<div class="pure-u-1-6">
+			<div>
+				<i class="fa fa-key"></i> api key
+			</div>
 		</div>
-
-		<div>
-			<label>Email</label>
-			<input type="text" ng-model="userTemp.email" />
+		<div class="pure-u-5-6">
+			<div>
+				{{ user.token }}
+			</div>
 		</div>
-
-		<div>
-			<label>Full Name</label>
-			<input type="text" ng-model="userTemp.name" />
-		</div>
-
-		<div>
-			<label>Created</label>
-			<span>{{ user.created_at | fromNow }}</span>
-		</div>
-
-		<div>
-			<label>Updated</label>
-			<span>{{ user.updated_at | fromNow }}</span>
-		</div>
-
-		<div>
-			<label>Synced</label>
-			<span>{{ user.synced_at | fromNow }}</span>
-		</div>
-
-		<div>
-			{{failure}}
-		</div>
-
-		<div ng-if="notifications.supported && !notifications.granted">
-			<button ng-click="enableNotifications()">Enable Notifications</button>
-		</div>
-
-		<div>
-			<button ng-click="save()">Save</button>
-			<button ng-click="cancel()">Cancel</button>
-		</div>
-	</div>
-</div>
+	</section>
+</article>

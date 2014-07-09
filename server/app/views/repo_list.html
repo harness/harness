@@ -1,0 +1,13 @@
+<article id="repospage">
+	<nav>
+		<a href="/"><span class="fa fa-th"></span></a>
+		<a href="/account/repos">repositories</a>
+	</nav>
+
+
+	<section>
+		<ul>
+			<li ng-repeat="repo in repos"><a href="/{{ repo | fullPath }}">{{ repo | fullName }}</a></li>
+		</ul>
+	</section>
+</article>

@@ -1,22 +1,28 @@
 <!doctype html>
 <html ng-app="app">
 	<head>
-		<meta charset="utf-8" />
+		<meta charset="utf-8">
 		<meta name="author" content="Brad Rydzewski" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title></title>
 
-		<link rel="shortcut icon" href="/favicon.png" />
-		<link rel="stylesheet" href="//yui.yahooapis.com/pure/0.4.2/pure-min.css" />
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="stylesheet" href="//yui.yahooapis.com/pure/0.5.0/pure-min.css" />
+		<link rel="stylesheet" href="//yui.yahooapis.com/pure/0.5.0/grids-responsive-min.css" />
+		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" />
 		<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans" />
 		<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Orbitron" />
 		<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Droid+Sans+Mono" />
+		<link rel="stylesheet" href="/styles/drone.css" />
 
 	</head>
-	<body ng-controller="MainCtrl">
-
-		<div ng-include src=" '/views/header.html' "></div>
-
-		<div ng-view></div>
+	<body ng-controller="MainCtrl" ng-cloak>
+		<div id="container">
+			<input id="drawer-checkbox" type="checkbox" ng-if="user != undefined" />
+			<header id="header" ng-include src=" '/views/header.html' "></header>
+			<aside id="drawer" ng-include src=" '/views/drawer.html' "></aside>
+			<div ng-view id="body"></div>
+		</div>
 
 		<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.8/angular.min.js"></script>
 		<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.8/angular-route.min.js"></script>

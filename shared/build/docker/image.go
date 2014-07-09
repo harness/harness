@@ -120,5 +120,5 @@ func (c *ImageService) Build(tag, dir string) error {
 	headers.Set("Content-Type", "application/tar")
 
 	// make the request
-	return c.stream("POST", path, body, os.Stdout, headers)
+	return c.stream("POST", path, body /*os.Stdout*/, nil, headers)
 }
