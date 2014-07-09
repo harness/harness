@@ -627,19 +627,30 @@ nav {
 		}
 
 		.user {
-			.transition(.4s border linear);
-			border:1px solid #eee;
-			border-bottom:1px solid #fff;
+			.border_box;
 			text-decoration:none;
-			&:last-child {
+
+			&:last-child > div {
 				border-bottom:1px solid #fff;
 			}
-
-			&> div {
+			
+			&> div  {
 				.border_box;
-				padding:20px 25px;
-				padding-right:0px;
+				border:1px solid #eee;
+				border-bottom:1px solid #fff;
+				.transition(.4s border linear);
+
+				& > div {
+					.border_box;
+					padding:20px 25px;
+					padding-right:0px;
+				}
+
+				&:hover {
+					border:1px solid @c0;
+				}
 			}
+
 
 			img {
 				border-radius:50%;
@@ -661,10 +672,6 @@ nav {
 			span {
 				color:#666;
 				font-size:14px;
-			}
-
-			&:hover {
-				border:1px solid @c0;
 			}
 		}
 	}
