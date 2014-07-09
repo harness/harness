@@ -1,13 +1,30 @@
-<article id="repospage">
+<div id="repospage">
 	<nav>
 		<a href="/"><span class="fa fa-th"></span></a>
-		<a href="/account/repos">repositories</a>
+		<a href="/">repositories</a>
 	</nav>
 
-
 	<section>
-		<ul>
-			<li ng-repeat="repo in repos"><a href="/{{ repo | fullPath }}">{{ repo | fullName }}</a></li>
-		</ul>
+		<form class="pure-form search pure-g">
+			<input type="search" placeholder="FILTER" class="pure-u-1" id="search" ng-model="search" autofocus />
+		</form>
+
+		<a class="repo" ng-repeat="repo in repos | filter:search" href="/{{ repo | fullPath }}">
+			<div class="pure-g">
+				<div class="pure-u-5-6">
+					<div>
+						<h4>{{ repo.name }}</h4>
+						<span class="url">{{ repo | fullPath }}</span>
+					</div>
+				</div>
+				<div class="pure-u-1-6">
+					<div>
+						<i class="fa fa-circle-o" ng-if="repo.active == false"></i>
+						<i class="fa fa-check-circle-o" ng-if="repo.active == true"></i>
+					</div>
+				</div>
+			</div>
+		</a>
+		
 	</section>
-</article>
+</div>

@@ -666,9 +666,87 @@ nav a span.fa {
   width: 100%;
 }
 #repospage section {
-  max-width: 1180px;
+  border-bottom: 1px solid #eee;
+  max-width: 768px;
   margin: 0px auto;
   margin-top: 30px;
+  margin-bottom: 30px;
+}
+#repospage section .search {
+  margin-bottom: 25px;
+}
+#repospage section .search input[type="text"],
+#repospage section .search input[type="search"] {
+  -webkit-transition: 0.4s border linear;
+  -moz-transition: 0.4s border linear;
+  -ms-transition: 0.4s border linear;
+  -o-transition: 0.4s border linear;
+  transition: 0.4s border linear;
+  border: 1px solid #ccc;
+  border-radius: 0px;
+  box-shadow: none;
+  padding: 12px;
+}
+#repospage section .search input[type="text"]:focus,
+#repospage section .search input[type="search"]:focus {
+  border-color: #129FEA;
+}
+#repospage section .repo {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+#repospage section .repo:last-child > div {
+  border-bottom: 1px solid #fff;
+}
+#repospage section .repo > div {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  border: 1px solid #eee;
+  border-bottom: 1px solid #fff;
+  -webkit-transition: 0.4s border linear;
+  -moz-transition: 0.4s border linear;
+  -ms-transition: 0.4s border linear;
+  -o-transition: 0.4s border linear;
+  transition: 0.4s border linear;
+}
+#repospage section .repo > div > div {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  padding: 20px 25px;
+}
+#repospage section .repo > div > div:last-child div {
+  text-align: right;
+}
+#repospage section .repo > div:hover {
+  border: 1px solid #262626;
+}
+#repospage section .repo h4 {
+  font-size: 20px;
+  margin-bottom: 2px;
+  color: #262626;
+}
+#repospage section .repo span {
+  color: #666;
+  font-size: 14px;
+}
+#repospage section .repo i {
+  color: #DDD;
+  font-size: 22px;
+  margin-left: 20px;
+  margin-top: 15px;
+}
+#repospage section .repo i.fa-check-circle-o {
+  color: #68c598;
 }
 #userspage {
   width: 100%;
