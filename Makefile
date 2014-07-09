@@ -13,6 +13,7 @@ deps:
 	go list github.com/drone/drone/... | xargs go get -t -v
 
 build:
+	mkdir -p debian/drone/usr/local/bin
 	go build -o debian/drone/usr/local/bin/drone  -ldflags "-X main.revision $(SHA)" github.com/drone/drone/client
 	go build -o debian/drone/usr/local/bin/droned -ldflags "-X main.revision $(SHA)" github.com/drone/drone/server
 
@@ -44,5 +45,4 @@ lessc:
 # creates a debian package for drone to install
 # `sudo dpkg -i drone.deb`
 deb:
-	mkdir -p debian/drone/usr/local/bin
 	dpkg-deb --build debian/drone
