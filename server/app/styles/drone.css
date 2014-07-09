@@ -917,6 +917,11 @@ nav div.options .pure-button i {
   margin: 10px 0px;
   font-size: 22px;
 }
+#accountpage section h4 small {
+  opacity: 0.6;
+  font-size: 16px;
+  margin-left: 10px;
+}
 #accountpage section img {
   width: 64px;
   height: 64px;
@@ -927,6 +932,18 @@ nav div.options .pure-button i {
   top: 0px;
   right: 0px;
   margin: 20px;
+}
+#accountpage section .button-error {
+  color: #FFF;
+  background: #ca3c3c;
+  padding: 10px 20px;
+  float: right;
+}
+#accountpage section .pure-button-primary {
+  color: #FFF;
+  background: #4ab1ce;
+  padding: 10px 20px;
+  float: right;
 }
 #repopage {
   width: 100%;
@@ -1157,4 +1174,19 @@ nav div.options .pure-button i {
   font-size: 13px;
   white-space: pre-wrap;
   overflow: hidden;
+}
+.pure-form.pure-form-stacked label {
+  font-size: 14px;
+  color: #666;
+  margin-top: 20px;
+  margin-bottom: 5px;
+}
+.pure-form.pure-form-stacked label:first-child {
+  margin-top: 0px;
+}
+.pure-form.pure-form-stacked input[type="text"],
+.pure-form.pure-form-stacked select {
+  min-width: 300px;
+  box-shadow: none;
+  padding: 10px 10px;
 }

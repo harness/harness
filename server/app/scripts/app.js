@@ -50,8 +50,28 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
 				}
 			}
 		})
+		.when('/admin/users/add', {
+			templateUrl: '/views/users_add.html',
+			controller: 'UserAddController',
+			title: 'Add User',
+			resolve: {
+				user: function(authService) {
+					return authService.getUser();
+				}
+			}
+		})
+		.when('/admin/users/:host/:login', {
+			templateUrl: '/views/users_edit.html',
+			controller: 'UserEditController',
+			title: 'Edit User',
+			resolve: {
+				user: function(authService) {
+					return authService.getUser();
+				}
+			}
+		})
 		.when('/admin/users', {
-			templateUrl: '/views/sys_users.html',
+			templateUrl: '/views/users.html',
 			controller: 'UsersController',
 			title: 'System Users',
 			resolve: {
