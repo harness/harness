@@ -596,9 +596,75 @@ nav {
 #repospage {
 	width:100%;
 	section {
-		max-width:1180px;
+		border-bottom:1px solid #eee;
+		max-width:768px;
 		margin:0px auto;
 		margin-top:30px;
+		margin-bottom:30px;
+
+		.search {
+			margin-bottom: 25px;
+			input[type="text"],
+			input[type="search"] {
+				.transition(.4s border linear);
+				border: 1px solid #ccc;
+				border-radius: 0px;
+				box-shadow: none;
+				padding: 12px;
+				&:focus {
+					border-color: #129FEA;
+				}
+			}
+		}
+
+		.repo {
+			.border_box;
+			text-decoration:none;
+
+			&:last-child > div {
+				border-bottom:1px solid #fff;
+			}
+			
+			&> div  {
+				.border_box;
+				border:1px solid #eee;
+				border-bottom:1px solid #fff;
+				.transition(.4s border linear);
+
+				& > div {
+					.border_box;
+					padding:20px 25px;
+					&:last-child div {
+						text-align:right;
+					}
+				}
+
+				&:hover {
+					border:1px solid @c0;
+				}
+			}
+
+			h4 {
+				font-size:20px;
+				margin-bottom:2px;
+				color:@c0;
+			}
+
+			span {
+				color:#666;
+				font-size:14px;
+			}
+
+			i {
+				color: #DDD;
+				font-size: 22px;
+				margin-left:20px;
+				margin-top:15px;
+				&.fa-check-circle-o {
+					color:@cok;
+				}
+			}
+		}
 	}
 }
 
