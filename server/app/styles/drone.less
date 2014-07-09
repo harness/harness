@@ -609,6 +609,23 @@ nav {
 		max-width:768px;
 		margin:0px auto;
 		margin-top:30px;
+		margin-bottom:30px;
+
+		.search {
+			margin-bottom: 25px;
+			input[type="text"],
+			input[type="search"] {
+				.transition(.4s border linear);
+				border: 1px solid #ccc;
+				border-radius: 0px;
+				box-shadow: none;
+				padding: 12px;
+				&:focus {
+					border-color: #129FEA;
+				}
+			}
+		}
+
 		.user {
 			.transition(.4s border linear);
 			border:1px solid #eee;
