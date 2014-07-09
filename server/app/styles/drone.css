@@ -678,6 +678,26 @@ nav a span.fa {
   max-width: 768px;
   margin: 0px auto;
   margin-top: 30px;
+  margin-bottom: 30px;
+}
+#userspage section .search {
+  margin-bottom: 25px;
+}
+#userspage section .search input[type="text"],
+#userspage section .search input[type="search"] {
+  -webkit-transition: 0.4s border linear;
+  -moz-transition: 0.4s border linear;
+  -ms-transition: 0.4s border linear;
+  -o-transition: 0.4s border linear;
+  transition: 0.4s border linear;
+  border: 1px solid #ccc;
+  border-radius: 0px;
+  box-shadow: none;
+  padding: 12px;
+}
+#userspage section .search input[type="text"]:focus,
+#userspage section .search input[type="search"]:focus {
+  border-color: #129FEA;
 }
 #userspage section .user {
   -webkit-transition: 0.4s border linear;

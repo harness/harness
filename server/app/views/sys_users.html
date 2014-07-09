@@ -5,7 +5,11 @@
 	</nav>
 
 	<section>
-		<a class="pure-g user" ng-repeat="user in users" href="/admin/users/{{ user.remote }}/{{ user.login}}">
+		<form class="pure-form search pure-g">
+			<input type="search" placeholder="FILTER" class="pure-u-1" id="search" ng-model="search"/>
+		</form>
+
+		<a class="pure-g user" ng-repeat="user in users | filter:search | orderBy: 'login' " href="/admin/users/{{ user.remote }}/{{ user.login}}">
 			<div class="pure-u-1-8">
 				<div>
 					<img class="gravatar" ng-src="{{ user.gravatar | gravatar }}" />
