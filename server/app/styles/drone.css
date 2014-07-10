@@ -849,6 +849,55 @@ nav div.options .pure-button i {
   color: #666;
   font-size: 14px;
 }
+#repoconfpage {
+  width: 100%;
+}
+#repoconfpage section {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  border: 1px solid #eee;
+  max-width: 768px;
+  margin: 0px auto;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  padding: 20px;
+}
+#repoconfpage section h2 {
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+#repoconfpage section .markdown,
+#repoconfpage section .params,
+#repoconfpage section .key {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  min-height: 50px;
+  margin-top: 10px;
+  font-family: 'Droid Sans Mono';
+  border: 1px solid #eee;
+  padding: 20px;
+  width: 100%;
+  max-width: 100%;
+  color: #666;
+}
+#repoconfpage section .markdown:focus,
+#repoconfpage section .params:focus,
+#repoconfpage section .key:focus {
+  border-color: #129FEA;
+  outline: 0;
+}
+#repoconfpage section .pure-button-primary {
+  color: #FFF;
+  background: #4ab1ce;
+  padding: 10px 20px;
+  margin-top: 20px;
+}
 #accountpage {
   width: 100%;
 }
@@ -943,7 +992,7 @@ nav div.options .pure-button i {
   color: #FFF;
   background: #4ab1ce;
   padding: 10px 20px;
-  float: right;
+  margin-top: 10px;
 }
 #repopage {
   width: 100%;
@@ -1189,4 +1238,74 @@ nav div.options .pure-button i {
   min-width: 300px;
   box-shadow: none;
   padding: 10px 10px;
+  border: 1px solid #ccc;
+  border-radius: 0px;
+}
+.toggle {
+  margin-bottom: 10px;
+}
+.toggle:nth-child(2) {
+  margin-top: 40px;
+}
+.toggle span {
+  line-height: 32px;
+  vertical-align: middle;
+  display: inline-block;
+  margin-left: 10px;
+}
+.toggle input[type='checkbox'] {
+  max-height: 0;
+  max-width: 0;
+  opacity: 0;
+}
+.toggle input[type='checkbox'] + label {
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  box-shadow: inset 0 0 0px 1px #d5d5d5;
+  text-indent: -5000px;
+  height: 30px;
+  width: 50px;
+  border-radius: 15px;
+}
+.toggle input[type='checkbox'] + label:before {
+  content: "";
+  position: absolute;
+  display: block;
+  height: 30px;
+  width: 30px;
+  top: 0;
+  left: 0;
+  border-radius: 15px;
+  background: rgba(19, 191, 17, 0);
+  -webkit-transition: 0.25s ease-in-out;
+  -moz-transition: 0.25s ease-in-out;
+  -ms-transition: 0.25s ease-in-out;
+  -o-transition: 0.25s ease-in-out;
+  transition: 0.25s ease-in-out;
+}
+.toggle input[type='checkbox'] + label:after {
+  content: "";
+  position: absolute;
+  display: block;
+  height: 30px;
+  width: 30px;
+  top: 0;
+  left: 0px;
+  border-radius: 15px;
+  background: white;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.2);
+  -webkit-transition: 0.25s ease-in-out;
+  -moz-transition: 0.25s ease-in-out;
+  -ms-transition: 0.25s ease-in-out;
+  -o-transition: 0.25s ease-in-out;
+  transition: 0.25s ease-in-out;
+}
+.toggle input[type='checkbox']:checked + label:before {
+  width: 50px;
+  background: #4ab1ce;
+}
+.toggle input[type='checkbox']:checked + label:after {
+  left: 20px;
+  box-shadow: inset 0 0 0 1px #4ab1ce, 0 2px 4px rgba(0, 0, 0, 0.2);
 }

@@ -15,6 +15,7 @@
 
 @logo: 'Orbitron';
 @sans: 'Open Sans';
+@mono: 'Droid Sans Mono';
 
 html {
 	height: 100%;
@@ -761,6 +762,46 @@ nav {
 	}
 }
 
+#repoconfpage {
+	width:100%;
+	section {
+		.border_box;
+		border:1px solid #eee;
+		max-width:768px;
+		margin:0px auto;
+		margin-top:30px;
+		margin-bottom:30px;
+		padding:20px;
+		h2 {
+			font-size: 16px;
+			margin-bottom: 15px;
+		}
+		.markdown,
+		.params,
+		.key {
+			.border_box;
+			min-height:50px;
+			margin-top:10px;
+			font-family:@mono;
+			border:1px solid #eee;
+			padding:20px;
+			width:100%;
+			max-width:100%;
+			color:#666;
+			&:focus {
+				border-color: #129FEA;
+				outline: 0;
+			}
+		}
+		.pure-button-primary {
+			color:#FFF;
+            background: @link2;
+            padding:10px 20px;
+            margin-top:20px;
+        }
+	}
+}
+
 #accountpage {
 	width:100%;
 	section {
@@ -852,7 +893,7 @@ nav {
 			color:#FFF;
             background: @link2;
             padding:10px 20px;
-            float:right;
+            margin-top:10px;
         }
 	}
 }
@@ -1042,7 +1083,7 @@ nav {
 			margin:0px auto;
 			padding:30px;
 			color:#FFF;
-			font-family:'Droid Sans Mono';
+			font-family:@mono;
 			font-size:13px;
 			white-space: pre-wrap;
 			overflow: hidden;
@@ -1066,5 +1107,84 @@ nav {
 		min-width:300px;
 		box-shadow:none;
 		padding:10px 10px;
+		border: 1px solid #ccc;
+		border-radius:0px;
+	}
+}
+
+
+.toggle {
+	margin-bottom:10px;
+	&:nth-child(2) {
+		margin-top:40px;
+	}
+	span {
+		line-height:32px;
+		vertical-align:middle;
+		display: inline-block;
+		margin-left:10px;
+	}
+	input[type='checkbox'] {
+		max-height: 0;
+		max-width: 0;
+		opacity: 0;
+
+		// The following provides the "container" for our toggle
+		// in its default (off) state
+		& + label {
+			display: inline-block;
+			vertical-align: middle;
+			position: relative;
+			box-shadow: inset 0 0 0px 1px #d5d5d5;
+			text-indent: -5000px;
+			height: 30px;
+			width: 50px;
+			border-radius: 15px;
+
+			// The following provides the green background for the
+			// "on" state of our toggle - it is hidden when the
+			// switch is off
+			&:before {
+				content: "";
+				position: absolute;
+				display: block;
+				height: 30px;
+				width: 30px;
+				top: 0;
+				left: 0;
+				border-radius: 15px;
+				background: rgba(19,191,17,0);
+				.transition(.25s ease-in-out);
+			}
+
+
+			// The following provides the actual switch
+			// and its drop shadow
+			&:after {
+				content: "";
+				position: absolute;
+				display: block;
+				height: 30px;
+				width: 30px;
+				top: 0;
+				left: 0px;
+				border-radius: 15px;
+				background: white;
+				box-shadow: inset 0 0 0 1px rgba(0,0,0,.2), 0 2px 4px rgba(0,0,0,.2);
+				.transition(.25s ease-in-out);
+			}
+		}
+
+
+		// The following defines the "on" state for the switch
+		&:checked + label:before {
+			width: 50px;
+			background: @link2;
+		}
+			
+		&:checked + label:after {
+			left: 20px;
+			box-shadow: inset 0 0 0 1px @link2, 0 2px 4px rgba(0,0,0,.2);
+		}
 	}
 }

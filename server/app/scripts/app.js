@@ -204,29 +204,16 @@ app.controller("ConfigController", function($scope, $http, user) {
 });
 
 app.controller("RepoConfigController", function($scope, $http, $routeParams, user) {
-
 	$scope.user = user;
 
 	var remote = $routeParams.remote;
 	var owner  = $routeParams.owner;
 	var name   = $routeParams.name;
 
-
-
 	// load the repo meta-data
-	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name}).
+	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"?admin=1"}).
 		success(function(data, status, headers, config) {
 			$scope.repo = data;
-			$scope.repoTemp = {
-				pull_requests : $scope.repo.pull_requests,
-				post_commits  : $scope.repo.post_commits,
-				params        : $scope.repo.params,
-				timeout       : $scope.repo.timeout,
-				privileged    : $scope.repo.privileged
-			};
-
-			$scope.badgeMarkdown = badgeMarkdown(data.remote+"/"+data.owner+"/"+data.name)
-			$scope.badgeMarkup = badgeMarkup(data.remote+"/"+data.owner+"/"+data.name)
 		}).
 		error(function(data, status, headers, config) {
 			console.log(data);
@@ -234,24 +221,13 @@ app.controller("RepoConfigController", function($scope, $http, $routeParams, use
 
 	$scope.save = function() {
 		// request to create a new repository
-		$http({method: 'PUT', url: '/v1/repos/'+remote+'/'+owner+"/"+name, data: $scope.repoTemp }).
+		$http({method: 'PUT', url: '/v1/repos/'+remote+'/'+owner+"/"+name, data: $scope.repo }).
 			success(function(data, status, headers, config) {
 				delete $scope.failure;
-				$scope.repo = data;
 			}).
 			error(function(data, status, headers, config) {
 				$scope.failure = data;
 			});
-	};
-	$scope.cancel = function() {
-		delete $scope.failure;
-		$scope.repoTemp = {
-			pull_requests : $scope.repo.pull_requests,
-			post_commits  : $scope.repo.post_commits,
-			params        : $scope.repo.params,
-			timeout       : $scope.repo.timeout,
-			privileged    : $scope.repo.privileged
-		};
 	};
 });
 
