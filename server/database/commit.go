@@ -85,15 +85,31 @@ LIMIT 20
  `
 
 // SQL query to retrieve the latest Commits for a user's repositories.
+//const listUserCommitsQuery = `
+//SELECT r.repo_remote, r.repo_host, r.repo_owner, r.repo_name, c.*
+//FROM commits c, repos r, perms p
+//WHERE c.repo_id=r.repo_id
+//AND   r.repo_id=p.repo_id
+//AND   p.user_id=?
+//AND   c.commit_status NOT IN ('Started', 'Pending')
+//ORDER BY commit_id DESC
+//LIMIT 20
+//`
+
 const listUserCommitsQuery = `
 SELECT r.repo_remote, r.repo_host, r.repo_owner, r.repo_name, c.*
-FROM commits c, repos r, perms p
+FROM commits c, repos r
 WHERE c.repo_id=r.repo_id
-AND   r.repo_id=p.repo_id
-AND   p.user_id=?
-AND   c.commit_status NOT IN ('Started', 'Pending')
-ORDER BY commit_id DESC
-LIMIT 20
+AND   c.commit_id IN (
+	SELECT max(c.commit_id)
+	FROM commits c, repos r, perms p
+	WHERE c.repo_id=r.repo_id
+	AND   r.repo_id=p.repo_id
+	AND   p.user_id=?
+	AND   c.commit_id
+	AND   c.commit_status NOT IN ('Started', 'Pending')
+	GROUP BY r.repo_id
+) ORDER BY c.commit_created DESC LIMIT 5;
 `
 
 // SQL query to retrieve the latest Commits across all branches.

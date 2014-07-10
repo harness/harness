@@ -7,7 +7,7 @@ var app = angular.module('app', [
 
 app.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
 	$routeProvider.when('/', {
-			templateUrl: '/views/index.html',
+			templateUrl: '/views/home.html',
 			controller: 'HomeController',
 			title: 'Dashboard',
 			resolve: {
