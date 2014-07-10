@@ -696,6 +696,19 @@ nav div.options .pure-button i {
 #homepage section .card[data-status="Error"] .l-box:hover {
   border: 1px solid #262626;
 }
+#homepage section .card[data-status="Killed"]:after,
+#homepage section .card[data-status="Failure"]:after,
+#homepage section .card[data-status="Error"]:after {
+  font-family: 'FontAwesome';
+  font-size: 16px;
+  position: absolute;
+  right: 12px;
+  top: -8px;
+  content: "\f111";
+  color: #e97041;
+  min-width: 16px;
+  text-align: center;
+}
 #repospage {
   width: 100%;
 }
