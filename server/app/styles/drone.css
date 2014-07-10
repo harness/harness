@@ -383,6 +383,14 @@ nav div.options .pure-button i {
   color: #262626;
   font-family: 'Open Sans';
 }
+.cards .card[data-status="Success"] em {
+  border-top: 5px solid #68c598;
+}
+.cards .card[data-status="Killed"] em,
+.cards .card[data-status="Failure"] em,
+.cards .card[data-status="Error"] em {
+  border-top: 5px solid #e97041;
+}
 .cards .card .l-box {
   background: #FFF;
   border: 1px solid #DDD;
@@ -1015,18 +1023,10 @@ nav div.options .pure-button i {
 #repopage section .card[data-status="Success"]:nth-child(2) .l-box {
   border-color: #68c598;
 }
-#repopage section .card[data-status="Success"] em {
-  border-top: 5px solid #68c598;
-}
 #repopage section .card[data-status="Killed"]:nth-child(2) .l-box,
 #repopage section .card[data-status="Failure"]:nth-child(2) .l-box,
 #repopage section .card[data-status="Error"]:nth-child(2) .l-box {
   border-color: #e97041;
-}
-#repopage section .card[data-status="Killed"] em,
-#repopage section .card[data-status="Failure"] em,
-#repopage section .card[data-status="Error"] em {
-  border-top: 5px solid #e97041;
 }
 #repopage section .card[data-status="Started"] em:before,
 #repopage section .card[data-status="Pending"] em:before {

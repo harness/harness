@@ -294,6 +294,20 @@ nav {
 		color:@c0;
 		font-family:@sans;
 
+		&[data-status="Success"] {
+			em {
+				border-top:5px solid @cok;
+			}
+		}
+
+		&[data-status="Killed"],
+		&[data-status="Failure"],
+		&[data-status="Error"] {
+			em {
+				border-top:5px solid @cneg;
+			}
+		}
+
 		.l-box {
 			background:#FFF;
 			border:1px solid #DDD;
@@ -922,9 +936,6 @@ nav {
 			&:nth-child(2) .l-box {
 				border-color: @cok;
 			}
-				em {
-					border-top:5px solid @cok;
-				}
 		}
 
 		.card[data-status="Killed"],
@@ -932,9 +943,6 @@ nav {
 		.card[data-status="Error"] {
 			&:nth-child(2) .l-box {
 				border-color: @cneg;
-			}
-			em {
-				border-top:5px solid @cneg;
 			}
 		}
 
@@ -1112,7 +1120,8 @@ nav {
 	}
 }
 
-
+// special thanks to:
+// http://www.designcouch.com/home/why/2013/09/19/ios7-style-pure-css-toggle/
 .toggle {
 	margin-bottom:10px;
 	&:nth-child(2) {
