@@ -667,6 +667,21 @@ nav div.options .pure-button i {
 #loginpage .pure-g .pure-u-1:last-child a {
   margin-bottom: 0px;
 }
+#syncpage {
+  width: 100%;
+}
+#syncpage section {
+  padding: 40px 0px 20px 0px;
+}
+#syncpage section h1 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+#syncpage section h1 i {
+  font-size: 32px;
+  margin-top: 20px;
+}
 #homepage {
   width: 100%;
   background: #f2f5f8;
@@ -674,6 +689,15 @@ nav div.options .pure-button i {
 #homepage section {
   padding: 40px 0px 20px 0px;
   border-bottom: 1px solid #EEE;
+}
+#homepage section h1 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+#homepage section h1 i {
+  font-size: 32px;
+  margin-top: 20px;
 }
 #homepage section div {
   max-width: 1180px;

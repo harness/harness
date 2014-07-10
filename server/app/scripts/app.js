@@ -16,6 +16,11 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
 				}
 			}
 		})
+		.when('/sync', {
+			templateUrl: '/views/sync.html',
+			controller: 'SyncController',
+			title: 'Sync'
+		})
 		.when('/login', {
 			templateUrl: '/views/login.html',
 			title: 'Login',
@@ -94,7 +99,7 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
 			}
 		})
 		.when('/:remote/:owner/:name/settings', {
-			templateUrl: '/views/repo_conf.html',
+			templateUrl: '/views/repo_edit.html',
 			controller: 'RepoConfigController',
 			title: 'Repository Settings',
 			resolve: {

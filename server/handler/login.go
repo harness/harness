@@ -27,6 +27,7 @@ func NewLoginHandler(users database.UserManager, repos database.RepoManager, per
 // GET /login/:host
 func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	host := r.FormValue(":host")
+	redirect := "/"
 
 	// get the remote system's client.
 	remote := h.conf.Find().GetRemote(host)
@@ -88,6 +89,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	//      should be injected into this struct, just like
 	//      the database code.
 	if u.IsStale() {
+		redirect = "/sync"
 		log.Println("sync user account.", u.Login)
 
 		// sync inside a goroutine. This should eventually be moved to
@@ -138,7 +140,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	h.sess.SetUser(w, r, u)
 
 	// redirect the user to their dashboard
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, redirect, http.StatusSeeOther)
 	return nil
 }
 
