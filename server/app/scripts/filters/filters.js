@@ -32,6 +32,7 @@ angular.module('app').filter('fullName', function() {
 
 angular.module('app').filter('fullPath', function() {
   return function(repo) {
+    if (repo == undefined) { return ""; }
     return repo.remote+"/"+repo.owner+"/"+repo.name;
   }
 });
@@ -45,6 +46,7 @@ angular.module('app').filter('shortHash', function() {
 
 angular.module('app').filter('badgeMarkdown', function() {
   return function(repo) {
+    if (repo == undefined) { return ""; }
     var scheme = window.location.protocol;
     var host = window.location.host;
     var path = repo.host+'/'+repo.owner+'/'+repo.name;
@@ -54,6 +56,7 @@ angular.module('app').filter('badgeMarkdown', function() {
 
 angular.module('app').filter('badgeMarkup', function() {
   return function(repo) {
+    if (repo == undefined) { return ""; }
     var scheme = window.location.protocol;
     var host = window.location.host;
     var path = repo.host+'/'+repo.owner+'/'+repo.name;
@@ -65,6 +68,9 @@ angular.module('app').filter('unique', function() {
     return function(input, key) {
         var unique = {};
         var uniqueList = [];
+        if (input == undefined) {
+          return uniqueList;
+        }
         for(var i = 0; i < input.length; i++){
             if(typeof unique[input[i][key]] == "undefined"){
                 unique[input[i][key]] = "";

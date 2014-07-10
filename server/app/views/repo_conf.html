@@ -1,74 +1,72 @@
-<article id="repopage">
+<article id="repoconfpage">
 	<nav>
-		<a href="/{{ repo | fullPath}}"><span class="fa fa-arrow-left"></span></a>
+		<a href="/{{ repo | fullPath }}">
+			<span class="fa fa-arrow-left"></span>
+		</a>
 		<span>{{ repo.owner }}</span>
 		<span>/</span>
-		<a href="/{{ repo | fullPath}}">{{ repo.name }}</a>
+		<a href="/{{ repo | fullPath }}">{{ repo.name }}</a>
 		<span>/</span>
 		<a href="#">settings</a>
 	</nav>
 
+	<!-- this section is used for generating the build status badge's url -->
+	<section>
+		<div class="pure-g">
+			<div class="pure-u-1">
+				<a href="/{{ repo | fullPath }}" target="_blank" style="float:right;">
+					<img ng-src="/v1/badge/{{ repo | fullPath }}/status.svg" />
+				</a>
+				<h2>Status Badge</h2>
+			</div>
+			<div class="pure-u-1">
+				<div class="markdown">{{ repo | badgeMarkdown }}</div>
+			</div>
+		</div>
+	</section>
 
 	<section>
-
-		<!-- summary column -->
-		<div class="col-xs-6 col-sm-3">
-			<!-- badge -->
-			<a href="/{{ repo.remote }}/{{ repo.owner}}/{{ repo.name }}">
-				<img ng-src="/v1/badge/{{ repo.remote }}/{{ repo.owner}}/{{ repo.name }}/status.svg" />
-			</a>
+		<div class="pure-g">
+			<div class="pure-u-1">
+				<div>
+					<h2>Public Key</h2>
+				<pre class="key">{{ repo.public_key }}</pre>
+				</div>
+			</div>
 		</div>
+	</section>
 
-		<!-- primary column -->
-		<div class="col-xs-12 col-sm-9">
-
-			<div>
-				<label>Post Commit Hook</label>
-				<input type="checkbox" ng-model="repoTemp.post_commits" />
+	<section>
+		<div class="pure-g">
+			<div class="pure-u-1">
+				<div>
+					<h2>Private Variables</h2>
+					<textarea class="params" ng-model="repo.params" placeholder="FOO=BAR"></textarea>
+					<button ng-click="save()" class="pure-button pure-button-primary">Save Variables</button>
+				</div>
 			</div>
+		</div>
+	</section>
 
-			<div>
-				<label>Pull Reqest Hook</label>
-				<input type="checkbox" ng-model="repoTemp.pull_requests" />
-			</div>
+	<!-- this section is used to toggle builds and pull requests builds on and off -->
+	<section>
+		<div class="pure-g">
+			<div class="pure-u-1">
+				<div>
+					<h2>Build Flags</h2>
+					<div class="toggle">
+						<input type="checkbox" ng-model="repo.post_commits" id="post_commit" />
+						<label for="post_commit"></label>
+						<span>Enable Post Commit Hooks</span>
+					</div>
 
-			<div>
-				<label>Private Variables</label>
-				<div>TODO!</div>
-			</div>
-
-			<div>
-				<label>Privileged</label>
-				<input type="checkbox" ng-model="repoTemp.privileged" />
-			</div>
-
-			<div>
-				<label>Timeout</label>
-				<input type="number" ng-model="repoTemp.timeout" />
-			</div>
-
-			<div>
-				<label>URL</label>
-				<span>{{ repo.url }}</span>
-			</div>
-
-			<div>
-				<label>Created</label>
-				<span>{{ repo.created_at | fromNow }}</span>
-			</div>
-
-			<div>
-				<label>Updated</label>
-				<span>{{ repo.updated_at | fromNow }}</span>
-			</div>
-
-			<div>
-				{{failure}}
-			</div>
-
-			<div>
-				<button ng-click="save()">Save</button>
-				<button ng-click="cancel()">Cancel</button>
+					<div class="toggle">
+						<input type="checkbox" ng-model="repo.pull_requests" id="pull_requests" />
+						<label for="pull_requests"></label>
+						<span>Enable Pull Request Hooks</span>
+					</div>
+					<button ng-click="save()" class="pure-button pure-button-primary">Save Flags</button>
+				</div>
 			</div>
 		</div>
 	</section>

@@ -8,6 +8,7 @@ import (
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/shared/httputil"
+	"github.com/drone/drone/shared/model"
 	"github.com/drone/drone/shared/sshutil"
 	"github.com/gorilla/pat"
 )
@@ -29,6 +30,7 @@ func NewRepoHandler(repos database.RepoManager, commits database.CommitManager,
 // GET /v1/repos/:host/:owner/:name
 func (h *RepoHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
 	var host, owner, name = parseRepo(r)
+	var admin = r.FormValue("admin")
 
 	// get the user form the session.
 	user := h.sess.User(r)
@@ -44,7 +46,24 @@ func (h *RepoHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
 		return notFound{err}
 	}
 
-	return json.NewEncoder(w).Encode(repo)
+	// if the user is not requesting admin data we can
+	// return exactly what we have.
+	if len(admin) == 0 {
+		return json.NewEncoder(w).Encode(repo)
+	}
+
+	// ammend the response to include data that otherwise
+	// would be excluded from json serialization, assuming
+	// the user is actually an admin of the repo.
+	if ok, _ := h.perms.Admin(user, repo); !ok {
+		return notFound{err}
+	}
+
+	return json.NewEncoder(w).Encode(struct {
+		*model.Repo
+		PublicKey string `json:"public_key"`
+		Params    string `json:"params"`
+	}{repo, repo.PublicKey, repo.Params})
 }
 
 // PostRepo activates the named repository.
