@@ -6,7 +6,6 @@ import (
 
 type User struct {
 	ID       int64  `meddler:"user_id,pk"     json:"-"`
-	ParentID int64  `meddler:"user_parent_id" json:"-"`
 	Remote   string `meddler:"user_remote"    json:"remote"`
 	Login    string `meddler:"user_login"     json:"login"`
 	Access   string `meddler:"user_access"    json:"-"`
