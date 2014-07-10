@@ -9,7 +9,6 @@ import (
 var stmts = []string{`
 	CREATE TABLE IF NOT EXISTS users (
 		 user_id           INTEGER PRIMARY KEY AUTOINCREMENT
-		,user_parent_id    INTEGER
 		,user_remote       VARCHAR(255)
 		,user_login        VARCHAR(255)
 		,user_access       VARCHAR(255)
