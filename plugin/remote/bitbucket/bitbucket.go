@@ -132,6 +132,11 @@ func (b *Bitbucket) GetLogin(w http.ResponseWriter, r *http.Request) (*remote.Lo
 		Name:   user.User.DisplayName,
 	}
 
+	email, _ := client.Emails.FindPrimary(user.User.Username)
+	if email != nil {
+		login.Email = email.Email
+	}
+
 	return &login, nil
 }
 
