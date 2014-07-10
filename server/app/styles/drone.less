@@ -623,6 +623,17 @@ nav {
 		&:nth-child(3) {
 			border-bottom:0px solid #EEE;
 		}
+
+		.card[data-status="Killed"],
+		.card[data-status="Failure"],
+		.card[data-status="Error"] {
+			.l-box {
+				border: 1px solid @cneg;
+				&:hover {
+					border:1px solid @c0;
+				}
+			}
+		}
 	}
 }
 
@@ -935,6 +946,9 @@ nav {
 		.card[data-status="Success"] {
 			&:nth-child(2) .l-box {
 				border-color: @cok;
+				&:hover {
+					border:1px solid @c0;
+				}
 			}
 		}
 
@@ -943,6 +957,9 @@ nav {
 		.card[data-status="Error"] {
 			&:nth-child(2) .l-box {
 				border-color: @cneg;
+				&:hover {
+					border:1px solid @c0;
+				}
 			}
 		}
 

@@ -686,6 +686,16 @@ nav div.options .pure-button i {
 #homepage section:nth-child(3) {
   border-bottom: 0px solid #EEE;
 }
+#homepage section .card[data-status="Killed"] .l-box,
+#homepage section .card[data-status="Failure"] .l-box,
+#homepage section .card[data-status="Error"] .l-box {
+  border: 1px solid #e97041;
+}
+#homepage section .card[data-status="Killed"] .l-box:hover,
+#homepage section .card[data-status="Failure"] .l-box:hover,
+#homepage section .card[data-status="Error"] .l-box:hover {
+  border: 1px solid #262626;
+}
 #repospage {
   width: 100%;
 }
@@ -1023,10 +1033,18 @@ nav div.options .pure-button i {
 #repopage section .card[data-status="Success"]:nth-child(2) .l-box {
   border-color: #68c598;
 }
+#repopage section .card[data-status="Success"]:nth-child(2) .l-box:hover {
+  border: 1px solid #262626;
+}
 #repopage section .card[data-status="Killed"]:nth-child(2) .l-box,
 #repopage section .card[data-status="Failure"]:nth-child(2) .l-box,
 #repopage section .card[data-status="Error"]:nth-child(2) .l-box {
   border-color: #e97041;
+}
+#repopage section .card[data-status="Killed"]:nth-child(2) .l-box:hover,
+#repopage section .card[data-status="Failure"]:nth-child(2) .l-box:hover,
+#repopage section .card[data-status="Error"]:nth-child(2) .l-box:hover {
+  border: 1px solid #262626;
 }
 #repopage section .card[data-status="Started"] em:before,
 #repopage section .card[data-status="Pending"] em:before {
