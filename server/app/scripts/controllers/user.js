@@ -2,7 +2,7 @@
 
 angular.module('app').controller("UserController", function($scope, $http, user, notify) {
 
-	$scope.user = user;
+	$scope.account = user;
 
 	// get the user details
 	$http({method: 'GET', url: '/v1/user'}).

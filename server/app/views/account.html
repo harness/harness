@@ -8,15 +8,15 @@
 		<div class="pure-u-1-6">
 			<div>
 				<a href="https://gravatar.com/" target="_blank">
-					<img ng-src="https://gravatar.com/avatar/{{ user.gravatar }}?d=identicon" />
+					<img ng-src="{{ account.gravatar | gravatar }}" />
 				</a>
 			</div>
 		</div>
 		<div class="pure-u-5-6">
 			<div>
-				<h4>bradrydzewski</h4>
-				<span class="fullname">Brad Rydzewski</span>
-				<span class="email">brad.rydzewski@gmail.com</span>
+				<h4>{{ account.login }}</h4>
+				<span class="fullname">{{ account.name }}</span>
+				<span class="email">{{ account.email }}</span>
 			</div>
 
 			<!-- button to toggle HTML5 desktop notifications for build events -->
@@ -34,7 +34,7 @@
 		</div>
 		<div class="pure-u-5-6">
 			<div>
-				{{ user.token }}
+				{{ account.token }}
 			</div>
 		</div>
 	</section>
