@@ -1,3 +1,12 @@
+<div class="toast" ng-if="msg != undefined">
+	<span>commit </span>
+	<a href="/{{ msg.repo | fullPath }}/{{ msg.commit.branch }}/{{ msg.commit.sha }}">{{ msg.commit.sha | shortHash }}</a>
+	<span ng-if="msg.commit.status == 'Started'">is running</span>
+	<span ng-if="msg.commit.status == 'Success'">finished successfully</span>
+	<span ng-if="msg.commit.status == 'Failure'">finished with errors</span>
+	<button ng-click="reload()">Reload</button>
+</div>
+
 <article id="repopage">
 	<nav>
 		<div class="options">
