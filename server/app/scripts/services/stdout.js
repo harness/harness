@@ -20,7 +20,7 @@ angular.module('app').service('stdout', ['$window', function($window) {
 
 	this.unsubscribe = function() {
 		callback = undefined;
-		if (webscoket != undefined) {
+		if (websocket != undefined) {
 			websocket.close();
 		}
 	};

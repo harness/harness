@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"log"
 	"path/filepath"
 	"time"
 
@@ -97,7 +98,10 @@ func (w *worker) Execute(r *Request) {
 	// been parsed in the hook, so we can be confident it will succeed.
 	// that being said, we should clean this up
 	params, _ := r.Repo.ParamMap()
-	script, _ := script.ParseBuild(r.Commit.Config, params)
+	script, err := script.ParseBuild(r.Commit.Config, params)
+	if err != nil {
+		log.Printf("Error parsing YAML for %s/%s, Err: %s", r.Repo.Owner, r.Repo.Name, err.Error())
+	}
 
 	path := r.Repo.Host + "/" + r.Repo.Owner + "/" + r.Repo.Name
 	repo := &repo.Repo{
@@ -129,7 +133,7 @@ func (w *worker) Execute(r *Request) {
 	builder.Privileged = r.Repo.Privileged
 
 	// run the build
-	err := builder.Run()
+	err = builder.Run()
 
 	// update the build status based on the results
 	// from the build runner.
