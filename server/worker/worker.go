@@ -81,7 +81,7 @@ func (w *worker) Stop() {
 func (w *worker) Execute(r *Request) {
 	// mark the build as Started and update the database
 	r.Commit.Status = model.StatusStarted
-	r.Commit.Started = time.Now().Unix()
+	r.Commit.Started = time.Now().UTC().Unix()
 	w.commits.Update(r.Commit)
 
 	// notify all listeners that the build is started
@@ -129,7 +129,7 @@ func (w *worker) Execute(r *Request) {
 	builder.Repo = repo
 	builder.Stdout = buf
 	builder.Key = []byte(r.Repo.PrivateKey)
-	builder.Timeout = time.Duration(r.Repo.Timeout) * time.Minute
+	builder.Timeout = time.Duration(r.Repo.Timeout) * time.Second
 	builder.Privileged = r.Repo.Privileged
 
 	// run the build
@@ -140,6 +140,7 @@ func (w *worker) Execute(r *Request) {
 	switch {
 	case err != nil:
 		r.Commit.Status = model.StatusError
+		log.Printf("Error building %s, Err: %s", r.Commit.Sha, err)
 		buf.WriteString(err.Error())
 	case builder.BuildState == nil:
 		r.Commit.Status = model.StatusFailure
@@ -151,7 +152,7 @@ func (w *worker) Execute(r *Request) {
 
 	// calcualte the build finished and duration details and
 	// update the commit
-	r.Commit.Finished = time.Now().Unix()
+	r.Commit.Finished = time.Now().UTC().Unix()
 	r.Commit.Duration = (r.Commit.Finished - r.Commit.Started)
 	w.commits.Update(r.Commit)
 	w.commits.UpdateOutput(r.Commit, buf.Bytes())

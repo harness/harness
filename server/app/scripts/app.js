@@ -245,7 +245,13 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 			$scope.commit = data;
 
 			if (data.status!='Started' && data.status!='Pending') {
-				return;
+				$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/console"}).
+					success(function(data, status, headers, config) {
+						$scope.console = data;
+					}).
+					error(function(data, status, headers, config) {
+						console.log(data);
+					});
 			}
 
 			stdout.subscribe(data.id, function(out){
@@ -256,13 +262,6 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 			console.log(data);
 		});
 
-	// load the repo build stdout
-	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/console"}).
-		success(function(data, status, headers, config) {
-			$scope.console = data;
-		}).
-		error(function(data, status, headers, config) {
-			console.log(data);
-		});
+
 
 });

@@ -6,8 +6,8 @@
 		</dl>
 	</div>
 		
-	<dl>
-		<dd><h1>3.5 ms</h1></dd>
+	<dl ng-if="commit.duration != 0">
+		<dd><h1>{{ commit.duration | toDuration}}</h1></dd>
 	</dl>
 
 	<dl>
@@ -19,7 +19,7 @@
 </aside>
 
 <div id="main" class="output">
-	<div id="main" class="output" data-result="Failure">
+	<div id="main" class="output" data-result="{{ commit.status }}">
 		<nav>
 			<a href="/"><span class="fa fa-th"></span></a>
 			<span>{{ repo.owner }}</span>
