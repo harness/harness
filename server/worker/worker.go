@@ -119,16 +119,8 @@ func (w *worker) Execute(r *Request) {
 	builder.Timeout = time.Duration(r.Repo.Timeout) * time.Minute
 	builder.Privileged = r.Repo.Privileged
 
-	//err := builder.Run()
-	var err error
-	buf.WriteString("THIS\n")
-	time.Sleep(3 * time.Second)
-	buf.WriteString("IS\n")
-	time.Sleep(3 * time.Second)
-	buf.WriteString("A\n")
-	time.Sleep(3 * time.Second)
-	buf.WriteString("TEST\n")
-	time.Sleep(3 * time.Second)
+	// run the build
+	err := builder.Run()
 
 	// update the build status based on the results
 	// from the build runner.

@@ -139,10 +139,14 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
 	$locationProvider.html5Mode(true);
 }]);
 
-/* Directives */
-
 /* also see https://coderwall.com/p/vcfo4q */
-app.run(['$location', '$rootScope', '$routeParams', function($location, $rootScope, $routeParams) {
+app.run(['$location', '$rootScope', '$routeParams', 'feed', 'stdout', function($location, $rootScope, $routeParams, feed, stdout) {
+
+	$rootScope.$on('$routeChangeStart', function (event, next) {
+		feed.unsubscribe();
+		stdout.unsubscribe();
+	});
+
     $rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
         document.title = current.$$route.title + ' · drone.io';
     });
