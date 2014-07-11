@@ -110,8 +110,17 @@ func (w *worker) Execute(r *Request) {
 		Depth:  git.GitDepth(script.Git),
 	}
 
+	// Instantiate a new Docker client
+	var dockerClient *docker.Client
+	switch {
+	case len(w.server.Host) == 0:
+		dockerClient = docker.New()
+	default:
+		dockerClient = docker.NewHost(w.server.Host)
+	}
+
 	// create an instance of the Docker builder
-	builder := build.New(docker.NewHost(w.server.Host))
+	builder := build.New(dockerClient)
 	builder.Build = script
 	builder.Repo = repo
 	builder.Stdout = buf
