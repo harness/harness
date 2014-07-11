@@ -22,7 +22,9 @@ func (b *Buffer) Write(p []byte) (n int, err error) {
 }
 
 func (b *Buffer) WriteString(s string) (n int, err error) {
-	return b.Write([]byte(s))
+	n, err = b.buf.WriteString(s)
+	b.channel.Publish([]byte(s))
+	return
 }
 
 func (b *Buffer) Bytes() []byte {

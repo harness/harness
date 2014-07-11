@@ -87,10 +87,6 @@ func main() {
 	// cancel all previously running builds
 	go commits.CancelAll()
 
-	// setup the build queue
-	//queueRunner := queue.NewBuildRunner(docker.New(), timeout)
-	//queue := queue.Start(work	ers, commits, queueRunner)
-
 	queue := make(chan *worker.Request)
 	workers := make(chan chan *worker.Request)
 	worker.NewDispatch(queue, workers).Start()

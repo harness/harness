@@ -16,6 +16,9 @@ angular.module('app').service('stdout', ['$window', function($window) {
 				callback(event.data);
 			}
 		};
+		websocket.onclose = function(event) {
+			console.log('websocket closed at '+path);
+		};
 	};
 
 	this.unsubscribe = function() {

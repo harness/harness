@@ -29,8 +29,7 @@ func NewChannel(opts *Opts) *Channel {
 }
 
 func (c *Channel) Publish(data interface{}) {
-	c.broadcast <- data
-	return
+	go func() { c.broadcast <- data }()
 }
 
 func (c *Channel) Subscribe() *Subscription {
