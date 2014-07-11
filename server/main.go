@@ -94,7 +94,7 @@ func main() {
 	queue := make(chan *worker.Request)
 	workers := make(chan chan *worker.Request)
 	worker.NewDispatch(queue, workers).Start()
-	worker.NewWorker(workers, users, repos, commits, configs, pubsub, &model.Server{Host: "unix:///tmp/sock.sock"}).Start()
+	worker.NewWorker(workers, users, repos, commits, configs, pubsub, &model.Server{}).Start()
 
 	// setup the session managers
 	sess := session.NewSession(users)
