@@ -391,6 +391,19 @@ nav div.options .pure-button i {
 .cards .card[data-status="Error"] em {
   border-top: 5px solid #e97041;
 }
+.cards .card[data-status="Killed"]:after,
+.cards .card[data-status="Failure"]:after,
+.cards .card[data-status="Error"]:after {
+  font-family: 'FontAwesome';
+  font-size: 16px;
+  position: absolute;
+  right: 12px;
+  top: -8px;
+  content: "\f111";
+  color: #e97041;
+  min-width: 16px;
+  text-align: center;
+}
 .cards .card .l-box {
   background: #FFF;
   border: 1px solid #DDD;
@@ -719,19 +732,6 @@ nav div.options .pure-button i {
 #homepage section .card[data-status="Failure"] .l-box:hover,
 #homepage section .card[data-status="Error"] .l-box:hover {
   border: 1px solid #262626;
-}
-#homepage section .card[data-status="Killed"]:after,
-#homepage section .card[data-status="Failure"]:after,
-#homepage section .card[data-status="Error"]:after {
-  font-family: 'FontAwesome';
-  font-size: 16px;
-  position: absolute;
-  right: 12px;
-  top: -8px;
-  content: "\f111";
-  color: #e97041;
-  min-width: 16px;
-  text-align: center;
 }
 #repospage {
   width: 100%;
@@ -1114,6 +1114,39 @@ nav div.options .pure-button i {
 }
 #repopage section .card:last-child .l-box:after {
   content: '';
+}
+#repopage section.nobuilds,
+#repopage section.inactive {
+  text-align: center;
+  padding-bottom: 50px;
+}
+#repopage section.nobuilds h1,
+#repopage section.inactive h1 {
+  font-size: 26px;
+  color: #262626;
+}
+#repopage section.nobuilds p,
+#repopage section.inactive p {
+  font-size: 16px;
+  color: #666;
+}
+#repopage section.nobuilds i,
+#repopage section.inactive i {
+  font-size: 32px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+#repopage section.nobuilds i.fa-file-code-o,
+#repopage section.inactive i.fa-file-code-o {
+  font-size: 42px;
+  margin-top: 30px;
+}
+#repopage section.nobuilds .pure-button-primary,
+#repopage section.inactive .pure-button-primary {
+  font-size: 14px;
+  text-transform: uppercase;
+  background: #4ab1ce;
+  padding: 10px 30px;
 }
 @-webkit-keyframes progress {
   to {

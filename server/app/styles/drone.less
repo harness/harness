@@ -306,6 +306,18 @@ nav {
 			em {
 				border-top:5px solid @cneg;
 			}
+
+			&:after {
+				font-family:'FontAwesome';
+				font-size:16px;
+				position:absolute;
+				right:12px;
+				top:-8px;
+				content:"\f111";
+				color: @cneg;
+				min-width:16px;
+				text-align:center;
+			}
 		}
 
 		.l-box {
@@ -658,18 +670,6 @@ nav {
 				&:hover {
 					border:1px solid @c0;
 				}
-			}
-
-			&:after {
-				font-family:'FontAwesome';
-				font-size:16px;
-				position:absolute;
-				right:12px;
-				top:-8px;
-				content:"\f111";
-				color: @cneg;
-				min-width:16px;
-				text-align:center;
 			}
 		}
 	}
@@ -1033,6 +1033,39 @@ nav {
 		}
 		.card:last-child .l-box:after {
 			content:'';
+		}
+
+		&.nobuilds,
+		&.inactive {
+			text-align:center;
+			padding-bottom:50px;
+			h1 {
+			    font-size: 26px;
+			    color: #262626;
+			}
+			p {
+			    font-size: 16px;
+			    color: #666;
+			}
+			i {
+				font-size: 32px;
+				margin-top: 20px;
+				margin-bottom: 20px;
+				&.fa-file-code-o {
+					font-size: 42px;
+					margin-top: 30px;
+				}
+			}
+			.pure-button-primary {
+				    font-size: 14px;
+				    text-transform: uppercase;
+				    background: #4ab1ce;
+				    padding: 10px 30px;
+			}
+		}
+
+		&.nobuilds {
+
 		}
 	}
 }
