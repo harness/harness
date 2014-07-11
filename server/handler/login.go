@@ -78,6 +78,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	u.Secret = login.Secret
 	u.Name = login.Name
 	u.SetEmail(login.Email)
+	u.Syncing = u.IsStale()
 	if err := h.users.Update(u); err != nil {
 		return badRequest{err}
 	}
@@ -85,23 +86,21 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	// look at the last synchronized date to determine if
 	// we need to re-sync the account.
 	//
-	// TODO this should move to a server/sync package and
-	//      should be injected into this struct, just like
-	//      the database code.
-	if u.IsStale() {
+	// todo(bradrydzewski) this should move to a server/sync package and
+	//      should be injected into this struct, just like the database code.
+	//
+	// todo(bradrydzewski) this login should be a bit more intelligent
+	//      than the current implementation.
+	//
+	// todo(bradrydzewski) the github implementation will only sync a
+	//      maximum of 100 repositories due to the api pagination. need to fix.
+	if u.Syncing {
 		redirect = "/sync"
 		log.Println("sync user account.", u.Login)
 
 		// sync inside a goroutine. This should eventually be moved to
 		// its own package / sync utility.
 		go func() {
-			// mark as synced
-			u.Synced = time.Now().Unix()
-			if err := h.users.Update(u); err != nil {
-				log.Println("Error syncing user account, updating sync date", u.Login, err)
-				return
-			}
-
 			// list all repositories
 			client := remote.GetClient(u.Access, u.Secret)
 			repos, err := client.GetRepos("")
@@ -132,6 +131,13 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 				}
 
 				log.Println("Successfully syced repo.", u.Login+"/"+remoteRepo.Name)
+
+				u.Synced = time.Now().Unix()
+				u.Syncing = false
+				if err := h.users.Update(u); err != nil {
+					log.Println("Error syncing user account, updating sync date", u.Login, err)
+					return
+				}
 			}
 		}()
 	}
@@ -148,7 +154,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 // GET /logout
 func (h *LoginHandler) GetLogout(w http.ResponseWriter, r *http.Request) error {
 	h.sess.Clear(w, r)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 	return nil
 }
 

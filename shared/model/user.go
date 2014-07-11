@@ -16,6 +16,7 @@ type User struct {
 	Token    string `meddler:"user_token"     json:"-"`
 	Admin    bool   `meddler:"user_admin"     json:"admin"`
 	Active   bool   `meddler:"user_active"    json:"active"`
+	Syncing  bool   `meddler:"user_syncing"   json:"syncing"`
 	Created  int64  `meddler:"user_created"   json:"created_at"`
 	Updated  int64  `meddler:"user_updated"   json:"updated_at"`
 	Synced   int64  `meddler:"user_synced"    json:"synced_at"`
