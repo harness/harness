@@ -7,10 +7,10 @@ import (
 
 var stmts = []string{
 	// insert user entries
-	"insert into users values (1, 'github.com', 'smellypooper',  'f0b461ca586c27872b43a0685cbc2847', '976f22a5eef7caacb7e678d6c52f49b1', 'Dr. Cooper',       'drcooper@caltech.edu', 'b9015b0857e16ac4d94a0ffd9a0b79c8', 'e42080dddf012c718e476da161d21ad5', 1, 1, 1398065343, 1398065344, 1398065345);",
-	"insert into users values (2, 'github.com', 'lhofstadter',   'e4105c3059ac4c466594932dc9a4ffb2', '2257216903d9cd0d3d24772132febf52', 'Dr. Hofstadter',   'leanard@caltech.edu',  '23dde632fdece6880f4ff03bb20f05d7', 'a5ad0d75f317f0b0a5dfdb68e5a3079e', 1, 1, 1398065343, 1398065344, 1398065345);",
-	"insert into users values (3, 'gitlab.com', 'browndynamite', '4821477cc26a0c8c80c6c9b568d98e32', '1dd52c37cf5c63fe5abfd047b5b74a31', 'Dr. Koothrappali', 'rajesh@caltech.edu',   'f9133051f480b7ea88848b9f0a079dae', '7a50ede04637d4a8fce532c7d511226b', 1, 1, 1398065343, 1398065344, 1398065345);",
-	"insert into users values (4, 'github.com', 'mrwolowitz',    '1f6a80bde960e6913bf9b7e61eadd068', '74c40472494ba7f9f6c3ae061ff799ed', 'Mr. Wolowitz',     'wolowitz@caltech.edu', 'ea250570c794d84dc583421bb717be82', '3bd7e7d7411b2978e45919c9ad419984', 1, 1, 1398065343, 1398065344, 1398065345);",
+	"insert into users values (1, 'github.com', 'smellypooper',  'f0b461ca586c27872b43a0685cbc2847', '976f22a5eef7caacb7e678d6c52f49b1', 'Dr. Cooper',       'drcooper@caltech.edu', 'b9015b0857e16ac4d94a0ffd9a0b79c8', 'e42080dddf012c718e476da161d21ad5', 1, 1, 0, 1398065343, 1398065344, 1398065345);",
+	"insert into users values (2, 'github.com', 'lhofstadter',   'e4105c3059ac4c466594932dc9a4ffb2', '2257216903d9cd0d3d24772132febf52', 'Dr. Hofstadter',   'leanard@caltech.edu',  '23dde632fdece6880f4ff03bb20f05d7', 'a5ad0d75f317f0b0a5dfdb68e5a3079e', 1, 1, 0, 1398065343, 1398065344, 1398065345);",
+	"insert into users values (3, 'gitlab.com', 'browndynamite', '4821477cc26a0c8c80c6c9b568d98e32', '1dd52c37cf5c63fe5abfd047b5b74a31', 'Dr. Koothrappali', 'rajesh@caltech.edu',   'f9133051f480b7ea88848b9f0a079dae', '7a50ede04637d4a8fce532c7d511226b', 1, 1, 0, 1398065343, 1398065344, 1398065345);",
+	"insert into users values (4, 'github.com', 'mrwolowitz',    '1f6a80bde960e6913bf9b7e61eadd068', '74c40472494ba7f9f6c3ae061ff799ed', 'Mr. Wolowitz',     'wolowitz@caltech.edu', 'ea250570c794d84dc583421bb717be82', '3bd7e7d7411b2978e45919c9ad419984', 1, 1, 0, 1398065343, 1398065344, 1398065345);",
 
 	// insert repository entries
 	"insert into repos values (1, 0, 'github.com', 'github.com', 'lhofstadter',   'lenwoloppali', '', 'git://github.com/lhofstadter/lenwoloppali.git', '', '', 1, 1, 1, 1, 1, 'publickey', 'privatekey', 'params', 900, 1398065343, 1398065344);",

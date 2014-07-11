@@ -19,6 +19,7 @@ var stmts = []string{`
 		,user_token        VARCHAR(255)
 		,user_admin        BOOLEAN
 		,user_active       BOOLEAN
+		,user_syncing      BOOLEAN
 		,user_created      INTEGER
 		,user_updated      INTEGER
 		,user_synced       INTEGER
