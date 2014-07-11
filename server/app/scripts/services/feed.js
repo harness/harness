@@ -19,6 +19,6 @@ angular.module('app').service('feed', ['$http', '$window', function($http, $wind
 	};
 
 	this.unsubscribe = function() {
-		ws.close();
+		wsCallback = undefined;
 	};
 }]);

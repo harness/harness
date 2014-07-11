@@ -46,3 +46,7 @@ lessc:
 # `sudo dpkg -i drone.deb`
 deb:
 	dpkg-deb --build debian/drone
+
+deploy:
+	scp -i $$DRONE_STAGING_KEY debian/drone.deb $$DRONE_STAGING_USER@$$DRONE_STAGING_HOST:/tmp
+	ssh -i $$DRONE_STAGING_KEY $$DRONE_STAGING_USER@$$DRONE_STAGING_HOST -- dpkg -i /tmp/drone.deb
