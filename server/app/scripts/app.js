@@ -118,16 +118,6 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
 				}
 			}
 		})
-		.when('/:remote/:owner/:name/:branch', {
-			templateUrl: '/views/branch.html',
-			controller: 'BranchController',
-			title: 'Recent Commits',
-			resolve: {
-				user: function(authService) {
-					return authService.getUser();
-				}
-			}
-		})
 		.when('/:remote/:owner/:name', {
 			templateUrl: '/views/repo.html',
 			controller: 'RepoController',
@@ -136,11 +126,11 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
 				user: function(authService) {
 					return authService.getUser();
 				},
-				repo: function($route, repoService) {
+				repo: function($route, repos) {
 					var remote = $route.current.params.remote;
 					var owner  = $route.current.params.owner;
 					var name   = $route.current.params.name;
-					return repoService.getRepo(remote, owner, name);
+					return repos.getRepo(remote, owner, name);
 				}
 			}
 		});
@@ -208,119 +198,9 @@ app.controller("ConfigController", function($scope, $http, user) {
 		});
 });
 
-app.controller("RepoConfigController", function($scope, $http, $routeParams, user) {
-	$scope.user = user;
 
-	var remote = $routeParams.remote;
-	var owner  = $routeParams.owner;
-	var name   = $routeParams.name;
 
-	// load the repo meta-data
-	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"?admin=1"}).
-		success(function(data, status, headers, config) {
-			$scope.repo = data;
-		}).
-		error(function(data, status, headers, config) {
-			console.log(data);
-		});
 
-	$scope.save = function() {
-		// request to create a new repository
-		$http({method: 'PUT', url: '/v1/repos/'+remote+'/'+owner+"/"+name, data: $scope.repo }).
-			success(function(data, status, headers, config) {
-				delete $scope.failure;
-			}).
-			error(function(data, status, headers, config) {
-				$scope.failure = data;
-			});
-	};
-});
-
-function badgeMarkdown(repo) {
-	var scheme = window.location.protocol;
-	var host = window.location.host;
-	return '[![Build Status]('+scheme+'//'+host+'/v1/badge/'+repo+'/status.svg?branch=master)]('+scheme+'//'+host+'/'+repo+')'
-}
-
-function badgeMarkup(repo) {
-	var scheme = window.location.protocol;
-	var host = window.location.host;
-	return '<a href="'+scheme+'//'+host+'/'+repo+'"><img src="'+scheme+'//'+host+'/v1/badge/'+repo+'/status.svg?branch=master" /></a>'
-}
-
-app.controller("RepoController", function($scope, $http, $routeParams, user, repo) {
-	$scope.user = user;
-	$scope.repo = repo;
-
-	// load the repo branch list
-	/*
-	$http({method: 'GET', url: '/v1/repos/'+repo.host+'/'+repo.owner+"/"+repo.name+"/branches"}).
-		success(function(data, status, headers, config) {
-			$scope.branches = (typeof data==='string')?[]:data;
-		}).
-		error(function(data, status, headers, config) {
-			console.log(data);
-		});
-	*/
-
-	// load the repo commit feed
-	$http({method: 'GET', url: '/v1/repos/'+repo.host+'/'+repo.owner+"/"+repo.name+"/feed"}).
-		success(function(data, status, headers, config) {
-			$scope.commits = (typeof data==='string')?[]:data;
-		}).
-		error(function(data, status, headers, config) {
-			console.log(data);
-		});
-
-	$scope.activate = function() {
-		// request to create a new repository
-		$http({method: 'POST', url: '/v1/repos/'+repo.host+'/'+repo.owner+"/"+repo.name }).
-			success(function(data, status, headers, config) {
-				$scope.repo = data;
-			}).
-			error(function(data, status, headers, config) {
-				$scope.failure = data;
-			});
-	};
-
-});
-
-app.controller("BranchController", function($scope, $http, $routeParams, user) {
-
-	$scope.user = user;
-	var remote = $routeParams.remote;
-	var owner  = $routeParams.owner;
-	var name   = $routeParams.name;
-	var branch = $routeParams.branch;
-	$scope.branch = branch;
-
-	// load the repo meta-data
-	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name}).
-		success(function(data, status, headers, config) {
-			$scope.repo = data;
-		}).
-		error(function(data, status, headers, config) {
-			console.log(data);
-		});
-
-	// load the repo branch list
-	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches"}).
-		success(function(data, status, headers, config) {
-			$scope.branches = (typeof data==='string')?[]:data;
-		}).
-		error(function(data, status, headers, config) {
-			console.log(data);
-		});
-
-	// load the repo commit feed
-	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits"}).
-		success(function(data, status, headers, config) {
-			$scope.commits = data;
-		}).
-		error(function(data, status, headers, config) {
-			console.log(data);
-		});
-});
 
 app.controller("CommitController", function($scope, $http, $routeParams, stdout, feed, notify) {
 
@@ -372,15 +252,6 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 			console.log(data);
 		});
 
-	// load the repo build data
-	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/builds/1"}).
-		success(function(data, status, headers, config) {
-			$scope.build = data;
-		}).
-		error(function(data, status, headers, config) {
-			console.log(data);
-		});
-
 	// load the repo build stdout
 	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/console"}).
 		success(function(data, status, headers, config) {
@@ -389,8 +260,5 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 		error(function(data, status, headers, config) {
 			console.log(data);
 		});
-
-
-
 
 });
