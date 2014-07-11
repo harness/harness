@@ -12,6 +12,18 @@
 		<a href="/{{ repo | fullPath}}">{{ repo.name }}</a>
 	</nav>
 
+		<section ng-if="repo.active == false" class="inactive">
+			<h1>This will be your commit stream</h1>
+			<p>Activate this repository to start testing your commits</p>
+			<div><i class="fa fa-long-arrow-down"></i></div>
+			<button ng-click="activate()" class="pure-button pure-button-primary">Activate Now</button>
+		</section>
+
+		<section ng-if="repo.active == true && commits != undefined && commits.length == 0" class="nobuilds">
+			<h1>This will be your commit stream</h1>
+			<p>Setup a .drone.yml file to configure the build</p>
+			<div><i class="fa fa-file-code-o"></i></div>
+		</section>
 
 		<section ng-repeat="group in commits | unique: 'branch'">
 			<div class="pure-g cards">
