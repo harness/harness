@@ -55,7 +55,7 @@ func TestRemoteInsert(t *testing.T) {
 	setup()
 	defer teardown()
 
-	remote := &model.Remote{0, "bitbucket.org", "bitbucket.org", "https://bitbucket.org", "https://bitbucket.org", "abc", "123", false}
+	remote := &model.Remote{ID: 0, Type: "bitbucket.org", Host: "bitbucket.org", URL: "https://bitbucket.org", API: "https://bitbucket.org", Client: "abc", Secret: "123", Open: false}
 	remotes := NewRemoteManager(db)
 	if err := remotes.Insert(remote); err != nil {
 		t.Errorf("Want Remote created, got %s", err)
