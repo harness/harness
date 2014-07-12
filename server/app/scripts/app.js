@@ -213,11 +213,11 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 	var name   = $routeParams.name;
 	var branch = $routeParams.branch;
 	var commit = $routeParams.commit;
+	$scope.console='';
 
 	feed.subscribe(function(item) {
-		// if the
-		if (item.commit.sha == commit
-				&& item.commit.branch == branch) {
+		if (item.commit.sha    == commit &&
+			item.commit.branch == branch) {
 			$scope.commit = item.commit;
 			$scope.$apply();
 		} else {
@@ -247,15 +247,20 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 			if (data.status!='Started' && data.status!='Pending') {
 				$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/console"}).
 					success(function(data, status, headers, config) {
-						$scope.console = data;
+						var lineFormatter = new Drone.LineFormatter();
+						var el = document.querySelector('#output');
+						angular.element(el).append(lineFormatter.format(data));
 					}).
 					error(function(data, status, headers, config) {
 						console.log(data);
 					});
+				return;
 			}
 
+			var lineFormatter = new Drone.LineFormatter();
+			var el = document.querySelector('#output');
 			stdout.subscribe(data.id, function(out){
-				console.log(out);
+				angular.element(el).append(lineFormatter.format(out));
 			});
 		}).
 		error(function(data, status, headers, config) {

@@ -1,6 +1,7 @@
 package pubsub
 
 import (
+	"log"
 	"time"
 )
 
@@ -47,7 +48,9 @@ func (c *Channel) start() {
 	// if somehow we encounter a nil pointer or some
 	// other unexpected behavior.
 	defer func() {
-		recover()
+		if r := recover(); r != nil {
+			log.Println("recoved from panic", r)
+		}
 	}()
 
 	// timeout the channel after N duration
@@ -63,6 +66,7 @@ func (c *Channel) start() {
 		case sub := <-c.unsubscribe:
 			delete(c.subscriptions, sub)
 			close(sub.send)
+			log.Println("usubscribed to subscription")
 
 		case sub := <-c.subscribe:
 			c.subscriptions[sub] = true
@@ -89,15 +93,18 @@ func (c *Channel) start() {
 				select {
 				case sub.send <- msg:
 					// do nothing
-				default:
-					sub.Close()
+					//default:
+					//	log.Println("subscription closed in inner select")
+					//	sub.Close()
 				}
 			}
 
 		case <-timeout:
+			log.Println("subscription's timedout channel received message")
 			c.Close()
 
 		case <-c.closed:
+			log.Println("subscription's close channel received message")
 			c.stop()
 			return
 		}
@@ -111,6 +118,7 @@ func replay(s *Subscription, history []interface{}) {
 }
 
 func (c *Channel) stop() {
+	log.Println("subscription stopped")
 	for sub := range c.subscriptions {
 		sub.Close()
 	}
