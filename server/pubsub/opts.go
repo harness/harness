@@ -21,6 +21,6 @@ var DefaultOpts = &Opts{
 }
 
 var ConsoleOpts = &Opts{
-	Timeout: time.Minute * 60,
+	Timeout: time.Minute * 120,
 	Record:  true,
 }

@@ -24,6 +24,7 @@ angular.module('app').service('stdout', ['$window', function($window) {
 	this.unsubscribe = function() {
 		callback = undefined;
 		if (websocket != undefined) {
+			console.log('unsubscribing websocket at '+websocket.url);
 			websocket.close();
 		}
 	};
