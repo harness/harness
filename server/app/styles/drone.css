@@ -391,6 +391,16 @@ nav div.options .pure-button i {
 .cards .card[data-status="Error"] em {
   border-top: 5px solid #e97041;
 }
+.cards .card[data-status="Killed"] .l-box,
+.cards .card[data-status="Failure"] .l-box,
+.cards .card[data-status="Error"] .l-box {
+  border: 1px solid #e97041;
+}
+.cards .card[data-status="Killed"] .l-box:hover,
+.cards .card[data-status="Failure"] .l-box:hover,
+.cards .card[data-status="Error"] .l-box:hover {
+  border: 1px solid #262626;
+}
 .cards .card[data-status="Killed"]:after,
 .cards .card[data-status="Failure"]:after,
 .cards .card[data-status="Error"]:after {
@@ -1296,6 +1306,10 @@ nav div.options .pure-button i {
 #sidebar .result[data-result="Failure"] .status:before,
 #sidebar .result[data-result="Error"] .status:before {
   content: "!";
+}
+#sidebar .result[data-result="Pending"],
+#sidebar .result[data-result="Started"] {
+  background: #4ab1ce;
 }
 #main {
   flex-grow: 2;

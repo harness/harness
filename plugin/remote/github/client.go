@@ -41,6 +41,12 @@ func (c *Client) GetRepos(owner string) ([]*remote.Repo, error) {
 
 	// loop throught the list and convert to the standard repo format
 	for _, repo := range repos {
+		// if the repository is private we should use the ssh
+		// url to clone, else we should use the git url
+		if repo.Private {
+			repo.CloneUrl = repo.SshUrl
+		}
+
 		result = append(result, &remote.Repo{
 			ID:      repo.ID,
 			Host:    githuburl.Host,
