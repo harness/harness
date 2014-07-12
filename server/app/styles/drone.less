@@ -307,6 +307,13 @@ nav {
 				border-top:5px solid @cneg;
 			}
 
+			.l-box {
+				border: 1px solid @cneg;
+				&:hover {
+					border:1px solid @c0;
+				}
+			}
+
 			&:after {
 				font-family:'FontAwesome';
 				font-size:16px;
@@ -328,6 +335,7 @@ nav {
 			height:200px;
 			.transition(.4s border linear);
 			.border_box;
+
 
 			//box-shadow: inset 0 0 0 1px #dfdfdf,
 			//	    inset 0 0 0 2px #fff,
@@ -1167,6 +1175,11 @@ nav {
 			.status:before {
 				content:"!";
 			}
+		}
+
+		&[data-result="Pending"],
+		&[data-result="Started"] {
+			background:@link2;
 		}
 	}
 }
