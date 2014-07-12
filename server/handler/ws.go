@@ -158,19 +158,19 @@ func (h *WsHandler) WsConsole(w http.ResponseWriter, r *http.Request) error {
 				ws.SetWriteDeadline(time.Now().Add(writeWait))
 				err := ws.WriteMessage(websocket.TextMessage, data)
 				if err != nil {
-					log.Println("websocket for commit %d closed. Err: %s", commitID, err)
+					log.Printf("websocket for commit %d closed. Err: %s\n", commitID, err)
 					ws.Close()
 					return
 				}
 			case <-sub.CloseNotify():
-				log.Println("websocket for commit %d closed by client", commitID)
+				log.Printf("websocket for commit %d closed by client\n", commitID)
 				ws.Close()
 				return
 			case <-ticker.C:
 				ws.SetWriteDeadline(time.Now().Add(writeWait))
 				err := ws.WriteMessage(websocket.PingMessage, []byte{})
 				if err != nil {
-					log.Println("websocket for commit %d closed. Err: %s", commitID, err)
+					log.Printf("websocket for commit %d closed. Err: %s\n", commitID, err)
 					ws.Close()
 					return
 				}
