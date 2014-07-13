@@ -7,6 +7,7 @@ type Perm struct {
 	Read    bool  `meddler:"perm_read"    json:"read"`
 	Write   bool  `meddler:"perm_write"   json:"write"`
 	Admin   bool  `meddler:"perm_admin"   json:"admin"`
+	Guest   bool  `meddler:"-"            json:"guest"`
 	Created int64 `meddler:"perm_created" json:"-"`
 	Updated int64 `meddler:"perm_updated" json:"-"`
 }

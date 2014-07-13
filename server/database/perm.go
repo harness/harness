@@ -101,11 +101,13 @@ func (db *permManager) Find(u *model.User, r *model.Repo) *model.Perm {
 	switch {
 	case u == nil && r.Private:
 		return &model.Perm{
+			Guest: true,
 			Read:  false,
 			Write: false,
 			Admin: false}
 	case u == nil && !r.Private:
 		return &model.Perm{
+			Guest: true,
 			Read:  true,
 			Write: false,
 			Admin: false}
@@ -124,10 +126,12 @@ func (db *permManager) Find(u *model.User, r *model.Repo) *model.Perm {
 		perm.Read = true
 		perm.Write = true
 		perm.Admin = true
+		perm.Guest = true
 
 	// if the repo is public, grant read access only.
 	case r.Private == false:
 		perm.Read = true
+		perm.Guest = true
 	}
 
 	return perm
