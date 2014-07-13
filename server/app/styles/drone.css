@@ -650,6 +650,7 @@ nav div.options .pure-button i {
   -o-box-sizing: border-box;
   box-sizing: border-box;
 }
+#setuppage .pure-g,
 #loginpage .pure-g {
   padding: 30px;
   border: 1px solid #DDD;
@@ -662,6 +663,7 @@ nav div.options .pure-button i {
   -o-box-sizing: border-box;
   box-sizing: border-box;
 }
+#setuppage .pure-g a,
 #loginpage .pure-g a {
   display: block;
   background: #45494b;
@@ -671,9 +673,11 @@ nav div.options .pure-button i {
   border-radius: 5px;
   text-decoration: none;
 }
+#setuppage .pure-g a:hover,
 #loginpage .pure-g a:hover {
   background: #262626;
 }
+#setuppage .pure-g [class*="fa-"],
 #loginpage .pure-g [class*="fa-"] {
   float: left;
   font-size: 20px;
@@ -684,11 +688,73 @@ nav div.options .pure-button i {
   min-width: 27px;
   min-height: 20px;
 }
+#setuppage .pure-g .pure-u-1 a,
 #loginpage .pure-g .pure-u-1 a {
   margin-bottom: 10px;
 }
+#setuppage .pure-g .pure-u-1:last-child a,
 #loginpage .pure-g .pure-u-1:last-child a {
   margin-bottom: 0px;
+}
+#setuppage2 {
+  margin-bottom: 50px;
+}
+#setuppage2 section {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+}
+#setuppage2 section .pure-g {
+  padding: 30px;
+  border: 1px solid #DDD;
+  max-width: 400px;
+  margin: 0px auto;
+  margin-top: 50px;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+}
+#setuppage2 section label {
+  display: inline-block;
+}
+#setuppage2 section input[type='text'] {
+  margin-top: 5px;
+  margin-bottom: 10px;
+  box-shadow: none;
+  width: 100%;
+}
+#setuppage2 section .pure-button-primary {
+  color: #FFF;
+  background: #4ab1ce;
+  padding: 10px 20px;
+  margin-top: 20px;
+  width: 100%;
+}
+#setuppage2 section .tip h2 {
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+#setuppage2 section .tip dd {
+  font-weight: bold;
+  color: #666;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+#setuppage2 section .tip dt {
+  padding: .5em .6em;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  width: 100%;
 }
 #syncpage {
   width: 100%;

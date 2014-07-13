@@ -64,6 +64,31 @@ angular.module('app').filter('badgeMarkup', function() {
   }
 });
 
+angular.module('app').filter('remoteName', function() {
+  return function(name) {
+    switch (name) {
+    case 'gitlab.com'            : return 'GitLab';
+    case 'github.com'            : return 'GitHub';
+    case 'enterprise.github.com' : return 'GitHub Enterprise';
+    case 'bitbucket.org'         : return 'Bitbucket';
+    case 'stash.atlassian.com'   : return 'Atlassian Stash';
+    }
+  }
+});
+
+angular.module('app').filter('remoteIcon', function() {
+  return function(name) {
+    switch (name) {
+    case 'gitlab.com'            : return 'fa-git-square';
+    case 'github.com'            : return 'fa-github-square';
+    case 'enterprise.github.com' : return 'fa-github-square';
+    case 'bitbucket.org'         : return 'fa-bitbucket-square';
+    case 'stash.atlassian.com'   : return 'fa-bitbucket-square';
+    }
+  }
+});
+
+
 angular.module('app').filter('unique', function() {
     return function(input, key) {
         var unique = {};

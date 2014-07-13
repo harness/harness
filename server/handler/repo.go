@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/shared/httputil"
@@ -14,7 +15,7 @@ import (
 )
 
 type RepoHandler struct {
-	conf    database.ConfigManager
+	remotes database.RemoteManager
 	commits database.CommitManager
 	perms   database.PermManager
 	repos   database.RepoManager
@@ -22,8 +23,8 @@ type RepoHandler struct {
 }
 
 func NewRepoHandler(repos database.RepoManager, commits database.CommitManager,
-	perms database.PermManager, sess session.Session, conf database.ConfigManager) *RepoHandler {
-	return &RepoHandler{conf, commits, perms, repos, sess}
+	perms database.PermManager, sess session.Session, remotes database.RemoteManager) *RepoHandler {
+	return &RepoHandler{remotes, commits, perms, repos, sess}
 }
 
 // GetRepo gets the named repository.
@@ -105,16 +106,24 @@ func (h *RepoHandler) PostRepo(w http.ResponseWriter, r *http.Request) error {
 	repo.PrivateKey = sshutil.MarshalPrivateKey(key)
 
 	// get the remote and client
-	remote := h.conf.Find().GetRemote(host)
-	if remote == nil {
+	remoteServer, err := h.remotes.FindType(repo.Remote)
+	if err != nil {
+		return notFound{err}
+	}
+
+	remotePlugin, ok := remote.Lookup(remoteServer.Type)
+	if !ok {
 		return notFound{}
 	}
 
+	// get the remote system's client.
+	plugin := remotePlugin(remoteServer)
+
 	// post commit hook url
-	hook := fmt.Sprintf("%s://%s/v1/hook/%s", httputil.GetScheme(r), httputil.GetHost(r), remote.GetName())
+	hook := fmt.Sprintf("%s://%s/v1/hook/%s", httputil.GetScheme(r), httputil.GetHost(r), plugin.GetName())
 
 	// activate the repository in the remote system
-	client := remote.GetClient(user.Access, user.Secret)
+	client := plugin.GetClient(user.Access, user.Secret)
 	if err := client.SetActive(owner, name, hook, repo.PublicKey); err != nil {
 		return badRequest{err}
 	}

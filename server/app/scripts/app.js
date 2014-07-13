@@ -23,6 +23,7 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
 		})
 		.when('/login', {
 			templateUrl: '/views/login.html',
+			controller: 'LoginController',
 			title: 'Login',
 		})
 		.when('/setup', {

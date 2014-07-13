@@ -3,8 +3,9 @@ package handler
 import (
 	"net/http"
 
+	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/server/database"
-	"github.com/drone/drone/server/worker"
+	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
 )
@@ -13,12 +14,12 @@ type HookHandler struct {
 	users   database.UserManager
 	repos   database.RepoManager
 	commits database.CommitManager
-	conf    database.ConfigManager
-	queue   chan *worker.Request
+	remotes database.RemoteManager
+	queue   chan *model.Request
 }
 
-func NewHookHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, conf database.ConfigManager, queue chan *worker.Request) *HookHandler {
-	return &HookHandler{users, repos, commits, conf, queue}
+func NewHookHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, remotes database.RemoteManager, queue chan *model.Request) *HookHandler {
+	return &HookHandler{users, repos, commits, remotes, queue}
 }
 
 // PostHook receives a post-commit hook from GitHub, Bitbucket, etc
@@ -26,14 +27,21 @@ func NewHookHandler(users database.UserManager, repos database.RepoManager, comm
 func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	host := r.FormValue(":host")
 
-	// get the remote system's client.
-	remote := h.conf.Find().GetRemote(host)
-	if remote == nil {
+	remoteServer, err := h.remotes.FindType(host)
+	if err != nil {
+		return notFound{err}
+	}
+
+	remotePlugin, ok := remote.Lookup(remoteServer.Type)
+	if !ok {
 		return notFound{}
 	}
 
+	// get the remote system's client.
+	plugin := remotePlugin(remoteServer)
+
 	// parse the hook payload
-	hook, err := remote.GetHook(r)
+	hook, err := plugin.GetHook(r)
 	if err != nil {
 		return badRequest{err}
 	}
@@ -47,7 +55,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// fetch the repository from the database
-	repo, err := h.repos.FindName(remote.GetHost(), hook.Owner, hook.Repo)
+	repo, err := h.repos.FindName(plugin.GetHost(), hook.Owner, hook.Repo)
 	if err != nil {
 		return notFound{}
 	}
@@ -66,7 +74,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// featch the .drone.yml file from the database
-	client := remote.GetClient(user.Access, user.Secret)
+	client := plugin.GetClient(user.Access, user.Secret)
 	yml, err := client.GetScript(hook)
 	if err != nil {
 		return badRequest{err}
@@ -91,7 +99,8 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 
 	// drop the items on the queue
 	go func() {
-		h.queue <- &worker.Request{
+		h.queue <- &model.Request{
+			Host:   httputil.GetURL(r),
 			Repo:   repo,
 			Commit: &c,
 		}

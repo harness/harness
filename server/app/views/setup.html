@@ -1,57 +1,105 @@
-<h1>First Time Setup</h1>
+<article id="setuppage" ng-if="remote.type == undefined">
+	<nav>
+		<a href="#"><span class="fa fa-th"></span></a>
+		<a href="#">Choose a Remote System</a>
+	</nav>
 
-<div class="row">
-	<div class="col-xs-6 col-sm-3">
-		<table border="1">
-			<tr>
-				<td><a href="/setup/github.com">GitHub</a></td>
-				<td><a href="/setup/enterprise.github.com">GitHub Enterprise</a></td>
-				<td><a href="/setup/gitlab.com">Gitlab</a></td>
-				<td><a href="/setup/bitbucket.org">Bitbucket</a></td>
-				<td><a href="/setup/stash.atlassian.com">Stash</a></td>
-			</tr>
-		</table>
-	</div>
-
-	<!-- primary column -->
-	<div class="col-xs-12 col-sm-9">
-
-		<div>
-			<label>Registration</label>
-			<input type="radio" ng-model="remote.register" ng-value="true" />
-			<input type="radio" ng-model="remote.register" ng-value="false" />
-		</div>
-
-		<div>
-			<label>URL</label>
-			<div ng-switch="remote.type">
-				<input ng-switch-when="github.com"    ng-model="remote.url" type="text" readonly />
-				<input ng-switch-when="bitbucket.org" ng-model="remote.url" type="text" readonly />
-				<input ng-switch-default              ng-model="remote.url" type="text" />
+	<section>
+		<div class="pure-g">
+			<div class="pure-u-1">
+				<a href="/setup/github.com">
+					<i class="fa fa-github-square"></i> GitHub
+				</a>
+			</div>
+			<div class="pure-u-1">
+				<a href="/setup/enterprise.github.com">
+					<i class="fa fa-github-square"></i> GitHub Enterprise
+				</a>
+			</div>
+			<div class="pure-u-1">
+				<a href="/setup/bitbucket.org">
+					<i class="fa fa-bitbucket-square"></i> Bitbucket
+				</a>
+			</div>
+			<div class="pure-u-1">
+				<a href="/setup/stash.atlassian.com">
+					<i class="fa fa-bitbucket-square"></i> Atlassian Stash
+				</a>
+			</div>
+			<div class="pure-u-1">
+				<a href="/setup/gitlab.com">
+					<i class="fa fa-git-square"></i> GitLab
+				</a>
 			</div>
 		</div>
+	</section>
+</article>
 
-		<div ng-if="remote.type != 'gitlab.com'">
-			<label>API</label>
-			<div ng-switch="remote.type">
-				<input ng-switch-when="github.com"    ng-model="remote.api" type="text" readonly />
-				<input ng-switch-when="bitbucket.org" ng-model="remote.api" type="text" readonly />
-				<input ng-switch-default              ng-model="remote.api" type="text" />
+<article ng-if="remote.type != undefined" id="setuppage2">
+	<nav>
+		<a href="/setup">
+			<span class="fa fa-arrow-left"></span>
+		</a>
+		<a href="/setup">Configure {{ remote.type | remoteName }}</a>
+	</nav>
+
+	<section ng-if-"remote.type == 'github.com' || remote.type == 'enterprise.github.com' ">
+		<div class="pure-g">
+			<div class="pure-u-1 tip">
+				<h2>Register with {{ remote.type | remoteName }}</h2>
+				<dl>
+					<dd>Homepage URL</dd>
+					<dt>{{ window.location.protocol }}//{{ window.location.host }}</dt>
+				</dl>
+				<dl>
+					<dd>Authorization callback URL</dd>
+					<dt>{{ window.location.protocol }}//{{ window.location.host }}/login/{{ remote.type }}</dt>
+				</dl>
 			</div>
 		</div>
+	</section>
 
-		<div ng-if="remote.type != 'gitlab.com'">
-			<label>Client</label>
-			<input type="text" ng-model="remote.client" />
-		</div>
+	<section>
+		<div class="pure-g">
+			<div class="pure-u-1">
+				<div class="pure-form">
+					<div ng-if="remote.type != 'github.com' && remote.type != 'bitbucket.org' ">
+						<label>URL</label>
+						<div ng-switch="remote.type">
+							<input ng-switch-default ng-model="remote.url" type="text" placeholder="https://www.foo.com" />
+						</div>
+					</div>
 
-		<div ng-if="remote.type != 'gitlab.com'">
-			<label>Secret</label>
-			<input type="text" ng-model="remote.secret" />
-		</div>
+					<div ng-if="remote.type != 'github.com' && remote.type != 'bitbucket.org' ">
+						<label>API URL</label>
+						<div ng-switch="remote.type">
+							<input ng-switch-default ng-model="remote.api" type="text" placeholder="https://www.foo.com/api" />
+						</div>
+					</div>
 
-		<div>
-			<button ng-click="save()">Save</button>
+					<div ng-if="remote.type != 'gitlab.com'">
+						<label>OAuth Client</label>
+						<div>
+							<input type="text" ng-model="remote.client" />
+						</div>
+					</div>
+
+					<div ng-if="remote.type != 'gitlab.com'">
+						<label>OAuth Secret</label>
+						<div>
+							<input type="text" ng-model="remote.secret" />
+						</div>
+					</div>
+
+					<div class="toggle">
+						<input type="checkbox" ng-model="remote.register" id="register" />
+						<label for="register"></label>
+						<span>Enable Self-Registration</span>
+					</div>
+
+					<button ng-click="save()" class="pure-button pure-button-primary">Save and Login</button>
+				</div>
+			</div>
 		</div>
-	</div>
-</div>
+	</section>
+</article>

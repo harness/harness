@@ -2,7 +2,26 @@ package remote
 
 import (
 	"net/http"
+
+	"github.com/drone/drone/shared/model"
 )
+
+// Defines a model for integrating (or pluggin in) remote version
+// control systems, such as GitHub and Bitbucket.
+type Plugin func(*model.Remote) Remote
+
+var plugins = map[string]Plugin{}
+
+// Register registers a new plugin.
+func Register(name string, plugin Plugin) {
+	plugins[name] = plugin
+}
+
+// Lookup retrieves the plugin for the remote.
+func Lookup(name string) (Plugin, bool) {
+	plugin, ok := plugins[name]
+	return plugin, ok
+}
 
 type Remote interface {
 	// GetName returns the name of this remote system.
