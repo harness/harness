@@ -1,12 +1,9 @@
 'use strict';
 
-angular.module('app').controller("HomeController", function($scope, $http, feed, notify) {
+angular.module('app').controller("HomeController", function($scope, $http, feed) {
 
 	feed.subscribe(function(item) {
-		notify.sendCommit(
-			item.repo,
-			item.commit
-		);
+		// todo toast notification
 	});
 
 	$http({method: 'GET', url: '/v1/user/feed'}).
