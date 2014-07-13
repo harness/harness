@@ -1,5 +1,6 @@
 package database
 
+/*
 import (
 	"github.com/BurntSushi/toml"
 	"github.com/drone/drone/shared/model"
@@ -33,3 +34,4 @@ func NewConfigManager(filename string) ConfigManager {
 func (c *configManager) Find() *model.Config {
 	return c.conf
 }
+*/

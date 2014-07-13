@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/shared/model"
@@ -15,12 +16,13 @@ type LoginHandler struct {
 	users database.UserManager
 	repos database.RepoManager
 	perms database.PermManager
-	conf  database.ConfigManager
-	sess  session.Session
+	//conf    database.ConfigManager
+	sess    session.Session
+	remotes database.RemoteManager
 }
 
-func NewLoginHandler(users database.UserManager, repos database.RepoManager, perms database.PermManager, sess session.Session, conf database.ConfigManager) *LoginHandler {
-	return &LoginHandler{users, repos, perms, conf, sess}
+func NewLoginHandler(users database.UserManager, repos database.RepoManager, perms database.PermManager, sess session.Session /*conf database.ConfigManager,*/, remotes database.RemoteManager) *LoginHandler {
+	return &LoginHandler{users, repos, perms /*conf,*/, sess, remotes}
 }
 
 // GetLogin gets the login to the 3rd party remote system.
@@ -29,14 +31,21 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	host := r.FormValue(":host")
 	redirect := "/"
 
-	// get the remote system's client.
-	remote := h.conf.Find().GetRemote(host)
-	if remote == nil {
+	remoteServer, err := h.remotes.FindType(host)
+	if err != nil {
+		return notFound{err}
+	}
+
+	remotePlugin, ok := remote.Lookup(remoteServer.Type)
+	if !ok {
 		return notFound{}
 	}
 
+	// get the remote system's client.
+	plugin := remotePlugin(remoteServer)
+
 	// authenticate the user
-	login, err := remote.GetLogin(w, r)
+	login, err := plugin.GetLogin(w, r)
 	if err != nil {
 		return badRequest{err}
 	} else if login == nil {
@@ -51,12 +60,12 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 		// if self-registration is disabled we should
 		// return a notAuthorized error. the only exception
 		// is if no users exist yet in the system we'll proceed.
-		if h.conf.Find().Registration == false && h.users.Exist() {
+		if remoteServer.Open == false && h.users.Exist() {
 			return notAuthorized{}
 		}
 
 		// create the user account
-		u = model.NewUser(remote.GetName(), login.Login, login.Email)
+		u = model.NewUser(plugin.GetName(), login.Login, login.Email)
 		u.Name = login.Name
 		u.SetEmail(login.Email)
 
@@ -102,7 +111,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 		// its own package / sync utility.
 		go func() {
 			// list all repositories
-			client := remote.GetClient(u.Access, u.Secret)
+			client := plugin.GetClient(u.Access, u.Secret)
 			repos, err := client.GetRepos("")
 			if err != nil {
 				log.Println("Error syncing user account, listing repositories", u.Login, err)
@@ -111,7 +120,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 
 			// insert all repositories
 			for _, remoteRepo := range repos {
-				repo, _ := model.NewRepo(remote.GetName(), remoteRepo.Owner, remoteRepo.Name)
+				repo, _ := model.NewRepo(plugin.GetName(), remoteRepo.Owner, remoteRepo.Name)
 				repo.Private = remoteRepo.Private
 				repo.Host = remoteRepo.Host
 				repo.CloneURL = remoteRepo.Clone
@@ -131,13 +140,13 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 				}
 
 				log.Println("Successfully syced repo.", u.Login+"/"+remoteRepo.Name)
+			}
 
-				u.Synced = time.Now().Unix()
-				u.Syncing = false
-				if err := h.users.Update(u); err != nil {
-					log.Println("Error syncing user account, updating sync date", u.Login, err)
-					return
-				}
+			u.Synced = time.Now().UTC().Unix()
+			u.Syncing = false
+			if err := h.users.Update(u); err != nil {
+				log.Println("Error syncing user account, updating sync date", u.Login, err)
+				return
 			}
 		}()
 	}

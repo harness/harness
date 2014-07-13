@@ -38,6 +38,23 @@ func (h *RemoteHandler) GetRemotes(w http.ResponseWriter, r *http.Request) error
 	return json.NewEncoder(w).Encode(remotes)
 }
 
+// GetRemoteLogins gets all remote logins.
+// GET /api/remotes/logins
+func (h *RemoteHandler) GetRemoteLogins(w http.ResponseWriter, r *http.Request) error {
+	remotes, err := h.remotes.List()
+	if err != nil {
+		return internalServerError{err}
+	}
+	var logins []interface{}
+	for _, remote := range remotes {
+		logins = append(logins, struct {
+			Type string `json:"type"`
+			Host string `json:"host"`
+		}{remote.Type, remote.Host})
+	}
+	return json.NewEncoder(w).Encode(&logins)
+}
+
 // PostRemote creates a new remote.
 // POST /api/remotes
 func (h *RemoteHandler) PostRemote(w http.ResponseWriter, r *http.Request) error {
@@ -57,7 +74,6 @@ func (h *RemoteHandler) PostRemote(w http.ResponseWriter, r *http.Request) error
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		return badRequest{err}
 	}
-
 	uri, err := url.Parse(in.URL)
 	if err != nil {
 		return badRequest{err}
@@ -65,7 +81,8 @@ func (h *RemoteHandler) PostRemote(w http.ResponseWriter, r *http.Request) error
 	in.Host = uri.Host
 
 	// there is an edge case where, during installation, a user could attempt
-	// to add the same result multiple times.
+	// to add the same result multiple times. In this case we will delete
+	// the old remote prior to adding the new one.
 	if remote, err := h.remotes.FindHost(in.Host); err == nil && h.users.Exist() {
 		h.remotes.Delete(remote)
 	}
@@ -78,31 +95,50 @@ func (h *RemoteHandler) PostRemote(w http.ResponseWriter, r *http.Request) error
 	return json.NewEncoder(w).Encode(&in)
 }
 
-// DeleteRemote delete the remote.
-// GET /api/remotes/:name
-func (h *RemoteHandler) DeleteRemote(w http.ResponseWriter, r *http.Request) error {
-	host := r.FormValue(":host")
-
+// PutRemote updates an existing remote.
+// PUT /api/remotes
+func (h *RemoteHandler) PutRemote(w http.ResponseWriter, r *http.Request) error {
 	// get the user form the session
 	user := h.sess.User(r)
 	if user == nil || !user.Admin {
 		return notAuthorized{}
 	}
-	// get the remote
-	remote, err := h.remotes.FindHost(host)
+	// unmarshal the remote from the payload
+	defer r.Body.Close()
+	in := model.Remote{}
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		return badRequest{err}
+	}
+	uri, err := url.Parse(in.URL)
+	if err != nil {
+		return badRequest{err}
+	}
+	in.Host = uri.Host
+
+	// retrieve the remote and return an error if not exists
+	remote, err := h.remotes.FindHost(in.Host)
 	if err != nil {
 		return notFound{err}
 	}
-	if err := h.remotes.Delete(remote); err != nil {
+
+	// update the remote details
+	remote.API = in.API
+	remote.URL = in.URL
+	remote.Host = in.Host
+	remote.Client = in.Client
+	remote.Secret = in.Secret
+
+	// insert the remote in the database
+	if err := h.remotes.Update(remote); err != nil {
 		return internalServerError{err}
 	}
 
-	w.WriteHeader(http.StatusNoContent)
-	return nil
+	return json.NewEncoder(w).Encode(remote)
 }
 
 func (h *RemoteHandler) Register(r *pat.Router) {
-	r.Delete("/v1/remotes/:name", errorHandler(h.DeleteRemote))
-	r.Post("/v1/remotes", errorHandler(h.PostRemote))
+	r.Get("/v1/logins", errorHandler(h.GetRemoteLogins))
 	r.Get("/v1/remotes", errorHandler(h.GetRemotes))
+	r.Post("/v1/remotes", errorHandler(h.PostRemote))
+	r.Put("/v1/remotes", errorHandler(h.PutRemote))
 }

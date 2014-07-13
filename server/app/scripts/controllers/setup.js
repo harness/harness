@@ -1,14 +1,18 @@
 'use strict';
 
-angular.module('app').controller("SetupController", function($scope, $http, $routeParams) {
+angular.module('app').controller("SetupController", function($scope, $http, $routeParams, $window) {
 
 	// create a remote that will be populated
 	// and persisted to the database.
 	$scope.remote = {};
 	$scope.remote.type = $routeParams.remote;
-	$scope.remote.register = true;
+	$scope.remote.register = false;
+	$scope.window = $window
+
+	// pre-populate the form if the remote
+	// type is selected and is a cloud service
+	// with a known URL and standard configuration.
 	switch($scope.remote.type) {
-	case undefined:
 	case 'github.com':
 		$scope.remote.type = "github.com"
 		$scope.remote.url = "https://github.com";
@@ -26,7 +30,7 @@ angular.module('app').controller("SetupController", function($scope, $http, $rou
 			success(function(data, status, headers, config) {
 				delete $scope.failure;
 				$scope.remote = data;
-				console.log('success', $scope.remote);
+				$window.location.href="/login/"+data.type;
 			}).
 			error(function(data, status, headers, config) {
 				$scope.failure = data;

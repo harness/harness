@@ -6,7 +6,7 @@ import (
 
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/session"
-	"github.com/drone/drone/server/worker"
+	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
 )
@@ -16,10 +16,10 @@ type CommitHandler struct {
 	repos   database.RepoManager
 	commits database.CommitManager
 	sess    session.Session
-	queue   chan *worker.Request
+	queue   chan *model.Request
 }
 
-func NewCommitHandler(repos database.RepoManager, commits database.CommitManager, perms database.PermManager, sess session.Session, queue chan *worker.Request) *CommitHandler {
+func NewCommitHandler(repos database.RepoManager, commits database.CommitManager, perms database.PermManager, sess session.Session, queue chan *model.Request) *CommitHandler {
 	return &CommitHandler{perms, repos, commits, sess, queue}
 }
 
@@ -160,7 +160,8 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 	// drop the items on the queue
 	// drop the items on the queue
 	go func() {
-		h.queue <- &worker.Request{
+		h.queue <- &model.Request{
+			Host:   httputil.GetURL(r),
 			Repo:   repo,
 			Commit: c,
 		}

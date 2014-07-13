@@ -14,6 +14,9 @@ type RemoteManager interface {
 	// FindHost finds the Remote by hostname.
 	FindHost(name string) (*model.Remote, error)
 
+	// FindHost finds the Remote by type.
+	FindType(t string) (*model.Remote, error)
+
 	// List finds all registered Remotes of the system.
 	List() ([]*model.Remote, error)
 
@@ -40,10 +43,19 @@ WHERE remote_host=?
 LIMIT 1
 `
 
+// SQL query to retrieve a Remote by remote login.
+const findRemoteTypeQuery = `
+SELECT *
+FROM remotes
+WHERE remote_type=?
+LIMIT 1
+`
+
 // SQL query to retrieve a list of all Remotes.
 const listRemoteQuery = `
 SELECT *
 FROM remotes
+ORDER BY remote_type
 `
 
 // SQL statement to delete a Remote by ID.
@@ -66,6 +78,12 @@ func (db *remoteManager) Find(id int64) (*model.Remote, error) {
 func (db *remoteManager) FindHost(host string) (*model.Remote, error) {
 	dst := model.Remote{}
 	err := meddler.QueryRow(db, &dst, findRemoteQuery, host)
+	return &dst, err
+}
+
+func (db *remoteManager) FindType(t string) (*model.Remote, error) {
+	dst := model.Remote{}
+	err := meddler.QueryRow(db, &dst, findRemoteTypeQuery, t)
 	return &dst, err
 }
 

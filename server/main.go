@@ -25,6 +25,10 @@ import (
 	"github.com/GeertJohan/go.rice"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/russross/meddler"
+
+	_ "github.com/drone/drone/plugin/remote/bitbucket"
+	_ "github.com/drone/drone/plugin/remote/github"
+	_ "github.com/drone/drone/plugin/remote/gitlab"
 )
 
 var (
@@ -79,7 +83,7 @@ func main() {
 	commits := database.NewCommitManager(db)
 	servers := database.NewServerManager(db)
 	remotes := database.NewRemoteManager(db)
-	configs := database.NewConfigManager(filepath.Join(home, "config.toml"))
+	//configs := database.NewConfigManager(filepath.Join(home, "config.toml"))
 
 	// message broker
 	pubsub := pubsub.NewPubSub()
@@ -87,10 +91,10 @@ func main() {
 	// cancel all previously running builds
 	go commits.CancelAll()
 
-	queue := make(chan *worker.Request)
-	workers := make(chan chan *worker.Request)
+	queue := make(chan *model.Request)
+	workers := make(chan chan *model.Request)
 	worker.NewDispatch(queue, workers).Start()
-	worker.NewWorker(workers, users, repos, commits, configs, pubsub, &model.Server{}).Start()
+	worker.NewWorker(workers, users, repos, commits, pubsub, &model.Server{}).Start()
 
 	// setup the session managers
 	sess := session.NewSession(users)
@@ -99,13 +103,13 @@ func main() {
 	router := pat.New()
 	handler.NewUsersHandler(users, sess).Register(router)
 	handler.NewUserHandler(users, repos, commits, sess).Register(router)
-	handler.NewHookHandler(users, repos, commits, configs, queue).Register(router)
-	handler.NewLoginHandler(users, repos, perms, sess, configs).Register(router)
+	handler.NewHookHandler(users, repos, commits, remotes, queue).Register(router)
+	handler.NewLoginHandler(users, repos, perms, sess, remotes).Register(router)
 	handler.NewCommitHandler(repos, commits, perms, sess, queue).Register(router)
 	handler.NewBranchHandler(repos, commits, perms, sess).Register(router)
-	handler.NewRepoHandler(repos, commits, perms, sess, configs).Register(router)
+	handler.NewRepoHandler(repos, commits, perms, sess, remotes).Register(router)
 	handler.NewBadgeHandler(repos, commits).Register(router)
-	handler.NewConfigHandler(configs, sess).Register(router)
+	//handler.NewConfigHandler(configs, sess).Register(router)
 	handler.NewServerHandler(servers, sess).Register(router)
 	handler.NewRemoteHandler(users, remotes, sess).Register(router)
 	handler.NewWsHandler(repos, commits, perms, sess, pubsub).Register(router)

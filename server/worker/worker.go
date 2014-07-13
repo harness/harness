@@ -24,25 +24,25 @@ type worker struct {
 	users   database.UserManager
 	repos   database.RepoManager
 	commits database.CommitManager
-	config  database.ConfigManager
-	pubsub  *pubsub.PubSub
-	server  *model.Server
+	//config  database.ConfigManager
+	pubsub *pubsub.PubSub
+	server *model.Server
 
-	request  chan *Request
-	dispatch chan chan *Request
+	request  chan *model.Request
+	dispatch chan chan *model.Request
 	quit     chan bool
 }
 
-func NewWorker(dispatch chan chan *Request, users database.UserManager, repos database.RepoManager, commits database.CommitManager, config database.ConfigManager, pubsub *pubsub.PubSub, server *model.Server) Worker {
+func NewWorker(dispatch chan chan *model.Request, users database.UserManager, repos database.RepoManager, commits database.CommitManager /*config database.ConfigManager,*/, pubsub *pubsub.PubSub, server *model.Server) Worker {
 	return &worker{
-		users:    users,
-		repos:    repos,
-		commits:  commits,
-		config:   config,
+		users:   users,
+		repos:   repos,
+		commits: commits,
+		//config:   config,
 		pubsub:   pubsub,
 		server:   server,
 		dispatch: dispatch,
-		request:  make(chan *Request),
+		request:  make(chan *model.Request),
 		quit:     make(chan bool),
 	}
 }
@@ -59,7 +59,7 @@ func (w *worker) Start() {
 			select {
 			case r := <-w.request:
 				// handle the request
-				r.server = w.server
+				r.Server = w.server
 				w.Execute(r)
 
 			case <-w.quit:
@@ -78,7 +78,7 @@ func (w *worker) Stop() {
 // Execute executes the work Request, persists the
 // results to the database, and sends event messages
 // to the pubsub (for websocket updates on the website).
-func (w *worker) Execute(r *Request) {
+func (w *worker) Execute(r *model.Request) {
 	// mark the build as Started and update the database
 	r.Commit.Status = model.StatusStarted
 	r.Commit.Started = time.Now().UTC().Unix()
@@ -123,6 +123,11 @@ func (w *worker) Execute(r *Request) {
 		dockerClient = docker.NewHost(w.server.Host)
 	}
 
+	// send all "started" notifications
+	if script.Notifications != nil {
+		script.Notifications.Send(r)
+	}
+
 	// create an instance of the Docker builder
 	builder := build.New(dockerClient)
 	builder.Build = script
@@ -162,5 +167,9 @@ func (w *worker) Execute(r *Request) {
 
 	// todo(bradrydzewski) update github status API
 	// todo(bradrydzewski) send email notifications
-	// todo(bradrydzewski) send other notifications
+
+	// send all "finished" notifications
+	if script.Notifications != nil {
+		script.Notifications.Send(r)
+	}
 }

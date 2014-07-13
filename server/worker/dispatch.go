@@ -1,14 +1,18 @@
 package worker
 
+import (
+	"github.com/drone/drone/shared/model"
+)
+
 // http://nesv.github.io/golang/2014/02/25/worker-queues-in-go.html
 
 type Dispatch struct {
-	requests chan *Request
-	workers  chan chan *Request
+	requests chan *model.Request
+	workers  chan chan *model.Request
 	quit     chan bool
 }
 
-func NewDispatch(requests chan *Request, workers chan chan *Request) *Dispatch {
+func NewDispatch(requests chan *model.Request, workers chan chan *model.Request) *Dispatch {
 	return &Dispatch{
 		requests: requests,
 		workers:  workers,
