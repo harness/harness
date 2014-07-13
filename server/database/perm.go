@@ -16,6 +16,9 @@ type PermManager interface {
 	// Revoke will revoke all user permissions to the specified repository.
 	Revoke(u *model.User, r *model.Repo) error
 
+	// Find returns the user's permission to access the specified repository.
+	Find(u *model.User, r *model.Repo) *model.Perm
+
 	// Read returns true if the specified user has read
 	// access to the repository.
 	Read(u *model.User, r *model.Repo) (bool, error)
@@ -52,17 +55,6 @@ LIMIT 1
 const deletePermStmt = `
 DELETE FROM perms WHERE user_id=? AND repo_id=?
 `
-
-type perm struct {
-	ID      int64 `meddler:"perm_id,pk"`
-	UserID  int64 `meddler:"user_id"`
-	RepoID  int64 `meddler:"repo_id"`
-	Read    bool  `meddler:"perm_read"`
-	Write   bool  `meddler:"perm_write"`
-	Admin   bool  `meddler:"perm_admin"`
-	Created int64 `meddler:"perm_created"`
-	Updated int64 `meddler:"perm_updated"`
-}
 
 // NewManager initiales a new PermManager intended to
 // manage user permission and access control.
@@ -101,6 +93,44 @@ func (db *permManager) Grant(u *model.User, r *model.Repo, read, write, admin bo
 func (db *permManager) Revoke(u *model.User, r *model.Repo) error {
 	_, err := db.Exec(deletePermStmt, u.ID, r.ID)
 	return err
+}
+
+func (db *permManager) Find(u *model.User, r *model.Repo) *model.Perm {
+	// if the user is a gues they should only be granted
+	// read access to public repositories.
+	switch {
+	case u == nil && r.Private:
+		return &model.Perm{
+			Read:  false,
+			Write: false,
+			Admin: false}
+	case u == nil && !r.Private:
+		return &model.Perm{
+			Read:  true,
+			Write: false,
+			Admin: false}
+	}
+
+	// if the user is authenticated we'll retireive the
+	// permission details from the database.
+	perm, err := db.find(u, r)
+	if err != nil {
+		return perm
+	}
+
+	switch {
+	// if the user is a system admin grant super access.
+	case u.Admin == true:
+		perm.Read = true
+		perm.Write = true
+		perm.Admin = true
+
+	// if the repo is public, grant read access only.
+	case r.Private == false:
+		perm.Read = true
+	}
+
+	return perm
 }
 
 func (db *permManager) Read(u *model.User, r *model.Repo) (bool, error) {
@@ -165,8 +195,8 @@ func (db *permManager) Member(u *model.User, r *model.Repo) (bool, error) {
 	return perm.Read, err
 }
 
-func (db *permManager) find(u *model.User, r *model.Repo) (*perm, error) {
-	var dst = perm{}
+func (db *permManager) find(u *model.User, r *model.Repo) (*model.Perm, error) {
+	var dst = model.Perm{}
 	var err = meddler.QueryRow(db, &dst, findPermQuery, u.ID, r.ID)
 	return &dst, err
 }
