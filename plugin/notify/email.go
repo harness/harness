@@ -1,6 +1,8 @@
 package notify
 
-//import "github.com/drone/drone/pkg/mail"
+import (
+	"github.com/drone/drone/shared/model"
+)
 
 type Email struct {
 	Recipients []string `yaml:"recipients,omitempty"`
@@ -10,7 +12,7 @@ type Email struct {
 
 // Send will send an email, either success or failure,
 // based on the Commit Status.
-func (e *Email) Send(context *Context) error {
+func (e *Email) Send(context *model.Request) error {
 	switch {
 	case context.Commit.Status == "Success" && e.Success != "never":
 		return e.sendSuccess(context)
@@ -23,7 +25,7 @@ func (e *Email) Send(context *Context) error {
 
 // sendFailure sends email notifications to the list of
 // recipients indicating the build failed.
-func (e *Email) sendFailure(context *Context) error {
+func (e *Email) sendFailure(context *model.Request) error {
 	// loop through and email recipients
 	//for _, email := range e.Recipients {
 	//if err := mail.SendFailure(context.Repo.Name, context.Commit.HashShort(), email, context); err != nil {
@@ -35,7 +37,7 @@ func (e *Email) sendFailure(context *Context) error {
 
 // sendSuccess sends email notifications to the list of
 // recipients indicating the build was a success.
-func (e *Email) sendSuccess(context *Context) error {
+func (e *Email) sendSuccess(context *model.Request) error {
 	// loop through and email recipients
 	//for _, email := range e.Recipients {
 	//	if err := mail.SendSuccess(context.Repo.Name, context.Commit.HashShort(), email, context); err != nil {

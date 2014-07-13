@@ -3,6 +3,8 @@ package notify
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/drone/drone/shared/model"
 )
 
 const (
@@ -22,7 +24,7 @@ type Slack struct {
 	Failure  bool   `yaml:"on_failure,omitempty"`
 }
 
-func (s *Slack) Send(context *Context) error {
+func (s *Slack) Send(context *model.Request) error {
 	switch {
 	case context.Commit.Status == "Started" && s.Started:
 		return s.sendStarted(context)
@@ -35,24 +37,24 @@ func (s *Slack) Send(context *Context) error {
 	return nil
 }
 
-func getBuildUrl(context *Context) string {
-	return fmt.Sprintf("%s/%s/%s/%s/branch/%s/commit/%s", context.Host, context.Repo.Host, context.Repo.Owner, context.Repo.Name, context.Commit.Branch, context.Commit.Sha)
+func getBuildUrl(context *model.Request) string {
+	return fmt.Sprintf("%s/%s/%s/%s/%s/%s", context.Host, context.Repo.Host, context.Repo.Owner, context.Repo.Name, context.Commit.Branch, context.Commit.Sha)
 }
 
-func getMessage(context *Context, message string) string {
+func getMessage(context *model.Request, message string) string {
 	url := getBuildUrl(context)
 	return fmt.Sprintf(message, context.Repo.Name, url, context.Commit.ShaShort(), context.Commit.Author)
 }
 
-func (s *Slack) sendStarted(context *Context) error {
+func (s *Slack) sendStarted(context *model.Request) error {
 	return s.send(getMessage(context, slackStartedMessage))
 }
 
-func (s *Slack) sendSuccess(context *Context) error {
+func (s *Slack) sendSuccess(context *model.Request) error {
 	return s.send(getMessage(context, slackSuccessMessage))
 }
 
-func (s *Slack) sendFailure(context *Context) error {
+func (s *Slack) sendFailure(context *model.Request) error {
 	return s.send(getMessage(context, slackFailureMessage))
 }
 

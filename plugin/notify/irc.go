@@ -3,6 +3,7 @@ package notify
 import (
 	"fmt"
 
+	"github.com/drone/drone/shared/model"
 	irc "github.com/fluffle/goirc/client"
 )
 
@@ -39,7 +40,7 @@ func (i *IRC) Connect() {
 	i.Client = c
 }
 
-func (i *IRC) Send(context *Context) error {
+func (i *IRC) Send(context *model.Request) error {
 	switch {
 	case context.Commit.Status == "Started" && i.Started:
 		return i.sendStarted(context)
@@ -51,13 +52,13 @@ func (i *IRC) Send(context *Context) error {
 	return nil
 }
 
-func (i *IRC) sendStarted(context *Context) error {
+func (i *IRC) sendStarted(context *model.Request) error {
 	msg := fmt.Sprintf(ircStartedMessage, context.Repo.Name, context.Commit.ShaShort(), context.Commit.Author)
 	i.send(i.Channel, msg)
 	return nil
 }
 
-func (i *IRC) sendFailure(context *Context) error {
+func (i *IRC) sendFailure(context *model.Request) error {
 	msg := fmt.Sprintf(ircFailureMessage, context.Repo.Name, context.Commit.ShaShort(), context.Commit.Author)
 	i.send(i.Channel, msg)
 	if i.ClientStarted {
@@ -66,7 +67,7 @@ func (i *IRC) sendFailure(context *Context) error {
 	return nil
 }
 
-func (i *IRC) sendSuccess(context *Context) error {
+func (i *IRC) sendSuccess(context *model.Request) error {
 	msg := fmt.Sprintf(ircSuccessMessage, context.Repo.Name, context.Commit.ShaShort(), context.Commit.Author)
 	i.send(i.Channel, msg)
 	if i.ClientStarted {

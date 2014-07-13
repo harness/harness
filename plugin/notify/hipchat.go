@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/andybons/hipchat"
+	"github.com/drone/drone/shared/model"
 )
 
 const (
@@ -20,7 +21,7 @@ type Hipchat struct {
 	Failure bool   `yaml:"on_failure,omitempty"`
 }
 
-func (h *Hipchat) Send(context *Context) error {
+func (h *Hipchat) Send(context *model.Request) error {
 	switch {
 	case context.Commit.Status == "Started" && h.Started:
 		return h.sendStarted(context)
@@ -33,17 +34,17 @@ func (h *Hipchat) Send(context *Context) error {
 	return nil
 }
 
-func (h *Hipchat) sendStarted(context *Context) error {
+func (h *Hipchat) sendStarted(context *model.Request) error {
 	msg := fmt.Sprintf(startedMessage, context.Repo.Name, context.Commit.ShaShort(), context.Commit.Author)
 	return h.send(hipchat.ColorYellow, hipchat.FormatHTML, msg)
 }
 
-func (h *Hipchat) sendFailure(context *Context) error {
+func (h *Hipchat) sendFailure(context *model.Request) error {
 	msg := fmt.Sprintf(failureMessage, context.Repo.Name, context.Commit.ShaShort(), context.Commit.Author)
 	return h.send(hipchat.ColorRed, hipchat.FormatHTML, msg)
 }
 
-func (h *Hipchat) sendSuccess(context *Context) error {
+func (h *Hipchat) sendSuccess(context *model.Request) error {
 	msg := fmt.Sprintf(successMessage, context.Repo.Name, context.Commit.ShaShort(), context.Commit.Author)
 	return h.send(hipchat.ColorGreen, hipchat.FormatHTML, msg)
 }
