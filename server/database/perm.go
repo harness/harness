@@ -116,7 +116,7 @@ func (db *permManager) Find(u *model.User, r *model.Repo) *model.Perm {
 	// if the user is authenticated we'll retireive the
 	// permission details from the database.
 	perm, err := db.find(u, r)
-	if err != nil {
+	if err != nil && perm.ID != 0 {
 		return perm
 	}
 
@@ -138,65 +138,20 @@ func (db *permManager) Find(u *model.User, r *model.Repo) *model.Perm {
 }
 
 func (db *permManager) Read(u *model.User, r *model.Repo) (bool, error) {
-	switch {
-	// if the repo is public, grant access.
-	case r.Private == false:
-		return true, nil
-	// if the repo is private and the user is nil, deny access
-	case r.Private == true && u == nil:
-		return false, nil
-	// if the user is a system admin, grant access
-	case u.Admin == true:
-		return true, nil
-	}
-
-	// get the permissions from the database
-	perm, err := db.find(u, r)
-	return perm.Read, err
+	return db.Find(u, r).Read, nil
 }
 
 func (db *permManager) Write(u *model.User, r *model.Repo) (bool, error) {
-	switch {
-	// if the user is nil, deny access
-	case u == nil:
-		return false, nil
-	// if the user is a system admin, grant access
-	case u.Admin == true:
-		return true, nil
-	}
-
-	// get the permissions from the database
-	perm, err := db.find(u, r)
-	return perm.Write, err
+	return db.Find(u, r).Write, nil
 }
 
 func (db *permManager) Admin(u *model.User, r *model.Repo) (bool, error) {
-	switch {
-	// if the user is nil, deny access
-	case u == nil:
-		return false, nil
-	// if the user is a system admin, grant access
-	case u.Admin == true:
-		return true, nil
-	}
-
-	// get the permissions from the database
-	perm, err := db.find(u, r)
-	return perm.Admin, err
+	return db.Find(u, r).Admin, nil
 }
 
 func (db *permManager) Member(u *model.User, r *model.Repo) (bool, error) {
-	switch {
-	// if the user is nil, deny access
-	case u == nil:
-		return false, nil
-	case u.ID == r.UserID:
-		return true, nil
-	}
-
-	// get the permissions from the database
-	perm, err := db.find(u, r)
-	return perm.Read, err
+	perm := db.Find(u, r)
+	return perm.Read && !perm.Guest, nil
 }
 
 func (db *permManager) find(u *model.User, r *model.Repo) (*model.Perm, error) {

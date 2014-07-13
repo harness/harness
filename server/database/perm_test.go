@@ -65,6 +65,53 @@ func Test_find(t *testing.T) {
 	}
 }
 
+func TestPermFind(t *testing.T) {
+	setup()
+	defer teardown()
+
+	manager := NewPermManager(db).(*permManager)
+
+	u := model.User{ID: 101, Admin: false}
+	r := model.Repo{ID: 201, Private: false}
+
+	// public repos should always be accessible
+	if perm := manager.Find(&u, &r); !perm.Read {
+		t.Errorf("Public repos should always be READ accessible")
+	}
+
+	// public repos should always be accessible, even to guest users
+	if perm := manager.Find(nil, &r); !perm.Read || perm.Write || perm.Admin {
+		t.Errorf("Public repos should always be READ accessible, even to nil users")
+	}
+
+	// private repos should not be accessible to nil users
+	r.Private = true
+	if perm := manager.Find(nil, &r); perm.Read || perm.Write || perm.Admin {
+		t.Errorf("Private repos should not be READ accessible to nil users")
+	}
+
+	// private repos should not be accessible to users without a row in the perm table.
+	r.Private = true
+	if perm := manager.Find(&u, &r); perm.Read || perm.Write || perm.Admin {
+		t.Errorf("Private repos should not be READ accessible to users without a row in the perm table.")
+	}
+
+	// private repos should be accessible to admins
+	r.Private = true
+	u.Admin = true
+	if perm := manager.Find(&u, &r); !perm.Read || !perm.Write || !perm.Admin {
+		t.Errorf("Private repos should be READ accessible to admins")
+	}
+
+	// private repos should be accessible to users with rows in the perm table.
+	r.ID = 200
+	r.Private = true
+	u.Admin = false
+	if perm := manager.Find(&u, &r); !perm.Read {
+		t.Errorf("Private repos should be READ accessible to users with rows in the perm table.")
+	}
+}
+
 func TestPermRead(t *testing.T) {
 	setup()
 	defer teardown()
@@ -92,7 +139,7 @@ func TestPermRead(t *testing.T) {
 
 	// private repos should not be accessible to users without a row in the perm table.
 	r.Private = true
-	if read, err := manager.Read(&u, &r); read || err != sql.ErrNoRows {
+	if read, _ := manager.Read(&u, &r); read {
 		t.Errorf("Private repos should not be READ accessible to users without a row in the perm table.")
 	}
 
@@ -128,7 +175,7 @@ func TestPermWrite(t *testing.T) {
 	}
 
 	// repos should not be accessible to users without a row in the perm table.
-	if write, err := manager.Write(&u, &r); write || err != sql.ErrNoRows {
+	if write, _ := manager.Write(&u, &r); write {
 		t.Errorf("Repos should not be WRITE accessible to users without a row in the perm table.")
 	}
 
@@ -169,7 +216,7 @@ func TestPermAdmin(t *testing.T) {
 	}
 
 	// repos should not be accessible to users without a row in the perm table.
-	if admin, err := manager.Admin(&u, &r); admin || err != sql.ErrNoRows {
+	if admin, _ := manager.Admin(&u, &r); admin {
 		t.Errorf("Repos should not be ADMIN accessible to users without a row in the perm table.")
 	}
 
@@ -202,7 +249,7 @@ func TestPermRevoke(t *testing.T) {
 	u := model.User{ID: 101}
 	r := model.Repo{ID: 200}
 
-	manager := NewPermManager(db)
+	manager := NewPermManager(db).(*permManager)
 	admin, err := manager.Admin(&u, &r)
 	if !admin || err != nil {
 		t.Errorf("Want Admin permission, got Admin %v, error %s", admin, err)
@@ -213,9 +260,9 @@ func TestPermRevoke(t *testing.T) {
 		t.Errorf("Want revoked permissions, got %s", err)
 	}
 
-	admin, err = manager.Admin(&u, &r)
-	if admin == true || err != sql.ErrNoRows {
-		t.Errorf("Expected revoked permission, got Admin %v, error %v", admin, err)
+	perm, err := manager.find(&u, &r)
+	if perm.Admin == true || err != sql.ErrNoRows {
+		t.Errorf("Expected revoked permission, got Admin %v, error %v", perm.Admin, err)
 	}
 }
 
