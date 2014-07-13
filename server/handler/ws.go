@@ -78,7 +78,7 @@ func (h *WsHandler) WsUser(w http.ResponseWriter, r *http.Request) error {
 
 				// user must have read access to the repository
 				// in order to pass this message along
-				if ok, _ := h.perms.Member(user, work.Repo); !ok {
+				if role := h.perms.Find(user, work.Repo); role.Read {
 					break
 				}
 
