@@ -1,5 +1,5 @@
 Package: drone
-Version: 0.1
+Version: 0.3
 Section: base
 Priority: optional
 Architecture: amd64

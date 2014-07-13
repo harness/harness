@@ -45,6 +45,8 @@ lessc:
 # creates a debian package for drone to install
 # `sudo dpkg -i drone.deb`
 deb:
+	mkdir -p debian/drone/usr/local/bin
+	mkdir -p debian/drone/var/lib/drone
 	dpkg-deb --build debian/drone
 
 deploy:
