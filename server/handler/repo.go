@@ -43,14 +43,18 @@ func (h *RepoHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// user must have read access to the repository.
-	if ok, _ := h.perms.Read(user, repo); !ok {
+	role := h.perms.Find(user, repo)
+	if !role.Read {
 		return notFound{err}
 	}
 
 	// if the user is not requesting admin data we can
 	// return exactly what we have.
 	if len(admin) == 0 {
-		return json.NewEncoder(w).Encode(repo)
+		return json.NewEncoder(w).Encode(struct {
+			*model.Repo
+			Role *model.Perm `json:"role"`
+		}{repo, role})
 	}
 
 	// ammend the response to include data that otherwise
@@ -62,9 +66,10 @@ func (h *RepoHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
 
 	return json.NewEncoder(w).Encode(struct {
 		*model.Repo
-		PublicKey string `json:"public_key"`
-		Params    string `json:"params"`
-	}{repo, repo.PublicKey, repo.Params})
+		Role      *model.Perm `json:"role"`
+		PublicKey string      `json:"public_key"`
+		Params    string      `json:"params"`
+	}{repo, role, repo.PublicKey, repo.Params})
 }
 
 // PostRepo activates the named repository.

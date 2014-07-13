@@ -9,7 +9,7 @@
 
 <article id="repopage">
 	<nav>
-		<div class="options">
+		<div class="options" ng-if="repo.role.admin">
 			<a class="pure-button pure-button-primary" href="/{{ repo | fullPath }}/settings">
 				<i class="fa fa-sliders"></i> Settings
 			</a>
