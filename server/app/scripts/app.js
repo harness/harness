@@ -207,7 +207,7 @@ app.controller("ConfigController", function($scope, $http, user) {
 
 
 
-app.controller("CommitController", function($scope, $http, $routeParams, stdout, feed, notify) {
+app.controller("CommitController", function($scope, $http, $routeParams, stdout, feed) {
 
 	var remote = $routeParams.remote;
 	var owner  = $routeParams.owner;
@@ -222,12 +222,9 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 			$scope.commit = item.commit;
 			$scope.$apply();
 		} else {
-			// we trigger an html5 notification so the
+			// we trigger an toast notification so the
 			// user is aware another build started
-			notify.sendCommit(
-				item.repo,
-				item.commit
-			);
+			
 		}
 	});
 

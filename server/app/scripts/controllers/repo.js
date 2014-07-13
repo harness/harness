@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('app').controller("RepoController", function($scope, $http, $routeParams, $route, repos, feed, repo, notify) {
+angular.module('app').controller("RepoController", function($scope, $http, $routeParams, $route, repos, feed, repo) {
 	$scope.repo = repo;
 
 	// subscribes to the global feed to receive
@@ -15,12 +15,9 @@ angular.module('app').controller("RepoController", function($scope, $http, $rout
 			$scope.msg = item;
 			$scope.$apply();
 		} else {
-			// we trigger an html5 notification so the
+			// we trigger a toast (or html5) notification so the
 			// user is aware another build started
-			notify.sendCommit(
-				item.repo,
-				item.commit
-			);
+
 		}
 	});
 
