@@ -14,7 +14,7 @@ type Webhook struct {
 	Failure bool     `yaml:"on_failure,omitempty"`
 }
 
-func (w *Webhook) Send(context *Context) error {
+func (w *Webhook) Send(context *model.Request) error {
 	switch {
 	case context.Commit.Status == "Success" && w.Success:
 		return w.send(context)
@@ -26,7 +26,7 @@ func (w *Webhook) Send(context *Context) error {
 }
 
 // helper function to send HTTP requests
-func (w *Webhook) send(context *Context) error {
+func (w *Webhook) send(context *model.Request) error {
 	// data will get posted in this format
 	data := struct {
 		Owner  *model.User   `json:"owner"`

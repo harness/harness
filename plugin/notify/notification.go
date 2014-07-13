@@ -4,24 +4,8 @@ import (
 	"github.com/drone/drone/shared/model"
 )
 
-// Context represents the context of an
-// in-progress build request.
-type Context struct {
-	// Global settings
-	Host string
-
-	// User that owns the repository
-	User *model.User
-
-	// Repository being built.
-	Repo *model.Repo
-
-	// Commit being built
-	Commit *model.Commit
-}
-
 type Sender interface {
-	Send(context *Context) error
+	Send(context *model.Request) error
 }
 
 // Notification stores the configuration details
@@ -35,12 +19,7 @@ type Notification struct {
 	Slack   *Slack   `yaml:"slack,omitempty"`
 }
 
-func (n *Notification) Send(context *Context) error {
-	// send email notifications
-	if n.Email != nil {
-		n.Email.Send(context)
-	}
-
+func (n *Notification) Send(context *model.Request) error {
 	// send email notifications
 	if n.Webhook != nil {
 		n.Webhook.Send(context)

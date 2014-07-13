@@ -6,7 +6,7 @@ import (
 )
 
 func Test_getBuildUrl(t *testing.T) {
-	c := &Context{
+	c := &model.Request{
 		Host: "http://examplehost.com",
 		Repo: &model.Repo{
 			Host:  "examplegit.com",
@@ -18,7 +18,7 @@ func Test_getBuildUrl(t *testing.T) {
 			Branch: "example",
 		},
 	}
-	expected := "http://examplehost.com/examplegit.com/owner/repo/branch/example/commit/abc"
+	expected := "http://examplehost.com/examplegit.com/owner/repo/example/abc"
 	output := getBuildUrl(c)
 
 	if output != expected {
