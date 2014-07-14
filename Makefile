@@ -3,8 +3,7 @@ SHA := $(shell git rev-parse --short HEAD)
 all: build
 
 deps:
-	# npm install -g uglify-js
-	# npm install -g less
+	# which npm && npm -g install uglify-js less
 	go get github.com/GeertJohan/go.rice/rice
 	go list github.com/drone/drone/... | xargs go get -t -v
 
