@@ -1,8 +1,9 @@
+[![Build Status](http://test.drone.io/v1/badge/github.com/bradrydzewski/drone/status.svg?branch=exp)](http://test.drone.io/github.com/bradrydzewski/drone)
+
 Experimental version of Drone.IO with deep GitHub, GitHub Enterprise and Bitbucket integration.
 
 I am currently copy / pasting functionality into this branch. So if you see something that is missing it
-probably because I haven't gotten to that section yet. The initial focus has been on the API and UI, which
-means builds are not hooked up yet. Help is of course welcome.
+probably because I haven't gotten to that section yet.
 
 Some of the fundamental changes include
 
@@ -13,12 +14,8 @@ Some of the fundamental changes include
 5. github, bitbucket, etc native permissions are used. No more teams or permissions in Drone
 6. github, bitbucket, etc authentication is used. No more drone password
 7. github, bitbucket, etc repository data is cached upon login (and subsequent logins)
-8. configuration is driven by a file (~/.drone/drone.toml) and not the database
+8. angularjs user interface with modified reactive design
 
 ... probably more that I'm forgetting
 
-Normally I wouldn't post experimental code in such disarray, but given the amount of activity around
-the project I wanted to give the community visibility into these changes. I could also use the help!
-
-I'm tracking my TODO list here:
-https://gist.github.com/bradrydzewski/85b7720c276a70a1bed5
+If you find an issue please don't log a bug. I'm probably aware of it and just haven't gotten to fixing it yet ... especially if it is related to a) angular b) emails or c) github, bitbucket and gitlab functionality.
