@@ -87,15 +87,12 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
 			}
 		})
 		.when('/admin/settings', {
-			templateUrl: '/views/sys_config.html',
+			templateUrl: '/views/config.html',
 			controller: 'ConfigController',
 			title: 'System Settings',
 			resolve: {
 				user: function(authService) {
 					return authService.getUser();
-				},
-				conf: function(confService) {
-					return confService.getConfig();
 				}
 			}
 		})
@@ -187,24 +184,6 @@ app.controller("AccountReposController", function($scope, $http, user) {
 			return $scope.remote == "" || $scope.remote == entry.remote; 
 		}; 
 });
-
-
-
-app.controller("ConfigController", function($scope, $http, user) {
-
-	$scope.user = user;
-
-	$http({method: 'GET', url: '/v1/config'}).
-		success(function(data, status, headers, config) {
-			$scope.config = data;
-		}).
-		error(function(data, status, headers, config) {
-			console.log(data);
-		});
-});
-
-
-
 
 
 app.controller("CommitController", function($scope, $http, $routeParams, stdout, feed) {

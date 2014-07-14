@@ -8,7 +8,6 @@ angular.module('app').controller("HomeController", function($scope, $http, feed)
 
 	$http({method: 'GET', url: '/v1/user/feed'}).
 		success(function(data, status, headers, config) {
-			console.log(data)
 			$scope.feed = (typeof data==='string')?[]:data;
 		}).
 		error(function(data, status, headers, config) {
