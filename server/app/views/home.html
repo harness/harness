@@ -12,7 +12,7 @@
 
 	<section ng-if="feed.length > 0">
 		<div class="pure-g cards">
-			<a class="pure-u-1 pure-u-md-1-2 pure-u-lg-1-4 pure-u-xl-1-4 card card" href="/{{ commit | fullPath }}" ng-repeat="commit in feed | limitTo:4" data-status="{{ commit.status }}">
+			<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card" href="/{{ commit | fullPath }}" ng-repeat="commit in feed | limitTo:4" data-status="{{ commit.status }}">
 				<div class="l-box">
 						<h2>{{ commit.owner }} <span class="separator">/</span> {{ commit.name }}</h2>
 						<em>{{ commit.finished_at | fromNow }}</em>
@@ -24,13 +24,13 @@
 
 	<section>
 		<div class="pure-g cards">
-			<a class="pure-u-1 pure-u-md-1-2 pure-u-lg-1-4 pure-u-xl-1-4 card card-inactive" href="/{{ repo | fullPath }}" ng-repeat="repo in repos | filter: { active: false } | limitTo:3">
+			<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card-inactive" href="/{{ repo | fullPath }}" ng-repeat="repo in repos | filter: { active: false } | limitTo:3">
 				<div class="l-box">
 						<h2>{{ repo.owner }} <span class="separator">/</span> {{ repo.name }}</h2>
 						<em><span class="fa fa-plus"></span> Activate</em>
 				</div>
 			</a>
-			<a class="pure-u-1 pure-u-md-1-2 pure-u-lg-1-4 pure-u-xl-1-4 card card-browse-inactive" href="/account/repos">
+			<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card-browse-inactive" href="/account/repos">
 				<div class="l-box">
 					<span>Browse All</span><br>
 					<span class="fa fa-long-arrow-down"></span>
