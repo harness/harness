@@ -28,9 +28,6 @@ import (
 )
 
 var (
-	// home directory for the application.
-	home string
-
 	// port the server will run on
 	port string
 
@@ -46,7 +43,7 @@ var (
 	sslkey  string
 
 	// commit sha for the current build.
-	version  string = "0.2-dev"
+	version  string = "0.3-dev"
 	revision string
 
 	// Number of concurrent build workers to run
@@ -90,7 +87,16 @@ func main() {
 	queue := make(chan *model.Request)
 	workers := make(chan chan *model.Request)
 	worker.NewDispatch(queue, workers).Start()
-	worker.NewWorker(workers, users, repos, commits, pubsub, &model.Server{}).Start()
+
+	// there must be a minimum of 1 worker
+	if workers <= 0 {
+		workers = 1
+	}
+
+	// create the specified number of worker nodes
+	for i := 0; i < workers; i++ {
+		worker.NewWorker(workers, users, repos, commits, pubsub, &model.Server{}).Start()
+	}
 
 	// setup the session managers
 	sess := session.NewSession(users)
@@ -105,11 +111,9 @@ func main() {
 	handler.NewBranchHandler(repos, commits, perms, sess).Register(router)
 	handler.NewRepoHandler(repos, commits, perms, sess, remotes).Register(router)
 	handler.NewBadgeHandler(repos, commits).Register(router)
-	//handler.NewConfigHandler(configs, sess).Register(router)
 	handler.NewServerHandler(servers, sess).Register(router)
 	handler.NewRemoteHandler(users, remotes, sess).Register(router)
 	handler.NewWsHandler(repos, commits, perms, sess, pubsub).Register(router)
-	//handler.NewSiteHandler(users, repos, commits, perms, sess, templ.ExecuteTemplate).Register(router)
 
 	box := rice.MustFindBox("app/")
 	fserver := http.FileServer(box.HTTPBox())
