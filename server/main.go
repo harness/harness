@@ -85,8 +85,8 @@ func main() {
 	go commits.CancelAll()
 
 	queue := make(chan *model.Request)
-	workers := make(chan chan *model.Request)
-	worker.NewDispatch(queue, workers).Start()
+	workerc := make(chan chan *model.Request)
+	worker.NewDispatch(queue, workerc).Start()
 
 	// there must be a minimum of 1 worker
 	if workers <= 0 {
@@ -95,7 +95,7 @@ func main() {
 
 	// create the specified number of worker nodes
 	for i := 0; i < workers; i++ {
-		worker.NewWorker(workers, users, repos, commits, pubsub, &model.Server{}).Start()
+		worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
 	}
 
 	// setup the session managers
