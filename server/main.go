@@ -55,7 +55,6 @@ func main() {
 
 	log.SetPriority(log.LOG_NOTICE)
 
-	// parse command line flags
 	flag.StringVar(&port, "port", ":8080", "")
 	flag.StringVar(&driver, "driver", "sqlite3", "")
 	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
@@ -143,14 +142,22 @@ func main() {
 	}
 }
 
-func setupDatabase() {
+func init() {
 
 }
 
-func setupQueue() {
+func init_flags() {
 
 }
 
-func setupHandlers() {
+func init_database() {
+
+}
+
+func init_workers() {
+
+}
+
+func init_handlers() {
 
 }

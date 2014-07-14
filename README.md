@@ -14,7 +14,7 @@ Some of the fundamental changes include
 5. github, bitbucket, etc native permissions are used. No more teams or permissions in Drone
 6. github, bitbucket, etc authentication is used. No more drone password
 7. github, bitbucket, etc repository data is cached upon login (and subsequent logins)
-8. angularjs user interface with modified reactive design
+8. angularjs user interface with modified responsive design
 
 ... probably more that I'm forgetting
 

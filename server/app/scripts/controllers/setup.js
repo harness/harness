@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('app').controller("SetupController", function($scope, $http, $routeParams, $window) {
+angular.module('app').controller("SetupController", function($scope, $http, $routeParams, $window, $location) {
 
 	// create a remote that will be populated
 	// and persisted to the database.
@@ -24,17 +24,16 @@ angular.module('app').controller("SetupController", function($scope, $http, $rou
 		break;
 	}
 
+	// todo(bradrydzewski) move this to the remote.js service.
 	$scope.save = function() {
 		// request to create a new repository
 		$http({method: 'POST', url: '/v1/remotes', data: $scope.remote }).
 			success(function(data, status, headers, config) {
 				delete $scope.failure;
-				$scope.remote = data;
-				$window.location.href="/login/"+data.type;
+				$location.path("/login");
 			}).
 			error(function(data, status, headers, config) {
 				$scope.failure = data;
-				console.log('failure', $scope.failure);
 			});
 	};
 });
