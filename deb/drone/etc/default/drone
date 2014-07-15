@@ -4,7 +4,6 @@
 #
 #   -datasource="drone.sqlite":
 #   -driver="sqlite3":
-#   -path="":
 #   -port=":8080":
 #   -workers="4":
 #         
