@@ -105,6 +105,8 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 			Commit: &c,
 		}
 	}()
+
+	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
