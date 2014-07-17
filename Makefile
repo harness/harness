@@ -15,6 +15,10 @@ build:
 	go build -o debian/drone/usr/local/bin/drone  -ldflags "-X main.revision $(SHA)" github.com/drone/drone/client
 	go build -o debian/drone/usr/local/bin/droned -ldflags "-X main.revision $(SHA)" github.com/drone/drone/server
 
+install:
+	install -t /usr/local/bin debian/drone/usr/local/bin/drone 
+	install -t /usr/local/bin debian/drone/usr/local/bin/droned 
+
 run:
 	@go run server/main.go
 
