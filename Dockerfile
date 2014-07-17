@@ -24,4 +24,4 @@ EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/droned"]
 
-CMD ["--port=:80", "--path=/var/lib/drone/drone.sqlite"]
+CMD ["--port=:80", "--datasource=/var/lib/drone/drone.sqlite"]
