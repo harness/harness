@@ -94,4 +94,5 @@ godep:
 	go get github.com/tools/godep
 
 rice:
-	go install github.com/GeertJohan/go.rice/rice
+	go get github.com/GeertJohan/go.rice/rice
+	go build github.com/GeertJohan/go.rice/rice
