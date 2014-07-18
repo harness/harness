@@ -2,9 +2,11 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/shared/build/script"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
@@ -49,7 +51,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	// in some cases we have neither a hook nor error. An example
 	// would be GitHub sending a ping request to the URL, in which
 	// case we'll just exit quiely with an 'OK'
-	if hook == nil {
+	if hook == nil || strings.Contains(hook.Message, "[CI SKIP]") {
 		w.WriteHeader(http.StatusOK)
 		return nil
 	}
@@ -78,6 +80,15 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	yml, err := client.GetScript(hook)
 	if err != nil {
 		return badRequest{err}
+	}
+
+	// verify the commit hooks branch matches the list of approved
+	// branches (unless it is a pull request). Note that we don't really
+	// care if parsing the yaml fails here.
+	s, _ := script.ParseBuild(yml, map[string]string{})
+	if len(hook.PullRequest) != 0 && !s.MatchBranch(hook.Branch) {
+		w.WriteHeader(http.StatusOK)
+		return nil
 	}
 
 	c := model.Commit{
