@@ -71,6 +71,9 @@ type Build struct {
 	// linked to the build environment.
 	Services []string
 
+	// White-list of Branches that are built.
+	Branches []string
+
 	Deploy        *deploy.Deploy       `yaml:"deploy,omitempty"`
 	Publish       *publish.Publish     `yaml:"publish,omitempty"`
 	Notifications *notify.Notification `yaml:"notify,omitempty"`
@@ -117,6 +120,18 @@ func (b *Build) WriteBuild(f *buildfile.Buildfile) {
 	for _, cmd := range b.Script {
 		f.WriteCmd(cmd)
 	}
+}
+
+func (b *Build) MatchBranch(branch string) bool {
+	if len(b.Branches) == 0 {
+		return true
+	}
+	for _, item := range b.Branches {
+		if item == branch {
+			return true
+		}
+	}
+	return false
 }
 
 type Publish interface {
