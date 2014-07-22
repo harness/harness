@@ -34,7 +34,7 @@ type HipchatContext struct {
 func (h *Hipchat) Send(context *Context) error {
 	hipchatContext := &HipchatContext{
 		CommitHash:   context.Commit.HashShort(),
-		CommitAuthor: context.CommitAuthor,
+		CommitAuthor: context.Commit.Author,
 		RepoName:     context.Repo.Name,
 	}
 	switch {
@@ -51,21 +51,21 @@ func (h *Hipchat) Send(context *Context) error {
 
 func (h *Hipchat) sendStarted(context *HipchatContext) error {
 	var msg bytes.Buffer
-	tmpl = parseTemplate("started", h.StartedMessage, startedMessage)
+	tmpl := parseTemplate("started", h.StartedMessage, startedMessage)
 	tmpl.Execute(&msg, context)
 	return h.send(hipchat.ColorYellow, hipchat.FormatHTML, msg.String())
 }
 
 func (h *Hipchat) sendFailure(context *HipchatContext) error {
 	var msg bytes.Buffer
-	tmpl = parseTemplate("failure", h.FailureMessage, failureMessage)
+	tmpl := parseTemplate("failure", h.FailureMessage, failureMessage)
 	tmpl.Execute(&msg, context)
 	return h.send(hipchat.ColorRed, hipchat.FormatHTML, msg.String())
 }
 
 func (h *Hipchat) sendSuccess(context *HipchatContext) error {
 	var msg bytes.Buffer
-	tmpl = parseTemplate("success", h.SuccessMessage, successMessage)
+	tmpl := parseTemplate("success", h.SuccessMessage, successMessage)
 	tmpl.Execute(&msg, context)
 	return h.send(hipchat.ColorGreen, hipchat.FormatHTML, msg.String())
 }
@@ -85,8 +85,8 @@ func (h *Hipchat) send(color, format, message string) error {
 	return c.PostMessage(req)
 }
 
-func parseTemplate(name, templ, def string) *Template {
-	if templ != nil {
+func parseTemplate(name, templ, def string) *template.Template {
+	if templ != "" {
 		tmpl, err := template.New("failure").Parse(templ)
 		if err != nil {
 			return parseTemplate(name, "Error:"+err.Error(), "")
