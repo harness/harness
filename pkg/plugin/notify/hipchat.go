@@ -1,51 +1,73 @@
 package notify
 
 import (
-	"fmt"
+	"bytes"
+	"text/template"
 
 	"github.com/andybons/hipchat"
 )
 
 const (
-	startedMessage = "Building %s, commit %s, author %s"
-	successMessage = "<b>Success</b> %s, commit %s, author %s"
-	failureMessage = "<b>Failed</b> %s, commit %s, author %s"
+	startedMessage = "Building {{.RepoName}}, commit {{.CommitHash}}, author {{.CommitAuthor}}"
+	successMessage = "<b>Success</b> {{.RepoName}}, commit {{.CommitHash}}, author {{.CommitAuthor}}"
+	failureMessage = "<b>Failed</b> {{.RepoName}}, commit {{.CommitHash}}, author {{.CommitAuthor}}"
 )
 
 type Hipchat struct {
-	Room    string `yaml:"room,omitempty"`
-	Token   string `yaml:"token,omitempty"`
-	Started bool   `yaml:"on_started,omitempty"`
-	Success bool   `yaml:"on_success,omitempty"`
-	Failure bool   `yaml:"on_failure,omitempty"`
+	Room           string `yaml:"room,omitempty"`
+	Token          string `yaml:"token,omitempty"`
+	Started        bool   `yaml:"on_started,omitempty"`
+	Success        bool   `yaml:"on_success,omitempty"`
+	Failure        bool   `yaml:"on_failure,omitempty"`
+	StartedMessage string `yaml:"started_message,omitempty"`
+	SuccessMessage string `yaml:"success_message,omitempty"`
+	FailureMessage string `yaml:"failure_message,omitempty"`
+}
+
+type HipchatContext struct {
+	CommitHash   string
+	CommitAuthor string
+	RepoName     string
+	Host         string
 }
 
 func (h *Hipchat) Send(context *Context) error {
+	hipchatContext := &HipchatContext{
+		CommitHash:   context.Commit.HashShort(),
+		CommitAuthor: context.CommitAuthor,
+		RepoName:     context.Repo.Name,
+	}
 	switch {
 	case context.Commit.Status == "Started" && h.Started:
-		return h.sendStarted(context)
+		return h.sendStarted(hipchatContext)
 	case context.Commit.Status == "Success" && h.Success:
-		return h.sendSuccess(context)
+		return h.sendSuccess(hipchatContext)
 	case context.Commit.Status == "Failure" && h.Failure:
-		return h.sendFailure(context)
+		return h.sendFailure(hipchatContext)
 	}
 
 	return nil
 }
 
-func (h *Hipchat) sendStarted(context *Context) error {
-	msg := fmt.Sprintf(startedMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
-	return h.send(hipchat.ColorYellow, hipchat.FormatHTML, msg)
+func (h *Hipchat) sendStarted(context *HipchatContext) error {
+	var msg bytes.Buffer
+	tmpl = parseTemplate("started", h.StartedMessage, startedMessage)
+	tmpl.Execute(&msg, context)
+	return h.send(hipchat.ColorYellow, hipchat.FormatHTML, msg.String())
 }
 
-func (h *Hipchat) sendFailure(context *Context) error {
-	msg := fmt.Sprintf(failureMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
-	return h.send(hipchat.ColorRed, hipchat.FormatHTML, msg)
+func (h *Hipchat) sendFailure(context *HipchatContext) error {
+	var msg bytes.Buffer
+	tmpl = parseTemplate("failure", h.FailureMessage, failureMessage)
+	tmpl.Execute(&msg, context)
+	return h.send(hipchat.ColorRed, hipchat.FormatHTML, msg.String())
 }
 
-func (h *Hipchat) sendSuccess(context *Context) error {
-	msg := fmt.Sprintf(successMessage, context.Repo.Name, context.Commit.HashShort(), context.Commit.Author)
-	return h.send(hipchat.ColorGreen, hipchat.FormatHTML, msg)
+func (h *Hipchat) sendSuccess(context *HipchatContext) error {
+	var msg bytes.Buffer
+	tmpl = parseTemplate("success", h.SuccessMessage, successMessage)
+	tmpl.Execute(&msg, context)
+	return h.send(hipchat.ColorGreen, hipchat.FormatHTML, msg.String())
 }
 
 // helper function to send Hipchat requests
@@ -61,4 +83,16 @@ func (h *Hipchat) send(color, format, message string) error {
 	}
 
 	return c.PostMessage(req)
+}
+
+func parseTemplate(name, templ, def string) *Template {
+	if templ != nil {
+		tmpl, err := template.New("failure").Parse(templ)
+		if err != nil {
+			return parseTemplate(name, "Error:"+err.Error(), "")
+		}
+		return tmpl
+	} else {
+		return parseTemplate(name, def, "")
+	}
 }
