@@ -43,14 +43,17 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	}
 
 	// Install Docker on the container
-	f.WriteCmd("sudo sh -c \"echo deb http://get.docker.io/ubuntu docker main\\ > " +
+	f.WriteCmd("sudo sh -c \"echo deb https://get.docker.io/ubuntu docker main\\ > " +
 		"/etc/apt/sources.list.d/docker.list\"")
+	f.WriteCmd("apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys " +
+		"36A1D7869245C8950F966E92D8576A8BA88D21E9")
 	f.WriteCmd("sudo apt-get update")
 	f.WriteCmd("sudo apt-get --yes install lxc-docker-" + d.DockerVersion)
 
 	dockerServerUrl := d.Server + ":" + strconv.Itoa(d.Port)
 	splitRepoName := strings.Split(r.Name, "/")
-	dockerRepo := d.RepoBaseName + "/" + splitRepoName[len(splitRepoName) - 1]
+	dockerRepo := d.RepoBaseName + "/" + splitRepoName[len(splitRepoName)-1]
+
 	dockerPath := "."
 	if len(d.Dockerfile) != 0 {
 		dockerPath = fmt.Sprintf("- < %s", d.Dockerfile)
@@ -67,7 +70,7 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 		dockerServerUrl, d.Username, d.Password, d.Email))
 	f.WriteCmd(fmt.Sprintf("docker -H %s push %s", dockerServerUrl, dockerRepo))
 
-        // Delete the image from the docker server we built on.
+	// Delete the image from the docker server we built on.
 	f.WriteCmd(fmt.Sprintf("docker -H %s rmi %s:$(git rev-parse --short HEAD)",
 		dockerServerUrl, dockerRepo))
 }
