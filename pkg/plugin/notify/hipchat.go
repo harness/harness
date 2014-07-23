@@ -37,52 +37,43 @@ func (h *Hipchat) Send(context *Context) error {
 		CommitAuthor: context.Commit.Author,
 		RepoName:     context.Repo.Name,
 	}
+	var message string
+
 	switch {
 	case context.Commit.Status == "Started" && h.Started:
-		return h.sendStarted(hipchatContext)
+		message = renderMessage(hipchatContext, h.StartedMessage, startedMessage)
+		return h.send(hipchat.ColorYellow, message)
 	case context.Commit.Status == "Success" && h.Success:
-		return h.sendSuccess(hipchatContext)
+		message = renderMessage(hipchatContext, h.SuccessMessage, successMessage)
+		return h.send(hipchat.ColorGreen, message)
 	case context.Commit.Status == "Failure" && h.Failure:
-		return h.sendFailure(hipchatContext)
+		message = renderMessage(hipchatContext, h.FailureMessage, failureMessage)
+		return h.send(hipchat.ColorRed, message)
 	}
 
 	return nil
 }
 
-func (h *Hipchat) sendStarted(context *HipchatContext) error {
-	var msg bytes.Buffer
-	tmpl := parseTemplate("started", h.StartedMessage, startedMessage)
-	tmpl.Execute(&msg, context)
-	return h.send(hipchat.ColorYellow, hipchat.FormatHTML, msg.String())
-}
-
-func (h *Hipchat) sendFailure(context *HipchatContext) error {
-	var msg bytes.Buffer
-	tmpl := parseTemplate("failure", h.FailureMessage, failureMessage)
-	tmpl.Execute(&msg, context)
-	return h.send(hipchat.ColorRed, hipchat.FormatHTML, msg.String())
-}
-
-func (h *Hipchat) sendSuccess(context *HipchatContext) error {
-	var msg bytes.Buffer
-	tmpl := parseTemplate("success", h.SuccessMessage, successMessage)
-	tmpl.Execute(&msg, context)
-	return h.send(hipchat.ColorGreen, hipchat.FormatHTML, msg.String())
-}
-
 // helper function to send Hipchat requests
-func (h *Hipchat) send(color, format, message string) error {
+func (h *Hipchat) send(color, message string) error {
 	c := hipchat.Client{AuthToken: h.Token}
 	req := hipchat.MessageRequest{
 		RoomId:        h.Room,
 		From:          "Drone",
 		Message:       message,
 		Color:         color,
-		MessageFormat: format,
+		MessageFormat: hipchat.FormatHTML,
 		Notify:        true,
 	}
 
 	return c.PostMessage(req)
+}
+
+func renderMessage(context *HipchatContext, msgTmpl, defaultTmpl string) string {
+	var msg bytes.Buffer
+	tmpl := parseTemplate("started", msgTmpl, defaultTmpl)
+	tmpl.Execute(&msg, context)
+	return msg.String()
 }
 
 func parseTemplate(name, templ, def string) *template.Template {
