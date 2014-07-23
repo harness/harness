@@ -15,7 +15,7 @@
 			<input type="search" placeholder="FILTER" class="pure-u-1" id="search" ng-model="search" autofocus />
 		</form>
 
-		<a class="user" ng-repeat="user in users | filter:search | orderBy: 'login' " href="/admin/users/{{ user.remote }}/{{ user.login}}">
+		<a class="user" ng-repeat="user in users | filter:search | orderBy: 'login' " ng-href="/admin/users/{{ user.remote }}/{{ user.login}}">
 			<div class="pure-g">
 				<div class="pure-u-1-8">
 					<div>
