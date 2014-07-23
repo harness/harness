@@ -9,7 +9,7 @@
 			<input type="search" placeholder="FILTER" class="pure-u-1" id="search" ng-model="search" autofocus />
 		</form>
 
-		<a class="repo" ng-repeat="repo in repos | filter:search | orderBy: 'name' " href="/{{ repo | fullPath }}">
+		<a class="repo" ng-repeat="repo in repos | filter:search | orderBy: 'name' " ng-href="/{{ repo | fullPath }}">
 			<div class="pure-g">
 				<div class="pure-u-5-6">
 					<div>

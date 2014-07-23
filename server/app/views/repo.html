@@ -1,6 +1,6 @@
 <div class="toast" ng-if="msg != undefined">
 	<span>commit </span>
-	<a href="/{{ msg.repo | fullPath }}/{{ msg.commit.branch }}/{{ msg.commit.sha }}">{{ msg.commit.sha | shortHash }}</a>
+	<a ng-href="/{{ msg.repo | fullPath }}/{{ msg.commit.branch }}/{{ msg.commit.sha }}">{{ msg.commit.sha | shortHash }}</a>
 	<span ng-if="msg.commit.status == 'Started'">is running</span>
 	<span ng-if="msg.commit.status == 'Success'">finished successfully</span>
 	<span ng-if="msg.commit.status == 'Failure'">finished with errors</span>
@@ -10,7 +10,7 @@
 <article id="repopage">
 	<nav>
 		<div class="options" ng-if="repo.role.admin">
-			<a class="pure-button pure-button-primary" href="/{{ repo | fullPath }}/settings">
+			<a class="pure-button pure-button-primary" ng-href="/{{ repo | fullPath }}/settings">
 				<i class="fa fa-sliders"></i> Settings
 			</a>
 		</div>
@@ -18,7 +18,7 @@
 		<a href="/"><span class="fa fa-th"></span></a>
 		<span>{{ repo.owner }}</span>
 		<span>/</span>
-		<a href="/{{ repo | fullPath}}">{{ repo.name }}</a>
+		<a ng-href="/{{ repo | fullPath}}">{{ repo.name }}</a>
 	</nav>
 
 		<section ng-if="repo.active == false" class="inactive">
@@ -37,7 +37,7 @@
 		<section ng-repeat="group in commits | unique: 'branch'">
 			<div class="pure-g cards">
 				<h2 class="pure-u-1" style="font-size:22px;margin-bottom:20px;"><i class="fa fa-code-fork"></i> {{group.branch}}</h2>
-				<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card" href="/{{ repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}" ng-repeat="commit in commits | filter: { branch: group.branch } | limitTo:4" data-status="{{ commit.status }}">
+				<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card" ng-href="/{{ repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}" ng-repeat="commit in commits | filter: { branch: group.branch } | limitTo:4" data-status="{{ commit.status }}">
 					<div class="l-box">
 						<h2>{{ commit.message }}</h2>
 						<em ng-if="commit.finished_at != 0">{{ commit.finished_at | fromNow }}</em>
