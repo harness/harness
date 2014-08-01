@@ -439,7 +439,7 @@ func (b *Builder) writeDockerfile(dir string) error {
 	switch {
 	case strings.HasPrefix(b.Build.Image, "bradrydzewski/"),
 		strings.HasPrefix(b.Build.Image, "drone/"):
-		// the default user for all official Drone imnage
+		// the default user for all official Drone images
 		// is the "ubuntu" user, since all build images
 		// inherit from the ubuntu cloud ISO
 		dockerfile.WriteUser("ubuntu")
