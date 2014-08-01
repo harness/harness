@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"encoding/xml"
 	"net/http"
 	"time"
 
 	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/pat"
 )
@@ -91,7 +93,25 @@ func (h *BadgeHandler) GetCoverage(w http.ResponseWriter, r *http.Request) error
 }
 
 func (h *BadgeHandler) GetCC(w http.ResponseWriter, r *http.Request) error {
-	return notImplemented{}
+	host, owner, name := parseRepo(r)
+
+	// get the repository from the database
+	repo, err := h.repos.FindName(host, owner, name)
+	if err != nil {
+		return notFound{err}
+	}
+
+	// get the latest commits for the repo
+	commits, err := h.commits.List(repo.ID)
+	if err != nil || len(commits) == 0 {
+		return notFound{}
+	}
+	commit := commits[0]
+
+	// generate the URL for the repository
+	url := httputil.GetURL(r) + "/" + repo.Host + "/" + repo.Owner + "/" + repo.Name
+	proj := model.NewCC(repo, commit, url)
+	return xml.NewEncoder(w).Encode(proj)
 }
 
 func (h *BadgeHandler) Register(r *pat.Router) {
