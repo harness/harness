@@ -1,11 +1,28 @@
 [![Build Status](http://test.drone.io/v1/badge/github.com/bradrydzewski/drone/status.svg?branch=exp)](http://test.drone.io/github.com/bradrydzewski/drone)
 
-Experimental version of Drone.IO with deep GitHub, GitHub Enterprise and Bitbucket integration.
 
-I am currently copy / pasting functionality into this branch. So if you see something that is missing it
-probably because I haven't gotten to that section yet.
+## System Requirements
 
-Some of the fundamental changes include
+* Docker
+* AUFS
+
+We highly recommend running Docker with the AUFS storage driver. You can verify Docker is using
+the AUFS storage driver with the following command `sudo docker info | grep Driver:`
+
+## Installation
+
+We have optimized the installation process for Ubuntu since that is what we test with internally. You can run the following commands to quickly download an install Drone on an Ubuntu machine.
+
+```sh
+wget downloads.drone.io/exp/drone.deb
+sudo dpkg -i drone.deb
+```
+
+Please do not log issues for the above items. We are aware and will fix as soon as possible, as they are holding up the 0.3 release. Pull requests, however, are very welcome :)
+
+## What Changed
+
+This branch introduces major changes, including:
 
 1. modification to project structure
 2. api-driven design
@@ -16,6 +33,19 @@ Some of the fundamental changes include
 7. github, bitbucket, etc repository data is cached upon login (and subsequent logins)
 8. angularjs user interface with modified responsive design
 
-... probably more that I'm forgetting
+## Database Compatibility Issues
 
-If you find an issue please don't log a bug. I'm probably aware of it and just haven't gotten to fixing it yet ... especially if it is related to a) angular b) emails or c) github, bitbucket and gitlab functionality.
+**WARNING**
+
+There were some fundamental changes to the application and we decided to introduce breaking changes to the dataabase. Migration would have been difficult and time consuming. Drone is an alpha product and therefore backward compatibility is not a primary goal until we hit a stable release. Apologizes for any inconvenience.
+
+## Filing Bugs
+
+This is an experimental branch with known bugs and issues, namely:
+
+* notifications
+* github status api updates
+* gitlab integration
+* smtp settings screen
+* github / bitbucket / gitlab settings screen
+* mysql support
