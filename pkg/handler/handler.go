@@ -64,10 +64,33 @@ func (h AdminHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// PublicHandler wraps the default http.HandlerFunc to include
+// requested Repository in the method signature, in addition
+// to handling an error as the return value.
+type PublicHandler func(w http.ResponseWriter, r *http.Request, repo *Repo) error
+
+func (h PublicHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// repository name from the URL parameters
+	hostParam := r.FormValue(":host")
+	userParam := r.FormValue(":owner")
+	nameParam := r.FormValue(":name")
+	repoName := fmt.Sprintf("%s/%s/%s", hostParam, userParam, nameParam)
+
+	repo, err := database.GetRepoSlug(repoName)
+	if err != nil || repo == nil {
+		RenderNotFound(w)
+		return
+	}
+
+	h(w, r, repo)
+	return
+}
+
 // RepoHandler wraps the default http.HandlerFunc to include
 // the currently authenticated User and requested Repository
 // in the method signature, in addition to handling an error
 // as the return value.
+
 type RepoHandler func(w http.ResponseWriter, r *http.Request, user *User, repo *Repo) error
 
 func (h RepoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
