@@ -17,8 +17,7 @@ We have optimized the installation process for Ubuntu since that is what we test
 wget downloads.drone.io/exp/drone.deb
 sudo dpkg -i drone.deb
 ```
-
-Please do not log issues for the above items. We are aware and will fix as soon as possible, as they are holding up the 0.3 release. Pull requests, however, are very welcome :)
+https://github.com/drone/drone/milestones/v0.3
 
 ## What Changed
 
@@ -49,3 +48,9 @@ This is an experimental branch with known bugs and issues, namely:
 * smtp settings screen
 * github / bitbucket / gitlab settings screen
 * mysql support
+
+Please do not log issues for the above items. We are aware and will fix as soon as possible, as they are holding up the 0.3 release. Pull requests, however, are very welcome :)
+
+You can track progress of this release here:
+
+https://github.com/drone/drone/milestones/v0.3
