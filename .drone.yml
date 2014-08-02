@@ -14,12 +14,12 @@ notify:
     recipients:
       - brad@drone.io
 
-#publish:
-#  s3:
-#    acl: public-read
-#    region: us-east-1
-#    bucket: downloads.drone.io
-#    access_key: $AWS_KEY
-#    secret_key: $AWS_SECRET
-#    source: deb/drone.deb
-#    target: exp/
+publish:
+  s3:
+    acl: public-read
+    region: us-east-1
+    bucket: downloads.drone.io
+    access_key: $AWS_KEY
+    secret_key: $AWS_SECRET
+    source: debian/drone.deb
+    target: $DRONE_BRANCH/
