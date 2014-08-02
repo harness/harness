@@ -227,6 +227,7 @@ func setupHandlers() {
 
 	// handlers for repository, commits and build details
 	m.Get("/:host/:owner/:name/commit/:commit/build/:label/out.txt", handler.RepoHandler(handler.BuildOut))
+	m.Get("/:host/:owner/:name/commit/:commit/build/:label/status.json", handler.PublicHandler(handler.BuildStatus))
 	m.Post("/:host/:owner/:name/commit/:commit/build/:label/rebuild", handler.RepoAdminHandler(rebuild.CommitRebuild))
 	m.Get("/:host/:owner/:name/commit/:commit/build/:label", handler.RepoHandler(handler.CommitShow))
 	m.Post("/:host/:owner/:name/commit/:commit/rebuild", handler.RepoAdminHandler(rebuild.CommitRebuild))
