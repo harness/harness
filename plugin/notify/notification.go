@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/drone/drone/plugin/notify/email"
+	"github.com/drone/drone/plugin/notify/github"
 	"github.com/drone/drone/shared/model"
 )
 
@@ -20,6 +21,8 @@ type Notification struct {
 	Hipchat *Hipchat     `yaml:"hipchat,omitempty"`
 	Irc     *IRC         `yaml:"irc,omitempty"`
 	Slack   *Slack       `yaml:"slack,omitempty"`
+
+	GitHub github.GitHub `yaml:"github_status"`
 }
 
 func (n *Notification) Send(context *model.Request) error {
@@ -61,6 +64,11 @@ func (n *Notification) Send(context *model.Request) error {
 		if err != nil {
 			log.Println(err)
 		}
+	}
+
+	// send email notifications
+	if err := n.GitHub.Send(context); err != nil {
+		log.Println(err)
 	}
 
 	return nil
