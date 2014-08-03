@@ -8,3 +8,41 @@
 #   -workers="4":
 #         
 #DRONED_OPTS="--port=:80"
+
+# Email configuration
+#SMTP_HOST=
+#SMTP_PORT=
+#SMTP_FROM=
+#SMTP_USER=
+#SMTP_PASS= 
+
+# GitHub configuration
+#GITHUB_CLIENT=
+#GITHUB_SECRET=
+
+# GitHub Enterprise configuration
+#GITHUB_ENTERPRISE_CLIENT=
+#GITHUB_ENTERPRISE_SECRET=
+#GITHUB_ENTERPRISE_URL=
+#GITHUB_ENTERPRISE_API=
+
+# GitLab configuration
+#GITLAB_URL=
+
+# Atlassian Bitbucket configuration
+#BITBUCKET_CLIENT=
+#BITBUCKET_SECRET=
+
+# Atlassian Stash configuration
+#STASH_CLIENT=
+#STASH_SECRET=
+#STASH_URL=
+#STASH_API=
+
+# Optional global configuration options.
+#
+# This allows you, for example, to set a default Hipchat token
+# so that you don't need to specify in each .drone.yml file.
+#HIPCHAT_TOKEN=
+#SLACK_TOKEN=
+#ZAPIER_TOKEN=

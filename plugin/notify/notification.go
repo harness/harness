@@ -1,6 +1,9 @@
 package notify
 
 import (
+	"log"
+
+	"github.com/drone/drone/plugin/notify/email"
 	"github.com/drone/drone/shared/model"
 )
 
@@ -12,32 +15,52 @@ type Sender interface {
 // for notifying a user, or group of users,
 // when their Build has completed.
 type Notification struct {
-	Email   *Email   `yaml:"email,omitempty"`
-	Webhook *Webhook `yaml:"webhook,omitempty"`
-	Hipchat *Hipchat `yaml:"hipchat,omitempty"`
-	Irc     *IRC     `yaml:"irc,omitempty"`
-	Slack   *Slack   `yaml:"slack,omitempty"`
+	Email   *email.Email `yaml:"email,omitempty"`
+	Webhook *Webhook     `yaml:"webhook,omitempty"`
+	Hipchat *Hipchat     `yaml:"hipchat,omitempty"`
+	Irc     *IRC         `yaml:"irc,omitempty"`
+	Slack   *Slack       `yaml:"slack,omitempty"`
 }
 
 func (n *Notification) Send(context *model.Request) error {
 	// send email notifications
-	if n.Webhook != nil {
-		n.Webhook.Send(context)
+	if n.Email != nil {
+		err := n.Email.Send(context)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
-	// send email notifications
+	// send webhook notifications
+	if n.Webhook != nil {
+		err := n.Webhook.Send(context)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	// send hipchat notifications
 	if n.Hipchat != nil {
-		n.Hipchat.Send(context)
+		err := n.Hipchat.Send(context)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	// send irc notifications
 	if n.Irc != nil {
-		n.Irc.Send(context)
+		err := n.Irc.Send(context)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	// send slack notifications
 	if n.Slack != nil {
-		n.Slack.Send(context)
+		err := n.Slack.Send(context)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	return nil
