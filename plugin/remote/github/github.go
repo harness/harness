@@ -165,6 +165,7 @@ func (g *Github) GetLogin(w http.ResponseWriter, r *http.Request) (*remote.Login
 
 	// create the client
 	client := github.New(token.AccessToken)
+	client.ApiUrl = g.API
 
 	// get the user information
 	user, err := client.Users.Current()
