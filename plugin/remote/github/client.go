@@ -23,6 +23,7 @@ func (c *Client) GetUser(login string) (*remote.User, error) {
 func (c *Client) GetRepos(owner string) ([]*remote.Repo, error) {
 	// create the github client
 	client := github.New(c.access)
+	client.ApiUrl = c.config.API
 
 	// retrieve a list of all github repositories
 	repos, err := client.Repos.ListAll()
@@ -71,6 +72,7 @@ func (c *Client) GetRepos(owner string) ([]*remote.Repo, error) {
 func (c *Client) GetScript(hook *remote.Hook) (out string, err error) {
 	// create the github client
 	client := github.New(c.access)
+	client.ApiUrl = c.config.API
 
 	// retrieve the .drone.yml file from GitHub
 	content, err := client.Contents.FindRef(hook.Owner, hook.Repo, ".drone.yml", hook.Sha)
@@ -91,6 +93,7 @@ func (c *Client) GetScript(hook *remote.Hook) (out string, err error) {
 func (c *Client) SetStatus(owner, name, sha, status string) error {
 	// create the github client
 	client := github.New(c.access)
+	client.ApiUrl = c.config.API
 
 	// convert from drone status to github status
 	var message string
@@ -127,6 +130,7 @@ func (c *Client) SetStatus(owner, name, sha, status string) error {
 func (c *Client) SetActive(owner, name, hook, key string) error {
 	// create the github client
 	client := github.New(c.access)
+	client.ApiUrl = c.config.API
 
 	// parse the hostname from the hook, and use this
 	// to name the ssh key
