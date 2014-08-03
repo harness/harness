@@ -142,7 +142,7 @@ func (g *Github) GetPullRequestHook(r *http.Request) (*remote.Hook, error) {
 func (g *Github) GetLogin(w http.ResponseWriter, r *http.Request) (*remote.Login, error) {
 	// create the oauth2 client
 	oauth := oauth2.Client{
-		RedirectURL:      fmt.Sprintf("%s://%s/login/github.com", httputil.GetScheme(r), httputil.GetHost(r)),
+		RedirectURL:      fmt.Sprintf("%s://%s/login/%s", httputil.GetScheme(r), httputil.GetHost(r), g.GetName()),
 		AccessTokenURL:   fmt.Sprintf("%s/login/oauth/access_token", g.URL),
 		AuthorizationURL: fmt.Sprintf("%s/login/oauth/authorize", g.URL),
 		ClientId:         g.Client,
