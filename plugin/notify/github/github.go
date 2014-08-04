@@ -11,6 +11,10 @@ import (
 	"github.com/google/go-github/github"
 )
 
+// TODO (bradrydzewski) explore using the Repo.URL to parse the GitHub
+// Entperprise Scheme+Hostname, instead of the environment variable. Is
+// there any reason not to use the environment variable?
+
 // GitHub enterprise URL
 var URL = os.Getenv("GITHUB_ENTERPRISE_API")
 
