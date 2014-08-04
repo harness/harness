@@ -284,11 +284,11 @@ nav {
 }
 
 .cards {
-	//padding:20px 0px 20px 20px;
 	.card {
 		.border_box;
 		padding-right:20px;
 		padding-bottom:20px;
+		padding-left:20px;
 		text-decoration:none;
 		position:relative;
 		color:@c0;
@@ -461,6 +461,8 @@ nav {
 				box-shadow:none;
 			}
 		}
+
+
 	}
 
 	.progressContainer {
@@ -1377,5 +1379,70 @@ nav {
 		color: #EEFF41;
 		text-transform: uppercase;
 		margin-left:10px;
+	}
+}
+
+@media screen and (min-width: 80em) {
+
+}
+@media screen and (max-width: 35.5em) {
+	.cards {
+		.card {
+			&:after {
+				display: none !IMPORTANT;
+			}
+		}
+	}
+
+	header {
+		.username {
+			display:none;
+		}
+	}
+
+	#repopage {
+		h2 {
+			padding-left:20px;
+		}
+	}
+
+	#userspage,
+	#repospage {
+		form {
+			display:none;
+		}
+		section {
+			margin:0px;
+			.user,
+			.repo {
+				&:nth-child(2) > .pure-g {
+					border-top:1px solid #FFF;
+				}
+				&:nth-child(2):hover > .pure-g {
+					border-top:1px solid #262626;
+				}
+			}
+		}
+	}
+
+	#accountpage {
+		.token {
+			span {
+				display:none;
+			}
+		}
+	}
+
+	nav {
+		div.options {
+			.pure-button{
+				i {
+					margin:0px;
+				}
+				span {
+					display:none;
+				}
+			}
+		}
 	}
 }
