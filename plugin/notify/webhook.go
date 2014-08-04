@@ -40,7 +40,6 @@ func (w *Webhook) send(context *model.Request) error {
 		return err
 	}
 
-	// loop through and email recipients
 	for _, url := range w.URL {
 		go sendJson(url, payload)
 	}

@@ -21,7 +21,7 @@ const (
 )
 
 const (
-	StatusPending = "peding"
+	StatusPending = "pending"
 	StatusSuccess = "success"
 	StatusFailure = "failure"
 	StatusError   = "error"
@@ -69,15 +69,15 @@ func (g GitHub) Send(context *model.Request) error {
 		context.Repo.Host,
 		context.Repo.Owner,
 		context.Repo.Name,
-		context.Commit.Sha,
-		target,
-		getDesc(context.Commit.Status),
 		getStatus(context.Commit.Status),
-		context.User.Token,
+		getDesc(context.Commit.Status),
+		target,
+		context.Commit.Sha,
+		context.User.Access,
 	)
 }
 
-func send(host, owner, repo, ref, status, target, desc, token string) error {
+func send(host, owner, repo, status, desc, target, ref, token string) error {
 	transport := &oauth.Transport{
 		Token: &oauth.Token{AccessToken: token},
 	}

@@ -107,10 +107,15 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	//fmt.Printf("%s", yml)
+	owner, err := h.users.Find(repo.UserID)
+	if err != nil {
+		return badRequest{err}
+	}
 
 	// drop the items on the queue
 	go func() {
 		h.queue <- &model.Request{
+			User:   owner,
 			Host:   httputil.GetURL(r),
 			Repo:   repo,
 			Commit: &c,

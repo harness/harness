@@ -165,9 +165,6 @@ func (w *worker) Execute(r *model.Request) {
 	// notify all listeners that the build is finished
 	commitc.Publish(r)
 
-	// todo(bradrydzewski) update github status API
-	// todo(bradrydzewski) send email notifications
-
 	// send all "finished" notifications
 	if script.Notifications != nil {
 		script.Notifications.Send(r)
