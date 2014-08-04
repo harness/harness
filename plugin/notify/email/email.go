@@ -24,8 +24,7 @@ const (
 )
 
 const (
-	SubjectSuccess = "[SUCCESS] %s/%s %s"
-	SubjectFailure = "[FAILURE] %s/%s %s"
+	Subject = "[%s] %s/%s (%s - %s)"
 )
 
 var (
@@ -86,9 +85,11 @@ func (e *Email) sendFailure(context *model.Request) error {
 
 	// generate the email subject
 	var subject = fmt.Sprintf(
-		SubjectFailure,
+		Subject,
+		context.Commit.Status,
 		context.Repo.Owner,
 		context.Repo.Name,
+		context.Commit.Branch,
 		context.Commit.ShaShort(),
 	)
 
@@ -117,9 +118,11 @@ func (e *Email) sendSuccess(context *model.Request) error {
 
 	// generate the email subject
 	var subject = fmt.Sprintf(
-		SubjectSuccess,
+		Subject,
+		context.Commit.Status,
 		context.Repo.Owner,
 		context.Repo.Name,
+		context.Commit.Branch,
 		context.Commit.ShaShort(),
 	)
 
