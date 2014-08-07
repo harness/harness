@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 
@@ -131,6 +132,40 @@ func (c *Client) SetStatus(owner, repo, sha, status string) error {
 }
 
 // SetActive
-func (c *Client) SetActive(owner, repo, hook, key string) error {
+func (c *Client) SetActive(owner, name, hook, key string) error {
+	// create a new gitlab client
+	client := gogitlab.NewGitlab(c.config.URL, "/api/v3", c.access)
+
+	// parse the hostname from the hook, and use this
+	// to name the ssh key
+	hookurl, err := url.Parse(hook)
+	if err != nil {
+		return err
+	}
+
+	// create repo path
+	path := fmt.Sprintf("%s%%2F%s", owner, name)
+
+	// fetch the repository so that we can see if it
+	// is public or private.
+	repo, err := client.Project(path)
+	if err != nil {
+		return err
+	}
+
+	// if the repository is private we'll need
+	// to upload a github key to the repository
+	if !repo.Public {
+		keyname := "drone@" + hookurl.Host
+		if err := client.AddProjectDeployKey(path, keyname, key); err != nil {
+			return err
+		}
+	}
+
+	// add the hook
+	if err := client.AddProjectHook(path, hook, true, false, true); err != nil {
+		return err
+	}
+
 	return nil
 }
