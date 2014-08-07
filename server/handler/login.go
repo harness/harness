@@ -27,7 +27,7 @@ func NewLoginHandler(users database.UserManager, repos database.RepoManager, per
 
 // GetLogin gets the login to the 3rd party remote system.
 // GET /login/:host
-func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
+func (h *LoginHandler) GetPostLogin(w http.ResponseWriter, r *http.Request) error {
 	host := r.FormValue(":host")
 	redirect := "/"
 
@@ -172,6 +172,7 @@ func (h *LoginHandler) GetLogout(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (h *LoginHandler) Register(r *pat.Router) {
-	r.Get("/login/{host}", errorHandler(h.GetLogin))
+	r.Post("/login/{host}", errorHandler(h.GetPostLogin))
+	r.Get("/login/{host}", errorHandler(h.GetPostLogin))
 	r.Get("/logout", errorHandler(h.GetLogout))
 }

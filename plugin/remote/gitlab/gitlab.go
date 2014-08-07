@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/Bugagazavr/go-gitlab-client"
 	"github.com/drone/drone/plugin/remote"
 )
 
@@ -35,8 +36,27 @@ func (g *Gitlab) GetHook(*http.Request) (*remote.Hook, error) {
 
 // GetLogin handles authentication to third party, remote services
 // and returns the required user data in a standard format.
-func (g *Gitlab) GetLogin(http.ResponseWriter, *http.Request) (*remote.Login, error) {
-	return nil, nil
+func (g *Gitlab) GetLogin(w http.ResponseWriter, r *http.Request) (*remote.Login, error) {
+	user_login := r.FormValue("login")
+	user_password := r.FormValue("password")
+
+	client := gogitlab.NewGitlab(g.URL, "/api/v3", "")
+	session, err := client.GetSession(user_login, user_password)
+	if err != nil {
+		redirect := "/login"
+		http.Redirect(w, r, redirect, http.StatusSeeOther)
+		return nil, err
+	}
+
+	login := remote.Login{
+		ID:     int64(session.Id),
+		Login:  session.UserName,
+		Access: session.PrivateToken,
+		Name:   session.Name,
+		Email:  session.Email,
+	}
+
+	return &login, nil
 }
 
 // GetClient returns a new Gitlab remote client.

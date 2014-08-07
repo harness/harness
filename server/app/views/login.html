@@ -8,14 +8,39 @@ minor modifications to the style that only apply to this view
 </style>
 
 <article id="loginpage">
-	<div class="pure-g">
-		<div class="pure-u-1" ng-if="state == 1 && remotes.length != 0" ng-repeat="remote in remotes">
+	<div class="pure-g" ng-if="state == 1 && oauth_remotes.length != 0">
+		<section class="pure-u-1" ng-repeat="remote in oauth_remotes">
 			<a ng-href="/login/{{ remote.type }}" target="_self">
 				<i class="fa {{ remote.type | remoteIcon }}"></i> {{ remote.type | remoteName }}
 			</a>
-		</div>
+		</section>
+	</div>
 
-		<div class="pure-u-1" ng-if="state == 1 && remotes.length == 0">
+	<section>
+		<div class="pure-g" ng-if="state == 1 && manual_remotes.length != 0" ng-repeat="remote in manual_remotes">
+			<div class="pure-u-1 tip">
+				<form class="pure-form" action="{{'/login/' + remote.type }}" method="POST">
+					<h2 class="ng-binding">Login with {{ remote.type | remoteName }}</h2>
+					<div class="ng-scope">
+						<label>Login</label>
+						<div>
+							<input type="text" placeholder="login" name="login" class="ng-scope ng-pristine ng-valid">
+						</div>
+					</div>
+					<div class="ng-scope">
+						<label>Password</label>
+						<div>
+							<input type="password" placeholder="password" name="password" class="ng-scope ng-pristine ng-valid">
+						</div>
+					</div>
+					<input type="submit" class="pure-button pure-button-primary" value="Login"></button>
+				</from>
+			</div>
+		</div>
+	</section>
+
+	<div class="pure-g" ng-if="state == 1 && remotes.length == 0">
+		<div class="pure-u-1">
 			<a href="/setup">
 				<i class="fa fa-rocket"></i> Launch Setup Wizard
 			</a>
