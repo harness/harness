@@ -33,7 +33,7 @@ angular.module('app').filter('fullName', function() {
 angular.module('app').filter('fullPath', function() {
   return function(repo) {
     if (repo == undefined) { return ""; }
-    return repo.remote+"/"+repo.owner+"/"+repo.name;
+    return repo.host+"/"+repo.owner+"/"+repo.name;
   }
 });
 
