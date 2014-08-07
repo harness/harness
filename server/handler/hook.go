@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -28,6 +29,7 @@ func NewHookHandler(users database.UserManager, repos database.RepoManager, comm
 // GET /hook/:host
 func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	host := r.FormValue(":host")
+	log.Println("received post-commit hook.")
 
 	remoteServer, err := h.remotes.FindType(host)
 	if err != nil {
