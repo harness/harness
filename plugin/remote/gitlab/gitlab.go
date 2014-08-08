@@ -44,7 +44,7 @@ func (g *Gitlab) GetLogin(w http.ResponseWriter, r *http.Request) (*remote.Login
 	session, err := client.GetSession(user_login, user_password)
 	if err != nil {
 		redirect := "/login"
-		http.Redirect(w, r, redirect, http.StatusSeeOther)
+		http.Redirect(w, r, redirect, http.StatusUnauthorized)
 		return nil, err
 	}
 
