@@ -7,6 +7,7 @@ import (
 
 	"github.com/Bugagazavr/go-gitlab-client"
 	"github.com/drone/drone/plugin/remote"
+	"github.com/drone/drone/shared/model"
 )
 
 type Gitlab struct {
@@ -30,7 +31,11 @@ func (g *Gitlab) GetHost() (host string) {
 
 // GetHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
-func (g *Gitlab) GetHook(*http.Request) (*remote.Hook, error) {
+func (g *Gitlab) GetHook(*http.Request, *model.User) (*remote.Hook, error) {
+	return nil, nil
+}
+
+func (g *Gitlab) GetPullRequestHook(*http.Request) (*remote.Hook, error) {
 	return nil, nil
 }
 

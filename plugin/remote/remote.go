@@ -32,7 +32,7 @@ type Remote interface {
 
 	// GetHook parses the post-commit hook from the Request body
 	// and returns the required data in a standard format.
-	GetHook(*http.Request) (*Hook, error)
+	GetHook(*http.Request, *model.User) (*Hook, error)
 
 	// GetLogin handles authentication to third party, remote services
 	// and returns the required user data in a standard format.

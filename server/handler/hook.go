@@ -29,9 +29,13 @@ func NewHookHandler(users database.UserManager, repos database.RepoManager, comm
 // GET /hook/:host
 func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	host := r.FormValue(":host")
+	owner := r.FormValue(":owner")
+	name := r.FormValue(":name")
+
 	log.Println("received post-commit hook.")
 
-	remoteServer, err := h.remotes.FindType(host)
+	// get remote
+	remoteServer, err := h.remotes.FindHost(host)
 	if err != nil {
 		return notFound{err}
 	}
@@ -41,11 +45,23 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 		return notFound{}
 	}
 
+	// fetch the repository from the database
+	repo, err := h.repos.FindName(host, owner, name)
+	if err != nil {
+		return notFound{}
+	}
+
+	// fetch the user from the database that owns this repo
+	user, err := h.users.Find(repo.UserID)
+	if err != nil {
+		return notFound{}
+	}
+
 	// get the remote system's client.
 	plugin := remotePlugin(remoteServer)
 
 	// parse the hook payload
-	hook, err := plugin.GetHook(r)
+	hook, err := plugin.GetHook(r, user)
 	if err != nil {
 		return badRequest{err}
 	}
@@ -58,23 +74,11 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	// fetch the repository from the database
-	repo, err := h.repos.FindName(plugin.GetHost(), hook.Owner, hook.Repo)
-	if err != nil {
-		return notFound{}
-	}
-
 	if repo.Active == false ||
 		(repo.PostCommit == false && len(hook.PullRequest) == 0) ||
 		(repo.PullRequest == false && len(hook.PullRequest) != 0) {
 		w.WriteHeader(http.StatusOK)
 		return nil
-	}
-
-	// fetch the user from the database that owns this repo
-	user, err := h.users.Find(repo.UserID)
-	if err != nil {
-		return notFound{}
 	}
 
 	// featch the .drone.yml file from the database
@@ -109,7 +113,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	//fmt.Printf("%s", yml)
-	owner, err := h.users.Find(repo.UserID)
+	user_owner, err := h.users.Find(repo.UserID)
 	if err != nil {
 		return badRequest{err}
 	}
@@ -117,7 +121,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	// drop the items on the queue
 	go func() {
 		h.queue <- &model.Request{
-			User:   owner,
+			User:   user_owner,
 			Host:   httputil.GetURL(r),
 			Repo:   repo,
 			Commit: &c,
@@ -129,6 +133,6 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (h *HookHandler) Register(r *pat.Router) {
-	r.Post("/v1/hook/{host}", errorHandler(h.PostHook))
-	r.Put("/v1/hook/{host}", errorHandler(h.PostHook))
+	r.Post("/v1/hook/{host}/{owner}/{name}", errorHandler(h.PostHook))
+	r.Put("/v1/hook/{host}/{owner}/{name}", errorHandler(h.PostHook))
 }
