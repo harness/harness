@@ -10,7 +10,6 @@ func main() {
 	app.Name = "drone"
 	app.Version = "1.0"
 	app.Usage = "command line utility"
-	app.EnableBashCompletion = true
 
 	app.Commands = []cli.Command{
 		NewBuildCommand(),
