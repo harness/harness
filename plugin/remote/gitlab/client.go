@@ -35,7 +35,7 @@ func (c *Client) GetRepos(owner string) ([]*remote.Repo, error) {
 	client := gogitlab.NewGitlab(c.config.URL, "/api/v3", c.access)
 
 	// retrieve a list of all gitlab repositories
-	repos, err := client.Projects()
+	repos, err := client.AllProjects()
 	if err != nil {
 		return nil, err
 	}
