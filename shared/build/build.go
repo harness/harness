@@ -486,6 +486,7 @@ func (b *Builder) writeBuildScript(dir string) error {
 	// add environment variables about the build
 	f.WriteEnv("CI", "true")
 	f.WriteEnv("DRONE", "true")
+	f.WriteEnv("DRONE_REMOTE", b.Repo.Path)
 	f.WriteEnv("DRONE_BRANCH", b.Repo.Branch)
 	f.WriteEnv("DRONE_COMMIT", b.Repo.Commit)
 	f.WriteEnv("DRONE_PR", b.Repo.PR)
@@ -496,6 +497,7 @@ func (b *Builder) writeBuildScript(dir string) error {
 	f.WriteEnv("CI_NAME", "DRONE")
 	f.WriteEnv("CI_BUILD_NUMBER", b.Repo.Commit)
 	f.WriteEnv("CI_BUILD_URL", "")
+	f.WriteEnv("CI_REMOTE", b.Repo.Path)
 	f.WriteEnv("CI_BRANCH", b.Repo.Branch)
 	f.WriteEnv("CI_PULL_REQUEST", b.Repo.PR)
 
