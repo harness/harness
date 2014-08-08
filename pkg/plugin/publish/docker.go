@@ -16,7 +16,7 @@ type Docker struct {
 
 	// Connection information for the docker server that will build the image
 	DockerServer string `yaml:"docker_server"`
-	DockerServerPort   int    `yaml:"docker_port"`
+	DockerServerPort   int	`yaml:"docker_port"`
 	// The Docker client version to download. This must match the docker version on the server
 	DockerVersion string `yaml:"docker_version"`
 
@@ -25,20 +25,23 @@ type Docker struct {
 	RegistryHost string `yaml:"registry_host"`
 	RegistryProtocol string `yaml:"registry_protocol"`
 	RegistryPort int `yaml:"registry_port"`
-    RegistryLogin bool `yaml:"registry_login"`
+	RegistryLogin bool `yaml:"registry_login"`
 	RegistryLoginUri string `yaml:"registry_login_uri"`
 
+	// Allow setting Repo + Image names for delivery
+	// NOTE: RepoName is not compatible with private Registries
+	RepoName string `yaml:"repo_name"`
 	ImageName string `yaml:"image_name"`
 
 	// Authentication credentials for index.docker.io
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
-	Email    string `yaml:"email"`
+	Email	string `yaml:"email"`
 
 	// Keep the build on the Docker host after pushing?
 	KeepBuild bool `yaml:"keep_build"`
-    // Do we want to override "latest" automatically with this build?
-    PushLatest bool `yaml:"push_latest"`
+	// Do we want to override "latest" automatically with this build?
+	PushLatest bool `yaml:"push_latest"`
 
 	Branch string `yaml:"branch,omitempty"`
 	Tag string `yaml:"custom_tag"`
@@ -52,12 +55,21 @@ type Docker struct {
 func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	if len(d.DockerServer) == 0 || d.DockerServerPort == 0 || len(d.DockerVersion) == 0 ||
 		len(d.ImageName) == 0 {
-		f.WriteCmdSilent(`echo "Docker Plugin: Missing argument(s)"`)
+		f.WriteCmdSilent(`echo -e "Docker Plugin: Missing argument(s)"\n\n`)
+		if len(d.DockerServer) == 0  { f.WriteCmdSilent(`echo -e "\tdocker_server not defined in yaml`) }
+		if d.DockerServerPort == 0   { f.WriteCmdSilent(`echo -e "\tdocker_port not defined in yaml`) }
+		if len(d.DockerVersion) == 0 { f.WriteCmdSilent(`echo -e "\tdocker_version not defined in yaml`) }
+		if len(d.ImageName) == 0     { f.WriteCmdSilent(`echo -e "\timage_name not defined in yaml`) }
 		return
 	}
 
-    // Ensure correct apt-get has the https method-driver as per (http://askubuntu.com/questions/165676/)
-    f.WriteCmd("sudo apt-get install apt-transport-https")
+	if len(d.RepoName) > 0 && len(d.RegistryHost) > 0 {
+		f.WriteCmdSilent(`echo -e "Docker Plugin: Invalid Arguments Specified\n\n    cannot combine repo_name and registry_host\n\t(It's not possible to host sub-repo's on private registries)\n"`)
+		return
+	}
+
+	// Ensure correct apt-get has the https method-driver as per (http://askubuntu.com/questions/165676/)
+	f.WriteCmd("sudo apt-get install apt-transport-https")
 
 	// Install Docker on the container
 	f.WriteCmd("sudo sh -c \"echo deb https://get.docker.io/ubuntu docker main\\ > " +
@@ -72,12 +84,16 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 
 	// Construct Image BaseName 
 	// e.g. "docker.mycompany.com/myimage" for private registries
-	//      "myuser/myimage" for index.docker.io
+	//	  "myuser/myimage" for index.docker.io
 	imageBaseName := ""
 	if len(d.RegistryHost) > 0 {
 		imageBaseName = fmt.Sprintf("%s/%s",d.RegistryHost,d.ImageName)
 	} else {
-		imageBaseName = fmt.Sprintf("%s/%s",d.Username,d.ImageName)
+		if len(d.RepoName) > 0 {
+			imageBaseName = fmt.Sprintf("%s/%s",d.RepoName,d.ImageName)
+		} else {
+			imageBaseName = fmt.Sprintf("%s/%s",d.Username,d.ImageName)
+		}
 	}
 
 	registryLoginEndpoint := ""
@@ -101,9 +117,6 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 			registryLoginEndpoint = fmt.Sprintf("%s/v1/",registryLoginEndpoint)
 		}
 	}
-
-	//splitRepoName := strings.Split(r.Name, "/")
-	//dockerRepo := d.ImageName + "/" + splitRepoName[len(splitRepoName)-1]
 
 	dockerPath := "."
 	if len(d.Dockerfile) != 0 {
@@ -131,11 +144,11 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 			dockerServerUrl, d.Username, d.Password, d.Email))
 	}
 
-    // Are we overriding the "latest" tag?
-    if d.PushLatest {
+	// Are we overriding the "latest" tag?
+	if d.PushLatest {
 		f.WriteCmd(fmt.Sprintf("docker -H %s tag %s:%s %s:latest",
 			dockerServerUrl, imageBaseName, imageTag, imageBaseName))
-    }
+	}
 
 	f.WriteCmd(fmt.Sprintf("docker -H %s push %s", dockerServerUrl, imageBaseName))
 
