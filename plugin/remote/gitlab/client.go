@@ -122,8 +122,18 @@ func (c *Client) GetRepos(owner string) ([]*remote.Repo, error) {
 
 // GetScript fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
-func (c *Client) GetScript(*remote.Hook) (string, error) {
-	return "", nil
+func (c *Client) GetScript(hook *remote.Hook) (string, error) {
+	client := gogitlab.NewGitlab(c.config.URL, "/api/v3", c.access)
+
+	// create repo path
+	path := ns(hook.Owner, hook.Repo)
+
+	content, err := client.RepoRawFile(path, hook.Sha, ".drone.yml")
+	if err != nil {
+		return "", err
+	}
+
+	return string(content), nil
 }
 
 // SetStatus
@@ -144,7 +154,7 @@ func (c *Client) SetActive(owner, name, hook, key string) error {
 	}
 
 	// create repo path
-	path := fmt.Sprintf("%s%%2F%s", owner, name)
+	path := ns(owner, name)
 
 	// fetch the repository so that we can see if it
 	// is public or private.
@@ -168,4 +178,8 @@ func (c *Client) SetActive(owner, name, hook, key string) error {
 	}
 
 	return nil
+}
+
+func ns(user, repo string) string {
+	return fmt.Sprintf("%s%%2F%s", user, repo)
 }

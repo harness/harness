@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -31,11 +32,45 @@ func (g *Gitlab) GetHost() (host string) {
 
 // GetHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
-func (g *Gitlab) GetHook(*http.Request, *model.User) (*remote.Hook, error) {
-	return nil, nil
+func (g *Gitlab) GetHook(r *http.Request, u *model.User) (*remote.Hook, error) {
+	owner := r.FormValue(":owner")
+	name := r.FormValue(":name")
+
+	payload, _ := ioutil.ReadAll(r.Body)
+	parsed, err := gogitlab.ParseHook(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	if parsed.ObjectKind == "merge_request" {
+		return g.GetPullRequestHook(r, u)
+	}
+
+	if len(parsed.After) == 0 {
+		return nil, nil
+	}
+
+	hook := remote.Hook{}
+
+	hook.Repo = name
+	hook.Owner = owner
+	hook.Sha = parsed.After
+	hook.Branch = parsed.Branch()
+
+	head := parsed.Head()
+
+	hook.Message = head.Message
+	hook.Timestamp = head.Timestamp
+	if head.Author != nil {
+		hook.Author = head.Author.Email
+	} else {
+		hook.Author = parsed.UserName
+	}
+
+	return &hook, nil
 }
 
-func (g *Gitlab) GetPullRequestHook(*http.Request) (*remote.Hook, error) {
+func (g *Gitlab) GetPullRequestHook(*http.Request, *model.User) (*remote.Hook, error) {
 	return nil, nil
 }
 
