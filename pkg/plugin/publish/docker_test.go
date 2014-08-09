@@ -24,30 +24,6 @@ func setUpWithDrone(input string) (string, error) {
 	return bf.String(), err
 }
 
-// Private Registry + RepoName (invalid config)
-var privateRegistryRepoNameYaml = `
-publish:
-  docker:
-    docker_server: server
-    docker_port: 1000
-    docker_version: 1.0
-    registry_host: server
-    registry_login: false
-    repo_name: company
-    image_name: image
-`
-
-func TestPrivateRegistryRepoName(t *testing.T) {
-	response, err := setUpWithDrone(privateRegistryRepoNameYaml)
-	t.Log(privateRegistryRepoNameYaml)
-	if err != nil {
-		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
-	}
-	if !strings.Contains(response, "Docker Plugin: Invalid Arguments Specified") {
-		t.Fatalf("registry_host + repo_name should produce an invalid config error, it didn't")
-	}
-}
-
 // Private Registry Test (no auth)
 var privateRegistryNoAuthYaml = `
 publish:
@@ -56,9 +32,8 @@ publish:
     docker_server: server
     docker_port: 1000
     docker_version: 1.0
-    registry_host: registry
     registry_login: false
-    image_name: image
+    image_name: registry/image
 `
 func TestPrivateRegistryNoAuth(t *testing.T) {
 	response, err := setUpWithDrone(privateRegistryNoAuthYaml)
@@ -79,14 +54,12 @@ publish:
     docker_server: server
     docker_port: 1000
     docker_version: 1.0
-    registry_host: registry
-    registry_protocol: https
-    registry_port: 8000
+    registry_login_url: https://registry:8000/v1/
     registry_login: true
     username: username
     password: password
     email: email@example.com
-    image_name: image
+    image_name: registry/image
 `
 func TestPrivateRegistryAuth(t *testing.T) {
 	response, err := setUpWithDrone(privateRegistryAuthYaml)
@@ -114,7 +87,7 @@ publish:
     username: username
     password: password
     email: email@example.com
-    image_name: image
+    image_name: username/image
     push_latest: true
 `
 func TestOverrideLatestTag(t *testing.T) {
@@ -166,7 +139,7 @@ publish:
     username: username
     password: password
     email: email@example.com
-    image_name: image
+    image_name: username/image
 `
 func TestCustomTag(t *testing.T) {
 	response, err := setUpWithDrone(customTagYaml)
@@ -209,12 +182,12 @@ publish:
     docker_server: server
     docker_port: 1000
     docker_version: 1.0
-    repo_base_name: base_repo
     username: user
     password: password
     email: email
-    image_name: image
+    image_name: user/image
     push_latest: true
+    registry_login: true
 `
 
 func TestValidYaml(t *testing.T) {
@@ -248,7 +221,7 @@ publish:
     docker_server: server
     docker_port: 1000
     docker_version: 1.0
-    image_name: image
+    image_name: user/image
     username: user
     password: password
     email: email
