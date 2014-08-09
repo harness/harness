@@ -1,6 +1,7 @@
 package github
 
 import (
+	"encoding/base32"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -12,11 +13,11 @@ import (
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/go-github/github"
 	"github.com/drone/go-github/oauth2"
+	"github.com/gorilla/securecookie"
 )
 
 var (
 	scope = "repo,repo:status,user:email"
-	state = "FqB4EbagQ2o"
 )
 
 type Github struct {
@@ -151,10 +152,21 @@ func (g *Github) GetLogin(w http.ResponseWriter, r *http.Request) (*remote.Login
 
 	// get the OAuth code
 	code := r.FormValue("code")
+	state := r.FormValue("state")
 	if len(code) == 0 {
-		redirect := oauth.AuthorizeRedirect(scope, state)
+		var random = base32.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(32))
+		httputil.SetCookie(w, r, "github_state", string(random))
+
+		// redirect the user to login
+		redirect := oauth.AuthorizeRedirect(scope, random)
 		http.Redirect(w, r, redirect, http.StatusSeeOther)
 		return nil, nil
+	}
+
+	cookieState := httputil.GetCookie(r, "github_state")
+	httputil.DelCookie(w, r, "github_state")
+	if cookieState != state {
+		return nil, fmt.Errorf("Error matching state in OAuth2 redirect")
 	}
 
 	// exchange code for an auth token
