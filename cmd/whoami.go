@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/codegangsta/cli"
-	"github.com/drone/drone/shared/model"
+	"github.com/drone/drone/client"
 )
 
 // NewWhoamiCommand returns the CLI command for "whoami".
@@ -20,9 +20,8 @@ func NewWhoamiCommand() cli.Command {
 }
 
 // whoamiCommandFunc executes the "logout" command.
-func whoamiCommandFunc(c *cli.Context, client *Client) error {
-	user := model.User{}
-	err := client.Do("GET", "/v1/user", nil, &user)
+func whoamiCommandFunc(c *cli.Context, client *client.Client) error {
+	user, err := client.Users.GetCurrent()
 	if err != nil {
 		return err
 	}
