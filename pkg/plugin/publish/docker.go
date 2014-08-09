@@ -3,7 +3,6 @@ package publish
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/drone/drone/pkg/build/buildfile"
 	"github.com/drone/drone/pkg/build/repo"
@@ -22,16 +21,9 @@ type Docker struct {
 
 	// Optional Arguments to allow finer-grained control of registry
 	// endpoints
-	RegistryHost string `yaml:"registry_host"`
-	RegistryProtocol string `yaml:"registry_protocol"`
-	RegistryPort int `yaml:"registry_port"`
-	RegistryLogin bool `yaml:"registry_login"`
-	RegistryLoginUri string `yaml:"registry_login_uri"`
-
-	// Allow setting Repo + Image names for delivery
-	// NOTE: RepoName is not compatible with private Registries
-	RepoName string `yaml:"repo_name"`
+	RegistryLoginUrl string `yaml:"registry_login_url"`
 	ImageName string `yaml:"image_name"`
+	RegistryLogin bool `yaml:"registry_login"`
 
 	// Authentication credentials for index.docker.io
 	Username string `yaml:"username"`
@@ -42,9 +34,8 @@ type Docker struct {
 	KeepBuild bool `yaml:"keep_build"`
 	// Do we want to override "latest" automatically with this build?
 	PushLatest bool `yaml:"push_latest"`
-
-	Branch string `yaml:"branch,omitempty"`
-	Tag string `yaml:"custom_tag"`
+	CustomTag string `yaml:"custom_tag"`
+	Branch string `yaml:"branch"`
 }
 
 // Write adds commands to the buildfile to do the following:
@@ -63,11 +54,6 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 		return
 	}
 
-	if len(d.RepoName) > 0 && len(d.RegistryHost) > 0 {
-		f.WriteCmdSilent(`echo -e "Docker Plugin: Invalid Arguments Specified\n\n    cannot combine repo_name and registry_host\n\t(It's not possible to host sub-repo's on private registries)\n"`)
-		return
-	}
-
 	// Ensure correct apt-get has the https method-driver as per (http://askubuntu.com/questions/165676/)
 	f.WriteCmd("sudo apt-get install apt-transport-https")
 
@@ -82,42 +68,6 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	// Format our Build Server Endpoint
 	dockerServerUrl := d.DockerServer + ":" + strconv.Itoa(d.DockerServerPort)
 
-	// Construct Image BaseName 
-	// e.g. "docker.mycompany.com/myimage" for private registries
-	//	  "myuser/myimage" for index.docker.io
-	imageBaseName := ""
-	if len(d.RegistryHost) > 0 {
-		imageBaseName = fmt.Sprintf("%s/%s",d.RegistryHost,d.ImageName)
-	} else {
-		if len(d.RepoName) > 0 {
-			imageBaseName = fmt.Sprintf("%s/%s",d.RepoName,d.ImageName)
-		} else {
-			imageBaseName = fmt.Sprintf("%s/%s",d.Username,d.ImageName)
-		}
-	}
-
-	registryLoginEndpoint := ""
-
-	// Gather information to build our Registry Endpoint for private registries
-	if len(d.RegistryHost) > 0 {
-		// Set Protocol
-		if len(d.RegistryProtocol) > 0 {
-			registryLoginEndpoint = fmt.Sprintf("%s://%s", d.RegistryProtocol,d.RegistryHost)
-		} else {
-			registryLoginEndpoint = fmt.Sprintf("http://%s", d.RegistryHost)
-		}
-		// Set Port
-		if d.RegistryPort > 0 {
-			registryLoginEndpoint = fmt.Sprintf("%s:%d",registryLoginEndpoint,d.RegistryPort)
-		}
-		// Set Login URI
-		if len(d.RegistryLoginUri) > 0 {
-			registryLoginEndpoint = fmt.Sprintf("%s/%s",registryLoginEndpoint,strings.TrimPrefix(d.RegistryLoginUri,"/"))
-		} else {
-			registryLoginEndpoint = fmt.Sprintf("%s/v1/",registryLoginEndpoint)
-		}
-	}
-
 	dockerPath := "."
 	if len(d.Dockerfile) != 0 {
 		dockerPath = fmt.Sprintf("- < %s", d.Dockerfile)
@@ -126,37 +76,41 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	// Run the command commands to build and deploy the image.
 	// Are we setting a custom tag, or do we use the git hash?
 	imageTag := ""
-	if len(d.Tag) > 0 {
-		imageTag = d.Tag
+	if len(d.CustomTag) > 0 {
+		imageTag = d.CustomTag
 	} else {
 		imageTag = "$(git rev-parse --short HEAD)"
 	}
-	f.WriteCmd(fmt.Sprintf("docker -H %s build -t %s:%s %s", dockerServerUrl, imageBaseName, imageTag, dockerPath))
+	f.WriteCmd(fmt.Sprintf("docker -H %s build -t %s:%s %s", dockerServerUrl, d.ImageName, imageTag, dockerPath))
 
 	// Login?
-	if len(d.RegistryHost) > 0 && d.RegistryLogin == true {
-		f.WriteCmdSilent(fmt.Sprintf("docker -H %s login -u %s -p %s -e %s %s",
-			dockerServerUrl, d.Username, d.Password, d.Email, registryLoginEndpoint))
-	} else if len(d.RegistryHost) == 0 {
-		// Assume that because no private registry is specified it requires auth
-		// for index.docker.io
-		f.WriteCmdSilent(fmt.Sprintf("docker -H %s login -u %s -p %s -e %s",
-			dockerServerUrl, d.Username, d.Password, d.Email))
+	if d.RegistryLogin == true {
+		// Are we logging in to a custom Registry?
+		if len(d.RegistryLoginUrl) > 0 {
+			f.WriteCmdSilent(fmt.Sprintf("docker -H %s login -u %s -p %s -e %s %s",
+				dockerServerUrl, d.Username, d.Password, d.Email, d.RegistryLoginUrl))
+		} else {
+			// Assume index.docker.io
+			f.WriteCmdSilent(fmt.Sprintf("docker -H %s login -u %s -p %s -e %s",
+				dockerServerUrl, d.Username, d.Password, d.Email))
+		}
 	}
 
 	// Are we overriding the "latest" tag?
 	if d.PushLatest {
 		f.WriteCmd(fmt.Sprintf("docker -H %s tag %s:%s %s:latest",
-			dockerServerUrl, imageBaseName, imageTag, imageBaseName))
+			dockerServerUrl, d.ImageName, imageTag, d.ImageName))
 	}
 
-	f.WriteCmd(fmt.Sprintf("docker -H %s push %s", dockerServerUrl, imageBaseName))
+	f.WriteCmd(fmt.Sprintf("docker -H %s push %s", dockerServerUrl, d.ImageName))
 
 	// Delete the image from the docker server we built on.
 	if ! d.KeepBuild {
 		f.WriteCmd(fmt.Sprintf("docker -H %s rmi %s:%s",
-			dockerServerUrl, imageBaseName, imageTag))
-		f.WriteCmd(fmt.Sprintf("docker -H %s rmi %s:latest",
-			dockerServerUrl, imageBaseName))
+			dockerServerUrl, d.ImageName, imageTag))
+		if d.PushLatest {
+			f.WriteCmd(fmt.Sprintf("docker -H %s rmi %s:latest",
+				dockerServerUrl, d.ImageName))
+		}
 	}
 }
