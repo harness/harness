@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/codegangsta/cli"
+	"github.com/drone/drone/client"
 )
 
 // NewEnableCommand returns the CLI command for "enable".
@@ -17,18 +18,13 @@ func NewEnableCommand() cli.Command {
 }
 
 // enableCommandFunc executes the "enable" command.
-func enableCommandFunc(c *cli.Context, client *Client) error {
-	var repo string
-	var arg = c.Args()
+func enableCommandFunc(c *cli.Context, client *client.Client) error {
+	var host, owner, name string
+	var args = c.Args()
 
-	if len(arg) != 0 {
-		repo = arg[0]
+	if len(args) != 0 {
+		host, owner, name = parseRepo(args[0])
 	}
 
-	err := client.Do("POST", "/v1/repos/"+repo, nil, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return client.Repos.Enable(host, owner, name)
 }

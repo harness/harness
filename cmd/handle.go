@@ -4,25 +4,28 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
+	"github.com/drone/drone/client"
 )
 
-type handlerFunc func(*cli.Context, *Client) error
+type handlerFunc func(*cli.Context, *client.Client) error
 
 // handle wraps the command function handlers and
 // sets up the environment.
 func handle(c *cli.Context, fn handlerFunc) {
-	client := Client{}
-	client.Token = os.Getenv("DRONE_TOKEN")
-	client.URL = os.Getenv("DRONE_HOST")
+	var token = c.GlobalString("token")
+	var server = c.GlobalString("server")
 
-	// if no url is provided we can default
+	// if no server url is provided we can default
 	// to the hosted Drone service.
-	if len(client.URL) == 0 {
-		client.URL = "http://test.drone.io"
+	if len(server) == 0 {
+		server = "http://test.drone.io"
 	}
 
+	// create the drone client
+	client := client.New(token, server)
+
 	// handle the function
-	if err := fn(c, &client); err != nil {
+	if err := fn(c, client); err != nil {
 		println(err.Error())
 		os.Exit(1)
 	}

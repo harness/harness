@@ -9,6 +9,20 @@ import (
 	"time"
 )
 
+func parseRepo(str string) (host, owner, repo string) {
+	var parts = strings.Split(str, "/")
+	if len(repo) != 3 {
+		host = "undefined"
+		owner = "undefined"
+		repo = "undefined"
+		return
+	}
+	host = parts[0]
+	owner = parts[1]
+	repo = parts[2]
+	return
+}
+
 // getGoPath checks the source codes absolute path
 // in reference to the host operating system's GOPATH
 // to correctly determine the code's package path. This

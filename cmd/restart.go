@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/codegangsta/cli"
+	"github.com/drone/drone/client"
 )
 
 // NewRestartCommand returns the CLI command for "restart".
@@ -19,22 +18,19 @@ func NewRestartCommand() cli.Command {
 }
 
 // restartCommandFunc executes the "restart" command.
-func restartCommandFunc(c *cli.Context, client *Client) error {
-	var branch string = "master"
-	var commit string
-	var repo string
-	var arg = c.Args()
+func restartCommandFunc(c *cli.Context, client *client.Client) error {
+	var host, owner, repo, branch, sha string
+	var args = c.Args()
 
-	switch len(arg) {
-	case 2:
-		repo = arg[0]
-		commit = arg[1]
-	case 3:
-		repo = arg[0]
-		branch = arg[1]
-		commit = arg[2]
+	if len(args) == 5 {
+		host, owner, repo = parseRepo(args[0])
+	} else {
+		host = "unknown"
+		owner = "unknown"
+		repo = "unknown"
+		branch = "unknown"
+		sha = "unknown"
 	}
 
-	path := fmt.Sprintf("/v1/repos/%s/branches/%s/commits/%s?action=rebuild", repo, branch, commit)
-	return client.Do("POST", path, nil, nil)
+	return client.Commits.Rebuild(host, owner, repo, branch, sha)
 }
