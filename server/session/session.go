@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
@@ -12,6 +13,9 @@ import (
 // stores sessions using secure cookies.
 var cookies = sessions.NewCookieStore(
 	securecookie.GenerateRandomKey(64))
+
+// stores sessions using secure cookies.
+var xsrftoken = string(securecookie.GenerateRandomKey(32))
 
 type Session interface {
 	User(r *http.Request) *model.User
@@ -31,7 +35,7 @@ func NewSession(users database.UserManager) Session {
 	}
 }
 
-// User gets the currently authenticated user from the secure cookie session.
+// User gets the currently authenticated user.
 func (s *session) User(r *http.Request) *model.User {
 	switch {
 	case r.FormValue("access_token") == "":
@@ -40,6 +44,19 @@ func (s *session) User(r *http.Request) *model.User {
 		return s.UserToken(r)
 	}
 	return nil
+}
+
+// UserXsrf gets the currently authenticated user and
+// validates the xsrf session token, if necessary.
+func (s *session) UserXsrf(r *http.Request) *model.User {
+	user := s.User(r)
+	if user == nil || r.FormValue("access_token") != "" {
+		return user
+	}
+	if !httputil.CheckXsrf(r, xsrftoken, user.Login) {
+		return nil
+	}
+	return user
 }
 
 // UserToken gets the currently authenticated user for the given auth token.
@@ -70,6 +87,7 @@ func (s *session) SetUser(w http.ResponseWriter, r *http.Request, u *model.User)
 	sess, _ := cookies.Get(r, "_sess")
 	sess.Values["uid"] = u.ID
 	sess.Save(r, w)
+	httputil.SetXsrf(w, r, xsrftoken, u.Login)
 }
 
 // Clear removes the user from the session.
