@@ -98,7 +98,7 @@ func (c *Client) GetRepos(owner string) ([]*remote.Repo, error) {
 		if state.Permissions >= 40 {
 			state.AdminAbility = true
 		} else {
-			state.AdminAbility = true
+			state.AdminAbility = false
 		}
 
 		result = append(result, &remote.Repo{
