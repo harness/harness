@@ -122,11 +122,18 @@ func main() {
 			strings.HasPrefix(r.URL.Path, "/scripts/"),
 			strings.HasPrefix(r.URL.Path, "/styles/"),
 			strings.HasPrefix(r.URL.Path, "/views/"):
+			// serve static conent
 			fserver.ServeHTTP(w, r)
 		case strings.HasPrefix(r.URL.Path, "/logout"),
 			strings.HasPrefix(r.URL.Path, "/login/"),
 			strings.HasPrefix(r.URL.Path, "/v1/"),
 			strings.HasPrefix(r.URL.Path, "/ws/"):
+			// standard header variables that should be set, for good measure.
+			w.Header().Add("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
+			w.Header().Add("X-Frame-Options", "DENY")
+			w.Header().Add("X-Content-Type-Options", "nosniff")
+			w.Header().Add("X-XSS-Protection", "1; mode=block")
+			// serve dynamic content
 			router.ServeHTTP(w, r)
 		default:
 			w.Write(index)

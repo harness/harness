@@ -28,12 +28,6 @@ type internalServerError struct{ error }
 // If the error is of another type, it is considered as an internal error and its message is logged.
 func errorHandler(f func(w http.ResponseWriter, r *http.Request) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// standard header variables that should be set, for good measure.
-		w.Header().Add("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
-		w.Header().Add("X-Frame-Options", "DENY")
-		w.Header().Add("X-Content-Type-Options", "nosniff")
-		w.Header().Add("X-XSS-Protection", "1; mode=block")
-
 		// serve the request
 		err := f(w, r)
 		if err == nil {
