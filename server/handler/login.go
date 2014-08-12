@@ -129,12 +129,13 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 				repo.URL = remoteRepo.URL
 
 				if err := h.repos.Insert(repo); err != nil {
-					log.Println("Error adding repo.", u.Login, remoteRepo.Name, err)
-					// this is probably because the repository already exists.
-					// we should still attempt to grant the user access, however.
-					//
-					// todo(bradrydzewski) we should inspect the response to ensure
-					//      the failure is caused by a primary key violation.
+					// typically we see a failure because the repository already exists
+					// in which case, we can retrieve the existing record to get the ID.
+					repo, err = h.repos.FindName(repo.Host, repo.Owner, repo.Name)
+					if err != nil {
+						log.Println("Error adding repo.", u.Login, remoteRepo.Name, err)
+						continue
+					}
 				}
 
 				// add user permissions
