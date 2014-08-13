@@ -19,7 +19,8 @@ func NewWhoamiCommand() cli.Command {
 	}
 }
 
-// whoamiCommandFunc executes the "logout" command.
+// whoamiCommandFunc communicates with the server and echoes
+// the currently authenticated user.
 func whoamiCommandFunc(c *cli.Context, client *client.Client) error {
 	user, err := client.Users.GetCurrent()
 	if err != nil {
