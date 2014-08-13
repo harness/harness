@@ -13,7 +13,7 @@ type CommitService struct {
 
 // GET /v1/repos/{host}/{owner}/{name}/branch/{branch}/commit/{commit}
 func (s *CommitService) Get(host, owner, name, branch, sha string) (*model.Commit, error) {
-	var path = fmt.Sprintf("/v1/repos/%s/%s/%s/branch/%s/commit/%s", host, owner, name, branch, sha)
+	var path = fmt.Sprintf("/v1/repos/%s/%s/%s/branches/%s/commits/%s", host, owner, name, branch, sha)
 	var commit = model.Commit{}
 	var err = s.run("GET", path, nil, &commit)
 	return &commit, err
@@ -21,7 +21,7 @@ func (s *CommitService) Get(host, owner, name, branch, sha string) (*model.Commi
 
 // GET /v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}/console
 func (s *CommitService) GetOutput(host, owner, name, branch, sha string) (io.ReadCloser, error) {
-	var path = fmt.Sprintf("/v1/repos/%s/%s/%s/branch/%s/commit/%s/console", host, owner, name, branch, sha)
+	var path = fmt.Sprintf("/v1/repos/%s/%s/%s/branches/%s/commits/%s/console", host, owner, name, branch, sha)
 	resp, err := s.do("GET", path)
 	if err != nil {
 		return nil, nil
@@ -31,7 +31,7 @@ func (s *CommitService) GetOutput(host, owner, name, branch, sha string) (io.Rea
 
 // POST /v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}?action=rebuild
 func (s *CommitService) Rebuild(host, owner, name, branch, sha string) error {
-	var path = fmt.Sprintf("/v1/repos/%s/%s/%s/branch/%s/commit/%s", host, owner, name, branch, sha)
+	var path = fmt.Sprintf("/v1/repos/%s/%s/%s/branches/%s/commits/%s", host, owner, name, branch, sha)
 	return s.run("POST", path, nil, nil)
 }
 
@@ -45,7 +45,7 @@ func (s *CommitService) List(host, owner, name string) ([]*model.Commit, error) 
 
 // GET /v1/repos/{host}/{owner}/{name}/branch/{branch}
 func (s *CommitService) ListBranch(host, owner, name, branch string) ([]*model.Commit, error) {
-	var path = fmt.Sprintf("/v1/repos/%s/%s/%s/branch/%s", host, owner, name, branch)
+	var path = fmt.Sprintf("/v1/repos/%s/%s/%s/branches/%s/commits", host, owner, name, branch)
 	var list []*model.Commit
 	var err = s.run("GET", path, nil, &list)
 	return list, err

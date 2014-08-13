@@ -34,6 +34,7 @@ func main() {
 	app.Commands = []cli.Command{
 		NewBuildCommand(),
 		NewReposCommand(),
+		NewStatusCommand(),
 		NewEnableCommand(),
 		NewDisableCommand(),
 		NewRestartCommand(),
