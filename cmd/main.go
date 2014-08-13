@@ -33,6 +33,7 @@ func main() {
 
 	app.Commands = []cli.Command{
 		NewBuildCommand(),
+		NewReposCommand(),
 		NewEnableCommand(),
 		NewDisableCommand(),
 		NewRestartCommand(),
