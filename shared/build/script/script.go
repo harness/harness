@@ -76,7 +76,7 @@ type Build struct {
 
 	Deploy        *deploy.Deploy       `yaml:"deploy,omitempty"`
 	Publish       *publish.Publish     `yaml:"publish,omitempty"`
-	Notifications *notify.Notification `yaml:"notify,omitempty"`
+	Notifications *notify.Notification `yaml:"notify"`
 
 	// Git specified git-specific parameters, such as
 	// the clone depth and path
