@@ -11,10 +11,7 @@ import (
 
 func parseRepo(str string) (host, owner, repo string) {
 	var parts = strings.Split(str, "/")
-	if len(repo) != 3 {
-		host = "undefined"
-		owner = "undefined"
-		repo = "undefined"
+	if len(parts) != 3 {
 		return
 	}
 	host = parts[0]
