@@ -22,14 +22,17 @@ func restartCommandFunc(c *cli.Context, client *client.Client) error {
 	var host, owner, repo, branch, sha string
 	var args = c.Args()
 
-	if len(args) == 5 {
+	if len(args) != 0 {
 		host, owner, repo = parseRepo(args[0])
-	} else {
-		host = "unknown"
-		owner = "unknown"
-		repo = "unknown"
-		branch = "unknown"
-		sha = "unknown"
+	}
+
+	switch len(args) {
+	case 2:
+		branch = "master"
+		sha = args[1]
+	case 3,4,5:
+		branch = args[1]
+		sha = args[2]
 	}
 
 	return client.Commits.Rebuild(host, owner, repo, branch, sha)
