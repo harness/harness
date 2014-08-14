@@ -67,6 +67,9 @@ func (n *Notification) Send(context *model.Request) error {
 	}
 
 	// send email notifications
+	if n.GitHub == nil {
+		n.GitHub = &github.GitHub{}
+	}
 	if err := n.GitHub.Send(context); err != nil {
 		log.Println(err)
 	}
