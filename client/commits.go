@@ -31,7 +31,7 @@ func (s *CommitService) GetOutput(host, owner, name, branch, sha string) (io.Rea
 
 // POST /v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}?action=rebuild
 func (s *CommitService) Rebuild(host, owner, name, branch, sha string) error {
-	var path = fmt.Sprintf("/v1/repos/%s/%s/%s/branches/%s/commits/%s", host, owner, name, branch, sha)
+	var path = fmt.Sprintf("/v1/repos/%s/%s/%s/branches/%s/commits/%s?action=rebuild", host, owner, name, branch, sha)
 	return s.run("POST", path, nil, nil)
 }
 
