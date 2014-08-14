@@ -134,7 +134,7 @@ func (w *worker) Execute(r *model.Request) {
 	}
 
 	// send all "started" notifications
-	if script.Notifications != nil {
+	if script.Notifications == nil {
 		script.Notifications = &notify.Notification{}
 	}
 	script.Notifications.Send(r)
