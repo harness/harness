@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/drone/drone/plugin/notify"
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/pubsub"
 	"github.com/drone/drone/shared/build"
@@ -103,6 +104,15 @@ func (w *worker) Execute(r *model.Request) {
 		log.Printf("Error parsing YAML for %s/%s, Err: %s", r.Repo.Owner, r.Repo.Name, err.Error())
 	}
 
+	// append private parameters to the environment
+	// variable section of the .drone.yml file, iff
+	// this is not a pull request (for security purposes)
+	if params != nil && len(r.Commit.PullRequest) == 0 {
+		for k, v := range params {
+			script.Env = append(script.Env, k+"="+v)
+		}
+	}
+
 	path := r.Repo.Host + "/" + r.Repo.Owner + "/" + r.Repo.Name
 	repo := &repo.Repo{
 		Name:   path,
@@ -125,8 +135,9 @@ func (w *worker) Execute(r *model.Request) {
 
 	// send all "started" notifications
 	if script.Notifications != nil {
-		script.Notifications.Send(r)
+		script.Notifications = &notify.Notification{}
 	}
+	script.Notifications.Send(r)
 
 	// create an instance of the Docker builder
 	builder := build.New(dockerClient)
@@ -166,7 +177,5 @@ func (w *worker) Execute(r *model.Request) {
 	commitc.Publish(r)
 
 	// send all "finished" notifications
-	if script.Notifications != nil {
-		script.Notifications.Send(r)
-	}
+	script.Notifications.Send(r)
 }
