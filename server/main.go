@@ -106,7 +106,7 @@ func main() {
 	handler.NewUserHandler(users, repos, commits, sess).Register(router)
 	handler.NewHookHandler(users, repos, commits, remotes, queue).Register(router)
 	handler.NewLoginHandler(users, repos, perms, sess, remotes).Register(router)
-	handler.NewCommitHandler(repos, commits, perms, sess, queue).Register(router)
+	handler.NewCommitHandler(users, repos, commits, perms, sess, queue).Register(router)
 	handler.NewRepoHandler(repos, commits, perms, sess, remotes).Register(router)
 	handler.NewBadgeHandler(repos, commits).Register(router)
 	handler.NewServerHandler(servers, sess).Register(router)
