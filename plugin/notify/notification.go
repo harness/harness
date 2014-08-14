@@ -22,7 +22,7 @@ type Notification struct {
 	Irc     *IRC         `yaml:"irc,omitempty"`
 	Slack   *Slack       `yaml:"slack,omitempty"`
 
-	GitHub  *github.GitHub `yaml:"github_status,omitempty"`
+	GitHub  github.GitHub `yaml:"--"`
 }
 
 func (n *Notification) Send(context *model.Request) error {
@@ -67,9 +67,6 @@ func (n *Notification) Send(context *model.Request) error {
 	}
 
 	// send email notifications
-	if n.GitHub == nil {
-		n.GitHub = &github.GitHub{}
-	}
 	if err := n.GitHub.Send(context); err != nil {
 		log.Println(err)
 	}
