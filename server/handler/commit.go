@@ -157,10 +157,16 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 		return internalServerError{err}
 	}
 
+	owner, err := h.users.Find(repo.UserID)
+	if err != nil {
+		return badRequest{err}
+	}
+
 	// drop the items on the queue
 	// drop the items on the queue
 	go func() {
 		h.queue <- &model.Request{
+			User:   owner,
 			Host:   httputil.GetURL(r),
 			Repo:   repo,
 			Commit: c,
