@@ -10,7 +10,7 @@ import (
 	"github.com/drone/go-bitbucket/bitbucket"
 	"github.com/drone/go-github/github"
 
-	"launchpad.net/goyaml"
+	"gopkg.in/yaml.v1"
 )
 
 // Display a Repository dashboard.
@@ -290,7 +290,7 @@ func RepoParamsForm(w http.ResponseWriter, r *http.Request, u *User, repo *Repo)
 	}{repo, u, ""}
 
 	if repo.Params != nil && len(repo.Params) != 0 {
-		raw, _ := goyaml.Marshal(&repo.Params)
+		raw, _ := yaml.Marshal(&repo.Params)
 		data.Textarea = string(raw)
 	}
 
@@ -322,7 +322,7 @@ func RepoUpdate(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 	switch r.FormValue("action") {
 	case "params":
 		repo.Params = map[string]string{}
-		if err := goyaml.Unmarshal([]byte(r.FormValue("params")), &repo.Params); err != nil {
+		if err := yaml.Unmarshal([]byte(r.FormValue("params")), &repo.Params); err != nil {
 			return err
 		}
 	default:

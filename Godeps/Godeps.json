@@ -163,7 +163,7 @@
 		},
 		{
 			"ImportPath": "github.com/plouc/go-gitlab-client",
-			"Rev": "b0e1b9f3f7585d066d05341bbfdf6d0dd6930cae"
+			"Rev": "80398caaef592ef875851e74876d5b2d52dbcb43"
 		},
 		{
 			"ImportPath": "github.com/russross/meddler",
@@ -175,9 +175,8 @@
 			"Rev": "2abea075ec076abf0572d29bdb28ae7da64cfb7a"
 		},
 		{
-			"ImportPath": "launchpad.net/goyaml",
-			"Comment": "51",
-			"Rev": "gustavo@niemeyer.net-20140305200416-7gh64vkcckre5mob"
+			"ImportPath": "gopkg.in/yaml.v1",
+			"Rev": "72c33f6840f49f9ed7d1faef7562b3266640fdf4"
 		}
 	]
 }

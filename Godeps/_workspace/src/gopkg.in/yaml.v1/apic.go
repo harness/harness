@@ -1,4 +1,4 @@
-package goyaml
+package yaml
 
 import (
 	"io"

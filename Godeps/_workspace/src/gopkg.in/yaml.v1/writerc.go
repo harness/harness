@@ -1,4 +1,4 @@
-package goyaml
+package yaml
 
 // Set the writer error and return false.
 func yaml_emitter_set_writer_error(emitter *yaml_emitter_t, problem string) bool {
