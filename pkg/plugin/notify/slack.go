@@ -8,9 +8,9 @@ import (
 
 const (
 	slackEndpoint       = "https://%s.slack.com/services/hooks/incoming-webhook?token=%s"
-	slackStartedMessage = "*Building* %s, commit <%s|%s>, author %s"
-	slackSuccessMessage = "*Success* %s, commit <%s|%s>, author %s"
-	slackFailureMessage = "*Failed* %s, commit <%s|%s>, author %s"
+	slackStartedMessage = "*Building* %s <%s|%s>, by %s:\n> %s"
+	slackSuccessMessage = "*Success* %s <%s|%s>, by %s:\n> %s"
+	slackFailureMessage = "*Failed* %s <%s|%s>, by %s:\n> %s"
 )
 
 type Slack struct {
@@ -47,7 +47,13 @@ func getBuildUrl(context *Context) string {
 
 func getMessage(context *Context, message string) string {
 	url := getBuildUrl(context)
-	return fmt.Sprintf(message, context.Repo.Name, url, context.Commit.HashShort(), context.Commit.Author)
+	return fmt.Sprintf(
+		message,
+		context.Repo.Name,
+		url,
+		context.Commit.HashShort(),
+		context.Commit.Author,
+		context.Commit.Message)
 }
 
 func (s *Slack) sendStarted(context *Context) error {
