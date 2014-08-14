@@ -12,6 +12,7 @@ import (
 )
 
 type CommitHandler struct {
+	users   database.UserManager
 	perms   database.PermManager
 	repos   database.RepoManager
 	commits database.CommitManager
@@ -19,8 +20,8 @@ type CommitHandler struct {
 	queue   chan *model.Request
 }
 
-func NewCommitHandler(repos database.RepoManager, commits database.CommitManager, perms database.PermManager, sess session.Session, queue chan *model.Request) *CommitHandler {
-	return &CommitHandler{perms, repos, commits, sess, queue}
+func NewCommitHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, perms database.PermManager, sess session.Session, queue chan *model.Request) *CommitHandler {
+	return &CommitHandler{users, perms, repos, commits, sess, queue}
 }
 
 // GetFeed gets recent commits for the repository and branch
@@ -157,7 +158,7 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 		return internalServerError{err}
 	}
 
-	owner, err := h.users.Find(repo.UserID)
+	repoOwner, err := h.users.Find(repo.UserID)
 	if err != nil {
 		return badRequest{err}
 	}
@@ -166,7 +167,7 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 	// drop the items on the queue
 	go func() {
 		h.queue <- &model.Request{
-			User:   owner,
+			User:   repoOwner,
 			Host:   httputil.GetURL(r),
 			Repo:   repo,
 			Commit: c,
