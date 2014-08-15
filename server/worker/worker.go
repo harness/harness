@@ -107,7 +107,7 @@ func (w *worker) Execute(r *model.Request) {
 	// append private parameters to the environment
 	// variable section of the .drone.yml file, iff
 	// this is not a pull request (for security purposes)
-	if params != nil && len(r.Commit.PullRequest) == 0 {
+	if params != nil && (r.Repo.Private || len(r.Commit.PullRequest) == 0) {
 		for k, v := range params {
 			script.Env = append(script.Env, k+"="+v)
 		}
