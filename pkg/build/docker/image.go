@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/dotcloud/docker/archive"
-	"github.com/dotcloud/docker/utils"
+	"github.com/dotcloud/docker/pkg/parsers"
 )
 
 type Images struct {
@@ -63,7 +63,7 @@ func (c *ImageService) Create(image string) error {
 }
 
 func (c *ImageService) Pull(image string) error {
-	name, tag := utils.ParseRepositoryTag(image)
+	name, tag := parsers.ParseRepositoryTag(image)
 	if len(tag) == 0 {
 		tag = DEFAULTTAG
 	}
