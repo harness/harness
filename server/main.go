@@ -27,6 +27,7 @@ import (
 	"github.com/drone/drone/plugin/remote/bitbucket"
 	"github.com/drone/drone/plugin/remote/github"
 	"github.com/drone/drone/plugin/remote/gitlab"
+	"github.com/drone/drone/plugin/remote/stash"
 )
 
 var (
@@ -84,6 +85,7 @@ func main() {
 	bitbucket.Register()
 	github.Register()
 	gitlab.Register()
+	stash.Register()
 
 	// setup the database
 	meddler.Default = meddler.SQLite

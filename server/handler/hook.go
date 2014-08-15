@@ -116,6 +116,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (h *HookHandler) Register(r *pat.Router) {
+	r.Get("/v1/hook/{host}", errorHandler(h.PostHook))
 	r.Post("/v1/hook/{host}", errorHandler(h.PostHook))
 	r.Put("/v1/hook/{host}", errorHandler(h.PostHook))
 }
