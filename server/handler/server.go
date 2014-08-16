@@ -24,8 +24,11 @@ func NewServerHandler(servers database.ServerManager, sess session.Session) *Ser
 func (h *ServerHandler) GetServers(w http.ResponseWriter, r *http.Request) error {
 	// get the user form the session
 	user := h.sess.User(r)
-	if user == nil || !user.Admin {
+	switch {
+	case user == nil:
 		return notAuthorized{}
+	case user.Admin == false:
+		return forbidden{}
 	}
 	// get all servers
 	servers, err := h.servers.List()
@@ -41,8 +44,11 @@ func (h *ServerHandler) GetServers(w http.ResponseWriter, r *http.Request) error
 func (h *ServerHandler) PostServer(w http.ResponseWriter, r *http.Request) error {
 	// get the user form the session
 	user := h.sess.User(r)
-	if user == nil || !user.Admin {
+	switch {
+	case user == nil:
 		return notAuthorized{}
+	case user.Admin == false:
+		return forbidden{}
 	}
 	// unmarshal the server from the payload
 	defer r.Body.Close()
@@ -65,8 +71,11 @@ func (h *ServerHandler) DeleteServer(w http.ResponseWriter, r *http.Request) err
 
 	// get the user form the session
 	user := h.sess.User(r)
-	if user == nil || !user.Admin {
+	switch {
+	case user == nil:
 		return notAuthorized{}
+	case user.Admin == false:
+		return forbidden{}
 	}
 	// get the server
 	server, err := h.servers.FindName(name)

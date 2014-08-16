@@ -5,7 +5,7 @@ var app = angular.module('app', [
   'ui.filters'
 ]);
 
-app.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
+app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($routeProvider, $locationProvider, $httpProvider) {
 	$routeProvider.when('/', {
 			templateUrl: '/views/home.html',
 			controller: 'HomeController',
@@ -135,6 +135,17 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
 
 	// use the HTML5 History API
 	$locationProvider.html5Mode(true);
+
+	$httpProvider.interceptors.push(function($q, $location) {
+		return {
+			'responseError': function(rejection) {
+				if (rejection.status == 401) {
+					$location.path('/login');
+				}
+				return $q.reject(rejection);
+			}
+		};
+	});
 }]);
 
 /* also see https://coderwall.com/p/vcfo4q */
@@ -148,6 +159,7 @@ app.run(['$location', '$rootScope', '$routeParams', 'feed', 'stdout', function($
     $rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
         document.title = current.$$route.title + ' · drone.io';
     });
+
 }]);
 
 
