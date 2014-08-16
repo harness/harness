@@ -24,8 +24,11 @@ func NewUsersHandler(users database.UserManager, sess session.Session) *UsersHan
 func (h *UsersHandler) GetUsers(w http.ResponseWriter, r *http.Request) error {
 	// get the user form the session
 	user := h.sess.User(r)
-	if user == nil || !user.Admin {
+	switch {
+	case user == nil:
 		return notAuthorized{}
+	case user.Admin == false:
+		return forbidden{}
 	}
 	// get all users
 	users, err := h.users.List()
@@ -44,8 +47,11 @@ func (h *UsersHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
 
 	// get the user form the session
 	user := h.sess.User(r)
-	if user == nil || !user.Admin {
+	switch {
+	case user == nil:
 		return notAuthorized{}
+	case user.Admin == false:
+		return forbidden{}
 	}
 	user, err := h.users.FindLogin(remote, login)
 	if err != nil {
@@ -63,8 +69,11 @@ func (h *UsersHandler) PostUser(w http.ResponseWriter, r *http.Request) error {
 
 	// get the user form the session
 	user := h.sess.User(r)
-	if user == nil || !user.Admin {
+	switch {
+	case user == nil:
 		return notAuthorized{}
+	case user.Admin == false:
+		return forbidden{}
 	}
 
 	account := model.NewUser(remote, login, "")
@@ -85,8 +94,11 @@ func (h *UsersHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error 
 
 	// get the user form the session
 	user := h.sess.User(r)
-	if user == nil || !user.Admin {
+	switch {
+	case user == nil:
 		return notAuthorized{}
+	case user.Admin == false:
+		return forbidden{}
 	}
 	account, err := h.users.FindLogin(remote, login)
 	if err != nil {

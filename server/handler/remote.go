@@ -26,8 +26,11 @@ func NewRemoteHandler(users database.UserManager, remotes database.RemoteManager
 func (h *RemoteHandler) GetRemotes(w http.ResponseWriter, r *http.Request) error {
 	// get the user form the session
 	user := h.sess.User(r)
-	if user == nil || !user.Admin {
+	switch {
+	case user == nil:
 		return notAuthorized{}
+	case user.Admin == false:
+		return forbidden{}
 	}
 	// get all remotes
 	remotes, err := h.remotes.List()
@@ -100,8 +103,11 @@ func (h *RemoteHandler) PostRemote(w http.ResponseWriter, r *http.Request) error
 func (h *RemoteHandler) PutRemote(w http.ResponseWriter, r *http.Request) error {
 	// get the user form the session
 	user := h.sess.User(r)
-	if user == nil || !user.Admin {
+	switch {
+	case user == nil:
 		return notAuthorized{}
+	case user.Admin == false:
+		return forbidden{}
 	}
 	// unmarshal the remote from the payload
 	defer r.Body.Close()

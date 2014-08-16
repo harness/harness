@@ -35,13 +35,20 @@ func (h *CommitHandler) GetFeed(w http.ResponseWriter, r *http.Request) error {
 
 	// get the repository from the database.
 	repo, err := h.repos.FindName(host, owner, name)
-	if err != nil {
-		return notFound{err}
+	switch {
+	case err != nil && user == nil:
+		return notAuthorized{}
+	case err != nil && user != nil:
+		return notFound{}
 	}
 
 	// user must have read access to the repository.
-	if ok, _ := h.perms.Read(user, repo); !ok {
-		return notFound{err}
+	ok, _ := h.perms.Read(user, repo)
+	switch {
+	case ok == false && user == nil:
+		return notAuthorized{}
+	case ok == false && user != nil:
+		return notFound{}
 	}
 
 	commits, err := h.commits.ListBranch(repo.ID, branch)
@@ -64,13 +71,20 @@ func (h *CommitHandler) GetCommit(w http.ResponseWriter, r *http.Request) error 
 
 	// get the repository from the database.
 	repo, err := h.repos.FindName(host, owner, name)
-	if err != nil {
-		return notFound{err}
+	switch {
+	case err != nil && user == nil:
+		return notAuthorized{}
+	case err != nil && user != nil:
+		return notFound{}
 	}
 
 	// user must have read access to the repository.
-	if ok, _ := h.perms.Read(user, repo); !ok {
-		return notFound{err}
+	ok, _ := h.perms.Read(user, repo)
+	switch {
+	case ok == false && user == nil:
+		return notAuthorized{}
+	case ok == false && user != nil:
+		return notFound{}
 	}
 
 	commit, err := h.commits.FindSha(repo.ID, branch, sha)
@@ -93,13 +107,20 @@ func (h *CommitHandler) GetCommitOutput(w http.ResponseWriter, r *http.Request) 
 
 	// get the repository from the database.
 	repo, err := h.repos.FindName(host, owner, name)
-	if err != nil {
-		return notFound{err}
+	switch {
+	case err != nil && user == nil:
+		return notAuthorized{}
+	case err != nil && user != nil:
+		return notFound{}
 	}
 
 	// user must have read access to the repository.
-	if ok, _ := h.perms.Read(user, repo); !ok {
-		return notFound{err}
+	ok, _ := h.perms.Read(user, repo)
+	switch {
+	case ok == false && user == nil:
+		return notAuthorized{}
+	case ok == false && user != nil:
+		return notFound{}
 	}
 
 	commit, err := h.commits.FindSha(repo.ID, branch, sha)
@@ -131,8 +152,11 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 
 	// get the repo from the database
 	repo, err := h.repos.FindName(host, owner, name)
-	if err != nil {
-		return notFound{err}
+	switch {
+	case err != nil && user == nil:
+		return notAuthorized{}
+	case err != nil && user != nil:
+		return notFound{}
 	}
 
 	// user must have admin access to the repository.

@@ -38,16 +38,21 @@ func (h *RepoHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
 
 	// get the repository from the database.
 	repo, err := h.repos.FindName(host, owner, name)
-	if err != nil {
-		return notFound{err}
+	switch {
+	case err != nil && user == nil:
+		return notAuthorized{}
+	case err != nil && user != nil:
+		return notFound{}
 	}
 
 	// user must have read access to the repository.
 	role := h.perms.Find(user, repo)
-	if !role.Read {
-		return notFound{err}
+	switch {
+	case role.Read == false && user == nil:
+		return notAuthorized{}
+	case role.Read == false && user != nil:
+		return notFound{}
 	}
-
 	// if the user is not requesting admin data we can
 	// return exactly what we have.
 	if len(admin) == 0 {
@@ -85,8 +90,11 @@ func (h *RepoHandler) PostRepo(w http.ResponseWriter, r *http.Request) error {
 
 	// get the repo from the database
 	repo, err := h.repos.FindName(host, owner, name)
-	if err != nil {
-		return notFound{err}
+	switch {
+	case err != nil && user == nil:
+		return notAuthorized{}
+	case err != nil && user != nil:
+		return notFound{}
 	}
 
 	// user must have admin access to the repository.
@@ -155,8 +163,11 @@ func (h *RepoHandler) PutRepo(w http.ResponseWriter, r *http.Request) error {
 
 	// get the repo from the database
 	repo, err := h.repos.FindName(host, owner, name)
-	if err != nil {
-		return notFound{err}
+	switch {
+	case err != nil && user == nil:
+		return notAuthorized{}
+	case err != nil && user != nil:
+		return notFound{}
 	}
 
 	// user must have admin access to the repository.
@@ -221,8 +232,11 @@ func (h *RepoHandler) DeleteRepo(w http.ResponseWriter, r *http.Request) error {
 
 	// get the repo from the database
 	repo, err := h.repos.FindName(host, owner, name)
-	if err != nil {
-		return notFound{err}
+	switch {
+	case err != nil && user == nil:
+		return notAuthorized{}
+	case err != nil && user != nil:
+		return notFound{}
 	}
 
 	// user must have admin access to the repository.
@@ -254,13 +268,20 @@ func (h *RepoHandler) GetFeed(w http.ResponseWriter, r *http.Request) error {
 
 	// get the repository from the database.
 	repo, err := h.repos.FindName(host, owner, name)
-	if err != nil {
-		return notFound{err}
+	switch {
+	case err != nil && user == nil:
+		return notAuthorized{}
+	case err != nil && user != nil:
+		return notFound{}
 	}
 
 	// user must have read access to the repository.
-	if ok, _ := h.perms.Read(user, repo); !ok {
-		return notFound{err}
+	ok, _ := h.perms.Read(user, repo)
+	switch {
+	case ok == false && user == nil:
+		return notAuthorized{}
+	case ok == false && user != nil:
+		return notFound{}
 	}
 
 	// lists the most recent commits across all branches.
