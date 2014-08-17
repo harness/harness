@@ -3,11 +3,12 @@
 # Command line options:
 #
 #   -datasource="drone.sqlite":
-#   -driver="sqlite3":
 #   -port=":8080":
 #   -workers="4":
 #         
 #DRONED_OPTS="--port=:80"
+
+DATABASE_URL=sqlite:///var/lib/drone/drone.sqlite
 
 # Email configuration
 #SMTP_HOST=

@@ -12,8 +12,8 @@ func init() {
 
 func plugin(remote *model.Remote) remote.Remote {
 	return &Github{
-		URL:     remote.URL,
-		API:     remote.API,
+		URL:     remote.Url,
+		API:     remote.Api,
 		Client:  remote.Client,
 		Secret:  remote.Secret,
 		Enabled: remote.Open,

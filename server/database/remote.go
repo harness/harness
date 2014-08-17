@@ -1,10 +1,8 @@
 package database
 
 import (
-	"database/sql"
-
 	"github.com/drone/drone/shared/model"
-	"github.com/russross/meddler"
+	"github.com/jinzhu/gorm"
 )
 
 type RemoteManager interface {
@@ -32,76 +30,51 @@ type RemoteManager interface {
 
 // remoteManager manages a list of remotes in a SQL database.
 type remoteManager struct {
-	*sql.DB
+	ORM *gorm.DB
 }
-
-// SQL query to retrieve a Remote by remote login.
-const findRemoteQuery = `
-SELECT *
-FROM remotes
-WHERE remote_host=?
-LIMIT 1
-`
-
-// SQL query to retrieve a Remote by remote login.
-const findRemoteTypeQuery = `
-SELECT *
-FROM remotes
-WHERE remote_type=?
-LIMIT 1
-`
-
-// SQL query to retrieve a list of all Remotes.
-const listRemoteQuery = `
-SELECT *
-FROM remotes
-ORDER BY remote_type
-`
-
-// SQL statement to delete a Remote by ID.
-const deleteRemoteStmt = `
-DELETE FROM remotes WHERE remote_id=?
-`
 
 // NewRemoteManager initiales a new RemoteManager intended to
 // manage and persist servers.
-func NewRemoteManager(db *sql.DB) RemoteManager {
-	return &remoteManager{db}
+func NewRemoteManager(db *gorm.DB) RemoteManager {
+	return &remoteManager{ORM: db}
 }
 
 func (db *remoteManager) Find(id int64) (*model.Remote, error) {
-	dst := model.Remote{}
-	err := meddler.Load(db, "remotes", &dst, id)
-	return &dst, err
+	remote := model.Remote{}
+
+	err := db.ORM.Table("remotes").Where(model.Remote{Id: id}).First(&remote).Error
+	return &remote, err
 }
 
 func (db *remoteManager) FindHost(host string) (*model.Remote, error) {
-	dst := model.Remote{}
-	err := meddler.QueryRow(db, &dst, findRemoteQuery, host)
-	return &dst, err
+	remote := model.Remote{}
+
+	err := db.ORM.Table("remotes").Where(model.Remote{Host: host}).First(&remote).Error
+	return &remote, err
 }
 
 func (db *remoteManager) FindType(t string) (*model.Remote, error) {
-	dst := model.Remote{}
-	err := meddler.QueryRow(db, &dst, findRemoteTypeQuery, t)
-	return &dst, err
+	remote := model.Remote{}
+
+	err := db.ORM.Table("remotes").Where(model.Remote{Type: t}).First(&remote).Error
+	return &remote, err
 }
 
 func (db *remoteManager) List() ([]*model.Remote, error) {
-	var dst []*model.Remote
-	err := meddler.QueryAll(db, &dst, listRemoteQuery)
-	return dst, err
+	var remotes []*model.Remote
+
+	err := db.ORM.Table("remotes").Find(&remotes).Error
+	return remotes, err
 }
 
 func (db *remoteManager) Insert(remote *model.Remote) error {
-	return meddler.Insert(db, "remotes", remote)
+	return db.ORM.Table("remotes").Create(remote).Error
 }
 
 func (db *remoteManager) Update(remote *model.Remote) error {
-	return meddler.Update(db, "remotes", remote)
+	return db.ORM.Table("remotes").Where(model.Remote{Id: remote.Id}).Update(remote).Error
 }
 
 func (db *remoteManager) Delete(remote *model.Remote) error {
-	_, err := db.Exec(deleteRemoteStmt, remote.ID)
-	return err
+	return db.ORM.Table("remotes").Delete(remote).Error
 }

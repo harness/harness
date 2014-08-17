@@ -1,35 +1,53 @@
 package database
 
 import (
-	"database/sql"
 	"testing"
 
-	"github.com/drone/drone/server/database/schema"
-	"github.com/drone/drone/server/database/testdata"
-	"github.com/drone/drone/server/database/testdatabase"
+	"github.com/drone/drone/server/database/connection"
+	"github.com/drone/drone/server/database/fixtures"
+	"github.com/drone/drone/shared/migrationutil"
 	"github.com/drone/drone/shared/model"
+	"github.com/jinzhu/gorm"
 )
 
 // in-memory database instance for unit testing
-var db *sql.DB
+var conn *connection.Connection
 
 // setup the test database and test fixtures
 func setup() {
-	db, _ = testdatabase.Open()
-	schema.Load(db)
-	testdata.Load(db)
+	conn = connection.NewConnection()
+	conn.Open()
+
+	conn.DB.LogMode(false)
+
+	// Clean db before new test
+	fixtures.CleanDatabase(conn.DB)
+
+	// Migrate data
+	migration := migrationutil.New(conn.DB, false)
+	migration.All()
+	migration.Migrate()
+
+	// Load data
+	fixtures.LoadUsers(conn.DB)
+	fixtures.LoadRepos(conn.DB)
+	fixtures.LoadPerms(conn.DB)
+	fixtures.LoadCommits(conn.DB)
+	fixtures.LoadOutput(conn.DB)
+	fixtures.LoadRemotes(conn.DB)
+	fixtures.LoadServers(conn.DB)
 }
 
 // teardown the test database
 func teardown() {
-	db.Close()
+	conn.DB.Close()
 }
 
 func TestUserFind(t *testing.T) {
 	setup()
 	defer teardown()
 
-	users := NewUserManager(db)
+	users := NewUserManager(conn.DB)
 	user, err := users.Find(1)
 	if err != nil {
 		t.Errorf("Want User from ID, got %s", err)
@@ -42,7 +60,7 @@ func TestUserFindLogin(t *testing.T) {
 	setup()
 	defer teardown()
 
-	users := NewUserManager(db)
+	users := NewUserManager(conn.DB)
 	user, err := users.FindLogin("github.com", "smellypooper")
 	if err != nil {
 		t.Errorf("Want User from Login, got %s", err)
@@ -55,7 +73,7 @@ func TestUserFindToken(t *testing.T) {
 	setup()
 	defer teardown()
 
-	users := NewUserManager(db)
+	users := NewUserManager(conn.DB)
 	user, err := users.FindToken("e42080dddf012c718e476da161d21ad5")
 	if err != nil {
 		t.Errorf("Want User from Token, got %s", err)
@@ -68,7 +86,7 @@ func TestUserList(t *testing.T) {
 	setup()
 	defer teardown()
 
-	users := NewUserManager(db)
+	users := NewUserManager(conn.DB)
 	all, err := users.List()
 	if err != nil {
 		t.Errorf("Want Users, got %s", err)
@@ -87,12 +105,12 @@ func TestUserInsert(t *testing.T) {
 	defer teardown()
 
 	user := model.NewUser("github.com", "winkle", "winkle@caltech.edu")
-	users := NewUserManager(db)
+	users := NewUserManager(conn.DB)
 	if err := users.Insert(user); err != nil {
 		t.Errorf("Want User created, got %s", err)
 	}
 
-	var got, want = user.ID, int64(5)
+	var got, want = user.Id, int64(5)
 	if want != got {
 		t.Errorf("Want User ID %v, got %v", want, got)
 	}
@@ -114,7 +132,7 @@ func TestUserUpdate(t *testing.T) {
 	setup()
 	defer teardown()
 
-	users := NewUserManager(db)
+	users := NewUserManager(conn.DB)
 	user, err := users.Find(4)
 	if err != nil {
 		t.Errorf("Want User from ID, got %s", err)
@@ -143,7 +161,7 @@ func TestUserDelete(t *testing.T) {
 	setup()
 	defer teardown()
 
-	users := NewUserManager(db)
+	users := NewUserManager(conn.DB)
 	user, err := users.Find(1)
 	if err != nil {
 		t.Errorf("Want User from ID, got %s", err)
@@ -155,7 +173,7 @@ func TestUserDelete(t *testing.T) {
 	}
 
 	// check to see if the deleted user is actually gone
-	if _, err := users.Find(1); err != sql.ErrNoRows {
+	if _, err := users.Find(1); err != nil && err != gorm.RecordNotFound {
 		t.Errorf("Want ErrNoRows, got %s", err)
 	}
 }
@@ -213,7 +231,7 @@ func testUser(t *testing.T, user *model.User) {
 		t.Errorf("Want Admin %v, got %v", wantBool, gotBool)
 	}
 
-	var gotInt64, wantInt64 = user.ID, int64(1)
+	var gotInt64, wantInt64 = user.Id, int64(1)
 	if gotInt64 != wantInt64 {
 		t.Errorf("Want ID %v, got %v", wantInt64, gotInt64)
 	}

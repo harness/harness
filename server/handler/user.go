@@ -83,7 +83,7 @@ func (h *UserHandler) GetRepos(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// get the user repositories
-	repos, err := h.repos.List(u.ID)
+	repos, err := h.repos.List(u.Id)
 	if err != nil {
 		return badRequest{err}
 	}
@@ -100,7 +100,7 @@ func (h *UserHandler) GetFeed(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// get the user commits
-	commits, err := h.commits.ListUser(u.ID)
+	commits, err := h.commits.ListUser(u.Id)
 	if err != nil {
 		return badRequest{err}
 	}

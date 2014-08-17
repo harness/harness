@@ -5,21 +5,21 @@ import (
 )
 
 type User struct {
-	ID       int64  `meddler:"user_id,pk"     json:"-"`
-	Remote   string `meddler:"user_remote"    json:"remote"`
-	Login    string `meddler:"user_login"     json:"login"`
-	Access   string `meddler:"user_access"    json:"-"`
-	Secret   string `meddler:"user_secret"    json:"-"`
-	Name     string `meddler:"user_name"      json:"name"`
-	Email    string `meddler:"user_email"     json:"email,omitempty"`
-	Gravatar string `meddler:"user_gravatar"  json:"gravatar"`
-	Token    string `meddler:"user_token"     json:"-"`
-	Admin    bool   `meddler:"user_admin"     json:"admin"`
-	Active   bool   `meddler:"user_active"    json:"active"`
-	Syncing  bool   `meddler:"user_syncing"   json:"syncing"`
-	Created  int64  `meddler:"user_created"   json:"created_at"`
-	Updated  int64  `meddler:"user_updated"   json:"updated_at"`
-	Synced   int64  `meddler:"user_synced"    json:"synced_at"`
+	Id       int64  `gorm:"primary_key:yes"     json:"-"`
+	Remote   string `json:"remote"`
+	Login    string `json:"login"`
+	Access   string `json:"-"`
+	Secret   string `json:"-"`
+	Name     string `json:"name"`
+	Email    string `json:"email,omitempty"`
+	Gravatar string `json:"gravatar"`
+	Token    string `json:"-"`
+	Admin    bool   `json:"admin"`
+	Active   bool   `json:"active"`
+	Syncing  bool   `json:"syncing"`
+	Created  int64  `json:"created_at"`
+	Updated  int64  `json:"updated_at"`
+	Synced   int64  `json:"synced_at"`
 }
 
 func NewUser(remote, login, email string) *User {

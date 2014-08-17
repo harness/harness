@@ -85,7 +85,7 @@ func (s *session) UserCookie(r *http.Request) *model.User {
 // SetUser writes the specified username to the session.
 func (s *session) SetUser(w http.ResponseWriter, r *http.Request, u *model.User) {
 	sess, _ := cookies.Get(r, "_sess")
-	sess.Values["uid"] = u.ID
+	sess.Values["uid"] = u.Id
 	sess.Save(r, w)
 	httputil.SetXsrf(w, r, xsrftoken, u.Login)
 }

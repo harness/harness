@@ -76,7 +76,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 
 		// if this is the first user, they
 		// should be an admin.
-		if u.ID == 1 {
+		if u.Id == 1 {
 			u.Admin = true
 		}
 	}
@@ -123,10 +123,10 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 				repo, _ := model.NewRepo(plugin.GetName(), remoteRepo.Owner, remoteRepo.Name)
 				repo.Private = remoteRepo.Private
 				repo.Host = remoteRepo.Host
-				repo.CloneURL = remoteRepo.Clone
-				repo.GitURL = remoteRepo.Git
-				repo.SSHURL = remoteRepo.SSH
-				repo.URL = remoteRepo.URL
+				repo.CloneUrl = remoteRepo.Clone
+				repo.GitUrl = remoteRepo.Git
+				repo.SshUrl = remoteRepo.SSH
+				repo.Url = remoteRepo.URL
 
 				if err := h.repos.Insert(repo); err != nil {
 					// typically we see a failure because the repository already exists

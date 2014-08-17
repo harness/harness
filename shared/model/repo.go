@@ -16,29 +16,29 @@ var (
 type RepoParams map[string]string
 
 type Repo struct {
-	ID     int64  `meddler:"repo_id,pk"        json:"-"`
-	UserID int64  `meddler:"user_id"           json:"-"`
-	Remote string `meddler:"repo_remote"       json:"remote"`
-	Host   string `meddler:"repo_host"         json:"host"`
-	Owner  string `meddler:"repo_owner"        json:"owner"`
-	Name   string `meddler:"repo_name"         json:"name"`
+	Id     int64  `gorm:"primary_key:yes"        json:"-"`
+	UserId int64  `json:"-"`
+	Remote string `json:"remote"`
+	Host   string `json:"host"`
+	Owner  string `json:"owner"`
+	Name   string `json:"name"`
 
-	URL      string `meddler:"repo_url"       json:"url"`
-	CloneURL string `meddler:"repo_clone_url" json:"clone_url"`
-	GitURL   string `meddler:"repo_git_url"   json:"git_url"`
-	SSHURL   string `meddler:"repo_ssh_url"   json:"ssh_url"`
+	Url      string `json:"url"`
+	CloneUrl string `json:"clone_url"`
+	GitUrl   string `json:"git_url"`
+	SshUrl   string `json:"ssh_url"`
 
-	Active      bool   `meddler:"repo_active"       json:"active"`
-	Private     bool   `meddler:"repo_private"      json:"private"`
-	Privileged  bool   `meddler:"repo_privileged"   json:"privileged"`
-	PostCommit  bool   `meddler:"repo_post_commit"  json:"post_commits"`
-	PullRequest bool   `meddler:"repo_pull_request" json:"pull_requests"`
-	PublicKey   string `meddler:"repo_public_key"   json:"-"`
-	PrivateKey  string `meddler:"repo_private_key"  json:"-"`
-	Params      string `meddler:"repo_params"       json:"-"`
-	Timeout     int64  `meddler:"repo_timeout"      json:"timeout"`
-	Created     int64  `meddler:"repo_created"      json:"created_at"`
-	Updated     int64  `meddler:"repo_updated"      json:"updated_at"`
+	Active      bool   `json:"active"`
+	Private     bool   `json:"private"`
+	Privileged  bool   `json:"privileged"`
+	PostCommit  bool   `json:"post_commits"`
+	PullRequest bool   `json:"pull_requests"`
+	PublicKey   string `json:"-"`
+	PrivateKey  string `json:"-"`
+	Params      string `json:"-"`
+	Timeout     int64  `json:"timeout"`
+	Created     int64  `json:"created_at"`
+	Updated     int64  `json:"updated_at"`
 }
 
 func NewRepo(remote, owner, name string) (*Repo, error) {

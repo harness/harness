@@ -1,13 +1,13 @@
 package model
 
 type Perm struct {
-	ID      int64 `meddler:"perm_id,pk"   json:"-"`
-	UserID  int64 `meddler:"user_id"      json:"-"`
-	RepoID  int64 `meddler:"repo_id"      json:"-"`
-	Read    bool  `meddler:"perm_read"    json:"read"`
-	Write   bool  `meddler:"perm_write"   json:"write"`
-	Admin   bool  `meddler:"perm_admin"   json:"admin"`
-	Guest   bool  `meddler:"-"            json:"guest"`
-	Created int64 `meddler:"perm_created" json:"-"`
-	Updated int64 `meddler:"perm_updated" json:"-"`
+	Id      int64 `gorm:"primary_key:yes"   json:"-"`
+	UserId  int64 `json:"-"`
+	RepoId  int64 `json:"-"`
+	Read    bool  `json:"read"`
+	Write   bool  `json:"write"`
+	Admin   bool  `json:"admin"`
+	Guest   bool  `json:"guest" sql:"-"`
+	Created int64 `json:"-"`
+	Updated int64 `json:"-"`
 }

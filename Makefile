@@ -9,8 +9,19 @@ deps:
 	go list github.com/drone/drone/... | xargs go get -t -v
 
 test:
+	# Test with SQLite in memory
 	go vet ./...
 	go test -cover -short ./...
+
+ci_test: test test_psql test_mysql
+
+test_psql:
+	# Test with PostreSQL
+	DATABASE_URL="postgres://postgres@127.0.0.1:5432/drone?sslmode=disable" go test -cover -short ./...
+
+test_mysql:
+	# Test with MySQL
+	DATABASE_URL="mysql://root@127.0.0.1:3306/drone" go test -cover -short ./...
 
 build:
 	go build -o debian/drone/usr/local/bin/drone  -ldflags "-X main.revision $(SHA)" github.com/drone/drone/cmd
@@ -21,7 +32,7 @@ install:
 	install -t /usr/local/bin debian/drone/usr/local/bin/droned 
 
 run:
-	@go run server/main.go
+	@go run server/main.go --dbdebug=true
 
 clean:
 	find . -name "*.out" -delete

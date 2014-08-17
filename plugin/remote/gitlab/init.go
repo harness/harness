@@ -11,7 +11,7 @@ func init() {
 
 func plugin(remote *model.Remote) remote.Remote {
 	return &Gitlab{
-		URL:     remote.URL,
+		URL:     remote.Url,
 		Enabled: remote.Open,
 	}
 }

@@ -1,18 +1,18 @@
 package database
 
 import (
-	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/drone/drone/shared/model"
+	"github.com/jinzhu/gorm"
 )
 
 func TestCommitFind(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewCommitManager(db)
+	commits := NewCommitManager(conn.DB)
 	commit, err := commits.Find(3)
 	if err != nil {
 		t.Errorf("Want Commit from ID, got %s", err)
@@ -25,9 +25,10 @@ func TestCommitFindSha(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewCommitManager(db)
+	commits := NewCommitManager(conn.DB)
 	commit, err := commits.FindSha(2, "master", "7253f6545caed41fb8f5a6fcdb3abc0b81fa9dbf")
 	if err != nil {
+		t.Errorf("Want Commit from SHA, got %s", err)
 		t.Errorf("Want Commit from SHA, got %s", err)
 	}
 
@@ -38,7 +39,7 @@ func TestCommitFindLatest(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewCommitManager(db)
+	commits := NewCommitManager(conn.DB)
 	commit, err := commits.FindLatest(2, "master")
 	if err != nil {
 		t.Errorf("Want Latest Commit, got %s", err)
@@ -51,7 +52,7 @@ func TestCommitFindOutput(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewCommitManager(db)
+	commits := NewCommitManager(conn.DB)
 	out, err := commits.FindOutput(1)
 	if err != nil {
 		t.Errorf("Want Commit stdout, got %s", err)
@@ -67,7 +68,7 @@ func TestCommitList(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewCommitManager(db)
+	commits := NewCommitManager(conn.DB)
 	list, err := commits.List(2)
 	if err != nil {
 		t.Errorf("Want List from RepoID, got %s", err)
@@ -85,7 +86,7 @@ func TestCommitListBranch(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewCommitManager(db)
+	commits := NewCommitManager(conn.DB)
 	list, err := commits.ListBranch(2, "master")
 	if err != nil {
 		t.Errorf("Want List from RepoID, got %s", err)
@@ -103,7 +104,7 @@ func TestCommitListBranches(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewCommitManager(db)
+	commits := NewCommitManager(conn.DB)
 	list, err := commits.ListBranches(2)
 	if err != nil {
 		t.Errorf("Want Branch List from RepoID, got %s", err)
@@ -121,20 +122,20 @@ func TestCommitInsert(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commit := model.Commit{RepoID: 3, Branch: "foo", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"}
-	commits := NewCommitManager(db)
+	commit := model.Commit{RepoId: 3, Branch: "foo", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"}
+	commits := NewCommitManager(conn.DB)
 	if err := commits.Insert(&commit); err != nil {
 		t.Errorf("Want Commit created, got %s", err)
 	}
 
 	// verify that it is ok to add same sha for different branch
-	var err = commits.Insert(&model.Commit{RepoID: 3, Branch: "bar", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"})
+	var err = commits.Insert(&model.Commit{RepoId: 3, Branch: "bar", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"})
 	if err != nil {
 		t.Errorf("Want Commit created, got %s", err)
 	}
 
 	// verify unique remote + remote id constraint
-	err = commits.Insert(&model.Commit{RepoID: 3, Branch: "bar", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"})
+	err = commits.Insert(&model.Commit{RepoId: 3, Branch: "bar", Sha: "85f8c029b902ed9400bc600bac301a0aadb144ac"})
 	if err == nil {
 		t.Error("Want unique constraint violated")
 	}
@@ -145,7 +146,7 @@ func TestCommitUpdate(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewCommitManager(db)
+	commits := NewCommitManager(conn.DB)
 	commit, err := commits.Find(5)
 	if err != nil {
 		t.Errorf("Want Commit from ID, got %s", err)
@@ -165,7 +166,7 @@ func TestCommitUpdate(t *testing.T) {
 		t.Errorf("Want updated Status %v, got %v", want, got)
 	}
 
-	var gotInt64, wantInt64 = updated.ID, commit.ID
+	var gotInt64, wantInt64 = updated.Id, commit.Id
 	if gotInt64 != wantInt64 {
 		t.Errorf("Want commit ID %v, got %v", wantInt64, gotInt64)
 	}
@@ -185,7 +186,7 @@ func TestCommitDelete(t *testing.T) {
 	setup()
 	defer teardown()
 
-	commits := NewCommitManager(db)
+	commits := NewCommitManager(conn.DB)
 	commit, err := commits.Find(1)
 	if err != nil {
 		t.Errorf("Want Commit from ID, got %s", err)
@@ -197,7 +198,7 @@ func TestCommitDelete(t *testing.T) {
 	}
 
 	// check to see if the deleted commit is actually gone
-	if _, err := commits.Find(1); err != sql.ErrNoRows {
+	if _, err := commits.Find(1); err != gorm.RecordNotFound {
 		t.Errorf("Want ErrNoRows, got %s", err)
 	}
 }
@@ -245,12 +246,12 @@ func testCommit(t *testing.T, commit *model.Commit) {
 		t.Errorf("Want Message %v, got %v", want, got)
 	}
 
-	var gotInt64, wantInt64 = commit.ID, int64(3)
+	var gotInt64, wantInt64 = commit.Id, int64(3)
 	if gotInt64 != wantInt64 {
 		t.Errorf("Want ID %v, got %v", wantInt64, gotInt64)
 	}
 
-	gotInt64, wantInt64 = commit.RepoID, int64(2)
+	gotInt64, wantInt64 = commit.RepoId, int64(2)
 	if gotInt64 != wantInt64 {
 		t.Errorf("Want RepoID %v, got %v", wantInt64, gotInt64)
 	}

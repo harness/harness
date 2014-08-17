@@ -60,7 +60,7 @@ func (h *BadgeHandler) GetStatus(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// get the latest commit
-	c, _ := h.commits.FindLatest(arepo.ID, branch)
+	c, _ := h.commits.FindLatest(arepo.Id, branch)
 
 	// if no commit was found then display
 	// the 'none' badge
@@ -102,7 +102,7 @@ func (h *BadgeHandler) GetCC(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// get the latest commits for the repo
-	commits, err := h.commits.List(repo.ID)
+	commits, err := h.commits.List(repo.Id)
 	if err != nil || len(commits) == 0 {
 		return notFound{}
 	}

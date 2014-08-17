@@ -5,22 +5,22 @@ import (
 )
 
 type Commit struct {
-	ID          int64  `meddler:"commit_id,pk"     json:"id"`
-	RepoID      int64  `meddler:"repo_id"          json:"-"`
-	Status      string `meddler:"commit_status"    json:"status"`
-	Started     int64  `meddler:"commit_started"   json:"started_at"`
-	Finished    int64  `meddler:"commit_finished"  json:"finished_at"`
-	Duration    int64  `meddler:"commit_duration"  json:"duration"`
-	Sha         string `meddler:"commit_sha"       json:"sha"`
-	Branch      string `meddler:"commit_branch"    json:"branch"`
-	PullRequest string `meddler:"commit_pr"        json:"pull_request"`
-	Author      string `meddler:"commit_author"    json:"author"`
-	Gravatar    string `meddler:"commit_gravatar"  json:"gravatar"`
-	Timestamp   string `meddler:"commit_timestamp" json:"timestamp"`
-	Message     string `meddler:"commit_message"   json:"message"`
-	Config      string `meddler:"commit_yaml"      json:"-"`
-	Created     int64  `meddler:"commit_created"   json:"created_at"`
-	Updated     int64  `meddler:"commit_updated"   json:"updated_at"`
+	Id          int64  `gorm:"primary_key:yes"     json:"id"`
+	RepoId      int64  `json:"-"`
+	Status      string `json:"status"`
+	Started     int64  `json:"started_at"`
+	Finished    int64  `json:"finished_at"`
+	Duration    int64  `json:"duration"`
+	Sha         string `json:"sha"`
+	Branch      string `json:"branch"`
+	PullRequest string `json:"pull_request"`
+	Author      string `json:"author"`
+	Gravatar    string `json:"gravatar"`
+	Timestamp   string `json:"timestamp"`
+	Message     string `json:"message"`
+	Config      string `json:"-"`
+	Created     int64  `json:"created_at"`
+	Updated     int64  `json:"updated_at"`
 }
 
 // SetAuthor sets the author's email address and calculate the Gravatar hash.
@@ -45,27 +45,27 @@ func (c *Commit) FinishedString() string {
 }
 
 type CommitRepo struct {
-	Remote string `meddler:"repo_remote" json:"remote"`
-	Host   string `meddler:"repo_host"   json:"host"`
-	Owner  string `meddler:"repo_owner"  json:"owner"`
-	Name   string `meddler:"repo_name"   json:"name"`
+	Remote string `json:"remote"`
+	Host   string `json:"host"`
+	Owner  string `json:"owner"`
+	Name   string `json:"name"`
 
-	CommitID    int64  `meddler:"commit_id,pk"     json:"-"`
-	RepoID      int64  `meddler:"repo_id"          json:"-"`
-	Status      string `meddler:"commit_status"    json:"status"`
-	Started     int64  `meddler:"commit_started"   json:"started_at"`
-	Finished    int64  `meddler:"commit_finished"  json:"finished_at"`
-	Duration    int64  `meddler:"commit_duration"  json:"duration"`
-	Sha         string `meddler:"commit_sha"       json:"sha"`
-	Branch      string `meddler:"commit_branch"    json:"branch"`
-	PullRequest string `meddler:"commit_pr"        json:"pull_request"`
-	Author      string `meddler:"commit_author"    json:"author"`
-	Gravatar    string `meddler:"commit_gravatar"  json:"gravatar"`
-	Timestamp   string `meddler:"commit_timestamp" json:"timestamp"`
-	Message     string `meddler:"commit_message"   json:"message"`
-	Config      string `meddler:"commit_yaml"      json:"-"`
-	Created     int64  `meddler:"commit_created"   json:"created_at"`
-	Updated     int64  `meddler:"commit_updated"   json:"updated_at"`
+	CommitID    int64  `son:"-"`
+	RepoID      int64  `json:"-"`
+	Status      string `json:"status"`
+	Started     int64  `json:"started_at"`
+	Finished    int64  `json:"finished_at"`
+	Duration    int64  `json:"duration"`
+	Sha         string `json:"sha"`
+	Branch      string `json:"branch"`
+	PullRequest string `json:"pull_request"`
+	Author      string `json:"author"`
+	Gravatar    string `json:"gravatar"`
+	Timestamp   string `json:"timestamp"`
+	Message     string `json:"message"`
+	Config      string `json:"-"`
+	Created     int64  `json:"created_at"`
+	Updated     int64  `json:"updated_at"`
 }
 
 // Returns the Short (--short) Commit Hash.
