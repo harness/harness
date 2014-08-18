@@ -24,6 +24,18 @@ angular.module('app').filter('toDate', function() {
   }
 });
 
+angular.module('app').filter('pullRequests', function() {
+  return function(commits) {
+    var filtered = [];
+    angular.forEach(commits, function(commit) {
+      if(commit.pull_request.length != 0) {
+        filtered.push(commit);
+      }
+    });
+    return filtered;
+  }
+});
+
 angular.module('app').filter('fullName', function() {
   return function(repo) {
     return repo.owner+"/"+repo.name;

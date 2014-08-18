@@ -139,7 +139,7 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 	$httpProvider.interceptors.push(function($q, $location) {
 		return {
 			'responseError': function(rejection) {
-				if (rejection.status == 401) {
+				if (rejection.status == 401 && rejection.config.url != "/v1/user") {
 					$location.path('/login');
 				}
 				return $q.reject(rejection);
