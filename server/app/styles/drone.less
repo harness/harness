@@ -2,20 +2,27 @@
 @import "base.less";
 
 // Standard Colors
+// http://www.google.com/design/spec/style/color.html#color-ui-color-palette
 
 @link: #68c598;
 @link2: #4ab1ce;
-@cneg: #e97041;
-@cok: #68c598;
-@c0: #262626;
+@cfailure: #f44336;
+@csuccess: #7cb342;
+@cpending: #ffb300;
+@c0: #212121;
 @c1: #45494b;
 @c2: #849299;
+
+
+// @csuccess: #68c598;
+// @cfailure: #e97041;
 
 // Standard Fonts
 
 @logo: 'Orbitron';
 @sans: 'Open Sans';
 @mono: 'Droid Sans Mono';
+@fontawesome: 'FontAwesome';
 
 html {
 	height: 100%;
@@ -64,6 +71,7 @@ body {
 	font-size: 15px;
 	line-height: 55px;
 	text-align: center;
+	box-shadow: 1px 1px 4px rgba(0,0,0,0.5);
 
 	.brand {
 		display: inline-block;
@@ -296,7 +304,7 @@ nav {
 
 		&[data-status="Success"] {
 			em {
-				border-top:5px solid @cok;
+				border-top:5px solid @csuccess;
 			}
 		}
 
@@ -304,11 +312,11 @@ nav {
 		&[data-status="Failure"],
 		&[data-status="Error"] {
 			em {
-				border-top:5px solid @cneg;
+				border-top:5px solid @cfailure;
 			}
 
 			.l-box {
-				border: 1px solid @cneg;
+				border: 1px solid @cfailure;
 				&:hover {
 					border:1px solid @c0;
 				}
@@ -321,7 +329,7 @@ nav {
 				right:12px;
 				top:-8px;
 				content:"\f111";
-				color: @cneg;
+				color: @cfailure;
 				min-width:16px;
 				text-align:center;
 			}
@@ -467,7 +475,7 @@ nav {
 
 	.progressContainer {
 		height:5px;
-		background-color: @cneg;
+		background-color: @cfailure;
 		position: absolute;
 		bottom:65px;
 		left:20px;
@@ -481,11 +489,11 @@ nav {
 		}
 
 		.activeProgress {
-			background-color: @cok;
+			background-color: @csuccess;
 		}
 
 		.secondaryProgress {
-			background-color: @cok;
+			background-color: @csuccess;
 		}
 	}
 }
@@ -507,7 +515,7 @@ nav {
 				padding:20px 45px;
 				display:block;
 				border-bottom: 1px solid #dadcdd;
-				color:#262626;
+				color: @c0;
 				text-decoration:none;
 				position:relative;
 				.border_box;
@@ -556,13 +564,13 @@ nav {
 				&[data-status="Failure"] {
 					background: #fff9f5;
 					&:before {
-						background: @cneg;
+						background: @cfailure;
 						content: "!";
 					}
 				}
 
 				&[data-status="Success"]:before {
-					background: @cok;
+					background: @csuccess;
 				}
 			}
 		}
@@ -728,7 +736,7 @@ nav {
 		.card[data-status="Failure"],
 		.card[data-status="Error"] {
 			.l-box {
-				border: 1px solid @cneg;
+				border: 1px solid @cfailure;
 				&:hover {
 					border:1px solid @c0;
 				}
@@ -805,7 +813,7 @@ nav {
 				margin-left:20px;
 				margin-top:15px;
 				&.fa-check-circle-o {
-					color:@cok;
+					color:@csuccess;
 				}
 			}
 		}
@@ -1045,7 +1053,7 @@ nav {
 
 		.card[data-status="Success"] {
 			&:nth-child(2) .l-box {
-				border-color: @cok;
+				border-color: @csuccess;
 				&:hover {
 					border:1px solid @c0;
 				}
@@ -1056,7 +1064,7 @@ nav {
 		.card[data-status="Failure"],
 		.card[data-status="Error"] {
 			&:nth-child(2) .l-box {
-				border-color: @cneg;
+				border-color: @cfailure;
 				&:hover {
 					border:1px solid @c0;
 				}
@@ -1075,7 +1083,7 @@ nav {
 			left: 0px;
 			right: 0px;
 			margin: 0px;
-			background: #fee172;
+			background: @cpending;
 			background-image: -webkit-linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0.55) 75%, transparent 75%, transparent);
 			background-image: linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0.55) 75%, transparent 75%, transparent);
 			background-repeat: repeat-x;
@@ -1111,7 +1119,7 @@ nav {
 			padding-bottom:50px;
 			h1 {
 			    font-size: 26px;
-			    color: #262626;
+			    color: @c0;
 			}
 			p {
 			    font-size: 16px;
@@ -1183,7 +1191,7 @@ nav {
 		.large {font-size:18px; padding-bottom:5px;}
 		.time {float:right; margin-left:8px;}
 		.photo {margin-right:4px;}
-		.negative {color:@cneg;}
+		.negative {color:@cfailure;}
 		.photoline {display:inline-block; position:relative; top:-10px; font-weight:bold;}
 		.small {padding-bottom:5px; font-weight:bold; font-size:12px;}
 	}
@@ -1199,18 +1207,18 @@ nav {
 		font-weight:bold;
 		&:before {float:left; margin-left:-5px;}
 		&.status_ok {
-			color:@cok; border-color:@cok;
+			color:@csuccess; border-color:@csuccess;
 			&:before {content:"\f00c"; font-family:'FontAwesome';}
 		}
 		&.status_error {
-			color:@cneg; border-color:@cneg;
+			color:@cfailure; border-color:@cfailure;
 			&:before {content:"!";}
 		}
 	}
 
 	.result {
 		background:@link2;
-		background:@cok;
+		background:@csuccess;
 		color:#fff;
 		margin:-30px -30px -6px;
 		padding:30px;
@@ -1233,7 +1241,7 @@ nav {
 		&[data-result="Killed"],
 		&[data-result="Failure"],
 		&[data-result="Error"] {
-			background: @cneg;
+			background: @cfailure;
 			.status:before {
 				content:"!";
 			}
@@ -1241,7 +1249,14 @@ nav {
 
 		&[data-result="Pending"],
 		&[data-result="Started"] {
-			background:@link2;
+			background:@cpending;
+			.status:before {
+				content:"\f021";
+				-webkit-animation: spin 2s infinite linear;
+				-moz-animation: spin 2s infinite linear;
+				-o-animation: spin 2s infinite linear;
+				animation: spin 2s infinite linear;
+			}
 		}
 	}
 }
@@ -1249,7 +1264,9 @@ nav {
 #main {
 	flex-grow: 2;
 	&.output {
-		background: #525252;
+		position:relative;
+		//background: #424242;
+		background: @c0;
 		pre {
 			margin:0px auto;
 			padding:30px;
@@ -1258,6 +1275,21 @@ nav {
 			font-size:13px;
 			white-space: pre-wrap;
 			overflow: hidden;
+		}
+
+		&[data-result="Pending"]:after,
+		&[data-result="Started"]:after {
+			position: absolute;
+			right:20px;
+			bottom:20px;
+			color:#9e9e9e;
+			font-size:18px;
+			font-family:@fontawesome;
+			content: "\f021";
+			-webkit-animation: spin 2s infinite linear;
+				-moz-animation: spin 2s infinite linear;
+				-o-animation: spin 2s infinite linear;
+				animation: spin 2s infinite linear;
 		}
 	}
 }
@@ -1441,7 +1473,7 @@ nav {
 					border-top:1px solid #FFF;
 				}
 				&:nth-child(2):hover > .pure-g {
-					border-top:1px solid #262626;
+					border-top:1px solid @c0;
 				}
 				i {
 					margin-left:0px;
