@@ -13,6 +13,9 @@
 @c1: #45494b;
 @c2: #849299;
 
+@grey50: #fafafa;
+@grey100: #f5f5f5;
+@grey200: #eeeeee;
 
 // @csuccess: #68c598;
 // @cfailure: #e97041;
@@ -236,7 +239,7 @@ nav {
 	font-size: 22px;
 	white-space: nowrap;
 	color: rgba(0, 0, 0, 0.7);
-	border-bottom:1px solid #EEE;
+	border-bottom:1px solid @grey200;
 	position:relative;
 	z-index:2;
 
@@ -261,7 +264,7 @@ nav {
 			color: #FFF;
 			text-transform: lowercase;
 			font-size: 14px;
-			background: #f2f5f8;
+			background: @grey100;
 			padding: 10px 30px;
 			color: rgba(0,0,0,0.5);
 			i {
@@ -702,11 +705,11 @@ nav {
 
 #homepage {
 	width:100%;
-	background:#f2f5f8;
+	background:@grey50;
 
 	section {
 		padding:40px 0px 20px 0px;
-		border-bottom:1px solid #EEE;
+		//border-bottom:1px solid #EEE;
 
 		h1 {
 			text-align: center;
@@ -748,7 +751,7 @@ nav {
 #repospage {
 	width:100%;
 	section {
-		border-bottom:1px solid #eee;
+		border-bottom:1px solid @grey200;
 		max-width:768px;
 		margin:0px auto;
 		margin-top:30px;
@@ -779,7 +782,7 @@ nav {
 			
 			&> div  {
 				.border_box;
-				border:1px solid #eee;
+				border:1px solid @grey200;
 				border-bottom:1px solid #fff;
 				.transition(.4s border linear);
 
@@ -823,7 +826,7 @@ nav {
 #userspage {
 	width:100%;
 	section {
-		border-bottom:1px solid #eee;
+		border-bottom:1px solid @grey200;
 		max-width:768px;
 		margin:0px auto;
 		margin-top:30px;
@@ -854,7 +857,7 @@ nav {
 			
 			&> div  {
 				.border_box;
-				border:1px solid #eee;
+				border:1px solid @grey200;
 				border-bottom:1px solid #fff;
 				.transition(.4s border linear);
 
@@ -899,7 +902,7 @@ nav {
 	width:100%;
 	section {
 		.border_box;
-		border:1px solid #eee;
+		border:1px solid @grey200;
 		max-width:768px;
 		margin:0px auto;
 		margin-top:30px;
@@ -916,7 +919,7 @@ nav {
 			min-height:50px;
 			margin-top:10px;
 			font-family:@mono;
-			border:1px solid #eee;
+			border:1px solid @grey200;
 			padding:20px;
 			width:100%;
 			max-width:100%;
@@ -942,7 +945,7 @@ nav {
 		max-width:768px;
 		margin:0px auto;
 		margin-top:30px;
-		border:1px solid #eee;
+		border:1px solid @grey200;
 
 		&.profile {
 			&> div:first-child {
@@ -1033,11 +1036,11 @@ nav {
 
 #repopage {
 	width:100%;
-	background:#f2f5f8;
+	background:@grey50;
 
 	section {
 		padding:40px 0px 20px 0px;
-		border-bottom:1px solid #EEE;
+		//border-bottom:1px solid #EEE;
 		&> div {
 			max-width:1180px;
 			margin:0px auto;
