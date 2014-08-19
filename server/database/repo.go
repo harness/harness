@@ -81,7 +81,14 @@ func (db *repoManager) Insert(repo *model.Repo) error {
 func (db *repoManager) Update(repo *model.Repo) error {
 	repo.Updated = time.Now().Unix()
 
-	return db.ORM.Table("repos").Where(model.Repo{Id: repo.Id}).Update(repo).Error
+	// Fix bool update https://github.com/jinzhu/gorm/issues/202#issuecomment-52582525
+	return db.ORM.Table("repos").Where(model.Repo{Id: repo.Id}).Update(repo).
+		Update(map[string]interface{}{
+		"Active":      repo.Active,
+		"Private":     repo.Private,
+		"PostCommit":  repo.PostCommit,
+		"PullRequest": repo.PullRequest,
+		"Privileged":  repo.Privileged}).Error
 }
 
 func (db *repoManager) Delete(repo *model.Repo) error {

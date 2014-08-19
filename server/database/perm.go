@@ -73,7 +73,9 @@ func (db *permManager) Grant(u *model.User, r *model.Repo, read bool, write bool
 	if perm.Id == 0 {
 		return db.ORM.Create(perm).Error
 	} else {
-		return db.ORM.Model(perm).UpdateColumns(perm).Error
+		// Fix bool update https://github.com/jinzhu/gorm/issues/202#issuecomment-52582525
+		return db.ORM.Table("perms").Where(model.Perm{Id: perm.Id}).Update(perm).
+			Update(map[string]interface{}{"Read": read, "Write": write, "Admin": admin}).Error
 	}
 }
 
