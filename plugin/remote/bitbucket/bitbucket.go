@@ -8,6 +8,7 @@ import (
 
 	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/shared/httputil"
+	"github.com/drone/drone/shared/model"
 	"github.com/drone/go-bitbucket/bitbucket"
 	"github.com/drone/go-bitbucket/oauth1"
 )
@@ -36,7 +37,7 @@ func (b *Bitbucket) GetHost() (host string) {
 
 // GetHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
-func (b *Bitbucket) GetHook(r *http.Request) (*remote.Hook, error) {
+func (b *Bitbucket) GetHook(r *http.Request, _ *model.User) (*remote.Hook, error) {
 	// get the payload from the request
 	payload := r.FormValue("payload")
 

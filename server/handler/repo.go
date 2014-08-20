@@ -133,7 +133,7 @@ func (h *RepoHandler) PostRepo(w http.ResponseWriter, r *http.Request) error {
 	plugin := remotePlugin(remoteServer)
 
 	// post commit hook url
-	hook := fmt.Sprintf("%s://%s/v1/hook/%s", httputil.GetScheme(r), httputil.GetHost(r), plugin.GetName())
+	hook := fmt.Sprintf("%s://%s/v1/hook/%s/%s/%s", httputil.GetScheme(r), httputil.GetHost(r), plugin.GetHost(), owner, name)
 
 	// activate the repository in the remote system
 	client := plugin.GetClient(user.Access, user.Secret)

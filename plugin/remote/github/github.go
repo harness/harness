@@ -11,6 +11,7 @@ import (
 
 	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/shared/httputil"
+	"github.com/drone/drone/shared/model"
 	"github.com/drone/go-github/github"
 	"github.com/drone/go-github/oauth2"
 	"github.com/gorilla/securecookie"
@@ -49,7 +50,7 @@ func (g *Github) GetHost() (host string) {
 
 // GetHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
-func (g *Github) GetHook(r *http.Request) (*remote.Hook, error) {
+func (g *Github) GetHook(r *http.Request, _ *model.User) (*remote.Hook, error) {
 	// handle github ping
 	if r.Header.Get("X-Github-Event") == "ping" {
 		return nil, nil
