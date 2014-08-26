@@ -28,11 +28,12 @@ type Sender interface {
 // for notifying a user, or group of users,
 // when their Build has completed.
 type Notification struct {
-	Email   *Email   `yaml:"email,omitempty"`
-	Webhook *Webhook `yaml:"webhook,omitempty"`
-	Hipchat *Hipchat `yaml:"hipchat,omitempty"`
-	Irc     *IRC     `yaml:"irc,omitempty"`
-	Slack   *Slack   `yaml:"slack,omitempty"`
+	Email   	*Email   	`yaml:"email,omitempty"`
+	Webhook 	*Webhook 	`yaml:"webhook,omitempty"`
+	Hipchat 	*Hipchat 	`yaml:"hipchat,omitempty"`
+	Irc     	*IRC     	`yaml:"irc,omitempty"`
+	Slack   	*Slack   	`yaml:"slack,omitempty"`
+	Flowdock  *Flowdock	`yaml:"flowdock,omitempty"`
 }
 
 func (n *Notification) Send(context *Context) error {
@@ -61,5 +62,10 @@ func (n *Notification) Send(context *Context) error {
 		n.Slack.Send(context)
 	}
 
+	// send flowdock notifications
+	if n.Flowdock != nil {
+		n.Flowdock.Send(context)
+	}
+	
 	return nil
 }
