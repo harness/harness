@@ -38,7 +38,7 @@ func (f *Flowdock) Send(context *Context) error {
   return nil
 }
 
-func getBuildUrl(context *Context) string {
+func (f *Flowdock) getBuildUrl(context *Context) string {
 	branchQuery := url.Values{}
 	if context.Commit.Branch != "" {
 		branchQuery.Set("branch", context.Commit.Branch)
@@ -47,19 +47,19 @@ func getBuildUrl(context *Context) string {
 	return fmt.Sprintf("%s/%s/commit/%s?%s", context.Host, context.Repo.Slug, context.Commit.Hash, branchQuery.Encode())
 }
 
-func getRepoUrl(context *Context) string {
+func (f *Flowdock) getRepoUrl(context *Context) string {
   return fmt.Sprintf("%s/%s", context.Host, context.Repo.Slug)
 }
 
-func getMessage(context *Context) string {
-  buildUrl := fmt.Sprintf("<a href=\"%s\"><span class=\"commit-sha\">%s</span></a>", getBuildUrl(context), context.Commit.HashShort())
-  return fmt.Sprintf(flowdockMessage, context.Repo.Name, buildUrl, context.Commit.Status, context.Commit.Author, context.Commit.Message, getRepoUrl(context))
+func (f *Flowdock) getMessage(context *Context) string {
+  buildUrl := fmt.Sprintf("<a href=\"%s\"><span class=\"commit-sha\">%s</span></a>", f.getBuildUrl(context), context.Commit.HashShort())
+  return fmt.Sprintf(flowdockMessage, context.Repo.Name, buildUrl, context.Commit.Status, context.Commit.Author, context.Commit.Message, f.getRepoUrl(context))
 }
 
 func (f *Flowdock) sendStarted(context *Context) error {
   fromAddress := context.Commit.Author
   subject := fmt.Sprintf(flowdockStartedSubject, context.Repo.Name, context.Commit.Branch)
-  msg := getMessage(context)
+  msg := f.getMessage(context)
 	tags := strings.Split(f.Tags, ",")
   return f.send(fromAddress, subject, msg, tags)
 }
@@ -68,7 +68,7 @@ func (f *Flowdock) sendFailure(context *Context) error {
   fromAddress := flowdockBuildFailEmail
 	tags := strings.Split(f.Tags, ",")
   subject := fmt.Sprintf(flowdockFailureSubject, context.Repo.Name, context.Commit.Branch)
-  msg := getMessage(context)
+  msg := f.getMessage(context)
   return f.send(fromAddress, subject, msg, tags)
 }
 
@@ -76,7 +76,7 @@ func (f *Flowdock) sendSuccess(context *Context) error {
 	fromAddress := flowdockBuildOkEmail
   tags := strings.Split(f.Tags, ",")
   subject := fmt.Sprintf(flowdockSuccessSubject, context.Repo.Name, context.Commit.Branch)
-  msg := getMessage(context)
+  msg := f.getMessage(context)
   return f.send(fromAddress, subject, msg, tags)
 }
 
