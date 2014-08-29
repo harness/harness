@@ -175,6 +175,10 @@
 			"Rev": "2abea075ec076abf0572d29bdb28ae7da64cfb7a"
 		},
 		{
+			"ImportPath": "github.com/stvp/flowdock",
+			"Rev": "50362abeabebf40b0f56a326d62f17e61a59302b"
+		},
+		{
 			"ImportPath": "launchpad.net/goyaml",
 			"Comment": "51",
 			"Rev": "gustavo@niemeyer.net-20140305200416-7gh64vkcckre5mob"
