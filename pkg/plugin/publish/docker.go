@@ -14,47 +14,56 @@ type Docker struct {
 	Dockerfile string `yaml:"docker_file"`
 
 	// Connection information for the docker server that will build the image
-	DockerServer string `yaml:"docker_server"`
-	DockerServerPort   int	`yaml:"docker_port"`
+	DockerServer     string `yaml:"docker_server"`
+	DockerServerPort int    `yaml:"docker_port"`
 	// The Docker client version to download. This must match the docker version on the server
 	DockerVersion string `yaml:"docker_version"`
 
 	// Optional Arguments to allow finer-grained control of registry
 	// endpoints
 	RegistryLoginUrl string `yaml:"registry_login_url"`
-	ImageName string `yaml:"image_name"`
-	RegistryLogin bool `yaml:"registry_login"`
+	ImageName        string `yaml:"image_name"`
+	RegistryLogin    bool   `yaml:"registry_login"`
 
 	// Authentication credentials for index.docker.io
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
-	Email	string `yaml:"email"`
+	Email    string `yaml:"email"`
 
 	// Keep the build on the Docker host after pushing?
 	KeepBuild bool `yaml:"keep_build"`
 	// Do we want to override "latest" automatically with this build?
-	PushLatest bool `yaml:"push_latest"`
-	CustomTag string `yaml:"custom_tag"`
-	Branch string `yaml:"branch"`
+	PushLatest bool   `yaml:"push_latest"`
+	CustomTag  string `yaml:"custom_tag"`
+	Branch     string `yaml:"branch"`
 }
 
 // Write adds commands to the buildfile to do the following:
 // 1. Install the docker client in the Drone container.
 // 2. Build a docker image based on the dockerfile defined in the config.
 // 3. Push that docker image to index.docker.io.
-// 4. Delete the docker image on the server it was build on so we conserve disk space.
+// 4. Delete the docker image on the server it was built on so we conserve disk space.
 func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	if len(d.DockerServer) == 0 || d.DockerServerPort == 0 || len(d.DockerVersion) == 0 ||
 		len(d.ImageName) == 0 {
 		f.WriteCmdSilent(`echo -e "Docker Plugin: Missing argument(s)"\n\n`)
-		if len(d.DockerServer) == 0  { f.WriteCmdSilent(`echo -e "\tdocker_server not defined in yaml`) }
-		if d.DockerServerPort == 0   { f.WriteCmdSilent(`echo -e "\tdocker_port not defined in yaml`) }
-		if len(d.DockerVersion) == 0 { f.WriteCmdSilent(`echo -e "\tdocker_version not defined in yaml`) }
-		if len(d.ImageName) == 0     { f.WriteCmdSilent(`echo -e "\timage_name not defined in yaml`) }
+		if len(d.DockerServer) == 0 {
+			f.WriteCmdSilent(`echo -e "\tdocker_server not defined in yaml`)
+		}
+		if d.DockerServerPort == 0 {
+			f.WriteCmdSilent(`echo -e "\tdocker_port not defined in yaml`)
+		}
+		if len(d.DockerVersion) == 0 {
+			f.WriteCmdSilent(`echo -e "\tdocker_version not defined in yaml`)
+		}
+		if len(d.ImageName) == 0 {
+			f.WriteCmdSilent(`echo -e "\timage_name not defined in yaml`)
+		}
 		return
 	}
 
 	// Ensure correct apt-get has the https method-driver as per (http://askubuntu.com/questions/165676/)
+	f.WriteCmd("sudo apt-get -y update")
 	f.WriteCmd("sudo apt-get install apt-transport-https")
 
 	// Install Docker on the container
@@ -105,7 +114,7 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	f.WriteCmd(fmt.Sprintf("docker -H %s push %s", dockerServerUrl, d.ImageName))
 
 	// Delete the image from the docker server we built on.
-	if ! d.KeepBuild {
+	if !d.KeepBuild {
 		f.WriteCmd(fmt.Sprintf("docker -H %s rmi %s:%s",
 			dockerServerUrl, d.ImageName, imageTag))
 		if d.PushLatest {
