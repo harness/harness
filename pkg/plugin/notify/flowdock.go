@@ -85,5 +85,6 @@ func (f *Flowdock) send(fromAddress, subject, message string, tags []string) err
 
   c := flowdock.Client{Token: f.Token, Source: f.Source, FromName: "drone.io", FromAddress: fromAddress, Tags: tags}
 
-  return c.Inbox(subject, message)
+  go c.Inbox(subject, message)
+  return nil
 }
