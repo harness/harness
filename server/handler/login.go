@@ -87,7 +87,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	u.Secret = login.Secret
 	u.Name = login.Name
 	u.SetEmail(login.Email)
-	u.Syncing = u.IsStale()
+	u.Syncing = true //u.IsStale() // todo (badrydzewski) should not always sync
 	if err := h.users.Update(u); err != nil {
 		return badRequest{err}
 	}
