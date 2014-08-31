@@ -8,7 +8,8 @@
 #         
 #DRONED_OPTS="--port=:80"
 
-DATABASE_URL=sqlite:///var/lib/drone/drone.sqlite
+DRONE_DRIVER=sqlite3
+DRONE_DATASOURCE=/var/lib/drone/drone.sqlite
 
 # Email configuration
 #SMTP_HOST=
