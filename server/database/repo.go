@@ -1,11 +1,10 @@
 package database
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/drone/drone/shared/model"
-	"github.com/russross/meddler"
+	"github.com/jinzhu/gorm"
 )
 
 type RepoManager interface {
@@ -31,48 +30,61 @@ type RepoManager interface {
 	//ListPublic(user int64) ([]*Repo, error)
 }
 
-func NewRepoManager(db *sql.DB) RepoManager {
-	return &repoManager{db}
+// A list of repositories when user has access
+const repoListQuery = `
+SELECT repos.* 
+FROM repos 
+JOIN perms p ON p.repo_id = repos.id
+	WHERE p.user_id = ?
+	AND p.read = '1'
+ORDER BY repos.id ASC
+`
+
+func NewRepoManager(db *gorm.DB) RepoManager {
+	return &repoManager{ORM: db}
 }
 
 type repoManager struct {
-	*sql.DB
+	ORM *gorm.DB
 }
 
 func (db *repoManager) Find(id int64) (*model.Repo, error) {
-	const query = "select * from repos where repo_id = ?"
-	var repo = model.Repo{}
-	var err = meddler.QueryRow(db, &repo, query, id)
+	repo := model.Repo{}
+
+	err := db.ORM.First(&repo, id).Error
 	return &repo, err
 }
 
-func (db *repoManager) FindName(remote, owner, name string) (*model.Repo, error) {
-	const query = "select * from repos where repo_host = ? and repo_owner = ? and repo_name = ?"
-	var repo = model.Repo{}
-	var err = meddler.QueryRow(db, &repo, query, remote, owner, name)
+func (db *repoManager) FindName(host, owner, name string) (*model.Repo, error) {
+	repo := model.Repo{}
+
+	err := db.ORM.Where(&model.Repo{Host: host, Owner: owner, Name: name}).First(&repo).Error
 	return &repo, err
 }
 
 func (db *repoManager) List(user int64) ([]*model.Repo, error) {
-	const query = "select * from repos where repo_id IN (select repo_id from perms where user_id = ?)"
 	var repos []*model.Repo
-	err := meddler.QueryAll(db, &repos, query, user)
+
+	// Get all permited repos
+	err := db.ORM.Raw(repoListQuery, user).Find(&repos).Error
+
 	return repos, err
 }
 
 func (db *repoManager) Insert(repo *model.Repo) error {
 	repo.Created = time.Now().Unix()
 	repo.Updated = time.Now().Unix()
-	return meddler.Insert(db, "repos", repo)
+
+	return db.ORM.Create(repo).Error
 }
 
 func (db *repoManager) Update(repo *model.Repo) error {
 	repo.Updated = time.Now().Unix()
-	return meddler.Update(db, "repos", repo)
+
+	// Fix bool update https://github.com/jinzhu/gorm/issues/202#issuecomment-52582525
+	return db.ORM.Save(repo).Error
 }
 
 func (db *repoManager) Delete(repo *model.Repo) error {
-	const stmt = "delete from repos where repo_id = ?"
-	_, err := db.Exec(stmt, repo.ID)
-	return err
+	return db.ORM.Delete(repo).Error
 }

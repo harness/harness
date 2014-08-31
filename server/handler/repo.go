@@ -106,7 +106,7 @@ func (h *RepoHandler) PostRepo(w http.ResponseWriter, r *http.Request) error {
 	repo.Active = true
 	repo.PullRequest = true
 	repo.PostCommit = true
-	repo.UserID = user.ID
+	repo.UserId = user.Id
 
 	// generate the rsa key
 	key, err := sshutil.GeneratePrivateKey()
@@ -285,7 +285,7 @@ func (h *RepoHandler) GetFeed(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// lists the most recent commits across all branches.
-	commits, err := h.commits.List(repo.ID)
+	commits, err := h.commits.List(repo.Id)
 	if err != nil {
 		return notFound{err}
 	}

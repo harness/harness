@@ -1,26 +1,25 @@
 package main
 
 import (
-	"database/sql"
 	"flag"
 	"net/http"
 	"runtime"
 	"strings"
 
 	"github.com/drone/drone/server/database"
-	"github.com/drone/drone/server/database/schema"
+	"github.com/drone/drone/server/database/connection"
 	"github.com/drone/drone/server/handler"
 	"github.com/drone/drone/server/pubsub"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/server/worker"
 	"github.com/drone/drone/shared/build/log"
+	"github.com/drone/drone/shared/migrationutil"
 	"github.com/drone/drone/shared/model"
 
 	"github.com/gorilla/pat"
 	//"github.com/justinas/nosurf"
 	"github.com/GeertJohan/go.rice"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/russross/meddler"
+	"github.com/jinzhu/gorm"
 
 	_ "github.com/drone/drone/plugin/remote/bitbucket"
 	_ "github.com/drone/drone/plugin/remote/github"
@@ -31,13 +30,6 @@ var (
 	// port the server will run on
 	port string
 
-	// database driver used to connect to the database
-	driver string
-
-	// driver specific connection information. In this
-	// case, it should be the location of the SQLite file
-	datasource string
-
 	// optional flags for tls listener
 	sslcert string
 	sslkey  string
@@ -46,35 +38,43 @@ var (
 	version  string = "0.3-dev"
 	revision string
 
+	// Database debuger
+	dbdebug bool
+
 	// Number of concurrent build workers to run
 	// default to number of CPUs on machine
 	workers int
 )
 
 func main() {
-
 	log.SetPriority(log.LOG_NOTICE)
 
 	flag.StringVar(&port, "port", ":8080", "")
-	flag.StringVar(&driver, "driver", "sqlite3", "")
-	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
 	flag.StringVar(&sslcert, "sslcert", "", "")
 	flag.StringVar(&sslkey, "sslkey", "", "")
+	flag.BoolVar(&dbdebug, "dbdebug", false, "")
 	flag.IntVar(&workers, "workers", runtime.NumCPU(), "")
 	flag.Parse()
 
-	// setup the database
-	meddler.Default = meddler.SQLite
-	db, _ := sql.Open(driver, datasource)
-	schema.Load(db)
+	// Create database connection
+	conn := connection.NewConnection()
+	conn.Open()
+
+	// Setup SQL logs
+	conn.DB.LogMode(dbdebug)
+	defer conn.DB.Close()
+
+	if err := migrate(conn.DB); err != nil {
+		panic(err)
+	}
 
 	// setup the database managers
-	repos := database.NewRepoManager(db)
-	users := database.NewUserManager(db)
-	perms := database.NewPermManager(db)
-	commits := database.NewCommitManager(db)
-	servers := database.NewServerManager(db)
-	remotes := database.NewRemoteManager(db)
+	repos := database.NewRepoManager(conn.DB)
+	users := database.NewUserManager(conn.DB)
+	perms := database.NewPermManager(conn.DB)
+	commits := database.NewCommitManager(conn.DB)
+	servers := database.NewServerManager(conn.DB)
+	remotes := database.NewRemoteManager(conn.DB)
 	//configs := database.NewConfigManager(filepath.Join(home, "config.toml"))
 
 	// message broker
@@ -156,8 +156,15 @@ func init_flags() {
 
 }
 
-func init_database() {
+func migrate(db *gorm.DB) error {
+	// Create migration util
+	migrations := migrationutil.New(db, true)
 
+	// Select all migrates
+	migrations.All()
+
+	// Run migration
+	return migrations.Migrate()
 }
 
 func init_workers() {

@@ -88,7 +88,7 @@ func (w *worker) Execute(r *model.Request) {
 	// notify all listeners that the build is started
 	commitc := w.pubsub.Register("_global")
 	commitc.Publish(r)
-	stdoutc := w.pubsub.RegisterOpts(r.Commit.ID, pubsub.ConsoleOpts)
+	stdoutc := w.pubsub.RegisterOpts(r.Commit.Id, pubsub.ConsoleOpts)
 	defer stdoutc.Close()
 
 	// create a special buffer that will also
@@ -116,7 +116,7 @@ func (w *worker) Execute(r *model.Request) {
 	path := r.Repo.Host + "/" + r.Repo.Owner + "/" + r.Repo.Name
 	repo := &repo.Repo{
 		Name:   path,
-		Path:   r.Repo.CloneURL,
+		Path:   r.Repo.CloneUrl,
 		Branch: r.Commit.Branch,
 		Commit: r.Commit.Sha,
 		PR:     r.Commit.PullRequest,

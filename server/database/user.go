@@ -1,11 +1,10 @@
 package database
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/drone/drone/shared/model"
-	"github.com/russross/meddler"
+	"github.com/jinzhu/gorm"
 )
 
 type UserManager interface {
@@ -36,92 +35,61 @@ type UserManager interface {
 
 // userManager manages a list of users in a SQL database.
 type userManager struct {
-	*sql.DB
+	ORM *gorm.DB
 }
-
-// SQL query to retrieve a User by remote login.
-const findUserLoginQuery = `
-SELECT *
-FROM users
-WHERE user_remote=?
-AND   user_login=?
-LIMIT 1
-`
-
-// SQL query to retrieve a User by remote login.
-const findUserTokenQuery = `
-SELECT *
-FROM users
-WHERE user_token=?
-LIMIT 1
-`
-
-// SQL query to retrieve a list of all users.
-const listUserQuery = `
-SELECT *
-FROM users
-ORDER BY user_name ASC
-`
-
-// SQL statement to delete a User by ID.
-const deleteUserStmt = `
-DELETE FROM users WHERE user_id=?
-`
-
-// SQL statement to check if users exist.
-const confirmUserStmt = `
-select 0 from users limit 1
-`
 
 // NewUserManager initiales a new UserManager intended to
 // manage and persist commits.
-func NewUserManager(db *sql.DB) UserManager {
-	return &userManager{db}
+func NewUserManager(db *gorm.DB) UserManager {
+	return &userManager{ORM: db}
 }
 
 func (db *userManager) Find(id int64) (*model.User, error) {
-	dst := model.User{}
-	err := meddler.Load(db, "users", &dst, id)
-	return &dst, err
+	person := model.User{}
+
+	err := db.ORM.First(&person, id).Error
+	return &person, err
 }
 
 func (db *userManager) FindLogin(remote, login string) (*model.User, error) {
-	dst := model.User{}
-	err := meddler.QueryRow(db, &dst, findUserLoginQuery, remote, login)
-	return &dst, err
+	person := model.User{}
+
+	err := db.ORM.Where(&model.User{Remote: remote, Login: login}).First(&person).Error
+	return &person, err
 }
 
 func (db *userManager) FindToken(token string) (*model.User, error) {
-	dst := model.User{}
-	err := meddler.QueryRow(db, &dst, findUserTokenQuery, token)
-	return &dst, err
+	person := model.User{}
+
+	err := db.ORM.Where(&model.User{Token: token}).First(&person).Error
+	return &person, err
 }
 
 func (db *userManager) List() ([]*model.User, error) {
-	var dst []*model.User
-	err := meddler.QueryAll(db, &dst, listUserQuery)
-	return dst, err
+	var users []*model.User
+
+	err := db.ORM.Find(&users).Error
+	return users, err
 }
 
 func (db *userManager) Insert(user *model.User) error {
 	user.Created = time.Now().Unix()
 	user.Updated = time.Now().Unix()
-	return meddler.Insert(db, "users", user)
+
+	return db.ORM.Create(user).Error
 }
 
 func (db *userManager) Update(user *model.User) error {
 	user.Updated = time.Now().Unix()
-	return meddler.Update(db, "users", user)
+	return db.ORM.Save(user).Error
 }
 
 func (db *userManager) Delete(user *model.User) error {
-	_, err := db.Exec(deleteUserStmt, user.ID)
-	return err
+	return db.ORM.Delete(user).Error
 }
 
 func (db *userManager) Exist() bool {
-	row := db.QueryRow(confirmUserStmt)
 	var result int
-	row.Scan(&result)
+	db.ORM.Table("users").Select("0").Limit("1").Scan(&result)
 	return result == 1
 }

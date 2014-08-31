@@ -1,17 +1,17 @@
 package database
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/drone/drone/shared/model"
+	"github.com/jinzhu/gorm"
 )
 
 func TestRemoteFind(t *testing.T) {
 	setup()
 	defer teardown()
 
-	remotes := NewRemoteManager(db)
+	remotes := NewRemoteManager(conn.DB)
 	remote, err := remotes.Find(1)
 	if err != nil {
 		t.Errorf("Want Remote from ID, got %s", err)
@@ -24,7 +24,7 @@ func TestRemoteFindHost(t *testing.T) {
 	setup()
 	defer teardown()
 
-	remotes := NewRemoteManager(db)
+	remotes := NewRemoteManager(conn.DB)
 	remote, err := remotes.FindHost("github.drone.io")
 	if err != nil {
 		t.Errorf("Want Remote from Host, got %s", err)
@@ -37,7 +37,7 @@ func TestRemoteList(t *testing.T) {
 	setup()
 	defer teardown()
 
-	remotes := NewRemoteManager(db)
+	remotes := NewRemoteManager(conn.DB)
 	all, err := remotes.List()
 	if err != nil {
 		t.Errorf("Want Remotes, got %s", err)
@@ -55,13 +55,13 @@ func TestRemoteInsert(t *testing.T) {
 	setup()
 	defer teardown()
 
-	remote := &model.Remote{ID: 0, Type: "bitbucket.org", Host: "bitbucket.org", URL: "https://bitbucket.org", API: "https://bitbucket.org", Client: "abc", Secret: "123", Open: false}
-	remotes := NewRemoteManager(db)
+	remote := &model.Remote{Id: 0, Type: "bitbucket.org", Host: "bitbucket.org", Url: "https://bitbucket.org", Api: "https://bitbucket.org", Client: "abc", Secret: "123", Open: false}
+	remotes := NewRemoteManager(conn.DB)
 	if err := remotes.Insert(remote); err != nil {
 		t.Errorf("Want Remote created, got %s", err)
 	}
 
-	var got, want = remote.ID, int64(3)
+	var got, want = remote.Id, int64(3)
 	if want != got {
 		t.Errorf("Want Remote ID %v, got %v", want, got)
 	}
@@ -78,7 +78,7 @@ func TestRemoteUpdate(t *testing.T) {
 	setup()
 	defer teardown()
 
-	remotes := NewRemoteManager(db)
+	remotes := NewRemoteManager(conn.DB)
 	remote, err := remotes.Find(1)
 	if err != nil {
 		t.Errorf("Want Remote from ID, got %s", err)
@@ -88,8 +88,8 @@ func TestRemoteUpdate(t *testing.T) {
 	remote.Client = "abc"
 	remote.Secret = "123"
 	remote.Host = "git.drone.io"
-	remote.URL = "https://git.drone.io"
-	remote.API = "https://git.drone.io/v3/api"
+	remote.Url = "https://git.drone.io"
+	remote.Api = "https://git.drone.io/v3/api"
 	if err := remotes.Update(remote); err != nil {
 		t.Errorf("Want Remote updated, got %s", err)
 	}
@@ -120,12 +120,12 @@ func TestRemoteUpdate(t *testing.T) {
 		t.Errorf("Want updated Host %s, got %s", want, got)
 	}
 
-	got, want = updated.URL, remote.URL
+	got, want = updated.Url, remote.Url
 	if got != want {
 		t.Errorf("Want updated URL %s, got %s", want, got)
 	}
 
-	got, want = updated.API, remote.API
+	got, want = updated.Api, remote.Api
 	if got != want {
 		t.Errorf("Want updated API %s, got %s", want, got)
 	}
@@ -135,7 +135,7 @@ func TestRemoteDelete(t *testing.T) {
 	setup()
 	defer teardown()
 
-	remotes := NewRemoteManager(db)
+	remotes := NewRemoteManager(conn.DB)
 	remote, err := remotes.Find(1)
 	if err != nil {
 		t.Errorf("Want Remote from ID, got %s", err)
@@ -147,7 +147,7 @@ func TestRemoteDelete(t *testing.T) {
 	}
 
 	// check to see if the deleted remote is actually gone
-	if _, err := remotes.Find(1); err != sql.ErrNoRows {
+	if _, err := remotes.Find(1); err != gorm.RecordNotFound {
 		t.Errorf("Want ErrNoRows, got %s", err)
 	}
 }
@@ -164,12 +164,12 @@ func testRemote(t *testing.T, remote *model.Remote) {
 		t.Errorf("Want Type %v, got %v", want, got)
 	}
 
-	got, want = remote.URL, "https://github.drone.io"
+	got, want = remote.Url, "https://github.drone.io"
 	if got != want {
 		t.Errorf("Want URL %v, got %v", want, got)
 	}
 
-	got, want = remote.API, "https://github.drone.io/v3/api"
+	got, want = remote.Api, "https://github.drone.io/v3/api"
 	if got != want {
 		t.Errorf("Want API %v, got %v", want, got)
 	}
@@ -189,7 +189,7 @@ func testRemote(t *testing.T, remote *model.Remote) {
 		t.Errorf("Want Open %v, got %v", wantBool, gotBool)
 	}
 
-	var gotInt64, wantInt64 = remote.ID, int64(1)
+	var gotInt64, wantInt64 = remote.Id, int64(1)
 	if gotInt64 != wantInt64 {
 		t.Errorf("Want ID %v, got %v", wantInt64, gotInt64)
 	}

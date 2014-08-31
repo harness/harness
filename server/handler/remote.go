@@ -77,7 +77,7 @@ func (h *RemoteHandler) PostRemote(w http.ResponseWriter, r *http.Request) error
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		return badRequest{err}
 	}
-	uri, err := url.Parse(in.URL)
+	uri, err := url.Parse(in.Url)
 	if err != nil {
 		return badRequest{err}
 	}
@@ -115,7 +115,7 @@ func (h *RemoteHandler) PutRemote(w http.ResponseWriter, r *http.Request) error 
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		return badRequest{err}
 	}
-	uri, err := url.Parse(in.URL)
+	uri, err := url.Parse(in.Url)
 	if err != nil {
 		return badRequest{err}
 	}
@@ -128,8 +128,8 @@ func (h *RemoteHandler) PutRemote(w http.ResponseWriter, r *http.Request) error 
 	}
 
 	// update the remote details
-	remote.API = in.API
-	remote.URL = in.URL
+	remote.Api = in.Api
+	remote.Url = in.Url
 	remote.Host = in.Host
 	remote.Client = in.Client
 	remote.Secret = in.Secret

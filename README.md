@@ -33,7 +33,52 @@ This branch introduces major changes, including:
 7. github, bitbucket, etc repository data is cached upon login (and subsequent logins)
 8. angularjs user interface with modified responsive design
 
-## Database Compatibility Issues
+## Database 
+
+For Debian, database configs stores in /etc/default/drone
+
+### SQLite
+
+```sh
+DRONE_DRIVER="sqlite3"
+DRONE_DATASOURCE="/var/lib/drone/drone.sqlite"
+```
+
+### PostgreSQL
+More information about data source you can read [here](http://godoc.org/github.com/lib/pq#hdr-Connection_String_Parameters)
+
+**TCP**
+
+```sh
+DRONE_DRIVER="postgres"
+DRONE_DATASOURCE="user=postgres password=drone host=127.0.0.1 port=5432 dbname=drone sslmode=disable"
+```
+
+**UNIX**
+
+```sh
+DRONE_DRIVER="postgres"
+DRONE_DATASOURCE="user=postgres password=drone host=/var/run/postgresql/.s.PGSQL.5432 dbname=drone sslmode=disable"
+```
+
+### MySQL
+More information about data source you can read [here](https://github.com/go-sql-driver/mysql#dsn-data-source-name)
+
+**TCP**
+
+```sh
+DRONE_DRIVER="mysql"
+DRONE_DATASOURCE="drone:drone@tcp(127.0.0.1:3306)/drone"
+```
+
+**UNIX**
+
+```sh
+DRONE_DRIVER="mysql"
+DRONE_DATASOURCE="drone:drone@unix(/tmp/mysql.sock)/drone"
+```
+
+### Compatibility Issues
 
 **WARNING**
 

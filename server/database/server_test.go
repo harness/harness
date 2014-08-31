@@ -1,17 +1,17 @@
 package database
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/drone/drone/shared/model"
+	"github.com/jinzhu/gorm"
 )
 
 func TestServerFind(t *testing.T) {
 	setup()
 	defer teardown()
 
-	servers := NewServerManager(db)
+	servers := NewServerManager(conn.DB)
 	server, err := servers.Find(1)
 	if err != nil {
 		t.Errorf("Want Server from ID, got %s", err)
@@ -24,7 +24,7 @@ func TestServerFindName(t *testing.T) {
 	setup()
 	defer teardown()
 
-	servers := NewServerManager(db)
+	servers := NewServerManager(conn.DB)
 	server, err := servers.FindName("docker1")
 	if err != nil {
 		t.Errorf("Want Server from Host, got %s", err)
@@ -41,13 +41,13 @@ func TestServerFindSMTP(t *testing.T) {
 		Host: "127.0.0.1",
 		User: "foo"}
 
-	servers := NewServerManager(db)
+	servers := NewServerManager(conn.DB)
 	if err := servers.UpdateSMTP(&server); err != nil {
 		t.Errorf("Want SMTP server inserted, got %s", err)
 	}
 	if inserted, err := servers.FindSMTP(); err != nil {
 		t.Errorf("Want SMTP server, got %s", err)
-	} else if inserted.ID == 0 {
+	} else if inserted.Id == 0 {
 		t.Errorf("Want SMTP server inserted")
 	}
 
@@ -73,7 +73,7 @@ func TestServerList(t *testing.T) {
 	setup()
 	defer teardown()
 
-	servers := NewServerManager(db)
+	servers := NewServerManager(conn.DB)
 	all, err := servers.List()
 	if err != nil {
 		t.Errorf("Want Servers, got %s", err)
@@ -92,12 +92,12 @@ func TestServerInsert(t *testing.T) {
 	defer teardown()
 
 	server := &model.Server{Host: "tcp://127.0.0.1:4243", Name: "docker3"}
-	servers := NewServerManager(db)
+	servers := NewServerManager(conn.DB)
 	if err := servers.Insert(server); err != nil {
 		t.Errorf("Want Server created, got %s", err)
 	}
 
-	var got, want = server.ID, int64(3)
+	var got, want = server.Id, int64(3)
 	if want != got {
 		t.Errorf("Want Server ID %v, got %v", want, got)
 	}
@@ -113,7 +113,7 @@ func TestServerUpdate(t *testing.T) {
 	setup()
 	defer teardown()
 
-	servers := NewServerManager(db)
+	servers := NewServerManager(conn.DB)
 	server, err := servers.Find(1)
 	if err != nil {
 		t.Errorf("Want Server from ID, got %s", err)
@@ -148,7 +148,7 @@ func TestServerDelete(t *testing.T) {
 	setup()
 	defer teardown()
 
-	servers := NewServerManager(db)
+	servers := NewServerManager(conn.DB)
 	server, err := servers.Find(1)
 	if err != nil {
 		t.Errorf("Want Server from ID, got %s", err)
@@ -160,7 +160,7 @@ func TestServerDelete(t *testing.T) {
 	}
 
 	// check to see if the deleted server is actually gone
-	if _, err := servers.Find(1); err != sql.ErrNoRows {
+	if _, err := servers.Find(1); err != gorm.RecordNotFound {
 		t.Errorf("Want ErrNoRows, got %s", err)
 	}
 }
@@ -194,7 +194,7 @@ func testServer(t *testing.T, server *model.Server) {
 		t.Errorf("Want Cert %v, got %v", want, got)
 	}
 
-	var gotInt64, wantInt64 = server.ID, int64(1)
+	var gotInt64, wantInt64 = server.Id, int64(1)
 	if gotInt64 != wantInt64 {
 		t.Errorf("Want ID %v, got %v", wantInt64, gotInt64)
 	}

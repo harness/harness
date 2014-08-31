@@ -106,7 +106,7 @@ func (h *UsersHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error 
 	}
 
 	// user cannot delete his / her own account
-	if account.ID == user.ID {
+	if account.Id == user.Id {
 		return badRequest{}
 	}
 

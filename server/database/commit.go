@@ -1,11 +1,10 @@
 package database
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/drone/drone/shared/model"
-	"github.com/russross/meddler"
+	"github.com/jinzhu/gorm"
 )
 
 type CommitManager interface {
@@ -52,201 +51,143 @@ type CommitManager interface {
 
 // commitManager manages a list of commits in a SQL database.
 type commitManager struct {
-	*sql.DB
+	ORM *gorm.DB
 }
 
 // NewCommitManager initiales a new CommitManager intended to
 // manage and persist commits.
-func NewCommitManager(db *sql.DB) CommitManager {
-	return &commitManager{db}
+func NewCommitManager(db *gorm.DB) CommitManager {
+	return &commitManager{ORM: db}
 }
 
 // SQL query to retrieve the latest Commits for each branch.
 const listBranchesQuery = `
 SELECT *
 FROM commits
-WHERE commit_id IN (
-    SELECT MAX(commit_id)
+WHERE id IN (
+    SELECT MAX(id)
     FROM commits
     WHERE repo_id=?
-    AND commit_status NOT IN ('Started', 'Pending')
-    GROUP BY commit_branch)
- ORDER BY commit_branch ASC
- `
-
-// SQL query to retrieve the latest Commits for a specific branch.
-const listBranchQuery = `
-SELECT *
-FROM commits
-WHERE repo_id=?
-AND   commit_branch=?
-ORDER BY commit_id DESC
-LIMIT 20
+    AND status NOT IN ('Started', 'Pending')
+    GROUP BY branch)
+ ORDER BY branch ASC
  `
 
 // SQL query to retrieve the latest Commits for a user's repositories.
-//const listUserCommitsQuery = `
-//SELECT r.repo_remote, r.repo_host, r.repo_owner, r.repo_name, c.*
-//FROM commits c, repos r, perms p
-//WHERE c.repo_id=r.repo_id
-//AND   r.repo_id=p.repo_id
-//AND   p.user_id=?
-//AND   c.commit_status NOT IN ('Started', 'Pending')
-//ORDER BY commit_id DESC
-//LIMIT 20
-//`
-
 const listUserCommitsQuery = `
-SELECT r.repo_remote, r.repo_host, r.repo_owner, r.repo_name, c.*
-FROM commits c, repos r
-WHERE c.repo_id=r.repo_id
-AND   c.commit_id IN (
-	SELECT max(c.commit_id)
-	FROM commits c, repos r, perms p
-	WHERE c.repo_id=r.repo_id
-	AND   r.repo_id=p.repo_id
-	AND   p.user_id=?
-	AND   c.commit_id
-	AND   c.commit_status NOT IN ('Started', 'Pending')
-	GROUP BY r.repo_id
-) ORDER BY c.commit_created DESC LIMIT 5;
-`
-
-// SQL query to retrieve the latest Commits across all branches.
-const listCommitsQuery = `
-SELECT *
-FROM commits
-WHERE repo_id=? 
-ORDER BY commit_id DESC
-LIMIT 20
-`
-
-// SQL query to retrieve a Commit by branch and sha.
-const findCommitQuery = `
-SELECT *
-FROM commits
-WHERE repo_id=?
-AND   commit_branch=?
-AND   commit_sha=?
-LIMIT 1
-`
-
-// SQL query to retrieve the most recent Commit for a branch.
-const findLatestCommitQuery = `
-SELECT *
-FROM commits
-WHERE commit_id IN (
-    SELECT MAX(commit_id)
-    FROM commits
-    WHERE repo_id=?
-    AND commit_branch=?)
-`
-
-// SQL query to retrieve a Commit's stdout.
-const findOutputQuery = `
-SELECT output_raw
-FROM output
-WHERE commit_id = ?
-`
-
-// SQL statement to insert a Commit's stdout.
-const insertOutputStmt = `
-INSERT INTO output (commit_id, output_raw) values (?,?);
-`
-
-// SQL statement to update a Commit's stdout.
-const updateOutputStmt = `
-UPDATE output SET output_raw = ? WHERE commit_id = ?;
-`
-
-// SQL statement to delete a Commit by ID.
-const deleteCommitStmt = `
-DELETE FROM commits WHERE commit_id = ?;
-`
-
-// SQL statement to cancel all running Commits.
-const cancelCommitStmt = `
-UPDATE commits SET
-commit_status = ?,
-commit_started = ?,
-commit_finished = ?
-WHERE commit_status IN ('Started', 'Pending');
+SELECT r.remote, r.host, r.owner, r.name, c.*
+FROM commits c
+	JOIN repos r ON r.id = c.repo_id
+	JOIN perms p ON p.repo_id = r.id
+	WHERE p.user_id = ?
+	AND   c.id IS NOT NULL
+	AND   c.status NOT IN ('Started', 'Pending')
+	GROUP BY r.id
+ORDER BY c.created DESC LIMIT 5
 `
 
 func (db *commitManager) Find(id int64) (*model.Commit, error) {
-	dst := model.Commit{}
-	err := meddler.Load(db, "commits", &dst, id)
-	return &dst, err
+	commit := model.Commit{}
+
+	err := db.ORM.First(&commit, id).Error
+	return &commit, err
 }
 
 func (db *commitManager) FindSha(repo int64, branch, sha string) (*model.Commit, error) {
-	dst := model.Commit{}
-	err := meddler.QueryRow(db, &dst, findCommitQuery, repo, branch, sha)
-	return &dst, err
+	commit := model.Commit{}
+
+	err := db.ORM.Where(model.Commit{RepoId: repo, Branch: branch, Sha: sha}).First(&commit).Error
+	return &commit, err
 }
 
 func (db *commitManager) FindLatest(repo int64, branch string) (*model.Commit, error) {
-	dst := model.Commit{}
-	err := meddler.QueryRow(db, &dst, findLatestCommitQuery, repo, branch)
-	return &dst, err
+	var max_commit int64
+	commit := model.Commit{}
+
+	row := db.ORM.Table("commits").Select("MAX(id)").Where(model.Commit{RepoId: repo, Branch: branch}).Row()
+	row.Scan(&max_commit)
+
+	err := db.ORM.Table("commits").Where(max_commit).First(&commit).Error
+	return &commit, err
 }
 
 func (db *commitManager) FindOutput(commit int64) ([]byte, error) {
-	var dst string
-	err := db.QueryRow(findOutputQuery, commit).Scan(&dst)
-	return []byte(dst), err
+	var output string
+
+	row := db.ORM.Table("output").Select("output_raw").Where(model.Output{CommitId: commit}).Row()
+	err := row.Scan(&output)
+
+	return []byte(output), err
 }
 
 func (db *commitManager) List(repo int64) ([]*model.Commit, error) {
-	var dst []*model.Commit
-	err := meddler.QueryAll(db, &dst, listCommitsQuery, repo)
-	return dst, err
+	var commits []*model.Commit
+
+	err := db.ORM.Where(model.Commit{RepoId: repo}).Order("id desc").Find(&commits).Error
+	return commits, err
 }
 
 func (db *commitManager) ListBranch(repo int64, branch string) ([]*model.Commit, error) {
-	var dst []*model.Commit
-	err := meddler.QueryAll(db, &dst, listBranchQuery, repo, branch)
-	return dst, err
+	var commits []*model.Commit
+
+	err := db.ORM.Where(model.Commit{RepoId: repo, Branch: branch}).Order("id desc").Limit("20").Find(&commits).Error
+	return commits, err
 }
 
 func (db *commitManager) ListBranches(repo int64) ([]*model.Commit, error) {
-	var dst []*model.Commit
-	err := meddler.QueryAll(db, &dst, listBranchesQuery, repo)
-	return dst, err
+	var commits []*model.Commit
+
+	rows, err := db.ORM.Raw(listBranchesQuery, repo).Find(&commits).Rows()
+	rows.Scan(&commits)
+
+	return commits, err
 }
 
 func (db *commitManager) ListUser(user int64) ([]*model.CommitRepo, error) {
-	var dst []*model.CommitRepo
-	err := meddler.QueryAll(db, &dst, listUserCommitsQuery, user)
-	return dst, err
+	var commit_repos []*model.CommitRepo
+
+	rows, err := db.ORM.Raw(listUserCommitsQuery, user).Rows()
+	rows.Scan(&commit_repos)
+
+	return commit_repos, err
 }
 
 func (db *commitManager) Insert(commit *model.Commit) error {
 	commit.Created = time.Now().Unix()
 	commit.Updated = time.Now().Unix()
-	return meddler.Insert(db, "commits", commit)
+
+	return db.ORM.Create(commit).Error
 }
 
 func (db *commitManager) Update(commit *model.Commit) error {
 	commit.Updated = time.Now().Unix()
-	return meddler.Update(db, "commits", commit)
+
+	return db.ORM.Save(commit).Error
 }
 
 func (db *commitManager) UpdateOutput(commit *model.Commit, out []byte) error {
-	_, err := db.Exec(insertOutputStmt, commit.ID, out)
-	if err != nil {
-		return nil
+	if err := db.ORM.Table("output").Create(model.Output{CommitId: commit.Id, OutputRaw: string(out)}).Error; err != nil {
+		// Do nothing because output may be allready created for this commit id
 	}
-	_, err = db.Exec(updateOutputStmt, out, commit.ID)
-	return err
+
+	output := model.Output{}
+	if err := db.ORM.Table("output").Where(model.Output{CommitId: commit.Id}).First(&output).Error; err != nil {
+		return err
+	}
+
+	if string(out) != output.OutputRaw {
+		return db.ORM.Table("output").Where(model.Output{CommitId: commit.Id}).Update(output).Error
+	}
+
+	return nil
 }
 
 func (db *commitManager) Delete(commit *model.Commit) error {
-	_, err := db.Exec(deleteCommitStmt, commit.ID)
-	return err
+	return db.ORM.Delete(commit).Error
 }
 
 func (db *commitManager) CancelAll() error {
-	_, err := db.Exec(cancelCommitStmt, model.StatusKilled, time.Now().Unix(), time.Now().Unix())
+	err := db.ORM.Table("commits").Where("status IN ('Started', 'Pending')").
+		Updates(model.Commit{Status: model.StatusKilled, Started: time.Now().Unix(), Finished: time.Now().Unix()}).Error
 	return err
 }

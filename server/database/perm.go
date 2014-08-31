@@ -1,11 +1,10 @@
 package database
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/drone/drone/shared/model"
-	"github.com/russross/meddler"
+	"github.com/jinzhu/gorm"
 )
 
 type PermManager interface {
@@ -38,44 +37,29 @@ type PermManager interface {
 
 // permManager manages user permissions to access repositories.
 type permManager struct {
-	*sql.DB
+	ORM *gorm.DB
 }
-
-// SQL query to retrieve a user's permission to
-// access a repository.
-const findPermQuery = `
-SELECT *
-FROM perms
-WHERE user_id=?
-AND   repo_id=?
-LIMIT 1
-`
-
-// SQL statement to delete a permission.
-const deletePermStmt = `
-DELETE FROM perms WHERE user_id=? AND repo_id=?
-`
 
 // NewManager initiales a new PermManager intended to
 // manage user permission and access control.
-func NewPermManager(db *sql.DB) PermManager {
-	return &permManager{db}
+func NewPermManager(db *gorm.DB) PermManager {
+	return &permManager{ORM: db}
 }
 
 // Grant will grant the user read, write and admin persmissions
 // to the specified repository.
-func (db *permManager) Grant(u *model.User, r *model.Repo, read, write, admin bool) error {
+func (db *permManager) Grant(u *model.User, r *model.Repo, read bool, write bool, admin bool) error {
 	// attempt to get existing permissions from the database
 	perm, err := db.find(u, r)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err != gorm.RecordNotFound {
 		return err
 	}
 
 	// if this is a new permission set the user ID,
 	// repository ID and created timestamp.
-	if perm.ID == 0 {
-		perm.UserID = u.ID
-		perm.RepoID = r.ID
+	if perm.Id == 0 {
+		perm.UserId = u.Id
+		perm.RepoId = r.Id
 		perm.Created = time.Now().Unix()
 	}
 
@@ -86,13 +70,17 @@ func (db *permManager) Grant(u *model.User, r *model.Repo, read, write, admin bo
 	perm.Updated = time.Now().Unix()
 
 	// update the database
-	return meddler.Save(db, "perms", perm)
+	if perm.Id == 0 {
+		return db.ORM.Create(perm).Error
+	} else {
+		// Fix bool update https://github.com/jinzhu/gorm/issues/202#issuecomment-52582525
+		return db.ORM.Save(perm).Error
+	}
 }
 
 // Revoke will revoke all user permissions to the specified repository.
 func (db *permManager) Revoke(u *model.User, r *model.Repo) error {
-	_, err := db.Exec(deletePermStmt, u.ID, r.ID)
-	return err
+	return db.ORM.Delete(model.Perm{UserId: u.Id, RepoId: r.Id}).Error
 }
 
 func (db *permManager) Find(u *model.User, r *model.Repo) *model.Perm {
@@ -116,7 +104,7 @@ func (db *permManager) Find(u *model.User, r *model.Repo) *model.Perm {
 	// if the user is authenticated we'll retireive the
 	// permission details from the database.
 	perm, err := db.find(u, r)
-	if err != nil && perm.ID != 0 {
+	if err != nil && perm.Id != 0 {
 		return perm
 	}
 
@@ -155,7 +143,8 @@ func (db *permManager) Member(u *model.User, r *model.Repo) (bool, error) {
 }
 
 func (db *permManager) find(u *model.User, r *model.Repo) (*model.Perm, error) {
-	var dst = model.Perm{}
-	var err = meddler.QueryRow(db, &dst, findPermQuery, u.ID, r.ID)
-	return &dst, err
+	perm := model.Perm{}
+
+	err := db.ORM.Where(model.Perm{UserId: u.Id, RepoId: r.Id}).First(&perm).Error
+	return &perm, err
 }

@@ -1,33 +1,33 @@
 package database
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/drone/drone/shared/model"
+	"github.com/jinzhu/gorm"
 )
 
 func Test_find(t *testing.T) {
 	setup()
 	defer teardown()
 
-	manager := NewPermManager(db).(*permManager)
-	perm, err := manager.find(&model.User{ID: 101}, &model.Repo{ID: 200})
+	manager := NewPermManager(conn.DB).(*permManager)
+	perm, err := manager.find(&model.User{Id: 101}, &model.Repo{Id: 200})
 	if err != nil {
 		t.Errorf("Want permission, got %s", err)
 	}
 
-	var got, want = perm.ID, int64(1)
+	var got, want = perm.Id, int64(1)
 	if got != want {
 		t.Errorf("Want ID %d, got %d", got, want)
 	}
 
-	got, want = perm.UserID, int64(101)
+	got, want = perm.UserId, int64(101)
 	if got != want {
 		t.Errorf("Want Created %d, got %d", got, want)
 	}
 
-	got, want = perm.RepoID, int64(200)
+	got, want = perm.RepoId, int64(200)
 	if got != want {
 		t.Errorf("Want Created %d, got %d", got, want)
 	}
@@ -59,8 +59,8 @@ func Test_find(t *testing.T) {
 
 	// test that we get the appropriate error message when
 	// no permissions are found in the database.
-	_, err = manager.find(&model.User{ID: 102}, &model.Repo{ID: 201})
-	if err != sql.ErrNoRows {
+	_, err = manager.find(&model.User{Id: 102}, &model.Repo{Id: 201})
+	if err != gorm.RecordNotFound {
 		t.Errorf("Want ErrNoRows, got %s", err)
 	}
 }
@@ -69,10 +69,10 @@ func TestPermFind(t *testing.T) {
 	setup()
 	defer teardown()
 
-	manager := NewPermManager(db).(*permManager)
+	manager := NewPermManager(conn.DB).(*permManager)
 
-	u := model.User{ID: 101, Admin: false}
-	r := model.Repo{ID: 201, Private: false}
+	u := model.User{Id: 101, Admin: false}
+	r := model.Repo{Id: 201, Private: false}
 
 	// public repos should always be accessible
 	if perm := manager.Find(&u, &r); !perm.Read {
@@ -104,7 +104,7 @@ func TestPermFind(t *testing.T) {
 	}
 
 	// private repos should be accessible to users with rows in the perm table.
-	r.ID = 200
+	r.Id = 200
 	r.Private = true
 	u.Admin = false
 	if perm := manager.Find(&u, &r); !perm.Read {
@@ -115,11 +115,11 @@ func TestPermFind(t *testing.T) {
 func TestPermRead(t *testing.T) {
 	setup()
 	defer teardown()
-	var manager = NewPermManager(db)
+	var manager = NewPermManager(conn.DB)
 
 	// dummy admin and repo
-	u := model.User{ID: 101, Admin: false}
-	r := model.Repo{ID: 201, Private: false}
+	u := model.User{Id: 101, Admin: false}
+	r := model.Repo{Id: 201, Private: false}
 
 	// public repos should always be accessible
 	if read, err := manager.Read(&u, &r); !read || err != nil {
@@ -151,7 +151,7 @@ func TestPermRead(t *testing.T) {
 	}
 
 	// private repos should be accessible to users with rows in the perm table.
-	r.ID = 200
+	r.Id = 200
 	r.Private = true
 	u.Admin = false
 	if read, err := manager.Read(&u, &r); !read || err != nil {
@@ -162,11 +162,11 @@ func TestPermRead(t *testing.T) {
 func TestPermWrite(t *testing.T) {
 	setup()
 	defer teardown()
-	var manager = NewPermManager(db)
+	var manager = NewPermManager(conn.DB)
 
 	// dummy admin and repo
-	u := model.User{ID: 101, Admin: false}
-	r := model.Repo{ID: 201, Private: false}
+	u := model.User{Id: 101, Admin: false}
+	r := model.Repo{Id: 201, Private: false}
 
 	// repos should not be accessible to nil users
 	r.Private = true
@@ -186,14 +186,14 @@ func TestPermWrite(t *testing.T) {
 	}
 
 	// repos should be accessible to users with rows in the perm table.
-	r.ID = 200
+	r.Id = 200
 	u.Admin = false
 	if write, err := manager.Write(&u, &r); !write || err != nil {
 		t.Errorf("Repos should be WRITE accessible to users with rows in the perm table.")
 	}
 
 	// repos should not be accessible to users with a row in the perm table, but write=false
-	u.ID = 103
+	u.Id = 103
 	u.Admin = false
 	if write, err := manager.Write(&u, &r); write || err != nil {
 		t.Errorf("Repos should not be WRITE accessible to users with perm.Write=false.")
@@ -203,11 +203,11 @@ func TestPermWrite(t *testing.T) {
 func TestPermAdmin(t *testing.T) {
 	setup()
 	defer teardown()
-	var manager = NewPermManager(db)
+	var manager = NewPermManager(conn.DB)
 
 	// dummy admin and repo
-	u := model.User{ID: 101, Admin: false}
-	r := model.Repo{ID: 201, Private: false}
+	u := model.User{Id: 101, Admin: false}
+	r := model.Repo{Id: 201, Private: false}
 
 	// repos should not be accessible to nil users
 	r.Private = true
@@ -227,14 +227,14 @@ func TestPermAdmin(t *testing.T) {
 	}
 
 	// repos should be accessible to users with rows in the perm table.
-	r.ID = 200
+	r.Id = 200
 	u.Admin = false
 	if admin, err := manager.Admin(&u, &r); !admin || err != nil {
 		t.Errorf("Repos should be ADMIN accessible to users with rows in the perm table.")
 	}
 
 	// repos should not be accessible to users with a row in the perm table, but admin=false
-	u.ID = 103
+	u.Id = 103
 	u.Admin = false
 	if admin, err := manager.Admin(&u, &r); admin || err != nil {
 		t.Errorf("Repos should not be ADMIN accessible to users with perm.Admin=false.")
@@ -246,10 +246,10 @@ func TestPermRevoke(t *testing.T) {
 	defer teardown()
 
 	// dummy admin and repo
-	u := model.User{ID: 101}
-	r := model.Repo{ID: 200}
+	u := model.User{Id: 101}
+	r := model.Repo{Id: 200}
 
-	manager := NewPermManager(db).(*permManager)
+	manager := NewPermManager(conn.DB).(*permManager)
 	admin, err := manager.Admin(&u, &r)
 	if !admin || err != nil {
 		t.Errorf("Want Admin permission, got Admin %v, error %s", admin, err)
@@ -261,7 +261,7 @@ func TestPermRevoke(t *testing.T) {
 	}
 
 	perm, err := manager.find(&u, &r)
-	if perm.Admin == true || err != sql.ErrNoRows {
+	if perm.Admin == true || err != gorm.RecordNotFound {
 		t.Errorf("Expected revoked permission, got Admin %v, error %v", perm.Admin, err)
 	}
 }
@@ -271,10 +271,10 @@ func TestPermGrant(t *testing.T) {
 	defer teardown()
 
 	// dummy admin and repo
-	u := model.User{ID: 104}
-	r := model.Repo{ID: 200}
+	u := model.User{Id: 104}
+	r := model.Repo{Id: 200}
 
-	manager := NewPermManager(db).(*permManager)
+	manager := NewPermManager(conn.DB).(*permManager)
 	if err := manager.Grant(&u, &r, true, true, true); err != nil {
 		t.Errorf("Want permissions granted, got %s", err)
 	}

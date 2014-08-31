@@ -1,17 +1,17 @@
 package database
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/drone/drone/shared/model"
+	"github.com/jinzhu/gorm"
 )
 
 func TestRepoFind(t *testing.T) {
 	setup()
 	defer teardown()
 
-	repos := NewRepoManager(db)
+	repos := NewRepoManager(conn.DB)
 	repo, err := repos.Find(1)
 	if err != nil {
 		t.Errorf("Want Repo from ID, got %s", err)
@@ -24,7 +24,7 @@ func TestRepoFindName(t *testing.T) {
 	setup()
 	defer teardown()
 
-	repos := NewRepoManager(db)
+	repos := NewRepoManager(conn.DB)
 	user, err := repos.FindName("github.com", "lhofstadter", "lenwoloppali")
 	if err != nil {
 		t.Errorf("Want Repo by Name, got %s", err)
@@ -37,7 +37,7 @@ func TestRepoList(t *testing.T) {
 	setup()
 	defer teardown()
 
-	repos := NewRepoManager(db)
+	repos := NewRepoManager(conn.DB)
 	all, err := repos.List(1)
 	if err != nil {
 		t.Errorf("Want Repos, got %s", err)
@@ -56,7 +56,7 @@ func TestRepoInsert(t *testing.T) {
 	defer teardown()
 
 	repo, _ := model.NewRepo("github.com", "mrwolowitz", "lenwoloppali")
-	repos := NewRepoManager(db)
+	repos := NewRepoManager(conn.DB)
 	if err := repos.Insert(repo); err != nil {
 		t.Errorf("Want Repo created, got %s", err)
 	}
@@ -72,7 +72,7 @@ func TestRepoUpdate(t *testing.T) {
 	setup()
 	defer teardown()
 
-	repos := NewRepoManager(db)
+	repos := NewRepoManager(conn.DB)
 	repo, err := repos.Find(1)
 	if err != nil {
 		t.Errorf("Want Repo from ID, got %s", err)
@@ -119,7 +119,7 @@ func TestRepoDelete(t *testing.T) {
 	setup()
 	defer teardown()
 
-	repos := NewRepoManager(db)
+	repos := NewRepoManager(conn.DB)
 	repo, err := repos.Find(1)
 	if err != nil {
 		t.Errorf("Want Repo from ID, got %s", err)
@@ -131,7 +131,7 @@ func TestRepoDelete(t *testing.T) {
 	}
 
 	// check to see if the deleted repo is actually gone
-	if _, err := repos.Find(1); err != sql.ErrNoRows {
+	if _, err := repos.Find(1); err != gorm.RecordNotFound {
 		t.Errorf("Want ErrNoRows, got %s", err)
 	}
 }
@@ -159,7 +159,7 @@ func testRepo(t *testing.T, repo *model.Repo) {
 		t.Errorf("Want Name %v, got %v", want, got)
 	}
 
-	got, want = repo.CloneURL, "git://github.com/lhofstadter/lenwoloppali.git"
+	got, want = repo.CloneUrl, "git://github.com/lhofstadter/lenwoloppali.git"
 	if got != want {
 		t.Errorf("Want URL %v, got %v", want, got)
 	}
@@ -204,7 +204,7 @@ func testRepo(t *testing.T, repo *model.Repo) {
 		t.Errorf("Want PullRequest %v, got %v", wantBool, gotBool)
 	}
 
-	var gotInt64, wantInt64 = repo.ID, int64(1)
+	var gotInt64, wantInt64 = repo.Id, int64(1)
 	if gotInt64 != wantInt64 {
 		t.Errorf("Want ID %v, got %v", wantInt64, gotInt64)
 	}

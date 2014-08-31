@@ -72,7 +72,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// fetch the user from the database that owns this repo
-	user, err := h.users.Find(repo.UserID)
+	user, err := h.users.Find(repo.UserId)
 	if err != nil {
 		return notFound{}
 	}
@@ -94,7 +94,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	c := model.Commit{
-		RepoID:      repo.ID,
+		RepoId:      repo.Id,
 		Status:      model.StatusEnqueue,
 		Sha:         hook.Sha,
 		Branch:      hook.Branch,
@@ -109,7 +109,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	//fmt.Printf("%s", yml)
-	owner, err := h.users.Find(repo.UserID)
+	owner, err := h.users.Find(repo.UserId)
 	if err != nil {
 		return badRequest{err}
 	}

@@ -51,7 +51,7 @@ func (h *CommitHandler) GetFeed(w http.ResponseWriter, r *http.Request) error {
 		return notFound{}
 	}
 
-	commits, err := h.commits.ListBranch(repo.ID, branch)
+	commits, err := h.commits.ListBranch(repo.Id, branch)
 	if err != nil {
 		return notFound{err}
 	}
@@ -87,7 +87,7 @@ func (h *CommitHandler) GetCommit(w http.ResponseWriter, r *http.Request) error 
 		return notFound{}
 	}
 
-	commit, err := h.commits.FindSha(repo.ID, branch, sha)
+	commit, err := h.commits.FindSha(repo.Id, branch, sha)
 	if err != nil {
 		return notFound{err}
 	}
@@ -123,12 +123,12 @@ func (h *CommitHandler) GetCommitOutput(w http.ResponseWriter, r *http.Request) 
 		return notFound{}
 	}
 
-	commit, err := h.commits.FindSha(repo.ID, branch, sha)
+	commit, err := h.commits.FindSha(repo.Id, branch, sha)
 	if err != nil {
 		return notFound{err}
 	}
 
-	output, err := h.commits.FindOutput(commit.ID)
+	output, err := h.commits.FindOutput(commit.Id)
 	if err != nil {
 		return notFound{err}
 	}
@@ -164,7 +164,7 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 		return notFound{err}
 	}
 
-	c, err := h.commits.FindSha(repo.ID, branch, sha)
+	c, err := h.commits.FindSha(repo.Id, branch, sha)
 	if err != nil {
 		return notFound{err}
 	}
@@ -182,7 +182,7 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 		return internalServerError{err}
 	}
 
-	repoOwner, err := h.users.Find(repo.UserID)
+	repoOwner, err := h.users.Find(repo.UserId)
 	if err != nil {
 		return badRequest{err}
 	}
