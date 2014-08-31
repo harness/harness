@@ -89,14 +89,14 @@ ORDER BY c.created DESC LIMIT 5
 func (db *commitManager) Find(id int64) (*model.Commit, error) {
 	commit := model.Commit{}
 
-	err := db.ORM.Table("commits").Where(model.Commit{Id: id}).First(&commit).Error
+	err := db.ORM.First(&commit, id).Error
 	return &commit, err
 }
 
 func (db *commitManager) FindSha(repo int64, branch, sha string) (*model.Commit, error) {
 	commit := model.Commit{}
 
-	err := db.ORM.Table("commits").Where(model.Commit{RepoId: repo, Branch: branch, Sha: sha}).First(&commit).Error
+	err := db.ORM.Where(model.Commit{RepoId: repo, Branch: branch, Sha: sha}).First(&commit).Error
 	return &commit, err
 }
 
@@ -123,14 +123,14 @@ func (db *commitManager) FindOutput(commit int64) ([]byte, error) {
 func (db *commitManager) List(repo int64) ([]*model.Commit, error) {
 	var commits []*model.Commit
 
-	err := db.ORM.Table("commits").Where(model.Commit{RepoId: repo}).Order("id desc").Find(&commits).Error
+	err := db.ORM.Where(model.Commit{RepoId: repo}).Order("id desc").Find(&commits).Error
 	return commits, err
 }
 
 func (db *commitManager) ListBranch(repo int64, branch string) ([]*model.Commit, error) {
 	var commits []*model.Commit
 
-	err := db.ORM.Table("commits").Where(model.Commit{RepoId: repo, Branch: branch}).Order("id desc").Limit("20").Find(&commits).Error
+	err := db.ORM.Where(model.Commit{RepoId: repo, Branch: branch}).Order("id desc").Limit("20").Find(&commits).Error
 	return commits, err
 }
 
@@ -156,18 +156,18 @@ func (db *commitManager) Insert(commit *model.Commit) error {
 	commit.Created = time.Now().Unix()
 	commit.Updated = time.Now().Unix()
 
-	return db.ORM.Table("commits").Create(commit).Error
+	return db.ORM.Create(commit).Error
 }
 
 func (db *commitManager) Update(commit *model.Commit) error {
 	commit.Updated = time.Now().Unix()
 
-	return db.ORM.Table("commits").Where(model.Commit{Id: commit.Id}).Update(commit).Error
+	return db.ORM.Save(commit).Error
 }
 
 func (db *commitManager) UpdateOutput(commit *model.Commit, out []byte) error {
 	if err := db.ORM.Table("output").Create(model.Output{CommitId: commit.Id, OutputRaw: string(out)}).Error; err != nil {
-		return nil
+		// Do nothing because output may be allready created for this commit id
 	}
 
 	output := model.Output{}
@@ -183,7 +183,7 @@ func (db *commitManager) UpdateOutput(commit *model.Commit, out []byte) error {
 }
 
 func (db *commitManager) Delete(commit *model.Commit) error {
-	return db.ORM.Table("commits").Delete(commit).Error
+	return db.ORM.Delete(commit).Error
 }
 
 func (db *commitManager) CancelAll() error {

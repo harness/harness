@@ -42,39 +42,39 @@ func NewRemoteManager(db *gorm.DB) RemoteManager {
 func (db *remoteManager) Find(id int64) (*model.Remote, error) {
 	remote := model.Remote{}
 
-	err := db.ORM.Table("remotes").Where(model.Remote{Id: id}).First(&remote).Error
+	err := db.ORM.First(&remote, id).Error
 	return &remote, err
 }
 
 func (db *remoteManager) FindHost(host string) (*model.Remote, error) {
 	remote := model.Remote{}
 
-	err := db.ORM.Table("remotes").Where(model.Remote{Host: host}).First(&remote).Error
+	err := db.ORM.Where(model.Remote{Host: host}).First(&remote).Error
 	return &remote, err
 }
 
 func (db *remoteManager) FindType(t string) (*model.Remote, error) {
 	remote := model.Remote{}
 
-	err := db.ORM.Table("remotes").Where(model.Remote{Type: t}).First(&remote).Error
+	err := db.ORM.Where(model.Remote{Type: t}).First(&remote).Error
 	return &remote, err
 }
 
 func (db *remoteManager) List() ([]*model.Remote, error) {
 	var remotes []*model.Remote
 
-	err := db.ORM.Table("remotes").Find(&remotes).Error
+	err := db.ORM.Find(&remotes).Error
 	return remotes, err
 }
 
 func (db *remoteManager) Insert(remote *model.Remote) error {
-	return db.ORM.Table("remotes").Create(remote).Error
+	return db.ORM.Create(remote).Error
 }
 
 func (db *remoteManager) Update(remote *model.Remote) error {
-	return db.ORM.Table("remotes").Where(model.Remote{Id: remote.Id}).Update(remote).Error
+	return db.ORM.Save(remote).Error
 }
 
 func (db *remoteManager) Delete(remote *model.Remote) error {
-	return db.ORM.Table("remotes").Delete(remote).Error
+	return db.ORM.Delete(remote).Error
 }

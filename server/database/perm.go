@@ -74,14 +74,13 @@ func (db *permManager) Grant(u *model.User, r *model.Repo, read bool, write bool
 		return db.ORM.Create(perm).Error
 	} else {
 		// Fix bool update https://github.com/jinzhu/gorm/issues/202#issuecomment-52582525
-		return db.ORM.Table("perms").Where(model.Perm{Id: perm.Id}).Update(perm).
-			Update(map[string]interface{}{"Read": read, "Write": write, "Admin": admin}).Error
+		return db.ORM.Save(perm).Error
 	}
 }
 
 // Revoke will revoke all user permissions to the specified repository.
 func (db *permManager) Revoke(u *model.User, r *model.Repo) error {
-	return db.ORM.Table("perms").Delete(model.Perm{UserId: u.Id, RepoId: r.Id}).Error
+	return db.ORM.Delete(model.Perm{UserId: u.Id, RepoId: r.Id}).Error
 }
 
 func (db *permManager) Find(u *model.User, r *model.Repo) *model.Perm {
@@ -146,6 +145,6 @@ func (db *permManager) Member(u *model.User, r *model.Repo) (bool, error) {
 func (db *permManager) find(u *model.User, r *model.Repo) (*model.Perm, error) {
 	perm := model.Perm{}
 
-	err := db.ORM.Table("perms").Where(model.Perm{UserId: u.Id, RepoId: r.Id}).First(&perm).Error
+	err := db.ORM.Where(model.Perm{UserId: u.Id, RepoId: r.Id}).First(&perm).Error
 	return &perm, err
 }

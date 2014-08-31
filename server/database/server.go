@@ -45,14 +45,14 @@ func NewServerManager(db *gorm.DB) ServerManager {
 func (db *serverManager) Find(id int64) (*model.Server, error) {
 	server := model.Server{}
 
-	err := db.ORM.Table("servers").Where(model.Server{Id: id}).First(&server).Error
+	err := db.ORM.First(&server, id).Error
 	return &server, err
 }
 
 func (db *serverManager) FindName(name string) (*model.Server, error) {
 	server := model.Server{}
 
-	err := db.ORM.Table("servers").Where(model.Server{Name: name}).First(&server).Error
+	err := db.ORM.Where(model.Server{Name: name}).First(&server).Error
 	return &server, err
 }
 
@@ -66,16 +66,16 @@ func (db *serverManager) FindSMTP() (*model.SMTPServer, error) {
 func (db *serverManager) List() ([]*model.Server, error) {
 	var servers []*model.Server
 
-	err := db.ORM.Table("servers").Find(&servers).Error
+	err := db.ORM.Find(&servers).Error
 	return servers, err
 }
 
 func (db *serverManager) Insert(server *model.Server) error {
-	return db.ORM.Table("servers").Create(server).Error
+	return db.ORM.Create(server).Error
 }
 
 func (db *serverManager) Update(server *model.Server) error {
-	return db.ORM.Table("servers").Where(model.Server{Id: server.Id}).Update(server).Error
+	return db.ORM.Save(server).Error
 }
 
 func (db *serverManager) UpdateSMTP(server *model.SMTPServer) error {
