@@ -46,20 +46,17 @@ func (h *RepoHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// user must have read access to the repository.
-	role := h.perms.Find(user, repo)
+	repo.Role = h.perms.Find(user, repo)
 	switch {
-	case role.Read == false && user == nil:
+	case repo.Role.Read == false && user == nil:
 		return notAuthorized{}
-	case role.Read == false && user != nil:
+	case repo.Role.Read == false && user != nil:
 		return notFound{}
 	}
 	// if the user is not requesting admin data we can
 	// return exactly what we have.
 	if len(admin) == 0 {
-		return json.NewEncoder(w).Encode(struct {
-			*model.Repo
-			Role *model.Perm `json:"role"`
-		}{repo, role})
+		return json.NewEncoder(w).Encode(repo)
 	}
 
 	// ammend the response to include data that otherwise
@@ -71,10 +68,9 @@ func (h *RepoHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
 
 	return json.NewEncoder(w).Encode(struct {
 		*model.Repo
-		Role      *model.Perm `json:"role"`
-		PublicKey string      `json:"public_key"`
-		Params    string      `json:"params"`
-	}{repo, role, repo.PublicKey, repo.Params})
+		PublicKey string `json:"public_key"`
+		Params    string `json:"params"`
+	}{repo, repo.PublicKey, repo.Params})
 }
 
 // PostRepo activates the named repository.
@@ -118,26 +114,16 @@ func (h *RepoHandler) PostRepo(w http.ResponseWriter, r *http.Request) error {
 	repo.PublicKey = sshutil.MarshalPublicKey(&key.PublicKey)
 	repo.PrivateKey = sshutil.MarshalPrivateKey(key)
 
-	// get the remote and client
-	remoteServer, err := h.remotes.FindType(repo.Remote)
-	if err != nil {
-		return notFound{err}
-	}
-
-	remotePlugin, ok := remote.Lookup(remoteServer.Type)
-	if !ok {
+	var remote = remote.Lookup(host)
+	if remote == nil {
 		return notFound{}
 	}
 
-	// get the remote system's client.
-	plugin := remotePlugin(remoteServer)
-
 	// post commit hook url
-	hook := fmt.Sprintf("%s://%s/v1/hook/%s", httputil.GetScheme(r), httputil.GetHost(r), plugin.GetName())
+	hook := fmt.Sprintf("%s://%s/v1/hook/%s", httputil.GetScheme(r), httputil.GetHost(r), remote.GetKind())
 
 	// activate the repository in the remote system
-	client := plugin.GetClient(user.Access, user.Secret)
-	if err := client.SetActive(owner, name, hook, repo.PublicKey); err != nil {
+	if err := remote.Activate(user, repo, hook); err != nil {
 		return badRequest{err}
 	}
 

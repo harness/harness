@@ -6,113 +6,58 @@ import (
 	"github.com/drone/drone/shared/model"
 )
 
-// Defines a model for integrating (or pluggin in) remote version
-// control systems, such as GitHub and Bitbucket.
-type Plugin func(*model.Remote) Remote
-
-var plugins = map[string]Plugin{}
-
-// Register registers a new plugin.
-func Register(name string, plugin Plugin) {
-	plugins[name] = plugin
-}
-
-// Lookup retrieves the plugin for the remote.
-func Lookup(name string) (Plugin, bool) {
-	plugin, ok := plugins[name]
-	return plugin, ok
-}
-
 type Remote interface {
-	// GetName returns the name of this remote system.
-	GetName() string
+	// Authorize handles authentication with thrid party remote systems,
+	// such as github or bitbucket, and returns user data.
+	Authorize(w http.ResponseWriter, r *http.Request) (*model.Login, error)
 
-	// GetHost returns the URL hostname of this remote system.
-	GetHost() (host string)
+	// GetKind returns the kind of plugin
+	GetKind() string
 
-	// GetHook parses the post-commit hook from the Request body
-	// and returns the required data in a standard format.
-	GetHook(*http.Request) (*Hook, error)
-
-	// GetLogin handles authentication to third party, remote services
-	// and returns the required user data in a standard format.
-	GetLogin(http.ResponseWriter, *http.Request) (*Login, error)
-
-	// NewClient returns a new Bitbucket remote client.
-	GetClient(access, secret string) Client
-
-	// Match returns true if the hostname matches the
-	// hostname of this remote client.
-	IsMatch(hostname string) bool
-}
-
-type Client interface {
-	// GetUser fetches the user by ID (login name).
-	GetUser(login string) (*User, error)
+	// GetHost returns the hostname of the remote service.
+	GetHost() string
 
 	// GetRepos fetches all repositories that the specified
 	// user has access to in the remote system.
-	GetRepos(owner string) ([]*Repo, error)
+	GetRepos(user *model.User) ([]*model.Repo, error)
 
 	// GetScript fetches the build script (.drone.yml) from the remote
 	// repository and returns in string format.
-	GetScript(*Hook) (string, error)
+	GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error)
 
-	// SetStatus
-	SetStatus(owner, repo, sha, status string) error
+	// Activate activates a repository by creating the post-commit hook and
+	// adding the SSH deploy key, if applicable.
+	Activate(user *model.User, repo *model.Repo, link string) error
 
-	// SetActive
-	SetActive(owner, repo, hook, key string) error
+	// ParseHook parses the post-commit hook from the Request body
+	// and returns the required data in a standard format.
+	ParseHook(r *http.Request) (*model.Hook, error)
 }
 
-// Hook represents a subset of commit meta-data provided
-// by post-commit and pull request hooks.
-type Hook struct {
-	Owner       string
-	Repo        string
-	Sha         string
-	Branch      string
-	PullRequest string
-	Author      string
-	Gravatar    string
-	Timestamp   string
-	Message     string
+// List of registered plugins.
+var remotes []Remote
+
+// Register registers a plugin by name.
+//
+// All plugins must be registered when the application
+// initializes. This should not be invoked while the application
+// is running, and is not thread safe.
+func Register(remote Remote) {
+	remotes = append(remotes, remote)
 }
 
-// Login represents a standard subset of user meta-data
-// provided by OAuth login services.
-type Login struct {
-	ID     int64
-	Login  string
-	Access string
-	Secret string
-	Name   string
-	Email  string
+// List Registered remote plugins
+func Registered() []Remote {
+	return remotes
 }
 
-// User represents a standard subset of user meta-data
-// returned by REST API user endpoints (ie github user api).
-type User struct {
-	ID       int64
-	Login    string
-	Name     string
-	Gravatar string
-}
-
-// Repo represents a standard subset of repository meta-data
-// returned by REST API endpoints (ie github repo api).
-type Repo struct {
-	ID      int64
-	Host    string
-	Owner   string
-	Name    string
-	Kind    string
-	Clone   string
-	Git     string
-	SSH     string
-	URL     string
-	Private bool
-	Pull    bool
-	Push    bool
-	Admin   bool
+// Lookup gets a plugin by name.
+func Lookup(name string) Remote {
+	for _, remote := range remotes {
+		if remote.GetKind() == name ||
+			remote.GetHost() == name {
+			return remote
+		}
+	}
+	return nil
 }

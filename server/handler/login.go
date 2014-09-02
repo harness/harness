@@ -28,24 +28,15 @@ func NewLoginHandler(users database.UserManager, repos database.RepoManager, per
 // GetLogin gets the login to the 3rd party remote system.
 // GET /login/:host
 func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
-	host := r.FormValue(":host")
-	redirect := "/"
-
-	remoteServer, err := h.remotes.FindType(host)
-	if err != nil {
-		return notFound{err}
-	}
-
-	remotePlugin, ok := remote.Lookup(remoteServer.Type)
-	if !ok {
+	var host = r.FormValue(":host")
+	var redirect = "/"
+	var remote = remote.Lookup(host)
+	if remote == nil {
 		return notFound{}
 	}
 
-	// get the remote system's client.
-	plugin := remotePlugin(remoteServer)
-
 	// authenticate the user
-	login, err := plugin.GetLogin(w, r)
+	login, err := remote.Authorize(w, r)
 	if err != nil {
 		return badRequest{err}
 	} else if login == nil {
@@ -60,12 +51,12 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 		// if self-registration is disabled we should
 		// return a notAuthorized error. the only exception
 		// is if no users exist yet in the system we'll proceed.
-		if remoteServer.Open == false && h.users.Exist() {
+		if h.users.Exist() {
 			return notAuthorized{}
 		}
 
 		// create the user account
-		u = model.NewUser(plugin.GetName(), login.Login, login.Email)
+		u = model.NewUser(remote.GetKind(), login.Login, login.Email)
 		u.Name = login.Name
 		u.SetEmail(login.Email)
 
@@ -110,41 +101,32 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 		// sync inside a goroutine. This should eventually be moved to
 		// its own package / sync utility.
 		go func() {
-			// list all repositories
-			client := plugin.GetClient(u.Access, u.Secret)
-			repos, err := client.GetRepos("")
+			repos, err := remote.GetRepos(u)
 			if err != nil {
 				log.Println("Error syncing user account, listing repositories", u.Login, err)
 				return
 			}
 
 			// insert all repositories
-			for _, remoteRepo := range repos {
-				repo, _ := model.NewRepo(plugin.GetName(), remoteRepo.Owner, remoteRepo.Name)
-				repo.Private = remoteRepo.Private
-				repo.Host = remoteRepo.Host
-				repo.CloneURL = remoteRepo.Clone
-				repo.GitURL = remoteRepo.Git
-				repo.SSHURL = remoteRepo.SSH
-				repo.URL = remoteRepo.URL
-
+			for _, repo := range repos {
+				var role = repo.Role
 				if err := h.repos.Insert(repo); err != nil {
 					// typically we see a failure because the repository already exists
 					// in which case, we can retrieve the existing record to get the ID.
 					repo, err = h.repos.FindName(repo.Host, repo.Owner, repo.Name)
 					if err != nil {
-						log.Println("Error adding repo.", u.Login, remoteRepo.Name, err)
+						log.Println("Error adding repo.", u.Login, repo.Name, err)
 						continue
 					}
 				}
 
 				// add user permissions
-				if err := h.perms.Grant(u, repo, remoteRepo.Pull, remoteRepo.Push, remoteRepo.Admin); err != nil {
-					log.Println("Error adding permissions.", u.Login, remoteRepo.Name, err)
+				if err := h.perms.Grant(u, repo, role.Read, role.Write, role.Admin); err != nil {
+					log.Println("Error adding permissions.", u.Login, repo.Name, err)
 					continue
 				}
 
-				log.Println("Successfully syced repo.", u.Login+"/"+remoteRepo.Name)
+				log.Println("Successfully syced repo.", u.Login+"/"+repo.Name)
 			}
 
 			u.Synced = time.Now().UTC().Unix()

@@ -1,7 +1,6 @@
 package github
 
 import (
-	"encoding/base32"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -9,74 +8,225 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drone/drone/plugin/remote"
+	"code.google.com/p/goauth2/oauth"
 	"github.com/drone/drone/shared/httputil"
+	"github.com/drone/drone/shared/model"
 	"github.com/drone/go-github/github"
-	"github.com/drone/go-github/oauth2"
-	"github.com/gorilla/securecookie"
 )
 
-var (
-	scope = "repo,repo:status,user:email"
+const (
+	DefaultAPI   = "https://api.github.com/"
+	DefaultURL   = "https://github.com"
+	DefaultScope = "repo,repo:status,user:email"
 )
 
-type Github struct {
-	URL     string `json:"url"` // https://github.com
-	API     string `json:"api"` // https://api.github.com
-	Client  string `json:"client"`
-	Secret  string `json:"secret"`
-	Enabled bool   `json:"enabled"`
+type GitHub struct {
+	URL    string
+	API    string
+	Client string
+	Secret string
 }
 
-// GetName returns the name of this remote system.
-func (g *Github) GetName() string {
-	switch g.URL {
-	case "https://github.com":
-		return "github.com"
-	default:
-		return "enterprise.github.com"
+func New(url, api, client, secret string) *GitHub {
+	var github = GitHub{
+		URL:    url,
+		API:    api,
+		Client: client,
+		Secret: secret,
 	}
+	// the API must have a trailing slash
+	if !strings.HasSuffix(github.API, "/") {
+		github.API += "/"
+	}
+	// the URL must NOT have a trailing slash
+	if strings.HasSuffix(github.URL, "/") {
+		github.URL = github.URL[:len(github.URL)-1]
+	}
+	return &github
 }
 
-// GetHost returns the url.Host of this remote system.
-func (g *Github) GetHost() (host string) {
-	u, err := url.Parse(g.URL)
+func NewDefault(client, secret string) *GitHub {
+	return New(DefaultURL, DefaultAPI, client, secret)
+}
+
+// Authorize handles GitHub API Authorization.
+func (r *GitHub) Authorize(res http.ResponseWriter, req *http.Request) (*model.Login, error) {
+	var config = &oauth.Config{
+		ClientId:     r.Client,
+		ClientSecret: r.Secret,
+		Scope:        DefaultScope,
+		AuthURL:      fmt.Sprintf("%s/login/oauth/authorize", r.URL),
+		TokenURL:     fmt.Sprintf("%s/login/oauth/access_token", r.URL),
+		RedirectURL:  fmt.Sprintf("%s/login/%s", httputil.GetURL(req), r.GetKind()),
+	}
+
+	// get the OAuth code
+	var code = req.FormValue("code")
+	var state = req.FormValue("state")
+	if len(code) == 0 {
+		var random = GetRandom()
+		httputil.SetCookie(res, req, "github_state", random)
+		http.Redirect(res, req, config.AuthCodeURL(random), http.StatusSeeOther)
+		return nil, nil
+	}
+
+	cookieState := httputil.GetCookie(req, "github_state")
+	httputil.DelCookie(res, req, "github_state")
+	if cookieState != state {
+		return nil, fmt.Errorf("Error matching state in OAuth2 redirect")
+	}
+
+	var trans = &oauth.Transport{Config: config}
+	var token, err = trans.Exchange(code)
 	if err != nil {
-		return
+		return nil, err
 	}
-	return u.Host
+
+	var client = NewClient(r.API, token.AccessToken)
+	var useremail, errr = GetUserEmail(client)
+	if errr != nil {
+		return nil, errr
+	}
+
+	var login = new(model.Login)
+	login.ID = int64(*useremail.ID)
+	login.Access = token.AccessToken
+	login.Login = *useremail.Login
+	login.Name = *useremail.Name
+	login.Email = *useremail.Email
+	return login, nil
 }
 
-// GetHook parses the post-commit hook from the Request body
+// GetKind returns the internal identifier of this remote GitHub instane.
+func (r *GitHub) GetKind() string {
+	if r.IsEnterprise() {
+		return model.RemoteGithubEnterprise
+	} else {
+		return model.RemoteGithub
+	}
+}
+
+// GetHost returns the hostname of this remote GitHub instance.
+func (r *GitHub) GetHost() string {
+	uri, _ := url.Parse(r.URL)
+	return uri.Host
+}
+
+// IsEnterprise returns true if the remote system is an
+// instance of GitHub Enterprise Edition.
+func (r *GitHub) IsEnterprise() bool {
+	return r.URL != DefaultURL
+}
+
+// GetRepos fetches all repositories that the specified
+// user has access to in the remote system.
+func (r *GitHub) GetRepos(user *model.User) ([]*model.Repo, error) {
+	var repos []*model.Repo
+	var client = NewClient(r.API, user.Access)
+	var list, err = GetAllRepos(client)
+	if err != nil {
+		return nil, err
+	}
+
+	var remote = r.GetKind()
+	var hostname = r.GetHost()
+	var enterprise = r.IsEnterprise()
+
+	for _, item := range list {
+		var repo = model.Repo{
+			UserID:   user.ID,
+			Remote:   remote,
+			Host:     hostname,
+			Owner:    *item.Owner.Login,
+			Name:     *item.Name,
+			Private:  *item.Private,
+			URL:      *item.URL,
+			CloneURL: *item.GitURL,
+			GitURL:   *item.GitURL,
+			SSHURL:   *item.SSHURL,
+			Role:     &model.Perm{},
+		}
+
+		if enterprise || repo.Private {
+			repo.CloneURL = *item.SSHURL
+		}
+
+		// if no permissions we should skip the repository
+		// entirely, since this should never happen
+		if item.Permissions == nil {
+			continue
+		}
+
+		repo.Role.Admin = (*item.Permissions)["admin"]
+		repo.Role.Write = (*item.Permissions)["push"]
+		repo.Role.Read = (*item.Permissions)["pull"]
+		repos = append(repos, &repo)
+	}
+
+	return repos, err
+}
+
+// GetScript fetches the build script (.drone.yml) from the remote
+// repository and returns in string format.
+func (r *GitHub) GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error) {
+	var client = NewClient(r.API, user.Access)
+	return GetFile(client, repo.Owner, repo.Name, ".drone.yml", hook.Sha)
+}
+
+// Activate activates a repository by adding a Post-commit hook and
+// a Public Deploy key, if applicable.
+func (r *GitHub) Activate(user *model.User, repo *model.Repo, link string) error {
+	var client = NewClient(r.API, user.Access)
+	var title, err = GetKeyTitle(link)
+	if err != nil {
+		return err
+	}
+
+	// if the CloneURL is using the SSHURL then we know that
+	// we need to add an SSH key to GitHub.
+	if repo.SSHURL == repo.CloneURL {
+		_, err = CreateUpdateKey(client, repo.Owner, repo.Name, title, repo.PublicKey)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = CreateUpdateHook(client, repo.Owner, repo.Name, link)
+	return err
+}
+
+// ParseHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
-func (g *Github) GetHook(r *http.Request) (*remote.Hook, error) {
+func (r *GitHub) ParseHook(req *http.Request) (*model.Hook, error) {
 	// handle github ping
-	if r.Header.Get("X-Github-Event") == "ping" {
+	if req.Header.Get("X-Github-Event") == "ping" {
 		return nil, nil
 	}
 
 	// handle github pull request hook differently
-	if r.Header.Get("X-Github-Event") == "pull_request" {
-		return g.GetPullRequestHook(r)
+	if req.Header.Get("X-Github-Event") == "pull_request" {
+		return r.ParsePullRequestHook(req)
 	}
 
 	// get the payload of the message
-	payload := r.FormValue("payload")
+	var payload = req.FormValue("payload")
 
 	// parse the github Hook payload
-	data, err := github.ParseHook([]byte(payload))
+	var data, err = github.ParseHook([]byte(payload))
 	if err != nil {
 		return nil, nil
 	}
 
 	// make sure this is being triggered because of a commit
 	// and not something like a tag deletion or whatever
-	if data.IsTag() || data.IsGithubPages() ||
-		data.IsHead() == false || data.IsDeleted() {
+	if data.IsTag() ||
+		data.IsGithubPages() ||
+		data.IsHead() == false ||
+		data.IsDeleted() {
 		return nil, nil
 	}
 
-	hook := remote.Hook{}
+	var hook = new(model.Hook)
 	hook.Repo = data.Repo.Name
 	hook.Owner = data.Repo.Owner.Login
 	hook.Sha = data.Head.Id
@@ -99,15 +249,17 @@ func (g *Github) GetHook(r *http.Request) (*remote.Hook, error) {
 		hook.Author = data.Commits[0].Author.Email
 	}
 
-	return &hook, nil
+	return hook, nil
 }
 
-func (g *Github) GetPullRequestHook(r *http.Request) (*remote.Hook, error) {
-	payload := r.FormValue("payload")
+// ParsePullRequestHook parses the pull request hook from the Request body
+// and returns the required data in a standard format.
+func (r *GitHub) ParsePullRequestHook(req *http.Request) (*model.Hook, error) {
+	var payload = req.FormValue("payload")
 
 	// parse the payload to retrieve the pull-request
 	// hook meta-data.
-	data, err := github.ParsePullRequestHook([]byte(payload))
+	var data, err = github.ParsePullRequestHook([]byte(payload))
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +271,7 @@ func (g *Github) GetPullRequestHook(r *http.Request) (*remote.Hook, error) {
 
 	// TODO we should also store the pull request branch (ie from x to y)
 	//      we can find it here: data.PullRequest.Head.Ref
-	hook := remote.Hook{
+	var hook = model.Hook{
 		Owner:       data.Repo.Owner.Login,
 		Repo:        data.Repo.Name,
 		Sha:         data.PullRequest.Head.Sha,
@@ -136,79 +288,4 @@ func (g *Github) GetPullRequestHook(r *http.Request) (*remote.Hook, error) {
 	}
 
 	return &hook, nil
-}
-
-// GetLogin handles authentication to third party, remote services
-// and returns the required user data in a standard format.
-func (g *Github) GetLogin(w http.ResponseWriter, r *http.Request) (*remote.Login, error) {
-	// create the oauth2 client
-	oauth := oauth2.Client{
-		RedirectURL:      fmt.Sprintf("%s://%s/login/%s", httputil.GetScheme(r), httputil.GetHost(r), g.GetName()),
-		AccessTokenURL:   fmt.Sprintf("%s/login/oauth/access_token", g.URL),
-		AuthorizationURL: fmt.Sprintf("%s/login/oauth/authorize", g.URL),
-		ClientId:         g.Client,
-		ClientSecret:     g.Secret,
-	}
-
-	// get the OAuth code
-	code := r.FormValue("code")
-	state := r.FormValue("state")
-	if len(code) == 0 {
-		var random = base32.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(32))
-		httputil.SetCookie(w, r, "github_state", string(random))
-
-		// redirect the user to login
-		redirect := oauth.AuthorizeRedirect(scope, random)
-		http.Redirect(w, r, redirect, http.StatusSeeOther)
-		return nil, nil
-	}
-
-	cookieState := httputil.GetCookie(r, "github_state")
-	httputil.DelCookie(w, r, "github_state")
-	if cookieState != state {
-		return nil, fmt.Errorf("Error matching state in OAuth2 redirect")
-	}
-
-	// exchange code for an auth token
-	token, err := oauth.GrantToken(code)
-	if err != nil {
-		return nil, fmt.Errorf("Error granting GitHub authorization token. %s", err)
-	}
-
-	// create the client
-	client := github.New(token.AccessToken)
-	client.ApiUrl = g.API
-
-	// get the user information
-	user, err := client.Users.Current()
-	if err != nil {
-		return nil, fmt.Errorf("Error retrieving currently authenticated GitHub user. %s", err)
-	}
-
-	// put the user data in the common format
-	login := remote.Login{
-		ID:     user.ID,
-		Login:  user.Login,
-		Access: token.AccessToken,
-		Name:   user.Name,
-	}
-
-	// get the users primary email address
-	email, err := client.Emails.FindPrimary()
-	if err == nil {
-		login.Email = email.Email
-	}
-
-	return &login, nil
-}
-
-// GetClient returns a new Github remote client.
-func (g *Github) GetClient(access, secret string) remote.Client {
-	return &Client{g, access}
-}
-
-// IsMatch returns true if the hostname matches the
-// hostname of this remote client.
-func (g *Github) IsMatch(hostname string) bool {
-	return strings.HasSuffix(hostname, g.URL)
 }
