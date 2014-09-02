@@ -6,78 +6,50 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/shared/httputil"
+	"github.com/drone/drone/shared/model"
 	"github.com/drone/go-bitbucket/bitbucket"
 	"github.com/drone/go-bitbucket/oauth1"
 )
 
+const (
+	DefaultAPI = "https://api.bitbucket.org/1.0"
+	DefaultURL = "https://bitbucket.org"
+)
+
 type Bitbucket struct {
-	URL     string `json:"url"` // https://bitbucket.org
-	API     string `json:"api"` // https://api.bitbucket.org
-	Client  string `json:"client"`
-	Secret  string `json:"secret"`
-	Enabled bool   `json:"enabled"`
+	URL    string
+	API    string
+	Client string
+	Secret string
 }
 
-// GetName returns the name of this remote system.
-func (b *Bitbucket) GetName() string {
-	return "bitbucket.org"
-}
-
-// GetHost returns the url.Host of this remote system.
-func (b *Bitbucket) GetHost() (host string) {
-	u, err := url.Parse(b.URL)
-	if err != nil {
-		return
+func New(url, api, client, secret string) *Bitbucket {
+	return &Bitbucket{
+		URL:    url,
+		API:    api,
+		Client: client,
+		Secret: secret,
 	}
-	return u.Host
 }
 
-// GetHook parses the post-commit hook from the Request body
-// and returns the required data in a standard format.
-func (b *Bitbucket) GetHook(r *http.Request) (*remote.Hook, error) {
-	// get the payload from the request
-	payload := r.FormValue("payload")
-
-	// parse the post-commit hook
-	hook, err := bitbucket.ParseHook([]byte(payload))
-	if err != nil {
-		return nil, err
-	}
-
-	// verify the payload has the minimum amount of required data.
-	if hook.Repo == nil || hook.Commits == nil || len(hook.Commits) == 0 {
-		return nil, fmt.Errorf("Invalid Bitbucket post-commit Hook. Missing Repo or Commit data.")
-	}
-
-	return &remote.Hook{
-		Owner:     hook.Repo.Owner,
-		Repo:      hook.Repo.Name,
-		Sha:       hook.Commits[len(hook.Commits)-1].Hash,
-		Branch:    hook.Commits[len(hook.Commits)-1].Branch,
-		Author:    hook.Commits[len(hook.Commits)-1].Author,
-		Timestamp: time.Now().UTC().String(),
-		Message:   hook.Commits[len(hook.Commits)-1].Message,
-	}, nil
+func NewDefault(client, secret string) *Bitbucket {
+	return New(DefaultURL, DefaultAPI, client, secret)
 }
 
-// GetLogin handles authentication to third party, remote services
-// and returns the required user data in a standard format.
-func (b *Bitbucket) GetLogin(w http.ResponseWriter, r *http.Request) (*remote.Login, error) {
-
-	// bitbucket oauth1 consumer
+// Authorize handles Bitbucket API Authorization
+func (r *Bitbucket) Authorize(res http.ResponseWriter, req *http.Request) (*model.Login, error) {
 	consumer := oauth1.Consumer{
 		RequestTokenURL:  "https://bitbucket.org/api/1.0/oauth/request_token/",
 		AuthorizationURL: "https://bitbucket.org/!api/1.0/oauth/authenticate",
 		AccessTokenURL:   "https://bitbucket.org/api/1.0/oauth/access_token/",
-		CallbackURL:      httputil.GetScheme(r) + "://" + httputil.GetHost(r) + "/login/bitbucket.org",
-		ConsumerKey:      b.Client,
-		ConsumerSecret:   b.Secret,
+		CallbackURL:      httputil.GetScheme(req) + "://" + httputil.GetHost(req) + "/login/bitbucket.org",
+		ConsumerKey:      r.Client,
+		ConsumerSecret:   r.Secret,
 	}
 
 	// get the oauth verifier
-	verifier := r.FormValue("oauth_verifier")
+	verifier := req.FormValue("oauth_verifier")
 	if len(verifier) == 0 {
 		// Generate a Request Token
 		requestToken, err := consumer.RequestToken()
@@ -86,19 +58,19 @@ func (b *Bitbucket) GetLogin(w http.ResponseWriter, r *http.Request) (*remote.Lo
 		}
 
 		// add the request token as a signed cookie
-		httputil.SetCookie(w, r, "bitbucket_token", requestToken.Encode())
+		httputil.SetCookie(res, req, "bitbucket_token", requestToken.Encode())
 
 		url, _ := consumer.AuthorizeRedirect(requestToken)
-		http.Redirect(w, r, url, http.StatusSeeOther)
+		http.Redirect(res, req, url, http.StatusSeeOther)
 		return nil, nil
 	}
 
 	// remove bitbucket token data once before redirecting
 	// back to the application.
-	defer httputil.DelCookie(w, r, "bitbucket_token")
+	defer httputil.DelCookie(res, req, "bitbucket_token")
 
 	// get the tokens from the request
-	requestTokenStr := httputil.GetCookie(r, "bitbucket_token")
+	requestTokenStr := httputil.GetCookie(req, "bitbucket_token")
 	requestToken, err := oauth1.ParseRequestTokenStr(requestTokenStr)
 	if err != nil {
 		return nil, err
@@ -112,8 +84,8 @@ func (b *Bitbucket) GetLogin(w http.ResponseWriter, r *http.Request) (*remote.Lo
 
 	// create the Bitbucket client
 	client := bitbucket.New(
-		b.Client,
-		b.Secret,
+		r.Client,
+		r.Secret,
 		accessToken.Token(),
 		accessToken.Secret(),
 	)
@@ -125,7 +97,7 @@ func (b *Bitbucket) GetLogin(w http.ResponseWriter, r *http.Request) (*remote.Lo
 	}
 
 	// put the user data in the common format
-	login := remote.Login{
+	login := model.Login{
 		Login:  user.User.Username,
 		Access: accessToken.Token(),
 		Secret: accessToken.Secret(),
@@ -140,13 +112,147 @@ func (b *Bitbucket) GetLogin(w http.ResponseWriter, r *http.Request) (*remote.Lo
 	return &login, nil
 }
 
-// GetClient returns a new Bitbucket remote client.
-func (b *Bitbucket) GetClient(access, secret string) remote.Client {
-	return &Client{b, access, secret}
+// GetKind returns the internal identifier of this remote Bitbucket instane.
+func (r *Bitbucket) GetKind() string {
+	return model.RemoteBitbucket
 }
 
-// IsMatch returns true if the hostname matches the
-// hostname of this remote client.
-func (b *Bitbucket) IsMatch(hostname string) bool {
-	return hostname == "bitbucket.org"
+// GetHost returns the hostname of this remote Bitbucket instance.
+func (r *Bitbucket) GetHost() string {
+	uri, _ := url.Parse(r.URL)
+	return uri.Host
+}
+
+// GetRepos fetches all repositories that the specified
+// user has access to in the remote system.
+func (r *Bitbucket) GetRepos(user *model.User) ([]*model.Repo, error) {
+	var repos []*model.Repo
+	var client = bitbucket.New(
+		r.Client,
+		r.Secret,
+		user.Access,
+		user.Secret,
+	)
+	var list, err = client.Repos.List()
+	if err != nil {
+		return nil, err
+	}
+
+	var remote = r.GetKind()
+	var hostname = r.GetHost()
+
+	for _, item := range list {
+		// for now we only support git repos
+		if item.Scm != "git" {
+			continue
+		}
+
+		// these are the urls required to clone the repository
+		// TODO use the bitbucketurl.Host and bitbucketurl.Scheme instead of hardcoding
+		//      so that we can support Stash.
+		var clone = fmt.Sprintf("https://bitbucket.org/%s/%s.git", item.Owner, item.Name)
+		var ssh = fmt.Sprintf("git@bitbucket.org:%s/%s.git", item.Owner, item.Name)
+
+		var repo = model.Repo{
+			UserID:   user.ID,
+			Remote:   remote,
+			Host:     hostname,
+			Owner:    item.Owner,
+			Name:     item.Name,
+			Private:  item.Private,
+			CloneURL: clone,
+			GitURL:   clone,
+			SSHURL:   ssh,
+			Role: &model.Perm{
+				Admin: true,
+				Write: true,
+				Read:  true,
+			},
+		}
+
+		if repo.Private {
+			repo.CloneURL = repo.SSHURL
+		}
+
+		repos = append(repos, &repo)
+	}
+
+	return repos, err
+}
+
+// GetScript fetches the build script (.drone.yml) from the remote
+// repository and returns in string format.
+func (r *Bitbucket) GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error) {
+	var client = bitbucket.New(
+		r.Client,
+		r.Secret,
+		user.Access,
+		user.Secret,
+	)
+
+	// get the yaml from the database
+	var raw, err = client.Sources.Find(repo.Owner, repo.Name, hook.Sha, ".drone.yml")
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(raw.Data), nil
+}
+
+// Activate activates a repository by adding a Post-commit hook and
+// a Public Deploy key, if applicable.
+func (r *Bitbucket) Activate(user *model.User, repo *model.Repo, link string) error {
+	var client = bitbucket.New(
+		r.Client,
+		r.Secret,
+		user.Access,
+		user.Secret,
+	)
+
+	// parse the hostname from the hook, and use this
+	// to name the ssh key
+	var hookurl, err = url.Parse(link)
+	if err != nil {
+		return err
+	}
+
+	// if the repository is private we'll need
+	// to upload a github key to the repository
+	if repo.Private {
+		// name the key
+		var keyname = "drone@" + hookurl.Host
+		var _, err = client.RepoKeys.CreateUpdate(repo.Owner, repo.Name, repo.PublicKey, keyname)
+		if err != nil {
+			return err
+		}
+	}
+
+	// add the hook
+	_, err = client.Brokers.CreateUpdate(repo.Owner, repo.Name, link, bitbucket.BrokerTypePost)
+	return err
+}
+
+// ParseHook parses the post-commit hook from the Request body
+// and returns the required data in a standard format.
+func (r *Bitbucket) ParseHook(req *http.Request) (*model.Hook, error) {
+	var payload = req.FormValue("payload")
+	var hook, err = bitbucket.ParseHook([]byte(payload))
+	if err != nil {
+		return nil, err
+	}
+
+	// verify the payload has the minimum amount of required data.
+	if hook.Repo == nil || hook.Commits == nil || len(hook.Commits) == 0 {
+		return nil, fmt.Errorf("Invalid Bitbucket post-commit Hook. Missing Repo or Commit data.")
+	}
+
+	return &model.Hook{
+		Owner:     hook.Repo.Owner,
+		Repo:      hook.Repo.Name,
+		Sha:       hook.Commits[len(hook.Commits)-1].Hash,
+		Branch:    hook.Commits[len(hook.Commits)-1].Branch,
+		Author:    hook.Commits[len(hook.Commits)-1].Author,
+		Timestamp: time.Now().UTC().String(),
+		Message:   hook.Commits[len(hook.Commits)-1].Message,
+	}, nil
 }

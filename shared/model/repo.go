@@ -39,6 +39,11 @@ type Repo struct {
 	Timeout     int64  `meddler:"repo_timeout"      json:"timeout"`
 	Created     int64  `meddler:"repo_created"      json:"created_at"`
 	Updated     int64  `meddler:"repo_updated"      json:"updated_at"`
+
+	// Role defines the user's role relative to this repository.
+	// Note that this data is stored separately in the datastore,
+	// and must be joined to populate.
+	Role *Perm `meddler:"-" json:"role,omitempty"`
 }
 
 func NewRepo(remote, owner, name string) (*Repo, error) {

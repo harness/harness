@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
@@ -28,24 +27,14 @@ func NewHookHandler(users database.UserManager, repos database.RepoManager, comm
 // PostHook receives a post-commit hook from GitHub, Bitbucket, etc
 // GET /hook/:host
 func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
-	host := r.FormValue(":host")
-	log.Println("received post-commit hook.")
-
-	remoteServer, err := h.remotes.FindType(host)
-	if err != nil {
-		return notFound{err}
-	}
-
-	remotePlugin, ok := remote.Lookup(remoteServer.Type)
-	if !ok {
+	var host = r.FormValue(":host")
+	var remote = remote.Lookup(host)
+	if remote == nil {
 		return notFound{}
 	}
 
-	// get the remote system's client.
-	plugin := remotePlugin(remoteServer)
-
 	// parse the hook payload
-	hook, err := plugin.GetHook(r)
+	hook, err := remote.ParseHook(r)
 	if err != nil {
 		return badRequest{err}
 	}
@@ -59,7 +48,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// fetch the repository from the database
-	repo, err := h.repos.FindName(plugin.GetHost(), hook.Owner, hook.Repo)
+	repo, err := h.repos.FindName(remote.GetHost(), hook.Owner, hook.Repo)
 	if err != nil {
 		return notFound{}
 	}
@@ -78,8 +67,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// featch the .drone.yml file from the database
-	client := plugin.GetClient(user.Access, user.Secret)
-	yml, err := client.GetScript(hook)
+	yml, err := remote.GetScript(user, repo, hook)
 	if err != nil {
 		return badRequest{err}
 	}
@@ -87,7 +75,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 	// verify the commit hooks branch matches the list of approved
 	// branches (unless it is a pull request). Note that we don't really
 	// care if parsing the yaml fails here.
-	s, _ := script.ParseBuild(yml, map[string]string{})
+	s, _ := script.ParseBuild(string(yml), map[string]string{})
 	if len(hook.PullRequest) == 0 && !s.MatchBranch(hook.Branch) {
 		w.WriteHeader(http.StatusOK)
 		return nil
@@ -101,7 +89,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 		PullRequest: hook.PullRequest,
 		Timestamp:   hook.Timestamp,
 		Message:     hook.Message,
-		Config:      yml}
+		Config:      string(yml)}
 	c.SetAuthor(hook.Author)
 	// inser the commit into the database
 	if err := h.commits.Insert(&c); err != nil {

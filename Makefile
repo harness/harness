@@ -29,7 +29,7 @@ clean:
 	rm -f debian/drone/usr/local/bin/droned
 	rm -f debian/drone.deb
 	rm -f server/server
-	rm -f client/client
+	rm -f cmd/cmd
 
 lessc:
 	lessc --clean-css server/app/styles/drone.less server/app/styles/drone.css
