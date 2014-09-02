@@ -9,8 +9,19 @@ deps:
 	go list github.com/drone/drone/... | xargs go get -t -v
 
 test:
+	# Test with SQLite in memory
 	go vet ./...
-	go test -cover -short ./...
+	DRONE_DATABASE_DRIVER="sqlite3" DRONE_DATABASE_DATASOURCE=":memory:" go test -cover -short ./...
+
+ci_test: test test_psql test_mysql
+
+test_psql:
+	# Test with PostreSQL
+	DRONE_DATABASE_DRIVER="postgres" DRONE_DATABASE_DATASOURCE="user=postgres host=127.0.0.1 port=5432 dbname=drone sslmode=disable" go test -cover -short ./...
+
+test_mysql:
+	# Test with MySQL
+	DRONE_DATABASE_DRIVER="mysql" DRONE_DATABASE_DATASOURCE="root@tcp(127.0.0.1:3306)/drone" go test -cover -short ./...
 
 build:
 	go build -o debian/drone/usr/local/bin/drone  -ldflags "-X main.revision $(SHA)" github.com/drone/drone/cmd

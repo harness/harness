@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/drone/drone/server/helper"
 	"github.com/drone/drone/shared/model"
 	"github.com/russross/meddler"
 )
@@ -181,43 +182,44 @@ func (db *commitManager) Find(id int64) (*model.Commit, error) {
 
 func (db *commitManager) FindSha(repo int64, branch, sha string) (*model.Commit, error) {
 	dst := model.Commit{}
-	err := meddler.QueryRow(db, &dst, findCommitQuery, repo, branch, sha)
+
+	err := meddler.QueryRow(db, &dst, helper.Rebind(findCommitQuery), repo, branch, sha)
 	return &dst, err
 }
 
 func (db *commitManager) FindLatest(repo int64, branch string) (*model.Commit, error) {
 	dst := model.Commit{}
-	err := meddler.QueryRow(db, &dst, findLatestCommitQuery, repo, branch)
+	err := meddler.QueryRow(db, &dst, helper.Rebind(findLatestCommitQuery), repo, branch)
 	return &dst, err
 }
 
 func (db *commitManager) FindOutput(commit int64) ([]byte, error) {
 	var dst string
-	err := db.QueryRow(findOutputQuery, commit).Scan(&dst)
+	err := db.QueryRow(helper.Rebind(findOutputQuery), commit).Scan(&dst)
 	return []byte(dst), err
 }
 
 func (db *commitManager) List(repo int64) ([]*model.Commit, error) {
 	var dst []*model.Commit
-	err := meddler.QueryAll(db, &dst, listCommitsQuery, repo)
+	err := meddler.QueryAll(db, &dst, helper.Rebind(listCommitsQuery), repo)
 	return dst, err
 }
 
 func (db *commitManager) ListBranch(repo int64, branch string) ([]*model.Commit, error) {
 	var dst []*model.Commit
-	err := meddler.QueryAll(db, &dst, listBranchQuery, repo, branch)
+	err := meddler.QueryAll(db, &dst, helper.Rebind(listBranchQuery), repo, branch)
 	return dst, err
 }
 
 func (db *commitManager) ListBranches(repo int64) ([]*model.Commit, error) {
 	var dst []*model.Commit
-	err := meddler.QueryAll(db, &dst, listBranchesQuery, repo)
+	err := meddler.QueryAll(db, &dst, helper.Rebind(listBranchesQuery), repo)
 	return dst, err
 }
 
 func (db *commitManager) ListUser(user int64) ([]*model.CommitRepo, error) {
 	var dst []*model.CommitRepo
-	err := meddler.QueryAll(db, &dst, listUserCommitsQuery, user)
+	err := meddler.QueryAll(db, &dst, helper.Rebind(listUserCommitsQuery), user)
 	return dst, err
 }
 
@@ -233,20 +235,20 @@ func (db *commitManager) Update(commit *model.Commit) error {
 }
 
 func (db *commitManager) UpdateOutput(commit *model.Commit, out []byte) error {
-	_, err := db.Exec(insertOutputStmt, commit.ID, out)
+	_, err := db.Exec(helper.Rebind(insertOutputStmt), commit.ID, out)
 	if err != nil {
 		return nil
 	}
-	_, err = db.Exec(updateOutputStmt, out, commit.ID)
+	_, err = db.Exec(helper.Rebind(updateOutputStmt), out, commit.ID)
 	return err
 }
 
 func (db *commitManager) Delete(commit *model.Commit) error {
-	_, err := db.Exec(deleteCommitStmt, commit.ID)
+	_, err := db.Exec(helper.Rebind(deleteCommitStmt), commit.ID)
 	return err
 }
 
 func (db *commitManager) CancelAll() error {
-	_, err := db.Exec(cancelCommitStmt, model.StatusKilled, time.Now().Unix(), time.Now().Unix())
+	_, err := db.Exec(helper.Rebind(cancelCommitStmt), model.StatusKilled, time.Now().Unix(), time.Now().Unix())
 	return err
 }

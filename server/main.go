@@ -9,7 +9,6 @@ import (
 	"github.com/drone/config"
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/database/connection"
-	"github.com/drone/drone/server/database/schema"
 	"github.com/drone/drone/server/handler"
 	"github.com/drone/drone/server/pubsub"
 	"github.com/drone/drone/server/session"
@@ -77,10 +76,10 @@ func main() {
 
 	// Create database connection
 	conn := connection.NewConnection(driver, datasource)
+	if err := conn.MigrateAll(); err != nil {
+		panic(err)
+	}
 	defer conn.Close()
-
-	// Load schema
-	schema.Load(conn.DB)
 
 	// setup the database managers
 	repos := database.NewRepoManager(conn.DB)
