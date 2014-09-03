@@ -156,5 +156,6 @@ func (h *LoginHandler) GetLogout(w http.ResponseWriter, r *http.Request) error {
 
 func (h *LoginHandler) Register(r *pat.Router) {
 	r.Get("/login/{host}", errorHandler(h.GetLogin))
+	r.Post("/login/{host}", errorHandler(h.GetLogin))
 	r.Get("/logout", errorHandler(h.GetLogout))
 }
