@@ -1,16 +1,24 @@
 package bitbucket
 
 import (
-	"os"
-
+	"github.com/drone/config"
 	"github.com/drone/drone/plugin/remote"
 )
 
-func init() {
-	var cli = os.Getenv("BITBUCKET_CLIENT")
-	var sec = os.Getenv("BITBUCKET_SECRET")
-	if len(cli) == 0 || len(sec) == 0 {
+var (
+	// Bitbucket cloud configuration details
+	bitbucketClient = config.String("bitbucket-client", "")
+	bitbucketSecret = config.String("bitbucket-secret", "")
+)
+
+// Registers the Bitbucket plugin using the default
+// settings from the config file or environment
+// variables.
+func Register() {
+	if len(*bitbucketClient) == 0 || len(*bitbucketSecret) == 0 {
 		return
 	}
-	remote.Register(NewDefault(cli, sec))
+	remote.Register(
+		NewDefault(*bitbucketClient, *bitbucketSecret),
+	)
 }

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net"
 	"net/smtp"
-	"os"
 	"strings"
 
+	"github.com/drone/config"
 	"github.com/drone/drone/shared/model"
 )
 
@@ -28,11 +28,11 @@ const (
 )
 
 var (
-	DefaultHost = os.Getenv("SMTP_HOST")
-	DefaultPort = os.Getenv("SMTP_PORT")
-	DefaultFrom = os.Getenv("SMTP_FROM")
-	DefaultUser = os.Getenv("SMTP_USER")
-	DefaultPass = os.Getenv("SMTP_PASS")
+	DefaultHost = config.String("smtp-host", "")
+	DefaultPort = config.String("smtp-port", "")
+	DefaultFrom = config.String("smtp-from", "")
+	DefaultUser = config.String("smtp-user", "")
+	DefaultPass = config.String("smtp-pass", "")
 )
 
 type Email struct {
@@ -139,12 +139,12 @@ func (e *Email) send(subject, body string, recipients []string) error {
 	// configuration. If None provided, attempt to
 	// use the global configuration set in the environet
 	// variables.
-	if len(DefaultHost) != 0 {
-		e.Host = DefaultHost
-		e.Port = DefaultPort
-		e.From = DefaultFrom
-		e.Username = DefaultUser
-		e.Password = DefaultPass
+	if len(*DefaultHost) != 0 {
+		e.Host = *DefaultHost
+		e.Port = *DefaultPort
+		e.From = *DefaultFrom
+		e.Username = *DefaultUser
+		e.Password = *DefaultPass
 	}
 
 	var auth smtp.Auth
