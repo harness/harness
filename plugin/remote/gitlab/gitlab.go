@@ -83,13 +83,23 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 
 		// if no permissions we should skip the repository
 		// entirely, since this should never happen
-		if item.Permissions == nil {
+		if repo.Owner != user.Login && item.Permissions == nil {
 			continue
 		}
 
-		repo.Role.Admin = IsAdmin(item)
-		repo.Role.Write = IsWrite(item)
-		repo.Role.Read = IsRead(item)
+		// if the user is the owner we can assume full access,
+		// otherwise check for the permission items.
+		if repo.Owner == user.Login {
+			repo.Role = new(model.Perm)
+			repo.Role.Admin = true
+			repo.Role.Write = true
+			repo.Role.Read = true
+		} else {
+			repo.Role.Admin = IsAdmin(item)
+			repo.Role.Write = IsWrite(item)
+			repo.Role.Read = IsRead(item)
+		}
+
 		repos = append(repos, &repo)
 	}
 
