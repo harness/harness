@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/drone/config"
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/database/schema"
 	"github.com/drone/drone/server/handler"
@@ -22,9 +23,9 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/russross/meddler"
 
-	_ "github.com/drone/drone/plugin/remote/bitbucket"
-	_ "github.com/drone/drone/plugin/remote/github"
-	_ "github.com/drone/drone/plugin/remote/gitlab"
+	"github.com/drone/drone/plugin/remote/bitbucket"
+	"github.com/drone/drone/plugin/remote/github"
+	"github.com/drone/drone/plugin/remote/gitlab"
 )
 
 var (
@@ -49,12 +50,16 @@ var (
 	// Number of concurrent build workers to run
 	// default to number of CPUs on machine
 	workers int
+
+	conf   string
+	prefix string
 )
 
 func main() {
-
 	log.SetPriority(log.LOG_NOTICE)
 
+	flag.StringVar(&conf, "config", "", "")
+	flag.StringVar(&prefix, "prefix", "DRONE_", "")
 	flag.StringVar(&port, "port", ":8080", "")
 	flag.StringVar(&driver, "driver", "sqlite3", "")
 	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
@@ -62,6 +67,14 @@ func main() {
 	flag.StringVar(&sslkey, "sslkey", "", "")
 	flag.IntVar(&workers, "workers", runtime.NumCPU(), "")
 	flag.Parse()
+
+	config.SetPrefix(prefix)
+	config.Parse(conf)
+
+	// setup the remote services
+	bitbucket.Register()
+	github.Register()
+	gitlab.Register()
 
 	// setup the database
 	meddler.Default = meddler.SQLite
@@ -146,24 +159,4 @@ func main() {
 	} else {
 		panic(http.ListenAndServe(port, nil))
 	}
-}
-
-func init() {
-
-}
-
-func init_flags() {
-
-}
-
-func init_database() {
-
-}
-
-func init_workers() {
-
-}
-
-func init_handlers() {
-
 }

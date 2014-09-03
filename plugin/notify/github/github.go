@@ -3,20 +3,11 @@ package github
 import (
 	"fmt"
 	"net/url"
-	"os"
-	"strings"
 
 	"code.google.com/p/goauth2/oauth"
 	"github.com/drone/drone/shared/model"
 	"github.com/google/go-github/github"
 )
-
-// TODO (bradrydzewski) explore using the Repo.URL to parse the GitHub
-// Entperprise Scheme+Hostname, instead of the environment variable. Is
-// there any reason not to use the environment variable?
-
-// GitHub enterprise URL
-var URL = os.Getenv("GITHUB_ENTERPRISE_API")
 
 const (
 	NotifyDisabled = "disabled"
@@ -36,6 +27,10 @@ const (
 	DescSuccess = "the build was succcessful"
 	DescFailure = "the build failed"
 	DescError   = "oops, something went wrong"
+)
+
+const (
+	BaseURL = "https://api.github.com/"
 )
 
 type GitHub string
@@ -70,6 +65,7 @@ func (g GitHub) Send(context *model.Request) error {
 	)
 
 	return send(
+		context.Repo.URL,
 		context.Repo.Host,
 		context.Repo.Owner,
 		context.Repo.Name,
@@ -81,7 +77,7 @@ func (g GitHub) Send(context *model.Request) error {
 	)
 }
 
-func send(host, owner, repo, status, desc, target, ref, token string) error {
+func send(rawurl, host, owner, repo, status, desc, target, ref, token string) error {
 	transport := &oauth.Transport{
 		Token: &oauth.Token{AccessToken: token},
 	}
@@ -99,10 +95,7 @@ func send(host, owner, repo, status, desc, target, ref, token string) error {
 	// the base url. Per the documentation, we need to
 	// ensure there is a trailing slash.
 	if host != model.RemoteGithub {
-		client.BaseURL, _ = url.Parse(URL)
-		if !strings.HasSuffix(client.BaseURL.Path, "/") {
-			client.BaseURL.Path = client.BaseURL.Path + "/"
-		}
+		client.BaseURL, _ = getEndpoint(rawurl)
 	}
 
 	_, _, err := client.Repositories.CreateStatus(owner, repo, ref, &data)
@@ -150,4 +143,16 @@ func getDesc(status string) string {
 //   https://drone.io/github.com/drone/drone-test-go/master/c22aec9c53
 func getTarget(url, host, owner, repo, branch, commit string) string {
 	return fmt.Sprintf("%s/%s/%s/%s/%s/%s", url, host, owner, repo, branch, commit)
+}
+
+// getEndpoint is a helper funcation that parsed the
+// repository HTML URL to determine the API URL. It is
+// intended for use with GitHub enterprise.
+func getEndpoint(rawurl string) (*url.URL, error) {
+	uri, err := url.Parse(rawurl)
+	if err != nil {
+		return nil, err
+	}
+	uri.Path = "/api/v3"
+	return uri, nil
 }
