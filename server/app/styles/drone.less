@@ -634,6 +634,31 @@ nav {
 			margin-bottom:0px;
 		}
 	}
+	form.pure-g {
+		input[type="text"],
+		input[type="password"] {
+			.border_box();
+			width:100%;
+			padding:8px;
+			font-size:14px;
+			margin-bottom:15px;
+			border: 1px solid #DDD;
+		}
+		input[type="submit"] {
+			display:block;
+			background:@c1;
+			color:#fff;
+			padding:14px 20px;
+			font-size:15px;
+			border-radius:5px;
+			text-decoration:none;
+			width:100%;
+			border:none;
+			&:hover {
+				background:@c0;
+			}
+		}
+	}
 }
 
 #setuppage2  {

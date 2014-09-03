@@ -26,6 +26,10 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 			controller: 'LoginController',
 			title: 'Login',
 		})
+		.when('/gitlab', {
+			templateUrl: '/views/login_gitlab.html',
+			title: 'GitLab Login',
+		})
 		.when('/setup', {
 			templateUrl: '/views/setup.html',
 			controller: 'SetupController',
