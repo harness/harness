@@ -147,6 +147,7 @@ docker pull bradrydzewski/gcc:4.8          # image: gcc4.8
 docker pull bradrydzewski/go:1.0           # image: go1
 docker pull bradrydzewski/go:1.1           # image: go1.1
 docker pull bradrydzewski/go:1.2           # image: go1.2
+docker pull bradrydzewski/go:1.3           # image: go1.3
 
 # haskell images
 docker pull bradrydzewski/haskell:7.4      # image: haskell
