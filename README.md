@@ -27,7 +27,6 @@ you can provide Drone with the path to your configuration file:
 
 ```sh
 ./drone --config=/path/to/drone.conf
-
 ```
 
 The configuration file is in TOML format:
@@ -90,7 +89,6 @@ Or a combination of the two:
 
 ```sh
 DRONE_GITLAB_URL="https://gitlab.com" ./drone --config=/path/to/drone.conf
-
 ```
 
 ## Compatibility Issues
