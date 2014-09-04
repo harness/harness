@@ -47,6 +47,9 @@ url=""
 client=""
 secret=""
 
+[gitlab]
+url=""
+
 [smtp]
 host=""
 port=""
@@ -60,7 +63,7 @@ Or you can use environment variables
 ```sh
 # github configuration
 export DRONE_GITHUB_CLIENT=""
-export DRONE_GITHUB_secret=""
+export DRONE_GITHUB_SECRET=""
 
 # github enterprise configuration
 export DRONE_GITHUB_ENTERPRISE_CLIENT=""
@@ -72,12 +75,22 @@ export DRONE_GITHUB_ENTERPRISE_URL=""
 export DRONE_BITBUCKET_CLIENT=""
 export DRONE_BITBUCKET_SECRET=""
 
+# gitlab configuration
+export DRONE_GITLAB_URL=""
+
 # email configuration
 export DRONE_SMTP_HOST=""
 export DRONE_SMTP_PORT=""
 export DRONE_SMTP_FROM=""
 export DRONE_SMTP_USER=""
 export DRONE_SMTP_PASS=""
+```
+
+Or a combination of the two:
+
+```sh
+DRONE_GITLAB_URL="https://gitlab.com" ./drone --config=/path/to/drone.conf
+
 ```
 
 ## Compatibility Issues
