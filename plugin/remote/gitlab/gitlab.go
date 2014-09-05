@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/Bugagazavr/go-gitlab-client"
 	"github.com/drone/drone/shared/model"
@@ -81,9 +82,15 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 			repo.CloneURL = repo.SSHURL
 		}
 
+		// Fetch current project
+		project, err := client.Project(strconv.Itoa(item.Id))
+		if err != nil {
+			return nil, err
+		}
+
 		// if no permissions we should skip the repository
 		// entirely, since this should never happen
-		if repo.Owner != user.Login && item.Permissions == nil {
+		if repo.Owner != user.Login && project.Permissions == nil {
 			continue
 		}
 
@@ -95,9 +102,9 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 			repo.Role.Write = true
 			repo.Role.Read = true
 		} else {
-			repo.Role.Admin = IsAdmin(item)
-			repo.Role.Write = IsWrite(item)
-			repo.Role.Read = IsRead(item)
+			repo.Role.Admin = IsAdmin(project)
+			repo.Role.Write = IsWrite(project)
+			repo.Role.Read = IsRead(project)
 		}
 
 		repos = append(repos, &repo)
