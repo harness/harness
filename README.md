@@ -32,6 +32,10 @@ you can provide Drone with the path to your configuration file:
 The configuration file is in TOML format:
 
 ```toml
+
+[registration]
+open=true
+
 [github]
 client=""
 secret=""

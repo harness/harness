@@ -16,13 +16,12 @@ type LoginHandler struct {
 	users database.UserManager
 	repos database.RepoManager
 	perms database.PermManager
-	//conf    database.ConfigManager
-	sess    session.Session
-	remotes database.RemoteManager
+	sess  session.Session
+	open  bool
 }
 
-func NewLoginHandler(users database.UserManager, repos database.RepoManager, perms database.PermManager, sess session.Session /*conf database.ConfigManager,*/, remotes database.RemoteManager) *LoginHandler {
-	return &LoginHandler{users, repos, perms /*conf,*/, sess, remotes}
+func NewLoginHandler(users database.UserManager, repos database.RepoManager, perms database.PermManager, sess session.Session, open bool) *LoginHandler {
+	return &LoginHandler{users, repos, perms, sess, open}
 }
 
 // GetLogin gets the login to the 3rd party remote system.
@@ -51,7 +50,7 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 		// if self-registration is disabled we should
 		// return a notAuthorized error. the only exception
 		// is if no users exist yet in the system we'll proceed.
-		if h.users.Exist() {
+		if h.open == false && h.users.Exist() {
 			return notAuthorized{}
 		}
 
