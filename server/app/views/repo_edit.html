@@ -28,6 +28,12 @@
 						<label for="pull_requests"></label>
 						<span>Enable Pull Request Hooks</span>
 					</div>
+
+					<div class="toggle" ng-if="user.admin == true">
+						<input type="checkbox" ng-model="repo.privileged" id="privileged" />
+						<label for="privileged"></label>
+						<span>Enable Privileged mode</span>
+					</div>
 					<button ng-click="save()" class="pure-button pure-button-primary">Save Flags</button>
 				</div>
 			</div>
