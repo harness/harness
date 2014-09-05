@@ -76,6 +76,7 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 			GitURL:   item.HttpRepoUrl,
 			SSHURL:   item.SshRepoUrl,
 			Role:     &model.Perm{},
+			Timeout:  900,
 		}
 
 		if repo.Private {
