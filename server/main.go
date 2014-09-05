@@ -53,6 +53,8 @@ var (
 
 	conf   string
 	prefix string
+
+	open bool
 )
 
 func main() {
@@ -68,6 +70,7 @@ func main() {
 	flag.IntVar(&workers, "workers", runtime.NumCPU(), "")
 	flag.Parse()
 
+	config.BoolVar(&open, "registration-open", false)
 	config.SetPrefix(prefix)
 	config.Parse(conf)
 
@@ -88,7 +91,6 @@ func main() {
 	commits := database.NewCommitManager(db)
 	servers := database.NewServerManager(db)
 	remotes := database.NewRemoteManager(db)
-	//configs := database.NewConfigManager(filepath.Join(home, "config.toml"))
 
 	// message broker
 	pubsub := pubsub.NewPubSub()
@@ -118,7 +120,7 @@ func main() {
 	handler.NewUsersHandler(users, sess).Register(router)
 	handler.NewUserHandler(users, repos, commits, sess).Register(router)
 	handler.NewHookHandler(users, repos, commits, remotes, queue).Register(router)
-	handler.NewLoginHandler(users, repos, perms, sess, remotes).Register(router)
+	handler.NewLoginHandler(users, repos, perms, sess, open).Register(router)
 	handler.NewCommitHandler(users, repos, commits, perms, sess, queue).Register(router)
 	handler.NewRepoHandler(repos, commits, perms, sess, remotes).Register(router)
 	handler.NewBadgeHandler(repos, commits).Register(router)

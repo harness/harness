@@ -70,7 +70,7 @@ DELETE FROM users WHERE user_id=?
 
 // SQL statement to check if users exist.
 const confirmUserStmt = `
-select 0 from users limit 1
+select 1 from users limit 1
 `
 
 // NewUserManager initiales a new UserManager intended to
