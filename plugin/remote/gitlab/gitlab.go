@@ -152,6 +152,10 @@ func (r *Gitlab) ParseHook(req *http.Request) (*model.Hook, error) {
 		return nil, err
 	}
 
+	if len(parsed.After) == 0 || parsed.TotalCommitsCount == 0 {
+		return nil, nil
+	}
+
 	if parsed.ObjectKind == "merge_request" {
 		// TODO (bradrydzewski) figure out how to handle merge requests
 		return nil, nil
