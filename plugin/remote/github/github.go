@@ -212,11 +212,9 @@ func (r *GitHub) ParseHook(req *http.Request) (*model.Hook, error) {
 		return r.ParsePullRequestHook(req)
 	}
 
-	// get the payload of the message
-	var payload = req.FormValue("payload")
-
 	// parse the github Hook payload
-	var data, err = github.ParseHook([]byte(payload))
+	var payload = GetPayload(req)
+	var data, err = github.ParseHook(payload)
 	if err != nil {
 		return nil, nil
 	}
@@ -259,11 +257,11 @@ func (r *GitHub) ParseHook(req *http.Request) (*model.Hook, error) {
 // ParsePullRequestHook parses the pull request hook from the Request body
 // and returns the required data in a standard format.
 func (r *GitHub) ParsePullRequestHook(req *http.Request) (*model.Hook, error) {
-	var payload = req.FormValue("payload")
 
 	// parse the payload to retrieve the pull-request
 	// hook meta-data.
-	var data, err = github.ParsePullRequestHook([]byte(payload))
+	var payload = GetPayload(req)
+	var data, err = github.ParsePullRequestHook(payload)
 	if err != nil {
 		return nil, err
 	}

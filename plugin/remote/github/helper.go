@@ -3,6 +3,8 @@ package github
 import (
 	"encoding/base32"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"net/url"
 
 	"code.google.com/p/goauth2/oauth"
@@ -235,4 +237,16 @@ func GetFile(client *github.Client, owner, name, path, ref string) ([]byte, erro
 // key, base32 encoded as a string value.
 func GetRandom() string {
 	return base32.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(32))
+}
+
+// GetPayload is a helper function that will parse the JSON payload. It will
+// first check for a `payload` parameter in a POST, but can fallback to a
+// raw JSON body as well.
+func GetPayload(req *http.Request) []byte {
+	var payload = req.FormValue("payload")
+	if len(payload) == 0 {
+		raw, _ := ioutil.ReadAll(req.Body)
+		return raw
+	}
+	return []byte(payload)
 }
