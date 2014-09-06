@@ -93,8 +93,9 @@ func (r *GitHub) Authorize(res http.ResponseWriter, req *http.Request) (*model.L
 	login.Access = token.AccessToken
 	login.Login = *useremail.Login
 	login.Email = *useremail.Email
-	if username.Name == nil {
-		login.Name = *useremail.Email
+	login.Name = *useremail.Email
+	if useremail.Name != nil {
+		login.Name = *useremail.Name
 	}
 
 	return login, nil
