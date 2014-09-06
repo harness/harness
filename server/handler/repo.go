@@ -103,6 +103,7 @@ func (h *RepoHandler) PostRepo(w http.ResponseWriter, r *http.Request) error {
 	repo.PullRequest = true
 	repo.PostCommit = true
 	repo.UserID = user.ID
+	repo.Timeout = 3600 // default to 1 hour
 
 	// generate the rsa key
 	key, err := sshutil.GeneratePrivateKey()
