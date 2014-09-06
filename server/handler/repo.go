@@ -170,6 +170,8 @@ func (h *RepoHandler) PutRepo(w http.ResponseWriter, r *http.Request) error {
 		Privileged  *bool   `json:"privileged"`
 		Params      *string `json:"params"`
 		Timeout     *int64  `json:"timeout"`
+		PublicKey   *string `json:"public_key"`
+		PrivateKey  *string `json:"private_key"`
 	}{}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		return badRequest{err}
@@ -196,6 +198,10 @@ func (h *RepoHandler) PutRepo(w http.ResponseWriter, r *http.Request) error {
 	// the system administrator
 	if in.Timeout != nil && user.Admin {
 		repo.Timeout = *in.Timeout
+	}
+	if in.PrivateKey != nil && in.PublicKey != nil {
+		repo.PublicKey = *in.PublicKey
+		repo.PrivateKey = *in.PrivateKey
 	}
 
 	// update the repository
