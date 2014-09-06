@@ -76,23 +76,10 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 			GitURL:   item.HttpRepoUrl,
 			SSHURL:   item.SshRepoUrl,
 			Role:     &model.Perm{},
-			Timeout:  900,
 		}
 
 		if repo.Private {
 			repo.CloneURL = repo.SSHURL
-		}
-
-		// Fetch current project
-		project, err := client.Project(strconv.Itoa(item.Id))
-		if err != nil {
-			return nil, err
-		}
-
-		// if no permissions we should skip the repository
-		// entirely, since this should never happen
-		if repo.Owner != user.Login && project.Permissions == nil {
-			continue
 		}
 
 		// if the user is the owner we can assume full access,
@@ -103,6 +90,11 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 			repo.Role.Write = true
 			repo.Role.Read = true
 		} else {
+			// Fetch current project
+			project, err := client.Project(strconv.Itoa(item.Id))
+			if err != nil || project.Permissions == nil {
+				continue
+			}
 			repo.Role.Admin = IsAdmin(project)
 			repo.Role.Write = IsWrite(project)
 			repo.Role.Read = IsRead(project)
