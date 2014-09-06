@@ -147,7 +147,7 @@ func CreateHook(client *github.Client, owner, name, url string) (*github.Hook, e
 	hook.Events = []string{"push", "pull_request"}
 	hook.Config = map[string]interface{}{}
 	hook.Config["url"] = url
-	hook.Config["content_type"] = "json"
+	hook.Config["content_type"] = "form"
 	created, _, err := client.Repositories.CreateHook(owner, name, hook)
 	return created, err
 }
@@ -162,7 +162,7 @@ func CreateUpdateHook(client *github.Client, owner, name, url string) (*github.H
 		hook.Events = []string{"push", "pull_request"}
 		hook.Config = map[string]interface{}{}
 		hook.Config["url"] = url
-		hook.Config["content_type"] = "json"
+		hook.Config["content_type"] = "form"
 		var updated, _, err = client.Repositories.EditHook(owner, name, *hook.ID, hook)
 		return updated, err
 	}
