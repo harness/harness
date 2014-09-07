@@ -45,6 +45,7 @@ client=""
 secret=""
 api=""
 url=""
+private_mode=false
 
 [bitbucket]
 client=""
@@ -64,6 +65,10 @@ pass=""
 Or you can use environment variables
 
 ```sh
+
+# enable users to self-register
+export DRONE_REGISTRATION_OPEN=false
+
 # github configuration
 export DRONE_GITHUB_CLIENT=""
 export DRONE_GITHUB_SECRET=""
@@ -73,6 +78,7 @@ export DRONE_GITHUB_ENTERPRISE_CLIENT=""
 export DRONE_GITHUB_ENTERPRISE_SECRET=""
 export DRONE_GITHUB_ENTERPRISE_API=""
 export DRONE_GITHUB_ENTERPRISE_URL=""
+export DRONE_GITHUB_ENTERPRISE_PRIVATE_MODE=false
 
 # bitbucket configuration
 export DRONE_BITBUCKET_CLIENT=""

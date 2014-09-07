@@ -21,18 +21,20 @@ const (
 )
 
 type GitHub struct {
-	URL    string
-	API    string
-	Client string
-	Secret string
+	URL     string
+	API     string
+	Client  string
+	Secret  string
+	Private bool
 }
 
-func New(url, api, client, secret string) *GitHub {
+func New(url, api, client, secret string, private bool) *GitHub {
 	var github = GitHub{
-		URL:    url,
-		API:    api,
-		Client: client,
-		Secret: secret,
+		URL:     url,
+		API:     api,
+		Client:  client,
+		Secret:  secret,
+		Private: private,
 	}
 	// the API must have a trailing slash
 	if !strings.HasSuffix(github.API, "/") {
@@ -46,7 +48,7 @@ func New(url, api, client, secret string) *GitHub {
 }
 
 func NewDefault(client, secret string) *GitHub {
-	return New(DefaultURL, DefaultAPI, client, secret)
+	return New(DefaultURL, DefaultAPI, client, secret, false)
 }
 
 // Authorize handles GitHub API Authorization.
@@ -134,7 +136,6 @@ func (r *GitHub) GetRepos(user *model.User) ([]*model.Repo, error) {
 
 	var remote = r.GetKind()
 	var hostname = r.GetHost()
-	var enterprise = r.IsEnterprise()
 
 	for _, item := range list {
 		var repo = model.Repo{
@@ -151,7 +152,7 @@ func (r *GitHub) GetRepos(user *model.User) ([]*model.Repo, error) {
 			Role:     &model.Perm{},
 		}
 
-		if enterprise || repo.Private {
+		if r.Private || repo.Private {
 			repo.CloneURL = *item.SSHURL
 		}
 
