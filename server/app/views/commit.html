@@ -35,6 +35,13 @@
 <div id="main" class="output">
 	<div id="main" class="output" data-result="{{ commit.status }}">
 		<nav>
+			<div class="options ng-scope" ng-if="repo.role.admin || repo.role.write">
+				<a class="pure-button pure-button-primary" ng-click="rebuildCommit()" href="#">
+					<i class="fa fa-refresh"></i>
+					<span>Rebuild</span>
+				</a>
+			</div>
+
 			<a href="/"><span class="fa fa-th"></span></a>
 			<span>{{ repo.owner }}</span>
 			<span>/</span>
