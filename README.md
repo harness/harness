@@ -60,6 +60,13 @@ port=""
 from=""
 user=""
 pass=""
+
+[worker]
+nodes=[
+"unix:///var/run/docker.sock",
+"unix:///var/run/docker.sock"
+]
+
 ```
 
 Or you can use environment variables
@@ -93,6 +100,11 @@ export DRONE_SMTP_PORT=""
 export DRONE_SMTP_FROM=""
 export DRONE_SMTP_USER=""
 export DRONE_SMTP_PASS=""
+
+# worker nodes
+# these are optional. If not specified Drone will add
+# two worker nodes that connect to $DOCKER_HOST
+export DRONE_WORKER_NODES="tcp://0.0.0.0:2375,tcp://0.0.0.0:2375"
 ```
 
 Or a combination of the two:
