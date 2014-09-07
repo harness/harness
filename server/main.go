@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"fmt"
 	"net/http"
 	"runtime"
 	"strings"
@@ -55,6 +56,8 @@ var (
 	prefix string
 
 	open bool
+
+	nodes StringArr
 )
 
 func main() {
@@ -70,9 +73,12 @@ func main() {
 	flag.IntVar(&workers, "workers", runtime.NumCPU(), "")
 	flag.Parse()
 
+	config.Var(&nodes, "worker-nodes")
 	config.BoolVar(&open, "registration-open", false)
 	config.SetPrefix(prefix)
-	config.Parse(conf)
+	if err := config.Parse(conf); err != nil {
+		fmt.Println("Error parsing config", err)
+	}
 
 	// setup the remote services
 	bitbucket.Register()
@@ -102,14 +108,16 @@ func main() {
 	workerc := make(chan chan *model.Request)
 	worker.NewDispatch(queue, workerc).Start()
 
-	// there must be a minimum of 1 worker
-	if workers <= 0 {
-		workers = 1
-	}
-
-	// create the specified number of worker nodes
-	for i := 0; i < workers; i++ {
+	// if no worker nodes are specified than start 2 workers
+	// using the default DOCKER_HOST
+	if nodes == nil || len(nodes) == 0 {
 		worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
+		worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
+	} else {
+		for _, node := range nodes {
+			println(node)
+			worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{Host: node}).Start()
+		}
 	}
 
 	// setup the session managers
@@ -161,4 +169,18 @@ func main() {
 	} else {
 		panic(http.ListenAndServe(port, nil))
 	}
+}
+
+type StringArr []string
+
+func (s *StringArr) String() string {
+	return fmt.Sprint(*s)
+}
+
+func (s *StringArr) Set(value string) error {
+	for _, str := range strings.Split(value, ",") {
+		str = strings.TrimSpace(str)
+		*s = append(*s, str)
+	}
+	return nil
 }
