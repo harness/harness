@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -32,16 +31,12 @@ func NewConnection(driver, datasource string) *Connection {
 }
 
 func SetupConnection(driver, datasource string) (*sql.DB, error) {
-	wd, _ := os.Getwd()
-
 	if driver == "" {
-		driver = "sqlite3"
-		log.Println("WARNING: database driver is missing, use:", driver)
+		log.Fatalln("Error database driver is missing")
 	}
 
 	if datasource == "" {
-		datasource = fmt.Sprintf("%s/drone.sqlite", wd)
-		log.Println("WARNING: database datasource is missing, use:", datasource)
+		log.Fatalln("Error database datasource is missing")
 	}
 
 	switch driver {

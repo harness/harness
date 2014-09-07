@@ -66,6 +66,9 @@ func main() {
 	flag.Parse()
 
 	config.BoolVar(&open, "registration-open", false)
+	config.StringVar(&driver, "database-driver", "sqlite3")
+	config.StringVar(&datasource, "database-datasource", "drone.sqlite")
+
 	config.SetPrefix(prefix)
 	config.Parse(conf)
 
