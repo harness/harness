@@ -260,6 +260,9 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 			console.log(data);
 		});
 
+	$scope.rebuildCommit = function() {
+		$http({method: 'POST', url: '/v1/repos/'+remote+'/'+owner+'/'+name+'/'+'branches/'+branch+'/'+'commits/'+commit+'/?action=rebuild' })
+	}
 
 
 });
