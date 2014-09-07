@@ -19,9 +19,11 @@
 			</strong>
 		</dd>
 		<dd class="large" ng-if="repo.remote == 'bitbucket.org' ">
+			<strong>
 				commit 
 				<a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/commits/{{ commit.sha }}" >{{ commit.sha | shortHash}}</a> 
 				to <a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/src/?at={{ commit.branch }}">{{ commit.branch }}</a> branch
+			</strong>
 		</dd>
 		<dd class="large" ng-if="repo.remote != 'gitlab.com' && repo.remote != 'github.com' && repo.remote != 'enterprise.github.com' && repo.remote != 'bitbucket.org' ">
 			<strong>commit <u>{{ commit.sha | shortHash}}</u> to <u>{{ commit.branch }}</u> branch</strong>
