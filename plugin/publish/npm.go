@@ -3,6 +3,7 @@ package publish
 import (
 	"fmt"
 
+	"github.com/drone/drone/plugin/condition"
 	"github.com/drone/drone/shared/build/buildfile"
 )
 
@@ -40,7 +41,7 @@ type NPM struct {
 	// Registers the published package with the given tag
 	Tag string `yaml:"tag,omitempty"`
 
-	Branch string `yaml:"branch,omitempty"`
+	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
 func (n *NPM) Write(f *buildfile.Buildfile) {
@@ -70,4 +71,8 @@ func (n *NPM) Write(f *buildfile.Buildfile) {
 	}
 
 	f.WriteCmd(fmt.Sprintf(npmPublishCmd, n.Folder))
+}
+
+func (n *NPM) GetCondition() *condition.Condition {
+	return n.Condition
 }

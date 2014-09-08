@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/drone/drone/plugin/condition"
 	"github.com/drone/drone/shared/build/buildfile"
 )
 
@@ -34,7 +35,7 @@ type Swift struct {
 	// object name if source is a file
 	Target string `yaml:"target,omitempty"`
 
-	Branch string `yaml:"branch,omitempty"`
+	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
 func (s *Swift) Write(f *buildfile.Buildfile) {
@@ -64,4 +65,8 @@ func (s *Swift) Write(f *buildfile.Buildfile) {
 	f.WriteEnv("SWIFTLY_REGION", s.Region)
 
 	f.WriteCmd(fmt.Sprintf(`swiftly put -i %s %s%s`, s.Source, s.Container, target))
+}
+
+func (s *Swift) GetCondition() *condition.Condition {
+	return s.Condition
 }
