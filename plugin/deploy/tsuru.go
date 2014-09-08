@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"fmt"
+	"github.com/drone/drone/plugin/condition"
 	"github.com/drone/drone/shared/build/buildfile"
 )
 
@@ -9,9 +10,11 @@ type Tsuru struct {
 	Force  bool   `yaml:"force,omitempty"`
 	Branch string `yaml:"branch,omitempty"`
 	Remote string `yaml:"remote,omitempty"`
+
+	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
-func (h *Tsuru) Write(f *buildfile.Buildfile) {
+func (t *Tsuru) Write(f *buildfile.Buildfile) {
 	// get the current commit hash
 	f.WriteCmdSilent("COMMIT=$(git rev-parse HEAD)")
 
@@ -21,9 +24,9 @@ func (h *Tsuru) Write(f *buildfile.Buildfile) {
 	f.WriteCmdSilent("git config --global user.email $(git --no-pager log -1 --pretty=format:'%ae')")
 
 	// add tsuru as a git remote
-	f.WriteCmd(fmt.Sprintf("git remote add tsuru %s", h.Remote))
+	f.WriteCmd(fmt.Sprintf("git remote add tsuru %s", t.Remote))
 
-	switch h.Force {
+	switch t.Force {
 	case true:
 		// this is useful when the there are artifacts generated
 		// by the build script, such as less files converted to css,
@@ -35,4 +38,8 @@ func (h *Tsuru) Write(f *buildfile.Buildfile) {
 		// otherwise we just do a standard git push
 		f.WriteCmd(fmt.Sprintf("git push tsuru $COMMIT:master"))
 	}
+}
+
+func (t *Tsuru) GetCondition() *condition.Condition {
+	return t.Condition
 }

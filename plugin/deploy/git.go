@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"fmt"
+	"github.com/drone/drone/plugin/condition"
 	"github.com/drone/drone/shared/build/buildfile"
 )
 
@@ -9,6 +10,8 @@ type Git struct {
 	Target string `yaml:"target,omitempty"`
 	Force  bool   `yaml:"force,omitempty"`
 	Branch string `yaml:"branch,omitempty"`
+
+	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
 func (g *Git) Write(f *buildfile.Buildfile) {
@@ -40,4 +43,8 @@ func (g *Git) Write(f *buildfile.Buildfile) {
 		// otherwise we just do a standard git push
 		f.WriteCmd(fmt.Sprintf("git push deploy $COMMIT:%s", destinationBranch))
 	}
+}
+
+func (g *Git) GetCondition() *condition.Condition {
+	return g.Condition
 }

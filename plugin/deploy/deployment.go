@@ -1,7 +1,9 @@
 package deploy
 
 import (
+	"github.com/drone/drone/plugin/condition"
 	"github.com/drone/drone/shared/build/buildfile"
+	"github.com/drone/drone/shared/build/repo"
 )
 
 // Deploy stores the configuration details
@@ -22,41 +24,44 @@ type Deploy struct {
 	Bash         *Bash         `yaml:"bash,omitempty"`
 }
 
-func (d *Deploy) Write(f *buildfile.Buildfile) {
-	if d.AppFog != nil {
-		d.AppFog.Write(f)
-	}
-	if d.CloudControl != nil {
-		d.CloudControl.Write(f)
-	}
-	if d.CloudFoundry != nil {
+func (d *Deploy) Write(f *buildfile.Buildfile, r *repo.Repo) {
+
+	if d.CloudFoundry != nil && match(d.CloudFoundry.GetCondition(), r) {
 		d.CloudFoundry.Write(f)
 	}
-	if d.EngineYard != nil {
-		d.EngineYard.Write(f)
-	}
-	if d.Git != nil {
+	if d.Git != nil && match(d.Git.GetCondition(), r) {
 		d.Git.Write(f)
 	}
-	if d.Heroku != nil {
+	if d.Heroku != nil && match(d.Heroku.GetCondition(), r) {
 		d.Heroku.Write(f)
 	}
-	if d.Modulus != nil {
+	if d.Modulus != nil && match(d.Modulus.GetCondition(), r) {
 		d.Modulus.Write(f)
 	}
-	if d.Nodejitsu != nil {
+	if d.Nodejitsu != nil && match(d.Nodejitsu.GetCondition(), r) {
 		d.Nodejitsu.Write(f)
 	}
-	if d.Openshift != nil {
-		d.Openshift.Write(f)
-	}
-	if d.SSH != nil {
+	if d.SSH != nil && match(d.SSH.GetCondition(), r) {
 		d.SSH.Write(f)
 	}
-	if d.Tsuru != nil {
+	if d.Tsuru != nil && match(d.Tsuru.GetCondition(), r) {
 		d.Tsuru.Write(f)
 	}
-	if d.Bash != nil {
+	if d.Bash != nil && match(d.Bash.GetCondition(), r) {
 		d.Bash.Write(f)
 	}
+}
+
+func match(c *condition.Condition, r *repo.Repo) bool {
+	switch {
+	case c == nil:
+		return true
+	case !c.MatchBranch(r.Branch):
+		return false
+	case !c.MatchOwner(r.Name):
+		return false
+	case !c.MatchPullRequest(r.PR):
+		return false
+	}
+	return true
 }

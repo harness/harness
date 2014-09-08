@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"fmt"
+	"github.com/drone/drone/plugin/condition"
 	"github.com/drone/drone/shared/build/buildfile"
 )
 
@@ -13,6 +14,8 @@ type CloudFoundry struct {
 	Space    string `yaml:"space,omitempty"`
 
 	App string `yaml:"app,omitempty"`
+
+	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
 func (cf *CloudFoundry) Write(f *buildfile.Buildfile) {
@@ -41,4 +44,8 @@ func (cf *CloudFoundry) Write(f *buildfile.Buildfile) {
 	// push app
 	pushCmd := "cf push %s"
 	f.WriteCmd(fmt.Sprintf(pushCmd, cf.App))
+}
+
+func (cf *CloudFoundry) GetCondition() *condition.Condition {
+	return cf.Condition
 }

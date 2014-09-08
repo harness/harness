@@ -96,7 +96,7 @@ func (b *Build) Write(f *buildfile.Buildfile, r *repo.Repo) {
 
 	// write deployment commands
 	if b.Deploy != nil {
-		b.Deploy.Write(f)
+		b.Deploy.Write(f, r)
 	}
 
 	// write exit value

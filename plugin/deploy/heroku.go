@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"fmt"
+	"github.com/drone/drone/plugin/condition"
 	"github.com/drone/drone/shared/build/buildfile"
 )
 
@@ -9,6 +10,8 @@ type Heroku struct {
 	App    string `yaml:"app,omitempty"`
 	Force  bool   `yaml:"force,omitempty"`
 	Branch string `yaml:"branch,omitempty"`
+
+	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
 func (h *Heroku) Write(f *buildfile.Buildfile) {
@@ -35,4 +38,8 @@ func (h *Heroku) Write(f *buildfile.Buildfile) {
 		// otherwise we just do a standard git push
 		f.WriteCmd(fmt.Sprintf("git push heroku $COMMIT:master"))
 	}
+}
+
+func (h *Heroku) GetCondition() *condition.Condition {
+	return h.Condition
 }
