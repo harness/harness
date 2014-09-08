@@ -1,5 +1,9 @@
 package condition
 
+import (
+	"strings"
+)
+
 type Condition struct {
 	Owner       string // Indicates the step should run only for this repo (useful for forks)
 	Branch      string // Indicates the step should run only for this branch
@@ -49,5 +53,13 @@ func (c *Condition) MatchOwner(owner string) bool {
 	if len(c.Owner) == 0 {
 		return true
 	}
-	return c.Owner == owner
+	parts := strings.Split(owner, "/")
+	switch len(parts) {
+	case 2:
+		return c.Owner == parts[0]
+	case 3:
+		return c.Owner == parts[1]
+	default:
+		return c.Owner == owner
+	}
 }
