@@ -56,7 +56,7 @@ func setUp(input string) (string, error) {
 		return "", err
 	}
 	bf := buildfile.New()
-	buildStruct.Deploy.Write(bf)
+	buildStruct.Deploy.Write(bf, nil)
 	return bf.String(), err
 }
 
