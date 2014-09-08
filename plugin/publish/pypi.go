@@ -3,6 +3,7 @@ package publish
 import (
 	"fmt"
 
+	"github.com/drone/drone/plugin/condition"
 	"github.com/drone/drone/shared/build/buildfile"
 )
 
@@ -37,7 +38,8 @@ type PyPI struct {
 	Password   string   `yaml:"password,omitempty"`
 	Formats    []string `yaml:"formats,omitempty"`
 	Repository string   `yaml:"repository,omitempty"`
-	Branch     string   `yaml:"branch,omitempty"`
+
+	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
 func (p *PyPI) Write(f *buildfile.Buildfile) {
@@ -82,4 +84,8 @@ func (p *PyPI) BuildFormatStr() string {
 		fmtStr += p.Formats[i] + ","
 	}
 	return fmtStr[:len(fmtStr)-1]
+}
+
+func (p *PyPI) GetCondition() *condition.Condition {
+	return p.Condition
 }

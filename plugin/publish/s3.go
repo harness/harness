@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/drone/drone/plugin/condition"
 	"github.com/drone/drone/shared/build/buildfile"
 )
 
@@ -47,7 +48,7 @@ type S3 struct {
 	// Recursive uploads
 	Recursive bool `yaml:"recursive"`
 
-	Branch string `yaml:"branch,omitempty"`
+	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
 func (s *S3) Write(f *buildfile.Buildfile) {
@@ -93,4 +94,8 @@ func (s *S3) Write(f *buildfile.Buildfile) {
 	case false:
 		f.WriteCmd(fmt.Sprintf(`aws s3 cp %s s3://%s/%s --acl %s --region %s`, s.Source, s.Bucket, s.Target, s.Access, s.Region))
 	}
+}
+
+func (s *S3) GetCondition() *condition.Condition {
+	return s.Condition
 }
