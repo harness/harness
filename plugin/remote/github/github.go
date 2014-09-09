@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"code.google.com/p/goauth2/oauth"
+	"github.com/drone/drone/plugin/remote/github/oauth"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 	"github.com/drone/go-github/github"
