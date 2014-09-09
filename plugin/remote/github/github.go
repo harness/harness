@@ -81,13 +81,13 @@ func (r *GitHub) Authorize(res http.ResponseWriter, req *http.Request) (*model.L
 	var trans = &oauth.Transport{Config: config}
 	var token, err = trans.Exchange(code)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error exchanging token. %s", err)
 	}
 
 	var client = NewClient(r.API, token.AccessToken)
 	var useremail, errr = GetUserEmail(client)
 	if errr != nil {
-		return nil, errr
+		return nil, fmt.Errorf("Error retrieving user or verified email. %s", errr)
 	}
 
 	var login = new(model.Login)
@@ -95,7 +95,6 @@ func (r *GitHub) Authorize(res http.ResponseWriter, req *http.Request) (*model.L
 	login.Access = token.AccessToken
 	login.Login = *useremail.Login
 	login.Email = *useremail.Email
-	login.Name = *useremail.Email
 	if useremail.Name != nil {
 		login.Name = *useremail.Name
 	}
