@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/drone/drone/plugin/remote/github/oauth"
 	"github.com/google/go-github/github"
@@ -37,16 +36,12 @@ func GetUserEmail(client *github.Client) (*github.User, error) {
 		return nil, err
 	}
 
-	// WARNING, HACK
-	// for out-of-date github enterprise editions the primary
-	// and verified fields won't exist.
-	if !strings.HasPrefix(*user.HTMLURL, DefaultURL) && len(emails) != 0 && emails[0].Primary == nil {
-		user.Email = emails[0].Email
-		return user, nil
-	}
-
 	// else we should iterate through the list
 	for _, email := range emails {
+		if email.Primary == nil { // hack for github enterprise
+			user.Email = email.Email
+			return user, nil
+		}
 		if *email.Primary && *email.Verified {
 			user.Email = email.Email
 			return user, nil
