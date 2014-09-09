@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"code.google.com/p/goauth2/oauth"
+	"github.com/drone/drone/plugin/remote/github/oauth"
 	"github.com/google/go-github/github"
 	"github.com/gorilla/securecookie"
 )

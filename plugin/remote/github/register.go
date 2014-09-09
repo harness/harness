@@ -44,7 +44,6 @@ func registerGitHubEnterprise() {
 		len(*githubEnterpriseSecret) == 0 {
 		return
 	}
-
 	remote.Register(
 		New(
 			*githubEnterpriseURL,
