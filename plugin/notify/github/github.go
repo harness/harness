@@ -95,7 +95,7 @@ func send(rawurl, host, owner, repo, status, desc, target, ref, token string) er
 	// the base url. Per the documentation, we need to
 	// ensure there is a trailing slash.
 	if host != model.RemoteGithub {
-		client.BaseURL, _ = getEndpoint(rawurl)
+		client.BaseURL, _ = getEndpoint(rawurl)+"/"
 	}
 
 	_, _, err := client.Repositories.CreateStatus(owner, repo, ref, &data)
