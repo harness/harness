@@ -5,6 +5,8 @@ import (
 
 	"github.com/drone/drone/plugin/notify/email"
 	"github.com/drone/drone/plugin/notify/github"
+	"github.com/drone/drone/plugin/notify/irc"
+	"github.com/drone/drone/plugin/notify/webhook"
 	"github.com/drone/drone/shared/model"
 )
 
@@ -16,13 +18,13 @@ type Sender interface {
 // for notifying a user, or group of users,
 // when their Build has completed.
 type Notification struct {
-	Email   *email.Email `yaml:"email,omitempty"`
-	Webhook *Webhook     `yaml:"webhook,omitempty"`
-	Hipchat *Hipchat     `yaml:"hipchat,omitempty"`
-	Irc     *IRC         `yaml:"irc,omitempty"`
-	Slack   *Slack       `yaml:"slack,omitempty"`
+	Email   *email.Email     `yaml:"email,omitempty"`
+	Webhook *webhook.Webhook `yaml:"webhook,omitempty"`
+	Hipchat *Hipchat         `yaml:"hipchat,omitempty"`
+	Irc     *irc.IRC         `yaml:"irc,omitempty"`
+	Slack   *Slack           `yaml:"slack,omitempty"`
 
-	GitHub  github.GitHub `yaml:"--"`
+	GitHub github.GitHub `yaml:"--"`
 }
 
 func (n *Notification) Send(context *model.Request) error {

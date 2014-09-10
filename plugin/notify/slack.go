@@ -1,8 +1,10 @@
 package notify
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/drone/drone/shared/model"
 )
@@ -78,4 +80,15 @@ func (s *Slack) send(msg string) error {
 	go sendJson(url, payload)
 
 	return nil
+}
+
+// helper fuction to sent HTTP Post requests
+// with JSON data as the payload.
+func sendJson(url string, payload []byte) {
+	buf := bytes.NewBuffer(payload)
+	resp, err := http.Post(url, "application/json", buf)
+	if err != nil {
+		return
+	}
+	resp.Body.Close()
 }

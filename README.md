@@ -1,4 +1,4 @@
-[![Build Status](http://test.drone.io/v1/badge/github.com/drone/drone/status.svg?branch=master)](http://test.drone.io/github.com/drone/drone)
+[![Build Status](http://test.drone.io/v1/badge/github.com/drone/drone/status.svg?branch=exp)](http://test.drone.io/github.com/drone/drone)
 [![GoDoc](https://godoc.org/github.com/drone/drone?status.png)](https://godoc.org/github.com/drone/drone)
 
 

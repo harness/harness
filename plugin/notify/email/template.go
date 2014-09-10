@@ -15,7 +15,10 @@ Content-Type: text/html; charset="UTF-8"
 
 // default success email template
 var successTemplate = template.Must(template.New("_").Parse(`
-<p><b>Build was Successful</b></p>
+<p>
+	<b>Build was Successful</b>
+	(<a href="{{.Host}}/{{.Repo.Host}}/{{.Repo.Owner}}/{{.Repo.Name}}/{{.Commit.Branch}}/{{.Commit.Sha}}">see results</a>)
+</p>
 <p>Repository : {{.Repo.Owner}}/{{.Repo.Name}}</p>
 <p>Commit     : {{.Commit.ShaShort}}</p>
 <p>Author     : {{.Commit.Author}}</p>
@@ -26,7 +29,10 @@ var successTemplate = template.Must(template.New("_").Parse(`
 
 // default failure email template
 var failureTemplate = template.Must(template.New("_").Parse(`
-<p><b>Build Failed</b></p>
+<p>
+	<b>Build Failed</b>
+	(<a href="{{.Host}}/{{.Repo.Host}}/{{.Repo.Owner}}/{{.Repo.Name}}/{{.Commit.Branch}}/{{.Commit.Sha}}">see results</a>)
+</p>
 <p>Repository : {{.Repo.Owner}}/{{.Repo.Name}}</p>
 <p>Commit     : {{.Commit.ShaShort}}</p>
 <p>Author     : {{.Commit.Author}}</p>

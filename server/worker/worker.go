@@ -98,7 +98,10 @@ func (w *worker) Execute(r *model.Request) {
 	// parse the parameters and build script. The script has already
 	// been parsed in the hook, so we can be confident it will succeed.
 	// that being said, we should clean this up
-	params, _ := r.Repo.ParamMap()
+	params, err := r.Repo.ParamMap()
+	if err != nil {
+		log.Printf("Error parsing PARAMS for %s/%s, Err: %s", r.Repo.Owner, r.Repo.Name, err.Error())
+	}
 	script, err := script.ParseBuild(r.Commit.Config, params)
 	if err != nil {
 		log.Printf("Error parsing YAML for %s/%s, Err: %s", r.Repo.Owner, r.Repo.Name, err.Error())
