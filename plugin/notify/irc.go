@@ -17,18 +17,18 @@ type IRC struct {
 	Channel string `yaml:"channel,omitempty"`
 	Nick    string `yaml:"nick,omitempty"`
 	Server  string `yaml:"server,omitempty"`
-	Started bool   `yaml:"on_started,omitempty"`
-	Success bool   `yaml:"on_success,omitempty"`
-	Failure bool   `yaml:"on_failure,omitempty"`
+	Started *bool  `yaml:"on_started,omitempty"`
+	Success *bool  `yaml:"on_success,omitempty"`
+	Failure *bool  `yaml:"on_failure,omitempty"`
 }
 
 func (i *IRC) Send(req *model.Request) error {
 	switch {
-	case req.Commit.Status == "Started" && i.Started:
+	case req.Commit.Status == "Started" && i.Started != nil && *i.Started == true:
 		return i.sendStarted(req)
-	case req.Commit.Status == "Success" && i.Success:
+	case req.Commit.Status == "Success" && i.Success != nil && *i.Success == true:
 		return i.sendSuccess(req)
-	case req.Commit.Status == "Failure" && i.Failure:
+	case req.Commit.Status == "Failure" && i.Failure != nil && *i.Failure == true:
 		return i.sendFailure(req)
 	}
 	return nil
