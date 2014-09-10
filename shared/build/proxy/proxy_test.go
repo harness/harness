@@ -10,12 +10,10 @@ func TestProxy(t *testing.T) {
 	// proxy shell script.
 	p := Proxy{}
 	p.Set("8080", "172.1.4.5")
-	p.Set("8000", "172.1.3.1")
 	b := p.Bytes()
 
 	expected := `#!/bin/bash
 [ -x /usr/bin/socat ] && socat TCP-LISTEN:8080,fork TCP:172.1.4.5:8080 &
-[ -x /usr/bin/socat ] && socat TCP-LISTEN:8000,fork TCP:172.1.3.1:8000 &
 `
 	if string(b) != expected {
 		t.Errorf("Invalid proxy \n%s", expected)
