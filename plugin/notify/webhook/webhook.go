@@ -1,4 +1,4 @@
-package notify
+package webhook
 
 import (
 	"bytes"
@@ -10,15 +10,15 @@ import (
 
 type Webhook struct {
 	URL     []string `yaml:"urls,omitempty"`
-	Success bool     `yaml:"on_success,omitempty"`
-	Failure bool     `yaml:"on_failure,omitempty"`
+	Success *bool    `yaml:"on_success,omitempty"`
+	Failure *bool    `yaml:"on_failure,omitempty"`
 }
 
 func (w *Webhook) Send(context *model.Request) error {
 	switch {
-	case context.Commit.Status == "Success" && w.Success:
+	case context.Commit.Status == model.StatusSuccess && w.Success != nil && *w.Success == true:
 		return w.send(context)
-	case context.Commit.Status == "Failure" && w.Failure:
+	case context.Commit.Status == model.StatusFailure && w.Failure != nil && *w.Success == true:
 		return w.send(context)
 	}
 
