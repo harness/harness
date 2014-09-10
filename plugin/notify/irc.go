@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/drone/drone/shared/model"
-	irc "github.com/fluffle/goirc/client"
+	"github.com/thoj/go-ircevent"
 )
 
 const (
@@ -14,72 +14,50 @@ const (
 )
 
 type IRC struct {
-	Channel       string `yaml:"channel,omitempty"`
-	Nick          string `yaml:"nick,omitempty"`
-	Server        string `yaml:"server,omitempty"`
-	Started       bool   `yaml:"on_started,omitempty"`
-	Success       bool   `yaml:"on_success,omitempty"`
-	Failure       bool   `yaml:"on_failure,omitempty"`
-	SSL           bool   `yaml:"ssl,omitempty"`
-	ClientStarted bool
-	Client        *irc.Conn
+	Channel string `yaml:"channel,omitempty"`
+	Nick    string `yaml:"nick,omitempty"`
+	Server  string `yaml:"server,omitempty"`
+	Started bool   `yaml:"on_started,omitempty"`
+	Success bool   `yaml:"on_success,omitempty"`
+	Failure bool   `yaml:"on_failure,omitempty"`
 }
 
-func (i *IRC) Connect() {
-	c := irc.SimpleClient(i.Nick)
-	c.SSL = i.SSL
-	connected := make(chan bool)
-	c.AddHandler(irc.CONNECTED,
-		func(conn *irc.Conn, line *irc.Line) {
-			conn.Join(i.Channel)
-			connected <- true
-		})
-	c.Connect(i.Server)
-	<-connected
-	i.ClientStarted = true
-	i.Client = c
-}
-
-func (i *IRC) Send(context *model.Request) error {
+func (i *IRC) Send(req *model.Request) error {
 	switch {
-	case context.Commit.Status == "Started" && i.Started:
-		return i.sendStarted(context)
-	case context.Commit.Status == "Success" && i.Success:
-		return i.sendSuccess(context)
-	case context.Commit.Status == "Failure" && i.Failure:
-		return i.sendFailure(context)
+	case req.Commit.Status == "Started" && i.Started:
+		return i.sendStarted(req)
+	case req.Commit.Status == "Success" && i.Success:
+		return i.sendSuccess(req)
+	case req.Commit.Status == "Failure" && i.Failure:
+		return i.sendFailure(req)
 	}
 	return nil
 }
 
-func (i *IRC) sendStarted(context *model.Request) error {
-	msg := fmt.Sprintf(ircStartedMessage, context.Repo.Name, context.Commit.ShaShort(), context.Commit.Author)
-	i.send(i.Channel, msg)
-	return nil
+func (i *IRC) sendStarted(req *model.Request) error {
+	msg := fmt.Sprintf(ircStartedMessage, req.Repo.Name, req.Commit.ShaShort(), req.Commit.Author)
+	return i.send(i.Channel, msg)
 }
 
-func (i *IRC) sendFailure(context *model.Request) error {
-	msg := fmt.Sprintf(ircFailureMessage, context.Repo.Name, context.Commit.ShaShort(), context.Commit.Author)
-	i.send(i.Channel, msg)
-	if i.ClientStarted {
-		i.Client.Quit()
-	}
-	return nil
+func (i *IRC) sendFailure(req *model.Request) error {
+	msg := fmt.Sprintf(ircFailureMessage, req.Repo.Name, req.Commit.ShaShort(), req.Commit.Author)
+	return i.send(i.Channel, msg)
 }
 
-func (i *IRC) sendSuccess(context *model.Request) error {
-	msg := fmt.Sprintf(ircSuccessMessage, context.Repo.Name, context.Commit.ShaShort(), context.Commit.Author)
-	i.send(i.Channel, msg)
-	if i.ClientStarted {
-		i.Client.Quit()
-	}
-	return nil
+func (i *IRC) sendSuccess(req *model.Request) error {
+	msg := fmt.Sprintf(ircSuccessMessage, req.Repo.Name, req.Commit.ShaShort(), req.Commit.Author)
+	return i.send(i.Channel, msg)
 }
 
+// send is a helper function that will send notice messages
+// to the connected IRC client
 func (i *IRC) send(channel string, message string) error {
-	if !i.ClientStarted {
-		i.Connect()
+	client := irc.IRC(i.Nick, i.Nick)
+	if client != nil {
+		return fmt.Errorf("Error creating IRC client")
 	}
-	i.Client.Notice(channel, message)
+	defer client.Disconnect()
+	client.Connect(i.Server)
+	client.Notice(channel, message)
 	return nil
 }
