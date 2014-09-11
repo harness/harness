@@ -45,10 +45,6 @@ type NPM struct {
 
 func (n *NPM) Write(f *buildfile.Buildfile) {
 
-    if len(n.Email) == 0 || len(n.Username) == 0 || len(n.Password) == 0 {
-        return
-    }
-
     npmPublishCmd := "npm publish %s"
 
     if n.Tag != "" {
@@ -62,7 +58,9 @@ func (n *NPM) Write(f *buildfile.Buildfile) {
     f.WriteCmdSilent("echo 'publishing to NPM ...'")
 
     // Login to registry
-    f.WriteCmdSilent(fmt.Sprintf(npmLoginCmd, n.Username, n.Password, n.Email))
+    if len(n.Email) != 0 && len(n.Username) != 0 && len(n.Password) != 0 {
+		f.WriteCmdSilent(fmt.Sprintf(npmLoginCmd, n.Username, n.Password, n.Email))
+    }
 
     // Setup custom npm registry
     if n.Registry != "" {
