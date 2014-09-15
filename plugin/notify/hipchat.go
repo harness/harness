@@ -41,22 +41,22 @@ func (h *Hipchat) buildLink(context *model.Request) string {
 }
 
 func (h *Hipchat) sendStarted(context *model.Request) error {
-	return h.send(hipchat.ColorYellow, hipchat.FormatHTML, msg)
 	msg := fmt.Sprintf(startedMessage, h.buildLink(context), context.Commit.Branch, context.User.Login, context.Commit.Message)
+	return h.send(hipchat.ColorYellow, hipchat.FormatHTML, msg, false)
 }
 
 func (h *Hipchat) sendFailure(context *model.Request) error {
-	return h.send(hipchat.ColorRed, hipchat.FormatHTML, msg)
 	msg := fmt.Sprintf(failureMessage, h.buildLink(context), context.Commit.Branch, context.User.Login)
+	return h.send(hipchat.ColorRed, hipchat.FormatHTML, msg, true)
 }
 
 func (h *Hipchat) sendSuccess(context *model.Request) error {
-	return h.send(hipchat.ColorGreen, hipchat.FormatHTML, msg)
 	msg := fmt.Sprintf(successMessage, h.buildLink(context), context.Commit.Branch, context.User.Login)
+	return h.send(hipchat.ColorGreen, hipchat.FormatHTML, msg, false)
 }
 
 // helper function to send Hipchat requests
-func (h *Hipchat) send(color, format, message string) error {
+func (h *Hipchat) send(color, format, message string, notify bool) error {
 	c := hipchat.Client{AuthToken: h.Token}
 	req := hipchat.MessageRequest{
 		RoomId:        h.Room,
@@ -64,7 +64,7 @@ func (h *Hipchat) send(color, format, message string) error {
 		Message:       message,
 		Color:         color,
 		MessageFormat: format,
-		Notify:        true,
+		Notify:        notify,
 	}
 
 	return c.PostMessage(req)
