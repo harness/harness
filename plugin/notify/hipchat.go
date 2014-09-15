@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	startedMessage = "Building %s, commit %s, author %s"
-	successMessage = "<b>Success</b> %s, commit %s, author %s"
-	failureMessage = "<b>Failed</b> %s, commit %s, author %s"
+	startedMessage = "Building %s (%s) by %s <br> - %s"
+	successMessage = "Success %s (%s) by %s"
+	failureMessage = "Failed %s (%s) by %s"
 )
 
 type Hipchat struct {
@@ -34,19 +34,25 @@ func (h *Hipchat) Send(context *model.Request) error {
 	return nil
 }
 
+func (h *Hipchat) buildLink(context *model.Request) string {
+	repoName := context.Repo.Owner + "/" + context.Repo.Name
+	url := context.Host + "/" + context.Repo.Host + "/" + repoName + "/" + context.Commit.Branch + "/" + context.Commit.Sha
+	return fmt.Sprintf("<a href=\"%s\">%s#%s</a>", url, repoName, context.Commit.ShaShort())
+}
+
 func (h *Hipchat) sendStarted(context *model.Request) error {
-	msg := fmt.Sprintf(startedMessage, context.Repo.Name, context.Commit.ShaShort(), context.Commit.Author)
 	return h.send(hipchat.ColorYellow, hipchat.FormatHTML, msg)
+	msg := fmt.Sprintf(startedMessage, h.buildLink(context), context.Commit.Branch, context.User.Login, context.Commit.Message)
 }
 
 func (h *Hipchat) sendFailure(context *model.Request) error {
-	msg := fmt.Sprintf(failureMessage, context.Repo.Name, context.Commit.ShaShort(), context.Commit.Author)
 	return h.send(hipchat.ColorRed, hipchat.FormatHTML, msg)
+	msg := fmt.Sprintf(failureMessage, h.buildLink(context), context.Commit.Branch, context.User.Login)
 }
 
 func (h *Hipchat) sendSuccess(context *model.Request) error {
-	msg := fmt.Sprintf(successMessage, context.Repo.Name, context.Commit.ShaShort(), context.Commit.Author)
 	return h.send(hipchat.ColorGreen, hipchat.FormatHTML, msg)
+	msg := fmt.Sprintf(successMessage, h.buildLink(context), context.Commit.Branch, context.User.Login)
 }
 
 // helper function to send Hipchat requests
