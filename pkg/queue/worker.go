@@ -56,6 +56,11 @@ func (w *worker) execute(task *BuildTask) error {
 			database.SaveBuild(task.Build)
 			database.SaveCommit(task.Commit)
 		}
+		// update the status of the commit using the
+		// GitHub status API.
+		if err := updateGitHubStatus(task.Repo, task.Commit); err != nil {
+			log.Printf("error updating github status: %s\n", err.Error())
+		}
 	}()
 
 	// update commit and build status
@@ -124,14 +129,6 @@ func (w *worker) execute(task *BuildTask) error {
 			buildscript.Env = append(buildscript.Env, k+"="+v)
 		}
 	}
-
-	defer func() {
-		// update the status of the commit using the
-		// GitHub status API.
-		if err := updateGitHubStatus(task.Repo, task.Commit); err != nil {
-			log.Printf("error updating github status: %s\n", err.Error())
-		}
-	}()
 
 	// execute the build
 	passed, buildErr := w.runBuild(task, buildscript, buf)
@@ -222,6 +219,10 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 	// get the system settings
 	settings, _ := database.GetSettings()
 
+	// If Repository is not Github, there's no point in hitting it's status api
+	if repo.Host != settings.GitHubDomain {
+		return nil
+	}
 	// get the user from the database
 	// since we need his / her GitHub token
 	user, err := database.GetUser(repo.UserID)
@@ -234,6 +235,7 @@ func updateGitHubStatus(repo *Repo, commit *Commit) error {
 	buildUrl := getBuildUrl(settings.URL().String(), repo, commit)
 
 	return client.Repos.CreateStatus(repo.Owner, repo.Name, status, buildUrl, message, commit.Hash)
+
 }
 
 func getBuildUrl(host string, repo *Repo, commit *Commit) string {
