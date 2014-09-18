@@ -76,27 +76,27 @@ func (r *Stash) Authorize(w http.ResponseWriter, req *http.Request) (*model.Logi
 		return nil, err
 	}
 
-	// Stash has no API endpoint to get current user
 	// create the Stash client
-	// client := stash.New(
-	// 	s.Client,
-	// 	s.Secret,
-	// 	accessToken.Token(),
-	// 	accessToken.Secret(),
-	// )
+	var client = stash.New(
+		r.URL,
+		r.Secret,
+		accessToken.Token(),
+		accessToken.Secret(),
+		r.PrivateKey,
+	)
 
 	// get the currently authenticated Stash User
-	// user, err := client.Users.Current()
-	// if err != nil {
-	// 	return nil, err
-	// }
+	user, err := client.Users.Current()
+	if err != nil {
+		return nil, err
+	}
 
 	// put the user data in the common format
 	login := model.Login{
-		//Login:  user.User.Username,
+		Login:  user.Username,
 		Access: accessToken.Token(),
 		Secret: accessToken.Secret(),
-		//Name:   user.User.DisplayName,
+		//Name:   user.DisplayName,
 	}
 
 	return &login, nil
