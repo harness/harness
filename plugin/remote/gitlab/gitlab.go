@@ -152,19 +152,19 @@ func (r *Gitlab) ParseHook(req *http.Request) (*model.Hook, error) {
 		return nil, err
 	}
 
-	if len(parsed.After) == 0 || parsed.TotalCommitsCount == 0 {
+	switch parsed.Type() {
+	case "commit", "branch":
+		return r.ParseCommitHook(req, parsed)
+	case "merge_request":
+		return r.ParsePullRequestHook(req, parsed)
+	case "tag":
+		return r.ParseTagHook(req, parsed)
+	default:
 		return nil, nil
 	}
+}
 
-	if parsed.ObjectKind == "merge_request" {
-		// TODO (bradrydzewski) figure out how to handle merge requests
-		return nil, nil
-	}
-
-	if len(parsed.After) == 0 {
-		return nil, nil
-	}
-
+func (r *Gitlab) ParseCommitHook(req *http.Request, parsed *gogitlab.HookPayload) (*model.Hook, error) {
 	var hook = new(model.Hook)
 	hook.Owner = req.FormValue("owner")
 	hook.Repo = req.FormValue("name")
@@ -185,4 +185,12 @@ func (r *Gitlab) ParseHook(req *http.Request) (*model.Hook, error) {
 	}
 
 	return hook, nil
+}
+
+func (r *Gitlab) ParsePullRequestHook(req *http.Request, parsed *gogitlab.HookPayload) (*model.Hook, error) {
+	return nil, nil
+}
+
+func (r *Gitlab) ParseTagHook(req *http.Request, parsed *gogitlab.HookPayload) (*model.Hook, error) {
+	return nil, nil
 }
