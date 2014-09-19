@@ -19,6 +19,9 @@ type Repo struct {
 	// the repository is located on the local filesystem.
 	Path string
 
+	// Type of commit to select git strategy.
+	Type string
+
 	// (optional) Specific Branch that we should checkout
 	// when the Repository is cloned. If no value is
 	// provided we'll assume the default, master branch.
@@ -32,6 +35,9 @@ type Repo struct {
 	// (optional) Pull Request number that we should
 	// checkout when the Repository is cloned.
 	PR string
+
+	// (optional) Specific Tag that we should checkout.
+	Tag string
 
 	// (optional) The filesystem path that the repository
 	// will be cloned into (or copied to) inside the
@@ -105,19 +111,17 @@ func (r *Repo) Commands() []string {
 	cmds := []string{}
 	cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
 
-	switch {
-	// if a specific commit is provided then we'll
-	// need to clone it.
-	case len(r.PR) > 0:
-
-		cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
-		cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
-		//cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/merge:", r.PR))
-		//cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", "FETCH_HEAD"))
-	// if a specific commit is provided then we'll
-	// need to clone it.
-	case len(r.Commit) > 0:
-		cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))
+	switch r.Type {
+	case "tag":
+		cmds = append(cmds, fmt.Sprintf("git fetch origin refs/tags/%s:refs/remotes/origin/%s", r.Tag, r.Tag))
+		cmds = append(cmds, fmt.Sprintf("git checkout -qf remotes/origin/%s", r.Tag))
+	case "pull_request":
+		if len(r.PR) > 0 {
+			cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
+			cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
+		} else {
+			cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))
+		}
 	}
 
 	return cmds

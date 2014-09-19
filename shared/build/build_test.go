@@ -543,6 +543,7 @@ func TestWriteBuildScript(t *testing.T) {
 		Hosts: []string{"127.0.0.1"}}
 	b.Repo = &repo.Repo{
 		Path:   "git://github.com/drone/drone.git",
+		Type:   "pull_request",
 		Branch: "master",
 		Commit: "e7e046b35",
 		PR:     "123",

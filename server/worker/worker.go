@@ -120,9 +120,11 @@ func (w *worker) Execute(r *model.Request) {
 	repo := &repo.Repo{
 		Name:   path,
 		Path:   r.Repo.CloneURL,
+		Type:   r.Commit.Type,
 		Branch: r.Commit.Branch,
 		Commit: r.Commit.Sha,
 		PR:     r.Commit.PullRequest,
+		Tag:    r.Commit.Tag,
 		Dir:    filepath.Join("/var/cache/drone/src", git.GitPath(script.Git, path)),
 		Depth:  git.GitDepth(script.Git),
 	}
