@@ -202,16 +202,17 @@ func (r *GitHub) Activate(user *model.User, repo *model.Repo, link string) error
 // ParseHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
 func (r *GitHub) ParseHook(req *http.Request) (*model.Hook, error) {
-	// handle github ping
-	if req.Header.Get("X-Github-Event") == "ping" {
+	switch req.Header.Get("X-Github-Event") {
+	case "push":
+		return r.ParseCommitHook(req)
+	case "pull_request":
+		return r.ParsePullRequestHook(req)
+	default:
 		return nil, nil
 	}
+}
 
-	// handle github pull request hook differently
-	if req.Header.Get("X-Github-Event") == "pull_request" {
-		return r.ParsePullRequestHook(req)
-	}
-
+func (r *GitHub) ParseCommitHook(req *http.Request) (*model.Hook, error) {
 	// parse the github Hook payload
 	var payload = GetPayload(req)
 	var data, err = github.ParseHook(payload)
@@ -229,6 +230,7 @@ func (r *GitHub) ParseHook(req *http.Request) (*model.Hook, error) {
 	}
 
 	var hook = new(model.Hook)
+	hook.Type = "commit"
 	hook.Repo = data.Repo.Name
 	hook.Owner = data.Repo.Owner.Login
 	hook.Sha = data.Head.Id
@@ -257,7 +259,6 @@ func (r *GitHub) ParseHook(req *http.Request) (*model.Hook, error) {
 // ParsePullRequestHook parses the pull request hook from the Request body
 // and returns the required data in a standard format.
 func (r *GitHub) ParsePullRequestHook(req *http.Request) (*model.Hook, error) {
-
 	// parse the payload to retrieve the pull-request
 	// hook meta-data.
 	var payload = GetPayload(req)
@@ -274,6 +275,7 @@ func (r *GitHub) ParsePullRequestHook(req *http.Request) (*model.Hook, error) {
 	// TODO we should also store the pull request branch (ie from x to y)
 	//      we can find it here: data.PullRequest.Head.Ref
 	var hook = model.Hook{
+		Type:        "pull_request",
 		Owner:       data.Repo.Owner.Login,
 		Repo:        data.Repo.Name,
 		Sha:         data.PullRequest.Head.Sha,

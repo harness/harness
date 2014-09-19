@@ -166,6 +166,7 @@ func (r *Gitlab) ParseHook(req *http.Request) (*model.Hook, error) {
 
 func (r *Gitlab) ParseCommitHook(req *http.Request, parsed *gogitlab.HookPayload) (*model.Hook, error) {
 	var hook = new(model.Hook)
+	hook.Type = "commit"
 	hook.Owner = req.FormValue("owner")
 	hook.Repo = req.FormValue("name")
 	hook.Sha = parsed.After
@@ -192,5 +193,25 @@ func (r *Gitlab) ParsePullRequestHook(req *http.Request, parsed *gogitlab.HookPa
 }
 
 func (r *Gitlab) ParseTagHook(req *http.Request, parsed *gogitlab.HookPayload) (*model.Hook, error) {
-	return nil, nil
+	var hook = new(model.Hook)
+	hook.Type = "tag"
+	hook.Owner = req.FormValue("owner")
+	hook.Repo = req.FormValue("name")
+	hook.Sha = parsed.After
+	hook.Tag = parsed.Tag()
+
+	var head = parsed.Head()
+	hook.Message = head.Message
+	hook.Timestamp = head.Timestamp
+
+	// extracts the commit author (ideally email)
+	// from the post-commit hook
+	switch {
+	case head.Author != nil:
+		hook.Author = head.Author.Email
+	case head.Author == nil:
+		hook.Author = parsed.UserName
+	}
+
+	return hook, nil
 }
