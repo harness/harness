@@ -85,8 +85,10 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 		RepoID:      repo.ID,
 		Status:      model.StatusEnqueue,
 		Sha:         hook.Sha,
+		Type:        hook.Type,
 		Branch:      hook.Branch,
 		PullRequest: hook.PullRequest,
+		Tag:         hook.Tag,
 		Timestamp:   hook.Timestamp,
 		Message:     hook.Message,
 		Config:      string(yml)}

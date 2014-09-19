@@ -69,8 +69,10 @@ var stmts = []string{`
 		,commit_finished   INTEGER
 		,commit_duration   INTEGER
 		,commit_sha        VARCHAR(255)
+		,commit_type       VARCHAR(255)
 		,commit_branch     VARCHAR(255)
 		,commit_pr         VARCHAR(255)
+		,commit_tag        VARCHAR(255)
 		,commit_author     VARCHAR(255)
 		,commit_gravatar   VARCHAR(255)
 		,commit_timestamp  VARCHAR(255)
@@ -78,7 +80,7 @@ var stmts = []string{`
 		,commit_yaml       VARCHAR(4000)
 		,commit_created    INTEGER
 		,commit_updated    INTEGER
-		,UNIQUE(commit_sha, commit_branch, repo_id)
+		,UNIQUE(commit_sha, commit_type, commit_branch, repo_id)
 	);`, `
 	CREATE TABLE IF NOT EXISTS output (
 		 output_id         INTEGER PRIMARY KEY AUTOINCREMENT

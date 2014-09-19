@@ -12,8 +12,10 @@ type Commit struct {
 	Finished    int64  `meddler:"commit_finished"  json:"finished_at"`
 	Duration    int64  `meddler:"commit_duration"  json:"duration"`
 	Sha         string `meddler:"commit_sha"       json:"sha"`
+	Type        string `meddler:"commit_type"      json:"type"`
 	Branch      string `meddler:"commit_branch"    json:"branch"`
 	PullRequest string `meddler:"commit_pr"        json:"pull_request"`
+	Tag         string `meddler:"commit_tag"       json:"tag"`
 	Author      string `meddler:"commit_author"    json:"author"`
 	Gravatar    string `meddler:"commit_gravatar"  json:"gravatar"`
 	Timestamp   string `meddler:"commit_timestamp" json:"timestamp"`

@@ -10,6 +10,8 @@ type Hook struct {
 	PullRequest string
 	Author      string
 	Gravatar    string
+	Type        string
+	Tag         string
 	Timestamp   string
 	Message     string
 }
