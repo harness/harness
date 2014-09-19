@@ -124,7 +124,23 @@
     return function(commits) {
       var filtered = [];
       angular.forEach(commits, function(commit) {
-        if(commit.pull_request.length != 0) {
+        if(commit.type == 'pull_request') {
+          filtered.push(commit);
+        }
+      });
+      return filtered;
+    }
+  }
+
+  /**
+   * byTags is a helper funcation that filters a list of commits
+   * and returns the subset of those commits that are tags.
+   */
+  function byTags() {
+    return function(commits) {
+      var filtered = [];
+      angular.forEach(commits, function(commit) {
+        if(commit.type == 'tag') {
           filtered.push(commit);
         }
       });
@@ -195,6 +211,7 @@
     .filter('fullPath', fullPath)
     .filter('gravatar', gravatar)
     .filter('gravatarLarge', gravatarLarge)
+    .filter('byTags', byTags)
     .filter('pullRequests', pullRequests)
     .filter('remoteIcon', remoteIcon)
     .filter('remoteName', remoteName)
