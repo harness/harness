@@ -9,11 +9,24 @@ type Condition struct {
 	Branch      string // Indicates the step should run only for this branch
 	Condition   string // Indicates the step should run if bash condition evals to true
 	PullRequest *bool  `yaml:"pull_requests"` // Indicates the step should run for all pull requests
+	AllTags     *bool  `yaml:"all_tags"`      // Indicates the step should run for all tag push events
 	AllBranches *bool  `yaml:"all_branches"`  // Indicates the step should run for all branches
 
 	// Indicates the step should only run when the following
 	// matrix values are present for the sub-build.
 	Matrix map[string]string
+}
+
+// MatchTag is a helper function that returns true
+// if all_tags is true. Else it returns false.
+func (c *Condition) MatchTag(tag string) bool {
+	if len(tag) == 0 {
+		return true
+	}
+	if c.AllTags == nil {
+		return false
+	}
+	return *c.AllTags
 }
 
 // MatchPullRequest is a helper function that returns false

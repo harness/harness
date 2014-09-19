@@ -56,6 +56,8 @@ func match(c *condition.Condition, r *repo.Repo) bool {
 	switch {
 	case c == nil:
 		return true
+	case !c.MatchTag(r.Tag):
+		return false
 	case !c.MatchBranch(r.Branch):
 		return false
 	case !c.MatchOwner(r.Name):

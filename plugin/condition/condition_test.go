@@ -6,6 +6,34 @@ import (
 
 type Bool bool
 
+func Test_MatchTag(t *testing.T) {
+
+	var c = Condition{}
+	var got, want = c.MatchTag(""), true
+	if got != want {
+		t.Errorf("Non-push tag events are always enabled, expected %v, got %v", want, got)
+	}
+
+	got, want = c.MatchTag("v1.0.0"), false
+	if got != want {
+		t.Errorf("Push tag events should be disabled by default, expected %v, got %v", want, got)
+	}
+
+	c.AllTags = new(bool)
+	*c.AllTags = false
+	got, want = c.MatchTag("v1.0.0"), false
+	if got != want {
+		t.Errorf("Push tag events can be explicity disabled, expected %v, got %v", want, got)
+	}
+
+	c.AllTags = new(bool)
+	*c.AllTags = true
+	got, want = c.MatchTag("v1.0.0"), true
+	if got != want {
+		t.Errorf("Push tag events can be explicitly enabled, expected %v, got %v", want, got)
+	}
+}
+
 func Test_MatchPullRequest(t *testing.T) {
 
 	var c = Condition{}
