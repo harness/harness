@@ -103,21 +103,18 @@ func (r *Repo) Commands() []string {
 	}
 
 	cmds := []string{}
-	cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
-
-	switch {
-	// if a specific commit is provided then we'll
-	// need to clone it.
-	case len(r.PR) > 0:
-
+	if len(r.PR) > 0 {
+		// If a specific PR is provided then we need to clone it.
+		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive %s %s", r.Depth, r.Path, r.Dir))
 		cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
 		cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
-		//cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/merge:", r.PR))
-		//cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", "FETCH_HEAD"))
-	// if a specific commit is provided then we'll
-	// need to clone it.
-	case len(r.Commit) > 0:
-		cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))
+	} else {
+		// Otherwise just clone the branch.
+		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
+		// If a specific commit is provided then we'll need to check it out.
+		if len(r.Commit) > 0 {
+			cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))
+		}
 	}
 
 	return cmds
