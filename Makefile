@@ -1,5 +1,5 @@
 SELFPKG := github.com/drone/drone
-VERSION := 0.2.0
+VERSION := $(shell cat VERSION)
 SHA := $(shell git rev-parse --short HEAD)
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 PKGS := \
@@ -76,7 +76,8 @@ clean: rice
 	rm -rf usr/local/bin/droned
 	rm -rf drone.sqlite
 	rm -rf /tmp/drone.sqlite
-	rm -rf build release
+	rm -rf build
+	rm -rf release
 
 # creates a debian package for drone
 # to install `sudo dpkg -i drone.deb`
