@@ -204,7 +204,7 @@ func (r *GitHub) Activate(user *model.User, repo *model.Repo, link string) error
 func (r *GitHub) ParseHook(req *http.Request) (*model.Hook, error) {
 	switch req.Header.Get("X-Github-Event") {
 	case "push":
-		return r.ParseCommitHook(req)
+		return r.ParsePushEvent(req)
 	case "pull_request":
 		return r.ParsePullRequestHook(req)
 	default:
@@ -212,23 +212,57 @@ func (r *GitHub) ParseHook(req *http.Request) (*model.Hook, error) {
 	}
 }
 
-func (r *GitHub) ParseCommitHook(req *http.Request) (*model.Hook, error) {
-	// parse the github Hook payload
+func (r *GitHub) ParsePushEvent(req *http.Request) (*model.Hook, error) {
 	var payload = GetPayload(req)
-	var data, err = github.ParseHook(payload)
+	data, err := github.ParseHook(payload)
 	if err != nil {
 		return nil, nil
 	}
 
-	// make sure this is being triggered because of a commit
-	// and not something like a tag deletion or whatever
-	if data.IsTag() ||
-		data.IsGithubPages() ||
-		data.IsHead() == false ||
-		data.IsDeleted() {
+	switch {
+	case data.IsDeleted():
+		return nil, nil
+	case data.IsGithubPages():
+		return nil, nil
+	case data.IsHead():
+		return r.ParseCommitHook(req, data)
+	case data.IsTag():
+		return r.ParseTagHook(req, data)
+	default:
 		return nil, nil
 	}
+}
 
+func (r *GitHub) ParseTagHook(req *http.Request, data *github.PostReceiveHook) (*model.Hook, error) {
+	var hook = new(model.Hook)
+	hook.Type = "tag"
+	hook.Repo = data.Repo.Name
+	hook.Owner = data.Repo.Owner.Login
+	hook.Sha = data.Head.Id
+	hook.Branch = strings.TrimPrefix(data.Ref, "refs/tags/")
+	hook.Tag = hook.Branch
+
+	if len(hook.Owner) == 0 {
+		hook.Owner = data.Repo.Owner.Name
+	}
+
+	// extract the author and message from the commit
+	// this is kind of experimental, since I don't know
+	// what I'm doing here.
+	if data.Head != nil && data.Head.Author != nil {
+		hook.Message = data.Head.Message
+		hook.Timestamp = data.Head.Timestamp
+		hook.Author = data.Head.Author.Email
+	} else if data.Commits != nil && len(data.Commits) > 0 && data.Commits[0].Author != nil {
+		hook.Message = data.Commits[0].Message
+		hook.Timestamp = data.Commits[0].Timestamp
+		hook.Author = data.Commits[0].Author.Email
+	}
+
+	return hook, nil
+}
+
+func (r *GitHub) ParseCommitHook(req *http.Request, data *github.PostReceiveHook) (*model.Hook, error) {
 	var hook = new(model.Hook)
 	hook.Type = "commit"
 	hook.Repo = data.Repo.Name
