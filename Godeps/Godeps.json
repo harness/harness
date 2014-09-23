@@ -178,6 +178,10 @@
 			"ImportPath": "launchpad.net/goyaml",
 			"Comment": "51",
 			"Rev": "gustavo@niemeyer.net-20140305200416-7gh64vkcckre5mob"
+		},
+		{
+			"ImportPath": "gopkg.in/v1/yaml",
+			"Rev": "1b9791953ba4027efaeb728c7355e542a203be5e"
 		}
 	]
 }

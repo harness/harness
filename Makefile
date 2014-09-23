@@ -1,5 +1,5 @@
 SELFPKG := github.com/drone/drone
-VERSION := 0.2
+VERSION := $(shell cat VERSION)
 SHA := $(shell git rev-parse --short HEAD)
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 PKGS := \
@@ -76,6 +76,8 @@ clean: rice
 	rm -rf usr/local/bin/droned
 	rm -rf drone.sqlite
 	rm -rf /tmp/drone.sqlite
+	rm -rf build
+	rm -rf release
 
 # creates a debian package for drone
 # to install `sudo dpkg -i drone.deb`
@@ -95,3 +97,16 @@ godep:
 
 rice:
 	go install github.com/GeertJohan/go.rice/rice
+
+BUILDS := build/drone-v$(VERSION)-linux-amd64
+COMPRESSED_BUILDS := $(BUILDS:%=%.tar.gz)
+RELEASE_ARTIFACTS := $(COMPRESSED_BUILDS:build/%=release/%)
+$(RELEASE_ARTIFACTS): release/% : build/%
+	mkdir -p release
+	cp $< $@
+build/drone-v$(VERSION)-linux-amd64:
+	GOARCH=amd64 GOOS=linux godep go build -o "$@/drone" -ldflags "-X main.version $(VERSION)" $(SELFPKG)/cmd/drone
+	GOARCH=amd64 GOOS=linux godep go build -o "$@/droned" -ldflags "-X main.version $(VERSION)" $(SELFPKG)/cmd/droned
+%.tar.gz: %
+	tar -C `dirname $<` -zcvf "$<.tar.gz" `basename $<`
+release: $(RELEASE_ARTIFACTS)

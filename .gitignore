@@ -15,3 +15,6 @@ deb/drone/usr/local/bin/droned
 
 .vagrant
 *.out
+
+build
+release
