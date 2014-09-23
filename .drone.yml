@@ -20,7 +20,6 @@ publish:
       - make release
     artifacts:
       - release
-    # keep tag in sync with VERSION in Makefile
     tag: v$(cat VERSION)
     token: {{github_token}}
     user: Clever
