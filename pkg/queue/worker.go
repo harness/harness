@@ -184,7 +184,7 @@ func (w *worker) runBuild(task *BuildTask, buildscript *script.Build, buf io.Wri
 		Branch: task.Commit.Branch,
 		Commit: task.Commit.Hash,
 		PR:     task.Commit.PullRequest,
-		Dir:    filepath.Join("/var/cache/drone/src", task.Repo.Slug),
+		Dir:    filepath.Join("/var/cache/drone/src", git.GitPath(buildscript.Git, task.Repo.Slug)),
 		Depth:  git.GitDepth(buildscript.Git),
 	}
 

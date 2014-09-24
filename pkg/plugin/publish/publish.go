@@ -9,10 +9,11 @@ import (
 // for publishing build artifacts when
 // a Build has succeeded
 type Publish struct {
-	S3    *S3    `yaml:"s3,omitempty"`
-	Swift *Swift `yaml:"swift,omitempty"`
-	PyPI  *PyPI  `yaml:"pypi,omitempty"`
-	NPM   *NPM   `yaml:"npm,omitempty"`
+	S3     *S3     `yaml:"s3,omitempty"`
+	Swift  *Swift  `yaml:"swift,omitempty"`
+	PyPI   *PyPI   `yaml:"pypi,omitempty"`
+	NPM    *NPM    `yaml:"npm,omitempty"`
+	Docker *Docker `yaml:"docker,omitempty"`
 }
 
 func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
@@ -34,5 +35,10 @@ func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	// NPM
 	if p.NPM != nil && (len(p.NPM.Branch) == 0 || (len(p.NPM.Branch) > 0 && r.Branch == p.NPM.Branch)) {
 		p.NPM.Write(f)
+	}
+
+	// Docker
+	if p.Docker != nil && (len(p.Docker.Branch) == 0 || (len(p.Docker.Branch) > 0 && r.Branch == p.Docker.Branch)) {
+		p.Docker.Write(f, r)
 	}
 }

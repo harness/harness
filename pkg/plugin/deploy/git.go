@@ -35,7 +35,7 @@ func (g *Git) Write(f *buildfile.Buildfile) {
 		// that need to be deployed to git remote.
 		f.WriteCmd(fmt.Sprintf("git add -A"))
 		f.WriteCmd(fmt.Sprintf("git commit -m 'add build artifacts'"))
-		f.WriteCmd(fmt.Sprintf("git push deploy $COMMIT:%s --force", destinationBranch))
+		f.WriteCmd(fmt.Sprintf("git push deploy HEAD:%s --force", destinationBranch))
 	case false:
 		// otherwise we just do a standard git push
 		f.WriteCmd(fmt.Sprintf("git push deploy $COMMIT:%s", destinationBranch))
