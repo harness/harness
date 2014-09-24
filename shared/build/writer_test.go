@@ -9,7 +9,7 @@ func TestSetupDockerfile(t *testing.T) {
 	var buf bytes.Buffer
 
 	// wrap the buffer so we can analyze output
-	w := writer{&buf}
+	w := writer{&buf, 0}
 
 	w.WriteString("#DRONE:676f206275696c64\n")
 	w.WriteString("#DRONE:676f2074657374202d76\n")
