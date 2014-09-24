@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/dotcloud/docker/pkg/term"
+	"github.com/dotcloud/docker/pkg/stdcopy"
 	"github.com/dotcloud/docker/utils"
 )
 
@@ -208,7 +209,7 @@ func (c *Client) hijack(method, path string, setRawTerminal bool, out io.Writer)
 		if setRawTerminal {
 			_, err = io.Copy(out, br)
 		} else {
-			_, err = utils.StdCopy(out, out, br)
+			_, err = stdcopy.StdCopy(out, out, br)
 		}
 
 		errStdout <- err
