@@ -198,21 +198,7 @@ func readWebsocket(ws *websocket.Conn) {
 	}
 }
 
-// Ping is a method that is being used for internal testing and
-// will be removed prior to release
-func (h *WsHandler) Ping(w http.ResponseWriter, r *http.Request) error {
-	channel := h.pubsub.Register("_global")
-	msg := model.Request{
-		Repo:   &model.Repo{ID: 1, Private: false, Host: "github.com", Owner: "drone", Name: "drone"},
-		Commit: &model.Commit{ID: 1, Status: "Started", Branch: "master", Sha: "113f4917ff9174945388d86395f902cd154074cb", Message: "Remove branches by SCM hook", Author: "bradrydzewski", Gravatar: "8c58a0be77ee441bb8f8595b7f1b4e87"},
-	}
-	channel.Publish(&msg)
-	w.WriteHeader(http.StatusOK)
-	return nil
-}
-
 func (h *WsHandler) Register(r *pat.Router) {
-	r.Post("/ws/ping", errorHandler(h.Ping))
 	r.Get("/ws/user", errorHandler(h.WsUser))
 	r.Get("/ws/stdout/{id}", errorHandler(h.WsConsole))
 }
