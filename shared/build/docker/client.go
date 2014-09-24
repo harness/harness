@@ -13,14 +13,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dotcloud/docker/pkg/term"
 	"github.com/dotcloud/docker/pkg/stdcopy"
+	"github.com/dotcloud/docker/pkg/term"
 	"github.com/dotcloud/docker/utils"
 )
 
 const (
 	APIVERSION        = 1.9
-	DEFAULTHTTPPORT   = 4243
+	DEFAULTHTTPPORT   = 2375
 	DEFAULTUNIXSOCKET = "/var/run/docker.sock"
 	DEFAULTPROTOCOL   = "unix"
 	DEFAULTTAG        = "latest"
@@ -104,7 +104,7 @@ func (c *Client) setHost(defaultUnixSocket string) {
 		// we'll try to connect to the default tcp address
 		if _, err := os.Stat(defaultUnixSocket); err != nil {
 			c.proto = "tcp"
-			c.addr = "0.0.0.0:4243"
+			c.addr = "0.0.0.0:2375"
 		}
 	}
 }
