@@ -7,7 +7,7 @@ import (
 )
 
 func TestHostFromEnv(t *testing.T) {
-	os.Setenv("DOCKER_HOST", "tcp://1.1.1.1:4243")
+	os.Setenv("DOCKER_HOST", "tcp://1.1.1.1:2375")
 	defer os.Setenv("DOCKER_HOST", "")
 
 	client := New()
@@ -16,18 +16,18 @@ func TestHostFromEnv(t *testing.T) {
 		t.Fail()
 	}
 
-	if client.addr != "1.1.1.1:4243" {
+	if client.addr != "1.1.1.1:2375" {
 		t.Fail()
 	}
 }
 
 func TestInvalidHostFromEnv(t *testing.T) {
-	os.Setenv("DOCKER_HOST", "tcp:1.1.1.1:4243") // missing tcp:// prefix
+	os.Setenv("DOCKER_HOST", "tcp:1.1.1.1:2375") // missing tcp:// prefix
 	defer os.Setenv("DOCKER_HOST", "")
 
 	client := New()
 
-	if client.addr == "1.1.1.1:4243" {
+	if client.addr == "1.1.1.1:2375" {
 		t.Fail()
 	}
 }
@@ -61,7 +61,7 @@ func TestDefaultTcpHost(t *testing.T) {
 		t.Fail()
 	}
 
-	if client.addr != "0.0.0.0:4243" {
+	if client.addr != "0.0.0.0:2375" {
 		t.Fail()
 	}
 }
