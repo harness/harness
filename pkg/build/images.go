@@ -193,10 +193,11 @@ var builders = map[string]*image{
 	"gcc4.8": {Tag: "bradrydzewski/gcc:4.8"},
 
 	// Golang build images
-	"go":    {Tag: "bradrydzewski/go:1.2"},
+	"go":    {Tag: "bradrydzewski/go:1.3"},
 	"go1":   {Tag: "bradrydzewski/go:1.0"},
 	"go1.1": {Tag: "bradrydzewski/go:1.1"},
 	"go1.2": {Tag: "bradrydzewski/go:1.2"},
+	"go1.3": {Tag: "bradrydzewski/go:1.3"},
 
 	// Haskell build images
 	"haskell":    {Tag: "bradrydzewski/haskell:7.4"},
