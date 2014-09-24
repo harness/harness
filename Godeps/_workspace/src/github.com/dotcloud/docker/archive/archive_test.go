@@ -3,7 +3,6 @@ package archive
 import (
 	"bytes"
 	"fmt"
-	"github.com/dotcloud/docker/vendor/src/code.google.com/p/go/src/pkg/archive/tar"
 	"io"
 	"io/ioutil"
 	"os"
@@ -11,6 +10,8 @@ import (
 	"path"
 	"testing"
 	"time"
+
+	"github.com/docker/docker/vendor/src/code.google.com/p/go/src/pkg/archive/tar"
 )
 
 func TestCmdStreamLargeStderr(t *testing.T) {
@@ -62,8 +63,8 @@ func TestCmdStreamGood(t *testing.T) {
 	}
 }
 
-func tarUntar(t *testing.T, origin string, compression Compression) error {
-	archive, err := Tar(origin, compression)
+func tarUntar(t *testing.T, origin string, options *TarOptions) ([]Change, error) {
+	archive, err := TarWithOptions(origin, options)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,37 +72,29 @@ func tarUntar(t *testing.T, origin string, compression Compression) error {
 
 	buf := make([]byte, 10)
 	if _, err := archive.Read(buf); err != nil {
-		return err
+		return nil, err
 	}
 	wrap := io.MultiReader(bytes.NewReader(buf), archive)
 
 	detectedCompression := DetectCompression(buf)
+	compression := options.Compression
 	if detectedCompression.Extension() != compression.Extension() {
-		return fmt.Errorf("Wrong compression detected. Actual compression: %s, found %s", compression.Extension(), detectedCompression.Extension())
+		return nil, fmt.Errorf("Wrong compression detected. Actual compression: %s, found %s", compression.Extension(), detectedCompression.Extension())
 	}
 
 	tmp, err := ioutil.TempDir("", "docker-test-untar")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer os.RemoveAll(tmp)
 	if err := Untar(wrap, tmp, nil); err != nil {
-		return err
+		return nil, err
 	}
 	if _, err := os.Stat(tmp); err != nil {
-		return err
+		return nil, err
 	}
 
-	changes, err := ChangesDirs(origin, tmp)
-	if err != nil {
-		return err
-	}
-
-	if len(changes) != 0 {
-		t.Fatalf("Unexpected differences after tarUntar: %v", changes)
-	}
-
-	return nil
+	return ChangesDirs(origin, tmp)
 }
 
 func TestTarUntar(t *testing.T) {
@@ -116,13 +109,57 @@ func TestTarUntar(t *testing.T) {
 	if err := ioutil.WriteFile(path.Join(origin, "2"), []byte("welcome!"), 0700); err != nil {
 		t.Fatal(err)
 	}
+	if err := ioutil.WriteFile(path.Join(origin, "3"), []byte("will be ignored"), 0700); err != nil {
+		t.Fatal(err)
+	}
 
 	for _, c := range []Compression{
 		Uncompressed,
 		Gzip,
 	} {
-		if err := tarUntar(t, origin, c); err != nil {
+		changes, err := tarUntar(t, origin, &TarOptions{
+			Compression: c,
+			Excludes:    []string{"3"},
+		})
+
+		if err != nil {
 			t.Fatalf("Error tar/untar for compression %s: %s", c.Extension(), err)
+		}
+
+		if len(changes) != 1 || changes[0].Path != "/3" {
+			t.Fatalf("Unexpected differences after tarUntar: %v", changes)
+		}
+	}
+}
+
+func TestTarWithOptions(t *testing.T) {
+	origin, err := ioutil.TempDir("", "docker-test-untar-origin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(origin)
+	if err := ioutil.WriteFile(path.Join(origin, "1"), []byte("hello world"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := ioutil.WriteFile(path.Join(origin, "2"), []byte("welcome!"), 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := []struct {
+		opts       *TarOptions
+		numChanges int
+	}{
+		{&TarOptions{Includes: []string{"1"}}, 1},
+		{&TarOptions{Excludes: []string{"2"}}, 1},
+	}
+	for _, testCase := range cases {
+		changes, err := tarUntar(t, origin, testCase.opts)
+		if err != nil {
+			t.Fatalf("Error tar/untar when testing inclusion/exclusion: %s", err)
+		}
+		if len(changes) != testCase.numChanges {
+			t.Errorf("Expected %d changes, got %d for %+v:",
+				testCase.numChanges, len(changes), testCase.opts)
 		}
 	}
 }
@@ -132,8 +169,76 @@ func TestTarUntar(t *testing.T) {
 // Failing prevents the archives from being uncompressed during ADD
 func TestTypeXGlobalHeaderDoesNotFail(t *testing.T) {
 	hdr := tar.Header{Typeflag: tar.TypeXGlobalHeader}
-	err := createTarFile("pax_global_header", "some_dir", &hdr, nil)
+	err := createTarFile("pax_global_header", "some_dir", &hdr, nil, true)
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+// Some tar have both GNU specific (huge uid) and Ustar specific (long name) things.
+// Not supposed to happen (should use PAX instead of Ustar for long name) but it does and it should still work.
+func TestUntarUstarGnuConflict(t *testing.T) {
+	f, err := os.Open("testdata/broken.tar")
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	tr := tar.NewReader(f)
+	// Iterate through the files in the archive.
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			// end of tar archive
+			break
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		if hdr.Name == "root/.cpanm/work/1395823785.24209/Plack-1.0030/blib/man3/Plack::Middleware::LighttpdScriptNameFix.3pm" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("%s not found in the archive", "root/.cpanm/work/1395823785.24209/Plack-1.0030/blib/man3/Plack::Middleware::LighttpdScriptNameFix.3pm")
+	}
+}
+
+func prepareUntarSourceDirectory(numberOfFiles int, targetPath string) (int, error) {
+	fileData := []byte("fooo")
+	for n := 0; n < numberOfFiles; n++ {
+		fileName := fmt.Sprintf("file-%d", n)
+		if err := ioutil.WriteFile(path.Join(targetPath, fileName), fileData, 0700); err != nil {
+			return 0, err
+		}
+	}
+	totalSize := numberOfFiles * len(fileData)
+	return totalSize, nil
+}
+
+func BenchmarkTarUntar(b *testing.B) {
+	origin, err := ioutil.TempDir("", "docker-test-untar-origin")
+	if err != nil {
+		b.Fatal(err)
+	}
+	tempDir, err := ioutil.TempDir("", "docker-test-untar-destination")
+	if err != nil {
+		b.Fatal(err)
+	}
+	target := path.Join(tempDir, "dest")
+	n, err := prepareUntarSourceDirectory(100, origin)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.ResetTimer()
+	b.SetBytes(int64(n))
+	defer os.RemoveAll(origin)
+	defer os.RemoveAll(tempDir)
+	for n := 0; n < b.N; n++ {
+		err := TarUntar(origin, target)
+		if err != nil {
+			b.Fatal(err)
+		}
+		os.RemoveAll(target)
 	}
 }

@@ -16,8 +16,9 @@ var flags struct {
 		Executable string `long:"exec" description:"Executable to append" required:"true"`
 	} `command:"append"`
 
-	Embed struct{} `command:"embed"`
-	Clean struct{} `command:"clean"`
+	EmbedGo   struct{} `command:"embed-go" alias:"embed"`
+	EmbedSyso struct{} `command:"embed-syso"`
+	Clean     struct{} `command:"clean"`
 }
 
 // flags parser

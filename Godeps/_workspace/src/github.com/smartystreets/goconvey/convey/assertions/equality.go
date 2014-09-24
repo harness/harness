@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/jacobsa/oglematchers"
+	"github.com/smartystreets/goconvey/convey/assertions/oglematchers"
 )
 
 // default acceptable delta for ShouldAlmostEqual
@@ -142,7 +142,13 @@ func ShouldResemble(actual interface{}, expected ...interface{}) string {
 	}
 
 	if matchError := oglematchers.DeepEquals(expected[0]).Matches(actual); matchError != nil {
-		return serializer.serialize(expected[0], actual, fmt.Sprintf(shouldHaveResembled, expected[0], actual))
+		message := fmt.Sprintf(
+			shouldHaveResembled,
+			expected[0], expected[0],
+			actual, actual,
+		)
+		return serializer.serialize(
+			expected[0], actual, message)
 	}
 
 	return success
@@ -153,7 +159,11 @@ func ShouldNotResemble(actual interface{}, expected ...interface{}) string {
 	if message := need(1, expected); message != success {
 		return message
 	} else if ShouldResemble(actual, expected[0]) == success {
-		return fmt.Sprintf(shouldNotHaveResembled, actual, expected[0])
+		return fmt.Sprintf(
+			shouldNotHaveResembled,
+			actual, actual,
+			expected[0], expected[0],
+		)
 	}
 	return success
 }

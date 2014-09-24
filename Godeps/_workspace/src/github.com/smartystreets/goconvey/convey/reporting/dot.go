@@ -29,6 +29,10 @@ func (self *dot) Exit() {}
 
 func (self *dot) EndStory() {}
 
+func (self *dot) Write(content []byte) (written int, err error) {
+	return len(content), nil // no-op
+}
+
 func NewDotReporter(out *Printer) *dot {
 	self := new(dot)
 	self.out = out

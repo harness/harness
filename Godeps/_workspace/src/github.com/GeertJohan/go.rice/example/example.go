@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error opening rice.Box: %s\n", err)
 	}
-	spew.Dump(box)
+	// spew.Dump(box)
 
 	contentString, err := box.String("file.txt")
 	if err != nil {
@@ -35,6 +35,16 @@ func main() {
 		log.Fatalf("could not open file: %s\n", err)
 	}
 	spew.Dump(file)
+	// debianFile, err := box.Open("debian-7.3.0-amd64-i386-netinst.iso")
+	// if err != nil {
+	// 	log.Fatalf("error opening file debian-7.3.0-amd64-i386-netinst.iso: %v", err)
+	// }
+	// info, err := debianFile.Stat()
+	// if err != nil {
+	// 	log.Fatalf("error doing stat for debian file: %v", err)
+	// }
+	// log.Printf("debian file was last modified at %v\n", info.ModTime())
+	// log.Printf("debian file is %d bytes large\n", info.Size())
 
 	// find/create a rice.Box
 	templateBox, err := rice.FindBox("example-templates")

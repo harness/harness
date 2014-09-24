@@ -14,6 +14,7 @@ type scope struct {
 	children   map[string]*scope
 	birthOrder []*scope
 	child      int
+	resetOrder []string
 	resets     map[string]*action
 	panicked   bool
 	reporter   reporting.Reporter
@@ -21,55 +22,69 @@ type scope struct {
 }
 
 func (parent *scope) adopt(child *scope) {
-	if parent.hasChild(child) {
-		return
+	i := parent.getChildIndex(child)
+
+	if i == -1 {
+		parent.children[child.name] = child
+		parent.birthOrder = append(parent.birthOrder, child)
+	} else {
+		/* We need to replace the action to retain the closed over variables from
+		   the specific invocation of the parent scope, enabling the enclosing
+		   parent scope to serve as a set-up for the child scope */
+		parent.birthOrder[i].action = child.action
 	}
-	parent.birthOrder = append(parent.birthOrder, child)
-	parent.children[child.name] = child
 }
-func (parent *scope) hasChild(child *scope) bool {
-	for _, ordered := range parent.birthOrder {
+
+func (parent *scope) getChildIndex(child *scope) int {
+	for i, ordered := range parent.birthOrder {
 		if ordered.name == child.name && ordered.title == child.title {
-			return true
+			return i
 		}
 	}
-	return false
+
+	return -1
 }
 
 func (self *scope) registerReset(action *action) {
 	self.resets[action.name] = action
+	for _, name := range self.resetOrder {
+		if name == action.name {
+			return
+		}
+	}
+	self.resetOrder = append(self.resetOrder, action.name)
 }
 
 func (self *scope) visited() bool {
 	return self.panicked || self.child >= len(self.birthOrder)
 }
 
-func (parent *scope) visit() {
+func (parent *scope) visit(runner *runner) {
+	runner.active = parent
 	defer parent.exit()
-	parent.enter()
-	parent.action.Invoke()
-	parent.visitChildren()
-}
-func (parent *scope) enter() {
+
+	oldMode := runner.setFailureMode(parent.action.failureMode)
+	defer runner.setFailureMode(oldMode)
+
 	parent.reporter.Enter(parent.report)
+	parent.action.Invoke()
+	parent.visitNextChild(runner)
+	parent.cleanup()
 }
-func (parent *scope) visitChildren() {
-	if len(parent.birthOrder) == 0 {
-		parent.cleanup()
-	} else {
-		parent.visitChild()
-	}
-}
-func (parent *scope) visitChild() {
-	child := parent.birthOrder[parent.child]
-	child.visit()
-	if child.visited() {
-		parent.cleanup()
-		parent.child++
+func (parent *scope) visitNextChild(runner *runner) {
+	if len(parent.birthOrder) > parent.child {
+		child := parent.birthOrder[parent.child]
+
+		child.visit(runner)
+
+		if child.visited() {
+			parent.child++
+		}
 	}
 }
 func (parent *scope) cleanup() {
-	for _, reset := range parent.resets {
+	for _, name := range parent.resetOrder {
+		reset := parent.resets[name]
 		reset.Invoke()
 	}
 }
@@ -79,22 +94,23 @@ func (parent *scope) exit() {
 			panic(problem)
 		}
 		if problem != failureHalt {
-			parent.panicked = true
 			parent.reporter.Report(reporting.NewErrorReport(problem))
 		}
+		parent.panicked = true
 	}
 	parent.reporter.Exit()
 }
 
 func newScope(entry *registration, reporter reporting.Reporter) *scope {
-	self := new(scope)
-	self.reporter = reporter
-	self.name = entry.action.name
-	self.title = entry.Situation
-	self.action = entry.action
-	self.children = make(map[string]*scope)
-	self.birthOrder = []*scope{}
-	self.resets = make(map[string]*action)
-	self.report = reporting.NewScopeReport(self.title, self.name)
-	return self
+	return &scope{
+		reporter:   reporter,
+		name:       entry.action.name,
+		title:      entry.Situation,
+		action:     entry.action,
+		children:   make(map[string]*scope),
+		birthOrder: []*scope{},
+		resetOrder: []string{},
+		resets:     make(map[string]*action),
+		report:     reporting.NewScopeReport(entry.Situation, entry.action.name),
+	}
 }

@@ -36,6 +36,7 @@ type ScopeResult struct {
 	Line       int
 	Depth      int
 	Assertions []*AssertionResult
+	Output     string
 }
 
 func newScopeResult(title string, depth int, file string, line int) *ScopeResult {
@@ -122,10 +123,7 @@ func NewErrorReport(err interface{}) *AssertionResult {
 	return report
 }
 func NewSuccessReport() *AssertionResult {
-	report := new(AssertionResult)
-	report.File, report.Line = caller()
-	report.StackTrace = fullStackTrace()
-	return report
+	return new(AssertionResult)
 }
 func NewSkipReport() *AssertionResult {
 	report := new(AssertionResult)

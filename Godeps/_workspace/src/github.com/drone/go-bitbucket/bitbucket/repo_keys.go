@@ -75,9 +75,18 @@ func (r *RepoKeyResource) Create(owner, slug, key, label string) (*Key, error) {
 // Creates a key on the specified account. You must supply a valid key
 // that is unique across the Bitbucket service.
 func (r *RepoKeyResource) Update(owner, slug, key, label string, id int) (*Key, error) {
-	// There is actually no API to update an existing key
-	r.Delete(owner, slug, id)
-	return r.Create(owner, slug, key, label)
+
+	values := url.Values{}
+	values.Add("key", key)
+	values.Add("label", label)
+
+	k := Key{}
+	path := fmt.Sprintf("/repositories/%s/%s/deploy-keys/%v", owner, slug, id)
+	if err := r.client.do("PUT", path, nil, values, &k); err != nil {
+		return nil, err
+	}
+
+	return &k, nil
 }
 
 func (r *RepoKeyResource) CreateUpdate(owner, slug, key, label string) (*Key, error) {

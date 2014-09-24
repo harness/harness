@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"go/ast"
 	"go/build"
-	"io/ioutil"
+	"go/parser"
+	"go/token"
 	"os"
 	"path/filepath"
-	"regexp"
+	"strings"
 )
 
 func findBoxes(pkg *build.Package) map[string]bool {
@@ -15,13 +17,6 @@ func findBoxes(pkg *build.Package) map[string]bool {
 	filenames = append(filenames, pkg.GoFiles...)
 	filenames = append(filenames, pkg.CgoFiles...)
 
-	// prepare regex to find calls to rice.FindBox(..)
-	regexpBox, err := regexp.Compile(`rice\.(?:Must)?FindBox\(["` + "`" + `]{1}([a-zA-Z0-9\\/\.\-_]+)["` + "`" + `]{1}\)`)
-	if err != nil {
-		fmt.Printf("error compiling rice.FindBox regexp: %s\n", err)
-		os.Exit(1)
-	}
-
 	// create map of boxes to embed
 	var boxMap = make(map[string]bool)
 
@@ -29,29 +24,80 @@ func findBoxes(pkg *build.Package) map[string]bool {
 	for _, filename := range filenames {
 		// find full filepath
 		fullpath := filepath.Join(pkg.Dir, filename)
-		verbosef("scanning file %s\n", fullpath)
-
-		// open source file
-		file, err := os.Open(fullpath)
-		if err != nil {
-			fmt.Printf("error opening file '%s': %s\n", filename, err)
-			os.Exit(1)
+		if strings.HasSuffix(filename, "rice-box.go") {
+			// Ignore *.rice-box.go files
+			verbosef("skipping file %q\n", fullpath)
+			continue
 		}
-		defer file.Close()
+		verbosef("scanning file %q\n", fullpath)
 
-		// slurp source code
-		fileData, err := ioutil.ReadAll(file)
+		fset := token.NewFileSet()
+		f, err := parser.ParseFile(fset, fullpath, nil, 0)
 		if err != nil {
-			fmt.Printf("error reading file '%s': %s\n", filename, err)
+			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		// find rice.FindBox(..) calls
-		matches := regexpBox.FindAllStringSubmatch(string(fileData), -1)
-		for _, match := range matches {
-			boxMap[match[1]] = true
-			verbosef("\tfound box '%s'\n", match[1])
+		var riceIsImported bool
+		ricePkgName := "rice"
+		for _, imp := range f.Imports {
+			if strings.HasSuffix(imp.Path.Value, "go.rice\"") {
+				if imp.Name != nil {
+					ricePkgName = imp.Name.Name
+				}
+				riceIsImported = true
+				break
+			}
 		}
+		if !riceIsImported {
+			// Rice wasn't imported, so we won't find a box.
+			continue
+		}
+		if ricePkgName == "_" {
+			// Rice pkg is unnamed, so we won't find a box.
+			continue
+		}
+
+		// Inspect AST, looking for calls to (Must)?FindBox.
+		// First parameter of the func must be a basic literal.
+		// Identifiers won't be resolved.
+		var nextIdentIsBoxFunc bool
+		var nextBasicLitParamIsBoxName bool
+		ast.Inspect(f, func(node ast.Node) bool {
+			if node == nil {
+				return false
+			}
+			switch x := node.(type) {
+			case *ast.Ident:
+				if nextIdentIsBoxFunc || ricePkgName == "." {
+					nextIdentIsBoxFunc = false
+					if x.Name == "FindBox" || x.Name == "MustFindBox" {
+						nextBasicLitParamIsBoxName = true
+					}
+				} else {
+					if x.Name == ricePkgName {
+						nextIdentIsBoxFunc = true
+					}
+				}
+			case *ast.BasicLit:
+				if nextBasicLitParamIsBoxName && x.Kind == token.STRING {
+					nextBasicLitParamIsBoxName = false
+					// trim "" or ``
+					name := x.Value[1 : len(x.Value)-1]
+					boxMap[name] = true
+					verbosef("\tfound box %q\n", name)
+				}
+
+			default:
+				if nextIdentIsBoxFunc {
+					nextIdentIsBoxFunc = false
+				}
+				if nextBasicLitParamIsBoxName {
+					nextBasicLitParamIsBoxName = false
+				}
+			}
+			return true
+		})
 	}
 
 	return boxMap

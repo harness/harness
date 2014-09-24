@@ -61,6 +61,12 @@ func (cs callSet) FindMatch(receiver interface{}, method string, args []interfac
 	// Search through the unordered set of calls expected on a method on a
 	// receiver.
 	for _, call := range calls {
+		// A call should not normally still be here if exhausted,
+		// but it can happen if, for instance, .Times(0) was used.
+		// Pretend the call doesn't match.
+		if call.exhausted() {
+			continue
+		}
 		if call.matches(args) {
 			return call
 		}

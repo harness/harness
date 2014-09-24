@@ -3,7 +3,13 @@
 // packages from this project as they serve internal purposes.
 package convey
 
-import "github.com/smartystreets/goconvey/convey/reporting"
+import (
+	"fmt"
+
+	"github.com/smartystreets/goconvey/convey/reporting"
+)
+
+////////////////////////////////// Registration //////////////////////////////////
 
 // Convey is the method intended for use when declaring the scopes
 // of a specification. Each scope has a description and a func()
@@ -21,10 +27,21 @@ import "github.com/smartystreets/goconvey/convey/reporting"
 //
 // Don't worry, the goconvey will panic if you get it wrong so you can fix it.
 //
+// All Convey()-blocks also take an optional parameter of FailureMode which
+// sets how goconvey should treat failures for So()-assertions in the block and
+// nested blocks. See the constants in this file for the available options.
+//
+// By default it will inherit from its parent block and the top-level blocks
+// start with setting of FailureHalts.
+//
+// This parameter is inserted before the block itself:
+//
+//     Convey(description string, t *testing.T, mode FailureMode, action func())
+//     Convey(description string, mode FailureMode, action func())
+//
 // See the examples package for, well, examples.
 func Convey(items ...interface{}) {
-	entry := discover(items)
-	register(entry)
+	register(discover(items))
 }
 
 // SkipConvey is analagous to Convey except that the scope is not executed
@@ -32,7 +49,8 @@ func Convey(items ...interface{}) {
 // The reporter will be notified that this step was skipped.
 func SkipConvey(items ...interface{}) {
 	entry := discover(items)
-	entry.action = newSkippedAction(skipReport)
+	entry.action = newSkippedAction(skipReport, entry.action.failureMode)
+
 	register(entry)
 }
 
@@ -46,11 +64,12 @@ func SkipConvey(items ...interface{}) {
 func FocusConvey(items ...interface{}) {
 	entry := discover(items)
 	entry.Focus = true
+
 	register(entry)
 }
 
 func register(entry *registration) {
-	if entry.IsTopLevel() {
+	if entry.ShouldBeTopLevel() {
 		suites.Run(entry)
 	} else {
 		suites.Current().Register(entry)
@@ -64,8 +83,19 @@ func skipReport() {
 // Reset registers a cleanup function to be run after each Convey()
 // in the same scope. See the examples package for a simple use case.
 func Reset(action func()) {
-	suites.Current().RegisterReset(newAction(action))
+	/* TODO: Failure mode configuration */
+	suites.Current().RegisterReset(newAction(action, FailureInherits))
 }
+
+/////////////////////////////////// Assertions ///////////////////////////////////
+
+// assertion is an alias for a function with a signature that the convey.So()
+// method can handle. Any future or custom assertions should conform to this
+// method signature. The return value should be an empty string if the assertion
+// passes and a well-formed failure message if not.
+type assertion func(actual interface{}, expected ...interface{}) string
+
+const assertionSuccess = ""
 
 // So is the means by which assertions are made against the system under test.
 // The majority of exported names in the assertions package begin with the word
@@ -88,10 +118,61 @@ func SkipSo(stuff ...interface{}) {
 	skipReport()
 }
 
-// assertion is an alias for a function with a signature that the convey.So()
-// method can handle. Any future or custom assertions should conform to this
-// method signature. The return value should be an empty string if the assertion
-// passes and a well-formed failure message if not.
-type assertion func(actual interface{}, expected ...interface{}) string
+// FailureMode is a type which determines how the So() blocks should fail
+// if their assertion fails. See constants further down for acceptable values
+type FailureMode string
 
-const assertionSuccess = ""
+const (
+
+	// FailureContinues is a failure mode which prevents failing
+	// So()-assertions from halting Convey-block execution, instead
+	// allowing the test to continue past failing So()-assertions.
+	FailureContinues FailureMode = "continue"
+
+	// FailureHalts is the default setting for a top-level Convey()-block
+	// and will cause all failing So()-assertions to halt further execution
+	// in that test-arm and continue on to the next arm.
+	FailureHalts FailureMode = "halt"
+
+	// FailureInherits is the default setting for failure-mode, it will
+	// default to the failure-mode of the parent block. You should never
+	// need to specify this mode in your tests..
+	FailureInherits FailureMode = "inherits"
+)
+
+var defaultFailureMode FailureMode = FailureHalts
+
+// SetDefaultFailureMode allows you to specify the default failure mode
+// for all Convey blocks. It is meant to be used in an init function to
+// allow the default mode to be changd across all tests for an entire packgae
+// but it can be used anywhere.
+func SetDefaultFailureMode(mode FailureMode) {
+	if mode == FailureContinues || mode == FailureHalts {
+		defaultFailureMode = mode
+	} else {
+		panic("You may only use the constants named 'FailureContinues' and 'FailureHalts' as default failure modes.")
+	}
+}
+
+//////////////////////////////////// Print functions ////////////////////////////////////
+
+// Print is analogous to fmt.Print (and it even calls fmt.Print). It ensures that
+// output is aligned with the corresponding scopes in the web UI.
+func Print(items ...interface{}) (written int, err error) {
+	fmt.Fprint(suites.Current(), items...)
+	return fmt.Print(items...)
+}
+
+// Print is analogous to fmt.Println (and it even calls fmt.Println). It ensures that
+// output is aligned with the corresponding scopes in the web UI.
+func Println(items ...interface{}) (written int, err error) {
+	fmt.Fprintln(suites.Current(), items...)
+	return fmt.Println(items...)
+}
+
+// Print is analogous to fmt.Printf (and it even calls fmt.Printf). It ensures that
+// output is aligned with the corresponding scopes in the web UI.
+func Printf(format string, items ...interface{}) (written int, err error) {
+	fmt.Fprintf(suites.Current(), format, items...)
+	return fmt.Printf(format, items...)
+}

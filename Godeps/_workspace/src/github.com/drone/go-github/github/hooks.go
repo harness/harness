@@ -244,9 +244,10 @@ type PostReceiveHook struct {
 }
 
 type CommitRepo struct {
-	Url  string `json:"url"`
-	Name string `json:"name"`
-	Desc string `json:"description"`
+	Url    string `json:"url"`
+	Name   string `json:"name"`
+	Desc   string `json:"description"`
+	Owner  *Owner `json:"owner"`
 }
 
 type Commit struct {

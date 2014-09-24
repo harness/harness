@@ -33,7 +33,8 @@ func TestShouldNotHaveSameTypeAs(t *testing.T) {
 
 func TestShouldImplement(t *testing.T) {
 	var ioReader *io.Reader = nil
-	var writer *http.ResponseWriter = nil
+	var response http.Response = http.Response{}
+	var responsePtr *http.Response = new(http.Response)
 	var reader = bytes.NewBufferString("")
 
 	fail(t, so(reader, ShouldImplement), "This assertion requires exactly 1 comparison values (you provided 0).")
@@ -44,16 +45,19 @@ func TestShouldImplement(t *testing.T) {
 	fail(t, so(reader, ShouldImplement, 1), shouldCompareWithInterfacePointer)
 	fail(t, so(reader, ShouldImplement, nil), shouldCompareWithInterfacePointer)
 
-	fail(t, so(nil, ShouldImplement, ioReader), "Expected: 'io.Reader'\nActual:   '<nil>'")
-	fail(t, so(1, ShouldImplement, ioReader), "Expected: 'io.Reader'\nActual:   '1'")
+	fail(t, so(nil, ShouldImplement, ioReader), shouldNotBeNilActual)
+	fail(t, so(1, ShouldImplement, ioReader), "Expected: 'io.Reader interface support'\nActual:   '*int' does not implement the interface!")
 
-	fail(t, so(writer, ShouldImplement, ioReader), "Expected: 'io.Reader'\nActual:   '*http.ResponseWriter'")
+	fail(t, so(response, ShouldImplement, ioReader), "Expected: 'io.Reader interface support'\nActual:   '*http.Response' does not implement the interface!")
+	fail(t, so(responsePtr, ShouldImplement, ioReader), "Expected: 'io.Reader interface support'\nActual:   '*http.Response' does not implement the interface!")
 	pass(t, so(reader, ShouldImplement, ioReader))
+	pass(t, so(reader, ShouldImplement, (*io.Reader)(nil)))
 }
 
 func TestShouldNotImplement(t *testing.T) {
 	var ioReader *io.Reader = nil
-	var writer *http.ResponseWriter = nil
+	var response http.Response = http.Response{}
+	var responsePtr *http.Response = new(http.Response)
 	var reader io.Reader = bytes.NewBufferString("")
 
 	fail(t, so(reader, ShouldNotImplement), "This assertion requires exactly 1 comparison values (you provided 0).")
@@ -65,7 +69,8 @@ func TestShouldNotImplement(t *testing.T) {
 	fail(t, so(reader, ShouldNotImplement, nil), shouldCompareWithInterfacePointer)
 
 	fail(t, so(reader, ShouldNotImplement, ioReader), "Expected         '*bytes.Buffer'\nto NOT implement   'io.Reader' (but it did)!")
-	pass(t, so(nil, ShouldNotImplement, ioReader))
+	fail(t, so(nil, ShouldNotImplement, ioReader), shouldNotBeNilActual)
 	pass(t, so(1, ShouldNotImplement, ioReader))
-	pass(t, so(writer, ShouldNotImplement, ioReader))
+	pass(t, so(response, ShouldNotImplement, ioReader))
+	pass(t, so(responsePtr, ShouldNotImplement, ioReader))
 }

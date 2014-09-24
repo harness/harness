@@ -2,14 +2,16 @@ package archive
 
 import (
 	"fmt"
-	"github.com/dotcloud/docker/vendor/src/code.google.com/p/go/src/pkg/archive/tar"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
-	"time"
+
+	"github.com/docker/docker/vendor/src/code.google.com/p/go/src/pkg/archive/tar"
+
+	"github.com/docker/docker/pkg/pools"
 )
 
 // Linux device nodes are a bit weird due to backwards compat with 16 bit device nodes.
@@ -17,15 +19,6 @@ import (
 // then the top 12 bits of the minor
 func mkdev(major int64, minor int64) uint32 {
 	return uint32(((minor & 0xfff00) << 12) | ((major & 0xfff) << 8) | (minor & 0xff))
-}
-func timeToTimespec(time time.Time) (ts syscall.Timespec) {
-	if time.IsZero() {
-		// Return UTIME_OMIT special value
-		ts.Sec = 0
-		ts.Nsec = ((1 << 30) - 2)
-		return
-	}
-	return syscall.NsecToTimespec(time.UnixNano())
 }
 
 // ApplyLayer parses a diff in the standard layer format from `layer`, and
@@ -41,6 +34,8 @@ func ApplyLayer(dest string, layer ArchiveReader) error {
 	}
 
 	tr := tar.NewReader(layer)
+	trBuf := pools.BufioReader32KPool.Get(tr)
+	defer pools.BufioReader32KPool.Put(trBuf)
 
 	var dirs []*tar.Header
 
@@ -68,7 +63,7 @@ func ApplyLayer(dest string, layer ArchiveReader) error {
 			parent := filepath.Dir(hdr.Name)
 			parentPath := filepath.Join(dest, parent)
 			if _, err := os.Lstat(parentPath); err != nil && os.IsNotExist(err) {
-				err = os.MkdirAll(parentPath, 600)
+				err = os.MkdirAll(parentPath, 0600)
 				if err != nil {
 					return err
 				}
@@ -89,7 +84,7 @@ func ApplyLayer(dest string, layer ArchiveReader) error {
 					}
 					defer os.RemoveAll(aufsTempdir)
 				}
-				if err := createTarFile(filepath.Join(aufsTempdir, basename), dest, hdr, tr); err != nil {
+				if err := createTarFile(filepath.Join(aufsTempdir, basename), dest, hdr, tr, true); err != nil {
 					return err
 				}
 			}
@@ -117,7 +112,8 @@ func ApplyLayer(dest string, layer ArchiveReader) error {
 				}
 			}
 
-			srcData := io.Reader(tr)
+			trBuf.Reset(tr)
+			srcData := io.Reader(trBuf)
 			srcHdr := hdr
 
 			// Hard links into /.wh..wh.plnk don't work, as we don't extract that directory, so
@@ -136,7 +132,7 @@ func ApplyLayer(dest string, layer ArchiveReader) error {
 				srcData = tmpFile
 			}
 
-			if err := createTarFile(path, dest, srcHdr, srcData); err != nil {
+			if err := createTarFile(path, dest, srcHdr, srcData, true); err != nil {
 				return err
 			}
 

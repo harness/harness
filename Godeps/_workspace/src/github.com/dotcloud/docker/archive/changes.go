@@ -3,15 +3,18 @@ package archive
 import (
 	"bytes"
 	"fmt"
-	"github.com/dotcloud/docker/pkg/system"
-	"github.com/dotcloud/docker/utils"
-	"github.com/dotcloud/docker/vendor/src/code.google.com/p/go/src/pkg/archive/tar"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/docker/docker/vendor/src/code.google.com/p/go/src/pkg/archive/tar"
+
+	"github.com/docker/docker/pkg/log"
+	"github.com/docker/docker/pkg/pools"
+	"github.com/docker/docker/pkg/system"
 )
 
 type ChangeType int
@@ -55,6 +58,8 @@ func sameFsTimeSpec(a, b syscall.Timespec) bool {
 		(a.Nsec == b.Nsec || a.Nsec == 0 || b.Nsec == 0)
 }
 
+// Changes walks the path rw and determines changes for the files in the path,
+// with respect to the parent layers
 func Changes(layers []string, rw string) ([]Change, error) {
 	var changes []Change
 	err := filepath.Walk(rw, func(path string, f os.FileInfo, err error) error {
@@ -133,6 +138,7 @@ type FileInfo struct {
 	stat       syscall.Stat_t
 	children   map[string]*FileInfo
 	capability []byte
+	added      bool
 }
 
 func (root *FileInfo) LookUp(path string) *FileInfo {
@@ -166,6 +172,9 @@ func (info *FileInfo) isDir() bool {
 }
 
 func (info *FileInfo) addChanges(oldInfo *FileInfo, changes *[]Change) {
+
+	sizeAtEntry := len(*changes)
+
 	if oldInfo == nil {
 		// add
 		change := Change{
@@ -173,6 +182,7 @@ func (info *FileInfo) addChanges(oldInfo *FileInfo, changes *[]Change) {
 			Kind: ChangeAdd,
 		}
 		*changes = append(*changes, change)
+		info.added = true
 	}
 
 	// We make a copy so we can modify it to detect additions
@@ -210,6 +220,7 @@ func (info *FileInfo) addChanges(oldInfo *FileInfo, changes *[]Change) {
 					Kind: ChangeModify,
 				}
 				*changes = append(*changes, change)
+				newChild.added = true
 			}
 
 			// Remove from copy so we can detect deletions
@@ -225,6 +236,19 @@ func (info *FileInfo) addChanges(oldInfo *FileInfo, changes *[]Change) {
 			Kind: ChangeDelete,
 		}
 		*changes = append(*changes, change)
+	}
+
+	// If there were changes inside this directory, we need to add it, even if the directory
+	// itself wasn't changed. This is needed to properly save and restore filesystem permissions.
+	if len(*changes) > sizeAtEntry && info.isDir() && !info.added && info.path() != "/" {
+		change := Change{
+			Path: info.path(),
+			Kind: ChangeModify,
+		}
+		// Let's insert the directory entry before the recently added entries located inside this dir
+		*changes = append(*changes, change) // just to resize the slice, will be overwritten
+		copy((*changes)[sizeAtEntry+1:], (*changes)[sizeAtEntry:])
+		(*changes)[sizeAtEntry] = change
 	}
 
 }
@@ -291,20 +315,34 @@ func collectFileInfo(sourceDir string) (*FileInfo, error) {
 	return root, nil
 }
 
-// Compare two directories and generate an array of Change objects describing the changes
+// ChangesDirs compares two directories and generates an array of Change objects describing the changes.
+// If oldDir is "", then all files in newDir will be Add-Changes.
 func ChangesDirs(newDir, oldDir string) ([]Change, error) {
-	oldRoot, err := collectFileInfo(oldDir)
-	if err != nil {
-		return nil, err
-	}
-	newRoot, err := collectFileInfo(newDir)
-	if err != nil {
-		return nil, err
+	var (
+		oldRoot, newRoot *FileInfo
+		err1, err2       error
+		errs             = make(chan error, 2)
+	)
+	go func() {
+		if oldDir != "" {
+			oldRoot, err1 = collectFileInfo(oldDir)
+		}
+		errs <- err1
+	}()
+	go func() {
+		newRoot, err2 = collectFileInfo(newDir)
+		errs <- err2
+	}()
+	for i := 0; i < 2; i++ {
+		if err := <-errs; err != nil {
+			return nil, err
+		}
 	}
 
 	return newRoot.Changes(oldRoot), nil
 }
 
+// ChangesSize calculates the size in bytes of the provided changes, based on newDir.
 func ChangesSize(newDir string, changes []Change) int64 {
 	var size int64
 	for _, change := range changes {
@@ -327,11 +365,14 @@ func minor(device uint64) uint64 {
 	return (device & 0xff) | ((device >> 12) & 0xfff00)
 }
 
+// ExportChanges produces an Archive from the provided changes, relative to dir.
 func ExportChanges(dir string, changes []Change) (Archive, error) {
 	reader, writer := io.Pipe()
 	tw := tar.NewWriter(writer)
 
 	go func() {
+		twBuf := pools.BufioWriter32KPool.Get(nil)
+		defer pools.BufioWriter32KPool.Put(twBuf)
 		// In general we log errors here but ignore them because
 		// during e.g. a diff operation the container can continue
 		// mutating the filesystem and we can see transient errors
@@ -341,27 +382,28 @@ func ExportChanges(dir string, changes []Change) (Archive, error) {
 				whiteOutDir := filepath.Dir(change.Path)
 				whiteOutBase := filepath.Base(change.Path)
 				whiteOut := filepath.Join(whiteOutDir, ".wh."+whiteOutBase)
+				timestamp := time.Now()
 				hdr := &tar.Header{
 					Name:       whiteOut[1:],
 					Size:       0,
-					ModTime:    time.Now(),
-					AccessTime: time.Now(),
-					ChangeTime: time.Now(),
+					ModTime:    timestamp,
+					AccessTime: timestamp,
+					ChangeTime: timestamp,
 				}
 				if err := tw.WriteHeader(hdr); err != nil {
-					utils.Debugf("Can't write whiteout header: %s\n", err)
+					log.Debugf("Can't write whiteout header: %s", err)
 				}
 			} else {
 				path := filepath.Join(dir, change.Path)
-				if err := addTarFile(path, change.Path[1:], tw); err != nil {
-					utils.Debugf("Can't add file %s to tar: %s\n", path, err)
+				if err := addTarFile(path, change.Path[1:], tw, twBuf); err != nil {
+					log.Debugf("Can't add file %s to tar: %s", path, err)
 				}
 			}
 		}
 
 		// Make sure to check the error on Close.
 		if err := tw.Close(); err != nil {
-			utils.Debugf("Can't close layer: %s\n", err)
+			log.Debugf("Can't close layer: %s", err)
 		}
 		writer.Close()
 	}()

@@ -5,8 +5,8 @@ const ( // equality
 	shouldNotHaveBeenEqual       = "Expected     '%v'\nto NOT equal '%v'\n(but it did)!"
 	shouldHaveBeenAlmostEqual    = "Expected '%v' to almost equal '%v' (but it didn't)!"
 	shouldHaveNotBeenAlmostEqual = "Expected '%v' to NOT almost equal '%v' (but it did)!"
-	shouldHaveResembled          = "Expected: '%+v'\nActual:   '%+v'\n(Should resemble)!"
-	shouldNotHaveResembled       = "Expected        '%+v'\nto NOT resemble '%+v'\n(but it did)!"
+	shouldHaveResembled          = "Expected: '%T(%+v)'\nActual:   '%T(%+v)'\n(Should resemble)!"
+	shouldNotHaveResembled       = "Expected        '%T(%+v)'\nto NOT resemble '%T(%+v)'\n(but it did)!"
 	shouldBePointers             = "Both arguments should be pointers "
 	shouldHaveBeenNonNilPointer  = shouldBePointers + "(the %s was %s)!"
 	shouldHavePointedTo          = "Expected '%+v' (address: '%v') and '%+v' (address: '%v') to be the same address (but their weren't)!"
@@ -66,9 +66,10 @@ const ( // type checking
 	shouldHaveBeenA    = "Expected '%v' to be: '%v' (but was: '%v')!"
 	shouldNotHaveBeenA = "Expected '%v' to NOT be: '%v' (but it was)!"
 
-	shouldHaveImplemented             = "Expected: '%v'\nActual:   '%v'"
+	shouldHaveImplemented             = "Expected: '%v interface support'\nActual:   '%v' does not implement the interface!"
 	shouldNotHaveImplemented          = "Expected         '%v'\nto NOT implement '%v'\n(but it did)!"
 	shouldCompareWithInterfacePointer = "The expected value must be a pointer to an interface type (eg. *fmt.Stringer)"
+	shouldNotBeNilActual              = "The actual value was 'nil' and should be a value or a pointer to a value!"
 )
 
 const ( // time comparisons

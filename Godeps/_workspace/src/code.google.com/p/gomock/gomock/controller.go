@@ -86,6 +86,10 @@ func (ctrl *Controller) RecordCall(receiver interface{}, method string, args ...
 	for i, arg := range args {
 		if m, ok := arg.(Matcher); ok {
 			margs[i] = m
+		} else if arg == nil {
+			// Handle nil specially so that passing a nil interface value
+			// will match the typed nils of concrete args.
+			margs[i] = Nil()
 		} else {
 			margs[i] = Eq(arg)
 		}

@@ -8,6 +8,7 @@ import (
 type Owner struct {
 	Type  string `json:"type"`
 	Login string `json:"login"`
+	Name  string `json:"name"`
 }
 
 // Permissions
@@ -23,6 +24,7 @@ type Source struct {
 
 // Repo represents a Github-hosted Git Repository.
 type Repo struct {
+	ID       int64  `json:"id"`
 	Name     string `json:"name"`
 	FullName string `json:"full_name"`
 	Private  bool   `json:"private"`

@@ -28,14 +28,16 @@ func BuildDotReporter() Reporter {
 	return NewReporters(
 		NewGoTestReporter(),
 		NewDotReporter(out),
-		NewProblemReporter(out))
+		NewProblemReporter(out),
+		consoleStatistics)
 }
 func BuildStoryReporter() Reporter {
 	out := NewPrinter(NewConsole())
 	return NewReporters(
 		NewGoTestReporter(),
 		NewStoryReporter(out),
-		NewProblemReporter(out))
+		NewProblemReporter(out),
+		consoleStatistics)
 }
 func BuildSilentReporter() Reporter {
 	out := NewPrinter(NewConsole())
@@ -64,6 +66,8 @@ var (
 	redColor    = "\033[31m"
 	resetColor  = "\033[0m"
 )
+
+var consoleStatistics = NewStatisticsReporter(NewPrinter(NewConsole()))
 
 // QuiteMode disables all console output symbols. This is only meant to be used
 // for tests that are internal to goconvey where the output is distracting or
