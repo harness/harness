@@ -54,6 +54,8 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 		return
 	}
 
+	f.WriteCmd("sudo apt-get update")
+
 	// Ensure correct apt-get has the https method-driver as per (http://askubuntu.com/questions/165676/)
 	f.WriteCmd("sudo apt-get install apt-transport-https")
 
