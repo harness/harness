@@ -14,6 +14,7 @@ type Publish struct {
 	PyPI   *PyPI   `yaml:"pypi,omitempty"`
 	NPM    *NPM    `yaml:"npm,omitempty"`
 	Docker *Docker `yaml:"docker,omitempty"`
+	Github *Github `yaml:"github,omitempty"`
 }
 
 func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
@@ -40,5 +41,10 @@ func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	// Docker
 	if p.Docker != nil && (len(p.Docker.Branch) == 0 || (len(p.Docker.Branch) > 0 && r.Branch == p.Docker.Branch)) {
 		p.Docker.Write(f, r)
+	}
+
+	// Github
+	if p.Github != nil && (len(p.Github.Branch) == 0 || (len(p.Github.Branch) > 0 && r.Branch == p.Github.Branch)) {
+		p.Github.Write(f, r)
 	}
 }
