@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/drone/drone/server/helper"
 	"github.com/drone/drone/shared/model"
 	"github.com/russross/meddler"
 )
@@ -91,7 +92,7 @@ func (db *permManager) Grant(u *model.User, r *model.Repo, read, write, admin bo
 
 // Revoke will revoke all user permissions to the specified repository.
 func (db *permManager) Revoke(u *model.User, r *model.Repo) error {
-	_, err := db.Exec(deletePermStmt, u.ID, r.ID)
+	_, err := db.Exec(helper.Rebind(deletePermStmt), u.ID, r.ID)
 	return err
 }
 
@@ -156,6 +157,6 @@ func (db *permManager) Member(u *model.User, r *model.Repo) (bool, error) {
 
 func (db *permManager) find(u *model.User, r *model.Repo) (*model.Perm, error) {
 	var dst = model.Perm{}
-	var err = meddler.QueryRow(db, &dst, findPermQuery, u.ID, r.ID)
+	var err = meddler.QueryRow(db, &dst, helper.Rebind(findPermQuery), u.ID, r.ID)
 	return &dst, err
 }

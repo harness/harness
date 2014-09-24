@@ -113,6 +113,87 @@ Or a combination of the two:
 DRONE_GITLAB_URL="https://gitlab.com" ./drone --config=/path/to/drone.conf
 ```
 
+### SQLite
+
+```toml
+[database]
+driver="sqlite3"
+datasurce="/var/lib/drone/drone.sqlite"
+```
+
+Or you can use environment variables
+
+```sh
+DRONE_DATABASE_DRIVER="sqlite3"
+DRONE_DATABASE_DATASOURCE="/var/lib/drone/drone.sqlite"
+```
+
+### PostgreSQL
+More information about data source you can read [here](http://godoc.org/github.com/lib/pq#hdr-Connection_String_Parameters)
+
+**TCP**
+
+```toml
+[database]
+driver="postgres"
+datasurce="user=postgres password=drone host=127.0.0.1 port=5432 dbname=drone sslmode=disable"
+```
+
+Or you can use environment variables
+
+```sh
+DRONE_DATABASE_DRIVER="postgres"
+DRONE_DATABASE_DATASOURCE="user=postgres password=drone host=127.0.0.1 port=5432 dbname=drone sslmode=disable"
+```
+
+**UNIX**
+
+```toml
+[database]
+driver="postgres"
+datasurce="user=postgres password=drone host=/var/run/postgresql/.s.PGSQL.5432 dbname=drone sslmode=disable"
+```
+
+Or you can use environment variables
+
+```sh
+DRONE_DATABASE_DRIVER="postgres"
+DRONE_DATABASE_DATASOURCE="user=postgres password=drone host=/var/run/postgresql/.s.PGSQL.5432 dbname=drone sslmode=disable"
+```
+
+### MySQL
+More information about data source you can read [here](https://github.com/go-sql-driver/mysql#dsn-data-source-name)
+
+**TCP**
+
+```toml
+[database]
+driver="mysql"
+datasurce="drone:drone@tcp(127.0.0.1:3306)/drone"
+```
+
+Or you can use environment variables
+
+```sh
+DRONE_DATABASE_DRIVER="mysql"
+DRONE_DATABASE_DATASOURCE="drone:drone@tcp(127.0.0.1:3306)/drone"
+```
+
+**UNIX**
+
+```toml
+[database]
+driver="mysql"
+datasurce="drone:drone@unix(/tmp/mysql.sock)/drone"
+```
+
+Or you can use environment variables
+
+```sh
+DRONE_DATABASE_DRIVER="mysql"
+DRONE_DATABASE_DATASOURCE="drone:drone@unix(/tmp/mysql.sock)/drone"
+```
+
 ## Compatibility Issues
 
 **WARNING**

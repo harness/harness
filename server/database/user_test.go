@@ -2,11 +2,11 @@ package database
 
 import (
 	"database/sql"
+	"os"
 	"testing"
 
-	"github.com/drone/drone/server/database/schema"
-	"github.com/drone/drone/server/database/testdata"
-	"github.com/drone/drone/server/database/testdatabase"
+	"github.com/drone/drone/server/database/connection"
+	"github.com/drone/drone/server/database/fixtures"
 	"github.com/drone/drone/shared/model"
 )
 
@@ -15,9 +15,22 @@ var db *sql.DB
 
 // setup the test database and test fixtures
 func setup() {
-	db, _ = testdatabase.Open()
-	schema.Load(db)
-	testdata.Load(db)
+	conn := connection.NewConnection(os.Getenv("DRONE_DATABASE_DRIVER"), os.Getenv("DRONE_DATABASE_DATASOURCE"))
+	db = conn.DB
+
+	fixtures.CleanDatabase(db)
+
+	if err := conn.MigrateAll(); err != nil {
+		panic(err)
+	}
+
+	fixtures.LoadUsers(db)
+	fixtures.LoadRepos(db)
+	fixtures.LoadPerms(db)
+	fixtures.LoadCommits(db)
+	fixtures.LoadOutputs(db)
+	fixtures.LoadRemotes(db)
+	fixtures.LoadServers(db)
 }
 
 // teardown the test database

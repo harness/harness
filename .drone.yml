@@ -1,13 +1,18 @@
 image: go1.3
 git:
   path: github.com/drone/drone
+services:
+  - postgres
+  - mysql
 env:
   - GOROOT=/usr/local/go
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 script:
   - sudo apt-get -y install zip libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
   - make deps
-  - make test
+  - psql -p 5432 -h localhost -U postgres -c 'create database drone;'
+  - mysql -P 3306 --protocol=tcp -u root -e 'create database drone;'
+  - make ci_test -k
   - make dpkg
 notify:
   email:

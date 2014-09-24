@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 
+	"github.com/drone/drone/server/helper"
 	"github.com/drone/drone/shared/model"
 	"github.com/russross/meddler"
 )
@@ -77,19 +78,19 @@ func (db *remoteManager) Find(id int64) (*model.Remote, error) {
 
 func (db *remoteManager) FindHost(host string) (*model.Remote, error) {
 	dst := model.Remote{}
-	err := meddler.QueryRow(db, &dst, findRemoteQuery, host)
+	err := meddler.QueryRow(db, &dst, helper.Rebind(findRemoteQuery), host)
 	return &dst, err
 }
 
 func (db *remoteManager) FindType(t string) (*model.Remote, error) {
 	dst := model.Remote{}
-	err := meddler.QueryRow(db, &dst, findRemoteTypeQuery, t)
+	err := meddler.QueryRow(db, &dst, helper.Rebind(findRemoteTypeQuery), t)
 	return &dst, err
 }
 
 func (db *remoteManager) List() ([]*model.Remote, error) {
 	var dst []*model.Remote
-	err := meddler.QueryAll(db, &dst, listRemoteQuery)
+	err := meddler.QueryAll(db, &dst, helper.Rebind(listRemoteQuery))
 	return dst, err
 }
 
@@ -102,6 +103,6 @@ func (db *remoteManager) Update(remote *model.Remote) error {
 }
 
 func (db *remoteManager) Delete(remote *model.Remote) error {
-	_, err := db.Exec(deleteRemoteStmt, remote.ID)
+	_, err := db.Exec(helper.Rebind(deleteRemoteStmt), remote.ID)
 	return err
 }

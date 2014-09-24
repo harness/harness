@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/drone/drone/server/helper"
 	"github.com/drone/drone/shared/model"
 	"github.com/russross/meddler"
 )
@@ -87,19 +88,19 @@ func (db *userManager) Find(id int64) (*model.User, error) {
 
 func (db *userManager) FindLogin(remote, login string) (*model.User, error) {
 	dst := model.User{}
-	err := meddler.QueryRow(db, &dst, findUserLoginQuery, remote, login)
+	err := meddler.QueryRow(db, &dst, helper.Rebind(findUserLoginQuery), remote, login)
 	return &dst, err
 }
 
 func (db *userManager) FindToken(token string) (*model.User, error) {
 	dst := model.User{}
-	err := meddler.QueryRow(db, &dst, findUserTokenQuery, token)
+	err := meddler.QueryRow(db, &dst, helper.Rebind(findUserTokenQuery), token)
 	return &dst, err
 }
 
 func (db *userManager) List() ([]*model.User, error) {
 	var dst []*model.User
-	err := meddler.QueryAll(db, &dst, listUserQuery)
+	err := meddler.QueryAll(db, &dst, helper.Rebind(listUserQuery))
 	return dst, err
 }
 
@@ -115,12 +116,12 @@ func (db *userManager) Update(user *model.User) error {
 }
 
 func (db *userManager) Delete(user *model.User) error {
-	_, err := db.Exec(deleteUserStmt, user.ID)
+	_, err := db.Exec(helper.Rebind(deleteUserStmt), user.ID)
 	return err
 }
 
 func (db *userManager) Exist() bool {
-	row := db.QueryRow(confirmUserStmt)
+	row := db.QueryRow(helper.Rebind(confirmUserStmt))
 	var result int
 	row.Scan(&result)
 	return result == 1

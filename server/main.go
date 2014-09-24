@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"flag"
 	"fmt"
 	"net/http"
@@ -10,7 +9,7 @@ import (
 
 	"github.com/drone/config"
 	"github.com/drone/drone/server/database"
-	"github.com/drone/drone/server/database/schema"
+	"github.com/drone/drone/server/database/connection"
 	"github.com/drone/drone/server/handler"
 	"github.com/drone/drone/server/pubsub"
 	"github.com/drone/drone/server/session"
@@ -21,8 +20,6 @@ import (
 	"github.com/gorilla/pat"
 	//"github.com/justinas/nosurf"
 	"github.com/GeertJohan/go.rice"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/russross/meddler"
 
 	"github.com/drone/drone/plugin/remote/bitbucket"
 	"github.com/drone/drone/plugin/remote/github"
@@ -66,8 +63,6 @@ func main() {
 	flag.StringVar(&conf, "config", "", "")
 	flag.StringVar(&prefix, "prefix", "DRONE_", "")
 	flag.StringVar(&port, "port", ":8080", "")
-	flag.StringVar(&driver, "driver", "sqlite3", "")
-	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
 	flag.StringVar(&sslcert, "sslcert", "", "")
 	flag.StringVar(&sslkey, "sslkey", "", "")
 	flag.IntVar(&workers, "workers", runtime.NumCPU(), "")
@@ -75,6 +70,9 @@ func main() {
 
 	config.Var(&nodes, "worker-nodes")
 	config.BoolVar(&open, "registration-open", false)
+	config.StringVar(&driver, "database-driver", "sqlite3")
+	config.StringVar(&datasource, "database-datasource", "drone.sqlite")
+
 	config.SetPrefix(prefix)
 	if err := config.Parse(conf); err != nil {
 		fmt.Println("Error parsing config", err)
@@ -85,18 +83,20 @@ func main() {
 	github.Register()
 	gitlab.Register()
 
-	// setup the database
-	meddler.Default = meddler.SQLite
-	db, _ := sql.Open(driver, datasource)
-	schema.Load(db)
+	// Create database connection
+	conn := connection.NewConnection(driver, datasource)
+	if err := conn.MigrateAll(); err != nil {
+		panic(err)
+	}
+	defer conn.Close()
 
 	// setup the database managers
-	repos := database.NewRepoManager(db)
-	users := database.NewUserManager(db)
-	perms := database.NewPermManager(db)
-	commits := database.NewCommitManager(db)
-	servers := database.NewServerManager(db)
-	remotes := database.NewRemoteManager(db)
+	repos := database.NewRepoManager(conn.DB)
+	users := database.NewUserManager(conn.DB)
+	perms := database.NewPermManager(conn.DB)
+	commits := database.NewCommitManager(conn.DB)
+	servers := database.NewServerManager(conn.DB)
+	remotes := database.NewRemoteManager(conn.DB)
 
 	// message broker
 	pubsub := pubsub.NewPubSub()

@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 
+	"github.com/drone/drone/server/helper"
 	"github.com/drone/drone/shared/model"
 	"github.com/russross/meddler"
 )
@@ -71,7 +72,7 @@ func (db *serverManager) Find(id int64) (*model.Server, error) {
 
 func (db *serverManager) FindName(name string) (*model.Server, error) {
 	dst := model.Server{}
-	err := meddler.QueryRow(db, &dst, findServerQuery, name)
+	err := meddler.QueryRow(db, &dst, helper.Rebind(findServerQuery), name)
 	return &dst, err
 }
 
@@ -86,7 +87,7 @@ func (db *serverManager) FindSMTP() (*model.SMTPServer, error) {
 
 func (db *serverManager) List() ([]*model.Server, error) {
 	var dst []*model.Server
-	err := meddler.QueryAll(db, &dst, listServerQuery)
+	err := meddler.QueryAll(db, &dst, helper.Rebind(listServerQuery))
 	return dst, err
 }
 
@@ -106,6 +107,6 @@ func (db *serverManager) UpdateSMTP(server *model.SMTPServer) error {
 }
 
 func (db *serverManager) Delete(server *model.Server) error {
-	_, err := db.Exec(deleteServerStmt, server.ID)
+	_, err := db.Exec(helper.Rebind(deleteServerStmt), server.ID)
 	return err
 }
