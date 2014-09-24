@@ -10,13 +10,15 @@ RUN wget https://go.googlecode.com/files/go1.2.src.tar.gz && tar zxvf go1.2.src.
 ENV PATH $PATH:/go/bin:/gocode/bin
 ENV GOPATH /gocode
 
+RUN go get github.com/tools/godep
+
 RUN mkdir -p /gocode/src/github.com/drone
 
 ADD . /gocode/src/github.com/drone/drone
 
 WORKDIR /gocode/src/github.com/drone/drone
 
-RUN make deps
+RUN godep restore
 RUN make
 RUN make install
 
@@ -24,4 +26,4 @@ EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/droned"]
 
-CMD ["--port=:80", "--path=/var/lib/drone/drone.sqlite"]
+CMD ["--port=:80", "--datasource=/var/lib/drone/drone.sqlite"]
