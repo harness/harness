@@ -57,6 +57,11 @@ type Thing struct{}
 
 func (self *Thing) Hi() {}
 
+type IntAlias int
+type StringAlias string
+type StringSliceAlias []string
+type StringStringMapAlias map[string]string
+
 /******** FakeSerialzier ********/
 
 type fakeSerializer struct{}

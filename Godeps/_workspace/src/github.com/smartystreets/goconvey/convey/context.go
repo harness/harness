@@ -12,6 +12,12 @@ import (
 	"sync"
 )
 
+const (
+	missingGoTest string = `Top-level calls to Convey(...) need a reference to the *testing.T. 
+		Hint: Convey("description here", t, func() { /* notice that the second argument was the *testing.T (t)! */ }) `
+	extraGoTest string = `Only the top-level call to Convey(...) needs a reference to the *testing.T.`
+)
+
 // suiteContext magically handles all coordination of reporter, runners as they handle calls
 // to Convey, So, and the like. It does this via runtime call stack inspection, making sure
 // that each test function has its own runner, and routes all live registrations
@@ -29,24 +35,15 @@ func (self *suiteContext) Run(entry *registration) {
 		panic(extraGoTest)
 	}
 
-	reporter := buildReporter()
-	runner := newRunner()
-	runner.UpgradeReporter(reporter)
+	runner := newRunner(buildReporter())
 
 	testName, location, _ := suiteAnchor()
 
-	self.lock.Lock()
-	self.locations[location] = testName
-	self.runners[testName] = runner
-	self.lock.Unlock()
+	self.setRunner(location, testName, runner)
 
-	runner.Begin(entry)
-	runner.Run()
+	runner.Run(entry)
 
-	self.lock.Lock()
-	delete(self.locations, location)
-	delete(self.runners, testName)
-	self.lock.Unlock()
+	self.unsetRunner(location, testName)
 }
 
 func (self *suiteContext) Current() *runner {
@@ -58,20 +55,33 @@ func (self *suiteContext) Current() *runner {
 func (self *suiteContext) current() *runner {
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	testName, _, err := suiteAnchor()
 
-	if err != nil {
-		testName = correlate(self.locations)
+	if testName, _, err := suiteAnchor(); err == nil {
+		return self.runners[testName]
 	}
 
-	return self.runners[testName]
+	return self.runners[correlate(self.locations)]
+}
+func (self *suiteContext) setRunner(location string, testName string, runner *runner) {
+	self.lock.Lock()
+	defer self.lock.Unlock()
+
+	self.locations[location] = testName
+	self.runners[testName] = runner
+}
+func (self *suiteContext) unsetRunner(location string, testName string) {
+	self.lock.Lock()
+	defer self.lock.Unlock()
+
+	delete(self.locations, location)
+	delete(self.runners, testName)
 }
 
 func newSuiteContext() *suiteContext {
-	self := new(suiteContext)
-	self.locations = make(map[string]string)
-	self.runners = make(map[string]*runner)
-	return self
+	return &suiteContext{
+		locations: map[string]string{},
+		runners:   map[string]*runner{},
+	}
 }
 
 //////////////////// Helper Functions ///////////////////////
@@ -107,14 +117,15 @@ func suiteAnchor() (testName, location string, err error) {
 func correlate(locations map[string]string) (testName string) {
 	file, line := resolveTestFileAndLine()
 	closest := -1
+
 	for location, registeredTestName := range locations {
-		parts := strings.Split(location, ":")
-		locationFile := parts[0]
+		locationFile, rawLocationLine := splitFileAndLine(location)
+
 		if locationFile != file {
 			continue
 		}
 
-		locationLine, err := strconv.Atoi(parts[1])
+		locationLine, err := strconv.Atoi(rawLocationLine)
 		if err != nil || locationLine < line {
 			continue
 		}
@@ -123,6 +134,22 @@ func correlate(locations map[string]string) (testName string) {
 			closest = locationLine
 			testName = registeredTestName
 		}
+	}
+	return
+}
+
+// splitFileAndLine receives a path and a line number in a single string,
+// separated by a colon and splits them.
+func splitFileAndLine(value string) (file, line string) {
+	parts := strings.Split(value, ":")
+	if len(parts) == 2 {
+		file = parts[0]
+		line = parts[1]
+	} else if len(parts) > 2 {
+		// 'C:/blah.go:123' (windows drive letter has two colons
+		// '-:--------:---'  instead of just one to separate file and line)
+		file = strings.Join(parts[:2], ":")
+		line = parts[2]
 	}
 	return
 }

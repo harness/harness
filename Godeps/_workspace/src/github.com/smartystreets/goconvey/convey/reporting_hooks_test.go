@@ -252,6 +252,10 @@ func (self *fakeReporter) EndStory() {
 	self.calls = append(self.calls, "End")
 }
 
+func (self *fakeReporter) Write(content []byte) (int, error) {
+	return len(content), nil // no-op
+}
+
 func (self *fakeReporter) wholeStory() string {
 	return strings.Join(self.calls, "|")
 }

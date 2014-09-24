@@ -95,7 +95,13 @@ func operationAppend(pkg *build.Package) {
 			}
 
 			// create zipFileWriter
-			zipFileWriter, err := zipWriter.Create(zipFileName)
+			zipFileHeader, err := zip.FileInfoHeader(info)
+			if err != nil {
+				fmt.Printf("Error creating zip FileHeader: %v\n", err)
+				os.Exit(1)
+			}
+			zipFileHeader.Name = zipFileName
+			zipFileWriter, err := zipWriter.CreateHeader(zipFileHeader)
 			if err != nil {
 				fmt.Printf("Error creating file in tmp zip: %s\n", err)
 				os.Exit(1)

@@ -65,7 +65,7 @@ func (vf *virtualFile) readdir(count int) ([]os.FileInfo, error) {
 			Err:  errors.New("bad file descriptor"),
 		}
 	}
-	//++ wont work for a file
+	//TODO: return proper error for a readdir() call on a file
 	return nil, ErrNotImplemented
 }
 

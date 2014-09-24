@@ -52,6 +52,10 @@ func (self *problem) showFailures() {
 	}
 }
 
+func (self *problem) Write(content []byte) (written int, err error) {
+	return len(content), nil // no-op
+}
+
 func NewProblemReporter(out *Printer) *problem {
 	self := new(problem)
 	self.out = out

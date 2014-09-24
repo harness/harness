@@ -3,7 +3,7 @@ package assertions
 import (
 	"fmt"
 
-	"github.com/jacobsa/oglematchers"
+	"github.com/smartystreets/goconvey/convey/assertions/oglematchers"
 )
 
 // ShouldBeGreaterThan receives exactly two parameters and ensures that the first is greater than the second.

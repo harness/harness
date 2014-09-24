@@ -53,6 +53,10 @@ func (self *story) EndStory() {
 	self.out.Println("\n")
 }
 
+func (self *story) Write(content []byte) (written int, err error) {
+	return len(content), nil // no-op
+}
+
 func NewStoryReporter(out *Printer) *story {
 	self := new(story)
 	self.out = out

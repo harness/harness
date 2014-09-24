@@ -20,6 +20,10 @@ func (self *gotestReporter) EndStory() {
 	self.test = nil
 }
 
+func (self *gotestReporter) Write(content []byte) (written int, err error) {
+	return len(content), nil // no-op
+}
+
 func NewGoTestReporter() *gotestReporter {
 	return new(gotestReporter)
 }

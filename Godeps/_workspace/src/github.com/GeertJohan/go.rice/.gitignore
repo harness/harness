@@ -4,4 +4,4 @@
 /rice/rice.exe
 
 *.rice-box.go
-*.rice-single.go
+*.rice-box.syso

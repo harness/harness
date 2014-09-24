@@ -1,11 +1,4 @@
 // Package goyaml implements YAML support for the Go language.
-//
-// WARNING: You are using an out of date import path. Please update your code and import the following instead:
-//
-//   gonuts.org/v1/yaml
-//
-// The package name has changed from "yaml" from "goyaml", but the package API has not changed.
-//
 package goyaml
 
 import (

@@ -103,7 +103,7 @@ func TestShouldResemble(t *testing.T) {
 	fail(t, so(Thing1{"hi"}, ShouldResemble, Thing1{"hi"}, Thing1{"hi"}), "This assertion requires exactly 1 comparison values (you provided 2).")
 
 	pass(t, so(Thing1{"hi"}, ShouldResemble, Thing1{"hi"}))
-	fail(t, so(Thing1{"hi"}, ShouldResemble, Thing1{"bye"}), "{bye}|{hi}|Expected: '{a:bye}' Actual: '{a:hi}' (Should resemble)!")
+	fail(t, so(Thing1{"hi"}, ShouldResemble, Thing1{"bye"}), "{bye}|{hi}|Expected: 'assertions.Thing1({a:bye})' Actual: 'assertions.Thing1({a:hi})' (Should resemble)!")
 }
 
 func TestShouldNotResemble(t *testing.T) {
@@ -111,7 +111,19 @@ func TestShouldNotResemble(t *testing.T) {
 	fail(t, so(Thing1{"hi"}, ShouldNotResemble, Thing1{"hi"}, Thing1{"hi"}), "This assertion requires exactly 1 comparison values (you provided 2).")
 
 	pass(t, so(Thing1{"hi"}, ShouldNotResemble, Thing1{"bye"}))
-	fail(t, so(Thing1{"hi"}, ShouldNotResemble, Thing1{"hi"}), "Expected '{a:hi}' to NOT resemble '{a:hi}' (but it did)!")
+	fail(t, so(Thing1{"hi"}, ShouldNotResemble, Thing1{"hi"}),
+		"Expected 'assertions.Thing1({a:hi})' to NOT resemble 'assertions.Thing1({a:hi})' (but it did)!")
+
+	pass(t, so(map[string]string{"hi": "bye"}, ShouldResemble, map[string]string{"hi": "bye"}))
+	fail(t, so(StringStringMapAlias{"hi": "bye"}, ShouldResemble, map[string]string{"hi": "bye"}),
+		"map[hi:bye]|map[hi:bye]|Expected: 'map[string]string(map[hi:bye])' Actual: 'assertions.StringStringMapAlias(map[hi:bye])' (Should resemble)!")
+	pass(t, so(IntAlias(42), ShouldNotResemble, 42))
+	fail(t, so(IntAlias(42), ShouldResemble, 42), "42|42|Expected: 'int(42)' Actual: 'assertions.IntAlias(42)' (Should resemble)!")
+	fail(t, so(StringAlias("hi"), ShouldResemble, "hi"), "hi|hi|Expected: 'string(hi)' Actual: 'assertions.StringAlias(hi)' (Should resemble)!")
+
+	pass(t, so(StringSliceAlias{"hi", "bye"}, ShouldNotResemble, []string{"hi", "bye"}))
+	fail(t, so(StringSliceAlias{"hi", "bye"}, ShouldResemble, []string{"hi", "bye"}),
+		"[hi bye]|[hi bye]|Expected: '[]string([hi bye])' Actual: 'assertions.StringSliceAlias([hi bye])' (Should resemble)!")
 }
 
 func TestShouldPointTo(t *testing.T) {

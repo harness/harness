@@ -1,0 +1,2016 @@
+
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/smartystreets/goconvey/convey/assertions/oglematchers/all_of.go</option>
+				
+				<option value="file1">github.com/smartystreets/goconvey/convey/assertions/oglematchers/any.go</option>
+				
+				<option value="file2">github.com/smartystreets/goconvey/convey/assertions/oglematchers/any_of.go</option>
+				
+				<option value="file3">github.com/smartystreets/goconvey/convey/assertions/oglematchers/contains.go</option>
+				
+				<option value="file4">github.com/smartystreets/goconvey/convey/assertions/oglematchers/deep_equals.go</option>
+				
+				<option value="file5">github.com/smartystreets/goconvey/convey/assertions/oglematchers/elements_are.go</option>
+				
+				<option value="file6">github.com/smartystreets/goconvey/convey/assertions/oglematchers/equals.go</option>
+				
+				<option value="file7">github.com/smartystreets/goconvey/convey/assertions/oglematchers/error.go</option>
+				
+				<option value="file8">github.com/smartystreets/goconvey/convey/assertions/oglematchers/greater_or_equal.go</option>
+				
+				<option value="file9">github.com/smartystreets/goconvey/convey/assertions/oglematchers/greater_than.go</option>
+				
+				<option value="file10">github.com/smartystreets/goconvey/convey/assertions/oglematchers/has_substr.go</option>
+				
+				<option value="file11">github.com/smartystreets/goconvey/convey/assertions/oglematchers/identical_to.go</option>
+				
+				<option value="file12">github.com/smartystreets/goconvey/convey/assertions/oglematchers/less_or_equal.go</option>
+				
+				<option value="file13">github.com/smartystreets/goconvey/convey/assertions/oglematchers/less_than.go</option>
+				
+				<option value="file14">github.com/smartystreets/goconvey/convey/assertions/oglematchers/matcher.go</option>
+				
+				<option value="file15">github.com/smartystreets/goconvey/convey/assertions/oglematchers/matches_regexp.go</option>
+				
+				<option value="file16">github.com/smartystreets/goconvey/convey/assertions/oglematchers/not.go</option>
+				
+				<option value="file17">github.com/smartystreets/goconvey/convey/assertions/oglematchers/panics.go</option>
+				
+				<option value="file18">github.com/smartystreets/goconvey/convey/assertions/oglematchers/pointee.go</option>
+				
+				<option value="file19">github.com/smartystreets/goconvey/convey/assertions/oglematchers/transform_description.go</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" >// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "strings"
+)
+
+// AllOf accepts a set of matchers S and returns a matcher that follows the
+// algorithm below when considering a candidate c:
+//
+//  1. Return true if for every Matcher m in S, m matches c.
+//
+//  2. Otherwise, if there is a matcher m in S such that m returns a fatal
+//     error for c, return that matcher's error message.
+//
+//  3. Otherwise, return false with the error from some wrapped matcher.
+//
+// This is akin to a logical AND operation for matchers.
+func AllOf(matchers ...Matcher) Matcher <span class="cov0" title="0">{
+        return &amp;allOfMatcher{matchers}
+}</span>
+
+type allOfMatcher struct {
+        wrappedMatchers []Matcher
+}
+
+func (m *allOfMatcher) Description() string <span class="cov0" title="0">{
+        // Special case: the empty set.
+        if len(m.wrappedMatchers) == 0 </span><span class="cov0" title="0">{
+                return "is anything"
+        }</span>
+
+        // Join the descriptions for the wrapped matchers.
+        <span class="cov0" title="0">wrappedDescs := make([]string, len(m.wrappedMatchers))
+        for i, wrappedMatcher := range m.wrappedMatchers </span><span class="cov0" title="0">{
+                wrappedDescs[i] = wrappedMatcher.Description()
+        }</span>
+
+        <span class="cov0" title="0">return strings.Join(wrappedDescs, ", and ")</span>
+}
+
+func (m *allOfMatcher) Matches(c interface{}) (err error) <span class="cov0" title="0">{
+        for _, wrappedMatcher := range m.wrappedMatchers </span><span class="cov0" title="0">{
+                if wrappedErr := wrappedMatcher.Matches(c); wrappedErr != nil </span><span class="cov0" title="0">{
+                        err = wrappedErr
+
+                        // If the error is fatal, return immediately with this error.
+                        _, ok := wrappedErr.(*FatalError)
+                        if ok </span><span class="cov0" title="0">{
+                                return
+                        }</span>
+                }
+        }
+
+        <span class="cov0" title="0">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+// Any returns a matcher that matches any value.
+func Any() Matcher <span class="cov0" title="0">{
+        return &amp;anyMatcher{}
+}</span>
+
+type anyMatcher struct {
+}
+
+func (m *anyMatcher) Description() string <span class="cov0" title="0">{
+        return "is anything"
+}</span>
+
+func (m *anyMatcher) Matches(c interface{}) error <span class="cov0" title="0">{
+        return nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "errors"
+        "fmt"
+        "reflect"
+        "strings"
+)
+
+// AnyOf accepts a set of values S and returns a matcher that follows the
+// algorithm below when considering a candidate c:
+//
+//  1. If there exists a value m in S such that m implements the Matcher
+//     interface and m matches c, return true.
+//
+//  2. Otherwise, if there exists a value v in S such that v does not implement
+//     the Matcher interface and the matcher Equals(v) matches c, return true.
+//
+//  3. Otherwise, if there is a value m in S such that m implements the Matcher
+//     interface and m returns a fatal error for c, return that fatal error.
+//
+//  4. Otherwise, return false.
+//
+// This is akin to a logical OR operation for matchers, with non-matchers x
+// being treated as Equals(x).
+func AnyOf(vals ...interface{}) Matcher <span class="cov8" title="1">{
+        // Get ahold of a type variable for the Matcher interface.
+        var dummy *Matcher
+        matcherType := reflect.TypeOf(dummy).Elem()
+
+        // Create a matcher for each value, or use the value itself if it's already a
+        // matcher.
+        wrapped := make([]Matcher, len(vals))
+        for i, v := range vals </span><span class="cov8" title="1">{
+                if reflect.TypeOf(v).Implements(matcherType) </span><span class="cov8" title="1">{
+                        wrapped[i] = v.(Matcher)
+                }</span> <span class="cov0" title="0">else {
+                        wrapped[i] = Equals(v)
+                }</span>
+        }
+
+        <span class="cov8" title="1">return &amp;anyOfMatcher{wrapped}</span>
+}
+
+type anyOfMatcher struct {
+        wrapped []Matcher
+}
+
+func (m *anyOfMatcher) Description() string <span class="cov0" title="0">{
+        wrappedDescs := make([]string, len(m.wrapped))
+        for i, matcher := range m.wrapped </span><span class="cov0" title="0">{
+                wrappedDescs[i] = matcher.Description()
+        }</span>
+
+        <span class="cov0" title="0">return fmt.Sprintf("or(%s)", strings.Join(wrappedDescs, ", "))</span>
+}
+
+func (m *anyOfMatcher) Matches(c interface{}) (err error) <span class="cov8" title="1">{
+        err = errors.New("")
+
+        // Try each matcher in turn.
+        for _, matcher := range m.wrapped </span><span class="cov8" title="1">{
+                wrappedErr := matcher.Matches(c)
+
+                // Return immediately if there's a match.
+                if wrappedErr == nil </span><span class="cov8" title="1">{
+                        err = nil
+                        return
+                }</span>
+
+                // Note the fatal error, if any.
+                <span class="cov8" title="1">if _, isFatal := wrappedErr.(*FatalError); isFatal </span><span class="cov0" title="0">{
+                        err = wrappedErr
+                }</span>
+        }
+
+        <span class="cov8" title="1">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">// Copyright 2012 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "fmt"
+        "reflect"
+)
+
+// Return a matcher that matches arrays slices with at least one element that
+// matches the supplied argument. If the argument x is not itself a Matcher,
+// this is equivalent to Contains(Equals(x)).
+func Contains(x interface{}) Matcher <span class="cov8" title="1">{
+        var result containsMatcher
+        var ok bool
+
+        if result.elementMatcher, ok = x.(Matcher); !ok </span><span class="cov8" title="1">{
+                result.elementMatcher = Equals(x)
+        }</span>
+
+        <span class="cov8" title="1">return &amp;result</span>
+}
+
+type containsMatcher struct {
+        elementMatcher Matcher
+}
+
+func (m *containsMatcher) Description() string <span class="cov0" title="0">{
+        return fmt.Sprintf("contains: %s", m.elementMatcher.Description())
+}</span>
+
+func (m *containsMatcher) Matches(candidate interface{}) error <span class="cov8" title="1">{
+        // The candidate must be a slice or an array.
+        v := reflect.ValueOf(candidate)
+        if v.Kind() != reflect.Slice &amp;&amp; v.Kind() != reflect.Array </span><span class="cov8" title="1">{
+                return NewFatalError("which is not a slice or array")
+        }</span>
+
+        // Check each element.
+        <span class="cov8" title="1">for i := 0; i &lt; v.Len(); i++ </span><span class="cov8" title="1">{
+                elem := v.Index(i)
+                if matchErr := m.elementMatcher.Matches(elem.Interface()); matchErr == nil </span><span class="cov8" title="1">{
+                        return nil
+                }</span>
+        }
+
+        <span class="cov8" title="1">return fmt.Errorf("")</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">// Copyright 2012 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "bytes"
+        "errors"
+        "fmt"
+        "reflect"
+)
+
+var byteSliceType reflect.Type = reflect.TypeOf([]byte{})
+
+// DeepEquals returns a matcher that matches based on 'deep equality', as
+// defined by the reflect package. This matcher requires that values have
+// identical types to x.
+func DeepEquals(x interface{}) Matcher <span class="cov8" title="1">{
+        return &amp;deepEqualsMatcher{x}
+}</span>
+
+type deepEqualsMatcher struct {
+        x interface{}
+}
+
+func (m *deepEqualsMatcher) Description() string <span class="cov0" title="0">{
+        xDesc := fmt.Sprintf("%v", m.x)
+        xValue := reflect.ValueOf(m.x)
+
+        // Special case: fmt.Sprintf presents nil slices as "[]", but
+        // reflect.DeepEqual makes a distinction between nil and empty slices. Make
+        // this less confusing.
+        if xValue.Kind() == reflect.Slice &amp;&amp; xValue.IsNil() </span><span class="cov0" title="0">{
+                xDesc = "&lt;nil slice&gt;"
+        }</span>
+
+        <span class="cov0" title="0">return fmt.Sprintf("deep equals: %s", xDesc)</span>
+}
+
+func (m *deepEqualsMatcher) Matches(c interface{}) error <span class="cov8" title="1">{
+        // Make sure the types match.
+        ct := reflect.TypeOf(c)
+        xt := reflect.TypeOf(m.x)
+
+        if ct != xt </span><span class="cov8" title="1">{
+                return NewFatalError(fmt.Sprintf("which is of type %v", ct))
+        }</span>
+
+        // Special case: handle byte slices more efficiently.
+        <span class="cov8" title="1">cValue := reflect.ValueOf(c)
+        xValue := reflect.ValueOf(m.x)
+
+        if ct == byteSliceType &amp;&amp; !cValue.IsNil() &amp;&amp; !xValue.IsNil() </span><span class="cov0" title="0">{
+                xBytes := m.x.([]byte)
+                cBytes := c.([]byte)
+
+                if bytes.Equal(cBytes, xBytes) </span><span class="cov0" title="0">{
+                        return nil
+                }</span>
+
+                <span class="cov0" title="0">return errors.New("")</span>
+        }
+
+        // Defer to the reflect package.
+        <span class="cov8" title="1">if reflect.DeepEqual(m.x, c) </span><span class="cov8" title="1">{
+                return nil
+        }</span>
+
+        // Special case: if the comparison failed because c is the nil slice, given
+        // an indication of this (since its value is printed as "[]").
+        <span class="cov8" title="1">if cValue.Kind() == reflect.Slice &amp;&amp; cValue.IsNil() </span><span class="cov0" title="0">{
+                return errors.New("which is nil")
+        }</span>
+
+        <span class="cov8" title="1">return errors.New("")</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">// Copyright 2012 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "errors"
+        "fmt"
+        "reflect"
+        "strings"
+)
+
+// Given a list of arguments M, ElementsAre returns a matcher that matches
+// arrays and slices A where all of the following hold:
+//
+//  *  A is the same length as M.
+//
+//  *  For each i &lt; len(A) where M[i] is a matcher, A[i] matches M[i].
+//
+//  *  For each i &lt; len(A) where M[i] is not a matcher, A[i] matches
+//     Equals(M[i]).
+//
+func ElementsAre(M ...interface{}) Matcher <span class="cov0" title="0">{
+        // Copy over matchers, or convert to Equals(x) for non-matcher x.
+        subMatchers := make([]Matcher, len(M))
+        for i, x := range M </span><span class="cov0" title="0">{
+                if matcher, ok := x.(Matcher); ok </span><span class="cov0" title="0">{
+                        subMatchers[i] = matcher
+                        continue</span>
+                }
+
+                <span class="cov0" title="0">subMatchers[i] = Equals(x)</span>
+        }
+
+        <span class="cov0" title="0">return &amp;elementsAreMatcher{subMatchers}</span>
+}
+
+type elementsAreMatcher struct {
+        subMatchers []Matcher
+}
+
+func (m *elementsAreMatcher) Description() string <span class="cov0" title="0">{
+        subDescs := make([]string, len(m.subMatchers))
+        for i, sm := range m.subMatchers </span><span class="cov0" title="0">{
+                subDescs[i] = sm.Description()
+        }</span>
+
+        <span class="cov0" title="0">return fmt.Sprintf("elements are: [%s]", strings.Join(subDescs, ", "))</span>
+}
+
+func (m *elementsAreMatcher) Matches(candidates interface{}) error <span class="cov0" title="0">{
+        // The candidate must be a slice or an array.
+        v := reflect.ValueOf(candidates)
+        if v.Kind() != reflect.Slice &amp;&amp; v.Kind() != reflect.Array </span><span class="cov0" title="0">{
+                return NewFatalError("which is not a slice or array")
+        }</span>
+
+        // The length must be correct.
+        <span class="cov0" title="0">if v.Len() != len(m.subMatchers) </span><span class="cov0" title="0">{
+                return errors.New(fmt.Sprintf("which is of length %d", v.Len()))
+        }</span>
+
+        // Check each element.
+        <span class="cov0" title="0">for i, subMatcher := range m.subMatchers </span><span class="cov0" title="0">{
+                c := v.Index(i)
+                if matchErr := subMatcher.Matches(c.Interface()); matchErr != nil </span><span class="cov0" title="0">{
+                        // Return an errors indicating which element doesn't match. If the
+                        // matcher error was fatal, make this one fatal too.
+                        err := errors.New(fmt.Sprintf("whose element %d doesn't match", i))
+                        if _, isFatal := matchErr.(*FatalError); isFatal </span><span class="cov0" title="0">{
+                                err = NewFatalError(err.Error())
+                        }</span>
+
+                        <span class="cov0" title="0">return err</span>
+                }
+        }
+
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "errors"
+        "fmt"
+        "math"
+        "reflect"
+)
+
+// Equals(x) returns a matcher that matches values v such that v and x are
+// equivalent. This includes the case when the comparison v == x using Go's
+// built-in comparison operator is legal, but for convenience the following
+// rules also apply:
+//
+//  *  Type checking is done based on underlying types rather than actual
+//     types, so that e.g. two aliases for string can be compared:
+//
+//         type stringAlias1 string
+//         type stringAlias2 string
+//
+//         a := "taco"
+//         b := stringAlias1("taco")
+//         c := stringAlias2("taco")
+//
+//         ExpectTrue(a == b)  // Legal, passes
+//         ExpectTrue(b == c)  // Illegal, doesn't compile
+//
+//         ExpectThat(a, Equals(b))  // Passes
+//         ExpectThat(b, Equals(c))  // Passes
+//
+//  *  Values of numeric type are treated as if they were abstract numbers, and
+//     compared accordingly. Therefore Equals(17) will match int(17),
+//     int16(17), uint(17), float32(17), complex64(17), and so on.
+//
+// If you want a stricter matcher that contains no such cleverness, see
+// IdenticalTo instead.
+func Equals(x interface{}) Matcher <span class="cov8" title="1">{
+        v := reflect.ValueOf(x)
+
+        // The == operator is not defined for array or struct types.
+        if v.Kind() == reflect.Array || v.Kind() == reflect.Struct </span><span class="cov8" title="1">{
+                panic(fmt.Sprintf("oglematchers.Equals: unsupported kind %v", v.Kind()))
+        }</span>
+
+        // The == operator is not defined for non-nil slices.
+        <span class="cov8" title="1">if v.Kind() == reflect.Slice &amp;&amp; v.Pointer() != uintptr(0) </span><span class="cov0" title="0">{
+                panic(fmt.Sprintf("oglematchers.Equals: non-nil slice"))
+        }</span>
+
+        <span class="cov8" title="1">return &amp;equalsMatcher{v}</span>
+}
+
+type equalsMatcher struct {
+        expectedValue reflect.Value
+}
+
+////////////////////////////////////////////////////////////////////////
+// Numeric types
+////////////////////////////////////////////////////////////////////////
+
+func isSignedInteger(v reflect.Value) bool <span class="cov8" title="1">{
+        k := v.Kind()
+        return k &gt;= reflect.Int &amp;&amp; k &lt;= reflect.Int64
+}</span>
+
+func isUnsignedInteger(v reflect.Value) bool <span class="cov8" title="1">{
+        k := v.Kind()
+        return k &gt;= reflect.Uint &amp;&amp; k &lt;= reflect.Uint64
+}</span>
+
+func isInteger(v reflect.Value) bool <span class="cov8" title="1">{
+        return isSignedInteger(v) || isUnsignedInteger(v)
+}</span>
+
+func isFloat(v reflect.Value) bool <span class="cov8" title="1">{
+        k := v.Kind()
+        return k == reflect.Float32 || k == reflect.Float64
+}</span>
+
+func isComplex(v reflect.Value) bool <span class="cov0" title="0">{
+        k := v.Kind()
+        return k == reflect.Complex64 || k == reflect.Complex128
+}</span>
+
+func checkAgainstInt64(e int64, c reflect.Value) (err error) <span class="cov8" title="1">{
+        err = errors.New("")
+
+        switch </span>{
+        <span class="cov8" title="1">case isSignedInteger(c):
+                if c.Int() == e </span><span class="cov8" title="1">{
+                        err = nil
+                }</span>
+
+        <span class="cov8" title="1">case isUnsignedInteger(c):
+                u := c.Uint()
+                if u &lt;= math.MaxInt64 &amp;&amp; int64(u) == e </span><span class="cov8" title="1">{
+                        err = nil
+                }</span>
+
+        // Turn around the various floating point types so that the checkAgainst*
+        // functions for them can deal with precision issues.
+        <span class="cov8" title="1">case isFloat(c), isComplex(c):
+                return Equals(c.Interface()).Matches(e)</span>
+
+        <span class="cov0" title="0">default:
+                err = NewFatalError("which is not numeric")</span>
+        }
+
+        <span class="cov8" title="1">return</span>
+}
+
+func checkAgainstUint64(e uint64, c reflect.Value) (err error) <span class="cov8" title="1">{
+        err = errors.New("")
+
+        switch </span>{
+        <span class="cov8" title="1">case isSignedInteger(c):
+                i := c.Int()
+                if i &gt;= 0 &amp;&amp; uint64(i) == e </span><span class="cov8" title="1">{
+                        err = nil
+                }</span>
+
+        <span class="cov0" title="0">case isUnsignedInteger(c):
+                if c.Uint() == e </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+
+        // Turn around the various floating point types so that the checkAgainst*
+        // functions for them can deal with precision issues.
+        <span class="cov8" title="1">case isFloat(c), isComplex(c):
+                return Equals(c.Interface()).Matches(e)</span>
+
+        <span class="cov0" title="0">default:
+                err = NewFatalError("which is not numeric")</span>
+        }
+
+        <span class="cov8" title="1">return</span>
+}
+
+func checkAgainstFloat32(e float32, c reflect.Value) (err error) <span class="cov0" title="0">{
+        err = errors.New("")
+
+        switch </span>{
+        <span class="cov0" title="0">case isSignedInteger(c):
+                if float32(c.Int()) == e </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+
+        <span class="cov0" title="0">case isUnsignedInteger(c):
+                if float32(c.Uint()) == e </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+
+        <span class="cov0" title="0">case isFloat(c):
+                // Compare using float32 to avoid a false sense of precision; otherwise
+                // e.g. Equals(float32(0.1)) won't match float32(0.1).
+                if float32(c.Float()) == e </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+
+        <span class="cov0" title="0">case isComplex(c):
+                comp := c.Complex()
+                rl := real(comp)
+                im := imag(comp)
+
+                // Compare using float32 to avoid a false sense of precision; otherwise
+                // e.g. Equals(float32(0.1)) won't match (0.1 + 0i).
+                if im == 0 &amp;&amp; float32(rl) == e </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+
+        <span class="cov0" title="0">default:
+                err = NewFatalError("which is not numeric")</span>
+        }
+
+        <span class="cov0" title="0">return</span>
+}
+
+func checkAgainstFloat64(e float64, c reflect.Value) (err error) <span class="cov8" title="1">{
+        err = errors.New("")
+
+        ck := c.Kind()
+
+        switch </span>{
+        <span class="cov8" title="1">case isSignedInteger(c):
+                if float64(c.Int()) == e </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+
+        <span class="cov8" title="1">case isUnsignedInteger(c):
+                if float64(c.Uint()) == e </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+
+        // If the actual value is lower precision, turn the comparison around so we
+        // apply the low-precision rules. Otherwise, e.g. Equals(0.1) may not match
+        // float32(0.1).
+        <span class="cov0" title="0">case ck == reflect.Float32 || ck == reflect.Complex64:
+                return Equals(c.Interface()).Matches(e)</span>
+
+                // Otherwise, compare with double precision.
+        <span class="cov8" title="1">case isFloat(c):
+                if c.Float() == e </span><span class="cov8" title="1">{
+                        err = nil
+                }</span>
+
+        <span class="cov0" title="0">case isComplex(c):
+                comp := c.Complex()
+                rl := real(comp)
+                im := imag(comp)
+
+                if im == 0 &amp;&amp; rl == e </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+
+        <span class="cov0" title="0">default:
+                err = NewFatalError("which is not numeric")</span>
+        }
+
+        <span class="cov8" title="1">return</span>
+}
+
+func checkAgainstComplex64(e complex64, c reflect.Value) (err error) <span class="cov0" title="0">{
+        err = errors.New("")
+        realPart := real(e)
+        imaginaryPart := imag(e)
+
+        switch </span>{
+        <span class="cov0" title="0">case isInteger(c) || isFloat(c):
+                // If we have no imaginary part, then we should just compare against the
+                // real part. Otherwise, we can't be equal.
+                if imaginaryPart != 0 </span><span class="cov0" title="0">{
+                        return
+                }</span>
+
+                <span class="cov0" title="0">return checkAgainstFloat32(realPart, c)</span>
+
+        <span class="cov0" title="0">case isComplex(c):
+                // Compare using complex64 to avoid a false sense of precision; otherwise
+                // e.g. Equals(0.1 + 0i) won't match float32(0.1).
+                if complex64(c.Complex()) == e </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+
+        <span class="cov0" title="0">default:
+                err = NewFatalError("which is not numeric")</span>
+        }
+
+        <span class="cov0" title="0">return</span>
+}
+
+func checkAgainstComplex128(e complex128, c reflect.Value) (err error) <span class="cov0" title="0">{
+        err = errors.New("")
+        realPart := real(e)
+        imaginaryPart := imag(e)
+
+        switch </span>{
+        <span class="cov0" title="0">case isInteger(c) || isFloat(c):
+                // If we have no imaginary part, then we should just compare against the
+                // real part. Otherwise, we can't be equal.
+                if imaginaryPart != 0 </span><span class="cov0" title="0">{
+                        return
+                }</span>
+
+                <span class="cov0" title="0">return checkAgainstFloat64(realPart, c)</span>
+
+        <span class="cov0" title="0">case isComplex(c):
+                if c.Complex() == e </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+
+        <span class="cov0" title="0">default:
+                err = NewFatalError("which is not numeric")</span>
+        }
+
+        <span class="cov0" title="0">return</span>
+}
+
+////////////////////////////////////////////////////////////////////////
+// Other types
+////////////////////////////////////////////////////////////////////////
+
+func checkAgainstBool(e bool, c reflect.Value) (err error) <span class="cov8" title="1">{
+        if c.Kind() != reflect.Bool </span><span class="cov0" title="0">{
+                err = NewFatalError("which is not a bool")
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = errors.New("")
+        if c.Bool() == e </span><span class="cov8" title="1">{
+                err = nil
+        }</span>
+        <span class="cov8" title="1">return</span>
+}
+
+func checkAgainstUintptr(e uintptr, c reflect.Value) (err error) <span class="cov8" title="1">{
+        if c.Kind() != reflect.Uintptr </span><span class="cov0" title="0">{
+                err = NewFatalError("which is not a uintptr")
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = errors.New("")
+        if uintptr(c.Uint()) == e </span><span class="cov8" title="1">{
+                err = nil
+        }</span>
+        <span class="cov8" title="1">return</span>
+}
+
+func checkAgainstChan(e reflect.Value, c reflect.Value) (err error) <span class="cov0" title="0">{
+        // Create a description of e's type, e.g. "chan int".
+        typeStr := fmt.Sprintf("%s %s", e.Type().ChanDir(), e.Type().Elem())
+
+        // Make sure c is a chan of the correct type.
+        if c.Kind() != reflect.Chan ||
+                c.Type().ChanDir() != e.Type().ChanDir() ||
+                c.Type().Elem() != e.Type().Elem() </span><span class="cov0" title="0">{
+                err = NewFatalError(fmt.Sprintf("which is not a %s", typeStr))
+                return
+        }</span>
+
+        <span class="cov0" title="0">err = errors.New("")
+        if c.Pointer() == e.Pointer() </span><span class="cov0" title="0">{
+                err = nil
+        }</span>
+        <span class="cov0" title="0">return</span>
+}
+
+func checkAgainstFunc(e reflect.Value, c reflect.Value) (err error) <span class="cov0" title="0">{
+        // Make sure c is a function.
+        if c.Kind() != reflect.Func </span><span class="cov0" title="0">{
+                err = NewFatalError("which is not a function")
+                return
+        }</span>
+
+        <span class="cov0" title="0">err = errors.New("")
+        if c.Pointer() == e.Pointer() </span><span class="cov0" title="0">{
+                err = nil
+        }</span>
+        <span class="cov0" title="0">return</span>
+}
+
+func checkAgainstMap(e reflect.Value, c reflect.Value) (err error) <span class="cov0" title="0">{
+        // Make sure c is a map.
+        if c.Kind() != reflect.Map </span><span class="cov0" title="0">{
+                err = NewFatalError("which is not a map")
+                return
+        }</span>
+
+        <span class="cov0" title="0">err = errors.New("")
+        if c.Pointer() == e.Pointer() </span><span class="cov0" title="0">{
+                err = nil
+        }</span>
+        <span class="cov0" title="0">return</span>
+}
+
+func checkAgainstPtr(e reflect.Value, c reflect.Value) (err error) <span class="cov8" title="1">{
+        // Create a description of e's type, e.g. "*int".
+        typeStr := fmt.Sprintf("*%v", e.Type().Elem())
+
+        // Make sure c is a pointer of the correct type.
+        if c.Kind() != reflect.Ptr ||
+                c.Type().Elem() != e.Type().Elem() </span><span class="cov8" title="1">{
+                err = NewFatalError(fmt.Sprintf("which is not a %s", typeStr))
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = errors.New("")
+        if c.Pointer() == e.Pointer() </span><span class="cov8" title="1">{
+                err = nil
+        }</span>
+        <span class="cov8" title="1">return</span>
+}
+
+func checkAgainstSlice(e reflect.Value, c reflect.Value) (err error) <span class="cov0" title="0">{
+        // Create a description of e's type, e.g. "[]int".
+        typeStr := fmt.Sprintf("[]%v", e.Type().Elem())
+
+        // Make sure c is a slice of the correct type.
+        if c.Kind() != reflect.Slice ||
+                c.Type().Elem() != e.Type().Elem() </span><span class="cov0" title="0">{
+                err = NewFatalError(fmt.Sprintf("which is not a %s", typeStr))
+                return
+        }</span>
+
+        <span class="cov0" title="0">err = errors.New("")
+        if c.Pointer() == e.Pointer() </span><span class="cov0" title="0">{
+                err = nil
+        }</span>
+        <span class="cov0" title="0">return</span>
+}
+
+func checkAgainstString(e reflect.Value, c reflect.Value) (err error) <span class="cov8" title="1">{
+        // Make sure c is a string.
+        if c.Kind() != reflect.String </span><span class="cov0" title="0">{
+                err = NewFatalError("which is not a string")
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = errors.New("")
+        if c.String() == e.String() </span><span class="cov8" title="1">{
+                err = nil
+        }</span>
+        <span class="cov8" title="1">return</span>
+}
+
+func checkAgainstUnsafePointer(e reflect.Value, c reflect.Value) (err error) <span class="cov0" title="0">{
+        // Make sure c is a pointer.
+        if c.Kind() != reflect.UnsafePointer </span><span class="cov0" title="0">{
+                err = NewFatalError("which is not a unsafe.Pointer")
+                return
+        }</span>
+
+        <span class="cov0" title="0">err = errors.New("")
+        if c.Pointer() == e.Pointer() </span><span class="cov0" title="0">{
+                err = nil
+        }</span>
+        <span class="cov0" title="0">return</span>
+}
+
+func checkForNil(c reflect.Value) (err error) <span class="cov8" title="1">{
+        err = errors.New("")
+
+        // Make sure it is legal to call IsNil.
+        switch c.Kind() </span>{
+        <span class="cov8" title="1">case reflect.Invalid:</span>
+        <span class="cov0" title="0">case reflect.Chan:</span>
+        <span class="cov0" title="0">case reflect.Func:</span>
+        <span class="cov0" title="0">case reflect.Interface:</span>
+        <span class="cov0" title="0">case reflect.Map:</span>
+        <span class="cov0" title="0">case reflect.Ptr:</span>
+        <span class="cov0" title="0">case reflect.Slice:</span>
+
+        <span class="cov0" title="0">default:
+                err = NewFatalError("which cannot be compared to nil")
+                return</span>
+        }
+
+        // Ask whether the value is nil. Handle a nil literal (kind Invalid)
+        // specially, since it's not legal to call IsNil there.
+        <span class="cov8" title="1">if c.Kind() == reflect.Invalid || c.IsNil() </span><span class="cov8" title="1">{
+                err = nil
+        }</span>
+        <span class="cov8" title="1">return</span>
+}
+
+////////////////////////////////////////////////////////////////////////
+// Public implementation
+////////////////////////////////////////////////////////////////////////
+
+func (m *equalsMatcher) Matches(candidate interface{}) error <span class="cov8" title="1">{
+        e := m.expectedValue
+        c := reflect.ValueOf(candidate)
+        ek := e.Kind()
+
+        switch </span>{
+        <span class="cov8" title="1">case ek == reflect.Bool:
+                return checkAgainstBool(e.Bool(), c)</span>
+
+        <span class="cov8" title="1">case isSignedInteger(e):
+                return checkAgainstInt64(e.Int(), c)</span>
+
+        <span class="cov8" title="1">case isUnsignedInteger(e):
+                return checkAgainstUint64(e.Uint(), c)</span>
+
+        <span class="cov8" title="1">case ek == reflect.Uintptr:
+                return checkAgainstUintptr(uintptr(e.Uint()), c)</span>
+
+        <span class="cov0" title="0">case ek == reflect.Float32:
+                return checkAgainstFloat32(float32(e.Float()), c)</span>
+
+        <span class="cov8" title="1">case ek == reflect.Float64:
+                return checkAgainstFloat64(e.Float(), c)</span>
+
+        <span class="cov0" title="0">case ek == reflect.Complex64:
+                return checkAgainstComplex64(complex64(e.Complex()), c)</span>
+
+        <span class="cov0" title="0">case ek == reflect.Complex128:
+                return checkAgainstComplex128(complex128(e.Complex()), c)</span>
+
+        <span class="cov0" title="0">case ek == reflect.Chan:
+                return checkAgainstChan(e, c)</span>
+
+        <span class="cov0" title="0">case ek == reflect.Func:
+                return checkAgainstFunc(e, c)</span>
+
+        <span class="cov0" title="0">case ek == reflect.Map:
+                return checkAgainstMap(e, c)</span>
+
+        <span class="cov8" title="1">case ek == reflect.Ptr:
+                return checkAgainstPtr(e, c)</span>
+
+        <span class="cov0" title="0">case ek == reflect.Slice:
+                return checkAgainstSlice(e, c)</span>
+
+        <span class="cov8" title="1">case ek == reflect.String:
+                return checkAgainstString(e, c)</span>
+
+        <span class="cov0" title="0">case ek == reflect.UnsafePointer:
+                return checkAgainstUnsafePointer(e, c)</span>
+
+        <span class="cov8" title="1">case ek == reflect.Invalid:
+                return checkForNil(c)</span>
+        }
+
+        <span class="cov0" title="0">panic(fmt.Sprintf("equalsMatcher.Matches: unexpected kind: %v", ek))</span>
+}
+
+func (m *equalsMatcher) Description() string <span class="cov0" title="0">{
+        // Special case: handle nil.
+        if !m.expectedValue.IsValid() </span><span class="cov0" title="0">{
+                return "is nil"
+        }</span>
+
+        <span class="cov0" title="0">return fmt.Sprintf("%v", m.expectedValue.Interface())</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+// Error returns a matcher that matches non-nil values implementing the
+// built-in error interface for whom the return value of Error() matches the
+// supplied matcher.
+//
+// For example:
+//
+//     err := errors.New("taco burrito")
+//
+//     Error(Equals("taco burrito"))  // matches err
+//     Error(HasSubstr("taco"))       // matches err
+//     Error(HasSubstr("enchilada"))  // doesn't match err
+//
+func Error(m Matcher) Matcher <span class="cov0" title="0">{
+        return &amp;errorMatcher{m}
+}</span>
+
+type errorMatcher struct {
+        wrappedMatcher Matcher
+}
+
+func (m *errorMatcher) Description() string <span class="cov0" title="0">{
+        return "error " + m.wrappedMatcher.Description()
+}</span>
+
+func (m *errorMatcher) Matches(c interface{}) error <span class="cov0" title="0">{
+        // Make sure that c is an error.
+        e, ok := c.(error)
+        if !ok </span><span class="cov0" title="0">{
+                return NewFatalError("which is not an error")
+        }</span>
+
+        // Pass on the error text to the wrapped matcher.
+        <span class="cov0" title="0">return m.wrappedMatcher.Matches(e.Error())</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "fmt"
+        "reflect"
+)
+
+// GreaterOrEqual returns a matcher that matches integer, floating point, or
+// strings values v such that v &gt;= x. Comparison is not defined between numeric
+// and string types, but is defined between all integer and floating point
+// types.
+//
+// x must itself be an integer, floating point, or string type; otherwise,
+// GreaterOrEqual will panic.
+func GreaterOrEqual(x interface{}) Matcher <span class="cov8" title="1">{
+        desc := fmt.Sprintf("greater than or equal to %v", x)
+
+        // Special case: make it clear that strings are strings.
+        if reflect.TypeOf(x).Kind() == reflect.String </span><span class="cov8" title="1">{
+                desc = fmt.Sprintf("greater than or equal to \"%s\"", x)
+        }</span>
+
+        <span class="cov8" title="1">return transformDescription(Not(LessThan(x)), desc)</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "fmt"
+        "reflect"
+)
+
+// GreaterThan returns a matcher that matches integer, floating point, or
+// strings values v such that v &gt; x. Comparison is not defined between numeric
+// and string types, but is defined between all integer and floating point
+// types.
+//
+// x must itself be an integer, floating point, or string type; otherwise,
+// GreaterThan will panic.
+func GreaterThan(x interface{}) Matcher <span class="cov8" title="1">{
+        desc := fmt.Sprintf("greater than %v", x)
+
+        // Special case: make it clear that strings are strings.
+        if reflect.TypeOf(x).Kind() == reflect.String </span><span class="cov8" title="1">{
+                desc = fmt.Sprintf("greater than \"%s\"", x)
+        }</span>
+
+        <span class="cov8" title="1">return transformDescription(Not(LessOrEqual(x)), desc)</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "errors"
+        "fmt"
+        "reflect"
+        "strings"
+)
+
+// HasSubstr returns a matcher that matches strings containing s as a
+// substring.
+func HasSubstr(s string) Matcher <span class="cov0" title="0">{
+        return &amp;hasSubstrMatcher{s}
+}</span>
+
+type hasSubstrMatcher struct {
+        needle string
+}
+
+func (m *hasSubstrMatcher) Description() string <span class="cov0" title="0">{
+        return fmt.Sprintf("has substring \"%s\"", m.needle)
+}</span>
+
+func (m *hasSubstrMatcher) Matches(c interface{}) error <span class="cov0" title="0">{
+        v := reflect.ValueOf(c)
+        if v.Kind() != reflect.String </span><span class="cov0" title="0">{
+                return NewFatalError("which is not a string")
+        }</span>
+
+        // Perform the substring search.
+        <span class="cov0" title="0">haystack := v.String()
+        if strings.Contains(haystack, m.needle) </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov0" title="0">return errors.New("")</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">// Copyright 2012 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "errors"
+        "fmt"
+        "reflect"
+)
+
+// Is the type comparable according to the definition here?
+//
+//     http://weekly.golang.org/doc/go_spec.html#Comparison_operators
+//
+func isComparable(t reflect.Type) bool <span class="cov0" title="0">{
+        switch t.Kind() </span>{
+        <span class="cov0" title="0">case reflect.Array:
+                return isComparable(t.Elem())</span>
+
+        <span class="cov0" title="0">case reflect.Struct:
+                for i := 0; i &lt; t.NumField(); i++ </span><span class="cov0" title="0">{
+                        if !isComparable(t.Field(i).Type) </span><span class="cov0" title="0">{
+                                return false
+                        }</span>
+                }
+
+                <span class="cov0" title="0">return true</span>
+
+        <span class="cov0" title="0">case reflect.Slice, reflect.Map, reflect.Func:
+                return false</span>
+        }
+
+        <span class="cov0" title="0">return true</span>
+}
+
+// Should the supplied type be allowed as an argument to IdenticalTo?
+func isLegalForIdenticalTo(t reflect.Type) (bool, error) <span class="cov0" title="0">{
+        // Allow the zero type.
+        if t == nil </span><span class="cov0" title="0">{
+                return true, nil
+        }</span>
+
+        // Reference types are always okay; we compare pointers.
+        <span class="cov0" title="0">switch t.Kind() </span>{
+        <span class="cov0" title="0">case reflect.Slice, reflect.Map, reflect.Func, reflect.Chan:
+                return true, nil</span>
+        }
+
+        // Reject other non-comparable types.
+        <span class="cov0" title="0">if !isComparable(t) </span><span class="cov0" title="0">{
+                return false, errors.New(fmt.Sprintf("%v is not comparable", t))
+        }</span>
+
+        <span class="cov0" title="0">return true, nil</span>
+}
+
+// IdenticalTo(x) returns a matcher that matches values v with type identical
+// to x such that:
+//
+//  1. If v and x are of a reference type (slice, map, function, channel), then
+//     they are either both nil or are references to the same object.
+//
+//  2. Otherwise, if v and x are not of a reference type but have a valid type,
+//     then v == x.
+//
+// If v and x are both the invalid type (which results from the predeclared nil
+// value, or from nil interface variables), then the matcher is satisfied.
+//
+// This function will panic if x is of a value type that is not comparable. For
+// example, x cannot be an array of functions.
+func IdenticalTo(x interface{}) Matcher <span class="cov0" title="0">{
+        t := reflect.TypeOf(x)
+
+        // Reject illegal arguments.
+        if ok, err := isLegalForIdenticalTo(t); !ok </span><span class="cov0" title="0">{
+                panic("IdenticalTo: " + err.Error())
+        }</span>
+
+        <span class="cov0" title="0">return &amp;identicalToMatcher{x}</span>
+}
+
+type identicalToMatcher struct {
+        x interface{}
+}
+
+func (m *identicalToMatcher) Description() string <span class="cov0" title="0">{
+        t := reflect.TypeOf(m.x)
+        return fmt.Sprintf("identical to &lt;%v&gt; %v", t, m.x)
+}</span>
+
+func (m *identicalToMatcher) Matches(c interface{}) error <span class="cov0" title="0">{
+        // Make sure the candidate's type is correct.
+        t := reflect.TypeOf(m.x)
+        if ct := reflect.TypeOf(c); t != ct </span><span class="cov0" title="0">{
+                return NewFatalError(fmt.Sprintf("which is of type %v", ct))
+        }</span>
+
+        // Special case: two values of the invalid type are always identical.
+        <span class="cov0" title="0">if t == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        // Handle reference types.
+        <span class="cov0" title="0">switch t.Kind() </span>{
+        <span class="cov0" title="0">case reflect.Slice, reflect.Map, reflect.Func, reflect.Chan:
+                xv := reflect.ValueOf(m.x)
+                cv := reflect.ValueOf(c)
+                if xv.Pointer() == cv.Pointer() </span><span class="cov0" title="0">{
+                        return nil
+                }</span>
+
+                <span class="cov0" title="0">return errors.New("which is not an identical reference")</span>
+        }
+
+        // Are the values equal?
+        <span class="cov0" title="0">if m.x == c </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov0" title="0">return errors.New("")</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "fmt"
+        "reflect"
+)
+
+// LessOrEqual returns a matcher that matches integer, floating point, or
+// strings values v such that v &lt;= x. Comparison is not defined between numeric
+// and string types, but is defined between all integer and floating point
+// types.
+//
+// x must itself be an integer, floating point, or string type; otherwise,
+// LessOrEqual will panic.
+func LessOrEqual(x interface{}) Matcher <span class="cov8" title="1">{
+        desc := fmt.Sprintf("less than or equal to %v", x)
+
+        // Special case: make it clear that strings are strings.
+        if reflect.TypeOf(x).Kind() == reflect.String </span><span class="cov8" title="1">{
+                desc = fmt.Sprintf("less than or equal to \"%s\"", x)
+        }</span>
+
+        // Put LessThan last so that its error messages will be used in the event of
+        // failure.
+        <span class="cov8" title="1">return transformDescription(AnyOf(Equals(x), LessThan(x)), desc)</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "errors"
+        "fmt"
+        "math"
+        "reflect"
+)
+
+// LessThan returns a matcher that matches integer, floating point, or strings
+// values v such that v &lt; x. Comparison is not defined between numeric and
+// string types, but is defined between all integer and floating point types.
+//
+// x must itself be an integer, floating point, or string type; otherwise,
+// LessThan will panic.
+func LessThan(x interface{}) Matcher <span class="cov8" title="1">{
+        v := reflect.ValueOf(x)
+        kind := v.Kind()
+
+        switch </span>{
+        <span class="cov8" title="1">case isInteger(v):</span>
+        <span class="cov8" title="1">case isFloat(v):</span>
+        <span class="cov8" title="1">case kind == reflect.String:</span>
+
+        <span class="cov0" title="0">default:
+                panic(fmt.Sprintf("LessThan: unexpected kind %v", kind))</span>
+        }
+
+        <span class="cov8" title="1">return &amp;lessThanMatcher{v}</span>
+}
+
+type lessThanMatcher struct {
+        limit reflect.Value
+}
+
+func (m *lessThanMatcher) Description() string <span class="cov0" title="0">{
+        // Special case: make it clear that strings are strings.
+        if m.limit.Kind() == reflect.String </span><span class="cov0" title="0">{
+                return fmt.Sprintf("less than \"%s\"", m.limit.String())
+        }</span>
+
+        <span class="cov0" title="0">return fmt.Sprintf("less than %v", m.limit.Interface())</span>
+}
+
+func compareIntegers(v1, v2 reflect.Value) (err error) <span class="cov8" title="1">{
+        err = errors.New("")
+
+        switch </span>{
+        <span class="cov8" title="1">case isSignedInteger(v1) &amp;&amp; isSignedInteger(v2):
+                if v1.Int() &lt; v2.Int() </span><span class="cov8" title="1">{
+                        err = nil
+                }</span>
+                <span class="cov8" title="1">return</span>
+
+        <span class="cov8" title="1">case isSignedInteger(v1) &amp;&amp; isUnsignedInteger(v2):
+                if v1.Int() &lt; 0 || uint64(v1.Int()) &lt; v2.Uint() </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+                <span class="cov8" title="1">return</span>
+
+        <span class="cov8" title="1">case isUnsignedInteger(v1) &amp;&amp; isSignedInteger(v2):
+                if v1.Uint() &lt;= math.MaxInt64 &amp;&amp; int64(v1.Uint()) &lt; v2.Int() </span><span class="cov8" title="1">{
+                        err = nil
+                }</span>
+                <span class="cov8" title="1">return</span>
+
+        <span class="cov0" title="0">case isUnsignedInteger(v1) &amp;&amp; isUnsignedInteger(v2):
+                if v1.Uint() &lt; v2.Uint() </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+                <span class="cov0" title="0">return</span>
+        }
+
+        <span class="cov0" title="0">panic(fmt.Sprintf("compareIntegers: %v %v", v1, v2))</span>
+}
+
+func getFloat(v reflect.Value) float64 <span class="cov8" title="1">{
+        switch </span>{
+        <span class="cov8" title="1">case isSignedInteger(v):
+                return float64(v.Int())</span>
+
+        <span class="cov8" title="1">case isUnsignedInteger(v):
+                return float64(v.Uint())</span>
+
+        <span class="cov8" title="1">case isFloat(v):
+                return v.Float()</span>
+        }
+
+        <span class="cov0" title="0">panic(fmt.Sprintf("getFloat: %v", v))</span>
+}
+
+func (m *lessThanMatcher) Matches(c interface{}) (err error) <span class="cov8" title="1">{
+        v1 := reflect.ValueOf(c)
+        v2 := m.limit
+
+        err = errors.New("")
+
+        // Handle strings as a special case.
+        if v1.Kind() == reflect.String &amp;&amp; v2.Kind() == reflect.String </span><span class="cov8" title="1">{
+                if v1.String() &lt; v2.String() </span><span class="cov8" title="1">{
+                        err = nil
+                }</span>
+                <span class="cov8" title="1">return</span>
+        }
+
+        // If we get here, we require that we are dealing with integers or floats.
+        <span class="cov8" title="1">v1Legal := isInteger(v1) || isFloat(v1)
+        v2Legal := isInteger(v2) || isFloat(v2)
+        if !v1Legal || !v2Legal </span><span class="cov0" title="0">{
+                err = NewFatalError("which is not comparable")
+                return
+        }</span>
+
+        // Handle the various comparison cases.
+        <span class="cov8" title="1">switch </span>{
+        // Both integers
+        <span class="cov8" title="1">case isInteger(v1) &amp;&amp; isInteger(v2):
+                return compareIntegers(v1, v2)</span>
+
+        // At least one float32
+        <span class="cov0" title="0">case v1.Kind() == reflect.Float32 || v2.Kind() == reflect.Float32:
+                if float32(getFloat(v1)) &lt; float32(getFloat(v2)) </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+                <span class="cov0" title="0">return</span>
+
+        // At least one float64
+        <span class="cov8" title="1">case v1.Kind() == reflect.Float64 || v2.Kind() == reflect.Float64:
+                if getFloat(v1) &lt; getFloat(v2) </span><span class="cov8" title="1">{
+                        err = nil
+                }</span>
+                <span class="cov8" title="1">return</span>
+        }
+
+        // We shouldn't get here.
+        <span class="cov0" title="0">panic(fmt.Sprintf("lessThanMatcher.Matches: Shouldn't get here: %v %v", v1, v2))</span>
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Package oglematchers provides a set of matchers useful in a testing or
+// mocking framework. These matchers are inspired by and mostly compatible with
+// Google Test for C++ and Google JS Test.
+//
+// This package is used by github.com/smartystreets/goconvey/convey/assertions/ogletest and
+// github.com/smartystreets/goconvey/convey/assertions/oglemock, which may be more directly useful if you're not
+// writing your own testing package or defining your own matchers.
+package oglematchers
+
+// A Matcher is some predicate implicitly defining a set of values that it
+// matches. For example, GreaterThan(17) matches all numeric values greater
+// than 17, and HasSubstr("taco") matches all strings with the substring
+// "taco".
+type Matcher interface {
+        // Check whether the supplied value belongs to the the set defined by the
+        // matcher. Return a non-nil error if and only if it does not.
+        //
+        // The error describes why the value doesn't match. The error text is a
+        // relative clause that is suitable for being placed after the value. For
+        // example, a predicate that matches strings with a particular substring may,
+        // when presented with a numerical value, return the following error text:
+        //
+        //     "which is not a string"
+        //
+        // Then the failure message may look like:
+        //
+        //     Expected: has substring "taco"
+        //     Actual:   17, which is not a string
+        //
+        // If the error is self-apparent based on the description of the matcher, the
+        // error text may be empty (but the error still non-nil). For example:
+        //
+        //     Expected: 17
+        //     Actual:   19
+        //
+        // If you are implementing a new matcher, see also the documentation on
+        // FatalError.
+        Matches(candidate interface{}) error
+
+        // Description returns a string describing the property that values matching
+        // this matcher have, as a verb phrase where the subject is the value. For
+        // example, "is greather than 17" or "has substring "taco"".
+        Description() string
+}
+
+// FatalError is an implementation of the error interface that may be returned
+// from matchers, indicating the error should be propagated. Returning a
+// *FatalError indicates that the matcher doesn't process values of the
+// supplied type, or otherwise doesn't know how to handle the value.
+//
+// For example, if GreaterThan(17) returned false for the value "taco" without
+// a fatal error, then Not(GreaterThan(17)) would return true. This is
+// technically correct, but is surprising and may mask failures where the wrong
+// sort of matcher is accidentally used. Instead, GreaterThan(17) can return a
+// fatal error, which will be propagated by Not().
+type FatalError struct {
+        errorText string
+}
+
+// NewFatalError creates a FatalError struct with the supplied error text.
+func NewFatalError(s string) *FatalError <span class="cov8" title="1">{
+        return &amp;FatalError{s}
+}</span>
+
+func (e *FatalError) Error() string <span class="cov8" title="1">{
+        return e.errorText
+}</span>
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "errors"
+        "fmt"
+        "reflect"
+        "regexp"
+)
+
+// MatchesRegexp returns a matcher that matches strings and byte slices whose
+// contents match the supplide regular expression. The semantics are those of
+// regexp.Match. In particular, that means the match is not implicitly anchored
+// to the ends of the string: MatchesRegexp("bar") will match "foo bar baz".
+func MatchesRegexp(pattern string) Matcher <span class="cov0" title="0">{
+        re, err := regexp.Compile(pattern)
+        if err != nil </span><span class="cov0" title="0">{
+                panic("MatchesRegexp: " + err.Error())
+        }</span>
+
+        <span class="cov0" title="0">return &amp;matchesRegexpMatcher{re}</span>
+}
+
+type matchesRegexpMatcher struct {
+        re *regexp.Regexp
+}
+
+func (m *matchesRegexpMatcher) Description() string <span class="cov0" title="0">{
+        return fmt.Sprintf("matches regexp \"%s\"", m.re.String())
+}</span>
+
+func (m *matchesRegexpMatcher) Matches(c interface{}) (err error) <span class="cov0" title="0">{
+        v := reflect.ValueOf(c)
+        isString := v.Kind() == reflect.String
+        isByteSlice := v.Kind() == reflect.Slice &amp;&amp; v.Elem().Kind() == reflect.Uint8
+
+        err = errors.New("")
+
+        switch </span>{
+        <span class="cov0" title="0">case isString:
+                if m.re.MatchString(v.String()) </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+
+        <span class="cov0" title="0">case isByteSlice:
+                if m.re.Match(v.Bytes()) </span><span class="cov0" title="0">{
+                        err = nil
+                }</span>
+
+        <span class="cov0" title="0">default:
+                err = NewFatalError("which is not a string or []byte")</span>
+        }
+
+        <span class="cov0" title="0">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "errors"
+        "fmt"
+)
+
+// Not returns a matcher that inverts the set of values matched by the wrapped
+// matcher. It does not transform the result for values for which the wrapped
+// matcher returns a fatal error.
+func Not(m Matcher) Matcher <span class="cov8" title="1">{
+        return &amp;notMatcher{m}
+}</span>
+
+type notMatcher struct {
+        wrapped Matcher
+}
+
+func (m *notMatcher) Matches(c interface{}) (err error) <span class="cov8" title="1">{
+        err = m.wrapped.Matches(c)
+
+        // Did the wrapped matcher say yes?
+        if err == nil </span><span class="cov8" title="1">{
+                return errors.New("")
+        }</span>
+
+        // Did the wrapped matcher return a fatal error?
+        <span class="cov8" title="1">if _, isFatal := err.(*FatalError); isFatal </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // The wrapped matcher returned a non-fatal error.
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (m *notMatcher) Description() string <span class="cov0" title="0">{
+        return fmt.Sprintf("not(%s)", m.wrapped.Description())
+}</span>
+</pre>
+		
+		<pre class="file" id="file17" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "errors"
+        "fmt"
+        "reflect"
+)
+
+// Panics matches zero-arg functions which, when invoked, panic with an error
+// that matches the supplied matcher.
+//
+// NOTE(jacobsa): This matcher cannot detect the case where the function panics
+// using panic(nil), by design of the language. See here for more info:
+//
+//     http://goo.gl/9aIQL
+//
+func Panics(m Matcher) Matcher <span class="cov0" title="0">{
+        return &amp;panicsMatcher{m}
+}</span>
+
+type panicsMatcher struct {
+        wrappedMatcher Matcher
+}
+
+func (m *panicsMatcher) Description() string <span class="cov0" title="0">{
+        return "panics with: " + m.wrappedMatcher.Description()
+}</span>
+
+func (m *panicsMatcher) Matches(c interface{}) (err error) <span class="cov0" title="0">{
+        // Make sure c is a zero-arg function.
+        v := reflect.ValueOf(c)
+        if v.Kind() != reflect.Func || v.Type().NumIn() != 0 </span><span class="cov0" title="0">{
+                err = NewFatalError("which is not a zero-arg function")
+                return
+        }</span>
+
+        // Call the function and check its panic error.
+        <span class="cov0" title="0">defer func() </span><span class="cov0" title="0">{
+                if e := recover(); e != nil </span><span class="cov0" title="0">{
+                        err = m.wrappedMatcher.Matches(e)
+
+                        // Set a clearer error message if the matcher said no.
+                        if err != nil </span><span class="cov0" title="0">{
+                                wrappedClause := ""
+                                if err.Error() != "" </span><span class="cov0" title="0">{
+                                        wrappedClause = ", " + err.Error()
+                                }</span>
+
+                                <span class="cov0" title="0">err = errors.New(fmt.Sprintf("which panicked with: %v%s", e, wrappedClause))</span>
+                        }
+                }
+        }()
+
+        <span class="cov0" title="0">v.Call([]reflect.Value{})
+
+        // If we get here, the function didn't panic.
+        err = errors.New("which didn't panic")
+        return</span>
+}
+</pre>
+		
+		<pre class="file" id="file18" style="display: none">// Copyright 2012 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+import (
+        "errors"
+        "fmt"
+        "reflect"
+)
+
+// Return a matcher that matches non-nil pointers whose pointee matches the
+// wrapped matcher.
+func Pointee(m Matcher) Matcher <span class="cov0" title="0">{
+        return &amp;pointeeMatcher{m}
+}</span>
+
+type pointeeMatcher struct {
+        wrapped Matcher
+}
+
+func (m *pointeeMatcher) Matches(c interface{}) (err error) <span class="cov0" title="0">{
+        // Make sure the candidate is of the appropriate type.
+        cv := reflect.ValueOf(c)
+        if !cv.IsValid() || cv.Kind() != reflect.Ptr </span><span class="cov0" title="0">{
+                return NewFatalError("which is not a pointer")
+        }</span>
+
+        // Make sure the candidate is non-nil.
+        <span class="cov0" title="0">if cv.IsNil() </span><span class="cov0" title="0">{
+                return NewFatalError("")
+        }</span>
+
+        // Defer to the wrapped matcher. Fix up empty errors so that failure messages
+        // are more helpful than just printing a pointer for "Actual".
+        <span class="cov0" title="0">pointee := cv.Elem().Interface()
+        err = m.wrapped.Matches(pointee)
+        if err != nil &amp;&amp; err.Error() == "" </span><span class="cov0" title="0">{
+                s := fmt.Sprintf("whose pointee is %v", pointee)
+
+                if _, ok := err.(*FatalError); ok </span><span class="cov0" title="0">{
+                        err = NewFatalError(s)
+                }</span> <span class="cov0" title="0">else {
+                        err = errors.New(s)
+                }</span>
+        }
+
+        <span class="cov0" title="0">return err</span>
+}
+
+func (m *pointeeMatcher) Description() string <span class="cov0" title="0">{
+        return fmt.Sprintf("pointee(%s)", m.wrapped.Description())
+}</span>
+</pre>
+		
+		<pre class="file" id="file19" style="display: none">// Copyright 2011 Aaron Jacobs. All Rights Reserved.
+// Author: aaronjjacobs@gmail.com (Aaron Jacobs)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oglematchers
+
+// transformDescription returns a matcher that is equivalent to the supplied
+// one, except that it has the supplied description instead of the one attached
+// to the existing matcher.
+func transformDescription(m Matcher, newDesc string) Matcher <span class="cov8" title="1">{
+        return &amp;transformDescriptionMatcher{newDesc, m}
+}</span>
+
+type transformDescriptionMatcher struct {
+        desc string
+        wrappedMatcher Matcher
+}
+
+func (m *transformDescriptionMatcher) Description() string <span class="cov0" title="0">{
+        return m.desc
+}</span>
+
+func (m *transformDescriptionMatcher) Matches(c interface{}) error <span class="cov8" title="1">{
+        return m.wrappedMatcher.Matches(c)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible = document.getElementById('file0');
+		files.addEventListener('change', onChange, false);
+		function onChange() {
+			visible.style.display = 'none';
+			visible = document.getElementById(files.value);
+			visible.style.display = 'block';
+			window.scrollTo(0, 0);
+		}
+	})();
+	</script>
+</html>

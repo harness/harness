@@ -75,13 +75,6 @@ type boxDataType struct {
 	Dirs    map[string]*dirDataType
 }
 
-type singleDataType struct {
-	Package    string
-	SingleName string
-	UnixNow    int64
-	File       *fileDataType
-}
-
 type fileDataType struct {
 	Identifier string
 	FileName   string

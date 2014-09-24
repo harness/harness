@@ -1,47 +1,47 @@
 package convey
 
 import (
+	"flag"
 	"os"
 
 	"github.com/smartystreets/goconvey/convey/reporting"
 )
 
 func init() {
+	declareFlags()
+
 	suites = newSuiteContext()
 }
 
-func buildReporter() reporting.Reporter {
-	if testReporter != nil {
-		return testReporter
+func declareFlags() {
+	flag.BoolVar(&json, "json", false, "When true, emits results in JSON blocks. Default: 'false'")
+	flag.BoolVar(&silent, "silent", false, "When true, all output from GoConvey is suppressed.")
+	flag.BoolVar(&story, "story", false, "When true, emits story output, otherwise emits dot output. When not provided, this flag mirros the value of the '-test.v' flag")
 
-	} else if flagFound(jsonEnabled) {
-		return reporting.BuildJsonReporter()
-
-	} else if flagFound(silentEnabled) {
-		return reporting.BuildSilentReporter()
-
-	} else if flagFound(verboseEnabled) || flagFound(storyEnabled) {
-		return reporting.BuildStoryReporter()
-
-	} else {
-		return reporting.BuildDotReporter()
-
+	if noStoryFlagProvided() {
+		story = verboseEnabled
 	}
+
+	// FYI: flag.Parse() is called from the testing package.
 }
 
-// flagFound parses the command line args manually because the go test tool,
-// which shares the same process space with this code, already defines
-// the -v argument (verbosity) and we can't feed in a custom flag to old-style
-// go test packages (like -json, which I would prefer). So, we use the timeout
-// flag with a value of -42 to request json output and other negative values
-// as needed. My deepest sympothies.
-func flagFound(flagValue string) bool {
-	for _, arg := range os.Args {
-		if arg == flagValue {
-			return true
-		}
+func noStoryFlagProvided() bool {
+	return !story && !storyDisabled
+}
+
+func buildReporter() reporting.Reporter {
+	switch {
+	case testReporter != nil:
+		return testReporter
+	case json:
+		return reporting.BuildJsonReporter()
+	case silent:
+		return reporting.BuildSilentReporter()
+	case story:
+		return reporting.BuildStoryReporter()
+	default:
+		return reporting.BuildDotReporter()
 	}
-	return false
 }
 
 var (
@@ -51,11 +51,22 @@ var (
 	testReporter reporting.Reporter
 )
 
-const (
-	verboseEnabled = "-test.v=true"
+var (
+	json   bool
+	silent bool
+	story  bool
 
-	// Hack! I hope go test *always* supports negative timeouts...
-	jsonEnabled   = "-test.timeout=-42s"
-	silentEnabled = "-test.timeout=-43s"
-	storyEnabled  = "-test.timeout=-44s"
+	verboseEnabled = flagFound("-test.v=true")
+	storyDisabled  = flagFound("-story=false")
 )
+
+// flagFound parses the command line args manually for flags defined in other
+// packages. Like the '-v' flag from the "testing" package, for instance.
+func flagFound(flagValue string) bool {
+	for _, arg := range os.Args {
+		if arg == flagValue {
+			return true
+		}
+	}
+	return false
+}

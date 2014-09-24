@@ -5,6 +5,7 @@ import (
 )
 
 type User struct {
+	ID         int64  `json:"id"`
 	Login      string `json:"login"`
 	Type       string `json:"type"`
 	Name       string `json:"name"`
@@ -64,25 +65,23 @@ func mapToUser(m map[string]interface{}) *User {
 			continue
 		}
 
-		// ignore non-string values
-		var str string
-		var ok bool
-		if str, ok = v.(string); !ok {
-			continue
-		} 
-
 		switch k {
-		case "login"       : user.Login = str
-		case "type"        : user.Type = str
-		case "name"        : user.Name = str
-		case "email"       : user.Email = str
-		case "company"     : user.Company = str
-		case "location"    : user.Location = str
-		case "avatar_url"  : user.Avatar = str
-		case "gravatar_id" : user.GravatarId = str
-		case "html_url"    : user.Url = str
+		case "login"       : user.Login, _ = v.(string)
+		case "type"        : user.Type, _ = v.(string)
+		case "name"        : user.Name, _ = v.(string)
+		case "email"       : user.Email, _ = v.(string)
+		case "company"     : user.Company, _ = v.(string)
+		case "location"    : user.Location, _ = v.(string)
+		case "avatar_url"  : user.Avatar, _ = v.(string)
+		case "gravatar_id" : user.GravatarId, _ = v.(string)
+		case "html_url"    : user.Url, _ = v.(string)
+		case "id"          :
+			if id, ok := v.(float64); ok {
+				user.ID = int64(id)
+			}
 		}
 	}
 
 	return &user
 }
+

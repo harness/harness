@@ -59,10 +59,10 @@ func (f *File) Stat() (os.FileInfo, error) {
 func (f *File) Readdir(count int) ([]os.FileInfo, error) {
 	if f.appendedF != nil {
 		if f.appendedF.dir {
-			fi := make([]os.FileInfo, len(f.appendedF.children))
+			fi := make([]os.FileInfo, 0, len(f.appendedF.children))
 			for _, childAppendedFile := range f.appendedF.children {
 				if childAppendedFile.dir {
-					fi = append(fi, f.appendedF.dirInfo)
+					fi = append(fi, childAppendedFile.dirInfo)
 				} else {
 					fi = append(fi, childAppendedFile.zipFile.FileInfo())
 				}

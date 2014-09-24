@@ -382,3 +382,14 @@ func TestSetArgWithBadType(t *testing.T) {
 	})
 	ctrl.Call(s, "FooMethod", "1")
 }
+
+func TestTimes0(t *testing.T) {
+	rep, ctrl := createFixtures(t)
+	defer ctrl.Finish()
+
+	s := new(Subject)
+	ctrl.RecordCall(s, "FooMethod", "arg").Times(0)
+	rep.assertFatal(func() {
+		ctrl.Call(s, "FooMethod", "arg")
+	})
+}

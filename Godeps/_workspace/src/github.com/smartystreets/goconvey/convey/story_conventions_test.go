@@ -69,7 +69,7 @@ func TestExtraReferencePanics(t *testing.T) {
 func TestParseRegistrationMissingRequiredElements(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
-			if r != "You must provide a name (string), then a *testing.T (if in outermost scope), and then an action (func())." {
+			if r != "You must provide a name (string), then a *testing.T (if in outermost scope), an optional FailureMode, and then an action (func())." {
 				t.Errorf("Incorrect panic message.")
 			}
 		}
@@ -108,4 +108,78 @@ func TestParseRegistration_MissingActionFunc(t *testing.T) {
 	Convey("Hi there", 12345)
 
 	t.Errorf("goTest should have panicked in Convey(...) and then recovered in the defer func().")
+}
+
+func TestFailureModeParameterButMissing(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			if r != parseError {
+				t.Errorf("Incorrect panic message.")
+			}
+		} else {
+			t.Errorf("Expected panic")
+		}
+	}()
+
+	prepare()
+
+	Convey("Foobar", t, FailureHalts)
+}
+
+func TestFailureModeParameterWithAction(t *testing.T) {
+	prepare()
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Unexpected panic")
+		}
+	}()
+
+	Convey("Foobar", t, FailureHalts, func() {})
+}
+
+func TestExtraConveyParameters(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			if r != parseError {
+				t.Errorf("Incorrect panic message.")
+			}
+		} else {
+			t.Errorf("Expected panic")
+		}
+	}()
+
+	prepare()
+
+	Convey("Foobar", t, FailureHalts, func() {}, "This is not supposed to be here")
+}
+
+func TestExtraConveyParameters2(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			if r != parseError {
+				t.Errorf("Incorrect panic message.")
+			}
+		} else {
+			t.Errorf("Expected panic")
+		}
+	}()
+
+	prepare()
+
+	Convey("Foobar", t, func() {}, "This is not supposed to be here")
+}
+
+func TestExtraConveyParameters3(t *testing.T) {
+	output := prepare()
+
+	Convey("A", t, func() {
+		output += "A "
+
+		Convey("B", func() {
+			output += "B "
+		}, "This is not supposed to be here")
+	})
+
+	expectEqual(t, "A ", output)
 }

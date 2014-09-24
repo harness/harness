@@ -5,6 +5,7 @@ package reporting
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"strings"
 )
 
@@ -22,8 +23,8 @@ func (self *JsonReporter) Enter(scope *ScopeReport) {
 	if _, found := self.index[scope.ID]; !found {
 		self.registerScope(scope)
 	}
-	self.current = self.index[scope.ID]
 	self.depth++
+	self.current = self.index[scope.ID]
 }
 func (self *JsonReporter) registerScope(scope *ScopeReport) {
 	next := newScopeResult(scope.Title, self.depth, scope.File, scope.Line)
@@ -44,7 +45,6 @@ func (self *JsonReporter) EndStory() {
 	self.reset()
 }
 func (self *JsonReporter) report() {
-	self.out.Print(OpenJson + "\n")
 	scopes := []string{}
 	for _, scope := range self.scopes {
 		serialized, err := json.Marshal(scope)
@@ -56,13 +56,17 @@ func (self *JsonReporter) report() {
 		json.Indent(&buffer, serialized, "", "  ")
 		scopes = append(scopes, buffer.String())
 	}
-	self.out.Print(strings.Join(scopes, ",") + ",\n")
-	self.out.Print(CloseJson + "\n")
+	self.out.Print(fmt.Sprintf("%s\n%s,\n%s\n", OpenJson, strings.Join(scopes, ","), CloseJson))
 }
 func (self *JsonReporter) reset() {
 	self.scopes = []*ScopeResult{}
 	self.index = map[string]*ScopeResult{}
 	self.depth = 0
+}
+
+func (self *JsonReporter) Write(content []byte) (written int, err error) {
+	self.current.Output += string(content)
+	return len(content), nil
 }
 
 func NewJsonReporter(out *Printer) *JsonReporter {

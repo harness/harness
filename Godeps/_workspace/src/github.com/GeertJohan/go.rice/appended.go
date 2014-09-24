@@ -75,8 +75,10 @@ func init() {
 		if dirName == "." {
 			dirName = ""
 		}
-		if dir := box.Files[dirName]; dir != nil {
-			dir.children = append(dir.children, af)
+		if fileName != "" { // don't make box root dir a child of itself
+			if dir := box.Files[dirName]; dir != nil {
+				dir.children = append(dir.children, af)
+			}
 		}
 	}
 }
