@@ -395,7 +395,7 @@ func (b *Builder) run() error {
 
 	// attach to the container
 	go func() {
-		b.dockerClient.Containers.Attach(run.ID, &writer{b.Stdout})
+		b.dockerClient.Containers.Attach(run.ID, &writer{b.Stdout, 0})
 	}()
 
 	// start the container

@@ -12,18 +12,33 @@ var (
 	// the prefix used to determine if this is
 	// data that should be stripped from the output
 	prefix = []byte("#DRONE:")
+
+	// default limit to use when streaming build output.
+	DefaultLimit = 2000000
 )
 
 // custom writer to intercept the build
 // output
 type writer struct {
 	io.Writer
+
+	length int
 }
 
 // Write appends the contents of p to the buffer. It will
 // scan for DRONE special formatting codes embedded in the
 // output, and will alter the output accordingly.
 func (w *writer) Write(p []byte) (n int, err error) {
+
+	// ensure we haven't exceeded the limit
+	if w.length > DefaultLimit {
+		w.Writer.Write([]byte("Truncating build output ..."))
+		return len(p), nil
+	}
+
+	// track the number of bytes written to the
+	// buffer so that we can limit it.
+	w.length += len(p)
 
 	lines := strings.Split(string(p), "\n")
 	for i, line := range lines {
