@@ -15,7 +15,6 @@ import (
 )
 
 type RepoHandler struct {
-	remotes database.RemoteManager
 	commits database.CommitManager
 	perms   database.PermManager
 	repos   database.RepoManager
@@ -23,8 +22,8 @@ type RepoHandler struct {
 }
 
 func NewRepoHandler(repos database.RepoManager, commits database.CommitManager,
-	perms database.PermManager, sess session.Session, remotes database.RemoteManager) *RepoHandler {
-	return &RepoHandler{remotes, commits, perms, repos, sess}
+	perms database.PermManager, sess session.Session) *RepoHandler {
+	return &RepoHandler{commits, perms, repos, sess}
 }
 
 // GetRepo gets the named repository.

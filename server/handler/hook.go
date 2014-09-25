@@ -16,12 +16,11 @@ type HookHandler struct {
 	users   database.UserManager
 	repos   database.RepoManager
 	commits database.CommitManager
-	remotes database.RemoteManager
 	queue   chan *model.Request
 }
 
-func NewHookHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, remotes database.RemoteManager, queue chan *model.Request) *HookHandler {
-	return &HookHandler{users, repos, commits, remotes, queue}
+func NewHookHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, queue chan *model.Request) *HookHandler {
+	return &HookHandler{users, repos, commits, queue}
 }
 
 // PostHook receives a post-commit hook from GitHub, Bitbucket, etc

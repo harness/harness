@@ -95,8 +95,6 @@ func main() {
 	users := database.NewUserManager(db)
 	perms := database.NewPermManager(db)
 	commits := database.NewCommitManager(db)
-	servers := database.NewServerManager(db)
-	remotes := database.NewRemoteManager(db)
 
 	// message broker
 	pubsub := pubsub.NewPubSub()
@@ -127,13 +125,11 @@ func main() {
 	router := pat.New()
 	handler.NewUsersHandler(users, sess).Register(router)
 	handler.NewUserHandler(users, repos, commits, sess).Register(router)
-	handler.NewHookHandler(users, repos, commits, remotes, queue).Register(router)
+	handler.NewHookHandler(users, repos, commits, queue).Register(router)
 	handler.NewLoginHandler(users, repos, perms, sess, open).Register(router)
 	handler.NewCommitHandler(users, repos, commits, perms, sess, queue).Register(router)
-	handler.NewRepoHandler(repos, commits, perms, sess, remotes).Register(router)
+	handler.NewRepoHandler(repos, commits, perms, sess).Register(router)
 	handler.NewBadgeHandler(repos, commits).Register(router)
-	handler.NewServerHandler(servers, sess).Register(router)
-	handler.NewRemoteHandler(users, remotes, sess).Register(router)
 	handler.NewWsHandler(repos, commits, perms, sess, pubsub).Register(router)
 
 	box := rice.MustFindBox("app/")
