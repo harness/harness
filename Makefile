@@ -13,7 +13,7 @@ test:
 	go test -cover -short ./...
 
 build:
-	go build -o debian/drone/usr/local/bin/drone  -ldflags "-X main.revision $(SHA)" github.com/drone/drone/cmd
+	go build -o debian/drone/usr/local/bin/drone  -ldflags "-X main.revision $(SHA)" github.com/drone/drone/cli
 	go build -o debian/drone/usr/local/bin/droned -ldflags "-X main.revision $(SHA)" github.com/drone/drone/server
 
 install:
@@ -29,7 +29,7 @@ clean:
 	rm -f debian/drone/usr/local/bin/droned
 	rm -f debian/drone.deb
 	rm -f server/server
-	rm -f cmd/cmd
+	rm -f cli/cli
 
 lessc:
 	lessc --clean-css server/app/styles/drone.less server/app/styles/drone.css
