@@ -28,7 +28,7 @@ type CommitManager interface {
 	ListBranch(repo int64, branch string) ([]*model.Commit, error)
 
 	// ListBranches finds most recent commit for each branch.
-	ListBranches(repo int64) ([]*model.Commit, error)
+	//ListBranches(repo int64) ([]*model.Commit, error)
 
 	// ListUser finds most recent commits for a user.
 	ListUser(repo int64) ([]*model.CommitRepo, error)

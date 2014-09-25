@@ -25,7 +25,7 @@ type PermManager interface {
 
 	// Write returns true if the specified user has write
 	// access to the repository.
-	Write(u *model.User, r *model.Repo) (bool, error)
+	//Write(u *model.User, r *model.Repo) (bool, error)
 
 	// Admin returns true if the specified user is an
 	// administrator of the repository.
@@ -33,7 +33,7 @@ type PermManager interface {
 
 	// Member returns true if the specified user is a
 	// collaborator on the repository.
-	Member(u *model.User, r *model.Repo) (bool, error)
+	//Member(u *model.User, r *model.Repo) (bool, error)
 }
 
 // permManager manages user permissions to access repositories.
