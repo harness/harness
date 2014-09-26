@@ -1,4 +1,4 @@
-package datasql
+package database
 
 import (
 	"github.com/drone/drone/shared/model"
@@ -25,7 +25,7 @@ func (db *Repostore) GetRepo(id int64) (*model.Repo, error) {
 // for the specified remote, owner and name.
 func (db *Repostore) GetRepoName(remote, owner, name string) (*model.Repo, error) {
 	var repo = new(model.Repo)
-	var err = meddler.QueryRow(db, repo, repoNameQuery, remote, owner, name)
+	var err = meddler.QueryRow(db, repo, rebind(repoNameQuery), remote, owner, name)
 	return repo, err
 }
 
@@ -33,7 +33,7 @@ func (db *Repostore) GetRepoName(remote, owner, name string) (*model.Repo, error
 // the datastore accessible by the given user ID.
 func (db *Repostore) GetRepoList(user *model.User) ([]*model.Repo, error) {
 	var repos []*model.Repo
-	var err = meddler.QueryAll(db, &repos, repoListQuery)
+	var err = meddler.QueryAll(db, &repos, rebind(repoListQuery))
 	return repos, err
 }
 
@@ -49,7 +49,7 @@ func (db *Repostore) PutRepo(repo *model.Repo) error {
 
 // DelRepo removes the repo from the datastore.
 func (db *Repostore) DelRepo(repo *model.Repo) error {
-	var _, err = db.Exec(repoDeleteStmt, repo.ID)
+	var _, err = db.Exec(rebind(repoDeleteStmt), repo.ID)
 	return err
 }
 

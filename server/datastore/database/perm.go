@@ -1,4 +1,4 @@
-package datasql
+package database
 
 import (
 	"github.com/drone/drone/shared/model"
@@ -17,7 +17,7 @@ func NewPermstore(db meddler.DB) *Permstore {
 // the datastore for the given repository.
 func (db *Repostore) GetPerm(user *model.User, repo *model.Repo) (*model.Perm, error) {
 	var perm = new(model.Perm)
-	var err = meddler.QueryRow(db, perm, permQuery, user.ID, repo.ID)
+	var err = meddler.QueryRow(db, perm, rebind(permQuery), user.ID, repo.ID)
 	return perm, err
 }
 
@@ -33,7 +33,7 @@ func (db *Repostore) PutPerm(perm *model.Perm) error {
 
 // DelPerm removes permission from the datastore.
 func (db *Repostore) DelPerm(perm *model.Perm) error {
-	var _, err = db.Exec(permDeleteStmt, perm.ID)
+	var _, err = db.Exec(rebind(permDeleteStmt), perm.ID)
 	return err
 }
 
