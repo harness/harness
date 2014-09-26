@@ -46,11 +46,11 @@ type Docker struct {
 func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	if len(d.DockerServer) == 0 || d.DockerServerPort == 0 || len(d.DockerVersion) == 0 ||
 		len(d.ImageName) == 0 {
-		f.WriteCmdSilent(`echo -e "Docker Plugin: Missing argument(s)"\n\n`)
-		if len(d.DockerServer) == 0  { f.WriteCmdSilent(`echo -e "\tdocker_server not defined in yaml`) }
-		if d.DockerServerPort == 0   { f.WriteCmdSilent(`echo -e "\tdocker_port not defined in yaml`) }
-		if len(d.DockerVersion) == 0 { f.WriteCmdSilent(`echo -e "\tdocker_version not defined in yaml`) }
-		if len(d.ImageName) == 0     { f.WriteCmdSilent(`echo -e "\timage_name not defined in yaml`) }
+		f.WriteCmdSilent(`echo -e "Docker Plugin: Missing argument(s)\n\n"`)
+		if len(d.DockerServer) == 0  { f.WriteCmdSilent(`echo -e "\tdocker_server not defined in yaml"`) }
+		if d.DockerServerPort == 0   { f.WriteCmdSilent(`echo -e "\tdocker_port not defined in yaml"`) }
+		if len(d.DockerVersion) == 0 { f.WriteCmdSilent(`echo -e "\tdocker_version not defined in yaml"`) }
+		if len(d.ImageName) == 0     { f.WriteCmdSilent(`echo -e "\timage_name not defined in yaml"`) }
 		return
 	}
 
