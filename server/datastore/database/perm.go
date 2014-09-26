@@ -15,24 +15,24 @@ func NewPermstore(db meddler.DB) *Permstore {
 
 // GetPerm retrieves the User's permission from
 // the datastore for the given repository.
-func (db *Repostore) GetPerm(user *model.User, repo *model.Repo) (*model.Perm, error) {
+func (db *Permstore) GetPerm(user *model.User, repo *model.Repo) (*model.Perm, error) {
 	var perm = new(model.Perm)
 	var err = meddler.QueryRow(db, perm, rebind(permQuery), user.ID, repo.ID)
 	return perm, err
 }
 
 // PostPerm saves permission in the datastore.
-func (db *Repostore) PostPerm(perm *model.Perm) error {
+func (db *Permstore) PostPerm(perm *model.Perm) error {
 	return meddler.Save(db, permTable, perm)
 }
 
 // PutPerm saves permission in the datastore.
-func (db *Repostore) PutPerm(perm *model.Perm) error {
+func (db *Permstore) PutPerm(perm *model.Perm) error {
 	return meddler.Save(db, permTable, perm)
 }
 
 // DelPerm removes permission from the datastore.
-func (db *Repostore) DelPerm(perm *model.Perm) error {
+func (db *Permstore) DelPerm(perm *model.Perm) error {
 	var _, err = db.Exec(rebind(permDeleteStmt), perm.ID)
 	return err
 }

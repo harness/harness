@@ -33,7 +33,7 @@ func (db *Repostore) GetRepoName(remote, owner, name string) (*model.Repo, error
 // the datastore accessible by the given user ID.
 func (db *Repostore) GetRepoList(user *model.User) ([]*model.Repo, error) {
 	var repos []*model.Repo
-	var err = meddler.QueryAll(db, &repos, rebind(repoListQuery))
+	var err = meddler.QueryAll(db, &repos, rebind(repoListQuery), user.ID)
 	return repos, err
 }
 
@@ -80,6 +80,6 @@ WHERE repo_id IN (
 
 // SQL statement to delete a User by ID.
 const repoDeleteStmt = `
-DELETE FROM users
-WHERE user_id = ?
+DELETE FROM repos
+WHERE repo_id = ?
 `
