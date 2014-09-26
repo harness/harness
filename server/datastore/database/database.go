@@ -40,7 +40,7 @@ func Connect(driver, datasource string) (*sql.DB, error) {
 	return migration.Open(driver, datasource, migrations)
 }
 
-// MustConnect is a helper function that create a
+// MustConnect is a helper function that creates a
 // new database commention and auto-generates the
 // database schema. An error causes a panic.
 func MustConnect(driver, datasource string) *sql.DB {

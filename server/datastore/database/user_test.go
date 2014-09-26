@@ -7,7 +7,7 @@ import (
 	"github.com/franela/goblin"
 )
 
-func TestPackagestore(t *testing.T) {
+func TestUserstore(t *testing.T) {
 	db := MustConnect("sqlite3", ":memory:")
 	us := NewUserstore(db)
 	defer db.Close()
