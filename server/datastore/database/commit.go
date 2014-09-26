@@ -1,4 +1,4 @@
-package datasql
+package database
 
 import (
 	"github.com/drone/drone/shared/model"
@@ -25,7 +25,7 @@ func (db *Commitstore) GetCommit(id int64) (*model.Commit, error) {
 // datastore for the specified repo and sha
 func (db *Commitstore) GetCommitSha(repo *model.Repo, branch, sha string) (*model.Commit, error) {
 	var commit = new(model.Commit)
-	var err = meddler.QueryRow(db, commit, commitShaQuery, repo.ID, branch, sha)
+	var err = meddler.QueryRow(db, commit, rebind(commitShaQuery), repo.ID, branch, sha)
 	return commit, err
 }
 
@@ -34,7 +34,7 @@ func (db *Commitstore) GetCommitSha(repo *model.Repo, branch, sha string) (*mode
 // and branch.
 func (db *Commitstore) GetCommitLast(repo *model.Repo, branch string) (*model.Commit, error) {
 	var commit = new(model.Commit)
-	var err = meddler.QueryRow(db, commit, commitLastQuery, repo.ID, branch)
+	var err = meddler.QueryRow(db, commit, rebind(commitLastQuery), repo.ID, branch)
 	return commit, err
 }
 
@@ -42,7 +42,7 @@ func (db *Commitstore) GetCommitLast(repo *model.Repo, branch string) (*model.Co
 // from the datastore for the specified repository.
 func (db *Commitstore) GetCommitList(repo *model.Repo) ([]*model.Commit, error) {
 	var commits []*model.Commit
-	var err = meddler.QueryAll(db, &commits, commitListQuery)
+	var err = meddler.QueryAll(db, &commits, rebind(commitListQuery))
 	return commits, err
 }
 
@@ -64,14 +64,14 @@ func (db *Commitstore) PutCommit(commit *model.Commit) error {
 
 // DelCommit removes the commit from the datastore.
 func (db *Commitstore) DelCommit(commit *model.Commit) error {
-	var _, err = db.Exec(commitDeleteStmt, commit.ID)
+	var _, err = db.Exec(rebind(commitDeleteStmt), commit.ID)
 	return err
 }
 
 // KillCommits updates all pending or started commits
 // in the datastore settings the status to killed.
 func (db *Commitstore) KillCommits() error {
-	var _, err = db.Exec(commitKillStmt)
+	var _, err = db.Exec(rebind(commitKillStmt))
 	return err
 }
 

@@ -1,4 +1,4 @@
-package datasql
+package database
 
 import (
 	"github.com/drone/drone/shared/model"
@@ -15,7 +15,7 @@ func NewUserstore(db meddler.DB) *Userstore {
 
 // GetUser retrieves a specific user from the
 // datastore for the given ID.
-func (db *Repostore) GetUser(id int64) (*model.User, error) {
+func (db *Userstore) GetUser(id int64) (*model.User, error) {
 	var usr = new(model.User)
 	var err = meddler.Load(db, userTable, usr, id)
 	return usr, err
@@ -23,41 +23,41 @@ func (db *Repostore) GetUser(id int64) (*model.User, error) {
 
 // GetUserLogin retrieves a user from the datastore
 // for the specified remote and login name.
-func (db *Repostore) GetUserLogin(remote, login string) (*model.User, error) {
+func (db *Userstore) GetUserLogin(remote, login string) (*model.User, error) {
 	var usr = new(model.User)
-	var err = meddler.QueryRow(db, usr, userLoginQuery)
+	var err = meddler.QueryRow(db, usr, rebind(userLoginQuery), remote, login)
 	return usr, err
 }
 
 // GetUserToken retrieves a user from the datastore
 // with the specified token.
-func (db *Repostore) GetUserToken(token string) (*model.User, error) {
+func (db *Userstore) GetUserToken(token string) (*model.User, error) {
 	var usr = new(model.User)
-	var err = meddler.QueryRow(db, usr, userTokenQuery)
+	var err = meddler.QueryRow(db, usr, rebind(userTokenQuery), token)
 	return usr, err
 }
 
 // GetUserList retrieves a list of all users from
 // the datastore that are registered in the system.
-func (db *Repostore) GetUserList() ([]*model.User, error) {
+func (db *Userstore) GetUserList() ([]*model.User, error) {
 	var users []*model.User
-	var err = meddler.QueryAll(db, &users, userListQuery)
+	var err = meddler.QueryAll(db, &users, rebind(userListQuery))
 	return users, err
 }
 
 // PostUser saves a User in the datastore.
-func (db *Repostore) PostUser(user *model.User) error {
+func (db *Userstore) PostUser(user *model.User) error {
 	return meddler.Save(db, userTable, user)
 }
 
 // PutUser saves a user in the datastore.
-func (db *Repostore) PutUser(user *model.User) error {
+func (db *Userstore) PutUser(user *model.User) error {
 	return meddler.Save(db, userTable, user)
 }
 
 // DelUser removes the user from the datastore.
-func (db *Repostore) DelUser(user *model.User) error {
-	var _, err = db.Exec(userDeleteStmt, user.ID)
+func (db *Userstore) DelUser(user *model.User) error {
+	var _, err = db.Exec(rebind(userDeleteStmt), user.ID)
 	return err
 }
 
