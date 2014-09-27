@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"os"
 
 	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/server/datastore/database/migrate"
@@ -41,9 +42,29 @@ func Connect(driver, datasource string) (*sql.DB, error) {
 }
 
 // MustConnect is a helper function that creates a
-// new database commention and auto-generates the
+// new database connection and auto-generates the
 // database schema. An error causes a panic.
 func MustConnect(driver, datasource string) *sql.DB {
+	db, err := Connect(driver, datasource)
+	if err != nil {
+		panic(err)
+	}
+	return db
+}
+
+// mustConnectTest is a helper function that creates a
+// new database connection using environment variables.
+// If not environment varaibles are found, the default
+// in-memory SQLite database is used.
+func mustConnectTest() *sql.DB {
+	var (
+		driver     = os.Getenv("TEST_DRIVER")
+		datasource = os.Getenv("TEST_DATASOURCE")
+	)
+	if len(driver) == 0 {
+		driver = driverSqlite
+		datasource = ":memory:"
+	}
 	db, err := Connect(driver, datasource)
 	if err != nil {
 		panic(err)

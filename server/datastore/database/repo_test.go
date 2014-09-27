@@ -8,7 +8,7 @@ import (
 )
 
 func TestRepostore(t *testing.T) {
-	db := MustConnect("sqlite3", ":memory:")
+	db := mustConnectTest()
 	rs := NewRepostore(db)
 	ps := NewPermstore(db)
 	defer db.Close()
