@@ -8,7 +8,7 @@ import (
 )
 
 func TestUserstore(t *testing.T) {
-	db := MustConnect("sqlite3", ":memory:")
+	db := mustConnectTest()
 	us := NewUserstore(db)
 	defer db.Close()
 
