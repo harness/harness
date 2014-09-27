@@ -42,7 +42,7 @@ func (db *Commitstore) GetCommitLast(repo *model.Repo, branch string) (*model.Co
 // from the datastore for the specified repository.
 func (db *Commitstore) GetCommitList(repo *model.Repo) ([]*model.Commit, error) {
 	var commits []*model.Commit
-	var err = meddler.QueryAll(db, &commits, rebind(commitListQuery))
+	var err = meddler.QueryAll(db, &commits, rebind(commitListQuery), repo.ID)
 	return commits, err
 }
 
@@ -115,9 +115,6 @@ LIMIT 1
 
 // SQL statement to cancel all running Commits.
 const commitKillStmt = `
-UPDATE commits SET
-commit_status   = ?,
-commit_started  = ?,
-commit_finished = ?
+UPDATE commits SET commit_status = 'Killed'
 WHERE commit_status IN ('Started', 'Pending');
 `
