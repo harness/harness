@@ -16,14 +16,14 @@
 						</div>
 					</div>
 
-					<div ng-if="remote.type != 'github.com' && remote.type != 'bitbucket.org' ">
+					<div ng-if="remote.type != 'github.com' && remote.type != 'bitbucket.org' && remote.type != 'gogs' ">
 						<label>API URL</label>
 						<div ng-switch="remote.type">
 							<input ng-switch-default ng-model="remote.api" type="text" placeholder="https://www.foo.com/api" />
 						</div>
 					</div>
 
-					<div ng-if="remote.type != 'gitlab.com'">
+					<div ng-if="remote.type != 'gitlab.com' && remote.type != 'gogs' ">
 						<label>OAuth Client</label>
 						<div>
 							<input type="text" ng-model="remote.client" />
