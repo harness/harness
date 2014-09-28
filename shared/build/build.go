@@ -41,6 +41,8 @@ func New(dockerClient *docker.Client) *Builder {
 // Builder represents a build process being prepared
 // to run.
 type Builder struct {
+	Index int
+
 	// Image specifies the Docker Image that will be
 	// used to virtualize the Build process.
 	Build *script.Build
@@ -118,7 +120,7 @@ func (b *Builder) Run() error {
 	case err := <-c:
 		return err
 	case <-time.After(b.Timeout):
-		log.Errf("time limit exceeded for build %s", b.Build.Name)
+		log.Errf("time limit exceeded for build %s", b.Build.Matrix[b.Index].Name)
 		b.BuildState.ExitCode = 124
 		b.BuildState.Finished = time.Now().UTC().Unix()
 		return nil
@@ -126,7 +128,6 @@ func (b *Builder) Run() error {
 }
 
 func (b *Builder) setup() error {
-
 	// temp directory to store all files required
 	// to generate the Docker image.
 	dir, err := ioutil.TempDir("", "drone-")
@@ -138,15 +139,20 @@ func (b *Builder) setup() error {
 	defer os.RemoveAll(dir)
 
 	// make sure the image isn't empty. this would be bad
-	if len(b.Build.Image) == 0 {
-		log.Err("Fatal Error, No Docker Image specified")
-		return fmt.Errorf("Error: missing Docker image")
+	if len(b.Build.Matrix[b.Index].Image) == 0 {
+		if len(b.Build.Image) == 0 {
+			log.Err("Fatal Error, No Docker Image specified")
+			return fmt.Errorf("Error: missing Docker image")
+		} else {
+			// Matrix inherits image
+			b.Build.Matrix[b.Index].Image = b.Build.Image
+		}
 	}
 
 	// if we're using an alias for the build name we
 	// should substitute it now
-	if alias, ok := builders[b.Build.Image]; ok {
-		b.Build.Image = alias.Tag
+	if alias, ok := builders[b.Build.Matrix[b.Index].Image]; ok {
+		b.Build.Matrix[b.Index].Image = alias.Tag
 	}
 
 	// if this is a local repository we should symlink
@@ -171,9 +177,13 @@ func (b *Builder) setup() error {
 		}
 	}
 
+	for _, service := range b.Build.Services {
+		b.Build.Matrix[b.Index].Services = append(b.Build.Matrix[b.Index].Services, service)
+	}
+
 	// start all services required for the build
 	// that will get linked to the container.
-	for _, service := range b.Build.Services {
+	for _, service := range b.Build.Matrix[b.Index].Services {
 
 		// Parse the name of the Docker image
 		// And then construct a fully qualified image name
@@ -239,9 +249,9 @@ func (b *Builder) setup() error {
 
 	// check for build container (ie bradrydzewski/go:1.2)
 	// and download if it doesn't already exist
-	if _, err := b.dockerClient.Images.Inspect(b.Build.Image); err == docker.ErrNotFound {
+	if _, err := b.dockerClient.Images.Inspect(b.Build.Matrix[b.Index].Image); err == docker.ErrNotFound {
 		// download the image if it doesn't exist
-		if err := b.dockerClient.Images.Pull(b.Build.Image); err != nil {
+		if err := b.dockerClient.Images.Pull(b.Build.Matrix[b.Index].Image); err != nil {
 			return err
 		}
 	}
@@ -290,7 +300,7 @@ func (b *Builder) teardown() error {
 	// stop and destroy the container services
 	for i, container := range b.services {
 		// debugging
-		log.Infof("removing service container %s", b.Build.Services[i])
+		log.Infof("removing service container %s", b.Build.Matrix[b.Index].Services[i])
 
 		// stop the service container, ignore the error
 		b.dockerClient.Containers.Stop(container.ID, 15)
@@ -329,12 +339,12 @@ func (b *Builder) run() error {
 	}
 
 	// debugging
-	log.Noticef("starting build %s", b.Build.Name)
+	log.Noticef("starting build %s", b.Build.Matrix[b.Index].Name)
 
 	// link service containers
 	for i, service := range b.services {
 		// convert name of the image to a slug
-		_, name, _ := parseImageName(b.Build.Services[i])
+		_, name, _ := parseImageName(b.Build.Matrix[b.Index].Services[i])
 
 		// link the service container to our
 		// build container.
@@ -355,7 +365,7 @@ func (b *Builder) run() error {
 
 	// link cached volumes
 	conf.Volumes = make(map[string]struct{})
-	for _, volume := range b.Build.Cache {
+	for _, volume := range b.Build.Matrix[b.Index].Cache {
 		name := filepath.Clean(b.Repo.Name)
 		branch := filepath.Clean(b.Repo.Branch)
 		volume := filepath.Clean(volume)
@@ -426,7 +436,7 @@ func (b *Builder) run() error {
 // Dockerfile and writes to the builds temporary directory
 // so that it can be used to create the Image.
 func (b *Builder) writeDockerfile(dir string) error {
-	var dockerfile = dockerfile.New(b.Build.Image)
+	var dockerfile = dockerfile.New(b.Build.Matrix[b.Index].Image)
 	dockerfile.WriteWorkdir(b.Repo.Dir)
 	dockerfile.WriteAdd("drone", "/usr/local/bin/")
 
@@ -437,8 +447,8 @@ func (b *Builder) writeDockerfile(dir string) error {
 	}
 
 	switch {
-	case strings.HasPrefix(b.Build.Image, "bradrydzewski/"),
-		strings.HasPrefix(b.Build.Image, "drone/"):
+	case strings.HasPrefix(b.Build.Matrix[b.Index].Image, "bradrydzewski/"),
+		strings.HasPrefix(b.Build.Matrix[b.Index].Image, "drone/"):
 		// the default user for all official Drone imnage
 		// is the "ubuntu" user, since all build images
 		// inherit from the ubuntu cloud ISO
@@ -491,6 +501,8 @@ func (b *Builder) writeBuildScript(dir string) error {
 	f.WriteEnv("DRONE_COMMIT", b.Repo.Commit)
 	f.WriteEnv("DRONE_PR", b.Repo.PR)
 	f.WriteEnv("DRONE_BUILD_DIR", b.Repo.Dir)
+	f.WriteEnv("DRONE_BUILD_INDEX", string(b.Index+1))
+	f.WriteEnvIsolate("DRONE_BUILD_NAME", b.Build.Matrix[b.Index].Name)
 
 	// add environment variables for code coverage
 	// systems, like coveralls.
@@ -502,7 +514,7 @@ func (b *Builder) writeBuildScript(dir string) error {
 	f.WriteEnv("CI_PULL_REQUEST", b.Repo.PR)
 
 	// add /etc/hosts entries
-	for _, mapping := range b.Build.Hosts {
+	for _, mapping := range b.Build.Matrix[b.Index].Hosts {
 		f.WriteHost(mapping)
 	}
 
@@ -519,10 +531,10 @@ func (b *Builder) writeBuildScript(dir string) error {
 	// we should only execute the build commands,
 	// and omit the deploy and publish commands.
 	if len(b.Repo.PR) == 0 {
-		b.Build.Write(f, b.Repo)
+		b.Build.Write(f, b.Repo, b.Index)
 	} else {
 		// only write the build commands
-		b.Build.WriteBuild(f)
+		b.Build.WriteBuild(f, b.Index)
 	}
 
 	scriptfilePath := filepath.Join(dir, "drone")

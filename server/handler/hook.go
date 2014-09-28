@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -16,11 +17,12 @@ type HookHandler struct {
 	users   database.UserManager
 	repos   database.RepoManager
 	commits database.CommitManager
+	builds  database.BuildManager
 	queue   chan *model.Request
 }
 
-func NewHookHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, queue chan *model.Request) *HookHandler {
-	return &HookHandler{users, repos, commits, queue}
+func NewHookHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, builds database.BuildManager, queue chan *model.Request) *HookHandler {
+	return &HookHandler{users, repos, commits, builds, queue}
 }
 
 // PostHook receives a post-commit hook from GitHub, Bitbucket, etc
@@ -95,6 +97,33 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 		return badRequest{err}
 	}
 
+	// Create builds
+	var builds []*model.Build
+	if s.Matrix == nil {
+		build := model.Build{
+			Name:     "Build 1",
+			Index:    1,
+			CommitID: c.ID,
+		}
+		h.builds.Insert(&build)
+		builds = append(builds, &build)
+	} else {
+		for i, matrix := range s.Matrix {
+			build := model.Build{
+				Name:      matrix.Name,
+				Index:     int64(i) + 1,
+				CommitID:  c.ID,
+				AllowFail: matrix.AllowFail,
+			}
+			if len(matrix.Name) == 0 {
+				build.Name = fmt.Sprintf("Build %s", string(i+1))
+			}
+
+			h.builds.Insert(&build)
+			builds = append(builds, &build)
+		}
+	}
+
 	//fmt.Printf("%s", yml)
 	owner, err := h.users.Find(repo.UserID)
 	if err != nil {
@@ -108,6 +137,7 @@ func (h *HookHandler) PostHook(w http.ResponseWriter, r *http.Request) error {
 			Host:   httputil.GetURL(r),
 			Repo:   repo,
 			Commit: &c,
+			Builds: builds,
 		}
 	}()
 

@@ -46,6 +46,10 @@ func (b *Buildfile) WriteEnv(key, value string) {
 	b.WriteString(fmt.Sprintf("export %s=%s\n", key, value))
 }
 
+func (b *Buildfile) WriteEnvIsolate(key, value string) {
+	b.WriteString(fmt.Sprintf("export %s='%s'\n", key, value))
+}
+
 // WriteHost adds an entry to the /etc/hosts file.
 func (b *Buildfile) WriteHost(mapping string) {
 	b.WriteCmdSilent(fmt.Sprintf("[ -f /usr/bin/sudo ] || echo %q | tee -a /etc/hosts", mapping))

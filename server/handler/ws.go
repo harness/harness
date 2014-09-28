@@ -33,14 +33,15 @@ var upgrader = websocket.Upgrader{
 
 type WsHandler struct {
 	pubsub  *pubsub.PubSub
+	builds  database.BuildManager
 	commits database.CommitManager
 	perms   database.PermManager
 	repos   database.RepoManager
 	sess    session.Session
 }
 
-func NewWsHandler(repos database.RepoManager, commits database.CommitManager, perms database.PermManager, sess session.Session, pubsub *pubsub.PubSub) *WsHandler {
-	return &WsHandler{pubsub, commits, perms, repos, sess}
+func NewWsHandler(repos database.RepoManager, builds database.BuildManager, commits database.CommitManager, perms database.PermManager, sess session.Session, pubsub *pubsub.PubSub) *WsHandler {
+	return &WsHandler{pubsub, builds, commits, perms, repos, sess}
 }
 
 // WsUser will upgrade the connection to a Websocket and will stream
@@ -110,7 +111,13 @@ func (h *WsHandler) WsUser(w http.ResponseWriter, r *http.Request) error {
 // WsConsole will upgrade the connection to a Websocket and will stream
 // the build output to the browser.
 func (h *WsHandler) WsConsole(w http.ResponseWriter, r *http.Request) error {
-	var commitID, _ = strconv.Atoi(r.FormValue(":id"))
+	var commitID, _ = strconv.Atoi(r.FormValue(":commit"))
+	var buildIndex, _ = strconv.Atoi(r.FormValue(":build"))
+
+	build, err := h.builds.Find(int64(buildIndex), int64(commitID))
+	if err != nil {
+		return notFound{err}
+	}
 
 	commit, err := h.commits.Find(int64(commitID))
 	if err != nil {
@@ -127,7 +134,7 @@ func (h *WsHandler) WsConsole(w http.ResponseWriter, r *http.Request) error {
 
 	// find a channel that we can subscribe to
 	// and listen for stream updates.
-	channel := h.pubsub.Lookup(commit.ID)
+	channel := h.pubsub.Lookup(build.ID)
 	if channel == nil {
 		return notFound{}
 	}
@@ -157,19 +164,19 @@ func (h *WsHandler) WsConsole(w http.ResponseWriter, r *http.Request) error {
 				ws.SetWriteDeadline(time.Now().Add(writeWait))
 				err := ws.WriteMessage(websocket.TextMessage, data)
 				if err != nil {
-					log.Printf("websocket for commit %d closed. Err: %s\n", commitID, err)
+					log.Printf("websocket for build %d closed. Err: %s\n", build.ID, err)
 					ws.Close()
 					return
 				}
 			case <-sub.CloseNotify():
-				log.Printf("websocket for commit %d closed by client\n", commitID)
+				log.Printf("websocket for build %d closed by client\n", build.ID)
 				ws.Close()
 				return
 			case <-ticker.C:
 				ws.SetWriteDeadline(time.Now().Add(writeWait))
 				err := ws.WriteMessage(websocket.PingMessage, []byte{})
 				if err != nil {
-					log.Printf("websocket for commit %d closed. Err: %s\n", commitID, err)
+					log.Printf("websocket for build %d closed. Err: %s\n", build.ID, err)
 					ws.Close()
 					return
 				}
@@ -200,5 +207,5 @@ func readWebsocket(ws *websocket.Conn) {
 
 func (h *WsHandler) Register(r *pat.Router) {
 	r.Get("/ws/user", errorHandler(h.WsUser))
-	r.Get("/ws/stdout/{id}", errorHandler(h.WsConsole))
+	r.Get("/ws/stdout/{commit}/{build}", errorHandler(h.WsConsole))
 }

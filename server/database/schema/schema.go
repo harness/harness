@@ -79,12 +79,22 @@ var stmts = []string{`
 		,commit_created    INTEGER
 		,commit_updated    INTEGER
 		,UNIQUE(commit_sha, commit_branch, repo_id)
-	);`, `
-	CREATE TABLE IF NOT EXISTS output (
-		 output_id         INTEGER PRIMARY KEY AUTOINCREMENT
+	);`, ` 
+	CREATE TABLE IF NOT EXISTS builds (
+		 build_id		   INTEGER PRIMARY KEY AUTOINCREMENT
 		,commit_id         INTEGER
-		,output_raw        BLOB
-		,UNIQUE(commit_id)
+		,build_index       INTEGER
+		,build_name        VARCHAR(255)
+		,build_status      VARCHAR(255)
+		,build_started     INTEGER
+		,build_finished    INTEGER
+		,build_duration    INTEGER
+		,build_allow_fail  BOOLEAN
+		,build_output      BLOB
+		,build_created     INTEGER
+		,build_updated     INTEGER
+		,UNIQUE(build_id, commit_id)
+		,UNIQUE(build_index, commit_id)
 	);`, `
 	CREATE TABLE IF NOT EXISTS remotes (
 		 remote_id         INTEGER PRIMARY KEY AUTOINCREMENT

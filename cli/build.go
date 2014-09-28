@@ -18,6 +18,12 @@ import (
 
 const EXIT_STATUS = 1
 
+type Result struct {
+	Code     int
+	Name     string
+	Duration time.Duration
+}
+
 // NewBuildCommand returns the CLI command for "build".
 func NewBuildCommand() cli.Command {
 	return cli.Command{
@@ -71,24 +77,48 @@ func buildCommandFunc(c *cli.Context) {
 	log.SetPriority(log.LOG_DEBUG) //LOG_NOTICE
 	docker.Logging = false
 
-	var exit, _ = run(path, identity, privileged)
-	os.Exit(exit)
+	status_codes, _ := run(path, identity, privileged)
+	var exit_code int
+	for _, v := range status_codes {
+		if v.Code > exit_code {
+			exit_code = v.Code
+		}
+
+		switch {
+		case v.Code == 0:
+			fmt.Printf(" \033[32m\u2713\033[0m %v \033[90m(%v)\033[0m\n", v.Name, humanizeDuration(v.Duration*time.Second))
+		case v.Code != 0:
+			fmt.Printf(" \033[31m\u2717\033[0m %v \033[90m(%v)\033[0m\n", v.Name, humanizeDuration(v.Duration*time.Second))
+		}
+	}
+	os.Exit(exit_code)
 }
 
-func run(path, identity string, privileged bool) (int, error) {
-	dockerClient := docker.New()
+func run(path, identity string, privileged bool) ([]*Result, error) {
+	var results []*Result
 
 	// parse the Drone yml file
 	s, err := script.ParseBuildFile(path)
 	if err != nil {
 		log.Err(err.Error())
-		return EXIT_STATUS, err
+		results := append(results, &Result{EXIT_STATUS, "DRONE_YAML_PARSE", 0})
+		return results, err
 	}
 
+	for i, b := range s.Matrix {
+		code, name, duration := build_matrix(s, b, i, path, identity, privileged)
+		results = append(results, &Result{code, name, duration})
+	}
+
+	return results, nil
+}
+
+func build_matrix(s *script.Build, b *script.Matrix, i int, path, identity string, priveleged bool) (int, string, time.Duration) {
+	dockerClient := docker.New()
 	// remove deploy & publish sections
 	// for now, until I fix bug
-	s.Publish = nil
-	s.Deploy = nil
+	s.Matrix[i].Publish = nil
+	s.Matrix[i].Deploy = nil
 
 	// get the repository root directory
 	dir := filepath.Dir(path)
@@ -122,43 +152,36 @@ func run(path, identity string, privileged bool) (int, error) {
 
 	// ssh key to import into container
 	var key []byte
+	var err error
 	if len(identity) != 0 {
 		key, err = ioutil.ReadFile(identity)
 		if err != nil {
+			// loop through and print results
 			fmt.Printf("[Error] Could not find or read identity file %s\n", identity)
-			return EXIT_STATUS, err
+			return EXIT_STATUS, b.Name, 0
 		}
 	}
 
 	// loop through and create builders
 	builder := build.New(dockerClient)
+	builder.Index = i
 	builder.Build = s
 	builder.Repo = &code
 	builder.Key = key
 	builder.Stdout = os.Stdout
 	// TODO ADD THIS BACK
 	builder.Timeout = 300 * time.Minute
-	builder.Privileged = privileged
+	builder.Privileged = priveleged
 
 	// execute the build
 	if err := builder.Run(); err != nil {
+		res := builder.BuildState
+		duration := time.Duration(res.Finished - res.Started)
 		log.Errf("Error executing build: %s", err.Error())
-		return EXIT_STATUS, err
+		return EXIT_STATUS, b.Name, duration
 	}
 
-	fmt.Printf("\nDrone Build Results \033[90m(%s)\033[0m\n", dir)
-
-	// loop through and print results
-
-	build := builder.Build
 	res := builder.BuildState
 	duration := time.Duration(res.Finished - res.Started)
-	switch {
-	case builder.BuildState.ExitCode == 0:
-		fmt.Printf(" \033[32m\u2713\033[0m %v \033[90m(%v)\033[0m\n", build.Name, humanizeDuration(duration*time.Second))
-	case builder.BuildState.ExitCode != 0:
-		fmt.Printf(" \033[31m\u2717\033[0m %v \033[90m(%v)\033[0m\n", build.Name, humanizeDuration(duration*time.Second))
-	}
-
-	return builder.BuildState.ExitCode, nil
+	return builder.BuildState.ExitCode, b.Name, duration
 }

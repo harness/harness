@@ -3,6 +3,8 @@ package worker
 import (
 	"log"
 	"path/filepath"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/drone/drone/plugin/notify"
@@ -25,6 +27,7 @@ type worker struct {
 	users   database.UserManager
 	repos   database.RepoManager
 	commits database.CommitManager
+	builds  database.BuildManager
 	//config  database.ConfigManager
 	pubsub *pubsub.PubSub
 	server *model.Server
@@ -34,11 +37,12 @@ type worker struct {
 	quit     chan bool
 }
 
-func NewWorker(dispatch chan chan *model.Request, users database.UserManager, repos database.RepoManager, commits database.CommitManager /*config database.ConfigManager,*/, pubsub *pubsub.PubSub, server *model.Server) Worker {
+func NewWorker(dispatch chan chan *model.Request, users database.UserManager, repos database.RepoManager, commits database.CommitManager, builds database.BuildManager /*config database.ConfigManager,*/, pubsub *pubsub.PubSub, server *model.Server) Worker {
 	return &worker{
 		users:   users,
 		repos:   repos,
 		commits: commits,
+		builds:  builds,
 		//config:   config,
 		pubsub:   pubsub,
 		server:   server,
@@ -85,16 +89,6 @@ func (w *worker) Execute(r *model.Request) {
 	r.Commit.Started = time.Now().UTC().Unix()
 	w.commits.Update(r.Commit)
 
-	// notify all listeners that the build is started
-	commitc := w.pubsub.Register("_global")
-	commitc.Publish(r)
-	stdoutc := w.pubsub.RegisterOpts(r.Commit.ID, pubsub.ConsoleOpts)
-	defer stdoutc.Close()
-
-	// create a special buffer that will also
-	// write to a websocket channel
-	buf := pubsub.NewBuffer(stdoutc)
-
 	// parse the parameters and build script. The script has already
 	// been parsed in the hook, so we can be confident it will succeed.
 	// that being said, we should clean this up
@@ -136,6 +130,10 @@ func (w *worker) Execute(r *model.Request) {
 		dockerClient = docker.NewHost(w.server.Host)
 	}
 
+	// notify all listeners that the build is started
+	commitc := w.pubsub.Register("_global")
+	commitc.Publish(r)
+
 	// send all "started" notifications
 	if script.Notifications == nil {
 		script.Notifications = &notify.Notification{}
@@ -143,30 +141,85 @@ func (w *worker) Execute(r *model.Request) {
 	script.Notifications.Send(r)
 
 	// create an instance of the Docker builder
-	builder := build.New(dockerClient)
-	builder.Build = script
-	builder.Repo = repo
-	builder.Stdout = buf
-	builder.Key = []byte(r.Repo.PrivateKey)
-	builder.Timeout = time.Duration(r.Repo.Timeout) * time.Second
-	builder.Privileged = r.Repo.Privileged
+	var names []string
+	var wg sync.WaitGroup
+	wg.Add(len(r.Builds))
 
-	// run the build
-	err = builder.Run()
+	for _, b := range r.Builds {
+		current_index := b.Index - 1
+		current_build := b
+
+		names = append(names, b.Name)
+
+		current_build.Status = model.StatusStarted
+		current_build.Started = time.Now().UTC().Unix()
+		w.builds.Update(current_build)
+		go func() {
+			stdoutc := w.pubsub.RegisterOpts(current_build.ID, pubsub.ConsoleOpts)
+			defer stdoutc.Close()
+
+			// create a special buffer that will also
+			// write to a websocket channel
+			buf := pubsub.NewBuffer(stdoutc)
+
+			builder := build.New(dockerClient)
+			builder.Index = int(current_index)
+			builder.Build = script
+			builder.Repo = repo
+			builder.Stdout = buf
+			builder.Key = []byte(r.Repo.PrivateKey)
+			builder.Timeout = time.Duration(r.Repo.Timeout) * time.Second
+			builder.Privileged = r.Repo.Privileged
+
+			// run the build
+			err = builder.Run()
+
+			switch {
+			case err != nil:
+				current_build.Status = model.StatusError
+				log.Printf("Error building %s, Commit: %s, Err: %s", current_build.Name, r.Commit.Sha, err)
+				buf.WriteString(err.Error())
+			case builder.BuildState == nil:
+				current_build.Status = model.StatusFailure
+			case builder.BuildState.ExitCode != 0:
+				current_build.Status = model.StatusFailure
+			default:
+				current_build.Status = model.StatusSuccess
+			}
+
+			if current_build.Status != model.StatusSuccess && current_build.AllowFail {
+				current_build.Status = model.StatusAllowFailure
+			}
+
+			current_build.Finished = time.Now().UTC().Unix()
+			current_build.Duration = (current_build.Finished - current_build.Started)
+			current_build.Output = string(buf.Bytes())
+
+			err := w.builds.Update(current_build)
+			if err != nil {
+				log.Printf("Error saving result: %s, Err: %s", current_build.Name, err)
+			}
+
+			wg.Done()
+		}()
+	}
 
 	// update the build status based on the results
 	// from the build runner.
-	switch {
-	case err != nil:
+	wg.Wait()
+
+	builds, err := w.builds.FindCommit(r.Commit.ID)
+	if err != nil {
 		r.Commit.Status = model.StatusError
 		log.Printf("Error building %s, Err: %s", r.Commit.Sha, err)
-		buf.WriteString(err.Error())
-	case builder.BuildState == nil:
-		r.Commit.Status = model.StatusFailure
-	case builder.BuildState.ExitCode != 0:
-		r.Commit.Status = model.StatusFailure
-	default:
-		r.Commit.Status = model.StatusSuccess
+	} else {
+		for _, build := range builds {
+			r.Commit.Status = build.Status
+
+			if r.Commit.Status != model.StatusSuccess && build.Status != model.StatusAllowFailure {
+				break
+			}
+		}
 	}
 
 	// calcualte the build finished and duration details and
@@ -174,11 +227,11 @@ func (w *worker) Execute(r *model.Request) {
 	r.Commit.Finished = time.Now().UTC().Unix()
 	r.Commit.Duration = (r.Commit.Finished - r.Commit.Started)
 	w.commits.Update(r.Commit)
-	w.commits.UpdateOutput(r.Commit, buf.Bytes())
 
 	// notify all listeners that the build is finished
 	commitc.Publish(r)
 
 	// send all "finished" notifications
 	script.Notifications.Send(r)
+	log.Printf("Builds (%s) for commit (%s) finished, with %s status", strings.Join(names, ", "), r.Commit.ShaShort(), r.Commit.Status)
 }

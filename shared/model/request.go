@@ -1,9 +1,10 @@
 package model
 
 type Request struct {
-	Host   string  `json:"-"`
-	User   *User   `json:"-"`
-	Repo   *Repo   `json:"repo"`
-	Commit *Commit `json:"commit"`
-	Server *Server `json:"-"`
+	Host   string   `json:"-"`
+	User   *User    `json:"-"`
+	Repo   *Repo    `json:"repo"`
+	Commit *Commit  `json:"commit"`
+	Server *Server  `json:"-"`
+	Builds []*Build `json:"builds"`
 }

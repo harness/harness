@@ -76,11 +76,14 @@ func TestSetup(t *testing.T) {
 		w.Write([]byte(body))
 	})
 
+	yaml := &script.Build{}
+	yaml.Matrix = append(yaml.Matrix, &script.Matrix{Image: "go1.2", Name: "hello"})
+
 	b := Builder{}
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
-	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
+	b.Index = 0
+	b.Build = yaml
 	b.dockerClient = client
 
 	if err := b.setup(); err != nil {
@@ -101,7 +104,10 @@ func TestSetup(t *testing.T) {
 // TestSetupEmptyImage will test our ability to handle a nil or
 // blank Docker build image. We expect this to return an error.
 func TestSetupEmptyImage(t *testing.T) {
-	b := Builder{Build: &script.Build{}}
+	yaml := &script.Build{}
+	yaml.Matrix = append(yaml.Matrix, &script.Matrix{Name: "hello"})
+
+	b := Builder{Build: yaml, Index: 0}
 	var got, want = b.setup(), "Error: missing Docker image"
 
 	if got == nil || got.Error() != want {
@@ -143,11 +149,14 @@ func TestSetupErrorRunDaemonPorts(t *testing.T) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
+	yaml := &script.Build{}
+	yaml.Matrix = append(yaml.Matrix, &script.Matrix{Image: "go1.2", Name: "hello"})
+
 	b := Builder{}
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
-	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
+	b.Index = 0
+	b.Build = yaml
 	b.Build.Services = append(b.Build.Services, "mysql")
 	b.dockerClient = client
 
@@ -182,11 +191,14 @@ func TestSetupErrorServiceInspect(t *testing.T) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
+	yaml := &script.Build{}
+	yaml.Matrix = append(yaml.Matrix, &script.Matrix{Image: "go1.2", Name: "hello"})
+
 	b := Builder{}
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
-	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
+	b.Index = 0
+	b.Build = yaml
 	b.Build.Services = append(b.Build.Services, "mysql")
 	b.dockerClient = client
 
@@ -210,11 +222,14 @@ func TestSetupErrorImagePull(t *testing.T) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
+	yaml := &script.Build{}
+	yaml.Matrix = append(yaml.Matrix, &script.Matrix{Image: "go1.2", Name: "hello"})
+
 	b := Builder{}
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
-	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
+	b.Index = 0
+	b.Build = yaml
 	b.Build.Services = append(b.Build.Services, "mysql")
 	b.dockerClient = client
 
@@ -240,11 +255,14 @@ func TestSetupErrorBuild(t *testing.T) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
+	yaml := &script.Build{}
+	yaml.Matrix = append(yaml.Matrix, &script.Matrix{Image: "go1.2", Name: "hello"})
+
 	b := Builder{}
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
-	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
+	b.Index = 0
+	b.Build = yaml
 	b.dockerClient = client
 
 	var got, want = b.setup(), docker.ErrBadRequest
@@ -275,11 +293,14 @@ func TestSetupErrorBuildInspect(t *testing.T) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
+	yaml := &script.Build{}
+	yaml.Matrix = append(yaml.Matrix, &script.Matrix{Image: "go1.2", Name: "hello"})
+
 	b := Builder{}
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
-	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
+	b.Index = 0
+	b.Build = yaml
 	b.dockerClient = client
 
 	var got, want = b.setup(), docker.ErrBadRequest
@@ -327,12 +348,15 @@ func TestTeardown(t *testing.T) {
 		w.Write([]byte(`[{"Untagged":"c3ab8ff137"},{"Deleted":"c3ab8ff137"}]`))
 	})
 
+	yaml := &script.Build{}
+	yaml.Matrix = append(yaml.Matrix, &script.Matrix{Image: "go1.2", Name: "hello", Services: []string{"mysql"}})
+
 	b := Builder{}
 	b.dockerClient = client
 	b.services = append(b.services, &docker.Container{ID: "ec62dcc736"})
 	b.container = &docker.Run{ID: "7bf9ce0ffb"}
 	b.image = &docker.Image{ID: "c3ab8ff137"}
-	b.Build = &script.Build{Services: []string{"mysql"}}
+	b.Build = yaml
 	b.teardown()
 
 	if !containerStopped {
@@ -376,12 +400,15 @@ func TestRunPrivileged(t *testing.T) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
+	yaml := &script.Build{}
+	yaml.Matrix = append(yaml.Matrix, &script.Matrix{Image: "go1.2", Name: "hello"})
+
 	b := Builder{}
 	b.BuildState = &BuildState{}
 	b.dockerClient = client
 	b.Stdout = new(bytes.Buffer)
 	b.image = &docker.Image{ID: "c3ab8ff137"}
-	b.Build = &script.Build{}
+	b.Build = yaml
 	b.Repo = &repo.Repo{}
 	b.run()
 
@@ -415,12 +442,15 @@ func TestRunErrorCreate(t *testing.T) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
+	yaml := &script.Build{}
+	yaml.Matrix = append(yaml.Matrix, &script.Matrix{Image: "go1.2", Name: "hello"})
+
 	b := Builder{}
 	b.BuildState = &BuildState{}
 	b.dockerClient = client
 	b.Stdout = new(bytes.Buffer)
 	b.image = &docker.Image{ID: "c3ab8ff137"}
-	b.Build = &script.Build{}
+	b.Build = yaml
 	b.Repo = &repo.Repo{}
 
 	if err := b.run(); err != docker.ErrBadRequest {
@@ -448,12 +478,15 @@ func TestRunErrorStart(t *testing.T) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
+	yaml := &script.Build{}
+	yaml.Matrix = append(yaml.Matrix, &script.Matrix{Image: "go1.2", Name: "hello"})
+
 	b := Builder{}
 	b.BuildState = &BuildState{}
 	b.dockerClient = client
 	b.Stdout = new(bytes.Buffer)
 	b.image = &docker.Image{ID: "c3ab8ff137"}
-	b.Build = &script.Build{}
+	b.Build = yaml
 	b.Repo = &repo.Repo{}
 
 	if err := b.run(); err != docker.ErrBadRequest {
@@ -538,9 +571,11 @@ func TestWriteBuildScript(t *testing.T) {
 	dir, _ := ioutil.TempDir("", "drone-test-")
 	defer os.RemoveAll(dir)
 
+	yaml := &script.Build{}
+	yaml.Matrix = append(yaml.Matrix, &script.Matrix{Image: "go1.2", Name: "hello", Hosts: []string{"127.0.0.1"}})
+
 	b := Builder{}
-	b.Build = &script.Build{
-		Hosts: []string{"127.0.0.1"}}
+	b.Build = yaml
 	b.Repo = &repo.Repo{
 		Path:   "git://github.com/drone/drone.git",
 		Branch: "master",
@@ -563,6 +598,8 @@ func TestWriteBuildScript(t *testing.T) {
 	f.WriteEnv("DRONE_COMMIT", "e7e046b35")
 	f.WriteEnv("DRONE_PR", "123")
 	f.WriteEnv("DRONE_BUILD_DIR", "/var/cache/drone/github.com/drone/drone")
+	f.WriteEnv("DRONE_BUILD_INDEX", string(b.Index+1))
+	f.WriteEnvIsolate("DRONE_BUILD_NAME", b.Build.Matrix[b.Index].Name)
 	f.WriteEnv("CI_NAME", "DRONE")
 	f.WriteEnv("CI_BUILD_NUMBER", "e7e046b35")
 	f.WriteEnv("CI_BUILD_URL", "")

@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/session"
@@ -12,7 +14,7 @@ import (
 	"github.com/gorilla/pat"
 )
 
-type CommitHandler struct {
+type BuildHandler struct {
 	users   database.UserManager
 	perms   database.PermManager
 	repos   database.RepoManager
@@ -22,48 +24,11 @@ type CommitHandler struct {
 	queue   chan *model.Request
 }
 
-func NewCommitHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, builds database.BuildManager, perms database.PermManager, sess session.Session, queue chan *model.Request) *CommitHandler {
-	return &CommitHandler{users, perms, repos, commits, builds, sess, queue}
+func NewBuildHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, builds database.BuildManager, perms database.PermManager, sess session.Session, queue chan *model.Request) *BuildHandler {
+	return &BuildHandler{users, perms, repos, commits, builds, sess, queue}
 }
 
-// GetFeed gets recent commits for the repository and branch
-// GET /v1/repos/{host}/{owner}/{name}/branches/{branch}/commits
-func (h *CommitHandler) GetFeed(w http.ResponseWriter, r *http.Request) error {
-	var host, owner, name = parseRepo(r)
-	var branch = r.FormValue(":branch")
-
-	// get the user form the session.
-	user := h.sess.User(r)
-
-	// get the repository from the database.
-	repo, err := h.repos.FindName(host, owner, name)
-	switch {
-	case err != nil && user == nil:
-		return notAuthorized{}
-	case err != nil && user != nil:
-		return notFound{}
-	}
-
-	// user must have read access to the repository.
-	ok, _ := h.perms.Read(user, repo)
-	switch {
-	case ok == false && user == nil:
-		return notAuthorized{}
-	case ok == false && user != nil:
-		return notFound{}
-	}
-
-	commits, err := h.commits.ListBranch(repo.ID, branch)
-	if err != nil {
-		return notFound{err}
-	}
-
-	return json.NewEncoder(w).Encode(commits)
-}
-
-// GetCommit gets the commit for the repository, branch and sha.
-// GET /v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}
-func (h *CommitHandler) GetCommit(w http.ResponseWriter, r *http.Request) error {
+func (h *BuildHandler) GetFeed(w http.ResponseWriter, r *http.Request) error {
 	var host, owner, name = parseRepo(r)
 	var branch = r.FormValue(":branch")
 	var sha = r.FormValue(":commit")
@@ -89,20 +54,73 @@ func (h *CommitHandler) GetCommit(w http.ResponseWriter, r *http.Request) error 
 		return notFound{}
 	}
 
-	commit, err := h.commits.FindSha(repo.ID, branch, sha)
+	c, err := h.commits.FindSha(repo.ID, branch, sha)
 	if err != nil {
 		return notFound{err}
 	}
 
-	return json.NewEncoder(w).Encode(commit)
+	builds, err := h.builds.FindCommit(c.ID)
+	if err != nil {
+		return notFound{err}
+	}
+
+	return json.NewEncoder(w).Encode(builds)
 }
 
-// PostCommit gets the commit for the repository and schedules to re-build.
-// GET /v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}
-func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error {
+func (h *BuildHandler) GetBuild(w http.ResponseWriter, r *http.Request) error {
 	var host, owner, name = parseRepo(r)
 	var branch = r.FormValue(":branch")
 	var sha = r.FormValue(":commit")
+
+	build_id, err := strconv.Atoi(r.FormValue(":build"))
+	if err != nil {
+		return notFound{}
+	}
+
+	// get the user form the session.
+	user := h.sess.User(r)
+
+	// get the repository from the database.
+	repo, err := h.repos.FindName(host, owner, name)
+	switch {
+	case err != nil && user == nil:
+		return notAuthorized{}
+	case err != nil && user != nil:
+		return notFound{}
+	}
+
+	// user must have read access to the repository.
+	ok, _ := h.perms.Read(user, repo)
+	switch {
+	case ok == false && user == nil:
+		return notAuthorized{}
+	case ok == false && user != nil:
+		return notFound{}
+	}
+
+	c, err := h.commits.FindSha(repo.ID, branch, sha)
+	if err != nil || c == nil {
+		return notFound{err}
+	}
+
+	build, err := h.builds.Find(int64(build_id), c.ID)
+	if err != nil {
+		log.Println(err)
+		return notFound{err}
+	}
+
+	return json.NewEncoder(w).Encode(build)
+}
+
+func (h *BuildHandler) PostBuild(w http.ResponseWriter, r *http.Request) error {
+	var host, owner, name = parseRepo(r)
+	var branch = r.FormValue(":branch")
+	var sha = r.FormValue(":commit")
+
+	build_id, err := strconv.Atoi(r.FormValue(":build"))
+	if err != nil {
+		return notFound{}
+	}
 
 	// get the user form the session.
 	user := h.sess.User(r)
@@ -129,9 +147,18 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 		return notFound{err}
 	}
 
+	b, err := h.builds.Find(int64(build_id), c.ID)
+	if err != nil {
+		return notFound{err}
+	}
+
 	// we can't start an already started build
 	if c.Status == model.StatusStarted || c.Status == model.StatusEnqueue {
 		return badRequest{errors.New("This commit already builds")}
+	}
+
+	if b.Status == model.StatusStarted || b.Status == model.StatusEnqueue {
+		return badRequest{errors.New("This build already builds")}
 	}
 
 	c.Status = model.StatusEnqueue
@@ -142,28 +169,23 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 		return internalServerError{err}
 	}
 
+	b.Status = model.StatusEnqueue
+	b.Started = 0
+	b.Finished = 0
+	b.Duration = 0
+	if err := h.builds.Update(b); err != nil {
+		return internalServerError{err}
+	}
+
 	repoOwner, err := h.users.Find(repo.UserID)
 	if err != nil {
 		return badRequest{err}
 	}
 
-	builds, err := h.builds.FindCommit(c.ID)
-	if err != nil {
-		return notFound{err}
-	}
+	var builds []*model.Build
+	builds = append(builds, b)
 
-	for _, build := range builds {
-		if build.Status == model.StatusStarted || build.Status == model.StatusEnqueue {
-			return badRequest{errors.New("This build already builds")}
-		} else {
-			build.Status = model.StatusEnqueue
-			build.Started = 0
-			build.Finished = 0
-			build.Duration = 0
-			h.builds.Update(build)
-		}
-	}
-
+	// drop the items on the queue
 	// drop the items on the queue
 	go func() {
 		h.queue <- &model.Request{
@@ -179,8 +201,8 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
-func (h *CommitHandler) Register(r *pat.Router) {
-	r.Get("/v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}", errorHandler(h.GetCommit))
-	r.Post("/v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}", errorHandler(h.PostCommit)).Queries("action", "rebuild")
-	r.Get("/v1/repos/{host}/{owner}/{name}/branches/{branch}/commits", errorHandler(h.GetFeed))
+func (h *BuildHandler) Register(r *pat.Router) {
+	r.Get("/v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}/builds/{build}", errorHandler(h.GetBuild))
+	r.Post("/v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}/builds/{build}", errorHandler(h.PostBuild)).Queries("action", "rebuild")
+	r.Get("/v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}/builds", errorHandler(h.GetFeed))
 }

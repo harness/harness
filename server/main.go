@@ -95,6 +95,7 @@ func main() {
 	users := database.NewUserManager(db)
 	perms := database.NewPermManager(db)
 	commits := database.NewCommitManager(db)
+	builds := database.NewBuildManager(db)
 
 	// message broker
 	pubsub := pubsub.NewPubSub()
@@ -109,12 +110,12 @@ func main() {
 	// if no worker nodes are specified than start 2 workers
 	// using the default DOCKER_HOST
 	if nodes == nil || len(nodes) == 0 {
-		worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
-		worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
+		worker.NewWorker(workerc, users, repos, commits, builds, pubsub, &model.Server{}).Start()
+		worker.NewWorker(workerc, users, repos, commits, builds, pubsub, &model.Server{}).Start()
 	} else {
 		for _, node := range nodes {
 			println(node)
-			worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{Host: node}).Start()
+			worker.NewWorker(workerc, users, repos, commits, builds, pubsub, &model.Server{Host: node}).Start()
 		}
 	}
 
@@ -124,13 +125,15 @@ func main() {
 	// setup the router and register routes
 	router := pat.New()
 	handler.NewUsersHandler(users, sess).Register(router)
+	handler.NewRemoteHandler(users, sess).Register(router)
 	handler.NewUserHandler(users, repos, commits, sess).Register(router)
-	handler.NewHookHandler(users, repos, commits, queue).Register(router)
+	handler.NewHookHandler(users, repos, commits, builds, queue).Register(router)
 	handler.NewLoginHandler(users, repos, perms, sess, open).Register(router)
-	handler.NewCommitHandler(users, repos, commits, perms, sess, queue).Register(router)
+	handler.NewBuildHandler(users, repos, commits, builds, perms, sess, queue).Register(router)
+	handler.NewCommitHandler(users, repos, commits, builds, perms, sess, queue).Register(router)
 	handler.NewRepoHandler(repos, commits, perms, sess).Register(router)
 	handler.NewBadgeHandler(repos, commits).Register(router)
-	handler.NewWsHandler(repos, commits, perms, sess, pubsub).Register(router)
+	handler.NewWsHandler(repos, builds, commits, perms, sess, pubsub).Register(router)
 
 	box := rice.MustFindBox("app/")
 	fserver := http.FileServer(box.HTTPBox())

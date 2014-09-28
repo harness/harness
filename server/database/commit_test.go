@@ -47,22 +47,6 @@ func TestCommitFindLatest(t *testing.T) {
 	testCommit(t, commit)
 }
 
-func TestCommitFindOutput(t *testing.T) {
-	setup()
-	defer teardown()
-
-	commits := NewCommitManager(db)
-	out, err := commits.FindOutput(1)
-	if err != nil {
-		t.Errorf("Want Commit stdout, got %s", err)
-	}
-
-	var want, got = "sample console output", string(out)
-	if want != got {
-		t.Errorf("Want stdout %v, got %v", want, got)
-	}
-}
-
 func TestCommitList(t *testing.T) {
 	setup()
 	defer teardown()
@@ -138,7 +122,6 @@ func TestCommitInsert(t *testing.T) {
 	if err == nil {
 		t.Error("Want unique constraint violated")
 	}
-
 }
 
 func TestCommitUpdate(t *testing.T) {
