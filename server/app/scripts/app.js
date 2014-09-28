@@ -273,11 +273,23 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 			var el = document.querySelector('#output');
 			stdout.subscribe(data.id, function(out){
 				angular.element(el).append(lineFormatter.format(out));
+				if ($scope.following) {
+					window.scrollTo(0, document.body.scrollHeight);
+				}
 			});
 		}).
 		error(function(data, status, headers, config) {
 			console.log(data);
 		});
+
+	$scope.following = false;
+	$scope.follow = function() {
+		$scope.following = true;
+		window.scrollTo(0, document.body.scrollHeight);
+	}
+	$scope.unfollow = function() {
+		$scope.following = false;
+	}
 
 	$scope.rebuildCommit = function() {
 		$http({method: 'POST', url: '/api/repos/'+remote+'/'+owner+'/'+name+'/'+'branches/'+branch+'/'+'commits/'+commit+'?action=rebuild' })
