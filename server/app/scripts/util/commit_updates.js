@@ -23,6 +23,7 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 		autoFollow: false,
 
 		startOutput: function(el) {
+			console.log(el)
 			if(typeof(el) === 'string') {
 				this.el = document.getElementById(el);
 			} else {

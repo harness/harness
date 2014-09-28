@@ -7,6 +7,7 @@
 @link: #68c598;
 @link2: #4ab1ce;
 @cfailure: #f44336;
+@callowfailure: #ff6600;
 @csuccess: #7cb342;
 @cpending: #ffb300;
 @c0: #212121;
@@ -333,6 +334,31 @@ nav {
 				top:-8px;
 				content:"\f111";
 				color: @cfailure;
+				min-width:16px;
+				text-align:center;
+			}
+		}
+
+		&[data-status="AllowFailure"] {
+			em {
+				border-top:5px solid @callowfailure;
+			}
+
+			.l-box {
+				border: 1px solid @cfailure;
+				&:hover {
+					border:1px solid @c0;
+				}
+			}
+
+			&:after {
+				font-family:'FontAwesome';
+				font-size:16px;
+				position:absolute;
+				right:12px;
+				top:-8px;
+				content:"\f111";
+				color: @callowfailure;
 				min-width:16px;
 				text-align:center;
 			}
@@ -1278,6 +1304,13 @@ nav {
 		&[data-result="Failure"],
 		&[data-result="Error"] {
 			background: @cfailure;
+			.status:before {
+				content:"!";
+			}
+		}
+
+		&[data-result="AllowFailure"] {
+			background: @callowfailure;
 			.status:before {
 				content:"!";
 			}

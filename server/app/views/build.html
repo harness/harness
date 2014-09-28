@@ -1,0 +1,59 @@
+<aside id="sidebar">
+	<div class="result" data-result="{{ build.status }}">
+		<dl>
+			<dd><span class="status">{{ build.status }}</span></dd>
+			<dd><strong>{{ commit.message }}</strong></dd>
+		</dl>
+	</div>
+		
+	<dl ng-if="build.duration != 0">
+		<dd><h1>{{ build.duration | toDuration}}</h1></dd>
+	</dl>
+
+	<dl>
+		<dd class="large" ng-if="repo.remote == 'gitlab.com' || repo.remote == 'github.com' || repo.remote == 'enterprise.github.com' ">
+			<strong>
+				commit 
+				<a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/commit/{{ commit.sha }}" >{{ commit.sha | shortHash}}</a> 
+				to <a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/tree/{{ commit.branch }}">{{ commit.branch }}</a> branch
+			</strong>
+		</dd>
+		<dd class="large" ng-if="repo.remote == 'bitbucket.org' ">
+			<strong>
+				commit 
+				<a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/commits/{{ commit.sha }}" >{{ commit.sha | shortHash}}</a> 
+				to <a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/src/?at={{ commit.branch }}">{{ commit.branch }}</a> branch
+			</strong>
+		</dd>
+		<dd class="large" ng-if="repo.remote != 'gitlab.com' && repo.remote != 'github.com' && repo.remote != 'enterprise.github.com' && repo.remote != 'bitbucket.org' ">
+			<strong>commit <u>{{ commit.sha | shortHash}}</u> to <u>{{ commit.branch }}</u> branch</strong>
+		</dd>
+		<dd ng-if="build.finished_at != 0">{{ build.finished_at | fromNow }}</dd>
+		<dd ng-if="build.finished_at == 0 && build.started_at != 0">Started {{ build.started_at | fromNow }}</dd>
+		<dd ng-if="build.finished_at == 0 && build.started_at == 0">Created {{ build.created_at}}</dd>
+	</dl>
+</aside>
+
+<div id="main" class="output">
+	<div id="main" class="output" data-result="{{ commit.status }}">
+		<nav>
+			<div class="options ng-scope" ng-if="repo.role.admin || repo.role.write">
+				<a class="pure-button pure-button-primary ng-hide" ng-show="build.status != 'Started' || build.status != 'Pending'" ng-click="rebuild()" href="#">
+					<i class="fa fa-refresh"></i>
+					<span>Rebuild</span>
+				</a>
+			</div>
+
+			<a href="/"><span class="fa fa-th"></span></a>
+			<span>{{ repo.owner }}</span>
+			<span>/</span>
+			<a href="/{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}">{{ repo.name }}</a>
+			<span>/</span>
+			<a href="/{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/{{ commit.branch }}/{{ commit.sha }}">{{ commit.sha | shortHash}}</a>
+			<span>/</span>
+			<a href="#">{{ build.name }}</a>
+		</nav>
+
+		<pre id="output"></pre>
+	</div>
+</div>

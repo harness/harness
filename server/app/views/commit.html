@@ -1,57 +1,33 @@
-<aside id="sidebar">
-	<div class="result" data-result="{{ commit.status }}">
-		<dl>
-			<dd><span class="status">{{ commit.status }}</span></dd>
-			<dd><strong>{{ commit.message }}</strong></dd>
-		</dl>
-	</div>
-		
-	<dl ng-if="commit.duration != 0">
-		<dd><h1>{{ commit.duration | toDuration}}</h1></dd>
-	</dl>
+<article id="repopage">
+	<nav>
+		<div class="options ng-scope" ng-if="repo.role.admin || repo.role.write">
+			<a class="pure-button pure-button-primary" ng-click="rebuild()" href="#">
+				<i class="fa fa-refresh"></i>
+				<span>Rebuild</span>
+			</a>
+		</div>
 
-	<dl>
-		<dd class="large" ng-if="repo.remote == 'gitlab.com' || repo.remote == 'github.com' || repo.remote == 'enterprise.github.com' ">
-			<strong>
-				commit 
-				<a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/commit/{{ commit.sha }}" >{{ commit.sha | shortHash}}</a> 
-				to <a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/tree/{{ commit.branch }}">{{ commit.branch }}</a> branch
-			</strong>
-		</dd>
-		<dd class="large" ng-if="repo.remote == 'bitbucket.org' ">
-			<strong>
-				commit 
-				<a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/commits/{{ commit.sha }}" >{{ commit.sha | shortHash}}</a> 
-				to <a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/src/?at={{ commit.branch }}">{{ commit.branch }}</a> branch
-			</strong>
-		</dd>
-		<dd class="large" ng-if="repo.remote != 'gitlab.com' && repo.remote != 'github.com' && repo.remote != 'enterprise.github.com' && repo.remote != 'bitbucket.org' ">
-			<strong>commit <u>{{ commit.sha | shortHash}}</u> to <u>{{ commit.branch }}</u> branch</strong>
-		</dd>
-		<dd ng-if="commit.finished_at != 0">{{ commit.finished_at | fromNow }}</dd>
-		<dd ng-if="commit.finished_at == 0 && commit.started_at != 0">Started {{ commit.started_at | fromNow }}</dd>
-		<dd ng-if="commit.finished_at == 0 && commit.started_at == 0">Created {{ commit.created_at}}</dd>
-	</dl>
-</aside>
+		<a href="/"><span class="fa fa-th"></span></a>
+		<span>{{ repo.owner }}</span>
+		<span>/</span>
+		<a href="/{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}">{{ repo.name }}</a>
+		<span>/</span>
+		<a href="#">{{ commit.sha | shortHash}}</a>
+	</nav>
 
-<div id="main" class="output">
-	<div id="main" class="output" data-result="{{ commit.status }}">
-		<nav>
-			<div class="options ng-scope" ng-if="repo.role.admin || repo.role.write">
-				<a class="pure-button pure-button-primary" ng-click="rebuildCommit()" href="#">
-					<i class="fa fa-refresh"></i>
-					<span>Rebuild</span>
-				</a>
-			</div>
 
-			<a href="/"><span class="fa fa-th"></span></a>
-			<span>{{ repo.owner }}</span>
-			<span>/</span>
-			<a href="/{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}">{{ repo.name }}</a>
-			<span>/</span>
-			<a href="#">{{ commit.sha | shortHash}}</a>
-		</nav>
-
-		<pre id="output"></pre>
-	</div>
-</div>
+	<section>
+		<div class="pure-g cards" ng-if="builds.length!=0">
+			<h2 class="pure-u-1" style="font-size:22px;margin-bottom:20px;"><i class="fa fa-tasks"></i> Builds</h2>
+			<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card" ng-href="/{{ repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}/{{ build.index }}" ng-repeat="build in builds" data-status="{{ build.status }}">
+				<div class="l-box">
+					<h2>{{ build.name }}</h2>
+					<em ng-if="build.finished_at != 0">{{ commit.author }}<br/>{{ build.finished_at | fromNow }}</em>
+					<em ng-if="build.finished_at == 0 && build.started_at != 0">{{ commit.author }}<br/>Started {{ build.started_at | fromNow }}</em>
+					<em ng-if="build.finished_at == 0 && build.started_at == 0">{{ commit.author }}<br/>Created {{ build.created_at}}</em>
+					<img ng-src="{{ commit.gravatar | gravatar }}" />
+				</div>
+			</a>
+		</div>
+	</section>
+</article>
