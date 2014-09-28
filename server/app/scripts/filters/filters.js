@@ -144,6 +144,7 @@
       case 'enterprise.github.com' : return 'GitHub Enterprise';
       case 'bitbucket.org'         : return 'Bitbucket';
       case 'stash.atlassian.com'   : return 'Atlassian Stash';
+      case 'gogs'                  : return 'Gogs';
       }
     }
   }
@@ -160,6 +161,7 @@
       case 'enterprise.github.com' : return 'fa-github-square';
       case 'bitbucket.org'         : return 'fa-bitbucket-square';
       case 'stash.atlassian.com'   : return 'fa-bitbucket-square';
+      case 'gogs'                  : return 'fa-git-square';
       }
     }
   }
