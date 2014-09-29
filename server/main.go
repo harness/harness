@@ -31,6 +31,9 @@ import (
 	"github.com/drone/drone/server/blobstore"
 	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/server/datastore/database"
+	"github.com/drone/drone/server/worker/director"
+	"github.com/drone/drone/server/worker/docker"
+	"github.com/drone/drone/server/worker/pool"
 )
 
 var (
@@ -52,14 +55,16 @@ var (
 	version  string = "0.3-dev"
 	revision string
 
-	// Number of concurrent build workers to run
-	// default to number of CPUs on machine
-	workers int
-
 	conf   string
 	prefix string
 
 	open bool
+
+	// worker pool
+	workers *pool.Pool
+
+	// director
+	worker *director.Director
 
 	nodes StringArr
 
@@ -91,6 +96,26 @@ func main() {
 	// commits in the system.
 	db = database.MustConnect(driver, datasource)
 	go database.NewCommitstore(db).KillCommits()
+
+	// Create the worker, director and builders
+	workers = pool.New()
+	workers.Allocate(docker.New())
+	workers.Allocate(docker.New())
+	workers.Allocate(docker.New())
+	workers.Allocate(docker.New())
+	worker = director.New()
+
+	/*
+		if nodes == nil || len(nodes) == 0 {
+			worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
+			worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
+		} else {
+			for _, node := range nodes {
+				println(node)
+				worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{Host: node}).Start()
+			}
+		}
+	*/
 
 	goji.Get("/api/auth/:host", handler.GetLogin)
 	goji.Get("/api/badge/:host/:owner/:name/status.svg", handler.GetBadge)
@@ -135,20 +160,6 @@ func main() {
 	goji.Use(middleware.SetUser)
 	goji.Serve()
 
-	// if no worker nodes are specified than start 2 workers
-	// using the default DOCKER_HOST
-	/*
-		if nodes == nil || len(nodes) == 0 {
-			worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
-			worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
-		} else {
-			for _, node := range nodes {
-				println(node)
-				worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{Host: node}).Start()
-			}
-		}
-	*/
-
 	// start webserver using HTTPS or HTTP
 	//if len(sslcert) != 0 {
 	//	panic(http.ListenAndServeTLS(port, sslcert, sslkey, nil))
@@ -164,8 +175,8 @@ func ContextMiddleware(c *web.C, h http.Handler) http.Handler {
 		var ctx = context.Background()
 		ctx = datastore.NewContext(ctx, database.NewDatastore(db))
 		ctx = blobstore.NewContext(ctx, database.NewBlobstore(db))
-		//ctx = pool.NewContext(ctx, workers)
-		//ctx = director.NewContext(ctx, worker)
+		ctx = pool.NewContext(ctx, workers)
+		ctx = director.NewContext(ctx, worker)
 
 		// add the context to the goji web context
 		webcontext.Set(c, ctx)

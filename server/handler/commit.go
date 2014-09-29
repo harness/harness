@@ -5,6 +5,9 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/server/datastore"
+	"github.com/drone/drone/server/worker"
+	"github.com/drone/drone/shared/httputil"
+	"github.com/drone/drone/shared/model"
 	"github.com/goji/context"
 	"github.com/zenazn/goji/web"
 )
@@ -50,71 +53,55 @@ func GetCommit(c web.C, w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(commit)
 }
 
-func PostCommit(c web.C, w http.ResponseWriter, r *http.Request) {}
+// PostHook accepts a post-commit hook and parses the payload
+// in order to trigger a build. The payload is specified to the
+// remote system (ie GitHub) and will therefore get parsed by
+// the appropriate remote plugin.
+//
+//     POST /api/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}
+//
+func PostCommit(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var (
+		branch = c.URLParams["branch"]
+		hash   = c.URLParams["commit"]
+		repo   = ToRepo(c)
+	)
 
-/*
-// PostCommit gets the commit for the repository and schedules to re-build.
-// GET /v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}
-func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error {
-	var host, owner, name = parseRepo(r)
-	var branch = r.FormValue(":branch")
-	var sha = r.FormValue(":commit")
-
-	// get the user form the session.
-	user := h.sess.User(r)
-	if user == nil {
-		return notAuthorized{}
-	}
-
-	// get the repo from the database
-	repo, err := h.repos.FindName(host, owner, name)
-	switch {
-	case err != nil && user == nil:
-		return notAuthorized{}
-	case err != nil && user != nil:
-		return notFound{}
-	}
-
-	// user must have admin access to the repository.
-	if ok, _ := h.perms.Admin(user, repo); !ok {
-		return notFound{err}
-	}
-
-	c, err := h.commits.FindSha(repo.ID, branch, sha)
+	commit, err := datastore.GetCommitSha(ctx, repo, branch, hash)
 	if err != nil {
-		return notFound{err}
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
-	// we can't start an already started build
-	if c.Status == model.StatusStarted || c.Status == model.StatusEnqueue {
-		return badRequest{}
+	if commit.Status == model.StatusStarted ||
+		commit.Status == model.StatusEnqueue {
+		w.WriteHeader(http.StatusConflict)
+		return
 	}
 
-	c.Status = model.StatusEnqueue
-	c.Started = 0
-	c.Finished = 0
-	c.Duration = 0
-	if err := h.commits.Update(c); err != nil {
-		return internalServerError{err}
+	commit.Status = model.StatusEnqueue
+	commit.Started = 0
+	commit.Finished = 0
+	commit.Duration = 0
+	if err := datastore.PutCommit(ctx, commit); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	repoOwner, err := h.users.Find(repo.UserID)
+	owner, err := datastore.GetUser(ctx, repo.UserID)
 	if err != nil {
-		return badRequest{err}
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	// drop the items on the queue
-	// drop the items on the queue
-	go func() {
-		h.queue <- &model.Request{
-			User:   repoOwner,
-			Host:   httputil.GetURL(r),
-			Repo:   repo,
-			Commit: c,
-		}
-	}()
+	go worker.Do(ctx, &worker.Work{
+		User:   owner,
+		Repo:   repo,
+		Commit: commit,
+		Host:   httputil.GetURL(r),
+	})
 
 	w.WriteHeader(http.StatusOK)
-	return nil
 }
-*/
