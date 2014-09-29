@@ -10,37 +10,37 @@ type RepoService struct {
 	*Client
 }
 
-// GET /v1/repos/{host}/{owner}/{name}
+// GET /api/repos/{host}/{owner}/{name}
 func (s *RepoService) Get(host, owner, name string) (*model.Repo, error) {
-	var path = fmt.Sprintf("/v1/repos/%s/%s/%s", host, owner, name)
+	var path = fmt.Sprintf("/api/repos/%s/%s/%s", host, owner, name)
 	var repo = model.Repo{}
 	var err = s.run("PUT", path, nil, &repo)
 	return &repo, err
 }
 
-// PUT /v1/repos/{host}/{owner}/{name}
+// PUT /api/repos/{host}/{owner}/{name}
 func (s *RepoService) Update(repo *model.Repo) (*model.Repo, error) {
-	var path = fmt.Sprintf("/v1/repos/%s/%s/%s", repo.Host, repo.Owner, repo.Name)
+	var path = fmt.Sprintf("/api/repos/%s/%s/%s", repo.Host, repo.Owner, repo.Name)
 	var result = model.Repo{}
 	var err = s.run("PUT", path, &repo, &result)
 	return &result, err
 }
 
-// POST /v1/repos/{host}/{owner}/{name}
+// POST /api/repos/{host}/{owner}/{name}
 func (s *RepoService) Enable(host, owner, name string) error {
-	var path = fmt.Sprintf("/v1/repos/%s/%s/%s", host, owner, name)
+	var path = fmt.Sprintf("/api/repos/%s/%s/%s", host, owner, name)
 	return s.run("POST", path, nil, nil)
 }
 
-// DELETE /v1/repos/{host}/{owner}/{name}
+// DELETE /api/repos/{host}/{owner}/{name}
 func (s *RepoService) Disable(host, owner, name string) error {
-	var path = fmt.Sprintf("/v1/repos/%s/%s/%s", host, owner, name)
+	var path = fmt.Sprintf("/api/repos/%s/%s/%s", host, owner, name)
 	return s.run("DELETE", path, nil, nil)
 }
 
-// GET /v1/user/repos
+// GET /api/user/repos
 func (s *RepoService) List() ([]*model.Repo, error) {
 	var repos []*model.Repo
-	var err = s.run("GET", "/v1/user/repos", nil, &repos)
+	var err = s.run("GET", "/api/user/repos", nil, &repos)
 	return repos, err
 }
