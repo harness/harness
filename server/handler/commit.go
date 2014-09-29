@@ -4,139 +4,55 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/drone/drone/server/database"
-	"github.com/drone/drone/server/session"
-	"github.com/drone/drone/shared/httputil"
-	"github.com/drone/drone/shared/model"
-	"github.com/gorilla/pat"
+	"github.com/drone/drone/server/datastore"
+	"github.com/goji/context"
+	"github.com/zenazn/goji/web"
 )
 
-type CommitHandler struct {
-	users   database.UserManager
-	perms   database.PermManager
-	repos   database.RepoManager
-	commits database.CommitManager
-	sess    session.Session
-	queue   chan *model.Request
-}
+// GetCommitList accepts a request to retrieve a list
+// of recent commits by Repo, and retur in JSON format.
+//
+//     GET /api/repos/:host/:owner/:name/commits
+//
+func GetCommitList(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var repo = ToRepo(c)
 
-func NewCommitHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, perms database.PermManager, sess session.Session, queue chan *model.Request) *CommitHandler {
-	return &CommitHandler{users, perms, repos, commits, sess, queue}
-}
-
-// GetFeed gets recent commits for the repository and branch
-// GET /v1/repos/{host}/{owner}/{name}/branches/{branch}/commits
-func (h *CommitHandler) GetFeed(w http.ResponseWriter, r *http.Request) error {
-	var host, owner, name = parseRepo(r)
-	var branch = r.FormValue(":branch")
-
-	// get the user form the session.
-	user := h.sess.User(r)
-
-	// get the repository from the database.
-	repo, err := h.repos.FindName(host, owner, name)
-	switch {
-	case err != nil && user == nil:
-		return notAuthorized{}
-	case err != nil && user != nil:
-		return notFound{}
-	}
-
-	// user must have read access to the repository.
-	ok, _ := h.perms.Read(user, repo)
-	switch {
-	case ok == false && user == nil:
-		return notAuthorized{}
-	case ok == false && user != nil:
-		return notFound{}
-	}
-
-	commits, err := h.commits.ListBranch(repo.ID, branch)
+	commits, err := datastore.GetCommitList(ctx, repo)
 	if err != nil {
-		return notFound{err}
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
-	return json.NewEncoder(w).Encode(commits)
+	json.NewEncoder(w).Encode(commits)
 }
 
-// GetCommit gets the commit for the repository, branch and sha.
-// GET /v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}
-func (h *CommitHandler) GetCommit(w http.ResponseWriter, r *http.Request) error {
-	var host, owner, name = parseRepo(r)
-	var branch = r.FormValue(":branch")
-	var sha = r.FormValue(":commit")
+// GetCommit accepts a request to retrieve a commit
+// from the datastore for the given repository, branch and
+// commit hash.
+//
+//     GET /api/repos/:host/:owner/:name/branches/:branch/commits/:commit
+//
+func GetCommit(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var (
+		branch = c.URLParams["branch"]
+		hash   = c.URLParams["commit"]
+		repo   = ToRepo(c)
+	)
 
-	// get the user form the session.
-	user := h.sess.User(r)
-
-	// get the repository from the database.
-	repo, err := h.repos.FindName(host, owner, name)
-	switch {
-	case err != nil && user == nil:
-		return notAuthorized{}
-	case err != nil && user != nil:
-		return notFound{}
-	}
-
-	// user must have read access to the repository.
-	ok, _ := h.perms.Read(user, repo)
-	switch {
-	case ok == false && user == nil:
-		return notAuthorized{}
-	case ok == false && user != nil:
-		return notFound{}
-	}
-
-	commit, err := h.commits.FindSha(repo.ID, branch, sha)
+	commit, err := datastore.GetCommitSha(ctx, repo, branch, hash)
 	if err != nil {
-		return notFound{err}
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
-	return json.NewEncoder(w).Encode(commit)
+	json.NewEncoder(w).Encode(commit)
 }
 
-// GetCommitOutput gets the commit's stdout.
-// GET /v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}/console
-func (h *CommitHandler) GetCommitOutput(w http.ResponseWriter, r *http.Request) error {
-	var host, owner, name = parseRepo(r)
-	var branch = r.FormValue(":branch")
-	var sha = r.FormValue(":commit")
+func PostCommit(c web.C, w http.ResponseWriter, r *http.Request) {}
 
-	// get the user form the session.
-	user := h.sess.User(r)
-
-	// get the repository from the database.
-	repo, err := h.repos.FindName(host, owner, name)
-	switch {
-	case err != nil && user == nil:
-		return notAuthorized{}
-	case err != nil && user != nil:
-		return notFound{}
-	}
-
-	// user must have read access to the repository.
-	ok, _ := h.perms.Read(user, repo)
-	switch {
-	case ok == false && user == nil:
-		return notAuthorized{}
-	case ok == false && user != nil:
-		return notFound{}
-	}
-
-	commit, err := h.commits.FindSha(repo.ID, branch, sha)
-	if err != nil {
-		return notFound{err}
-	}
-
-	output, err := h.commits.FindOutput(commit.ID)
-	if err != nil {
-		return notFound{err}
-	}
-
-	w.Write(output)
-	return nil
-}
-
+/*
 // PostCommit gets the commit for the repository and schedules to re-build.
 // GET /v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}
 func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error {
@@ -201,10 +117,4 @@ func (h *CommitHandler) PostCommit(w http.ResponseWriter, r *http.Request) error
 	w.WriteHeader(http.StatusOK)
 	return nil
 }
-
-func (h *CommitHandler) Register(r *pat.Router) {
-	r.Get("/v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}/console", errorHandler(h.GetCommitOutput))
-	r.Get("/v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}", errorHandler(h.GetCommit))
-	r.Post("/v1/repos/{host}/{owner}/{name}/branches/{branch}/commits/{commit}", errorHandler(h.PostCommit)).Queries("action", "rebuild")
-	r.Get("/v1/repos/{host}/{owner}/{name}/branches/{branch}/commits", errorHandler(h.GetFeed))
-}
+*/

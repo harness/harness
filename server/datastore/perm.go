@@ -32,7 +32,7 @@ func GetPerm(c context.Context, user *model.User, repo *model.Repo) (*model.Perm
 			Read:  false,
 			Write: false,
 			Admin: false}, nil
-	case user == nil && !reop.Private:
+	case user == nil && !repo.Private:
 		return &model.Perm{
 			Guest: true,
 			Read:  true,
