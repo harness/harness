@@ -117,6 +117,8 @@ func main() {
 		}
 	*/
 
+	goji.Get("/api/stream/stdout/:id", handler.WsConsole)
+	goji.Get("/api/stream/user", handler.WsUser)
 	goji.Get("/api/auth/:host", handler.GetLogin)
 	goji.Get("/api/badge/:host/:owner/:name/status.svg", handler.GetBadge)
 	goji.Get("/api/badge/:host/:owner/:name/cc.xml", handler.GetCC)
