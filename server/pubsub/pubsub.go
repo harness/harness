@@ -2,6 +2,8 @@ package pubsub
 
 import (
 	"sync"
+
+	"code.google.com/p/go.net/context"
 )
 
 type PubSub struct {
@@ -72,4 +74,31 @@ func (b *PubSub) Unregister(key interface{}) {
 	c.Close()
 	delete(b.channels, key)
 	return
+}
+
+// Lookup performs a thread safe operation to return a pointer
+// to an existing Channel object with the given key. If the
+// Channel does not exist a nil value is returned.
+func Lookup(c context.Context, key interface{}) *Channel {
+	return FromContext(c).Lookup(key)
+}
+
+// Register performs a thread safe operation to return a pointer
+// to a Channel object for the given key. The Channel is created
+// if it does not yet exist.
+func Register(c context.Context, key interface{}) *Channel {
+	return FromContext(c).Register(key)
+}
+
+// Register performs a thread safe operation to return a pointer
+// to a Channel object for the given key. The Channel is created
+// if it does not yet exist using custom options.
+func RegisterOpts(c context.Context, key interface{}, opts *Opts) *Channel {
+	return FromContext(c).RegisterOpts(key, opts)
+}
+
+// Unregister performs a thread safe operation to delete the
+// Channel with the given key.
+func Unregister(c context.Context, key interface{}) {
+	FromContext(c).Unregister(key)
 }
