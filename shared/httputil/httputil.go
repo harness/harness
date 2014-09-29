@@ -3,8 +3,6 @@ package httputil
 import (
 	"net/http"
 	"strings"
-
-	"code.google.com/p/xsrftoken"
 )
 
 // IsHttps is a helper function that evaluates the http.Request
@@ -104,27 +102,4 @@ func DelCookie(w http.ResponseWriter, r *http.Request, name string) {
 	}
 
 	http.SetCookie(w, &cookie)
-}
-
-// SetXsrf writes the cookie value.
-func SetXsrf(w http.ResponseWriter, r *http.Request, token, login string) {
-	cookie := http.Cookie{
-		Name:     "XSRF-TOKEN",
-		Value:    xsrftoken.Generate(token, login, "/"),
-		Path:     "/",
-		Domain:   r.URL.Host,
-		HttpOnly: false,
-		Secure:   IsHttps(r),
-	}
-
-	http.SetCookie(w, &cookie)
-}
-
-// CheckXsrf verifies the xsrf value.
-func CheckXsrf(r *http.Request, token, login string) bool {
-	if r.Method == "GET" {
-		return true
-	}
-	return xsrftoken.Valid(
-		r.Header.Get("X-XSRF-TOKEN"), token, login, "/")
 }

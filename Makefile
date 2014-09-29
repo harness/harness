@@ -21,7 +21,7 @@ install:
 	install -t /usr/local/bin debian/drone/usr/local/bin/droned 
 
 run:
-	@go run server/main.go
+	@go run server/main.go --config=$$HOME/.drone/config.toml
 
 clean:
 	find . -name "*.out" -delete

@@ -4,124 +4,127 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/drone/drone/server/database"
-	"github.com/drone/drone/server/session"
+	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/shared/model"
-	"github.com/gorilla/pat"
+	"github.com/goji/context"
+	"github.com/zenazn/goji/web"
 )
 
-type UsersHandler struct {
-	users database.UserManager
-	sess  session.Session
-}
-
-func NewUsersHandler(users database.UserManager, sess session.Session) *UsersHandler {
-	return &UsersHandler{users, sess}
-}
-
-// GetUsers gets all users.
-// GET /api/users
-func (h *UsersHandler) GetUsers(w http.ResponseWriter, r *http.Request) error {
-	// get the user form the session
-	user := h.sess.User(r)
-	switch {
-	case user == nil:
-		return notAuthorized{}
-	case user.Admin == false:
-		return forbidden{}
-	}
-	// get all users
-	users, err := h.users.List()
-	if err != nil {
-		return internalServerError{err}
-	}
-
-	return json.NewEncoder(w).Encode(users)
-}
-
-// GetUser gets a user by hostname and login.
-// GET /api/users/:host/:login
-func (h *UsersHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
-	remote := r.FormValue(":host")
-	login := r.FormValue(":login")
-
-	// get the user form the session
-	user := h.sess.User(r)
-	switch {
-	case user == nil:
-		return notAuthorized{}
-	case user.Admin == false:
-		return forbidden{}
-	}
-	user, err := h.users.FindLogin(remote, login)
-	if err != nil {
-		return notFound{err}
-	}
-
-	return json.NewEncoder(w).Encode(user)
-}
-
-// PostUser registers a new user account.
-// POST /api/users/:host/:login
-func (h *UsersHandler) PostUser(w http.ResponseWriter, r *http.Request) error {
-	remote := r.FormValue(":host")
-	login := r.FormValue(":login")
-
-	// get the user form the session
-	user := h.sess.User(r)
-	switch {
-	case user == nil:
-		return notAuthorized{}
-	case user.Admin == false:
-		return forbidden{}
-	}
-
-	account := model.NewUser(remote, login, "")
-	if err := h.users.Insert(account); err != nil {
-		return badRequest{err}
-	}
-
-	return json.NewEncoder(w).Encode(account)
-}
-
-// DeleteUser gets a user by hostname and login and deletes
-// from the system.
+// GetUsers accepts a request to retrieve all users
+// from the datastore and return encoded in JSON format.
 //
-// DELETE /api/users/:host/:login
-func (h *UsersHandler) DeleteUser(w http.ResponseWriter, r *http.Request) error {
-	remote := r.FormValue(":host")
-	login := r.FormValue(":login")
-
-	// get the user form the session
-	user := h.sess.User(r)
+//     GET /api/users
+//
+func GetUserList(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var user = ToUser(c)
 	switch {
 	case user == nil:
-		return notAuthorized{}
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	case user.Admin == false:
-		return forbidden{}
+		w.WriteHeader(http.StatusForbidden)
+		return
 	}
-	account, err := h.users.FindLogin(remote, login)
+	users, err := datastore.GetUserList(ctx)
 	if err != nil {
-		return notFound{err}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-
-	// user cannot delete his / her own account
-	if account.ID == user.ID {
-		return badRequest{}
-	}
-
-	if err := h.users.Delete(account); err != nil {
-		return badRequest{err}
-	}
-
-	// return a 200 indicating deletion complete
-	w.WriteHeader(http.StatusOK)
-	return nil
+	json.NewEncoder(w).Encode(users)
 }
 
-func (h *UsersHandler) Register(r *pat.Router) {
-	r.Delete("/v1/users/{host}/{login}", errorHandler(h.DeleteUser))
-	r.Post("/v1/users/{host}/{login}", errorHandler(h.PostUser))
-	r.Get("/v1/users/{host}/{login}", errorHandler(h.GetUser))
-	r.Get("/v1/users", errorHandler(h.GetUsers))
+// GetUser accepts a request to retrieve a user by hostname
+// and login from the datastore and return encoded in JSON
+// format.
+//
+//     GET /api/users/:host/:login
+//
+func GetUser(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var (
+		user  = ToUser(c)
+		host  = c.URLParams["host"]
+		login = c.URLParams["login"]
+	)
+	switch {
+	case user == nil:
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	case user.Admin == false:
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	user, err := datastore.GetUserLogin(ctx, host, login)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	json.NewEncoder(w).Encode(user)
+}
+
+// PostUser accepts a request to create a new user in the
+// system. The created user account is returned in JSON
+// format if successful.
+//
+//     POST /api/users/:host/:login
+//
+func PostUser(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var (
+		user  = ToUser(c)
+		host  = c.URLParams["host"]
+		login = c.URLParams["login"]
+	)
+	switch {
+	case user == nil:
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	case user.Admin == false:
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	account := model.NewUser(host, login, "")
+	if err := datastore.PostUser(ctx, account); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(account)
+}
+
+// DeleteUser accepts a request to delete the specified
+// user account from the system. A successful request will
+// respond with an OK 200 status.
+//
+//     DELETE /api/users/:host/:login
+//
+func DelUser(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var (
+		user  = ToUser(c)
+		host  = c.URLParams["host"]
+		login = c.URLParams["login"]
+	)
+	switch {
+	case user == nil:
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	case user.Admin == false:
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	account, err := datastore.GetUserLogin(ctx, host, login)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if account.ID == user.ID {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if err := datastore.DelUser(ctx, account); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }

@@ -6,52 +6,53 @@ import (
 	"time"
 
 	"github.com/drone/drone/plugin/remote"
-	"github.com/drone/drone/server/database"
+	"github.com/drone/drone/server/capability"
+	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/shared/model"
-	"github.com/gorilla/pat"
+	"github.com/goji/context"
+	"github.com/zenazn/goji/web"
 )
 
-type LoginHandler struct {
-	users database.UserManager
-	repos database.RepoManager
-	perms database.PermManager
-	sess  session.Session
-	open  bool
-}
-
-func NewLoginHandler(users database.UserManager, repos database.RepoManager, perms database.PermManager, sess session.Session, open bool) *LoginHandler {
-	return &LoginHandler{users, repos, perms, sess, open}
-}
-
-// GetLogin gets the login to the 3rd party remote system.
-// GET /login/:host
-func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
-	var host = r.FormValue(":host")
+// GetLogin accepts a request to authorize the user and to
+// return a valid OAuth2 access token. The access token is
+// returned as url segment #access_token
+//
+//     GET /login/:host
+//
+func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var host = c.URLParams["host"]
 	var redirect = "/"
 	var remote = remote.Lookup(host)
 	if remote == nil {
-		return notFound{}
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
 	// authenticate the user
 	login, err := remote.Authorize(w, r)
 	if err != nil {
-		return badRequest{err}
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	} else if login == nil {
 		// in this case we probably just redirected
 		// the user, so we can exit with no error
-		return nil
+		return
 	}
 
 	// get the user from the database
-	u, err := h.users.FindLogin(host, login.Login)
+	u, err := datastore.GetUserLogin(ctx, host, login.Login)
 	if err != nil {
 		// if self-registration is disabled we should
 		// return a notAuthorized error. the only exception
 		// is if no users exist yet in the system we'll proceed.
-		if h.open == false && h.users.Exist() {
-			return notAuthorized{}
+		if capability.Enabled(ctx, capability.Registration) == false {
+			users, err := datastore.GetUserList(ctx)
+			if err != nil || len(users) != 0 {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 		}
 
 		// create the user account
@@ -60,8 +61,9 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 		u.SetEmail(login.Email)
 
 		// insert the user into the database
-		if err := h.users.Insert(u); err != nil {
-			return badRequest{err}
+		if err := datastore.PostUser(ctx, u); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 
 		// if this is the first user, they
@@ -78,8 +80,9 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 	u.Name = login.Name
 	u.SetEmail(login.Email)
 	u.Syncing = true //u.IsStale() // todo (badrydzewski) should not always sync
-	if err := h.users.Update(u); err != nil {
-		return badRequest{err}
+	if err := datastore.PutUser(ctx, u); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	// look at the last synchronized date to determine if
@@ -109,10 +112,10 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 			// insert all repositories
 			for _, repo := range repos {
 				var role = repo.Role
-				if err := h.repos.Insert(repo); err != nil {
+				if err := datastore.PostRepo(ctx, repo); err != nil {
 					// typically we see a failure because the repository already exists
 					// in which case, we can retrieve the existing record to get the ID.
-					repo, err = h.repos.FindName(repo.Host, repo.Owner, repo.Name)
+					repo, err = datastore.GetRepoName(ctx, repo.Host, repo.Owner, repo.Name)
 					if err != nil {
 						log.Println("Error adding repo.", u.Login, repo.Name, err)
 						continue
@@ -120,7 +123,14 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 				}
 
 				// add user permissions
-				if err := h.perms.Grant(u, repo, role.Read, role.Write, role.Admin); err != nil {
+				perm := model.Perm{
+					UserID: u.ID,
+					RepoID: repo.ID,
+					Read:   role.Read,
+					Write:  role.Write,
+					Admin:  role.Admin,
+				}
+				if err := datastore.PostPerm(ctx, &perm); err != nil {
 					log.Println("Error adding permissions.", u.Login, repo.Name, err)
 					continue
 				}
@@ -130,31 +140,19 @@ func (h *LoginHandler) GetLogin(w http.ResponseWriter, r *http.Request) error {
 
 			u.Synced = time.Now().UTC().Unix()
 			u.Syncing = false
-			if err := h.users.Update(u); err != nil {
+			if err := datastore.PutUser(ctx, u); err != nil {
 				log.Println("Error syncing user account, updating sync date", u.Login, err)
 				return
 			}
 		}()
 	}
 
-	// (re)-create the user session
-	h.sess.SetUser(w, r, u)
+	token, err := session.GenerateToken(ctx, r, u)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	redirect = redirect + "#access_token=" + token
 
-	// redirect the user to their dashboard
 	http.Redirect(w, r, redirect, http.StatusSeeOther)
-	return nil
-}
-
-// GetLogout terminates the current user session
-// GET /logout
-func (h *LoginHandler) GetLogout(w http.ResponseWriter, r *http.Request) error {
-	h.sess.Clear(w, r)
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
-	return nil
-}
-
-func (h *LoginHandler) Register(r *pat.Router) {
-	r.Get("/login/{host}", errorHandler(h.GetLogin))
-	r.Post("/login/{host}", errorHandler(h.GetLogin))
-	r.Get("/logout", errorHandler(h.GetLogout))
 }

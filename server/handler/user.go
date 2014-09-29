@@ -4,112 +4,110 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/drone/drone/server/database"
-	"github.com/drone/drone/server/session"
+	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/shared/model"
-	"github.com/gorilla/pat"
+	"github.com/goji/context"
+	"github.com/zenazn/goji/web"
 )
 
-type UserHandler struct {
-	commits database.CommitManager
-	repos   database.RepoManager
-	users   database.UserManager
-	sess    session.Session
-}
-
-func NewUserHandler(users database.UserManager, repos database.RepoManager, commits database.CommitManager, sess session.Session) *UserHandler {
-	return &UserHandler{commits, repos, users, sess}
-}
-
-// GetUser gets the authenticated user.
-// GET /api/user
-func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) error {
-	// get the user form the session
-	u := h.sess.User(r)
-	if u == nil {
-		return notAuthorized{}
+// GetUserCurrent accepts a request to retrieve the
+// currently authenticated user from the datastore
+// and return in JSON format.
+//
+//     GET /api/user
+//
+func GetUserCurrent(c web.C, w http.ResponseWriter, r *http.Request) {
+	var user = ToUser(c)
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
-	// Normally the Token would not be serialized to json.
-	// In this case it is appropriate because the user is
-	// requesting their own data, and will need to display
-	// the Token on the website.
+	// return private data for the currently authenticated
+	// user, specifically, their auth token.
 	data := struct {
 		*model.User
 		Token string `json:"token"`
-	}{u, u.Token}
-	return json.NewEncoder(w).Encode(&data)
+	}{user, user.Token}
+	json.NewEncoder(w).Encode(&data)
 }
 
-// PutUser updates the authenticated user.
-// PUT /api/user
-func (h *UserHandler) PutUser(w http.ResponseWriter, r *http.Request) error {
-	// get the user form the session
-	u := h.sess.User(r)
-	if u == nil {
-		return notAuthorized{}
+// PutUser accepts a request to update the currently
+// authenticated User profile.
+//
+//     PUT /api/user
+//
+func PutUser(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var user = ToUser(c)
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
 
 	// unmarshal the repository from the payload
 	defer r.Body.Close()
 	in := model.User{}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-		return badRequest{err}
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	// update the user email
 	if len(in.Email) != 0 {
-		u.SetEmail(in.Email)
+		user.SetEmail(in.Email)
 	}
 	// update the user full name
 	if len(in.Name) != 0 {
-		u.Name = in.Name
+		user.Name = in.Name
 	}
 
 	// update the database
-	if err := h.users.Update(u); err != nil {
-		return internalServerError{err}
+	if err := datastore.PutUser(ctx, user); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	return json.NewEncoder(w).Encode(u)
+	json.NewEncoder(w).Encode(user)
 }
 
-// GetRepos gets the authenticated user's repositories.
-// GET /api/user/repos
-func (h *UserHandler) GetRepos(w http.ResponseWriter, r *http.Request) error {
-	// get the user from the session
-	u := h.sess.User(r)
-	if u == nil {
-		return notAuthorized{}
+// GetRepos accepts a request to get the currently
+// authenticated user's repository list from the datastore,
+// encoded and returned in JSON format.
+//
+//     GET /api/user/repos
+//
+func GetUserRepos(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var user = ToUser(c)
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
-
-	// get the user repositories
-	repos, err := h.repos.List(u.ID)
+	repos, err := datastore.GetRepoList(ctx, user)
 	if err != nil {
-		return badRequest{err}
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
-	return json.NewEncoder(w).Encode(&repos)
+	json.NewEncoder(w).Encode(&repos)
 }
 
-// GetFeed gets the authenticated user's commit feed.
-// GET /api/user/feed
-func (h *UserHandler) GetFeed(w http.ResponseWriter, r *http.Request) error {
-	// get the user from the session
-	u := h.sess.User(r)
-	if u == nil {
-		return notAuthorized{}
+// GetUserFeed accepts a request to get the user's latest
+// build feed, across all repositories, from the datastore.
+// The results are encoded and returned in JSON format.
+//
+//     GET /api/user/feed
+//
+func GetUserFeed(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var user = ToUser(c)
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
-
-	// get the user commits
-	commits, err := h.commits.ListUser(u.ID)
+	repos, err := datastore.GetCommitListUser(ctx, user)
 	if err != nil {
-		return badRequest{err}
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
-	return json.NewEncoder(w).Encode(&commits)
-}
-
-func (h *UserHandler) Register(r *pat.Router) {
-	r.Get("/v1/user/repos", errorHandler(h.GetRepos))
-	r.Get("/v1/user/feed", errorHandler(h.GetFeed))
-	r.Get("/v1/user", errorHandler(h.GetUser))
-	r.Put("/v1/user", errorHandler(h.PutUser))
+	json.NewEncoder(w).Encode(&repos)
 }

@@ -2,97 +2,67 @@ package session
 
 import (
 	"net/http"
+	"time"
 
-	"github.com/drone/drone/server/database"
+	"code.google.com/p/go.net/context"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/securecookie"
-	"github.com/gorilla/sessions"
 )
 
-// stores sessions using secure cookies.
-var cookies = sessions.NewCookieStore(
-	securecookie.GenerateRandomKey(64))
+// secret key used to create jwt
+var secret = securecookie.GenerateRandomKey(32)
 
-// stores sessions using secure cookies.
-var xsrftoken = string(securecookie.GenerateRandomKey(32))
-
-type Session interface {
-	User(r *http.Request) *model.User
-	UserToken(r *http.Request) *model.User
-	UserCookie(r *http.Request) *model.User
-	SetUser(w http.ResponseWriter, r *http.Request, u *model.User)
-	Clear(w http.ResponseWriter, r *http.Request)
-}
-
-type session struct {
-	users database.UserManager
-}
-
-func NewSession(users database.UserManager) Session {
-	return &session{
-		users: users,
-	}
-}
-
-// User gets the currently authenticated user.
-func (s *session) User(r *http.Request) *model.User {
+// GetUser gets the currently authenticated user for the
+// http.Request. The user details will be stored as either
+// a simple API token or JWT bearer token.
+func GetUser(c context.Context, r *http.Request) *model.User {
+	var token = r.FormValue("access_token")
 	switch {
-	case r.FormValue("access_token") == "":
-		return s.UserCookie(r)
-	case r.FormValue("access_token") != "":
-		return s.UserToken(r)
+	case len(token) == 0:
+		return nil
+	case len(token) == 32:
+		return getUserToken(c, r)
+	default:
+		return getUserBearer(c, r)
 	}
-	return nil
 }
 
-// UserXsrf gets the currently authenticated user and
-// validates the xsrf session token, if necessary.
-func (s *session) UserXsrf(r *http.Request) *model.User {
-	user := s.User(r)
-	if user == nil || r.FormValue("access_token") != "" {
-		return user
-	}
-	if !httputil.CheckXsrf(r, xsrftoken, user.Login) {
-		return nil
-	}
+// GenerateToken generates a JWT token for the user session
+// that can be appended to the #access_token segment to
+// facilitate client-based OAuth2.
+func GenerateToken(c context.Context, r *http.Request, user *model.User) (string, error) {
+	token := jwt.New(jwt.GetSigningMethod("HS256"))
+	token.Claims["user_id"] = user.ID
+	token.Claims["audience"] = httputil.GetURL(r)
+	token.Claims["expires"] = time.Now().UTC().Add(time.Hour * 72).Unix()
+	return token.SignedString(secret)
+}
+
+// getUserToken gets the currently authenticated user for the given
+// auth token.
+func getUserToken(c context.Context, r *http.Request) *model.User {
+	var token = r.FormValue("access_token")
+	var user, _ = datastore.GetUserToken(c, token)
 	return user
 }
 
-// UserToken gets the currently authenticated user for the given auth token.
-func (s *session) UserToken(r *http.Request) *model.User {
-	token := r.FormValue("access_token")
-	user, _ := s.users.FindToken(token)
-	return user
-}
-
-// UserCookie gets the currently authenticated user from the secure cookie session.
-func (s *session) UserCookie(r *http.Request) *model.User {
-	sess, err := cookies.Get(r, "_sess")
-	if err != nil {
+// getUserBearer gets the currently authenticated user for the given
+// bearer token (JWT)
+func getUserBearer(c context.Context, r *http.Request) *model.User {
+	var tokenstr = r.FormValue("access_token")
+	var token, err = jwt.Parse(tokenstr, func(t *jwt.Token) (interface{}, error) {
+		return secret, nil
+	})
+	if err != nil || token.Valid {
 		return nil
 	}
-	// get the uid from the session
-	value, ok := sess.Values["uid"]
+	var userid, ok = token.Claims["user_id"].(int64)
 	if !ok {
 		return nil
 	}
-	// get the user from the database
-	user, _ := s.users.Find(value.(int64))
+	var user, _ = datastore.GetUser(c, userid)
 	return user
-}
-
-// SetUser writes the specified username to the session.
-func (s *session) SetUser(w http.ResponseWriter, r *http.Request, u *model.User) {
-	sess, _ := cookies.Get(r, "_sess")
-	sess.Values["uid"] = u.ID
-	sess.Save(r, w)
-	httputil.SetXsrf(w, r, xsrftoken, u.Login)
-}
-
-// Clear removes the user from the session.
-func (s *session) Clear(w http.ResponseWriter, r *http.Request) {
-	sess, _ := cookies.Get(r, "_sess")
-	delete(sess.Values, "uid")
-	sess.Save(r, w)
 }

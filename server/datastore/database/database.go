@@ -72,8 +72,8 @@ func mustConnectTest() *sql.DB {
 	return db
 }
 
-// New returns a new DataStore
-func New(db *sql.DB) datastore.Datastore {
+// New returns a new Datastore
+func NewDatastore(db *sql.DB) datastore.Datastore {
 	return struct {
 		*Userstore
 		*Permstore

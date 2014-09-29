@@ -6,96 +6,73 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/plugin/remote"
-	"github.com/drone/drone/server/database"
-	"github.com/drone/drone/server/session"
+	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 	"github.com/drone/drone/shared/sshutil"
-	"github.com/gorilla/pat"
+	"github.com/goji/context"
+	"github.com/zenazn/goji/web"
 )
 
-type RepoHandler struct {
-	commits database.CommitManager
-	perms   database.PermManager
-	repos   database.RepoManager
-	sess    session.Session
-}
+// GetRepo accepts a request to retrieve a commit
+// from the datastore for the given repository, branch and
+// commit hash.
+//
+//     GET /api/repos/:host/:owner/:name
+//
+func GetRepo(c web.C, w http.ResponseWriter, r *http.Request) {
+	var (
+		admin = r.FormValue("admin")
+		role  = ToRole(c)
+		repo  = ToRepo(c)
+	)
 
-func NewRepoHandler(repos database.RepoManager, commits database.CommitManager,
-	perms database.PermManager, sess session.Session) *RepoHandler {
-	return &RepoHandler{commits, perms, repos, sess}
-}
-
-// GetRepo gets the named repository.
-// GET /v1/repos/:host/:owner/:name
-func (h *RepoHandler) GetRepo(w http.ResponseWriter, r *http.Request) error {
-	var host, owner, name = parseRepo(r)
-	var admin = r.FormValue("admin")
-
-	// get the user form the session.
-	user := h.sess.User(r)
-
-	// get the repository from the database.
-	repo, err := h.repos.FindName(host, owner, name)
-	switch {
-	case err != nil && user == nil:
-		return notAuthorized{}
-	case err != nil && user != nil:
-		return notFound{}
+	// if the user is not requesting (or cannot access)
+	// admin data then we just return the repo as-is
+	if len(admin) == 0 || role.Admin == false {
+		json.NewEncoder(w).Encode(repo)
+		return
 	}
 
-	// user must have read access to the repository.
-	repo.Role = h.perms.Find(user, repo)
-	switch {
-	case repo.Role.Read == false && user == nil:
-		return notAuthorized{}
-	case repo.Role.Read == false && user != nil:
-		return notFound{}
-	}
-	// if the user is not requesting admin data we can
-	// return exactly what we have.
-	if len(admin) == 0 {
-		return json.NewEncoder(w).Encode(repo)
-	}
-
-	// ammend the response to include data that otherwise
-	// would be excluded from json serialization, assuming
-	// the user is actually an admin of the repo.
-	if ok, _ := h.perms.Admin(user, repo); !ok {
-		return notFound{err}
-	}
-
-	return json.NewEncoder(w).Encode(struct {
+	// else we should return restricted fields
+	json.NewEncoder(w).Encode(struct {
 		*model.Repo
 		PublicKey string `json:"public_key"`
 		Params    string `json:"params"`
 	}{repo, repo.PublicKey, repo.Params})
 }
 
-// PostRepo activates the named repository.
-// POST /v1/repos/:host/:owner/:name
-func (h *RepoHandler) PostRepo(w http.ResponseWriter, r *http.Request) error {
-	var host, owner, name = parseRepo(r)
+// DelRepo accepts a request to inactivate the named
+// repository. This will disable all builds in the system
+// for this repository.
+//
+//     DEL /api/repos/:host/:owner/:name
+//
+func DelRepo(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var repo = ToRepo(c)
 
-	// get the user form the session.
-	user := h.sess.User(r)
-	if user == nil {
-		return notAuthorized{}
-	}
+	// disable everything
+	repo.Active = false
+	repo.PullRequest = false
+	repo.PostCommit = false
 
-	// get the repo from the database
-	repo, err := h.repos.FindName(host, owner, name)
-	switch {
-	case err != nil && user == nil:
-		return notAuthorized{}
-	case err != nil && user != nil:
-		return notFound{}
+	if err := datastore.PutRepo(ctx, repo); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+	w.WriteHeader(http.StatusNoContent)
+}
 
-	// user must have admin access to the repository.
-	if ok, _ := h.perms.Admin(user, repo); !ok {
-		return notFound{err}
-	}
+// PostRepo accapets a request to activate the named repository
+// in the datastore. It returns a 201 status created if successful
+//
+//     POST /api/repos/:host/:owner/:name
+//
+func PostRepo(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var repo = ToRepo(c)
+	var user = ToUser(c)
 
 	// update the repo active flag and fields
 	repo.Active = true
@@ -104,62 +81,47 @@ func (h *RepoHandler) PostRepo(w http.ResponseWriter, r *http.Request) error {
 	repo.UserID = user.ID
 	repo.Timeout = 3600 // default to 1 hour
 
-	// generate the rsa key
+	// generates the rsa key
 	key, err := sshutil.GeneratePrivateKey()
 	if err != nil {
-		return internalServerError{err}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-
-	// marshal the public and private key values
 	repo.PublicKey = sshutil.MarshalPublicKey(&key.PublicKey)
 	repo.PrivateKey = sshutil.MarshalPrivateKey(key)
 
-	var remote = remote.Lookup(host)
+	var remote = remote.Lookup(repo.Host)
 	if remote == nil {
-		return notFound{}
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
-	// post commit hook url
-	hook := fmt.Sprintf("%s://%s/v1/hook/%s", httputil.GetScheme(r), httputil.GetHost(r), remote.GetKind())
-
-	// activate the repository in the remote system
+	// setup the post-commit hook with the remote system and
+	// if necessary, register the public key
+	var hook = fmt.Sprintf("%s/v1/hook/%s", httputil.GetURL(r), repo.Remote)
 	if err := remote.Activate(user, repo, hook); err != nil {
-		return badRequest{err}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	// update the status in the database
-	if err := h.repos.Update(repo); err != nil {
-		return badRequest{err}
+	if err := datastore.PutRepo(ctx, repo); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-
 	w.WriteHeader(http.StatusCreated)
-	return json.NewEncoder(w).Encode(repo)
+	json.NewEncoder(w).Encode(repo)
 }
 
-// PutRepo updates the named repository.
-// PUT /v1/repos/:host/:owner/:name
-func (h *RepoHandler) PutRepo(w http.ResponseWriter, r *http.Request) error {
-	var host, owner, name = parseRepo(r)
-
-	// get the user form the session.
-	user := h.sess.User(r)
-	if user == nil {
-		return notAuthorized{}
-	}
-
-	// get the repo from the database
-	repo, err := h.repos.FindName(host, owner, name)
-	switch {
-	case err != nil && user == nil:
-		return notAuthorized{}
-	case err != nil && user != nil:
-		return notFound{}
-	}
-
-	// user must have admin access to the repository.
-	if ok, _ := h.perms.Admin(user, repo); !ok {
-		return notFound{err}
-	}
+// PutRepo accapets a request to update the named repository
+// in the datastore. It expects a JSON input and returns the
+// updated repository in JSON format if successful.
+//
+//     PUT /api/repos/:host/:owner/:name
+//
+func PutRepo(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var repo = ToRepo(c)
+	var user = ToUser(c)
 
 	// unmarshal the repository from the payload
 	defer r.Body.Close()
@@ -173,28 +135,22 @@ func (h *RepoHandler) PutRepo(w http.ResponseWriter, r *http.Request) error {
 		PrivateKey  *string `json:"private_key"`
 	}{}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-		return badRequest{err}
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
-	// update the private/secure parameters
 	if in.Params != nil {
 		repo.Params = *in.Params
 	}
-	// update the post commit flag
 	if in.PostCommit != nil {
 		repo.PostCommit = *in.PostCommit
 	}
-	// update the pull request flag
 	if in.PullRequest != nil {
 		repo.PullRequest = *in.PullRequest
 	}
-	// update the privileged flag. This can only be updated by
-	// the system administrator
 	if in.Privileged != nil && user.Admin {
 		repo.Privileged = *in.Privileged
 	}
-	// update the timeout. This can only be updated by
-	// the system administrator
 	if in.Timeout != nil && user.Admin {
 		repo.Timeout = *in.Timeout
 	}
@@ -202,93 +158,9 @@ func (h *RepoHandler) PutRepo(w http.ResponseWriter, r *http.Request) error {
 		repo.PublicKey = *in.PublicKey
 		repo.PrivateKey = *in.PrivateKey
 	}
-
-	// update the repository
-	if err := h.repos.Update(repo); err != nil {
-		return badRequest{err}
+	if err := datastore.PutRepo(ctx, repo); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-
-	return json.NewEncoder(w).Encode(repo)
-}
-
-// DeleteRepo deletes the named repository.
-// DEL /v1/repos/:host/:owner/:name
-func (h *RepoHandler) DeleteRepo(w http.ResponseWriter, r *http.Request) error {
-	var host, owner, name = parseRepo(r)
-
-	// get the user form the session.
-	user := h.sess.User(r)
-	if user == nil {
-		return notAuthorized{}
-	}
-
-	// get the repo from the database
-	repo, err := h.repos.FindName(host, owner, name)
-	switch {
-	case err != nil && user == nil:
-		return notAuthorized{}
-	case err != nil && user != nil:
-		return notFound{}
-	}
-
-	// user must have admin access to the repository.
-	if ok, _ := h.perms.Admin(user, repo); !ok {
-		return notFound{err}
-	}
-
-	// update the repo active flag and fields.
-	repo.Active = false
-	repo.PullRequest = false
-	repo.PostCommit = false
-
-	// insert the new repository
-	if err := h.repos.Update(repo); err != nil {
-		return badRequest{err}
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-	return nil
-}
-
-// GetFeed gets the most recent commits across all branches
-// GET /v1/repos/{host}/{owner}/{name}/feed
-func (h *RepoHandler) GetFeed(w http.ResponseWriter, r *http.Request) error {
-	var host, owner, name = parseRepo(r)
-
-	// get the user form the session.
-	user := h.sess.User(r)
-
-	// get the repository from the database.
-	repo, err := h.repos.FindName(host, owner, name)
-	switch {
-	case err != nil && user == nil:
-		return notAuthorized{}
-	case err != nil && user != nil:
-		return notFound{}
-	}
-
-	// user must have read access to the repository.
-	ok, _ := h.perms.Read(user, repo)
-	switch {
-	case ok == false && user == nil:
-		return notAuthorized{}
-	case ok == false && user != nil:
-		return notFound{}
-	}
-
-	// lists the most recent commits across all branches.
-	commits, err := h.commits.List(repo.ID)
-	if err != nil {
-		return notFound{err}
-	}
-
-	return json.NewEncoder(w).Encode(commits)
-}
-
-func (h *RepoHandler) Register(r *pat.Router) {
-	r.Get("/v1/repos/{host}/{owner}/{name}/feed", errorHandler(h.GetFeed))
-	r.Get("/v1/repos/{host}/{owner}/{name}", errorHandler(h.GetRepo))
-	r.Put("/v1/repos/{host}/{owner}/{name}", errorHandler(h.PutRepo))
-	r.Post("/v1/repos/{host}/{owner}/{name}", errorHandler(h.PostRepo))
-	r.Delete("/v1/repos/{host}/{owner}/{name}", errorHandler(h.DeleteRepo))
+	json.NewEncoder(w).Encode(repo)
 }

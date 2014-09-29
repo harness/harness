@@ -5,28 +5,32 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"runtime"
 	"strings"
 
 	"github.com/drone/config"
-	"github.com/drone/drone/server/database"
-	"github.com/drone/drone/server/database/schema"
+	//"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/handler"
-	"github.com/drone/drone/server/pubsub"
-	"github.com/drone/drone/server/session"
-	"github.com/drone/drone/server/worker"
+	"github.com/drone/drone/server/middleware"
+	//"github.com/drone/drone/server/pubsub"
+	//"github.com/drone/drone/server/session"
+	//"github.com/drone/drone/server/worker"
 	"github.com/drone/drone/shared/build/log"
-	"github.com/drone/drone/shared/model"
+	//"github.com/drone/drone/shared/model"
 
-	"github.com/gorilla/pat"
-	//"github.com/justinas/nosurf"
-	"github.com/GeertJohan/go.rice"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/russross/meddler"
+	//"github.com/GeertJohan/go.rice"
 
+	"code.google.com/p/go.net/context"
+	webcontext "github.com/goji/context"
+	"github.com/zenazn/goji"
+	"github.com/zenazn/goji/web"
+
+	_ "github.com/drone/drone/plugin/notify/email"
 	"github.com/drone/drone/plugin/remote/bitbucket"
 	"github.com/drone/drone/plugin/remote/github"
 	"github.com/drone/drone/plugin/remote/gitlab"
+	"github.com/drone/drone/server/blobstore"
+	"github.com/drone/drone/server/datastore"
+	"github.com/drone/drone/server/datastore/database"
 )
 
 var (
@@ -58,6 +62,8 @@ var (
 	open bool
 
 	nodes StringArr
+
+	db *sql.DB
 )
 
 func main() {
@@ -65,12 +71,8 @@ func main() {
 
 	flag.StringVar(&conf, "config", "", "")
 	flag.StringVar(&prefix, "prefix", "DRONE_", "")
-	flag.StringVar(&port, "port", ":8080", "")
 	flag.StringVar(&driver, "driver", "sqlite3", "")
 	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
-	flag.StringVar(&sslcert, "sslcert", "", "")
-	flag.StringVar(&sslkey, "sslkey", "", "")
-	flag.IntVar(&workers, "workers", runtime.NumCPU(), "")
 	flag.Parse()
 
 	config.Var(&nodes, "worker-nodes")
@@ -85,86 +87,91 @@ func main() {
 	github.Register()
 	gitlab.Register()
 
-	// setup the database
-	meddler.Default = meddler.SQLite
-	db, _ := sql.Open(driver, datasource)
-	schema.Load(db)
+	// setup the database and cancel all pending
+	// commits in the system.
+	db = database.MustConnect(driver, datasource)
+	go database.NewCommitstore(db).KillCommits()
 
-	// setup the database managers
-	repos := database.NewRepoManager(db)
-	users := database.NewUserManager(db)
-	perms := database.NewPermManager(db)
-	commits := database.NewCommitManager(db)
+	goji.Get("/api/auth/:host", handler.GetLogin)
+	goji.Get("/api/badge/:host/:owner/:name/status.svg", handler.GetBadge)
+	goji.Get("/api/badge/:host/:owner/:name/cc.xml", handler.GetCC)
+	//goji.Get("/api/hook", handler.PostHook)
+	//goji.Put("/api/hook", handler.PostHook)
+	//goji.Post("/api/hook", handler.PostHook)
 
-	// message broker
-	pubsub := pubsub.NewPubSub()
+	repos := web.New()
+	repos.Use(middleware.SetRepo)
+	repos.Use(middleware.RequireRepoRead)
+	repos.Use(middleware.RequireRepoAdmin)
+	repos.Get("/api/repos/:host/:owner/:name/branches/:branch/commits/:commit/console", handler.GetOutput)
+	repos.Get("/api/repos/:host/:owner/:name/branches/:branch/commits/:commit", handler.GetCommit)
+	repos.Post("/api/repos/:host/:owner/:name/branches/:branch/commits/:commit", handler.PostCommit)
+	repos.Get("/api/repos/:host/:owner/:name/commits", handler.GetCommitList)
+	repos.Get("/api/repos/:host/:owner/:name", handler.GetRepo)
+	repos.Put("/api/repos/:host/:owner/:name", handler.PutRepo)
+	repos.Post("/api/repos/:host/:owner/:name", handler.PostRepo)
+	repos.Delete("/api/repos/:host/:owner/:name", handler.DelRepo)
+	goji.Handle("/api/repos/:host/:owner/:name*", repos)
 
-	// cancel all previously running builds
-	go commits.CancelAll()
+	users := web.New()
+	users.Use(middleware.RequireUserAdmin)
+	users.Get("/api/users/:host/:login", handler.GetUser)
+	users.Post("/api/users/:host/:login", handler.PostUser)
+	users.Delete("/api/users/:host/:login", handler.DelUser)
+	users.Get("/api/users", handler.GetUserList)
+	goji.Handle("/api/users*", users)
 
-	queue := make(chan *model.Request)
-	workerc := make(chan chan *model.Request)
-	worker.NewDispatch(queue, workerc).Start()
+	user := web.New()
+	user.Use(middleware.RequireUser)
+	user.Get("/api/user/feed", handler.GetUserFeed)
+	user.Get("/api/user/repos", handler.GetUserRepos)
+	user.Get("/api/user", handler.GetUserCurrent)
+	user.Put("/api/user", handler.PutUser)
+	goji.Handle("/api/user*", user)
+
+	// Add middleware and serve
+	goji.Use(ContextMiddleware)
+	goji.Use(middleware.SetHeaders)
+	goji.Use(middleware.SetUser)
+	goji.Serve()
 
 	// if no worker nodes are specified than start 2 workers
 	// using the default DOCKER_HOST
-	if nodes == nil || len(nodes) == 0 {
-		worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
-		worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
-	} else {
-		for _, node := range nodes {
-			println(node)
-			worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{Host: node}).Start()
+	/*
+		if nodes == nil || len(nodes) == 0 {
+			worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
+			worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
+		} else {
+			for _, node := range nodes {
+				println(node)
+				worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{Host: node}).Start()
+			}
 		}
-	}
-
-	// setup the session managers
-	sess := session.NewSession(users)
-
-	// setup the router and register routes
-	router := pat.New()
-	handler.NewUsersHandler(users, sess).Register(router)
-	handler.NewUserHandler(users, repos, commits, sess).Register(router)
-	handler.NewHookHandler(users, repos, commits, queue).Register(router)
-	handler.NewLoginHandler(users, repos, perms, sess, open).Register(router)
-	handler.NewCommitHandler(users, repos, commits, perms, sess, queue).Register(router)
-	handler.NewRepoHandler(repos, commits, perms, sess).Register(router)
-	handler.NewBadgeHandler(repos, commits).Register(router)
-	handler.NewWsHandler(repos, commits, perms, sess, pubsub).Register(router)
-
-	box := rice.MustFindBox("app/")
-	fserver := http.FileServer(box.HTTPBox())
-	index, _ := box.Bytes("index.html")
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		switch {
-		case strings.HasPrefix(r.URL.Path, "/favicon.ico"),
-			strings.HasPrefix(r.URL.Path, "/scripts/"),
-			strings.HasPrefix(r.URL.Path, "/styles/"),
-			strings.HasPrefix(r.URL.Path, "/views/"):
-			// serve static conent
-			fserver.ServeHTTP(w, r)
-		case strings.HasPrefix(r.URL.Path, "/logout"),
-			strings.HasPrefix(r.URL.Path, "/login/"),
-			strings.HasPrefix(r.URL.Path, "/v1/"),
-			strings.HasPrefix(r.URL.Path, "/ws/"):
-			// standard header variables that should be set, for good measure.
-			w.Header().Add("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
-			w.Header().Add("X-Frame-Options", "DENY")
-			w.Header().Add("X-Content-Type-Options", "nosniff")
-			w.Header().Add("X-XSS-Protection", "1; mode=block")
-			// serve dynamic content
-			router.ServeHTTP(w, r)
-		default:
-			w.Write(index)
-		}
-	})
+	*/
 
 	// start webserver using HTTPS or HTTP
-	if len(sslcert) != 0 {
-		panic(http.ListenAndServeTLS(port, sslcert, sslkey, nil))
-	} else {
-		panic(http.ListenAndServe(port, nil))
+	//if len(sslcert) != 0 {
+	//	panic(http.ListenAndServeTLS(port, sslcert, sslkey, nil))
+	//} else {
+	//panic(http.ListenAndServe(port, nil))
+	//}
+}
+
+// ContextMiddleware creates a new go.net/context and
+// injects into the current goji context.
+func ContextMiddleware(c *web.C, h http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		var ctx = context.Background()
+		ctx = datastore.NewContext(ctx, database.NewDatastore(db))
+		ctx = blobstore.NewContext(ctx, database.NewBlobstore(db))
+		//ctx = pool.NewContext(ctx, workers)
+		//ctx = director.NewContext(ctx, worker)
+
+		// add the context to the goji web context
+		webcontext.Set(c, ctx)
+		h.ServeHTTP(w, r)
 	}
+	return http.HandlerFunc(fn)
 }
 
 type StringArr []string
