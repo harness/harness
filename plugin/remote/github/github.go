@@ -59,7 +59,7 @@ func (r *GitHub) Authorize(res http.ResponseWriter, req *http.Request) (*model.L
 		Scope:        DefaultScope,
 		AuthURL:      fmt.Sprintf("%s/login/oauth/authorize", r.URL),
 		TokenURL:     fmt.Sprintf("%s/login/oauth/access_token", r.URL),
-		RedirectURL:  fmt.Sprintf("%s/login/%s", httputil.GetURL(req), r.GetKind()),
+		RedirectURL:  fmt.Sprintf("%s/api/auth/%s", httputil.GetURL(req), r.GetKind()),
 	}
 
 	// get the OAuth code

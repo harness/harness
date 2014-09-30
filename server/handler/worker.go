@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/drone/drone-dart/worker"
-	"github.com/drone/drone-dart/worker/director"
-	"github.com/drone/drone-dart/worker/pool"
+	"github.com/drone/drone/server/worker"
+	"github.com/drone/drone/server/worker/director"
+	"github.com/drone/drone/server/worker/pool"
 	"github.com/goji/context"
 	"github.com/zenazn/goji/web"
 )

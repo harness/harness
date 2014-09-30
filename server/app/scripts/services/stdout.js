@@ -8,7 +8,7 @@ angular.module('app').service('stdout', ['$window', function($window) {
 		callback = _callback;
 
 		var proto = ($window.location.protocol == 'https:' ? 'wss' : 'ws');
-		var route = [proto, "://", $window.location.host, '/ws/stdout/', path].join('');
+		var route = [proto, "://", $window.location.host, '/api/feed/stdout/', path].join('');
 
 		websocket = new WebSocket(route);
 		websocket.onmessage = function(event) {

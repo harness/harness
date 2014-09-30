@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -155,4 +156,21 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 	redirect = redirect + "#access_token=" + token
 
 	http.Redirect(w, r, redirect, http.StatusSeeOther)
+}
+
+// GetLoginList accepts a request to retrive a list of
+// all OAuth login options.
+//
+//     GET /api/remotes/login
+//
+func GetLoginList(c web.C, w http.ResponseWriter, r *http.Request) {
+	var list = remote.Registered()
+	var logins []interface{}
+	for _, item := range list {
+		logins = append(logins, struct {
+			Type string `json:"type"`
+			Host string `json:"host"`
+		}{item.GetKind(), item.GetHost()})
+	}
+	json.NewEncoder(w).Encode(&logins)
 }

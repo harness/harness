@@ -27,7 +27,7 @@ angular.module('app').controller("SetupController", function($scope, $http, $rou
 	// todo(bradrydzewski) move this to the remote.js service.
 	$scope.save = function() {
 		// request to create a new repository
-		$http({method: 'POST', url: '/v1/remotes', data: $scope.remote }).
+		$http({method: 'POST', url: '/api/remotes', data: $scope.remote }).
 			success(function(data, status, headers, config) {
 				delete $scope.failure;
 				$location.path("/login");

@@ -3,7 +3,7 @@
 angular.module('app').service('feed', ['$http', '$window', function($http, $window) {
 
 	var proto = ($window.location.protocol == 'https:' ? 'wss' : 'ws');
-	var route = [proto, "://", $window.location.host, '/ws/user'].join('');
+	var route = [proto, "://", $window.location.host, '/api/stream/user'].join('');
 
 	var wsCallback = undefined;
 	var ws = new WebSocket(route);

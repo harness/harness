@@ -1,6 +1,7 @@
 package session
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -19,14 +20,13 @@ var secret = securecookie.GenerateRandomKey(32)
 // http.Request. The user details will be stored as either
 // a simple API token or JWT bearer token.
 func GetUser(c context.Context, r *http.Request) *model.User {
-	var token = r.FormValue("access_token")
 	switch {
-	case len(token) == 0:
-		return nil
-	case len(token) == 32:
+	case r.Header.Get("Authorization") != "":
+		return getUserBearer(c, r)
+	case r.FormValue("access_token") != "":
 		return getUserToken(c, r)
 	default:
-		return getUserBearer(c, r)
+		return nil
 	}
 }
 
@@ -52,17 +52,20 @@ func getUserToken(c context.Context, r *http.Request) *model.User {
 // getUserBearer gets the currently authenticated user for the given
 // bearer token (JWT)
 func getUserBearer(c context.Context, r *http.Request) *model.User {
-	var tokenstr = r.FormValue("access_token")
+	var tokenstr = r.Header.Get("Authorization")
+	fmt.Sscanf(tokenstr, "Bearer %s", &tokenstr)
+
 	var token, err = jwt.Parse(tokenstr, func(t *jwt.Token) (interface{}, error) {
 		return secret, nil
 	})
-	if err != nil || token.Valid {
+	if err != nil || !token.Valid {
+		println("invalid token")
 		return nil
 	}
-	var userid, ok = token.Claims["user_id"].(int64)
+	var userid, ok = token.Claims["user_id"].(float64)
 	if !ok {
 		return nil
 	}
-	var user, _ = datastore.GetUser(c, userid)
+	var user, _ = datastore.GetUser(c, int64(userid))
 	return user
 }

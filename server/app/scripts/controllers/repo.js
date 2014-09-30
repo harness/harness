@@ -42,7 +42,7 @@ angular.module('app').controller("RepoController", function($scope, $http, $rout
 
 	$scope.activate = function() {
 		// request to create a new repository
-		$http({method: 'POST', url: '/v1/repos/'+repo.host+'/'+repo.owner+"/"+repo.name }).
+		$http({method: 'POST', url: '/api/repos/'+repo.host+'/'+repo.owner+"/"+repo.name }).
 			success(function(data, status, headers, config) {
 				$scope.repo = data;
 			}).
@@ -79,7 +79,7 @@ angular.module('app').controller("RepoConfigController", function($scope, $http,
 
 	// load the repo meta-data
 	// request admin details for the repository as well.
-	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"?admin=1"}).
+	$http({method: 'GET', url: '/api/repos/'+remote+'/'+owner+"/"+name+"?admin=1"}).
 		success(function(data, status, headers, config) {
 			$scope.repo = data;
 		}).
@@ -89,7 +89,7 @@ angular.module('app').controller("RepoConfigController", function($scope, $http,
 
 	$scope.save = function() {
 		// request to create a new repository
-		$http({method: 'PUT', url: '/v1/repos/'+remote+'/'+owner+"/"+name, data: $scope.repo }).
+		$http({method: 'PUT', url: '/api/repos/'+remote+'/'+owner+"/"+name, data: $scope.repo }).
 			success(function(data, status, headers, config) {
 				delete $scope.failure;
 			}).
