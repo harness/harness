@@ -6,7 +6,7 @@ angular.module('app').controller("HomeController", function($scope, $http, feed)
 		// todo toast notification
 	});
 
-	$http({method: 'GET', url: '/v1/user/feed'}).
+	$http({method: 'GET', url: '/api/user/feed'}).
 		success(function(data, status, headers, config) {
 			$scope.feed = (typeof data==='string')?[]:data;
 		}).
@@ -14,7 +14,7 @@ angular.module('app').controller("HomeController", function($scope, $http, feed)
 			console.log(data);
 		});
 
-	$http({method: 'GET', url: '/v1/user/repos'}).
+	$http({method: 'GET', url: '/api/user/repos'}).
 		success(function(data, status, headers, config) {
 			$scope.repos = (typeof data==='string')?[]:data;
 		}).

@@ -43,7 +43,7 @@ func (r *Bitbucket) Authorize(res http.ResponseWriter, req *http.Request) (*mode
 		RequestTokenURL:  "https://bitbucket.org/api/1.0/oauth/request_token/",
 		AuthorizationURL: "https://bitbucket.org/!api/1.0/oauth/authenticate",
 		AccessTokenURL:   "https://bitbucket.org/api/1.0/oauth/access_token/",
-		CallbackURL:      httputil.GetScheme(req) + "://" + httputil.GetHost(req) + "/login/bitbucket.org",
+		CallbackURL:      httputil.GetScheme(req) + "://" + httputil.GetHost(req) + "/api/auth/bitbucket.org",
 		ConsumerKey:      r.Client,
 		ConsumerSecret:   r.Secret,
 	}

@@ -13,14 +13,14 @@
 		<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans" />
 		<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Orbitron" />
 		<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Droid+Sans+Mono" />
-		<link rel="stylesheet" href="/styles/drone.css" />
+		<link rel="stylesheet" href="/static/styles/drone.css" />
 
 	</head>
 	<body ng-controller="MainCtrl" ng-cloak>
 		<div id="container">
 			<input id="drawer-checkbox" type="checkbox" ng-if="user != undefined" />
-			<header id="header" ng-include src=" '/views/header.html' "></header>
-			<aside id="drawer" ng-include src=" '/views/drawer.html' "></aside>
+			<header id="header" ng-include src=" '/static/views/header.html' "></header>
+			<aside id="drawer" ng-include src=" '/static/views/drawer.html' "></aside>
 			<div ng-view id="body"></div>
 		</div>
 
@@ -31,25 +31,25 @@
 		<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.6.0/moment.min.js"></script>
 
 		<!-- main javascript application -->
-		<script src="/scripts/line_formatter.js"></script>
-		<script src="/scripts/commit_updates.js"></script>
-		<script src="/scripts/app.js"></script>
-		<script src="/scripts/controllers/conf.js"></script>
-		<script src="/scripts/controllers/home.js"></script>
-		<script src="/scripts/controllers/repo.js"></script>
-		<script src="/scripts/controllers/user.js"></script>
-		<script src="/scripts/controllers/users.js"></script>
-		<script src="/scripts/controllers/setup.js"></script>
-		<script src="/scripts/controllers/sync.js"></script>
-		<script src="/scripts/controllers/main.js"></script>
-		<script src="/scripts/controllers/login.js"></script>
-		<script src="/scripts/services/auth.js"></script>
-		<script src="/scripts/services/conf.js"></script>
-		<script src="/scripts/services/repo.js"></script>
-		<script src="/scripts/services/user.js"></script>
-		<script src="/scripts/services/feed.js"></script>
-		<script src="/scripts/services/remote.js"></script>
-		<script src="/scripts/services/stdout.js"></script>
-		<script src="/scripts/filters/filters.js"></script>
+		<script src="/static/scripts/line_formatter.js"></script>
+		<script src="/static/scripts/commit_updates.js"></script>
+		<script src="/static/scripts/app.js"></script>
+		<script src="/static/scripts/controllers/conf.js"></script>
+		<script src="/static/scripts/controllers/home.js"></script>
+		<script src="/static/scripts/controllers/repo.js"></script>
+		<script src="/static/scripts/controllers/user.js"></script>
+		<script src="/static/scripts/controllers/users.js"></script>
+		<script src="/static/scripts/controllers/setup.js"></script>
+		<script src="/static/scripts/controllers/sync.js"></script>
+		<script src="/static/scripts/controllers/main.js"></script>
+		<script src="/static/scripts/controllers/login.js"></script>
+		<script src="/static/scripts/services/auth.js"></script>
+		<script src="/static/scripts/services/conf.js"></script>
+		<script src="/static/scripts/services/repo.js"></script>
+		<script src="/static/scripts/services/user.js"></script>
+		<script src="/static/scripts/services/feed.js"></script>
+		<script src="/static/scripts/services/remote.js"></script>
+		<script src="/static/scripts/services/stdout.js"></script>
+		<script src="/static/scripts/filters/filters.js"></script>
 	</body>
 </html>

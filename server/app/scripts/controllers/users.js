@@ -4,7 +4,7 @@ angular.module('app').controller("UsersController", function($scope, $http, user
 
 	$scope.user = user;
 
-	$http({method: 'GET', url: '/v1/users'}).
+	$http({method: 'GET', url: '/api/users'}).
 		success(function(data, status, headers, config) {
 			$scope.users = data;
 		}).

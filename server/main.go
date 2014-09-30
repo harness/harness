@@ -8,16 +8,12 @@ import (
 	"strings"
 
 	"github.com/drone/config"
-	//"github.com/drone/drone/server/database"
 	"github.com/drone/drone/server/handler"
 	"github.com/drone/drone/server/middleware"
-	//"github.com/drone/drone/server/pubsub"
-	//"github.com/drone/drone/server/session"
-	//"github.com/drone/drone/server/worker"
+	"github.com/drone/drone/server/pubsub"
 	"github.com/drone/drone/shared/build/log"
-	//"github.com/drone/drone/shared/model"
 
-	//"github.com/GeertJohan/go.rice"
+	"github.com/GeertJohan/go.rice"
 
 	"code.google.com/p/go.net/context"
 	webcontext "github.com/goji/context"
@@ -66,6 +62,8 @@ var (
 	// director
 	worker *director.Director
 
+	pub *pubsub.PubSub
+
 	nodes StringArr
 
 	db *sql.DB
@@ -105,6 +103,7 @@ func main() {
 	workers.Allocate(docker.New())
 	worker = director.New()
 
+	pub = pubsub.NewPubSub()
 	/*
 		if nodes == nil || len(nodes) == 0 {
 			worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
@@ -117,6 +116,7 @@ func main() {
 		}
 	*/
 
+	goji.Get("/api/logins", handler.GetLoginList)
 	goji.Get("/api/stream/stdout/:id", handler.WsConsole)
 	goji.Get("/api/stream/user", handler.WsUser)
 	goji.Get("/api/auth/:host", handler.GetLogin)
@@ -164,6 +164,14 @@ func main() {
 	work.Get("/api/workers", handler.GetWorkers)
 	goji.Handle("/api/work*", work)
 
+	// Include static resources
+	assets := rice.MustFindBox("app").HTTPBox()
+	assetserve := http.FileServer(rice.MustFindBox("app").HTTPBox())
+	http.Handle("/static/", http.StripPrefix("/static", assetserve))
+	goji.Get("/*", func(c web.C, w http.ResponseWriter, r *http.Request) {
+		w.Write(assets.MustBytes("index.html"))
+	})
+
 	// Add middleware and serve
 	goji.Use(ContextMiddleware)
 	goji.Use(middleware.SetHeaders)
@@ -187,6 +195,7 @@ func ContextMiddleware(c *web.C, h http.Handler) http.Handler {
 		ctx = blobstore.NewContext(ctx, database.NewBlobstore(db))
 		ctx = pool.NewContext(ctx, workers)
 		ctx = director.NewContext(ctx, worker)
+		ctx = pubsub.NewContext(ctx, pub)
 
 		// add the context to the goji web context
 		webcontext.Set(c, ctx)

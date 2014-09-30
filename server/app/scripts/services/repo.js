@@ -7,7 +7,7 @@ angular.module('app').service('repos', ['$q', '$http', function($q, $http) {
 	// @deprecated
 	this.getRepo = function(host, owner, name) {
 			var defer = $q.defer();
-			var route = '/v1/repos/'+host+'/'+owner+'/'+name;
+			var route = '/api/repos/'+host+'/'+owner+'/'+name;
 			$http.get(route).success(function(data){
 				defer.resolve(data);
 			});
@@ -16,30 +16,30 @@ angular.module('app').service('repos', ['$q', '$http', function($q, $http) {
 
 	// Gets a repository by host, owner and name.
 	this.get = function(host, owner, name) {
-		return $http.get('/v1/repos/'+host+'/'+owner+'/'+name);
+		return $http.get('/api/repos/'+host+'/'+owner+'/'+name);
 	};
 
 	// Gets a repository by host, owner and name.
 	this.feed = function(host, owner, name) {
-		return $http.get('/v1/repos/'+host+'/'+owner+'/'+name+'/feed');
+		return $http.get('/api/repos/'+host+'/'+owner+'/'+name+'/feed');
 	};
 
 	// Updates an existing repository
 	this.update = function(repo) {
 		// todo(bradrydzewski) add repo to the request body
-		return $http.post('/v1/repos/'+repo.host+'/'+repo.owner+'/'+repo.name);
+		return $http.post('/api/repos/'+repo.host+'/'+repo.owner+'/'+repo.name);
 	};
 
 	// Activates a repository on the backend, registering post-commit
 	// hooks with the remote hosting service (ie github).
 	this.activate = function(repo) {
 		// todo(bradrydzewski) add repo to the request body
-		return $http.post('/v1/repos/'+repo.host+'/'+repo.owner+'/'+repo.name);
+		return $http.post('/api/repos/'+repo.host+'/'+repo.owner+'/'+repo.name);
 	};
 
 	// Deactivate a repository sets the active flag to false, instructing
 	// the system to ignore all post-commit hooks for the repository.
 	this.deactivate = function(repo) {
-		return $http.delete('/v1/repos/'+repo.host+'/'+repo.owner+'/'+repo.name);
+		return $http.delete('/api/repos/'+repo.host+'/'+repo.owner+'/'+repo.name);
 	};
 }]);

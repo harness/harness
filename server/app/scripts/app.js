@@ -5,9 +5,10 @@ var app = angular.module('app', [
   'ui.filters'
 ]);
 
+
 app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($routeProvider, $locationProvider, $httpProvider) {
 	$routeProvider.when('/', {
-			templateUrl: '/views/home.html',
+			templateUrl: '/static/views/home.html',
 			controller: 'HomeController',
 			title: 'Dashboard',
 			resolve: {
@@ -17,31 +18,31 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 			}
 		})
 		.when('/sync', {
-			templateUrl: '/views/sync.html',
+			templateUrl: '/static/views/sync.html',
 			controller: 'SyncController',
 			title: 'Sync'
 		})
 		.when('/login', {
-			templateUrl: '/views/login.html',
+			templateUrl: '/static/views/login.html',
 			controller: 'LoginController',
 			title: 'Login',
 		})
 		.when('/gitlab', {
-			templateUrl: '/views/login_gitlab.html',
+			templateUrl: '/static/views/login_gitlab.html',
 			title: 'GitLab Login',
 		})
 		.when('/setup', {
-			templateUrl: '/views/setup.html',
+			templateUrl: '/static/views/setup.html',
 			controller: 'SetupController',
 			title: 'Setup'
 		})
 		.when('/setup/:remote', {
-			templateUrl: '/views/setup.html',
+			templateUrl: '/static/views/setup.html',
 			controller: 'SetupController',
 			title: 'Setup'
 		})
 		.when('/account/profile', {
-			templateUrl: '/views/account.html',
+			templateUrl: '/static/views/account.html',
 			controller: 'UserController',
 			title: 'Profile',
 			resolve: {
@@ -51,7 +52,7 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 			}
 		})
 		.when('/account/repos', {
-			templateUrl: '/views/repo_list.html',
+			templateUrl: '/static/views/repo_list.html',
 			controller: 'AccountReposController',
 			title: 'Repositories',
 			resolve: {
@@ -61,7 +62,7 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 			}
 		})
 		.when('/admin/users/add', {
-			templateUrl: '/views/users_add.html',
+			templateUrl: '/static/views/users_add.html',
 			controller: 'UserAddController',
 			title: 'Add User',
 			resolve: {
@@ -71,7 +72,7 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 			}
 		})
 		.when('/admin/users/:host/:login', {
-			templateUrl: '/views/users_edit.html',
+			templateUrl: '/static/views/users_edit.html',
 			controller: 'UserEditController',
 			title: 'Edit User',
 			resolve: {
@@ -81,7 +82,7 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 			}
 		})
 		.when('/admin/users', {
-			templateUrl: '/views/users.html',
+			templateUrl: '/static/views/users.html',
 			controller: 'UsersController',
 			title: 'System Users',
 			resolve: {
@@ -91,7 +92,7 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 			}
 		})
 		.when('/admin/settings', {
-			templateUrl: '/views/config.html',
+			templateUrl: '/static/views/config.html',
 			controller: 'ConfigController',
 			title: 'System Settings',
 			resolve: {
@@ -101,7 +102,7 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 			}
 		})
 		.when('/:remote/:owner/:name/settings', {
-			templateUrl: '/views/repo_edit.html',
+			templateUrl: '/static/views/repo_edit.html',
 			controller: 'RepoConfigController',
 			title: 'Repository Settings',
 			resolve: {
@@ -111,7 +112,7 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 			}
 		})
 		.when('/:remote/:owner/:name/:branch/:commit', {
-			templateUrl: '/views/commit.html',
+			templateUrl: '/static/views/commit.html',
 			controller: 'CommitController',
 			title: 'Recent Commits',
 			resolve: {
@@ -121,7 +122,7 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 			}
 		})
 		.when('/:remote/:owner/:name', {
-			templateUrl: '/views/repo.html',
+			templateUrl: '/static/views/repo.html',
 			controller: 'RepoController',
 			title: 'Recent Commits',
 			resolve: {
@@ -140,10 +141,26 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 	// use the HTML5 History API
 	$locationProvider.html5Mode(true);
 
+	// First, parse the query string
+	var params = {}, queryString = location.hash.substring(1),
+	    regex  = /([^&=]+)=([^&]*)/g, m;
+	while (m = regex.exec(queryString)) {
+		params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+	}
+
+
+	// if the user is authenticated we should add Basic
+	// auth token to each request.
+	if (params.access_token) {
+		$httpProvider.defaults.headers.common.Authorization = 'Bearer '+params.access_token;
+		window.history.replaceState( {} , document.title, '/sync' );
+	}
+
+
 	$httpProvider.interceptors.push(function($q, $location) {
 		return {
 			'responseError': function(rejection) {
-				if (rejection.status == 401 && rejection.config.url != "/v1/user") {
+				if (rejection.status == 401 && rejection.config.url != "/api/user") {
 					$location.path('/login');
 				}
 				return $q.reject(rejection);
@@ -179,7 +196,7 @@ app.controller("AccountReposController", function($scope, $http, user) {
 	$scope.user = user;
 
 	// get the user details
-	$http({method: 'GET', url: '/v1/user/repos'}).
+	$http({method: 'GET', url: '/api/user/repos'}).
 		success(function(data, status, headers, config) {
 			$scope.repos = (typeof data==='string')?[]:data;
 		}).
@@ -224,7 +241,7 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 	});
 
 	// load the repo meta-data
-	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name}).
+	$http({method: 'GET', url: '/api/repos/'+remote+'/'+owner+"/"+name}).
 		success(function(data, status, headers, config) {
 			$scope.repo = data;
 		}).
@@ -233,12 +250,12 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 		});
 
 	// load the repo commit data
-	$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit}).
+	$http({method: 'GET', url: '/api/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit}).
 		success(function(data, status, headers, config) {
 			$scope.commit = data;
 
 			if (data.status!='Started' && data.status!='Pending') {
-				$http({method: 'GET', url: '/v1/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/console"}).
+				$http({method: 'GET', url: '/api/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/console"}).
 					success(function(data, status, headers, config) {
 						var lineFormatter = new Drone.LineFormatter();
 						var el = document.querySelector('#output');
@@ -261,7 +278,7 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 		});
 
 	$scope.rebuildCommit = function() {
-		$http({method: 'POST', url: '/v1/repos/'+remote+'/'+owner+'/'+name+'/'+'branches/'+branch+'/'+'commits/'+commit+'/?action=rebuild' })
+		$http({method: 'POST', url: '/api/repos/'+remote+'/'+owner+'/'+name+'/'+'branches/'+branch+'/'+'commits/'+commit+'/?action=rebuild' })
 	}
 
 

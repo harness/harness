@@ -16,7 +16,7 @@ angular.module('app').service('authService', function($q, $http) {
 			}
 
 			// else we need to fetch from the server
-			$http({method: 'GET', url: '/v1/user'}).
+			$http({method: 'GET', url: '/api/user'}).
 				success(function(data) {
 						_this.user=data;
 						defer.resolve(_this.user);
