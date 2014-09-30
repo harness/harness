@@ -5,6 +5,22 @@ var app = angular.module('app', [
   'ui.filters'
 ]);
 
+// First, parse the query string
+var params = {}, queryString = location.hash.substring(1),
+	regex  = /([^&=]+)=([^&]*)/g, m;
+while (m = regex.exec(queryString)) {
+	params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+}
+
+
+// if the user is authenticated we should add Basic
+// auth token to each request.
+if (params.access_token) {
+	localStorage.setItem("access_token", params.access_token);
+	history.replaceState({}, document.title, location.pathname);
+}
+
+
 
 app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($routeProvider, $locationProvider, $httpProvider) {
 	$routeProvider.when('/', {
@@ -141,21 +157,7 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 	// use the HTML5 History API
 	$locationProvider.html5Mode(true);
 
-	// First, parse the query string
-	var params = {}, queryString = location.hash.substring(1),
-	    regex  = /([^&=]+)=([^&]*)/g, m;
-	while (m = regex.exec(queryString)) {
-		params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
-	}
-
-
-	// if the user is authenticated we should add Basic
-	// auth token to each request.
-	if (params.access_token) {
-		$httpProvider.defaults.headers.common.Authorization = 'Bearer '+params.access_token;
-		window.history.replaceState( {} , document.title, '/sync' );
-	}
-
+	$httpProvider.defaults.headers.common.Authorization = 'Bearer '+localStorage.getItem('access_token');
 
 	$httpProvider.interceptors.push(function($q, $location) {
 		return {
