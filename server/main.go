@@ -122,9 +122,9 @@ func main() {
 	goji.Get("/api/auth/:host", handler.GetLogin)
 	goji.Get("/api/badge/:host/:owner/:name/status.svg", handler.GetBadge)
 	goji.Get("/api/badge/:host/:owner/:name/cc.xml", handler.GetCC)
-	//goji.Get("/api/hook", handler.PostHook)
-	//goji.Put("/api/hook", handler.PostHook)
-	//goji.Post("/api/hook", handler.PostHook)
+	goji.Get("/api/hook/:hook", handler.PostHook)
+	goji.Put("/api/hook/:hook", handler.PostHook)
+	goji.Post("/api/hook/:hook", handler.PostHook)
 
 	repos := web.New()
 	repos.Use(middleware.SetRepo)
@@ -155,6 +155,14 @@ func main() {
 	user.Get("/api/user", handler.GetUserCurrent)
 	user.Put("/api/user", handler.PutUser)
 	goji.Handle("/api/user*", user)
+
+	work := web.New()
+	work.Use(middleware.RequireUserAdmin)
+	work.Get("/api/work/started", handler.GetWorkStarted)
+	work.Get("/api/work/pending", handler.GetWorkPending)
+	work.Get("/api/work/assignments", handler.GetWorkAssigned)
+	work.Get("/api/workers", handler.GetWorkers)
+	goji.Handle("/api/work*", work)
 
 	// Add middleware and serve
 	goji.Use(ContextMiddleware)

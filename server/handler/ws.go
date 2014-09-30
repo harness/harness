@@ -8,7 +8,7 @@ import (
 
 	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/server/pubsub"
-	"github.com/drone/drone/shared/model"
+	"github.com/drone/drone/server/worker"
 
 	"github.com/goji/context"
 	"github.com/gorilla/websocket"
@@ -60,7 +60,7 @@ func WsUser(c web.C, w http.ResponseWriter, r *http.Request) {
 		for {
 			select {
 			case msg := <-sub.Read():
-				work, ok := msg.(*model.Request)
+				work, ok := msg.(*worker.Work)
 				if !ok {
 					break
 				}
