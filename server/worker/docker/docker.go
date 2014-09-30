@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"bytes"
 	"log"
 	"path/filepath"
 	"runtime/debug"
@@ -12,6 +11,7 @@ import (
 	"github.com/drone/drone/plugin/notify"
 	"github.com/drone/drone/server/blobstore"
 	"github.com/drone/drone/server/datastore"
+	"github.com/drone/drone/server/pubsub"
 	"github.com/drone/drone/server/worker"
 	"github.com/drone/drone/shared/build"
 	"github.com/drone/drone/shared/build/docker"
@@ -57,14 +57,14 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	datastore.PutCommit(c, r.Commit)
 
 	// notify all listeners that the build is started
-	//commitc := w.pubsub.Register("_global")
-	//commitc.Publish(r)
-	//stdoutc := w.pubsub.RegisterOpts(r.Commit.ID, pubsub.ConsoleOpts)
-	//defer stdoutc.Close()
+	commitc := pubsub.Register(c, "_global")
+	commitc.Publish(r)
+	stdoutc := pubsub.RegisterOpts(c, r.Commit.ID, pubsub.ConsoleOpts)
+	defer stdoutc.Close()
 
 	// create a special buffer that will also
 	// write to a websocket channel
-	var buf bytes.Buffer //:= pubsub.NewBuffer(stdoutc)
+	buf := pubsub.NewBuffer(stdoutc)
 
 	// parse the parameters and build script. The script has already
 	// been parsed in the hook, so we can be confident it will succeed.
@@ -102,13 +102,18 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	if script.Notifications == nil {
 		script.Notifications = &notify.Notification{}
 	}
-	//script.Notifications.Send(r)
+	script.Notifications.Send(&model.Request{
+		User:   r.User,
+		Repo:   r.Repo,
+		Commit: r.Commit,
+		Host:   r.Host,
+	})
 
 	// create an instance of the Docker builder
 	builder := build.New(d.docker)
 	builder.Build = script
 	builder.Repo = repo
-	builder.Stdout = &buf
+	builder.Stdout = buf
 	builder.Key = []byte(r.Repo.PrivateKey)
 	builder.Timeout = time.Duration(r.Repo.Timeout) * time.Second
 	builder.Privileged = r.Repo.Privileged
@@ -139,8 +144,13 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	blobstore.Put(c, filepath.Join(r.Repo.Host, r.Repo.Owner, r.Repo.Name, r.Commit.Branch, r.Commit.Sha), buf.Bytes())
 
 	// notify all listeners that the build is finished
-	//commitc.Publish(r)
+	commitc.Publish(r)
 
 	// send all "finished" notifications
-	//script.Notifications.Send(r)
+	script.Notifications.Send(&model.Request{
+		User:   r.User,
+		Repo:   r.Repo,
+		Commit: r.Commit,
+		Host:   r.Host,
+	})
 }
