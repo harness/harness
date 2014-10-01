@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/drone/drone/pkg/channel"
@@ -26,6 +27,7 @@ func CommitShow(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 	if err != nil {
 		return err
 	}
+	branch = url.QueryEscape(commit.Branch)
 
 	// get the builds from the database. a commit can have
 	// multiple sub-builds (or matrix builds)
@@ -45,9 +47,10 @@ func CommitShow(w http.ResponseWriter, r *http.Request, u *User, repo *Repo) err
 		Commit  *Commit
 		Build   *Build
 		Builds  []*Build
+		Branch  string
 		Token   string
 		IsAdmin bool
-	}{u, repo, commit, builds[0], builds, "", admin}
+	}{u, repo, commit, builds[0], builds, branch, "", admin}
 
 	// get the specific build requested by the user. instead
 	// of a database round trip, we can just loop through the
@@ -161,9 +164,9 @@ func (h *CommitRebuildHandler) CommitRebuild(w http.ResponseWriter, r *http.Requ
 	h.queue.Add(&queue.BuildTask{Repo: repo, Commit: commit, Build: build})
 
 	if labl != "" {
-		http.Redirect(w, r, fmt.Sprintf("/%s/%s/%s/commit/%s/build/%s?branch=%s", host, repo.Owner, repo.Name, hash, labl, branch), http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("/%s/%s/%s/commit/%s/build/%s?branch=%s", host, repo.Owner, repo.Name, hash, labl, url.QueryEscape(branch)), http.StatusSeeOther)
 	} else {
-		http.Redirect(w, r, fmt.Sprintf("/%s/%s/%s/commit/%s?branch=%s", host, repo.Owner, repo.Name, hash, branch), http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("/%s/%s/%s/commit/%s?branch=%s", host, repo.Owner, repo.Name, hash, url.QueryEscape(branch)), http.StatusSeeOther)
 	}
 
 	return nil
