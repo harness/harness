@@ -8,7 +8,12 @@ script:
   - sudo apt-get -y install zip libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
   - make deps
   - make test
+  - make test_postgres
+  - make test_mysql
   - make dpkg
+services:
+  - postgres
+  - mysql
 notify:
   email:
     recipients:

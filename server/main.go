@@ -74,10 +74,10 @@ func main() {
 
 	flag.StringVar(&conf, "config", "", "")
 	flag.StringVar(&prefix, "prefix", "DRONE_", "")
-	flag.StringVar(&driver, "driver", "sqlite3", "")
-	flag.StringVar(&datasource, "datasource", "drone.sqlite", "")
 	flag.Parse()
 
+	config.StringVar(&datasource, "database-path", "drone.sqlite")
+	config.StringVar(&driver, "database-driver", "sqlite3")
 	config.Var(&nodes, "worker-nodes")
 	config.BoolVar(&open, "registration-open", false)
 	config.SetPrefix(prefix)
