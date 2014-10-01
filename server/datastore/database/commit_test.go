@@ -10,7 +10,8 @@ import (
 func TestCommitstore(t *testing.T) {
 	db := mustConnectTest()
 	cs := NewCommitstore(db)
-	//ps := NewPermstore(db)
+	rs := NewRepostore(db)
+	ps := NewPermstore(db)
 	defer db.Close()
 
 	g := goblin.Goblin(t)
@@ -20,6 +21,7 @@ func TestCommitstore(t *testing.T) {
 		// table data from the database.
 		g.BeforeEach(func() {
 			db.Exec("DELETE FROM perms")
+			db.Exec("DELETE FROM repos")
 			db.Exec("DELETE FROM commits")
 		})
 
@@ -166,47 +168,67 @@ func TestCommitstore(t *testing.T) {
 			g.Assert(commits[0].Sha).Equal(commit2.Sha)
 		})
 
-		g.It("Should get the recent Commit List for a User")
-		/*
-			g.It("Should get the recent Commit List for a User", func() {
-				perm1 := model.Perm{
-					RepoID: 1,
-					UserID: 1,
-					Read:   true,
-					Write:  true,
-					Admin:  true,
-				}
-				commit1 := model.Commit{
-					RepoID: 1,
-					Branch: "foo",
-					Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
-					Status: model.StatusFailure,
-				}
-				commit2 := model.Commit{
-					RepoID: 1,
-					Branch: "foo",
-					Sha:    "0a74b46d7d62b737b6906897f48dbeb72cfda222",
-					Status: model.StatusSuccess,
-				}
-				commit3 := model.Commit{
-					RepoID: 2,
-					Branch: "baz",
-					Sha:    "0a74b46d7d62b737b6906897f48dbeb72cfda222",
-					Status: model.StatusSuccess,
-				}
-				cs.PutCommit(&commit1)
-				cs.PutCommit(&commit2)
-				cs.PutCommit(&commit3)
-				ps.PutPerm(&perm1)
-				commits, err := cs.GetCommitListUser(&model.User{ID: 1})
-				g.Assert(err == nil).IsTrue()
-				g.Assert(len(commits)).Equal(2)
-				g.Assert(commits[0].ID).Equal(commit2.ID)
-				g.Assert(commits[0].RepoID).Equal(commit2.RepoID)
-				g.Assert(commits[0].Branch).Equal(commit2.Branch)
-				g.Assert(commits[0].Sha).Equal(commit2.Sha)
-			})
-		*/
+		g.It("Should get the recent Commit List for a User", func() {
+			repo1 := model.Repo{
+				UserID: 1,
+				Remote: "enterprise.github.com",
+				Host:   "github.drone.io",
+				Owner:  "bradrydzewski",
+				Name:   "drone",
+			}
+			repo2 := model.Repo{
+				UserID: 1,
+				Remote: "enterprise.github.com",
+				Host:   "github.drone.io",
+				Owner:  "drone",
+				Name:   "drone",
+			}
+			rs.PostRepo(&repo1)
+			rs.PostRepo(&repo2)
+			commit1 := model.Commit{
+				RepoID: repo1.ID,
+				Branch: "foo",
+				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
+				Status: model.StatusFailure,
+			}
+			commit2 := model.Commit{
+				RepoID: repo2.ID,
+				Branch: "bar",
+				Sha:    "0a74b46d7d62b737b6906897f48dbeb72cfda222",
+				Status: model.StatusSuccess,
+			}
+			commit3 := model.Commit{
+				RepoID: 99999,
+				Branch: "baz",
+				Sha:    "0a74b46d7d62b737b6906897f48dbeb72cfda222",
+				Status: model.StatusSuccess,
+			}
+			cs.PostCommit(&commit1)
+			cs.PostCommit(&commit2)
+			cs.PostCommit(&commit3)
+			perm1 := model.Perm{
+				RepoID: repo1.ID,
+				UserID: 1,
+				Read:   true,
+				Write:  true,
+				Admin:  true,
+			}
+			perm2 := model.Perm{
+				RepoID: repo2.ID,
+				UserID: 1,
+				Read:   true,
+				Write:  true,
+				Admin:  true,
+			}
+			ps.PostPerm(&perm1)
+			ps.PostPerm(&perm2)
+			commits, err := cs.GetCommitListUser(&model.User{ID: 1})
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(commits)).Equal(2)
+			g.Assert(commits[0].RepoID).Equal(commit1.RepoID)
+			g.Assert(commits[0].Branch).Equal(commit1.Branch)
+			g.Assert(commits[0].Sha).Equal(commit1.Sha)
+		})
 
 		g.It("Should enforce unique Sha + Branch", func() {
 			commit1 := model.Commit{

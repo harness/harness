@@ -15,4 +15,4 @@ RUN make deps build embed install
 EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/droned"]
-CMD ["--port=:80"]
+CMD ["--bind=:80"]
