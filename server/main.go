@@ -25,6 +25,7 @@ import (
 	"github.com/drone/drone/plugin/remote/github"
 	"github.com/drone/drone/plugin/remote/gitlab"
 	"github.com/drone/drone/server/blobstore"
+	"github.com/drone/drone/server/capability"
 	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/server/datastore/database"
 	"github.com/drone/drone/server/worker/director"
@@ -67,6 +68,8 @@ var (
 	nodes StringArr
 
 	db *sql.DB
+
+	caps map[string]bool
 )
 
 func main() {
@@ -89,6 +92,9 @@ func main() {
 	bitbucket.Register()
 	github.Register()
 	gitlab.Register()
+
+	caps = map[string]bool{}
+	caps[capability.Registration] = open
 
 	// setup the database and cancel all pending
 	// commits in the system.
@@ -183,6 +189,7 @@ func ContextMiddleware(c *web.C, h http.Handler) http.Handler {
 		ctx = pool.NewContext(ctx, workers)
 		ctx = director.NewContext(ctx, worker)
 		ctx = pubsub.NewContext(ctx, pub)
+		ctx = capability.NewContext(ctx, caps)
 
 		// add the context to the goji web context
 		webcontext.Set(c, ctx)
