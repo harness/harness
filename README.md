@@ -123,10 +123,16 @@ Below are example values when running Drone locally. If you are running Drone on
 you should replace `localhost` with your server hostname or address.
 
 Homepage URL:
+
+```
 http://localhost:8000/
+```
 
 Authorization callback URL:
+
+```
 http://localhost:8000/api/auth/github.com
+```
 
 ## Compatibility Issues
 
