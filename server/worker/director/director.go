@@ -89,7 +89,7 @@ func (d *Director) GetAssignemnts() []*worker.Assignment {
 	defer d.Unlock()
 	assignments := []*worker.Assignment{}
 	for work, _worker := range d.started {
-		assignment := &worker.Assignment{work, _worker}
+		assignment := &worker.Assignment{Work: work, Worker: _worker}
 		assignments = append(assignments, assignment)
 	}
 	return assignments
