@@ -54,7 +54,7 @@ The configuration file is in TOML format:
 
 ```toml
 
-[datasource]
+[database]
 driver=""
 source=""
 
@@ -99,8 +99,8 @@ Or you can use environment variables
 ```sh
 
 # custom database settings
-export DRONE_DATASOURCE_DRIVER=""
-export DRONE_DATASOURCE_SOURCE=""
+export DRONE_DATABASE_DRIVER=""
+export DRONE_DATABASE_SOURCE=""
 
 # enable users to self-register
 export DRONE_REGISTRATION_OPEN=false
