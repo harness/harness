@@ -113,6 +113,21 @@ Or a combination of the two:
 DRONE_GITLAB_URL="https://gitlab.com" ./drone --config=/path/to/drone.conf
 ```
 
+## GitHub
+
+In order to setup with GitHub you'll need to register your local Drone installation
+with GitHub (or GitHub Enterprise). You can read more about registering an application here:
+https://github.com/settings/applications/new
+
+Below are example values when running Drone locally. If you are running Drone on a server
+you should replace `localhost` with your server hostname or address.
+
+Homepage URL:
+http://localhost:8000/
+
+Authorization callback URL:
+http://localhost:8000/api/auth/github.com
+
 ## Compatibility Issues
 
 **WARNING**

@@ -97,24 +97,18 @@ func main() {
 
 	// Create the worker, director and builders
 	workers = pool.New()
-	workers.Allocate(docker.New())
-	workers.Allocate(docker.New())
-	workers.Allocate(docker.New())
-	workers.Allocate(docker.New())
 	worker = director.New()
 
-	pub = pubsub.NewPubSub()
-	/*
-		if nodes == nil || len(nodes) == 0 {
-			worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
-			worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{}).Start()
-		} else {
-			for _, node := range nodes {
-				println(node)
-				worker.NewWorker(workerc, users, repos, commits, pubsub, &model.Server{Host: node}).Start()
-			}
+	if nodes == nil || len(nodes) == 0 {
+		workers.Allocate(docker.New())
+		workers.Allocate(docker.New())
+	} else {
+		for _, node := range nodes {
+			workers.Allocate(docker.NewHost(node))
 		}
-	*/
+	}
+
+	pub = pubsub.NewPubSub()
 
 	goji.Get("/api/logins", handler.GetLoginList)
 	goji.Get("/api/stream/stdout/:id", handler.WsConsole)
@@ -177,13 +171,6 @@ func main() {
 	goji.Use(middleware.SetHeaders)
 	goji.Use(middleware.SetUser)
 	goji.Serve()
-
-	// start webserver using HTTPS or HTTP
-	//if len(sslcert) != 0 {
-	//	panic(http.ListenAndServeTLS(port, sslcert, sslkey, nil))
-	//} else {
-	//panic(http.ListenAndServe(port, nil))
-	//}
 }
 
 // ContextMiddleware creates a new go.net/context and

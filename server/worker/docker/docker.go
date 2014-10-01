@@ -37,7 +37,15 @@ func New() *Docker {
 		Kind:    dockerKind,
 		Created: time.Now().UTC().Unix(),
 		docker:  docker.New(),
-		//docker.NewHost(w.server.Host)
+	}
+}
+
+func NewHost(host string) *Docker {
+	return &Docker{
+		UUID:    uuid.New(),
+		Kind:    dockerKind,
+		Created: time.Now().UTC().Unix(),
+		docker:  docker.NewHost(host),
 	}
 }
 
