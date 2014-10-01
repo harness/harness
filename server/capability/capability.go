@@ -8,7 +8,7 @@ type Capability map[string]bool
 
 // Get the capability value from the map.
 func (c Capability) Get(key string) bool {
-	return c.Get(key)
+	return c[key]
 }
 
 // Sets the capability value in the map.
