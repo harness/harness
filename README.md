@@ -19,6 +19,27 @@ wget downloads.drone.io/exp/drone.deb
 sudo dpkg -i drone.deb
 ```
 
+## Database
+
+By default, Drone will create a SQLite database. Drone also supports Postgres and MySQL
+databases. You can customize the database settings using the configuration options
+described in the **Setup** section.
+
+Below are some example configurations that you can use as reference:
+
+```
+# to use postgres
+[datasource]
+driver="postgres"
+source="host=172.17.0.2 user=postgres dbname=drone sslmode=disable"
+
+# to use mysql
+[datasource]
+driver="mysql"
+source="root@tcp(172.17.0.2:3306)/drone"
+
+```
+
 ## Setup
 
 We are in the process of moving configuration out of the UI and into configuration
@@ -32,6 +53,10 @@ you can provide Drone with the path to your configuration file:
 The configuration file is in TOML format:
 
 ```toml
+
+[datasource]
+driver=""
+source=""
 
 [registration]
 open=true
@@ -72,6 +97,10 @@ nodes=[
 Or you can use environment variables
 
 ```sh
+
+# custom database settings
+export DRONE_DATASOURCE_DRIVER=""
+export DRONE_DATASOURCE_SOURCE=""
 
 # enable users to self-register
 export DRONE_REGISTRATION_OPEN=false
