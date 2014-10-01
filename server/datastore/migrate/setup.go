@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS commits (
 var blobTable = `
 CREATE TABLE IF NOT EXISTS blobs (
 	 blob_id      INTEGER PRIMARY KEY AUTOINCREMENT
-	,blob_path    VARCHAR(1024)
+	,blob_path    VARCHAR(255)
 	,blob_data    BLOB
 	,UNIQUE(blob_path)
 );
