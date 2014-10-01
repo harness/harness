@@ -4,10 +4,10 @@
 #
 #   -datasource="drone.sqlite":
 #   -driver="sqlite3":
-#   -port=":8080":
+#   -bind=":8080":
 #   -workers="4":
 #         
-#DRONED_OPTS="--port=:80"
+#DRONED_OPTS="--bind=:80"
 
 # Email configuration
 #DRONE_SMTP_HOST=
