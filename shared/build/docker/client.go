@@ -13,9 +13,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dotcloud/docker/pkg/stdcopy"
-	"github.com/dotcloud/docker/pkg/term"
-	"github.com/dotcloud/docker/utils"
+	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/docker/docker/pkg/term"
+	"github.com/docker/docker/utils"
 )
 
 const (
