@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dotcloud/docker/archive"
+	"github.com/dotcloud/docker/pkg/archive"
 	"github.com/dotcloud/docker/pkg/parsers"
 )
 
