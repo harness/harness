@@ -20,8 +20,8 @@ angular.module('app').service('repos', ['$q', '$http', function($q, $http) {
 	};
 
 	// Gets a repository by host, owner and name.
-	this.feed = function(host, owner, name) {
-		return $http.get('/api/repos/'+host+'/'+owner+'/'+name+'/feed');
+	this.commits = function(host, owner, name) {
+		return $http.get('/api/repos/'+host+'/'+owner+'/'+name+'/commits');
 	};
 
 	// Updates an existing repository
