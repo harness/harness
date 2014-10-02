@@ -23,8 +23,8 @@ angular.module('app').controller("RepoController", function($scope, $http, $rout
 
 
 	// load the repo commit feed
-	repos.feed(repo.host, repo.owner, repo.name).success(function (feed) {
-			$scope.commits = (typeof feed==='string')?[]:feed;
+	repos.commits(repo.host, repo.owner, repo.name).success(function (commits) {
+			$scope.commits = (typeof commits==='string')?[]:commits;
 			$scope.state = 1;
 		})
 		.error(function (error) {
