@@ -1,7 +1,10 @@
 package notify
 
 import (
+	"bytes"
+	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/drone/drone/plugin/notify/email"
 	"github.com/drone/drone/plugin/notify/github"
@@ -23,6 +26,7 @@ type Notification struct {
 	Hipchat *Hipchat         `yaml:"hipchat,omitempty"`
 	Irc     *irc.IRC         `yaml:"irc,omitempty"`
 	Slack   *Slack           `yaml:"slack,omitempty"`
+	Gitter  *Gitter          `yaml:"gitter,omitempty"`
 
 	GitHub github.GitHub `yaml:"--"`
 }
@@ -68,6 +72,14 @@ func (n *Notification) Send(context *model.Request) error {
 		}
 	}
 
+	// send gitter notifications
+	if n.Gitter != nil {
+		err := n.Gitter.Send(context)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
 	// send email notifications
 	// TODO (bradrydzewski) need to improve this code
 	githubStatus := new(github.GitHub)
@@ -76,4 +88,30 @@ func (n *Notification) Send(context *model.Request) error {
 	}
 
 	return nil
+}
+
+func getBuildUrl(context *model.Request) string {
+	return fmt.Sprintf("%s/%s/%s/%s/%s/%s", context.Host, context.Repo.Host, context.Repo.Owner, context.Repo.Name, context.Commit.Branch, context.Commit.Sha)
+}
+
+// helper fuction to sent HTTP Post requests
+// with JSON data as the payload.
+func sendJson(url string, payload []byte, headers map[string]string) {
+	client := &http.Client{}
+	buf := bytes.NewBuffer(payload)
+
+	req, err := http.NewRequest("POST", url, buf)
+
+	req.Header.Set("Content-Type", "application/json")
+	if headers != nil {
+		for k, v := range headers {
+			req.Header.Add(k, v)
+		}
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return
+	}
+	resp.Body.Close()
 }
