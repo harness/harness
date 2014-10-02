@@ -547,6 +547,10 @@ func TestWriteBuildScript(t *testing.T) {
 		Commit: "e7e046b35",
 		PR:     "123",
 		Dir:    "/var/cache/drone/github.com/drone/drone"}
+
+	// test environment variables for drone command
+	os.Setenv("DRONE_DEMO_VAR", "123")
+
 	b.writeBuildScript(dir)
 
 	// persist a dummy build script to disk
@@ -567,6 +571,7 @@ func TestWriteBuildScript(t *testing.T) {
 	f.WriteEnv("CI_BUILD_URL", "")
 	f.WriteEnv("CI_BRANCH", "master")
 	f.WriteEnv("CI_PULL_REQUEST", "123")
+	f.WriteEnv("DEMO_VAR", "123")
 	f.WriteHost("127.0.0.1")
 	f.WriteCmd("git clone --depth=0 --recursive git://github.com/drone/drone.git /var/cache/drone/github.com/drone/drone")
 	f.WriteCmd("git fetch origin +refs/pull/123/head:refs/remotes/origin/pr/123")
