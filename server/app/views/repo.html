@@ -26,7 +26,7 @@
 			<h1>This will be your commit stream</h1>
 			<p>Activate this repository to start testing your commits</p>
 			<div><i class="fa fa-long-arrow-down"></i></div>
-			<button ng-click="activate()" class="pure-button pure-button-primary">Activate Now</button>
+			<button ng-click="activate()" class="pure-button pure-button-primary ladda-button expand-right" data-loading="{{ activating }}" ng-model="button" ng-disabled="activating">Activate Now</button>
 		</section>
 
 		<section ng-if="repo.active == true && commits != undefined && commits.length == 0" class="nobuilds">

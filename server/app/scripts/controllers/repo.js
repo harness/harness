@@ -2,6 +2,7 @@
 
 angular.module('app').controller("RepoController", function($scope, $http, $routeParams, $route, repos, feed, repo) {
 	$scope.repo = repo;
+	$scope.activating = false;
 
 	// subscribes to the global feed to receive
 	// build status updates.
@@ -41,13 +42,17 @@ angular.module('app').controller("RepoController", function($scope, $http, $rout
 	//	});
 
 	$scope.activate = function() {
+		$scope.activating = true;
+
 		// request to create a new repository
 		$http({method: 'POST', url: '/api/repos/'+repo.host+'/'+repo.owner+"/"+repo.name }).
 			success(function(data, status, headers, config) {
 				$scope.repo = data;
+				$scope.activating = false;
 			}).
 			error(function(data, status, headers, config) {
 				$scope.failure = data;
+				$scope.activating = false;
 			});
 	};
 
@@ -70,8 +75,9 @@ angular.module('app').controller("RepoController", function($scope, $http, $rout
 
 
 
-angular.module('app').controller("RepoConfigController", function($scope, $http, $routeParams, user) {
+angular.module('app').controller("RepoConfigController", function($scope, $http, $timeout, $routeParams, user) {
 	$scope.user = user;
+	$scope.saving = false;
 
 	var remote = $routeParams.remote;
 	var owner  = $routeParams.owner;
@@ -88,13 +94,24 @@ angular.module('app').controller("RepoConfigController", function($scope, $http,
 		});
 
 	$scope.save = function() {
+		$scope.saving = true;
+
 		// request to create a new repository
 		$http({method: 'PUT', url: '/api/repos/'+remote+'/'+owner+"/"+name, data: $scope.repo }).
 			success(function(data, status, headers, config) {
 				delete $scope.failure;
+
+				// yes, for UX reasons we make this request look like it
+				// is taking longer than it really is. Otherwise the loading
+				// button just instantly flickers.
+				$timeout(function(){ 
+						$scope.saving = false;
+					}, 1500);
 			}).
 			error(function(data, status, headers, config) {
 				$scope.failure = data;
+				$scope.saving = false;
 			});
+		
 	};
 });
