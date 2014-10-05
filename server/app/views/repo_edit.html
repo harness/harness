@@ -34,7 +34,9 @@
 						<label for="privileged"></label>
 						<span>Enable Privileged mode</span>
 					</div>
-					<button ng-click="save()" class="pure-button pure-button-primary">Save Flags</button>
+					<button ng-click="save()" class="pure-button pure-button-primary ladda-button expand-right" data-loading='{{ saving }}' ng-model="button" ng-disabled='saving'>
+						Save Flags
+					</button>
 				</div>
 			</div>
 		</div>
@@ -46,7 +48,9 @@
 				<div>
 					<h2>Private Variables (YAML syntax)</h2>
 					<textarea class="params" ng-model="repo.params" placeholder="FOO: BAR"></textarea>
-					<button ng-click="save()" class="pure-button pure-button-primary">Save Variables</button>
+					<button ng-click="save()" class="pure-button pure-button-primary ladda-button expand-right" data-loading='{{ saving }}' ng-model="button" ng-disabled='saving'>
+						Save Variables
+					</button>
 				</div>
 			</div>
 		</div>
