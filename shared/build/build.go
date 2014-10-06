@@ -501,6 +501,20 @@ func (b *Builder) writeBuildScript(dir string) error {
 	f.WriteEnv("CI_BRANCH", b.Repo.Branch)
 	f.WriteEnv("CI_PULL_REQUEST", b.Repo.PR)
 
+	// pull in environment variables for the drone command
+	for _, kv := range os.Environ() {
+		envvar := strings.SplitN(kv, "=", 2)
+		if len(envvar) != 2 {
+			continue
+		}
+
+		key := envvar[0]
+		value := envvar[1]
+		if strings.HasPrefix(key, "DRONE_") {
+			f.WriteEnv(strings.TrimPrefix(key, "DRONE_"), value)
+		}
+	}
+
 	// add /etc/hosts entries
 	for _, mapping := range b.Build.Hosts {
 		f.WriteHost(mapping)
