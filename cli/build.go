@@ -140,6 +140,9 @@ func run(path, identity string, privileged bool) (int, error) {
 	builder.Timeout = 300 * time.Minute
 	builder.Privileged = privileged
 
+	// pass some external variables along to
+	getExternalVariables("DRONE_ENV_", builder.AdditionalVars)
+
 	// execute the build
 	if err := builder.Run(); err != nil {
 		log.Errf("Error executing build: %s", err.Error())

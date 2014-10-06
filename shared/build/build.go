@@ -35,6 +35,7 @@ type BuildState struct {
 func New(dockerClient *docker.Client) *Builder {
 	return &Builder{
 		dockerClient: dockerClient,
+		AdditionalVars: make(map[string]string),
 	}
 }
 
@@ -74,6 +75,11 @@ type Builder struct {
 	// BuildState contains information about an exited build,
 	// available after a call to Run.
 	BuildState *BuildState
+
+	// AdditionalVars is a map of extra environment variables which should be
+	// included in the build script that is generated and executed within a
+	// container.
+	AdditionalVars map[string]string
 
 	// Docker image that was created for
 	// this build.
@@ -501,18 +507,9 @@ func (b *Builder) writeBuildScript(dir string) error {
 	f.WriteEnv("CI_BRANCH", b.Repo.Branch)
 	f.WriteEnv("CI_PULL_REQUEST", b.Repo.PR)
 
-	// pull in environment variables for the drone command
-	for _, kv := range os.Environ() {
-		envvar := strings.SplitN(kv, "=", 2)
-		if len(envvar) != 2 {
-			continue
-		}
-
-		key := envvar[0]
-		value := envvar[1]
-		if strings.HasPrefix(key, "DRONE_") {
-			f.WriteEnv(strings.TrimPrefix(key, "DRONE_"), value)
-		}
+	// write any additional environment variables to the build script
+	for key, val := range b.AdditionalVars {
+		f.WriteEnv(key, val)
 	}
 
 	// add /etc/hosts entries

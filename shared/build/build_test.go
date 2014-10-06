@@ -538,7 +538,9 @@ func TestWriteBuildScript(t *testing.T) {
 	dir, _ := ioutil.TempDir("", "drone-test-")
 	defer os.RemoveAll(dir)
 
-	b := Builder{}
+	b := Builder{
+		AdditionalVars: make(map[string]string),
+	}
 	b.Build = &script.Build{
 		Hosts: []string{"127.0.0.1"}}
 	b.Repo = &repo.Repo{
@@ -549,7 +551,7 @@ func TestWriteBuildScript(t *testing.T) {
 		Dir:    "/var/cache/drone/github.com/drone/drone"}
 
 	// test environment variables for drone command
-	os.Setenv("DRONE_DEMO_VAR", "123")
+	b.AdditionalVars["DEMO_VAR"] = "123"
 
 	b.writeBuildScript(dir)
 
