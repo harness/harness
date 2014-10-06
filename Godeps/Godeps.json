@@ -124,27 +124,17 @@
 			"Rev": "f68f5fd521270ad9775fb0adfe7516f9e4855ba5"
 		},
 		{
-			"ImportPath": "github.com/dotcloud/docker/archive",
+			"ImportPath": "github.com/docker/docker/archive",
 			"Comment": "v1.2.0-576-gf68f5fd",
 			"Rev": "f68f5fd521270ad9775fb0adfe7516f9e4855ba5"
 		},
 		{
-			"ImportPath": "github.com/dotcloud/docker/pkg/parsers",
+			"ImportPath": "github.com/docker/docker/pkg/parsers",
 			"Comment": "v1.2.0-576-gf68f5fd",
 			"Rev": "f68f5fd521270ad9775fb0adfe7516f9e4855ba5"
 		},
 		{
-			"ImportPath": "github.com/dotcloud/docker/pkg/stdcopy",
-			"Comment": "v1.2.0-576-gf68f5fd",
-			"Rev": "f68f5fd521270ad9775fb0adfe7516f9e4855ba5"
-		},
-		{
-			"ImportPath": "github.com/dotcloud/docker/pkg/term",
-			"Comment": "v1.2.0-576-gf68f5fd",
-			"Rev": "f68f5fd521270ad9775fb0adfe7516f9e4855ba5"
-		},
-		{
-			"ImportPath": "github.com/dotcloud/docker/utils",
+			"ImportPath": "github.com/docker/docker/pkg/stdcopy",
 			"Comment": "v1.2.0-576-gf68f5fd",
 			"Rev": "f68f5fd521270ad9775fb0adfe7516f9e4855ba5"
 		},
