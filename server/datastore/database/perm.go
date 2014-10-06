@@ -23,6 +23,11 @@ func (db *Permstore) GetPerm(user *model.User, repo *model.Repo) (*model.Perm, e
 
 // PostPerm saves permission in the datastore.
 func (db *Permstore) PostPerm(perm *model.Perm) error {
+	var _perm = new(model.Perm)
+	meddler.QueryRow(db, _perm, rebind(permQuery), perm.UserID, perm.RepoID)
+	if _perm.ID != 0 {
+		perm.ID = _perm.ID
+	}
 	return meddler.Save(db, permTable, perm)
 }
 
