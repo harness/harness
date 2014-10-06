@@ -67,18 +67,3 @@ type CommitRepo struct {
 	Created     int64  `meddler:"commit_created"   json:"created_at"`
 	Updated     int64  `meddler:"commit_updated"   json:"updated_at"`
 }
-
-// Returns the Short (--short) Commit Hash.
-func (c *CommitRepo) ShaShort() string {
-	if len(c.Sha) > 8 {
-		return c.Sha[:8]
-	} else {
-		return c.Sha
-	}
-}
-
-// Returns the Started Date as an ISO8601
-// formatted string.
-func (c *CommitRepo) FinishedString() string {
-	return time.Unix(c.Finished, 0).Format("2006-01-02T15:04:05Z")
-}
