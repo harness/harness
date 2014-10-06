@@ -100,7 +100,6 @@ func humanizeDuration(d time.Duration) string {
 	return fmt.Sprintf("%f years", d.Hours()/24/365)
 }
 
-
 // getExternalVariables retrieves all environment variables with a specific
 // prefix and puts them into a map. The keys will have the prefix stripped
 // away.

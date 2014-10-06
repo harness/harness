@@ -34,7 +34,7 @@ type BuildState struct {
 
 func New(dockerClient *docker.Client) *Builder {
 	return &Builder{
-		dockerClient: dockerClient,
+		dockerClient:   dockerClient,
 		AdditionalVars: make(map[string]string),
 	}
 }
