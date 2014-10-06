@@ -94,9 +94,6 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 	//
 	// todo(bradrydzewski) this login should be a bit more intelligent
 	//      than the current implementation.
-	//
-	// todo(bradrydzewski) the github implementation will only sync a
-	//      maximum of 100 repositories due to the api pagination. need to fix.
 	if u.Syncing {
 		redirect = "/sync"
 		log.Println("sync user account.", u.Login)

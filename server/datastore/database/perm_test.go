@@ -47,6 +47,29 @@ func TestPermstore(t *testing.T) {
 			g.Assert(perm1.ID != 0).IsTrue()
 		})
 
+		g.It("Should Upsert a Perm", func() {
+			perm1 := model.Perm{
+				UserID: 1,
+				RepoID: 2,
+				Read:   true,
+				Write:  true,
+				Admin:  true,
+			}
+			ps.PostPerm(&perm1)
+			perm1.Read = true
+			perm1.Write = true
+			perm1.Admin = false
+			perm1.ID = 0
+			err := ps.PostPerm(&perm1)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(perm1.ID != 0).IsTrue()
+			getperm, err := ps.GetPerm(&model.User{ID: 1}, &model.Repo{ID: 2})
+			g.Assert(err == nil).IsTrue()
+			g.Assert(getperm.Read).IsTrue()
+			g.Assert(getperm.Write).IsTrue()
+			g.Assert(getperm.Admin).IsFalse()
+		})
+
 		g.It("Should Get a Perm", func() {
 			ps.PostPerm(&model.Perm{
 				UserID: 1,
@@ -80,25 +103,6 @@ func TestPermstore(t *testing.T) {
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(err3 == nil).IsFalse()
-		})
-
-		g.It("Should Enforce Unique Perm", func() {
-			err1 := ps.PostPerm(&model.Perm{
-				UserID: 1,
-				RepoID: 2,
-				Read:   true,
-				Write:  true,
-				Admin:  true,
-			})
-			err2 := ps.PostPerm(&model.Perm{
-				UserID: 1,
-				RepoID: 2,
-				Read:   true,
-				Write:  true,
-				Admin:  true,
-			})
-			g.Assert(err1 == nil).IsTrue()
-			g.Assert(err2 == nil).IsFalse()
 		})
 	})
 }
