@@ -98,7 +98,7 @@ func PostRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	// setup the post-commit hook with the remote system and
 	// if necessary, register the public key
-	var hook = fmt.Sprintf("%s/v1/hook/%s", httputil.GetURL(r), repo.Remote)
+	var hook = fmt.Sprintf("%s/api/hook/%s", httputil.GetURL(r), repo.Remote)
 	if err := remote.Activate(user, repo, hook); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
