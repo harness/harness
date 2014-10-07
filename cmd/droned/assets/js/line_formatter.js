@@ -16,6 +16,7 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 
 			var output = "";
 			var current = 0;
+			var m = null;
 			while (m = this.regex.exec(s)) {
 				var part = s.substring(current, m.index);
 				current = this.regex.lastIndex;
@@ -29,10 +30,11 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 				switch (code) {
 					case 'm':
 					case '0m':
+					case '39m':
 						var len = this.styles.length;
 						for (var i=0; i < len; i++) {
 							this.styles.pop();
-							post += "</span>"
+							post += "</span>";
 						}
 						break;
 					case '30;42m': pre = '<span style="color:black;background:lime">'; break;
@@ -53,6 +55,11 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 
 				if (pre !== "") {
 					this.styles.push(pre);
+				}
+
+				if (part.indexOf("0G") === 2) {
+					output = output.replace(/[^\n]+$/, "");
+					part = part.substr(4);
 				}
 
 				output += part + pre + post;
