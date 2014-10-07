@@ -1,10 +1,8 @@
 package notify
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/drone/drone/shared/model"
 )
@@ -39,25 +37,21 @@ func (s *Slack) Send(context *model.Request) error {
 	return nil
 }
 
-func getBuildUrl(context *model.Request) string {
-	return fmt.Sprintf("%s/%s/%s/%s/%s/%s", context.Host, context.Repo.Host, context.Repo.Owner, context.Repo.Name, context.Commit.Branch, context.Commit.Sha)
-}
-
-func getMessage(context *model.Request, message string) string {
+func (s *Slack) getMessage(context *model.Request, message string) string {
 	url := getBuildUrl(context)
 	return fmt.Sprintf(message, context.Repo.Name, url, context.Commit.ShaShort(), context.Commit.Author)
 }
 
 func (s *Slack) sendStarted(context *model.Request) error {
-	return s.send(getMessage(context, slackStartedMessage))
+	return s.send(s.getMessage(context, slackStartedMessage))
 }
 
 func (s *Slack) sendSuccess(context *model.Request) error {
-	return s.send(getMessage(context, slackSuccessMessage))
+	return s.send(s.getMessage(context, slackSuccessMessage))
 }
 
 func (s *Slack) sendFailure(context *model.Request) error {
-	return s.send(getMessage(context, slackFailureMessage))
+	return s.send(s.getMessage(context, slackFailureMessage))
 }
 
 // helper function to send HTTP requests
@@ -77,18 +71,8 @@ func (s *Slack) send(msg string) error {
 
 	// send payload
 	url := fmt.Sprintf(slackEndpoint, s.Team, s.Token)
-	go sendJson(url, payload)
+
+	go sendJson(url, payload, nil)
 
 	return nil
-}
-
-// helper fuction to sent HTTP Post requests
-// with JSON data as the payload.
-func sendJson(url string, payload []byte) {
-	buf := bytes.NewBuffer(payload)
-	resp, err := http.Post(url, "application/json", buf)
-	if err != nil {
-		return
-	}
-	resp.Body.Close()
 }
