@@ -59,8 +59,8 @@ $(PKGS): godep
 install:
 	cp deb/drone/etc/init/drone.conf /etc/init/drone.conf
 	test -f /etc/default/drone || cp deb/drone/etc/default/drone /etc/default/drone
-	cd bin && install -t /usr/local/bin drone
-	cd bin && install -t /usr/local/bin droned
+	cd bin && install -t /opt/bin drone
+	cd bin && install -t /opt/bin droned
 	mkdir -p /var/lib/drone
 
 clean: rice
@@ -72,19 +72,19 @@ clean: rice
 	rm -rf bin/drone
 	rm -rf bin/droned
 	rm -rf deb/drone.deb
-	rm -rf usr/local/bin/drone
-	rm -rf usr/local/bin/droned
+	rm -rf opt/bin/drone
+	rm -rf opt/bin/droned
 	rm -rf drone.sqlite
 	rm -rf /tmp/drone.sqlite
 
 # creates a debian package for drone
 # to install `sudo dpkg -i drone.deb`
 dpkg:
-	mkdir -p deb/drone/usr/local/bin
+	mkdir -p deb/drone/opt/bin
 	mkdir -p deb/drone/var/lib/drone
 	mkdir -p deb/drone/var/cache/drone
-	cp bin/drone  deb/drone/usr/local/bin
-	cp bin/droned deb/drone/usr/local/bin
+	cp bin/drone  deb/drone/opt/bin
+	cp bin/droned deb/drone/opt/bin
 	-dpkg-deb --build deb/drone
 
 run:
