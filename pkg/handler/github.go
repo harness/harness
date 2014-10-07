@@ -52,7 +52,7 @@ func (h *GithubHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 	// make sure this is being triggered because of a commit
 	// and not something like a tag deletion or whatever
 	if hook.IsTag() || hook.IsGithubPages() ||
-		hook.IsHead() == false || hook.IsDeleted() {
+		hook.IsHead() == false {
 		return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
 	}
 
@@ -69,6 +69,12 @@ func (h *GithubHandler) Hook(w http.ResponseWriter, r *http.Request) error {
 	user, err := database.GetUser(repo.UserID)
 	if err != nil {
 		return RenderText(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	}
+
+	if hook.IsDeleted() {
+		database.DeleteBuildByBranch(repo.ID, hook.Branch())
+		database.DeleteCommitByBranch(repo.ID, hook.Branch())
+		return RenderText(w, http.StatusText(http.StatusOK), http.StatusOK)
 	}
 
 	// Verify that the commit doesn't already exist.

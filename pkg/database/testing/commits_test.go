@@ -140,6 +140,22 @@ func TestDeleteCommit(t *testing.T) {
 	}
 }
 
+func TestDeleteByBranch(t *testing.T) {
+	Setup()
+	defer Teardown()
+
+	if err := database.DeleteCommitByBranch(1, "dev"); err != nil {
+		t.Error(err)
+	}
+
+	// check that commits no longer exists
+	commits, _ := database.ListCommits(1, "dev")
+	if len(commits) > 0 {
+		t.Fail()
+		return
+	}
+}
+
 func TestListCommits(t *testing.T) {
 	Setup()
 	defer Teardown()

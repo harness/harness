@@ -24,6 +24,14 @@ WHERE id = ?
 LIMIT 1
 `
 
+// SQL All builds by repo and branch
+const buildsByBranchStmt = `
+SELECT b.id, b.commit_id, b.slug, b.status, b.started, b.finished, b.duration, b.created, b.updated, b.stdout, b.buildscript
+FROM builds as b
+INNER JOIN commits as c ON b.commit_id = c.id
+WHERE c.repo_id = ? AND c.branch = ?
+`
+
 // SQL Queries to retrieve a Commit by name and repo id.
 const buildFindSlugStmt = `
 SELECT id, commit_id, slug, status, started, finished, duration, created, updated, stdout, buildscript
@@ -42,6 +50,16 @@ WHERE status IN ('Started', 'Pending')
 // SQL Queries to delete a Commit.
 const buildDeleteStmt = `
 DELETE FROM builds WHERE id = ?
+`
+
+// SQL Queries to delete a Build by repo and branch names.
+const buildDeleteByBranchStmt = `
+DELETE FROM builds
+WHERE id IN (
+  SELECT b.id FROM builds as b
+  INNER JOIN commits as c ON b.commit_id = c.id
+  WHERE c.repo_id = ? AND c.branch = ?
+)
 `
 
 // Returns the Build with the given ID.
@@ -67,6 +85,20 @@ func SaveBuild(build *Build) error {
 func DeleteBuild(id int64) error {
 	_, err := db.Exec(buildDeleteStmt, id)
 	return err
+}
+
+// Deletes an existing Build by branch.
+func DeleteBuildByBranch(repo int64, branch string) error {
+	_, err := db.Exec(buildDeleteByBranchStmt, repo, branch)
+	return err
+}
+
+// Returns a list of all Builds associated
+// with the specified repo and branch.
+func ListBuildsByBranch(repo int64, branch string) ([]*Build, error) {
+	var builds []*Build
+	err := meddler.QueryAll(db, &builds, buildsByBranchStmt, repo, branch)
+	return builds, err
 }
 
 // Returns a list of all Builds associated

@@ -88,6 +88,11 @@ const commitDeleteStmt = `
 DELETE FROM commits WHERE id = ?
 `
 
+// SQL Queries to delete a Commit.
+const commitDeleteByBranchStmt = `
+DELETE FROM commits WHERE repo_id = ? AND branch = ?
+`
+
 // SQL Queries to retrieve the latest Commits for each branch.
 const commitBranchesStmt = `
 SELECT id, repo_id, status, started, finished, duration,
@@ -162,6 +167,12 @@ func SaveCommit(commit *Commit) error {
 // Deletes an existing Commit.
 func DeleteCommit(id int64) error {
 	_, err := db.Exec(commitDeleteStmt, id)
+	return err
+}
+
+// Deletes an existing Commit.
+func DeleteCommitByBranch(repo int64, branch string) error {
+	_, err := db.Exec(commitDeleteByBranchStmt, repo, branch)
 	return err
 }
 
