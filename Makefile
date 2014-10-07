@@ -62,6 +62,8 @@ install:
 	cd bin && install -t /usr/local/bin drone
 	cd bin && install -t /usr/local/bin droned
 	mkdir -p /var/lib/drone
+	getent passwd drone >/dev/null || useradd -r -M -d /var/lib/drone -s /bin/false -g docker drone
+	chown drone:docker /var/lib/drone
 
 clean: rice
 	cd cmd/droned   && rice clean

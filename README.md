@@ -50,7 +50,7 @@ $ sudo dpkg -i drone.deb
 $ sudo start drone
 ```
 
-Once Drone is running (by default on :80) navigate to **http://localhost:80/install**
+Once Drone is running (by default on :8080) navigate to **http://localhost:8080/install**
 and follow the steps in the setup wizard.
 
 **IMPORTANT** You will also need a GitHub Client ID and Secret:
@@ -58,7 +58,7 @@ and follow the steps in the setup wizard.
 * Register a new application https://github.com/settings/applications
 * Set the homepage URL to http://$YOUR_IP_ADDRESS/
 * Set the callback URL to http://$YOUR_IP_ADDRESS/auth/login/github
-* Copy the Client ID and Secret into the Drone admin console http://localhost:80/account/admin/settings
+* Copy the Client ID and Secret into the Drone admin console http://localhost:8080/account/admin/settings
 
 I'm working on a getting started video. Having issues with volume, but hopefully
 you can still get a feel for the steps:

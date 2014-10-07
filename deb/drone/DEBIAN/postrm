@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "purge" ]; then
+    update-rc.d drone remove defaults >/dev/null
+
+    if dpkg-statoverride --list --quiet "/var/lib/drone" >/dev/null; then
+        dpkg-statoverride --force --quiet --remove "/var/lib/drone"
+    fi
+
+    deluser --quiet --system drone > /dev/null || true
+    deluser --group --quiet --system --only-if-empty drone > dev/null || true
+
+    rm -rf /var/lib/drone > /dev/null 2>&1
+fi
