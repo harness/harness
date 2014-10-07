@@ -33,7 +33,7 @@ angular.module('app').controller("RepoController", function($scope, $http, $rout
 			$scope.state = 1;
 		});
 
-	//$http({method: 'GET', url: '/v1/repos/'+repo.host+'/'+repo.owner+"/"+repo.name+"/feed"}).
+	//$http({method: 'GET', url: '/api/repos/'+repo.host+'/'+repo.owner+"/"+repo.name+"/feed"}).
 	//	success(function(data, status, headers, config) {
 	//		$scope.commits = (typeof data==='string')?[]:data;
 	//	}).

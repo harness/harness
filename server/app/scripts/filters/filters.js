@@ -98,7 +98,7 @@
       var scheme = window.location.protocol;
       var host = window.location.host;
       var path = repo.host+'/'+repo.owner+'/'+repo.name;
-      return '[![Build Status]('+scheme+'//'+host+'/v1/badge/'+path+'/status.svg?branch=master)]('+scheme+'//'+host+'/'+path+')'
+      return '[![Build Status]('+scheme+'//'+host+'/api/badge/'+path+'/status.svg?branch=master)]('+scheme+'//'+host+'/'+path+')'
     }
   }
 
@@ -112,7 +112,7 @@
       var scheme = window.location.protocol;
       var host = window.location.host;
       var path = repo.host+'/'+repo.owner+'/'+repo.name;
-      return '[![Build Status]('+scheme+'//'+host+'/v1/badge/'+path+'/status.svg?branch=master)]('+scheme+'//'+host+'/'+path+')'
+      return '[![Build Status]('+scheme+'//'+host+'/api/badge/'+path+'/status.svg?branch=master)]('+scheme+'//'+host+'/'+path+')'
     }
   }
 
