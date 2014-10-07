@@ -5,8 +5,6 @@ env:
   - PATH=$PWD/Godeps/_workspace/bin:/var/cache/drone/bin:$PATH
 script:
   - sudo apt-get -y install libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
-  - make embed
-  - make build-dist
   - make test
   - make dpkg
 notify:
