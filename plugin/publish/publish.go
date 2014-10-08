@@ -2,6 +2,7 @@ package publish
 
 import (
 	"github.com/drone/drone/plugin/condition"
+	"github.com/drone/drone/plugin/publish/npm"
 	"github.com/drone/drone/shared/build/buildfile"
 	"github.com/drone/drone/shared/build/repo"
 )
@@ -10,10 +11,10 @@ import (
 // for publishing build artifacts when
 // a Build has succeeded
 type Publish struct {
-	S3    *S3    `yaml:"s3,omitempty"`
-	Swift *Swift `yaml:"swift,omitempty"`
-	PyPI  *PyPI  `yaml:"pypi,omitempty"`
-	NPM   *NPM   `yaml:"npm,omitempty"`
+	S3    *S3      `yaml:"s3,omitempty"`
+	Swift *Swift   `yaml:"swift,omitempty"`
+	PyPI  *PyPI    `yaml:"pypi,omitempty"`
+	NPM   *npm.NPM `yaml:"npm,omitempty"`
 }
 
 func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
