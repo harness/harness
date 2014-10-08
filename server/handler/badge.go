@@ -81,6 +81,9 @@ func GetCC(c web.C, w http.ResponseWriter, r *http.Request) {
 		owner = c.URLParams["owner"]
 		name  = c.URLParams["name"]
 	)
+
+	w.Header().Set("Content-Type", "image/svg+xml")
+
 	repo, err := datastore.GetRepoName(ctx, host, owner, name)
 	if err != nil {
 		w.Write(badgeNone)
