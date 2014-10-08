@@ -18,7 +18,11 @@ email = %s
 EOF
 `
 
-const CmdPublish = "npm publish %s"
+const (
+	CmdPublish     = "npm publish %s"
+	CmdAlwaysAuth  = "npm set always-auth true"
+	CmdSetRegistry = "npm config set registry %s"
+)
 
 var (
 	DefaultUser  = config.String("npm-user", "")
@@ -61,7 +65,9 @@ type NPM struct {
 func (n *NPM) Write(f *buildfile.Buildfile) {
 	// If the yaml doesn't provide a username or password
 	// we should attempt to use the global defaults.
-	if len(n.Email) == 0 {
+	if len(n.Email) == 0 ||
+		len(n.Username) == 0 ||
+		len(n.Password) == 0 {
 		n.Username = *DefaultUser
 		n.Password = *DefaultPass
 		n.Email = *DefaultEmail
@@ -75,8 +81,20 @@ func (n *NPM) Write(f *buildfile.Buildfile) {
 		return
 	}
 
-	var cmd = CmdPublish
+	// Setup the npm credentials
+	f.WriteCmdSilent(fmt.Sprintf(CmdLogin, n.Username, n.Password, n.Email))
 
+	// Setup custom npm registry
+	if len(n.Registry) != 0 {
+		f.WriteCmd(fmt.Sprintf(CmdSetRegistry, n.Registry))
+	}
+
+	// Set npm to always authenticate
+	if n.AlwaysAuth {
+		f.WriteCmd(CmdAlwaysAuth)
+	}
+
+	var cmd = fmt.Sprintf(CmdPublish, n.Folder)
 	if len(n.Tag) != 0 {
 		cmd += fmt.Sprintf(" --tag %s", n.Tag)
 	}
@@ -85,20 +103,7 @@ func (n *NPM) Write(f *buildfile.Buildfile) {
 		cmd += " --force"
 	}
 
-	// Setup the npm credentials
-	f.WriteCmdSilent(fmt.Sprintf(CmdLogin, n.Username, n.Password, n.Email))
-
-	// Setup custom npm registry
-	if len(n.Registry) != 0 {
-		f.WriteCmd(fmt.Sprintf("npm config set registry %s", n.Registry))
-	}
-
-	// Set npm to always authenticate
-	if n.AlwaysAuth {
-		f.WriteCmd("npm set always-auth true")
-	}
-
-	f.WriteCmd(fmt.Sprintf(cmd, n.Folder))
+	f.WriteCmd(cmd)
 }
 
 func (n *NPM) GetCondition() *condition.Condition {
