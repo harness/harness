@@ -6,6 +6,7 @@ import (
 
 	"github.com/drone/drone/server/worker"
 	"github.com/drone/drone/server/worker/director"
+	"github.com/drone/drone/server/worker/docker"
 	"github.com/drone/drone/server/worker/pool"
 	"github.com/goji/context"
 	"github.com/zenazn/goji/web"
@@ -21,6 +22,19 @@ func GetWorkers(c web.C, w http.ResponseWriter, r *http.Request) {
 	ctx := context.FromC(c)
 	workers := pool.FromContext(ctx).List()
 	json.NewEncoder(w).Encode(workers)
+}
+
+// PostWorker accepts a request to allocate a new
+// worker to the pool.
+//
+//     POST /api/workers
+//
+func PostWorker(c web.C, w http.ResponseWriter, r *http.Request) {
+	ctx := context.FromC(c)
+	workers := pool.FromContext(ctx)
+	node := r.FormValue("node")
+	workers.Allocate(docker.NewHost(node))
+	w.WriteHeader(http.StatusOK)
 }
 
 // GetWorkPending accepts a request to retrieve the list
