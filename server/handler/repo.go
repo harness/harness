@@ -22,14 +22,13 @@ import (
 //
 func GetRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	var (
-		admin = r.FormValue("admin")
-		role  = ToRole(c)
-		repo  = ToRepo(c)
+		role = ToRole(c)
+		repo = ToRepo(c)
 	)
 
 	// if the user is not requesting (or cannot access)
 	// admin data then we just return the repo as-is
-	if len(admin) == 0 || role.Admin == false {
+	if role.Admin == false {
 		json.NewEncoder(w).Encode(repo)
 		return
 	}
@@ -37,9 +36,10 @@ func GetRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	// else we should return restricted fields
 	json.NewEncoder(w).Encode(struct {
 		*model.Repo
-		PublicKey string `json:"public_key"`
-		Params    string `json:"params"`
-	}{repo, repo.PublicKey, repo.Params})
+		PublicKey string      `json:"public_key"`
+		Params    string      `json:"params"`
+		Perm      *model.Perm `json:"role"`
+	}{repo, repo.PublicKey, repo.Params, role})
 }
 
 // DelRepo accepts a request to inactivate the named
