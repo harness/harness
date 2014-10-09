@@ -34,7 +34,7 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 	// authenticate the user
 	login, err := remote.Authorize(w, r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	} else if login == nil {
 		// in this case we probably just redirected
@@ -63,7 +63,7 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 
 		// insert the user into the database
 		if err := datastore.PostUser(ctx, u); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -82,7 +82,7 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 	u.SetEmail(login.Email)
 	u.Syncing = true //u.IsStale() // todo (badrydzewski) should not always sync
 	if err := datastore.PutUser(ctx, u); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -147,7 +147,7 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	token, err := session.GenerateToken(ctx, r, u)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	redirect = redirect + "#access_token=" + token
