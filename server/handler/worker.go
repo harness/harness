@@ -31,10 +31,30 @@ func GetWorkers(c web.C, w http.ResponseWriter, r *http.Request) {
 //
 func PostWorker(c web.C, w http.ResponseWriter, r *http.Request) {
 	ctx := context.FromC(c)
-	workers := pool.FromContext(ctx)
-	node := r.FormValue("node")
-	workers.Allocate(docker.NewHost(node))
+	pool := pool.FromContext(ctx)
+	node := r.FormValue("address")
+	pool.Allocate(docker.NewHost(node))
 	w.WriteHeader(http.StatusOK)
+}
+
+// Delete accepts a request to delete a worker
+// from the pool.
+//
+//     DELETE /api/workers
+//
+func DelWorker(c web.C, w http.ResponseWriter, r *http.Request) {
+	ctx := context.FromC(c)
+	pool := pool.FromContext(ctx)
+	uuid := r.FormValue("id")
+
+	for _, worker := range pool.List() {
+		if worker.(*docker.Docker).UUID != uuid {
+			pool.Deallocate(worker)
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+	}
+	w.WriteHeader(http.StatusNotFound)
 }
 
 // GetWorkPending accepts a request to retrieve the list

@@ -163,6 +163,8 @@ func main() {
 	work.Get("/api/work/pending", handler.GetWorkPending)
 	work.Get("/api/work/assignments", handler.GetWorkAssigned)
 	work.Get("/api/workers", handler.GetWorkers)
+	work.Post("/api/workers", handler.PostWorker)
+	work.Delete("/api/workers", handler.DelWorker)
 	goji.Handle("/api/work*", work)
 
 	// Include static resources
