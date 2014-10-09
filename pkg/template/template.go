@@ -148,6 +148,7 @@ func init() {
 		"success.html",
 		"invitation.html",
 		"reset_password.html",
+		"test.html",
 	}
 
 	// extract the base template as a string

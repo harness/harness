@@ -107,6 +107,31 @@ func SendFailure(repo, sha, to string, data interface{}) error {
 	return Send(&msg)
 }
 
+// Sends a test email to the user
+func SendTest() error {
+    s, err := database.GetSettings()
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+    
+    msg := Message{}
+    msg.Subject = "[drone.io] Test set email";
+    //get user Smtp name from saved settings
+    msg.To = s.SmtpUsername;
+    
+    var buf bytes.Buffer
+    data := struct{}{}
+    err = template.ExecuteTemplate(&buf, "test.html", &data)
+    if err != nil {
+        log.Print(err)
+        return err
+    }
+    msg.Body = buf.String()
+    
+    return Send(&msg)
+}
+
 // Send sends an email message.
 func Send(msg *Message) error {
 	// retieve the system settings from the database

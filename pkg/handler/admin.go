@@ -198,6 +198,14 @@ func AdminSettingsUpdate(w http.ResponseWriter, r *http.Request, u *User) error 
 		return RenderError(w, err, http.StatusBadRequest)
 	}
 
+
+    //send test mail to saved settings 
+
+    if err := mail.SendTest(); err != nil {
+		return RenderError(w, err, http.StatusBadRequest)
+    }
+
+    //TODO shouldn't it be deleted, is it?
 	// make sure the mail package is updated with the
 	// latest client information.
 	//mail.SetClient(&mail.SMTPClient{
