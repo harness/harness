@@ -278,7 +278,13 @@ notify:
     on_started: true
     on_success: true
     on_failure: true
+    started_message: Building {{.CommitAuthor}}/{{.RepoName}}/{{.CommitHash}}.
+    success_message: <b>Success:</b> {{.CommitHash}}!
+    failure_message: <b>Failed</b> {{.RepoName}}, commit {{.CommitHash}}, author {{.CommitAuthor}}
 ```
+
+Hipchat messages are customizable using Go templates, available variables:
+`CommitAuthor`, `RepoName`, `CommitHash`, `Host`.
 
 ### Databases
 
