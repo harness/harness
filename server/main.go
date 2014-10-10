@@ -8,16 +8,15 @@ import (
 	"strings"
 
 	"github.com/drone/config"
-	"github.com/drone/drone/server/handler"
 	"github.com/drone/drone/server/middleware"
 	"github.com/drone/drone/server/pubsub"
+	"github.com/drone/drone/server/router"
 	"github.com/drone/drone/shared/build/log"
 
 	"github.com/GeertJohan/go.rice"
 
 	"code.google.com/p/go.net/context"
 	webcontext "github.com/goji/context"
-	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
 
 	_ "github.com/drone/drone/plugin/notify/email"
@@ -116,70 +115,29 @@ func main() {
 
 	pub = pubsub.NewPubSub()
 
-	goji.Get("/api/logins", handler.GetLoginList)
-	goji.Get("/api/stream/stdout/:id", handler.WsConsole)
-	goji.Get("/api/stream/user", handler.WsUser)
-	goji.Get("/api/auth/:host", handler.GetLogin)
-	goji.Post("/api/auth/:host", handler.GetLogin)
-	goji.Get("/api/badge/:host/:owner/:name/status.svg", handler.GetBadge)
-	goji.Get("/api/badge/:host/:owner/:name/cc.xml", handler.GetCC)
-	goji.Get("/api/hook/:host", handler.PostHook)
-	goji.Put("/api/hook/:host", handler.PostHook)
-	goji.Post("/api/hook/:host", handler.PostHook)
-
-	repos := web.New()
-	repos.Use(middleware.SetRepo)
-	repos.Use(middleware.RequireRepoRead)
-	repos.Use(middleware.RequireRepoAdmin)
-	repos.Get("/api/repos/:host/:owner/:name/branches/:branch/commits/:commit/console", handler.GetOutput)
-	repos.Get("/api/repos/:host/:owner/:name/branches/:branch/commits/:commit", handler.GetCommit)
-	repos.Post("/api/repos/:host/:owner/:name/branches/:branch/commits/:commit", handler.PostCommit)
-	repos.Get("/api/repos/:host/:owner/:name/commits", handler.GetCommitList)
-	repos.Get("/api/repos/:host/:owner/:name", handler.GetRepo)
-	repos.Put("/api/repos/:host/:owner/:name", handler.PutRepo)
-	repos.Post("/api/repos/:host/:owner/:name", handler.PostRepo)
-	repos.Delete("/api/repos/:host/:owner/:name", handler.DelRepo)
-	goji.Handle("/api/repos/:host/:owner/:name*", repos)
-
-	users := web.New()
-	users.Use(middleware.RequireUserAdmin)
-	users.Get("/api/users/:host/:login", handler.GetUser)
-	users.Post("/api/users/:host/:login", handler.PostUser)
-	users.Delete("/api/users/:host/:login", handler.DelUser)
-	users.Get("/api/users", handler.GetUserList)
-	goji.Handle("/api/users*", users)
-
-	user := web.New()
-	user.Use(middleware.RequireUser)
-	user.Get("/api/user/feed", handler.GetUserFeed)
-	user.Get("/api/user/repos", handler.GetUserRepos)
-	user.Get("/api/user", handler.GetUserCurrent)
-	user.Put("/api/user", handler.PutUser)
-	goji.Handle("/api/user*", user)
-
-	work := web.New()
-	work.Use(middleware.RequireUserAdmin)
-	work.Get("/api/work/started", handler.GetWorkStarted)
-	work.Get("/api/work/pending", handler.GetWorkPending)
-	work.Get("/api/work/assignments", handler.GetWorkAssigned)
-	work.Get("/api/workers", handler.GetWorkers)
-	work.Post("/api/workers", handler.PostWorker)
-	work.Delete("/api/workers", handler.DelWorker)
-	goji.Handle("/api/work*", work)
-
 	// Include static resources
 	assets := rice.MustFindBox("app").HTTPBox()
 	assetserve := http.FileServer(rice.MustFindBox("app").HTTPBox())
 	http.Handle("/static/", http.StripPrefix("/static", assetserve))
-	goji.Get("/*", func(c web.C, w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write(assets.MustBytes("index.html"))
 	})
 
-	// Add middleware and serve
-	goji.Use(ContextMiddleware)
-	goji.Use(middleware.SetHeaders)
-	goji.Use(middleware.SetUser)
-	goji.Serve()
+	// create the router and add middleware
+	mux := router.New()
+	//mux.Use(middleware.Recovery)
+	//mux.Use(middleware.Logger)
+	//mux.Use(middleware.NoCache)
+	mux.Use(middleware.SetHeaders)
+	mux.Use(middleware.SetUser)
+	mux.Use(ContextMiddleware)
+	http.Handle("/api/", mux)
+
+	if len(sslcert) == 0 {
+		panic(http.ListenAndServe(port, nil))
+	} else {
+		panic(http.ListenAndServeTLS(port, sslcert, sslkey, nil))
+	}
 }
 
 // ContextMiddleware creates a new go.net/context and
