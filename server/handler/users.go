@@ -17,15 +17,7 @@ import (
 //
 func GetUserList(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
-	var user = ToUser(c)
-	switch {
-	case user == nil:
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	case user.Admin == false:
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
+
 	users, err := datastore.GetUserList(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -47,14 +39,7 @@ func GetUser(c web.C, w http.ResponseWriter, r *http.Request) {
 		host  = c.URLParams["host"]
 		login = c.URLParams["login"]
 	)
-	switch {
-	case user == nil:
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	case user.Admin == false:
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
+
 	user, err := datastore.GetUserLogin(ctx, host, login)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -72,18 +57,10 @@ func GetUser(c web.C, w http.ResponseWriter, r *http.Request) {
 func PostUser(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
 	var (
-		user  = ToUser(c)
 		host  = c.URLParams["host"]
 		login = c.URLParams["login"]
 	)
-	switch {
-	case user == nil:
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	case user.Admin == false:
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
+
 	account := model.NewUser(host, login, "")
 	if err := datastore.PostUser(ctx, account); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -105,14 +82,7 @@ func DelUser(c web.C, w http.ResponseWriter, r *http.Request) {
 		host  = c.URLParams["host"]
 		login = c.URLParams["login"]
 	)
-	switch {
-	case user == nil:
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	case user.Admin == false:
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
+
 	account, err := datastore.GetUserLogin(ctx, host, login)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)

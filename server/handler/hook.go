@@ -90,9 +90,11 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 		PullRequest: hook.PullRequest,
 		Timestamp:   hook.Timestamp,
 		Message:     hook.Message,
-		Config:      string(yml)}
+		Config:      string(yml),
+	}
 	commit.SetAuthor(hook.Author)
-	// inser the commit into the database
+
+	// inserts the commit into the database
 	if err := datastore.PostCommit(ctx, &commit); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
