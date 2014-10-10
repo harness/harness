@@ -36,6 +36,10 @@ func GetBadge(c web.C, w http.ResponseWriter, r *http.Request) {
 		branch = c.URLParams["branch"]
 	)
 
+	// an SVG response is always served, even when error, so
+	// we can go ahead and set the content type appropriately.
+	w.Header().Set("Content-Type", "image/svg+xml")
+
 	repo, err := datastore.GetRepoName(ctx, host, owner, name)
 	if err != nil {
 		w.Write(badgeNone)
@@ -81,8 +85,6 @@ func GetCC(c web.C, w http.ResponseWriter, r *http.Request) {
 		owner = c.URLParams["owner"]
 		name  = c.URLParams["name"]
 	)
-
-	w.Header().Set("Content-Type", "image/svg+xml")
 
 	repo, err := datastore.GetRepoName(ctx, host, owner, name)
 	if err != nil {
