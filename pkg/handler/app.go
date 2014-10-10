@@ -29,6 +29,10 @@ func generateRandomKey(strength int) []byte {
 	return k
 }
 
+func SetSecret(sec string) {
+	secret = []byte(sec)
+}
+
 // Returns an HTML index.html page if the user is
 // not currently authenticated, otherwise redirects
 // the user to their personal dashboard screen
