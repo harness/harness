@@ -133,6 +133,7 @@ SELECT *
 FROM commits
 WHERE repo_id       = ?
   AND commit_branch = ?
+  AND commit_pr     = ''
 ORDER BY commit_id DESC
 LIMIT 1
 `
