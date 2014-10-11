@@ -21,12 +21,13 @@ type Sender interface {
 // for notifying a user, or group of users,
 // when their Build has completed.
 type Notification struct {
-	Email   *email.Email     `yaml:"email,omitempty"`
-	Webhook *webhook.Webhook `yaml:"webhook,omitempty"`
-	Hipchat *Hipchat         `yaml:"hipchat,omitempty"`
-	Irc     *irc.IRC         `yaml:"irc,omitempty"`
-	Slack   *Slack           `yaml:"slack,omitempty"`
-	Gitter  *Gitter          `yaml:"gitter,omitempty"`
+	Email    *email.Email     `yaml:"email,omitempty"`
+	Webhook  *webhook.Webhook `yaml:"webhook,omitempty"`
+	Hipchat  *Hipchat         `yaml:"hipchat,omitempty"`
+	Irc      *irc.IRC         `yaml:"irc,omitempty"`
+	Slack    *Slack           `yaml:"slack,omitempty"`
+	Gitter   *Gitter          `yaml:"gitter,omitempty"`
+	Flowdock *Flowdock        `yaml:"flowdock,omitempty"`
 
 	GitHub github.GitHub `yaml:"--"`
 }
@@ -75,6 +76,14 @@ func (n *Notification) Send(context *model.Request) error {
 	// send gitter notifications
 	if n.Gitter != nil {
 		err := n.Gitter.Send(context)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	// send gitter notifications
+	if n.Flowdock != nil {
+		err := n.Flowdock.Send(context)
 		if err != nil {
 			log.Println(err)
 		}
