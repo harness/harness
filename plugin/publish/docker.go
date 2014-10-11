@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/drone/drone/plugin/condition"
 	"github.com/drone/drone/shared/build/buildfile"
-	"github.com/drone/drone/shared/build/repo"
 )
 
 type Docker struct {
@@ -35,7 +35,8 @@ type Docker struct {
 	// Do we want to override "latest" automatically with this build?
 	PushLatest bool   `yaml:"push_latest"`
 	CustomTag  string `yaml:"custom_tag"`
-	Branch     string `yaml:"branch"`
+
+	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
 // Write adds commands to the buildfile to do the following:
@@ -43,7 +44,7 @@ type Docker struct {
 // 2. Build a docker image based on the dockerfile defined in the config.
 // 3. Push that docker image to index.docker.io.
 // 4. Delete the docker image on the server it was build on so we conserve disk space.
-func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
+func (d *Docker) Write(f *buildfile.Buildfile) {
 	if len(d.DockerServer) == 0 || d.DockerServerPort == 0 || len(d.DockerVersion) == 0 ||
 		len(d.ImageName) == 0 {
 		f.WriteCmdSilent(`echo -e "Docker Plugin: Missing argument(s)\n\n"`)
@@ -123,4 +124,8 @@ func (d *Docker) Write(f *buildfile.Buildfile, r *repo.Repo) {
 				dockerServerUrl, d.ImageName))
 		}
 	}
+}
+
+func (d *Docker) GetCondition() *condition.Condition {
+	return d.Condition
 }

@@ -40,8 +40,8 @@ func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	}
 
 	// Docker
-	if p.Docker != nil && (len(p.Docker.Branch) == 0 || (len(p.Docker.Branch) > 0 && r.Branch == p.Docker.Branch)) {
-		p.Docker.Write(f, r)
+	if p.Docker != nil && match(p.Docker.GetCondition(), r) {
+		p.Docker.Write(f)
 	}
 }
 
