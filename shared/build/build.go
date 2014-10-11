@@ -244,6 +244,8 @@ func (b *Builder) setup() error {
 		if err := b.dockerClient.Images.Pull(b.Build.Image); err != nil {
 			return err
 		}
+	} else if err != nil {
+		log.Errf("failed to inspect image %s", b.Build.Image)
 	}
 
 	// create the Docker image
@@ -439,7 +441,7 @@ func (b *Builder) writeDockerfile(dir string) error {
 	switch {
 	case strings.HasPrefix(b.Build.Image, "bradrydzewski/"),
 		strings.HasPrefix(b.Build.Image, "drone/"):
-		// the default user for all official Drone imnage
+		// the default user for all official Drone image
 		// is the "ubuntu" user, since all build images
 		// inherit from the ubuntu cloud ISO
 		dockerfile.WriteUser("ubuntu")
