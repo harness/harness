@@ -59,9 +59,9 @@ var (
 	pub     *pubsub.PubSub
 
 	// Docker configuration details.
-	tlscacert = config.String("docker-tlscacert")
-	tlscert   = config.String("docker-tlscert")
-	tlskey    = config.String("docker-tlskey")
+	tlscacert = config.String("docker-tlscacert", "")
+	tlscert   = config.String("docker-tlscert", "")
+	tlskey    = config.String("docker-tlskey", "")
 	nodes     StringArr
 
 	db *sql.DB
