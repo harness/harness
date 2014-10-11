@@ -43,25 +43,40 @@ func (s *Slack) getMessage(context *model.Request, message string) string {
 }
 
 func (s *Slack) sendStarted(context *model.Request) error {
-	return s.send(s.getMessage(context, slackStartedMessage))
+	return s.send(s.getMessage(context, slackStartedMessage), "warning")
 }
 
 func (s *Slack) sendSuccess(context *model.Request) error {
-	return s.send(s.getMessage(context, slackSuccessMessage))
+	return s.send(s.getMessage(context, slackSuccessMessage), "good")
 }
 
 func (s *Slack) sendFailure(context *model.Request) error {
-	return s.send(s.getMessage(context, slackFailureMessage))
+	return s.send(s.getMessage(context, slackFailureMessage), "danger")
 }
 
 // helper function to send HTTP requests
-func (s *Slack) send(msg string) error {
+func (s *Slack) send(msg string, color string) error {
+	type Attachment struct {
+		Fallback string   `json:"fallback"`
+		Text     string   `json:"text"`
+		Color    string   `json:"color"`
+		MrkdwnIn []string `json:"mrkdwn_in"`
+	}
+
+	attachments := []Attachment{
+		Attachment{
+			msg,
+			msg,
+			color,
+			[]string{"fallback", "text"},
+		},
+	}
 	// data will get posted in this format
 	data := struct {
-		Channel  string `json:"channel"`
-		Username string `json:"username"`
-		Text     string `json:"text"`
-	}{s.Channel, s.Username, msg}
+		Channel     string       `json:"channel"`
+		Username    string       `json:"username"`
+		Attachments []Attachment `json:"attachments"`
+	}{s.Channel, s.Username, attachments}
 
 	// data json encoded
 	payload, err := json.Marshal(data)
