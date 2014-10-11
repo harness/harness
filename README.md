@@ -54,6 +54,13 @@ The configuration file is in TOML format:
 
 ```toml
 
+[server]
+port=""
+
+[server.ssl]
+key=""
+cert=""
+
 [database]
 driver=""
 source=""
@@ -97,6 +104,11 @@ nodes=[
 Or you can use environment variables
 
 ```sh
+
+# custom database settings
+export DRONE_SERVER_PORT=""
+export DRONE_SERVER_SSL_KEY=""
+export DRONE_SERVER_SSL_CERT=""
 
 # custom database settings
 export DRONE_DATABASE_DRIVER=""
