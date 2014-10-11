@@ -16,6 +16,7 @@ type Publish struct {
 	PyPI   *PyPI    `yaml:"pypi,omitempty"`
 	NPM    *npm.NPM `yaml:"npm,omitempty"`
 	Docker *Docker  `yaml:"docker,omitempty"`
+	Github *Github  `yaml:"github,omitempty"`
 }
 
 func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
@@ -37,6 +38,11 @@ func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	// NPM
 	if p.NPM != nil && match(p.NPM.GetCondition(), r) {
 		p.NPM.Write(f)
+	}
+
+	// Github
+	if p.Github != nil && match(p.Github.GetCondition(), r) {
+		p.Github.Write(f)
 	}
 
 	// Docker
