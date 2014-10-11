@@ -33,7 +33,7 @@ func (h *Heroku) Write(f *buildfile.Buildfile) {
 		// that need to be deployed to Heroku.
 		f.WriteCmd(fmt.Sprintf("git add -A"))
 		f.WriteCmd(fmt.Sprintf("git commit -m 'adding build artifacts'"))
-		f.WriteCmd(fmt.Sprintf("git push heroku $COMMIT:master --force"))
+		f.WriteCmd(fmt.Sprintf("git push heroku HEAD:master --force"))
 	case false:
 		// otherwise we just do a standard git push
 		f.WriteCmd(fmt.Sprintf("git push heroku $COMMIT:master"))
