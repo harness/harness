@@ -33,38 +33,36 @@ import (
 )
 
 var (
-	// port the server will run on
-	port string
-
-	// database driver used to connect to the database
-	driver string
-
-	// driver specific connection information. In this
-	// case, it should be the location of the SQLite file
-	datasource string
-
-	// optional flags for tls listener
-	sslcert string
-	sslkey  string
-
-	// commit sha for the current build.
+	// commit sha for the current build, set by
+	// the compile process.
 	version  string = "0.3-dev"
 	revision string
+)
 
-	conf   string
-	prefix string
+var (
+	// Database driver configuration. Defaults to sqlite
+	// when no database configuration specified.
+	datasource = config.String("database-source", "drone.sqlite")
+	driver     = config.String("database-driver", "sqlite3")
 
-	open bool
+	// HTTP Server settings.
+	port   = config.String("server-port", ":8000")
+	sslcrt = config.String("server-ssl-cert", "")
+	sslkey = config.String("server-ssl-key", "")
 
-	// worker pool
+	// Enable self-registration. When false, the system admin
+	// must grant user access.
+	open = config.Bool("registration-open", false)
+
 	workers *pool.Pool
+	worker  *director.Director
+	pub     *pubsub.PubSub
 
-	// director
-	worker *director.Director
-
-	pub *pubsub.PubSub
-
-	nodes StringArr
+	// Docker configuration details.
+	tlscacert = config.String("docker-tlscacert")
+	tlscert   = config.String("docker-tlscert")
+	tlskey    = config.String("docker-tlskey")
+	nodes     StringArr
 
 	db *sql.DB
 
@@ -74,30 +72,34 @@ var (
 func main() {
 	log.SetPriority(log.LOG_NOTICE)
 
+	// Parses flags. The only flag that can be passed into the
+	// application is the location of the configuration (.toml) file.
+	var conf string
 	flag.StringVar(&conf, "config", "", "")
-	flag.StringVar(&prefix, "prefix", "DRONE_", "")
 	flag.Parse()
 
-	config.StringVar(&datasource, "database-source", "drone.sqlite")
-	config.StringVar(&driver, "database-driver", "sqlite3")
 	config.Var(&nodes, "worker-nodes")
-	config.BoolVar(&open, "registration-open", false)
-	config.SetPrefix(prefix)
-	if err := config.Parse(conf); err != nil {
-		fmt.Println("Error parsing config", err)
-	}
 
-	// setup the remote services
+	// Parses config data. The config data can be stored in a config
+	// file (.toml format) or environment variables, or a combo.
+	config.SetPrefix("DRONE_")
+	config.Parse(conf)
+
+	// Setup the remote services. We need to execute these to register
+	// the remote plugins with the system.
+	//
+	// NOTE: this cannot be done via init() because they need to be
+	//       executed after config.Parse
 	bitbucket.Register()
 	github.Register()
 	gitlab.Register()
 
 	caps = map[string]bool{}
-	caps[capability.Registration] = open
+	caps[capability.Registration] = *open
 
 	// setup the database and cancel all pending
 	// commits in the system.
-	db = database.MustConnect(driver, datasource)
+	db = database.MustConnect(*driver, *datasource)
 	go database.NewCommitstore(db).KillCommits()
 
 	// Create the worker, director and builders
@@ -115,7 +117,7 @@ func main() {
 
 	pub = pubsub.NewPubSub()
 
-	// Include static resources
+	// create handler for static resources
 	assets := rice.MustFindBox("app").HTTPBox()
 	assetserve := http.FileServer(rice.MustFindBox("app").HTTPBox())
 	http.Handle("/static/", http.StripPrefix("/static", assetserve))
@@ -125,18 +127,17 @@ func main() {
 
 	// create the router and add middleware
 	mux := router.New()
-	//mux.Use(middleware.Recovery)
-	//mux.Use(middleware.Logger)
-	//mux.Use(middleware.NoCache)
+	mux.Use(ContextMiddleware)
 	mux.Use(middleware.SetHeaders)
 	mux.Use(middleware.SetUser)
-	mux.Use(ContextMiddleware)
 	http.Handle("/api/", mux)
 
-	if len(sslcert) == 0 {
-		panic(http.ListenAndServe(port, nil))
+	// start the http server in either http or https mode,
+	// depending on whether a certificate was provided.
+	if len(*sslcrt) == 0 {
+		panic(http.ListenAndServe(*port, nil))
 	} else {
-		panic(http.ListenAndServeTLS(port, sslcert, sslkey, nil))
+		panic(http.ListenAndServeTLS(*port, *sslcrt, *sslkey, nil))
 	}
 }
 
