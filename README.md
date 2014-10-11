@@ -1,6 +1,5 @@
-[![Build Status](http://test.drone.io/v1/badge/github.com/drone/drone/status.svg?branch=exp)](http://test.drone.io/github.com/drone/drone)
+[![Build Status](http://test.drone.io/v1/badge/github.com/drone/drone/status.svg)](http://test.drone.io/github.com/drone/drone)
 [![GoDoc](https://godoc.org/github.com/drone/drone?status.png)](https://godoc.org/github.com/drone/drone)
-
 
 ## System Requirements
 
@@ -12,10 +11,13 @@ the AUFS storage driver with the following command `sudo docker info | grep Driv
 
 ## Installation
 
-We have optimized the installation process for Ubuntu since that is what we test with internally. You can run the following commands to quickly download an install Drone on an Ubuntu machine.
+**This is project is alpha stage. Consider yourself warned**
+
+We have optimized the installation process for Ubuntu since that is what we test with internally.
+You can run the following commands to quickly download an install Drone on an Ubuntu machine.
 
 ```sh
-wget downloads.drone.io/exp/drone.deb
+wget downloads.drone.io/master/drone.deb
 sudo dpkg -i drone.deb
 ```
 
@@ -31,12 +33,12 @@ Below are some example configurations that you can use as reference:
 # to use postgres
 [database]
 driver="postgres"
-datasource="host=172.17.0.2 user=postgres dbname=drone sslmode=disable"
+datasource="host=127.0.0.1 user=postgres dbname=drone sslmode=disable"
 
 # to use mysql
 [database]
 driver="mysql"
-datasource="root@tcp(172.17.0.2:3306)/drone"
+datasource="root@tcp(127.0.0.1:3306)/drone"
 
 ```
 
@@ -47,10 +49,11 @@ files and/or environment variables (your choice which). If you prefer configurat
 you can provide Drone with the path to your configuration file:
 
 ```sh
-./drone --config=/path/to/drone.conf
+droned --config=/path/to/drone.toml
 ```
 
-The configuration file is in TOML format:
+The configuration file is in TOML format. If installed using the `drone.deb` file
+will be located in `/etc/drone/drone.toml`.
 
 ```toml
 
@@ -151,7 +154,7 @@ export DRONE_WORKER_NODES="tcp://0.0.0.0:2375,tcp://0.0.0.0:2375"
 Or a combination of the two:
 
 ```sh
-DRONE_GITLAB_URL="https://gitlab.com" ./drone --config=/path/to/drone.conf
+DRONE_GITLAB_URL="https://gitlab.com" droned --config=/path/to/drone.conf
 ```
 
 ## GitHub
@@ -174,9 +177,3 @@ Authorization callback URL:
 ```
 http://localhost:8000/api/auth/github.com
 ```
-
-## Compatibility Issues
-
-**WARNING**
-
-There were some fundamental changes to the application and we decided to introduce breaking changes to the dataabase. Migration would have been difficult and time consuming. Drone is an alpha product and therefore backward compatibility is not a primary goal until we hit a stable release. Apologizes for any inconvenience.
