@@ -29,14 +29,14 @@ Below are some example configurations that you can use as reference:
 
 ```
 # to use postgres
-[datasource]
+[database]
 driver="postgres"
-source="host=172.17.0.2 user=postgres dbname=drone sslmode=disable"
+datasource="host=172.17.0.2 user=postgres dbname=drone sslmode=disable"
 
 # to use mysql
-[datasource]
+[database]
 driver="mysql"
-source="root@tcp(172.17.0.2:3306)/drone"
+datasource="root@tcp(172.17.0.2:3306)/drone"
 
 ```
 
@@ -63,7 +63,7 @@ cert=""
 
 [database]
 driver=""
-source=""
+datasource=""
 
 [registration]
 open=true
@@ -112,7 +112,7 @@ export DRONE_SERVER_SSL_CERT=""
 
 # custom database settings
 export DRONE_DATABASE_DRIVER=""
-export DRONE_DATABASE_SOURCE=""
+export DRONE_DATABASE_DATASOURCE=""
 
 # enable users to self-register
 export DRONE_REGISTRATION_OPEN=false
