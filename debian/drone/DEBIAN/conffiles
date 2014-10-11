@@ -1,2 +1,2 @@
 /etc/init/drone.conf
-/etc/default/drone
+/etc/drone/drone.toml
