@@ -3,14 +3,15 @@ package notify
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
+
+	"github.com/drone/drone/shared/model"
 )
 
 const (
 	slackEndpoint       = "https://%s.slack.com/services/hooks/incoming-webhook?token=%s"
-	slackStartedMessage = "*Building* %s <%s|%s>, by %s:\n> %s"
-	slackSuccessMessage = "*Success* %s <%s|%s>, by %s:\n> %s"
-	slackFailureMessage = "*Failed* %s <%s|%s>, by %s:\n> %s"
+	slackStartedMessage = "*Building* %s, commit <%s|%s>, author %s"
+	slackSuccessMessage = "*Success* %s, commit <%s|%s>, author %s"
+	slackFailureMessage = "*Failed* %s, commit <%s|%s>, author %s"
 )
 
 type Slack struct {
@@ -23,7 +24,7 @@ type Slack struct {
 	Failure  bool   `yaml:"on_failure,omitempty"`
 }
 
-func (s *Slack) Send(context *Context) error {
+func (s *Slack) Send(context *model.Request) error {
 	switch {
 	case context.Commit.Status == "Started" && s.Started:
 		return s.sendStarted(context)
@@ -36,36 +37,21 @@ func (s *Slack) Send(context *Context) error {
 	return nil
 }
 
-func getBuildUrl(context *Context) string {
-	branchQuery := url.Values{}
-	if context.Commit.Branch != "" {
-		branchQuery.Set("branch", context.Commit.Branch)
-	}
-
-	return fmt.Sprintf("%s/%s/commit/%s?%s", context.Host, context.Repo.Slug, context.Commit.Hash, branchQuery.Encode())
-}
-
-func getMessage(context *Context, message string) string {
+func (s *Slack) getMessage(context *model.Request, message string) string {
 	url := getBuildUrl(context)
-	return fmt.Sprintf(
-		message,
-		context.Repo.Name,
-		url,
-		context.Commit.HashShort(),
-		context.Commit.Author,
-		context.Commit.Message)
+	return fmt.Sprintf(message, context.Repo.Name, url, context.Commit.ShaShort(), context.Commit.Author)
 }
 
-func (s *Slack) sendStarted(context *Context) error {
-	return s.send(getMessage(context, slackStartedMessage), "warning")
+func (s *Slack) sendStarted(context *model.Request) error {
+	return s.send(s.getMessage(context, slackStartedMessage), "warning")
 }
 
-func (s *Slack) sendSuccess(context *Context) error {
-	return s.send(getMessage(context, slackSuccessMessage), "good")
+func (s *Slack) sendSuccess(context *model.Request) error {
+	return s.send(s.getMessage(context, slackSuccessMessage), "good")
 }
 
-func (s *Slack) sendFailure(context *Context) error {
-	return s.send(getMessage(context, slackFailureMessage), "danger")
+func (s *Slack) sendFailure(context *model.Request) error {
+	return s.send(s.getMessage(context, slackFailureMessage), "danger")
 }
 
 // helper function to send HTTP requests
@@ -100,7 +86,8 @@ func (s *Slack) send(msg string, color string) error {
 
 	// send payload
 	url := fmt.Sprintf(slackEndpoint, s.Team, s.Token)
-	go sendJson(url, payload)
+
+	go sendJson(url, payload, nil)
 
 	return nil
 }
