@@ -42,7 +42,7 @@ var (
 var (
 	// Database driver configuration. Defaults to sqlite
 	// when no database configuration specified.
-	datasource = config.String("database-source", "drone.sqlite")
+	datasource = config.String("database-datasource", "drone.sqlite")
 	driver     = config.String("database-driver", "sqlite3")
 
 	// HTTP Server settings.
