@@ -6,7 +6,7 @@ deps:
 	# which npm && npm -g install uglify-js less
 	go get github.com/GeertJohan/go.rice/rice
 	go get github.com/franela/goblin
-	go list github.com/drone/drone/... | xargs go get -t -v
+	go get -t -v ./...
 
 test:
 	go vet ./...
