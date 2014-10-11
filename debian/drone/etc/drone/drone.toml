@@ -1,0 +1,69 @@
+
+[server]
+port=":80"
+
+#####################################################################
+# SSL configuration for Drone. Provide you key and cert chain
+# to server Drone over https.
+#
+# [server.ssl]
+# key=""
+# cert=""
+
+
+#####################################################################
+# Database configuration for Drone, by default using SQLite3.
+# You can also use postgres and mysql. See the documentation
+# for more details.
+
+[database]
+driver="sqlite3"
+source="/var/lib/drone/drone.sqlite"
+
+
+#####################################################################
+# Open Registration allows users to self-register for Drone.
+# This is recommended if Drone is being hosted behind a
+# firewall.
+#
+# When false, the system admin will need to manually add
+# users to Drone through the admin screens. 
+#
+# [registration]
+# open=true
+
+# [github]
+# client=""
+# secret=""
+
+# [github_enterprise]
+# client=""
+# secret=""
+# api=""
+# url=""
+# private_mode=false
+
+# [bitbucket]
+# client=""
+# secret=""
+
+# [gitlab]
+# url=""
+
+
+#####################################################################
+# SMTP configuration for Drone. This is required if you plan
+# to send email notifications for build statuses.
+#
+# [smtp]
+# host=""
+# port=""
+# from=""
+# user=""
+# pass=""
+
+# [worker]
+# nodes=[
+#   "unix:///var/run/docker.sock",
+#   "unix:///var/run/docker.sock"
+# ]
