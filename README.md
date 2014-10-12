@@ -18,8 +18,13 @@ We have optimized the installation process for Ubuntu since that is what we test
 You can run the following commands to quickly download an install Drone on an Ubuntu machine.
 
 ```sh
+# Ubuntu, Debian
 wget downloads.drone.io/master/drone.deb
 sudo dpkg -i drone.deb
+
+# CentOS, RedHat
+wget downloads.drone.io/master/drone.rpm
+sudo yum localinstall drone.rpm
 ```
 
 ## Database
