@@ -5,12 +5,14 @@ env:
   - GOROOT=/usr/local/go
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 script:
-  - sudo apt-get -y install zip libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
+  - sudo apt-get -y install zip libsqlite3-dev sqlite3 rpm 1> /dev/null 2> /dev/null
+  - gem install fpm
+  - rbenv rehash
   - make deps
   - make test
   - make test_postgres
   - make test_mysql
-  - make dpkg
+  - make packages
 services:
   - postgres
   - mysql
@@ -26,5 +28,5 @@ publish:
     bucket: downloads.drone.io
     access_key: $AWS_KEY
     secret_key: $AWS_SECRET
-    source: debian/drone.deb
+    source: packaging/output/drone.*
     target: $DRONE_BRANCH/
