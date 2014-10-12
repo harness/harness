@@ -31,5 +31,6 @@ publish:
     bucket: downloads.drone.io
     access_key: $AWS_KEY
     secret_key: $AWS_SECRET
-    source: packaging/output/drone.*
+    source: packaging/output/
     target: $DRONE_BRANCH/
+    recursive: true
