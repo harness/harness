@@ -3,16 +3,18 @@
 port=":80"
 
 #####################################################################
-# SSL configuration for Drone. Provide you key and cert chain
-# to server Drone over https.
+# SSL configuration
 #
 # [server.ssl]
 # key=""
 # cert=""
 
+# [session]
+# secret=""
+# duration=""
 
 #####################################################################
-# Database configuration for Drone, by default using SQLite3.
+# Database configuration, by default using SQLite3.
 # You can also use postgres and mysql. See the documentation
 # for more details.
 
