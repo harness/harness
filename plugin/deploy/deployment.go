@@ -2,25 +2,27 @@ package deploy
 
 import (
 	"github.com/drone/drone/plugin/condition"
-	"github.com/drone/drone/plugin/deploy/git"
-	"github.com/drone/drone/plugin/deploy/heroku"
-	"github.com/drone/drone/plugin/deploy/tsuru"
 	"github.com/drone/drone/shared/build/buildfile"
 	"github.com/drone/drone/shared/build/repo"
+
+	"github.com/drone/drone/plugin/deploy/git"
+	"github.com/drone/drone/plugin/deploy/heroku"
+	"github.com/drone/drone/plugin/deploy/modulus"
+	"github.com/drone/drone/plugin/deploy/tsuru"
 )
 
 // Deploy stores the configuration details
 // for deploying build artifacts when
 // a Build has succeeded
 type Deploy struct {
-	CloudFoundry *CloudFoundry  `yaml:"cloudfoundry,omitempty"`
-	Git          *git.Git       `yaml:"git,omitempty"`
-	Heroku       *heroku.Heroku `yaml:"heroku,omitempty"`
-	Modulus      *Modulus       `yaml:"modulus,omitempty"`
-	Nodejitsu    *Nodejitsu     `yaml:"nodejitsu,omitempty"`
-	SSH          *SSH           `yaml:"ssh,omitempty"`
-	Tsuru        *tsuru.Tsuru   `yaml:"tsuru,omitempty"`
-	Bash         *Bash          `yaml:"bash,omitempty"`
+	CloudFoundry *CloudFoundry    `yaml:"cloudfoundry,omitempty"`
+	Git          *git.Git         `yaml:"git,omitempty"`
+	Heroku       *heroku.Heroku   `yaml:"heroku,omitempty"`
+	Modulus      *modulus.Modulus `yaml:"modulus,omitempty"`
+	Nodejitsu    *Nodejitsu       `yaml:"nodejitsu,omitempty"`
+	SSH          *SSH             `yaml:"ssh,omitempty"`
+	Tsuru        *tsuru.Tsuru     `yaml:"tsuru,omitempty"`
+	Bash         *Bash            `yaml:"bash,omitempty"`
 }
 
 func (d *Deploy) Write(f *buildfile.Buildfile, r *repo.Repo) {
