@@ -67,13 +67,24 @@ func getRepoPath(dir string) (path string, ok bool) {
 	return dir[index+5:], true
 }
 
-// getGitOrigin checks the .git origin in an attempt
-// to correctly determine the code's package path. This
-// is Go-specific, since Go code must exist in
-// $GOPATH/src/github.com/{owner}/{name}
-func getGitOrigin(dir string) (path string, ok bool) {
-	// TODO
-	return
+// GetRepoMap returns a map of enivronment variables that
+// should be injected into the .drone.yml
+func getParamMap(prefix string) map[string]string {
+	envs := map[string]string{}
+
+	for _, item := range os.Environ() {
+		env := strings.SplitN(item, "=", 2)
+		if len(env) != 2 {
+			continue
+		}
+
+		key := env[0]
+		val := env[1]
+		if strings.HasPrefix(key, prefix) {
+			envs[strings.TrimPrefix(key, prefix)] = val
+		}
+	}
+	return envs
 }
 
 // prints the time as a human readable string
