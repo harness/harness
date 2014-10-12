@@ -3,16 +3,14 @@
 #    docker run -p 127.0.0.1:80:80 -t drone/drone
 
 FROM google/golang
-
-RUN apt-get update
-RUN apt-get -y install zip libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
+ENV DRONE_SERVER_PORT :80
 
 ADD . /gopath/src/github.com/drone/drone/
 WORKDIR /gopath/src/github.com/drone/drone
 
-RUN make deps build embed install
+RUN apt-get update
+RUN apt-get -y install zip libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
+RUN make deps build test embed install
 
 EXPOSE 80
-
 ENTRYPOINT ["/usr/local/bin/droned"]
-CMD ["--bind=:80"]
