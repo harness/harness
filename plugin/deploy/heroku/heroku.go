@@ -1,4 +1,4 @@
-package git
+package heroku
 
 import (
 	"fmt"
@@ -16,41 +16,35 @@ const (
 	CmdGlobalUser  = "git config --global user.name  $(git --no-pager log -1 --pretty=format:'%an')"
 )
 
-type Git struct {
-	Target string `yaml:"target,omitempty"`
-	Force  bool   `yaml:"force,omitempty"`
-	Branch string `yaml:"branch,omitempty"`
+type Heroku struct {
+	App   string `yaml:"app,omitempty"`
+	Force bool   `yaml:"force,omitempty"`
 
 	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
-func (g *Git) Write(f *buildfile.Buildfile) {
+func (h *Heroku) Write(f *buildfile.Buildfile) {
 	f.WriteCmdSilent(CmdRevParse)
 	f.WriteCmdSilent(CmdGlobalUser)
 	f.WriteCmdSilent(CmdGlobalEmail)
 
-	// add target as a git remote
-	f.WriteCmd(fmt.Sprintf("git remote add deploy %s", g.Target))
+	// add heroku as a git remote
+	f.WriteCmd(fmt.Sprintf("git remote add heroku git@heroku.com:%s.git", h.App))
 
-	dest := g.Branch
-	if len(dest) == 0 {
-		dest = "master"
-	}
-
-	switch g.Force {
+	switch h.Force {
 	case true:
 		// this is useful when the there are artifacts generated
 		// by the build script, such as less files converted to css,
-		// that need to be deployed to git remote.
+		// that need to be deployed to Heroku.
 		f.WriteCmd(fmt.Sprintf("git add -A"))
-		f.WriteCmd(fmt.Sprintf("git commit -m 'add build artifacts'"))
-		f.WriteCmd(fmt.Sprintf("git push deploy HEAD:%s --force", dest))
+		f.WriteCmd(fmt.Sprintf("git commit -m 'adding build artifacts'"))
+		f.WriteCmd(fmt.Sprintf("git push heroku HEAD:master --force"))
 	case false:
 		// otherwise we just do a standard git push
-		f.WriteCmd(fmt.Sprintf("git push deploy $COMMIT:%s", dest))
+		f.WriteCmd(fmt.Sprintf("git push heroku $COMMIT:master"))
 	}
 }
 
-func (g *Git) GetCondition() *condition.Condition {
-	return g.Condition
+func (h *Heroku) GetCondition() *condition.Condition {
+	return h.Condition
 }
