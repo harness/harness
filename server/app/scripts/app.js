@@ -280,7 +280,7 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 		});
 
 	$scope.rebuildCommit = function() {
-		$http({method: 'POST', url: '/api/repos/'+remote+'/'+owner+'/'+name+'/'+'branches/'+branch+'/'+'commits/'+commit+'/?action=rebuild' })
+		$http({method: 'POST', url: '/api/repos/'+remote+'/'+owner+'/'+name+'/'+'branches/'+branch+'/'+'commits/'+commit+'?action=rebuild' })
 	}
 
 
