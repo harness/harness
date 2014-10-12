@@ -20,8 +20,9 @@ test_postgres:
 	TEST_DRIVER="postgres" TEST_DATASOURCE="host=127.0.0.1 user=postgres dbname=postgres sslmode=disable" go test -short github.com/drone/drone/server/datastore/database
 
 build:
-	go build -o debian/drone/usr/local/bin/drone  -ldflags "-X main.revision $(SHA)" github.com/drone/drone/cli
-	go build -o debian/drone/usr/local/bin/droned -ldflags "-X main.revision $(SHA)" github.com/drone/drone/server
+	mkdir -p packaging/root/usr/local/bin
+	go build -o packaging/root/usr/local/bin/drone  -ldflags "-X main.revision $(SHA)" github.com/drone/drone/cli
+	go build -o packaging/root/usr/local/bin/droned -ldflags "-X main.revision $(SHA)" github.com/drone/drone/server
 
 install:
 	install -t /usr/local/bin debian/drone/usr/local/bin/drone 
@@ -32,28 +33,53 @@ run:
 
 clean:
 	find . -name "*.out" -delete
-	rm -f debian/drone/usr/local/bin/drone
-	rm -f debian/drone/usr/local/bin/droned
-	rm -f debian/drone.deb
-	rm -f server/server
-	rm -f cli/cli
+	rm -rf packaging/output
+	rm -f packaging/root/usr/local/bin/drone
+	rm -f packaging/root/usr/local/bin/droned
+	mkdir -p packaging/output
 
 lessc:
 	lessc --clean-css server/app/styles/drone.less server/app/styles/drone.css
 
-dpkg: build embed deb
+packages: clean build embed deb rpm
 
 # embeds content in go source code so that it is compiled
 # and packaged inside the go binary file.
 embed:
-	rice --import-path="github.com/drone/drone/server" append --exec="debian/drone/usr/local/bin/droned"
+	rice --import-path="github.com/drone/drone/server" append --exec="packaging/root/usr/local/bin/droned"
 
 # creates a debian package for drone to install
 # `sudo dpkg -i drone.deb`
 deb:
-	mkdir -p debian/drone/usr/local/bin
-	mkdir -p debian/drone/var/lib/drone
-	dpkg-deb --build debian/drone
+	fpm -s dir -t deb -n drone -v 0.3 -p packaging/output/drone.deb \
+		--deb-priority optional --category admin \
+		--force \
+		--deb-compression bzip2 \
+	 	--after-install packaging/scripts/postinst.deb \
+	 	--before-remove packaging/scripts/prerm.deb \
+		--after-remove packaging/scripts/postrm.deb \
+		--url https://github.com/drone/drone \
+		--description "Drone continuous integration server" \
+		-m "Brad Rydzewski <brad@drone.io>" \
+		--license "Apache License 2.0" \
+		--vendor "drone.io" -a amd64 \
+		--config-files /etc/drone/drone.toml \
+		packaging/root/=/
+
+rpm:
+	fpm -s dir -t rpm -n drone -v 0.3 -p packaging/output/drone.rpm \
+		--rpm-compression bzip2 --rpm-os linux \
+		--force \
+	 	--after-install packaging/scripts/postinst.rpm \
+	 	--before-remove packaging/scripts/prerm.rpm \
+		--after-remove packaging/scripts/postrm.rpm \
+		--url https://github.com/drone/drone \
+		--description "Drone continuous integration server" \
+		-m "Brad Rydzewski <brad@drone.io>" \
+		--license "Apache License 2.0" \
+		--vendor "drone.io" -a amd64 \
+		--config-files /etc/drone/drone.toml \
+		packaging/root/=/
 
 # deploys drone to a staging server. this requires the following
 # environment variables are set:
