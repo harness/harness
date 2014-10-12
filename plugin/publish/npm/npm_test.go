@@ -36,19 +36,6 @@ func Test_NPM(t *testing.T) {
 			g.Assert(strings.Contains(out, "\nnpm config set")).Equal(false)
 		})
 
-		/*
-			n := NPM{
-				Email:      "foo@bar.com",
-				Username:   "foo",
-				Password:   "bar",
-				Force:      true,
-				Registry:   "",
-				Folder:     "/path/to/repo",
-				Tag:        "1.0.0",
-				AlwaysAuth: false,
-			}
-		*/
-
 		g.It("Should set force", func() {
 			b := new(buildfile.Buildfile)
 			n := NPM{

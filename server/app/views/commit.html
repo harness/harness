@@ -51,7 +51,10 @@
 			<span>/</span>
 			<a href="#">{{ commit.sha | shortHash}}</a>
 		</nav>
-
+		<div id="follow">
+			<button ng-click="follow()" ng-if="following == false">follow</button>
+			<button ng-click="unfollow()" ng-if="following == true">unfollow</button>
+		</div>
 		<pre id="output"></pre>
 	</div>
 </div>
