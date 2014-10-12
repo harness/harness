@@ -76,7 +76,7 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 	// verify the commit hooks branch matches the list of approved
 	// branches (unless it is a pull request). Note that we don't really
 	// care if parsing the yaml fails here.
-	s, _ := script.ParseBuild(string(yml), map[string]string{})
+	s, _ := script.ParseBuild(string(yml))
 	if len(hook.PullRequest) == 0 && !s.MatchBranch(hook.Branch) {
 		w.WriteHeader(http.StatusOK)
 		return
