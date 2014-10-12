@@ -1,4 +1,4 @@
-package deploy
+package tsuru
 
 import (
 	"fmt"
@@ -6,22 +6,27 @@ import (
 	"github.com/drone/drone/shared/build/buildfile"
 )
 
+const (
+	// Gommand to the current commit hash
+	CmdRevParse = "COMMIT=$(git rev-parse HEAD)"
+
+	// Command to set the git user and email based on the
+	// individual that made the commit.
+	CmdGlobalEmail = "git config --global user.email $(git --no-pager log -1 --pretty=format:'%ae')"
+	CmdGlobalUser  = "git config --global user.name  $(git --no-pager log -1 --pretty=format:'%an')"
+)
+
 type Tsuru struct {
 	Force  bool   `yaml:"force,omitempty"`
-	Branch string `yaml:"branch,omitempty"`
 	Remote string `yaml:"remote,omitempty"`
 
 	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
 func (t *Tsuru) Write(f *buildfile.Buildfile) {
-	// get the current commit hash
-	f.WriteCmdSilent("COMMIT=$(git rev-parse HEAD)")
-
-	// set the git user and email based on the individual
-	// that made the commit.
-	f.WriteCmdSilent("git config --global user.name $(git --no-pager log -1 --pretty=format:'%an')")
-	f.WriteCmdSilent("git config --global user.email $(git --no-pager log -1 --pretty=format:'%ae')")
+	f.WriteCmdSilent(CmdRevParse)
+	f.WriteCmdSilent(CmdGlobalUser)
+	f.WriteCmdSilent(CmdGlobalEmail)
 
 	// add tsuru as a git remote
 	f.WriteCmd(fmt.Sprintf("git remote add tsuru %s", t.Remote))

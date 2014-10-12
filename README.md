@@ -1,5 +1,6 @@
 [![Build Status](http://test.drone.io/v1/badge/github.com/drone/drone/status.svg)](http://test.drone.io/github.com/drone/drone)
 [![GoDoc](https://godoc.org/github.com/drone/drone?status.png)](https://godoc.org/github.com/drone/drone)
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/drone/drone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## System Requirements
 
@@ -29,7 +30,7 @@ described in the **Setup** section.
 
 Below are some example configurations that you can use as reference:
 
-```
+```toml
 # to use postgres
 [database]
 driver="postgres"
@@ -39,7 +40,6 @@ datasource="host=127.0.0.1 user=postgres dbname=drone sslmode=disable"
 [database]
 driver="mysql"
 datasource="root@tcp(127.0.0.1:3306)/drone"
-
 ```
 
 ## Setup
@@ -63,6 +63,10 @@ port=""
 [server.ssl]
 key=""
 cert=""
+
+[session]
+secret=""
+duration=""
 
 [database]
 driver=""

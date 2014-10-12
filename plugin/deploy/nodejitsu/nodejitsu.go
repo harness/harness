@@ -1,4 +1,4 @@
-package deploy
+package nodejitsu
 
 import (
 	"github.com/drone/drone/plugin/condition"
@@ -6,7 +6,6 @@ import (
 )
 
 type Nodejitsu struct {
-	App   string `yaml:"app,omitempty"`
 	User  string `yaml:"user,omitempty"`
 	Token string `yaml:"token,omitempty"`
 
@@ -14,6 +13,10 @@ type Nodejitsu struct {
 }
 
 func (n *Nodejitsu) Write(f *buildfile.Buildfile) {
+	if len(n.Token) == 0 || len(n.User) == 0 {
+		return
+	}
+
 	f.WriteEnv("username", n.User)
 	f.WriteEnv("apiToken", n.Token)
 

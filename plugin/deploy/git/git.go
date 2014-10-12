@@ -1,9 +1,19 @@
-package deploy
+package git
 
 import (
 	"fmt"
 	"github.com/drone/drone/plugin/condition"
 	"github.com/drone/drone/shared/build/buildfile"
+)
+
+const (
+	// Gommand to the current commit hash
+	CmdRevParse = "COMMIT=$(git rev-parse HEAD)"
+
+	// Command to set the git user and email based on the
+	// individual that made the commit.
+	CmdGlobalEmail = "git config --global user.email $(git --no-pager log -1 --pretty=format:'%ae')"
+	CmdGlobalUser  = "git config --global user.name  $(git --no-pager log -1 --pretty=format:'%an')"
 )
 
 type Git struct {
@@ -15,20 +25,16 @@ type Git struct {
 }
 
 func (g *Git) Write(f *buildfile.Buildfile) {
-	// get the current commit hash
-	f.WriteCmdSilent("COMMIT=$(git rev-parse HEAD)")
-
-	// set the git user and email based on the individual
-	// that made the commit.
-	f.WriteCmdSilent("git config --global user.name $(git --no-pager log -1 --pretty=format:'%an')")
-	f.WriteCmdSilent("git config --global user.email $(git --no-pager log -1 --pretty=format:'%ae')")
+	f.WriteCmdSilent(CmdRevParse)
+	f.WriteCmdSilent(CmdGlobalUser)
+	f.WriteCmdSilent(CmdGlobalEmail)
 
 	// add target as a git remote
 	f.WriteCmd(fmt.Sprintf("git remote add deploy %s", g.Target))
 
-	destinationBranch := g.Branch
-	if destinationBranch == "" {
-		destinationBranch = "master"
+	dest := g.Branch
+	if len(dest) == 0 {
+		dest = "master"
 	}
 
 	switch g.Force {
@@ -38,10 +44,10 @@ func (g *Git) Write(f *buildfile.Buildfile) {
 		// that need to be deployed to git remote.
 		f.WriteCmd(fmt.Sprintf("git add -A"))
 		f.WriteCmd(fmt.Sprintf("git commit -m 'add build artifacts'"))
-		f.WriteCmd(fmt.Sprintf("git push deploy HEAD:%s --force", destinationBranch))
+		f.WriteCmd(fmt.Sprintf("git push deploy HEAD:%s --force", dest))
 	case false:
 		// otherwise we just do a standard git push
-		f.WriteCmd(fmt.Sprintf("git push deploy $COMMIT:%s", destinationBranch))
+		f.WriteCmd(fmt.Sprintf("git push deploy $COMMIT:%s", dest))
 	}
 }
 
