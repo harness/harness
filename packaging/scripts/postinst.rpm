@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -e
+
+if [ -f /etc/drone/drone.toml ]; then
+  chmod 600 /etc/drone/drone.toml
+fi
+
+if which systemctl > /dev/null; then
+  echo "Using systemd to control Drone"
+  cp /usr/share/drone/systemd/drone.service /lib/systemd/system/drone.service
+
+  systemctl daemon-reload || :
+  if [ "$1" = 1 ] ; then
+    # first time install
+    systemctl enable drone || :
+    systemctl start drone || :
+  else
+    echo "Upgrading drone"
+  fi
+else
+  echo "Couldn't find systemd to control Drone, cannot proceed."
+  echo "Open an issue and tell us about your system."
+  exit 1
+fi
+
+exit 0
