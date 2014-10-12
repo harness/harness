@@ -1,7 +1,6 @@
 package modulus
 
 import (
-	//"strings"
 	"testing"
 
 	"github.com/drone/drone/shared/build/buildfile"
@@ -42,7 +41,7 @@ func Test_Modulus(t *testing.T) {
 
 			m.Write(b)
 			g.Assert(b.String()).Equal(`export MODULUS_TOKEN=bar
-[ -f /usr/bin/npm ] || echo ERROR: npm is required for moduls deployments
+[ -f /usr/bin/npm ] || echo ERROR: npm is required for modulus.io deployments
 [ -f /usr/bin/npm ] || exit 1
 [ -f /usr/bin/sudo ] || npm install -g modulus
 [ -f /usr/bin/sudo ] && sudo npm install -g modulus

@@ -21,7 +21,7 @@ func (m *Modulus) Write(f *buildfile.Buildfile) {
 
 	// Verify npm exists, otherwise we cannot install the
 	// modulus command line utility.
-	f.WriteCmdSilent("[ -f /usr/bin/npm ] || echo ERROR: npm is required for moduls deployments")
+	f.WriteCmdSilent("[ -f /usr/bin/npm ] || echo ERROR: npm is required for modulus.io deployments")
 	f.WriteCmdSilent("[ -f /usr/bin/npm ] || exit 1")
 
 	// Install the Modulus command line interface then deploy the configured
