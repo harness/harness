@@ -7,14 +7,21 @@ import (
 
 	"code.google.com/p/go.net/context"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/drone/config"
 	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 	"github.com/gorilla/securecookie"
 )
 
-// secret key used to create jwt
-var secret = securecookie.GenerateRandomKey(32)
+// random key used to create jwt if none
+// provided in the configuration.
+var random = securecookie.GenerateRandomKey(32)
+
+var (
+	secret  = config.String("session-secret", string(random))
+	expires = config.Duration("session-expires", time.Hour*72)
+)
 
 // GetUser gets the currently authenticated user for the
 // http.Request. The user details will be stored as either
@@ -38,7 +45,7 @@ func GenerateToken(c context.Context, r *http.Request, user *model.User) (string
 	token.Claims["user_id"] = user.ID
 	token.Claims["audience"] = httputil.GetURL(r)
 	token.Claims["expires"] = time.Now().UTC().Add(time.Hour * 72).Unix()
-	return token.SignedString(secret)
+	return token.SignedString([]byte(*secret))
 }
 
 // getUserToken gets the currently authenticated user for the given
@@ -56,7 +63,7 @@ func getUserBearer(c context.Context, r *http.Request) *model.User {
 	fmt.Sscanf(tokenstr, "Bearer %s", &tokenstr)
 
 	var token, err = jwt.Parse(tokenstr, func(t *jwt.Token) (interface{}, error) {
-		return secret, nil
+		return []byte(*secret), nil
 	})
 	if err != nil || !token.Valid {
 		println("invalid token")

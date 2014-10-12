@@ -64,6 +64,10 @@ port=""
 key=""
 cert=""
 
+[session]
+secret=""
+duration=""
+
 [database]
 driver=""
 datasource=""
