@@ -29,19 +29,16 @@ func NewBuildCommand() cli.Command {
 				Value: "",
 				Usage: "identify file injected in the container",
 			},
-			cli.StringFlag{
+			cli.BoolFlag{
 				Name:  "p",
-				Value: "false",
 				Usage: "runs drone build in a privileged container",
 			},
-			cli.StringFlag{
+			cli.BoolFlag{
 				Name:  "deploy",
-				Value: "false",
 				Usage: "runs drone build with deployments enabled",
 			},
-			cli.StringFlag{
+			cli.BoolFlag{
 				Name:  "publish",
-				Value: "false",
 				Usage: "runs drone build with publishing enabled",
 			},
 		},
