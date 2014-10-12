@@ -1,8 +1,6 @@
 package script
 
 import (
-	"bytes"
-	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -16,11 +14,11 @@ import (
 	"github.com/drone/drone/shared/build/repo"
 )
 
-func ParseBuild(data string, params map[string]string) (*Build, error) {
+func ParseBuild(data string) (*Build, error) {
 	build := Build{}
 
 	// parse the build configuration file
-	err := yaml.Unmarshal(injectParams([]byte(data), params), &build)
+	err := yaml.Unmarshal([]byte(data), &build)
 	return &build, err
 }
 
@@ -30,15 +28,7 @@ func ParseBuildFile(filename string) (*Build, error) {
 		return nil, err
 	}
 
-	return ParseBuild(string(data), nil)
-}
-
-// injectParams injects params into data.
-func injectParams(data []byte, params map[string]string) []byte {
-	for k, v := range params {
-		data = bytes.Replace(data, []byte(fmt.Sprintf("{{%s}}", k)), []byte(v), -1)
-	}
-	return data
+	return ParseBuild(string(data))
 }
 
 // Build stores the configuration details for
