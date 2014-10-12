@@ -81,7 +81,7 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	if err != nil {
 		log.Printf("Error parsing PARAMS for %s/%s, Err: %s", r.Repo.Owner, r.Repo.Name, err.Error())
 	}
-	script, err := script.ParseBuild(r.Commit.Config, params)
+	script, err := script.ParseBuild(script.Inject(r.Commit.Config, params))
 	if err != nil {
 		log.Printf("Error parsing YAML for %s/%s, Err: %s", r.Repo.Owner, r.Repo.Name, err.Error())
 	}

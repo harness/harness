@@ -15,9 +15,12 @@ services:
   - postgres
   - mysql
 notify:
-  email:
-    recipients:
-      - brad@drone.io
+  gitter:
+    room_id: 76f5e5ec935c5b40259a
+    token: $$GITTER_TOKEN
+    on_started: false
+    on_success: false
+    on_failure: false
 
 publish:
   s3:
