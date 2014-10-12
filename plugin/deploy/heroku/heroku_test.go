@@ -8,7 +8,7 @@ import (
 	"github.com/franela/goblin"
 )
 
-func Test_Git(t *testing.T) {
+func Test_Heroku(t *testing.T) {
 
 	g := goblin.Goblin(t)
 	g.Describe("Heroku Deploy", func() {
