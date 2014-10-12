@@ -99,3 +99,22 @@ func humanizeDuration(d time.Duration) string {
 	}
 	return fmt.Sprintf("%f years", d.Hours()/24/365)
 }
+
+// getExternalVariables retrieves all environment variables with a specific
+// prefix and puts them into a map. The keys will have the prefix stripped
+// away.
+func getExternalVariables(prefix string, dest map[string]string) {
+	// pull in environment variables for the drone command
+	for _, kv := range os.Environ() {
+		envvar := strings.SplitN(kv, "=", 2)
+		if len(envvar) != 2 {
+			continue
+		}
+
+		key := envvar[0]
+		value := envvar[1]
+		if strings.HasPrefix(key, prefix) {
+			dest[strings.TrimPrefix(key, prefix)] = value
+		}
+	}
+}
