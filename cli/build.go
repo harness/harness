@@ -78,11 +78,19 @@ func buildCommandFunc(c *cli.Context) {
 func run(path, identity string, privileged bool) (int, error) {
 	dockerClient := docker.New()
 
+	// parse the private environment variables
+	envs := getParamMap("DRONE_ENV_")
+
 	// parse the Drone yml file
-	s, err := script.ParseBuildFile(path)
+	s, err := script.ParseBuildFile(script.Inject(path, envs))
 	if err != nil {
 		log.Err(err.Error())
 		return EXIT_STATUS, err
+	}
+
+	// inject private environment variables into build script
+	for key, val := range envs {
+		s.Env = append(s.Env, key+"="+val)
 	}
 
 	// remove deploy & publish sections
