@@ -29,10 +29,17 @@ func NewBuildCommand() cli.Command {
 				Value: "",
 				Usage: "identify file injected in the container",
 			},
-			cli.StringFlag{
+			cli.BoolFlag{
 				Name:  "p",
-				Value: "false",
 				Usage: "runs drone build in a privileged container",
+			},
+			cli.BoolFlag{
+				Name:  "deploy",
+				Usage: "runs drone build with deployments enabled",
+			},
+			cli.BoolFlag{
+				Name:  "publish",
+				Usage: "runs drone build with publishing enabled",
 			},
 		},
 		Action: func(c *cli.Context) {
@@ -45,6 +52,8 @@ func NewBuildCommand() cli.Command {
 func buildCommandFunc(c *cli.Context) {
 	var privileged = c.Bool("p")
 	var identity = c.String("i")
+	var deploy = c.Bool("deploy")
+	var publish = c.Bool("publish")
 	var path string
 
 	// the path is provided as an optional argument that
@@ -71,24 +80,34 @@ func buildCommandFunc(c *cli.Context) {
 	log.SetPriority(log.LOG_DEBUG) //LOG_NOTICE
 	docker.Logging = false
 
-	var exit, _ = run(path, identity, privileged)
+	var exit, _ = run(path, identity, publish, deploy, privileged)
 	os.Exit(exit)
 }
 
-func run(path, identity string, privileged bool) (int, error) {
+func run(path, identity string, publish, deploy, privileged bool) (int, error) {
 	dockerClient := docker.New()
 
+	// parse the private environment variables
+	envs := getParamMap("DRONE_ENV_")
+
 	// parse the Drone yml file
-	s, err := script.ParseBuildFile(path)
+	s, err := script.ParseBuildFile(script.Inject(path, envs))
 	if err != nil {
 		log.Err(err.Error())
 		return EXIT_STATUS, err
 	}
 
-	// remove deploy & publish sections
-	// for now, until I fix bug
-	s.Publish = nil
-	s.Deploy = nil
+	// inject private environment variables into build script
+	for key, val := range envs {
+		s.Env = append(s.Env, key+"="+val)
+	}
+
+	if deploy == false {
+		s.Publish = nil
+	}
+	if publish == false {
+		s.Deploy = nil
+	}
 
 	// get the repository root directory
 	dir := filepath.Dir(path)
@@ -136,7 +155,6 @@ func run(path, identity string, privileged bool) (int, error) {
 	builder.Repo = &code
 	builder.Key = key
 	builder.Stdout = os.Stdout
-	// TODO ADD THIS BACK
 	builder.Timeout = 300 * time.Minute
 	builder.Privileged = privileged
 
