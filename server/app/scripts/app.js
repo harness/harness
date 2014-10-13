@@ -231,10 +231,11 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 	$scope.console='';
 
 	feed.subscribe(function(item) {
-		if (item.commit.sha    == commit &&
-			item.commit.branch == branch) {
-			$scope.commit = item.commit;
+		if (item.Commit.sha    == commit &&
+			item.Commit.branch == branch) {
+			$scope.commit = item.Commit;
 			$scope.$apply();
+
 		} else {
 			// we trigger an toast notification so the
 			// user is aware another build started
