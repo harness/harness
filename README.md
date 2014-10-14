@@ -10,6 +10,12 @@
 We highly recommend running Docker with the AUFS storage driver. You can verify Docker is using
 the AUFS storage driver with the following command `sudo docker info | grep Driver:`
 
+## Upgrading
+
+If you are upgrading from `0.2` I would recommend waiting a few weeks for the master
+branch to stabilize. There was a huge amount of refacotring that destabilized the codebase
+and I'd hate for that to impact any real world installations.
+
 ## Installation
 
 **This is project is alpha stage. Consider yourself warned**
