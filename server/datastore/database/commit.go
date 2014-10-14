@@ -1,6 +1,8 @@
 package database
 
 import (
+	"time"
+
 	"github.com/drone/drone/shared/model"
 	"github.com/russross/meddler"
 )
@@ -56,11 +58,19 @@ func (db *Commitstore) GetCommitListUser(user *model.User) ([]*model.CommitRepo,
 
 // PostCommit saves a commit in the datastore.
 func (db *Commitstore) PostCommit(commit *model.Commit) error {
+	if commit.Created == 0 {
+		commit.Created = time.Now().UTC().Unix()
+	}
+	commit.Updated = time.Now().UTC().Unix()
 	return meddler.Save(db, commitTable, commit)
 }
 
 // PutCommit saves a commit in the datastore.
 func (db *Commitstore) PutCommit(commit *model.Commit) error {
+	if commit.Created == 0 {
+		commit.Created = time.Now().UTC().Unix()
+	}
+	commit.Updated = time.Now().UTC().Unix()
 	return meddler.Save(db, commitTable, commit)
 }
 
