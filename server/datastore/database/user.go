@@ -1,6 +1,8 @@
 package database
 
 import (
+	"time"
+
 	"github.com/drone/drone/shared/model"
 	"github.com/russross/meddler"
 )
@@ -47,11 +49,19 @@ func (db *Userstore) GetUserList() ([]*model.User, error) {
 
 // PostUser saves a User in the datastore.
 func (db *Userstore) PostUser(user *model.User) error {
+	if user.Created == 0 {
+		user.Created = time.Now().UTC().Unix()
+	}
+	user.Updated = time.Now().UTC().Unix()
 	return meddler.Save(db, userTable, user)
 }
 
 // PutUser saves a user in the datastore.
 func (db *Userstore) PutUser(user *model.User) error {
+	if user.Created == 0 {
+		user.Created = time.Now().UTC().Unix()
+	}
+	user.Updated = time.Now().UTC().Unix()
 	return meddler.Save(db, userTable, user)
 }
 
