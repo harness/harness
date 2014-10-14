@@ -66,7 +66,6 @@ func (c *Channel) start() {
 		case sub := <-c.unsubscribe:
 			delete(c.subscriptions, sub)
 			close(sub.send)
-			log.Println("usubscribed to subscription")
 
 		case sub := <-c.subscribe:
 			c.subscriptions[sub] = true
@@ -118,7 +117,6 @@ func replay(s *Subscription, history []interface{}) {
 }
 
 func (c *Channel) stop() {
-	log.Println("subscription stopped")
 	for sub := range c.subscriptions {
 		sub.Close()
 	}
