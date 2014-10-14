@@ -16,6 +16,10 @@ If you are upgrading from `0.2` I would recommend waiting a few weeks for the ma
 branch to stabilize. There was a huge amount of refacotring that destabilized the codebase
 and I'd hate for that to impact any real world installations.
 
+If you still want to upgrade to `0.2` please know that the databases are not compatible and
+there is no automated migration due to some fundamental structural changes. You will need
+to start with a fresh instance.
+
 ## Installation
 
 **This is project is alpha stage. Consider yourself warned**
