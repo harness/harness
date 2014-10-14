@@ -52,6 +52,7 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 		if capability.Enabled(ctx, capability.Registration) == false {
 			users, err := datastore.GetUserList(ctx)
 			if err != nil || len(users) != 0 {
+				log.Println("Unable to create account. Registration is closed")
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
