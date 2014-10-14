@@ -21,18 +21,18 @@ dist() {
 }
 
 version() {
-  lsb_release -r | awk '{print $2}' | sed -e 's/^ *//' -e 's/ *$//'
+  lsb_release -r | awk '{print $2}' | sed -e 's/^ *//' -e 's/ *$//' | awk -F. '{ print $1 }'
 }
 
 upstart() {
   if [ -d /etc/init ]; then
+    echo "Your system $(dist) $(version): using upstart to control Drone"
     if [ -f /usr/local/bin/droned ]; then
       if pidof /usr/local/bin/droned >/dev/null; then
         initctl stop drone || :
       fi
     fi
 
-    echo "You have $(dist) $(version): using upstart to control Drone"
     cp -r /usr/share/drone/init/drone.conf /etc/init/drone.conf
     initctl start drone || :
   else
@@ -44,17 +44,13 @@ upstart() {
 
 systemd() {
   if which systemctl > /dev/null; then
-    echo "Your system $(dist) $(version): using systemd to control Drone"
     cp /usr/share/drone/systemd/drone.service /lib/systemd/system/drone.service
 
     systemctl daemon-reload || :
-    if [ "$1" = 1 ] ; then
-      # first time install
+    if [ "$1" = "configure" ] ; then
+      echo "Your system $(dist) $(version): using systemd to control Drone"
       systemctl enable drone || :
-      systemctl start drone || :
-    else
-      echo "Upgrading drone"
-      systemctl restart drone
+      systemctl restart drone || :
     fi
   else
     echo "Couldn't find systemd to control Drone, cannot proceed."
@@ -63,20 +59,16 @@ systemd() {
   fi
 }
 
-validate_ver() {
-  echo "$(version) < $1" | bc
-}
-
 case "$(dist)" in
   debian)
-    if [ $(validate_ver "8.0") -eq 1 ]; then
+    if [ "$(version)" -lt "8" ]; then
       upstart
     else
       systemd $1
     fi
     ;;
   ubuntu)
-    if [ $(validate_ver "14.10") -eq 1 ]; then
+    if [ "$(version)" -lt "15" ]; then
       upstart
     else
       systemd $1

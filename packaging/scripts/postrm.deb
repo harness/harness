@@ -7,7 +7,7 @@ dist() {
 }
 
 version() {
-  lsb_release -r | awk '{print $2}' | sed -e 's/^ *//' -e 's/ *$//'
+  lsb_release -r | awk '{print $2}' | sed -e 's/^ *//' -e 's/ *$//' | awk -F. '{ print $1 }'
 }
 
 upstart() {
@@ -24,14 +24,14 @@ validate_ver() {
 
 case "$(dist)" in
   debian)
-    if [ $(validate_ver "8.0") -eq 1 ]; then
+    if [ "$(version)" -lt "8" ]; then
       upstart
     else
       systemd
     fi
     ;;
   ubuntu)
-    if [ $(validate_ver "14.10") -eq 1 ]; then
+    if [ "$(version)" -lt "15" ]; then
       upstart
     else
       systemd
