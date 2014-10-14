@@ -41,7 +41,12 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 		.when('/login', {
 			templateUrl: '/static/views/login.html',
 			controller: 'LoginController',
-			title: 'Login',
+			title: 'Login'
+		})
+		.when('/logout', {
+			templateUrl: '/static/views/logout.html',
+			controller: 'LogoutController',
+			title: 'Logout'
 		})
 		.when('/gitlab', {
 			templateUrl: '/static/views/login_gitlab.html',
