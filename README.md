@@ -117,7 +117,7 @@ Or you can use environment variables
 
 ```sh
 
-# custom database settings
+# custom http server settings
 export DRONE_SERVER_PORT=""
 export DRONE_SERVER_SSL_KEY=""
 export DRONE_SERVER_SSL_CERT=""

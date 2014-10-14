@@ -961,6 +961,27 @@ nav {
             padding:10px 20px;
             margin-top:20px;
         }
+        select,
+		input[type="number"] {
+			.border_box();
+			padding:8px;
+			font-size:14px;
+			margin-bottom:15px;
+			border: 1px solid #DDD;
+		}
+		span.seconds {
+			color:#212121;
+			margin-left:10px;
+		}
+		span.minutes {
+			color:#212121;
+			&:before {
+				content:'(';
+			}
+			&:after {
+				content:')';
+			}
+		}
 	}
 }
 
