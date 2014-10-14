@@ -1,6 +1,8 @@
 package database
 
 import (
+	"time"
+
 	"github.com/drone/drone/shared/model"
 	"github.com/russross/meddler"
 )
@@ -39,11 +41,19 @@ func (db *Repostore) GetRepoList(user *model.User) ([]*model.Repo, error) {
 
 // PostRepo saves a repo in the datastore.
 func (db *Repostore) PostRepo(repo *model.Repo) error {
+	if repo.Created == 0 {
+		repo.Created = time.Now().UTC().Unix()
+	}
+	repo.Updated = time.Now().UTC().Unix()
 	return meddler.Save(db, repoTable, repo)
 }
 
 // PutRepo saves a repo in the datastore.
 func (db *Repostore) PutRepo(repo *model.Repo) error {
+	if repo.Created == 0 {
+		repo.Created = time.Now().UTC().Unix()
+	}
+	repo.Updated = time.Now().UTC().Unix()
 	return meddler.Save(db, repoTable, repo)
 }
 
