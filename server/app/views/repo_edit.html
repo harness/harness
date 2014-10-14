@@ -34,6 +34,7 @@
 						<label for="privileged"></label>
 						<span>Enable Privileged mode</span>
 					</div>
+
 					<button ng-click="save()" class="pure-button pure-button-primary ladda-button expand-right" data-loading='{{ saving }}' ng-model="button" ng-disabled='saving'>
 						Save Flags
 					</button>
@@ -41,6 +42,26 @@
 			</div>
 		</div>
 	</section>
+
+	<section  ng-if="user.admin == true">
+		<div class="pure-g">
+			<div class="pure-u-1">
+				<div>
+					<h2>Build Timeout</h2>
+					<div>
+						<input type="number" ng-model="repo.timeout" id="timeout" integer />
+						<span ng-if="repo.timeout > 0" class="seconds">Seconds</span>
+						<span ng-if="repo.timeout > 0" class="minutes">{{ repo.timeout / 60 | number:0 }} minutes</span>
+					</div>
+
+					<button ng-click="save()" class="pure-button pure-button-primary ladda-button expand-right" data-loading='{{ saving }}' ng-model="button" ng-disabled='saving'>
+						Save Timeout
+					</button>
+				</div>
+			</div>
+		</div>
+	</section>
+
 
 	<section>
 		<div class="pure-g">
