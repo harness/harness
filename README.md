@@ -13,7 +13,7 @@ the AUFS storage driver with the following command `sudo docker info | grep Driv
 ## Upgrading
 
 If you are upgrading from `0.2` I would recommend waiting a few weeks for the master
-branch to stabilize. There was a huge amount of refacotring that destabilized the codebase
+branch to stabilize. There was a huge amount of refactoring that destabilized the codebase
 and I'd hate for that to impact any real world installations.
 
 If you still want to upgrade to `0.2` please know that the databases are not compatible and
