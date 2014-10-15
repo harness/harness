@@ -17,12 +17,15 @@ services:
   - postgres
   - mysql
 notify:
+  email:
+    recipients:
+      - brad@drone.io
   gitter:
-    room_id: 76f5e5ec935c5b40259a
+    room_id: $$GITTER_ROOM
     token: $$GITTER_KEY
     on_started: false
-    on_success: false
-    on_failure: false
+    on_success: true
+    on_failure: true
 
 publish:
   s3:
@@ -34,3 +37,5 @@ publish:
     source: packaging/output/
     target: $DRONE_BRANCH/
     recursive: true
+    when:
+      owner: drone

@@ -24,11 +24,11 @@ type Gitter struct {
 
 func (g *Gitter) Send(context *model.Request) error {
 	switch {
-	case context.Commit.Status == "Started" && g.Started:
+	case context.Commit.Status == model.StatusStarted && g.Started:
 		return g.sendStarted(context)
-	case context.Commit.Status == "Success" && g.Success:
+	case context.Commit.Status == model.StatusSuccess && g.Success:
 		return g.sendSuccess(context)
-	case context.Commit.Status == "Failure" && g.Failure:
+	case context.Commit.Status == model.StatusFailure && g.Failure:
 		return g.sendFailure(context)
 	}
 
@@ -70,9 +70,8 @@ func (g *Gitter) send(msg string) error {
 
 	// create headers
 	headers := make(map[string]string)
+	headers["Accept"] = "application/json"
 	headers["Authorization"] = fmt.Sprintf("Bearer %s", g.Token)
 
-	go sendJson(url, payload, headers)
-
-	return nil
+	return sendJson(url, payload, headers)
 }
