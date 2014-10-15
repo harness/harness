@@ -19,7 +19,7 @@ services:
 notify:
   gitter:
     room_id: 76f5e5ec935c5b40259a
-    token: $$GITTER_TOKEN
+    token: $$GITTER_KEY
     on_started: false
     on_success: false
     on_failure: false
@@ -29,8 +29,8 @@ publish:
     acl: public-read
     region: us-east-1
     bucket: downloads.drone.io
-    access_key: $AWS_KEY
-    secret_key: $AWS_SECRET
+    access_key: $$AWS_KEY
+    secret_key: $$AWS_SECRET
     source: packaging/output/
     target: $DRONE_BRANCH/
     recursive: true
