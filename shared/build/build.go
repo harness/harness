@@ -330,6 +330,10 @@ func (b *Builder) run() error {
 		Privileged: (b.Privileged && len(b.Repo.PR) == 0),
 	}
 
+	if host.Privileged {
+		host.NetworkMode = script.DockerNetworkMode(b.Build.Docker)
+	}
+
 	// debugging
 	log.Noticef("starting build %s", b.Build.Name)
 
