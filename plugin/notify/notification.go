@@ -105,11 +105,14 @@ func getBuildUrl(context *model.Request) string {
 
 // helper fuction to sent HTTP Post requests
 // with JSON data as the payload.
-func sendJson(url string, payload []byte, headers map[string]string) {
+func sendJson(url string, payload []byte, headers map[string]string) error {
 	client := &http.Client{}
 	buf := bytes.NewBuffer(payload)
 
 	req, err := http.NewRequest("POST", url, buf)
+	if err != nil {
+		return err
+	}
 
 	req.Header.Set("Content-Type", "application/json")
 	if headers != nil {
@@ -120,7 +123,8 @@ func sendJson(url string, payload []byte, headers map[string]string) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return
+		return err
 	}
 	resp.Body.Close()
+	return nil
 }
