@@ -71,6 +71,10 @@ type Build struct {
 	// Git specified git-specific parameters, such as
 	// the clone depth and path
 	Git *git.Git `yaml:"git,omitempty"`
+
+	// Docker container parameters, such as
+	// NetworkMode and UserName
+	Docker *Docker `yaml:"docker,omitempty"`
 }
 
 // Write adds all the steps to the build script, including
