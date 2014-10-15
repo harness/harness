@@ -13,6 +13,8 @@ func IsHttps(r *http.Request) bool {
 	switch {
 	case r.URL.Scheme == "https":
 		return true
+	case r.TLS != nil:
+		return true
 	case strings.HasPrefix(r.Proto, "HTTPS"):
 		return true
 	case r.Header.Get("X-Forwarded-Proto") == "https":
@@ -29,6 +31,8 @@ func IsHttps(r *http.Request) bool {
 func GetScheme(r *http.Request) string {
 	switch {
 	case r.URL.Scheme == "https":
+		return "https"
+	case r.TLS != nil:
 		return "https"
 	case strings.HasPrefix(r.Proto, "HTTPS"):
 		return "https"
