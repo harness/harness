@@ -116,10 +116,7 @@ user=""
 pass=""
 
 [worker]
-nodes=[
-"unix:///var/run/docker.sock",
-"unix:///var/run/docker.sock"
-]
+nodes="unix:///var/run/docker.sock,unix:///var/run/docker.sock"
 
 ```
 
