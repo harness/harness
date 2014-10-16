@@ -45,7 +45,7 @@ func (s *CommitService) List(host, owner, name string) ([]*model.Commit, error) 
 
 // GET /api/repos/{host}/{owner}/{name}/branch/{branch}
 func (s *CommitService) ListBranch(host, owner, name, branch string) ([]*model.Commit, error) {
-	var path = fmt.Sprintf("/api/repos/%s/%s/%s/branches/%s/commits", host, owner, name, branch)
+	var path = fmt.Sprintf("/api/repos/%s/%s/%s/commits", host, owner, name)
 	var list []*model.Commit
 	var err = s.run("GET", path, nil, &list)
 	return list, err
