@@ -29,7 +29,7 @@ datasource="/var/lib/drone/drone.sqlite"
 # firewall.
 #
 # When false, the system admin will need to manually add
-# users to Drone through the admin screens. 
+# users to Drone through the admin screens.
 #
 # [registration]
 # open=true
@@ -65,7 +65,4 @@ datasource="/var/lib/drone/drone.sqlite"
 # pass=""
 
 # [worker]
-# nodes=[
-#   "unix:///var/run/docker.sock",
-#   "unix:///var/run/docker.sock"
-# ]
+# nodes="unix:///var/run/docker.sock,unix:///var/run/docker.sock"
