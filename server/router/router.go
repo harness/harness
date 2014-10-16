@@ -11,8 +11,6 @@ func New() *web.Mux {
 	mux := web.New()
 
 	mux.Get("/api/logins", handler.GetLoginList)
-	mux.Get("/api/stream/stdout/:id", handler.WsConsole)
-	mux.Get("/api/stream/user", handler.WsUser)
 	mux.Get("/api/auth/:host", handler.GetLogin)
 	mux.Post("/api/auth/:host", handler.GetLogin)
 	mux.Get("/api/badge/:host/:owner/:name/status.svg", handler.GetBadge)
@@ -20,6 +18,11 @@ func New() *web.Mux {
 	mux.Get("/api/hook/:host", handler.PostHook)
 	mux.Put("/api/hook/:host", handler.PostHook)
 	mux.Post("/api/hook/:host", handler.PostHook)
+
+	streams := web.New()
+	streams.Get("/api/stream/stdout/:id", handler.WsConsole)
+	streams.Get("/api/stream/user", handler.WsUser)
+	mux.Handle("/api/stream/*", streams)
 
 	repos := web.New()
 	repos.Use(middleware.SetRepo)
