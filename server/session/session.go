@@ -66,7 +66,6 @@ func getUserBearer(c context.Context, r *http.Request) *model.User {
 		return []byte(*secret), nil
 	})
 	if err != nil || !token.Valid {
-		println("invalid token")
 		return nil
 	}
 	var userid, ok = token.Claims["user_id"].(float64)
