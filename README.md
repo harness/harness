@@ -7,6 +7,7 @@
 * Docker
 * AUFS
 
+
 We highly recommend running Docker with the AUFS storage driver. You can verify Docker is using
 the AUFS storage driver with the following command `sudo docker info | grep Driver:`
 

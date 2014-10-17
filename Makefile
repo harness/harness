@@ -20,6 +20,7 @@ test_postgres:
 	TEST_DRIVER="postgres" TEST_DATASOURCE="host=127.0.0.1 user=postgres dbname=postgres sslmode=disable" go test -short github.com/drone/drone/server/datastore/database
 
 build:
+	mkdir -p packaging/output
 	mkdir -p packaging/root/usr/local/bin
 	go build -o packaging/root/usr/local/bin/drone  -ldflags "-X main.revision $(SHA)" github.com/drone/drone/cli
 	go build -o packaging/root/usr/local/bin/droned -ldflags "-X main.revision $(SHA)" github.com/drone/drone/server
@@ -36,7 +37,6 @@ clean:
 	rm -rf packaging/output
 	rm -f packaging/root/usr/local/bin/drone
 	rm -f packaging/root/usr/local/bin/droned
-	mkdir -p packaging/output
 
 lessc:
 	lessc --clean-css server/app/styles/drone.less server/app/styles/drone.css
