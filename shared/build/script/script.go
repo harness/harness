@@ -11,6 +11,7 @@ import (
 	"github.com/drone/drone/plugin/publish"
 	"github.com/drone/drone/shared/build/buildfile"
 	"github.com/drone/drone/shared/build/git"
+	"github.com/drone/drone/shared/build/docker"
 	"github.com/drone/drone/shared/build/repo"
 )
 
@@ -71,6 +72,10 @@ type Build struct {
 	// Git specified git-specific parameters, such as
 	// the clone depth and path
 	Git *git.Git `yaml:"git,omitempty"`
+
+	// Docker container parameters, such as
+	// NetworkMode and UserName
+	Docker *docker.Docker `yaml:"docker,omitempty"`
 }
 
 // Write adds all the steps to the build script, including

@@ -19,6 +19,7 @@ type KeyValuePair struct {
 type HostConfig struct {
 	Binds           []string
 	ContainerIDFile string
+	NetworkMode     string
 	LxcConf         []KeyValuePair
 	Privileged      bool
 	PortBindings    map[Port][]PortBinding
