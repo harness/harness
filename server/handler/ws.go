@@ -68,6 +68,11 @@ func WsUser(c web.C, w http.ResponseWriter, r *http.Request) {
 				// user must have read access to the repository
 				// in order to pass this message along
 				if role, err := datastore.GetPerm(ctx, user, work.Repo); err != nil || role.Read == false {
+					if err != nil {
+						log.Printf("WS: Error getting permissions for repository %s. Error: %s\n", work.Repo.Name, err)
+					} else {
+						log.Printf("WS: No read access for repository %s\n", work.Repo.Name)
+					}
 					break
 				}
 
@@ -103,16 +108,22 @@ func WsConsole(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	commit, err := datastore.GetCommit(ctx, int64(commitID))
 	if err != nil {
+		log.Printf("WS: Error retrieving commit by ID. %s\n", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	repo, err := datastore.GetRepo(ctx, commit.RepoID)
 	if err != nil {
+		log.Printf("WS: Error retrieving repo by ID. %s\n", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	role, err := datastore.GetPerm(ctx, user, repo)
 	if err != nil || role.Read == false {
+		if user == nil {
+			log.Println("WS: Error getting User session")
+		}
+		log.Println("WS: Error retrieving Read permission.", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -121,6 +132,7 @@ func WsConsole(c web.C, w http.ResponseWriter, r *http.Request) {
 	// and listen for stream updates.
 	channel := pubsub.Lookup(ctx, commit.ID)
 	if channel == nil {
+		log.Println("WS: Error getting build stream from channel")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -151,19 +163,16 @@ func WsConsole(c web.C, w http.ResponseWriter, r *http.Request) {
 				ws.SetWriteDeadline(time.Now().Add(writeWait))
 				err := ws.WriteMessage(websocket.TextMessage, data)
 				if err != nil {
-					log.Printf("websocket for commit %d closed. Err: %s\n", commitID, err)
 					ws.Close()
 					return
 				}
 			case <-sub.CloseNotify():
-				log.Printf("websocket for commit %d closed by client\n", commitID)
 				ws.Close()
 				return
 			case <-ticker.C:
 				ws.SetWriteDeadline(time.Now().Add(writeWait))
 				err := ws.WriteMessage(websocket.PingMessage, []byte{})
 				if err != nil {
-					log.Printf("websocket for commit %d closed. Err: %s\n", commitID, err)
 					ws.Close()
 					return
 				}
