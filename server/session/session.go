@@ -52,7 +52,11 @@ func GenerateToken(c context.Context, r *http.Request, user *model.User) (string
 // auth token.
 func getUserToken(c context.Context, r *http.Request) *model.User {
 	var token = r.FormValue("access_token")
-	var user, _ = datastore.GetUserToken(c, token)
+	var user = getUserJwtToken(c, token)
+	// TODO: is it needed to fallback to user_token query?
+	if user == nil {
+		user, _ = datastore.GetUserToken(c, token)
+	}
 	return user
 }
 
@@ -61,7 +65,13 @@ func getUserToken(c context.Context, r *http.Request) *model.User {
 func getUserBearer(c context.Context, r *http.Request) *model.User {
 	var tokenstr = r.Header.Get("Authorization")
 	fmt.Sscanf(tokenstr, "Bearer %s", &tokenstr)
+	var user = getUserJwtToken(c, tokenstr)
+	return user
+}
 
+// getUserAccessToken gets the currently authenticated user for the given
+// auth token in jwt format.
+func getUserJwtToken(c context.Context, tokenstr string) *model.User {
 	var token, err = jwt.Parse(tokenstr, func(t *jwt.Token) (interface{}, error) {
 		return []byte(*secret), nil
 	})
