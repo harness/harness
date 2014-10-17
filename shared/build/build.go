@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/drone/config"
 	"github.com/drone/drone/shared/build/buildfile"
 	"github.com/drone/drone/shared/build/docker"
 	"github.com/drone/drone/shared/build/dockerfile"
@@ -17,6 +18,10 @@ import (
 	"github.com/drone/drone/shared/build/proxy"
 	"github.com/drone/drone/shared/build/repo"
 	"github.com/drone/drone/shared/build/script"
+)
+
+var (
+	networkmode = config.String("worker-net", "")
 )
 
 // BuildState stores information about a build
@@ -328,6 +333,7 @@ func (b *Builder) run() error {
 	// configure if Docker should run in privileged mode
 	host := docker.HostConfig{
 		Privileged: (b.Privileged && len(b.Repo.PR) == 0),
+		NetworkMode: *networkmode,
 	}
 
 	// debugging
