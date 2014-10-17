@@ -62,19 +62,9 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 		}
 		return
 	}
-
-	f.WriteCmd("sudo apt-get update")
-
-	// Ensure correct apt-get has the https method-driver as per (http://askubuntu.com/questions/165676/)
-	f.WriteCmd("sudo apt-get install apt-transport-https")
-
-	// Install Docker on the container
-	f.WriteCmd("sudo sh -c \"echo deb https://get.docker.io/ubuntu docker main\\ > " +
-		"/etc/apt/sources.list.d/docker.list\"")
-	f.WriteCmd("sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys " +
-		"36A1D7869245C8950F966E92D8576A8BA88D21E9")
-	f.WriteCmd("sudo apt-get update")
-	f.WriteCmd("sudo apt-get --yes install lxc-docker-" + d.DockerVersion)
+	// Download docker binary and install it as /usr/local/bin/docker
+	f.WriteCmd("wget -qO- https://get.docker.io/builds/Linux/x86_64/docker-" +
+		d.DockerVersion + ".tgz |sudo tar zxf - -C /")
 
 	// Format our Build Server Endpoint
 	dockerServerUrl := d.DockerServer + ":" + strconv.Itoa(d.DockerServerPort)
