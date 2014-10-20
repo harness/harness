@@ -82,7 +82,7 @@ cert=""
 
 [session]
 secret=""
-duration=""
+expires=""
 
 [database]
 driver=""
@@ -132,6 +132,10 @@ Or you can use environment variables
 export DRONE_SERVER_PORT=""
 export DRONE_SERVER_SSL_KEY=""
 export DRONE_SERVER_SSL_CERT=""
+
+# session settings
+export DRONE_SESSION_SECRET=""
+export DRONE_SESSION_EXPIRES=""
 
 # custom database settings
 export DRONE_DATABASE_DRIVER=""
