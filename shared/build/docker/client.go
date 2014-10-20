@@ -2,6 +2,7 @@ package docker
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/docker/pkg/term"
@@ -58,7 +60,45 @@ func NewHost(address string) *Client {
 	return c
 }
 
+func NewClient(addr, cert, key string) (*Client, error) {
+	// generate a new Client
+	var cli = NewHost(addr)
+	cli.tls = new(tls.Config)
+
+	// this is required in order for Docker to connect
+	// to a certificate generated for an IP address and
+	// not a Domain name
+	cli.tls.InsecureSkipVerify = true
+
+	// loads the keyvalue pair and stores the
+	// cert (pem) in a certificate store (array)
+	pem, err := tls.LoadX509KeyPair(cert, key)
+	if err != nil {
+		return nil, err
+	}
+	cli.tls.Certificates = []tls.Certificate{pem}
+
+	// creates a transport that uses the custom tls
+	// configuration to securely connect to remote
+	// Docker clients.
+	cli.trans = &http.Transport{
+		TLSClientConfig: cli.tls,
+		Dial: func(dial_network, dial_addr string) (net.Conn, error) {
+			return net.DialTimeout(cli.proto, cli.addr, 32*time.Second)
+		},
+	}
+
+	if cli.proto == "unix" {
+		// no need in compressing for local communications
+		cli.trans.DisableCompression = true
+	}
+
+	return cli, nil
+}
+
 type Client struct {
+	tls   *tls.Config
+	trans *http.Transport
 	proto string
 	addr  string
 
@@ -133,16 +173,10 @@ func (c *Client) do(method, path string, in, out interface{}) error {
 	req.Header.Set("Content-Type", "application/json")
 
 	// dial the host server
-	req.Host = c.addr
-	dial, err := net.Dial(c.proto, c.addr)
-	if err != nil {
-		return err
-	}
+	req.URL.Host = c.addr
+	req.URL.Scheme = "http"
 
-	// make the request
-	conn := httputil.NewClientConn(dial, nil)
-	resp, err := conn.Do(req)
-	defer conn.Close()
+	resp, err := c.HTTPClient().Do(req)
 	if err != nil {
 		return err
 	}
@@ -184,7 +218,7 @@ func (c *Client) hijack(method, path string, setRawTerminal bool, out io.Writer)
 	req.Header.Set("Content-Type", "plain/text")
 	req.Host = c.addr
 
-	dial, err := net.Dial(c.proto, c.addr)
+	dial, err := c.Dial()
 	if err != nil {
 		if strings.Contains(err.Error(), "connection refused") {
 			return fmt.Errorf("Can't connect to docker daemon. Is 'docker -d' running on this host?")
@@ -239,16 +273,27 @@ func (c *Client) stream(method, path string, in io.Reader, out io.Writer, header
 	req.Header.Set("Content-Type", "plain/text")
 
 	// dial the host server
-	req.Host = c.addr
-	dial, err := net.Dial(c.proto, c.addr)
-	if err != nil {
-		return err
-	}
+	/*
+		req.Host = c.addr
+		dial, err := net.Dial(c.proto, c.addr)
+		if err != nil {
+			return err
+		}
 
-	// make the request
-	conn := httputil.NewClientConn(dial, nil)
-	resp, err := conn.Do(req)
-	defer conn.Close()
+		// make the request
+		conn := httputil.NewClientConn(dial, nil)
+		resp, err := conn.Do(req)
+		defer conn.Close()
+		if err != nil {
+			return err
+		}
+	*/
+
+	// dial the host server
+	req.URL.Host = c.addr
+	req.URL.Scheme = "http"
+
+	resp, err := c.HTTPClient().Do(req)
 	if err != nil {
 		return err
 	}
@@ -270,6 +315,7 @@ func (c *Client) stream(method, path string, in io.Reader, out io.Writer, header
 
 	// If no output we exit now with no errors
 	if out == nil {
+		io.Copy(ioutil.Discard, resp.Body)
 		return nil
 	}
 
@@ -288,4 +334,24 @@ func (c *Client) stream(method, path string, in io.Reader, out io.Writer, header
 	}
 
 	return nil
+}
+
+func (c *Client) HTTPClient() *http.Client {
+	if c.trans != nil {
+		return &http.Client{Transport: c.trans}
+	}
+	return &http.Client{
+		Transport: &http.Transport{
+			Dial: func(dial_network, dial_addr string) (net.Conn, error) {
+				return net.DialTimeout(c.proto, c.addr, 32*time.Second)
+			},
+		},
+	}
+}
+
+func (c *Client) Dial() (net.Conn, error) {
+	if c.tls != nil && c.proto != "unix" {
+		return tls.Dial(c.proto, c.addr, c.tls)
+	}
+	return net.Dial(c.proto, c.addr)
 }
