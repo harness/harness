@@ -1,6 +1,8 @@
 package router
 
 import (
+	"regexp"
+
 	"github.com/drone/drone/server/handler"
 	"github.com/drone/drone/server/middleware"
 
@@ -28,9 +30,9 @@ func New() *web.Mux {
 	repos.Use(middleware.SetRepo)
 	repos.Use(middleware.RequireRepoRead)
 	repos.Use(middleware.RequireRepoAdmin)
-	repos.Get("/api/repos/:host/:owner/:name/branches/:branch/commits/:commit/console", handler.GetOutput)
-	repos.Get("/api/repos/:host/:owner/:name/branches/:branch/commits/:commit", handler.GetCommit)
-	repos.Post("/api/repos/:host/:owner/:name/branches/:branch/commits/:commit", handler.PostCommit)
+	repos.Get(regexp.MustCompile(`^\/api\/repos\/(?P<host>(.*))\/(?P<owner>(.*))\/(?P<name>(.*))\/branches\/(?P<branch>(.*))\/commits\/(?P<commit>(.*))\/console$`), handler.GetOutput)
+	repos.Get(regexp.MustCompile(`^\/api\/repos\/(?P<host>(.*))\/(?P<owner>(.*))\/(?P<name>(.*))\/branches\/(?P<branch>(.*))\/commits\/(?P<commit>(.*))$`), handler.GetCommit)
+	repos.Post(regexp.MustCompile(`^\/api\/repos\/(?P<host>(.*))\/(?P<owner>(.*))\/(?P<name>(.*))\/branches\/(?P<branch>(.*))\/commits\/(?P<commit>(.*))\/console$`), handler.PostCommit)
 	repos.Get("/api/repos/:host/:owner/:name/commits", handler.GetCommitList)
 	repos.Get("/api/repos/:host/:owner/:name", handler.GetRepo)
 	repos.Put("/api/repos/:host/:owner/:name", handler.PutRepo)
