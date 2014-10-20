@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/drone/config"
@@ -83,7 +84,11 @@ func main() {
 	// Parses config data. The config data can be stored in a config
 	// file (.toml format) or environment variables, or a combo.
 	config.SetPrefix("DRONE_")
-	config.Parse(conf)
+	err := config.Parse(conf)
+	if err != nil {
+		log.Errf("Unable to parse config: %v", err)
+		os.Exit(1)
+	}
 
 	// Setup the remote services. We need to execute these to register
 	// the remote plugins with the system.
