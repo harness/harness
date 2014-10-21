@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"time"
 
 	"github.com/drone/drone/shared/httputil"
@@ -246,12 +247,16 @@ func (r *Bitbucket) ParseHook(req *http.Request) (*model.Hook, error) {
 		return nil, fmt.Errorf("Invalid Bitbucket post-commit Hook. Missing Repo or Commit data.")
 	}
 
+	// bitbucket returns commit author email only in format "John Doe <john.doe@example.com>"
+	regexp, _ := regexp.Compile("<(.*)>")
+	email := regexp.FindStringSubmatch(hook.Commits[len(hook.Commits)-1].RawAuthor)[1]
+
 	return &model.Hook{
 		Owner:     hook.Repo.Owner,
 		Repo:      hook.Repo.Name,
 		Sha:       hook.Commits[len(hook.Commits)-1].Hash,
 		Branch:    hook.Commits[len(hook.Commits)-1].Branch,
-		Author:    hook.Commits[len(hook.Commits)-1].Author,
+		Author:    email,
 		Timestamp: time.Now().UTC().String(),
 		Message:   hook.Commits[len(hook.Commits)-1].Message,
 	}, nil
