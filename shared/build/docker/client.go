@@ -37,12 +37,27 @@ func New() *Client {
 	return NewHost("")
 }
 
-func NewHost(address string) *Client {
-	var cli, _ = NewClient(address, "", "")
+func NewHost(uri string) *Client {
+	var cli, _ = NewHostCert(uri, nil, nil)
 	return cli
 }
 
-func NewClient(uri, cert, key string) (*Client, error) {
+func NewHostCertFile(uri, cert, key string) (*Client, error) {
+	if len(key) == 0 || len(cert) == 0 {
+		return NewHostCert(uri, nil, nil)
+	}
+	certfile, err := ioutil.ReadFile(cert)
+	if err != nil {
+		return nil, err
+	}
+	keyfile, err := ioutil.ReadFile(key)
+	if err != nil {
+		return nil, err
+	}
+	return NewHostCert(uri, certfile, keyfile)
+}
+
+func NewHostCert(uri string, cert, key []byte) (*Client, error) {
 	var host = GetHost(uri)
 	var proto, addr = SplitProtoAddr(host)
 
@@ -55,12 +70,12 @@ func NewClient(uri, cert, key string) (*Client, error) {
 
 	// if no certificate is provided returns the
 	// client with no TLS configured.
-	if len(cert) == 0 || len(key) == 0 {
+	if cert == nil || key == nil || len(cert) == 0 || len(key) == 0 {
 		return cli, nil
 	}
 
 	// loads the key value pair in pem format
-	pem, err := tls.LoadX509KeyPair(cert, key)
+	pem, err := tls.X509KeyPair(cert, key)
 	if err != nil {
 		return nil, err
 	}
