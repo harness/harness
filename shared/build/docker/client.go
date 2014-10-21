@@ -175,6 +175,9 @@ func (c *Client) do(method, path string, in, out interface{}) error {
 	// dial the host server
 	req.URL.Host = c.addr
 	req.URL.Scheme = "http"
+	if c.tls != nil {
+		req.URL.Scheme = "https"
+	}
 
 	resp, err := c.HTTPClient().Do(req)
 	if err != nil {
@@ -273,25 +276,11 @@ func (c *Client) stream(method, path string, in io.Reader, out io.Writer, header
 	req.Header.Set("Content-Type", "plain/text")
 
 	// dial the host server
-	/*
-		req.Host = c.addr
-		dial, err := net.Dial(c.proto, c.addr)
-		if err != nil {
-			return err
-		}
-
-		// make the request
-		conn := httputil.NewClientConn(dial, nil)
-		resp, err := conn.Do(req)
-		defer conn.Close()
-		if err != nil {
-			return err
-		}
-	*/
-
-	// dial the host server
 	req.URL.Host = c.addr
 	req.URL.Scheme = "http"
+	if c.tls != nil {
+		req.URL.Scheme = "https"
+	}
 
 	resp, err := c.HTTPClient().Do(req)
 	if err != nil {
