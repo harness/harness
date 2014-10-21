@@ -34,53 +34,52 @@ var Logging = true
 
 // New creates an instance of the Docker Client
 func New() *Client {
-	c := &Client{}
-
-	c.setHost(DEFAULTUNIXSOCKET)
-
-	c.Images = &ImageService{c}
-	c.Containers = &ContainerService{c}
-	return c
+	return NewHost("")
 }
 
 func NewHost(address string) *Client {
-	c := &Client{}
-
-	// parse the address and split
-	pieces := strings.Split(address, "://")
-	if len(pieces) == 2 {
-		c.proto = pieces[0]
-		c.addr = pieces[1]
-	} else if len(pieces) == 1 {
-		c.addr = pieces[0]
-	}
-
-	c.Images = &ImageService{c}
-	c.Containers = &ContainerService{c}
-	return c
+	var cli, _ = NewClient(address, "", "")
+	return cli
 }
 
-func NewClient(addr, cert, key string) (*Client, error) {
-	// generate a new Client
-	var cli = NewHost(addr)
-	cli.tls = new(tls.Config)
+func NewClient(uri, cert, key string) (*Client, error) {
+	var host = GetHost(uri)
+	var proto, addr = GetProtoAddr(host)
 
-	// this is required in order for Docker to connect
-	// to a certificate generated for an IP address and
-	// not a Domain name
-	cli.tls.InsecureSkipVerify = true
+	var cli = new(Client)
+	cli.proto = proto
+	cli.addr = addr
+	cli.scheme = "http"
+	cli.Images = &ImageService{cli}
+	cli.Containers = &ContainerService{cli}
 
-	// loads the keyvalue pair and stores the
-	// cert (pem) in a certificate store (array)
+	// if no certificate is provided returns the
+	// client with no TLS configured.
+	if len(cert) == 0 || len(key) == 0 {
+		return cli, nil
+	}
+
+	// loads the key value pair in pem format
 	pem, err := tls.LoadX509KeyPair(cert, key)
 	if err != nil {
 		return nil, err
 	}
+
+	// setup the client TLS and store the certificate.
+	// also skip verification since we are (typically)
+	// going to be using certs for IP addresses.
+	cli.scheme = "https"
+	cli.tls = new(tls.Config)
+	cli.tls.InsecureSkipVerify = true
 	cli.tls.Certificates = []tls.Certificate{pem}
 
-	// creates a transport that uses the custom tls
-	// configuration to securely connect to remote
-	// Docker clients.
+	// disable compression for local socket communication.
+	if cli.proto == DEFAULTPROTOCOL {
+		cli.trans.DisableCompression = true
+	}
+
+	// creates a transport that uses the custom tls configuration
+	// to securely connect to remote Docker clients.
 	cli.trans = &http.Transport{
 		TLSClientConfig: cli.tls,
 		Dial: func(dial_network, dial_addr string) (net.Conn, error) {
@@ -88,19 +87,15 @@ func NewClient(addr, cert, key string) (*Client, error) {
 		},
 	}
 
-	if cli.proto == "unix" {
-		// no need in compressing for local communications
-		cli.trans.DisableCompression = true
-	}
-
 	return cli, nil
 }
 
 type Client struct {
-	tls   *tls.Config
-	trans *http.Transport
-	proto string
-	addr  string
+	tls    *tls.Config
+	trans  *http.Transport
+	scheme string
+	proto  string
+	addr   string
 
 	Images     *ImageService
 	Containers *ContainerService
@@ -147,6 +142,48 @@ func (c *Client) setHost(defaultUnixSocket string) {
 			c.addr = "0.0.0.0:2375"
 		}
 	}
+}
+
+// GetHost returns the Docker Host address in order to
+// connect to the Docker Daemon. It implements a very
+// simple set of fallthrough logic to determine which
+// address to use.
+func GetHost(host string) string {
+	// if a default value was provided this
+	// shoudl be used
+	if len(host) != 0 {
+		return host
+	}
+	// else attempt to use the DOCKER_HOST
+	// environment variable
+	var env = os.Getenv("DOCKER_HOST")
+	if len(env) != 0 {
+		return env
+	}
+	// else check to see if the default unix
+	// socket exists and return
+	_, err := os.Stat(DEFAULTUNIXSOCKET)
+	if err == nil {
+		return fmt.Sprintf("%s://%s", DEFAULTPROTOCOL, DEFAULTUNIXSOCKET)
+	}
+	// else return the standard TCP address
+	return fmt.Sprintf("tcp://0.0.0.0:%d", DEFAULTHTTPPORT)
+}
+
+// GetProtoAddr is a helper function that splits
+// a host into Protocol and Address.
+func GetProtoAddr(host string) (string, string) {
+	var parts = strings.Split(host, "://")
+	var proto, addr string
+	switch {
+	case len(parts) == 2:
+		proto = parts[0]
+		addr = parts[1]
+	default:
+		proto = "tcp"
+		addr = parts[0]
+	}
+	return proto, addr
 }
 
 // helper function used to make HTTP requests to the Docker daemon.
