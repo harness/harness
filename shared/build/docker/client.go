@@ -44,7 +44,7 @@ func NewHost(address string) *Client {
 
 func NewClient(uri, cert, key string) (*Client, error) {
 	var host = GetHost(uri)
-	var proto, addr = GetProtoAddr(host)
+	var proto, addr = SplitProtoAddr(host)
 
 	var cli = new(Client)
 	cli.proto = proto
@@ -90,6 +90,48 @@ func NewClient(uri, cert, key string) (*Client, error) {
 	return cli, nil
 }
 
+// GetHost returns the Docker Host address in order to
+// connect to the Docker Daemon. It implements a very
+// simple set of fallthrough logic to determine which
+// address to use.
+func GetHost(host string) string {
+	// if a default value was provided this
+	// shoudl be used
+	if len(host) != 0 {
+		return host
+	}
+	// else attempt to use the DOCKER_HOST
+	// environment variable
+	var env = os.Getenv("DOCKER_HOST")
+	if len(env) != 0 {
+		return env
+	}
+	// else check to see if the default unix
+	// socket exists and return
+	_, err := os.Stat(DEFAULTUNIXSOCKET)
+	if err == nil {
+		return fmt.Sprintf("%s://%s", DEFAULTPROTOCOL, DEFAULTUNIXSOCKET)
+	}
+	// else return the standard TCP address
+	return fmt.Sprintf("tcp://0.0.0.0:%d", DEFAULTHTTPPORT)
+}
+
+// SplitProtoAddr is a helper function that splits
+// a host into Protocol and Address.
+func SplitProtoAddr(host string) (string, string) {
+	var parts = strings.Split(host, "://")
+	var proto, addr string
+	switch {
+	case len(parts) == 2:
+		proto = parts[0]
+		addr = parts[1]
+	default:
+		proto = "tcp"
+		addr = parts[0]
+	}
+	return proto, addr
+}
+
 type Client struct {
 	tls    *tls.Config
 	trans  *http.Transport
@@ -121,70 +163,6 @@ var (
 	// the caller can receive this return if you forget a required parameter.
 	ErrBadRequest = errors.New("Bad Request")
 )
-
-func (c *Client) setHost(defaultUnixSocket string) {
-	c.proto = DEFAULTPROTOCOL
-	c.addr = defaultUnixSocket
-
-	if os.Getenv("DOCKER_HOST") != "" {
-		pieces := strings.Split(os.Getenv("DOCKER_HOST"), "://")
-		if len(pieces) == 2 {
-			c.proto = pieces[0]
-			c.addr = pieces[1]
-		} else if len(pieces) == 1 {
-			c.addr = pieces[0]
-		}
-	} else {
-		// if the default socket doesn't exist then
-		// we'll try to connect to the default tcp address
-		if _, err := os.Stat(defaultUnixSocket); err != nil {
-			c.proto = "tcp"
-			c.addr = "0.0.0.0:2375"
-		}
-	}
-}
-
-// GetHost returns the Docker Host address in order to
-// connect to the Docker Daemon. It implements a very
-// simple set of fallthrough logic to determine which
-// address to use.
-func GetHost(host string) string {
-	// if a default value was provided this
-	// shoudl be used
-	if len(host) != 0 {
-		return host
-	}
-	// else attempt to use the DOCKER_HOST
-	// environment variable
-	var env = os.Getenv("DOCKER_HOST")
-	if len(env) != 0 {
-		return env
-	}
-	// else check to see if the default unix
-	// socket exists and return
-	_, err := os.Stat(DEFAULTUNIXSOCKET)
-	if err == nil {
-		return fmt.Sprintf("%s://%s", DEFAULTPROTOCOL, DEFAULTUNIXSOCKET)
-	}
-	// else return the standard TCP address
-	return fmt.Sprintf("tcp://0.0.0.0:%d", DEFAULTHTTPPORT)
-}
-
-// GetProtoAddr is a helper function that splits
-// a host into Protocol and Address.
-func GetProtoAddr(host string) (string, string) {
-	var parts = strings.Split(host, "://")
-	var proto, addr string
-	switch {
-	case len(parts) == 2:
-		proto = parts[0]
-		addr = parts[1]
-	default:
-		proto = "tcp"
-		addr = parts[0]
-	}
-	return proto, addr
-}
 
 // helper function used to make HTTP requests to the Docker daemon.
 func (c *Client) do(method, path string, in, out interface{}) error {
