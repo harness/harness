@@ -41,6 +41,21 @@ func NewBuildCommand() cli.Command {
 				Name:  "publish",
 				Usage: "runs drone build with publishing enabled",
 			},
+			cli.StringFlag{
+				Name:  "docker-host",
+				Value: "",
+				Usage: "docker daemon address",
+			},
+			cli.StringFlag{
+				Name:  "docker-cert",
+				Value: "",
+				Usage: "docker daemon tls certificate",
+			},
+			cli.StringFlag{
+				Name:  "docker-key",
+				Value: "",
+				Usage: "docker daemon tls key",
+			},
 		},
 		Action: func(c *cli.Context) {
 			buildCommandFunc(c)
@@ -55,6 +70,10 @@ func buildCommandFunc(c *cli.Context) {
 	var deploy = c.Bool("deploy")
 	var publish = c.Bool("publish")
 	var path string
+
+	var dockerhost = c.String("docker-host")
+	var dockercert = c.String("docker-cert")
+	var dockerkey = c.String("docker-key")
 
 	// the path is provided as an optional argument that
 	// will otherwise default to $PWD/.drone.yml
@@ -80,12 +99,17 @@ func buildCommandFunc(c *cli.Context) {
 	log.SetPriority(log.LOG_DEBUG) //LOG_NOTICE
 	docker.Logging = false
 
-	var exit, _ = run(path, identity, publish, deploy, privileged)
+	var exit, _ = run(path, identity, dockerhost, dockercert, dockerkey, publish, deploy, privileged)
 	os.Exit(exit)
 }
 
-func run(path, identity string, publish, deploy, privileged bool) (int, error) {
-	dockerClient := docker.New()
+// TODO this has gotten a bit out of hand. refactor input params
+func run(path, identity, dockerhost, dockercert, dockerkey string, publish, deploy, privileged bool) (int, error) {
+	dockerClient, err := docker.NewHostCertFile(dockerhost, dockercert, dockerkey)
+	if err != nil {
+		log.Err(err.Error())
+		return EXIT_STATUS, err
+	}
 
 	// parse the private environment variables
 	envs := getParamMap("DRONE_ENV_")
