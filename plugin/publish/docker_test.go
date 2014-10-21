@@ -24,25 +24,48 @@ func setUpWithDrone(input string) (string, error) {
 	return bf.String(), err
 }
 
+// DockerHost and version test (no auth)
+var dockerHostYaml = `
+publish:
+  docker:
+    docker_host: tcp://server:1000
+    docker_version: 1.3.0
+    image_name: registry/image
+`
+func TestDockerHost(t *testing.T) {
+	response, err := setUpWithDrone(dockerHostYaml)
+	t.Log(privateRegistryNoAuthYaml)
+	if err != nil {
+		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
+	}
+	expected := "export DOCKER_HOST=tcp://server:1000"
+	if !strings.Contains(response, expected) {
+		t.Fatalf("Response: " + response + " doesn't export correct " +
+			"DOCKER_HOST envvar: expected " + expected + "\n\n")
+	}
+	expected = "https://get.docker.io/builds/Linux/x86_64/docker-1.3.0.tgz"
+	if !strings.Contains(response, expected) {
+		t.Fatalf("Response: " + response + " doesn't download from:" + expected + "\n\n")
+	}
+}
+
 // Private Registry Test (no auth)
 var privateRegistryNoAuthYaml = `
 publish:
   docker:
     dockerfile: file_path
-    docker_server: server
-    docker_port: 1000
+    docker_host: tcp://server:1000
     docker_version: 1.0
     registry_login: false
     image_name: registry/image
 `
-
 func TestPrivateRegistryNoAuth(t *testing.T) {
 	response, err := setUpWithDrone(privateRegistryNoAuthYaml)
 	t.Log(privateRegistryNoAuthYaml)
 	if err != nil {
 		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
 	}
-	if !strings.Contains(response, "docker -H server:1000 build -t registry/image:$(git rev-parse --short HEAD)") {
+	if !strings.Contains(response, "docker build -t registry/image:$(git rev-parse --short HEAD)") {
 		t.Fatalf("Response: " + response + " doesn't contain registry in image-names: expected registry/image\n\n")
 	}
 }
@@ -52,8 +75,7 @@ var privateRegistryAuthYaml = `
 publish:
   docker:
     dockerfile: file_path
-    docker_server: server
-    docker_port: 1000
+    docker_host: tcp://server:1000
     docker_version: 1.0
     registry_login_url: https://registry:8000/v1/
     registry_login: true
@@ -69,12 +91,12 @@ func TestPrivateRegistryAuth(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
 	}
-	if !strings.Contains(response, "docker -H server:1000 login -u username -p password -e email@example.com https://registry:8000/v1/") {
-		t.Log("\n\n\n\ndocker -H server:1000 login -u username -p xxxxxxxx -e email@example.com https://registry:8000/v1/\n\n\n\n")
+	if !strings.Contains(response, "docker login -u username -p password -e email@example.com https://registry:8000/v1/") {
+		t.Log("\n\n\n\ndocker login -u username -p xxxxxxxx -e email@example.com https://registry:8000/v1/\n\n\n\n")
 		t.Fatalf("Response: " + response + " doesn't contain private registry login\n\n")
 	}
-	if !strings.Contains(response, "docker -H server:1000 build -t registry/image:$(git rev-parse --short HEAD) .") {
-		t.Log("docker -H server:1000 build -t registry/image:$(git rev-parse --short HEAD) .")
+	if !strings.Contains(response, "docker build -t registry/image:$(git rev-parse --short HEAD) .") {
+		t.Log("docker build -t registry/image:$(git rev-parse --short HEAD) .")
 		t.Fatalf("Response: " + response + " doesn't contain registry in image-names\n\n")
 	}
 }
@@ -83,8 +105,7 @@ func TestPrivateRegistryAuth(t *testing.T) {
 var overrideLatestTagYaml = `
 publish:
   docker:
-    docker_server: server
-    docker_port: 1000
+    docker_host: tcp://server:1000
     docker_version: 1.0
     username: username
     password: password
@@ -99,11 +120,14 @@ func TestOverrideLatestTag(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
 	}
-	if !strings.Contains(response, "docker -H server:1000 build -t username/image:$(git rev-parse --short HEAD) .") {
+	if !strings.Contains(response, "docker build -t username/image:$(git rev-parse --short HEAD) .") {
 		t.Fatalf("Response: " + response + " doesn't contain the git-ref tagged image\n\n")
 	}
-	if !strings.Contains(response, "docker -H server:1000 tag username/image:$(git rev-parse --short HEAD) username/image:latest") {
+	if !strings.Contains(response, "docker tag username/image:$(git rev-parse --short HEAD) username/image:latest") {
 		t.Fatalf("Response: " + response + " doesn't contain 'latest' tag command\n\n")
+	}
+	if !strings.Contains(response, "docker push username/image:latest") {
+		t.Fatalf("Response: " + response + " doesn't contain push command\n\n")
 	}
 }
 
@@ -111,8 +135,7 @@ func TestOverrideLatestTag(t *testing.T) {
 var keepBuildsYaml = `
 publish:
   docker:
-    docker_server: server
-    docker_port: 1000
+    docker_host: tcp://server:1000
     docker_version: 1.0
     keep_build: true
     username: username
@@ -127,7 +150,7 @@ func TestKeepBuilds(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
 	}
-	if strings.Contains(response, "docker -H server:1000 rmi") {
+	if strings.Contains(response, "docker rmi") {
 		t.Fatalf("Response: " + response + " incorrectly instructs the docker server to remove the builds when it shouldn't\n\n")
 	}
 }
@@ -136,8 +159,7 @@ func TestKeepBuilds(t *testing.T) {
 var customTagYaml = `
 publish:
   docker:
-    docker_server: server
-    docker_port: 1000
+    docker_host: tcp://server:1000
     docker_version: 1.0
     custom_tag: release-0.1
     username: username
@@ -155,10 +177,10 @@ func TestCustomTag(t *testing.T) {
 	if strings.Contains(response, "$(git rev-parse --short HEAD)") {
 		t.Fatalf("Response: " + response + " is tagging images from git-refs when it should use a custom tag\n\n")
 	}
-	if !strings.Contains(response, "docker -H server:1000 build -t username/image:release-0.1") {
+	if !strings.Contains(response, "docker build -t username/image:release-0.1") {
 		t.Fatalf("Response: " + response + " isn't tagging images using our custom tag\n\n")
 	}
-	if !strings.Contains(response, "docker -H server:1000 push username/image") {
+	if !strings.Contains(response, "docker push username/image:release-0.1") {
 		t.Fatalf("Response: " + response + " doesn't push the custom tagged image\n\n")
 	}
 }
@@ -184,8 +206,7 @@ var validYaml = `
 publish:
   docker:
     docker_file: file_path
-    docker_server: server
-    docker_port: 1000
+    docker_host: tcp://server:1000
     docker_version: 1.0
     username: user
     password: password
@@ -202,19 +223,19 @@ func TestValidYaml(t *testing.T) {
 		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
 	}
 
-	if !strings.Contains(response, "docker -H server:1000 tag user/image:$(git rev-parse --short HEAD) user/image:latest") {
+	if !strings.Contains(response, "docker tag user/image:$(git rev-parse --short HEAD) user/image:latest") {
 		t.Fatalf("Response: " + response + " doesn't contain tag command for latest\n\n")
 	}
-	if !strings.Contains(response, "docker -H server:1000 build -t user/image:$(git rev-parse --short HEAD) - <") {
+	if !strings.Contains(response, "docker build -t user/image:$(git rev-parse --short HEAD) - <") {
 		t.Fatalf("Response: " + response + "doesn't contain build command for commit hash\n\n")
 	}
-	if !strings.Contains(response, "docker -H server:1000 login -u user -p password -e email") {
+	if !strings.Contains(response, "docker login -u user -p password -e email") {
 		t.Fatalf("Response: " + response + " doesn't contain login command\n\n")
 	}
-	if !strings.Contains(response, "docker -H server:1000 push user/image") {
+	if !strings.Contains(response, "docker push user/image:$(git rev-parse --short HEAD)") {
 		t.Fatalf("Response: " + response + " doesn't contain push command\n\n")
 	}
-	if !strings.Contains(response, "docker -H server:1000 rmi user/image:"+
+	if !strings.Contains(response, "docker rmi user/image:"+
 		"$(git rev-parse --short HEAD)") {
 		t.Fatalf("Response: " + response + " doesn't contain remove image command\n\n")
 	}
@@ -223,8 +244,7 @@ func TestValidYaml(t *testing.T) {
 var withoutDockerFileYaml = `
 publish:
   docker:
-    docker_server: server
-    docker_port: 1000
+    docker_host: tcp://server:1000
     docker_version: 1.0
     image_name: user/image
     username: user
@@ -239,7 +259,7 @@ func TestWithoutDockerFile(t *testing.T) {
 		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
 	}
 
-	if !strings.Contains(response, "docker -H server:1000 build -t user/image:$(git rev-parse --short HEAD) .") {
+	if !strings.Contains(response, "docker build -t user/image:$(git rev-parse --short HEAD) .") {
 		t.Fatalf("Response: " + response + " doesn't contain build command\n\n")
 	}
 }
