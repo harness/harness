@@ -80,6 +80,7 @@ func PostRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	repo.PostCommit = true
 	repo.UserID = user.ID
 	repo.Timeout = 3600 // default to 1 hour
+	repo.Token = model.GenerateToken()
 
 	// generates the rsa key
 	key, err := sshutil.GeneratePrivateKey()
@@ -98,7 +99,7 @@ func PostRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	// setup the post-commit hook with the remote system and
 	// if necessary, register the public key
-	var hook = fmt.Sprintf("%s/api/hook/%s", httputil.GetURL(r), repo.Remote)
+	var hook = fmt.Sprintf("%s/api/hook/%s?token=%s", httputil.GetURL(r), repo.Remote, repo.Token)
 	if err := remote.Activate(user, repo, hook); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
