@@ -37,6 +37,7 @@ func Connect(driver, datasource string) (*sql.DB, error) {
 	migration.DefaultSetVersion = migrate.SetVersion
 	var migrations = []migration.Migrator{
 		migrate.Setup,
+		migrate.Migrate_20142110,
 	}
 	return migration.Open(driver, datasource, migrations)
 }

@@ -23,6 +23,22 @@ func Setup(tx migration.LimitedTx) error {
 	return nil
 }
 
+// Migrate_20142110 is a database migration on Oct-10 2014.
+func Migrate_20142110(tx migration.LimitedTx) error {
+	var stmts = []string{
+		commitRepoIndex, // index the commit table repo_id column
+		repoTokenColumn, // add the repo token column
+		repoTokenUpdate, // update the repo token column to empty string
+	}
+	for _, stmt := range stmts {
+		_, err := tx.Exec(transform(stmt))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 var userTable = `
 CREATE TABLE IF NOT EXISTS users (
 	 user_id           INTEGER PRIMARY KEY AUTOINCREMENT
@@ -86,6 +102,14 @@ CREATE TABLE IF NOT EXISTS repos (
 );
 `
 
+var repoTokenColumn = `
+ALTER TABLE repos ADD COLUMN repo_token VARCHAR(40)
+`
+
+var repoTokenUpdate = `
+UPDATE repos SET repo_token = '';
+`
+
 var commitTable = `
 CREATE TABLE IF NOT EXISTS commits (
 	 commit_id         INTEGER PRIMARY KEY AUTOINCREMENT
@@ -106,6 +130,10 @@ CREATE TABLE IF NOT EXISTS commits (
 	,commit_updated    INTEGER
 	,UNIQUE(commit_sha, commit_branch, repo_id)
 );
+`
+
+var commitRepoIndex = `
+CREATE INDEX commit_repo_id_idx ON commits (repo_id);
 `
 
 var blobTable = `

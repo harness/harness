@@ -88,5 +88,5 @@ rpm:
 #   DRONE_STAGING_USER -- the username used to login
 #   DRONE_STAGING_KEY  -- the identity file path (~/.ssh/id_rsa)
 deploy:
-	scp -i $$DRONE_STAGING_KEY debian/drone.deb $$DRONE_STAGING_USER@$$DRONE_STAGING_HOST:/tmp
+	scp -i $$DRONE_STAGING_KEY packaging/output/drone.deb $$DRONE_STAGING_USER@$$DRONE_STAGING_HOST:/tmp
 	ssh -i $$DRONE_STAGING_KEY $$DRONE_STAGING_USER@$$DRONE_STAGING_HOST -- dpkg -i /tmp/drone.deb

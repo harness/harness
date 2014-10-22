@@ -26,7 +26,7 @@ type Commit struct {
 // SetAuthor sets the author's email address and calculate the Gravatar hash.
 func (c *Commit) SetAuthor(email string) {
 	c.Author = email
-	c.Gravatar = createGravatar(email)
+	c.Gravatar = CreateGravatar(email)
 }
 
 // Returns the Short (--short) Commit Hash.
