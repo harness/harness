@@ -14,9 +14,9 @@ var chars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567
 // default token length
 var length = 40
 
-// generateToken generates random strings good for use in URIs to
+// GenerateToken generates random strings good for use in URIs to
 // identify unique objects.
-func generateToken() string {
+func GenerateToken() string {
 	b := make([]byte, length)
 	r := make([]byte, length+(length/4)) // storage for random bytes.
 	clen := byte(len(chars))
@@ -40,7 +40,7 @@ func generateToken() string {
 
 // helper function to create a Gravatar Hash
 // for the given Email address.
-func createGravatar(email string) string {
+func CreateGravatar(email string) string {
 	email = strings.ToLower(strings.TrimSpace(email))
 	hash := md5.New()
 	hash.Write([]byte(email))

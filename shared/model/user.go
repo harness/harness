@@ -24,7 +24,7 @@ type User struct {
 
 func NewUser(remote, login, email string) *User {
 	user := User{}
-	user.Token = generateToken()
+	user.Token = GenerateToken()
 	user.Login = login
 	user.Remote = remote
 	user.Active = true
@@ -35,7 +35,7 @@ func NewUser(remote, login, email string) *User {
 // SetEmail sets the email address and calculate the Gravatar hash.
 func (u *User) SetEmail(email string) {
 	u.Email = email
-	u.Gravatar = createGravatar(email)
+	u.Gravatar = CreateGravatar(email)
 }
 
 func (u *User) IsStale() bool {

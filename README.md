@@ -201,3 +201,11 @@ Authorization callback URL:
 ```
 http://localhost:8000/api/auth/github.com
 ```
+
+## Build Configuration
+
+You will need to include a `.drone.yml` file in the root of your repository in order to
+configure a build. I'm still working on updated documentation, so in the meantime please refer
+to the `0.2` README to learn more about the `.drone.yml` format:
+
+https://github.com/drone/drone/blob/v0.2.1/README.md#builds

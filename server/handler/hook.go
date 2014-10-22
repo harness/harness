@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -24,6 +25,7 @@ import (
 func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
 	var host = c.URLParams["host"]
+	var token = r.FormValue("token")
 	var remote = remote.Lookup(host)
 	if remote == nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -49,6 +51,14 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 	repo, err := datastore.GetRepoName(ctx, remote.GetHost(), hook.Owner, hook.Repo)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// each hook contains a token to verify the sender. If the token
+	// is not provided or does not match, exit
+	if len(repo.Token) == 0 || repo.Token != token {
+		log.Printf("Rejected post commit hook for %s. Token mismatch\n", repo.Name)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 

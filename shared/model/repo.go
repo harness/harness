@@ -18,6 +18,7 @@ type RepoParams map[string]string
 type Repo struct {
 	ID     int64  `meddler:"repo_id,pk"        json:"-"`
 	UserID int64  `meddler:"user_id"           json:"-"`
+	Token  string `meddler:"repo_token"        json:"-"`
 	Remote string `meddler:"repo_remote"       json:"remote"`
 	Host   string `meddler:"repo_host"         json:"host"`
 	Owner  string `meddler:"repo_owner"        json:"owner"`
