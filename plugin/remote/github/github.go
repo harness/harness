@@ -277,7 +277,7 @@ func (r *GitHub) ParsePullRequestHook(req *http.Request) (*model.Hook, error) {
 		Owner:       data.Repo.Owner.Login,
 		Repo:        data.Repo.Name,
 		Sha:         data.PullRequest.Head.Sha,
-		Branch:      data.PullRequest.Base.Ref,
+		Branch:      data.PullRequest.Head.Ref,
 		Author:      data.PullRequest.User.Login,
 		Gravatar:    data.PullRequest.User.GravatarId,
 		Timestamp:   time.Now().UTC().String(),
