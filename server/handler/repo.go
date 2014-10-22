@@ -56,6 +56,7 @@ func DelRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	repo.Active = false
 	repo.PullRequest = false
 	repo.PostCommit = false
+	repo.UserID = 0
 
 	if err := datastore.PutRepo(ctx, repo); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -80,16 +81,22 @@ func PostRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	repo.PostCommit = true
 	repo.UserID = user.ID
 	repo.Timeout = 3600 // default to 1 hour
-	repo.Token = model.GenerateToken()
+
+	// generate a secret key for post-commit hooks
+	if len(repo.Token) == 0 {
+		repo.Token = model.GenerateToken()
+	}
 
 	// generates the rsa key
-	key, err := sshutil.GeneratePrivateKey()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	if len(repo.PublicKey) == 0 || len(repo.PrivateKey) == 0 {
+		key, err := sshutil.GeneratePrivateKey()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		repo.PublicKey = sshutil.MarshalPublicKey(&key.PublicKey)
+		repo.PrivateKey = sshutil.MarshalPrivateKey(key)
 	}
-	repo.PublicKey = sshutil.MarshalPublicKey(&key.PublicKey)
-	repo.PrivateKey = sshutil.MarshalPrivateKey(key)
 
 	var remote = remote.Lookup(repo.Host)
 	if remote == nil {
