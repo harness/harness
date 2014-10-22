@@ -15,9 +15,17 @@ func New() *web.Mux {
 	mux.Post("/api/auth/:host", handler.GetLogin)
 	mux.Get("/api/badge/:host/:owner/:name/status.svg", handler.GetBadge)
 	mux.Get("/api/badge/:host/:owner/:name/cc.xml", handler.GetCC)
+	mux.Get("/api/hook/:host/:token", handler.PostHook)
+	mux.Put("/api/hook/:host/:token", handler.PostHook)
+	mux.Post("/api/hook/:host/:token", handler.PostHook)
+
+	// these routes are here for backward compatibility
+	// to help people troubleshoot why their upgrade isn't
+	// working correctly. remove at some point
 	mux.Get("/api/hook/:host", handler.PostHook)
 	mux.Put("/api/hook/:host", handler.PostHook)
 	mux.Post("/api/hook/:host", handler.PostHook)
+	////
 
 	streams := web.New()
 	streams.Get("/api/stream/stdout/:id", handler.WsConsole)

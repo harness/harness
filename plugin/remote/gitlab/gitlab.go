@@ -135,7 +135,7 @@ func (r *Gitlab) Activate(user *model.User, repo *model.Repo, link string) error
 
 	// append the repo owner / name to the hook url since gitlab
 	// doesn't send this detail in the post-commit hook
-	link += "&owner=" + repo.Owner + "&name=" + repo.Name
+	link += "?owner=" + repo.Owner + "&name=" + repo.Name
 
 	// add the hook
 	return client.AddProjectHook(path, link, true, false, true)

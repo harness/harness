@@ -25,7 +25,7 @@ import (
 func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
 	var host = c.URLParams["host"]
-	var token = r.FormValue("token")
+	var token = c.URLParams["token"]
 	var remote = remote.Lookup(host)
 	if remote == nil {
 		w.WriteHeader(http.StatusNotFound)
