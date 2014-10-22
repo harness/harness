@@ -32,6 +32,7 @@ publish:
     docker_version: 1.3.0
     image_name: registry/image
 `
+
 func TestDockerHost(t *testing.T) {
 	response, err := setUpWithDrone(dockerHostYaml)
 	t.Log(privateRegistryNoAuthYaml)
@@ -59,6 +60,7 @@ publish:
     registry_login: false
     image_name: registry/image
 `
+
 func TestPrivateRegistryNoAuth(t *testing.T) {
 	response, err := setUpWithDrone(privateRegistryNoAuthYaml)
 	t.Log(privateRegistryNoAuthYaml)
@@ -101,36 +103,6 @@ func TestPrivateRegistryAuth(t *testing.T) {
 	}
 }
 
-// Override "latest" Test
-var overrideLatestTagYaml = `
-publish:
-  docker:
-    docker_host: tcp://server:1000
-    docker_version: 1.0
-    username: username
-    password: password
-    email: email@example.com
-    image_name: username/image
-    push_latest: true
-`
-
-func TestOverrideLatestTag(t *testing.T) {
-	response, err := setUpWithDrone(overrideLatestTagYaml)
-	t.Log(overrideLatestTagYaml)
-	if err != nil {
-		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
-	}
-	if !strings.Contains(response, "docker build -t username/image:$(git rev-parse --short HEAD) .") {
-		t.Fatalf("Response: " + response + " doesn't contain the git-ref tagged image\n\n")
-	}
-	if !strings.Contains(response, "docker tag username/image:$(git rev-parse --short HEAD) username/image:latest") {
-		t.Fatalf("Response: " + response + " doesn't contain 'latest' tag command\n\n")
-	}
-	if !strings.Contains(response, "docker push username/image:latest") {
-		t.Fatalf("Response: " + response + " doesn't contain push command\n\n")
-	}
-}
-
 // Keep builds Test
 var keepBuildsYaml = `
 publish:
@@ -161,14 +133,14 @@ publish:
   docker:
     docker_host: tcp://server:1000
     docker_version: 1.0
-    custom_tag: release-0.1
+    tag: release-0.1
     username: username
     password: password
     email: email@example.com
     image_name: username/image
 `
 
-func TestCustomTag(t *testing.T) {
+func TestSingleTag(t *testing.T) {
 	response, err := setUpWithDrone(customTagYaml)
 	t.Log(customTagYaml)
 	if err != nil {
@@ -183,6 +155,9 @@ func TestCustomTag(t *testing.T) {
 	if !strings.Contains(response, "docker push username/image:release-0.1") {
 		t.Fatalf("Response: " + response + " doesn't push the custom tagged image\n\n")
 	}
+	if !strings.Contains(response, "docker rmi username/image:release-0.1") {
+		t.Fatalf("Response: " + response + " doesn't remove custom tagged image\n\n")
+	}
 }
 
 var missingFieldsYaml = `
@@ -190,6 +165,98 @@ publish:
   docker:
     dockerfile: file
 `
+
+var multipleTagsYaml = `
+publish:
+  docker:
+    docker_host: tcp://server:1000
+    docker_version: 1.0
+    tags: [release-0.2, release-latest]
+    username: username
+    password: password
+    email: email@example.com
+    image_name: username/image
+`
+
+func TestTagsNoSingle(t *testing.T) {
+	response, err := setUpWithDrone(multipleTagsYaml)
+	t.Log(multipleTagsYaml)
+	if err != nil {
+		t.Fatalf("Can't unmarshal script: %s\n", err.Error())
+	}
+	if strings.Contains(response, "$(git rev-parse --short HEAD)") {
+		t.Fatalf("Response: " + response + " is tagging images from git-refs when it should using custom tag\n\n")
+	}
+	if !strings.Contains(response, "docker build -t username/image:release-0.2") {
+		t.Fatalf("Response: " + response + " isn't tagging images using our first custom tag\n\n")
+	}
+	if !strings.Contains(response, "docker tag username/image:release-0.2 username/image:release-latest") {
+		t.Fatalf("Response: " + response + " isn't tagging images using our second custom tag\n\n")
+	}
+	if !strings.Contains(response, "docker push username/image:release-0.2") {
+		t.Fatalf("Response: " + response + " doesn't push the custom tagged image\n\n")
+	}
+	if !strings.Contains(response, "docker rmi username/image:release-0.2") {
+		t.Fatalf("Response: " + response + " doesn't remove custom tagged image\n\n")
+	}
+	if !strings.Contains(response, "docker push username/image:release-latest") {
+		t.Fatalf("Response: " + response + " doesn't push the second custom tagged image\n\n")
+	}
+	if !strings.Contains(response, "docker rmi username/image:release-latest") {
+		t.Fatalf("Response: " + response + " doesn't remove second custom tagged image\n\n")
+	}
+}
+
+var bothTagsYaml = `
+publish:
+  docker:
+    docker_host: tcp://server:1000
+    docker_version: 1.0
+    tag: release-0.2
+    tags: [release-0.3, release-latest]
+    username: username
+    password: password
+    email: email@example.com
+    image_name: username/image
+`
+
+func TestTagsWithSingle(t *testing.T) {
+	response, err := setUpWithDrone(bothTagsYaml)
+	t.Log(bothTagsYaml)
+	if err != nil {
+		t.Fatalf("Can't unmarshal script: %s\n", err.Error())
+	}
+	if strings.Contains(response, "$(git rev-parse --short HEAD)") {
+		t.Fatalf("Response: " + response + " is tagging images from git-refs when it should using custom tag\n\n")
+	}
+	if !strings.Contains(response, "docker build -t username/image:release-0.3") {
+		t.Fatalf("Response: " + response + " isn't tagging images using our first custom tag\n\n")
+	}
+	if !strings.Contains(response, "docker tag username/image:release-0.3 username/image:release-0.2") {
+		t.Fatalf("Response: " + response + " isn't tagging images using our second custom tag\n\n")
+	}
+	if !strings.Contains(response, "docker tag username/image:release-0.3 username/image:release-latest") {
+		t.Fatalf("Response: " + response + " isn't tagging images using our third custom tag\n\n")
+	}
+	if !strings.Contains(response, "docker push username/image:release-0.2") {
+		t.Fatalf("Response: " + response + " doesn't push the custom tagged image\n\n")
+	}
+	if !strings.Contains(response, "docker rmi username/image:release-0.2") {
+		t.Fatalf("Response: " + response + " doesn't remove custom tagged image\n\n")
+	}
+	if !strings.Contains(response, "docker push username/image:release-0.3") {
+		t.Fatalf("Response: " + response + " doesn't push the custom tagged image\n\n")
+	}
+	if !strings.Contains(response, "docker rmi username/image:release-0.3") {
+		t.Fatalf("Response: " + response + " doesn't remove custom tagged image\n\n")
+	}
+	if !strings.Contains(response, "docker push username/image:release-latest") {
+		t.Fatalf("Response: " + response + " doesn't push the second custom tagged image\n\n")
+	}
+	if !strings.Contains(response, "docker rmi username/image:release-latest") {
+		t.Fatalf("Response: " + response + " doesn't remove second custom tagged image\n\n")
+	}
+}
 
 func TestMissingFields(t *testing.T) {
 	response, err := setUpWithDrone(missingFieldsYaml)
@@ -212,7 +279,6 @@ publish:
     password: password
     email: email
     image_name: user/image
-    push_latest: true
     registry_login: true
 `
 
@@ -223,9 +289,6 @@ func TestValidYaml(t *testing.T) {
 		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
 	}
 
-	if !strings.Contains(response, "docker tag user/image:$(git rev-parse --short HEAD) user/image:latest") {
-		t.Fatalf("Response: " + response + " doesn't contain tag command for latest\n\n")
-	}
 	if !strings.Contains(response, "docker build -t user/image:$(git rev-parse --short HEAD) - <") {
 		t.Fatalf("Response: " + response + "doesn't contain build command for commit hash\n\n")
 	}
