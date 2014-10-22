@@ -18,6 +18,11 @@ const (
 	DefaultURL = "https://bitbucket.org"
 )
 
+var (
+	// bitbucket returns commit author email only in format "John Doe <john.doe@example.com>"
+	emailRegexp = regexp.MustCompile("<(.*)>")
+)
+
 type Bitbucket struct {
 	URL    string
 	API    string
@@ -247,9 +252,13 @@ func (r *Bitbucket) ParseHook(req *http.Request) (*model.Hook, error) {
 		return nil, fmt.Errorf("Invalid Bitbucket post-commit Hook. Missing Repo or Commit data.")
 	}
 
-	// bitbucket returns commit author email only in format "John Doe <john.doe@example.com>"
-	regexp, _ := regexp.Compile("<(.*)>")
-	email := regexp.FindStringSubmatch(hook.Commits[len(hook.Commits)-1].RawAuthor)[1]
+	rawAuthor := hook.Commits[len(hook.Commits)-1].RawAuthor
+	email := rawAuthor
+	match := emailRegexp.FindStringSubmatch(rawAuthor)
+
+	if len(match) > 0 {
+		email = match[1]
+	}
 
 	return &model.Hook{
 		Owner:     hook.Repo.Owner,
