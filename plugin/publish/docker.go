@@ -30,10 +30,9 @@ type Docker struct {
 	Email    string `yaml:"email"`
 
 	// Keep the build on the Docker host after pushing?
-	KeepBuild bool `yaml:"keep_build"`
-	// Do we want to override "latest" automatically with this build?
-	PushLatest bool   `yaml:"push_latest"`
-	CustomTag  string `yaml:"custom_tag"`
+	KeepBuild bool     `yaml:"keep_build"`
+	Tag       string   `yaml:"tag"`
+	Tags      []string `yaml:"tags"`
 
 	Condition *condition.Condition `yaml:"when,omitempty"`
 }
@@ -67,36 +66,42 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 	}
 
 	// Run the command commands to build and deploy the image.
-	// Are we setting a custom tag, or do we use the git hash?
-	imageTag := ""
-	if len(d.CustomTag) > 0 {
-		imageTag = d.CustomTag
-	} else {
-		imageTag = "$(git rev-parse --short HEAD)"
+
+	// Add the single tag if one exists
+	if len(d.Tag) > 0 {
+		d.Tags = append(d.Tags, d.Tag)
 	}
+
+	// If no tags are specified, use the commit hash
+	if len(d.Tags) == 0 {
+		d.Tags = append(d.Tags, "$(git rev-parse --short HEAD)")
+	}
+
+	// There is always at least 1 tag
+	buildImageTag := d.Tags[0]
+
+	// Export docker host once
 	f.WriteCmd("export DOCKER_HOST=" + d.DockerHost)
-	f.WriteCmd(fmt.Sprintf("docker build -t %s:%s %s", d.ImageName, imageTag, dockerPath))
+
+	// Build the image
+	f.WriteCmd(fmt.Sprintf("docker build -t %s:%s %s", d.ImageName, buildImageTag, dockerPath))
 
 	// Login?
 	if d.RegistryLogin == true {
 		f.WriteCmdSilent(fmt.Sprintf("docker login -u %s -p %s -e %s %s",
 			d.Username, d.Password, d.Email, d.RegistryLoginUrl))
 	}
-	// Push the tagged image only - Do not push all image tags
-	f.WriteCmd(fmt.Sprintf("docker push %s:%s", d.ImageName, imageTag))
 
-	// Are we overriding the "latest" tag?
-	if d.PushLatest {
-		f.WriteCmd(fmt.Sprintf("docker tag %s:%s %s:latest",
-			d.ImageName, imageTag, d.ImageName))
-		f.WriteCmd(fmt.Sprintf("docker push %s:latest", d.ImageName))
+	// Tag and push all tags
+	for _, tag := range d.Tags {
+		f.WriteCmd(fmt.Sprintf("docker tag %s:%s %s:%s", d.ImageName, buildImageTag, d.ImageName, tag))
+		f.WriteCmd(fmt.Sprintf("docker push %s:%s", d.ImageName, tag))
 	}
 
-	// Delete the image from the docker server we built on.
+	// Remove tags after pushing unless keepBuild is set
 	if !d.KeepBuild {
-		f.WriteCmd(fmt.Sprintf("docker rmi %s:%s", d.ImageName, imageTag))
-		if d.PushLatest {
-			f.WriteCmd(fmt.Sprintf("docker rmi %s:latest", d.ImageName))
+		for _, tag := range d.Tags {
+			f.WriteCmd(fmt.Sprintf("docker rmi %s:%s", d.ImageName, tag))
 		}
 	}
 }
