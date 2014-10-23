@@ -251,7 +251,7 @@ func (r *Bitbucket) ParseHook(req *http.Request) (*model.Hook, error) {
 		return nil, fmt.Errorf("Invalid Bitbucket post-commit Hook. Missing Repo or Commit data.")
 	}
 
-	var author = hook.Commits[len(hook.Commits)-1].RawAuthor
+	var author = hook.Commits[len(hook.Commits)-1].Author
 	var matches = emailRegexp.FindStringSubmatch(author)
 	if len(matches) == 2 {
 		author = matches[1]
