@@ -65,6 +65,8 @@ datasource="/var/lib/drone/drone.sqlite"
 # pass=""
 
 # [worker]
+# cert=""
+# key=""
 # nodes=[
 #   "unix:///var/run/docker.sock",
 #   "unix:///var/run/docker.sock"

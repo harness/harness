@@ -2,6 +2,7 @@ package docker
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/docker/pkg/term"
@@ -32,35 +34,125 @@ var Logging = true
 
 // New creates an instance of the Docker Client
 func New() *Client {
-	c := &Client{}
-
-	c.setHost(DEFAULTUNIXSOCKET)
-
-	c.Images = &ImageService{c}
-	c.Containers = &ContainerService{c}
-	return c
+	return NewHost("")
 }
 
-func NewHost(address string) *Client {
-	c := &Client{}
+func NewHost(uri string) *Client {
+	var cli, _ = NewHostCert(uri, nil, nil)
+	return cli
+}
 
-	// parse the address and split
-	pieces := strings.Split(address, "://")
-	if len(pieces) == 2 {
-		c.proto = pieces[0]
-		c.addr = pieces[1]
-	} else if len(pieces) == 1 {
-		c.addr = pieces[0]
+func NewHostCertFile(uri, cert, key string) (*Client, error) {
+	if len(key) == 0 || len(cert) == 0 {
+		return NewHostCert(uri, nil, nil)
+	}
+	certfile, err := ioutil.ReadFile(cert)
+	if err != nil {
+		return nil, err
+	}
+	keyfile, err := ioutil.ReadFile(key)
+	if err != nil {
+		return nil, err
+	}
+	return NewHostCert(uri, certfile, keyfile)
+}
+
+func NewHostCert(uri string, cert, key []byte) (*Client, error) {
+	var host = GetHost(uri)
+	var proto, addr = SplitProtoAddr(host)
+
+	var cli = new(Client)
+	cli.proto = proto
+	cli.addr = addr
+	cli.scheme = "http"
+	cli.Images = &ImageService{cli}
+	cli.Containers = &ContainerService{cli}
+
+	// if no certificate is provided returns the
+	// client with no TLS configured.
+	if cert == nil || key == nil || len(cert) == 0 || len(key) == 0 {
+		return cli, nil
 	}
 
-	c.Images = &ImageService{c}
-	c.Containers = &ContainerService{c}
-	return c
+	// loads the key value pair in pem format
+	pem, err := tls.X509KeyPair(cert, key)
+	if err != nil {
+		return nil, err
+	}
+
+	// setup the client TLS and store the certificate.
+	// also skip verification since we are (typically)
+	// going to be using certs for IP addresses.
+	cli.scheme = "https"
+	cli.tls = new(tls.Config)
+	cli.tls.InsecureSkipVerify = true
+	cli.tls.Certificates = []tls.Certificate{pem}
+
+	// disable compression for local socket communication.
+	if cli.proto == DEFAULTPROTOCOL {
+		cli.trans.DisableCompression = true
+	}
+
+	// creates a transport that uses the custom tls configuration
+	// to securely connect to remote Docker clients.
+	cli.trans = &http.Transport{
+		TLSClientConfig: cli.tls,
+		Dial: func(dial_network, dial_addr string) (net.Conn, error) {
+			return net.DialTimeout(cli.proto, cli.addr, 32*time.Second)
+		},
+	}
+
+	return cli, nil
+}
+
+// GetHost returns the Docker Host address in order to
+// connect to the Docker Daemon. It implements a very
+// simple set of fallthrough logic to determine which
+// address to use.
+func GetHost(host string) string {
+	// if a default value was provided this
+	// shoudl be used
+	if len(host) != 0 {
+		return host
+	}
+	// else attempt to use the DOCKER_HOST
+	// environment variable
+	var env = os.Getenv("DOCKER_HOST")
+	if len(env) != 0 {
+		return env
+	}
+	// else check to see if the default unix
+	// socket exists and return
+	_, err := os.Stat(DEFAULTUNIXSOCKET)
+	if err == nil {
+		return fmt.Sprintf("%s://%s", DEFAULTPROTOCOL, DEFAULTUNIXSOCKET)
+	}
+	// else return the standard TCP address
+	return fmt.Sprintf("tcp://0.0.0.0:%d", DEFAULTHTTPPORT)
+}
+
+// SplitProtoAddr is a helper function that splits
+// a host into Protocol and Address.
+func SplitProtoAddr(host string) (string, string) {
+	var parts = strings.Split(host, "://")
+	var proto, addr string
+	switch {
+	case len(parts) == 2:
+		proto = parts[0]
+		addr = parts[1]
+	default:
+		proto = "tcp"
+		addr = parts[0]
+	}
+	return proto, addr
 }
 
 type Client struct {
-	proto string
-	addr  string
+	tls    *tls.Config
+	trans  *http.Transport
+	scheme string
+	proto  string
+	addr   string
 
 	Images     *ImageService
 	Containers *ContainerService
@@ -87,28 +179,6 @@ var (
 	ErrBadRequest = errors.New("Bad Request")
 )
 
-func (c *Client) setHost(defaultUnixSocket string) {
-	c.proto = DEFAULTPROTOCOL
-	c.addr = defaultUnixSocket
-
-	if os.Getenv("DOCKER_HOST") != "" {
-		pieces := strings.Split(os.Getenv("DOCKER_HOST"), "://")
-		if len(pieces) == 2 {
-			c.proto = pieces[0]
-			c.addr = pieces[1]
-		} else if len(pieces) == 1 {
-			c.addr = pieces[0]
-		}
-	} else {
-		// if the default socket doesn't exist then
-		// we'll try to connect to the default tcp address
-		if _, err := os.Stat(defaultUnixSocket); err != nil {
-			c.proto = "tcp"
-			c.addr = "0.0.0.0:2375"
-		}
-	}
-}
-
 // helper function used to make HTTP requests to the Docker daemon.
 func (c *Client) do(method, path string, in, out interface{}) error {
 	// if data input is provided, serialize to JSON
@@ -133,16 +203,13 @@ func (c *Client) do(method, path string, in, out interface{}) error {
 	req.Header.Set("Content-Type", "application/json")
 
 	// dial the host server
-	req.Host = c.addr
-	dial, err := net.Dial(c.proto, c.addr)
-	if err != nil {
-		return err
+	req.URL.Host = c.addr
+	req.URL.Scheme = "http"
+	if c.tls != nil {
+		req.URL.Scheme = "https"
 	}
 
-	// make the request
-	conn := httputil.NewClientConn(dial, nil)
-	resp, err := conn.Do(req)
-	defer conn.Close()
+	resp, err := c.HTTPClient().Do(req)
 	if err != nil {
 		return err
 	}
@@ -184,7 +251,7 @@ func (c *Client) hijack(method, path string, setRawTerminal bool, out io.Writer)
 	req.Header.Set("Content-Type", "plain/text")
 	req.Host = c.addr
 
-	dial, err := net.Dial(c.proto, c.addr)
+	dial, err := c.Dial()
 	if err != nil {
 		if strings.Contains(err.Error(), "connection refused") {
 			return fmt.Errorf("Can't connect to docker daemon. Is 'docker -d' running on this host?")
@@ -239,16 +306,13 @@ func (c *Client) stream(method, path string, in io.Reader, out io.Writer, header
 	req.Header.Set("Content-Type", "plain/text")
 
 	// dial the host server
-	req.Host = c.addr
-	dial, err := net.Dial(c.proto, c.addr)
-	if err != nil {
-		return err
+	req.URL.Host = c.addr
+	req.URL.Scheme = "http"
+	if c.tls != nil {
+		req.URL.Scheme = "https"
 	}
 
-	// make the request
-	conn := httputil.NewClientConn(dial, nil)
-	resp, err := conn.Do(req)
-	defer conn.Close()
+	resp, err := c.HTTPClient().Do(req)
 	if err != nil {
 		return err
 	}
@@ -270,6 +334,7 @@ func (c *Client) stream(method, path string, in io.Reader, out io.Writer, header
 
 	// If no output we exit now with no errors
 	if out == nil {
+		io.Copy(ioutil.Discard, resp.Body)
 		return nil
 	}
 
@@ -288,4 +353,24 @@ func (c *Client) stream(method, path string, in io.Reader, out io.Writer, header
 	}
 
 	return nil
+}
+
+func (c *Client) HTTPClient() *http.Client {
+	if c.trans != nil {
+		return &http.Client{Transport: c.trans}
+	}
+	return &http.Client{
+		Transport: &http.Transport{
+			Dial: func(dial_network, dial_addr string) (net.Conn, error) {
+				return net.DialTimeout(c.proto, c.addr, 32*time.Second)
+			},
+		},
+	}
+}
+
+func (c *Client) Dial() (net.Conn, error) {
+	if c.tls != nil && c.proto != "unix" {
+		return tls.Dial(c.proto, c.addr, c.tls)
+	}
+	return net.Dial(c.proto, c.addr)
 }

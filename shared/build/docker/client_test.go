@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -28,40 +27,6 @@ func TestInvalidHostFromEnv(t *testing.T) {
 	client := New()
 
 	if client.addr == "1.1.1.1:2375" {
-		t.Fail()
-	}
-}
-
-func TestSocketHost(t *testing.T) {
-	// create temporary file to represent the docker socket
-	file, err := ioutil.TempFile("", "TestDefaultUnixHost")
-	if err != nil {
-		t.Fail()
-	}
-	file.Close()
-	defer os.Remove(file.Name())
-
-	client := &Client{}
-	client.setHost(file.Name())
-
-	if client.proto != "unix" {
-		t.Fail()
-	}
-
-	if client.addr != file.Name() {
-		t.Fail()
-	}
-}
-
-func TestDefaultTcpHost(t *testing.T) {
-	client := &Client{}
-	client.setHost("/tmp/missing_socket")
-
-	if client.proto != "tcp" {
-		t.Fail()
-	}
-
-	if client.addr != "0.0.0.0:2375" {
 		t.Fail()
 	}
 }
