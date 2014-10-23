@@ -138,15 +138,15 @@ func (b *Builder) setup() error {
 	defer os.RemoveAll(dir)
 
 	// make sure the image isn't empty. this would be bad
-	if len(b.Build.Image) == 0 {
+	if len(b.Build.Docker.Image.Name) == 0 {
 		log.Err("Fatal Error, No Docker Image specified")
 		return fmt.Errorf("Error: missing Docker image")
 	}
 
 	// if we're using an alias for the build name we
 	// should substitute it now
-	if alias, ok := builders[b.Build.Image]; ok {
-		b.Build.Image = alias.Tag
+	if alias, ok := builders[b.Build.Docker.Image.Name]; ok {
+		b.Build.Docker.Image.Name = alias.Tag
 	}
 
 	// if this is a local repository we should symlink
@@ -183,8 +183,9 @@ func (b *Builder) setup() error {
 		// Get the image info
 		img, err := b.dockerClient.Images.Inspect(cname)
 		if err != nil {
+
 			// Get the image if it doesn't exist
-			if err := b.dockerClient.Images.Pull(cname); err != nil {
+			if err := b.dockerClient.Images.Pull(cname, b.Build.Docker.AuthConfig()); err != nil {
 				return fmt.Errorf("Error: Unable to pull image %s", cname)
 			}
 
@@ -198,7 +199,7 @@ func (b *Builder) setup() error {
 		log.Infof("starting service container %s", cname)
 
 		// Run the contianer
-		run, err := b.dockerClient.Containers.RunDaemonPorts(cname, img.Config.ExposedPorts)
+		run, err := b.dockerClient.Containers.RunDaemonPorts(cname, img.Config.ExposedPorts, b.Build.Docker.AuthConfig())
 		if err != nil {
 			return err
 		}
@@ -239,13 +240,13 @@ func (b *Builder) setup() error {
 
 	// check for build container (ie bradrydzewski/go:1.2)
 	// and download if it doesn't already exist
-	if _, err := b.dockerClient.Images.Inspect(b.Build.Image); err == docker.ErrNotFound {
+	if _, err := b.dockerClient.Images.Inspect(b.Build.Docker.Image.Name); err == docker.ErrNotFound {
 		// download the image if it doesn't exist
-		if err := b.dockerClient.Images.Pull(b.Build.Image); err != nil {
+		if err := b.dockerClient.Images.Pull(b.Build.Docker.Image.Name, b.Build.Docker.AuthConfig()); err != nil {
 			return err
 		}
 	} else if err != nil {
-		log.Errf("failed to inspect image %s", b.Build.Image)
+		log.Errf("failed to inspect image %s", b.Build.Docker.Image.Name)
 	}
 
 	// create the Docker image
@@ -331,7 +332,7 @@ func (b *Builder) run() error {
 	}
 
 	if host.Privileged {
-		host.NetworkMode = script.DockerNetworkMode(b.Build.Docker)
+		host.NetworkMode = b.Build.Docker.NetworkMode()
 	}
 
 	// debugging
@@ -391,7 +392,7 @@ func (b *Builder) run() error {
 	}
 
 	// create the container from the image
-	run, err := b.dockerClient.Containers.Create(&conf)
+	run, err := b.dockerClient.Containers.Create(&conf, b.Build.Docker.AuthConfig())
 	if err != nil {
 		return err
 	}
@@ -432,7 +433,7 @@ func (b *Builder) run() error {
 // Dockerfile and writes to the builds temporary directory
 // so that it can be used to create the Image.
 func (b *Builder) writeDockerfile(dir string) error {
-	var dockerfile = dockerfile.New(b.Build.Image)
+	var dockerfile = dockerfile.New(b.Build.Docker.Image.Name)
 	dockerfile.WriteWorkdir(b.Repo.Dir)
 	dockerfile.WriteAdd("drone", "/usr/local/bin/")
 
@@ -443,8 +444,8 @@ func (b *Builder) writeDockerfile(dir string) error {
 	}
 
 	switch {
-	case strings.HasPrefix(b.Build.Image, "bradrydzewski/"),
-		strings.HasPrefix(b.Build.Image, "drone/"):
+	case strings.HasPrefix(b.Build.Docker.Image.Name, "bradrydzewski/"),
+		strings.HasPrefix(b.Build.Docker.Image.Name, "drone/"):
 		// the default user for all official Drone image
 		// is the "ubuntu" user, since all build images
 		// inherit from the ubuntu cloud ISO

@@ -80,7 +80,7 @@ func TestSetup(t *testing.T) {
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
 	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
+	b.Build.Docker.Image.Name = "go1.2"
 	b.dockerClient = client
 
 	if err := b.setup(); err != nil {
@@ -88,8 +88,8 @@ func TestSetup(t *testing.T) {
 	}
 
 	// verify the Image is being correctly set
-	if b.image == nil {
-		t.Errorf("Expected image not nil")
+	if len(b.Build.Docker.Image.Name) == 0 {
+		t.Errorf("Expected image to be set")
 	}
 
 	expectedID := "7bf9ce0ffb7236ca68da0f9fed0e1682053b393db3c724ff3c5a4e8c0793b34c"
@@ -147,7 +147,7 @@ func TestSetupErrorRunDaemonPorts(t *testing.T) {
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
 	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
+	b.Build.Docker.Image.Name = "go1.2"
 	b.Build.Services = append(b.Build.Services, "mysql")
 	b.dockerClient = client
 
@@ -186,7 +186,7 @@ func TestSetupErrorServiceInspect(t *testing.T) {
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
 	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
+	b.Build.Docker.Image.Name = "go1.2"
 	b.Build.Services = append(b.Build.Services, "mysql")
 	b.dockerClient = client
 
@@ -214,7 +214,7 @@ func TestSetupErrorImagePull(t *testing.T) {
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
 	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
+	b.Build.Docker.Image.Name = "go1.2"
 	b.Build.Services = append(b.Build.Services, "mysql")
 	b.dockerClient = client
 
@@ -244,7 +244,7 @@ func TestSetupErrorBuild(t *testing.T) {
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
 	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
+	b.Build.Docker.Image.Name = "go1.2"
 	b.dockerClient = client
 
 	var got, want = b.setup(), docker.ErrBadRequest
@@ -279,7 +279,7 @@ func TestSetupErrorBuildInspect(t *testing.T) {
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
 	b.Build = &script.Build{}
-	b.Build.Image = "go1.2"
+	b.Build.Docker.Image.Name = "go1.2"
 	b.dockerClient = client
 
 	var got, want = b.setup(), docker.ErrBadRequest

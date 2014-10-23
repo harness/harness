@@ -19,6 +19,12 @@ func ParseBuild(data string) (*Build, error) {
 
 	// parse the build configuration file
 	err := yaml.Unmarshal([]byte(data), &build)
+
+	// alias simple image tag to the docker struct
+	if len(build.Docker.Image.Name) == 0 {
+		build.Docker.Image.Name = build.Image
+	}
+
 	return &build, err
 }
 
@@ -74,7 +80,7 @@ type Build struct {
 
 	// Docker container parameters, such as
 	// NetworkMode and UserName
-	Docker *Docker `yaml:"docker,omitempty"`
+	Docker Docker
 }
 
 // Write adds all the steps to the build script, including
