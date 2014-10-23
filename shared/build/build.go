@@ -262,7 +262,7 @@ func (b *Builder) setup() error {
 	if err != nil {
 		// if we have problems with the image make sure
 		// we remove it before we exit
-		b.dockerClient.Images.Remove(id)
+		log.Errf("failed to verify build image %s", id)
 		return err
 	}
 
