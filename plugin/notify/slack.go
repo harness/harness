@@ -9,9 +9,9 @@ import (
 
 const (
 	slackEndpoint       = "https://%s.slack.com/services/hooks/incoming-webhook?token=%s"
-	slackStartedMessage = "*Building* %s, commit <%s|%s>, author %s"
-	slackSuccessMessage = "*Success* %s, commit <%s|%s>, author %s"
-	slackFailureMessage = "*Failed* %s, commit <%s|%s>, author %s"
+	slackStartedMessage = "*Building* <%s|%s> (%s) by %s"
+	slackSuccessMessage = "*Success* <%s|%s> (%s) by %s"
+	slackFailureMessage = "*Failed* <%s|%s> (%s) by %s"
 )
 
 type Slack struct {
@@ -39,11 +39,14 @@ func (s *Slack) Send(context *model.Request) error {
 
 func (s *Slack) getMessage(context *model.Request, message string) string {
 	url := getBuildUrl(context)
-	return fmt.Sprintf(message, context.Repo.Name, url, context.Commit.ShaShort(), context.Commit.Author)
+	// drone/drone#3333333
+	linktext := context.Repo.Owner + "/" + context.Repo.Name + "#" + context.Commit.ShaShort()
+
+	return fmt.Sprintf(message, linktext, url, context.Commit.Branch, context.Commit.Author)
 }
 
 func (s *Slack) sendStarted(context *model.Request) error {
-	return s.send(s.getMessage(context, slackStartedMessage), "warning")
+	return s.send(s.getMessage(context, slackStartedMessage)+"\n - "+context.Commit.Message, "warning")
 }
 
 func (s *Slack) sendSuccess(context *model.Request) error {
