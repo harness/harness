@@ -81,7 +81,7 @@ func (s *SSH) Write(f *buildfile.Buildfile) {
 	}
 
 	if len(s.Cmd) > 0 {
-		sshCmd := "ssh -o StrictHostKeyChecking=no -p %s %s %s"
+		sshCmd := "ssh -o StrictHostKeyChecking=no -p %s %s \"%s\""
 		f.WriteCmd(fmt.Sprintf(sshCmd, host[1], strings.SplitN(host[0], ":", 2)[0], s.Cmd))
 	}
 }
