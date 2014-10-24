@@ -225,8 +225,7 @@ func CreateUpdateKey(client *github.Client, owner, name, title, key string) (*gi
 	if k != nil {
 		k.Title = github.String(title)
 		k.Key = github.String(key)
-		var updated, _, err = client.Repositories.EditKey(owner, name, *k.ID, k)
-		return updated, err
+		client.Repositories.DeleteKey(owner, name, *k.ID)
 	}
 
 	return CreateKey(client, owner, name, title, key)
