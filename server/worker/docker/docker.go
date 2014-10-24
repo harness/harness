@@ -68,7 +68,7 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	commitc := pubsub.Register(c, "_global")
 	commitc.Publish(r)
 	stdoutc := pubsub.RegisterOpts(c, r.Commit.ID, pubsub.ConsoleOpts)
-	defer stdoutc.Close()
+	defer pubsub.Unregister(c, r.Commit.ID)
 
 	// create a special buffer that will also
 	// write to a websocket channel
