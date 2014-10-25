@@ -226,7 +226,7 @@ app.controller("AccountReposController", function($scope, $http, user) {
 });
 
 
-app.controller("CommitController", function($scope, $http, $routeParams, stdout, feed) {
+app.controller("CommitController", function($scope, $http, $route, $routeParams, stdout, feed) {
 
 	var remote = $routeParams.remote;
 	var owner  = $routeParams.owner;
@@ -234,12 +234,30 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 	var branch = $routeParams.branch;
 	var commit = $routeParams.commit;
 	$scope.console='';
+	
+	var handleOutput = function(id, clearConsole) {
+		var lineFormatter = new Drone.LineFormatter();
+		var el = document.querySelector('#output');
+		if(clearConsole === true) {
+			el.innerHTML = ''; 
+		}
+		stdout.subscribe(id, function(out){
+			angular.element(el).append(lineFormatter.format(out));
+			if ($scope.following) {
+				window.scrollTo(0, document.body.scrollHeight);
+			}
+		});
+	}
 
 	feed.subscribe(function(item) {
 		if (item.commit.sha    == commit &&
 			item.commit.branch == branch) {
+			if(item.commit.status == "Started") {
+				handleOutput(item.commit.id, true);
+			}
 			$scope.commit = item.commit;
 			$scope.$apply();
+
 		} else {
 			// we trigger an toast notification so the
 			// user is aware another build started
@@ -274,14 +292,8 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 				return;
 			}
 
-			var lineFormatter = new Drone.LineFormatter();
-			var el = document.querySelector('#output');
-			stdout.subscribe(data.id, function(out){
-				angular.element(el).append(lineFormatter.format(out));
-				if ($scope.following) {
-					window.scrollTo(0, document.body.scrollHeight);
-				}
-			});
+			handleOutput(data.id, false);
+		
 		}).
 		error(function(data, status, headers, config) {
 			console.log(data);
@@ -297,7 +309,7 @@ app.controller("CommitController", function($scope, $http, $routeParams, stdout,
 	}
 
 	$scope.rebuildCommit = function() {
-		$http({method: 'POST', url: '/api/repos/'+remote+'/'+owner+'/'+name+'/'+'branches/'+branch+'/'+'commits/'+commit+'?action=rebuild' })
+        $http({method: 'POST', url: '/api/repos/'+remote+'/'+owner+'/'+name+'/'+'branches/'+branch+'/'+'commits/'+commit+'?action=rebuild' });
 	}
 
 
