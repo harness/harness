@@ -93,14 +93,16 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 	}
 
 	commit := model.Commit{
-		RepoID:      repo.ID,
-		Status:      model.StatusEnqueue,
-		Sha:         hook.Sha,
-		Branch:      hook.Branch,
-		PullRequest: hook.PullRequest,
-		Timestamp:   hook.Timestamp,
-		Message:     hook.Message,
-		Config:      string(yml),
+		RepoID:       repo.ID,
+		Status:       model.StatusEnqueue,
+		Sha:          hook.Sha,
+		Branch:       hook.Branch,
+		PullRequest:  hook.PullRequest,
+		Timestamp:    hook.Timestamp,
+		Message:      hook.Message,
+		SourceRemote: hook.SourceRemote,
+		SourceBranch: hook.SourceBranch,
+		Config:       string(yml),
 	}
 	commit.SetAuthor(hook.Author)
 

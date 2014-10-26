@@ -38,6 +38,10 @@ type Repo struct {
 	// host system (Docker Container).
 	Dir string
 
+	// For gitlab pull requests.
+	SourceRemote string
+	SourceBranch string
+
 	// (optional) The depth of the `git clone` command.
 	Depth int
 }
@@ -110,10 +114,16 @@ func (r *Repo) Commands() []string {
 
 	cmds := []string{}
 	if len(r.PR) > 0 {
-		// If a specific PR is provided then we need to clone it.
 		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive %s %s", r.Depth, r.Path, r.Dir))
-		cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
-		cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
+		if len(r.SourceRemote) > 0 {
+			cmds = append(cmds, fmt.Sprintf("git remote add pr_%s %s", r.PR, r.SourceRemote))
+			cmds = append(cmds, fmt.Sprintf("git fetch pr_%s +refs/heads/%s:refs/remotes/pr_%s/pr/%s", r.PR, r.SourceBranch, r.PR, r.PR))
+			cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s pr_%s/pr/%s", r.PR, r.PR, r.PR))
+		} else {
+			// If a specific PR is provided then we need to clone it.
+			cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
+			cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
+		}
 	} else {
 		// Otherwise just clone the branch.
 		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
