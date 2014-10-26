@@ -50,6 +50,8 @@ func (r *Repo) IsRemote() bool {
 		return true
 	case strings.HasPrefix(r.Path, "git@"):
 		return true
+	case strings.HasPrefix(r.Path, "gitlab@"):
+		return true
 	case strings.HasPrefix(r.Path, "http://"):
 		return true
 	case strings.HasPrefix(r.Path, "https://"):
@@ -76,6 +78,10 @@ func (r *Repo) IsGit() bool {
 	case strings.HasPrefix(r.Path, "git@"):
 		return true
 	case strings.HasPrefix(r.Path, "ssh://git@"):
+		return true
+	case strings.HasPrefix(r.Path, "gitlab@"):
+		return true
+	case strings.HasPrefix(r.Path, "ssh://gitlab@"):
 		return true
 	case strings.HasPrefix(r.Path, "https://github"):
 		return true
