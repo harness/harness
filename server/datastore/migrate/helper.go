@@ -13,6 +13,7 @@ func transform(stmt string) string {
 	switch meddler.Default {
 	case meddler.MySQL:
 		stmt = strings.Replace(stmt, "AUTOINCREMENT", "AUTO_INCREMENT", -1)
+		stmt = strings.Replace(stmt, "BLOB", "MEDIUMBLOB", -1)
 	case meddler.PostgreSQL:
 		stmt = strings.Replace(stmt, "INTEGER PRIMARY KEY AUTOINCREMENT", "SERIAL PRIMARY KEY", -1)
 		stmt = strings.Replace(stmt, "BLOB", "BYTEA", -1)
