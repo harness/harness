@@ -35,7 +35,7 @@ publish:
 
 func TestDockerHost(t *testing.T) {
 	response, err := setUpWithDrone(dockerHostYaml)
-	t.Log(privateRegistryNoAuthYaml)
+	t.Log(dockerHostYaml)
 	if err != nil {
 		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
 	}
@@ -47,6 +47,30 @@ func TestDockerHost(t *testing.T) {
 	expected = "https://get.docker.io/builds/Linux/x86_64/docker-1.3.0.tgz"
 	if !strings.Contains(response, expected) {
 		t.Fatalf("Response: " + response + " doesn't download from:" + expected + "\n\n")
+	}
+}
+
+var dockerHostNoVersionYaml = `
+publish:
+  docker:
+    docker_host: tcp://server:1000
+    image_name: registry/image
+`
+
+func TestDockerHostNoVersion(t *testing.T) {
+	response, err := setUpWithDrone(dockerHostNoVersionYaml)
+	t.Log(dockerHostNoVersionYaml)
+	if err != nil {
+		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
+	}
+	expected := "export DOCKER_HOST=tcp://server:1000"
+	if !strings.Contains(response, expected) {
+		t.Fatalf("Response: " + response + " doesn't export correct " +
+			"DOCKER_HOST envvar: expected " + expected + "\n\n")
+	}
+	download := "https://get.docker.io/builds/Linux/x86_64/docker-latest.tgz"
+	if !strings.Contains(response, download) {
+		t.Fatalf("Response: " + response + " doesn't download from:" + download + "\n\n")
 	}
 }
 
