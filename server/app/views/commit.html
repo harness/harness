@@ -11,29 +11,12 @@
 			<dd><h1>{{ commit.duration | toDuration}}</h1></dd>
 		</dl>
 
-		<dl>
-			<dd class="large" ng-if="repo.remote == 'gitlab.com' || repo.remote == 'github.com' || repo.remote == 'enterprise.github.com' ">
-				<strong>
-					commit 
-					<a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/commit/{{ commit.sha }}" >{{ commit.sha | shortHash}}</a> 
-					to <a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/tree/{{ commit.branch }}">{{ commit.branch }}</a> branch
-				</strong>
-			</dd>
-			<dd class="large" ng-if="repo.remote == 'bitbucket.org' ">
-				<strong>
-					commit 
-					<a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/commits/{{ commit.sha }}" >{{ commit.sha | shortHash}}</a> 
-					to <a href="http://{{ repo.host }}/{{ repo.owner }}/{{ repo.name }}/src/?at={{ commit.branch }}">{{ commit.branch }}</a> branch
-				</strong>
-			</dd>
-			<dd class="large" ng-if="repo.remote != 'gitlab.com' && repo.remote != 'github.com' && repo.remote != 'enterprise.github.com' && repo.remote != 'bitbucket.org' ">
-				<strong>commit <u>{{ commit.sha | shortHash}}</u> to <u>{{ commit.branch }}</u> branch</strong>
-			</dd>
-			<dd ng-if="commit.finished_at != 0">{{ commit.finished_at | fromNow }}</dd>
-			<dd ng-if="commit.finished_at == 0 && commit.started_at != 0">Started {{ commit.started_at | fromNow }}</dd>
-			<dd ng-if="commit.finished_at == 0 && commit.started_at == 0">Created {{ commit.created_at}}</dd>
-		</dl>
-        </div>
+		<dl ng-include src="'/static/views/commit_detail.html'" ng-if="commit.pull_request.length == 0"></dl>
+		<dl ng-include src="'/static/views/commit_detail_pr.html'" ng-if="commit.pull_request.length != 0"></dl>
+		<dd ng-if="commit.finished_at != 0">{{ commit.finished_at | fromNow }}</dd>
+		<dd ng-if="commit.finished_at == 0 && commit.started_at != 0">Started {{ commit.started_at | fromNow }}</dd>
+		<dd ng-if="commit.finished_at == 0 && commit.started_at == 0">Created {{ commit.created_at}}</dd>
+	</div>
 </aside>
 
 <div id="main" class="output">
