@@ -58,6 +58,7 @@ func New() *web.Mux {
 	user.Use(middleware.RequireUser)
 	user.Get("/api/user/feed", handler.GetUserFeed)
 	user.Get("/api/user/repos", handler.GetUserRepos)
+	user.Post("/api/user/sync", handler.PostUserSync)
 	user.Get("/api/user", handler.GetUserCurrent)
 	user.Put("/api/user", handler.PutUser)
 	mux.Handle("/api/user*", user)

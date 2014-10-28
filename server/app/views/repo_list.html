@@ -1,7 +1,19 @@
+<div class="toast" ng-if="msg != undefined">
+	<span ng-if="msg == 'already'">sync already runned</span>
+	<span ng-if="msg == 'bad'">bad response</span>
+</div>
+
 <div id="repospage">
 	<nav>
 		<a href="/"><span class="fa fa-th"></span></a>
 		<a href="/">repositories</a>
+
+		<div class="options ng-scope">
+			<a class="pure-button pure-button-primary" ng-click="syncUser()" href="#">
+				<i class="fa fa-refresh"></i>
+				<span>Sync</span>
+			</a>
+		</div>
 	</nav>
 
 	<section>
