@@ -75,6 +75,7 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 			CloneURL: item.HttpRepoUrl,
 			GitURL:   item.HttpRepoUrl,
 			SSHURL:   item.SshRepoUrl,
+			URL:      item.Url,
 			Role:     &model.Perm{},
 		}
 
