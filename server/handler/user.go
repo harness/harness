@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/server/datastore"
+	"github.com/drone/drone/server/sync"
 	"github.com/drone/drone/shared/model"
 	"github.com/goji/context"
 	"github.com/zenazn/goji/web"
@@ -110,4 +112,38 @@ func GetUserFeed(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(&repos)
+}
+
+// PostUserSync accepts a request to post user sync
+//
+//     POST /api/user/sync
+//
+func PostUserSync(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var user = ToUser(c)
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	var remote = remote.Lookup(user.Remote)
+	if remote == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	if user.Syncing {
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
+
+	user.Syncing = true
+	if err := datastore.PutUser(ctx, user); err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	go sync.SyncUser(ctx, user, remote)
+	w.WriteHeader(http.StatusNoContent)
+	return
 }

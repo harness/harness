@@ -198,9 +198,22 @@ app.run(['$location', '$rootScope', '$routeParams', 'feed', 'stdout', function($
 
 
 
-app.controller("AccountReposController", function($scope, $http, user) {
+app.controller("AccountReposController", function($scope, $http, $location, user) {
 
 	$scope.user = user;
+
+	$scope.syncUser = function() {
+		$http({method: 'POST', url: '/api/user/sync' }).success(function(data){
+			$location.search('return_to', $location.$$path).path('/sync')
+		}).error(function(data, status){
+			if (status == 409) {
+				$scope.msg = 'already'
+			} else {
+				$scope.msg = 'bad'
+			}
+			$scope.$apply();
+		});
+	}
 
 	// get the user details
 	$http({method: 'GET', url: '/api/user/repos'}).
