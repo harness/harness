@@ -3,6 +3,7 @@ package handler
 import (
 	"io"
 	"net/http"
+	"net/url"
 	"path/filepath"
 
 	"github.com/drone/drone/server/blobstore"
@@ -23,8 +24,8 @@ func GetOutput(c web.C, w http.ResponseWriter, r *http.Request) {
 		branch = c.URLParams["branch"]
 		hash   = c.URLParams["commit"]
 	)
-
-	path := filepath.Join(host, owner, name, branch, hash)
+	_branch, _ := url.QueryUnescape(branch)
+	path := filepath.Join(host, owner, name, _branch, hash)
 	rc, err := blobstore.GetReader(ctx, path)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)

@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 
 	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/server/worker"
@@ -43,8 +44,9 @@ func GetCommit(c web.C, w http.ResponseWriter, r *http.Request) {
 		hash   = c.URLParams["commit"]
 		repo   = ToRepo(c)
 	)
+	_branch, _ := url.QueryUnescape(branch)
 
-	commit, err := datastore.GetCommitSha(ctx, repo, branch, hash)
+	commit, err := datastore.GetCommitSha(ctx, repo, _branch, hash)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -67,8 +69,9 @@ func PostCommit(c web.C, w http.ResponseWriter, r *http.Request) {
 		hash   = c.URLParams["commit"]
 		repo   = ToRepo(c)
 	)
+	_branch, _ := url.QueryUnescape(branch)
 
-	commit, err := datastore.GetCommitSha(ctx, repo, branch, hash)
+	commit, err := datastore.GetCommitSha(ctx, repo, _branch, hash)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
