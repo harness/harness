@@ -248,6 +248,9 @@ app.controller("CommitController", function($scope, $http, $route, $routeParams,
 			}
 		});
 	}
+	var encode = function(str) {
+		return encodeURIComponent(str.replace(/\//g, "%2F"));
+	}
 
 	feed.subscribe(function(item) {
 		if (item.commit.sha    == commit &&
@@ -275,12 +278,12 @@ app.controller("CommitController", function($scope, $http, $route, $routeParams,
 		});
 
 	// load the repo commit data
-	$http({method: 'GET', url: '/api/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit}).
+	$http({method: 'GET', url: '/api/repos/'+remote+'/'+owner+"/"+name+"/branches/"+encode(branch)+"/commits/"+encode(commit)}).
 		success(function(data, status, headers, config) {
 			$scope.commit = data;
 
 			if (data.status!='Started' && data.status!='Pending') {
-				$http({method: 'GET', url: '/api/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/console"}).
+				$http({method: 'GET', url: '/api/repos/'+remote+'/'+owner+"/"+name+"/branches/"+encode(branch)+"/commits/"+encode(commit)+"/console"}).
 					success(function(data, status, headers, config) {
 						var lineFormatter = new Drone.LineFormatter();
 						var el = document.querySelector('#output');
@@ -309,7 +312,7 @@ app.controller("CommitController", function($scope, $http, $route, $routeParams,
 	}
 
 	$scope.rebuildCommit = function() {
-        $http({method: 'POST', url: '/api/repos/'+remote+'/'+owner+'/'+name+'/'+'branches/'+branch+'/'+'commits/'+commit+'?action=rebuild' });
+        $http({method: 'POST', url: '/api/repos/'+remote+'/'+owner+'/'+name+'/'+'branches/'+encode(branch)+'/'+'commits/'+encode(commit)+'?action=rebuild' });
 	}
 
 
