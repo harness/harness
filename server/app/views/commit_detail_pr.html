@@ -1,0 +1,31 @@
+<!-- GITHUB -->
+<dd class="large" ng-if="repo.remote == 'github.com' || repo.remote == 'enterprise.github.com' ">
+	<strong>
+		Pull Request 
+		<a href="{{ repo.url }}/pull/{{ commit.pull_request }}" >#{{ commit.pull_request }}</a>
+	</strong>
+</dd>
+<!-- /GITHUB -->
+<!-- GITLAB -->
+<dd class="large" ng-if="repo.remote == 'gitlab.com'">
+	<strong>
+		Pull Request 
+		<a href="{{ repo.url }}/merge_requests/{{ commit.pull_request }}" >#{{ commit.pull_request }}</a>
+	</strong>
+</dd>
+<!-- /GITLAB -->
+<!-- BITBUCKET -->
+<dd class="large" ng-if="repo.remote == 'bitbucket.org' ">
+	<strong>
+		Pull Request 
+		<a href="{{ repo.url }}/pull-requests/{{ commit.pull_request }}" >#{{ commit.pull_request }}</a>
+	</strong>
+</dd>
+<!-- /BITBUCKET -->
+<!-- STASH -->
+<dd class="large" ng-if="repo.remote != 'gitlab.com' && repo.remote != 'github.com' && repo.remote != 'enterprise.github.com' && repo.remote != 'bitbucket.org' ">
+	<strong>			
+		Pull Request #{{ commit.pull_request }}
+	</strong>
+</dd>
+<!-- /STASH -->

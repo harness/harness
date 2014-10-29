@@ -70,7 +70,7 @@ func TestSSHNoArtifact(t *testing.T) {
 		t.Error("Expect script not to contains scp command")
 	}
 
-	if !strings.Contains(bscr, "ssh -o StrictHostKeyChecking=no -p 22 user@test.example.com /opt/bin/redeploy.sh") {
+	if !strings.Contains(bscr, "ssh -o StrictHostKeyChecking=no -p 22 user@test.example.com \"/opt/bin/redeploy.sh\"") {
 		t.Error("Expect script to contains ssh command")
 	}
 }
