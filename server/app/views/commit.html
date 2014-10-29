@@ -11,8 +11,8 @@
 			<dd><h1>{{ commit.duration | toDuration}}</h1></dd>
 		</dl>
 
-		<dl ng-include src="'/static/views/commit_detail.html'" ng-if="commit.pull_request.length == 0"></dl>
-		<dl ng-include src="'/static/views/commit_detail_pr.html'" ng-if="commit.pull_request.length != 0"></dl>
+		<dl ng-include="'/static/views/commit_detail.html'" ng-show="commit.pull_request.length == 0"></dl>
+		<dl ng-include="'/static/views/commit_detail_pr.html'" ng-show="commit.pull_request.length != 0"></dl>
 		<dd ng-if="commit.finished_at != 0">{{ commit.finished_at | fromNow }}</dd>
 		<dd ng-if="commit.finished_at == 0 && commit.started_at != 0">Started {{ commit.started_at | fromNow }}</dd>
 		<dd ng-if="commit.finished_at == 0 && commit.started_at == 0">Created {{ commit.created_at}}</dd>
