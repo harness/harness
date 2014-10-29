@@ -228,6 +228,13 @@ func TestCommitstore(t *testing.T) {
 			g.Assert(commits[0].RepoID).Equal(commit1.RepoID)
 			g.Assert(commits[0].Branch).Equal(commit1.Branch)
 			g.Assert(commits[0].Sha).Equal(commit1.Sha)
+
+			verboseCommits, err := cs.GetCommitListUserVerbose(&model.User{ID: 1})
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(verboseCommits)).Equal(2)
+			g.Assert(verboseCommits[0].RepoID).Equal(commit1.RepoID)
+			g.Assert(verboseCommits[0].Branch).Equal(commit1.Branch)
+			g.Assert(verboseCommits[0].Sha).Equal(commit1.Sha)
 		})
 
 		g.It("Should enforce unique Sha + Branch", func() {
