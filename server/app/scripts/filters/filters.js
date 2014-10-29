@@ -1,7 +1,17 @@
 'use strict';
 
 (function () {
-
+  /**
+   * encode is a helper function that return an encoded string 
+   * replaced slash with "%2F" and encodeURIComponent in order to
+   * process branch and commit containing control chars like slash
+   * hash (#), and so on.
+   */ 
+  function encode() {
+    return function(data) {
+      return encodeURIComponent(data.replace(/\//g, "%2F");
+    }
+  }
   /**
    * fromNow is a helper function that returns a human readable
    * string for the elapsed time between the given unix date and the
@@ -190,6 +200,7 @@
     .module('app')
     .filter('badgeMarkdown', badgeMarkdown)
     .filter('badgeMarkup', badgeMarkup)
+    .filter('encode', encode)
     .filter('fromNow', fromNow)
     .filter('fullName', fullName)
     .filter('fullPath', fullPath)
