@@ -90,12 +90,8 @@ func (c *Client) run(method, path string, in, out interface{}) error {
 		return err
 	}
 
-	// Read the bytes from the body (make sure we defer close the body)
+	// make sure we defer close the body
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
 
 	// Check for an http error status (ie not 200 StatusOK)
 	switch resp.StatusCode {
@@ -111,9 +107,9 @@ func (c *Client) run(method, path string, in, out interface{}) error {
 		return ErrInternalServer
 	}
 
-	// Unmarshall the JSON response
+	// Decode the JSON response
 	if out != nil {
-		return json.Unmarshal(body, out)
+		return json.NewDecoder(resp.Body).Decode(out)
 	}
 
 	return nil

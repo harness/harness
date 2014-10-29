@@ -198,9 +198,22 @@ app.run(['$location', '$rootScope', '$routeParams', 'feed', 'stdout', function($
 
 
 
-app.controller("AccountReposController", function($scope, $http, user) {
+app.controller("AccountReposController", function($scope, $http, $location, user) {
 
 	$scope.user = user;
+
+	$scope.syncUser = function() {
+		$http({method: 'POST', url: '/api/user/sync' }).success(function(data){
+			$location.search('return_to', $location.$$path).path('/sync')
+		}).error(function(data, status){
+			if (status == 409) {
+				$scope.msg = 'already'
+			} else {
+				$scope.msg = 'bad'
+			}
+			$scope.$apply();
+		});
+	}
 
 	// get the user details
 	$http({method: 'GET', url: '/api/user/repos'}).
@@ -223,94 +236,4 @@ app.controller("AccountReposController", function($scope, $http, user) {
 	$scope.byRemote = function(entry){
 			return $scope.remote == "" || $scope.remote == entry.remote; 
 		}; 
-});
-
-
-app.controller("CommitController", function($scope, $http, $route, $routeParams, stdout, feed) {
-
-	var remote = $routeParams.remote;
-	var owner  = $routeParams.owner;
-	var name   = $routeParams.name;
-	var branch = $routeParams.branch;
-	var commit = $routeParams.commit;
-	$scope.console='';
-	
-	var handleOutput = function(id, clearConsole) {
-		var lineFormatter = new Drone.LineFormatter();
-		var el = document.querySelector('#output');
-		if(clearConsole === true) {
-			el.innerHTML = ''; 
-		}
-		stdout.subscribe(id, function(out){
-			angular.element(el).append(lineFormatter.format(out));
-			if ($scope.following) {
-				window.scrollTo(0, document.body.scrollHeight);
-			}
-		});
-	}
-
-	feed.subscribe(function(item) {
-		if (item.commit.sha    == commit &&
-			item.commit.branch == branch) {
-			if(item.commit.status == "Started") {
-				handleOutput(item.commit.id, true);
-			}
-			$scope.commit = item.commit;
-			$scope.$apply();
-
-		} else {
-			// we trigger an toast notification so the
-			// user is aware another build started
-			
-		}
-	});
-
-	// load the repo meta-data
-	$http({method: 'GET', url: '/api/repos/'+remote+'/'+owner+"/"+name}).
-		success(function(data, status, headers, config) {
-			$scope.repo = data;
-		}).
-		error(function(data, status, headers, config) {
-			console.log(data);
-		});
-
-	// load the repo commit data
-	$http({method: 'GET', url: '/api/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit}).
-		success(function(data, status, headers, config) {
-			$scope.commit = data;
-
-			if (data.status!='Started' && data.status!='Pending') {
-				$http({method: 'GET', url: '/api/repos/'+remote+'/'+owner+"/"+name+"/branches/"+branch+"/commits/"+commit+"/console"}).
-					success(function(data, status, headers, config) {
-						var lineFormatter = new Drone.LineFormatter();
-						var el = document.querySelector('#output');
-						angular.element(el).append(lineFormatter.format(data));
-					}).
-					error(function(data, status, headers, config) {
-						console.log(data);
-					});
-				return;
-			}
-
-			handleOutput(data.id, false);
-		
-		}).
-		error(function(data, status, headers, config) {
-			console.log(data);
-		});
-
-	$scope.following = false;
-	$scope.follow = function() {
-		$scope.following = true;
-		window.scrollTo(0, document.body.scrollHeight);
-	}
-	$scope.unfollow = function() {
-		$scope.following = false;
-	}
-
-	$scope.rebuildCommit = function() {
-        $http({method: 'POST', url: '/api/repos/'+remote+'/'+owner+'/'+name+'/'+'branches/'+branch+'/'+'commits/'+commit+'?action=rebuild' });
-	}
-
-
 });
