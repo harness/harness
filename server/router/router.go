@@ -56,7 +56,6 @@ func New() *web.Mux {
 
 	user := web.New()
 	user.Use(middleware.RequireUser)
-	user.Get("/api/user/feed/verbose", handler.GetUserVerboseFeed)
 	user.Get("/api/user/feed", handler.GetUserFeed)
 	user.Get("/api/user/repos", handler.GetUserRepos)
 	user.Post("/api/user/sync", handler.PostUserSync)
