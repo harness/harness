@@ -56,15 +56,6 @@ func (db *Commitstore) GetCommitListUser(user *model.User) ([]*model.CommitRepo,
 	return commits, err
 }
 
-// GetCommitListUserVerbose retrieves a list of latest commits
-// from the datastore accessible to the specified user and including
-// any active builds
-func (db *Commitstore) GetCommitListUserVerbose(user *model.User) ([]*model.CommitRepo, error) {
-	var commits []*model.CommitRepo
-	var err = meddler.QueryAll(db, &commits, rebind(commitListUserVerboseQuery), user.ID)
-	return commits, err
-}
-
 // PostCommit saves a commit in the datastore.
 func (db *Commitstore) PostCommit(commit *model.Commit) error {
 	if commit.Created == 0 {
@@ -125,28 +116,6 @@ WHERE c.repo_id = r.repo_id
 	  AND c.commit_status NOT IN ('Started', 'Pending')
 	GROUP BY r.repo_id
 ) ORDER BY c.commit_created DESC LIMIT 5;
-`
-
-// SQL query to retrieve the latest Commits accessible
-// to ta specific user account. This query includes many
-// results and doesn't filter out active builds.
-const commitListUserVerboseQuery = `
-SELECT r.repo_remote, r.repo_host, r.repo_owner, r.repo_name, c.*
-FROM
- commits c
-,repos r
-WHERE c.repo_id = r.repo_id
-  AND c.commit_id IN (
-	SELECT max(c.commit_id)
-	FROM
-	 commits c
-	,repos r
-	,perms p
-	WHERE c.repo_id = r.repo_id
-	  AND r.repo_id = p.repo_id
-	  AND p.user_id = ?
-	GROUP BY r.repo_id
-) ORDER BY c.commit_created DESC LIMIT 20;
 `
 
 // SQL query to retrieve the latest Commits across all branches.
