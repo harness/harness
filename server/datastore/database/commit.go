@@ -113,7 +113,6 @@ WHERE c.repo_id = r.repo_id
 	WHERE c.repo_id = r.repo_id
 	  AND r.repo_id = p.repo_id
 	  AND p.user_id = ?
-	  AND c.commit_status NOT IN ('Started', 'Pending')
 	GROUP BY r.repo_id
 ) ORDER BY c.commit_created DESC LIMIT 5;
 `
