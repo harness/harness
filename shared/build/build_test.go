@@ -497,6 +497,27 @@ func TestWriteIdentifyFile(t *testing.T) {
 	}
 }
 
+func TestWriteSSHConfigFile(t *testing.T) {
+	// temporary directory to store file
+	dir, _ := ioutil.TempDir("", "drone-test-")
+	defer os.RemoveAll(dir)
+
+	b := Builder{}
+	b.SSHConfig = []byte("Host gitlab.myorg.com: ...")
+	b.writeSSHConfigFile(dir)
+
+	// persist a dummy id_rsa keyfile to disk
+	sshconfig, err := ioutil.ReadFile(filepath.Join(dir, "config"))
+	if err != nil {
+		t.Errorf("Expected id_rsa file saved to disk")
+	}
+
+	if string(sshconfig) != string(b.SSHConfig) {
+		t.Errorf("Expected config value saved as %s, got %s", b.SSHConfig, sshconfig)
+	}
+}
+
+
 func TestWriteProxyScript(t *testing.T) {
 	// temporary directory to store file
 	dir, _ := ioutil.TempDir("", "drone-test-")

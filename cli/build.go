@@ -29,6 +29,11 @@ func NewBuildCommand() cli.Command {
 				Value: "",
 				Usage: "identify file injected in the container",
 			},
+			cli.StringFlag{
+				Name:  "ssh-config",
+				Value: "",
+				Usage: "ssh-config file injected in the container",
+			},
 			cli.BoolFlag{
 				Name:  "p",
 				Usage: "runs drone build in a privileged container",
@@ -67,6 +72,7 @@ func NewBuildCommand() cli.Command {
 func buildCommandFunc(c *cli.Context) {
 	var privileged = c.Bool("p")
 	var identity = c.String("i")
+	var sshconfig = c.String("ssh-config")
 	var deploy = c.Bool("deploy")
 	var publish = c.Bool("publish")
 	var path string
@@ -99,12 +105,12 @@ func buildCommandFunc(c *cli.Context) {
 	log.SetPriority(log.LOG_DEBUG) //LOG_NOTICE
 	docker.Logging = false
 
-	var exit, _ = run(path, identity, dockerhost, dockercert, dockerkey, publish, deploy, privileged)
+	var exit, _ = run(path, identity, sshconfig, dockerhost, dockercert, dockerkey, publish, deploy, privileged)
 	os.Exit(exit)
 }
 
 // TODO this has gotten a bit out of hand. refactor input params
-func run(path, identity, dockerhost, dockercert, dockerkey string, publish, deploy, privileged bool) (int, error) {
+func run(path, identity, sshconfig, dockerhost, dockercert, dockerkey string, publish, deploy, privileged bool) (int, error) {
 	dockerClient, err := docker.NewHostCertFile(dockerhost, dockercert, dockerkey)
 	if err != nil {
 		log.Err(err.Error())
@@ -173,11 +179,22 @@ func run(path, identity, dockerhost, dockercert, dockerkey string, publish, depl
 		}
 	}
 
+	// ssh-config file to import into container
+	var sshconfigcontent []byte
+	if len(sshconfig) != 0 {
+		sshconfigcontent, err = ioutil.ReadFile(sshconfig)
+		if err != nil {
+			fmt.Printf("[Error] Could not find or read ssh-config file %s\n", sshconfig)
+			return EXIT_STATUS, err
+		}
+	}
+
 	// loop through and create builders
 	builder := build.New(dockerClient)
 	builder.Build = s
 	builder.Repo = &code
 	builder.Key = key
+	builder.SSHConfig = sshconfigcontent
 	builder.Stdout = os.Stdout
 	builder.Timeout = 300 * time.Minute
 	builder.Privileged = privileged
