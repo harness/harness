@@ -91,7 +91,7 @@ func PostRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	if len(repo.PublicKey) == 0 || len(repo.PrivateKey) == 0 {
 		key, err := sshutil.GeneratePrivateKey()
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		repo.PublicKey = sshutil.MarshalPublicKey(&key.PublicKey)
@@ -108,12 +108,12 @@ func PostRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	// if necessary, register the public key
 	var hook = fmt.Sprintf("%s/api/hook/%s/%s", httputil.GetURL(r), repo.Remote, repo.Token)
 	if err := remote.Activate(user, repo, hook); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := datastore.PutRepo(ctx, repo); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
@@ -143,7 +143,7 @@ func PutRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 		PrivateKey  *string `json:"private_key"`
 	}{}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -167,7 +167,7 @@ func PutRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 		repo.PrivateKey = *in.PrivateKey
 	}
 	if err := datastore.PutRepo(ctx, repo); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(repo)
