@@ -40,8 +40,8 @@ func Test_Modulus(t *testing.T) {
 			}
 
 			n.Write(b)
-			g.Assert(b.String()).Equal(`export username=foo
-export apiToken=bar
+			g.Assert(b.String()).Equal(`export username="foo"
+export apiToken="bar"
 [ -f /usr/bin/sudo ] || npm install -g jitsu
 [ -f /usr/bin/sudo ] && sudo npm install -g jitsu
 echo '#DRONE:6a69747375206465706c6f79'

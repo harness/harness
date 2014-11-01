@@ -40,7 +40,7 @@ func Test_Modulus(t *testing.T) {
 			}
 
 			m.Write(b)
-			g.Assert(b.String()).Equal(`export MODULUS_TOKEN=bar
+			g.Assert(b.String()).Equal(`export MODULUS_TOKEN="bar"
 [ -f /usr/bin/npm ] || echo ERROR: npm is required for modulus.io deployments
 [ -f /usr/bin/npm ] || exit 1
 [ -f /usr/bin/sudo ] || npm install -g modulus

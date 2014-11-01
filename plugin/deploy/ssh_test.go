@@ -81,7 +81,7 @@ func TestSSHOneArtifact(t *testing.T) {
 		t.Fatalf("Can't unmarshal deploy script: %s", err)
 	}
 
-	if !strings.Contains(bscr, "ARTIFACT=build.result") {
+	if !strings.Contains(bscr, `ARTIFACT="build.result"`) {
 		t.Error("Expect script to contains artifact")
 	}
 
@@ -96,7 +96,7 @@ func TestSSHMultiArtifact(t *testing.T) {
 		t.Fatalf("Can't unmarshal deploy script: %s", err)
 	}
 
-	if !strings.Contains(bscr, "ARTIFACT=${PWD##*/}.tar.gz") {
+	if !strings.Contains(bscr, `ARTIFACT="${PWD##*/}.tar.gz"`) {
 		t.Errorf("Expect script to contains artifact")
 	}
 
@@ -111,11 +111,11 @@ func TestSSHGitArchive(t *testing.T) {
 		t.Fatalf("Can't unmarshal deploy script: %s", err)
 	}
 
-	if !strings.Contains(bscr, "COMMIT=$(git rev-parse HEAD)") {
+	if !strings.Contains(bscr, `COMMIT="$(git rev-parse HEAD)"`) {
 		t.Errorf("Expect script to contains commit ref")
 	}
 
-	if !strings.Contains(bscr, "ARTIFACT=${PWD##*/}-${COMMIT}.tar.gz") {
+	if !strings.Contains(bscr, `ARTIFACT="${PWD##*/}-${COMMIT}.tar.gz"`) {
 		t.Errorf("Expect script to contains artifact")
 	}
 
