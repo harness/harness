@@ -43,7 +43,7 @@ func (b *Buildfile) WriteComment(comment string) {
 // are not echoed back to the console, and are
 // kept private by default.
 func (b *Buildfile) WriteEnv(key, value string) {
-	b.WriteString(fmt.Sprintf("export %s=%s\n", key, value))
+	b.WriteString(fmt.Sprintf("export %s=%q\n", key, value))
 }
 
 // WriteHost adds an entry to the /etc/hosts file.
