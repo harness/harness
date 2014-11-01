@@ -35,7 +35,7 @@ func TestWrite(t *testing.T) {
 
 	f = &Buildfile{}
 	f.WriteEnv("FOO", "BAR")
-	got, want = f.String(), "export FOO=BAR\n"
+	got, want = f.String(), "export FOO=\"BAR\"\n"
 	if got != want {
 		t.Errorf("Exepected WriteEnv returned %s, got %s", want, got)
 	}
