@@ -115,7 +115,7 @@ func GetCC(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	repo, err := datastore.GetRepoName(ctx, host, owner, name)
 	if err != nil {
-		w.Write(defaultBadge.none)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	commits, err := datastore.GetCommitList(ctx, repo)
