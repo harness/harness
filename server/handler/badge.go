@@ -33,7 +33,7 @@ func GetBadge(c web.C, w http.ResponseWriter, r *http.Request) {
 		host   = c.URLParams["host"]
 		owner  = c.URLParams["owner"]
 		name   = c.URLParams["name"]
-		branch = c.URLParams["branch"]
+		branch = r.FormValue("branch")
 	)
 
 	// an SVG response is always served, even when error, so

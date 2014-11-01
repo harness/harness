@@ -203,9 +203,16 @@ func TestCommitstore(t *testing.T) {
 				Sha:    "0a74b46d7d62b737b6906897f48dbeb72cfda222",
 				Status: model.StatusSuccess,
 			}
+			commit4 := model.Commit{
+				RepoID: repo2.ID,
+				Branch: "bar",
+				Sha:    "d923a61d8ad3d8d02db4fef0bf40a726bad0fc03",
+				Status: model.StatusStarted,
+			}
 			cs.PostCommit(&commit1)
 			cs.PostCommit(&commit2)
 			cs.PostCommit(&commit3)
+			cs.PostCommit(&commit4)
 			perm1 := model.Perm{
 				RepoID: repo1.ID,
 				UserID: 1,
@@ -228,6 +235,8 @@ func TestCommitstore(t *testing.T) {
 			g.Assert(commits[0].RepoID).Equal(commit1.RepoID)
 			g.Assert(commits[0].Branch).Equal(commit1.Branch)
 			g.Assert(commits[0].Sha).Equal(commit1.Sha)
+			g.Assert(commits[1].Sha).Equal(commit4.Sha)
+			g.Assert(commits[1].Status).Equal(commit4.Status)
 		})
 
 		g.It("Should enforce unique Sha + Branch", func() {
