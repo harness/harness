@@ -103,7 +103,7 @@ func (b *Build) Write(f *buildfile.Buildfile, r *repo.Repo) {
 func (b *Build) WriteBuild(f *buildfile.Buildfile) {
 	// append environment variables
 	for _, env := range b.Env {
-		parts := strings.Split(env, "=")
+		parts := strings.SplitN(env, "=", 2)
 		if len(parts) != 2 {
 			continue
 		}
