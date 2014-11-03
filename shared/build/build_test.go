@@ -509,7 +509,7 @@ func TestWriteSSHConfigFile(t *testing.T) {
 	// persist a dummy id_rsa keyfile to disk
 	sshconfig, err := ioutil.ReadFile(filepath.Join(dir, "config"))
 	if err != nil {
-		t.Errorf("Expected id_rsa file saved to disk")
+		t.Errorf("Expected config file saved to disk")
 	}
 
 	if string(sshconfig) != string(b.SSHConfig) {
