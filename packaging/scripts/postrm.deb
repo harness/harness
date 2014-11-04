@@ -18,6 +18,11 @@ systemd() {
   rm -f /lib/systemd/system/drone.service
 }
 
+sysv() {
+  update-rc.d -f drone remove
+  rm -f /etc/init.d/drone
+}
+
 validate_ver() {
   echo "$(version) < $1" | bc
 }
@@ -25,7 +30,7 @@ validate_ver() {
 case "$(dist)" in
   debian)
     if [ "$(version)" -lt "8" ]; then
-      upstart
+      sysv
     else
       systemd
     fi
