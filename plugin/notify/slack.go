@@ -42,7 +42,7 @@ func (s *Slack) getMessage(context *model.Request, message string) string {
 	// drone/drone#3333333
 	linktext := context.Repo.Owner + "/" + context.Repo.Name + "#" + context.Commit.ShaShort()
 
-	return fmt.Sprintf(message, linktext, url, context.Commit.Branch, context.Commit.Author)
+	return fmt.Sprintf(message, url, linktext, context.Commit.Branch, context.Commit.Author)
 }
 
 func (s *Slack) sendStarted(context *model.Request) error {
