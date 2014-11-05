@@ -44,7 +44,8 @@ func New() *web.Mux {
 	repos.Put("/api/repos/:host/:owner/:name", handler.PutRepo)
 	repos.Post("/api/repos/:host/:owner/:name", handler.PostRepo)
 	repos.Delete("/api/repos/:host/:owner/:name", handler.DelRepo)
-	mux.Handle("/api/repos/:host/:owner/:name*", repos)
+	mux.Handle("/api/repos/:host/:owner/:name", repos)
+	mux.Handle("/api/repos/:host/:owner/:name/*", repos)
 
 	users := web.New()
 	users.Use(middleware.RequireUserAdmin)
@@ -52,7 +53,8 @@ func New() *web.Mux {
 	users.Post("/api/users/:host/:login", handler.PostUser)
 	users.Delete("/api/users/:host/:login", handler.DelUser)
 	users.Get("/api/users", handler.GetUserList)
-	mux.Handle("/api/users*", users)
+	mux.Handle("/api/users", users)
+	mux.Handle("/api/users/*", users)
 
 	user := web.New()
 	user.Use(middleware.RequireUser)
@@ -61,7 +63,8 @@ func New() *web.Mux {
 	user.Post("/api/user/sync", handler.PostUserSync)
 	user.Get("/api/user", handler.GetUserCurrent)
 	user.Put("/api/user", handler.PutUser)
-	mux.Handle("/api/user*", user)
+	mux.Handle("/api/user", user)
+	mux.Handle("/api/user/*", user)
 
 	work := web.New()
 	work.Use(middleware.RequireUserAdmin)
@@ -71,7 +74,8 @@ func New() *web.Mux {
 	work.Get("/api/workers", handler.GetWorkers)
 	work.Post("/api/workers", handler.PostWorker)
 	work.Delete("/api/workers", handler.DelWorker)
-	mux.Handle("/api/work*", work)
+	mux.Handle("/api/work", work)
+	mux.Handle("/api/work/*", work)
 
 	return mux
 }
