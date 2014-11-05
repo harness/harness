@@ -23,7 +23,7 @@ var request = &model.Request{
 }
 */
 
-var slackExpectedLink = "<owner/repo#abc|http://examplehost.com/examplegit.com/owner/repo/example/abc>"
+var slackExpectedLink = "<http://examplehost.com/examplegit.com/owner/repo/example/abc|owner/repo#abc>"
 var slackExpectedBase = slackExpectedLink + " (example) by Test User"
 
 func Test_slackStartedMessage(t *testing.T) {
