@@ -463,17 +463,17 @@ func (b *Builder) writeDockerfile(dir string) error {
 	default:
 		// all other images are assumed to use
 		// the root user.
-		dockerfile.WriteUser("root")
-		dockerfile.WriteEnv("HOME", "/root")
+		dockerfile.WriteUser(b.Build.Docker.GetUser())
+		dockerfile.WriteEnv("HOME", b.Build.Docker.GetHome())
 		dockerfile.WriteEnv("LANG", "en_US.UTF-8")
 		dockerfile.WriteEnv("LANGUAGE", "en_US:en")
-		dockerfile.WriteEnv("LOGNAME", "root")
+		dockerfile.WriteEnv("LOGNAME", b.Build.Docker.GetUser())
 		dockerfile.WriteEnv("TERM", "xterm")
 		dockerfile.WriteEnv("SHELL", "/bin/bash")
 		dockerfile.WriteEnv("GOPATH", "/var/cache/drone")
-		dockerfile.WriteAdd("id_rsa", "/root/.ssh/id_rsa")
-		dockerfile.WriteRun("chmod 600 /root/.ssh/id_rsa")
-		dockerfile.WriteRun("echo 'StrictHostKeyChecking no' > /root/.ssh/config")
+		dockerfile.WriteAdd("id_rsa", b.Build.Docker.GetHome() + "/.ssh/id_rsa")
+		dockerfile.WriteRun("chmod 600 " + b.Build.Docker.GetHome() + "/.ssh/id_rsa")
+		dockerfile.WriteRun("echo 'StrictHostKeyChecking no' > " + b.Build.Docker.GetHome() + "/.ssh/config")
 	}
 
 	dockerfile.WriteAdd("proxy.sh", "/etc/drone.d/")
