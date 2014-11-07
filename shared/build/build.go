@@ -89,6 +89,9 @@ type Builder struct {
 	services []*docker.Container
 
 	dockerClient *docker.Client
+
+	User       string
+	WorkingDir string
 }
 
 func (b *Builder) Run() error {
@@ -218,6 +221,37 @@ func (b *Builder) setup() error {
 		b.services = append(b.services, info)
 	}
 
+	var img *docker.Image
+
+	// check for build container (ie bradrydzewski/go:1.2)
+	// and download if it doesn't already exist
+	img, err = b.dockerClient.Images.Inspect(b.Build.Image)
+	if err == docker.ErrNotFound {
+		// download the image if it doesn't exist
+		if err := b.dockerClient.Images.Pull(b.Build.Image); err != nil {
+			return err
+		}
+
+		img, err = b.dockerClient.Images.Inspect(b.Build.Image)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		log.Errf("failed to inspect image %s", b.Build.Image)
+	}
+
+	if img.Config != nil && img.Config.User != "" {
+		b.User = img.Config.User
+	} else {
+		b.User = "root"
+	}
+
+	if img.Config != nil && img.Config.WorkingDir != "" {
+		b.WorkingDir = img.Config.WorkingDir
+	} else {
+		b.WorkingDir = "/root"
+	}
+
 	if err := b.writeIdentifyFile(dir); err != nil {
 		return err
 	}
@@ -236,17 +270,6 @@ func (b *Builder) setup() error {
 
 	// debugging
 	log.Info("creating build image")
-
-	// check for build container (ie bradrydzewski/go:1.2)
-	// and download if it doesn't already exist
-	if _, err := b.dockerClient.Images.Inspect(b.Build.Image); err == docker.ErrNotFound {
-		// download the image if it doesn't exist
-		if err := b.dockerClient.Images.Pull(b.Build.Image); err != nil {
-			return err
-		}
-	} else if err != nil {
-		log.Errf("failed to inspect image %s", b.Build.Image)
-	}
 
 	// create the Docker image
 	id := createUID()
@@ -464,16 +487,20 @@ func (b *Builder) writeDockerfile(dir string) error {
 		// all other images are assumed to use
 		// the root user.
 		dockerfile.WriteUser("root")
-		dockerfile.WriteEnv("HOME", "/root")
+		dockerfile.WriteAdd("id_rsa", fmt.Sprintf("%s/.ssh/id_rsa", b.WorkingDir))
+		dockerfile.WriteRun(fmt.Sprintf("chmod 600 %s/.ssh/id_rsa", b.WorkingDir))
+		dockerfile.WriteRun(fmt.Sprintf("chown %s:%s %s/.ssh/id_rsa", b.User, b.User, b.WorkingDir))
+		dockerfile.WriteRun(fmt.Sprintf("chown %s:%s /usr/local/bin/drone", b.User, b.User))
+		dockerfile.WriteRun(fmt.Sprintf("chown -R %s:%s /var/cache/drone/", b.User, b.User))
+		dockerfile.WriteUser(b.User)
+		dockerfile.WriteEnv("HOME", b.WorkingDir)
 		dockerfile.WriteEnv("LANG", "en_US.UTF-8")
 		dockerfile.WriteEnv("LANGUAGE", "en_US:en")
-		dockerfile.WriteEnv("LOGNAME", "root")
+		dockerfile.WriteEnv("LOGNAME", b.User)
 		dockerfile.WriteEnv("TERM", "xterm")
 		dockerfile.WriteEnv("SHELL", "/bin/bash")
 		dockerfile.WriteEnv("GOPATH", "/var/cache/drone")
-		dockerfile.WriteAdd("id_rsa", "/root/.ssh/id_rsa")
-		dockerfile.WriteRun("chmod 600 /root/.ssh/id_rsa")
-		dockerfile.WriteRun("echo 'StrictHostKeyChecking no' > /root/.ssh/config")
+		dockerfile.WriteRun(fmt.Sprintf("echo 'StrictHostKeyChecking no' > %s/.ssh/config", b.WorkingDir))
 	}
 
 	dockerfile.WriteAdd("proxy.sh", "/etc/drone.d/")
