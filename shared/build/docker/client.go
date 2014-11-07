@@ -162,6 +162,9 @@ var (
 	// Returned if the specified resource does not exist.
 	ErrNotFound = errors.New("Not Found")
 
+	// Return if something going wrong
+	ErrInternalServer = errors.New("Internal Server Error")
+
 	// Returned if the caller attempts to make a call or modify a resource
 	// for which the caller is not authorized.
 	//
@@ -219,6 +222,8 @@ func (c *Client) do(method, path string, in, out interface{}) error {
 
 	// Check for an http error status (ie not 200 StatusOK)
 	switch resp.StatusCode {
+	case 500:
+		return ErrInternalServer
 	case 404:
 		return ErrNotFound
 	case 403:
@@ -318,6 +323,8 @@ func (c *Client) stream(method, path string, in io.Reader, out io.Writer, header
 
 	// Check for an http error status (ie not 200 StatusOK)
 	switch resp.StatusCode {
+	case 500:
+		return ErrInternalServer
 	case 404:
 		return ErrNotFound
 	case 403:
