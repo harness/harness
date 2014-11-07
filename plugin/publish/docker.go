@@ -15,7 +15,7 @@ type Docker struct {
 	// Connection information for the docker server that will build the image
 	// Same format than DOCKER_HOST envvar, i.e.: tcp://172.16.1.1:2375
 	DockerHost string `yaml:"docker_host"`
-	// The Docker client version to download. This must match the docker version on the server
+	// The Docker client version to download. Will default to latest if not set
 	DockerVersion string `yaml:"docker_version"`
 
 	// Optional Arguments to allow finer-grained control of registry
@@ -38,27 +38,32 @@ type Docker struct {
 }
 
 // Write adds commands to the buildfile to do the following:
-// 1. Install the docker client in the Drone container.
+// 1. Install the docker client in the Drone container if required.
 // 2. Build a docker image based on the dockerfile defined in the config.
 // 3. Push that docker image to index.docker.io.
 // 4. Delete the docker image on the server it was build on so we conserve disk space.
 func (d *Docker) Write(f *buildfile.Buildfile) {
-	if len(d.DockerHost) == 0 || len(d.DockerVersion) == 0 || len(d.ImageName) == 0 {
+	if len(d.DockerHost) == 0 || len(d.ImageName) == 0 {
 		f.WriteCmdSilent(`echo -e "Docker Plugin: Missing argument(s)\n\n"`)
 		if len(d.DockerHost) == 0 {
 			f.WriteCmdSilent(`echo -e "\tdocker_host not defined in yaml"`)
-		}
-		if len(d.DockerVersion) == 0 {
-			f.WriteCmdSilent(`echo -e "\tdocker_version not defined in yaml"`)
 		}
 		if len(d.ImageName) == 0 {
 			f.WriteCmdSilent(`echo -e "\timage_name not defined in yaml"`)
 		}
 		return
 	}
-	// Download docker binary and install it as /usr/local/bin/docker
-	f.WriteCmd("wget -qO- https://get.docker.io/builds/Linux/x86_64/docker-" +
-		d.DockerVersion + ".tgz |sudo tar zxf - -C /")
+
+	// If docker version is unspecified, download and install the latest client
+	if len(d.DockerVersion) == 0 {
+		d.DockerVersion = "latest"
+	}
+
+	if len(d.DockerVersion) > 0 {
+		// Download docker binary and install it as /usr/local/bin/docker if it does not exist
+		f.WriteCmd("type -p docker || wget -qO- https://get.docker.io/builds/Linux/x86_64/docker-" +
+			d.DockerVersion + ".tgz |sudo tar zxf - -C /")
+	}
 
 	dockerPath := "."
 	if len(d.Dockerfile) != 0 {
