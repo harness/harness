@@ -132,7 +132,7 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 				}
 			}
 		})
-		.when('/:remote/:owner/:name/:branch/:commit', {
+		.when('/:remote/:owner/:name/:branch*\/:commit', {
 			templateUrl: '/static/views/commit.html',
 			controller: 'CommitController',
 			title: 'Recent Commits',
