@@ -40,7 +40,7 @@ func New() *web.Mux {
 	repos.Use(middleware.RequireRepoAdmin)
 	repos.Get(regexp.MustCompile(`^\/api\/repos\/(?P<host>(.*))\/(?P<owner>(.*))\/(?P<name>(.*))\/branches\/(?P<branch>(.*))\/commits\/(?P<commit>(.*))\/console$`), handler.GetOutput)
 	repos.Get(regexp.MustCompile(`^\/api\/repos\/(?P<host>(.*))\/(?P<owner>(.*))\/(?P<name>(.*))\/branches\/(?P<branch>(.*))\/commits\/(?P<commit>(.*))$`), handler.GetCommit)
-	repos.Post(regexp.MustCompile(`^\/api\/repos\/(?P<host>(.*))\/(?P<owner>(.*))\/(?P<name>(.*))\/branches\/(?P<branch>(.*))\/commits\/(?P<commit>(.*))\/console$`), handler.PostCommit)
+	repos.Post(regexp.MustCompile(`^\/api\/repos\/(?P<host>(.*))\/(?P<owner>(.*))\/(?P<name>(.*))\/branches\/(?P<branch>(.*))\/commits\/(?P<commit>(.*))$`), handler.PostCommit)
 	repos.Get("/api/repos/:host/:owner/:name/commits", handler.GetCommitList)
 	repos.Get("/api/repos/:host/:owner/:name", handler.GetRepo)
 	repos.Put("/api/repos/:host/:owner/:name", handler.PutRepo)
