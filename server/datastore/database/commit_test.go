@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/drone/drone/shared/model"
@@ -183,6 +184,13 @@ func TestCommitstore(t *testing.T) {
 				Owner:  "drone",
 				Name:   "drone",
 			}
+			repo3 := model.Repo{
+				UserID: 2,
+				Remote: "enterprise.github.com",
+				Host:   "github.drone.io",
+				Owner:  "droneio",
+				Name:   "drone",
+			}
 			rs.PostRepo(&repo1)
 			rs.PostRepo(&repo2)
 			commit1 := model.Commit{
@@ -209,10 +217,17 @@ func TestCommitstore(t *testing.T) {
 				Sha:    "d923a61d8ad3d8d02db4fef0bf40a726bad0fc03",
 				Status: model.StatusStarted,
 			}
+			commit5 := model.Commit{
+				RepoID: repo3.ID,
+				Branch: "bar",
+				Sha:    "d923a61d8ad3d8d02db4fef0bf40a726bad0fc03",
+				Status: model.StatusStarted,
+			}
 			cs.PostCommit(&commit1)
 			cs.PostCommit(&commit2)
 			cs.PostCommit(&commit3)
 			cs.PostCommit(&commit4)
+			cs.PostCommit(&commit5)
 			perm1 := model.Perm{
 				RepoID: repo1.ID,
 				UserID: 1,
@@ -237,6 +252,12 @@ func TestCommitstore(t *testing.T) {
 			g.Assert(commits[0].Sha).Equal(commit1.Sha)
 			g.Assert(commits[1].Sha).Equal(commit4.Sha)
 			g.Assert(commits[1].Status).Equal(commit4.Status)
+
+			commits, err = cs.GetCommitListActivity(&model.User{ID: 1})
+			fmt.Println(commits)
+			fmt.Println(err)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(commits)).Equal(3)
 		})
 
 		g.It("Should enforce unique Sha + Branch", func() {
