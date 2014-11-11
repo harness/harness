@@ -8,10 +8,13 @@ import (
 )
 
 const (
-	slackEndpoint       = "https://%s.slack.com/services/hooks/incoming-webhook?token=%s"
-	slackStartedMessage = "*Building* <%s|%s> (%s) by %s"
-	slackSuccessMessage = "*Success* <%s|%s> (%s) by %s"
-	slackFailureMessage = "*Failed* <%s|%s> (%s) by %s"
+	slackEndpoint               = "https://%s.slack.com/services/hooks/incoming-webhook?token=%s"
+	slackStartedMessage         = "*Building* <%s|%s> (%s) by %s"
+	slackStartedFallbackMessage = "Building %s (%s) by %s"
+	slackSuccessMessage         = "*Success* <%s|%s> (%s) by %s"
+	slackSuccessFallbackMessage = "Success %s (%s) by %s"
+	slackFailureMessage         = "*Failed* <%s|%s> (%s) by %s"
+	slackFailureFallbackMessage = "Failed %s (%s) by %s"
 )
 
 type Slack struct {
@@ -45,20 +48,30 @@ func (s *Slack) getMessage(context *model.Request, message string) string {
 	return fmt.Sprintf(message, url, linktext, context.Commit.Branch, context.Commit.Author)
 }
 
+func (s *Slack) getFallbackMessage(context *model.Request, message string) string {
+	// drone/drone#3333333
+	text := context.Repo.Owner + "/" + context.Repo.Name + "#" + context.Commit.ShaShort()
+
+	return fmt.Sprintf(message, text, context.Commit.Branch, context.Commit.Author)
+}
+
 func (s *Slack) sendStarted(context *model.Request) error {
-	return s.send(s.getMessage(context, slackStartedMessage)+"\n - "+context.Commit.Message, "warning")
+	return s.send(s.getMessage(context, slackStartedMessage)+"\n - "+context.Commit.Message,
+		s.getFallbackMessage(context, slackStartedFallbackMessage), "warning")
 }
 
 func (s *Slack) sendSuccess(context *model.Request) error {
-	return s.send(s.getMessage(context, slackSuccessMessage), "good")
+	return s.send(s.getMessage(context, slackSuccessMessage),
+		s.getFallbackMessage(context, slackSuccessFallbackMessage), "good")
 }
 
 func (s *Slack) sendFailure(context *model.Request) error {
-	return s.send(s.getMessage(context, slackFailureMessage), "danger")
+	return s.send(s.getMessage(context, slackFailureMessage),
+		s.getFallbackMessage(context, slackFailureFallbackMessage), "danger")
 }
 
 // helper function to send HTTP requests
-func (s *Slack) send(msg string, color string) error {
+func (s *Slack) send(msg string, fallback string, color string) error {
 	type Attachment struct {
 		Fallback string   `json:"fallback"`
 		Text     string   `json:"text"`
@@ -68,7 +81,7 @@ func (s *Slack) send(msg string, color string) error {
 
 	attachments := []Attachment{
 		Attachment{
-			msg,
+			fallback,
 			msg,
 			color,
 			[]string{"fallback", "text"},
