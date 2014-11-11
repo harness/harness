@@ -111,6 +111,12 @@ func (c *Channel) start() {
 }
 
 func replay(s *Subscription, history []interface{}) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("recoved from panic", r)
+		}
+	}()
+
 	for _, msg := range history {
 		s.send <- msg
 	}
