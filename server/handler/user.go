@@ -114,6 +114,27 @@ func GetUserFeed(c web.C, w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&repos)
 }
 
+// GetUserActivity accepts a request to get the user's latest
+// build activity, across all repositories, from the datastore.
+// The results are encoded and returned in JSON format.
+//
+//     GET /api/user/activity
+//
+func GetUserActivity(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var user = ToUser(c)
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	repos, err := datastore.GetCommitListActivity(ctx, user)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	json.NewEncoder(w).Encode(&repos)
+}
+
 // PostUserSync accepts a request to post user sync
 //
 //     POST /api/user/sync
