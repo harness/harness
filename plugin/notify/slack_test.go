@@ -23,8 +23,11 @@ var request = &model.Request{
 }
 */
 
-var slackExpectedLink = "<http://examplehost.com/examplegit.com/owner/repo/example/abc|owner/repo#abc>"
-var slackExpectedBase = slackExpectedLink + " (example) by Test User"
+var (
+	slackExpectedLink         = "<http://examplehost.com/examplegit.com/owner/repo/example/abc|owner/repo#abc>"
+	slackExpectedFallbackText = "owner/repo#abc (example) by Test User"
+	slackExpectedBase         = slackExpectedLink + " (example) by Test User"
+)
 
 func Test_slackStartedMessage(t *testing.T) {
 	actual := (&Slack{}).getMessage(request, slackStartedMessage)
@@ -33,6 +36,16 @@ func Test_slackStartedMessage(t *testing.T) {
 
 	if actual != expected {
 		t.Errorf("Invalid getStarted message for Slack. Expected %v, got %v", expected, actual)
+	}
+}
+
+func Test_slackStartedFallbackMessage(t *testing.T) {
+	actual := (&Slack{}).getFallbackMessage(request, slackStartedFallbackMessage)
+
+	expected := "Building " + slackExpectedFallbackText
+
+	if actual != expected {
+		t.Errorf("Invalid fallback started message for Slack. Expected %v, got %v", expected, actual)
 	}
 }
 
@@ -46,6 +59,16 @@ func Test_slackSuccessMessage(t *testing.T) {
 	}
 }
 
+func Test_slackSuccessFallbackMessage(t *testing.T) {
+	actual := (&Slack{}).getFallbackMessage(request, slackSuccessFallbackMessage)
+
+	expected := "Success " + slackExpectedFallbackText
+
+	if actual != expected {
+		t.Errorf("Invalid success fallback message for Slack. Expected %v, got %v", expected, actual)
+	}
+}
+
 func Test_slackFailureMessage(t *testing.T) {
 	actual := (&Slack{}).getMessage(request, slackFailureMessage)
 
@@ -53,5 +76,15 @@ func Test_slackFailureMessage(t *testing.T) {
 
 	if actual != expected {
 		t.Errorf("Invalid getStarted message for Slack. Expected %v, got %v", expected, actual)
+	}
+}
+
+func Test_slackFailureFallbackMessage(t *testing.T) {
+	actual := (&Slack{}).getFallbackMessage(request, slackFailureFallbackMessage)
+
+	expected := "Failed " + slackExpectedFallbackText
+
+	if actual != expected {
+		t.Errorf("Invalid failure fallback message for Slack. Expected %v, got %v", expected, actual)
 	}
 }
