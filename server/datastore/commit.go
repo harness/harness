@@ -25,7 +25,7 @@ type Commitstore interface {
 
 	// GetCommitListUser retrieves a list of latest commits
 	// from the datastore accessible to the specified user.
-	GetCommitListUser(user *model.User) ([]*model.CommitRepo, error)
+	GetCommitListUser(user *model.User, limit int) ([]*model.CommitRepo, error)
 
 	// GetCommitListActivity retrieves an ungrouped list of latest commits
 	// from the datastore accessible to the specified user.
@@ -72,8 +72,8 @@ func GetCommitList(c context.Context, repo *model.Repo) ([]*model.Commit, error)
 
 // GetCommitListUser retrieves a list of latest commits
 // from the datastore accessible to the specified user.
-func GetCommitListUser(c context.Context, user *model.User) ([]*model.CommitRepo, error) {
-	return FromContext(c).GetCommitListUser(user)
+func GetCommitListUser(c context.Context, user *model.User, limit int) ([]*model.CommitRepo, error) {
+	return FromContext(c).GetCommitListUser(user, limit)
 }
 
 // GetCommitListActivity retrieves an ungrouped list of latest commits

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"strconv"
 	"encoding/json"
 	"net/http"
 
@@ -102,11 +103,20 @@ func GetUserRepos(c web.C, w http.ResponseWriter, r *http.Request) {
 func GetUserFeed(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
 	var user = ToUser(c)
+	var limit = 5
 	if user == nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	repos, err := datastore.GetCommitListUser(ctx, user)
+	if r.FormValue("limit") != "" {
+		tmp, err := strconv.ParseInt(r.FormValue("limit"), 0, 0)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		limit = int(tmp)
+	}
+	repos, err := datastore.GetCommitListUser(ctx, user, limit)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return

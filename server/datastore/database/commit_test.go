@@ -244,7 +244,7 @@ func TestCommitstore(t *testing.T) {
 			}
 			ps.PostPerm(&perm1)
 			ps.PostPerm(&perm2)
-			commits, err := cs.GetCommitListUser(&model.User{ID: 1})
+			commits, err := cs.GetCommitListUser(&model.User{ID: 1}, 5)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(commits)).Equal(2)
 			g.Assert(commits[0].RepoID).Equal(commit1.RepoID)
