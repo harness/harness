@@ -79,13 +79,12 @@ LIMIT 1;
 // SQL statement to retrieve a list of Repos
 // with permissions for the given User ID.
 const repoListQuery = `
-SELECT *
-FROM repos
-WHERE repo_id IN (
-	SELECT repo_id
-	FROM perms
-	WHERE user_id = ?
-);
+SELECT r.*
+FROM
+ repos r
+,perms p
+WHERE r.repo_id = p.repo_id
+  AND p.user_id = ?
 `
 
 // SQL statement to delete a User by ID.
