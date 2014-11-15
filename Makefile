@@ -13,8 +13,9 @@ test:
 	go test -cover -short ./...
 
 test_mysql:
-	mysql -P 3306 --protocol=tcp -u root -e 'create database test;'
+	mysql -P 3306 --protocol=tcp -u root -e 'create database if not exists test;'
 	TEST_DRIVER="mysql" TEST_DATASOURCE="root@tcp(127.0.0.1:3306)/test" go test -short github.com/drone/drone/server/datastore/database
+	mysql -P 3306 --protocol=tcp -u root -e 'drop database test;'
 
 test_postgres:
 	TEST_DRIVER="postgres" TEST_DATASOURCE="host=127.0.0.1 user=postgres dbname=postgres sslmode=disable" go test -short github.com/drone/drone/server/datastore/database
@@ -26,8 +27,8 @@ build:
 	go build -o packaging/root/usr/local/bin/droned -ldflags "-X main.revision $(SHA)" github.com/drone/drone/server
 
 install:
-	install -t /usr/local/bin packaging/root/usr/local/bin/drone 
-	install -t /usr/local/bin packaging/root/usr/local/bin/droned 
+	install -t /usr/local/bin packaging/root/usr/local/bin/drone
+	install -t /usr/local/bin packaging/root/usr/local/bin/droned
 
 run:
 	@go run server/main.go --config=$$HOME/.drone/config.toml
