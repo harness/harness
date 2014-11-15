@@ -122,7 +122,7 @@ WHERE c.repo_id = r.repo_id
 	  AND r.repo_id = p.repo_id
 	  AND p.user_id = ?
 	GROUP BY r.repo_id
-) ORDER BY c.commit_created DESC LIMIT 5;
+) ORDER BY c.commit_created DESC LIMIT ?;
 `
 
 // SQL query to retrieve the ungrouped, latest Commits
