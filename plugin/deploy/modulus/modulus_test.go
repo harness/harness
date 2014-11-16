@@ -41,12 +41,12 @@ func Test_Modulus(t *testing.T) {
 
 			m.Write(b)
 			g.Assert(b.String()).Equal(`export MODULUS_TOKEN="bar"
-[ -f /usr/bin/npm ] || echo ERROR: npm is required for modulus.io deployments
-[ -f /usr/bin/npm ] || exit 1
-[ -f /usr/bin/sudo ] || npm install -g modulus
-[ -f /usr/bin/sudo ] && sudo npm install -g modulus
+sh -c "[ -f /usr/bin/npm ] || echo ERROR: npm is required for modulus.io deployments"
+sh -c "[ -f /usr/bin/npm ] || exit 1"
+sh -c "[ -f /usr/bin/sudo ] || npm install -g modulus"
+sh -c "[ -f /usr/bin/sudo ] && sudo npm install -g modulus"
 echo '#DRONE:6d6f64756c7573206465706c6f79202d702022666f6f22'
-modulus deploy -p "foo"
+sh -c "modulus deploy -p \"foo\""
 `)
 		})
 	})

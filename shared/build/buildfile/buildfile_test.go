@@ -14,14 +14,14 @@ func TestWrite(t *testing.T) {
 
 	f = &Buildfile{}
 	f.WriteCmd("echo hi")
-	got, want = f.String(), "echo '#DRONE:6563686f206869'\necho hi\n"
+	got, want = f.String(), "echo '#DRONE:6563686f206869'\nsh -c \"echo hi\"\n"
 	if got != want {
 		t.Errorf("Exepected WriteCmd returned %s, got %s", want, got)
 	}
 
 	f = &Buildfile{}
 	f.WriteCmdSilent("echo hi")
-	got, want = f.String(), "echo hi\n"
+	got, want = f.String(), "sh -c \"echo hi\"\n"
 	if got != want {
 		t.Errorf("Exepected WriteCmdSilent returned %s, got %s", want, got)
 	}
@@ -42,7 +42,7 @@ func TestWrite(t *testing.T) {
 
 	f = &Buildfile{}
 	f.WriteHost("127.0.0.1")
-	got, want = f.String(), "[ -f /usr/bin/sudo ] || echo \"127.0.0.1\" | tee -a /etc/hosts\n[ -f /usr/bin/sudo ] && echo \"127.0.0.1\" | sudo tee -a /etc/hosts\n"
+	got, want = f.String(), "sh -c \"[ -f /usr/bin/sudo ] || echo \\\"127.0.0.1\\\" | tee -a /etc/hosts\"\nsh -c \"[ -f /usr/bin/sudo ] && echo \\\"127.0.0.1\\\" | sudo tee -a /etc/hosts\"\n"
 	if got != want {
 		t.Errorf("Exepected WriteHost returned %s, got %s", want, got)
 	}

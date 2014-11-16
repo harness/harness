@@ -11,12 +11,10 @@ import (
 // command to create the .npmrc file that stores
 // the login credentials, as opposed to npm login
 // which requires stdin.
-const CmdLogin = `
-cat <<EOF > ~/.npmrc
+const CmdLogin = `cat <<EOF > ~/.npmrc
 _auth = $(echo "%s:%s" | tr -d "\r\n" | base64)
 email = %s
-EOF
-`
+EOF`
 
 const (
 	CmdPublish     = "npm publish %s"

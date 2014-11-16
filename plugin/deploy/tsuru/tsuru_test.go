@@ -34,7 +34,7 @@ func Test_Tsuru(t *testing.T) {
 
 			d.Write(b)
 			out := b.String()
-			g.Assert(strings.Contains(out, "\ngit remote add tsuru git://foo.com/bar/baz.git\n")).Equal(true)
+			g.Assert(strings.Contains(out, "git remote add tsuru git://foo.com/bar/baz.git")).Equal(true)
 		})
 
 		g.It("Should push to remote", func() {
@@ -45,7 +45,7 @@ func Test_Tsuru(t *testing.T) {
 
 			d.Write(b)
 			out := b.String()
-			g.Assert(strings.Contains(out, "\ngit push tsuru $COMMIT:master\n")).Equal(true)
+			g.Assert(strings.Contains(out, "git push tsuru $COMMIT:master")).Equal(true)
 		})
 
 		g.It("Should force push to remote", func() {
@@ -57,9 +57,9 @@ func Test_Tsuru(t *testing.T) {
 
 			d.Write(b)
 			out := b.String()
-			g.Assert(strings.Contains(out, "\ngit add -A\n")).Equal(true)
-			g.Assert(strings.Contains(out, "\ngit commit -m 'adding build artifacts'\n")).Equal(true)
-			g.Assert(strings.Contains(out, "\ngit push tsuru HEAD:master --force\n")).Equal(true)
+			g.Assert(strings.Contains(out, "git add -A")).Equal(true)
+			g.Assert(strings.Contains(out, "git commit -m 'adding build artifacts'")).Equal(true)
+			g.Assert(strings.Contains(out, "git push tsuru HEAD:master --force")).Equal(true)
 		})
 
 	})

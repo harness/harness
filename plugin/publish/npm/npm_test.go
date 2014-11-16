@@ -31,9 +31,9 @@ func Test_NPM(t *testing.T) {
 
 			n.Write(b)
 			out := b.String()
-			g.Assert(strings.Contains(out, "\nnpm publish /path/to/repo\n")).Equal(true)
-			g.Assert(strings.Contains(out, "\nnpm set")).Equal(false)
-			g.Assert(strings.Contains(out, "\nnpm config set")).Equal(false)
+			g.Assert(strings.Contains(out, "npm publish /path/to/repo")).Equal(true)
+			g.Assert(strings.Contains(out, "npm set")).Equal(false)
+			g.Assert(strings.Contains(out, "npm config set")).Equal(false)
 		})
 
 		g.It("Should set force", func() {
@@ -47,7 +47,7 @@ func Test_NPM(t *testing.T) {
 			}
 
 			n.Write(b)
-			g.Assert(strings.Contains(b.String(), "\nnpm publish /path/to/repo --force\n")).Equal(true)
+			g.Assert(strings.Contains(b.String(), "npm publish /path/to/repo --force")).Equal(true)
 		})
 
 		g.It("Should set tag", func() {
@@ -61,7 +61,7 @@ func Test_NPM(t *testing.T) {
 			}
 
 			n.Write(b)
-			g.Assert(strings.Contains(b.String(), "\nnpm publish /path/to/repo --tag 1.0.0\n")).Equal(true)
+			g.Assert(strings.Contains(b.String(), "npm publish /path/to/repo --tag 1.0.0")).Equal(true)
 		})
 
 		g.It("Should set registry", func() {
@@ -75,7 +75,7 @@ func Test_NPM(t *testing.T) {
 			}
 
 			n.Write(b)
-			g.Assert(strings.Contains(b.String(), "\nnpm config set registry https://npmjs.com\n")).Equal(true)
+			g.Assert(strings.Contains(b.String(), "npm config set registry https://npmjs.com")).Equal(true)
 		})
 
 		g.It("Should set always-auth", func() {
@@ -104,10 +104,7 @@ func Test_NPM(t *testing.T) {
 			b := new(buildfile.Buildfile)
 			n := new(NPM)
 
-			expected := `cat <<EOF > ~/.npmrc
-_auth = $(echo "foo:bar" | tr -d "\r\n" | base64)
-email = foo@bar.com
-EOF`
+			expected := `sh -c "cat <<EOF > ~/.npmrc\n_auth = $(echo \"foo:bar\" | tr -d \"\\r\\n\" | base64)\nemail = foo@bar.com\nEOF"`
 
 			var user, pass, email string = "foo", "bar", "foo@bar.com"
 			DefaultUser = &user
@@ -128,10 +125,7 @@ EOF`
 				AlwaysAuth: true,
 			}
 
-			expected := `cat <<EOF > ~/.npmrc
-_auth = $(echo "foo:bar" | tr -d "\r\n" | base64)
-email = foo@bar.com
-EOF`
+			expected := `sh -c "cat <<EOF > ~/.npmrc\n_auth = $(echo \"foo:bar\" | tr -d \"\\r\\n\" | base64)\nemail = foo@bar.com\nEOF"`
 
 			n.Write(b)
 			g.Assert(strings.Contains(b.String(), expected)).Equal(true)
