@@ -18,38 +18,43 @@ var sampleYml = `
 deploy:
   ssh:
     target: user@test.example.com
-    cmd: /opt/bin/redeploy.sh
+    cmd:
+     - /opt/bin/redeploy.sh
 `
 
 var sampleYml1 = `
 deploy:
   ssh:
     target: user@test.example.com:/srv/app/location 2212
-    artifacts: ./
-    cmd: /opt/bin/redeploy.sh
+    artifacts:
+      - ./
+    cmd:
+      - /opt/bin/redeploy.sh
 `
 
 var sampleYml2 = `
 deploy:
   ssh:
     target: user@test.example.com:/srv/app/location 2212
-    artifacts: |
-      build.result
-      config/file
-    cmd: /opt/bin/redeploy.sh
+    artifacts:
+      - build.result
+      - config/file
+    cmd:
+      - /opt/bin/redeploy.sh
 `
 
 var sampleYml3 = `
 deploy:
   ssh:
     target: user@test.example.com:/srv/app/location 2212
-    artifacts: ./
-    cmd: |
-      cd /srv/app/location
-      bundle install --deployment
-      bundle exec rake assets:clobber
-      RAILS_ENV=production bundle exec rake assets:precompile
-      sudo sv restart puma
+    artifacts:
+      - ./
+    cmd:
+      - cd /srv/app/location
+      - bundle install --deployment
+      - bundle exec rake assets:clobber
+      - RAILS_ENV=production bundle exec rake assets:precompile
+      - sudo sv restart puma
 `
 
 func setUp(input string) (string, error) {
@@ -99,7 +104,7 @@ func TestSSHMultiArtifact(t *testing.T) {
 		t.Fatalf("Can't unmarshal deploy script: %s", err)
 	}
 
-	if !strings.Contains(bscr, `printf "build.result\nconfig/file\n" > ${ARTIFACTS}`) {
+	if !strings.Contains(bscr, `printf "build.result\nconfig/file" > ${ARTIFACTS}`) {
 		t.Errorf("Expect script to contains artifact")
 	}
 }

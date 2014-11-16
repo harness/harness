@@ -28,31 +28,24 @@ type SSH struct {
 	// Artifacts is a list of files/dirs to be deployed
 	// to the target host and always relative to the project's root directory,
 	// like so:
-	//   artifacts: ./
+	//   artifacts:
+	//     - ./
 	// or
-	//   artifacts: build/
-	//
-	// To list multiple artifacts, please use multiple-line string
-	// directive instead
-	// eg.
-	//    artifacts: |
-	//      bin/
-	//      include/
-	//      lib/
-	Artifacts string `yaml:"artifacts,omitempty"`
+	//   artifacts:
+	//     - build/
+	//     - contrib/config.example
+	Artifacts []string `yaml:"artifacts,omitempty"`
 
 	// Cmd is the command executed at target host after the artifacts
 	// is deployed.
-	// To use multiple commands you can write it naturally with
-	// multiple-line string directive
 	// eg.
-	//    cmd: |
-	//      git clone github.com/myproject/myrepo
-	//      cd myrepo
-	//      bundle install --deployment
-	//      bundle exec rake assets:precompile
-	//      touch tmp/restart.txt
-	Cmd string `yaml:"cmd,omitempty"`
+	//   cmd:
+	//     - git clone github.com/myproject/myrepo
+	//     - cd myrepo
+	//     - bundle install --deployment
+	//     - bundle exec rake assets:precompile
+	//     - touch tmp/restart.txt
+	Cmd []string `yaml:"cmd,omitempty"`
 
 	Condition *condition.Condition `yaml:"when,omitempty"`
 }
@@ -75,19 +68,20 @@ func (s *SSH) Write(f *buildfile.Buildfile) {
 
 	if len(s.Artifacts) > 0 {
 		f.WriteEnv("ARTIFACTS", "$(mktemp)")
-		f.WriteCmdSilent(fmt.Sprintf("printf %q > ${ARTIFACTS}", s.Artifacts))
+		f.WriteCmdSilent(fmt.Sprintf("printf %q > ${ARTIFACTS}", strings.Join(s.Artifacts, "\n")))
 		f.WriteCmd(fmt.Sprintf(rsyncTemplate, host[1], host[0]))
 		f.WriteCmdSilent("rm -f ${ARTIFACTS}")
 	}
 
 	if len(s.Cmd) > 0 {
+		cmd := strings.Join(s.Cmd, "\n")
 		sshCmd := "ssh -o StrictHostKeyChecking=no -p %s %s %q"
 		hostnpath := strings.SplitN(host[0], ":", 2)
 		if len(hostnpath) == 2 {
 			// ensure script to run under target directory
-			s.Cmd = fmt.Sprintf("cd %s\n%s", hostnpath[1], s.Cmd)
+			cmd = fmt.Sprintf("cd %s\n%s", hostnpath[1], cmd)
 		}
-		cmd := fmt.Sprintf(cmdTemplate, s.Cmd)
+		cmd = fmt.Sprintf(cmdTemplate, cmd)
 		f.WriteCmdSilent(fmt.Sprintf(sshCmd, host[1], hostnpath[0], cmd))
 	}
 }
