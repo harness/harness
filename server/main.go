@@ -131,6 +131,7 @@ func main() {
 
 	// create the router and add middleware
 	mux := router.New()
+	mux.Use(middleware.Options)
 	mux.Use(ContextMiddleware)
 	mux.Use(middleware.SetHeaders)
 	mux.Use(middleware.SetUser)
