@@ -21,20 +21,22 @@ const (
 )
 
 type GitHub struct {
-	URL     string
-	API     string
-	Client  string
-	Secret  string
-	Private bool
+	URL        string
+	API        string
+	Client     string
+	Secret     string
+	Private    bool
+	SkipVerify bool
 }
 
-func New(url, api, client, secret string, private bool) *GitHub {
+func New(url, api, client, secret string, private, skipVerify bool) *GitHub {
 	var github = GitHub{
-		URL:     url,
-		API:     api,
-		Client:  client,
-		Secret:  secret,
-		Private: private,
+		URL:        url,
+		API:        api,
+		Client:     client,
+		Secret:     secret,
+		Private:    private,
+		SkipVerify: skipVerify,
 	}
 	// the API must have a trailing slash
 	if !strings.HasSuffix(github.API, "/") {
@@ -48,7 +50,7 @@ func New(url, api, client, secret string, private bool) *GitHub {
 }
 
 func NewDefault(client, secret string) *GitHub {
-	return New(DefaultURL, DefaultAPI, client, secret, false)
+	return New(DefaultURL, DefaultAPI, client, secret, false, false)
 }
 
 // Authorize handles GitHub API Authorization.
@@ -84,7 +86,7 @@ func (r *GitHub) Authorize(res http.ResponseWriter, req *http.Request) (*model.L
 		return nil, fmt.Errorf("Error exchanging token. %s", err)
 	}
 
-	var client = NewClient(r.API, token.AccessToken)
+	var client = NewClient(r.API, token.AccessToken, r.SkipVerify)
 	var useremail, errr = GetUserEmail(client)
 	if errr != nil {
 		return nil, fmt.Errorf("Error retrieving user or verified email. %s", errr)
@@ -127,7 +129,7 @@ func (r *GitHub) IsEnterprise() bool {
 // user has access to in the remote system.
 func (r *GitHub) GetRepos(user *model.User) ([]*model.Repo, error) {
 	var repos []*model.Repo
-	var client = NewClient(r.API, user.Access)
+	var client = NewClient(r.API, user.Access, r.SkipVerify)
 	var list, err = GetAllRepos(client)
 	if err != nil {
 		return nil, err
@@ -173,14 +175,14 @@ func (r *GitHub) GetRepos(user *model.User) ([]*model.Repo, error) {
 // GetScript fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
 func (r *GitHub) GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error) {
-	var client = NewClient(r.API, user.Access)
+	var client = NewClient(r.API, user.Access, r.SkipVerify)
 	return GetFile(client, repo.Owner, repo.Name, ".drone.yml", hook.Sha)
 }
 
 // Activate activates a repository by adding a Post-commit hook and
 // a Public Deploy key, if applicable.
 func (r *GitHub) Activate(user *model.User, repo *model.Repo, link string) error {
-	var client = NewClient(r.API, user.Access)
+	var client = NewClient(r.API, user.Access, r.SkipVerify)
 	var title, err = GetKeyTitle(link)
 	if err != nil {
 		return err

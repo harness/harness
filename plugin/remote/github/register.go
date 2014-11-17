@@ -11,11 +11,12 @@ var (
 	githubSecret = config.String("github-secret", "")
 
 	// GitHub Enterprise configuration details
-	githubEnterpriseURL     = config.String("github-enterprise-url", "")
-	githubEnterpriseAPI     = config.String("github-enterprise-api", "")
-	githubEnterpriseClient  = config.String("github-enterprise-client", "")
-	githubEnterpriseSecret  = config.String("github-enterprise-secret", "")
-	githubEnterprisePrivate = config.Bool("github-enterprise-private-mode", true)
+	githubEnterpriseURL        = config.String("github-enterprise-url", "")
+	githubEnterpriseAPI        = config.String("github-enterprise-api", "")
+	githubEnterpriseClient     = config.String("github-enterprise-client", "")
+	githubEnterpriseSecret     = config.String("github-enterprise-secret", "")
+	githubEnterprisePrivate    = config.Bool("github-enterprise-private-mode", true)
+	githubEnterpriseSkipVerify = config.Bool("github-enterprise-skip-verify", false)
 )
 
 // Registers the GitHub plugins using the default
@@ -51,6 +52,7 @@ func registerGitHubEnterprise() {
 			*githubEnterpriseClient,
 			*githubEnterpriseSecret,
 			*githubEnterprisePrivate,
+			*githubEnterpriseSkipVerify,
 		),
 	)
 }
