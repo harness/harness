@@ -1,6 +1,7 @@
 package condition
 
 import (
+	"path/filepath"
 	"strings"
 )
 
@@ -40,7 +41,8 @@ func (c *Condition) MatchBranch(branch string) bool {
 	if c.AllBranches != nil && *c.AllBranches == true {
 		return true
 	}
-	return c.Branch == branch
+	match, _ := filepath.Match(c.Branch, branch)
+	return match
 }
 
 // MatchOwner is a helper function that returns false
