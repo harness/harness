@@ -1,6 +1,7 @@
 package github
 
 import (
+	"crypto/tls"
 	"encoding/base32"
 	"fmt"
 	"io/ioutil"
@@ -15,10 +16,19 @@ import (
 
 // NewClient is a helper function that returns a new GitHub
 // client using the provided OAuth token.
-func NewClient(uri, token string) *github.Client {
+func NewClient(uri, token string, skipVerify bool) *github.Client {
 	t := &oauth.Transport{
 		Token: &oauth.Token{AccessToken: token},
 	}
+
+	// this is for GitHub enterprise users that are using
+	// self-signed certificates.
+	if skipVerify {
+		t.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+	}
+
 	c := github.NewClient(t.Client())
 	c.BaseURL, _ = url.Parse(uri)
 	return c
