@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	slackEndpoint               = "https://%s.slack.com/services/hooks/incoming-webhook?token=%s"
 	slackStartedMessage         = "*Building* <%s|%s> (%s) by %s"
 	slackStartedFallbackMessage = "Building %s (%s) by %s"
 	slackSuccessMessage         = "*Success* <%s|%s> (%s) by %s"
@@ -18,13 +17,12 @@ const (
 )
 
 type Slack struct {
-	Team     string `yaml:"team,omitempty"`
-	Channel  string `yaml:"channel,omitempty"`
-	Username string `yaml:"username,omitempty"`
-	Token    string `yaml:"token,omitempty"`
-	Started  bool   `yaml:"on_started,omitempty"`
-	Success  bool   `yaml:"on_success,omitempty"`
-	Failure  bool   `yaml:"on_failure,omitempty"`
+	WebhookUrl string `yaml:"webhook_url,omitempty"`
+	Channel    string `yaml:"channel,omitempty"`
+	Username   string `yaml:"username,omitempty"`
+	Started    bool   `yaml:"on_started,omitempty"`
+	Success    bool   `yaml:"on_success,omitempty"`
+	Failure    bool   `yaml:"on_failure,omitempty"`
 }
 
 func (s *Slack) Send(context *model.Request) error {
@@ -100,10 +98,7 @@ func (s *Slack) send(msg string, fallback string, color string) error {
 		return err
 	}
 
-	// send payload
-	url := fmt.Sprintf(slackEndpoint, s.Team, s.Token)
-
-	go sendJson(url, payload, nil)
+	go sendJson(s.WebhookUrl, payload, nil)
 
 	return nil
 }
