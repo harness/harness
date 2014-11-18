@@ -59,6 +59,12 @@ func Test_MatchBranch(t *testing.T) {
 	if got != want {
 		t.Errorf("Branch should not match, expected %v, got %v", want, got)
 	}
+
+	c.Branch = "release/*"
+	got, want = c.MatchBranch("release/1.0.0"), true
+	if got != want {
+		t.Errorf("Branch should match wildcard, expected %v, got %v", want, got)
+	}
 }
 
 func Test_MatchOwner(t *testing.T) {
