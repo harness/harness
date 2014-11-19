@@ -24,6 +24,7 @@ import (
 	"github.com/drone/drone/plugin/remote/bitbucket"
 	"github.com/drone/drone/plugin/remote/github"
 	"github.com/drone/drone/plugin/remote/gitlab"
+	"github.com/drone/drone/plugin/remote/gogs"
 	"github.com/drone/drone/server/blobstore"
 	"github.com/drone/drone/server/capability"
 	"github.com/drone/drone/server/datastore"
@@ -97,6 +98,7 @@ func main() {
 	bitbucket.Register()
 	github.Register()
 	gitlab.Register()
+	gogs.Register()
 
 	caps = map[string]bool{}
 	caps[capability.Registration] = *open
