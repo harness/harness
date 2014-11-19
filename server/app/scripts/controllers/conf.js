@@ -30,6 +30,9 @@ angular.module('app').controller("ConfigController", function($scope, $http, rem
 				case 'stash.atlassian.com':
 					$scope.stash = remote;
 					break;
+				case 'gogs':
+					$scope.gogs = remote;
+					break;
 				}
 			}
 		})

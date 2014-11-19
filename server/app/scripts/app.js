@@ -52,6 +52,10 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider', function($ro
 			templateUrl: '/static/views/login_gitlab.html',
 			title: 'GitLab Login',
 		})
+		.when('/gogs', {
+			templateUrl: '/static/views/login_gogs.html',
+			title: 'Gogs Setup',
+		})
 		.when('/setup', {
 			templateUrl: '/static/views/setup.html',
 			controller: 'SetupController',
@@ -234,6 +238,6 @@ app.controller("AccountReposController", function($scope, $http, $location, user
 			return true;
 		};
 	$scope.byRemote = function(entry){
-			return $scope.remote == "" || $scope.remote == entry.remote; 
-		}; 
+			return $scope.remote == "" || $scope.remote == entry.remote;
+		};
 });
