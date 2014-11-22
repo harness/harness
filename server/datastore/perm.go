@@ -23,7 +23,7 @@ type Permstore interface {
 // GetPerm retrieves the User's permission from
 // the datastore for the given repository.
 func GetPerm(c context.Context, user *model.User, repo *model.Repo) (*model.Perm, error) {
-	// if the user is a gues they should only be granted
+	// if the user is a guest they should only be granted
 	// read access to public repositories.
 	switch {
 	case user == nil && repo.Private:
@@ -43,8 +43,8 @@ func GetPerm(c context.Context, user *model.User, repo *model.Repo) (*model.Perm
 	// if the user is authenticated we'll retireive the
 	// permission details from the database.
 	perm, err := FromContext(c).GetPerm(user, repo)
-	if err == nil && perm.ID != 0 {
-		return perm, err
+	if perm.ID == 0 {
+		perm.Guest = true
 	}
 
 	switch {
@@ -53,12 +53,10 @@ func GetPerm(c context.Context, user *model.User, repo *model.Repo) (*model.Perm
 		perm.Read = true
 		perm.Write = true
 		perm.Admin = true
-		perm.Guest = true
 
 	// if the repo is public, grant read access only.
 	case repo.Private == false:
 		perm.Read = true
-		perm.Guest = true
 	}
 	return perm, err
 }
