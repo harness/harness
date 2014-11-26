@@ -6,7 +6,8 @@ import (
 )
 
 var (
-	gitlabURL = config.String("gitlab-url", "")
+	gitlabURL        = config.String("gitlab-url", "")
+	gitlabSkipVerify = config.Bool("gitlab-skip-verify", false)
 )
 
 // Registers the Gitlab plugin using the default
@@ -17,6 +18,9 @@ func Register() {
 		return
 	}
 	remote.Register(
-		New(*gitlabURL),
+		New(
+			*gitlabURL,
+			*gitlabSkipVerify,
+		),
 	)
 }
