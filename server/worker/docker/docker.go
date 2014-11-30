@@ -76,6 +76,7 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	// mark the build as Started and update the database
 	r.Commit.Status = model.StatusStarted
 	r.Commit.Started = time.Now().UTC().Unix()
+
 	datastore.PutCommit(c, r.Commit)
 
 	// notify all listeners that the build is started
@@ -109,15 +110,22 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 		}
 	}
 
+	// TODO: handle error better?
+	buildNumber, err := datastore.GetBuildNumber(c, r.Commit)
+	if err != nil {
+		log.Printf("Unable to fetch build number, Err: %s", err.Error())
+	}
+
 	path := r.Repo.Host + "/" + r.Repo.Owner + "/" + r.Repo.Name
 	repo := &repo.Repo{
-		Name:   path,
-		Path:   r.Repo.CloneURL,
-		Branch: r.Commit.Branch,
-		Commit: r.Commit.Sha,
-		PR:     r.Commit.PullRequest,
-		Dir:    filepath.Join("/var/cache/drone/src", git.GitPath(script.Git, path)),
-		Depth:  git.GitDepth(script.Git),
+		Name:        path,
+		Path:        r.Repo.CloneURL,
+		Branch:      r.Commit.Branch,
+		Commit:      r.Commit.Sha,
+		PR:          r.Commit.PullRequest,
+		Dir:         filepath.Join("/var/cache/drone/src", git.GitPath(script.Git, path)),
+		Depth:       git.GitDepth(script.Git),
+		BuildNumber: buildNumber,
 	}
 
 	priorCommit, _ := datastore.GetCommitPrior(c, r.Commit)
