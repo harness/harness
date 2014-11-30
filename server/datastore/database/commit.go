@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/drone/drone/shared/model"
@@ -103,6 +104,20 @@ func (db *Commitstore) KillCommits() error {
 	return err
 }
 
+// GetBuildNumber retrieves the build number for a commit.
+func (db *Commitstore) GetBuildNumber(commit *model.Commit) (int64, error) {
+	row := db.QueryRow(rebind(commitGetBuildNumberStmt), commit.ID, commit.RepoID)
+	if row == nil {
+		return 0, fmt.Errorf("Unable to get build number for commit %d", commit.ID)
+	}
+	var bn int64
+	err := row.Scan(&bn)
+	if err != nil {
+		return 0, err
+	}
+	return bn, nil
+}
+
 // Commit table name in database.
 const commitTable = "commits"
 
@@ -193,4 +208,13 @@ LIMIT 1
 const commitKillStmt = `
 UPDATE commits SET commit_status = 'Killed'
 WHERE commit_status IN ('Started', 'Pending');
+`
+
+// SQL statement to retrieve the build number for
+// a commit
+const commitGetBuildNumberStmt = `
+SELECT COUNT(1)
+FROM commits 
+WHERE commit_id <= ? 
+	AND repo_id = ?
 `
