@@ -41,6 +41,8 @@ type Repo struct {
 	Created     int64  `meddler:"repo_created"      json:"created_at"`
 	Updated     int64  `meddler:"repo_updated"      json:"updated_at"`
 
+	BuildNumber int64 `meddler:"repo_build_number" json:"last_build_number"`
+
 	// Role defines the user's role relative to this repository.
 	// Note that this data is stored separately in the datastore,
 	// and must be joined to populate.
@@ -56,6 +58,7 @@ func NewRepo(remote, owner, name string) (*Repo, error) {
 	repo.PostCommit = true
 	repo.PullRequest = true
 	repo.Timeout = DefaultTimeout
+	repo.BuildNumber = 0
 	return &repo, nil
 }
 
@@ -63,4 +66,10 @@ func (r *Repo) ParamMap() (map[string]string, error) {
 	out := map[string]string{}
 	err := yaml.Unmarshal([]byte(r.Params), out)
 	return out, err
+}
+
+// IncBuildNumber increments and returns the repo's monotonically increasing build number
+func (r *Repo) IncBuildNumber() int64 {
+	r.BuildNumber = r.BuildNumber + 1
+	return r.BuildNumber
 }

@@ -5,22 +5,23 @@ import (
 )
 
 type Commit struct {
-	ID          int64  `meddler:"commit_id,pk"     json:"id"`
-	RepoID      int64  `meddler:"repo_id"          json:"-"`
-	Status      string `meddler:"commit_status"    json:"status"`
-	Started     int64  `meddler:"commit_started"   json:"started_at"`
-	Finished    int64  `meddler:"commit_finished"  json:"finished_at"`
-	Duration    int64  `meddler:"commit_duration"  json:"duration"`
-	Sha         string `meddler:"commit_sha"       json:"sha"`
-	Branch      string `meddler:"commit_branch"    json:"branch"`
-	PullRequest string `meddler:"commit_pr"        json:"pull_request"`
-	Author      string `meddler:"commit_author"    json:"author"`
-	Gravatar    string `meddler:"commit_gravatar"  json:"gravatar"`
-	Timestamp   string `meddler:"commit_timestamp" json:"timestamp"`
-	Message     string `meddler:"commit_message"   json:"message"`
-	Config      string `meddler:"commit_yaml"      json:"-"`
-	Created     int64  `meddler:"commit_created"   json:"created_at"`
-	Updated     int64  `meddler:"commit_updated"   json:"updated_at"`
+	ID          int64  `meddler:"commit_id,pk"        json:"id"`
+	RepoID      int64  `meddler:"repo_id"             json:"-"`
+	Status      string `meddler:"commit_status"       json:"status"`
+	Started     int64  `meddler:"commit_started"      json:"started_at"`
+	Finished    int64  `meddler:"commit_finished"     json:"finished_at"`
+	Duration    int64  `meddler:"commit_duration"     json:"duration"`
+	Sha         string `meddler:"commit_sha"          json:"sha"`
+	Branch      string `meddler:"commit_branch"       json:"branch"`
+	PullRequest string `meddler:"commit_pr"           json:"pull_request"`
+	Author      string `meddler:"commit_author"       json:"author"`
+	Gravatar    string `meddler:"commit_gravatar"     json:"gravatar"`
+	Timestamp   string `meddler:"commit_timestamp"    json:"timestamp"`
+	Message     string `meddler:"commit_message"      json:"message"`
+	Config      string `meddler:"commit_yaml"         json:"-"`
+	Created     int64  `meddler:"commit_created"      json:"created_at"`
+	Updated     int64  `meddler:"commit_updated"      json:"updated_at"`
+	BuildNumber int64  `meddler:"commit_build_number" json:"build_number"`
 }
 
 // SetAuthor sets the author's email address and calculate the Gravatar hash.
@@ -50,20 +51,21 @@ type CommitRepo struct {
 	Owner  string `meddler:"repo_owner"  json:"owner"`
 	Name   string `meddler:"repo_name"   json:"name"`
 
-	CommitID    int64  `meddler:"commit_id,pk"     json:"-"`
-	RepoID      int64  `meddler:"repo_id"          json:"-"`
-	Status      string `meddler:"commit_status"    json:"status"`
-	Started     int64  `meddler:"commit_started"   json:"started_at"`
-	Finished    int64  `meddler:"commit_finished"  json:"finished_at"`
-	Duration    int64  `meddler:"commit_duration"  json:"duration"`
-	Sha         string `meddler:"commit_sha"       json:"sha"`
-	Branch      string `meddler:"commit_branch"    json:"branch"`
-	PullRequest string `meddler:"commit_pr"        json:"pull_request"`
-	Author      string `meddler:"commit_author"    json:"author"`
-	Gravatar    string `meddler:"commit_gravatar"  json:"gravatar"`
-	Timestamp   string `meddler:"commit_timestamp" json:"timestamp"`
-	Message     string `meddler:"commit_message"   json:"message"`
-	Config      string `meddler:"commit_yaml"      json:"-"`
-	Created     int64  `meddler:"commit_created"   json:"created_at"`
-	Updated     int64  `meddler:"commit_updated"   json:"updated_at"`
+	CommitID    int64  `meddler:"commit_id,pk"        json:"-"`
+	RepoID      int64  `meddler:"repo_id"             json:"-"`
+	Status      string `meddler:"commit_status"       json:"status"`
+	Started     int64  `meddler:"commit_started"      json:"started_at"`
+	Finished    int64  `meddler:"commit_finished"     json:"finished_at"`
+	Duration    int64  `meddler:"commit_duration"     json:"duration"`
+	Sha         string `meddler:"commit_sha"          json:"sha"`
+	Branch      string `meddler:"commit_branch"       json:"branch"`
+	PullRequest string `meddler:"commit_pr"           json:"pull_request"`
+	Author      string `meddler:"commit_author"       json:"author"`
+	Gravatar    string `meddler:"commit_gravatar"     json:"gravatar"`
+	Timestamp   string `meddler:"commit_timestamp"    json:"timestamp"`
+	Message     string `meddler:"commit_message"      json:"message"`
+	Config      string `meddler:"commit_yaml"         json:"-"`
+	Created     int64  `meddler:"commit_created"      json:"created_at"`
+	Updated     int64  `meddler:"commit_updated"      json:"updated_at"`
+	BuildNumber int64  `meddler:"commit_build_number" json:"build_number"`
 }

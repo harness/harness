@@ -542,11 +542,12 @@ func TestWriteBuildScript(t *testing.T) {
 	b.Build = &script.Build{
 		Hosts: []string{"127.0.0.1"}}
 	b.Repo = &repo.Repo{
-		Path:   "git://github.com/drone/drone.git",
-		Branch: "master",
-		Commit: "e7e046b35",
-		PR:     "123",
-		Dir:    "/var/cache/drone/github.com/drone/drone"}
+		Path:        "git://github.com/drone/drone.git",
+		Branch:      "master",
+		Commit:      "e7e046b35",
+		BuildNumber: 0,
+		PR:          "123",
+		Dir:         "/var/cache/drone/github.com/drone/drone"}
 	b.writeBuildScript(dir)
 
 	// persist a dummy build script to disk
@@ -563,8 +564,9 @@ func TestWriteBuildScript(t *testing.T) {
 	f.WriteEnv("DRONE_COMMIT", "e7e046b35")
 	f.WriteEnv("DRONE_PR", "123")
 	f.WriteEnv("DRONE_BUILD_DIR", "/var/cache/drone/github.com/drone/drone")
+	f.WriteEnv("DRONE_BUILD_NUMBER", "0")
 	f.WriteEnv("CI_NAME", "DRONE")
-	f.WriteEnv("CI_BUILD_NUMBER", "e7e046b35")
+	f.WriteEnv("CI_BUILD_NUMBER", "0")
 	f.WriteEnv("CI_BUILD_URL", "")
 	f.WriteEnv("CI_REMOTE", "git://github.com/drone/drone.git")
 	f.WriteEnv("CI_BRANCH", "master")
