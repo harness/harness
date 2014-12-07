@@ -127,10 +127,10 @@ func run(path, identity, dockerhost, dockercert, dockerkey string, publish, depl
 	}
 
 	if deploy == false {
-		s.Publish = nil
+		s.Deploy = nil
 	}
 	if publish == false {
-		s.Deploy = nil
+		s.Publish = nil
 	}
 
 	// get the repository root directory
