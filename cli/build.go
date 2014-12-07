@@ -115,7 +115,7 @@ func run(path, identity, dockerhost, dockercert, dockerkey string, publish, depl
 	envs := getParamMap("DRONE_ENV_")
 
 	// parse the Drone yml file
-	s, err := script.ParseBuildFile(script.Inject(path, envs))
+	s, err := script.ParseBuildFile(path, envs)
 	if err != nil {
 		log.Err(err.Error())
 		return EXIT_STATUS, err
