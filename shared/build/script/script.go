@@ -22,13 +22,13 @@ func ParseBuild(data string) (*Build, error) {
 	return &build, err
 }
 
-func ParseBuildFile(filename string) (*Build, error) {
+func ParseBuildFile(filename string, params map[string]string) (*Build, error) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	return ParseBuild(string(data))
+	return ParseBuild(Inject(string(data), params))
 }
 
 // Build stores the configuration details for
