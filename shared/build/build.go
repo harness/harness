@@ -57,6 +57,10 @@ type Builder struct {
 	// will be copied into the environments ~/.ssh/id_rsa file.
 	Key []byte
 
+	// SSHConfig is a ~/.ssh/config file that will be copied into the 
+	// environment's ~/.ssh/config file
+	SSHConfig []byte
+
 	// Timeout is the maximum amount of to will wait for a process
 	// to exit. The default is no timeout.
 	Timeout time.Duration
@@ -219,6 +223,10 @@ func (b *Builder) setup() error {
 	}
 
 	if err := b.writeIdentifyFile(dir); err != nil {
+		return err
+	}
+
+	if err := b.writeSSHConfigFile(dir); err != nil {
 		return err
 	}
 
@@ -456,6 +464,7 @@ func (b *Builder) writeDockerfile(dir string) error {
 		dockerfile.WriteEnv("TERM", "xterm")
 		dockerfile.WriteEnv("SHELL", "/bin/bash")
 		dockerfile.WriteAdd("id_rsa", "/home/ubuntu/.ssh/id_rsa")
+		dockerfile.WriteAdd("config", "/home/ubuntu/.ssh/config")
 		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /home/ubuntu/.ssh")
 		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /var/cache/drone")
 		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /usr/local/bin/drone")
@@ -473,6 +482,8 @@ func (b *Builder) writeDockerfile(dir string) error {
 		dockerfile.WriteEnv("GOPATH", "/var/cache/drone")
 		dockerfile.WriteAdd("id_rsa", "/root/.ssh/id_rsa")
 		dockerfile.WriteRun("chmod 600 /root/.ssh/id_rsa")
+		dockerfile.WriteAdd("config", "/root/.ssh/config")
+		dockerfile.WriteRun("chmod 600 /root/.ssh/config")
 		dockerfile.WriteRun("echo 'StrictHostKeyChecking no' > /root/.ssh/config")
 	}
 
@@ -561,4 +572,12 @@ func (b *Builder) writeProxyScript(dir string) error {
 func (b *Builder) writeIdentifyFile(dir string) error {
 	keyfilePath := filepath.Join(dir, "id_rsa")
 	return ioutil.WriteFile(keyfilePath, b.Key, 0700)
+}
+
+// writeSSHConfigFile is a helper function that
+// will generate the ssh config file in the builder's
+// temp directory to be added to the Image.
+func (b *Builder) writeSSHConfigFile(dir string) error {
+	sshConfigfilePath := filepath.Join(dir, "config")
+	return ioutil.WriteFile(sshConfigfilePath, b.SSHConfig, 0700)
 }
