@@ -66,7 +66,7 @@ func TestDefaultBehavior(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defaultname := fmt.Sprintf(`-n "%s"`, validcfg["tag"].(string))
+	defaultname := fmt.Sprintf(`-n \"%s\"`, validcfg["tag"].(string))
 	if !strings.Contains(buildfilestr, defaultname) {
 		t.Fatalf("Expected buildfile to contain name default to tag '%s': %s", defaultname, buildfilestr)
 	}

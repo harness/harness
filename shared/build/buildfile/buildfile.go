@@ -23,13 +23,13 @@ func (b *Buildfile) WriteCmd(command string) {
 	// echo the command as an encoded value
 	b.WriteString(fmt.Sprintf("echo '#DRONE:%x'\n", command))
 	// and then run the command
-	b.WriteString(fmt.Sprintf("%s\n", command))
+	b.WriteString(fmt.Sprintf("sh -c %q\n", command))
 }
 
 // WriteCmdSilent writes a command to the build file
 // but does not echo the command.
 func (b *Buildfile) WriteCmdSilent(command string) {
-	b.WriteString(fmt.Sprintf("%s\n", command))
+	b.WriteString(fmt.Sprintf("sh -c %q\n", command))
 }
 
 // WriteComment adds a comment to the build file. This
