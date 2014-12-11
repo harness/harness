@@ -477,6 +477,26 @@ func TestRunErrorWait(t *testing.T) {
 	t.Skip()
 }
 
+func TestWriteIdentifyFile(t *testing.T) {
+	// temporary directory to store file
+	dir, _ := ioutil.TempDir("", "drone-test-")
+	defer os.RemoveAll(dir)
+
+	b := Builder{}
+	b.Key = []byte("ssh-rsa AAA...")
+	b.writeIdentifyFile(dir)
+
+	// persist a dummy id_rsa keyfile to disk
+	keyfile, err := ioutil.ReadFile(filepath.Join(dir, "id_rsa"))
+	if err != nil {
+		t.Errorf("Expected id_rsa file saved to disk")
+	}
+
+	if string(keyfile) != string(b.Key) {
+		t.Errorf("Expected id_rsa value saved as %s, got %s", b.Key, keyfile)
+	}
+}
+
 func TestWriteProxyScript(t *testing.T) {
 	// temporary directory to store file
 	dir, _ := ioutil.TempDir("", "drone-test-")
@@ -521,7 +541,6 @@ func TestWriteBuildScript(t *testing.T) {
 	b := Builder{}
 	b.Build = &script.Build{
 		Hosts: []string{"127.0.0.1"}}
-	b.Key = []byte("ssh-rsa AAA...")
 	b.Repo = &repo.Repo{
 		Path:   "git://github.com/drone/drone.git",
 		Branch: "master",
@@ -551,7 +570,6 @@ func TestWriteBuildScript(t *testing.T) {
 	f.WriteEnv("CI_BRANCH", "master")
 	f.WriteEnv("CI_PULL_REQUEST", "123")
 	f.WriteHost("127.0.0.1")
-	f.WriteFile("$HOME/.ssh/id_rsa", []byte("ssh-rsa AAA..."), 600)
 	f.WriteCmd("git clone --depth=0 --recursive git://github.com/drone/drone.git /var/cache/drone/github.com/drone/drone")
 	f.WriteCmd("git fetch origin +refs/pull/123/head:refs/remotes/origin/pr/123")
 	f.WriteCmd("git checkout -qf -b pr/123 origin/pr/123")
