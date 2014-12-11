@@ -52,6 +52,12 @@ func (b *Buildfile) WriteHost(mapping string) {
 	b.WriteCmdSilent(fmt.Sprintf("[ -f /usr/bin/sudo ] && echo %q | sudo tee -a /etc/hosts", mapping))
 }
 
+// WriteFile add files as part of the script.
+func (b *Buildfile) WriteFile(path string, file []byte, i int) {
+	b.WriteString(fmt.Sprintf("echo %q | tee %s > /dev/null\n", string(file), path))
+	b.WriteCmdSilent(fmt.Sprintf("chmod %d %s", i, path))
+}
+
 // every build script starts with the following
 // code at the start.
 var base = `
@@ -69,6 +75,13 @@ if [ -d /etc/drone.d ]; then
   done
   unset i
 fi
+
+if [ ! -d $HOME/.ssh ]; then
+  mkdir -p $HOME/.ssh
+fi
+
+chmod 0700 $HOME/.ssh
+echo 'StrictHostKeyChecking no' | tee $HOME/.ssh/config > /dev/null
 
 # be sure to exit on error and print out
 # our bash commands, so we can which commands
