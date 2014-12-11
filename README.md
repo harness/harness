@@ -122,9 +122,11 @@ from=""
 user=""
 pass=""
 
-[worker]
+[docker]
 cert=""
 key=""
+
+[worker]
 nodes=[
 "unix:///var/run/docker.sock",
 "unix:///var/run/docker.sock"

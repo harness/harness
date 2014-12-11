@@ -34,6 +34,10 @@ import (
 	"github.com/drone/drone/server/worker/pool"
 )
 
+const (
+	DockerTLSWarning = `WARINING: Docker TLS cert or key not given, this may cause a build errors`
+)
+
 var (
 	// commit sha for the current build, set by
 	// the compile process.
@@ -61,9 +65,9 @@ var (
 	pub     *pubsub.PubSub
 
 	// Docker configuration details.
-	dockercrt = config.String("docker-cert", "")
-	dockerkey = config.String("docker-key", "")
-	nodes     StringArr
+	dockercert = config.String("docker-cert", "")
+	dockerkey  = config.String("docker-key", "")
+	nodes      StringArr
 
 	db *sql.DB
 
@@ -117,7 +121,14 @@ func main() {
 		workers.Allocate(docker.New())
 	} else {
 		for _, node := range nodes {
-			workers.Allocate(docker.NewHost(node))
+			if strings.HasPrefix(node, "unix://") {
+				workers.Allocate(docker.NewHost(node))
+			} else if *dockercert != "" && *dockerkey != "" {
+				workers.Allocate(docker.NewHostCertFile(node, *dockercert, *dockerkey))
+			} else {
+				fmt.Println(DockerTLSWarning)
+				workers.Allocate(docker.NewHost(node))
+			}
 		}
 	}
 
