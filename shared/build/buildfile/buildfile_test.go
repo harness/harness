@@ -46,4 +46,11 @@ func TestWrite(t *testing.T) {
 	if got != want {
 		t.Errorf("Exepected WriteHost returned %s, got %s", want, got)
 	}
+
+	f = &Buildfile{}
+	f.WriteFile("$HOME/.ssh/id_rsa", []byte("ssh-rsa AAA..."), 600)
+	got, want = f.String(), "echo 'ssh-rsa AAA...' | tee $HOME/.ssh/id_rsa > /dev/null\nchmod 600 $HOME/.ssh/id_rsa\n"
+	if got != want {
+		t.Errorf("Exepected WriteFile returned \n%s, \ngot\n%s", want, got)
+	}
 }
