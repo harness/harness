@@ -218,10 +218,6 @@ func (b *Builder) setup() error {
 		b.services = append(b.services, info)
 	}
 
-	if err := b.writeIdentifyFile(dir); err != nil {
-		return err
-	}
-
 	if err := b.writeBuildScript(dir); err != nil {
 		return err
 	}
@@ -455,11 +451,8 @@ func (b *Builder) writeDockerfile(dir string) error {
 		dockerfile.WriteEnv("LOGNAME", "ubuntu")
 		dockerfile.WriteEnv("TERM", "xterm")
 		dockerfile.WriteEnv("SHELL", "/bin/bash")
-		dockerfile.WriteAdd("id_rsa", "/home/ubuntu/.ssh/id_rsa")
-		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /home/ubuntu/.ssh")
 		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /var/cache/drone")
 		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /usr/local/bin/drone")
-		dockerfile.WriteRun("sudo chmod 600 /home/ubuntu/.ssh/id_rsa")
 	default:
 		// all other images are assumed to use
 		// the root user.
@@ -471,9 +464,6 @@ func (b *Builder) writeDockerfile(dir string) error {
 		dockerfile.WriteEnv("TERM", "xterm")
 		dockerfile.WriteEnv("SHELL", "/bin/bash")
 		dockerfile.WriteEnv("GOPATH", "/var/cache/drone")
-		dockerfile.WriteAdd("id_rsa", "/root/.ssh/id_rsa")
-		dockerfile.WriteRun("chmod 600 /root/.ssh/id_rsa")
-		dockerfile.WriteRun("echo 'StrictHostKeyChecking no' > /root/.ssh/config")
 	}
 
 	dockerfile.WriteAdd("proxy.sh", "/etc/drone.d/")
@@ -511,6 +501,8 @@ func (b *Builder) writeBuildScript(dir string) error {
 	for _, mapping := range b.Build.Hosts {
 		f.WriteHost(mapping)
 	}
+
+	f.WriteFile("$HOME/.ssh/id_rsa", b.Key, 600)
 
 	// if the repository is remote then we should
 	// add the commands to the build script to
@@ -553,12 +545,4 @@ func (b *Builder) writeProxyScript(dir string) error {
 	// write the proxyfile to the temp directory
 	proxyfilePath := filepath.Join(dir, "proxy.sh")
 	return ioutil.WriteFile(proxyfilePath, proxyfile.Bytes(), 0755)
-}
-
-// writeIdentifyFile is a helper function that
-// will generate the id_rsa file in the builder's
-// temp directory to be added to the Image.
-func (b *Builder) writeIdentifyFile(dir string) error {
-	keyfilePath := filepath.Join(dir, "id_rsa")
-	return ioutil.WriteFile(keyfilePath, b.Key, 0700)
 }
