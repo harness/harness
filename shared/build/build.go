@@ -445,25 +445,16 @@ func (b *Builder) writeDockerfile(dir string) error {
 		// is the "ubuntu" user, since all build images
 		// inherit from the ubuntu cloud ISO
 		dockerfile.WriteUser("ubuntu")
-		dockerfile.WriteEnv("HOME", "/home/ubuntu")
-		dockerfile.WriteEnv("LANG", "en_US.UTF-8")
-		dockerfile.WriteEnv("LANGUAGE", "en_US:en")
 		dockerfile.WriteEnv("LOGNAME", "ubuntu")
-		dockerfile.WriteEnv("TERM", "xterm")
-		dockerfile.WriteEnv("SHELL", "/bin/bash")
+		dockerfile.WriteEnv("HOME", "/home/ubuntu")
 		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /var/cache/drone")
 		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /usr/local/bin/drone")
 	default:
 		// all other images are assumed to use
 		// the root user.
 		dockerfile.WriteUser("root")
-		dockerfile.WriteEnv("HOME", "/root")
-		dockerfile.WriteEnv("LANG", "en_US.UTF-8")
-		dockerfile.WriteEnv("LANGUAGE", "en_US:en")
 		dockerfile.WriteEnv("LOGNAME", "root")
-		dockerfile.WriteEnv("TERM", "xterm")
-		dockerfile.WriteEnv("SHELL", "/bin/bash")
-		dockerfile.WriteEnv("GOPATH", "/var/cache/drone")
+		dockerfile.WriteEnv("HOME", "/root")
 	}
 
 	dockerfile.WriteAdd("proxy.sh", "/etc/drone.d/")
@@ -478,6 +469,13 @@ func (b *Builder) writeDockerfile(dir string) error {
 // temp directory to be added to the Image.
 func (b *Builder) writeBuildScript(dir string) error {
 	f := buildfile.New()
+
+	// add environment variables for user env
+	f.WriteEnv("LANG", "en_US.UTF-8")
+	f.WriteEnv("LANGUAGE", "en_US:en")
+	f.WriteEnv("TERM", "xterm")
+	f.WriteEnv("GOPATH", "/var/cache/drone")
+	f.WriteEnv("SHELL", "/bin/bash")
 
 	// add environment variables about the build
 	f.WriteEnv("CI", "true")
