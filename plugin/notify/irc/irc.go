@@ -66,7 +66,7 @@ func (i *IRC) send(channel string, message string) error {
 
 	client.AddCallback("001", func(_ *irc.Event) {
 		client.Notice(channel, message)
-		client.Disconnect()
+		client.Quit()
 	})
 
 	go client.Loop()
