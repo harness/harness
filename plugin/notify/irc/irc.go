@@ -53,11 +53,23 @@ func (i *IRC) sendSuccess(req *model.Request) error {
 // to the connected IRC client
 func (i *IRC) send(channel string, message string) error {
 	client := irc.IRC(i.Nick, i.Nick)
-	if client != nil {
+
+	if client == nil {
 		return fmt.Errorf("Error creating IRC client")
 	}
-	defer client.Disconnect()
-	client.Connect(i.Server)
-	client.Notice(channel, message)
+
+	err := client.Connect(i.Server)
+
+	if err != nil {
+		return fmt.Errorf("Error connecting to IRC server: %v", err)
+	}
+
+	client.AddCallback("001", func(_ *irc.Event) {
+		client.Notice(channel, message)
+		client.Quit()
+	})
+
+	go client.Loop()
+
 	return nil
 }
