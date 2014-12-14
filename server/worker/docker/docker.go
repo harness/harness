@@ -111,13 +111,15 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 
 	path := r.Repo.Host + "/" + r.Repo.Owner + "/" + r.Repo.Name
 	repo := &repo.Repo{
-		Name:   path,
-		Path:   r.Repo.CloneURL,
-		Branch: r.Commit.Branch,
-		Commit: r.Commit.Sha,
-		PR:     r.Commit.PullRequest,
-		Dir:    filepath.Join("/var/cache/drone/src", git.GitPath(script.Git, path)),
-		Depth:  git.GitDepth(script.Git),
+		Name:         path,
+		Path:         r.Repo.CloneURL,
+		Branch:       r.Commit.Branch,
+		Commit:       r.Commit.Sha,
+		PR:           r.Commit.PullRequest,
+		SourceRemote: r.Commit.SourceRemote,
+		SourceBranch: r.Commit.SourceBranch,
+		Dir:          filepath.Join("/var/cache/drone/src", git.GitPath(script.Git, path)),
+		Depth:        git.GitDepth(script.Git),
 	}
 
 	// send all "started" notifications

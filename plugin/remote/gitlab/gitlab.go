@@ -111,7 +111,12 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 // repository and returns in string format.
 func (r *Gitlab) GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error) {
 	var client = NewClient(r.url, user.Access)
-	var path = ns(repo.Owner, repo.Name)
+	var path string
+	if len(hook.SourceRemote) > 0 {
+		path = ns(hook.SourceOwner, hook.SourceName)
+	} else {
+		path = ns(repo.Owner, repo.Name)
+	}
 	return client.RepoRawFile(path, hook.Sha, ".drone.yml")
 }
 
@@ -145,7 +150,6 @@ func (r *Gitlab) Activate(user *model.User, repo *model.Repo, link string) error
 // ParseHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
 func (r *Gitlab) ParseHook(req *http.Request) (*model.Hook, error) {
-
 	defer req.Body.Close()
 	var payload, _ = ioutil.ReadAll(req.Body)
 	var parsed, err = gogitlab.ParseHook(payload)
@@ -153,16 +157,11 @@ func (r *Gitlab) ParseHook(req *http.Request) (*model.Hook, error) {
 		return nil, err
 	}
 
-	if len(parsed.After) == 0 || parsed.TotalCommitsCount == 0 {
-		return nil, nil
-	}
-
 	if parsed.ObjectKind == "merge_request" {
-		// TODO (bradrydzewski) figure out how to handle merge requests
-		return nil, nil
+		return r.ParsePullRequestHook(parsed, req)
 	}
 
-	if len(parsed.After) == 0 {
+	if len(parsed.After) == 0 || parsed.TotalCommitsCount == 0 {
 		return nil, nil
 	}
 
@@ -184,6 +183,50 @@ func (r *Gitlab) ParseHook(req *http.Request) (*model.Hook, error) {
 	case head.Author == nil:
 		hook.Author = parsed.UserName
 	}
+
+	return hook, nil
+}
+
+func (r *Gitlab) ParsePullRequestHook(payload *gogitlab.HookPayload, req *http.Request) (*model.Hook, error) {
+	obj := payload.ObjectAttributes
+
+	if !(obj.State == "opened" && obj.MergeStatus == "unchecked") {
+		return nil, nil
+	}
+
+	var hook = new(model.Hook)
+
+	hook.SourceName = obj.Source.Name
+	hook.SourceOwner = obj.Source.Namespace
+
+	// Check pull request comes from public fork
+	if obj.Source.VisibilityLevel < 20 {
+		hook.SourceRemote = obj.Source.SshUrl
+		// If pull request source repo is not a public
+		// check for non-internal pull request
+		if obj.Source.Name != obj.Target.Name || obj.Source.Namespace != obj.Target.Namespace {
+			return nil, nil
+		}
+	} else {
+		hook.SourceRemote = obj.Source.HttpUrl
+	}
+
+	hook.Owner = req.FormValue("owner")
+	hook.Repo = req.FormValue("name")
+	hook.Sha = obj.LastCommit.Id
+	hook.Branch = obj.TargetBranch
+	hook.SourceBranch = obj.SourceBranch
+	hook.Timestamp = obj.LastCommit.Timestamp
+	hook.Message = obj.Title
+
+	if obj.LastCommit.Author == nil {
+		// Waiting for merge https://github.com/gitlabhq/gitlabhq/pull/7967
+		hook.Author = ""
+	} else {
+		hook.Author = obj.LastCommit.Author.Email
+	}
+
+	hook.PullRequest = strconv.Itoa(obj.IId)
 
 	return hook, nil
 }

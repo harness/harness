@@ -39,6 +39,21 @@ func Migrate_20142110(tx migration.LimitedTx) error {
 	return nil
 }
 
+// Migrate_20142310 is a database migration on Oct-10 2014.
+func Migrate_20142310(tx migration.LimitedTx) error {
+	var stmts = []string{
+		commitSourceRemote, // add source remote column
+		commitSourceBranch, // add source branch column
+	}
+	for _, stmt := range stmts {
+		_, err := tx.Exec(transform(stmt))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 var userTable = `
 CREATE TABLE IF NOT EXISTS users (
 	 user_id           INTEGER PRIMARY KEY AUTOINCREMENT
@@ -143,4 +158,11 @@ CREATE TABLE IF NOT EXISTS blobs (
 	,blob_data    BLOB
 	,UNIQUE(blob_path)
 );
+`
+
+var commitSourceRemote = `
+ALTER TABLE commits ADD COLUMN commit_source_remote VARCHAR(255)
+`
+var commitSourceBranch = `
+ALTER TABLE commits ADD COLUMN commit_source_branch VARCHAR(255)
 `

@@ -13,6 +13,10 @@
 * Docker
 * AUFS
 
+## Additional Requirements
+
+* GitLab 7.4 and higher ( if you use gitlab )
+
 
 We highly recommend running Docker with the AUFS storage driver. You can verify Docker is using
 the AUFS storage driver with the following command `sudo docker info | grep Driver:`
