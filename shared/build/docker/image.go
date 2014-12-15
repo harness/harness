@@ -1,6 +1,8 @@
 package docker
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -46,6 +48,12 @@ type Delete struct {
 	Untagged string `json:",omitempty"`
 }
 
+type AuthConfiguration struct {
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+	Email    string `json:"email,omitempty"`
+}
+
 type ImageService struct {
 	*Client
 }
@@ -62,22 +70,30 @@ func (c *ImageService) Create(image string) error {
 	return c.do("POST", fmt.Sprintf("/images/create?fromImage=%s", image), nil, nil)
 }
 
-func (c *ImageService) Pull(image string) error {
+func (c *ImageService) Pull(image string, auth AuthConfiguration) error {
 	name, tag := parsers.ParseRepositoryTag(image)
 	if len(tag) == 0 {
 		tag = DEFAULTTAG
 	}
-	return c.PullTag(name, tag)
+	return c.PullTag(name, tag, auth)
 }
 
-func (c *ImageService) PullTag(name, tag string) error {
+func (c *ImageService) PullTag(name, tag string, auth AuthConfiguration) error {
 	var out io.Writer
 	if Logging {
 		out = os.Stdout
 	}
 
 	path := fmt.Sprintf("/images/create?fromImage=%s&tag=%s", name, tag)
-	return c.stream("POST", path, nil, out, http.Header{})
+
+	buf, err := json.Marshal(auth)
+	if err != nil {
+		return err
+	}
+
+	headers := http.Header{}
+	headers.Set("X-Registry-Auth", base64.URLEncoding.EncodeToString(buf))
+	return c.stream("POST", path, nil, out, headers)
 }
 
 // Remove the image name from the filesystem

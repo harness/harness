@@ -24,7 +24,7 @@ func (c *ContainerService) ListAll() ([]*Containers, error) {
 }
 
 // Create a Container
-func (c *ContainerService) Create(conf *Config) (*Run, error) {
+func (c *ContainerService) Create(conf *Config, auth AuthConfiguration) (*Run, error) {
 	run, err := c.create(conf)
 	switch {
 	// if no error, exit immediately
@@ -39,7 +39,7 @@ func (c *ContainerService) Create(conf *Config) (*Run, error) {
 	}
 
 	// attempt to pull the image
-	if err := c.Images.Pull(conf.Image); err != nil {
+	if err := c.Images.Pull(conf.Image, auth); err != nil {
 		return nil, err
 	}
 
@@ -89,9 +89,9 @@ func (c *ContainerService) Inspect(id string) (*Container, error) {
 }
 
 // Run the container
-func (c *ContainerService) Run(conf *Config, host *HostConfig, out io.Writer) (*Wait, error) {
+func (c *ContainerService) Run(conf *Config, host *HostConfig, out io.Writer, auth AuthConfiguration) (*Wait, error) {
 	// create the container from the image
-	run, err := c.Create(conf)
+	run, err := c.Create(conf, auth)
 	if err != nil {
 		return nil, err
 	}
@@ -116,8 +116,8 @@ func (c *ContainerService) Run(conf *Config, host *HostConfig, out io.Writer) (*
 }
 
 // Run the container as a Daemon
-func (c *ContainerService) RunDaemon(conf *Config, host *HostConfig) (*Run, error) {
-	run, err := c.Create(conf)
+func (c *ContainerService) RunDaemon(conf *Config, host *HostConfig, auth AuthConfiguration) (*Run, error) {
+	run, err := c.Create(conf, auth)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (c *ContainerService) RunDaemon(conf *Config, host *HostConfig) (*Run, erro
 	return run, err
 }
 
-func (c *ContainerService) RunDaemonPorts(image string, ports map[Port]struct{}) (*Run, error) {
+func (c *ContainerService) RunDaemonPorts(image string, ports map[Port]struct{}, auth AuthConfiguration) (*Run, error) {
 	// setup configuration
 	config := Config{Image: image}
 	config.ExposedPorts = ports
@@ -142,5 +142,5 @@ func (c *ContainerService) RunDaemonPorts(image string, ports map[Port]struct{})
 	}
 	//127.0.0.1::%s
 	//map[3306/tcp:{}] map[3306/tcp:[{127.0.0.1 }]]
-	return c.RunDaemon(&config, &host)
+	return c.RunDaemon(&config, &host, auth)
 }
