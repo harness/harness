@@ -134,7 +134,7 @@ url = ""
 api = ""
 secret = ""
 private-key = ""
-hook = "de.aeffle.stash.plugin.stash-http-get-post-receive-hook"
+hook = "de.aeffle.stash.plugin.stash-http-get-post-receive-hook%3Ahttp-get-post-receive-hook"
 
 [smtp]
 host=""
