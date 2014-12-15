@@ -114,6 +114,7 @@ secret=""
 
 [gitlab]
 url=""
+skip_verify=false
 
 [smtp]
 host=""
@@ -171,6 +172,7 @@ export DRONE_BITBUCKET_SECRET=""
 
 # gitlab configuration
 export DRONE_GITLAB_URL=""
+export DRONE_GITLAB_SKIP_VERIFY=false
 
 # email configuration
 export DRONE_SMTP_HOST=""

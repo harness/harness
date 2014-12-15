@@ -51,6 +51,7 @@ datasource="/var/lib/drone/drone.sqlite"
 
 # [gitlab]
 # url=""
+# skip_verify=false
 
 
 #####################################################################
