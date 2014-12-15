@@ -315,6 +315,7 @@ func (b *Builder) teardown() error {
 func (b *Builder) run() error {
 	// create and run the container
 	conf := docker.Config{
+		Hostname:     script.DockerHostname(b.Build.Docker),
 		Image:        b.image.ID,
 		AttachStdin:  false,
 		AttachStdout: true,
