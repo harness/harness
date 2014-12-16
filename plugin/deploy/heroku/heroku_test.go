@@ -57,7 +57,7 @@ func Test_Heroku(t *testing.T) {
 
 			d.Write(b)
 			out := b.String()
-			g.Assert(strings.Contains(out, "\ngit push heroku $COMMIT:master\n")).Equal(true)
+			g.Assert(strings.Contains(out, "\ngit push heroku $COMMIT:refs/heads/master\n")).Equal(true)
 		})
 
 		g.It("Should force push to remote", func() {
@@ -71,7 +71,7 @@ func Test_Heroku(t *testing.T) {
 			out := b.String()
 			g.Assert(strings.Contains(out, "\ngit add -A\n")).Equal(true)
 			g.Assert(strings.Contains(out, "\ngit commit -m 'adding build artifacts'\n")).Equal(true)
-			g.Assert(strings.Contains(out, "\ngit push heroku HEAD:master --force\n")).Equal(true)
+			g.Assert(strings.Contains(out, "\ngit push heroku HEAD:refs/heads/master --force\n")).Equal(true)
 		})
 
 	})
