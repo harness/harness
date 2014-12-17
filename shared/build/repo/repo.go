@@ -70,7 +70,7 @@ func (r *Repo) IsLocal() bool {
 }
 
 // IsGit returns true if the Repository is
-// a Git repoisitory.
+// a Git repository.
 func (r *Repo) IsGit() bool {
 	switch {
 	case strings.HasPrefix(r.Path, "git://"):
@@ -96,6 +96,16 @@ func (r *Repo) IsGit() bool {
 	return false
 }
 
+// IsHG returns true if the repository is
+// a Mercurial repository
+func (r *Repo) IsHG() bool {
+	switch {
+	case strings.HasPrefix(r.Path, "ssh://hg@"):
+		return true
+	}
+	return false
+}
+
 // returns commands that can be used in a Dockerfile
 // to clone the repository.
 //
@@ -105,21 +115,40 @@ func (r *Repo) Commands() []string {
 	// if no branch exists.
 	branch := r.Branch
 	if len(branch) == 0 {
-		branch = "master"
+		switch {
+		case r.IsGit():
+			branch = "master"
+		case r.IsHG():
+			branch = "default"
+		}
 	}
 
 	cmds := []string{}
 	if len(r.PR) > 0 {
-		// If a specific PR is provided then we need to clone it.
-		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive %s %s", r.Depth, r.Path, r.Dir))
-		cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
-		cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
+		if r.IsGit() {
+			// If a specific PR is provided then we need to clone it.
+			cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive %s %s", r.Depth, r.Path, r.Dir))
+			cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
+			cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
+		}
+		if r.IsHG() {
+			// we need to add support for mercurial PR
+		}
 	} else {
 		// Otherwise just clone the branch.
-		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
-		// If a specific commit is provided then we'll need to check it out.
-		if len(r.Commit) > 0 {
-			cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))
+		if r.IsGit() {
+			cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
+			// If a specific commit is provided then we'll need to check it out.
+			if len(r.Commit) > 0 {
+				cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))
+			}
+		}
+		if r.IsHG() {
+			cmds = append(cmds, fmt.Sprintf("hg clone --branch %s %s %s", r.Depth, branch, r.Path, r.Dir))
+			// If a specific commit is provided then we'll need to check it out.
+			if len(r.Commit) > 0 {
+				cmds = append(cmds, fmt.Sprintf("hg update %s", r.Commit))
+			}
 		}
 	}
 
