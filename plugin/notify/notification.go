@@ -9,6 +9,7 @@ import (
 	"github.com/drone/drone/plugin/notify/email"
 	"github.com/drone/drone/plugin/notify/github"
 	"github.com/drone/drone/plugin/notify/irc"
+	"github.com/drone/drone/plugin/notify/katoim"
 	"github.com/drone/drone/plugin/notify/webhook"
 	"github.com/drone/drone/shared/model"
 )
@@ -28,6 +29,7 @@ type Notification struct {
 	Slack    *Slack           `yaml:"slack,omitempty"`
 	Gitter   *Gitter          `yaml:"gitter,omitempty"`
 	Flowdock *Flowdock        `yaml:"flowdock,omitempty"`
+	KatoIM   *katoim.KatoIM   `yaml:"katoim,omitempty"`
 
 	GitHub github.GitHub `yaml:"--"`
 }
@@ -84,6 +86,14 @@ func (n *Notification) Send(context *model.Request) error {
 	// send gitter notifications
 	if n.Flowdock != nil {
 		err := n.Flowdock.Send(context)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	// send kato-im notifications
+	if n.KatoIM != nil {
+		err := n.KatoIM.Send(context)
 		if err != nil {
 			log.Println(err)
 		}
