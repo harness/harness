@@ -71,6 +71,11 @@ func NewHostCert(uri string, cert, key []byte) (*Client, error) {
 	// if no certificate is provided returns the
 	// client with no TLS configured.
 	if cert == nil || key == nil || len(cert) == 0 || len(key) == 0 {
+		cli.trans = &http.Transport{
+			Dial: func(dial_network, dial_addr string) (net.Conn, error) {
+				return net.DialTimeout(cli.proto, cli.addr, 32*time.Second)
+			},
+		}
 		return cli, nil
 	}
 
@@ -363,6 +368,7 @@ func (c *Client) HTTPClient() *http.Client {
 		return &http.Client{Transport: c.trans}
 	}
 	return &http.Client{
+		// WARN Leak Transport's Pooling Connection
 		Transport: &http.Transport{
 			Dial: func(dial_network, dial_addr string) (net.Conn, error) {
 				return net.DialTimeout(c.proto, c.addr, 32*time.Second)
@@ -376,4 +382,10 @@ func (c *Client) Dial() (net.Conn, error) {
 		return tls.Dial(c.proto, c.addr, c.tls)
 	}
 	return net.Dial(c.proto, c.addr)
+}
+
+func (c *Client) CloseIdleConnections() {
+	if c.trans != nil {
+		c.trans.CloseIdleConnections()
+	}
 }
