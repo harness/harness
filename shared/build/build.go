@@ -270,6 +270,8 @@ func (b *Builder) setup() error {
 // and the supporting service containers.
 func (b *Builder) teardown() error {
 
+	defer b.dockerClient.CloseIdleConnections()
+
 	// stop and destroy the container
 	if b.container != nil {
 
