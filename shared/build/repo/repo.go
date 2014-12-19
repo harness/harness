@@ -144,7 +144,7 @@ func (r *Repo) Commands() []string {
 			}
 		}
 		if r.IsHG() {
-			cmds = append(cmds, fmt.Sprintf("hg clone --branch %s %s %s", r.Depth, branch, r.Path, r.Dir))
+			cmds = append(cmds, fmt.Sprintf("hg clone --branch %s %s %s", branch, r.Path, r.Dir))
 			// If a specific commit is provided then we'll need to check it out.
 			if len(r.Commit) > 0 {
 				cmds = append(cmds, fmt.Sprintf("hg update %s", r.Commit))
