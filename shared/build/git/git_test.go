@@ -38,3 +38,38 @@ func TestGitDepth(t *testing.T) {
 		t.Errorf("The result is invalid. [expected: %d][actual: %d]", expected, actual)
 	}
 }
+
+func TestGitRecursive(t *testing.T) {
+	var g *Git
+	var expected bool
+
+	expected = DefaultGitRecursive
+	g = nil
+	if actual := GitRecursive(g); actual != expected {
+		t.Errorf("The result is invalid. [expected: %v][actual: %v]", expected, actual)
+	}
+
+	expected = DefaultGitRecursive
+	g = &Git{}
+	if actual := GitRecursive(g); actual != expected {
+		t.Errorf("The result is invalid. [expected: %v][actual: %v]", expected, actual)
+	}
+
+	expected = DefaultGitRecursive
+	g = &Git{Recursive: nil}
+	if actual := GitRecursive(g); actual != expected {
+		t.Errorf("The result is invalid. [expected: %v][actual: %v]", expected, actual)
+	}
+
+	expected = false
+	g = &Git{Recursive: &expected}
+	if actual := GitRecursive(g); actual != expected {
+		t.Errorf("The result is invalid. [expected: %v][actual: %v]", expected, actual)
+	}
+
+	expected = true
+	g = &Git{Recursive: &expected}
+	if actual := GitRecursive(g); actual != expected {
+		t.Errorf("The result is invalid. [expected: %v][actual: %v]", expected, actual)
+	}
+}
