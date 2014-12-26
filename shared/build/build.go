@@ -389,6 +389,11 @@ func (b *Builder) run() error {
 		log.Infof("mounting volume %s:%s", hostpath, volume)
 	}
 
+	// append volumes for to the host.Binds
+	for _, volume := range b.Build.Volumes {
+		host.Binds = append(host.Binds, fmt.Sprintf("%s:%s", volume))
+	}
+
 	// create the container from the image
 	run, err := b.dockerClient.Containers.Create(&conf)
 	if err != nil {

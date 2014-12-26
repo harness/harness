@@ -56,6 +56,11 @@ type Build struct {
 	// persisted between builds.
 	Cache []string
 
+	// Volumes lists a set of directorys that should
+	// be a bound volume from the container host
+	// to the container
+	Volumes []string
+
 	// Services specifies external services, such as
 	// database or messaging queues, that should be
 	// linked to the build environment.
