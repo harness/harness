@@ -391,7 +391,8 @@ func (b *Builder) run() error {
 
 	// append volumes for to the host.Binds
 	for _, volume := range b.Build.Volumes {
-		host.Binds = append(host.Binds, fmt.Sprintf("%s:%s", volume))
+		host.Binds = append(host.Binds, fmt.Sprintf("%s:%s", volume, volume))
+		conf.Volumes[volume] = struct{}{}
 	}
 
 	// create the container from the image
