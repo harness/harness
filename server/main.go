@@ -137,6 +137,7 @@ func main() {
 	// create handler for static resources
 	assets := rice.MustFindBox("app").HTTPBox()
 	assetserve := http.FileServer(rice.MustFindBox("app").HTTPBox())
+	http.Handle("/robots.txt", assetserve)
 	http.Handle("/static/", http.StripPrefix("/static", assetserve))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write(assets.MustBytes("index.html"))
