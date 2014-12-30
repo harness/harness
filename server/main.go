@@ -24,6 +24,7 @@ import (
 	"github.com/drone/drone/plugin/remote/bitbucket"
 	"github.com/drone/drone/plugin/remote/github"
 	"github.com/drone/drone/plugin/remote/gitlab"
+	"github.com/drone/drone/plugin/remote/gogs"
 	"github.com/drone/drone/server/blobstore"
 	"github.com/drone/drone/server/capability"
 	"github.com/drone/drone/server/datastore"
@@ -31,6 +32,10 @@ import (
 	"github.com/drone/drone/server/worker/director"
 	"github.com/drone/drone/server/worker/docker"
 	"github.com/drone/drone/server/worker/pool"
+)
+
+const (
+	DockerTLSWarning = `WARINING: Docker TLS cert or key not given, this may cause a build errors`
 )
 
 var (
@@ -60,9 +65,9 @@ var (
 	pub     *pubsub.PubSub
 
 	// Docker configuration details.
-	dockercrt = config.String("docker-cert", "")
-	dockerkey = config.String("docker-key", "")
-	nodes     StringArr
+	dockercert = config.String("docker-cert", "")
+	dockerkey  = config.String("docker-key", "")
+	nodes      StringArr
 
 	db *sql.DB
 
@@ -97,6 +102,7 @@ func main() {
 	bitbucket.Register()
 	github.Register()
 	gitlab.Register()
+	gogs.Register()
 
 	caps = map[string]bool{}
 	caps[capability.Registration] = *open
@@ -115,7 +121,14 @@ func main() {
 		workers.Allocate(docker.New())
 	} else {
 		for _, node := range nodes {
-			workers.Allocate(docker.NewHost(node))
+			if strings.HasPrefix(node, "unix://") {
+				workers.Allocate(docker.NewHost(node))
+			} else if *dockercert != "" && *dockerkey != "" {
+				workers.Allocate(docker.NewHostCertFile(node, *dockercert, *dockerkey))
+			} else {
+				fmt.Println(DockerTLSWarning)
+				workers.Allocate(docker.NewHost(node))
+			}
 		}
 	}
 
@@ -124,6 +137,7 @@ func main() {
 	// create handler for static resources
 	assets := rice.MustFindBox("app").HTTPBox()
 	assetserve := http.FileServer(rice.MustFindBox("app").HTTPBox())
+	http.Handle("/robots.txt", assetserve)
 	http.Handle("/static/", http.StripPrefix("/static", assetserve))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write(assets.MustBytes("index.html"))

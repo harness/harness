@@ -9,8 +9,8 @@ import (
 
 // NewClient is a helper function that returns a new GitHub
 // client using the provided OAuth token.
-func NewClient(uri, token string) *gogitlab.Gitlab {
-	return gogitlab.NewGitlab(uri, "/api/v3", token)
+func NewClient(uri, token string, skipVerify bool) *gogitlab.Gitlab {
+	return gogitlab.NewGitlabCert(uri, "/api/v3", token, skipVerify)
 }
 
 // IsRead is a helper function that returns true if the

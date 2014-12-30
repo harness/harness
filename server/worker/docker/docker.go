@@ -49,6 +49,20 @@ func NewHost(host string) *Docker {
 	}
 }
 
+func NewHostCertFile(host, cert, key string) *Docker {
+	docker_node, err := docker.NewHostCertFile(host, cert, key)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return &Docker{
+		UUID:    uuid.New(),
+		Kind:    dockerKind,
+		Created: time.Now().UTC().Unix(),
+		docker:  docker_node,
+	}
+}
+
 func (d *Docker) Do(c context.Context, r *worker.Work) {
 
 	// ensure that we can recover from any panics to

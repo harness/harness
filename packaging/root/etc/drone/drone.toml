@@ -11,7 +11,7 @@ port=":80"
 
 # [session]
 # secret=""
-# duration=""
+# expires=""
 
 #####################################################################
 # Database configuration, by default using SQLite3.
@@ -51,6 +51,7 @@ datasource="/var/lib/drone/drone.sqlite"
 
 # [gitlab]
 # url=""
+# skip_verify=false
 
 
 #####################################################################
@@ -64,9 +65,11 @@ datasource="/var/lib/drone/drone.sqlite"
 # user=""
 # pass=""
 
-# [worker]
+# [docker]
 # cert=""
 # key=""
+
+# [worker]
 # nodes=[
 #   "unix:///var/run/docker.sock",
 #   "unix:///var/run/docker.sock"
