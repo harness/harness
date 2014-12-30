@@ -39,12 +39,6 @@ func Migrate_20142110(tx migration.LimitedTx) error {
 	return nil
 }
 
-// Migrate_20143012 adds the prior commit's status to the current commit
-func Migrate_20143012(tx migration.LimitedTx) error {
-	_, err := tx.Exec(transform(commitPriorStatusColumn))
-	return err
-}
-
 var userTable = `
 CREATE TABLE IF NOT EXISTS users (
 	 user_id           INTEGER PRIMARY KEY AUTOINCREMENT
@@ -114,10 +108,6 @@ ALTER TABLE repos ADD COLUMN repo_token VARCHAR(40)
 
 var repoTokenUpdate = `
 UPDATE repos SET repo_token = '';
-`
-
-var commitPriorStatusColumn = `
-ALTER TABLE commits ADD COLUMN commit_prior_status VARCHAR(255);
 `
 
 var commitTable = `
