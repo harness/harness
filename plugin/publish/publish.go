@@ -11,12 +11,13 @@ import (
 // for publishing build artifacts when
 // a Build has succeeded
 type Publish struct {
-	S3     *S3      `yaml:"s3,omitempty"`
-	Swift  *Swift   `yaml:"swift,omitempty"`
-	PyPI   *PyPI    `yaml:"pypi,omitempty"`
-	NPM    *npm.NPM `yaml:"npm,omitempty"`
-	Docker *Docker  `yaml:"docker,omitempty"`
-	Github *Github  `yaml:"github,omitempty"`
+	S3      *S3      `yaml:"s3,omitempty"`
+	Swift   *Swift   `yaml:"swift,omitempty"`
+	PyPI    *PyPI    `yaml:"pypi,omitempty"`
+	NPM     *npm.NPM `yaml:"npm,omitempty"`
+	Docker  *Docker  `yaml:"docker,omitempty"`
+	Github  *Github  `yaml:"github,omitempty"`
+	Dropbox *Dropbox `yaml:"dropbox,omitempty"`
 }
 
 func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
@@ -48,6 +49,11 @@ func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	// Docker
 	if p.Docker != nil && match(p.Docker.GetCondition(), r) {
 		p.Docker.Write(f)
+	}
+
+	// Dropbox
+	if p.Dropbox != nil && match(p.Dropbox.GetCondition(), r) {
+		p.Dropbox.Write(f)
 	}
 }
 

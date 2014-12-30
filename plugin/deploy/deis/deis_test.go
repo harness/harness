@@ -1,4 +1,4 @@
-package heroku
+package deis
 
 import (
 	"strings"
@@ -8,15 +8,16 @@ import (
 	"github.com/franela/goblin"
 )
 
-func Test_Heroku(t *testing.T) {
+func Test_Deis(t *testing.T) {
 
 	g := goblin.Goblin(t)
-	g.Describe("Heroku Deploy", func() {
+	g.Describe("Deis Deploy", func() {
 
 		g.It("Should set git.config", func() {
 			b := new(buildfile.Buildfile)
-			h := Heroku{
+			h := Deis{
 				App: "drone",
+			  Deisurl: "deis.yourdomain.com:2222",
 			}
 
 			h.Write(b)
@@ -26,52 +27,41 @@ func Test_Heroku(t *testing.T) {
 			g.Assert(strings.Contains(out, CmdGlobalEmail)).Equal(true)
 		})
 
-		g.It("Should write token", func() {
-			b := new(buildfile.Buildfile)
-			h := Heroku{
-				App: "drone",
-				Token: "mock-token",
-			}
-
-			h.Write(b)
-			out := b.String()
-			g.Assert(strings.Contains(out, "\necho 'machine git.heroku.com login _ password mock-token' >> ~/.netrc\n")).Equal(true)
-			})
-
 		g.It("Should add remote", func() {
 			b := new(buildfile.Buildfile)
-			h := Heroku{
+			h := Deis{
 				App: "drone",
+			  Deisurl: "deis.yourdomain.com:2222/",
 			}
 
 			h.Write(b)
 			out := b.String()
-			g.Assert(strings.Contains(out, "\ngit remote add heroku https://git.heroku.com/drone.git\n")).Equal(true)
+			g.Assert(strings.Contains(out, "\ngit remote add deis ssh://git@deis.yourdomain.com:2222/drone.git\n")).Equal(true)
 		})
 
 		g.It("Should push to remote", func() {
 			b := new(buildfile.Buildfile)
-			d := Heroku{
+			d := Deis{
 				App: "drone",
 			}
 
 			d.Write(b)
 			out := b.String()
-			g.Assert(strings.Contains(out, "\ngit push heroku $COMMIT:refs/heads/master\n")).Equal(true)
+			g.Assert(strings.Contains(out, "\ngit push deis $COMMIT:master\n")).Equal(true)
 		})
 
 		g.It("Should force push to remote", func() {
 			b := new(buildfile.Buildfile)
-			h := Heroku{
+			h := Deis{
 				Force: true,
-				App:   "drone",
+				App: "drone",
 			}
 
 			h.Write(b)
 			out := b.String()
 			g.Assert(strings.Contains(out, "\ngit add -A\n")).Equal(true)
 			g.Assert(strings.Contains(out, "\ngit commit -m 'adding build artifacts'\n")).Equal(true)
-			g.Assert(strings.Contains(out, "\ngit push heroku HEAD:refs/heads/master --force\n")).Equal(true)
+			g.Assert(strings.Contains(out, "\ngit push deis HEAD:master --force\n")).Equal(true)
 		})
 
 	})
