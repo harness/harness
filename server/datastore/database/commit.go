@@ -40,6 +40,15 @@ func (db *Commitstore) GetCommitLast(repo *model.Repo, branch string) (*model.Co
 	return commit, err
 }
 
+// GetCommitPrior retrieves the latest commit
+// from the datastore for the specified repository
+// and branch.
+func (db *Commitstore) GetCommitPrior(oldCommit *model.Commit) (*model.Commit, error) {
+	var commit = new(model.Commit)
+	var err = meddler.QueryRow(db, commit, rebind(commitPriorQuery), oldCommit.RepoID, oldCommit.Branch, oldCommit.Created)
+	return commit, err
+}
+
 // GetCommitList retrieves a list of latest commits
 // from the datastore for the specified repository.
 func (db *Commitstore) GetCommitList(repo *model.Repo) ([]*model.Commit, error) {
@@ -70,16 +79,18 @@ func (db *Commitstore) PostCommit(commit *model.Commit) error {
 		commit.Created = time.Now().UTC().Unix()
 	}
 	commit.Updated = time.Now().UTC().Unix()
+
+	priorCommit, err := db.GetCommitPrior(commit)
+	if err == nil {
+		commit.PriorStatus = priorCommit.Status
+	}
+
 	return meddler.Save(db, commitTable, commit)
 }
 
 // PutCommit saves a commit in the datastore.
 func (db *Commitstore) PutCommit(commit *model.Commit) error {
-	if commit.Created == 0 {
-		commit.Created = time.Now().UTC().Unix()
-	}
-	commit.Updated = time.Now().UTC().Unix()
-	return meddler.Save(db, commitTable, commit)
+	return db.PostCommit(commit)
 }
 
 // DelCommit removes the commit from the datastore.
@@ -167,6 +178,18 @@ WHERE repo_id       = ?
   AND commit_branch = ?
   AND commit_pr     = ''
 ORDER BY commit_id DESC
+LIMIT 1
+`
+
+// SQL query to retrieve the prior Commit (by commit_created) in the same branch and repo as the specified Commit.
+const commitPriorQuery = `
+SELECT *
+FROM commits
+WHERE repo_id = ?
+  AND commit_branch = ?
+  AND commit_created < ?
+  AND commit_status IN ('Success', 'Failure')
+ORDER BY commit_created DESC
 LIMIT 1
 `
 
