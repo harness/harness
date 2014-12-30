@@ -8,6 +8,7 @@ type Commit struct {
 	ID          int64  `meddler:"commit_id,pk"     json:"id"`
 	RepoID      int64  `meddler:"repo_id"          json:"-"`
 	Status      string `meddler:"commit_status"    json:"status"`
+	PriorStatus string `meddler:"commit_prior_status" json:"prior_status"`
 	Started     int64  `meddler:"commit_started"   json:"started_at"`
 	Finished    int64  `meddler:"commit_finished"  json:"finished_at"`
 	Duration    int64  `meddler:"commit_duration"  json:"duration"`
