@@ -5,4 +5,5 @@ type Request struct {
 	User   *User   `json:"-"`
 	Repo   *Repo   `json:"repo"`
 	Commit *Commit `json:"commit"`
+	Prior  *Commit `json:"prior_commit"`
 }

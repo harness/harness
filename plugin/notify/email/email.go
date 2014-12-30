@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	NotifyAlways = "always" // always send email notification
-	NotifyNever  = "never"  // never send email notifications
-	NotifyAuthor = "author" // only send email notifications to the author
+	NotifyAlways      = "always" // always send email notification
+	NotifyNever       = "never"  // never send email notifications
+	NotifyAuthor      = "author" // only send email notifications to the author
+	NotifyAfterChange = "change" // only if the previous commit has a different status
 
 	NotifyTrue  = "true"  // alias for NotifyTrue
 	NotifyFalse = "false" // alias for NotifyFalse
@@ -70,6 +71,11 @@ func (e *Email) sendFailure(context *model.Request) error {
 	switch e.Failure {
 	case NotifyFalse, NotifyNever, NotifyOff:
 		return nil
+	// if the last commit in this branch was a different status, notify
+	case NotifyAfterChange:
+		if context.Prior.Status == context.Commit.Status {
+			return nil
+		}
 	// if configured to email the author, replace
 	// the recipiends with the commit author email.
 	case NotifyBlame, NotifyAuthor:
@@ -103,6 +109,11 @@ func (e *Email) sendSuccess(context *model.Request) error {
 	switch e.Success {
 	case NotifyFalse, NotifyNever, NotifyOff:
 		return nil
+	// if the last commit in this branch was a different status, notify
+	case NotifyAfterChange:
+		if context.Prior.Status == context.Commit.Status {
+			return nil
+		}
 	// if configured to email the author, replace
 	// the recipiends with the commit author email.
 	case NotifyBlame, NotifyAuthor:
