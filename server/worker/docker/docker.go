@@ -139,9 +139,12 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	builder.Build = script
 	builder.Repo = repo
 	builder.Stdout = buf
-	builder.Key = []byte(r.Repo.PrivateKey)
 	builder.Timeout = time.Duration(r.Repo.Timeout) * time.Second
 	builder.Privileged = r.Repo.Privileged
+
+	if r.Repo.Private || len(r.Commit.PullRequest) == 0 {
+		builder.Key = []byte(r.Repo.PrivateKey)
+	}
 
 	// run the build
 	err = builder.Run()
