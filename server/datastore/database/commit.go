@@ -40,15 +40,6 @@ func (db *Commitstore) GetCommitLast(repo *model.Repo, branch string) (*model.Co
 	return commit, err
 }
 
-// GetCommitPrior retrieves the latest commit
-// from the datastore for the specified repository
-// and branch.
-func (db *Commitstore) GetCommitPrior(oldCommit *model.Commit) (*model.Commit, error) {
-	var commit = new(model.Commit)
-	var err = meddler.QueryRow(db, commit, rebind(commitPriorQuery), oldCommit.RepoID, oldCommit.Branch, oldCommit.Created)
-	return commit, err
-}
-
 // GetCommitList retrieves a list of latest commits
 // from the datastore for the specified repository.
 func (db *Commitstore) GetCommitList(repo *model.Repo) ([]*model.Commit, error) {
@@ -73,24 +64,30 @@ func (db *Commitstore) GetCommitListActivity(user *model.User) ([]*model.CommitR
 	return commits, err
 }
 
+// GetCommitPrior retrieves the latest commit
+// from the datastore for the specified repository and branch.
+func (db *Commitstore) GetCommitPrior(oldCommit *model.Commit) (*model.Commit, error) {
+	var commit = new(model.Commit)
+	var err = meddler.QueryRow(db, commit, rebind(commitPriorQuery), oldCommit.RepoID, oldCommit.Branch, oldCommit.ID)
+	return commit, err
+}
+
 // PostCommit saves a commit in the datastore.
 func (db *Commitstore) PostCommit(commit *model.Commit) error {
 	if commit.Created == 0 {
 		commit.Created = time.Now().UTC().Unix()
 	}
 	commit.Updated = time.Now().UTC().Unix()
-
-	priorCommit, err := db.GetCommitPrior(commit)
-	if err == nil {
-		commit.PriorStatus = priorCommit.Status
-	}
-
 	return meddler.Save(db, commitTable, commit)
 }
 
 // PutCommit saves a commit in the datastore.
 func (db *Commitstore) PutCommit(commit *model.Commit) error {
-	return db.PostCommit(commit)
+	if commit.Created == 0 {
+		commit.Created = time.Now().UTC().Unix()
+	}
+	commit.Updated = time.Now().UTC().Unix()
+	return meddler.Save(db, commitTable, commit)
 }
 
 // DelCommit removes the commit from the datastore.
@@ -185,11 +182,11 @@ LIMIT 1
 const commitPriorQuery = `
 SELECT *
 FROM commits
-WHERE repo_id = ?
+WHERE repo_id       = ?
   AND commit_branch = ?
-  AND commit_created < ?
+  AND commit_id     < ?
   AND commit_status IN ('Success', 'Failure')
-ORDER BY commit_created DESC
+ORDER BY commit_id DESC
 LIMIT 1
 `
 

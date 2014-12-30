@@ -12,11 +12,10 @@ import (
 )
 
 const (
-	NotifyAlways       = "always"        // always send email notification
-	NotifyNever        = "never"         // never send email notifications
-	NotifyAuthor       = "author"        // only send email notifications to the author
-	NotifyAfterFailure = "after_failure" // only send a notification if the previous commit failed
-	NotifyAfterSuccess = "after_success" // only send a notification if the previous commit succeeded
+	NotifyAlways      = "always" // always send email notification
+	NotifyNever       = "never"  // never send email notifications
+	NotifyAuthor      = "author" // only send email notifications to the author
+	NotifyAfterChange = "change" // only if the previous commit has a different status
 
 	NotifyTrue  = "true"  // alias for NotifyTrue
 	NotifyFalse = "false" // alias for NotifyFalse
@@ -72,14 +71,9 @@ func (e *Email) sendFailure(context *model.Request) error {
 	switch e.Failure {
 	case NotifyFalse, NotifyNever, NotifyOff:
 		return nil
-	// if the last commit in this branch was a success, notify
-	case NotifyAfterSuccess:
-		if context.Commit.PriorStatus != "Success" {
-			return nil
-		}
-	// if the last commit in this branch was a failure, notify
-	case NotifyAfterFailure:
-		if context.Commit.PriorStatus != "Failure" {
+	// if the last commit in this branch was a different status, notify
+	case NotifyAfterChange:
+		if context.Prior.Status == context.Commit.Status {
 			return nil
 		}
 	// if configured to email the author, replace
@@ -115,14 +109,9 @@ func (e *Email) sendSuccess(context *model.Request) error {
 	switch e.Success {
 	case NotifyFalse, NotifyNever, NotifyOff:
 		return nil
-	// if the last commit in this branch was a success, notify
-	case NotifyAfterSuccess:
-		if context.Commit.PriorStatus == "Failure" {
-			return nil
-		}
-	// if the last commit in this branch was a failure, notify
-	case NotifyAfterFailure:
-		if context.Commit.PriorStatus == "Success" {
+	// if the last commit in this branch was a different status, notify
+	case NotifyAfterChange:
+		if context.Prior.Status == context.Commit.Status {
 			return nil
 		}
 	// if configured to email the author, replace
