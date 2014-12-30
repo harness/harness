@@ -64,6 +64,14 @@ func (db *Commitstore) GetCommitListActivity(user *model.User) ([]*model.CommitR
 	return commits, err
 }
 
+// GetCommitPrior retrieves the latest commit
+// from the datastore for the specified repository and branch.
+func (db *Commitstore) GetCommitPrior(oldCommit *model.Commit) (*model.Commit, error) {
+	var commit = new(model.Commit)
+	var err = meddler.QueryRow(db, commit, rebind(commitPriorQuery), oldCommit.RepoID, oldCommit.Branch, oldCommit.ID)
+	return commit, err
+}
+
 // PostCommit saves a commit in the datastore.
 func (db *Commitstore) PostCommit(commit *model.Commit) error {
 	if commit.Created == 0 {
@@ -166,6 +174,17 @@ FROM commits
 WHERE repo_id       = ?
   AND commit_branch = ?
   AND commit_pr     = ''
+ORDER BY commit_id DESC
+LIMIT 1
+`
+
+// SQL query to retrieve the prior Commit (by commit_created) in the same branch and repo as the specified Commit.
+const commitPriorQuery = `
+SELECT *
+FROM commits
+WHERE repo_id       = ?
+  AND commit_branch = ?
+  AND commit_id     < ?
 ORDER BY commit_id DESC
 LIMIT 1
 `
