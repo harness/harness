@@ -185,7 +185,6 @@ FROM commits
 WHERE repo_id       = ?
   AND commit_branch = ?
   AND commit_id     < ?
-  AND commit_status IN ('Success', 'Failure')
 ORDER BY commit_id DESC
 LIMIT 1
 `
