@@ -38,6 +38,16 @@ func (s *RepoService) Disable(host, owner, name string) error {
 	return s.run("DELETE", path, nil, nil)
 }
 
+// PUT /api/repos/{host}/{owner}/{name}
+func (s *RepoService) SetKey(host, owner, name, pub, priv string) error {
+	var path = fmt.Sprintf("/api/repos/%s/%s/%s", host, owner, name)
+	var in = struct {
+		PublicKey  string `json:"public_key"`
+		PrivateKey string `json:"private_key"`
+	}{pub, priv}
+	return s.run("PUT", path, &in, nil)
+}
+
 // GET /api/user/repos
 func (s *RepoService) List() ([]*model.Repo, error) {
 	var repos []*model.Repo
