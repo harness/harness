@@ -422,8 +422,7 @@ func TestRunErrorCreate(t *testing.T) {
 	b.image = &docker.Image{ID: "c3ab8ff137"}
 	b.Build = &script.Build{}
 	b.Repo = &repo.Repo{}
-
-	if err := b.run(); err != docker.ErrBadRequest {
+	if err := b.run(); err == nil || err.Error() != "Error: Failed to create build container. Bad Request" {
 		t.Errorf("Expected error when trying to create build container")
 	}
 }
@@ -456,7 +455,7 @@ func TestRunErrorStart(t *testing.T) {
 	b.Build = &script.Build{}
 	b.Repo = &repo.Repo{}
 
-	if err := b.run(); err != docker.ErrBadRequest {
+	if err := b.run(); err == nil || err.Error() != "Error: Failed to start build container. Bad Request" {
 		t.Errorf("Expected error when trying to start build container")
 	}
 
