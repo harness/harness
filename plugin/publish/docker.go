@@ -99,7 +99,10 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 
 	// Tag and push all tags
 	for _, tag := range d.Tags {
-		f.WriteCmd(fmt.Sprintf("docker tag %s:%s %s:%s", d.ImageName, buildImageTag, d.ImageName, tag))
+		if tag != buildImageTag {
+			f.WriteCmd(fmt.Sprintf("docker tag %s:%s %s:%s", d.ImageName, buildImageTag, d.ImageName, tag))
+		}
+
 		f.WriteCmd(fmt.Sprintf("docker push %s:%s", d.ImageName, tag))
 	}
 
