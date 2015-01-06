@@ -3,6 +3,8 @@ package repo
 import (
 	"fmt"
 	"strings"
+
+	"github.com/drone/drone/shared/build/log"
 )
 
 type Repo struct {
@@ -96,16 +98,6 @@ func (r *Repo) IsGit() bool {
 	return false
 }
 
-// IsHG returns true if the repository is
-// a Mercurial repository
-func (r *Repo) IsHG() bool {
-	switch {
-	case strings.HasPrefix(r.Path, "ssh://hg@"):
-		return true
-	}
-	return false
-}
-
 // returns commands that can be used in a Dockerfile
 // to clone the repository.
 //
@@ -118,7 +110,7 @@ func (r *Repo) Commands() []string {
 		switch {
 		case r.IsGit():
 			branch = "master"
-		case r.IsHG():
+		default:
 			branch = "default"
 		}
 	}
@@ -126,27 +118,31 @@ func (r *Repo) Commands() []string {
 	cmds := []string{}
 	if len(r.PR) > 0 {
 		if r.IsGit() {
+			log.Noticef("Detected a git repos, adding git PR commands")
 			// If a specific PR is provided then we need to clone it.
 			cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive %s %s", r.Depth, r.Path, r.Dir))
 			cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
 			cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
-		}
-		if r.IsHG() {
+		} else {
 			// we need to add support for mercurial PR
+			log.Noticef("No HG support for Pull requests yet")
 		}
 	} else {
 		// Otherwise just clone the branch.
+		log.Noticef("Simple clone operation (no PR)")
 		if r.IsGit() {
+			log.Noticef("Git repos detected: %s", r.Path)
 			cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
 			// If a specific commit is provided then we'll need to check it out.
 			if len(r.Commit) > 0 {
 				cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))
 			}
-		}
-		if r.IsHG() {
+		} else {
+			log.Noticef("HG repos detected: %s", r.Path)
 			cmds = append(cmds, fmt.Sprintf("hg clone --branch %s %s %s", branch, r.Path, r.Dir))
-			// If a specific commit is provided then we'll need to check it out.
+			// If a specific commit is provided then we'll need to update to it
 			if len(r.Commit) > 0 {
+				log.Noticef("Updating HG repos to rev: %s", r.Commit)
 				cmds = append(cmds, fmt.Sprintf("hg update %s", r.Commit))
 			}
 		}
