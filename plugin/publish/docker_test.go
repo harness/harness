@@ -91,7 +91,7 @@ func TestPrivateRegistryNoAuth(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
 	}
-	if !strings.Contains(response, "docker build -t registry/image:$(git rev-parse --short HEAD)") {
+	if !strings.Contains(response, "docker build --pull -t registry/image:$(git rev-parse --short HEAD)") {
 		t.Fatalf("Response: " + response + " doesn't contain registry in image-names: expected registry/image\n\n")
 	}
 }
@@ -121,8 +121,8 @@ func TestPrivateRegistryAuth(t *testing.T) {
 		t.Log("\n\n\n\ndocker login -u username -p xxxxxxxx -e email@example.com https://registry:8000/v1/\n\n\n\n")
 		t.Fatalf("Response: " + response + " doesn't contain private registry login\n\n")
 	}
-	if !strings.Contains(response, "docker build -t registry/image:$(git rev-parse --short HEAD) .") {
-		t.Log("docker build -t registry/image:$(git rev-parse --short HEAD) .")
+	if !strings.Contains(response, "docker build --pull -t registry/image:$(git rev-parse --short HEAD) .") {
+		t.Log("docker build --pull -t registry/image:$(git rev-parse --short HEAD) .")
 		t.Fatalf("Response: " + response + " doesn't contain registry in image-names\n\n")
 	}
 }
@@ -173,7 +173,7 @@ func TestSingleTag(t *testing.T) {
 	if strings.Contains(response, "$(git rev-parse --short HEAD)") {
 		t.Fatalf("Response: " + response + " is tagging images from git-refs when it should use a custom tag\n\n")
 	}
-	if !strings.Contains(response, "docker build -t username/image:release-0.1") {
+	if !strings.Contains(response, "docker build --pull -t username/image:release-0.1") {
 		t.Fatalf("Response: " + response + " isn't tagging images using our custom tag\n\n")
 	}
 	if !strings.Contains(response, "docker push username/image:release-0.1") {
@@ -211,7 +211,7 @@ func TestTagsNoSingle(t *testing.T) {
 	if strings.Contains(response, "$(git rev-parse --short HEAD)") {
 		t.Fatalf("Response: " + response + " is tagging images from git-refs when it should using custom tag\n\n")
 	}
-	if !strings.Contains(response, "docker build -t username/image:release-0.2") {
+	if !strings.Contains(response, "docker build --pull -t username/image:release-0.2") {
 		t.Fatalf("Response: " + response + " isn't tagging images using our first custom tag\n\n")
 	}
 	if !strings.Contains(response, "docker tag username/image:release-0.2 username/image:release-latest") {
@@ -253,7 +253,7 @@ func TestTagsWithSingle(t *testing.T) {
 	if strings.Contains(response, "$(git rev-parse --short HEAD)") {
 		t.Fatalf("Response: " + response + " is tagging images from git-refs when it should using custom tag\n\n")
 	}
-	if !strings.Contains(response, "docker build -t username/image:release-0.3") {
+	if !strings.Contains(response, "docker build --pull -t username/image:release-0.3") {
 		t.Fatalf("Response: " + response + " isn't tagging images using our first custom tag\n\n")
 	}
 	if !strings.Contains(response, "docker tag username/image:release-0.3 username/image:release-0.2") {
@@ -313,7 +313,7 @@ func TestValidYaml(t *testing.T) {
 		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
 	}
 
-	if !strings.Contains(response, "docker build -t user/image:$(git rev-parse --short HEAD) - <") {
+	if !strings.Contains(response, "docker build --pull -t user/image:$(git rev-parse --short HEAD) - <") {
 		t.Fatalf("Response: " + response + "doesn't contain build command for commit hash\n\n")
 	}
 	if !strings.Contains(response, "docker login -u user -p password -e email") {
@@ -346,7 +346,7 @@ func TestWithoutDockerFile(t *testing.T) {
 		t.Fatalf("Can't unmarshal script: %s\n\n", err.Error())
 	}
 
-	if !strings.Contains(response, "docker build -t user/image:$(git rev-parse --short HEAD) .") {
+	if !strings.Contains(response, "docker build --pull -t user/image:$(git rev-parse --short HEAD) .") {
 		t.Fatalf("Response: " + response + " doesn't contain build command\n\n")
 	}
 }
