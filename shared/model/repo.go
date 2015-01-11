@@ -10,8 +10,6 @@ const (
 )
 
 var (
-	DefaultBranch = "master"
-
 	// default build timeout, in seconds
 	DefaultTimeout int64 = 7200
 )
@@ -69,4 +67,12 @@ func (r *Repo) ParamMap() (map[string]string, error) {
 	out := map[string]string{}
 	err := yaml.Unmarshal([]byte(r.Params), out)
 	return out, err
+}
+
+func (r *Repo) DefaultBranch() string {
+	var branch = "master"
+	if r.Scm == Mercurial {
+		branch = "default"
+	}
+	return branch
 }
