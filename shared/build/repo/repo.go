@@ -5,10 +5,18 @@ import (
 	"strings"
 )
 
+const (
+	Git       = "git"
+	Mercurial = "mercurial"
+)
+
 type Repo struct {
 	// The name of the Repository. This should be the
 	// canonical name, for example, github.com/drone/drone.
 	Name string
+
+	// The type of source control management.
+	Scm string
 
 	// The path of the Repoisotry. This could be
 	// the remote path of a Git repository or the path of
@@ -69,57 +77,44 @@ func (r *Repo) IsLocal() bool {
 	return !r.IsRemote()
 }
 
-// IsGit returns true if the Repository is
-// a Git repoisitory.
-func (r *Repo) IsGit() bool {
-	switch {
-	case strings.HasPrefix(r.Path, "git://"):
-		return true
-	case strings.HasPrefix(r.Path, "git@"):
-		return true
-	case strings.HasPrefix(r.Path, "ssh://git@"):
-		return true
-	case strings.HasPrefix(r.Path, "gitlab@"):
-		return true
-	case strings.HasPrefix(r.Path, "ssh://gitlab@"):
-		return true
-	case strings.HasPrefix(r.Path, "https://github"):
-		return true
-	case strings.HasPrefix(r.Path, "http://github"):
-		return true
-	case strings.HasSuffix(r.Path, ".git"):
-		return true
-	}
-
-	// we could also ping the repository to check
-
-	return false
-}
-
 // returns commands that can be used in a Dockerfile
 // to clone the repository.
 //
-// TODO we should also enable Mercurial projects and SVN projects
+// TODO we should also enable SVN projects
 func (r *Repo) Commands() []string {
-	// get the branch. default to master
-	// if no branch exists.
+	// get the branch. default to master or default if no branch exists.
 	branch := r.Branch
 	if len(branch) == 0 {
-		branch = "master"
+		switch {
+		case r.Scm == Mercurial:
+			branch = "default"
+		case r.Scm == Git:
+		default:
+			branch = "master"
+		}
 	}
 
 	cmds := []string{}
-	if len(r.PR) > 0 {
-		// If a specific PR is provided then we need to clone it.
-		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive %s %s", r.Depth, r.Path, r.Dir))
-		cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
-		cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
-	} else {
-		// Otherwise just clone the branch.
-		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
-		// If a specific commit is provided then we'll need to check it out.
+	switch {
+	case r.Scm == Mercurial:
+		cmds = append(cmds, fmt.Sprintf("hg clone --branch %s %s %s", branch, r.Path, r.Dir))
 		if len(r.Commit) > 0 {
-			cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))
+			cmds = append(cmds, fmt.Sprintf("hg update %s", r.Commit))
+		}
+	case r.Scm == Git:
+	default:
+		if len(r.PR) > 0 {
+			// If a specific PR is provided then we need to clone it.
+			cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive %s %s", r.Depth, r.Path, r.Dir))
+			cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
+			cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
+		} else {
+			// Otherwise just clone the branch.
+			cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
+			// If a specific commit is provided then we'll need to check it out.
+			if len(r.Commit) > 0 {
+				cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))
+			}
 		}
 	}
 

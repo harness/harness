@@ -159,6 +159,7 @@ func (r *GitHub) GetRepos(user *model.User) ([]*model.Repo, error) {
 			Host:     hostname,
 			Owner:    *item.Owner.Login,
 			Name:     *item.Name,
+			Scm:      model.Git,
 			Private:  *item.Private,
 			URL:      *item.HTMLURL,
 			CloneURL: *item.GitURL,
