@@ -3,7 +3,7 @@ SHA := $(shell git rev-parse --short HEAD)
 all: build
 
 deps:
-	# which npm && npm -g install uglify-js less autoprefixer
+	# which npm && npm -g install uglify-js less autoprefixer less-plugin-clean-css
 	go get github.com/GeertJohan/go.rice/rice
 	go get github.com/franela/goblin
 	go get -t -v ./...
