@@ -30,7 +30,7 @@ func restartCommandFunc(c *cli.Context, client *client.Client) error {
 	case 2:
 		branch = "master"
 		sha = args[1]
-	case 3,4,5:
+	case 3, 4, 5:
 		branch = args[1]
 		sha = args[2]
 	}
