@@ -3,7 +3,7 @@ SHA := $(shell git rev-parse --short HEAD)
 all: build
 
 deps:
-	# which npm && npm install
+	npm install
 	go get github.com/GeertJohan/go.rice/rice
 	go get github.com/franela/goblin
 	go get -t -v ./...
