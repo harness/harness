@@ -29,14 +29,14 @@ func Test_Heroku(t *testing.T) {
 		g.It("Should write token", func() {
 			b := new(buildfile.Buildfile)
 			h := Heroku{
-				App: "drone",
+				App:   "drone",
 				Token: "mock-token",
 			}
 
 			h.Write(b)
 			out := b.String()
 			g.Assert(strings.Contains(out, "\necho 'machine git.heroku.com login _ password mock-token' >> ~/.netrc\n")).Equal(true)
-			})
+		})
 
 		g.It("Should add remote", func() {
 			b := new(buildfile.Buildfile)

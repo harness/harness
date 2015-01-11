@@ -17,7 +17,7 @@ const (
 
 	// Command to write the API token to ~/.netrc
 	// use "_" since heroku git authentication ignores username
-	CmdLogin    = "echo 'machine git.heroku.com login _ password %s' >> ~/.netrc"
+	CmdLogin = "echo 'machine git.heroku.com login _ password %s' >> ~/.netrc"
 )
 
 type Heroku struct {
