@@ -84,16 +84,6 @@ func (r *Repo) IsLocal() bool {
 func (r *Repo) Commands() []string {
 	// get the branch. default to master or default if no branch exists.
 	branch := r.Branch
-	if len(branch) == 0 {
-		switch {
-		case r.Scm == Mercurial:
-			branch = "default"
-		case r.Scm == Git:
-		default:
-			branch = "master"
-		}
-	}
-
 	cmds := []string{}
 	switch {
 	case r.Scm == Mercurial:
