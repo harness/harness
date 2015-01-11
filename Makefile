@@ -3,7 +3,7 @@ SHA := $(shell git rev-parse --short HEAD)
 all: build
 
 deps:
-	# which npm && npm -g install uglify-js less autoprefixer less-plugin-clean-css
+	# which npm && npm install
 	go get github.com/GeertJohan/go.rice/rice
 	go get github.com/franela/goblin
 	go get -t -v ./...
@@ -40,7 +40,7 @@ clean:
 	rm -f packaging/root/usr/local/bin/droned
 
 lessc:
-	lessc --clean-css server/app/styles/drone.less | autoprefixer > server/app/styles/drone.css
+	node_modules/less/bin/lessc --clean-css server/app/styles/drone.less | autoprefixer > server/app/styles/drone.css
 
 packages: clean build embed deb rpm
 
