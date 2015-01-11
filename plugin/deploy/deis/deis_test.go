@@ -16,8 +16,8 @@ func Test_Deis(t *testing.T) {
 		g.It("Should set git.config", func() {
 			b := new(buildfile.Buildfile)
 			h := Deis{
-				App: "drone",
-			  Deisurl: "deis.yourdomain.com:2222",
+				App:     "drone",
+				Deisurl: "deis.yourdomain.com:2222",
 			}
 
 			h.Write(b)
@@ -30,8 +30,8 @@ func Test_Deis(t *testing.T) {
 		g.It("Should add remote", func() {
 			b := new(buildfile.Buildfile)
 			h := Deis{
-				App: "drone",
-			  Deisurl: "deis.yourdomain.com:2222/",
+				App:     "drone",
+				Deisurl: "deis.yourdomain.com:2222/",
 			}
 
 			h.Write(b)
@@ -54,7 +54,7 @@ func Test_Deis(t *testing.T) {
 			b := new(buildfile.Buildfile)
 			h := Deis{
 				Force: true,
-				App: "drone",
+				App:   "drone",
 			}
 
 			h.Write(b)
