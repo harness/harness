@@ -1,0 +1,13 @@
+{
+  "name": "drone",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/drone/drone.git"
+  },
+  "devDependencies": {
+    "autoprefixer": "^4.0.0",
+    "less": "^2.2.0",
+    "less-plugin-clean-css": "^1.4.0",
+    "uglify-js": "^2.4.16"
+  }
+}

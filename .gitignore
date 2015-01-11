@@ -3,6 +3,8 @@ drone.sublime-project
 drone.sublime-workspace
 .vagrant
 
+node_modules/
+
 *~
 ~*
 *.sqlite
