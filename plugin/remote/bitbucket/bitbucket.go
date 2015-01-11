@@ -156,8 +156,20 @@ func (r *Bitbucket) GetRepos(user *model.User) ([]*model.Repo, error) {
 		// TODO use the bitbucketurl.Host and bitbucketurl.Scheme instead of hardcoding
 		//      so that we can support Stash.
 		var html = fmt.Sprintf("https://bitbucket.org/%s/%s", item.Owner, item.Name)
-		var clone = fmt.Sprintf("https://bitbucket.org/%s/%s.git", item.Owner, item.Name)
-		var ssh = fmt.Sprintf("git@bitbucket.org:%s/%s.git", item.Owner, item.Name)
+		var clone = ""
+		var ssh = ""
+		var scm = ""
+		switch {
+		case item.Scm == "hg":
+			scm = model.Mercurial
+			clone = fmt.Sprintf("https://bitbucket.org/%s/%s", item.Owner, item.Name)
+			ssh = fmt.Sprintf("ssh://hg@bitbucket.org:%s/%s", item.Owner, item.Name)
+		case item.Scm == "git":
+		default:
+			scm = model.Git
+			clone = fmt.Sprintf("https://bitbucket.org/%s/%s.git", item.Owner, item.Name)
+			ssh = fmt.Sprintf("git@bitbucket.org:%s/%s.git", item.Owner, item.Name)
+		}
 
 		var repo = model.Repo{
 			UserID:   user.ID,
@@ -165,6 +177,7 @@ func (r *Bitbucket) GetRepos(user *model.User) ([]*model.Repo, error) {
 			Host:     hostname,
 			Owner:    item.Owner,
 			Name:     item.Name,
+			Scm:      scm,
 			Private:  item.Private,
 			URL:      html,
 			CloneURL: clone,

@@ -113,6 +113,7 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	repo := &repo.Repo{
 		Name:   path,
 		Path:   r.Repo.CloneURL,
+		Scm:    r.Repo.Scm,
 		Branch: r.Commit.Branch,
 		Commit: r.Commit.Sha,
 		PR:     r.Commit.PullRequest,
