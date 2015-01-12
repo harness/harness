@@ -116,6 +116,10 @@ secret=""
 url=""
 skip_verify=false
 
+[gogs]
+url=""
+secret=""
+
 [smtp]
 host=""
 port=""
