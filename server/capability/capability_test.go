@@ -9,7 +9,6 @@ import (
 
 func TestBlobstore(t *testing.T) {
 	caps := map[string]bool{}
-	caps[Registration] = true
 
 	ctx := NewContext(context.Background(), caps)
 
@@ -17,7 +16,6 @@ func TestBlobstore(t *testing.T) {
 	g.Describe("Capabilities", func() {
 
 		g.It("Should get capabilities from context", func() {
-			g.Assert(Enabled(ctx, Registration)).Equal(true)
 			g.Assert(Enabled(ctx, "Fake Key")).Equal(false)
 		})
 	})
