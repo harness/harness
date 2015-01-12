@@ -53,6 +53,9 @@ datasource="/var/lib/drone/drone.sqlite"
 # url=""
 # skip_verify=false
 
+# [gogs]
+# url=""
+# secret=""
 
 #####################################################################
 # SMTP configuration for Drone. This is required if you plan
