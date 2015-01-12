@@ -1,4 +1,6 @@
 SHA := $(shell git rev-parse --short HEAD)
+VERSION := $(shell cat VERSION)
+ITTERATION := $(shell date +%s)
 
 all: build
 
@@ -23,8 +25,8 @@ test_postgres:
 build:
 	mkdir -p packaging/output
 	mkdir -p packaging/root/usr/local/bin
-	go build -o packaging/root/usr/local/bin/drone  -ldflags "-X main.revision $(SHA)" github.com/drone/drone/cli
-	go build -o packaging/root/usr/local/bin/droned -ldflags "-X main.revision $(SHA)" github.com/drone/drone/server
+	go build -o packaging/root/usr/local/bin/drone  -ldflags "-X main.revision $(SHA) -X main.version $(VERSION)" github.com/drone/drone/cli
+	go build -o packaging/root/usr/local/bin/droned -ldflags "-X main.revision $(SHA) -X main.version $(VERSION)" github.com/drone/drone/server
 
 install:
 	install -t /usr/local/bin packaging/root/usr/local/bin/drone
@@ -52,9 +54,10 @@ embed:
 # creates a debian package for drone to install
 # `sudo dpkg -i drone.deb`
 deb:
-	fpm -s dir -t deb -n drone -v 0.3 -p packaging/output/drone.deb \
+	fpm -s dir -t deb -n drone -v $(VERSION) -p packaging/output/drone.deb \
 		--deb-priority optional --category admin \
 		--force \
+		--iteration $(ITTERATION) \
 		--deb-compression bzip2 \
 	 	--after-install packaging/scripts/postinst.deb \
 	 	--before-remove packaging/scripts/prerm.deb \
@@ -68,9 +71,10 @@ deb:
 		packaging/root/=/
 
 rpm:
-	fpm -s dir -t rpm -n drone -v 0.3 -p packaging/output/drone.rpm \
+	fpm -s dir -t rpm -n drone -v $(VERSION) -p packaging/output/drone.rpm \
 		--rpm-compression bzip2 --rpm-os linux \
 		--force \
+		--iteration $(ITTERATION) \
 	 	--after-install packaging/scripts/postinst.rpm \
 	 	--before-remove packaging/scripts/prerm.rpm \
 		--after-remove packaging/scripts/postrm.rpm \
