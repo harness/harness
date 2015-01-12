@@ -9,6 +9,7 @@ var (
 	// Bitbucket cloud configuration details
 	bitbucketClient = config.String("bitbucket-client", "")
 	bitbucketSecret = config.String("bitbucket-secret", "")
+	bitbucketOpen   = config.Bool("bitbucket-open", false)
 )
 
 // Registers the Bitbucket plugin using the default
@@ -19,6 +20,6 @@ func Register() {
 		return
 	}
 	remote.Register(
-		NewDefault(*bitbucketClient, *bitbucketSecret),
+		NewDefault(*bitbucketClient, *bitbucketSecret, *bitbucketOpen),
 	)
 }

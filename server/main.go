@@ -56,10 +56,6 @@ var (
 	sslcrt = config.String("server-ssl-cert", "")
 	sslkey = config.String("server-ssl-key", "")
 
-	// Enable self-registration. When false, the system admin
-	// must grant user access.
-	open = config.Bool("registration-open", false)
-
 	workers *pool.Pool
 	worker  *director.Director
 	pub     *pubsub.PubSub
@@ -105,7 +101,6 @@ func main() {
 	gogs.Register()
 
 	caps = map[string]bool{}
-	caps[capability.Registration] = *open
 
 	// setup the database and cancel all pending
 	// commits in the system.

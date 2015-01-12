@@ -27,19 +27,21 @@ type Bitbucket struct {
 	API    string
 	Client string
 	Secret string
+	Open   bool
 }
 
-func New(url, api, client, secret string) *Bitbucket {
+func New(url, api, client, secret string, open bool) *Bitbucket {
 	return &Bitbucket{
 		URL:    url,
 		API:    api,
 		Client: client,
 		Secret: secret,
+		Open:   open,
 	}
 }
 
-func NewDefault(client, secret string) *Bitbucket {
-	return New(DefaultURL, DefaultAPI, client, secret)
+func NewDefault(client, secret string, open bool) *Bitbucket {
+	return New(DefaultURL, DefaultAPI, client, secret, open)
 }
 
 // Authorize handles Bitbucket API Authorization
@@ -268,4 +270,8 @@ func (r *Bitbucket) ParseHook(req *http.Request) (*model.Hook, error) {
 		Timestamp: time.Now().UTC().String(),
 		Message:   hook.Commits[len(hook.Commits)-1].Message,
 	}, nil
+}
+
+func (r *Bitbucket) OpenRegistration() bool {
+	return r.Open
 }

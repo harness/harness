@@ -22,22 +22,11 @@ port=":80"
 driver="sqlite3"
 datasource="/var/lib/drone/drone.sqlite"
 
-
-#####################################################################
-# Open Registration allows users to self-register for Drone.
-# This is recommended if Drone is being hosted behind a
-# firewall.
-#
-# When false, the system admin will need to manually add
-# users to Drone through the admin screens. 
-#
-# [registration]
-# open=true
-
 # [github]
 # client=""
 # secret=""
 # orgs=[]
+# open=false
 
 # [github_enterprise]
 # client=""
@@ -46,18 +35,22 @@ datasource="/var/lib/drone/drone.sqlite"
 # url=""
 # orgs=[]
 # private_mode=false
+# open=false
 
 # [bitbucket]
 # client=""
 # secret=""
+# open=false
 
 # [gitlab]
 # url=""
 # skip_verify=false
+# open=false
 
 # [gogs]
 # url=""
 # secret=""
+# open=false
 
 #####################################################################
 # SMTP configuration for Drone. This is required if you plan

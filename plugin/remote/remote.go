@@ -32,6 +32,9 @@ type Remote interface {
 	// ParseHook parses the post-commit hook from the Request body
 	// and returns the required data in a standard format.
 	ParseHook(r *http.Request) (*model.Hook, error)
+
+	// Registration returns true if open registration is allowed
+	OpenRegistration() bool
 }
 
 // List of registered plugins.
