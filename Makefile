@@ -5,10 +5,10 @@ all: build
 deps:
 	# which npm && npm -g install uglify-js less autoprefixer
 	go get github.com/GeertJohan/go.rice/rice
-	go get github.com/franela/goblin
 	go get -t -v ./...
 
 test:
+	@test -z "$(shell find . -name '*.go' | xargs gofmt -l)" || (echo "Need to run 'go fmt ./...'"; exit 1)
 	go vet ./...
 	go test -cover -short ./...
 
