@@ -18,7 +18,7 @@ type Repo struct {
 	// The type of source control management.
 	Scm string
 
-	// The path of the Repoisotry. This could be
+	// The path of the Repository. This could be
 	// the remote path of a Git repository or the path of
 	// of the repository on the local file system.
 	//
