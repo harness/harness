@@ -24,9 +24,7 @@ import (
 
 const dockerKind = "docker"
 
-var (
-	repo-path = config.String("repo-path", "/var/cache/drone/src")
-)
+var repo-path = config.String("repo-path", "/var/cache/drone/src")
 
 type Docker struct {
 	UUID    string `json:"uuid"`
