@@ -81,4 +81,4 @@ datasource="/var/lib/drone/drone.sqlite"
 # Defaults to /var/cache/drone/src.
 #
 # [repos]
-# repo-path=""
+# repo_path=""

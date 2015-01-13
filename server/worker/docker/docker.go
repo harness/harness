@@ -24,7 +24,7 @@ import (
 
 const dockerKind = "docker"
 
-var repo-path = config.String("repo-path", "/var/cache/drone/src")
+var repoPath = config.String("repo_path", "/var/cache/drone/src")
 
 type Docker struct {
 	UUID    string `json:"uuid"`
@@ -119,7 +119,7 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 		Branch: r.Commit.Branch,
 		Commit: r.Commit.Sha,
 		PR:     r.Commit.PullRequest,
-		Dir:    filepath.Join(*repo-path, git.GitPath(script.Git, path)),
+		Dir:    filepath.Join(*repoPath, git.GitPath(script.Git, path)),
 		Depth:  git.GitDepth(script.Git),
 	}
 
