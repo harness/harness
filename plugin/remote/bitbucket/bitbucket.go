@@ -151,17 +151,9 @@ func (r *Bitbucket) GetRepos(user *model.User) ([]*model.Repo, error) {
 		// these are the urls required to clone the repository
 		// TODO use the bitbucketurl.Host and bitbucketurl.Scheme instead of hardcoding
 		//      so that we can support Stash.
-		var clone = ""
-		var ssh = ""
-
-		if item.Scm == "git" {
-			clone = fmt.Sprintf("https://bitbucket.org/%s/%s.git", item.Owner, item.Name)
-			ssh = fmt.Sprintf("git@bitbucket.org:%s/%s.git", item.Owner, item.Name)
-		} else {
-			clone = fmt.Sprintf("https://bitbucket.org/%s/%s", item.Owner, item.Name)
-			ssh = fmt.Sprintf("ssh://hg@bitbucket.org/%s/%s", item.Owner,
-				item.Name)
-		}
+		var html = fmt.Sprintf("https://bitbucket.org/%s/%s", item.Owner, item.Name)
+		var clone = fmt.Sprintf("https://bitbucket.org/%s/%s.git", item.Owner, item.Name)
+		var ssh = fmt.Sprintf("git@bitbucket.org:%s/%s.git", item.Owner, item.Name)
 
 		var repo = model.Repo{
 			UserID:   user.ID,
@@ -170,6 +162,7 @@ func (r *Bitbucket) GetRepos(user *model.User) ([]*model.Repo, error) {
 			Owner:    item.Owner,
 			Name:     item.Name,
 			Private:  item.Private,
+			URL:      html,
 			CloneURL: clone,
 			GitURL:   clone,
 			SSHURL:   ssh,
