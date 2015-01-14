@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -28,6 +29,7 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 	var remote = remote.Lookup(host)
 	if remote == nil {
 		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "No plugin remote found for %q", host)
 		return
 	}
 
@@ -36,6 +38,7 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, err)
 		return
 	} else if login == nil {
 		// in this case we probably just redirected
@@ -52,8 +55,10 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 		if capability.Enabled(ctx, capability.Registration) == false {
 			users, err := datastore.GetUserList(ctx)
 			if err != nil || len(users) != 0 {
-				log.Println("Unable to create account. Registration is closed")
+				msg := "Unable to create account. Registration is closed"
+				log.Println(msg)
 				w.WriteHeader(http.StatusForbidden)
+				fmt.Fprint(w, msg)
 				return
 			}
 		}
@@ -67,6 +72,7 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 		if err := datastore.PostUser(ctx, u); err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, err)
 			return
 		}
 
@@ -88,6 +94,7 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 	if err := datastore.PutUser(ctx, u); err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, err)
 		return
 	}
 
@@ -111,6 +118,7 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, err)
 		return
 	}
 	redirect = redirect + "#access_token=" + token
