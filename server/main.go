@@ -41,7 +41,7 @@ const (
 var (
 	// commit sha for the current build, set by
 	// the compile process.
-	version  string = "0.3-dev"
+	version  string
 	revision string
 )
 

@@ -5,9 +5,9 @@ import (
 	"github.com/drone/drone/shared/build/buildfile"
 	"github.com/drone/drone/shared/build/repo"
 
+	"github.com/drone/drone/plugin/deploy/deis"
 	"github.com/drone/drone/plugin/deploy/git"
 	"github.com/drone/drone/plugin/deploy/heroku"
-	"github.com/drone/drone/plugin/deploy/deis"
 	"github.com/drone/drone/plugin/deploy/modulus"
 	"github.com/drone/drone/plugin/deploy/nodejitsu"
 	"github.com/drone/drone/plugin/deploy/tsuru"
@@ -20,7 +20,7 @@ type Deploy struct {
 	CloudFoundry *CloudFoundry        `yaml:"cloudfoundry,omitempty"`
 	Git          *git.Git             `yaml:"git,omitempty"`
 	Heroku       *heroku.Heroku       `yaml:"heroku,omitempty"`
-	Deis	       *deis.Deis 		      `yaml:"deis,omitempty"`
+	Deis         *deis.Deis           `yaml:"deis,omitempty"`
 	Modulus      *modulus.Modulus     `yaml:"modulus,omitempty"`
 	Nodejitsu    *nodejitsu.Nodejitsu `yaml:"nodejitsu,omitempty"`
 	SSH          *SSH                 `yaml:"ssh,omitempty"`
