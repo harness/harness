@@ -70,6 +70,13 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// the user id should NEVER equal zero
+		if u.ID == 0 {
+			log.Println("Unable to create account. User ID is zero")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		// if this is the first user, they
 		// should be an admin.
 		if u.ID == 1 {
