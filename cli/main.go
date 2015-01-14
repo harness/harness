@@ -39,6 +39,7 @@ func main() {
 		NewDisableCommand(),
 		NewRestartCommand(),
 		NewWhoamiCommand(),
+		NewSetKeyCommand(),
 	}
 
 	app.Run(os.Args)
