@@ -6,7 +6,6 @@ import (
 
 	"github.com/drone/drone/shared/build/buildfile"
 	"github.com/drone/drone/shared/build/repo"
-	"gopkg.in/v1/yaml"
 	"gopkg.in/yaml.v1"
 )
 
