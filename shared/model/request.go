@@ -15,7 +15,7 @@ type Request struct {
 // URL returns the link to the commit in
 // string format.
 func (r *Request) URL() string {
-	return fmt.Sprintf("%s/%s/%s/%s",
+	return fmt.Sprintf("%s/%s/%s/%s/%s/%s",
 		r.Host,
 		r.Repo.Host,
 		r.Repo.Owner,
