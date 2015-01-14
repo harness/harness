@@ -21,7 +21,7 @@ func NewServer() *httptest.Server {
 		case "/user/orgs":
 			w.Write(userOrgsPayload)
 			return
-		case "/orgs/github/repos":
+		case "/orgs/octocats-inc/repos":
 			w.Write(userReposPayload)
 			return
 		case "/repos/octocat/Hello-World/contents/.drone.yml":
@@ -108,7 +108,7 @@ var emptyObjPayload = []byte(`{}`)
 // sample org list response
 var userOrgsPayload = []byte(`
 [
-	{ "login": "github", "id": 1 }
+	{ "login": "octocats-inc", "id": 1 }
 ]
 `)
 
