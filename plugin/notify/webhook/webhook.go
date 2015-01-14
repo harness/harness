@@ -29,10 +29,11 @@ func (w *Webhook) Send(context *model.Request) error {
 func (w *Webhook) send(context *model.Request) error {
 	// data will get posted in this format
 	data := struct {
+		From   string        `json:"from_url"`
 		Owner  *model.User   `json:"owner"`
 		Repo   *model.Repo   `json:"repository"`
 		Commit *model.Commit `json:"commit"`
-	}{context.User, context.Repo, context.Commit}
+	}{context.Host, context.User, context.Repo, context.Commit}
 
 	// data json encoded
 	payload, err := json.Marshal(data)
