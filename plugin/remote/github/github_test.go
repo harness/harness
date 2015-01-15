@@ -1,6 +1,9 @@
 package github
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/drone/drone/plugin/remote/github/testdata"
@@ -90,5 +93,20 @@ func Test_Github(t *testing.T) {
 		g.It("Should parse a commit hook")
 
 		g.It("Should parse a pull request hook")
+
+		g.It("Should authorize a valid user", func() {
+			var resp = httptest.NewRecorder()
+			var state = "validstate"
+			var req, _ = http.NewRequest(
+				"GET",
+				fmt.Sprintf("%s/?code=sekret&state=%s", server.URL, state),
+				nil,
+			)
+			req.AddCookie(&http.Cookie{Name: "github_state", Value: state})
+
+			var login, err = github.Authorize(resp, req)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(login == nil).IsFalse()
+		})
 	})
 }
