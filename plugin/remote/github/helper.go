@@ -138,7 +138,7 @@ func GetOrgRepos(client *github.Client, org string) ([]github.Repository, error)
 }
 
 // GetOrgs is a helper function that returns a list of
-// all org repositories.
+// all orgs that a user belongs to.
 func GetOrgs(client *github.Client) ([]github.Organization, error) {
 	orgs, _, err := client.Organizations.List("", nil)
 	return orgs, err

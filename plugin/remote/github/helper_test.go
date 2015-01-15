@@ -12,13 +12,22 @@ func Test_Helper(t *testing.T) {
 	var server = testdata.NewServer()
 	defer server.Close()
 
+	var client = NewClient(server.URL, "sekret", false)
+
 	g := goblin.Goblin(t)
 	g.Describe("GitHub Helper Functions", func() {
 
 		g.It("Should Get a User")
 		g.It("Should Get a User Primary Email")
 		g.It("Should Get a User + Primary Email")
-		g.It("Should Get a list of Orgs")
+
+		g.It("Should Get a list of Orgs", func() {
+			var orgs, err = GetOrgs(client)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(orgs)).Equal(1)
+			g.Assert(*orgs[0].Login).Equal("octocats-inc")
+		})
+
 		g.It("Should Get a list of User Repos")
 		g.It("Should Get a list of Org Repos")
 		g.It("Should Get a list of All Repos")
