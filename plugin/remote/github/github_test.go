@@ -94,7 +94,11 @@ func Test_Github(t *testing.T) {
 
 		g.It("Should parse a pull request hook")
 
-		g.It("Should authorize a valid user", func() {
+		g.Describe("Authorize", func() {
+			g.AfterEach(func() {
+				github.Orgs = []string{}
+			})
+
 			var resp = httptest.NewRecorder()
 			var state = "validstate"
 			var req, _ = http.NewRequest(
@@ -104,9 +108,25 @@ func Test_Github(t *testing.T) {
 			)
 			req.AddCookie(&http.Cookie{Name: "github_state", Value: state})
 
-			var login, err = github.Authorize(resp, req)
-			g.Assert(err == nil).IsTrue()
-			g.Assert(login == nil).IsFalse()
+			g.It("Should authorize a valid user with no org restrictions", func() {
+				var login, err = github.Authorize(resp, req)
+				g.Assert(err == nil).IsTrue()
+				g.Assert(login == nil).IsFalse()
+			})
+
+			g.It("Should authorize a valid user in the correct org", func() {
+				github.Orgs = []string{"octocats-inc"}
+				var login, err = github.Authorize(resp, req)
+				g.Assert(err == nil).IsTrue()
+				g.Assert(login == nil).IsFalse()
+			})
+
+			g.It("Should not authorize a valid user in the wrong org", func() {
+				github.Orgs = []string{"acme"}
+				var login, err = github.Authorize(resp, req)
+				g.Assert(err != nil).IsTrue()
+				g.Assert(login == nil).IsTrue()
+			})
 		})
 	})
 }
