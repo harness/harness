@@ -37,12 +37,14 @@ datasource="/var/lib/drone/drone.sqlite"
 # [github]
 # client=""
 # secret=""
+# orgs=[]
 
 # [github_enterprise]
 # client=""
 # secret=""
 # api=""
 # url=""
+# orgs=[]
 # private_mode=false
 
 # [bitbucket]

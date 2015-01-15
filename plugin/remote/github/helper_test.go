@@ -39,5 +39,20 @@ func Test_Helper(t *testing.T) {
 		g.It("Should Create or Update a Repo Hook")
 		g.It("Should Get a Repo File")
 
+		g.Describe("UserBelongsToOrg", func() {
+			g.It("Should confirm user does belong to 'octocats-inc' org", func() {
+				var requiredOrgs = []string{"one", "octocats-inc", "two"}
+				var member, err = UserBelongsToOrg(client, requiredOrgs)
+				g.Assert(err == nil).IsTrue()
+				g.Assert(member).IsTrue()
+			})
+
+			g.It("Should confirm user not does belong to 'octocats-inc' org", func() {
+				var requiredOrgs = []string{"one", "two"}
+				var member, err = UserBelongsToOrg(client, requiredOrgs)
+				g.Assert(err == nil).IsTrue()
+				g.Assert(member).IsFalse()
+			})
+		})
 	})
 }
