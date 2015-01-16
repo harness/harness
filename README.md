@@ -100,12 +100,14 @@ open=true
 [github]
 client=""
 secret=""
+orgs=[]
 
 [github_enterprise]
 client=""
 secret=""
 api=""
 url=""
+orgs=[]
 private_mode=false
 
 [bitbucket]
