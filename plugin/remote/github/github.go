@@ -27,9 +27,10 @@ type GitHub struct {
 	Secret     string
 	Private    bool
 	SkipVerify bool
+	Orgs       []string
 }
 
-func New(url, api, client, secret string, private, skipVerify bool) *GitHub {
+func New(url, api, client, secret string, private, skipVerify bool, orgs []string) *GitHub {
 	var github = GitHub{
 		URL:        url,
 		API:        api,
@@ -37,6 +38,7 @@ func New(url, api, client, secret string, private, skipVerify bool) *GitHub {
 		Secret:     secret,
 		Private:    private,
 		SkipVerify: skipVerify,
+		Orgs:       orgs,
 	}
 	// the API must have a trailing slash
 	if !strings.HasSuffix(github.API, "/") {
@@ -49,8 +51,8 @@ func New(url, api, client, secret string, private, skipVerify bool) *GitHub {
 	return &github
 }
 
-func NewDefault(client, secret string) *GitHub {
-	return New(DefaultURL, DefaultAPI, client, secret, false, false)
+func NewDefault(client, secret string, orgs []string) *GitHub {
+	return New(DefaultURL, DefaultAPI, client, secret, false, false, orgs)
 }
 
 // Authorize handles GitHub API Authorization.
@@ -90,6 +92,16 @@ func (r *GitHub) Authorize(res http.ResponseWriter, req *http.Request) (*model.L
 	var useremail, errr = GetUserEmail(client)
 	if errr != nil {
 		return nil, fmt.Errorf("Error retrieving user or verified email. %s", errr)
+	}
+
+	if len(r.Orgs) > 0 {
+		allowedOrg, err := UserBelongsToOrg(client, r.Orgs)
+		if err != nil {
+			return nil, fmt.Errorf("Could not check org membership. %s", err)
+		}
+		if !allowedOrg {
+			return nil, fmt.Errorf("User does not belong to correct org")
+		}
 	}
 
 	var login = new(model.Login)
