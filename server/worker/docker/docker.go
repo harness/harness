@@ -8,7 +8,6 @@ import (
 
 	"code.google.com/p/go-uuid/uuid"
 	"code.google.com/p/go.net/context"
-	"github.com/drone/config"
 	"github.com/drone/drone/plugin/notify"
 	"github.com/drone/drone/server/blobstore"
 	"github.com/drone/drone/server/datastore"
@@ -23,8 +22,6 @@ import (
 )
 
 const dockerKind = "docker"
-
-var repoPath = config.String("repo_path", "/var/cache/drone/src")
 
 type Docker struct {
 	UUID    string `json:"uuid"`
@@ -119,7 +116,7 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 		Branch: r.Commit.Branch,
 		Commit: r.Commit.Sha,
 		PR:     r.Commit.PullRequest,
-		Dir:    filepath.Join(*repoPath, git.GitPath(script.Git, path)),
+		Dir:    filepath.Join("/apps", git.GitPath(script.Git, path)),
 		Depth:  git.GitDepth(script.Git),
 	}
 
