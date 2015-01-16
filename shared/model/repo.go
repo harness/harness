@@ -4,9 +4,12 @@ import (
 	"gopkg.in/yaml.v1"
 )
 
-var (
-	DefaultBranch = "master"
+const (
+	Git       = "git"
+	Mercurial = "mercurial"
+)
 
+var (
 	// default build timeout, in seconds
 	DefaultTimeout int64 = 7200
 )
@@ -23,6 +26,7 @@ type Repo struct {
 	Host   string `meddler:"repo_host"         json:"host"`
 	Owner  string `meddler:"repo_owner"        json:"owner"`
 	Name   string `meddler:"repo_name"         json:"name"`
+	Scm    string `meddler:"repo_scm"          json:"scm"`
 
 	URL      string `meddler:"repo_url"       json:"url"`
 	CloneURL string `meddler:"repo_clone_url" json:"clone_url"`
@@ -63,4 +67,12 @@ func (r *Repo) ParamMap() (map[string]string, error) {
 	out := map[string]string{}
 	err := yaml.Unmarshal([]byte(r.Params), out)
 	return out, err
+}
+
+func (r *Repo) DefaultBranch() string {
+	var branch = "master"
+	if r.Scm == Mercurial {
+		branch = "default"
+	}
+	return branch
 }
