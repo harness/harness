@@ -139,6 +139,9 @@ nodes=[
 "unix:///var/run/docker.sock"
 ]
 
+[repos]
+repo_path=""
+
 ```
 
 Or you can use environment variables

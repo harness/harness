@@ -79,3 +79,11 @@ datasource="/var/lib/drone/drone.sqlite"
 #   "unix:///var/run/docker.sock",
 #   "unix:///var/run/docker.sock"
 # ]
+
+
+#####################################################################
+# Where repositories should be checked out to in the Docker container.
+# Defaults to /var/cache/drone/src.
+#
+# [repos]
+# repo_path=""
