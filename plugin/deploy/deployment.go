@@ -5,6 +5,7 @@ import (
 	"github.com/drone/drone/shared/build/buildfile"
 	"github.com/drone/drone/shared/build/repo"
 
+	"github.com/drone/drone/plugin/deploy/deis"
 	"github.com/drone/drone/plugin/deploy/git"
 	"github.com/drone/drone/plugin/deploy/heroku"
 	"github.com/drone/drone/plugin/deploy/modulus"
@@ -19,6 +20,7 @@ type Deploy struct {
 	CloudFoundry *CloudFoundry        `yaml:"cloudfoundry,omitempty"`
 	Git          *git.Git             `yaml:"git,omitempty"`
 	Heroku       *heroku.Heroku       `yaml:"heroku,omitempty"`
+	Deis         *deis.Deis           `yaml:"deis,omitempty"`
 	Modulus      *modulus.Modulus     `yaml:"modulus,omitempty"`
 	Nodejitsu    *nodejitsu.Nodejitsu `yaml:"nodejitsu,omitempty"`
 	SSH          *SSH                 `yaml:"ssh,omitempty"`
@@ -36,6 +38,9 @@ func (d *Deploy) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	}
 	if d.Heroku != nil && match(d.Heroku.GetCondition(), r) {
 		d.Heroku.Write(f)
+	}
+	if d.Deis != nil && match(d.Deis.GetCondition(), r) {
+		d.Deis.Write(f)
 	}
 	if d.Modulus != nil && match(d.Modulus.GetCondition(), r) {
 		d.Modulus.Write(f)

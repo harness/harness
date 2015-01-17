@@ -1,4 +1,4 @@
-package heroku
+package deis
 
 import (
 	"fmt"
@@ -14,43 +14,43 @@ const (
 	// individual that made the commit.
 	CmdGlobalEmail = "git config --global user.email $(git --no-pager log -1 --pretty=format:'%ae')"
 	CmdGlobalUser  = "git config --global user.name  $(git --no-pager log -1 --pretty=format:'%an')"
-
-	// Command to write the API token to ~/.netrc
-	// use "_" since heroku git authentication ignores username
-	CmdLogin = "echo 'machine git.heroku.com login _ password %s' >> ~/.netrc"
 )
 
-type Heroku struct {
-	App   string `yaml:"app,omitempty"`
-	Force bool   `yaml:"force,omitempty"`
-	Token string `yaml:"token,omitempty"`
+// deploy:
+//   deis:
+//     app: safe-island-6261
+//     deisurl: deis.myurl.tdl:2222/
 
+type Deis struct {
+	App       string               `yaml:"app,omitempty"`
+	Force     bool                 `yaml:"force,omitempty"`
+	Deisurl   string               `yaml:"deisurl,omitempty"`
 	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
-func (h *Heroku) Write(f *buildfile.Buildfile) {
+func (h *Deis) Write(f *buildfile.Buildfile) {
 	f.WriteCmdSilent(CmdRevParse)
 	f.WriteCmdSilent(CmdGlobalUser)
 	f.WriteCmdSilent(CmdGlobalEmail)
-	f.WriteCmdSilent(fmt.Sprintf(CmdLogin, h.Token))
 
-	// add heroku as a git remote
-	f.WriteCmd(fmt.Sprintf("git remote add heroku https://git.heroku.com/%s.git", h.App))
+	// git@deis.yourdomain.com:2222/drone.git
+
+	f.WriteCmd(fmt.Sprintf("git remote add deis ssh://git@%s%s.git", h.Deisurl, h.App))
 
 	switch h.Force {
 	case true:
 		// this is useful when the there are artifacts generated
 		// by the build script, such as less files converted to css,
-		// that need to be deployed to Heroku.
+		// that need to be deployed to Deis.
 		f.WriteCmd(fmt.Sprintf("git add -A"))
 		f.WriteCmd(fmt.Sprintf("git commit -m 'adding build artifacts'"))
-		f.WriteCmd(fmt.Sprintf("git push heroku HEAD:refs/heads/master --force"))
+		f.WriteCmd(fmt.Sprintf("git push deis HEAD:master --force"))
 	case false:
 		// otherwise we just do a standard git push
-		f.WriteCmd(fmt.Sprintf("git push heroku $COMMIT:refs/heads/master"))
+		f.WriteCmd(fmt.Sprintf("git push deis $COMMIT:master"))
 	}
 }
 
-func (h *Heroku) GetCondition() *condition.Condition {
+func (h *Deis) GetCondition() *condition.Condition {
 	return h.Condition
 }

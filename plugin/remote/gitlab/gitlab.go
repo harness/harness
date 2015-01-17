@@ -11,11 +11,17 @@ import (
 )
 
 type Gitlab struct {
-	url string
+	url        string
+	SkipVerify bool
+	Open       bool
 }
 
-func New(url string) *Gitlab {
-	return &Gitlab{url: url}
+func New(url string, skipVerify, open bool) *Gitlab {
+	return &Gitlab{
+		url:        url,
+		SkipVerify: skipVerify,
+		Open:       open,
+	}
 }
 
 // Authorize handles authentication with thrid party remote systems,
@@ -24,7 +30,7 @@ func (r *Gitlab) Authorize(res http.ResponseWriter, req *http.Request) (*model.L
 	var username = req.FormValue("username")
 	var password = req.FormValue("password")
 
-	var client = NewClient(r.url, "")
+	var client = NewClient(r.url, "", r.SkipVerify)
 	var session, err = client.GetSession(username, password)
 	if err != nil {
 		return nil, err
@@ -55,7 +61,7 @@ func (r *Gitlab) GetHost() string {
 func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 
 	var repos []*model.Repo
-	var client = NewClient(r.url, user.Access)
+	var client = NewClient(r.url, user.Access, r.SkipVerify)
 	var list, err = client.AllProjects()
 	if err != nil {
 		return nil, err
@@ -110,7 +116,7 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 // GetScript fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
 func (r *Gitlab) GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error) {
-	var client = NewClient(r.url, user.Access)
+	var client = NewClient(r.url, user.Access, r.SkipVerify)
 	var path = ns(repo.Owner, repo.Name)
 	return client.RepoRawFile(path, hook.Sha, ".drone.yml")
 }
@@ -118,7 +124,7 @@ func (r *Gitlab) GetScript(user *model.User, repo *model.Repo, hook *model.Hook)
 // Activate activates a repository by adding a Post-commit hook and
 // a Public Deploy key, if applicable.
 func (r *Gitlab) Activate(user *model.User, repo *model.Repo, link string) error {
-	var client = NewClient(r.url, user.Access)
+	var client = NewClient(r.url, user.Access, r.SkipVerify)
 	var path = ns(repo.Owner, repo.Name)
 	var title, err = GetKeyTitle(link)
 	if err != nil {
@@ -186,4 +192,8 @@ func (r *Gitlab) ParseHook(req *http.Request) (*model.Hook, error) {
 	}
 
 	return hook, nil
+}
+
+func (r *Gitlab) OpenRegistration() bool {
+	return r.Open
 }

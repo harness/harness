@@ -138,7 +138,7 @@ func GetOrgRepos(client *github.Client, org string) ([]github.Repository, error)
 }
 
 // GetOrgs is a helper function that returns a list of
-// all org repositories.
+// all orgs that a user belongs to.
 func GetOrgs(client *github.Client) ([]github.Organization, error) {
 	orgs, _, err := client.Organizations.List("", nil)
 	return orgs, err
@@ -269,4 +269,26 @@ func GetPayload(req *http.Request) []byte {
 		return raw
 	}
 	return []byte(payload)
+}
+
+// UserBelongsToOrg returns true if the currently authenticated user is a
+// member of any of the organizations provided.
+func UserBelongsToOrg(client *github.Client, permittedOrgs []string) (bool, error) {
+	userOrgs, err := GetOrgs(client)
+	if err != nil {
+		return false, err
+	}
+
+	userOrgSet := make(map[string]struct{}, len(userOrgs))
+	for _, org := range userOrgs {
+		userOrgSet[*org.Login] = struct{}{}
+	}
+
+	for _, org := range permittedOrgs {
+		if _, ok := userOrgSet[org]; ok {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

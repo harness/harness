@@ -43,17 +43,17 @@ func NewBuildCommand() cli.Command {
 			},
 			cli.StringFlag{
 				Name:  "docker-host",
-				Value: "",
+				Value: getHost(),
 				Usage: "docker daemon address",
 			},
 			cli.StringFlag{
 				Name:  "docker-cert",
-				Value: "",
+				Value: getCert(),
 				Usage: "docker daemon tls certificate",
 			},
 			cli.StringFlag{
 				Name:  "docker-key",
-				Value: "",
+				Value: getKey(),
 				Usage: "docker daemon tls key",
 			},
 		},
@@ -115,7 +115,7 @@ func run(path, identity, dockerhost, dockercert, dockerkey string, publish, depl
 	envs := getParamMap("DRONE_ENV_")
 
 	// parse the Drone yml file
-	s, err := script.ParseBuildFile(script.Inject(path, envs))
+	s, err := script.ParseBuildFile(path, envs)
 	if err != nil {
 		log.Err(err.Error())
 		return EXIT_STATUS, err
@@ -127,10 +127,10 @@ func run(path, identity, dockerhost, dockercert, dockerkey string, publish, depl
 	}
 
 	if deploy == false {
-		s.Publish = nil
+		s.Deploy = nil
 	}
 	if publish == false {
-		s.Deploy = nil
+		s.Publish = nil
 	}
 
 	// get the repository root directory
@@ -203,4 +203,24 @@ func run(path, identity, dockerhost, dockercert, dockerkey string, publish, depl
 	}
 
 	return builder.BuildState.ExitCode, nil
+}
+
+func getHost() string {
+	return os.Getenv("DOCKER_HOST")
+}
+
+func getCert() string {
+	if os.Getenv("DOCKER_CERT_PATH") != "" && os.Getenv("DOCKER_TLS_VERIFY") == "1" {
+		return filepath.Join(os.Getenv("DOCKER_CERT_PATH"), "cert.pem")
+	} else {
+		return ""
+	}
+}
+
+func getKey() string {
+	if os.Getenv("DOCKER_CERT_PATH") != "" && os.Getenv("DOCKER_TLS_VERIFY") == "1" {
+		return filepath.Join(os.Getenv("DOCKER_CERT_PATH"), "key.pem")
+	} else {
+		return ""
+	}
 }

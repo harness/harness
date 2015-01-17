@@ -218,10 +218,6 @@ func (b *Builder) setup() error {
 		b.services = append(b.services, info)
 	}
 
-	if err := b.writeIdentifyFile(dir); err != nil {
-		return err
-	}
-
 	if err := b.writeBuildScript(dir); err != nil {
 		return err
 	}
@@ -242,7 +238,7 @@ func (b *Builder) setup() error {
 	if _, err := b.dockerClient.Images.Inspect(b.Build.Image); err == docker.ErrNotFound {
 		// download the image if it doesn't exist
 		if err := b.dockerClient.Images.Pull(b.Build.Image); err != nil {
-			return err
+			return fmt.Errorf("Error: Unable to pull image %s. %s", b.Build.Image, err)
 		}
 	} else if err != nil {
 		log.Errf("failed to inspect image %s", b.Build.Image)
@@ -273,6 +269,8 @@ func (b *Builder) setup() error {
 // stop and remove the build container, its supporting image,
 // and the supporting service containers.
 func (b *Builder) teardown() error {
+
+	defer b.dockerClient.CloseIdleConnections()
 
 	// stop and destroy the container
 	if b.container != nil {
@@ -319,6 +317,7 @@ func (b *Builder) teardown() error {
 func (b *Builder) run() error {
 	// create and run the container
 	conf := docker.Config{
+		Hostname:     script.DockerHostname(b.Build.Docker),
 		Image:        b.image.ID,
 		AttachStdin:  false,
 		AttachStdout: true,
@@ -393,7 +392,7 @@ func (b *Builder) run() error {
 	// create the container from the image
 	run, err := b.dockerClient.Containers.Create(&conf)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error: Failed to create build container. %s", err)
 	}
 
 	// cache instance of docker.Run
@@ -408,7 +407,7 @@ func (b *Builder) run() error {
 	if err := b.dockerClient.Containers.Start(run.ID, &host); err != nil {
 		b.BuildState.ExitCode = 1
 		b.BuildState.Finished = time.Now().UTC().Unix()
-		return err
+		return fmt.Errorf("Error: Failed to start build container. %s", err)
 	}
 
 	// wait for the container to stop
@@ -416,7 +415,7 @@ func (b *Builder) run() error {
 	if err != nil {
 		b.BuildState.ExitCode = 1
 		b.BuildState.Finished = time.Now().UTC().Unix()
-		return err
+		return fmt.Errorf("Error: Failed to wait for build container. %s", err)
 	}
 
 	// set completion time
@@ -449,31 +448,16 @@ func (b *Builder) writeDockerfile(dir string) error {
 		// is the "ubuntu" user, since all build images
 		// inherit from the ubuntu cloud ISO
 		dockerfile.WriteUser("ubuntu")
-		dockerfile.WriteEnv("HOME", "/home/ubuntu")
-		dockerfile.WriteEnv("LANG", "en_US.UTF-8")
-		dockerfile.WriteEnv("LANGUAGE", "en_US:en")
 		dockerfile.WriteEnv("LOGNAME", "ubuntu")
-		dockerfile.WriteEnv("TERM", "xterm")
-		dockerfile.WriteEnv("SHELL", "/bin/bash")
-		dockerfile.WriteAdd("id_rsa", "/home/ubuntu/.ssh/id_rsa")
-		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /home/ubuntu/.ssh")
+		dockerfile.WriteEnv("HOME", "/home/ubuntu")
 		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /var/cache/drone")
 		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /usr/local/bin/drone")
-		dockerfile.WriteRun("sudo chmod 600 /home/ubuntu/.ssh/id_rsa")
 	default:
 		// all other images are assumed to use
 		// the root user.
 		dockerfile.WriteUser("root")
-		dockerfile.WriteEnv("HOME", "/root")
-		dockerfile.WriteEnv("LANG", "en_US.UTF-8")
-		dockerfile.WriteEnv("LANGUAGE", "en_US:en")
 		dockerfile.WriteEnv("LOGNAME", "root")
-		dockerfile.WriteEnv("TERM", "xterm")
-		dockerfile.WriteEnv("SHELL", "/bin/bash")
-		dockerfile.WriteEnv("GOPATH", "/var/cache/drone")
-		dockerfile.WriteAdd("id_rsa", "/root/.ssh/id_rsa")
-		dockerfile.WriteRun("chmod 600 /root/.ssh/id_rsa")
-		dockerfile.WriteRun("echo 'StrictHostKeyChecking no' > /root/.ssh/config")
+		dockerfile.WriteEnv("HOME", "/root")
 	}
 
 	dockerfile.WriteAdd("proxy.sh", "/etc/drone.d/")
@@ -488,6 +472,13 @@ func (b *Builder) writeDockerfile(dir string) error {
 // temp directory to be added to the Image.
 func (b *Builder) writeBuildScript(dir string) error {
 	f := buildfile.New()
+
+	// add environment variables for user env
+	f.WriteEnv("LANG", "en_US.UTF-8")
+	f.WriteEnv("LANGUAGE", "en_US:en")
+	f.WriteEnv("TERM", "xterm")
+	f.WriteEnv("GOPATH", "/var/cache/drone")
+	f.WriteEnv("SHELL", "/bin/bash")
 
 	// add environment variables about the build
 	f.WriteEnv("CI", "true")
@@ -511,6 +502,10 @@ func (b *Builder) writeBuildScript(dir string) error {
 	// add /etc/hosts entries
 	for _, mapping := range b.Build.Hosts {
 		f.WriteHost(mapping)
+	}
+
+	if len(b.Key) != 0 {
+		f.WriteFile("$HOME/.ssh/id_rsa", b.Key, 600)
 	}
 
 	// if the repository is remote then we should
@@ -554,12 +549,4 @@ func (b *Builder) writeProxyScript(dir string) error {
 	// write the proxyfile to the temp directory
 	proxyfilePath := filepath.Join(dir, "proxy.sh")
 	return ioutil.WriteFile(proxyfilePath, proxyfile.Bytes(), 0755)
-}
-
-// writeIdentifyFile is a helper function that
-// will generate the id_rsa file in the builder's
-// temp directory to be added to the Image.
-func (b *Builder) writeIdentifyFile(dir string) error {
-	keyfilePath := filepath.Join(dir, "id_rsa")
-	return ioutil.WriteFile(keyfilePath, b.Key, 0700)
 }

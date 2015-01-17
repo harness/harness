@@ -1,5 +1,5 @@
-[![Build Status](http://test.drone.io/api/badge/github.com/drone/drone/status.svg)](http://test.drone.io/github.com/drone/drone)
-[![GoDoc](https://godoc.org/github.com/drone/drone?status.png)](https://godoc.org/github.com/drone/drone)
+[![Build Status](http://test.drone.io/api/badge/github.com/drone/drone/status.svg?style=flat)](http://test.drone.io/github.com/drone/drone)
+[![GoDoc](https://godoc.org/github.com/drone/drone?status.svg)](https://godoc.org/github.com/drone/drone)
 [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/drone/drone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Documentation
@@ -100,12 +100,14 @@ open=true
 [github]
 client=""
 secret=""
+orgs=[]
 
 [github_enterprise]
 client=""
 secret=""
 api=""
 url=""
+orgs=[]
 private_mode=false
 
 [bitbucket]
@@ -114,6 +116,11 @@ secret=""
 
 [gitlab]
 url=""
+skip_verify=false
+
+[gogs]
+url=""
+secret=""
 
 [smtp]
 host=""
@@ -122,9 +129,11 @@ from=""
 user=""
 pass=""
 
-[worker]
+[docker]
 cert=""
 key=""
+
+[worker]
 nodes=[
 "unix:///var/run/docker.sock",
 "unix:///var/run/docker.sock"
@@ -169,6 +178,7 @@ export DRONE_BITBUCKET_SECRET=""
 
 # gitlab configuration
 export DRONE_GITLAB_URL=""
+export DRONE_GITLAB_SKIP_VERIFY=false
 
 # email configuration
 export DRONE_SMTP_HOST=""
