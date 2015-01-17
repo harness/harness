@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/plugin/remote"
-	"github.com/drone/drone/server/capability"
 	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/server/sync"
@@ -49,7 +48,7 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 		// if self-registration is disabled we should
 		// return a notAuthorized error. the only exception
 		// is if no users exist yet in the system we'll proceed.
-		if capability.Enabled(ctx, capability.Registration) == false {
+		if remote.OpenRegistration() == false {
 			users, err := datastore.GetUserList(ctx)
 			if err != nil || len(users) != 0 {
 				log.Println("Unable to create account. Registration is closed")

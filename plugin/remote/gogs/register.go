@@ -8,6 +8,7 @@ import (
 var (
 	gogsUrl    = config.String("gogs-url", "")
 	gogsSecret = config.String("gogs-secret", "")
+	gogsOpen   = config.Bool("gogs-open", false)
 )
 
 // Registers the Gogs plugin using the default
@@ -18,6 +19,6 @@ func Register() {
 		return
 	}
 	remote.Register(
-		New(*gogsUrl, *gogsSecret),
+		New(*gogsUrl, *gogsSecret, *gogsOpen),
 	)
 }
