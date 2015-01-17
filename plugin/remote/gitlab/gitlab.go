@@ -13,12 +13,14 @@ import (
 type Gitlab struct {
 	url        string
 	SkipVerify bool
+	Open       bool
 }
 
-func New(url string, skipVerify bool) *Gitlab {
+func New(url string, skipVerify, open bool) *Gitlab {
 	return &Gitlab{
 		url:        url,
 		SkipVerify: skipVerify,
+		Open:       open,
 	}
 }
 
@@ -190,4 +192,8 @@ func (r *Gitlab) ParseHook(req *http.Request) (*model.Hook, error) {
 	}
 
 	return hook, nil
+}
+
+func (r *Gitlab) OpenRegistration() bool {
+	return r.Open
 }

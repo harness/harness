@@ -28,9 +28,10 @@ type GitHub struct {
 	Private    bool
 	SkipVerify bool
 	Orgs       []string
+	Open       bool
 }
 
-func New(url, api, client, secret string, private, skipVerify bool, orgs []string) *GitHub {
+func New(url, api, client, secret string, private, skipVerify bool, orgs []string, open bool) *GitHub {
 	var github = GitHub{
 		URL:        url,
 		API:        api,
@@ -39,6 +40,7 @@ func New(url, api, client, secret string, private, skipVerify bool, orgs []strin
 		Private:    private,
 		SkipVerify: skipVerify,
 		Orgs:       orgs,
+		Open:       open,
 	}
 	// the API must have a trailing slash
 	if !strings.HasSuffix(github.API, "/") {
@@ -51,8 +53,8 @@ func New(url, api, client, secret string, private, skipVerify bool, orgs []strin
 	return &github
 }
 
-func NewDefault(client, secret string, orgs []string) *GitHub {
-	return New(DefaultURL, DefaultAPI, client, secret, false, false, orgs)
+func NewDefault(client, secret string, orgs []string, open bool) *GitHub {
+	return New(DefaultURL, DefaultAPI, client, secret, false, false, orgs, open)
 }
 
 // Authorize handles GitHub API Authorization.
@@ -304,4 +306,8 @@ func (r *GitHub) ParsePullRequestHook(req *http.Request) (*model.Hook, error) {
 	}
 
 	return &hook, nil
+}
+
+func (r *GitHub) OpenRegistration() bool {
+	return r.Open
 }
