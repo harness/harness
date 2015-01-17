@@ -58,7 +58,6 @@ func NewRepo(remote, owner, name string) (*Repo, error) {
 	repo.PostCommit = true
 	repo.PullRequest = true
 	repo.Timeout = DefaultTimeout
-	repo.BuildNumber = 0
 	return &repo, nil
 }
 
