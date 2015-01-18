@@ -17,6 +17,8 @@ import (
 	"github.com/drone/drone/shared/build/proxy"
 	"github.com/drone/drone/shared/build/repo"
 	"github.com/drone/drone/shared/build/script"
+
+	"github.com/drone/drone/plugin/scm"
 )
 
 // BuildState stores information about a build
@@ -169,6 +171,7 @@ func (b *Builder) setup() error {
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("Error: Unable to copy repository. %s", err)
 		}
+		b.Repo.Path = "/tmp/drone_cache/"
 	}
 
 	// start all services required for the build
@@ -437,8 +440,8 @@ func (b *Builder) writeDockerfile(dir string) error {
 
 	// upload source code if repository is stored
 	// on the host machine
-	if b.Repo.IsRemote() == false {
-		dockerfile.WriteAdd("src", filepath.Join(b.Repo.Dir))
+	if b.Repo.IsLocal() {
+		dockerfile.WriteAdd("src", "/tmp/drone_cache")
 	}
 
 	switch {
@@ -510,10 +513,16 @@ func (b *Builder) writeBuildScript(dir string) error {
 	// if the repository is remote then we should
 	// add the commands to the build script to
 	// clone the repository
-	if b.Repo.IsRemote() {
-		for _, cmd := range b.Repo.Commands() {
-			f.WriteCmd(cmd)
-		}
+
+	source := scm.Lookup(b.Repo.Scm)
+	if source == nil {
+		return fmt.Errorf("could not find scm plugin (%s)", b.Repo.Scm)
+	}
+
+	if len(b.Repo.PR) > 0 {
+		source.PullRequest(f, b.Repo)
+	} else {
+		source.Commit(f, b.Repo)
 	}
 
 	// if the commit is for merging a pull request

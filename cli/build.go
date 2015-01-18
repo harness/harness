@@ -13,6 +13,8 @@ import (
 	"github.com/drone/drone/shared/build/repo"
 	"github.com/drone/drone/shared/build/script"
 
+	"github.com/drone/drone/plugin/scm/local"
+
 	"github.com/codegangsta/cli"
 )
 
@@ -105,6 +107,8 @@ func buildCommandFunc(c *cli.Context) {
 
 // TODO this has gotten a bit out of hand. refactor input params
 func run(path, identity, dockerhost, dockercert, dockerkey string, publish, deploy, privileged bool) (int, error) {
+	local.Register()
+
 	dockerClient, err := docker.NewHostCertFile(dockerhost, dockercert, dockerkey)
 	if err != nil {
 		log.Err(err.Error())
@@ -162,6 +166,7 @@ func run(path, identity, dockerhost, dockercert, dockerkey string, publish, depl
 	// this is where the code gets uploaded to the container
 	// TODO move this code to the build package
 	code.Dir = filepath.Join("/var/cache/drone/src", filepath.Clean(code.Dir))
+	code.Scm = "local"
 
 	// ssh key to import into container
 	var key []byte

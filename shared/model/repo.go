@@ -2,6 +2,14 @@ package model
 
 import (
 	"gopkg.in/yaml.v1"
+
+	"github.com/drone/drone/plugin/scm"
+)
+
+const (
+	Git       = "git"
+	Mercurial = "mercurial"
+	Local     = "local"
 )
 
 var (
@@ -23,6 +31,7 @@ type Repo struct {
 	Host   string `meddler:"repo_host"         json:"host"`
 	Owner  string `meddler:"repo_owner"        json:"owner"`
 	Name   string `meddler:"repo_name"         json:"name"`
+	Scm    string `meddler:"repo_scm"          json:"scm"`
 
 	URL      string `meddler:"repo_url"       json:"url"`
 	CloneURL string `meddler:"repo_clone_url" json:"clone_url"`
@@ -63,4 +72,14 @@ func (r *Repo) ParamMap() (map[string]string, error) {
 	out := map[string]string{}
 	err := yaml.Unmarshal([]byte(r.Params), out)
 	return out, err
+}
+
+func (r *Repo) DefaultBranch() string {
+	source := scm.Lookup(r.Scm)
+
+	if source != nil {
+		return source.DefaultBranch()
+	} else {
+		return "master"
+	}
 }

@@ -109,6 +109,7 @@ func (r *Gogs) GetRepos(user *model.User) ([]*model.Repo, error) {
 			Host:     hostname,
 			Owner:    owner,
 			Name:     name,
+			Scm:      model.Git,
 			Private:  repo.Private,
 			CloneURL: repo.CloneUrl,
 			GitURL:   repo.CloneUrl,

@@ -6,49 +6,50 @@ import (
 
 func TestIsRemote(t *testing.T) {
 	repos := []struct {
-		path   string
+		scm    string
 		remote bool
 	}{
-		{"git://github.com/foo/far", true},
-		{"git://github.com/foo/far.git", true},
-		{"git@github.com:foo/far", true},
-		{"git@github.com:foo/far.git", true},
-		{"http://github.com/foo/far.git", true},
-		{"https://github.com/foo/far.git", true},
-		{"ssh://baz.com/foo/far.git", true},
-		{"/var/lib/src", false},
-		{"/home/ubuntu/src", false},
-		{"src", false},
+		{"git", true},
+		{"mercurial", true},
+		{"mercurial", true},
+		{"mercurial", true},
+		{"git", true},
+		{"git", true},
+		{"mercurial", true},
+		{"local", false},
+		{"local", false},
+		{"local", false},
 	}
 
 	for _, r := range repos {
-		repo := Repo{Path: r.path}
+		repo := Repo{Scm: r.scm}
 		if remote := repo.IsRemote(); remote != r.remote {
-			t.Errorf("IsRemote %s was %v, expected %v", r.path, remote, r.remote)
+			t.Errorf("IsRemote %s was %v, expected %v", r.scm, remote, r.remote)
 		}
 	}
 }
 
-func TestIsGit(t *testing.T) {
+func TestIsLocal(t *testing.T) {
 	repos := []struct {
-		path   string
-		remote bool
+		scm   string
+		local bool
 	}{
-		{"git://github.com/foo/far", true},
-		{"git://github.com/foo/far.git", true},
-		{"git@github.com:foo/far", true},
-		{"git@github.com:foo/far.git", true},
-		{"http://github.com/foo/far.git", true},
-		{"https://github.com/foo/far.git", true},
-		{"ssh://baz.com/foo/far.git", true},
-		{"svn://gcc.gnu.org/svn/gcc/branches/gccgo", false},
-		{"https://code.google.com/p/go", false},
+		{"git", false},
+		{"mercurial", false},
+		{"mercurial", false},
+		{"mercurial", false},
+		{"git", false},
+		{"git", false},
+		{"mercurial", false},
+		{"local", true},
+		{"local", true},
+		{"local", true},
 	}
 
 	for _, r := range repos {
-		repo := Repo{Path: r.path}
-		if remote := repo.IsGit(); remote != r.remote {
-			t.Errorf("IsGit %s was %v, expected %v", r.path, remote, r.remote)
+		repo := Repo{Scm: r.scm}
+		if local := repo.IsLocal(); local != r.local {
+			t.Errorf("IsRemote %s was %v, expected %v", r.scm, local, r.local)
 		}
 	}
 }

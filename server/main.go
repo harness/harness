@@ -25,6 +25,8 @@ import (
 	"github.com/drone/drone/plugin/remote/github"
 	"github.com/drone/drone/plugin/remote/gitlab"
 	"github.com/drone/drone/plugin/remote/gogs"
+	"github.com/drone/drone/plugin/scm/git"
+	"github.com/drone/drone/plugin/scm/mercurial"
 	"github.com/drone/drone/server/blobstore"
 	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/server/datastore/database"
@@ -96,6 +98,9 @@ func main() {
 	github.Register()
 	gitlab.Register()
 	gogs.Register()
+
+	git.Register()
+	mercurial.Register()
 
 	// setup the database and cancel all pending
 	// commits in the system.

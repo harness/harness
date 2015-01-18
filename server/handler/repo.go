@@ -36,10 +36,11 @@ func GetRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	// else we should return restricted fields
 	json.NewEncoder(w).Encode(struct {
 		*model.Repo
-		PublicKey string      `json:"public_key"`
-		Params    string      `json:"params"`
-		Perm      *model.Perm `json:"role"`
-	}{repo, repo.PublicKey, repo.Params, role})
+		DefaultBranch string      `json:"default_branch"`
+		PublicKey     string      `json:"public_key"`
+		Params        string      `json:"params"`
+		Perm          *model.Perm `json:"role"`
+	}{repo, repo.DefaultBranch(), repo.PublicKey, repo.Params, role})
 }
 
 // DelRepo accepts a request to inactivate the named

@@ -73,7 +73,7 @@ func GetBadge(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(branch) == 0 {
-		branch = model.DefaultBranch
+		branch = repo.DefaultBranch()
 	}
 	commit, _ := datastore.GetCommitLast(ctx, repo, branch)
 
