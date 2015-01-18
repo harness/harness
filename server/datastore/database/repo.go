@@ -92,3 +92,18 @@ const repoDeleteStmt = `
 DELETE FROM repos
 WHERE repo_id = ?
 `
+
+// SQL statement to increment build number for a repo
+const repoIncBuildNumberStmt = `
+UPDATE repos
+SET repo_build_number = repo_build_number + 1
+WHERE repo_id = ?
+`
+
+// SQL statement to retrieve current build number for repo
+// see incBuildNumberForCommit
+const repoGetBuildNumberStmt = `
+SELECT repo_build_number
+FROM repos
+WHERE repo_id = ?
+`

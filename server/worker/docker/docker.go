@@ -77,13 +77,6 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	r.Commit.Status = model.StatusStarted
 	r.Commit.Started = time.Now().UTC().Unix()
 
-	// Update the sequential build number if it hasn't been set yet
-	if r.Commit.BuildNumber == 0 {
-		r.Commit.BuildNumber = r.Repo.IncBuildNumber()
-		// Save the updated build number to the repo
-		datastore.PutRepo(c, r.Repo)
-	}
-
 	datastore.PutCommit(c, r.Commit)
 
 	// notify all listeners that the build is started
