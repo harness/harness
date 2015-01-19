@@ -93,9 +93,17 @@ DELETE FROM repos
 WHERE repo_id = ?
 `
 
+// SQL statement to create row in repo_build_numbers
+const repoBuildNumberInsertStmt = `
+INSERT INTO repo_build_numbers 
+( repo_id, repo_build_number )
+VALUES
+( ?, 1 )
+`
+
 // SQL statement to increment build number for a repo
 const repoIncBuildNumberStmt = `
-UPDATE repos
+UPDATE repo_build_numbers
 SET repo_build_number = repo_build_number + 1
 WHERE repo_id = ?
 `
@@ -104,6 +112,6 @@ WHERE repo_id = ?
 // see incBuildNumberForCommit
 const repoGetBuildNumberStmt = `
 SELECT repo_build_number
-FROM repos
+FROM repo_build_numbers
 WHERE repo_id = ?
 `

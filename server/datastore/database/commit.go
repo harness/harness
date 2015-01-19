@@ -12,6 +12,10 @@ type Commitstore struct {
 	*sql.DB
 }
 
+type buildNumber struct {
+	BuildNumber int64 `meddler:"repo_build_number"`
+}
+
 func NewCommitstore(db *sql.DB) *Commitstore {
 	return &Commitstore{db}
 }
@@ -124,14 +128,29 @@ func (db *Commitstore) incBuildNumberForCommit(repoID int64) (int64, error) {
 		return 0, err
 	}
 
-	_, err = txn.Exec(rebind(repoIncBuildNumberStmt), repoID)
+	res, err := txn.Exec(rebind(repoIncBuildNumberStmt), repoID)
 	if err != nil {
 		txn.Rollback()
 		return 0, err
 	}
 
-	var buildNumber int64
-	err = meddler.QueryRow(txn, &buildNumber, rebind(repoGetBuildNumberStmt), repoID)
+	// Insert row if needed
+	rows, err := res.RowsAffected()
+	if err != nil {
+		txn.Rollback()
+		return 0, err
+	}
+
+	if rows == 0 {
+		_, err := txn.Exec(rebind(repoBuildNumberInsertStmt), repoID)
+		if err != nil {
+			txn.Rollback()
+			return 0, err
+		}
+	}
+
+	bn := buildNumber{}
+	err = meddler.QueryRow(txn, &bn, rebind(repoGetBuildNumberStmt), repoID)
 	if err != nil {
 		txn.Rollback()
 		return 0, err
@@ -142,7 +161,7 @@ func (db *Commitstore) incBuildNumberForCommit(repoID int64) (int64, error) {
 		return 0, err
 	}
 
-	return buildNumber, nil
+	return bn.BuildNumber, nil
 }
 
 // Commit table name in database.

@@ -42,8 +42,7 @@ func Migrate_20142110(tx migration.LimitedTx) error {
 // Migrate_20141130 is a database migration on Nov-30 2014.
 func Migrate_20141130(tx migration.LimitedTx) error {
 	var stmts = []string{
-		repoBuildNumberColumn,   // add the repo build number column
-		repoBuildNumberUpdate,   // set the starting build number to be 0
+		repoBuildNumbersTable,   // add the repo build number table
 		commitBuildNumberColumn, // add the commit build number column
 		commitBuildNumberUpdate, // set the commit build number to 0 for all existing commits
 	}
@@ -127,13 +126,6 @@ var repoTokenUpdate = `
 UPDATE repos SET repo_token = '';
 `
 
-var repoBuildNumberColumn = `
-ALTER TABLE repos ADD COLUMN repo_build_number INTEGER
-`
-var repoBuildNumberUpdate = `
-UPDATE repos SET repo_build_number = 0;
-`
-
 var commitTable = `
 CREATE TABLE IF NOT EXISTS commits (
 	 commit_id         INTEGER PRIMARY KEY AUTOINCREMENT
@@ -172,5 +164,12 @@ CREATE TABLE IF NOT EXISTS blobs (
 	,blob_path    VARCHAR(255)
 	,blob_data    BLOB
 	,UNIQUE(blob_path)
+);
+`
+
+var repoBuildNumbersTable = `
+CREATE TABLE repo_build_numbers (
+	 repo_id INTEGER PRIMARY KEY
+	,repo_build_number INTEGER
 );
 `
