@@ -360,6 +360,57 @@ func TestRun(t *testing.T) {
 	t.Skip()
 }
 
+func TestRunDockerVolumes(t *testing.T) {
+	setup()
+	defer teardown()
+
+	var conf = docker.HostConfig{}
+
+	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
+		body := `{ "Id":"e90e34656806", "Warnings":[] }`
+		w.Write([]byte(body))
+	})
+
+	mux.HandleFunc("/v1.9/containers/e90e34656806/start", func(w http.ResponseWriter, r *http.Request) {
+		json.NewDecoder(r.Body).Decode(&conf)
+		w.WriteHeader(http.StatusBadRequest)
+	})
+
+	b := Builder{}
+	b.BuildState = &BuildState{}
+	b.dockerClient = client
+	b.Stdout = new(bytes.Buffer)
+	b.image = &docker.Image{ID: "c3ab8ff137"}
+	b.Build = &script.Build{}
+	b.Repo = &repo.Repo{}
+	func(b Builder) {
+		b.Build.Docker = &script.Docker{Volumes: []string{"/123:/123"}}
+		b.run()
+		passed := false
+		for _, b := range conf.Binds {
+			if b == "/123:/123" {
+				passed = true
+			}
+		}
+		if !passed {
+			t.Errorf("Expected container NOT started with volumes mapped")
+		}
+	}(b)
+	func(b Builder) {
+		b.Build.Docker = &script.Docker{Volumes: []string{"/123"}}
+		b.run()
+		passed := false
+		for _, b := range conf.Binds {
+			if b == "/123" {
+				passed = true
+			}
+		}
+		if passed {
+			t.Errorf("Expected container started with nonsense volumes mapped")
+		}
+	}(b)
+}
+
 func TestRunPrivileged(t *testing.T) {
 	setup()
 	defer teardown()

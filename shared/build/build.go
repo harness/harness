@@ -389,10 +389,13 @@ func (b *Builder) run() error {
 		log.Infof("mounting volume %s:%s", hostpath, volume)
 	}
 
-	// append volumes for to the host.Binds
-	for _, volume := range b.Build.Volumes {
-		host.Binds = append(host.Binds, fmt.Sprintf("%s:%s", volume, volume))
-		conf.Volumes[volume] = struct{}{}
+	// foreach of the volumes listed on the docker script
+	for _, volume := range script.DockerVolumes(b.Build.Docker) {
+		// if volumes are valid, append to host.Binds and conf.Volumes mapping
+		if script.IsVolumeValid(volume) {
+			host.Binds = append(host.Binds, volume)
+			conf.Volumes[volume] = struct{}{}
+		}
 	}
 
 	// create the container from the image
