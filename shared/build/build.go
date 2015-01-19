@@ -238,7 +238,7 @@ func (b *Builder) setup() error {
 	if _, err := b.dockerClient.Images.Inspect(b.Build.Image); err == docker.ErrNotFound {
 		// download the image if it doesn't exist
 		if err := b.dockerClient.Images.Pull(b.Build.Image); err != nil {
-			return err
+			return fmt.Errorf("Error: Unable to pull image %s. %s", b.Build.Image, err)
 		}
 	} else if err != nil {
 		log.Errf("failed to inspect image %s", b.Build.Image)
@@ -398,7 +398,7 @@ func (b *Builder) run() error {
 	// create the container from the image
 	run, err := b.dockerClient.Containers.Create(&conf)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error: Failed to create build container. %s", err)
 	}
 
 	// cache instance of docker.Run
@@ -413,7 +413,7 @@ func (b *Builder) run() error {
 	if err := b.dockerClient.Containers.Start(run.ID, &host); err != nil {
 		b.BuildState.ExitCode = 1
 		b.BuildState.Finished = time.Now().UTC().Unix()
-		return err
+		return fmt.Errorf("Error: Failed to start build container. %s", err)
 	}
 
 	// wait for the container to stop
@@ -421,7 +421,7 @@ func (b *Builder) run() error {
 	if err != nil {
 		b.BuildState.ExitCode = 1
 		b.BuildState.Finished = time.Now().UTC().Unix()
-		return err
+		return fmt.Errorf("Error: Failed to wait for build container. %s", err)
 	}
 
 	// set completion time
@@ -509,7 +509,9 @@ func (b *Builder) writeBuildScript(dir string) error {
 		f.WriteHost(mapping)
 	}
 
-	f.WriteFile("$HOME/.ssh/id_rsa", b.Key, 600)
+	if len(b.Key) != 0 {
+		f.WriteFile("$HOME/.ssh/id_rsa", b.Key, 600)
+	}
 
 	// if the repository is remote then we should
 	// add the commands to the build script to

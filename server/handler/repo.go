@@ -149,6 +149,10 @@ func PutRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	if in.Params != nil {
 		repo.Params = *in.Params
+		if _, err := repo.ParamMap(); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 	if in.PostCommit != nil {
 		repo.PostCommit = *in.PostCommit

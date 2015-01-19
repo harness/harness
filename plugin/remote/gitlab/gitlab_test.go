@@ -14,7 +14,7 @@ func Test_Github(t *testing.T) {
 	var server = testdata.NewServer()
 	defer server.Close()
 
-	var gitlab = New(server.URL, false)
+	var gitlab = New(server.URL, false, false)
 	var user = model.User{
 		Access: "e3b0c44298fc1c149afbf4c8996fb",
 	}

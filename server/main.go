@@ -26,7 +26,6 @@ import (
 	"github.com/drone/drone/plugin/remote/gitlab"
 	"github.com/drone/drone/plugin/remote/gogs"
 	"github.com/drone/drone/server/blobstore"
-	"github.com/drone/drone/server/capability"
 	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/server/datastore/database"
 	"github.com/drone/drone/server/worker/director"
@@ -41,7 +40,7 @@ const (
 var (
 	// commit sha for the current build, set by
 	// the compile process.
-	version  string = "0.3-dev"
+	version  string
 	revision string
 )
 
@@ -56,10 +55,6 @@ var (
 	sslcrt = config.String("server-ssl-cert", "")
 	sslkey = config.String("server-ssl-key", "")
 
-	// Enable self-registration. When false, the system admin
-	// must grant user access.
-	open = config.Bool("registration-open", false)
-
 	workers *pool.Pool
 	worker  *director.Director
 	pub     *pubsub.PubSub
@@ -70,8 +65,6 @@ var (
 	nodes      StringArr
 
 	db *sql.DB
-
-	caps map[string]bool
 )
 
 func main() {
@@ -104,9 +97,6 @@ func main() {
 	gitlab.Register()
 	gogs.Register()
 
-	caps = map[string]bool{}
-	caps[capability.Registration] = *open
-
 	// setup the database and cancel all pending
 	// commits in the system.
 	db = database.MustConnect(*driver, *datasource)
@@ -137,6 +127,7 @@ func main() {
 	// create handler for static resources
 	assets := rice.MustFindBox("app").HTTPBox()
 	assetserve := http.FileServer(rice.MustFindBox("app").HTTPBox())
+	http.Handle("/robots.txt", assetserve)
 	http.Handle("/static/", http.StripPrefix("/static", assetserve))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write(assets.MustBytes("index.html"))
@@ -169,7 +160,6 @@ func ContextMiddleware(c *web.C, h http.Handler) http.Handler {
 		ctx = pool.NewContext(ctx, workers)
 		ctx = director.NewContext(ctx, worker)
 		ctx = pubsub.NewContext(ctx, pub)
-		ctx = capability.NewContext(ctx, caps)
 
 		// add the context to the goji web context
 		webcontext.Set(c, ctx)

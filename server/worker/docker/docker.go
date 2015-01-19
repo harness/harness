@@ -120,6 +120,8 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 		Depth:  git.GitDepth(script.Git),
 	}
 
+	priorCommit, _ := datastore.GetCommitPrior(c, r.Commit)
+
 	// send all "started" notifications
 	if script.Notifications == nil {
 		script.Notifications = &notify.Notification{}
@@ -129,6 +131,7 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 		Repo:   r.Repo,
 		Commit: r.Commit,
 		Host:   r.Host,
+		Prior:  priorCommit,
 	})
 
 	// create an instance of the Docker builder
@@ -136,9 +139,12 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	builder.Build = script
 	builder.Repo = repo
 	builder.Stdout = buf
-	builder.Key = []byte(r.Repo.PrivateKey)
 	builder.Timeout = time.Duration(r.Repo.Timeout) * time.Second
 	builder.Privileged = r.Repo.Privileged
+
+	if r.Repo.Private || len(r.Commit.PullRequest) == 0 {
+		builder.Key = []byte(r.Repo.PrivateKey)
+	}
 
 	// run the build
 	err = builder.Run()
@@ -168,11 +174,14 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	// notify all listeners that the build is finished
 	commitc.Publish(r)
 
+	priorCommit, _ = datastore.GetCommitPrior(c, r.Commit)
+
 	// send all "finished" notifications
 	script.Notifications.Send(&model.Request{
 		User:   r.User,
 		Repo:   r.Repo,
 		Commit: r.Commit,
 		Host:   r.Host,
+		Prior:  priorCommit,
 	})
 }

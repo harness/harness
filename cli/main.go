@@ -7,7 +7,7 @@ import (
 
 var (
 	// commit sha for the current build.
-	version  string = "0.3-dev"
+	version  string
 	revision string
 )
 
@@ -39,6 +39,7 @@ func main() {
 		NewDisableCommand(),
 		NewRestartCommand(),
 		NewWhoamiCommand(),
+		NewSetKeyCommand(),
 	}
 
 	app.Run(os.Args)

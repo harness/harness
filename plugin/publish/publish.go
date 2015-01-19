@@ -2,6 +2,7 @@ package publish
 
 import (
 	"github.com/drone/drone/plugin/condition"
+	"github.com/drone/drone/plugin/publish/bintray"
 	"github.com/drone/drone/plugin/publish/npm"
 	"github.com/drone/drone/shared/build/buildfile"
 	"github.com/drone/drone/shared/build/repo"
@@ -11,12 +12,14 @@ import (
 // for publishing build artifacts when
 // a Build has succeeded
 type Publish struct {
-	S3     *S3      `yaml:"s3,omitempty"`
-	Swift  *Swift   `yaml:"swift,omitempty"`
-	PyPI   *PyPI    `yaml:"pypi,omitempty"`
-	NPM    *npm.NPM `yaml:"npm,omitempty"`
-	Docker *Docker  `yaml:"docker,omitempty"`
-	Github *Github  `yaml:"github,omitempty"`
+	S3      *S3              `yaml:"s3,omitempty"`
+	Swift   *Swift           `yaml:"swift,omitempty"`
+	PyPI    *PyPI            `yaml:"pypi,omitempty"`
+	NPM     *npm.NPM         `yaml:"npm,omitempty"`
+	Docker  *Docker          `yaml:"docker,omitempty"`
+	Github  *Github          `yaml:"github,omitempty"`
+	Dropbox *Dropbox         `yaml:"dropbox,omitempty"`
+	Bintray *bintray.Bintray `yaml:"bintray,omitempty"`
 }
 
 func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
@@ -48,6 +51,16 @@ func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	// Docker
 	if p.Docker != nil && match(p.Docker.GetCondition(), r) {
 		p.Docker.Write(f)
+	}
+
+	// Dropbox
+	if p.Dropbox != nil && match(p.Dropbox.GetCondition(), r) {
+		p.Dropbox.Write(f)
+	}
+
+	// Bintray
+	if p.Bintray != nil && match(p.Bintray.GetCondition(), r) {
+		p.Bintray.Write(f)
 	}
 }
 

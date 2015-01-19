@@ -22,20 +22,20 @@ const (
 //     deisurl: deis.myurl.tdl:2222/
 
 type Deis struct {
-  App   string `yaml:"app,omitempty"`
-  Force bool   `yaml:"force,omitempty"`
-  Deisurl string `yaml:"deisurl,omitempty"`
-  Condition *condition.Condition `yaml:"when,omitempty"`
+	App       string               `yaml:"app,omitempty"`
+	Force     bool                 `yaml:"force,omitempty"`
+	Deisurl   string               `yaml:"deisurl,omitempty"`
+	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
 func (h *Deis) Write(f *buildfile.Buildfile) {
 	f.WriteCmdSilent(CmdRevParse)
 	f.WriteCmdSilent(CmdGlobalUser)
 	f.WriteCmdSilent(CmdGlobalEmail)
-	
+
 	// git@deis.yourdomain.com:2222/drone.git
-	
-	f.WriteCmd(fmt.Sprintf("git remote add deis ssh://git@%s%s.git", h.Deisurl , h.App))
+
+	f.WriteCmd(fmt.Sprintf("git remote add deis ssh://git@%s%s.git", h.Deisurl, h.App))
 
 	switch h.Force {
 	case true:
