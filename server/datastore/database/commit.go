@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/drone/drone/shared/model"
@@ -8,10 +9,14 @@ import (
 )
 
 type Commitstore struct {
-	meddler.DB
+	*sql.DB
 }
 
-func NewCommitstore(db meddler.DB) *Commitstore {
+type buildNumber struct {
+	BuildNumber int64 `meddler:"repo_build_number"`
+}
+
+func NewCommitstore(db *sql.DB) *Commitstore {
 	return &Commitstore{db}
 }
 
@@ -75,6 +80,11 @@ func (db *Commitstore) GetCommitPrior(oldCommit *model.Commit) (*model.Commit, e
 // PostCommit saves a commit in the datastore.
 func (db *Commitstore) PostCommit(commit *model.Commit) error {
 	if commit.Created == 0 {
+		var err error
+		commit.BuildNumber, err = db.incBuildNumberForCommit(commit.RepoID)
+		if err != nil {
+			return err
+		}
 		commit.Created = time.Now().UTC().Unix()
 	}
 	commit.Updated = time.Now().UTC().Unix()
@@ -84,6 +94,11 @@ func (db *Commitstore) PostCommit(commit *model.Commit) error {
 // PutCommit saves a commit in the datastore.
 func (db *Commitstore) PutCommit(commit *model.Commit) error {
 	if commit.Created == 0 {
+		var err error
+		commit.BuildNumber, err = db.incBuildNumberForCommit(commit.RepoID)
+		if err != nil {
+			return err
+		}
 		commit.Created = time.Now().UTC().Unix()
 	}
 	commit.Updated = time.Now().UTC().Unix()
@@ -101,6 +116,52 @@ func (db *Commitstore) DelCommit(commit *model.Commit) error {
 func (db *Commitstore) KillCommits() error {
 	var _, err = db.Exec(rebind(commitKillStmt))
 	return err
+}
+
+// Retrieve the build number for this commit by incrementing the repo build number
+func (db *Commitstore) incBuildNumberForCommit(repoID int64) (int64, error) {
+	// Call the update and select in a single transaction to ensure there is no
+	// chance of two commits having the same build number. The update will lock the
+	// repo row, serializing the select.
+	txn, err := db.Begin()
+	if err != nil {
+		return 0, err
+	}
+
+	res, err := txn.Exec(rebind(repoIncBuildNumberStmt), repoID)
+	if err != nil {
+		txn.Rollback()
+		return 0, err
+	}
+
+	// Insert row if needed
+	rows, err := res.RowsAffected()
+	if err != nil {
+		txn.Rollback()
+		return 0, err
+	}
+
+	if rows == 0 {
+		_, err := txn.Exec(rebind(repoBuildNumberInsertStmt), repoID)
+		if err != nil {
+			txn.Rollback()
+			return 0, err
+		}
+	}
+
+	bn := buildNumber{}
+	err = meddler.QueryRow(txn, &bn, rebind(repoGetBuildNumberStmt), repoID)
+	if err != nil {
+		txn.Rollback()
+		return 0, err
+	}
+
+	err = txn.Commit()
+	if err != nil {
+		return 0, err
+	}
+
+	return bn.BuildNumber, nil
 }
 
 // Commit table name in database.
