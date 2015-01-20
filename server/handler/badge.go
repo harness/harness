@@ -82,6 +82,7 @@ func GetBadge(c web.C, w http.ResponseWriter, r *http.Request) {
 	if len(commit) == 0 { 
 		commit, _ = datastore.GetCommitLast(ctx, repo, branch)
 	} else {
+		//not last
 		commit,_ = datastore.GetCommitSha(ctx, repo, branch, commitSha)
 	}
 	// if no commit was found then display
