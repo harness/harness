@@ -50,12 +50,13 @@ var badgeStyles = map[string]badge{
 //
 func GetBadge(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
+	var commit *model.Commit
 	var (
 		host   = c.URLParams["host"]
 		owner  = c.URLParams["owner"]
 		name   = c.URLParams["name"]
 		branch = r.FormValue("branch")
-		commit = r.FormValue("commit")
+		commitSha = r.FormValue("commit")
 		style  = r.FormValue("style")
 		
 	)
@@ -79,9 +80,9 @@ func GetBadge(c web.C, w http.ResponseWriter, r *http.Request) {
 	}
 	
 	if len(commit) == 0 { 
-		commit, _ := datastore.GetCommitLast(ctx, repo, branch)
+		commit, _ = datastore.GetCommitLast(ctx, repo, branch)
 	} else {
-		commit,_ := datastore.GetCommitSha(ctx, repo, branch, commit)
+		commit,_ = datastore.GetCommitSha(ctx, repo, branch, commitSha)
 	}
 	// if no commit was found then display
 	// the 'none' badge, instead of throwing
