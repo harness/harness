@@ -12,6 +12,7 @@ var (
 	stashSecret     = config.String("stash-secret", "")
 	stashPrivateKey = config.String("stash-private-key", "")
 	stashHook       = config.String("stash-hook", "")
+	stashOpen       = config.Bool("stash-open", false)
 )
 
 // Registers the Stash plugin using the default
@@ -32,6 +33,7 @@ func Register() {
 			*stashSecret,
 			*stashPrivateKey,
 			*stashHook,
+			*stashOpen,
 		),
 	)
 }

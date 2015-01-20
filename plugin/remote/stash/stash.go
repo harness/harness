@@ -18,15 +18,17 @@ type Stash struct {
 	Secret     string
 	PrivateKey string
 	Hook       string
+	Open       bool
 }
 
-func New(url, api, secret, private_key, hook string) *Stash {
+func New(url, api, secret, private_key, hook string, open bool) *Stash {
 	return &Stash{
 		URL:        url,
 		API:        api,
 		Secret:     secret,
 		PrivateKey: private_key,
 		Hook:       hook,
+		Open:       open,
 	}
 }
 
@@ -254,4 +256,8 @@ func (r *Stash) ParseHook(req *http.Request) (*model.Hook, error) {
 		Timestamp: time.Now().UTC().String(),
 		Message:   message,
 	}, nil
+}
+
+func (r *Stash) OpenRegistration() bool {
+	return r.Open
 }
