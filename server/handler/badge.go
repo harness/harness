@@ -50,13 +50,15 @@ var badgeStyles = map[string]badge{
 //
 func GetBadge(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
+	var commit *model.Commit
 	var (
 		host   = c.URLParams["host"]
 		owner  = c.URLParams["owner"]
 		name   = c.URLParams["name"]
 		branch = r.FormValue("branch")
-		branch = r.FormValue("commit")
+		commitSha = r.FormValue("commit")
 		style  = r.FormValue("style")
+		
 	)
 
 	// an SVG response is always served, even when error, so
@@ -76,10 +78,10 @@ func GetBadge(c web.C, w http.ResponseWriter, r *http.Request) {
 	if len(branch) == 0 {
 		branch = model.DefaultBranch
 	}
-	if commit == "" { 
+	if commitSha == "" { 
 		commit, _ := datastore.GetCommitLast(ctx, repo, branch)
 	} else {
-		commit,_ := datastore.GetCommitSha(ctx, repo, branch, sha)
+		commit,_ := datastore.GetCommitSha(ctx, repo, branch, commitSha)
 	}
 	// if no commit was found then display
 	// the 'none' badge, instead of throwing
