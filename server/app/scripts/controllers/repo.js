@@ -14,6 +14,18 @@ angular.module('app').controller("RepoController", function($scope, $http, $rout
 			// commit details, allowing the user to
 			// reload the page.
 			$scope.msg = item;
+
+			// Try find an existing commit for this SHA. If found, replace it
+			var sha_updated = $scope.commits.some(function(element, index) {
+				if (element.sha == item.commit.sha)
+					$scope.commits[index] = item.commit;
+				return element.sha == item.commit.sha;
+			});
+
+			// Add a new commit if the SHA couldn't be found but the new build status is 'Started'
+			if ( ! sha_updated && item.commit.status == 'Started')
+				$scope.commits.unshift(item.commit);
+
 			$scope.$apply();
 		} else {
 			// we trigger a toast (or html5) notification so the
