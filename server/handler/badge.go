@@ -55,6 +55,7 @@ func GetBadge(c web.C, w http.ResponseWriter, r *http.Request) {
 		owner  = c.URLParams["owner"]
 		name   = c.URLParams["name"]
 		branch = r.FormValue("branch")
+		branch = r.FormValue("commit")
 		style  = r.FormValue("style")
 	)
 
@@ -75,8 +76,11 @@ func GetBadge(c web.C, w http.ResponseWriter, r *http.Request) {
 	if len(branch) == 0 {
 		branch = model.DefaultBranch
 	}
-	commit, _ := datastore.GetCommitLast(ctx, repo, branch)
-
+	if commit == "" { 
+		commit, _ := datastore.GetCommitLast(ctx, repo, branch)
+	} else {
+		commit,_ := datastore.GetCommitSha(ctx, repo, branch, sha)
+	}
 	// if no commit was found then display
 	// the 'none' badge, instead of throwing
 	// an error response
