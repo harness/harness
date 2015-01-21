@@ -56,7 +56,7 @@ func GetBadge(c web.C, w http.ResponseWriter, r *http.Request) {
 		owner  = c.URLParams["owner"]
 		name   = c.URLParams["name"]
 		branch = r.FormValue("branch")
-		commitSha = r.FormValue("commit") // commit hash
+		commitSha = r.FormValue("commit")
 		style  = r.FormValue("style")
 		
 	)
