@@ -13,7 +13,6 @@ angular.module('app').controller("RepoController", function($scope, $http, $rout
 			// display a toast message with the
 			// commit details, allowing the user to
 			// reload the page.
-			$scope.msg = item;
 
 			// Try find an existing commit for this SHA. If found, replace it
 			var sha_updated = $scope.commits.some(function(element, index) {
@@ -22,9 +21,11 @@ angular.module('app').controller("RepoController", function($scope, $http, $rout
 				return element.sha == item.commit.sha;
 			});
 
-			// Add a new commit if the SHA couldn't be found but the new build status is 'Started'
-			if ( ! sha_updated && item.commit.status == 'Started')
-				$scope.commits.unshift(item.commit);
+			// Add a build message if the SHA couldn't be found and the new build status is 'Started'
+			if ( ! sha_updated && item.commit.status == 'Started') {
+				// $scope.commits.unshift(item.commit);
+				$scope.msg = item;
+			}
 
 			$scope.$apply();
 		} else {
