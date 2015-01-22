@@ -31,23 +31,21 @@ func Test_NPM(t *testing.T) {
 
 			n.Write(b)
 			out := b.String()
-			g.Assert(strings.Contains(out, "\nnpm publish /path/to/repo\n")).Equal(true)
+			g.Assert(strings.Contains(out, "npm publish /path/to/repo\n")).Equal(true)
 			g.Assert(strings.Contains(out, "\nnpm set")).Equal(false)
 			g.Assert(strings.Contains(out, "\nnpm config set")).Equal(false)
 		})
 
-		g.It("Should set force", func() {
+		g.It("Should use current directory if folder is empty", func() {
 			b := new(buildfile.Buildfile)
 			n := NPM{
 				Email:    "foo@bar.com",
 				Username: "foo",
 				Password: "bar",
-				Folder:   "/path/to/repo",
-				Force:    true,
 			}
 
 			n.Write(b)
-			g.Assert(strings.Contains(b.String(), "\nnpm publish /path/to/repo --force\n")).Equal(true)
+			g.Assert(strings.Contains(b.String(), "npm publish .\n")).Equal(true)
 		})
 
 		g.It("Should set tag", func() {
@@ -61,7 +59,8 @@ func Test_NPM(t *testing.T) {
 			}
 
 			n.Write(b)
-			g.Assert(strings.Contains(b.String(), "\nnpm publish /path/to/repo --tag 1.0.0\n")).Equal(true)
+			g.Assert(strings.Contains(b.String(), "\n_NPM_PACKAGE_TAG=\"1.0.0\"\n")).Equal(true)
+			g.Assert(strings.Contains(b.String(), "npm tag ${_NPM_PACKAGE_NAME} ${_NPM_PACKAGE_TAG}\n")).Equal(true)
 		})
 
 		g.It("Should set registry", func() {
