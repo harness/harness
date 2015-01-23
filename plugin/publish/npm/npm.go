@@ -22,7 +22,7 @@ EOF
 const CmdPublish = `
 _NPM_PACKAGE_NAME=$(cd %s && npm list | head -n 1 | cut -d ' ' -f1)
 _NPM_PACKAGE_TAG="%s"
-if [ -z "$(npm info ${_NPM_PACKAGE_NAME})" ]
+if [ -z "$(npm info ${_NPM_PACKAGE_NAME} 2> /dev/null)" ]
 then
 	npm publish %s
 	[ -n ${_NPM_PACKAGE_TAG} ] && npm tag ${_NPM_PACKAGE_NAME} ${_NPM_PACKAGE_TAG}
