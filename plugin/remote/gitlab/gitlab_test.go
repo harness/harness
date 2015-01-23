@@ -1,7 +1,9 @@
 package gitlab
 
 import (
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/drone/drone/plugin/remote/gitlab/testdata"
@@ -14,7 +16,7 @@ func Test_Github(t *testing.T) {
 	var server = testdata.NewServer()
 	defer server.Close()
 
-	var gitlab = New(server.URL, false, false)
+	var gitlab = New(server.URL, false, false, "", "")
 	var user = model.User{
 		Access: "e3b0c44298fc1c149afbf4c8996fb",
 	}
@@ -31,17 +33,6 @@ func Test_Github(t *testing.T) {
 	g := goblin.Goblin(t)
 	g.Describe("Gitlab Plugin", func() {
 
-		g.It("Should authorize user", func() {
-			var req, _ = http.NewRequest("GET", "/login/gitlab", nil)
-			var login, err = gitlab.Authorize(nil, req)
-			g.Assert(err == nil).IsTrue()
-			g.Assert(login.Email).Equal("john@example.com")
-			g.Assert(login.Name).Equal("John Smith")
-			g.Assert(login.Login).Equal("john_smith")
-			g.Assert(login.Access).Equal("dd34asd13as")
-			g.Assert(login.ID).Equal(int64(1))
-		})
-
 		g.It("Should get the repo list", func() {
 			var repos, err = gitlab.GetRepos(&user)
 			g.Assert(err == nil).IsTrue()
@@ -54,6 +45,23 @@ func Test_Github(t *testing.T) {
 			g.Assert(repos[0].Role.Admin).Equal(true)
 			g.Assert(repos[0].Role.Read).Equal(true)
 			g.Assert(repos[0].Role.Write).Equal(true)
+		})
+
+		g.Describe("Authorize", func() {
+			var resp = httptest.NewRecorder()
+			var state = "validstate"
+			var req, _ = http.NewRequest(
+				"GET",
+				fmt.Sprintf("%s/?code=sekret&state=%s", server.URL, state),
+				nil,
+			)
+			req.AddCookie(&http.Cookie{Name: "gitlab_state", Value: state})
+
+			g.It("Should authorize a valid user", func() {
+				var login, err = gitlab.Authorize(resp, req)
+				g.Assert(err == nil).IsTrue()
+				g.Assert(login == nil).IsFalse()
+			})
 		})
 		/*
 			g.It("Should get the build script", func() {

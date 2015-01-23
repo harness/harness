@@ -1,12 +1,15 @@
 package gitlab
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
 
 	"github.com/Bugagazavr/go-gitlab-client"
+	"github.com/drone/drone/plugin/remote/github/oauth"
+	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 )
 
@@ -14,34 +17,66 @@ type Gitlab struct {
 	url        string
 	SkipVerify bool
 	Open       bool
+	Client     string
+	Secret     string
 }
 
-func New(url string, skipVerify, open bool) *Gitlab {
+func New(url string, skipVerify, open bool, client, secret string) *Gitlab {
 	return &Gitlab{
 		url:        url,
 		SkipVerify: skipVerify,
 		Open:       open,
+		Client:     client,
+		Secret:     secret,
 	}
 }
 
 // Authorize handles authentication with thrid party remote systems,
 // such as github or bitbucket, and returns user data.
 func (r *Gitlab) Authorize(res http.ResponseWriter, req *http.Request) (*model.Login, error) {
-	var username = req.FormValue("username")
-	var password = req.FormValue("password")
+	var config = &oauth.Config{
+		ClientId:     r.Client,
+		ClientSecret: r.Secret,
+		Scope:        "api",
+		AuthURL:      fmt.Sprintf("%s/oauth/authorize", r.url),
+		TokenURL:     fmt.Sprintf("%s/oauth/token", r.url),
+		RedirectURL:  fmt.Sprintf("%s/api/auth/%s", httputil.GetURL(req), r.GetKind()),
+	}
 
-	var client = NewClient(r.url, "", r.SkipVerify)
-	var session, err = client.GetSession(username, password)
+	var code = req.FormValue("code")
+	var state = req.FormValue("state")
+
+	if len(code) == 0 {
+		var random = GetRandom()
+		httputil.SetCookie(res, req, "gitlab_state", random)
+		http.Redirect(res, req, config.AuthCodeURL(random), http.StatusSeeOther)
+		return nil, nil
+	}
+
+	cookieState := httputil.GetCookie(req, "gitlab_state")
+	httputil.DelCookie(res, req, "gitlab_state")
+	if cookieState != state {
+		return nil, fmt.Errorf("Error matching state in OAuth2 redirect")
+	}
+
+	var trans = &oauth.Transport{Config: config}
+	var token, err = trans.Exchange(code)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error exchanging token. %s", err)
+	}
+
+	var client = NewClient(r.url, token.AccessToken, r.SkipVerify)
+
+	var user, errr = client.CurrentUser()
+	if errr != nil {
+		return nil, fmt.Errorf("Error retrieving current user. %s", errr)
 	}
 
 	var login = new(model.Login)
-	login.ID = int64(session.Id)
-	login.Access = session.PrivateToken
-	login.Login = session.UserName
-	login.Name = session.Name
-	login.Email = session.Email
+	login.ID = int64(user.Id)
+	login.Access = token.AccessToken
+	login.Login = user.Username
+	login.Email = user.Email
 	return login, nil
 }
 

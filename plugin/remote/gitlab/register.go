@@ -9,6 +9,9 @@ var (
 	gitlabURL        = config.String("gitlab-url", "")
 	gitlabSkipVerify = config.Bool("gitlab-skip-verify", false)
 	gitlabOpen       = config.Bool("gitlab-open", false)
+
+	gitlabClient = config.String("gitlab-client", "")
+	gitlabSecret = config.String("gitlab-secret", "")
 )
 
 // Registers the Gitlab plugin using the default
@@ -23,6 +26,8 @@ func Register() {
 			*gitlabURL,
 			*gitlabSkipVerify,
 			*gitlabOpen,
+			*gitlabClient,
+			*gitlabSecret,
 		),
 	)
 }
