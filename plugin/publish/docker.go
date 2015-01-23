@@ -89,7 +89,7 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 	f.WriteCmd("export DOCKER_HOST=" + d.DockerHost)
 
 	// Build the image
-	f.WriteCmd(fmt.Sprintf("docker build -t %s:%s %s", d.ImageName, buildImageTag, dockerPath))
+	f.WriteCmd(fmt.Sprintf("docker build --pull -t %s:%s %s", d.ImageName, buildImageTag, dockerPath))
 
 	// Login?
 	if d.RegistryLogin == true {

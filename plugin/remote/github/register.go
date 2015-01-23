@@ -9,6 +9,8 @@ var (
 	// GitHub cloud configuration details
 	githubClient = config.String("github-client", "")
 	githubSecret = config.String("github-secret", "")
+	githubOrgs   = config.Strings("github-orgs")
+	githubOpen   = config.Bool("github-open", false)
 
 	// GitHub Enterprise configuration details
 	githubEnterpriseURL        = config.String("github-enterprise-url", "")
@@ -17,6 +19,8 @@ var (
 	githubEnterpriseSecret     = config.String("github-enterprise-secret", "")
 	githubEnterprisePrivate    = config.Bool("github-enterprise-private-mode", true)
 	githubEnterpriseSkipVerify = config.Bool("github-enterprise-skip-verify", false)
+	githubEnterpriseOrgs       = config.Strings("github-enterprise-orgs")
+	githubEnterpriseOpen       = config.Bool("github-enterprise-open", false)
 )
 
 // Registers the GitHub plugins using the default
@@ -33,7 +37,7 @@ func registerGitHub() {
 		return
 	}
 	remote.Register(
-		NewDefault(*githubClient, *githubSecret),
+		NewDefault(*githubClient, *githubSecret, *githubOrgs, *githubOpen),
 	)
 }
 
@@ -53,6 +57,8 @@ func registerGitHubEnterprise() {
 			*githubEnterpriseSecret,
 			*githubEnterprisePrivate,
 			*githubEnterpriseSkipVerify,
+			*githubEnterpriseOrgs,
+			*githubEnterpriseOpen,
 		),
 	)
 }
