@@ -18,8 +18,22 @@ email = %s
 EOF
 `
 
+// command to publish npm package if not published
+const CmdPublish = `
+_NPM_PACKAGE_NAME=$(cd %s && npm list | head -n 1 | cut -d ' ' -f1)
+_NPM_PACKAGE_TAG="%s"
+if [ -z "$(npm info ${_NPM_PACKAGE_NAME} 2> /dev/null)" ]
+then
+	npm publish %s
+	[ -n ${_NPM_PACKAGE_TAG} ] && npm tag ${_NPM_PACKAGE_NAME} ${_NPM_PACKAGE_TAG}
+else
+	echo "skipping publish, package ${_NPM_PACKAGE_NAME} already published"
+fi
+unset _NPM_PACKAGE_NAME
+unset _NPM_PACKAGE_TAG
+`
+
 const (
-	CmdPublish     = "npm publish %s"
 	CmdAlwaysAuth  = "npm set always-auth true"
 	CmdSetRegistry = "npm config set registry %s"
 )
@@ -42,10 +56,6 @@ type NPM struct {
 	// The Password used by NPM to connect
 	// and publish to a repository
 	Password string `yaml:"password,omitempty"`
-
-	// Fails if the package name and version combination already
-	// exists in the registry. Overwrites when the "--force" flag is set.
-	Force bool `yaml:"force"`
 
 	// The registry URL of custom npm repository
 	Registry string `yaml:"registry,omitempty"`
@@ -94,16 +104,11 @@ func (n *NPM) Write(f *buildfile.Buildfile) {
 		f.WriteCmd(CmdAlwaysAuth)
 	}
 
-	var cmd = fmt.Sprintf(CmdPublish, n.Folder)
-	if len(n.Tag) != 0 {
-		cmd += fmt.Sprintf(" --tag %s", n.Tag)
+	if len(n.Folder) == 0 {
+		n.Folder = "."
 	}
 
-	if n.Force {
-		cmd += " --force"
-	}
-
-	f.WriteCmd(cmd)
+	f.WriteString(fmt.Sprintf(CmdPublish, n.Folder, n.Tag, n.Folder))
 }
 
 func (n *NPM) GetCondition() *condition.Condition {

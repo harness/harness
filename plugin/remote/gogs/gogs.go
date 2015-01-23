@@ -16,10 +16,11 @@ import (
 type Gogs struct {
 	URL    string
 	Secret string
+	Open   bool
 }
 
-func New(url string, secret string) *Gogs {
-	return &Gogs{URL: url, Secret: secret}
+func New(url string, secret string, open bool) *Gogs {
+	return &Gogs{URL: url, Secret: secret, Open: open}
 }
 
 // Authorize handles Gogs authorization
@@ -180,4 +181,8 @@ func (r *Gogs) ParseHook(req *http.Request) (*model.Hook, error) {
 		Timestamp: time.Now().UTC().String(),
 		Message:   payload.Commits[0].Message,
 	}, nil
+}
+
+func (r *Gogs) OpenRegistration() bool {
+	return r.Open
 }

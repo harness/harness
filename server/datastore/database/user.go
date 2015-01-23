@@ -49,20 +49,15 @@ func (db *Userstore) GetUserList() ([]*model.User, error) {
 
 // PostUser saves a User in the datastore.
 func (db *Userstore) PostUser(user *model.User) error {
-	if user.Created == 0 {
-		user.Created = time.Now().UTC().Unix()
-	}
+	user.Created = time.Now().UTC().Unix()
 	user.Updated = time.Now().UTC().Unix()
-	return meddler.Save(db, userTable, user)
+	return meddler.Insert(db, userTable, user)
 }
 
 // PutUser saves a user in the datastore.
 func (db *Userstore) PutUser(user *model.User) error {
-	if user.Created == 0 {
-		user.Created = time.Now().UTC().Unix()
-	}
 	user.Updated = time.Now().UTC().Unix()
-	return meddler.Save(db, userTable, user)
+	return meddler.Update(db, userTable, user)
 }
 
 // DelUser removes the user from the datastore.

@@ -14,7 +14,7 @@ type RepoService struct {
 func (s *RepoService) Get(host, owner, name string) (*model.Repo, error) {
 	var path = fmt.Sprintf("/api/repos/%s/%s/%s", host, owner, name)
 	var repo = model.Repo{}
-	var err = s.run("PUT", path, nil, &repo)
+	var err = s.run("GET", path, nil, &repo)
 	return &repo, err
 }
 
@@ -36,6 +36,16 @@ func (s *RepoService) Enable(host, owner, name string) error {
 func (s *RepoService) Disable(host, owner, name string) error {
 	var path = fmt.Sprintf("/api/repos/%s/%s/%s", host, owner, name)
 	return s.run("DELETE", path, nil, nil)
+}
+
+// PUT /api/repos/{host}/{owner}/{name}
+func (s *RepoService) SetKey(host, owner, name, pub, priv string) error {
+	var path = fmt.Sprintf("/api/repos/%s/%s/%s", host, owner, name)
+	var in = struct {
+		PublicKey  string `json:"public_key"`
+		PrivateKey string `json:"private_key"`
+	}{pub, priv}
+	return s.run("PUT", path, &in, nil)
 }
 
 // GET /api/user/repos
