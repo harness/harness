@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/server/worker"
 	"github.com/drone/drone/shared/httputil"
@@ -65,7 +66,9 @@ func PostCommit(c web.C, w http.ResponseWriter, r *http.Request) {
 	var (
 		branch = c.URLParams["branch"]
 		hash   = c.URLParams["commit"]
+		host   = c.URLParams["host"]
 		repo   = ToRepo(c)
+		remote = remote.Lookup(host)
 	)
 
 	commit, err := datastore.GetCommitSha(ctx, repo, branch, hash)
@@ -91,6 +94,17 @@ func PostCommit(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	owner, err := datastore.GetUser(ctx, repo.UserID)
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Request a new token and update
+	user_token, err := remote.GetToken(owner)
+	if user_token != nil {
+		owner.Access = user_token.AccessToken
+		owner.Secret = user_token.RefreshToken
+		datastore.PutUser(ctx, owner)
+	} else if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
