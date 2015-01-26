@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/plugin/notify/email"
+	"github.com/drone/drone/plugin/notify/flowdock"
 	"github.com/drone/drone/plugin/notify/github"
 	"github.com/drone/drone/plugin/notify/irc"
 	"github.com/drone/drone/plugin/notify/katoim"
@@ -22,14 +23,14 @@ type Sender interface {
 // for notifying a user, or group of users,
 // when their Build has completed.
 type Notification struct {
-	Email    *email.Email     `yaml:"email,omitempty"`
-	Webhook  *webhook.Webhook `yaml:"webhook,omitempty"`
-	Hipchat  *Hipchat         `yaml:"hipchat,omitempty"`
-	Irc      *irc.IRC         `yaml:"irc,omitempty"`
-	Slack    *Slack           `yaml:"slack,omitempty"`
-	Gitter   *Gitter          `yaml:"gitter,omitempty"`
-	Flowdock *Flowdock        `yaml:"flowdock,omitempty"`
-	KatoIM   *katoim.KatoIM   `yaml:"katoim,omitempty"`
+	Email    *email.Email       `yaml:"email,omitempty"`
+	Webhook  *webhook.Webhook   `yaml:"webhook,omitempty"`
+	Hipchat  *Hipchat           `yaml:"hipchat,omitempty"`
+	Irc      *irc.IRC           `yaml:"irc,omitempty"`
+	Slack    *Slack             `yaml:"slack,omitempty"`
+	Gitter   *Gitter            `yaml:"gitter,omitempty"`
+	Flowdock *flowdock.Flowdock `yaml:"flowdock,omitempty"`
+	KatoIM   *katoim.KatoIM     `yaml:"katoim,omitempty"`
 
 	GitHub github.GitHub `yaml:"--"`
 }
