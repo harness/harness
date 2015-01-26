@@ -140,8 +140,21 @@ func GetOrgRepos(client *github.Client, org string) ([]github.Repository, error)
 // GetOrgs is a helper function that returns a list of
 // all orgs that a user belongs to.
 func GetOrgs(client *github.Client) ([]github.Organization, error) {
-	orgs, _, err := client.Organizations.List("", nil)
-	return orgs, err
+	var allOrgs []github.Organization
+	var err error
+	page := 1
+	for {
+		options := &github.ListOptions{Page: page}
+		orgs, _, err := client.Organizations.List("", options)
+		if len(orgs) == 0 || err != nil {
+			break
+		}
+		for _, v := range orgs {
+			allOrgs = append(allOrgs, v)
+		}
+		page++
+	}
+	return allOrgs, err
 }
 
 // GetHook is a heper function that retrieves a hook by
