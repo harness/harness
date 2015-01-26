@@ -116,6 +116,8 @@ secret=""
 
 [gitlab]
 url=""
+client=""
+secret=""
 skip_verify=false
 
 [gogs]
@@ -178,6 +180,8 @@ export DRONE_BITBUCKET_SECRET=""
 
 # gitlab configuration
 export DRONE_GITLAB_URL=""
+export DRONE_GITLAB_CLIENT=""
+export DRONE_GITLAB_SECRET=""
 export DRONE_GITLAB_SKIP_VERIFY=false
 
 # email configuration

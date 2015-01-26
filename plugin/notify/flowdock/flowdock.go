@@ -1,11 +1,10 @@
-package notify
+package flowdock
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/drone/drone/shared/model"
-	"github.com/stvp/flowdock"
 )
 
 const (
@@ -78,7 +77,7 @@ func (f *Flowdock) sendSuccess(context *model.Request) error {
 
 // helper function to send Flowdock requests
 func (f *Flowdock) send(fromAddress, subject, message string, tags []string) error {
-	c := flowdock.Client{Token: f.Token, Source: f.Source, FromName: "drone.io", FromAddress: fromAddress, Tags: tags}
+	c := Client{Token: f.Token, Source: f.Source, FromName: "drone.io", FromAddress: fromAddress, Tags: tags}
 	go c.Inbox(subject, message)
 	return nil
 }
