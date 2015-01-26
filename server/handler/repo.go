@@ -104,6 +104,17 @@ func PostRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Request a new token and update
+	user_token, err := remote.GetToken(user)
+	if user_token != nil {
+		user.Access = user_token.AccessToken
+		user.Secret = user_token.RefreshToken
+		datastore.PutUser(ctx, user)
+	} else if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	// setup the post-commit hook with the remote system and
 	// if necessary, register the public key
 	var hook = fmt.Sprintf("%s/api/hook/%s/%s", httputil.GetURL(r), repo.Remote, repo.Token)

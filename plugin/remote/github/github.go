@@ -311,3 +311,7 @@ func (r *GitHub) ParsePullRequestHook(req *http.Request) (*model.Hook, error) {
 func (r *GitHub) OpenRegistration() bool {
 	return r.Open
 }
+
+func (r *GitHub) GetToken(user *model.User) (*model.Token, error) {
+	return nil, nil
+}

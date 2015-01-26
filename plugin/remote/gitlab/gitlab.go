@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 
+	"code.google.com/p/goauth2/oauth"
 	"github.com/Bugagazavr/go-gitlab-client"
-	"github.com/drone/drone/plugin/remote/github/oauth"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 )
@@ -34,14 +35,8 @@ func New(url string, skipVerify, open bool, client, secret string) *Gitlab {
 // Authorize handles authentication with thrid party remote systems,
 // such as github or bitbucket, and returns user data.
 func (r *Gitlab) Authorize(res http.ResponseWriter, req *http.Request) (*model.Login, error) {
-	var config = &oauth.Config{
-		ClientId:     r.Client,
-		ClientSecret: r.Secret,
-		Scope:        "api",
-		AuthURL:      fmt.Sprintf("%s/oauth/authorize", r.url),
-		TokenURL:     fmt.Sprintf("%s/oauth/token", r.url),
-		RedirectURL:  fmt.Sprintf("%s/api/auth/%s", httputil.GetURL(req), r.GetKind()),
-	}
+	host := httputil.GetURL(req)
+	config := NewOauthConfig(r, host)
 
 	var code = req.FormValue("code")
 	var state = req.FormValue("state")
@@ -75,6 +70,7 @@ func (r *Gitlab) Authorize(res http.ResponseWriter, req *http.Request) (*model.L
 	var login = new(model.Login)
 	login.ID = int64(user.Id)
 	login.Access = token.AccessToken
+	login.Secret = token.RefreshToken
 	login.Login = user.Username
 	login.Email = user.Email
 	return login, nil
@@ -231,4 +227,25 @@ func (r *Gitlab) ParseHook(req *http.Request) (*model.Hook, error) {
 
 func (r *Gitlab) OpenRegistration() bool {
 	return r.Open
+}
+
+func (r *Gitlab) GetToken(user *model.User) (*model.Token, error) {
+	expiry := time.Now().Truncate(7200 * time.Second)
+	t := &oauth.Transport{
+		Config: NewOauthConfig(r, ""),
+		Token: &oauth.Token{
+			AccessToken:  user.Access,
+			RefreshToken: user.Secret,
+			Expiry:       expiry,
+		},
+	}
+
+	if err := t.Refresh(); err != nil {
+		return nil, err
+	}
+
+	var token = new(model.Token)
+	token.AccessToken = t.Token.AccessToken
+	token.RefreshToken = t.Token.RefreshToken
+	return token, nil
 }
