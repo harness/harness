@@ -44,6 +44,8 @@ datasource="/var/lib/drone/drone.sqlite"
 
 # [gitlab]
 # url=""
+# client=""
+# secret=""
 # skip_verify=false
 # open=false
 
