@@ -5,21 +5,22 @@ import (
 )
 
 type User struct {
-	ID       int64  `meddler:"user_id,pk"     json:"-"`
-	Remote   string `meddler:"user_remote"    json:"remote"`
-	Login    string `meddler:"user_login"     json:"login"`
-	Access   string `meddler:"user_access"    json:"-"`
-	Secret   string `meddler:"user_secret"    json:"-"`
-	Name     string `meddler:"user_name"      json:"name"`
-	Email    string `meddler:"user_email"     json:"email,omitempty"`
-	Gravatar string `meddler:"user_gravatar"  json:"gravatar"`
-	Token    string `meddler:"user_token"     json:"-"`
-	Admin    bool   `meddler:"user_admin"     json:"admin"`
-	Active   bool   `meddler:"user_active"    json:"active"`
-	Syncing  bool   `meddler:"user_syncing"   json:"syncing"`
-	Created  int64  `meddler:"user_created"   json:"created_at"`
-	Updated  int64  `meddler:"user_updated"   json:"updated_at"`
-	Synced   int64  `meddler:"user_synced"    json:"synced_at"`
+	ID          int64  `meddler:"user_id,pk"          json:"-"`
+	Remote      string `meddler:"user_remote"         json:"remote"`
+	Login       string `meddler:"user_login"          json:"login"`
+	Access      string `meddler:"user_access"         json:"-"`
+	Secret      string `meddler:"user_secret"         json:"-"`
+	Name        string `meddler:"user_name"           json:"name"`
+	Email       string `meddler:"user_email"          json:"email,omitempty"`
+	Gravatar    string `meddler:"user_gravatar"       json:"gravatar"`
+	Token       string `meddler:"user_token"          json:"-"`
+	Admin       bool   `meddler:"user_admin"          json:"admin"`
+	Active      bool   `meddler:"user_active"         json:"active"`
+	Syncing     bool   `meddler:"user_syncing"        json:"syncing"`
+	Created     int64  `meddler:"user_created"        json:"created_at"`
+	Updated     int64  `meddler:"user_updated"        json:"updated_at"`
+	Synced      int64  `meddler:"user_synced"         json:"synced_at"`
+	TokenExpiry int64  `meddler:"user_access_expires" json:"-"`
 }
 
 func NewUser(remote, login, email string) *User {

@@ -230,7 +230,11 @@ func (r *Gitlab) OpenRegistration() bool {
 }
 
 func (r *Gitlab) GetToken(user *model.User) (*model.Token, error) {
-	expiry := time.Now().Truncate(7200 * time.Second)
+	expiry := time.Unix(user.TokenExpiry, 0)
+	if expiry.Sub(time.Now()) > (60 * time.Second) {
+		return nil, nil
+	}
+
 	t := &oauth.Transport{
 		Config: NewOauthConfig(r, ""),
 		Token: &oauth.Token{
@@ -247,5 +251,6 @@ func (r *Gitlab) GetToken(user *model.User) (*model.Token, error) {
 	var token = new(model.Token)
 	token.AccessToken = t.Token.AccessToken
 	token.RefreshToken = t.Token.RefreshToken
+	token.Expiry = t.Token.Expiry.Unix()
 	return token, nil
 }
