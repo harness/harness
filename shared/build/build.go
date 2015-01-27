@@ -198,7 +198,13 @@ func (b *Builder) setup() error {
 		log.Infof("starting service container %s", cname)
 
 		// Run the contianer
-		run, err := b.dockerClient.Containers.RunDaemonPorts(cname, img.Config.ExposedPorts)
+		var run *docker.Run
+		networkMode := script.DockerNetworkMode(b.Build.Docker)
+		if networkMode != "host" {
+			run, err = b.dockerClient.Containers.RunDaemonPorts(cname, img.Config.ExposedPorts)
+		} else {
+			run, err = b.dockerClient.Containers.RunDaemonHost(cname)
+		}
 		if err != nil {
 			return err
 		}
@@ -337,13 +343,15 @@ func (b *Builder) run() error {
 	log.Noticef("starting build %s", b.Build.Name)
 
 	// link service containers
-	for i, service := range b.services {
-		// convert name of the image to a slug
-		_, name, _ := parseImageName(b.Build.Services[i])
+	if host.NetworkMode != "host" {
+		for i, service := range b.services {
+			// convert name of the image to a slug
+			_, name, _ := parseImageName(b.Build.Services[i])
 
-		// link the service container to our
-		// build container.
-		host.Links = append(host.Links, service.Name[1:]+":"+name)
+			// link the service container to our
+			// build container.
+			host.Links = append(host.Links, service.Name[1:]+":"+name)
+		}
 	}
 
 	// where are temp files going to go?
