@@ -6,10 +6,10 @@ drone.sublime-workspace
 *~
 ~*
 *.sqlite
-drone.deb
-drone.rpm
 *.out
 *.rice-box.go
+drone.deb
+drone.rpm
 
 cli/cli
 client/client
