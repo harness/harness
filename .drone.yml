@@ -9,6 +9,7 @@ script:
   - sudo apt-get -y install zip libsqlite3-dev sqlite3 rpm 1> /dev/null 2> /dev/null
   - gem install fpm
   - rbenv rehash
+  - go get -u github.com/gorilla/websocket
   - make deps
   - make test
   - make test_postgres
