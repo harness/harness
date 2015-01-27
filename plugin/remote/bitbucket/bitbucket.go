@@ -275,3 +275,7 @@ func (r *Bitbucket) ParseHook(req *http.Request) (*model.Hook, error) {
 func (r *Bitbucket) OpenRegistration() bool {
 	return r.Open
 }
+
+func (r *Bitbucket) GetToken(user *model.User) (*model.Token, error) {
+	return nil, nil
+}

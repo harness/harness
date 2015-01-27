@@ -158,6 +158,16 @@ func PostUserSync(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Request a new token and update
+	user_token, err := remote.GetToken(user)
+	if user_token != nil {
+		user.Access = user_token.AccessToken
+		user.Secret = user_token.RefreshToken
+	} else if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	user.Syncing = true
 	if err := datastore.PutUser(ctx, user); err != nil {
 		w.WriteHeader(http.StatusNotFound)

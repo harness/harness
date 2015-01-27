@@ -186,3 +186,7 @@ func (r *Gogs) ParseHook(req *http.Request) (*model.Hook, error) {
 func (r *Gogs) OpenRegistration() bool {
 	return r.Open
 }
+
+func (r *Gogs) GetToken(user *model.User) (*model.Token, error) {
+	return nil, nil
+}

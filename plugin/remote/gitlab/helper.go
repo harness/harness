@@ -5,14 +5,26 @@ import (
 	"fmt"
 	"net/url"
 
+	"code.google.com/p/goauth2/oauth"
 	"github.com/Bugagazavr/go-gitlab-client"
 	"github.com/gorilla/securecookie"
 )
 
+func NewOauthConfig(g *Gitlab, host string) *oauth.Config {
+	return &oauth.Config{
+		ClientId:     g.Client,
+		ClientSecret: g.Secret,
+		Scope:        "api",
+		AuthURL:      fmt.Sprintf("%s/oauth/authorize", g.url),
+		TokenURL:     fmt.Sprintf("%s/oauth/token", g.url),
+		RedirectURL:  fmt.Sprintf("%s/api/auth/%s", host, g.GetKind()),
+	}
+}
+
 // NewClient is a helper function that returns a new GitHub
 // client using the provided OAuth token.
-func NewClient(uri, token string, skipVerify bool) *gogitlab.Gitlab {
-	client := gogitlab.NewGitlabCert(uri, "/api/v3", token, skipVerify)
+func NewClient(url, accessToken string, skipVerify bool) *gogitlab.Gitlab {
+	client := gogitlab.NewGitlabCert(url, "/api/v3", accessToken, skipVerify)
 	client.Bearer = true
 	return client
 }
