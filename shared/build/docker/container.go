@@ -144,3 +144,11 @@ func (c *ContainerService) RunDaemonPorts(image string, ports map[Port]struct{})
 	//map[3306/tcp:{}] map[3306/tcp:[{127.0.0.1 }]]
 	return c.RunDaemon(&config, &host)
 }
+
+func (c *ContainerService) RunDaemonHost(image string) (*Run, error) {
+	// setup configuration
+	config := Config{Image: image}
+	host := HostConfig{}
+	host.NetworkMode = "host"
+	return c.RunDaemon(&config, &host)
+}
