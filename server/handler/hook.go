@@ -76,6 +76,17 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Request a new token and update
+	user_token, err := remote.GetToken(user)
+	if user_token != nil {
+		user.Access = user_token.AccessToken
+		user.Secret = user_token.RefreshToken
+		datastore.PutUser(ctx, user)
+	} else if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	// featch the .drone.yml file from the database
 	yml, err := remote.GetScript(user, repo, hook)
 	if err != nil {

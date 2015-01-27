@@ -35,6 +35,9 @@ type Remote interface {
 
 	// Registration returns true if open registration is allowed
 	OpenRegistration() bool
+
+	// Get token
+	GetToken(*model.User) (*model.Token, error)
 }
 
 // List of registered plugins.
