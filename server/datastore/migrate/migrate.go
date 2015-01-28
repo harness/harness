@@ -39,6 +39,22 @@ func Migrate_20142110(tx migration.LimitedTx) error {
 	return nil
 }
 
+// Migrate_20141130 is a database migration on Nov-30 2014.
+func Migrate_20141130(tx migration.LimitedTx) error {
+	var stmts = []string{
+		repoBuildNumbersTable,   // add the repo build number table
+		commitBuildNumberColumn, // add the commit build number column
+		commitBuildNumberUpdate, // set the commit build number to 0 for all existing commits
+	}
+	for _, stmt := range stmts {
+		_, err := tx.Exec(transform(stmt))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 var userTable = `
 CREATE TABLE IF NOT EXISTS users (
 	 user_id           INTEGER PRIMARY KEY AUTOINCREMENT
@@ -131,6 +147,12 @@ CREATE TABLE IF NOT EXISTS commits (
 	,UNIQUE(commit_sha, commit_branch, repo_id)
 );
 `
+var commitBuildNumberColumn = `
+ALTER TABLE commits ADD COLUMN commit_build_number INTEGER
+`
+var commitBuildNumberUpdate = `
+UPDATE commits SET commit_build_number = 0;
+`
 
 var commitRepoIndex = `
 CREATE INDEX commit_repo_id_idx ON commits (repo_id);
@@ -142,5 +164,12 @@ CREATE TABLE IF NOT EXISTS blobs (
 	,blob_path    VARCHAR(255)
 	,blob_data    BLOB
 	,UNIQUE(blob_path)
+);
+`
+
+var repoBuildNumbersTable = `
+CREATE TABLE repo_build_numbers (
+	 repo_id INTEGER PRIMARY KEY
+	,repo_build_number INTEGER
 );
 `
