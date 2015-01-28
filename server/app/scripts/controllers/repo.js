@@ -1,8 +1,10 @@
 'use strict';
 
-angular.module('app').controller("RepoController", function($scope, $http, $routeParams, $route, repos, feed, repo) {
+angular.module('app').controller("RepoController", function($scope, $filter, $http, $routeParams, $route, repos, feed, repo) {
 	$scope.repo = repo;
 	$scope.activating = false;
+	$scope.build_filter = 'build_history';
+	$scope.layout = 'grid';
 
 	// subscribes to the global feed to receive
 	// build status updates.
@@ -83,6 +85,34 @@ angular.module('app').controller("RepoController", function($scope, $http, $rout
 	//		});
 	//};
 
+	$scope.setCommitFilter = function(filter) {
+		$scope.build_filter = filter;
+	}
+
+	$scope.setLayout = function(layout) {
+		$scope.layout = layout;
+	}
+
+	$scope.filteredCommits = function() {
+		var filteredCommits;
+		switch ($scope.build_filter) {
+			// Latest commit for each branch (excluding PR branches)
+			case 'branch_summary':
+				filteredCommits = $filter('filter')($scope.commits, { pull_request: '' }, true);
+				filteredCommits = $filter('unique')($scope.commits, 'branch');
+				break;
+			// Latest commit for each PR
+			case 'pull_requests':
+				filteredCommits = $filter('pullRequests')($scope.commits);
+				filteredCommits = $filter('unique')(filteredCommits, 'pull_request');
+				break;
+			// All commits for a full build history
+			default:
+				filteredCommits = $scope.commits;
+		}
+
+		return filteredCommits;
+	}
 });
 
 

@@ -9,10 +9,16 @@
 
 <article id="repopage">
 	<nav>
-		<div class="options" ng-if="repo.role.admin">
-			<a class="pure-button pure-button-primary" ng-href="/{{ repo | fullPath }}/settings">
+		<div class="options">
+			<a ng-if="repo.role.admin" class="pure-button pure-button-primary" ng-href="/{{ repo | fullPath }}/settings">
 				<i class="fa fa-sliders"></i>
 				<span>Settings</span>
+			</a>
+			<a ng-if="layout == 'row'" class="pure-button pure-button-primary" ng-click="setLayout('grid')">
+				<i class="fa fa-th-large" style="margin-right:-10px;"></i>
+			</a>
+			<a ng-if="layout == 'grid'" class="pure-button pure-button-primary" ng-click="setLayout('row')">
+				<i class="fa fa-th-list" style="margin-right:-10px;"></i>
 			</a>
 		</div>
 
@@ -34,7 +40,49 @@
 			<p>Add a .drone.yml file and make a commit to trigger a build</p>
 			<div><i class="fa fa-file-code-o"></i></div>
 		</section>
-		<section ng-repeat="group in commits | filter:{ pull_request: '' }:true | unique: 'branch'">
+
+		<section ng-if="(commits).length!=0 && layout == 'row'" style="border:0px;">
+			<div class="cards">
+				<div class="tabs">
+					<a class="pure-button" ng-class="{active: build_filter=='build_history'}" ng-click="setCommitFilter('build_history')">
+						<i class="fa fa-history"></i>
+						<span>Build History</span>
+					</a>
+					<a class="pure-button" ng-if="(commits | pullRequests).length!=0" ng-class="{active: build_filter=='pull_requests'}" ng-click="setCommitFilter('pull_requests')">
+						<i class="fa fa-code-fork"></i>
+						<span>Pull Requests</span>
+					</a>
+					<a class="pure-button" ng-class="{active: build_filter=='branch_summary'}" ng-click="setCommitFilter('branch_summary')">
+						<i class="fa fa-code-fork"></i>
+						<span>Branch Summary</span>
+					</a>
+				</div>
+				<table class="list-view">
+					<thead>
+						<tr>
+							<th>Build</th><th>Message</th><th>Commit</th><th>Committer</th><th>Duration</th><th>Finished</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="commit in filteredCommits() | limitTo:25" data-status="{{ commit.status }}">
+							<td><a href='/{{ repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}'>{{ commit.id }}</a></td>
+							<td>{{ commit.message }}</td>
+							<td><a href='{{ repo.url }}/commit/{{ commit.sha }}'>{{ commit.sha | shortHash }}</a> (<a href='{{ repo.url }}/tree/{{ commit.branch }}'>{{ commit.branch }}</a>)</td>
+							<td>{{ commit.author }}</td>
+
+							<td ng-if="commit.finished_at != 0" title="{{ commit.duration }} seconds">{{ commit.duration | toDuration }}</td>
+							<td ng-if="commit.finished_at == 0 && commit.started_at != 0">{{ commit.started_at | fromNow }}</td>
+							<td ng-if="commit.finished_at == 0 && commit.started_at == 0">-</td>
+
+							<td ng-if="commit.finished_at != 0" title="{{ commit.finished_at * 1000 | date:'medium' }}">{{ commit.finished_at | fromNow }}</td>
+							<td ng-if="commit.finished_at == 0">-</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
+		<section ng-if="layout == 'grid'" ng-repeat="group in commits | filter:{ pull_request: '' }:true | unique: 'branch'">
 			<div class="pure-g cards">
 				<h2 class="pure-u-1" style="font-size:22px;margin-bottom:20px;"><i class="fa fa-code-fork"></i> {{group.branch}}</h2>
 				<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card" ng-href="/{{ repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}" ng-repeat="commit in commits | filter:{ branch:group.branch }:true | limitTo:4" data-status="{{ commit.status }}">
@@ -49,7 +97,7 @@
 			</div>
 		</section>
 
-		<section ng-if="(commits | pullRequests).length!=0">
+		<section ng-if="(commits | pullRequests).length!=0 && layout == 'grid'"">
 			<div class="pure-g cards">
 				<h2 class="pure-u-1" style="font-size:22px;margin-bottom:20px;"><i class="fa fa-code-fork"></i> Pull Requests</h2>
 				<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card" ng-href="/{{ repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}" ng-repeat="commit in commits | pullRequests | limitTo:4" data-status="{{ commit.status }}">
