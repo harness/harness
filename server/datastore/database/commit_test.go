@@ -69,6 +69,21 @@ func TestCommitstore(t *testing.T) {
 			g.Assert(commit.Updated).Equal(getcommit.Updated)
 		})
 
+		g.It("Should Get the build number", func() {
+			commit := model.Commit{
+				RepoID:  1,
+				Branch:  "foo",
+				Sha:     "85f8c029b902ed9400bc600bac301a0aadb144ac",
+				Status:  model.StatusSuccess,
+				Created: 1398065343,
+				Updated: 1398065344,
+			}
+			cs.PostCommit(&commit)
+			bn, err := cs.GetBuildNumber(&commit)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(bn).Equal(int64(1))
+		})
+
 		g.It("Should Delete a Commit", func() {
 			commit := model.Commit{
 				RepoID: 1,

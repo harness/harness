@@ -47,6 +47,10 @@ type Commitstore interface {
 	// KillCommits updates all pending or started commits
 	// in the datastore settings the status to killed.
 	KillCommits() error
+
+	// GetCommitBuildNumber retrieves the monotonically increaing build number
+	// from the commit's repo
+	GetBuildNumber(commit *model.Commit) (int64, error)
 }
 
 // GetCommit retrieves a commit from the
@@ -111,4 +115,10 @@ func DelCommit(c context.Context, commit *model.Commit) error {
 // in the datastore settings the status to killed.
 func KillCommits(c context.Context) error {
 	return FromContext(c).KillCommits()
+}
+
+// GetBuildNumber retrieves the monotonically increaing build number
+// from the commit's repo
+func GetBuildNumber(c context.Context, commit *model.Commit) (int64, error) {
+	return FromContext(c).GetBuildNumber(commit)
 }
