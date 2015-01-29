@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"fmt"
 	"log"
 	"path/filepath"
 	"runtime/debug"
@@ -115,17 +116,18 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	if err != nil {
 		log.Printf("Unable to fetch build number, Err: %s", err.Error())
 	}
+	script.Env = append(script.Env, fmt.Sprintf("DRONE_BUILD_NUMBER=%d", buildNumber))
+	script.Env = append(script.Env, fmt.Sprintf("CI_BUILD_NUMBER=%d", buildNumber))
 
 	path := r.Repo.Host + "/" + r.Repo.Owner + "/" + r.Repo.Name
 	repo := &repo.Repo{
-		Name:        path,
-		Path:        r.Repo.CloneURL,
-		Branch:      r.Commit.Branch,
-		Commit:      r.Commit.Sha,
-		PR:          r.Commit.PullRequest,
-		Dir:         filepath.Join("/var/cache/drone/src", git.GitPath(script.Git, path)),
-		Depth:       git.GitDepth(script.Git),
-		BuildNumber: buildNumber,
+		Name:   path,
+		Path:   r.Repo.CloneURL,
+		Branch: r.Commit.Branch,
+		Commit: r.Commit.Sha,
+		PR:     r.Commit.PullRequest,
+		Dir:    filepath.Join("/var/cache/drone/src", git.GitPath(script.Git, path)),
+		Depth:  git.GitDepth(script.Git),
 	}
 
 	priorCommit, _ := datastore.GetCommitPrior(c, r.Commit)
