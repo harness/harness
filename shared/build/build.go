@@ -492,7 +492,6 @@ func (b *Builder) writeBuildScript(dir string) error {
 	// add environment variables for code coverage
 	// systems, like coveralls.
 	f.WriteEnv("CI_NAME", "DRONE")
-	f.WriteEnv("CI_BUILD_NUMBER", b.Repo.Commit)
 	f.WriteEnv("CI_BUILD_URL", "")
 	f.WriteEnv("CI_REMOTE", b.Repo.Path)
 	f.WriteEnv("CI_BRANCH", b.Repo.Branch)

@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"fmt"
 	"log"
 	"path/filepath"
 	"runtime/debug"
@@ -76,6 +77,7 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	// mark the build as Started and update the database
 	r.Commit.Status = model.StatusStarted
 	r.Commit.Started = time.Now().UTC().Unix()
+
 	datastore.PutCommit(c, r.Commit)
 
 	// notify all listeners that the build is started
@@ -108,6 +110,14 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 			script.Env = append(script.Env, k+"="+v)
 		}
 	}
+
+	// TODO: handle error better?
+	buildNumber, err := datastore.GetBuildNumber(c, r.Commit)
+	if err != nil {
+		log.Printf("Unable to fetch build number, Err: %s", err.Error())
+	}
+	script.Env = append(script.Env, fmt.Sprintf("DRONE_BUILD_NUMBER=%d", buildNumber))
+	script.Env = append(script.Env, fmt.Sprintf("CI_BUILD_NUMBER=%d", buildNumber))
 
 	path := r.Repo.Host + "/" + r.Repo.Owner + "/" + r.Repo.Name
 	repo := &repo.Repo{
