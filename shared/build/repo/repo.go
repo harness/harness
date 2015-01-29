@@ -40,9 +40,6 @@ type Repo struct {
 
 	// (optional) The depth of the `git clone` command.
 	Depth int
-
-	// The monotonically increasing build number for this repo
-	BuildNumber int64
 }
 
 // IsRemote returns true if the Repository is located
