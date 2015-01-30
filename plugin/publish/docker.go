@@ -33,6 +33,7 @@ type Docker struct {
 	KeepBuild bool     `yaml:"keep_build"`
 	Tag       string   `yaml:"tag"`
 	Tags      []string `yaml:"tags"`
+	ForceTags bool     `yaml:"force_tags"`
 
 	Condition *condition.Condition `yaml:"when,omitempty"`
 }
@@ -100,7 +101,11 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 	// Tag and push all tags
 	for _, tag := range d.Tags {
 		if tag != buildImageTag {
-			f.WriteCmd(fmt.Sprintf("docker tag %s:%s %s:%s", d.ImageName, buildImageTag, d.ImageName, tag))
+			var options string
+			if d.ForceTags {
+				options = "-f"
+			}
+			f.WriteCmd(fmt.Sprintf("docker tag %s %s:%s %s:%s", options, d.ImageName, buildImageTag, d.ImageName, tag))
 		}
 
 		f.WriteCmd(fmt.Sprintf("docker push %s:%s", d.ImageName, tag))
