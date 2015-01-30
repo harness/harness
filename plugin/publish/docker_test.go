@@ -214,7 +214,7 @@ func TestTagsNoSingle(t *testing.T) {
 	if !strings.Contains(response, "docker build --pull -t username/image:release-0.2") {
 		t.Fatalf("Response: " + response + " isn't tagging images using our first custom tag\n\n")
 	}
-	if !strings.Contains(response, "docker tag username/image:release-0.2 username/image:release-latest") {
+	if !strings.Contains(response, "docker tag  username/image:release-0.2 username/image:release-latest") {
 		t.Fatalf("Response: " + response + " isn't tagging images using our second custom tag\n\n")
 	}
 	if !strings.Contains(response, "docker push username/image:release-0.2") {
@@ -256,10 +256,10 @@ func TestTagsWithSingle(t *testing.T) {
 	if !strings.Contains(response, "docker build --pull -t username/image:release-0.3") {
 		t.Fatalf("Response: " + response + " isn't tagging images using our first custom tag\n\n")
 	}
-	if !strings.Contains(response, "docker tag username/image:release-0.3 username/image:release-0.2") {
+	if !strings.Contains(response, "docker tag  username/image:release-0.3 username/image:release-0.2") {
 		t.Fatalf("Response: " + response + " isn't tagging images using our second custom tag\n\n")
 	}
-	if !strings.Contains(response, "docker tag username/image:release-0.3 username/image:release-latest") {
+	if !strings.Contains(response, "docker tag  username/image:release-0.3 username/image:release-latest") {
 		t.Fatalf("Response: " + response + " isn't tagging images using our third custom tag\n\n")
 	}
 	if !strings.Contains(response, "docker push username/image:release-0.2") {
