@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/xml"
+	"time"
 )
 
 type CCProjects struct {
@@ -34,8 +35,8 @@ func NewCC(r *Repo, c *Commit, url string) *CCProjects {
 		c.Status != StatusEnqueue {
 		proj.Activity = "Sleeping"
 		proj.LastBuildStatus = c.Status
+		proj.LastBuildTime = time.Unix(c.Started, 0).Format(time.RFC3339)
 		proj.LastBuildLabel = c.ShaShort()
-		proj.LastBuildTime = "" // 2006-01-02T15:04:05.000+0000
 	}
 
 	// If the build is not running, and not successful,
