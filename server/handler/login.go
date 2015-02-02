@@ -30,6 +30,8 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Del("Content-Type")
+
 	// authenticate the user
 	login, err := remote.Authorize(w, r)
 	if err != nil {
