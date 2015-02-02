@@ -24,6 +24,8 @@ func GetOutput(c web.C, w http.ResponseWriter, r *http.Request) {
 		hash   = c.URLParams["commit"]
 	)
 
+	w.Header().Set("Content-Type", "text/plain")
+
 	path := filepath.Join(host, owner, name, branch, hash)
 	rc, err := blobstore.GetReader(ctx, path)
 	if err != nil {
