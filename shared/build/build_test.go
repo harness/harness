@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/drone/drone/plugin/scm/git"
 	"github.com/drone/drone/shared/build/buildfile"
 	"github.com/drone/drone/shared/build/docker"
 	"github.com/drone/drone/shared/build/proxy"
@@ -33,6 +34,7 @@ var (
 // setup a mock docker client for testing purposes. This will use
 // a test http server that can return mock responses to the docker client.
 func setup() {
+	git.Register()
 	mux = http.NewServeMux()
 	server = httptest.NewServer(mux)
 
@@ -79,6 +81,7 @@ func TestSetup(t *testing.T) {
 	b := Builder{}
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
+	b.Repo.Scm = "git"
 	b.Build = &script.Build{}
 	b.Build.Image = "go1.2"
 	b.dockerClient = client
@@ -146,6 +149,7 @@ func TestSetupErrorRunDaemonPorts(t *testing.T) {
 	b := Builder{}
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
+	b.Repo.Scm = "git"
 	b.Build = &script.Build{}
 	b.Build.Image = "go1.2"
 	b.Build.Services = append(b.Build.Services, "mysql")
@@ -243,6 +247,7 @@ func TestSetupErrorBuild(t *testing.T) {
 	b := Builder{}
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
+	b.Repo.Scm = "git"
 	b.Build = &script.Build{}
 	b.Build.Image = "go1.2"
 	b.dockerClient = client
@@ -278,6 +283,7 @@ func TestSetupErrorBuildInspect(t *testing.T) {
 	b := Builder{}
 	b.Repo = &repo.Repo{}
 	b.Repo.Path = "git://github.com/drone/drone.git"
+	b.Repo.Scm = "git"
 	b.Build = &script.Build{}
 	b.Build.Image = "go1.2"
 	b.dockerClient = client
@@ -526,6 +532,7 @@ func TestWriteBuildScript(t *testing.T) {
 		Branch: "master",
 		Commit: "e7e046b35",
 		PR:     "123",
+		Scm:    "git",
 		Dir:    "/var/cache/drone/github.com/drone/drone"}
 	b.writeBuildScript(dir)
 

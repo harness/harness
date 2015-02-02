@@ -39,6 +39,21 @@ func Migrate_20142110(tx migration.LimitedTx) error {
 	return nil
 }
 
+// Add scm to repos.
+func Migrate_20151801(tx migration.LimitedTx) error {
+	var stmts = []string{
+		repoScmColumn, // add the repo scm column
+		repoScmUpdate, // update the repo scm column to 'git'
+	}
+	for _, stmt := range stmts {
+		_, err := tx.Exec(transform(stmt))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 var userTable = `
 CREATE TABLE IF NOT EXISTS users (
 	 user_id           INTEGER PRIMARY KEY AUTOINCREMENT
@@ -143,4 +158,12 @@ CREATE TABLE IF NOT EXISTS blobs (
 	,blob_data    BLOB
 	,UNIQUE(blob_path)
 );
+`
+
+var repoScmColumn = `
+ALTER TABLE repos ADD COLUMN repo_scm VARCHAR(255);
+`
+
+var repoScmUpdate = `
+UPDATE repos SET repo_scm = 'git';
 `
