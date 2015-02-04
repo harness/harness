@@ -193,7 +193,6 @@ func (r *Gitlab) Deactivate(user *model.User, repo *model.Repo, link string) err
 	var pubkey = strings.TrimSpace(repo.PublicKey)
 	for _, k := range keys {
 		if pubkey == strings.TrimSpace(k.Key) {
-			fmt.Printf("remove deploy key: %+v\n", k)
 			if err := client.RemoveProjectDeployKey(path, strconv.Itoa(k.Id)); err != nil {
 				return err
 			}

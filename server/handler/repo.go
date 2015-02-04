@@ -81,6 +81,11 @@ func DelRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		if err := datastore.DelRepo(ctx, repo); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// disable everything
