@@ -38,6 +38,12 @@ func (s *RepoService) Disable(host, owner, name string) error {
 	return s.run("DELETE", path, nil, nil)
 }
 
+// DELETE /api/repos/{host}/{owner}/{name}?remove=true
+func (s *RepoService) Delete(host, owner, name string) error {
+	var path = fmt.Sprintf("/api/repos/%s/%s/%s?remove=true", host, owner, name)
+	return s.run("DELETE", path, nil, nil)
+}
+
 // PUT /api/repos/{host}/{owner}/{name}
 func (s *RepoService) SetKey(host, owner, name, pub, priv string) error {
 	var path = fmt.Sprintf("/api/repos/%s/%s/%s", host, owner, name)
