@@ -173,6 +173,16 @@ func GetHook(client *github.Client, owner, name, url string) (*github.Hook, erro
 	return nil, nil
 }
 
+func DeleteHook(client *github.Client, owner, name, url string) error {
+	hook, err := GetHook(client, owner, name, url)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.Repositories.DeleteHook(owner, name, *hook.ID)
+	return err
+}
+
 // CreateHook is a heper function that creates a post-commit hook
 // for the specified repository.
 func CreateHook(client *github.Client, owner, name, url string) (*github.Hook, error) {
@@ -230,7 +240,26 @@ func GetKeyTitle(rawurl string) (string, error) {
 	return fmt.Sprintf("drone@%s", uri.Host), nil
 }
 
-// CreateKey is a heper function that creates a deploy key
+// DeleteKey is a helper function that deletes a deploy key
+// for the specified repository.
+func DeleteKey(client *github.Client, owner, name, title, key string) error {
+	var k = new(github.Key)
+	k.Title = github.String(title)
+	k.Key = github.String(key)
+	keys, _, err := client.Repositories.ListKeys(owner, name, nil)
+	if err != nil {
+		return err
+	}
+	for _, rk := range keys {
+		if rk.Key != nil && rk.Key == k.Key {
+			_, err = client.Repositories.DeleteKey(owner, name, *rk.ID)
+			return err
+		}
+	}
+	return fmt.Errorf("%s not found in the list of keys", title)
+}
+
+// CreateKey is a helper function that creates a deploy key
 // for the specified repository.
 func CreateKey(client *github.Client, owner, name, title, key string) (*github.Key, error) {
 	var k = new(github.Key)
@@ -240,7 +269,7 @@ func CreateKey(client *github.Client, owner, name, title, key string) (*github.K
 	return created, err
 }
 
-// CreateUpdateKey is a heper function that creates a deployment key
+// CreateUpdateKey is a helper function that creates a deployment key
 // for the specified repository if it does not already exist, otherwise
 // it updates the existing key
 func CreateUpdateKey(client *github.Client, owner, name, title, key string) (*github.Key, error) {

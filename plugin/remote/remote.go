@@ -29,6 +29,10 @@ type Remote interface {
 	// adding the SSH deploy key, if applicable.
 	Activate(user *model.User, repo *model.Repo, link string) error
 
+	// Deactivate removes a repository by removing all the post-commit hooks
+	// which are equal to link and removing the SSH deploy key.
+	Deactivate(user *model.User, repo *model.Repo, link string) error
+
 	// ParseHook parses the post-commit hook from the Request body
 	// and returns the required data in a standard format.
 	ParseHook(r *http.Request) (*model.Hook, error)

@@ -52,6 +52,37 @@ func DelRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
 	var repo = ToRepo(c)
 
+	var rm = r.FormValue("remove") // using ?remove=true
+
+	// completely remove the repository from the database
+	if len(rm) != 0 {
+		var user = ToUser(c)
+		var remote = remote.Lookup(repo.Host)
+		if remote == nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		// Request a new token and update
+		user_token, err := remote.GetToken(user)
+		if user_token != nil {
+			user.Access = user_token.AccessToken
+			user.Secret = user_token.RefreshToken
+			datastore.PutUser(ctx, user)
+		} else if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// setup the post-commit hook with the remote system and
+		// if necessary, register the public key
+		var hook = fmt.Sprintf("%s/api/hook/%s/%s", httputil.GetURL(r), repo.Remote, repo.Token)
+		if err := remote.Deactivate(user, repo, hook); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
 	// disable everything
 	repo.Active = false
 	repo.PullRequest = false

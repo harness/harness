@@ -241,6 +241,12 @@ func (r *Bitbucket) Activate(user *model.User, repo *model.Repo, link string) er
 	return err
 }
 
+// Deactivate removes a repository by removing all the post-commit hooks
+// which are equal to link and removing the SSH deploy key.
+func (r *Bitbucket) Deactivate(user *model.User, repo *model.Repo, link string) error {
+	return fmt.Errorf("Remove %#v in bitbucket not implemented", *repo)
+}
+
 // ParseHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
 func (r *Bitbucket) ParseHook(req *http.Request) (*model.Hook, error) {
