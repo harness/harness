@@ -9,4 +9,5 @@ type Login struct {
 	Secret string
 	Name   string
 	Email  string
+	Expiry int64
 }

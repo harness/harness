@@ -38,6 +38,7 @@ func Connect(driver, datasource string) (*sql.DB, error) {
 	var migrations = []migration.Migrator{
 		migrate.Setup,
 		migrate.Migrate_20142110,
+		migrate.Migrate_20152701,
 	}
 	return migration.Open(driver, datasource, migrations)
 }

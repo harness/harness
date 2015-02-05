@@ -103,6 +103,7 @@ func PostCommit(c web.C, w http.ResponseWriter, r *http.Request) {
 	if user_token != nil {
 		owner.Access = user_token.AccessToken
 		owner.Secret = user_token.RefreshToken
+		owner.TokenExpiry = user_token.Expiry
 		datastore.PutUser(ctx, owner)
 	} else if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
