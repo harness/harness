@@ -35,12 +35,12 @@ func (s *RepoService) Enable(host, owner, name string) error {
 // DELETE /api/repos/{host}/{owner}/{name}
 func (s *RepoService) Disable(host, owner, name string) error {
 	var path = fmt.Sprintf("/api/repos/%s/%s/%s", host, owner, name)
-	return s.run("DELETE", path, nil, nil)
+	return s.run("PATCH", path, nil, nil)
 }
 
 // DELETE /api/repos/{host}/{owner}/{name}?remove=true
 func (s *RepoService) Delete(host, owner, name string) error {
-	var path = fmt.Sprintf("/api/repos/%s/%s/%s?remove=true", host, owner, name)
+	var path = fmt.Sprintf("/api/repos/%s/%s/%s", host, owner, name)
 	return s.run("DELETE", path, nil, nil)
 }
 

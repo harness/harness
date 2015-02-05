@@ -43,9 +43,8 @@ func GetRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	}{repo, repo.PublicKey, repo.Params, role})
 }
 
-// DelRepo accepts a request to inactivate the named
-// repository. This will disable all builds in the system
-// for this repository.
+// DelRepo accepts a request to delete the named
+// repository.
 //
 //     DEL /api/repos/:host/:owner/:name
 //
@@ -53,42 +52,49 @@ func DelRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
 	var repo = ToRepo(c)
 
-	var rm = r.FormValue("remove") // using ?remove=true
-
 	// completely remove the repository from the database
-	if len(rm) != 0 {
-		var user = ToUser(c)
-		var remote = remote.Lookup(repo.Host)
-		if remote == nil {
-			log.Errf("no remote for host '%s' found", repo.Host)
+	var user = ToUser(c)
+	var remote = remote.Lookup(repo.Host)
+	if remote == nil {
+		log.Errf("no remote for host '%s' found", repo.Host)
+	} else {
+		// Request a new token and update
+		user_token, err := remote.GetToken(user)
+		if err != nil {
+			log.Errf("no token for user '%s' on remote '%s' ", repo.Host)
 		} else {
-			// Request a new token and update
-			user_token, err := remote.GetToken(user)
-			if err != nil {
-				log.Errf("no token for user '%s' on remote '%s' ", repo.Host)
-			} else {
-				if user_token != nil {
-					user.Access = user_token.AccessToken
-					user.Secret = user_token.RefreshToken
-					datastore.PutUser(ctx, user)
-				}
-				// setup the post-commit hook with the remote system and
-				// and deactiveate this hook/user on the remote system
-				var hook = fmt.Sprintf("%s/api/hook/%s/%s", httputil.GetURL(r), repo.Remote, repo.Token)
-				if err := remote.Deactivate(user, repo, hook); err != nil {
-					log.Errf("deactivate on remote '%s' failed: %s", repo.Host, err)
-				}
+			if user_token != nil {
+				user.Access = user_token.AccessToken
+				user.Secret = user_token.RefreshToken
+				user.TokenExpiry = user_token.Expiry
+				datastore.PutUser(ctx, user)
+			}
+			// setup the post-commit hook with the remote system and
+			// and deactiveate this hook/user on the remote system
+			var hook = fmt.Sprintf("%s/api/hook/%s/%s", httputil.GetURL(r), repo.Remote, repo.Token)
+			if err := remote.Deactivate(user, repo, hook); err != nil {
+				log.Errf("deactivate on remote '%s' failed: %s", repo.Host, err)
 			}
 		}
-		// fail through: if any of the actions on the remote failed
-		// we try to delete the repo in our datastore anyway
-		if err := datastore.DelRepo(ctx, repo); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusNoContent)
-		}
-		return
 	}
+	// fail through: if any of the actions on the remote failed
+	// we try to delete the repo in our datastore anyway
+	if err := datastore.DelRepo(ctx, repo); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// PatchRepo accepts a request to inactivate the named
+// repository. This will disable all builds in the system
+// for this repository.
+//
+//     PATCH /api/repos/:host/:owner/:name
+//
+func PatchRepo(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var repo = ToRepo(c)
 
 	// disable everything
 	repo.Active = false
