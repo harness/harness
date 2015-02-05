@@ -20,7 +20,7 @@ type User struct {
 	Created     int64  `meddler:"user_created"        json:"created_at"`
 	Updated     int64  `meddler:"user_updated"        json:"updated_at"`
 	Synced      int64  `meddler:"user_synced"         json:"synced_at"`
-	TokenExpiry int64  `meddler:"user_access_expires" json:"-"`
+	TokenExpiry int64  `meddler:"user_access_expires,zeroisnull" json:"-"`
 }
 
 func NewUser(remote, login, email string) *User {
