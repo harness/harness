@@ -39,6 +39,20 @@ func Migrate_20142110(tx migration.LimitedTx) error {
 	return nil
 }
 
+// Migrate_20142110 is a database migration on Oct-10 2014.
+func Migrate_20152701(tx migration.LimitedTx) error {
+	var stmts = []string{
+		addUserTokenExpires, // index the commit table repo_id column
+	}
+	for _, stmt := range stmts {
+		_, err := tx.Exec(transform(stmt))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 var userTable = `
 CREATE TABLE IF NOT EXISTS users (
 	 user_id           INTEGER PRIMARY KEY AUTOINCREMENT
@@ -143,4 +157,8 @@ CREATE TABLE IF NOT EXISTS blobs (
 	,blob_data    BLOB
 	,UNIQUE(blob_path)
 );
+`
+
+var addUserTokenExpires = `
+ALTER TABLE users ADD COLUMN user_access_expires INTEGER
 `

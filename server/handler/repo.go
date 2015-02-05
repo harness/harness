@@ -147,6 +147,7 @@ func PostRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	if user_token != nil {
 		user.Access = user_token.AccessToken
 		user.Secret = user_token.RefreshToken
+		user.TokenExpiry = user_token.Expiry
 		datastore.PutUser(ctx, user)
 	} else if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
