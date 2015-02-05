@@ -7,6 +7,7 @@ import (
 
 	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/server/datastore"
+	"github.com/drone/drone/shared/build/log"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 	"github.com/drone/drone/shared/sshutil"
@@ -59,33 +60,34 @@ func DelRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 		var user = ToUser(c)
 		var remote = remote.Lookup(repo.Host)
 		if remote == nil {
-			w.WriteHeader(http.StatusNotFound)
-			return
+			log.Errf("no remote for host '%s' found", repo.Host)
+		} else {
+			// Request a new token and update
+			user_token, err := remote.GetToken(user)
+			if err != nil {
+				log.Errf("no token for user '%s' on remote '%s' ", repo.Host)
+			} else {
+				if user_token != nil {
+					user.Access = user_token.AccessToken
+					user.Secret = user_token.RefreshToken
+					datastore.PutUser(ctx, user)
+				}
+				// setup the post-commit hook with the remote system and
+				// and deactiveate this hook/user on the remote system
+				var hook = fmt.Sprintf("%s/api/hook/%s/%s", httputil.GetURL(r), repo.Remote, repo.Token)
+				if err := remote.Deactivate(user, repo, hook); err != nil {
+					log.Errf("deactivate on remote '%s' failed: %s", repo.Host, err)
+				}
+			}
 		}
-
-		// Request a new token and update
-		user_token, err := remote.GetToken(user)
-		if user_token != nil {
-			user.Access = user_token.AccessToken
-			user.Secret = user_token.RefreshToken
-			datastore.PutUser(ctx, user)
-		} else if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		// setup the post-commit hook with the remote system and
-		// if necessary, register the public key
-		var hook = fmt.Sprintf("%s/api/hook/%s/%s", httputil.GetURL(r), repo.Remote, repo.Token)
-		if err := remote.Deactivate(user, repo, hook); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
+		// fail through: if any of the actions on the remote failed
+		// we try to delete the repo in our datastore anyway
 		if err := datastore.DelRepo(ctx, repo); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			return
+		} else {
+			w.WriteHeader(http.StatusNoContent)
 		}
+		return
 	}
 
 	// disable everything

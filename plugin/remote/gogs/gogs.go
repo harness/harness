@@ -156,7 +156,7 @@ func (r *Gogs) Activate(user *model.User, repo *model.Repo, link string) error {
 // Deactivate removes a repository by removing all the post-commit hooks
 // which are equal to link and removing the SSH deploy key.
 func (r *Gogs) Deactivate(user *model.User, repo *model.Repo, link string) error {
-	return fmt.Errorf("Remove %#v in gots not implemented", *repo)
+	return fmt.Errorf("Remove %#v in gogs not implemented", *repo)
 }
 
 // ParseHook parses the post-commit hook from the Request body

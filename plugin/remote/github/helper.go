@@ -256,7 +256,7 @@ func DeleteKey(client *github.Client, owner, name, title, key string) error {
 			return err
 		}
 	}
-	return fmt.Errorf("%s not found in the list of keys", title)
+	return nil
 }
 
 // CreateKey is a helper function that creates a deploy key
