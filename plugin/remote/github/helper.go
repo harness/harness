@@ -243,18 +243,10 @@ func GetKeyTitle(rawurl string) (string, error) {
 // DeleteKey is a helper function that deletes a deploy key
 // for the specified repository.
 func DeleteKey(client *github.Client, owner, name, title, key string) error {
-	var k = new(github.Key)
-	k.Title = github.String(title)
-	k.Key = github.String(key)
-	keys, _, err := client.Repositories.ListKeys(owner, name, nil)
-	if err != nil {
+	var k, _ = GetKey(client, owner, name, title)
+	if k != nil {
+		_, err := client.Repositories.DeleteKey(owner, name, *k.ID)
 		return err
-	}
-	for _, rk := range keys {
-		if rk.Key != nil && rk.Key == k.Key {
-			_, err = client.Repositories.DeleteKey(owner, name, *rk.ID)
-			return err
-		}
 	}
 	return nil
 }
