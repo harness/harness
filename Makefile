@@ -69,6 +69,7 @@ deb:
 		--vendor "drone.io" -a amd64 \
 		--config-files /etc/drone/drone.toml \
 		packaging/root/=/
+	cp packaging/output/drone.deb packaging/output/drone.deb.$(SHA)
 
 rpm:
 	fpm -s dir -t rpm -n drone -v $(VERSION) -p packaging/output/drone.rpm \

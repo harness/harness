@@ -98,7 +98,5 @@ func (s *Slack) send(msg string, fallback string, color string) error {
 		return err
 	}
 
-	go sendJson(s.WebhookUrl, payload, nil)
-
-	return nil
+	return sendJson(s.WebhookUrl, payload, nil)
 }
