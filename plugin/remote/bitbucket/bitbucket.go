@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/drone/drone/shared/httputil"
@@ -244,7 +245,26 @@ func (r *Bitbucket) Activate(user *model.User, repo *model.Repo, link string) er
 // Deactivate removes a repository by removing all the post-commit hooks
 // which are equal to link and removing the SSH deploy key.
 func (r *Bitbucket) Deactivate(user *model.User, repo *model.Repo, link string) error {
-	return fmt.Errorf("Remove %#v in bitbucket not implemented", *repo)
+	var client = bitbucket.New(
+		r.Client,
+		r.Secret,
+		user.Access,
+		user.Secret,
+	)
+
+	if keys, err := client.RepoKeys.List(repo.Owner, repo.Name); err == nil {
+		repokey := strings.TrimSpace(repo.PublicKey)
+		for _, k := range keys {
+			if k.Key == repokey {
+				if err := client.RepoKeys.Delete(repo.Owner, repo.Name, k.Id); err != nil {
+					return err
+				} else {
+					break
+				}
+			}
+		}
+	}
+	return client.Brokers.DeleteUrl(repo.Owner, repo.Name, link, bitbucket.BrokerTypePost)
 }
 
 // ParseHook parses the post-commit hook from the Request body
