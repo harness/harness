@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/drone/drone/shared/httputil"
@@ -251,18 +250,12 @@ func (r *Bitbucket) Deactivate(user *model.User, repo *model.Repo, link string) 
 		user.Access,
 		user.Secret,
 	)
-
-	if keys, err := client.RepoKeys.List(repo.Owner, repo.Name); err == nil {
-		repokey := strings.TrimSpace(repo.PublicKey)
-		for _, k := range keys {
-			if k.Key == repokey {
-				if err := client.RepoKeys.Delete(repo.Owner, repo.Name, k.Id); err != nil {
-					return err
-				} else {
-					break
-				}
-			}
-		}
+	title, err := GetKeyTitle(link)
+	if err != nil {
+		return err
+	}
+	if err := client.RepoKeys.DeleteName(repo.Owner, repo.Name, title); err != nil {
+		return err
 	}
 	return client.Brokers.DeleteUrl(repo.Owner, repo.Name, link, bitbucket.BrokerTypePost)
 }
@@ -304,4 +297,14 @@ func (r *Bitbucket) OpenRegistration() bool {
 
 func (r *Bitbucket) GetToken(user *model.User) (*model.Token, error) {
 	return nil, nil
+}
+
+// GetKeyTitle is a helper function that generates a title for the
+// RSA public key based on the username and domain name.
+func GetKeyTitle(rawurl string) (string, error) {
+	var uri, err = url.Parse(rawurl)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("drone@%s", uri.Host), nil
 }
