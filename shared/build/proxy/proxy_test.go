@@ -16,7 +16,7 @@ func TestProxy(t *testing.T) {
 [ -x /tmp/socat ] && /tmp/socat TCP-LISTEN:8080,fork TCP:172.1.4.5:8080 &
 `
 	if string(b) != expected {
-		t.Errorf("AInvalid proxy \n%s", string(b))
+		t.Errorf("Invalid proxy \n%s", string(b))
 	}
 
 	// test creating a proxy script when there
