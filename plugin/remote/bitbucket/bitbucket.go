@@ -279,3 +279,17 @@ func (r *Bitbucket) OpenRegistration() bool {
 func (r *Bitbucket) GetToken(user *model.User) (*model.Token, error) {
 	return nil, nil
 }
+
+func (r *Bitbucket) Commands(repo *model.Repo, commit *model.Commit, dir string, depth int) []string {
+	// TODO add support for mercurial
+	cmds := []string{}
+	if len(commit.PullRequest) > 0 {
+		// TODO
+	} else {
+		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", depth, commit.Branch, repo.CloneURL, dir))
+		if len(commit.Sha) > 0 {
+			cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", commit.Sha))
+		}
+	}
+	return cmds
+}
