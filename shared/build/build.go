@@ -326,7 +326,7 @@ func (b *Builder) run() error {
 
 	// configure if Docker should run in privileged mode
 	host := docker.HostConfig{
-		Privileged: (b.Privileged && len(b.Repo.PR) == 0),
+		Privileged: (b.Privileged && (b.Repo.Commit == nil || len(b.Repo.Commit.PullRequest) == 0)),
 	}
 
 	if host.Privileged {
@@ -362,7 +362,10 @@ func (b *Builder) run() error {
 	conf.Volumes = make(map[string]struct{})
 	for _, volume := range b.Build.Cache {
 		name := filepath.Clean(b.Repo.Name)
-		branch := filepath.Clean(b.Repo.Branch)
+		var branch string
+		if b.Repo.Commit != nil {
+			branch = filepath.Clean(b.Repo.Commit.Branch)
+		}
 		volume := filepath.Clean(volume)
 
 		// with Docker, volumes must be an absolute path. If an absolute
@@ -483,19 +486,29 @@ func (b *Builder) writeBuildScript(dir string) error {
 	// add environment variables about the build
 	f.WriteEnv("CI", "true")
 	f.WriteEnv("DRONE", "true")
-	f.WriteEnv("DRONE_REMOTE", b.Repo.Path)
-	f.WriteEnv("DRONE_BRANCH", b.Repo.Branch)
-	f.WriteEnv("DRONE_COMMIT", b.Repo.Commit)
-	f.WriteEnv("DRONE_PR", b.Repo.PR)
+	var remote string
+	if b.Repo.Repo != nil {
+		remote = b.Repo.Repo.CloneURL
+	} else {
+		remote = b.Repo.Path
+	}
+	f.WriteEnv("DRONE_REMOTE", remote)
+	if b.Repo.Commit != nil {
+		f.WriteEnv("DRONE_BRANCH", b.Repo.Commit.Branch)
+		f.WriteEnv("DRONE_COMMIT", b.Repo.Commit.Sha)
+		f.WriteEnv("DRONE_PR", b.Repo.Commit.PullRequest)
+	}
 	f.WriteEnv("DRONE_BUILD_DIR", b.Repo.Dir)
 
 	// add environment variables for code coverage
 	// systems, like coveralls.
 	f.WriteEnv("CI_NAME", "DRONE")
 	f.WriteEnv("CI_BUILD_URL", "")
-	f.WriteEnv("CI_REMOTE", b.Repo.Path)
-	f.WriteEnv("CI_BRANCH", b.Repo.Branch)
-	f.WriteEnv("CI_PULL_REQUEST", b.Repo.PR)
+	f.WriteEnv("CI_REMOTE", remote)
+	if b.Repo.Commit != nil {
+		f.WriteEnv("CI_BRANCH", b.Repo.Commit.Branch)
+		f.WriteEnv("CI_PULL_REQUEST", b.Repo.Commit.PullRequest)
+	}
 
 	// add /etc/hosts entries
 	for _, mapping := range b.Build.Hosts {
@@ -518,7 +531,7 @@ func (b *Builder) writeBuildScript(dir string) error {
 	// if the commit is for merging a pull request
 	// we should only execute the build commands,
 	// and omit the deploy and publish commands.
-	if len(b.Repo.PR) == 0 {
+	if b.Repo.Commit != nil && len(b.Repo.Commit.PullRequest) == 0 {
 		b.Build.Write(f, b.Repo)
 	} else {
 		// only write the build commands

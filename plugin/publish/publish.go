@@ -68,11 +68,11 @@ func match(c *condition.Condition, r *repo.Repo) bool {
 	switch {
 	case c == nil:
 		return true
-	case !c.MatchBranch(r.Branch):
+	case !c.MatchBranch(r.Commit.Branch):
 		return false
 	case !c.MatchOwner(r.Name):
 		return false
-	case !c.MatchPullRequest(r.PR):
+	case !c.MatchPullRequest(r.Commit.PullRequest):
 		return false
 	}
 	return true

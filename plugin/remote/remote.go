@@ -38,6 +38,9 @@ type Remote interface {
 
 	// Get token
 	GetToken(*model.User) (*model.Token, error)
+
+	// Get commands to clone repository
+	Commands(repo *model.Repo, commit *model.Commit, dir string, depth int) []string
 }
 
 // List of registered plugins.

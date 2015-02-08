@@ -17,6 +17,7 @@ import (
 	"github.com/drone/drone/shared/build/proxy"
 	"github.com/drone/drone/shared/build/repo"
 	"github.com/drone/drone/shared/build/script"
+	"github.com/drone/drone/shared/model"
 )
 
 var (
@@ -78,7 +79,11 @@ func TestSetup(t *testing.T) {
 
 	b := Builder{}
 	b.Repo = &repo.Repo{}
-	b.Repo.Path = "git://github.com/drone/drone.git"
+	b.Repo.Repo = &model.Repo{
+		Remote:   model.RemoteGithub,
+		URL:      "https://github.com",
+		CloneURL: "git://github.com/drone/drone.git",
+	}
 	b.Build = &script.Build{}
 	b.Build.Image = "go1.2"
 	b.dockerClient = client
@@ -145,7 +150,11 @@ func TestSetupErrorRunDaemonPorts(t *testing.T) {
 
 	b := Builder{}
 	b.Repo = &repo.Repo{}
-	b.Repo.Path = "git://github.com/drone/drone.git"
+	b.Repo.Repo = &model.Repo{
+		Remote:   model.RemoteGithub,
+		URL:      "https://github.com",
+		CloneURL: "git://github.com/drone/drone.git",
+	}
 	b.Build = &script.Build{}
 	b.Build.Image = "go1.2"
 	b.Build.Services = append(b.Build.Services, "mysql")
@@ -184,7 +193,11 @@ func TestSetupErrorServiceInspect(t *testing.T) {
 
 	b := Builder{}
 	b.Repo = &repo.Repo{}
-	b.Repo.Path = "git://github.com/drone/drone.git"
+	b.Repo.Repo = &model.Repo{
+		Remote:   model.RemoteGithub,
+		URL:      "https://github.com",
+		CloneURL: "git://github.com/drone/drone.git",
+	}
 	b.Build = &script.Build{}
 	b.Build.Image = "go1.2"
 	b.Build.Services = append(b.Build.Services, "mysql")
@@ -212,7 +225,11 @@ func TestSetupErrorImagePull(t *testing.T) {
 
 	b := Builder{}
 	b.Repo = &repo.Repo{}
-	b.Repo.Path = "git://github.com/drone/drone.git"
+	b.Repo.Repo = &model.Repo{
+		Remote:   model.RemoteGithub,
+		URL:      "https://github.com",
+		CloneURL: "git://github.com/drone/drone.git",
+	}
 	b.Build = &script.Build{}
 	b.Build.Image = "go1.2"
 	b.Build.Services = append(b.Build.Services, "mysql")
@@ -242,7 +259,11 @@ func TestSetupErrorBuild(t *testing.T) {
 
 	b := Builder{}
 	b.Repo = &repo.Repo{}
-	b.Repo.Path = "git://github.com/drone/drone.git"
+	b.Repo.Repo = &model.Repo{
+		Remote:   model.RemoteGithub,
+		URL:      "https://github.com",
+		CloneURL: "git://github.com/drone/drone.git",
+	}
 	b.Build = &script.Build{}
 	b.Build.Image = "go1.2"
 	b.dockerClient = client
@@ -277,7 +298,11 @@ func TestSetupErrorBuildInspect(t *testing.T) {
 
 	b := Builder{}
 	b.Repo = &repo.Repo{}
-	b.Repo.Path = "git://github.com/drone/drone.git"
+	b.Repo.Repo = &model.Repo{
+		Remote:   model.RemoteGithub,
+		URL:      "https://github.com",
+		CloneURL: "git://github.com/drone/drone.git",
+	}
 	b.Build = &script.Build{}
 	b.Build.Image = "go1.2"
 	b.dockerClient = client
@@ -399,7 +424,7 @@ func TestRunPrivileged(t *testing.T) {
 
 	// now lets set priviliged mode but for a pull request
 	b.Privileged = true
-	b.Repo.PR = "55"
+	b.Repo.Commit = &model.Commit{PullRequest: "55"}
 	b.run()
 
 	if conf.Privileged != false {
@@ -522,11 +547,17 @@ func TestWriteBuildScript(t *testing.T) {
 		Hosts: []string{"127.0.0.1"}}
 	b.Key = []byte("ssh-rsa AAA...")
 	b.Repo = &repo.Repo{
-		Path:   "git://github.com/drone/drone.git",
-		Branch: "master",
-		Commit: "e7e046b35",
-		PR:     "123",
-		Dir:    "/var/cache/drone/github.com/drone/drone"}
+		Repo: &model.Repo{
+			Remote:   model.RemoteGithub,
+			URL:      "https://github.com",
+			CloneURL: "git://github.com/drone/drone.git",
+		},
+		Commit: &model.Commit{
+			Branch:      "master",
+			Sha:         "e7e046b35",
+			PullRequest: "123",
+		},
+		Dir: "/var/cache/drone/github.com/drone/drone"}
 	b.writeBuildScript(dir)
 
 	// persist a dummy build script to disk
@@ -555,9 +586,6 @@ func TestWriteBuildScript(t *testing.T) {
 	f.WriteEnv("CI_PULL_REQUEST", "123")
 	f.WriteHost("127.0.0.1")
 	f.WriteFile("$HOME/.ssh/id_rsa", []byte("ssh-rsa AAA..."), 600)
-	f.WriteCmd("git clone --depth=0 --recursive git://github.com/drone/drone.git /var/cache/drone/github.com/drone/drone")
-	f.WriteCmd("git fetch origin +refs/pull/123/head:refs/remotes/origin/pr/123")
-	f.WriteCmd("git checkout -qf -b pr/123 origin/pr/123")
 
 	if string(script) != f.String() {
 		t.Errorf("Expected build script value saved as %s, got %s", f.String(), script)
