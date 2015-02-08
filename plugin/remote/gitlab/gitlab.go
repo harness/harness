@@ -108,7 +108,6 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 			Host:     hostname,
 			Owner:    item.Namespace.Path,
 			Name:     item.Path,
-			Scm:      model.Git,
 			Private:  !item.Public,
 			CloneURL: item.HttpRepoUrl,
 			GitURL:   item.HttpRepoUrl,

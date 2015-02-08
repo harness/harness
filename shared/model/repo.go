@@ -2,11 +2,8 @@ package model
 
 import (
 	"gopkg.in/yaml.v1"
-)
 
-const (
-	Git       = "git"
-	Mercurial = "mercurial"
+	"github.com/drone/drone/shared/vcsutil"
 )
 
 var (
@@ -26,7 +23,6 @@ type Repo struct {
 	Host   string `meddler:"repo_host"         json:"host"`
 	Owner  string `meddler:"repo_owner"        json:"owner"`
 	Name   string `meddler:"repo_name"         json:"name"`
-	Scm    string `meddler:"repo_scm"          json:"scm"`
 
 	URL      string `meddler:"repo_url"       json:"url"`
 	CloneURL string `meddler:"repo_clone_url" json:"clone_url"`
@@ -70,8 +66,10 @@ func (r *Repo) ParamMap() (map[string]string, error) {
 }
 
 func (r *Repo) DefaultBranch() string {
-	var branch = "master"
-	if r.Scm == Mercurial {
+	var branch string
+	if vcsutil.IsGit(r.CloneURL) {
+		branch = "master"
+	} else {
 		branch = "default"
 	}
 	return branch

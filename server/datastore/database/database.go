@@ -39,7 +39,6 @@ func Connect(driver, datasource string) (*sql.DB, error) {
 		migrate.Setup,
 		migrate.Migrate_20142110,
 		migrate.Migrate_20152701,
-		migrate.Migrate_repo_scm,
 	}
 	return migration.Open(driver, datasource, migrations)
 }

@@ -3,20 +3,14 @@ package repo
 import (
 	"fmt"
 	"strings"
-)
 
-const (
-	Git       = "git"
-	Mercurial = "mercurial"
+	"github.com/drone/drone/shared/vcsutil"
 )
 
 type Repo struct {
 	// The name of the Repository. This should be the
 	// canonical name, for example, github.com/drone/drone.
 	Name string
-
-	// The type of source control management.
-	Scm string
 
 	// The path of the Repoisotry. This could be
 	// the remote path of a Git repository or the path of
@@ -77,22 +71,24 @@ func (r *Repo) IsLocal() bool {
 	return !r.IsRemote()
 }
 
+// IsGit returns true if the Repository is
+// a Git repoisitory.
+func (r *Repo) IsGit() bool {
+	return vcsutil.IsGit(r.Path)
+}
+
 // returns commands that can be used in a Dockerfile
 // to clone the repository.
 //
 // TODO we should also enable SVN projects
 func (r *Repo) Commands() []string {
+	cmds := []string{}
 	// get the branch. default to master or default if no branch exists.
 	branch := r.Branch
-	cmds := []string{}
-	switch {
-	case r.Scm == Mercurial:
-		cmds = append(cmds, fmt.Sprintf("hg clone --branch %s %s %s", branch, r.Path, r.Dir))
-		if len(r.Commit) > 0 {
-			cmds = append(cmds, fmt.Sprintf("hg update %s", r.Commit))
+	if r.IsGit() {
+		if len(branch) == 0 {
+			branch = "master"
 		}
-	case r.Scm == Git:
-	default:
 		if len(r.PR) > 0 {
 			// If a specific PR is provided then we need to clone it.
 			cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive %s %s", r.Depth, r.Path, r.Dir))
@@ -105,6 +101,14 @@ func (r *Repo) Commands() []string {
 			if len(r.Commit) > 0 {
 				cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))
 			}
+		}
+	} else {
+		if len(branch) == 0 {
+			branch = "default"
+		}
+		cmds = append(cmds, fmt.Sprintf("hg clone --branch %s %s %s", branch, r.Path, r.Dir))
+		if len(r.Commit) > 0 {
+			cmds = append(cmds, fmt.Sprintf("hg update %s", r.Commit))
 		}
 	}
 
