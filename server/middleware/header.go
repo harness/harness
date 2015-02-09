@@ -22,7 +22,7 @@ func SetHeaders(c *web.C, h http.Handler) http.Handler {
 		w.Header().Add("Cache-Control", "value")
 		w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
 		w.Header().Set("Expires", "Thu, 01 Jan 1970 00:00:00 GMT")
-		if (r.TLS != nil) {
+		if r.TLS != nil {
 			w.Header().Add("Strict-Transport-Security", "max-age=31536000")
 		}
 		h.ServeHTTP(w, r)
