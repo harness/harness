@@ -46,7 +46,7 @@ func New() *web.Mux {
 	repos.Put("/api/repos/:host/:owner/:name", handler.PutRepo)
 	repos.Post("/api/repos/:host/:owner/:name", handler.PostRepo)
 	repos.Delete("/api/repos/:host/:owner/:name", handler.DelRepo)
-	repos.Patch("/api/repos/:host/:owner/:name", handler.PatchRepo)
+	repos.Post("/api/repos/:host/:owner/:name/deactivate", handler.DeactivateRepo)
 	mux.Handle("/api/repos/:host/:owner/:name", repos)
 	mux.Handle("/api/repos/:host/:owner/:name/*", repos)
 

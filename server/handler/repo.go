@@ -86,13 +86,13 @@ func DelRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// PatchRepo accepts a request to inactivate the named
+// DeactivateRepo accepts a request to deactivate the named
 // repository. This will disable all builds in the system
 // for this repository.
 //
-//     PATCH /api/repos/:host/:owner/:name
+//     POST /api/repos/:host/:owner/:name/deactivate
 //
-func PatchRepo(c web.C, w http.ResponseWriter, r *http.Request) {
+func DeactivateRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
 	var repo = ToRepo(c)
 
@@ -106,7 +106,7 @@ func PatchRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode(repo)
 }
 
 // PostRepo accapets a request to activate the named repository
