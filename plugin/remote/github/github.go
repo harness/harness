@@ -193,6 +193,23 @@ func (r *GitHub) GetScript(user *model.User, repo *model.Repo, hook *model.Hook)
 	return GetFile(client, repo.Owner, repo.Name, ".drone.yml", hook.Sha)
 }
 
+// Deactivate removes a repository by removing all the post-commit hooks
+// which are equal to link and removing the SSH deploy key.
+func (r *GitHub) Deactivate(user *model.User, repo *model.Repo, link string) error {
+	var client = NewClient(r.API, user.Access, r.SkipVerify)
+	var title, err = GetKeyTitle(link)
+	if err != nil {
+		return err
+	}
+
+	// remove the deploy-key if it is installed remote.
+	if err := DeleteKey(client, repo.Owner, repo.Name, title, repo.PublicKey); err != nil {
+		return err
+	}
+
+	return DeleteHook(client, repo.Owner, repo.Name, link)
+}
+
 // Activate activates a repository by adding a Post-commit hook and
 // a Public Deploy key, if applicable.
 func (r *GitHub) Activate(user *model.User, repo *model.Repo, link string) error {
