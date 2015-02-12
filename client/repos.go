@@ -32,10 +32,10 @@ func (s *RepoService) Enable(host, owner, name string) error {
 	return s.run("POST", path, nil, nil)
 }
 
-// DELETE /api/repos/{host}/{owner}/{name}
+// POST /api/repos/{host}/{owner}/{name}/deactivate
 func (s *RepoService) Disable(host, owner, name string) error {
-	var path = fmt.Sprintf("/api/repos/%s/%s/%s", host, owner, name)
-	return s.run("PATCH", path, nil, nil)
+	var path = fmt.Sprintf("/api/repos/%s/%s/%s/deactivate", host, owner, name)
+	return s.run("POST", path, nil, nil)
 }
 
 // DELETE /api/repos/{host}/{owner}/{name}?remove=true
