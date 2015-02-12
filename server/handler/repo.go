@@ -3,11 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/server/datastore"
-	"github.com/drone/drone/shared/build/log"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 	"github.com/drone/drone/shared/sshutil"
@@ -56,12 +56,12 @@ func DelRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	var user = ToUser(c)
 	var remote = remote.Lookup(repo.Host)
 	if remote == nil {
-		log.Errf("no remote for host '%s' found", repo.Host)
+		log.Printf("[ERROR] no remote for host '%s' found", repo.Host)
 	} else {
 		// Request a new token and update
 		user_token, err := remote.GetToken(user)
 		if err != nil {
-			log.Errf("no token for user '%s' on remote '%s' ", repo.Host)
+			log.Printf("[ERROR] no token for user '%s' on remote '%s' ", user.Email, repo.Host)
 		} else {
 			if user_token != nil {
 				user.Access = user_token.AccessToken
@@ -73,7 +73,7 @@ func DelRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 			// and deactiveate this hook/user on the remote system
 			var hook = fmt.Sprintf("%s/api/hook/%s/%s", httputil.GetURL(r), repo.Remote, repo.Token)
 			if err := remote.Deactivate(user, repo, hook); err != nil {
-				log.Errf("deactivate on remote '%s' failed: %s", repo.Host, err)
+				log.Printf("[ERROR] deactivate on remote '%s' failed: %s", repo.Host, err)
 			}
 		}
 	}
