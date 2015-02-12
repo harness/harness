@@ -102,7 +102,7 @@ func (r *GitHub) Authorize(res http.ResponseWriter, req *http.Request) (*model.L
 			return nil, fmt.Errorf("Could not check org membership. %s", err)
 		}
 		if !allowedOrg {
-			return nil, fmt.Errorf("User does not belong to correct org")
+			return nil, fmt.Errorf("User does not belong to correct org. Must belong to %v", r.Orgs)
 		}
 	}
 
