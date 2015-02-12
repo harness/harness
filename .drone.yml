@@ -21,9 +21,9 @@ notify:
   email:
     recipients:
       - brad@drone.io
-  gitter:
-    room_id: $$GITTER_ROOM
-    token: $$GITTER_KEY
+  webhook:
+    urls:
+      - https://webhooks.gitter.im/e/$$GITTER_KEY
     on_started: false
     on_success: true
     on_failure: true
