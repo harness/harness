@@ -70,11 +70,11 @@
 							<td><a href='{{ repo.url }}/commit/{{ commit.sha }}'>{{ commit.sha | shortHash }}</a> (<a href='{{ repo.url }}/tree/{{ commit.branch }}'>{{ commit.branch }}</a>)</td>
 							<td>{{ commit.author }}</td>
 
-							<td ng-if="commit.finished_at != 0" title="{{ commit.duration }} seconds">{{ commit.duration | toDuration }}</td>
-							<td ng-if="commit.finished_at == 0 && commit.started_at != 0">{{ commit.started_at | fromNow }}</td>
-							<td ng-if="commit.finished_at == 0 && commit.started_at == 0">-</td>
+							<td ng-if="commit.finished_at != 0" title="{{ commit.duration }} seconds">{{ commit.duration | amDurationFormat:'seconds':false }}</td>
+							<td ng-if="commit.finished_at == 0 && commit.started_at != 0" am-time-ago="{{ commit.started_at }}" am-without-suffix="true"></td>
+							<td ng-if="commit.finished_at == 0 && commit.started_at == 0" am-time-ago="{{ commit.created_at }}" am-without-suffix="true"></td>
 
-							<td ng-if="commit.finished_at != 0" title="{{ commit.finished_at * 1000 | date:'medium' }}">{{ commit.finished_at | fromNow }}</td>
+							<td ng-if="commit.finished_at != 0" title="{{ commit.finished_at * 1000 | date:'medium' }}" am-time-ago="{{ commit.finished_at }}"></td>
 							<td ng-if="commit.finished_at == 0">-</td>
 						</tr>
 					</tbody>
@@ -88,24 +88,24 @@
 				<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card" ng-href="/{{ repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}" ng-repeat="commit in commits | filter:{ branch:group.branch }:true | limitTo:4" data-status="{{ commit.status }}">
 					<div class="l-box">
 						<h2>{{ commit.message }}</h2>
-						<em ng-if="commit.finished_at != 0">{{ commit.author }}<br/>{{ commit.finished_at | fromNow }}</em>
-						<em ng-if="commit.finished_at == 0 && commit.started_at != 0">{{ commit.author }}<br/>Started {{ commit.started_at | fromNow }}</em>
-						<em ng-if="commit.finished_at == 0 && commit.started_at == 0">{{ commit.author }}<br/>Created {{ commit.created_at}}</em>
+						<em ng-if="commit.finished_at != 0">{{ commit.author }}<br/><span am-time-ago="{{ commit.finished_at }}"></span></em>
+						<em ng-if="commit.finished_at == 0 && commit.started_at != 0">{{ commit.author }}<br/>Started <span am-time-ago="{{ commit.started_at }}"></span></em>
+						<em ng-if="commit.finished_at == 0 && commit.started_at == 0">{{ commit.author }}<br/>Created <span am-time-ago="{{ commit.created_at }}"></span></em>
 						<img ng-src="{{ commit.gravatar | gravatar }}" />
 					</div>
 				</a>
 			</div>
 		</section>
 
-		<section ng-if="(commits | pullRequests).length!=0 && layout == 'grid'"">
+		<section ng-if="(commits | pullRequests).length!=0 && layout == 'grid'">
 			<div class="pure-g cards">
 				<h2 class="pure-u-1" style="font-size:22px;margin-bottom:20px;"><i class="fa fa-code-fork"></i> Pull Requests</h2>
 				<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card" ng-href="/{{ repo | fullPath }}/{{ commit.branch }}/{{ commit.sha }}" ng-repeat="commit in commits | pullRequests | limitTo:4" data-status="{{ commit.status }}">
 					<div class="l-box">
 						<h2>{{ commit.message }}</h2>
-						<em ng-if="commit.finished_at != 0">{{ commit.author }}<br/>{{ commit.finished_at | fromNow }}</em>
-						<em ng-if="commit.finished_at == 0 && commit.started_at != 0">{{ commit.author }}<br/>Started {{ commit.started_at | fromNow }}</em>
-						<em ng-if="commit.finished_at == 0 && commit.started_at == 0">{{ commit.author }}<br/>Created {{ commit.created_at}}</em>
+						<em ng-if="commit.finished_at != 0">{{ commit.author }}<br/><span am-time-ago="{{ commit.finished_at }}"></span></em>
+						<em ng-if="commit.finished_at == 0 && commit.started_at != 0">{{ commit.author }}<br/>Started <span am-time-ago="{{ commit.started_at }}"></span></em>
+						<em ng-if="commit.finished_at == 0 && commit.started_at == 0">{{ commit.author }}<br/>Created <span am-time-ago="{{ commit.created_at }}"></span></em>
 						<img ng-src="{{ commit.gravatar | gravatar }}" />
 					</div>
 				</a>
