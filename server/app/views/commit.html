@@ -8,14 +8,14 @@
 		</div>
 
 		<dl ng-if="commit.duration != 0">
-			<dd><h1>{{ commit.duration | toDuration}}</h1></dd>
+			<dd><h1>{{ commit.duration | amDurationFormat:'seconds':false }}</h1></dd>
 		</dl>
 
 		<dl ng-include="'/static/views/commit_detail.html'" ng-show="commit.pull_request.length == 0"></dl>
 		<dl ng-include="'/static/views/commit_detail_pr.html'" ng-show="commit.pull_request.length != 0"></dl>
-		<dd ng-if="commit.finished_at != 0">{{ commit.finished_at | fromNow }}</dd>
-		<dd ng-if="commit.finished_at == 0 && commit.started_at != 0">Started {{ commit.started_at | fromNow }}</dd>
-		<dd ng-if="commit.finished_at == 0 && commit.started_at == 0">Created {{ commit.created_at}}</dd>
+		<dd ng-if="commit.finished_at != 0" am-time-ago="{{ commit.finished_at }}"></dd>
+		<dd ng-if="commit.finished_at == 0 && commit.started_at != 0">Started <span am-time-ago="{{ commit.started_at }}"></span></dd>
+		<dd ng-if="commit.finished_at == 0 && commit.started_at == 0">Created <span am-time-ago="{{ commit.created_at }}"></span></dd>
 	</div>
 </aside>
 

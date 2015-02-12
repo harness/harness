@@ -2,8 +2,13 @@
 
 var app = angular.module('app', [
   'ngRoute',
-  'ui.filters'
+  'ui.filters',
+  'angularMoment'
 ]);
+
+angular.module('app').constant('angularMomentConfig', {
+    preprocess: 'unix'
+});
 
 // First, parse the query string
 var params = {}, queryString = location.hash.substring(1),
