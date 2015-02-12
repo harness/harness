@@ -30,6 +30,16 @@ func Test_Github(t *testing.T) {
 	var hook = model.Hook{
 		Sha: "6dcb09b5b57875f334f61aebed695e2e4193db5e",
 	}
+	var commit = model.Commit{
+		Branch: "master",
+		Sha:    "e7e046b35",
+	}
+	var pr = model.Commit{
+		Branch:      "master",
+		Sha:         "e7e046b35",
+		PullRequest: "123",
+	}
+	var dir = "/var/cache/drone/github.com/octocat/Hello-World"
 
 	g := goblin.Goblin(t)
 	g.Describe("GitHub Plugin", func() {
@@ -127,6 +137,19 @@ func Test_Github(t *testing.T) {
 				g.Assert(err != nil).IsTrue()
 				g.Assert(login == nil).IsTrue()
 			})
+		})
+
+		g.It("Should return build commands for commit", func() {
+			var cmds = github.Commands(&repo, &commit, dir, 0)
+			g.Assert(cmds[0]).Equal("git clone --depth=0 --recursive --branch=master git@github.com:octocat/Hola-Mundo.git /var/cache/drone/github.com/octocat/Hello-World")
+			g.Assert(cmds[1]).Equal("git checkout -qf e7e046b35")
+		})
+
+		g.It("Should return build commands for pull request", func() {
+			var cmds = github.Commands(&repo, &pr, dir, 0)
+			g.Assert(cmds[0]).Equal("git clone --depth=0 --recursive git@github.com:octocat/Hola-Mundo.git /var/cache/drone/github.com/octocat/Hello-World")
+			g.Assert(cmds[1]).Equal("git fetch origin +refs/pull/123/head:refs/remotes/origin/pr/123")
+			g.Assert(cmds[2]).Equal("git checkout -qf -b pr/123 origin/pr/123")
 		})
 	})
 }

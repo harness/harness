@@ -136,9 +136,8 @@ func run(path, identity, dockerhost, dockercert, dockerkey string, publish, depl
 	// get the repository root directory
 	dir := filepath.Dir(path)
 	code := repo.Repo{
-		Name:   filepath.Base(dir),
-		Branch: "HEAD", // should we do this?
-		Path:   dir,
+		Name: filepath.Base(dir),
+		Path: dir,
 	}
 
 	// does the local repository match the

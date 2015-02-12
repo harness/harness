@@ -315,3 +315,18 @@ func (r *GitHub) OpenRegistration() bool {
 func (r *GitHub) GetToken(user *model.User) (*model.Token, error) {
 	return nil, nil
 }
+
+func (r *GitHub) Commands(repo *model.Repo, commit *model.Commit, dir string, depth int) []string {
+	cmds := []string{}
+	if len(commit.PullRequest) > 0 {
+		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive %s %s", depth, repo.CloneURL, dir))
+		cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", commit.PullRequest, commit.PullRequest))
+		cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", commit.PullRequest, commit.PullRequest))
+	} else {
+		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", depth, commit.Branch, repo.CloneURL, dir))
+		if len(commit.Sha) > 0 {
+			cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", commit.Sha))
+		}
+	}
+	return cmds
+}
