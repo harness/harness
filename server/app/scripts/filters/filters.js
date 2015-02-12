@@ -25,7 +25,7 @@
 
   /**
    * toDate is a helper function that returns a human readable
-   * string gor the given unix date.
+   * string for the given unix date.
    */
   function toDate() {
     return function(date) {
