@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/codegangsta/cli"
 	"os"
+
+	"github.com/codegangsta/cli"
 )
 
 var (
@@ -40,6 +41,7 @@ func main() {
 		NewRestartCommand(),
 		NewWhoamiCommand(),
 		NewSetKeyCommand(),
+		NewDeleteCommand(),
 	}
 
 	app.Run(os.Args)
