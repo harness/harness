@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.google.com/p/goauth2/oauth"
@@ -177,6 +178,41 @@ func (r *Gitlab) Activate(user *model.User, repo *model.Repo, link string) error
 
 	// add the hook
 	return client.AddProjectHook(path, link, true, false, true)
+}
+
+// Deactivate removes a repository by removing all the post-commit hooks
+// which are equal to link and removing the SSH deploy key.
+func (r *Gitlab) Deactivate(user *model.User, repo *model.Repo, link string) error {
+	var client = NewClient(r.url, user.Access, r.SkipVerify)
+	var path = ns(repo.Owner, repo.Name)
+
+	keys, err := client.ProjectDeployKeys(path)
+	if err != nil {
+		return err
+	}
+	var pubkey = strings.TrimSpace(repo.PublicKey)
+	for _, k := range keys {
+		if pubkey == strings.TrimSpace(k.Key) {
+			if err := client.RemoveProjectDeployKey(path, strconv.Itoa(k.Id)); err != nil {
+				return err
+			}
+			break
+		}
+	}
+	hooks, err := client.ProjectHooks(path)
+	if err != nil {
+		return err
+	}
+	link += "?owner=" + repo.Owner + "&name=" + repo.Name
+	for _, h := range hooks {
+		if link == h.Url {
+			if err := client.RemoveProjectHook(path, strconv.Itoa(h.Id)); err != nil {
+				return err
+			}
+			break
+		}
+	}
+	return nil
 }
 
 // ParseHook parses the post-commit hook from the Request body

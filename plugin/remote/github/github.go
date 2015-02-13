@@ -102,7 +102,7 @@ func (r *GitHub) Authorize(res http.ResponseWriter, req *http.Request) (*model.L
 			return nil, fmt.Errorf("Could not check org membership. %s", err)
 		}
 		if !allowedOrg {
-			return nil, fmt.Errorf("User does not belong to correct org")
+			return nil, fmt.Errorf("User does not belong to correct org. Must belong to %v", r.Orgs)
 		}
 	}
 
@@ -169,6 +169,7 @@ func (r *GitHub) GetRepos(user *model.User) ([]*model.Repo, error) {
 
 		if r.Private || repo.Private {
 			repo.CloneURL = *item.SSHURL
+			repo.Private = true
 		}
 
 		// if no permissions we should skip the repository
@@ -191,6 +192,23 @@ func (r *GitHub) GetRepos(user *model.User) ([]*model.Repo, error) {
 func (r *GitHub) GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error) {
 	var client = NewClient(r.API, user.Access, r.SkipVerify)
 	return GetFile(client, repo.Owner, repo.Name, ".drone.yml", hook.Sha)
+}
+
+// Deactivate removes a repository by removing all the post-commit hooks
+// which are equal to link and removing the SSH deploy key.
+func (r *GitHub) Deactivate(user *model.User, repo *model.Repo, link string) error {
+	var client = NewClient(r.API, user.Access, r.SkipVerify)
+	var title, err = GetKeyTitle(link)
+	if err != nil {
+		return err
+	}
+
+	// remove the deploy-key if it is installed remote.
+	if err := DeleteKey(client, repo.Owner, repo.Name, title, repo.PublicKey); err != nil {
+		return err
+	}
+
+	return DeleteHook(client, repo.Owner, repo.Name, link)
 }
 
 // Activate activates a repository by adding a Post-commit hook and
