@@ -241,6 +241,25 @@ func (r *Bitbucket) Activate(user *model.User, repo *model.Repo, link string) er
 	return err
 }
 
+// Deactivate removes a repository by removing all the post-commit hooks
+// which are equal to link and removing the SSH deploy key.
+func (r *Bitbucket) Deactivate(user *model.User, repo *model.Repo, link string) error {
+	var client = bitbucket.New(
+		r.Client,
+		r.Secret,
+		user.Access,
+		user.Secret,
+	)
+	title, err := GetKeyTitle(link)
+	if err != nil {
+		return err
+	}
+	if err := client.RepoKeys.DeleteName(repo.Owner, repo.Name, title); err != nil {
+		return err
+	}
+	return client.Brokers.DeleteUrl(repo.Owner, repo.Name, link, bitbucket.BrokerTypePost)
+}
+
 // ParseHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
 func (r *Bitbucket) ParseHook(req *http.Request) (*model.Hook, error) {
@@ -278,4 +297,14 @@ func (r *Bitbucket) OpenRegistration() bool {
 
 func (r *Bitbucket) GetToken(user *model.User) (*model.Token, error) {
 	return nil, nil
+}
+
+// GetKeyTitle is a helper function that generates a title for the
+// RSA public key based on the username and domain name.
+func GetKeyTitle(rawurl string) (string, error) {
+	var uri, err = url.Parse(rawurl)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("drone@%s", uri.Host), nil
 }

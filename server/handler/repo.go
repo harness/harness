@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/drone/drone/plugin/remote"
@@ -42,13 +43,56 @@ func GetRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	}{repo, repo.PublicKey, repo.Params, role})
 }
 
-// DelRepo accepts a request to inactivate the named
-// repository. This will disable all builds in the system
-// for this repository.
+// DelRepo accepts a request to delete the named
+// repository.
 //
 //     DEL /api/repos/:host/:owner/:name
 //
 func DelRepo(c web.C, w http.ResponseWriter, r *http.Request) {
+	var ctx = context.FromC(c)
+	var repo = ToRepo(c)
+
+	// completely remove the repository from the database
+	var user = ToUser(c)
+	var remote = remote.Lookup(repo.Host)
+	if remote == nil {
+		log.Printf("[ERROR] no remote for host '%s' found", repo.Host)
+	} else {
+		// Request a new token and update
+		user_token, err := remote.GetToken(user)
+		if err != nil {
+			log.Printf("[ERROR] no token for user '%s' on remote '%s' ", user.Email, repo.Host)
+		} else {
+			if user_token != nil {
+				user.Access = user_token.AccessToken
+				user.Secret = user_token.RefreshToken
+				user.TokenExpiry = user_token.Expiry
+				datastore.PutUser(ctx, user)
+			}
+			// setup the post-commit hook with the remote system and
+			// and deactiveate this hook/user on the remote system
+			var hook = fmt.Sprintf("%s/api/hook/%s/%s", httputil.GetURL(r), repo.Remote, repo.Token)
+			if err := remote.Deactivate(user, repo, hook); err != nil {
+				log.Printf("[ERROR] deactivate on remote '%s' failed: %s", repo.Host, err)
+			}
+		}
+	}
+	// fail through: if any of the actions on the remote failed
+	// we try to delete the repo in our datastore anyway
+	if err := datastore.DelRepo(ctx, repo); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// DeactivateRepo accepts a request to deactivate the named
+// repository. This will disable all builds in the system
+// for this repository.
+//
+//     POST /api/repos/:host/:owner/:name/deactivate
+//
+func DeactivateRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
 	var repo = ToRepo(c)
 
@@ -62,7 +106,7 @@ func DelRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode(repo)
 }
 
 // PostRepo accapets a request to activate the named repository
