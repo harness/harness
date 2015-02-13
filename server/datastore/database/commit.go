@@ -43,9 +43,9 @@ func (db *Commitstore) GetCommitLast(repo *model.Repo, branch string) (*model.Co
 
 // GetCommitList retrieves a list of latest commits
 // from the datastore for the specified repository.
-func (db *Commitstore) GetCommitList(repo *model.Repo) ([]*model.Commit, error) {
+func (db *Commitstore) GetCommitList(repo *model.Repo, limit, offset int) ([]*model.Commit, error) {
 	var commits []*model.Commit
-	var err = meddler.QueryAll(db, &commits, rebind(commitListQuery), repo.ID)
+	var err = meddler.QueryAll(db, &commits, rebind(commitListQuery), repo.ID, limit, offset)
 	return commits, err
 }
 
@@ -59,9 +59,9 @@ func (db *Commitstore) GetCommitListUser(user *model.User) ([]*model.CommitRepo,
 
 // GetCommitListActivity retrieves an ungrouped list of latest commits
 // from the datastore accessible to the specified user.
-func (db *Commitstore) GetCommitListActivity(user *model.User) ([]*model.CommitRepo, error) {
+func (db *Commitstore) GetCommitListActivity(user *model.User, limit, offset int) ([]*model.CommitRepo, error) {
 	var commits []*model.CommitRepo
-	var err = meddler.QueryAll(db, &commits, rebind(commitListActivityQuery), user.ID)
+	var err = meddler.QueryAll(db, &commits, rebind(commitListActivityQuery), user.ID, limit, offset)
 	return commits, err
 }
 
@@ -160,7 +160,7 @@ WHERE c.repo_id = r.repo_id
   AND r.repo_id = p.repo_id
   AND p.user_id = ?
 ORDER BY c.commit_created DESC
-LIMIT 20
+LIMIT ? OFFSET ?
 `
 
 // SQL query to retrieve the latest Commits across all branches.
@@ -169,7 +169,7 @@ SELECT *
 FROM commits
 WHERE repo_id = ?
 ORDER BY commit_id DESC
-LIMIT 20
+LIMIT ? OFFSET ?
 `
 
 // SQL query to retrieve a Commit by branch and sha.
