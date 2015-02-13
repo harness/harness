@@ -118,16 +118,18 @@ func GetUserFeed(c web.C, w http.ResponseWriter, r *http.Request) {
 // build activity, across all repositories, from the datastore.
 // The results are encoded and returned in JSON format.
 //
-//     GET /api/user/activity
+//     GET /api/user/activity?limit=:limit&offset=:offset
 //
 func GetUserActivity(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
+	var limit = ToLimit(r)
+	var offset = ToOffset(r)
 	var user = ToUser(c)
 	if user == nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	repos, err := datastore.GetCommitListActivity(ctx, user)
+	repos, err := datastore.GetCommitListActivity(ctx, user, limit, offset)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
