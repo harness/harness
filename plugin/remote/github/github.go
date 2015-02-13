@@ -169,6 +169,7 @@ func (r *GitHub) GetRepos(user *model.User) ([]*model.Repo, error) {
 
 		if r.Private || repo.Private {
 			repo.CloneURL = *item.SSHURL
+			repo.Private = true
 		}
 
 		// if no permissions we should skip the repository
