@@ -120,7 +120,7 @@ func GetCC(c web.C, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	commits, err := datastore.GetCommitList(ctx, repo)
+	commits, err := datastore.GetCommitList(ctx, repo, 1, 0)
 	if err != nil || len(commits) == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		return

@@ -16,13 +16,15 @@ import (
 // GetCommitList accepts a request to retrieve a list
 // of recent commits by Repo, and retur in JSON format.
 //
-//     GET /api/repos/:host/:owner/:name/commits
+//     GET /api/repos/:host/:owner/:name/commits?limit=:limit&offset=:offset
 //
 func GetCommitList(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
 	var repo = ToRepo(c)
+	var limit = ToLimit(r)
+	var offset = ToOffset(r)
 
-	commits, err := datastore.GetCommitList(ctx, repo)
+	commits, err := datastore.GetCommitList(ctx, repo, limit, offset)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
