@@ -175,13 +175,37 @@ func TestCommitstore(t *testing.T) {
 			}
 			cs.PutCommit(&commit1)
 			cs.PutCommit(&commit2)
-			commits, err := cs.GetCommitList(&model.Repo{ID: 1})
+			commits, err := cs.GetCommitList(&model.Repo{ID: 1}, 20, 0)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(commits)).Equal(2)
 			g.Assert(commits[0].ID).Equal(commit2.ID)
 			g.Assert(commits[0].RepoID).Equal(commit2.RepoID)
 			g.Assert(commits[0].Branch).Equal(commit2.Branch)
 			g.Assert(commits[0].Sha).Equal(commit2.Sha)
+		})
+
+		g.It("Should get only one last Commit from Commit List for a Repo", func() {
+			commit1 := model.Commit{
+				RepoID: 1,
+				Branch: "foo",
+				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
+				Status: model.StatusFailure,
+			}
+			commit2 := model.Commit{
+				RepoID: 1,
+				Branch: "foo",
+				Sha:    "0a74b46d7d62b737b6906897f48dbeb72cfda222",
+				Status: model.StatusSuccess,
+			}
+			cs.PutCommit(&commit1)
+			cs.PutCommit(&commit2)
+			commits, err := cs.GetCommitList(&model.Repo{ID: 1}, 1, 1)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(commits)).Equal(1)
+			g.Assert(commits[0].ID).Equal(commit1.ID)
+			g.Assert(commits[0].RepoID).Equal(commit1.RepoID)
+			g.Assert(commits[0].Branch).Equal(commit1.Branch)
+			g.Assert(commits[0].Sha).Equal(commit1.Sha)
 		})
 
 		g.It("Should get the recent Commit List for a User", func() {
@@ -268,11 +292,67 @@ func TestCommitstore(t *testing.T) {
 			g.Assert(commits[1].Sha).Equal(commit4.Sha)
 			g.Assert(commits[1].Status).Equal(commit4.Status)
 
-			commits, err = cs.GetCommitListActivity(&model.User{ID: 1})
+			commits, err = cs.GetCommitListActivity(&model.User{ID: 1}, 20, 0)
 			fmt.Println(commits)
 			fmt.Println(err)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(commits)).Equal(3)
+		})
+
+		g.It("Should get only one last Commit List for a User", func() {
+			repo1 := model.Repo{
+				UserID: 1,
+				Remote: "enterprise.github.com",
+				Host:   "github.drone.io",
+				Owner:  "bradrydzewski",
+				Name:   "drone",
+			}
+			repo2 := model.Repo{
+				UserID: 1,
+				Remote: "enterprise.github.com",
+				Host:   "github.drone.io",
+				Owner:  "drone",
+				Name:   "drone",
+			}
+			rs.PostRepo(&repo1)
+			rs.PostRepo(&repo2)
+			commit1 := model.Commit{
+				RepoID: repo1.ID,
+				Branch: "foo",
+				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
+				Status: model.StatusFailure,
+			}
+			commit2 := model.Commit{
+				RepoID: repo2.ID,
+				Branch: "bar",
+				Sha:    "0a74b46d7d62b737b6906897f48dbeb72cfda222",
+				Status: model.StatusSuccess,
+			}
+			cs.PostCommit(&commit1)
+			cs.PostCommit(&commit2)
+			perm1 := model.Perm{
+				RepoID: repo1.ID,
+				UserID: 1,
+				Read:   true,
+				Write:  true,
+				Admin:  true,
+			}
+			perm2 := model.Perm{
+				RepoID: repo2.ID,
+				UserID: 1,
+				Read:   true,
+				Write:  true,
+				Admin:  true,
+			}
+			ps.PostPerm(&perm1)
+			ps.PostPerm(&perm2)
+			commits, err := cs.GetCommitListActivity(&model.User{ID: 1}, 1, 1)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(commits)).Equal(1)
+			g.Assert(commits[0].RepoID).Equal(commit2.RepoID)
+			g.Assert(commits[0].Branch).Equal(commit2.Branch)
+			g.Assert(commits[0].Sha).Equal(commit2.Sha)
+			g.Assert(commits[0].Status).Equal(commit2.Status)
 		})
 
 		g.It("Should enforce unique Sha + Branch", func() {
