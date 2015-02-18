@@ -448,6 +448,8 @@ func (b *Builder) writeDockerfile(dir string) error {
 		// is the "ubuntu" user, since all build images
 		// inherit from the ubuntu cloud ISO
 		dockerfile.WriteUser("ubuntu")
+		dockerfile.WriteEnv("LANG", "en_US.UTF-8")
+		dockerfile.WriteEnv("LANGUAGE", "en_US:en")
 		dockerfile.WriteEnv("LOGNAME", "ubuntu")
 		dockerfile.WriteEnv("HOME", "/home/ubuntu")
 		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /var/cache/drone")
@@ -474,8 +476,6 @@ func (b *Builder) writeBuildScript(dir string) error {
 	f := buildfile.New()
 
 	// add environment variables for user env
-	f.WriteEnv("LANG", "en_US.UTF-8")
-	f.WriteEnv("LANGUAGE", "en_US:en")
 	f.WriteEnv("TERM", "xterm")
 	f.WriteEnv("GOPATH", "/var/cache/drone")
 	f.WriteEnv("SHELL", "/bin/bash")
