@@ -536,8 +536,6 @@ func TestWriteBuildScript(t *testing.T) {
 	}
 
 	f := buildfile.New()
-	f.WriteEnv("LANG", "en_US.UTF-8")
-	f.WriteEnv("LANGUAGE", "en_US:en")
 	f.WriteEnv("TERM", "xterm")
 	f.WriteEnv("GOPATH", "/var/cache/drone")
 	f.WriteEnv("SHELL", "/bin/bash")
