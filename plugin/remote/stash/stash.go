@@ -226,9 +226,24 @@ func (r *Stash) Activate(user *model.User, repo *model.Repo, link string) error 
 	}
 
 	// add the hook
-	var hook = fmt.Sprintf("%s?owner=%s&name=%s&branch=${refChange.name}&hash=${refChange.toHash}&message=${refChange.type}&author=${user.displayName}", link, repo.Owner, repo.Name)
+	var hook = GetHook(user, repo, link)
 	var _, err = client.Repos.CreateHook(repo.Owner, repo.Name, r.Hook, hook)
 	return err
+}
+
+// Deactivate removes a repository by removing all the post-commit hooks
+// which are equal to link. SSH key is not removed as this is on the user,
+// not the repo
+func (r *Stash) Deactivate(user *model.User, repo *model.Repo, link string) error {
+	var client = stash.New(
+		r.URL,
+		r.Secret,
+		user.Access,
+		user.Secret,
+		r.PrivateKey,
+	)
+	var hook = GetHook(user, repo, link)
+	return client.Repos.DeleteHook(repo.Owner, repo.Name, r.Hook, hook)
 }
 
 // ParseHook parses the post-commit hook from the Request body
@@ -258,6 +273,24 @@ func (r *Stash) ParseHook(req *http.Request) (*model.Hook, error) {
 	}, nil
 }
 
-func (r *Stash) OpenRegistration() bool {
-	return r.Open
+func (s *Stash) OpenRegistration() bool {
+	return s.Open
+}
+
+func (s *Stash) GetToken(user *model.User) (*model.Token, error) {
+	return nil, nil
+}
+
+// GetKeyTitle is a helper function that generates a title for the
+// RSA public key based on the username and domain name.
+func GetKeyTitle(rawurl string) (string, error) {
+	var uri, err = url.Parse(rawurl)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("drone@%s", uri.Host), nil
+}
+
+func GetHook(user *model.User, repo *model.Repo, link string) string {
+	return fmt.Sprintf("%s?owner=%s&name=%s&branch=${refChange.name}&hash=${refChange.toHash}&message=${refChange.type}&author=${user.displayName}", link, repo.Owner, repo.Name)
 }
