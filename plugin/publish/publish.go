@@ -12,6 +12,7 @@ import (
 // for publishing build artifacts when
 // a Build has succeeded
 type Publish struct {
+	Azure   *Azure           `yaml:"azure,omitempty"`
 	S3      *S3              `yaml:"s3,omitempty"`
 	Swift   *Swift           `yaml:"swift,omitempty"`
 	PyPI    *PyPI            `yaml:"pypi,omitempty"`
@@ -23,6 +24,11 @@ type Publish struct {
 }
 
 func (p *Publish) Write(f *buildfile.Buildfile, r *repo.Repo) {
+	// Azure
+	if p.Azure != nil && match(p.Azure.GetCondition(), r) {
+		p.Azure.Write(f)
+	}
+
 	// S3
 	if p.S3 != nil && match(p.S3.GetCondition(), r) {
 		p.S3.Write(f)
