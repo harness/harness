@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"strconv"
@@ -65,14 +66,15 @@ func WsUser(c web.C, w http.ResponseWriter, r *http.Request) {
 					break
 				}
 
-				// user must have read access to the repository
+				role, permerr := datastore.GetPerm(ctx, user, work.Repo)
+				if permerr != nil && permerr != sql.ErrNoRows {
+					// for debugging
+					log.Printf("WS: Error getting permissions for repository %s. Error: %s\n", work.Repo.Name, permerr)
+				}
+
+				// user must have read access to private the repository
 				// in order to pass this message along
-				if role, err := datastore.GetPerm(ctx, user, work.Repo); err != nil || role.Read == false {
-					if err != nil {
-						log.Printf("WS: Error getting permissions for repository %s. Error: %s\n", work.Repo.Name, err)
-					} else {
-						log.Printf("WS: No read access for repository %s\n", work.Repo.Name)
-					}
+				if work.Repo.Private == true && role.Read == false {
 					break
 				}
 
