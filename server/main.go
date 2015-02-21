@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -34,7 +35,8 @@ import (
 )
 
 const (
-	DockerTLSWarning = `WARINING: Docker TLS cert or key not given, this may cause a build errors`
+	DockerTLSWarning    = `WARNING: Docker TLS cert or key not given, this may cause a build errors`
+	BoxExtractionFailed = `WARNING: Box extraсtion failed: %s, can be used only embedded static files storage`
 )
 
 var (
@@ -125,7 +127,13 @@ func main() {
 	pub = pubsub.NewPubSub()
 
 	// create handler for static resources
-	assetserve := http.FileServer(rice.MustFindBox("app").HTTPBox())
+	box := rice.MustFindBox("app")
+	if err := boxExtractor(box); err != nil {
+		fmt.Println(fmt.Sprintf(BoxExtractionFailed, err.Error()))
+	}
+
+	assetserve := http.FileServer(box.HTTPBox())
+
 	http.Handle("/robots.txt", assetserve)
 	http.Handle("/static/", http.StripPrefix("/static", assetserve))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -180,4 +188,23 @@ func (s *StringArr) Set(value string) error {
 		*s = append(*s, str)
 	}
 	return nil
+}
+
+func boxExtractor(box *rice.Box) error {
+	return box.Walk("/", func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			if err := os.MkdirAll(fmt.Sprintf("assets/%s", path), 0755); err != nil {
+				return err
+			}
+		} else {
+			file_data, err := box.Bytes(path)
+			if err != nil {
+				return err
+			}
+
+			return ioutil.WriteFile(fmt.Sprintf("assets/%s", path), file_data, 0755)
+		}
+
+		return nil
+	})
 }
