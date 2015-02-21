@@ -24,7 +24,7 @@ const (
 
 const (
 	DescPending = "this build is pending"
-	DescSuccess = "the build was succcessful"
+	DescSuccess = "the build was successful"
 	DescFailure = "the build failed"
 	DescError   = "oops, something went wrong"
 )
