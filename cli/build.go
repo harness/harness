@@ -42,19 +42,28 @@ func NewBuildCommand() cli.Command {
 				Usage: "runs drone build with publishing enabled",
 			},
 			cli.StringFlag{
-				Name:  "docker-host",
+				Name:  "docker-host, H",
 				Value: getHost(),
 				Usage: "docker daemon address",
 			},
 			cli.StringFlag{
-				Name:  "docker-cert",
+				Name:  "docker-cert, tlscert",
 				Value: getCert(),
 				Usage: "docker daemon tls certificate",
 			},
 			cli.StringFlag{
-				Name:  "docker-key",
+				Name:  "docker-key, tlskey",
 				Value: getKey(),
 				Usage: "docker daemon tls key",
+			},
+			cli.BoolFlag{
+				Name:  "tls",
+				Usage: "runs drone build with docker arguments using tls",
+			},
+			cli.StringFlag{
+				Name:  "tlscacert",
+				Value: "",
+				Usage: "trusted docker daemon that signed by CA given here",
 			},
 		},
 		Action: func(c *cli.Context) {
