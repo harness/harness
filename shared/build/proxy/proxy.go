@@ -9,8 +9,10 @@ import (
 // as an alternative to socat to proxy tcp traffic.
 const header = `#!/bin/bash
 set +e
-echo H4sICGKv1VQAA3NvY2F0LnBsAH1SXUvDQBB8Tn7FipUmkpr6gWBKgyIiBdGixVeJ6RZP00u4S6wi8be7t3exFsWEhNzO7M7MXba34kar+FHIuEJV+I1GmNwkyV2Zv2A9Wq+xwJzWfk/IqqlhDM+lkEEf+tHp2e3lfTj6Rj5hGc/Op4Oryd3s4joJ9nbDaFGqF6Air/gVU0M2nyua1Dug76pUZmrvkDSW79ATpUZTWIsPUomrkQF3NLt7WGaVY2tUr6g6OqNJMrm+mHFT4HtXZZ4VZ6yXQn+4x3c/csCUxVNgF1S8RcrdsfcNS+gapWdWw6HPYY2/QUoRAqdOVX/1JAqEYD+ED9+j0MDm2A8EXU+eyQeF2ZxJnlgQ4ijjcRfFYp5pzwuBkvfGQiSa51jRYTiCwmVZ4z/h6Zoiqi4Q73v0Xd4Ib6ohT95IaD38AVhtB6yP5cN1tMa25fym2DpTLNtQWnqwoL+O80t8q6GRBWoN+EaHoGFjhP1uf2/Fv6zHZrFA9aMpm69bBql+16YUOF4ER8OTYxfRCjBnpUSNHSl03lu/9b8ACaSZylQDAAA= | base64 -d | gunzip > /tmp/socat && chmod +x /tmp/socat
 `
+
+// TODO(bradrydzewski) probably going to remove this
+//echo H4sICGKv1VQAA3NvY2F0LnBsAH1SXUvDQBB8Tn7FipUmkpr6gWBKgyIiBdGixVeJ6RZP00u4S6wi8be7t3exFsWEhNzO7M7MXba34kar+FHIuEJV+I1GmNwkyV2Zv2A9Wq+xwJzWfk/IqqlhDM+lkEEf+tHp2e3lfTj6Rj5hGc/Op4Oryd3s4joJ9nbDaFGqF6Air/gVU0M2nyua1Dug76pUZmrvkDSW79ATpUZTWIsPUomrkQF3NLt7WGaVY2tUr6g6OqNJMrm+mHFT4HtXZZ4VZ6yXQn+4x3c/csCUxVNgF1S8RcrdsfcNS+gapWdWw6HPYY2/QUoRAqdOVX/1JAqEYD+ED9+j0MDm2A8EXU+eyQeF2ZxJnlgQ4ijjcRfFYp5pzwuBkvfGQiSa51jRYTiCwmVZ4z/h6Zoiqi4Q73v0Xd4Ib6ohT95IaD38AVhtB6yP5cN1tMa25fym2DpTLNtQWnqwoL+O80t8q6GRBWoN+EaHoGFjhP1uf2/Fv6zHZrFA9aMpm69bBql+16YUOF4ER8OTYxfRCjBnpUSNHSl03lu/9b8ACaSZylQDAAA= | base64 -d | gunzip > /tmp/socat && chmod +x /tmp/socat
 
 // this command string will check if the socat utility
 // exists, and if it does, will proxy connections to
@@ -37,7 +39,9 @@ func (p Proxy) String() string {
 	buf.WriteString(header)
 	for port, ip := range p {
 		buf.WriteString(fmt.Sprintf(command, port, ip, port))
-		buf.WriteString(fmt.Sprintf(polyfill, port, ip, port))
+
+		// TODO(bradrydzewski) probably going to remove this
+		//buf.WriteString(fmt.Sprintf(polyfill, port, ip, port))
 	}
 
 	return buf.String()
