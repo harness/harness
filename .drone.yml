@@ -5,10 +5,13 @@ env:
   - GOROOT=/usr/local/go
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 script:
+  - sudo add-apt-repository ppa:git-core/ppa 1> /dev/null 2> /dev/null
   - sudo apt-get update 1> /dev/null 2> /dev/null
-  - sudo apt-get -y install zip libsqlite3-dev sqlite3 rpm 1> /dev/null 2> /dev/null
+  - sudo apt-get update 1> /dev/null 2> /dev/null
+  - sudo apt-get -y install git zip libsqlite3-dev sqlite3 rpm 1> /dev/null 2> /dev/null
   - gem install fpm
   - rbenv rehash
+  - make docker
   - make deps
   - make test
   - make test_postgres
