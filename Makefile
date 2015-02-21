@@ -5,38 +5,36 @@ ITTERATION := $(shell date +%s)
 all: build
 
 deps:
-	go get github.com/GeertJohan/go.rice/rice
-	go get -t -v ./...
-
-docker:
-	mkdir -p $$GOPATH/src/github.com/docker/docker
-	git clone --depth=1 --branch=v1.5.0 git://github.com/docker/docker.git $$GOPATH/src/github.com/docker/docker
+	# which npm && npm -g install uglify-js less autoprefixer
+	go get github.com/nitrous-io/goop
+	goop install
+	goop go get -t -v ./...
 
 test:
-	@test -z "$(shell find . -name '*.go' | xargs gofmt -l)" || (echo "Need to run 'go fmt ./...'"; exit 1)
-	go vet ./...
-	go test -cover -short ./...
+	@test -z "$(shell find . -name '*.go' -not -path "./.vendor/*" | xargs gofmt -l)" || (echo "Need to run 'go fmt ./...'"; exit 1)
+	goop go vet ./...
+	goop go test -cover -short ./...
 
 test_mysql:
 	mysql -P 3306 --protocol=tcp -u root -e 'create database if not exists test;'
-	TEST_DRIVER="mysql" TEST_DATASOURCE="root@tcp(127.0.0.1:3306)/test" go test -short github.com/drone/drone/server/datastore/database
+	TEST_DRIVER="mysql" TEST_DATASOURCE="root@tcp(127.0.0.1:3306)/test" goop go test -short github.com/drone/drone/server/datastore/database
 	mysql -P 3306 --protocol=tcp -u root -e 'drop database test;'
 
 test_postgres:
-	TEST_DRIVER="postgres" TEST_DATASOURCE="host=127.0.0.1 user=postgres dbname=postgres sslmode=disable" go test -short github.com/drone/drone/server/datastore/database
+	TEST_DRIVER="postgres" TEST_DATASOURCE="host=127.0.0.1 user=postgres dbname=postgres sslmode=disable" goop go test -short github.com/drone/drone/server/datastore/database
 
 build:
 	mkdir -p packaging/output
 	mkdir -p packaging/root/usr/local/bin
-	go build -o packaging/root/usr/local/bin/drone  -ldflags "-X main.revision $(SHA) -X main.version $(VERSION)" github.com/drone/drone/cli
-	go build -o packaging/root/usr/local/bin/droned -ldflags "-X main.revision $(SHA) -X main.version $(VERSION)" github.com/drone/drone/server
+	goop go build -o packaging/root/usr/local/bin/drone  -ldflags "-X main.revision $(SHA) -X main.version $(VERSION)" github.com/drone/drone/cli
+	goop go build -o packaging/root/usr/local/bin/droned -ldflags "-X main.revision $(SHA) -X main.version $(VERSION)" github.com/drone/drone/server
 
 install:
 	install -t /usr/local/bin packaging/root/usr/local/bin/drone
 	install -t /usr/local/bin packaging/root/usr/local/bin/droned
 
 run:
-	@go run server/main.go --config=$$HOME/.drone/config.toml
+	@goop go run server/main.go --config=$$HOME/.drone/config.toml
 
 clean:
 	find . -name "*.out" -delete
@@ -52,7 +50,7 @@ packages: clean build embed deb rpm
 # embeds content in go source code so that it is compiled
 # and packaged inside the go binary file.
 embed:
-	rice --import-path="github.com/drone/drone/server" append --exec="packaging/root/usr/local/bin/droned"
+	goop exec rice --import-path="github.com/drone/drone/server" append --exec="packaging/root/usr/local/bin/droned"
 
 # creates a debian package for drone to install
 # `sudo dpkg -i drone.deb`

@@ -1,0 +1,3 @@
+github.com/docker/docker #v1.5.0
+github.com/docker/libcontainer #v1.4.0
+github.com/GeertJohan/go.rice/rice
