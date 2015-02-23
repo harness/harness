@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -277,6 +278,10 @@ func (r *Gitlab) GetToken(user *model.User) (*model.Token, error) {
 			AccessToken:  user.Access,
 			RefreshToken: user.Secret,
 			Expiry:       expiry,
+		},
+		Transport: &http.Transport{
+			Proxy:           http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: r.SkipVerify},
 		},
 	}
 
