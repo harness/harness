@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"regexp"
 
 	"github.com/drone/drone/server/datastore"
 	"github.com/goji/context"
@@ -89,6 +90,13 @@ func RequireRepoAdmin(c *web.C, h http.Handler) http.Handler {
 		case user != nil && role.Read == false && role.Admin == false:
 			w.WriteHeader(http.StatusNotFound)
 			return
+		case user != nil && role.Write == true && role.Admin == false:
+			if IsRebuild(r.URL.Path) {
+				h.ServeHTTP(w, r)
+				return
+			}
+			w.WriteHeader(http.StatusForbidden)
+			return
 		case user != nil && role.Read == true && role.Admin == false:
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -99,4 +107,10 @@ func RequireRepoAdmin(c *web.C, h http.Handler) http.Handler {
 
 	}
 	return http.HandlerFunc(fn)
+}
+
+func IsRebuild(path string) bool {
+	const pattern = `\/(.*)\/(.*)\/(.*)\/branches\/(.*)\/commits\/(.*)`
+	ok, _ := regexp.MatchString(pattern, path)
+	return ok
 }
