@@ -227,7 +227,7 @@ func (r *Stash) Activate(user *model.User, repo *model.Repo, link string) error 
 
 	// add the hook
 	var hook = GetHook(user, repo, link)
-	var _, err = client.Repos.CreateHook(repo.Owner, repo.Name, r.Hook, hook)
+	var _, err = client.Hooks.CreateHook(repo.Owner, repo.Name, r.Hook, hook)
 	return err
 }
 
@@ -243,7 +243,7 @@ func (r *Stash) Deactivate(user *model.User, repo *model.Repo, link string) erro
 		r.PrivateKey,
 	)
 	var hook = GetHook(user, repo, link)
-	return client.Repos.DeleteHook(repo.Owner, repo.Name, r.Hook, hook)
+	return client.Hooks.DeleteHook(repo.Owner, repo.Name, r.Hook, hook)
 }
 
 // ParseHook parses the post-commit hook from the Request body
