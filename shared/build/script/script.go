@@ -42,6 +42,9 @@ type Build struct {
 	// to identify the build.
 	Name string
 
+	// User specifies a unix-user who run builds.
+	User string
+
 	// Script specifies the build and test commands.
 	Script []string
 
