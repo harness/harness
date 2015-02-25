@@ -30,7 +30,10 @@ func GetRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	// if the user is not requesting (or cannot access)
 	// admin data then we just return the repo as-is
 	if role.Admin == false {
-		json.NewEncoder(w).Encode(repo)
+		json.NewEncoder(w).Encode(struct {
+			*model.Repo
+			Perm      *model.Perm `json:"role"`
+		}{repo, role})
 		return
 	}
 
