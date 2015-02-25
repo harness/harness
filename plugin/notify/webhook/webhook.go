@@ -18,7 +18,7 @@ func (w *Webhook) Send(context *model.Request) error {
 	switch {
 	case context.Commit.Status == model.StatusSuccess && w.Success != nil && *w.Success == true:
 		return w.send(context)
-	case context.Commit.Status == model.StatusFailure && w.Failure != nil && *w.Success == true:
+	case context.Commit.Status == model.StatusFailure && w.Failure != nil && *w.Failure == true:
 		return w.send(context)
 	}
 
