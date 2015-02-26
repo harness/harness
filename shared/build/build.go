@@ -388,6 +388,15 @@ func (b *Builder) run() error {
 		log.Infof("mounting volume %s:%s", hostpath, volume)
 	}
 
+	// link docker.sock
+	hostpath = "/var/run/docker.sock"
+	volume = hostpath
+	host.Binds = append(host.Binds, hostpath+":"+volume)
+	conf.Volumes[volume] = struct{}{}
+
+	// debugging
+	log.Infof("mounting volume %s:%s", hostpath, volume)
+
 	// create the container from the image
 	run, err := b.dockerClient.Containers.Create(&conf)
 	if err != nil {
