@@ -77,6 +77,8 @@ droned --config=/path/to/drone.toml
 The configuration file is in TOML format. If installed using the `drone.deb` file
 will be located in `/etc/drone/drone.toml`.
 
+You can find the current config of the master branch [here](https://github.com/drone/drone/blob/master/packaging/root/etc/drone/drone.toml).
+
 ```toml
 
 [server]
@@ -94,13 +96,11 @@ expires=""
 driver=""
 datasource=""
 
-[registration]
-open=true
-
 [github]
 client=""
 secret=""
 orgs=[]
+open=false
 
 [github_enterprise]
 client=""
@@ -109,20 +109,24 @@ api=""
 url=""
 orgs=[]
 private_mode=false
+open=false
 
 [bitbucket]
 client=""
 secret=""
+open=false
 
 [gitlab]
 url=""
 client=""
 secret=""
 skip_verify=false
+open=false
 
 [gogs]
 url=""
 secret=""
+open=false
 
 [smtp]
 host=""
@@ -160,12 +164,10 @@ export DRONE_SESSION_EXPIRES=""
 export DRONE_DATABASE_DRIVER=""
 export DRONE_DATABASE_DATASOURCE=""
 
-# enable users to self-register
-export DRONE_REGISTRATION_OPEN=false
-
 # github configuration
 export DRONE_GITHUB_CLIENT=""
 export DRONE_GITHUB_SECRET=""
+export DRONE_GITHUB_OPEN=false
 
 # github enterprise configuration
 export DRONE_GITHUB_ENTERPRISE_CLIENT=""
@@ -173,16 +175,20 @@ export DRONE_GITHUB_ENTERPRISE_SECRET=""
 export DRONE_GITHUB_ENTERPRISE_API=""
 export DRONE_GITHUB_ENTERPRISE_URL=""
 export DRONE_GITHUB_ENTERPRISE_PRIVATE_MODE=false
+export DRONE_GITHUB_ENTERPRISE_OPEN=false
 
 # bitbucket configuration
 export DRONE_BITBUCKET_CLIENT=""
 export DRONE_BITBUCKET_SECRET=""
+export DRONE_BITBUCKET_OPEN=false
+
 
 # gitlab configuration
 export DRONE_GITLAB_URL=""
 export DRONE_GITLAB_CLIENT=""
 export DRONE_GITLAB_SECRET=""
 export DRONE_GITLAB_SKIP_VERIFY=false
+export DRONE_GITLAB_OPEN=false
 
 # email configuration
 export DRONE_SMTP_HOST=""
