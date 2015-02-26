@@ -32,7 +32,7 @@ func GetRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	if role.Admin == false {
 		json.NewEncoder(w).Encode(struct {
 			*model.Repo
-			Perm      *model.Perm `json:"role"`
+			Perm *model.Perm `json:"role"`
 		}{repo, role})
 		return
 	}
