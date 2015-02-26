@@ -389,8 +389,8 @@ func (b *Builder) run() error {
 	}
 
 	// link docker.sock
-	hostpath = "/var/run/docker.sock"
-	volume = hostpath
+	hostpath := "/var/run/docker.sock"
+	volume := hostpath
 	host.Binds = append(host.Binds, hostpath+":"+volume)
 	conf.Volumes[volume] = struct{}{}
 
