@@ -9,6 +9,12 @@ port=":80"
 # key=""
 # cert=""
 
+#####################################################################
+# Assets configuration
+#
+# [server.assets]
+# folder=""
+
 # [session]
 # secret=""
 # expires=""
