@@ -55,6 +55,8 @@ var (
 	sslcrt = config.String("server-ssl-cert", "")
 	sslkey = config.String("server-ssl-key", "")
 
+	assets_folder = config.String("server-assets-folder", "")
+
 	workers *pool.Pool
 	worker  *director.Director
 	pub     *pubsub.PubSub
@@ -125,7 +127,15 @@ func main() {
 	pub = pubsub.NewPubSub()
 
 	// create handler for static resources
-	assetserve := http.FileServer(rice.MustFindBox("app").HTTPBox())
+	// if we have a configured assets folder it takes precedence over the assets
+	// bundled to the binary
+	var assetserve http.Handler
+	if *assets_folder != "" {
+		assetserve = http.FileServer(http.Dir(*assets_folder))
+	} else {
+		assetserve = http.FileServer(rice.MustFindBox("app").HTTPBox())
+	}
+
 	http.Handle("/robots.txt", assetserve)
 	http.Handle("/static/", http.StripPrefix("/static", assetserve))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
