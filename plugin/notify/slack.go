@@ -14,6 +14,7 @@ const (
 	slackSuccessFallbackMessage = "Success %s (%s) by %s"
 	slackFailureMessage         = "*Failed* <%s|%s> (%s) by %s"
 	slackFailureFallbackMessage = "Failed %s (%s) by %s"
+	drone_icon                  = "https://avatars.githubusercontent.com/drone"
 )
 
 type Slack struct {
@@ -89,8 +90,9 @@ func (s *Slack) send(msg string, fallback string, color string) error {
 	data := struct {
 		Channel     string       `json:"channel"`
 		Username    string       `json:"username"`
+		Icon        string       `json:"icon_url"`
 		Attachments []Attachment `json:"attachments"`
-	}{s.Channel, s.Username, attachments}
+	}{s.Channel, s.Username, drone_icon, attachments}
 
 	// data json encoded
 	payload, err := json.Marshal(data)
