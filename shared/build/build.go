@@ -234,8 +234,8 @@ func (b *Builder) setup() error {
 	log.Info("creating build image")
 
 	// check for build container (ie bradrydzewski/go:1.2)
-	// and download if it doesn't already exist
-	if _, err := b.dockerClient.Images.Inspect(b.Build.Image); err == docker.ErrNotFound {
+	// and download if it doesn't already exist or it's :latest tag
+	if _, err := b.dockerClient.Images.Inspect(b.Build.Image); err == docker.ErrNotFound || strings.HasSuffix(b.Build.Image, ":latest") {
 		// download the image if it doesn't exist
 		if err := b.dockerClient.Images.Pull(b.Build.Image); err != nil {
 			return fmt.Errorf("Error: Unable to pull image %s. %s", b.Build.Image, err)
