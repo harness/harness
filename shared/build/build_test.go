@@ -224,6 +224,29 @@ func TestSetupErrorImagePull(t *testing.T) {
 	}
 }
 
+// TestSetupErrorUpdate will test our ability to handle a
+// failure when the build image cannot be updated
+func TestSetupErrorUpdate(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/v1.9/images/create", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+	})
+
+	b := Builder{}
+	b.Repo = &repo.Repo{}
+	b.Repo.Path = "git://github.com/drone/drone.git"
+	b.Build = &script.Build{}
+	b.Build.Image = "bradrydzewski/go:latest"
+	b.dockerClient = client
+
+	var got, want = b.setup(), fmt.Errorf("Error: Unable to pull image bradrydzewski/go:latest. %s", docker.ErrBadRequest)
+	if got == nil || got.Error() != want.Error() {
+		t.Errorf("Expected error %s, got %s", want, got)
+	}
+}
+
 // TestSetupErrorBuild will test our ability to handle a failure
 // when creating a Docker image with the injected build script,
 // ssh keys, etc.
