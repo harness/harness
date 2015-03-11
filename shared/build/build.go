@@ -362,7 +362,6 @@ func (b *Builder) run() error {
 	conf.Volumes = make(map[string]struct{})
 	for _, volume := range b.Build.Cache {
 		name := filepath.Clean(b.Repo.Name)
-		branch := filepath.Clean(b.Repo.Branch)
 		volume := filepath.Clean(volume)
 
 		// with Docker, volumes must be an absolute path. If an absolute
@@ -374,7 +373,7 @@ func (b *Builder) run() error {
 
 		// local cache path on the host machine
 		// this path is going to be really long
-		hostpath := filepath.Join(tmpPath, name, branch, volume)
+		hostpath := filepath.Join(tmpPath, name, volume)
 
 		// check if the volume is created
 		if _, err := os.Stat(hostpath); err != nil {
