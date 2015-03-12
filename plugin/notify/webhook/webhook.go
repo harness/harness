@@ -10,12 +10,15 @@ import (
 
 type Webhook struct {
 	URL     []string `yaml:"urls,omitempty"`
+	Started *bool    `yaml:"on_start,omitempty"`
 	Success *bool    `yaml:"on_success,omitempty"`
 	Failure *bool    `yaml:"on_failure,omitempty"`
 }
 
 func (w *Webhook) Send(context *model.Request) error {
 	switch {
+	case context.Commit.Status == model.StatusStarted && w.Started != nil && *w.Started == true:
+		return w.send(context)
 	case context.Commit.Status == model.StatusSuccess && w.Success != nil && *w.Success == true:
 		return w.send(context)
 	case context.Commit.Status == model.StatusFailure && w.Failure != nil && *w.Failure == true:
