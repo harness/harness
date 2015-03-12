@@ -10,7 +10,7 @@ import (
 
 type Webhook struct {
 	URL     []string `yaml:"urls,omitempty"`
-	Started *bool    `yaml:"on_start,omitempty"`
+	Started *bool    `yaml:"on_started,omitempty"`
 	Success *bool    `yaml:"on_success,omitempty"`
 	Failure *bool    `yaml:"on_failure,omitempty"`
 }
