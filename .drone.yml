@@ -1,4 +1,4 @@
-image: go1.3
+image: bradrydzewski/go:1.3
 git:
   path: github.com/drone/drone
 env:
@@ -20,26 +20,3 @@ script:
 services:
   - postgres
   - mysql
-notify:
-  email:
-    recipients:
-      - brad@drone.io
-  webhook:
-    urls:
-      - https://webhooks.gitter.im/e/$$GITTER_KEY
-    on_started: false
-    on_success: true
-    on_failure: true
-
-publish:
-  s3:
-    acl: public-read
-    region: us-east-1
-    bucket: downloads.drone.io
-    access_key: $$AWS_KEY
-    secret_key: $$AWS_SECRET
-    source: packaging/output/
-    target: $DRONE_BRANCH/
-    recursive: true
-    when:
-      owner: drone
