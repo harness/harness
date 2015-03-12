@@ -1,4 +1,4 @@
-image: go1.3
+image: bradrydzewski/go:1.3
 git:
   path: github.com/drone/drone
 env:
@@ -12,23 +12,15 @@ script:
   - rbenv rehash
   - make deps
   - make test
+<<<<<<< HEAD
   - make test_postgres
+=======
+  #- make test_postgres
   - make test_mysql
+>>>>>>> de64629... don't test postgres
   - make packages
 services:
   - postgres
-  - mysql
-notify:
-  email:
-    recipients:
-      - brad@drone.io
-  webhook:
-    urls:
-      - https://webhooks.gitter.im/e/$$GITTER_KEY
-    on_started: false
-    on_success: true
-    on_failure: true
-
 publish:
   s3:
     acl: public-read
@@ -41,9 +33,6 @@ publish:
     recursive: true
     when:
       owner: drone
-
-
-
 
 # new build script for 0.4 branch
 
