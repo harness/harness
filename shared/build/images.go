@@ -225,7 +225,9 @@ var builders = map[string]*image{
 	"python2.7": {Tag: "bradrydzewski/python:2.7"},
 	"python3.2": {Tag: "bradrydzewski/python:3.2"},
 	"python3.3": {Tag: "bradrydzewski/python:3.3"},
+	"python3.4": {Tag: "bradrydzewski/python:3.4"},
 	"pypy":      {Tag: "bradrydzewski/python:pypy"},
+	"python:all": {Tag: "bradrydzewski/python:all"},
 
 	// Ruby build images
 	"ruby":      {Tag: "bradrydzewski/ruby:2.0.0"},
