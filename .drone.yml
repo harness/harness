@@ -18,5 +18,17 @@ script:
   - make test_mysql
   - make packages
 services:
-  - postgres
+  #- postgres
   - mysql
+publish:
+  docker:
+    branch: upstream-master-with-mods
+    docker_port: 4243
+    docker_server: {{docker_server}}
+    docker_version: 0.10.0
+    email: {{docker_email}}
+    image_name: clever/drone
+    password: {{docker_password}}
+    push_latest: false
+    registry_login: true
+    username: {{docker_username}}
