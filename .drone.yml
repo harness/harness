@@ -1,4 +1,4 @@
-image: bradrydzewski/go:1.3
+image: bradrydzewski/go:1.4
 git:
   path: github.com/drone/drone
 env:
@@ -12,38 +12,21 @@ script:
   - rbenv rehash
   - make deps
   - make test
-<<<<<<< HEAD
   - make test_postgres
-=======
-  #- make test_postgres
-  - make test_mysql
->>>>>>> de64629... don't test postgres
+  #- make test_mysql
   - make packages
 services:
   - postgres
 publish:
-  s3:
-    acl: public-read
-    region: us-east-1
-    bucket: downloads.drone.io
-    access_key: $$AWS_KEY
-    secret_key: $$AWS_SECRET
-    source: packaging/output/
-    target: $DRONE_BRANCH/
-    recursive: true
+  docker:
+    docker_host: $$docker_host
+    email: $$docker_email
+    username: $$docker_username
+    password: $$docker_password
+    image_name: clever/drone
+    registry_login: true
+    tags:
+      - $(git rev-parse --short HEAD)
+      #- latest
     when:
-      owner: drone
-
-# new build script for 0.4 branch
-
-build:
-  image: golang:1.4.2
-  environment:
-    - GOPATH=/drone
-  commands:
-    - apt-get update 1> /dev/null 2> /dev/null
-    - apt-get -y install libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
-    - go get golang.org/x/tools/cmd/vet
-    - go get golang.org/x/tools/cmd/cover
-    - make deps
-    - make test
+      branch: master
