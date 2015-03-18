@@ -10,7 +10,6 @@ WORKDIR /gopath/src/github.com/drone/drone
 
 RUN apt-get update
 RUN apt-get -y install zip libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
-RUN make docker
 RUN make deps
 RUN make build
 RUN make embed
