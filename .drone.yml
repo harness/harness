@@ -29,6 +29,8 @@ publish:
     email: {{docker_email}}
     image_name: clever/drone
     password: {{docker_password}}
-    tags: ["$(git rev-parse --short HEAD)"]
+    tags:
+      - $(git rev-parse --short HEAD)
+      #- latest
     registry_login: true
     username: {{docker_username}}
