@@ -43,7 +43,7 @@ func SyncUser(ctx context.Context, user *model.User, remote remote.Remote) {
 			continue
 		}
 
-		log.Printf("Successfully syced repo. %s/%s\n", repo.Owner, repo.Name)
+		log.Printf("Successfully synced repo. %s/%s\n", repo.Owner, repo.Name)
 	}
 
 	user.Synced = time.Now().UTC().Unix()
