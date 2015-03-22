@@ -17,7 +17,7 @@ set +e
 // this command string will check if the socat utility
 // exists, and if it does, will proxy connections to
 // the external IP address.
-const command = "[ -x /usr/bin/socat ] && socat TCP-LISTEN:%s,fork TCP:%s:%s &\n"
+const command = "command -v socat >/dev/null && socat TCP-LISTEN:%s,fork TCP:%s:%s &\n"
 
 // alternative command that acts as a "polyfill" for socat
 // in the event that it isn't installed on the server
