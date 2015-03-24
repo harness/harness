@@ -24,13 +24,13 @@ publish:
   docker:
     branch: upstream-master-with-mods
     docker_port: 4243
-    docker_host: {{docker_host}}
+    docker_host: $$docker_host
     docker_version: 0.10.0
-    email: {{docker_email}}
+    email: $$docker_email
     image_name: clever/drone
-    password: {{docker_password}}
+    password: $$docker_password
     tags:
       - $(git rev-parse --short HEAD)
       #- latest
     registry_login: true
-    username: {{docker_username}}
+    username: $$docker_username
