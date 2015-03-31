@@ -29,6 +29,8 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 				switch (code) {
 					case 'm':
 					case '0m':
+					case '39m':
+					case '49m':
 						var len = this.styles.length;
 						for (var i=0; i < len; i++) {
 							this.styles.pop();
