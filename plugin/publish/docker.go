@@ -94,8 +94,14 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 
 	// Login?
 	if d.RegistryLogin == true {
+		// If email is unspecified, pass in -e ' ' to avoid having
+		// registry URL interpreted as email, which will fail cryptically.
+		emailOpt := "' '"
+		if d.Email != "" {
+			emailOpt = d.Email
+		}
 		f.WriteCmdSilent(fmt.Sprintf("docker login -u %s -p %s -e %s %s",
-			d.Username, d.Password, d.Email, d.RegistryLoginUrl))
+			d.Username, d.Password, emailOpt, d.RegistryLoginUrl))
 	}
 
 	// Tag and push all tags
