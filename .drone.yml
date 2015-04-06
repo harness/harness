@@ -31,4 +31,4 @@ publish:
     registry_login: true
     tags:
       - $(git rev-parse --short HEAD)
-      - latest
+        #- latest
