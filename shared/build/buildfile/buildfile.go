@@ -84,7 +84,7 @@ chmod 0700 $HOME/.ssh
 echo 'StrictHostKeyChecking no' | tee $HOME/.ssh/config > /dev/null
 
 # be sure to exit on error and print out
-# our bash commands, so we can which commands
+# our bash commands, so we can see which commands
 # are executing and troubleshoot failures.
 set -e
 
