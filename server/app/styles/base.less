@@ -1,0 +1,171 @@
+// Base less file with helper mixins
+
+.hidden {
+	display: none !important;
+	visibility: hidden;
+}
+
+.invisible {
+	visibility: hidden;
+}
+
+
+.clearfix {
+	*zoom: 1;
+	&:before,
+	&:after { content: ""; display: table; }
+	&:after { clear: both; }
+}
+
+.nowrap {
+	white-space:nowrap;
+}
+
+.opacity(@num) {
+	opacity:@num;
+	@num2:@num*100;
+	filter:alpha(opacity=@num2);
+}
+
+.grayscale(@num:1) {
+	-webkit-filter: grayscale(@num);
+	   -moz-filter: grayscale(@num);
+	  	-ms-filter: grayscale(@num);
+		 -o-filter: grayscale(@num);
+			filter: grayscale(@num);
+}
+
+.transition(@transString: 0) when not (@transString = 0) {
+    -webkit-transition: @transString;
+       -moz-transition: @transString;
+        -ms-transition: @transString;
+         -o-transition: @transString;
+            transition: @transString;
+}
+
+.gradient(@c1, @c2, @direction:top){
+	background:@c2;
+	background-image: -webkit-linear-gradient(@direction, @c1, @c2);
+	background-image:    -moz-linear-gradient(@direction, @c1, @c2);
+	background-image:     -ms-linear-gradient(@direction, @c1, @c2);
+	background-image:      -o-linear-gradient(@direction, @c1, @c2);
+	background-image:         linear-gradient(@direction, @c1, @c2);
+}
+
+.gradient2(@c1, @c2, @c3, @direction:top){
+	background:@c3;
+	background-image: -webkit-linear-gradient(@direction, @c1, @c2, @c3);
+	background-image:    -moz-linear-gradient(@direction, @c1, @c2, @c3);
+	background-image:     -ms-linear-gradient(@direction, @c1, @c2, @c3);
+	background-image:      -o-linear-gradient(@direction, @c1, @c2, @c3);
+	background-image:         linear-gradient(@direction, @c1, @c2, @c3);
+}
+
+.rotate(@deg){
+	-webkit-transform:rotate(@deg);
+	   -moz-transform:rotate(@deg);
+		-ms-transform:rotate(@deg);
+		 -o-transform:rotate(@deg);
+			transform:rotate(@deg);
+}
+
+.origin(@o){
+	-webkit-transform-origin:@o;
+	   -moz-transform-origin:@o;
+		-ms-transform-origin:@o;
+		 -o-transform-origin:@o;
+			transform-origin:@o;
+}
+
+.filter(@param){
+	-webkit-filter:@param;
+	   -moz-filter:@param;
+		-ms-filter:@param;
+		 -o-filter:@param;
+			filter:@param;
+}
+
+.animation(@a){
+	-webkit-animation:@a;
+	   -moz-animation:@a;
+		-ms-animation:@a;
+		 -o-animation:@a;
+			animation:@a;
+}
+
+.perspective(@a){
+	-webkit-perspective:@a;
+	   -moz-perspective:@a;
+		-ms-perspective:@a;
+		 -o-perspective:@a;
+			perspective:@a;
+}
+
+.border_box {
+	-webkit-box-sizing:border-box;
+	   -moz-box-sizing:border-box;
+		-ms-box-sizing:border-box;
+		 -o-box-sizing:border-box;
+			box-sizing:border-box;
+}
+
+.transform(@param){
+	-webkit-transform:@param;
+	   -moz-transform:@param;
+		-ms-transform:@param;
+		 -o-transform:@param;
+			transform:@param;
+}
+
+.fix3d {
+	-webkit-transform:translate3D(0, 0, 0); //fix 3d flashing
+}
+
+.border_box {
+	-webkit-box-sizing:border-box;
+	   -moz-box-sizing:border-box;
+		-ms-box-sizing:border-box;
+		 -o-box-sizing:border-box;
+			box-sizing:border-box;
+}
+
+.invert {
+	-webkit-filter:invert(100%);
+	   -moz-filter:invert(100%);
+		-ms-filter:invert(100%);
+		 -o-filter:invert(100%);
+			filter:invert(100%);
+}
+
+.animation(@a){
+	-webkit-animation:@a;
+	   -moz-animation:@a;
+		-ms-animation:@a;
+		 -o-animation:@a;
+			animation:@a;
+}
+
+.animation_delay(@a){
+	-webkit-animation-delay:@a;
+	   -moz-animation-delay:@a;
+		-ms-animation-delay:@a;
+		 -o-animation-delay:@a;
+			animation-delay:@a;
+}
+
+.transition_delay(@a){
+	-webkit-transition-delay:@a;
+	   -moz-transition-delay:@a;
+		-ms-transition-delay:@a;
+		 -o-transition-delay:@a;
+			transition-delay:@a;
+}
+
+
+.columns(@a){
+	-webkit-columns:@a;
+	   -moz-columns:@a;
+		-ms-columns:@a;
+		 -o-columns:@a;
+			columns:@a;
+}

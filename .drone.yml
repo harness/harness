@@ -1,26 +1,34 @@
-image: bradrydzewski/go:1.2
+image: bradrydzewski/go:1.3
+git:
+  path: github.com/drone/drone
 env:
   - GOROOT=/usr/local/go
-  - GOPATH=$PWD/Godeps/_workspace:/var/cache/drone
-  - PATH=$PWD/Godeps/_workspace/bin:/var/cache/drone/bin:$PATH
+  - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 script:
-  - sudo apt-get -y install libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
-  # $GOPATH/src/github.com/drone/drone must be this repo
-  - mkdir /var/cache/drone/src/github.com/drone
-  - ln -sf /var/cache/drone/src/github.com/Clever/drone /var/cache/drone/src/github.com/drone/drone
-  - make embed
-  - make build-dist
+  - sudo add-apt-repository ppa:git-core/ppa 1> /dev/null 2> /dev/null
+  - sudo apt-get update 1> /dev/null 2> /dev/null
+  - sudo apt-get update 1> /dev/null 2> /dev/null
+  - sudo apt-get -y install git zip libsqlite3-dev sqlite3 rpm 1> /dev/null 2> /dev/null
+  - gem install fpm
+  - rbenv rehash
+  - make docker
+  - make deps
   - make test
-  - make dpkg
+  - make test_postgres
+  - make test_mysql
+  - make packages
+services:
+  - postgres
+  - mysql
 publish:
-  github:
-    branch: master
-    script:
-      - make embed
-      - make release
-    artifacts:
-      - release
-    tag: v$(cat VERSION)
-    token: {{github_token}}
-    user: Clever
-    repo: drone
+  docker:
+    branch: upstream-master-with-mods
+    docker_host: $$docker_host
+    email: $$docker_email
+    username: $$docker_username
+    password: $$docker_password
+    image_name: clever/drone
+    registry_login: true
+    tags:
+      - $(git rev-parse --short HEAD)
+      - latest

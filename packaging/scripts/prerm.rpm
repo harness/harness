@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+if [ "$1" -eq 0 ] ; then
+  echo Stopping Drone
+  systemctl --no-reload disable drone || :
+  systemctl stop drone || :
+fi

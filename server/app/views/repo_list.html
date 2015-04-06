@@ -1,0 +1,42 @@
+<div class="toast" ng-if="msg != undefined">
+	<span ng-if="msg == 'already'">sync already in progress</span>
+	<span ng-if="msg == 'bad'">bad response</span>
+</div>
+
+<div id="repospage">
+	<nav>
+		<a href="/"><span class="fa fa-th"></span></a>
+		<a href="/">repositories</a>
+
+		<div class="options ng-scope">
+			<a class="pure-button pure-button-primary" ng-click="syncUser()" href="#">
+				<i class="fa fa-refresh"></i>
+				<span>Sync</span>
+			</a>
+		</div>
+	</nav>
+
+	<section>
+		<form class="pure-form search pure-g">
+			<input type="search" placeholder="FILTER" class="pure-u-1" id="search" ng-model="search" autofocus />
+		</form>
+
+		<a class="repo" ng-repeat="repo in repos | filter:search | orderBy: 'name' " ng-href="/{{ repo | fullPath }}">
+			<div class="pure-g">
+				<div class="pure-u-5-6">
+					<div>
+						<h4>{{ repo.name }}</h4>
+						<span class="url">{{ repo | fullPath }}</span>
+					</div>
+				</div>
+				<div class="pure-u-1-6">
+					<div>
+						<i class="fa fa-circle-o" ng-if="repo.active == false"></i>
+						<i class="fa fa-check-circle-o" ng-if="repo.active == true"></i>
+					</div>
+				</div>
+			</div>
+		</a>
+		
+	</section>
+</div>

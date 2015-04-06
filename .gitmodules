@@ -1,3 +1,0 @@
-[submodule "vendor/src/github.com/GeertJohan/go.rice"]
-	path = vendor/src/github.com/GeertJohan/go.rice
-	url = https://github.com/GeertJohan/go.rice.git

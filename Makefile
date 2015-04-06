@@ -1,112 +1,101 @@
-SELFPKG := github.com/drone/drone
-VERSION := $(shell cat VERSION)
 SHA := $(shell git rev-parse --short HEAD)
-BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
-PKGS := \
-build \
-build/buildfile \
-build/docker \
-build/dockerfile \
-build/proxy \
-build/repo \
-build/script \
-channel \
-database \
-database/encrypt \
-database/migrate/testing \
-database/testing \
-mail \
-model \
-plugin/deploy \
-plugin/publish \
-queue
-PKGS := $(addprefix github.com/drone/drone/pkg/,$(PKGS))
-.PHONY := test $(PKGS)
+VERSION := $(shell cat VERSION)
+ITTERATION := $(shell date +%s)
 
-all: embed build
-
-build:
-	go build -o bin/drone -ldflags "-X main.version $(VERSION)dev-$(SHA)" $(SELFPKG)/cmd/drone
-	go build -o bin/droned -ldflags "-X main.version $(VERSION)dev-$(SHA)" $(SELFPKG)/cmd/droned
-
-build-dist: godep
-	godep go build -o bin/drone -ldflags "-X main.version $(VERSION)-$(SHA)" $(SELFPKG)/cmd/drone
-	godep go build -o bin/droned -ldflags "-X main.version $(VERSION)-$(SHA)" $(SELFPKG)/cmd/droned
-
-bump-deps: deps vendor
+all: build
 
 deps:
-	go get -u -t -v ./...
+	go get github.com/GeertJohan/go.rice/rice
+	go get -t -v ./...
 
-vendor: godep
-	git submodule update --init --recursive
-	godep save ./...
+docker:
+	mkdir -p $$GOPATH/src/github.com/docker/docker
+	git clone --depth=1 --branch=v1.5.0 git://github.com/docker/docker.git $$GOPATH/src/github.com/docker/docker
 
+test:
+	@test -z "$(shell find . -name '*.go' | xargs gofmt -l)" || (echo "Need to run 'go fmt ./...'"; exit 1)
+	go vet ./...
+	go test -cover -short ./...
 
-# Embed static assets
-embed: js rice
-	cd cmd/droned   && rice embed
-	cd pkg/template && rice embed
+test_mysql:
+	mysql -P 3306 --protocol=tcp -u root -e 'create database if not exists test;'
+	TEST_DRIVER="mysql" TEST_DATASOURCE="root@tcp(127.0.0.1:3306)/test" go test -short github.com/drone/drone/server/datastore/database
+	mysql -P 3306 --protocol=tcp -u root -e 'drop database test;'
 
-js:
-	cd cmd/droned/assets && find js -name "*.js" ! -name '.*' ! -name "main.js" -exec cat {} \; > js/main.js
+test_postgres:
+	TEST_DRIVER="postgres" TEST_DATASOURCE="host=127.0.0.1 user=postgres dbname=postgres sslmode=disable" go test -short github.com/drone/drone/server/datastore/database
 
-test: $(PKGS)
-
-$(PKGS): godep
-	godep go test -v $@
+build:
+	mkdir -p packaging/output
+	mkdir -p packaging/root/usr/local/bin
+	go build -o packaging/root/usr/local/bin/drone  -ldflags "-X main.revision $(SHA) -X main.version $(VERSION)" github.com/drone/drone/cli
+	go build -o packaging/root/usr/local/bin/droned -ldflags "-X main.revision $(SHA) -X main.version $(VERSION)" github.com/drone/drone/server
 
 install:
-	cp deb/drone/etc/init/drone.conf /etc/init/drone.conf
-	test -f /etc/default/drone || cp deb/drone/etc/default/drone /etc/default/drone
-	cd bin && install -t /usr/local/bin drone
-	cd bin && install -t /usr/local/bin droned
-	mkdir -p /var/lib/drone
-
-clean: rice
-	cd cmd/droned   && rice clean
-	cd pkg/template && rice clean
-	rm -rf cmd/drone/drone
-	rm -rf cmd/droned/droned
-	rm -rf cmd/droned/drone.sqlite
-	rm -rf bin/drone
-	rm -rf bin/droned
-	rm -rf deb/drone.deb
-	rm -rf usr/local/bin/drone
-	rm -rf usr/local/bin/droned
-	rm -rf drone.sqlite
-	rm -rf /tmp/drone.sqlite
-	rm -rf build
-	rm -rf release
-
-# creates a debian package for drone
-# to install `sudo dpkg -i drone.deb`
-dpkg:
-	mkdir -p deb/drone/usr/local/bin
-	mkdir -p deb/drone/var/lib/drone
-	mkdir -p deb/drone/var/cache/drone
-	cp bin/drone  deb/drone/usr/local/bin
-	cp bin/droned deb/drone/usr/local/bin
-	-dpkg-deb --build deb/drone
+	install -t /usr/local/bin packaging/root/usr/local/bin/drone
+	install -t /usr/local/bin packaging/root/usr/local/bin/droned
 
 run:
-	bin/droned --port=":8080" --datasource="drone.sqlite"
+	@go run server/main.go --config=$$HOME/.drone/config.toml
 
-godep:
-	go get github.com/tools/godep
+clean:
+	find . -name "*.out" -delete
+	rm -rf packaging/output
+	rm -f packaging/root/usr/local/bin/drone
+	rm -f packaging/root/usr/local/bin/droned
 
-rice:
-	go install github.com/GeertJohan/go.rice/rice
+lessc:
+	lessc --clean-css server/app/styles/drone.less | autoprefixer > server/app/styles/drone.css
 
-BUILDS := build/drone-v$(VERSION)-linux-amd64
-COMPRESSED_BUILDS := $(BUILDS:%=%.tar.gz)
-RELEASE_ARTIFACTS := $(COMPRESSED_BUILDS:build/%=release/%)
-$(RELEASE_ARTIFACTS): release/% : build/%
-	mkdir -p release
-	cp $< $@
-build/drone-v$(VERSION)-linux-amd64:
-	GOARCH=amd64 GOOS=linux godep go build -o "$@/drone" -ldflags "-X main.version $(VERSION)" $(SELFPKG)/cmd/drone
-	GOARCH=amd64 GOOS=linux godep go build -o "$@/droned" -ldflags "-X main.version $(VERSION)" $(SELFPKG)/cmd/droned
-%.tar.gz: %
-	tar -C `dirname $<` -zcvf "$<.tar.gz" `basename $<`
-release: $(RELEASE_ARTIFACTS)
+packages: clean build embed deb rpm
+
+# embeds content in go source code so that it is compiled
+# and packaged inside the go binary file.
+embed:
+	rice --import-path="github.com/drone/drone/server" append --exec="packaging/root/usr/local/bin/droned"
+
+# creates a debian package for drone to install
+# `sudo dpkg -i drone.deb`
+deb:
+	fpm -s dir -t deb -n drone -v $(VERSION) -p packaging/output/drone.deb \
+		--deb-priority optional --category admin \
+		--force \
+		--iteration $(ITTERATION) \
+		--deb-compression bzip2 \
+	 	--after-install packaging/scripts/postinst.deb \
+	 	--before-remove packaging/scripts/prerm.deb \
+		--after-remove packaging/scripts/postrm.deb \
+		--url https://github.com/drone/drone \
+		--description "Drone continuous integration server" \
+		-m "Brad Rydzewski <brad@drone.io>" \
+		--license "Apache License 2.0" \
+		--vendor "drone.io" -a amd64 \
+		--config-files /etc/drone/drone.toml \
+		packaging/root/=/
+	cp packaging/output/drone.deb packaging/output/drone.deb.$(SHA)
+
+rpm:
+	fpm -s dir -t rpm -n drone -v $(VERSION) -p packaging/output/drone.rpm \
+		--rpm-compression bzip2 --rpm-os linux \
+		--force \
+		--iteration $(ITTERATION) \
+	 	--after-install packaging/scripts/postinst.rpm \
+	 	--before-remove packaging/scripts/prerm.rpm \
+		--after-remove packaging/scripts/postrm.rpm \
+		--url https://github.com/drone/drone \
+		--description "Drone continuous integration server" \
+		-m "Brad Rydzewski <brad@drone.io>" \
+		--license "Apache License 2.0" \
+		--vendor "drone.io" -a amd64 \
+		--config-files /etc/drone/drone.toml \
+		packaging/root/=/
+
+# deploys drone to a staging server. this requires the following
+# environment variables are set:
+#
+#   DRONE_STAGING_HOST -- the hostname or ip
+#   DRONE_STAGING_USER -- the username used to login
+#   DRONE_STAGING_KEY  -- the identity file path (~/.ssh/id_rsa)
+deploy:
+	scp -i $$DRONE_STAGING_KEY packaging/output/drone.deb $$DRONE_STAGING_USER@$$DRONE_STAGING_HOST:/tmp
+	ssh -i $$DRONE_STAGING_KEY $$DRONE_STAGING_USER@$$DRONE_STAGING_HOST -- dpkg -i /tmp/drone.deb

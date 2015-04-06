@@ -1,0 +1,106 @@
+<article id="repoconfpage">
+	<nav>
+		<a ng-href="/{{ repo | fullPath }}">
+			<span class="fa fa-arrow-left"></span>
+		</a>
+		<span>{{ repo.owner }}</span>
+		<span>/</span>
+		<a ng-href="/{{ repo | fullPath }}">{{ repo.name }}</a>
+		<span>/</span>
+		<a href="#">settings</a>
+	</nav>
+
+
+	<!-- this section is used to toggle builds and pull requests builds on and off -->
+	<section>
+		<div class="pure-g">
+			<div class="pure-u-1">
+				<div>
+					<h2>Build Flags</h2>
+					<div class="toggle">
+						<input type="checkbox" ng-model="repo.post_commits" id="post_commit" />
+						<label for="post_commit"></label>
+						<span>Enable Post Commit Hooks</span>
+					</div>
+
+					<div class="toggle">
+						<input type="checkbox" ng-model="repo.pull_requests" id="pull_requests" />
+						<label for="pull_requests"></label>
+						<span>Enable Pull Request Hooks</span>
+					</div>
+
+					<div class="toggle" ng-if="user.admin == true">
+						<input type="checkbox" ng-model="repo.privileged" id="privileged" />
+						<label for="privileged"></label>
+						<span>Enable Privileged mode</span>
+					</div>
+
+					<button ng-click="save()" class="pure-button pure-button-primary ladda-button expand-right" data-loading='{{ saving }}' ng-model="button" ng-disabled='saving'>
+						Save Flags
+					</button>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section  ng-if="user.admin == true">
+		<div class="pure-g">
+			<div class="pure-u-1">
+				<div>
+					<h2>Build Timeout</h2>
+					<div>
+						<input type="number" ng-model="repo.timeout" id="timeout" integer />
+						<span ng-if="repo.timeout > 0" class="seconds">Seconds</span>
+						<span ng-if="repo.timeout > 0" class="minutes">{{ repo.timeout / 60 | number:0 }} minutes</span>
+					</div>
+
+					<button ng-click="save()" class="pure-button pure-button-primary ladda-button expand-right" data-loading='{{ saving }}' ng-model="button" ng-disabled='saving'>
+						Save Timeout
+					</button>
+				</div>
+			</div>
+		</div>
+	</section>
+
+
+	<section>
+		<div class="pure-g">
+			<div class="pure-u-1">
+				<div>
+					<h2>Private Variables (YAML syntax)</h2>
+					<textarea class="params" ng-model="repo.params" placeholder="FOO: BAR"></textarea>
+					<button ng-click="save()" class="pure-button pure-button-primary ladda-button expand-right" data-loading='{{ saving }}' ng-model="button" ng-disabled='saving'>
+						Save Variables
+					</button>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- this section is used for generating the build status badge's url -->
+	<section>
+		<div class="pure-g">
+			<div class="pure-u-1">
+				<a ng-href="/{{ repo | fullPath }}" target="_blank" style="float:right;">
+					<img ng-src="/api/badge/{{ repo | fullPath }}/status.svg" />
+				</a>
+				<h2>Status Badge</h2>
+			</div>
+			<div class="pure-u-1">
+				<pre class="markdown">{{ repo | badgeMarkdown }}</pre>
+			</div>
+		</div>
+	</section>
+
+	<section ng-if="repo.public_key != '' ">
+		<div class="pure-g">
+			<div class="pure-u-1">
+				<div>
+					<h2>Public Key</h2>
+					<pre class="key">{{ repo.public_key }}</pre>
+				</div>
+			</div>
+		</div>
+	</section>
+
+</article>

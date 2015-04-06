@@ -1,0 +1,32 @@
+<!-- GITHUB && GITLAB -->
+<dd class="large" ng-if="repo.remote == 'gitlab.com' || repo.remote == 'github.com' || repo.remote == 'enterprise.github.com' ">
+	<strong>
+		commit 
+		<a href="{{ repo.url }}/commit/{{ commit.sha }}" >{{ commit.sha | shortHash}}</a> 
+		to <a href="{{ repo.url }}/tree/{{ commit.branch }}">{{ commit.branch }}</a> branch
+	</strong>
+</dd>
+<!-- /GITHUB && GITLAB -->
+<!-- BITBUCKET -->
+<dd class="large" ng-if="repo.remote == 'bitbucket.org' ">
+	<strong>
+		commit 
+		<a href="{{ repo.url }}/commits/{{ commit.sha }}" >{{ commit.sha | shortHash}}</a> 
+		to <a href="{{ repo.url }}/src/?at={{ commit.branch }}">{{ commit.branch }}</a> branch
+	</strong>
+</dd>
+<!-- /BITBUCKET -->
+<!-- GOGS -->
+<dd class="large" ng-if="repo.remote == 'gogs' ">
+	<strong>
+		commit 
+		<a href="{{ repo.url }}/commit/{{ commit.sha }}" >{{ commit.sha | shortHash}}</a> 
+		to <a href="{{ repo.url }}/src/{{ commit.branch }}">{{ commit.branch }}</a> branch
+	</strong>
+</dd>
+<!-- /GOGS -->
+<!-- STASH -->
+<dd class="large" ng-if="repo.remote != 'gitlab.com' && repo.remote != 'github.com' && repo.remote != 'enterprise.github.com' && repo.remote != 'bitbucket.org' && repo.remote != 'gogs' ">
+	<strong>commit <u>{{ commit.sha | shortHash}}</u> to <u>{{ commit.branch }}</u> branch</strong>
+</dd>
+<!-- /STASH -->

@@ -1,0 +1,55 @@
+#!/bin/sh
+
+set -e
+
+dist() {
+  lsb_release -i | awk '{print tolower($3)}' | sed -e 's/^ *//' -e 's/ *$//'
+}
+
+version() {
+  lsb_release -r | awk '{print $2}' | sed -e 's/^ *//' -e 's/ *$//' | awk -F. '{ print $1 }'
+}
+
+upstart() {
+  rm -f /etc/init/drone.conf
+}
+
+systemd() {
+  rm -f /lib/systemd/system/drone.service
+}
+
+sysv() {
+  update-rc.d -f drone remove
+  rm -f /etc/init.d/drone
+}
+
+validate_ver() {
+  echo "$(version) < $1" | bc
+}
+
+case "$(dist)" in
+  debian)
+    if [ "$(version)" -lt "8" ]; then
+      sysv
+    else
+      systemd
+    fi
+    ;;
+  ubuntu)
+    if [ "$(version)" -lt "15" ]; then
+      upstart
+    else
+      systemd
+    fi
+    ;;
+  *)
+    echo "\033[33m Please remove service manually \033[0m"
+    ;;
+esac
+
+# https://www.debian.org/doc/debian-policy/ch-maintainerscripts.html
+
+if [ "$1" = "purge" ] ; then
+  echo "Purging drone configuration"
+  rm -rf /etc/drone
+fi

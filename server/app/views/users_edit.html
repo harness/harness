@@ -1,0 +1,26 @@
+<article id="accountpage">
+	<nav>
+		<a href="/admin/users"><span class="fa fa-arrow-left"></span></a>
+		<a href="/admin/users">users</a>
+		<span class="separator">/</span>
+		<a ng-href="/admin/users/{{account.remote}}/{{ account.login }}">edit</a>
+	</nav>
+
+	<section class="pure-g profile">
+		<div class="pure-u-1-6">
+			<div>
+				<a href="https://gravatar.com/" target="_blank">
+					<img ng-src="{{ account.gravatar | gravatar }}" />
+				</a>
+			</div>
+		</div>
+		<div class="pure-u-5-6">
+			<div>
+				<h4>{{ account.login }} <small>{{ account.remote }}</small></h4>
+				<span class="fullname">{{ account.name }}</span>
+				<span class="email">{{ account.email }}</span>
+				<button ng-click="delete()" class="pure-button button-error">Delete Account</button>
+			</div>
+		</div>
+	</section>
+</article>

@@ -1,0 +1,16 @@
+<a class="burger" href="/" ng-if="user != undefined">
+	<i class="fa fa-bars"></i>
+</a>
+
+<a class="brand" href="/">Drone</a>
+
+<div class="user" ng-if="user != undefined">
+	<a href="/account/profile">
+		<img class="avatar" ng-src="{{ user.gravatar | gravatar }}" />
+		<span class="username">{{ user.login }}</span>
+	</a>
+</div>
+
+<div class="user" ng-if="user == undefined">
+	<a href="/login">Login</a>
+</div>

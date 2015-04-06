@@ -1,0 +1,36 @@
+<div id="userspage">
+	<nav>
+		<div class="options">
+			<a class="pure-button pure-button-primary" href="/admin/users/add">
+				<i class="fa fa fa-plus"></i>
+				<span>Register User</span>
+			</a>
+		</div>
+
+		<a href="/"><span class="fa fa-th"></span></a>
+		<a href="/">users</a>
+	</nav>
+
+	<section>
+		<form class="pure-form search pure-g">
+			<input type="search" placeholder="FILTER" class="pure-u-1" id="search" ng-model="search" autofocus />
+		</form>
+
+		<a class="user" ng-repeat="user in users | filter:search | orderBy: 'login' " ng-href="/admin/users/{{ user.remote }}/{{ user.login}}">
+			<div class="pure-g">
+				<div class="pure-u-1-8">
+					<div>
+						<img class="gravatar" ng-src="{{ user.gravatar | gravatar }}" />
+					</div>
+				</div>
+				<div class="pure-u-7-8">
+					<div>
+						<h4>{{ user.login }} <small>{{ user.remote }}</small></h4>
+						<span class="email">{{ user.email }}</span>
+					</div>
+				</div>
+			</div>
+		</a>
+		
+	</section>
+</div>

@@ -1,387 +1,239 @@
-Drone is a [Continuous Integration](http://en.wikipedia.org/wiki/Continuous_integration) platform built on [Docker](https://www.docker.io/)
+[![Build Status](http://test.drone.io/api/badge/github.com/drone/drone/status.svg?style=flat)](http://test.drone.io/github.com/drone/drone)
+[![GoDoc](https://godoc.org/github.com/drone/drone?status.svg)](https://godoc.org/github.com/drone/drone)
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/drone/drone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![Build Status](http://beta.drone.io/github.com/drone/drone/status.svg?branch=master)](http://beta.drone.io/github.com/drone/drone)
-[![GoDoc](https://godoc.org/github.com/drone/drone?status.png)](https://godoc.org/github.com/drone/drone)
+## Documentation
 
-### Getting Started
+* [Installation](http://readme.drone.io/setup/install/ubuntu/)
+* [User Guide](http://readme.drone.io/usage/overview/)
+* [API Reference](http://readme.drone.io/api/overview/)
 
-* [Installation](http://drone.readthedocs.org/en/latest/install.html)
-* [Configuration](http://drone.readthedocs.org/en/latest/setup.html)
-* [Getting Help](http://drone.readthedocs.org/en/latest/index.html#need-help)
+## System Requirements
 
-### Contributing
+* Docker
+* AUFS
 
-Interested in contributing? Great! Please read our [contributor guidelines](http://drone.readthedocs.org/en/latest/contribute.html#pull-requests).
 
----
+We highly recommend running Docker with the AUFS storage driver. You can verify Docker is using
+the AUFS storage driver with the following command `sudo docker info | grep Driver:`
 
-* [System Requirements](#system)
-* [Installation](#setup)
-* [Builds](#builds)
-* [Images](#images)
-* [Application Environment](#environment)
-* [Git Command Options](#git-command-options)
-* [Deployments](#deployments)
-* [Notifications](#notifications)
-* [Database Services](#databases)
-* [Caching](#caching)
-* [Params Injection](#params-injection)
-* [Wall display](#wall-display)
-* [Local development](#local-development)
-* [Documentation and References](#docs)
+## Upgrading
 
-### System
+If you are upgrading from `0.2` I would recommend waiting a few weeks for the master
+branch to stabilize. There was a huge amount of refactoring that destabilized the codebase
+and I'd hate for that to impact any real world installations.
 
-Drone is tested on the following versions of Ubuntu:
+If you still want to upgrade to `0.2` please know that the databases are not compatible and
+there is no automated migration due to some fundamental structural changes. You will need
+to start with a fresh instance.
 
-* Ubuntu Precise 12.04 (LTS) (64-bit)
-* Ubuntu Raring 13.04 (64 bit)
+## Installation
 
-Drone's only external dependency is the latest version of Docker (0.8)
+**This is project is alpha stage. Consider yourself warned**
 
-### Setup
-
-Drone is packaged and distributed as a debian file. You can download an install
-using the following commands:
+We have optimized the installation process for Ubuntu since that is what we test with internally.
+You can run the following commands to quickly download an install Drone on an Ubuntu machine.
 
 ```sh
-$ wget http://downloads.drone.io/latest/drone.deb
-$ sudo dpkg -i drone.deb
-$ sudo start drone
+# Ubuntu, Debian
+wget downloads.drone.io/master/drone.deb
+sudo dpkg -i drone.deb
+
+# CentOS, RedHat
+wget downloads.drone.io/master/drone.rpm
+sudo yum localinstall drone.rpm
 ```
 
-Once Drone is running (by default on :80) navigate to **http://localhost:80/install**
-and follow the steps in the setup wizard.
+## Database
 
-**IMPORTANT** You will also need a GitHub Client ID and Secret:
+By default, Drone will create a SQLite database. Drone also supports Postgres and MySQL
+databases. You can customize the database settings using the configuration options
+described in the **Setup** section.
 
-* Register a new application https://github.com/settings/applications
-* Set the homepage URL to http://$YOUR_IP_ADDRESS/
-* Set the callback URL to http://$YOUR_IP_ADDRESS/auth/login/github
-* Copy the Client ID and Secret into the Drone admin console http://localhost:80/account/admin/settings
+Below are some example configurations that you can use as reference:
 
-I'm working on a getting started video. Having issues with volume, but hopefully
-you can still get a feel for the steps:
+```toml
+# to use postgres
+[database]
+driver="postgres"
+datasource="host=127.0.0.1 user=postgres dbname=drone sslmode=disable"
 
-https://docs.google.com/file/d/0By8deR1ROz8memUxV0lTSGZPQUk
-
-**Using MySQL**
-
-By default, Drone use sqlite as its database storage. To use MySQL/MariaDB instead, use `-driver` flag
-and set it to `mysql`. You will need to set your DSN (`-datasource`) in this form: 
-```
-    user:password@tcp(hostname:port)/dbname?parseTime=true
-```
-Change it according to your database settings. The parseTime above is required since drone using
-`time.Time` to represents `TIMESTAMP` data. Please refer to [1] for more options on mysql driver.
-
-You may also need to tweak some innodb options, especially if you're using `utf8mb4` collation type.
-```
-    innodb_file_format = Barracuda
-    innodb_file_per_table = On
-    innodb_large_prefix = On
-```
-Please consult to the MySQL/MariaDB documentation for further information
-regarding large prefix for index column and dynamic row format (which is used in Drone).
-
-[1] https://github.com/go-sql-driver/mysql
-
-### Builds
-
-Drone use a **.drone.yml** configuration file in the root of your
-repository to run your build:
-
-```
-image: mischief/docker-golang
-env:
-  - GOPATH=/var/cache/drone
-script:
-  - go build
-  - go test -v
-services:
-  - redis
-notify:
-  email:
-    recipients:
-      - brad@drone.io
-      - burke@drone.io
+# to use mysql
+[database]
+driver="mysql"
+datasource="root@tcp(127.0.0.1:3306)/drone"
 ```
 
-### Images
+## Setup
 
-In the above example we used a custom Docker image from index.docker.io **mischief/docker-golang**
-
-Drone also provides official build images. These images are configured specifically for CI and
-have many common software packages pre-installed (git, xvfb, firefox, libsqlite, etc).
-
-Official Drone images are referenced in the **.drone.yml** by an alias:
+We are in the process of moving configuration out of the UI and into configuration
+files and/or environment variables (your choice which). If you prefer configuration files
+you can provide Drone with the path to your configuration file:
 
 ```sh
-image: go1.2   # same as bradrydzewski/go:1.2
+droned --config=/path/to/drone.toml
 ```
 
-Here is a list of our official images:
+The configuration file is in TOML format. If installed using the `drone.deb` file
+will be located in `/etc/drone/drone.toml`.
+
+You can find the current config of the master branch [here](https://github.com/drone/drone/blob/master/packaging/root/etc/drone/drone.toml).
+
+```toml
+
+[server]
+port=""
+
+[server.ssl]
+key=""
+cert=""
+
+[session]
+secret=""
+expires=""
+
+[database]
+driver=""
+datasource=""
+
+[github]
+client=""
+secret=""
+orgs=[]
+open=false
+
+[github_enterprise]
+client=""
+secret=""
+api=""
+url=""
+orgs=[]
+private_mode=false
+open=false
+
+[bitbucket]
+client=""
+secret=""
+open=false
+
+[gitlab]
+url=""
+client=""
+secret=""
+skip_verify=false
+open=false
+
+[gogs]
+url=""
+secret=""
+open=false
+
+[smtp]
+host=""
+port=""
+from=""
+user=""
+pass=""
+
+[docker]
+cert=""
+key=""
+
+[worker]
+nodes=[
+"unix:///var/run/docker.sock",
+"unix:///var/run/docker.sock"
+]
+
+```
+
+Or you can use environment variables
 
 ```sh
-# these two are base images. all Drone images are built on top of these
-# these are BIG (~3GB) so make sure you have a FAST internet connection
-docker pull bradrydzewski/ubuntu
-docker pull bradrydzewski/base
 
-# clojure images
-docker pull bradrydzewski/lein             # image: lein
+# custom http server settings
+export DRONE_SERVER_PORT=""
+export DRONE_SERVER_SSL_KEY=""
+export DRONE_SERVER_SSL_CERT=""
 
-# dart images
-docker pull bradrydzewski/dart:stable      # image: dart
+# session settings
+export DRONE_SESSION_SECRET=""
+export DRONE_SESSION_EXPIRES=""
 
-# erlang images
-docker pull bradrydzewski/erlang:R16B      # image: erlangR16B
-docker pull bradrydzewski/erlang:R16B02    # image: erlangR16B02
-docker pull bradrydzewski/erlang:R16B01    # image: erlangR16B01
+# custom database settings
+export DRONE_DATABASE_DRIVER=""
+export DRONE_DATABASE_DATASOURCE=""
 
-# gcc images (c/c++)
-docker pull bradrydzewski/gcc:4.6          # image: gcc4.6
-docker pull bradrydzewski/gcc:4.8          # image: gcc4.8
+# github configuration
+export DRONE_GITHUB_CLIENT=""
+export DRONE_GITHUB_SECRET=""
+export DRONE_GITHUB_OPEN=false
 
-# go images
-docker pull bradrydzewski/go:1.0           # image: go1
-docker pull bradrydzewski/go:1.1           # image: go1.1
-docker pull bradrydzewski/go:1.2           # image: go1.2
+# github enterprise configuration
+export DRONE_GITHUB_ENTERPRISE_CLIENT=""
+export DRONE_GITHUB_ENTERPRISE_SECRET=""
+export DRONE_GITHUB_ENTERPRISE_API=""
+export DRONE_GITHUB_ENTERPRISE_URL=""
+export DRONE_GITHUB_ENTERPRISE_PRIVATE_MODE=false
+export DRONE_GITHUB_ENTERPRISE_OPEN=false
 
-# haskell images
-docker pull bradrydzewski/haskell:7.4      # image: haskell
+# bitbucket configuration
+export DRONE_BITBUCKET_CLIENT=""
+export DRONE_BITBUCKET_SECRET=""
+export DRONE_BITBUCKET_OPEN=false
 
-# java and jdk images
-docker pull bradrydzewski/java:openjdk6    # image: openjdk6
-docker pull bradrydzewski/java:openjdk7    # image: openjdk7
-docker pull bradrydzewski/java:oraclejdk7  # image: oraclejdk7
-docker pull bradrydzewski/java:oraclejdk8  # image: oraclejdk8
 
-# node images
-docker pull bradrydzewski/node:0.10        # image node0.10
-docker pull bradrydzewski/node:0.8         # image node0.8
+# gitlab configuration
+export DRONE_GITLAB_URL=""
+export DRONE_GITLAB_CLIENT=""
+export DRONE_GITLAB_SECRET=""
+export DRONE_GITLAB_SKIP_VERIFY=false
+export DRONE_GITLAB_OPEN=false
 
-# php images
-docker pull bradrydzewski/php:5.5          # image: php5.5
-docker pull bradrydzewski/php:5.4          # image: php5.4
+# email configuration
+export DRONE_SMTP_HOST=""
+export DRONE_SMTP_PORT=""
+export DRONE_SMTP_FROM=""
+export DRONE_SMTP_USER=""
+export DRONE_SMTP_PASS=""
 
-# python images
-docker pull bradrydzewski/python:2.7       # image: python2.7
-docker pull bradrydzewski/python:3.2       # image: python3.2
-docker pull bradrydzewski/python:3.3       # image: python3.3
-docker pull bradrydzewski/python:pypy      # image: pypy
-
-# ruby images
-docker pull bradrydzewski/ruby:2.0.0       # image: ruby2.0.0
-docker pull bradrydzewski/ruby:1.9.3       # image: ruby1.9.3
-
-# scala images
-docker pull bradrydzewski/scala:2.10.3     # image: scala2.10.3
-docker pull bradrydzewski/scala:2.9.3      # image: scala2.9.3
-
+# worker nodes
+# these are optional. If not specified Drone will add
+# two worker nodes that connect to $DOCKER_HOST
+export DRONE_WORKER_NODES="tcp://0.0.0.0:2375,tcp://0.0.0.0:2375"
 ```
 
-### Environment
-
-Drone clones your repository into a Docker container
-at the following location:
-
-```
-/var/cache/drone/src/github.com/$owner/$name
-```
-
-Please take this into consideration when setting up your build commands, or
-if you are using a custom Docker image.
-
-### Git Command Options
-
-You can specify the `--depth` option of the `git clone` command (default value is `50`):
-
-```
-git:
-  depth: 1
-```
-
-### Deployments
-
-Drone can trigger a deployment at the successful completion of your build:
-
-```
-deploy:
-  heroku:
-    app: safe-island-6261
-
-publish:
-  s3:
-    acl: public-read
-    region: us-east-1
-    bucket: downloads.drone.io
-    access_key: C24526974F365C3B
-    secret_key: 2263c9751ed084a68df28fd2f658b127
-    source: /tmp/drone.deb
-    target: latest/
-
-  swift:
-    username: someuser
-    password: 030e39a1278a18828389b194b93211aa
-    auth_url: https://identity.api.rackspacecloud.com/v2.0
-    region: DFW
-    container: drone
-    source: /tmp/drone.deb
-    target: latest/drone.deb
-    branch: master
-
-```
-
-Drone currently has these `deploy` and `publish` plugins implemented (more to come!):
-
-**deploy**
-- [heroku](#docs)
-- [git](#docs)
-- [modulus](#docs)
-- [nodejitsu](#docs)
-- [ssh](#docs)
-- [tsuru](#docs)
-- [bash](#docs)
-
-**publish**
-- [Amazon s3](#docs)
-- [OpenStack Swift](#docs)
-- [PyPI](#docs)
-
-Publish plugins can be limited to a specific branch using the `branch` configuration
-as seen above in the `swift` example. If you do not specify a `branch` all branches
-will be published, with the exception of Pull Requests.
-
-### Notifications
-
-Drone can trigger email, hipchat and web hook notification at the beginning and
-completion of your build:
-
-```
-notify:
-  email:
-    recipients:
-      - brad@drone.io
-      - burke@drone.io
-
-  webhook:
-    on_success: true
-    on_failure: true
-    urls:
-      - http://my-deploy-hook.com
-
-  hipchat:
-    room: support
-    token: 3028700e5466d375
-    on_started: true
-    on_success: true
-    on_failure: true
-```
-
-### Databases
-
-Drone can launch database containers for your build:
-
-```
-services:
-  - cassandra
-  - couchdb
-  - couchdb:1.0
-  - couchdb:1.4
-  - couchdb:1.5
-  - elasticsearch
-  - elasticsearch:0.20
-  - elasticsearch:0.90
-  - neo4j
-  - neo4j:1.9
-  - mongodb
-  - mongodb:2.2
-  - mongodb:2.4
-  - mysql
-  - mysql:5.5
-  - postgres
-  - postgres:9.1
-  - rabbitmq
-  - rabbitmq:3.2
-  - redis
-  - riak
-  - zookeeper
-```
-
-If you omit the version, Drone will launch the latest version of the database. (For example, if you set `mongodb`, Drone will launch MongoDB 2.4.)
-
-You can also launch custom Docker containers using standard docker notation:
+Or a combination of the two:
 
 ```sh
-services:
-  - dockerfile/rethinkdb # same as dockerfile/rethinkdb:latest
-  - barnybug/elasticsearch:1.0.1
+DRONE_GITLAB_URL="https://gitlab.com" droned --config=/path/to/drone.conf
 ```
 
-**NOTE 1:** database and service containers are exposed over TCP connections and
-have their own local IP address. If the **socat** utility is installed inside your
-Docker image, Drone will automatically proxy localhost connections to the correct
-IP address.
+## GitHub
 
-**NOTE 2:** avoid running services that use the same ports. For example, don't specify
-multiple versions of Elastic Search since the port will already be in use.
+In order to setup with GitHub you'll need to register your local Drone installation
+with GitHub (or GitHub Enterprise). You can read more about registering an application here:
+https://github.com/settings/applications/new
 
-### Caching
+Below are example values when running Drone locally. If you are running Drone on a server
+you should replace `localhost` with your server hostname or address.
 
-Drone can persist directories between builds. This should be used for caching dependencies to
-decrease overall build time. Examples include your `.npm`, `.m2`, `bundler`, etc.
+Homepage URL:
 
 ```
-cache:
-  - /usr/local/bin/go/pkg
+http://localhost:8000/
 ```
 
-This will cache the directory relative to the root directory of your repository:
+Authorization callback URL:
 
 ```
-cache:
-  - .npm
+http://localhost:8000/api/auth/github.com
 ```
 
-**NOTE:** this is an alpha quality feature and still has some quirks. See https://github.com/drone/drone/issues/147
+## Build Configuration
 
-### Params Injection
+You will need to include a `.drone.yml` file in the root of your repository in order to
+configure a build. I'm still working on updated documentation, so in the meantime please refer
+to the `0.2` README to learn more about the `.drone.yml` format:
 
-You can inject params into .drone.yml.
-
-```
-notify:
-  hipchat:
-    room: {{hipchatRoom}}
-    token: {{hipchatToken}}
-    on_started: true
-    on_success: true
-    on_failure: true
-```
-
-![params-injection](https://f.cloud.github.com/assets/1583973/2161187/2905077e-94c3-11e3-8499-a3844682c8af.png)
-
-### Wall display
-
-A wall display for Drone is available as a separate service. See [Drone Wall](https://github.com/drone/drone-wall)
-for details.
-
-### Local development
-
-Local Drone setup for development is pretty straightforward.
-
-You will need to clone the repo, install Vagrant and run `vagrant up`.
-This command will download base Ubuntu image, setup the virtual machine and build Drone.
-
-Afterwards, you may `vagrant ssh` into the vagrant instance, where docker is already installed and ready to go.
-
-Once in the vagrant instance, run `make run`, the visit http://localhost:8080/install in your browser.
-
-The Makefile has other targets so check that out for more build, test, run configurations.
-
-### Docs
-
-* [drone.readthedocs.org](http://drone.readthedocs.org/) (Coming Soon)
-* [GoDoc](http://godoc.org/github.com/drone/drone)
-
+https://github.com/drone/drone/blob/v0.2.1/README.md#builds

@@ -1,0 +1,39 @@
+<article id="accountpage">
+	<nav>
+		<a href="/admin/users"><span class="fa fa-arrow-left"></span></a>
+		<a href="/admin/users">users</a>
+		<span class="separator">/</span>
+		<a href="/admin/users/add">register</a>
+	</nav>
+
+	<section class="pure-g profile">
+		<div class="pure-u-1-6">
+			<div>
+				<a href="https://gravatar.com/" target="_blank">
+					<img src="//www.gravatar.com/avatar/00000000000000000000000000000000?d=mm" />
+				</a>
+			</div>
+		</div>
+		<div class="pure-u-5-6">
+			<div>
+				<form class="pure-form pure-form-stacked">
+					<fieldset>
+						<label for="host">Service</label>
+						<select ng-model="host" name="host">
+							<option value="github.com">GitHub</option>
+							<option value="enterprise.github.com">GitHub Enterprise</option>
+							<option value="gitlab.com">GitLab</option>
+							<option value="bitbucket.org">Bitbucket</option>
+							<option value="stash.atlassian.com">Stash</option>
+							<option value="gogs">Gogs</option>
+						</select>
+
+						<label for="username">Username</label>
+						<input type="text" ng-model="name" name="username" placeholder="ex. octocat" />
+					</fieldset>
+				</form>
+				<button ng-click="create()" class="pure-button pure-button-primary">Register Account</button>
+			</div>
+		</div>
+	</section>
+</article>

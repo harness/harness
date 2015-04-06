@@ -1,0 +1,54 @@
+<div class="toast" ng-if="msg != undefined">
+	<span ng-if="msg == 'already'">sync already in progress</span>
+	<span ng-if="msg == 'bad'">bad response</span>
+</div>
+
+<article id="homepage">
+	<nav>
+		<a href="/"><span class="fa fa-th"></span></a>
+		<a href="/">dashboard</a>
+		<div class="options ng-scope">
+			<a class="pure-button pure-button-primary" ng-click="syncUser()" href="#">
+				<i class="fa fa-refresh"></i>
+				<span>Sync</span>
+			</a>
+		</div>
+	</nav>
+
+	<section ng-if="feed.length == 0">
+		<div>
+			<h1>Activate your Repositories<br/><i class="fa fa-long-arrow-down"></i></h1>
+		</div>
+	</section>
+
+	<section ng-if="feed.length > 0">
+		<div class="pure-g cards">
+			<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card" href="/{{ commit | fullPath }}" ng-repeat="commit in feed" data-status="{{ commit.status }}">
+				<div class="l-box">
+						<h2>{{ commit.owner }} <span class="separator">/</span> {{ commit.name }}</h2>
+						<em ng-if="commit.finished_at != 0">{{ commit.finished_at | fromNow }}</em>
+						<em ng-if="commit.finished_at == 0 && commit.started_at != 0">Started {{ commit.started_at | fromNow }}</em>
+						<em ng-if="commit.finished_at == 0 && commit.started_at == 0">Created {{ commit.created_at}}</em>
+						<img ng-src="{{ commit.gravatar | gravatar }}" />
+				</div>
+			</a>
+		</div>
+	</section>
+
+	<section>
+		<div class="pure-g cards">
+			<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card-inactive" href="/{{ repo | fullPath }}" ng-repeat="repo in repos | orderBy:'updated_at':true | filter: { active: false } | limitTo:3">
+				<div class="l-box">
+						<h2>{{ repo.owner }} <span class="separator">/</span> {{ repo.name }}</h2>
+						<em><span class="fa fa-plus"></span> Activate</em>
+				</div>
+			</a>
+			<a class="pure-u-1 pure-u-md-1-4 pure-u-lg-1-4 pure-u-xl-1-4 card card-browse-inactive" href="/account/repos">
+				<div class="l-box">
+					<span>Browse All</span><br>
+					<span class="fa fa-long-arrow-down"></span>
+				</div>
+			</a>
+		</div>
+	</section>
+</div>

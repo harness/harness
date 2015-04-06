@@ -1,0 +1,82 @@
+
+[server]
+port=":80"
+
+#####################################################################
+# SSL configuration
+#
+# [server.ssl]
+# key=""
+# cert=""
+
+#####################################################################
+# Assets configuration
+#
+# [server.assets]
+# folder=""
+
+# [session]
+# secret=""
+# expires=""
+
+#####################################################################
+# Database configuration, by default using SQLite3.
+# You can also use postgres and mysql. See the documentation
+# for more details.
+
+[database]
+driver="sqlite3"
+datasource="/var/lib/drone/drone.sqlite"
+
+# [github]
+# client=""
+# secret=""
+# orgs=[]
+# open=false
+
+# [github_enterprise]
+# client=""
+# secret=""
+# api=""
+# url=""
+# orgs=[]
+# private_mode=false
+# open=false
+
+# [bitbucket]
+# client=""
+# secret=""
+# open=false
+
+# [gitlab]
+# url=""
+# client=""
+# secret=""
+# skip_verify=false
+# open=false
+
+# [gogs]
+# url=""
+# secret=""
+# open=false
+
+#####################################################################
+# SMTP configuration for Drone. This is required if you plan
+# to send email notifications for build statuses.
+#
+# [smtp]
+# host=""
+# port=""
+# from=""
+# user=""
+# pass=""
+
+# [docker]
+# cert=""
+# key=""
+
+# [worker]
+# nodes=[
+#   "unix:///var/run/docker.sock",
+#   "unix:///var/run/docker.sock"
+# ]
