@@ -42,6 +42,7 @@ func main() {
 		NewWhoamiCommand(),
 		NewSetKeyCommand(),
 		NewDeleteCommand(),
+		NewSetParamsCommand(),
 	}
 
 	app.Run(os.Args)
