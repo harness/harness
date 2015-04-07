@@ -22,7 +22,6 @@ services:
   - mysql
 publish:
   docker:
-    branch: upstream-master-with-mods
     docker_host: $$docker_host
     email: $$docker_email
     username: $$docker_username
@@ -31,4 +30,6 @@ publish:
     registry_login: true
     tags:
       - $(git rev-parse --short HEAD)
-      #- latest
+      - latest
+    when:
+      branch: master
