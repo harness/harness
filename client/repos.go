@@ -54,6 +54,15 @@ func (s *RepoService) SetKey(host, owner, name, pub, priv string) error {
 	return s.run("PUT", path, &in, nil)
 }
 
+// PUT /api/repos/{host}/{owner}/{name}
+func (s *RepoService) SetParams(host, owner, name, params string) error {
+	var path = fmt.Sprintf("/api/repos/%s/%s/%s", host, owner, name)
+	var in = struct {
+		Params string `json:"params"`
+	}{params}
+	return s.run("PUT", path, &in, nil)
+}
+
 // GET /api/user/repos
 func (s *RepoService) List() ([]*model.Repo, error) {
 	var repos []*model.Repo

@@ -1,0 +1,17 @@
+run:
+  type: docker
+env:
+  - DRONE_SERVER_PORT
+  - DRONE_SESSION_SECRET
+  - DRONE_DATABASE_DRIVER
+  - DRONE_DATABASE_DATASOURCE
+  - DRONE_GITHUB_CLIENT
+  - DRONE_GITHUB_SECRET
+  - DRONE_GITHUB_OPEN
+  - DRONE_WORKER_NODES
+resources:
+  cpu: 1.0
+expose:                # list of ports to expose
+  - name: http         # identifier for this port mapping
+    port: 80           # port to map to inside the container
+    bind: 80           # port to bind the reverse proxy to (for the world)
