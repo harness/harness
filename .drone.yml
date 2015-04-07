@@ -5,41 +5,11 @@ env:
   - GOROOT=/usr/local/go
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 script:
-  - sudo add-apt-repository ppa:git-core/ppa 1> /dev/null 2> /dev/null
-  - sudo apt-get update 1> /dev/null 2> /dev/null
-  - sudo apt-get update 1> /dev/null 2> /dev/null
-  - sudo apt-get -y install git zip libsqlite3-dev sqlite3 rpm 1> /dev/null 2> /dev/null
-  - gem install fpm
-  - rbenv rehash
-  - make docker
   - make deps
+  - make
   - make test
-  - make test_postgres
-  - make test_mysql
-  - make packages
-services:
-  - postgres
-  - mysql
+
 notify:
   email:
     recipients:
       - brad@drone.io
-  webhook:
-    urls:
-      - https://webhooks.gitter.im/e/$$GITTER_KEY
-    on_started: false
-    on_success: true
-    on_failure: true
-
-publish:
-  s3:
-    acl: public-read
-    region: us-east-1
-    bucket: downloads.drone.io
-    access_key: $$AWS_KEY
-    secret_key: $$AWS_SECRET
-    source: packaging/output/
-    target: $DRONE_BRANCH/
-    recursive: true
-    when:
-      owner: drone

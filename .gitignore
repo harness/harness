@@ -1,4 +1,3 @@
-NOTES.txt
 drone.sublime-project
 drone.sublime-workspace
 .vagrant
@@ -11,8 +10,8 @@ drone.sublime-workspace
 *.rpm
 *.out
 *.rice-box.go
+*.db
+*.txt
+*.toml
 
-cli/cli
-client/client
-server/server
-packaging/root/usr/local
+drone
