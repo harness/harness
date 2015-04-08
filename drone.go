@@ -15,6 +15,7 @@ import (
 var path = flag.String("config", "drone.toml", "")
 
 func main() {
+	flag.Parse()
 
 	settings, err := settings.Parse(*path)
 	if err != nil {
