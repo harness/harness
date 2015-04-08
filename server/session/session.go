@@ -23,8 +23,12 @@ type session struct {
 }
 
 func New(s *settings.Session) Session {
-	secret := securecookie.GenerateRandomKey(32)
+	// TODO (bradrydzewski) hook up the Session.Expires
+	secret := s.Secret
 	expire := time.Hour * 72
+	if len(secret) == 0 {
+		securecookie.GenerateRandomKey(32)
+	}
 	return &session{
 		secret: secret,
 		expire: expire,
