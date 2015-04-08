@@ -73,7 +73,7 @@ type Server struct {
 // used to generate, validate and expire authentication
 // sessions.
 type Session struct {
-	Secret  string `toml:"secret"`
+	Secret  []byte `toml:"secret"`
 	Expires int64  `toml:"expires"`
 }
 
