@@ -1,0 +1,26 @@
+<h1>{{ user.login }}</h1>
+
+<a href="/">Back</a>
+
+<dl>
+	<dt>Login</dt>
+	<dd>{{ user.login }}</dd>
+
+	<dt>Full Name</dt>
+	<dd>{{ user.name }}</dd>
+
+	<dt>Created</dt>
+	<dd>{{ user.created_at | fromNow }}</dd>
+
+	<dt>Updated</dt>
+	<dd>{{ user.update_at | fromNow }}</dd>
+
+	<dt>Email</dt>
+	<dd>{{ user.email }}</dd>
+
+	<dt>Site Admin</dt>
+	<dd>{{ user.admin }}</dd>
+
+	<dt>Gravatar</dt>
+	<dd><img ng-src="{{ user.gravatar_id | gravatar }}"</dd>
+</dl>

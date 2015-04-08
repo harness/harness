@@ -1,0 +1,39 @@
+<!doctype html>
+<html ng-app="drone" lang="en">
+	<head>
+		<base href="/">
+		<meta charset="utf-8">
+		<meta name="author" content="Brad Rydzewski and the Drone Authors">
+		<meta name="viewport" content="width=device-width, user-scalable=no">
+		<link rel="shortcut icon" href="/favicon.ico"/>
+		<link href="https://fonts.googleapis.com/css?family=Droid+Sans+Mono" rel="stylesheet" type="text/css">
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,300,700" rel="stylesheet" type="text/css" />
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/octicons/2.1.2/octicons.min.css" rel="stylesheet" type="text/css" />
+	</head>
+	<body ng-cloak>
+		<main role="main" ng-view></main>
+
+		<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.8/angular.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.8/angular-route.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.8/angular-resource.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui/0.4.0/angular-ui.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.6.0/moment.min.js"></script>
+
+		<!-- main javascript application -->
+		<script src="/static/scripts/drone.js"></script>
+		<script src="/static/scripts/controllers/repos.js"></script>
+		<script src="/static/scripts/controllers/builds.js"></script>
+		<script src="/static/scripts/controllers/users.js"></script>
+
+		<script src="/static/scripts/services/repos.js"></script>
+		<script src="/static/scripts/services/builds.js"></script>
+		<script src="/static/scripts/services/tasks.js"></script>
+		<script src="/static/scripts/services/users.js"></script>
+		<script src="/static/scripts/services/logs.js"></script>
+
+		<script src="/static/scripts/filters/filter.js"></script>
+		<script src="/static/scripts/filters/gravatar.js"></script>
+		<script src="/static/scripts/filters/time.js"></script>
+
+	</body>
+</html>
