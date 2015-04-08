@@ -33,6 +33,8 @@ func PostUser(c *gin.Context) {
 	ds := ToDatastore(c)
 	name := c.Params.ByName("name")
 	user := &common.User{Login: name, Name: name}
+	user.Token = c.Request.FormValue("token")
+	user.Secret = c.Request.FormValue("secret")
 	if err := ds.InsertUser(user); err != nil {
 		c.Fail(400, err)
 	} else {
