@@ -11,6 +11,10 @@ type Service struct {
 	// may be github, gitlab, bitbucket, or gogs.
 	Name string `toml:"name"`
 
+	// Address defines the address (uri) of the plugin for
+	// communication via the net/rpc package.
+	Address string `toml:"address"`
+
 	// Base defines the base URL for the service. For example:
 	// https://github.com
 	// https://bitbucket.org
