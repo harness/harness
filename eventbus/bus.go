@@ -1,6 +1,6 @@
 package eventbus
 
-import "github.com/bradrydzewski/drone/common"
+import "github.com/drone/drone/common"
 
 type Event struct {
 	Build *common.Build
