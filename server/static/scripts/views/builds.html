@@ -1,0 +1,36 @@
+<h1>{{ repo.full_name }}</h1>
+
+<a href="/">Back</a>
+<a ng-href="/{{ repo.full_name }}/edit">Settings</a>
+
+<button ng-click="watch(repo)" ng-if="!repo.subscription || !repo.subscription.subscribed">Watch</button>
+<button ng-click="unwatch(repo)" ng-if="repo.subscription && repo.subscription.subscribed">Unwatch</button>
+
+<table border="1">
+	<thead>
+		<tr>
+			<th>Number</th>
+			<th>Status</th>
+			<th>Started</th>
+			<th>Duration</th>
+			<th>Type</th>
+			<th>Ref</th>
+			<th>Commit</th>
+			<th>Author</th>
+			<th>Message</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="build in builds">
+			<td><a ng-href="/{{ repo.full_name }}/{{ build.number }}">{{ build.number }}</a></td>
+			<td>{{ build.state }}</td>
+			<td>{{ build.started_at | fromNow }}</td>
+			<td>{{ build.duration | toDuration }}</td>
+			<td>{{ build.head_commit ? "push" : "pull request" }}</td>
+			<td>{{ build | ref }}</td>
+			<td>{{ build | sha }}</td>
+			<td>{{ build | author }}</td>
+			<td>{{ build | message }}</td>
+		</tr>
+	</tbody>
+</table>

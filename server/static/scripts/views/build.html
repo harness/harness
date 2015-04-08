@@ -1,0 +1,80 @@
+<h1>{{ repo.full_name }}/{{ build.number }}</h1>
+
+<a href="/{{ repo.full_name }}">Back</a>
+
+<dl>
+	<dt>Build State</dt>
+	<dd>{{ build.state }}</dd>
+
+	<dt>Started</dt>
+	<dd>{{ build.started_at | fromNow }}</dd>
+
+	<dt>Duration</dt>
+	<dd>{{ build.duration | toDuration }}</dd>
+
+	<dt>Type</dt>
+	<dd>{{ build.head_commit ? "push" : "pull request" }}</dd>
+
+	<dt>Ref</dt>
+	<dd>{{ build | ref }}</dd>
+
+	<dt>Sha</dt>
+	<dd>{{ build | sha }}</dd>
+
+	<dt>Author</dt>
+	<dd>{{ build | author }}</dd>
+
+	<dt>Message</dt>
+	<dd>{{ build | message }}</dd>
+</dl>
+
+<hr>
+
+<dl>
+	<dt>Task State</dt>
+	<dd>{{ task.state }}</dd>
+
+	<dt>Started</dt>
+	<dd>{{ task.started_at | fromNow }}</dd>
+
+	<dt>Finished</dt>
+	<dd>{{ task.finished_at | fromNow }}</dd>
+
+	<dt>Duration</dt>
+	<dd>{{ task.duration | toDuration }}</dd>
+
+	<dt>Exit Code</dt>
+	<dd>{{ task.exit_code }}</dd>
+
+	<dt>Matrix</dt>
+	<dd>{{ task.environment }}</dd>
+</dl>
+
+<hr>
+
+<pre>{{ logs }}</pre>
+
+<table border="1">
+	<thead>
+		<tr>
+			<th>Number</th>
+			<th>Status</th>
+			<th>Started</th>
+			<th>Finished</th>
+			<th>Duration</th>
+			<th>Exit Code</th>
+			<th>Matrix</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="task in tasks">
+			<td><a ng-href="{{ repo.full_name }}/{{ build.number }}/{{ task.number }}">{{ task.number }}</a></td>
+			<td>{{ task.state }}</td>
+			<td>{{ task.started_at | fromNow }}</td>
+			<td>{{ task.finished_at | fromNow }}</td>
+			<td>{{ task.duration | toDuration }}</td>
+			<td>{{ task.exit_code }}</td>
+			<td>{{ task.environment }}</td>
+		</tr>
+	</tbody>
+</table>

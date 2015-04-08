@@ -1,0 +1,42 @@
+<h1>{{ repo.full_name }} / Edit</h1>
+
+<a ng-href="/{{ repo.full_name }}">Back</a>
+
+<form>
+	<div>
+		<label>Disable Pushes</label>
+		<input type="checkbox" ng-model="repo.disabled" />
+	</div>
+	<div>
+		<label>Disable PRs</label>
+		<input type="checkbox" ng-model="repo.disabled_prs" />
+	</div>
+	<div>
+		<label>Disable Tags</label>
+		<input type="checkbox" ng-model="repo.disabled_tags" />
+	</div>
+
+	<div>
+		<label>Trusted</label>
+		<input type="checkbox" ng-model="repo.trusted" />
+	</div>
+	<div>
+		<label>Timeout</label>
+		<input type="number" ng-model="repo.timeout" />
+	</div>
+	<ul>
+		<li ng-repeat="(key, value) in repo.params">
+			<label>{{ key }}</label>
+			<input type="text" ng-model="repo.params[key]"/>
+			<button ng-click="deleteParam(key)">remove</button>
+		</li>
+		<li>
+			<input type="text" ng-model="param.key" />
+			<input type="text" ng-model="param.value" />
+			<button ng-click="addParam(param)">add</button>
+		</li>
+	</ul>
+
+	<button ng-click="save(repo)">Save</button>
+	<button ng-click="delete(repo.full_name)">Delete</button>
+</form>
