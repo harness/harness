@@ -37,8 +37,6 @@ type Keypair struct {
 // is displayed on the user dashboard and in the user
 // event feed.
 type Subscriber struct {
-	Login string `json:"login,omitempty"`
-
 	// Determines if notifications should be
 	// received from this repository.
 	Subscribed bool `json:"subscribed"`

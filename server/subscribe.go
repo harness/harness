@@ -6,41 +6,6 @@ import (
 	"github.com/drone/drone/common"
 )
 
-// GetSubscriber accepts a request to retrieve a repository
-// subscriber from the datastore for the given repository by
-// user Login.
-//
-//     GET /api/subscribers/:owner/:name/:login
-//
-func GetSubscriber(c *gin.Context) {
-	store := ToDatastore(c)
-	repo := ToRepo(c)
-	login := c.Params.ByName("login")
-	subsc, err := store.GetSubscriber(repo.FullName, login)
-	if err != nil {
-		c.Fail(404, err)
-	} else {
-		c.JSON(200, subsc)
-	}
-}
-
-// GetSubscribers accepts a request to retrieve a repository
-// watchers from the datastore for the given repository.
-//
-//     GET /api/subscribers/:owner/:name
-//
-func GetSubscribers(c *gin.Context) {
-	// store := ToDatastore(c)
-	// repo := ToRepo(c)
-	// subs, err := store.GetSubscribers(repo.FullName)
-	// if err != nil {
-	// 	c.Fail(404, err)
-	// } else {
-	// 	c.JSON(200, subs)
-	// }
-	c.Writer.WriteHeader(501)
-}
-
 // Unubscribe accapets a request to unsubscribe the
 // currently authenticated user to the repository.
 //
@@ -50,11 +15,9 @@ func Unsubscribe(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
 	user := ToUser(c)
-	sub, err := store.GetSubscriber(repo.FullName, user.Login)
-	if err != nil {
-		c.Fail(404, err)
-	}
-	err = store.DeleteSubscriber(repo.FullName, sub)
+
+	delete(user.Repos, repo.FullName)
+	err := store.UpdateUser(user)
 	if err != nil {
 		c.Fail(400, err)
 	} else {
@@ -71,14 +34,14 @@ func Subscribe(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
 	user := ToUser(c)
-	subscriber := &common.Subscriber{
-		Login:      user.Login,
-		Subscribed: true,
+	if user.Repos == nil {
+		user.Repos = map[string]struct{}{}
 	}
-	err := store.InsertSubscriber(repo.FullName, subscriber)
+	user.Repos[repo.FullName] = struct{}{}
+	err := store.UpdateUser(user)
 	if err != nil {
 		c.Fail(400, err)
 	} else {
-		c.JSON(200, subscriber)
+		c.JSON(200, &common.Subscriber{Subscribed: true})
 	}
 }
