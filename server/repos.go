@@ -60,9 +60,15 @@ func GetRepo(c *gin.Context) {
 	}
 	// if the user is authenticated, we should display
 	// if she is watching the current repository.
-	if user != nil {
-		data.Watch, _ = store.GetSubscriber(repo.FullName, user.Login)
+	if user == nil {
+		c.JSON(200, data)
+		return
 	}
+
+	// check to see if the user is subscribing to the repo
+	_, ok := user.Repos[repo.FullName]
+	data.Watch = &common.Subscriber{Subscribed: ok}
+
 	c.JSON(200, data)
 }
 
@@ -75,8 +81,8 @@ func GetRepo(c *gin.Context) {
 func PutRepo(c *gin.Context) {
 	store := ToDatastore(c)
 	perm := ToPerm(c)
-	u := ToUser(c)
-	r := ToRepo(c)
+	user := ToUser(c)
+	repo := ToRepo(c)
 
 	in := &repoReq{}
 	if !c.BindWith(in, binding.JSON) {
@@ -84,37 +90,41 @@ func PutRepo(c *gin.Context) {
 	}
 
 	if in.Params != nil {
-		err := store.UpsertRepoParams(r.FullName, *in.Params)
+		err := store.UpsertRepoParams(repo.FullName, *in.Params)
 		if err != nil {
 			c.Fail(400, err)
 			return
 		}
 	}
 	if in.Disabled != nil {
-		r.Disabled = *in.Disabled
+		repo.Disabled = *in.Disabled
 	}
 	if in.DisablePR != nil {
-		r.DisablePR = *in.DisablePR
+		repo.DisablePR = *in.DisablePR
 	}
 	if in.DisableTag != nil {
-		r.DisableTag = *in.DisableTag
+		repo.DisableTag = *in.DisableTag
 	}
-	if in.Trusted != nil && u.Admin {
-		r.Trusted = *in.Trusted
+	if in.Trusted != nil && user.Admin {
+		repo.Trusted = *in.Trusted
 	}
-	if in.Timeout != nil && u.Admin {
-		r.Timeout = *in.Timeout
+	if in.Timeout != nil && user.Admin {
+		repo.Timeout = *in.Timeout
 	}
 
-	err := store.UpdateRepo(r)
+	err := store.UpdateRepo(repo)
 	if err != nil {
 		c.Fail(400, err)
 		return
 	}
 
-	data := repoResp{r, perm, nil, nil}
-	data.Params, _ = store.GetRepoParams(r.FullName)
-	data.Watch, _ = store.GetSubscriber(r.FullName, u.Login)
+	data := repoResp{repo, perm, nil, nil}
+	data.Params, _ = store.GetRepoParams(repo.FullName)
+
+	// check to see if the user is subscribing to the repo
+	_, ok := user.Repos[repo.FullName]
+	data.Watch = &common.Subscriber{Subscribed: ok}
+
 	c.JSON(200, data)
 }
 
@@ -194,30 +204,38 @@ func PostRepo(c *gin.Context) {
 	keypair := &common.Keypair{}
 	keypair.Public = sshutil.MarshalPublicKey(&key.PublicKey)
 	keypair.Private = sshutil.MarshalPrivateKey(key)
+
+	// activate the repository before we make any
+	// local changes to the database.
+	err = remote.Activate(user, r, keypair, link)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+
+	// persist the repository
+	err = store.InsertRepo(user, r)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+
+	// persisty the repository key pair
 	err = store.UpsertRepoKeys(r.FullName, keypair)
 	if err != nil {
 		c.Fail(500, err)
 		return
 	}
 
-	// store the repository and the users' permissions
-	// in the datastore.
-	err = store.InsertRepo(user, r)
-	if err != nil {
-		c.Fail(500, err)
-		return
+	// subscribe the user to the repository
+	// if this fails we'll ignore, since the user
+	// can just go click the "watch" button in the
+	// user interface.
+	if user.Repos == nil {
+		user.Repos = map[string]struct{}{}
 	}
-	err = store.InsertSubscriber(r.FullName, &common.Subscriber{Subscribed: true})
-	if err != nil {
-		c.Fail(500, err)
-		return
-	}
-
-	err = remote.Activate(user, r, keypair, link)
-	if err != nil {
-		c.Fail(500, err)
-		return
-	}
+	user.Repos[r.FullName] = struct{}{}
+	store.UpdateUser(user)
 
 	c.JSON(200, r)
 }

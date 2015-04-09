@@ -79,7 +79,6 @@ func main() {
 		subscribers.Use(server.SetPerm())
 		subscribers.Use(server.CheckPull())
 
-		subscribers.GET("", server.GetSubscribers)
 		subscribers.POST("", server.Subscribe)
 		subscribers.DELETE("", server.Unsubscribe)
 	}

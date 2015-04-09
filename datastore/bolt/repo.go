@@ -84,25 +84,25 @@ func (db *DB) DeleteRepo(repo *common.Repo) error {
 	return t.Commit()
 }
 
-// GetSubscriber gets the subscriber by login for the
-// named repository.
-func (db *DB) GetSubscriber(repo string, login string) (*common.Subscriber, error) {
-	sub := &common.Subscriber{}
-	key := []byte(login + "/" + repo)
-	err := get(db, bucketUserRepos, key, sub)
-	return sub, err
-}
+// // GetSubscriber gets the subscriber by login for the
+// // named repository.
+// func (db *DB) GetSubscriber(repo string, login string) (*common.Subscriber, error) {
+// 	sub := &common.Subscriber{}
+// 	key := []byte(login + "/" + repo)
+// 	err := get(db, bucketUserRepos, key, sub)
+// 	return sub, err
+// }
 
-// InsertSubscriber inserts a subscriber for the named
-// repository.
-func (db *DB) InsertSubscriber(repo string, sub *common.Subscriber) error {
-	key := []byte(sub.Login + "/" + repo)
-	return insert(db, bucketUserRepos, key, sub)
-}
+// // InsertSubscriber inserts a subscriber for the named
+// // repository.
+// func (db *DB) InsertSubscriber(repo string, sub *common.Subscriber) error {
+// 	key := []byte(sub.Login + "/" + repo)
+// 	return insert(db, bucketUserRepos, key, sub)
+// }
 
-// DeleteSubscriber removes the subscriber by login for the
-// named repository.
-func (db *DB) DeleteSubscriber(repo string, sub *common.Subscriber) error {
-	key := []byte(sub.Login + "/" + repo)
-	return delete(db, bucketUserRepos, key)
-}
+// // DeleteSubscriber removes the subscriber by login for the
+// // named repository.
+// func (db *DB) DeleteSubscriber(repo string, sub *common.Subscriber) error {
+// 	key := []byte(sub.Login + "/" + repo)
+// 	return delete(db, bucketUserRepos, key)
+// }

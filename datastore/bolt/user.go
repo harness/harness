@@ -57,22 +57,27 @@ func (db *DB) GetUserRepos(login string) ([]*common.Repo, error) {
 	}
 	defer t.Rollback()
 	repos := []*common.Repo{}
+	user := &common.User{}
 
-	// get the index of user repos and unmarshal
-	// to a string array.
+	// get the user struct from the database
 	key := []byte(login)
-	raw := t.Bucket(bucketUserRepos).Get(key)
-	keys := [][]byte{}
-	err = decode(raw, &keys)
+	raw := t.Bucket(bucketUser).Get(key)
+	err = decode(raw, user)
 	if err != nil {
-		return repos, err
+		return nil, err
 	}
 
 	// for each item in the index, get the repository
 	// and append to the array
-	for _, key := range keys {
+	for repoName, _ := range user.Repos {
 		repo := &common.Repo{}
+		key = []byte(repoName)
 		raw = t.Bucket(bucketRepo).Get(key)
+		if raw == nil {
+			// this will happen when the repository has been deleted
+			// TODO we should probably upate the index in this case.
+			continue
+		}
 		err = decode(raw, repo)
 		if err != nil {
 			break
