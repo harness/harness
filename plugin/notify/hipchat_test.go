@@ -3,15 +3,14 @@ package notify
 import (
 	"testing"
 
-	"github.com/andybons/hipchat"
 	"github.com/drone/drone/shared/model"
 )
 
 type MockHipchatClient struct {
-	Request hipchat.MessageRequest
+	Request HipchatMessageRequest
 }
 
-func (c *MockHipchatClient) PostMessage(req hipchat.MessageRequest) error {
+func (c *MockHipchatClient) PostMessage(req HipchatMessageRequest) error {
 	c.Request = req
 	return nil
 }
@@ -49,13 +48,12 @@ func Test_SendStarted(t *testing.T) {
 	request.Commit.Status = "Started"
 
 	subject.SendWithClient(client, request)
-	expected := hipchat.MessageRequest{
-		RoomId:        "SampleRoom",
-		From:          "Drone",
-		Message:       "Building <a href=\"http://examplehost.com/examplegit.com/owner/repo/example/abc\">owner/repo#abc</a> (example) by Test User <br> - Test Commit",
-		Color:         hipchat.ColorYellow,
-		MessageFormat: hipchat.FormatHTML,
-		Notify:        false,
+	expected := HipchatMessageRequest{
+		RoomId:    "SampleRoom",
+		AuthToken: "foo",
+		Color:     "yellow",
+		Message:   "Building <a href=\"http://examplehost.com/examplegit.com/owner/repo/example/abc\">owner/repo#abc</a> (example) by Test User <br> - Test Commit",
+		Notify:    false,
 	}
 
 	if client.Request != expected {
@@ -67,13 +65,12 @@ func Test_SendSuccess(t *testing.T) {
 	request.Commit.Status = "Success"
 
 	subject.SendWithClient(client, request)
-	expected := hipchat.MessageRequest{
-		RoomId:        "SampleRoom",
-		From:          "Drone",
-		Message:       "Success <a href=\"http://examplehost.com/examplegit.com/owner/repo/example/abc\">owner/repo#abc</a> (example) by Test User",
-		Color:         hipchat.ColorGreen,
-		MessageFormat: hipchat.FormatHTML,
-		Notify:        false,
+	expected := HipchatMessageRequest{
+		RoomId:    "SampleRoom",
+		AuthToken: "foo",
+		Color:     "green",
+		Message:   "Success <a href=\"http://examplehost.com/examplegit.com/owner/repo/example/abc\">owner/repo#abc</a> (example) by Test User",
+		Notify:    false,
 	}
 
 	if client.Request != expected {
@@ -85,13 +82,12 @@ func Test_SendFailure(t *testing.T) {
 	request.Commit.Status = "Failure"
 
 	subject.SendWithClient(client, request)
-	expected := hipchat.MessageRequest{
-		RoomId:        "SampleRoom",
-		From:          "Drone",
-		Message:       "Failed <a href=\"http://examplehost.com/examplegit.com/owner/repo/example/abc\">owner/repo#abc</a> (example) by Test User",
-		Color:         hipchat.ColorRed,
-		MessageFormat: hipchat.FormatHTML,
-		Notify:        true,
+	expected := HipchatMessageRequest{
+		RoomId:    "SampleRoom",
+		AuthToken: "foo",
+		Color:     "red",
+		Message:   "Failed <a href=\"http://examplehost.com/examplegit.com/owner/repo/example/abc\">owner/repo#abc</a> (example) by Test User",
+		Notify:    true,
 	}
 
 	if client.Request != expected {
