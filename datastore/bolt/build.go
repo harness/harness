@@ -2,6 +2,7 @@ package bolt
 
 import (
 	"bytes"
+	"encoding/binary"
 	"strconv"
 	"time"
 
@@ -67,10 +68,49 @@ func (db *DB) GetBuildStatusList(repo string, build int) ([]*common.Status, erro
 
 // InsertBuild inserts a new build for the named repository
 func (db *DB) InsertBuild(repo string, build *common.Build) error {
-	// TODO(bradrydzewski) use the `bucketBuildSeq` to increment the
-	//                     sequence for the build and set the build number.
-	key := []byte(repo + "/" + strconv.Itoa(build.Number))
-	return update(db, bucketBuild, key, build)
+	var seqno int
+
+	t, err := db.Begin(true)
+	if err != nil {
+		return err
+	}
+	key := []byte(repo)
+	raw := t.Bucket(bucketBuildSeq).Get(key)
+	if raw != nil {
+		// convert our raw to an integer value
+		seqno = int(binary.LittleEndian.Uint32(raw))
+	}
+
+	// increment the seqno, if no record was found, this starts us at 1
+	seqno += 1
+
+	// convert our new seqno back to raw value
+	raw = make([]byte, 4) // TODO: replace magic number 4 (uint32)
+	binary.LittleEndian.PutUint32(raw, uint32(seqno))
+	err = t.Bucket(bucketBuildSeq).Put(key, raw)
+	if err != nil {
+		t.Rollback()
+		return err
+	}
+
+	// fill out build structure
+	build.Number = seqno
+	build.Created = time.Now().UTC().Unix()
+
+	key = []byte(repo + "/" + strconv.Itoa(build.Number))
+	raw, err = encode(build)
+	if err != nil {
+		t.Rollback()
+		return err
+	}
+
+	err = t.Bucket(bucketBuild).Put(key, raw)
+	if err != nil {
+		t.Rollback()
+		return err
+	}
+
+	return t.Commit()
 }
 
 // InsertBuildStatus inserts a new build status for the
