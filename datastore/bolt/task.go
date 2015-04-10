@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/drone/drone/common"
+	"github.com/boltdb/bolt"
 )
 
 // GetTask gets the task at index N for the named
@@ -11,7 +12,9 @@ import (
 func (db *DB) GetTask(repo string, build int, task int) (*common.Task, error) {
 	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + strconv.Itoa(task))
 	task_ := &common.Task{}
-	err := get(db, bucketBuildTasks, key, task_)
+	err := db.View(func (t *bolt.Tx) error {
+		return get(t, bucketBuildTasks, key, task_)
+	})
 	return task_, err
 }
 
@@ -19,7 +22,14 @@ func (db *DB) GetTask(repo string, build int, task int) (*common.Task, error) {
 // the named repository and build number.
 func (db *DB) GetTaskLogs(repo string, build int, task int) ([]byte, error) {
 	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + strconv.Itoa(task))
-	log, err := raw(db, bucketBuildLogs, key)
+
+	var log []byte
+	err := db.View(func (t *bolt.Tx) error {
+		var err error
+		log, err = raw(t, bucketBuildLogs, key)
+		return err
+	})
+
 	return log, err
 }
 
@@ -62,7 +72,9 @@ func (db *DB) GetTaskList(repo string, build int) ([]*common.Task, error) {
 // repository and build number.
 func (db *DB) UpsertTask(repo string, build int, task *common.Task) error {
 	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + strconv.Itoa(task.Number))
-	return update(db, bucketBuildTasks, key, task)
+	return db.Update(func (t *bolt.Tx) error {
+		return update(t, bucketBuildTasks, key, task)
+	})
 }
 
 // UpsertTaskLogs inserts or updates a task logs for the
