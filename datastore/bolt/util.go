@@ -1,6 +1,9 @@
 package bolt
 
-import "github.com/youtube/vitess/go/bson"
+import (
+	"github.com/youtube/vitess/go/bson"
+	"github.com/boltdb/bolt"
+)
 
 func encode(v interface{}) ([]byte, error) {
 	return bson.Marshal(v)
@@ -10,12 +13,7 @@ func decode(raw []byte, v interface{}) error {
 	return bson.Unmarshal(raw, v)
 }
 
-func get(db *DB, bucket, key []byte, v interface{}) error {
-	t, err := db.Begin(false)
-	if err != nil {
-		return err
-	}
-	defer t.Rollback()
+func get(t *bolt.Tx, bucket, key []byte, v interface{}) error {
 	raw := t.Bucket(bucket).Get(key)
 	if raw == nil {
 		return ErrKeyNotFound
@@ -23,12 +21,7 @@ func get(db *DB, bucket, key []byte, v interface{}) error {
 	return bson.Unmarshal(raw, v)
 }
 
-func raw(db *DB, bucket, key []byte) ([]byte, error) {
-	t, err := db.Begin(false)
-	if err != nil {
-		return nil, err
-	}
-	defer t.Rollback()
+func raw(t *bolt.Tx, bucket, key []byte) ([]byte, error) {
 	raw := t.Bucket(bucket).Get(key)
 	if raw == nil {
 		return nil, ErrKeyNotFound
@@ -36,11 +29,7 @@ func raw(db *DB, bucket, key []byte) ([]byte, error) {
 	return raw, nil
 }
 
-func update(db *DB, bucket, key []byte, v interface{}) error {
-	t, err := db.Begin(true)
-	if err != nil {
-		return err
-	}
+func update(t *bolt.Tx, bucket, key []byte, v interface{}) error {
 	raw, err := encode(v)
 	if err != nil {
 		t.Rollback()
@@ -48,17 +37,12 @@ func update(db *DB, bucket, key []byte, v interface{}) error {
 	}
 	err = t.Bucket(bucket).Put(key, raw)
 	if err != nil {
-		t.Rollback()
 		return err
 	}
-	return t.Commit()
+	return nil
 }
 
-func insert(db *DB, bucket, key []byte, v interface{}) error {
-	t, err := db.Begin(true)
-	if err != nil {
-		return err
-	}
+func insert(t *bolt.Tx, bucket, key []byte, v interface{}) error {
 	raw, err := encode(v)
 	if err != nil {
 		t.Rollback()
@@ -67,26 +51,19 @@ func insert(db *DB, bucket, key []byte, v interface{}) error {
 	// verify the key does not already exists
 	// in the bucket. If exists, fail
 	if t.Bucket(bucket).Get(key) != nil {
-		t.Rollback()
 		return ErrKeyExists
 	}
 	err = t.Bucket(bucket).Put(key, raw)
 	if err != nil {
-		t.Rollback()
 		return err
 	}
-	return t.Commit()
+	return nil
 }
 
-func delete(db *DB, bucket, key []byte) error {
-	t, err := db.Begin(true)
+func delete(t *bolt.Tx, bucket, key []byte) error {
+	err := t.Bucket(bucket).Delete(key)
 	if err != nil {
 		return err
 	}
-	err = t.Bucket(bucket).Delete(key)
-	if err != nil {
-		t.Rollback()
-		return err
-	}
-	return t.Commit()
+	return nil
 }

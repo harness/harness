@@ -15,7 +15,11 @@ import (
 func (db *DB) GetBuild(repo string, build int) (*common.Build, error) {
 	build_ := &common.Build{}
 	key := []byte(repo + "/" + strconv.Itoa(build))
-	err := get(db, bucketBuild, key, build_)
+
+	err := db.View(func(t *bolt.Tx) error {
+		return get(t, bucketBuild, key, build_)
+	})
+
 	return build_, err
 }
 
@@ -41,7 +45,11 @@ func (db *DB) GetBuildLast(repo string) (*common.Build, error) {
 func (db *DB) GetBuildStatus(repo string, build int, status string) (*common.Status, error) {
 	status_ := &common.Status{}
 	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + status)
-	err := update(db, bucketBuildStatus, key, status)
+
+	err := db.Update(func(t *bolt.Tx) error {
+		return update(t, bucketBuildStatus, key, status)
+	})
+
 	return status_, err
 }
 
@@ -68,49 +76,36 @@ func (db *DB) GetBuildStatusList(repo string, build int) ([]*common.Status, erro
 
 // InsertBuild inserts a new build for the named repository
 func (db *DB) InsertBuild(repo string, build *common.Build) error {
-	var seqno int
-
-	t, err := db.Begin(true)
-	if err != nil {
-		return err
-	}
 	key := []byte(repo)
-	raw := t.Bucket(bucketBuildSeq).Get(key)
-	if raw != nil {
-		// convert our raw to an integer value
-		seqno = int(binary.LittleEndian.Uint32(raw))
-	}
 
-	// increment the seqno, if no record was found, this starts us at 1
-	seqno += 1
+	return db.Update(func (t *bolt.Tx) error {
+		raw, err := raw(t, bucketBuildSeq, key)
 
-	// convert our new seqno back to raw value
-	raw = make([]byte, 4) // TODO: replace magic number 4 (uint32)
-	binary.LittleEndian.PutUint32(raw, uint32(seqno))
-	err = t.Bucket(bucketBuildSeq).Put(key, raw)
-	if err != nil {
-		t.Rollback()
-		return err
-	}
+		var next_seq uint32
+		switch err {
+			case ErrKeyNotFound:
+				next_seq = 1
+			case nil:
+				next_seq = 1 + binary.LittleEndian.Uint32(raw)
+			default:
+				return err
+		}
 
-	// fill out build structure
-	build.Number = seqno
-	build.Created = time.Now().UTC().Unix()
+		// covert our seqno to raw value
+		raw = make([]byte, 4) // TODO(benschumacher) replace magic number 4 (uint32)
+		binary.LittleEndian.PutUint32(raw, next_seq)
+		err = t.Bucket(bucketBuildSeq).Put(key, raw)
+		if err != nil {
+			return err
+		}
 
-	key = []byte(repo + "/" + strconv.Itoa(build.Number))
-	raw, err = encode(build)
-	if err != nil {
-		t.Rollback()
-		return err
-	}
+		// fill out the build structure
+		build.Number = int(next_seq)
+		build.Created = time.Now().UTC().Unix()
 
-	err = t.Bucket(bucketBuild).Put(key, raw)
-	if err != nil {
-		t.Rollback()
-		return err
-	}
-
-	return t.Commit()
+		key = []byte(repo + "/" + strconv.Itoa(build.Number))
+		return insert(t, bucketBuild, key, build)
+	})
 }
 
 // InsertBuildStatus inserts a new build status for the
@@ -118,7 +113,10 @@ func (db *DB) InsertBuild(repo string, build *common.Build) error {
 // exists an error is returned.
 func (db *DB) InsertBuildStatus(repo string, build int, status *common.Status) error {
 	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + status.Context)
-	return update(db, bucketBuildStatus, key, status)
+
+	return db.Update(func(t *bolt.Tx) error {
+		return update(t, bucketBuildStatus, key, status)
+	})
 }
 
 // UpdateBuild updates an existing build for the named
@@ -127,5 +125,8 @@ func (db *DB) InsertBuildStatus(repo string, build int, status *common.Status) e
 func (db *DB) UpdateBuild(repo string, build *common.Build) error {
 	key := []byte(repo + "/" + strconv.Itoa(build.Number))
 	build.Updated = time.Now().UTC().Unix()
-	return update(db, bucketBuild, key, build)
+
+	return db.Update(func(t *bolt.Tx) error {
+		return update(t, bucketBuild, key, build)
+	})
 }
