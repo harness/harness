@@ -34,7 +34,7 @@ func NewClient(uri, token string, skipVerify bool) *github.Client {
 	return c
 }
 
-// GetUserEmail is a heper function that retrieves the currently
+// GetUserEmail is a helper function that retrieves the currently
 // authenticated user from GitHub + Email address.
 func GetUserEmail(client *github.Client) (*github.User, error) {
 	user, _, err := client.Users.Get("")
@@ -157,7 +157,7 @@ func GetOrgs(client *github.Client) ([]github.Organization, error) {
 	return orgs, nil
 }
 
-// GetHook is a heper function that retrieves a hook by
+// GetHook is a helper function that retrieves a hook by
 // hostname. To do this, it will retrieve a list of all hooks
 // and iterate through the list.
 func GetHook(client *github.Client, owner, name, url string) (*github.Hook, error) {
@@ -183,7 +183,7 @@ func DeleteHook(client *github.Client, owner, name, url string) error {
 	return err
 }
 
-// CreateHook is a heper function that creates a post-commit hook
+// CreateHook is a helper function that creates a post-commit hook
 // for the specified repository.
 func CreateHook(client *github.Client, owner, name, url string) (*github.Hook, error) {
 	var hook = new(github.Hook)
@@ -196,7 +196,7 @@ func CreateHook(client *github.Client, owner, name, url string) (*github.Hook, e
 	return created, err
 }
 
-// CreateUpdateHook is a heper function that creates a post-commit hook
+// CreateUpdateHook is a helper function that creates a post-commit hook
 // for the specified repository if it does not already exist, otherwise
 // it updates the existing hook
 func CreateUpdateHook(client *github.Client, owner, name, url string) (*github.Hook, error) {
@@ -214,7 +214,7 @@ func CreateUpdateHook(client *github.Client, owner, name, url string) (*github.H
 	return CreateHook(client, owner, name, url)
 }
 
-// GetKey is a heper function that retrieves a public Key by
+// GetKey is a helper function that retrieves a public Key by
 // title. To do this, it will retrieve a list of all keys
 // and iterate through the list.
 func GetKey(client *github.Client, owner, name, title string) (*github.Key, error) {
@@ -275,7 +275,7 @@ func CreateUpdateKey(client *github.Client, owner, name, title, key string) (*gi
 	return CreateKey(client, owner, name, title, key)
 }
 
-// GetFile is a heper function that retrieves a file from
+// GetFile is a helper function that retrieves a file from
 // GitHub and returns its contents in byte array format.
 func GetFile(client *github.Client, owner, name, path, ref string) ([]byte, error) {
 	var opts = new(github.RepositoryContentGetOptions)
