@@ -4,13 +4,18 @@ import (
 	"time"
 
 	"github.com/drone/drone/common"
+	"github.com/boltdb/bolt"
 )
 
 // GetUser gets a user by user login.
 func (db *DB) GetUser(login string) (*common.User, error) {
 	user := &common.User{}
 	key := []byte(login)
-	err := get(db, bucketUser, key, user)
+
+	err := db.View(func (t *bolt.Tx) error {
+		return get(t, bucketUser, key, user)
+	})
+
 	return user, err
 }
 
@@ -120,7 +125,10 @@ func (db *DB) GetUserList() ([]*common.User, error) {
 func (db *DB) UpdateUser(user *common.User) error {
 	key := []byte(user.Login)
 	user.Updated = time.Now().UTC().Unix()
-	return update(db, bucketUser, key, user)
+
+	return db.Update(func (t *bolt.Tx) error {
+		return update(t, bucketUser, key, user)
+	})
 }
 
 // InsertUser inserts a new user into the datastore. If
@@ -129,7 +137,10 @@ func (db *DB) InsertUser(user *common.User) error {
 	key := []byte(user.Login)
 	user.Created = time.Now().UTC().Unix()
 	user.Updated = time.Now().UTC().Unix()
-	return insert(db, bucketUser, key, user)
+
+	return db.Update(func (t *bolt.Tx) error {
+		return insert(t, bucketUser, key, user)
+	})
 }
 
 // DeleteUser deletes the user.
@@ -137,5 +148,8 @@ func (db *DB) DeleteUser(user *common.User) error {
 	key := []byte(user.Login)
 	// TODO(bradrydzewski) delete user subscriptions
 	// TODO(bradrydzewski) delete user tokens
-	return delete(db, bucketUser, key)
+
+	return db.Update(func (t *bolt.Tx) error {
+		return delete(t, bucketUser, key)
+	})
 }

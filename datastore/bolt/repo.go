@@ -4,13 +4,18 @@ import (
 	"time"
 
 	"github.com/drone/drone/common"
+	"github.com/boltdb/bolt"
 )
 
 // GetRepo gets the repository by name.
 func (db *DB) GetRepo(repo string) (*common.Repo, error) {
 	repo_ := &common.Repo{}
 	key := []byte(repo)
-	err := get(db, bucketRepo, key, repo_)
+
+	err := db.View(func (t *bolt.Tx) error {
+		return get(t, bucketRepo, key, repo_)
+	})
+
 	return repo_, err
 }
 
@@ -19,7 +24,11 @@ func (db *DB) GetRepo(repo string) (*common.Repo, error) {
 func (db *DB) GetRepoParams(repo string) (map[string]string, error) {
 	params := map[string]string{}
 	key := []byte(repo)
-	err := get(db, bucketRepoParams, key, &params)
+
+	err := db.View(func (t *bolt.Tx) error {
+		return get(t, bucketRepoParams, key, &params)
+	})
+
 	return params, err
 }
 
@@ -28,7 +37,11 @@ func (db *DB) GetRepoParams(repo string) (map[string]string, error) {
 func (db *DB) GetRepoKeys(repo string) (*common.Keypair, error) {
 	keypair := &common.Keypair{}
 	key := []byte(repo)
-	err := get(db, bucketRepoKeys, key, keypair)
+
+	err := db.View(func (t *bolt.Tx) error {
+		return get(t, bucketRepoKeys, key, keypair)
+	})
+
 	return keypair, err
 }
 
@@ -37,7 +50,10 @@ func (db *DB) GetRepoKeys(repo string) (*common.Keypair, error) {
 func (db *DB) UpdateRepo(repo *common.Repo) error {
 	key := []byte(repo.FullName)
 	repo.Updated = time.Now().UTC().Unix()
-	return update(db, bucketRepo, key, repo)
+
+	return db.Update(func (t *bolt.Tx) error {
+		return update(t, bucketRepo, key, repo)
+	})
 }
 
 // InsertRepo inserts a repository in the datastore and
@@ -46,27 +62,38 @@ func (db *DB) InsertRepo(user *common.User, repo *common.Repo) error {
 	key := []byte(repo.FullName)
 	repo.Created = time.Now().UTC().Unix()
 	repo.Updated = time.Now().UTC().Unix()
-	// TODO(bradrydzewski) add repo to user index
-	// TODO(bradrydzewski) add user to repo index
-	return insert(db, bucketRepo, key, repo)
+
+	return db.Update(func (t *bolt.Tx) error {
+		// TODO(bradrydzewski) add repo to user index
+		// TODO(bradrydzewski) add user to repo index
+		return insert(t, bucketRepo, key, repo)
+	})
 }
 
 // UpsertRepoParams inserts or updates the private
 // environment parameters for the named repository.
 func (db *DB) UpsertRepoParams(repo string, params map[string]string) error {
 	key := []byte(repo)
-	return update(db, bucketRepoParams, key, params)
+
+	return db.Update(func (t *bolt.Tx) error {
+		return update(t, bucketRepoParams, key, params)
+	})
 }
 
 // UpsertRepoKeys inserts or updates the private and
 // public keypair for the named repository.
 func (db *DB) UpsertRepoKeys(repo string, keypair *common.Keypair) error {
 	key := []byte(repo)
-	return update(db, bucketRepoKeys, key, keypair)
+
+	return db.Update(func (t *bolt.Tx) error {
+		return update(t, bucketRepoKeys, key, keypair)
+	})
 }
 
 // DeleteRepo deletes the repository.
 func (db *DB) DeleteRepo(repo *common.Repo) error {
+	//TODO(benschumacher) rework this to use BoltDB's txn wrapper
+
 	t, err := db.Begin(true)
 	if err != nil {
 		return err
