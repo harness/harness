@@ -52,5 +52,15 @@ func TestBuild(t *testing.T) {
 			g.Assert(build.State).Equal("pending")
 			g.Assert(build.Number).Equal(3)
 		})
+
+		g.It("Should get the recent list of builds", func() {
+			db.InsertBuild(repo, &common.Build{State: "success"})
+			db.InsertBuild(repo, &common.Build{State: "success"})
+			db.InsertBuild(repo, &common.Build{State: "pending"})
+
+			builds, err := db.GetBuildList(repo)
+			g.Assert(err).Equal(nil)
+			g.Assert(len(builds)).Equal(3)
+		})
 	})
 }
