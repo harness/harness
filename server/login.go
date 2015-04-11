@@ -2,11 +2,11 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/common/gravatar"
 	"github.com/drone/drone/common/httputil"
@@ -52,15 +52,20 @@ func GetLogin(c *gin.Context) {
 	login := ToUser(c)
 	u, err := store.GetUser(login.Login)
 	if err != nil {
+		count, err := store.GetUserCount()
+		if err != nil {
+			log.Errorf("cannot register %s. %s", login.Login, err)
+			c.Redirect(303, "/login#error=internal_error")
+			return
+		}
+
 		// if self-registration is disabled we should
 		// return a notAuthorized error. the only exception
 		// is if no users exist yet in the system we'll proceed.
-		if !settings.Service.Open {
-			count, err := store.GetUserCount()
-			if err != nil || count != 0 {
-				c.String(400, "Unable to create account. Registration is closed")
-				return
-			}
+		if !settings.Service.Open && count != 0 {
+			log.Errorf("cannot register %s. registration closed", login.Login)
+			c.Redirect(303, "/login#error=access_denied")
+			return
 		}
 
 		// create the user account
@@ -74,15 +79,14 @@ func GetLogin(c *gin.Context) {
 
 		// insert the user into the database
 		if err := store.InsertUser(u); err != nil {
-			log.Println(err)
-			c.Fail(400, err)
+			log.Errorf("cannot insert %s. %s", login.Login, err)
+			c.Redirect(303, "/login#error=internal_error")
 			return
 		}
 
-		// // if this is the first user, they
-		// // should be an admin.
-		//if u.ID == 1 {
-		if u.Login == "bradrydzewski" {
+		// if this is the first user, they
+		// should be an admin.
+		if count == 0 {
 			u.Admin = true
 		}
 	}
@@ -96,15 +100,15 @@ func GetLogin(c *gin.Context) {
 	u.Gravatar = gravatar.Generate(u.Email)
 
 	if err := store.UpdateUser(u); err != nil {
-		log.Println(err)
-		c.Fail(400, err)
+		log.Errorf("cannot update %s. %s", u.Login, err)
+		c.Redirect(303, "/login#error=internal_error")
 		return
 	}
 
 	token, err := session.GenerateToken(c.Request, u)
 	if err != nil {
-		log.Println(err)
-		c.Fail(400, err)
+		log.Errorf("cannot create token for %s. %s", u.Login, err)
+		c.Redirect(303, "/login#error=internal_error")
 		return
 	}
 	c.Redirect(303, "/#access_token="+token)
@@ -130,6 +134,7 @@ func getLoginOauth2(c *gin.Context) {
 	var code = c.Request.FormValue("code")
 	//var state = c.Request.FormValue("state")
 	if len(code) == 0 {
+		// TODO this should be a random number, verified by a cookie
 		c.Redirect(303, config.AuthCodeURL("random"))
 		return
 	}
@@ -138,14 +143,16 @@ func getLoginOauth2(c *gin.Context) {
 	var trans = &oauth2.Transport{Config: config}
 	var token, err = trans.Exchange(code)
 	if err != nil {
-		c.Fail(400, err)
+		log.Errorf("cannot get access_token. %s", err)
+		c.Redirect(303, "/login#error=token_exchange")
 		return
 	}
 
 	// get user account
 	user, err := remote.Login(token.AccessToken, token.RefreshToken)
 	if err != nil {
-		c.Fail(404, err)
+		log.Errorf("cannot get user with access_token. %s", err)
+		c.Redirect(303, "/login#error=user_not_found")
 		return
 	}
 
@@ -172,7 +179,8 @@ func getLoginBasic(c *gin.Context) {
 	// get user account
 	user, err := remote.Login(username, password)
 	if err != nil {
-		c.Fail(404, err)
+		log.Errorf("invalid username or password for %s. %s", username, err)
+		c.Redirect(303, "/login#error=invalid_credentials")
 		return
 	}
 

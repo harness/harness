@@ -3,6 +3,7 @@ package server
 import (
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/common"
 	// "github.com/bradrydzewski/drone/worker"
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,7 @@ func PostHook(c *gin.Context) {
 
 	hook, err := remote.Hook(c.Request)
 	if err != nil {
+		log.Errorf("failure to parse hook. %s", err)
 		c.Fail(400, err)
 		return
 	}
@@ -27,6 +29,7 @@ func PostHook(c *gin.Context) {
 		return
 	}
 	if hook.Repo == nil {
+		log.Errorf("failure to ascertain repo from hook.")
 		c.Writer.WriteHeader(400)
 		return
 	}
@@ -34,23 +37,36 @@ func PostHook(c *gin.Context) {
 	// a build may be skipped if the text [CI SKIP]
 	// is found inside the commit message
 	if hook.Commit != nil && strings.Contains(hook.Commit.Message, "[CI SKIP]") {
+		log.Infof("ignoring hook. [ci skip] found for %s")
 		c.Writer.WriteHeader(204)
 		return
 	}
 
 	repo, err := store.GetRepo(hook.Repo.FullName)
 	if err != nil {
+		log.Errorf("failure to find repo %s from hook. %s", hook.Repo.FullName, err)
 		c.Fail(404, err)
 		return
 	}
 
-	if repo.Disabled || repo.User == nil || (repo.DisablePR && hook.PullRequest != nil) {
+	switch {
+	case repo.Disabled:
+		log.Infof("ignoring hook. repo %s is disabled.", repo.FullName)
+		c.Writer.WriteHeader(204)
+		return
+	case repo.User == nil:
+		log.Warnf("ignoring hook. repo %s has no owner.", repo.FullName)
+		c.Writer.WriteHeader(204)
+		return
+	case repo.DisablePR && hook.PullRequest != nil:
+		log.Warnf("ignoring hook. repo %s is disabled for pull requests.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
 	}
 
 	user, err := store.GetUser(repo.User.Login)
 	if err != nil {
+		log.Errorf("failure to find repo owner %s. %s", repo.User.Login, err)
 		c.Fail(500, err)
 		return
 	}
@@ -63,6 +79,7 @@ func PostHook(c *gin.Context) {
 	// featch the .drone.yml file from the database
 	_, err = remote.Script(user, repo, build)
 	if err != nil {
+		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
 		c.Fail(404, err)
 		return
 	}

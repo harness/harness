@@ -212,6 +212,7 @@ func PostRepo(c *gin.Context) {
 		c.Fail(500, err)
 		return
 	}
+	println(link)
 
 	// persist the repository
 	err = store.InsertRepo(user, r)
