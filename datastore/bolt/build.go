@@ -35,9 +35,15 @@ func (db *DB) GetBuildList(repo string) ([]*common.Build, error) {
 // GetBuildLast gets the last executed build for the
 // named repository.
 func (db *DB) GetBuildLast(repo string) (*common.Build, error) {
-	// get the last build sequence number (stored in key in `bucketBuildSeq`)
-	// return that build
-	return nil, nil
+	key := []byte(repo)
+	build := &common.Build{}
+	err := db.View(func(t *bolt.Tx) error {
+		raw := t.Bucket(bucketBuildSeq).Get(key)
+		num := binary.LittleEndian.Uint32(raw)
+		key = []byte(repo + "/" + strconv.FormatUint(uint64(num), 10))
+		return get(t, bucketBuild, key, build)
+	})
+	return build, err
 }
 
 // GetBuildStatus gets the named build status for the
@@ -78,17 +84,17 @@ func (db *DB) GetBuildStatusList(repo string, build int) ([]*common.Status, erro
 func (db *DB) InsertBuild(repo string, build *common.Build) error {
 	key := []byte(repo)
 
-	return db.Update(func (t *bolt.Tx) error {
+	return db.Update(func(t *bolt.Tx) error {
 		raw, err := raw(t, bucketBuildSeq, key)
 
 		var next_seq uint32
 		switch err {
-			case ErrKeyNotFound:
-				next_seq = 1
-			case nil:
-				next_seq = 1 + binary.LittleEndian.Uint32(raw)
-			default:
-				return err
+		case ErrKeyNotFound:
+			next_seq = 1
+		case nil:
+			next_seq = 1 + binary.LittleEndian.Uint32(raw)
+		default:
+			return err
 		}
 
 		// covert our seqno to raw value

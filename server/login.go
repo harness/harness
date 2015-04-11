@@ -166,7 +166,7 @@ func getLoginBasic(c *gin.Context) {
 	var (
 		remote   = ToRemote(c)
 		username = c.Request.FormValue("username")
-		password = c.Request.FormValue("username")
+		password = c.Request.FormValue("password")
 	)
 
 	// get user account

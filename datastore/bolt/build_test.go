@@ -42,5 +42,15 @@ func TestBuild(t *testing.T) {
 			g.Assert(build.State).Equal("success")
 		})
 
+		g.It("Should get the latest builds", func() {
+			db.InsertBuild(repo, &common.Build{State: "success"})
+			db.InsertBuild(repo, &common.Build{State: "success"})
+			db.InsertBuild(repo, &common.Build{State: "pending"})
+
+			build, err := db.GetBuildLast(repo)
+			g.Assert(err).Equal(nil)
+			g.Assert(build.State).Equal("pending")
+			g.Assert(build.Number).Equal(3)
+		})
 	})
 }
