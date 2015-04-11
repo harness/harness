@@ -26,10 +26,32 @@ func (db *DB) GetBuild(repo string, build int) (*common.Build, error) {
 // GetBuildList gets a list of recent builds for the
 // named repository.
 func (db *DB) GetBuildList(repo string) ([]*common.Build, error) {
-	// get the last build sequence number (stored in key in `bucketBuildSeq`)
-	// get all builds where build number > sequent-20
-	// github.com/foo/bar/{number}
-	return nil, nil
+	// TODO (bradrydzewski) we can do this more efficiently
+	var builds []*common.Build
+	build, err := db.GetBuildLast(repo)
+	if err == ErrKeyNotFound {
+		return builds, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	err = db.View(func(t *bolt.Tx) error {
+		pos := build.Number - 25
+		if pos < 1 {
+			pos = 1
+		}
+		for i := pos; i <= build.Number; i++ {
+			key := []byte(repo + "/" + strconv.Itoa(i))
+			build := &common.Build{}
+			err = get(t, bucketBuild, key, build)
+			if err != nil {
+				return err
+			}
+			builds = append(builds, build)
+		}
+		return nil
+	})
+	return builds, err
 }
 
 // GetBuildLast gets the last executed build for the
