@@ -61,6 +61,9 @@ func (db *DB) GetBuildLast(repo string) (*common.Build, error) {
 	build := &common.Build{}
 	err := db.View(func(t *bolt.Tx) error {
 		raw := t.Bucket(bucketBuildSeq).Get(key)
+		if raw == nil {
+			return ErrKeyNotFound
+		}
 		num := binary.LittleEndian.Uint32(raw)
 		key = []byte(repo + "/" + strconv.FormatUint(uint64(num), 10))
 		return get(t, bucketBuild, key, build)
