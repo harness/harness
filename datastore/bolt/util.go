@@ -1,8 +1,8 @@
 package bolt
 
 import (
-	"github.com/youtube/vitess/go/bson"
 	"github.com/boltdb/bolt"
+	"github.com/youtube/vitess/go/bson"
 )
 
 func encode(v interface{}) ([]byte, error) {
@@ -35,11 +35,7 @@ func update(t *bolt.Tx, bucket, key []byte, v interface{}) error {
 		t.Rollback()
 		return err
 	}
-	err = t.Bucket(bucket).Put(key, raw)
-	if err != nil {
-		return err
-	}
-	return nil
+	return t.Bucket(bucket).Put(key, raw)
 }
 
 func insert(t *bolt.Tx, bucket, key []byte, v interface{}) error {
@@ -53,17 +49,9 @@ func insert(t *bolt.Tx, bucket, key []byte, v interface{}) error {
 	if t.Bucket(bucket).Get(key) != nil {
 		return ErrKeyExists
 	}
-	err = t.Bucket(bucket).Put(key, raw)
-	if err != nil {
-		return err
-	}
-	return nil
+	return t.Bucket(bucket).Put(key, raw)
 }
 
 func delete(t *bolt.Tx, bucket, key []byte) error {
-	err := t.Bucket(bucket).Delete(key)
-	if err != nil {
-		return err
-	}
-	return nil
+	return t.Bucket(bucket).Delete(key)
 }

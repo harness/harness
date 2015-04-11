@@ -114,7 +114,7 @@ func main() {
 		logs.Use(server.CheckPull())
 		logs.Use(server.CheckPush())
 
-		logs.GET("", server.GetLogs)
+		logs.GET("", server.GetTaskLogs)
 	}
 
 	status := api.Group("/status/:owner/:name/:number")

@@ -193,7 +193,7 @@ func PostRepo(c *gin.Context) {
 
 	// set the repository owner to the
 	// currently authenticated user.
-	r.User = user
+	r.User = &common.Owner{Login: user.Login}
 
 	// generate an RSA key and add to the repo
 	key, err := sshutil.GeneratePrivateKey()

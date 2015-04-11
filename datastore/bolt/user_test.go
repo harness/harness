@@ -73,7 +73,13 @@ func TestUser(t *testing.T) {
 			g.Assert(err).Equal(ErrKeyNotFound)
 		})
 
-		g.It("Should list")
+		g.It("Should list", func() {
+			db.InsertUser(&common.User{Login: "bert"})
+			db.InsertUser(&common.User{Login: "ernie"})
+			users, err := db.GetUserList()
+			g.Assert(err).Equal(nil)
+			g.Assert(len(users)).Equal(2)
+		})
 
 		g.It("Should count", func() {
 			db.InsertUser(&common.User{Login: "bert"})

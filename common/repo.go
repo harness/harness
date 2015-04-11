@@ -20,7 +20,7 @@ type Repo struct {
 	Created int64 `json:"created_at"`
 	Updated int64 `json:"updated_at"`
 
-	User *User  `json:"user,omitempty"`
+	User *Owner `json:"user,omitempty"`
 	Last *Build `json:"last_build,omitempty"`
 }
 
@@ -30,6 +30,11 @@ type Repo struct {
 type Keypair struct {
 	Public  string `json:"public"`
 	Private string `json:"-"`
+}
+
+// Owner represents the owner of a repository.
+type Owner struct {
+	Login string `json:"login"`
 }
 
 // Subscriber represents a user's subscription
