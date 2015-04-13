@@ -1,6 +1,10 @@
 package datastore
 
-import "github.com/drone/drone/common"
+import (
+	"io"
+
+	"github.com/drone/drone/common"
+)
 
 type Datastore interface {
 	// GetUser gets a user by user login.
@@ -123,7 +127,7 @@ type Datastore interface {
 
 	// GetTaskLogs gets the task logs at index N for
 	// the named repository and build number.
-	GetTaskLogs(string, int, int) ([]byte, error)
+	GetTaskLogs(string, int, int) (io.Reader, error)
 
 	// GetTaskList gets all tasks for the named repository
 	// and build number.

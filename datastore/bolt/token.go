@@ -33,4 +33,5 @@ func (db *DB) DeleteToken(token *common.Token) error {
 	return db.Update(func(t *bolt.Tx) error {
 		return delete(t, bucketUser, key)
 	})
+	// TODO(bradrydzewski) remove token from users_token index
 }
