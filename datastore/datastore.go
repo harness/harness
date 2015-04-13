@@ -33,7 +33,7 @@ type Datastore interface {
 	DeleteUser(*common.User) error
 
 	// GetToken gets a token by sha value.
-	GetToken(string) (*common.Token, error)
+	GetToken(string, string) (*common.Token, error)
 
 	// InsertToken inserts a new user token in the datastore.
 	// If the token already exists and error is returned.

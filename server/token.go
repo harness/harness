@@ -13,28 +13,17 @@ func PostToken(c *gin.Context) {
 	// 3. return the random password to the UI and instruct the user to copy it
 }
 
-// DELETE /api/user/tokens/:sha
+// DELETE /api/user/tokens/:label
 func DelToken(c *gin.Context) {
 	store := ToDatastore(c)
 	user := ToUser(c)
-	hash := c.Params.ByName("hash")
-	token, err := store.GetToken(hash)
+	label := c.Params.ByName("label")
+	token, err := store.GetToken(user.Login, label)
 	if err != nil {
 		c.Fail(404, err)
 	}
 	err = store.DeleteToken(token)
 	if err != nil {
 		c.Fail(400, err)
-	}
-
-	// TODO(bradrydzewski) this should be encapsulated
-	// in our database code, since this feels like a
-	// database-specific implementation.
-	delete(user.Tokens, token.Sha)
-	err = store.UpdateUser(user)
-	if err != nil {
-		c.Fail(400, err)
-	} else {
-		c.Writer.WriteHeader(200)
 	}
 }

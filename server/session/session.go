@@ -39,19 +39,10 @@ func New(s *settings.Session) Session {
 // facilitate client-based OAuth2.
 func (s *session) GenerateToken(r *http.Request, t *common.Token) (string, error) {
 	token := jwt.New(jwt.GetSigningMethod("HS256"))
-	token.Claims["login"] = t.Login
-	token.Claims["expiry"] = t.Expiry
-
-	// add optional repos that can be
-	// access from this session.
-	if len(t.Repos) != 0 {
-		token.Claims["repos"] = t.Repos
-	}
-	// add optional scopes that can be
-	// applied to this session.
-	if len(t.Scopes) != 0 {
-		token.Claims["scope"] = t.Scopes
-	}
+	token.Claims["user"] = t.Login
+	token.Claims["kind"] = t.Kind
+	token.Claims["date"] = t.Issued
+	token.Claims["label"] = t.Label
 	return token.SignedString(s.secret)
 }
 
@@ -65,21 +56,16 @@ func (s *session) GetLogin(r *http.Request) *common.Token {
 	}
 
 	claims := getClaims(t, s.secret)
-	if claims == nil || claims["login"] == nil {
+	if claims == nil || claims["user"] == nil || claims["date"] == nil || claims["label"] == nil || claims["kind"] == nil {
 		return nil
 	}
 
-	loginv, ok := claims["login"]
-	if !ok {
-		return nil
+	return &common.Token{
+		Kind:   claims["kind"].(string),
+		Login:  claims["user"].(string),
+		Label:  claims["label"].(string),
+		Issued: int64(claims["date"].(float64)),
 	}
-
-	loginstr, ok := loginv.(string)
-	if !ok {
-		return nil
-	}
-
-	return &common.Token{Login: loginstr}
 }
 
 // getToken is a helper function that extracts the token
