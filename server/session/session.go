@@ -12,7 +12,7 @@ import (
 )
 
 type Session interface {
-	GenerateToken(*http.Request, *common.Token) (string, error)
+	GenerateToken(*common.Token) (string, error)
 	GetLogin(*http.Request) *common.Token
 }
 
@@ -37,7 +37,7 @@ func New(s *settings.Session) Session {
 // GenerateToken generates a JWT token for the user session
 // that can be appended to the #access_token segment to
 // facilitate client-based OAuth2.
-func (s *session) GenerateToken(r *http.Request, t *common.Token) (string, error) {
+func (s *session) GenerateToken(t *common.Token) (string, error) {
 	token := jwt.New(jwt.GetSigningMethod("HS256"))
 	token.Claims["user"] = t.Login
 	token.Claims["kind"] = t.Kind

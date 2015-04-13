@@ -111,7 +111,7 @@ func GetLogin(c *gin.Context) {
 		Login:  u.Login,
 		Issued: time.Now().UTC().Unix(),
 	}
-	tokenstr, err := session.GenerateToken(c.Request, token)
+	tokenstr, err := session.GenerateToken(token)
 	if err != nil {
 		log.Errorf("cannot create token for %s. %s", u.Login, err)
 		c.Redirect(303, "/login#error=internal_error")
