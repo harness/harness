@@ -14,8 +14,4 @@ type User struct {
 	// Repos contains a list of subscriptions
 	// to repositories the user is watching.
 	Repos map[string]struct{} `json:"-"`
-
-	// Tokens contains a list of tokens for
-	// the user account.
-	Tokens map[string]struct{} `json:"-"`
 }
