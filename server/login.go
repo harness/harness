@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -106,8 +107,9 @@ func GetLogin(c *gin.Context) {
 	}
 
 	token := &common.Token{
-		// Expiry: settings.Session.Expires, // TODO add this
-		Login: u.Login,
+		Kind:   common.TokenSess,
+		Login:  u.Login,
+		Issued: time.Now().UTC().Unix(),
 	}
 	tokenstr, err := session.GenerateToken(c.Request, token)
 	if err != nil {

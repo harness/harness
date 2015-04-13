@@ -118,6 +118,24 @@ func SetUser(s session.Session) gin.HandlerFunc {
 		if err == nil {
 			c.Set("user", u)
 		}
+
+		// if session token we can proceed, otherwise
+		// we should validate the token hasn't been revoked
+		if token.Kind == common.TokenSess {
+			c.Next()
+			return
+		}
+
+		// to verify the token we fetch from the datastore
+		// and check to see if the token issued date matches
+		// what we found in the jwt (in case the label is re-used)
+		t, err := ds.GetToken(token.Login, token.Label)
+		if err != nil || t.Issued != token.Issued {
+			c.AbortWithStatus(403)
+			return
+		}
+
+		c.Next()
 	}
 }
 
