@@ -43,6 +43,9 @@ func main() {
 		user.GET("", server.GetUserCurr)
 		user.PUT("", server.PutUserCurr)
 		user.GET("/repos", server.GetUserRepos)
+		user.GET("/tokens", server.GetUserTokens)
+		user.POST("/tokens", server.PostToken)
+		user.DELETE("/tokens", server.DelToken)
 	}
 
 	users := api.Group("/users")

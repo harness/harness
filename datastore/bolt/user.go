@@ -3,8 +3,8 @@ package bolt
 import (
 	"time"
 
-	"github.com/drone/drone/common"
 	"github.com/boltdb/bolt"
+	"github.com/drone/drone/common"
 )
 
 // GetUser gets a user by user login.
@@ -12,7 +12,7 @@ func (db *DB) GetUser(login string) (*common.User, error) {
 	user := &common.User{}
 	key := []byte(login)
 
-	err := db.View(func (t *bolt.Tx) error {
+	err := db.View(func(t *bolt.Tx) error {
 		return get(t, bucketUser, key, user)
 	})
 
@@ -31,26 +31,24 @@ func (db *DB) GetUserTokens(login string) ([]*common.Token, error) {
 
 	// get the index of user tokens and unmarshal
 	// to a string array.
-	key := []byte(login)
-	raw := t.Bucket(bucketUserTokens).Get(key)
-	keys := [][]byte{}
-	err = decode(raw, &keys)
-	if err != nil {
-		return tokens, err
+	var keys [][]byte
+	err = get(t, bucketUserTokens, []byte(login), &keys)
+	if err != nil && err != ErrKeyNotFound {
+		return nil, err
 	}
 
 	// for each item in the index, get the repository
 	// and append to the array
 	for _, key := range keys {
 		token := &common.Token{}
-		raw = t.Bucket(bucketTokens).Get(key)
+		raw := t.Bucket(bucketTokens).Get(key)
 		err = decode(raw, token)
 		if err != nil {
-			break
+			return nil, err
 		}
 		tokens = append(tokens, token)
 	}
-	return tokens, err
+	return tokens, nil
 }
 
 // GetUserRepos gets a list of repositories for the
@@ -126,7 +124,7 @@ func (db *DB) UpdateUser(user *common.User) error {
 	key := []byte(user.Login)
 	user.Updated = time.Now().UTC().Unix()
 
-	return db.Update(func (t *bolt.Tx) error {
+	return db.Update(func(t *bolt.Tx) error {
 		return update(t, bucketUser, key, user)
 	})
 }
@@ -138,7 +136,7 @@ func (db *DB) InsertUser(user *common.User) error {
 	user.Created = time.Now().UTC().Unix()
 	user.Updated = time.Now().UTC().Unix()
 
-	return db.Update(func (t *bolt.Tx) error {
+	return db.Update(func(t *bolt.Tx) error {
 		return insert(t, bucketUser, key, user)
 	})
 }
@@ -149,7 +147,7 @@ func (db *DB) DeleteUser(user *common.User) error {
 	// TODO(bradrydzewski) delete user subscriptions
 	// TODO(bradrydzewski) delete user tokens
 
-	return db.Update(func (t *bolt.Tx) error {
+	return db.Update(func(t *bolt.Tx) error {
 		return delete(t, bucketUser, key)
 	})
 }
