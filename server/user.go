@@ -65,12 +65,12 @@ func GetUserRepos(c *gin.Context) {
 //     GET /api/user/tokens
 //
 func GetUserTokens(c *gin.Context) {
-	// ds := ToDatastore(c)
-	// me := ToUser(c)
-	// tokens, err := ds.GetUserTokens(me.Login)
-	// if err != nil {
-	// 	c.Fail(400, err)
-	// } else {
-	// 	c.JSON(200, &repos)
-	// }
+	ds := ToDatastore(c)
+	me := ToUser(c)
+	tokens, err := ds.GetUserTokens(me.Login)
+	if err != nil {
+		c.Fail(400, err)
+	} else {
+		c.JSON(200, &tokens)
+	}
 }

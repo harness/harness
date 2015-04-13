@@ -24,3 +24,34 @@
 	<dt>Gravatar</dt>
 	<dd><img ng-src="{{ user.gravatar_id | gravatar }}"</dd>
 </dl>
+
+
+<form>
+	<input type="label" ng-model="newToken.label" />
+	<button ng-click="createToken(newToken)">Create</button>
+</form>
+
+<div class="alert" ng-if="tokens && tokens.length === 0">No Personal Tokens Exist</div>
+
+<table ng-if="tokens && tokens.length !== 0">
+	<thead>
+		<tr>
+			<th>Label</th>
+			<th>Issued</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat-start="token in tokens">
+			<td>{{ token.label }}</td>
+			<td>{{ token.issued_at | fromNow }}</td>
+			<td><button ng-click="revokeToken(token)">delete</button></td>
+		</tr>
+		<tr ng-repeat-end ng-if="token.hash">
+			<td colspan="3">
+				<span>Make sure to copy your new personal access token now. You won't be able to see it again!</span>
+				<pre style="white-space: pre-line;overflow-wrap: break-word;">{{ token.hash }}</pre>
+			</td>
+		</tr>
+	</tbody>
+</table>

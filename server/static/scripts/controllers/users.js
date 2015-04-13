@@ -3,12 +3,32 @@
 	/**
 	 * UserCtrl is responsible for managing user settings.
 	 */	
-	function UserCtrl($scope, users) {
+	function UserCtrl($scope, users, tokens) {
 
 		// Gets the currently authenticated user 
 		users.getCurrent().then(function(payload){
 			$scope.user = payload.data;
 		});
+
+		// Gets the user tokens
+		tokens.list().then(function(payload){
+			$scope.tokens = payload.data;
+		});
+
+		$scope.newToken={Label: ""};
+		$scope.createToken = function(newToken) {
+			tokens.post(newToken).then(function(payload) {
+				$scope.tokens.push(payload.data);
+				$scope.newToken={Label: ""};
+			});
+		}
+
+		$scope.revokeToken = function(token) {
+			tokens.delete(token).then(function() {
+				var index = $scope.tokens.indexOf(token);
+				$scope.tokens.splice(index, 1);
+			});
+		}
 	}
 
 	/**
@@ -40,9 +60,8 @@
 
 		$scope.remove = function(user) {
 			users.delete(user).then(function(){
-				users.list().then(function(payload){
-					$scope.users = payload.data;
-				});
+				var index = $scope.users.indexOf(user);
+				$scope.users.splice(index, 1);
 			});
 		}
 	}
