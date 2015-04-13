@@ -1,6 +1,7 @@
 package server
 
 import (
+	"io"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -54,13 +55,16 @@ func GetTasks(c *gin.Context) {
 func GetTaskLogs(c *gin.Context) {
 	ds := ToDatastore(c)
 	repo := ToRepo(c)
+	full, _ := strconv.ParseBool(c.Params.ByName("full"))
 	build, _ := strconv.Atoi(c.Params.ByName("number"))
 	task, _ := strconv.Atoi(c.Params.ByName("task"))
 
 	logs, err := ds.GetTaskLogs(repo.FullName, build, task)
 	if err != nil {
 		c.Fail(404, err)
+	} else if full {
+		io.Copy(c.Writer, logs)
 	} else {
-		c.Writer.Write(logs)
+		io.Copy(c.Writer, io.LimitReader(logs, 2000000))
 	}
 }

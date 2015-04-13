@@ -1,10 +1,12 @@
 package bolt
 
 import (
+	"bytes"
+	"io"
 	"strconv"
 
-	"github.com/drone/drone/common"
 	"github.com/boltdb/bolt"
+	"github.com/drone/drone/common"
 )
 
 // GetTask gets the task at index N for the named
@@ -12,7 +14,7 @@ import (
 func (db *DB) GetTask(repo string, build int, task int) (*common.Task, error) {
 	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + strconv.Itoa(task))
 	task_ := &common.Task{}
-	err := db.View(func (t *bolt.Tx) error {
+	err := db.View(func(t *bolt.Tx) error {
 		return get(t, bucketBuildTasks, key, task_)
 	})
 	return task_, err
@@ -20,17 +22,17 @@ func (db *DB) GetTask(repo string, build int, task int) (*common.Task, error) {
 
 // GetTaskLogs gets the task logs at index N for
 // the named repository and build number.
-func (db *DB) GetTaskLogs(repo string, build int, task int) ([]byte, error) {
+func (db *DB) GetTaskLogs(repo string, build int, task int) (io.Reader, error) {
 	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + strconv.Itoa(task))
 
 	var log []byte
-	err := db.View(func (t *bolt.Tx) error {
+	err := db.View(func(t *bolt.Tx) error {
 		var err error
 		log, err = raw(t, bucketBuildLogs, key)
 		return err
 	})
-
-	return log, err
+	buf := bytes.NewBuffer(log)
+	return buf, err
 }
 
 // GetTaskList gets all tasks for the named repository
@@ -72,7 +74,7 @@ func (db *DB) GetTaskList(repo string, build int) ([]*common.Task, error) {
 // repository and build number.
 func (db *DB) UpsertTask(repo string, build int, task *common.Task) error {
 	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + strconv.Itoa(task.Number))
-	return db.Update(func (t *bolt.Tx) error {
+	return db.Update(func(t *bolt.Tx) error {
 		return update(t, bucketBuildTasks, key, task)
 	})
 }
