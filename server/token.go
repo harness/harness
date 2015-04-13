@@ -1,6 +1,8 @@
 package server
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 
@@ -24,6 +26,7 @@ func PostToken(c *gin.Context) {
 	token.Scopes = in.Scopes
 	token.Login = user.Login
 	token.Kind = common.TokenUser
+	token.Issued = time.Now().UTC().Unix()
 
 	err := store.InsertToken(token)
 	if err != nil {
@@ -34,10 +37,13 @@ func PostToken(c *gin.Context) {
 	if err != nil {
 		c.Fail(400, err)
 	}
-	c.String(200, jwt)
+	c.JSON(200, struct {
+		*common.Token
+		Hash string `json:"hash"`
+	}{token, jwt})
 }
 
-// DELETE /api/user/tokens
+// DELETE /api/user/tokens/:label
 func DelToken(c *gin.Context) {
 	store := ToDatastore(c)
 	user := ToUser(c)
