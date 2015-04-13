@@ -7,14 +7,13 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/drone/drone/common"
-	"github.com/drone/drone/common/httputil"
 	"github.com/drone/drone/settings"
 	"github.com/gorilla/securecookie"
 )
 
 type Session interface {
-	GenerateToken(*http.Request, *common.User) (string, error)
-	GetLogin(*http.Request) string
+	GenerateToken(*http.Request, *common.Token) (string, error)
+	GetLogin(*http.Request) *common.Token
 }
 
 type session struct {
@@ -38,42 +37,49 @@ func New(s *settings.Session) Session {
 // GenerateToken generates a JWT token for the user session
 // that can be appended to the #access_token segment to
 // facilitate client-based OAuth2.
-func (s *session) GenerateToken(r *http.Request, user *common.User) (string, error) {
+func (s *session) GenerateToken(r *http.Request, t *common.Token) (string, error) {
 	token := jwt.New(jwt.GetSigningMethod("HS256"))
-	token.Claims["user_id"] = user.Login
-	token.Claims["audience"] = httputil.GetURL(r)
-	token.Claims["expires"] = time.Now().UTC().Add(s.expire).Unix()
+	token.Claims["login"] = t.Login
+	token.Claims["expiry"] = t.Expiry
+
+	// add optional repos that can be
+	// access from this session.
+	if len(t.Repos) != 0 {
+		token.Claims["repos"] = t.Repos
+	}
+	// add optional scopes that can be
+	// applied to this session.
+	if len(t.Scopes) != 0 {
+		token.Claims["scope"] = t.Scopes
+	}
 	return token.SignedString(s.secret)
 }
 
 // GetLogin gets the currently authenticated user for the
 // http.Request. The user details will be stored as either
 // a simple API token or JWT bearer token.
-func (s *session) GetLogin(r *http.Request) (_ string) {
-	token := getToken(r)
-	if len(token) == 0 {
-		return
+func (s *session) GetLogin(r *http.Request) *common.Token {
+	t := getToken(r)
+	if len(t) == 0 {
+		return nil
 	}
 
-	claims := getClaims(token, s.secret)
-	if claims == nil || claims["user_id"] == nil {
-		return
+	claims := getClaims(t, s.secret)
+	if claims == nil || claims["login"] == nil {
+		return nil
 	}
 
-	userid, ok := claims["user_id"].(string)
+	loginv, ok := claims["login"]
 	if !ok {
-		return
+		return nil
 	}
 
-	// tokenid, ok := claims["token_id"].(string)
-	// if ok {
-	// 	_, err := datastore.GetToken(c, int64(tokenid))
-	// 	if err != nil {
-	// 		return nil
-	// 	}
-	// }
+	loginstr, ok := loginv.(string)
+	if !ok {
+		return nil
+	}
 
-	return userid
+	return &common.Token{Login: loginstr}
 }
 
 // getToken is a helper function that extracts the token

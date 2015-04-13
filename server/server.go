@@ -108,13 +108,13 @@ func SetSession(s session.Session) gin.HandlerFunc {
 func SetUser(s session.Session) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ds := ToDatastore(c)
-		login := s.GetLogin(c.Request)
-		if len(login) == 0 {
+		token := s.GetLogin(c.Request)
+		if token == nil {
 			c.Next()
 			return
 		}
 
-		u, err := ds.GetUser(login)
+		u, err := ds.GetUser(token.Login)
 		if err == nil {
 			c.Set("user", u)
 		}
