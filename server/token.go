@@ -3,14 +3,31 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 
-	// "github.com/drone/drone/common"
+	"github.com/drone/drone/common"
 )
 
-// POST /api/user/tokens
+// POST /api/user/tokens/:label
 func PostToken(c *gin.Context) {
-	// 1. generate a unique, random password
-	// 2. take a hash of the password, and store in the database
-	// 3. return the random password to the UI and instruct the user to copy it
+	store := ToDatastore(c)
+	sess := ToSession(c)
+	user := ToUser(c)
+	label := c.Params.ByName("label")
+
+	token := &common.Token{}
+	token.Label = label
+	token.Login = user.Login
+	token.Kind = common.TokenUser
+
+	err := store.InsertToken(token)
+	if err != nil {
+		c.Fail(400, err)
+	}
+
+	jwt, err := sess.GenerateToken(token)
+	if err != nil {
+		c.Fail(400, err)
+	}
+	c.String(200, jwt)
 }
 
 // DELETE /api/user/tokens/:label
