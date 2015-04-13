@@ -9,11 +9,9 @@ import (
 func (db *DB) GetToken(user, label string) (*common.Token, error) {
 	token := &common.Token{}
 	key := []byte(user + "/" + label)
-
 	err := db.View(func(t *bolt.Tx) error {
 		return get(t, bucketTokens, key, token)
 	})
-
 	return token, err
 }
 
