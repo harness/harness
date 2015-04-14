@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"time"
 
 	"github.com/gin-gonic/gin"

@@ -60,12 +60,20 @@ func (s *session) GetLogin(r *http.Request) *common.Token {
 		return nil
 	}
 
-	return &common.Token{
+	token := &common.Token{
 		Kind:   claims["kind"].(string),
 		Login:  claims["user"].(string),
 		Label:  claims["label"].(string),
 		Issued: int64(claims["date"].(float64)),
 	}
+	if token.Kind != common.TokenSess {
+		return token
+	}
+
+	if time.Now().UTC().Add(s.expire).Unix() > token.Issued {
+		return nil
+	}
+	return token
 }
 
 // getToken is a helper function that extracts the token
