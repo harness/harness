@@ -1,9 +1,8 @@
 package server
 
 import (
-	"github.com/gin-gonic/gin"
-
 	"github.com/drone/drone/common"
+	"github.com/gin-gonic/gin"
 )
 
 // Unubscribe accapets a request to unsubscribe the
@@ -16,8 +15,7 @@ func Unsubscribe(c *gin.Context) {
 	repo := ToRepo(c)
 	user := ToUser(c)
 
-	delete(user.Repos, repo.FullName)
-	err := store.UpdateUser(user)
+	err := store.DeleteSubscriber(user.Login, repo.FullName)
 	if err != nil {
 		c.Fail(400, err)
 	} else {
@@ -34,11 +32,8 @@ func Subscribe(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
 	user := ToUser(c)
-	if user.Repos == nil {
-		user.Repos = map[string]struct{}{}
-	}
-	user.Repos[repo.FullName] = struct{}{}
-	err := store.UpdateUser(user)
+
+	err := store.InsertSubscriber(user.Login, repo.FullName)
 	if err != nil {
 		c.Fail(400, err)
 	} else {

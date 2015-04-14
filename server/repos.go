@@ -66,8 +66,7 @@ func GetRepo(c *gin.Context) {
 	}
 
 	// check to see if the user is subscribing to the repo
-	_, ok := user.Repos[repo.FullName]
-	data.Watch = &common.Subscriber{Subscribed: ok}
+	data.Watch, _ = store.GetSubscriber(user.Login, repo.FullName)
 
 	c.JSON(200, data)
 }
@@ -122,8 +121,7 @@ func PutRepo(c *gin.Context) {
 	data.Params, _ = store.GetRepoParams(repo.FullName)
 
 	// check to see if the user is subscribing to the repo
-	_, ok := user.Repos[repo.FullName]
-	data.Watch = &common.Subscriber{Subscribed: ok}
+	data.Watch, _ = store.GetSubscriber(user.Login, repo.FullName)
 
 	c.JSON(200, data)
 }
@@ -207,11 +205,11 @@ func PostRepo(c *gin.Context) {
 
 	// activate the repository before we make any
 	// local changes to the database.
-	err = remote.Activate(user, r, keypair, link)
-	if err != nil {
-		c.Fail(500, err)
-		return
-	}
+	// err = remote.Activate(user, r, keypair, link)
+	// if err != nil {
+	// 	c.Fail(500, err)
+	// 	return
+	// }
 	println(link)
 
 	// persist the repository
@@ -227,16 +225,6 @@ func PostRepo(c *gin.Context) {
 		c.Fail(500, err)
 		return
 	}
-
-	// subscribe the user to the repository
-	// if this fails we'll ignore, since the user
-	// can just go click the "watch" button in the
-	// user interface.
-	if user.Repos == nil {
-		user.Repos = map[string]struct{}{}
-	}
-	user.Repos[r.FullName] = struct{}{}
-	store.UpdateUser(user)
 
 	c.JSON(200, r)
 }

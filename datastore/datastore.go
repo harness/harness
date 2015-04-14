@@ -46,17 +46,17 @@ type Datastore interface {
 	// DeleteUser deletes the token.
 	DeleteToken(*common.Token) error
 
-	// // GetSubscriber gets the subscriber by login for the
-	// // named repository.
-	// GetSubscriber(string, string) (*common.Subscriber, error)
+	// GetSubscriber gets the subscriber by login for the
+	// named repository.
+	GetSubscriber(string, string) (*common.Subscriber, error)
 
-	// // InsertSubscriber inserts a subscriber for the named
-	// // repository.
-	// InsertSubscriber(string, *common.Subscriber) error
+	// InsertSubscriber inserts a subscriber for the named
+	// repository.
+	InsertSubscriber(string, string) error
 
-	// // DeleteSubscriber removes the subscriber by login for the
-	// // named repository.
-	// DeleteSubscriber(string, *common.Subscriber) error
+	// DeleteSubscriber removes the subscriber by login for the
+	// named repository.
+	DeleteSubscriber(string, string) error
 
 	// GetRepo gets the repository by name.
 	GetRepo(string) (*common.Repo, error)
