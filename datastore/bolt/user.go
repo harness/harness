@@ -93,27 +93,27 @@ func (db *DB) GetUserRepos(login string) ([]*common.Repo, error) {
 // GetUserCount gets a count of all registered users
 // in the system.
 func (db *DB) GetUserCount() (int, error) {
-	t, err := db.Begin(false)
-	if err != nil {
-		return 0, err
-	}
-	defer t.Rollback()
-	return t.Bucket(bucketUser).Stats().KeyN, nil
+	var out int
+	var err = db.View(func(t *bolt.Tx) error {
+		out = t.Bucket(bucketUser).Stats().KeyN
+		return nil
+	})
+	return out, err
 }
 
 // GetUserList gets a list of all registered users.
 func (db *DB) GetUserList() ([]*common.User, error) {
-	t, err := db.Begin(false)
-	if err != nil {
-		return nil, err
-	}
-	defer t.Rollback()
 	users := []*common.User{}
-	err = t.Bucket(bucketUser).ForEach(func(key, raw []byte) error {
-		user := &common.User{}
-		err := decode(raw, user)
-		users = append(users, user)
-		return err
+	err := db.View(func(t *bolt.Tx) error {
+		return t.Bucket(bucketUser).ForEach(func(key, raw []byte) error {
+			user := &common.User{}
+			err := decode(raw, user)
+			if err != nil {
+				return err
+			}
+			users = append(users, user)
+			return nil
+		})
 	})
 	return users, err
 }
