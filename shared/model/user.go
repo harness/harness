@@ -23,13 +23,15 @@ type User struct {
 	TokenExpiry int64  `meddler:"user_access_expires,zeroisnull" json:"-"`
 }
 
-func NewUser(remote, login, email string) *User {
+func NewUser(remote, login, email string, token string) *User {
 	user := User{}
-	user.Token = GenerateToken()
 	user.Login = login
 	user.Remote = remote
 	user.Active = true
 	user.SetEmail(email)
+	user.Token = GenerateToken()
+	user.Access = token
+
 	return &user
 }
 

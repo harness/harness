@@ -10,7 +10,7 @@ import (
 	"github.com/zenazn/goji/web"
 )
 
-// GetUsers accepts a request to retrieve all users
+// GetUserList accepts a request to retrieve all users
 // from the datastore and return encoded in JSON format.
 //
 //     GET /api/users
@@ -57,11 +57,12 @@ func GetUser(c web.C, w http.ResponseWriter, r *http.Request) {
 func PostUser(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
 	var (
-		host  = c.URLParams["host"]
-		login = c.URLParams["login"]
+		host   = c.URLParams["host"]
+		login  = c.URLParams["login"]
+		token = r.PostForm.Get("token")
 	)
 
-	account := model.NewUser(host, login, "")
+	account := model.NewUser(host, login, "", token)
 	if err := datastore.PostUser(ctx, account); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -69,7 +70,7 @@ func PostUser(c web.C, w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(account)
 }
 
-// DeleteUser accepts a request to delete the specified
+// DelUser accepts a request to delete the specified
 // user account from the system. A successful request will
 // respond with an OK 200 status.
 //

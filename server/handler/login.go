@@ -60,7 +60,7 @@ func GetLogin(c web.C, w http.ResponseWriter, r *http.Request) {
 		}
 
 		// create the user account
-		u = model.NewUser(remote.GetKind(), login.Login, login.Email)
+		u = model.NewUser(remote.GetKind(), login.Login, login.Email, "")
 		u.Name = login.Name
 		u.SetEmail(login.Email)
 
