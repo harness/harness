@@ -8,10 +8,6 @@ deps:
 	go get github.com/GeertJohan/go.rice/rice
 	go get -t -v ./...
 
-docker:
-	mkdir -p $$GOPATH/src/github.com/docker/docker
-	git clone --depth=1 --branch=v1.5.0 git://github.com/docker/docker.git $$GOPATH/src/github.com/docker/docker
-
 test:
 	@test -z "$(shell find . -name '*.go' | xargs gofmt -l)" || (echo "Need to run 'go fmt ./...'"; exit 1)
 	go vet ./...
