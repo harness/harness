@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,9 +12,17 @@ import (
 
 // POST /api/user/tokens
 func PostToken(c *gin.Context) {
+	settings := ToSettings(c)
 	store := ToDatastore(c)
 	sess := ToSession(c)
 	user := ToUser(c)
+
+	// if a session secret is not defined there is no way to
+	// generate jwt user tokens, so we must throw an error
+	if settings.Session == nil || len(settings.Session.Secret) == 0 {
+		c.String(500, "User tokens are not configured")
+		return
+	}
 
 	in := &common.Token{}
 	if !c.BindWith(in, binding.JSON) {
