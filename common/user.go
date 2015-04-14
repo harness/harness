@@ -10,8 +10,4 @@ type User struct {
 	Admin    bool   `json:"admin,omitempty"`
 	Created  int64  `json:"created_at,omitempty"`
 	Updated  int64  `json:"updated_at,omitempty"`
-
-	// Repos contains a list of subscriptions
-	// to repositories the user is watching.
-	Repos map[string]struct{} `json:"-"`
 }

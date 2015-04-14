@@ -54,39 +54,33 @@ func (db *DB) GetUserTokens(login string) ([]*common.Token, error) {
 // GetUserRepos gets a list of repositories for the
 // given user account.
 func (db *DB) GetUserRepos(login string) ([]*common.Repo, error) {
-	t, err := db.Begin(false)
-	if err != nil {
-		return nil, err
-	}
-	defer t.Rollback()
 	repos := []*common.Repo{}
-	user := &common.User{}
-
-	// get the user struct from the database
-	key := []byte(login)
-	raw := t.Bucket(bucketUser).Get(key)
-	err = decode(raw, user)
-	if err != nil {
-		return nil, err
-	}
-
-	// for each item in the index, get the repository
-	// and append to the array
-	for repoName, _ := range user.Repos {
-		repo := &common.Repo{}
-		key = []byte(repoName)
-		raw = t.Bucket(bucketRepo).Get(key)
-		if raw == nil {
-			// this will happen when the repository has been deleted
-			// TODO we should probably upate the index in this case.
-			continue
+	err := db.View(func(t *bolt.Tx) error {
+		// get the index of user tokens and unmarshal
+		// to a string array.
+		var keys [][]byte
+		err := get(t, bucketUserRepos, []byte(login), &keys)
+		if err != nil && err != ErrKeyNotFound {
+			return err
 		}
-		err = decode(raw, repo)
-		if err != nil {
-			break
+
+		// for each item in the index, get the repository
+		// and append to the array
+		for _, key := range keys {
+			repo := &common.Repo{}
+			err := get(t, bucketRepo, key, repo)
+			if err == ErrKeyNotFound {
+				// TODO if we come across ErrKeyNotFound it means
+				// we need to re-build the index
+				continue
+			} else if err != nil {
+				return err
+			}
+			repos = append(repos, repo)
 		}
-		repos = append(repos, repo)
-	}
+		return nil
+	})
+
 	return repos, err
 }
 

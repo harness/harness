@@ -74,11 +74,13 @@ func splice(t *bolt.Tx, bucket, index, value []byte) error {
 	if err != nil && err != ErrKeyNotFound {
 		return err
 	}
+
 	for i, key := range keys {
 		if bytes.Equal(key, value) {
 			keys = keys[:i+copy(keys[i:], keys[i+1:])]
 			break
 		}
 	}
+
 	return update(t, bucket, index, &keys)
 }
