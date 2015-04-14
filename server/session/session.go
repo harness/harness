@@ -70,7 +70,7 @@ func (s *session) GetLogin(r *http.Request) *common.Token {
 		return token
 	}
 
-	if time.Now().UTC().Add(s.expire).Unix() > token.Issued {
+	if time.Unix(token.Issued, 0).Add(s.expire).Before(time.Now()) {
 		return nil
 	}
 	return token
