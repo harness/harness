@@ -11,6 +11,13 @@ type Remote interface {
 	// remote user details.
 	Login(token, secret string) (*common.User, error)
 
+	// Orgs fetches the organizations for the given user.
+	//
+	// TODO(bradrydzewski) consider consolidating this to return
+	//                     the list of organizations along with
+	//                     the user Login info.
+	Orgs(u *common.User) ([]string, error)
+
 	// Repo fetches the named repository from the remote system.
 	Repo(u *common.User, owner, repo string) (*common.Repo, error)
 
