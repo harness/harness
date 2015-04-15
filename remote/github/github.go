@@ -26,8 +26,6 @@ type GitHub struct {
 	Secret      string
 	PrivateMode bool
 	SkipVerify  bool
-	Orgs        []string
-	Open        bool
 
 	cache *lru.Cache
 }
@@ -40,8 +38,6 @@ func New(service *settings.Service) *GitHub {
 		Secret:      service.OAuth.Secret,
 		PrivateMode: service.PrivateMode,
 		SkipVerify:  service.SkipVerify,
-		Orgs:        service.Orgs,
-		Open:        service.Open,
 	}
 	var err error
 	github.cache, err = lru.New(1028)
@@ -79,6 +75,20 @@ func (g *GitHub) Login(token, secret string) (*common.User, error) {
 	user.Token = token
 	user.Secret = secret
 	return &user, nil
+}
+
+// Orgs fetches the organizations for the given user.
+func (g *GitHub) Orgs(u *common.User) ([]string, error) {
+	client := NewClient(g.API, u.Token, g.SkipVerify)
+	orgs_ := []string{}
+	orgs, err := GetOrgs(client)
+	if err != nil {
+		return orgs_, err
+	}
+	for _, org := range orgs {
+		orgs_ = append(orgs_, *org.Login)
+	}
+	return orgs_, nil
 }
 
 // Repo fetches the named repository from the remote system.

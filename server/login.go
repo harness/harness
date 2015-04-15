@@ -23,6 +23,7 @@ import (
 func GetLogin(c *gin.Context) {
 	settings := ToSettings(c)
 	session := ToSession(c)
+	remote := ToRemote(c)
 	store := ToDatastore(c)
 
 	// when dealing with redirects we may need
@@ -49,8 +50,18 @@ func GetLogin(c *gin.Context) {
 		return
 	}
 
-	// get the user from the database
 	login := ToUser(c)
+
+	// check organization membership, if applicable
+	if len(settings.Service.Orgs) != 0 {
+		orgs, _ := remote.Orgs(login)
+		if !checkMembership(orgs, settings.Service.Orgs) {
+			c.Redirect(303, "/login#error=access_denied_org")
+			return
+		}
+	}
+
+	// get the user from the database
 	u, err := store.User(login.Login)
 	if err != nil {
 		count, err := store.UserCount()
@@ -192,4 +203,20 @@ func getLoginBasic(c *gin.Context) {
 
 	// add the user to the request
 	c.Set("user", user)
+}
+
+// checkMembership is a helper function that compares the user's
+// organization list to a whitelist of organizations that are
+// approved to use the system.
+func checkMembership(orgs, whitelist []string) bool {
+	orgs_ := make(map[string]struct{}, len(orgs))
+	for _, org := range orgs {
+		orgs_[org] = struct{}{}
+	}
+	for _, org := range whitelist {
+		if _, ok := orgs_[org]; ok {
+			return true
+		}
+	}
+	return false
 }
