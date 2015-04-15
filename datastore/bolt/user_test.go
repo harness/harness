@@ -23,17 +23,17 @@ func TestUser(t *testing.T) {
 		})
 
 		g.It("Should find", func() {
-			db.InsertUser(&common.User{Login: "octocat"})
-			user, err := db.GetUser("octocat")
+			db.SetUserNotExists(&common.User{Login: "octocat"})
+			user, err := db.User("octocat")
 			g.Assert(err).Equal(nil)
 			g.Assert(user.Login).Equal("octocat")
 		})
 
 		g.It("Should insert", func() {
-			err := db.InsertUser(&common.User{Login: "octocat"})
+			err := db.SetUserNotExists(&common.User{Login: "octocat"})
 			g.Assert(err).Equal(nil)
 
-			user, err := db.GetUser("octocat")
+			user, err := db.User("octocat")
 			g.Assert(err).Equal(nil)
 			g.Assert(user.Login).Equal("octocat")
 			g.Assert(user.Created != 0).IsTrue()
@@ -41,50 +41,50 @@ func TestUser(t *testing.T) {
 		})
 
 		g.It("Should not insert if exists", func() {
-			db.InsertUser(&common.User{Login: "octocat"})
-			err := db.InsertUser(&common.User{Login: "octocat"})
+			db.SetUser(&common.User{Login: "octocat"})
+			err := db.SetUserNotExists(&common.User{Login: "octocat"})
 			g.Assert(err).Equal(ErrKeyExists)
 		})
 
 		g.It("Should update", func() {
-			db.InsertUser(&common.User{Login: "octocat"})
-			user, err := db.GetUser("octocat")
+			db.SetUserNotExists(&common.User{Login: "octocat"})
+			user, err := db.User("octocat")
 			g.Assert(err).Equal(nil)
 
 			user.Email = "octocat@github.com"
-			err = db.UpdateUser(user)
+			err = db.SetUser(user)
 			g.Assert(err).Equal(nil)
 
-			user_, err := db.GetUser("octocat")
+			user_, err := db.User("octocat")
 			g.Assert(err).Equal(nil)
 			g.Assert(user_.Login).Equal(user.Login)
 			g.Assert(user_.Email).Equal(user.Email)
 		})
 
 		g.It("Should delete", func() {
-			db.InsertUser(&common.User{Login: "octocat"})
-			user, err := db.GetUser("octocat")
+			db.SetUserNotExists(&common.User{Login: "octocat"})
+			user, err := db.User("octocat")
 			g.Assert(err).Equal(nil)
 
-			err = db.DeleteUser(user)
+			err = db.DelUser(user)
 			g.Assert(err).Equal(nil)
 
-			_, err = db.GetUser("octocat")
+			_, err = db.User("octocat")
 			g.Assert(err).Equal(ErrKeyNotFound)
 		})
 
 		g.It("Should list", func() {
-			db.InsertUser(&common.User{Login: "bert"})
-			db.InsertUser(&common.User{Login: "ernie"})
-			users, err := db.GetUserList()
+			db.SetUserNotExists(&common.User{Login: "bert"})
+			db.SetUserNotExists(&common.User{Login: "ernie"})
+			users, err := db.UserList()
 			g.Assert(err).Equal(nil)
 			g.Assert(len(users)).Equal(2)
 		})
 
 		g.It("Should count", func() {
-			db.InsertUser(&common.User{Login: "bert"})
-			db.InsertUser(&common.User{Login: "ernie"})
-			count, err := db.GetUserCount()
+			db.SetUserNotExists(&common.User{Login: "bert"})
+			db.SetUserNotExists(&common.User{Login: "ernie"})
+			count, err := db.UserCount()
 			g.Assert(err).Equal(nil)
 			g.Assert(count).Equal(2)
 		})

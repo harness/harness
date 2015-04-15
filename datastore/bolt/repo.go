@@ -8,8 +8,8 @@ import (
 	"github.com/drone/drone/common"
 )
 
-// GetRepo gets the repository by name.
-func (db *DB) GetRepo(repo string) (*common.Repo, error) {
+// Repo returns the repository with the given name.
+func (db *DB) Repo(repo string) (*common.Repo, error) {
 	repo_ := &common.Repo{}
 	key := []byte(repo)
 
@@ -20,9 +20,42 @@ func (db *DB) GetRepo(repo string) (*common.Repo, error) {
 	return repo_, err
 }
 
-// GetRepoParams gets the private environment parameters
+// RepoList returns a list of repositories for the
+// given user account.
+func (db *DB) RepoList(login string) ([]*common.Repo, error) {
+	repos := []*common.Repo{}
+	err := db.View(func(t *bolt.Tx) error {
+		// get the index of user tokens and unmarshal
+		// to a string array.
+		var keys [][]byte
+		err := get(t, bucketUserRepos, []byte(login), &keys)
+		if err != nil && err != ErrKeyNotFound {
+			return err
+		}
+
+		// for each item in the index, get the repository
+		// and append to the array
+		for _, key := range keys {
+			repo := &common.Repo{}
+			err := get(t, bucketRepo, key, repo)
+			if err == ErrKeyNotFound {
+				// TODO if we come across ErrKeyNotFound it means
+				// we need to re-build the index
+				continue
+			} else if err != nil {
+				return err
+			}
+			repos = append(repos, repo)
+		}
+		return nil
+	})
+
+	return repos, err
+}
+
+// RepoParams returns the private environment parameters
 // for the given repository.
-func (db *DB) GetRepoParams(repo string) (map[string]string, error) {
+func (db *DB) RepoParams(repo string) (map[string]string, error) {
 	params := map[string]string{}
 	key := []byte(repo)
 
@@ -33,9 +66,9 @@ func (db *DB) GetRepoParams(repo string) (map[string]string, error) {
 	return params, err
 }
 
-// GetRepoParams gets the private and public rsa keys
+// RepoKeypair returns the private and public rsa keys
 // for the given repository.
-func (db *DB) GetRepoKeys(repo string) (*common.Keypair, error) {
+func (db *DB) RepoKeypair(repo string) (*common.Keypair, error) {
 	keypair := &common.Keypair{}
 	key := []byte(repo)
 
@@ -46,9 +79,8 @@ func (db *DB) GetRepoKeys(repo string) (*common.Keypair, error) {
 	return keypair, err
 }
 
-// UpdateRepos updates a repository. If the repository
-// does not exist an error is returned.
-func (db *DB) UpdateRepo(repo *common.Repo) error {
+// SetRepo inserts or updates a repository.
+func (db *DB) SetRepo(repo *common.Repo) error {
 	key := []byte(repo.FullName)
 	repo.Updated = time.Now().UTC().Unix()
 
@@ -57,9 +89,9 @@ func (db *DB) UpdateRepo(repo *common.Repo) error {
 	})
 }
 
-// InsertRepo inserts a repository in the datastore and
-// subscribes the user to that repository.
-func (db *DB) InsertRepo(user *common.User, repo *common.Repo) error {
+// SetRepoNotExists updates a repository. If the repository
+// already exists ErrConflict is returned.
+func (db *DB) SetRepoNotExists(user *common.User, repo *common.Repo) error {
 	repokey := []byte(repo.FullName)
 	repo.Created = time.Now().UTC().Unix()
 	repo.Updated = time.Now().UTC().Unix()
@@ -78,9 +110,9 @@ func (db *DB) InsertRepo(user *common.User, repo *common.Repo) error {
 	})
 }
 
-// UpsertRepoParams inserts or updates the private
+// SetRepoParams inserts or updates the private
 // environment parameters for the named repository.
-func (db *DB) UpsertRepoParams(repo string, params map[string]string) error {
+func (db *DB) SetRepoParams(repo string, params map[string]string) error {
 	key := []byte(repo)
 
 	return db.Update(func(t *bolt.Tx) error {
@@ -88,9 +120,9 @@ func (db *DB) UpsertRepoParams(repo string, params map[string]string) error {
 	})
 }
 
-// UpsertRepoKeys inserts or updates the private and
+// SetRepoKeypair inserts or updates the private and
 // public keypair for the named repository.
-func (db *DB) UpsertRepoKeys(repo string, keypair *common.Keypair) error {
+func (db *DB) SetRepoKeypair(repo string, keypair *common.Keypair) error {
 	key := []byte(repo)
 
 	return db.Update(func(t *bolt.Tx) error {
@@ -98,8 +130,8 @@ func (db *DB) UpsertRepoKeys(repo string, keypair *common.Keypair) error {
 	})
 }
 
-// DeleteRepo deletes the repository.
-func (db *DB) DeleteRepo(repo *common.Repo) error {
+// DelRepo deletes the repository.
+func (db *DB) DelRepo(repo *common.Repo) error {
 	//TODO(benschumacher) rework this to use BoltDB's txn wrapper
 
 	t, err := db.Begin(true)
@@ -119,9 +151,13 @@ func (db *DB) DeleteRepo(repo *common.Repo) error {
 	return t.Commit()
 }
 
-// GetSubscriber gets the subscriber by login for the
-// named repository.
-func (db *DB) GetSubscriber(login, repo string) (*common.Subscriber, error) {
+// Subscribed returns true if the user is subscribed
+// to the named repository.
+//
+// TODO (bradrydzewski) we are currently storing the subscription
+// data in a wrapper element called common.Subscriber. This is
+// no longer necessary.
+func (db *DB) Subscribed(login, repo string) (bool, error) {
 	sub := &common.Subscriber{}
 	err := db.View(func(t *bolt.Tx) error {
 		repokey := []byte(repo)
@@ -142,12 +178,12 @@ func (db *DB) GetSubscriber(login, repo string) (*common.Subscriber, error) {
 		}
 		return nil
 	})
-	return sub, err
+	return sub.Subscribed, err
 }
 
-// InsertSubscriber inserts a subscriber for the named
+// SetSubscriber inserts a subscriber for the named
 // repository.
-func (db *DB) InsertSubscriber(login, repo string) error {
+func (db *DB) SetSubscriber(login, repo string) error {
 	return db.Update(func(t *bolt.Tx) error {
 		userkey := []byte(login)
 		repokey := []byte(repo)
@@ -155,9 +191,9 @@ func (db *DB) InsertSubscriber(login, repo string) error {
 	})
 }
 
-// DeleteSubscriber removes the subscriber by login for the
+// DelSubscriber removes the subscriber by login for the
 // named repository.
-func (db *DB) DeleteSubscriber(login, repo string) error {
+func (db *DB) DelSubscriber(login, repo string) error {
 	return db.Update(func(t *bolt.Tx) error {
 		userkey := []byte(login)
 		repokey := []byte(repo)

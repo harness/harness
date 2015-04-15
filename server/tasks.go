@@ -14,12 +14,12 @@ import (
 //     GET /api/tasks/:owner/:name/:number/:task
 //
 func GetTask(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	repo := ToRepo(c)
 	b, _ := strconv.Atoi(c.Params.ByName("number"))
 	t, _ := strconv.Atoi(c.Params.ByName("task"))
 
-	task, err := ds.GetTask(repo.FullName, b, t)
+	task, err := store.Task(repo.FullName, b, t)
 	if err != nil {
 		c.Fail(404, err)
 	} else {
@@ -34,11 +34,11 @@ func GetTask(c *gin.Context) {
 //     GET /api/tasks/:owner/:name/:number
 //
 func GetTasks(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	repo := ToRepo(c)
 	num, _ := strconv.Atoi(c.Params.ByName("number"))
 
-	tasks, err := ds.GetTaskList(repo.FullName, num)
+	tasks, err := store.TaskList(repo.FullName, num)
 	if err != nil {
 		c.Fail(404, err)
 	} else {
@@ -53,18 +53,18 @@ func GetTasks(c *gin.Context) {
 //     GET /api/logs/:owner/:name/:number/:task
 //
 func GetTaskLogs(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	repo := ToRepo(c)
 	full, _ := strconv.ParseBool(c.Params.ByName("full"))
 	build, _ := strconv.Atoi(c.Params.ByName("number"))
 	task, _ := strconv.Atoi(c.Params.ByName("task"))
 
-	logs, err := ds.GetTaskLogs(repo.FullName, build, task)
+	r, err := store.LogReader(repo.FullName, build, task)
 	if err != nil {
 		c.Fail(404, err)
 	} else if full {
-		io.Copy(c.Writer, logs)
+		io.Copy(c.Writer, r)
 	} else {
-		io.Copy(c.Writer, io.LimitReader(logs, 2000000))
+		io.Copy(c.Writer, io.LimitReader(r, 2000000))
 	}
 }

@@ -43,7 +43,7 @@
 		 * @param {object} JSON representation of a repository.
 		 */
 		this.update = function(repo) {
-			return $http.put('/api/repos/'+repo.full_name, repo);
+			return $http.patch('/api/repos/'+repo.full_name, repo);
 		};
 
 		/**
@@ -61,7 +61,7 @@
 		 * @param {string} Name of the repository.
 		 */
 		this.watch = function(repoName) {
-			return $http.post('/api/subscribers/'+repoName);
+			return $http.post('/api/repos/'+repoName+'/watch');
 		};
 
 		/**
@@ -70,7 +70,7 @@
 		 * @param {string} Name of the repository.
 		 */
 		this.unwatch = function(repoName) {
-			return $http.delete('/api/subscribers/'+repoName);
+			return $http.delete('/api/repos/'+repoName+'/unwatch');
 		};
 	}
 

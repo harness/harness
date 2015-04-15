@@ -11,7 +11,7 @@ import (
 
 // GetTask gets the task at index N for the named
 // repository and build number.
-func (db *DB) GetTask(repo string, build int, task int) (*common.Task, error) {
+func (db *DB) Task(repo string, build int, task int) (*common.Task, error) {
 	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + strconv.Itoa(task))
 	task_ := &common.Task{}
 	err := db.View(func(t *bolt.Tx) error {
@@ -20,27 +20,12 @@ func (db *DB) GetTask(repo string, build int, task int) (*common.Task, error) {
 	return task_, err
 }
 
-// GetTaskLogs gets the task logs at index N for
-// the named repository and build number.
-func (db *DB) GetTaskLogs(repo string, build int, task int) (io.Reader, error) {
-	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + strconv.Itoa(task))
-
-	var log []byte
-	err := db.View(func(t *bolt.Tx) error {
-		var err error
-		log, err = raw(t, bucketBuildLogs, key)
-		return err
-	})
-	buf := bytes.NewBuffer(log)
-	return buf, err
-}
-
-// GetTaskList gets all tasks for the named repository
+// TaskList gets all tasks for the named repository
 // and build number.
-func (db *DB) GetTaskList(repo string, build int) ([]*common.Task, error) {
+func (db *DB) TaskList(repo string, build int) ([]*common.Task, error) {
 	// fetch the build so that we can get the
 	// number of child tasks.
-	build_, err := db.GetBuild(repo, build)
+	build_, err := db.Build(repo, build)
 	if err != nil {
 		return nil, err
 	}
@@ -70,18 +55,18 @@ func (db *DB) GetTaskList(repo string, build int) ([]*common.Task, error) {
 	return tasks, nil
 }
 
-// UpsertTask inserts or updates a task for the named
+// SetTask inserts or updates a task for the named
 // repository and build number.
-func (db *DB) UpsertTask(repo string, build int, task *common.Task) error {
+func (db *DB) SetTask(repo string, build int, task *common.Task) error {
 	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + strconv.Itoa(task.Number))
 	return db.Update(func(t *bolt.Tx) error {
 		return update(t, bucketBuildTasks, key, task)
 	})
 }
 
-// UpsertTaskLogs inserts or updates a task logs for the
+// SetLogs inserts or updates a task logs for the
 // named repository and build number.
-func (db *DB) UpsertTaskLogs(repo string, build int, task int, log []byte) error {
+func (db *DB) SetLogs(repo string, build int, task int, log []byte) error {
 	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + strconv.Itoa(task))
 	t, err := db.Begin(true)
 	if err != nil {
@@ -93,4 +78,19 @@ func (db *DB) UpsertTaskLogs(repo string, build int, task int, log []byte) error
 		return err
 	}
 	return t.Commit()
+}
+
+// LogReader gets the task logs at index N for
+// the named repository and build number.
+func (db *DB) LogReader(repo string, build int, task int) (io.Reader, error) {
+	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + strconv.Itoa(task))
+
+	var log []byte
+	err := db.View(func(t *bolt.Tx) error {
+		var err error
+		log, err = raw(t, bucketBuildLogs, key)
+		return err
+	})
+	buf := bytes.NewBuffer(log)
+	return buf, err
 }

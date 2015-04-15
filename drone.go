@@ -42,7 +42,7 @@ func main() {
 		user.Use(server.SetSession(session))
 
 		user.GET("", server.GetUserCurr)
-		user.PUT("", server.PutUserCurr)
+		user.PATCH("", server.PutUserCurr)
 		user.GET("/repos", server.GetUserRepos)
 		user.GET("/tokens", server.GetUserTokens)
 		user.POST("/tokens", server.PostToken)
@@ -55,8 +55,8 @@ func main() {
 
 		users.GET("", server.GetUsers)
 		users.GET("/:name", server.GetUser)
-		users.PUT("/:name", server.PutUser)
 		users.POST("/:name", server.PostUser)
+		users.PATCH("/:name", server.PutUser)
 		users.DELETE("/:name", server.DeleteUser)
 	}
 
@@ -72,65 +72,23 @@ func main() {
 			repo.Use(server.CheckPush())
 
 			repo.GET("", server.GetRepo)
-			repo.PUT("", server.PutRepo)
+			repo.PATCH("", server.PutRepo)
 			repo.DELETE("", server.DeleteRepo)
+			repo.POST("/watch", server.Subscribe)
+			repo.DELETE("/unwatch", server.Unsubscribe)
+
+			repo.GET("/builds", server.GetBuilds)
+			repo.GET("/builds/:number", server.GetBuild)
+			//TODO repo.POST("/builds/:number", server.RestartBuild)
+			//TODO repo.DELETE("/builds/:number", server.CancelBuild)
+			repo.GET("/builds/:number/tasks", server.GetTasks)
+			repo.GET("/builds/:number/tasks/:task", server.GetTask)
+			repo.GET("/builds/:number/tasks/:task/log", server.GetTaskLogs)
+
+			// repo.GET("/status/:number/status/:context", server.GetStatus)
+			repo.GET("/status/:number", server.GetStatusList)
+			repo.POST("/status/:number", server.PostStatus)
 		}
-	}
-
-	subscribers := api.Group("/subscribers/:owner/:name")
-	{
-		subscribers.Use(server.SetRepo())
-		subscribers.Use(server.SetPerm())
-		subscribers.Use(server.CheckPull())
-
-		subscribers.POST("", server.Subscribe)
-		subscribers.DELETE("", server.Unsubscribe)
-	}
-
-	builds := api.Group("/builds/:owner/:name")
-	{
-		builds.Use(server.SetRepo())
-		builds.Use(server.SetPerm())
-		builds.Use(server.CheckPull())
-		builds.Use(server.CheckPush())
-
-		builds.GET("", server.GetBuilds)
-		builds.GET("/:number", server.GetBuild)
-		//TODO builds.POST("/:number", server.RestartBuild)
-		//TODO builds.DELETE("/:number", server.CancelBuild)
-	}
-
-	tasks := api.Group("/tasks/:owner/:name/:number")
-	{
-		tasks.Use(server.SetRepo())
-		tasks.Use(server.SetPerm())
-		tasks.Use(server.CheckPull())
-		tasks.Use(server.CheckPush())
-
-		tasks.GET("", server.GetTasks)
-		tasks.GET("/:task", server.GetTask)
-	}
-
-	logs := api.Group("/logs/:owner/:name/:number/:task")
-	{
-		logs.Use(server.SetRepo())
-		logs.Use(server.SetPerm())
-		logs.Use(server.CheckPull())
-		logs.Use(server.CheckPush())
-
-		logs.GET("", server.GetTaskLogs)
-	}
-
-	status := api.Group("/status/:owner/:name/:number")
-	{
-		status.Use(server.SetRepo())
-		status.Use(server.SetPerm())
-		status.Use(server.CheckPull())
-		status.Use(server.CheckPush())
-
-		status.GET("/:context", server.GetStatus)
-		status.GET("", server.GetStatusList)
-		status.POST("", server.PostStatus)
 	}
 
 	badges := api.Group("/badges/:owner/:name")

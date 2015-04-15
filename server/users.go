@@ -14,8 +14,8 @@ import (
 //     GET /api/users
 //
 func GetUsers(c *gin.Context) {
-	ds := ToDatastore(c)
-	users, err := ds.GetUserList()
+	store := ToDatastore(c)
+	users, err := store.UserList()
 	if err != nil {
 		c.Fail(400, err)
 	} else {
@@ -30,12 +30,12 @@ func GetUsers(c *gin.Context) {
 //     POST /api/users
 //
 func PostUser(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	name := c.Params.ByName("name")
 	user := &common.User{Login: name, Name: name}
 	user.Token = c.Request.FormValue("token")
 	user.Secret = c.Request.FormValue("secret")
-	if err := ds.InsertUser(user); err != nil {
+	if err := store.SetUserNotExists(user); err != nil {
 		c.Fail(400, err)
 	} else {
 		c.JSON(201, user)
@@ -49,9 +49,9 @@ func PostUser(c *gin.Context) {
 //     GET /api/users/:name
 //
 func GetUser(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	name := c.Params.ByName("name")
-	user, err := ds.GetUser(name)
+	user, err := store.User(name)
 	if err != nil {
 		c.Fail(404, err)
 	} else {
@@ -66,10 +66,10 @@ func GetUser(c *gin.Context) {
 //     PUT /api/users/:name
 //
 func PutUser(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	me := ToUser(c)
 	name := c.Params.ByName("name")
-	user, err := ds.GetUser(name)
+	user, err := store.User(name)
 	if err != nil {
 		c.Fail(404, err)
 		return
@@ -88,7 +88,7 @@ func PutUser(c *gin.Context) {
 		user.Admin = in.Admin
 	}
 
-	err = ds.UpdateUser(user)
+	err = store.SetUser(user)
 	if err != nil {
 		c.Fail(400, err)
 	} else {
@@ -103,10 +103,10 @@ func PutUser(c *gin.Context) {
 //     DELETE /api/users/:name
 //
 func DeleteUser(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	me := ToUser(c)
 	name := c.Params.ByName("name")
-	user, err := ds.GetUser(name)
+	user, err := store.User(name)
 	if err != nil {
 		c.Fail(404, err)
 		return
@@ -119,7 +119,7 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	if err := ds.DeleteUser(user); err != nil {
+	if err := store.DelUser(user); err != nil {
 		c.Fail(400, err)
 	} else {
 		c.Writer.WriteHeader(204)

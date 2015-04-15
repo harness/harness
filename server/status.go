@@ -16,12 +16,12 @@ import (
 //     GET /api/status/:owner/:name/:number/:context
 //
 func GetStatus(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	repo := ToRepo(c)
 	num, _ := strconv.Atoi(c.Params.ByName("number"))
 	ctx := c.Params.ByName("context")
 
-	status, err := ds.GetBuildStatus(repo.FullName, num, ctx)
+	status, err := store.Status(repo.FullName, num, ctx)
 	if err != nil {
 		c.Fail(404, err)
 	} else {
@@ -36,7 +36,7 @@ func GetStatus(c *gin.Context) {
 //     POST /api/status/:owner/:name/:number
 //
 func PostStatus(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	repo := ToRepo(c)
 	num, err := strconv.Atoi(c.Params.ByName("number"))
 	if err != nil {
@@ -48,7 +48,7 @@ func PostStatus(c *gin.Context) {
 		c.AbortWithStatus(400)
 		return
 	}
-	if err := ds.InsertBuildStatus(repo.Name, num, in); err != nil {
+	if err := store.SetStatus(repo.Name, num, in); err != nil {
 		c.Fail(400, err)
 	} else {
 		c.JSON(201, in)
@@ -62,11 +62,11 @@ func PostStatus(c *gin.Context) {
 //     GET /api/status/:owner/:name/:number/:context
 //
 func GetStatusList(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	repo := ToRepo(c)
 	num, _ := strconv.Atoi(c.Params.ByName("number"))
 
-	list, err := ds.GetBuildStatusList(repo.FullName, num)
+	list, err := store.StatusList(repo.FullName, num)
 	if err != nil {
 		c.Fail(404, err)
 	} else {

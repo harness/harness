@@ -51,9 +51,9 @@ func GetLogin(c *gin.Context) {
 
 	// get the user from the database
 	login := ToUser(c)
-	u, err := store.GetUser(login.Login)
+	u, err := store.User(login.Login)
 	if err != nil {
-		count, err := store.GetUserCount()
+		count, err := store.UserCount()
 		if err != nil {
 			log.Errorf("cannot register %s. %s", login.Login, err)
 			c.Redirect(303, "/login#error=internal_error")
@@ -79,7 +79,7 @@ func GetLogin(c *gin.Context) {
 		u.Gravatar = gravatar.Generate(u.Email)
 
 		// insert the user into the database
-		if err := store.InsertUser(u); err != nil {
+		if err := store.SetUserNotExists(u); err != nil {
 			log.Errorf("cannot insert %s. %s", login.Login, err)
 			c.Redirect(303, "/login#error=internal_error")
 			return
@@ -100,7 +100,7 @@ func GetLogin(c *gin.Context) {
 	u.Email = login.Email
 	u.Gravatar = gravatar.Generate(u.Email)
 
-	if err := store.UpdateUser(u); err != nil {
+	if err := store.SetUser(u); err != nil {
 		log.Errorf("cannot update %s. %s", u.Login, err)
 		c.Redirect(303, "/login#error=internal_error")
 		return

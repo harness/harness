@@ -15,7 +15,7 @@
 		 * @param {number} Number of the build.
 		 */
 		this.list = function(repoName, number) {
-			return $http.get('/api/tasks/'+repoName+'/'+number);
+			return $http.get('/api/repos/'+repoName+'/builds/'+number+'/tasks');
 		};
 
 		/**
@@ -26,7 +26,7 @@
 		 * @param {number} Number of the task.
 		 */
 		this.get = function(repoName, number, step) {
-			return $http.get('/api/tasks/'+repoName+'/'+name+'/'+step);
+			return $http.get('/api/repos/'+repoName+'/builds/'+number+'/tasks/'+step);
 		};
 
 		/**
@@ -37,7 +37,7 @@
 		 * @param {number} Number of the task.
 		 */
 		this.get = function(repoName, number, step) {
-			return $http.get('/api/tasks/'+repoName+'/'+name+'/'+step);
+			return $http.get('/api/repos/'+repoName+'/builds/'+number+'/tasks/'+step);
 		};
 	}
 

@@ -24,20 +24,20 @@ func GetUserCurr(c *gin.Context) {
 //     PUT /api/user
 //
 func PutUserCurr(c *gin.Context) {
-	ds := ToDatastore(c)
-	me := ToUser(c)
+	store := ToDatastore(c)
+	user := ToUser(c)
 
 	in := &common.User{}
 	if !c.BindWith(in, binding.JSON) {
 		return
 	}
-	me.Email = in.Email
-	me.Gravatar = gravatar.Generate(in.Email)
-	err := ds.UpdateUser(me)
+	user.Email = in.Email
+	user.Gravatar = gravatar.Generate(in.Email)
+	err := store.SetUser(user)
 	if err != nil {
 		c.Fail(400, err)
 	} else {
-		c.JSON(200, me)
+		c.JSON(200, user)
 	}
 }
 
@@ -48,9 +48,9 @@ func PutUserCurr(c *gin.Context) {
 //     GET /api/user/repos
 //
 func GetUserRepos(c *gin.Context) {
-	ds := ToDatastore(c)
-	me := ToUser(c)
-	repos, err := ds.GetUserRepos(me.Login)
+	store := ToDatastore(c)
+	user := ToUser(c)
+	repos, err := store.RepoList(user.Login)
 	if err != nil {
 		c.Fail(400, err)
 	} else {
@@ -65,9 +65,9 @@ func GetUserRepos(c *gin.Context) {
 //     GET /api/user/tokens
 //
 func GetUserTokens(c *gin.Context) {
-	ds := ToDatastore(c)
-	me := ToUser(c)
-	tokens, err := ds.GetUserTokens(me.Login)
+	store := ToDatastore(c)
+	user := ToUser(c)
+	tokens, err := store.TokenList(user.Login)
 	if err != nil {
 		c.Fail(400, err)
 	} else {

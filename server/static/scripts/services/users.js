@@ -45,7 +45,7 @@
 		 * Updates an existing user
 		 */
 		this.put = function(user) {
-			return $http.put('/api/users/'+user.login, user);
+			return $http.patch('/api/users/'+user.login, user);
 		};
 
 		/**

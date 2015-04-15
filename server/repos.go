@@ -17,9 +17,10 @@ import (
 // additional repository meta-data.
 type repoResp struct {
 	*common.Repo
-	Perms  *common.Perm       `json:"permissions,omitempty"`
-	Watch  *common.Subscriber `json:"subscription,omitempty"`
-	Params map[string]string  `json:"params,omitempty"`
+	Perms   *common.Perm       `json:"permissions,omitempty"`
+	Watch   *common.Subscriber `json:"subscription,omitempty"`
+	Keypair *common.Keypair    `json:"keypair,omitempty"`
+	Params  map[string]string  `json:"params,omitempty"`
 }
 
 // repoReq is a data structure used for receiving
@@ -52,11 +53,11 @@ func GetRepo(c *gin.Context) {
 	repo := ToRepo(c)
 	user := ToUser(c)
 	perm := ToPerm(c)
-	data := repoResp{repo, perm, nil, nil}
+	data := repoResp{repo, perm, nil, nil, nil}
 	// if the user is an administrator of the project
 	// we should display the private parameter data.
 	if perm.Admin {
-		data.Params, _ = store.GetRepoParams(repo.FullName)
+		data.Params, _ = store.RepoParams(repo.FullName)
 	}
 	// if the user is authenticated, we should display
 	// if she is watching the current repository.
@@ -66,7 +67,9 @@ func GetRepo(c *gin.Context) {
 	}
 
 	// check to see if the user is subscribing to the repo
-	data.Watch, _ = store.GetSubscriber(user.Login, repo.FullName)
+	data.Watch = &common.Subscriber{}
+	data.Watch.Subscribed, _ = store.Subscribed(user.Login, repo.FullName)
+	data.Keypair, _ = store.RepoKeypair(repo.FullName)
 
 	c.JSON(200, data)
 }
@@ -89,7 +92,7 @@ func PutRepo(c *gin.Context) {
 	}
 
 	if in.Params != nil {
-		err := store.UpsertRepoParams(repo.FullName, *in.Params)
+		err := store.SetRepoParams(repo.FullName, *in.Params)
 		if err != nil {
 			c.Fail(400, err)
 			return
@@ -111,17 +114,19 @@ func PutRepo(c *gin.Context) {
 		repo.Timeout = *in.Timeout
 	}
 
-	err := store.UpdateRepo(repo)
+	err := store.SetRepo(repo)
 	if err != nil {
 		c.Fail(400, err)
 		return
 	}
 
-	data := repoResp{repo, perm, nil, nil}
-	data.Params, _ = store.GetRepoParams(repo.FullName)
+	data := repoResp{repo, perm, nil, nil, nil}
+	data.Params, _ = store.RepoParams(repo.FullName)
 
 	// check to see if the user is subscribing to the repo
-	data.Watch, _ = store.GetSubscriber(user.Login, repo.FullName)
+	data.Watch = &common.Subscriber{}
+	data.Watch.Subscribed, _ = store.Subscribed(user.Login, repo.FullName)
+	data.Keypair, _ = store.RepoKeypair(repo.FullName)
 
 	c.JSON(200, data)
 }
@@ -147,7 +152,7 @@ func DeleteRepo(c *gin.Context) {
 		c.Fail(400, err)
 	}
 
-	err = ds.DeleteRepo(r)
+	err = ds.DelRepo(r)
 	if err != nil {
 		c.Fail(400, err)
 	}
@@ -213,14 +218,14 @@ func PostRepo(c *gin.Context) {
 	println(link)
 
 	// persist the repository
-	err = store.InsertRepo(user, r)
+	err = store.SetRepoNotExists(user, r)
 	if err != nil {
 		c.Fail(500, err)
 		return
 	}
 
 	// persisty the repository key pair
-	err = store.UpsertRepoKeys(r.FullName, keypair)
+	err = store.SetRepoKeypair(r.FullName, keypair)
 	if err != nil {
 		c.Fail(500, err)
 		return
