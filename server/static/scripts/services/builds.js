@@ -14,7 +14,7 @@
 		 * @param {string} Name of the repository.
 		 */
 		this.list = function(repoName) {
-			return $http.get('/api/builds/'+repoName);
+			return $http.get('/api/repos/'+repoName+'/builds');
 		};
 
 		/**
@@ -24,7 +24,7 @@
 		 * @param {number} Number of the build.
 		 */
 		this.get = function(repoName, buildNumber) {
-			return $http.get('/api/builds/'+repoName+'/'+buildNumber);
+			return $http.get('/api/repos/'+repoName+'/builds/'+buildNumber);
 		};
 	}
 

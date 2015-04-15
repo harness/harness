@@ -36,7 +36,7 @@ func PostToken(c *gin.Context) {
 	token.Kind = common.TokenUser
 	token.Issued = time.Now().UTC().Unix()
 
-	err := store.InsertToken(token)
+	err := store.SetToken(token)
 	if err != nil {
 		c.Fail(400, err)
 	}
@@ -57,11 +57,11 @@ func DelToken(c *gin.Context) {
 	user := ToUser(c)
 	label := c.Params.ByName("label")
 
-	token, err := store.GetToken(user.Login, label)
+	token, err := store.Token(user.Login, label)
 	if err != nil {
 		c.Fail(404, err)
 	}
-	err = store.DeleteToken(token)
+	err = store.DelToken(token)
 	if err != nil {
 		c.Fail(400, err)
 	}

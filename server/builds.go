@@ -13,14 +13,14 @@ import (
 //     GET /api/builds/:owner/:name/:number
 //
 func GetBuild(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	repo := ToRepo(c)
 	num, err := strconv.Atoi(c.Params.ByName("number"))
 	if err != nil {
 		c.Fail(400, err)
 		return
 	}
-	build, err := ds.GetBuild(repo.FullName, num)
+	build, err := store.Build(repo.FullName, num)
 	if err != nil {
 		c.Fail(404, err)
 	} else {
@@ -34,9 +34,9 @@ func GetBuild(c *gin.Context) {
 //     GET /api/builds/:owner/:name
 //
 func GetBuilds(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	repo := ToRepo(c)
-	builds, err := ds.GetBuildList(repo.FullName)
+	builds, err := store.BuildList(repo.FullName)
 	if err != nil {
 		c.Fail(404, err)
 	} else {

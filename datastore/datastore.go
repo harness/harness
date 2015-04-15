@@ -6,138 +6,136 @@ import (
 	"github.com/drone/drone/common"
 )
 
+var (
+	ErrConflict = "Key not unique"
+	ErrNotFound = "Key not found"
+)
+
 type Datastore interface {
-	// GetUser gets a user by user login.
-	GetUser(string) (*common.User, error)
+	// User returns a user by user login.
+	User(string) (*common.User, error)
 
-	// GetUserTokens gets a list of all tokens for
-	// the given user login.
-	GetUserTokens(string) ([]*common.Token, error)
+	// UserCount returns a count of all registered users.
+	UserCount() (int, error)
 
-	// GetUserRepos gets a list of repositories for the
-	// given user account.
-	GetUserRepos(string) ([]*common.Repo, error)
+	// UserList returns a list of all registered users.
+	UserList() ([]*common.User, error)
 
-	// GetUserCount gets a count of all registered users
-	// in the system.
-	GetUserCount() (int, error)
+	// SetUser inserts or updates a user.
+	SetUser(*common.User) error
 
-	// GetUserList gets a list of all registered users.
-	GetUserList() ([]*common.User, error)
+	// SetUserNotExists inserts a new user into the datastore.
+	// If the user login already exists ErrConflict is returned.
+	SetUserNotExists(*common.User) error
 
-	// UpdateUser updates an existing user. If the user
-	// does not exists an error is returned.
-	UpdateUser(*common.User) error
+	// Del deletes the user.
+	DelUser(*common.User) error
 
-	// InsertUser inserts a new user into the datastore. If
-	// the user login already exists an error is returned.
-	InsertUser(*common.User) error
+	// Token returns the token for the given user and label.
+	Token(string, string) (*common.Token, error)
 
-	// DeleteUser deletes the user.
-	DeleteUser(*common.User) error
+	// TokenList returns a list of all tokens for the given
+	// user login.
+	TokenList(string) ([]*common.Token, error)
 
-	// GetToken gets a token by sha value.
-	GetToken(string, string) (*common.Token, error)
+	// SetToken inserts a new user token in the datastore.
+	SetToken(*common.Token) error
 
-	// InsertToken inserts a new user token in the datastore.
-	// If the token already exists and error is returned.
-	InsertToken(*common.Token) error
+	// DelToken deletes the token.
+	DelToken(*common.Token) error
 
-	// DeleteUser deletes the token.
-	DeleteToken(*common.Token) error
+	// Subscribed returns true if the user is subscribed
+	// to the named repository.
+	Subscribed(string, string) (bool, error)
 
-	// GetSubscriber gets the subscriber by login for the
-	// named repository.
-	GetSubscriber(string, string) (*common.Subscriber, error)
-
-	// InsertSubscriber inserts a subscriber for the named
+	// SetSubscriber inserts a subscriber for the named
 	// repository.
-	InsertSubscriber(string, string) error
+	SetSubscriber(string, string) error
 
-	// DeleteSubscriber removes the subscriber by login for the
+	// DelSubscriber removes the subscriber by login for the
 	// named repository.
-	DeleteSubscriber(string, string) error
+	DelSubscriber(string, string) error
 
-	// GetRepo gets the repository by name.
-	GetRepo(string) (*common.Repo, error)
+	// Repo returns the repository with the given name.
+	Repo(string) (*common.Repo, error)
 
-	// GetRepoParams gets the private environment parameters
+	// RepoList returns a list of repositories for the
+	// given user account.
+	RepoList(string) ([]*common.Repo, error)
+
+	// RepoParams returns the private environment parameters
 	// for the given repository.
-	GetRepoParams(string) (map[string]string, error)
+	RepoParams(string) (map[string]string, error)
 
-	// GetRepoParams gets the private and public rsa keys
+	// RepoKeypair returns the private and public rsa keys
 	// for the given repository.
-	GetRepoKeys(string) (*common.Keypair, error)
+	RepoKeypair(string) (*common.Keypair, error)
 
-	// UpdateRepos updates a repository. If the repository
-	// does not exist an error is returned.
-	UpdateRepo(*common.Repo) error
+	// SetRepo inserts or updates a repository.
+	SetRepo(*common.Repo) error
 
-	// InsertRepo inserts a repository in the datastore and
-	// subscribes the user to that repository.
-	InsertRepo(*common.User, *common.Repo) error
+	// SetRepo updates a repository. If the repository
+	// already exists ErrConflict is returned.
+	SetRepoNotExists(*common.User, *common.Repo) error
 
-	// UpsertRepoParams inserts or updates the private
+	// SetRepoParams inserts or updates the private
 	// environment parameters for the named repository.
-	UpsertRepoParams(string, map[string]string) error
+	SetRepoParams(string, map[string]string) error
 
-	// UpsertRepoKeys inserts or updates the private and
+	// SetRepoKeypair inserts or updates the private and
 	// public keypair for the named repository.
-	UpsertRepoKeys(string, *common.Keypair) error
+	SetRepoKeypair(string, *common.Keypair) error
 
-	// DeleteRepo deletes the repository.
-	DeleteRepo(*common.Repo) error
+	// DelRepo deletes the repository.
+	DelRepo(*common.Repo) error
 
-	// GetBuild gets the specified build number for the
+	// Build gets the specified build number for the
 	// named repository and build number
-	GetBuild(string, int) (*common.Build, error)
+	Build(string, int) (*common.Build, error)
 
-	// GetBuildList gets a list of recent builds for the
+	// BuildList gets a list of recent builds for the
 	// named repository.
-	GetBuildList(string) ([]*common.Build, error)
+	BuildList(string) ([]*common.Build, error)
 
-	// GetBuildLast gets the last executed build for the
+	// BuildLast gets the last executed build for the
 	// named repository.
-	GetBuildLast(string) (*common.Build, error)
+	BuildLast(string) (*common.Build, error)
 
-	// GetBuildStatus gets the named build status for the
-	// named repository and build number.
-	GetBuildStatus(string, int, string) (*common.Status, error)
+	// SetBuild inserts or updates a build for the named
+	// repository. The build number is incremented and
+	// assigned to the provided build.
+	SetBuild(string, *common.Build) error
 
-	// GetBuildStatusList gets a list of all build statues for
-	// the named repository and build number.
-	GetBuildStatusList(string, int) ([]*common.Status, error)
+	// Status returns the status for the given repository
+	// and build number.
+	Status(string, int, string) (*common.Status, error)
 
-	// InsertBuild inserts a new build for the named repository
-	InsertBuild(string, *common.Build) error
+	// StatusList returned a list of all build statues for
+	// the given repository and build number.
+	StatusList(string, int) ([]*common.Status, error)
 
-	// InsertBuildStatus inserts a new build status for the
+	// SetStatus inserts a new build status for the
 	// named repository and build number. If the status already
 	// exists an error is returned.
-	InsertBuildStatus(string, int, *common.Status) error
-
-	// UpdateBuild updates an existing build for the named
-	// repository. If the build already exists and error is
-	// returned.
-	UpdateBuild(string, *common.Build) error
+	SetStatus(string, int, *common.Status) error
 
 	// GetTask gets the task at index N for the named
 	// repository and build number.
-	GetTask(string, int, int) (*common.Task, error)
+	Task(string, int, int) (*common.Task, error)
 
-	// GetTaskLogs gets the task logs at index N for
-	// the named repository and build number.
-	GetTaskLogs(string, int, int) (io.Reader, error)
-
-	// GetTaskList gets all tasks for the named repository
+	// TaskList gets all tasks for the named repository
 	// and build number.
-	GetTaskList(string, int) ([]*common.Task, error)
+	TaskList(string, int) ([]*common.Task, error)
 
-	// UpsertTask inserts or updates a task for the named
+	// SetTask inserts or updates a task for the named
 	// repository and build number.
-	UpsertTask(string, int, *common.Task) error
+	SetTask(string, int, *common.Task) error
 
-	// UpsertTaskLogs inserts or updates a task logs for the
+	// LogReader gets the task logs at index N for
+	// the named repository and build number.
+	LogReader(string, int, int) (io.Reader, error)
+
+	// SetLogs inserts or updates a task logs for the
 	// named repository and build number.
-	UpsertTaskLogs(string, int, int, []byte) error
+	SetLogs(string, int, int, []byte) error
 }

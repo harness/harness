@@ -15,7 +15,7 @@ func Unsubscribe(c *gin.Context) {
 	repo := ToRepo(c)
 	user := ToUser(c)
 
-	err := store.DeleteSubscriber(user.Login, repo.FullName)
+	err := store.DelSubscriber(user.Login, repo.FullName)
 	if err != nil {
 		c.Fail(400, err)
 	} else {
@@ -33,7 +33,7 @@ func Subscribe(c *gin.Context) {
 	repo := ToRepo(c)
 	user := ToUser(c)
 
-	err := store.InsertSubscriber(user.Login, repo.FullName)
+	err := store.SetSubscriber(user.Login, repo.FullName)
 	if err != nil {
 		c.Fail(400, err)
 	} else {

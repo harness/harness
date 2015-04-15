@@ -59,9 +59,9 @@ func GetBadge(c *gin.Context) {
 //
 // TODO(bradrydzewski) this will not return in-progress builds, which it should
 func GetCC(c *gin.Context) {
-	ds := ToDatastore(c)
+	store := ToDatastore(c)
 	repo := ToRepo(c)
-	last, err := ds.GetBuildLast(repo.FullName)
+	last, err := store.BuildLast(repo.FullName)
 	if err != nil {
 		c.Fail(404, err)
 		return

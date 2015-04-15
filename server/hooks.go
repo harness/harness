@@ -42,7 +42,7 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	repo, err := store.GetRepo(hook.Repo.FullName)
+	repo, err := store.Repo(hook.Repo.FullName)
 	if err != nil {
 		log.Errorf("failure to find repo %s from hook. %s", hook.Repo.FullName, err)
 		c.Fail(404, err)
@@ -64,7 +64,7 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	user, err := store.GetUser(repo.User.Login)
+	user, err := store.User(repo.User.Login)
 	if err != nil {
 		log.Errorf("failure to find repo owner %s. %s", repo.User.Login, err)
 		c.Fail(500, err)
@@ -84,7 +84,7 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	err = store.InsertBuild(repo.FullName, build)
+	err = store.SetBuild(repo.FullName, build)
 	if err != nil {
 		c.Fail(500, err)
 		return
