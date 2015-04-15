@@ -13,7 +13,7 @@ type User struct {
 	Name        string `meddler:"user_name"           json:"name"`
 	Email       string `meddler:"user_email"          json:"email,omitempty"`
 	Gravatar    string `meddler:"user_gravatar"       json:"gravatar"`
-	Token       string `meddler:"user_token"          json:"-"`
+	Token       string `meddler:"user_token"          json:"token"`
 	Admin       bool   `meddler:"user_admin"          json:"admin"`
 	Active      bool   `meddler:"user_active"         json:"active"`
 	Syncing     bool   `meddler:"user_syncing"        json:"syncing"`
@@ -23,14 +23,14 @@ type User struct {
 	TokenExpiry int64  `meddler:"user_access_expires,zeroisnull" json:"-"`
 }
 
-func NewUser(remote, login, email string, token string) *User {
+func NewUser(remote, login, email string, oauthToken string) *User {
 	user := User{}
 	user.Login = login
 	user.Remote = remote
 	user.Active = true
 	user.SetEmail(email)
 	user.Token = GenerateToken()
-	user.Access = token
+	user.Access = oauthToken
 
 	return &user
 }

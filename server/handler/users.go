@@ -2,10 +2,13 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/shared/model"
+	"github.com/drone/drone/plugin/remote"
+	"github.com/drone/drone/server/sync"
 	"github.com/goji/context"
 	"github.com/zenazn/goji/web"
 )
@@ -59,14 +62,57 @@ func PostUser(c web.C, w http.ResponseWriter, r *http.Request) {
 	var (
 		host   = c.URLParams["host"]
 		login  = c.URLParams["login"]
-		token = r.PostForm.Get("token")
 	)
+	var remote = remote.Lookup(host)
+	if remote == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 
-	account := model.NewUser(host, login, "", token)
+	// not sure I love this, but POST now flexibly accepts the oauth_token for
+	// GitHub as either application/x-www-form-urlencoded OR as applcation/json
+	// with this format:
+	//    { "oauth_token": "...." }
+	var oauthToken string
+	switch cnttype := r.Header.Get("Content-Type"); cnttype {
+		case "application/json":
+			var out interface{}
+			err := json.NewDecoder(r.Body).Decode(&out)
+			if err == nil {
+				if val, ok := out.(map[string]interface{})["oauth_token"]; ok {
+					oauthToken = val.(string)
+				}
+			}
+		case "application/x-www-form-urlencoded":
+			oauthToken = r.PostForm.Get("oauth_token")
+		default:
+			// we don't recognize the content-type, but it isn't worth it
+			// to error here
+			log.Printf("PostUser(%s) Unknown 'Content-Type': %s)", r.URL, cnttype)
+	}
+	account := model.NewUser(host, login, "", oauthToken)
+
 	if err := datastore.PostUser(ctx, account); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	// borrowed this concept from login.go. upon first creation we
+	// may trying syncing the user's repositories.
+	account.Syncing = account.IsStale()
+	if err := datastore.PutUser(ctx, account); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if account.Syncing {
+		log.Println("sync user account.", account.Login)
+
+		// sync inside a goroutine
+		go sync.SyncUser(ctx, account, remote)
+	}
+
 	json.NewEncoder(w).Encode(account)
 }
 
