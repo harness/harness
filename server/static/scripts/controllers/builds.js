@@ -68,19 +68,25 @@
 		// Gets the build
 		builds.get(fullName, number).then(function(payload){
 			$scope.build = payload.data;
-			$scope.task = payload.data.tasks[step];
+			$scope.task = payload.data.tasks[step-1];
+
+			if ($scope.task.state === 'pending') {
+				// do nothing
+			} else if ($scope.task.state === 'running') {
+				// stream the build
+			} else {
+
+				// fetch the logs for the finished build.
+				logs.get(fullName, number, step).then(function(payload){
+					$scope.logs = payload.data;
+				}).catch(function(err){
+					$scope.error = err;
+				});
+			}
 		}).catch(function(err){
 			$scope.error = err;
 		});
 
-		if (step) { // TODO only if build is step.state == 'running'
-			// Gets a list of build steps
-			logs.get(fullName, number, step).then(function(payload){
-				$scope.logs = payload.data;
-			}).catch(function(err){
-				$scope.error = err;
-			});
-		}
 	}
 
 	angular
