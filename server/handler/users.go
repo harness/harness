@@ -5,10 +5,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/drone/drone/server/datastore"
-	"github.com/drone/drone/shared/model"
 	"github.com/drone/drone/plugin/remote"
+	"github.com/drone/drone/server/datastore"
 	"github.com/drone/drone/server/sync"
+	"github.com/drone/drone/shared/model"
 	"github.com/goji/context"
 	"github.com/zenazn/goji/web"
 )
@@ -60,8 +60,8 @@ func GetUser(c web.C, w http.ResponseWriter, r *http.Request) {
 func PostUser(c web.C, w http.ResponseWriter, r *http.Request) {
 	var ctx = context.FromC(c)
 	var (
-		host   = c.URLParams["host"]
-		login  = c.URLParams["login"]
+		host  = c.URLParams["host"]
+		login = c.URLParams["login"]
 	)
 	var remote = remote.Lookup(host)
 	if remote == nil {
@@ -75,20 +75,20 @@ func PostUser(c web.C, w http.ResponseWriter, r *http.Request) {
 	//    { "oauth_token": "...." }
 	var oauthToken string
 	switch cnttype := r.Header.Get("Content-Type"); cnttype {
-		case "application/json":
-			var out interface{}
-			err := json.NewDecoder(r.Body).Decode(&out)
-			if err == nil {
-				if val, ok := out.(map[string]interface{})["oauth_token"]; ok {
-					oauthToken = val.(string)
-				}
+	case "application/json":
+		var out interface{}
+		err := json.NewDecoder(r.Body).Decode(&out)
+		if err == nil {
+			if val, ok := out.(map[string]interface{})["oauth_token"]; ok {
+				oauthToken = val.(string)
 			}
-		case "application/x-www-form-urlencoded":
-			oauthToken = r.PostForm.Get("oauth_token")
-		default:
-			// we don't recognize the content-type, but it isn't worth it
-			// to error here
-			log.Printf("PostUser(%s) Unknown 'Content-Type': %s)", r.URL, cnttype)
+		}
+	case "application/x-www-form-urlencoded":
+		oauthToken = r.PostForm.Get("oauth_token")
+	default:
+		// we don't recognize the content-type, but it isn't worth it
+		// to error here
+		log.Printf("PostUser(%s) Unknown 'Content-Type': %s)", r.URL, cnttype)
 	}
 	account := model.NewUser(host, login, "", oauthToken)
 
