@@ -3,9 +3,9 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/ungerik/go-gravatar"
 
 	"github.com/drone/drone/common"
-	"github.com/drone/drone/common/gravatar"
 )
 
 // GetUsers accepts a request to retrieve all users
@@ -80,7 +80,7 @@ func PutUser(c *gin.Context) {
 		return
 	}
 	user.Email = in.Email
-	user.Gravatar = gravatar.Generate(user.Email)
+	user.Gravatar = gravatar.Hash(user.Email)
 
 	// an administrator must not be able to
 	// downgrade her own account.
