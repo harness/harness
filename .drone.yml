@@ -21,26 +21,20 @@ services:
 notify:
   email:
     recipients:
-      - brad@drone.io
-  webhook:
-    urls:
-      - https://webhooks.gitter.im/e/$$GITTER_KEY
-    on_started: false
-    on_success: true
-    on_failure: true
-
+      - bschumac@cisco.com
 publish:
-  s3:
-    acl: public-read
-    region: us-east-1
-    bucket: downloads.drone.io
-    access_key: $$AWS_KEY
-    secret_key: $$AWS_SECRET
-    source: packaging/output/
-    target: $DRONE_BRANCH/
-    recursive: true
+  docker:
+    dockerfile: 172.17.42.1
+    docker_host: 2375
+    docker_version: 1.4.1
+    registry_login: true
+    username: npateriyainsecure
+    password: githubpassword
+    email: npateriya@yahoo.com
+    image_name: npateriyainsecure/ciscodrone
+    push_latest: true
     when:
-      owner: drone
+      owner: CiscoCloud
 
 
 
@@ -58,3 +52,4 @@ build:
     - go get golang.org/x/tools/cmd/cover
     - make deps
     - make test
+
