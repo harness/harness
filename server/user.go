@@ -3,9 +3,9 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/ungerik/go-gravatar"
 
 	"github.com/drone/drone/common"
-	"github.com/drone/drone/common/gravatar"
 )
 
 // GetUserCurr accepts a request to retrieve the
@@ -32,7 +32,7 @@ func PutUserCurr(c *gin.Context) {
 		return
 	}
 	user.Email = in.Email
-	user.Gravatar = gravatar.Generate(in.Email)
+	user.Gravatar = gravatar.Hash(in.Email)
 	err := store.SetUser(user)
 	if err != nil {
 		c.Fail(400, err)

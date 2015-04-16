@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ungerik/go-gravatar"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/common"
-	"github.com/drone/drone/common/gravatar"
 	"github.com/drone/drone/common/httputil"
 	"github.com/drone/drone/common/oauth2"
 )
@@ -87,7 +87,7 @@ func GetLogin(c *gin.Context) {
 		u.Secret = login.Secret
 		u.Name = login.Name
 		u.Email = login.Email
-		u.Gravatar = gravatar.Generate(u.Email)
+		u.Gravatar = gravatar.Hash(u.Email)
 
 		// insert the user into the database
 		if err := store.SetUserNotExists(u); err != nil {
@@ -109,7 +109,7 @@ func GetLogin(c *gin.Context) {
 	u.Secret = login.Secret
 	u.Name = login.Name
 	u.Email = login.Email
-	u.Gravatar = gravatar.Generate(u.Email)
+	u.Gravatar = gravatar.Hash(u.Email)
 
 	if err := store.SetUser(u); err != nil {
 		log.Errorf("cannot update %s. %s", u.Login, err)
