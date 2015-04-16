@@ -25,7 +25,7 @@ notify:
 publish:
   docker:
     dockerfile: ./Dockerfile
-    docker_host: 172.17.42.1
+    docker_host: 172.17.42.1:2375
     docker_port: 2375
     docker_version: 1.4.1
     registry_login: true
