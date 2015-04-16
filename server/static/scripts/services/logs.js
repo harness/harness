@@ -16,7 +16,7 @@
 		 * @param {number} Number of the task.
 		 */
 		this.get = function(repoName, number, step) {
-			return $http.get('/api/repos/'+repoName+'/builds/'+number+'/tasks/'+step+'/log');
+			return $http.get('/api/repos/'+repoName+'/logs/'+number+'/'+step);
 		};
 	}
 

@@ -67,7 +67,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		<tr ng-repeat="task in tasks">
+		<tr ng-repeat="task in build.tasks">
 			<td><a ng-href="{{ repo.full_name }}/{{ build.number }}/{{ task.number }}">{{ task.number }}</a></td>
 			<td>{{ task.state }}</td>
 			<td>{{ task.started_at | fromNow }}</td>
