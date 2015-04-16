@@ -24,8 +24,9 @@ notify:
       - bschumac@cisco.com
 publish:
   docker:
-    dockerfile: 172.17.42.1
-    docker_host: 2375
+    dockerfile: ./Dockerfile
+    docker_host: 172.17.42.1
+    docker_port: 2375
     docker_version: 1.4.1
     registry_login: true
     username: $$DOCKERHUB_USER
