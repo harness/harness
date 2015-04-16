@@ -1,5 +1,4 @@
-[![Stories in Ready](https://badge.waffle.io/drone/drone.png?label=ready&title=Ready)](https://waffle.io/drone/drone)
-[![Build Status](http://test.drone.io/api/badge/github.com/drone/drone/status.svg?style=flat)](http://test.drone.io/github.com/drone/drone)
+[![Build Status](http://droneio.shipped-cisco.com/api/badge/github.com/CiscoCloud/drone/status.svg?branch=master)](http://droneio.shipped-cisco.com/github.com/CiscoCloud/drone)
 [![GoDoc](https://godoc.org/github.com/drone/drone?status.svg)](https://godoc.org/github.com/drone/drone)
 [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/drone/drone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 

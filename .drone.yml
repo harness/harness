@@ -28,8 +28,8 @@ publish:
     docker_host: 2375
     docker_version: 1.4.1
     registry_login: true
-    username: npateriyainsecure
-    password: githubpassword
+    username: $$DOCKERHUB_USER
+    password: $$DOCKERHUB_PASS
     email: npateriya@yahoo.com
     image_name: npateriyainsecure/ciscodrone
     push_latest: true
