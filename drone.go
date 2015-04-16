@@ -79,15 +79,8 @@ func main() {
 
 			repo.GET("/builds", server.GetBuilds)
 			repo.GET("/builds/:number", server.GetBuild)
-			//TODO repo.POST("/builds/:number", server.RestartBuild)
-			//TODO repo.DELETE("/builds/:number", server.CancelBuild)
-			repo.GET("/builds/:number/tasks", server.GetTasks)
-			repo.GET("/builds/:number/tasks/:task", server.GetTask)
-			repo.GET("/builds/:number/tasks/:task/log", server.GetTaskLogs)
-
-			// repo.GET("/status/:number/status/:context", server.GetStatus)
-			repo.GET("/status/:number", server.GetStatusList)
-			repo.POST("/status/:number", server.PostStatus)
+			repo.GET("/logs/:number/:task", server.GetBuildLogs)
+			repo.POST("/status/:number", server.PostBuildStatus)
 		}
 	}
 

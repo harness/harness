@@ -234,6 +234,42 @@ func PostRepo(c *gin.Context) {
 	c.JSON(200, r)
 }
 
+// Unubscribe accapets a request to unsubscribe the
+// currently authenticated user to the repository.
+//
+//     DEL /api/subscribers/:owner/:name
+//
+func Unsubscribe(c *gin.Context) {
+	store := ToDatastore(c)
+	repo := ToRepo(c)
+	user := ToUser(c)
+
+	err := store.DelSubscriber(user.Login, repo.FullName)
+	if err != nil {
+		c.Fail(400, err)
+	} else {
+		c.Writer.WriteHeader(200)
+	}
+}
+
+// Subscribe accapets a request to subscribe the
+// currently authenticated user to the repository.
+//
+//     POST /api/subscriber/:owner/:name
+//
+func Subscribe(c *gin.Context) {
+	store := ToDatastore(c)
+	repo := ToRepo(c)
+	user := ToUser(c)
+
+	err := store.SetSubscriber(user.Login, repo.FullName)
+	if err != nil {
+		c.Fail(400, err)
+	} else {
+		c.JSON(200, &common.Subscriber{Subscribed: true})
+	}
+}
+
 // perms is a helper function that returns user permissions
 // for a particular repository.
 func perms(remote remote.Remote, u *common.User, r *common.Repo) *common.Perm {
