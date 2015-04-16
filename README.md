@@ -17,21 +17,21 @@ Configuring Drone:
 
 ```toml
 [server]
-addr=":80"
-cert=""
-key=""
+addr = ":80"
+cert = ""
+key = ""
 
 [session]
-secret=""
-expires=""
+secret = ""
+expires = ""
 
 [database]
-path=""
+path = "/etc/drone/drone.db"
 
 [docker]
-cert=""
-key=""
-nodes=[
+cert = ""
+key = ""
+nodes = [
   "unix:///var/run/docker.sock",
   "unix:///var/run/docker.sock"
 ]

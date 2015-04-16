@@ -37,6 +37,11 @@
 		</li>
 	</ul>
 
+	<div>
+		<label>Public Key</label>
+		<pre>{{ repo.keypair.public }}</pre>
+	</div>
+
 	<button ng-click="save(repo)">Save</button>
 	<button ng-click="delete(repo.full_name)">Delete</button>
 </form>
