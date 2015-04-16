@@ -12,12 +12,13 @@ const (
 type Build struct {
 	Number   int    `json:"number"`
 	State    string `json:"state"`
-	Tasks    int    `json:"task_count"`
 	Duration int64  `json:"duration"`
 	Started  int64  `json:"started_at"`
 	Finished int64  `json:"finished_at"`
 	Created  int64  `json:"created_at"`
 	Updated  int64  `json:"updated_at"`
+
+	// Tasks int  `json:"task_count"`
 
 	// Commit represents the commit data send in the
 	// post-commit hook. This will not be populated when
@@ -28,6 +29,14 @@ type Build struct {
 	// in the post-commit hook. This will only be populated
 	// when a pull request.
 	PullRequest *PullRequest `json:"pull_request,omitempty"`
+
+	// Statuses represents a list of build statuses used
+	// to annotate the build.
+	Statuses []*Status `json:"statuses,omitempty"`
+
+	// Tasks represents a list of build tasks. A build is
+	// comprised of one or many tasks.
+	Tasks []*Task `json:"tasks,omitempty"`
 }
 
 type Status struct {
