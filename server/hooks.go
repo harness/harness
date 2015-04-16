@@ -5,6 +5,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/common"
+	"github.com/drone/drone/parser/matrix"
 	// "github.com/bradrydzewski/drone/worker"
 	"github.com/gin-gonic/gin"
 )
@@ -77,11 +78,28 @@ func PostHook(c *gin.Context) {
 	build.PullRequest = hook.PullRequest
 
 	// featch the .drone.yml file from the database
-	_, err = remote.Script(user, repo, build)
+	raw, err := remote.Script(user, repo, build)
 	if err != nil {
 		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
 		c.Fail(404, err)
 		return
+	}
+
+	axes, err := matrix.Parse(string(raw))
+	if err != nil {
+		log.Errorf("failure to calculate matrix for %s. %s", repo.FullName, err)
+		c.Fail(404, err)
+		return
+	}
+	if len(axes) == 0 {
+		axes = append(axes, matrix.Axis{})
+	}
+	for num, axis := range axes {
+		build.Tasks = append(build.Tasks, &common.Task{
+			Number:      num + 1,
+			State:       common.StatePending,
+			Environment: axis,
+		})
 	}
 
 	err = store.SetBuild(repo.FullName, build)
