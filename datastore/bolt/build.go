@@ -77,6 +77,9 @@ func (db *DB) BuildLast(repo string) (*common.Build, error) {
 func (db *DB) SetBuild(repo string, build *common.Build) error {
 	repokey := []byte(repo)
 	build.Updated = time.Now().UTC().Unix()
+	if build.Created == 0 {
+		build.Created = build.Updated
+	}
 
 	return db.Update(func(t *bolt.Tx) error {
 
@@ -153,5 +156,55 @@ func (db *DB) SetStatus(repo string, build int, status *common.Status) error {
 
 	return db.Update(func(t *bolt.Tx) error {
 		return update(t, bucketBuildStatus, key, status)
+	})
+}
+
+// Experimental
+
+func (db *DB) SetBuildState(repo string, build *common.Build) error {
+	key := []byte(repo + "/" + strconv.Itoa(build.Number))
+
+	return db.Update(func(t *bolt.Tx) error {
+		build_ := &common.Build{}
+		err := get(t, bucketBuild, key, build_)
+		if err != nil {
+			return err
+		}
+		build_.Updated = time.Now().UTC().Unix()
+		build_.Duration = build.Duration
+		build_.Started = build.Started
+		build_.Finished = build.Finished
+		build_.State = build.State
+		return update(t, bucketBuild, key, build_)
+	})
+}
+
+func (db *DB) SetBuildStatus(repo string, build int, status *common.Status) error {
+	key := []byte(repo + "/" + strconv.Itoa(build))
+
+	return db.Update(func(t *bolt.Tx) error {
+		build_ := &common.Build{}
+		err := get(t, bucketBuild, key, build_)
+		if err != nil {
+			return err
+		}
+		build_.Updated = time.Now().UTC().Unix()
+		build_.Statuses = append(build_.Statuses, status)
+		return update(t, bucketBuild, key, build_)
+	})
+}
+
+func (db *DB) SetBuildTask(repo string, build int, task *common.Task) error {
+	key := []byte(repo + "/" + strconv.Itoa(build))
+
+	return db.Update(func(t *bolt.Tx) error {
+		build_ := &common.Build{}
+		err := get(t, bucketBuild, key, build_)
+		if err != nil {
+			return err
+		}
+		build_.Updated = time.Now().UTC().Unix()
+		build_.Tasks[task.Number] = task // TODO check index to prevent nil pointer / panic
+		return update(t, bucketBuild, key, build_)
 	})
 }

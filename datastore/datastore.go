@@ -138,4 +138,20 @@ type Datastore interface {
 	// SetLogs inserts or updates a task logs for the
 	// named repository and build number.
 	SetLogs(string, int, int, []byte) error
+
+	// Experimental
+
+	// SetBuildState updates an existing build's start time,
+	// finish time, duration and state. No other fields are
+	// updated.
+	SetBuildState(string, *common.Build) error
+
+	// SetBuildStatus appends a new build status to an
+	// existing build record.
+	SetBuildStatus(string, int, *common.Status) error
+
+	// SetBuildTask updates an existing build task. The build
+	// and task must already exist. If the task does not exist
+	// an error is returned.
+	SetBuildTask(string, int, *common.Task) error
 }
