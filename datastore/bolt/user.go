@@ -75,6 +75,17 @@ func (db *DB) DelUser(user *common.User) error {
 	// TODO(bradrydzewski) delete user tokens
 
 	return db.Update(func(t *bolt.Tx) error {
+		err := delete(t, bucketUserTokens, key)
+		if err != nil {
+			return err
+		}
+		err = delete(t, bucketUserRepos, key)
+		if err != nil {
+			return err
+		}
+		// deletePrefix(t, bucketTokens, prefix)
+		// or
+		// deleteKeys(t, bucketTokens, keys)
 		return delete(t, bucketUser, key)
 	})
 }
