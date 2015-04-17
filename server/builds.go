@@ -95,3 +95,79 @@ func PostBuildStatus(c *gin.Context) {
 		c.JSON(201, in)
 	}
 }
+
+// RunBuild accepts a request to restart an existing build.
+//
+//     POST /api/builds/:owner/:name/builds/:number
+//
+func RunBuild(c *gin.Context) {
+	store := ToDatastore(c)
+	repo := ToRepo(c)
+	num, err := strconv.Atoi(c.Params.ByName("number"))
+	if err != nil {
+		c.Fail(400, err)
+		return
+	}
+	build, err := store.Build(repo.FullName, num)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+
+	// must not restart a running build
+	if build.State == common.StatePending || build.State == common.StateRunning {
+		c.Fail(409, err)
+		return
+	}
+
+	build.State = common.StatePending
+	build.Started = 0
+	build.Finished = 0
+	build.Duration = 0
+	build.Statuses = []*common.Status{}
+	for _, task := range build.Tasks {
+		task.State = common.StatePending
+		task.Started = 0
+		task.Finished = 0
+		task.ExitCode = 0
+	}
+
+	err = store.SetBuild(repo.FullName, build)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+
+	// TODO push build to queue
+
+	c.JSON(202, build)
+}
+
+// KillBuild accepts a request to kill a running build.
+//
+//     DELETE /api/builds/:owner/:name/builds/:number
+//
+func KillBuild(c *gin.Context) {
+	store := ToDatastore(c)
+	repo := ToRepo(c)
+	num, err := strconv.Atoi(c.Params.ByName("number"))
+	if err != nil {
+		c.Fail(400, err)
+		return
+	}
+	build, err := store.Build(repo.FullName, num)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+
+	// must not restart a running build
+	if build.State != common.StatePending && build.State != common.StateRunning {
+		c.Fail(409, err)
+		return
+	}
+
+	// TODO tell queue to cancel build
+
+	c.Writer.WriteHeader(202)
+}

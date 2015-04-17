@@ -87,6 +87,17 @@
 			$scope.error = err;
 		});
 
+		$scope.restart = function() {
+			builds.restart(fullName, number).catch(function(err){
+				$scope.error = err;
+			});
+		};
+
+		$scope.cancel = function() {
+			builds.cancel(fullName, number).catch(function(err) {
+				$scope.error = err;
+			});
+		};
 	}
 
 	angular
