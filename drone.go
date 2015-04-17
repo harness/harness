@@ -79,6 +79,8 @@ func main() {
 
 			repo.GET("/builds", server.GetBuilds)
 			repo.GET("/builds/:number", server.GetBuild)
+			repo.POST("/builds/:number", server.RunBuild)
+			repo.DELETE("/builds/:number", server.KillBuild)
 			repo.GET("/logs/:number/:task", server.GetBuildLogs)
 			repo.POST("/status/:number", server.PostBuildStatus)
 		}

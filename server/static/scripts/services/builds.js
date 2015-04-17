@@ -26,6 +26,26 @@
 		this.get = function(repoName, buildNumber) {
 			return $http.get('/api/repos/'+repoName+'/builds/'+buildNumber);
 		};
+
+		/**
+		 * Restarts a build.
+		 *
+		 * @param {string} Name of the repository.
+		 * @param {number} Number of the build.
+		 */
+		this.restart = function(repoName, buildNumber) {
+			return $http.post('/api/repos/' + repoName+'/builds/'+buildNumber);
+		};
+
+		/**
+		 * Cancels a running build.
+		 *
+		 * @param {string} Name of the repository.
+		 * @param {number} Number of the build.
+		 */
+		this.cancel = function(repoName, buildNumber) {
+			return $http.delete('/api/repos/'+repoName+'/builds/'+buildNumber);
+		};
 	}
 
 	angular
