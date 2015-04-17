@@ -1,59 +1,59 @@
 package bolt
 
 import (
-	"bytes"
+	//"bytes"
+	"github.com/drone/drone/common"
+	. "github.com/franela/goblin"
 	"os"
 	"testing"
-	//. "github.com/franela/goblin"
-	. "github.com/smartystreets/goconvey/convey"
+	//. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestTask(t *testing.T) {
-	var testUser string = "octocat"
-	var testRepo string = "github.com/octopod/hq"
-	var testBuild int = 1
-	var testTask int = 1
-	var testLogInfo []byte = "Log Info for UpsertTaskLogs"
-	var db *DB //-- Temp database
+	g := Goblin(t)
+	g.Describe("Tasks", func() {
+		testUser := "octocat"
+		testRepo := "github.com/octopod/hq"
+		testBuild := 1
+		testTask := 1
+		testLogInfo := []byte("Log Info for SetLogs()")
+		var db *DB // Temp database
 
-	//-- We create a temp db.
-	db = Must("/tmp/drone.test.db")
+		// create a new database before each unit
+		// test and destroy afterwards.
+		g.BeforeEach(func() {
+			db = Must("/tmp/drone.test.db")
+		})
+		g.AfterEach(func() {
+			os.Remove(db.Path())
+		})
 
-	//--
-	Convey("Should GetTask", t, func() {
-		task, err := db.GetTask(testRepo, testBuild, testTask)
-		So(task, ShouldNotBeNil)
-		So(err, ShouldBeNil)
+		g.It("Should set Task", func() {
+			tasks := db.SetTask(testRepo, testBuild, testTask)
+			g.Assert(tasks).NotEqual(nil)
+		})
+
+		g.It("Should get Task", func() {
+			task, err := db.Task(testRepo, testBuild, testTask)
+			g.Assert(task).Equal(testTask)
+			g.Assert(err).Equal(nil)
+		})
+
+		g.It("Should get TaskList", func() {
+			tasks, err := db.TaskList(testRepo, testBuild)
+			g.Assert(tasks).NotEqual(nil)
+			g.Assert(err).Equal(nil)
+		})
+
+		g.It("Should set Logs", func() {
+			err := db.SetLogs(testRepo, testBuild, testTask, testLogInfo)
+			g.Assert(err).Equal(nil)
+		})
+
+		g.It("Should LogReader", func() {
+			buf, err := db.LogReader(testRepo, testBuild, testTask)
+			g.Assert(buf).NotEqual(nil)
+			g.Assert(err).Equal(nil)
+		})
 	})
-
-	//--
-	Convey("Should GetTaskLogs", t, func() {
-		buf, err := db.GetTaskLogs(testRepo, testBuild, testTask)
-		So(buf, ShouldNotBeNil)
-		So(err, ShouldBeNil)
-	})
-
-	//--
-	Convey("Should GetTaskList", t, func() {
-		tasks := db.GetTaskList(testRepo, testBuild)
-		So(tasks, ShouldNotBeNil)
-	})
-
-	//--
-	Convey("Should UpsertTask", t, func() {
-		tasks := db.UpsertTask(testRepo, testBuild, testTask)
-		So(tasks, ShouldNotBeNil)
-	})
-
-	//--
-	Convey("Should UpsertTaskLogs", t, func() {
-		tasks := db.UpsertTaskLogs(testRepo, testBuild, testLogInfo)
-		So(tasks, ShouldNotBeNil)
-		//So(err, ShouldBeNil)
-	})
-
-	//-- Delete the temp db at the end.
-	os.Remove(db.Path())
 }
-
-
