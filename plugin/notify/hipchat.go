@@ -2,8 +2,10 @@ package notify
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
 
-	"github.com/andybons/hipchat"
 	"github.com/drone/drone/shared/model"
 )
 
@@ -21,12 +23,8 @@ type Hipchat struct {
 	Failure bool   `yaml:"on_failure,omitempty"`
 }
 
-type HipchatClient interface {
-	PostMessage(req hipchat.MessageRequest) error
-}
-
 func (h *Hipchat) Send(context *model.Request) error {
-	client := &hipchat.Client{AuthToken: h.Token}
+	client := new(HipchatSimpleHTTPClient)
 	return h.SendWithClient(client, context)
 }
 
@@ -39,7 +37,6 @@ func (h *Hipchat) SendWithClient(client HipchatClient, context *model.Request) e
 	case context.Commit.Status == "Failure" && h.Failure:
 		return h.sendFailure(client, context)
 	}
-
 	return nil
 }
 
@@ -51,29 +48,65 @@ func (h *Hipchat) buildLink(context *model.Request) string {
 
 func (h *Hipchat) sendStarted(client HipchatClient, context *model.Request) error {
 	msg := fmt.Sprintf(startedMessage, h.buildLink(context), context.Commit.Branch, context.Commit.Author, context.Commit.Message)
-	return h.send(client, hipchat.ColorYellow, hipchat.FormatHTML, msg, false)
+	req := HipchatMessageRequest{
+		RoomId:    h.Room,
+		AuthToken: h.Token,
+		Color:     "yellow",
+		Message:   msg,
+		Notify:    false,
+	}
+	return client.PostMessage(req)
 }
 
 func (h *Hipchat) sendFailure(client HipchatClient, context *model.Request) error {
 	msg := fmt.Sprintf(failureMessage, h.buildLink(context), context.Commit.Branch, context.Commit.Author)
-	return h.send(client, hipchat.ColorRed, hipchat.FormatHTML, msg, true)
+	req := HipchatMessageRequest{
+		RoomId:    h.Room,
+		AuthToken: h.Token,
+		Color:     "red",
+		Message:   msg,
+		Notify:    true,
+	}
+	return client.PostMessage(req)
 }
 
 func (h *Hipchat) sendSuccess(client HipchatClient, context *model.Request) error {
 	msg := fmt.Sprintf(successMessage, h.buildLink(context), context.Commit.Branch, context.Commit.Author)
-	return h.send(client, hipchat.ColorGreen, hipchat.FormatHTML, msg, false)
+	req := HipchatMessageRequest{
+		RoomId:    h.Room,
+		AuthToken: h.Token,
+		Color:     "green",
+		Message:   msg,
+		Notify:    false,
+	}
+	return client.PostMessage(req)
 }
 
-// helper function to send Hipchat requests
-func (h *Hipchat) send(client HipchatClient, color, format, message string, notify bool) error {
-	req := hipchat.MessageRequest{
-		RoomId:        h.Room,
-		From:          "Drone",
-		Message:       message,
-		Color:         color,
-		MessageFormat: format,
-		Notify:        notify,
-	}
+// HipChat client
 
-	return client.PostMessage(req)
+type HipchatClient interface {
+	PostMessage(req HipchatMessageRequest) error
+}
+
+type HipchatMessageRequest struct {
+	RoomId    string
+	Color     string
+	Message   string
+	Notify    bool
+	AuthToken string
+}
+
+type HipchatSimpleHTTPClient struct{}
+
+func (*HipchatSimpleHTTPClient) PostMessage(req HipchatMessageRequest) error {
+	hipchat_uri := fmt.Sprintf("https://api.hipchat.com/v2/room/%s/notification", req.RoomId)
+	_, err := http.PostForm(hipchat_uri,
+		url.Values{
+			"color":          {req.Color},
+			"message":        {req.Message},
+			"notify":         {strconv.FormatBool(req.Notify)},
+			"message_format": {"html"},
+			"auth_token":     {req.AuthToken},
+		})
+	return err
 }
