@@ -84,3 +84,17 @@ func splice(t *bolt.Tx, bucket, index, value []byte) error {
 
 	return update(t, bucket, index, &keys)
 }
+
+func deleteWithPrefix(t *bolt.Tx, bucket, prefix []byte, ignoreErr bool) error {
+	var err error
+
+	c := t.Bucket(bucket).Cursor()
+	for k, _ := c.Seek(prefix); bytes.HasPrefix(k, prefix); k, _ = c.Next() {
+		err = c.Delete()
+		if !ignoreErr && err != nil {
+			break
+		}
+	}
+
+	return err
+}
