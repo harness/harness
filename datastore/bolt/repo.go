@@ -132,23 +132,43 @@ func (db *DB) SetRepoKeypair(repo string, keypair *common.Keypair) error {
 
 // DelRepo deletes the repository.
 func (db *DB) DelRepo(repo *common.Repo) error {
-	//TODO(benschumacher) rework this to use BoltDB's txn wrapper
-
-	t, err := db.Begin(true)
-	if err != nil {
-		return err
-	}
 	key := []byte(repo.FullName)
-	err = t.Bucket(bucketRepo).Delete(key)
-	if err != nil {
-		t.Rollback()
+
+	return db.Update(func(t *bolt.Tx) error {
+		err := t.Bucket(bucketRepo).Delete(key)
+		if err != nil {
+			return err
+		}
+		t.Bucket(bucketRepoKeys).Delete(key)
+		t.Bucket(bucketRepoParams).Delete(key)
+
+		// should we just ignore these error conditions? or should
+		// we go ahead with the transaction and assume we can
+		// cleanup the leftovers through some other maintenance process?
+		err = db.deleteTracesOfRepo(t, key)
+
 		return err
-	}
-	t.Bucket(bucketRepoKeys).Delete(key)
-	t.Bucket(bucketRepoParams).Delete(key)
-	// TODO(bradrydzewski) delete all builds
-	// TODO(bradrydzewski) delete all tasks
-	return t.Commit()
+	})
+}
+
+// deleteTracesOfRepo cleans up build leftovers when a repo is removed
+func (db *DB) deleteTracesOfRepo(t *bolt.Tx, repoKey []byte) error {
+	err := error(nil)
+
+	// bucketBuildSeq uses the repoKey directly
+	t.Bucket(bucketBuildSeq).Delete(repoKey)
+
+	// the other buckets use repoKey with '/buildNumber', at least.
+	// validating that an additiona '/' is there ensures that we don't
+	// match 'github.com/drone/droney' when we're cleaning up after
+	// 'github.com/drone/drone'.
+	prefix := append(repoKey, '/')
+	deleteWithPrefix(t, bucketBuildLogs, prefix, true)
+	deleteWithPrefix(t, bucketBuildStatus, prefix, true)
+	deleteWithPrefix(t, bucketBuildTasks, prefix, true)
+	deleteWithPrefix(t, bucketBuild, prefix, true)
+
+	return err
 }
 
 // Subscribed returns true if the user is subscribed

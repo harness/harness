@@ -1,24 +1,130 @@
 package bolt
 
 import (
-	"testing"
-
+	"github.com/drone/drone/common"
 	. "github.com/franela/goblin"
+	"os"
+	"testing"
 )
 
 func TestRepo(t *testing.T) {
 	g := Goblin(t)
-	g.Describe("Repos", func() {
+	g.Describe("Repo", func() {
+		testUser := "octocat"
+		testRepo := "github.com/octopod/hq"
+		testRepo2 := "github.com/octopod/avengers"
+		var db *DB // Temp database
 
-		g.It("Should find by name")
-		g.It("Should find params")
-		g.It("Should find keys")
-		g.It("Should delete")
-		g.It("Should insert")
-		g.It("Should not insert if exists")
-		g.It("Should insert params")
-		g.It("Should update params")
-		g.It("Should insert keys")
-		g.It("Should update keys")
+		// create a new database before each unit
+		// test and destroy afterwards.
+		g.BeforeEach(func() {
+			db = Must("/tmp/drone.test.db")
+		})
+		g.AfterEach(func() {
+			os.Remove(db.Path())
+		})
+
+		g.It("Should set Repo", func() {
+			err := db.SetRepo(&common.Repo{FullName: testRepo})
+			g.Assert(err).Equal(nil)
+
+			repo, err := db.Repo(testRepo)
+			g.Assert(err).Equal(nil)
+			g.Assert(repo.FullName).Equal(testRepo)
+		})
+
+		g.It("Should get Repo", func() {
+			db.SetRepo(&common.Repo{FullName: testRepo})
+
+			repo, err := db.Repo(testRepo)
+			g.Assert(err).Equal(nil)
+			g.Assert(repo.FullName).Equal(testRepo)
+		})
+
+		g.It("Should del Repo", func() {
+			db.SetRepo(&common.Repo{FullName: testRepo})
+
+			db.Repo(testRepo)
+			err_ := db.DelRepo((&common.Repo{FullName: testRepo}))
+			g.Assert(err_).Equal(nil)
+		})
+
+		g.It("Should get RepoList", func() {
+			db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
+			db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo2})
+
+			repos, err := db.RepoList(testUser)
+			g.Assert(err).Equal(nil)
+			g.Assert(len(repos)).Equal(2)
+		})
+
+		g.It("Should set RepoParams", func() {
+			db.SetRepo(&common.Repo{FullName: testRepo})
+			err := db.SetRepoParams(testRepo, map[string]string{"A": "Alpha"})
+			g.Assert(err).Equal(nil)
+		})
+
+		g.It("Should get RepoParams", func() {
+			db.SetRepo(&common.Repo{FullName: testRepo})
+			err := db.SetRepoParams(testRepo, map[string]string{"A": "Alpha", "B": "Beta"})
+			params, err := db.RepoParams(testRepo)
+			g.Assert(err).Equal(nil)
+			g.Assert(len(params)).Equal(2)
+			g.Assert(params["A"]).Equal("Alpha")
+			g.Assert(params["B"]).Equal("Beta")
+		})
+
+		// we test again with same repo/user already existing
+		// to see if it will return "ErrConflict"
+		g.It("Should set SetRepoNotExists", func() {
+			err := db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
+			g.Assert(err).Equal(nil)
+			// We should get ErrConflict now, trying to add the same repo again.
+			err_ := db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
+			g.Assert(err_).Equal(ErrKeyExists)
+		})
+
+		g.It("Should set RepoKeypair", func() {
+			db.SetRepo(&common.Repo{FullName: testRepo})
+
+			err := db.SetRepoKeypair(testRepo, &common.Keypair{Private: "A", Public: "Alpha"})
+			g.Assert(err).Equal(nil)
+		})
+
+		g.It("Should get RepoKeypair", func() {
+			db.SetRepo(&common.Repo{FullName: testRepo})
+			err := db.SetRepoKeypair(testRepo, &common.Keypair{Private: "A", Public: "Alpha"})
+
+			keypair, err := db.RepoKeypair(testRepo)
+			g.Assert(err).Equal(nil)
+			g.Assert(keypair.Public).Equal("Alpha")
+			g.Assert(keypair.Private).Equal("A")
+		})
+
+		g.It("Should set Subscriber", func() {
+			db.SetRepo(&common.Repo{FullName: testRepo})
+			err := db.SetSubscriber(testUser, testRepo)
+			g.Assert(err).Equal(nil)
+		})
+
+		g.It("Should get Subscribed", func() {
+			db.SetRepo(&common.Repo{FullName: testRepo})
+			err := db.SetSubscriber(testUser, testRepo)
+			subscribed, err := db.Subscribed(testUser, testRepo)
+			g.Assert(err).Equal(nil)
+			g.Assert(subscribed).Equal(true)
+		})
+
+		g.It("Should del Subscriber", func() {
+			db.SetRepo(&common.Repo{FullName: testRepo})
+			db.SetSubscriber(testUser, testRepo)
+			err := db.DelSubscriber(testUser, testRepo)
+			g.Assert(err).Equal(nil)
+
+			subscribed, err := db.Subscribed(testUser, testRepo)
+			g.Assert(subscribed).Equal(false)
+
+		})
+
 	})
 }
