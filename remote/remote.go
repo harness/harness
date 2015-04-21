@@ -12,16 +12,13 @@ type Remote interface {
 	Login(token, secret string) (*common.User, error)
 
 	// Orgs fetches the organizations for the given user.
-	//
-	// TODO(bradrydzewski) consider consolidating this to return
-	//                     the list of organizations along with
-	//                     the user Login info.
 	Orgs(u *common.User) ([]string, error)
 
 	// Repo fetches the named repository from the remote system.
 	Repo(u *common.User, owner, repo string) (*common.Repo, error)
 
-	// Perm fetches the named repository from the remote system.
+	// Perm fetches the named repository permissions from
+	// the remote system for the specified user.
 	Perm(u *common.User, owner, repo string) (*common.Perm, error)
 
 	// Script fetches the build script (.drone.yml) from the remote

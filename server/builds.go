@@ -138,6 +138,11 @@ func RunBuild(c *gin.Context) {
 		return
 	}
 
+	// params, _ := store.RepoParams(repo.FullName)
+	// if params != nil && len(params) != 0 {
+	// 	raw = []byte(inject.InjectSafe(string(raw), params))
+	// }
+
 	// TODO push build to queue
 
 	c.JSON(202, build)

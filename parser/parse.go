@@ -16,7 +16,7 @@ type Opts struct {
 	Privileged bool
 }
 
-var defaultOpts = &Opts{
+var DefaultOpts = &Opts{
 	Volumes:    false,
 	Network:    false,
 	Privileged: false,
@@ -26,42 +26,13 @@ var defaultOpts = &Opts{
 // a list of build configurations for each axis
 // using the default parsing options.
 func Parse(raw string) ([]*common.Config, error) {
-	return ParseOpts(raw, defaultOpts)
+	return ParseOpts(raw, DefaultOpts)
 }
 
 // ParseOpts parses a build matrix and returns
 // a list of build configurations for each axis
 // using the provided parsing options.
 func ParseOpts(raw string, opts *Opts) ([]*common.Config, error) {
-	confs, err := parse(raw)
-	if err != nil {
-		return nil, err
-	}
-	for _, conf := range confs {
-		err := Lint(conf)
-		if err != nil {
-			return nil, err
-		}
-		transformSetup(conf)
-		transformClone(conf)
-		transformBuild(conf)
-		transformImages(conf)
-		transformDockerPlugin(conf)
-		if !opts.Network {
-			rmNetwork(conf)
-		}
-		if !opts.Volumes {
-			rmVolumes(conf)
-		}
-		if !opts.Privileged {
-			rmPrivileged(conf)
-		}
-	}
-	return confs, nil
-}
-
-// helper function to parse a matrix configuraiton file.
-func parse(raw string) ([]*common.Config, error) {
 	axis, err := matrix.Parse(raw)
 	if err != nil {
 		return nil, err
@@ -71,7 +42,7 @@ func parse(raw string) ([]*common.Config, error) {
 	// when no matrix values exist we should return
 	// a single config value with an empty label.
 	if len(axis) == 0 {
-		conf, err := parseYaml(raw)
+		conf, err := ParseSingle(raw, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -81,19 +52,43 @@ func parse(raw string) ([]*common.Config, error) {
 	for _, ax := range axis {
 		// inject the matrix values into the raw script
 		injected := inject.Inject(raw, ax)
-		conf, err := parseYaml(injected)
+		conf, err := ParseSingle(injected, opts)
 		if err != nil {
 			return nil, err
 		}
 		conf.Axis = common.Axis(ax)
 		confs = append(confs, conf)
 	}
+
 	return confs, nil
 }
 
 // helper funtion to parse a yaml configuration file.
-func parseYaml(raw string) (*common.Config, error) {
+func ParseSingle(raw string, opts *Opts) (*common.Config, error) {
 	conf := &common.Config{}
 	err := yaml.Unmarshal([]byte(raw), conf)
+	if err != nil {
+		return nil, err
+	}
+	// lint the yaml file
+	err = Lint(conf)
+	if err != nil {
+		return nil, err
+	}
+	// apply rules / transofms
+	transformSetup(conf)
+	transformClone(conf)
+	transformBuild(conf)
+	transformImages(conf)
+	transformDockerPlugin(conf)
+	if !opts.Network {
+		rmNetwork(conf)
+	}
+	if !opts.Volumes {
+		rmVolumes(conf)
+	}
+	if !opts.Privileged {
+		rmPrivileged(conf)
+	}
 	return conf, err
 }

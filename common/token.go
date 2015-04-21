@@ -6,7 +6,7 @@ const (
 )
 
 type Token struct {
-	Kind   string   `json:"-"`
+	Kind   string   `json:"kind"`
 	Login  string   `json:"-"`
 	Label  string   `json:"label"`
 	Repos  []string `json:"repos,omitempty"`
