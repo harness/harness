@@ -2,13 +2,18 @@ package bolt
 
 import (
 	"bytes"
+	"github.com/boltdb/bolt"
+	//"github.com/drone/drone/common"
 	"io"
 	"strconv"
-
-	"github.com/boltdb/bolt"
-	"github.com/drone/drone/common"
 )
 
+/*
+	Brad Rydzewski1:00 PM
+	the `Task`, `TaskList` and `SetTask` are deprecated and can be probably be removed.
+	I just need to make sure we aren't still using those functions anywhere else in the code
+*/
+/*
 // GetTask gets the task at index N for the named
 // repository and build number.
 func (db *DB) Task(repo string, build int, task int) (*common.Task, error) {
@@ -63,6 +68,7 @@ func (db *DB) SetTask(repo string, build int, task *common.Task) error {
 		return update(t, bucketBuildTasks, key, task)
 	})
 }
+*/
 
 // SetLogs inserts or updates a task logs for the
 // named repository and build number.
