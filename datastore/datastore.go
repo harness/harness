@@ -121,15 +121,15 @@ type Datastore interface {
 
 	// GetTask gets the task at index N for the named
 	// repository and build number.
-	Task(string, int, int) (*common.Task, error)
+	//Task(string, int, int) (*common.Task, error)
 
 	// TaskList gets all tasks for the named repository
 	// and build number.
-	TaskList(string, int) ([]*common.Task, error)
+	//TaskList(string, int) ([]*common.Task, error)
 
 	// SetTask inserts or updates a task for the named
 	// repository and build number.
-	SetTask(string, int, *common.Task) error
+	//SetTask(string, int, *common.Task) error
 
 	// LogReader gets the task logs at index N for
 	// the named repository and build number.

@@ -25,21 +25,17 @@ func TestRepo(t *testing.T) {
 		})
 
 		g.It("Should set Repo", func() {
-			//err := db.SetRepoNotExists(&common.User{Name: testUser}, &common.Repo{Name: testRepo})
 			err := db.SetRepo(&common.Repo{FullName: testRepo})
 			g.Assert(err).Equal(nil)
 
-			// setrepo only returns an error. Repo returns error and a structure
 			repo, err := db.Repo(testRepo)
 			g.Assert(err).Equal(nil)
 			g.Assert(repo.FullName).Equal(testRepo)
 		})
 
 		g.It("Should get Repo", func() {
-			//db.SetRepoNotExists(&common.User{Name: testUser}, &common.Repo{Name: testRepo})
 			db.SetRepo(&common.Repo{FullName: testRepo})
 
-			// setrepo only returns an error. Repo returns error and a structure
 			repo, err := db.Repo(testRepo)
 			g.Assert(err).Equal(nil)
 			g.Assert(repo.FullName).Equal(testRepo)
@@ -47,8 +43,7 @@ func TestRepo(t *testing.T) {
 
 		g.It("Should del Repo", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
-			// setrepo only returns an error. Repo returns error and a structure
-			//repo, err := db.Repo(testRepo)
+
 			db.Repo(testRepo)
 			err_ := db.DelRepo((&common.Repo{FullName: testRepo}))
 			g.Assert(err_).Equal(nil)
@@ -57,22 +52,19 @@ func TestRepo(t *testing.T) {
 		g.It("Should get RepoList", func() {
 			db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
 			db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo2})
-			//db.SetRepo(&common.Repo{FullName: testRepo})
-			//db.SetRepo(&common.Repo{FullName: testRepo2})
+
 			repos, err := db.RepoList(testUser)
 			g.Assert(err).Equal(nil)
 			g.Assert(len(repos)).Equal(2)
 		})
 
 		g.It("Should set RepoParams", func() {
-			//db.SetRepoNotExists(&common.User{Name: testUser}, &common.Repo{Name: testRepo})
 			db.SetRepo(&common.Repo{FullName: testRepo})
 			err := db.SetRepoParams(testRepo, map[string]string{"A": "Alpha"})
 			g.Assert(err).Equal(nil)
 		})
 
 		g.It("Should get RepoParams", func() {
-			//db.SetRepoNotExists(&common.User{Name: testUser}, &common.Repo{Name: testRepo})
 			db.SetRepo(&common.Repo{FullName: testRepo})
 			err := db.SetRepoParams(testRepo, map[string]string{"A": "Alpha", "B": "Beta"})
 			params, err := db.RepoParams(testRepo)
@@ -89,12 +81,12 @@ func TestRepo(t *testing.T) {
 			g.Assert(err).Equal(nil)
 			// We should get ErrConflict now, trying to add the same repo again.
 			err_ := db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
-			g.Assert(err_ == nil).IsFalse() // we should get (ErrConflict)
+			g.Assert(err_).Equal(ErrKeyExists)
 		})
 
 		g.It("Should set RepoKeypair", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
-			//err := db.SetRepoKeypair(testRepo, &common.Keypair{Private: []byte("A"), Public: []byte("Alpha")})
+
 			err := db.SetRepoKeypair(testRepo, &common.Keypair{Private: "A", Public: "Alpha"})
 			g.Assert(err).Equal(nil)
 		})
@@ -102,7 +94,7 @@ func TestRepo(t *testing.T) {
 		g.It("Should get RepoKeypair", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
 			err := db.SetRepoKeypair(testRepo, &common.Keypair{Private: "A", Public: "Alpha"})
-			//g.Assert(err).Equal(nil)
+
 			keypair, err := db.RepoKeypair(testRepo)
 			g.Assert(err).Equal(nil)
 			g.Assert(keypair.Public).Equal("Alpha")
@@ -128,7 +120,7 @@ func TestRepo(t *testing.T) {
 			db.SetSubscriber(testUser, testRepo)
 			err := db.DelSubscriber(testUser, testRepo)
 			g.Assert(err).Equal(nil)
-			//
+
 			subscribed, err := db.Subscribed(testUser, testRepo)
 			g.Assert(subscribed).Equal(false)
 

@@ -15,7 +15,7 @@ func TestTask(t *testing.T) {
 		testRepo := "github.com/octopod/hq"
 		testBuild := 1
 		testTask := 0
-		testTask2 := 1
+		//testTask2 := 1
 		testLogInfo := []byte("Log Info for SetLogs()")
 		var db *DB // Temp database
 
@@ -26,21 +26,6 @@ func TestTask(t *testing.T) {
 		})
 		g.AfterEach(func() {
 			os.Remove(db.Path())
-		})
-
-		g.It("Should set Task", func() {
-			db.SetRepo(&common.Repo{FullName: testRepo})
-			err := db.SetTask(testRepo, testBuild, &common.Task{Number: testTask})
-			g.Assert(err).Equal(nil)
-		})
-
-		g.It("Should get Task", func() {
-			db.SetRepo(&common.Repo{FullName: testRepo})
-			db.SetTask(testRepo, testBuild, &common.Task{Number: testTask})
-			//
-			task, err := db.Task(testRepo, testBuild, testTask)
-			g.Assert(err).Equal(nil)
-			g.Assert(task.Number).Equal(testTask)
 		})
 
 		/*
@@ -63,12 +48,27 @@ func TestTask(t *testing.T) {
 				//g.Assert(err).Equal(nil)
 				//g.Assert(len(tasks)).Equal(2)
 			})
+
+			g.It("Should set Task", func() {
+				db.SetRepo(&common.Repo{FullName: testRepo})
+				err := db.SetTask(testRepo, testBuild, &common.Task{Number: testTask})
+				g.Assert(err).Equal(nil)
+			})
+
+			g.It("Should get Task", func() {
+				db.SetRepo(&common.Repo{FullName: testRepo})
+				db.SetTask(testRepo, testBuild, &common.Task{Number: testTask})
+				//
+				task, err := db.Task(testRepo, testBuild, testTask)
+				g.Assert(err).Equal(nil)
+				g.Assert(task.Number).Equal(testTask)
+			})
 		*/
 
 		g.It("Should set Logs", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
-			db.SetTask(testRepo, testBuild, &common.Task{Number: testTask})
-			db.SetTask(testRepo, testBuild, &common.Task{Number: testTask2})
+			//db.SetTask(testRepo, testBuild, &common.Task{Number: testTask})
+			//db.SetTask(testRepo, testBuild, &common.Task{Number: testTask2})
 			//
 			err := db.SetLogs(testRepo, testBuild, testTask, testLogInfo)
 			g.Assert(err).Equal(nil)
@@ -76,8 +76,8 @@ func TestTask(t *testing.T) {
 
 		g.It("Should LogReader", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
-			db.SetTask(testRepo, testBuild, &common.Task{Number: testTask})
-			db.SetTask(testRepo, testBuild, &common.Task{Number: testTask2})
+			//db.SetTask(testRepo, testBuild, &common.Task{Number: testTask})
+			//db.SetTask(testRepo, testBuild, &common.Task{Number: testTask2})
 			db.SetLogs(testRepo, testBuild, testTask, testLogInfo)
 			//
 			buf, err_ := db.LogReader(testRepo, testBuild, testTask)
