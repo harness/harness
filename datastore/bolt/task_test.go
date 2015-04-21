@@ -28,43 +28,6 @@ func TestTask(t *testing.T) {
 			os.Remove(db.Path())
 		})
 
-		/*
-			Brad Rydzewski1:00 PM
-			the `Task`, `TaskList` and `SetTask` are deprecated and can be probably be removed.
-			I just need to make sure we aren't still using those functions anywhere else in the code
-		*/
-		/*
-			g.It("Should get TaskList", func() {
-				db.SetRepo(&common.Repo{FullName: testRepo})
-				//db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
-				err := db.SetTask(testRepo, testBuild, &common.Task{Number: testTask})
-				g.Assert(err).Equal(nil)
-				err_ := db.SetTask(testRepo, testBuild, &common.Task{Number: testTask2})
-				g.Assert(err_).Equal(nil)
-				//
-				tasks, err := db.TaskList(testRepo, testBuild)
-				// We seem to have an issue here. TaskList doesn't seem to be returning
-				// All the tasks added to to repo/build. So commenting these for now.
-				//g.Assert(err).Equal(nil)
-				//g.Assert(len(tasks)).Equal(2)
-			})
-
-			g.It("Should set Task", func() {
-				db.SetRepo(&common.Repo{FullName: testRepo})
-				err := db.SetTask(testRepo, testBuild, &common.Task{Number: testTask})
-				g.Assert(err).Equal(nil)
-			})
-
-			g.It("Should get Task", func() {
-				db.SetRepo(&common.Repo{FullName: testRepo})
-				db.SetTask(testRepo, testBuild, &common.Task{Number: testTask})
-				//
-				task, err := db.Task(testRepo, testBuild, testTask)
-				g.Assert(err).Equal(nil)
-				g.Assert(task.Number).Equal(testTask)
-			})
-		*/
-
 		g.It("Should set Logs", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
 			//db.SetTask(testRepo, testBuild, &common.Task{Number: testTask})
