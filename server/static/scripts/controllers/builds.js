@@ -98,6 +98,15 @@
 				$scope.error = err;
 			});
 		};
+
+		// var convert = new Filter({stream:true,newline:false});
+		// var term = document.getElementById("term")
+		// var stdout = document.getElementById("stdout").innerText.split("\n")
+		// stdout.forEach(function(line, i) {
+		// 	setTimeout(function () {
+		// 		term.innerHTML += convert.toHtml(line+"\n");
+		// 	}, i*i);
+		// });
 	}
 
 	angular
