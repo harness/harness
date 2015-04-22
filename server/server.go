@@ -9,10 +9,26 @@ import (
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/datastore"
 	"github.com/drone/drone/eventbus"
+	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/settings"
 )
+
+func SetQueue(q queue.Queue) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("queue", q)
+		c.Next()
+	}
+}
+
+func ToQueue(c *gin.Context) queue.Queue {
+	v, err := c.Get("queue")
+	if err != nil {
+		return nil
+	}
+	return v.(queue.Queue)
+}
 
 func SetBus(r eventbus.Bus) gin.HandlerFunc {
 	return func(c *gin.Context) {
