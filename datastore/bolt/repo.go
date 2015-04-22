@@ -153,20 +153,25 @@ func (db *DB) DelRepo(repo *common.Repo) error {
 
 // deleteTracesOfRepo cleans up build leftovers when a repo is removed
 func (db *DB) deleteTracesOfRepo(t *bolt.Tx, repoKey []byte) error {
-	err := error(nil)
-
 	// bucketBuildSeq uses the repoKey directly
-	t.Bucket(bucketBuildSeq).Delete(repoKey)
+	err := t.Bucket(bucketBuildSeq).Delete(repoKey)
+	if err != nil {
+		// only error here is if our Tx is read-only
+		return err
+	}
 
 	// the other buckets use repoKey with '/buildNumber', at least.
 	// validating that an additiona '/' is there ensures that we don't
 	// match 'github.com/drone/droney' when we're cleaning up after
 	// 'github.com/drone/drone'.
 	prefix := append(repoKey, '/')
-	deleteWithPrefix(t, bucketBuildLogs, prefix, true)
-	deleteWithPrefix(t, bucketBuildStatus, prefix, true)
-	deleteWithPrefix(t, bucketBuildTasks, prefix, true)
-	deleteWithPrefix(t, bucketBuild, prefix, true)
+	buckets := [][]byte{bucketBuildStatus, bucketBuildLogs, bucketBuild}
+	for _, b := range buckets {
+		err = deleteWithPrefix(t, b, prefix)
+		if err != nil {
+			break
+		}
+	}
 
 	return err
 }
