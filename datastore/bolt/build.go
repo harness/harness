@@ -3,11 +3,10 @@ package bolt
 import (
 	//"bytes"
 	"encoding/binary"
-	"strconv"
-	"time"
-
 	"github.com/boltdb/bolt"
 	"github.com/drone/drone/common"
+	"strconv"
+	"time"
 )
 
 // Build gets the specified build number for the
@@ -203,12 +202,13 @@ func (db *DB) SetBuildTask(repo string, build int, task *common.Task) error {
 		if err != nil {
 			return err
 		}
+		// check index to prevent nil pointer / panic
 		if task.Number > len(build_.Tasks) {
 			return ErrKeyNotFound
 		}
 		build_.Updated = time.Now().UTC().Unix()
 		//assuming task number is 1-based.
-		build_.Tasks[task.Number-1] = task // TODO check index to prevent nil pointer / panic
+		build_.Tasks[task.Number-1] = task
 		return update(t, bucketBuild, key, build_)
 	})
 }

@@ -107,10 +107,6 @@ func TestBuild(t *testing.T) {
 			db.SetBuild(repo, &common.Build{State: "success"})
 			err_ := db.SetBuildTask(repo, 1, &common.Task{Number: 1})
 			g.Assert(err_).Equal(nil)
-			//err_ = db.SetBuildTask(repo, 1, &common.Task{Number: 2})
-			//g.Assert(err_).Equal(nil)
-			//err_ = db.SetBuildTask(repo, 2, &common.Task{Number: 1})
-			//g.Assert(err_).Equal(nil)
 		})
 	})
 }
