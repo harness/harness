@@ -1,14 +1,15 @@
 package datastore
 
 import (
+	"errors"
 	"io"
 
 	"github.com/drone/drone/common"
 )
 
 var (
-	ErrConflict = "Key not unique"
-	ErrNotFound = "Key not found"
+	ErrConflict    = errors.New("Key not unique")
+	ErrKeyNotFound = errors.New("Key not found")
 )
 
 type Datastore interface {
