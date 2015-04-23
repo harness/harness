@@ -85,16 +85,17 @@ func splice(t *bolt.Tx, bucket, index, value []byte) error {
 	return update(t, bucket, index, &keys)
 }
 
-func deleteWithPrefix(t *bolt.Tx, bucket, prefix []byte, ignoreErr bool) error {
+func deleteWithPrefix(t *bolt.Tx, bucket, prefix []byte) error {
 	var err error
 
 	c := t.Bucket(bucket).Cursor()
 	for k, _ := c.Seek(prefix); bytes.HasPrefix(k, prefix); k, _ = c.Next() {
 		err = c.Delete()
-		if !ignoreErr && err != nil {
+		if err != nil {
 			break
 		}
 	}
 
+	// only error here is if our Tx is read-only
 	return err
 }

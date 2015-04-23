@@ -14,12 +14,17 @@ func TestRepo(t *testing.T) {
 		testUser := "octocat"
 		testRepo := "github.com/octopod/hq"
 		testRepo2 := "github.com/octopod/avengers"
+		commUser := &common.User{Login: "freya"}
 		var db *DB // Temp database
 
-		// create a new database before each unit
-		// test and destroy afterwards.
+		// create a new database before each unit test and destroy afterwards.
 		g.BeforeEach(func() {
-			db = Must("/tmp/drone.test.db")
+			file, err := ioutil.TempFile(os.TempDir(), "drone-bolt")
+			if err != nil {
+				panic(err)
+			}
+
+			db = Must(file.Name())
 		})
 		g.AfterEach(func() {
 			os.Remove(db.Path())
@@ -42,12 +47,39 @@ func TestRepo(t *testing.T) {
 			g.Assert(repo.FullName).Equal(testRepo)
 		})
 
-		g.It("Should del Repo", func() {
+		g.It("Should be deletable", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
 
 			db.Repo(testRepo)
 			err_ := db.DelRepo((&common.Repo{FullName: testRepo}))
 			g.Assert(err_).Equal(nil)
+		})
+
+		g.It("Should cleanup builds when deleted", func() {
+			repo := &common.Repo{FullName: testRepo}
+			err := db.SetRepoNotExists(commUser, repo)
+			g.Assert(err).Equal(nil)
+
+			db.SetBuild(testRepo, &common.Build{State: "success"})
+			db.SetBuild(testRepo, &common.Build{State: "success"})
+			db.SetBuild(testRepo, &common.Build{State: "pending"})
+
+			db.SetBuildStatus(testRepo, 1, &common.Status{Context: "success"})
+			db.SetBuildStatus(testRepo, 2, &common.Status{Context: "success"})
+			db.SetBuildStatus(testRepo, 3, &common.Status{Context: "pending"})
+
+			// first a little sanity to validate our test conditions
+			_, err = db.BuildLast(testRepo)
+			g.Assert(err).Equal(nil)
+
+			// now run our specific test suite
+			// 1. ensure that we can delete the repo
+			err = db.DelRepo(repo)
+			g.Assert(err).Equal(nil)
+
+			// 2. ensure that deleting the repo cleans up other references
+			_, err = db.Build(testRepo, 1)
+			g.Assert(err).Equal(ErrKeyNotFound)
 		})
 
 		g.It("Should get RepoList", func() {
