@@ -101,10 +101,18 @@ type Datastore interface {
 	// named repository.
 	BuildLast(string) (*common.Build, error)
 
+	// BuildConf gets the build configuration file (yaml)
+	// for the named repository and build number.
+	// BuildConf(string, int) ([]byte, error)
+
 	// SetBuild inserts or updates a build for the named
 	// repository. The build number is incremented and
 	// assigned to the provided build.
 	SetBuild(string, *common.Build) error
+
+	// SetBuildConf persists the build configuration file (yaml)
+	// for the named repository and build number.
+	// SetBuildConf(string, int) ([]byte, error)
 
 	// Status returns the status for the given repository
 	// and build number.

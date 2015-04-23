@@ -24,7 +24,6 @@ var (
 	bucketRepoUsers   = []byte("repo_users")
 	bucketBuild       = []byte("build")
 	bucketBuildStatus = []byte("build_status")
-	bucketBuildTasks  = []byte("build_tasks")
 	bucketBuildLogs   = []byte("build_logs")
 	bucketBuildSeq    = []byte("build_seq")
 )
@@ -51,7 +50,6 @@ func New(path string) (*DB, error) {
 		tx.CreateBucketIfNotExists(bucketRepoUsers)
 		tx.CreateBucketIfNotExists(bucketBuild)
 		tx.CreateBucketIfNotExists(bucketBuildStatus)
-		tx.CreateBucketIfNotExists(bucketBuildTasks)
 		tx.CreateBucketIfNotExists(bucketBuildLogs)
 		tx.CreateBucketIfNotExists(bucketBuildSeq)
 		return nil

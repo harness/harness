@@ -5,6 +5,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/common"
+	"github.com/drone/drone/parser/inject"
 	"github.com/drone/drone/parser/matrix"
 	// "github.com/bradrydzewski/drone/worker"
 	"github.com/gin-gonic/gin"
@@ -72,6 +73,8 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
+	params, _ := store.RepoParams(repo.FullName)
+
 	build := &common.Build{}
 	build.State = common.StatePending
 	build.Commit = hook.Commit
@@ -84,7 +87,10 @@ func PostHook(c *gin.Context) {
 		c.Fail(404, err)
 		return
 	}
-
+	// inject any private parameters into the .drone.yml
+	if params != nil && len(params) != 0 {
+		raw = []byte(inject.InjectSafe(string(raw), params))
+	}
 	axes, err := matrix.Parse(string(raw))
 	if err != nil {
 		log.Errorf("failure to calculate matrix for %s. %s", repo.FullName, err)

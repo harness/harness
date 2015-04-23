@@ -1,4 +1,4 @@
-package pool
+package cluster
 
 import (
 	"sync"
@@ -9,14 +9,14 @@ import (
 // TODO (bradrydzewski) ability to cancel work.
 // TODO (bradrydzewski) ability to remove a worker.
 
-type Pool struct {
+type Cluster struct {
 	sync.Mutex
 	clients map[dockerclient.Client]bool
 	clientc chan dockerclient.Client
 }
 
-func New() *Pool {
-	return &Pool{
+func New() *Cluster {
+	return &Cluster{
 		clients: make(map[dockerclient.Client]bool),
 		clientc: make(chan dockerclient.Client, 999),
 	}
@@ -24,26 +24,26 @@ func New() *Pool {
 
 // Allocate allocates a client to the pool to
 // be available to accept work.
-func (p *Pool) Allocate(c dockerclient.Client) bool {
-	if p.IsAllocated(c) {
+func (c *Cluster) Allocate(cli dockerclient.Client) bool {
+	if c.IsAllocated(cli) {
 		return false
 	}
 
-	p.Lock()
-	p.clients[c] = true
-	p.Unlock()
+	c.Lock()
+	c.clients[cli] = true
+	c.Unlock()
 
-	p.clientc <- c
+	c.clientc <- cli
 	return true
 }
 
 // IsAllocated is a helper function that returns
 // true if the client is currently allocated to
 // the Pool.
-func (p *Pool) IsAllocated(c dockerclient.Client) bool {
-	p.Lock()
-	defer p.Unlock()
-	_, ok := p.clients[c]
+func (c *Cluster) IsAllocated(cli dockerclient.Client) bool {
+	c.Lock()
+	defer c.Unlock()
+	_, ok := c.clients[cli]
 	return ok
 }
 
@@ -51,21 +51,21 @@ func (p *Pool) IsAllocated(c dockerclient.Client) bool {
 // available clients. If the client is currently
 // reserved and performing work it will finish,
 // but no longer be given new work.
-func (p *Pool) Deallocate(c dockerclient.Client) {
-	p.Lock()
-	defer p.Unlock()
-	delete(p.clients, c)
+func (c *Cluster) Deallocate(cli dockerclient.Client) {
+	c.Lock()
+	defer c.Unlock()
+	delete(c.clients, cli)
 }
 
 // List returns a list of all Workers currently
 // allocated to the Pool.
-func (p *Pool) List() []dockerclient.Client {
-	p.Lock()
-	defer p.Unlock()
+func (c *Cluster) List() []dockerclient.Client {
+	c.Lock()
+	defer c.Unlock()
 
 	var clients []dockerclient.Client
-	for c := range p.clients {
-		clients = append(clients, c)
+	for cli := range c.clients {
+		clients = append(clients, cli)
 	}
 	return clients
 }
@@ -73,17 +73,17 @@ func (p *Pool) List() []dockerclient.Client {
 // Reserve reserves the next available worker to
 // start doing work. Once work is complete, the
 // worker should be released back to the pool.
-func (p *Pool) Reserve() <-chan dockerclient.Client {
+func (p *Cluster) Reserve() <-chan dockerclient.Client {
 	return p.clientc
 }
 
 // Release releases the worker back to the pool
 // of available workers.
-func (p *Pool) Release(c dockerclient.Client) bool {
-	if !p.IsAllocated(c) {
+func (c *Cluster) Release(cli dockerclient.Client) bool {
+	if !c.IsAllocated(cli) {
 		return false
 	}
 
-	p.clientc <- c
+	c.clientc <- cli
 	return true
 }
