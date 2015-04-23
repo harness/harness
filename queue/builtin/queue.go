@@ -1,10 +1,13 @@
 package builtin
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/drone/drone/queue"
 )
+
+var ErrNotFound = errors.New("work item not found")
 
 type Queue struct {
 	sync.Mutex
@@ -40,7 +43,7 @@ func (q *Queue) Remove(work *queue.Work) error {
 
 	_, ok := q.items[work]
 	if !ok {
-		return nil
+		return ErrNotFound
 	}
 	var items []*queue.Work
 

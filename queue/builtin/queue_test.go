@@ -34,6 +34,7 @@ func TestBuild(t *testing.T) {
 			g.Assert(len(q.itemc)).Equal(2)
 			g.Assert(q.Pull()).Equal(w1)
 			g.Assert(q.Pull()).Equal(w3)
+			g.Assert(q.Remove(w2)).Equal(ErrNotFound)
 		})
 
 		g.It("Should pull item", func() {
