@@ -89,7 +89,9 @@ func PostBuildStatus(c *gin.Context) {
 		c.AbortWithStatus(400)
 		return
 	}
-	if err := store.SetStatus(repo.Name, num, in); err != nil {
+
+	//if err := store.SetStatus(repo.Name, num, in); err != nil {
+	if err := store.SetBuildStatus(repo.Name, num, in); err != nil {
 		c.Fail(400, err)
 	} else {
 		c.JSON(201, in)
