@@ -203,8 +203,12 @@ func (db *DB) SetBuildTask(repo string, build int, task *common.Task) error {
 		if err != nil {
 			return err
 		}
+		if task.Number > len(build_.Tasks) {
+			return ErrKeyNotFound
+		}
 		build_.Updated = time.Now().UTC().Unix()
-		build_.Tasks[task.Number] = task // TODO check index to prevent nil pointer / panic
+		//assuming task number is 1-based.
+		build_.Tasks[task.Number-1] = task // TODO check index to prevent nil pointer / panic
 		return update(t, bucketBuild, key, build_)
 	})
 }
