@@ -98,19 +98,21 @@ func TestBuild(t *testing.T) {
 			g.Assert(err_).Equal(nil)
 		})
 
-		g.It("Should set build task: SetBuildTask()", func() {
-			err := db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
-			g.Assert(err).Equal(nil)
+		/*
+			g.It("Should set build task: SetBuildTask()", func() {
+				err := db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
+				g.Assert(err).Equal(nil)
 
-			db.SetBuild(repo, &common.Build{State: "error"})
-			db.SetBuild(repo, &common.Build{State: "pending"})
-			db.SetBuild(repo, &common.Build{State: "success"})
-			err_ := db.SetBuildTask(repo, 1, &common.Task{Number: 1})
-			g.Assert(err_).Equal(nil)
-			err_ = db.SetBuildTask(repo, 1, &common.Task{Number: 2})
-			g.Assert(err_).Equal(nil)
-			err_ = db.SetBuildTask(repo, 2, &common.Task{Number: 1})
-			g.Assert(err_).Equal(nil)
-		})
+				db.SetBuild(repo, &common.Build{State: "error"})
+				db.SetBuild(repo, &common.Build{State: "pending"})
+				db.SetBuild(repo, &common.Build{State: "success"})
+				err_ := db.SetBuildTask(repo, 1, &common.Task{Number: 1})
+				g.Assert(err_).Equal(nil)
+				err_ = db.SetBuildTask(repo, 1, &common.Task{Number: 2})
+				g.Assert(err_).Equal(nil)
+				err_ = db.SetBuildTask(repo, 2, &common.Task{Number: 1})
+				g.Assert(err_).Equal(nil)
+			})
+		*/
 	})
 }
