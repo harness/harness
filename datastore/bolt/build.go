@@ -1,7 +1,7 @@
 package bolt
 
 import (
-	"bytes"
+	//"bytes"
 	"encoding/binary"
 	"strconv"
 	"time"
@@ -114,6 +114,7 @@ func (db *DB) SetBuild(repo string, build *common.Build) error {
 	})
 }
 
+/*
 // Status returns the status for the given repository
 // and build number.
 func (db *DB) Status(repo string, build int, status string) (*common.Status, error) {
@@ -147,7 +148,7 @@ func (db *DB) StatusList(repo string, build int) ([]*common.Status, error) {
 	})
 	return statuses, err
 }
-
+*/
 // SetStatus inserts a new build status for the
 // named repository and build number. If the status already
 // exists an error is returned.
@@ -160,7 +161,6 @@ func (db *DB) SetStatus(repo string, build int, status *common.Status) error {
 }
 
 // Experimental
-
 func (db *DB) SetBuildState(repo string, build *common.Build) error {
 	key := []byte(repo + "/" + strconv.Itoa(build.Number))
 
