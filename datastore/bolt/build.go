@@ -204,7 +204,7 @@ func (db *DB) SetBuildTask(repo string, build int, task *common.Task) error {
 			return err
 		}
 		build_.Updated = time.Now().UTC().Unix()
-		build_.Tasks[task.Number] = task // TODO check index to prevent nil pointer / panic
+		build_.Tasks[task.Number-1] = task // TODO check index to prevent nil pointer / panic
 		return update(t, bucketBuild, key, build_)
 	})
 }

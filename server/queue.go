@@ -19,7 +19,7 @@ import (
 // GET /queue/pull
 func PollBuild(c *gin.Context) {
 	queue := ToQueue(c)
-	work := queue.PullAck()
+	work := queue.Pull()
 	c.JSON(200, work)
 }
 
@@ -37,6 +37,10 @@ func PushBuild(c *gin.Context) {
 		c.Fail(404, err)
 		return
 	}
+	build.Duration = in.Duration
+	build.Started = in.Started
+	build.Finished = in.Finished
+	build.State = in.State
 	err = store.SetBuildState(repo.FullName, build)
 	if err != nil {
 		c.Fail(500, err)
@@ -105,4 +109,10 @@ func PushLogs(c *gin.Context) {
 		return
 	}
 	c.Writer.WriteHeader(200)
+}
+
+func GetQueue(c *gin.Context) {
+	queue := ToQueue(c)
+	items := queue.Items()
+	c.JSON(200, items)
 }
