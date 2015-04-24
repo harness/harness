@@ -268,7 +268,7 @@ func (r *Gitlab) OpenRegistration() bool {
 
 func (r *Gitlab) GetToken(user *model.User) (*model.Token, error) {
 	expiry := time.Unix(user.TokenExpiry, 0)
-	if expiry.Sub(time.Now()) > (60 * time.Second) {
+	if user.TokenExpiry == 0 || expiry.Sub(time.Now()) > (60*time.Second) {
 		return nil, nil
 	}
 
