@@ -26,30 +26,3 @@ type Queue interface {
 	// queue, in proper sequence.
 	Items() []*Work
 }
-
-// type Manager interface {
-// 	// Register registers a worker that has signed
-// 	// up to accept work.
-// 	Register(*Worker)
-
-// 	// Unregister unregisters a worker that should no
-// 	// longer be accepting work.
-// 	Unregister(*Worker)
-
-// 	// Assign assigns work to a worker.
-// 	Assign(*Work, *Worker)
-
-// 	// Unassign unassigns work from a worker.
-// 	Unassign(*Work, *Worker)
-
-// 	// Work returns a list of all work that is
-// 	// currently in progress.
-// 	Work() []*Work
-
-// 	// Worker retrieves a worker by name.
-// 	Worker(string) *Worker
-
-// 	// Workers returns a slice containing all workers
-// 	// registered with the manager.
-// 	Workers() []*Worker
-// }
