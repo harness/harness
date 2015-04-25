@@ -6,10 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/datastore/bolt"
+	"github.com/drone/drone/eventbus"
 	"github.com/drone/drone/remote/github"
 	"github.com/drone/drone/server"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/settings"
+
+	queue "github.com/drone/drone/queue/builtin"
 )
 
 var path = flag.String("config", "drone.toml", "")
@@ -31,8 +34,10 @@ func main() {
 
 	api := r.Group("/api")
 	api.Use(server.SetHeaders())
+	api.Use(server.SetBus(eventbus.New()))
 	api.Use(server.SetDatastore(ds))
 	api.Use(server.SetRemote(remote))
+	api.Use(server.SetQueue(queue.New()))
 	api.Use(server.SetSettings(settings))
 	api.Use(server.SetUser(session))
 
@@ -97,6 +102,16 @@ func main() {
 	hooks := api.Group("/hook")
 	{
 		hooks.POST("", server.PostHook)
+	}
+
+	queue := api.Group("/queue")
+	{
+		queue.Use(server.SetRepo())
+		queue.GET("", server.GetQueue)
+		queue.POST("/pull", server.PollBuild)
+		queue.POST("/push/:owner/:name", server.PushBuild)
+		queue.POST("/push/:owner/:name/:build", server.PushTask)
+		queue.POST("/push/:owner/:name/:build/:task/logs", server.PushLogs)
 	}
 
 	auth := r.Group("/authorize")

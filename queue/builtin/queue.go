@@ -1,10 +1,13 @@
 package builtin
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/drone/drone/queue"
 )
+
+var ErrNotFound = errors.New("work item not found")
 
 type Queue struct {
 	sync.Mutex
@@ -35,6 +38,37 @@ func (q *Queue) Publish(work *queue.Work) error {
 // Remove removes the specified work item from this queue,
 // if it is present.
 func (q *Queue) Remove(work *queue.Work) error {
+	q.Lock()
+	defer q.Unlock()
+
+	_, ok := q.items[work]
+	if !ok {
+		return ErrNotFound
+	}
+	var items []*queue.Work
+
+	// loop through and drain all items
+	// from the queue.
+drain:
+	for {
+		select {
+		case item := <-q.itemc:
+			items = append(items, item)
+		default:
+			break drain
+		}
+	}
+
+	// re-add all items to the queue except
+	// the item we're trying to remove
+	for _, item := range items {
+		if item == work {
+			delete(q.items, work)
+			delete(q.acks, work)
+			continue
+		}
+		q.itemc <- item
+	}
 	return nil
 }
 
@@ -48,7 +82,7 @@ func (q *Queue) Pull() *queue.Work {
 	return work
 }
 
-// PullAct retrieves and removes the head of this queue, waiting
+// PullAck retrieves and removes the head of this queue, waiting
 // if necessary until work becomes available. Items pull from the
 // queue that aren't acknowledged will be pushed back to the queue
 // again when the default acknowledgement deadline is reached.
@@ -74,7 +108,7 @@ func (q *Queue) Items() []*queue.Work {
 	q.Lock()
 	defer q.Unlock()
 	items := []*queue.Work{}
-	for work, _ := range q.items {
+	for work := range q.items {
 		items = append(items, work)
 	}
 	return items

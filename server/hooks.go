@@ -7,7 +7,7 @@ import (
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/parser/inject"
 	"github.com/drone/drone/parser/matrix"
-	// "github.com/bradrydzewski/drone/worker"
+	"github.com/drone/drone/queue"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +19,7 @@ import (
 func PostHook(c *gin.Context) {
 	remote := ToRemote(c)
 	store := ToDatastore(c)
+	queue_ := ToQueue(c)
 
 	hook, err := remote.Hook(c.Request)
 	if err != nil {
@@ -107,18 +108,12 @@ func PostHook(c *gin.Context) {
 			Environment: axis,
 		})
 	}
-
-	err = store.SetBuild(repo.FullName, build)
+	keys, err := store.RepoKeypair(repo.FullName)
 	if err != nil {
-		c.Fail(500, err)
+		log.Errorf("failure to fetch keypair for %s. %s", repo.FullName, err)
+		c.Fail(404, err)
 		return
 	}
-
-	// w := worker.Work{
-	// 	User: user,
-	// 	Repo: repo,
-	// 	Build: build,
-	// }
 
 	// verify the branches can be built vs skipped
 	// s, _ := script.ParseBuild(string(yml))
@@ -126,6 +121,21 @@ func PostHook(c *gin.Context) {
 	// 	w.WriteHeader(http.StatusOK)
 	// 	return
 	// }
+
+	err = store.SetBuild(repo.FullName, build)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+
+	queue_.Publish(&queue.Work{
+		User:  user,
+		Repo:  repo,
+		Build: build,
+		Keys:  keys,
+		Netrc: &common.Netrc{}, // TODO
+		Yaml:  raw,
+	})
 
 	c.JSON(200, build)
 }

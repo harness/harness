@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/drone/drone/common"
+	"github.com/drone/drone/queue"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
@@ -102,6 +103,7 @@ func PostBuildStatus(c *gin.Context) {
 //
 func RunBuild(c *gin.Context) {
 	store := ToDatastore(c)
+	queue_ := ToQueue(c)
 	repo := ToRepo(c)
 	num, err := strconv.Atoi(c.Params.ByName("number"))
 	if err != nil {
@@ -109,6 +111,18 @@ func RunBuild(c *gin.Context) {
 		return
 	}
 	build, err := store.Build(repo.FullName, num)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+
+	keys, err := store.RepoKeypair(repo.FullName)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+
+	user, err := store.User(repo.User.Login)
 	if err != nil {
 		c.Fail(404, err)
 		return
@@ -143,7 +157,14 @@ func RunBuild(c *gin.Context) {
 	// 	raw = []byte(inject.InjectSafe(string(raw), params))
 	// }
 
-	// TODO push build to queue
+	queue_.Publish(&queue.Work{
+		User:  user,
+		Repo:  repo,
+		Build: build,
+		Keys:  keys,
+		Netrc: &common.Netrc{}, //TODO create netrc
+		Yaml:  nil,             // TODO fetch yaml
+	})
 
 	c.JSON(202, build)
 }
