@@ -3,9 +3,9 @@ package eventbus
 import "github.com/drone/drone/common"
 
 type Event struct {
-	Build *common.Build
-	Repo  *common.Repo
-	Task  *common.Task
+	Build *common.Build `json:"build,omitempty"`
+	Repo  *common.Repo  `json:"repo,omitempty"`
+	Task  *common.Task  `json:"task,omitempty"`
 }
 
 type Bus interface {

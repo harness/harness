@@ -3,14 +3,14 @@
 	/**
 	 * ReposCtrl responsible for rendering the user's
 	 * repository home screen.
-	 */	
-	function ReposCtrl($scope, $routeParams, repos, users) {
+	 */
+	function ReposCtrl($scope, $routeParams, repos, users, feed) {
 
-		// Gets the currently authenticated user 
+		// Gets the currently authenticated user
 		users.getCached().then(function(payload){
 			$scope.user = payload.data;
 		});
-		
+
 		// Gets a list of repos to display in the
 		// dropdown.
 		repos.list().then(function(payload){
@@ -18,12 +18,25 @@
 		}).catch(function(err){
 			$scope.error = err;
 		});
+
+		feed.subscribe(function(event) {
+			if (!$scope.repos) {
+				return;
+			}
+			for (var i=0;i<$scope.repos.length;i++) {
+				if ($scope.repos[i].full_name === event.repo.full_name) {
+					$scope.repos[i]=event.repo;
+					$scope.$apply();
+					break;
+				}
+			};
+		});
 	}
 
 	/**
 	 * RepoAddCtrl responsible for activaing a new
 	 * repository.
-	 */	
+	 */
 	function RepoAddCtrl($scope, $location, repos, users) {
 		$scope.add = function(slug) {
 			repos.post(slug).then(function(payload) {
@@ -36,17 +49,17 @@
 
 	/**
 	 * RepoEditCtrl responsible for editing a repository.
-	 */	
+	 */
 	function RepoEditCtrl($scope, $location, $routeParams, repos, users) {
 		var owner = $routeParams.owner;
 		var name  = $routeParams.name;
 		var fullName = owner+'/'+name;
 
-		// Gets the currently authenticated user 
+		// Gets the currently authenticated user
 		users.getCached().then(function(payload){
 			$scope.user = payload.data;
 		});
-		
+
 		// Gets a repository
 		repos.get(fullName).then(function(payload){
 			$scope.repo = payload.data;
