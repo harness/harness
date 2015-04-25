@@ -114,6 +114,12 @@ func main() {
 		queue.POST("/push/:owner/:name/:build/:task/logs", server.PushLogs)
 	}
 
+	events := api.Group("/stream")
+	{
+		events.GET("/user", server.GetEvents)
+		//events.GET("/logs/:owner/:name/:build/:number")
+	}
+
 	auth := r.Group("/authorize")
 	{
 		auth.Use(server.SetHeaders())
