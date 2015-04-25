@@ -37,6 +37,7 @@ func PushBuild(c *gin.Context) {
 		c.Fail(404, err)
 		return
 	}
+
 	build.Duration = in.Duration
 	build.Started = in.Started
 	build.Finished = in.Finished
@@ -47,16 +48,33 @@ func PushBuild(c *gin.Context) {
 		return
 	}
 
+	if repo.Last == nil || build.Number >= repo.Last.Number {
+		repo.Last = build
+		store.SetRepo(repo)
+	}
+
+	// <-- FIXME
+	// for some reason the Repo and Build fail to marshal to JSON.
+	// It has something to do with memory / pointers. So it goes away
+	// if I just refetch these items. Needs to be fixed in the future,
+	// but for now should be ok
+	repo, err = store.Repo(repo.FullName)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+	build, err = store.Build(repo.FullName, in.Number)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+	// END FIXME -->
+
 	bus.Send(&eventbus.Event{
 		Build: build,
 		Repo:  repo,
 	})
-	if repo.Last != nil && repo.Last.Number > build.Number {
-		c.Writer.WriteHeader(200)
-		return
-	}
-	repo.Last = build
-	store.SetRepo(repo)
+
 	c.Writer.WriteHeader(200)
 }
 
@@ -83,6 +101,7 @@ func PushTask(c *gin.Context) {
 	bus.Send(&eventbus.Event{
 		Build: build,
 		Repo:  repo,
+		Task:  in,
 	})
 	c.Writer.WriteHeader(200)
 }

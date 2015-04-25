@@ -12,7 +12,7 @@
 
 	/**
 	 * Bootstraps the application and retrieves the
-	 * token from the 
+	 * token from the
 	 */
 	function Authorize() {
 		// First, parse the query string
@@ -117,24 +117,23 @@
 		});
 	}
 
-	// /**
-	//  *
-	//  */
-	// function RouteChange($rootScope, stdout, projs) {
-	// 	$rootScope.$on('$routeChangeStart', function (event, next) {
-	// 		projs.unsubscribe();
-	// 		stdout.unsubscribe();
-	// 	});
 
-	// 	//$rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
- // 		//	document.title = current.$$route.title + ' · drone.io';
-	// 	//});
-	// }
+	function RouteChange($rootScope, feed) {
+		$rootScope.$on('$routeChangeStart', function (event, next) {
+			feed.unsubscribe();
+		});
+
+		$rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
+			if (current.$$route.title) {
+ 				document.title = current.$$route.title + ' · drone';
+			}
+		});
+	}
 
 	angular
 		.module('drone')
 		.config(Authorize)
-		.config(Config);
-		// .run(RouteChange);
+		.config(Config)
+		.run(RouteChange);
 
 })();

@@ -4,7 +4,7 @@
 	 * BuildsCtrl responsible for rendering the repo's
 	 * recent build history.
 	 */
-	function BuildsCtrl($scope, $routeParams, builds, repos, users) {
+	function BuildsCtrl($scope, $routeParams, builds, repos, users, feed) {
 
 		var owner = $routeParams.owner;
 		var name  = $routeParams.name;
@@ -40,12 +40,31 @@
 				delete $scope.repo.subscription;
 			});
 		}
+
+		feed.subscribe(function(event) {
+			if (event.repo.full_name !== fullName) {
+				return; // ignore
+			}
+			// update repository
+			$scope.repo = event.repo;
+			$scope.apply();
+			
+			if (event.build.number !== parseInt(number)) {
+				return; // ignore
+			}
+			// update the build status
+			$scope.build.state = event.build.state;
+			$scope.build.started = event.build.started;
+			$scope.build.finished = event.build.finished;
+			$scope.build.duration = event.build.duration;
+			$scope.$apply();
+		});
 	}
 
 	/**
 	 * BuildCtrl responsible for rendering a build.
 	 */
-	function BuildCtrl($scope, $routeParams, logs, builds, repos, users) {
+	function BuildCtrl($scope, $routeParams, logs, builds, repos, users, feed) {
 
 		var step = parseInt($routeParams.step) || 1;
 		var number = $routeParams.number;
@@ -98,6 +117,32 @@
 				$scope.error = err;
 			});
 		};
+
+		feed.subscribe(function(event) {
+			if (event.repo.full_name !== fullName) {
+				return; // ignore
+			}
+			if (event.build.number !== parseInt(number)) {
+				return; // ignore
+			}
+			// update the build status
+			$scope.build.state = event.build.state;
+			$scope.build.started = event.build.started;
+			$scope.build.finished = event.build.finished;
+			$scope.build.duration = event.build.duration;
+			$scope.$apply();
+
+			if (!event.task || event.task.number !== step) {
+				return; // ignore
+			}
+			// update the task status
+			$scope.task.state = event.task.state;
+			$scope.task.started = event.task.started;
+			$scope.task.finished = event.task.finished;
+			$scope.task.duration = event.task.duration;
+			$scope.task.exit_code = event.task.exit_code;
+			$scope.$apply();
+		});
 
 		// var convert = new Filter({stream:true,newline:false});
 		// var term = document.getElementById("term")
