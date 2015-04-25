@@ -4,7 +4,6 @@ VERSION := 0.4.0-alpha
 all: concat bindata build
 
 deps:
-	go get -u github.com/jteeuwen/go-bindata/...
 	go get -t -v ./...
 
 test:
