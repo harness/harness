@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"html/template"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -133,8 +134,9 @@ func main() {
 		auth.POST("", server.GetLogin)
 	}
 
+	r.SetHTMLTemplate(index())
 	r.NoRoute(func(c *gin.Context) {
-		c.File("server/static/index.html")
+		c.HTML(200, "index.html", nil)
 	})
 
 	http.Handle("/static/", static())
@@ -150,4 +152,12 @@ func static() http.Handler {
 		AssetDir: AssetDir,
 		Prefix:   "server/static",
 	}))
+}
+
+// index is a helper function that will setup a template
+// for rendering the main angular index.html file.
+func index() *template.Template {
+	file := MustAsset("server/static/index.html")
+	filestr := string(file)
+	return template.Must(template.New("index.html").Parse(filestr))
 }
