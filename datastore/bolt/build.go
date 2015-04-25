@@ -212,3 +212,4 @@ func (db *DB) SetBuildTask(repo string, build int, task *common.Task) error {
 		return update(t, bucketBuild, key, build_)
 	})
 }
+
