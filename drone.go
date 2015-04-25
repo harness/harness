@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 
@@ -11,16 +12,17 @@ import (
 	"github.com/drone/drone/server"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/settings"
+	"github.com/elazarl/go-bindata-assetfs"
 
 	queue "github.com/drone/drone/queue/builtin"
 )
 
-var path = flag.String("config", "drone.toml", "")
+var conf = flag.String("config", "drone.toml", "")
 
 func main() {
 	flag.Parse()
 
-	settings, err := settings.Parse(*path)
+	settings, err := settings.Parse(*conf)
 	if err != nil {
 		panic(err)
 	}
@@ -134,6 +136,18 @@ func main() {
 	r.NoRoute(func(c *gin.Context) {
 		c.File("server/static/index.html")
 	})
-	r.Static("/static", "server/static")
-	r.Run(settings.Server.Addr)
+
+	http.Handle("/static/", static())
+	http.Handle("/", r)
+	http.ListenAndServe(settings.Server.Addr, nil)
+}
+
+// static is a helper function that will setup handlers
+// for serving static files.
+func static() http.Handler {
+	return http.StripPrefix("/static/", http.FileServer(&assetfs.AssetFS{
+		Asset:    Asset,
+		AssetDir: AssetDir,
+		Prefix:   "server/static",
+	}))
 }
