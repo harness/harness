@@ -13,9 +13,7 @@ drone.sublime-workspace
 *.db
 *.txt
 *.toml
+*.min.js
 bindata.go
-
-# combined assets
-server/static/drone.js
 
 drone

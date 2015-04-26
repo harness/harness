@@ -109,12 +109,16 @@ func main() {
 
 	queue := api.Group("/queue")
 	{
-		queue.Use(server.SetRepo())
 		queue.GET("", server.GetQueue)
 		queue.POST("/pull", server.PollBuild)
-		queue.POST("/push/:owner/:name", server.PushBuild)
-		queue.POST("/push/:owner/:name/:build", server.PushTask)
-		queue.POST("/push/:owner/:name/:build/:task/logs", server.PushLogs)
+
+		push := queue.Group("/push/:owner/:name")
+		{
+			push.Use(server.SetRepo())
+			push.POST("", server.PushBuild)
+			push.POST("/:build", server.PushTask)
+			push.POST("/:build/:task/logs", server.PushLogs)
+		}
 	}
 
 	events := api.Group("/stream")
