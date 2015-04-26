@@ -47,17 +47,28 @@
 			}
 			// update repository
 			$scope.repo = event.repo;
-			$scope.apply();
-			
-			if (event.build.number !== parseInt(number)) {
-				return; // ignore
-			}
-			// update the build status
-			$scope.build.state = event.build.state;
-			$scope.build.started = event.build.started;
-			$scope.build.finished = event.build.finished;
-			$scope.build.duration = event.build.duration;
 			$scope.$apply();
+			
+			var added = false;
+			for (var i=0;i<$scope.builds.length;i++) {
+				var build = $scope.builds[i];
+				if (event.build.number !== build.number) {
+					continue; // ignore
+				}
+				// update the build status
+				build.state = event.build.state;
+				build.started_at = event.build.started_at;
+				build.finished_at = event.build.finished_at;
+				build.duration = event.build.duration;
+				$scope.builds[i] = build;
+				$scope.$apply();
+				added = true;
+			}
+
+			if (!added) {
+				$scope.builds.push(event.build);
+				$scope.$apply();
+			}
 		});
 	}
 
@@ -97,7 +108,9 @@
 
 				// fetch the logs for the finished build.
 				logs.get(fullName, number, step).then(function(payload){
-					$scope.logs = payload.data;
+					var convert = new Filter({stream:false,newline:false});
+					var term = document.getElementById("term")
+					term.innerHTML = convert.toHtml(payload.data);
 				}).catch(function(err){
 					$scope.error = err;
 				});
@@ -127,8 +140,8 @@
 			}
 			// update the build status
 			$scope.build.state = event.build.state;
-			$scope.build.started = event.build.started;
-			$scope.build.finished = event.build.finished;
+			$scope.build.started_at = event.build.started_at;
+			$scope.build.finished_at = event.build.finished_at;
 			$scope.build.duration = event.build.duration;
 			$scope.$apply();
 
@@ -137,8 +150,8 @@
 			}
 			// update the task status
 			$scope.task.state = event.task.state;
-			$scope.task.started = event.task.started;
-			$scope.task.finished = event.task.finished;
+			$scope.task.started_at = event.task.started_at;
+			$scope.task.finished_at = event.task.finished_at;
 			$scope.task.duration = event.task.duration;
 			$scope.task.exit_code = event.task.exit_code;
 			$scope.$apply();

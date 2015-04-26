@@ -72,7 +72,7 @@ func remove(c *gin.Context) {
 func pull(c *gin.Context) {
 	q := fromContext(c)
 	var work *queue.Work
-	if c.Request.FormValue("ack") != "" {
+	if c.Request.FormValue("ack") == "true" {
 		work = q.PullAck()
 	} else {
 		work = q.Pull()
