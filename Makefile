@@ -23,7 +23,7 @@ concat:
 		server/static/scripts/services/*.js    \
 		server/static/scripts/filters/*.js     \
 		server/static/scripts/controllers/*.js \
-		server/static/scripts/term.js          > server/static/drone.js
+		server/static/scripts/term.js          > server/static/scripts/drone.min.js
 
 bindata_debug:
 	go-bindata --debug server/static/...

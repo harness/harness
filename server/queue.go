@@ -48,9 +48,11 @@ func PushBuild(c *gin.Context) {
 		return
 	}
 
-	if repo.Last == nil || build.Number >= repo.Last.Number {
-		repo.Last = build
-		store.SetRepo(repo)
+	if build.State != common.StatePending && build.State != common.StateRunning {
+		if repo.Last == nil || build.Number >= repo.Last.Number {
+			repo.Last = build
+			store.SetRepo(repo)
+		}
 	}
 
 	// <-- FIXME
