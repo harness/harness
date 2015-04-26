@@ -5,8 +5,9 @@ env:
   - GOROOT=/usr/local/go
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 script:
-  - make deps
-  - make
+  - go get -u github.com/jteeuwen/go-bindata/...
+  - make bindata deps
+  - make build
   - make test
 
 notify:

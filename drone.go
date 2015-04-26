@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"html/template"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 
@@ -11,16 +13,17 @@ import (
 	"github.com/drone/drone/server"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/settings"
+	"github.com/elazarl/go-bindata-assetfs"
 
 	queue "github.com/drone/drone/queue/builtin"
 )
 
-var path = flag.String("config", "drone.toml", "")
+var conf = flag.String("config", "drone.toml", "")
 
 func main() {
 	flag.Parse()
 
-	settings, err := settings.Parse(*path)
+	settings, err := settings.Parse(*conf)
 	if err != nil {
 		panic(err)
 	}
@@ -106,12 +109,16 @@ func main() {
 
 	queue := api.Group("/queue")
 	{
-		queue.Use(server.SetRepo())
 		queue.GET("", server.GetQueue)
 		queue.POST("/pull", server.PollBuild)
-		queue.POST("/push/:owner/:name", server.PushBuild)
-		queue.POST("/push/:owner/:name/:build", server.PushTask)
-		queue.POST("/push/:owner/:name/:build/:task/logs", server.PushLogs)
+
+		push := queue.Group("/push/:owner/:name")
+		{
+			push.Use(server.SetRepo())
+			push.POST("", server.PushBuild)
+			push.POST("/:build", server.PushTask)
+			push.POST("/:build/:task/logs", server.PushLogs)
+		}
 	}
 
 	events := api.Group("/stream")
@@ -131,9 +138,30 @@ func main() {
 		auth.POST("", server.GetLogin)
 	}
 
+	r.SetHTMLTemplate(index())
 	r.NoRoute(func(c *gin.Context) {
-		c.File("server/static/index.html")
+		c.HTML(200, "index.html", nil)
 	})
-	r.Static("/static", "server/static")
-	r.Run(settings.Server.Addr)
+
+	http.Handle("/static/", static())
+	http.Handle("/", r)
+	http.ListenAndServe(settings.Server.Addr, nil)
+}
+
+// static is a helper function that will setup handlers
+// for serving static files.
+func static() http.Handler {
+	return http.StripPrefix("/static/", http.FileServer(&assetfs.AssetFS{
+		Asset:    Asset,
+		AssetDir: AssetDir,
+		Prefix:   "server/static",
+	}))
+}
+
+// index is a helper function that will setup a template
+// for rendering the main angular index.html file.
+func index() *template.Template {
+	file := MustAsset("server/static/index.html")
+	filestr := string(file)
+	return template.Must(template.New("index.html").Parse(filestr))
 }

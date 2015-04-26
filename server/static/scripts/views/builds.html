@@ -21,7 +21,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		<tr ng-repeat="build in builds">
+		<tr ng-repeat="build in builds | orderBy:'-number'">
 			<td><a ng-href="/{{ repo.full_name }}/{{ build.number }}">{{ build.number }}</a></td>
 			<td>{{ build.state }}</td>
 			<td>{{ build.started_at | fromNow }}</td>
