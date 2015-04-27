@@ -116,28 +116,16 @@ type Datastore interface {
 
 	// Status returns the status for the given repository
 	// and build number.
-	Status(string, int, string) (*common.Status, error)
+	////Status(string, int, string) (*common.Status, error)
 
 	// StatusList returned a list of all build statues for
 	// the given repository and build number.
-	StatusList(string, int) ([]*common.Status, error)
+	////StatusList(string, int) ([]*common.Status, error)
 
 	// SetStatus inserts a new build status for the
 	// named repository and build number. If the status already
 	// exists an error is returned.
 	SetStatus(string, int, *common.Status) error
-
-	// GetTask gets the task at index N for the named
-	// repository and build number.
-	//Task(string, int, int) (*common.Task, error)
-
-	// TaskList gets all tasks for the named repository
-	// and build number.
-	//TaskList(string, int) ([]*common.Task, error)
-
-	// SetTask inserts or updates a task for the named
-	// repository and build number.
-	//SetTask(string, int, *common.Task) error
 
 	// LogReader gets the task logs at index N for
 	// the named repository and build number.
