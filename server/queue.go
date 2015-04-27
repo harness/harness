@@ -19,8 +19,12 @@ import (
 // GET /queue/pull
 func PollBuild(c *gin.Context) {
 	queue := ToQueue(c)
-	work := queue.Pull()
-	c.JSON(200, work)
+	work := queue.PullClose(c.Writer)
+	if work == nil {
+		c.AbortWithStatus(500)
+	} else {
+		c.JSON(200, work)
+	}
 }
 
 // GET /queue/push/:owner/:repo
