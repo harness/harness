@@ -82,6 +82,24 @@ func (q *Queue) Pull() *queue.Work {
 	return work
 }
 
+// PullClose retrieves and removes the head of this queue,
+// waiting if necessary until work becomes available. The
+// CloseNotifier should be provided to clone the channel
+// if the subscribing client terminates its connection.
+func (q *Queue) PullClose(cn queue.CloseNotifier) *queue.Work {
+	for {
+		select {
+		case <-cn.CloseNotify():
+			return nil
+		case work := <-q.itemc:
+			q.Lock()
+			delete(q.items, work)
+			q.Unlock()
+			return work
+		}
+	}
+}
+
 // PullAck retrieves and removes the head of this queue, waiting
 // if necessary until work becomes available. Items pull from the
 // queue that aren't acknowledged will be pushed back to the queue
