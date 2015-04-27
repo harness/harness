@@ -13,6 +13,12 @@ type Queue interface {
 	// if necessary until work becomes available.
 	Pull() *Work
 
+	// PullClose retrieves and removes the head of this queue,
+	// waiting if necessary until work becomes available. The
+	// CloseNotifier should be provided to clone the channel
+	// if the subscribing client terminates its connection.
+	PullClose(CloseNotifier) *Work
+
 	// PullAck retrieves and removes the head of this queue, waiting
 	// if necessary until work becomes available. Items pull from the
 	// queue that aren't acknowledged will be pushed back to the queue
@@ -25,4 +31,10 @@ type Queue interface {
 	// Items returns a slice containing all of the work in this
 	// queue, in proper sequence.
 	Items() []*Work
+}
+
+type CloseNotifier interface {
+	// CloseNotify returns a channel that receives a single value
+	// when the client connection has gone away.
+	CloseNotify() <-chan bool
 }
