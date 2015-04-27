@@ -1,13 +1,12 @@
 package bolt
 
 import (
-	"bytes"
+	//"bytes"
 	"encoding/binary"
-	"strconv"
-	"time"
-
 	"github.com/boltdb/bolt"
 	"github.com/drone/drone/common"
+	"strconv"
+	"time"
 )
 
 // Build gets the specified build number for the
@@ -114,6 +113,7 @@ func (db *DB) SetBuild(repo string, build *common.Build) error {
 	})
 }
 
+/*
 // Status returns the status for the given repository
 // and build number.
 func (db *DB) Status(repo string, build int, status string) (*common.Status, error) {
@@ -147,7 +147,7 @@ func (db *DB) StatusList(repo string, build int) ([]*common.Status, error) {
 	})
 	return statuses, err
 }
-
+*/
 // SetStatus inserts a new build status for the
 // named repository and build number. If the status already
 // exists an error is returned.
@@ -160,7 +160,6 @@ func (db *DB) SetStatus(repo string, build int, status *common.Status) error {
 }
 
 // Experimental
-
 func (db *DB) SetBuildState(repo string, build *common.Build) error {
 	key := []byte(repo + "/" + strconv.Itoa(build.Number))
 
@@ -203,8 +202,14 @@ func (db *DB) SetBuildTask(repo string, build int, task *common.Task) error {
 		if err != nil {
 			return err
 		}
+		// check index to prevent nil pointer / panic
+		if task.Number > len(build_.Tasks) {
+			return ErrKeyNotFound
+		}
 		build_.Updated = time.Now().UTC().Unix()
-		build_.Tasks[task.Number-1] = task // TODO check index to prevent nil pointer / panic
+		//assuming task number is 1-based.
+		build_.Tasks[task.Number-1] = task
 		return update(t, bucketBuild, key, build_)
 	})
 }
+

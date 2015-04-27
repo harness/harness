@@ -1,11 +1,10 @@
 package bolt
 
 import (
-	"os"
-	"testing"
-
 	"github.com/drone/drone/common"
 	. "github.com/franela/goblin"
+	"os"
+	"testing"
 )
 
 func TestBuild(t *testing.T) {
@@ -13,6 +12,11 @@ func TestBuild(t *testing.T) {
 	g.Describe("Build", func() {
 		var db *DB // temporary database
 		repo := string("github.com/octopod/hq")
+		//testUser := &common.User{Login: "octocat"}
+		//testRepo := &common.Repo{FullName: "github.com/octopod/hq"}
+		testUser := "octocat"
+		testRepo := "github.com/octopod/hq"
+		//testBuild := 1
 
 		// create a new database before each unit
 		// test and destroy afterwards.
@@ -61,6 +65,68 @@ func TestBuild(t *testing.T) {
 			builds, err := db.BuildList(repo)
 			g.Assert(err).Equal(nil)
 			g.Assert(len(builds)).Equal(3)
+		})
+
+		g.It("Should set build status: SetBuildStatus()", func() {
+			//err := db.SetRepoNotExists(testUser, testRepo)
+			err := db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
+			g.Assert(err).Equal(nil)
+
+			db.SetBuild(repo, &common.Build{State: "error"})
+			db.SetBuild(repo, &common.Build{State: "pending"})
+			db.SetBuild(repo, &common.Build{State: "success"})
+			err_ := db.SetBuildStatus(repo, 1, &common.Status{Context: "pending"})
+			g.Assert(err_).Equal(nil)
+			err_ = db.SetBuildStatus(repo, 2, &common.Status{Context: "running"})
+			g.Assert(err_).Equal(nil)
+			err_ = db.SetBuildStatus(repo, 3, &common.Status{Context: "success"})
+			g.Assert(err_).Equal(nil)
+		})
+
+		g.It("Should set build state: SetBuildState()", func() {
+			err := db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
+			g.Assert(err).Equal(nil)
+
+			db.SetBuild(repo, &common.Build{State: "error"})
+			db.SetBuild(repo, &common.Build{State: "pending"})
+			db.SetBuild(repo, &common.Build{State: "success"})
+			err_ := db.SetBuildState(repo, &common.Build{Number: 1})
+			g.Assert(err_).Equal(nil)
+			err_ = db.SetBuildState(repo, &common.Build{Number: 2})
+			g.Assert(err_).Equal(nil)
+			err_ = db.SetBuildState(repo, &common.Build{Number: 3})
+			g.Assert(err_).Equal(nil)
+		})
+
+		g.It("Should set build task: SetBuildTask()", func() {
+			err_ := db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
+			g.Assert(err_).Equal(nil)
+			// setting up tasks.
+			tasks := []*common.Task{
+				&common.Task{
+					Number:   1,
+					State:    "pending",
+					ExitCode: 0,
+				},
+				&common.Task{
+					Number:   2,
+					State:    "running",
+					ExitCode: 0,
+				},
+				&common.Task{
+					Number:   3,
+					State:    "success",
+					ExitCode: 0,
+				},
+			}
+			// setting up builds.
+			err_ = db.SetBuild(repo, &common.Build{Number: 1, State: "failed", Tasks: tasks})
+			g.Assert(err_).Equal(nil)
+			err_ = db.SetBuildTask(repo, 1, &common.Task{Number: 1, State: "error", ExitCode: -1})
+			g.Assert(err_).Equal(nil)
+			db.SetBuild(repo, &common.Build{Number: 2, State: "success", Tasks: tasks})
+			err_ = db.SetBuildTask(repo, 2, &common.Task{Number: 1, State: "success", ExitCode: 0})
+			g.Assert(err_).Equal(nil)
 		})
 	})
 }
