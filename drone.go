@@ -8,13 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/datastore/bolt"
-	"github.com/drone/drone/eventbus"
 	"github.com/drone/drone/remote/github"
 	"github.com/drone/drone/server"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/settings"
 	"github.com/elazarl/go-bindata-assetfs"
 
+	eventbus "github.com/drone/drone/eventbus/builtin"
 	queue "github.com/drone/drone/queue/builtin"
 )
 
