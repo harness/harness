@@ -16,7 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func TestBadage(t *testing.T) {
+func TestBadge(t *testing.T) {
 	g := Goblin(t)
 	g.Describe("Badge", func() {
 		var ctx gin.Context
