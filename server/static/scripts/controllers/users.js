@@ -1,11 +1,17 @@
 (function () {
 
+	function UserLoginCtrl($scope, $window) {
+		// attempts to extract an error message from
+		// the URL hash in format #error=?
+		$scope.error = $window.location.hash.substr(7);
+	}
+
 	/**
 	 * UserCtrl is responsible for managing user settings.
-	 */	
+	 */
 	function UserCtrl($scope, users, tokens) {
 
-		// Gets the currently authenticated user 
+		// Gets the currently authenticated user
 		users.getCurrent().then(function(payload){
 			$scope.user = payload.data;
 		});
@@ -34,9 +40,9 @@
 	/**
 	 * UsersCtrl is responsible for managing user accounts.
 	 * This part of the site is for administrators only.
-	 */	
+	 */
 	function UsersCtrl($scope, users) {
-		// Gets the currently authenticated user 
+		// Gets the currently authenticated user
 		users.getCached().then(function(payload){
 			$scope.user = payload.data;
 		});
@@ -68,6 +74,7 @@
 
 	angular
 		.module('drone')
+		.controller('UserLoginCtrl', UserLoginCtrl)
 		.controller('UserCtrl', UserCtrl)
 		.controller('UsersCtrl', UsersCtrl);
 })();
