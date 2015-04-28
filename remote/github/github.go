@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/drone/drone/common"
@@ -147,6 +148,20 @@ func (g *GitHub) Script(u *common.User, r *common.Repo, b *common.Build) ([]byte
 		sha = b.PullRequest.Source.Sha
 	}
 	return GetFile(client, r.Owner, r.Name, ".drone.yml", sha)
+}
+
+// Netrc returns a .netrc file that can be used to clone
+// private repositories from a remote system.
+func (g *GitHub) Netrc(u *common.User, r *common.Repo) (*common.Netrc, error) {
+	url_, err := url.Parse(g.URL)
+	if err != nil {
+		return nil, err
+	}
+	netrc := &common.Netrc{}
+	netrc.Login = u.Token
+	netrc.Password = "x-oauth-basic"
+	netrc.Machine = url_.Host
+	return netrc, nil
 }
 
 // Activate activates a repository by creating the post-commit hook and
