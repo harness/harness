@@ -55,6 +55,7 @@
 		})
 		.when('/login', {
 			templateUrl: '/static/scripts/views/login.html',
+			controller: 'UserLoginCtrl'
 		})
 		.when('/profile', {
 			templateUrl: '/static/scripts/views/user.html',
