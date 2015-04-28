@@ -48,7 +48,7 @@
 			// update repository
 			$scope.repo = event.repo;
 			$scope.$apply();
-			
+
 			var added = false;
 			for (var i=0;i<$scope.builds.length;i++) {
 				var build = $scope.builds[i];
@@ -120,13 +120,19 @@
 		});
 
 		$scope.restart = function() {
-			builds.restart(fullName, number).catch(function(err){
+			builds.restart(fullName, number).then(function(payload){
+				$scope.build = payload.data;
+				$scope.task = payload.data.tasks[step-1];
+			}).catch(function(err){
 				$scope.error = err;
 			});
 		};
 
 		$scope.cancel = function() {
-			builds.cancel(fullName, number).catch(function(err) {
+			builds.cancel(fullName, number).then(function(payload){
+				$scope.build = payload.data;
+				$scope.task = payload.data.tasks[step-1];
+			}).catch(function(err) {
 				$scope.error = err;
 			});
 		};

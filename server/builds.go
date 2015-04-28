@@ -3,6 +3,7 @@ package server
 import (
 	"io"
 	"strconv"
+	"time"
 
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/parser/inject"
@@ -190,6 +191,7 @@ func RunBuild(c *gin.Context) {
 //     DELETE /api/builds/:owner/:name/builds/:number
 //
 func KillBuild(c *gin.Context) {
+	queue := ToQueue(c)
 	store := ToDatastore(c)
 	repo := ToRepo(c)
 	num, err := strconv.Atoi(c.Params.ByName("number"))
@@ -209,7 +211,33 @@ func KillBuild(c *gin.Context) {
 		return
 	}
 
-	// TODO tell queue to cancel build
+	// remove from the queue if exists
+	for _, item := range queue.Items() {
+		if item.Repo.FullName == repo.FullName && item.Build.Number == build.Number {
+			queue.Remove(item)
+			break
+		}
+	}
 
-	c.Writer.WriteHeader(202)
+	build.State = common.StateKilled
+	build.Finished = time.Now().Unix()
+	if build.Started == 0 {
+		build.Started = build.Finished
+	}
+	build.Duration = build.Finished - build.Started
+	for _, task := range build.Tasks {
+		if task.State != common.StatePending && task.State != common.StateRunning {
+			continue
+		}
+		task.State = common.StateKilled
+		task.Started = build.Started
+		task.Finished = build.Finished
+	}
+	err = store.SetBuild(repo.FullName, build)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+
+	c.JSON(200, build)
 }
