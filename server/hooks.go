@@ -115,6 +115,12 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
+	netrc, err := remote.Netrc(user)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+
 	// verify the branches can be built vs skipped
 	// s, _ := script.ParseBuild(string(yml))
 	// if len(hook.PullRequest) == 0 && !s.MatchBranch(hook.Branch) {
@@ -133,7 +139,7 @@ func PostHook(c *gin.Context) {
 		Repo:  repo,
 		Build: build,
 		Keys:  keys,
-		Netrc: &common.Netrc{}, // TODO
+		Netrc: netrc,
 		Yaml:  raw,
 	})
 

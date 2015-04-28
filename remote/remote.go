@@ -31,7 +31,7 @@ type Remote interface {
 
 	// Netrc returns a .netrc file that can be used to clone
 	// private repositories from a remote system.
-	Netrc(u *common.User, r *common.Repo) (*common.Netrc, error)
+	Netrc(u *common.User) (*common.Netrc, error)
 
 	// Activate activates a repository by creating the post-commit hook and
 	// adding the SSH deploy key, if applicable.

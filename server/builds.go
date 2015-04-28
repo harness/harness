@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/drone/drone/common"
+	"github.com/drone/drone/parser/inject"
 	"github.com/drone/drone/queue"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -102,6 +103,7 @@ func PostBuildStatus(c *gin.Context) {
 //     POST /api/builds/:owner/:name/builds/:number
 //
 func RunBuild(c *gin.Context) {
+	remote := ToRemote(c)
 	store := ToDatastore(c)
 	queue_ := ToQueue(c)
 	repo := ToRepo(c)
@@ -152,18 +154,32 @@ func RunBuild(c *gin.Context) {
 		return
 	}
 
-	// params, _ := store.RepoParams(repo.FullName)
-	// if params != nil && len(params) != 0 {
-	// 	raw = []byte(inject.InjectSafe(string(raw), params))
-	// }
+	netrc, err := remote.Netrc(user)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+
+	// featch the .drone.yml file from the database
+	raw, err := remote.Script(user, repo, build)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+
+	// inject any private parameters into the .drone.yml
+	params, _ := store.RepoParams(repo.FullName)
+	if params != nil && len(params) != 0 {
+		raw = []byte(inject.InjectSafe(string(raw), params))
+	}
 
 	queue_.Publish(&queue.Work{
 		User:  user,
 		Repo:  repo,
 		Build: build,
 		Keys:  keys,
-		Netrc: &common.Netrc{}, //TODO create netrc
-		Yaml:  nil,             // TODO fetch yaml
+		Netrc: netrc,
+		Yaml:  raw,
 	})
 
 	c.JSON(202, build)
