@@ -100,7 +100,7 @@
 			$scope.build = payload.data;
 			$scope.task = payload.data.tasks[step-1];
 
-			if ($scope.task.state === 'pending') {
+			if (['pending', 'killed'].indexOf($scope.task.state) !== -1) {
 				// do nothing
 			} else if ($scope.task.state === 'running') {
 				// stream the build
