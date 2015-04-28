@@ -29,6 +29,10 @@ type Remote interface {
 	// An example would be the GitHub pull request status.
 	Status(u *common.User, r *common.Repo, b *common.Build, link string) error
 
+	// Netrc returns a .netrc file that can be used to clone
+	// private repositories from a remote system.
+	Netrc(u *common.User, r *common.Repo) (*common.Netrc, error)
+
 	// Activate activates a repository by creating the post-commit hook and
 	// adding the SSH deploy key, if applicable.
 	Activate(u *common.User, r *common.Repo, k *common.Keypair, link string) error
