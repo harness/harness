@@ -3,10 +3,11 @@ package bolt
 import (
 	//"bytes"
 	"encoding/binary"
-	"github.com/boltdb/bolt"
-	"github.com/drone/drone/common"
 	"strconv"
 	"time"
+
+	"github.com/boltdb/bolt"
+	"github.com/drone/drone/common"
 )
 
 // Build gets the specified build number for the
@@ -213,3 +214,27 @@ func (db *DB) SetBuildTask(repo string, build int, task *common.Task) error {
 	})
 }
 
+// SetBuildAgent insert or updates the agent that is
+// running a build.
+func (db *DB) SetBuildAgent(repo string, build int, agent *common.Agent) error {
+	key := []byte(repo + "/" + strconv.Itoa(build))
+	return db.Update(func(t *bolt.Tx) error {
+		return update(t, bucketBuildAgent, key, agent)
+	})
+}
+
+func (db *DB) DelBuildAgent(repo string, build int, agent *common.Agent) error {
+	key := []byte(repo + "/" + strconv.Itoa(build))
+	return db.Update(func(t *bolt.Tx) error {
+		return delete(t, bucketBuildAgent, key)
+	})
+}
+
+func (db *DB) BuildAgent(repo string, build int) (*common.Agent, error) {
+	key := []byte(repo + "/" + strconv.Itoa(build))
+	agent := &common.Agent{}
+	err := db.View(func(t *bolt.Tx) error {
+		return get(t, bucketBuildAgent, key, agent)
+	})
+	return agent, err
+}
