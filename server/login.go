@@ -44,14 +44,13 @@ func GetLogin(c *gin.Context) {
 		getLoginOauth2(c)
 	}
 
-	login := ToUser(c)
-
 	// exit if authorization fails
 	if c.Writer.Status() != 200 {
-		log.Errorf("could not get authorization for %s.", login.Login)
-		c.Redirect(303, "/login#error=access_denied")
+		log.Errorf("authorization failed.")
 		return
 	}
+
+	login := ToUser(c)
 
 	// check organization membership, if applicable
 	if len(settings.Service.Orgs) != 0 {

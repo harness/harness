@@ -175,10 +175,9 @@ func PostRepo(c *gin.Context) {
 		httputil.GetURL(c.Request),
 	)
 
-	_, err_ := store.Repo(name)
-	if err_ != nil {
-		//c.Fail(409, err_)
-		c.Fail(409, fmt.Errorf("Conflict"))
+	_, err := store.Repo(name)
+	if err == nil {
+		c.String(409, "Repository already exists")
 		return
 	}
 
