@@ -105,7 +105,7 @@
 		$httpProvider.interceptors.push(function($q, $location) {
 			return {
 				'responseError': function(rejection) {
-					if (rejection.status === 401) {// && rejection.config.url != "/api/user") {
+					if (rejection.status === 401 && rejection.config.url !== "/api/user") {
 						$location.path('/login');
 					}
 					if (rejection.status === 0) {
