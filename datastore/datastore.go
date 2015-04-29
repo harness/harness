@@ -101,41 +101,10 @@ type Datastore interface {
 	// named repository.
 	BuildLast(string) (*common.Build, error)
 
-	// BuildConf gets the build configuration file (yaml)
-	// for the named repository and build number.
-	// BuildConf(string, int) ([]byte, error)
-
 	// SetBuild inserts or updates a build for the named
 	// repository. The build number is incremented and
 	// assigned to the provided build.
 	SetBuild(string, *common.Build) error
-
-	// SetBuildConf persists the build configuration file (yaml)
-	// for the named repository and build number.
-	// SetBuildConf(string, int) ([]byte, error)
-
-	// Status returns the status for the given repository
-	// and build number.
-	////Status(string, int, string) (*common.Status, error)
-
-	// StatusList returned a list of all build statues for
-	// the given repository and build number.
-	////StatusList(string, int) ([]*common.Status, error)
-
-	// SetStatus inserts a new build status for the
-	// named repository and build number. If the status already
-	// exists an error is returned.
-	SetStatus(string, int, *common.Status) error
-
-	// LogReader gets the task logs at index N for
-	// the named repository and build number.
-	LogReader(string, int, int) (io.Reader, error)
-
-	// SetLogs inserts or updates a task logs for the
-	// named repository and build number.
-	SetLogs(string, int, int, []byte) error
-
-	// Experimental
 
 	// SetBuildState updates an existing build's start time,
 	// finish time, duration and state. No other fields are
@@ -150,4 +119,12 @@ type Datastore interface {
 	// and task must already exist. If the task does not exist
 	// an error is returned.
 	SetBuildTask(string, int, *common.Task) error
+
+	// LogReader gets the task logs at index N for
+	// the named repository and build number.
+	LogReader(string, int, int) (io.Reader, error)
+
+	// SetLogs inserts or updates a task logs for the
+	// named repository and build number.
+	SetLogs(string, int, int, []byte) error
 }
