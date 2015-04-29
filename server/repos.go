@@ -210,12 +210,11 @@ func PostRepo(c *gin.Context) {
 
 	// activate the repository before we make any
 	// local changes to the database.
-	// err = remote.Activate(user, r, keypair, link)
-	// if err != nil {
-	// 	c.Fail(500, err)
-	// 	return
-	// }
-	println(link)
+	err = remote.Activate(user, r, keypair, link)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
 
 	// persist the repository
 	err = store.SetRepoNotExists(user, r)
