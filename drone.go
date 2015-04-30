@@ -68,6 +68,12 @@ func main() {
 		users.DELETE("/:name", server.DeleteUser)
 	}
 
+	agents := api.Group("/agents")
+	{
+		agents.Use(server.MustAdmin())
+		agents.GET("/token", server.GetAgentToken)
+	}
+
 	repos := api.Group("/repos/:owner/:name")
 	{
 		repos.POST("", server.PostRepo)
