@@ -5,6 +5,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/common"
+	"github.com/drone/drone/parser"
 	"github.com/drone/drone/parser/inject"
 	"github.com/drone/drone/parser/matrix"
 	"github.com/drone/drone/queue"
@@ -122,11 +123,12 @@ func PostHook(c *gin.Context) {
 	}
 
 	// verify the branches can be built vs skipped
-	// s, _ := script.ParseBuild(string(yml))
-	// if len(hook.PullRequest) == 0 && !s.MatchBranch(hook.Branch) {
-	// 	w.WriteHeader(http.StatusOK)
-	// 	return
-	// }
+	when, _ := parser.ParseCondition(string(raw))
+	if build.Commit != nil && when != nil && !when.MatchBranch(build.Commit.Ref) {
+		log.Infof("ignoring hook. yaml file excludes repo and branch %s %s", repo.FullName, build.Commit.Ref)
+		c.AbortWithStatus(200)
+		return
+	}
 
 	err = store.SetBuild(repo.FullName, build)
 	if err != nil {

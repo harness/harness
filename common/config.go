@@ -78,6 +78,9 @@ func (c *Condition) MatchBranch(branch string) bool {
 	if len(c.Branch) == 0 {
 		return true
 	}
+	if strings.HasPrefix(branch, "refs/heads/") {
+		branch = branch[11:]
+	}
 	match, _ := filepath.Match(c.Branch, branch)
 	return match
 }
