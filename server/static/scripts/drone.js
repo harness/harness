@@ -62,6 +62,11 @@
 			controller: 'UserCtrl',
 			resolve: resolveUser
 		})
+		.when('/agents', {
+			templateUrl: '/static/scripts/views/agents.html',
+			controller: 'AgentsCtrl',
+			resolve: resolveUser
+		})
 		.when('/users', {
 			templateUrl: '/static/scripts/views/users.html',
 			controller: 'UsersCtrl',
