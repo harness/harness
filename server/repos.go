@@ -166,14 +166,10 @@ func DeleteRepo(c *gin.Context) {
 //
 func PostRepo(c *gin.Context) {
 	user := ToUser(c)
+	sess := ToSession(c)
 	store := ToDatastore(c)
 	owner := c.Params.ByName("owner")
 	name := c.Params.ByName("name")
-
-	link := fmt.Sprintf(
-		"%s/api/hook",
-		httputil.GetURL(c.Request),
-	)
 
 	// TODO(bradrydzewski) verify repo not exists
 
@@ -193,6 +189,21 @@ func PostRepo(c *gin.Context) {
 		c.Fail(403, fmt.Errorf("must be repository admin"))
 		return
 	}
+
+	token := &common.Token{}
+	token.Kind = common.TokenHook
+	token.Label = r.FullName
+	tokenstr, err := sess.GenerateToken(token)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+
+	link := fmt.Sprintf(
+		"%s/api/hook?access_token=%s",
+		httputil.GetURL(c.Request),
+		tokenstr,
+	)
 
 	// set the repository owner to the
 	// currently authenticated user.

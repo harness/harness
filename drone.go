@@ -42,12 +42,12 @@ func main() {
 	api.Use(server.SetRemote(remote))
 	api.Use(server.SetQueue(queue.New()))
 	api.Use(server.SetSettings(settings))
+	api.Use(server.SetSession(session))
 	api.Use(server.SetUser(session))
 
 	user := api.Group("/user")
 	{
 		user.Use(server.MustUser())
-		user.Use(server.SetSession(session))
 
 		user.GET("", server.GetUserCurr)
 		user.PATCH("", server.PutUserCurr)
