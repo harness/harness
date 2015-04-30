@@ -57,7 +57,8 @@
 
 <hr>
 
-<pre id="term">{{ logs }}</pre>
+<button ng-if="build.state === 'running'" ng-click="tail()">(un)Follow</button>
+<pre id="term" ng-if="build.state !== 'pending'">{{ logs }}</pre>
 
 <table border="1">
 	<thead>

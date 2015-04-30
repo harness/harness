@@ -75,13 +75,14 @@
 	/**
 	 * BuildCtrl responsible for rendering a build.
 	 */
-	function BuildCtrl($scope, $routeParams, logs, builds, repos, users, feed) {
+	function BuildCtrl($scope, $routeParams, $window, logs, builds, repos, users, feed) {
 
 		var step = parseInt($routeParams.step) || 1;
 		var number = $routeParams.number;
 		var owner = $routeParams.owner;
 		var name  = $routeParams.name;
 		var fullName = owner+'/'+name;
+		var tail = false;
 
 		// Initiates streaming a build.
 		var stream = function() {
@@ -89,8 +90,13 @@
 			var term = document.getElementById("term");
 			term.innerHTML = "";
 
+			// subscribes to the build otuput.
 			logs.subscribe(fullName, number, step, function(data){
 				term.innerHTML += convert.toHtml(data)+"\n";
+				if (tail) {
+					// scrolls to the bottom of the page if enabled
+					$window.scrollTo(0, $window.document.body.scrollHeight);
+				}
 			});
 		}
 
@@ -147,6 +153,10 @@
 			}).catch(function(err) {
 				$scope.error = err;
 			});
+		};
+
+		$scope.tail = function() {
+			tail = !tail;
 		};
 
 		feed.subscribe(function(event) {
