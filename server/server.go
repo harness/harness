@@ -213,6 +213,21 @@ func MustAdmin() gin.HandlerFunc {
 	}
 }
 
+func MustAgent() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		sess := ToSession(c)
+		token := sess.GetLogin(c.Request)
+		if token == nil {
+			c.AbortWithStatus(401)
+			return
+		} else if token.Kind != common.TokenAgent {
+			c.AbortWithStatus(500)
+			return
+		}
+		c.Next()
+	}
+}
+
 func CheckPull() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		u := ToUser(c)
