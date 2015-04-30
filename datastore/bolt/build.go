@@ -223,7 +223,7 @@ func (db *DB) SetBuildAgent(repo string, build int, agent *common.Agent) error {
 	})
 }
 
-func (db *DB) DelBuildAgent(repo string, build int, agent *common.Agent) error {
+func (db *DB) DelBuildAgent(repo string, build int) error {
 	key := []byte(repo + "/" + strconv.Itoa(build))
 	return db.Update(func(t *bolt.Tx) error {
 		return delete(t, bucketBuildAgent, key)

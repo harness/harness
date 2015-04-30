@@ -4,7 +4,7 @@
 	 * BuildsCtrl responsible for rendering the repo's
 	 * recent build history.
 	 */
-	function BuildsCtrl($scope, $routeParams, builds, repos, users, feed) {
+	function BuildsCtrl($scope, $routeParams, builds, repos, users, feed, logs) {
 
 		var owner = $routeParams.owner;
 		var name  = $routeParams.name;
@@ -83,6 +83,17 @@
 		var name  = $routeParams.name;
 		var fullName = owner+'/'+name;
 
+		// Initiates streaming a build.
+		var stream = function() {
+			var convert = new Filter({stream:true,newline:false});
+			var term = document.getElementById("term");
+			term.innerHTML = "";
+
+			logs.subscribe(fullName, number, step, function(data){
+				term.innerHTML += convert.toHtml(data)+"\n";
+			});
+		}
+
 		// Gets the currently authenticated user
 		users.getCached().then(function(payload){
 			$scope.user = payload.data;
@@ -104,6 +115,7 @@
 				// do nothing
 			} else if ($scope.task.state === 'running') {
 				// stream the build
+				stream();
 			} else {
 
 				// fetch the logs for the finished build.
@@ -154,6 +166,11 @@
 			if (!event.task || event.task.number !== step) {
 				return; // ignore
 			}
+
+			if (event.task.state === 'running' && $scope.task.state !== 'running') {
+				stream();
+			}
+
 			// update the task status
 			$scope.task.state = event.task.state;
 			$scope.task.started_at = event.task.started_at;
@@ -163,14 +180,7 @@
 			$scope.$apply();
 		});
 
-		// var convert = new Filter({stream:true,newline:false});
-		// var term = document.getElementById("term")
-		// var stdout = document.getElementById("stdout").innerText.split("\n")
-		// stdout.forEach(function(line, i) {
-		// 	setTimeout(function () {
-		// 		term.innerHTML += convert.toHtml(line+"\n");
-		// 	}, i*i);
-		// });
+
 	}
 
 	angular
