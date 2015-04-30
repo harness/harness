@@ -21,6 +21,7 @@ func PostHook(c *gin.Context) {
 	remote := ToRemote(c)
 	store := ToDatastore(c)
 	queue_ := ToQueue(c)
+	sess := ToSession(c)
 
 	hook, err := remote.Hook(c.Request)
 	if err != nil {
@@ -35,6 +36,14 @@ func PostHook(c *gin.Context) {
 	if hook.Repo == nil {
 		log.Errorf("failure to ascertain repo from hook.")
 		c.Writer.WriteHeader(400)
+		return
+	}
+
+	// get the token and verify the hook is authorized
+	token := sess.GetLogin(c.Request)
+	if token == nil || token.Label != hook.Repo.FullName {
+		log.Errorf("invalid token sent with hook.")
+		c.AbortWithStatus(403)
 		return
 	}
 

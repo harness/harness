@@ -1,8 +1,10 @@
 package common
 
 const (
-	TokenUser = "u"
-	TokenSess = "s"
+	TokenUser  = "u"
+	TokenSess  = "s"
+	TokenHook  = "h"
+	TokenAgent = "a"
 )
 
 type Token struct {

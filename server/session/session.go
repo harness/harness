@@ -8,7 +8,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/settings"
-	"github.com/gorilla/securecookie"
 )
 
 type Session interface {
@@ -22,12 +21,8 @@ type session struct {
 }
 
 func New(s *settings.Session) Session {
-	// TODO (bradrydzewski) hook up the Session.Expires
 	secret := []byte(s.Secret)
 	expire := time.Hour * 72
-	if len(secret) == 0 {
-		securecookie.GenerateRandomKey(32)
-	}
 	return &session{
 		secret: secret,
 		expire: expire,
