@@ -1,7 +1,10 @@
 package server
 
 import (
+	"fmt"
 	"io"
+	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -238,6 +241,22 @@ func KillBuild(c *gin.Context) {
 		c.Fail(500, err)
 		return
 	}
+
+	// get the agent from the repository so we can
+	// notify the agent to kill the build.
+	agent, err := store.BuildAgent(repo.FullName, build.Number)
+	if err != nil {
+		c.JSON(200, build)
+		return
+	}
+	url_, _ := url.Parse("http://" + agent.Addr)
+	url_.Path = fmt.Sprintf("/cancel/%s/%v", repo.FullName, build.Number)
+	resp, err := http.Post(url_.String(), "application/json", nil)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+	defer resp.Body.Close()
 
 	c.JSON(200, build)
 }

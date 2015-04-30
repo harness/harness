@@ -3,8 +3,8 @@
 <a href="/{{ repo.full_name }}">Back</a>
 
 <div>
-	<button ng-if="build.state !== 'pending' && build.state !== 'started'" ng-click="restart()">Restart</button>
-	<button ng-if="build.state === 'pending' || build.state === 'started'" ng-click="cancel()">Cancel</button>
+	<button ng-if="build.state !== 'pending' && build.state !== 'running'" ng-click="restart()">Restart</button>
+	<button ng-if="build.state === 'pending' || build.state === 'running'" ng-click="cancel()">Cancel</button>
 </div>
 
 <dl>
