@@ -115,6 +115,7 @@ func main() {
 
 	queue := api.Group("/queue")
 	{
+		queue.Use(server.MustAgent())
 		queue.GET("", server.GetQueue)
 		queue.POST("/pull", server.PollBuild)
 

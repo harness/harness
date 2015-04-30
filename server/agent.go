@@ -9,6 +9,8 @@ import (
 func GetAgentToken(c *gin.Context) {
 	sess := ToSession(c)
 	token := &common.Token{}
+	token.Kind = common.TokenAgent
+	token.Label = "drone-agent"
 	tokenstr, err := sess.GenerateToken(token)
 	if err != nil {
 		c.Fail(500, err)
