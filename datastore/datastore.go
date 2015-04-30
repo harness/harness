@@ -103,7 +103,7 @@ type Datastore interface {
 
 	// BuildAgent returns the agent that is being
 	// used to execute the build.
-	// BuildAgent(string, int) (*common.Agent, error)
+	BuildAgent(string, int) (*common.Agent, error)
 
 	// SetBuild inserts or updates a build for the named
 	// repository. The build number is incremented and
@@ -126,11 +126,11 @@ type Datastore interface {
 
 	// SetBuildAgent insert or updates the agent that is
 	// running a build.
-	// SetBuildAgent(string, int, *common.Agent) error
+	SetBuildAgent(string, int, *common.Agent) error
 
 	// DelBuildAgent purges the referce to the agent
 	// that ran a build.
-	// DelBuildAgent(string, int, *common.Agent) error
+	DelBuildAgent(string, int) error
 
 	// LogReader gets the task logs at index N for
 	// the named repository and build number.

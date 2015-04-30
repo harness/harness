@@ -59,6 +59,8 @@ func GetHost(r *http.Request) string {
 		return r.Header.Get("X-Host")
 	case len(r.Header.Get("XFF")) != 0:
 		return r.Header.Get("XFF")
+	case len(r.Header.Get("X-Real-IP")) != 0:
+		return r.Header.Get("X-Real-IP")
 	default:
 		return "localhost:8080"
 	}

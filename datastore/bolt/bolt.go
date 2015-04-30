@@ -23,7 +23,7 @@ var (
 	bucketRepoParams  = []byte("repo_params")
 	bucketRepoUsers   = []byte("repo_users")
 	bucketBuild       = []byte("build")
-	bucketBuildAgent  = []byte("build_agent")
+	bucketBuildAgent  = []byte("build_agents")
 	bucketBuildStatus = []byte("build_status")
 	bucketBuildLogs   = []byte("build_logs")
 	bucketBuildSeq    = []byte("build_seq")

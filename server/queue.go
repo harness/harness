@@ -3,8 +3,10 @@ package server
 import (
 	"io"
 	"io/ioutil"
+	"net"
 	"strconv"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 
@@ -19,12 +21,35 @@ import (
 // GET /queue/pull
 func PollBuild(c *gin.Context) {
 	queue := ToQueue(c)
+	store := ToDatastore(c)
+	agent := &common.Agent{
+		Addr: c.Request.RemoteAddr,
+	}
+
+	// extact the host port and name and
+	// replace with the default agent port (1999)
+	host, _, err := net.SplitHostPort(agent.Addr)
+	if err == nil {
+		agent.Addr = host
+	}
+	agent.Addr = net.JoinHostPort(agent.Addr, "1999")
+
+	log.Infof("agent connected and polling builds at %s", agent.Addr)
+
 	work := queue.PullClose(c.Writer)
 	if work == nil {
 		c.AbortWithStatus(500)
-	} else {
-		c.JSON(200, work)
+		return
 	}
+
+	// TODO (bradrydzewski) decide how we want to handle a failure here
+	// still not sure exact behavior we want ...
+	err = store.SetBuildAgent(work.Repo.FullName, work.Build.Number, agent)
+	if err != nil {
+		log.Errorf("error persisting build agent. %s", err)
+	}
+
+	c.JSON(200, work)
 }
 
 // GET /queue/push/:owner/:repo
@@ -40,6 +65,10 @@ func PushBuild(c *gin.Context) {
 	if err != nil {
 		c.Fail(404, err)
 		return
+	}
+
+	if in.State != common.StatePending && in.State != common.StateRunning {
+		store.DelBuildAgent(repo.FullName, build.Number)
 	}
 
 	build.Duration = in.Duration

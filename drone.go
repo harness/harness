@@ -124,7 +124,13 @@ func main() {
 	events := api.Group("/stream")
 	{
 		events.GET("/user", server.GetEvents)
-		//events.GET("/logs/:owner/:name/:build/:number")
+
+		stream := events.Group("/logs")
+		{
+			stream.Use(server.SetRepo())
+			stream.Use(server.SetPerm())
+			stream.GET("/:owner/:name/:build/:number", server.GetStream)
+		}
 	}
 
 	auth := r.Group("/authorize")

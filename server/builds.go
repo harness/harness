@@ -133,7 +133,7 @@ func RunBuild(c *gin.Context) {
 
 	// must not restart a running build
 	if build.State == common.StatePending || build.State == common.StateRunning {
-		c.Fail(409, err)
+		c.AbortWithStatus(409)
 		return
 	}
 

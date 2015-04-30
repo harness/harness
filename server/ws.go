@@ -1,6 +1,9 @@
 package server
 
 import (
+	"fmt"
+	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/drone/drone/common"
@@ -9,6 +12,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/koding/websocketproxy"
 )
 
 const (
@@ -93,6 +97,30 @@ func GetEvents(c *gin.Context) {
 	}()
 
 	readWebsocket(ws)
+	log.Debugf("closed websocket")
+}
+
+func GetStream(c *gin.Context) {
+	store := ToDatastore(c)
+	repo := ToRepo(c)
+	build, _ := strconv.Atoi(c.Params.ByName("build"))
+	task, _ := strconv.Atoi(c.Params.ByName("number"))
+
+	agent, err := store.BuildAgent(repo.FullName, build)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+
+	url_, err := url.Parse("ws://" + agent.Addr)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+	url_.Path = fmt.Sprintf("/stream/%s/%v/%v", repo.FullName, build, task)
+	proxy := websocketproxy.NewProxy(url_)
+	proxy.ServeHTTP(c.Writer, c.Request)
+
 	log.Debugf("closed websocket")
 }
 

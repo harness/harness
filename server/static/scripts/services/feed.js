@@ -3,25 +3,34 @@
 (function () {
 
 	function FeedService($http, $window) {
-		var token = localStorage.getItem('access_token');
-		var proto = ($window.location.protocol == 'https:' ? 'wss' : 'ws');
-		var route = [proto, "://", $window.location.host, '/api/stream/user?access_token=', token].join('');
 
-		var wsCallback = undefined;
-		var ws = new WebSocket(route);
-		ws.onmessage = function(event) {
-			var data = angular.fromJson(event.data);
-			if (wsCallback != undefined) {
-				wsCallback(data);
-			}
-		};
+		var callback,
+			websocket,
+			token = localStorage.getItem('access_token');
 
-		this.subscribe = function(callback) {
-			wsCallback = callback;
+		this.subscribe = function(_callback) {
+			callback = _callback;
+
+			var proto = ($window.location.protocol === 'https:' ? 'wss' : 'ws'),
+				route = [proto, "://", $window.location.host, '/api/stream/user?access_token=', token].join('');
+
+			websocket = new WebSocket(route);
+			websocket.onmessage = function (event) {
+				if (callback !== undefined) {
+					callback(angular.fromJson(event.data));
+				}
+			};
+			websocket.onclose = function (event) {
+				console.log('user websocket closed');
+			};
 		};
 
 		this.unsubscribe = function() {
-			wsCallback = undefined;
+			callback = undefined;
+			if (websocket !== undefined) {
+				websocket.close();
+				websocket = undefined;
+			}
 		};
 	}
 

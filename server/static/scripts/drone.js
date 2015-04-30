@@ -119,9 +119,10 @@
 	}
 
 
-	function RouteChange($rootScope, feed) {
+	function RouteChange($rootScope, feed, logs) {
 		$rootScope.$on('$routeChangeStart', function (event, next) {
 			feed.unsubscribe();
+			logs.unsubscribe();
 		});
 
 		$rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
