@@ -2,6 +2,11 @@
 
 <a href="/">Back</a>
 
+<div class="alert alert-error" ng-if="error !== undefined">
+	There was an error adding your repository. Please ensure the
+	repository exists and you have admin privileges.
+</div>
+
 <form>
 	<input type="text" placeholder="octocat/Hello-World" ng-model="slug" />
 	<button ng-click="add(slug)">Add</button>
