@@ -37,7 +37,7 @@ func TestBadges(t *testing.T) {
 	g := Goblin(t)
 	g.Describe("Badges", func() {
 
-		g.It("should svg badges", func() {
+		g.It("should serve svg badges", func() {
 			for _, test := range badgeTests {
 				rw := recorder.New()
 				ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
