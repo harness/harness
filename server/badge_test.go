@@ -4,9 +4,7 @@ import (
 	"encoding/xml"
 	"net/http"
 	"net/url"
-	"strings"
 	"testing"
-	"time"
 
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/common/ccmenu"
@@ -17,129 +15,78 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func TestBadge(t *testing.T) {
+var badgeTests = []struct {
+	badge    []byte
+	state    string
+	activity string
+	status   string
+	err      error
+}{
+	{badgeSuccess, common.StateSuccess, "Sleeping", "Success", nil},
+	{badgeStarted, common.StateRunning, "Building", "Unknown", nil},
+	{badgeError, common.StateError, "Sleeping", "Exception", nil},
+	{badgeError, common.StateKilled, "Sleeping", "Exception", nil},
+	{badgeFailure, common.StateFailure, "Sleeping", "Failure", nil},
+	{badgeNone, "", "", "", datastore.ErrKeyNotFound},
+}
+
+func TestBadges(t *testing.T) {
+	store := new(mocks.Datastore)
+	url_, _ := url.Parse("http://localhost:8080")
+
 	g := Goblin(t)
-	g.Describe("Badge", func() {
-		var ctx gin.Context
-		owner := "Freya"
-		name := "Hello-World"
-		fullName := owner + "/" + name
-		repo := &common.Repo{Owner: owner, Name: name, FullName: fullName}
-		g.BeforeEach(func() {
-			ctx = gin.Context{Engine: gin.Default()}
-			url, _ := url.Parse("http://drone.local/badges/" + fullName)
-			ctx.Request = &http.Request{URL: url}
-			ctx.Set("repo", repo)
-		})
+	g.Describe("Badges", func() {
 
-		g.AfterEach(func() {
-		})
+		g.It("should svg badges", func() {
+			for _, test := range badgeTests {
+				rw := recorder.New()
+				ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
 
-		cycleStateTester := func(expector gin.HandlerFunc, handle gin.HandlerFunc, validator func(state string, w *recorder.ResponseRecorder)) {
-			for idx, state := range []string{"", common.StateError, common.StateFailure, common.StateKilled, common.StatePending, common.StateRunning, common.StateSuccess} {
-				w := recorder.NewResponseRecorder()
-				ctx.Writer = w
-
-				repo.Last = &common.Build{
-					Started:  time.Now().UTC().Unix(),
-					Finished: time.Now().UTC().Unix(),
-					Number:   idx,
-					State:    state,
+				repo := &common.Repo{FullName: "foo/bar"}
+				if len(test.state) != 0 {
+					repo.Last = &common.Build{State: test.state}
 				}
+
+				ctx.Set("datastore", store)
 				ctx.Set("repo", repo)
 
-				if expector != nil {
-					expector(&ctx)
-				}
-
-				handle(&ctx)
-
-				validator(state, w)
+				GetBadge(ctx)
+				g.Assert(rw.Code).Equal(200)
+				g.Assert(rw.Body.Bytes()).Equal(test.badge)
+				g.Assert(rw.HeaderMap.Get("Content-Type")).Equal("image/svg+xml")
 			}
-		}
-
-		g.It("should provide SVG response", func() {
-			{
-				// 1. verify no "last" build
-				w := recorder.NewResponseRecorder()
-				ctx.Writer = w
-				ctx.Request.URL.Path += "/status.svg"
-
-				GetBadge(&ctx)
-
-				g.Assert(w.Status()).Equal(200)
-				g.Assert(w.HeaderMap.Get("content-type")).Equal("image/svg+xml")
-				g.Assert(strings.Contains(w.Body.String(), ">none")).IsTrue()
-			}
-
-			// 2. verify a variety of "last" build states
-			cycleStateTester(nil, GetBadge, func(state string, w *recorder.ResponseRecorder) {
-				g.Assert(w.Status()).Equal(200)
-				g.Assert(w.HeaderMap.Get("content-type")).Equal("image/svg+xml")
-
-				// this may be excessive, but does effectively verify behavior
-				switch state {
-				case common.StateSuccess:
-					g.Assert(strings.Contains(w.Body.String(), ">success")).IsTrue()
-				case common.StatePending, common.StateRunning:
-					g.Assert(strings.Contains(w.Body.String(), ">started")).IsTrue()
-				case common.StateError, common.StateKilled:
-					g.Assert(strings.Contains(w.Body.String(), ">error")).IsTrue()
-				case common.StateFailure:
-					g.Assert(strings.Contains(w.Body.String(), ">failure")).IsTrue()
-				default:
-					g.Assert(strings.Contains(w.Body.String(), ">none")).IsTrue()
-				}
-			})
 		})
 
-		g.It("should provide CCTray response", func() {
-			{
-				// 1. verify no "last" build
-				w := recorder.NewResponseRecorder()
-				ctx.Writer = w
-				ctx.Request.URL.Path += "/cc.xml"
+		g.It("should serve ccmenu xml", func() {
 
-				ds := new(mocks.Datastore)
-				ctx.Set("datastore", ds)
+			for _, test := range badgeTests {
+				rw := recorder.New()
+				ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
+				ctx.Request = &http.Request{URL: url_}
 
-				ds.On("BuildLast", fullName).Return(nil, datastore.ErrKeyNotFound).Once()
-				GetCC(&ctx)
+				repo := &common.Repo{FullName: "foo/bar"}
+				ctx.Set("datastore", store)
+				ctx.Set("repo", repo)
 
-				g.Assert(w.Status()).Equal(404)
+				build := &common.Build{State: test.state}
+				store.On("BuildLast", repo.FullName).Return(build, test.err).Once()
+				GetCC(ctx)
+
+				// in an error scenario (ie no build exists) we should
+				// return a 404 not found error.
+				if test.err != nil {
+					g.Assert(rw.Status()).Equal(404)
+					continue
+				}
+
+				// else parse the CCMenu xml output and verify
+				// it matches the expected values.
+				cc := &ccmenu.CCProjects{}
+				xml.Unmarshal(rw.Body.Bytes(), cc)
+				g.Assert(cc.Project.Activity).Equal(test.activity)
+				g.Assert(cc.Project.LastBuildStatus).Equal(test.status)
+				g.Assert(rw.HeaderMap.Get("Content-Type")).Equal("application/xml; charset=utf-8")
 			}
-
-			// 2. verify a variety of "last" build states
-			cycleStateTester(func(c *gin.Context) {
-				repo := ToRepo(c)
-				ds := new(mocks.Datastore)
-				ctx.Set("datastore", ds)
-				ds.On("BuildLast", fullName).Return(repo.Last, nil).Once()
-			},
-				GetCC,
-				func(state string, w *recorder.ResponseRecorder) {
-					g.Assert(w.Status()).Equal(200)
-
-					v := ccmenu.CCProjects{}
-					xml.Unmarshal(w.Body.Bytes(), &v)
-					switch state {
-					case common.StateSuccess:
-						g.Assert(v.Project.Activity).Equal("Sleeping")
-						g.Assert(v.Project.LastBuildStatus).Equal("Success")
-					case common.StatePending, common.StateRunning:
-						g.Assert(v.Project.Activity).Equal("Building")
-						g.Assert(v.Project.LastBuildStatus).Equal("Unknown")
-					case common.StateError, common.StateKilled:
-						g.Assert(v.Project.Activity).Equal("Sleeping")
-						g.Assert(v.Project.LastBuildStatus).Equal("Exception")
-					case common.StateFailure:
-						g.Assert(v.Project.Activity).Equal("Sleeping")
-						g.Assert(v.Project.LastBuildStatus).Equal("Failure")
-					default:
-						g.Assert(v.Project.Activity).Equal("Sleeping")
-						g.Assert(v.Project.LastBuildStatus).Equal("Unknown")
-					}
-				})
 		})
 	})
 }
