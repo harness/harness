@@ -1,4 +1,4 @@
-package rpc
+package plugin
 
 import (
 	"github.com/drone/drone/common"

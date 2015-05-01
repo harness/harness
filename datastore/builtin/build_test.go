@@ -1,4 +1,4 @@
-package bolt
+package builtin
 
 import (
 	"github.com/drone/drone/common"

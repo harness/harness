@@ -7,13 +7,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/datastore/bolt"
 	"github.com/drone/drone/remote/github"
 	"github.com/drone/drone/server"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/settings"
 	"github.com/elazarl/go-bindata-assetfs"
 
+	store "github.com/drone/drone/datastore/builtin"
 	eventbus "github.com/drone/drone/eventbus/builtin"
 	queue "github.com/drone/drone/queue/builtin"
 )
@@ -30,7 +30,7 @@ func main() {
 	remote := github.New(settings.Service)
 	session := session.New(settings.Session)
 
-	ds := bolt.Must(settings.Database.Path)
+	ds := store.Must(settings.Database.Path)
 	defer ds.Close()
 
 	r := gin.Default()
