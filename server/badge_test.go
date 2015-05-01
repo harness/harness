@@ -11,7 +11,8 @@ import (
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/common/ccmenu"
 	"github.com/drone/drone/datastore"
-	"github.com/drone/drone/mocks"
+	"github.com/drone/drone/datastore/mock"
+	"github.com/drone/drone/server/recorder"
 	. "github.com/franela/goblin"
 	"github.com/gin-gonic/gin"
 )
@@ -34,9 +35,9 @@ func TestBadge(t *testing.T) {
 		g.AfterEach(func() {
 		})
 
-		cycleStateTester := func(expector gin.HandlerFunc, handle gin.HandlerFunc, validator func(state string, w *ResponseRecorder)) {
+		cycleStateTester := func(expector gin.HandlerFunc, handle gin.HandlerFunc, validator func(state string, w *recorder.ResponseRecorder)) {
 			for idx, state := range []string{"", common.StateError, common.StateFailure, common.StateKilled, common.StatePending, common.StateRunning, common.StateSuccess} {
-				w := NewResponseRecorder()
+				w := recorder.NewResponseRecorder()
 				ctx.Writer = w
 
 				repo.Last = &common.Build{
@@ -60,7 +61,7 @@ func TestBadge(t *testing.T) {
 		g.It("should provide SVG response", func() {
 			{
 				// 1. verify no "last" build
-				w := NewResponseRecorder()
+				w := recorder.NewResponseRecorder()
 				ctx.Writer = w
 				ctx.Request.URL.Path += "/status.svg"
 
@@ -72,7 +73,7 @@ func TestBadge(t *testing.T) {
 			}
 
 			// 2. verify a variety of "last" build states
-			cycleStateTester(nil, GetBadge, func(state string, w *ResponseRecorder) {
+			cycleStateTester(nil, GetBadge, func(state string, w *recorder.ResponseRecorder) {
 				g.Assert(w.Status()).Equal(200)
 				g.Assert(w.HeaderMap.Get("content-type")).Equal("image/svg+xml")
 
@@ -95,7 +96,7 @@ func TestBadge(t *testing.T) {
 		g.It("should provide CCTray response", func() {
 			{
 				// 1. verify no "last" build
-				w := NewResponseRecorder()
+				w := recorder.NewResponseRecorder()
 				ctx.Writer = w
 				ctx.Request.URL.Path += "/cc.xml"
 
@@ -116,7 +117,7 @@ func TestBadge(t *testing.T) {
 				ds.On("BuildLast", fullName).Return(repo.Last, nil).Once()
 			},
 				GetCC,
-				func(state string, w *ResponseRecorder) {
+				func(state string, w *recorder.ResponseRecorder) {
 					g.Assert(w.Status()).Equal(200)
 
 					v := ccmenu.CCProjects{}

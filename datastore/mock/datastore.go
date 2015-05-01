@@ -1,12 +1,18 @@
 package mocks
 
-import "github.com/stretchr/testify/mock"
+import (
+	"io"
 
-import "io"
-import "github.com/drone/drone/common"
+	"github.com/drone/drone/common"
+	"github.com/stretchr/testify/mock"
+)
 
 type Datastore struct {
 	mock.Mock
+}
+
+func New() *Datastore {
+	return new(Datastore)
 }
 
 func (m *Datastore) User(_a0 string) (*common.User, error) {
@@ -230,6 +236,17 @@ func (m *Datastore) BuildLast(_a0 string) (*common.Build, error) {
 
 	return r0, r1
 }
+func (m *Datastore) BuildAgent(_a0 string, _a1 int) (*common.Agent, error) {
+	ret := m.Called(_a0, _a1)
+
+	var r0 *common.Agent
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(*common.Agent)
+	}
+	r1 := ret.Error(1)
+
+	return r0, r1
+}
 func (m *Datastore) SetBuild(_a0 string, _a1 *common.Build) error {
 	ret := m.Called(_a0, _a1)
 
@@ -301,4 +318,12 @@ func (m *Datastore) SetBuildTask(_a0 string, _a1 int, _a2 *common.Task) error {
 	r0 := ret.Error(0)
 
 	return r0
+}
+
+func (m *Datastore) SetBuildAgent(_a0 string, _a1 int, _a2 *common.Agent) error {
+	return m.Called(_a0, _a1, _a2).Error(0)
+}
+
+func (m *Datastore) DelBuildAgent(_a0 string, _a1 int) error {
+	return m.Called(_a0, _a1).Error(0)
 }
