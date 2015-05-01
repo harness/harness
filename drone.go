@@ -7,13 +7,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/datastore/bolt"
 	"github.com/drone/drone/remote/github"
 	"github.com/drone/drone/server"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/settings"
 	"github.com/elazarl/go-bindata-assetfs"
 
+	store "github.com/drone/drone/datastore/builtin"
 	eventbus "github.com/drone/drone/eventbus/builtin"
 	queue "github.com/drone/drone/queue/builtin"
 )
@@ -30,7 +30,7 @@ func main() {
 	remote := github.New(settings.Service)
 	session := session.New(settings.Session)
 
-	ds := bolt.Must(settings.Database.Path)
+	ds := store.Must(settings.Database.Path)
 	defer ds.Close()
 
 	r := gin.Default()
@@ -42,12 +42,12 @@ func main() {
 	api.Use(server.SetRemote(remote))
 	api.Use(server.SetQueue(queue.New()))
 	api.Use(server.SetSettings(settings))
+	api.Use(server.SetSession(session))
 	api.Use(server.SetUser(session))
 
 	user := api.Group("/user")
 	{
 		user.Use(server.MustUser())
-		user.Use(server.SetSession(session))
 
 		user.GET("", server.GetUserCurr)
 		user.PATCH("", server.PutUserCurr)
@@ -66,6 +66,12 @@ func main() {
 		users.POST("/:name", server.PostUser)
 		users.PATCH("/:name", server.PutUser)
 		users.DELETE("/:name", server.DeleteUser)
+	}
+
+	agents := api.Group("/agents")
+	{
+		agents.Use(server.MustAdmin())
+		agents.GET("/token", server.GetAgentToken)
 	}
 
 	repos := api.Group("/repos/:owner/:name")
@@ -109,6 +115,7 @@ func main() {
 
 	queue := api.Group("/queue")
 	{
+		queue.Use(server.MustAgent())
 		queue.GET("", server.GetQueue)
 		queue.POST("/pull", server.PollBuild)
 
@@ -124,7 +131,13 @@ func main() {
 	events := api.Group("/stream")
 	{
 		events.GET("/user", server.GetEvents)
-		//events.GET("/logs/:owner/:name/:build/:number")
+
+		stream := events.Group("/logs")
+		{
+			stream.Use(server.SetRepo())
+			stream.Use(server.SetPerm())
+			stream.GET("/:owner/:name/:build/:number", server.GetStream)
+		}
 	}
 
 	auth := r.Group("/authorize")

@@ -5,6 +5,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/common"
+	"github.com/drone/drone/parser"
 	"github.com/drone/drone/parser/inject"
 	"github.com/drone/drone/parser/matrix"
 	"github.com/drone/drone/queue"
@@ -20,6 +21,7 @@ func PostHook(c *gin.Context) {
 	remote := ToRemote(c)
 	store := ToDatastore(c)
 	queue_ := ToQueue(c)
+	sess := ToSession(c)
 
 	hook, err := remote.Hook(c.Request)
 	if err != nil {
@@ -34,6 +36,14 @@ func PostHook(c *gin.Context) {
 	if hook.Repo == nil {
 		log.Errorf("failure to ascertain repo from hook.")
 		c.Writer.WriteHeader(400)
+		return
+	}
+
+	// get the token and verify the hook is authorized
+	token := sess.GetLogin(c.Request)
+	if token == nil || token.Label != hook.Repo.FullName {
+		log.Errorf("invalid token sent with hook.")
+		c.AbortWithStatus(403)
 		return
 	}
 
@@ -122,11 +132,12 @@ func PostHook(c *gin.Context) {
 	}
 
 	// verify the branches can be built vs skipped
-	// s, _ := script.ParseBuild(string(yml))
-	// if len(hook.PullRequest) == 0 && !s.MatchBranch(hook.Branch) {
-	// 	w.WriteHeader(http.StatusOK)
-	// 	return
-	// }
+	when, _ := parser.ParseCondition(string(raw))
+	if build.Commit != nil && when != nil && !when.MatchBranch(build.Commit.Ref) {
+		log.Infof("ignoring hook. yaml file excludes repo and branch %s %s", repo.FullName, build.Commit.Ref)
+		c.AbortWithStatus(200)
+		return
+	}
 
 	err = store.SetBuild(repo.FullName, build)
 	if err != nil {

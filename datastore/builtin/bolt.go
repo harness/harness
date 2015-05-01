@@ -1,11 +1,9 @@
-package bolt
+package builtin
 
 import (
 	"errors"
 
 	"github.com/boltdb/bolt"
-
-	"github.com/drone/drone/datastore"
 )
 
 var (
@@ -23,6 +21,7 @@ var (
 	bucketRepoParams  = []byte("repo_params")
 	bucketRepoUsers   = []byte("repo_users")
 	bucketBuild       = []byte("build")
+	bucketBuildAgent  = []byte("build_agents")
 	bucketBuildStatus = []byte("build_status")
 	bucketBuildLogs   = []byte("build_logs")
 	bucketBuildSeq    = []byte("build_seq")
@@ -49,18 +48,12 @@ func New(path string) (*DB, error) {
 		tx.CreateBucketIfNotExists(bucketRepoParams)
 		tx.CreateBucketIfNotExists(bucketRepoUsers)
 		tx.CreateBucketIfNotExists(bucketBuild)
+		tx.CreateBucketIfNotExists(bucketBuildAgent)
 		tx.CreateBucketIfNotExists(bucketBuildStatus)
 		tx.CreateBucketIfNotExists(bucketBuildLogs)
 		tx.CreateBucketIfNotExists(bucketBuildSeq)
 		return nil
 	})
-
-	// REMOVE BELOW
-	var ds datastore.Datastore
-	if ds == nil {
-		ds = &DB{db}
-	}
-	// REMOVE ABOVE
 
 	return &DB{db}, nil
 }

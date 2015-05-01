@@ -1,4 +1,4 @@
-package bolt
+package builtin
 
 import (
 	"bytes"
@@ -63,6 +63,12 @@ func push(t *bolt.Tx, bucket, index, value []byte) error {
 	err := get(t, bucket, index, &keys)
 	if err != nil && err != ErrKeyNotFound {
 		return err
+	}
+	// we shouldn't add a key that already exists
+	for _, key := range keys {
+		if bytes.Equal(key, value) {
+			return nil
+		}
 	}
 	keys = append(keys, value)
 	return update(t, bucket, index, &keys)

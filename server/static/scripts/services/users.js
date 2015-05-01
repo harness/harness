@@ -74,6 +74,8 @@
 			this.getCurrent().then(function(payload){
 				_user=payload;
 				defer.resolve(_user);
+			}).catch(function(){
+				defer.resolve(_user);
 			});
 
 			return defer.promise;

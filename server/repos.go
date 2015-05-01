@@ -166,6 +166,7 @@ func DeleteRepo(c *gin.Context) {
 //
 func PostRepo(c *gin.Context) {
 	user := ToUser(c)
+	sess := ToSession(c)
 	store := ToDatastore(c)
 	owner := c.Params.ByName("owner")
 	name := c.Params.ByName("name")
@@ -198,6 +199,21 @@ func PostRepo(c *gin.Context) {
 		return
 	}
 
+	token := &common.Token{}
+	token.Kind = common.TokenHook
+	token.Label = r.FullName
+	tokenstr, err := sess.GenerateToken(token)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+
+	link := fmt.Sprintf(
+		"%s/api/hook?access_token=%s",
+		httputil.GetURL(c.Request),
+		tokenstr,
+	)
+
 	// set the repository owner to the
 	// currently authenticated user.
 	r.User = &common.Owner{Login: user.Login}
@@ -214,12 +230,11 @@ func PostRepo(c *gin.Context) {
 
 	// activate the repository before we make any
 	// local changes to the database.
-	// err = remote.Activate(user, r, keypair, link)
-	// if err != nil {
-	// 	c.Fail(500, err)
-	// 	return
-	// }
-	println(link)
+	err = remote.Activate(user, r, keypair, link)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
 
 	// persist the repository
 	err = store.SetRepoNotExists(user, r)

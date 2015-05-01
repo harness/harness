@@ -1,4 +1,4 @@
-package bolt
+package builtin
 
 import (
 	"bytes"
@@ -102,10 +102,6 @@ func (db *DB) SetRepoNotExists(user *common.User, repo *common.Repo) error {
 		if err != nil {
 			return err
 		}
-		// err = push(t, bucketRepoUsers, repokey, userkey)
-		// if err != nil {
-		// 	return err
-		// }
 		return insert(t, bucketRepo, repokey, repo)
 	})
 }
@@ -141,39 +137,13 @@ func (db *DB) DelRepo(repo *common.Repo) error {
 		}
 		t.Bucket(bucketRepoKeys).Delete(key)
 		t.Bucket(bucketRepoParams).Delete(key)
-
-		// should we just ignore these error conditions? or should
-		// we go ahead with the transaction and assume we can
-		// cleanup the leftovers through some other maintenance process?
-		err = db.deleteTracesOfRepo(t, key)
+		t.Bucket(bucketBuildSeq).Delete(key)
+		deleteWithPrefix(t, bucketBuild, append(key, '/'))
+		deleteWithPrefix(t, bucketBuildLogs, append(key, '/'))
+		deleteWithPrefix(t, bucketBuildStatus, append(key, '/'))
 
 		return err
 	})
-}
-
-// deleteTracesOfRepo cleans up build leftovers when a repo is removed
-func (db *DB) deleteTracesOfRepo(t *bolt.Tx, repoKey []byte) error {
-	// bucketBuildSeq uses the repoKey directly
-	err := t.Bucket(bucketBuildSeq).Delete(repoKey)
-	if err != nil {
-		// only error here is if our Tx is read-only
-		return err
-	}
-
-	// the other buckets use repoKey with '/buildNumber', at least.
-	// validating that an additiona '/' is there ensures that we don't
-	// match 'github.com/drone/droney' when we're cleaning up after
-	// 'github.com/drone/drone'.
-	prefix := append(repoKey, '/')
-	buckets := [][]byte{bucketBuildStatus, bucketBuildLogs, bucketBuild}
-	for _, b := range buckets {
-		err = deleteWithPrefix(t, b, prefix)
-		if err != nil {
-			break
-		}
-	}
-
-	return err
 }
 
 // Subscribed returns true if the user is subscribed

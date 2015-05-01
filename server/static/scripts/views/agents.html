@@ -1,0 +1,12 @@
+<h1>{{ user.login }}</h1>
+
+<a href="/">Back</a>
+
+<dl>
+	<dt>Token</dt>
+	<dd>{{ token }}</dd>
+</dl>
+
+<pre>
+docker run drone/drone-agent --addr={{ addr }} --token={{ token }}
+</pre>

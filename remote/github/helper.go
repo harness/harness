@@ -172,7 +172,7 @@ func GetHook(client *github.Client, owner, name, url string) (*github.Hook, erro
 		return nil, err
 	}
 	for _, hook := range hooks {
-		if hook.Config["url"] == url {
+		if strings.HasPrefix(hook.Config["url"].(string), url) {
 			return &hook, nil
 		}
 	}
@@ -254,6 +254,9 @@ func DeleteKey(client *github.Client, owner, name, title string) error {
 	var k, err = GetKey(client, owner, name, title)
 	if err != nil {
 		return err
+	}
+	if k == nil {
+		return nil
 	}
 	_, err = client.Repositories.DeleteKey(owner, name, *k.ID)
 	return err

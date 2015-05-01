@@ -1,12 +1,12 @@
-package bolt
+package builtin
 
 import (
-	//"bytes"
 	"encoding/binary"
-	"github.com/boltdb/bolt"
-	"github.com/drone/drone/common"
 	"strconv"
 	"time"
+
+	"github.com/boltdb/bolt"
+	"github.com/drone/drone/common"
 )
 
 // Build gets the specified build number for the
@@ -70,6 +70,17 @@ func (db *DB) BuildLast(repo string) (*common.Build, error) {
 	return build, err
 }
 
+// BuildAgent gets the agent that is currently executing
+// a build. If no agent exists ErrKeyNotFound is returned.
+func (db *DB) BuildAgent(repo string, build int) (*common.Agent, error) {
+	key := []byte(repo + "/" + strconv.Itoa(build))
+	agent := &common.Agent{}
+	err := db.View(func(t *bolt.Tx) error {
+		return get(t, bucketBuildAgent, key, agent)
+	})
+	return agent, err
+}
+
 // SetBuild inserts or updates a build for the named
 // repository. The build number is incremented and
 // assigned to the provided build.
@@ -110,52 +121,6 @@ func (db *DB) SetBuild(repo string, build *common.Build) error {
 
 		key := []byte(repo + "/" + strconv.Itoa(build.Number))
 		return update(t, bucketBuild, key, build)
-	})
-}
-
-/*
-// Status returns the status for the given repository
-// and build number.
-func (db *DB) Status(repo string, build int, status string) (*common.Status, error) {
-	status_ := &common.Status{}
-	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + status)
-
-	err := db.Update(func(t *bolt.Tx) error {
-		return update(t, bucketBuildStatus, key, status)
-	})
-
-	return status_, err
-}
-
-// StatusList returned a list of all build statues for
-// the given repository and build number.
-func (db *DB) StatusList(repo string, build int) ([]*common.Status, error) {
-	// TODO (bradrydzewski) explore efficiency of cursor vs index
-
-	statuses := []*common.Status{}
-	err := db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket(bucketBuildStatus).Cursor()
-		prefix := []byte(repo + "/" + strconv.Itoa(build) + "/")
-		for k, v := c.Seek(prefix); bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			status := &common.Status{}
-			if err := decode(v, status); err != nil {
-				return err
-			}
-			statuses = append(statuses, status)
-		}
-		return nil
-	})
-	return statuses, err
-}
-*/
-// SetStatus inserts a new build status for the
-// named repository and build number. If the status already
-// exists an error is returned.
-func (db *DB) SetStatus(repo string, build int, status *common.Status) error {
-	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + status.Context)
-
-	return db.Update(func(t *bolt.Tx) error {
-		return update(t, bucketBuildStatus, key, status)
 	})
 }
 
@@ -213,3 +178,18 @@ func (db *DB) SetBuildTask(repo string, build int, task *common.Task) error {
 	})
 }
 
+// SetBuildAgent insert or updates the agent that is
+// running a build.
+func (db *DB) SetBuildAgent(repo string, build int, agent *common.Agent) error {
+	key := []byte(repo + "/" + strconv.Itoa(build))
+	return db.Update(func(t *bolt.Tx) error {
+		return update(t, bucketBuildAgent, key, agent)
+	})
+}
+
+func (db *DB) DelBuildAgent(repo string, build int) error {
+	key := []byte(repo + "/" + strconv.Itoa(build))
+	return db.Update(func(t *bolt.Tx) error {
+		return delete(t, bucketBuildAgent, key)
+	})
+}

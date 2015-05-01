@@ -1,8 +1,6 @@
 package settings
 
-import (
-	"github.com/BurntSushi/toml"
-)
+import "github.com/BurntSushi/toml"
 
 // Service represents the configuration details required
 // to connect to the revision control system (ie GitHub, Bitbucket)
@@ -108,7 +106,7 @@ type Settings struct {
 func Parse(path string) (*Settings, error) {
 	s := &Settings{}
 	_, err := toml.DecodeFile(path, s)
-	return s, err
+	return applyDefaults(s), err
 }
 
 // ParseString parses the Drone settings string and unmarshals
@@ -116,5 +114,18 @@ func Parse(path string) (*Settings, error) {
 func ParseString(data string) (*Settings, error) {
 	s := &Settings{}
 	_, err := toml.Decode(data, s)
-	return s, err
+	return applyDefaults(s), err
+}
+
+func applyDefaults(s *Settings) *Settings {
+	if s.Session == nil {
+		s.Session = &Session{}
+	}
+	// if no session token is provided we can
+	// instead use the client secret to sign
+	// our sessions and tokens.
+	if len(s.Session.Secret) == 0 {
+		s.Session.Secret = s.Service.OAuth.Secret
+	}
+	return s
 }

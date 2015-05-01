@@ -62,6 +62,11 @@
 			controller: 'UserCtrl',
 			resolve: resolveUser
 		})
+		.when('/agents', {
+			templateUrl: '/static/scripts/views/agents.html',
+			controller: 'AgentsCtrl',
+			resolve: resolveUser
+		})
 		.when('/users', {
 			templateUrl: '/static/scripts/views/users.html',
 			controller: 'UsersCtrl',
@@ -105,7 +110,7 @@
 		$httpProvider.interceptors.push(function($q, $location) {
 			return {
 				'responseError': function(rejection) {
-					if (rejection.status === 401) {// && rejection.config.url != "/api/user") {
+					if (rejection.status === 401 && rejection.config.url !== "/api/user") {
 						$location.path('/login');
 					}
 					if (rejection.status === 0) {
@@ -119,9 +124,10 @@
 	}
 
 
-	function RouteChange($rootScope, feed) {
+	function RouteChange($rootScope, feed, logs) {
 		$rootScope.$on('$routeChangeStart', function (event, next) {
 			feed.unsubscribe();
+			logs.unsubscribe();
 		});
 
 		$rootScope.$on('$routeChangeSuccess', function (event, current, previous) {

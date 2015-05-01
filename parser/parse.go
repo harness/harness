@@ -92,3 +92,11 @@ func ParseSingle(raw string, opts *Opts) (*common.Config, error) {
 	}
 	return conf, err
 }
+
+func ParseCondition(raw string) (*common.Condition, error) {
+	c := struct {
+		Condition *common.Condition `yaml:"when"`
+	}{}
+	err := yaml.Unmarshal([]byte(raw), c)
+	return c.Condition, err
+}

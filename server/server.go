@@ -125,7 +125,7 @@ func SetUser(s session.Session) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ds := ToDatastore(c)
 		token := s.GetLogin(c.Request)
-		if token == nil {
+		if token == nil || len(token.Login) == 0 {
 			c.Next()
 			return
 		}
@@ -137,7 +137,8 @@ func SetUser(s session.Session) gin.HandlerFunc {
 
 		// if session token we can proceed, otherwise
 		// we should validate the token hasn't been revoked
-		if token.Kind == common.TokenSess {
+		switch token.Kind {
+		case common.TokenSess:
 			c.Next()
 			return
 		}
@@ -209,6 +210,21 @@ func MustAdmin() gin.HandlerFunc {
 			c.Set("user", u)
 			c.Next()
 		}
+	}
+}
+
+func MustAgent() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		sess := ToSession(c)
+		token := sess.GetLogin(c.Request)
+		if token == nil {
+			c.AbortWithStatus(401)
+			return
+		} else if token.Kind != common.TokenAgent {
+			c.AbortWithStatus(500)
+			return
+		}
+		c.Next()
 	}
 }
 
