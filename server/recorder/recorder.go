@@ -11,7 +11,7 @@ type ResponseRecorder struct {
 	*httptest.ResponseRecorder
 }
 
-func NewResponseRecorder() *ResponseRecorder {
+func New() *ResponseRecorder {
 	return &ResponseRecorder{httptest.NewRecorder()}
 }
 
