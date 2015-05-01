@@ -4,8 +4,6 @@ import (
 	"errors"
 
 	"github.com/boltdb/bolt"
-
-	"github.com/drone/drone/datastore"
 )
 
 var (
@@ -56,13 +54,6 @@ func New(path string) (*DB, error) {
 		tx.CreateBucketIfNotExists(bucketBuildSeq)
 		return nil
 	})
-
-	// REMOVE BELOW
-	var ds datastore.Datastore
-	if ds == nil {
-		ds = &DB{db}
-	}
-	// REMOVE ABOVE
 
 	return &DB{db}, nil
 }

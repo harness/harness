@@ -71,9 +71,6 @@ func (db *DB) SetUserNotExists(user *common.User) error {
 // DelUser deletes the user.
 func (db *DB) DelUser(user *common.User) error {
 	key := []byte(user.Login)
-	// TODO(bradrydzewski) delete user subscriptions
-	// TODO(bradrydzewski) delete user tokens
-
 	return db.Update(func(t *bolt.Tx) error {
 		err := delete(t, bucketUserTokens, key)
 		if err != nil {
@@ -83,9 +80,8 @@ func (db *DB) DelUser(user *common.User) error {
 		if err != nil {
 			return err
 		}
-		// deletePrefix(t, bucketTokens, prefix)
-		// or
-		// deleteKeys(t, bucketTokens, keys)
+		// IDEA: deleteKeys(t, bucketTokens, keys)
+		deleteWithPrefix(t, bucketTokens, append(key, '/'))
 		return delete(t, bucketUser, key)
 	})
 }
