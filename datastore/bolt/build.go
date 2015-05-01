@@ -70,6 +70,17 @@ func (db *DB) BuildLast(repo string) (*common.Build, error) {
 	return build, err
 }
 
+// BuildAgent gets the agent that is currently executing
+// a build. If no agent exists ErrKeyNotFound is returned.
+func (db *DB) BuildAgent(repo string, build int) (*common.Agent, error) {
+	key := []byte(repo + "/" + strconv.Itoa(build))
+	agent := &common.Agent{}
+	err := db.View(func(t *bolt.Tx) error {
+		return get(t, bucketBuildAgent, key, agent)
+	})
+	return agent, err
+}
+
 // SetBuild inserts or updates a build for the named
 // repository. The build number is incremented and
 // assigned to the provided build.
@@ -110,17 +121,6 @@ func (db *DB) SetBuild(repo string, build *common.Build) error {
 
 		key := []byte(repo + "/" + strconv.Itoa(build.Number))
 		return update(t, bucketBuild, key, build)
-	})
-}
-
-// SetStatus inserts a new build status for the
-// named repository and build number. If the status already
-// exists an error is returned.
-func (db *DB) SetStatus(repo string, build int, status *common.Status) error {
-	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + status.Context)
-
-	return db.Update(func(t *bolt.Tx) error {
-		return update(t, bucketBuildStatus, key, status)
 	})
 }
 
@@ -192,13 +192,4 @@ func (db *DB) DelBuildAgent(repo string, build int) error {
 	return db.Update(func(t *bolt.Tx) error {
 		return delete(t, bucketBuildAgent, key)
 	})
-}
-
-func (db *DB) BuildAgent(repo string, build int) (*common.Agent, error) {
-	key := []byte(repo + "/" + strconv.Itoa(build))
-	agent := &common.Agent{}
-	err := db.View(func(t *bolt.Tx) error {
-		return get(t, bucketBuildAgent, key, agent)
-	})
-	return agent, err
 }
