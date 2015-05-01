@@ -63,10 +63,7 @@ func TestRepo(t *testing.T) {
 			db.SetBuild(testRepo, &common.Build{State: "success"})
 			db.SetBuild(testRepo, &common.Build{State: "success"})
 			db.SetBuild(testRepo, &common.Build{State: "pending"})
-
-			db.SetBuildStatus(testRepo, 1, &common.Status{Context: "success"})
-			db.SetBuildStatus(testRepo, 2, &common.Status{Context: "success"})
-			db.SetBuildStatus(testRepo, 3, &common.Status{Context: "pending"})
+			db.SetLogs(testRepo, 1, 1, []byte("foo"))
 
 			// first a little sanity to validate our test conditions
 			_, err = db.BuildLast(testRepo)
@@ -82,7 +79,7 @@ func TestRepo(t *testing.T) {
 			g.Assert(err).Equal(ErrKeyNotFound)
 		})
 
-		g.It("Should get RepoList", func() {
+		g.It("Should get Repo list", func() {
 			db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
 			db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo2})
 
@@ -91,13 +88,13 @@ func TestRepo(t *testing.T) {
 			g.Assert(len(repos)).Equal(2)
 		})
 
-		g.It("Should set RepoParams", func() {
+		g.It("Should set Repo parameters", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
 			err := db.SetRepoParams(testRepo, map[string]string{"A": "Alpha"})
 			g.Assert(err).Equal(nil)
 		})
 
-		g.It("Should get RepoParams", func() {
+		g.It("Should get Repo parameters", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
 			err := db.SetRepoParams(testRepo, map[string]string{"A": "Alpha", "B": "Beta"})
 			params, err := db.RepoParams(testRepo)
@@ -117,14 +114,14 @@ func TestRepo(t *testing.T) {
 			g.Assert(err_).Equal(ErrKeyExists)
 		})
 
-		g.It("Should set RepoKeypair", func() {
+		g.It("Should set Repo keypair", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
 
 			err := db.SetRepoKeypair(testRepo, &common.Keypair{Private: "A", Public: "Alpha"})
 			g.Assert(err).Equal(nil)
 		})
 
-		g.It("Should get RepoKeypair", func() {
+		g.It("Should get Repo keypair", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
 			err := db.SetRepoKeypair(testRepo, &common.Keypair{Private: "A", Public: "Alpha"})
 
@@ -134,13 +131,13 @@ func TestRepo(t *testing.T) {
 			g.Assert(keypair.Private).Equal("A")
 		})
 
-		g.It("Should set Subscriber", func() {
+		g.It("Should set subscriber", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
 			err := db.SetSubscriber(testUser, testRepo)
 			g.Assert(err).Equal(nil)
 		})
 
-		g.It("Should get Subscribed", func() {
+		g.It("Should get subscribed", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
 			err := db.SetSubscriber(testUser, testRepo)
 			subscribed, err := db.Subscribed(testUser, testRepo)
@@ -148,7 +145,7 @@ func TestRepo(t *testing.T) {
 			g.Assert(subscribed).Equal(true)
 		})
 
-		g.It("Should del Subscriber", func() {
+		g.It("Should del subscriber", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
 			db.SetSubscriber(testUser, testRepo)
 			err := db.DelSubscriber(testUser, testRepo)
@@ -159,57 +156,5 @@ func TestRepo(t *testing.T) {
 
 		})
 
-	})
-}
-
-func TestRepoDel(t *testing.T) {
-	g := Goblin(t)
-	g.Describe("Delete repo", func() {
-
-		var db *DB // temporary database
-
-		user := &common.User{Login: "freya"}
-		repoUri := string("github.com/octopod/hq")
-
-		// create a new database before each unit
-		// test and destroy afterwards.
-		g.BeforeEach(func() {
-			file, err := ioutil.TempFile(os.TempDir(), "drone-bolt")
-			if err != nil {
-				panic(err)
-			}
-
-			db = Must(file.Name())
-		})
-		g.AfterEach(func() {
-			os.Remove(db.Path())
-		})
-
-		g.It("should cleanup", func() {
-			repo := &common.Repo{FullName: repoUri}
-			err := db.SetRepoNotExists(user, repo)
-			g.Assert(err).Equal(nil)
-
-			db.SetBuild(repoUri, &common.Build{State: "success"})
-			db.SetBuild(repoUri, &common.Build{State: "success"})
-			db.SetBuild(repoUri, &common.Build{State: "pending"})
-
-			db.SetBuildStatus(repoUri, 1, &common.Status{Context: "success"})
-			db.SetBuildStatus(repoUri, 2, &common.Status{Context: "success"})
-			db.SetBuildStatus(repoUri, 3, &common.Status{Context: "pending"})
-
-			// first a little sanity to validate our test conditions
-			_, err = db.BuildLast(repoUri)
-			g.Assert(err).Equal(nil)
-
-			// now run our specific test suite
-			// 1. ensure that we can delete the repo
-			err = db.DelRepo(repo)
-			g.Assert(err).Equal(nil)
-
-			// 2. ensure that deleting the repo cleans up other references
-			_, err = db.Build(repoUri, 1)
-			g.Assert(err).Equal(ErrKeyNotFound)
-		})
 	})
 }

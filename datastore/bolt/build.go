@@ -1,7 +1,6 @@
 package bolt
 
 import (
-	//"bytes"
 	"encoding/binary"
 	"strconv"
 	"time"
@@ -114,41 +113,6 @@ func (db *DB) SetBuild(repo string, build *common.Build) error {
 	})
 }
 
-/*
-// Status returns the status for the given repository
-// and build number.
-func (db *DB) Status(repo string, build int, status string) (*common.Status, error) {
-	status_ := &common.Status{}
-	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + status)
-
-	err := db.Update(func(t *bolt.Tx) error {
-		return update(t, bucketBuildStatus, key, status)
-	})
-
-	return status_, err
-}
-
-// StatusList returned a list of all build statues for
-// the given repository and build number.
-func (db *DB) StatusList(repo string, build int) ([]*common.Status, error) {
-	// TODO (bradrydzewski) explore efficiency of cursor vs index
-
-	statuses := []*common.Status{}
-	err := db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket(bucketBuildStatus).Cursor()
-		prefix := []byte(repo + "/" + strconv.Itoa(build) + "/")
-		for k, v := c.Seek(prefix); bytes.HasPrefix(k, prefix); k, v = c.Next() {
-			status := &common.Status{}
-			if err := decode(v, status); err != nil {
-				return err
-			}
-			statuses = append(statuses, status)
-		}
-		return nil
-	})
-	return statuses, err
-}
-*/
 // SetStatus inserts a new build status for the
 // named repository and build number. If the status already
 // exists an error is returned.
