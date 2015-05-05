@@ -33,10 +33,10 @@ var (
 
 var (
 	// name of the build agent container.
-	DefaultAgent = "busybox"
+	DefaultAgent = "drone/drone-agent"
 
 	// default name of the build agent executable
-	DefaultEntrypoint = []string{"/bin/echo"} //[]string{"/bin/drone-agent"}
+	DefaultEntrypoint = []string{"/bin/drone-agent"}
 
 	// default argument to invoke build steps
 	DefaultBuildArgs = []string{"--build", "--clone", "--publish", "--deploy"}
