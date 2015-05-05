@@ -19,12 +19,6 @@ type Queue interface {
 	// if the subscribing client terminates its connection.
 	PullClose(CloseNotifier) *Work
 
-	// PullAck retrieves and removes the head of this queue, waiting
-	// if necessary until work becomes available. Items pull from the
-	// queue that aren't acknowledged will be pushed back to the queue
-	// again when the default acknowledgement deadline is reached.
-	PullAck() *Work
-
 	// Ack acknowledges an item in the queue was processed.
 	Ack(*Work) error
 

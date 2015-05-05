@@ -1,6 +1,7 @@
 package builtin
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/drone/drone/queue"
@@ -41,25 +42,38 @@ func TestBuild(t *testing.T) {
 			w1 := &queue.Work{}
 			w2 := &queue.Work{}
 			q := New()
+			c := new(closeNotifier)
 			q.Publish(w1)
 			q.Publish(w2)
 			g.Assert(q.Pull()).Equal(w1)
-			g.Assert(q.Pull()).Equal(w2)
+			g.Assert(q.PullClose(c)).Equal(w2)
+			g.Assert(q.acks[w1]).Equal(struct{}{})
+			g.Assert(q.acks[w2]).Equal(struct{}{})
+			g.Assert(len(q.acks)).Equal(2)
 		})
 
-		g.It("Should pull item with ack", func() {
-			w := &queue.Work{}
+		g.It("Should cancel pulling item", func() {
 			q := New()
-			q.Publish(w)
-			g.Assert(q.PullAck()).Equal(w)
-			g.Assert(q.acks[w]).Equal(struct{}{})
+			c := new(closeNotifier)
+			c.closec = make(chan bool, 1)
+			var wg sync.WaitGroup
+			go func() {
+				wg.Add(1)
+				g.Assert(q.PullClose(c) == nil).IsTrue()
+				wg.Done()
+			}()
+			go func() {
+				c.closec <- true
+			}()
+			wg.Wait()
 		})
 
 		g.It("Should ack item", func() {
 			w := &queue.Work{}
+			c := new(closeNotifier)
 			q := New()
 			q.Publish(w)
-			g.Assert(q.PullAck()).Equal(w)
+			g.Assert(q.PullClose(c)).Equal(w)
 			g.Assert(len(q.acks)).Equal(1)
 			g.Assert(q.Ack(w)).Equal(nil)
 			g.Assert(len(q.acks)).Equal(0)
@@ -73,4 +87,12 @@ func TestBuild(t *testing.T) {
 			g.Assert(len(q.Items())).Equal(3)
 		})
 	})
+}
+
+type closeNotifier struct {
+	closec chan bool
+}
+
+func (c *closeNotifier) CloseNotify() <-chan bool {
+	return c.closec
 }
