@@ -37,7 +37,7 @@ func main() {
 	eventbus_ := eventbus.New()
 	queue_ := queue.New()
 	updater := runner.NewUpdater(eventbus_, store)
-	runner_ := runner.Runner{updater}
+	runner_ := runner.Runner{Updater: updater}
 	go run(&runner_, queue_)
 
 	r := gin.Default()
