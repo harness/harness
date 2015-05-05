@@ -33,10 +33,10 @@ var (
 
 var (
 	// name of the build agent container.
-	DefaultAgent = "drone/drone-agent"
+	DefaultAgent = "drone/drone-build"
 
 	// default name of the build agent executable
-	DefaultEntrypoint = []string{"/bin/drone-agent"}
+	DefaultEntrypoint = []string{"/bin/drone-build"}
 
 	// default argument to invoke build steps
 	DefaultBuildArgs = []string{"--build", "--clone", "--publish", "--deploy"}
