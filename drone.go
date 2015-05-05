@@ -16,6 +16,7 @@ import (
 	store "github.com/drone/drone/datastore/builtin"
 	eventbus "github.com/drone/drone/eventbus/builtin"
 	queue "github.com/drone/drone/queue/builtin"
+	runner "github.com/drone/drone/runner/builtin"
 )
 
 var conf = flag.String("config", "drone.toml", "")
@@ -27,20 +28,26 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	store := store.Must(settings.Database.Path)
+	defer store.Close()
+
 	remote := github.New(settings.Service)
 	session := session.New(settings.Session)
-
-	ds := store.Must(settings.Database.Path)
-	defer ds.Close()
+	eventbus_ := eventbus.New()
+	queue_ := queue.New()
+	updater := runner.NewUpdater(eventbus_, store)
+	runner_ := runner.Runner{updater}
+	go run(&runner_, queue_)
 
 	r := gin.Default()
 
 	api := r.Group("/api")
 	api.Use(server.SetHeaders())
-	api.Use(server.SetBus(eventbus.New()))
-	api.Use(server.SetDatastore(ds))
+	api.Use(server.SetBus(eventbus_))
+	api.Use(server.SetDatastore(store))
 	api.Use(server.SetRemote(remote))
-	api.Use(server.SetQueue(queue.New()))
+	api.Use(server.SetQueue(queue_))
 	api.Use(server.SetSettings(settings))
 	api.Use(server.SetSession(session))
 	api.Use(server.SetUser(session))
@@ -143,7 +150,7 @@ func main() {
 	auth := r.Group("/authorize")
 	{
 		auth.Use(server.SetHeaders())
-		auth.Use(server.SetDatastore(ds))
+		auth.Use(server.SetDatastore(store))
 		auth.Use(server.SetRemote(remote))
 		auth.Use(server.SetSettings(settings))
 		auth.Use(server.SetSession(session))
@@ -177,4 +184,14 @@ func index() *template.Template {
 	file := MustAsset("server/static/index.html")
 	filestr := string(file)
 	return template.Must(template.New("index.html").Parse(filestr))
+}
+
+// run is a helper function for initializing the
+// built-in build runner, if not running in remote
+// mode.
+func run(r *runner.Runner, q *queue.Queue) {
+	defer func() {
+		recover()
+	}()
+	r.Poll(q)
 }

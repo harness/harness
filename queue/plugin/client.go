@@ -44,12 +44,11 @@ func (c *Client) Pull() *queue.Work {
 }
 
 // Pull makes an http request to the remote queue to
-// retrieve work, with an acknowldement required.
-// This initiates a long poll and will block until
-// complete.
-func (c *Client) PullAck() *queue.Work {
+// retrieve work. This initiates a long poll and will
+// block until complete.
+func (c *Client) PullClose(cn queue.CloseNotifier) *queue.Work {
 	out := &queue.Work{}
-	err := c.send("POST", "/queue/pull?ack=true", nil, out)
+	err := c.send("POST", "/queue/pull", nil, out)
 	if err != nil {
 		// TODO handle error
 	}
@@ -96,7 +95,6 @@ func (c *Client) send(method, path string, in interface{}, out interface{}) erro
 	}
 	req.Header.Add("Authorization", "Bearer "+c.token)
 	req.Header.Add("Content-Type", "application/json")
-
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
@@ -107,3 +105,18 @@ func (c *Client) send(method, path string, in interface{}, out interface{}) erro
 	}
 	return json.NewDecoder(resp.Body).Decode(out)
 }
+
+// In order to implement PullClose() we'll need to use a custom transport:
+//
+// tr := &http.Transport{}
+// client := &http.Client{Transport: tr}
+// c := make(chan error, 1)
+// go func() { c <- f(client.Do(req)) }()
+// select {
+// case <-ctx.Done():
+//     tr.CancelRequest(req)
+//     <-c // Wait for f to return.
+//     return ctx.Err()
+// case err := <-c:
+//     return err
+// }

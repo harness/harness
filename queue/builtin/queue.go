@@ -78,6 +78,7 @@ func (q *Queue) Pull() *queue.Work {
 	work := <-q.itemc
 	q.Lock()
 	delete(q.items, work)
+	q.acks[work] = struct{}{}
 	q.Unlock()
 	return work
 }
@@ -94,22 +95,11 @@ func (q *Queue) PullClose(cn queue.CloseNotifier) *queue.Work {
 		case work := <-q.itemc:
 			q.Lock()
 			delete(q.items, work)
+			q.acks[work] = struct{}{}
 			q.Unlock()
 			return work
 		}
 	}
-}
-
-// PullAck retrieves and removes the head of this queue, waiting
-// if necessary until work becomes available. Items pull from the
-// queue that aren't acknowledged will be pushed back to the queue
-// again when the default acknowledgement deadline is reached.
-func (q *Queue) PullAck() *queue.Work {
-	work := q.Pull()
-	q.Lock()
-	q.acks[work] = struct{}{}
-	q.Unlock()
-	return work
 }
 
 // Ack acknowledges an item in the queue was processed.

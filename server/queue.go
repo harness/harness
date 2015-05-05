@@ -50,6 +50,9 @@ func PollBuild(c *gin.Context) {
 	}
 
 	c.JSON(200, work)
+
+	// acknowledge work received by the client
+	queue.Ack(work)
 }
 
 // GET /queue/push/:owner/:repo
