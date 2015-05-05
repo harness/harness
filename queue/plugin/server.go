@@ -71,12 +71,7 @@ func remove(c *gin.Context) {
 // to retrieve work.
 func pull(c *gin.Context) {
 	q := fromContext(c)
-	var work *queue.Work
-	if c.Request.FormValue("ack") == "true" {
-		work = q.PullAck()
-	} else {
-		work = q.Pull()
-	}
+	work := q.PullClose(c.Writer)
 	if work == nil {
 		c.AbortWithStatus(500)
 		return

@@ -172,7 +172,11 @@ func GetHook(client *github.Client, owner, name, url string) (*github.Hook, erro
 		return nil, err
 	}
 	for _, hook := range hooks {
-		if strings.HasPrefix(hook.Config["url"].(string), url) {
+		hookurl, ok := hook.Config["url"].(string)
+		if !ok {
+			continue
+		}
+		if strings.HasPrefix(hookurl, url) {
 			return &hook, nil
 		}
 	}
