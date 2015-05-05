@@ -1,11 +1,13 @@
 package builtin
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -69,10 +71,14 @@ func (r *Runner) Run(w *queue.Work) error {
 				}
 				r.SetTask(w.Repo, w.Build, t)
 			}
+			// must populate build start
+			if w.Build.Started == 0 {
+				w.Build.Started = time.Now().UTC().Unix()
+			}
 			// mark the build as complete (with error)
 			w.Build.State = common.StateError
-			w.Build.Duration = w.Build.Finished - w.Build.Started
 			w.Build.Finished = time.Now().UTC().Unix()
+			w.Build.Duration = w.Build.Finished - w.Build.Started
 			r.SetBuild(w.Repo, w.Build)
 		}
 	}()
@@ -119,12 +125,12 @@ func (r *Runner) Run(w *queue.Work) error {
 		worker := newWorkerTimeout(client, w.Repo.Timeout+10) // 10 minute buffer
 		workers = append(workers, worker)
 		cname := cname(w.Repo.FullName, w.Build.Number, task.Number)
-		state, err := worker.Build(cname, in)
+		state, builderr := worker.Build(cname, in)
 
 		switch {
-		case err == ErrTimeout:
+		case builderr == ErrTimeout:
 			task.State = common.StateKilled
-		case err != nil:
+		case builderr != nil:
 			task.State = common.StateError
 		case state != 0:
 			task.ExitCode = state
@@ -135,7 +141,11 @@ func (r *Runner) Run(w *queue.Work) error {
 
 		// send the logs to the datastore
 		rc, err := worker.Logs()
-		if err != nil {
+		if err != nil && builderr != nil {
+			var buf bytes.Buffer
+			buf.WriteString(builderr.Error())
+			rc = ioutil.NopCloser(&buf)
+		} else if err != nil {
 			return err
 		}
 		err = r.SetLogs(w.Repo, w.Build, task, rc)
