@@ -1,11 +1,15 @@
 package eventbus
 
-import "github.com/drone/drone/common"
+const (
+	EventRepo  = "repo"
+	EventUser  = "user"
+	EventAgent = "agent"
+)
 
 type Event struct {
-	Build *common.Build `json:"build,omitempty"`
-	Repo  *common.Repo  `json:"repo,omitempty"`
-	Task  *common.Task  `json:"task,omitempty"`
+	Kind string
+	Name string
+	Msg  []byte
 }
 
 type Bus interface {

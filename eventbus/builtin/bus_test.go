@@ -3,7 +3,6 @@ package builtin
 import (
 	"testing"
 
-	"github.com/drone/drone/common"
 	"github.com/drone/drone/eventbus"
 	. "github.com/franela/goblin"
 )
@@ -34,8 +33,8 @@ func TestBuild(t *testing.T) {
 		})
 
 		g.It("Should send", func() {
-			e1 := &eventbus.Event{Repo: &common.Repo{Name: "foo"}}
-			e2 := &eventbus.Event{Repo: &common.Repo{Name: "bar"}}
+			e1 := &eventbus.Event{Name: "foo"}
+			e2 := &eventbus.Event{Name: "bar"}
 			c := make(chan *eventbus.Event)
 			b := New()
 			b.Subscribe(c)
