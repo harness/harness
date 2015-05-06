@@ -46,23 +46,29 @@ func GetRepoEvents(c *gin.Context) {
 	}
 
 	ticker := time.NewTicker(pingPeriod)
-	eventc := make(chan *eventbus.Event, 1)
+	eventc := make(chan *eventbus.Event)
 	bus.Subscribe(eventc)
 	defer func() {
 		bus.Unsubscribe(eventc)
 		ticker.Stop()
 		ws.Close()
 		close(eventc)
-		log.Debugf("closed websocket")
+		log.Infof("closed websocket")
 	}()
 
 	go func() {
 		for {
 			select {
 			case <-c.Writer.CloseNotify():
+				ws.Close()
 				return
 			case event := <-eventc:
-				if event != nil && event.Kind == eventbus.EventRepo && event.Name == repo.FullName {
+				if event == nil {
+					log.Infof("closed websocket")
+					ws.Close()
+					return
+				}
+				if event.Kind == eventbus.EventRepo && event.Name == repo.FullName {
 					ws.WriteMessage(websocket.TextMessage, event.Msg)
 					break
 				}
@@ -70,6 +76,7 @@ func GetRepoEvents(c *gin.Context) {
 				ws.SetWriteDeadline(time.Now().Add(writeWait))
 				err := ws.WriteMessage(websocket.PingMessage, []byte{})
 				if err != nil {
+					log.Infof("closed websocket")
 					ws.Close()
 					return
 				}

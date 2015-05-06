@@ -177,6 +177,8 @@ func RunBuild(c *gin.Context) {
 		raw = []byte(inject.InjectSafe(string(raw), params))
 	}
 
+	c.JSON(202, build)
+
 	queue_.Publish(&queue.Work{
 		User:  user,
 		Repo:  repo,
@@ -185,8 +187,6 @@ func RunBuild(c *gin.Context) {
 		Netrc: netrc,
 		Yaml:  raw,
 	})
-
-	c.JSON(202, build)
 }
 
 // KillBuild accepts a request to kill a running build.
