@@ -17,6 +17,8 @@ import (
 	eventbus "github.com/drone/drone/eventbus/builtin"
 	queue "github.com/drone/drone/queue/builtin"
 	runner "github.com/drone/drone/runner/builtin"
+
+	_ "net/http/pprof"
 )
 
 var conf = flag.String("config", "drone.toml", "")

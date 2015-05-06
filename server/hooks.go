@@ -145,6 +145,8 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
+	c.JSON(200, build)
+
 	queue_.Publish(&queue.Work{
 		User:  user,
 		Repo:  repo,
@@ -153,6 +155,4 @@ func PostHook(c *gin.Context) {
 		Netrc: netrc,
 		Yaml:  raw,
 	})
-
-	c.JSON(200, build)
 }
