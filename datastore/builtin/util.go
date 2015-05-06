@@ -4,15 +4,23 @@ import (
 	"bytes"
 
 	"github.com/boltdb/bolt"
-	"github.com/youtube/vitess/go/bson"
+	//"github.com/youtube/vitess/go/bson"
+	"encoding/gob"
 )
 
 func encode(v interface{}) ([]byte, error) {
-	return bson.Marshal(v)
+	var buf bytes.Buffer
+	var err = gob.NewEncoder(&buf).Encode(v)
+	return buf.Bytes(), err
+	//return bson.Marshal(v)
 }
 
 func decode(raw []byte, v interface{}) error {
-	return bson.Unmarshal(raw, v)
+	var buf bytes.Buffer
+	buf.Write(raw)
+	var err = gob.NewDecoder(&buf).Decode(v)
+	return err
+	//return bson.Unmarshal(raw, v)
 }
 
 func get(t *bolt.Tx, bucket, key []byte, v interface{}) error {
@@ -20,7 +28,7 @@ func get(t *bolt.Tx, bucket, key []byte, v interface{}) error {
 	if raw == nil {
 		return ErrKeyNotFound
 	}
-	return bson.Unmarshal(raw, v)
+	return decode(raw, v)
 }
 
 func raw(t *bolt.Tx, bucket, key []byte) ([]byte, error) {

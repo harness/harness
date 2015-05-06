@@ -127,9 +127,12 @@ func GetRepoEvents(c *gin.Context) {
 	go func() {
 		for {
 			select {
+			case <-c.Writer.CloseNotify():
+				return
 			case event := <-eventc:
-				if event.Kind == eventbus.EventRepo && event.Name == repo.FullName {
+				if event != nil && event.Kind == eventbus.EventRepo && event.Name == repo.FullName {
 					ws.WriteMessage(websocket.TextMessage, event.Msg)
+					break
 				}
 			case <-ticker.C:
 				ws.SetWriteDeadline(time.Now().Add(writeWait))

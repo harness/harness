@@ -41,7 +41,7 @@
 			});
 		}
 
-		repo.subscribe(fullName, function(event) {
+		repos.subscribe(fullName, function(event) {
 			var added = false;
 			for (var i=0;i<$scope.builds.length;i++) {
 				var build = $scope.builds[i];
