@@ -1,9 +1,8 @@
 package server
 
 import (
-	"fmt"
+	"bufio"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -12,7 +11,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/koding/websocketproxy"
+
+	// "github.com/koding/websocketproxy"
 )
 
 const (
@@ -88,27 +88,91 @@ func GetRepoEvents(c *gin.Context) {
 }
 
 func GetStream(c *gin.Context) {
-	store := ToDatastore(c)
+	// store := ToDatastore(c)
 	repo := ToRepo(c)
+	runner := ToRunner(c)
 	build, _ := strconv.Atoi(c.Params.ByName("build"))
 	task, _ := strconv.Atoi(c.Params.ByName("number"))
 
-	agent, err := store.BuildAgent(repo.FullName, build)
+	// agent, err := store.BuildAgent(repo.FullName, build)
+	// if err != nil {
+	// 	c.Fail(404, err)
+	// 	return
+	// }
+
+	rc, err := runner.Logs(repo.FullName, build, task)
 	if err != nil {
 		c.Fail(404, err)
 		return
 	}
 
-	url_, err := url.Parse("ws://" + agent.Addr)
+	// upgrade the websocket
+	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		c.Fail(500, err)
+		c.Fail(400, err)
 		return
 	}
-	url_.Path = fmt.Sprintf("/stream/%s/%v/%v", repo.FullName, build, task)
-	proxy := websocketproxy.NewProxy(url_)
-	proxy.ServeHTTP(c.Writer, c.Request)
 
-	log.Debugf("closed websocket")
+	var ticker = time.NewTicker(pingPeriod)
+	var out = make(chan []byte)
+	defer func() {
+		log.Infof("closed stdout websocket")
+		ticker.Stop()
+		rc.Close()
+		ws.Close()
+	}()
+
+	go func() {
+		for {
+			select {
+			case <-c.Writer.CloseNotify():
+				rc.Close()
+				ws.Close()
+				return
+			case line := <-out:
+				ws.WriteMessage(websocket.TextMessage, line)
+			case <-ticker.C:
+				ws.SetWriteDeadline(time.Now().Add(writeWait))
+				err := ws.WriteMessage(websocket.PingMessage, []byte{})
+				if err != nil {
+					rc.Close()
+					ws.Close()
+					return
+				}
+			}
+		}
+	}()
+
+	go func() {
+		rd := bufio.NewReader(rc)
+		for {
+			str, err := rd.ReadBytes('\n')
+
+			if err != nil {
+				break
+			}
+			if len(str) == 0 {
+				break
+			}
+
+			out <- str
+		}
+		rc.Close()
+		ws.Close()
+	}()
+
+	readWebsocket(ws)
+
+	// url_, err := url.Parse("ws://" + agent.Addr)
+	// if err != nil {
+	// 	c.Fail(500, err)
+	// 	return
+	// }
+	// url_.Path = fmt.Sprintf("/stream/%s/%v/%v", repo.FullName, build, task)
+	// proxy := websocketproxy.NewProxy(url_)
+	// proxy.ServeHTTP(c.Writer, c.Request)
+
+	// log.Debugf("closed websocket")
 }
 
 // readWebsocket will block while reading the websocket data
