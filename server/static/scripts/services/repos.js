@@ -72,6 +72,41 @@
 		this.unwatch = function(repoName) {
 			return $http.delete('/api/repos/'+repoName+'/unwatch');
 		};
+
+
+		var callback,
+			websocket,
+			token = localStorage.getItem('access_token');
+
+		/**
+		 * Subscribes to a live update feed for a repository
+		 *
+		 * @param {string} Name of the repository.
+		 */
+		this.subscribe = function(repo, _callback) {
+			callback = _callback;
+
+			var proto = ($window.location.protocol === 'https:' ? 'wss' : 'ws'),
+				route = [proto, "://", $window.location.host, '/api/stream/logs/'+ repo +'?access_token=', token].join('');
+
+			websocket = new WebSocket(route);
+			websocket.onmessage = function (event) {
+				if (callback !== undefined) {
+					callback(angular.fromJson(event.data));
+				}
+			};
+			websocket.onclose = function (event) {
+				console.log('user websocket closed');
+			};
+		};
+
+		this.unsubscribe = function() {
+			callback = undefined;
+			if (websocket !== undefined) {
+				websocket.close();
+				websocket = undefined;
+			}
+		};
 	}
 
 	angular

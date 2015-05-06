@@ -124,9 +124,9 @@
 	}
 
 
-	function RouteChange($rootScope, feed, logs) {
+	function RouteChange($rootScope, repos, logs) {
 		$rootScope.$on('$routeChangeStart', function (event, next) {
-			feed.unsubscribe();
+			repos.unsubscribe();
 			logs.unsubscribe();
 		});
 

@@ -1,6 +1,7 @@
 package builtin
 
 import (
+	"encoding/json"
 	"io"
 	"io/ioutil"
 
@@ -31,9 +32,16 @@ func (u *updater) SetBuild(r *common.Repo, b *common.Build) error {
 	if err != nil {
 		return err
 	}
+
+	msg, err := json.Marshal(b)
+	if err != nil {
+		return err
+	}
+
 	u.bus.Send(&eventbus.Event{
-		Repo:  r,
-		Build: b,
+		Name: r.FullName,
+		Kind: eventbus.EventRepo,
+		Msg:  msg,
 	})
 	return nil
 }
@@ -43,10 +51,16 @@ func (u *updater) SetTask(r *common.Repo, b *common.Build, t *common.Task) error
 	if err != nil {
 		return err
 	}
+
+	msg, err := json.Marshal(b)
+	if err != nil {
+		return err
+	}
+
 	u.bus.Send(&eventbus.Event{
-		Repo:  r,
-		Build: b,
-		Task:  t,
+		Name: r.FullName,
+		Kind: eventbus.EventRepo,
+		Msg:  msg,
 	})
 	return nil
 }

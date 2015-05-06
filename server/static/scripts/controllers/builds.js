@@ -4,7 +4,7 @@
 	 * BuildsCtrl responsible for rendering the repo's
 	 * recent build history.
 	 */
-	function BuildsCtrl($scope, $routeParams, builds, repos, users, feed, logs) {
+	function BuildsCtrl($scope, $routeParams, builds, repos, users, logs) {
 
 		var owner = $routeParams.owner;
 		var name  = $routeParams.name;
@@ -41,32 +41,21 @@
 			});
 		}
 
-		feed.subscribe(function(event) {
-			if (event.repo.full_name !== fullName) {
-				return; // ignore
-			}
-			// update repository
-			$scope.repo = event.repo;
-			$scope.$apply();
-
+		repos.subscribe(fullName, function(event) {
 			var added = false;
 			for (var i=0;i<$scope.builds.length;i++) {
 				var build = $scope.builds[i];
-				if (event.build.number !== build.number) {
+				if (event.number !== build.number) {
 					continue; // ignore
 				}
 				// update the build status
-				build.state = event.build.state;
-				build.started_at = event.build.started_at;
-				build.finished_at = event.build.finished_at;
-				build.duration = event.build.duration;
-				$scope.builds[i] = build;
+				$scope.builds[i] = event;
 				$scope.$apply();
 				added = true;
 			}
 
 			if (!added) {
-				$scope.builds.push(event.build);
+				$scope.builds.push(event);
 				$scope.$apply();
 			}
 		});
@@ -75,17 +64,23 @@
 	/**
 	 * BuildCtrl responsible for rendering a build.
 	 */
-	function BuildCtrl($scope, $routeParams, $window, logs, builds, repos, users, feed) {
+	function BuildCtrl($scope, $routeParams, $window, logs, builds, repos, users) {
 
 		var step = parseInt($routeParams.step) || 1;
 		var number = $routeParams.number;
 		var owner = $routeParams.owner;
 		var name  = $routeParams.name;
 		var fullName = owner+'/'+name;
+		var streaming = false;
 		var tail = false;
 
 		// Initiates streaming a build.
 		var stream = function() {
+			if (streaming) {
+				return;
+			}
+			streaming = true;
+
 			var convert = new Filter({stream:true,newline:false});
 			var term = document.getElementById("term");
 			term.innerHTML = "";
@@ -159,35 +154,22 @@
 			tail = !tail;
 		};
 
-		feed.subscribe(function(event) {
-			if (event.repo.full_name !== fullName) {
+		repos.subscribe(fullName, function(event) {
+			if (event.number !== parseInt(number)) {
 				return; // ignore
 			}
-			if (event.build.number !== parseInt(number)) {
-				return; // ignore
-			}
-			// update the build status
-			$scope.build.state = event.build.state;
-			$scope.build.started_at = event.build.started_at;
-			$scope.build.finished_at = event.build.finished_at;
-			$scope.build.duration = event.build.duration;
+			// update the build
+			$scope.build = event;
+			$scope.task = event.tasks[step-1];
 			$scope.$apply();
 
-			if (!event.task || event.task.number !== step) {
-				return; // ignore
-			}
-
-			if (event.task.state === 'running' && $scope.task.state !== 'running') {
+			// start streaming the current build
+			if ($scope.task.state === 'running') {
 				stream();
+			} else {
+				// resets our streaming state
+				streaming = false;
 			}
-
-			// update the task status
-			$scope.task.state = event.task.state;
-			$scope.task.started_at = event.task.started_at;
-			$scope.task.finished_at = event.task.finished_at;
-			$scope.task.duration = event.task.duration;
-			$scope.task.exit_code = event.task.exit_code;
-			$scope.$apply();
 		});
 
 
