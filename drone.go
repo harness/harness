@@ -53,6 +53,7 @@ func main() {
 	api.Use(server.SetSettings(settings))
 	api.Use(server.SetSession(session))
 	api.Use(server.SetUser(session))
+	api.Use(server.SetRunner(&runner_))
 
 	user := api.Group("/user")
 	{
@@ -141,7 +142,6 @@ func main() {
 	{
 		stream.Use(server.SetRepo())
 		stream.Use(server.SetPerm())
-		stream.Use(server.SetRunner(&runner_))
 		stream.GET("/:owner/:name", server.GetRepoEvents)
 		stream.GET("/:owner/:name/:build/:number", server.GetStream)
 
