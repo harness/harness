@@ -87,7 +87,7 @@
 			callback = _callback;
 
 			var proto = ($window.location.protocol === 'https:' ? 'wss' : 'ws'),
-				route = [proto, "://", $window.location.host, '/api/stream/logs/'+ repo +'?access_token=', token].join('');
+				route = [proto, "://", $window.location.host, '/api/stream/'+ repo +'?access_token=', token].join('');
 
 			websocket = new WebSocket(route);
 			websocket.onmessage = function (event) {
