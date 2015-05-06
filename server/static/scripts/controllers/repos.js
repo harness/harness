@@ -19,18 +19,18 @@
 			$scope.error = err;
 		});
 
-		feed.subscribe(function(event) {
-			if (!$scope.repos) {
-				return;
-			}
-			for (var i=0;i<$scope.repos.length;i++) {
-				if ($scope.repos[i].full_name === event.repo.full_name) {
-					$scope.repos[i]=event.repo;
-					$scope.$apply();
-					break;
-				}
-			};
-		});
+		// feed.subscribe(function(event) {
+		// 	if (!$scope.repos) {
+		// 		return;
+		// 	}
+		// 	for (var i=0;i<$scope.repos.length;i++) {
+		// 		if ($scope.repos[i].full_name === event.repo.full_name) {
+		// 			$scope.repos[i]=event.repo;
+		// 			$scope.$apply();
+		// 			break;
+		// 		}
+		// 	};
+		// });
 	}
 
 	/**

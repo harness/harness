@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net"
@@ -108,9 +109,16 @@ func PushBuild(c *gin.Context) {
 	}
 	// END FIXME -->
 
+	msg, err := json.Marshal(build)
+	if err == nil {
+		c.String(200, err.Error()) // we can ignore this error
+		return
+	}
+
 	bus.Send(&eventbus.Event{
-		Build: build,
-		Repo:  repo,
+		Name: repo.FullName,
+		Kind: eventbus.EventRepo,
+		Msg:  msg,
 	})
 
 	c.Writer.WriteHeader(200)
@@ -136,11 +144,19 @@ func PushTask(c *gin.Context) {
 		c.Fail(404, err)
 		return
 	}
+
+	msg, err := json.Marshal(build)
+	if err == nil {
+		c.String(200, err.Error()) // we can ignore this error
+		return
+	}
+
 	bus.Send(&eventbus.Event{
-		Build: build,
-		Repo:  repo,
-		Task:  in,
+		Name: repo.FullName,
+		Kind: eventbus.EventRepo,
+		Msg:  msg,
 	})
+
 	c.Writer.WriteHeader(200)
 }
 
