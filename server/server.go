@@ -11,6 +11,7 @@ import (
 	"github.com/drone/drone/eventbus"
 	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
+	"github.com/drone/drone/runner"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/settings"
 )
@@ -56,6 +57,21 @@ func ToRemote(c *gin.Context) remote.Remote {
 func SetRemote(r remote.Remote) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("remote", r)
+		c.Next()
+	}
+}
+
+func ToRunner(c *gin.Context) runner.Runner {
+	v, err := c.Get("runner")
+	if err != nil {
+		return nil
+	}
+	return v.(runner.Runner)
+}
+
+func SetRunner(r runner.Runner) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("runner", r)
 		c.Next()
 	}
 }

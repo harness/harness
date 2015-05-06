@@ -140,15 +140,18 @@ func (r *Runner) Run(w *queue.Work) error {
 		}
 
 		// send the logs to the datastore
+		var buf bytes.Buffer
 		rc, err := worker.Logs()
 		if err != nil && builderr != nil {
-			var buf bytes.Buffer
 			buf.WriteString(builderr.Error())
-			rc = ioutil.NopCloser(&buf)
 		} else if err != nil {
+			buf.WriteString(err.Error())
 			return err
+		} else {
+			defer rc.Close()
+			StdCopy(&buf, &buf, rc)
 		}
-		err = r.SetLogs(w.Repo, w.Build, task, rc)
+		err = r.SetLogs(w.Repo, w.Build, task, ioutil.NopCloser(&buf))
 		if err != nil {
 			return err
 		}
@@ -210,7 +213,39 @@ func (r *Runner) Logs(repo string, build, task int) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	return client.ContainerLogs(cname(repo, build, task), logOptsTail)
+	// make sure this container actually exists
+	info, err := client.InspectContainer(cname(repo, build, task))
+	if err != nil {
+		return nil, err
+	}
+	// verify the container is running. if not we'll
+	// do an exponential backoff and attempt to wait
+	if !info.State.Running {
+		for i := 0; ; i++ {
+			time.Sleep(1 * time.Second)
+			info, err = client.InspectContainer(info.Id)
+			if err != nil {
+				return nil, err
+			}
+			if info.State.Running {
+				break
+			}
+			if i == 5 {
+				return nil, dockerclient.ErrNotFound
+			}
+		}
+	}
+
+	rc, err := client.ContainerLogs(info.Id, logOptsTail)
+	if err != nil {
+		return nil, err
+	}
+	pr, pw := io.Pipe()
+	go func() {
+		defer rc.Close()
+		StdCopy(pw, pw, rc)
+	}()
+	return pr, nil
 }
 
 func cname(repo string, number, task int) string {

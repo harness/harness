@@ -33,6 +33,17 @@ func (u *updater) SetBuild(r *common.Repo, b *common.Build) error {
 		return err
 	}
 
+	// if the build is complete we may need to update
+	if b.State != common.StatePending && b.State != common.StateRunning {
+		repo, err := u.store.Repo(r.FullName)
+		if err == nil {
+			if repo.Last == nil || b.Number >= repo.Last.Number {
+				repo.Last = b
+				u.store.SetRepo(repo)
+			}
+		}
+	}
+
 	msg, err := json.Marshal(b)
 	if err != nil {
 		return err

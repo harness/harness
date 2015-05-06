@@ -141,6 +141,7 @@ func main() {
 	{
 		stream.Use(server.SetRepo())
 		stream.Use(server.SetPerm())
+		stream.Use(server.SetRunner(&runner_))
 		stream.GET("/:owner/:name", server.GetRepoEvents)
 		stream.GET("/:owner/:name/:build/:number", server.GetStream)
 

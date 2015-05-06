@@ -33,10 +33,10 @@ var (
 
 var (
 	// name of the build agent container.
-	DefaultAgent = "drone/drone-build"
+	DefaultAgent = "drone/drone-build:latest"
 
 	// default name of the build agent executable
-	DefaultEntrypoint = []string{"/bin/drone-build"}
+	DefaultEntrypoint = []string{"/go/bin/drone-build"}
 
 	// default argument to invoke build steps
 	DefaultBuildArgs = []string{"--build", "--clone", "--publish", "--deploy"}
@@ -98,7 +98,7 @@ func (w *worker) Build(name string, stdin []byte) (_ int, err error) {
 
 	w.build, err = run(w.client, conf, name, w.timeout)
 	if err != nil {
-		return
+		return 1, err
 	}
 	return w.build.State.ExitCode, err
 }
