@@ -9,12 +9,17 @@ import (
 
 // SetLogs inserts or updates a task logs for the
 // named repository and build number.
-func (db *DB) SetLogs(repo string, build int, task int, log []byte) error {
+func (db *DB) SetLogs(repo string, build int, task int, rd io.Reader) error {
 	key := []byte(repo + "/" + strconv.Itoa(build) + "/" + strconv.Itoa(task))
 	t, err := db.Begin(true)
 	if err != nil {
 		return err
 	}
+	//Added
+	rdBuff := new(bytes.Buffer)
+	rdBuff.ReadFrom(rd)
+	log := rdBuff.Bytes()
+
 	err = t.Bucket(bucketBuildLogs).Put(key, log)
 	if err != nil {
 		t.Rollback()

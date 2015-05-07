@@ -1,8 +1,10 @@
 package builtin
 
 import (
+	"bytes"
 	"github.com/drone/drone/common"
 	. "github.com/franela/goblin"
+	"io"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -30,13 +32,15 @@ func TestTask(t *testing.T) {
 
 		g.It("Should set Logs", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
-			err := db.SetLogs(testRepo, testBuild, testTask, testLogInfo)
+			//err := db.SetLogs(testRepo, testBuild, testTask, testLogInfo)
+			err := db.SetLogs(testRepo, testBuild, testTask, io.Reader(bytes.NewBuffer(testLogInfo)))
 			g.Assert(err).Equal(nil)
 		})
 
 		g.It("Should get logs", func() {
 			db.SetRepo(&common.Repo{FullName: testRepo})
-			db.SetLogs(testRepo, testBuild, testTask, testLogInfo)
+			//db.SetLogs(testRepo, testBuild, testTask, testLogInfo)
+			db.SetLogs(testRepo, testBuild, testTask, io.Reader(bytes.NewBuffer(testLogInfo)))
 			buf, err := db.LogReader(testRepo, testBuild, testTask)
 			g.Assert(err).Equal(nil)
 			logInfo, err := ioutil.ReadAll(buf)
