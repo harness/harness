@@ -225,10 +225,16 @@ Homepage URL:
 http://localhost:8000/
 ```
 
-Authorization callback URL:
+Authorization callback URL for github.com:
 
 ```
 http://localhost:8000/api/auth/github.com
+```
+
+Authorization callback URL for GitHub Enterprise:
+
+```
+http://localhost:8000/api/auth/enterprise.github.com
 ```
 
 ## Build Configuration
