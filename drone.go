@@ -17,6 +17,8 @@ import (
 	eventbus "github.com/drone/drone/eventbus/builtin"
 	queue "github.com/drone/drone/queue/builtin"
 	runner "github.com/drone/drone/runner/builtin"
+
+	_ "net/http/pprof"
 )
 
 var conf = flag.String("config", "drone.toml", "")
@@ -51,6 +53,7 @@ func main() {
 	api.Use(server.SetSettings(settings))
 	api.Use(server.SetSession(session))
 	api.Use(server.SetUser(session))
+	api.Use(server.SetRunner(&runner_))
 
 	user := api.Group("/user")
 	{
@@ -135,17 +138,13 @@ func main() {
 		}
 	}
 
-	events := api.Group("/stream")
+	stream := api.Group("/stream")
 	{
-		events.GET("/user", server.GetEvents)
+		stream.Use(server.SetRepo())
+		stream.Use(server.SetPerm())
+		stream.GET("/:owner/:name", server.GetRepoEvents)
+		stream.GET("/:owner/:name/:build/:number", server.GetStream)
 
-		stream := events.Group("/logs")
-		{
-			stream.Use(server.SetRepo())
-			stream.Use(server.SetPerm())
-			stream.GET("/:owner/:name", server.GetRepoEvents)
-			stream.GET("/:owner/:name/:build/:number", server.GetStream)
-		}
 	}
 
 	auth := r.Group("/authorize")

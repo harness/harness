@@ -1,10 +1,7 @@
 package server
 
 import (
-	"fmt"
 	"io"
-	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -177,6 +174,8 @@ func RunBuild(c *gin.Context) {
 		raw = []byte(inject.InjectSafe(string(raw), params))
 	}
 
+	c.JSON(202, build)
+
 	queue_.Publish(&queue.Work{
 		User:  user,
 		Repo:  repo,
@@ -185,8 +184,6 @@ func RunBuild(c *gin.Context) {
 		Netrc: netrc,
 		Yaml:  raw,
 	})
-
-	c.JSON(202, build)
 }
 
 // KillBuild accepts a request to kill a running build.
@@ -194,6 +191,7 @@ func RunBuild(c *gin.Context) {
 //     DELETE /api/builds/:owner/:name/builds/:number
 //
 func KillBuild(c *gin.Context) {
+	runner := ToRunner(c)
 	queue := ToQueue(c)
 	store := ToDatastore(c)
 	repo := ToRepo(c)
@@ -242,21 +240,24 @@ func KillBuild(c *gin.Context) {
 		return
 	}
 
-	// get the agent from the repository so we can
-	// notify the agent to kill the build.
-	agent, err := store.BuildAgent(repo.FullName, build.Number)
-	if err != nil {
-		c.JSON(200, build)
-		return
+	for _, task := range build.Tasks {
+		runner.Cancel(repo.FullName, build.Number, task.Number)
 	}
-	url_, _ := url.Parse("http://" + agent.Addr)
-	url_.Path = fmt.Sprintf("/cancel/%s/%v", repo.FullName, build.Number)
-	resp, err := http.Post(url_.String(), "application/json", nil)
-	if err != nil {
-		c.Fail(500, err)
-		return
-	}
-	defer resp.Body.Close()
+	// // get the agent from the repository so we can
+	// // notify the agent to kill the build.
+	// agent, err := store.BuildAgent(repo.FullName, build.Number)
+	// if err != nil {
+	// 	c.JSON(200, build)
+	// 	return
+	// }
+	// url_, _ := url.Parse("http://" + agent.Addr)
+	// url_.Path = fmt.Sprintf("/cancel/%s/%v", repo.FullName, build.Number)
+	// resp, err := http.Post(url_.String(), "application/json", nil)
+	// if err != nil {
+	// 	c.Fail(500, err)
+	// 	return
+	// }
+	// defer resp.Body.Close()
 
 	c.JSON(200, build)
 }

@@ -3,7 +3,7 @@ package builtin
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
+	//"io/ioutil"
 
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/datastore"
@@ -31,6 +31,17 @@ func (u *updater) SetBuild(r *common.Repo, b *common.Build) error {
 	err := u.store.SetBuildState(r.FullName, b)
 	if err != nil {
 		return err
+	}
+
+	// if the build is complete we may need to update
+	if b.State != common.StatePending && b.State != common.StateRunning {
+		repo, err := u.store.Repo(r.FullName)
+		if err == nil {
+			if repo.Last == nil || b.Number >= repo.Last.Number {
+				repo.Last = b
+				u.store.SetRepo(repo)
+			}
+		}
 	}
 
 	msg, err := json.Marshal(b)
@@ -66,10 +77,11 @@ func (u *updater) SetTask(r *common.Repo, b *common.Build, t *common.Task) error
 }
 
 func (u *updater) SetLogs(r *common.Repo, b *common.Build, t *common.Task, rc io.ReadCloser) error {
-	defer rc.Close()
-	out, err := ioutil.ReadAll(rc)
-	if err != nil {
-		return err
-	}
-	return u.store.SetLogs(r.FullName, b.Number, t.Number, out)
+	//defer rc.Close()
+	//out, err := ioutil.ReadAll(rc)
+	//if err != nil {
+	//	return err
+	//}
+	//return u.store.SetLogs(r.FullName, b.Number, t.Number, out)
+	return u.store.SetLogs(r.FullName, b.Number, t.Number, rc)
 }

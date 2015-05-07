@@ -208,7 +208,7 @@ func PostRepo(c *gin.Context) {
 		return
 	}
 
-	link := fmt.Sprintf(
+	link = fmt.Sprintf(
 		"%s/api/hook?access_token=%s",
 		httputil.GetURL(c.Request),
 		tokenstr,
