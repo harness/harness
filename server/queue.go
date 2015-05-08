@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"io"
-	//"io/ioutil"
 	"net"
 	"strconv"
 
@@ -170,7 +169,7 @@ func PushLogs(c *gin.Context) {
 	// TODO (bradrydzewski) change this interface to accept an io.Reader
 	// instead of a byte array so that we can buffer the write and so that
 	// we avoid unnecessary copies of the data in memory.
-	var maxBuffToRead int64 = 5000000 // 5MB.
+	const maxBuffToRead int64 = 5000000 // 5MB.
 
 	//logs, err := ioutil.ReadAll(io.LimitReader(c.Request.Body, 5000000)) //5MB
 	//defer c.Request.Body.Close()
