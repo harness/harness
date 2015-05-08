@@ -172,6 +172,17 @@ func PostRepo(c *gin.Context) {
 	name := c.Params.ByName("name")
 
 	// TODO(bradrydzewski) verify repo not exists
+	link := fmt.Sprintf(
+		"%s/api/hook",
+		httputil.GetURL(c.Request),
+	)
+
+	_, err_ := store.Repo(name)
+	if err_ != nil {
+		//c.Fail(409, err_)
+		c.Fail(409, fmt.Errorf("Conflict"))
+		return
+	}
 
 	// get the repository and user permissions
 	// from the remote system.
@@ -199,7 +210,7 @@ func PostRepo(c *gin.Context) {
 		return
 	}
 
-	link := fmt.Sprintf(
+	link = fmt.Sprintf(
 		"%s/api/hook?access_token=%s",
 		httputil.GetURL(c.Request),
 		tokenstr,
