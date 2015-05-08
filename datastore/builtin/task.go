@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/boltdb/bolt"
 	"io"
+	"io/ioutil"
 	"strconv"
 )
 
@@ -16,9 +17,13 @@ func (db *DB) SetLogs(repo string, build int, task int, rd io.Reader) error {
 		return err
 	}
 	//Added
-	rdBuff := new(bytes.Buffer)
-	rdBuff.ReadFrom(rd)
-	log := rdBuff.Bytes()
+	//rdBuff := new(bytes.Buffer)
+	//rdBuff.ReadFrom(rd)
+	//log := rdBuff.Bytes()
+	log, err := ioutil.ReadAll(rd)
+	if err != nil {
+		return err
+	}
 
 	err = t.Bucket(bucketBuildLogs).Put(key, log)
 	if err != nil {
