@@ -171,7 +171,11 @@ func PostRepo(c *gin.Context) {
 	owner := c.Params.ByName("owner")
 	name := c.Params.ByName("name")
 
-	// TODO(bradrydzewski) verify repo not exists
+	_, err := store.Repo(owner + "/" + name)
+	if err == nil {
+		c.String(409, "Repository already exists")
+		return
+	}
 
 	// get the repository and user permissions
 	// from the remote system.

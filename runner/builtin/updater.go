@@ -3,7 +3,7 @@ package builtin
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
+	//"io/ioutil"
 
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/datastore"
@@ -77,10 +77,11 @@ func (u *updater) SetTask(r *common.Repo, b *common.Build, t *common.Task) error
 }
 
 func (u *updater) SetLogs(r *common.Repo, b *common.Build, t *common.Task, rc io.ReadCloser) error {
-	defer rc.Close()
-	out, err := ioutil.ReadAll(rc)
-	if err != nil {
-		return err
-	}
-	return u.store.SetLogs(r.FullName, b.Number, t.Number, out)
+	//defer rc.Close()
+	//out, err := ioutil.ReadAll(rc)
+	//if err != nil {
+	//	return err
+	//}
+	//return u.store.SetLogs(r.FullName, b.Number, t.Number, out)
+	return u.store.SetLogs(r.FullName, b.Number, t.Number, rc)
 }
