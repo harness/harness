@@ -16,10 +16,7 @@ func (db *DB) SetLogs(repo string, build int, task int, rd io.Reader) error {
 	if err != nil {
 		return err
 	}
-	//Added
-	//rdBuff := new(bytes.Buffer)
-	//rdBuff.ReadFrom(rd)
-	//log := rdBuff.Bytes()
+
 	log, err := ioutil.ReadAll(rd)
 	if err != nil {
 		return err

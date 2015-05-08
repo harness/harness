@@ -166,19 +166,7 @@ func PushLogs(c *gin.Context) {
 	bnum, _ := strconv.Atoi(c.Params.ByName("build"))
 	tnum, _ := strconv.Atoi(c.Params.ByName("task"))
 
-	// TODO (bradrydzewski) change this interface to accept an io.Reader
-	// instead of a byte array so that we can buffer the write and so that
-	// we avoid unnecessary copies of the data in memory.
 	const maxBuffToRead int64 = 5000000 // 5MB.
-
-	//logs, err := ioutil.ReadAll(io.LimitReader(c.Request.Body, 5000000)) //5MB
-	//defer c.Request.Body.Close()
-	//if err != nil {
-	//	c.Fail(500, err)
-	//	return
-	//}
-	//err = store.SetLogs(repo.FullName, bnum, tnum, logs)
-
 	err := store.SetLogs(repo.FullName, bnum, tnum, io.LimitReader(c.Request.Body, maxBuffToRead))
 	if err != nil {
 		c.Fail(500, err)

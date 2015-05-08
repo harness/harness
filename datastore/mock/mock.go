@@ -292,7 +292,6 @@ func (m *Datastore) LogReader(_a0 string, _a1 int, _a2 int) (io.Reader, error) {
 	return r0, r1
 }
 
-//func (m *Datastore) SetLogs(_a0 string, _a1 int, _a2 int, _a3 []byte) error {
 func (m *Datastore) SetLogs(_a0 string, _a1 int, _a2 int, _a3 io.Reader) error {
 	ret := m.Called(_a0, _a1, _a2, _a3)
 

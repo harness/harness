@@ -64,8 +64,6 @@ func TestRepo(t *testing.T) {
 			db.SetBuild(testRepo, &common.Build{State: "success"})
 			db.SetBuild(testRepo, &common.Build{State: "success"})
 			db.SetBuild(testRepo, &common.Build{State: "pending"})
-			//db.SetLogs(testRepo, 1, 1, []byte("foo"))
-			//db.SetLogs(testRepo, 1, 1, io.Reader(bytes.NewBuffer([]byte("foo"))))
 			db.SetLogs(testRepo, 1, 1, (bytes.NewBuffer([]byte("foo"))))
 
 			// first a little sanity to validate our test conditions
