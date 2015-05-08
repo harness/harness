@@ -103,7 +103,10 @@ func (g *GitHub) Repo(u *common.User, owner, name string) (*common.Repo, error) 
 	repo := &common.Repo{}
 	repo.Owner = owner
 	repo.Name = name
-	repo.Language = *repo_.Language
+
+	if repo_.Language != nil {
+		repo.Language = *repo_.Language
+	}
 	repo.FullName = *repo_.FullName
 	repo.Link = *repo_.HTMLURL
 	repo.Private = *repo_.Private
