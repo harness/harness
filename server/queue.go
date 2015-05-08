@@ -177,9 +177,8 @@ func PushLogs(c *gin.Context) {
 	//	c.Fail(500, err)
 	//	return
 	//}
-
 	//err = store.SetLogs(repo.FullName, bnum, tnum, logs)
-	//err = store.SetLogs(repo.FullName, bnum, tnum, io.Reader(c.Request.Body, reqBuff))
+
 	err := store.SetLogs(repo.FullName, bnum, tnum, io.LimitReader(c.Request.Body, maxBuffToRead))
 	if err != nil {
 		c.Fail(500, err)
