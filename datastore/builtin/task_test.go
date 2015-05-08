@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/drone/drone/common"
 	. "github.com/franela/goblin"
-	"io"
 	"io/ioutil"
 	"os"
 	"testing"
