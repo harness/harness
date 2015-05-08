@@ -171,12 +171,6 @@ func PostRepo(c *gin.Context) {
 	owner := c.Params.ByName("owner")
 	name := c.Params.ByName("name")
 
-	// TODO(bradrydzewski) verify repo not exists
-	link := fmt.Sprintf(
-		"%s/api/hook",
-		httputil.GetURL(c.Request),
-	)
-
 	_, err := store.Repo(owner + "/" + name)
 	if err == nil {
 		c.String(409, "Repository already exists")
@@ -209,7 +203,7 @@ func PostRepo(c *gin.Context) {
 		return
 	}
 
-	link = fmt.Sprintf(
+	link := fmt.Sprintf(
 		"%s/api/hook?access_token=%s",
 		httputil.GetURL(c.Request),
 		tokenstr,
