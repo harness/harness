@@ -139,5 +139,6 @@ type Datastore interface {
 
 	// SetLogs inserts or updates a task logs for the
 	// named repository and build number.
-	SetLogs(string, int, int, []byte) error
+	SetLogs(string, int, int, io.Reader) error
 }
+
