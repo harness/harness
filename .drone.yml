@@ -14,3 +14,18 @@ notify:
   email:
     recipients:
       - brad@drone.io
+
+# new .drone.yml syntax
+
+clone:
+  path: github.com/drone/drone
+
+build:
+  image: golang:1.4.2
+  commands:
+    - export GOPATH=/drone
+    - export PATH=$PATH:$GOPATH/bin
+    - go get -u github.com/jteeuwen/go-bindata/...
+    - make bindata deps
+    - make build
+    - make test
