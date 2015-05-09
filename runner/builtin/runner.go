@@ -115,6 +115,7 @@ func (r *Runner) Run(w *queue.Work) error {
 			Repo:  w.Repo,
 			Build: w.Build,
 			Keys:  w.Keys,
+			Netrc: w.Netrc,
 			Yaml:  w.Yaml,
 			Task:  task,
 		}
@@ -186,6 +187,7 @@ func (r *Runner) Run(w *queue.Work) error {
 			Repo:  w.Repo,
 			Build: w.Build,
 			Keys:  w.Keys,
+			Netrc: w.Netrc,
 			Yaml:  w.Yaml,
 			Task:  task,
 		}
