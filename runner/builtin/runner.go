@@ -144,8 +144,10 @@ func (r *Runner) Run(w *queue.Work) error {
 		var buf bytes.Buffer
 		rc, err := worker.Logs()
 		if err != nil && builderr != nil {
+			buf.WriteString("001 Error launching build")
 			buf.WriteString(builderr.Error())
 		} else if err != nil {
+			buf.WriteString("002 Error launching build")
 			buf.WriteString(err.Error())
 			return err
 		} else {
