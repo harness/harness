@@ -105,3 +105,17 @@ func (c *Condition) MatchOwner(owner string) bool {
 		return c.Owner == owner
 	}
 }
+
+// MatchMatrix is a helper function that returns false
+// to limit steps to only certain matrix axis.
+func (c *Condition) MatchMatrix(matrix map[string]string) bool {
+	if len(c.Matrix) == 0 {
+		return true
+	}
+	for k, v := range c.Matrix {
+		if matrix[k] != v {
+			return false
+		}
+	}
+	return true
+}
