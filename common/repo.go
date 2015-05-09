@@ -29,7 +29,7 @@ type Repo struct {
 // private repositories, or as a deployment key.
 type Keypair struct {
 	Public  string `json:"public"`
-	Private string `json:"-"`
+	Private string `json:"private"`
 }
 
 // Owner represents the owner of a repository.

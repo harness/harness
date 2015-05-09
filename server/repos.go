@@ -55,9 +55,16 @@ func GetRepo(c *gin.Context) {
 	perm := ToPerm(c)
 	data := repoResp{repo, perm, nil, nil, nil}
 	// if the user is an administrator of the project
-	// we should display the private parameter data.
-	if perm.Admin {
+	// we should display the private parameter data
+	// and keypair data.
+	if perm.Push {
 		data.Params, _ = store.RepoParams(repo.FullName)
+
+		// note that we should only display the public key
+		keypair, err := store.RepoKeypair(repo.FullName)
+		if err == nil {
+			data.Keypair = &common.Keypair{Public: keypair.Public}
+		}
 	}
 	// if the user is authenticated, we should display
 	// if she is watching the current repository.
@@ -69,12 +76,11 @@ func GetRepo(c *gin.Context) {
 	// check to see if the user is subscribing to the repo
 	data.Watch = &common.Subscriber{}
 	data.Watch.Subscribed, _ = store.Subscribed(user.Login, repo.FullName)
-	data.Keypair, _ = store.RepoKeypair(repo.FullName)
 
 	c.JSON(200, data)
 }
 
-// PutRepo accapets a request to update the named repository
+// PutRepo accepts a request to update the named repository
 // in the datastore. It expects a JSON input and returns the
 // updated repository in JSON format if successful.
 //
@@ -122,11 +128,18 @@ func PutRepo(c *gin.Context) {
 
 	data := repoResp{repo, perm, nil, nil, nil}
 	data.Params, _ = store.RepoParams(repo.FullName)
+	data.Keypair, _ = store.RepoKeypair(repo.FullName)
 
 	// check to see if the user is subscribing to the repo
 	data.Watch = &common.Subscriber{}
 	data.Watch.Subscribed, _ = store.Subscribed(user.Login, repo.FullName)
-	data.Keypair, _ = store.RepoKeypair(repo.FullName)
+
+	// scrub the private key from the keypair
+	if data.Keypair != nil {
+		data.Keypair = &common.Keypair{
+			Public: data.Keypair.Public,
+		}
+	}
 
 	c.JSON(200, data)
 }
