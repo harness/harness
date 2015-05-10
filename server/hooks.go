@@ -1,10 +1,12 @@
 package server
 
 import (
+	"fmt"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/common"
+	"github.com/drone/drone/common/httputil"
 	"github.com/drone/drone/parser"
 	"github.com/drone/drone/parser/inject"
 	"github.com/drone/drone/parser/matrix"
@@ -146,6 +148,17 @@ func PostHook(c *gin.Context) {
 	}
 
 	c.JSON(200, build)
+
+	link := fmt.Sprintf(
+		"%s/%s/%d",
+		httputil.GetURL(c.Request),
+		repo.FullName,
+		build.Number,
+	)
+	err = remote.Status(user, repo, build, link)
+	if err != nil {
+		log.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
+	}
 
 	queue_.Publish(&queue.Work{
 		User:  user,
