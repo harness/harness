@@ -38,7 +38,7 @@ func main() {
 	session := session.New(settings.Session)
 	eventbus_ := eventbus.New()
 	queue_ := queue.New()
-	updater := runner.NewUpdater(eventbus_, store)
+	updater := runner.NewUpdater(eventbus_, store, remote)
 	runner_ := runner.Runner{Updater: updater}
 	go run(&runner_, queue_)
 
