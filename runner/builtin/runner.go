@@ -79,14 +79,14 @@ func (r *Runner) Run(w *queue.Work) error {
 			w.Build.State = common.StateError
 			w.Build.Finished = time.Now().UTC().Unix()
 			w.Build.Duration = w.Build.Finished - w.Build.Started
-			r.SetBuild(w.Repo, w.Build)
+			r.SetBuild(w.User, w.Repo, w.Build)
 		}
 	}()
 
 	// marks the build as running
 	w.Build.Started = time.Now().UTC().Unix()
 	w.Build.State = common.StateRunning
-	err := r.SetBuild(w.Repo, w.Build)
+	err := r.SetBuild(w.User, w.Repo, w.Build)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func (r *Runner) Run(w *queue.Work) error {
 			break
 		}
 	}
-	err = r.SetBuild(w.Repo, w.Build)
+	err = r.SetBuild(w.User, w.Repo, w.Build)
 	if err != nil {
 		return err
 	}

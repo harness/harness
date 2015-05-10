@@ -3,31 +3,32 @@ package builtin
 import (
 	"encoding/json"
 	"io"
-	//"io/ioutil"
 
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/datastore"
 	"github.com/drone/drone/eventbus"
+	"github.com/drone/drone/remote"
 )
 
 type Updater interface {
-	SetBuild(*common.Repo, *common.Build) error
+	SetBuild(*common.User, *common.Repo, *common.Build) error
 	SetTask(*common.Repo, *common.Build, *common.Task) error
 	SetLogs(*common.Repo, *common.Build, *common.Task, io.ReadCloser) error
 }
 
 // NewUpdater returns an implementation of the Updater interface
 // that directly modifies the database and sends messages to the bus.
-func NewUpdater(bus eventbus.Bus, store datastore.Datastore) Updater {
-	return &updater{bus, store}
+func NewUpdater(bus eventbus.Bus, store datastore.Datastore, rem remote.Remote) Updater {
+	return &updater{bus, store, rem}
 }
 
 type updater struct {
-	bus   eventbus.Bus
-	store datastore.Datastore
+	bus    eventbus.Bus
+	store  datastore.Datastore
+	remote remote.Remote
 }
 
-func (u *updater) SetBuild(r *common.Repo, b *common.Build) error {
+func (u *updater) SetBuild(user *common.User, r *common.Repo, b *common.Build) error {
 	err := u.store.SetBuildState(r.FullName, b)
 	if err != nil {
 		return err
@@ -42,6 +43,11 @@ func (u *updater) SetBuild(r *common.Repo, b *common.Build) error {
 				u.store.SetRepo(repo)
 			}
 		}
+
+		// err = u.remote.Status(user, r, b, "")
+		// if err != nil {
+		//
+		// }
 	}
 
 	msg, err := json.Marshal(b)

@@ -46,7 +46,6 @@ func GetLogin(c *gin.Context) {
 
 	// exit if authorization fails
 	if c.Writer.Status() != 200 {
-		log.Errorf("authorization failed.")
 		return
 	}
 
