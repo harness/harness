@@ -66,7 +66,7 @@
 	 */
 	function BuildCtrl($scope, $routeParams, $window, logs, builds, repos, users) {
 
-		var step = parseInt($routeParams.step);
+		var step = parseInt($routeParams.step) || 1;
 		var number = $routeParams.number;
 		var owner = $routeParams.owner;
 		var name  = $routeParams.name;
@@ -110,17 +110,6 @@
 		// Gets the build
 		builds.get(fullName, number).then(function(payload){
 			$scope.build = payload.data;
-
-			// if only 1 build, select first
-			if (!step && payload.data.builds.length === 1) {
-				step = 1;
-
-			// else if only 1 step, but multiple builds
-			// we should only render the list of builds
-			} else if (!step) {
-				return;
-			}
-
 			$scope.task = payload.data.builds[step-1];
 
 			if (['pending', 'killed'].indexOf($scope.task.state) !== -1) {
