@@ -1,144 +1,149 @@
 package datastore
 
 import (
-	"errors"
 	"io"
 
 	"github.com/drone/drone/common"
 )
 
-var (
-	ErrConflict    = errors.New("Key not unique")
-	ErrKeyNotFound = errors.New("Key not found")
-)
-
 type Datastore interface {
-	// User returns a user by user login.
-	User(string) (*common.User, error)
 
-	// UserCount returns a count of all registered users.
-	UserCount() (int, error)
+	// User returns a user by user ID.
+	User(id int64) (*common.User, error)
+
+	// UserLogin returns a user by user login.
+	UserLogin(string) (*common.User, error)
 
 	// UserList returns a list of all registered users.
 	UserList() ([]*common.User, error)
 
-	// SetUser inserts or updates a user.
+	// UserFeed retrieves a digest of recent builds
+	// from the datastore accessible to the specified user.
+	UserFeed(*common.User, int, int) ([]*common.RepoCommit, error)
+
+	// UserCount returns a count of all registered users.
+	UserCount() (int, error)
+
+	// AddUser inserts a new user into the datastore.
+	// If the user login already exists an error is returned.
+	AddUser(*common.User) error
+
+	// SetUser updates an existing user.
 	SetUser(*common.User) error
 
-	// SetUserNotExists inserts a new user into the datastore.
-	// If the user login already exists ErrConflict is returned.
-	SetUserNotExists(*common.User) error
-
-	// Del deletes the user.
+	// DelUser removes the user from the datastore.
 	DelUser(*common.User) error
 
-	// Token returns the token for the given user and label.
-	Token(string, string) (*common.Token, error)
+	// Token returns a token by ID.
+	Token(int64) (*common.Token, error)
 
-	// TokenList returns a list of all tokens for the given
-	// user login.
-	TokenList(string) ([]*common.Token, error)
+	// TokenLabel returns a token by label
+	TokenLabel(*common.User, string) (*common.Token, error)
 
-	// SetToken inserts a new user token in the datastore.
-	SetToken(*common.Token) error
+	// TokenList returns a list of all user tokens.
+	TokenList(*common.User) ([]*common.Token, error)
 
-	// DelToken deletes the token.
+	// AddToken inserts a new token into the datastore.
+	// If the token label already exists for the user
+	// an error is returned.
+	AddToken(*common.Token) error
+
+	// DelToken removes the DelToken from the datastore.
 	DelToken(*common.Token) error
 
-	// Subscribed returns true if the user is subscribed
-	// to the named repository.
-	Subscribed(string, string) (bool, error)
+	//
 
-	// SetSubscriber inserts a subscriber for the named
-	// repository.
-	SetSubscriber(string, string) error
+	// Starred returns true if the user starred
+	// the given repository.
+	Starred(*common.User, *common.Repo) (bool, error)
 
-	// DelSubscriber removes the subscriber by login for the
-	// named repository.
-	DelSubscriber(string, string) error
+	// AddStar stars a repository.
+	AddStar(*common.User, *common.Repo) error
 
-	// Repo returns the repository with the given name.
-	Repo(string) (*common.Repo, error)
+	// DelStar unstars a repository.
+	DelStar(*common.User, *common.Repo) error
 
-	// RepoList returns a list of repositories for the
-	// given user account.
-	RepoList(string) ([]*common.Repo, error)
+	//
 
-	// RepoParams returns the private environment parameters
-	// for the given repository.
-	RepoParams(string) (map[string]string, error)
+	// Repo retrieves a specific repo from the
+	// datastore for the given ID.
+	Repo(id int64) (*common.Repo, error)
 
-	// RepoKeypair returns the private and public rsa keys
-	// for the given repository.
-	RepoKeypair(string) (*common.Keypair, error)
+	// RepoName retrieves a repo from the datastore
+	// for the specified name.
+	RepoName(owner, name string) (*common.Repo, error)
 
-	// SetRepo inserts or updates a repository.
+	// RepoList retrieves a list of all repos from
+	// the datastore accessible by the given user ID.
+	RepoList(*common.User) ([]*common.Repo, error)
+
+	// AddRepo inserts a repo in the datastore.
+	AddRepo(*common.Repo) error
+
+	// SetRepo updates a repo in the datastore.
 	SetRepo(*common.Repo) error
 
-	// SetRepo updates a repository. If the repository
-	// already exists ErrConflict is returned.
-	SetRepoNotExists(*common.User, *common.Repo) error
-
-	// SetRepoParams inserts or updates the private
-	// environment parameters for the named repository.
-	SetRepoParams(string, map[string]string) error
-
-	// SetRepoKeypair inserts or updates the private and
-	// public keypair for the named repository.
-	SetRepoKeypair(string, *common.Keypair) error
-
-	// DelRepo deletes the repository.
+	// DelRepo removes the repo from the datastore.
 	DelRepo(*common.Repo) error
 
-	// Build gets the specified build number for the
-	// named repository and build number
-	Build(string, int) (*common.Build, error)
+	//
 
-	// BuildList gets a list of recent builds for the
+	// Commit gets a commit by ID
+	Commit(int64) (*common.Commit, error)
+
+	// CommitSeq gets the specified commit sequence for the
+	// named repository and commit number
+	CommitSeq(*common.Repo, int) (*common.Commit, error)
+
+	// CommitLast gets the last executed commit for the
+	// named repository and branch
+	CommitLast(*common.Repo, string) (*common.Commit, error)
+
+	// CommitList gets a list of recent commits for the
 	// named repository.
-	BuildList(string) ([]*common.Build, error)
+	CommitList(*common.Repo, int, int) ([]*common.Commit, error)
 
-	// BuildLast gets the last executed build for the
-	// named repository.
-	BuildLast(string) (*common.Build, error)
+	// AddCommit inserts a new commit in the datastore.
+	AddCommit(*common.Commit) error
 
-	// BuildAgent returns the agent that is being
-	// used to execute the build.
-	BuildAgent(string, int) (*common.Agent, error)
+	// SetCommit updates an existing commit and commit tasks.
+	SetCommit(*common.Commit) error
 
-	// SetBuild inserts or updates a build for the named
-	// repository. The build number is incremented and
-	// assigned to the provided build.
-	SetBuild(string, *common.Build) error
+	// KillCommits updates all pending or started commits
+	// in the datastore settings the status to killed.
+	KillCommits() error
 
-	// SetBuildState updates an existing build's start time,
-	// finish time, duration and state. No other fields are
-	// updated.
-	SetBuildState(string, *common.Build) error
+	//
 
-	// SetBuildStatus appends a new build status to an
-	// existing build record.
-	SetBuildStatus(string, int, *common.Status) error
+	// Build returns a build by ID.
+	Build(int64) (*common.Build, error)
 
-	// SetBuildTask updates an existing build task. The build
-	// and task must already exist. If the task does not exist
-	// an error is returned.
-	SetBuildTask(string, int, *common.Task) error
+	// BuildSeq returns a build by sequence number.
+	BuildSeq(*common.Commit, int) (*common.Build, error)
 
-	// SetBuildAgent insert or updates the agent that is
-	// running a build.
-	SetBuildAgent(string, int, *common.Agent) error
+	// BuildList returns a list of all commit builds
+	BuildList(*common.Commit) ([]*common.Build, error)
 
-	// DelBuildAgent purges the referce to the agent
-	// that ran a build.
-	DelBuildAgent(string, int) error
+	// SetBuild updates an existing build.
+	SetBuild(*common.Build) error
 
-	// LogReader gets the task logs at index N for
-	// the named repository and build number.
-	LogReader(string, int, int) (io.Reader, error)
+	//
 
-	// SetLogs inserts or updates a task logs for the
-	// named repository and build number.
-	SetLogs(string, int, int, io.Reader) error
+	// Get retrieves an object from the blobstore.
+	GetBlob(path string) ([]byte, error)
+
+	// GetBlobReader retrieves an object from the blobstore.
+	// It is the caller's responsibility to call Close on
+	// the ReadCloser when finished reading.
+	GetBlobReader(path string) (io.ReadCloser, error)
+
+	// Set inserts an object into the blobstore.
+	SetBlob(path string, data []byte) error
+
+	// SetBlobReader inserts an object into the blobstore by
+	// consuming data from r until EOF.
+	SetBlobReader(path string, r io.Reader) error
+
+	// Del removes an object from the blobstore.
+	DelBlob(path string) error
 }
-

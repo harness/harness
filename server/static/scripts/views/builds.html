@@ -3,8 +3,8 @@
 <a href="/">Back</a>
 <a ng-href="/{{ repo.full_name }}/edit">Settings</a>
 
-<button ng-click="watch(repo)" ng-if="!repo.subscription || !repo.subscription.subscribed">Watch</button>
-<button ng-click="unwatch(repo)" ng-if="repo.subscription && repo.subscription.subscribed">Unwatch</button>
+<button ng-click="watch(repo)" ng-if="!repo.starred">Watch</button>
+<button ng-click="unwatch(repo)" ng-if="repo.starred">Unwatch</button>
 
 <table border="1">
 	<thead>
@@ -21,16 +21,16 @@
 		</tr>
 	</thead>
 	<tbody>
-		<tr ng-repeat="build in builds | orderBy:'-number'">
-			<td><a ng-href="/{{ repo.full_name }}/{{ build.number }}">{{ build.number }}</a></td>
+		<tr ng-repeat="build in builds | orderBy:'-sequence'">
+			<td><a ng-href="/{{ repo.full_name }}/{{ build.sequence }}">{{ build.sequence }}</a></td>
 			<td>{{ build.state }}</td>
 			<td>{{ build.started_at | fromNow }}</td>
 			<td>{{ build.duration | toDuration }}</td>
-			<td>{{ build.head_commit ? "push" : "pull request" }}</td>
-			<td>{{ build | ref }}</td>
-			<td>{{ build | sha }}</td>
-			<td>{{ build | author }}</td>
-			<td>{{ build | message }}</td>
+			<td>{{ build.pull_request ? "pull request" : "push" }}</td>
+			<td>{{ build.ref }}</td>
+			<td>{{ build.sha }}</td>
+			<td>{{ build.author }}</td>
+			<td>{{ build.message }}</td>
 		</tr>
 	</tbody>
 </table>

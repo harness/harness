@@ -50,7 +50,7 @@ func PutUserCurr(c *gin.Context) {
 func GetUserRepos(c *gin.Context) {
 	store := ToDatastore(c)
 	user := ToUser(c)
-	repos, err := store.RepoList(user.Login)
+	repos, err := store.RepoList(user)
 	if err != nil {
 		c.Fail(400, err)
 	} else {
@@ -67,7 +67,7 @@ func GetUserRepos(c *gin.Context) {
 func GetUserTokens(c *gin.Context) {
 	store := ToDatastore(c)
 	user := ToUser(c)
-	tokens, err := store.TokenList(user.Login)
+	tokens, err := store.TokenList(user)
 	if err != nil {
 		c.Fail(400, err)
 	} else {

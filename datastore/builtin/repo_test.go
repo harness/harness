@@ -1,161 +1,169 @@
 package builtin
 
 import (
-	"bytes"
-	"github.com/drone/drone/common"
-	. "github.com/franela/goblin"
-	"io/ioutil"
-	"os"
 	"testing"
+
+	"github.com/drone/drone/common"
+	"github.com/franela/goblin"
 )
 
-func TestRepo(t *testing.T) {
-	g := Goblin(t)
-	g.Describe("Repo", func() {
-		testUser := "octocat"
-		testRepo := "github.com/octopod/hq"
-		testRepo2 := "github.com/octopod/avengers"
-		commUser := &common.User{Login: "freya"}
-		var db *DB // Temp database
+func TestRepostore(t *testing.T) {
+	db := mustConnectTest()
+	rs := NewRepostore(db)
+	ss := NewStarstore(db)
+	defer db.Close()
 
-		// create a new database before each unit test and destroy afterwards.
+	g := goblin.Goblin(t)
+	g.Describe("Repostore", func() {
+
+		// before each test be sure to purge the package
+		// table data from the database.
 		g.BeforeEach(func() {
-			file, err := ioutil.TempFile(os.TempDir(), "drone-bolt")
-			if err != nil {
-				panic(err)
+			db.Exec("DELETE FROM stars")
+			db.Exec("DELETE FROM repos")
+			db.Exec("DELETE FROM users")
+		})
+
+		g.It("Should Set a Repo", func() {
+			repo := common.Repo{
+				UserID: 1,
+				Owner:  "bradrydzewski",
+				Name:   "drone",
 			}
-
-			db = Must(file.Name())
-		})
-		g.AfterEach(func() {
-			os.Remove(db.Path())
-		})
-
-		g.It("Should set Repo", func() {
-			err := db.SetRepo(&common.Repo{FullName: testRepo})
-			g.Assert(err).Equal(nil)
-
-			repo, err := db.Repo(testRepo)
-			g.Assert(err).Equal(nil)
-			g.Assert(repo.FullName).Equal(testRepo)
+			err1 := rs.AddRepo(&repo)
+			err2 := rs.SetRepo(&repo)
+			getrepo, err3 := rs.Repo(repo.ID)
+			g.Assert(err1 == nil).IsTrue()
+			g.Assert(err2 == nil).IsTrue()
+			g.Assert(err3 == nil).IsTrue()
+			g.Assert(repo.ID).Equal(getrepo.ID)
 		})
 
-		g.It("Should get Repo", func() {
-			db.SetRepo(&common.Repo{FullName: testRepo})
-
-			repo, err := db.Repo(testRepo)
-			g.Assert(err).Equal(nil)
-			g.Assert(repo.FullName).Equal(testRepo)
+		g.It("Should Add a Repo", func() {
+			repo := common.Repo{
+				UserID: 1,
+				Owner:  "bradrydzewski",
+				Name:   "drone",
+			}
+			err := rs.AddRepo(&repo)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(repo.ID != 0).IsTrue()
 		})
 
-		g.It("Should be deletable", func() {
-			db.SetRepo(&common.Repo{FullName: testRepo})
+		// g.It("Should Add a Repos Keypair", func() {
+		// 	keypair := common.Keypair{
+		// 		RepoID:  1,
+		// 		Public:  []byte("-----BEGIN RSA PRIVATE KEY----- ..."),
+		// 		Private: []byte("ssh-rsa AAAAE1BzbF1xc2EABAvVA6Z ..."),
+		// 	}
+		// 	err := rs.SetRepoKeypair(&keypair)
+		// 	g.Assert(err == nil).IsTrue()
+		// 	g.Assert(keypair.ID != 0).IsTrue()
+		// 	getkeypair, err := rs.RepoKeypair(&common.Repo{ID: 1})
+		// 	g.Assert(err == nil).IsTrue()
+		// 	g.Assert(keypair.ID).Equal(getkeypair.ID)
+		// 	g.Assert(keypair.RepoID).Equal(getkeypair.RepoID)
+		// 	g.Assert(keypair.Public).Equal(getkeypair.Public)
+		// 	g.Assert(keypair.Private).Equal(getkeypair.Private)
+		// })
 
-			db.Repo(testRepo)
-			err_ := db.DelRepo((&common.Repo{FullName: testRepo}))
-			g.Assert(err_).Equal(nil)
+		// g.It("Should Add a Repos Private Params", func() {
+		// 	params := common.Params{
+		// 		RepoID: 1,
+		// 		Map:    map[string]string{"foo": "bar"},
+		// 	}
+		// 	err := rs.SetRepoParams(&params)
+		// 	g.Assert(err == nil).IsTrue()
+		// 	g.Assert(params.ID != 0).IsTrue()
+		// 	getparams, err := rs.RepoParams(&common.Repo{ID: 1})
+		// 	g.Assert(err == nil).IsTrue()
+		// 	g.Assert(params.ID).Equal(getparams.ID)
+		// 	g.Assert(params.RepoID).Equal(getparams.RepoID)
+		// 	g.Assert(params.Map).Equal(getparams.Map)
+		// })
+
+		g.It("Should Get a Repo by ID", func() {
+			repo := common.Repo{
+				UserID: 1,
+				Owner:  "bradrydzewski",
+				Name:   "drone",
+			}
+			rs.AddRepo(&repo)
+			getrepo, err := rs.Repo(repo.ID)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(repo.ID).Equal(getrepo.ID)
+			g.Assert(repo.UserID).Equal(getrepo.UserID)
+			g.Assert(repo.Owner).Equal(getrepo.Owner)
+			g.Assert(repo.Name).Equal(getrepo.Name)
 		})
 
-		g.It("Should cleanup builds when deleted", func() {
-			repo := &common.Repo{FullName: testRepo}
-			err := db.SetRepoNotExists(commUser, repo)
-			g.Assert(err).Equal(nil)
-
-			db.SetBuild(testRepo, &common.Build{State: "success"})
-			db.SetBuild(testRepo, &common.Build{State: "success"})
-			db.SetBuild(testRepo, &common.Build{State: "pending"})
-			db.SetLogs(testRepo, 1, 1, (bytes.NewBuffer([]byte("foo"))))
-
-			// first a little sanity to validate our test conditions
-			_, err = db.BuildLast(testRepo)
-			g.Assert(err).Equal(nil)
-
-			// now run our specific test suite
-			// 1. ensure that we can delete the repo
-			err = db.DelRepo(repo)
-			g.Assert(err).Equal(nil)
-
-			// 2. ensure that deleting the repo cleans up other references
-			_, err = db.Build(testRepo, 1)
-			g.Assert(err).Equal(ErrKeyNotFound)
+		g.It("Should Get a Repo by Name", func() {
+			repo := common.Repo{
+				UserID: 1,
+				Owner:  "bradrydzewski",
+				Name:   "drone",
+			}
+			rs.AddRepo(&repo)
+			getrepo, err := rs.RepoName(repo.Owner, repo.Name)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(repo.ID).Equal(getrepo.ID)
+			g.Assert(repo.UserID).Equal(getrepo.UserID)
+			g.Assert(repo.Owner).Equal(getrepo.Owner)
+			g.Assert(repo.Name).Equal(getrepo.Name)
 		})
 
-		g.It("Should get Repo list", func() {
-			db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
-			db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo2})
-
-			repos, err := db.RepoList(testUser)
-			g.Assert(err).Equal(nil)
-			g.Assert(len(repos)).Equal(2)
+		g.It("Should Get a Repo List by User", func() {
+			repo1 := common.Repo{
+				UserID: 1,
+				Owner:  "bradrydzewski",
+				Name:   "drone",
+			}
+			repo2 := common.Repo{
+				UserID: 1,
+				Owner:  "bradrydzewski",
+				Name:   "drone-dart",
+			}
+			rs.AddRepo(&repo1)
+			rs.AddRepo(&repo2)
+			ss.AddStar(&common.User{ID: 1}, &repo1)
+			repos, err := rs.RepoList(&common.User{ID: 1})
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(repos)).Equal(1)
+			g.Assert(repos[0].UserID).Equal(repo1.UserID)
+			g.Assert(repos[0].Owner).Equal(repo1.Owner)
+			g.Assert(repos[0].Name).Equal(repo1.Name)
 		})
 
-		g.It("Should set Repo parameters", func() {
-			db.SetRepo(&common.Repo{FullName: testRepo})
-			err := db.SetRepoParams(testRepo, map[string]string{"A": "Alpha"})
-			g.Assert(err).Equal(nil)
+		g.It("Should Delete a Repo", func() {
+			repo := common.Repo{
+				UserID: 1,
+				Owner:  "bradrydzewski",
+				Name:   "drone",
+			}
+			rs.AddRepo(&repo)
+			_, err1 := rs.Repo(repo.ID)
+			err2 := rs.DelRepo(&repo)
+			_, err3 := rs.Repo(repo.ID)
+			g.Assert(err1 == nil).IsTrue()
+			g.Assert(err2 == nil).IsTrue()
+			g.Assert(err3 == nil).IsFalse()
 		})
 
-		g.It("Should get Repo parameters", func() {
-			db.SetRepo(&common.Repo{FullName: testRepo})
-			err := db.SetRepoParams(testRepo, map[string]string{"A": "Alpha", "B": "Beta"})
-			params, err := db.RepoParams(testRepo)
-			g.Assert(err).Equal(nil)
-			g.Assert(len(params)).Equal(2)
-			g.Assert(params["A"]).Equal("Alpha")
-			g.Assert(params["B"]).Equal("Beta")
+		g.It("Should Enforce Unique Repo Name", func() {
+			repo1 := common.Repo{
+				UserID: 1,
+				Owner:  "bradrydzewski",
+				Name:   "drone",
+			}
+			repo2 := common.Repo{
+				UserID: 2,
+				Owner:  "bradrydzewski",
+				Name:   "drone",
+			}
+			err1 := rs.AddRepo(&repo1)
+			err2 := rs.AddRepo(&repo2)
+			g.Assert(err1 == nil).IsTrue()
+			g.Assert(err2 == nil).IsFalse()
 		})
-
-		// we test again with same repo/user already existing
-		// to see if it will return "ErrConflict"
-		g.It("Should set SetRepoNotExists", func() {
-			err := db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
-			g.Assert(err).Equal(nil)
-			// We should get ErrConflict now, trying to add the same repo again.
-			err_ := db.SetRepoNotExists(&common.User{Login: testUser}, &common.Repo{FullName: testRepo})
-			g.Assert(err_).Equal(ErrKeyExists)
-		})
-
-		g.It("Should set Repo keypair", func() {
-			db.SetRepo(&common.Repo{FullName: testRepo})
-
-			err := db.SetRepoKeypair(testRepo, &common.Keypair{Private: "A", Public: "Alpha"})
-			g.Assert(err).Equal(nil)
-		})
-
-		g.It("Should get Repo keypair", func() {
-			db.SetRepo(&common.Repo{FullName: testRepo})
-			err := db.SetRepoKeypair(testRepo, &common.Keypair{Private: "A", Public: "Alpha"})
-
-			keypair, err := db.RepoKeypair(testRepo)
-			g.Assert(err).Equal(nil)
-			g.Assert(keypair.Public).Equal("Alpha")
-			g.Assert(keypair.Private).Equal("A")
-		})
-
-		g.It("Should set subscriber", func() {
-			db.SetRepo(&common.Repo{FullName: testRepo})
-			err := db.SetSubscriber(testUser, testRepo)
-			g.Assert(err).Equal(nil)
-		})
-
-		g.It("Should get subscribed", func() {
-			db.SetRepo(&common.Repo{FullName: testRepo})
-			err := db.SetSubscriber(testUser, testRepo)
-			subscribed, err := db.Subscribed(testUser, testRepo)
-			g.Assert(err).Equal(nil)
-			g.Assert(subscribed).Equal(true)
-		})
-
-		g.It("Should del subscriber", func() {
-			db.SetRepo(&common.Repo{FullName: testRepo})
-			db.SetSubscriber(testUser, testRepo)
-			err := db.DelSubscriber(testUser, testRepo)
-			g.Assert(err).Equal(nil)
-
-			subscribed, err := db.Subscribed(testUser, testRepo)
-			g.Assert(subscribed).Equal(false)
-
-		})
-
 	})
 }

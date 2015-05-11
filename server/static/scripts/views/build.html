@@ -1,10 +1,85 @@
-<h1>{{ repo.full_name }}/{{ build.number }}</h1>
+<header>
+	<a href="/" class="logo"></a>
+	<div class="title"></div>
+	<div class="user">
+		<span>{{ user.login }}</span>
+		<img ng-src="{{ user.gravatar_id | gravatar }}" />
+	</div>
+</header>
+	<nav>
+		<h1>{{ repo.owner }}<span>{{ repo.name }}</span><span>{{ build.sequence}}</span></h1>
+	</nav>
+	<main>
+
+			<section class="commit-section">
+					<div class="commit-status">
+						<div class="status {{ task.state }}" ng-if="task"></div>
+						<div class="status {{ build.state }}" ng-if="!task"></div>
+					</div>
+					<div class="commit-meta">
+						<h2>{{ build.message }}</h2>
+						<h3>authored <span>{{ build.created_at | fromNow }}</span> by <span>@{{ build.author }}</span></h3>
+
+						<span class="octicon octicon-git-commit">{{ build.sha.substr(0,8) }}</span>
+						<span class="octicon octicon-git-branch">{{ build.branch }}</span>
+						<span class="octicon octicon-clock" style="background:#FFF;">{{ build.duration | toDuration }} duration</span>
+
+						<span class="octicon octicon-settings" style="color: #BDBDBD; background:#FFF;position:absolute;top:20px;right:10px;padding:0px;font-size:24px;opacity:0.8;margin:0px;"></span>
+						<span class="md md-more-horiz" style="position:absolute;bottom:20px;right:20px;color:#BDBDBD;font-size:24px;opacity:0.8;margin:0px;"></span>
+
+					</div>
+
+				</section>
+			<section>
+				<pre id="term" ng-if="task && task.state !== 'pending'">{{ logs }}</pre>
+			</section>
+			<section ng-if="build.builds.length === 1 || !task">
+				<table border="1">
+					<thead>
+						<tr>
+							<th>Number</th>
+							<th>Status</th>
+							<th>Started</th>
+							<th>Finished</th>
+							<th>Duration</th>
+							<th>Exit Code</th>
+							<th>Matrix</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="task in build.builds">
+							<td><a ng-href="{{ repo.full_name }}/{{ build.sequence }}/{{ task.sequence }}">{{ task.sequence }}</a></td>
+							<td>{{ task.state }}</td>
+							<td>{{ task.started_at | fromNow }}</td>
+							<td>{{ task.finished_at | fromNow }}</td>
+							<td>{{ task.duration | toDuration }}</td>
+							<td>{{ task.exit_code }}</td>
+							<td>{{ task.environment }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<button class="fab" ng-if="build.state === 'running'" ng-click="tail()"></button>
+	</main>
+</body>
+</html>
+
+
+
+	<button ng-if="build.state !== 'pending' && build.state !== 'running'" ng-click="restart()">Restart</button>
+	<button ng-if="build.state === 'pending' || build.state === 'running'" ng-click="cancel()">Cancel</button>
+
+
+
+<!--
+
+<h1>{{ repo.full_name }}/{{ build.sequence }}</h1>
 
 <a href="/{{ repo.full_name }}">Back</a>
 
 <div>
-	<button ng-if="build.state !== 'pending' && build.state !== 'running'" ng-click="restart()">Restart</button>
-	<button ng-if="build.state === 'pending' || build.state === 'running'" ng-click="cancel()">Cancel</button>
+
 </div>
 
 <dl>
@@ -18,19 +93,22 @@
 	<dd>{{ build.duration | toDuration }}</dd>
 
 	<dt>Type</dt>
-	<dd>{{ build.head_commit ? "push" : "pull request" }}</dd>
+	<dd>{{ build.pull_request ? "pull request" : "push" }}</dd>
+
+	<dt ng-if="build.pull_request">Pull Request</dt>
+	<dd ng-if="build.pull_request">{{ build.pull_request }}</dd>
 
 	<dt>Ref</dt>
-	<dd>{{ build | ref }}</dd>
+	<dd>{{ build.ref }}</dd>
 
 	<dt>Sha</dt>
-	<dd>{{ build | sha }}</dd>
+	<dd>{{ build.sha }}</dd>
 
 	<dt>Author</dt>
-	<dd>{{ build | author }}</dd>
+	<dd>{{ build.author }}</dd>
 
 	<dt>Message</dt>
-	<dd>{{ build | message }}</dd>
+	<dd>{{ build.message }}</dd>
 </dl>
 
 <hr>
@@ -55,32 +133,5 @@
 	<dd>{{ task.environment }}</dd>
 </dl>
 
-<hr>
 
-<button ng-if="build.state === 'running'" ng-click="tail()">(un)Follow</button>
-<pre id="term" ng-if="build.state !== 'pending'">{{ logs }}</pre>
-
-<table border="1">
-	<thead>
-		<tr>
-			<th>Number</th>
-			<th>Status</th>
-			<th>Started</th>
-			<th>Finished</th>
-			<th>Duration</th>
-			<th>Exit Code</th>
-			<th>Matrix</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr ng-repeat="task in build.tasks">
-			<td><a ng-href="{{ repo.full_name }}/{{ build.number }}/{{ task.number }}">{{ task.number }}</a></td>
-			<td>{{ task.state }}</td>
-			<td>{{ task.started_at | fromNow }}</td>
-			<td>{{ task.finished_at | fromNow }}</td>
-			<td>{{ task.duration | toDuration }}</td>
-			<td>{{ task.exit_code }}</td>
-			<td>{{ task.environment }}</td>
-		</tr>
-	</tbody>
-</table>
+-->

@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/settings"
@@ -103,14 +105,17 @@ func (g *GitHub) Repo(u *common.User, owner, name string) (*common.Repo, error) 
 	repo := &common.Repo{}
 	repo.Owner = owner
 	repo.Name = name
-
-	if repo_.Language != nil {
-		repo.Language = *repo_.Language
-	}
 	repo.FullName = *repo_.FullName
 	repo.Link = *repo_.HTMLURL
 	repo.Private = *repo_.Private
 	repo.Clone = *repo_.CloneURL
+
+	if repo_.Language != nil {
+		repo.Language = *repo_.Language
+	}
+	if repo_.DefaultBranch != nil {
+		repo.Branch = *repo_.DefaultBranch
+	}
 
 	if g.PrivateMode {
 		repo.Private = true
@@ -132,7 +137,6 @@ func (g *GitHub) Perm(u *common.User, owner, name string) (*common.Perm, error) 
 		return nil, err
 	}
 	m := &common.Perm{}
-	m.Login = u.Login
 	m.Admin = (*repo.Permissions)["admin"]
 	m.Push = (*repo.Permissions)["push"]
 	m.Pull = (*repo.Permissions)["pull"]
@@ -142,13 +146,13 @@ func (g *GitHub) Perm(u *common.User, owner, name string) (*common.Perm, error) 
 
 // Script fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
-func (g *GitHub) Script(u *common.User, r *common.Repo, b *common.Build) ([]byte, error) {
+func (g *GitHub) Script(u *common.User, r *common.Repo, c *common.Commit) ([]byte, error) {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
 	var sha string
-	if b.Commit != nil {
-		sha = b.Commit.Sha
+	if len(c.SourceSha) == 0 {
+		sha = c.Sha
 	} else {
-		sha = b.PullRequest.Source.Sha
+		sha = c.SourceSha
 	}
 	return GetFile(client, r.Owner, r.Name, ".drone.yml", sha)
 }
@@ -208,23 +212,21 @@ func (g *GitHub) Deactivate(u *common.User, r *common.Repo, link string) error {
 	return DeleteHook(client, r.Owner, r.Name, link)
 }
 
-func (g *GitHub) Status(u *common.User, r *common.Repo, b *common.Build, link string) error {
+func (g *GitHub) Status(u *common.User, r *common.Repo, c *common.Commit, link string) error {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
-	var ref string
-	if b.Commit != nil {
-		ref = b.Commit.Ref
-	} else {
-		ref = b.PullRequest.Source.Ref
+	if len(c.PullRequest) == 0 {
+		return nil
 	}
-	status := getStatus(b.State)
-	desc := getDesc(b.State)
+
+	status := getStatus(c.State)
+	desc := getDesc(c.State)
 	data := github.RepoStatus{
 		Context:     github.String("Drone"),
 		State:       github.String(status),
 		Description: github.String(desc),
 		TargetURL:   github.String(link),
 	}
-	_, _, err := client.Repositories.CreateStatus(r.Owner, r.Name, ref, &data)
+	_, _, err := client.Repositories.CreateStatus(r.Owner, r.Name, c.SourceSha, &data)
 	return err
 }
 
@@ -253,23 +255,27 @@ func (g *GitHub) push(r *http.Request) (*common.Hook, error) {
 
 	repo := &common.Repo{}
 	repo.Owner = hook.Repo.Owner.Login
+	if len(repo.Owner) == 0 {
+		repo.Owner = hook.Repo.Owner.Name
+	}
 	repo.Name = hook.Repo.Name
-	repo.Language = hook.Repo.Language
 	repo.FullName = hook.Repo.FullName
 	repo.Link = hook.Repo.HTMLURL
 	repo.Private = hook.Repo.Private
 	repo.Clone = hook.Repo.CloneURL
+	repo.Language = hook.Repo.Language
+	repo.Branch = hook.Repo.DefaultBranch
 
 	commit := &common.Commit{}
 	commit.Sha = hook.Head.ID
 	commit.Ref = hook.Ref
+	commit.Branch = strings.Replace(commit.Ref, "refs/heads/", "", -1)
 	commit.Message = hook.Head.Message
 	commit.Timestamp = hook.Head.Timestamp
-
-	commit.Author = &common.Author{}
-	commit.Author.Name = hook.Head.Author.Name
-	commit.Author.Email = hook.Head.Author.Email
-	commit.Author.Login = hook.Head.Author.Username
+	commit.Author = hook.Head.Author.Username
+	// commit.Author.Name = hook.Head.Author.Name
+	// commit.Author.Email = hook.Head.Author.Email
+	// commit.Author.Login = hook.Head.Author.Username
 
 	// we should ignore github pages
 	if commit.Ref == "refs/heads/gh-pages" {
@@ -301,32 +307,31 @@ func (g *GitHub) pullRequest(r *http.Request) (*common.Hook, error) {
 	repo := &common.Repo{}
 	repo.Owner = *hook.Repo.Owner.Login
 	repo.Name = *hook.Repo.Name
-	repo.Language = *hook.Repo.Language
 	repo.FullName = *hook.Repo.FullName
 	repo.Link = *hook.Repo.HTMLURL
 	repo.Private = *hook.Repo.Private
 	repo.Clone = *hook.Repo.CloneURL
+	if hook.Repo.Language != nil {
+		repo.Language = *hook.Repo.Language
+	}
+	if hook.Repo.DefaultBranch != nil {
+		repo.Branch = *hook.Repo.DefaultBranch
+	}
 
-	pr := &common.PullRequest{}
-	pr.Number = *hook.PullRequest.Number
-	pr.Title = *hook.PullRequest.Title
+	c := &common.Commit{}
+	c.PullRequest = strconv.Itoa(*hook.PullRequest.Number)
+	c.Message = *hook.PullRequest.Title
+	c.Sha = *hook.PullRequest.Base.SHA
+	c.Ref = *hook.PullRequest.Base.Ref
+	c.Ref = fmt.Sprintf("refs/pull/%s/merge", c.PullRequest)
+	c.Branch = *hook.PullRequest.Base.Ref
+	c.Timestamp = time.Now().UTC().Format("2006-01-02 15:04:05.000000000 +0000 MST")
+	c.Author = *hook.PullRequest.Base.User.Login
+	c.SourceRemote = *hook.PullRequest.Head.Repo.CloneURL
+	c.SourceBranch = *hook.PullRequest.Head.Ref
+	c.SourceSha = *hook.PullRequest.Head.SHA
 
-	pr.Source = &common.Commit{}
-	pr.Source.Sha = *hook.PullRequest.Head.SHA
-	pr.Source.Ref = *hook.PullRequest.Head.Ref
-	pr.Source.Author = &common.Author{}
-	pr.Source.Author.Login = *hook.PullRequest.User.Login
-
-	pr.Source.Remote = &common.Remote{}
-	pr.Source.Remote.Clone = *hook.PullRequest.Head.Repo.CloneURL
-	pr.Source.Remote.Name = *hook.PullRequest.Head.Repo.Name
-	pr.Source.Remote.FullName = *hook.PullRequest.Head.Repo.FullName
-
-	pr.Target = &common.Commit{}
-	pr.Target.Sha = *hook.PullRequest.Base.SHA
-	pr.Target.Ref = *hook.PullRequest.Base.Ref
-
-	return &common.Hook{Repo: repo, PullRequest: pr}, nil
+	return &common.Hook{Repo: repo, Commit: c}, nil
 }
 
 type pushHook struct {
@@ -353,13 +358,15 @@ type pushHook struct {
 	Repo struct {
 		Owner struct {
 			Login string `json:"login"`
+			Name  string `json:"name"`
 		} `json:"owner"`
-		Name     string `json:"name"`
-		FullName string `json:"full_name"`
-		Language string `json:"language"`
-		Private  bool   `json:"private"`
-		HTMLURL  string `json:"html_url"`
-		CloneURL string `json:"clone_url"`
+		Name          string `json:"name"`
+		FullName      string `json:"full_name"`
+		Language      string `json:"language"`
+		Private       bool   `json:"private"`
+		HTMLURL       string `json:"html_url"`
+		CloneURL      string `json:"clone_url"`
+		DefaultBranch string `json:"default_branch"`
 	} `json:"repository"`
 }
 

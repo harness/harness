@@ -2,6 +2,7 @@ package builtin
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/drone/drone/common"
@@ -11,9 +12,9 @@ import (
 )
 
 type Updater interface {
-	SetBuild(*common.User, *common.Repo, *common.Build) error
-	SetTask(*common.Repo, *common.Build, *common.Task) error
-	SetLogs(*common.Repo, *common.Build, *common.Task, io.ReadCloser) error
+	SetCommit(*common.User, *common.Repo, *common.Commit) error
+	SetBuild(*common.Repo, *common.Commit, *common.Build) error
+	SetLogs(*common.Repo, *common.Commit, *common.Build, io.ReadCloser) error
 }
 
 // NewUpdater returns an implementation of the Updater interface
@@ -28,29 +29,15 @@ type updater struct {
 	remote remote.Remote
 }
 
-func (u *updater) SetBuild(user *common.User, r *common.Repo, b *common.Build) error {
-	err := u.store.SetBuildState(r.FullName, b)
+func (u *updater) SetCommit(user *common.User, r *common.Repo, c *common.Commit) error {
+	err := u.store.SetCommit(c)
 	if err != nil {
 		return err
 	}
 
-	// if the build is complete we may need to update
-	if b.State != common.StatePending && b.State != common.StateRunning {
-		repo, err := u.store.Repo(r.FullName)
-		if err == nil {
-			if repo.Last == nil || b.Number >= repo.Last.Number {
-				repo.Last = b
-				u.store.SetRepo(repo)
-			}
-		}
+	// TODO invoke remote.Status to set the build status
 
-		// err = u.remote.Status(user, r, b, "")
-		// if err != nil {
-		//
-		// }
-	}
-
-	msg, err := json.Marshal(b)
+	msg, err := json.Marshal(c)
 	if err != nil {
 		return err
 	}
@@ -63,13 +50,13 @@ func (u *updater) SetBuild(user *common.User, r *common.Repo, b *common.Build) e
 	return nil
 }
 
-func (u *updater) SetTask(r *common.Repo, b *common.Build, t *common.Task) error {
-	err := u.store.SetBuildTask(r.FullName, b.Number, t)
+func (u *updater) SetBuild(r *common.Repo, c *common.Commit, b *common.Build) error {
+	err := u.store.SetBuild(b)
 	if err != nil {
 		return err
 	}
 
-	msg, err := json.Marshal(b)
+	msg, err := json.Marshal(c)
 	if err != nil {
 		return err
 	}
@@ -82,12 +69,7 @@ func (u *updater) SetTask(r *common.Repo, b *common.Build, t *common.Task) error
 	return nil
 }
 
-func (u *updater) SetLogs(r *common.Repo, b *common.Build, t *common.Task, rc io.ReadCloser) error {
-	//defer rc.Close()
-	//out, err := ioutil.ReadAll(rc)
-	//if err != nil {
-	//	return err
-	//}
-	//return u.store.SetLogs(r.FullName, b.Number, t.Number, out)
-	return u.store.SetLogs(r.FullName, b.Number, t.Number, rc)
+func (u *updater) SetLogs(r *common.Repo, c *common.Commit, b *common.Build, rc io.ReadCloser) error {
+	path := fmt.Sprintf("/logs/%s/%v/%v", r.FullName, c.Sequence, b.Sequence)
+	return u.store.SetBlobReader(path, rc)
 }

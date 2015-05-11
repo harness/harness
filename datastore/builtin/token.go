@@ -1,70 +1,74 @@
 package builtin
 
 import (
-	"github.com/boltdb/bolt"
 	"github.com/drone/drone/common"
+	"github.com/russross/meddler"
 )
 
-// Token returns the token for the given user and label.
-func (db *DB) Token(user, label string) (*common.Token, error) {
-	token := &common.Token{}
-	key := []byte(user + "/" + label)
+type Tokenstore struct {
+	meddler.DB
+}
 
-	err := db.View(func(t *bolt.Tx) error {
-		return get(t, bucketTokens, key, token)
-	})
+func NewTokenstore(db meddler.DB) *Tokenstore {
+	return &Tokenstore{db}
+}
+
+// Token returns a token by ID.
+func (db *Tokenstore) Token(id int64) (*common.Token, error) {
+	var token = new(common.Token)
+	var err = meddler.Load(db, tokenTable, token, id)
 	return token, err
 }
 
-// TokenList returns a list of all tokens for the given
-// user login.
-func (db *DB) TokenList(login string) ([]*common.Token, error) {
-	tokens := []*common.Token{}
-	userkey := []byte(login)
-	err := db.Update(func(t *bolt.Tx) error {
-		// get the index of user tokens and unmarshal
-		// to a string array.
-		var keys [][]byte
-		err := get(t, bucketUserTokens, userkey, &keys)
-		if err != nil && err != ErrKeyNotFound {
-			return err
-		}
-		// for each item in the index, get the repository
-		// and append to the array
-		for _, key := range keys {
-			token := &common.Token{}
-			raw := t.Bucket(bucketTokens).Get(key)
-			err = decode(raw, token)
-			if err != nil {
-				return err
-			}
-			tokens = append(tokens, token)
-		}
-		return nil
-	})
+// TokenLabel returns a token by label
+func (db *Tokenstore) TokenLabel(user *common.User, label string) (*common.Token, error) {
+	var token = new(common.Token)
+	var err = meddler.QueryRow(db, token, rebind(tokenLabelQuery), user.ID, label)
+	return token, err
+}
+
+// TokenList returns a list of all user tokens.
+func (db *Tokenstore) TokenList(user *common.User) ([]*common.Token, error) {
+	var tokens []*common.Token
+	var err = meddler.QueryAll(db, &tokens, rebind(tokenListQuery), user.ID)
 	return tokens, err
 }
 
-// SetToken inserts a new user token in the datastore.
-func (db *DB) SetToken(token *common.Token) error {
-	key := []byte(token.Login + "/" + token.Label)
-	return db.Update(func(t *bolt.Tx) error {
-		err := push(t, bucketUserTokens, []byte(token.Login), key)
-		if err != nil {
-			return err
-		}
-		return insert(t, bucketTokens, key, token)
-	})
+// AddToken inserts a new token into the datastore.
+// If the token label already exists for the user
+// an error is returned.
+func (db *Tokenstore) AddToken(token *common.Token) error {
+	return meddler.Insert(db, tokenTable, token)
 }
 
-// DelToken deletes the token.
-func (db *DB) DelToken(token *common.Token) error {
-	key := []byte(token.Login + "/" + token.Label)
-	return db.Update(func(t *bolt.Tx) error {
-		err := splice(t, bucketUserTokens, []byte(token.Login), key)
-		if err != nil {
-			return err
-		}
-		return delete(t, bucketTokens, key)
-	})
+// DelToken removes the DelToken from the datastore.
+func (db *Tokenstore) DelToken(token *common.Token) error {
+	var _, err = db.Exec(rebind(tokenDeleteStmt), token.ID)
+	return err
 }
+
+// Token table name in database.
+const tokenTable = "tokens"
+
+// SQL query to retrieve a token by label.
+const tokenLabelQuery = `
+SELECT *
+FROM tokens
+WHERE user_id     = ?
+  AND token_label = ?
+LIMIT 1
+`
+
+// SQL query to retrieve a list of user tokens.
+const tokenListQuery = `
+SELECT *
+FROM tokens
+WHERE user_id = ?
+ORDER BY token_label ASC
+`
+
+// SQL statement to delete a Token by ID.
+const tokenDeleteStmt = `
+DELETE FROM tokens
+WHERE token_id=?
+`

@@ -1,7 +1,6 @@
 package common
 
 type Hook struct {
-	Repo        *Repo
-	Commit      *Commit
-	PullRequest *PullRequest
+	Repo   *Repo
+	Commit *Commit
 }

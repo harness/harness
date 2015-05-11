@@ -146,9 +146,9 @@ func SetUser(s session.Session) gin.HandlerFunc {
 			return
 		}
 
-		u, err := ds.User(token.Login)
+		user, err := ds.UserLogin(token.Login)
 		if err == nil {
-			c.Set("user", u)
+			c.Set("user", user)
 		}
 
 		// if session token we can proceed, otherwise
@@ -162,7 +162,7 @@ func SetUser(s session.Session) gin.HandlerFunc {
 		// to verify the token we fetch from the datastore
 		// and check to see if the token issued date matches
 		// what we found in the jwt (in case the label is re-used)
-		t, err := ds.Token(token.Login, token.Label)
+		t, err := ds.TokenLabel(user, token.Label)
 		if err != nil || t.Issued != token.Issued {
 			c.AbortWithStatus(403)
 			return
@@ -178,7 +178,7 @@ func SetRepo() gin.HandlerFunc {
 		u := ToUser(c)
 		owner := c.Params.ByName("owner")
 		name := c.Params.ByName("name")
-		r, err := ds.Repo(owner + "/" + name)
+		r, err := ds.RepoName(owner, name)
 		switch {
 		case err != nil && u != nil:
 			c.Fail(404, err)

@@ -3,85 +3,123 @@ package builtin
 import (
 	"time"
 
-	"github.com/boltdb/bolt"
 	"github.com/drone/drone/common"
+	"github.com/russross/meddler"
 )
 
-// User returns a user by user login.
-func (db *DB) User(login string) (*common.User, error) {
-	user := &common.User{}
-	key := []byte(login)
-
-	err := db.View(func(t *bolt.Tx) error {
-		return get(t, bucketUser, key, user)
-	})
-
-	return user, err
+type Userstore struct {
+	meddler.DB
 }
 
-// UserCount returns a count of all registered users.
-func (db *DB) UserCount() (int, error) {
-	var out int
-	var err = db.View(func(t *bolt.Tx) error {
-		out = t.Bucket(bucketUser).Stats().KeyN
-		return nil
-	})
-	return out, err
+func NewUserstore(db meddler.DB) *Userstore {
+	return &Userstore{db}
+}
+
+// User returns a user by user ID.
+func (db *Userstore) User(id int64) (*common.User, error) {
+	var usr = new(common.User)
+	var err = meddler.Load(db, userTable, usr, id)
+	return usr, err
+}
+
+// UserLogin returns a user by user login.
+func (db *Userstore) UserLogin(login string) (*common.User, error) {
+	var usr = new(common.User)
+	var err = meddler.QueryRow(db, usr, rebind(userLoginQuery), login)
+	return usr, err
 }
 
 // UserList returns a list of all registered users.
-func (db *DB) UserList() ([]*common.User, error) {
-	users := []*common.User{}
-	err := db.View(func(t *bolt.Tx) error {
-		return t.Bucket(bucketUser).ForEach(func(key, raw []byte) error {
-			user := &common.User{}
-			err := decode(raw, user)
-			if err != nil {
-				return err
-			}
-			users = append(users, user)
-			return nil
-		})
-	})
+func (db *Userstore) UserList() ([]*common.User, error) {
+	var users []*common.User
+	var err = meddler.QueryAll(db, &users, rebind(userListQuery))
 	return users, err
 }
 
-// SetUser inserts or updates a user.
-func (db *DB) SetUser(user *common.User) error {
-	key := []byte(user.Login)
-	user.Updated = time.Now().UTC().Unix()
-
-	return db.Update(func(t *bolt.Tx) error {
-		return update(t, bucketUser, key, user)
-	})
+// UserFeed retrieves a digest of recent builds
+// from the datastore accessible to the specified user.
+func (db *Userstore) UserFeed(user *common.User, limit, offset int) ([]*common.RepoCommit, error) {
+	var builds []*common.RepoCommit
+	var err = meddler.QueryAll(db, &builds, rebind(userFeedQuery), user.ID, limit, offset)
+	return builds, err
 }
 
-// SetUserNotExists inserts a new user into the datastore.
-// If the user login already exists ErrConflict is returned.
-func (db *DB) SetUserNotExists(user *common.User) error {
-	key := []byte(user.Login)
+// UserCount returns a count of all registered users.
+func (db *Userstore) UserCount() (int, error) {
+	var count = struct{ Count int }{}
+	var err = meddler.QueryRow(db, &count, rebind(userCountQuery))
+	return count.Count, err
+}
+
+// AddUser inserts a new user into the datastore.
+// If the user login already exists an error is returned.
+func (db *Userstore) AddUser(user *common.User) error {
 	user.Created = time.Now().UTC().Unix()
 	user.Updated = time.Now().UTC().Unix()
-
-	return db.Update(func(t *bolt.Tx) error {
-		return insert(t, bucketUser, key, user)
-	})
+	return meddler.Insert(db, userTable, user)
 }
 
-// DelUser deletes the user.
-func (db *DB) DelUser(user *common.User) error {
-	key := []byte(user.Login)
-	return db.Update(func(t *bolt.Tx) error {
-		err := delete(t, bucketUserTokens, key)
-		if err != nil {
-			return err
-		}
-		err = delete(t, bucketUserRepos, key)
-		if err != nil {
-			return err
-		}
-		// IDEA: deleteKeys(t, bucketTokens, keys)
-		deleteWithPrefix(t, bucketTokens, append(key, '/'))
-		return delete(t, bucketUser, key)
-	})
+// SetUser updates an existing user.
+func (db *Userstore) SetUser(user *common.User) error {
+	user.Updated = time.Now().UTC().Unix()
+	return meddler.Update(db, userTable, user)
 }
+
+// DelUser removes the user from the datastore.
+func (db *Userstore) DelUser(user *common.User) error {
+	var _, err = db.Exec(rebind(userDeleteStmt), user.ID)
+	return err
+}
+
+// User table name in database.
+const userTable = "users"
+
+// SQL query to retrieve a User by remote login.
+const userLoginQuery = `
+SELECT *
+FROM users
+WHERE user_login=?
+LIMIT 1
+`
+
+// SQL query to retrieve a list of all users.
+const userListQuery = `
+SELECT *
+FROM users
+ORDER BY user_name ASC
+`
+
+// SQL query to retrieve a list of all users.
+const userCountQuery = `
+SELECT count(1) as "Count"
+FROM users
+`
+
+// SQL statement to delete a User by ID.
+const userDeleteStmt = `
+DELETE FROM users
+WHERE user_id=?
+`
+
+// SQL query to retrieve a build feed for the given
+// user account.
+const userFeedQuery = `
+SELECT
+ r.repo_id
+,r.repo_owner
+,r.repo_name
+,r.repo_slug
+,c.commit_seq
+,c.commit_state
+,c.commit_started
+,c.commit_finished
+FROM
+ commits c
+,repos r
+,stars s
+WHERE c.repo_id = r.repo_id
+  AND r.repo_id = s.repo_id
+  AND s.user_id = ?
+ORDER BY c.commit_seq DESC
+LIMIT ? OFFSET ?
+`

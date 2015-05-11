@@ -31,13 +31,13 @@
 
 		$scope.watch = function(repo) {
 			repos.watch(repo.full_name).then(function(payload) {
-				$scope.repo.subscription = payload.data;
+				$scope.repo.starred = true;
 			});
 		}
 
 		$scope.unwatch = function(repo) {
 			repos.unwatch(repo.full_name).then(function() {
-				delete $scope.repo.subscription;
+				$scope.repo.starred = false;
 			});
 		}
 
@@ -45,7 +45,7 @@
 			var added = false;
 			for (var i=0;i<$scope.builds.length;i++) {
 				var build = $scope.builds[i];
-				if (event.number !== build.number) {
+				if (event.sequence !== build.sequence) {
 					continue; // ignore
 				}
 				// update the build status
@@ -66,7 +66,7 @@
 	 */
 	function BuildCtrl($scope, $routeParams, $window, logs, builds, repos, users) {
 
-		var step = parseInt($routeParams.step) || 1;
+		var step = parseInt($routeParams.step);
 		var number = $routeParams.number;
 		var owner = $routeParams.owner;
 		var name  = $routeParams.name;
@@ -110,7 +110,18 @@
 		// Gets the build
 		builds.get(fullName, number).then(function(payload){
 			$scope.build = payload.data;
-			$scope.task = payload.data.tasks[step-1];
+
+			// if only 1 build, select first
+			if (!step && payload.data.builds.length === 1) {
+				step = 1;
+
+			// else if only 1 step, but multiple builds
+			// we should only render the list of builds
+			} else if (!step) {
+				return;
+			}
+
+			$scope.task = payload.data.builds[step-1];
 
 			if (['pending', 'killed'].indexOf($scope.task.state) !== -1) {
 				// do nothing
@@ -135,7 +146,7 @@
 		$scope.restart = function() {
 			builds.restart(fullName, number).then(function(payload){
 				$scope.build = payload.data;
-				$scope.task = payload.data.tasks[step-1];
+				$scope.task = payload.data.builds[step-1];
 			}).catch(function(err){
 				$scope.error = err;
 			});
@@ -144,7 +155,7 @@
 		$scope.cancel = function() {
 			builds.cancel(fullName, number).then(function(payload){
 				$scope.build = payload.data;
-				$scope.task = payload.data.tasks[step-1];
+				$scope.task = payload.data.builds[step-1];
 			}).catch(function(err) {
 				$scope.error = err;
 			});
@@ -155,12 +166,12 @@
 		};
 
 		repos.subscribe(fullName, function(event) {
-			if (event.number !== parseInt(number)) {
+			if (event.sequence !== parseInt(number)) {
 				return; // ignore
 			}
 			// update the build
 			$scope.build = event;
-			$scope.task = event.tasks[step-1];
+			$scope.task = event.builds[step-1];
 			$scope.$apply();
 
 			// start streaming the current build

@@ -35,7 +35,7 @@ func PostUser(c *gin.Context) {
 	user := &common.User{Login: name, Name: name}
 	user.Token = c.Request.FormValue("token")
 	user.Secret = c.Request.FormValue("secret")
-	if err := store.SetUserNotExists(user); err != nil {
+	if err := store.AddUser(user); err != nil {
 		c.Fail(400, err)
 	} else {
 		c.JSON(201, user)
@@ -51,7 +51,7 @@ func PostUser(c *gin.Context) {
 func GetUser(c *gin.Context) {
 	store := ToDatastore(c)
 	name := c.Params.ByName("name")
-	user, err := store.User(name)
+	user, err := store.UserLogin(name)
 	if err != nil {
 		c.Fail(404, err)
 	} else {
@@ -69,7 +69,7 @@ func PutUser(c *gin.Context) {
 	store := ToDatastore(c)
 	me := ToUser(c)
 	name := c.Params.ByName("name")
-	user, err := store.User(name)
+	user, err := store.UserLogin(name)
 	if err != nil {
 		c.Fail(404, err)
 		return
@@ -106,7 +106,7 @@ func DeleteUser(c *gin.Context) {
 	store := ToDatastore(c)
 	me := ToUser(c)
 	name := c.Params.ByName("name")
-	user, err := store.User(name)
+	user, err := store.UserLogin(name)
 	if err != nil {
 		c.Fail(404, err)
 		return

@@ -57,52 +57,49 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	repo, err := store.Repo(hook.Repo.FullName)
+	repo, err := store.RepoName(hook.Repo.Owner, hook.Repo.Name)
 	if err != nil {
-		log.Errorf("failure to find repo %s from hook. %s", hook.Repo.FullName, err)
+		log.Errorf("failure to find repo %s/%s from hook. %s", hook.Repo.Owner, hook.Repo.Name, err)
 		c.Fail(404, err)
 		return
 	}
 
 	switch {
-	case repo.Disabled:
-		log.Infof("ignoring hook. repo %s is disabled.", repo.FullName)
-		c.Writer.WriteHeader(204)
-		return
-	case repo.User == nil:
+	case repo.UserID == 0:
 		log.Warnf("ignoring hook. repo %s has no owner.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
-	case repo.DisablePR && hook.PullRequest != nil:
+	case !repo.PostCommit && hook.Commit.PullRequest != "":
+		log.Infof("ignoring hook. repo %s is disabled.", repo.FullName)
+		c.Writer.WriteHeader(204)
+		return
+	case !repo.PullRequest && hook.Commit.PullRequest == "":
 		log.Warnf("ignoring hook. repo %s is disabled for pull requests.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
 	}
 
-	user, err := store.User(repo.User.Login)
+	user, err := store.User(repo.UserID)
 	if err != nil {
-		log.Errorf("failure to find repo owner %s. %s", repo.User.Login, err)
+		log.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
 		c.Fail(500, err)
 		return
 	}
 
-	params, _ := store.RepoParams(repo.FullName)
-
-	build := &common.Build{}
-	build.State = common.StatePending
-	build.Commit = hook.Commit
-	build.PullRequest = hook.PullRequest
+	commit := hook.Commit
+	commit.State = common.StatePending
+	commit.RepoID = repo.ID
 
 	// featch the .drone.yml file from the database
-	raw, err := remote.Script(user, repo, build)
+	raw, err := remote.Script(user, repo, commit)
 	if err != nil {
 		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
 		c.Fail(404, err)
 		return
 	}
 	// inject any private parameters into the .drone.yml
-	if params != nil && len(params) != 0 {
-		raw = []byte(inject.InjectSafe(string(raw), params))
+	if repo.Params != nil && len(repo.Params) != 0 {
+		raw = []byte(inject.InjectSafe(string(raw), repo.Params))
 	}
 	axes, err := matrix.Parse(string(raw))
 	if err != nil {
@@ -114,58 +111,59 @@ func PostHook(c *gin.Context) {
 		axes = append(axes, matrix.Axis{})
 	}
 	for num, axis := range axes {
-		build.Tasks = append(build.Tasks, &common.Task{
-			Number:      num + 1,
+		commit.Builds = append(commit.Builds, &common.Build{
+			CommitID:    commit.ID,
+			Sequence:    num + 1,
 			State:       common.StatePending,
 			Environment: axis,
 		})
 	}
-	keys, err := store.RepoKeypair(repo.FullName)
-	if err != nil {
-		log.Errorf("failure to fetch keypair for %s. %s", repo.FullName, err)
-		c.Fail(404, err)
-		return
+	keys := &common.Keypair{
+		Public:  repo.PublicKey,
+		Private: repo.PrivateKey,
 	}
 
 	netrc, err := remote.Netrc(user)
 	if err != nil {
+		log.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
 		c.Fail(500, err)
 		return
 	}
 
 	// verify the branches can be built vs skipped
 	when, _ := parser.ParseCondition(string(raw))
-	if build.Commit != nil && when != nil && !when.MatchBranch(build.Commit.Ref) {
-		log.Infof("ignoring hook. yaml file excludes repo and branch %s %s", repo.FullName, build.Commit.Ref)
+	if commit.PullRequest != "" && when != nil && !when.MatchBranch(commit.Branch) {
+		log.Infof("ignoring hook. yaml file excludes repo and branch %s %s", repo.FullName, commit.Branch)
 		c.AbortWithStatus(200)
 		return
 	}
 
-	err = store.SetBuild(repo.FullName, build)
+	err = store.AddCommit(commit)
 	if err != nil {
+		log.Errorf("failure to save commit for %s. %s", repo.FullName, err)
 		c.Fail(500, err)
 		return
 	}
 
-	c.JSON(200, build)
+	c.JSON(200, commit)
 
 	link := fmt.Sprintf(
 		"%s/%s/%d",
 		httputil.GetURL(c.Request),
 		repo.FullName,
-		build.Number,
+		commit.Sequence,
 	)
-	err = remote.Status(user, repo, build, link)
+	err = remote.Status(user, repo, commit, link)
 	if err != nil {
-		log.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
+		log.Errorf("error setting commit status for %s/%d", repo.FullName, commit.Sequence)
 	}
 
 	queue_.Publish(&queue.Work{
-		User:  user,
-		Repo:  repo,
-		Build: build,
-		Keys:  keys,
-		Netrc: netrc,
-		Yaml:  raw,
+		User:   user,
+		Repo:   repo,
+		Commit: commit,
+		Keys:   keys,
+		Netrc:  netrc,
+		Yaml:   raw,
 	})
 }

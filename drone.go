@@ -31,8 +31,9 @@ func main() {
 		panic(err)
 	}
 
-	store := store.Must(settings.Database.Path)
-	defer store.Close()
+	db := store.MustConnect(settings.Database.Driver, settings.Database.Datasource)
+	store := store.New(db)
+	defer db.Close()
 
 	remote := github.New(settings.Service)
 	session := session.New(settings.Session)
@@ -101,12 +102,12 @@ func main() {
 			repo.POST("/watch", server.Subscribe)
 			repo.DELETE("/unwatch", server.Unsubscribe)
 
-			repo.GET("/builds", server.GetBuilds)
-			repo.GET("/builds/:number", server.GetBuild)
+			repo.GET("/builds", server.GetCommits)
+			repo.GET("/builds/:number", server.GetCommit)
 			repo.POST("/builds/:number", server.RunBuild)
 			repo.DELETE("/builds/:number", server.KillBuild)
-			repo.GET("/logs/:number/:task", server.GetBuildLogs)
-			repo.POST("/status/:number", server.PostBuildStatus)
+			repo.GET("/logs/:number/:task", server.GetLogs)
+			// repo.POST("/status/:number", server.PostBuildStatus)
 		}
 	}
 
@@ -123,20 +124,20 @@ func main() {
 		hooks.POST("", server.PostHook)
 	}
 
-	queue := api.Group("/queue")
-	{
-		queue.Use(server.MustAgent())
-		queue.GET("", server.GetQueue)
-		queue.POST("/pull", server.PollBuild)
+	// queue := api.Group("/queue")
+	// {
+	// 	queue.Use(server.MustAgent())
+	// 	queue.GET("", server.GetQueue)
+	// 	queue.POST("/pull", server.PollBuild)
 
-		push := queue.Group("/push/:owner/:name")
-		{
-			push.Use(server.SetRepo())
-			push.POST("", server.PushBuild)
-			push.POST("/:build", server.PushTask)
-			push.POST("/:build/:task/logs", server.PushLogs)
-		}
-	}
+	// 	push := queue.Group("/push/:owner/:name")
+	// 	{
+	// 		push.Use(server.SetRepo())
+	// 		push.POST("", server.PushBuild)
+	// 		push.POST("/:build", server.PushTask)
+	// 		push.POST("/:build/:task/logs", server.PushLogs)
+	// 	}
+	// }
 
 	stream := api.Group("/stream")
 	{

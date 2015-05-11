@@ -1,197 +1,138 @@
 package builtin
 
 import (
-	"bytes"
+	"database/sql"
 	"time"
 
-	"github.com/boltdb/bolt"
 	"github.com/drone/drone/common"
+	"github.com/russross/meddler"
 )
 
-// Repo returns the repository with the given name.
-func (db *DB) Repo(repo string) (*common.Repo, error) {
-	repo_ := &common.Repo{}
-	key := []byte(repo)
-
-	err := db.View(func(t *bolt.Tx) error {
-		return get(t, bucketRepo, key, repo_)
-	})
-
-	return repo_, err
+type Repostore struct {
+	*sql.DB
 }
 
-// RepoList returns a list of repositories for the
-// given user account.
-func (db *DB) RepoList(login string) ([]*common.Repo, error) {
-	repos := []*common.Repo{}
-	err := db.View(func(t *bolt.Tx) error {
-		// get the index of user tokens and unmarshal
-		// to a string array.
-		var keys [][]byte
-		err := get(t, bucketUserRepos, []byte(login), &keys)
-		if err != nil && err != ErrKeyNotFound {
-			return err
-		}
+func NewRepostore(db *sql.DB) *Repostore {
+	return &Repostore{db}
+}
 
-		// for each item in the index, get the repository
-		// and append to the array
-		for _, key := range keys {
-			repo := &common.Repo{}
-			err := get(t, bucketRepo, key, repo)
-			if err == ErrKeyNotFound {
-				// TODO if we come across ErrKeyNotFound it means
-				// we need to re-build the index
-				continue
-			} else if err != nil {
-				return err
-			}
-			repos = append(repos, repo)
-		}
-		return nil
-	})
+// Repo retrieves a specific repo from the
+// datastore for the given ID.
+func (db *Repostore) Repo(id int64) (*common.Repo, error) {
+	var repo = new(common.Repo)
+	var err = meddler.Load(db, repoTable, repo, id)
+	return repo, err
+}
 
+// RepoName retrieves a repo from the datastore
+// for the specified name.
+func (db *Repostore) RepoName(owner, name string) (*common.Repo, error) {
+	var repo = new(common.Repo)
+	var err = meddler.QueryRow(db, repo, rebind(repoNameQuery), owner, name)
+	return repo, err
+}
+
+// RepoList retrieves a list of all repos from
+// the datastore accessible by the given user ID.
+func (db *Repostore) RepoList(user *common.User) ([]*common.Repo, error) {
+	var repos []*common.Repo
+	var err = meddler.QueryAll(db, &repos, rebind(repoListQuery), user.ID)
 	return repos, err
 }
 
-// RepoParams returns the private environment parameters
-// for the given repository.
-func (db *DB) RepoParams(repo string) (map[string]string, error) {
-	params := map[string]string{}
-	key := []byte(repo)
+// // RepoKeys retrieves a set of repository keys from
+// // the datastore for the specified name.
+// func (db *Repostore) RepoKeypair(repo *common.Repo) (*common.Keypair, error) {
+// 	var keypair = new(common.Keypair)
+// 	var err = meddler.QueryRow(db, keypair, rebind(repoKeysQuery), repo.ID)
+// 	return keypair, err
+// }
 
-	err := db.View(func(t *bolt.Tx) error {
-		return get(t, bucketRepoParams, key, &params)
-	})
+// // RepoParams retrieves a set of repository params from
+// // the datastore for the specified name.
+// func (db *Repostore) RepoParams(repo *common.Repo) (*common.Params, error) {
+// 	var params = new(common.Params)
+// 	var err = meddler.QueryRow(db, params, rebind(repoParamsQuery), repo.ID)
+// 	return params, err
+// }
 
-	return params, err
-}
-
-// RepoKeypair returns the private and public rsa keys
-// for the given repository.
-func (db *DB) RepoKeypair(repo string) (*common.Keypair, error) {
-	keypair := &common.Keypair{}
-	key := []byte(repo)
-
-	err := db.View(func(t *bolt.Tx) error {
-		return get(t, bucketRepoKeys, key, keypair)
-	})
-
-	return keypair, err
-}
-
-// SetRepo inserts or updates a repository.
-func (db *DB) SetRepo(repo *common.Repo) error {
-	key := []byte(repo.FullName)
-	repo.Updated = time.Now().UTC().Unix()
-
-	return db.Update(func(t *bolt.Tx) error {
-		return update(t, bucketRepo, key, repo)
-	})
-}
-
-// SetRepoNotExists updates a repository. If the repository
-// already exists ErrConflict is returned.
-func (db *DB) SetRepoNotExists(user *common.User, repo *common.Repo) error {
-	repokey := []byte(repo.FullName)
+// AddRepo inserts a repo in the datastore.
+func (db *Repostore) AddRepo(repo *common.Repo) error {
 	repo.Created = time.Now().UTC().Unix()
 	repo.Updated = time.Now().UTC().Unix()
-
-	return db.Update(func(t *bolt.Tx) error {
-		userkey := []byte(user.Login)
-		err := push(t, bucketUserRepos, userkey, repokey)
-		if err != nil {
-			return err
-		}
-		return insert(t, bucketRepo, repokey, repo)
-	})
+	return meddler.Insert(db, repoTable, repo)
 }
 
-// SetRepoParams inserts or updates the private
-// environment parameters for the named repository.
-func (db *DB) SetRepoParams(repo string, params map[string]string) error {
-	key := []byte(repo)
-
-	return db.Update(func(t *bolt.Tx) error {
-		return update(t, bucketRepoParams, key, params)
-	})
+// SetRepo updates a repo in the datastore.
+func (db *Repostore) SetRepo(repo *common.Repo) error {
+	repo.Updated = time.Now().UTC().Unix()
+	return meddler.Update(db, repoTable, repo)
 }
 
-// SetRepoKeypair inserts or updates the private and
-// public keypair for the named repository.
-func (db *DB) SetRepoKeypair(repo string, keypair *common.Keypair) error {
-	key := []byte(repo)
+// // SetRepoKeypair upserts a keypair in the datastore.
+// func (db *Repostore) SetRepoKeypair(keys *common.Keypair) error {
+// 	return meddler.Save(db, repoKeyTable, keys)
+// }
 
-	return db.Update(func(t *bolt.Tx) error {
-		return update(t, bucketRepoKeys, key, keypair)
-	})
+// // SetRepoKeypair upserts a param set in the datastore.
+// func (db *Repostore) SetRepoParams(params *common.Params) error {
+// 	return meddler.Save(db, repoParamTable, params)
+// }
+
+// DelRepo removes the repo from the datastore.
+func (db *Repostore) DelRepo(repo *common.Repo) error {
+	var _, err = db.Exec(rebind(repoDeleteStmt), repo.ID)
+	return err
 }
 
-// DelRepo deletes the repository.
-func (db *DB) DelRepo(repo *common.Repo) error {
-	key := []byte(repo.FullName)
+// Repo table names in database.
+const (
+	repoTable      = "repos"
+	repoKeyTable   = "repo_keys"
+	repoParamTable = "repo_params"
+)
 
-	return db.Update(func(t *bolt.Tx) error {
-		err := t.Bucket(bucketRepo).Delete(key)
-		if err != nil {
-			return err
-		}
-		t.Bucket(bucketRepoKeys).Delete(key)
-		t.Bucket(bucketRepoParams).Delete(key)
-		t.Bucket(bucketBuildSeq).Delete(key)
-		deleteWithPrefix(t, bucketBuild, append(key, '/'))
-		deleteWithPrefix(t, bucketBuildLogs, append(key, '/'))
-		deleteWithPrefix(t, bucketBuildStatus, append(key, '/'))
+// SQL statement to retrieve a Repo by name.
+const repoNameQuery = `
+SELECT *
+FROM repos
+WHERE repo_owner = ?
+  AND repo_name  = ?
+LIMIT 1;
+`
 
-		return err
-	})
-}
+// SQL statement to retrieve a list of Repos
+// with permissions for the given User ID.
+const repoListQuery = `
+SELECT r.*
+FROM
+ repos r
+,stars s
+WHERE r.repo_id = s.repo_id
+  AND s.user_id = ?
+`
 
-// Subscribed returns true if the user is subscribed
-// to the named repository.
-//
-// TODO (bradrydzewski) we are currently storing the subscription
-// data in a wrapper element called common.Subscriber. This is
-// no longer necessary.
-func (db *DB) Subscribed(login, repo string) (bool, error) {
-	sub := &common.Subscriber{}
-	err := db.View(func(t *bolt.Tx) error {
-		repokey := []byte(repo)
+// SQL statement to retrieve a keypair for
+// a Repository.
+const repoKeysQuery = `
+SELECT *
+FROM repo_keys
+WHERE repo_id = ?
+LIMIT 1;
+`
 
-		// get the index of user tokens and unmarshal
-		// to a string array.
-		var keys [][]byte
-		err := get(t, bucketUserRepos, []byte(login), &keys)
-		if err != nil && err != ErrKeyNotFound {
-			return err
-		}
+// SQL statement to retrieve a keypair for
+// a Repository.
+const repoParamsQuery = `
+SELECT *
+FROM repo_params
+WHERE repo_id = ?
+LIMIT 1;
+`
 
-		for _, key := range keys {
-			if bytes.Equal(repokey, key) {
-				sub.Subscribed = true
-				return nil
-			}
-		}
-		return nil
-	})
-	return sub.Subscribed, err
-}
-
-// SetSubscriber inserts a subscriber for the named
-// repository.
-func (db *DB) SetSubscriber(login, repo string) error {
-	return db.Update(func(t *bolt.Tx) error {
-		userkey := []byte(login)
-		repokey := []byte(repo)
-		return push(t, bucketUserRepos, userkey, repokey)
-	})
-}
-
-// DelSubscriber removes the subscriber by login for the
-// named repository.
-func (db *DB) DelSubscriber(login, repo string) error {
-	return db.Update(func(t *bolt.Tx) error {
-		userkey := []byte(login)
-		repokey := []byte(repo)
-		return splice(t, bucketUserRepos, userkey, repokey)
-	})
-}
+// SQL statement to delete a User by ID.
+const (
+	repoDeleteStmt        = `DELETE FROM repos       WHERE repo_id = ?`
+	repoKeypairDeleteStmt = `DELETE FROM repo_params WHERE repo_id = ?`
+	repoParamsDeleteStmt  = `DELETE FROM repo_keys   WHERE repo_id = ?`
+)

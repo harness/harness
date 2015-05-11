@@ -1,93 +1,19 @@
 package common
 
-const (
-	StatePending = "pending"
-	StateRunning = "running"
-	StateSuccess = "success"
-	StateFailure = "failure"
-	StateKilled  = "killed"
-	StateError   = "error"
-)
-
 type Build struct {
-	Number   int    `json:"number"`
-	State    string `json:"state"`
-	Duration int64  `json:"duration"`
-	Started  int64  `json:"started_at"`
-	Finished int64  `json:"finished_at"`
-	Created  int64  `json:"created_at"`
-	Updated  int64  `json:"updated_at"`
+	ID       int64  `meddler:"build_id,pk"    json:"-"`
+	CommitID int64  `meddler:"commit_id"      json:"-"`
+	State    string `meddler:"build_state"    json:"state"`
+	ExitCode int    `meddler:"build_exit"     json:"exit_code"`
+	Sequence int    `meddler:"build_seq"      json:"sequence"`
+	Duration int64  `meddler:"build_duration" json:"duration"`
+	Started  int64  `meddler:"build_started"  json:"started_at"`
+	Finished int64  `meddler:"build_finished" json:"finished_at"`
+	Created  int64  `meddler:"build_created"  json:"created_at"`
+	Updated  int64  `meddler:"build_updated"  json:"updated_at"`
 
-	// Tasks int  `json:"task_count"`
-
-	// Commit represents the commit data send in the
-	// post-commit hook. This will not be populated when
-	// a pull requests.
-	Commit *Commit `json:"head_commit,omitempty"`
-
-	// PullRequest represents the pull request data sent
-	// in the post-commit hook. This will only be populated
-	// when a pull request.
-	PullRequest *PullRequest `json:"pull_request,omitempty"`
-
-	// Statuses represents a list of build statuses used
-	// to annotate the build.
-	Statuses []*Status `json:"statuses,omitempty"`
-
-	// Tasks represents a list of build tasks. A build is
-	// comprised of one or many tasks.
-	Tasks []*Task `json:"tasks,omitempty"`
+	Environment map[string]string `meddler:"build_env,json" json:"environment"`
 }
 
-type Status struct {
-	State   string `json:"state"`
-	Link    string `json:"target_url"`
-	Desc    string `json:"description"`
-	Context string `json:"context"`
-}
-
-type Commit struct {
-	Sha       string  `json:"sha,omitempty"`
-	Ref       string  `json:"ref,omitempty"`
-	Message   string  `json:"message,omitempty"`
-	Timestamp string  `json:"timestamp,omitempty"`
-	Author    *Author `json:"author,omitempty"`
-	Remote    *Remote `json:"repo,omitempty"`
-}
-
-type PullRequest struct {
-	Number int     `json:"number,omitempty"`
-	Title  string  `json:"title,omitempty"`
-	Source *Commit `json:"source,omitempty"`
-	Target *Commit `json:"target,omitempty"`
-}
-
-type Author struct {
-	Name     string `json:"name,omitempty"`
-	Login    string `json:"login,omitempty"`
-	Email    string `json:"email,omitempty"`
-	Gravatar string `json:"gravatar_id,omitempty"`
-}
-
-type Remote struct {
-	Name     string `json:"name,omitempty"`
-	FullName string `json:"full_name,omitempty"`
-	Clone    string `json:"clone_url,omitempty"`
-}
-
-type Clone struct {
-	Origin  string   `json:"origin"`
-	Remote  string   `json:"remote"`
-	Branch  string   `json:"branch"`
-	Sha     string   `json:"sha"`
-	Ref     string   `json:"ref"`
-	Dir     string   `json:"dir"`
-	Netrc   *Netrc   `json:"netrc"`
-	Keypair *Keypair `json:"keypair"`
-}
-
-type Netrc struct {
-	Machine  string `json:"machine"`
-	Login    string `json:"login"`
-	Password string `json:"user"`
-}
+// QUESTION: should we track if it was oom killed?
+// OOMKill bool `meddler:"build_oom" json:"oom_kill"`

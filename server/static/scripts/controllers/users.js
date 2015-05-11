@@ -18,7 +18,7 @@
 
 		// Gets the user tokens
 		tokens.list().then(function(payload){
-			$scope.tokens = payload.data;
+			$scope.tokens = payload.data || [];
 		});
 
 		$scope.newToken={Label: ""};

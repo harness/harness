@@ -1,65 +1,149 @@
 package builtin
 
 import (
-	"os"
 	"testing"
+	"time"
 
 	"github.com/drone/drone/common"
-	. "github.com/franela/goblin"
+	"github.com/franela/goblin"
 )
 
-func TestToken(t *testing.T) {
-	g := Goblin(t)
-	g.Describe("Tokens", func() {
-		var db *DB // temporary database
+func TestTokenstore(t *testing.T) {
+	db := mustConnectTest()
+	ts := NewTokenstore(db)
+	defer db.Close()
 
-		// create a new database before each unit
-		// test and destroy afterwards.
+	g := goblin.Goblin(t)
+	g.Describe("Tokenstore", func() {
+
+		// before each test be sure to purge the package
+		// table data from the database.
 		g.BeforeEach(func() {
-			db = Must("/tmp/drone.test.db")
-		})
-		g.AfterEach(func() {
-			os.Remove(db.Path())
+			db.Exec("DELETE FROM tokens")
 		})
 
-		g.It("Should list for user", func() {
-			db.SetUserNotExists(&common.User{Login: "octocat"})
-			err1 := db.SetToken(&common.Token{Login: "octocat", Label: "gist"})
-			err2 := db.SetToken(&common.Token{Login: "octocat", Label: "github"})
-			g.Assert(err1).Equal(nil)
-			g.Assert(err2).Equal(nil)
-
-			list, err := db.TokenList("octocat")
-			g.Assert(err).Equal(nil)
-			g.Assert(len(list)).Equal(2)
+		g.It("Should Add a new Token", func() {
+			token := common.Token{
+				UserID: 1,
+				Label:  "foo",
+				Kind:   common.TokenUser,
+				Issued: time.Now().Unix(),
+				Expiry: time.Now().Unix() + 1000,
+			}
+			err := ts.AddToken(&token)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(token.ID != 0).IsTrue()
 		})
 
-		g.It("Should insert", func() {
-			db.SetUserNotExists(&common.User{Login: "octocat"})
-			err := db.SetToken(&common.Token{Login: "octocat", Label: "gist"})
-			g.Assert(err).Equal(nil)
-
-			token, err := db.Token("octocat", "gist")
-			g.Assert(err).Equal(nil)
-			g.Assert(token.Label).Equal("gist")
-			g.Assert(token.Login).Equal("octocat")
+		g.It("Should get a Token", func() {
+			token := common.Token{
+				UserID: 1,
+				Label:  "foo",
+				Kind:   common.TokenUser,
+				Issued: time.Now().Unix(),
+				Expiry: time.Now().Unix() + 1000,
+			}
+			err1 := ts.AddToken(&token)
+			gettoken, err2 := ts.Token(token.ID)
+			g.Assert(err1 == nil).IsTrue()
+			g.Assert(err2 == nil).IsTrue()
+			g.Assert(token.ID).Equal(gettoken.ID)
+			g.Assert(token.Label).Equal(gettoken.Label)
+			g.Assert(token.Kind).Equal(gettoken.Kind)
+			g.Assert(token.Issued).Equal(gettoken.Issued)
+			g.Assert(token.Expiry).Equal(gettoken.Expiry)
 		})
 
-		g.It("Should delete", func() {
-			db.SetUserNotExists(&common.User{Login: "octocat"})
-			err := db.SetToken(&common.Token{Login: "octocat", Label: "gist"})
-			g.Assert(err).Equal(nil)
+		g.It("Should Get a Token By Label", func() {
+			token := common.Token{
+				UserID: 1,
+				Label:  "foo",
+				Kind:   common.TokenUser,
+				Issued: time.Now().Unix(),
+				Expiry: time.Now().Unix() + 1000,
+			}
+			err1 := ts.AddToken(&token)
+			gettoken, err2 := ts.TokenLabel(&common.User{ID: 1}, "foo")
+			g.Assert(err1 == nil).IsTrue()
+			g.Assert(err2 == nil).IsTrue()
+			g.Assert(token.ID).Equal(gettoken.ID)
+			g.Assert(token.Label).Equal(gettoken.Label)
+			g.Assert(token.Kind).Equal(gettoken.Kind)
+			g.Assert(token.Issued).Equal(gettoken.Issued)
+			g.Assert(token.Expiry).Equal(gettoken.Expiry)
+		})
 
-			token, err := db.Token("octocat", "gist")
-			g.Assert(err).Equal(nil)
-			g.Assert(token.Label).Equal("gist")
-			g.Assert(token.Login).Equal("octocat")
+		g.It("Should Enforce Unique Token Label", func() {
+			token1 := common.Token{
+				UserID: 1,
+				Label:  "foo",
+				Kind:   common.TokenUser,
+				Issued: time.Now().Unix(),
+				Expiry: time.Now().Unix() + 1000,
+			}
+			token2 := common.Token{
+				UserID: 1,
+				Label:  "foo",
+				Kind:   common.TokenUser,
+				Issued: time.Now().Unix(),
+				Expiry: time.Now().Unix() + 1000,
+			}
+			err1 := ts.AddToken(&token1)
+			err2 := ts.AddToken(&token2)
+			g.Assert(err1 == nil).IsTrue()
+			g.Assert(err2 == nil).IsFalse()
+		})
 
-			err = db.DelToken(token)
-			g.Assert(err).Equal(nil)
+		g.It("Should Get a User Token List", func() {
+			token1 := common.Token{
+				UserID: 1,
+				Label:  "bar",
+				Kind:   common.TokenUser,
+				Issued: time.Now().Unix(),
+				Expiry: time.Now().Unix() + 1000,
+			}
+			token2 := common.Token{
+				UserID: 1,
+				Label:  "foo",
+				Kind:   common.TokenUser,
+				Issued: time.Now().Unix(),
+				Expiry: time.Now().Unix() + 1000,
+			}
+			token3 := common.Token{
+				UserID: 2,
+				Label:  "foo",
+				Kind:   common.TokenUser,
+				Issued: time.Now().Unix(),
+				Expiry: time.Now().Unix() + 1000,
+			}
+			ts.AddToken(&token1)
+			ts.AddToken(&token2)
+			ts.AddToken(&token3)
+			tokens, err := ts.TokenList(&common.User{ID: 1})
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(tokens)).Equal(2)
+			g.Assert(tokens[0].ID).Equal(token1.ID)
+			g.Assert(tokens[0].Label).Equal(token1.Label)
+			g.Assert(tokens[0].Kind).Equal(token1.Kind)
+			g.Assert(tokens[0].Issued).Equal(token1.Issued)
+			g.Assert(tokens[0].Expiry).Equal(token1.Expiry)
+		})
 
-			token, err = db.Token("octocat", "gist")
-			g.Assert(err != nil).IsTrue()
+		g.It("Should Del a Token", func() {
+			token := common.Token{
+				UserID: 1,
+				Label:  "foo",
+				Kind:   common.TokenUser,
+				Issued: time.Now().Unix(),
+				Expiry: time.Now().Unix() + 1000,
+			}
+			ts.AddToken(&token)
+			_, err1 := ts.Token(token.ID)
+			err2 := ts.DelToken(&token)
+			_, err3 := ts.Token(token.ID)
+			g.Assert(err1 == nil).IsTrue()
+			g.Assert(err2 == nil).IsTrue()
+			g.Assert(err3 == nil).IsFalse()
 		})
 	})
 }

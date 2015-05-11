@@ -1,0 +1,590 @@
+html {
+  font-family: sans-serif;
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+}
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+main,
+menu,
+nav,
+section,
+summary {
+  display: block;
+}
+audio,
+canvas,
+progress,
+video {
+  display: inline-block;
+  vertical-align: baseline;
+}
+audio:not([controls]) {
+  display: none;
+  height: 0;
+}
+[hidden],
+template {
+  display: none;
+}
+a {
+  background-color: transparent;
+}
+a:active,
+a:hover {
+  outline: 0;
+}
+abbr[title] {
+  border-bottom: 1px dotted;
+}
+b,
+strong {
+  font-weight: bold;
+}
+dfn {
+  font-style: italic;
+}
+h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+mark {
+  background: #ff0;
+  color: #000;
+}
+small {
+  font-size: 80%;
+}
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+sup {
+  top: -0.5em;
+}
+sub {
+  bottom: -0.25em;
+}
+img {
+  border: 0;
+}
+svg:not(:root) {
+  overflow: hidden;
+}
+figure {
+  margin: 1em 40px;
+}
+hr {
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  height: 0;
+}
+pre {
+  overflow: auto;
+}
+code,
+kbd,
+pre,
+samp {
+  font-family: monospace, monospace;
+  font-size: 1em;
+}
+button,
+input,
+optgroup,
+select,
+textarea {
+  color: inherit;
+  font: inherit;
+  margin: 0;
+}
+button {
+  overflow: visible;
+}
+button,
+select {
+  text-transform: none;
+}
+button,
+html input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+  -webkit-appearance: button;
+  cursor: pointer;
+}
+button[disabled],
+html input[disabled] {
+  cursor: default;
+}
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+input {
+  line-height: normal;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  box-sizing: border-box;
+  /* 1 */
+  padding: 0;
+  /* 2 */
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  height: auto;
+}
+input[type="search"] {
+  -webkit-appearance: textfield;
+  -moz-box-sizing: content-box;
+  -webkit-box-sizing: content-box;
+  box-sizing: content-box;
+}
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+fieldset {
+  border: 1px solid #c0c0c0;
+  margin: 0 2px;
+  padding: 0.35em 0.625em 0.75em;
+}
+legend {
+  border: 0;
+  padding: 0;
+}
+textarea {
+  overflow: auto;
+}
+optgroup {
+  font-weight: bold;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+td,
+th {
+  padding: 0;
+}
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+body {
+  font-family: 'Open Sans';
+  font-size: 14px;
+  background: #EEE;
+}
+h1 {
+  flex: 1 1 auto;
+  display: inline;
+  margin: 0px;
+  line-height: 70px;
+  font-size: 22px;
+  font-weight: normal;
+  padding-left: 40px;
+  color: #9E9E9E;
+}
+h1 span {
+  color: #212121;
+}
+h1 span:before {
+  content: "/";
+  margin-left: 5px;
+  margin-right: 5px;
+}
+header {
+  height: 70px;
+  min-height: 70px;
+  max-height: 70px;
+  border-bottom: 1px solid #eeeeee;
+  display: flex;
+}
+header nav {
+  flex: 1 1 auto;
+  display: inline;
+}
+header nav li {
+  display: inline-block;
+  line-height: 70px;
+}
+header menu {
+  flex: 1 1 auto;
+  display: inline;
+  margin: 0px;
+  padding: 0px;
+  padding-right: 20px;
+  text-align: right;
+}
+header menu li {
+  display: inline-block;
+  line-height: 70px;
+}
+header menu li a {
+  border-radius: 999em;
+  padding: 7px 18px;
+  border: 1px solid #E0E0E0;
+  margin-left: 5px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.44);
+  text-decoration: none;
+}
+header menu li a.primary {
+  border-color: #4CAF50;
+  color: #4CAF50;
+}
+aside {
+  width: 20%;
+  max-width: 20%;
+  min-width: 350px;
+  background: #fafafa;
+  box-shadow: -1px 0 1px -2px rgba(0, 0, 0, 0.9);
+  padding: 20px;
+  box-sizing: border-box;
+}
+aside div {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  margin-top: 35px;
+}
+aside div:first-child {
+  margin-top: 25px;
+}
+aside div h3 {
+  border-top: 1px solid rgba(0, 0, 0, 0.44);
+  text-transform: uppercase;
+  line-height: 20px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.8);
+  display: inline-block;
+  margin: 0px;
+  padding: 10px 0px;
+  margin-bottom: 15px;
+}
+aside ul.branches {
+  color: rgba(0, 0, 0, 0.901961);
+  padding: 0px;
+  margin: 0px;
+}
+aside ul.branches li {
+  list-style: none;
+  vertical-align: middle;
+  height: 30px;
+  margin-bottom: 3px;
+}
+aside ul.branches li:before {
+  content: "\f299";
+  font-family: "Material-Design-Iconic-Font";
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #E0E0E0;
+  color: rgba(0, 0, 0, 0.44);
+  vertical-align: middle;
+  margin-right: 10px;
+  text-align: center;
+  line-height: 22px;
+}
+aside ul.branches li.success:before {
+  border-color: #4CAF50;
+  color: #4CAF50;
+}
+aside ul.branches li.failure:before {
+  content: "\f29a";
+  border-color: #F44336;
+  color: #F44336;
+}
+aside ul.users {
+  color: rgba(0, 0, 0, 0.901961);
+  padding: 0px;
+  margin: 0px;
+}
+aside ul.users li {
+  list-style: none;
+  vertical-align: middle;
+  height: 30px;
+  margin-bottom: 3px;
+}
+aside ul.users li img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+article {
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  padding: 40px;
+  padding-left: 80px;
+}
+article section pre {
+  background: #212121;
+  color: #FFF;
+  padding: 50px;
+  font-family: 'Droid Sans Mono';
+  position: relative;
+  line-height: 20px;
+  font-size: 13px;
+  margin: 0px;
+  margin-bottom: 20px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow: hidden;
+  border-bottom-right-radius: 4px;
+}
+.logo {
+  height: 50px;
+  max-height: 50px;
+  line-height: 50px;
+  width: 50px;
+  margin-left: 10px;
+  margin-top: 10px;
+  margin-right: 10px;
+  border-radius: 50%;
+  opacity: 0.7;
+}
+.logo:before {
+  content: '';
+  display: block;
+  height: 50px;
+  background: url("../images/drone_32.svg") no-repeat center center;
+  background-size: 34px;
+}
+header {
+  background: #212121;
+  height: 70px;
+  min-height: 70px;
+  max-height: 70px;
+  display: flex;
+}
+nav {
+  background: #FFF;
+  height: 70px;
+  min-height: 70px;
+  max-height: 70px;
+  display: flex;
+  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid #EEEEEE;
+}
+.logo {
+  width: 50px;
+  margin-left: 10px;
+  margin-top: 10px;
+  margin-right: 10px;
+  border-radius: 50%;
+  opacity: 0.7;
+}
+.logo:before {
+  content: '';
+  display: block;
+  height: 50px;
+  background: url("../images/logo.svg") no-repeat center center;
+  background-size: 34px;
+}
+.logo:hover {
+  opacity: 1;
+}
+.title {
+  flex: 1 1 auto;
+}
+.user {
+  text-align: right;
+  line-height: 70px;
+}
+.user img {
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 20px;
+  margin-left: 15px;
+}
+.user span {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  display: inline-block;
+  vertical-align: middle;
+}
+main {
+  padding: 40px 80px 80px;
+}
+section {
+  margin: 0px auto;
+  max-width: 1000px;
+  background: #FFF;
+  box-sizing: border-box;
+}
+section pre {
+  background: #212121;
+  color: #FFF;
+  padding: 50px;
+  font-family: 'Droid Sans Mono';
+  position: relative;
+  line-height: 20px;
+  font-size: 13px;
+  margin: 0px;
+  margin-bottom: 20px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow: hidden;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+.commit-section {
+  display: flex;
+  position: relative;
+  padding-top: 30px;
+  padding-bottom: 30px;
+  padding-left: 30px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  margin-bottom: 20px;
+}
+.commit-section .commit-status {
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+}
+.commit-section .commit-meta {
+  flex: 1 1 auto;
+}
+.commit-section .commit-meta h2 {
+  margin: 0px;
+  padding: 0px;
+  font-weight: normal;
+  font-size: 24px;
+  margin-bottom: 5px;
+  margin-top: 3px;
+}
+.commit-section .commit-meta .octicon {
+  font-weight: normal;
+  font-size: 12px;
+  margin: 0px;
+  margin-top: 20px;
+  color: #757575;
+  display: inline-block;
+  text-align: right;
+  background: #eee;
+  background: #F5F5F5;
+  padding: 8px 18px;
+  padding-left: 15px;
+  color: #9E9E9E;
+}
+.commit-section .commit-meta .octicon:before {
+  margin-right: 10px;
+}
+.commit-section .commit-meta h2 small {
+  color: #757575;
+  margin-left: 10px;
+  font-size: 90%;
+}
+.commit-section .commit-meta h3 {
+  margin: 0px;
+  padding: 0px;
+  font-weight: normal;
+  font-size: 14px;
+  color: #757575;
+}
+.commit-section .commit-meta span {
+  color: #212121;
+}
+.commit-section .commit-meta p {
+  color: #424242;
+  padding: 0px;
+  margin: 0px;
+  font-size: 14px;
+  color: #757575;
+  margin-top: 3px;
+}
+.commit-section .commit-meta p.tag {
+  font-weight: normal;
+  font-size: 12px;
+  margin: 0px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  color: #757575;
+  display: block;
+  text-align: right;
+  margin-bottom: 5px;
+  float: right;
+  background: #eee;
+  padding: 5px 20px;
+  margin-left: 5px;
+}
+.fab {
+  position: fixed;
+  bottom: 20px;
+  right: 50px;
+  background: rgba(158, 158, 158, 0.75);
+  width: 40px;
+  height: 40px;
+  z-index: 2;
+  border-radius: 50%;
+  opacity: 0.6;
+  cursor: pointer;
+}
+.fab:before {
+  content: "\f297";
+  font-family: 'Material-Design-Iconic-Font';
+  transform: rotate(90%);
+  line-height: 40px;
+  text-align: center;
+  width: 40px;
+  display: block;
+  color: #FFF;
+  font-size: 22px;
+  transform: rotate(-90deg);
+}
+.status {
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  color: #FFF;
+  font-size: 20px;
+  font-family: "Open Sans";
+  font-weight: 600;
+  width: 35px;
+  height: 35px;
+  font-size: 16px;
+}
+.status:before {
+  line-height: 35px;
+  text-align: center;
+  display: block;
+  font-family: 'Material-Design-Iconic-Font';
+}
+.success {
+  background: #4CAF50;
+  background: #FFF;
+  border: 2px solid #4CAF50;
+}
+.success:before {
+  content: "\f023";
+  color: #4CAF50;
+}
+.failure {
+  background: #F44336;
+  background: #FFF;
+  border: 2px solid #F44336;
+}
+.failure:before {
+  content: "\f29a";
+  color: #F44336;
+}

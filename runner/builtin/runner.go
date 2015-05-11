@@ -2,8 +2,6 @@ package builtin
 
 import (
 	"bytes"
-	"crypto/sha1"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -51,42 +49,41 @@ func (r *Runner) Run(w *queue.Work) error {
 			worker.Remove()
 		}
 
-		// if any part of the build fails and leaves
+		// if any part of the commit fails and leaves
 		// behind orphan sub-builds we need to cleanup
 		// after ourselves.
-		if w.Build.State == common.StateRunning {
+		if w.Commit.State == common.StateRunning {
 			// if any tasks are running or pending
 			// we should mark them as complete.
-			for _, t := range w.Build.Tasks {
-				if t.State == common.StateRunning {
-					t.State = common.StateError
-					t.Finished = time.Now().UTC().Unix()
-					t.Duration = t.Finished - t.Started
+			for _, b := range w.Commit.Builds {
+				if b.State == common.StateRunning {
+					b.State = common.StateError
+					b.Finished = time.Now().UTC().Unix()
+					b.Duration = b.Finished - b.Started
 				}
-				if t.State == common.StatePending {
-					t.State = common.StateError
-					t.Started = time.Now().UTC().Unix()
-					t.Finished = time.Now().UTC().Unix()
-					t.Duration = 0
+				if b.State == common.StatePending {
+					b.State = common.StateError
+					b.Started = time.Now().UTC().Unix()
+					b.Finished = time.Now().UTC().Unix()
+					b.Duration = 0
 				}
-				r.SetTask(w.Repo, w.Build, t)
+				r.SetBuild(w.Repo, w.Commit, b)
 			}
 			// must populate build start
-			if w.Build.Started == 0 {
-				w.Build.Started = time.Now().UTC().Unix()
+			if w.Commit.Started == 0 {
+				w.Commit.Started = time.Now().UTC().Unix()
 			}
 			// mark the build as complete (with error)
-			w.Build.State = common.StateError
-			w.Build.Finished = time.Now().UTC().Unix()
-			w.Build.Duration = w.Build.Finished - w.Build.Started
-			r.SetBuild(w.User, w.Repo, w.Build)
+			w.Commit.State = common.StateError
+			w.Commit.Finished = time.Now().UTC().Unix()
+			r.SetCommit(w.User, w.Repo, w.Commit)
 		}
 	}()
 
 	// marks the build as running
-	w.Build.Started = time.Now().UTC().Unix()
-	w.Build.State = common.StateRunning
-	err := r.SetBuild(w.User, w.Repo, w.Build)
+	w.Commit.Started = time.Now().UTC().Unix()
+	w.Commit.State = common.StateRunning
+	err := r.SetCommit(w.User, w.Repo, w.Commit)
 	if err != nil {
 		return err
 	}
@@ -101,23 +98,23 @@ func (r *Runner) Run(w *queue.Work) error {
 
 	// loop through and execute the build and
 	// clone steps for each build task.
-	for _, task := range w.Build.Tasks {
+	for _, task := range w.Commit.Builds {
 
 		// marks the task as running
 		task.State = common.StateRunning
 		task.Started = time.Now().UTC().Unix()
-		err = r.SetTask(w.Repo, w.Build, task)
+		err = r.SetBuild(w.Repo, w.Commit, task)
 		if err != nil {
 			return err
 		}
 
 		work := &work{
-			Repo:  w.Repo,
-			Build: w.Build,
-			Keys:  w.Keys,
-			Netrc: w.Netrc,
-			Yaml:  w.Yaml,
-			Task:  task,
+			Repo:   w.Repo,
+			Commit: w.Commit,
+			Keys:   w.Keys,
+			Netrc:  w.Netrc,
+			Yaml:   w.Yaml,
+			Build:  task,
 		}
 		in, err := json.Marshal(work)
 		if err != nil {
@@ -125,7 +122,7 @@ func (r *Runner) Run(w *queue.Work) error {
 		}
 		worker := newWorkerTimeout(client, w.Repo.Timeout+10) // 10 minute buffer
 		workers = append(workers, worker)
-		cname := cname(w.Repo.FullName, w.Build.Number, task.Number)
+		cname := cname(task)
 		state, builderr := worker.Build(cname, in)
 
 		switch {
@@ -154,7 +151,7 @@ func (r *Runner) Run(w *queue.Work) error {
 			defer rc.Close()
 			StdCopy(&buf, &buf, rc)
 		}
-		err = r.SetLogs(w.Repo, w.Build, task, ioutil.NopCloser(&buf))
+		err = r.SetLogs(w.Repo, w.Commit, task, ioutil.NopCloser(&buf))
 		if err != nil {
 			return err
 		}
@@ -162,7 +159,7 @@ func (r *Runner) Run(w *queue.Work) error {
 		// update the task in the datastore
 		task.Finished = time.Now().UTC().Unix()
 		task.Duration = task.Finished - task.Started
-		err = r.SetTask(w.Repo, w.Build, task)
+		err = r.SetBuild(w.Repo, w.Commit, task)
 		if err != nil {
 			return err
 		}
@@ -170,28 +167,28 @@ func (r *Runner) Run(w *queue.Work) error {
 
 	// update the build state if any of the sub-tasks
 	// had a non-success status
-	w.Build.State = common.StateSuccess
-	for _, task := range w.Build.Tasks {
-		if task.State != common.StateSuccess {
-			w.Build.State = task.State
+	w.Commit.State = common.StateSuccess
+	for _, build := range w.Commit.Builds {
+		if build.State != common.StateSuccess {
+			w.Commit.State = build.State
 			break
 		}
 	}
-	err = r.SetBuild(w.User, w.Repo, w.Build)
+	err = r.SetCommit(w.User, w.Repo, w.Commit)
 	if err != nil {
 		return err
 	}
 
 	// loop through and execute the notifications and
 	// the destroy all containers afterward.
-	for i, task := range w.Build.Tasks {
+	for i, build := range w.Commit.Builds {
 		work := &work{
-			Repo:  w.Repo,
-			Build: w.Build,
-			Keys:  w.Keys,
-			Netrc: w.Netrc,
-			Yaml:  w.Yaml,
-			Task:  task,
+			Repo:   w.Repo,
+			Commit: w.Commit,
+			Keys:   w.Keys,
+			Netrc:  w.Netrc,
+			Yaml:   w.Yaml,
+			Build:  build,
 		}
 		in, err := json.Marshal(work)
 		if err != nil {
@@ -204,21 +201,21 @@ func (r *Runner) Run(w *queue.Work) error {
 	return nil
 }
 
-func (r *Runner) Cancel(repo string, build, task int) error {
+func (r *Runner) Cancel(build *common.Build) error {
 	client, err := dockerclient.NewDockerClient(DockerHost, nil)
 	if err != nil {
 		return err
 	}
-	return client.StopContainer(cname(repo, build, task), 30)
+	return client.StopContainer(cname(build), 30)
 }
 
-func (r *Runner) Logs(repo string, build, task int) (io.ReadCloser, error) {
+func (r *Runner) Logs(build *common.Build) (io.ReadCloser, error) {
 	client, err := dockerclient.NewDockerClient(DockerHost, nil)
 	if err != nil {
 		return nil, err
 	}
 	// make sure this container actually exists
-	info, err := client.InspectContainer(cname(repo, build, task))
+	info, err := client.InspectContainer(cname(build))
 	if err != nil {
 		return nil, err
 	}
@@ -252,12 +249,8 @@ func (r *Runner) Logs(repo string, build, task int) (io.ReadCloser, error) {
 	return pr, nil
 }
 
-func cname(repo string, number, task int) string {
-	s := fmt.Sprintf("%s/%d/%d", repo, number, task)
-	h := sha1.New()
-	h.Write([]byte(s))
-	hash := hex.EncodeToString(h.Sum(nil))[:10]
-	return fmt.Sprintf("drone-%s", hash)
+func cname(build *common.Build) string {
+	return fmt.Sprintf("drone-%d", build.ID)
 }
 
 func (r *Runner) Poll(q queue.Queue) {
