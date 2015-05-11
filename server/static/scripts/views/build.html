@@ -30,10 +30,8 @@
 					</div>
 
 				</section>
-			<section>
-				<pre id="term" ng-if="task && task.state !== 'pending'">{{ logs }}</pre>
-			</section>
-			<section ng-if="build.builds.length === 1 || !task">
+
+			<section ng-if="build.builds.length > 1">
 				<table border="1">
 					<thead>
 						<tr>
@@ -59,6 +57,11 @@
 					</tbody>
 				</table>
 			</section>
+			
+			<section>
+				<pre id="term" ng-if="task && task.state !== 'pending'">{{ logs }}</pre>
+			</section>
+
 
 			<button class="fab" ng-if="build.state === 'running'" ng-click="tail()"></button>
 	</main>
