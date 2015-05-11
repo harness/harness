@@ -17,10 +17,10 @@ import (
 // additional repository meta-data.
 type repoResp struct {
 	*common.Repo
-	Perms   *common.Perm       `json:"permissions,omitempty"`
-	Watch   *common.Subscriber `json:"subscription,omitempty"`
-	Keypair *common.Keypair    `json:"keypair,omitempty"`
-	Params  map[string]string  `json:"params,omitempty"`
+	Perms   *common.Perm      `json:"permissions,omitempty"`
+	Keypair *common.Keypair   `json:"keypair,omitempty"`
+	Params  map[string]string `json:"params,omitempty"`
+	Starred bool              `json:"starred,omitempty"`
 }
 
 // repoReq is a data structure used for receiving
@@ -31,11 +31,10 @@ type repoResp struct {
 // accept null values, effectively patching an existing
 // repository object with only the supplied fields.
 type repoReq struct {
-	Disabled   *bool  `json:"disabled"`
-	DisablePR  *bool  `json:"disable_prs"`
-	DisableTag *bool  `json:"disable_tags"`
-	Trusted    *bool  `json:"privileged"`
-	Timeout    *int64 `json:"timeout"`
+	PostCommit  *bool  `json:"post_commits"`
+	PullRequest *bool  `json:"pull_requests"`
+	Trusted     *bool  `json:"privileged"`
+	Timeout     *int64 `json:"timeout"`
 
 	// optional private parameters can only be
 	// supplied by the repository admin.
@@ -53,19 +52,8 @@ func GetRepo(c *gin.Context) {
 	repo := ToRepo(c)
 	user := ToUser(c)
 	perm := ToPerm(c)
-	data := repoResp{repo, perm, nil, nil, nil}
-	// if the user is an administrator of the project
-	// we should display the private parameter data
-	// and keypair data.
-	if perm.Push {
-		data.Params, _ = store.RepoParams(repo.FullName)
+	data := repoResp{repo, perm, nil, nil, false}
 
-		// note that we should only display the public key
-		keypair, err := store.RepoKeypair(repo.FullName)
-		if err == nil {
-			data.Keypair = &common.Keypair{Public: keypair.Public}
-		}
-	}
 	// if the user is authenticated, we should display
 	// if she is watching the current repository.
 	if user == nil {
@@ -73,9 +61,17 @@ func GetRepo(c *gin.Context) {
 		return
 	}
 
+	// if the user is an administrator of the project
+	// we should display the private parameter data
+	// and keypair data.
+	if perm.Push {
+		data.Params = repo.Params
+		data.Keypair = &common.Keypair{
+			Public: repo.PublicKey,
+		}
+	}
 	// check to see if the user is subscribing to the repo
-	data.Watch = &common.Subscriber{}
-	data.Watch.Subscribed, _ = store.Subscribed(user.Login, repo.FullName)
+	data.Starred, _ = store.Starred(user, repo)
 
 	c.JSON(200, data)
 }
@@ -98,20 +94,14 @@ func PutRepo(c *gin.Context) {
 	}
 
 	if in.Params != nil {
-		err := store.SetRepoParams(repo.FullName, *in.Params)
-		if err != nil {
-			c.Fail(400, err)
-			return
-		}
+		repo.Params = *in.Params
 	}
-	if in.Disabled != nil {
-		repo.Disabled = *in.Disabled
+
+	if in.PostCommit != nil {
+		repo.PullRequest = *in.PullRequest
 	}
-	if in.DisablePR != nil {
-		repo.DisablePR = *in.DisablePR
-	}
-	if in.DisableTag != nil {
-		repo.DisableTag = *in.DisableTag
+	if in.PullRequest != nil {
+		repo.PullRequest = *in.PullRequest
 	}
 	if in.Trusted != nil && user.Admin {
 		repo.Trusted = *in.Trusted
@@ -126,20 +116,12 @@ func PutRepo(c *gin.Context) {
 		return
 	}
 
-	data := repoResp{repo, perm, nil, nil, nil}
-	data.Params, _ = store.RepoParams(repo.FullName)
-	data.Keypair, _ = store.RepoKeypair(repo.FullName)
-
-	// check to see if the user is subscribing to the repo
-	data.Watch = &common.Subscriber{}
-	data.Watch.Subscribed, _ = store.Subscribed(user.Login, repo.FullName)
-
-	// scrub the private key from the keypair
-	if data.Keypair != nil {
-		data.Keypair = &common.Keypair{
-			Public: data.Keypair.Public,
-		}
+	data := repoResp{repo, perm, nil, nil, false}
+	data.Params = repo.Params
+	data.Keypair = &common.Keypair{
+		Public: repo.PublicKey,
 	}
+	data.Starred, _ = store.Starred(user, repo)
 
 	c.JSON(200, data)
 }
@@ -184,12 +166,6 @@ func PostRepo(c *gin.Context) {
 	owner := c.Params.ByName("owner")
 	name := c.Params.ByName("name")
 
-	_, err := store.Repo(owner + "/" + name)
-	if err == nil {
-		c.String(409, "Repository already exists")
-		return
-	}
-
 	// get the repository and user permissions
 	// from the remote system.
 	remote := ToRemote(c)
@@ -204,6 +180,13 @@ func PostRepo(c *gin.Context) {
 	}
 	if !m.Admin {
 		c.Fail(403, fmt.Errorf("must be repository admin"))
+		return
+	}
+
+	// error if the repository already exists
+	_, err = store.RepoName(owner, name)
+	if err == nil {
+		c.String(409, "Repository already exists")
 		return
 	}
 
@@ -224,7 +207,9 @@ func PostRepo(c *gin.Context) {
 
 	// set the repository owner to the
 	// currently authenticated user.
-	r.User = &common.Owner{Login: user.Login}
+	r.UserID = user.ID
+	r.PostCommit = true
+	r.PullRequest = true
 
 	// generate an RSA key and add to the repo
 	key, err := sshutil.GeneratePrivateKey()
@@ -232,9 +217,12 @@ func PostRepo(c *gin.Context) {
 		c.Fail(400, err)
 		return
 	}
-	keypair := &common.Keypair{}
-	keypair.Public = sshutil.MarshalPublicKey(&key.PublicKey)
-	keypair.Private = sshutil.MarshalPrivateKey(key)
+	r.PublicKey = sshutil.MarshalPublicKey(&key.PublicKey)
+	r.PrivateKey = sshutil.MarshalPrivateKey(key)
+	keypair := &common.Keypair{
+		Public:  r.PublicKey,
+		Private: r.PrivateKey,
+	}
 
 	// activate the repository before we make any
 	// local changes to the database.
@@ -245,18 +233,13 @@ func PostRepo(c *gin.Context) {
 	}
 
 	// persist the repository
-	err = store.SetRepoNotExists(user, r)
+	err = store.AddRepo(r)
 	if err != nil {
 		c.Fail(500, err)
 		return
 	}
 
-	// persisty the repository key pair
-	err = store.SetRepoKeypair(r.FullName, keypair)
-	if err != nil {
-		c.Fail(500, err)
-		return
-	}
+	store.AddStar(user, r)
 
 	c.JSON(200, r)
 }
@@ -271,7 +254,7 @@ func Unsubscribe(c *gin.Context) {
 	repo := ToRepo(c)
 	user := ToUser(c)
 
-	err := store.DelSubscriber(user.Login, repo.FullName)
+	err := store.DelStar(user, repo)
 	if err != nil {
 		c.Fail(400, err)
 	} else {
@@ -289,11 +272,11 @@ func Subscribe(c *gin.Context) {
 	repo := ToRepo(c)
 	user := ToUser(c)
 
-	err := store.SetSubscriber(user.Login, repo.FullName)
+	err := store.AddStar(user, repo)
 	if err != nil {
 		c.Fail(400, err)
 	} else {
-		c.JSON(200, &common.Subscriber{Subscribed: true})
+		c.Writer.WriteHeader(200)
 	}
 }
 

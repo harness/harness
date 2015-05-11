@@ -87,7 +87,8 @@ type Docker struct {
 // Database represents the configuration details used
 // to connect to the embedded Bolt database.
 type Database struct {
-	Path string `toml:"path"`
+	Driver     string `toml:"driver"`
+	Datasource string `toml:"datasource"`
 }
 
 // Settings defines global settings for the Drone system.

@@ -4,16 +4,12 @@
 
 <form>
 	<div>
-		<label>Disable Pushes</label>
-		<input type="checkbox" ng-model="repo.disabled" />
+		<label>Enable Pushes</label>
+		<input type="checkbox" ng-model="repo.post_commits" />
 	</div>
 	<div>
-		<label>Disable PRs</label>
-		<input type="checkbox" ng-model="repo.disabled_prs" />
-	</div>
-	<div>
-		<label>Disable Tags</label>
-		<input type="checkbox" ng-model="repo.disabled_tags" />
+		<label>Enable Pull Requests</label>
+		<input type="checkbox" ng-model="repo.pull_requests" />
 	</div>
 
 	<div>

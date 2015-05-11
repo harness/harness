@@ -1,43 +1,43 @@
-<!doctype html>
+<!DOCTYPE html>
 <html ng-app="drone" lang="en">
-	<head>
-		<base href="/">
-		<meta charset="utf-8">
-		<meta name="author" content="Brad Rydzewski and the Drone Authors">
-		<meta name="viewport" content="width=device-width, user-scalable=no">
-		<link rel="shortcut icon" href="/static/favicon.png"/>
-		<link href="https://fonts.googleapis.com/css?family=Droid+Sans+Mono" rel="stylesheet" type="text/css">
-		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,300,700" rel="stylesheet" type="text/css" />
-		<link href="https://cdnjs.cloudflare.com/ajax/libs/octicons/2.1.2/octicons.min.css" rel="stylesheet" type="text/css" />
-	</head>
-	<body ng-cloak>
-		<main role="main" ng-view></main>
+<head>
+	<base href="/"/>
+	<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:200,300,400,600,700' rel='stylesheet' type='text/css'>
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,300' rel='stylesheet' type='text/css'>
+	<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
+	<link href='https://cdn.rawgit.com/zavoloklom/material-design-iconic-font/master/css/material-design-iconic-font.min.css' rel='stylesheet' type='text/css'>
+	<link href='https://cdnjs.cloudflare.com/ajax/libs/octicons/2.1.2/octicons.min.css' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Droid+Sans+Mono" />
+	<link href='/static/styles/drone.css' rel='stylesheet' type='text/css'>
+</head>
+<body ng-cloak>
+	<div role="main" ng-view></div>
 
-		<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.8/angular.js"></script>
-		<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.8/angular-route.js"></script>
-		<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.8/angular-resource.js"></script>
-		<script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui/0.4.0/angular-ui.js"></script>
-		<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.6.0/moment.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.15/angular.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.15/angular-route.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.15/angular-resource.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui/0.4.0/angular-ui.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.6.0/moment.min.js"></script>
 
-		<!-- main javascript application -->
-		<script src="/static/scripts/term.js"></script>
-		<script src="/static/scripts/drone.js"></script>
-		<script src="/static/scripts/controllers/agents.js"></script>
-		<script src="/static/scripts/controllers/repos.js"></script>
-		<script src="/static/scripts/controllers/builds.js"></script>
-		<script src="/static/scripts/controllers/users.js"></script>
+	<!-- main javascript application -->
+	<script src="/static/scripts/term.js"></script>
+	<script src="/static/scripts/drone.js"></script>
+	<script src="/static/scripts/controllers/agents.js"></script>
+	<script src="/static/scripts/controllers/repos.js"></script>
+	<script src="/static/scripts/controllers/builds.js"></script>
+	<script src="/static/scripts/controllers/users.js"></script>
 
-		<script src="/static/scripts/services/agents.js"></script>
-		<script src="/static/scripts/services/repos.js"></script>
-		<script src="/static/scripts/services/builds.js"></script>
-		<script src="/static/scripts/services/users.js"></script>
-		<script src="/static/scripts/services/logs.js"></script>
-		<script src="/static/scripts/services/tokens.js"></script>
-		<script src="/static/scripts/services/feed.js"></script>
+	<script src="/static/scripts/services/agents.js"></script>
+	<script src="/static/scripts/services/repos.js"></script>
+	<script src="/static/scripts/services/builds.js"></script>
+	<script src="/static/scripts/services/users.js"></script>
+	<script src="/static/scripts/services/logs.js"></script>
+	<script src="/static/scripts/services/tokens.js"></script>
+	<script src="/static/scripts/services/feed.js"></script>
 
-		<script src="/static/scripts/filters/filter.js"></script>
-		<script src="/static/scripts/filters/gravatar.js"></script>
-		<script src="/static/scripts/filters/time.js"></script>
+	<script src="/static/scripts/filters/filter.js"></script>
+	<script src="/static/scripts/filters/gravatar.js"></script>
+	<script src="/static/scripts/filters/time.js"></script>
 
-	</body>
+</body>
 </html>

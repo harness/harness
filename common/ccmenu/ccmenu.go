@@ -23,7 +23,7 @@ type CCProject struct {
 	WebURL          string   `xml:"webUrl,attr"`
 }
 
-func NewCC(r *common.Repo, b *common.Build, url string) *CCProjects {
+func NewCC(r *common.Repo, c *common.Commit, url string) *CCProjects {
 	proj := &CCProject{
 		Name:            r.Owner + "/" + r.Name,
 		WebURL:          url,
@@ -34,16 +34,16 @@ func NewCC(r *common.Repo, b *common.Build, url string) *CCProjects {
 
 	// if the build is not currently running then
 	// we can return the latest build status.
-	if b.State != common.StatePending &&
-		b.State != common.StateRunning {
+	if c.State != common.StatePending &&
+		c.State != common.StateRunning {
 		proj.Activity = "Sleeping"
-		proj.LastBuildTime = time.Unix(b.Started, 0).Format(time.RFC3339)
-		proj.LastBuildLabel = strconv.Itoa(b.Number)
+		proj.LastBuildTime = time.Unix(c.Started, 0).Format(time.RFC3339)
+		proj.LastBuildLabel = strconv.Itoa(c.Sequence)
 	}
 
 	// ensure the last build state accepts a valid
 	// ccmenu enumeration
-	switch b.State {
+	switch c.State {
 	case common.StateError, common.StateKilled:
 		proj.LastBuildStatus = "Exception"
 	case common.StateSuccess:

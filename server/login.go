@@ -61,7 +61,7 @@ func GetLogin(c *gin.Context) {
 	}
 
 	// get the user from the database
-	u, err := store.User(login.Login)
+	u, err := store.UserLogin(login.Login)
 	if err != nil {
 		count, err := store.UserCount()
 		if err != nil {
@@ -89,7 +89,7 @@ func GetLogin(c *gin.Context) {
 		u.Gravatar = gravatar.Hash(u.Email)
 
 		// insert the user into the database
-		if err := store.SetUserNotExists(u); err != nil {
+		if err := store.AddUser(u); err != nil {
 			log.Errorf("cannot insert %s. %s", login.Login, err)
 			c.Redirect(303, "/login#error=internal_error")
 			return

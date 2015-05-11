@@ -88,11 +88,11 @@ func GetRepoEvents(c *gin.Context) {
 }
 
 func GetStream(c *gin.Context) {
-	// store := ToDatastore(c)
+	store := ToDatastore(c)
 	repo := ToRepo(c)
 	runner := ToRunner(c)
-	build, _ := strconv.Atoi(c.Params.ByName("build"))
-	task, _ := strconv.Atoi(c.Params.ByName("number"))
+	commitseq, _ := strconv.Atoi(c.Params.ByName("build"))
+	buildseq, _ := strconv.Atoi(c.Params.ByName("number"))
 
 	// agent, err := store.BuildAgent(repo.FullName, build)
 	// if err != nil {
@@ -100,7 +100,18 @@ func GetStream(c *gin.Context) {
 	// 	return
 	// }
 
-	rc, err := runner.Logs(repo.FullName, build, task)
+	commit, err := store.CommitSeq(repo, commitseq)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+	build, err := store.BuildSeq(commit, buildseq)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+
+	rc, err := runner.Logs(build)
 	if err != nil {
 		c.Fail(404, err)
 		return

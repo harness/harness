@@ -1,62 +1,54 @@
 package common
 
 type Repo struct {
-	ID       int64  `json:"id"`
-	Owner    string `json:"owner"`
-	Name     string `json:"name"`
-	FullName string `json:"full_name"`
-	Language string `json:"language"`
-	Private  bool   `json:"private"`
-	Link     string `json:"link_url"`
-	Clone    string `json:"clone_url"`
-	Branch   string `json:"default_branch"`
+	ID          int64  `meddler:"repo_id,pk"       json:"id"`
+	UserID      int64  `meddler:"user_id"          json:"-"`
+	Owner       string `meddler:"repo_owner"       json:"owner"`
+	Name        string `meddler:"repo_name"        json:"name"`
+	FullName    string `meddler:"repo_slug"        json:"full_name"`
+	Token       string `meddler:"repo_token"       json:"-"`
+	Language    string `meddler:"repo_lang"        json:"language"`
+	Private     bool   `meddler:"repo_private"     json:"private"`
+	Link        string `meddler:"repo_link"        json:"link_url"`
+	Clone       string `meddler:"repo_clone"       json:"clone_url"`
+	Branch      string `meddler:"repo_branch"      json:"default_branch"`
+	Timeout     int64  `meddler:"repo_timeout"     json:"timeout"`
+	Trusted     bool   `meddler:"repo_trusted"     json:"trusted"`
+	PostCommit  bool   `meddler:"repo_push"        json:"post_commits"`
+	PullRequest bool   `meddler:"repo_pull"        json:"pull_requests"`
+	PublicKey   string `meddler:"repo_public_key"  json:"-"`
+	PrivateKey  string `meddler:"repo_private_key" json:"-"`
+	Created     int64  `meddler:"repo_created"     json:"created_at"`
+	Updated     int64  `meddler:"repo_updated"     json:"updated_at"`
 
-	Timeout    int64 `json:"timeout"`
-	Trusted    bool  `json:"trusted"`
-	Disabled   bool  `json:"disabled"`
-	DisablePR  bool  `json:"disable_prs"`
-	DisableTag bool  `json:"disable_tags"`
-
-	Created int64 `json:"created_at"`
-	Updated int64 `json:"updated_at"`
-
-	User *Owner `json:"user,omitempty"`
-	Last *Build `json:"last_build,omitempty"`
+	Params map[string]string `meddler:"repo_params,json" json:"-"`
 }
 
-// Keypair represents an RSA public and private key
-// assigned to a repository. It may be used to clone
-// private repositories, or as a deployment key.
-type Keypair struct {
-	Public  string `json:"public"`
-	Private string `json:"private"`
+type RepoLite struct {
+	ID       int64  `meddler:"repo_id,pk"   json:"id"`
+	UserID   int64  `meddler:"user_id"      json:"-"`
+	Owner    string `meddler:"repo_owner"   json:"owner"`
+	Name     string `meddler:"repo_name"    json:"name"`
+	FullName string `meddler:"repo_slug"    json:"full_name"`
+	Language string `meddler:"repo_lang"    json:"language"`
+	Private  bool   `meddler:"repo_private" json:"private"`
+	Created  int64  `meddler:"repo_created" json:"created_at"`
+	Updated  int64  `meddler:"repo_updated" json:"updated_at"`
 }
 
-// Owner represents the owner of a repository.
-type Owner struct {
-	Login string `json:"login"`
+type RepoCommit struct {
+	ID       int64  `meddler:"repo_id,pk"      json:"id"`
+	Owner    string `meddler:"repo_owner"      json:"owner"`
+	Name     string `meddler:"repo_name"       json:"name"`
+	FullName string `meddler:"repo_slug"       json:"full_name"`
+	Number   int    `meddler:"commit_seq"      json:"number"`
+	State    string `meddler:"commit_state"    json:"state"`
+	Started  int64  `meddler:"commit_started"  json:"started_at"`
+	Finished int64  `meddler:"commit_finished" json:"finished_at"`
 }
 
-// Subscriber represents a user's subscription
-// to a repository. This determines if the repository
-// is displayed on the user dashboard and in the user
-// event feed.
-type Subscriber struct {
-	// Determines if notifications should be
-	// received from this repository.
-	Subscribed bool `json:"subscribed"`
-
-	// Determines if all notifications should be
-	// blocked from this repository.
-	Ignored bool `json:"ignored"`
-}
-
-// Perm represents a user's permissiont to access
-// a repository. Pull indicates read-only access. Push
-// indiates write access. Admin indicates god access.
 type Perm struct {
-	Login string `json:"login,omitempty"`
-	Pull  bool   `json:"pull"`
-	Push  bool   `json:"push"`
-	Admin bool   `json:"admin"`
+	Pull  bool
+	Push  bool
+	Admin bool
 }

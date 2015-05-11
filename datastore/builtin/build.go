@@ -1,195 +1,62 @@
 package builtin
 
 import (
-	"encoding/binary"
-	"strconv"
 	"time"
 
-	"github.com/boltdb/bolt"
 	"github.com/drone/drone/common"
+	"github.com/russross/meddler"
 )
 
-// Build gets the specified build number for the
-// named repository and build number.
-func (db *DB) Build(repo string, build int) (*common.Build, error) {
-	build_ := &common.Build{}
-	key := []byte(repo + "/" + strconv.Itoa(build))
-
-	err := db.View(func(t *bolt.Tx) error {
-		return get(t, bucketBuild, key, build_)
-	})
-
-	return build_, err
+type Buildstore struct {
+	meddler.DB
 }
 
-// BuildList gets a list of recent builds for the
-// named repository.
-func (db *DB) BuildList(repo string) ([]*common.Build, error) {
-	// TODO (bradrydzewski) we can do this more efficiently
-	var builds []*common.Build
-	build, err := db.BuildLast(repo)
-	if err == ErrKeyNotFound {
-		return builds, nil
-	} else if err != nil {
-		return nil, err
-	}
-
-	err = db.View(func(t *bolt.Tx) error {
-		pos := build.Number - 25
-		if pos < 1 {
-			pos = 1
-		}
-		for i := pos; i <= build.Number; i++ {
-			key := []byte(repo + "/" + strconv.Itoa(i))
-			build := &common.Build{}
-			err = get(t, bucketBuild, key, build)
-			if err != nil {
-				return err
-			}
-			builds = append(builds, build)
-		}
-		return nil
-	})
-	return builds, err
+func NewBuildstore(db meddler.DB) *Buildstore {
+	return &Buildstore{db}
 }
 
-// BuildLast gets the last executed build for the
-// named repository.
-func (db *DB) BuildLast(repo string) (*common.Build, error) {
-	key := []byte(repo)
-	build := &common.Build{}
-	err := db.View(func(t *bolt.Tx) error {
-		raw := t.Bucket(bucketBuildSeq).Get(key)
-		if raw == nil {
-			return ErrKeyNotFound
-		}
-		num := binary.LittleEndian.Uint32(raw)
-		key = []byte(repo + "/" + strconv.FormatUint(uint64(num), 10))
-		return get(t, bucketBuild, key, build)
-	})
+// Build returns a build by ID.
+func (db *Buildstore) Build(id int64) (*common.Build, error) {
+	var build = new(common.Build)
+	var err = meddler.Load(db, buildTable, build, id)
 	return build, err
 }
 
-// BuildAgent gets the agent that is currently executing
-// a build. If no agent exists ErrKeyNotFound is returned.
-func (db *DB) BuildAgent(repo string, build int) (*common.Agent, error) {
-	key := []byte(repo + "/" + strconv.Itoa(build))
-	agent := &common.Agent{}
-	err := db.View(func(t *bolt.Tx) error {
-		return get(t, bucketBuildAgent, key, agent)
-	})
-	return agent, err
+// BuildSeq returns a build by sequence number.
+func (db *Buildstore) BuildSeq(commit *common.Commit, seq int) (*common.Build, error) {
+	var build = new(common.Build)
+	var err = meddler.QueryRow(db, build, rebind(buildNumberQuery), commit.ID, seq)
+	return build, err
 }
 
-// SetBuild inserts or updates a build for the named
-// repository. The build number is incremented and
-// assigned to the provided build.
-func (db *DB) SetBuild(repo string, build *common.Build) error {
-	repokey := []byte(repo)
+// BuildList returns a list of all commit builds
+func (db *Buildstore) BuildList(commit *common.Commit) ([]*common.Build, error) {
+	var builds []*common.Build
+	var err = meddler.QueryAll(db, &builds, rebind(buildListQuery), commit.ID)
+	return builds, err
+}
+
+// SetBuild updates an existing build.
+func (db *Buildstore) SetBuild(build *common.Build) error {
 	build.Updated = time.Now().UTC().Unix()
-	if build.Created == 0 {
-		build.Created = build.Updated
-	}
-
-	return db.Update(func(t *bolt.Tx) error {
-
-		if build.Number == 0 {
-			raw, err := raw(t, bucketBuildSeq, repokey)
-
-			var next_seq uint32
-			switch err {
-			case ErrKeyNotFound:
-				next_seq = 1
-			case nil:
-				next_seq = 1 + binary.LittleEndian.Uint32(raw)
-			default:
-				return err
-			}
-
-			// covert our seqno to raw value
-			raw = make([]byte, 4) // TODO(benschumacher) replace magic number 4 (uint32)
-			binary.LittleEndian.PutUint32(raw, next_seq)
-			err = t.Bucket(bucketBuildSeq).Put(repokey, raw)
-			if err != nil {
-				return err
-			}
-
-			// fill out the build structure
-			build.Number = int(next_seq)
-			build.Created = time.Now().UTC().Unix()
-		}
-
-		key := []byte(repo + "/" + strconv.Itoa(build.Number))
-		return update(t, bucketBuild, key, build)
-	})
+	return meddler.Update(db, buildTable, build)
 }
 
-// Experimental
-func (db *DB) SetBuildState(repo string, build *common.Build) error {
-	key := []byte(repo + "/" + strconv.Itoa(build.Number))
+// Build table name in database.
+const buildTable = "builds"
 
-	return db.Update(func(t *bolt.Tx) error {
-		build_ := &common.Build{}
-		err := get(t, bucketBuild, key, build_)
-		if err != nil {
-			return err
-		}
-		build_.Updated = time.Now().UTC().Unix()
-		build_.Duration = build.Duration
-		build_.Started = build.Started
-		build_.Finished = build.Finished
-		build_.State = build.State
-		return update(t, bucketBuild, key, build_)
-	})
-}
+// SQL query to retrieve a token by label.
+const buildListQuery = `
+SELECT *
+FROM builds
+WHERE commit_id = ?
+ORDER BY build_seq ASC
+`
 
-func (db *DB) SetBuildStatus(repo string, build int, status *common.Status) error {
-	key := []byte(repo + "/" + strconv.Itoa(build))
-
-	return db.Update(func(t *bolt.Tx) error {
-		build_ := &common.Build{}
-		err := get(t, bucketBuild, key, build_)
-		if err != nil {
-			return err
-		}
-		build_.Updated = time.Now().UTC().Unix()
-		build_.Statuses = append(build_.Statuses, status)
-		return update(t, bucketBuild, key, build_)
-	})
-}
-
-func (db *DB) SetBuildTask(repo string, build int, task *common.Task) error {
-	key := []byte(repo + "/" + strconv.Itoa(build))
-
-	return db.Update(func(t *bolt.Tx) error {
-		build_ := &common.Build{}
-		err := get(t, bucketBuild, key, build_)
-		if err != nil {
-			return err
-		}
-		// check index to prevent nil pointer / panic
-		if task.Number > len(build_.Tasks) {
-			return ErrKeyNotFound
-		}
-		build_.Updated = time.Now().UTC().Unix()
-		//assuming task number is 1-based.
-		build_.Tasks[task.Number-1] = task
-		return update(t, bucketBuild, key, build_)
-	})
-}
-
-// SetBuildAgent insert or updates the agent that is
-// running a build.
-func (db *DB) SetBuildAgent(repo string, build int, agent *common.Agent) error {
-	key := []byte(repo + "/" + strconv.Itoa(build))
-	return db.Update(func(t *bolt.Tx) error {
-		return update(t, bucketBuildAgent, key, agent)
-	})
-}
-
-func (db *DB) DelBuildAgent(repo string, build int) error {
-	key := []byte(repo + "/" + strconv.Itoa(build))
-	return db.Update(func(t *bolt.Tx) error {
-		return delete(t, bucketBuildAgent, key)
-	})
-}
+const buildNumberQuery = `
+SELECT *
+FROM builds
+WHERE commit_id = ?
+  AND build_seq = ?
+LIMIT 1;
+`

@@ -24,6 +24,11 @@ var (
 //
 func GetBadge(c *gin.Context) {
 	var repo = ToRepo(c)
+	var store = ToDatastore(c)
+	var branch = c.Request.FormValue("branch")
+	if len(branch) == 0 {
+		branch = repo.Branch
+	}
 
 	// an SVG response is always served, even when error, so
 	// we can go ahead and set the content type appropriately.
@@ -32,12 +37,13 @@ func GetBadge(c *gin.Context) {
 	// if no commit was found then display
 	// the 'none' badge, instead of throwing
 	// an error response
-	if repo.Last == nil {
+	commit, err := store.CommitLast(repo, branch)
+	if err != nil {
 		c.Writer.Write(badgeNone)
 		return
 	}
 
-	switch repo.Last.State {
+	switch commit.State {
 	case common.StateSuccess:
 		c.Writer.Write(badgeSuccess)
 	case common.StateFailure:
@@ -61,14 +67,14 @@ func GetBadge(c *gin.Context) {
 func GetCC(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
-	last, err := store.BuildLast(repo.FullName)
-	if err != nil {
-		c.Fail(404, err)
+	list, err := store.CommitList(repo, 1, 0)
+	if err != nil || len(list) == 0 {
+		c.AbortWithStatus(404)
 		return
 	}
 
 	link := httputil.GetURL(c.Request) + "/" + repo.FullName
-	cc := ccmenu.NewCC(repo, last, link)
+	cc := ccmenu.NewCC(repo, list[0], link)
 
 	c.Writer.Header().Set("Content-Type", "application/xml")
 	c.XML(200, cc)
