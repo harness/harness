@@ -68,7 +68,10 @@ func parseImageName(image string) (owner, name, tag string) {
 	}
 
 	parts := strings.Split(name, "/")
-	if len(parts) == 2 {
+	if len := len(parts); len == 3 {
+		owner = fmt.Sprintf("%s/%s", parts[0], parts[1])
+		name = parts[2]
+	} else if len == 2 {
 		owner = parts[0]
 		name = parts[1]
 	}
