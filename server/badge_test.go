@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"encoding/xml"
 	"net/http"
 	"net/url"
@@ -8,26 +9,29 @@ import (
 
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/common/ccmenu"
-	"github.com/drone/drone/datastore"
 	"github.com/drone/drone/datastore/mock"
 	"github.com/drone/drone/server/recorder"
+
 	. "github.com/franela/goblin"
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/mock"
 )
 
 var badgeTests = []struct {
+	branch   string
 	badge    []byte
 	state    string
 	activity string
 	status   string
 	err      error
 }{
-	{badgeSuccess, common.StateSuccess, "Sleeping", "Success", nil},
-	{badgeStarted, common.StateRunning, "Building", "Unknown", nil},
-	{badgeError, common.StateError, "Sleeping", "Exception", nil},
-	{badgeError, common.StateKilled, "Sleeping", "Exception", nil},
-	{badgeFailure, common.StateFailure, "Sleeping", "Failure", nil},
-	{badgeNone, "", "", "", datastore.ErrKeyNotFound},
+	{"", badgeSuccess, common.StateSuccess, "Sleeping", "Success", nil},
+	{"master", badgeSuccess, common.StateSuccess, "Sleeping", "Success", nil},
+	{"", badgeStarted, common.StateRunning, "Building", "Unknown", nil},
+	{"", badgeError, common.StateError, "Sleeping", "Exception", nil},
+	{"", badgeError, common.StateKilled, "Sleeping", "Exception", nil},
+	{"", badgeFailure, common.StateFailure, "Sleeping", "Failure", nil},
+	{"", badgeNone, "", "", "", sql.ErrNoRows},
 }
 
 func TestBadges(t *testing.T) {
@@ -41,16 +45,21 @@ func TestBadges(t *testing.T) {
 			for _, test := range badgeTests {
 				rw := recorder.New()
 				ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
-
-				repo := &common.Repo{FullName: "foo/bar"}
-				if len(test.state) != 0 {
-					repo.Last = &common.Build{State: test.state}
+				ctx.Request = &http.Request{
+					Form: url.Values{},
+				}
+				if len(test.branch) != 0 {
+					ctx.Request.Form.Set("branch", test.branch)
 				}
 
+				repo := &common.Repo{FullName: "foo/bar"}
 				ctx.Set("datastore", store)
 				ctx.Set("repo", repo)
 
+				commit := &common.Commit{State: test.state}
+				store.On("CommitLast", repo, test.branch).Return(commit, test.err).Once()
 				GetBadge(ctx)
+
 				g.Assert(rw.Code).Equal(200)
 				g.Assert(rw.Body.Bytes()).Equal(test.badge)
 				g.Assert(rw.HeaderMap.Get("Content-Type")).Equal("image/svg+xml")
@@ -68,8 +77,10 @@ func TestBadges(t *testing.T) {
 				ctx.Set("datastore", store)
 				ctx.Set("repo", repo)
 
-				build := &common.Build{State: test.state}
-				store.On("BuildLast", repo.FullName).Return(build, test.err).Once()
+				commits := []*common.Commit{
+					&common.Commit{State: test.state},
+				}
+				store.On("CommitList", repo, mock.AnythingOfType("int"), mock.AnythingOfType("int")).Return(commits, test.err).Once()
 				GetCC(ctx)
 
 				// in an error scenario (ie no build exists) we should
@@ -83,6 +94,7 @@ func TestBadges(t *testing.T) {
 				// it matches the expected values.
 				cc := &ccmenu.CCProjects{}
 				xml.Unmarshal(rw.Body.Bytes(), cc)
+				g.Assert(rw.Code).Equal(200)
 				g.Assert(cc.Project.Activity).Equal(test.activity)
 				g.Assert(cc.Project.LastBuildStatus).Equal(test.status)
 				g.Assert(rw.HeaderMap.Get("Content-Type")).Equal("application/xml; charset=utf-8")
