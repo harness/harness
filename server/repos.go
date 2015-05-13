@@ -210,6 +210,11 @@ func PostRepo(c *gin.Context) {
 	r.UserID = user.ID
 	r.PostCommit = true
 	r.PullRequest = true
+	r.Self = fmt.Sprintf(
+		"%s/%s",
+		httputil.GetURL(c.Request),
+		r.FullName,
+	)
 
 	// generate an RSA key and add to the repo
 	key, err := sshutil.GeneratePrivateKey()

@@ -212,12 +212,12 @@ func (g *GitHub) Deactivate(u *common.User, r *common.Repo, link string) error {
 	return DeleteHook(client, r.Owner, r.Name, link)
 }
 
-func (g *GitHub) Status(u *common.User, r *common.Repo, c *common.Commit, link string) error {
+func (g *GitHub) Status(u *common.User, r *common.Repo, c *common.Commit) error {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
 	if len(c.PullRequest) == 0 {
 		return nil
 	}
-
+	link := fmt.Sprintf("%s/%v", r.Self, c.Sequence)
 	status := getStatus(c.State)
 	desc := getDesc(c.State)
 	data := github.RepoStatus{

@@ -35,7 +35,10 @@ func (u *updater) SetCommit(user *common.User, r *common.Repo, c *common.Commit)
 		return err
 	}
 
-	// TODO invoke remote.Status to set the build status
+	err = u.remote.Status(user, r, c)
+	if err != nil {
+		// log err
+	}
 
 	msg, err := json.Marshal(c)
 	if err != nil {
