@@ -128,17 +128,6 @@ func createClone(c *Context) error {
 		return err
 	}
 	c.Clone.Dir = filepath.Join("/drone/src", url_.Host, c.Repo.FullName)
-
-	// attempt to extract the clone path. i'm not a huge fan of
-	// this, by the way, but for now we'll keep it.
-	// TODO consider moving this to a transform?
-	pathv, ok := c.Conf.Clone.Config["path"]
-	if ok {
-		path, ok := pathv.(string)
-		if ok {
-			c.Clone.Dir = filepath.Join("/drone/src", path)
-		}
-	}
 	return nil
 }
 
