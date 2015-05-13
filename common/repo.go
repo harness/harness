@@ -9,6 +9,7 @@ type Repo struct {
 	Token       string `meddler:"repo_token"       json:"-"`
 	Language    string `meddler:"repo_lang"        json:"language"`
 	Private     bool   `meddler:"repo_private"     json:"private"`
+	Self        string `meddler:"repo_self"        json:"self_url"`
 	Link        string `meddler:"repo_link"        json:"link_url"`
 	Clone       string `meddler:"repo_clone"       json:"clone_url"`
 	Branch      string `meddler:"repo_branch"      json:"default_branch"`

@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS repos (
 	,repo_branch       VARCHAR(255)
 	,repo_private      BOOLEAN
 	,repo_trusted      BOOLEAN
+	,repo_self         VARCHAR(1024)
 	,repo_link         VARCHAR(1024)
 	,repo_clone        VARCHAR(1024)
 	,repo_push         BOOLEAN

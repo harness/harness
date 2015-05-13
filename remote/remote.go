@@ -27,7 +27,7 @@ type Remote interface {
 
 	// Status sends the commit status to the remote system.
 	// An example would be the GitHub pull request status.
-	Status(u *common.User, r *common.Repo, c *common.Commit, link string) error
+	Status(u *common.User, r *common.Repo, c *common.Commit) error
 
 	// Netrc returns a .netrc file that can be used to clone
 	// private repositories from a remote system.
