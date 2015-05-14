@@ -7,7 +7,7 @@ import (
 )
 
 type Remote interface {
-	// Authorize handles authentication with thrid party remote systems,
+	// Authorize handles authentication with third party remote systems,
 	// such as github or bitbucket, and returns user data.
 	Authorize(w http.ResponseWriter, r *http.Request) (*model.Login, error)
 
