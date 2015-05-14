@@ -9,6 +9,9 @@ import (
 )
 
 type Swift struct {
+	// Script is an optional list of commands to run to prepare for a release.
+	Script []string `yaml:"script"`
+
 	// Username for authentication
 	Username string `yaml:"username,omitempty"`
 
@@ -44,6 +47,10 @@ func (s *Swift) Write(f *buildfile.Buildfile) {
 	if len(s.Username) == 0 || len(s.Password) == 0 || len(s.AuthURL) == 0 || len(s.Region) == 0 || len(s.Source) == 0 || len(s.Container) == 0 {
 		f.WriteCmdSilent(`echo "Swift: Missing argument(s)"`)
 		return
+	}
+
+	for _, cmd := range s.Script {
+		f.WriteCmd(cmd)
 	}
 
 	// If a target was provided, prefix it with a /
