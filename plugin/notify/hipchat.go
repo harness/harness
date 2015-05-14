@@ -13,9 +13,11 @@ const (
 	startedMessage = "Building %s (%s) by %s <br> - %s"
 	successMessage = "Success %s (%s) by %s"
 	failureMessage = "Failed %s (%s) by %s"
+	defaultServer  = "api.hipchat.com"
 )
 
 type Hipchat struct {
+	Server  string `yaml:"server,omitempty"`
 	Room    string `yaml:"room,omitempty"`
 	Token   string `yaml:"token,omitempty"`
 	Started bool   `yaml:"on_started,omitempty"`
@@ -49,6 +51,7 @@ func (h *Hipchat) buildLink(context *model.Request) string {
 func (h *Hipchat) sendStarted(client HipchatClient, context *model.Request) error {
 	msg := fmt.Sprintf(startedMessage, h.buildLink(context), context.Commit.Branch, context.Commit.Author, context.Commit.Message)
 	req := HipchatMessageRequest{
+		Server:    h.Server,
 		RoomId:    h.Room,
 		AuthToken: h.Token,
 		Color:     "yellow",
@@ -61,6 +64,7 @@ func (h *Hipchat) sendStarted(client HipchatClient, context *model.Request) erro
 func (h *Hipchat) sendFailure(client HipchatClient, context *model.Request) error {
 	msg := fmt.Sprintf(failureMessage, h.buildLink(context), context.Commit.Branch, context.Commit.Author)
 	req := HipchatMessageRequest{
+		Server:    h.Server,
 		RoomId:    h.Room,
 		AuthToken: h.Token,
 		Color:     "red",
@@ -73,6 +77,7 @@ func (h *Hipchat) sendFailure(client HipchatClient, context *model.Request) erro
 func (h *Hipchat) sendSuccess(client HipchatClient, context *model.Request) error {
 	msg := fmt.Sprintf(successMessage, h.buildLink(context), context.Commit.Branch, context.Commit.Author)
 	req := HipchatMessageRequest{
+		Server:    h.Server,
 		RoomId:    h.Room,
 		AuthToken: h.Token,
 		Color:     "green",
@@ -89,6 +94,7 @@ type HipchatClient interface {
 }
 
 type HipchatMessageRequest struct {
+	Server    string
 	RoomId    string
 	Color     string
 	Message   string
@@ -99,7 +105,13 @@ type HipchatMessageRequest struct {
 type HipchatSimpleHTTPClient struct{}
 
 func (*HipchatSimpleHTTPClient) PostMessage(req HipchatMessageRequest) error {
-	hipchat_uri := fmt.Sprintf("https://api.hipchat.com/v2/room/%s/notification", req.RoomId)
+	var server string
+	if len(req.Server) > 0 {
+		server = req.Server
+	} else {
+		server = defaultServer
+	}
+	hipchat_uri := fmt.Sprintf("https://%s/v2/room/%s/notification", server, req.RoomId)
 	_, err := http.PostForm(hipchat_uri,
 		url.Values{
 			"color":          {req.Color},
