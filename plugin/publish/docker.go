@@ -66,6 +66,21 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 			d.DockerVersion + ".tgz |sudo tar zxf - -C /")
 	}
 
+	// Export docker host once
+	f.WriteCmd("export DOCKER_HOST=" + d.DockerHost)
+
+	// Login?
+	if d.RegistryLogin == true {
+		// If email is unspecified, pass in -e ' ' to avoid having
+		// registry URL interpreted as email, which will fail cryptically.
+		emailOpt := "' '"
+		if d.Email != "" {
+			emailOpt = d.Email
+		}
+		f.WriteCmdSilent(fmt.Sprintf("docker login -u %s -p %s -e %s %s",
+			d.Username, d.Password, emailOpt, d.RegistryLoginUrl))
+	}
+
 	dockerPath := "."
 	if len(d.Dockerfile) != 0 {
 		dockerPath = fmt.Sprintf("- < %s", d.Dockerfile)
@@ -86,23 +101,8 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 	// There is always at least 1 tag
 	buildImageTag := d.Tags[0]
 
-	// Export docker host once
-	f.WriteCmd("export DOCKER_HOST=" + d.DockerHost)
-
 	// Build the image
 	f.WriteCmd(fmt.Sprintf("docker build --pull -t %s:%s %s", d.ImageName, buildImageTag, dockerPath))
-
-	// Login?
-	if d.RegistryLogin == true {
-		// If email is unspecified, pass in -e ' ' to avoid having
-		// registry URL interpreted as email, which will fail cryptically.
-		emailOpt := "' '"
-		if d.Email != "" {
-			emailOpt = d.Email
-		}
-		f.WriteCmdSilent(fmt.Sprintf("docker login -u %s -p %s -e %s %s",
-			d.Username, d.Password, emailOpt, d.RegistryLoginUrl))
-	}
 
 	// Tag and push all tags
 	for _, tag := range d.Tags {
