@@ -170,7 +170,7 @@ func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, name st
 		id, err = client.CreateContainer(conf, name)
 		// make sure the container is removed in
 		// the event of a creation error.
-		if len(id) != 0 {
+		if err != nil && len(id) != 0 {
 			client.RemoveContainer(id, true, true)
 		}
 		if err != nil {

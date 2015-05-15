@@ -24,6 +24,10 @@ func toContainerConfig(step *common.Step) *dockerclient.ContainerConfig {
 		},
 	}
 
+	if len(config.Entrypoint) == 0 {
+		config.Entrypoint = nil
+	}
+
 	config.Volumes = map[string]struct{}{}
 	for _, path := range step.Volumes {
 		if strings.Index(path, ":") == -1 {
