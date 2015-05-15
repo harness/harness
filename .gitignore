@@ -20,3 +20,7 @@ bindata.go
 drone
 drone-build
 drone-bot
+
+bin/drone
+bin/drone-build
+bin/drone-bot
