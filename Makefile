@@ -1,3 +1,5 @@
+.PHONY: dist
+
 SHA := $(shell git rev-parse --short HEAD)
 VERSION := 0.4.0-alpha
 
@@ -11,7 +13,7 @@ test:
 	go test -cover -short ./...
 
 build:
-	go build -ldflags "-X main.revision $(SHA) -X main.version $(VERSION).$(SHA)"
+	go build -o bin/drone -ldflags "-X main.revision $(SHA) -X main.version $(VERSION).$(SHA)"
 
 clean:
 	find . -name "*.out" -delete
@@ -33,3 +35,12 @@ bindata_debug:
 
 bindata:
 	$$GOPATH/bin/go-bindata server/static/...
+
+# creates a debian package for drone
+# to install `sudo dpkg -i drone.deb`
+dist:
+	mkdir -p dist/drone/usr/local/bin
+	mkdir -p dist/drone/var/lib/drone
+	mkdir -p dist/drone/var/cache/drone
+	cp bin/drone dist/drone/usr/local/bin
+	-dpkg-deb --build dist/drone

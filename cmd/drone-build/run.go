@@ -134,11 +134,12 @@ func runSteps(c *Context, steps map[string]*common.Step) (int, error) {
 
 		// verify the step matches the branch
 		// and other specifications
-		if step.Condition == nil ||
-			!step.Condition.MatchOwner(c.Repo.Owner) ||
-			!step.Condition.MatchBranch(c.Clone.Branch) ||
-			!step.Condition.MatchMatrix(c.Build.Environment) {
-			continue
+		if step.Condition != nil {
+			if !step.Condition.MatchOwner(c.Repo.Owner) ||
+				!step.Condition.MatchBranch(c.Clone.Branch) ||
+				!step.Condition.MatchMatrix(c.Build.Environment) {
+				continue
+			}
 		}
 
 		conf := toContainerConfig(step)
