@@ -210,6 +210,7 @@ func PostRepo(c *gin.Context) {
 	r.UserID = user.ID
 	r.PostCommit = true
 	r.PullRequest = true
+	r.Timeout = 60 // 1 hour default build time
 	r.Self = fmt.Sprintf(
 		"%s/%s",
 		httputil.GetURL(c.Request),
