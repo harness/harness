@@ -120,7 +120,8 @@ func (r *Runner) Run(w *queue.Work) error {
 		if err != nil {
 			return err
 		}
-		worker := newWorkerTimeout(client, w.Repo.Timeout+10) // 10 minute buffer
+
+		worker := newWorkerTimeout(client, w.Repo.Timeout)
 		workers = append(workers, worker)
 		cname := cname(task)
 		state, builderr := worker.Build(cname, in)
