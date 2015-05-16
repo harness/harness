@@ -27,6 +27,13 @@ type Context struct {
 
 func setup(c *Context) error {
 	var err error
+	var opts = parser.DefaultOpts
+
+	// if repository is trusted the build may specify
+	// custom volumes, networking and run in trusted mode.
+	if c.Repo.Trusted {
+		opts = &parser.Opts{true, true, true}
+	}
 
 	// inject the matrix parameters into the yaml
 	injected := inject.Inject(string(c.Yaml), c.Build.Environment)
