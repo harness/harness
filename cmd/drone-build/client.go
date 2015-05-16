@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/samalba/dockerclient"
 )
 
@@ -98,14 +99,18 @@ func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, pull bo
 	id, err := client.CreateContainer(conf, "")
 	if err != nil {
 		// and pull the image and re-create if that fails
-		client.PullImage(conf.Image, nil)
+		err = client.PullImage(conf.Image, nil)
+		if err != nil {
+			log.Errorf("Error pulling %s. %s\n", conf.Image, err)
+			return nil, err
+		}
+
 		id, err = client.CreateContainer(conf, "")
 		// make sure the container is removed in
 		// the event of a creation error.
-		if err != nil && len(id) != 0 {
-			client.RemoveContainer(id, true, true)
-		}
 		if err != nil {
+			log.Errorf("Error starting %s. %s\n", conf.Image, err)
+			client.RemoveContainer(id, true, true)
 			return nil, err
 		}
 	}
@@ -120,6 +125,7 @@ func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, pull bo
 	// fetches the container information.
 	info, err := client.InspectContainer(id)
 	if err != nil {
+		log.Errorf("Error inspecting %s. %s\n", conf.Image, err)
 		client.RemoveContainer(id, true, true)
 		return nil, err
 	}
@@ -133,6 +139,7 @@ func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, pull bo
 		// starts the container
 		err := client.StartContainer(id, &conf.HostConfig)
 		if err != nil {
+			log.Errorf("Error starting %s. %s\n", conf.Image, err)
 			errc <- err
 			return
 		}
@@ -142,6 +149,7 @@ func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, pull bo
 		// we could use the `wait` function instead
 		rc, err := client.ContainerLogs(id, logOptsTail)
 		if err != nil {
+			log.Errorf("Error tailing %s. %s\n", conf.Image, err)
 			errc <- err
 			return
 		}
@@ -151,6 +159,7 @@ func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, pull bo
 		// fetches the container information
 		info, err := client.InspectContainer(id)
 		if err != nil {
+			log.Errorf("Error getting exit code for %s. %s\n", conf.Image, err)
 			errc <- err
 			return
 		}
@@ -178,14 +187,15 @@ func daemon(client dockerclient.Client, conf *dockerclient.ContainerConfig, pull
 	id, err := client.CreateContainer(conf, "")
 	if err != nil {
 		// and pull the image and re-create if that fails
-		client.PullImage(conf.Image, nil)
-		id, err = client.CreateContainer(conf, "")
-		// make sure the container is removed in
-		// the event of a creation error.
-		if err != nil && len(id) != 0 {
-			client.RemoveContainer(id, true, true)
-		}
+		err = client.PullImage(conf.Image, nil)
 		if err != nil {
+			log.Errorf("Error pulling %s. %s\n", conf.Image, err)
+			return nil, err
+		}
+		id, err = client.CreateContainer(conf, "")
+		if err != nil {
+			log.Errorf("Error creating %s. %s\n", conf.Image, err)
+			client.RemoveContainer(id, true, true)
 			return nil, err
 		}
 	}
@@ -193,11 +203,15 @@ func daemon(client dockerclient.Client, conf *dockerclient.ContainerConfig, pull
 	// fetches the container information
 	info, err := client.InspectContainer(id)
 	if err != nil {
+		log.Errorf("Error inspecting %s. %s\n", conf.Image, err)
 		client.RemoveContainer(id, true, true)
 		return nil, err
 	}
 
 	// starts the container
 	err = client.StartContainer(id, &conf.HostConfig)
+	if err != nil {
+		log.Errorf("Error starting daemon %s. %s\n", conf.Image, err)
+	}
 	return info, err
 }
