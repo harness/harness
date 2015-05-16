@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/common"
 	"github.com/samalba/dockerclient"
 )
@@ -20,14 +21,19 @@ var (
 	publish = flag.Bool("publish", false, "")
 	deploy  = flag.Bool("deploy", false, "")
 	notify  = flag.Bool("notify", false, "")
+	debug   = flag.Bool("debug", false, "")
 )
 
 func main() {
 	flag.Parse()
 
+	if *debug {
+		log.SetLevel(log.DebugLevel)
+	}
+
 	ctx, err := parseContext()
 	if err != nil {
-		fmt.Println("Error launching build container.", err)
+		log.Errorln("Error launching build container.", err)
 		os.Exit(1)
 		return
 	}
@@ -37,7 +43,7 @@ func main() {
 	// linked Docker daemon
 	docker, err := dockerclient.NewDockerClient("unix:///var/run/docker.sock", nil)
 	if err != nil {
-		fmt.Println("Error connecting to build server.", err)
+		log.Errorln("Error connecting to build server.", err)
 		os.Exit(1)
 		return
 	}
@@ -46,7 +52,7 @@ func main() {
 	// container to create a pod-like environment.
 	client, err := newClient(docker)
 	if err != nil {
-		fmt.Println("Error starting build server pod", err)
+		log.Errorln("Error starting build server pod", err)
 		os.Exit(1)
 	}
 	ctx.client = client
@@ -56,7 +62,7 @@ func main() {
 	// prior to executing our build tasks.
 	err = setup(ctx)
 	if err != nil {
-		fmt.Println("Error processing .drone.yml file.", err)
+		log.Errorln("Error processing .drone.yml file.", err)
 		client.Destroy()
 		os.Exit(1)
 	}

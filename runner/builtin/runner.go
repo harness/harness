@@ -124,7 +124,8 @@ func (r *Runner) Run(w *queue.Work) error {
 		worker := newWorkerTimeout(client, w.Repo.Timeout)
 		workers = append(workers, worker)
 		cname := cname(task)
-		state, builderr := worker.Build(cname, in)
+		pullrequest := (w.Commit.PullRequest != "")
+		state, builderr := worker.Build(cname, in, pullrequest)
 
 		switch {
 		case builderr == ErrTimeout:
