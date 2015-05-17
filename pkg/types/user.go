@@ -1,4 +1,4 @@
-package common
+package types
 
 type User struct {
 	ID       int64  `meddler:"user_id,pk"    json:"-"`

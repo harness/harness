@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/yaml/inject"
 	"github.com/drone/drone/pkg/yaml/matrix"
 

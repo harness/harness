@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/drone/drone/common"
 	"github.com/drone/drone/pkg/bus"
 	"github.com/drone/drone/pkg/remote"
 	"github.com/drone/drone/pkg/store"
+	common "github.com/drone/drone/pkg/types"
 )
 
 type Updater interface {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 )
 
 // lintRule defines a function that runs lint

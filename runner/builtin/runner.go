@@ -9,8 +9,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/drone/drone/common"
 	"github.com/drone/drone/pkg/queue"
+	common "github.com/drone/drone/pkg/types"
 	"github.com/samalba/dockerclient"
 
 	log "github.com/Sirupsen/logrus"

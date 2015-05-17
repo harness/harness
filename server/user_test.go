@@ -8,15 +8,15 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/drone/drone/common"
 	"github.com/drone/drone/pkg/store/mock"
+	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/server/recorder"
 	. "github.com/franela/goblin"
 	"github.com/gin-gonic/gin"
 )
 
 func TestUser(t *testing.T) {
-	store := new(mocks.Datastore)
+	store := new(mocks.Store)
 
 	g := Goblin(t)
 	g.Describe("User", func() {

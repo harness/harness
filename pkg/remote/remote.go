@@ -3,7 +3,7 @@ package remote
 import (
 	"net/http"
 
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 )
 
 type Remote interface {

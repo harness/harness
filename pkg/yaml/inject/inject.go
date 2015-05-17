@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/drone/drone/common"
+	"github.com/drone/drone/pkg/types"
 	"gopkg.in/yaml.v2"
 )
 
@@ -47,8 +47,8 @@ func InjectSafe(raw string, params map[string]string) string {
 }
 
 // helper funtion to parse a yaml configuration file.
-func parse(raw string) (*common.Config, error) {
-	cfg := common.Config{}
+func parse(raw string) (*types.Config, error) {
+	cfg := types.Config{}
 	err := yaml.Unmarshal([]byte(raw), &cfg)
 	return &cfg, err
 }

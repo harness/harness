@@ -3,8 +3,8 @@ package runner
 import (
 	"io"
 
-	"github.com/drone/drone/common"
 	"github.com/drone/drone/pkg/queue"
+	common "github.com/drone/drone/pkg/types"
 )
 
 type Runner interface {

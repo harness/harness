@@ -1,4 +1,4 @@
-package common
+package types
 
 type Task struct {
 	Number   int    `json:"number"`

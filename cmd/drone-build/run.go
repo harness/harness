@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/yaml"
 	"github.com/drone/drone/pkg/yaml/inject"
 	"github.com/samalba/dockerclient"

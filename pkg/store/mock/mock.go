@@ -3,7 +3,7 @@ package mocks
 import (
 	"io"
 
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 	"github.com/stretchr/testify/mock"
 )
 

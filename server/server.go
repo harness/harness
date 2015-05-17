@@ -6,11 +6,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/common"
 	"github.com/drone/drone/pkg/bus"
 	"github.com/drone/drone/pkg/queue"
 	"github.com/drone/drone/pkg/remote"
 	"github.com/drone/drone/pkg/store"
+	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/runner"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/settings"

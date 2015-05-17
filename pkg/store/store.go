@@ -3,7 +3,7 @@ package store
 import (
 	"io"
 
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 )
 
 type Store interface {

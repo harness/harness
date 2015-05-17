@@ -1,4 +1,4 @@
-package common
+package types
 
 type Token struct {
 	ID     int64  `meddler:"token_id,pk"   json:"-"`
