@@ -14,8 +14,8 @@ import (
 	"github.com/elazarl/go-bindata-assetfs"
 
 	eventbus "github.com/drone/drone/pkg/bus/builtin"
+	queue "github.com/drone/drone/pkg/queue/builtin"
 	store "github.com/drone/drone/pkg/store/builtin"
-	queue "github.com/drone/drone/queue/builtin"
 	runner "github.com/drone/drone/runner/builtin"
 
 	_ "net/http/pprof"

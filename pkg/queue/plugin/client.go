@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/drone/drone/queue"
+	"github.com/drone/drone/pkg/queue"
 )
 
 type Client struct {

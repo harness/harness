@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/drone/drone/common"
-	"github.com/drone/drone/queue"
+	"github.com/drone/drone/pkg/queue"
 	"github.com/samalba/dockerclient"
 
 	log "github.com/Sirupsen/logrus"

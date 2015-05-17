@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/drone/drone/queue"
+	"github.com/drone/drone/pkg/queue"
 	. "github.com/franela/goblin"
 )
 

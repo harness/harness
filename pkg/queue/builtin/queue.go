@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/drone/drone/queue"
+	"github.com/drone/drone/pkg/queue"
 )
 
 var ErrNotFound = errors.New("work item not found")

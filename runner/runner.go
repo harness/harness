@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/drone/drone/common"
-	"github.com/drone/drone/queue"
+	"github.com/drone/drone/pkg/queue"
 )
 
 type Runner interface {

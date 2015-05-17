@@ -3,7 +3,7 @@ package plugin
 import (
 	"net/http"
 
-	"github.com/drone/drone/queue"
+	"github.com/drone/drone/pkg/queue"
 	"github.com/gin-gonic/gin"
 )
 

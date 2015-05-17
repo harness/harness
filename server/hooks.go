@@ -5,10 +5,10 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/common"
+	"github.com/drone/drone/pkg/queue"
 	"github.com/drone/drone/pkg/yaml"
 	"github.com/drone/drone/pkg/yaml/inject"
 	"github.com/drone/drone/pkg/yaml/matrix"
-	"github.com/drone/drone/queue"
 	"github.com/gin-gonic/gin"
 )
 
