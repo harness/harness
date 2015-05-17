@@ -2,6 +2,7 @@ package server
 
 import (
 	"bufio"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -37,54 +38,27 @@ var upgrader = websocket.Upgrader{
 func GetRepoEvents(c *gin.Context) {
 	bus := ToBus(c)
 	repo := ToRepo(c)
+	c.Writer.Header().Set("Content-Type", "text/event-stream")
 
-	// upgrade the websocket
-	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		c.Fail(400, err)
-		return
-	}
-
-	ticker := time.NewTicker(pingPeriod)
-	eventc := make(chan *eventbus.Event)
+	eventc := make(chan *eventbus.Event, 1)
 	bus.Subscribe(eventc)
 	defer func() {
 		bus.Unsubscribe(eventc)
-		ticker.Stop()
-		ws.Close()
-		close(eventc)
-		log.Infof("closed websocket")
+		log.Infof("closed event stream")
 	}()
 
-	go func() {
-		for {
-			select {
-			case <-c.Writer.CloseNotify():
-				ws.Close()
-				return
-			case event := <-eventc:
-				if event == nil {
-					log.Infof("closed websocket")
-					ws.Close()
-					return
-				}
-				if event.Kind == eventbus.EventRepo && event.Name == repo.FullName {
-					ws.WriteMessage(websocket.TextMessage, event.Msg)
-					break
-				}
-			case <-ticker.C:
-				ws.SetWriteDeadline(time.Now().Add(writeWait))
-				err := ws.WriteMessage(websocket.PingMessage, []byte{})
-				if err != nil {
-					log.Infof("closed websocket")
-					ws.Close()
-					return
-				}
-			}
+	c.Stream(func(w io.Writer) bool {
+		event := <-eventc
+		if event == nil {
+			return false
 		}
-	}()
+		if event.Kind == eventbus.EventRepo &&
+			event.Name == repo.FullName {
+			c.SSEvent("message", event.Msg)
+		}
 
-	readWebsocket(ws)
+		return true
+	})
 }
 
 func GetStream(c *gin.Context) {
