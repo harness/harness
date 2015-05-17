@@ -2,6 +2,7 @@ package server
 
 import (
 	"bufio"
+	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
@@ -54,7 +55,9 @@ func GetRepoEvents(c *gin.Context) {
 		}
 		if event.Kind == eventbus.EventRepo &&
 			event.Name == repo.FullName {
-			c.SSEvent("message", event.Msg)
+			d := map[string]interface{}{}
+			json.Unmarshal(event.Msg, &d)
+			c.SSEvent("message", d)
 		}
 
 		return true
