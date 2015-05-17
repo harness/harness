@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/remote/github"
+	"github.com/drone/drone/pkg/remote/github"
 	"github.com/drone/drone/server"
 	"github.com/drone/drone/server/session"
 	"github.com/drone/drone/settings"
