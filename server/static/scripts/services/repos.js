@@ -88,12 +88,16 @@
 
 			events = new EventSource("/api/stream/" + repo + "?access_token=" + token, { withCredentials: true });
 			events.onmessage = function (event) {
-				console.log(event);
 				if (callback !== undefined) {
 					callback(angular.fromJson(event.data));
 				}
 			};
 			events.onerror = function (event) {
+				callback = undefined;
+				if (events !== undefined) {
+					events.close();
+					events = undefined;
+				}
 				console.log('user event stream closed due to error.', event);
 			};
 		};
