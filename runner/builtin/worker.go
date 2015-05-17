@@ -36,7 +36,7 @@ var (
 	DefaultAgent = "drone/drone-build:latest"
 
 	// default name of the build agent executable
-	DefaultEntrypoint = []string{"/go/bin/drone-build"}
+	DefaultEntrypoint = []string{"/bin/drone-build"}
 
 	// default argument to invoke build steps
 	DefaultBuildArgs = []string{"--build", "--clone", "--publish", "--deploy"}

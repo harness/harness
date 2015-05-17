@@ -32,12 +32,12 @@ func setup(c *Context) error {
 	// if repository is trusted the build may specify
 	// custom volumes, networking and run in trusted mode.
 	if c.Repo.Trusted {
-		opts = &parser.Opts{true, true, true}
+		opts = &parser.Opts{Network: true, Privileged: true, Volumes: true}
 	}
 
 	// inject the matrix parameters into the yaml
 	injected := inject.Inject(string(c.Yaml), c.Build.Environment)
-	c.Conf, err = parser.ParseSingle(injected, parser.DefaultOpts)
+	c.Conf, err = parser.ParseSingle(injected, opts)
 	if err != nil {
 		return err
 	}

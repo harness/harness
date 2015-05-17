@@ -21,19 +21,19 @@ func GeneratePrivateKey() (*rsa.PrivateKey, error) {
 
 // helper function that marshalls an RSA Public Key to an SSH
 // .authorized_keys format
-func MarshalPublicKey(pubkey *rsa.PublicKey) string {
+func MarshalPublicKey(pubkey *rsa.PublicKey) []byte {
 	pk, err := ssh.NewPublicKey(pubkey)
 	if err != nil {
-		return ""
+		return []byte{}
 	}
 
-	return string(ssh.MarshalAuthorizedKey(pk))
+	return ssh.MarshalAuthorizedKey(pk)
 }
 
 // helper function that marshalls an RSA Private Key to
 // a PEM encoded file.
-func MarshalPrivateKey(privkey *rsa.PrivateKey) string {
+func MarshalPrivateKey(privkey *rsa.PrivateKey) []byte {
 	privateKeyMarshaled := x509.MarshalPKCS1PrivateKey(privkey)
 	privateKeyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Headers: nil, Bytes: privateKeyMarshaled})
-	return string(privateKeyPEM)
+	return privateKeyPEM
 }

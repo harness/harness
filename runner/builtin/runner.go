@@ -60,12 +60,14 @@ func (r *Runner) Run(w *queue.Work) error {
 					b.State = common.StateError
 					b.Finished = time.Now().UTC().Unix()
 					b.Duration = b.Finished - b.Started
+					b.ExitCode = 255
 				}
 				if b.State == common.StatePending {
 					b.State = common.StateError
 					b.Started = time.Now().UTC().Unix()
 					b.Finished = time.Now().UTC().Unix()
 					b.Duration = 0
+					b.ExitCode = 255
 				}
 				r.SetBuild(w.Repo, w.Commit, b)
 			}

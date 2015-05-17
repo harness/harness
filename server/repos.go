@@ -223,8 +223,8 @@ func PostRepo(c *gin.Context) {
 		c.Fail(400, err)
 		return
 	}
-	r.PublicKey = sshutil.MarshalPublicKey(&key.PublicKey)
-	r.PrivateKey = sshutil.MarshalPrivateKey(key)
+	r.PublicKey = string(sshutil.MarshalPublicKey(&key.PublicKey))
+	r.PrivateKey = string(sshutil.MarshalPrivateKey(key))
 	keypair := &common.Keypair{
 		Public:  r.PublicKey,
 		Private: r.PrivateKey,

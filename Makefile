@@ -13,6 +13,7 @@ test:
 	go test -cover -short ./...
 
 build:
+	mkdir -p bin
 	go build -o bin/drone -ldflags "-X main.revision $(SHA) -X main.version $(VERSION).$(SHA)"
 
 clean:
