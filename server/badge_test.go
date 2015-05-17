@@ -9,7 +9,7 @@ import (
 
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/common/ccmenu"
-	"github.com/drone/drone/datastore/mock"
+	"github.com/drone/drone/pkg/store/mock"
 	"github.com/drone/drone/server/recorder"
 
 	. "github.com/franela/goblin"
@@ -35,7 +35,7 @@ var badgeTests = []struct {
 }
 
 func TestBadges(t *testing.T) {
-	store := new(mocks.Datastore)
+	store := new(mocks.Store)
 	url_, _ := url.Parse("http://localhost:8080")
 
 	g := Goblin(t)

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/drone/drone/common"
-	"github.com/drone/drone/parser"
-	"github.com/drone/drone/parser/inject"
+	"github.com/drone/drone/pkg/yaml"
+	"github.com/drone/drone/pkg/yaml/inject"
 	"github.com/samalba/dockerclient"
 )
 
