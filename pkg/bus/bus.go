@@ -1,4 +1,4 @@
-package eventbus
+package bus
 
 const (
 	EventRepo  = "repo"

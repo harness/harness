@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"os"
 
-	"github.com/drone/drone/datastore"
-	"github.com/drone/drone/datastore/builtin/migrate"
+	"github.com/drone/drone/pkg/store"
+	"github.com/drone/drone/pkg/store/builtin/migrate"
 
 	"github.com/BurntSushi/migration"
 	_ "github.com/lib/pq"
@@ -71,7 +71,7 @@ func mustConnectTest() *sql.DB {
 }
 
 // New returns a new Datastore
-func New(db *sql.DB) datastore.Datastore {
+func New(db *sql.DB) store.Store {
 	return struct {
 		*Userstore
 		*Repostore

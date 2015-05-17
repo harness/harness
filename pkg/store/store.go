@@ -1,4 +1,4 @@
-package datastore
+package store
 
 import (
 	"io"
@@ -6,7 +6,7 @@ import (
 	"github.com/drone/drone/common"
 )
 
-type Datastore interface {
+type Store interface {
 
 	// User returns a user by user ID.
 	User(id int64) (*common.User, error)

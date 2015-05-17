@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type Datastore struct {
+type Store struct {
 	mock.Mock
 }
 
-func (m *Datastore) User(id int64) (*common.User, error) {
+func (m *Store) User(id int64) (*common.User, error) {
 	ret := m.Called(id)
 
 	var r0 *common.User
@@ -22,7 +22,7 @@ func (m *Datastore) User(id int64) (*common.User, error) {
 
 	return r0, r1
 }
-func (m *Datastore) UserLogin(_a0 string) (*common.User, error) {
+func (m *Store) UserLogin(_a0 string) (*common.User, error) {
 	ret := m.Called(_a0)
 
 	var r0 *common.User
@@ -33,7 +33,7 @@ func (m *Datastore) UserLogin(_a0 string) (*common.User, error) {
 
 	return r0, r1
 }
-func (m *Datastore) UserList() ([]*common.User, error) {
+func (m *Store) UserList() ([]*common.User, error) {
 	ret := m.Called()
 
 	var r0 []*common.User
@@ -44,7 +44,7 @@ func (m *Datastore) UserList() ([]*common.User, error) {
 
 	return r0, r1
 }
-func (m *Datastore) UserFeed(_a0 *common.User, _a1 int, _a2 int) ([]*common.RepoCommit, error) {
+func (m *Store) UserFeed(_a0 *common.User, _a1 int, _a2 int) ([]*common.RepoCommit, error) {
 	ret := m.Called(_a0, _a1, _a2)
 
 	var r0 []*common.RepoCommit
@@ -55,7 +55,7 @@ func (m *Datastore) UserFeed(_a0 *common.User, _a1 int, _a2 int) ([]*common.Repo
 
 	return r0, r1
 }
-func (m *Datastore) UserCount() (int, error) {
+func (m *Store) UserCount() (int, error) {
 	ret := m.Called()
 
 	r0 := ret.Get(0).(int)
@@ -63,28 +63,28 @@ func (m *Datastore) UserCount() (int, error) {
 
 	return r0, r1
 }
-func (m *Datastore) AddUser(_a0 *common.User) error {
+func (m *Store) AddUser(_a0 *common.User) error {
 	ret := m.Called(_a0)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) SetUser(_a0 *common.User) error {
+func (m *Store) SetUser(_a0 *common.User) error {
 	ret := m.Called(_a0)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) DelUser(_a0 *common.User) error {
+func (m *Store) DelUser(_a0 *common.User) error {
 	ret := m.Called(_a0)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) Token(_a0 int64) (*common.Token, error) {
+func (m *Store) Token(_a0 int64) (*common.Token, error) {
 	ret := m.Called(_a0)
 
 	var r0 *common.Token
@@ -95,7 +95,7 @@ func (m *Datastore) Token(_a0 int64) (*common.Token, error) {
 
 	return r0, r1
 }
-func (m *Datastore) TokenLabel(_a0 *common.User, _a1 string) (*common.Token, error) {
+func (m *Store) TokenLabel(_a0 *common.User, _a1 string) (*common.Token, error) {
 	ret := m.Called(_a0, _a1)
 
 	var r0 *common.Token
@@ -106,7 +106,7 @@ func (m *Datastore) TokenLabel(_a0 *common.User, _a1 string) (*common.Token, err
 
 	return r0, r1
 }
-func (m *Datastore) TokenList(_a0 *common.User) ([]*common.Token, error) {
+func (m *Store) TokenList(_a0 *common.User) ([]*common.Token, error) {
 	ret := m.Called(_a0)
 
 	var r0 []*common.Token
@@ -117,21 +117,21 @@ func (m *Datastore) TokenList(_a0 *common.User) ([]*common.Token, error) {
 
 	return r0, r1
 }
-func (m *Datastore) AddToken(_a0 *common.Token) error {
+func (m *Store) AddToken(_a0 *common.Token) error {
 	ret := m.Called(_a0)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) DelToken(_a0 *common.Token) error {
+func (m *Store) DelToken(_a0 *common.Token) error {
 	ret := m.Called(_a0)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) Starred(_a0 *common.User, _a1 *common.Repo) (bool, error) {
+func (m *Store) Starred(_a0 *common.User, _a1 *common.Repo) (bool, error) {
 	ret := m.Called(_a0, _a1)
 
 	r0 := ret.Get(0).(bool)
@@ -139,21 +139,21 @@ func (m *Datastore) Starred(_a0 *common.User, _a1 *common.Repo) (bool, error) {
 
 	return r0, r1
 }
-func (m *Datastore) AddStar(_a0 *common.User, _a1 *common.Repo) error {
+func (m *Store) AddStar(_a0 *common.User, _a1 *common.Repo) error {
 	ret := m.Called(_a0, _a1)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) DelStar(_a0 *common.User, _a1 *common.Repo) error {
+func (m *Store) DelStar(_a0 *common.User, _a1 *common.Repo) error {
 	ret := m.Called(_a0, _a1)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) Repo(id int64) (*common.Repo, error) {
+func (m *Store) Repo(id int64) (*common.Repo, error) {
 	ret := m.Called(id)
 
 	var r0 *common.Repo
@@ -164,7 +164,7 @@ func (m *Datastore) Repo(id int64) (*common.Repo, error) {
 
 	return r0, r1
 }
-func (m *Datastore) RepoName(owner string, name string) (*common.Repo, error) {
+func (m *Store) RepoName(owner string, name string) (*common.Repo, error) {
 	ret := m.Called(owner, name)
 
 	var r0 *common.Repo
@@ -175,7 +175,7 @@ func (m *Datastore) RepoName(owner string, name string) (*common.Repo, error) {
 
 	return r0, r1
 }
-func (m *Datastore) RepoList(_a0 *common.User) ([]*common.Repo, error) {
+func (m *Store) RepoList(_a0 *common.User) ([]*common.Repo, error) {
 	ret := m.Called(_a0)
 
 	var r0 []*common.Repo
@@ -186,28 +186,28 @@ func (m *Datastore) RepoList(_a0 *common.User) ([]*common.Repo, error) {
 
 	return r0, r1
 }
-func (m *Datastore) AddRepo(_a0 *common.Repo) error {
+func (m *Store) AddRepo(_a0 *common.Repo) error {
 	ret := m.Called(_a0)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) SetRepo(_a0 *common.Repo) error {
+func (m *Store) SetRepo(_a0 *common.Repo) error {
 	ret := m.Called(_a0)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) DelRepo(_a0 *common.Repo) error {
+func (m *Store) DelRepo(_a0 *common.Repo) error {
 	ret := m.Called(_a0)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) Commit(_a0 int64) (*common.Commit, error) {
+func (m *Store) Commit(_a0 int64) (*common.Commit, error) {
 	ret := m.Called(_a0)
 
 	var r0 *common.Commit
@@ -218,7 +218,7 @@ func (m *Datastore) Commit(_a0 int64) (*common.Commit, error) {
 
 	return r0, r1
 }
-func (m *Datastore) CommitSeq(_a0 *common.Repo, _a1 int) (*common.Commit, error) {
+func (m *Store) CommitSeq(_a0 *common.Repo, _a1 int) (*common.Commit, error) {
 	ret := m.Called(_a0, _a1)
 
 	var r0 *common.Commit
@@ -229,7 +229,7 @@ func (m *Datastore) CommitSeq(_a0 *common.Repo, _a1 int) (*common.Commit, error)
 
 	return r0, r1
 }
-func (m *Datastore) CommitLast(_a0 *common.Repo, _a1 string) (*common.Commit, error) {
+func (m *Store) CommitLast(_a0 *common.Repo, _a1 string) (*common.Commit, error) {
 	ret := m.Called(_a0, _a1)
 
 	var r0 *common.Commit
@@ -240,7 +240,7 @@ func (m *Datastore) CommitLast(_a0 *common.Repo, _a1 string) (*common.Commit, er
 
 	return r0, r1
 }
-func (m *Datastore) CommitList(_a0 *common.Repo, _a1 int, _a2 int) ([]*common.Commit, error) {
+func (m *Store) CommitList(_a0 *common.Repo, _a1 int, _a2 int) ([]*common.Commit, error) {
 	ret := m.Called(_a0, _a1, _a2)
 
 	var r0 []*common.Commit
@@ -251,28 +251,28 @@ func (m *Datastore) CommitList(_a0 *common.Repo, _a1 int, _a2 int) ([]*common.Co
 
 	return r0, r1
 }
-func (m *Datastore) AddCommit(_a0 *common.Commit) error {
+func (m *Store) AddCommit(_a0 *common.Commit) error {
 	ret := m.Called(_a0)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) SetCommit(_a0 *common.Commit) error {
+func (m *Store) SetCommit(_a0 *common.Commit) error {
 	ret := m.Called(_a0)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) KillCommits() error {
+func (m *Store) KillCommits() error {
 	ret := m.Called()
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) Build(_a0 int64) (*common.Build, error) {
+func (m *Store) Build(_a0 int64) (*common.Build, error) {
 	ret := m.Called(_a0)
 
 	var r0 *common.Build
@@ -283,7 +283,7 @@ func (m *Datastore) Build(_a0 int64) (*common.Build, error) {
 
 	return r0, r1
 }
-func (m *Datastore) BuildSeq(_a0 *common.Commit, _a1 int) (*common.Build, error) {
+func (m *Store) BuildSeq(_a0 *common.Commit, _a1 int) (*common.Build, error) {
 	ret := m.Called(_a0, _a1)
 
 	var r0 *common.Build
@@ -294,7 +294,7 @@ func (m *Datastore) BuildSeq(_a0 *common.Commit, _a1 int) (*common.Build, error)
 
 	return r0, r1
 }
-func (m *Datastore) BuildList(_a0 *common.Commit) ([]*common.Build, error) {
+func (m *Store) BuildList(_a0 *common.Commit) ([]*common.Build, error) {
 	ret := m.Called(_a0)
 
 	var r0 []*common.Build
@@ -305,14 +305,14 @@ func (m *Datastore) BuildList(_a0 *common.Commit) ([]*common.Build, error) {
 
 	return r0, r1
 }
-func (m *Datastore) SetBuild(_a0 *common.Build) error {
+func (m *Store) SetBuild(_a0 *common.Build) error {
 	ret := m.Called(_a0)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) GetBlob(path string) ([]byte, error) {
+func (m *Store) GetBlob(path string) ([]byte, error) {
 	ret := m.Called(path)
 
 	var r0 []byte
@@ -323,7 +323,7 @@ func (m *Datastore) GetBlob(path string) ([]byte, error) {
 
 	return r0, r1
 }
-func (m *Datastore) GetBlobReader(path string) (io.ReadCloser, error) {
+func (m *Store) GetBlobReader(path string) (io.ReadCloser, error) {
 	ret := m.Called(path)
 
 	r0 := ret.Get(0).(io.ReadCloser)
@@ -331,21 +331,21 @@ func (m *Datastore) GetBlobReader(path string) (io.ReadCloser, error) {
 
 	return r0, r1
 }
-func (m *Datastore) SetBlob(path string, data []byte) error {
+func (m *Store) SetBlob(path string, data []byte) error {
 	ret := m.Called(path, data)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) SetBlobReader(path string, r io.Reader) error {
+func (m *Store) SetBlobReader(path string, r io.Reader) error {
 	ret := m.Called(path, r)
 
 	r0 := ret.Error(0)
 
 	return r0
 }
-func (m *Datastore) DelBlob(path string) error {
+func (m *Store) DelBlob(path string) error {
 	ret := m.Called(path)
 
 	r0 := ret.Error(0)

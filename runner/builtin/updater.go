@@ -6,8 +6,8 @@ import (
 	"io"
 
 	"github.com/drone/drone/common"
-	"github.com/drone/drone/datastore"
-	"github.com/drone/drone/eventbus"
+	"github.com/drone/drone/pkg/bus"
+	"github.com/drone/drone/pkg/store"
 	"github.com/drone/drone/remote"
 )
 
@@ -19,13 +19,13 @@ type Updater interface {
 
 // NewUpdater returns an implementation of the Updater interface
 // that directly modifies the database and sends messages to the bus.
-func NewUpdater(bus eventbus.Bus, store datastore.Datastore, rem remote.Remote) Updater {
+func NewUpdater(bus bus.Bus, store store.Store, rem remote.Remote) Updater {
 	return &updater{bus, store, rem}
 }
 
 type updater struct {
-	bus    eventbus.Bus
-	store  datastore.Datastore
+	bus    bus.Bus
+	store  store.Store
 	remote remote.Remote
 }
 
@@ -45,9 +45,9 @@ func (u *updater) SetCommit(user *common.User, r *common.Repo, c *common.Commit)
 		return err
 	}
 
-	u.bus.Send(&eventbus.Event{
+	u.bus.Send(&bus.Event{
 		Name: r.FullName,
-		Kind: eventbus.EventRepo,
+		Kind: bus.EventRepo,
 		Msg:  msg,
 	})
 	return nil
@@ -64,9 +64,9 @@ func (u *updater) SetBuild(r *common.Repo, c *common.Commit, b *common.Build) er
 		return err
 	}
 
-	u.bus.Send(&eventbus.Event{
+	u.bus.Send(&bus.Event{
 		Name: r.FullName,
-		Kind: eventbus.EventRepo,
+		Kind: bus.EventRepo,
 		Msg:  msg,
 	})
 	return nil

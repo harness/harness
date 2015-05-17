@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/drone/drone/eventbus"
+	"github.com/drone/drone/pkg/bus"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
@@ -37,14 +37,14 @@ var upgrader = websocket.Upgrader{
 // GetRepoEvents will upgrade the connection to a Websocket and will stream
 // event updates to the browser.
 func GetRepoEvents(c *gin.Context) {
-	bus := ToBus(c)
+	bus_ := ToBus(c)
 	repo := ToRepo(c)
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 
-	eventc := make(chan *eventbus.Event, 1)
-	bus.Subscribe(eventc)
+	eventc := make(chan *bus.Event, 1)
+	bus_.Subscribe(eventc)
 	defer func() {
-		bus.Unsubscribe(eventc)
+		bus_.Unsubscribe(eventc)
 		log.Infof("closed event stream")
 	}()
 
@@ -55,7 +55,7 @@ func GetRepoEvents(c *gin.Context) {
 				log.Infof("nil event received")
 				return false
 			}
-			if event.Kind == eventbus.EventRepo &&
+			if event.Kind == bus.EventRepo &&
 				event.Name == repo.FullName {
 				d := map[string]interface{}{}
 				json.Unmarshal(event.Msg, &d)

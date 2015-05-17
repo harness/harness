@@ -13,8 +13,8 @@ import (
 	"github.com/drone/drone/settings"
 	"github.com/elazarl/go-bindata-assetfs"
 
-	store "github.com/drone/drone/datastore/builtin"
-	eventbus "github.com/drone/drone/eventbus/builtin"
+	eventbus "github.com/drone/drone/pkg/bus/builtin"
+	store "github.com/drone/drone/pkg/store/builtin"
 	queue "github.com/drone/drone/queue/builtin"
 	runner "github.com/drone/drone/runner/builtin"
 

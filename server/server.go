@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/common"
-	"github.com/drone/drone/datastore"
-	"github.com/drone/drone/eventbus"
+	"github.com/drone/drone/pkg/bus"
+	"github.com/drone/drone/pkg/store"
 	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/runner"
@@ -31,19 +31,19 @@ func ToQueue(c *gin.Context) queue.Queue {
 	return v.(queue.Queue)
 }
 
-func SetBus(r eventbus.Bus) gin.HandlerFunc {
+func SetBus(r bus.Bus) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("eventbus", r)
+		c.Set("bus", r)
 		c.Next()
 	}
 }
 
-func ToBus(c *gin.Context) eventbus.Bus {
-	v, ok := c.Get("eventbus")
+func ToBus(c *gin.Context) bus.Bus {
+	v, ok := c.Get("bus")
 	if !ok {
 		return nil
 	}
-	return v.(eventbus.Bus)
+	return v.(bus.Bus)
 }
 
 func ToRemote(c *gin.Context) remote.Remote {
@@ -115,15 +115,15 @@ func ToRepo(c *gin.Context) *common.Repo {
 	return v.(*common.Repo)
 }
 
-func ToDatastore(c *gin.Context) datastore.Datastore {
-	return c.MustGet("datastore").(datastore.Datastore)
+func ToDatastore(c *gin.Context) store.Store {
+	return c.MustGet("datastore").(store.Store)
 }
 
 func ToSession(c *gin.Context) session.Session {
 	return c.MustGet("session").(session.Session)
 }
 
-func SetDatastore(ds datastore.Datastore) gin.HandlerFunc {
+func SetDatastore(ds store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("datastore", ds)
 		c.Next()
