@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/drone/drone/common"
-	"github.com/drone/drone/datastore/mock"
+	"github.com/drone/drone/pkg/store/mock"
 	"github.com/drone/drone/server/recorder"
 	. "github.com/franela/goblin"
 	"github.com/gin-gonic/gin"
