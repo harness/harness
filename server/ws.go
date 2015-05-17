@@ -49,17 +49,21 @@ func GetRepoEvents(c *gin.Context) {
 	}()
 
 	c.Stream(func(w io.Writer) bool {
-		event := <-eventc
-		if event == nil {
+		select {
+		case event := <-eventc:
+			if event == nil {
+				log.Infof("nil event received")
+				return false
+			}
+			if event.Kind == eventbus.EventRepo &&
+				event.Name == repo.FullName {
+				d := map[string]interface{}{}
+				json.Unmarshal(event.Msg, &d)
+				c.SSEvent("message", d)
+			}
+		case <-c.Writer.CloseNotify():
 			return false
 		}
-		if event.Kind == eventbus.EventRepo &&
-			event.Name == repo.FullName {
-			d := map[string]interface{}{}
-			json.Unmarshal(event.Msg, &d)
-			c.SSEvent("message", d)
-		}
-
 		return true
 	})
 }
