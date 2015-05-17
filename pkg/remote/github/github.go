@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/drone/drone/pkg/settings"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/drone/drone/settings"
 	"github.com/hashicorp/golang-lru"
 
 	"github.com/google/go-github/github"

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/rpc"
 
+	"github.com/drone/drone/pkg/settings"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/drone/drone/settings"
 )
 
 // Client communicates with a Remote plugin using the

@@ -9,11 +9,11 @@ import (
 	"github.com/drone/drone/pkg/bus"
 	"github.com/drone/drone/pkg/queue"
 	"github.com/drone/drone/pkg/remote"
+	"github.com/drone/drone/pkg/runner"
+	"github.com/drone/drone/pkg/server/session"
+	"github.com/drone/drone/pkg/settings"
 	"github.com/drone/drone/pkg/store"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/drone/drone/runner"
-	"github.com/drone/drone/server/session"
-	"github.com/drone/drone/settings"
 )
 
 func SetQueue(q queue.Queue) gin.HandlerFunc {

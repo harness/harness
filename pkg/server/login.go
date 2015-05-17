@@ -9,7 +9,7 @@ import (
 	"github.com/ungerik/go-gravatar"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/drone/drone/common/oauth2"
+	"github.com/drone/drone/pkg/oauth2"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/httputil"
 )

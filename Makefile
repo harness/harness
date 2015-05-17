@@ -6,6 +6,7 @@ VERSION := 0.4.0-alpha
 all: concat bindata build
 
 deps:
+	go get github.com/jteeuwen/go-bindata/...
 	go get -t -v ./...
 
 test:
@@ -13,8 +14,7 @@ test:
 	go test -cover -short ./...
 
 build:
-	mkdir -p bin
-	go build -o bin/drone -ldflags "-X main.revision $(SHA) -X main.version $(VERSION).$(SHA)"
+	go build -o bin/drone -ldflags "-X main.revision $(SHA) -X main.version $(VERSION).$(SHA)" github.com/drone/drone/cmd/drone-server
 
 clean:
 	find . -name "*.out" -delete
@@ -22,20 +22,19 @@ clean:
 	rm -f bindata.go
 
 concat:
-	cat server/static/scripts/drone.js         \
-		server/static/scripts/services/*.js    \
-		server/static/scripts/filters/*.js     \
-		server/static/scripts/controllers/*.js \
-		server/static/scripts/term.js          > server/static/scripts/drone.min.js
+	cat cmd/drone-server/static/scripts/drone.js         \
+		cmd/drone-server/static/scripts/services/*.js    \
+		cmd/drone-server/static/scripts/filters/*.js     \
+		cmd/drone-server/static/scripts/controllers/*.js \
+		cmd/drone-server/static/scripts/term.js          > cmd/drone-server/static/scripts/drone.min.js
 
-bindata_deps:
-	go get github.com/jteeuwen/go-bindata/...
+# embeds all the static files directly
+# into the drone binary file
+bindata:
+	$$GOPATH/bin/go-bindata -o="cmd/drone-server/drone_bindata.go" cmd/drone-server/static/...
 
 bindata_debug:
-	$$GOPATH/bin/go-bindata --debug server/static/...
-
-bindata:
-	$$GOPATH/bin/go-bindata server/static/...
+	$$GOPATH/bin/go-bindata --debug -o="cmd/drone-server/drone_bindata.go" cmd/drone-server/static/...
 
 # creates a debian package for drone
 # to install `sudo dpkg -i drone.deb`
