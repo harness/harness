@@ -20,7 +20,7 @@ drone
 *.txt
 *.toml
 *.min.js
-bindata.go
+*_bindata.go
 
 # generate binaries
 cmd/drone/drone
