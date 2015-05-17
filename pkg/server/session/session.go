@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/drone/drone/pkg/settings"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/drone/drone/settings"
 )
 
 type Session interface {

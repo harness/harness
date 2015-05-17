@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/drone/drone/pkg/server/recorder"
 	"github.com/drone/drone/pkg/store/mock"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/drone/drone/server/recorder"
 	. "github.com/franela/goblin"
 	"github.com/gin-gonic/gin"
 )

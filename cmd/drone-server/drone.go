@@ -8,15 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/pkg/remote/github"
-	"github.com/drone/drone/server"
-	"github.com/drone/drone/server/session"
-	"github.com/drone/drone/settings"
+	"github.com/drone/drone/pkg/server"
+	"github.com/drone/drone/pkg/server/session"
+	"github.com/drone/drone/pkg/settings"
 	"github.com/elazarl/go-bindata-assetfs"
 
 	eventbus "github.com/drone/drone/pkg/bus/builtin"
 	queue "github.com/drone/drone/pkg/queue/builtin"
+	runner "github.com/drone/drone/pkg/runner/builtin"
 	store "github.com/drone/drone/pkg/store/builtin"
-	runner "github.com/drone/drone/runner/builtin"
 
 	_ "net/http/pprof"
 )
@@ -175,14 +175,14 @@ func static() http.Handler {
 	return http.StripPrefix("/static/", http.FileServer(&assetfs.AssetFS{
 		Asset:    Asset,
 		AssetDir: AssetDir,
-		Prefix:   "server/static",
+		Prefix:   "cmd/drone-server/static",
 	}))
 }
 
 // index is a helper function that will setup a template
 // for rendering the main angular index.html file.
 func index() *template.Template {
-	file := MustAsset("server/static/index.html")
+	file := MustAsset("cmd/drone-server/static/index.html")
 	filestr := string(file)
 	return template.Must(template.New("index.html").Parse(filestr))
 }
