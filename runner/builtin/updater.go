@@ -7,8 +7,8 @@ import (
 
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/pkg/bus"
+	"github.com/drone/drone/pkg/remote"
 	"github.com/drone/drone/pkg/store"
-	"github.com/drone/drone/remote"
 )
 
 type Updater interface {

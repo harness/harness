@@ -9,7 +9,7 @@ import (
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/common/httputil"
 	"github.com/drone/drone/common/sshutil"
-	"github.com/drone/drone/remote"
+	"github.com/drone/drone/pkg/remote"
 )
 
 // repoResp is a data structure used for sending
