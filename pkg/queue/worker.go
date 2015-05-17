@@ -3,7 +3,7 @@ package queue
 import (
 	"io"
 
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 )
 
 // Work represents an item for work to be

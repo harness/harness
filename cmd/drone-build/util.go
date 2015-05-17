@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 	"github.com/samalba/dockerclient"
 )
 

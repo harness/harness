@@ -3,9 +3,8 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/common"
-	"github.com/drone/drone/common/ccmenu"
-	"github.com/drone/drone/common/httputil"
+	"github.com/drone/drone/pkg/ccmenu"
+	common "github.com/drone/drone/pkg/types"
 )
 
 var (
@@ -73,8 +72,7 @@ func GetCC(c *gin.Context) {
 		return
 	}
 
-	link := httputil.GetURL(c.Request) + "/" + repo.FullName
-	cc := ccmenu.NewCC(repo, list[0], link)
+	cc := ccmenu.NewCC(repo, list[0])
 
 	c.Writer.Header().Set("Content-Type", "application/xml")
 	c.XML(200, cc)

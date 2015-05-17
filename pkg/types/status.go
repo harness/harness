@@ -1,4 +1,4 @@
-package common
+package types
 
 type Status struct {
 	ID       int64  `meddler:"status_id,pk"    json:"-"`

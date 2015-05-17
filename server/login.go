@@ -9,9 +9,9 @@ import (
 	"github.com/ungerik/go-gravatar"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/drone/drone/common"
-	"github.com/drone/drone/common/httputil"
 	"github.com/drone/drone/common/oauth2"
+	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/utils/httputil"
 )
 
 // GetLogin accepts a request to authorize the user and to

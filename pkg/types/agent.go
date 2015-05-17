@@ -1,4 +1,4 @@
-package common
+package types
 
 // Agent represents a worker that has connected
 // to the system in order to perform work

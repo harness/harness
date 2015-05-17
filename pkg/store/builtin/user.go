@@ -3,7 +3,7 @@ package builtin
 import (
 	"time"
 
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 	"github.com/russross/meddler"
 )
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/rpc"
 
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/settings"
 )
 

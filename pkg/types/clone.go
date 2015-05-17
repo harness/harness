@@ -1,4 +1,4 @@
-package common
+package types
 
 type Clone struct {
 	Origin  string   `json:"origin"`

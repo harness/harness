@@ -1,4 +1,4 @@
-package common
+package types
 
 type Build struct {
 	ID       int64  `meddler:"build_id,pk"    json:"-"`

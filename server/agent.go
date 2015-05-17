@@ -1,15 +1,15 @@
 package server
 
 import (
-	"github.com/drone/drone/common"
+	"github.com/drone/drone/pkg/types"
 	"github.com/gin-gonic/gin"
 )
 
 // GET /api/agents/token
 func GetAgentToken(c *gin.Context) {
 	sess := ToSession(c)
-	token := &common.Token{}
-	token.Kind = common.TokenAgent
+	token := &types.Token{}
+	token.Kind = types.TokenAgent
 	token.Label = "drone-agent"
 	tokenstr, err := sess.GenerateToken(token)
 	if err != nil {

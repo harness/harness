@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/ungerik/go-gravatar"
 
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 )
 
 // GetUsers accepts a request to retrieve all users

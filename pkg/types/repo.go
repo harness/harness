@@ -1,4 +1,4 @@
-package common
+package types
 
 type Repo struct {
 	ID          int64  `meddler:"repo_id,pk"       json:"id"`

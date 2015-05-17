@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 
-	"github.com/drone/drone/common"
-	"github.com/drone/drone/common/httputil"
-	"github.com/drone/drone/common/sshutil"
 	"github.com/drone/drone/pkg/remote"
+	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/utils/httputil"
+	"github.com/drone/drone/pkg/utils/sshutil"
 )
 
 // repoResp is a data structure used for sending

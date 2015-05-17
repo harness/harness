@@ -1,4 +1,4 @@
-package common
+package types
 
 type Hook struct {
 	Repo   *Repo

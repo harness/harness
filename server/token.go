@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 )
 
 // POST /api/user/tokens

@@ -1,7 +1,7 @@
 package plugin
 
 import (
-	"github.com/drone/drone/common"
+	common "github.com/drone/drone/pkg/types"
 )
 
 type GetTokenReq struct {

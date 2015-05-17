@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/drone/drone/common"
+	"github.com/drone/drone/pkg/types"
 )
 
 type CCProjects struct {
@@ -23,10 +23,10 @@ type CCProject struct {
 	WebURL          string   `xml:"webUrl,attr"`
 }
 
-func NewCC(r *common.Repo, c *common.Commit, url string) *CCProjects {
+func NewCC(r *types.Repo, c *types.Commit) *CCProjects {
 	proj := &CCProject{
 		Name:            r.Owner + "/" + r.Name,
-		WebURL:          url,
+		WebURL:          r.Self,
 		Activity:        "Building",
 		LastBuildStatus: "Unknown",
 		LastBuildLabel:  "Unknown",
@@ -34,8 +34,8 @@ func NewCC(r *common.Repo, c *common.Commit, url string) *CCProjects {
 
 	// if the build is not currently running then
 	// we can return the latest build status.
-	if c.State != common.StatePending &&
-		c.State != common.StateRunning {
+	if c.State != types.StatePending &&
+		c.State != types.StateRunning {
 		proj.Activity = "Sleeping"
 		proj.LastBuildTime = time.Unix(c.Started, 0).Format(time.RFC3339)
 		proj.LastBuildLabel = strconv.Itoa(c.Sequence)
@@ -44,11 +44,11 @@ func NewCC(r *common.Repo, c *common.Commit, url string) *CCProjects {
 	// ensure the last build state accepts a valid
 	// ccmenu enumeration
 	switch c.State {
-	case common.StateError, common.StateKilled:
+	case types.StateError, types.StateKilled:
 		proj.LastBuildStatus = "Exception"
-	case common.StateSuccess:
+	case types.StateSuccess:
 		proj.LastBuildStatus = "Success"
-	case common.StateFailure:
+	case types.StateFailure:
 		proj.LastBuildStatus = "Failure"
 	default:
 		proj.LastBuildStatus = "Unknown"
