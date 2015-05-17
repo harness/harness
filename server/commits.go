@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/drone/drone/common"
+	"github.com/drone/drone/pkg/queue"
 	"github.com/drone/drone/pkg/yaml/inject"
-	"github.com/drone/drone/queue"
 	"github.com/gin-gonic/gin"
 	// "github.com/gin-gonic/gin/binding"
 )

@@ -8,8 +8,8 @@ import (
 
 	"github.com/drone/drone/common"
 	"github.com/drone/drone/pkg/bus"
+	"github.com/drone/drone/pkg/queue"
 	"github.com/drone/drone/pkg/store"
-	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/runner"
 	"github.com/drone/drone/server/session"
