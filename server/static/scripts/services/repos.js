@@ -75,7 +75,7 @@
 
 
 		var callback,
-			websocket,
+			events,
 			token = localStorage.getItem('access_token');
 
 		/**
@@ -86,25 +86,23 @@
 		this.subscribe = function(repo, _callback) {
 			callback = _callback;
 
-			var proto = ($window.location.protocol === 'https:' ? 'wss' : 'ws'),
-				route = [proto, "://", $window.location.host, '/api/stream/'+ repo +'?access_token=', token].join('');
-
-			websocket = new WebSocket(route);
-			websocket.onmessage = function (event) {
+			events = new EventSource("/api/stream/" + repo + "?access_token=" + token, { withCredentials: true });
+			events.onmessage = function (event) {
+				console.log(event);
 				if (callback !== undefined) {
 					callback(angular.fromJson(event.data));
 				}
 			};
-			websocket.onclose = function (event) {
-				console.log('user websocket closed');
+			events.onerror = function (event) {
+				console.log('user event stream closed due to error.', event);
 			};
 		};
 
 		this.unsubscribe = function() {
 			callback = undefined;
-			if (websocket !== undefined) {
-				websocket.close();
-				websocket = undefined;
+			if (events !== undefined) {
+				events.close();
+				events = undefined;
 			}
 		};
 	}

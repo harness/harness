@@ -24,8 +24,8 @@ func SetQueue(q queue.Queue) gin.HandlerFunc {
 }
 
 func ToQueue(c *gin.Context) queue.Queue {
-	v, err := c.Get("queue")
-	if err != nil {
+	v, ok := c.Get("queue")
+	if !ok {
 		return nil
 	}
 	return v.(queue.Queue)
@@ -39,16 +39,16 @@ func SetBus(r eventbus.Bus) gin.HandlerFunc {
 }
 
 func ToBus(c *gin.Context) eventbus.Bus {
-	v, err := c.Get("eventbus")
-	if err != nil {
+	v, ok := c.Get("eventbus")
+	if !ok {
 		return nil
 	}
 	return v.(eventbus.Bus)
 }
 
 func ToRemote(c *gin.Context) remote.Remote {
-	v, err := c.Get("remote")
-	if err != nil {
+	v, ok := c.Get("remote")
+	if !ok {
 		return nil
 	}
 	return v.(remote.Remote)
@@ -62,8 +62,8 @@ func SetRemote(r remote.Remote) gin.HandlerFunc {
 }
 
 func ToRunner(c *gin.Context) runner.Runner {
-	v, err := c.Get("runner")
-	if err != nil {
+	v, ok := c.Get("runner")
+	if !ok {
 		return nil
 	}
 	return v.(runner.Runner)
@@ -77,8 +77,8 @@ func SetRunner(r runner.Runner) gin.HandlerFunc {
 }
 
 func ToSettings(c *gin.Context) *settings.Settings {
-	v, err := c.Get("settings")
-	if err != nil {
+	v, ok := c.Get("settings")
+	if !ok {
 		return nil
 	}
 	return v.(*settings.Settings)
@@ -92,24 +92,24 @@ func SetSettings(s *settings.Settings) gin.HandlerFunc {
 }
 
 func ToPerm(c *gin.Context) *common.Perm {
-	v, err := c.Get("perm")
-	if err != nil {
+	v, ok := c.Get("perm")
+	if !ok {
 		return nil
 	}
 	return v.(*common.Perm)
 }
 
 func ToUser(c *gin.Context) *common.User {
-	v, err := c.Get("user")
-	if err != nil {
+	v, ok := c.Get("user")
+	if !ok {
 		return nil
 	}
 	return v.(*common.User)
 }
 
 func ToRepo(c *gin.Context) *common.Repo {
-	v, err := c.Get("repo")
-	if err != nil {
+	v, ok := c.Get("repo")
+	if !ok {
 		return nil
 	}
 	return v.(*common.Repo)
