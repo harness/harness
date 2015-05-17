@@ -2,8 +2,8 @@ package parser
 
 import (
 	"github.com/drone/drone/common"
-	"github.com/drone/drone/parser/inject"
-	"github.com/drone/drone/parser/matrix"
+	"github.com/drone/drone/pkg/yaml/inject"
+	"github.com/drone/drone/pkg/yaml/matrix"
 
 	"gopkg.in/yaml.v2"
 )
