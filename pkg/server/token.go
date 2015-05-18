@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 
+	"github.com/drone/drone/pkg/server/session"
 	common "github.com/drone/drone/pkg/types"
 )
 
@@ -13,7 +14,6 @@ import (
 func PostToken(c *gin.Context) {
 	settings := ToSettings(c)
 	store := ToDatastore(c)
-	sess := ToSession(c)
 	user := ToUser(c)
 
 	// if a session secret is not defined there is no way to
@@ -39,13 +39,24 @@ func PostToken(c *gin.Context) {
 
 	err := store.AddToken(token)
 	if err != nil {
-		c.Fail(400, err)
+		c.Fail(500, err)
+		return
+	}
+
+	var sess session.Session
+	val, _ := c.Get("session")
+	if val != nil {
+		sess = val.(session.Session)
+	} else {
+		sess = session.New(settings.Session)
 	}
 
 	jwt, err := sess.GenerateToken(token)
 	if err != nil {
 		c.Fail(400, err)
+		return
 	}
+
 	c.JSON(200, struct {
 		*common.Token
 		Hash string `json:"hash"`
@@ -61,10 +72,12 @@ func DelToken(c *gin.Context) {
 	token, err := store.TokenLabel(user, label)
 	if err != nil {
 		c.Fail(404, err)
+		return
 	}
 	err = store.DelToken(token)
 	if err != nil {
 		c.Fail(400, err)
+		return
 	}
 
 	c.Writer.WriteHeader(200)
