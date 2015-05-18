@@ -11,17 +11,9 @@ import (
 
 // POST /api/user/tokens
 func PostToken(c *gin.Context) {
-	settings := ToSettings(c)
-	store := ToDatastore(c)
 	sess := ToSession(c)
+	store := ToDatastore(c)
 	user := ToUser(c)
-
-	// if a session secret is not defined there is no way to
-	// generate jwt user tokens, so we must throw an error
-	if settings.Session == nil || len(settings.Session.Secret) == 0 {
-		c.String(500, "User tokens are not configured")
-		return
-	}
 
 	in := &common.Token{}
 	if !c.BindWith(in, binding.JSON) {
@@ -39,13 +31,16 @@ func PostToken(c *gin.Context) {
 
 	err := store.AddToken(token)
 	if err != nil {
-		c.Fail(400, err)
+		c.Fail(500, err)
+		return
 	}
 
 	jwt, err := sess.GenerateToken(token)
 	if err != nil {
 		c.Fail(400, err)
+		return
 	}
+
 	c.JSON(200, struct {
 		*common.Token
 		Hash string `json:"hash"`
@@ -61,10 +56,12 @@ func DelToken(c *gin.Context) {
 	token, err := store.TokenLabel(user, label)
 	if err != nil {
 		c.Fail(404, err)
+		return
 	}
 	err = store.DelToken(token)
 	if err != nil {
 		c.Fail(400, err)
+		return
 	}
 
 	c.Writer.WriteHeader(200)
