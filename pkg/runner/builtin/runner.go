@@ -244,16 +244,6 @@ func (r *Runner) Logs(build *common.Build) (io.ReadCloser, error) {
 	}
 
 	return client.ContainerLogs(info.Id, logOptsTail)
-	// rc, err := client.ContainerLogs(info.Id, logOptsTail)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// pr, pw := io.Pipe()
-	// go func() {
-	// 	defer rc.Close()
-	// 	docker.StdCopy(pw, pw, rc)
-	// }()
-	// return pr, nil
 }
 
 func cname(build *common.Build) string {
