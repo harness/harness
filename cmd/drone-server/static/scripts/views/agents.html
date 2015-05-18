@@ -2,10 +2,26 @@
 
 <a href="/">Back</a>
 
-<dl>
-	<dt>Token</dt>
-	<dd>{{ token }}</dd>
-</dl>
+
+<input type="text" ng-model="newAgent.address" />
+<button ng-click="onAdd(newAgent)">Add</button>
+
+<table border="1">
+	<thead>
+		<tr>
+			<th>Address</th>
+			<th>Token</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="agent in agents | orderBy:'-address'">
+			<td>{{ agent.address }}</td>
+			<td>{{ agent.token }}</td>
+			<td><button ng-click="onDelete(agent)">Delete</button>
+		</tr>
+	</tbody>
+</table>
 
 <pre>
 docker run -d drone/drone-agent --addr={{ addr }} --token={{ token }}

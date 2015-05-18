@@ -80,6 +80,7 @@ func New(db *sql.DB) store.Store {
 		*Blobstore
 		*Starstore
 		*Tokenstore
+		*Agentstore
 	}{
 		NewUserstore(db),
 		NewRepostore(db),
@@ -88,5 +89,6 @@ func New(db *sql.DB) store.Store {
 		NewBlobstore(db),
 		NewStarstore(db),
 		NewTokenstore(db),
+		NewAgentstore(db),
 	}
 }

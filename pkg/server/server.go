@@ -76,6 +76,21 @@ func SetRunner(r runner.Runner) gin.HandlerFunc {
 	}
 }
 
+func ToUpdater(c *gin.Context) runner.Updater {
+	v, ok := c.Get("updater")
+	if !ok {
+		return nil
+	}
+	return v.(runner.Updater)
+}
+
+func SetUpdater(u runner.Updater) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("updater", u)
+		c.Next()
+	}
+}
+
 func ToSettings(c *gin.Context) *settings.Settings {
 	v, ok := c.Get("settings")
 	if !ok {
@@ -113,6 +128,14 @@ func ToRepo(c *gin.Context) *common.Repo {
 		return nil
 	}
 	return v.(*common.Repo)
+}
+
+func ToAgent(c *gin.Context) *common.Agent {
+	v, ok := c.Get("agent")
+	if !ok {
+		return nil
+	}
+	return v.(*common.Agent)
 }
 
 func ToDatastore(c *gin.Context) store.Store {
@@ -231,15 +254,22 @@ func MustAdmin() gin.HandlerFunc {
 
 func MustAgent() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		sess := ToSession(c)
-		token := sess.GetLogin(c.Request)
-		if token == nil {
+		store := ToDatastore(c)
+		token := c.Request.FormValue("token")
+		if len(token) == 0 {
 			c.AbortWithStatus(401)
 			return
-		} else if token.Kind != common.TokenAgent {
-			c.AbortWithStatus(500)
+		}
+		agent, err := store.AgentToken(token)
+		if err != nil {
+			c.Fail(401, err)
 			return
 		}
+		if agent.Active == false {
+			c.AbortWithStatus(403)
+			return
+		}
+		c.Set("agent", agent)
 		c.Next()
 	}
 }

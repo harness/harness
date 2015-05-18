@@ -1,182 +1,144 @@
 package server
 
-// import (
-// 	"encoding/json"
-// 	"io"
-// 	"net"
-// 	"strconv"
+import (
+	"strconv"
 
-// 	log "github.com/Sirupsen/logrus"
-// 	"github.com/gin-gonic/gin"
-// 	"github.com/gin-gonic/gin/binding"
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 
-// 	"github.com/drone/drone/common"
-// 	"github.com/drone/drone/eventbus"
-// )
+	log "github.com/Sirupsen/logrus"
+	common "github.com/drone/drone/pkg/types"
+)
 
-// // TODO (bradrydzewski) the callback URL should be signed.
-// // TODO (bradrydzewski) we shouldn't need to fetch the Repo if specified in the URL path
-// // TODO (bradrydzewski) use SetRepoLast to update the last repository
+// GET /queue/pull
+func PollBuild(c *gin.Context) {
+	queue := ToQueue(c)
+	store := ToDatastore(c)
+	agent := ToAgent(c)
 
-// // GET /queue/pull
-// func PollBuild(c *gin.Context) {
-// 	queue := ToQueue(c)
-// 	store := ToDatastore(c)
-// 	agent := &common.Agent{
-// 		Addr: c.Request.RemoteAddr,
-// 	}
+	log.Infof("agent connected and polling builds at %s", agent.Addr)
 
-// 	// extact the host port and name and
-// 	// replace with the default agent port (1999)
-// 	host, _, err := net.SplitHostPort(agent.Addr)
-// 	if err == nil {
-// 		agent.Addr = host
-// 	}
-// 	agent.Addr = net.JoinHostPort(agent.Addr, "1999")
+	// pull an item from the queue
+	work := queue.PullClose(c.Writer)
+	if work == nil {
+		c.AbortWithStatus(500)
+		return
+	}
 
-// 	log.Infof("agent connected and polling builds at %s", agent.Addr)
+	// store the agent details with the commit
+	work.Commit.AgentID = agent.ID
+	err := store.SetCommit(work.Commit)
+	if err != nil {
+		log.Errorf("unable to associate agent with commit. %s", err)
+		// IMPORTANT: this should never happen, and even if it does
+		// it is an error scenario that will only impact live streaming
+		// so we choose it log and ignore.
+	}
 
-// 	work := queue.PullClose(c.Writer)
-// 	if work == nil {
-// 		c.AbortWithStatus(500)
-// 		return
-// 	}
+	c.JSON(200, work)
 
-// 	// TODO (bradrydzewski) decide how we want to handle a failure here
-// 	// still not sure exact behavior we want ...
-// 	err = store.SetBuildAgent(work.Repo.FullName, work.Build.Number, agent)
-// 	if err != nil {
-// 		log.Errorf("error persisting build agent. %s", err)
-// 	}
+	// acknowledge work received by the client
+	queue.Ack(work)
+}
 
-// 	c.JSON(200, work)
+// POST /queue/push/:owner/:repo
+func PushCommit(c *gin.Context) {
+	store := ToDatastore(c)
+	repo := ToRepo(c)
 
-// 	// acknowledge work received by the client
-// 	queue.Ack(work)
-// }
+	in := &common.Commit{}
+	if !c.BindWith(in, binding.JSON) {
+		return
+	}
+	user, err := store.User(repo.UserID)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+	commit, err := store.CommitSeq(repo, in.Sequence)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
 
-// // GET /queue/push/:owner/:repo
-// func PushBuild(c *gin.Context) {
-// 	store := ToDatastore(c)
-// 	repo := ToRepo(c)
-// 	bus := ToBus(c)
-// 	in := &common.Build{}
-// 	if !c.BindWith(in, binding.JSON) {
-// 		return
-// 	}
-// 	build, err := store.Build(repo.FullName, in.Number)
-// 	if err != nil {
-// 		c.Fail(404, err)
-// 		return
-// 	}
+	commit.Started = in.Started
+	commit.Finished = in.Finished
+	commit.State = in.State
 
-// 	if in.State != common.StatePending && in.State != common.StateRunning {
-// 		store.DelBuildAgent(repo.FullName, build.Number)
-// 	}
+	updater := ToUpdater(c)
+	err = updater.SetCommit(user, repo, commit)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+	c.Writer.WriteHeader(200)
+}
 
-// 	build.Duration = in.Duration
-// 	build.Started = in.Started
-// 	build.Finished = in.Finished
-// 	build.State = in.State
-// 	err = store.SetBuildState(repo.FullName, build)
-// 	if err != nil {
-// 		c.Fail(500, err)
-// 		return
-// 	}
+// POST /queue/push/:owner/:repo/:commit
+func PushBuild(c *gin.Context) {
+	store := ToDatastore(c)
+	repo := ToRepo(c)
+	cnum, _ := strconv.Atoi(c.Params.ByName("commit"))
 
-// 	if build.State != common.StatePending && build.State != common.StateRunning {
-// 		if repo.Last == nil || build.Number >= repo.Last.Number {
-// 			repo.Last = build
-// 			store.SetRepo(repo)
-// 		}
-// 	}
+	in := &common.Build{}
+	if !c.BindWith(in, binding.JSON) {
+		return
+	}
 
-// 	// <-- FIXME
-// 	// for some reason the Repo and Build fail to marshal to JSON.
-// 	// It has something to do with memory / pointers. So it goes away
-// 	// if I just refetch these items. Needs to be fixed in the future,
-// 	// but for now should be ok
-// 	repo, err = store.Repo(repo.FullName)
-// 	if err != nil {
-// 		c.Fail(500, err)
-// 		return
-// 	}
-// 	build, err = store.Build(repo.FullName, in.Number)
-// 	if err != nil {
-// 		c.Fail(404, err)
-// 		return
-// 	}
-// 	// END FIXME -->
+	commit, err := store.CommitSeq(repo, cnum)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+	build, err := store.BuildSeq(commit, in.Sequence)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
 
-// 	msg, err := json.Marshal(build)
-// 	if err == nil {
-// 		c.String(200, err.Error()) // we can ignore this error
-// 		return
-// 	}
+	build.Duration = in.Duration
+	build.Started = in.Started
+	build.Finished = in.Finished
+	build.ExitCode = in.ExitCode
+	build.State = in.State
 
-// 	bus.Send(&eventbus.Event{
-// 		Name: repo.FullName,
-// 		Kind: eventbus.EventRepo,
-// 		Msg:  msg,
-// 	})
+	updater := ToUpdater(c)
+	err = updater.SetBuild(repo, commit, build)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+	c.Writer.WriteHeader(200)
+}
 
-// 	c.Writer.WriteHeader(200)
-// }
+// POST /queue/push/:owner/:repo/:comimt/:build/logs
+func PushLogs(c *gin.Context) {
+	store := ToDatastore(c)
+	repo := ToRepo(c)
+	cnum, _ := strconv.Atoi(c.Params.ByName("commit"))
+	bnum, _ := strconv.Atoi(c.Params.ByName("build"))
 
-// // POST /queue/push/:owner/:repo/:build
-// func PushTask(c *gin.Context) {
-// 	store := ToDatastore(c)
-// 	repo := ToRepo(c)
-// 	bus := ToBus(c)
-// 	num, _ := strconv.Atoi(c.Params.ByName("build"))
-// 	in := &common.Task{}
-// 	if !c.BindWith(in, binding.JSON) {
-// 		return
-// 	}
-// 	err := store.SetBuildTask(repo.FullName, num, in)
-// 	if err != nil {
-// 		c.Fail(404, err)
-// 		return
-// 	}
-// 	build, err := store.Build(repo.FullName, num)
-// 	if err != nil {
-// 		c.Fail(404, err)
-// 		return
-// 	}
+	commit, err := store.CommitSeq(repo, cnum)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+	build, err := store.BuildSeq(commit, bnum)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+	updater := ToUpdater(c)
+	err = updater.SetLogs(repo, commit, build, c.Request.Body)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+	c.Writer.WriteHeader(200)
+}
 
-// 	msg, err := json.Marshal(build)
-// 	if err == nil {
-// 		c.String(200, err.Error()) // we can ignore this error
-// 		return
-// 	}
-
-// 	bus.Send(&eventbus.Event{
-// 		Name: repo.FullName,
-// 		Kind: eventbus.EventRepo,
-// 		Msg:  msg,
-// 	})
-
-// 	c.Writer.WriteHeader(200)
-// }
-
-// // POST /queue/push/:owner/:repo/:build/:task/logs
-// func PushLogs(c *gin.Context) {
-// 	store := ToDatastore(c)
-// 	repo := ToRepo(c)
-// 	bnum, _ := strconv.Atoi(c.Params.ByName("build"))
-// 	tnum, _ := strconv.Atoi(c.Params.ByName("task"))
-
-// 	const maxBuffToRead int64 = 5000000 // 5MB.
-// 	err := store.SetLogs(repo.FullName, bnum, tnum, io.LimitReader(c.Request.Body, maxBuffToRead))
-// 	if err != nil {
-// 		c.Fail(500, err)
-// 		return
-// 	}
-// 	c.Writer.WriteHeader(200)
-// }
-
-// func GetQueue(c *gin.Context) {
-// 	queue := ToQueue(c)
-// 	items := queue.Items()
-// 	c.JSON(200, items)
-// }
+func GetQueue(c *gin.Context) {
+	queue := ToQueue(c)
+	items := queue.Items()
+	c.JSON(200, items)
+}

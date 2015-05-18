@@ -12,6 +12,7 @@ const (
 type Commit struct {
 	ID           int64  `meddler:"commit_id,pk"         json:"-"`
 	RepoID       int64  `meddler:"repo_id"              json:"-"`
+	AgentID      int64  `meddler:"agent_id"             json:"-"`
 	Sequence     int    `meddler:"commit_seq"           json:"sequence"`
 	State        string `meddler:"commit_state"         json:"state"`
 	Started      int64  `meddler:"commit_started"       json:"started_at"`

@@ -1,13 +1,9 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
-	"net/http"
-	"net/url"
 	"os"
 	"time"
 
@@ -54,7 +50,7 @@ func main() {
 				time.Sleep(30 * time.Second)
 				continue
 			}
-			runner_ := runner.Runner{&updater{addr, token}}
+			runner_ := runner.Runner{&updater{}}
 			runner_.Run(w)
 		}
 	}()
@@ -64,6 +60,12 @@ func main() {
 	s.GET("/ping", ping)
 	s.GET("/about", about)
 	s.Run(":1999")
+}
+
+func pull() (*queue.Work, error) {
+	out := &queue.Work{}
+	err := send("POST", "/api/queue/pull", nil, out)
+	return out, err
 }
 
 // ping handler returns a simple response to the
@@ -86,6 +88,11 @@ func about(c *gin.Context) {
 // stream handler is a proxy that streams the Docker
 // stdout and stderr for a running build to the caller.
 func stream(c *gin.Context) {
+	if c.Request.FormValue("token") != token {
+		c.AbortWithStatus(401)
+		return
+	}
+
 	client, err := dockerclient.NewDockerClient(DockerHost, nil)
 	if err != nil {
 		c.Fail(500, err)
@@ -134,18 +141,4 @@ func stream(c *gin.Context) {
 		return
 	}
 	io.Copy(c.Writer, rc)
-}
-
-func pull() (*queue.Work, error) {
-	url_, _ := url.Parse(addr)
-	url_.Path = "/api/queue/pull"
-	var body bytes.Buffer
-	resp, err := http.Post(url_.String(), "application/json", &body)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	work := &queue.Work{}
-	err = json.NewDecoder(resp.Body).Decode(work)
-	return work, err
 }
