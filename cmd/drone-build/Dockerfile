@@ -1,4 +1,4 @@
-# Docker image for Drone's slack notification plugin
+# Docker image for the Drone build runner
 #
 #     CGO_ENABLED=0 go build -a -tags netgo
 #     docker build --rm=true -t drone/drone-build .
