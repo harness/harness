@@ -21,6 +21,13 @@ import (
 	_ "net/http/pprof"
 )
 
+var (
+	// commit sha for the current build, set by
+	// the compile process.
+	version  string
+	revision string
+)
+
 var conf = flag.String("config", "drone.toml", "")
 
 func main() {
