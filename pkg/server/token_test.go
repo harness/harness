@@ -19,18 +19,15 @@ import (
 )
 
 var tokenTests = []struct {
-	inLabel    string
-	inBody     string
-	inSession  *settings.Session
-	inHaveSess bool
-	storeErr   error
-	outCode    int
-	outKind    string
+	inLabel  string
+	inBody   string
+	storeErr error
+	outCode  int
+	outKind  string
 }{
-	{"", `{}`, nil, false, nil, 500, ""},
-	{"", `{}`, &settings.Session{Secret: "Otto"}, false, sql.ErrNoRows, 500, ""},
-	{"app1", `{"label": "app1"}`, &settings.Session{Secret: "Otto"}, true, nil, 200, types.TokenUser},
-	{"app2", `{"label": "app2"}`, &settings.Session{Secret: "Otto"}, false, nil, 200, types.TokenUser},
+	{"", `{}`, sql.ErrNoRows, 500, ""},
+	{"app1", `{"label": "app1"}`, nil, 200, types.TokenUser},
+	{"app2", `{"label": "app2"}`, nil, 200, types.TokenUser},
 }
 
 func TestToken(t *testing.T) {
@@ -48,18 +45,12 @@ func TestToken(t *testing.T) {
 				ctx.Set("datastore", store)
 				ctx.Set("user", &types.User{Login: "Freya"})
 
-				config := settings.Settings{Session: test.inSession}
+				config := settings.Settings{Session: &settings.Session{Secret: "Otto"}}
 				ctx.Set("settings", &config)
-				if test.inSession != nil {
-					// only set these up if we've got Session configuration
-					if test.inHaveSess {
-						ctx.Set("session", session.New(test.inSession))
-					}
+				ctx.Set("session", session.New(config.Session))
 
-					// prepare the mock datastore
-					store.On("AddToken", mock.AnythingOfType("*types.Token")).Return(test.storeErr).Once()
-				}
-
+				// prepare the mock
+				store.On("AddToken", mock.AnythingOfType("*types.Token")).Return(test.storeErr).Once()
 				PostToken(&ctx)
 
 				g.Assert(rw.Code).Equal(test.outCode)
