@@ -87,7 +87,7 @@
 
 			// subscribes to the build otuput.
 			logs.subscribe(fullName, number, step, function(data){
-				term.innerHTML += convert.toHtml(data);
+				term.innerHTML += convert.toHtml(data.replace("\\n","\n"));
 				if (tail) {
 					// scrolls to the bottom of the page if enabled
 					$window.scrollTo(0, $window.document.body.scrollHeight);

@@ -20,31 +20,34 @@
 		};
 
 		var callback,
-			websocket,
+			events,
 			token = localStorage.getItem('access_token');
 
 		this.subscribe = function (repoName, number, step, _callback) {
 			callback = _callback;
 
-			var proto = ($window.location.protocol === 'https:' ? 'wss' : 'ws'),
-				route = [proto, "://", $window.location.host, '/api/stream/', repoName, '/', number, '/', step, '?access_token=', token].join('');
-
-			websocket = new WebSocket(route);
-			websocket.onmessage = function (event) {
+			var route = ['/api/stream/', repoName, '/', number, '/', step, '?access_token=', token].join('')
+			events = new EventSource(route, { withCredentials: true });
+			events.onmessage = function (event) {
 				if (callback !== undefined) {
 					callback(event.data);
 				}
 			};
-			websocket.onclose = function (event) {
-				console.log('logs websocket closed');
+			events.onerror = function (event) {
+				callback = undefined;
+				if (events !== undefined) {
+					events.close();
+					events = undefined;
+				}
+				console.log('user event stream closed due to error.', event);
 			};
 		};
 
 		this.unsubscribe = function () {
 			callback = undefined;
-			if (websocket !== undefined) {
-				websocket.close();
-				websocket = undefined;
+			if (events !== undefined) {
+				events.close();
+				events = undefined;
 			}
 		};
 	}
