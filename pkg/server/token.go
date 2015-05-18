@@ -6,22 +6,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 
-	"github.com/drone/drone/pkg/server/session"
 	common "github.com/drone/drone/pkg/types"
 )
 
 // POST /api/user/tokens
 func PostToken(c *gin.Context) {
-	settings := ToSettings(c)
+	sess := ToSession(c)
 	store := ToDatastore(c)
 	user := ToUser(c)
-
-	// if a session secret is not defined there is no way to
-	// generate jwt user tokens, so we must throw an error
-	if settings.Session == nil || len(settings.Session.Secret) == 0 {
-		c.String(500, "User tokens are not configured")
-		return
-	}
 
 	in := &common.Token{}
 	if !c.BindWith(in, binding.JSON) {
@@ -41,14 +33,6 @@ func PostToken(c *gin.Context) {
 	if err != nil {
 		c.Fail(500, err)
 		return
-	}
-
-	var sess session.Session
-	val, _ := c.Get("session")
-	if val != nil {
-		sess = val.(session.Session)
-	} else {
-		sess = session.New(settings.Session)
 	}
 
 	jwt, err := sess.GenerateToken(token)
