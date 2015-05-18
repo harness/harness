@@ -9,11 +9,20 @@
 	function AgentService($http) {
 
 		/**
-		 * Gets an agent token.
+		 * Gets an agent list.
 		 */
-		this.getToken = function() {
-			return $http.get('/api/agents/token');
+		this.getAgents = function() {
+			return $http.get('/api/agents');
 		};
+
+		this.deleteAgent = function(agent) {
+			return $http.delete('/api/agents/'+agent.id);
+		};
+
+		this.postAgent = function(agent) {
+			return $http.post('/api/agents', agent);
+		};
+
 	}
 
 	angular

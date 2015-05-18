@@ -40,22 +40,6 @@ func (db *Repostore) RepoList(user *common.User) ([]*common.Repo, error) {
 	return repos, err
 }
 
-// // RepoKeys retrieves a set of repository keys from
-// // the datastore for the specified name.
-// func (db *Repostore) RepoKeypair(repo *common.Repo) (*common.Keypair, error) {
-// 	var keypair = new(common.Keypair)
-// 	var err = meddler.QueryRow(db, keypair, rebind(repoKeysQuery), repo.ID)
-// 	return keypair, err
-// }
-
-// // RepoParams retrieves a set of repository params from
-// // the datastore for the specified name.
-// func (db *Repostore) RepoParams(repo *common.Repo) (*common.Params, error) {
-// 	var params = new(common.Params)
-// 	var err = meddler.QueryRow(db, params, rebind(repoParamsQuery), repo.ID)
-// 	return params, err
-// }
-
 // AddRepo inserts a repo in the datastore.
 func (db *Repostore) AddRepo(repo *common.Repo) error {
 	repo.Created = time.Now().UTC().Unix()
@@ -68,16 +52,6 @@ func (db *Repostore) SetRepo(repo *common.Repo) error {
 	repo.Updated = time.Now().UTC().Unix()
 	return meddler.Update(db, repoTable, repo)
 }
-
-// // SetRepoKeypair upserts a keypair in the datastore.
-// func (db *Repostore) SetRepoKeypair(keys *common.Keypair) error {
-// 	return meddler.Save(db, repoKeyTable, keys)
-// }
-
-// // SetRepoKeypair upserts a param set in the datastore.
-// func (db *Repostore) SetRepoParams(params *common.Params) error {
-// 	return meddler.Save(db, repoParamTable, params)
-// }
 
 // DelRepo removes the repo from the datastore.
 func (db *Repostore) DelRepo(repo *common.Repo) error {

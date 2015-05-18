@@ -89,7 +89,9 @@ func main() {
 	agents := api.Group("/agents")
 	{
 		agents.Use(server.MustAdmin())
-		agents.GET("/token", server.GetAgentToken)
+		agents.GET("", server.GetAgents)
+		agents.POST("", server.PostAgent)
+		agents.DELETE("/:id", server.DeleteAgent)
 	}
 
 	repos := api.Group("/repos/:owner/:name")
@@ -131,20 +133,20 @@ func main() {
 		hooks.POST("", server.PostHook)
 	}
 
-	// queue := api.Group("/queue")
-	// {
-	// 	queue.Use(server.MustAgent())
-	// 	queue.GET("", server.GetQueue)
-	// 	queue.POST("/pull", server.PollBuild)
+	queue := api.Group("/queue")
+	{
+		queue.Use(server.MustAgent())
+		queue.Use(server.SetUpdater(updater))
+		queue.POST("/pull", server.PollBuild)
 
-	// 	push := queue.Group("/push/:owner/:name")
-	// 	{
-	// 		push.Use(server.SetRepo())
-	// 		push.POST("", server.PushBuild)
-	// 		push.POST("/:build", server.PushTask)
-	// 		push.POST("/:build/:task/logs", server.PushLogs)
-	// 	}
-	// }
+		push := queue.Group("/push/:owner/:name")
+		{
+			push.Use(server.SetRepo())
+			push.POST("", server.PushCommit)
+			push.POST("/:commit", server.PushBuild)
+			push.POST("/:commit/:build/logs", server.PushLogs)
+		}
+	}
 
 	stream := api.Group("/stream")
 	{

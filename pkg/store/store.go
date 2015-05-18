@@ -34,6 +34,8 @@ type Store interface {
 	// DelUser removes the user from the datastore.
 	DelUser(*common.User) error
 
+	//
+
 	// Token returns a token by ID.
 	Token(int64) (*common.Token, error)
 
@@ -146,4 +148,24 @@ type Store interface {
 
 	// Del removes an object from the blobstore.
 	DelBlob(path string) error
+
+	//
+
+	// Agent returns an agent by ID.
+	Agent(int64) (*common.Agent, error)
+
+	// AgentAddr returns an agent by address.
+	AgentAddr(string) (*common.Agent, error)
+
+	// AgentToken returns an agent by token.
+	AgentToken(string) (*common.Agent, error)
+
+	// AgentList returns a list of all build agents.
+	AgentList() ([]*common.Agent, error)
+
+	// AddAgent inserts an agent in the datastore.
+	AddAgent(*common.Agent) error
+
+	// SetAgent updates an agent in the datastore.
+	SetAgent(*common.Agent) error
 }

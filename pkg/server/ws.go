@@ -2,6 +2,7 @@ package server
 
 import (
 	"io"
+	"net/http"
 	"strconv"
 
 	"github.com/drone/drone/pkg/bus"
@@ -68,22 +69,44 @@ func GetStream(c *gin.Context) {
 		return
 	}
 
-	rc, err := runner.Logs(build)
-	if err != nil {
-		c.Fail(404, err)
-		return
+	var rc io.ReadCloser
+
+	// if no agent is assigned to the build we
+	// should stream the local logs
+	if commit.AgentID == 0 {
+		rc, err = runner.Logs(build)
+		if err != nil {
+			c.Fail(404, err)
+			return
+		}
+	} else {
+		agent, err := store.Agent(commit.AgentID)
+		if err != nil {
+			c.Fail(404, err)
+			return
+		}
+		resp, err := http.Get("http://" + agent.Addr)
+		if err != nil {
+			c.Fail(500, err)
+			return
+		} else if resp.StatusCode != 200 {
+			resp.Body.Close()
+			c.AbortWithStatus(resp.StatusCode)
+			return
+		}
+		rc = resp.Body
 	}
+
+	defer func() {
+		rc.Close()
+	}()
+
 	go func() {
 		<-c.Writer.CloseNotify()
 		rc.Close()
 	}()
 
 	rw := &StreamWriter{c.Writer, 0}
-
-	defer func() {
-		log.Infof("closed log stream")
-		rc.Close()
-	}()
 
 	docker.StdCopy(rw, rw, rc)
 }
