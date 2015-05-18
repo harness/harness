@@ -5,6 +5,7 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drone/drone/pkg/docker"
 	"github.com/samalba/dockerclient"
 )
 
@@ -154,7 +155,7 @@ func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, pull bo
 			return
 		}
 		defer rc.Close()
-		StdCopy(os.Stdout, os.Stdout, rc)
+		docker.StdCopy(os.Stdout, os.Stdout, rc)
 
 		// fetches the container information
 		info, err := client.InspectContainer(id)
