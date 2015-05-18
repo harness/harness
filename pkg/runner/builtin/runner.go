@@ -224,6 +224,7 @@ func (r *Runner) Logs(build *common.Build) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	// verify the container is running. if not we'll
 	// do an exponential backoff and attempt to wait
 	if !info.State.Running {
@@ -242,16 +243,17 @@ func (r *Runner) Logs(build *common.Build) (io.ReadCloser, error) {
 		}
 	}
 
-	rc, err := client.ContainerLogs(info.Id, logOptsTail)
-	if err != nil {
-		return nil, err
-	}
-	pr, pw := io.Pipe()
-	go func() {
-		defer rc.Close()
-		docker.StdCopy(pw, pw, rc)
-	}()
-	return pr, nil
+	return client.ContainerLogs(info.Id, logOptsTail)
+	// rc, err := client.ContainerLogs(info.Id, logOptsTail)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// pr, pw := io.Pipe()
+	// go func() {
+	// 	defer rc.Close()
+	// 	docker.StdCopy(pw, pw, rc)
+	// }()
+	// return pr, nil
 }
 
 func cname(build *common.Build) string {
