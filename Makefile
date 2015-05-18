@@ -28,6 +28,11 @@ concat:
 		cmd/drone-server/static/scripts/controllers/*.js \
 		cmd/drone-server/static/scripts/term.js          > cmd/drone-server/static/scripts/drone.min.js
 
+# installs the drone binaries into bin
+install:
+	install -t /usr/local/bin bin/drone
+	install -t /usr/local/bin bin/drone-agent
+
 # embeds all the static files directly
 # into the drone binary file
 bindata:

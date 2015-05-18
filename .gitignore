@@ -23,11 +23,12 @@ drone
 *_bindata.go
 
 # generate binaries
-cmd/drone/drone
-cmd/drone-build/drone-build
 cmd/drone-agent/drone-agent
+cmd/drone-build/drone-build
+cmd/drone-agent/drone-server
 
 # generated binaries
 bin/drone
-bin/drone-build
 bin/drone-agent
+bin/drone-build
+bin/drone-server

@@ -1,0 +1,129 @@
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: Drone API
+  contact:
+    name: Team Drone
+    url: "https://github.com/drone/drone"
+  license:
+    name: Creative Commons 4.0 International
+    url: "http://creativecommons.org/licenses/by/4.0/"
+host: "localhost:8080"
+basePath: /api
+schemes:
+  - http
+paths:
+  /user:
+    get:
+      description: Returns the currently authenticated user.
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: The currently authenticated user.
+          schema:
+            $ref: "#/definitions/User"
+    patch:
+      description: Updates the currently authenticated user.
+      produces:
+        - application/json
+      parameters:
+        - name: user
+          in: body
+          description: Updates to the user.
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        "200":
+          description: The updated user.
+          schema:
+            $ref: "#/definitions/User"
+definitions:
+  User:
+    properties:
+      login:
+        type: string
+      name:
+        type: string
+      email:
+        type: string
+      gravatar_id:
+        type: string
+      admin:
+        type: boolean
+      active:
+        type: boolean
+      created_at:
+        type: integer
+        format: int64
+      updated_at:
+        type: integer
+        format: int64
+  Repo:
+    properties:
+      owner:
+        type: string
+      name:
+        type: string
+      created_at:
+        type: integer
+        format: int64
+      updated_at:
+        type: integer
+        format: int64
+  Commit:
+    properties:
+      sequence:
+        type: integer
+      state:
+        type: string
+      sha:
+        type: string
+      ref:
+        type: string
+      branch:
+        type: string
+      author:
+        type: string
+      gravatar_id:
+        type: string
+      message:
+        type: string
+      pull_request:
+        type: boolean
+      started_at:
+        type: integer
+        format: int64
+      finished_at:
+        type: integer
+        format: int64
+      created_at:
+        type: integer
+        format: int64
+      updated_at:
+        type: integer
+        format: int64
+  Build:
+    properties:
+      sequence:
+        type: integer
+      state:
+        type: string
+      exit_code:
+        type: integer
+      duration:
+        type: integer
+        format: int64
+      started_at:
+        type: integer
+        format: int64
+      finished_at:
+        type: integer
+        format: int64
+      created_at:
+        type: integer
+        format: int64
+      updated_at:
+        type: integer
+        format: int64

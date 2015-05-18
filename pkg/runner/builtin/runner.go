@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/drone/drone/pkg/docker"
 	"github.com/drone/drone/pkg/queue"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/samalba/dockerclient"
@@ -153,7 +154,7 @@ func (r *Runner) Run(w *queue.Work) error {
 			return err
 		} else {
 			defer rc.Close()
-			StdCopy(&buf, &buf, rc)
+			docker.StdCopy(&buf, &buf, rc)
 		}
 		err = r.SetLogs(w.Repo, w.Commit, task, ioutil.NopCloser(&buf))
 		if err != nil {
@@ -248,7 +249,7 @@ func (r *Runner) Logs(build *common.Build) (io.ReadCloser, error) {
 	pr, pw := io.Pipe()
 	go func() {
 		defer rc.Close()
-		StdCopy(pw, pw, rc)
+		docker.StdCopy(pw, pw, rc)
 	}()
 	return pr, nil
 }
