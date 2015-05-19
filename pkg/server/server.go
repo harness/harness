@@ -130,14 +130,6 @@ func ToRepo(c *gin.Context) *common.Repo {
 	return v.(*common.Repo)
 }
 
-func ToAgent(c *gin.Context) *common.Agent {
-	v, ok := c.Get("agent")
-	if !ok {
-		return nil
-	}
-	return v.(*common.Agent)
-}
-
 func ToDatastore(c *gin.Context) store.Store {
 	return c.MustGet("datastore").(store.Store)
 }
@@ -254,22 +246,19 @@ func MustAdmin() gin.HandlerFunc {
 
 func MustAgent() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		store := ToDatastore(c)
+		conf := ToSettings(c)
+
+		// verify remote agents are enabled
+		if conf.Agents == nil || len(conf.Agents.Secret) == 0 {
+			c.AbortWithStatus(405)
+			return
+		}
+		// verify the agent token matches
 		token := c.Request.FormValue("token")
-		if len(token) == 0 {
+		if token != conf.Agents.Secret {
 			c.AbortWithStatus(401)
 			return
 		}
-		agent, err := store.AgentToken(token)
-		if err != nil {
-			c.Fail(401, err)
-			return
-		}
-		if agent.Active == false {
-			c.AbortWithStatus(403)
-			return
-		}
-		c.Set("agent", agent)
 		c.Next()
 	}
 }

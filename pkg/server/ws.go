@@ -71,21 +71,12 @@ func GetStream(c *gin.Context) {
 
 	var rc io.ReadCloser
 
-	// if no agent is assigned to the build we
-	// should stream the local logs
-	if commit.AgentID == 0 {
-		rc, err = runner.Logs(build)
-		if err != nil {
-			c.Fail(404, err)
-			return
-		}
-	} else {
-		agent, err := store.Agent(commit.AgentID)
-		if err != nil {
-			c.Fail(404, err)
-			return
-		}
-		resp, err := http.Get("http://" + agent.Addr)
+	addr, err := store.Agent(commit)
+	// if the commit is being executed by an agent
+	// we'll proxy the build output directly to the
+	// remote Docker client, through the agent.
+	if err == nil {
+		resp, err := http.Get("http://" + addr)
 		if err != nil {
 			c.Fail(500, err)
 			return
@@ -95,6 +86,15 @@ func GetStream(c *gin.Context) {
 			return
 		}
 		rc = resp.Body
+
+	} else {
+		// else if the commit is not being executed
+		// by the build agent we can use the local runner
+		rc, err = runner.Logs(build)
+		if err != nil {
+			c.Fail(404, err)
+			return
+		}
 	}
 
 	defer func() {

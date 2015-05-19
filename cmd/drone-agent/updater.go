@@ -11,20 +11,20 @@ import (
 	"strconv"
 	"time"
 
-	//logs "github.com/Sirupsen/logrus"
+	logs "github.com/Sirupsen/logrus"
 	common "github.com/drone/drone/pkg/types"
 )
 
 type updater struct{}
 
 func (u *updater) SetCommit(user *common.User, r *common.Repo, c *common.Commit) error {
-	path := fmt.Sprintf("/api/queue/push/%s/%v", r.FullName, c.Sequence)
+	path := fmt.Sprintf("/api/queue/push/%s", r.FullName)
 	return sendBackoff("POST", path, c, nil)
 }
 
 func (u *updater) SetBuild(r *common.Repo, c *common.Commit, b *common.Build) error {
-	path := fmt.Sprintf("/api/queue/push/%s", r.FullName)
-	return sendBackoff("POST", path, c, nil)
+	path := fmt.Sprintf("/api/queue/push/%s/%v", r.FullName, c.Sequence)
+	return sendBackoff("POST", path, b, nil)
 }
 
 func (u *updater) SetLogs(r *common.Repo, c *common.Commit, b *common.Build, rc io.ReadCloser) error {
@@ -40,7 +40,7 @@ func sendBackoff(method, path string, in, out interface{}) error {
 		if err == nil {
 			break
 		}
-		if attempts > 30 {
+		if attempts > 99 {
 			break
 		}
 		attempts++
@@ -99,19 +99,21 @@ func send(method, path string, in, out interface{}) error {
 	// make the request using the default http client
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		logs.Errorf("Error posting request. %s", err)
 		return err
 	}
 	defer resp.Body.Close()
 
 	// Check for an http error status (ie not 200 StatusOK)
 	if resp.StatusCode > 300 {
+		logs.Errorf("Error status code %d", resp.StatusCode)
 		return fmt.Errorf(resp.Status)
 	}
 
 	// Decode the JSON response
 	if out != nil {
-		return json.NewDecoder(resp.Body).Decode(out)
+		err = json.NewDecoder(resp.Body).Decode(out)
 	}
 
-	return nil
+	return err
 }

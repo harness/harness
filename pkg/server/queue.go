@@ -1,6 +1,7 @@
 package server
 
 import (
+	"net"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -14,9 +15,17 @@ import (
 func PollBuild(c *gin.Context) {
 	queue := ToQueue(c)
 	store := ToDatastore(c)
-	agent := ToAgent(c)
 
-	log.Infof("agent connected and polling builds at %s", agent.Addr)
+	// extract the IP address from the agent that is
+	// polling for builds.
+	host := c.Request.RemoteAddr
+	addr, _, err := net.SplitHostPort(host)
+	if err != nil {
+		addr = host
+	}
+	addr = net.JoinHostPort(addr, "1999")
+
+	log.Infof("agent connected and polling builds at %s", addr)
 
 	// pull an item from the queue
 	work := queue.PullClose(c.Writer)
@@ -25,14 +34,14 @@ func PollBuild(c *gin.Context) {
 		return
 	}
 
-	// store the agent details with the commit
-	work.Commit.AgentID = agent.ID
-	err := store.SetCommit(work.Commit)
+	// persist the relationship between agent and commit.
+	err = store.SetAgent(work.Commit, addr)
 	if err != nil {
-		log.Errorf("unable to associate agent with commit. %s", err)
-		// IMPORTANT: this should never happen, and even if it does
-		// it is an error scenario that will only impact live streaming
-		// so we choose it log and ignore.
+		// note the we are ignoring and just logging the error here.
+		// we consider this an acceptible failure because it doesn't
+		// impact anything other than live-streaming output.
+		log.Errorf("unable to store the agent address %s for build %s %v",
+			addr, work.Repo.FullName, work.Commit.Sequence)
 	}
 
 	c.JSON(200, work)

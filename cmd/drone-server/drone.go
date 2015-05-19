@@ -13,6 +13,7 @@ import (
 	"github.com/drone/drone/pkg/settings"
 	"github.com/elazarl/go-bindata-assetfs"
 
+	log "github.com/Sirupsen/logrus"
 	eventbus "github.com/drone/drone/pkg/bus/builtin"
 	queue "github.com/drone/drone/pkg/queue/builtin"
 	runner "github.com/drone/drone/pkg/runner/builtin"
@@ -48,7 +49,15 @@ func main() {
 	queue_ := queue.New()
 	updater := runner.NewUpdater(eventbus_, store, remote)
 	runner_ := runner.Runner{Updater: updater}
-	go run(&runner_, queue_)
+
+	// launch the local queue runner if the system
+	// is not conifugred to run in agent mode
+	if settings.Agents != nil && settings.Agents.Secret != "" {
+		log.Infof("Run builds using remote build agents")
+	} else {
+		log.Infof("Run builds using the embedded build runner")
+		go run(&runner_, queue_)
+	}
 
 	r := gin.Default()
 
@@ -84,14 +93,6 @@ func main() {
 		users.POST("/:name", server.PostUser)
 		users.PATCH("/:name", server.PutUser)
 		users.DELETE("/:name", server.DeleteUser)
-	}
-
-	agents := api.Group("/agents")
-	{
-		agents.Use(server.MustAdmin())
-		agents.GET("", server.GetAgents)
-		agents.POST("", server.PostAgent)
-		agents.DELETE("/:id", server.DeleteAgent)
 	}
 
 	repos := api.Group("/repos/:owner/:name")
@@ -136,6 +137,7 @@ func main() {
 	queue := api.Group("/queue")
 	{
 		queue.Use(server.MustAgent())
+		queue.Use(server.SetSettings(settings))
 		queue.Use(server.SetUpdater(updater))
 		queue.POST("/pull", server.PollBuild)
 

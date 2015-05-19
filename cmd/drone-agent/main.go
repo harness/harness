@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/pkg/queue"
 	runner "github.com/drone/drone/pkg/runner/builtin"
 
@@ -47,11 +48,19 @@ func main() {
 		for {
 			w, err := pull()
 			if err != nil {
+				log.Errorln(err)
 				time.Sleep(30 * time.Second)
 				continue
 			}
+
+			log.Infof("Pulled and running build %s / %d",
+				w.Repo.FullName, w.Commit.Sequence)
+
 			runner_ := runner.Runner{&updater{}}
-			runner_.Run(w)
+			err = runner_.Run(w)
+			if err != nil {
+				log.Errorln(err)
+			}
 		}
 	}()
 

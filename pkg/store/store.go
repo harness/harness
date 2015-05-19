@@ -152,20 +152,8 @@ type Store interface {
 	//
 
 	// Agent returns an agent by ID.
-	Agent(int64) (*common.Agent, error)
-
-	// AgentAddr returns an agent by address.
-	AgentAddr(string) (*common.Agent, error)
-
-	// AgentToken returns an agent by token.
-	AgentToken(string) (*common.Agent, error)
-
-	// AgentList returns a list of all build agents.
-	AgentList() ([]*common.Agent, error)
-
-	// AddAgent inserts an agent in the datastore.
-	AddAgent(*common.Agent) error
+	Agent(*common.Commit) (string, error)
 
 	// SetAgent updates an agent in the datastore.
-	SetAgent(*common.Agent) error
+	SetAgent(*common.Commit, string) error
 }

@@ -1,7 +1,7 @@
 package types
 
 type Build struct {
-	ID       int64  `meddler:"build_id,pk"    json:"-"`
+	ID       int64  `meddler:"build_id,pk"    json:"id"`
 	CommitID int64  `meddler:"commit_id"      json:"-"`
 	State    string `meddler:"build_state"    json:"state"`
 	ExitCode int    `meddler:"build_exit"     json:"exit_code"`

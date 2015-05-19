@@ -91,6 +91,10 @@ type Database struct {
 	Datasource string `toml:"datasource"`
 }
 
+type Agents struct {
+	Secret string `toml:"secret"`
+}
+
 // Settings defines global settings for the Drone system.
 type Settings struct {
 	Database *Database `toml:"database"`
@@ -98,6 +102,7 @@ type Settings struct {
 	Service  *Service  `toml:"service"`
 	Server   *Server   `toml:"server"`
 	Session  *Session  `toml:"session"`
+	Agents   *Agents   `toml:"agents"`
 
 	Plugins map[string]interface{} `toml:"plugins"`
 }
