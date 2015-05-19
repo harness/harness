@@ -17,7 +17,7 @@ func NewAgentstore(db *sql.DB) *Agentstore {
 
 // Agent returns an agent by ID.
 func (db *Agentstore) Agent(commit *common.Commit) (string, error) {
-	var agent = new(common.Agent)
+	var agent = new(agent)
 	var err = meddler.QueryRow(db, agent, rebind(agentQuery), commit.ID)
 	return agent.Addr, err
 }
