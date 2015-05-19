@@ -40,6 +40,14 @@ func (u *updater) SetCommit(user *common.User, r *common.Repo, c *common.Commit)
 		// log err
 	}
 
+	// we need this because builds coming from
+	// a remote agent won't have the embedded
+	// build list. we should probably just rethink
+	// the messaging instead of this hack.
+	if c.Builds == nil || len(c.Builds) == 0 {
+		c.Builds, _ = u.store.BuildList(c)
+	}
+
 	msg, err := json.Marshal(c)
 	if err != nil {
 		return err
@@ -57,6 +65,14 @@ func (u *updater) SetBuild(r *common.Repo, c *common.Commit, b *common.Build) er
 	err := u.store.SetBuild(b)
 	if err != nil {
 		return err
+	}
+
+	// we need this because builds coming from
+	// a remote agent won't have the embedded
+	// build list. we should probably just rethink
+	// the messaging instead of this hack.
+	if c.Builds == nil || len(c.Builds) == 0 {
+		c.Builds, _ = u.store.BuildList(c)
 	}
 
 	msg, err := json.Marshal(c)

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -50,6 +51,7 @@ func GetRepoEvents(c *gin.Context) {
 }
 
 func GetStream(c *gin.Context) {
+	conf := ToSettings(c)
 	store := ToDatastore(c)
 	repo := ToRepo(c)
 	runner := ToRunner(c)
@@ -71,12 +73,17 @@ func GetStream(c *gin.Context) {
 
 	var rc io.ReadCloser
 
-	addr, err := store.Agent(commit)
 	// if the commit is being executed by an agent
 	// we'll proxy the build output directly to the
 	// remote Docker client, through the agent.
-	if err == nil {
-		resp, err := http.Get("http://" + addr)
+	if conf.Agents != nil && conf.Agents.Secret != "" {
+		addr, err := store.Agent(commit)
+		if err != nil {
+			c.Fail(500, err)
+			return
+		}
+		url := fmt.Sprintf("http://%s/stream/%d?token=%s", addr, build.ID, conf.Agents.Secret)
+		resp, err := http.Get(url)
 		if err != nil {
 			c.Fail(500, err)
 			return
