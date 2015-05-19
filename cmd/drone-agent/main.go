@@ -56,7 +56,8 @@ func main() {
 			log.Infof("Pulled and running build %s / %d",
 				w.Repo.FullName, w.Commit.Sequence)
 
-			runner_ := runner.Runner{&updater{}}
+			updater := &updater{}
+			runner_ := runner.Runner{Updater: updater}
 			err = runner_.Run(w)
 			if err != nil {
 				log.Errorln(err)
