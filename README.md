@@ -50,4 +50,7 @@ secret = ""
 authorize = "https://github.com/login/oauth/authorize"
 access_token = "https://github.com/login/oauth/access_token"
 request_token = ""
+
+[agents]
+secret = ""
 ```
