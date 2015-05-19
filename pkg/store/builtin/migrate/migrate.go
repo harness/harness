@@ -125,7 +125,6 @@ var commitTable = `
 CREATE TABLE IF NOT EXISTS commits (
 	 commit_id             INTEGER PRIMARY KEY AUTOINCREMENT
 	,repo_id               INTEGER
-	,agent_id              INTEGER
 	,commit_seq            INTEGER
 	,commit_state          VARCHAR(255)
 	,commit_started        INTEGER
@@ -150,10 +149,6 @@ CREATE TABLE IF NOT EXISTS commits (
 
 var commitRepoIndex = `
 CREATE INDEX commits_repo_idx ON commits (repo_id);
-`
-
-var agentRepoIndex = `
-CREATE INDEX commits_agent_idx ON commits (agent_id);
 `
 
 var tokenTable = `
@@ -222,13 +217,8 @@ CREATE TABLE IF NOT EXISTS blobs (
 var agentTable = `
 CREATE TABLE IF NOT EXISTS agents (
 	 agent_id           INTEGER PRIMARY KEY AUTOINCREMENT
-	,agent_kind         VARCHAR(255)
+	,commit_id          INTEGER
 	,agent_addr         VARCHAR(2000)
-	,agent_token        VARCHAR(2000)
-	,agent_active       BOOL
-	,agent_cert         BLOB
-	,agent_key          BLOB
-	,UNIQUE(agent_addr)
-	,UNIQUE(agent_token)
+	,UNIQUE(commit_id)
 );
 `
