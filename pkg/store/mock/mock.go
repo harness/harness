@@ -352,3 +352,18 @@ func (m *Store) DelBlob(path string) error {
 
 	return r0
 }
+func (m *Store) Agent(_a0 *common.Commit) (string, error) {
+	ret := m.Called(_a0)
+
+	r0 := ret.Get(0).(string)
+	r1 := ret.Error(1)
+
+	return r0, r1
+}
+func (m *Store) SetAgent(_a0 *common.Commit, _a1 string) error {
+	ret := m.Called(_a0, _a1)
+
+	r0 := ret.Error(0)
+
+	return r0
+}
