@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -18,7 +19,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var tokenTests = []struct {
+var createTests = []struct {
 	inLabel  string
 	inBody   string
 	storeErr error
@@ -30,13 +31,27 @@ var tokenTests = []struct {
 	{"app2", `{"label": "app2"}`, nil, 200, types.TokenUser},
 }
 
+var deleteTests = []struct {
+	inLabel       string
+	errTokenLabel error
+	errDelToken   error
+	outCode       int
+	outToken      *types.Token
+}{
+	{"app1", sql.ErrNoRows, nil, 404, &types.Token{}},
+	{"app2", nil, sql.ErrNoRows, 400, &types.Token{Label: "app2"}},
+	{"app3", nil, nil, 200, &types.Token{Label: "app2"}},
+}
+
 func TestToken(t *testing.T) {
 	store := new(mocks.Store)
 
 	g := Goblin(t)
 	g.Describe("Token", func() {
+
+		// POST /api/user/tokens
 		g.It("should create tokens", func() {
-			for _, test := range tokenTests {
+			for _, test := range createTests {
 				rw := recorder.New()
 				ctx := gin.Context{Engine: gin.Default(), Writer: rw}
 				body := bytes.NewBufferString(test.inBody)
@@ -73,6 +88,39 @@ func TestToken(t *testing.T) {
 			}
 		})
 
-		g.It("should delete tokens")
+		// DELETE /api/user/tokens/:label
+		g.It("should delete tokens", func() {
+			for _, test := range deleteTests {
+				rw := recorder.New()
+				ctx := gin.Context{Engine: gin.Default(), Writer: rw}
+				ctx.Params = append(ctx.Params, gin.Param{Key: "label", Value: test.inLabel})
+
+				ctx.Set("datastore", store)
+				ctx.Set("user", &types.User{Login: "Freya"})
+
+				config := settings.Settings{Session: &settings.Session{Secret: "Otto"}}
+				ctx.Set("settings", &config)
+				ctx.Set("session", session.New(config.Session))
+
+				// prepare the mock
+				store.On("TokenLabel", mock.AnythingOfType("*types.User"), test.inLabel).Return(test.outToken, test.errTokenLabel).Once()
+
+				if test.errTokenLabel == nil {
+					// we don't need this expectation if we error on our first
+					store.On("DelToken", mock.AnythingOfType("*types.Token")).Return(test.errDelToken).Once()
+				}
+				fmt.Println(test)
+				DelToken(&ctx)
+
+				g.Assert(rw.Code).Equal(test.outCode)
+				if test.outCode != 200 {
+					continue
+				}
+
+				var respjson map[string]interface{}
+				json.Unmarshal(rw.Body.Bytes(), &respjson)
+				fmt.Println(rw.Code, respjson)
+			}
+		})
 	})
 }
