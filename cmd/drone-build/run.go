@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
-	"fmt"
 	"path/filepath"
 
 	common "github.com/drone/drone/pkg/types"
@@ -47,7 +45,7 @@ func setup(c *Context) error {
 
 	// inject the matrix parameters into the yaml
 	injected := inject.Inject(string(c.Yaml), c.Build.Environment)
-	c.Conf, err = parser.ParseSingle(injected, opts)
+	c.Conf, err = parser.ParseSingle(injected, &opts)
 	if err != nil {
 		return err
 	}
@@ -153,7 +151,7 @@ func runSteps(c *Context, steps map[string]*common.Step) (int, error) {
 		conf.Cmd = toCommand(c, step)
 
 		// append global environment variables
-		conf.Env = append(conf.Env, c.Env)
+		conf.Env = append(conf.Env, c.Env...)
 
 		info, err := run(c.client, conf, step.Pull)
 		if err != nil {
