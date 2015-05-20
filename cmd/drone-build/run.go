@@ -13,14 +13,15 @@ import (
 
 type Context struct {
 	// Links  *common.Link
-	Clone  *common.Clone   `json:"clone"`
-	Repo   *common.Repo    `json:"repo"`
-	Commit *common.Commit  `json:"commit"`
-	Build  *common.Build   `json:"build"`
-	Keys   *common.Keypair `json:"keys"`
-	Netrc  *common.Netrc   `json:"netrc"`
-	Yaml   []byte          `json:"yaml"`
-	Env    []string        `json:"env"`
+	Clone   *common.Clone   `json:"clone"`
+	Repo    *common.Repo    `json:"repo"`
+	Commit  *common.Commit  `json:"commit"`
+	Build   *common.Build   `json:"build"`
+	Keys    *common.Keypair `json:"keys"`
+	Netrc   *common.Netrc   `json:"netrc"`
+	Yaml    []byte          `json:"yaml"`
+	Env     []string        `json:"environment"`
+	Plugins []string        `json:"plugins"`
 
 	Conf   *common.Config `json:"-"`
 	infos  []*dockerclient.ContainerInfo
@@ -29,12 +30,19 @@ type Context struct {
 
 func setup(c *Context) error {
 	var err error
-	var opts = parser.DefaultOpts
+	var opts = parser.Opts{
+		Network:    true,
+		Privileged: true,
+		Volumes:    true,
+		Whitelist:  c.Plugins,
+	}
 
 	// if repository is trusted the build may specify
 	// custom volumes, networking and run in trusted mode.
 	if c.Repo.Trusted {
-		opts = &parser.Opts{Network: true, Privileged: true, Volumes: true}
+		opts.Network = true
+		opts.Privileged = true
+		opts.Volumes = true
 	}
 
 	// inject the matrix parameters into the yaml

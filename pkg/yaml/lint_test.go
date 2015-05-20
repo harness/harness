@@ -90,3 +90,58 @@ func Test_Linter(t *testing.T) {
 
 	})
 }
+
+func Test_LintPlugins(t *testing.T) {
+
+	g := goblin.Goblin(t)
+	g.Describe("Plugin Linter", func() {
+
+		g.It("Should fail un-trusted plugin", func() {
+			c := &common.Config{
+				Setup:   &common.Step{Image: "foo/baz"},
+				Clone:   &common.Step{Image: "foo/bar"},
+				Notify:  map[string]*common.Step{},
+				Deploy:  map[string]*common.Step{},
+				Publish: map[string]*common.Step{},
+			}
+			o := &Opts{Whitelist: []string{"plugins/*"}}
+			g.Assert(LintPlugins(c, o) != nil).IsTrue()
+		})
+
+		g.It("Should pass when empty whitelist", func() {
+			c := &common.Config{
+				Setup:   &common.Step{Image: "foo/baz"},
+				Clone:   &common.Step{Image: "foo/bar"},
+				Notify:  map[string]*common.Step{},
+				Deploy:  map[string]*common.Step{},
+				Publish: map[string]*common.Step{},
+			}
+			o := &Opts{Whitelist: []string{}}
+			g.Assert(LintPlugins(c, o) == nil).IsTrue()
+		})
+
+		g.It("Should pass wildcard", func() {
+			c := &common.Config{
+				Setup:   &common.Step{Image: "plugins/drone-setup"},
+				Clone:   &common.Step{Image: "plugins/drone-build"},
+				Notify:  map[string]*common.Step{},
+				Deploy:  map[string]*common.Step{},
+				Publish: map[string]*common.Step{},
+			}
+			o := &Opts{Whitelist: []string{"plugins/*"}}
+			g.Assert(LintPlugins(c, o) == nil).IsTrue()
+		})
+
+		g.It("Should pass itemized", func() {
+			c := &common.Config{
+				Setup:   &common.Step{Image: "plugins/drone-setup"},
+				Clone:   &common.Step{Image: "plugins/drone-build"},
+				Notify:  map[string]*common.Step{},
+				Deploy:  map[string]*common.Step{},
+				Publish: map[string]*common.Step{},
+			}
+			o := &Opts{Whitelist: []string{"plugins/drone-setup", "plugins/drone-build"}}
+			g.Assert(LintPlugins(c, o) == nil).IsTrue()
+		})
+	})
+}
