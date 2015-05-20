@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	common "github.com/drone/drone/pkg/types"
@@ -99,6 +100,45 @@ func expectTrustedNotify(c *common.Config) error {
 	for _, step := range c.Notify {
 		if strings.Contains(step.Image, "/") {
 			return fmt.Errorf("Yaml must use trusted notify plugins")
+		}
+	}
+	return nil
+}
+
+func LintPlugins(c *common.Config, opts *Opts) error {
+	if len(opts.Whitelist) == 0 {
+		return nil
+	}
+
+	var images []string
+	images = append(images, c.Setup.Image)
+	images = append(images, c.Clone.Image)
+	c.Clone.Image = imageName(c.Clone.Image)
+	for _, step := range c.Publish {
+		images = append(images, step.Image)
+	}
+	for _, step := range c.Deploy {
+		images = append(images, step.Image)
+	}
+	for _, step := range c.Notify {
+		images = append(images, step.Image)
+	}
+
+	for _, image := range images {
+		match := false
+		for _, pattern := range opts.Whitelist {
+			if pattern == image {
+				match = true
+				break
+			}
+			ok, err := filepath.Match(pattern, image)
+			if ok && err == nil {
+				match = true
+				break
+			}
+		}
+		if !match {
+			return fmt.Errorf("Cannot use un-trusted image %s", image)
 		}
 	}
 	return nil

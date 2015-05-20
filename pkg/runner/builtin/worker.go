@@ -52,13 +52,14 @@ var (
 )
 
 type work struct {
-	Repo   *common.Repo    `json:"repo"`
-	Commit *common.Commit  `json:"commit"`
-	Build  *common.Build   `json:"build"`
-	Keys   *common.Keypair `json:"keys"`
-	Netrc  *common.Netrc   `json:"netrc"`
-	Yaml   []byte          `json:"yaml"`
-	Env    []string        `json:"env"`
+	Repo    *common.Repo    `json:"repo"`
+	Commit  *common.Commit  `json:"commit"`
+	Build   *common.Build   `json:"build"`
+	Keys    *common.Keypair `json:"keys"`
+	Netrc   *common.Netrc   `json:"netrc"`
+	Yaml    []byte          `json:"yaml"`
+	Env     []string        `json:"environment"`
+	Plugins []string        `json:"plugins"`
 }
 
 type worker struct {

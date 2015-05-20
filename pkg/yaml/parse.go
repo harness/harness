@@ -14,12 +14,14 @@ type Opts struct {
 	Volumes    bool
 	Network    bool
 	Privileged bool
+	Whitelist  []string
 }
 
 var DefaultOpts = &Opts{
 	Volumes:    false,
 	Network:    false,
 	Privileged: false,
+	Whitelist:  []string{"plugins/*"},
 }
 
 // Parse parses a build matrix and returns
