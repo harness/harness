@@ -58,6 +58,7 @@ type work struct {
 	Keys   *common.Keypair `json:"keys"`
 	Netrc  *common.Netrc   `json:"netrc"`
 	Yaml   []byte          `json:"yaml"`
+	Env    []string        `json:"env"`
 }
 
 type worker struct {

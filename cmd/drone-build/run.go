@@ -20,7 +20,9 @@ type Context struct {
 	Keys   *common.Keypair `json:"keys"`
 	Netrc  *common.Netrc   `json:"netrc"`
 	Yaml   []byte          `json:"yaml"`
-	Conf   *common.Config  `json:"-"`
+	Env    []string        `json:"env"`
+
+	Conf   *common.Config `json:"-"`
 	infos  []*dockerclient.ContainerInfo
 	client dockerclient.Client
 }
@@ -126,16 +128,6 @@ func execCompose(c *Context) (int, error) {
 	return 0, nil
 }
 
-func trace(s string) string {
-	cmd := fmt.Sprintf("$ %s\n", s)
-	encoded := base64.StdEncoding.EncodeToString([]byte(cmd))
-	return fmt.Sprintf("echo %s | base64 --decode\n", encoded)
-}
-
-func newline(s string) string {
-	return fmt.Sprintf("%s\n", s)
-}
-
 func runSteps(c *Context, steps map[string]*common.Step) (int, error) {
 	for _, step := range steps {
 
@@ -151,6 +143,10 @@ func runSteps(c *Context, steps map[string]*common.Step) (int, error) {
 
 		conf := toContainerConfig(step)
 		conf.Cmd = toCommand(c, step)
+
+		// append global environment variables
+		conf.Env = append(conf.Env, c.Env)
+
 		info, err := run(c.client, conf, step.Pull)
 		if err != nil {
 			return 255, err

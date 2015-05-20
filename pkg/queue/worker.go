@@ -15,6 +15,7 @@ type Work struct {
 	Keys   *common.Keypair `json:"keypair"`
 	Netrc  *common.Netrc   `json:"netrc"`
 	Yaml   []byte          `json:"yaml"`
+	Env    []string        `json:"env"`
 }
 
 // represents a worker that has connected

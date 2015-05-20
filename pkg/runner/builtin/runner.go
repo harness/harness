@@ -118,6 +118,7 @@ func (r *Runner) Run(w *queue.Work) error {
 			Netrc:  w.Netrc,
 			Yaml:   w.Yaml,
 			Build:  task,
+			Env:    w.Env,
 		}
 		in, err := json.Marshal(work)
 		if err != nil {
