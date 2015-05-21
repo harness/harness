@@ -1228,9 +1228,11 @@ header .logo {
     background:#424242;
     position:relative;
     height:56px;
-    box-shadow: 0 2px 5px 0 rgba(0,0,0,0.26);
     position: sticky;
     top: 0px;
+
+    box-shadow: 0 2px 5px 0 rgba(0,0,0,0.26);
+    box-shadow: none;
 }
 .toolbar .breadcrumb {
     max-width:900px;
@@ -1277,6 +1279,19 @@ header .logo {
     top:0px;
 }
 
+
+pre.success {
+    border-left:10px solid #81C784;
+    background: #424242;
+}
+
+pre.error,
+pre.killed,
+pre.failure {
+    border-left:10px solid #E57373;
+    background: #424242;
+}
+
 article > pre {
     font-family: "Droid Sans Mono","Roboto","Arial";
     font-size: 13px;
@@ -1289,6 +1304,7 @@ article > pre {
     margin-top:30px;
     border-radius:2px;
 }
+
 
 article {
     padding:0px 20px;
@@ -1303,8 +1319,10 @@ section {
     background:#FFF;
     padding:0px;
     margin-top:30px;
-    border:1px solid #EEE;
     border-radius:2px;
+
+    border:1px solid #EEE;
+    border:none;
 }
 
 section h2 {
@@ -1403,6 +1421,7 @@ section > .search a {
     float:right;
     transition: all .5s;
     border-radius:2px;
+    text-transform:uppercase;
 }
 section > .search a:hover {
     background: #00ACC1;
