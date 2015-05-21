@@ -1287,6 +1287,7 @@ article > pre {
     word-wrap: break-word;
     padding: 30px;
     margin-top:30px;
+    border-radius:2px;
 }
 
 article {
@@ -1303,6 +1304,7 @@ section {
     padding:0px;
     margin-top:30px;
     border:1px solid #EEE;
+    border-radius:2px;
 }
 
 section h2 {
@@ -1361,7 +1363,7 @@ section .build-row .build-num {
 }
 
 .success {
-    background:#26A65B;
+    background:#66BB6A;
 }
 .error,
 .killed,
@@ -1384,6 +1386,27 @@ section .build-row strong {
     font-weight:normal;
 }
 
+section > .search {
+    padding:30px;
+
+    padding: 20px;
+    padding-bottom: 5px;
+}
+
+section > .search a {
+    text-decoration: none;
+    background: #00BCD4;
+    background: #9E9E9E;
+    padding: 12px 20px;
+    color: rgba(255,255,255,0.8);
+    float:right;
+    transition: all .5s;
+    border-radius:2px;
+}
+section > .search a:hover {
+    background: #00ACC1;
+}
+
 pre.key {
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -1392,6 +1415,19 @@ pre.key {
     line-height:18px;
     color:#424242;
     font-family: "Droid Sans Mono","Roboto","Arial";
+}
+
+textarea:focus, input:focus{
+    outline: 0;
+}
+
+.clearfix:after {
+    visibility: hidden;
+    display: block;
+    font-size: 0;
+    content: " ";
+    clear: both;
+    height: 0;
 }
 
 @media (max-width: 990px) {
@@ -1405,3 +1441,4 @@ pre.key {
         margin-top:-5px;
     }
 }
+
