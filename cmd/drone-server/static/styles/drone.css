@@ -1367,14 +1367,19 @@ section .row:last-child > div {
 }
 
 section .build-row .build-num {
-    padding: 8px;
     display: inline-block;
-    width: 75px;
+    width: 60px;
+    height:50px;
+    line-height:50px;
     border-radius: 2px;
     color: rgba(255,255,255,0.9);
     font-size: 16px;
     text-align: center;
 }
+section .build-row > div:last-child {
+    padding-left:5px;
+}
+
 .pending,
 .running {
     background: #FFD740;
@@ -1389,6 +1394,14 @@ section .build-row .build-num {
     background: #EF5350;
 }
 
+.build-last.success:after {
+    font-size: 18px;
+    content: '\f084';
+    color: rgba(255, 255, 255, 0.701961);
+    width: 24px;
+    font-family: Material-Design-Iconic-Font;
+}
+
 section .build-row > div:first-child {
     width:90px;
     min-width: 90px;
@@ -1398,6 +1411,7 @@ section .build-row h3 {
     color:#212121;
     font-size:18px;
     margin-bottom:10px;
+    margin-top: 4px;
 }
 
 section .build-row strong {

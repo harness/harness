@@ -22,7 +22,7 @@
 
 		<a class="row build-row" ng-repeat="repo in repos | orderBy:'full_name'" ng-href="/{{ repo.full_name }}">
 			<div>
-				<div class="build-num success">&nbsp;</div>
+				<div class="build-num build-last success">&nbsp;</div>
 			</div>
 			<div>
 				<h3>{{ repo.owner }} / {{ repo.name }}</h3>
