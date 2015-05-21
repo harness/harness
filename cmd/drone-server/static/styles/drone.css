@@ -1422,6 +1422,7 @@ section > .search a {
     transition: all .5s;
     border-radius:2px;
     text-transform:uppercase;
+    font-size:14px;
 }
 section > .search a:hover {
     background: #00ACC1;
