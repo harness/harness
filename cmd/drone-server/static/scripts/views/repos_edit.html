@@ -1,43 +1,74 @@
-<h1>{{ repo.full_name }} / Edit</h1>
+<header>
+	<a class="logo float-left" href="/"></a>
+	<a class="menu-item settings float-right" href="/profile"></a>
+	<a class="menu-item users float-right" href="/users" ng-if="user.admin"></a>
+	<a class="menu-item help float-right" href="http://readme.drone.io" target="_blank"></a>
+	<a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
+</header>
 
-<a ng-href="/{{ repo.full_name }}">Back</a>
+<div class="toolbar">
 
-<form>
-	<div>
-		<label>Enable Pushes</label>
-		<input type="checkbox" ng-model="repo.post_commits" />
-	</div>
-	<div>
-		<label>Enable Pull Requests</label>
-		<input type="checkbox" ng-model="repo.pull_requests" />
-	</div>
-
-	<div>
-		<label>Trusted</label>
-		<input type="checkbox" ng-model="repo.trusted" />
-	</div>
-	<div>
-		<label>Timeout</label>
-		<input type="number" ng-model="repo.timeout" />
-	</div>
-	<ul>
-		<li ng-repeat="(key, value) in repo.params">
-			<label>{{ key }}</label>
-			<input type="text" ng-model="repo.params[key]"/>
-			<button ng-click="deleteParam(key)">remove</button>
-		</li>
-		<li>
-			<input type="text" ng-model="param.key" />
-			<input type="text" ng-model="param.value" />
-			<button ng-click="addParam(param)">add</button>
-		</li>
-	</ul>
-
-	<div>
-		<label>Public Key</label>
-		<pre>{{ repo.keypair.public }}</pre>
+	<div class="breadcrumb"  style="position:relative;top:0px;">
+		<a href="/{{ repo.full_name }}" class="icon icon-home"></a>
+		<a ng-href="/{{ repo.full_name }}">{{ repo.owner }} / {{ repo.name }}</a>
 	</div>
 
-	<button ng-click="save(repo)">Save</button>
-	<button ng-click="delete(repo.full_name)">Delete</button>
-</form>
+	<div class="menu">
+		<a href="settings.html" class="icon icon-settings"></a>
+		<a ng-href="/{{ repo.full_name }}/edit" class="nav-item settings float-right"></a>
+		<button ng-click="watch(repo)"   ng-if="!repo.starred" class="nav-item star float-right"></button>
+		<button ng-click="unwatch(repo)" ng-if="repo.starred"  class="nav-item unstar float-right"></button>
+	</div>
+
+</div>
+
+
+<article>
+	<section>
+
+		<form>
+			<div>
+				<label>Enable Pushes</label>
+				<input type="checkbox" ng-model="repo.post_commits" />
+			</div>
+			<div>
+				<label>Enable Pull Requests</label>
+				<input type="checkbox" ng-model="repo.pull_requests" />
+			</div>
+
+			<div>
+				<label>Trusted</label>
+				<input type="checkbox" ng-model="repo.trusted" />
+			</div>
+			<div>
+				<label>Timeout</label>
+				<input type="number" ng-model="repo.timeout" />
+			</div>
+			<ul>
+				<li ng-repeat="(key, value) in repo.params">
+					<label>{{ key }}</label>
+					<input type="text" ng-model="repo.params[key]"/>
+					<button ng-click="deleteParam(key)">remove</button>
+				</li>
+				<li>
+					<input type="text" ng-model="param.key" />
+					<input type="text" ng-model="param.value" />
+					<button ng-click="addParam(param)">add</button>
+				</li>
+			</ul>
+
+	
+
+			<button ng-click="save(repo)">Save</button>
+			<button ng-click="delete(repo.full_name)">Delete</button>
+		</form>
+
+	</section>
+
+	<section>
+		<h2>Public Key</h2>
+		<div>
+			<pre class="key">{{ repo.keypair.public }}</pre>
+		</div>
+	</section>
+</article>

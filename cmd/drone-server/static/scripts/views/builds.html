@@ -6,39 +6,34 @@
 	<a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
 </header>
 
-<header show-nav distance="160" class="dockable transition-fade flex-parent"></header>
-<section class="central-container">
-	<div class="flex-item pane restrict-center contains-cardset">
-		<div class="breadcrumb flex-item truncate">
-					<a href="/" class="backarrow"></a>
-					<a href="#" class="level">{{ repo.owner }} / {{ repo.name }}</a>
-		</div>
+<div class="toolbar">
+
+	<div class="breadcrumb"  style="position:relative;top:0px;">
+		<a href="/" class="icon icon-home"></a>
+		<a href="#">{{ repo.owner }} / {{ repo.name }}</a>
 	</div>
 
-	<nav>
+	<div class="menu">
+		<a href="settings.html" class="icon icon-settings"></a>
 		<a ng-href="/{{ repo.full_name }}/edit" class="nav-item settings float-right"></a>
 		<button ng-click="watch(repo)"   ng-if="!repo.starred" class="nav-item star float-right"></button>
 		<button ng-click="unwatch(repo)" ng-if="repo.starred"  class="nav-item unstar float-right"></button>
-	</nav>
+	</div>
 
-	<ul class="cardset list">
-		<li ng-repeat="build in builds | orderBy:'-sequence'">
-			<div ng-class="[ 'card', build.state ]">
-				<div class="dataset">
-					<a ng-href="/{{ repo.full_name }}/{{ build.sequence }}"></a>
-					<div class="info-1">
-						<p class="number">{{ build.sequence }}</p>
-					</div>
-					<div class="info-2">
-						<p class="branch-sha truncate">{{ build.branch }} ({{build.sha | trunc }})</p>
-						<p class="author-time truncate">{{ build.author }} &middot {{ build.started_at | fromNow }}</p>
-					</div>
-					<div class="info-3">
-						<p class="commit-message truncate">{{ build.message }}</p>
-					</div>
-				</div>
+</div>
+
+
+
+<article>
+	<section>
+		<a class="row build-row" ng-repeat="build in builds | orderBy:'-sequence'" ng-href="/{{ repo.full_name }}/{{ build.sequence }}">
+			<div>
+				<div ng-class="[ 'build-num', build.state ]">{{ build.sequence }}</div>
 			</div>
-		</li>
-	</ul>
-
-</section>
+			<div>
+				<h3>{{ build.message }}</h3>
+				<p><strong>{{ build.author }}</strong> pushed to <strong>{{ build.branch }}</strong> {{ build.started_at | fromNow }}</p>
+			</div>
+		</a>
+	</section>
+</article>

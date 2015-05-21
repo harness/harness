@@ -6,67 +6,61 @@
 	<a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
 </header>
 
-<header show-nav distance="160" class="dockable transition-fade flex-parent"></header>
-<section class="central-container">
-	<div class="flex-item pane restrict-center contains-cardset">
-		<div class="breadcrumb flex-item truncate">
-					<a href="/" class="backarrow"></a>
-					<a href="#" class="level">Profile</a>
-		</div>
+<div class="toolbar">
+
+	<div class="breadcrumb"  style="position:relative;top:0px;">
+		<a href="/" class="icon icon-home"></a>
+		<a href="#">Profile</a>
 	</div>
-</section>
+</div>
 
+<article>
+	<section>
+		<h2>Login info</h2>
+		<div class="row">
+			<div>Login</div>
+			<div>{{ user.login }}</div>
+		</div>
+		<div class="row">
+			<div>Full Name</div>
+			<div>{{ user.name }}</div>
+		</div>
+		<div class="row">
+			<div>Email</div>
+			<div>{{ user.email }}</div>
+		</div>
+	</section>
 
-<dl>
-	<dt>Login</dt>
-	<dd>{{ user.login }}</dd>
+	<section>
+		<h2>Tokens</h2>
+		<form>
+			<input type="label" ng-model="newToken.label" />
+			<button ng-click="createToken(newToken)">Create</button>
+		</form>
 
-	<dt>Full Name</dt>
-	<dd>{{ user.name }}</dd>
+		<div class="alert" ng-if="tokens && tokens.length === 0">No Personal Tokens Exist</div>
 
-	<dt>Created</dt>
-	<dd>{{ user.created_at | fromNow }}</dd>
-
-	<dt>Updated</dt>
-	<dd>{{ user.update_at | fromNow }}</dd>
-
-	<dt>Email</dt>
-	<dd>{{ user.email }}</dd>
-
-	<dt>Site Admin</dt>
-	<dd>{{ user.admin }}</dd>
-
-	<dt>Gravatar</dt>
-	<dd><img ng-src="{{ user.gravatar_id | gravatar }}"</dd>
-</dl>
-
-
-<form>
-	<input type="label" ng-model="newToken.label" />
-	<button ng-click="createToken(newToken)">Create</button>
-</form>
-
-<div class="alert" ng-if="tokens && tokens.length === 0">No Personal Tokens Exist</div>
-
-<table ng-if="tokens && tokens.length !== 0">
-	<thead>
-		<tr>
-			<th>Label</th>
-			<th>Issued</th>
-			<th></th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr ng-repeat-start="token in tokens">
-			<td>{{ token.label }}</td>
-			<td>{{ token.issued_at | fromNow }}</td>
-			<td><button ng-click="revokeToken(token)">delete</button></td>
-		</tr>
-		<tr ng-repeat-end ng-if="token.hash">
-			<td colspan="3">
-				<span>Make sure to copy your new personal access token now. You won't be able to see it again!</span>
-				<pre style="white-space: pre-line;overflow-wrap: break-word;">{{ token.hash }}</pre>
-			</td>
-		</tr>
-	</tbody>
-</table>
+		<table ng-if="tokens && tokens.length !== 0">
+			<thead>
+				<tr>
+					<th>Label</th>
+					<th>Issued</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat-start="token in tokens">
+					<td>{{ token.label }}</td>
+					<td>{{ token.issued_at | fromNow }}</td>
+					<td><button ng-click="revokeToken(token)">delete</button></td>
+				</tr>
+				<tr ng-repeat-end ng-if="token.hash">
+					<td colspan="3">
+						<span>Make sure to copy your new personal access token now. You won't be able to see it again!</span>
+						<pre style="white-space: pre-line;overflow-wrap: break-word;">{{ token.hash }}</pre>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+</article>

@@ -6,46 +6,49 @@
 	<a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
 </header>
 
-<header show-nav distance="160" class="dockable transition-fade flex-parent"></header>
-<section class="central-container">
-	<div class="flex-item pane restrict-center contains-cardset">
-		<div class="breadcrumb flex-item truncate">
-					<a href="/" class="backarrow"></a>
-					<a href="#" class="level">User Management</a>
-		</div>
+<div class="toolbar">
+	<div class="breadcrumb"  style="position:relative;top:0px;">
+		<a href="/" class="icon icon-home"></a>
+		<a href="#">Users</a>
 	</div>
-</section>
+</div>
 
-<table border="1">
-	<thead>
-		<tr>
-			<th>Login</th>
-			<th>Full Name</th>
-			<th>Created</th>
-			<th>Updated</th>
-			<th>Email</th>
-			<th>Site Admin</th>
-			<th>Gravatar</th>
-			<th></th>
-			<th></th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr ng-repeat="user in users">
-			<td>{{ user.login }}</td>
-			<td>{{ user.name }}</td>
-			<td>{{ user.created_at | fromNow }}</td>
-			<td>{{ user.updated_at | fromNow }}</td>
-			<td>{{ user.email }}</td>
-			<td>{{ !!user.admin }}</td>
-			<td><img ng-src="{{ user.gravatar_id | gravatar }}" /></td>
-			<td><button ng-click="toggle(user)">toggle admin</button></td>
-			<td><button ng-click="remove(user)">delete</button></td>
-		</tr>
-	</tbody>
-</table>
-
-<form>
-	<input type="text" ng-model="login" />
-	<button ng-click="add(login)">Add</button>
-</form>
+<article>
+	<section>
+		<table border="1">
+			<thead>
+				<tr>
+					<th>Login</th>
+					<th>Full Name</th>
+					<th>Created</th>
+					<th>Updated</th>
+					<th>Email</th>
+					<th>Site Admin</th>
+					<th>Gravatar</th>
+					<th></th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="user in users">
+					<td>{{ user.login }}</td>
+					<td>{{ user.name }}</td>
+					<td>{{ user.created_at | fromNow }}</td>
+					<td>{{ user.updated_at | fromNow }}</td>
+					<td>{{ user.email }}</td>
+					<td>{{ !!user.admin }}</td>
+					<td><img ng-src="{{ user.gravatar_id | gravatar }}" /></td>
+					<td><button ng-click="toggle(user)">toggle admin</button></td>
+					<td><button ng-click="remove(user)">delete</button></td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+	
+	<section>
+		<form>
+			<input type="text" ng-model="login" />
+			<button ng-click="add(login)">Add</button>
+		</form>
+	</section>
+</article>
