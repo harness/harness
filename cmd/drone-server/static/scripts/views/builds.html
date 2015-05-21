@@ -1,36 +1,44 @@
-<h1>{{ repo.full_name }}</h1>
+<header>
+	<a class="logo float-left" href="/"></a>
+	<a class="menu-item settings float-right" href="/profile"></a>
+	<a class="menu-item users float-right" href="/users" ng-if="user.admin"></a>
+	<a class="menu-item help float-right" href="http://readme.drone.io" target="_blank"></a>
+	<a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
+</header>
 
-<a href="/">Back</a>
-<a ng-href="/{{ repo.full_name }}/edit">Settings</a>
+<header show-nav distance="160" class="dockable transition-fade flex-parent"></header>
+<section class="central-container">
+	<div class="flex-item pane restrict-center contains-cardset">
+		<div class="breadcrumb flex-item truncate">
+					<a href="/" class="backarrow"></a>
+					<a href="#" class="level">{{ repo.owner }} / {{ repo.name }}</a>
+		</div>
+	</div>
 
-<button ng-click="watch(repo)" ng-if="!repo.starred">Watch</button>
-<button ng-click="unwatch(repo)" ng-if="repo.starred">Unwatch</button>
+	<nav>
+		<a ng-href="/{{ repo.full_name }}/edit" class="nav-item settings float-right"></a>
+		<button ng-click="watch(repo)"   ng-if="!repo.starred" class="nav-item star float-right"></button>
+		<button ng-click="unwatch(repo)" ng-if="repo.starred"  class="nav-item unstar float-right"></button>
+	</nav>
 
-<table border="1">
-	<thead>
-		<tr>
-			<th>Number</th>
-			<th>Status</th>
-			<th>Started</th>
-			<th>Duration</th>
-			<th>Type</th>
-			<th>Ref</th>
-			<th>Commit</th>
-			<th>Author</th>
-			<th>Message</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr ng-repeat="build in builds | orderBy:'-sequence'">
-			<td><a ng-href="/{{ repo.full_name }}/{{ build.sequence }}">{{ build.sequence }}</a></td>
-			<td>{{ build.state }}</td>
-			<td>{{ build.started_at | fromNow }}</td>
-			<td>{{ build.duration | toDuration }}</td>
-			<td>{{ build.pull_request ? "pull request" : "push" }}</td>
-			<td>{{ build.ref }}</td>
-			<td>{{ build.sha }}</td>
-			<td>{{ build.author }}</td>
-			<td>{{ build.message }}</td>
-		</tr>
-	</tbody>
-</table>
+	<ul class="cardset list">
+		<li ng-repeat="build in builds | orderBy:'-sequence'">
+			<div ng-class="[ 'card', build.state ]">
+				<div class="dataset">
+					<a ng-href="/{{ repo.full_name }}/{{ build.sequence }}"></a>
+					<div class="info-1">
+						<p class="number">{{ build.sequence }}</p>
+					</div>
+					<div class="info-2">
+						<p class="branch-sha truncate">{{ build.branch }} ({{build.sha | trunc }})</p>
+						<p class="author-time truncate">{{ build.author }} &middot {{ build.started_at | fromNow }}</p>
+					</div>
+					<div class="info-3">
+						<p class="commit-message truncate">{{ build.message }}</p>
+					</div>
+				</div>
+			</div>
+		</li>
+	</ul>
+
+</section>

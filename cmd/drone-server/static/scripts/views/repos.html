@@ -1,4 +1,19 @@
-<h1>Dashboard</h1>
+<header>
+	<a class="logo float-left" href="/"></a>
+	<a class="menu-item settings float-right" href="/profile"></a>
+	<a class="menu-item users float-right" href="/users" ng-if="user.admin"></a>
+	<a class="menu-item help float-right" href="http://readme.drone.io" target="_blank"></a>
+	<a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
+</header>
+
+<header show-nav distance="160" class="dockable transition-fade flex-parent"></header>
+<section class="central-container">
+	<div class="flex-item pane restrict-center contains-cardset">
+		<div class="breadcrumb flex-item truncate">
+					<a href="#" class="level">Dashboard</a>
+		</div>
+	</div>
+</section>
 
 <a href="/new">New</a>
 <a href="/profile">Settings</a>

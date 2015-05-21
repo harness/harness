@@ -1,14 +1,26 @@
 <header>
-	<a href="/" class="logo"></a>
-	<div class="title"></div>
-	<div class="user">
-		<span>{{ user.login }}</span>
-		<img ng-src="{{ user.gravatar_id | gravatar }}" />
-	</div>
+	<a class="logo float-left" href="/"></a>
+	<a class="menu-item settings float-right" href="/profile"></a>
+	<a class="menu-item users float-right" href="/users" ng-if="user.admin"></a>
+	<a class="menu-item help float-right" href="http://readme.drone.io" target="_blank"></a>
+	<a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
 </header>
-	<nav>
-		<h1>{{ repo.owner }}<span>{{ repo.name }}</span><span>{{ build.sequence}}</span></h1>
-	</nav>
+
+<header show-nav distance="160" class="dockable transition-fade flex-parent"></header>
+<section class="central-container">
+	<div class="flex-item pane restrict-center contains-cardset">
+		<div class="breadcrumb flex-item truncate">
+					<a ng-href="/{{ repo.full_name }}" class="backarrow"></a>
+					<a ng-href="/{{ repo.full_name }}" class="level">{{ repo.owner }} / {{ repo.name }}</a>
+					<span class="spacer"></span>
+					<a ng-href="/{{ repo.full_name }}" class="level">{{ build.sequence }}</span>
+					<span class="spacer"></span>
+					<span class="level">{{ task.sequence }}</span>
+		</div>
+	</div>
+</section>
+
+
 	<main>
 
 			<section class="commit-section">
@@ -57,7 +69,7 @@
 					</tbody>
 				</table>
 			</section>
-			
+
 			<section>
 				<pre id="term" ng-if="task && task.state !== 'pending'"></pre>
 			</section>
