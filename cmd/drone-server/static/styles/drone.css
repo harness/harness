@@ -1354,8 +1354,12 @@ section .build-row .build-num {
     color: rgba(255,255,255,0.9);
     font-size: 16px;
     text-align: center;
+}
+.pending,
+.running {
     background: #FFD740;
 }
+
 .success {
     background:#26A65B;
 }
