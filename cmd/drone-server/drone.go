@@ -29,7 +29,10 @@ var (
 	revision string
 )
 
-var conf = flag.String("config", "drone.toml", "")
+var (
+	conf  = flag.String("config", "drone.toml", "")
+	debug = flag.Bool("debug", false, "")
+)
 
 func main() {
 	flag.Parse()
@@ -187,11 +190,18 @@ func main() {
 // static is a helper function that will setup handlers
 // for serving static files.
 func static() http.Handler {
-	return http.StripPrefix("/static/", http.FileServer(&assetfs.AssetFS{
+	// default file server is embedded
+	var handler = http.FileServer(&assetfs.AssetFS{
 		Asset:    Asset,
 		AssetDir: AssetDir,
 		Prefix:   "cmd/drone-server/static",
-	}))
+	})
+	if *debug {
+		handler = http.FileServer(
+			http.Dir("cmd/drone-server/static"),
+		)
+	}
+	return http.StripPrefix("/static/", handler)
 }
 
 // index is a helper function that will setup a template

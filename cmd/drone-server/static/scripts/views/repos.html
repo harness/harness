@@ -6,40 +6,41 @@
 	<a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
 </header>
 
-<header show-nav distance="160" class="dockable transition-fade flex-parent"></header>
-<section class="central-container">
-	<div class="flex-item pane restrict-center contains-cardset">
-		<div class="breadcrumb flex-item truncate">
-					<a href="#" class="level">Dashboard</a>
-		</div>
+<div class="toolbar">
+	<div class="breadcrumb"  style="position:relative;top:0px;">
+		<a href="#">Dashboard</a>
 	</div>
-</section>
+</div>
 
-<a href="/new">New</a>
-<a href="/profile">Settings</a>
-<a href="/users" ng-if="user.admin">User Management</a>
+<article>
+	<section>
 
-<table border="1">
-	<thead>
-		<tr>
-			<th>Repo</th>
-			<th>Status</th>
-			<th>Number</th>
-			<th>Started</th>
-			<th>Duration</th>
-			<th>Branch</th>
-			<th>Commit</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr ng-repeat="repo in repos">
-			<td><a ng-href="{{ repo.full_name }}">{{ repo.full_name }}</a></td>
-			<td>{{ repo.last_build.state }}</td>
-			<td><a ng-href="{{ repo.full_name }}/{{ repo.last_build.number }}">{{ repo.last_build.number }}</a></td>
-			<td>{{ repo.last_build.started_at | fromNow }}</td>
-			<td>{{ repo.last_build.duration | toDuration }}</td>
-			<td>{{ repo.last_build.head_commit.ref || repo.last_build.pull_request.source.ref }}</td>
-			<td>{{ repo.last_build.head_commit.sha || repo.last_build.pull_request.source.ref }}</td>
-		</tr>
-	</tbody>
-</table>
+		<a href="/new">New</a>
+
+		<table border="1">
+			<thead>
+				<tr>
+					<th>Repo</th>
+					<th>Status</th>
+					<th>Number</th>
+					<th>Started</th>
+					<th>Duration</th>
+					<th>Branch</th>
+					<th>Commit</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="repo in repos">
+					<td><a ng-href="{{ repo.full_name }}">{{ repo.full_name }}</a></td>
+					<td>{{ repo.last_build.state }}</td>
+					<td><a ng-href="{{ repo.full_name }}/{{ repo.last_build.number }}">{{ repo.last_build.number }}</a></td>
+					<td>{{ repo.last_build.started_at | fromNow }}</td>
+					<td>{{ repo.last_build.duration | toDuration }}</td>
+					<td>{{ repo.last_build.head_commit.ref || repo.last_build.pull_request.source.ref }}</td>
+					<td>{{ repo.last_build.head_commit.sha || repo.last_build.pull_request.source.ref }}</td>
+				</tr>
+			</tbody>
+		</table>
+
+	</section>
+</article>

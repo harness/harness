@@ -1,5 +1,5 @@
-@import url(http://fonts.googleapis.com/css?family=Roboto:300,400,600,900);
-@import url(http://fonts.googleapis.com/css?family=Droid+Sans+Mono);
+@import url(//fonts.googleapis.com/css?family=Roboto:300,400,600,900);
+@import url(//fonts.googleapis.com/css?family=Droid+Sans+Mono);
 
 /*  RESETS */
 
@@ -156,7 +156,7 @@
       .status.error:before {
         font-size: 20px;
           content: '\f082';
-          color: #C0392B;
+          color: #EF5350;
           opacity: 0.85;
       }
 
@@ -266,7 +266,7 @@
             .card.killed .time-ran,
             .card.error .time-ran,
             .card.failure .time-ran {
-                color: #C0392B
+                color: #EF5350
             }
 
         .card .time-duration {
@@ -429,7 +429,7 @@
             .killed .build-number p,
             .error .build-number p,
             .failed .build-number p {
-                background-color: #C0392B;
+                background-color: #EF5350;
             }
 
         .list .card .message {
@@ -524,15 +524,6 @@
             margin-top: 4px;
         }
 
-        pre {
-            font-family: "Droid Sans Mono","Roboto","Arial";
-            font-size: 14px;
-            color: #cecece;
-            line-height: 175%;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
     /*  DATASET */
 
         .card .dataset {
@@ -616,7 +607,7 @@
             .card.error .dataset .number,
             .card.killed .dataset .number,
             .card.failure .dataset .number {
-                background-color: #CF000F;
+                background-color: #EF5350;
             }
 
         .card .dataset .branch-sha {
@@ -698,9 +689,7 @@
 
         }
 
-        section:last-of-type {
-            padding-bottom: 72px;
-        }
+
 
         .show section:first-of-type {
             margin-top: 0px;
@@ -735,7 +724,7 @@
         margin-left: auto;
         margin-right: auto;
     }
-
+/*
     header {
         height: 64px;
         width: 100%;
@@ -744,7 +733,7 @@
         line-height: 72px;
         overflow: hidden;
     }
-
+*/
     .dockable {
         background-color: #fafafa;
     }
@@ -792,7 +781,7 @@
           .nav-item:after,
           .nav-item:before {
               font-family: "Material-Design-Iconic-Font";
-              color: #3f3f3f;
+              color: rgba(255,255,255,0.749);
           }
 
           .nav-item {
@@ -890,7 +879,7 @@
         vertical-align: middle;
       }
 
-      .logo, .menu-item {
+      .menu-item {
           height: 40px;
           width: auto;
           margin: 7px 16px;
@@ -910,6 +899,7 @@
         margin-left: 0;
       }
 
+      /*
         .logo:hover {
             opacity: 1;
         }
@@ -940,6 +930,7 @@
             opacity: 1;
             font-weight: 400;
         }
+        */
 
         .menu-item {
             margin-right: 0;
@@ -1031,7 +1022,7 @@
         top: 0px;
         right: 25px;
       }
-
+/*
     .breadcrumb {
         padding: 0;
         height: 60px;
@@ -1103,7 +1094,7 @@
           font-weight: 400;
           color: #fafafa !important;
       }
-
+*/
       .test {
           position: absolute;
           top: -72px;
@@ -1164,17 +1155,6 @@
     */
 
 
-    article {
-      padding: 30px 20px;
-    }
-
-      article section {
-        margin:0px auto;
-        max-width:960px;
-        padding: 20px;
-        background: #FFF;
-        margin-bottom:30px;
-      }
 
 
   /*  INFO PANE */
@@ -1207,3 +1187,217 @@
         margin-top: -20px;
         font-size: 40px;
       }
+
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
+}
+
+body {
+    background:#f5f5f5;
+}
+header {
+    background:#FFF;
+}
+header[show-nav] {
+    display:none;
+}
+section.central-container {
+    margin-top:50px;
+}
+
+header {
+    height: 60px;
+    background: #FFF;
+    line-height: 60px;
+    overflow: hidden;
+    padding-left:15px;
+    padding-right:25px;
+}
+
+header .logo {
+    content: '';
+    display: block;
+    height: 60px;
+    width: 33px;
+    background: url("/static/images/logo.svg") no-repeat center center;
+    background-size: 33px;
+    float:left;
+}
+
+.toolbar {
+    background:#424242;
+    position:relative;
+    height:56px;
+    box-shadow: 0 2px 5px 0 rgba(0,0,0,0.26);
+    position: sticky;
+    top: 0px;
+}
+.toolbar .breadcrumb {
+    max-width:900px;
+    margin:0px auto;
+    line-height:56px;
+    height:56px;
+}
+.breadcrumb a {
+    color:#FFF;
+    font-size:20px;
+    line-height:56px;
+    height:56px;
+    text-decoration:none;
+    display:inline-block;
+}
+.breadcrumb span {
+    color: rgba(255,255,255,0.749);
+    line-height:56px;
+    height:56px;
+}
+.breadcrumb span:before {
+    font-family: "Material-Design-Iconic-Font";
+    color: rgba(255,255,255,0.749);
+    line-height:56px;
+    content: "\f29c";
+}
+
+.breadcrumb a.icon-home {
+    position: absolute;
+    left: -50px;
+}
+.breadcrumb a.icon-home:after {
+    font-family: "Material-Design-Iconic-Font";
+    line-height:56px;
+    color: rgba(255,255,255,0.749);
+    content: "\f297";
+    font-size:24px;
+    vertical-align: middle;
+}
+
+.menu {
+    position:absolute;
+    right:25px;
+    top:0px;
+}
+
+article > pre {
+    font-family: "Droid Sans Mono","Roboto","Arial";
+    font-size: 13px;
+    color:#fff;
+    background: #424242;
+    line-height: 18px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    padding: 30px;
+    margin-top:30px;
+}
+
+article {
+    padding:0px 20px;
+    max-width:900px;
+    margin:0px auto;
+    box-sizing: content-box;
+    margin-bottom:30px;
+    padding-top:15px;
+}
+
+section {
+    background:#FFF;
+    padding:0px;
+    margin-top:30px;
+    border:1px solid #EEE;
+}
+
+section h2 {
+    margin: 0px;
+    padding: 30px 30px;
+    padding-bottom: 10px;
+    font-size: 18px;
+    color: #424242;
+    font-weight: normal;
+}
+
+section .row {
+    padding: 0px 30px;
+    text-decoration: none;
+    display: block;
+    display: flex;
+    text-decoration: none;
+}
+
+section .row:hover {
+    background:#FAFAFA;
+}
+
+section .row > div:first-child {
+    padding: 30px 0px;
+    border-bottom: 1px solid #EEE;
+    width: 200px;
+    font-size:14px;
+    color: #757575;
+}
+
+section .row > div:last-child {
+    color: #9E9E9E;
+    flex: 1 1 auto;
+    padding: 30px 30px;
+    border-bottom: 1px solid #EEE;
+    font-size:14px;
+}
+
+section .row:last-child > div {
+    border-bottom:none;
+}
+
+section .build-row .build-num {
+    padding: 8px;
+    display: inline-block;
+    width: 75px;
+    border-radius: 2px;
+    color: rgba(255,255,255,0.9);
+    font-size: 16px;
+    text-align: center;
+    background: #FFD740;
+}
+.success {
+    background:#26A65B;
+}
+.error,
+.killed,
+.failure {
+    background: #EF5350;
+}
+
+section .build-row > div:first-child {
+    width:90px;
+}
+
+section .build-row h3 {
+    color:#212121;
+    font-size:18px;
+    margin-bottom:10px;
+}
+
+section .build-row strong {
+    color:#616161;
+    font-weight:normal;
+}
+
+pre.key {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    padding:30px;
+    font-size:14px;
+    line-height:18px;
+    color:#424242;
+    font-family: "Droid Sans Mono","Roboto","Arial";
+}
+
+@media (max-width: 990px) {
+    .breadcrumb a.icon-home {
+        position: static;
+        padding-right:20px;
+        padding-left:20px;
+    }
+    article {
+        padding-top:0px;
+        margin-top:-5px;
+    }
+}

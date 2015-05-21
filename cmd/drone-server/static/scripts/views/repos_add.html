@@ -1,13 +1,28 @@
-<h1>Add Repository</h1>
+<header>
+	<a class="logo float-left" href="/"></a>
+	<a class="menu-item settings float-right" href="/profile"></a>
+	<a class="menu-item users float-right" href="/users" ng-if="user.admin"></a>
+	<a class="menu-item help float-right" href="http://readme.drone.io" target="_blank"></a>
+	<a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
+</header>
 
-<a href="/">Back</a>
-
-<div class="alert alert-error" ng-if="error !== undefined">
-	There was an error adding your repository. Please ensure the
-	repository exists and you have admin privileges.
+<div class="toolbar">
+	<div class="breadcrumb"  style="position:relative;top:0px;">
+		<a href="/" class="icon icon-home"></a>
+		<a href="#">Add Repository</a>
+	</div>
 </div>
 
-<form>
-	<input type="text" placeholder="octocat/Hello-World" ng-model="slug" />
-	<button ng-click="add(slug)">Add</button>
-</form>
+<article>
+	<section>
+		<div class="alert alert-error" ng-if="error !== undefined">
+			There was an error adding your repository. Please ensure the
+			repository exists and you have admin privileges.
+		</div>
+
+		<form>
+			<input type="text" placeholder="octocat/Hello-World" ng-model="slug" />
+			<button ng-click="add(slug)">Add</button>
+		</form>
+	</section>
+</article>
