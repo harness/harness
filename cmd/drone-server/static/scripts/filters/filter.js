@@ -2,6 +2,15 @@
 
 (function () {
 
+	function trunc() {
+		return function(str) {
+			if (str && str.length > 10) {
+				return str.substr(0, 10);
+			}
+			return str;
+		}
+	}
+
 	/**
 	 * author is a helper function that return the builds
 	 * commit or pull request author.
@@ -53,6 +62,7 @@
 
 	angular
 		.module('drone')
+		.filter('trunc', trunc)
 		.filter('author', author)
 		.filter('message', message)
 		.filter('sha', sha)
