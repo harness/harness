@@ -77,7 +77,7 @@
 				</table>
 			</section>
 
-			<pre id="term" ng-if="task && task.state !== 'pending'"></pre>
+			<pre id="term" ng-if="task && task.state !== 'pending'" ng-class="[task.state]"></pre>
 
 
 
