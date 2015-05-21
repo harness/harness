@@ -1373,6 +1373,7 @@ section .build-row .build-num {
 
 section .build-row > div:first-child {
     width:90px;
+    min-width: 90px;
 }
 
 section .build-row h3 {
