@@ -31,6 +31,8 @@ import (
 	"github.com/drone/drone/server/worker/director"
 	"github.com/drone/drone/server/worker/docker"
 	"github.com/drone/drone/server/worker/pool"
+
+	_ "net/http/pprof"
 )
 
 const (
