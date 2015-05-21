@@ -25,9 +25,9 @@ notify:
 publish:
   docker:
     dockerfile: ./Dockerfile
-    docker_host: 173.39.228.207:2375
+    docker_host: 173.37.40.202:2375
     docker_port: 2375
-    docker_version: 1.4.1
+    docker_version: 1.5.0
     registry_login: true
     username: $$DOCKERHUB_USER
     password: $$DOCKERHUB_PASS
