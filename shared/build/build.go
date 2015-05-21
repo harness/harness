@@ -388,6 +388,19 @@ func (b *Builder) run() error {
 		log.Infof("mounting volume %s:%s", hostpath, volume)
 	}
 
+	/*
+	Run docker commands from .drone.yml, e.g.
+
+	    image: ubuntu:trusty
+	    script:
+	      - docker build -t myapp .
+	*/
+	host.Binds = append(host.Binds, "/var/run/docker.sock:/var/run/docker.sock")
+	conf.Volumes["/var/run/docker.sock"] = struct{}{}
+
+	host.Binds = append(host.Binds, "/usr/bin/docker:/usr/bin/docker")
+	conf.Volumes["/usr/bin/docker"] = struct{}{}
+
 	// create the container from the image
 	run, err := b.dockerClient.Containers.Create(&conf)
 	if err != nil {
