@@ -13,34 +13,22 @@
 </div>
 
 <article>
+
+
 	<section>
+		<div class="search clearfix">
+			<a href="/new">Add Repo</a>
+		</div>
 
-		<a href="/new">New</a>
-
-		<table border="1">
-			<thead>
-				<tr>
-					<th>Repo</th>
-					<th>Status</th>
-					<th>Number</th>
-					<th>Started</th>
-					<th>Duration</th>
-					<th>Branch</th>
-					<th>Commit</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr ng-repeat="repo in repos">
-					<td><a ng-href="{{ repo.full_name }}">{{ repo.full_name }}</a></td>
-					<td>{{ repo.last_build.state }}</td>
-					<td><a ng-href="{{ repo.full_name }}/{{ repo.last_build.number }}">{{ repo.last_build.number }}</a></td>
-					<td>{{ repo.last_build.started_at | fromNow }}</td>
-					<td>{{ repo.last_build.duration | toDuration }}</td>
-					<td>{{ repo.last_build.head_commit.ref || repo.last_build.pull_request.source.ref }}</td>
-					<td>{{ repo.last_build.head_commit.sha || repo.last_build.pull_request.source.ref }}</td>
-				</tr>
-			</tbody>
-		</table>
+		<a class="row build-row" ng-repeat="repo in repos | orderBy:'full_name'" ng-href="/{{ repo.full_name }}">
+			<div>
+				<div class="build-num success">&nbsp;</div>
+			</div>
+			<div>
+				<h3>{{ repo.owner }} / {{ repo.name }}</h3>
+				<p>{{ repo.clone_url }}</p>
+			</div>
+		</a>
 
 	</section>
 </article>
