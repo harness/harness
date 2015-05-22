@@ -10,16 +10,16 @@
 	<div class="breadcrumb"  style="position:relative;top:0px;">
 		<a href="#">Dashboard</a>
 	</div>
+
+	<div class="menu">
+		<a ng-href="/new" class="nav-item add float-right"></a>
+	</div>
 </div>
 
 <article>
 
 
 	<section>
-		<div class="search clearfix">
-			<a href="/new">Add Repo</a>
-		</div>
-
 		<a class="row build-row" ng-repeat="repo in repos | orderBy:'full_name'" ng-href="/{{ repo.full_name }}">
 			<div>
 				<div class="build-num build-last success">&nbsp;</div>

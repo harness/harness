@@ -25,6 +25,12 @@
 	 * repository.
 	 */
 	function RepoAddCtrl($scope, $location, repos, users) {
+
+		// Gets the currently authenticated user
+		users.getCached().then(function(payload){
+			$scope.user = payload.data;
+		});
+		
 		$scope.add = function(slug) {
 			repos.post(slug).then(function(payload) {
 				$location.path('/'+slug);
@@ -37,10 +43,13 @@
 	/**
 	 * RepoEditCtrl responsible for editing a repository.
 	 */
-	function RepoEditCtrl($scope, $location, $routeParams, repos, users) {
+	function RepoEditCtrl($scope, $window, $location, $routeParams, repos, users) {
 		var owner = $routeParams.owner;
 		var name  = $routeParams.name;
 		var fullName = owner+'/'+name;
+
+		// Inject window for composing url
+		$scope.window = $window;
 
 		// Gets the currently authenticated user
 		users.getCached().then(function(payload){

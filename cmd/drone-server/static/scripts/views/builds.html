@@ -14,10 +14,9 @@
 	</div>
 
 	<div class="menu">
-		<a href="settings.html" class="icon icon-settings"></a>
-		<a ng-href="/{{ repo.full_name }}/edit" class="nav-item settings float-right"></a>
-		<button ng-click="watch(repo)"   ng-if="!repo.starred" class="nav-item star float-right"></button>
-		<button ng-click="unwatch(repo)" ng-if="repo.starred"  class="nav-item unstar float-right"></button>
+		<a ng-href="/{{ repo.full_name }}/edit" class="nav-item settings float-right" ng-if="repo.permissions.pull"></a>
+		<button ng-click="watch(repo)"   ng-if="!repo.starred && user" class="nav-item star float-right"></button>
+		<button ng-click="unwatch(repo)" ng-if="repo.starred && user"  class="nav-item unstar float-right"></button>
 	</div>
 
 </div>

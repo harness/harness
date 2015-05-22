@@ -49,7 +49,7 @@ type RepoCommit struct {
 }
 
 type Perm struct {
-	Pull  bool
-	Push  bool
-	Admin bool
+	Pull  bool `json:"pull"`
+	Push  bool `json:"push"`
+	Admin bool `json:"admin"`
 }
