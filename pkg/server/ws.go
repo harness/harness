@@ -8,10 +8,10 @@ import (
 
 	"github.com/drone/drone/pkg/bus"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/manucorporat/sse"
 	"github.com/drone/drone/pkg/docker"
-	"github.com/gin-gonic/gin"
-	"github.com/manucorporat/sse"
 )
 
 // GetRepoEvents will upgrade the connection to a Websocket and will stream

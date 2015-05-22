@@ -5,7 +5,7 @@ import (
 	"github.com/drone/drone/pkg/yaml/inject"
 	"github.com/drone/drone/pkg/yaml/matrix"
 
-	"gopkg.in/yaml.v2"
+	"github.com/drone/drone/Godeps/_workspace/src/gopkg.in/yaml.v2"
 )
 
 // Opts specifies parser options that will permit

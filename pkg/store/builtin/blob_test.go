@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/franela/goblin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
 )
 
 func TestBlobstore(t *testing.T) {

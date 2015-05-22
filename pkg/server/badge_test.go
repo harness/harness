@@ -12,9 +12,9 @@ import (
 	"github.com/drone/drone/pkg/store/mock"
 	common "github.com/drone/drone/pkg/types"
 
-	. "github.com/franela/goblin"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/mock"
+	. "github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/stretchr/testify/mock"
 )
 
 var badgeTests = []struct {

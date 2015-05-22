@@ -3,13 +3,13 @@ package server
 import (
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/pkg/queue"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/yaml"
 	"github.com/drone/drone/pkg/yaml/inject"
 	"github.com/drone/drone/pkg/yaml/matrix"
-	"github.com/gin-gonic/gin"
 )
 
 // PostHook accepts a post-commit hook and parses the payload

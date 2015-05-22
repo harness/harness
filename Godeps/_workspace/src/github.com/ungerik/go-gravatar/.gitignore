@@ -1,0 +1,24 @@
+#############################
+# OS generated files:
+
+.DS_Store
+Icon?
+Thumbs.db
+
+#############################
+# Dropbox:
+
+.dropbox
+
+#############################
+# Go specific files:
+
+_obj
+_test
+*.[568vq]
+[568vq].out
+*.o
+*.a
+*.so
+*.exe
+

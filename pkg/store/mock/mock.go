@@ -3,8 +3,8 @@ package mocks
 import (
 	"io"
 
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/stretchr/testify/mock"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/stretchr/testify/mock"
 )
 
 type Store struct {

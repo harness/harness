@@ -8,15 +8,15 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/dgrijalva/jwt-go"
+	. "github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/stretchr/testify/mock"
 	"github.com/drone/drone/pkg/server/recorder"
 	"github.com/drone/drone/pkg/server/session"
 	"github.com/drone/drone/pkg/settings"
 	"github.com/drone/drone/pkg/store/mock"
 	"github.com/drone/drone/pkg/types"
-	. "github.com/franela/goblin"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/mock"
 )
 
 var createTests = []struct {

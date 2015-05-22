@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/franela/goblin"
 )
 
 func TestTokenstore(t *testing.T) {

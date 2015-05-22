@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/ungerik/go-gravatar"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/ungerik/go-gravatar"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/drone/drone/pkg/oauth2"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/httputil"

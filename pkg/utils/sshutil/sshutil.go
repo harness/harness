@@ -6,7 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 
-	"code.google.com/p/go.crypto/ssh"
+	"github.com/drone/drone/Godeps/_workspace/src/code.google.com/p/go.crypto/ssh"
 )
 
 const (

@@ -4,10 +4,10 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	common "github.com/drone/drone/pkg/types"
 )
 

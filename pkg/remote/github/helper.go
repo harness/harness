@@ -9,9 +9,9 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/google/go-github/github"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gorilla/securecookie"
 	"github.com/drone/drone/pkg/oauth2"
-	"github.com/google/go-github/github"
-	"github.com/gorilla/securecookie"
 )
 
 // NewClient is a helper function that returns a new GitHub
