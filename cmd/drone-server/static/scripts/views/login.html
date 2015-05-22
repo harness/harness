@@ -1,4 +1,59 @@
-<h1>Login</h1>
+	<style>
+		html, body {
+			background:#EEEEEE;
+			padding:0px;
+			margin:0px;
+			font-family:"Roboto";
+			font-size:15px;
+			text-transform:uppercase;
+			width:100%;
+			height:100%;
+		}
+		a.box {
+			background:#FFF;
+			width:250px;
+			padding:20px;
+			box-shadow: 0px 0px 0 rgba(255,255,255,0.05);
+			-webkit-transition: all .5s;
+			-webkit-box-flex: 0;
+			display:block;
+			text-decoration:none;
+			border-radius:3px;
+		}
+		a.box:hover {
+			box-shadow: 7px 7px 0 rgba(255,255,255,0.05);
+		}
+		div.logo {
+			background: url(/static/images/logo.svg) no-repeat center center;;
+			background-size:72px;
+			height:150px;
+			-webkit-transition: all .5s;
+		}
+		div.login {
+			text-align: center;
+			padding: 15px;
+			color: #424242;
+			font-size: 18px;
+			text-transform: uppercase;
+			border-radius: 3px;
+			-webkit-transition: all .5s;
+			background: #424242;
+			color: rgba(255,255,255,0.7);
+		}
+		body > div {
+			width:100%;
+			height:100%;
+			display: -webkit-box;
+			display: -webkit-flex;
+			display: flex;
+			-webkit-box-align: center;
+			-webkit-align-items: center;
+			align-items: center;
+			-webkit-box-pack: center;
+			-webkit-justify-content: center;
+			justify-content: center;
+		}
+	</style>
 
 <div ng-switch="error">
   <div ng-switch-when="internal_error">Oops. There was an unexpected error. Please try again.</div>
@@ -7,4 +62,7 @@
   <div ng-switch-when="access_denied">Self-registration is disabled. Please contact the system admin to grant access.</div>
 </div>
 
-<a href="/authorize" target="_self">Login</a>
+<a href="/authorize" target="_self" class="box">
+	<div class="logo"></div>
+	<div class="login">Login</div>
+</a>

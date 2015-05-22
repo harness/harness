@@ -792,7 +792,7 @@
           }
 
           .nav-item.settings:before {
-              font-size: 20px;
+              font-size: 22px;
               content: '\f060';
           }
 
@@ -805,16 +805,16 @@
           }
 
           .nav-item.star:after {
-            font-size: 20px;
+            font-size: 24px;
             content: "\f2e7";
           }
           .nav-item.unstar:after {
-            font-size: 20px;
+            font-size: 24px;
             content: "\f2e5";
           }
 
           .nav-item.add:after {
-            font-size: 22px;
+            font-size: 24px;
             content: "\f0fd";
 
           }
@@ -1356,6 +1356,7 @@ section .row > div:first-child {
     padding: 30px 0px;
     border-bottom: 1px solid #EEE;
     width: 200px;
+    min-width: 200px;
     font-size:14px;
     color: #757575;
 }
@@ -1448,14 +1449,18 @@ section > .search a:hover {
     background: #00ACC1;
 }
 
-pre.key {
+pre.snippet {
     white-space: pre-wrap;
     word-wrap: break-word;
-    padding:30px;
     font-size:13px;
     line-height:18px;
     color:#9E9E9E;
     font-family: "Droid Sans Mono","Roboto","Arial";
+}
+
+
+pre.snippet-padding {
+    padding:30px;
 }
 
 textarea:focus, input:focus{
@@ -1511,7 +1516,7 @@ textarea:focus, input:focus{
   width: 50px;
   height: 20.833333333333336px;
   border-radius: 10.416666666666668px;
-  background: #bdbdbd;
+  background: #E0E0E0;
   -webkit-transition: background 0.28s cubic-bezier(0.4, 0, 0.2, 1);
           transition: background 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   vertical-align: middle;
@@ -1524,8 +1529,7 @@ textarea:focus, input:focus{
   left: -2.604166666666667px;
   width: 26.04166666666667px;
   height: 26.04166666666667px;
-  background: #fafafa;
-  box-shadow: 0 2px 10.416666666666668px rgba(0,0,0,0.28);
+  background: #bdbdbd;
   border-radius: 50%;
   -webkit-transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1), background 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
           transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1), background 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
