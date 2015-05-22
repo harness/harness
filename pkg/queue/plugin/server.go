@@ -3,8 +3,8 @@ package plugin
 import (
 	"net/http"
 
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/pkg/queue"
-	"github.com/gin-gonic/gin"
 )
 
 // Handle returns an http.Handler that enables a remote

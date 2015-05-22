@@ -4,8 +4,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/drone/drone/Godeps/_workspace/src/gopkg.in/yaml.v2"
 	"github.com/drone/drone/pkg/types"
-	"gopkg.in/yaml.v2"
 )
 
 // Inject injects a map of parameters into a raw string and returns

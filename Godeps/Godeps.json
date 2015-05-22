@@ -1,0 +1,129 @@
+{
+	"ImportPath": "github.com/drone/drone",
+	"GoVersion": "go1.4.2",
+	"Packages": [
+		"github.com/drone/drone/..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/go.crypto/ssh",
+			"Comment": "null-236",
+			"Rev": "69e2a90ed92d03812364aeb947b7068dc42e561e"
+		},
+		{
+			"ImportPath": "github.com/BurntSushi/migration",
+			"Rev": "c45b897f13350786ccaf2b7403b92b1c7ad85844"
+		},
+		{
+			"ImportPath": "github.com/BurntSushi/toml",
+			"Comment": "v0.1.0-18-g443a628",
+			"Rev": "443a628bc233f634a75bcbdd71fe5350789f1afa"
+		},
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.6.6-2-g2cea0f0",
+			"Rev": "2cea0f0d141f56fae06df5b813ec4119d1c8ccbd"
+		},
+		{
+			"ImportPath": "github.com/dgrijalva/jwt-go",
+			"Comment": "v2.2.0-16-gc48cfd5",
+			"Rev": "c48cfd5d9711c75acb6036d2698ef3aef7bb655a"
+		},
+		{
+			"ImportPath": "github.com/elazarl/go-bindata-assetfs",
+			"Rev": "bea323321994103859d60197d229f1a94699dde3"
+		},
+		{
+			"ImportPath": "github.com/franela/goblin",
+			"Comment": "0.0.1-53-g2042c4d",
+			"Rev": "2042c4d610d2da4e4d2afd754da0b4eef31753bb"
+		},
+		{
+			"ImportPath": "github.com/gin-gonic/gin",
+			"Comment": "v0.4-255-gcaa75c6",
+			"Rev": "caa75c620153398c334dba46601a92dc9cc00c5d"
+		},
+		{
+			"ImportPath": "github.com/google/go-github/github",
+			"Rev": "2431923100d4989611dcc339f1ff8d280bd9c84c"
+		},
+		{
+			"ImportPath": "github.com/google/go-querystring/query",
+			"Rev": "d8840cbb2baa915f4836edda4750050a2c0b7aea"
+		},
+		{
+			"ImportPath": "github.com/gorilla/securecookie",
+			"Rev": "8e98dd730fc43f1383f19615db6f2e702c9738e8"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/golang-lru",
+			"Rev": "d85392d6bc30546d352f52f2632814cde4201d44"
+		},
+		{
+			"ImportPath": "github.com/lib/pq",
+			"Comment": "go1.0-cutoff-47-g93e9980",
+			"Rev": "93e9980741c9e593411b94e07d5bad8cfb4809db"
+		},
+		{
+			"ImportPath": "github.com/manucorporat/sse",
+			"Rev": "c574f6c50c8594f93d28b03a1bbd87b4a3899093"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-colorable",
+			"Rev": "043ae16291351db8465272edf465c9f388161627"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-sqlite3",
+			"Rev": "542ae647f8601bafd96233961b150cae198e0295"
+		},
+		{
+			"ImportPath": "github.com/naoina/go-stringutil",
+			"Rev": "360db0db4b01d34e12a2ec042c09e7d37fece761"
+		},
+		{
+			"ImportPath": "github.com/naoina/toml",
+			"Rev": "7b2dffbeaee47506726f29e36d19cf4ee90d361b"
+		},
+		{
+			"ImportPath": "github.com/russross/meddler",
+			"Rev": "cd98050d9328eb98ed57de34c74660dea3ca5df4"
+		},
+		{
+			"ImportPath": "github.com/samalba/dockerclient",
+			"Rev": "0fdc3ca0e58365801f1212900def9c7c60bbe2c7"
+		},
+		{
+			"ImportPath": "github.com/stretchr/objx",
+			"Rev": "cbeaeb16a013161a98496fad62933b1d21786672"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Rev": "73a8112e05603706e47153d5cbb86aac8d85adb0"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/mock",
+			"Rev": "73a8112e05603706e47153d5cbb86aac8d85adb0"
+		},
+		{
+			"ImportPath": "github.com/ungerik/go-gravatar",
+			"Rev": "6ab22628222adee0d853df36a2f0783f56ea55ec"
+		},
+		{
+			"ImportPath": "github.com/vrischmann/envconfig",
+			"Rev": "2985ccd302077381e9447e7b05af4d363fcae2c2"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "e0403b4e005737430c05a57aac078479844f919c"
+		},
+		{
+			"ImportPath": "gopkg.in/joeybloggs/go-validate-yourself.v4",
+			"Comment": "v4.0.4",
+			"Rev": "47a6634ff80051b92481b6c076854b85119fd267"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "49c95bdc21843256fb6c4e0d370a05f24a0bf213"
+		}
+	]
+}

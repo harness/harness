@@ -4,8 +4,8 @@ import (
 	"sync"
 	"testing"
 
+	. "github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
 	"github.com/drone/drone/pkg/queue"
-	. "github.com/franela/goblin"
 )
 
 func TestBuild(t *testing.T) {

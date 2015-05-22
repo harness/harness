@@ -5,15 +5,15 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/elazarl/go-bindata-assetfs"
 	"github.com/drone/drone/pkg/remote/github"
 	"github.com/drone/drone/pkg/server"
 	"github.com/drone/drone/pkg/server/session"
 	"github.com/drone/drone/pkg/settings"
-	"github.com/elazarl/go-bindata-assetfs"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	eventbus "github.com/drone/drone/pkg/bus/builtin"
 	queue "github.com/drone/drone/pkg/queue/builtin"
 	runner "github.com/drone/drone/pkg/runner/builtin"

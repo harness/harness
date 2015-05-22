@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/russross/meddler"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
 )
 
 // transform is a helper function that transforms sql

@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/russross/meddler"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
 )
 
 type blob struct {

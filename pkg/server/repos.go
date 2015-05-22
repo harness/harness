@@ -3,8 +3,8 @@ package server
 import (
 	"fmt"
 
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
 
 	"github.com/drone/drone/pkg/remote"
 	common "github.com/drone/drone/pkg/types"
