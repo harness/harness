@@ -25,25 +25,43 @@
 
 <article>
 	<section>
+		<h2>Hooks</h2>
+		<div class="row">
+			<div>Post Commit Hooks</div>
+			<div>
+				<input id="post_commits" type="checkbox" hidden="hidden" ng-model="repo.post_commits" />
+				<label for="post_commits" class="switch"></label>
+			</div>
+		</div>
+		<div class="row">
+			<div>Pull Request Hooks</div>
+			<div>
+				<input id="pull_requests" type="checkbox" hidden="hidden" ng-model="repo.pull_requests" />
+				<label for="pull_requests" class="switch"></label>
+			</div>
+		</div>
+	</section>
 
-		<form>
+	<section ng-if="user.admin">
+		<h2>Advanced</h2>
+		<div class="row">
+			<div>Trusted (Evelvate Privilege)</div>
 			<div>
-				<label>Enable Pushes</label>
-				<input type="checkbox" ng-model="repo.post_commits" />
+				<input id="trusted" type="checkbox" hidden="hidden" ng-model="repo.trusted" />
+				<label for="trusted" class="switch"></label>
 			</div>
+		</div>
+		<div class="row">
+			<div>Timeout in minutes</div>
 			<div>
-				<label>Enable Pull Requests</label>
-				<input type="checkbox" ng-model="repo.pull_requests" />
-			</div>
-
-			<div>
-				<label>Trusted</label>
-				<input type="checkbox" ng-model="repo.trusted" />
-			</div>
-			<div>
-				<label>Timeout</label>
 				<input type="number" ng-model="repo.timeout" />
 			</div>
+		</div>
+	</section>
+
+	<section>
+		<form>
+
 			<ul>
 				<li ng-repeat="(key, value) in repo.params">
 					<label>{{ key }}</label>
@@ -57,12 +75,28 @@
 				</li>
 			</ul>
 
-	
+
 
 			<button ng-click="save(repo)">Save</button>
 			<button ng-click="delete(repo.full_name)">Delete</button>
 		</form>
 
+	</section>
+
+	<section>
+		<h2>Badges</h2>
+		<div class="row">
+			<div>Build Status</div>
+			<div>
+				{{ window.location.origin }}/api/badges/{{ repo.full_name }}/status.svg</pre>
+			</div>
+		</div>
+		<div class="row">
+			<div>CCMenu</div>
+			<div>
+				{{ window.location.origin }}/api/badges/{{ repo.full_name }}/cc.xml</pre>
+			</div>
+		</div>
 	</section>
 
 	<section>
