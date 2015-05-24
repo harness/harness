@@ -10,7 +10,7 @@ An example command to run your Drone instance with GitHub enabled:
 sudo docker run -d \
 	-v /var/lib/drone:/var/lib/drone \
 	-e DRONE_GITHUB_CLIENT=c0aaff74c060ff4a950d \
-	-e DRONE_GITHUB_SECRET=1ac1eae5ff1b490892f5546f837f306265032412 \
+	-e DRONE_GITHUB_SECRET=1ac1eae5ff1b490892f5 \
 	-p 80:80 --name=drone drone/drone
 ```
 
@@ -31,6 +31,6 @@ When running Drone inside Docker we recommend using environment variables to con
 ```bash
 sudo docker run \
 	-e DRONE_GITHUB_CLIENT=c0aaff74c060ff4a950d \
-	-e DRONE_GITHUB_SECRET=1ac1eae5ff1b490892f5546f837f306265032412 \
+	-e DRONE_GITHUB_SECRET=1ac1eae5ff1b490892f5 \
 	--name=drone drone/drone
 ```
