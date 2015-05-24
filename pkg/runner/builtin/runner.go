@@ -9,12 +9,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 	"github.com/drone/drone/pkg/docker"
 	"github.com/drone/drone/pkg/queue"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/samalba/dockerclient"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 var (

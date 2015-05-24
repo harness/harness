@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/hashicorp/golang-lru"
 	"github.com/drone/drone/pkg/settings"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/hashicorp/golang-lru"
 
-	"github.com/google/go-github/github"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/google/go-github/github"
 )
 
 const (

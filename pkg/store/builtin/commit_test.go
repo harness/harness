@@ -3,8 +3,8 @@ package builtin
 import (
 	"testing"
 
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/franela/goblin"
 )
 
 func TestCommitstore(t *testing.T) {

@@ -1,0 +1,8 @@
+language: go
+go:
+ - 1.1.2
+ - tip
+notifications:
+  email:
+      - ionathan@gmail.com
+      - marcosnils@gmail.com

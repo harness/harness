@@ -1,8 +1,8 @@
 package builtin
 
 import (
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/franela/goblin"
 	"testing"
 )
 

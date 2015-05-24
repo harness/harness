@@ -3,7 +3,7 @@ package inject
 import (
 	"testing"
 
-	"github.com/franela/goblin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
 )
 
 func Test_Inject(t *testing.T) {

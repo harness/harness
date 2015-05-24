@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/pkg/ccmenu"
 	common "github.com/drone/drone/pkg/types"

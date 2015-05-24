@@ -1,7 +1,7 @@
 package migrate
 
 import (
-	"github.com/BurntSushi/migration"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/BurntSushi/migration"
 )
 
 // Setup is the database migration function that
