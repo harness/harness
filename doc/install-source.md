@@ -8,7 +8,7 @@ This document provides a brief overview of Drone's build process, so that you ca
 
 ### Build and Test
 
-We use `make` to build and package Drone. You can execute the following commands to build compile Drone locally:
+We use `make` to build and package Drone. You can execute the following commands to compile the Drone binary:
 
 ```bash
 make deps
@@ -18,9 +18,7 @@ make test
 
 The `all` directive compiles binary files to the `bin/` directory and embeds all static content (ie html, javascript, css files) directly into the binary for simplified distribution.
 
-The `test` directive runs the `go vet` tool for simple linting and executes the suite of unit tests.
-
-**NOTE** if you experience slow compile times you can `go install` the `go-sqlite3` library from the vendored dependencies. This will prevent Drone from re-compiling on every build:
+Note: if you experience slow compile times you can `go install` the `go-sqlite3` library from the vendored dependencies. This will prevent Drone from re-compiling on every build:
 
 ```bash
 go install github.com/drone/drone/Godeps/_workspace/src/github.com/mattn/go-sqlite3
