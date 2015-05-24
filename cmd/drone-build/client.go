@@ -4,9 +4,9 @@ import (
 	"errors"
 	"os"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 	"github.com/drone/drone/pkg/docker"
-	"github.com/samalba/dockerclient"
 )
 
 var (

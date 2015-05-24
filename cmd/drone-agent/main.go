@@ -7,12 +7,12 @@ import (
 	"os"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/drone/drone/pkg/queue"
 	runner "github.com/drone/drone/pkg/runner/builtin"
 
-	"github.com/gin-gonic/gin"
-	"github.com/samalba/dockerclient"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 )
 
 var (

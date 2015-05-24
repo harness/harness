@@ -3,8 +3,8 @@ package config
 import (
 	"io/ioutil"
 
-	"github.com/naoina/toml"
-	"github.com/vrischmann/envconfig"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/naoina/toml"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/vrischmann/envconfig"
 )
 
 type Config struct {

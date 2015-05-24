@@ -3,8 +3,8 @@ package builtin
 import (
 	"testing"
 
+	. "github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
 	"github.com/drone/drone/pkg/bus"
-	. "github.com/franela/goblin"
 )
 
 func TestBuild(t *testing.T) {

@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	logs "github.com/Sirupsen/logrus"
+	logs "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	common "github.com/drone/drone/pkg/types"
 )
 

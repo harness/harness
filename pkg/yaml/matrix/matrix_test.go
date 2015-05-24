@@ -3,7 +3,7 @@ package matrix
 import (
 	"testing"
 
-	"github.com/franela/goblin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
 )
 
 func Test_Matrix(t *testing.T) {

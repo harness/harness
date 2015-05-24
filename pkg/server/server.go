@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/pkg/bus"
 	"github.com/drone/drone/pkg/queue"

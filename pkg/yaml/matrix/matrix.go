@@ -3,7 +3,7 @@ package matrix
 import (
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"github.com/drone/drone/Godeps/_workspace/src/gopkg.in/yaml.v2"
 )
 
 const (

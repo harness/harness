@@ -1,0 +1,606 @@
+#Gin Web Framework [![Build Status](https://travis-ci.org/gin-gonic/gin.svg)](https://travis-ci.org/gin-gonic/gin) [![Coverage Status](https://coveralls.io/repos/gin-gonic/gin/badge.svg?branch=develop)](https://coveralls.io/r/gin-gonic/gin?branch=develop)
+
+ [![GoDoc](https://godoc.org/github.com/gin-gonic/gin?status.svg)](https://godoc.org/github.com/gin-gonic/gin)  [![Join the chat at https://gitter.im/gin-gonic/gin](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/gin-gonic/gin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+Gin is a web framework written in Golang. It features a martini-like API with much better performance, up to 40 times faster thanks to [httprouter](https://github.com/julienschmidt/httprouter). If you need performance and good productivity, you will love Gin. 
+
+![Gin console logger](https://gin-gonic.github.io/gin/other/console.png)
+
+```
+$ cat test.go
+```
+```go
+package main
+
+import (
+	"net/http"
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	router := gin.Default()
+	router.GET("/", func(c *gin.Context) {
+		c.String(http.StatusOK, "hello world")
+	})
+	router.GET("/ping", func(c *gin.Context) {
+		c.String(http.StatusOK, "pong")
+	})
+	router.POST("/submit", func(c *gin.Context) {
+		c.String(http.StatusUnauthorized, "not authorized")
+	})
+	router.PUT("/error", func(c *gin.Context) {
+		c.String(http.StatusInternalServerError, "an error happened :(")
+	})
+	router.Run(":8080")
+}
+```
+
+##Gin is new, will it be supported?
+
+Yes, Gin is an internal tool of [Manu](https://github.com/manucorporat) and [Javi](https://github.com/javierprovecho) for many of our projects/start-ups. We developed it and we are going to continue using and improve it.
+
+
+##Roadmap for v1.0
+- [ ] Ask our designer for a cool logo
+- [ ] Add tons of unit tests
+- [ ] Add internal benchmarks suite
+- [ ] More powerful validation API
+- [ ] Improve documentation
+- [ ] Add Swagger support
+- [x] Stable API
+- [x] Improve logging system
+- [x] Improve JSON/XML validation using bindings
+- [x] Improve XML support
+- [x] Flexible rendering system
+- [x] Add more cool middlewares, for example redis caching (this also helps developers to understand the framework).
+- [x] Continuous integration
+- [x] Performance improments, reduce allocation and garbage collection overhead
+- [x] Fix bugs
+
+
+
+## Start using it
+Obviously, you need to have Git and Go already installed to run Gin.  
+Run this in your terminal
+
+```
+go get github.com/gin-gonic/gin
+```
+Then import it in your Go code:
+
+```
+import "github.com/gin-gonic/gin"
+```
+
+##API Examples
+
+#### Create most basic PING/PONG HTTP endpoint
+```go 
+package main
+
+import (
+	"net/http"
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+	r.GET("/ping", func(c *gin.Context) {
+		c.String(http.StatusOK, "pong")
+	})
+
+	// Listen and serve on 0.0.0.0:8080
+	r.Run(":8080")
+}
+```
+
+#### Using GET, POST, PUT, PATCH, DELETE and OPTIONS
+
+```go
+func main() {
+	// Creates a gin router + logger and recovery (crash-free) middlewares
+	r := gin.Default()
+
+	r.GET("/someGet", getting)
+	r.POST("/somePost", posting)
+	r.PUT("/somePut", putting)
+	r.DELETE("/someDelete", deleting)
+	r.PATCH("/somePatch", patching)
+	r.HEAD("/someHead", head)
+	r.OPTIONS("/someOptions", options)
+
+	// Listen and server on 0.0.0.0:8080
+	r.Run(":8080")
+}
+```
+
+#### Parameters in path
+
+```go
+func main() {
+	r := gin.Default()
+	
+	// This handler will match /user/john but will not match neither /user/ or /user
+	r.GET("/user/:name", func(c *gin.Context) {
+		name := c.Params.ByName("name")
+		message := "Hello "+name
+		c.String(http.StatusOK, message)
+	})
+
+	// However, this one will match /user/john/ and also /user/john/send
+	// If no other routers match /user/john, it will redirect to /user/join/
+	r.GET("/user/:name/*action", func(c *gin.Context) {
+		name := c.Params.ByName("name")
+		action := c.Params.ByName("action")
+		message := name + " is " + action
+		c.String(http.StatusOK, message)
+	})
+	
+	// Listen and server on 0.0.0.0:8080
+	r.Run(":8080")
+}
+```
+###Form parameters
+```go
+func main() {
+	r := gin.Default()
+	
+	// This will respond to urls like search?firstname=Jane&lastname=Doe
+	r.GET("/search", func(c *gin.Context) {
+		// You need to call ParseForm() on the request to receive url and form params first
+		c.Request.ParseForm()
+		
+		firstname := c.Request.Form.Get("firstname")
+		lastname := c.Request.Form.Get("lastname")
+
+		message := "Hello "+ firstname + lastname
+		c.String(http.StatusOK, message)
+	})
+	r.Run(":8080")
+}
+```
+
+###Multipart Form
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+)
+
+type LoginForm struct {
+	User     string `form:"user" binding:"required"`
+	Password string `form:"password" binding:"required"`
+}
+
+func main() {
+
+	r := gin.Default()
+
+	r.POST("/login", func(c *gin.Context) {
+
+		var form LoginForm
+		c.BindWith(&form, binding.MultipartForm)
+
+		if form.User == "user" && form.Password == "password" {
+			c.JSON(200, gin.H{"status": "you are logged in"})
+		} else {
+			c.JSON(401, gin.H{"status": "unauthorized"})
+		}
+
+	})
+
+	r.Run(":8080")
+
+}
+```
+
+Test it with:
+```bash
+$ curl -v --form user=user --form password=password http://localhost:8080/login
+```
+
+#### Grouping routes
+```go
+func main() {
+	r := gin.Default()
+
+	// Simple group: v1
+	v1 := r.Group("/v1")
+	{
+		v1.POST("/login", loginEndpoint)
+		v1.POST("/submit", submitEndpoint)
+		v1.POST("/read", readEndpoint)
+	}
+
+	// Simple group: v2
+	v2 := r.Group("/v2")
+	{
+		v2.POST("/login", loginEndpoint)
+		v2.POST("/submit", submitEndpoint)
+		v2.POST("/read", readEndpoint)
+	}
+
+	// Listen and server on 0.0.0.0:8080
+	r.Run(":8080")
+}
+```
+
+
+#### Blank Gin without middlewares by default
+
+Use
+
+```go
+r := gin.New()
+```
+instead of
+
+```go
+r := gin.Default()
+```
+
+
+#### Using middlewares
+```go
+func main() {
+	// Creates a router without any middleware by default
+	r := gin.New()
+
+	// Global middlewares
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+
+	// Per route middlewares, you can add as many as you desire.
+	r.GET("/benchmark", MyBenchLogger(), benchEndpoint)
+
+	// Authorization group
+	// authorized := r.Group("/", AuthRequired())
+	// exactly the same than:
+	authorized := r.Group("/")
+	// per group middlewares! in this case we use the custom created
+	// AuthRequired() middleware just in the "authorized" group.
+	authorized.Use(AuthRequired())
+	{
+		authorized.POST("/login", loginEndpoint)
+		authorized.POST("/submit", submitEndpoint)
+		authorized.POST("/read", readEndpoint)
+
+		// nested group
+		testing := authorized.Group("testing")
+		testing.GET("/analytics", analyticsEndpoint)
+	}
+
+	// Listen and server on 0.0.0.0:8080
+	r.Run(":8080")
+}
+```
+
+#### Model binding and validation
+
+To bind a request body into a type, use model binding. We currently support binding of JSON, XML and standard form values (foo=bar&boo=baz).
+
+Note that you need to set the corresponding binding tag on all fields you want to bind. For example, when binding from JSON, set `json:"fieldname"`.
+
+When using the Bind-method, Gin tries to infer the binder depending on the Content-Type header. If you are sure what you are binding, you can use BindWith. 
+
+You can also specify that specific fields are required. If a field is decorated with `binding:"required"` and has a empty value when binding, the current request will fail with an error.
+
+```go
+// Binding from JSON
+type LoginJSON struct {
+	User     string `json:"user" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+// Binding from form values
+type LoginForm struct {
+    User     string `form:"user" binding:"required"`
+    Password string `form:"password" binding:"required"`   
+}
+
+func main() {
+	r := gin.Default()
+
+    // Example for binding JSON ({"user": "manu", "password": "123"})
+	r.POST("/loginJSON", func(c *gin.Context) {
+		var json LoginJSON
+
+        c.Bind(&json) // This will infer what binder to use depending on the content-type header.
+        if json.User == "manu" && json.Password == "123" {
+            c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
+        } else {
+            c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+        }
+	})
+
+    // Example for binding a HTML form (user=manu&password=123)
+    r.POST("/loginHTML", func(c *gin.Context) {
+        var form LoginForm
+
+        c.BindWith(&form, binding.Form) // You can also specify which binder to use. We support binding.Form, binding.JSON and binding.XML.
+        if form.User == "manu" && form.Password == "123" {
+            c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
+        } else {
+            c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+        }
+    })
+
+	// Listen and server on 0.0.0.0:8080
+	r.Run(":8080")
+}
+```
+
+#### XML and JSON rendering
+
+```go
+func main() {
+	r := gin.Default()
+
+	// gin.H is a shortcut for map[string]interface{}
+	r.GET("/someJSON", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"message": "hey", "status": http.StatusOK})
+	})
+
+	r.GET("/moreJSON", func(c *gin.Context) {
+		// You also can use a struct
+		var msg struct {
+			Name    string `json:"user"`
+			Message string
+			Number  int
+		}
+		msg.Name = "Lena"
+		msg.Message = "hey"
+		msg.Number = 123
+		// Note that msg.Name becomes "user" in the JSON
+		// Will output  :   {"user": "Lena", "Message": "hey", "Number": 123}
+		c.JSON(http.StatusOK, msg)
+	})
+
+	r.GET("/someXML", func(c *gin.Context) {
+		c.XML(http.StatusOK, gin.H{"message": "hey", "status": http.StatusOK})
+	})
+
+	// Listen and server on 0.0.0.0:8080
+	r.Run(":8080")
+}
+```
+
+####Serving static files
+Use Engine.ServeFiles(path string, root http.FileSystem):
+
+```go
+func main() {
+    r := gin.Default()
+    r.Static("/assets", "./assets")
+
+    // Listen and server on 0.0.0.0:8080
+    r.Run(":8080")
+}
+```
+
+Use the following example to serve static files at top level route of your domain. Files are being served from directory ./html.
+
+```
+r := gin.Default()
+r.Use(static.Serve("/", static.LocalFile("html", false)))
+```
+
+Note: this will use `httpNotFound` instead of the Router's `NotFound` handler.
+
+####HTML rendering
+
+Using LoadHTMLTemplates()
+
+```go
+func main() {
+	r := gin.Default()
+	r.LoadHTMLGlob("templates/*")
+	r.GET("/index", func(c *gin.Context) {
+		obj := gin.H{"title": "Main website"}
+		c.HTML(http.StatusOK, "index.tmpl", obj)
+	})
+
+	// Listen and server on 0.0.0.0:8080
+	r.Run(":8080")
+}
+```
+```html
+<h1>
+	{{ .title }}
+</h1>
+```
+
+You can also use your own html template render
+
+```go
+import "html/template"
+
+func main() {
+	r := gin.Default()
+	html := template.Must(template.ParseFiles("file1", "file2"))
+	r.SetHTMLTemplate(html)
+
+	// Listen and server on 0.0.0.0:8080
+	r.Run(":8080")
+}
+```
+
+#####Using layout files with templates
+```go
+var baseTemplate = "main.tmpl"
+
+r.GET("/", func(c *gin.Context) {
+    r.SetHTMLTemplate(template.Must(template.ParseFiles(baseTemplate, "whatever.tmpl")))
+    c.HTML(200, "base", data)
+})
+```
+main.tmpl
+```html
+{{define "base"}}
+<html>
+    <head></head>
+    <body>
+        {{template "content" .}}
+    </body>
+</html>
+{{end}}
+```
+whatever.tmpl
+```html
+{{define "content"}}
+<h1>Hello World!</h1>
+{{end}}
+```
+
+#### Redirects
+
+Issuing a HTTP redirect is easy:
+
+```go
+r.GET("/test", func(c *gin.Context) {
+	c.Redirect(http.StatusMovedPermanently, "http://www.google.com/")
+})
+```
+Both internal and external locations are supported.
+
+
+#### Custom Middlewares
+
+```go
+func Logger() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		t := time.Now()
+
+		// Set example variable
+		c.Set("example", "12345")
+
+		// before request
+
+		c.Next()
+
+		// after request
+		latency := time.Since(t)
+		log.Print(latency)
+
+		// access the status we are sending
+		status := c.Writer.Status()
+		log.Println(status)
+	}
+}
+
+func main() {
+	r := gin.New()
+	r.Use(Logger())
+
+	r.GET("/test", func(c *gin.Context) {
+		example := c.MustGet("example").(string)
+
+		// it would print: "12345"
+		log.Println(example)
+	})
+
+	// Listen and server on 0.0.0.0:8080
+	r.Run(":8080")
+}
+```
+
+#### Using BasicAuth() middleware
+```go
+// simulate some private data
+var secrets = gin.H{
+	"foo":    gin.H{"email": "foo@bar.com", "phone": "123433"},
+	"austin": gin.H{"email": "austin@example.com", "phone": "666"},
+	"lena":   gin.H{"email": "lena@guapa.com", "phone": "523443"},
+}
+
+func main() {
+	r := gin.Default()
+
+	// Group using gin.BasicAuth() middleware
+	// gin.Accounts is a shortcut for map[string]string
+	authorized := r.Group("/admin", gin.BasicAuth(gin.Accounts{
+		"foo":    "bar",
+		"austin": "1234",
+		"lena":   "hello2",
+		"manu":   "4321",
+	}))
+
+	// /admin/secrets endpoint
+	// hit "localhost:8080/admin/secrets
+	authorized.GET("/secrets", func(c *gin.Context) {
+		// get user, it was setted by the BasicAuth middleware
+		user := c.MustGet(gin.AuthUserKey).(string)
+		if secret, ok := secrets[user]; ok {
+			c.JSON(http.StatusOK, gin.H{"user": user, "secret": secret})
+		} else {
+			c.JSON(http.StatusOK, gin.H{"user": user, "secret": "NO SECRET :("})
+		}
+	})
+
+	// Listen and server on 0.0.0.0:8080
+	r.Run(":8080")
+}
+```
+
+
+#### Goroutines inside a middleware
+When starting inside a middleware or handler, you **SHOULD NOT** use the original context inside it, you have to use a read-only copy.
+
+```go
+func main() {
+	r := gin.Default()
+
+	r.GET("/long_async", func(c *gin.Context) {
+		// create copy to be used inside the goroutine
+		c_cp := c.Copy()
+		go func() {
+			// simulate a long task with time.Sleep(). 5 seconds
+			time.Sleep(5 * time.Second)
+
+			// note than you are using the copied context "c_cp", IMPORTANT
+			log.Println("Done! in path " + c_cp.Request.URL.Path)
+		}()
+	})
+
+
+	r.GET("/long_sync", func(c *gin.Context) {
+		// simulate a long task with time.Sleep(). 5 seconds
+		time.Sleep(5 * time.Second)
+
+		// since we are NOT using a goroutine, we do not have to copy the context
+		log.Println("Done! in path " + c.Request.URL.Path)
+	})
+
+    // Listen and server on 0.0.0.0:8080
+    r.Run(":8080")
+}
+```
+
+#### Custom HTTP configuration
+
+Use `http.ListenAndServe()` directly, like this:
+
+```go
+func main() {
+	router := gin.Default()
+	http.ListenAndServe(":8080", router)
+}
+```
+or
+
+```go
+func main() {
+	router := gin.Default()
+
+	s := &http.Server{
+		Addr:           ":8080",
+		Handler:        router,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+	s.ListenAndServe()
+}
+```

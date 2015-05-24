@@ -7,11 +7,11 @@ all: concat bindata build
 
 deps:
 	go get github.com/jteeuwen/go-bindata/...
-	go get -t -v ./...
 
 test:
-	go vet ./...
-	go test -cover -short ./...
+	go vet github.com/drone/drone/pkg/...
+	go vet github.com/drone/drone/cmd/...
+	go test -cover -short github.com/drone/drone/pkg/...
 
 build:
 	go build -o bin/drone       -ldflags "-X main.revision $(SHA) -X main.version $(VERSION).$(SHA)" github.com/drone/drone/cmd/drone-server
@@ -22,11 +22,11 @@ run:
 
 clean:
 	find . -name "*.out" -delete
-	rm -f drone
-	rm -f bindata.go
+	find . -name "*_bindata.go" -delete
+	rm -f bin/drone*
 
 concat:
-	cat cmd/drone-server/static/scripts/drone.js         \
+	cat cmd/drone-server/static/scripts/drone.js       \
 		cmd/drone-server/static/scripts/services/*.js    \
 		cmd/drone-server/static/scripts/filters/*.js     \
 		cmd/drone-server/static/scripts/controllers/*.js \

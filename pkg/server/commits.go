@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/pkg/queue"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/yaml/inject"
-	"github.com/gin-gonic/gin"
 	// "github.com/gin-gonic/gin/binding"
 )
 

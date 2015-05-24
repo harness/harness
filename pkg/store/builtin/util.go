@@ -3,7 +3,7 @@ package builtin
 import (
 	"strconv"
 
-	"github.com/russross/meddler"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
 )
 
 // rebind is a helper function that changes the sql

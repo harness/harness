@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/samalba/dockerclient"
 )
 
 var (

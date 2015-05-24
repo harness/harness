@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/russross/meddler"
 )
 
 type Commitstore struct {

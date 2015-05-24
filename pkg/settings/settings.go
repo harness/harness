@@ -1,6 +1,6 @@
 package settings
 
-import "github.com/BurntSushi/toml"
+import "github.com/drone/drone/Godeps/_workspace/src/github.com/BurntSushi/toml"
 
 // Service represents the configuration details required
 // to connect to the revision control system (ie GitHub, Bitbucket)
