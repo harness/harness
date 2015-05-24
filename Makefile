@@ -17,6 +17,8 @@ build:
 	go build -o bin/drone       -ldflags "-X main.revision $(SHA) -X main.version $(VERSION).$(SHA)" github.com/drone/drone/cmd/drone-server
 	go build -o bin/drone-agent -ldflags "-X main.revision $(SHA) -X main.version $(VERSION).$(SHA)" github.com/drone/drone/cmd/drone-agent
 
+run:
+	bin/drone-server --debug
 
 clean:
 	find . -name "*.out" -delete
