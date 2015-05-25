@@ -34,3 +34,11 @@ sudo docker run \
 	-e DRONE_GITHUB_SECRET=1ac1eae5ff1b490892f5 \
 	--name=drone drone/drone
 ```
+
+### Logging
+
+When running Drone inside Docker the logs are sent to stdout / stderr. You can view the log output by running the following command:
+
+```bash
+docker logs drone
+```
