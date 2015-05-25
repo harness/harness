@@ -16,6 +16,18 @@ notify:
     recipients:
       - brad@drone.io
 
+publish:
+  s3:
+    acl: public-read
+    region: us-east-1
+    bucket: downloads.drone.io
+    access_key: $$AWS_KEY
+    secret_key: $$AWS_SECRET
+    source: dist/drone.deb
+    target: $DRONE_BRANCH/
+    when:
+      owner: drone
+
 # new .drone.yml syntax
 
 clone:

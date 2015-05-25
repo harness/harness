@@ -13,6 +13,8 @@ location / {
 }
 ```
 
+It is very important to set the `X-Forwarded-For` and `X-Forwarded-Proto` header variables. Drone needs to know its own URL so that it can configure a repository's post-commit hooks properly.
+
 You may also want to change Drone’s default port when proxying traffic. You can change the port in the `/etc/drone/drone.toml` configuration file:
 
 ```toml
