@@ -20,7 +20,7 @@ wget -qO- https://get.docker.com/ | sh
 Once the environment is prepared you can install Drone from a debian file. Drone will automatically start on port 80. Edit /etc/drone/drone.toml to modify the port.
 
 ```bash
-wget downloads.drone.io/master/drone.deb
+wget downloads.drone.io/0.4.0/drone.deb
 sudo dpkg --install drone.deb
 ```
 
