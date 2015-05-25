@@ -10,6 +10,7 @@ script:
   - make bindata deps
   - make build
   - make test
+  - make dist
 
 notify:
   email:
