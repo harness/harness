@@ -55,14 +55,13 @@
 		}
 	</style>
 
-<div ng-switch="error">
-  <div ng-switch-when="internal_error">Oops. There was an unexpected error. Please try again.</div>
-  <div ng-switch-when="user_not_found">There was an error authorizing your account.</div>
-  <div ng-switch-when="access_denied_org">Login is restricted to approved organization members only</div>
-  <div ng-switch-when="access_denied">Self-registration is disabled. Please contact the system admin to grant access.</div>
-</div>
-
 <a href="/authorize" target="_self" class="box">
 	<div class="logo"></div>
+	<div ng-switch="error" class="alert alert-error" ng-if="error">
+	  <div ng-switch-when="internal_error">Oops. There was an unexpected error. Please try again.</div>
+	  <div ng-switch-when="user_not_found">There was an error authorizing your account.</div>
+	  <div ng-switch-when="access_denied_org">Login is restricted to approved organization members only</div>
+	  <div ng-switch-when="access_denied">Self-registration is disabled. Please contact the system admin to grant access.</div>
+	</div>
 	<div class="login">Login</div>
 </a>
