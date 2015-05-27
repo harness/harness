@@ -29,14 +29,14 @@
 		<div class="row">
 			<div>Post Commit Hooks</div>
 			<div>
-				<input id="post_commits" type="checkbox" hidden="hidden" ng-model="repo.post_commits" />
+				<input id="post_commits" type="checkbox" hidden="hidden" ng-model="repo.post_commits" ng-change="save(repo)" />
 				<label for="post_commits" class="switch"></label>
 			</div>
 		</div>
 		<div class="row">
 			<div>Pull Request Hooks</div>
 			<div>
-				<input id="pull_requests" type="checkbox" hidden="hidden" ng-model="repo.pull_requests" />
+				<input id="pull_requests" type="checkbox" hidden="hidden" ng-model="repo.pull_requests" ng-change="save(repo)" />
 				<label for="pull_requests" class="switch"></label>
 			</div>
 		</div>
@@ -47,14 +47,14 @@
 		<div class="row">
 			<div>Trusted (Evelvate Privilege)</div>
 			<div>
-				<input id="trusted" type="checkbox" hidden="hidden" ng-model="repo.trusted" />
+				<input id="trusted" type="checkbox" hidden="hidden" ng-model="repo.trusted" ng-change="save(repo)" />
 				<label for="trusted" class="switch"></label>
 			</div>
 		</div>
 		<div class="row">
 			<div>Timeout in minutes</div>
 			<div>
-				<input type="range" ng-model="repo.timeout" min="0" max="900" />
+				<input type="range" ng-model="repo.timeout" min="0" max="900" ng-blur="save(repo)" />
 				<span class="slider-label">{{ repo.timeout }} minutes</span>
 			</div>
 		</div>

@@ -33,7 +33,7 @@ type repoResp struct {
 type repoReq struct {
 	PostCommit  *bool  `json:"post_commits"`
 	PullRequest *bool  `json:"pull_requests"`
-	Trusted     *bool  `json:"privileged"`
+	Trusted     *bool  `json:"trusted"`
 	Timeout     *int64 `json:"timeout"`
 
 	// optional private parameters can only be
@@ -98,7 +98,7 @@ func PutRepo(c *gin.Context) {
 	}
 
 	if in.PostCommit != nil {
-		repo.PullRequest = *in.PullRequest
+		repo.PostCommit = *in.PostCommit
 	}
 	if in.PullRequest != nil {
 		repo.PullRequest = *in.PullRequest
