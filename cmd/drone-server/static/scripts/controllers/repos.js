@@ -30,7 +30,7 @@
 		users.getCached().then(function(payload){
 			$scope.user = payload.data;
 		});
-		
+
 		$scope.add = function(slug) {
 			repos.post(slug).then(function(payload) {
 				$location.path('/'+slug);
@@ -64,6 +64,7 @@
 		});
 
 		$scope.save = function(repo) {
+			repo.timeout = parseInt(repo.timeout);
 			repos.update(repo).then(function(payload) {
 				$scope.repo = payload.data;
 			}).catch(function(err){

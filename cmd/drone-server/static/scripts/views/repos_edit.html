@@ -54,7 +54,8 @@
 		<div class="row">
 			<div>Timeout in minutes</div>
 			<div>
-				<input type="number" ng-model="repo.timeout" />
+				<input type="range" ng-model="repo.timeout" min="0" max="900" />
+				<span class="slider-label">{{ repo.timeout }} minutes</span>
 			</div>
 		</div>
 	</section>
