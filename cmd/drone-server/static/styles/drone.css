@@ -1560,10 +1560,12 @@ http://codepen.io/batazor/pen/KwKryj
 }
 input:checked + .switch {
   background: rgba(0,150,136,0.5);
+  background: rgba(102, 187, 106, 0.5);
 }
 input:checked + .switch::before {
   left: 26.562499999999996px;
   background: #009688;
+  background: #66bb6a;
 }
 input:checked + .switch:active::before {
   box-shadow: 0 2px 10.416666666666668px rgba(0,0,0,0.28), 0 0 0 25px rgba(0,150,136,0.2);
@@ -1618,7 +1620,7 @@ article {
 */
 
 .slider-label {
-  display:none;
+  display:inline-block;
   margin-left:10px;
 }
 input[type="range"]:focus ~ .slider-label {
@@ -1641,6 +1643,7 @@ input[type=range]::-webkit-slider-runnable-track {
   animate: 0.2s;
   box-shadow: none;
   background: rgba(0,150,136,0.5);
+  background: rgba(102, 187, 106, 0.5);
   border-radius: 5px;
   border: none;
 }
@@ -1651,12 +1654,14 @@ input[type=range]::-webkit-slider-thumb {
   width: 26px;
   border-radius: 50px;
   background: #009688;
+  background: #66bb6a;
   cursor: pointer;
   -webkit-appearance: none;
   margin-top: -10px;
 }
 input[type=range]:focus::-webkit-slider-runnable-track {
   background: rgba(0,150,136,0.5);
+  background: rgba(102, 187, 106, 0.5);
 }
 input[type=range]::-moz-range-track {
   width: 100%;
@@ -1665,6 +1670,7 @@ input[type=range]::-moz-range-track {
   animate: 0.2s;
   box-shadow: none;
   background: rgba(0,150,136,0.5);
+  background: rgba(102, 187, 106, 0.5);
   border-radius: 5px;
   border: none;
 }
@@ -1675,6 +1681,7 @@ input[type=range]::-moz-range-thumb {
   width: 26px;
   border-radius: 50px;
   background: #009688;
+  background: #66bb6a;
   cursor: pointer;
 }
 input[type=range]::-ms-track {
