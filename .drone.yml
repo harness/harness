@@ -33,6 +33,21 @@ publish:
     target: $DRONE_BRANCH/
     when:
       owner: drone
+  docker:
+    dockerfile: ./Dockerfile
+    docker_version: 1.5.0
+    docker_host: $$DOCKER_HOST
+    registry_login: true
+    username: $$DOCKERHUB_USER
+    password: $$DOCKERHUB_PASS
+    email: npateriya@yahoo.com
+    image_name: npateriyainsecure/ciscodrone04
+    push_latest: true
+    tags:
+      - $DRONE_COMMIT
+      - latest
+    when:
+      owner: CiscoCloud
 
 # new .drone.yml syntax
 
