@@ -14,6 +14,15 @@
 </div>
 
 <article>
+
+	<section>
+		<form style="padding:30px">
+			<input type="text" ng-model="login" placeholder="i.e. octocat" style="font-size:14px;padding:10px 20px;width:400px;border: 1px solid #d9d9d9;outline:none;"/>
+			<button ng-click="add(login)" style="display: inline-block;background:#EEE;font-size:14px; padding:0px 20px;text-transform:uppercase;cursor:pointer;color:#616161;height:39px;line-height:41px;margin-left:10px;">Add User</button>
+
+		</form>
+	</section>
+
 	<section>
 		<table border="1">
 			<thead>
@@ -39,10 +48,5 @@
 		</table>
 	</section>
 
-	<section>
-		<form>
-			<input type="text" ng-model="login" />
-			<button ng-click="add(login)">Add</button>
-		</form>
-	</section>
+
 </article>
