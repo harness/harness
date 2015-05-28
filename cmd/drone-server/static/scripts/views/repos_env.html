@@ -20,23 +20,23 @@
 	</div>
 
 </div>
-
-
 <article>
+	<section>
+		<form>
+			<ul>
+				<li ng-repeat="(key, value) in repo.params">
+					<label>{{ key }}</label>
+					<input type="text" ng-model="repo.params[key]"/>
+					<button ng-click="deleteParam(key)">remove</button>
+				</li>
+				<li>
+					<input type="text" ng-model="param.key" />
+					<input type="text" ng-model="param.value" />
+					<button ng-click="addParam(param)">add</button>
+				</li>
+			</ul>
 
-
-	<section style="padding:30px; background-color:#EF5350;">
-		<button ng-click="delete(repo.full_name)" style="color:rgba(255,255,255,0.9);
-text-transform: uppercase;
-text-decoration: none;
-border: 1px solid rgba(255,255,255,0.9);
-padding: 10px;
-background:transparent;
-display:inline-block;
-cursor:pointer;
-margin-right: 10px;">Delete</button>
-<span style="color:rgba(255,255,255,0.9);font-size:16px;">Warning: this action cannot be undone.</span>
+			<button ng-click="save(repo)">Save</button>
+		</form>
 	</section>
-
-
 </article>

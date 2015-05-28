@@ -25,7 +25,7 @@
 
 <article>
 	<section>
-		<h2>Hooks</h2>
+		<h2>Settings</h2>
 		<div class="row">
 			<div>Post Commit Hooks</div>
 			<div>
@@ -40,10 +40,20 @@
 				<label for="pull_requests" class="switch"></label>
 			</div>
 		</div>
+		<a class="row" ng-href="{{ repo.full_name }}/edit/env">
+			<div>Private Variables</div>
+			<div>
+				Inject private variables into your build environment
+			</div>
+		</a>
+		<a class="row" ng-href="{{ repo.full_name }}/delete">
+			<div>Delete</div>
+			<div>Delete this repository and its build history</div>
+		</a>
 	</section>
 
 	<section ng-if="user.admin">
-		<h2>Advanced</h2>
+		<h2>Admin settings</h2>
 		<div class="row">
 			<div>Trusted (Evelvate Privilege)</div>
 			<div>
@@ -58,30 +68,6 @@
 				<span class="slider-label">{{ repo.timeout }} minutes</span>
 			</div>
 		</div>
-	</section>
-
-	<section>
-		<form>
-
-			<ul>
-				<li ng-repeat="(key, value) in repo.params">
-					<label>{{ key }}</label>
-					<input type="text" ng-model="repo.params[key]"/>
-					<button ng-click="deleteParam(key)">remove</button>
-				</li>
-				<li>
-					<input type="text" ng-model="param.key" />
-					<input type="text" ng-model="param.value" />
-					<button ng-click="addParam(param)">add</button>
-				</li>
-			</ul>
-
-
-
-			<button ng-click="save(repo)">Save</button>
-			<button ng-click="delete(repo.full_name)">Delete</button>
-		</form>
-
 	</section>
 
 	<section>
@@ -104,14 +90,6 @@
 		<h2>Public Key</h2>
 		<div>
 			<pre class="snippet snippet-padding">{{ repo.keypair.public }}</pre>
-		</div>
-	</section>
-
-	<section>
-		<h2>Delete</h2>
-		<a class="row" href="{{ repo.full_name }}/delete">
-			<div>Delete this Repository</div>
-			<div></div>
 		</div>
 	</section>
 </article>

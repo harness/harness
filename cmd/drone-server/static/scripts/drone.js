@@ -82,6 +82,11 @@
 			controller: 'RepoEditCtrl',
 			resolve: resolveUser
 		})
+		.when('/:owner/:name/edit/env', {
+			templateUrl: '/static/scripts/views/repos_env.html',
+			controller: 'RepoEditCtrl',
+			resolve: resolveUser
+		})
 		.when('/:owner/:name/delete', {
 			templateUrl: '/static/scripts/views/repos_del.html',
 			controller: 'RepoEditCtrl',
