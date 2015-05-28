@@ -1397,6 +1397,10 @@ section .build-row .build-num {
 section .build-row > div:last-child {
     padding-left:0px;
 }
+section a.build-row:after {
+    content:"";
+    -line-height: 115px;
+}
 
 .pending,
 .running {
