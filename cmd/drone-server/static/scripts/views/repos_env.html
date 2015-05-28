@@ -21,22 +21,31 @@
 
 </div>
 <article>
-	<section>
-		<form>
-			<ul>
-				<li ng-repeat="(key, value) in repo.params">
-					<label>{{ key }}</label>
-					<input type="text" ng-model="repo.params[key]"/>
-					<button ng-click="deleteParam(key)">remove</button>
-				</li>
-				<li>
-					<input type="text" ng-model="param.key" />
-					<input type="text" ng-model="param.value" />
-					<button ng-click="addParam(param)">add</button>
-				</li>
-			</ul>
-
-			<button ng-click="save(repo)">Save</button>
+	<section style="padding:30px;">
+		<div ng-repeat="(key, value) in repo.params" style="
+padding: 30px 0px;
+border-bottom: 1px solid #EEE;
+font-size: 14px;
+color: #757575;font-family:'Droid Sans Mono','Roboto','Arial';position:relative;">
+			<div style="display:inline-block;"><span style="color:#2196F3">export</span> {{ key }} <span style="color:#2196F3">=</span></div>
+			<div style="display:inline-block;">{{ value }}</div>
+			<button ng-click="deleteParam(key)" style="position:absolute;right:0px;background: #EF5350;
+padding: 8px 10px;
+color: #FFF;
+font-family: Roboto;
+font-size:12px;
+text-transform: uppercase;">remove</button>
+		</div>
+		<form style="padding-top:30px;font-family:'Droid Sans Mono','Roboto','Arial';font-size:14px;">
+			<span style="color:#2196F3">export</span>
+			<input type="text" placeholder="FOO" ng-model="param.key" style="border:none;border-bottom:1px solid #9E9E9E;line-height:24px;font-family:'Droid Sans Mono','Roboto','Arial';font-size:14px;" />
+			<span style="color:#2196F3">=</span>
+			<input type="text" placeholder="BAR" ng-model="param.value" style="border:none;border-bottom:1px solid #9E9E9E;line-height:24px;font-family:'Droid Sans Mono','Roboto','Arial';font-size:14px;" />
+			<button ng-click="addParam(param)" style="background: #66bb6a;
+padding: 8px 20px;
+color: #FFF;
+font-family: Roboto;
+text-transform: uppercase;">add</button>
 		</form>
 	</section>
 </article>
