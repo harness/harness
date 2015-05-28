@@ -24,28 +24,17 @@
 	</section>
 
 	<section>
-		<table border="1">
-			<thead>
-				<tr>
-					<th></th>
-					<th>Login</th>
-					<th>Email</th>
-					<th>Admin</th>
-					<th></th>
-					<th></th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr ng-repeat="user in users">
-					<td><img ng-src="{{ user.gravatar_id | gravatar }}" /></td>
-					<td>{{ user.login }}</td>
-					<td>{{ user.email }}</td>
-					<td>{{ !!user.admin }}</td>
-					<td><button ng-click="toggle(user)">toggle admin</button></td>
-					<td><button ng-click="remove(user)">delete</button></td>
-				</tr>
-			</tbody>
-		</table>
+		<div class="row row-user" ng-repeat="user in users">
+			<div>
+				<img ng-src="{{ user.gravatar_id | gravatar }}" />
+			</div>
+			<div>
+				<h3>{{ user.login }} <small ng-if="user.admin">Admin</small></h3>
+				<p>{{ user.email }}</p>
+				<button ng-click="toggle(user)" ng-class="{'btn-admin':true, 'btn-checked': user.admin}"></button>
+				<button ng-click="remove(user)" class="btn-remove"></button>
+			</div>
+		</div>
 	</section>
 
 
