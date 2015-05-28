@@ -1622,7 +1622,7 @@ input:checked + .switch:active::before {
 }
 
 .row-env {
-    padding: 30px 0px;
+    padding: 15px 0px;
     border-bottom: 1px solid #EEE;
     position:relative;
     color: #757575;
@@ -1687,7 +1687,7 @@ input:checked + .switch:active::before {
 .row-env .btn-remove {
     position: absolute;
     right: 0px;
-    top: 25px;
+    top: 12px;
 }
 .row-user .btn-remove {
     position: absolute;

@@ -48,7 +48,6 @@ CREATE TABLE IF NOT EXISTS users (
 	,user_active       BOOLEAN
 	,user_created      INTEGER
 	,user_updated      INTEGER
-	,UNIQUE(user_token)
 	,UNIQUE(user_login)
 );
 `
