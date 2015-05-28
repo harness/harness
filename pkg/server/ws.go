@@ -76,7 +76,7 @@ func GetStream(c *gin.Context) {
 	// if the commit is being executed by an agent
 	// we'll proxy the build output directly to the
 	// remote Docker client, through the agent.
-	if conf.Agents != nil && conf.Agents.Secret != "" {
+	if conf.Agents.Secret != "" {
 		addr, err := store.Agent(commit)
 		if err != nil {
 			c.Fail(500, err)
