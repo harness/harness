@@ -1586,10 +1586,119 @@ input:checked + .switch:active::before {
   box-shadow: 0 2px 10.416666666666668px rgba(0,0,0,0.28), 0 0 0 25px rgba(0,150,136,0.2);
 }
 
+.row.row-user div:first-child {
+    width:50px;
+    max-width:50px;
+    min-width:50px;
+}
+
+.row.row-user div:last-child {
+    position:relative;
+}
+.row-user img {
+    background:#E0E0E0;
+    border-radius:50%;
+    width:36px;
+    height:36px;
+    border:none;
+}
+.row-user h3 {
+    white-space:nowrap;
+    color: #212121;
+    font-size: 18px;
+    margin-bottom: 10px;
+    margin-top: 4px;
+}
+.row-user small {
+    background: #4CAF50;
+    color:#FFF;
+    display:inline-block;
+    text-transform: uppercase;
+    font-size:13px;
+    margin-left:10px;
+    line-height:18px;
+    padding:0px 3px;
+    border-radius:2px;
+}
+
+.row-env {
+    padding: 30px 0px;
+    border-bottom: 1px solid #EEE;
+    position:relative;
+    color: #757575;
+    font-family:'Droid Sans Mono','Roboto','Arial';
+    font-size: 14px;
+}
+.row-env span {
+    color:#2196F3;
+    display:inline-block;
+}
+.row-env div {
+    display:inline-block;
+}
+
+.btn-admin,
+.btn-remove {
+    border:none;
+    background: #E0E0E0;
+    color: rgba(255,255,255,0.9);
+    border-radius:50%;
+    width:25px;
+    height:25px;
+    border-radius:50%;
+    text-align: center;
+    cursor:pointer;
+    vertical-align: middle;
+}
+
+
+.btn-remove:hover {
+    background: #EF5350;
+    color: #FFF;
+}
+.btn-remove:before {
+    content: "\f102";
+    font-family:"Material-Design-Iconic-Font";
+    line-height:25px;
+    width:25px;
+    vertical-align: middle;
+    text-align: center;
+    display:inline-block;
+    font-size:16px;
+}
+.btn-admin.btn-checked,
+.btn-admin:hover {
+    background: #4CAF50;
+    color: #FFF;
+}
+.btn-admin:before {
+    content: "\f08e";
+    font-family:"Material-Design-Iconic-Font";
+    line-height:25px;
+    width:25px;
+    vertical-align: middle;
+    text-align: center;
+    display:inline-block;
+    font-size:16px;
+}
 
 
 
-
+.row-env .btn-remove {
+    position: absolute;
+    right: 0px;
+    top: 25px;
+}
+.row-user .btn-remove {
+    position: absolute;
+    right: 0px;
+    top: 40px;
+}
+.row-user .btn-admin {
+    position: absolute;
+    right: 40px;
+    top: 40px;
+}
 /*
 
 

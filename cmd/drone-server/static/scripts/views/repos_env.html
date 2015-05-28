@@ -22,19 +22,10 @@
 </div>
 <article>
 	<section style="padding:30px;">
-		<div ng-repeat="(key, value) in repo.params" style="
-padding: 30px 0px;
-border-bottom: 1px solid #EEE;
-font-size: 14px;
-color: #757575;font-family:'Droid Sans Mono','Roboto','Arial';position:relative;">
-			<div style="display:inline-block;"><span style="color:#2196F3">export</span> {{ key }} <span style="color:#2196F3">=</span></div>
-			<div style="display:inline-block;">{{ value }}</div>
-			<button ng-click="deleteParam(key)" style="position:absolute;right:0px;background: #EF5350;
-padding: 8px 10px;
-color: #FFF;
-font-family: Roboto;
-font-size:12px;
-text-transform: uppercase;">remove</button>
+		<div ng-repeat="(key, value) in repo.params" class="row-env">
+			<div><span>export</span> {{ key }} <span>=</span></div>
+			<div>{{ value }}</div>
+			<button ng-click="deleteParam(key)" class="btn-remove"></button>
 		</div>
 		<form style="padding-top:30px;font-family:'Droid Sans Mono','Roboto','Arial';font-size:14px;">
 			<span style="color:#2196F3">export</span>
