@@ -7,11 +7,11 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/pkg/bus"
+	"github.com/drone/drone/pkg/config"
 	"github.com/drone/drone/pkg/queue"
 	"github.com/drone/drone/pkg/remote"
 	"github.com/drone/drone/pkg/runner"
 	"github.com/drone/drone/pkg/server/session"
-	"github.com/drone/drone/pkg/settings"
 	"github.com/drone/drone/pkg/store"
 	common "github.com/drone/drone/pkg/types"
 )
@@ -91,17 +91,17 @@ func SetUpdater(u runner.Updater) gin.HandlerFunc {
 	}
 }
 
-func ToSettings(c *gin.Context) *settings.Settings {
-	v, ok := c.Get("settings")
+func ToSettings(c *gin.Context) *config.Config {
+	v, ok := c.Get("config")
 	if !ok {
 		return nil
 	}
-	return v.(*settings.Settings)
+	return v.(*config.Config)
 }
 
-func SetSettings(s *settings.Settings) gin.HandlerFunc {
+func SetSettings(s *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("settings", s)
+		c.Set("config", s)
 		c.Next()
 	}
 }
@@ -249,7 +249,7 @@ func MustAgent() gin.HandlerFunc {
 		conf := ToSettings(c)
 
 		// verify remote agents are enabled
-		if conf.Agents == nil || len(conf.Agents.Secret) == 0 {
+		if len(conf.Agents.Secret) == 0 {
 			c.AbortWithStatus(405)
 			return
 		}

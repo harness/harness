@@ -8,10 +8,10 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/elazarl/go-bindata-assetfs"
+	"github.com/drone/drone/pkg/config"
 	"github.com/drone/drone/pkg/remote/github"
 	"github.com/drone/drone/pkg/server"
 	"github.com/drone/drone/pkg/server/session"
-	"github.com/drone/drone/pkg/settings"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	eventbus "github.com/drone/drone/pkg/bus/builtin"
@@ -37,7 +37,7 @@ var (
 func main() {
 	flag.Parse()
 
-	settings, err := settings.Parse(*conf)
+	settings, err := config.Load(*conf)
 	if err != nil {
 		panic(err)
 	}
@@ -46,8 +46,8 @@ func main() {
 	store := store.New(db)
 	defer db.Close()
 
-	remote := github.New(settings.Service)
-	session := session.New(settings.Session)
+	remote := github.New(settings)
+	session := session.New(settings)
 	eventbus_ := eventbus.New()
 	queue_ := queue.New()
 	updater := runner.NewUpdater(eventbus_, store, remote)
@@ -55,7 +55,7 @@ func main() {
 
 	// launch the local queue runner if the system
 	// is not conifugred to run in agent mode
-	if settings.Agents != nil && settings.Agents.Secret != "" {
+	if len(settings.Agents.Secret) != 0 {
 		log.Infof("Run builds using remote build agents")
 	} else {
 		log.Infof("Run builds using the embedded build runner")

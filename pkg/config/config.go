@@ -40,6 +40,10 @@ type Config struct {
 		Expires int64  `envconfig:"optional"`
 	}
 
+	Agents struct {
+		Secret string `envconfig:"optional"`
+	}
+
 	Database struct {
 		Driver     string `envconfig:"optional"`
 		Datasource string `envconfig:"optional"`
@@ -56,7 +60,7 @@ type Config struct {
 
 	// Plugins represents a white-list of plugins
 	// that the system is authorized to load.
-	Plugins []string `envconfig:"white_list"`
+	Plugins []string `envconfig:"optional"`
 }
 
 // Load loads the configuration file and reads
