@@ -87,10 +87,24 @@
 			}
 			$scope.repo.params[param.key]=param.value;
 			$scope.param={}
+
+			// auto-update
+			repos.update($scope.repo).then(function(payload) {
+				$scope.repo = payload.data;
+			}).catch(function(err){
+				$scope.error = err;
+			});
 		}
 
 		$scope.deleteParam = function(key) {
 			delete $scope.repo.params[key];
+
+			// auto-update
+			repos.update($scope.repo).then(function(payload) {
+				$scope.repo = payload.data;
+			}).catch(function(err){
+				$scope.error = err;
+			});
 		}
 	}
 
