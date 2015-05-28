@@ -1346,10 +1346,21 @@ section .row {
     display: block;
     display: flex;
     text-decoration: none;
+    position: relative;
 }
 
-section .row:hover {
+section a.row:hover {
     background:#FAFAFA;
+}
+
+section a.row:after {
+    content: "\f29c";
+    font-family: Material-Design-Iconic-Font;
+    line-height: 74px;
+    font-size: 26px;
+    color: rgb(204, 204, 204);
+    position: absolute;
+    right: 25px;
 }
 
 section .row > div:first-child {
