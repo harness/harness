@@ -1236,6 +1236,7 @@ header .logo {
     height:56px;
     position: sticky;
     top: 0px;
+    z-index:1;
 
     box-shadow: 0 2px 5px 0 rgba(0,0,0,0.26);
     box-shadow: none;
@@ -1297,6 +1298,7 @@ pre.failure {
     border-left:10px solid #E57373;
     background: #424242;
 }
+
 
 article > pre {
     font-family: "Droid Sans Mono","Roboto","Arial";
@@ -1458,6 +1460,24 @@ section .build-row h3 {
 section .build-row strong {
     color:#616161;
     font-weight:normal;
+}
+
+section .build-row.sub-build-row > div {
+    padding-top:20px;
+    padding-bottom:20px;
+}
+section .build-row.sub-build-row h3 {
+    color:#212121;
+    font-size:15px;
+    margin-bottom:0px;
+    margin-top: 12px;
+}
+
+section .build-row.sub-build-row h3 > div {
+    margin-bottom:5px;
+}
+section .build-row.sub-build-row h3 > div:last-child {
+    margin-bottom:0px;
 }
 
 section > .search {
@@ -1659,8 +1679,8 @@ input:checked + .switch:active::before {
 .btn-remove:before {
     content: "\f102";
     font-family:"Material-Design-Iconic-Font";
-    line-height:25px;
-    width:25px;
+    /*line-height:25px;
+    width:25px;*/
     vertical-align: middle;
     text-align: center;
     display:inline-block;
@@ -1674,8 +1694,8 @@ input:checked + .switch:active::before {
 .btn-admin:before {
     content: "\f08e";
     font-family:"Material-Design-Iconic-Font";
-    line-height:25px;
-    width:25px;
+    /*line-height:25px;
+    width:25px;*/
     vertical-align: middle;
     text-align: center;
     display:inline-block;
