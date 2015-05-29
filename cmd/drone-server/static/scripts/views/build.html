@@ -36,48 +36,40 @@
 						<div class="status {{ build.state }}" ng-if="!task"></div>
 					</div>
 					<div class="commit-meta">
-						<h2>{{ build.message }}</h2>
-						<h3>authored <span>{{ build.created_at | fromNow }}</span> by <span>@{{ build.author }}</span></h3>
-
+						<h3>{{ build.message }}</h3>
+						<p><strong>{{ build.author }}</strong> pushed <strong>{{ build.sha.substr(0,8) }}</strong> to <strong>{{ build.branch }}</strong></p>
+						{{ build.exit_code }}
+						{{ build.started_at | fromNow }}
 						<span class="octicon octicon-git-commit">{{ build.sha.substr(0,8) }}</span>
 						<span class="octicon octicon-git-branch">{{ build.branch }}</span>
 						<span class="octicon octicon-clock" style="background:#FFF;">{{ build.duration | toDuration }} duration</span>
 
-						<span class="octicon octicon-settings" style="color: #BDBDBD; background:#FFF;position:absolute;top:20px;right:10px;padding:0px;font-size:24px;opacity:0.8;margin:0px;"></span>
-						<span class="md md-more-horiz" style="position:absolute;bottom:20px;right:20px;color:#BDBDBD;font-size:24px;opacity:0.8;margin:0px;"></span>
 
 					</div>
 
 				</section>
 
 			<section ng-if="build.builds.length > 1">
-				<table border="1">
-					<thead>
-						<tr>
-							<th>Number</th>
-							<th>Status</th>
-							<th>Started</th>
-							<th>Finished</th>
-							<th>Duration</th>
-							<th>Exit Code</th>
-							<th>Matrix</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr ng-repeat="task in build.builds">
-							<td><a ng-href="{{ repo.full_name }}/{{ build.sequence }}/{{ task.sequence }}">{{ task.sequence }}</a></td>
-							<td>{{ task.state }}</td>
-							<td>{{ task.started_at | fromNow }}</td>
-							<td>{{ task.finished_at | fromNow }}</td>
-							<td>{{ task.duration | toDuration }}</td>
-							<td>{{ task.exit_code }}</td>
-							<td>{{ task.environment }}</td>
-						</tr>
-					</tbody>
-				</table>
+
+				<a class="row build-row sub-build-row" ng-repeat="task in build.builds" ng-href="{{ repo.full_name }}/{{ build.sequence }}/{{ task.sequence }}">
+					<div>
+						<div ng-class="[ 'build-num', build.state ]">{{task.sequence}}</div>
+					</div>
+					<div>
+						<h3>
+							<div ng-repeat="(key, value) in task.environment">
+								{{ key.toUpperCase() }}={{ value }}
+							</div>
+						</h3>
+					</div>
+				</a>
+
+
+
+
 			</section>
 
-			<pre id="term" ng-if="task && task.state !== 'pending'" ng-class="[task.state]"></pre>
+			<pre id="term" ng-if="task && task.state !== 'pending'"></pre>
 
 
 
