@@ -62,7 +62,7 @@ DRONE_DOCKER_ADDR="tcp://10.0.0.1:2375"     # for [docker] section, 'addr' setti
 DRONE_AUTH_CLIENT="0123456789abcdef0123AA"  # for [auth] section, 'client' setting
 DRONE_AUTH_SECRET="<sha-1 hash secret>"     # for [auth] section, 'secret' setting
 
-exec bin/drone -config=drone.toml
+exec ./drone -config=drone.toml
 ```
 
 _NOTE: Configuration settings from environment variables override values set in the TOML file._

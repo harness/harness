@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/rpc"
 
-	"github.com/drone/drone/pkg/settings"
+	"github.com/drone/drone/pkg/config"
 	common "github.com/drone/drone/pkg/types"
 )
 
@@ -17,8 +17,8 @@ type Client struct {
 
 // New returns a new, remote datastore backend that connects
 // via tcp and exchanges data using Go's RPC mechanism.
-func New(service *settings.Service) (*Client, error) {
-	conn, err := net.Dial("tcp", service.Address)
+func New(conf *config.Config) (*Client, error) {
+	conn, err := net.Dial("tcp", conf.Server.Addr)
 	if err != nil {
 		return nil, err
 	}

@@ -66,7 +66,7 @@ type Config struct {
 // Load loads the configuration file and reads
 // parameters from environment variables.
 func Load(path string) (*Config, error) {
-	data, err := ioutil.ReadFile("drone.toml")
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -85,5 +85,15 @@ func LoadBytes(data []byte) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return conf, nil
+	return applyDefaults(conf), nil
+}
+
+func applyDefaults(c *Config) *Config {
+	// if no session token is provided we can
+	// instead use the client secret to sign
+	// our sessions and tokens.
+	if len(c.Session.Secret) == 0 {
+		c.Session.Secret = c.Auth.Secret
+	}
+	return c
 }
