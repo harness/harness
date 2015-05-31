@@ -66,3 +66,27 @@ exec ./drone -config=drone.toml
 ```
 
 _NOTE: Configuration settings from environment variables override values set in the TOML file._
+
+
+### From Source
+
+Commands to build from source:
+
+```sh
+make bindata # create .go files for web assets
+make         # create binary files in ./bin
+make test    # execute unit tests
+```
+
+Commands to run:
+
+```sh
+bin/drone
+bin/drone --debug # debug mode loads static content from filesystem
+```
+
+**NOTE** if you are seeing slow compile times you can try running `go install` for the vendored `go-sqlite3` library:
+
+```sh
+go install github.com/drone/drone/Godeps/_workspace/src/github.com/mattn/go-sqlite3
+```
