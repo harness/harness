@@ -40,6 +40,10 @@ type Config struct {
 		Expires int64  `envconfig:"optional"`
 	}
 
+	Agents struct {
+		Secret string `envconfig:"optional"`
+	}
+
 	Database struct {
 		Driver     string `envconfig:"optional"`
 		Datasource string `envconfig:"optional"`
@@ -56,13 +60,13 @@ type Config struct {
 
 	// Plugins represents a white-list of plugins
 	// that the system is authorized to load.
-	Plugins []string `envconfig:"white_list"`
+	Plugins []string `envconfig:"optional"`
 }
 
 // Load loads the configuration file and reads
 // parameters from environment variables.
 func Load(path string) (*Config, error) {
-	data, err := ioutil.ReadFile("drone.toml")
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -81,5 +85,15 @@ func LoadBytes(data []byte) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return conf, nil
+	return applyDefaults(conf), nil
+}
+
+func applyDefaults(c *Config) *Config {
+	// if no session token is provided we can
+	// instead use the client secret to sign
+	// our sessions and tokens.
+	if len(c.Session.Secret) == 0 {
+		c.Session.Secret = c.Auth.Secret
+	}
+	return c
 }
