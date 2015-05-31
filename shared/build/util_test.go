@@ -15,6 +15,8 @@ func TestParseImageName(t *testing.T) {
 		{"johnsmith", "redis", "latest", "johnsmith/redis"},
 		// image name with no owner specified
 		{"bradrydzewski", "redis", "2.8", "redis:2.8"},
+		// image name with hostname
+		{"docker.example.com/johnsmith", "redis", "latest", "docker.example.com/johnsmith/redis"},
 		// image name with ownly name specified
 		{"bradrydzewski", "redis2", "latest", "redis2"},
 		// image name that is a known alias
