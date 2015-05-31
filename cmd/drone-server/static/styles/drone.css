@@ -1396,6 +1396,33 @@ section .build-row .build-num {
     font-size: 16px;
     text-align: center;
 }
+
+section .build-row .build-num.success:after {
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  color: rgba(255, 255, 255, 0.701961);
+  font-size: 20px;
+  font-family: Material-Design-Iconic-Font;
+  opacity: 1;
+  font-size: 20px;
+  content: '\f084';
+}
+section .build-row .build-num.killed:after,
+section .build-row .build-num.error:after,
+section .build-row .build-num.failure:after {
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  color: rgba(255, 255, 255, 0.701961);
+  font-size: 20px;
+  font-family: Material-Design-Iconic-Font;
+  opacity: 1;
+  font-size: 20px;
+  content: "\f082";
+}
+
+
 section .build-row > div:last-child {
     padding-left:0px;
 }
@@ -1468,7 +1495,7 @@ section .build-row.sub-build-row > div {
 }
 section .build-row.sub-build-row h3 {
     color:#212121;
-    font-size:15px;
+    font-size:14px;
     margin-bottom:0px;
     margin-top: 12px;
 }
@@ -1719,49 +1746,6 @@ input:checked + .switch:active::before {
     right: 40px;
     top: 40px;
 }
-/*
-
-
-header {
-  background:transparent;
-}
-.toolbar {
-  position:static;
-  background:transparent;
-}
-.breadcrumb {
-  position:absolute !important;
-  background:transparent;
-  top:2px !important;
-  left:100px;
-}
-.breadcrumb a {
-  color:#424242;
-}
-.breadcrumb a.icon-home {
-  left:-35px;
-}
-.breadcrumb a:after {
-  color:rgba(0,0,0,0.5) !important;
-}
-article {
-  margin-top:-50px;
-}
-.menu {
-  max-width:900px;
-  margin:0 auto;
-  position: static !important;
-  top:auto;
-  right:auto;
-  height: 56px;
-}
-
-.menu .nav-item:before,
-.menu .nav-item:after {
-  color: #2f2f2f !important;
-}
-
-*/
 
 .slider-label {
   display:inline-block;
@@ -1865,3 +1849,49 @@ input[type=range]:focus::-ms-fill-lower {
 input[type=range]:focus::-ms-fill-upper {
   background: #367ebd;
 }
+
+
+
+
+
+/*
+header {
+  background:transparent;
+}
+.toolbar {
+  position:static;
+  background:transparent;
+}
+.breadcrumb {
+  position:absolute !important;
+  background:transparent;
+  top:2px !important;
+  left:100px;
+}
+.breadcrumb a {
+  color:#424242;
+}
+.breadcrumb a.icon-home {
+  left:-35px;
+}
+.breadcrumb a:after {
+  color:rgba(0,0,0,0.5) !important;
+}
+article {
+  margin-top:-50px;
+}
+.menu {
+  max-width:900px;
+  margin:0 auto;
+  position: static !important;
+  top:auto;
+  right:auto;
+  height: 56px;
+}
+
+.menu .nav-item:before,
+.menu .nav-item:after {
+  color: #2f2f2f !important;
+}
+
+*/
