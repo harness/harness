@@ -12,9 +12,9 @@ import (
 	. "github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/stretchr/testify/mock"
+	"github.com/drone/drone/pkg/config"
 	"github.com/drone/drone/pkg/server/recorder"
 	"github.com/drone/drone/pkg/server/session"
-	"github.com/drone/drone/pkg/settings"
 	"github.com/drone/drone/pkg/store/mock"
 	"github.com/drone/drone/pkg/types"
 )
@@ -60,9 +60,10 @@ func TestToken(t *testing.T) {
 				ctx.Set("datastore", store)
 				ctx.Set("user", &types.User{Login: "Freya"})
 
-				config := settings.Settings{Session: &settings.Session{Secret: "Otto"}}
-				ctx.Set("settings", &config)
-				ctx.Set("session", session.New(config.Session))
+				conf := &config.Config{}
+				conf.Session.Secret = "Otto"
+				ctx.Set("settings", conf)
+				ctx.Set("session", session.New(conf))
 
 				// prepare the mock
 				store.On("AddToken", mock.AnythingOfType("*types.Token")).Return(test.storeErr).Once()
@@ -98,9 +99,10 @@ func TestToken(t *testing.T) {
 				ctx.Set("datastore", store)
 				ctx.Set("user", &types.User{Login: "Freya"})
 
-				config := settings.Settings{Session: &settings.Session{Secret: "Otto"}}
-				ctx.Set("settings", &config)
-				ctx.Set("session", session.New(config.Session))
+				conf := &config.Config{}
+				conf.Session.Secret = "Otto"
+				ctx.Set("settings", conf)
+				ctx.Set("session", session.New(conf))
 
 				// prepare the mock
 				store.On("TokenLabel", mock.AnythingOfType("*types.User"), test.inLabel).Return(test.outToken, test.errTokenLabel).Once()

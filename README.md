@@ -31,20 +31,18 @@ path = "/etc/drone/drone.db"
 [docker]
 cert = ""
 key = ""
-nodes = [
-  "unix:///var/run/docker.sock",
-  "unix:///var/run/docker.sock"
-]
+addr = "unix:///var/run/docker.sock"
+swarm = ""
 
 [service]
-name = "github"
+kind = "github"
 base = "https://github.com"
 orgs = []
 open = false
-private_mode = false
+private = false
 skip_verify = true
 
-[service.oauth]
+[auth]
 client = ""
 secret = ""
 authorize = "https://github.com/login/oauth/authorize"
@@ -54,3 +52,17 @@ request_token = ""
 [agents]
 secret = ""
 ```
+
+Configuration settings can also be set by environment variables using the scheme `DRONE_<section>_<confkey>`, substituting the section title for `<section>` and the key for `<confkey>`, in all caps. For example:
+
+```shell
+#!/bin/bash
+# prepare environment for executing drone
+DRONE_DOCKER_ADDR="tcp://10.0.0.1:2375"     # for [docker] section, 'addr' setting
+DRONE_AUTH_CLIENT="0123456789abcdef0123AA"  # for [auth] section, 'client' setting
+DRONE_AUTH_SECRET="<sha-1 hash secret>"     # for [auth] section, 'secret' setting
+
+exec ./drone -config=drone.toml
+```
+
+_NOTE: Configuration settings from environment variables override values set in the TOML file._

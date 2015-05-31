@@ -36,9 +36,9 @@ func GetLogin(c *gin.Context) {
 	// Auth (username and password). This will delegate
 	// authorization accordingly.
 	switch {
-	case settings.Service.OAuth == nil:
-		getLoginBasic(c)
-	case settings.Service.OAuth.RequestToken != "":
+	// case settings.Auth == nil:
+	// 	getLoginBasic(c)
+	case settings.Auth.RequestToken != "":
 		getLoginOauth1(c)
 	default:
 		getLoginOauth2(c)
@@ -52,9 +52,9 @@ func GetLogin(c *gin.Context) {
 	login := ToUser(c)
 
 	// check organization membership, if applicable
-	if len(settings.Service.Orgs) != 0 {
+	if len(settings.Remote.Orgs) != 0 {
 		orgs, _ := remote.Orgs(login)
-		if !checkMembership(orgs, settings.Service.Orgs) {
+		if !checkMembership(orgs, settings.Remote.Orgs) {
 			c.Redirect(303, "/login#error=access_denied_org")
 			return
 		}
@@ -73,7 +73,7 @@ func GetLogin(c *gin.Context) {
 		// if self-registration is disabled we should
 		// return a notAuthorized error. the only exception
 		// is if no users exist yet in the system we'll proceed.
-		if !settings.Service.Open && count != 0 {
+		if !settings.Remote.Open && count != 0 {
 			log.Errorf("cannot register %s. registration closed", login.Login)
 			c.Redirect(303, "/login#error=access_denied")
 			return
@@ -137,11 +137,11 @@ func getLoginOauth2(c *gin.Context) {
 	var remote = ToRemote(c)
 
 	var config = &oauth2.Config{
-		ClientId:     settings.Service.OAuth.Client,
-		ClientSecret: settings.Service.OAuth.Secret,
-		Scope:        strings.Join(settings.Service.OAuth.Scope, ","),
-		AuthURL:      settings.Service.OAuth.Authorize,
-		TokenURL:     settings.Service.OAuth.AccessToken,
+		ClientId:     settings.Auth.Client,
+		ClientSecret: settings.Auth.Secret,
+		Scope:        strings.Join(settings.Auth.Scope, ","),
+		AuthURL:      settings.Auth.Authorize,
+		TokenURL:     settings.Auth.AccessToken,
 		RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURL(c.Request)),
 		//settings.Server.Scheme, settings.Server.Hostname),
 	}

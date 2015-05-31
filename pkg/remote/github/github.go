@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/hashicorp/golang-lru"
-	"github.com/drone/drone/pkg/settings"
+	"github.com/drone/drone/pkg/config"
 	common "github.com/drone/drone/pkg/types"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/google/go-github/github"
@@ -33,14 +33,14 @@ type GitHub struct {
 	cache *lru.Cache
 }
 
-func New(service *settings.Service) *GitHub {
+func New(conf *config.Config) *GitHub {
 	var github = GitHub{
 		API:         DefaultAPI,
 		URL:         DefaultURL,
-		Client:      service.OAuth.Client,
-		Secret:      service.OAuth.Secret,
-		PrivateMode: service.PrivateMode,
-		SkipVerify:  service.SkipVerify,
+		Client:      conf.Auth.Client,
+		Secret:      conf.Auth.Secret,
+		PrivateMode: conf.Remote.Private,
+		SkipVerify:  conf.Remote.SkipVerify,
 	}
 	var err error
 	github.cache, err = lru.New(1028)
@@ -50,9 +50,9 @@ func New(service *settings.Service) *GitHub {
 
 	// if GitHub enterprise then ensure we're using the
 	// appropriate URLs
-	if !strings.HasPrefix(service.Base, DefaultURL) && len(service.Base) != 0 {
-		github.URL = service.Base
-		github.API = service.Base + "/api/v3/"
+	if !strings.HasPrefix(conf.Remote.Base, DefaultURL) && len(conf.Remote.Base) != 0 {
+		github.URL = conf.Remote.Base
+		github.API = conf.Remote.Base + "/api/v3/"
 	}
 	// the API must have a trailing slash
 	if !strings.HasSuffix(github.API, "/") {
