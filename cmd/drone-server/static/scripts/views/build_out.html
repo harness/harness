@@ -9,14 +9,15 @@
 <div class="toolbar">
 
 	<div class="breadcrumb"  style="position:relative;top:0px;">
-		<a ng-href="/{{ repo.full_name }}" class="icon icon-home"></a>
+		<a ng-href="/{{ repo.full_name }}/{{ build.sequence }}" class="icon icon-home"></a>
 		<a ng-href="/{{ repo.full_name }}">{{ repo.owner }} / {{ repo.name }}</a>
 		<span class="spacer"></span>
-		<a ng-href="#">{{ build.sequence }}</a>
+		<a ng-href="/{{ repo.full_name }}/{{ build.sequence }}">{{ build.sequence }}</a>
+		<span class="spacer"></span>
+		<a href="#">{{ task.sequence }}</a>
 	</div>
 
 	<div class="menu">
-		<a href="settings.html" class="icon icon-settings"></a>
 		<a ng-href="/{{ repo.full_name }}/edit" class="nav-item settings float-right"></a>
 		<button ng-click="watch(repo)"   ng-if="!repo.starred" class="nav-item star float-right"></button>
 		<button ng-click="unwatch(repo)" ng-if="repo.starred"  class="nav-item unstar float-right"></button>
@@ -27,6 +28,7 @@
 
 
 	<article>
+
 			<section class="commit-section">
 					<div class="commit-status">
 						<div class="status {{ task.state }}" ng-if="task"></div>
@@ -40,24 +42,18 @@
 						<span class="octicon octicon-git-commit">{{ build.sha.substr(0,8) }}</span>
 						<span class="octicon octicon-git-branch">{{ build.branch }}</span>
 						<span class="octicon octicon-clock" style="background:#FFF;">{{ build.duration | toDuration }} duration</span>
-					</div>
-			</section>
 
-			<section>
-				<a class="row build-row sub-build-row" ng-repeat="task in build.builds" ng-href="{{ repo.full_name }}/{{ build.sequence }}/{{ task.sequence }}">
-					<div>
-						<div ng-class="[ 'build-num', build.state ]"></div>
+
 					</div>
-					<div>
-						<h3>
+
 							<div ng-repeat="(key, value) in task.environment">
 								{{ key.toUpperCase() }}={{ value }}
 							</div>
-						</h3>
-						<div style="position:absolute;top:30px;right:30px;color:#CCC;"># {{task.sequence}}</div>
-					</div>
-				</a>
-			</section>
+		</section>
+
+
+		<pre id="term" ng-if="task && task.state !== 'pending'"></pre>
+		<button class="fab" ng-if="build.state === 'running'" ng-click="tail()"></button>
 	</article>
 
 

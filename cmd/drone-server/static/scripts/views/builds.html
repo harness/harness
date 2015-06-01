@@ -27,11 +27,12 @@
 	<section>
 		<a class="row build-row" ng-repeat="build in builds | orderBy:'-sequence'" ng-href="/{{ repo.full_name }}/{{ build.sequence }}">
 			<div>
-				<div ng-class="[ 'build-num', build.state ]">{{ build.sequence }}</div>
+				<div ng-class="[ 'build-num', build.state ]"></div>
 			</div>
 			<div>
 				<h3>{{ build.message }}</h3>
 				<p><strong>{{ build.author }}</strong> pushed to <strong>{{ build.branch }}</strong> {{ build.started_at | fromNow }}</p>
+				<div style="position:absolute;top:30px;right:30px;color:#CCC;"># {{build.sequence}}</div>
 			</div>
 		</a>
 	</section>

@@ -98,8 +98,8 @@
 			resolve: resolveUser
 		})
 		.when('/:owner/:name/:number/:step', {
-			templateUrl: '/static/scripts/views/build.html',
-			controller: 'BuildCtrl',
+			templateUrl: '/static/scripts/views/build_out.html',
+			controller: 'BuildOutCtrl',
 			resolve: resolveUser
 		});
 
