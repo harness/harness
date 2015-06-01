@@ -1395,6 +1395,10 @@ section .build-row .build-num {
     color: rgba(255,255,255,0.9);
     font-size: 16px;
     text-align: center;
+
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
 }
 
 section .build-row .build-num.success:after {
@@ -1463,6 +1467,10 @@ section .icon {
     color: rgba(255,255,255,0.9);
     font-size: 16px;
     text-align: center;
+
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
 }
 section .icon-repo:after {
   font-size: 18px;
@@ -1495,9 +1503,10 @@ section .build-row.sub-build-row > div {
 }
 section .build-row.sub-build-row h3 {
     color:#212121;
-    font-size:14px;
+    font-size:13px;
     margin-bottom:0px;
     margin-top: 12px;
+    font-family: "Droid Sans Mono","Roboto","Arial";
 }
 
 section .build-row.sub-build-row h3 > div {

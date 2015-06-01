@@ -66,6 +66,46 @@
 	 */
 	function BuildCtrl($scope, $routeParams, $window, logs, builds, repos, users) {
 
+		var number = $routeParams.number;
+		var owner = $routeParams.owner;
+		var name  = $routeParams.name;
+		var fullName = owner+'/'+name;
+
+		// Gets the currently authenticated user
+		users.getCached().then(function(payload){
+			$scope.user = payload.data;
+		});
+
+		// Gets a repository
+		repos.get(fullName).then(function(payload){
+			$scope.repo = payload.data;
+		}).catch(function(err){
+			$scope.error = err;
+		});
+
+		// Gets the build
+		builds.get(fullName, number).then(function(payload){
+			$scope.build = payload.data;
+		}).catch(function(err){
+			$scope.error = err;
+		});
+
+		repos.subscribe(fullName, function(event) {
+			if (event.sequence !== parseInt(number)) {
+				return; // ignore
+			}
+			// update the build
+			$scope.build = event;
+			$scope.$apply();
+		});
+	}
+
+
+	/**
+	 * BuildOutCtrl responsible for rendering a build output.
+	 */
+	function BuildOutCtrl($scope, $routeParams, $window, logs, builds, repos, users) {
+
 		var step = parseInt($routeParams.step) || 1;
 		var number = $routeParams.number;
 		var owner = $routeParams.owner;
@@ -171,12 +211,12 @@
 				streaming = false;
 			}
 		});
-
-
 	}
+
 
 	angular
 		.module('drone')
+		.controller('BuildOutCtrl', BuildOutCtrl)
 		.controller('BuildCtrl', BuildCtrl)
 		.controller('BuildsCtrl', BuildsCtrl);
 })();
