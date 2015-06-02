@@ -1510,7 +1510,7 @@ section .build-row.sub-build-row h3 {
 }
 
 section .build-row.sub-build-row h3 > div {
-    margin-bottom:5px;
+    margin-bottom:7px;
 }
 section .build-row.sub-build-row h3 > div:last-child {
     margin-bottom:0px;
