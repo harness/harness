@@ -1409,7 +1409,7 @@ section .build-row .build-num.success:after {
   font-size: 20px;
   font-family: Material-Design-Iconic-Font;
   opacity: 1;
-  font-size: 20px;
+  font-size: 16px;
   content: '\f084';
 }
 section .build-row .build-num.killed:after,
@@ -1422,7 +1422,7 @@ section .build-row .build-num.failure:after {
   font-size: 20px;
   font-family: Material-Design-Iconic-Font;
   opacity: 1;
-  font-size: 20px;
+  font-size: 16px;
   content: "\f082";
 }
 
@@ -1506,7 +1506,7 @@ section .build-row.sub-build-row h3 {
     font-size:13px;
     margin-bottom:0px;
     margin-top: 12px;
-    font-family: "Droid Sans Mono","Roboto","Arial";
+    /*font-family: "Droid Sans Mono","Roboto","Arial";*/
 }
 
 section .build-row.sub-build-row h3 > div {
