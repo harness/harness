@@ -30,26 +30,32 @@
 	<article>
 
 			<section class="commit-section">
-					<div class="commit-status">
-						<div class="status {{ task.state }}" ng-if="task"></div>
-						<div class="status {{ build.state }}" ng-if="!task"></div>
+				<div class="row build-row">
+					<div>
+						<div ng-class="[ 'build-num', task.state ]"  ng-if="task"></div>
+						<div ng-class="[ 'build-num', build.state ]" ng-if="!task"></div>
 					</div>
-					<div class="commit-meta">
+					<div>
 						<h3>{{ build.message }}</h3>
-						<p><strong>{{ build.author }}</strong> pushed <strong>{{ build.sha.substr(0,8) }}</strong> to <strong>{{ build.branch }}</strong></p>
-						{{ build.exit_code }}
-						{{ build.started_at | fromNow }}
-						<span class="octicon octicon-git-commit">{{ build.sha.substr(0,8) }}</span>
-						<span class="octicon octicon-git-branch">{{ build.branch }}</span>
-						<span class="octicon octicon-clock" style="background:#FFF;">{{ build.duration | toDuration }} duration</span>
-
-
+						<p><strong>{{ build.author }}</strong> pushed to <strong>{{ build.branch }}</strong> {{ build.started_at | fromNow }}</p>
 					</div>
+				</div>
 
+				<div class="row build-row sub-build-row">
+					<div>
+						
+					</div>
+					<div>
+						<h3 style="margin-top:0px">
 							<div ng-repeat="(key, value) in task.environment">
 								{{ key.toUpperCase() }}={{ value }}
 							</div>
-		</section>
+						</h3>
+					</div>
+				</div>
+			</section>
+	
+
 
 
 		<pre id="term" ng-if="task && task.state !== 'pending'"></pre>
