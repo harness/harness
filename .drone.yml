@@ -1,9 +1,11 @@
-image: library/golang:1.4.2
+image: go1.3
 git:
   path: github.com/drone/drone
+env:
+  - GOROOT=/usr/local/go
+  - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+
 script:
-  - export GOPATH=/var/cache/drone
-  - export PATH=$PATH:$GOPATH/bin
   - go get golang.org/x/tools/cmd/cover
   - go get golang.org/x/tools/cmd/vet
   - go get -u github.com/jteeuwen/go-bindata/...
