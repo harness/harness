@@ -5,7 +5,7 @@ env:
   - GOROOT=/usr/local/go
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 script:
-  - apt-get update && apt-get -y install dpkg
+  - sudo apt-get update && sudo apt-get -y install dpkg
   - git clone git://github.com/gin-gonic/gin.git $GOPATH/src/github.com/gin-gonic/gin
   - go get -u github.com/jteeuwen/go-bindata/...
   - make bindata deps
