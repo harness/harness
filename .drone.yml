@@ -7,8 +7,7 @@ env:
 script:
   - sudo add-apt-repository ppa:git-core/ppa 1> /dev/null 2> /dev/null
   - sudo apt-get update 1> /dev/null 2> /dev/null
-  - sudo apt-get update 1> /dev/null 2> /dev/null
-  - sudo apt-get -y install git zip libsqlite3-dev sqlite3 rpm 1> /dev/null 2> /dev/null
+  - sudo apt-get -y install git zip libsqlite3-dev sqlite3 rpm dpkg 1> /dev/null 2> /dev/null
   - gem install fpm
   - rbenv rehash
   - make deps
