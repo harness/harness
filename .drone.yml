@@ -2,7 +2,7 @@ image: library/golang:1.4.2
 git:
   path: github.com/drone/drone
 script:
-  - export /var/cache/drone=/drone
+  - export GOPATH=/var/cache/drone
   - export PATH=$PATH:$GOPATH/bin
   - go get -u github.com/jteeuwen/go-bindata/...
   - make bindata deps
