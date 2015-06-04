@@ -1,12 +1,9 @@
-image: go1.3
+image: library/golang:1.4.2
 git:
   path: github.com/drone/drone
-env:
-  - GOROOT=/usr/local/go
-  - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 script:
-  - sudo apt-get update && sudo apt-get -y install dpkg
-  - git clone git://github.com/gin-gonic/gin.git $GOPATH/src/github.com/gin-gonic/gin
+  - export /var/cache/drone=/drone
+  - export PATH=$PATH:$GOPATH/bin
   - go get -u github.com/jteeuwen/go-bindata/...
   - make bindata deps
   - make build
