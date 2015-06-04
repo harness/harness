@@ -1,0 +1,36 @@
+[server]
+addr = ":80"
+cert = ""
+key = ""
+
+# [session]
+# secret = ""
+# expires = ""
+
+[database]
+path = "/var/lib/drone/drone.sqlite"
+
+[docker]
+cert = ""
+key = ""
+addr = "unix:///var/run/docker.sock"
+swarm = ""
+
+# [service]
+# kind = "github"
+# base = "https://github.com"
+# orgs = []
+# open = false
+# private = false
+# skip_verify = true
+
+# [auth]
+# client = ""
+# secret = ""
+# authorize = "https://github.com/login/oauth/authorize"
+# access_token = "https://github.com/login/oauth/access_token"
+# request_token = ""
+
+# [agents]
+# secret = ""
+

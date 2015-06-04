@@ -18,9 +18,10 @@ drone
 *.rice-box.go
 *.db
 *.txt
-*.toml
 *.min.js
 *_bindata.go
+*.toml
+!dist/drone/etc/drone/drone.toml
 
 # generate binaries
 cmd/drone-agent/drone-agent
