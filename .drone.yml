@@ -11,6 +11,7 @@ script:
   - make build
   - make test
   - make dist
+  - apt-get update && apt-get -y install dpkg
 
 notify:
   email:
