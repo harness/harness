@@ -1,4 +1,4 @@
-image: library/golang:1.4.2-wheezy
+image: library/golang:1.4.2
 git:
   path: github.com/drone/drone
 script:
