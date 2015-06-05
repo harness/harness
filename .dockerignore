@@ -1,0 +1,11 @@
+bin/
+cmd/drone-server/drone_bindata.go
+dist/
+doc/
+
+.dockerignore
+.drone.yml
+.gitignore
+Dockerfile
+LICENSE
+README.md
