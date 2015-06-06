@@ -92,7 +92,7 @@ func execClone(c *Context) (int, error) {
 
 func execBuild(c *Context) (int, error) {
 	conf := toContainerConfig(c.Conf.Build)
-	conf.Entrypoint = []string{"/bin/bash", "-e"}
+	conf.Entrypoint = []string{"/bin/sh", "-e"}
 	conf.Cmd = []string{"/drone/bin/build.sh"}
 	info, err := run(c.client, conf, c.Conf.Build.Pull)
 	if err != nil {
