@@ -34,7 +34,7 @@ key = ""
 addr = "unix:///var/run/docker.sock"
 swarm = ""
 
-[service]
+[remote]
 kind = "github"
 base = "https://github.com"
 orgs = []
@@ -53,19 +53,24 @@ request_token = ""
 secret = ""
 ```
 
-Configuration settings can also be set by environment variables using the scheme `DRONE_<section>_<confkey>`, substituting the section title for `<section>` and the key for `<confkey>`, in all caps. For example:
+Configuration settings can also be set by environment variables using the scheme
+`DRONE_<section>_<confkey>`, substituting the section title for `<section>` and
+the key for `<confkey>`, in all caps. For example:
 
 ```shell
 #!/bin/bash
 # prepare environment for executing drone
+DRONE_REMOTE_BASE="https://github.com"      # for [remote] section, 'base' setting
 DRONE_DOCKER_ADDR="tcp://10.0.0.1:2375"     # for [docker] section, 'addr' setting
 DRONE_AUTH_CLIENT="0123456789abcdef0123AA"  # for [auth] section, 'client' setting
 DRONE_AUTH_SECRET="<sha-1 hash secret>"     # for [auth] section, 'secret' setting
+DRONE_AUTH_ACCESSTOKEN="<url>"              # for [auth] section, 'access_token' setting
 
 exec ./drone -config=drone.toml
 ```
 
-_NOTE: Configuration settings from environment variables override values set in the TOML file._
+_NOTE: Configuration settings from environment variables override values set in
+the TOML file._
 
 
 ### From Source
@@ -85,7 +90,8 @@ bin/drone
 bin/drone --debug # debug mode loads static content from filesystem
 ```
 
-**NOTE** if you are seeing slow compile times you can try running `go install` for the vendored `go-sqlite3` library:
+**NOTE** if you are seeing slow compile times you can try running `go install`
+for the vendored `go-sqlite3` library:
 
 ```sh
 go install github.com/drone/drone/Godeps/_workspace/src/github.com/mattn/go-sqlite3
