@@ -292,5 +292,5 @@ func GetKeyTitle(rawurl string) (string, error) {
 }
 
 func GetHook(user *model.User, repo *model.Repo, link string) string {
-	return fmt.Sprintf("%s?owner=%s&name=%s&branch=${refChange.name}&hash=${refChange.toHash}&message=${refChange.type}&author=${user.displayName}", link, repo.Owner, repo.Name)
+	return fmt.Sprintf("%s?owner=%s&name=%s&branch=${refChange.name}&hash=${refChange.toHash}&message=${refChange.type}&author=${user.name}", link, repo.Owner, repo.Name)
 }
