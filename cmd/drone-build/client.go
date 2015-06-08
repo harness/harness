@@ -46,7 +46,7 @@ func newClient(docker dockerclient.Client) (*client, error) {
 	conf.HostConfig = dockerclient.HostConfig{}
 	conf.Entrypoint = []string{"/bin/sleep"}
 	conf.Cmd = []string{"86400"}
-	conf.Image = "busybox"
+	conf.Image = "gliderlabs/alpine:3.1"
 	conf.Volumes = map[string]struct{}{}
 	conf.Volumes["/drone"] = struct{}{}
 	info, err := daemon(docker, conf, false)
