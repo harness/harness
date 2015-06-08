@@ -54,5 +54,7 @@ build:
   commands:
     - apt-get update 1> /dev/null 2> /dev/null
     - apt-get -y install libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
+    - go get golang.org/x/tools/cmd/vet
+    - go get golang.org/x/tools/cmd/cover
     - make deps
     - make test
