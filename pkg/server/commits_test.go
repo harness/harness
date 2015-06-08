@@ -305,6 +305,7 @@ func TestCommits(t *testing.T) {
 			// Start mock
 			store.On("CommitSeq", repo1, mock.AnythingOfType("int")).Return(commit1, nil).Once()
 			store.On("BuildList", commit1).Return(commit1.Builds, nil).Once()
+			store.On("User", repo1.UserID).Return(user1, nil).Once()
 			store.On("SetCommit", commit1).Return(nil).Once()
 			store.On("Netrc", user1).Return(netrc1, nil).Once()
 			RunBuild(ctx)
@@ -377,7 +378,7 @@ func TestCommits(t *testing.T) {
 			ctx.Set("queue", queue1)
 			ctx.Set("runner", runner1)
 			// Start mock
-			store.On("CommitSeq", repo1, mock.AnythingOfType("int")).Return(commit1, nil).Once()
+			store.On("CommitSeq", repo1, 1).Return(commit1, nil).Once()
 			store.On("BuildList", commit1).Return(commit1.Builds, nil).Once()
 			store.On("SetCommit", commit1).Return(nil).Once()
 			KillBuild(ctx)
