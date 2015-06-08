@@ -77,10 +77,6 @@ func ParseSingle(raw string, opts *Opts) (*common.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = LintPlugins(conf, opts)
-	if err != nil {
-		return nil, err
-	}
 	// apply rules / transofms
 	transformSetup(conf)
 	transformClone(conf)
@@ -95,6 +91,10 @@ func ParseSingle(raw string, opts *Opts) (*common.Config, error) {
 	}
 	if !opts.Privileged {
 		rmPrivileged(conf)
+	}
+	err = LintPlugins(conf, opts)
+	if err != nil {
+		return nil, err
 	}
 	return conf, err
 }

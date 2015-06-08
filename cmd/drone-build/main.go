@@ -54,6 +54,7 @@ func main() {
 	if err != nil {
 		log.Errorln("Error starting build server pod", err)
 		os.Exit(1)
+		return
 	}
 	ctx.client = client
 	defer client.Destroy()
@@ -65,6 +66,7 @@ func main() {
 		log.Errorln("Error processing .drone.yml file.", err)
 		client.Destroy()
 		os.Exit(1)
+		return
 	}
 
 	var execs []execFunc
