@@ -41,3 +41,18 @@ publish:
     recursive: true
     when:
       owner: drone
+
+
+
+
+# new build script for 0.4 branch
+
+build:
+  image: golang:1.4.2
+  environment:
+    - GOPATH=/drone
+  commands:
+    - apt-get update 1> /dev/null 2> /dev/null
+    - apt-get -y install libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
+    - make deps
+    - make test
