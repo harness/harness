@@ -142,7 +142,6 @@ CREATE TABLE IF NOT EXISTS commits (
 	,commit_created        INTEGER
 	,commit_updated        INTEGER
 	,UNIQUE(repo_id, commit_seq)
-	,UNIQUE(repo_id, commit_sha, commit_ref)
 );
 `
 
