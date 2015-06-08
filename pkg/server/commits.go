@@ -114,6 +114,8 @@ func RunBuild(c *gin.Context) {
 	store := ToDatastore(c)
 	queue_ := ToQueue(c)
 	repo := ToRepo(c)
+	conf := ToSettings(c)
+
 	num, err := strconv.Atoi(c.Params.ByName("number"))
 	if err != nil {
 		c.Fail(400, err)
@@ -185,12 +187,14 @@ func RunBuild(c *gin.Context) {
 	c.JSON(202, commit)
 
 	queue_.Publish(&queue.Work{
-		User:   user,
-		Repo:   repo,
-		Commit: commit,
-		Keys:   keys,
-		Netrc:  netrc,
-		Yaml:   raw,
+		User:    user,
+		Repo:    repo,
+		Commit:  commit,
+		Keys:    keys,
+		Netrc:   netrc,
+		Yaml:    raw,
+		Plugins: conf.Plugins,
+		Env:     conf.Environment,
 	})
 }
 

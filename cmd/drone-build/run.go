@@ -29,9 +29,9 @@ type Context struct {
 func setup(c *Context) error {
 	var err error
 	var opts = parser.Opts{
-		Network:    true,
-		Privileged: true,
-		Volumes:    true,
+		Network:    false,
+		Privileged: false,
+		Volumes:    false,
 		Whitelist:  c.Plugins,
 	}
 

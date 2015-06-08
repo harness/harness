@@ -22,6 +22,7 @@ func PostHook(c *gin.Context) {
 	store := ToDatastore(c)
 	queue_ := ToQueue(c)
 	sess := ToSession(c)
+	conf := ToSettings(c)
 
 	hook, err := remote.Hook(c.Request)
 	if err != nil {
@@ -151,11 +152,13 @@ func PostHook(c *gin.Context) {
 	}
 
 	queue_.Publish(&queue.Work{
-		User:   user,
-		Repo:   repo,
-		Commit: commit,
-		Keys:   keys,
-		Netrc:  netrc,
-		Yaml:   raw,
+		User:    user,
+		Repo:    repo,
+		Commit:  commit,
+		Keys:    keys,
+		Netrc:   netrc,
+		Yaml:    raw,
+		Plugins: conf.Plugins,
+		Env:     conf.Environment,
 	})
 }
