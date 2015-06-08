@@ -9,7 +9,7 @@ import (
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/elazarl/go-bindata-assetfs"
 	"github.com/drone/drone/pkg/config"
-	"github.com/drone/drone/pkg/remote/github"
+	"github.com/drone/drone/pkg/remote/builtin/github"
 	"github.com/drone/drone/pkg/server"
 	"github.com/drone/drone/pkg/server/session"
 

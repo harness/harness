@@ -61,6 +61,39 @@ type Config struct {
 	// Plugins represents a white-list of plugins
 	// that the system is authorized to load.
 	Plugins []string `envconfig:"optional"`
+
+	Github struct {
+		Client string   `envconfig:"optional"`
+		Secret string   `envconfig:"optional"`
+		Orgs   []string `envconfig:"optional"`
+		Open   bool     `envconfig:"optional"`
+	}
+
+	GithubEnterprise struct {
+		URL        string   `envconfig:"optional"`
+		Client     string   `envconfig:"optional"`
+		Secret     string   `envconfig:"optional"`
+		Private    bool     `envconfig:"optional"`
+		SkipVerify bool     `envconfig:"optional"`
+		Open       bool     `envconfig:"optional"`
+		Orgs       []string `envconfig:"optional"`
+	}
+
+	Bitbucket struct {
+		Client string   `envconfig:"optional"`
+		Secret string   `envconfig:"optional"`
+		Open   bool     `envconfig:"optional"`
+		Orgs   []string `envconfig:"optional"`
+	}
+
+	Gitlab struct {
+		URL        string   `envconfig:"optional"`
+		Client     string   `envconfig:"optional"`
+		Secret     string   `envconfig:"optional"`
+		SkipVerify bool     `envconfig:"optional"`
+		Open       bool     `envconfig:"optional"`
+		Orgs       []string `envconfig:"optional"`
+	}
 }
 
 // Load loads the configuration file and reads
