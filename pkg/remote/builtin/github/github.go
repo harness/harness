@@ -301,6 +301,9 @@ func (g *GitHub) pullRequest(r *http.Request) (*common.Hook, error) {
 	if hook.Action != "opened" && hook.Action != "synchronize" {
 		return nil, nil
 	}
+	if *hook.PullRequest.State != "open" {
+		return nil, nil
+	}
 
 	repo := &common.Repo{}
 	repo.Owner = *hook.Repo.Owner.Login
