@@ -64,7 +64,7 @@ func (p *Pool) List() []worker.Worker {
 	defer p.Unlock()
 
 	var workers []worker.Worker
-	for w, _ := range p.workers {
+	for w := range p.workers {
 		workers = append(workers, w)
 	}
 	return workers
