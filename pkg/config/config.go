@@ -56,6 +56,10 @@ type Config struct {
 		Swarm bool   `envconfig:"optional"`
 	}
 
+	// Environment represents a set of global environment
+	// variable declarations that can be injected into
+	// build plugins. An example use case might be SMTP
+	// configuration.
 	Environment []string `envconfig:"optional"`
 
 	// Plugins represents a white-list of plugins
