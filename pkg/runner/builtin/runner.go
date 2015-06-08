@@ -190,12 +190,14 @@ func (r *Runner) Run(w *queue.Work) error {
 	// the destroy all containers afterward.
 	for i, build := range w.Commit.Builds {
 		work := &work{
-			Repo:   w.Repo,
-			Commit: w.Commit,
-			Keys:   w.Keys,
-			Netrc:  w.Netrc,
-			Yaml:   w.Yaml,
-			Build:  build,
+			Repo:    w.Repo,
+			Commit:  w.Commit,
+			Keys:    w.Keys,
+			Netrc:   w.Netrc,
+			Yaml:    w.Yaml,
+			Build:   build,
+			Env:     w.Env,
+			Plugins: w.Plugins,
 		}
 		in, err := json.Marshal(work)
 		if err != nil {
