@@ -6,6 +6,7 @@ doc/
 .dockerignore
 .drone.yml
 .gitignore
+drone.sqlite
 Dockerfile
 LICENSE
 README.md
