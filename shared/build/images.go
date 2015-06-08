@@ -198,6 +198,7 @@ var builders = map[string]*image{
 	"go1.1": {Tag: "bradrydzewski/go:1.1"},
 	"go1.2": {Tag: "bradrydzewski/go:1.2"},
 	"go1.3": {Tag: "bradrydzewski/go:1.3"},
+	"go1.4": {Tag: "bradrydzewski/go:1.4"},
 
 	// Haskell build images
 	"haskell":    {Tag: "bradrydzewski/haskell:7.4"},
