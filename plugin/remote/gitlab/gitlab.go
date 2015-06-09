@@ -56,7 +56,13 @@ func (r *Gitlab) Authorize(res http.ResponseWriter, req *http.Request) (*model.L
 		return nil, fmt.Errorf("Error matching state in OAuth2 redirect")
 	}
 
-	var trans = &oauth.Transport{Config: config}
+	var trans = &oauth.Transport{
+		Config: config,
+		Transport: &http.Transport{
+			Proxy:           http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: r.SkipVerify},
+		},
+	}
 	var token, err = trans.Exchange(code)
 	if err != nil {
 		return nil, fmt.Errorf("Error exchanging token. %s", err)
