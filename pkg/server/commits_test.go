@@ -18,8 +18,13 @@ import (
 	//
 	eventbus "github.com/drone/drone/pkg/bus/builtin"
 	queue "github.com/drone/drone/pkg/queue/builtin"
-	"github.com/drone/drone/pkg/remote/github"
 	runner "github.com/drone/drone/pkg/runner/builtin"
+	//updater "github.com/drone/drone/pkg/runner/builtin"
+	"github.com/drone/drone/pkg/remote/github"
+	//"github.com/drone/drone/pkg/bus"
+	//"github.com/drone/drone/pkg/queue"
+	//"github.com/drone/drone/pkg/remote"
+	//"github.com/drone/drone/pkg/runner"
 	"github.com/drone/drone/pkg/settings"
 )
 
@@ -353,6 +358,7 @@ func TestCommits(t *testing.T) {
 			remote1 := github.New(service1)
 			queue1 := queue.New()
 			eventbus1 := eventbus.New()
+
 			updater1 := runner.NewUpdater(eventbus1, store, remote1)
 			runner1 := runner.Runner{Updater: updater1}
 
@@ -378,7 +384,7 @@ func TestCommits(t *testing.T) {
 			ctx.Set("queue", queue1)
 			ctx.Set("runner", runner1)
 			// Start mock
-			store.On("CommitSeq", repo1, 1).Return(commit1, nil).Once()
+			store.On("CommitSeq", repo1, mock.AnythingOfType("int")).Return(commit1, nil).Once()
 			store.On("BuildList", commit1).Return(commit1.Builds, nil).Once()
 			store.On("SetCommit", commit1).Return(nil).Once()
 			KillBuild(ctx)
