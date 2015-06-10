@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	//"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/drone/drone/pkg/server/recorder"
@@ -65,15 +66,13 @@ func TestCommits(t *testing.T) {
 			ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
 			ctx.Params = append(ctx.Params, gin.Param{Key: "number", Value: "1"})
 			//
-			var buf bytes.Buffer
 			urlBase := "/api/repos/"
 			urlString := (repo1.Owner + "/" + repo1.Name + "/" + "1")
 			urlFull := (urlBase + urlString)
 			//
-			json.NewEncoder(&buf).Encode(commit1)
-			httpRequest, _ := http.NewRequest("GET", urlFull, ioutil.NopCloser(&buf))
-			httpRequest.Header.Set("Content-Type", "application/json")
-			ctx.Request = httpRequest
+			buf, _ := json.Marshal(&commit1)
+			ctx.Request, _ = http.NewRequest("GET", urlFull, bytes.NewBuffer(buf))
+			ctx.Request.Header.Set("Content-Type", "application/json")
 			//
 			ctx.Set("datastore", store)
 			ctx.Set("repo", repo1)
@@ -84,10 +83,7 @@ func TestCommits(t *testing.T) {
 			GetCommit(ctx)
 			//
 			commitOut := &common.Commit{}
-			json.NewDecoder(rw.Body).Decode(commitOut)
-			fmt.Println("buf: ", buf)
-			fmt.Println("&commit1: ", commit1, " & ", &commit1)
-			fmt.Println("rw: ", rw.Body, " code: ", rw.Code)
+			json.Unmarshal(rw.Body.Bytes(), &commitOut)
 			g.Assert(rw.Code).Equal(200)
 			g.Assert(commitOut.RepoID).Equal(commit1.RepoID)
 			g.Assert(commitOut.Sequence).Equal(commit1.Sequence)
@@ -152,16 +148,13 @@ func TestCommits(t *testing.T) {
 			rw := recorder.New()
 			ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
 			//
-			var buf bytes.Buffer
 			urlBase := "/api/repos/"
 			urlString := (repo1.Owner + "/" + repo1.Name + "/builds")
 			urlFull := (urlBase + urlString)
 			//
-			json.NewEncoder(&buf).Encode(commitList1)
-			//bodyReader := strings.NewReader(`{}`)
-			httpRequest, _ := http.NewRequest("GET", urlFull, ioutil.NopCloser(&buf))
-			ctx.Request = &http.Request{Body: ioutil.NopCloser(&buf)}
-			httpRequest.Header.Set("Content-Type", "application/json")
+			buf, _ := json.Marshal(&commitList1)
+			ctx.Request, _ = http.NewRequest("GET", urlFull, bytes.NewBuffer(buf))
+			ctx.Request.Header.Set("Content-Type", "application/json")
 			//
 			ctx.Set("datastore", store)
 			ctx.Set("repo", repo1)
@@ -170,9 +163,11 @@ func TestCommits(t *testing.T) {
 			GetCommits(ctx)
 			//
 			commitListOut := []*common.Commit{}
-			json.NewDecoder(rw.Body).Decode(commitListOut)
+			json.Unmarshal(rw.Body.Bytes(), &commitListOut)
 			g.Assert(rw.Code).Equal(200)
-			g.Assert(ctx.Request.Body).Equal(httpRequest.Body)
+			g.Assert(len(commitListOut)).Equal(len(commitList1))
+			g.Assert(commitListOut[0].Sha).Equal(commitList1[0].Sha)
+			g.Assert(commitListOut[0].Ref).Equal(commitList1[0].Ref)
 		})
 
 		g.It("Should get logs", func() {
@@ -211,16 +206,13 @@ func TestCommits(t *testing.T) {
 			ctx.Params = append(ctx.Params, gin.Param{Key: "number", Value: "1"})
 			ctx.Params = append(ctx.Params, gin.Param{Key: "task", Value: "1"})
 			//
-			var buf bytes.Buffer
-			//urlBase := "http://localhost:8080/api/repos/"
 			urlBase := "/api/repos/"
 			urlString := (repo1.Owner + "/" + repo1.Name + "/logs" + "/1" + "/1")
-			urlFull := (urlBase + urlString) //url.Parse(urlBase + urlString)
+			urlFull := (urlBase + urlString)
 			//
-			json.NewEncoder(&buf).Encode(commit1)
-			httpRequest, _ := http.NewRequest("GET", urlFull, ioutil.NopCloser(&buf)) //http.NewRequest("GET", urlFull, buf)
-			ctx.Request = &http.Request{Body: ioutil.NopCloser(&buf)}
-			httpRequest.Header.Set("Content-Type", "application/json")
+			buf, _ := json.Marshal(&commit1)
+			ctx.Request, _ = http.NewRequest("GET", urlFull, bytes.NewBuffer(buf))
+			ctx.Request.Header.Set("Content-Type", "application/json")
 			//
 			ctx.Set("datastore", store)
 			ctx.Set("repo", repo1)
@@ -231,9 +223,10 @@ func TestCommits(t *testing.T) {
 			GetLogs(ctx)
 			//
 			var readerOut io.ReadCloser
-			json.NewDecoder(rw.Body).Decode(readerOut)
+			//var readerOut []byte
+			json.Unmarshal(rw.Body.Bytes(), &readerOut)
 			g.Assert(rw.Code).Equal(200)
-			g.Assert(ctx.Request.Body).Equal(httpRequest.Body)
+			//g.Assert(readerOut).Equal(getRC)
 		})
 
 		g.It("Should run build", func() {
@@ -285,21 +278,18 @@ func TestCommits(t *testing.T) {
 				Password: "x-oauth-basic",
 				Machine:  getUrl1.Host,
 			}
-
 			// POST /api/builds/:owner/:name/builds/:number
 			rw := recorder.New()
 			ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
 			ctx.Params = append(ctx.Params, gin.Param{Key: "number", Value: "1"})
 			//
-			var buf bytes.Buffer
 			urlBase := "/api/builds/"
 			urlString := (repo1.Owner + "/" + repo1.Name + "/builds" + "/1")
 			urlFull := (urlBase + urlString)
 			//
-			json.NewEncoder(&buf).Encode(commit1)
-			httpRequest, _ := http.NewRequest("POST", urlFull, ioutil.NopCloser(&buf))
-			ctx.Request = &http.Request{Body: ioutil.NopCloser(&buf)}
-			httpRequest.Header.Set("Content-Type", "application/json")
+			buf, _ := json.Marshal(&commit1)
+			ctx.Request, _ = http.NewRequest("POST", urlFull, bytes.NewBuffer(buf))
+			ctx.Request.Header.Set("Content-Type", "application/json")
 			//
 			ctx.Set("datastore", store)
 			ctx.Set("repo", repo1)
@@ -311,13 +301,14 @@ func TestCommits(t *testing.T) {
 			store.On("User", repo1.UserID).Return(user1, nil).Once()
 			store.On("SetCommit", commit1).Return(nil).Once()
 			store.On("Netrc", user1).Return(netrc1, nil).Once()
+			store.On("Script", user1, repo1, commit1).Return([]byte("foo"), nil)
 			RunBuild(ctx)
 			//
-			fmt.Println("{body1: } ", rw.Body)
-			var readerOut io.ReadCloser
-			json.NewDecoder(rw.Body).Decode(readerOut)
+			//var readerOut io.ReadCloser
+			var readerOut []byte
+			json.Unmarshal(rw.Body.Bytes(), &readerOut)
 			g.Assert(rw.Code).Equal(200)
-			g.Assert(ctx.Request.Body).Equal(httpRequest.Body)
+
 		})
 
 		g.It("Should kill build", func() {
@@ -360,22 +351,18 @@ func TestCommits(t *testing.T) {
 			eventbus1 := eventbus.New()
 			updater1 := runner.NewUpdater(eventbus1, store, remote1)
 			runner1 := runner.Runner{Updater: updater1}
-
 			// DELETE /api/builds/:owner/:name/builds/:number
 			rw := recorder.New()
 			ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
 			ctx.Params = append(ctx.Params, gin.Param{Key: "number", Value: "1"})
 			//
-			var buf bytes.Buffer
 			urlBase := "/api/builds/"
 			urlString := (repo1.Owner + "/" + repo1.Name + "/builds" + "/1")
 			urlFull := (urlBase + urlString)
 			//
-			json.NewEncoder(&buf).Encode(commit1)
-			//bodyReader := strings.NewReader(`{}`)
-			httpRequest, _ := http.NewRequest("DELETE", urlFull, ioutil.NopCloser(&buf))
-			ctx.Request = &http.Request{Body: ioutil.NopCloser(&buf)}
-			httpRequest.Header.Set("Content-Type", "application/json")
+			buf, _ := json.Marshal(&commit1)
+			ctx.Request, _ = http.NewRequest("DELETE", urlFull, bytes.NewBuffer(buf))
+			ctx.Request.Header.Set("Content-Type", "application/json")
 			//
 			ctx.Set("datastore", store)
 			ctx.Set("repo", repo1)
@@ -387,9 +374,11 @@ func TestCommits(t *testing.T) {
 			store.On("BuildList", commit1).Return(commit1.Builds, nil).Once()
 			store.On("SetCommit", commit1).Return(nil).Once()
 			KillBuild(ctx)
-			fmt.Println("{body2: } ", rw.Body)
-			//json.NewDecoder(rw.Body).Decode(getReader)
+			//
+			var readerOut []byte
+			json.Unmarshal(rw.Body.Bytes(), &readerOut)
 			g.Assert(rw.Code).Equal(200)
+			//g.Assert(src)
 		})
 	})
 
