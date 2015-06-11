@@ -22,6 +22,7 @@ import (
 	"github.com/drone/drone/pkg/remote/github"
 	runner "github.com/drone/drone/pkg/runner/builtin"
 	"github.com/drone/drone/pkg/settings"
+	//"github.com/google/go-github/github"
 )
 
 func TestCommits(t *testing.T) {
@@ -217,16 +218,16 @@ func TestCommits(t *testing.T) {
 			ctx.Set("datastore", store)
 			ctx.Set("repo", repo1)
 			// Start mock
+			rcString := "foobar"
 			path := fmt.Sprintf("/logs/%s/%v/%v", repo1.FullName, "1", "1")
-			getRC := ioutil.NopCloser(bytes.NewBuffer([]byte("foobar")))
+			getRC := ioutil.NopCloser(bytes.NewBuffer([]byte(rcString)))
 			store.On("GetBlobReader", path).Return(getRC, nil).Once()
 			GetLogs(ctx)
 			//
 			var readerOut io.ReadCloser
-			//var readerOut []byte
-			json.Unmarshal(rw.Body.Bytes(), &readerOut)
+			json.Unmarshal(rw.Body.Bytes(), readerOut)
 			g.Assert(rw.Code).Equal(200)
-			//g.Assert(readerOut).Equal(getRC)
+			g.Assert(rw.Body.String()).Equal(rcString)
 		})
 
 		g.It("Should run build", func() {
@@ -267,6 +268,7 @@ func TestCommits(t *testing.T) {
 			remote1 := github.New(service1)
 			queue1 := queue.New()
 			user1 := &common.User{
+				ID:    1,
 				Login: "octocat",
 				Name:  "octocat octocat",
 				Email: "foo@bar.com",
@@ -278,6 +280,26 @@ func TestCommits(t *testing.T) {
 				Password: "x-oauth-basic",
 				Machine:  getUrl1.Host,
 			}
+			fakeYMLFile := fmt.Sprintf(`[{"type": "file",
+"encoding": "base64",
+"size": 5362,
+"name": "README.md",
+"path": "README.md",
+"content": "encoded content ...",
+"sha": "3d21ec53a331a6f037a91c368710b99387d012c1",
+"url": "https://api.github.com/repos/octokit/octokit.rb/contents/README.md",
+"git_url": "https://api.github.com/repos/octokit/octokit.rb/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+"html_url": "https://github.com/octokit/octokit.rb/blob/master/README.md",
+"download_url": "https://raw.githubusercontent.com/octokit/octokit.rb/master/README.md",
+"_links": {
+"git": "https://api.github.com/repos/octokit/octokit.rb/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+"self": "https://api.github.com/repos/octokit/octokit.rb/contents/README.md",
+"html": "https://github.com/octokit/octokit.rb/blob/master/README.md",
+"owner": "oliveiradan",
+"Name":  "drone-test1"
+}
+}]`)
+			bufYMLFile, _ := json.Marshal(&fakeYMLFile)
 			// POST /api/builds/:owner/:name/builds/:number
 			rw := recorder.New()
 			ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
@@ -296,19 +318,25 @@ func TestCommits(t *testing.T) {
 			ctx.Set("remote", remote1)
 			ctx.Set("queue", queue1)
 			// Start mock
+			var err error
 			store.On("CommitSeq", repo1, mock.AnythingOfType("int")).Return(commit1, nil).Once()
 			store.On("BuildList", commit1).Return(commit1.Builds, nil).Once()
 			store.On("User", repo1.UserID).Return(user1, nil).Once()
 			store.On("SetCommit", commit1).Return(nil).Once()
 			store.On("Netrc", user1).Return(netrc1, nil).Once()
-			store.On("Script", user1, repo1, commit1).Return([]byte("foo"), nil)
+			store.On("Script", user1, repo1, commit1).Return(bufYMLFile, err).Once()
 			RunBuild(ctx)
 			//
 			//var readerOut io.ReadCloser
-			var readerOut []byte
+			//var readerOut []byte
+			// as we don't have an existing build, we should have a 404.
+			if err != nil {
+				g.Assert(rw.Status()).Equal(404)
+			} else {
+				g.Assert(rw.Code).Equal(200)
+			}
+			var readerOut bytes.Buffer
 			json.Unmarshal(rw.Body.Bytes(), &readerOut)
-			g.Assert(rw.Code).Equal(200)
-
 		})
 
 		g.It("Should kill build", func() {
