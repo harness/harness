@@ -26,7 +26,8 @@ secret = ""
 expires = ""
 
 [database]
-path = "/etc/drone/drone.db"
+driver="sqlite3"
+datasource="/var/lib/drone/drone.sqlite"
 
 [docker]
 cert = ""
