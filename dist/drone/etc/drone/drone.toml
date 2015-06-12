@@ -8,7 +8,8 @@ key = ""
 # expires = ""
 
 [database]
-path = "/var/lib/drone/drone.sqlite"
+driver="sqlite3"
+datasource="/var/lib/drone/drone.sqlite"
 
 [docker]
 cert = ""
@@ -16,7 +17,7 @@ key = ""
 addr = "unix:///var/run/docker.sock"
 swarm = ""
 
-# [service]
+# [remote]
 # kind = "github"
 # base = "https://github.com"
 # orgs = []
@@ -33,4 +34,3 @@ swarm = ""
 
 # [agents]
 # secret = ""
-
