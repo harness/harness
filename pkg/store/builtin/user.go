@@ -1,105 +1,70 @@
 package builtin
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 )
 
 type Userstore struct {
-	meddler.DB
+	*sql.DB
 }
 
-func NewUserstore(db meddler.DB) *Userstore {
+func NewUserstore(db *sql.DB) *Userstore {
 	return &Userstore{db}
 }
 
 // User returns a user by user ID.
-func (db *Userstore) User(id int64) (*common.User, error) {
-	var usr = new(common.User)
-	var err = meddler.Load(db, userTable, usr, id)
-	return usr, err
+func (db *Userstore) User(id int64) (*types.User, error) {
+	return getUser(db, rebind(stmtUserSelect), id)
 }
 
 // UserLogin returns a user by user login.
-func (db *Userstore) UserLogin(login string) (*common.User, error) {
-	var usr = new(common.User)
-	var err = meddler.QueryRow(db, usr, rebind(userLoginQuery), login)
-	return usr, err
+func (db *Userstore) UserLogin(login string) (*types.User, error) {
+	return getUser(db, rebind(stmtUserSelectUserLogin), login)
 }
 
 // UserList returns a list of all registered users.
-func (db *Userstore) UserList() ([]*common.User, error) {
-	var users []*common.User
-	var err = meddler.QueryAll(db, &users, rebind(userListQuery))
-	return users, err
+func (db *Userstore) UserList() ([]*types.User, error) {
+	return getUsers(db, rebind(stmtUserSelectList))
 }
 
 // UserFeed retrieves a digest of recent builds
 // from the datastore accessible to the specified user.
-func (db *Userstore) UserFeed(user *common.User, limit, offset int) ([]*common.RepoCommit, error) {
-	var builds []*common.RepoCommit
+func (db *Userstore) UserFeed(user *types.User, limit, offset int) ([]*types.RepoCommit, error) {
+	var builds []*types.RepoCommit
 	var err = meddler.QueryAll(db, &builds, rebind(userFeedQuery), user.ID, limit, offset)
 	return builds, err
 }
 
 // UserCount returns a count of all registered users.
 func (db *Userstore) UserCount() (int, error) {
-	var count = struct{ Count int }{}
-	var err = meddler.QueryRow(db, &count, rebind(userCountQuery))
-	return count.Count, err
+	var count int
+	err := db.QueryRow(stmtUserSelectCount).Scan(&count)
+	return count, err
 }
 
 // AddUser inserts a new user into the datastore.
 // If the user login already exists an error is returned.
-func (db *Userstore) AddUser(user *common.User) error {
+func (db *Userstore) AddUser(user *types.User) error {
 	user.Created = time.Now().UTC().Unix()
 	user.Updated = time.Now().UTC().Unix()
-	return meddler.Insert(db, userTable, user)
+	return createUser(db, rebind(stmtUserInsert), user)
 }
 
 // SetUser updates an existing user.
-func (db *Userstore) SetUser(user *common.User) error {
+func (db *Userstore) SetUser(user *types.User) error {
 	user.Updated = time.Now().UTC().Unix()
-	return meddler.Update(db, userTable, user)
+	return updateUser(db, rebind(stmtUserUpdate), user)
 }
 
 // DelUser removes the user from the datastore.
-func (db *Userstore) DelUser(user *common.User) error {
-	var _, err = db.Exec(rebind(userDeleteStmt), user.ID)
+func (db *Userstore) DelUser(user *types.User) error {
+	var _, err = db.Exec(rebind(stmtUserDelete), user.ID)
 	return err
 }
-
-// User table name in database.
-const userTable = "users"
-
-// SQL query to retrieve a User by remote login.
-const userLoginQuery = `
-SELECT *
-FROM users
-WHERE user_login=?
-LIMIT 1
-`
-
-// SQL query to retrieve a list of all users.
-const userListQuery = `
-SELECT *
-FROM users
-ORDER BY user_name ASC
-`
-
-// SQL query to retrieve a list of all users.
-const userCountQuery = `
-SELECT count(1) as "Count"
-FROM users
-`
-
-// SQL statement to delete a User by ID.
-const userDeleteStmt = `
-DELETE FROM users
-WHERE user_id=?
-`
 
 // SQL query to retrieve a build feed for the given
 // user account.
@@ -108,7 +73,7 @@ SELECT
  r.repo_id
 ,r.repo_owner
 ,r.repo_name
-,r.repo_slug
+,r.repo_full_name
 ,c.commit_seq
 ,c.commit_state
 ,c.commit_started

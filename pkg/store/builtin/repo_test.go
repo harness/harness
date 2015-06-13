@@ -50,38 +50,6 @@ func TestRepostore(t *testing.T) {
 			g.Assert(repo.ID != 0).IsTrue()
 		})
 
-		// g.It("Should Add a Repos Keypair", func() {
-		// 	keypair := common.Keypair{
-		// 		RepoID:  1,
-		// 		Public:  []byte("-----BEGIN RSA PRIVATE KEY----- ..."),
-		// 		Private: []byte("ssh-rsa AAAAE1BzbF1xc2EABAvVA6Z ..."),
-		// 	}
-		// 	err := rs.SetRepoKeypair(&keypair)
-		// 	g.Assert(err == nil).IsTrue()
-		// 	g.Assert(keypair.ID != 0).IsTrue()
-		// 	getkeypair, err := rs.RepoKeypair(&common.Repo{ID: 1})
-		// 	g.Assert(err == nil).IsTrue()
-		// 	g.Assert(keypair.ID).Equal(getkeypair.ID)
-		// 	g.Assert(keypair.RepoID).Equal(getkeypair.RepoID)
-		// 	g.Assert(keypair.Public).Equal(getkeypair.Public)
-		// 	g.Assert(keypair.Private).Equal(getkeypair.Private)
-		// })
-
-		// g.It("Should Add a Repos Private Params", func() {
-		// 	params := common.Params{
-		// 		RepoID: 1,
-		// 		Map:    map[string]string{"foo": "bar"},
-		// 	}
-		// 	err := rs.SetRepoParams(&params)
-		// 	g.Assert(err == nil).IsTrue()
-		// 	g.Assert(params.ID != 0).IsTrue()
-		// 	getparams, err := rs.RepoParams(&common.Repo{ID: 1})
-		// 	g.Assert(err == nil).IsTrue()
-		// 	g.Assert(params.ID).Equal(getparams.ID)
-		// 	g.Assert(params.RepoID).Equal(getparams.RepoID)
-		// 	g.Assert(params.Map).Equal(getparams.Map)
-		// })
-
 		g.It("Should Get a Repo by ID", func() {
 			repo := common.Repo{
 				UserID: 1,

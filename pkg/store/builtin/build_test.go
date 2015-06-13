@@ -1,9 +1,11 @@
 package builtin
 
 import (
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
-	common "github.com/drone/drone/pkg/types"
 	"testing"
+
+	"github.com/bradrydzewski/drone/common"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
+	"github.com/drone/drone/pkg/types"
 )
 
 func TestBuildstore(t *testing.T) {
@@ -21,139 +23,80 @@ func TestBuildstore(t *testing.T) {
 			db.Exec("DELETE FROM commits")
 		})
 
-		g.It("Should update an existing build in the datastore", func() {
-			buildList := []*common.Build{
-				&common.Build{
-					CommitID: 1,
-					State:    "success",
-					ExitCode: 0,
-					Sequence: 1,
-				},
-				&common.Build{
-					CommitID: 3,
-					State:    "error",
-					ExitCode: 1,
-					Sequence: 2,
-				},
+		g.It("Should Set a build", func() {
+			build := &types.Build{
+				CommitID: 1,
+				State:    "pending",
+				ExitCode: 0,
+				Sequence: 1,
 			}
-			//In order for buid to be populated,
-			//The AddCommit command will insert builds
-			//if the Commit.Builds array is populated
-			//Add Commit.
-			commit1 := common.Commit{
-				RepoID: 1,
-				State:  common.StateSuccess,
-				Ref:    "refs/heads/master",
-				Sha:    "14710626f22791619d3b7e9ccf58b10374e5b76d",
-				Builds: buildList,
-			}
-			//Add commit, build, retrieve 2nd, update it and recheck it.
-			err1 := cs.AddCommit(&commit1)
+			err1 := bs.AddBuild(build)
 			g.Assert(err1 == nil).IsTrue()
-			g.Assert(commit1.ID != 0).IsTrue()
-			g.Assert(commit1.Sequence).Equal(1)
-			//
-			build, err2 := bs.Build(commit1.Builds[1].ID)
+			g.Assert(build.ID != 0).IsTrue()
+
+			build.State = "started"
+			err2 := bs.SetBuild(build)
 			g.Assert(err2 == nil).IsTrue()
-			g.Assert(build.ID).Equal(commit1.Builds[1].ID)
-			build.State = common.StatePending
-			err1 = bs.SetBuild(build)
-			g.Assert(err1 == nil).IsTrue()
-			build, err2 = bs.Build(commit1.Builds[1].ID)
-			g.Assert(build.ID).Equal(commit1.Builds[1].ID)
-			g.Assert(build.State).Equal(common.StatePending)
+
+			getbuild, err3 := bs.Build(build.ID)
+			g.Assert(err3 == nil).IsTrue()
+			g.Assert(getbuild.State).Equal(build.State)
 		})
 
-		g.It("Should return a build by ID", func() {
-			buildList := []*common.Build{
-				&common.Build{
-					CommitID: 1,
-					State:    "success",
-					ExitCode: 0,
-					Sequence: 1,
-				},
-				&common.Build{
-					CommitID: 3,
-					State:    "error",
-					ExitCode: 1,
-					Sequence: 2,
-				},
+		g.It("Should Get a Build by ID", func() {
+			build := &types.Build{
+				CommitID:    1,
+				State:       "pending",
+				ExitCode:    1,
+				Sequence:    1,
+				Environment: map[string]string{"foo": "bar"},
 			}
-			//In order for buid to be populated,
-			//The AddCommit command will insert builds
-			//if the Commit.Builds array is populated
-			//Add Commit.
-			commit1 := common.Commit{
-				RepoID: 1,
-				State:  common.StateSuccess,
-				Ref:    "refs/heads/master",
-				Sha:    "14710626f22791619d3b7e9ccf58b10374e5b76d",
-				Builds: buildList,
-			}
-			//Add commit, build, retrieve 2nd build ID.
-			err1 := cs.AddCommit(&commit1)
+			err1 := bs.AddBuild(build)
 			g.Assert(err1 == nil).IsTrue()
-			g.Assert(commit1.ID != 0).IsTrue()
-			g.Assert(commit1.Sequence).Equal(1)
-			//
-			build, err2 := bs.Build(commit1.Builds[1].ID)
+			g.Assert(build.ID != 0).IsTrue()
+
+			getbuild, err2 := bs.Build(build.ID)
 			g.Assert(err2 == nil).IsTrue()
-			g.Assert(build.ID).Equal(commit1.Builds[1].ID)
+			g.Assert(getbuild.ID).Equal(build.ID)
+			g.Assert(getbuild.State).Equal(build.State)
+			g.Assert(getbuild.ExitCode).Equal(build.ExitCode)
+			g.Assert(getbuild.Environment).Equal(build.Environment)
+			g.Assert(getbuild.Environment["foo"]).Equal("bar")
 		})
 
-		g.It("Should return a build by Sequence", func() {
-			buildList := []*common.Build{
-				&common.Build{
-					CommitID: 1,
-					State:    "success",
-					ExitCode: 0,
-					Sequence: 1,
-				},
-				&common.Build{
-					CommitID: 3,
-					State:    "error",
-					ExitCode: 1,
-					Sequence: 2,
-				},
+		g.It("Should Get a Build by Sequence", func() {
+			build := &types.Build{
+				CommitID: 1,
+				State:    "pending",
+				ExitCode: 1,
+				Sequence: 1,
 			}
-			//In order for buid to be populated,
-			//The AddCommit command will insert builds
-			//if the Commit.Builds array is populated
-			//Add Commit.
-			commit1 := common.Commit{
-				RepoID: 1,
-				State:  common.StateSuccess,
-				Ref:    "refs/heads/master",
-				Sha:    "14710626f22791619d3b7e9ccf58b10374e5b76d",
-				Builds: buildList,
-			}
-			//Add commit, build, retrieve 2nd build ID.
-			err1 := cs.AddCommit(&commit1)
+			err1 := bs.AddBuild(build)
 			g.Assert(err1 == nil).IsTrue()
-			g.Assert(commit1.ID != 0).IsTrue()
-			g.Assert(commit1.Sequence).Equal(1)
-			//
-			build, err2 := bs.BuildSeq(&commit1, commit1.Builds[1].Sequence)
+			g.Assert(build.ID != 0).IsTrue()
+
+			getbuild, err2 := bs.BuildSeq(&types.Commit{ID: 1}, 1)
 			g.Assert(err2 == nil).IsTrue()
-			g.Assert(build.Sequence).Equal(commit1.Builds[1].Sequence)
+			g.Assert(getbuild.ID).Equal(build.ID)
+			g.Assert(getbuild.State).Equal(build.State)
 		})
 
-		g.It("Should return a list of all commit builds", func() {
+		g.It("Should Get a List of Builds by Commit", func() {
 			//Add repo
-			buildList := []*common.Build{
-				&common.Build{
+			buildList := []*types.Build{
+				&types.Build{
 					CommitID: 1,
 					State:    "success",
 					ExitCode: 0,
 					Sequence: 1,
 				},
-				&common.Build{
+				&types.Build{
 					CommitID: 3,
 					State:    "error",
 					ExitCode: 1,
 					Sequence: 2,
 				},
-				&common.Build{
+				&types.Build{
 					CommitID: 5,
 					State:    "pending",
 					ExitCode: 0,
@@ -164,7 +107,7 @@ func TestBuildstore(t *testing.T) {
 			//The AddCommit command will insert builds
 			//if the Commit.Builds array is populated
 			//Add Commit.
-			commit1 := common.Commit{
+			commit1 := types.Commit{
 				RepoID: 1,
 				State:  common.StateSuccess,
 				Ref:    "refs/heads/master",

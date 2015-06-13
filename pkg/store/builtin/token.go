@@ -1,74 +1,43 @@
 package builtin
 
 import (
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
-	common "github.com/drone/drone/pkg/types"
+	"database/sql"
+
+	"github.com/drone/drone/pkg/types"
 )
 
 type Tokenstore struct {
-	meddler.DB
+	*sql.DB
 }
 
-func NewTokenstore(db meddler.DB) *Tokenstore {
+func NewTokenstore(db *sql.DB) *Tokenstore {
 	return &Tokenstore{db}
 }
 
 // Token returns a token by ID.
-func (db *Tokenstore) Token(id int64) (*common.Token, error) {
-	var token = new(common.Token)
-	var err = meddler.Load(db, tokenTable, token, id)
-	return token, err
+func (db *Tokenstore) Token(id int64) (*types.Token, error) {
+	return getToken(db, rebind(stmtTokenSelect), id)
 }
 
 // TokenLabel returns a token by label
-func (db *Tokenstore) TokenLabel(user *common.User, label string) (*common.Token, error) {
-	var token = new(common.Token)
-	var err = meddler.QueryRow(db, token, rebind(tokenLabelQuery), user.ID, label)
-	return token, err
+func (db *Tokenstore) TokenLabel(user *types.User, label string) (*types.Token, error) {
+	return getToken(db, rebind(stmtTokenSelectTokenUserLabel), user.ID, label)
 }
 
 // TokenList returns a list of all user tokens.
-func (db *Tokenstore) TokenList(user *common.User) ([]*common.Token, error) {
-	var tokens []*common.Token
-	var err = meddler.QueryAll(db, &tokens, rebind(tokenListQuery), user.ID)
-	return tokens, err
+func (db *Tokenstore) TokenList(user *types.User) ([]*types.Token, error) {
+	return getTokens(db, rebind(stmtTokenSelectTokenUserId), user.ID)
 }
 
 // AddToken inserts a new token into the datastore.
 // If the token label already exists for the user
 // an error is returned.
-func (db *Tokenstore) AddToken(token *common.Token) error {
-	return meddler.Insert(db, tokenTable, token)
+func (db *Tokenstore) AddToken(token *types.Token) error {
+	return createToken(db, rebind(stmtTokenInsert), token)
 }
 
 // DelToken removes the DelToken from the datastore.
-func (db *Tokenstore) DelToken(token *common.Token) error {
-	var _, err = db.Exec(rebind(tokenDeleteStmt), token.ID)
+func (db *Tokenstore) DelToken(token *types.Token) error {
+	var _, err = db.Exec(rebind(stmtTokenDelete), token.ID)
 	return err
 }
-
-// Token table name in database.
-const tokenTable = "tokens"
-
-// SQL query to retrieve a token by label.
-const tokenLabelQuery = `
-SELECT *
-FROM tokens
-WHERE user_id     = ?
-  AND token_label = ?
-LIMIT 1
-`
-
-// SQL query to retrieve a list of user tokens.
-const tokenListQuery = `
-SELECT *
-FROM tokens
-WHERE user_id = ?
-ORDER BY token_label ASC
-`
-
-// SQL statement to delete a Token by ID.
-const tokenDeleteStmt = `
-DELETE FROM tokens
-WHERE token_id=?
-`

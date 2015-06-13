@@ -162,6 +162,12 @@ func TestUserstore(t *testing.T) {
 			g.Assert(count).Equal(2)
 		})
 
+		g.It("Should Get a User Count Zero", func() {
+			count, err := us.UserCount()
+			g.Assert(err == nil).IsTrue()
+			g.Assert(count).Equal(0)
+		})
+
 		g.It("Should Del a User", func() {
 			user := common.User{
 				Login: "joe",

@@ -11,10 +11,6 @@ func Setup(tx migration.LimitedTx) error {
 		userTable,
 		starTable,
 		repoTable,
-		repoKeyTable,
-		repoKeyIndex,
-		repoParamTable,
-		repoParamsIndex,
 		repoUserIndex,
 		commitTable,
 		commitRepoIndex,
@@ -55,20 +51,20 @@ CREATE TABLE IF NOT EXISTS users (
 var repoTable = `
 CREATE TABLE IF NOT EXISTS repos (
 	 repo_id           INTEGER PRIMARY KEY AUTOINCREMENT
-	,user_id           INTEGER
+	,repo_user_id      INTEGER
 	,repo_owner        VARCHAR(255)
 	,repo_name         VARCHAR(255)
-	,repo_slug         VARCHAR(1024)
+	,repo_full_name    VARCHAR(1024)
 	,repo_token        VARCHAR(255)
-	,repo_lang         VARCHAR(255)
+	,repo_language     VARCHAR(255)
 	,repo_branch       VARCHAR(255)
 	,repo_private      BOOLEAN
 	,repo_trusted      BOOLEAN
 	,repo_self         VARCHAR(1024)
 	,repo_link         VARCHAR(1024)
 	,repo_clone        VARCHAR(1024)
-	,repo_push         BOOLEAN
-	,repo_pull         BOOLEAN
+	,repo_post_commit  BOOLEAN
+	,repo_pull_request BOOLEAN
 	,repo_public_key   BLOB
 	,repo_private_key  BLOB
 	,repo_params       BLOB
@@ -76,40 +72,40 @@ CREATE TABLE IF NOT EXISTS repos (
 	,repo_created      INTEGER
 	,repo_updated      INTEGER
 	,UNIQUE(repo_owner, repo_name)
-	,UNIQUE(repo_slug)
+	,UNIQUE(repo_full_name)
 );
 `
 
 var repoUserIndex = `
-CREATE INDEX repos_user_idx ON repos (user_id);
+CREATE INDEX repos_user_idx ON repos (repo_user_id);
 `
 
-var repoKeyTable = `
-CREATE TABLE IF NOT EXISTS repo_keys (
-	 keys_id       INTEGER PRIMARY KEY AUTOINCREMENT
-	,repo_id       INTEGER
-	,keys_public   BLOB
-	,keys_private  BLOB
-	,UNIQUE(repo_id)
-);
-`
+// var repoKeyTable = `
+// CREATE TABLE IF NOT EXISTS repo_keys (
+// 	 keys_id       INTEGER PRIMARY KEY AUTOINCREMENT
+// 	,repo_id       INTEGER
+// 	,keys_public   BLOB
+// 	,keys_private  BLOB
+// 	,UNIQUE(repo_id)
+// );
+// `
+//
+// var repoKeyIndex = `
+// CREATE INDEX keys_repo_idx ON repo_keys (repo_id);
+// `
 
-var repoKeyIndex = `
-CREATE INDEX keys_repo_idx ON repo_keys (repo_id);
-`
-
-var repoParamTable = `
-CREATE TABLE IF NOT EXISTS repo_params (
-	 param_id      INTEGER PRIMARY KEY AUTOINCREMENT
-	,repo_id       INTEGER
-	,param_map    BLOB
-	,UNIQUE(repo_id)
-);
-`
-
-var repoParamsIndex = `
-CREATE INDEX params_repo_idx ON repo_params (repo_id);
-`
+// var repoParamTable = `
+// CREATE TABLE IF NOT EXISTS repo_params (
+// 	 param_id      INTEGER PRIMARY KEY AUTOINCREMENT
+// 	,repo_id       INTEGER
+// 	,param_map    BLOB
+// 	,UNIQUE(repo_id)
+// );
+// `
+//
+// var repoParamsIndex = `
+// CREATE INDEX params_repo_idx ON repo_params (repo_id);
+// `
 
 var starTable = `
 CREATE TABLE IF NOT EXISTS stars (
@@ -152,38 +148,38 @@ CREATE INDEX commits_repo_idx ON commits (repo_id);
 var tokenTable = `
 CREATE TABLE IF NOT EXISTS tokens (
 	 token_id         INTEGER PRIMARY KEY AUTOINCREMENT
-	,user_id          INTEGER
+	,token_user_id    INTEGER
 	,token_kind       VARCHAR(255)
 	,token_label      VARCHAR(255)
 	,token_expiry     INTEGER
 	,token_issued     INTEGER
-	,UNIQUE(user_id, token_label)
+	,UNIQUE(token_user_id, token_label)
 );
 `
 
 var tokenUserIndex = `
-CREATE INDEX tokens_user_idx ON tokens (user_id);
+CREATE INDEX tokens_user_idx ON tokens (token_user_id);
 `
 
 var buildTable = `
 CREATE TABLE IF NOT EXISTS builds (
 	 build_id          INTEGER PRIMARY KEY AUTOINCREMENT
-	,commit_id         INTEGER
-	,build_seq         INTEGER
+	,build_commit_id   INTEGER
+	,build_sequence    INTEGER
 	,build_state       VARCHAR(255)
-	,build_exit        INTEGER
+	,build_exit_code   INTEGER
 	,build_duration    INTEGER
 	,build_started     INTEGER
 	,build_finished    INTEGER
 	,build_created     INTEGER
 	,build_updated     INTEGER
-	,build_env         BLOB
-	,UNIQUE(commit_id, build_seq)
+	,build_environment VARCHAR(2000)
+	,UNIQUE(build_commit_id, build_sequence)
 );
 `
 
 var buildCommitIndex = `
-CREATE INDEX builds_commit_idx ON builds (commit_id);
+CREATE INDEX builds_commit_idx ON builds (build_commit_id);
 `
 
 var statusTable = `
