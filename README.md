@@ -33,7 +33,7 @@ datasource="/var/lib/drone/drone.sqlite"
 cert = ""
 key = ""
 addr = "unix:///var/run/docker.sock"
-swarm = ""
+swarm = false
 
 [remote]
 kind = "github"
