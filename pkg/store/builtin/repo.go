@@ -4,8 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 )
 
 type Repostore struct {
@@ -18,95 +17,69 @@ func NewRepostore(db *sql.DB) *Repostore {
 
 // Repo retrieves a specific repo from the
 // datastore for the given ID.
-func (db *Repostore) Repo(id int64) (*common.Repo, error) {
-	var repo = new(common.Repo)
-	var err = meddler.Load(db, repoTable, repo, id)
-	return repo, err
+func (db *Repostore) Repo(id int64) (*types.Repo, error) {
+	return getRepo(db, rebind(stmtRepoSelect), id)
 }
 
 // RepoName retrieves a repo from the datastore
 // for the specified name.
-func (db *Repostore) RepoName(owner, name string) (*common.Repo, error) {
-	var repo = new(common.Repo)
-	var err = meddler.QueryRow(db, repo, rebind(repoNameQuery), owner, name)
-	return repo, err
+func (db *Repostore) RepoName(owner, name string) (*types.Repo, error) {
+	return getRepo(db, rebind(stmtRepoSelectRepoOwnerName), owner, name)
 }
 
 // RepoList retrieves a list of all repos from
 // the datastore accessible by the given user ID.
-func (db *Repostore) RepoList(user *common.User) ([]*common.Repo, error) {
-	var repos []*common.Repo
-	var err = meddler.QueryAll(db, &repos, rebind(repoListQuery), user.ID)
-	return repos, err
+func (db *Repostore) RepoList(user *types.User) ([]*types.Repo, error) {
+	return getRepos(db, rebind(repoListQuery), user.ID)
 }
 
 // AddRepo inserts a repo in the datastore.
-func (db *Repostore) AddRepo(repo *common.Repo) error {
+func (db *Repostore) AddRepo(repo *types.Repo) error {
 	repo.Created = time.Now().UTC().Unix()
 	repo.Updated = time.Now().UTC().Unix()
-	return meddler.Insert(db, repoTable, repo)
+	return createRepo(db, rebind(stmtRepoInsert), repo)
 }
 
 // SetRepo updates a repo in the datastore.
-func (db *Repostore) SetRepo(repo *common.Repo) error {
+func (db *Repostore) SetRepo(repo *types.Repo) error {
 	repo.Updated = time.Now().UTC().Unix()
-	return meddler.Update(db, repoTable, repo)
+	return updateRepo(db, rebind(stmtRepoUpdate), repo)
 }
 
 // DelRepo removes the repo from the datastore.
-func (db *Repostore) DelRepo(repo *common.Repo) error {
-	var _, err = db.Exec(rebind(repoDeleteStmt), repo.ID)
+func (db *Repostore) DelRepo(repo *types.Repo) error {
+	var _, err = db.Exec(rebind(stmtRepoDelete), repo.ID)
 	return err
 }
-
-// Repo table names in database.
-const (
-	repoTable      = "repos"
-	repoKeyTable   = "repo_keys"
-	repoParamTable = "repo_params"
-)
-
-// SQL statement to retrieve a Repo by name.
-const repoNameQuery = `
-SELECT *
-FROM repos
-WHERE repo_owner = ?
-  AND repo_name  = ?
-LIMIT 1;
-`
 
 // SQL statement to retrieve a list of Repos
 // with permissions for the given User ID.
 const repoListQuery = `
-SELECT r.*
+SELECT
+ r.repo_id
+,r.repo_user_id
+,r.repo_owner
+,r.repo_name
+,r.repo_full_name
+,r.repo_token
+,r.repo_language
+,r.repo_private
+,r.repo_self
+,r.repo_link
+,r.repo_clone
+,r.repo_branch
+,r.repo_timeout
+,r.repo_trusted
+,r.repo_post_commit
+,r.repo_pull_request
+,r.repo_public_key
+,r.repo_private_key
+,r.repo_created
+,r.repo_updated
+,r.repo_params
 FROM
  repos r
 ,stars s
 WHERE r.repo_id = s.repo_id
   AND s.user_id = ?
 `
-
-// SQL statement to retrieve a keypair for
-// a Repository.
-const repoKeysQuery = `
-SELECT *
-FROM repo_keys
-WHERE repo_id = ?
-LIMIT 1;
-`
-
-// SQL statement to retrieve a keypair for
-// a Repository.
-const repoParamsQuery = `
-SELECT *
-FROM repo_params
-WHERE repo_id = ?
-LIMIT 1;
-`
-
-// SQL statement to delete a User by ID.
-const (
-	repoDeleteStmt        = `DELETE FROM repos       WHERE repo_id = ?`
-	repoKeypairDeleteStmt = `DELETE FROM repo_params WHERE repo_id = ?`
-	repoParamsDeleteStmt  = `DELETE FROM repo_keys   WHERE repo_id = ?`
-)

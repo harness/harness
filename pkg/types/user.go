@@ -2,7 +2,7 @@ package types
 
 type User struct {
 	ID       int64  `meddler:"user_id,pk"    json:"id"`
-	Login    string `meddler:"user_login"    json:"login,omitempty"`
+	Login    string `meddler:"user_login"    json:"login,omitempty" sql:"unique:ux_user_login"`
 	Token    string `meddler:"user_token"    json:"-"`
 	Secret   string `meddler:"user_secret"   json:"-"`
 	Name     string `meddler:"user_name"     json:"name,omitempty"`
