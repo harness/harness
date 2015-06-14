@@ -251,6 +251,10 @@ func (g *GitHub) push(r *http.Request) (*common.Hook, error) {
 		return nil, err
 	}
 
+	if hook.Deleted {
+		return nil, nil
+	}
+
 	repo := &common.Repo{}
 	repo.Owner = hook.Repo.Owner.Login
 	if len(repo.Owner) == 0 {
@@ -336,7 +340,8 @@ func (g *GitHub) pullRequest(r *http.Request) (*common.Hook, error) {
 }
 
 type pushHook struct {
-	Ref string `json:"ref"`
+	Ref     string `json:"ref"`
+	Deleted bool   `json:"deleted"`
 
 	Head struct {
 		ID        string `json:"id"`
