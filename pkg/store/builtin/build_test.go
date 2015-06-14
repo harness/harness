@@ -3,7 +3,6 @@ package builtin
 import (
 	"testing"
 
-	"github.com/bradrydzewski/drone/common"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
 	"github.com/drone/drone/pkg/types"
 )
@@ -109,7 +108,7 @@ func TestBuildstore(t *testing.T) {
 			//Add Commit.
 			commit1 := types.Commit{
 				RepoID: 1,
-				State:  common.StateSuccess,
+				State:  types.StateSuccess,
 				Ref:    "refs/heads/master",
 				Sha:    "14710626f22791619d3b7e9ccf58b10374e5b76d",
 				Builds: buildList,
@@ -121,7 +120,7 @@ func TestBuildstore(t *testing.T) {
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(len(bldList)).Equal(3)
 			g.Assert(bldList[0].Sequence).Equal(1)
-			g.Assert(bldList[0].State).Equal(common.StateSuccess)
+			g.Assert(bldList[0].State).Equal(types.StateSuccess)
 		})
 	})
 }

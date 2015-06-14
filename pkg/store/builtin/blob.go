@@ -2,33 +2,38 @@ package builtin
 
 import (
 	"bytes"
+	"database/sql"
 	"io"
 	"io/ioutil"
-
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
 )
 
-type blob struct {
-	ID   int64  `meddler:"blob_id,pk"`
-	Path string `meddler:"blob_path"`
-	Data string `meddler:"blob_data,gobgzip"`
+type Blob struct {
+	ID   int64
+	Path string `sql:"unique:ux_blob_path"`
+	Data []byte
 }
 
 type Blobstore struct {
-	meddler.DB
+	*sql.DB
 }
 
 // Del removes an object from the blobstore.
 func (db *Blobstore) DelBlob(path string) error {
-	var _, err = db.Exec(rebind(blobDeleteStmt), path)
+	blob, _ := getBlob(db, rebind(stmtBlobSelectBlobPath), path)
+	if blob == nil {
+		return nil
+	}
+	_, err := db.Exec(rebind(stmtBlobDelete), blob.ID)
 	return err
 }
 
 // Get retrieves an object from the blobstore.
 func (db *Blobstore) GetBlob(path string) ([]byte, error) {
-	var blob = blob{}
-	var err = meddler.QueryRow(db, &blob, rebind(blobQuery), path)
-	return []byte(blob.Data), err
+	blob, err := getBlob(db, rebind(stmtBlobSelectBlobPath), path)
+	if err != nil {
+		return nil, nil
+	}
+	return blob.Data, nil
 }
 
 // GetBlobReader retrieves an object from the blobstore.
@@ -42,11 +47,16 @@ func (db *Blobstore) GetBlobReader(path string) (io.ReadCloser, error) {
 
 // SetBlob inserts an object into the blobstore.
 func (db *Blobstore) SetBlob(path string, data []byte) error {
-	var blob = blob{}
-	meddler.QueryRow(db, &blob, rebind(blobQuery), path)
+	blob, _ := getBlob(db, rebind(stmtBlobSelectBlobPath), path)
+	if blob == nil {
+		blob = &Blob{}
+	}
 	blob.Path = path
-	blob.Data = string(data)
-	return meddler.Save(db, blobTable, &blob)
+	blob.Data = data
+	if blob.ID == 0 {
+		return createBlob(db, rebind(stmtBlobInsert), blob)
+	}
+	return updateBlob(db, rebind(stmtBlobUpdate), blob)
 }
 
 // SetBlobReader inserts an object into the blobstore by
@@ -56,7 +66,7 @@ func (db *Blobstore) SetBlobReader(path string, r io.Reader) error {
 	return db.SetBlob(path, data)
 }
 
-func NewBlobstore(db meddler.DB) *Blobstore {
+func NewBlobstore(db *sql.DB) *Blobstore {
 	return &Blobstore{db}
 }
 
