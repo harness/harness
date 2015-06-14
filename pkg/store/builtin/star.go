@@ -1,60 +1,47 @@
 package builtin
 
 import (
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
-	common "github.com/drone/drone/pkg/types"
+	"database/sql"
+
+	"github.com/drone/drone/pkg/types"
 )
 
 type Starstore struct {
-	meddler.DB
+	*sql.DB
 }
 
-func NewStarstore(db meddler.DB) *Starstore {
+func NewStarstore(db *sql.DB) *Starstore {
 	return &Starstore{db}
 }
 
 // Starred returns true if the user starred
 // the given repository.
-func (db *Starstore) Starred(user *common.User, repo *common.Repo) (bool, error) {
-	var star = new(star)
-	err := meddler.QueryRow(db, star, rebind(starQuery), user.ID, repo.ID)
+func (db *Starstore) Starred(user *types.User, repo *types.Repo) (bool, error) {
+	_, err := getStar(db, rebind(stmtStarSelectStarUserRepo), user.ID, repo.ID)
 	return (err == nil), err
 }
 
 // AddStar inserts a starred repo / user in the datastore.
-func (db *Starstore) AddStar(user *common.User, repo *common.Repo) error {
-	var star = &star{UserID: user.ID, RepoID: repo.ID}
-	return meddler.Insert(db, starTable, star)
+func (db *Starstore) AddStar(user *types.User, repo *types.Repo) error {
+	var star = &Star{UserID: user.ID, RepoID: repo.ID}
+	return createStar(db, rebind(stmtStarInsert), star)
 }
 
 // DelStar removes starred repo / user from the datastore.
-func (db *Starstore) DelStar(user *common.User, repo *common.Repo) error {
-	var _, err = db.Exec(rebind(starDeleteStmt), user.ID, repo.ID)
+func (db *Starstore) DelStar(user *types.User, repo *types.Repo) error {
+	var _, err = db.Exec(rebind(stmtStartDeleteUserRepo), user.ID, repo.ID)
 	return err
 }
 
-type star struct {
-	ID     int64 `meddler:"star_id,pk"`
-	UserID int64 `meddler:"user_id"`
-	RepoID int64 `meddler:"repo_id"`
+type Star struct {
+	ID     int64
+	UserID int64 `sql:"unique:ux_star_user_repo"`
+	RepoID int64 `sql:"unique:ux_star_user_repo"`
 }
 
-// Stars table name in database.
-const starTable = "stars"
-
-// SQL query to retrieve a user's stars to
-// access a repository.
-const starQuery = `
-SELECT *
-FROM stars
-WHERE user_id=?
-AND   repo_id=?
-LIMIT 1
-`
-
 // SQL statement to delete a star by ID.
-const starDeleteStmt = `
+const stmtStartDeleteUserRepo = `
 DELETE FROM stars
-WHERE user_id=?
-  AND repo_id=?
+WHERE star_user_id=?
+  AND star_repo_id=?
 `
