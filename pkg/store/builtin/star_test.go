@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 )
 
 func TestStarstore(t *testing.T) {
@@ -22,15 +22,15 @@ func TestStarstore(t *testing.T) {
 		})
 
 		g.It("Should Add a Star", func() {
-			user := common.User{ID: 1}
-			repo := common.Repo{ID: 2}
+			user := types.User{ID: 1}
+			repo := types.Repo{ID: 2}
 			err := ss.AddStar(&user, &repo)
 			g.Assert(err == nil).IsTrue()
 		})
 
 		g.It("Should Get Starred", func() {
-			user := common.User{ID: 1}
-			repo := common.Repo{ID: 2}
+			user := types.User{ID: 1}
+			repo := types.Repo{ID: 2}
 			ss.AddStar(&user, &repo)
 			ok, err := ss.Starred(&user, &repo)
 			g.Assert(err == nil).IsTrue()
@@ -38,16 +38,16 @@ func TestStarstore(t *testing.T) {
 		})
 
 		g.It("Should Not Get Starred", func() {
-			user := common.User{ID: 1}
-			repo := common.Repo{ID: 2}
+			user := types.User{ID: 1}
+			repo := types.Repo{ID: 2}
 			ok, err := ss.Starred(&user, &repo)
 			g.Assert(err != nil).IsTrue()
 			g.Assert(ok).IsFalse()
 		})
 
 		g.It("Should Del a Star", func() {
-			user := common.User{ID: 1}
-			repo := common.Repo{ID: 2}
+			user := types.User{ID: 1}
+			repo := types.Repo{ID: 2}
 			ss.AddStar(&user, &repo)
 			_, err1 := ss.Starred(&user, &repo)
 			err2 := ss.DelStar(&user, &repo)

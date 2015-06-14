@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 )
 
 func TestUserstore(t *testing.T) {
@@ -29,7 +29,7 @@ func TestUserstore(t *testing.T) {
 		})
 
 		g.It("Should Update a User", func() {
-			user := common.User{
+			user := types.User{
 				Login: "joe",
 				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
@@ -45,7 +45,7 @@ func TestUserstore(t *testing.T) {
 		})
 
 		g.It("Should Add a new User", func() {
-			user := common.User{
+			user := types.User{
 				Login: "joe",
 				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
@@ -57,7 +57,7 @@ func TestUserstore(t *testing.T) {
 		})
 
 		g.It("Should Get a User", func() {
-			user := common.User{
+			user := types.User{
 				Login:    "joe",
 				Token:    "f0b461ca586c27872b43a0685cbc2847",
 				Secret:   "976f22a5eef7caacb7e678d6c52f49b1",
@@ -86,7 +86,7 @@ func TestUserstore(t *testing.T) {
 		})
 
 		g.It("Should Get a User By Login", func() {
-			user := common.User{
+			user := types.User{
 				Login: "joe",
 				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
@@ -100,13 +100,13 @@ func TestUserstore(t *testing.T) {
 		})
 
 		g.It("Should Enforce Unique User Login", func() {
-			user1 := common.User{
+			user1 := types.User{
 				Login: "joe",
 				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
-			user2 := common.User{
+			user2 := types.User{
 				Login: "joe",
 				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
@@ -119,13 +119,13 @@ func TestUserstore(t *testing.T) {
 		})
 
 		g.It("Should Get a User List", func() {
-			user1 := common.User{
+			user1 := types.User{
 				Login: "jane",
 				Name:  "Jane Doe",
 				Email: "foo@bar.com",
 				Token: "ab20g0ddaf012c744e136da16aa21ad9",
 			}
-			user2 := common.User{
+			user2 := types.User{
 				Login: "joe",
 				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
@@ -143,13 +143,13 @@ func TestUserstore(t *testing.T) {
 		})
 
 		g.It("Should Get a User Count", func() {
-			user1 := common.User{
+			user1 := types.User{
 				Login: "jane",
 				Name:  "Jane Doe",
 				Email: "foo@bar.com",
 				Token: "ab20g0ddaf012c744e136da16aa21ad9",
 			}
-			user2 := common.User{
+			user2 := types.User{
 				Login: "joe",
 				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
@@ -169,7 +169,7 @@ func TestUserstore(t *testing.T) {
 		})
 
 		g.It("Should Del a User", func() {
-			user := common.User{
+			user := types.User{
 				Login: "joe",
 				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
@@ -185,41 +185,41 @@ func TestUserstore(t *testing.T) {
 		})
 
 		g.It("Should get the Build feed for a User", func() {
-			repo1 := &common.Repo{
+			repo1 := &types.Repo{
 				UserID: 1,
 				Owner:  "bradrydzewski",
 				Name:   "drone",
 			}
-			repo2 := &common.Repo{
+			repo2 := &types.Repo{
 				UserID: 2,
 				Owner:  "drone",
 				Name:   "drone",
 			}
 			rs.AddRepo(repo1)
 			rs.AddRepo(repo2)
-			ss.AddStar(&common.User{ID: 1}, repo1)
-			commit1 := &common.Commit{
+			ss.AddStar(&types.User{ID: 1}, repo1)
+			commit1 := &types.Commit{
 				RepoID: 1,
-				State:  common.StateFailure,
+				State:  types.StateFailure,
 				Ref:    "refs/heads/master",
 				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
-			commit2 := &common.Commit{
+			commit2 := &types.Commit{
 				RepoID: 1,
-				State:  common.StateSuccess,
+				State:  types.StateSuccess,
 				Ref:    "refs/heads/dev",
 				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
-			commit3 := &common.Commit{
+			commit3 := &types.Commit{
 				RepoID: 2,
-				State:  common.StateSuccess,
+				State:  types.StateSuccess,
 				Ref:    "refs/heads/dev",
 				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
 			cs.AddCommit(commit1)
 			cs.AddCommit(commit2)
 			cs.AddCommit(commit3)
-			commits, err := us.UserFeed(&common.User{ID: 1}, 20, 0)
+			commits, err := us.UserFeed(&types.User{ID: 1}, 20, 0)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(commits)).Equal(2)
 			g.Assert(commits[0].State).Equal(commit2.State)
