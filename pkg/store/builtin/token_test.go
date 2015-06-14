@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 )
 
 func TestTokenstore(t *testing.T) {
@@ -23,10 +23,10 @@ func TestTokenstore(t *testing.T) {
 		})
 
 		g.It("Should Add a new Token", func() {
-			token := common.Token{
+			token := types.Token{
 				UserID: 1,
 				Label:  "foo",
-				Kind:   common.TokenUser,
+				Kind:   types.TokenUser,
 				Issued: time.Now().Unix(),
 				Expiry: time.Now().Unix() + 1000,
 			}
@@ -36,10 +36,10 @@ func TestTokenstore(t *testing.T) {
 		})
 
 		g.It("Should get a Token", func() {
-			token := common.Token{
+			token := types.Token{
 				UserID: 1,
 				Label:  "foo",
-				Kind:   common.TokenUser,
+				Kind:   types.TokenUser,
 				Issued: time.Now().Unix(),
 				Expiry: time.Now().Unix() + 1000,
 			}
@@ -55,15 +55,15 @@ func TestTokenstore(t *testing.T) {
 		})
 
 		g.It("Should Get a Token By Label", func() {
-			token := common.Token{
+			token := types.Token{
 				UserID: 1,
 				Label:  "foo",
-				Kind:   common.TokenUser,
+				Kind:   types.TokenUser,
 				Issued: time.Now().Unix(),
 				Expiry: time.Now().Unix() + 1000,
 			}
 			err1 := ts.AddToken(&token)
-			gettoken, err2 := ts.TokenLabel(&common.User{ID: 1}, "foo")
+			gettoken, err2 := ts.TokenLabel(&types.User{ID: 1}, "foo")
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(token.ID).Equal(gettoken.ID)
@@ -74,17 +74,17 @@ func TestTokenstore(t *testing.T) {
 		})
 
 		g.It("Should Enforce Unique Token Label", func() {
-			token1 := common.Token{
+			token1 := types.Token{
 				UserID: 1,
 				Label:  "foo",
-				Kind:   common.TokenUser,
+				Kind:   types.TokenUser,
 				Issued: time.Now().Unix(),
 				Expiry: time.Now().Unix() + 1000,
 			}
-			token2 := common.Token{
+			token2 := types.Token{
 				UserID: 1,
 				Label:  "foo",
-				Kind:   common.TokenUser,
+				Kind:   types.TokenUser,
 				Issued: time.Now().Unix(),
 				Expiry: time.Now().Unix() + 1000,
 			}
@@ -95,31 +95,31 @@ func TestTokenstore(t *testing.T) {
 		})
 
 		g.It("Should Get a User Token List", func() {
-			token1 := common.Token{
+			token1 := types.Token{
 				UserID: 1,
 				Label:  "bar",
-				Kind:   common.TokenUser,
+				Kind:   types.TokenUser,
 				Issued: time.Now().Unix(),
 				Expiry: time.Now().Unix() + 1000,
 			}
-			token2 := common.Token{
+			token2 := types.Token{
 				UserID: 1,
 				Label:  "foo",
-				Kind:   common.TokenUser,
+				Kind:   types.TokenUser,
 				Issued: time.Now().Unix(),
 				Expiry: time.Now().Unix() + 1000,
 			}
-			token3 := common.Token{
+			token3 := types.Token{
 				UserID: 2,
 				Label:  "foo",
-				Kind:   common.TokenUser,
+				Kind:   types.TokenUser,
 				Issued: time.Now().Unix(),
 				Expiry: time.Now().Unix() + 1000,
 			}
 			ts.AddToken(&token1)
 			ts.AddToken(&token2)
 			ts.AddToken(&token3)
-			tokens, err := ts.TokenList(&common.User{ID: 1})
+			tokens, err := ts.TokenList(&types.User{ID: 1})
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(tokens)).Equal(2)
 			g.Assert(tokens[0].ID).Equal(token1.ID)
@@ -130,10 +130,10 @@ func TestTokenstore(t *testing.T) {
 		})
 
 		g.It("Should Del a Token", func() {
-			token := common.Token{
+			token := types.Token{
 				UserID: 1,
 				Label:  "foo",
-				Kind:   common.TokenUser,
+				Kind:   types.TokenUser,
 				Issued: time.Now().Unix(),
 				Expiry: time.Now().Unix() + 1000,
 			}

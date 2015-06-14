@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 )
 
 func TestRepostore(t *testing.T) {
@@ -25,7 +25,7 @@ func TestRepostore(t *testing.T) {
 		})
 
 		g.It("Should Set a Repo", func() {
-			repo := common.Repo{
+			repo := types.Repo{
 				UserID: 1,
 				Owner:  "bradrydzewski",
 				Name:   "drone",
@@ -40,7 +40,7 @@ func TestRepostore(t *testing.T) {
 		})
 
 		g.It("Should Add a Repo", func() {
-			repo := common.Repo{
+			repo := types.Repo{
 				UserID: 1,
 				Owner:  "bradrydzewski",
 				Name:   "drone",
@@ -51,7 +51,7 @@ func TestRepostore(t *testing.T) {
 		})
 
 		g.It("Should Get a Repo by ID", func() {
-			repo := common.Repo{
+			repo := types.Repo{
 				UserID: 1,
 				Owner:  "bradrydzewski",
 				Name:   "drone",
@@ -66,7 +66,7 @@ func TestRepostore(t *testing.T) {
 		})
 
 		g.It("Should Get a Repo by Name", func() {
-			repo := common.Repo{
+			repo := types.Repo{
 				UserID: 1,
 				Owner:  "bradrydzewski",
 				Name:   "drone",
@@ -81,20 +81,20 @@ func TestRepostore(t *testing.T) {
 		})
 
 		g.It("Should Get a Repo List by User", func() {
-			repo1 := common.Repo{
+			repo1 := types.Repo{
 				UserID: 1,
 				Owner:  "bradrydzewski",
 				Name:   "drone",
 			}
-			repo2 := common.Repo{
+			repo2 := types.Repo{
 				UserID: 1,
 				Owner:  "bradrydzewski",
 				Name:   "drone-dart",
 			}
 			rs.AddRepo(&repo1)
 			rs.AddRepo(&repo2)
-			ss.AddStar(&common.User{ID: 1}, &repo1)
-			repos, err := rs.RepoList(&common.User{ID: 1})
+			ss.AddStar(&types.User{ID: 1}, &repo1)
+			repos, err := rs.RepoList(&types.User{ID: 1})
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(repos)).Equal(1)
 			g.Assert(repos[0].UserID).Equal(repo1.UserID)
@@ -103,7 +103,7 @@ func TestRepostore(t *testing.T) {
 		})
 
 		g.It("Should Delete a Repo", func() {
-			repo := common.Repo{
+			repo := types.Repo{
 				UserID: 1,
 				Owner:  "bradrydzewski",
 				Name:   "drone",
@@ -118,12 +118,12 @@ func TestRepostore(t *testing.T) {
 		})
 
 		g.It("Should Enforce Unique Repo Name", func() {
-			repo1 := common.Repo{
+			repo1 := types.Repo{
 				UserID: 1,
 				Owner:  "bradrydzewski",
 				Name:   "drone",
 			}
-			repo2 := common.Repo{
+			repo2 := types.Repo{
 				UserID: 2,
 				Owner:  "bradrydzewski",
 				Name:   "drone",
