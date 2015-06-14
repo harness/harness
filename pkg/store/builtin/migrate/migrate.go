@@ -109,10 +109,10 @@ CREATE INDEX repos_user_idx ON repos (repo_user_id);
 
 var starTable = `
 CREATE TABLE IF NOT EXISTS stars (
-	 star_id  INTEGER PRIMARY KEY AUTOINCREMENT
-	,user_id  INTEGER
-	,repo_id  INTEGER
-	,UNIQUE (repo_id, user_id)
+	 star_id       INTEGER PRIMARY KEY AUTOINCREMENT
+	,star_user_id  INTEGER
+	,star_repo_id  INTEGER
+	,UNIQUE (star_repo_id, star_user_id)
 );
 `
 

@@ -80,6 +80,6 @@ SELECT
 FROM
  repos r
 ,stars s
-WHERE r.repo_id = s.repo_id
-  AND s.user_id = ?
+WHERE r.repo_id = s.star_repo_id
+  AND s.star_user_id = ?
 `
