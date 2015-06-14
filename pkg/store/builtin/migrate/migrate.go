@@ -211,8 +211,8 @@ CREATE TABLE IF NOT EXISTS blobs (
 var agentTable = `
 CREATE TABLE IF NOT EXISTS agents (
 	 agent_id           INTEGER PRIMARY KEY AUTOINCREMENT
-	,commit_id          INTEGER
+	,agent_commit_id    INTEGER
 	,agent_addr         VARCHAR(2000)
-	,UNIQUE(commit_id)
+	,UNIQUE(agent_commit_id)
 );
 `
