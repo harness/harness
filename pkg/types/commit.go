@@ -11,14 +11,14 @@ const (
 
 type Commit struct {
 	ID           int64  `meddler:"commit_id,pk"         json:"id"`
-	RepoID       int64  `meddler:"repo_id"              json:"-"`
-	Sequence     int    `meddler:"commit_seq"           json:"sequence"`
+	RepoID       int64  `meddler:"commit_repo_id"       json:"-"              sql:"unique:ux_commit_seq,index:ix_commit_repo_id"`
+	Sequence     int    `meddler:"commit_sequence"      json:"sequence"       sql:"unique:ux_commit_seq"`
 	State        string `meddler:"commit_state"         json:"state"`
 	Started      int64  `meddler:"commit_started"       json:"started_at"`
 	Finished     int64  `meddler:"commit_finished"      json:"finished_at"`
 	Sha          string `meddler:"commit_sha"           json:"sha"`
 	Ref          string `meddler:"commit_ref"           json:"ref"`
-	PullRequest  string `meddler:"commit_pr"            json:"pull_request,omitempty"`
+	PullRequest  string `meddler:"commit_pull_request"  json:"pull_request,omitempty"`
 	Branch       string `meddler:"commit_branch"        json:"branch"`
 	Author       string `meddler:"commit_author"        json:"author"`
 	Gravatar     string `meddler:"commit_gravatar"      json:"gravatar"`
@@ -30,5 +30,5 @@ type Commit struct {
 	Created      int64  `meddler:"commit_created"       json:"created_at"`
 	Updated      int64  `meddler:"commit_updated"       json:"updated_at"`
 
-	Builds []*Build `meddler:"-" json:"builds,omitempty"`
+	Builds []*Build `meddler:"-" json:"builds,omitempty" sql:"-"`
 }

@@ -119,15 +119,15 @@ CREATE TABLE IF NOT EXISTS stars (
 var commitTable = `
 CREATE TABLE IF NOT EXISTS commits (
 	 commit_id             INTEGER PRIMARY KEY AUTOINCREMENT
-	,repo_id               INTEGER
-	,commit_seq            INTEGER
+	,commit_repo_id        INTEGER
+	,commit_sequence       INTEGER
 	,commit_state          VARCHAR(255)
 	,commit_started        INTEGER
 	,commit_finished       INTEGER
 	,commit_sha            VARCHAR(255)
 	,commit_ref            VARCHAR(255)
 	,commit_branch         VARCHAR(255)
-	,commit_pr             VARCHAR(255)
+	,commit_pull_request   VARCHAR(255)
 	,commit_author         VARCHAR(255)
 	,commit_gravatar       VARCHAR(255)
 	,commit_timestamp      VARCHAR(255)
@@ -137,12 +137,12 @@ CREATE TABLE IF NOT EXISTS commits (
 	,commit_source_sha     VARCHAR(255)
 	,commit_created        INTEGER
 	,commit_updated        INTEGER
-	,UNIQUE(repo_id, commit_seq)
+	,UNIQUE(commit_repo_id, commit_sequence)
 );
 `
 
 var commitRepoIndex = `
-CREATE INDEX commits_repo_idx ON commits (repo_id);
+CREATE INDEX commits_repo_idx ON commits (commit_repo_id);
 `
 
 var tokenTable = `

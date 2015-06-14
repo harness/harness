@@ -42,7 +42,7 @@ type RepoCommit struct {
 	Owner    string `meddler:"repo_owner"      json:"owner"`
 	Name     string `meddler:"repo_name"       json:"name"`
 	FullName string `meddler:"repo_full_name"  json:"full_name"`
-	Number   int    `meddler:"commit_seq"      json:"number"`
+	Number   int    `meddler:"commit_sequence" json:"number"`
 	State    string `meddler:"commit_state"    json:"state"`
 	Started  int64  `meddler:"commit_started"  json:"started_at"`
 	Finished int64  `meddler:"commit_finished" json:"finished_at"`

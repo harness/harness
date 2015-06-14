@@ -4,8 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 )
 
 type Commitstore struct {
@@ -17,38 +16,30 @@ func NewCommitstore(db *sql.DB) *Commitstore {
 }
 
 // Commit gets a commit by ID
-func (db *Commitstore) Commit(id int64) (*common.Commit, error) {
-	var commit = new(common.Commit)
-	var err = meddler.Load(db, commitTable, commit, id)
-	return commit, err
+func (db *Commitstore) Commit(id int64) (*types.Commit, error) {
+	return getCommit(db, rebind(stmtCommitSelect), id)
 }
 
 // CommitSeq gets the specified commit sequence for the
 // named repository and commit number
-func (db *Commitstore) CommitSeq(repo *common.Repo, seq int) (*common.Commit, error) {
-	var commit = new(common.Commit)
-	var err = meddler.QueryRow(db, commit, rebind(commitNumberQuery), repo.ID, seq)
-	return commit, err
+func (db *Commitstore) CommitSeq(repo *types.Repo, seq int) (*types.Commit, error) {
+	return getCommit(db, rebind(stmtCommitSelectCommitSeq), repo.ID, seq)
 }
 
 // CommitLast gets the last executed commit for the
 // named repository.
-func (db *Commitstore) CommitLast(repo *common.Repo, branch string) (*common.Commit, error) {
-	var commit = new(common.Commit)
-	var err = meddler.QueryRow(db, commit, rebind(commitLastQuery), repo.ID, branch)
-	return commit, err
+func (db *Commitstore) CommitLast(repo *types.Repo, branch string) (*types.Commit, error) {
+	return getCommit(db, rebind(commitLastQuery), repo.ID, branch)
 }
 
 // CommitList gets a list of recent commits for the
 // named repository.
-func (db *Commitstore) CommitList(repo *common.Repo, limit, offset int) ([]*common.Commit, error) {
-	var commits []*common.Commit
-	var err = meddler.QueryAll(db, &commits, rebind(commitListQuery), repo.ID, limit, offset)
-	return commits, err
+func (db *Commitstore) CommitList(repo *types.Repo, limit, offset int) ([]*types.Commit, error) {
+	return getCommits(db, rebind(commitListQuery), repo.ID, limit, offset)
 }
 
 // AddCommit inserts a new commit in the datastore.
-func (db *Commitstore) AddCommit(commit *common.Commit) error {
+func (db *Commitstore) AddCommit(commit *types.Commit) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -64,7 +55,7 @@ func (db *Commitstore) AddCommit(commit *common.Commit) error {
 	commit.Sequence = commit.Sequence + 1 // increment
 	commit.Created = time.Now().UTC().Unix()
 	commit.Updated = time.Now().UTC().Unix()
-	err = meddler.Insert(tx, commitTable, commit)
+	err = createCommit(tx, rebind(stmtCommitInsert), commit)
 	if err != nil {
 		return err
 	}
@@ -73,7 +64,7 @@ func (db *Commitstore) AddCommit(commit *common.Commit) error {
 		build.CommitID = commit.ID
 		build.Created = commit.Created
 		build.Updated = commit.Updated
-		err := meddler.Insert(tx, buildTable, build)
+		err := createBuild(tx, rebind(stmtBuildInsert), build)
 		if err != nil {
 			return err
 		}
@@ -82,7 +73,7 @@ func (db *Commitstore) AddCommit(commit *common.Commit) error {
 }
 
 // SetCommit updates an existing commit and commit tasks.
-func (db *Commitstore) SetCommit(commit *common.Commit) error {
+func (db *Commitstore) SetCommit(commit *types.Commit) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -90,14 +81,14 @@ func (db *Commitstore) SetCommit(commit *common.Commit) error {
 	defer tx.Rollback()
 
 	commit.Updated = time.Now().UTC().Unix()
-	err = meddler.Update(tx, commitTable, commit)
+	err = updateCommit(tx, rebind(stmtCommitUpdate), commit)
 	if err != nil {
 		return err
 	}
 
 	for _, build := range commit.Builds {
 		build.Updated = commit.Updated
-		err := meddler.Update(tx, buildTable, build)
+		err = updateBuild(tx, rebind(stmtBuildUpdate), build)
 		if err != nil {
 			return err
 		}
@@ -123,18 +114,9 @@ const commitTable = "commits"
 const commitListQuery = `
 SELECT *
 FROM commits
-WHERE repo_id = ?
-ORDER BY commit_seq DESC
+WHERE commit_repo_id = ?
+ORDER BY commit_sequence DESC
 LIMIT ? OFFSET ?
-`
-
-// SQL query to retrieve a commit by number.
-const commitNumberQuery = `
-SELECT *
-FROM commits
-WHERE repo_id    = ?
-  AND commit_seq = ?
-LIMIT 1
 `
 
 // SQL query to retrieve the most recent commit.
@@ -142,9 +124,9 @@ LIMIT 1
 const commitLastQuery = `
 SELECT *
 FROM commits
-WHERE repo_id       = ?
-  AND commit_branch = ?
-ORDER BY commit_seq DESC
+WHERE commit_repo_id = ?
+  AND commit_branch  = ?
+ORDER BY commit_sequence DESC
 LIMIT 1
 `
 
@@ -163,7 +145,7 @@ WHERE build_state IN ('pending', 'running');
 // SQL statement to retrieve the commit number for
 // a commit
 const commitNumberLast = `
-SELECT MAX(commit_seq)
-FROM commits 
-WHERE repo_id = ?
+SELECT MAX(commit_sequence)
+FROM commits
+WHERE commit_repo_id = ?
 `
