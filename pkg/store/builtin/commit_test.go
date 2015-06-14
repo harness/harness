@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 )
 
 func TestCommitstore(t *testing.T) {
@@ -23,9 +23,9 @@ func TestCommitstore(t *testing.T) {
 		})
 
 		g.It("Should Post a Commit", func() {
-			commit := common.Commit{
+			commit := types.Commit{
 				RepoID: 1,
-				State:  common.StateSuccess,
+				State:  types.StateSuccess,
 				Ref:    "refs/heads/master",
 				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
@@ -36,15 +36,15 @@ func TestCommitstore(t *testing.T) {
 		})
 
 		g.It("Should Put a Commit", func() {
-			commit := common.Commit{
+			commit := types.Commit{
 				RepoID:   1,
 				Sequence: 5,
-				State:    common.StatePending,
+				State:    types.StatePending,
 				Ref:      "refs/heads/master",
 				Sha:      "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
 			bs.AddCommit(&commit)
-			commit.State = common.StateRunning
+			commit.State = types.StateRunning
 			err1 := bs.SetCommit(&commit)
 			getcommit, err2 := bs.Commit(commit.ID)
 			g.Assert(err1 == nil).IsTrue()
@@ -56,9 +56,9 @@ func TestCommitstore(t *testing.T) {
 		})
 
 		g.It("Should Get a Commit", func() {
-			commit := common.Commit{
+			commit := types.Commit{
 				RepoID: 1,
-				State:  common.StateSuccess,
+				State:  types.StateSuccess,
 			}
 			bs.AddCommit(&commit)
 			getcommit, err := bs.Commit(commit.ID)
@@ -69,21 +69,21 @@ func TestCommitstore(t *testing.T) {
 		})
 
 		g.It("Should Get a Commit by Sequence", func() {
-			commit1 := &common.Commit{
+			commit1 := &types.Commit{
 				RepoID: 1,
-				State:  common.StatePending,
+				State:  types.StatePending,
 				Ref:    "refs/heads/master",
 				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
-			commit2 := &common.Commit{
+			commit2 := &types.Commit{
 				RepoID: 1,
-				State:  common.StatePending,
+				State:  types.StatePending,
 				Ref:    "refs/heads/dev",
 				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
 			err1 := bs.AddCommit(commit1)
 			err2 := bs.AddCommit(commit2)
-			getcommit, err3 := bs.CommitSeq(&common.Repo{ID: 1}, commit2.Sequence)
+			getcommit, err3 := bs.CommitSeq(&types.Repo{ID: 1}, commit2.Sequence)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(err3 == nil).IsTrue()
@@ -93,15 +93,15 @@ func TestCommitstore(t *testing.T) {
 		})
 
 		g.It("Should Kill Pending or Started Commits", func() {
-			commit1 := &common.Commit{
+			commit1 := &types.Commit{
 				RepoID: 1,
-				State:  common.StateRunning,
+				State:  types.StateRunning,
 				Ref:    "refs/heads/master",
 				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
-			commit2 := &common.Commit{
+			commit2 := &types.Commit{
 				RepoID: 1,
-				State:  common.StatePending,
+				State:  types.StatePending,
 				Ref:    "refs/heads/dev",
 				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
@@ -113,26 +113,26 @@ func TestCommitstore(t *testing.T) {
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(err3 == nil).IsTrue()
-			g.Assert(getcommit1.State).Equal(common.StateKilled)
-			g.Assert(getcommit2.State).Equal(common.StateKilled)
+			g.Assert(getcommit1.State).Equal(types.StateKilled)
+			g.Assert(getcommit2.State).Equal(types.StateKilled)
 		})
 
 		g.It("Should get recent Commits", func() {
-			commit1 := &common.Commit{
+			commit1 := &types.Commit{
 				RepoID: 1,
-				State:  common.StateFailure,
+				State:  types.StateFailure,
 				Ref:    "refs/heads/master",
 				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
-			commit2 := &common.Commit{
+			commit2 := &types.Commit{
 				RepoID: 1,
-				State:  common.StateSuccess,
+				State:  types.StateSuccess,
 				Ref:    "refs/heads/dev",
 				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
 			bs.AddCommit(commit1)
 			bs.AddCommit(commit2)
-			commits, err := bs.CommitList(&common.Repo{ID: 1}, 20, 0)
+			commits, err := bs.CommitList(&types.Repo{ID: 1}, 20, 0)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(commits)).Equal(2)
 			g.Assert(commits[0].ID).Equal(commit2.ID)
@@ -141,23 +141,23 @@ func TestCommitstore(t *testing.T) {
 		})
 
 		g.It("Should get the last Commit", func() {
-			commit1 := &common.Commit{
+			commit1 := &types.Commit{
 				RepoID: 1,
-				State:  common.StateFailure,
+				State:  types.StateFailure,
 				Branch: "master",
 				Ref:    "refs/heads/master",
 				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
-			commit2 := &common.Commit{
+			commit2 := &types.Commit{
 				RepoID: 1,
-				State:  common.StateFailure,
+				State:  types.StateFailure,
 				Branch: "master",
 				Ref:    "refs/heads/master",
 				Sha:    "8d6a233744a5dcacbf2605d4592a4bfe8b37320d",
 			}
-			commit3 := &common.Commit{
+			commit3 := &types.Commit{
 				RepoID: 1,
-				State:  common.StateSuccess,
+				State:  types.StateSuccess,
 				Branch: "dev",
 				Ref:    "refs/heads/dev",
 				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
@@ -165,7 +165,7 @@ func TestCommitstore(t *testing.T) {
 			err1 := bs.AddCommit(commit1)
 			err2 := bs.AddCommit(commit2)
 			err3 := bs.AddCommit(commit3)
-			last, err4 := bs.CommitLast(&common.Repo{ID: 1}, "master")
+			last, err4 := bs.CommitLast(&types.Repo{ID: 1}, "master")
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(err3 == nil).IsTrue()

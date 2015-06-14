@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
 	"github.com/drone/drone/pkg/types"
 )
 
@@ -34,9 +33,12 @@ func (db *Userstore) UserList() ([]*types.User, error) {
 // UserFeed retrieves a digest of recent builds
 // from the datastore accessible to the specified user.
 func (db *Userstore) UserFeed(user *types.User, limit, offset int) ([]*types.RepoCommit, error) {
-	var builds []*types.RepoCommit
-	var err = meddler.QueryAll(db, &builds, rebind(userFeedQuery), user.ID, limit, offset)
-	return builds, err
+	rows, err := db.Query(rebind(userFeedQuery), user.ID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanRepoCommits(rows)
 }
 
 // UserCount returns a count of all registered users.
@@ -74,7 +76,7 @@ SELECT
 ,r.repo_owner
 ,r.repo_name
 ,r.repo_full_name
-,c.commit_seq
+,c.commit_sequence
 ,c.commit_state
 ,c.commit_started
 ,c.commit_finished
@@ -82,9 +84,32 @@ FROM
  commits c
 ,repos r
 ,stars s
-WHERE c.repo_id = r.repo_id
+WHERE c.commit_repo_id = r.repo_id
   AND r.repo_id = s.star_repo_id
   AND s.star_user_id = ?
-ORDER BY c.commit_seq DESC
+ORDER BY c.commit_sequence DESC
 LIMIT ? OFFSET ?
 `
+
+func scanRepoCommits(rows *sql.Rows) ([]*types.RepoCommit, error) {
+	var err error
+	var vv []*types.RepoCommit
+	for rows.Next() {
+		v := &types.RepoCommit{}
+		err = rows.Scan(
+			&v.ID,
+			&v.Owner,
+			&v.Name,
+			&v.FullName,
+			&v.Number,
+			&v.State,
+			&v.Started,
+			&v.Finished,
+		)
+		if err != nil {
+			return vv, err
+		}
+		vv = append(vv, v)
+	}
+	return vv, rows.Err()
+}
