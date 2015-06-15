@@ -2,6 +2,7 @@ package builtin
 
 import (
 	"database/sql"
+	"net/url"
 	"os"
 
 	"github.com/drone/drone/pkg/store"
@@ -18,6 +19,28 @@ const (
 	driverSqlite   = "sqlite3"
 	driverMysql    = "mysql"
 )
+
+func init() {
+	store.Register("sqlite3", NewDriver)
+	store.Register("postgres", NewDriver)
+}
+
+func NewDriver(dsn string) (store.Store, error) {
+	uri, err := url.Parse(dsn)
+	if err != nil {
+		return nil, err
+	}
+	driver := uri.Scheme
+	if uri.Scheme == "sqlite3" {
+		uri.Scheme = ""
+	}
+	datasource := uri.String()
+	conn, err := Connect(driver, datasource)
+	if err != nil {
+		return nil, err
+	}
+	return New(conn), nil
+}
 
 // Connect is a helper function that establishes a new
 // database connection and auto-generates the database

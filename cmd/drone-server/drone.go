@@ -4,6 +4,7 @@ import (
 	"flag"
 	"html/template"
 	"net/http"
+	"os"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 
@@ -17,7 +18,9 @@ import (
 	eventbus "github.com/drone/drone/pkg/bus/builtin"
 	queue "github.com/drone/drone/pkg/queue/builtin"
 	runner "github.com/drone/drone/pkg/runner/builtin"
-	store "github.com/drone/drone/pkg/store/builtin"
+	"github.com/drone/drone/pkg/store"
+
+	_ "github.com/drone/drone/pkg/store/builtin"
 
 	_ "net/http/pprof"
 )
@@ -42,9 +45,10 @@ func main() {
 		panic(err)
 	}
 
-	db := store.MustConnect(settings.Database.Driver, settings.Database.Datasource)
-	store := store.New(db)
-	defer db.Close()
+	store, err := store.New(os.Getenv("DATABASE"))
+	if err != nil {
+		panic(err)
+	}
 
 	remote := github.New(settings)
 	session := session.New(settings)
