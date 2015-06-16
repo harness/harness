@@ -24,16 +24,16 @@ func GetCommit(c *gin.Context) {
 	repo := ToRepo(c)
 	num, err := strconv.Atoi(c.Params.ByName("number"))
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 		return
 	}
 	commit, err := store.CommitSeq(repo, num)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 	}
 	commit.Builds, err = store.BuildList(commit)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 	} else {
 		c.JSON(200, commit)
 	}
@@ -49,7 +49,7 @@ func GetCommits(c *gin.Context) {
 	repo := ToRepo(c)
 	commits, err := store.CommitList(repo, 20, 0)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 	} else {
 		c.JSON(200, commits)
 	}
@@ -71,7 +71,7 @@ func GetLogs(c *gin.Context) {
 	path := fmt.Sprintf("/logs/%s/%v/%v", repo.FullName, commit, build)
 	r, err := store.GetBlobReader(path)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 	} else if full {
 		io.Copy(c.Writer, r)
 	} else {
@@ -90,7 +90,7 @@ func GetLogs(c *gin.Context) {
 // 	repo := ToRepo(c)
 // 	num, err := strconv.Atoi(c.Params.ByName("number"))
 // 	if err != nil {
-// 		c.Fail(400, err)
+// 		c.AbortWithError(400, err)
 // 		return
 // 	}
 // 	in := &common.Status{}
@@ -99,7 +99,7 @@ func GetLogs(c *gin.Context) {
 // 		return
 // 	}
 // 	if err := store.SetBuildStatus(repo.Name, num, in); err != nil {
-// 		c.Fail(400, err)
+// 		c.AbortWithError(400, err)
 // 	} else {
 // 		c.JSON(201, in)
 // 	}
@@ -118,17 +118,17 @@ func RunBuild(c *gin.Context) {
 
 	num, err := strconv.Atoi(c.Params.ByName("number"))
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 		return
 	}
 	commit, err := store.CommitSeq(repo, num)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 	commit.Builds, err = store.BuildList(commit)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 
@@ -139,7 +139,7 @@ func RunBuild(c *gin.Context) {
 
 	user, err := store.User(repo.UserID)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 
@@ -162,20 +162,20 @@ func RunBuild(c *gin.Context) {
 
 	err = store.SetCommit(commit)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
 	netrc, err := remote.Netrc(user)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
 	// featch the .drone.yml file from the database
 	raw, err := remote.Script(user, repo, commit)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 
@@ -209,23 +209,23 @@ func KillBuild(c *gin.Context) {
 	repo := ToRepo(c)
 	num, err := strconv.Atoi(c.Params.ByName("number"))
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 		return
 	}
 	commit, err := store.CommitSeq(repo, num)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 	commit.Builds, err = store.BuildList(commit)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 
 	// must not restart a running build
 	if commit.State != common.StatePending && commit.State != common.StateRunning {
-		c.Fail(409, err)
+		c.AbortWithError(409, err)
 		return
 	}
 
@@ -256,7 +256,7 @@ func KillBuild(c *gin.Context) {
 	}
 	err = store.SetCommit(commit)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
@@ -274,7 +274,7 @@ func KillBuild(c *gin.Context) {
 	// url_.Path = fmt.Sprintf("/cancel/%s/%v", repo.FullName, build.Number)
 	// resp, err := http.Post(url_.String(), "application/json", nil)
 	// if err != nil {
-	// 	c.Fail(500, err)
+	// 	c.AbortWithError(500, err)
 	// 	return
 	// }
 	// defer resp.Body.Close()

@@ -62,12 +62,12 @@ func GetStream(c *gin.Context) {
 
 	commit, err := store.CommitSeq(repo, commitseq)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 	build, err := store.BuildSeq(commit, buildseq)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 
@@ -79,13 +79,13 @@ func GetStream(c *gin.Context) {
 	if conf.Agents.Secret != "" {
 		addr, err := store.Agent(commit)
 		if err != nil {
-			c.Fail(500, err)
+			c.AbortWithError(500, err)
 			return
 		}
 		url := fmt.Sprintf("http://%s/stream/%d?token=%s", addr, build.ID, conf.Agents.Secret)
 		resp, err := http.Get(url)
 		if err != nil {
-			c.Fail(500, err)
+			c.AbortWithError(500, err)
 			return
 		} else if resp.StatusCode != 200 {
 			resp.Body.Close()
@@ -99,7 +99,7 @@ func GetStream(c *gin.Context) {
 		// by the build agent we can use the local runner
 		rc, err = runner.Logs(build)
 		if err != nil {
-			c.Fail(404, err)
+			c.AbortWithError(404, err)
 			return
 		}
 	}

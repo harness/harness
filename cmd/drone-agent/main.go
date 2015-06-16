@@ -105,7 +105,7 @@ func stream(c *gin.Context) {
 
 	client, err := dockerclient.NewDockerClient(DockerHost, nil)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 	cname := fmt.Sprintf("drone-%s", c.Params.ByName("id"))
@@ -113,7 +113,7 @@ func stream(c *gin.Context) {
 	// finds the container by name
 	info, err := client.InspectContainer(cname)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 
@@ -124,14 +124,14 @@ func stream(c *gin.Context) {
 			time.Sleep(1 * time.Second)
 			info, err = client.InspectContainer(info.Id)
 			if err != nil {
-				c.Fail(404, err)
+				c.AbortWithError(404, err)
 				return
 			}
 			if info.State.Running {
 				break
 			}
 			if i == 5 {
-				c.Fail(404, dockerclient.ErrNotFound)
+				c.AbortWithError(404, dockerclient.ErrNotFound)
 				return
 			}
 		}
@@ -147,7 +147,7 @@ func stream(c *gin.Context) {
 	// daemon to the request.
 	rc, err := client.ContainerLogs(info.Id, logs)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 	io.Copy(c.Writer, rc)

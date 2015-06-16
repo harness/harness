@@ -16,7 +16,7 @@ func PostToken(c *gin.Context) {
 	user := ToUser(c)
 
 	in := &common.Token{}
-	if !c.BindWith(in, binding.JSON) {
+	if c.BindWith(in, binding.JSON) != nil {
 		return
 	}
 
@@ -31,13 +31,13 @@ func PostToken(c *gin.Context) {
 
 	err := store.AddToken(token)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
 	jwt, err := sess.GenerateToken(token)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 		return
 	}
 
@@ -55,12 +55,12 @@ func DelToken(c *gin.Context) {
 
 	token, err := store.TokenLabel(user, label)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 	err = store.DelToken(token)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 		return
 	}
 

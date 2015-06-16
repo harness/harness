@@ -112,9 +112,8 @@
 			"Rev": "e0403b4e005737430c05a57aac078479844f919c"
 		},
 		{
-			"ImportPath": "gopkg.in/joeybloggs/go-validate-yourself.v4",
-			"Comment": "v4.0.4",
-			"Rev": "47a6634ff80051b92481b6c076854b85119fd267"
+			"ImportPath": "gopkg.in/bluesuncorp/validator.v5",
+			"Rev": "df95f9de27b8022e57f8ce09448cee6b1170bb3d"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",

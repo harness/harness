@@ -4,13 +4,11 @@
 
 package gin
 
-import (
-	"log"
-	"os"
-)
+import "log"
 
-var debugLogger = log.New(os.Stdout, "[GIN-debug] ", 0)
-
+func init() {
+	log.SetFlags(0)
+}
 func IsDebugging() bool {
 	return ginMode == debugCode
 }
@@ -25,12 +23,16 @@ func debugPrintRoute(httpMethod, absolutePath string, handlers HandlersChain) {
 
 func debugPrint(format string, values ...interface{}) {
 	if IsDebugging() {
-		debugLogger.Printf(format, values...)
+		log.Printf("[GIN-debug] "+format, values...)
 	}
 }
 
 func debugPrintWARNING() {
-	debugPrint("[WARNING] Running in DEBUG mode! Disable it before going production\n")
+	debugPrint(`[WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+`)
 }
 
 func debugPrintError(err error) {

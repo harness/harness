@@ -28,14 +28,14 @@ func PutUserCurr(c *gin.Context) {
 	user := ToUser(c)
 
 	in := &common.User{}
-	if !c.BindWith(in, binding.JSON) {
+	if c.BindWith(in, binding.JSON) != nil {
 		return
 	}
 	user.Email = in.Email
 	user.Gravatar = gravatar.Hash(in.Email)
 	err := store.SetUser(user)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 	} else {
 		c.JSON(200, user)
 	}
@@ -52,7 +52,7 @@ func GetUserRepos(c *gin.Context) {
 	user := ToUser(c)
 	repos, err := store.RepoList(user)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 	} else {
 		c.JSON(200, &repos)
 	}
@@ -69,7 +69,7 @@ func GetUserTokens(c *gin.Context) {
 	user := ToUser(c)
 	tokens, err := store.TokenList(user)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 	} else {
 		c.JSON(200, &tokens)
 	}

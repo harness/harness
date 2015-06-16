@@ -89,7 +89,7 @@ func PutRepo(c *gin.Context) {
 	repo := ToRepo(c)
 
 	in := &repoReq{}
-	if !c.BindWith(in, binding.JSON) {
+	if c.BindWith(in, binding.JSON) != nil {
 		return
 	}
 
@@ -112,7 +112,7 @@ func PutRepo(c *gin.Context) {
 
 	err := store.SetRepo(repo)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 		return
 	}
 
@@ -144,12 +144,12 @@ func DeleteRepo(c *gin.Context) {
 	remote := ToRemote(c)
 	err := remote.Deactivate(u, r, link)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 	}
 
 	err = ds.DelRepo(r)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 	}
 	c.Writer.WriteHeader(200)
 }
@@ -171,15 +171,15 @@ func PostRepo(c *gin.Context) {
 	remote := ToRemote(c)
 	r, err := remote.Repo(user, owner, name)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 	}
 	m, err := remote.Perm(user, owner, name)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 		return
 	}
 	if !m.Admin {
-		c.Fail(403, fmt.Errorf("must be repository admin"))
+		c.AbortWithError(403, fmt.Errorf("must be repository admin"))
 		return
 	}
 
@@ -195,7 +195,7 @@ func PostRepo(c *gin.Context) {
 	token.Label = r.FullName
 	tokenstr, err := sess.GenerateToken(token)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
@@ -220,7 +220,7 @@ func PostRepo(c *gin.Context) {
 	// generate an RSA key and add to the repo
 	key, err := sshutil.GeneratePrivateKey()
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 		return
 	}
 	r.PublicKey = string(sshutil.MarshalPublicKey(&key.PublicKey))
@@ -234,14 +234,14 @@ func PostRepo(c *gin.Context) {
 	// local changes to the database.
 	err = remote.Activate(user, r, keypair, link)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
 	// persist the repository
 	err = store.AddRepo(r)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
@@ -262,7 +262,7 @@ func Unsubscribe(c *gin.Context) {
 
 	err := store.DelStar(user, repo)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 	} else {
 		c.Writer.WriteHeader(200)
 	}
@@ -280,7 +280,7 @@ func Subscribe(c *gin.Context) {
 
 	err := store.AddStar(user, repo)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 	} else {
 		c.Writer.WriteHeader(200)
 	}

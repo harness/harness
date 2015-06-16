@@ -1,3 +1,7 @@
+// Copyright 2014 Manu Martinez-Almeida.  All rights reserved.
+// Use of this source code is governed by a MIT style
+// license that can be found in the LICENSE file.
+
 package render
 
 import (
@@ -26,6 +30,8 @@ type (
 	}
 )
 
+var htmlContentType = []string{"text/html; charset=utf-8"}
+
 func (r HTMLProduction) Instance(name string, data interface{}) Render {
 	return HTML{
 		Template: r.Template,
@@ -46,12 +52,16 @@ func (r HTMLDebug) loadTemplate() *template.Template {
 		return template.Must(template.ParseFiles(r.Files...))
 	}
 	if len(r.Glob) > 0 {
-		return template.Must(template.ParseFiles(r.Files...))
+		return template.Must(template.ParseGlob(r.Glob))
 	}
 	panic("the HTML debug render was created without files or glob pattern")
 }
 
-func (r HTML) Write(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	return r.Template.ExecuteTemplate(w, r.Name, r.Data)
+func (r HTML) Render(w http.ResponseWriter) error {
+	writeContentType(w, htmlContentType)
+	if len(r.Name) == 0 {
+		return r.Template.Execute(w, r.Data)
+	} else {
+		return r.Template.ExecuteTemplate(w, r.Name, r.Data)
+	}
 }
