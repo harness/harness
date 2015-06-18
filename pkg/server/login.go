@@ -84,9 +84,8 @@ func GetLogin(c *gin.Context) {
 		u.Login = login.Login
 		u.Token = login.Token
 		u.Secret = login.Secret
-		u.Name = login.Name
 		u.Email = login.Email
-		u.Gravatar = gravatar.Hash(u.Email)
+		u.Avatar = gravatar.Hash(u.Email)
 
 		// insert the user into the database
 		if err := store.AddUser(u); err != nil {
@@ -106,9 +105,8 @@ func GetLogin(c *gin.Context) {
 	// data and cache in the datastore.
 	u.Token = login.Token
 	u.Secret = login.Secret
-	u.Name = login.Name
 	u.Email = login.Email
-	u.Gravatar = gravatar.Hash(u.Email)
+	u.Avatar = gravatar.Hash(u.Email)
 
 	if err := store.SetUser(u); err != nil {
 		log.Errorf("cannot update %s. %s", u.Login, err)

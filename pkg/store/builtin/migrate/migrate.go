@@ -37,13 +37,10 @@ CREATE TABLE IF NOT EXISTS users (
 	,user_login        VARCHAR(255)
 	,user_token        VARCHAR(255)
 	,user_secret       VARCHAR(255)
-	,user_name         VARCHAR(255)
 	,user_email        VARCHAR(255)
-	,user_gravatar     VARCHAR(255)
+	,user_avatar       VARCHAR(255)
 	,user_admin        BOOLEAN
 	,user_active       BOOLEAN
-	,user_created      INTEGER
-	,user_updated      INTEGER
 	,UNIQUE(user_login)
 );
 `
@@ -79,33 +76,6 @@ CREATE TABLE IF NOT EXISTS repos (
 var repoUserIndex = `
 CREATE INDEX repos_user_idx ON repos (repo_user_id);
 `
-
-// var repoKeyTable = `
-// CREATE TABLE IF NOT EXISTS repo_keys (
-// 	 keys_id       INTEGER PRIMARY KEY AUTOINCREMENT
-// 	,repo_id       INTEGER
-// 	,keys_public   BLOB
-// 	,keys_private  BLOB
-// 	,UNIQUE(repo_id)
-// );
-// `
-//
-// var repoKeyIndex = `
-// CREATE INDEX keys_repo_idx ON repo_keys (repo_id);
-// `
-
-// var repoParamTable = `
-// CREATE TABLE IF NOT EXISTS repo_params (
-// 	 param_id      INTEGER PRIMARY KEY AUTOINCREMENT
-// 	,repo_id       INTEGER
-// 	,param_map    BLOB
-// 	,UNIQUE(repo_id)
-// );
-// `
-//
-// var repoParamsIndex = `
-// CREATE INDEX params_repo_idx ON repo_params (repo_id);
-// `
 
 var starTable = `
 CREATE TABLE IF NOT EXISTS stars (

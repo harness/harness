@@ -32,7 +32,7 @@ func PutUserCurr(c *gin.Context) {
 		return
 	}
 	user.Email = in.Email
-	user.Gravatar = gravatar.Hash(in.Email)
+	user.Avatar = gravatar.Hash(in.Email)
 	err := store.SetUser(user)
 	if err != nil {
 		c.Fail(400, err)

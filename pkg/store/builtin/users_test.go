@@ -31,7 +31,6 @@ func TestUserstore(t *testing.T) {
 		g.It("Should Update a User", func() {
 			user := types.User{
 				Login: "joe",
-				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
@@ -47,7 +46,6 @@ func TestUserstore(t *testing.T) {
 		g.It("Should Add a new User", func() {
 			user := types.User{
 				Login: "joe",
-				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
@@ -58,16 +56,13 @@ func TestUserstore(t *testing.T) {
 
 		g.It("Should Get a User", func() {
 			user := types.User{
-				Login:    "joe",
-				Token:    "f0b461ca586c27872b43a0685cbc2847",
-				Secret:   "976f22a5eef7caacb7e678d6c52f49b1",
-				Name:     "Joe Sixpack",
-				Email:    "foo@bar.com",
-				Gravatar: "b9015b0857e16ac4d94a0ffd9a0b79c8",
-				Active:   true,
-				Admin:    true,
-				Created:  1398065343,
-				Updated:  1398065344,
+				Login:  "joe",
+				Token:  "f0b461ca586c27872b43a0685cbc2847",
+				Secret: "976f22a5eef7caacb7e678d6c52f49b1",
+				Email:  "foo@bar.com",
+				Avatar: "b9015b0857e16ac4d94a0ffd9a0b79c8",
+				Active: true,
+				Admin:  true,
 			}
 			us.AddUser(&user)
 			getuser, err := us.User(user.ID)
@@ -76,19 +71,15 @@ func TestUserstore(t *testing.T) {
 			g.Assert(user.Login).Equal(getuser.Login)
 			g.Assert(user.Token).Equal(getuser.Token)
 			g.Assert(user.Secret).Equal(getuser.Secret)
-			g.Assert(user.Name).Equal(getuser.Name)
 			g.Assert(user.Email).Equal(getuser.Email)
-			g.Assert(user.Gravatar).Equal(getuser.Gravatar)
+			g.Assert(user.Avatar).Equal(getuser.Avatar)
 			g.Assert(user.Active).Equal(getuser.Active)
 			g.Assert(user.Admin).Equal(getuser.Admin)
-			g.Assert(user.Created).Equal(getuser.Created)
-			g.Assert(user.Updated).Equal(getuser.Updated)
 		})
 
 		g.It("Should Get a User By Login", func() {
 			user := types.User{
 				Login: "joe",
-				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
@@ -102,13 +93,11 @@ func TestUserstore(t *testing.T) {
 		g.It("Should Enforce Unique User Login", func() {
 			user1 := types.User{
 				Login: "joe",
-				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
 			user2 := types.User{
 				Login: "joe",
-				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
 				Token: "ab20g0ddaf012c744e136da16aa21ad9",
 			}
@@ -121,13 +110,11 @@ func TestUserstore(t *testing.T) {
 		g.It("Should Get a User List", func() {
 			user1 := types.User{
 				Login: "jane",
-				Name:  "Jane Doe",
 				Email: "foo@bar.com",
 				Token: "ab20g0ddaf012c744e136da16aa21ad9",
 			}
 			user2 := types.User{
 				Login: "joe",
-				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
@@ -137,7 +124,6 @@ func TestUserstore(t *testing.T) {
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(users)).Equal(2)
 			g.Assert(users[0].Login).Equal(user1.Login)
-			g.Assert(users[0].Name).Equal(user1.Name)
 			g.Assert(users[0].Email).Equal(user1.Email)
 			g.Assert(users[0].Token).Equal(user1.Token)
 		})
@@ -145,13 +131,11 @@ func TestUserstore(t *testing.T) {
 		g.It("Should Get a User Count", func() {
 			user1 := types.User{
 				Login: "jane",
-				Name:  "Jane Doe",
 				Email: "foo@bar.com",
 				Token: "ab20g0ddaf012c744e136da16aa21ad9",
 			}
 			user2 := types.User{
 				Login: "joe",
-				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
@@ -171,7 +155,6 @@ func TestUserstore(t *testing.T) {
 		g.It("Should Del a User", func() {
 			user := types.User{
 				Login: "joe",
-				Name:  "Joe Sixpack",
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}

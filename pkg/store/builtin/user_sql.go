@@ -39,21 +39,15 @@ func createUser(db userDB, query string, v *User) error {
 	var v2 string
 	var v3 string
 	var v4 string
-	var v5 string
+	var v5 bool
 	var v6 bool
-	var v7 bool
-	var v8 int64
-	var v9 int64
 	v0 = v.Login
 	v1 = v.Token
 	v2 = v.Secret
-	v3 = v.Name
-	v4 = v.Email
-	v5 = v.Gravatar
+	v3 = v.Email
+	v4 = v.Avatar
+	v5 = v.Active
 	v6 = v.Admin
-	v7 = v.Active
-	v8 = v.Created
-	v9 = v.Updated
 
 	res, err := db.Exec(query,
 		&v0,
@@ -63,9 +57,6 @@ func createUser(db userDB, query string, v *User) error {
 		&v4,
 		&v5,
 		&v6,
-		&v7,
-		&v8,
-		&v9,
 	)
 	if err != nil {
 		return err
@@ -82,22 +73,16 @@ func updateUser(db userDB, query string, v *User) error {
 	var v3 string
 	var v4 string
 	var v5 string
-	var v6 string
+	var v6 bool
 	var v7 bool
-	var v8 bool
-	var v9 int64
-	var v10 int64
 	v0 = v.ID
 	v1 = v.Login
 	v2 = v.Token
 	v3 = v.Secret
-	v4 = v.Name
-	v5 = v.Email
-	v6 = v.Gravatar
+	v4 = v.Email
+	v5 = v.Avatar
+	v6 = v.Active
 	v7 = v.Admin
-	v8 = v.Active
-	v9 = v.Created
-	v10 = v.Updated
 
 	_, err := db.Exec(query,
 		&v1,
@@ -107,9 +92,6 @@ func updateUser(db userDB, query string, v *User) error {
 		&v5,
 		&v6,
 		&v7,
-		&v8,
-		&v9,
-		&v10,
 		&v0,
 	)
 	return err
@@ -122,11 +104,8 @@ func scanUser(row *sql.Row) (*User, error) {
 	var v3 string
 	var v4 string
 	var v5 string
-	var v6 string
+	var v6 bool
 	var v7 bool
-	var v8 bool
-	var v9 int64
-	var v10 int64
 
 	err := row.Scan(
 		&v0,
@@ -137,9 +116,6 @@ func scanUser(row *sql.Row) (*User, error) {
 		&v5,
 		&v6,
 		&v7,
-		&v8,
-		&v9,
-		&v10,
 	)
 	if err != nil {
 		return nil, err
@@ -150,13 +126,10 @@ func scanUser(row *sql.Row) (*User, error) {
 	v.Login = v1
 	v.Token = v2
 	v.Secret = v3
-	v.Name = v4
-	v.Email = v5
-	v.Gravatar = v6
+	v.Email = v4
+	v.Avatar = v5
+	v.Active = v6
 	v.Admin = v7
-	v.Active = v8
-	v.Created = v9
-	v.Updated = v10
 
 	return v, nil
 }
@@ -171,11 +144,8 @@ func scanUsers(rows *sql.Rows) ([]*User, error) {
 		var v3 string
 		var v4 string
 		var v5 string
-		var v6 string
+		var v6 bool
 		var v7 bool
-		var v8 bool
-		var v9 int64
-		var v10 int64
 		err = rows.Scan(
 			&v0,
 			&v1,
@@ -185,9 +155,6 @@ func scanUsers(rows *sql.Rows) ([]*User, error) {
 			&v5,
 			&v6,
 			&v7,
-			&v8,
-			&v9,
-			&v10,
 		)
 		if err != nil {
 			return vv, err
@@ -198,13 +165,10 @@ func scanUsers(rows *sql.Rows) ([]*User, error) {
 		v.Login = v1
 		v.Token = v2
 		v.Secret = v3
-		v.Name = v4
-		v.Email = v5
-		v.Gravatar = v6
+		v.Email = v4
+		v.Avatar = v5
+		v.Active = v6
 		v.Admin = v7
-		v.Active = v8
-		v.Created = v9
-		v.Updated = v10
 		vv = append(vv, v)
 	}
 	return vv, rows.Err()
@@ -216,13 +180,10 @@ SELECT
 ,user_login
 ,user_token
 ,user_secret
-,user_name
 ,user_email
-,user_gravatar
-,user_admin
+,user_avatar
 ,user_active
-,user_created
-,user_updated
+,user_admin
 FROM users
 `
 
@@ -232,13 +193,10 @@ SELECT
 ,user_login
 ,user_token
 ,user_secret
-,user_name
 ,user_email
-,user_gravatar
-,user_admin
+,user_avatar
 ,user_active
-,user_created
-,user_updated
+,user_admin
 FROM users
 LIMIT ? OFFSET ?
 `
@@ -249,13 +207,10 @@ SELECT
 ,user_login
 ,user_token
 ,user_secret
-,user_name
 ,user_email
-,user_gravatar
-,user_admin
+,user_avatar
 ,user_active
-,user_created
-,user_updated
+,user_admin
 FROM users
 WHERE user_id = ?
 `
@@ -266,13 +221,10 @@ SELECT
 ,user_login
 ,user_token
 ,user_secret
-,user_name
 ,user_email
-,user_gravatar
-,user_admin
+,user_avatar
 ,user_active
-,user_created
-,user_updated
+,user_admin
 FROM users
 WHERE user_login = ?
 `
@@ -287,14 +239,11 @@ INSERT INTO users (
  user_login
 ,user_token
 ,user_secret
-,user_name
 ,user_email
-,user_gravatar
-,user_admin
+,user_avatar
 ,user_active
-,user_created
-,user_updated
-) VALUES (?,?,?,?,?,?,?,?,?,?);
+,user_admin
+) VALUES (?,?,?,?,?,?,?);
 `
 
 const stmtUserUpdate = `
@@ -302,13 +251,10 @@ UPDATE users SET
  user_login = ?
 ,user_token = ?
 ,user_secret = ?
-,user_name = ?
 ,user_email = ?
-,user_gravatar = ?
-,user_admin = ?
+,user_avatar = ?
 ,user_active = ?
-,user_created = ?
-,user_updated = ?
+,user_admin = ?
 WHERE user_id = ?
 `
 
@@ -319,17 +265,14 @@ WHERE user_id = ?
 
 const stmtUserTable = `
 CREATE TABLE IF NOT EXISTS users (
- user_id	INTEGER PRIMARY KEY AUTOINCREMENT
-,user_login	VARCHAR
-,user_token	VARCHAR
+ user_id		INTEGER PRIMARY KEY AUTOINCREMENT
+,user_login		VARCHAR
+,user_token		VARCHAR
 ,user_secret	VARCHAR
-,user_name	VARCHAR
-,user_email	VARCHAR
-,user_gravatar	VARCHAR
-,user_admin	BOOLEAN
+,user_email		VARCHAR
+,user_avatar	VARCHAR
 ,user_active	BOOLEAN
-,user_created	INTEGER
-,user_updated	INTEGER
+,user_admin		BOOLEAN
 );
 `
 

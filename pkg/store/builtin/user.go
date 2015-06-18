@@ -2,7 +2,6 @@ package builtin
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/drone/drone/pkg/types"
 )
@@ -51,14 +50,11 @@ func (db *Userstore) UserCount() (int, error) {
 // AddUser inserts a new user into the datastore.
 // If the user login already exists an error is returned.
 func (db *Userstore) AddUser(user *types.User) error {
-	user.Created = time.Now().UTC().Unix()
-	user.Updated = time.Now().UTC().Unix()
 	return createUser(db, rebind(stmtUserInsert), user)
 }
 
 // SetUser updates an existing user.
 func (db *Userstore) SetUser(user *types.User) error {
-	user.Updated = time.Now().UTC().Unix()
 	return updateUser(db, rebind(stmtUserUpdate), user)
 }
 
