@@ -324,8 +324,6 @@ func TestCommits(t *testing.T) {
 			store.On("Script", user1, repo1, commit1).Return(bufYMLFile, nil).Once()
 			RunBuild(ctx)
 			//
-			//var readerOut io.ReadCloser
-			//var readerOut []byte
 			// as we don't have an existing build, we should have a 404.
 			if (rw.Status()) != 0 {
 				g.Assert(rw.Code).Equal(404)
@@ -354,7 +352,7 @@ func TestCommits(t *testing.T) {
 			}
 			commit1 := &common.Commit{
 				RepoID: 1,
-				State:  common.StateSuccess,
+				State:  common.StatePending, //common.StateSuccess,
 				Ref:    "refs/heads/master",
 				Sha:    "14710626f22791619d3b7e9ccf58b10374e5b76d",
 				Builds: buildList,
@@ -398,12 +396,9 @@ func TestCommits(t *testing.T) {
 			store.On("SetCommit", commit1).Return(nil).Once()
 			KillBuild(ctx)
 			//
-			// need to check this case with 409.
 			var readerOut []byte
 			json.Unmarshal(rw.Body.Bytes(), &readerOut)
 			g.Assert(rw.Code).Equal(200)
-			//g.Assert(src)
 		})
 	})
-
 }
