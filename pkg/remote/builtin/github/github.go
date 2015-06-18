@@ -74,7 +74,6 @@ func (g *GitHub) Login(token, secret string) (*common.User, error) {
 	user := common.User{}
 	user.Login = *login.Login
 	user.Email = *login.Email
-	user.Name = *login.Name
 	user.Token = token
 	user.Secret = secret
 	return &user, nil

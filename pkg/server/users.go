@@ -32,7 +32,7 @@ func GetUsers(c *gin.Context) {
 func PostUser(c *gin.Context) {
 	store := ToDatastore(c)
 	name := c.Params.ByName("name")
-	user := &common.User{Login: name, Name: name}
+	user := &common.User{Login: name}
 	user.Token = c.Request.FormValue("token")
 	user.Secret = c.Request.FormValue("secret")
 	if err := store.AddUser(user); err != nil {
@@ -80,7 +80,7 @@ func PutUser(c *gin.Context) {
 		return
 	}
 	user.Email = in.Email
-	user.Gravatar = gravatar.Hash(user.Email)
+	user.Avatar = gravatar.Hash(user.Email)
 
 	// an administrator must not be able to
 	// downgrade her own account.
