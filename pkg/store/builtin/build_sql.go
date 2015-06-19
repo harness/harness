@@ -13,47 +13,41 @@ import (
 var _ = json.Marshal
 
 // generic database interface, matching both *sql.Db and *sql.Tx
-type buildDB interface {
+type jobDB interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
 }
 
-func getBuild(db buildDB, query string, args ...interface{}) (*Build, error) {
+func getJob(db jobDB, query string, args ...interface{}) (*Job, error) {
 	row := db.QueryRow(query, args...)
-	return scanBuild(row)
+	return scanJob(row)
 }
 
-func getBuilds(db buildDB, query string, args ...interface{}) ([]*Build, error) {
+func getJobs(db jobDB, query string, args ...interface{}) ([]*Job, error) {
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	return scanBuilds(rows)
+	return scanJobs(rows)
 }
 
-func createBuild(db buildDB, query string, v *Build) error {
+func createJob(db jobDB, query string, v *Job) error {
 	var v0 int64
-	var v1 string
-	var v2 int
+	var v1 int
+	var v2 string
 	var v3 int
 	var v4 int64
 	var v5 int64
-	var v6 int64
-	var v7 int64
-	var v8 int64
-	var v9 []byte
-	v0 = v.CommitID
-	v1 = v.State
-	v2 = v.ExitCode
-	v3 = v.Sequence
-	v4 = v.Duration
-	v5 = v.Started
-	v6 = v.Finished
-	v7 = v.Created
-	v8 = v.Updated
-	v9, _ = json.Marshal(v.Environment)
+	var v6 []byte
+	v0 = v.BuildID
+	v1 = v.Number
+	v2 = v.Status
+	v3 = v.ExitCode
+	v4 = v.Started
+	v5 = v.Finished
+	v6, _ = json.Marshal(v.Environment)
 
 	res, err := db.Exec(query,
 		&v0,
@@ -63,9 +57,6 @@ func createBuild(db buildDB, query string, v *Build) error {
 		&v4,
 		&v5,
 		&v6,
-		&v7,
-		&v8,
-		&v9,
 	)
 	if err != nil {
 		return err
@@ -75,29 +66,23 @@ func createBuild(db buildDB, query string, v *Build) error {
 	return err
 }
 
-func updateBuild(db buildDB, query string, v *Build) error {
+func updateJob(db jobDB, query string, v *Job) error {
 	var v0 int64
 	var v1 int64
-	var v2 string
-	var v3 int
+	var v2 int
+	var v3 string
 	var v4 int
 	var v5 int64
 	var v6 int64
-	var v7 int64
-	var v8 int64
-	var v9 int64
-	var v10 []byte
+	var v7 []byte
 	v0 = v.ID
-	v1 = v.CommitID
-	v2 = v.State
-	v3 = v.ExitCode
-	v4 = v.Sequence
-	v5 = v.Duration
-	v6 = v.Started
-	v7 = v.Finished
-	v8 = v.Created
-	v9 = v.Updated
-	v10, _ = json.Marshal(v.Environment)
+	v1 = v.BuildID
+	v2 = v.Number
+	v3 = v.Status
+	v4 = v.ExitCode
+	v5 = v.Started
+	v6 = v.Finished
+	v7, _ = json.Marshal(v.Environment)
 
 	_, err := db.Exec(query,
 		&v1,
@@ -107,26 +92,20 @@ func updateBuild(db buildDB, query string, v *Build) error {
 		&v5,
 		&v6,
 		&v7,
-		&v8,
-		&v9,
-		&v10,
 		&v0,
 	)
 	return err
 }
 
-func scanBuild(row *sql.Row) (*Build, error) {
+func scanJob(row *sql.Row) (*Job, error) {
 	var v0 int64
 	var v1 int64
-	var v2 string
-	var v3 int
+	var v2 int
+	var v3 string
 	var v4 int
 	var v5 int64
 	var v6 int64
-	var v7 int64
-	var v8 int64
-	var v9 int64
-	var v10 []byte
+	var v7 []byte
 
 	err := row.Scan(
 		&v0,
@@ -137,45 +116,36 @@ func scanBuild(row *sql.Row) (*Build, error) {
 		&v5,
 		&v6,
 		&v7,
-		&v8,
-		&v9,
-		&v10,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	v := &Build{}
+	v := &Job{}
 	v.ID = v0
-	v.CommitID = v1
-	v.State = v2
-	v.ExitCode = v3
-	v.Sequence = v4
-	v.Duration = v5
-	v.Started = v6
-	v.Finished = v7
-	v.Created = v8
-	v.Updated = v9
-	json.Unmarshal(v10, &v.Environment)
+	v.BuildID = v1
+	v.Number = v2
+	v.Status = v3
+	v.ExitCode = v4
+	v.Started = v5
+	v.Finished = v6
+	json.Unmarshal(v7, &v.Environment)
 
 	return v, nil
 }
 
-func scanBuilds(rows *sql.Rows) ([]*Build, error) {
+func scanJobs(rows *sql.Rows) ([]*Job, error) {
 	var err error
-	var vv []*Build
+	var vv []*Job
 	for rows.Next() {
 		var v0 int64
 		var v1 int64
-		var v2 string
-		var v3 int
+		var v2 int
+		var v3 string
 		var v4 int
 		var v5 int64
 		var v6 int64
-		var v7 int64
-		var v8 int64
-		var v9 int64
-		var v10 []byte
+		var v7 []byte
 		err = rows.Scan(
 			&v0,
 			&v1,
@@ -185,171 +155,146 @@ func scanBuilds(rows *sql.Rows) ([]*Build, error) {
 			&v5,
 			&v6,
 			&v7,
-			&v8,
-			&v9,
-			&v10,
 		)
 		if err != nil {
 			return vv, err
 		}
 
-		v := &Build{}
+		v := &Job{}
 		v.ID = v0
-		v.CommitID = v1
-		v.State = v2
-		v.ExitCode = v3
-		v.Sequence = v4
-		v.Duration = v5
-		v.Started = v6
-		v.Finished = v7
-		v.Created = v8
-		v.Updated = v9
-		json.Unmarshal(v10, &v.Environment)
+		v.BuildID = v1
+		v.Number = v2
+		v.Status = v3
+		v.ExitCode = v4
+		v.Started = v5
+		v.Finished = v6
+		json.Unmarshal(v7, &v.Environment)
 		vv = append(vv, v)
 	}
 	return vv, rows.Err()
 }
 
-const stmtBuildSelectList = `
+const stmtJobSelectList = `
 SELECT
- build_id
-,build_commit_id
-,build_state
-,build_exit_code
-,build_sequence
-,build_duration
-,build_started
-,build_finished
-,build_created
-,build_updated
-,build_environment
-FROM builds
+ job_id
+,job_build_id
+,job_number
+,job_status
+,job_exit_code
+,job_started
+,job_finished
+,job_environment
+FROM jobs
 `
 
-const stmtBuildSelectRange = `
+const stmtJobSelectRange = `
 SELECT
- build_id
-,build_commit_id
-,build_state
-,build_exit_code
-,build_sequence
-,build_duration
-,build_started
-,build_finished
-,build_created
-,build_updated
-,build_environment
-FROM builds
+ job_id
+,job_build_id
+,job_number
+,job_status
+,job_exit_code
+,job_started
+,job_finished
+,job_environment
+FROM jobs
 LIMIT ? OFFSET ?
 `
 
-const stmtBuildSelect = `
+const stmtJobSelect = `
 SELECT
- build_id
-,build_commit_id
-,build_state
-,build_exit_code
-,build_sequence
-,build_duration
-,build_started
-,build_finished
-,build_created
-,build_updated
-,build_environment
-FROM builds
-WHERE build_id = ?
+ job_id
+,job_build_id
+,job_number
+,job_status
+,job_exit_code
+,job_started
+,job_finished
+,job_environment
+FROM jobs
+WHERE job_id = ?
 `
 
-const stmtBuildSelectBuildCommitId = `
+const stmtJobSelectJobBuildId = `
 SELECT
- build_id
-,build_commit_id
-,build_state
-,build_exit_code
-,build_sequence
-,build_duration
-,build_started
-,build_finished
-,build_created
-,build_updated
-,build_environment
-FROM builds
-WHERE build_commit_id = ?
+ job_id
+,job_build_id
+,job_number
+,job_status
+,job_exit_code
+,job_started
+,job_finished
+,job_environment
+FROM jobs
+WHERE job_build_id = ?
 `
 
-const stmtBuildSelectBuildSeq = `
+const stmtJobSelectBuildNumber = `
 SELECT
- build_id
-,build_commit_id
-,build_state
-,build_exit_code
-,build_sequence
-,build_duration
-,build_started
-,build_finished
-,build_created
-,build_updated
-,build_environment
-FROM builds
-WHERE build_commit_id = ?
-AND build_sequence = ?
+ job_id
+,job_build_id
+,job_number
+,job_status
+,job_exit_code
+,job_started
+,job_finished
+,job_environment
+FROM jobs
+WHERE job_build_id = ?
+AND job_number = ?
 `
 
-const stmtBuildInsert = `
-INSERT INTO builds (
- build_commit_id
-,build_state
-,build_exit_code
-,build_sequence
-,build_duration
-,build_started
-,build_finished
-,build_created
-,build_updated
-,build_environment
-) VALUES (?,?,?,?,?,?,?,?,?,?);
+const stmtJobSelectCount = `
+SELECT count(1)
+FROM jobs
 `
 
-const stmtBuildUpdate = `
-UPDATE builds SET
- build_commit_id = ?
-,build_state = ?
-,build_exit_code = ?
-,build_sequence = ?
-,build_duration = ?
-,build_started = ?
-,build_finished = ?
-,build_created = ?
-,build_updated = ?
-,build_environment = ?
-WHERE build_id = ?
+const stmtJobInsert = `
+INSERT INTO jobs (
+ job_build_id
+,job_number
+,job_status
+,job_exit_code
+,job_started
+,job_finished
+,job_environment
+) VALUES (?,?,?,?,?,?,?);
 `
 
-const stmtBuildDelete = `
-DELETE FROM builds
-WHERE build_id = ?
+const stmtJobUpdate = `
+UPDATE jobs SET
+ job_build_id = ?
+,job_number = ?
+,job_status = ?
+,job_exit_code = ?
+,job_started = ?
+,job_finished = ?
+,job_environment = ?
+WHERE job_id = ?
 `
 
-const stmtBuildTable = `
-CREATE TABLE IF NOT EXISTS builds (
- build_id		INTEGER PRIMARY KEY AUTOINCREMENT
-,build_commit_id	INTEGER
-,build_state		VARCHAR
-,build_exit_code	INTEGER
-,build_sequence		INTEGER
-,build_duration		INTEGER
-,build_started		INTEGER
-,build_finished		INTEGER
-,build_created		INTEGER
-,build_updated		INTEGER
-,build_environment	VARCHAR(2048)
+const stmtJobDelete = `
+DELETE FROM jobs
+WHERE job_id = ?
+`
+
+const stmtJobTable = `
+CREATE TABLE IF NOT EXISTS jobs (
+ job_id		INTEGER PRIMARY KEY AUTOINCREMENT
+,job_build_id	INTEGER
+,job_number	INTEGER
+,job_status	VARCHAR
+,job_exit_code	INTEGER
+,job_started	INTEGER
+,job_finished	INTEGER
+,job_environmentVARCHAR(2048)
 );
 `
 
-const stmtBuildBuildCommitIdIndex = `
-CREATE INDEX IF NOT EXISTS ix_build_commit_id ON builds (build_commit_id);
+const stmtJobJobBuildIdIndex = `
+CREATE INDEX IF NOT EXISTS ix_job_build_id ON jobs (job_build_id);
 `
 
-const stmtBuildBuildSeqIndex = `
-CREATE UNIQUE INDEX IF NOT EXISTS ux_build_seq ON builds (build_commit_id,build_sequence);
+const stmtJobBuildNumberIndex = `
+CREATE UNIQUE INDEX IF NOT EXISTS ux_build_number ON jobs (job_build_id,job_number);
 `

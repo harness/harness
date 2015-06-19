@@ -60,11 +60,9 @@ func (db *Commitstore) AddCommit(commit *types.Commit) error {
 		return err
 	}
 
-	for _, build := range commit.Builds {
-		build.CommitID = commit.ID
-		build.Created = commit.Created
-		build.Updated = commit.Updated
-		err := createBuild(tx, rebind(stmtBuildInsert), build)
+	for _, job := range commit.Builds {
+		job.BuildID = commit.ID
+		err := createJob(tx, rebind(stmtJobInsert), job)
 		if err != nil {
 			return err
 		}
@@ -86,9 +84,8 @@ func (db *Commitstore) SetCommit(commit *types.Commit) error {
 		return err
 	}
 
-	for _, build := range commit.Builds {
-		build.Updated = commit.Updated
-		err = updateBuild(tx, rebind(stmtBuildUpdate), build)
+	for _, job := range commit.Builds {
+		err = updateJob(tx, rebind(stmtJobUpdate), job)
 		if err != nil {
 			return err
 		}
@@ -138,8 +135,8 @@ WHERE commit_state IN ('pending', 'running');
 
 // SQL statement to cancel all running commits.
 const buildKillStmt = `
-UPDATE builds SET build_state = 'killed'
-WHERE build_state IN ('pending', 'running');
+UPDATE jobs SET job_status = 'killed'
+WHERE job_status IN ('pending', 'running');
 `
 
 // SQL statement to retrieve the commit number for

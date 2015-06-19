@@ -110,10 +110,10 @@ func PostHook(c *gin.Context) {
 		axes = append(axes, matrix.Axis{})
 	}
 	for num, axis := range axes {
-		commit.Builds = append(commit.Builds, &common.Build{
-			CommitID:    commit.ID,
-			Sequence:    num + 1,
-			State:       common.StatePending,
+		commit.Builds = append(commit.Builds, &common.Job{
+			BuildID:     commit.ID,
+			Number:      num + 1,
+			Status:      common.StatePending,
 			Environment: axis,
 		})
 	}

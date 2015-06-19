@@ -70,7 +70,7 @@ func toCommand(c *Context, step *common.Step) []string {
 	p := payload{
 		c.Repo,
 		c.Commit,
-		c.Build,
+		c.Job,
 		c.Clone,
 		step.Config,
 	}
@@ -83,7 +83,7 @@ func toCommand(c *Context, step *common.Step) []string {
 type payload struct {
 	Repo   *common.Repo   `json:"repo"`
 	Commit *common.Commit `json:"commit"`
-	Build  *common.Build  `json:"build"`
+	Job    *common.Job    `json:"job"`
 	Clone  *common.Clone  `json:"clone"`
 
 	Config map[string]interface{} `json:"vargs"`

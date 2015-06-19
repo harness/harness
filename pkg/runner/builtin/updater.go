@@ -8,13 +8,13 @@ import (
 	"github.com/drone/drone/pkg/bus"
 	"github.com/drone/drone/pkg/remote"
 	"github.com/drone/drone/pkg/store"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 )
 
 type Updater interface {
-	SetCommit(*common.User, *common.Repo, *common.Commit) error
-	SetBuild(*common.Repo, *common.Commit, *common.Build) error
-	SetLogs(*common.Repo, *common.Commit, *common.Build, io.ReadCloser) error
+	SetCommit(*types.User, *types.Repo, *types.Commit) error
+	SetJob(*types.Repo, *types.Commit, *types.Job) error
+	SetLogs(*types.Repo, *types.Commit, *types.Job, io.ReadCloser) error
 }
 
 // NewUpdater returns an implementation of the Updater interface
@@ -29,7 +29,7 @@ type updater struct {
 	remote remote.Remote
 }
 
-func (u *updater) SetCommit(user *common.User, r *common.Repo, c *common.Commit) error {
+func (u *updater) SetCommit(user *types.User, r *types.Repo, c *types.Commit) error {
 	err := u.store.SetCommit(c)
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (u *updater) SetCommit(user *common.User, r *common.Repo, c *common.Commit)
 	// build list. we should probably just rethink
 	// the messaging instead of this hack.
 	if c.Builds == nil || len(c.Builds) == 0 {
-		c.Builds, _ = u.store.BuildList(c)
+		c.Builds, _ = u.store.JobList(c)
 	}
 
 	msg, err := json.Marshal(c)
@@ -61,8 +61,8 @@ func (u *updater) SetCommit(user *common.User, r *common.Repo, c *common.Commit)
 	return nil
 }
 
-func (u *updater) SetBuild(r *common.Repo, c *common.Commit, b *common.Build) error {
-	err := u.store.SetBuild(b)
+func (u *updater) SetJob(r *types.Repo, c *types.Commit, j *types.Job) error {
+	err := u.store.SetJob(j)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (u *updater) SetBuild(r *common.Repo, c *common.Commit, b *common.Build) er
 	// build list. we should probably just rethink
 	// the messaging instead of this hack.
 	if c.Builds == nil || len(c.Builds) == 0 {
-		c.Builds, _ = u.store.BuildList(c)
+		c.Builds, _ = u.store.JobList(c)
 	}
 
 	msg, err := json.Marshal(c)
@@ -88,7 +88,7 @@ func (u *updater) SetBuild(r *common.Repo, c *common.Commit, b *common.Build) er
 	return nil
 }
 
-func (u *updater) SetLogs(r *common.Repo, c *common.Commit, b *common.Build, rc io.ReadCloser) error {
-	path := fmt.Sprintf("/logs/%s/%v/%v", r.FullName, c.Sequence, b.Sequence)
+func (u *updater) SetLogs(r *types.Repo, c *types.Commit, j *types.Job, rc io.ReadCloser) error {
+	path := fmt.Sprintf("/logs/%s/%v/%v", r.FullName, c.Sequence, j.Number)
 	return u.store.SetBlobReader(path, rc)
 }

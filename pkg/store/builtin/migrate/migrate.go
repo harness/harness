@@ -132,24 +132,21 @@ CREATE INDEX tokens_user_idx ON tokens (token_user_id);
 `
 
 var buildTable = `
-CREATE TABLE IF NOT EXISTS builds (
-	 build_id          INTEGER PRIMARY KEY AUTOINCREMENT
-	,build_commit_id   INTEGER
-	,build_sequence    INTEGER
-	,build_state       VARCHAR(255)
-	,build_exit_code   INTEGER
-	,build_duration    INTEGER
-	,build_started     INTEGER
-	,build_finished    INTEGER
-	,build_created     INTEGER
-	,build_updated     INTEGER
-	,build_environment VARCHAR(2000)
-	,UNIQUE(build_commit_id, build_sequence)
+CREATE TABLE IF NOT EXISTS jobs (
+	 job_id          INTEGER PRIMARY KEY AUTOINCREMENT
+	,job_build_id    INTEGER
+	,job_number      INTEGER
+	,job_status      VARCHAR(255)
+	,job_exit_code   INTEGER
+	,job_started     INTEGER
+	,job_finished    INTEGER
+	,job_environment VARCHAR(2000)
+	,UNIQUE(job_build_id, job_number)
 );
 `
 
 var buildCommitIndex = `
-CREATE INDEX builds_commit_idx ON builds (build_commit_id);
+CREATE INDEX ix_job_build_id ON jobs (job_build_id);
 `
 
 var statusTable = `

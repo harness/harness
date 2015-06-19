@@ -89,7 +89,7 @@ func PushBuild(c *gin.Context) {
 	repo := ToRepo(c)
 	cnum, _ := strconv.Atoi(c.Params.ByName("commit"))
 
-	in := &common.Build{}
+	in := &common.Job{}
 	if !c.BindWith(in, binding.JSON) {
 		return
 	}
@@ -99,20 +99,19 @@ func PushBuild(c *gin.Context) {
 		c.Fail(404, err)
 		return
 	}
-	build, err := store.BuildSeq(commit, in.Sequence)
+	job, err := store.JobNumber(commit, in.Number)
 	if err != nil {
 		c.Fail(404, err)
 		return
 	}
 
-	build.Duration = in.Duration
-	build.Started = in.Started
-	build.Finished = in.Finished
-	build.ExitCode = in.ExitCode
-	build.State = in.State
+	job.Started = in.Started
+	job.Finished = in.Finished
+	job.ExitCode = in.ExitCode
+	job.Status = in.Status
 
 	updater := ToUpdater(c)
-	err = updater.SetBuild(repo, commit, build)
+	err = updater.SetJob(repo, commit, job)
 	if err != nil {
 		c.Fail(500, err)
 		return
@@ -132,13 +131,13 @@ func PushLogs(c *gin.Context) {
 		c.Fail(404, err)
 		return
 	}
-	build, err := store.BuildSeq(commit, bnum)
+	job, err := store.JobNumber(commit, bnum)
 	if err != nil {
 		c.Fail(404, err)
 		return
 	}
 	updater := ToUpdater(c)
-	err = updater.SetLogs(repo, commit, build, c.Request.Body)
+	err = updater.SetLogs(repo, commit, job, c.Request.Body)
 	if err != nil {
 		c.Fail(500, err)
 		return

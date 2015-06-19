@@ -2,46 +2,39 @@ package builtin
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/drone/drone/pkg/types"
 )
 
-type Buildstore struct {
+type Jobstore struct {
 	*sql.DB
 }
 
-func NewBuildstore(db *sql.DB) *Buildstore {
-	return &Buildstore{db}
+func NewJobstore(db *sql.DB) *Jobstore {
+	return &Jobstore{db}
 }
 
-// Build returns a build by ID.
-func (db *Buildstore) Build(id int64) (*types.Build, error) {
-	return getBuild(db, rebind(stmtBuildSelect), id)
+// Job returns a Job by ID.
+func (db *Jobstore) Job(id int64) (*types.Job, error) {
+	return getJob(db, rebind(stmtJobSelect), id)
 }
 
-// BuildSeq returns a build by sequence number.
-func (db *Buildstore) BuildSeq(commit *types.Commit, seq int) (*types.Build, error) {
-	return getBuild(db, rebind(stmtBuildSelectBuildSeq), commit.ID, seq)
+// JobNumber returns a job by sequence number.
+func (db *Jobstore) JobNumber(commit *types.Commit, seq int) (*types.Job, error) {
+	return getJob(db, rebind(stmtJobSelectBuildNumber), commit.ID, seq)
 }
 
-// BuildList returns a list of all commit builds
-func (db *Buildstore) BuildList(commit *types.Commit) ([]*types.Build, error) {
-	return getBuilds(db, rebind(stmtBuildSelectBuildCommitId), commit.ID)
+// JobList returns a list of all build jobs
+func (db *Jobstore) JobList(commit *types.Commit) ([]*types.Job, error) {
+	return getJobs(db, rebind(stmtJobSelectJobBuildId), commit.ID)
 }
 
-// SetBuild updates an existing build.
-func (db *Buildstore) SetBuild(build *types.Build) error {
-	build.Updated = time.Now().UTC().Unix()
-	return updateBuild(db, rebind(stmtBuildUpdate), build)
+// SetJob updates an existing build job.
+func (db *Jobstore) SetJob(job *types.Job) error {
+	return updateJob(db, rebind(stmtJobUpdate), job)
 }
 
-// AddBuild inserts a build.
-func (db *Buildstore) AddBuild(build *types.Build) error {
-	build.Created = time.Now().UTC().Unix()
-	build.Updated = time.Now().UTC().Unix()
-	return createBuild(db, rebind(stmtBuildInsert), build)
+// AddJob inserts a build job.
+func (db *Jobstore) AddJob(job *types.Job) error {
+	return createJob(db, rebind(stmtJobInsert), job)
 }
-
-// Build table name in database.
-const buildTable = "builds"

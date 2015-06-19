@@ -31,7 +31,7 @@ func GetCommit(c *gin.Context) {
 	if err != nil {
 		c.Fail(404, err)
 	}
-	commit.Builds, err = store.BuildList(commit)
+	commit.Builds, err = store.JobList(commit)
 	if err != nil {
 		c.Fail(404, err)
 	} else {
@@ -126,7 +126,7 @@ func RunBuild(c *gin.Context) {
 		c.Fail(404, err)
 		return
 	}
-	commit.Builds, err = store.BuildList(commit)
+	commit.Builds, err = store.JobList(commit)
 	if err != nil {
 		c.Fail(404, err)
 		return
@@ -152,12 +152,11 @@ func RunBuild(c *gin.Context) {
 	commit.State = common.StatePending
 	commit.Started = 0
 	commit.Finished = 0
-	for _, build := range commit.Builds {
-		build.State = common.StatePending
-		build.Started = 0
-		build.Finished = 0
-		build.Duration = 0
-		build.ExitCode = 0
+	for _, job := range commit.Builds {
+		job.Status = common.StatePending
+		job.Started = 0
+		job.Finished = 0
+		job.ExitCode = 0
 	}
 
 	err = store.SetCommit(commit)
@@ -217,7 +216,7 @@ func KillBuild(c *gin.Context) {
 		c.Fail(404, err)
 		return
 	}
-	commit.Builds, err = store.BuildList(commit)
+	commit.Builds, err = store.JobList(commit)
 	if err != nil {
 		c.Fail(404, err)
 		return
@@ -245,14 +244,13 @@ func KillBuild(c *gin.Context) {
 	if commit.Started == 0 {
 		commit.Started = commit.Finished
 	}
-	for _, build := range commit.Builds {
-		if build.State != common.StatePending && build.State != common.StateRunning {
+	for _, job := range commit.Builds {
+		if job.Status != common.StatePending && job.Status != common.StateRunning {
 			continue
 		}
-		build.State = common.StateKilled
-		build.Started = commit.Started
-		build.Finished = commit.Finished
-		build.Duration = commit.Finished - commit.Started
+		job.Status = common.StateKilled
+		job.Started = commit.Started
+		job.Finished = commit.Finished
 	}
 	err = store.SetCommit(commit)
 	if err != nil {
@@ -260,8 +258,8 @@ func KillBuild(c *gin.Context) {
 		return
 	}
 
-	for _, build := range commit.Builds {
-		runner.Cancel(build)
+	for _, job := range commit.Builds {
+		runner.Cancel(job)
 	}
 	// // get the agent from the repository so we can
 	// // notify the agent to kill the build.

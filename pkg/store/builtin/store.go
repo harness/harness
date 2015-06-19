@@ -99,7 +99,7 @@ func New(db *sql.DB) store.Store {
 		*Userstore
 		*Repostore
 		*Commitstore
-		*Buildstore
+		*Jobstore
 		*Blobstore
 		*Starstore
 		*Tokenstore
@@ -108,7 +108,7 @@ func New(db *sql.DB) store.Store {
 		NewUserstore(db),
 		NewRepostore(db),
 		NewCommitstore(db),
-		NewBuildstore(db),
+		NewJobstore(db),
 		NewBlobstore(db),
 		NewStarstore(db),
 		NewTokenstore(db),

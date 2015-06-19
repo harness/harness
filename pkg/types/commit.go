@@ -30,5 +30,5 @@ type Commit struct {
 	Created      int64  `meddler:"commit_created"       json:"created_at"`
 	Updated      int64  `meddler:"commit_updated"       json:"updated_at"`
 
-	Builds []*Build `meddler:"-" json:"builds,omitempty" sql:"-"`
+	Builds []*Job `meddler:"-" json:"builds,omitempty" sql:"-"`
 }
