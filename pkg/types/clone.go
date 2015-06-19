@@ -16,11 +16,3 @@ type Netrc struct {
 	Login    string `json:"login"`
 	Password string `json:"user"`
 }
-
-// Keypair represents an RSA public and private key
-// assigned to a repository. It may be used to clone
-// private repositories, or as a deployment key.
-type Keypair struct {
-	Public  string `json:"public,omitempty"`
-	Private string `json:"private,omitempty"`
-}

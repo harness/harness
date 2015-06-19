@@ -47,27 +47,25 @@ CREATE TABLE IF NOT EXISTS users (
 
 var repoTable = `
 CREATE TABLE IF NOT EXISTS repos (
-	 repo_id           INTEGER PRIMARY KEY AUTOINCREMENT
-	,repo_user_id      INTEGER
-	,repo_owner        VARCHAR(255)
-	,repo_name         VARCHAR(255)
-	,repo_full_name    VARCHAR(1024)
-	,repo_token        VARCHAR(255)
-	,repo_language     VARCHAR(255)
-	,repo_branch       VARCHAR(255)
-	,repo_private      BOOLEAN
-	,repo_trusted      BOOLEAN
-	,repo_self         VARCHAR(1024)
-	,repo_link         VARCHAR(1024)
-	,repo_clone        VARCHAR(1024)
-	,repo_post_commit  BOOLEAN
-	,repo_pull_request BOOLEAN
-	,repo_public_key   BLOB
-	,repo_private_key  BLOB
-	,repo_params       BLOB
-	,repo_timeout      INTEGER
-	,repo_created      INTEGER
-	,repo_updated      INTEGER
+	 repo_id                 INTEGER PRIMARY KEY AUTOINCREMENT
+	,repo_user_id            INTEGER
+	,repo_owner              VARCHAR(255)
+	,repo_name               VARCHAR(255)
+	,repo_full_name          VARCHAR(1024)
+	,repo_self               VARCHAR(1024)
+	,repo_link               VARCHAR(1024)
+	,repo_clone              VARCHAR(1024)
+	,repo_branch             VARCHAR(255)
+	,repo_private            BOOLEAN
+	,repo_trusted            BOOLEAN
+	,repo_timeout            INTEGER
+	,repo_keys_public	     BLOB
+	,repo_keys_private	     BLOB
+	,repo_hooks_pull_request BOOLEAN
+	,repo_hooks_push         BOOLEAN
+	,repo_hooks_tags         BOOLEAN
+	,repo_params             BLOB
+
 	,UNIQUE(repo_owner, repo_name)
 	,UNIQUE(repo_full_name)
 );

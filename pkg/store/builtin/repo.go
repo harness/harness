@@ -2,7 +2,6 @@ package builtin
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/drone/drone/pkg/types"
 )
@@ -35,14 +34,11 @@ func (db *Repostore) RepoList(user *types.User) ([]*types.Repo, error) {
 
 // AddRepo inserts a repo in the datastore.
 func (db *Repostore) AddRepo(repo *types.Repo) error {
-	repo.Created = time.Now().UTC().Unix()
-	repo.Updated = time.Now().UTC().Unix()
 	return createRepo(db, rebind(stmtRepoInsert), repo)
 }
 
 // SetRepo updates a repo in the datastore.
 func (db *Repostore) SetRepo(repo *types.Repo) error {
-	repo.Updated = time.Now().UTC().Unix()
 	return updateRepo(db, rebind(stmtRepoUpdate), repo)
 }
 
@@ -56,27 +52,24 @@ func (db *Repostore) DelRepo(repo *types.Repo) error {
 // with permissions for the given User ID.
 const repoListQuery = `
 SELECT
- r.repo_id
-,r.repo_user_id
-,r.repo_owner
-,r.repo_name
-,r.repo_full_name
-,r.repo_token
-,r.repo_language
-,r.repo_private
-,r.repo_self
-,r.repo_link
-,r.repo_clone
-,r.repo_branch
-,r.repo_timeout
-,r.repo_trusted
-,r.repo_post_commit
-,r.repo_pull_request
-,r.repo_public_key
-,r.repo_private_key
-,r.repo_created
-,r.repo_updated
-,r.repo_params
+ repo_id
+,repo_user_id
+,repo_owner
+,repo_name
+,repo_full_name
+,repo_self
+,repo_link
+,repo_clone
+,repo_branch
+,repo_private
+,repo_trusted
+,repo_timeout
+,repo_keys_public
+,repo_keys_private
+,repo_hooks_pull_request
+,repo_hooks_push
+,repo_hooks_tags
+,repo_params
 FROM
  repos r
 ,stars s

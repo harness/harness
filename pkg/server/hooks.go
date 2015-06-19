@@ -68,11 +68,11 @@ func PostHook(c *gin.Context) {
 		log.Warnf("ignoring hook. repo %s has no owner.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
-	case !repo.PostCommit && hook.Commit.PullRequest != "":
+	case !repo.Hooks.Push && hook.Commit.PullRequest != "":
 		log.Infof("ignoring hook. repo %s is disabled.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
-	case !repo.PullRequest && hook.Commit.PullRequest == "":
+	case !repo.Hooks.PullRequest && hook.Commit.PullRequest == "":
 		log.Warnf("ignoring hook. repo %s is disabled for pull requests.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
@@ -117,10 +117,6 @@ func PostHook(c *gin.Context) {
 			Environment: axis,
 		})
 	}
-	keys := &common.Keypair{
-		Public:  repo.PublicKey,
-		Private: repo.PrivateKey,
-	}
 
 	netrc, err := remote.Netrc(user)
 	if err != nil {
@@ -155,7 +151,7 @@ func PostHook(c *gin.Context) {
 		User:    user,
 		Repo:    repo,
 		Commit:  commit,
-		Keys:    keys,
+		Keys:    repo.Keys,
 		Netrc:   netrc,
 		Yaml:    raw,
 		Plugins: conf.Plugins,
