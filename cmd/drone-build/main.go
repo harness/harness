@@ -94,7 +94,7 @@ func main() {
 			code = 255
 		}
 		if code != 0 {
-			ctx.Build.ExitCode = code
+			ctx.Job.ExitCode = code
 			break
 		}
 	}
@@ -105,7 +105,7 @@ func main() {
 	}
 
 	client.Destroy()
-	os.Exit(ctx.Build.ExitCode)
+	os.Exit(ctx.Job.ExitCode)
 }
 
 func createClone(c *Context) error {

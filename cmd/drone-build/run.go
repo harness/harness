@@ -14,7 +14,7 @@ type Context struct {
 	Clone   *common.Clone   `json:"clone"`
 	Repo    *common.Repo    `json:"repo"`
 	Commit  *common.Commit  `json:"commit"`
-	Build   *common.Build   `json:"build"`
+	Job     *common.Job     `json:"job"`
 	Keys    *common.Keypair `json:"keys"`
 	Netrc   *common.Netrc   `json:"netrc"`
 	Yaml    []byte          `json:"yaml"`
@@ -44,7 +44,7 @@ func setup(c *Context) error {
 	}
 
 	// inject the matrix parameters into the yaml
-	injected := inject.Inject(string(c.Yaml), c.Build.Environment)
+	injected := inject.Inject(string(c.Yaml), c.Job.Environment)
 	c.Conf, err = parser.ParseSingle(injected, &opts)
 	if err != nil {
 		return err
@@ -52,7 +52,7 @@ func setup(c *Context) error {
 
 	// and append the matrix parameters as environment
 	// variables for the build
-	for k, v := range c.Build.Environment {
+	for k, v := range c.Job.Environment {
 		env := k + "=" + v
 		c.Conf.Build.Environment = append(c.Conf.Build.Environment, env)
 	}
@@ -142,7 +142,7 @@ func runSteps(c *Context, steps map[string]*common.Step) (int, error) {
 		if step.Condition != nil {
 			if !step.Condition.MatchOwner(c.Repo.Owner) ||
 				!step.Condition.MatchBranch(c.Clone.Branch) ||
-				!step.Condition.MatchMatrix(c.Build.Environment) {
+				!step.Condition.MatchMatrix(c.Job.Environment) {
 				continue
 			}
 		}

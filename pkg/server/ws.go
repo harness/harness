@@ -56,7 +56,7 @@ func GetStream(c *gin.Context) {
 	repo := ToRepo(c)
 	runner := ToRunner(c)
 	commitseq, _ := strconv.Atoi(c.Params.ByName("build"))
-	buildseq, _ := strconv.Atoi(c.Params.ByName("number"))
+	jobnum, _ := strconv.Atoi(c.Params.ByName("number"))
 
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 
@@ -65,7 +65,7 @@ func GetStream(c *gin.Context) {
 		c.Fail(404, err)
 		return
 	}
-	build, err := store.BuildSeq(commit, buildseq)
+	job, err := store.JobNumber(commit, jobnum)
 	if err != nil {
 		c.Fail(404, err)
 		return
@@ -82,7 +82,7 @@ func GetStream(c *gin.Context) {
 			c.Fail(500, err)
 			return
 		}
-		url := fmt.Sprintf("http://%s/stream/%d?token=%s", addr, build.ID, conf.Agents.Secret)
+		url := fmt.Sprintf("http://%s/stream/%d?token=%s", addr, job.ID, conf.Agents.Secret)
 		resp, err := http.Get(url)
 		if err != nil {
 			c.Fail(500, err)
@@ -97,7 +97,7 @@ func GetStream(c *gin.Context) {
 	} else {
 		// else if the commit is not being executed
 		// by the build agent we can use the local runner
-		rc, err = runner.Logs(build)
+		rc, err = runner.Logs(job)
 		if err != nil {
 			c.Fail(404, err)
 			return

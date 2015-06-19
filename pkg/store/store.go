@@ -155,16 +155,16 @@ type Store interface {
 	//
 
 	// Build returns a build by ID.
-	Build(int64) (*types.Build, error)
+	Job(int64) (*types.Job, error)
 
-	// BuildSeq returns a build by sequence number.
-	BuildSeq(*types.Commit, int) (*types.Build, error)
+	// JobNumber returns a jobs by sequence number.
+	JobNumber(*types.Commit, int) (*types.Job, error)
 
-	// BuildList returns a list of all commit builds
-	BuildList(*types.Commit) ([]*types.Build, error)
+	// JobList returns a list of all commit jobs
+	JobList(*types.Commit) ([]*types.Job, error)
 
-	// SetBuild updates an existing build.
-	SetBuild(*types.Build) error
+	// SetJob updates an existing job.
+	SetJob(*types.Job) error
 
 	//
 

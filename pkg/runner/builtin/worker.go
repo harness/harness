@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 )
 
 var (
@@ -52,14 +52,14 @@ var (
 )
 
 type work struct {
-	Repo    *common.Repo    `json:"repo"`
-	Commit  *common.Commit  `json:"commit"`
-	Build   *common.Build   `json:"build"`
-	Keys    *common.Keypair `json:"keys"`
-	Netrc   *common.Netrc   `json:"netrc"`
-	Yaml    []byte          `json:"yaml"`
-	Env     []string        `json:"environment"`
-	Plugins []string        `json:"plugins"`
+	Repo    *types.Repo    `json:"repo"`
+	Commit  *types.Commit  `json:"commit"`
+	Job     *types.Job     `json:"job"`
+	Keys    *types.Keypair `json:"keys"`
+	Netrc   *types.Netrc   `json:"netrc"`
+	Yaml    []byte         `json:"yaml"`
+	Env     []string       `json:"environment"`
+	Plugins []string       `json:"plugins"`
 }
 
 type worker struct {

@@ -9,118 +9,117 @@ import (
 
 func TestBuildstore(t *testing.T) {
 	db := mustConnectTest()
-	bs := NewBuildstore(db)
+	bs := NewJobstore(db)
 	cs := NewCommitstore(db)
 	defer db.Close()
 
 	g := goblin.Goblin(t)
-	g.Describe("Buildstore", func() {
+	g.Describe("Jobstore", func() {
 
 		// before each test we purge the package table data from the database.
 		g.BeforeEach(func() {
-			db.Exec("DELETE FROM builds")
+			db.Exec("DELETE FROM jobs")
 			db.Exec("DELETE FROM commits")
 		})
 
-		g.It("Should Set a build", func() {
-			build := &types.Build{
-				CommitID: 1,
-				State:    "pending",
+		g.It("Should Set a job", func() {
+			job := &types.Job{
+				BuildID:  1,
+				Status:   "pending",
 				ExitCode: 0,
-				Sequence: 1,
+				Number:   1,
 			}
-			err1 := bs.AddBuild(build)
+			err1 := bs.AddJob(job)
 			g.Assert(err1 == nil).IsTrue()
-			g.Assert(build.ID != 0).IsTrue()
+			g.Assert(job.ID != 0).IsTrue()
 
-			build.State = "started"
-			err2 := bs.SetBuild(build)
+			job.Status = "started"
+			err2 := bs.SetJob(job)
 			g.Assert(err2 == nil).IsTrue()
 
-			getbuild, err3 := bs.Build(build.ID)
+			getjob, err3 := bs.Job(job.ID)
 			g.Assert(err3 == nil).IsTrue()
-			g.Assert(getbuild.State).Equal(build.State)
+			g.Assert(getjob.Status).Equal(job.Status)
 		})
 
-		g.It("Should Get a Build by ID", func() {
-			build := &types.Build{
-				CommitID:    1,
-				State:       "pending",
+		g.It("Should Get a Job by ID", func() {
+			job := &types.Job{
+				BuildID:     1,
+				Status:      "pending",
 				ExitCode:    1,
-				Sequence:    1,
+				Number:      1,
 				Environment: map[string]string{"foo": "bar"},
 			}
-			err1 := bs.AddBuild(build)
+			err1 := bs.AddJob(job)
 			g.Assert(err1 == nil).IsTrue()
-			g.Assert(build.ID != 0).IsTrue()
+			g.Assert(job.ID != 0).IsTrue()
 
-			getbuild, err2 := bs.Build(build.ID)
+			getjob, err2 := bs.Job(job.ID)
 			g.Assert(err2 == nil).IsTrue()
-			g.Assert(getbuild.ID).Equal(build.ID)
-			g.Assert(getbuild.State).Equal(build.State)
-			g.Assert(getbuild.ExitCode).Equal(build.ExitCode)
-			g.Assert(getbuild.Environment).Equal(build.Environment)
-			g.Assert(getbuild.Environment["foo"]).Equal("bar")
+			g.Assert(getjob.ID).Equal(job.ID)
+			g.Assert(getjob.Status).Equal(job.Status)
+			g.Assert(getjob.ExitCode).Equal(job.ExitCode)
+			g.Assert(getjob.Environment).Equal(job.Environment)
+			g.Assert(getjob.Environment["foo"]).Equal("bar")
 		})
 
-		g.It("Should Get a Build by Sequence", func() {
-			build := &types.Build{
-				CommitID: 1,
-				State:    "pending",
+		g.It("Should Get a Job by Number", func() {
+			job := &types.Job{
+				BuildID:  1,
+				Status:   "pending",
 				ExitCode: 1,
-				Sequence: 1,
+				Number:   1,
 			}
-			err1 := bs.AddBuild(build)
+			err1 := bs.AddJob(job)
 			g.Assert(err1 == nil).IsTrue()
-			g.Assert(build.ID != 0).IsTrue()
+			g.Assert(job.ID != 0).IsTrue()
 
-			getbuild, err2 := bs.BuildSeq(&types.Commit{ID: 1}, 1)
+			getjob, err2 := bs.JobNumber(&types.Commit{ID: 1}, 1)
 			g.Assert(err2 == nil).IsTrue()
-			g.Assert(getbuild.ID).Equal(build.ID)
-			g.Assert(getbuild.State).Equal(build.State)
+			g.Assert(getjob.ID).Equal(job.ID)
+			g.Assert(getjob.Status).Equal(job.Status)
 		})
 
-		g.It("Should Get a List of Builds by Commit", func() {
-			//Add repo
-			buildList := []*types.Build{
-				&types.Build{
-					CommitID: 1,
-					State:    "success",
-					ExitCode: 0,
-					Sequence: 1,
-				},
-				&types.Build{
-					CommitID: 3,
-					State:    "error",
-					ExitCode: 1,
-					Sequence: 2,
-				},
-				&types.Build{
-					CommitID: 5,
-					State:    "pending",
-					ExitCode: 0,
-					Sequence: 3,
-				},
-			}
+		g.It("Should Get a List of Jobs by Commit", func() {
+
 			//In order for buid to be populated,
 			//The AddCommit command will insert builds
 			//if the Commit.Builds array is populated
 			//Add Commit.
-			commit1 := types.Commit{
+			commit := types.Commit{
 				RepoID: 1,
 				State:  types.StateSuccess,
 				Ref:    "refs/heads/master",
 				Sha:    "14710626f22791619d3b7e9ccf58b10374e5b76d",
-				Builds: buildList,
+				Builds: []*types.Job{
+					&types.Job{
+						BuildID:  1,
+						Status:   "success",
+						ExitCode: 0,
+						Number:   1,
+					},
+					&types.Job{
+						BuildID:  3,
+						Status:   "error",
+						ExitCode: 1,
+						Number:   2,
+					},
+					&types.Job{
+						BuildID:  5,
+						Status:   "pending",
+						ExitCode: 0,
+						Number:   3,
+					},
+				},
 			}
 			//
-			err1 := cs.AddCommit(&commit1)
+			err1 := cs.AddCommit(&commit)
 			g.Assert(err1 == nil).IsTrue()
-			bldList, err2 := bs.BuildList(&commit1)
+			getjobs, err2 := bs.JobList(&commit)
 			g.Assert(err2 == nil).IsTrue()
-			g.Assert(len(bldList)).Equal(3)
-			g.Assert(bldList[0].Sequence).Equal(1)
-			g.Assert(bldList[0].State).Equal(types.StateSuccess)
+			g.Assert(len(getjobs)).Equal(3)
+			g.Assert(getjobs[0].Number).Equal(1)
+			g.Assert(getjobs[0].Status).Equal(types.StateSuccess)
 		})
 	})
 }

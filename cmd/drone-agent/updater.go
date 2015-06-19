@@ -22,13 +22,13 @@ func (u *updater) SetCommit(user *common.User, r *common.Repo, c *common.Commit)
 	return sendBackoff("POST", path, c, nil)
 }
 
-func (u *updater) SetBuild(r *common.Repo, c *common.Commit, b *common.Build) error {
+func (u *updater) SetJob(r *common.Repo, c *common.Commit, j *common.Job) error {
 	path := fmt.Sprintf("/api/queue/push/%s/%v", r.FullName, c.Sequence)
-	return sendBackoff("POST", path, b, nil)
+	return sendBackoff("POST", path, j, nil)
 }
 
-func (u *updater) SetLogs(r *common.Repo, c *common.Commit, b *common.Build, rc io.ReadCloser) error {
-	path := fmt.Sprintf("/api/queue/push/%s/%v/%v", r.FullName, c.Sequence, b.Sequence)
+func (u *updater) SetLogs(r *common.Repo, c *common.Commit, j *common.Job, rc io.ReadCloser) error {
+	path := fmt.Sprintf("/api/queue/push/%s/%v/%v", r.FullName, c.Sequence, j.Number)
 	return sendBackoff("POST", path, rc, nil)
 }
 

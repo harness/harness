@@ -12,7 +12,7 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 	"github.com/drone/drone/pkg/docker"
 	"github.com/drone/drone/pkg/queue"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
@@ -53,31 +53,29 @@ func (r *Runner) Run(w *queue.Work) error {
 		// if any part of the commit fails and leaves
 		// behind orphan sub-builds we need to cleanup
 		// after ourselves.
-		if w.Commit.State == common.StateRunning {
+		if w.Commit.State == types.StateRunning {
 			// if any tasks are running or pending
 			// we should mark them as complete.
 			for _, b := range w.Commit.Builds {
-				if b.State == common.StateRunning {
-					b.State = common.StateError
+				if b.Status == types.StateRunning {
+					b.Status = types.StateError
 					b.Finished = time.Now().UTC().Unix()
-					b.Duration = b.Finished - b.Started
 					b.ExitCode = 255
 				}
-				if b.State == common.StatePending {
-					b.State = common.StateError
+				if b.Status == types.StatePending {
+					b.Status = types.StateError
 					b.Started = time.Now().UTC().Unix()
 					b.Finished = time.Now().UTC().Unix()
-					b.Duration = 0
 					b.ExitCode = 255
 				}
-				r.SetBuild(w.Repo, w.Commit, b)
+				r.SetJob(w.Repo, w.Commit, b)
 			}
 			// must populate build start
 			if w.Commit.Started == 0 {
 				w.Commit.Started = time.Now().UTC().Unix()
 			}
 			// mark the build as complete (with error)
-			w.Commit.State = common.StateError
+			w.Commit.State = types.StateError
 			w.Commit.Finished = time.Now().UTC().Unix()
 			r.SetCommit(w.User, w.Repo, w.Commit)
 		}
@@ -85,7 +83,7 @@ func (r *Runner) Run(w *queue.Work) error {
 
 	// marks the build as running
 	w.Commit.Started = time.Now().UTC().Unix()
-	w.Commit.State = common.StateRunning
+	w.Commit.State = types.StateRunning
 	err := r.SetCommit(w.User, w.Repo, w.Commit)
 	if err != nil {
 		return err
@@ -100,13 +98,13 @@ func (r *Runner) Run(w *queue.Work) error {
 	}
 
 	// loop through and execute the build and
-	// clone steps for each build task.
-	for _, task := range w.Commit.Builds {
+	// clone steps for each build job.
+	for _, job := range w.Commit.Builds {
 
 		// marks the task as running
-		task.State = common.StateRunning
-		task.Started = time.Now().UTC().Unix()
-		err = r.SetBuild(w.Repo, w.Commit, task)
+		job.Status = types.StateRunning
+		job.Started = time.Now().UTC().Unix()
+		err = r.SetJob(w.Repo, w.Commit, job)
 		if err != nil {
 			return err
 		}
@@ -117,7 +115,7 @@ func (r *Runner) Run(w *queue.Work) error {
 			Keys:    w.Keys,
 			Netrc:   w.Netrc,
 			Yaml:    w.Yaml,
-			Build:   task,
+			Job:     job,
 			Env:     w.Env,
 			Plugins: w.Plugins,
 		}
@@ -128,20 +126,20 @@ func (r *Runner) Run(w *queue.Work) error {
 
 		worker := newWorkerTimeout(client, w.Repo.Timeout)
 		workers = append(workers, worker)
-		cname := cname(task)
+		cname := cname(job)
 		pullrequest := (w.Commit.PullRequest != "")
 		state, builderr := worker.Build(cname, in, pullrequest)
 
 		switch {
 		case builderr == ErrTimeout:
-			task.State = common.StateKilled
+			job.Status = types.StateKilled
 		case builderr != nil:
-			task.State = common.StateError
+			job.Status = types.StateError
 		case state != 0:
-			task.ExitCode = state
-			task.State = common.StateFailure
+			job.ExitCode = state
+			job.Status = types.StateFailure
 		default:
-			task.State = common.StateSuccess
+			job.Status = types.StateSuccess
 		}
 
 		// send the logs to the datastore
@@ -158,15 +156,14 @@ func (r *Runner) Run(w *queue.Work) error {
 			defer rc.Close()
 			docker.StdCopy(&buf, &buf, rc)
 		}
-		err = r.SetLogs(w.Repo, w.Commit, task, ioutil.NopCloser(&buf))
+		err = r.SetLogs(w.Repo, w.Commit, job, ioutil.NopCloser(&buf))
 		if err != nil {
 			return err
 		}
 
 		// update the task in the datastore
-		task.Finished = time.Now().UTC().Unix()
-		task.Duration = task.Finished - task.Started
-		err = r.SetBuild(w.Repo, w.Commit, task)
+		job.Finished = time.Now().UTC().Unix()
+		err = r.SetJob(w.Repo, w.Commit, job)
 		if err != nil {
 			return err
 		}
@@ -174,10 +171,10 @@ func (r *Runner) Run(w *queue.Work) error {
 
 	// update the build state if any of the sub-tasks
 	// had a non-success status
-	w.Commit.State = common.StateSuccess
-	for _, build := range w.Commit.Builds {
-		if build.State != common.StateSuccess {
-			w.Commit.State = build.State
+	w.Commit.State = types.StateSuccess
+	for _, job := range w.Commit.Builds {
+		if job.Status != types.StateSuccess {
+			w.Commit.State = job.Status
 			break
 		}
 	}
@@ -188,14 +185,14 @@ func (r *Runner) Run(w *queue.Work) error {
 
 	// loop through and execute the notifications and
 	// the destroy all containers afterward.
-	for i, build := range w.Commit.Builds {
+	for i, job := range w.Commit.Builds {
 		work := &work{
 			Repo:    w.Repo,
 			Commit:  w.Commit,
 			Keys:    w.Keys,
 			Netrc:   w.Netrc,
 			Yaml:    w.Yaml,
-			Build:   build,
+			Job:     job,
 			Env:     w.Env,
 			Plugins: w.Plugins,
 		}
@@ -210,21 +207,21 @@ func (r *Runner) Run(w *queue.Work) error {
 	return nil
 }
 
-func (r *Runner) Cancel(build *common.Build) error {
+func (r *Runner) Cancel(job *types.Job) error {
 	client, err := dockerclient.NewDockerClient(DockerHost, nil)
 	if err != nil {
 		return err
 	}
-	return client.StopContainer(cname(build), 30)
+	return client.StopContainer(cname(job), 30)
 }
 
-func (r *Runner) Logs(build *common.Build) (io.ReadCloser, error) {
+func (r *Runner) Logs(job *types.Job) (io.ReadCloser, error) {
 	client, err := dockerclient.NewDockerClient(DockerHost, nil)
 	if err != nil {
 		return nil, err
 	}
 	// make sure this container actually exists
-	info, err := client.InspectContainer(cname(build))
+	info, err := client.InspectContainer(cname(job))
 	if err != nil {
 		return nil, err
 	}
@@ -250,8 +247,8 @@ func (r *Runner) Logs(build *common.Build) (io.ReadCloser, error) {
 	return client.ContainerLogs(info.Id, logOptsTail)
 }
 
-func cname(build *common.Build) string {
-	return fmt.Sprintf("drone-%d", build.ID)
+func cname(job *types.Job) string {
+	return fmt.Sprintf("drone-%d", job.ID)
 }
 
 func (r *Runner) Poll(q queue.Queue) {
