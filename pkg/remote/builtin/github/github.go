@@ -108,10 +108,8 @@ func (g *GitHub) Repo(u *common.User, owner, name string) (*common.Repo, error) 
 	repo.Link = *repo_.HTMLURL
 	repo.Private = *repo_.Private
 	repo.Clone = *repo_.CloneURL
+	repo.Branch = "master"
 
-	if repo_.Language != nil {
-		repo.Language = *repo_.Language
-	}
 	if repo_.DefaultBranch != nil {
 		repo.Branch = *repo_.DefaultBranch
 	}
@@ -264,7 +262,6 @@ func (g *GitHub) push(r *http.Request) (*common.Hook, error) {
 	repo.Link = hook.Repo.HTMLURL
 	repo.Private = hook.Repo.Private
 	repo.Clone = hook.Repo.CloneURL
-	repo.Language = hook.Repo.Language
 	repo.Branch = hook.Repo.DefaultBranch
 
 	commit := &common.Commit{}
@@ -315,9 +312,7 @@ func (g *GitHub) pullRequest(r *http.Request) (*common.Hook, error) {
 	repo.Link = *hook.Repo.HTMLURL
 	repo.Private = *hook.Repo.Private
 	repo.Clone = *hook.Repo.CloneURL
-	if hook.Repo.Language != nil {
-		repo.Language = *hook.Repo.Language
-	}
+	repo.Branch = "master"
 	if hook.Repo.DefaultBranch != nil {
 		repo.Branch = *hook.Repo.DefaultBranch
 	}

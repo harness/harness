@@ -40,40 +40,38 @@ func createRepo(db repoDB, query string, v *Repo) error {
 	var v3 string
 	var v4 string
 	var v5 string
-	var v6 bool
+	var v6 string
 	var v7 string
-	var v8 string
-	var v9 string
-	var v10 string
-	var v11 int64
-	var v12 bool
+	var v8 bool
+	var v9 bool
+	var v10 int64
+	var v11 string
+	var v12 string
 	var v13 bool
 	var v14 bool
-	var v15 string
-	var v16 string
-	var v17 int64
-	var v18 int64
-	var v19 []byte
+	var v15 bool
+	var v16 []byte
 	v0 = v.UserID
 	v1 = v.Owner
 	v2 = v.Name
 	v3 = v.FullName
-	v4 = v.Token
-	v5 = v.Language
-	v6 = v.Private
-	v7 = v.Self
-	v8 = v.Link
-	v9 = v.Clone
-	v10 = v.Branch
-	v11 = v.Timeout
-	v12 = v.Trusted
-	v13 = v.PostCommit
-	v14 = v.PullRequest
-	v15 = v.PublicKey
-	v16 = v.PrivateKey
-	v17 = v.Created
-	v18 = v.Updated
-	v19, _ = json.Marshal(v.Params)
+	v4 = v.Self
+	v5 = v.Link
+	v6 = v.Clone
+	v7 = v.Branch
+	v8 = v.Private
+	v9 = v.Trusted
+	v10 = v.Timeout
+	if v.Keys != nil {
+		v11 = v.Keys.Public
+		v12 = v.Keys.Private
+	}
+	if v.Hooks != nil {
+		v13 = v.Hooks.PullRequest
+		v14 = v.Hooks.Push
+		v15 = v.Hooks.Tags
+	}
+	v16, _ = json.Marshal(v.Params)
 
 	res, err := db.Exec(query,
 		&v0,
@@ -93,9 +91,6 @@ func createRepo(db repoDB, query string, v *Repo) error {
 		&v14,
 		&v15,
 		&v16,
-		&v17,
-		&v18,
-		&v19,
 	)
 	if err != nil {
 		return err
@@ -113,41 +108,39 @@ func updateRepo(db repoDB, query string, v *Repo) error {
 	var v4 string
 	var v5 string
 	var v6 string
-	var v7 bool
+	var v7 string
 	var v8 string
-	var v9 string
-	var v10 string
-	var v11 string
-	var v12 int64
-	var v13 bool
+	var v9 bool
+	var v10 bool
+	var v11 int64
+	var v12 string
+	var v13 string
 	var v14 bool
 	var v15 bool
-	var v16 string
-	var v17 string
-	var v18 int64
-	var v19 int64
-	var v20 []byte
+	var v16 bool
+	var v17 []byte
 	v0 = v.ID
 	v1 = v.UserID
 	v2 = v.Owner
 	v3 = v.Name
 	v4 = v.FullName
-	v5 = v.Token
-	v6 = v.Language
-	v7 = v.Private
-	v8 = v.Self
-	v9 = v.Link
-	v10 = v.Clone
-	v11 = v.Branch
-	v12 = v.Timeout
-	v13 = v.Trusted
-	v14 = v.PostCommit
-	v15 = v.PullRequest
-	v16 = v.PublicKey
-	v17 = v.PrivateKey
-	v18 = v.Created
-	v19 = v.Updated
-	v20, _ = json.Marshal(v.Params)
+	v5 = v.Self
+	v6 = v.Link
+	v7 = v.Clone
+	v8 = v.Branch
+	v9 = v.Private
+	v10 = v.Trusted
+	v11 = v.Timeout
+	if v.Keys != nil {
+		v12 = v.Keys.Public
+		v13 = v.Keys.Private
+	}
+	if v.Hooks != nil {
+		v14 = v.Hooks.PullRequest
+		v15 = v.Hooks.Push
+		v16 = v.Hooks.Tags
+	}
+	v17, _ = json.Marshal(v.Params)
 
 	_, err := db.Exec(query,
 		&v1,
@@ -167,9 +160,6 @@ func updateRepo(db repoDB, query string, v *Repo) error {
 		&v15,
 		&v16,
 		&v17,
-		&v18,
-		&v19,
-		&v20,
 		&v0,
 	)
 	return err
@@ -183,20 +173,17 @@ func scanRepo(row *sql.Row) (*Repo, error) {
 	var v4 string
 	var v5 string
 	var v6 string
-	var v7 bool
+	var v7 string
 	var v8 string
-	var v9 string
-	var v10 string
-	var v11 string
-	var v12 int64
-	var v13 bool
+	var v9 bool
+	var v10 bool
+	var v11 int64
+	var v12 string
+	var v13 string
 	var v14 bool
 	var v15 bool
-	var v16 string
-	var v17 string
-	var v18 int64
-	var v19 int64
-	var v20 []byte
+	var v16 bool
+	var v17 []byte
 
 	err := row.Scan(
 		&v0,
@@ -217,9 +204,6 @@ func scanRepo(row *sql.Row) (*Repo, error) {
 		&v15,
 		&v16,
 		&v17,
-		&v18,
-		&v19,
-		&v20,
 	)
 	if err != nil {
 		return nil, err
@@ -231,22 +215,21 @@ func scanRepo(row *sql.Row) (*Repo, error) {
 	v.Owner = v2
 	v.Name = v3
 	v.FullName = v4
-	v.Token = v5
-	v.Language = v6
-	v.Private = v7
-	v.Self = v8
-	v.Link = v9
-	v.Clone = v10
-	v.Branch = v11
-	v.Timeout = v12
-	v.Trusted = v13
-	v.PostCommit = v14
-	v.PullRequest = v15
-	v.PublicKey = v16
-	v.PrivateKey = v17
-	v.Created = v18
-	v.Updated = v19
-	json.Unmarshal(v20, &v.Params)
+	v.Self = v5
+	v.Link = v6
+	v.Clone = v7
+	v.Branch = v8
+	v.Private = v9
+	v.Trusted = v10
+	v.Timeout = v11
+	v.Keys = &Keypair{}
+	v.Keys.Public = v12
+	v.Keys.Private = v13
+	v.Hooks = &Hooks{}
+	v.Hooks.PullRequest = v14
+	v.Hooks.Push = v15
+	v.Hooks.Tags = v16
+	json.Unmarshal(v17, &v.Params)
 
 	return v, nil
 }
@@ -262,20 +245,17 @@ func scanRepos(rows *sql.Rows) ([]*Repo, error) {
 		var v4 string
 		var v5 string
 		var v6 string
-		var v7 bool
+		var v7 string
 		var v8 string
-		var v9 string
-		var v10 string
-		var v11 string
-		var v12 int64
-		var v13 bool
+		var v9 bool
+		var v10 bool
+		var v11 int64
+		var v12 string
+		var v13 string
 		var v14 bool
 		var v15 bool
-		var v16 string
-		var v17 string
-		var v18 int64
-		var v19 int64
-		var v20 []byte
+		var v16 bool
+		var v17 []byte
 		err = rows.Scan(
 			&v0,
 			&v1,
@@ -295,9 +275,6 @@ func scanRepos(rows *sql.Rows) ([]*Repo, error) {
 			&v15,
 			&v16,
 			&v17,
-			&v18,
-			&v19,
-			&v20,
 		)
 		if err != nil {
 			return vv, err
@@ -309,22 +286,21 @@ func scanRepos(rows *sql.Rows) ([]*Repo, error) {
 		v.Owner = v2
 		v.Name = v3
 		v.FullName = v4
-		v.Token = v5
-		v.Language = v6
-		v.Private = v7
-		v.Self = v8
-		v.Link = v9
-		v.Clone = v10
-		v.Branch = v11
-		v.Timeout = v12
-		v.Trusted = v13
-		v.PostCommit = v14
-		v.PullRequest = v15
-		v.PublicKey = v16
-		v.PrivateKey = v17
-		v.Created = v18
-		v.Updated = v19
-		json.Unmarshal(v20, &v.Params)
+		v.Self = v5
+		v.Link = v6
+		v.Clone = v7
+		v.Branch = v8
+		v.Private = v9
+		v.Trusted = v10
+		v.Timeout = v11
+		v.Keys = &Keypair{}
+		v.Keys.Public = v12
+		v.Keys.Private = v13
+		v.Hooks = &Hooks{}
+		v.Hooks.PullRequest = v14
+		v.Hooks.Push = v15
+		v.Hooks.Tags = v16
+		json.Unmarshal(v17, &v.Params)
 		vv = append(vv, v)
 	}
 	return vv, rows.Err()
@@ -337,21 +313,18 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
-,repo_token
-,repo_language
-,repo_private
 ,repo_self
 ,repo_link
 ,repo_clone
 ,repo_branch
-,repo_timeout
+,repo_private
 ,repo_trusted
-,repo_post_commit
-,repo_pull_request
-,repo_public_key
-,repo_private_key
-,repo_created
-,repo_updated
+,repo_timeout
+,repo_keys_public
+,repo_keys_private
+,repo_hooks_pull_request
+,repo_hooks_push
+,repo_hooks_tags
 ,repo_params
 FROM repos
 `
@@ -363,21 +336,18 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
-,repo_token
-,repo_language
-,repo_private
 ,repo_self
 ,repo_link
 ,repo_clone
 ,repo_branch
-,repo_timeout
+,repo_private
 ,repo_trusted
-,repo_post_commit
-,repo_pull_request
-,repo_public_key
-,repo_private_key
-,repo_created
-,repo_updated
+,repo_timeout
+,repo_keys_public
+,repo_keys_private
+,repo_hooks_pull_request
+,repo_hooks_push
+,repo_hooks_tags
 ,repo_params
 FROM repos
 LIMIT ? OFFSET ?
@@ -390,24 +360,45 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
-,repo_token
-,repo_language
-,repo_private
 ,repo_self
 ,repo_link
 ,repo_clone
 ,repo_branch
-,repo_timeout
+,repo_private
 ,repo_trusted
-,repo_post_commit
-,repo_pull_request
-,repo_public_key
-,repo_private_key
-,repo_created
-,repo_updated
+,repo_timeout
+,repo_keys_public
+,repo_keys_private
+,repo_hooks_pull_request
+,repo_hooks_push
+,repo_hooks_tags
 ,repo_params
 FROM repos
 WHERE repo_id = ?
+`
+
+const stmtRepoSelectRepoUserId = `
+SELECT
+ repo_id
+,repo_user_id
+,repo_owner
+,repo_name
+,repo_full_name
+,repo_self
+,repo_link
+,repo_clone
+,repo_branch
+,repo_private
+,repo_trusted
+,repo_timeout
+,repo_keys_public
+,repo_keys_private
+,repo_hooks_pull_request
+,repo_hooks_push
+,repo_hooks_tags
+,repo_params
+FROM repos
+WHERE repo_user_id = ?
 `
 
 const stmtRepoSelectRepoOwnerName = `
@@ -417,21 +408,18 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
-,repo_token
-,repo_language
-,repo_private
 ,repo_self
 ,repo_link
 ,repo_clone
 ,repo_branch
-,repo_timeout
+,repo_private
 ,repo_trusted
-,repo_post_commit
-,repo_pull_request
-,repo_public_key
-,repo_private_key
-,repo_created
-,repo_updated
+,repo_timeout
+,repo_keys_public
+,repo_keys_private
+,repo_hooks_pull_request
+,repo_hooks_push
+,repo_hooks_tags
 ,repo_params
 FROM repos
 WHERE repo_owner = ?
@@ -445,24 +433,26 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
-,repo_token
-,repo_language
-,repo_private
 ,repo_self
 ,repo_link
 ,repo_clone
 ,repo_branch
-,repo_timeout
+,repo_private
 ,repo_trusted
-,repo_post_commit
-,repo_pull_request
-,repo_public_key
-,repo_private_key
-,repo_created
-,repo_updated
+,repo_timeout
+,repo_keys_public
+,repo_keys_private
+,repo_hooks_pull_request
+,repo_hooks_push
+,repo_hooks_tags
 ,repo_params
 FROM repos
 WHERE repo_full_name = ?
+`
+
+const stmtRepoSelectCount = `
+SELECT count(1)
+FROM repos
 `
 
 const stmtRepoInsert = `
@@ -471,23 +461,20 @@ INSERT INTO repos (
 ,repo_owner
 ,repo_name
 ,repo_full_name
-,repo_token
-,repo_language
-,repo_private
 ,repo_self
 ,repo_link
 ,repo_clone
 ,repo_branch
-,repo_timeout
+,repo_private
 ,repo_trusted
-,repo_post_commit
-,repo_pull_request
-,repo_public_key
-,repo_private_key
-,repo_created
-,repo_updated
+,repo_timeout
+,repo_keys_public
+,repo_keys_private
+,repo_hooks_pull_request
+,repo_hooks_push
+,repo_hooks_tags
 ,repo_params
-) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
+) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
 `
 
 const stmtRepoUpdate = `
@@ -496,21 +483,18 @@ UPDATE repos SET
 ,repo_owner = ?
 ,repo_name = ?
 ,repo_full_name = ?
-,repo_token = ?
-,repo_language = ?
-,repo_private = ?
 ,repo_self = ?
 ,repo_link = ?
 ,repo_clone = ?
 ,repo_branch = ?
-,repo_timeout = ?
+,repo_private = ?
 ,repo_trusted = ?
-,repo_post_commit = ?
-,repo_pull_request = ?
-,repo_public_key = ?
-,repo_private_key = ?
-,repo_created = ?
-,repo_updated = ?
+,repo_timeout = ?
+,repo_keys_public = ?
+,repo_keys_private = ?
+,repo_hooks_pull_request = ?
+,repo_hooks_push = ?
+,repo_hooks_tags = ?
 ,repo_params = ?
 WHERE repo_id = ?
 `
@@ -527,23 +511,24 @@ CREATE TABLE IF NOT EXISTS repos (
 ,repo_owner		VARCHAR
 ,repo_name		VARCHAR
 ,repo_full_name		VARCHAR
-,repo_token		VARCHAR
-,repo_language		VARCHAR
-,repo_private		BOOLEAN
 ,repo_self		VARCHAR
 ,repo_link		VARCHAR
 ,repo_clone		VARCHAR
 ,repo_branch		VARCHAR
-,repo_timeout		INTEGER
+,repo_private		BOOLEAN
 ,repo_trusted		BOOLEAN
-,repo_post_commit	BOOLEAN
-,repo_pull_request	BOOLEAN
-,repo_public_key	VARCHAR
-,repo_private_key	VARCHAR
-,repo_created		INTEGER
-,repo_updated		INTEGER
+,repo_timeout		INTEGER
+,repo_keys_public	VARCHAR
+,repo_keys_private	VARCHAR
+,repo_hooks_pull_requestBOOLEAN
+,repo_hooks_push	BOOLEAN
+,repo_hooks_tags	BOOLEAN
 ,repo_params		BLOB
 );
+`
+
+const stmtRepoRepoUserIdIndex = `
+CREATE INDEX IF NOT EXISTS ix_repo_user_id ON repos (repo_user_id);
 `
 
 const stmtRepoRepoOwnerNameIndex = `

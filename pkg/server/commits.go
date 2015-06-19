@@ -132,11 +132,6 @@ func RunBuild(c *gin.Context) {
 		return
 	}
 
-	keys := &common.Keypair{
-		Public:  repo.PublicKey,
-		Private: repo.PrivateKey,
-	}
-
 	user, err := store.User(repo.UserID)
 	if err != nil {
 		c.Fail(404, err)
@@ -189,7 +184,7 @@ func RunBuild(c *gin.Context) {
 		User:    user,
 		Repo:    repo,
 		Commit:  commit,
-		Keys:    keys,
+		Keys:    repo.Keys,
 		Netrc:   netrc,
 		Yaml:    raw,
 		Plugins: conf.Plugins,

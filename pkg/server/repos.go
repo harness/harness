@@ -66,9 +66,7 @@ func GetRepo(c *gin.Context) {
 	// and keypair data.
 	if perm.Push {
 		data.Params = repo.Params
-		data.Keypair = &common.Keypair{
-			Public: repo.PublicKey,
-		}
+		data.Keypair = repo.Keys
 	}
 	// check to see if the user is subscribing to the repo
 	data.Starred, _ = store.Starred(user, repo)
@@ -98,10 +96,10 @@ func PutRepo(c *gin.Context) {
 	}
 
 	if in.PostCommit != nil {
-		repo.PostCommit = *in.PostCommit
+		repo.Hooks.Push = *in.PostCommit
 	}
 	if in.PullRequest != nil {
-		repo.PullRequest = *in.PullRequest
+		repo.Hooks.PullRequest = *in.PullRequest
 	}
 	if in.Trusted != nil && user.Admin {
 		repo.Trusted = *in.Trusted
@@ -118,9 +116,7 @@ func PutRepo(c *gin.Context) {
 
 	data := repoResp{repo, perm, nil, nil, false}
 	data.Params = repo.Params
-	data.Keypair = &common.Keypair{
-		Public: repo.PublicKey,
-	}
+	data.Keypair = repo.Keys
 	data.Starred, _ = store.Starred(user, repo)
 
 	c.JSON(200, data)
@@ -208,8 +204,9 @@ func PostRepo(c *gin.Context) {
 	// set the repository owner to the
 	// currently authenticated user.
 	r.UserID = user.ID
-	r.PostCommit = true
-	r.PullRequest = true
+	r.Hooks = new(common.Hooks)
+	r.Hooks.Push = true
+	r.Hooks.PullRequest = true
 	r.Timeout = 60 // 1 hour default build time
 	r.Self = fmt.Sprintf(
 		"%s/%s",
@@ -223,16 +220,13 @@ func PostRepo(c *gin.Context) {
 		c.Fail(400, err)
 		return
 	}
-	r.PublicKey = string(sshutil.MarshalPublicKey(&key.PublicKey))
-	r.PrivateKey = string(sshutil.MarshalPrivateKey(key))
-	keypair := &common.Keypair{
-		Public:  r.PublicKey,
-		Private: r.PrivateKey,
-	}
+	r.Keys = new(common.Keypair)
+	r.Keys.Public = string(sshutil.MarshalPublicKey(&key.PublicKey))
+	r.Keys.Private = string(sshutil.MarshalPrivateKey(key))
 
 	// activate the repository before we make any
 	// local changes to the database.
-	err = remote.Activate(user, r, keypair, link)
+	err = remote.Activate(user, r, r.Keys, link)
 	if err != nil {
 		c.Fail(500, err)
 		return
