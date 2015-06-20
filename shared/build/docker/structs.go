@@ -133,7 +133,7 @@ type Config struct {
 	Dns             []string
 	Image           string // Name of the image as it was passed by the operator (eg. could be symbolic)
 	Volumes         map[string]struct{}
-	VolumesFrom     string
+	VolumesFrom     []string
 	WorkingDir      string
 	Entrypoint      []string
 	NetworkDisabled bool
