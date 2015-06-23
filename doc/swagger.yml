@@ -12,10 +12,47 @@ host: "localhost:8080"
 basePath: /api
 schemes:
   - http
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+security:
+  - accessToken: []
+securityDefinitions:
+  accessToken:
+    type: apiKey
+    in: query
+    name: access_token
 paths:
+  /repos/{owner}/{name}:
+    get:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+        - name: name
+          in: path
+          type: string
+      description: Returns the repository based on name.
+      security:
+        - accessToken: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: The repository.
+          schema:
+            $ref: "#/definitions/Repo"
   /user:
     get:
       description: Returns the currently authenticated user.
+      security:
+        - accessToken: []
+      consumes:
+        - application/json
       produces:
         - application/json
       responses:
@@ -23,6 +60,15 @@ paths:
           description: The currently authenticated user.
           schema:
             $ref: "#/definitions/User"
+          examples:
+            application/json: |-
+              {
+                "name": "Octocat",
+                "email": "octocat@github.com",
+                "gravatar_id": "7194e8d48fa1d2b689f99443b767316c",
+                "admin": false,
+                "active": true
+              }
     patch:
       description: Updates the currently authenticated user.
       produces:
@@ -44,8 +90,6 @@ definitions:
     properties:
       login:
         type: string
-      name:
-        type: string
       email:
         type: string
       gravatar_id:
@@ -54,76 +98,116 @@ definitions:
         type: boolean
       active:
         type: boolean
-      created_at:
-        type: integer
-        format: int64
-      updated_at:
-        type: integer
-        format: int64
   Repo:
     properties:
       owner:
         type: string
       name:
         type: string
-      created_at:
+      full_name:
+        type: string
+      link_url:
+        type: string
+      clone_url:
+        type: string
+      default_branch:
+        type: string
+      private:
+        type: boolean
+      trusted:
+        type: boolean
+      timeout:
         type: integer
-        format: int64
-      updated_at:
+      keypair:
+        type: object
+        properties:
+          public:
+            type: string
+          private:
+            type: string
+      hooks:
+        type: object
+        properties:
+          pull_request:
+            type: boolean
+          push:
+            type: boolean
+          tags:
+            type: boolean
+      permissions:
+        type: object
+        properties:
+          pull:
+            type: boolean
+          push:
+            type: boolean
+          admin:
+            type: boolean
+      params:
+        type: object
+  Build:
+    properties:
+      number:
         type: integer
-        format: int64
+      status:
+        type: string
+        enum:
+          - success
+          - failure
+          - pending
+          - started
+          - error
+          - killed
+      head_commit:
+         $ref: "#/definitions/Commit"
+      pull_request:
+         $ref: "#/definitions/PullRequest"
   Commit:
     properties:
-      sequence:
-        type: integer
-      state:
-        type: string
       sha:
         type: string
       ref:
         type: string
       branch:
         type: string
-      author:
-        type: string
-      gravatar_id:
-        type: string
       message:
         type: string
-      pull_request:
-        type: boolean
-      started_at:
-        type: integer
-        format: int64
-      finished_at:
-        type: integer
-        format: int64
-      created_at:
-        type: integer
-        format: int64
-      updated_at:
-        type: integer
-        format: int64
-  Build:
+      author:
+        $ref: "#/definitions/Author"
+  PullRequest:
     properties:
-      sequence:
+      number:
         type: integer
-      state:
+      title:
         type: string
+      base_commit:
+        $ref: "#/definitions/Commit"
+  Author:
+    properties:
+      login:
+        type: string
+      email:
+        type: string
+  Job:
+    properties:
+      number:
+        type: integer
+      status:
+        type: string
+        enum:
+          - success
+          - failure
+          - pending
+          - started
+          - error
+          - killed
       exit_code:
         type: integer
-      duration:
-        type: integer
-        format: int64
       started_at:
         type: integer
         format: int64
       finished_at:
         type: integer
         format: int64
-      created_at:
-        type: integer
-        format: int64
-      updated_at:
-        type: integer
-        format: int64
+      environment:
+        type: object
