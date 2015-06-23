@@ -68,11 +68,11 @@ func PostHook(c *gin.Context) {
 		log.Warnf("ignoring hook. repo %s has no owner.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
-	case !repo.Hooks.Push && hook.Commit.PullRequest != "":
+	case !repo.Hooks.Push && hook.PullRequest != nil:
 		log.Infof("ignoring hook. repo %s is disabled.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
-	case !repo.Hooks.PullRequest && hook.Commit.PullRequest == "":
+	case !repo.Hooks.PullRequest && hook.PullRequest == nil:
 		log.Warnf("ignoring hook. repo %s is disabled for pull requests.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
@@ -85,12 +85,14 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	commit := hook.Commit
-	commit.State = common.StatePending
-	commit.RepoID = repo.ID
+	build := &common.Build{}
+	build.Commit = hook.Commit
+	build.PullRequest = hook.PullRequest
+	build.Status = common.StatePending
+	build.RepoID = repo.ID
 
 	// featch the .drone.yml file from the database
-	raw, err := remote.Script(user, repo, commit)
+	raw, err := remote.Script(user, repo, build)
 	if err != nil {
 		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
 		c.Fail(404, err)
@@ -110,8 +112,8 @@ func PostHook(c *gin.Context) {
 		axes = append(axes, matrix.Axis{})
 	}
 	for num, axis := range axes {
-		commit.Builds = append(commit.Builds, &common.Job{
-			BuildID:     commit.ID,
+		build.Jobs = append(build.Jobs, &common.Job{
+			BuildID:     build.ID,
 			Number:      num + 1,
 			Status:      common.StatePending,
 			Environment: axis,
@@ -127,30 +129,30 @@ func PostHook(c *gin.Context) {
 
 	// verify the branches can be built vs skipped
 	when, _ := parser.ParseCondition(string(raw))
-	if commit.PullRequest != "" && when != nil && !when.MatchBranch(commit.Branch) {
-		log.Infof("ignoring hook. yaml file excludes repo and branch %s %s", repo.FullName, commit.Branch)
+	if build.PullRequest != nil && when != nil && !when.MatchBranch(build.Commit.Branch) {
+		log.Infof("ignoring hook. yaml file excludes repo and branch %s %s", repo.FullName, build.Commit.Branch)
 		c.AbortWithStatus(200)
 		return
 	}
 
-	err = store.AddCommit(commit)
+	err = store.AddBuild(build)
 	if err != nil {
 		log.Errorf("failure to save commit for %s. %s", repo.FullName, err)
 		c.Fail(500, err)
 		return
 	}
 
-	c.JSON(200, commit)
+	c.JSON(200, build)
 
-	err = remote.Status(user, repo, commit)
+	err = remote.Status(user, repo, build)
 	if err != nil {
-		log.Errorf("error setting commit status for %s/%d", repo.FullName, commit.Sequence)
+		log.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
 	}
 
 	queue_.Publish(&queue.Work{
 		User:    user,
 		Repo:    repo,
-		Commit:  commit,
+		Build:   build,
 		Keys:    repo.Keys,
 		Netrc:   netrc,
 		Yaml:    raw,

@@ -12,11 +12,12 @@ func Setup(tx migration.LimitedTx) error {
 		starTable,
 		repoTable,
 		repoUserIndex,
-		commitTable,
-		commitRepoIndex,
-		tokenTable,
 		buildTable,
-		buildCommitIndex,
+		buildRepoIndex,
+		buildBranchIndex,
+		tokenTable,
+		jobTable,
+		jobBuildIndex,
 		statusTable,
 		statusCommitIndex,
 		blobTable,
@@ -84,33 +85,42 @@ CREATE TABLE IF NOT EXISTS stars (
 );
 `
 
-var commitTable = `
-CREATE TABLE IF NOT EXISTS commits (
-	 commit_id             INTEGER PRIMARY KEY AUTOINCREMENT
-	,commit_repo_id        INTEGER
-	,commit_sequence       INTEGER
-	,commit_state          VARCHAR(255)
-	,commit_started        INTEGER
-	,commit_finished       INTEGER
-	,commit_sha            VARCHAR(255)
-	,commit_ref            VARCHAR(255)
-	,commit_branch         VARCHAR(255)
-	,commit_pull_request   VARCHAR(255)
-	,commit_author         VARCHAR(255)
-	,commit_gravatar       VARCHAR(255)
-	,commit_timestamp      VARCHAR(255)
-	,commit_message        VARCHAR(1000)
-	,commit_source_remote  VARCHAR(255)
-	,commit_source_branch  VARCHAR(255)
-	,commit_source_sha     VARCHAR(255)
-	,commit_created        INTEGER
-	,commit_updated        INTEGER
-	,UNIQUE(commit_repo_id, commit_sequence)
+var buildTable = `
+CREATE TABLE IF NOT EXISTS builds (
+	 build_id                             INTEGER PRIMARY KEY AUTOINCREMENT
+	,build_repo_id                        INTEGER
+	,build_number                         INTEGER
+	,build_status                         VARCHAR(512)
+	,build_started                        INTEGER
+	,build_finished                       INTEGER
+	,build_commit_sha                     VARCHAR(512)
+	,build_commit_ref                     VARCHAR(512)
+	,build_commit_branch                  VARCHAR(512)
+	,build_commit_message                 VARCHAR(512)
+	,build_commit_timestamp               VARCHAR(512)
+	,build_commit_remote                  VARCHAR(512)
+	,build_commit_author_login            VARCHAR(512)
+	,build_commit_author_email            VARCHAR(512)
+	,build_pull_request_number            INTEGER
+	,build_pull_request_title             VARCHAR(512)
+	,build_pull_request_base_sha          VARCHAR(512)
+	,build_pull_request_base_ref          VARCHAR(512)
+	,build_pull_request_base_branch       VARCHAR(512)
+	,build_pull_request_base_message      VARCHAR(512)
+	,build_pull_request_base_timestamp    VARCHAR(512)
+	,build_pull_request_base_remote       VARCHAR(512)
+	,build_pull_request_base_author_login VARCHAR(512)
+	,build_pull_request_base_author_email VARCHAR(512)
+	,UNIQUE(build_repo_id, build_number)
 );
 `
 
-var commitRepoIndex = `
-CREATE INDEX commits_repo_idx ON commits (commit_repo_id);
+var buildRepoIndex = `
+CREATE INDEX build_repo_idx ON builds (build_repo_id);
+`
+
+var buildBranchIndex = `
+CREATE INDEX build_branch_idx ON builds (build_commit_branch);
 `
 
 var tokenTable = `
@@ -129,7 +139,7 @@ var tokenUserIndex = `
 CREATE INDEX tokens_user_idx ON tokens (token_user_id);
 `
 
-var buildTable = `
+var jobTable = `
 CREATE TABLE IF NOT EXISTS jobs (
 	 job_id          INTEGER PRIMARY KEY AUTOINCREMENT
 	,job_build_id    INTEGER
@@ -143,7 +153,7 @@ CREATE TABLE IF NOT EXISTS jobs (
 );
 `
 
-var buildCommitIndex = `
+var jobBuildIndex = `
 CREATE INDEX ix_job_build_id ON jobs (job_build_id);
 `
 
@@ -176,8 +186,8 @@ CREATE TABLE IF NOT EXISTS blobs (
 var agentTable = `
 CREATE TABLE IF NOT EXISTS agents (
 	 agent_id           INTEGER PRIMARY KEY AUTOINCREMENT
-	,agent_commit_id    INTEGER
+	,agent_build_id     INTEGER
 	,agent_addr         VARCHAR(2000)
-	,UNIQUE(agent_commit_id)
+	,UNIQUE(agent_build_id)
 );
 `

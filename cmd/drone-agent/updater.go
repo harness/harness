@@ -17,18 +17,18 @@ import (
 
 type updater struct{}
 
-func (u *updater) SetCommit(user *common.User, r *common.Repo, c *common.Commit) error {
+func (u *updater) SetBuild(user *common.User, r *common.Repo, b *common.Build) error {
 	path := fmt.Sprintf("/api/queue/push/%s", r.FullName)
-	return sendBackoff("POST", path, c, nil)
+	return sendBackoff("POST", path, b, nil)
 }
 
-func (u *updater) SetJob(r *common.Repo, c *common.Commit, j *common.Job) error {
-	path := fmt.Sprintf("/api/queue/push/%s/%v", r.FullName, c.Sequence)
+func (u *updater) SetJob(r *common.Repo, b *common.Build, j *common.Job) error {
+	path := fmt.Sprintf("/api/queue/push/%s/%v", r.FullName, b.Number)
 	return sendBackoff("POST", path, j, nil)
 }
 
-func (u *updater) SetLogs(r *common.Repo, c *common.Commit, j *common.Job, rc io.ReadCloser) error {
-	path := fmt.Sprintf("/api/queue/push/%s/%v/%v", r.FullName, c.Sequence, j.Number)
+func (u *updater) SetLogs(r *common.Repo, b *common.Build, j *common.Job, rc io.ReadCloser) error {
+	path := fmt.Sprintf("/api/queue/push/%s/%v/%v", r.FullName, b.Number, j.Number)
 	return sendBackoff("POST", path, rc, nil)
 }
 

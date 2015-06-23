@@ -127,30 +127,30 @@ type Store interface {
 
 	//
 
-	// Commit gets a commit by ID
-	Commit(int64) (*types.Commit, error)
+	// Build gets a build by ID
+	Build(int64) (*types.Build, error)
 
-	// CommitSeq gets the specified commit sequence for the
-	// named repository and commit number
-	CommitSeq(*types.Repo, int) (*types.Commit, error)
+	// BuildNumber gets the specified build number for the
+	// named repository and build number
+	BuildNumber(*types.Repo, int) (*types.Build, error)
 
-	// CommitLast gets the last executed commit for the
+	// BuildLast gets the last executed build for the
 	// named repository and branch
-	CommitLast(*types.Repo, string) (*types.Commit, error)
+	BuildLast(*types.Repo, string) (*types.Build, error)
 
-	// CommitList gets a list of recent commits for the
+	// BuildList gets a list of recent builds for the
 	// named repository.
-	CommitList(*types.Repo, int, int) ([]*types.Commit, error)
+	BuildList(*types.Repo, int, int) ([]*types.Build, error)
 
-	// AddCommit inserts a new commit in the datastore.
-	AddCommit(*types.Commit) error
+	// AddBuild inserts a new build in the datastore.
+	AddBuild(*types.Build) error
 
-	// SetCommit updates an existing commit and commit tasks.
-	SetCommit(*types.Commit) error
+	// SetBuild updates an existing build and build jobs.
+	SetBuild(*types.Build) error
 
-	// KillCommits updates all pending or started commits
+	// KillBuilds updates all pending or started builds
 	// in the datastore settings the status to killed.
-	KillCommits() error
+	KillBuilds() error
 
 	//
 
@@ -158,10 +158,10 @@ type Store interface {
 	Job(int64) (*types.Job, error)
 
 	// JobNumber returns a jobs by sequence number.
-	JobNumber(*types.Commit, int) (*types.Job, error)
+	JobNumber(*types.Build, int) (*types.Job, error)
 
-	// JobList returns a list of all commit jobs
-	JobList(*types.Commit) ([]*types.Job, error)
+	// JobList returns a list of all build jobs
+	JobList(*types.Build) ([]*types.Job, error)
 
 	// SetJob updates an existing job.
 	SetJob(*types.Job) error
@@ -189,8 +189,8 @@ type Store interface {
 	//
 
 	// Agent returns an agent by ID.
-	Agent(*types.Commit) (string, error)
+	Agent(*types.Build) (string, error)
 
 	// SetAgent updates an agent in the datastore.
-	SetAgent(*types.Commit, string) error
+	SetAgent(*types.Build, string) error
 }

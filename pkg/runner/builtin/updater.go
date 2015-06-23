@@ -12,9 +12,9 @@ import (
 )
 
 type Updater interface {
-	SetCommit(*types.User, *types.Repo, *types.Commit) error
-	SetJob(*types.Repo, *types.Commit, *types.Job) error
-	SetLogs(*types.Repo, *types.Commit, *types.Job, io.ReadCloser) error
+	SetBuild(*types.User, *types.Repo, *types.Build) error
+	SetJob(*types.Repo, *types.Build, *types.Job) error
+	SetLogs(*types.Repo, *types.Build, *types.Job, io.ReadCloser) error
 }
 
 // NewUpdater returns an implementation of the Updater interface
@@ -29,8 +29,8 @@ type updater struct {
 	remote remote.Remote
 }
 
-func (u *updater) SetCommit(user *types.User, r *types.Repo, c *types.Commit) error {
-	err := u.store.SetCommit(c)
+func (u *updater) SetBuild(user *types.User, r *types.Repo, c *types.Build) error {
+	err := u.store.SetBuild(c)
 	if err != nil {
 		return err
 	}
@@ -44,8 +44,8 @@ func (u *updater) SetCommit(user *types.User, r *types.Repo, c *types.Commit) er
 	// a remote agent won't have the embedded
 	// build list. we should probably just rethink
 	// the messaging instead of this hack.
-	if c.Builds == nil || len(c.Builds) == 0 {
-		c.Builds, _ = u.store.JobList(c)
+	if c.Jobs == nil || len(c.Jobs) == 0 {
+		c.Jobs, _ = u.store.JobList(c)
 	}
 
 	msg, err := json.Marshal(c)
@@ -61,7 +61,7 @@ func (u *updater) SetCommit(user *types.User, r *types.Repo, c *types.Commit) er
 	return nil
 }
 
-func (u *updater) SetJob(r *types.Repo, c *types.Commit, j *types.Job) error {
+func (u *updater) SetJob(r *types.Repo, c *types.Build, j *types.Job) error {
 	err := u.store.SetJob(j)
 	if err != nil {
 		return err
@@ -71,8 +71,8 @@ func (u *updater) SetJob(r *types.Repo, c *types.Commit, j *types.Job) error {
 	// a remote agent won't have the embedded
 	// build list. we should probably just rethink
 	// the messaging instead of this hack.
-	if c.Builds == nil || len(c.Builds) == 0 {
-		c.Builds, _ = u.store.JobList(c)
+	if c.Jobs == nil || len(c.Jobs) == 0 {
+		c.Jobs, _ = u.store.JobList(c)
 	}
 
 	msg, err := json.Marshal(c)
@@ -88,7 +88,7 @@ func (u *updater) SetJob(r *types.Repo, c *types.Commit, j *types.Job) error {
 	return nil
 }
 
-func (u *updater) SetLogs(r *types.Repo, c *types.Commit, j *types.Job, rc io.ReadCloser) error {
-	path := fmt.Sprintf("/logs/%s/%v/%v", r.FullName, c.Sequence, j.Number)
+func (u *updater) SetLogs(r *types.Repo, c *types.Build, j *types.Job, rc io.ReadCloser) error {
+	path := fmt.Sprintf("/logs/%s/%v/%v", r.FullName, c.Number, j.Number)
 	return u.store.SetBlobReader(path, rc)
 }

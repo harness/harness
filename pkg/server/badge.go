@@ -36,13 +36,13 @@ func GetBadge(c *gin.Context) {
 	// if no commit was found then display
 	// the 'none' badge, instead of throwing
 	// an error response
-	commit, err := store.CommitLast(repo, branch)
+	build, err := store.BuildLast(repo, branch)
 	if err != nil {
 		c.Writer.Write(badgeNone)
 		return
 	}
 
-	switch commit.State {
+	switch build.Status {
 	case common.StateSuccess:
 		c.Writer.Write(badgeSuccess)
 	case common.StateFailure:
@@ -66,7 +66,7 @@ func GetBadge(c *gin.Context) {
 func GetCC(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
-	list, err := store.CommitList(repo, 1, 0)
+	list, err := store.BuildList(repo, 1, 0)
 	if err != nil || len(list) == 0 {
 		c.AbortWithStatus(404)
 		return
