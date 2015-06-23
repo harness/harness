@@ -45,7 +45,7 @@
 			var added = false;
 			for (var i=0;i<$scope.builds.length;i++) {
 				var build = $scope.builds[i];
-				if (event.sequence !== build.sequence) {
+				if (event.number !== build.number) {
 					continue; // ignore
 				}
 				// update the build status

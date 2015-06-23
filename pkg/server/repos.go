@@ -31,10 +31,13 @@ type repoResp struct {
 // accept null values, effectively patching an existing
 // repository object with only the supplied fields.
 type repoReq struct {
-	PostCommit  *bool  `json:"post_commits"`
-	PullRequest *bool  `json:"pull_requests"`
-	Trusted     *bool  `json:"trusted"`
-	Timeout     *int64 `json:"timeout"`
+	Trusted *bool  `json:"trusted"`
+	Timeout *int64 `json:"timeout"`
+
+	Hooks struct {
+		PullReqeust *bool `json:"pull_request"`
+		Push        *bool `json:"push"`
+	}
 
 	// optional private parameters can only be
 	// supplied by the repository admin.
@@ -95,11 +98,11 @@ func PutRepo(c *gin.Context) {
 		repo.Params = *in.Params
 	}
 
-	if in.PostCommit != nil {
-		repo.Hooks.Push = *in.PostCommit
+	if in.Hooks.Push != nil {
+		repo.Hooks.Push = *in.Hooks.Push
 	}
-	if in.PullRequest != nil {
-		repo.Hooks.PullRequest = *in.PullRequest
+	if in.Hooks.PullReqeust != nil {
+		repo.Hooks.PullRequest = *in.Hooks.PullReqeust
 	}
 	if in.Trusted != nil && user.Admin {
 		repo.Trusted = *in.Trusted

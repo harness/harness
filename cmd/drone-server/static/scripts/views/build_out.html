@@ -32,16 +32,16 @@
 			<section class="commit-section">
 				<div class="row build-row">
 					<div>
-						<div ng-class="[ 'build-num', task.state ]"  ng-if="task"></div>
-						<div ng-class="[ 'build-num', build.state ]" ng-if="!task"></div>
+						<div ng-class="[ 'build-num', task.status ]"  ng-if="task"></div>
+						<div ng-class="[ 'build-num', build.status ]" ng-if="!task"></div>
 					</div>
 					<div>
-						<h3>{{ build.message }}</h3>
-						<p><strong>{{ build.author }}</strong> pushed to <strong>{{ build.branch }}</strong> {{ build.started_at | fromNow }}</p>
+						<h3>{{ build.head_commit.message }}</h3>
+						<p><strong>{{ build.head_commit.author.login }}</strong> pushed to <strong>{{ build.head_commit.branch }}</strong> {{ build.started_at | fromNow }}</p>
 					</div>
 				</div>
 
-				<div class="row build-row sub-build-row" ng-if="build.builds.length > 1">
+				<div class="row build-row sub-build-row" ng-if="build.jobs.length > 1">
 					<div>
 						
 					</div>
@@ -58,11 +58,11 @@
 
 
 
-		<pre id="term" ng-if="task && task.state !== 'pending'"></pre>
-		<button class="fab" ng-if="build.state === 'running'" ng-click="tail()"></button>
+		<pre id="term" ng-if="task && task.status !== 'pending'"></pre>
+		<button class="fab" ng-if="build.status === 'running'" ng-click="tail()"></button>
 	</article>
 
 
 
-	<button ng-if="build.state !== 'pending' && build.state !== 'running'" ng-click="restart()">Restart</button>
-	<button ng-if="build.state === 'pending' || build.state === 'running'" ng-click="cancel()">Cancel</button>
+	<button ng-if="build.status !== 'pending' && build.status !== 'running'" ng-click="restart()">Restart</button>
+	<button ng-if="build.status === 'pending' || build.status === 'running'" ng-click="cancel()">Cancel</button>
