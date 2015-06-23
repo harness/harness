@@ -60,12 +60,12 @@ func GetStream(c *gin.Context) {
 
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 
-	commit, err := store.CommitSeq(repo, commitseq)
+	build, err := store.BuildNumber(repo, commitseq)
 	if err != nil {
 		c.Fail(404, err)
 		return
 	}
-	job, err := store.JobNumber(commit, jobnum)
+	job, err := store.JobNumber(build, jobnum)
 	if err != nil {
 		c.Fail(404, err)
 		return
@@ -77,7 +77,7 @@ func GetStream(c *gin.Context) {
 	// we'll proxy the build output directly to the
 	// remote Docker client, through the agent.
 	if conf.Agents.Secret != "" {
-		addr, err := store.Agent(commit)
+		addr, err := store.Agent(build)
 		if err != nil {
 			c.Fail(500, err)
 			return

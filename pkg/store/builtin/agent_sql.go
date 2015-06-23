@@ -35,7 +35,7 @@ func createAgent(db agentDB, query string, v *Agent) error {
 	var v0 string
 	var v1 int64
 	v0 = v.Addr
-	v1 = v.CommitID
+	v1 = v.BuildID
 
 	res, err := db.Exec(query,
 		&v0,
@@ -55,7 +55,7 @@ func updateAgent(db agentDB, query string, v *Agent) error {
 	var v2 int64
 	v0 = v.ID
 	v1 = v.Addr
-	v2 = v.CommitID
+	v2 = v.BuildID
 
 	_, err := db.Exec(query,
 		&v1,
@@ -82,7 +82,7 @@ func scanAgent(row *sql.Row) (*Agent, error) {
 	v := &Agent{}
 	v.ID = v0
 	v.Addr = v1
-	v.CommitID = v2
+	v.BuildID = v2
 
 	return v, nil
 }
@@ -106,7 +106,7 @@ func scanAgents(rows *sql.Rows) ([]*Agent, error) {
 		v := &Agent{}
 		v.ID = v0
 		v.Addr = v1
-		v.CommitID = v2
+		v.BuildID = v2
 		vv = append(vv, v)
 	}
 	return vv, rows.Err()
@@ -116,7 +116,7 @@ const stmtAgentSelectList = `
 SELECT
  agent_id
 ,agent_addr
-,agent_commit_id
+,agent_build_id
 FROM agents
 `
 

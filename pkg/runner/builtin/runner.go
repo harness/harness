@@ -53,10 +53,10 @@ func (r *Runner) Run(w *queue.Work) error {
 		// if any part of the commit fails and leaves
 		// behind orphan sub-builds we need to cleanup
 		// after ourselves.
-		if w.Commit.State == types.StateRunning {
+		if w.Build.Status == types.StateRunning {
 			// if any tasks are running or pending
 			// we should mark them as complete.
-			for _, b := range w.Commit.Builds {
+			for _, b := range w.Build.Jobs {
 				if b.Status == types.StateRunning {
 					b.Status = types.StateError
 					b.Finished = time.Now().UTC().Unix()
@@ -68,23 +68,23 @@ func (r *Runner) Run(w *queue.Work) error {
 					b.Finished = time.Now().UTC().Unix()
 					b.ExitCode = 255
 				}
-				r.SetJob(w.Repo, w.Commit, b)
+				r.SetJob(w.Repo, w.Build, b)
 			}
 			// must populate build start
-			if w.Commit.Started == 0 {
-				w.Commit.Started = time.Now().UTC().Unix()
+			if w.Build.Started == 0 {
+				w.Build.Started = time.Now().UTC().Unix()
 			}
 			// mark the build as complete (with error)
-			w.Commit.State = types.StateError
-			w.Commit.Finished = time.Now().UTC().Unix()
-			r.SetCommit(w.User, w.Repo, w.Commit)
+			w.Build.Status = types.StateError
+			w.Build.Finished = time.Now().UTC().Unix()
+			r.SetBuild(w.User, w.Repo, w.Build)
 		}
 	}()
 
 	// marks the build as running
-	w.Commit.Started = time.Now().UTC().Unix()
-	w.Commit.State = types.StateRunning
-	err := r.SetCommit(w.User, w.Repo, w.Commit)
+	w.Build.Started = time.Now().UTC().Unix()
+	w.Build.Status = types.StateRunning
+	err := r.SetBuild(w.User, w.Repo, w.Build)
 	if err != nil {
 		return err
 	}
@@ -99,19 +99,19 @@ func (r *Runner) Run(w *queue.Work) error {
 
 	// loop through and execute the build and
 	// clone steps for each build job.
-	for _, job := range w.Commit.Builds {
+	for _, job := range w.Build.Jobs {
 
 		// marks the task as running
 		job.Status = types.StateRunning
 		job.Started = time.Now().UTC().Unix()
-		err = r.SetJob(w.Repo, w.Commit, job)
+		err = r.SetJob(w.Repo, w.Build, job)
 		if err != nil {
 			return err
 		}
 
 		work := &work{
 			Repo:    w.Repo,
-			Commit:  w.Commit,
+			Build:   w.Build,
 			Keys:    w.Keys,
 			Netrc:   w.Netrc,
 			Yaml:    w.Yaml,
@@ -127,7 +127,7 @@ func (r *Runner) Run(w *queue.Work) error {
 		worker := newWorkerTimeout(client, w.Repo.Timeout)
 		workers = append(workers, worker)
 		cname := cname(job)
-		pullrequest := (w.Commit.PullRequest != "")
+		pullrequest := (w.Build.PullRequest != nil)
 		state, builderr := worker.Build(cname, in, pullrequest)
 
 		switch {
@@ -156,14 +156,14 @@ func (r *Runner) Run(w *queue.Work) error {
 			defer rc.Close()
 			docker.StdCopy(&buf, &buf, rc)
 		}
-		err = r.SetLogs(w.Repo, w.Commit, job, ioutil.NopCloser(&buf))
+		err = r.SetLogs(w.Repo, w.Build, job, ioutil.NopCloser(&buf))
 		if err != nil {
 			return err
 		}
 
 		// update the task in the datastore
 		job.Finished = time.Now().UTC().Unix()
-		err = r.SetJob(w.Repo, w.Commit, job)
+		err = r.SetJob(w.Repo, w.Build, job)
 		if err != nil {
 			return err
 		}
@@ -171,24 +171,24 @@ func (r *Runner) Run(w *queue.Work) error {
 
 	// update the build state if any of the sub-tasks
 	// had a non-success status
-	w.Commit.State = types.StateSuccess
-	for _, job := range w.Commit.Builds {
+	w.Build.Status = types.StateSuccess
+	for _, job := range w.Build.Jobs {
 		if job.Status != types.StateSuccess {
-			w.Commit.State = job.Status
+			w.Build.Status = job.Status
 			break
 		}
 	}
-	err = r.SetCommit(w.User, w.Repo, w.Commit)
+	err = r.SetBuild(w.User, w.Repo, w.Build)
 	if err != nil {
 		return err
 	}
 
 	// loop through and execute the notifications and
 	// the destroy all containers afterward.
-	for i, job := range w.Commit.Builds {
+	for i, job := range w.Build.Jobs {
 		work := &work{
 			Repo:    w.Repo,
-			Commit:  w.Commit,
+			Build:   w.Build,
 			Keys:    w.Keys,
 			Netrc:   w.Netrc,
 			Yaml:    w.Yaml,

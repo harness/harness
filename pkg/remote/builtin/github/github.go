@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -143,15 +142,9 @@ func (g *GitHub) Perm(u *common.User, owner, name string) (*common.Perm, error) 
 
 // Script fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
-func (g *GitHub) Script(u *common.User, r *common.Repo, c *common.Commit) ([]byte, error) {
+func (g *GitHub) Script(u *common.User, r *common.Repo, b *common.Build) ([]byte, error) {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
-	var sha string
-	if len(c.SourceSha) == 0 {
-		sha = c.Sha
-	} else {
-		sha = c.SourceSha
-	}
-	return GetFile(client, r.Owner, r.Name, ".drone.yml", sha)
+	return GetFile(client, r.Owner, r.Name, ".drone.yml", b.Commit.Sha)
 }
 
 // Netrc returns a .netrc file that can be used to clone
@@ -209,19 +202,19 @@ func (g *GitHub) Deactivate(u *common.User, r *common.Repo, link string) error {
 	return DeleteHook(client, r.Owner, r.Name, link)
 }
 
-func (g *GitHub) Status(u *common.User, r *common.Repo, c *common.Commit) error {
+func (g *GitHub) Status(u *common.User, r *common.Repo, b *common.Build) error {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
 
-	link := fmt.Sprintf("%s/%v", r.Self, c.Sequence)
-	status := getStatus(c.State)
-	desc := getDesc(c.State)
+	link := fmt.Sprintf("%s/%v", r.Self, b.Number)
+	status := getStatus(b.Status)
+	desc := getDesc(b.Status)
 	data := github.RepoStatus{
 		Context:     github.String("Drone"),
 		State:       github.String(status),
 		Description: github.String(desc),
 		TargetURL:   github.String(link),
 	}
-	_, _, err := client.Repositories.CreateStatus(r.Owner, r.Name, c.SourceSha, &data)
+	_, _, err := client.Repositories.CreateStatus(r.Owner, r.Name, b.Commit.Sha, &data)
 	return err
 }
 
@@ -270,10 +263,10 @@ func (g *GitHub) push(r *http.Request) (*common.Hook, error) {
 	commit.Branch = strings.Replace(commit.Ref, "refs/heads/", "", -1)
 	commit.Message = hook.Head.Message
 	commit.Timestamp = hook.Head.Timestamp
-	commit.Author = hook.Head.Author.Username
-	// commit.Author.Name = hook.Head.Author.Name
-	// commit.Author.Email = hook.Head.Author.Email
-	// commit.Author.Login = hook.Head.Author.Username
+	commit.Author = &common.Author{}
+	commit.Author.Email = hook.Head.Author.Email
+	commit.Author.Login = hook.Head.Author.Username
+	commit.Remote = hook.Repo.CloneURL
 
 	// we should ignore github pages
 	if commit.Ref == "refs/heads/gh-pages" {
@@ -318,19 +311,31 @@ func (g *GitHub) pullRequest(r *http.Request) (*common.Hook, error) {
 	}
 
 	c := &common.Commit{}
-	c.PullRequest = strconv.Itoa(*hook.PullRequest.Number)
-	c.Message = *hook.PullRequest.Title
-	c.Sha = *hook.PullRequest.Base.SHA
-	c.Ref = *hook.PullRequest.Base.Ref
-	c.Ref = fmt.Sprintf("refs/pull/%s/merge", c.PullRequest)
-	c.Branch = *hook.PullRequest.Base.Ref
+	c.Sha = *hook.PullRequest.Head.SHA
+	c.Ref = *hook.PullRequest.Head.Ref
+	c.Ref = fmt.Sprintf("refs/pull/%s/merge", *hook.PullRequest.Number)
+	c.Branch = *hook.PullRequest.Head.Ref
 	c.Timestamp = time.Now().UTC().Format("2006-01-02 15:04:05.000000000 +0000 MST")
-	c.Author = *hook.PullRequest.Base.User.Login
-	c.SourceRemote = *hook.PullRequest.Head.Repo.CloneURL
-	c.SourceBranch = *hook.PullRequest.Head.Ref
-	c.SourceSha = *hook.PullRequest.Head.SHA
+	c.Remote = *hook.PullRequest.Head.Repo.CloneURL
+	c.Author = &common.Author{}
+	c.Author.Login = *hook.PullRequest.Head.User.Login
+	// Author.Email
+	// Message
 
-	return &common.Hook{Repo: repo, Commit: c}, nil
+	pr := &common.PullRequest{}
+	pr.Number = *hook.PullRequest.Number
+	pr.Title = *hook.PullRequest.Title
+	pr.Base = &common.Commit{}
+	pr.Base.Sha = *hook.PullRequest.Base.SHA
+	pr.Base.Ref = *hook.PullRequest.Base.Ref
+	pr.Base.Remote = *hook.PullRequest.Base.Repo.CloneURL
+	// Branch
+	// Message
+	// Timestamp
+	// Author.Login
+	// Author.Email
+
+	return &common.Hook{Repo: repo, Commit: c, PullRequest: pr}, nil
 }
 
 type pushHook struct {

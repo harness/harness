@@ -27,15 +27,15 @@ func GetCommit(c *gin.Context) {
 		c.Fail(400, err)
 		return
 	}
-	commit, err := store.CommitSeq(repo, num)
+	build, err := store.BuildNumber(repo, num)
 	if err != nil {
 		c.Fail(404, err)
 	}
-	commit.Builds, err = store.JobList(commit)
+	build.Jobs, err = store.JobList(build)
 	if err != nil {
 		c.Fail(404, err)
 	} else {
-		c.JSON(200, commit)
+		c.JSON(200, build)
 	}
 }
 
@@ -47,11 +47,11 @@ func GetCommit(c *gin.Context) {
 func GetCommits(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
-	commits, err := store.CommitList(repo, 20, 0)
+	builds, err := store.BuildList(repo, 20, 0)
 	if err != nil {
 		c.Fail(404, err)
 	} else {
-		c.JSON(200, commits)
+		c.JSON(200, builds)
 	}
 }
 
@@ -65,10 +65,10 @@ func GetLogs(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
 	full, _ := strconv.ParseBool(c.Params.ByName("full"))
-	commit, _ := strconv.Atoi(c.Params.ByName("number"))
-	build, _ := strconv.Atoi(c.Params.ByName("task"))
+	build, _ := strconv.Atoi(c.Params.ByName("number"))
+	job, _ := strconv.Atoi(c.Params.ByName("task"))
 
-	path := fmt.Sprintf("/logs/%s/%v/%v", repo.FullName, commit, build)
+	path := fmt.Sprintf("/logs/%s/%v/%v", repo.FullName, build, job)
 	r, err := store.GetBlobReader(path)
 	if err != nil {
 		c.Fail(404, err)
@@ -121,12 +121,12 @@ func RunBuild(c *gin.Context) {
 		c.Fail(400, err)
 		return
 	}
-	commit, err := store.CommitSeq(repo, num)
+	build, err := store.BuildNumber(repo, num)
 	if err != nil {
 		c.Fail(404, err)
 		return
 	}
-	commit.Builds, err = store.JobList(commit)
+	build.Jobs, err = store.JobList(build)
 	if err != nil {
 		c.Fail(404, err)
 		return
@@ -139,22 +139,22 @@ func RunBuild(c *gin.Context) {
 	}
 
 	// must not restart a running build
-	if commit.State == common.StatePending || commit.State == common.StateRunning {
+	if build.Status == common.StatePending || build.Status == common.StateRunning {
 		c.AbortWithStatus(409)
 		return
 	}
 
-	commit.State = common.StatePending
-	commit.Started = 0
-	commit.Finished = 0
-	for _, job := range commit.Builds {
+	build.Status = common.StatePending
+	build.Started = 0
+	build.Finished = 0
+	for _, job := range build.Jobs {
 		job.Status = common.StatePending
 		job.Started = 0
 		job.Finished = 0
 		job.ExitCode = 0
 	}
 
-	err = store.SetCommit(commit)
+	err = store.SetBuild(build)
 	if err != nil {
 		c.Fail(500, err)
 		return
@@ -167,7 +167,7 @@ func RunBuild(c *gin.Context) {
 	}
 
 	// featch the .drone.yml file from the database
-	raw, err := remote.Script(user, repo, commit)
+	raw, err := remote.Script(user, repo, build)
 	if err != nil {
 		c.Fail(404, err)
 		return
@@ -178,12 +178,12 @@ func RunBuild(c *gin.Context) {
 		raw = []byte(inject.InjectSafe(string(raw), repo.Params))
 	}
 
-	c.JSON(202, commit)
+	c.JSON(202, build)
 
 	queue_.Publish(&queue.Work{
 		User:    user,
 		Repo:    repo,
-		Commit:  commit,
+		Build:   build,
 		Keys:    repo.Keys,
 		Netrc:   netrc,
 		Yaml:    raw,
@@ -206,19 +206,19 @@ func KillBuild(c *gin.Context) {
 		c.Fail(400, err)
 		return
 	}
-	commit, err := store.CommitSeq(repo, num)
+	build, err := store.BuildNumber(repo, num)
 	if err != nil {
 		c.Fail(404, err)
 		return
 	}
-	commit.Builds, err = store.JobList(commit)
+	build.Jobs, err = store.JobList(build)
 	if err != nil {
 		c.Fail(404, err)
 		return
 	}
 
 	// must not restart a running build
-	if commit.State != common.StatePending && commit.State != common.StateRunning {
+	if build.Status != common.StatePending && build.Status != common.StateRunning {
 		c.Fail(409, err)
 		return
 	}
@@ -228,32 +228,32 @@ func KillBuild(c *gin.Context) {
 	// TODO(bradrydzewski) this could yield a race condition
 	// because other threads may also be accessing these items.
 	for _, item := range queue.Items() {
-		if item.Repo.FullName == repo.FullName && item.Commit.Sequence == commit.Sequence {
+		if item.Repo.FullName == repo.FullName && item.Build.Number == build.Number {
 			queue.Remove(item)
 			break
 		}
 	}
 
-	commit.State = common.StateKilled
-	commit.Finished = time.Now().Unix()
-	if commit.Started == 0 {
-		commit.Started = commit.Finished
+	build.Status = common.StateKilled
+	build.Finished = time.Now().Unix()
+	if build.Started == 0 {
+		build.Started = build.Finished
 	}
-	for _, job := range commit.Builds {
+	for _, job := range build.Jobs {
 		if job.Status != common.StatePending && job.Status != common.StateRunning {
 			continue
 		}
 		job.Status = common.StateKilled
-		job.Started = commit.Started
-		job.Finished = commit.Finished
+		job.Started = build.Started
+		job.Finished = build.Finished
 	}
-	err = store.SetCommit(commit)
+	err = store.SetBuild(build)
 	if err != nil {
 		c.Fail(500, err)
 		return
 	}
 
-	for _, job := range commit.Builds {
+	for _, job := range build.Jobs {
 		runner.Cancel(job)
 	}
 	// // get the agent from the repository so we can
@@ -272,5 +272,5 @@ func KillBuild(c *gin.Context) {
 	// }
 	// defer resp.Body.Close()
 
-	c.JSON(200, commit)
+	c.JSON(200, build)
 }

@@ -98,7 +98,7 @@ func New(db *sql.DB) store.Store {
 	return struct {
 		*Userstore
 		*Repostore
-		*Commitstore
+		*Buildstore
 		*Jobstore
 		*Blobstore
 		*Starstore
@@ -107,7 +107,7 @@ func New(db *sql.DB) store.Store {
 	}{
 		NewUserstore(db),
 		NewRepostore(db),
-		NewCommitstore(db),
+		NewBuildstore(db),
 		NewJobstore(db),
 		NewBlobstore(db),
 		NewStarstore(db),

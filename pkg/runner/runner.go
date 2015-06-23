@@ -16,7 +16,7 @@ type Runner interface {
 // Updater defines a set of functions that are required for
 // the runner to sent Drone updates during a build.
 type Updater interface {
-	SetCommit(*types.User, *types.Repo, *types.Commit) error
-	SetJob(*types.Repo, *types.Commit, *types.Job) error
-	SetLogs(*types.Repo, *types.Commit, *types.Job, io.ReadCloser) error
+	SetBuild(*types.User, *types.Repo, *types.Build) error
+	SetJob(*types.Repo, *types.Build, *types.Job) error
+	SetLogs(*types.Repo, *types.Build, *types.Job, io.ReadCloser) error
 }

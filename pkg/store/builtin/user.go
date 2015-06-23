@@ -72,18 +72,18 @@ SELECT
 ,r.repo_owner
 ,r.repo_name
 ,r.repo_full_name
-,c.commit_sequence
-,c.commit_state
-,c.commit_started
-,c.commit_finished
+,b.build_number
+,b.build_status
+,b.build_started
+,b.build_finished
 FROM
- commits c
+ builds b
 ,repos r
 ,stars s
-WHERE c.commit_repo_id = r.repo_id
+WHERE b.build_repo_id = r.repo_id
   AND r.repo_id = s.star_repo_id
   AND s.star_user_id = ?
-ORDER BY c.commit_sequence DESC
+ORDER BY b.build_number DESC
 LIMIT ? OFFSET ?
 `
 

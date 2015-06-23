@@ -10,7 +10,7 @@ import (
 func TestUserstore(t *testing.T) {
 	db := mustConnectTest()
 	us := NewUserstore(db)
-	cs := NewCommitstore(db)
+	cs := NewBuildstore(db)
 	rs := NewRepostore(db)
 	ss := NewStarstore(db)
 	defer db.Close()
@@ -25,7 +25,7 @@ func TestUserstore(t *testing.T) {
 			db.Exec("DELETE FROM stars")
 			db.Exec("DELETE FROM repos")
 			db.Exec("DELETE FROM builds")
-			db.Exec("DELETE FROM tasks")
+			db.Exec("DELETE FROM jobs")
 		})
 
 		g.It("Should Update a User", func() {
@@ -181,33 +181,27 @@ func TestUserstore(t *testing.T) {
 			rs.AddRepo(repo1)
 			rs.AddRepo(repo2)
 			ss.AddStar(&types.User{ID: 1}, repo1)
-			commit1 := &types.Commit{
+			build1 := &types.Build{
 				RepoID: 1,
-				State:  types.StateFailure,
-				Ref:    "refs/heads/master",
-				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
+				Status: types.StateFailure,
 			}
-			commit2 := &types.Commit{
+			build2 := &types.Build{
 				RepoID: 1,
-				State:  types.StateSuccess,
-				Ref:    "refs/heads/dev",
-				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
+				Status: types.StateSuccess,
 			}
-			commit3 := &types.Commit{
+			build3 := &types.Build{
 				RepoID: 2,
-				State:  types.StateSuccess,
-				Ref:    "refs/heads/dev",
-				Sha:    "85f8c029b902ed9400bc600bac301a0aadb144ac",
+				Status: types.StateSuccess,
 			}
-			cs.AddCommit(commit1)
-			cs.AddCommit(commit2)
-			cs.AddCommit(commit3)
-			commits, err := us.UserFeed(&types.User{ID: 1}, 20, 0)
+			cs.AddBuild(build1)
+			cs.AddBuild(build2)
+			cs.AddBuild(build3)
+			builds, err := us.UserFeed(&types.User{ID: 1}, 20, 0)
 			g.Assert(err == nil).IsTrue()
-			g.Assert(len(commits)).Equal(2)
-			g.Assert(commits[0].State).Equal(commit2.State)
-			g.Assert(commits[0].Owner).Equal("bradrydzewski")
-			g.Assert(commits[0].Name).Equal("drone")
+			g.Assert(len(builds)).Equal(2)
+			//g.Assert(builds[0].Status).Equal(commit2.Status)
+			g.Assert(builds[0].Owner).Equal("bradrydzewski")
+			g.Assert(builds[0].Name).Equal("drone")
 		})
 	})
 }

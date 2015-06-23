@@ -15,8 +15,8 @@ func NewAgentstore(db *sql.DB) *Agentstore {
 }
 
 // Agent returns an agent by ID.
-func (db *Agentstore) Agent(commit *types.Commit) (string, error) {
-	agent, err := getAgent(db, rebind(stmtAgentSelectAgentCommit), commit.ID)
+func (db *Agentstore) Agent(build *types.Build) (string, error) {
+	agent, err := getAgent(db, rebind(stmtAgentSelectAgentCommit), build.ID)
 	if err != nil {
 		return "", err
 	}
@@ -24,13 +24,13 @@ func (db *Agentstore) Agent(commit *types.Commit) (string, error) {
 }
 
 // SetAgent updates an agent in the datastore.
-func (db *Agentstore) SetAgent(commit *types.Commit, addr string) error {
-	agent := Agent{Addr: addr, CommitID: commit.ID}
+func (db *Agentstore) SetAgent(build *types.Build, addr string) error {
+	agent := Agent{Addr: addr, BuildID: build.ID}
 	return createAgent(db, rebind(stmtAgentInsert), &agent)
 }
 
 type Agent struct {
-	ID       int64
-	Addr     string
-	CommitID int64 `sql:"unique:ux_agent_commit"`
+	ID      int64
+	Addr    string
+	BuildID int64 `sql:"unique:ux_agent_build"`
 }

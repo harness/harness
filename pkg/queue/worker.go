@@ -11,7 +11,7 @@ import (
 type Work struct {
 	User    *common.User    `json:"user"`
 	Repo    *common.Repo    `json:"repo"`
-	Commit  *common.Commit  `json:"commit"`
+	Build   *common.Build   `json:"build"`
 	Keys    *common.Keypair `json:"keypair"`
 	Netrc   *common.Netrc   `json:"netrc"`
 	Yaml    []byte          `json:"yaml"`

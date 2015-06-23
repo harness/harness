@@ -35,13 +35,13 @@ func PollBuild(c *gin.Context) {
 	}
 
 	// persist the relationship between agent and commit.
-	err = store.SetAgent(work.Commit, addr)
+	err = store.SetAgent(work.Build, addr)
 	if err != nil {
 		// note the we are ignoring and just logging the error here.
 		// we consider this an acceptible failure because it doesn't
 		// impact anything other than live-streaming output.
 		log.Errorf("unable to store the agent address %s for build %s %v",
-			addr, work.Repo.FullName, work.Commit.Sequence)
+			addr, work.Repo.FullName, work.Build.Number)
 	}
 
 	c.JSON(200, work)
@@ -55,7 +55,7 @@ func PushCommit(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
 
-	in := &common.Commit{}
+	in := &common.Build{}
 	if !c.BindWith(in, binding.JSON) {
 		return
 	}
@@ -64,18 +64,18 @@ func PushCommit(c *gin.Context) {
 		c.Fail(404, err)
 		return
 	}
-	commit, err := store.CommitSeq(repo, in.Sequence)
+	build, err := store.BuildNumber(repo, in.Number)
 	if err != nil {
 		c.Fail(404, err)
 		return
 	}
 
-	commit.Started = in.Started
-	commit.Finished = in.Finished
-	commit.State = in.State
+	build.Started = in.Started
+	build.Finished = in.Finished
+	build.Status = in.Status
 
 	updater := ToUpdater(c)
-	err = updater.SetCommit(user, repo, commit)
+	err = updater.SetBuild(user, repo, build)
 	if err != nil {
 		c.Fail(500, err)
 		return
@@ -94,12 +94,12 @@ func PushBuild(c *gin.Context) {
 		return
 	}
 
-	commit, err := store.CommitSeq(repo, cnum)
+	build, err := store.BuildNumber(repo, cnum)
 	if err != nil {
 		c.Fail(404, err)
 		return
 	}
-	job, err := store.JobNumber(commit, in.Number)
+	job, err := store.JobNumber(build, in.Number)
 	if err != nil {
 		c.Fail(404, err)
 		return
@@ -111,7 +111,7 @@ func PushBuild(c *gin.Context) {
 	job.Status = in.Status
 
 	updater := ToUpdater(c)
-	err = updater.SetJob(repo, commit, job)
+	err = updater.SetJob(repo, build, job)
 	if err != nil {
 		c.Fail(500, err)
 		return
@@ -126,18 +126,18 @@ func PushLogs(c *gin.Context) {
 	cnum, _ := strconv.Atoi(c.Params.ByName("commit"))
 	bnum, _ := strconv.Atoi(c.Params.ByName("build"))
 
-	commit, err := store.CommitSeq(repo, cnum)
+	build, err := store.BuildNumber(repo, cnum)
 	if err != nil {
 		c.Fail(404, err)
 		return
 	}
-	job, err := store.JobNumber(commit, bnum)
+	job, err := store.JobNumber(build, bnum)
 	if err != nil {
 		c.Fail(404, err)
 		return
 	}
 	updater := ToUpdater(c)
-	err = updater.SetLogs(repo, commit, job, c.Request.Body)
+	err = updater.SetLogs(repo, build, job, c.Request.Body)
 	if err != nil {
 		c.Fail(500, err)
 		return

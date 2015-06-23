@@ -53,7 +53,7 @@ var (
 
 type work struct {
 	Repo    *types.Repo    `json:"repo"`
-	Commit  *types.Commit  `json:"commit"`
+	Build   *types.Build   `json:"build"`
 	Job     *types.Job     `json:"job"`
 	Keys    *types.Keypair `json:"keys"`
 	Netrc   *types.Netrc   `json:"netrc"`
