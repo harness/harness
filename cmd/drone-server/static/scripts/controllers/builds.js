@@ -45,7 +45,7 @@
 			var added = false;
 			for (var i=0;i<$scope.builds.length;i++) {
 				var build = $scope.builds[i];
-				if (event.sequence !== build.sequence) {
+				if (event.number !== build.number) {
 					continue; // ignore
 				}
 				// update the build status
@@ -91,7 +91,7 @@
 		});
 
 		repos.subscribe(fullName, function(event) {
-			if (event.sequence !== parseInt(number)) {
+			if (event.number !== parseInt(number)) {
 				return; // ignore
 			}
 			// update the build
@@ -150,11 +150,11 @@
 		// Gets the build
 		builds.get(fullName, number).then(function(payload){
 			$scope.build = payload.data;
-			$scope.task = payload.data.builds[step-1];
+			$scope.task = payload.data.jobs[step-1];
 
-			if (['pending', 'killed'].indexOf($scope.task.state) !== -1) {
+			if (['pending', 'killed'].indexOf($scope.task.status) !== -1) {
 				// do nothing
-			} else if ($scope.task.state === 'running') {
+			} else if ($scope.task.status === 'running') {
 				// stream the build
 				stream();
 			} else {
@@ -195,7 +195,7 @@
 		};
 
 		repos.subscribe(fullName, function(event) {
-			if (event.sequence !== parseInt(number)) {
+			if (event.number !== parseInt(number)) {
 				return; // ignore
 			}
 			// update the build
@@ -204,7 +204,7 @@
 			$scope.$apply();
 
 			// start streaming the current build
-			if ($scope.task.state === 'running') {
+			if ($scope.task.status === 'running') {
 				stream();
 			} else {
 				// resets our streaming state
