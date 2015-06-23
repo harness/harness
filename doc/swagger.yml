@@ -46,6 +46,98 @@ paths:
           description: The repository.
           schema:
             $ref: "#/definitions/Repo"
+    patch:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+        - name: name
+          in: path
+          type: string
+      description: Updates the repository.
+      security:
+        - accessToken: []
+      responses:
+        "200":
+          description: The updated repository.
+          schema:
+            $ref: "#/definitions/Repo"
+    delete:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+        - name: name
+          in: path
+          type: string
+      description: Deletes the repository.
+      security:
+        - accessToken: []
+  /repos/{owner}/{name}/watch:
+    post:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+        - name: name
+          in: path
+          type: string
+      description: Watches the named repository.
+      security:
+        - accessToken: []
+
+  /repos/{owner}/{name}/unwatch:
+    delete:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+        - name: name
+          in: path
+          type: string
+      description: Unwatches the repository.
+      security:
+        - accessToken: []
+
+  /repos/{owner}/{name}/builds:
+    get:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+        - name: name
+          in: path
+          type: string
+      description: Returns recent builds for the repository based on name.
+      security:
+        - accessToken: []
+      responses:
+        "200":
+          description: The recent builds.
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Build"
+  /repos/{owner}/{name}/builds/{number}:
+    get:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+        - name: name
+          in: path
+          type: string
+        - name: number
+          in: path
+          type: integer
+      description: Returns the repository build by number.
+      security:
+        - accessToken: []
+      responses:
+        "200":
+          description: The build.
+          schema:
+            $ref: "#/definitions/Build"
   /user:
     get:
       description: Returns the currently authenticated user.

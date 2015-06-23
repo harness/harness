@@ -321,6 +321,15 @@ func SetHeaders() gin.HandlerFunc {
 			c.Writer.Header().Add("Strict-Transport-Security", "max-age=31536000")
 		}
 
+		if c.Request.Method == "OPTIONS" {
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization")
+			c.Writer.Header().Set("Allow", "HEAD,GET,POST,PUT,PATCH,DELETE,OPTIONS")
+			c.Writer.Header().Set("Content-Type", "application/json")
+			c.Writer.WriteHeader(200)
+			return
+		}
+
 		c.Next()
 	}
 }
