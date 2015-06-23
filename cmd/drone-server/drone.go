@@ -78,6 +78,7 @@ func main() {
 	api.Use(server.SetSession(session))
 	api.Use(server.SetUser(session))
 	api.Use(server.SetRunner(&runner_))
+	api.OPTIONS("/*path", func(c *gin.Context) {})
 
 	user := api.Group("/user")
 	{
