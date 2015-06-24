@@ -56,8 +56,8 @@ func TestBadges(t *testing.T) {
 				ctx.Set("datastore", store)
 				ctx.Set("repo", repo)
 
-				commit := &common.Commit{State: test.state}
-				store.On("CommitLast", repo, test.branch).Return(commit, test.err).Once()
+				commit := &common.Build{Status: test.state}
+				store.On("BuildLast", repo, test.branch).Return(commit, test.err).Once()
 				GetBadge(ctx)
 
 				g.Assert(rw.Code).Equal(200)
@@ -77,10 +77,10 @@ func TestBadges(t *testing.T) {
 				ctx.Set("datastore", store)
 				ctx.Set("repo", repo)
 
-				commits := []*common.Commit{
-					&common.Commit{State: test.state},
+				commits := []*common.Build{
+					&common.Build{Status: test.state},
 				}
-				store.On("CommitList", repo, mock.AnythingOfType("int"), mock.AnythingOfType("int")).Return(commits, test.err).Once()
+				store.On("BuildList", repo, mock.AnythingOfType("int"), mock.AnythingOfType("int")).Return(commits, test.err).Once()
 				GetCC(ctx)
 
 				// in an error scenario (ie no build exists) we should
