@@ -34,6 +34,8 @@ paths:
         - name: name
           in: path
           type: string
+      tags:
+        - repository
       description: Returns the repository based on name.
       security:
         - accessToken: []
@@ -54,6 +56,14 @@ paths:
         - name: name
           in: path
           type: string
+        - name: repo
+          in: body
+          description: The updated repository JSON
+          schema:
+            $ref: '#/definitions/Repo'
+          required: true
+      tags:
+        - repository
       description: Updates the repository.
       security:
         - accessToken: []
@@ -70,6 +80,8 @@ paths:
         - name: name
           in: path
           type: string
+      tags:
+        - repository
       description: Deletes the repository.
       security:
         - accessToken: []
@@ -82,6 +94,8 @@ paths:
         - name: name
           in: path
           type: string
+      tags:
+        - repository
       description: Watches the named repository.
       security:
         - accessToken: []
@@ -95,6 +109,8 @@ paths:
         - name: name
           in: path
           type: string
+      tags:
+        - repository
       description: Unwatches the repository.
       security:
         - accessToken: []
@@ -108,6 +124,8 @@ paths:
         - name: name
           in: path
           type: string
+      tags:
+        - build
       description: Returns recent builds for the repository based on name.
       security:
         - accessToken: []
@@ -130,6 +148,8 @@ paths:
         - name: number
           in: path
           type: integer
+      tags:
+        - build
       description: Returns the repository build by number.
       security:
         - accessToken: []
@@ -143,10 +163,8 @@ paths:
       description: Returns the currently authenticated user.
       security:
         - accessToken: []
-      consumes:
-        - application/json
-      produces:
-        - application/json
+      tags:
+        - user
       responses:
         "200":
           description: The currently authenticated user.
@@ -165,6 +183,8 @@ paths:
       description: Updates the currently authenticated user.
       produces:
         - application/json
+      tags:
+        - user
       parameters:
         - name: user
           in: body
