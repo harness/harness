@@ -59,7 +59,7 @@ func TestUser(t *testing.T) {
 			g.Assert(rw.Code).Equal(200)
 			g.Assert(out.Login).Equal(user.Login)
 			g.Assert(out.Email).Equal(in.Email)
-			g.Assert(out.Gravatar).Equal("7194e8d48fa1d2b689f99443b767316c")
+			g.Assert(out.Avatar).Equal("7194e8d48fa1d2b689f99443b767316c")
 		})
 
 		g.It("should put, error", func() {
