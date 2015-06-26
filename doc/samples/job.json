@@ -1,0 +1,8 @@
+{
+  "number": 1,
+  "status": "success",
+  "started_at": 5788800,
+  "finished_at": 5789500,
+  "exit_code": 0,
+  "environment": { "GO_VERSION": "1.4" }
+}

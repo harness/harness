@@ -1,0 +1,499 @@
+#%RAML 0.8
+
+title: Drone API
+baseUri: http://localhost:8080/api
+traits:
+  - authenticate:
+      description: Some requests require authentication.
+      queryParameters:
+        access_token:
+          description: Access Token
+          type: string
+          example: ACCESS_TOKEN
+  - authorize:
+      responses:
+        401:
+          description: |
+            Access Denied. User must be authenticated.
+        403:
+          description: |
+            Access Forbidden. User must be a system administrator.
+
+/repos/{owner}/{name}:
+  is: [ authorize, authenticate ]
+  uriParameters:
+    owner:
+      displayName: Owner
+      description: Owner of the repository
+      type: string
+      required: true
+    name:
+      displayName: Name
+      description: Name of the repository
+      type: string
+      required: true
+
+  get:
+    displayName: Find Repository
+    description: |
+      Retrieve a Repository by Name
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include samples/repo.json
+      404:
+        description: |
+          Unable to find the Repository in the database
+
+  patch:
+    displayName: Update Repository
+    description: |
+      Update a Repository
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include samples/repo.json
+      400:
+        description: |
+          Unable to update the Repository record in the database
+      404:
+        description: |
+          Unable to find the Repository in the database
+
+  post:
+    displayName: Activate Repository
+    description: |
+      Activate a Repository
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include samples/repo.json
+      400:
+        description: |
+          Unable to update the Repository record in the database
+      403:
+        description: |
+          Unable to activate the Repository due to insufficient privileges
+      404:
+        description: |
+          Unable to retrieve the Repository from the remote system (ie GitHub)
+      409:
+        description: |
+          Unable to activate the Repository because it is already activate
+      500:
+        description: |
+          Unable to activate the Repository due to an internal server error.
+          This may indicate a problem adding hooks to the remote system (ie Github),
+          generating SSH deployment keys, or persisting to the database.
+
+  delete:
+    displayName: Delete Repository
+    description: |
+      Deletes a Repository
+    responses:
+      200:
+        description: |
+          Successfully deleted the Repository
+      400:
+        description: |
+          Unable to remove post-commit hooks from the remote system (ie GitHub)
+      404:
+        description: |
+          Unable to find the Repository in the database
+      500:
+        description: |
+          Unable to update the Repository record in the database
+
+  /watch:
+    is: [ authorize, authenticate ]
+    description: |
+      Watch the Repository
+    post:
+      responses:
+        200:
+          description: |
+            Successfully Watching this Repository
+        400:
+          description: |
+            Unable to insert the Starred record in the database
+        404:
+          description: |
+            Unable to find the Repository in the database
+
+  /unwatch:
+    is: [ authorize, authenticate ]
+    description: |
+      Unwatch the Repository
+    delete:
+      responses:
+        200:
+          description: |
+            Successfully Unwatched this Repository
+        400:
+          description: |
+            Unable to delete the Starred record in the database
+        404:
+          description: |
+            Unable to find the Repository in the database
+
+
+#
+# Builds
+#
+
+/repos/{owner}/{name}/builds:
+  displayName: Builds
+  is: [ authorize, authenticate ]
+  uriParameters:
+    owner:
+      displayName: Owner
+      description: Owner of the repository
+      type: string
+      required: true
+    name:
+      displayName: Name
+      description: Name of the repository
+      type: string
+      required: true
+
+  get:
+    displayName: List Builds
+    description: |
+      Retrieve the list of recent Builds for the Repository
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include samples/builds.json
+      404:
+        description: |
+            Unable to find the Repository in the database
+
+  /{number}:
+    is: [ authorize, authenticate ]
+    uriParameters:
+      number:
+        displayName: Number
+        type: integer
+
+    get:
+      displayName: Find Build
+      description: |
+        Retrieve a specific Build by Number
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include samples/build.json
+        404:
+          description: |
+            Unable to find the Build in the database
+
+    delete:
+      displayName: Cancel Build
+      description: |
+        Cancel an running Build by Number
+      responses:
+        200:
+          description: |
+            Successfully cancelled the Build
+        404:
+          description: |
+            Cannot find Build by Number
+        409:
+          description: |
+            Cannot cancel a Build that is already stopped
+
+    post:
+      displayName: Restart Build
+      description: |
+        Restart a completed Build
+      responses:
+        202:
+          description: |
+            Successfully cancelled the Build
+        404:
+          description: |
+            Cannot find Build by Number
+        409:
+          description: |
+            Cannot re-start a Build that is running
+
+#
+# Build Logs
+#
+
+
+/repos/{owner}/{name}/logs/{number}/{job}:
+  displayName: Builds
+  is: [ authorize, authenticate ]
+  uriParameters:
+    owner:
+      displayName: Owner
+      description: Owner of the repository
+      type: string
+      required: true
+    name:
+      displayName: Name
+      description: Name of the repository
+      type: string
+      required: true
+    number:
+      displayName: Build Number
+      description: Incremental Build Number
+      type: integer
+      required: true
+    job:
+      displayName: Job Number
+      description: Sequential Job Number
+      type: integer
+      required: true
+
+  get:
+    displayName: Find Build Logs
+    description: |
+      Retrieve the Logs for a specific Build Job
+    responses:
+      200:
+        body:
+          text/plain:
+      404:
+        description: |
+          Cannot find Build Logs
+
+
+#
+# User Endpoint
+#
+
+/user:
+  is: [ authorize, authenticate ]
+  displayName: User
+
+  get:
+    description: |
+      Retrieve the currently authenticated User
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include samples/user.json
+
+  patch:
+    description: |
+      Update the currently authenticated User
+    responses:
+      200:
+        description: |
+          Updated User
+        body:
+          application/json:
+            example: !include samples/user.json
+      400:
+        description: |
+          Bad Request. Error updating User
+
+
+
+#
+# User Repos
+#
+
+/user/repos:
+  is: [ authorize, authenticate ]
+  displayName: User Repos
+
+  get:
+    description: |
+      Retrieve the currently authenticated User's Repository list
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include samples/repos.json
+      400:
+        description: |
+          Bad Request. Error retrieving Repository list
+
+
+#
+# User Tokens
+#
+
+/user/tokens:
+  is: [ authorize, authenticate ]
+  displayName: User Tokens
+
+  get:
+    description: |
+      Retrieve the currently authenticated User's active Token list
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include samples/tokens.json
+      400:
+        description: |
+          Error retrieving the Token list
+
+  post:
+    description: |
+      Generate a new User Token
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include samples/token.json
+      400:
+        description: |
+          Error when attempting to generate the JWT token
+      500:
+        description: |
+          Error when attempting to save the Token
+
+  /{label}:
+    is: [ authorize, authenticate ]
+    delete:
+      description: |
+        Delete a specific User Token by Label
+      responses:
+        200:
+          description: |
+            Successfully deleted the Token
+        400:
+          description: |
+            Error attempting to delete Token from database
+        404:
+          description: |
+            Unable to find Token in database
+
+#
+# Users Endpoint
+#
+
+/users:
+  is: [ authorize, authenticate ]
+  displayName: Users
+
+  get:
+    description: Retrieve a list of all registered Users.
+    displayName: List Users
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include samples/users.json
+
+  /{login}:
+    is: [ authorize, authenticate ]
+    uriParameters:
+      login:
+        displayName: Login
+        description: Username in remote system
+        example: Octocat
+        type: string
+        required: true
+
+    get:
+      displayName: Find User
+      description: |
+        Retrieve a specific User by Login name
+      responses:
+        200:
+          body:
+            application/json:
+              schema: !include schemas/user.json
+        404:
+          description: |
+            Cannot find the User
+
+    post:
+      displayName: Enable User
+      description: |
+        Enable a new User by Login name
+      responses:
+        201:
+          body:
+            application/json:
+              schema: !include schemas/user.json
+        400:
+          description: |
+            Error inserting User into the database
+
+    patch:
+      displayName: Update User
+      description: |
+        Update a specific User
+      responses:
+        200:
+          body:
+            application/json:
+              schema: !include schemas/user.json
+        400:
+          description: |
+            Error updating User record in the database
+
+    delete:
+      displayName: Delete User
+      description: |
+        Delete a specific User
+      responses:
+        204:
+          description: |
+            Successfully deleted the User
+        400:
+          description: |
+            Error deleting the User from the database
+        403:
+          description: |
+            Cannot delete your own User account
+        404:
+          description: |
+            Cannot find the User
+
+
+#
+# Badge Endpoint
+#
+
+/badges/{owner}/{name}:
+  displayName: Badges
+  uriParameters:
+    owner:
+      displayName: Owner
+      description: Owner of the repository
+      type: string
+      required: true
+    name:
+      displayName: Name
+      description: Name of the repository
+      type: string
+      required: true
+
+  /status.svg:
+    description: Returns an SVG status badge for the latest Build
+    displayName: Status Badge
+    get:
+      queryParameters:
+        branch:
+          default: master
+          required: false
+          type: string
+          example: master
+      responses:
+        200:
+          body:
+            image/svg+xml:
+
+  /cc.xml:
+    description: Returns a CCMenu feed for the Repository
+    displayName: CCMenu
+    get:
+      responses:
+        200:
+          body:
+            application/xml:
+              example: !include samples/ccmenu.xml

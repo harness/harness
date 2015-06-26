@@ -148,7 +148,7 @@ func DeleteRepo(c *gin.Context) {
 
 	err = ds.DelRepo(r)
 	if err != nil {
-		c.Fail(400, err)
+		c.Fail(500, err)
 	}
 	c.Writer.WriteHeader(200)
 }
@@ -170,11 +170,11 @@ func PostRepo(c *gin.Context) {
 	remote := ToRemote(c)
 	r, err := remote.Repo(user, owner, name)
 	if err != nil {
-		c.Fail(400, err)
+		c.Fail(404, err)
 	}
 	m, err := remote.Perm(user, owner, name)
 	if err != nil {
-		c.Fail(400, err)
+		c.Fail(404, err)
 		return
 	}
 	if !m.Admin {
@@ -220,7 +220,7 @@ func PostRepo(c *gin.Context) {
 	// generate an RSA key and add to the repo
 	key, err := sshutil.GeneratePrivateKey()
 	if err != nil {
-		c.Fail(400, err)
+		c.Fail(500, err)
 		return
 	}
 	r.Keys = new(common.Keypair)

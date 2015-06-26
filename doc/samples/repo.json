@@ -1,0 +1,28 @@
+{
+  "owner":"drone",
+  "name":"drone-test-go",
+  "full_name":"drone/drone-test-go",
+  "self_url":"http://localhost:8080/drone/drone-test-go",
+  "link_url":"https://github.com/drone/drone-test-go",
+  "clone_url":"https://github.com/drone/drone-test-go.git",
+  "default_branch":"master",
+  "private":true,
+  "trusted":false,
+  "timeout":60,
+  "hooks":{
+    "pull_request":true,
+    "push":true,
+    "tags":false
+  },
+  "keypair":{
+    "public": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDwXK..."
+  },
+  "permissions":{
+    "pull":true,
+    "push":true,
+    "admin":true
+  },
+  "params": {
+    "HEROKU_KEY": "f0e4c2f76c58916ec258f24"
+  }
+}
