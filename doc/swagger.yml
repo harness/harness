@@ -2,12 +2,10 @@ swagger: "2.0"
 info:
   version: 1.0.0
   title: Drone API
-  contact:
-    name: Team Drone
-    url: "https://github.com/drone/drone"
   license:
     name: Creative Commons 4.0 International
     url: "http://creativecommons.org/licenses/by/4.0/"
+
 host: "localhost:8080"
 basePath: /api
 schemes:
@@ -17,6 +15,22 @@ consumes:
   - application/json
 produces:
   - application/json
+
+#
+# Operation tags
+#
+
+tags:
+  - name: repository
+  - name: build
+  - name: user
+  - name: users
+  - name: tokens
+
+#
+# Security Definitions
+#
+
 security:
   - accessToken: []
 securityDefinitions:
@@ -24,81 +38,190 @@ securityDefinitions:
     type: apiKey
     in: query
     name: access_token
+
+#
+# Endpoint Definitions
+#
+
 paths:
+
+  #
+  # Repos Endpoint
+  #
+
   /repos/{owner}/{name}:
     get:
       parameters:
         - name: owner
           in: path
           type: string
+          description: owner of the repository
         - name: name
           in: path
           type: string
+          description: name of the repository
       tags:
         - repository
-      description: Returns the repository based on name.
+      summary: Get a repo
+      description: Retrieves the details of a repository.
       security:
         - accessToken: []
-      consumes:
-        - application/json
-      produces:
-        - application/json
       responses:
-        "200":
-          description: The repository.
+        200:
           schema:
             $ref: "#/definitions/Repo"
+        404:
+          description: |
+            Unable to find the repository.
+
     patch:
       parameters:
         - name: owner
           in: path
           type: string
+          description: owner of the repository
         - name: name
           in: path
           type: string
+          description: name of the repository
         - name: repo
           in: body
           description: The updated repository JSON
           schema:
             $ref: '#/definitions/Repo'
+            example: |
+                {
+                  "trusted":false,
+                  "timeout":60,
+                  "hooks":{
+                    "pull_request":true,
+                    "push":true,
+                    "tags":false
+                  },
+                  "keypair":{
+                    "public": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDwXK...",
+                    "private": "-----BEGIN RSA PRIVATE KEY-----\nF7tLaAvx..."
+                  },
+                  "params": {
+                    "HEROKU_KEY": "f0e4c2f76c58916ec258f24"
+                  }
+                }
           required: true
       tags:
         - repository
-      description: Updates the repository.
+      summary: Updates a repo
+      description: Updates the specified repository.
       security:
         - accessToken: []
       responses:
-        "200":
-          description: The updated repository.
+        200:
           schema:
             $ref: "#/definitions/Repo"
+        400:
+          description: |
+            Unable to update the repository in the database.
+        404:
+          description: |
+            Unable to find the repository.
+
+    post:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+      tags:
+        - repository
+      summary: Creates a repo
+      description: Creates a new repository.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          schema:
+            $ref: "#/definitions/Repo"
+        400:
+          description: |
+            Unable to update the Repository record in the database
+        403:
+          description: |
+            Unable to activate the Repository due to insufficient privileges
+        404:
+          description: |
+            Unable to retrieve the Repository from the remote system (ie GitHub)
+        409:
+          description: |
+            Unable to activate the Repository because it is already activate
+        500:
+          description: |
+            Unable to activate the Repository due to an internal server error. This may indicate a problem adding hooks to the remote system (ie Github), generating SSH deployment keys, or persisting to the database.
+
     delete:
       parameters:
         - name: owner
           in: path
           type: string
+          description: owner of the repository
         - name: name
           in: path
           type: string
+          description: name of the repository
       tags:
         - repository
-      description: Deletes the repository.
+      summary: Delete a repo
+      description: Permanently deletes a repository. It cannot be undone.
       security:
         - accessToken: []
+      responses:
+        200:
+          description: |
+            Successfully deleted the Repository
+        400:
+          description: |
+            Unable to remove post-commit hooks from the remote system (ie GitHub)
+        404:
+          description: |
+            Unable to find the Repository in the database
+        500:
+          description: |
+            Unable to update the Repository record in the database
+
+
+  #
+  # Repos Watch/Unwatch Enpoint
+  #
+
   /repos/{owner}/{name}/watch:
     post:
       parameters:
         - name: owner
           in: path
           type: string
+          description: owner of the repository
         - name: name
           in: path
           type: string
+          description: name of the repository
       tags:
         - repository
+      summary: Watch
       description: Watches the named repository.
       security:
         - accessToken: []
+      responses:
+        200:
+          description: |
+            Successfully watching this repository.
+        400:
+          description: |
+            Unable to update the database.
+        404:
+          description: |
+            Unable to find the repository.
 
   /repos/{owner}/{name}/unwatch:
     delete:
@@ -106,14 +229,32 @@ paths:
         - name: owner
           in: path
           type: string
+          description: owner of the repository
         - name: name
           in: path
           type: string
+          description: name of the repository
       tags:
         - repository
+      summary: Unwatch
       description: Unwatches the repository.
       security:
         - accessToken: []
+      responses:
+        200:
+          description: |
+            Successfully Unwatched this repository.
+        400:
+          description: |
+            Unable to update the database.
+        404:
+          description: |
+            Unable to find the repository.
+
+
+  #
+  # Builds Endpoint
+  #
 
   /repos/{owner}/{name}/builds:
     get:
@@ -121,68 +262,116 @@ paths:
         - name: owner
           in: path
           type: string
+          description: owner of the repository
         - name: name
           in: path
           type: string
+          description: name of the repository
       tags:
         - build
+      summary: Get recent builds
       description: Returns recent builds for the repository based on name.
       security:
         - accessToken: []
       responses:
-        "200":
+        200:
           description: The recent builds.
           schema:
             type: array
             items:
               $ref: "#/definitions/Build"
+        404:
+          description: |
+            Unable to find the Repository in the database
+
   /repos/{owner}/{name}/builds/{number}:
     get:
       parameters:
         - name: owner
           in: path
           type: string
+          description: owner of the repository
         - name: name
           in: path
           type: string
+          description: name of the repository
         - name: number
           in: path
           type: integer
+          description: sequential build number
       tags:
         - build
+      summary: Get a build
       description: Returns the repository build by number.
       security:
         - accessToken: []
       responses:
-        "200":
+        200:
           description: The build.
           schema:
             $ref: "#/definitions/Build"
+        404:
+          description: |
+            Unable to find the Build
+
+
+  #
+  # Badges
+  #
+
+  /badges/{owner}/{name}/status.svg:
+    get:
+      description: Returns an SVG status badge for the latest Build
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+        - name: string
+          in: query
+          type: string
+          description: specify a branch. defaults to master
+          default: master
+
+  /badges/{owner}/{name}/cc.xml:
+    get:
+      description: Returns a CCMenu feed for the Repository
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+      produces:
+        - application/xml
+
+  #
+  # User Endpoint
+  #
+
   /user:
     get:
+      summary: Gets a user
       description: Returns the currently authenticated user.
       security:
         - accessToken: []
       tags:
         - user
       responses:
-        "200":
+        200:
           description: The currently authenticated user.
           schema:
             $ref: "#/definitions/User"
-          examples:
-            application/json: |-
-              {
-                "name": "Octocat",
-                "email": "octocat@github.com",
-                "gravatar_id": "7194e8d48fa1d2b689f99443b767316c",
-                "admin": false,
-                "active": true
-              }
     patch:
+      summary: Updates a user
       description: Updates the currently authenticated user.
-      produces:
-        - application/json
       tags:
         - user
       parameters:
@@ -193,12 +382,89 @@ paths:
           schema:
             $ref: "#/definitions/User"
       responses:
-        "200":
+        200:
           description: The updated user.
           schema:
             $ref: "#/definitions/User"
+        400:
+          description: |
+            Unable to update the user in the database
+
+
+  #
+  # User Repos
+  #
+
+  /user/repos:
+    get:
+      summary: Get user repos
+      description: |
+        Retrieve the currently authenticated User's Repository list
+      tags:
+        - user
+      responses:
+        200:
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Repo"
+        400:
+          description: |
+            Unable to retrieve Repository list
+
+
+  #
+  # User Tokens
+  #
+
+  /user/tokens:
+    get:
+    post:
+
+  /user/tokens/{label}:
+    delete:
+
+
+  #
+  # Users Endpoint
+  #
+
+  /users:
+    get:
+      tags:
+        - users
+      summary: Get all users
+      description: Returns all registered, active users in the system.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: All registered users.
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/User"
+
+  /users/{login}:
+    get:
+    post:
+    patch:
+    delete:
+
+#
+# Schema Definitions
+#
+
 definitions:
   User:
+    example: |
+        {
+          "name": "Octocat",
+          "email": "octocat@github.com",
+          "gravatar_id": "7194e8d48fa1d2b689f99443b767316c",
+          "admin": false,
+          "active": true
+        }
     properties:
       login:
         type: string
@@ -210,7 +476,45 @@ definitions:
         type: boolean
       active:
         type: boolean
+  Token:
+    properties:
+      issued_at:
+        type: integer
+        format: int64
+      label:
+        type: string
+      hash:
+        type: string
   Repo:
+    example: |
+        {
+          "owner":"drone",
+          "name":"drone-test-go",
+          "full_name":"drone/drone-test-go",
+          "self_url":"http://localhost:8080/drone/drone-test-go",
+          "link_url":"https://github.com/drone/drone-test-go",
+          "clone_url":"https://github.com/drone/drone-test-go.git",
+          "default_branch":"master",
+          "private":true,
+          "trusted":false,
+          "timeout":60,
+          "hooks":{
+            "pull_request":true,
+            "push":true,
+            "tags":false
+          },
+          "keypair":{
+            "public": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDwXK..."
+          },
+          "permissions":{
+            "pull":true,
+            "push":true,
+            "admin":true
+          },
+          "params": {
+            "HEROKU_KEY": "f0e4c2f76c58916ec258f24"
+          }
+        }
     properties:
       owner:
         type: string
@@ -258,6 +562,45 @@ definitions:
       params:
         type: object
   Build:
+    example: |
+        {
+          "number": 1,
+          "status": "success",
+          "started_at": 5788800,
+          "finished_at": 5789500,
+
+          "head_commit": {
+            "sha": "d101ef3ed6e973b039c3fd5ccdec378b0fa8684c",
+            "ref": "refs\/heads\/master",
+            "branch": "master",
+            "message": "updated the README.md file",
+            "timestamp": "",
+            "remote": "https:\/\/github.com\/drone\/drone.git",
+            "author": {
+              "login": "bradrydzewski",
+              "email": "brad.rydzewski@gmail.com"
+            }
+          },
+
+          "jobs": [
+            {
+              "number": 1,
+              "status": "success",
+              "started_at": 5788800,
+              "finished_at": 5789500,
+              "exit_code": 0,
+              "environment": { "GO_VERSION": "1.4" }
+            },
+            {
+              "number": 2,
+              "status": "success",
+              "started_at": 5788800,
+              "finished_at": 5789500,
+              "exit_code": 0,
+              "environment": { "GO_VERSION": "1.5" }
+            }
+          ]
+        }
     properties:
       number:
         type: integer
