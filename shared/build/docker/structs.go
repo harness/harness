@@ -114,12 +114,12 @@ type NetworkSettings struct {
 }
 
 type Config struct {
-	Hostname        string
-	Domainname      string
-	User            string
-	Memory          int64 // Memory limit (in bytes)
-	MemorySwap      int64 // Total memory usage (memory + swap); set `-1' to disable swap
-	CpuShares       int64 // CPU shares (relative weight vs. other containers)
+	Hostname        string `json:",omitempty"`
+	Domainname      string `json:",omitempty"`
+	User            string `json:",omitempty"`
+	Memory          int64  // Memory limit (in bytes)
+	MemorySwap      int64  // Total memory usage (memory + swap); set `-1' to disable swap
+	CpuShares       int64  // CPU shares (relative weight vs. other containers)
 	AttachStdin     bool
 	AttachStdout    bool
 	AttachStderr    bool
@@ -131,10 +131,10 @@ type Config struct {
 	Env             []string
 	Cmd             []string
 	Dns             []string
-	Image           string // Name of the image as it was passed by the operator (eg. could be symbolic)
+	Image           string `json:",omitempty"` // Name of the image as it was passed by the operator (eg. could be symbolic)
 	Volumes         map[string]struct{}
-	VolumesFrom     string
-	WorkingDir      string
+	VolumesFrom     string `json:",omitempty"`
+	WorkingDir      string `json:",omitempty"`
 	Entrypoint      []string
 	NetworkDisabled bool
 }
