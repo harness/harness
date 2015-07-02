@@ -77,6 +77,13 @@ var services = map[string]*image{
 		Name:  "mysql",
 	},
 
+	// oracle xe
+	"oracle": {
+		Tag:   "letusfly85/oracle-xe:latest",
+		Ports: []string{"1521"},
+		Name:  "oraclexe",
+	},
+
 	// memcached
 	"memcached": {
 		Ports: []string{"11211"},

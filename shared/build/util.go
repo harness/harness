@@ -36,6 +36,7 @@ var defaultServices = map[string]string{
 	"memcached":     "bradrydzewski/memcached",
 	"mongodb":       "bradrydzewski/mongodb:2.4",
 	"mysql":         "bradrydzewski/mysql:5.5",
+	"oracle":        "letusfly85/oracle-xe:latest",
 	"neo4j":         "bradrydzewski/neo4j:1.9",
 	"postgres":      "bradrydzewski/postgres:9.1",
 	"redis":         "bradrydzewski/redis:2.8",
