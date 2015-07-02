@@ -322,6 +322,7 @@ func (b *Builder) run() error {
 		AttachStdin:  false,
 		AttachStdout: true,
 		AttachStderr: true,
+		Tty:          script.DockerTty(b.Build.Docker),
 	}
 
 	// configure if Docker should run in privileged mode
