@@ -43,7 +43,7 @@ func DockerHostname(d *Docker) string {
 
 // DockerTty returns true if the build
 // should allocate a pseudo tty
-func DockerTty(d *Docker) string {
+func DockerTty(d *Docker) bool {
 	if d == nil {
 		return false
 	}
