@@ -14,6 +14,9 @@ type Docker struct {
 	// Hostname (also known as `--hostname` option)
 	// Could be set only if Docker is running in privileged mode
 	Hostname *string `yaml:"hostname,omitempty"`
+
+	// Allocate a pseudo-TTY (also known as `--tty` option)
+	TTY bool `yaml:"tty,omitempty"`
 }
 
 // DockerNetworkMode returns DefaultNetworkMode
@@ -36,4 +39,13 @@ func DockerHostname(d *Docker) string {
 		return ""
 	}
 	return *d.Hostname
+}
+
+// DockerTty returns true if the build
+// should allocate a pseudo tty
+func DockerTty(d *Docker) string {
+	if d == nil {
+		return false
+	}
+	return d.TTY
 }
