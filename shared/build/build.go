@@ -388,6 +388,15 @@ func (b *Builder) run() error {
 		log.Infof("mounting volume %s:%s", hostpath, volume)
 	}
 
+	// foreach of the volumes listed on the docker script
+	for _, volume := range script.DockerVolumes(b.Build.Docker) {
+		// if volumes are valid, append to host.Binds and conf.Volumes mapping
+		if script.IsVolumeValid(volume) {
+			host.Binds = append(host.Binds, volume)
+			conf.Volumes[volume] = struct{}{}
+		}
+	}
+
 	// create the container from the image
 	run, err := b.dockerClient.Containers.Create(&conf)
 	if err != nil {
