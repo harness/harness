@@ -156,8 +156,15 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 // repository and returns in string format.
 func (r *Gitlab) GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error) {
 	var client = NewClient(r.url, user.Access, r.SkipVerify)
-	var path = ns(repo.Owner, repo.Name)
-	return client.RepoRawFile(path, hook.Sha, ".drone.yml")
+
+	projectId, err := client.SearchProjectId(repo.Owner, repo.Name)
+	if err != nil || projectId == 0 {
+		var emptyByte = make([]byte, 0)
+		return emptyByte, err
+	}
+	id := strconv.Itoa(projectId)
+
+	return client.RepoRawFile(id, hook.Sha, ".drone.yml")
 }
 
 // Activate activates a repository by adding a Post-commit hook and
