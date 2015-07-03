@@ -40,6 +40,9 @@ type Repo struct {
 
 	// (optional) The depth of the `git clone` command.
 	Depth int
+
+	// (optional) Specify if the clone should be recursive.
+	Recursive bool
 }
 
 // IsRemote returns true if the Repository is located
@@ -96,6 +99,16 @@ func (r *Repo) IsGit() bool {
 	return false
 }
 
+// recursiveFlag returns the string " --recursive" if the
+// git.recursive option was set to true in .drone.yml,
+// otherwise it returns and empty string.
+func (r *Repo) recursiveFlag() string {
+	if r.Recursive {
+		return " --recursive"
+	}
+	return ""
+}
+
 // returns commands that can be used in a Dockerfile
 // to clone the repository.
 //
@@ -111,12 +124,12 @@ func (r *Repo) Commands() []string {
 	cmds := []string{}
 	if len(r.PR) > 0 {
 		// If a specific PR is provided then we need to clone it.
-		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive %s %s", r.Depth, r.Path, r.Dir))
+		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d%s %s %s", r.Depth, r.recursiveFlag(), r.Path, r.Dir))
 		cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
 		cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
 	} else {
 		// Otherwise just clone the branch.
-		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
+		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d%s --branch=%s %s %s", r.Depth, r.recursiveFlag(), branch, r.Path, r.Dir))
 		// If a specific commit is provided then we'll need to check it out.
 		if len(r.Commit) > 0 {
 			cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))

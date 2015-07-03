@@ -1,7 +1,8 @@
 package git
 
 const (
-	DefaultGitDepth = 50
+	DefaultGitDepth     = 50
+	DefaultGitRecursive = true
 )
 
 // Git stores the configuration details for
@@ -12,11 +13,15 @@ type Git struct {
 	// number of revisions.
 	Depth *int `yaml:"depth,omitempty"`
 
+	// Recursive option instructs git to do a recursive
+	// clone of all submodules.
+	Recursive *bool `yaml:"recursive,omitempty"`
+
 	// The name of a directory to clone into.
 	Path *string `yaml:"path,omitempty"`
 }
 
-// GitDepth returns GitDefaultDepth
+// GitDepth returns DefaultGitDepth
 // when Git.Depth is empty.
 // GitDepth returns Git.Depth
 // when it is not empty.
@@ -25,6 +30,17 @@ func GitDepth(g *Git) int {
 		return DefaultGitDepth
 	}
 	return *g.Depth
+}
+
+// GitRecursive returns DefaultGitRecursive
+// when Git.Recursive is empty.
+// GitRecursive returns Git.Recursive
+// when it is not empty.
+func GitRecursive(g *Git) bool {
+	if g == nil || g.Recursive == nil {
+		return DefaultGitRecursive
+	}
+	return *g.Recursive
 }
 
 // GitPath returns the given default path
