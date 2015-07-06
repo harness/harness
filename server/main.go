@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	DockerTLSWarning = `WARINING: Docker TLS cert or key not given, this may cause a build errors`
+	DockerTLSWarning = `WARNING: Docker TLS cert or key not given, this may cause a build errors`
 )
 
 var (
