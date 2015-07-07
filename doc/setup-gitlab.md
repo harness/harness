@@ -1,51 +1,33 @@
-You may configure Drone to integrate with GitLab (version 7.9 or higher). This can be configured in the `/etc/drone/drone.toml` configuration file:
+# GitLab
 
-```ini
-[gitlab]
-url = "https://gitlab.com"
-client = "c0aaff74c060ff4a950d"
-secret = "1ac1eae5ff1b490892f5546f837f306265032412"
-skip_verify=false
-open=false
+Drone comes with built-in support for GitLab version 7.7 and higher. To enable GitLab, you must specify the `DRONE_REMOTE` environment variable with the URI configuration string. This section describes the URI format for configuring the GitLab driver.
+
+The following is the standard URI connection scheme:
+
+```
+gitlab://host[:port][?options]
 ```
 
-Or a custom installation:
+The components of this string are:
 
-```ini
-[gitlab]
-url = "http://gitlab.drone.io"
-client = "c0aaff74c060ff4a950d"
-secret = "1ac1eae5ff1b490892f5546f837f306265032412"
-skip_verify=false
-open=false
-```
+* `gitlab://` required prefix to load the GitLab driver
+* `host` server address to connect to.
+* `:port` optional. The default value is `:80` if not specified.
+* `?options` connection specific options
 
-### Environment Variables
-
-You may also configure Gitlab using environment variables. This is useful when running Drone inside Docker containers, for example.
+This is an example connection string:
 
 ```bash
-DRONE_GITLAB_URL="https://gitlab.com"
-DRONE_GITLAB_CLIENT="c0aaff74c060ff4a950d"
-DRONE_GITLAB_SECRET="1ac1eae5ff1b490892f5546f837f306265032412"
+DRONE_REMOTE="gitlab://gitlab.hooli.com?client_id=c0aaff74c060ff4a950d&client_secret=1ac1eae5ff1b490892f5546f837f306265032412"
 ```
 
-### User Registration
+## GitLab options
 
-User registration is closed by default and new accounts must be provisioned in the user interface. You may allow users to self-register with the following configuration flag:
+This section lists all connection options used in the connection string format. Connection options are pairs in the following form: `name=value`. The value is always case sensitive. Separate options with the ampersand (i.e. &) character:
 
-```ini
-[gitlab]
-open = true
-```
-
-Please note this has security implications. This setting should only be enabled if you are running Drone behind a firewall.
-
-### Self-Signed Certs
-
-If your Gitlab installation uses a self-signed certificate you may need to instruct Drone to skip TLS verification. This is not recommended, but if you have no other choice you can include the following:
-
-```ini
-[gitlab]
-skip_verify=true
-```
+* `client_id` oauth client id for registered application
+* `client_secret` oauth client secret for registered application
+* `open=false` allows users to self-register. Defaults to false for security reasons.
+* `orgs=drone,docker` restricts access to these GitLab organizations. **Optional**
+* `skip_verify=false` skip ca verification if self-signed certificate. Defaults to false for security reasons.
+* `ssl=true` initiates the connection with TLS/SSL. Defaults to true.

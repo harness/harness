@@ -1,49 +1,37 @@
-You may configure Drone to integrate with GitHub or GitHub enterprise. This can be configured in the `/etc/drone/drone.toml` configuration file:
+# GitHub
 
-```ini
-[github]
-client = "c0aaff74c060ff4a950d"
-secret = "1ac1eae5ff1b490892f5546f837f306265032412"
+Drone comes with built-in support for GitHub and GitHub Enterprise. To enable GitHub, you must specify the `DRONE_REMOTE` environment variable with the URI configuration string. This section describes the URI format for configuring the github driver.
+
+The following is the standard URI connection scheme:
+
+```
+github://host[:port][?options]
 ```
 
-### Environment Variables
+The components of this string are:
 
-You may also configure GitHub using environment variables. This is useful when running Drone inside Docker containers, for example.
+* `github://` required prefix to load the github driver
+* `host` server address to connect to. The default value is `github.com` if not specified.
+* `:port` optional. The default value is `:80` if not specified.
+* `?options` connection specific options
+
+This is an example connection string:
 
 ```bash
-DRONE_GITHUB_CLIENT="c0aaff74c060ff4a950d"
-DRONE_GITHUB_SECRET="1ac1eae5ff1b490892f5546f837f306265032412"
+DRONE_REMOTE="github://github.com?client_id=c0aaff74c060ff4a950d&client_secret=1ac1eae5ff1b490892f5546f837f306265032412"
 ```
 
-### Github Enterprise
+## GitHub options
 
-You may also configure Drone to integrate with GitHub Enterprise. Note that if you are running GitHub Enterprise in private mode you should set `private_mode=true`, forcing Drone to clone public repositories with git+ssh.
+This section lists all connection options used in the connection string format. Connection options are pairs in the following form: `name=value`. The value is always case sensitive. Separate options with the ampersand (i.e. &) character:
 
-```ini
-[github_enterprise]
-url = "https://github.drone.io"
-api = "https://github.drone.io/api/v3/"
-client = "c0aaff74c060ff4a950d"
-secret = "1ac1eae5ff1b490892f5546f837f306265032412"
-private_mode = false
-```
+* `client_id` oauth client id for registered application
+* `client_secret` oauth client secret for registered application
+* `open=false` allows users to self-register. Defaults to false for security reasons.
+* `orgs=drone,docker` restricts access to these GitHub organizations. **Optional**
+* `private_mode=false` indicates GitHub Enterprise is running in private mode
+* `ssl=true` initiates the connection with TLS/SSL. Defaults to true.
 
-### User Registration
+## GitHub Enterprise
 
-User registration is closed by default and new accounts must be provisioned in the user interface. You may allow users to self-register with the following configuration flag:
-
-```ini
-[github]
-open = true
-```
-
-Please note this has security implications. This setting should only be enabled if you are running Drone behind a firewall.
-
-### Organization Whitelists
-
-When specified, only users belonging to these organization may login to the system. Use this option to enable self-registration while still limiting access to the general public.
-
-```ini
-[github]
-orgs = [ "drone", "docker" ]
-```
+If you are configuring Drone with GitHub Enterprise edition, you must specify the `host` in the configuration string. Note that you may also need to set `private_mode=true` when running GitHub Entperirse in private mode.
