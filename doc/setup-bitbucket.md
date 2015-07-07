@@ -1,28 +1,31 @@
-You may configure Drone to integrate with Bitbucket. This can be configured in the `/etc/drone/drone.toml` configuration file:
+# Bitbucket
 
-```ini
-[bitbucket]
-client = "c0aaff74c060ff4a950d"
-secret = "1ac1eae5ff1b490892f5546f837f306265032412"
-open = false
+Drone comes with built-in support for Bitbucket. To enable Bitbucket, you must specify the `DRONE_REMOTE` environment variable with the URI configuration string. This section describes the URI format for configuring the Bitbucket driver.
+
+The following is the standard URI connection scheme:
+
+```
+bitbucket://host[:port][?options]
 ```
 
-Please note this has security implications. This setting should only be enabled if you are running Drone behind a firewall.
+The components of this string are:
 
-### Environment Variables
+* `bitbucket://` required prefix to load the Bitbucket driver
+* `host` server address to connect to
+* `:port` optional. The default value is `:80` if not specified.
+* `?options` connection specific options
 
-You may also configure Bitbucket using environment variables. This is useful when running Drone inside Docker containers, for example.
+This is an example connection string:
 
 ```bash
-DRONE_BITBUCKET_CLIENT="c0aaff74c060ff4a950d"
-DRONE_BITBUCKET_SECRET="1ac1eae5ff1b490892f5546f837f306265032412"
+DRONE_REMOTE="bitbucket://client_key=c0aaff74c060ff4a950d&client_secret=1ac1eae5ff1b490892f5546f837f306265032412"
 ```
 
-### User Registration
+## Bitbucket options
 
-User registration is closed by default and new accounts must be provisioned in the user interface. You may allow users to self-register with the following configuration flag:
+This section lists all connection options used in the connection string format. Connection options are pairs in the following form: `name=value`. The value is always case sensitive. Separate options with the ampersand (i.e. &) character:
 
-```ini
-[bitbucket]
-open = true
-```
+* `client_key` oauth client key for registered application
+* `client_secret` oauth client secret for registered application
+* `open=false` allows users to self-register. Defaults to false for security reasons.
+* `orgs=drone,docker` restricts access to these Bitbucket organizations. **Optional**

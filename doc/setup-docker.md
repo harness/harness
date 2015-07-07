@@ -3,11 +3,23 @@ Drone is configured to connect to the local Docker daemon. Drone will attempt to
 You can modify the Docker daemon URL in the Drone configuration file:
 
 ```ini
-[docker] 
-nodes=[ 
+[docker]
+nodes=[
    "unix:///var/run/docker.sock",
    "unix:///var/run/docker.sock"
 ]
+```
+
+```
+DOCKER_HOST="unix:///var/run/docker.sock"
+DOCKER_HOST_1="unix:///var/run/docker.sock"
+DOCKER_HOST_2="unix:///var/run/docker.sock"
+DOCKER_HOST_3="unix:///var/run/docker.sock"
+DOCKER_CA
+DOCKER_CERT
+DOCKER_KEY
+DOCKER_HOST
+DOCKER_HOST_*
 ```
 
 ### Concurrency
@@ -15,8 +27,8 @@ nodes=[
 Each node is capable of processing a single build. Therefore, the below configuration will only execute one build at a time:
 
 ```ini
-[docker] 
-nodes=[ 
+[docker]
+nodes=[
    "unix:///var/run/docker.sock"
 ]
 ```
@@ -24,8 +36,8 @@ nodes=[
 In order to increase concurrency you can increase the number of nodes. The below configuration is capable of processing four builds at a time, all using the local Docker daemon:
 
 ```ini
-[docker] 
-nodes=[ 
+[docker]
+nodes=[
    "unix:///var/run/docker.sock",
    "unix:///var/run/docker.sock",
    "unix:///var/run/docker.sock",
@@ -43,16 +55,16 @@ https://gist.github.com/bradrydzewski/a6090115b3fecfc25280
 This will generate the following files:
 
 * ca.pem
-* cert.pem 
-* key.pem 
-* server-cert.pem 
+* cert.pem
+* key.pem
+* server-cert.pem
 * server-key.pem
 
 Update your Drone configuration to use the `cert.pem` and `key.pem` files and remote daemon URLs:
 
 ```ini
 [docker]
-cert="/path/to/cert.pem" 
+cert="/path/to/cert.pem"
 key="/path/to/key.pem"
 nodes = [
   "tcp://172.17.42.1:2376",
