@@ -38,21 +38,3 @@ The service container configuration options:
 * `net` - sets the container [network mode](https://docs.docker.com/articles/networking/#container-networking) [1]
 
 [1] Some build options are disabled for security reasons, including `volumes`, `privileged` and `net`. To enable these options, a system administrator must white-list your repository as trusted. This can be done via the repository settings screen.
-
-## Service images
-
-The `image` attribute supports any valid Docker image name:
-
-```yaml
-# Docker library image
-image: postgres
-
-# Docker library image, with tag
-image: postgres:9.2
-
-# Docker image, full name, with tag
-image: library/postgres:9.2
-
-# fully qualified Docker image URI, with tag
-image: index.docker.io/library/postgres:9.2
-```

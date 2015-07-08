@@ -1,8 +1,4 @@
-# Environment
-
-The build environment is largely defined by the Docker image you specify in the `.drone.yml`. In addition, Drone will inject default environment variable and private variables.
-
-## Environment Variables
+# Variables
 
 The build environment has access to the following environment variables:
 
@@ -17,7 +13,7 @@ The build environment has access to the following environment variables:
 
 ## Private Variables
 
-Drone allows you to store sensitive data external to the `.drone.yml` and inject at runtime. You can declare private variables in the repository settings screen. These variables are injected into the `.drone.yml` at runtime using the `$$` notation.
+Drone also lets you to store sensitive data external to the `.drone.yml` and inject at runtime. You can declare private variables in the repository settings screen. These variables are injected into the `.drone.yml` at runtime using the `$$` notation.
 
 An example `.drone.yml` expecting the `HEROKU_TOKEN` private variable:
 
