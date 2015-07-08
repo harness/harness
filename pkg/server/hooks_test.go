@@ -30,8 +30,7 @@ import (
 
 func TestHooks(t *testing.T) {
 	store := new(mocks.Store)
-	//_url, _ := url.Parse("http://localhost:8080")
-
+	//
 	g := Goblin(t)
 	g.Describe("Hooks", func() {
 
@@ -138,7 +137,7 @@ func TestHooks(t *testing.T) {
 			//urlString := (repo1.Owner + "/" + repo1.Name + "/builds" + "/1")
 			urlFull := urlBase //(urlBase + urlString)
 			//
-			buf, _ := json.Marshal(&commit1)
+			buf, _ := json.Marshal(&hook1)
 			ctx.Request, _ = http.NewRequest("GET", urlFull, bytes.NewBuffer(buf))
 			ctx.Request.Header.Set("Content-Type", "application/json")
 			//
