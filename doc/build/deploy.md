@@ -11,6 +11,24 @@ deploy:
     token: f10e2821bbbea5
 ```
 
+## Deploy conditions
+
+Use the `when` attribute to limit deployments to a specific branch:
+
+```yaml
+deploy:
+  heroku:
+    when:
+      branch: master
+
+  # you can also do simple matching
+
+  google_appengine:
+    when:
+      branch: feature/*
+```
+
+<!--
 ## Deploy plugins
 
 Deployment plugins are Docker images that attach to your build environment at runtime. They are declared in the `.drone.yml` using the following format:
@@ -66,20 +84,4 @@ The `image` attribute is useful when you need to invoke the same plugin multiple
     when:
       branch: stage
 ```
-
-## Deploy conditions
-
-Use the `when` attribute to limit deployments to a specific branch:
-
-```yaml
-deploy:
-  heroku:
-    when:
-      branch: master
-
-  # you can also do simple matching
-
-  google_appengine:
-    when:
-      branch: feature/*
-```
+-->
