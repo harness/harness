@@ -98,7 +98,9 @@
       var scheme = window.location.protocol;
       var host = window.location.host;
       var path = repo.host+'/'+repo.owner+'/'+repo.name;
-      return '[![Build Status]('+scheme+'//'+host+'/api/badge/'+path+'/status.svg?branch=master)]('+scheme+'//'+host+'/'+path+')'
+      var branch = 'master';
+      if (repo.scm == 'mercurial') { branch = 'default'; }
+      return '[![Build Status]('+scheme+'//'+host+'/api/badge/'+path+'/status.svg?branch='+branch+')]('+scheme+'//'+host+'/'+path+')'
     }
   }
 
@@ -112,7 +114,9 @@
       var scheme = window.location.protocol;
       var host = window.location.host;
       var path = repo.host+'/'+repo.owner+'/'+repo.name;
-      return '[![Build Status]('+scheme+'//'+host+'/api/badge/'+path+'/status.svg?branch=master)]('+scheme+'//'+host+'/'+path+')'
+      var branch = 'master';
+      if (repo.scm == 'mercurial') { branch = 'default'; }
+      return '[![Build Status]('+scheme+'//'+host+'/api/badge/'+path+'/status.svg?branch='+branch+')]('+scheme+'//'+host+'/'+path+')'
     }
   }
 

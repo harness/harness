@@ -2,11 +2,11 @@ package model
 
 import (
 	"gopkg.in/yaml.v1"
+
+	"github.com/drone/drone/shared/vcsutil"
 )
 
 var (
-	DefaultBranch = "master"
-
 	// default build timeout, in seconds
 	DefaultTimeout int64 = 7200
 )
@@ -63,4 +63,14 @@ func (r *Repo) ParamMap() (map[string]string, error) {
 	out := map[string]string{}
 	err := yaml.Unmarshal([]byte(r.Params), out)
 	return out, err
+}
+
+func (r *Repo) DefaultBranch() string {
+	var branch string
+	if vcsutil.IsGit(r.CloneURL) {
+		branch = "master"
+	} else {
+		branch = "default"
+	}
+	return branch
 }
