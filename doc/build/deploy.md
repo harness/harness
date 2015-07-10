@@ -28,46 +28,7 @@ deploy:
       branch: feature/*
 ```
 
-<!--
-## Deploy plugins
-
-Deployment plugins are Docker images that attach to your build environment at runtime. They are declared in the `.drone.yml` using the following format:
-
-```
-deploy:
-  [step_name:]
-    [image:]
-    [options]
-```
-
-An example `heroku` plugin configuration:
-
-```yaml
-deploy:
-  heroku:
-    image: plugins/heroku
-    app: pied_piper
-    token: f10e2821bbbea5
-```
-
-The `image` attribute is optional. If the `image` is not specified Drone attempts to use the `step_name` as the `image` name. The below examples both produce identical output:
-
-```yaml
-  # this step specifies an image
-
-  heroku:
-    image: plubins/heroku
-    app: pied_piper
-    token: f10e2821bbbea5
-
-  # and this step infers the image from the step_name
-
-  heroku:
-    app: pied_piper
-    token: f10e2821bbbea5
-```
-
-The `image` attribute is useful when you need to invoke the same plugin multiple times. For example, we may want to deploy to multiple `heroku` environments depending on branch:
+Use a more verbose `.drone.yml` syntax to declare multiple `heroku` deployment steps:
 
 ```yaml
   # deploy master to our production heroku environment
@@ -83,5 +44,11 @@ The `image` attribute is useful when you need to invoke the same plugin multiple
     image: plugins/heroku
     when:
       branch: stage
+
+  # this is the same as above, but uses a short-hand syntax
+  # and infers the `image` name
+
+  heroku:
+    when:
+      branch: stage
 ```
--->

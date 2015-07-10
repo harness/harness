@@ -25,7 +25,7 @@ build:
     - go build
     - go test
 
-publish:
+deploy:
   heroku:
     app: pied_piper
     token: $$HEROKU_TOKEN

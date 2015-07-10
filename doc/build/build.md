@@ -45,19 +45,6 @@ image: library/golang:1.4
 image: index.docker.io/library/golang:1.4
 ```
 
-## Build environment
-
-The build environment has access to the following environment variables:
-
-* `CI=true`
-* `DRONE=true`
-* `DRONE_REPO` - repository name for the current build
-* `DRONE_BUILD` - build number for the current build
-* `DRONE_BRANCH` - branch name for the current build
-* `DRONE_COMMIT` - git sha for the current build
-* `DRONE_DIR` - working directory for the current build
-
-
 ## Skipping builds
 
 Skip a build by including the text `[CI SKIP]` in your commit message.
