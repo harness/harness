@@ -31,11 +31,11 @@ git clone --depth=50 --recusive=true \
 
 Cloning a private repository requires authentication to the remote system. Drone prefers `git+https` and `netrc` to authenticate, but will fallback to `git+ssh` and deploy keys if not supported.
 
-Drone prefers `git+ssh` for authentication because it allows you to clone multiple private repositories. This is helpful when you have git submodules or third party dependencies you need to download (via `go get` or `npm install` or others) that are sourced from a private repository.
+Drone prefers `git+https` for authentication because it allows you to clone multiple private repositories. This is helpful when you have git submodules or third party dependencies you need to download (via `go get` or `npm install` or others) that are sourced from a private repository.
 
 Drone only injects the `netrc` and `id_rsa` files into your build environment if your repository is private, or running in private mode. We do this for security reasons to avoid leaking sensitive data.
 
-## Clone Plugins
+## Clone Plugin
 
 You can override the default `git` plugin by specifying an alternative plugin image. An example use case may be integrating with alternate version control systems, such as mercurial:
 

@@ -1,11 +1,20 @@
-Highly experimental branch that implements the following features:
+# Drone
 
-* Pluggable database backends
-* Pluggable queue
-* Matrix builds
-* Build plugins
-* New Yaml syntax
-* and more ...
+Drone is a Continuous Integration platform built on container technology. Every build is executed inside an ephemeral Docker container, giving developers complete control over their build environment with guaranteed isolation.
+
+## Documentation
+
+Drone documentation is organized into several categories:
+
+* [Setup Guide](http://readme.drone.io/docs/setup/)
+* [Build Guide](http://readme.drone.io/docs/build/)
+* [API Reference](http://readme.drone.io/docs/api/)
+
+## Community
+
+Contributions, questions, and comments are all welcomed and encouraged! Drone developers hang out in the [drone/drone](https://gitter.im/drone/drone) room on [gitter](https://gitter.im/drone/drone).
+
+---
 
 Running Drone:
 
