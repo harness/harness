@@ -1,20 +1,20 @@
 # Installation
 
-To quickly tryout Drone we have a [Docker image](https://registry.hub.docker.com/u/drone/drone/) that includes everything you need to get started. Simply run the commend below, substituted with your GitHub credentials:
+To quickly tryout Drone we have a [Docker image](https://registry.hub.docker.com/u/drone/drone/) that includes everything you need to get started. Simply run the commend below:
 
-```bash
+```
 sudo docker run \
 	--volume /var/lib/drone:/var/lib/drone \
 	--volume /var/run/docker.sock:/var/run/docker.sock \
-	--env DRONE_REMOTE="github://client_id=1ac1eae5ff1b490892f5&client_secret=c0aaff74c060ff4a950d" \
+	--env-file /etc/defaults/drone \
 	--restart=always \
 	--publish=80:8000 \
 	--detach=true \
 	--name=drone \
-	drone/drone:latest
+	drone/drone
 ```
 
-Drone is now running (in the background) on `http://localhost:80`
+Drone is now running (in the background) on `http://localhost:80`. Note that before running you should create the `--env-file` and add your Drone configuration (GitHub, Bitbucket, GitLab credentials, etc).
 
 ## Docker options
 
@@ -25,11 +25,70 @@ Here are some of the Docker options, explained:
 * `--detach=true` starts Drone in the background
 * `--volume /var/lib/drone:/var/lib/drone` mounted volume to persist sqlite database
 * `--volume /var/run/docker.sock:/var/run/docker.sock` mounted volume to access Docker and spawn builds
+* `--env-file /etc/defaults/drone` loads an external file with environment variables. Used to configure Drone.
 
 ## Drone settings
 
-Drone uses environment variables for runtime settings and configuration, such as GitHub, GitLab, plugins and more. These settings can be provided to Docker using `--env` command as seen above.
+Drone uses environment variables for runtime settings and configuration, such as GitHub, GitLab, plugins and more. These settings can be provided to Docker using an `--env-file` as seen above.
 
-## Standalone Install
+## Starting, Stopping, Logs
 
-Running Drone inside Docker is recommended but by no means required. Drone compiles to a single binary file with zero dependencies. To simplify support, however, we no longer ship a binary distribution and encourage everyone to run Drone inside Docker.
+Commands to start, stop and restart Drone:
+
+```
+docker start drone
+docker stop drone
+docker restart drone
+```
+
+And to view the Drone logs:
+
+```
+docker logs drone
+```
+
+## Upstart
+
+Drone can be configured to work with process managers, such as **Ubuntu** Upstart, to automatically start when the operating system initializes. Here is an example upstart script that can be placed in `/etc/init/drone.conf`:
+
+```
+description "Drone container"
+
+start on filesystem and started docker
+stop on runlevel [!2345]
+respawn
+
+pre-start script
+  /usr/bin/docker rm -f drone
+end script
+
+script
+  /usr/bin/docker run -a drone
+end script
+```
+
+Commands to start and stop Drone:
+
+```
+sudo start drone
+sudo stop drone
+```
+
+## Systemd
+
+Drone can be configured to work with Systemd to automatically start when the operating system initializes. Here is an example systemd file:
+
+```
+[Unit]
+Description=Drone container
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+ExecStart=/usr/bin/docker start -a drone
+ExecStop=/usr/bin/docker stop -t 2 drone
+
+[Install]
+WantedBy=local.target
+```
