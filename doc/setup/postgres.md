@@ -1,7 +1,14 @@
 
 # Postgres
 
-Drone comes with support for Postgres as an alternate database engine. To enable Postgres, you must specify the `DRONE_DATASTORE` environment variable with the URI configuration string. This section describes the URI format for configuring the Postgres driver.
+Drone comes with support for Postgres as an alternate database engine. To enable Postgres, you should specify the following environment variables:
+
+```
+DATASTORE_DRIVER="postgres"
+DATASTORE_CONFIG="postgres://root:pa55word@127.0.0.1:5432/postgres"
+```
+
+## Postgres connection
 
 The following is the standard URI connection scheme:
 
@@ -11,7 +18,7 @@ postgres://[username:password@]host[:port]/[dbname][?options]
 
 The components of this string are:
 
-* `postgres://` required prefix to load the Postgres driver
+* `postgres://` required prefix
 * `username:password@` optional. Use these credentials when connecting to the Postgres instance.
 * `host` server address to connect to. It may be a hostname, IP address, or UNIX domain socket.
 * `:port` optional. The default value is `:5432` if not specified.
@@ -20,8 +27,8 @@ The components of this string are:
 
 This is an example connection string:
 
-```bash
-DRONE_DATASTORE="postgres://root:pa55word@127.0.0.1:5432/postgres"
+```
+postgres://root:pa55word@127.0.0.1:5432/postgres
 ```
 
 ## Postgres options
