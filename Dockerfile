@@ -2,7 +2,6 @@ FROM golang:1.4.2
 ENV DRONE_SERVER_PORT :80
 
 ADD . /go/src/github.com/drone/drone/
-ADD ./dist/drone/etc/drone/drone.toml /etc/drone/drone.toml
 RUN mkdir -p /var/lib/drone
 WORKDIR /go/src/github.com/drone/drone
 
