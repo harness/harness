@@ -87,3 +87,91 @@ func performRequestInGroup(t *testing.T, method string) {
 	assert.Equal(t, w.Code, 400)
 	assert.Equal(t, w.Body.String(), "the method was "+method+" and index 1")
 }
+
+func TestRouterGroupInvalidStatic(t *testing.T) {
+	router := New()
+	assert.Panics(t, func() {
+		router.Static("/path/:param", "/")
+	})
+
+	assert.Panics(t, func() {
+		router.Static("/path/*param", "/")
+	})
+}
+
+func TestRouterGroupInvalidStaticFile(t *testing.T) {
+	router := New()
+	assert.Panics(t, func() {
+		router.StaticFile("/path/:param", "favicon.ico")
+	})
+
+	assert.Panics(t, func() {
+		router.StaticFile("/path/*param", "favicon.ico")
+	})
+}
+
+func TestRouterGroupTooManyHandlers(t *testing.T) {
+	router := New()
+	handlers1 := make([]HandlerFunc, 40)
+	router.Use(handlers1...)
+
+	handlers2 := make([]HandlerFunc, 26)
+	assert.Panics(t, func() {
+		router.Use(handlers2...)
+	})
+	assert.Panics(t, func() {
+		router.GET("/", handlers2...)
+	})
+}
+
+func TestRouterGroupBadMethod(t *testing.T) {
+	router := New()
+	assert.Panics(t, func() {
+		router.Handle("get", "/")
+	})
+	assert.Panics(t, func() {
+		router.Handle(" GET", "/")
+	})
+	assert.Panics(t, func() {
+		router.Handle("GET ", "/")
+	})
+	assert.Panics(t, func() {
+		router.Handle("", "/")
+	})
+	assert.Panics(t, func() {
+		router.Handle("PO ST", "/")
+	})
+	assert.Panics(t, func() {
+		router.Handle("1GET", "/")
+	})
+	assert.Panics(t, func() {
+		router.Handle("PATCh", "/")
+	})
+}
+
+func TestRouterGroupPipeline(t *testing.T) {
+	router := New()
+	testRoutesInterface(t, router)
+
+	v1 := router.Group("/v1")
+	testRoutesInterface(t, v1)
+}
+
+func testRoutesInterface(t *testing.T, r routesInterface) {
+	handler := func(c *Context) {}
+	assert.Equal(t, r, r.Use(handler))
+
+	assert.Equal(t, r, r.Handle("GET", "/handler", handler))
+	assert.Equal(t, r, r.Any("/any", handler))
+	assert.Equal(t, r, r.GET("/", handler))
+	assert.Equal(t, r, r.POST("/", handler))
+	assert.Equal(t, r, r.DELETE("/", handler))
+	assert.Equal(t, r, r.PATCH("/", handler))
+	assert.Equal(t, r, r.PUT("/", handler))
+	assert.Equal(t, r, r.OPTIONS("/", handler))
+	assert.Equal(t, r, r.HEAD("/", handler))
+
+	assert.Equal(t, r, r.StaticFile("/file", "."))
+	assert.Equal(t, r, r.Static("/static", "."))
+	assert.Equal(t, r, r.StaticFS("/static2", Dir(".", false)))
+}

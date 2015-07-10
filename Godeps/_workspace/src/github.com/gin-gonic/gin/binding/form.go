@@ -9,15 +9,16 @@ import "net/http"
 type formBinding struct{}
 
 func (_ formBinding) Name() string {
-	return "query"
+	return "form"
 }
 
 func (_ formBinding) Bind(req *http.Request, obj interface{}) error {
 	if err := req.ParseForm(); err != nil {
 		return err
 	}
+	req.ParseMultipartForm(32 << 10) // 32 MB
 	if err := mapForm(obj, req.Form); err != nil {
 		return err
 	}
-	return Validate(obj)
+	return validate(obj)
 }

@@ -27,7 +27,7 @@ func PostHook(c *gin.Context) {
 	hook, err := remote.Hook(c.Request)
 	if err != nil {
 		log.Errorf("failure to parse hook. %s", err)
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 		return
 	}
 	if hook == nil {
@@ -59,7 +59,7 @@ func PostHook(c *gin.Context) {
 	repo, err := store.RepoName(hook.Repo.Owner, hook.Repo.Name)
 	if err != nil {
 		log.Errorf("failure to find repo %s/%s from hook. %s", hook.Repo.Owner, hook.Repo.Name, err)
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 
@@ -81,7 +81,7 @@ func PostHook(c *gin.Context) {
 	user, err := store.User(repo.UserID)
 	if err != nil {
 		log.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
@@ -93,7 +93,7 @@ func PostHook(c *gin.Context) {
 	raw, err := remote.Script(user, repo, commit)
 	if err != nil {
 		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 	// inject any private parameters into the .drone.yml
@@ -103,7 +103,7 @@ func PostHook(c *gin.Context) {
 	axes, err := matrix.Parse(string(raw))
 	if err != nil {
 		log.Errorf("failure to calculate matrix for %s. %s", repo.FullName, err)
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 	if len(axes) == 0 {
@@ -125,7 +125,7 @@ func PostHook(c *gin.Context) {
 	netrc, err := remote.Netrc(user)
 	if err != nil {
 		log.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
@@ -140,7 +140,7 @@ func PostHook(c *gin.Context) {
 	err = store.AddCommit(commit)
 	if err != nil {
 		log.Errorf("failure to save commit for %s. %s", repo.FullName, err)
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 

@@ -1,3 +1,7 @@
+// Copyright 2014 Manu Martinez-Almeida.  All rights reserved.
+// Use of this source code is governed by a MIT style
+// license that can be found in the LICENSE file.
+
 package sse
 
 import (
@@ -5,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEncodeOnlyData(t *testing.T) {
@@ -152,10 +156,64 @@ func TestRenderSSE(t *testing.T) {
 	err := (Event{
 		Event: "msg",
 		Data:  "hi! how are you?",
-	}).Write(w)
+	}).Render(w)
 
 	assert.NoError(t, err)
 	assert.Equal(t, w.Body.String(), "event: msg\ndata: hi! how are you?\n\n")
 	assert.Equal(t, w.Header().Get("Content-Type"), "text/event-stream")
 	assert.Equal(t, w.Header().Get("Cache-Control"), "no-cache")
+}
+
+func BenchmarkResponseWriter(b *testing.B) {
+	w := httptest.NewRecorder()
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		(Event{
+			Event: "new_message",
+			Data:  "hi! how are you? I am fine. this is a long stupid message!!!",
+		}).Render(w)
+	}
+}
+
+func BenchmarkFullSSE(b *testing.B) {
+	buf := new(bytes.Buffer)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Encode(buf, Event{
+			Event: "new_message",
+			Id:    "13435",
+			Retry: 10,
+			Data:  "hi! how are you? I am fine. this is a long stupid message!!!",
+		})
+		buf.Reset()
+	}
+}
+
+func BenchmarkNoRetrySSE(b *testing.B) {
+	buf := new(bytes.Buffer)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Encode(buf, Event{
+			Event: "new_message",
+			Id:    "13435",
+			Data:  "hi! how are you? I am fine. this is a long stupid message!!!",
+		})
+		buf.Reset()
+	}
+}
+
+func BenchmarkSimpleSSE(b *testing.B) {
+	buf := new(bytes.Buffer)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Encode(buf, Event{
+			Event: "new_message",
+			Data:  "hi! how are you? I am fine. this is a long stupid message!!!",
+		})
+		buf.Reset()
+	}
 }

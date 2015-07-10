@@ -1,16 +1,16 @@
 /*
-Package validator implements value validations for structs and individual fields based on tags. It can also handle Cross Field validation and even Cross Field Cross Struct validation for nested structs.
+Package validator implements value validations for structs and individual fields based on tags. It can also handle Cross Field and Cross Struct validation for nested structs.
 
-Built In Validator
+Validate
 
-	myValidator = validator.NewValidator("validate", validator.BakedInValidators)
+	validate := validator.New("validate", validator.BakedInValidators)
 
-	errs := myValidator.ValidateStruct(//your struct)
-	valErr := myValidator.ValidateFieldByTag(field, "omitempty,min=1,max=10")
+	errs := validate.Struct(//your struct)
+	valErr := validate.Field(field, "omitempty,min=1,max=10")
 
 A simple example usage:
 
-	type UserDetail {
+	type UserDetail struct {
 		Details string `validate:"-"`
 	}
 
@@ -25,17 +25,17 @@ A simple example usage:
 	}
 
 	// errs will contain a hierarchical list of errors
-	// using the StructValidationErrors struct
+	// using the StructErrors struct
 	// or nil if no errors exist
-	errs := myValidator.ValidateStruct(user)
+	errs := validate.Struct(user)
 
 	// in this case 1 error Name is required
 	errs.Struct will be "User"
 	errs.StructErrors will be empty <-- fields that were structs
-	errs.Errors will have 1 error of type FieldValidationError
+	errs.Errors will have 1 error of type FieldError
 
 	NOTE: Anonymous Structs - they don't have names so expect the Struct name
-	within StructValidationErrors to be blank.
+	within StructErrors to be blank.
 
 Error Handling
 
@@ -45,7 +45,7 @@ The error can be used like so
 	fieldErr.Field    // "Name"
 	fieldErr.ErrorTag // "required"
 
-Both StructValidationErrors and FieldValidationError implement the Error interface but it's
+Both StructErrors and FieldError implement the Error interface but it's
 intended use is for development + debugging, not a production error message.
 
 	fieldErr.Error() // Field validation for "Name" failed on the "required" tag
@@ -67,7 +67,7 @@ I needed to know the field and what validation failed so that I could provide an
 	}
 
 The hierarchical error structure is hard to work with sometimes.. Agreed Flatten function to the rescue!
-Flatten will return a map of FieldValidationError's but the field name will be namespaced.
+Flatten will return a map of FieldError's but the field name will be namespaced.
 
 	// if UserDetail Details field failed validation
 	Field will be "Sub.Details"
@@ -89,7 +89,7 @@ Custom functions can be added
 		return true
 	}
 
-	myValidator.AddFunction("custom tag name", customFunc)
+	validate.AddFunction("custom tag name", customFunc)
 	// NOTES: using the same tag name as an existing function
 	//        will overwrite the existing one
 
@@ -97,11 +97,11 @@ Cross Field Validation
 
 Cross Field Validation can be implemented, for example Start & End Date range validation
 
-	// NOTE: when calling myValidator.validateStruct(val) val will be the top level struct passed
+	// NOTE: when calling validate.Struct(val) val will be the top level struct passed
 	//       into the function
-	//       when calling myValidator.ValidateFieldByTagAndValue(val, field, tag) val will be
+	//       when calling validate.FieldWithValue(val, field, tag) val will be
 	//       whatever you pass, struct, field...
-	//       when calling myValidator.ValidateFieldByTag(field, tag) val will be nil
+	//       when calling validate.Field(field, tag) val will be nil
 	//
 	// Because of the specific requirements and field names within each persons project that
 	// uses this library it is likely that custom functions will need to be created for your
@@ -142,6 +142,11 @@ Baked In Validators and Tags
 NOTE: Baked In Cross field validation only compares fields on the same struct,
 if cross field + cross struct validation is needed your own custom validator
 should be implemented.
+
+NOTE2: comma is the default separator of validation tags, if you wish to have a comma
+included within the parameter i.e. excludesall=, you will need to use the UTF-8 hex
+representation 0x2C, which is replaced in the code as a comma, so the above will
+become excludesall=0x2C
 
 Here is a list of the current built in validators:
 
@@ -192,6 +197,16 @@ Here is a list of the current built in validators:
 		the string length is at least that number of characters. For slices,
 		arrays, and maps, validates the number of items. (Usage: min=10)
 
+	eq
+		For strings & numbers, eq will ensure that the value is
+		equal to the parameter given. For slices, arrays, and maps,
+		validates the number of items. (Usage: eq=10)
+
+	ne
+		For strings & numbers, eq will ensure that the value is not
+		equal to the parameter given. For slices, arrays, and maps,
+		validates the number of items. (Usage: eq=10)
+
 	gt
 		For numbers, this will ensure that the value is greater than the
 		parameter given. For strings, it checks that the string length
@@ -221,85 +236,131 @@ Here is a list of the current built in validators:
 		For time.Time ensures the time value is less than or equal to time.Now.UTC()
 		(Usage: lte)
 
+	eqfield
+		This will validate the field value against another fields value either within
+		a struct or passed in field.
+		usage examples are for validation of a password and confirm password:
+		Validation on Password field using validate.Struct Usage(eqfield=ConfirmPassword)
+		Validating by field validate.FieldWithValue(password, confirmpassword, "eqfield")
+
+	nefield
+		This will validate the field value against another fields value either within
+		a struct or passed in field.
+		usage examples are for ensuring two colors are not the same:
+		Validation on Color field using validate.Struct Usage(nefield=Color2)
+		Validating by field validate.FieldWithValue(color1, color2, "nefield")
+
 	gtfield
 		Only valid for Numbers and time.Time types, this will validate the field value
 		against another fields value either within a struct or passed in field.
 		usage examples are for validation of a Start and End date:
-		Validation on End field using ValidateByStruct Usage(gtfield=Start)
-		Validating by field ValidateFieldByTagAndValue(start, end, "gtfield")
+		Validation on End field using validate.Struct Usage(gtfield=Start)
+		Validating by field validate.FieldWithValue(start, end, "gtfield")
 
 	gtefield
 		Only valid for Numbers and time.Time types, this will validate the field value
 		against another fields value either within a struct or passed in field.
 		usage examples are for validation of a Start and End date:
-		Validation on End field using ValidateByStruct Usage(gtefield=Start)
-		Validating by field ValidateFieldByTagAndValue(start, end, "gtefield")
+		Validation on End field using validate.Struct Usage(gtefield=Start)
+		Validating by field validate.FieldWithValue(start, end, "gtefield")
 
 	ltfield
 		Only valid for Numbers and time.Time types, this will validate the field value
 		against another fields value either within a struct or passed in field.
 		usage examples are for validation of a Start and End date:
-		Validation on End field using ValidateByStruct Usage(ltfield=Start)
-		Validating by field ValidateFieldByTagAndValue(start, end, "ltfield")
+		Validation on End field using validate.Struct Usage(ltfield=Start)
+		Validating by field validate.FieldWithValue(start, end, "ltfield")
 
 	ltefield
 		Only valid for Numbers and time.Time types, this will validate the field value
 		against another fields value either within a struct or passed in field.
 		usage examples are for validation of a Start and End date:
-		Validation on End field using ValidateByStruct Usage(ltefield=Start)
-		Validating by field ValidateFieldByTagAndValue(start, end, "ltefield")
+		Validation on End field using validate.Struct Usage(ltefield=Start)
+		Validating by field validate.FieldWithValue(start, end, "ltefield")
 
 	alpha
-		This validates that a strings value contains alpha characters only
+		This validates that a string value contains alpha characters only
 		(Usage: alpha)
 
 	alphanum
-		This validates that a strings value contains alphanumeric characters only
+		This validates that a string value contains alphanumeric characters only
 		(Usage: alphanum)
 
 	numeric
-		This validates that a strings value contains a basic numeric value.
+		This validates that a string value contains a basic numeric value.
 		basic excludes exponents etc...
 		(Usage: numeric)
 
 	hexadecimal
-		This validates that a strings value contains a valid hexadecimal.
+		This validates that a string value contains a valid hexadecimal.
 		(Usage: hexadecimal)
 
 	hexcolor
-		This validates that a strings value contains a valid hex color including
+		This validates that a string value contains a valid hex color including
 		hashtag (#)
 		(Usage: hexcolor)
 
 	rgb
-		This validates that a strings value contains a valid rgb color
+		This validates that a string value contains a valid rgb color
 		(Usage: rgb)
 
 	rgba
-		This validates that a strings value contains a valid rgba color
+		This validates that a string value contains a valid rgba color
 		(Usage: rgba)
 
 	hsl
-		This validates that a strings value contains a valid hsl color
+		This validates that a string value contains a valid hsl color
 		(Usage: hsl)
 
 	hsla
-		This validates that a strings value contains a valid hsla color
+		This validates that a string value contains a valid hsla color
 		(Usage: hsla)
 
 	email
-		This validates that a strings value contains a valid email
+		This validates that a string value contains a valid email
 		This may not conform to all possibilities of any rfc standard, but neither
 		does any email provider accept all posibilities...
 		(Usage: email)
+
 	url
-		This validates that a strings value contains a valid url
+		This validates that a string value contains a valid url
 		This will accept any url the golang request uri accepts but must contain
 		a schema for example http:// or rtmp://
 		(Usage: url)
+
 	uri
-		This validates that a strings value contains a valid uri
+		This validates that a string value contains a valid uri
 		This will accept any uri the golang request uri accepts (Usage: uri)
+
+	base64
+		This validates that a string value contains a valid base64 value.
+		Although an empty string is valid base64 this will report an empty string
+		as an error, if you wish to accept an empty string as valid you can use
+		this with the omitempty tag. (Usage: base64)
+
+	contains
+		This validates that a string value contains the substring value.
+		(Usage: contains=@)
+
+	containsany
+		This validates that a string value contains any Unicode code points
+		in the substring value. (Usage: containsany=!@#?)
+
+	containsrune
+		This validates that a string value contains the supplied rune value.
+		(Usage: containsrune=@)
+
+	excludes
+		This validates that a string value does not contain the substring value.
+		(Usage: excludes=@)
+
+	excludesall
+		This validates that a string value does not contain any Unicode code
+		points in the substring value. (Usage: excludesall=!@#?)
+
+	excludesrune
+		This validates that a string value does not contain the supplied rune value.
+		(Usage: excludesrune=@)
 
 Validator notes:
 
@@ -314,7 +375,7 @@ Validator notes:
 		used within the validator function and even be precompiled for better efficiency
 		within regexes.go.
 
-		And the best reason, you can sumit a pull request and we can keep on adding to the
+		And the best reason, you can submit a pull request and we can keep on adding to the
 		validation library of this package!
 
 Panics
@@ -329,6 +390,6 @@ This package panics when bad input is provided, this is by design, bad code like
 		TestField: "Test"
 	}
 
-	myValidator.ValidateStruct(t) // this will panic
+	validate.Struct(t) // this will panic
 */
 package validator

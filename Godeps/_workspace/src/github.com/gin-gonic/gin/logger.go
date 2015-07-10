@@ -25,22 +25,27 @@ func ErrorLogger() HandlerFunc {
 	return ErrorLoggerT(ErrorTypeAny)
 }
 
-func ErrorLoggerT(typ int) HandlerFunc {
+func ErrorLoggerT(typ ErrorType) HandlerFunc {
 	return func(c *Context) {
 		c.Next()
-
+		// avoid writting if we already wrote into the response body
 		if !c.Writer.Written() {
-			if errs := c.Errors.ByType(typ); len(errs) > 0 {
-				c.JSON(-1, errs.Errors())
+			errors := c.Errors.ByType(typ)
+			if len(errors) > 0 {
+				c.JSON(-1, errors)
 			}
 		}
 	}
 }
 
+// Instances a Logger middleware that will write the logs to gin.DefaultWriter
+// By default gin.DefaultWriter = os.Stdout
 func Logger() HandlerFunc {
 	return LoggerWithWriter(DefaultWriter)
 }
 
+// Instance a Logger middleware with the specified writter buffer.
+// Example: os.Stdout, a file opened in write mode, a socket...
 func LoggerWithWriter(out io.Writer) HandlerFunc {
 	return func(c *Context) {
 		// Start timer
@@ -59,7 +64,7 @@ func LoggerWithWriter(out io.Writer) HandlerFunc {
 		statusCode := c.Writer.Status()
 		statusColor := colorForStatus(statusCode)
 		methodColor := colorForMethod(method)
-		comment := c.Errors.String()
+		comment := c.Errors.ByType(ErrorTypePrivate).String()
 
 		fmt.Fprintf(out, "[GIN] %v |%s %3d %s| %13v | %s |%s  %s %-7s %s\n%s",
 			end.Format("2006/01/02 - 15:04:05"),

@@ -196,10 +196,10 @@ func SetRepo() gin.HandlerFunc {
 		r, err := ds.RepoName(owner, name)
 		switch {
 		case err != nil && u != nil:
-			c.Fail(404, err)
+			c.AbortWithError(404, err)
 			return
 		case err != nil && u == nil:
-			c.Fail(401, err)
+			c.AbortWithError(401, err)
 			return
 		}
 		c.Set("repo", r)

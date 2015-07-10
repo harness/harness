@@ -56,17 +56,17 @@ func PushCommit(c *gin.Context) {
 	repo := ToRepo(c)
 
 	in := &common.Commit{}
-	if !c.BindWith(in, binding.JSON) {
+	if c.BindWith(in, binding.JSON) != nil {
 		return
 	}
 	user, err := store.User(repo.UserID)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 	commit, err := store.CommitSeq(repo, in.Sequence)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 
@@ -77,7 +77,7 @@ func PushCommit(c *gin.Context) {
 	updater := ToUpdater(c)
 	err = updater.SetCommit(user, repo, commit)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 	c.Writer.WriteHeader(200)
@@ -90,18 +90,18 @@ func PushBuild(c *gin.Context) {
 	cnum, _ := strconv.Atoi(c.Params.ByName("commit"))
 
 	in := &common.Build{}
-	if !c.BindWith(in, binding.JSON) {
+	if c.BindWith(in, binding.JSON) != nil {
 		return
 	}
 
 	commit, err := store.CommitSeq(repo, cnum)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 	build, err := store.BuildSeq(commit, in.Sequence)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 
@@ -114,7 +114,7 @@ func PushBuild(c *gin.Context) {
 	updater := ToUpdater(c)
 	err = updater.SetBuild(repo, commit, build)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 	c.Writer.WriteHeader(200)
@@ -129,18 +129,18 @@ func PushLogs(c *gin.Context) {
 
 	commit, err := store.CommitSeq(repo, cnum)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 	build, err := store.BuildSeq(commit, bnum)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 	updater := ToUpdater(c)
 	err = updater.SetLogs(repo, commit, build, c.Request.Body)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 	c.Writer.WriteHeader(200)

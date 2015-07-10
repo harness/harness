@@ -17,7 +17,7 @@ func GetUsers(c *gin.Context) {
 	store := ToDatastore(c)
 	users, err := store.UserList()
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 	} else {
 		c.JSON(200, users)
 	}
@@ -36,7 +36,7 @@ func PostUser(c *gin.Context) {
 	user.Token = c.Request.FormValue("token")
 	user.Secret = c.Request.FormValue("secret")
 	if err := store.AddUser(user); err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 	} else {
 		c.JSON(201, user)
 	}
@@ -53,7 +53,7 @@ func GetUser(c *gin.Context) {
 	name := c.Params.ByName("name")
 	user, err := store.UserLogin(name)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 	} else {
 		c.JSON(200, user)
 	}
@@ -71,12 +71,12 @@ func PutUser(c *gin.Context) {
 	name := c.Params.ByName("name")
 	user, err := store.UserLogin(name)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 
 	in := &common.User{}
-	if !c.BindWith(in, binding.JSON) {
+	if c.BindWith(in, binding.JSON) != nil {
 		return
 	}
 	user.Email = in.Email
@@ -90,7 +90,7 @@ func PutUser(c *gin.Context) {
 
 	err = store.SetUser(user)
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 	} else {
 		c.JSON(200, user)
 	}
@@ -108,7 +108,7 @@ func DeleteUser(c *gin.Context) {
 	name := c.Params.ByName("name")
 	user, err := store.UserLogin(name)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(404, err)
 		return
 	}
 
@@ -120,7 +120,7 @@ func DeleteUser(c *gin.Context) {
 	}
 
 	if err := store.DelUser(user); err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 	} else {
 		c.Writer.WriteHeader(204)
 	}

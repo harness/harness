@@ -38,13 +38,13 @@ func Handle(queue queue.Queue, token string) http.Handler {
 func publish(c *gin.Context) {
 	q := fromContext(c)
 	work := &queue.Work{}
-	if !c.Bind(work) {
+	if c.Bind(work) != nil {
 		c.AbortWithStatus(400)
 		return
 	}
 	err := q.Publish(work)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 	c.Writer.WriteHeader(200)
@@ -55,13 +55,13 @@ func publish(c *gin.Context) {
 func remove(c *gin.Context) {
 	q := fromContext(c)
 	work := &queue.Work{}
-	if !c.Bind(work) {
+	if c.Bind(work) != nil {
 		c.AbortWithStatus(400)
 		return
 	}
 	err := q.Remove(work)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 	c.Writer.WriteHeader(200)
@@ -84,13 +84,13 @@ func pull(c *gin.Context) {
 func ack(c *gin.Context) {
 	q := fromContext(c)
 	work := &queue.Work{}
-	if !c.Bind(work) {
+	if c.Bind(work) != nil {
 		c.AbortWithStatus(400)
 		return
 	}
 	err := q.Ack(work)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 	c.Writer.WriteHeader(200)
