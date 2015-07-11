@@ -231,6 +231,11 @@ func (g *GitHub) Hook(r *http.Request) (*common.Hook, error) {
 	}
 }
 
+// return default scope for GitHub
+func (g *GitHub) Scope() string {
+	return DefaultScope
+}
+
 // push parses a hook with event type `push` and returns
 // the commit data.
 func (g *GitHub) push(r *http.Request) (*common.Hook, error) {

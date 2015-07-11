@@ -4,7 +4,6 @@ import (
 	"flag"
 	"html/template"
 	"net/http"
-	"os"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 
@@ -45,7 +44,7 @@ func main() {
 		panic(err)
 	}
 
-	store, err := store.New(os.Getenv("DATABASE"))
+	store, err := store.New(settings.Database.Driver + "://" + settings.Database.Datasource)
 	if err != nil {
 		panic(err)
 	}
