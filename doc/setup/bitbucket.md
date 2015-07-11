@@ -1,3 +1,5 @@
+> **NOTE** Bitbucket integration has not yet been merged into 0.4, but is planned in the near future
+
 # Bitbucket
 
 Drone comes with built-in support for Bitbucket. To enable and configure Bitbucket, you should set the following environment variables:
@@ -13,7 +15,7 @@ BITBUCKET_ORGS="drone,drone-plugins"
 
 ## Bitbucket settings
 
-This section lists all environment variables options used to configure Bitbucket.
+This section lists all environment variables used to configure Bitbucket.
 
 * `BITBUCKET_KEY` oauth client id for registered application
 * `BITBUCKET_SECRET` oauth client secret for registered application

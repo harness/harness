@@ -1,3 +1,5 @@
+> **NOTE** GitLab integration has not yet been merged into 0.4, but is planned in the near future
+
 # GitLab
 
 Drone comes with built-in support for GitLab 7.7 and higher. To enable and configure GitLab, you should set the following environment variables:
@@ -15,7 +17,7 @@ GITLAB_SKIP_VERIFY="false"
 
 ## GitLab settings
 
-This section lists all environment variables options used to configure GitLab.
+This section lists all environment variables used to configure GitLab.
 
 * `GITLAB_HOST` server address to connect to.
 * `GITLAB_CLIENT` oauth client id for registered application

@@ -11,7 +11,7 @@ GITHUB_SECRET="1ac1eae5ff1b490892f5"
 
 ## GitHub settings
 
-This section lists all environment variables options used to configure GitHub.
+This section lists all environment variables used to configure GitHub.
 
 * `GITHUB_HOST` server address to connect to. The default value is `https://github.com` if not specified.
 * `GITHUB_CLIENT` oauth client id for registered application
