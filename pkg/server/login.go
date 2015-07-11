@@ -134,10 +134,14 @@ func getLoginOauth2(c *gin.Context) {
 	var settings = ToSettings(c)
 	var remote = ToRemote(c)
 
+	var scope = strings.Join(settings.Auth.Scope, ",")
+	if scope == "" {
+		scope = remote.Scope()
+	}
 	var config = &oauth2.Config{
 		ClientId:     settings.Auth.Client,
 		ClientSecret: settings.Auth.Secret,
-		Scope:        strings.Join(settings.Auth.Scope, ","),
+		Scope:        scope,
 		AuthURL:      settings.Auth.Authorize,
 		TokenURL:     settings.Auth.AccessToken,
 		RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURL(c.Request)),
