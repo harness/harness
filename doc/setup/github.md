@@ -2,7 +2,7 @@
 
 Drone comes with built-in support for GitHub and GitHub Enterprise. To enable and configure GitHub, you should set the following environment variables:
 
-```
+```bash
 REMOTE_DRIVER="github"
 
 GITHUB_CLIENT="c0aaff74c060ff4a950d"

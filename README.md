@@ -1,3 +1,5 @@
+> **WARNING** the 0.4 branch is very unstable. We only recommend running this branch if you plan to dig into the codebase, troubleshoot issues and contribute (please do!). We will notify the broader community once this branch is more stable.
+
 Drone is a Continuous Integration platform built on container technology. Every build is executed inside an ephemeral Docker container, giving developers complete control over their build environment with guaranteed isolation.
 
 ### Goals
@@ -10,6 +12,7 @@ Drone documentation is organized into several categories:
 
 * [Setup Guide](http://readme.drone.io/docs/setup/)
 * [Build Guide](http://readme.drone.io/docs/build/)
+* [Plugin Guide](http://readme.drone.io/docs/plugin/)
 * [API Reference](http://readme.drone.io/docs/api/)
 
 ### Community
