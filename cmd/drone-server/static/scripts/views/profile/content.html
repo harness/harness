@@ -1,19 +1,3 @@
-<header>
-	<a class="logo float-left" href="/"></a>
-	<a class="menu-item settings float-right" href="/profile"></a>
-	<a class="menu-item users float-right" href="/users" ng-if="user.admin"></a>
-	<a class="menu-item help float-right" href="http://readme.drone.io" target="_blank"></a>
-	<a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
-</header>
-
-<div class="toolbar">
-
-	<div class="breadcrumb"  style="position:relative;top:0px;">
-		<a href="/" class="icon icon-home"></a>
-		<a href="#">Profile</a>
-	</div>
-</div>
-
 <article>
 	<section>
 		<h2>Login info</h2>
@@ -34,8 +18,12 @@
 	<section>
 		<h2>Tokens</h2>
 		<form>
-			<input type="label" ng-model="newToken.label" />
+		    <div style="padding-left: 20px; float: left;">
+			    <input type="label" ng-model="newToken.label" />
+			</div>
+			<div style="padding-top: 20px; padding-left: 20px; float: left;">
 			<button ng-click="createToken(newToken)">Create</button>
+			</div>
 		</form>
 
 		<div class="alert" ng-if="tokens && tokens.length === 0">No Personal Tokens Exist</div>

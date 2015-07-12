@@ -4,8 +4,7 @@
 	 * ReposCtrl responsible for rendering the user's
 	 * repository home screen.
 	 */
-	function ReposCtrl($scope, $routeParams, repos, users) {
-
+	function ReposCtrl($scope, $stateParams, repos, users) {
 		// Gets the currently authenticated user
 		users.getCached().then(function(payload){
 			$scope.user = payload.data;
@@ -43,9 +42,9 @@
 	/**
 	 * RepoEditCtrl responsible for editing a repository.
 	 */
-	function RepoEditCtrl($scope, $window, $location, $routeParams, repos, users) {
-		var owner = $routeParams.owner;
-		var name  = $routeParams.name;
+	function RepoEditCtrl($scope, $window, $location, $stateParams, repos, users) {
+		var owner = $stateParams.owner;
+		var name  = $stateParams.name;
 		var fullName = owner+'/'+name;
 
 		// Inject window for composing url

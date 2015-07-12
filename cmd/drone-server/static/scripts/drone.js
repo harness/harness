@@ -7,7 +7,8 @@
 	 */
 	angular.module('drone', [
 			'ngRoute',
-			'ui.filters'
+			'ui.filters',
+			'ui.router'
 		]);
 
 	/**
@@ -37,7 +38,7 @@
 	 * Defines the route configuration for the
 	 * main application.
 	 */
-	function Config ($routeProvider, $httpProvider, $locationProvider) {
+	function Config ($stateProvider, $httpProvider, $locationProvider) {
 
 		// Resolver that will attempt to load the currently
 		// authenticated user prior to loading the page.
@@ -47,61 +48,136 @@
 			}
 		}
 
-		$routeProvider
-		.when('/', {
-			templateUrl: '/static/scripts/views/repos.html',
-			controller: 'ReposCtrl',
-			resolve: resolveUser
-		})
-		.when('/login', {
-			templateUrl: '/static/scripts/views/login.html',
-			controller: 'UserLoginCtrl'
-		})
-		.when('/profile', {
-			templateUrl: '/static/scripts/views/user.html',
-			controller: 'UserCtrl',
-			resolve: resolveUser
-		})
-		.when('/users', {
-			templateUrl: '/static/scripts/views/users.html',
-			controller: 'UsersCtrl',
-			resolve: resolveUser
-		})
-		.when('/new', {
-			templateUrl: '/static/scripts/views/repos_add.html',
-			controller: 'RepoAddCtrl',
-			resolve: resolveUser
-		})
-		.when('/:owner/:name', {
-			templateUrl: '/static/scripts/views/builds.html',
-			controller: 'BuildsCtrl',
-			resolve: resolveUser
-		})
-		.when('/:owner/:name/edit', {
-			templateUrl: '/static/scripts/views/repos_edit.html',
-			controller: 'RepoEditCtrl',
-			resolve: resolveUser
-		})
-		.when('/:owner/:name/edit/env', {
-			templateUrl: '/static/scripts/views/repos_env.html',
-			controller: 'RepoEditCtrl',
-			resolve: resolveUser
-		})
-		.when('/:owner/:name/delete', {
-			templateUrl: '/static/scripts/views/repos_del.html',
-			controller: 'RepoEditCtrl',
-			resolve: resolveUser
-		})
-		.when('/:owner/:name/:number', {
-			templateUrl: '/static/scripts/views/build.html',
-			controller: 'BuildCtrl',
-			resolve: resolveUser
-		})
-		.when('/:owner/:name/:number/:step', {
-			templateUrl: '/static/scripts/views/build_out.html',
-			controller: 'BuildOutCtrl',
-			resolve: resolveUser
-		});
+		$stateProvider
+			.state('app', {
+				abstract: true,
+				views: {
+					'layout': { 
+						templateUrl: '/static/scripts/views/layout.html',
+						controller: function ($scope, $routeParams, repos, users) {
+							users.getCached().then(function(payload){
+								$scope.user = payload.data;
+								console.log(repos.list());
+							});
+						}
+					}
+				},
+				resolve: resolveUser
+			})
+			.state('app.index', {
+				url: '/',
+				views: {
+					'toolbar': { 
+						templateUrl: '/static/scripts/views/repos/index/toolbar.html'
+					},
+					'content': { 
+						templateUrl: '/static/scripts/views/repos/index/content.html',
+						controller: 'ReposCtrl',
+						resolve: resolveUser
+					}
+				},
+				title: 'Dashboard'
+			})
+			.state('login', {
+				url: '/login',
+				templateUrl: '/static/scripts/views/login.html',
+				title: 'Login',
+				controller: 'UserLoginCtrl'
+			})
+			.state('app.profile', {
+				url: '/profile',
+				views: {
+					'toolbar': { templateUrl: '/static/scripts/views/profile/toolbar.html' },
+					'content': { 
+						templateUrl: '/static/scripts/views/profile/content.html',
+						controller: 'UserCtrl',
+						resolve: resolveUser
+					}
+				},
+				title: 'Profile'
+			})
+			.state('app.users', {
+				url: '/users',
+				views: {
+					'toolbar': { templateUrl: '/static/scripts/views/users/toolbar.html' },
+					'content': { 
+						templateUrl: '/static/scripts/views/users/content.html',
+						controller: 'UsersCtrl',
+						resolve: resolveUser
+					}
+				},
+				title: 'Users'
+			})
+			.state('app.new_repo', {
+				url: '/new',
+				views: {
+					'toolbar': { templateUrl: '/static/scripts/views/repos/add/toolbar.html' },
+					'content': { 
+						templateUrl: '/static/scripts/views/repos/add/content.html',
+						controller: 'RepoAddCtrl',
+						resolve: resolveUser
+					}
+				},
+				title: 'Add Repository'
+			})
+			.state('app.builds', {
+				url: '/:owner/:name',
+				views: {
+					'toolbar': { 
+						templateUrl: '/static/scripts/views/builds/index/toolbar.html',
+						controller: 'BuildsCtrl'
+					},
+					'content': { 
+						templateUrl: '/static/scripts/views/builds/index/content.html',
+						controller: 'BuildsCtrl'
+					}
+				}
+			})
+			.state('app.repo_edit', {
+				url: '/:owner/:name/edit',
+				views: {
+					'toolbar': { templateUrl: '/static/scripts/views/repos/toolbar.html' },
+					'content': { templateUrl: '/static/scripts/views/repos/edit.html' }
+				},
+				controller: 'RepoEditCtrl',
+				resolve: resolveUser
+			})
+			.state('app.repo.env', {
+				url: '/:owner/:name/edit/env',
+				views: {
+					'toolbar': { templateUrl: '/static/scripts/views/repos/toolbar.html' },
+					'content': { templateUrl: '/static/scripts/views/repos/env.html' }
+				},
+				controller: 'RepoEditCtrl',
+				resolve: resolveUser
+			})
+			.state('app.repo.del', {
+				url: '/:owner/:name/delete',
+				views: {
+					'toolbar': { templateUrl: '/static/scripts/views/repos/toolbar.html' },
+					'content': { templateUrl: '/static/scripts/views/repos/del.html' }
+				},
+				controller: 'RepoEditCtrl',
+				resolve: resolveUser
+			})
+			.state('app.build', {
+				url: '/:owner/:name/:number',
+				views: {
+					'toolbar': { templateUrl: '/static/scripts/views/builds/show/toolbar.html' },
+					'content': { templateUrl: '/static/scripts/views/builds/show/content.html' }
+				},
+				controller: 'BuildCtrl',
+				resolve: resolveUser
+			})
+			.state('app.build_step', {
+				url: '/:owner/:name/:number/:step',
+				views: {
+					'toolbar': { templateUrl: '/static/scripts/views/builds/step/toolbar.html' },
+					'content': { templateUrl: '/static/scripts/views/builds/step/content.html' }
+				},
+				controller: 'BuildOutCtrl',
+				resolve: resolveUser
+			})
 
 		// Enables html5 mode
 		$locationProvider.html5Mode(true)
@@ -130,14 +206,14 @@
 
 
 	function RouteChange($rootScope, repos, logs) {
-		$rootScope.$on('$routeChangeStart', function (event, next) {
+		$rootScope.$on('$stateChangeStart', function () {
 			repos.unsubscribe();
 			logs.unsubscribe();
 		});
 
-		$rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
-			if (current.$$route.title) {
- 				document.title = current.$$route.title + ' · drone';
+		$rootScope.$on('$stateChangeSuccess', function (event, current, previous) {
+			if (current.title) {
+ 				document.title = current.title + ' · drone';
 			}
 		});
 	}

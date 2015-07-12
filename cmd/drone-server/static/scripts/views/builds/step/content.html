@@ -1,0 +1,39 @@
+<article>
+
+		<section class="commit-section">
+			<div class="row build-row">
+				<div>
+					<div ng-class="[ 'build-num', task.status ]"  ng-if="task"></div>
+					<div ng-class="[ 'build-num', build.status ]" ng-if="!task"></div>
+				</div>
+				<div>
+					<h3>{{ build.head_commit.message }}</h3>
+					<p><strong>{{ build.head_commit.author.login }}</strong> pushed to <strong>{{ build.head_commit.branch }}</strong> {{ build.started_at | fromNow }}</p>
+				</div>
+			</div>
+
+			<div class="row build-row sub-build-row" ng-if="build.jobs.length > 1">
+				<div>
+
+				</div>
+				<div>
+					<h3 style="margin-top:0px">
+						<div ng-repeat="(key, value) in task.environment">
+							{{ key.toUpperCase() }}={{ value }}
+						</div>
+					</h3>
+				</div>
+			</div>
+		</section>
+
+
+
+
+	<pre id="term" ng-if="task && task.status !== 'pending'"></pre>
+	<button class="fab" ng-if="build.status === 'running'" ng-click="tail()"></button>
+</article>
+
+
+
+<button ng-if="build.status !== 'pending' && build.status !== 'running'" ng-click="restart()">Restart</button>
+<button ng-if="build.status === 'pending' || build.status === 'running'" ng-click="cancel()">Cancel</button>

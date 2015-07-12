@@ -1,0 +1,14 @@
+<article>
+    <section>
+    	<a class="row build-row" ng-repeat="repo in repos | orderBy:'full_name'" ng-href="/{{ repo.full_name }}">
+    		<div>
+    			<div class="icon icon-repo"></div>
+    		</div>
+    		<div>
+    			<h3>{{ repo.owner }} / {{ repo.name }}</h3>
+    			<p>{{ repo.clone_url }}</p>
+    		</div>
+    	</a>
+
+    </section>
+</article>
