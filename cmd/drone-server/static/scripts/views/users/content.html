@@ -1,18 +1,3 @@
-<header>
-	<a class="logo float-left" href="/"></a>
-	<a class="menu-item settings float-right" href="/profile"></a>
-	<a class="menu-item users float-right" href="/users" ng-if="user.admin"></a>
-	<a class="menu-item help float-right" href="http://readme.drone.io" target="_blank"></a>
-	<a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
-</header>
-
-<div class="toolbar">
-	<div class="breadcrumb"  style="position:relative;top:0px;">
-		<a href="/" class="icon icon-home"></a>
-		<a href="#">Users</a>
-	</div>
-</div>
-
 <article>
 
 	<section>
@@ -31,8 +16,12 @@
 			<div>
 				<h3>{{ user.login }} <small ng-if="user.admin">Admin</small></h3>
 				<p>{{ user.email }}</p>
-				<button ng-click="toggle(user)" ng-class="{'btn-admin':true, 'btn-checked': user.admin}"></button>
-				<button ng-click="remove(user)" class="btn-remove"></button>
+				<button ng-click="toggle(user)" ng-class="{'btn-admin':true, 'btn-checked': user.admin}">
+                    <i class="material-icons md-18">account_circle</i>
+				</button>
+				<button ng-click="remove(user)" class="btn-remove">
+                    <i class="material-icons md-18">delete</i>
+				</button>
 			</div>
 		</div>
 	</section>

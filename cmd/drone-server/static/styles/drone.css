@@ -778,9 +778,7 @@
               opacity: 1;
           }
 
-          .nav-item:after,
-          .nav-item:before {
-              font-family: "Material-Design-Iconic-Font";
+          .nav-item i {
               color: rgba(255,255,255,0.749);
           }
 
@@ -791,32 +789,11 @@
               text-decoration:none;
           }
 
-          .nav-item.settings:before {
-              font-size: 22px;
-              content: '\f060';
-          }
-
-
           .nav-item.unstar,
           .nav-item.star {
             font-size:14px;
             background:transparent;
             line-height:20px;
-          }
-
-          .nav-item.star:after {
-            font-size: 24px;
-            content: "\f2e7";
-          }
-          .nav-item.unstar:after {
-            font-size: 24px;
-            content: "\f2e5";
-          }
-
-          .nav-item.add:after {
-            font-size: 24px;
-            content: "\f0fd";
-
           }
 
           input.nav-item {
@@ -938,6 +915,11 @@
         }
         */
 
+				.material-icons.md-18 { font-size: 18px; }
+				.material-icons.md-24 { font-size: 24px; }
+				.material-icons.md-36 { font-size: 36px; }
+				.material-icons.md-48 { font-size: 48px; }
+
         .menu-item {
             margin-right: 0;
             height: auto;
@@ -948,8 +930,7 @@
             opacity: 1;
         }
 
-        .menu-item:before {
-            font-family: "Material-Design-Iconic-Font";
+        .menu-item i {
             color: #2f2f2f;
         }
 
@@ -967,26 +948,6 @@
             padding: 10px 0;
         }
 
-        .menu-item.settings:before {
-            font-size: 20px;
-            content: "\f060";
-        }
-
-        .menu-item.users:before {
-            font-size: 20px;
-            content: "\f006";
-        }
-
-        .menu-item.help:before {
-            font-size: 20px;
-            content: '\f033';
-        }
-
-        .menu-item.plugins:before {
-            font-size: 23px;
-            content: '\f292';
-        }
-
         .menu-item.user-name {
             height: 50px;
             font-size: 14px;
@@ -998,15 +959,12 @@
             padding: 20px 0 18px 0;
         }
 
-
-
-
-    .subnav {
-      background:rgba(255,255,255,0.8);
-      padding:0px 25px;
-      height:70px;
-      position:relative;
-    }
+	    .subnav {
+	      background:rgba(255,255,255,0.8);
+	      padding:0px 25px;
+	      height:70px;
+	      position:relative;
+	    }
 
       .subnav .icon {
         display:inline-block;
@@ -1018,10 +976,10 @@
         margin-left:10px;
       }
 
-        .subnav .icon.icon-settings:before {
-          content: "\f060";
-          font-family: "Material-Design-Iconic-Font";
-        }
+      .subnav .icon.icon-settings:before {
+        content: "\f060";
+        font-family: "Material-Design-Iconic-Font";
+      }
 
       .subnav .menu {
         position: absolute;
@@ -1271,12 +1229,10 @@ header .logo {
     position: absolute;
     left: -50px;
 }
-.breadcrumb a.icon-home:after {
-    font-family: "Material-Design-Iconic-Font";
-    line-height:56px;
+.breadcrumb a.icon-home i {
+    /* line-height:56px; */
     color: rgba(255,255,255,0.749);
-    content: "\f297";
-    font-size:24px;
+    /* font-size:24px; */
     vertical-align: middle;
 }
 
@@ -1629,6 +1585,14 @@ http://codepen.io/batazor/pen/KwKryj
 .switch:active::before {
   box-shadow: 0 2px 10.416666666666668px rgba(0,0,0,0.28), 0 0 0 25px rgba(0,0,0,0.1);
 }
+input {
+	font-size:14px;
+	padding:10px 20px;
+	width:400px;
+	border: 1px solid #d9d9d9;
+	outline:none;
+}
+
 input:checked + .switch {
   background: rgba(0,150,136,0.5);
   background: rgba(102, 187, 106, 0.5);
@@ -1712,33 +1676,11 @@ input:checked + .switch:active::before {
     background: #EF5350;
     color: #FFF;
 }
-.btn-remove:before {
-    content: "\f102";
-    font-family:"Material-Design-Iconic-Font";
-    /*line-height:25px;
-    width:25px;*/
-    vertical-align: middle;
-    text-align: center;
-    display:inline-block;
-    font-size:16px;
-}
 .btn-admin.btn-checked,
 .btn-admin:hover {
     background: #4CAF50;
     color: #FFF;
 }
-.btn-admin:before {
-    content: "\f08e";
-    font-family:"Material-Design-Iconic-Font";
-    /*line-height:25px;
-    width:25px;*/
-    vertical-align: middle;
-    text-align: center;
-    display:inline-block;
-    font-size:16px;
-}
-
-
 
 .row-env .btn-remove {
     position: absolute;

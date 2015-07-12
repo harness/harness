@@ -4,10 +4,9 @@
 	 * BuildsCtrl responsible for rendering the repo's
 	 * recent build history.
 	 */
-	function BuildsCtrl($scope, $routeParams, builds, repos, users, logs) {
-
-		var owner = $routeParams.owner;
-		var name  = $routeParams.name;
+	function BuildsCtrl($scope, $stateParams, builds, repos, users, logs) {
+		var owner = $stateParams.owner;
+		var name  = $stateParams.name;
 		var fullName = owner+'/'+name;
 
 		// Gets the currently authenticated user
@@ -64,11 +63,11 @@
 	/**
 	 * BuildCtrl responsible for rendering a build.
 	 */
-	function BuildCtrl($scope, $routeParams, $window, logs, builds, repos, users) {
+	function BuildCtrl($scope, $stateParams, $window, logs, builds, repos, users) {
 
-		var number = $routeParams.number;
-		var owner = $routeParams.owner;
-		var name  = $routeParams.name;
+		var number = $stateParams.number;
+		var owner = $stateParams.owner;
+		var name  = $stateParams.name;
 		var fullName = owner+'/'+name;
 
 		// Gets the currently authenticated user
@@ -104,12 +103,12 @@
 	/**
 	 * BuildOutCtrl responsible for rendering a build output.
 	 */
-	function BuildOutCtrl($scope, $routeParams, $window, logs, builds, repos, users) {
+	function BuildOutCtrl($scope, $stateParams, $window, logs, builds, repos, users) {
 
-		var step = parseInt($routeParams.step) || 1;
-		var number = $routeParams.number;
-		var owner = $routeParams.owner;
-		var name  = $routeParams.name;
+		var step = parseInt($stateParams.step) || 1;
+		var number = $stateParams.number;
+		var owner = $stateParams.owner;
+		var name  = $stateParams.name;
 		var fullName = owner+'/'+name;
 		var streaming = false;
 		var tail = false;
