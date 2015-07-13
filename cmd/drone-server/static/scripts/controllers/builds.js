@@ -98,7 +98,6 @@
     });
 
     $scope.restart = function () {
-      console.log('restart');
       builds.restart(fullName, number).then(function (payload) {
         $scope.build = payload.data;
       }).catch(function (err) {
@@ -191,8 +190,26 @@
       $scope.error = err;
     });
 
+    repos.subscribe(fullName, function (event) {
+      if (event.number !== parseInt(number)) {
+        return; // ignore
+      }
+      // update the build
+      $scope.build = event;
+      console.log(event.builds);
+      $scope.task = event.builds[step - 1];
+      $scope.$apply();
+
+      // start streaming the current build
+      if ($scope.task.status === 'running') {
+        stream();
+      } else {
+        // resets our streaming state
+        streaming = false;
+      }
+    });
+
     $scope.restart = function () {
-      console.log('restart');
       builds.restart(fullName, number).then(function (payload) {
         $scope.build = payload.data;
         $scope.task = payload.data.builds[step - 1];
@@ -213,24 +230,6 @@
     $scope.tail = function () {
       tail = !tail;
     };
-
-    repos.subscribe(fullName, function (event) {
-      if (event.number !== parseInt(number)) {
-        return; // ignore
-      }
-      // update the build
-      $scope.build = event;
-      $scope.task = event.builds[step - 1];
-      $scope.$apply();
-
-      // start streaming the current build
-      if ($scope.task.status === 'running') {
-        stream();
-      } else {
-        // resets our streaming state
-        streaming = false;
-      }
-    });
   }
 
   angular

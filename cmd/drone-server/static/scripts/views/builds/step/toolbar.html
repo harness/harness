@@ -3,10 +3,10 @@
     <i class="material-icons md-18">home</i>
   </a>
   <a ng-href="/{{ repo.full_name }}">{{ repo.owner }} / {{ repo.name }}</a>
+  <span class="spacer">&nbsp;</span>
+  <a ng-href="/{{ repo.full_name }}/{{ build.number }}">Build # {{ build.number }}</a>
   <span class="spacer"></span>
-  <a ng-href="/{{ repo.full_name }}/{{ build.sequence }}">{{ build.sequence }}</a>
-  <span class="spacer"></span>
-  <a href="#">{{ task.sequence }}</a>
+  <a href="#">Job #{{ task.number }}</a>
 </div>
 
 <div class="menu">

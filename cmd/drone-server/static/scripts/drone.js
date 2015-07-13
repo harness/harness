@@ -188,7 +188,7 @@
         },
         title: 'Build'
       })
-      .state('app.build_step', {
+      .state('app.job', {
         url: '/:owner/:name/:number/:step',
         views: {
           'toolbar': {
@@ -200,7 +200,8 @@
             templateUrl: '/static/scripts/views/builds/step/content.html',
             controller: 'BuildOutCtrl',
             resolve: resolveUser
-          }
+          },
+          title: 'Build Job'
         }
       });
 
