@@ -118,10 +118,10 @@ func createClone(c *Context) error {
 
 	c.Clone.Origin = c.Repo.Clone
 	c.Clone.Remote = c.Repo.Clone
-	c.Clone.Sha = c.Commit.Sha
-	c.Clone.Ref = c.Commit.Ref
-	c.Clone.Branch = c.Commit.Branch
-	// TODO move this to the main app (github package)
+	c.Clone.Sha = c.Build.Commit.Sha
+	c.Clone.Ref = c.Build.Commit.Ref
+	c.Clone.Branch = c.Build.Commit.Branch
+	// TODO do we still need this? it should be set by the remote
 	if strings.HasPrefix(c.Clone.Branch, "refs/heads/") {
 		c.Clone.Branch = c.Clone.Branch[11:]
 	}
