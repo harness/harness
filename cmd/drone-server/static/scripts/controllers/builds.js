@@ -64,7 +64,6 @@
    * BuildCtrl responsible for rendering a build.
    */
   function BuildCtrl($scope, $stateParams, $window, logs, builds, repos, users) {
-
     var number = $stateParams.number;
     var owner = $stateParams.owner;
     var name = $stateParams.name;
@@ -97,6 +96,27 @@
       $scope.build = event;
       $scope.$apply();
     });
+
+    $scope.restart = function () {
+      console.log('restart');
+      builds.restart(fullName, number).then(function (payload) {
+        $scope.build = payload.data;
+      }).catch(function (err) {
+        $scope.error = err;
+      });
+    };
+
+    $scope.cancel = function () {
+      builds.cancel(fullName, number).then(function (payload) {
+        $scope.build = payload.data;
+      }).catch(function (err) {
+        $scope.error = err;
+      });
+    };
+
+    $scope.tail = function () {
+      tail = !tail;
+    };
   }
 
 
@@ -172,6 +192,7 @@
     });
 
     $scope.restart = function () {
+      console.log('restart');
       builds.restart(fullName, number).then(function (payload) {
         $scope.build = payload.data;
         $scope.task = payload.data.builds[step - 1];
@@ -211,7 +232,6 @@
       }
     });
   }
-
 
   angular
     .module('drone')

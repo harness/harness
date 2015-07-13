@@ -78,9 +78,14 @@
       })
       .state('login', {
         url: '/login',
-        templateUrl: '/static/scripts/views/login.html',
-        title: 'Login',
-        controller: 'UserLoginCtrl'
+        views: {
+          'layout': {
+            templateUrl: '/static/scripts/views/login.html',
+            controller: 'UserLoginCtrl',
+            resolve: resolveUser
+          }
+        },
+        title: 'Login'
       })
       .state('app.profile', {
         url: '/profile',
@@ -123,13 +128,15 @@
         views: {
           'toolbar': {
             templateUrl: '/static/scripts/views/builds/index/toolbar.html',
-            controller: 'BuildsCtrl'
+            controller: 'RepoEditCtrl',
+            resolve: resolveUser
           },
           'content': {
             templateUrl: '/static/scripts/views/builds/index/content.html',
             controller: 'BuildsCtrl'
           }
-        }
+        },
+        title: 'Builds'
       })
       .state('app.repo_edit', {
         url: '/:owner/:name/edit',
@@ -168,20 +175,33 @@
       .state('app.build', {
         url: '/:owner/:name/:number',
         views: {
-          'toolbar': {templateUrl: '/static/scripts/views/builds/show/toolbar.html'},
-          'content': {templateUrl: '/static/scripts/views/builds/show/content.html'}
+          'toolbar': {
+            templateUrl: '/static/scripts/views/builds/show/toolbar.html',
+            controller: 'BuildCtrl',
+            resolve: resolveUser
+          },
+          'content': {
+            templateUrl: '/static/scripts/views/builds/show/content.html',
+            controller: 'BuildCtrl',
+            resolve: resolveUser
+          }
         },
-        controller: 'BuildCtrl',
-        resolve: resolveUser
+        title: 'Build'
       })
       .state('app.build_step', {
         url: '/:owner/:name/:number/:step',
         views: {
-          'toolbar': {templateUrl: '/static/scripts/views/builds/step/toolbar.html'},
-          'content': {templateUrl: '/static/scripts/views/builds/step/content.html'}
-        },
-        controller: 'BuildOutCtrl',
-        resolve: resolveUser
+          'toolbar': {
+            templateUrl: '/static/scripts/views/builds/step/toolbar.html',
+            controller: 'BuildOutCtrl',
+            resolve: resolveUser
+          },
+          'content': {
+            templateUrl: '/static/scripts/views/builds/step/content.html',
+            controller: 'BuildOutCtrl',
+            resolve: resolveUser
+          }
+        }
       });
 
     // Enables html5 mode
@@ -211,8 +231,8 @@
 
   function RouteChange($rootScope, repos, logs) {
     $rootScope.$on('$stateChangeStart', function () {
-      // repos.unsubscribe();
-      // logs.unsubscribe();
+      repos.unsubscribe();
+      logs.unsubscribe();
     });
 
     $rootScope.$on('$stateChangeSuccess', function (event, current) {
