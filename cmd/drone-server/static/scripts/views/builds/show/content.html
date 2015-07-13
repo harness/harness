@@ -8,25 +8,25 @@
       <div>
         <h3>{{ build.head_commit.message }}</h3>
 
-        <p><strong>{{ build.head_commit.author.login }}</strong> pushed to <strong>{{ build.head_commit.branch
-          }}</strong> {{ build.started_at | fromNow }}</p>
+        <p><strong>{{ build.head_commit.author.login }}</strong> pushed to <strong>{{ build.head_commit.branch}}</strong> {{ build.started_at | fromNow }}</p>
 
         <div style="position:absolute;top:30px;right:30px;color:#CCC;"># {{build.number}}</div>
       </div>
     </div>
   </section>
-
+  <p style="padding-top: 20px;">
+    <h3><strong>Build jobs</strong></h3>
+  </p>
   <section>
-    <a class="row build-row sub-build-row" ng-repeat="job in build.jobs"
-       ng-href="{{ repo.full_name }}/{{ build.number }}/{{ job.number }}">
+    <a class="row build-row sub-build-row" ng-repeat="job in build.jobs" ng-href="{{ repo.full_name }}/{{ build.number }}/{{ job.number }}">
       <div>
         <div ng-class="[ 'build-num', build.status ]"></div>
       </div>
       <div>
         <h3>
           <div ng-repeat="(key, value) in job.environment">
-            {{ key.toUpperCase() }}={{ value }}
-          </div>
+          {{ key.toUpperCase() }}={{ value }}
+        </div>
         </h3>
         <div style="position:absolute;top:30px;right:30px;color:#CCC;"># {{job.number}}</div>
       </div>
@@ -34,6 +34,7 @@
   </section>
 </article>
 
-
-<button ng-if="build.status !== 'pending' && build.status !== 'running'" ng-click="restart()">Restart</button>
-<button ng-if="build.status === 'pending' || build.status === 'running'" ng-click="cancel()">Cancel</button>
+<div style="padding-left: 20px;">
+  <button ng-if="build.status !== 'pending' && build.status !== 'running'" ng-click="restart()">Restart</button>
+  <button ng-if="build.status === 'pending' || build.status === 'running'" ng-click="cancel()">Cancel</button>
+</div>
