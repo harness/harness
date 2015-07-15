@@ -20,6 +20,9 @@ import (
 	runner "github.com/drone/drone/pkg/runner/builtin"
 	"github.com/drone/drone/pkg/store"
 
+	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/citadel/citadel"
+	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/citadel/citadel/cluster"
+	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/citadel/citadel/scheduler"
 	_ "github.com/drone/drone/pkg/store/builtin"
 
 	_ "net/http/pprof"
@@ -58,7 +61,7 @@ func main() {
 	runner_ := runner.Runner{Updater: updater}
 
 	// launch the local queue runner if the system
-	// is not conifugred to run in agent mode
+	// is not configured to run in agent mode
 	if len(settings.Agents.Secret) != 0 {
 		log.Infof("Run builds using remote build agents")
 	} else {

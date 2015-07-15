@@ -1,0 +1,18 @@
+{
+    "ssl-cert": "./certs/client-cert.pem",
+    "ssl-key": "./certs/client-key.pem",
+    "ca-cert": "./certs/ca.pem",
+    "listen-addr": ":8080",
+    "engines": [
+        {
+            "id": "local",
+            "addr": "https://127.0.0.1:2375",
+            "cpus": 4,
+            "memory": 32000,
+            "labels": [
+                "local"
+            ]
+        }
+    ]
+}
+
