@@ -119,7 +119,7 @@ func PushBuild(c *gin.Context) {
 	c.Writer.WriteHeader(200)
 }
 
-// POST /queue/push/:owner/:repo/:comimt/:build/logs
+// POST /queue/push/:owner/:repo/:commit/:build/logs
 func PushLogs(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)

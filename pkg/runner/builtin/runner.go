@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	// Defult docker host address
+	// Default docker host address
 	DefaultHost = "unix:///var/run/docker.sock"
 
 	// Docker host address from environment variable
