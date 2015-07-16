@@ -412,21 +412,39 @@ func TestRunPrivileged(t *testing.T) {
 		t.Errorf("Expected container NOT started in Privileged mode")
 	}
 
-	// now lets try to enable priviliged mode
+	// now lets set priviliged mode
 	b.Privileged = true
-	b.run()
-
-	if conf.Privileged != false {
-		t.Errorf("Expected container NOT started in Privileged mode when no setup in build script")
-	}
-
-	// now lets set priviliged mode in build script
-	b.Privileged = true
-	b.Build = &script.Build{Docker: &script.Docker{Privileged: true}}
 	b.run()
 
 	if conf.Privileged != true {
-		t.Errorf("Expected container IS started in Privileged mode when setup privileged mode in build script")
+		t.Errorf("Expected container IS started in Privileged mode")
+	}
+
+	// now lets set priviliged mode but for a pull request
+	b.Privileged = true
+	b.Repo.PR = "55"
+	b.run()
+
+	if conf.Privileged != false {
+		t.Errorf("Expected container NOT started in Privileged mode when PR")
+	}
+
+	// now lets set priviliged mode for a pull request from public repo
+	b.Privileged = true
+	b.Repo.Private = false
+	b.run()
+
+	if conf.Privileged != false {
+		t.Errorf("Expected container NOT started in Privileged mode when PR from public repo")
+	}
+
+	// now lets set priviliged mode for a pull request from private repo
+	b.Privileged = true
+	b.Repo.Private = true
+	b.run()
+
+	if conf.Privileged != true {
+		t.Errorf("Expected container started in Privileged mode when PR from private repo")
 	}
 }
 
