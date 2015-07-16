@@ -33,6 +33,9 @@ type Repo struct {
 	// checkout when the Repository is cloned.
 	PR string
 
+	// Private specifies if a git repo is private or not
+	Private bool
+
 	// (optional) The filesystem path that the repository
 	// will be cloned into (or copied to) inside the
 	// host system (Docker Container).
@@ -124,4 +127,9 @@ func (r *Repo) Commands() []string {
 	}
 
 	return cmds
+}
+
+// IsTrusted returns if a repo is trusted to run under privileged mode
+func (r *Repo) IsTrusted() bool {
+	return r.Private || len(r.PR) == 0
 }
