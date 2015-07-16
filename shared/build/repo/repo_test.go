@@ -52,3 +52,23 @@ func TestIsGit(t *testing.T) {
 		}
 	}
 }
+
+func TestIsTrusted(t *testing.T) {
+	repos := []struct {
+		private bool
+		PR      string
+		trusted bool
+	}{
+		{true, "1", true},
+		{false, "1", false},
+		{true, "", true},
+		{false, "", true},
+	}
+
+	for _, r := range repos {
+		repo := Repo{Private: r.private, PR: r.PR}
+		if trusted := repo.IsTrusted(); trusted != r.trusted {
+			t.Errorf("IsTrusted was %v, expected %v", trusted, r.trusted)
+		}
+	}
+}

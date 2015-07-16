@@ -30,7 +30,7 @@ func DockerNetworkMode(d *Docker) string {
 	return *d.NetworkMode
 }
 
-// DockerNetworkMode returns empty string
+// DockerHostname returns empty string
 // when Docker.NetworkMode is empty.
 // DockerNetworkMode returns Docker.NetworkMode
 // when it is not empty.
