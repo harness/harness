@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 )
 
 // helper function that converts the build step to
 // a containerConfig for use with the dockerclient
-func toContainerConfig(step *common.Step) *dockerclient.ContainerConfig {
+func toContainerConfig(step *types.Step) *dockerclient.ContainerConfig {
 	config := &dockerclient.ContainerConfig{
 		Image:      step.Image,
 		Env:        step.Environment,
@@ -47,8 +47,8 @@ func toEnv(c *Context) map[string]string {
 	return map[string]string{
 		"CI":           "true",
 		"BUILD_DIR":    c.Clone.Dir,
-		"BUILD_ID":     strconv.Itoa(c.Commit.Sequence),
-		"BUILD_NUMBER": strconv.Itoa(c.Commit.Sequence),
+		"BUILD_ID":     strconv.Itoa(c.Build.Number),
+		"BUILD_NUMBER": strconv.Itoa(c.Build.Number),
 		"JOB_NAME":     c.Repo.FullName,
 		"WORKSPACE":    c.Clone.Dir,
 		"GIT_BRANCH":   c.Clone.Branch,
@@ -56,7 +56,7 @@ func toEnv(c *Context) map[string]string {
 
 		"DRONE":        "true",
 		"DRONE_REPO":   c.Repo.FullName,
-		"DRONE_BUILD":  strconv.Itoa(c.Commit.Sequence),
+		"DRONE_BUILD":  strconv.Itoa(c.Build.Number),
 		"DRONE_BRANCH": c.Clone.Branch,
 		"DRONE_COMMIT": c.Clone.Sha,
 		"DRONE_DIR":    c.Clone.Dir,
@@ -66,10 +66,10 @@ func toEnv(c *Context) map[string]string {
 // helper function to encode the build step to
 // a json string. Primarily used for plugins, which
 // expect a json encoded string in stdin or arg[1].
-func toCommand(c *Context, step *common.Step) []string {
+func toCommand(c *Context, step *types.Step) []string {
 	p := payload{
 		c.Repo,
-		c.Commit,
+		c.Build,
 		c.Job,
 		c.Clone,
 		step.Config,
@@ -81,10 +81,10 @@ func toCommand(c *Context, step *common.Step) []string {
 // that is serialized and sent to the plugin in JSON
 // format via stdin or arg[1].
 type payload struct {
-	Repo   *common.Repo   `json:"repo"`
-	Commit *common.Commit `json:"commit"`
-	Job    *common.Job    `json:"job"`
-	Clone  *common.Clone  `json:"clone"`
+	Repo  *types.Repo  `json:"repo"`
+	Build *types.Build `json:"build"`
+	Job   *types.Job   `json:"job"`
+	Clone *types.Clone `json:"clone"`
 
 	Config map[string]interface{} `json:"vargs"`
 }

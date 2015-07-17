@@ -13,7 +13,7 @@ type Context struct {
 	// Links  *common.Link
 	Clone   *common.Clone   `json:"clone"`
 	Repo    *common.Repo    `json:"repo"`
-	Commit  *common.Commit  `json:"commit"`
+	Build   *common.Build   `json:"build"`
 	Job     *common.Job     `json:"job"`
 	Keys    *common.Keypair `json:"keys"`
 	Netrc   *common.Netrc   `json:"netrc"`

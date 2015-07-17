@@ -44,4 +44,7 @@ type Remote interface {
 	// Hook parses the post-commit hook from the Request body
 	// and returns the required data in a standard format.
 	Hook(r *http.Request) (*common.Hook, error)
+
+	// Default scope for remote
+	Scope() string
 }

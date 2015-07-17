@@ -91,7 +91,7 @@ func PostHook(c *gin.Context) {
 	build.Status = common.StatePending
 	build.RepoID = repo.ID
 
-	// featch the .drone.yml file from the database
+	// fetch the .drone.yml file from the database
 	raw, err := remote.Script(user, repo, build)
 	if err != nil {
 		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
