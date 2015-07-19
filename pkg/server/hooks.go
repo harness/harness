@@ -85,13 +85,14 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	build := &common.Build{}
-	build.Commit = hook.Commit
-	build.PullRequest = hook.PullRequest
-	build.Status = common.StatePending
-	build.RepoID = repo.ID
+	build := &common.Build{
+		Commit: hook.Commit,
+		PullRequest: hook.PullRequest,
+		Status: common.StatePending,
+		RepoID: repo.ID,
+	}
 
-	// fetch the .drone.yml file from the database
+	// fetch the .drone.yml file from the repo
 	raw, err := remote.Script(user, repo, build)
 	if err != nil {
 		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
@@ -149,14 +150,17 @@ func PostHook(c *gin.Context) {
 		log.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
 	}
 
-	queue_.Publish(&queue.Work{
-		User:    user,
-		Repo:    repo,
-		Build:   build,
-		Keys:    repo.Keys,
-		Netrc:   netrc,
-		Yaml:    raw,
-		Plugins: conf.Plugins,
-		Env:     conf.Environment,
-	})
+	// Publish all Jobs into Queue
+	for _, job := range build.Jobs {
+		queue_.Publish(&queue.Work{
+			Job:     job,
+			User:    user,
+			Repo:    repo,
+			Keys:    repo.Keys,
+			Netrc:   netrc,
+			Yaml:    raw,
+			Plugins: conf.Plugins,
+			Env:     conf.Environment,
+		})
+	}
 }

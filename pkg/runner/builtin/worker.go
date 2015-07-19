@@ -6,8 +6,9 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 	"github.com/drone/drone/pkg/types"
+	cluster_manager "github.com/drone/drone/pkg/cluster/builtin"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/citadel/citadel"
 )
 
 var (
@@ -16,14 +17,14 @@ var (
 )
 
 var (
-	// options to fetch the stdout and stderr logs
+// options to fetch the stdout and stderr logs
 	logOpts = &dockerclient.LogOptions{
 		Stdout: true,
 		Stderr: true,
 	}
 
-	// options to fetch the stdout and stderr logs
-	// by tailing the output.
+// options to fetch the stdout and stderr logs
+// by tailing the output.
 	logOptsTail = &dockerclient.LogOptions{
 		Follow: true,
 		Stdout: true,
@@ -32,22 +33,22 @@ var (
 )
 
 var (
-	// name of the build agent container.
+// name of the build agent container.
 	DefaultAgent = "drone/drone-build:latest"
 
-	// default name of the build agent executable
+// default name of the build agent executable
 	DefaultEntrypoint = []string{"/bin/drone-build"}
 
-	// default argument to invoke build steps
+// default argument to invoke build steps
 	DefaultBuildArgs = []string{"--build", "--clone", "--publish", "--deploy"}
 
-	// default argument to invoke build steps
+// default argument to invoke build steps
 	DefaultPullRequestArgs = []string{"--build", "--clone"}
 
-	// default arguments to invoke notify steps
+// default arguments to invoke notify steps
 	DefaultNotifyArgs = []string{"--notify"}
 
-	// default arguments to invoke notify steps
+// default arguments to invoke notify steps
 	DefaultNotifyTimeout = time.Minute * 5
 )
 
@@ -64,19 +65,19 @@ type work struct {
 
 type worker struct {
 	timeout time.Duration
-	client  dockerclient.Client
-	build   *dockerclient.ContainerInfo
-	notify  *dockerclient.ContainerInfo
+	manager *cluster_manager.Manager
+	build   *citadel.Container
+	notify  *citadel.Container
 }
 
-func newWorker(client dockerclient.Client) *worker {
-	return newWorkerTimeout(client, 60) // default 60 minute timeout
+func newWorker(master *cluster_manager.Manager) *worker {
+	return newWorkerTimeout(master, 60) // default 60 minute timeout
 }
 
-func newWorkerTimeout(client dockerclient.Client, timeout int64) *worker {
+func newWorkerTimeout(manager *cluster_manager.Manager, timeout int64) *worker {
 	return &worker{
 		timeout: time.Duration(timeout) * time.Minute,
-		client:  client,
+		manager:  manager,
 	}
 }
 
@@ -90,23 +91,22 @@ func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 	}
 	args = append(args, "--")
 	args = append(args, string(stdin))
-
-	conf := &dockerclient.ContainerConfig{
-		Image:      DefaultAgent,
+	image := &citadel.Image{
+		Type: "drone_internal",
+		ContainerName: name,
+		Name: DefaultAgent,
+		Cpus: 1.0,
 		Entrypoint: DefaultEntrypoint,
-		Cmd:        args,
-		HostConfig: dockerclient.HostConfig{
-			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
-		},
-		Volumes: map[string]struct{}{
-			"/drone":               struct{}{},
-			"/var/run/docker.sock": struct{}{},
+		Args: args,
+		Volumes: []string{
+			"/drone",
+			"/var/run/docker.sock:/var/run/docker.sock",
 		},
 	}
 
-	w.build, err = run(w.client, conf, name, w.timeout)
+	container, err := run(w.manager, image, name, w.timeout)
 	if err != nil {
-		return 1, err
+		return container, err
 	}
 	return w.build.State.ExitCode, err
 }
@@ -168,76 +168,25 @@ func (w *worker) Remove() {
 // blocking until either complete or the timeout is reached. If
 // the timeout is reached an ErrTimeout is returned, else the
 // container info is returned.
-func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, name string, timeout time.Duration) (*dockerclient.ContainerInfo, error) {
-
-	// attempts to create the contianer
-	id, err := client.CreateContainer(conf, name)
-	if err != nil {
-		// and pull the image and re-create if that fails
-		client.PullImage(conf.Image, nil)
-		id, err = client.CreateContainer(conf, name)
-		// make sure the container is removed in
-		// the event of a creation error.
-		if err != nil && len(id) != 0 {
-			client.RemoveContainer(id, true, true)
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// ensures the container is always stopped
-	// and ready to be removed.
-	defer func() {
-		client.StopContainer(id, 5)
-		client.KillContainer(id, "9")
-	}()
-
-	// fetches the container information.
-	info, err := client.InspectContainer(id)
-	if err != nil {
-		return nil, err
-	}
+func run(manager *cluster_manager.Manager, image *citadel.Image, name string, timeout time.Duration) (*citadel.Container, error) {
 
 	// channel listening for errors while the
 	// container is running async.
 	errc := make(chan error, 1)
-	infoc := make(chan *dockerclient.ContainerInfo, 1)
+	containerc := make(chan *citadel.Container, 1)
 	go func() {
-
-		// starts the container
-		err := client.StartContainer(id, &conf.HostConfig)
-		if err != nil {
-			errc <- err
-			return
-		}
-
-		// blocks and waits for the container to finish
-		// by streaming the logs (to /dev/null). Ideally
-		// we could use the `wait` function instead
-		rc, err := client.ContainerLogs(id, logOptsTail)
-		if err != nil {
-			errc <- err
-			return
-		}
-		io.Copy(ioutil.Discard, rc)
-		rc.Close()
-
-		// fetches the container information
-		info, err := client.InspectContainer(id)
-		if err != nil {
-			errc <- err
-			return
-		}
-		infoc <- info
+		// attempts to create the container
+		container, err := manager.Start(image, true)
+		containerc <- container
+		errc <- err
 	}()
 
 	select {
-	case info := <-infoc:
-		return info, nil
-	case err := <-errc:
-		return info, err
+	case container := <- containerc:
+		err := <- errc
+		manager.StopAndKillContainer(container)
+		return container, err
 	case <-time.After(timeout):
-		return info, ErrTimeout
+		return nil, ErrTimeout
 	}
 }

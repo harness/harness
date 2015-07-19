@@ -17,11 +17,9 @@ import (
 	eventbus "github.com/drone/drone/pkg/bus/builtin"
 	queue "github.com/drone/drone/pkg/queue/builtin"
 	runner "github.com/drone/drone/pkg/runner/builtin"
+	cluster_manager "github.com/drone/drone/pkg/cluster/builtin"
 	"github.com/drone/drone/pkg/store"
 
-	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/citadel/citadel"
-	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/citadel/citadel/cluster"
-	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/citadel/citadel/scheduler"
 	_ "github.com/drone/drone/pkg/store/builtin"
 
 	_ "net/http/pprof"
@@ -56,8 +54,9 @@ func main() {
 	session := session.New(settings)
 	eventbus_ := eventbus.New()
 	queue_ := queue.New()
+	cluster_manager_ := cluster_manager.New()
 	updater := runner.NewUpdater(eventbus_, store, remote)
-	runner_ := runner.Runner{Updater: updater}
+	runner_ := runner.Runner{Updater: updater, Manager: cluster_manager_}
 
 	// launch the local queue runner if the system
 	// is not configured to run in agent mode

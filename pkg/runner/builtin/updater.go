@@ -15,6 +15,7 @@ type Updater interface {
 	SetBuild(*types.User, *types.Repo, *types.Build) error
 	SetJob(*types.Repo, *types.Build, *types.Job) error
 	SetLogs(*types.Repo, *types.Build, *types.Job, io.ReadCloser) error
+	GetBuild(int64) *types.Build
 }
 
 // NewUpdater returns an implementation of the Updater interface
@@ -27,6 +28,10 @@ type updater struct {
 	bus    bus.Bus
 	store  store.Store
 	remote remote.Remote
+}
+
+func (u *updater) GetBuild(id int64) *types.Build {
+	return u.store.Build(id)
 }
 
 func (u *updater) SetBuild(user *types.User, r *types.Repo, c *types.Build) error {

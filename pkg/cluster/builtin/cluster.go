@@ -1,0 +1,172 @@
+package builtin
+
+import (
+	"os"
+	"regexp"
+	"strconv"
+	"io/ioutil"
+	"crypto/tls"
+	"crypto/x509"
+
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/citadel/citadel"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/citadel/citadel/cluster"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/citadel/citadel/scheduler"
+
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+)
+
+const (
+	// Default docker host address
+	DefaultHost = "unix:///var/run/docker.sock"
+
+	// Docker host address from environment variable
+	DockerHost = os.Getenv("DOCKER_HOST")
+	// Multiple Dockers ENV variable prefix
+	DockerPrefix = "DOCKER_HOST_"
+	// Docker TLS variables
+	DockerHostCa = os.Getenv("DOCKER_CA")
+	DockerHostKey = os.Getenv("DOCKER_KEY")
+	DockerHostCert = os.Getenv("DOCKER_CERT")
+	// Default docker host limits
+	DefaultMemory = 2048
+	DefaultCPUs = 1
+	// Default job container limits
+	DefaultContainerCPUs = os.Getenv("DOCKER_CONTAINER_CPU")
+	DefaultContainerMemory = os.Getenv("DOCKER_CONTAINER_MEM")
+)
+
+type Manager struct {
+	cluster *cluster.Cluster
+	tlc     *tls.Config
+}
+
+func GetTLSConfig() *tls.Config {
+	var tlc *tls.Config
+	// create the Docket client TLS config
+	if len(DockerHostCert) > 0 && len(DockerHostKey) > 0 && len(DockerHostCa) > 0 {
+		cert, err := tls.LoadX509KeyPair(DockerHostCert, DockerHostKey)
+		if err != nil {
+			log.Errorf("failure to load SSL cert and key. %s", err)
+		}
+		caCert, err := ioutil.ReadFile(DockerHostCa)
+		if err != nil {
+			log.Errorf("failure to load SSL CA cert. %s", err)
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+		tlc = &tls.Config{
+			Certificates:       []tls.Certificate{cert},
+			RootCAs:            caCertPool,
+		}
+	}
+	return tlc
+}
+
+func GetFloatFromEnv(key string) (value float64, found bool) {
+	val := os.Getenv(key)
+	if len(val) > 0 {
+		float, error := strconv.ParseFloat(val, 10)
+		if error == nil {
+			return float, true
+		}
+	}
+	return 0, false
+}
+
+func New() *Manager {
+	c, err := cluster.New(scheduler.NewResourceManager())
+	if err != nil {
+		panic(err)
+	}
+	if err := c.RegisterScheduler("drone_internal", &scheduler.LabelScheduler{}); err != nil {
+		panic(err)
+	}
+	manager := &Manager{
+		cluster: c,
+		tlc: GetTLSConfig(),
+	}
+	manager.CollectDockers()
+	return manager
+}
+
+func (c *Manager) CollectDockers() error {
+	r, _ := regexp.Compile(`\A` + DockerPrefix + `(\d+)\z`)
+	for _, key := range os.Environ() {
+		matches := r.FindStringSubmatch(key)
+		if len(matches) == 2 {
+			c.AddDocker(matches[1])
+		}
+	}
+	if len(c.cluster.Engines()) == 0 {
+		c.AddDocker(nil)
+	}
+	return nil
+}
+
+func (c *Manager) AddDocker(index string) error {
+	prefix := DockerPrefix + index
+	addr := os.Getenv(prefix)
+	label := os.Getenv(prefix + "_LABEL")
+	if len(label) == 0 {
+		label = prefix
+	}
+	engine := &citadel.Engine{
+		ID: label,
+		Addr: addr,
+		Labels: []string{label},
+	}
+	cpu_num, found := GetFloatFromEnv(prefix + "_CPU")
+	if found {
+		engine.Cpus = cpu_num
+	}
+	mem_num, found := GetFloatFromEnv(prefix + "_MEM")
+	if found {
+		engine.Memory = mem_num
+	}
+	return c.AddEngine(engine)
+}
+
+func (c *Manager) AddDefaultDocker() error {
+	addr := DockerHost
+	if len(addr) == 0 {
+		addr = DefaultHost
+	}
+	engine := &citadel.Engine{
+		ID: "Default",
+		Addr: addr,
+		Labels: []string{"Default"},
+	}
+	return c.AddEngine(engine)
+}
+
+func (c *Manager) AddEngine(engine citadel.Engine) error {
+	if err := engine.Connect(c.tlc); err != nil {
+		return err
+	}
+	c.cluster.AddEngine(engine)
+	return nil
+}
+
+func (c *Manager) Start(image *citadel.Image, pull bool) error {
+	return c.cluster.Start(image, pull)
+}
+
+func (c *Manager) StopAndKillContainer(container *citadel.Container) error {
+	err := c.cluster.Stop(container)
+	if err != nil {
+		return err
+	}
+	err := c.cluster.Kill(container, 9)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Manager) FindContainerByName(name string) (*citadel.Container, error) {
+	containers := c.cluster.ListContainers(false, false, "")
+	for _, container := range containers {
+		if container
+	}
+	return nil, err
+}
