@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"os"
 	"time"
+	"crypto/tls"
+	"crypto/x509"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 	"github.com/drone/drone/pkg/docker"
@@ -23,6 +25,11 @@ var (
 
 	// Docker host address from environment variable
 	DockerHost = os.Getenv("DOCKER_HOST")
+
+	// Docker TLS variables
+	DockerHostCa = os.Getenv("DOCKER_CA")
+	DockerHostKey = os.Getenv("DOCKER_KEY")
+	DockerHostCert = os.Getenv("DOCKER_CERT")
 )
 
 func init() {
@@ -40,6 +47,7 @@ type Runner struct {
 func (r *Runner) Run(w *queue.Work) error {
 	var workers []*worker
 	var client dockerclient.Client
+	var tlc *tls.Config
 
 	defer func() {
 		recover()
@@ -86,14 +94,34 @@ func (r *Runner) Run(w *queue.Work) error {
 	w.Build.Status = types.StateRunning
 	err := r.SetBuild(w.User, w.Repo, w.Build)
 	if err != nil {
+		log.Errorf("failure to set build. %s", err)
 		return err
+	}
+
+	// create the Docket client TLS config
+	if len(DockerHostCert) > 0 && len(DockerHostKey) > 0 && len(DockerHostCa) > 0 {
+		cert, err := tls.LoadX509KeyPair(DockerHostCert, DockerHostKey)
+		if err != nil {
+			log.Errorf("failure to load SSL cert and key. %s", err)
+		}
+		caCert, err := ioutil.ReadFile(DockerHostCa)
+		if err != nil {
+			log.Errorf("failure to load SSL CA cert. %s", err)
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+		tlc = &tls.Config{
+			Certificates:       []tls.Certificate{cert},
+			RootCAs:            caCertPool,
+		}
 	}
 
 	// create the Docker client. In this version of Drone (alpha)
 	// we do not spread builds across clients, but this can and
 	// (probably) will change in the future.
-	client, err = dockerclient.NewDockerClient(DockerHost, nil)
+	client, err = dockerclient.NewDockerClient(DockerHost, tlc)
 	if err != nil {
+		log.Errorf("failure to connect to docker. %s", err)
 		return err
 	}
 
@@ -106,6 +134,7 @@ func (r *Runner) Run(w *queue.Work) error {
 		job.Started = time.Now().UTC().Unix()
 		err = r.SetJob(w.Repo, w.Build, job)
 		if err != nil {
+			log.Errorf("failure to set job. %s", err)
 			return err
 		}
 
@@ -121,6 +150,7 @@ func (r *Runner) Run(w *queue.Work) error {
 		}
 		in, err := json.Marshal(work)
 		if err != nil {
+			log.Errorf("failure to marshalise work. %s", err)
 			return err
 		}
 

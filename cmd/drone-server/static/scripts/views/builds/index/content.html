@@ -1,0 +1,18 @@
+<article>
+  <section>
+    <a class="row build-row" ng-repeat="build in builds | orderBy:'-number'" ng-href="/{{ repo.full_name }}/{{ build.number }}">
+      <div>
+        <div ng-class="[ 'build-num', build.status ]"></div>
+      </div>
+      <div>
+        <h3>{{ build.head_commit.message }}</h3>
+
+        <p>
+          <strong>{{ build.head_commit.author.login }}</strong> pushed to <strong>{{ build.head_commit.branch}}</strong> {{ build.started_at | fromNow }}
+        </p>
+
+        <div style="position:absolute;top:30px;right:30px;color:#CCC;"># {{build.number}}</div>
+      </div>
+    </a>
+  </section>
+</article>

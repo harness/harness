@@ -4,10 +4,10 @@
 	 * CommitsCtrl responsible for rendering the repo's
 	 * recent commit history.
 	 */
-	function CommitsCtrl($scope, $routeParams, builds, repos, users, logs) {
+	function CommitsCtrl($scope, $stateParams, builds, repos, users, logs) {
 
-		var owner = $routeParams.owner;
-		var name  = $routeParams.name;
+		var owner = $stateParams.owner;
+		var name  = $stateParams.name;
 		var fullName = owner+'/'+name;
 
 		// Gets the currently authenticated user

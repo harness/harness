@@ -1,0 +1,75 @@
+<article>
+  <section>
+    <h2>Settings</h2>
+
+    <div class="row">
+      <div>Post Commit Hooks</div>
+      <div>
+        <input id="post_commits" type="checkbox" hidden="hidden" ng-model="repo.hooks.push" ng-change="save(repo)"/>
+        <label for="post_commits" class="switch"></label>
+      </div>
+    </div>
+    <div class="row">
+      <div>Pull Request Hooks</div>
+      <div>
+        <input id="pull_requests" type="checkbox" hidden="hidden" ng-model="repo.hooks.pull_request"
+               ng-change="save(repo)"/>
+        <label for="pull_requests" class="switch"></label>
+      </div>
+    </div>
+    <a class="row" ng-href="{{ repo.full_name }}/edit/env">
+      <div>Private Variables</div>
+      <div>
+        Inject private variables into your build environment
+      </div>
+    </a>
+    <a class="row" ng-href="{{ repo.full_name }}/delete">
+      <div>Delete</div>
+      <div>Delete this repository and its build history</div>
+    </a>
+  </section>
+
+  <section ng-if="user.admin">
+    <h2>Admin settings</h2>
+
+    <div class="row">
+      <div>Trusted (Evelvate Privilege)</div>
+      <div>
+        <input id="trusted" type="checkbox" hidden="hidden" ng-model="repo.trusted" ng-change="save(repo)"/>
+        <label for="trusted" class="switch"></label>
+      </div>
+    </div>
+    <div class="row">
+      <div>Timeout in minutes</div>
+      <div>
+        <input type="range" ng-model="repo.timeout" min="0" max="900" ng-blur="save(repo)"/>
+        <span class="slider-label">{{ repo.timeout }} minutes</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Badges</h2>
+
+    <div class="row">
+      <div>Markdown</div>
+      <div>
+        <pre class="snippet">[![Build Status]({{ window.location.origin }}/api/badges/{{ repo.full_name }}/status.svg)]({{ window.location.origin }}/{{ repo.full_name }})</pre>
+      </div>
+    </div>
+    <div class="row">
+      <div>CCMenu</div>
+      <div>
+        <pre class="snippet">{{ window.location.origin }}/api/badges/{{ repo.full_name }}/cc.xml</pre>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Public Key</h2>
+
+    <div>
+      <pre class="snippet snippet-padding">{{ repo.keypair.public }}</pre>
+    </div>
+  </section>
+</article>
