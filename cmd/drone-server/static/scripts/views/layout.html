@@ -1,0 +1,15 @@
+<header>
+  <a class="logo float-left" href="/"></a>
+  <a class="menu-item help float-right" href="http://readme.drone.io" target="_blank">
+    <i class="material-icons md-18">help</i>
+  </a>
+  <a class="menu-item users float-right" href="/users" ng-if="user.admin">
+    <i class="material-icons md-18">supervisor_account</i>
+  </a>
+  <a class="menu-item settings float-right" href="/profile">
+    <i class="material-icons md-18">settings</i>
+  </a>
+  <a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
+</header>
+<div class="toolbar" ui-view="toolbar"></div>
+<div ui-view="content"></div>
