@@ -185,7 +185,8 @@ func PostRepo(c *gin.Context) {
 
 	// error if the repository already exists
 	_, err = store.RepoName(owner, name)
-	if err == nil {
+	//if err == nil {
+	if err != nil {
 		c.String(409, "Repository already exists")
 		return
 	}
