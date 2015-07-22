@@ -121,7 +121,7 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	// inserts the commit into the database
 	if err := datastore.PostCommit(ctx, &commit); err != nil {
-		log.Printf("Unable to persist commit. %s\n", err)
+		log.Printf("Unable to persist commit %s@%s. %s\n", commit.Sha, commit.Branch, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
