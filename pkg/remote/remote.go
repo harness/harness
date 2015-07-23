@@ -1,8 +1,14 @@
 package remote
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/drone/drone/pkg/config"
+	"github.com/drone/drone/pkg/oauth2"
+	"github.com/drone/drone/pkg/remote/builtin/github"
 	common "github.com/drone/drone/pkg/types"
 )
 
@@ -45,6 +51,27 @@ type Remote interface {
 	// and returns the required data in a standard format.
 	Hook(r *http.Request) (*common.Hook, error)
 
+	// Oauth2Transport
+	Oauth2Transport(r *http.Request) *oauth2.Transport
+
+	// GetOrgs returns all allowed organizations for remote.
+	GetOrgs() []string
+
+	// GetOpen returns boolean field with enabled or disabled
+	// registration.
+	GetOpen() bool
+
 	// Default scope for remote
 	Scope() string
+}
+
+func New(conf *config.Config) (Remote, error) {
+	switch strings.ToLower(conf.Remote.Driver) {
+	case "github":
+		return github.New(conf), nil
+	case "":
+		return nil, errors.New("Remote not specifed, please set env variable DRONE_REMOTE_DRIVER")
+	default:
+		return nil, errors.New(fmt.Sprintf("Remote driver not supported: DRONE_REMOTE_DRIVER=%s", conf.Remote.Driver))
+	}
 }
