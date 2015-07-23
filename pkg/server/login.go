@@ -1,17 +1,13 @@
 package server
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/ungerik/go-gravatar"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/drone/drone/pkg/oauth2"
 	common "github.com/drone/drone/pkg/types"
-	"github.com/drone/drone/pkg/utils/httputil"
 )
 
 // GetLogin accepts a request to authorize the user and to
@@ -52,9 +48,9 @@ func GetLogin(c *gin.Context) {
 	login := ToUser(c)
 
 	// check organization membership, if applicable
-	if len(settings.Remote.Orgs) != 0 {
+	if len(remote.GetOrgs()) != 0 {
 		orgs, _ := remote.Orgs(login)
-		if !checkMembership(orgs, settings.Remote.Orgs) {
+		if !checkMembership(orgs, remote.GetOrgs()) {
 			c.Redirect(303, "/login#error=access_denied_org")
 			return
 		}
@@ -73,7 +69,7 @@ func GetLogin(c *gin.Context) {
 		// if self-registration is disabled we should
 		// return a notAuthorized error. the only exception
 		// is if no users exist yet in the system we'll proceed.
-		if !settings.Remote.Open && count != 0 {
+		if !remote.GetOpen() && count != 0 {
 			log.Errorf("cannot register %s. registration closed", login.Login)
 			c.Redirect(303, "/login#error=access_denied")
 			return
@@ -131,35 +127,26 @@ func GetLogin(c *gin.Context) {
 // getLoginOauth2 is the default authorization implementation
 // using the oauth2 protocol.
 func getLoginOauth2(c *gin.Context) {
-	var settings = ToSettings(c)
 	var remote = ToRemote(c)
 
-	var scope = strings.Join(settings.Auth.Scope, ",")
-	if scope == "" {
-		scope = remote.Scope()
-	}
-	var config = &oauth2.Config{
-		ClientId:     settings.Auth.Client,
-		ClientSecret: settings.Auth.Secret,
-		Scope:        scope,
-		AuthURL:      settings.Auth.Authorize,
-		TokenURL:     settings.Auth.AccessToken,
-		RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURL(c.Request)),
-		//settings.Server.Scheme, settings.Server.Hostname),
-	}
+	// Bugagazavr: I think this must be moved to remote config
+	//var scope = strings.Join(settings.Auth.Scope, ",")
+	//if scope == "" {
+	//	scope = remote.Scope()
+	//}
+	var transport = remote.Oauth2Transport(c.Request)
 
 	// get the OAuth code
 	var code = c.Request.FormValue("code")
 	//var state = c.Request.FormValue("state")
 	if len(code) == 0 {
 		// TODO this should be a random number, verified by a cookie
-		c.Redirect(303, config.AuthCodeURL("random"))
+		c.Redirect(303, transport.AuthCodeURL("random"))
 		return
 	}
 
 	// exhange for a token
-	var trans = &oauth2.Transport{Config: config}
-	var token, err = trans.Exchange(code)
+	var token, err = transport.Exchange(code)
 	if err != nil {
 		log.Errorf("cannot get access_token. %s", err)
 		c.Redirect(303, "/login#error=token_exchange")
