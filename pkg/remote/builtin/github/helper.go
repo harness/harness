@@ -25,6 +25,7 @@ func NewClient(uri, token string, skipVerify bool) *github.Client {
 	// self-signed certificates.
 	if skipVerify {
 		t.Transport = &http.Transport{
+			Proxy:           http.ProxyFromEnvironment,
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
 	}
