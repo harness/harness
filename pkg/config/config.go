@@ -1,11 +1,13 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/naoina/toml"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/vrischmann/envconfig"
 )
@@ -137,6 +139,7 @@ func applyDefaults(c *Config) *Config {
 		}
 
 		c.Database.Datasource = path.Join(pwd, "drone.sqlite3")
+		log.Warnf("Use default database settings, driver: %q, config: %q", c.Database.Driver, c.Database.Datasource)
 	}
 
 	// Set default settings for remotes
@@ -145,6 +148,10 @@ func applyDefaults(c *Config) *Config {
 		if len(c.Github.API) == 0 && len(c.Github.Host) == 0 {
 			c.Github.API = "https://api.github.com/"
 			c.Github.Host = "https://github.com"
+			log.Warnf("Use default github settings, host: %q, api: %q", c.Github.Host, c.Github.API)
+		} else if len(c.Github.API) == 0 && len(c.Github.Host) != 0 {
+			c.Github.API = fmt.Sprintf("%s/api/v3/", c.Github.Host)
+			log.Warnf("Github API not specified, use: %q", c.Github.API)
 		}
 	}
 
