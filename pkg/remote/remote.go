@@ -1,16 +1,41 @@
 package remote
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/drone/drone/pkg/config"
 	"github.com/drone/drone/pkg/oauth2"
-	"github.com/drone/drone/pkg/remote/builtin/github"
 	common "github.com/drone/drone/pkg/types"
 )
+
+var drivers = make(map[string]DriverFunc)
+
+// Register makes a remote driver available by the provided name.
+// If Register is called twice with the same name or if driver is nil,
+// it panics.
+func Register(name string, driver DriverFunc) {
+	if driver == nil {
+		panic("remote: Register driver is nil")
+	}
+	if _, dup := drivers[name]; dup {
+		panic("remote: Register called twice for driver " + name)
+	}
+	drivers[name] = driver
+}
+
+// DriverFunc returns a new connection to the remote.
+// Config is a struct, with base remote configuration.
+type DriverFunc func(conf *config.Config) (Remote, error)
+
+// New creates a new remote connection.
+func New(driver string, conf *config.Config) (Remote, error) {
+	fn, ok := drivers[driver]
+	if !ok {
+		return nil, fmt.Errorf("remote: unknown driver %q", driver)
+	}
+	return fn(conf)
+}
 
 type Remote interface {
 	// Login authenticates the session and returns the
@@ -63,15 +88,4 @@ type Remote interface {
 
 	// Default scope for remote
 	Scope() string
-}
-
-func New(conf *config.Config) (Remote, error) {
-	switch strings.ToLower(conf.Remote.Driver) {
-	case "github":
-		return github.New(conf), nil
-	case "":
-		return nil, errors.New("Remote not specifed, please set env variable DRONE_REMOTE_DRIVER")
-	default:
-		return nil, errors.New(fmt.Sprintf("Remote driver not supported: DRONE_REMOTE_DRIVER=%s", conf.Remote.Driver))
-	}
 }
