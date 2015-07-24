@@ -37,7 +37,7 @@ func NewClient(uri, token string, skipVerify bool) *github.Client {
 
 // GetUserEmail is a heper function that retrieves the currently
 // authenticated user from GitHub + Email address.
-func GetUserEmail(client *github.Client, defaultURL string) (*github.User, error) {
+func GetUserEmail(client *github.Client) (*github.User, error) {
 	user, _, err := client.Users.Get("")
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func GetUserEmail(client *github.Client, defaultURL string) (*github.User, error
 	// WARNING, HACK
 	// for out-of-date github enterprise editions the primary
 	// and verified fields won't exist.
-	if !strings.HasPrefix(*user.HTMLURL, defaultURL) && len(emails) != 0 {
+	if !strings.HasPrefix(*user.HTMLURL, DefaultURL) && len(emails) != 0 {
 		user.Email = emails[0].Email
 		return user, nil
 	}

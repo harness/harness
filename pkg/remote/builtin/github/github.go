@@ -12,6 +12,7 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/hashicorp/golang-lru"
 	"github.com/drone/drone/pkg/config"
 	"github.com/drone/drone/pkg/oauth2"
+	"github.com/drone/drone/pkg/remote"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/httputil"
 
@@ -19,6 +20,7 @@ import (
 )
 
 const (
+	DefaultURL   = "https://github.com"
 	DefaultScope = "repo,repo:status,user:email"
 )
 
@@ -35,7 +37,11 @@ type GitHub struct {
 	cache *lru.Cache
 }
 
-func New(conf *config.Config) *GitHub {
+func init() {
+	remote.Register("github", NewDriver)
+}
+
+func NewDriver(conf *config.Config) (remote.Remote, error) {
 	var github = GitHub{
 		API:         conf.Github.API,
 		URL:         conf.Github.Host,
@@ -49,7 +55,7 @@ func New(conf *config.Config) *GitHub {
 	var err error
 	github.cache, err = lru.New(1028)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// the API must have a trailing slash
@@ -60,12 +66,12 @@ func New(conf *config.Config) *GitHub {
 	if strings.HasSuffix(github.URL, "/") {
 		github.URL = github.URL[:len(github.URL)-1]
 	}
-	return &github
+	return &github, nil
 }
 
 func (g *GitHub) Login(token, secret string) (*common.User, error) {
 	client := NewClient(g.API, token, g.SkipVerify)
-	login, err := GetUserEmail(client, g.URL)
+	login, err := GetUserEmail(client)
 	if err != nil {
 		return nil, err
 	}

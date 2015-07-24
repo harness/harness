@@ -19,6 +19,7 @@ import (
 	runner "github.com/drone/drone/pkg/runner/builtin"
 	"github.com/drone/drone/pkg/store"
 
+	_ "github.com/drone/drone/pkg/remote/builtin/github"
 	_ "github.com/drone/drone/pkg/store/builtin"
 
 	_ "net/http/pprof"
@@ -49,7 +50,7 @@ func main() {
 		panic(err)
 	}
 
-	remote, err := remote.New(settings)
+	remote, err := remote.New(settings.Remote.Driver, settings)
 	if err != nil {
 		panic(err)
 	}
