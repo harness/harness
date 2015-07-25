@@ -213,6 +213,8 @@ func (r *Gitlab) Deactivate(user *common.User, repo *common.Repo, link string) e
 
 // ParseHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
+// NOTE: in gitlab 8.0, gitlab will get same MR models as github
+//       https://gitlab.com/gitlab-org/gitlab-ce/merge_requests/981/diffs
 func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 
 	var payload, _ = ioutil.ReadAll(req.Body)
