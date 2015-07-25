@@ -3,7 +3,6 @@ package builtin
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"time"
 
 	"github.com/drone/drone/pkg/types"
@@ -14,22 +13,6 @@ import (
 var (
 	ErrTimeout = errors.New("Timeout")
 	ErrLogging = errors.New("Logs not available")
-)
-
-var (
-// options to fetch the stdout and stderr logs
-	logOpts = &dockerclient.LogOptions{
-		Stdout: true,
-		Stderr: true,
-	}
-
-// options to fetch the stdout and stderr logs
-// by tailing the output.
-	logOptsTail = &dockerclient.LogOptions{
-		Follow: true,
-		Stdout: true,
-		Stderr: true,
-	}
 )
 
 var (
@@ -104,22 +87,19 @@ func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 		},
 	}
 
-	container, err := run(w.manager, image, name, w.timeout)
+	w.build, err = run(w.manager, image, name, w.timeout)
 	if err != nil {
-		return container, err
+		return 1, err
 	}
-	return w.build.State.ExitCode, err
+	containerInfo, err := w.build.Engine.Info(w.build)
+	return containerInfo.State.ExitCode, err
 }
 
 // Notify executes the notification steps.
 func (w *worker) Notify(stdin []byte) error {
-	// use the affinity parameter in case we are
-	// using Docker swarm as a backend.
-	environment := []string{"affinity:container==" + w.build.Id}
-
 	// the build container is acting as an ambassador container
 	// with a shared filesystem .
-	volume := []string{w.build.Id}
+	volume := []string{w.build.ID}
 
 	// the command line arguments passed into the
 	// build agent container.
@@ -127,18 +107,17 @@ func (w *worker) Notify(stdin []byte) error {
 	args = append(args, "--")
 	args = append(args, string(stdin))
 
-	conf := &dockerclient.ContainerConfig{
-		Image:      DefaultAgent,
+	image := &citadel.Image{
+		Type: "drone_internal",
+		Name: DefaultAgent,
+		Cpus: 0.5,
 		Entrypoint: DefaultEntrypoint,
-		Cmd:        args,
-		Env:        environment,
-		HostConfig: dockerclient.HostConfig{
-			VolumesFrom: volume,
-		},
+		Args: args,
+		VolumesFrom: volume,
 	}
 
 	var err error
-	w.notify, err = run(w.client, conf, "", DefaultNotifyTimeout)
+	w.notify, err = run(w.manager, image, "", DefaultNotifyTimeout)
 	return err
 }
 
@@ -148,19 +127,17 @@ func (w *worker) Logs() (io.ReadCloser, error) {
 	if w.build == nil {
 		return nil, ErrLogging
 	}
-	return w.client.ContainerLogs(w.build.Id, logOpts)
+	return w.manager.Logs(w.build)
 }
 
 // Remove stops and removes the build, deploy and
 // notification agents created for the build task.
 func (w *worker) Remove() {
 	if w.notify != nil {
-		w.client.KillContainer(w.notify.Id, "9")
-		w.client.RemoveContainer(w.notify.Id, true, true)
+		w.manager.RemoveContainer(w.notify)
 	}
 	if w.build != nil {
-		w.client.KillContainer(w.build.Id, "9")
-		w.client.RemoveContainer(w.build.Id, true, true)
+		w.manager.RemoveContainer(w.build)
 	}
 }
 
@@ -187,6 +164,10 @@ func run(manager *cluster_manager.Manager, image *citadel.Image, name string, ti
 		manager.StopAndKillContainer(container)
 		return container, err
 	case <-time.After(timeout):
+		container := manager.FindContainerByName(name)
+		if container != nil {
+			manager.StopAndKillContainer(container)
+		}
 		return nil, ErrTimeout
 	}
 }

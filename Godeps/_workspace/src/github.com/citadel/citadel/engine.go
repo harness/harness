@@ -112,6 +112,7 @@ func (e *Engine) Start(c *Container, pullImage bool) error {
 			Name:              i.RestartPolicy.Name,
 			MaximumRetryCount: i.RestartPolicy.MaximumRetryCount,
 		},
+		VolumesFrom: i.VolumesFrom,
 		NetworkMode: i.NetworkMode,
 		Privileged:  i.Privileged,
 	}
@@ -216,6 +217,10 @@ func (e *Engine) Restart(container *Container, timeout int) error {
 
 func (e *Engine) Remove(container *Container) error {
 	return e.client.RemoveContainer(container.ID, true, false)
+}
+
+func (e *Engine) Info(container *Container) (*dockerclient.ContainerInfo, error) {
+	return e.client.InspectContainer(container.ID)
 }
 
 func (e *Engine) Version() (*dockerclient.Version, error) {

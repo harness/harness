@@ -4,6 +4,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"io"
 	"io/ioutil"
 	"crypto/tls"
 	"crypto/x509"
@@ -13,9 +14,10 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/citadel/citadel/scheduler"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 )
 
-const (
+var (
 	// Default docker host address
 	DefaultHost = "unix:///var/run/docker.sock"
 
@@ -98,7 +100,7 @@ func (c *Manager) CollectDockers() error {
 		}
 	}
 	if len(c.cluster.Engines()) == 0 {
-		c.AddDocker(nil)
+		c.AddDefaultDocker()
 	}
 	return nil
 }
@@ -139,7 +141,7 @@ func (c *Manager) AddDefaultDocker() error {
 	return c.AddEngine(engine)
 }
 
-func (c *Manager) AddEngine(engine citadel.Engine) error {
+func (c *Manager) AddEngine(engine *citadel.Engine) error {
 	if err := engine.Connect(c.tlc); err != nil {
 		return err
 	}
@@ -147,7 +149,7 @@ func (c *Manager) AddEngine(engine citadel.Engine) error {
 	return nil
 }
 
-func (c *Manager) Start(image *citadel.Image, pull bool) error {
+func (c *Manager) Start(image *citadel.Image, pull bool) (*citadel.Container, error) {
 	return c.cluster.Start(image, pull)
 }
 
@@ -156,17 +158,36 @@ func (c *Manager) StopAndKillContainer(container *citadel.Container) error {
 	if err != nil {
 		return err
 	}
-	err := c.cluster.Kill(container, 9)
+	err = c.cluster.Kill(container, 9)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Manager) FindContainerByName(name string) (*citadel.Container, error) {
+func (c *Manager) RemoveContainer(container *citadel.Container) error {
+	err := c.cluster.Remove(container)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Manager) Logs(container *citadel.Container) (log io.ReadCloser, err error) {
+	log, err = c.cluster.Logs(container, true, true)
+	return
+}
+
+func (c *Manager) ContainerInfo(container *citadel.Container) (*dockerclient.ContainerInfo, error) {
+	return container.Engine.Info(container)
+}
+
+func (c *Manager) FindContainerByName(name string) *citadel.Container {
 	containers := c.cluster.ListContainers(false, false, "")
 	for _, container := range containers {
-		if container
+		if container.Name == name {
+			return container
+		}
 	}
-	return nil, err
+	return nil
 }

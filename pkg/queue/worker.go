@@ -11,6 +11,7 @@ import (
 type Work struct {
 	User    *common.User    `json:"user"`
 	Repo    *common.Repo    `json:"repo"`
+	Build   *common.Build	`json:"build"`
 	Job 	*common.Job		`json:"job"`
 	Keys    *common.Keypair `json:"keypair"`
 	Netrc   *common.Netrc   `json:"netrc"`

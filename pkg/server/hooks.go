@@ -153,6 +153,7 @@ func PostHook(c *gin.Context) {
 	// Publish all Jobs into Queue
 	for _, job := range build.Jobs {
 		queue_.Publish(&queue.Work{
+			Build:   build,
 			Job:     job,
 			User:    user,
 			Repo:    repo,

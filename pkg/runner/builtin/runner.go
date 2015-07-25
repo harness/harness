@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"time"
+	"errors"
 
 	"github.com/drone/drone/pkg/docker"
 	"github.com/drone/drone/pkg/queue"
@@ -57,13 +58,12 @@ func (r *Runner) Run(w *queue.Work) error {
 	// 	}
 	// }()
 
-	build := r.Updater.GetBuild(w.Job.BuildID)
 	current_time := time.Now().UTC().Unix()
 	// marks the build as running
-	if build.Status == types.StatePending {
-		build.Started = current_time
-		build.Status = types.StateRunning
-		err := r.SetBuild(w.User, w.Repo, build)
+	if w.Build.Status == types.StatePending {
+		w.Build.Started = current_time
+		w.Build.Status = types.StateRunning
+		err := r.SetBuild(w.User, w.Repo, w.Build)
 		if err != nil {
 			log.Errorf("failure to set build. %s", err)
 			return err
@@ -72,17 +72,17 @@ func (r *Runner) Run(w *queue.Work) error {
 	// marks the job as running
 	w.Job.Started = current_time
 	w.Job.Status = types.StateRunning
-	err := r.SetJob(w.Repo, build, w.Job)
+	err := r.SetJob(w.Repo, w.Build, w.Job)
 	if err != nil {
 		log.Errorf("failure to set job. %s", err)
 		return err
 	}
 
-	pullrequest := (build.PullRequest != nil)
+	pullrequest := (w.Build.PullRequest != nil)
 
 	work := &work{
 		Repo:    w.Repo,
-		Build:   build,
+		Build:   w.Build,
 		Keys:    w.Keys,
 		Netrc:   w.Netrc,
 		Yaml:    w.Yaml,
@@ -98,7 +98,7 @@ func (r *Runner) Run(w *queue.Work) error {
 	}
 
 	worker := newWorkerTimeout(r.Manager, w.Repo.Timeout)
-	cname := cname(w)
+	cname := cname(w.Job)
 	state, builderr := worker.Build(cname, in, pullrequest)
 
 	switch {
@@ -127,14 +127,14 @@ func (r *Runner) Run(w *queue.Work) error {
 		defer rc.Close()
 		docker.StdCopy(&buf, &buf, rc)
 	}
-	err = r.SetLogs(w.Repo, build, w.Job, ioutil.NopCloser(&buf))
+	err = r.SetLogs(w.Repo, w.Build, w.Job, ioutil.NopCloser(&buf))
 	if err != nil {
 		return err
 	}
 
 	// update the task in the datastore
 	w.Job.Finished = time.Now().UTC().Unix()
-	err = r.SetJob(w.Repo, build, w.Job)
+	err = r.SetJob(w.Repo, w.Build, w.Job)
 	if err != nil {
 		return err
 	}
@@ -142,16 +142,19 @@ func (r *Runner) Run(w *queue.Work) error {
 	// update the build state if any of the sub-tasks
 	// had a non-success status
 	// w.Build.Status = types.StateSuccess
-	// for _, job := range w.Build.Jobs {
-	// 	if job.Status != types.StateSuccess {
-	// 		w.Build.Status = job.Status
-	// 		break
-	// 	}
-	// }
-	// err = r.SetBuild(w.User, w.Repo, w.Build)
-	// if err != nil {
-	// 	return err
-	// }
+	for _, job := range w.Build.Jobs {
+		if job.Status == types.StatePending || job.Status == types.StateRunning {
+			continue
+		}
+		if job.Status != types.StateSuccess {
+			w.Build.Status = job.Status
+			break
+		}
+	}
+	err = r.SetBuild(w.User, w.Repo, w.Build)
+	if err != nil {
+		return err
+	}
 
 	// // loop through and execute the notifications and
 	// // the destroy all containers afterward.
@@ -178,20 +181,24 @@ func (r *Runner) Run(w *queue.Work) error {
 }
 
 func (r *Runner) Cancel(job *types.Job) error {
-	client, err := dockerclient.NewDockerClient(DockerHost, nil)
-	if err != nil {
-		return err
+	container := r.Manager.FindContainerByName(cname(job))
+	if container != nil {
+		err := r.Manager.StopAndKillContainer(container)
+		if err != nil {
+			return err
+		}
 	}
-	return client.StopContainer(cname(job), 30)
+	return nil
 }
 
 func (r *Runner) Logs(job *types.Job) (io.ReadCloser, error) {
-	client, err := dockerclient.NewDockerClient(DockerHost, nil)
-	if err != nil {
-		return nil, err
-	}
 	// make sure this container actually exists
-	info, err := client.InspectContainer(cname(job))
+	container := r.Manager.FindContainerByName(cname(job))
+	if container == nil {
+		return nil, errors.New("Not found")
+	}
+
+	info, err := r.Manager.ContainerInfo(container)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +208,7 @@ func (r *Runner) Logs(job *types.Job) (io.ReadCloser, error) {
 	if !info.State.Running {
 		for i := 0;; i++ {
 			time.Sleep(1 * time.Second)
-			info, err = client.InspectContainer(info.Id)
+			info, err = r.Manager.ContainerInfo(container)
 			if err != nil {
 				return nil, err
 			}
@@ -209,16 +216,16 @@ func (r *Runner) Logs(job *types.Job) (io.ReadCloser, error) {
 				break
 			}
 			if i == 5 {
-				return nil, dockerclient.ErrNotFound
+				return nil, errors.New("Not found")
 			}
 		}
 	}
 
-	return client.ContainerLogs(info.Id, logOptsTail)
+	return r.Manager.Logs(container)
 }
 
-func cname(w *queue.Work) string {
-	return fmt.Sprintf("drone-%d-%d-%d", w.Repo.ID, w.Job.BuildID, w.Job.ID)
+func cname(job *types.Job) string {
+	return fmt.Sprintf("drone-%d", job.ID)
 }
 
 func (r *Runner) Poll(q queue.Queue) {

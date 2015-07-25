@@ -46,6 +46,9 @@ type Image struct {
 	// Volumes are volumes on the same engine
 	Volumes []string `json:"volumes,omitempty"`
 
+	// Volumes are volumes on the same engine
+	VolumesFrom []string `json:"volumes_from,omitempty"`
+
 	// Links are mappings to other containers running on the same engine
 	Links map[string]string `json:"links,omitempty"`
 
