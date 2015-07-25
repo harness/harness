@@ -39,6 +39,7 @@ clone:
 build:
   image: golang:$$GO_VERSION
   commands:
+    - free -m
     - export GOPATH=/drone
     - export PATH=$PATH:$GOPATH/bin
     - go get -u github.com/jteeuwen/go-bindata/...
@@ -47,5 +48,5 @@ build:
     - make test
 matrix:
   GO_VERSION:
-    - 1.4
-    - 1.3
+    - 1.4.2
+    - 1.3.3
