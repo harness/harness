@@ -213,14 +213,18 @@ func (r *Gitlab) Deactivate(user *common.User, repo *common.Repo, link string) e
 
 // ParseHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
-// NOTE: in gitlab 8.0, gitlab will get same MR models as github
-//       https://gitlab.com/gitlab-org/gitlab-ce/merge_requests/981/diffs
 func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 
 	var payload, _ = ioutil.ReadAll(req.Body)
 	var parsed, _ = gogitlab.ParseHook(payload)
-	obj := parsed.ObjectAttributes
 
+	if parsed.ObjectKind == "merge_request" {
+		// NOTE: in gitlab 8.0, gitlab will get same MR models as github
+		//       https://gitlab.com/gitlab-org/gitlab-ce/merge_requests/981/diffs
+		return nil, nil
+	}
+
+	obj := parsed.ObjectAttributes
 	if !(obj.State == "opened" && obj.MergeStatus == "unchecked") {
 		return nil, nil
 	}
@@ -238,15 +242,11 @@ func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 		if obj.Source.Name != obj.Target.Name || obj.Source.Namespace != obj.Target.Namespace {
 			return nil, nil
 		}
-	} else {
-		//hook.SourceRemote = obj.Source.HttpUrl
 	}
 
 	hook.Commit.Author.Login = req.FormValue("owner")
-	//hook.Repo = req.FormValue("name")
 	hook.Commit.Sha = obj.LastCommit.Id
 	hook.Commit.Branch = obj.TargetBranch
-	//hook.Commit.SourceBranch = obj.SourceBranch
 	hook.Commit.Timestamp = obj.LastCommit.Timestamp
 	hook.Commit.Message = obj.Title
 
