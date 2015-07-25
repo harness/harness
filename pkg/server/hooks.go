@@ -136,6 +136,7 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
+	log.Errorf("Add build")
 	err = store.AddBuild(build)
 	if err != nil {
 		log.Errorf("failure to save commit for %s. %s", repo.FullName, err)
@@ -145,11 +146,13 @@ func PostHook(c *gin.Context) {
 
 	c.JSON(200, build)
 
+	log.Errorf("change remote status")
 	err = remote.Status(user, repo, build)
 	if err != nil {
 		log.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
 	}
 
+	log.Errorf("push jobs into queue")
 	// Publish all Jobs into Queue
 	for _, job := range build.Jobs {
 		queue_.Publish(&queue.Work{

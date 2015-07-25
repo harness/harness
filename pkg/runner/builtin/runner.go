@@ -24,8 +24,9 @@ type Runner struct {
 
 func (r *Runner) Run(w *queue.Work) error {
 
-	// defer func() {
-	// 	recover()
+	defer func() {
+		recover()
+	}()
 
 	// 	// if any part of the commit fails and leaves
 	// 	// behind orphan sub-builds we need to cleanup
@@ -58,6 +59,7 @@ func (r *Runner) Run(w *queue.Work) error {
 	// 	}
 	// }()
 
+	log.Errorf("Start build job")
 	current_time := time.Now().UTC().Unix()
 	// marks the build as running
 	if w.Build.Status == types.StatePending {
@@ -70,6 +72,7 @@ func (r *Runner) Run(w *queue.Work) error {
 		}
 	}
 	// marks the job as running
+	log.Errorf("Change status")
 	w.Job.Started = current_time
 	w.Job.Status = types.StateRunning
 	err := r.SetJob(w.Repo, w.Build, w.Job)
@@ -97,8 +100,10 @@ func (r *Runner) Run(w *queue.Work) error {
 		return err
 	}
 
+	log.Errorf("Init worker")
 	worker := newWorkerTimeout(r.Manager, w.Repo.Timeout)
 	cname := cname(w.Job)
+	log.Errorf("Start build in worker:")
 	state, builderr := worker.Build(cname, in, pullrequest)
 
 	switch {
@@ -230,11 +235,23 @@ func cname(job *types.Job) string {
 
 func (r *Runner) Poll(q queue.Queue) {
 	for {
-		w := q.Pull()
-		q.Ack(w)
-		err := r.Run(w)
-		if err != nil {
-			log.Error(err)
+		stats := r.Manager.ClusterStats()
+		log.Errorf("Cluster stats:")
+		log.Errorf("CPU: %s", stats.Cpus)
+		log.Errorf("MEMORY: %s", stats.Memory)
+		log.Errorf("Reserved CPU: %s", stats.ReservedCpus)
+		log.Errorf("Reserved MEMORY: %s", stats.ReservedMemory)
+		log.Errorf("Number of running cotainers: %s", stats.ContainerCount)
+		// If available cpus
+		if stats.Cpus - stats.ReservedCpus > 0 {
+			w := q.Pull()
+			q.Ack(w)
+			log.Errorf("Poll queue")
+			go r.Run(w)
+			time.Sleep(10 * time.Second)
+		} else {
+			time.Sleep(10 * time.Second)
+			continue
 		}
 	}
 }

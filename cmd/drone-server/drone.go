@@ -54,6 +54,7 @@ func main() {
 	session := session.New(settings)
 	eventbus_ := eventbus.New()
 	queue_ := queue.New()
+	log.Errorf("Run cluster manager")
 	cluster_manager_ := cluster_manager.New()
 	updater := runner.NewUpdater(eventbus_, store, remote)
 	runner_ := runner.Runner{Updater: updater, Manager: cluster_manager_}

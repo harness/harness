@@ -17,24 +17,17 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 )
 
-var (
+const (
 	// Default docker host address
 	DefaultHost = "unix:///var/run/docker.sock"
-
-	// Docker host address from environment variable
-	DockerHost = os.Getenv("DOCKER_HOST")
 	// Multiple Dockers ENV variable prefix
 	DockerPrefix = "DOCKER_HOST_"
-	// Docker TLS variables
-	DockerHostCa = os.Getenv("DOCKER_CA")
-	DockerHostKey = os.Getenv("DOCKER_KEY")
-	DockerHostCert = os.Getenv("DOCKER_CERT")
 	// Default docker host limits
 	DefaultMemory = 2048
 	DefaultCPUs = 1
 	// Default job container limits
-	DefaultContainerCPUs = os.Getenv("DOCKER_CONTAINER_CPU")
-	DefaultContainerMemory = os.Getenv("DOCKER_CONTAINER_MEM")
+	// DefaultContainerCPUs = os.Getenv("DOCKER_CONTAINER_CPU")
+	// DefaultContainerMemory = os.Getenv("DOCKER_CONTAINER_MEM")
 )
 
 type Manager struct {
@@ -44,6 +37,10 @@ type Manager struct {
 
 func GetTLSConfig() *tls.Config {
 	var tlc *tls.Config
+	// Docker TLS variables
+	DockerHostCa := os.Getenv("DOCKER_CA")
+	DockerHostKey := os.Getenv("DOCKER_KEY")
+	DockerHostCert := os.Getenv("DOCKER_CERT")
 	// create the Docket client TLS config
 	if len(DockerHostCert) > 0 && len(DockerHostKey) > 0 && len(DockerHostCa) > 0 {
 		cert, err := tls.LoadX509KeyPair(DockerHostCert, DockerHostKey)
@@ -76,10 +73,12 @@ func GetFloatFromEnv(key string) (value float64, found bool) {
 }
 
 func New() *Manager {
+	log.Errorln("Start new cluster scheduler")
 	c, err := cluster.New(scheduler.NewResourceManager())
 	if err != nil {
 		panic(err)
 	}
+	log.Errorln("Register label scheduler")
 	if err := c.RegisterScheduler("drone_internal", &scheduler.LabelScheduler{}); err != nil {
 		panic(err)
 	}
@@ -100,6 +99,7 @@ func (c *Manager) CollectDockers() error {
 		}
 	}
 	if len(c.cluster.Engines()) == 0 {
+		log.Errorln("Set default docker host")
 		c.AddDefaultDocker()
 	}
 	return nil
@@ -129,7 +129,7 @@ func (c *Manager) AddDocker(index string) error {
 }
 
 func (c *Manager) AddDefaultDocker() error {
-	addr := DockerHost
+	addr := os.Getenv("DOCKER_HOST")
 	if len(addr) == 0 {
 		addr = DefaultHost
 	}
@@ -137,16 +137,24 @@ func (c *Manager) AddDefaultDocker() error {
 		ID: "Default",
 		Addr: addr,
 		Labels: []string{"Default"},
+		Cpus: 1,
+		Memory: 2048,
 	}
 	return c.AddEngine(engine)
 }
 
 func (c *Manager) AddEngine(engine *citadel.Engine) error {
+	log.Errorf("Add Engine with tls config: %s", c.tlc)
 	if err := engine.Connect(c.tlc); err != nil {
+		log.Errorf("Could not connect to docker: %s", err)
 		return err
 	}
 	c.cluster.AddEngine(engine)
 	return nil
+}
+
+func (c *Manager) ClusterStats() *citadel.ClusterInfo {
+	return c.cluster.ClusterInfo()
 }
 
 func (c *Manager) Start(image *citadel.Image, pull bool) (*citadel.Container, error) {

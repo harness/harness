@@ -8,6 +8,7 @@ import (
 	"github.com/drone/drone/pkg/types"
 	cluster_manager "github.com/drone/drone/pkg/cluster/builtin"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/citadel/citadel"
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 var (
@@ -17,7 +18,7 @@ var (
 
 var (
 // name of the build agent container.
-	DefaultAgent = "drone/drone-build:latest"
+	DefaultAgent = "drone/drone-build"
 
 // default name of the build agent executable
 	DefaultEntrypoint = []string{"/bin/drone-build"}
@@ -74,6 +75,7 @@ func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 	}
 	args = append(args, "--")
 	args = append(args, string(stdin))
+	log.Errorf("params for build: %s", args)
 	image := &citadel.Image{
 		Type: "drone_internal",
 		ContainerName: name,
@@ -111,6 +113,7 @@ func (w *worker) Notify(stdin []byte) error {
 		Type: "drone_internal",
 		Name: DefaultAgent,
 		Cpus: 0.5,
+		Memory: 64,
 		Entrypoint: DefaultEntrypoint,
 		Args: args,
 		VolumesFrom: volume,
@@ -153,7 +156,11 @@ func run(manager *cluster_manager.Manager, image *citadel.Image, name string, ti
 	containerc := make(chan *citadel.Container, 1)
 	go func() {
 		// attempts to create the container
-		container, err := manager.Start(image, true)
+		log.Errorf("Start container")
+		container, err := manager.Start(image, false)
+		if err != nil {
+			log.Errorf("Error starting container: %s", err)
+		}
 		containerc <- container
 		errc <- err
 	}()
@@ -161,11 +168,13 @@ func run(manager *cluster_manager.Manager, image *citadel.Image, name string, ti
 	select {
 	case container := <- containerc:
 		err := <- errc
+		log.Errorf("Stop container")
 		manager.StopAndKillContainer(container)
 		return container, err
 	case <-time.After(timeout):
 		container := manager.FindContainerByName(name)
 		if container != nil {
+			log.Errorf("Stop container by timeout")
 			manager.StopAndKillContainer(container)
 		}
 		return nil, ErrTimeout
