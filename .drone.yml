@@ -37,7 +37,7 @@ clone:
   path: github.com/drone/drone
 
 build:
-  image: golang:1.4.2
+  image: golang:$$GO_VERSION
   commands:
     - export GOPATH=/drone
     - export PATH=$PATH:$GOPATH/bin
@@ -45,3 +45,7 @@ build:
     - make bindata deps
     - make build
     - make test
+matrix:
+  GO_VERSION:
+    - 1.4
+    - 1.3
