@@ -214,9 +214,16 @@ func (r *Gitlab) Deactivate(user *common.User, repo *common.Repo, link string) e
 // ParseHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
 func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
-
+	defer req.Body.Close()
 	var payload, _ = ioutil.ReadAll(req.Body)
-	var parsed, _ = gogitlab.ParseHook(payload)
+	var parsed, err = gogitlab.ParseHook(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(parsed.After) == 0 || parsed.TotalCommitsCount == 0 {
+		return nil, nil
+	}
 
 	if parsed.ObjectKind == "merge_request" {
 		// NOTE: in gitlab 8.0, gitlab will get same MR models as github
@@ -224,40 +231,28 @@ func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 		return nil, nil
 	}
 
-	obj := parsed.ObjectAttributes
-	if !(obj.State == "opened" && obj.MergeStatus == "unchecked") {
+	if len(parsed.After) == 0 {
 		return nil, nil
 	}
 
 	var hook = new(common.Hook)
+	hook.Repo.Owner = req.FormValue("owner")
+	hook.Repo.Name = req.FormValue("name")
+	hook.Commit.Sha = parsed.After
+	hook.Commit.Branch = parsed.Branch()
 
-	hook.Repo.Name = obj.Source.Name
-	hook.Repo.Owner = obj.Source.Namespace
+	var head = parsed.Head()
+	hook.Commit.Message = head.Message
+	hook.Commit.Timestamp = head.Timestamp
 
-	// Check pull request comes from public fork
-	if obj.Source.VisibilityLevel < 20 {
-		//hook.SourceRemote = obj.Source.SshUrl
-		// If pull request source repo is not a public
-		// check for non-internal pull request
-		if obj.Source.Name != obj.Target.Name || obj.Source.Namespace != obj.Target.Namespace {
-			return nil, nil
-		}
+	// extracts the commit author (ideally email)
+	// from the post-commit hook
+	switch {
+	case head.Author != nil:
+		hook.Commit.Author.Email = head.Author.Email
+	case head.Author == nil:
+		hook.Commit.Author.Login = parsed.UserName
 	}
-
-	hook.Commit.Author.Login = req.FormValue("owner")
-	hook.Commit.Sha = obj.LastCommit.Id
-	hook.Commit.Branch = obj.TargetBranch
-	hook.Commit.Timestamp = obj.LastCommit.Timestamp
-	hook.Commit.Message = obj.Title
-
-	if obj.LastCommit.Author == nil {
-		// Waiting for merge https://github.com/gitlabhq/gitlabhq/pull/7967
-		hook.Commit.Author.Email = ""
-	} else {
-		hook.Commit.Author.Email = obj.LastCommit.Author.Email
-	}
-
-	hook.PullRequest.Number = obj.IId
 
 	return hook, nil
 }
