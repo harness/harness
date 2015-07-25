@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -20,20 +19,6 @@ import (
 
 const (
 	DefaultScope = "repo"
-)
-
-const (
-	StatusPending = "pending"
-	StatusSuccess = "success"
-	StatusFailure = "failure"
-	StatusError   = "error"
-)
-
-const (
-	DescPending = "this build is pending"
-	DescSuccess = "the build was successful"
-	DescFailure = "the build failed"
-	DescError   = "oops, something went wrong"
 )
 
 type Gitlab struct {
@@ -150,23 +135,18 @@ func (r *Gitlab) Script(user *common.User, repo *common.Repo, build *common.Buil
 	return client.RepoRawFile(path, build.Commit.Sha, ".drone.yml")
 }
 
+// NOTE Currently gitlab doesn't support status for commits and events,
+//      also if we want get MR status in gitlab we need implement a special plugin for gitlab,
+//      gitlab uses API to fetch build status on client side. But for now we skip this.
 func (r *Gitlab) Status(u *common.User, repo *common.Repo, b *common.Build) error {
-	// how can I get Gitlab status
 	return nil
 }
 
 // Netrc returns a .netrc file that can be used to clone
 // private repositories from a remote system.
+// NOTE gitlab does not support this, so now we skip this.
 func (r *Gitlab) Netrc(u *common.User) (*common.Netrc, error) {
-	url_, err := url.Parse(r.URL)
-	if err != nil {
-		return nil, err
-	}
-	netrc := &common.Netrc{}
-	netrc.Login = u.Token
-	netrc.Password = "x-oauth-basic"
-	netrc.Machine = url_.Host
-	return netrc, nil
+	return nil, nil
 }
 
 // Activate activates a repository by adding a Post-commit hook and
@@ -235,44 +215,47 @@ func (r *Gitlab) Deactivate(user *common.User, repo *common.Repo, link string) e
 // and returns the required data in a standard format.
 func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 
-	defer req.Body.Close()
 	var payload, _ = ioutil.ReadAll(req.Body)
-	var parsed, err = gogitlab.ParseHook(payload)
-	if err != nil {
-		return nil, err
-	}
+	var parsed, _ = gogitlab.ParseHook(payload)
+	obj := parsed.ObjectAttributes
 
-	if len(parsed.After) == 0 || parsed.TotalCommitsCount == 0 {
-		return nil, nil
-	}
-
-	if parsed.ObjectKind == "merge_request" {
-		// TODO (bradrydzewski) figure out how to handle merge requests
-		return nil, nil
-	}
-
-	if len(parsed.After) == 0 {
+	if !(obj.State == "opened" && obj.MergeStatus == "unchecked") {
 		return nil, nil
 	}
 
 	var hook = new(common.Hook)
-	hook.Repo.Owner = req.FormValue("owner")
-	hook.Repo.Name = req.FormValue("name")
-	hook.Commit.Sha = parsed.After
-	hook.Commit.Branch = parsed.Branch()
 
-	var head = parsed.Head()
-	hook.Commit.Message = head.Message
-	hook.Commit.Timestamp = head.Timestamp
+	hook.Repo.Name = obj.Source.Name
+	hook.Repo.Owner = obj.Source.Namespace
 
-	// extracts the commit author (ideally email)
-	// from the post-commit hook
-	switch {
-	case head.Author != nil:
-		hook.Commit.Author.Login = head.Author.Email
-	case head.Author == nil:
-		hook.Commit.Author.Login = parsed.UserName
+	// Check pull request comes from public fork
+	if obj.Source.VisibilityLevel < 20 {
+		//hook.SourceRemote = obj.Source.SshUrl
+		// If pull request source repo is not a public
+		// check for non-internal pull request
+		if obj.Source.Name != obj.Target.Name || obj.Source.Namespace != obj.Target.Namespace {
+			return nil, nil
+		}
+	} else {
+		//hook.SourceRemote = obj.Source.HttpUrl
 	}
+
+	hook.Commit.Author.Login = req.FormValue("owner")
+	//hook.Repo = req.FormValue("name")
+	hook.Commit.Sha = obj.LastCommit.Id
+	hook.Commit.Branch = obj.TargetBranch
+	//hook.Commit.SourceBranch = obj.SourceBranch
+	hook.Commit.Timestamp = obj.LastCommit.Timestamp
+	hook.Commit.Message = obj.Title
+
+	if obj.LastCommit.Author == nil {
+		// Waiting for merge https://github.com/gitlabhq/gitlabhq/pull/7967
+		hook.Commit.Author.Email = ""
+	} else {
+		hook.Commit.Author.Email = obj.LastCommit.Author.Email
+	}
+
+	hook.PullRequest.Number = obj.IId
 
 	return hook, nil
 }
@@ -309,66 +292,4 @@ func (r *Gitlab) GetOpen() bool {
 // return default scope for GitHub
 func (r *Gitlab) Scope() string {
 	return DefaultScope
-}
-
-// getStatus is a helper functin that converts a Drone
-// status to a GitHub status.
-func getStatus(status string) string {
-	switch status {
-	case common.StatePending, common.StateRunning:
-		return StatusPending
-	case common.StateSuccess:
-		return StatusSuccess
-	case common.StateFailure:
-		return StatusFailure
-	case common.StateError, common.StateKilled:
-		return StatusError
-	default:
-		return StatusError
-	}
-}
-
-func New(conf *config.Config) *Gitlab {
-	var gitlab = Gitlab{
-		URL:         conf.Gitlab.URL,
-		Client:      conf.Gitlab.Client,
-		Secret:      conf.Gitlab.Secret,
-		SkipVerify:  conf.Gitlab.SkipVerify,
-		AllowedOrgs: conf.Gitlab.Orgs,
-		Open:        conf.Gitlab.Open,
-	}
-	var err error
-	gitlab.cache, err = lru.New(1028)
-	if err != nil {
-		panic(err)
-	}
-
-	// the URL must NOT have a trailing slash
-	if strings.HasSuffix(gitlab.URL, "/") {
-		gitlab.URL = gitlab.URL[:len(gitlab.URL)-1]
-	}
-	return &gitlab
-}
-
-// GetHost returns the hostname of this remote GitHub instance.
-func (r *Gitlab) GetHost() string {
-	uri, _ := url.Parse(r.URL)
-	return uri.Host
-}
-
-// getDesc is a helper function that generates a description
-// message for the build based on the status.
-func getDesc(status string) string {
-	switch status {
-	case common.StatePending, common.StateRunning:
-		return DescPending
-	case common.StateSuccess:
-		return DescSuccess
-	case common.StateFailure:
-		return DescFailure
-	case common.StateError, common.StateKilled:
-		return DescError
-	default:
-		return DescError
-	}
 }

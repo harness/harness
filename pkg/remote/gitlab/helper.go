@@ -1,12 +1,10 @@
 package gitlab
 
 import (
-	"encoding/base32"
 	"fmt"
 	"net/url"
 
 	"github.com/Bugagazavr/go-gitlab-client"
-	"github.com/gorilla/securecookie"
 )
 
 // NewClient is a helper function that returns a new GitHub
@@ -83,10 +81,4 @@ func ns(owner, name string) string {
 
 func GetUserEmail(client *gogitlab.Gitlab, defaultURL string) (*gogitlab.Gitlab, error) {
 	return client, nil
-}
-
-// GetRandom is a helper function that generates a 32-bit random
-// key, base32 encoded as a string value.
-func GetRandom() string {
-	return base32.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(32))
 }
