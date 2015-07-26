@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/Bugagazavr/go-gitlab-client"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/Bugagazavr/go-gitlab-client"
 )
 
 // NewClient is a helper function that returns a new GitHub

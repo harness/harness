@@ -1,0 +1,22 @@
+{
+  "object_kind": "merge_request",
+  "object_attributes": {
+    "id": 99,
+    "target_branch": "master",
+    "source_branch": "ms-viewport",
+    "source_project_id": 14,
+    "author_id": 51,
+    "assignee_id": 6,
+    "title": "MS-Viewport",
+    "created_at": "2013-12-03T17:23:34Z",
+    "updated_at": "2013-12-03T17:23:34Z",
+    "st_commits": null,
+    "st_diffs": null,
+    "milestone_id": null,
+    "state": "opened",
+    "merge_status": "unchecked",
+    "target_project_id": 14,
+    "iid": 1,
+    "description": ""
+  }
+}

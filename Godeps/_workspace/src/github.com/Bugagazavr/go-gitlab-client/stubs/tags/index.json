@@ -1,0 +1,22 @@
+[
+    {
+        "name": "v1.0.0",
+        "commit": {
+            "id": "2695effb5807a22ff3d138d593fd856244e155e7",
+            "parents": [],
+            "tree": "38017f2f189336fe4497e9d230c5bb1bf873f08d",
+            "message": "Initial commit",
+            "author": {
+                "name": "John Smith",
+                "email": "john@example.com"
+            },
+            "committer": {
+                "name": "Jack Smith",
+                "email": "jack@example.com"
+            },
+            "authored_date": "2012-05-28T04:42:42-07:00",
+            "committed_date": "2012-05-28T04:42:42-07:00"
+        },
+        "protected": null
+    }
+]
