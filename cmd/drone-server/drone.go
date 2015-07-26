@@ -9,7 +9,7 @@ import (
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/elazarl/go-bindata-assetfs"
 	"github.com/drone/drone/pkg/config"
-	"github.com/drone/drone/pkg/remote/builtin/github"
+	"github.com/drone/drone/pkg/remote"
 	"github.com/drone/drone/pkg/server"
 	"github.com/drone/drone/pkg/server/session"
 
@@ -19,6 +19,8 @@ import (
 	runner "github.com/drone/drone/pkg/runner/builtin"
 	"github.com/drone/drone/pkg/store"
 
+	_ "github.com/drone/drone/pkg/remote/builtin/github"
+	_ "github.com/drone/drone/pkg/remote/builtin/gitlab"
 	_ "github.com/drone/drone/pkg/store/builtin"
 
 	_ "net/http/pprof"
@@ -49,7 +51,10 @@ func main() {
 		panic(err)
 	}
 
-	remote := github.New(settings)
+	remote, err := remote.New(settings.Remote.Driver, settings)
+	if err != nil {
+		panic(err)
+	}
 	session := session.New(settings)
 	eventbus_ := eventbus.New()
 	queue_ := queue.New()
