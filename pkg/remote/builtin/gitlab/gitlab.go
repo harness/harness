@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -147,9 +148,16 @@ func (r *Gitlab) Status(u *common.User, repo *common.Repo, b *common.Build) erro
 
 // Netrc returns a .netrc file that can be used to clone
 // private repositories from a remote system.
-// NOTE gitlab does not support this, so now we skip this.
 func (r *Gitlab) Netrc(u *common.User) (*common.Netrc, error) {
-	return nil, nil
+	url_, err := url.Parse(r.URL)
+	if err != nil {
+		return nil, err
+	}
+	netrc := &common.Netrc{}
+	netrc.Login = "oauth2"
+	netrc.Password = u.Token
+	netrc.Machine = url_.Host
+	return netrc, nil
 }
 
 // Activate activates a repository by adding a Post-commit hook and
@@ -238,10 +246,6 @@ func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 	}
 
 	var cloneUrl = parsed.Repository.GitHttpUrl
-
-	if parsed.Repository.VisibilityLevel < 20 {
-		cloneUrl = parsed.Repository.GitSshUrl
-	}
 
 	var hook = new(common.Hook)
 	hook.Repo = &common.Repo{}
