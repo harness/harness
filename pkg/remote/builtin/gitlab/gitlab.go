@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	DefaultScope = "repo"
+	DefaultScope = "api"
 )
 
 type Gitlab struct {
@@ -39,7 +39,7 @@ func init() {
 
 func NewDriver(conf *config.Config) (remote.Remote, error) {
 	var gitlab = Gitlab{
-		URL:         conf.Gitlab.URL,
+		URL:         conf.Gitlab.Host,
 		Client:      conf.Gitlab.Client,
 		Secret:      conf.Gitlab.Secret,
 		AllowedOrgs: conf.Gitlab.Orgs,
@@ -151,7 +151,7 @@ func (r *Gitlab) Netrc(u *common.User) (*common.Netrc, error) {
 
 // Activate activates a repository by adding a Post-commit hook and
 // a Public Deploy key, if applicable.
-func (r *Gitlab) Activate(user *common.User, repo *common.Repo, keys *common.Keypair, link string) error {
+func (r *Gitlab) Activate(user *common.User, repo *common.Repo, k *common.Keypair, link string) error {
 	var client = NewClient(r.URL, user.Token, r.SkipVerify)
 	var path = ns(repo.Owner, repo.Name)
 	var title, err = GetKeyTitle(link)
@@ -162,15 +162,14 @@ func (r *Gitlab) Activate(user *common.User, repo *common.Repo, keys *common.Key
 	// if the repository is private we'll need
 	// to upload a github key to the repository
 	if repo.Private {
-		var err = client.AddProjectDeployKey(path, title, repo.Keys.Public)
-		if err != nil {
+		if err := client.AddProjectDeployKey(path, title, k.Public); err != nil {
 			return err
 		}
 	}
 
 	// append the repo owner / name to the hook url since gitlab
 	// doesn't send this detail in the post-commit hook
-	link += "?owner=" + repo.Owner + "&name=" + repo.Name
+	link += "&owner=" + repo.Owner + "&name=" + repo.Name
 
 	// add the hook
 	return client.AddProjectHook(path, link, true, false, true)
@@ -199,7 +198,7 @@ func (r *Gitlab) Deactivate(user *common.User, repo *common.Repo, link string) e
 	if err != nil {
 		return err
 	}
-	link += "?owner=" + repo.Owner + "&name=" + repo.Name
+	link += "&owner=" + repo.Owner + "&name=" + repo.Name
 	for _, h := range hooks {
 		if link == h.Url {
 			if err := client.RemoveProjectHook(path, strconv.Itoa(h.Id)); err != nil {
@@ -235,21 +234,48 @@ func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 		return nil, nil
 	}
 
+	var cloneUrl = parsed.Repository.GitHttpUrl
+
+	if parsed.Repository.VisibilityLevel < 20 {
+		cloneUrl = parsed.Repository.GitSshUrl
+	}
+
 	var hook = new(common.Hook)
+	hook.Repo = &common.Repo{}
 	hook.Repo.Owner = req.FormValue("owner")
 	hook.Repo.Name = req.FormValue("name")
+	hook.Repo.Link = parsed.Repository.URL
+	hook.Repo.Clone = cloneUrl
+	hook.Repo.Branch = "master"
+
+	switch parsed.Repository.VisibilityLevel {
+	case 0:
+		hook.Repo.Private = true
+	case 10:
+		hook.Repo.Private = true
+	case 20:
+		hook.Repo.Private = false
+	}
+
+	hook.Repo.FullName = fmt.Sprintf("%s/%s", req.FormValue("owner"), req.FormValue("name"))
+
+	hook.Commit = &common.Commit{}
 	hook.Commit.Sha = parsed.After
 	hook.Commit.Branch = parsed.Branch()
+	hook.Commit.Ref = parsed.Ref
+	hook.Commit.Remote = cloneUrl
 
 	var head = parsed.Head()
 	hook.Commit.Message = head.Message
 	hook.Commit.Timestamp = head.Timestamp
+	hook.Commit.Author = &common.Author{}
 
 	// extracts the commit author (ideally email)
 	// from the post-commit hook
 	switch {
 	case head.Author != nil:
 		hook.Commit.Author.Email = head.Author.Email
+		hook.Commit.Author.Login = parsed.UserName
 	case head.Author == nil:
 		hook.Commit.Author.Login = parsed.UserName
 	}
@@ -265,7 +291,7 @@ func (g *Gitlab) Oauth2Transport(r *http.Request) *oauth2.Transport {
 			ClientSecret: g.Secret,
 			Scope:        DefaultScope,
 			AuthURL:      fmt.Sprintf("%s/oauth/authorize", g.URL),
-			TokenURL:     fmt.Sprintf("%s/oauth/access_token", g.URL),
+			TokenURL:     fmt.Sprintf("%s/oauth/token", g.URL),
 			RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURL(r)),
 			//settings.Server.Scheme, settings.Server.Hostname),
 		},
