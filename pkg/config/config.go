@@ -1,20 +1,20 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
+	"os"
+	"path"
+	"strings"
 
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/naoina/toml"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/vrischmann/envconfig"
 )
 
 type Config struct {
 	Remote struct {
-		Kind       string   `envconfig:"optional"`
-		Base       string   `envconfig:"optional"`
-		Orgs       []string `envconfig:"optional"`
-		Open       bool     `envconfig:"optional"`
-		Private    bool     `envconfig:"optional"`
-		SkipVerify bool     `envconfig:"optional"`
+		Driver string `envconfig:"optional"`
 	}
 
 	Auth struct {
@@ -67,20 +67,14 @@ type Config struct {
 	Plugins []string `envconfig:"optional"`
 
 	Github struct {
-		Client string   `envconfig:"optional"`
-		Secret string   `envconfig:"optional"`
-		Orgs   []string `envconfig:"optional"`
-		Open   bool     `envconfig:"optional"`
-	}
-
-	GithubEnterprise struct {
-		URL        string   `envconfig:"optional"`
-		Client     string   `envconfig:"optional"`
-		Secret     string   `envconfig:"optional"`
-		Private    bool     `envconfig:"optional"`
-		SkipVerify bool     `envconfig:"optional"`
-		Open       bool     `envconfig:"optional"`
-		Orgs       []string `envconfig:"optional"`
+		API         string   `envconfig:"optional"`
+		Host        string   `envconfig:"optional"`
+		Client      string   `envconfig:"optional"`
+		Secret      string   `envconfig:"optional"`
+		PrivateMode bool     `envconfig:"optional"`
+		SkipVerify  bool     `envconfig:"optional"`
+		Open        bool     `envconfig:"optional"`
+		Orgs        []string `envconfig:"optional"`
 	}
 
 	Bitbucket struct {
@@ -91,7 +85,7 @@ type Config struct {
 	}
 
 	Gitlab struct {
-		URL        string   `envconfig:"optional"`
+		Host       string   `envconfig:"optional"`
 		Client     string   `envconfig:"optional"`
 		Secret     string   `envconfig:"optional"`
 		SkipVerify bool     `envconfig:"optional"`
@@ -132,5 +126,34 @@ func applyDefaults(c *Config) *Config {
 	if len(c.Session.Secret) == 0 {
 		c.Session.Secret = c.Auth.Secret
 	}
+
+	// Prevent crash on start, use sqlite3
+	// driver as default if DRONE_DATABASE_DRIVER and
+	// DRONE_DATABASE_DATASOURCE not specifed
+	if len(c.Database.Driver) == 0 && len(c.Database.Datasource) == 0 {
+		c.Database.Driver = "sqlite3"
+
+		pwd, err := os.Getwd()
+		if err != nil {
+			panic(err)
+		}
+
+		c.Database.Datasource = path.Join(pwd, "drone.sqlite3")
+		log.Warnf("Use default database settings, driver: %q, config: %q", c.Database.Driver, c.Database.Datasource)
+	}
+
+	// Set default settings for remotes
+	switch strings.ToLower(c.Remote.Driver) {
+	case "github":
+		if len(c.Github.API) == 0 && len(c.Github.Host) == 0 {
+			c.Github.API = "https://api.github.com/"
+			c.Github.Host = "https://github.com"
+			log.Warnf("Use default github settings, host: %q, api: %q", c.Github.Host, c.Github.API)
+		} else if len(c.Github.API) == 0 && len(c.Github.Host) != 0 {
+			c.Github.API = fmt.Sprintf("%s/api/v3/", c.Github.Host)
+			log.Warnf("Github API not specified, use: %q", c.Github.API)
+		}
+	}
+
 	return c
 }

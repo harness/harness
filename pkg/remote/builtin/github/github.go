@@ -1,6 +1,7 @@
 package github
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,13 +11,15 @@ import (
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/hashicorp/golang-lru"
 	"github.com/drone/drone/pkg/config"
+	"github.com/drone/drone/pkg/oauth2"
+	"github.com/drone/drone/pkg/remote"
 	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/utils/httputil"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/google/go-github/github"
 )
 
 const (
-	DefaultAPI   = "https://api.github.com/"
 	DefaultURL   = "https://github.com"
 	DefaultScope = "repo,repo:status,user:email"
 )
@@ -26,33 +29,35 @@ type GitHub struct {
 	API         string
 	Client      string
 	Secret      string
+	AllowedOrgs []string
+	Open        bool
 	PrivateMode bool
 	SkipVerify  bool
 
 	cache *lru.Cache
 }
 
-func New(conf *config.Config) *GitHub {
+func init() {
+	remote.Register("github", NewDriver)
+}
+
+func NewDriver(conf *config.Config) (remote.Remote, error) {
 	var github = GitHub{
-		API:         DefaultAPI,
-		URL:         DefaultURL,
-		Client:      conf.Auth.Client,
-		Secret:      conf.Auth.Secret,
-		PrivateMode: conf.Remote.Private,
-		SkipVerify:  conf.Remote.SkipVerify,
+		API:         conf.Github.API,
+		URL:         conf.Github.Host,
+		Client:      conf.Github.Client,
+		Secret:      conf.Github.Secret,
+		AllowedOrgs: conf.Github.Orgs,
+		Open:        conf.Github.Open,
+		PrivateMode: conf.Github.PrivateMode,
+		SkipVerify:  conf.Github.SkipVerify,
 	}
 	var err error
 	github.cache, err = lru.New(1028)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	// if GitHub enterprise then ensure we're using the
-	// appropriate URLs
-	if !strings.HasPrefix(conf.Remote.Base, DefaultURL) && len(conf.Remote.Base) != 0 {
-		github.URL = conf.Remote.Base
-		github.API = conf.Remote.Base + "/api/v3/"
-	}
 	// the API must have a trailing slash
 	if !strings.HasSuffix(github.API, "/") {
 		github.API += "/"
@@ -61,7 +66,7 @@ func New(conf *config.Config) *GitHub {
 	if strings.HasSuffix(github.URL, "/") {
 		github.URL = github.URL[:len(github.URL)-1]
 	}
-	return &github
+	return &github, nil
 }
 
 func (g *GitHub) Login(token, secret string) (*common.User, error) {
@@ -90,6 +95,16 @@ func (g *GitHub) Orgs(u *common.User) ([]string, error) {
 		orgs_ = append(orgs_, *org.Login)
 	}
 	return orgs_, nil
+}
+
+// Accessor method, to allowed remote organizations field.
+func (g *GitHub) GetOrgs() []string {
+	return g.AllowedOrgs
+}
+
+// Accessor method, to open field.
+func (g *GitHub) GetOpen() bool {
+	return g.Open
 }
 
 // Repo fetches the named repository from the remote system.
@@ -279,6 +294,25 @@ func (g *GitHub) push(r *http.Request) (*common.Hook, error) {
 	}
 
 	return &common.Hook{Repo: repo, Commit: commit}, nil
+}
+
+// ¯\_(ツ)_/¯
+func (g *GitHub) Oauth2Transport(r *http.Request) *oauth2.Transport {
+	return &oauth2.Transport{
+		Config: &oauth2.Config{
+			ClientId:     g.Client,
+			ClientSecret: g.Secret,
+			Scope:        DefaultScope,
+			AuthURL:      fmt.Sprintf("%s/login/oauth/authorize", g.URL),
+			TokenURL:     fmt.Sprintf("%s/login/oauth/access_token", g.URL),
+			RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURL(r)),
+			//settings.Server.Scheme, settings.Server.Hostname),
+		},
+		Transport: &http.Transport{
+			Proxy:           http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: g.SkipVerify},
+		},
+	}
 }
 
 // pullRequest parses a hook with event type `pullRequest`
