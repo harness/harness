@@ -20,7 +20,7 @@ import (
 	"github.com/drone/drone/pkg/store"
 
 	_ "github.com/drone/drone/pkg/remote/builtin/github"
-	_ "github.com/drone/drone/pkg/remote/gitlab"
+	_ "github.com/drone/drone/pkg/remote/builtin/gitlab"
 	_ "github.com/drone/drone/pkg/store/builtin"
 
 	_ "net/http/pprof"

@@ -85,7 +85,7 @@ type Config struct {
 	}
 
 	Gitlab struct {
-		URL        string   `envconfig:"optional"`
+		Host       string   `envconfig:"optional"`
 		Client     string   `envconfig:"optional"`
 		Secret     string   `envconfig:"optional"`
 		SkipVerify bool     `envconfig:"optional"`
