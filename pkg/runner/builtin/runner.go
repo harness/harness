@@ -226,7 +226,7 @@ func (r *Runner) Logs(job *types.Job) (io.ReadCloser, error) {
 		}
 	}
 
-	return r.Manager.Logs(container)
+	return r.Manager.Logs(container, false)
 }
 
 func cname(job *types.Job) string {
@@ -238,10 +238,7 @@ func (r *Runner) Poll(q queue.Queue) {
 		stats := r.Manager.ClusterStats()
 		log.Errorf("Cluster stats:")
 		log.Errorf("CPU: %s", stats.Cpus)
-		log.Errorf("MEMORY: %s", stats.Memory)
 		log.Errorf("Reserved CPU: %s", stats.ReservedCpus)
-		log.Errorf("Reserved MEMORY: %s", stats.ReservedMemory)
-		log.Errorf("Number of running cotainers: %s", stats.ContainerCount)
 		// If available cpus
 		if stats.Cpus - stats.ReservedCpus > 0 {
 			w := q.Pull()

@@ -101,13 +101,52 @@ func (c *Cluster) Kill(container *citadel.Container, sig int) error {
 	return engine.Kill(container, sig)
 }
 
-func (c *Cluster) Logs(container *citadel.Container, stdout bool, stderr bool) (io.ReadCloser, error) {
+func (c *Cluster) Logs(args ...interface{}) (io.ReadCloser, error) {
+	var container *citadel.Container
+	var stdout bool
+	var stderr bool
+	var follow bool
+	if 3 > len(args) {
+		return nil, fmt.Errorf("Not enough parameters.")
+	}
+
+	for i,p := range args {
+		switch i {
+			case 0: // container
+				param, ok := p.(*citadel.Container)
+				if !ok {
+					panic("1st parameter not type *citadel.Container")
+				}
+				container = param
+
+			case 1: //stdout
+				param, ok := p.(bool)
+				if !ok {
+					panic("2nd parameter not type bool")
+				}
+				stdout = param
+
+			case 2: //stderr
+				param, ok := p.(bool)
+				if !ok {
+					panic("3rd parameter not type bool")
+				}
+				stderr = param
+
+			case 3: //follow
+				param, ok := p.(bool)
+				if !ok {
+					panic("4th parameter not type bool")
+				}
+				follow = param
+		}
+	}
 	engine := c.engines[container.Engine.ID]
 	if engine == nil {
 		return nil, fmt.Errorf("engine with id %s is not in cluster", container.Engine.ID)
 	}
 
-	return engine.Logs(container, stdout, stderr)
+	return engine.Logs(container, stdout, stderr, follow)
 }
 
 func (c *Cluster) Stop(container *citadel.Container) error {

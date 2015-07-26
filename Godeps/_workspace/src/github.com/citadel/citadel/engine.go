@@ -192,12 +192,12 @@ func (e *Engine) ListContainers(all bool, size bool, filter string) ([]*Containe
 	return out, nil
 }
 
-func (e *Engine) Logs(container *Container, stdout bool, stderr bool) (io.ReadCloser, error) {
+func (e *Engine) Logs(container *Container, stdout bool, stderr bool, follow bool) (io.ReadCloser, error) {
 	logopts := &dockerclient.LogOptions{
 		Stdout:     stdout,
 		Stderr:     stderr,
 		Timestamps: false,
-		Follow:     false,
+		Follow:     follow,
 		Tail:       0,
 	}
 	return e.client.ContainerLogs(container.ID, logopts)

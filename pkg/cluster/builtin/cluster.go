@@ -144,7 +144,6 @@ func (c *Manager) AddDefaultDocker() error {
 }
 
 func (c *Manager) AddEngine(engine *citadel.Engine) error {
-	log.Errorf("Add Engine with tls config: %s", c.tlc)
 	if err := engine.Connect(c.tlc); err != nil {
 		log.Errorf("Could not connect to docker: %s", err)
 		return err
@@ -181,8 +180,8 @@ func (c *Manager) RemoveContainer(container *citadel.Container) error {
 	return nil
 }
 
-func (c *Manager) Logs(container *citadel.Container) (log io.ReadCloser, err error) {
-	log, err = c.cluster.Logs(container, true, true)
+func (c *Manager) Logs(container *citadel.Container, follow bool) (log io.ReadCloser, err error) {
+	log, err = c.cluster.Logs(container, true, true, follow)
 	return
 }
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"time"
+	"io/ioutil"
 
 	"github.com/drone/drone/pkg/types"
 	cluster_manager "github.com/drone/drone/pkg/cluster/builtin"
@@ -18,7 +19,7 @@ var (
 
 var (
 // name of the build agent container.
-	DefaultAgent = "drone/drone-build"
+	DefaultAgent = "drone/drone-build:latest"
 
 // default name of the build agent executable
 	DefaultEntrypoint = []string{"/bin/drone-build"}
@@ -75,7 +76,6 @@ func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 	}
 	args = append(args, "--")
 	args = append(args, string(stdin))
-	log.Errorf("params for build: %s", args)
 	image := &citadel.Image{
 		Type: "drone_internal",
 		ContainerName: name,
@@ -130,7 +130,7 @@ func (w *worker) Logs() (io.ReadCloser, error) {
 	if w.build == nil {
 		return nil, ErrLogging
 	}
-	return w.manager.Logs(w.build)
+	return w.manager.Logs(w.build, false)
 }
 
 // Remove stops and removes the build, deploy and
@@ -157,20 +157,34 @@ func run(manager *cluster_manager.Manager, image *citadel.Image, name string, ti
 	go func() {
 		// attempts to create the container
 		log.Errorf("Start container")
-		container, err := manager.Start(image, false)
+		container, err := manager.Start(image, true)
 		if err != nil {
 			log.Errorf("Error starting container: %s", err)
+			errc <- err
+			return
 		}
+
+		// blocks and waits for the container to finish
+		// by streaming the logs (to /dev/null). Ideally
+		// we could use the `wait` function instead
+		rc, err := manager.Logs(container, true)
+		if err != nil {
+			errc <- err
+			return
+		}
+		io.Copy(ioutil.Discard, rc)
+		rc.Close()
+
 		containerc <- container
-		errc <- err
 	}()
 
 	select {
 	case container := <- containerc:
-		err := <- errc
 		log.Errorf("Stop container")
 		manager.StopAndKillContainer(container)
-		return container, err
+		return container, nil
+	case err := <- errc:
+		return nil, err
 	case <-time.After(timeout):
 		container := manager.FindContainerByName(name)
 		if container != nil {
