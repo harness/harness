@@ -101,7 +101,10 @@ func (r *Gitlab) Repo(u *common.User, owner, name string) (*common.Repo, error) 
 
 	if r.PrivateMode {
 		repo.Private = true
+	} else {
+		repo.Private = !repo_.Public
 	}
+
 	return repo, err
 }
 
