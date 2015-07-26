@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Bugagazavr/go-gitlab-client"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/Bugagazavr/go-gitlab-client"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/hashicorp/golang-lru"
 	"github.com/drone/drone/pkg/config"
 	"github.com/drone/drone/pkg/oauth2"
