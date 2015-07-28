@@ -82,7 +82,11 @@ func (r *Gitlab) Orgs(u *common.User) ([]string, error) {
 // Repo fetches the named repository from the remote system.
 func (r *Gitlab) Repo(u *common.User, owner, name string) (*common.Repo, error) {
 	client := NewClient(r.URL, u.Token, r.SkipVerify)
-	id := ns(owner, name)
+	projectId, err := client.SearchProjectId(owner, name)
+	if err != nil || projectId == 0 {
+		return nil, err
+	}
+	id := strconv.Itoa(projectId)
 	repo_, err := client.Project(id)
 	if err != nil {
 		return nil, err
@@ -118,7 +122,12 @@ func (r *Gitlab) Perm(u *common.User, owner, name string) (*common.Perm, error) 
 	}
 
 	client := NewClient(r.URL, u.Token, r.SkipVerify)
-	id := ns(owner, name)
+	projectId, err := client.SearchProjectId(owner, name)
+	if err != nil || projectId == 0 {
+		return nil, err
+	}
+	id := strconv.Itoa(projectId)
+
 	repo, err := client.Project(id)
 	if err != nil {
 		return nil, err
@@ -135,8 +144,13 @@ func (r *Gitlab) Perm(u *common.User, owner, name string) (*common.Perm, error) 
 // repository and returns in string format.
 func (r *Gitlab) Script(user *common.User, repo *common.Repo, build *common.Build) ([]byte, error) {
 	var client = NewClient(r.URL, user.Token, r.SkipVerify)
-	var path = ns(repo.Owner, repo.Name)
-	return client.RepoRawFile(path, build.Commit.Sha, ".drone.yml")
+	projectId, err := client.SearchProjectId(repo.Owner, repo.Name)
+	if err != nil || projectId == 0 {
+		return nil, err
+	}
+	id := strconv.Itoa(projectId)
+
+	return client.RepoRawFile(id, build.Commit.Sha, ".drone.yml")
 }
 
 // NOTE Currently gitlab doesn't support status for commits and events,
@@ -164,8 +178,14 @@ func (r *Gitlab) Netrc(u *common.User) (*common.Netrc, error) {
 // a Public Deploy key, if applicable.
 func (r *Gitlab) Activate(user *common.User, repo *common.Repo, k *common.Keypair, link string) error {
 	var client = NewClient(r.URL, user.Token, r.SkipVerify)
-	var path = ns(repo.Owner, repo.Name)
-	var title, err = GetKeyTitle(link)
+
+	projectId, err := client.SearchProjectId(repo.Owner, repo.Name)
+	if err != nil || projectId == 0 {
+		return err
+	}
+	id := strconv.Itoa(projectId)
+
+	title, err := GetKeyTitle(link)
 	if err != nil {
 		return err
 	}
@@ -173,7 +193,7 @@ func (r *Gitlab) Activate(user *common.User, repo *common.Repo, k *common.Keypai
 	// if the repository is private we'll need
 	// to upload a github key to the repository
 	if repo.Private {
-		if err := client.AddProjectDeployKey(path, title, k.Public); err != nil {
+		if err := client.AddProjectDeployKey(id, title, k.Public); err != nil {
 			return err
 		}
 	}
@@ -183,36 +203,40 @@ func (r *Gitlab) Activate(user *common.User, repo *common.Repo, k *common.Keypai
 	link += "&owner=" + repo.Owner + "&name=" + repo.Name
 
 	// add the hook
-	return client.AddProjectHook(path, link, true, false, true)
+	return client.AddProjectHook(id, link, true, false, true)
 }
 
 // Deactivate removes a repository by removing all the post-commit hooks
 // which are equal to link and removing the SSH deploy key.
 func (r *Gitlab) Deactivate(user *common.User, repo *common.Repo, link string) error {
 	var client = NewClient(r.URL, user.Token, r.SkipVerify)
-	var path = ns(repo.Owner, repo.Name)
+	projectId, err := client.SearchProjectId(repo.Owner, repo.Name)
+	if err != nil || projectId == 0 {
+		return err
+	}
+	id := strconv.Itoa(projectId)
 
-	keys, err := client.ProjectDeployKeys(path)
+	keys, err := client.ProjectDeployKeys(id)
 	if err != nil {
 		return err
 	}
 	var pubkey = strings.TrimSpace(repo.Keys.Public)
 	for _, k := range keys {
 		if pubkey == strings.TrimSpace(k.Key) {
-			if err := client.RemoveProjectDeployKey(path, strconv.Itoa(k.Id)); err != nil {
+			if err := client.RemoveProjectDeployKey(id, strconv.Itoa(k.Id)); err != nil {
 				return err
 			}
 			break
 		}
 	}
-	hooks, err := client.ProjectHooks(path)
+	hooks, err := client.ProjectHooks(id)
 	if err != nil {
 		return err
 	}
 	link += "&owner=" + repo.Owner + "&name=" + repo.Name
 	for _, h := range hooks {
 		if link == h.Url {
-			if err := client.RemoveProjectHook(path, strconv.Itoa(h.Id)); err != nil {
+			if err := client.RemoveProjectHook(id, strconv.Itoa(h.Id)); err != nil {
 				return err
 			}
 			break
