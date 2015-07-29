@@ -1,0 +1,71 @@
+.list > a,
+.list > li {
+    display: flex;
+    padding: 30px 0px;
+    border-top: 1px solid #f0f4f7;
+    color:#4c555a;
+    text-decoration: none;
+    position: relative;
+}
+.list > a:first-child,
+.list > li:first-child {
+    border-top: none;
+}
+
+.list .column-avatar {    
+    width: 60px;
+    min-width: 60px;
+}
+.list .column-status {
+    width: 45px;
+    min-width: 45px;
+}
+.list .column-fill {
+    flex: 1 1 auto;
+}
+
+.comfortable > a,
+.comfortable > div,
+.comfortable > li {
+    padding-top:30px;
+    padding-bottom:30px;
+}
+
+.cozy > a,
+.cozy > div,
+.cozy > li {
+    padding-top:15px;
+    padding-bottom:15px;
+}
+
+.compact > a,
+.compact > div,
+.compact > li {
+    padding-top:10px;
+    padding-bottom:10px;
+}
+
+.list .column-avatar img {
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    margin-left:5px;
+}
+.list h2 {
+    line-height:32px;
+    font-size:18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom:1px;
+}
+.list p {
+    color:#a7adba;
+    margin-top:3px;
+    font-size:14px;
+    line-height:20px;
+}
+.list em,
+.list em {
+    color:#65737e;
+}

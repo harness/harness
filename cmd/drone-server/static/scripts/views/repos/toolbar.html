@@ -1,18 +1,8 @@
-<div class="breadcrumb">
-  <a href="/{{ repo.full_name }}/edit" class="icon icon-home">
-    <i class="material-icons md-18">home</i>
-  </a>
-  <a ng-href="/{{ repo.full_name }}">{{ repo.owner }} / {{ repo.name }}</a>
-</div>
-
-<div class="menu">
-  <a ng-href="/{{ repo.full_name }}/edit" class="nav-item settings float-right" ng-if="repo.permissions.pull">
-    <i class="material-icons md-18">edit</i>
-  </a>
-  <button ng-click="watch(repo)" ng-if="!repo.starred && user" class="nav-item star float-right">
-    <i class="material-icons md-18">star_border</i>
-  </button>
-  <button ng-click="unwatch(repo)" ng-if="repo.starred && user" class="nav-item unstar float-right">
-    <i class="material-icons md-18">star</i>
-  </button>
-</div>
+<ol>
+  <li>
+    <a ng-href="/{{ repo.full_name}}">
+      <i class="material-icons">arrow_back</i>
+    </a>
+  </li>
+  <li>{{repo.owner}} / {{repo.name}}</li>
+</ol>

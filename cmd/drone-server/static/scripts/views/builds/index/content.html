@@ -1,18 +1,33 @@
-<article>
-  <section>
-    <a class="row build-row" ng-repeat="build in builds | orderBy:'-number'" ng-href="/{{ repo.full_name }}/{{ build.number }}">
-      <div>
-        <div ng-class="[ 'build-num', build.status ]"></div>
-      </div>
-      <div>
-        <h3>{{ build.head_commit.message }}</h3>
+<main>
+  <article>
 
-        <p>
-          <strong>{{ build.head_commit.author.login }}</strong> pushed to <strong>{{ build.head_commit.branch}}</strong> {{ build.started_at | fromNow }}
-        </p>
+    <section class="search">
+      <input type="search" spellcheck="false" placeholder="Filter commits for {{ repo.full_name}}" />
+      <menu>
+        <button type="button" ng-click="unwatch(repo)" ng-if="repo.starred && user">
+          <i class="material-icons">visibility</i>
+        </button>
+        <button type="button" ng-click="watch(repo)" ng-if="!repo.starred && user">
+          <i class="material-icons">visibility_off</i>
+        </button>
+        <a href="/{{ repo.full_name }}/edit">
+          <i class="material-icons">tune</i>
+        </a>
+      </menu> 
+    </section>
 
-        <div style="position:absolute;top:30px;right:30px;color:#CCC;"># {{build.number}}</div>
+    <div>
+      <div class="list">
+        <a ng-repeat="build in builds | orderBy:'-number'" ng-href="/{{ repo.full_name }}/{{ build.number}}">
+          <div class="column-status">
+            <div class="status {{ build.status }}"></div>
+          </div>
+          <div class="column-fill">
+            <h2>{{ build.head_commit.message }}</h2>
+            <p><em>{{ build.head_commit.author.login }}</em> pushed to <em>{{ build.head_commit.branch }}</em> {{ build.started_at | fromNow }}</p>
+          </div>
+        </a>
       </div>
-    </a>
-  </section>
-</article>
+    </div>
+  </article>
+</main>

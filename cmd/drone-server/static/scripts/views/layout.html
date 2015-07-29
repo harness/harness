@@ -1,15 +1,71 @@
 <header>
-  <a class="logo float-left" href="/"></a>
-  <a class="menu-item help float-right" href="http://readme.drone.io" target="_blank">
-    <i class="material-icons md-18">help</i>
-  </a>
-  <a class="menu-item users float-right" href="/users" ng-if="user.admin">
-    <i class="material-icons md-18">supervisor_account</i>
-  </a>
-  <a class="menu-item settings float-right" href="/profile">
-    <i class="material-icons md-18">settings</i>
-  </a>
-  <a class="menu-item user-name float-right" href="/profile">{{ "+"+user.login }}</a>
+  <div class="toolbar" ui-view="toolbar"></div>
+
+  <ul>
+    <li>
+      <img src="https://avatars1.githubusercontent.com/u/817538" />
+    </li>
+    <li ng-init="show=false">
+      <a href="#" ng-click="show=true">
+        <span>{{user.login}}</span>
+        <i class="material-icons">more_vert</i>
+      </a>
+      <div class="backdrop" ng-show="show" ng-click="show=false"></div>
+      <div class="dropdown" ng-show="show" ng-click="show=false">
+        <ul>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/users">Users</a></li>
+          <li><a href="/profile">Workers</a></li>
+          <li><a href="/help">Help</a></li>
+        </ul>
+      </div>
+    </li>
+  </ul>
 </header>
-<div class="toolbar" ui-view="toolbar"></div>
+
 <div ui-view="content"></div>
+
+<style>
+header ul li a i {
+  cursor:pointer;
+}
+header li {
+  position:relative;
+}
+.backdrop {
+  position:fixed;
+  top:0px;
+  left:0px;
+  right:0px;
+  bottom:0px;
+  z-index:99;
+  cursor:default;
+}
+.dropdown {
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,.14),0 3px 1px -2px rgba(0,0,0,.2),0 1px 5px 0 rgba(0,0,0,.12);
+  position: absolute;
+  top: 60px;
+  right: 15px;
+  width: 200px;
+  height: 200px;
+  background: #FFF;
+  z-index:999;
+  padding: 10px 0px;
+}
+.dropdown ul {
+  float:inherit;
+  margin:0px;
+}
+.dropdown li {
+  display:block;
+}
+.dropdown li > a {
+  padding: 15px 20px;
+  display: block;
+  line-height: inherit;
+  text-transform: none;
+}
+.dropdown li > a:hover {
+  background:#F5F7F9;
+}
+</style>
