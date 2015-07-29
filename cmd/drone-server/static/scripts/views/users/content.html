@@ -1,36 +1,20 @@
-<article>
+<main>
+  <article>
 
-  <section>
-    <form style="padding:30px">
-      <input type="text" ng-model="login" placeholder="i.e. octocat"
-             style="font-size:14px;padding:10px 20px;width:400px;border: 1px solid #d9d9d9;outline:none;"/>
-      <button ng-click="add(login)"
-              style="display: inline-block;background:#EEE;font-size:14px; padding:0px 20px;text-transform:uppercase;cursor:pointer;color:#616161;height:39px;line-height:41px;margin-left:10px;">
-        Add User
-      </button>
+    <section class="search">
+      <input type="search" spellcheck="false" placeholder="Create or find a user" ng-model="login" />
+    </section>
 
-    </form>
-  </section>
+    <ul class="list cozy">
+      <li class="row row-user" ng-repeat="user in users">
+        <div class="column-avatar">
+          <img ng-src="{{ user.gravatar_id | gravatar }}" />
+        </div>
+        <div class="column-fill">
+          <h2>{{ user.login }}</h2>
+        </div>
+      </li>
+    </ul>
 
-  <section>
-    <div class="row row-user" ng-repeat="user in users">
-      <div>
-        <img ng-src="{{ user.gravatar_id | gravatar }}"/>
-      </div>
-      <div>
-        <h3>{{ user.login }}
-          <small ng-if="user.admin">Admin</small>
-        </h3>
-        <p>{{ user.email }}</p>
-        <button ng-click="toggle(user)" ng-class="{'btn-admin':true, 'btn-checked': user.admin}">
-          <i class="material-icons md-18">account_circle</i>
-        </button>
-        <button ng-click="remove(user)" class="btn-remove">
-          <i class="material-icons md-18">delete</i>
-        </button>
-      </div>
-    </div>
-  </section>
-
-
-</article>
+  </article>
+</main>

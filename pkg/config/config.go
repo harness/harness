@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/naoina/toml"
+	// "github.com/drone/drone/Godeps/_workspace/src/github.com/naoina/toml"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/vrischmann/envconfig"
 )
 
@@ -108,11 +108,11 @@ func Load(path string) (*Config, error) {
 // reads parameters from environment variables.
 func LoadBytes(data []byte) (*Config, error) {
 	conf := &Config{}
-	err := toml.Unmarshal(data, conf)
-	if err != nil {
-		return nil, err
-	}
-	err = envconfig.InitWithPrefix(conf, "DRONE")
+	// err := toml.Unmarshal(data, conf)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	err := envconfig.InitWithPrefix(conf, "DRONE")
 	if err != nil {
 		return nil, err
 	}

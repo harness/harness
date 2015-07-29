@@ -10,6 +10,7 @@ drone
 *~
 ~*
 *.sqlite
+*.sqlite3
 *.deb
 *.deb.*
 *.rpm

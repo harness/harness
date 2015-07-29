@@ -1,0 +1,48 @@
+.alert {
+    padding: 40px;
+    background-color: #F5F7F9;
+    color: #4f5b66;
+    text-align: center;
+    font-size: 16px;
+    border-radius:3px;
+    margin-bottom:30px;
+    position:relative;
+}
+.alert em {
+    font-weight: bold;
+    color: #2b303b;
+}
+.alert i.material-icons {
+    font-size: 42px;
+    display: block;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 20px;
+}
+.alert-error {
+    background: #bf616a;
+    color: #fff;
+}
+.alert-create-not-found {
+    color: rgba(255,255,255,0.95);
+    background:#ebcb8b;
+    outline:none;
+    border:none;
+    width:100%;
+    cursor: pointer;
+    font-family: Roboto;
+}
+.alert-error em,
+.alert-create-not-found em {
+    font-weight: bold;
+    color: #fff;
+    font-size: 120%;
+    margin-left:10px;
+}
+
+/* I'm not sure at the moment if we want
+ * to display these icons or not
+ */
+.alert-create-not-found i.material-icons {
+    display:none;
+}
