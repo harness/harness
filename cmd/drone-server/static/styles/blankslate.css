@@ -1,13 +1,23 @@
 .blankslate {
     padding: 40px 20px;
-    background-color: #eff1f5;
-    color: #303030;
+    background-color: #59abe3;
+    background-color: #8fa1b3;
+    color: #fff;
     text-align: center;
-    font-size: 16px;
+    font-size: 18px;
+    line-height:28px;
+    margin-bottom:30px;
 }
 .blankslate.clean-background {
 
 }
 .blankslate.spacious {
 
+}
+.blankslate i.material-icons {
+    font-size: 42px;
+    display: block;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 20px;
 }

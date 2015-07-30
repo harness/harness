@@ -16,6 +16,16 @@
       </menu> 
     </section>
 
+    <div class="blankslate" ng-show="!builds.length && !loading && !error">
+      <i class="material-icons">settings_ethernet</i>
+      <span>Push code to execute your first build.<br/>Be sure to configure you build using the <em>.drone.yml</em> file.</span>
+    </div>
+
+    <div class="alert alert-error" ng-show="!!error">
+      <i class="material-icons">error_outline</i>
+      <span>There was an error fetching the build history.</span>
+    </div>
+
     <div>
       <div class="list">
         <a ng-repeat="build in builds | orderBy:'-number'" ng-href="/{{ repo.full_name }}/{{ build.number}}">

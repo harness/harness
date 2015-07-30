@@ -2,13 +2,31 @@
   <article>
 
     <section class="search">
-      <input type="search" spellcheck="false" placeholder="Create or find a repository" ng-model="login" />
+      <input type="search" spellcheck="false" placeholder="Create or find a repository (e.g. octocat/Hello-World)" ng-model="search_text" ng-keypress="add($event, search_text)"/>
     </section>
 
-    <ul class="list cozy">
+    <div class="blankslate" ng-show="!repos.length && !loading && !search_text && !error">
+      <i class="material-icons">control_point_duplicate</i>
+      <span>Get started by adding your repository.<br/>Just type the repository name in the text box above.</span>
+    </div>
+
+    <div class="alert alert-create-not-found" ng-show="!!search_text">
+      <i class="material-icons" ng-show="!waiting">control_point_duplicate</i>
+      <i class="material-icons waiting" ng-show="waiting">refresh</i>
+      <span ng-show="!waiting">Press &lt;enter&gt; to add <em>{{search_text}}</em></span>
+      <span ng-show="waiting">Configuring repository <em>{{search_text}}</em></span>
+    </div>
+
+    <div class="alert alert-error" ng-show="!!error">
+      <i class="material-icons">error_outline</i>
+      <span>There was an error adding your repository.<br/>Please ensure the
+      repository exists and you have admin privileges.</span>
+    </div>
+
+    <ul class="list cozy" ng-show="!waiting && !error">
       <a class="row row-repo" ng-repeat="repo in repos" ng-href="/{{ repo.full_name }}">
         <div class="column-avatar">
-          <img ng-src="{{ repo.gravatar_id | gravatar }}" />
+          <img ng-src="https://avatars1.githubusercontent.com/u/2181346" />
         </div>
         <div class="column-fill">
           <h2>{{ repo.name }}</h2>

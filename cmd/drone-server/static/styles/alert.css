@@ -22,14 +22,15 @@
 .alert-error {
     background: #bf616a;
     color: #fff;
+    line-height:24px;
 }
 .alert-create-not-found {
     color: rgba(255,255,255,0.95);
-    background:#ebcb8b;
+    background:#59abe3;
+    background: #8fa1b3;
     outline:none;
     border:none;
     width:100%;
-    cursor: pointer;
     font-family: Roboto;
 }
 .alert-error em,
@@ -40,9 +41,43 @@
     margin-left:10px;
 }
 
-/* I'm not sure at the moment if we want
- * to display these icons or not
- */
-.alert-create-not-found i.material-icons {
-    display:none;
+@-webkit-keyframes delayed-rotate {
+    0% {
+    -webkit-transform: rotate(0deg);
+    }
+    100% { 
+    -webkit-transform: rotate(360deg);
+    }
+}
+@-moz-keyframes delayed-rotate {
+    0% {
+    -moz-transform: rotate(0deg);
+    }
+    100% { 
+    -moz-transform: rotate(360deg);
+    }
+}
+@keyframes delayed-rotate {
+    0% {
+    transform: rotate(0deg);
+    }
+    100% { 
+    transform: rotate(360deg);
+    }
+}
+.waiting {
+    -webkit-animation-name:             delayed-rotate; 
+    -webkit-animation-duration:         1s; 
+    -webkit-animation-iteration-count:  infinite;
+    -webkit-animation-timing-function:  ease-in-out;
+
+    -moz-animation-name:             delayed-rotate; 
+    -moz-animation-duration:         1s; 
+    -moz-animation-iteration-count:  infinite;
+    -moz-animation-timing-function:  ease-in-out;
+
+    animation-name:             delayed-rotate; 
+    animation-duration:         1s; 
+    animation-iteration-count:  infinite;
+    animation-timing-function:  ease-in-out;
 }
