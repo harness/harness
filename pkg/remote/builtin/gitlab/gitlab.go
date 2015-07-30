@@ -30,6 +30,7 @@ type Gitlab struct {
 	Open        bool
 	PrivateMode bool
 	SkipVerify  bool
+	Search      bool
 
 	cache *lru.Cache
 }
@@ -46,6 +47,7 @@ func NewDriver(conf *config.Config) (remote.Remote, error) {
 		AllowedOrgs: conf.Gitlab.Orgs,
 		Open:        conf.Gitlab.Open,
 		SkipVerify:  conf.Gitlab.SkipVerify,
+		Search:      conf.Gitlab.Search,
 	}
 	var err error
 	gitlab.cache, err = lru.New(1028)
@@ -82,11 +84,10 @@ func (r *Gitlab) Orgs(u *common.User) ([]string, error) {
 // Repo fetches the named repository from the remote system.
 func (r *Gitlab) Repo(u *common.User, owner, name string) (*common.Repo, error) {
 	client := NewClient(r.URL, u.Token, r.SkipVerify)
-	projectId, err := client.SearchProjectId(owner, name)
-	if err != nil || projectId == 0 {
+	id, err := GetProjectId(r, client, owner, name)
+	if err != nil {
 		return nil, err
 	}
-	id := strconv.Itoa(projectId)
 	repo_, err := client.Project(id)
 	if err != nil {
 		return nil, err
@@ -122,11 +123,10 @@ func (r *Gitlab) Perm(u *common.User, owner, name string) (*common.Perm, error) 
 	}
 
 	client := NewClient(r.URL, u.Token, r.SkipVerify)
-	projectId, err := client.SearchProjectId(owner, name)
-	if err != nil || projectId == 0 {
+	id, err := GetProjectId(r, client, owner, name)
+	if err != nil {
 		return nil, err
 	}
-	id := strconv.Itoa(projectId)
 
 	repo, err := client.Project(id)
 	if err != nil {
@@ -144,11 +144,10 @@ func (r *Gitlab) Perm(u *common.User, owner, name string) (*common.Perm, error) 
 // repository and returns in string format.
 func (r *Gitlab) Script(user *common.User, repo *common.Repo, build *common.Build) ([]byte, error) {
 	var client = NewClient(r.URL, user.Token, r.SkipVerify)
-	projectId, err := client.SearchProjectId(repo.Owner, repo.Name)
-	if err != nil || projectId == 0 {
+	id, err := GetProjectId(r, client, repo.Owner, repo.Name)
+	if err != nil {
 		return nil, err
 	}
-	id := strconv.Itoa(projectId)
 
 	return client.RepoRawFile(id, build.Commit.Sha, ".drone.yml")
 }
@@ -178,12 +177,10 @@ func (r *Gitlab) Netrc(u *common.User) (*common.Netrc, error) {
 // a Public Deploy key, if applicable.
 func (r *Gitlab) Activate(user *common.User, repo *common.Repo, k *common.Keypair, link string) error {
 	var client = NewClient(r.URL, user.Token, r.SkipVerify)
-
-	projectId, err := client.SearchProjectId(repo.Owner, repo.Name)
-	if err != nil || projectId == 0 {
+	id, err := GetProjectId(r, client, repo.Owner, repo.Name)
+	if err != nil {
 		return err
 	}
-	id := strconv.Itoa(projectId)
 
 	title, err := GetKeyTitle(link)
 	if err != nil {
@@ -210,11 +207,10 @@ func (r *Gitlab) Activate(user *common.User, repo *common.Repo, k *common.Keypai
 // which are equal to link and removing the SSH deploy key.
 func (r *Gitlab) Deactivate(user *common.User, repo *common.Repo, link string) error {
 	var client = NewClient(r.URL, user.Token, r.SkipVerify)
-	projectId, err := client.SearchProjectId(repo.Owner, repo.Name)
-	if err != nil || projectId == 0 {
+	id, err := GetProjectId(r, client, repo.Owner, repo.Name)
+	if err != nil {
 		return err
 	}
-	id := strconv.Itoa(projectId)
 
 	keys, err := client.ProjectDeployKeys(id)
 	if err != nil {

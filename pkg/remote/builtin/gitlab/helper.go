@@ -3,6 +3,7 @@ package gitlab
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/Bugagazavr/go-gitlab-client"
 )
@@ -81,4 +82,18 @@ func ns(owner, name string) string {
 
 func GetUserEmail(client *gogitlab.Gitlab, defaultURL string) (*gogitlab.Gitlab, error) {
 	return client, nil
+}
+
+func GetProjectId(r *Gitlab, client *gogitlab.Gitlab, owner, name string) (projectId string, err error) {
+	if r.Search {
+		_projectId, err := client.SearchProjectId(owner, name)
+		if err != nil || _projectId == 0 {
+			return "", err
+		}
+		projectId := strconv.Itoa(_projectId)
+		return projectId, nil
+	} else {
+		projectId := ns(owner, name)
+		return projectId, nil
+	}
 }
