@@ -10,8 +10,8 @@
 
     // Gets the currently authenticated user
     users.getCached().then(function (payload) {
-      $scope.loading = false;
       $scope.user = payload.data;
+      $scope.loading = false;
     });
 
     // Gets a list of repos to display in the
