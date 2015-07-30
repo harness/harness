@@ -58,6 +58,7 @@
 
 		$scope.add = function(event, login) {
 			$scope.error = undefined;
+			$scope.new_user = undefined;
 			if (event.which && event.which !== 13) {
 				return;
 			}
@@ -67,6 +68,7 @@
 				$scope.users.push(payload.data);
 				$scope.search_text=undefined;
 				$scope.waiting = false;
+				$scope.new_user = payload.data;
 			}).catch(function (err) {
 				$scope.error = err;
 				$scope.waiting = false;
@@ -75,11 +77,21 @@
 		}
 
 		$scope.toggle = function(user) {
+			if (user.login === $scope.user.login) {
+				// cannot revoke admin privilege for self
+				$scope.error = {}; // todo display an actual error here
+				return;
+			}
 			user.admin = !user.admin;
 			users.put(user);
 		}
 
 		$scope.remove = function(user) {
+			if (user.login === $scope.user.login) {
+				// cannot delete self
+				$scope.error = {}; // todo display an actual error here
+				return;
+			}
 			users.delete(user).then(function(){
 				var index = $scope.users.indexOf(user);
 				$scope.users.splice(index, 1);

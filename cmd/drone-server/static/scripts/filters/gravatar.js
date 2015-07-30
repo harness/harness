@@ -8,7 +8,7 @@
 	*/
 	function gravatar() {
 		return function(hash) {
-			if (hash  === undefined) { return ""; }
+			if (!hash) { return "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm&f=y"; }
 			return "https://secure.gravatar.com/avatar/"+hash+"?s=48&d=mm";
 		}
 	}
@@ -19,7 +19,7 @@
 	 */
 	function gravatarLarge() {
 		return function(hash) {
-			if (hash === undefined) { return ""; }
+			if (!hash) { return "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm&f=y"; }
 			return "https://secure.gravatar.com/avatar/"+hash+"?s=128&d=mm";
 		}
 	}

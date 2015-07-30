@@ -2,7 +2,7 @@
   <article>
 
     <section class="search">
-      <input type="search" spellcheck="false" placeholder="Filter commits for {{ repo.full_name}}" />
+      <input type="search" spellcheck="false" placeholder="Filter commits for {{ repo.full_name}}" spellcheck="false" ng-model="search_text"/>
       <menu>
         <button type="button" ng-click="unwatch(repo)" ng-if="repo.starred && user">
           <i class="material-icons">visibility</i>
@@ -28,7 +28,7 @@
 
     <div>
       <div class="list">
-        <a ng-repeat="build in builds | orderBy:'-number'" ng-href="/{{ repo.full_name }}/{{ build.number}}">
+        <a ng-repeat="build in builds | orderBy:'-number' | filter: search_text" ng-href="/{{ repo.full_name }}/{{ build.number}}">
           <div class="column-status">
             <div class="status {{ build.status }}"></div>
           </div>

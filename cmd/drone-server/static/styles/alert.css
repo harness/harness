@@ -24,6 +24,11 @@
     color: #fff;
     line-height:24px;
 }
+.alert-success {
+    background: #a3be8c;
+    color: #fff;
+    line-height:24px;
+}
 .alert-create-not-found {
     color: rgba(255,255,255,0.95);
     background:#59abe3;
@@ -33,6 +38,7 @@
     width:100%;
     font-family: Roboto;
 }
+.alert-success em,
 .alert-error em,
 .alert-create-not-found em {
     font-weight: bold;

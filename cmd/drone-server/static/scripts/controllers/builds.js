@@ -9,6 +9,8 @@
     var name = $stateParams.name;
     var fullName = owner + '/' + name;
 
+    $scope.loading=true;
+
     // Gets the currently authenticated user
     users.getCached().then(function (payload) {
       $scope.user = payload.data;
@@ -17,6 +19,7 @@
     // Gets a repository
     repos.get(fullName).then(function (payload) {
       $scope.repo = payload.data;
+      $scope.loading=false;
     }).catch(function (err) {
       $scope.error = err;
     });

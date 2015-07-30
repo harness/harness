@@ -16,13 +16,28 @@
       <span>Press &lt;enter&gt; to add <em>{{search_text}}</em></span>
     </div>
 
-    <ul class="list cozy">
-      <li class="row row-user" ng-repeat="user in users">
+    <div class="alert alert-success" ng-show="new_user">
+      <span>Successfully added user account <em>{{new_user.login}}</em>.</span>
+    </div>
+
+    <div class="alert alert-error" ng-show="!!error">
+      <i class="material-icons">error_outline</i>
+      <span>There was an error adding the user account.</span>
+    </div>
+
+    <ul class="list cozy user-list">
+      <li class="row row-user" ng-repeat="user in users | filter: search_text">
         <div class="column-avatar">
           <img ng-src="{{ user.gravatar_id | gravatar }}" />
         </div>
         <div class="column-fill">
-          <h2>{{ user.login }}</h2>
+          <h2>{{ user.login }} <small ng-if="user.admin" class="label label-success">Admin</small></h2>
+
+          <menu>
+            <button ng-click="toggle(user)" ng-if="!user.admin" class="button success">Grant Admin</button>
+            <button ng-click="toggle(user)" ng-if="user.admin" class="button danger">Revoke Admin</button>
+            <button ng-click="remove(user)" class="button danger">Delete</button>
+          </menu>          
         </div>
       </li>
     </ul>

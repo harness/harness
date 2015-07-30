@@ -1,0 +1,17 @@
+.label {
+  color: #FFF;
+  background:#8fa1b3;
+  font-size: 10px;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  vertical-align: middle;
+  border-radius: 2px;
+  margin-left: 15px;
+}
+
+.label-success {
+  background: #a3be8c;
+}
+.label-failure {
+  background: #bf616a;
+}
