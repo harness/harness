@@ -7,11 +7,19 @@
   vertical-align: middle;
   border-radius: 2px;
   margin-left: 15px;
+  cursor:default;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
 }
 
 .label-success {
-  background: #a3be8c;
+  color: #a3be8c;
+  border: 1px solid #a3be8c;
+  background: #fff;
 }
 .label-failure {
-  background: #bf616a;
+  color: #bf616a;
+  border: 1px solid #bf616a;
+  background: #fff;
 }

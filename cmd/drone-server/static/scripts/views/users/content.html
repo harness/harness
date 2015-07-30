@@ -7,7 +7,7 @@
 
     <div class="blankslate" ng-show="users.length === 1 && !search_text && !waiting">
       <i class="material-icons">control_point_duplicate</i>
-      <span>Get started by adding a user.<br/>Just type the user login (ie octocat) in the text box above.</span>
+      <span>Get started by adding your team members.<br/>Just type the user login (ie octocat) in the text box above.</span>
     </div>
 
     <div class="alert alert-create-not-found" ng-show="!!search_text">
@@ -26,7 +26,7 @@
     </div>
 
     <ul class="list cozy user-list">
-      <li class="row row-user" ng-repeat="user in users | filter: search_text">
+      <li class="row row-user" ng-repeat="user in users | orderBy:'login' | filter: search_text">
         <div class="column-avatar">
           <img ng-src="{{ user.gravatar_id | gravatar }}" />
         </div>
