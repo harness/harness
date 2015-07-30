@@ -352,7 +352,7 @@ func TestCommits(t *testing.T) {
 			}
 			commit1 := &common.Commit{
 				RepoID: 1,
-				State:  common.StatePending, //common.StateSuccess,
+				State:  common.StatePending,
 				Ref:    "refs/heads/master",
 				Sha:    "14710626f22791619d3b7e9ccf58b10374e5b76d",
 				Builds: buildList,

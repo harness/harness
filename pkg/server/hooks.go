@@ -101,6 +101,7 @@ func PostHook(c *gin.Context) {
 		raw = []byte(inject.InjectSafe(string(raw), repo.Params))
 	}
 	axes, err := matrix.Parse(string(raw))
+
 	if err != nil {
 		log.Errorf("failure to calculate matrix for %s. %s", repo.FullName, err)
 		c.Fail(404, err)

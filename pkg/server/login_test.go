@@ -74,7 +74,7 @@ func TestLogin(t *testing.T) {
 			config1 := &config.Config{}
 			config1.Auth.Client = "87e2bdf99eece72c73c1"
 			config1.Auth.Secret = "6b4031674ace18723ac41f58d63bff69276e5d1b"
-			config1.Auth.RequestToken = "" //Which will fall into getLoginOauth2
+			config1.Auth.RequestToken = "TESTING" //Which will fall into getLoginOauth2
 			remote1 := github.New(config1)
 			//hook1 := &common.Hook{
 			//	Repo:   repo1,

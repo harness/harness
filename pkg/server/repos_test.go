@@ -81,7 +81,7 @@ func TestRepos(t *testing.T) {
 			ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
 			//ctx.Params = append(ctx.Params, gin.Param{Key: "number", Value: "1"})
 			//
-			urlBase := "api/repos/"
+			urlBase := "/api/repos/"
 			urlString := (repo1.Owner + "/" + repo1.Name)
 			urlFull := (urlBase + urlString)
 			//
@@ -142,7 +142,7 @@ func TestRepos(t *testing.T) {
 			ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
 			//ctx.Params = append(ctx.Params, gin.Param{Key: "number", Value: "1"})
 			//
-			urlBase := "api/repos/"
+			urlBase := "/api/repos/"
 			urlString := (repo1.Owner + "/" + repo1.Name)
 			urlFull := (urlBase + urlString)
 			//
@@ -195,7 +195,7 @@ func TestRepos(t *testing.T) {
 			ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
 			//ctx.Params = append(ctx.Params, gin.Param{Key: "number", Value: "1"})
 			//
-			urlBase := "api/repos/"
+			urlBase := "/api/repos/"
 			urlString := (repo1.Owner + "/" + repo1.Name)
 			urlFull := (urlBase + urlString)
 			//
@@ -253,7 +253,7 @@ func TestRepos(t *testing.T) {
 			ctx.Params = append(ctx.Params, gin.Param{Key: "name", Value: repo1.Name})
 
 			//
-			urlBase := "api/repos/"
+			urlBase := "/api/repos/"
 			urlString := (repo1.Owner + "/" + repo1.Name)
 			urlFull := (urlBase + urlString)
 			//
@@ -305,7 +305,7 @@ func TestRepos(t *testing.T) {
 			ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
 
 			//
-			urlBase := "api/subscribers/"
+			urlBase := "/api/subscribers/"
 			urlString := (repo1.Owner + "/" + repo1.Name)
 			urlFull := (urlBase + urlString)
 			//
@@ -349,7 +349,7 @@ func TestRepos(t *testing.T) {
 			ctx := &gin.Context{Engine: gin.Default(), Writer: rw}
 
 			//
-			urlBase := "api/subscribers/"
+			urlBase := "/api/subscribers/"
 			urlString := (repo1.Owner + "/" + repo1.Name)
 			urlFull := (urlBase + urlString)
 			//
