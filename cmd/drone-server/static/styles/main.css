@@ -342,6 +342,10 @@ li menu {
     position:absolute;
     top:15px;
     right:0px;
+    display:none;
+}
+li:hover menu {
+    display:inline-block;
 }
 li menu .button {
     border-radius:50%;
@@ -352,6 +356,21 @@ li menu .button {
 
     color:#dfe1e8;
     background: #fff;
+    border:1px solid #FFF;
+    outline:none;
+    cursor:pointer;
+
+
+    width: auto;
+    text-transform: uppercase;
+    padding: 0px 10px;
+    border-radius: 2px;
+    font-size: 11px;
+    line-height: 30px;
+    height: auto;
+    margin-left: 10px;
+
+
 }
 li menu .button:hover {
     border:1px solid #a7adba;
@@ -369,8 +388,10 @@ li menu .button.success {
 
     color: #a3be8c;
     background:#FFF;
+
+
 }
-li menu .button.danger:hover {
+li menu .button.danger {
     color: #FFF;
     background: #bf616a;
 
@@ -378,6 +399,8 @@ li menu .button.danger:hover {
     background:#FFF;
     border:1px solid #bf616a;
 }
+
+
 
 /*
  * Tail button to follow a build
