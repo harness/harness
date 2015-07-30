@@ -42,20 +42,35 @@
 	 * This part of the site is for administrators only.
 	 */
 	function UsersCtrl($scope, users) {
+	    $scope.loading = true;
+	    $scope.waiting = false;
+
 		// Gets the currently authenticated user
 		users.getCached().then(function(payload){
 			$scope.user = payload.data;
 		});
 
+		// Gets the list of all system users
 		users.list().then(function(payload){
+	    	$scope.loading = true;
 			$scope.users = payload.data;
 		});
 
-		$scope.login="";
-		$scope.add = function(login) {
+		$scope.add = function(event, login) {
+			$scope.error = undefined;
+			if (event.which && event.which !== 13) {
+				return;
+			}
+			$scope.waiting = true;
+
 			users.post(login).then(function(payload){
 				$scope.users.push(payload.data);
-				$scope.login="";
+				$scope.search_text=undefined;
+				$scope.waiting = false;
+			}).catch(function (err) {
+				$scope.error = err;
+				$scope.waiting = false;
+				$scope.search_text = undefined;
 			});
 		}
 

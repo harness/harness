@@ -1,7 +1,6 @@
 <main>
 <article>
-  <section>
-    <h2>Settings</h2>
+  <section  style="margin-top:20px;">
 
     <div class="row">
       <div>Post Commit Hooks</div>
@@ -18,6 +17,42 @@
         <label for="pull_requests" class="switch"></label>
       </div>
     </div>
+    <div class="row" ng-if="user.admin">
+      <div>Trusted Code</div>
+      <div>
+        <input id="trusted" type="checkbox" hidden="hidden" ng-model="repo.trusted" ng-change="save(repo)"/>
+        <label for="trusted" class="switch"></label>
+      </div>
+    </div>
+    <div class="row" ng-if="user.admin">
+      <div>Timeout in minutes</div>
+      <div>
+        <input type="range" ng-model="repo.timeout" min="0" max="900" ng-blur="save(repo)"/>
+        <span class="slider-label">{{ repo.timeout }} minutes</span>
+      </div>
+    </div>
+    <div class="row">
+      <div>Badge</div>
+      <div>
+        <pre class="snippet">[![Build Status]({{ window.location.origin }}/api/badges/{{ repo.full_name }}/status.svg)]({{ window.location.origin }}/{{ repo.full_name }})</pre>
+      </div>
+    </div>
+    <div class="row">
+      <div>CCMenu</div>
+      <div>
+        <pre class="snippet">{{ window.location.origin }}/api/badges/{{ repo.full_name }}/cc.xml</pre>
+      </div>
+    </div>
+    <div class="row">
+      <div>Public Key</div>
+      <div>
+        <pre class="snippet">{{ repo.keypair.public }}</pre>
+      </div>
+    </div>
+  </section>
+
+  <p style="margin-top:50px;margin-bottom:10px;line-height:20px;color:#666;"><b style="font-weight:bold;">NOTE:</b> The below sections should re-architected and are therefore not styled. The delete page should be combined with this current page. Secret variables should be stored in the .drone.yml instead of the user interface</p>
+  <section>
     <a class="row" ng-href="{{ repo.full_name }}/edit/env">
       <div>Private Variables</div>
       <div>
@@ -30,48 +65,5 @@
     </a>
   </section>
 
-  <section ng-if="user.admin">
-    <h2>Admin settings</h2>
-
-    <div class="row">
-      <div>Trusted (Evelvate Privilege)</div>
-      <div>
-        <input id="trusted" type="checkbox" hidden="hidden" ng-model="repo.trusted" ng-change="save(repo)"/>
-        <label for="trusted" class="switch"></label>
-      </div>
-    </div>
-    <div class="row">
-      <div>Timeout in minutes</div>
-      <div>
-        <input type="range" ng-model="repo.timeout" min="0" max="900" ng-blur="save(repo)"/>
-        <span class="slider-label">{{ repo.timeout }} minutes</span>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <h2>Badges</h2>
-
-    <div class="row">
-      <div>Markdown</div>
-      <div>
-        <pre class="snippet">[![Build Status]({{ window.location.origin }}/api/badges/{{ repo.full_name }}/status.svg)]({{ window.location.origin }}/{{ repo.full_name }})</pre>
-      </div>
-    </div>
-    <div class="row">
-      <div>CCMenu</div>
-      <div>
-        <pre class="snippet">{{ window.location.origin }}/api/badges/{{ repo.full_name }}/cc.xml</pre>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <h2>Public Key</h2>
-
-    <div>
-      <pre class="snippet snippet-padding">{{ repo.keypair.public }}</pre>
-    </div>
-  </section>
 </article>
 </main>

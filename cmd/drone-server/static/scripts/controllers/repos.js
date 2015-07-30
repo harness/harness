@@ -4,9 +4,13 @@
    * ReposCtrl responsible for rendering the user's
    * repository home screen.
    */
-  function ReposCtrl($scope, $stateParams, repos, users) {
+  function ReposCtrl($scope, $location, $stateParams, repos, users) {
+    $scope.loading = true;
+    $scope.waiting = false;
+
     // Gets the currently authenticated user
     users.getCached().then(function (payload) {
+      $scope.loading = false;
       $scope.user = payload.data;
     });
 
@@ -17,6 +21,24 @@
     }).catch(function (err) {
       $scope.error = err;
     });
+
+    // Adds a repository
+    $scope.add = function (event, fullName) {
+      $scope.error = undefined;
+      if (event.which && event.which !== 13) {
+        return;
+      }
+      $scope.waiting = true;
+
+      repos.post(fullName).then(function (payload) {
+        $location.path('/' + fullName);
+        $scope.waiting = false;
+      }).catch(function (err) {
+        $scope.error = err;
+        $scope.waiting = false;
+        $scope.search_text = undefined;
+      });
+    }
   }
 
   /**
