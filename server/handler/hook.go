@@ -35,6 +35,7 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 	// parse the hook payload
 	hook, err := remote.ParseHook(r)
 	if err != nil {
+		log.Printf("Unable to parse hook. %s\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -84,6 +85,7 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 		user.TokenExpiry = user_token.Expiry
 		datastore.PutUser(ctx, user)
 	} else if err != nil {
+		log.Printf("Unable to refresh token. %s\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -91,6 +93,7 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 	// featch the .drone.yml file from the database
 	yml, err := remote.GetScript(user, repo, hook)
 	if err != nil {
+		log.Printf("Unable to fetch .drone.yml file. %s\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -118,12 +121,14 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	// inserts the commit into the database
 	if err := datastore.PostCommit(ctx, &commit); err != nil {
+		log.Printf("Unable to persist commit %s@%s. %s\n", commit.Sha, commit.Branch, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	owner, err := datastore.GetUser(ctx, repo.UserID)
 	if err != nil {
+		log.Printf("Unable to retrieve repository owner. %s.\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
