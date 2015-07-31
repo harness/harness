@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	APIVERSION        = 1.9
+	APIVERSION        = 1.12
 	DEFAULTHTTPPORT   = 2375
 	DEFAULTUNIXSOCKET = "/var/run/docker.sock"
 	DEFAULTPROTOCOL   = "unix"
