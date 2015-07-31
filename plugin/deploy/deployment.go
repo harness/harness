@@ -8,6 +8,7 @@ import (
 	"github.com/drone/drone/plugin/deploy/deis"
 	"github.com/drone/drone/plugin/deploy/git"
 	"github.com/drone/drone/plugin/deploy/heroku"
+	"github.com/drone/drone/plugin/deploy/marathon"
 	"github.com/drone/drone/plugin/deploy/modulus"
 	"github.com/drone/drone/plugin/deploy/nodejitsu"
 	"github.com/drone/drone/plugin/deploy/tsuru"
@@ -26,6 +27,7 @@ type Deploy struct {
 	SSH          *SSH                 `yaml:"ssh,omitempty"`
 	Tsuru        *tsuru.Tsuru         `yaml:"tsuru,omitempty"`
 	Bash         *Bash                `yaml:"bash,omitempty"`
+	Marathon     *marathon.Marathon   `yaml:"marathon,omitempty"`
 }
 
 func (d *Deploy) Write(f *buildfile.Buildfile, r *repo.Repo) {
@@ -56,6 +58,9 @@ func (d *Deploy) Write(f *buildfile.Buildfile, r *repo.Repo) {
 	}
 	if d.Bash != nil && match(d.Bash.GetCondition(), r) {
 		d.Bash.Write(f)
+	}
+	if d.Marathon != nil && match(d.Marathon.GetCondition(), r) {
+		d.Marathon.Write(f)
 	}
 }
 
