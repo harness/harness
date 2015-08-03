@@ -156,24 +156,37 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 // repository and returns in string format.
 func (r *Gitlab) GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error) {
 	var client = NewClient(r.url, user.Access, r.SkipVerify)
-	var path = ns(repo.Owner, repo.Name)
-	return client.RepoRawFile(path, hook.Sha, ".drone.yml")
+
+	projectId, err := client.SearchProjectId(repo.Owner, repo.Name)
+	if err != nil || projectId == 0 {
+		var emptyByte = make([]byte, 0)
+		return emptyByte, err
+	}
+	id := strconv.Itoa(projectId)
+
+	return client.RepoRawFile(id, hook.Sha, ".drone.yml")
 }
 
 // Activate activates a repository by adding a Post-commit hook and
 // a Public Deploy key, if applicable.
 func (r *Gitlab) Activate(user *model.User, repo *model.Repo, link string) error {
 	var client = NewClient(r.url, user.Access, r.SkipVerify)
-	var path = ns(repo.Owner, repo.Name)
 	var title, err = GetKeyTitle(link)
 	if err != nil {
 		return err
 	}
 
+	projectId, err := client.SearchProjectId(repo.Owner, repo.Name)
+	if err != nil || projectId == 0 {
+		return err
+	}
+	id := strconv.Itoa(projectId)
+
 	// if the repository is private we'll need
 	// to upload a github key to the repository
 	if repo.Private {
-		var err = client.AddProjectDeployKey(path, title, repo.PublicKey)
+
+		var err = client.AddProjectDeployKey(id, title, repo.PublicKey)
 		if err != nil {
 			return err
 		}
@@ -184,7 +197,7 @@ func (r *Gitlab) Activate(user *model.User, repo *model.Repo, link string) error
 	link += "?owner=" + repo.Owner + "&name=" + repo.Name
 
 	// add the hook
-	return client.AddProjectHook(path, link, true, false, true)
+	return client.AddProjectHook(id, link, true, false, true)
 }
 
 // Deactivate removes a repository by removing all the post-commit hooks
