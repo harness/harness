@@ -1,14 +1,5 @@
 <style>
-  html, body {
-    background: #EEEEEE;
-    padding: 0px;
-    margin: 0px;
-    font-family: "Roboto";
-    font-size: 15px;
-    text-transform: uppercase;
-    width: 100%;
-    height: 100%;
-  }
+
 
   a.box {
     background: #FFF;
@@ -26,7 +17,7 @@
     box-shadow: 7px 7px 0 rgba(255, 255, 255, 0.05);
   }
 
-  div.logo {
+  div.login-logo {
     background: url(/static/images/logo.svg) no-repeat center center;
     background-size: 72px;
     height: 150px;
@@ -61,7 +52,7 @@
 </style>
 
 <a href="/authorize" target="_self" class="box">
-  <div class="logo"></div>
+  <div class="login-logo"></div>
   <div ng-switch="error" class="alert alert-error" ng-if="error">
     <div ng-switch-when="internal_error">Oops. There was an unexpected error. Please try again.</div>
     <div ng-switch-when="user_not_found">There was an error authorizing your account.</div>
