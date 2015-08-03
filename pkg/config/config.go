@@ -91,6 +91,7 @@ type Config struct {
 		SkipVerify bool     `envconfig:"optional"`
 		Open       bool     `envconfig:"optional"`
 		Orgs       []string `envconfig:"optional"`
+		Search     bool     `envconfig:"optional"`
 	}
 }
 
