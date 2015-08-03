@@ -88,7 +88,7 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// featch the .drone.yml file from the database
+	// fetch the .drone.yml file from the database
 	yml, err := remote.GetScript(user, repo, hook)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
