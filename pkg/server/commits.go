@@ -30,6 +30,7 @@ func GetCommit(c *gin.Context) {
 	build, err := store.BuildNumber(repo, num)
 	if err != nil {
 		c.Fail(404, err)
+		return
 	}
 	build.Jobs, err = store.JobList(build)
 	if err != nil {
@@ -72,7 +73,11 @@ func GetLogs(c *gin.Context) {
 	r, err := store.GetBlobReader(path)
 	if err != nil {
 		c.Fail(404, err)
-	} else if full {
+		return
+	}
+
+	defer r.Close()
+	if full {
 		io.Copy(c.Writer, r)
 	} else {
 		io.Copy(c.Writer, io.LimitReader(r, 2000000))

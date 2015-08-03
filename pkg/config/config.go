@@ -112,7 +112,7 @@ func LoadBytes(data []byte) (*Config, error) {
 	// if err != nil {
 	// 	return nil, err
 	// }
-	err := envconfig.InitWithPrefix(conf, "DRONE")
+	err := envconfig.Init(conf)
 	if err != nil {
 		return nil, err
 	}

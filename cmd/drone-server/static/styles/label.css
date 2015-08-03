@@ -17,6 +17,10 @@
   color: #a3be8c;
   border: 1px solid #a3be8c;
   background: #fff;
+/*
+  background: rgba(163, 190, 140, 0.25);
+  border: none;
+  font-size: 11px;*/
 }
 .label-failure {
   color: #bf616a;

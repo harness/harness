@@ -177,12 +177,12 @@
         views: {
           'toolbar': {
             templateUrl: '/static/scripts/views/builds/show/toolbar.html',
-            controller: 'BuildCtrl',
+            controller: 'BuildOutCtrl',
             resolve: resolveUser
           },
           'content': {
             templateUrl: '/static/scripts/views/builds/show/content.html',
-            controller: 'BuildCtrl',
+            controller: 'BuildOutCtrl',
             resolve: resolveUser
           }
         },
@@ -192,12 +192,12 @@
         url: '/:owner/:name/:number/:step',
         views: {
           'toolbar': {
-            templateUrl: '/static/scripts/views/builds/step/toolbar.html',
+            templateUrl: '/static/scripts/views/builds/show/toolbar.html',
             controller: 'BuildOutCtrl',
             resolve: resolveUser
           },
           'content': {
-            templateUrl: '/static/scripts/views/builds/step/content.html',
+            templateUrl: '/static/scripts/views/builds/show/content.html',
             controller: 'BuildOutCtrl',
             resolve: resolveUser
           },
