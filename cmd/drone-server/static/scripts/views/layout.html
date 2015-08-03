@@ -3,7 +3,7 @@
 
   <ul>
     <li>
-      <img src="https://avatars1.githubusercontent.com/u/817538" />
+      <img ng-src="{{ user.gravatar_id | gravatar }}" />
     </li>
     <li ng-init="show=false">
       <a href="#" ng-click="show=true">
@@ -15,8 +15,6 @@
         <ul>
           <li><a href="/profile">Profile</a></li>
           <li><a href="/users">Users</a></li>
-          <li><a href="/profile">Workers</a></li>
-          <li><a href="/help">Help</a></li>
         </ul>
       </div>
     </li>
@@ -47,7 +45,6 @@ header li {
   top: 60px;
   right: 15px;
   width: 200px;
-  height: 200px;
   background: #FFF;
   z-index:999;
   padding: 10px 0px;
