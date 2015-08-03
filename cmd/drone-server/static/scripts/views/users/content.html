@@ -28,7 +28,7 @@
     <ul class="list cozy user-list">
       <li class="row row-user" ng-repeat="user in users | orderBy:'login' | filter: search_text">
         <div class="column-avatar">
-          <img ng-src="{{ user.gravatar_id | gravatar }}" />
+          <img ng-src="{{ user.avatar || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm&f=y' }}" />
         </div>
         <div class="column-fill">
           <h2>{{ user.login }} <small ng-if="user.admin" class="label label-success">Admin</small></h2>
