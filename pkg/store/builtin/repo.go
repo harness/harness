@@ -57,6 +57,7 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
+,repo_avatar
 ,repo_self
 ,repo_link
 ,repo_clone
