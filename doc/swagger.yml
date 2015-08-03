@@ -769,7 +769,7 @@ definitions:
         type: string
       email:
         type: string
-      gravatar_id:
+      avatar:
         type: string
       admin:
         type: boolean

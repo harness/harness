@@ -31,6 +31,7 @@ func PutUserCurr(c *gin.Context) {
 	if !c.BindWith(in, binding.JSON) {
 		return
 	}
+	// TODO: we are no longer auto-generating avatar
 	user.Email = in.Email
 	user.Avatar = gravatar.Hash(in.Email)
 	err := store.SetUser(user)

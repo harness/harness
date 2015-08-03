@@ -80,6 +80,7 @@ func (g *GitHub) Login(token, secret string) (*common.User, error) {
 	user.Email = *login.Email
 	user.Token = token
 	user.Secret = secret
+	user.Avatar = *login.AvatarURL
 	return &user, nil
 }
 
