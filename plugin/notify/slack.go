@@ -24,16 +24,21 @@ type Slack struct {
 	Started    bool   `yaml:"on_started,omitempty"`
 	Success    bool   `yaml:"on_success,omitempty"`
 	Failure    bool   `yaml:"on_failure,omitempty"`
+	Change     bool   `yaml:"on_change,omitempty"`
 }
 
 func (s *Slack) Send(context *model.Request) error {
 	switch {
 	case context.Commit.Status == "Started" && s.Started:
 		return s.sendStarted(context)
-	case context.Commit.Status == "Success" && s.Success:
-		return s.sendSuccess(context)
-	case context.Commit.Status == "Failure" && s.Failure:
-		return s.sendFailure(context)
+	case context.Commit.Status == "Success":
+		if s.Success || (s.Change && context.Prior.Status != context.Commit.Status) {
+			return s.sendSuccess(context)
+		}
+	case context.Commit.Status == "Failure":
+		if s.Failure || (s.Change && context.Prior.Status != context.Commit.Status) {
+			return s.sendFailure(context)
+		}
 	}
 
 	return nil
