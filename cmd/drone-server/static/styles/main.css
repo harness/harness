@@ -143,6 +143,8 @@ main aside > div {
     top:0px;
 }
 
+
+
 /*
  * Build Console
  */
@@ -164,9 +166,17 @@ main aside > div {
     box-sizing: border-box;
     padding:35px 40px;
     line-height:18px;
-    font-family: "RobotoMono", Roboto+Mono, Roboto;
+    font-family: "Roboto Mono";
     font-size:12px;
     font-weight:300;
+}
+
+@media (-webkit-min-device-pixel-ratio: 1) { 
+    .console pre {
+        font-weight:400; 
+        line-height:20px;
+        font-size:13px;
+    }
 }
 
 /*
@@ -307,16 +317,20 @@ main aside > div {
  */
 
 .job-list { }
-.job-list li {
+.job-list > a,
+.job-list > li {
     display:flex;
     padding:20px 0px;
     border-top:1px solid #f0f4f7;
 }
-.job-list li > div:first-child {
-    width:50px;
-    min-width:50px;
+
+.job-list > a > div:first-child,
+.job-list > li > div:first-child {
+    width:40px;
+    min-width:40px;
 }
-.job-list li > div:nth-child(2) { /** TEMPORARILY HIDDEN. MAY DECIDE TO REMOVE */
+.job-list > a > div:nth-child(2),
+.job-list > li > div:nth-child(2) { /** TEMPORARILY HIDDEN. MAY DECIDE TO REMOVE */
     min-width:25px;
     font-size:13px;
     text-align:right;
@@ -325,14 +339,17 @@ main aside > div {
     font-size:15px;
     display:none;
 }
-.job-list li > div:nth-child(3) {
+.job-list > a > div:nth-child(3),
+.job-list > li > div:nth-child(3) {
     flex:1 1 auto;
     font-size:13px;
 }
-.job-list li div.param {
+.job-list > a > div.param,
+.job-list > li div.param {
     margin-top:5px;
 }
-.job-list li div.param:first-child {
+.job-list > a div.param:first-child,
+.job-list > li div.param:first-child {
     margin-top:10px;
 }
 
