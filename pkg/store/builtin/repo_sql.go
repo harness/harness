@@ -42,36 +42,38 @@ func createRepo(db repoDB, query string, v *Repo) error {
 	var v5 string
 	var v6 string
 	var v7 string
-	var v8 bool
+	var v8 string
 	var v9 bool
-	var v10 int64
-	var v11 string
+	var v10 bool
+	var v11 int64
 	var v12 string
-	var v13 bool
+	var v13 string
 	var v14 bool
 	var v15 bool
-	var v16 []byte
+	var v16 bool
+	var v17 []byte
 	v0 = v.UserID
 	v1 = v.Owner
 	v2 = v.Name
 	v3 = v.FullName
-	v4 = v.Self
-	v5 = v.Link
-	v6 = v.Clone
-	v7 = v.Branch
-	v8 = v.Private
-	v9 = v.Trusted
-	v10 = v.Timeout
+	v4 = v.Avatar
+	v5 = v.Self
+	v6 = v.Link
+	v7 = v.Clone
+	v8 = v.Branch
+	v9 = v.Private
+	v10 = v.Trusted
+	v11 = v.Timeout
 	if v.Keys != nil {
-		v11 = v.Keys.Public
-		v12 = v.Keys.Private
+		v12 = v.Keys.Public
+		v13 = v.Keys.Private
 	}
 	if v.Hooks != nil {
-		v13 = v.Hooks.PullRequest
-		v14 = v.Hooks.Push
-		v15 = v.Hooks.Tags
+		v14 = v.Hooks.PullRequest
+		v15 = v.Hooks.Push
+		v16 = v.Hooks.Tags
 	}
-	v16, _ = json.Marshal(v.Params)
+	v17, _ = json.Marshal(v.Params)
 
 	res, err := db.Exec(query,
 		&v0,
@@ -91,6 +93,7 @@ func createRepo(db repoDB, query string, v *Repo) error {
 		&v14,
 		&v15,
 		&v16,
+		&v17,
 	)
 	if err != nil {
 		return err
@@ -110,37 +113,39 @@ func updateRepo(db repoDB, query string, v *Repo) error {
 	var v6 string
 	var v7 string
 	var v8 string
-	var v9 bool
+	var v9 string
 	var v10 bool
-	var v11 int64
-	var v12 string
+	var v11 bool
+	var v12 int64
 	var v13 string
-	var v14 bool
+	var v14 string
 	var v15 bool
 	var v16 bool
-	var v17 []byte
+	var v17 bool
+	var v18 []byte
 	v0 = v.ID
 	v1 = v.UserID
 	v2 = v.Owner
 	v3 = v.Name
 	v4 = v.FullName
-	v5 = v.Self
-	v6 = v.Link
-	v7 = v.Clone
-	v8 = v.Branch
-	v9 = v.Private
-	v10 = v.Trusted
-	v11 = v.Timeout
+	v5 = v.Avatar
+	v6 = v.Self
+	v7 = v.Link
+	v8 = v.Clone
+	v9 = v.Branch
+	v10 = v.Private
+	v11 = v.Trusted
+	v12 = v.Timeout
 	if v.Keys != nil {
-		v12 = v.Keys.Public
-		v13 = v.Keys.Private
+		v13 = v.Keys.Public
+		v14 = v.Keys.Private
 	}
 	if v.Hooks != nil {
-		v14 = v.Hooks.PullRequest
-		v15 = v.Hooks.Push
-		v16 = v.Hooks.Tags
+		v15 = v.Hooks.PullRequest
+		v16 = v.Hooks.Push
+		v17 = v.Hooks.Tags
 	}
-	v17, _ = json.Marshal(v.Params)
+	v18, _ = json.Marshal(v.Params)
 
 	_, err := db.Exec(query,
 		&v1,
@@ -160,6 +165,7 @@ func updateRepo(db repoDB, query string, v *Repo) error {
 		&v15,
 		&v16,
 		&v17,
+		&v18,
 		&v0,
 	)
 	return err
@@ -175,15 +181,16 @@ func scanRepo(row *sql.Row) (*Repo, error) {
 	var v6 string
 	var v7 string
 	var v8 string
-	var v9 bool
+	var v9 string
 	var v10 bool
-	var v11 int64
-	var v12 string
+	var v11 bool
+	var v12 int64
 	var v13 string
-	var v14 bool
+	var v14 string
 	var v15 bool
 	var v16 bool
-	var v17 []byte
+	var v17 bool
+	var v18 []byte
 
 	err := row.Scan(
 		&v0,
@@ -204,6 +211,7 @@ func scanRepo(row *sql.Row) (*Repo, error) {
 		&v15,
 		&v16,
 		&v17,
+		&v18,
 	)
 	if err != nil {
 		return nil, err
@@ -215,21 +223,22 @@ func scanRepo(row *sql.Row) (*Repo, error) {
 	v.Owner = v2
 	v.Name = v3
 	v.FullName = v4
-	v.Self = v5
-	v.Link = v6
-	v.Clone = v7
-	v.Branch = v8
-	v.Private = v9
-	v.Trusted = v10
-	v.Timeout = v11
+	v.Avatar = v5
+	v.Self = v6
+	v.Link = v7
+	v.Clone = v8
+	v.Branch = v9
+	v.Private = v10
+	v.Trusted = v11
+	v.Timeout = v12
 	v.Keys = &Keypair{}
-	v.Keys.Public = v12
-	v.Keys.Private = v13
+	v.Keys.Public = v13
+	v.Keys.Private = v14
 	v.Hooks = &Hooks{}
-	v.Hooks.PullRequest = v14
-	v.Hooks.Push = v15
-	v.Hooks.Tags = v16
-	json.Unmarshal(v17, &v.Params)
+	v.Hooks.PullRequest = v15
+	v.Hooks.Push = v16
+	v.Hooks.Tags = v17
+	json.Unmarshal(v18, &v.Params)
 
 	return v, nil
 }
@@ -247,15 +256,16 @@ func scanRepos(rows *sql.Rows) ([]*Repo, error) {
 		var v6 string
 		var v7 string
 		var v8 string
-		var v9 bool
+		var v9 string
 		var v10 bool
-		var v11 int64
-		var v12 string
+		var v11 bool
+		var v12 int64
 		var v13 string
-		var v14 bool
+		var v14 string
 		var v15 bool
 		var v16 bool
-		var v17 []byte
+		var v17 bool
+		var v18 []byte
 		err = rows.Scan(
 			&v0,
 			&v1,
@@ -275,6 +285,7 @@ func scanRepos(rows *sql.Rows) ([]*Repo, error) {
 			&v15,
 			&v16,
 			&v17,
+			&v18,
 		)
 		if err != nil {
 			return vv, err
@@ -286,21 +297,22 @@ func scanRepos(rows *sql.Rows) ([]*Repo, error) {
 		v.Owner = v2
 		v.Name = v3
 		v.FullName = v4
-		v.Self = v5
-		v.Link = v6
-		v.Clone = v7
-		v.Branch = v8
-		v.Private = v9
-		v.Trusted = v10
-		v.Timeout = v11
+		v.Avatar = v5
+		v.Self = v6
+		v.Link = v7
+		v.Clone = v8
+		v.Branch = v9
+		v.Private = v10
+		v.Trusted = v11
+		v.Timeout = v12
 		v.Keys = &Keypair{}
-		v.Keys.Public = v12
-		v.Keys.Private = v13
+		v.Keys.Public = v13
+		v.Keys.Private = v14
 		v.Hooks = &Hooks{}
-		v.Hooks.PullRequest = v14
-		v.Hooks.Push = v15
-		v.Hooks.Tags = v16
-		json.Unmarshal(v17, &v.Params)
+		v.Hooks.PullRequest = v15
+		v.Hooks.Push = v16
+		v.Hooks.Tags = v17
+		json.Unmarshal(v18, &v.Params)
 		vv = append(vv, v)
 	}
 	return vv, rows.Err()
@@ -313,6 +325,7 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
+,repo_avatar
 ,repo_self
 ,repo_link
 ,repo_clone
@@ -336,6 +349,7 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
+,repo_avatar
 ,repo_self
 ,repo_link
 ,repo_clone
@@ -360,6 +374,7 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
+,repo_avatar
 ,repo_self
 ,repo_link
 ,repo_clone
@@ -384,6 +399,7 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
+,repo_avatar
 ,repo_self
 ,repo_link
 ,repo_clone
@@ -408,6 +424,7 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
+,repo_avatar
 ,repo_self
 ,repo_link
 ,repo_clone
@@ -433,6 +450,7 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_full_name
+,repo_avatar
 ,repo_self
 ,repo_link
 ,repo_clone
@@ -461,6 +479,7 @@ INSERT INTO repos (
 ,repo_owner
 ,repo_name
 ,repo_full_name
+,repo_avatar
 ,repo_self
 ,repo_link
 ,repo_clone
@@ -474,7 +493,7 @@ INSERT INTO repos (
 ,repo_hooks_push
 ,repo_hooks_tags
 ,repo_params
-) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
+) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
 `
 
 const stmtRepoUpdate = `
@@ -483,6 +502,7 @@ UPDATE repos SET
 ,repo_owner = ?
 ,repo_name = ?
 ,repo_full_name = ?
+,repo_avatar = ?
 ,repo_self = ?
 ,repo_link = ?
 ,repo_clone = ?
@@ -511,6 +531,7 @@ CREATE TABLE IF NOT EXISTS repos (
 ,repo_owner		VARCHAR
 ,repo_name		VARCHAR
 ,repo_full_name		VARCHAR
+,repo_avatar		VARCHAR
 ,repo_self		VARCHAR
 ,repo_link		VARCHAR
 ,repo_clone		VARCHAR
@@ -520,7 +541,7 @@ CREATE TABLE IF NOT EXISTS repos (
 ,repo_timeout		INTEGER
 ,repo_keys_public	VARCHAR
 ,repo_keys_private	VARCHAR
-,repo_hooks_pull_requestBOOLEAN
+,repo_hooks_pull_request BOOLEAN
 ,repo_hooks_push	BOOLEAN
 ,repo_hooks_tags	BOOLEAN
 ,repo_params		BLOB

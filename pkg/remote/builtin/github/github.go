@@ -124,6 +124,7 @@ func (g *GitHub) Repo(u *common.User, owner, name string) (*common.Repo, error) 
 	repo.Private = *repo_.Private
 	repo.Clone = *repo_.CloneURL
 	repo.Branch = "master"
+	repo.Avatar = *repo_.Owner.AvatarURL
 
 	if repo_.DefaultBranch != nil {
 		repo.Branch = *repo_.DefaultBranch

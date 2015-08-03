@@ -6,6 +6,7 @@ type Repo struct {
 	Owner    string `meddler:"repo_owner"        json:"owner"      sql:"unique:ux_repo_owner_name"`
 	Name     string `meddler:"repo_name"         json:"name"       sql:"unique:ux_repo_owner_name"`
 	FullName string `meddler:"repo_full_name"    json:"full_name"  sql:"unique:ux_repo_full_name"`
+	Avatar   string `meddler:"repo_avatar"       json:"avatar"`
 	Self     string `meddler:"repo_self"         json:"self_url"`
 	Link     string `meddler:"repo_link"         json:"link_url"`
 	Clone    string `meddler:"repo_clone"        json:"clone_url"`
