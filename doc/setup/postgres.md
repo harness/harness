@@ -4,8 +4,8 @@
 Drone comes with support for Postgres as an alternate database engine. To enable Postgres, you should specify the following environment variables:
 
 ```
-DATASTORE_DRIVER="postgres"
-DATASTORE_CONFIG="postgres://root:pa55word@127.0.0.1:5432/postgres"
+DATABASE_DRIVER="postgres"
+DATABASE_DATASOURCE="postgres://root:pa55word@127.0.0.1:5432/postgres"
 ```
 
 ## Postgres connection
