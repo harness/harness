@@ -5,8 +5,8 @@
 Drone comes with support for MySQL as an alternate database engine. To enable Postgres, you should specify the following environment variables:
 
 ```
-DATASTORE_DRIVER="mysql"
-DATASTORE_CONFIG="root:pa55word@tcp(localhost:3306)/drone"
+DATABASE_DRIVER="mysql"
+DATABASE_DATASOURCE="root:pa55word@tcp(localhost:3306)/drone"
 ```
 
 ## MySQL connection
