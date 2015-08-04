@@ -15,6 +15,6 @@ Drone documentation is organized into several categories:
 * [Plugin Guide](http://readme.drone.io/docs/plugin/)
 * [API Reference](http://readme.drone.io/docs/api/)
 
-### Community
+### Community, Help
 
-Contributions, questions, and comments are welcomed and encouraged. Drone developers hang out in the [drone/drone](https://gitter.im/drone/drone) room on [gitter](https://gitter.im/drone/drone).
+Contributions, questions, and comments are welcomed and encouraged. Drone developers hang out in the [drone/drone](https://gitter.im/drone/drone) room on gitter. We ask that you please post your questions to [gitter](https://gitter.im/drone/drone) before creating an issue.

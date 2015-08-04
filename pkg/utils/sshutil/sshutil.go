@@ -37,3 +37,16 @@ func MarshalPrivateKey(privkey *rsa.PrivateKey) []byte {
 	privateKeyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Headers: nil, Bytes: privateKeyMarshaled})
 	return privateKeyPEM
 }
+
+// helper function to encrypt a plain-text string using
+// an RSA public key.
+func Encrypt(pubkey *rsa.PublicKey, msg string) ([]byte, error) {
+	return rsa.EncryptPKCS1v15(rand.Reader, pubkey, []byte(msg))
+}
+
+// helper function to encrypt a plain-text string using
+// an RSA public key.
+func Decrypt(privkey *rsa.PrivateKey, secret string) (string, error) {
+	msg, err := rsa.DecryptPKCS1v15(rand.Reader, privkey, []byte(secret))
+	return string(msg), err
+}
