@@ -47,6 +47,7 @@ type Step struct {
 	Entrypoint  []string
 	Command     []string
 	Volumes     []string
+	Cache       []string
 	WorkingDir  string `yaml:"working_dir"`
 	NetworkMode string `yaml:"net"`
 
