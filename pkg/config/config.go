@@ -2,13 +2,11 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	// "github.com/drone/drone/Godeps/_workspace/src/github.com/naoina/toml"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/vrischmann/envconfig"
 )
 
@@ -95,24 +93,10 @@ type Config struct {
 	}
 }
 
-// Load loads the configuration file and reads
-// parameters from environment variables.
-func Load(path string) (*Config, error) {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	return LoadBytes(data)
-}
-
-// LoadBytes reads the configuration file and
-// reads parameters from environment variables.
-func LoadBytes(data []byte) (*Config, error) {
+// Load loads the configuration from environment
+// variables.
+func Load() (*Config, error) {
 	conf := &Config{}
-	// err := toml.Unmarshal(data, conf)
-	// if err != nil {
-	// 	return nil, err
-	// }
 	err := envconfig.Init(conf)
 	if err != nil {
 		return nil, err
