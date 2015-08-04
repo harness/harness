@@ -34,14 +34,13 @@ var (
 )
 
 var (
-	conf  = flag.String("config", "drone.toml", "")
 	debug = flag.Bool("debug", false, "")
 )
 
 func main() {
 	flag.Parse()
 
-	settings, err := config.Load(*conf)
+	settings, err := config.Load()
 	if err != nil {
 		panic(err)
 	}
@@ -55,6 +54,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	session := session.New(settings)
 	eventbus_ := eventbus.New()
 	queue_ := queue.New()
