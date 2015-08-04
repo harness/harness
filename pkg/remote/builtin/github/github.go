@@ -273,7 +273,9 @@ func (g *GitHub) push(r *http.Request) (*common.Hook, error) {
 		repo.Owner = hook.Repo.Owner.Name
 	}
 	repo.Name = hook.Repo.Name
-	repo.FullName = hook.Repo.FullName
+	// Generating rather than using hook.Repo.FullName as it's
+	// not always present
+	repo.FullName = fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
 	repo.Link = hook.Repo.HTMLURL
 	repo.Private = hook.Repo.Private
 	repo.Clone = hook.Repo.CloneURL
