@@ -33,6 +33,10 @@ type Repo struct {
 	// checkout when the Repository is cloned.
 	PR string
 
+	// (optional) Tag that we should checkout when the
+	// Repository is cloned.
+	Tag string
+
 	// Private specifies if a git repo is private or not
 	Private bool
 
@@ -118,11 +122,16 @@ func (r *Repo) Commands() []string {
 		cmds = append(cmds, fmt.Sprintf("git fetch origin +refs/pull/%s/head:refs/remotes/origin/pr/%s", r.PR, r.PR))
 		cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
 	} else {
-		// Otherwise just clone the branch.
-		cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
-		// If a specific commit is provided then we'll need to check it out.
-		if len(r.Commit) > 0 {
-			cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))
+		if len(r.Tag) > 0 {
+			cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive %s %s", r.Depth, r.Path, r.Dir))
+			cmds = append(cmds, fmt.Sprintf("git checkout -qf -b tags/%s %s", r.Tag, r.Tag))
+		} else {
+			// Otherwise just clone the branch.
+			cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive --branch=%s %s %s", r.Depth, branch, r.Path, r.Dir))
+			// If a specific commit is provided then we'll need to check it out.
+			if len(r.Commit) > 0 {
+				cmds = append(cmds, fmt.Sprintf("git checkout -qf %s", r.Commit))
+			}
 		}
 	}
 

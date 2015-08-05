@@ -240,7 +240,19 @@ func (r *Gitlab) ParseHook(req *http.Request) (*model.Hook, error) {
 
 	if parsed.ObjectKind == "tag_push" {
 		// TODO (Wei.ZHAO) figure out how to handle tag push evnets
-		return nil, nil
+		// SHA="0000..0" means removing a tag
+		// using both '0' & ' ' to avoid probable existence of space
+		if strings.Trim(parsed.After, "0 ") == "" {
+			return nil, nil
+		}
+		var hook = new(model.Hook)
+		hook.Tag = parsed.Tag()
+		hook.Owner = req.FormValue("owner")
+		hook.Repo = req.FormValue("name")
+		hook.Sha = parsed.After
+		hook.Branch = "tags"
+		hook.Author = parsed.UserName
+		return hook, nil
 	}
 
 	if parsed.ObjectKind == "push" {

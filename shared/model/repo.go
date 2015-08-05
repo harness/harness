@@ -34,6 +34,7 @@ type Repo struct {
 	Privileged  bool   `meddler:"repo_privileged"   json:"privileged"`
 	PostCommit  bool   `meddler:"repo_post_commit"  json:"post_commits"`
 	PullRequest bool   `meddler:"repo_pull_request" json:"pull_requests"`
+	Tag         bool   `meddler:"repo_tag"          json:"tags"`
 	PublicKey   string `meddler:"repo_public_key"   json:"-"`
 	PrivateKey  string `meddler:"repo_private_key"  json:"-"`
 	Params      string `meddler:"repo_params"       json:"-"`
@@ -55,6 +56,7 @@ func NewRepo(remote, owner, name string) (*Repo, error) {
 	repo.Active = false
 	repo.PostCommit = true
 	repo.PullRequest = true
+	repo.Tag = true
 	repo.Timeout = DefaultTimeout
 	return &repo, nil
 }

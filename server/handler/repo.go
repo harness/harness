@@ -126,6 +126,7 @@ func PostRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	repo.Active = true
 	repo.PullRequest = true
 	repo.PostCommit = true
+	repo.Tag = true
 	repo.UserID = user.ID
 	repo.Timeout = 3600 // default to 1 hour
 

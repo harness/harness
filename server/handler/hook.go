@@ -64,8 +64,9 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if repo.Active == false ||
-		(repo.PostCommit == false && len(hook.PullRequest) == 0) ||
-		(repo.PullRequest == false && len(hook.PullRequest) != 0) {
+		(len(hook.PullRequest) != 0 && repo.PullRequest == false) ||
+		(len(hook.Tag) != 0 && repo.Tag == false) ||
+		repo.PostCommit == false {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -102,7 +103,7 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 	// branches (unless it is a pull request). Note that we don't really
 	// care if parsing the yaml fails here.
 	s, _ := script.ParseBuild(string(yml))
-	if len(hook.PullRequest) == 0 && !s.MatchBranch(hook.Branch) {
+	if len(hook.Tag) == 0 && !s.MatchBranch(hook.Branch) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -113,6 +114,7 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 		Sha:         hook.Sha,
 		Branch:      hook.Branch,
 		PullRequest: hook.PullRequest,
+		Tag:         hook.Tag,
 		Timestamp:   hook.Timestamp,
 		Message:     hook.Message,
 		Config:      string(yml),
