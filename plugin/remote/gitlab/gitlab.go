@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"code.google.com/p/goauth2/oauth"
-	"github.com/Bugagazavr/go-gitlab-client"
+	"github.com/depay/go-gitlab-client"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/model"
 )
@@ -184,7 +184,7 @@ func (r *Gitlab) Activate(user *model.User, repo *model.Repo, link string) error
 	link += "?owner=" + repo.Owner + "&name=" + repo.Name
 
 	// add the hook
-	return client.AddProjectHook(path, link, true, false, true)
+	return client.AddProjectHook(path, link, true, false, true, true)
 }
 
 // Deactivate removes a repository by removing all the post-commit hooks
@@ -233,39 +233,41 @@ func (r *Gitlab) ParseHook(req *http.Request) (*model.Hook, error) {
 		return nil, err
 	}
 
-	if len(parsed.After) == 0 || parsed.TotalCommitsCount == 0 {
-		return nil, nil
-	}
-
 	if parsed.ObjectKind == "merge_request" {
 		// TODO (bradrydzewski) figure out how to handle merge requests
 		return nil, nil
 	}
 
-	if len(parsed.After) == 0 {
+	if parsed.ObjectKind == "tag_push" {
+		// TODO (Wei.ZHAO) figure out how to handle tag push evnets
 		return nil, nil
 	}
 
-	var hook = new(model.Hook)
-	hook.Owner = req.FormValue("owner")
-	hook.Repo = req.FormValue("name")
-	hook.Sha = parsed.After
-	hook.Branch = parsed.Branch()
+	if parsed.ObjectKind == "push" {
+		if len(parsed.After) == 0 || parsed.TotalCommitsCount == 0 {
+			return nil, nil
+		}
+		var hook = new(model.Hook)
+		hook.Owner = req.FormValue("owner")
+		hook.Repo = req.FormValue("name")
+		hook.Sha = parsed.After
+		hook.Branch = parsed.Branch()
 
-	var head = parsed.Head()
-	hook.Message = head.Message
-	hook.Timestamp = head.Timestamp
+		var head = parsed.Head()
+		hook.Message = head.Message
+		hook.Timestamp = head.Timestamp
 
-	// extracts the commit author (ideally email)
-	// from the post-commit hook
-	switch {
-	case head.Author != nil:
-		hook.Author = head.Author.Email
-	case head.Author == nil:
-		hook.Author = parsed.UserName
+		// extracts the commit author (ideally email)
+		// from the post-commit hook
+		switch {
+		case head.Author != nil:
+			hook.Author = head.Author.Email
+		case head.Author == nil:
+			hook.Author = parsed.UserName
+		}
+		return hook, nil
 	}
-
-	return hook, nil
+	return nil, nil
 }
 
 func (r *Gitlab) OpenRegistration() bool {
