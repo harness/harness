@@ -1,12 +1,12 @@
 package remote
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/drone/drone/pkg/config"
 	"github.com/drone/drone/pkg/oauth2"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
+
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 var drivers = make(map[string]DriverFunc)
@@ -26,55 +26,55 @@ func Register(name string, driver DriverFunc) {
 
 // DriverFunc returns a new connection to the remote.
 // Config is a struct, with base remote configuration.
-type DriverFunc func(conf *config.Config) (Remote, error)
+type DriverFunc func(config string) (Remote, error)
 
 // New creates a new remote connection.
-func New(driver string, conf *config.Config) (Remote, error) {
+func New(driver, config string) (Remote, error) {
 	fn, ok := drivers[driver]
 	if !ok {
-		return nil, fmt.Errorf("remote: unknown driver %q", driver)
+		log.Fatalf("remote: unknown driver %q", driver)
 	}
-	return fn(conf)
+	return fn(config)
 }
 
 type Remote interface {
 	// Login authenticates the session and returns the
 	// remote user details.
-	Login(token, secret string) (*common.User, error)
+	Login(token, secret string) (*types.User, error)
 
 	// Orgs fetches the organizations for the given user.
-	Orgs(u *common.User) ([]string, error)
+	Orgs(u *types.User) ([]string, error)
 
 	// Repo fetches the named repository from the remote system.
-	Repo(u *common.User, owner, repo string) (*common.Repo, error)
+	Repo(u *types.User, owner, repo string) (*types.Repo, error)
 
 	// Perm fetches the named repository permissions from
 	// the remote system for the specified user.
-	Perm(u *common.User, owner, repo string) (*common.Perm, error)
+	Perm(u *types.User, owner, repo string) (*types.Perm, error)
 
 	// Script fetches the build script (.drone.yml) from the remote
 	// repository and returns in string format.
-	Script(u *common.User, r *common.Repo, b *common.Build) ([]byte, error)
+	Script(u *types.User, r *types.Repo, b *types.Build) ([]byte, error)
 
 	// Status sends the commit status to the remote system.
 	// An example would be the GitHub pull request status.
-	Status(u *common.User, r *common.Repo, b *common.Build) error
+	Status(u *types.User, r *types.Repo, b *types.Build) error
 
 	// Netrc returns a .netrc file that can be used to clone
 	// private repositories from a remote system.
-	Netrc(u *common.User) (*common.Netrc, error)
+	Netrc(u *types.User) (*types.Netrc, error)
 
 	// Activate activates a repository by creating the post-commit hook and
 	// adding the SSH deploy key, if applicable.
-	Activate(u *common.User, r *common.Repo, k *common.Keypair, link string) error
+	Activate(u *types.User, r *types.Repo, k *types.Keypair, link string) error
 
 	// Deactivate removes a repository by removing all the post-commit hooks
 	// which are equal to link and removing the SSH deploy key.
-	Deactivate(u *common.User, r *common.Repo, link string) error
+	Deactivate(u *types.User, r *types.Repo, link string) error
 
 	// Hook parses the post-commit hook from the Request body
 	// and returns the required data in a standard format.
-	Hook(r *http.Request) (*common.Hook, error)
+	Hook(r *http.Request) (*types.Hook, error)
 
 	// Oauth2Transport
 	Oauth2Transport(r *http.Request) *oauth2.Transport
