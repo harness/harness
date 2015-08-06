@@ -27,8 +27,8 @@ var (
 	DockerHost = os.Getenv("DOCKER_HOST")
 
 	// Docker TLS variables
-	DockerHostCa = os.Getenv("DOCKER_CA")
-	DockerHostKey = os.Getenv("DOCKER_KEY")
+	DockerHostCa   = os.Getenv("DOCKER_CA")
+	DockerHostKey  = os.Getenv("DOCKER_KEY")
 	DockerHostCert = os.Getenv("DOCKER_CERT")
 )
 
@@ -111,8 +111,8 @@ func (r *Runner) Run(w *queue.Work) error {
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(caCert)
 		tlc = &tls.Config{
-			Certificates:       []tls.Certificate{cert},
-			RootCAs:            caCertPool,
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      caCertPool,
 		}
 	}
 

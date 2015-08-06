@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/namsral/flag"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/namsral/flag"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 
