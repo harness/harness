@@ -12,7 +12,7 @@
     border-top: none;
 }
 
-.list .column-avatar {    
+.list .column-avatar {
     width: 60px;
     min-width: 60px;
 }
@@ -48,7 +48,7 @@
 .list .column-avatar img {
     width:32px;
     height:32px;
-    border-radius:50%;
+    border-radius:4px;
     margin-left:5px;
 }
 .list h2 {

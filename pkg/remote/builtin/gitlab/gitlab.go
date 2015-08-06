@@ -11,7 +11,6 @@ import (
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/Bugagazavr/go-gitlab-client"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/hashicorp/golang-lru"
-	"github.com/drone/drone/pkg/config"
 	"github.com/drone/drone/pkg/oauth2"
 	"github.com/drone/drone/pkg/remote"
 	common "github.com/drone/drone/pkg/types"
@@ -39,27 +38,31 @@ func init() {
 	remote.Register("gitlab", NewDriver)
 }
 
-func NewDriver(conf *config.Config) (remote.Remote, error) {
-	var gitlab = Gitlab{
-		URL:         conf.Gitlab.Host,
-		Client:      conf.Gitlab.Client,
-		Secret:      conf.Gitlab.Secret,
-		AllowedOrgs: conf.Gitlab.Orgs,
-		Open:        conf.Gitlab.Open,
-		SkipVerify:  conf.Gitlab.SkipVerify,
-		Search:      conf.Gitlab.Search,
-	}
-	var err error
-	gitlab.cache, err = lru.New(1028)
+func NewDriver(config string) (remote.Remote, error) {
+	url_, err := url.Parse(config)
 	if err != nil {
 		return nil, err
 	}
+	params := url_.Query()
+	url_.Path = ""
+	url_.RawQuery = ""
 
-	// the URL must NOT have a trailing slash
-	if strings.HasSuffix(gitlab.URL, "/") {
-		gitlab.URL = gitlab.URL[:len(gitlab.URL)-1]
-	}
-	return &gitlab, nil
+	gitlab := Gitlab{}
+	gitlab.URL = url_.String()
+	gitlab.Client = params.Get("client")
+	gitlab.Secret = params.Get("secret")
+	gitlab.AllowedOrgs = params["orgs"]
+	gitlab.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))
+	gitlab.Open, _ = strconv.ParseBool(params.Get("open"))
+
+	// this is a temp workaround
+	gitlab.Search, _ = strconv.ParseBool(params.Get("search"))
+
+	// here we cache permissions to avoid too many api
+	// calls. this should really be moved outise the
+	// remote plugin into the app
+	gitlab.cache, err = lru.New(1028)
+	return &gitlab, err
 }
 
 func (r *Gitlab) Login(token, secret string) (*common.User, error) {
