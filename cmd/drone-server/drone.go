@@ -1,9 +1,11 @@
 package main
 
 import (
-	"flag"
+	"fmt"
 	"html/template"
 	"net/http"
+
+	"github.com/namsral/flag"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 
@@ -33,11 +35,61 @@ var (
 	revision string
 )
 
-var (
-	debug = flag.Bool("debug", false, "")
-)
+var conf = struct {
+	debug bool
+
+	server struct {
+		addr string
+		cert string
+		key  string
+	}
+
+	session struct {
+		expiry string
+		secret string
+	}
+
+	docker struct {
+		host string
+		cert string
+		key  string
+		ca   string
+	}
+
+	remote struct {
+		driver string
+		config string
+	}
+
+	database struct {
+		driver string
+		config string
+	}
+
+	plugin struct {
+		filter string
+	}
+}{}
 
 func main() {
+
+	flag.StringVar(&conf.docker.host, "docker-host", "unix:///var/run/docker/docker.sock", "")
+	flag.StringVar(&conf.docker.cert, "docker-cert", "", "")
+	flag.StringVar(&conf.docker.key, "docker-key", "", "")
+	flag.StringVar(&conf.docker.ca, "docker-ca", "", "")
+	flag.StringVar(&conf.server.addr, "server-addr", ":8080", "")
+	flag.StringVar(&conf.server.cert, "server-cert", "", "")
+	flag.StringVar(&conf.server.key, "server-key", "", "")
+	flag.StringVar(&conf.session.expiry, "session-expiry", "", "")
+	flag.StringVar(&conf.session.secret, "session-secret", "", "")
+	flag.StringVar(&conf.remote.driver, "remote-driver", "github", "")
+	flag.StringVar(&conf.remote.config, "remote-config", "https://github.com", "")
+	flag.StringVar(&conf.database.driver, "database-driver", "sqlite3", "")
+	flag.StringVar(&conf.database.config, "database-config", "drone.sqlite", "")
+	flag.StringVar(&conf.plugin.filter, "plugin-filter", "plugins/*", "")
+	flag.BoolVar(&conf.debug, "debug", false, "")
+
+	flag.String("config", "", "")
 	flag.Parse()
 
 	settings, err := config.Load("")
@@ -45,12 +97,12 @@ func main() {
 		panic(err)
 	}
 
-	store, err := store.New(settings.Database.Driver + "://" + settings.Database.Datasource)
+	store, err := store.New(conf.database.driver, conf.database.config)
 	if err != nil {
 		panic(err)
 	}
 
-	remote, err := remote.New(settings.Remote.Driver, settings)
+	remote, err := remote.New(conf.remote.driver, conf.remote.config)
 	if err != nil {
 		panic(err)
 	}
@@ -204,7 +256,7 @@ func static() http.Handler {
 		AssetDir: AssetDir,
 		Prefix:   "cmd/drone-server/static",
 	})
-	if *debug {
+	if conf.debug {
 		handler = http.FileServer(
 			http.Dir("cmd/drone-server/static"),
 		)

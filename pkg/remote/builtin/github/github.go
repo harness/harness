@@ -41,7 +41,8 @@ func init() {
 	remote.Register("github", NewDriver)
 }
 
-func NewDriver(conf *config.Config) (remote.Remote, error) {
+func NewDriver(config string) (remote.Remote, error) {
+	//conf *config.Config
 	var github = GitHub{
 		API:         conf.Github.API,
 		URL:         conf.Github.Host,
