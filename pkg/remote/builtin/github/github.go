@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/hashicorp/golang-lru"
-	"github.com/drone/drone/pkg/config"
 	"github.com/drone/drone/pkg/oauth2"
 	"github.com/drone/drone/pkg/remote"
 	common "github.com/drone/drone/pkg/types"
@@ -21,6 +21,7 @@ import (
 
 const (
 	DefaultURL   = "https://github.com"
+	DefaultAPI   = "https://api.github.com"
 	DefaultScope = "repo,repo:status,user:email"
 )
 
@@ -41,32 +42,35 @@ func init() {
 	remote.Register("github", NewDriver)
 }
 
-func NewDriver(conf *config.Config) (remote.Remote, error) {
-	var github = GitHub{
-		API:         conf.Github.API,
-		URL:         conf.Github.Host,
-		Client:      conf.Github.Client,
-		Secret:      conf.Github.Secret,
-		AllowedOrgs: conf.Github.Orgs,
-		Open:        conf.Github.Open,
-		PrivateMode: conf.Github.PrivateMode,
-		SkipVerify:  conf.Github.SkipVerify,
-	}
-	var err error
-	github.cache, err = lru.New(1028)
+func NewDriver(config string) (remote.Remote, error) {
+	url_, err := url.Parse(config)
 	if err != nil {
 		return nil, err
 	}
+	params := url_.Query()
+	url_.Path = ""
+	url_.RawQuery = ""
 
-	// the API must have a trailing slash
-	if !strings.HasSuffix(github.API, "/") {
-		github.API += "/"
+	github := GitHub{}
+	github.URL = url_.String()
+	github.Client = params.Get("client")
+	github.Secret = params.Get("secret")
+	github.AllowedOrgs = params["orgs"]
+	github.PrivateMode, _ = strconv.ParseBool(params.Get("private_mode"))
+	github.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))
+	github.Open, _ = strconv.ParseBool(params.Get("open"))
+
+	if github.URL == DefaultURL {
+		github.API = DefaultAPI
+	} else {
+		github.API = github.URL + "/v3/api/"
 	}
-	// the URL must NOT have a trailing slash
-	if strings.HasSuffix(github.URL, "/") {
-		github.URL = github.URL[:len(github.URL)-1]
-	}
-	return &github, nil
+
+	// here we cache permissions to avoid too many api
+	// calls. this should really be moved outise the
+	// remote plugin into the app
+	github.cache, err = lru.New(1028)
+	return &github, err
 }
 
 func (g *GitHub) Login(token, secret string) (*common.User, error) {

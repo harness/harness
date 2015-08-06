@@ -1,11 +1,11 @@
 package store
 
 import (
-	"fmt"
 	"io"
-	"net/url"
 
 	"github.com/drone/drone/pkg/types"
+
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 var drivers = make(map[string]DriverFunc)
@@ -25,22 +25,19 @@ func Register(name string, driver DriverFunc) {
 
 // DriverFunc returns a new connection to the datastore.
 // The name is a string in a driver-specific format.
-type DriverFunc func(name string) (Store, error)
+type DriverFunc func(driver, datasource string) (Store, error)
 
 // New creates a new database connection specified by its database driver
 // name and a driver-specific data source name, usually consisting of at
 // least a database name and connection information.
-func New(dsn string) (Store, error) {
-	uri, err := url.Parse(dsn)
-	if err != nil {
-		return nil, err
-	}
-	driver := uri.Scheme
+func New(driver, datasource string) (Store, error) {
 	fn, ok := drivers[driver]
 	if !ok {
-		return nil, fmt.Errorf("datastore: unknown driver %q", driver)
+		log.Fatalf("datastore: unknown driver %q", driver)
 	}
-	return fn(dsn)
+	log.Infof("datastore: loading driver %s", driver)
+	log.Infof("datastore: loading config %s", datasource)
+	return fn(driver, datasource)
 }
 
 type Store interface {
