@@ -113,7 +113,16 @@ func Test_Linter(t *testing.T) {
 				},
 			}
 			g.Assert(expectCacheInWorkspace(c) != nil).IsTrue()
-		})		
+		})
+
+		g.It("Should fail when : is in the path", func() {
+			c := &common.Config{
+				Build: &common.Step{
+					Cache: []string{".git",".git:/../"},
+				},
+			}
+			g.Assert(expectCacheInWorkspace(c) != nil).IsTrue()
+		})
 	})
 }
 

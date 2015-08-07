@@ -110,6 +110,10 @@ func expectTrustedNotify(c *common.Config) error {
 // in the workspace.
 func expectCacheInWorkspace(c *common.Config) error {
 	for _, step := range c.Build.Cache {
+		if strings.Index(step, ":") != -1 {
+			return fmt.Errorf("Cache cannot contain : in the path")
+		}
+
 		cleaned := filepath.Clean(step)
 
 		if strings.Index(cleaned, "../") != -1 {
