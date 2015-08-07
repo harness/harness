@@ -123,7 +123,7 @@ func (r *Repo) Commands() []string {
 		cmds = append(cmds, fmt.Sprintf("git checkout -qf -b pr/%s origin/pr/%s", r.PR, r.PR))
 	} else {
 		if len(r.Tag) > 0 {
-			cmds = append(cmds, fmt.Sprintf("git clone --depth=%d --recursive %s %s", r.Depth, r.Path, r.Dir))
+			cmds = append(cmds, fmt.Sprintf("git clone --recursive %s %s", r.Path, r.Dir))
 			cmds = append(cmds, fmt.Sprintf("git checkout -qf -b tags/%s %s", r.Tag, r.Tag))
 		} else {
 			// Otherwise just clone the branch.
