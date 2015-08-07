@@ -22,6 +22,7 @@ var lintRules = [...]lintRule{
 	expectTrustedPublish,
 	expectTrustedDeploy,
 	expectTrustedNotify,
+	expectCacheInWorkspace,
 }
 
 // Lint runs all lint rules against the Yaml Config.
@@ -102,6 +103,22 @@ func expectTrustedNotify(c *common.Config) error {
 			return fmt.Errorf("Yaml must use trusted notify plugins")
 		}
 	}
+	return nil
+}
+
+// lint rule that fails if the cache directories are not contained
+// in the workspace.
+func expectCacheInWorkspace(c *common.Config) error {
+	for _, step := range c.Build.Cache {
+		cleaned := filepath.Clean(step)
+
+		if strings.Index(cleaned, "../") != -1 {
+			return fmt.Errorf("Cache must point to a path in the workspace")
+		} else if cleaned == "." {
+			return fmt.Errorf("Cannot cache the workspace")
+		}
+	}
+
 	return nil
 }
 
