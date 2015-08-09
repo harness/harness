@@ -53,8 +53,8 @@ func NewDriver(config string) (remote.Remote, error) {
 
 	github := GitHub{}
 	github.URL = url_.String()
-	github.Client = params.Get("client")
-	github.Secret = params.Get("secret")
+	github.Client = params.Get("client_id")
+	github.Secret = params.Get("client_secret")
 	github.AllowedOrgs = params["orgs"]
 	github.PrivateMode, _ = strconv.ParseBool(params.Get("private_mode"))
 	github.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))

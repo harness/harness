@@ -49,8 +49,8 @@ func NewDriver(config string) (remote.Remote, error) {
 
 	gitlab := Gitlab{}
 	gitlab.URL = url_.String()
-	gitlab.Client = params.Get("client")
-	gitlab.Secret = params.Get("secret")
+	gitlab.Client = params.Get("client_id")
+	gitlab.Secret = params.Get("client_secret")
 	gitlab.AllowedOrgs = params["orgs"]
 	gitlab.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))
 	gitlab.Open, _ = strconv.ParseBool(params.Get("open"))

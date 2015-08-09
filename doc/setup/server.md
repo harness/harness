@@ -12,7 +12,7 @@ This section lists all environment variables used to configure the server.
 
 This example changes the default port to `:80`:
 
-```
+```bash
 SERVER_ADDR=":80"
 ```
 
@@ -22,7 +22,7 @@ Drone uses the `ListAndServerTLS` function in the Go standard library to accept 
 
 This example accepts `HTTPS` connections:
 
-```
+```bash
 SERVER_ADDR=":443"
 SERVER_KEY="/path/to/key.pem"
 SERVER_CERT="/path/to/cert.pem"
@@ -30,9 +30,9 @@ SERVER_CERT="/path/to/cert.pem"
 
 > **NOTE** if the certificate is signed by a certificate authority, the cert should be the concatenation of the server's certificate followed by the CA's certificate.
 
-When running Drone inside Docker, you'll need to mount the volume containing the certificate:
+When running Drone inside Docker, you'll need to mount a volume containing the certificate:
 
-```
+```bash
 docker run
     --volume /path/to/cert.pem:/path/to/cert.pem \
     --volume /path/to/key.pem:/path/to/key.pem   \

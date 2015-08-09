@@ -5,8 +5,6 @@
     * [Docker](docker.md)
     * [GitHub](github.md)
     * [GitLab](gitlab.md)
-    * [Bitbucket](bitbucket.md)
 * [Database](#)
     * [SQLite](sqlite.md)
-    * [Postgres](postgres.md)
     * [MySQL](mysql.md)

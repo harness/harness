@@ -1,25 +1,40 @@
 # GitHub
 
-Drone comes with built-in support for GitHub and GitHub Enterprise. To enable and configure GitHub, you should set the following environment variables:
+Drone comes with built-in support for GitHub and GitHub Enterprise. To enable GitHub you should configure the GitHub driver using the following environment variables:
 
 ```bash
 REMOTE_DRIVER="github"
-
-GITHUB_CLIENT="c0aaff74c060ff4a950d"
-GITHUB_SECRET="1ac1eae5ff1b490892f5"
+REMOTE_CONFIG="https://github.com?client_id=${client_id}&client_secret=${client_secret}"
 ```
 
-## GitHub settings
+## GitHub configuration
 
-This section lists all environment variables used to configure GitHub.
+The following is the standard URI connection scheme:
 
-* `GITHUB_HOST` server address to connect to. The default value is `https://github.com` if not specified.
-* `GITHUB_CLIENT` oauth client id for registered application
-* `GITHUB_SECRET` oauth client secret for registered application
-* `GITHUB_OPEN=false` allows users to self-register. Defaults to false for security reasons.
-* `GITHUB_ORGS=drone,docker` restricts access to these GitHub organizations. **Optional**
-* `GITHUB_PRIVATE_MODE=false` indicates GitHub Enterprise is running in private mode
+```
+scheme://host[:port][?options]
+```
 
-## GitHub Enterprise
+The components of this string are:
 
-If you are configuring Drone with GitHub Enterprise edition, you must specify the `GITHUB_HOST` in the configuration string. Note that you may also need to set `GITHUB_PRIVATE_MODE=true` when running GitHub Entperirse in private mode.
+* `scheme` server protocol `http` or `https`.
+* `host` server address to connect to. The default value is github.com if not specified.
+* `:port` optional. The default value is :80 if not specified.
+* `?options` connection specific options.
+
+## GitHub options
+
+This section lists all connection options used in the connection string format. Connection options are pairs in the following form: `name=value`. The value is always case sensitive. Separate options with the ampersand (i.e. &) character:
+
+* `client_id` oauth client id for registered application
+* `client_secret` oauth client secret for registered application
+* `open=false` allows users to self-register. Defaults to false for security reasons.
+* `orgs=drone,docker` restricts access to these GitHub organizations. **Optional**
+* `private_mode=false` indicates GitHub Enterprise is running in private mode
+* `skip_verify=false` skip ca verification if self-signed certificate. Defaults to false.
+
+## GitHub registration
+
+You must register your application with GitHub in order to generate a Client and Secret. Navigate to your account settings and choose Applications from the menu, and click Register new application.
+
+Please use `/authorize` as the Authorization callback URL path.
