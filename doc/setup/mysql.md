@@ -4,12 +4,12 @@
 
 Drone comes with support for MySQL as an alternate database engine. To enable Postgres, you should specify the following environment variables:
 
-```
+```bash
 DATABASE_DRIVER="mysql"
-DATABASE_DATASOURCE="root:pa55word@tcp(localhost:3306)/drone"
+DATABASE_CONFIG="root:pa55word@tcp(localhost:3306)/drone"
 ```
 
-## MySQL connection
+## MySQL configuration
 
 The following is the standard URI connection scheme:
 
@@ -29,7 +29,7 @@ The components of this string are:
 This is an example connection string:
 
 ```
-root:pa55word@tcp(localhost:3306)/drone?autocommit=false
+root:pa55word@tcp(localhost:3306)/drone
 ```
 
 ## MySQL options

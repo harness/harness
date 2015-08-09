@@ -2,12 +2,12 @@
 
 Drone uses SQLite as the default database with zero configuration required. In order to customize the SQLite database configuration you should specify the following environment variables:
 
-```
+```bash
 DATABASE_DRIVER="sqlite3"
-DATABASE_DATASOURCE="/var/lib/drone/drone.sqlite"
+DATABASE_CONFIG="/var/lib/drone/drone.sqlite"
 ```
 
-## Sqlite3 connection
+## Sqlite3 configuration
 
 The components of the datasource connection string are:
 
@@ -15,6 +15,6 @@ The components of the datasource connection string are:
 
 This is an example connection string:
 
-```
-/var/lib/drone/drone.sqlite
+```bash
+DATABASE_CONFIG="/var/lib/drone/drone.sqlite"
 ```

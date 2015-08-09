@@ -5,10 +5,10 @@ Drone comes with support for Postgres as an alternate database engine. To enable
 
 ```
 DATABASE_DRIVER="postgres"
-DATABASE_DATASOURCE="postgres://root:pa55word@127.0.0.1:5432/postgres"
+DATABASE_CONFIG="postgres://root:pa55word@127.0.0.1:5432/postgres"
 ```
 
-## Postgres connection
+## Postgres configuration
 
 The following is the standard URI connection scheme:
 
