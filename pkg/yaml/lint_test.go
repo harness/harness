@@ -88,6 +88,41 @@ func Test_Linter(t *testing.T) {
 			g.Assert(Lint(c) == nil).IsTrue()
 		})
 
+		g.It("Should pass with path inside workspace", func() {
+			c := &common.Config{
+				Build: &common.Step{
+					Cache: []string{".git","/.git","/.git/../.git/../.git"},
+				},
+			}
+			g.Assert(expectCacheInWorkspace(c) == nil).IsTrue()
+		})
+
+		g.It("Should fail with path outside workspace", func() {
+			c := &common.Config{
+				Build: &common.Step{
+					Cache: []string{".git","/.git","../../.git"},
+				},
+			}
+			g.Assert(expectCacheInWorkspace(c) != nil).IsTrue()
+		})
+
+		g.It("Should fail when caching workspace directory", func() {
+			c := &common.Config{
+				Build: &common.Step{
+					Cache: []string{".git",".git/../"},
+				},
+			}
+			g.Assert(expectCacheInWorkspace(c) != nil).IsTrue()
+		})
+
+		g.It("Should fail when : is in the path", func() {
+			c := &common.Config{
+				Build: &common.Step{
+					Cache: []string{".git",".git:/../"},
+				},
+			}
+			g.Assert(expectCacheInWorkspace(c) != nil).IsTrue()
+		})
 	})
 }
 
