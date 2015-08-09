@@ -241,7 +241,7 @@ func main() {
 	http.Handle("/static/", static())
 	http.Handle("/", r)
 
-	err = http.ListenAndServe(settings.Server.Addr, nil)
+	err = http.ListenAndServe(conf.server.addr, nil)
 	if err != nil {
 		log.Error("Cannot start server: ", err)
 	}

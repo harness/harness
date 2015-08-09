@@ -3,6 +3,7 @@ cmd/drone-server/drone_bindata.go
 dist/
 doc/
 
+.git/
 .dockerignore
 .drone.yml
 .gitignore

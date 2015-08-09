@@ -154,6 +154,9 @@ func trace(args []string) {
 // helper function to parse the git revision
 func rev() string {
 	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
-	raw, _ := cmd.CombinedOutput()
+	raw, err := cmd.CombinedOutput()
+	if err != nil {
+		return "HEAD"
+	}
 	return strings.Trim(string(raw), "\n")
 }
