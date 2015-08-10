@@ -171,9 +171,9 @@ main aside > div {
     font-weight:300;
 }
 
-@media (-webkit-min-device-pixel-ratio: 1) { 
+@media (-webkit-min-device-pixel-ratio: 1) {
     .console pre {
-        font-weight:400; 
+        font-weight:400;
         line-height:20px;
         font-size:13px;
     }
@@ -306,7 +306,19 @@ main aside > div {
     box-sizing: border-box;
 }
 .build-summary h2 {
-    line-height:21px;
+    line-height:23px;
+}
+.build-summary h2 small {
+    font-size: 11px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-right: 5px;
+    vertical-align: top;
+    color:#FFF;
+    width:auto;
+    height:auto;
+    display:inline;
 }
 .build-summary p {
     margin-top:10px;
@@ -623,18 +635,18 @@ pre.snippet {
 
 .status.running i,
 .status.pending i {
-    -webkit-animation-name:             delayed-rotate; 
-    -webkit-animation-duration:         1s; 
+    -webkit-animation-name:             delayed-rotate;
+    -webkit-animation-duration:         1s;
     -webkit-animation-iteration-count:  infinite;
     -webkit-animation-timing-function:  ease-in-out;
 
-    -moz-animation-name:             delayed-rotate; 
-    -moz-animation-duration:         1s; 
+    -moz-animation-name:             delayed-rotate;
+    -moz-animation-duration:         1s;
     -moz-animation-iteration-count:  infinite;
     -moz-animation-timing-function:  ease-in-out;
 
-    animation-name:             delayed-rotate; 
-    animation-duration:         1s; 
+    animation-name:             delayed-rotate;
+    animation-duration:         1s;
     animation-iteration-count:  infinite;
     animation-timing-function:  ease-in-out;
 }
@@ -694,10 +706,3 @@ section.search menu i {
 /*
  * Lists
  */
-
-
-
-
-
-
-
