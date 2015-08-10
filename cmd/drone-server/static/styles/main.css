@@ -362,7 +362,7 @@ main aside > div {
 }
 .job-list > a div.param:first-child,
 .job-list > li div.param:first-child {
-    margin-top:10px;
+    margin-top:9px;
 }
 
 
@@ -509,27 +509,27 @@ menu .button span {
  */
 
 .status {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     display: inline-block;
 }
 .status i {
-    line-height: 36px;
-    width: 36px;
+    line-height: 32px;
+    width: 32px;
     vertical-align: middle;
     text-align: center;
     font-size:24px;
     color:rgba(255,255,255,0.7);
 }
 .status-small {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
 }
 .status-small i {
-    line-height: 32px;
-    width: 32px;
-    height: 32px;
+    line-height: 28px;
+    width: 28px;
+    height: 28px;
 }
 
 /* Search Form */

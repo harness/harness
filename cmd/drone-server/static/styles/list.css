@@ -75,9 +75,25 @@
 .list em {
     color:#65737e;
 }
-
+/*
 .matrix-list a.active {
     background-color: #eff1f5;
     margin-left: -10px;
     padding-left: 10px;
+}*/
+.matrix-list a.active:after {
+    content:"chevron_right";
+    font-family: "Material Icons";
+    line-height:28px;
+    color: #c0c5ce;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    word-wrap: normal;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    margin-right:-5px;
 }
