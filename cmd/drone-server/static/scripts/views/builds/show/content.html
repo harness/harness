@@ -7,7 +7,7 @@
                 <div class="build-section">
                     <div class="status"><i class="material-icons">close</i></div><!--remove-->
                     <div class="build-summary">
-                      <h2>{{ build.head_commit.message }}</h2>
+                      <h2><small class="status {{build.status}}">{{ build.status }}</small>{{ build.head_commit.message }}</h2>
                       <p><em>{{ build.head_commit.author.login }}</em> pushed to <em>{{ build.head_commit.branch }}</em> {{ build.started_at | fromNow }}</p>
                     </div>
                 </div>
