@@ -117,6 +117,7 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 		Branch:  r.Commit.Branch,
 		Commit:  r.Commit.Sha,
 		PR:      r.Commit.PullRequest,
+		Tag:     r.Commit.Tag,
 		Private: r.Repo.Private,
 		Dir:     filepath.ToSlash(filepath.Join("/var/cache/drone/src", git.GitPath(script.Git, path))),
 		Depth:   git.GitDepth(script.Git),

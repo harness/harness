@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS repos (
 	,repo_privileged   BOOLEAN
 	,repo_post_commit  BOOLEAN
 	,repo_pull_request BOOLEAN
+	,repo_tag          BOOLEAN
 	,repo_public_key   BLOB
 	,repo_private_key  BLOB
 	,repo_params       BLOB
@@ -135,6 +136,7 @@ CREATE TABLE IF NOT EXISTS commits (
 	,commit_sha        VARCHAR(255)
 	,commit_branch     VARCHAR(255)
 	,commit_pr         VARCHAR(255)
+	,commit_tag        VARCHAR(255)
 	,commit_author     VARCHAR(255)
 	,commit_gravatar   VARCHAR(255)
 	,commit_timestamp  VARCHAR(255)

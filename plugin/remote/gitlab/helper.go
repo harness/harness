@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"code.google.com/p/goauth2/oauth"
-	"github.com/Bugagazavr/go-gitlab-client"
+	"github.com/depay/go-gitlab-client"
 	"github.com/gorilla/securecookie"
 )
 

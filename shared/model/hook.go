@@ -7,6 +7,7 @@ type Hook struct {
 	Repo        string
 	Sha         string
 	Branch      string
+	Tag         string
 	PullRequest string
 	Author      string
 	Gravatar    string

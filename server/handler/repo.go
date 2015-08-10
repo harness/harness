@@ -103,6 +103,7 @@ func DeactivateRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	repo.Active = false
 	repo.PullRequest = false
 	repo.PostCommit = false
+	repo.Tag = false
 	repo.UserID = 0
 
 	if err := datastore.PutRepo(ctx, repo); err != nil {
@@ -126,6 +127,7 @@ func PostRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	repo.Active = true
 	repo.PullRequest = true
 	repo.PostCommit = true
+	repo.Tag = true
 	repo.UserID = user.ID
 	repo.Timeout = 3600 // default to 1 hour
 
@@ -195,6 +197,7 @@ func PutRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	in := struct {
 		PostCommit  *bool   `json:"post_commits"`
 		PullRequest *bool   `json:"pull_requests"`
+		Tag_push    *bool   `json:"tag_push"`
 		Privileged  *bool   `json:"privileged"`
 		Params      *string `json:"params"`
 		Timeout     *int64  `json:"timeout"`
@@ -218,6 +221,9 @@ func PutRepo(c web.C, w http.ResponseWriter, r *http.Request) {
 	}
 	if in.PullRequest != nil {
 		repo.PullRequest = *in.PullRequest
+	}
+	if in.Tag_push != nil {
+		repo.Tag = *in.Tag_push
 	}
 	if in.Privileged != nil && user.Admin {
 		repo.Privileged = *in.Privileged

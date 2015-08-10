@@ -29,6 +29,12 @@
 						<span>Enable Pull Request Hooks</span>
 					</div>
 
+					<div class="toggle">
+						<input type="checkbox" ng-model="repo.tag_push" id="tag_push" />
+						<label for="tag_push"></label>
+						<span>Enable Tag Push Hooks</span>
+					</div>
+
 					<div class="toggle" ng-if="user.admin == true">
 						<input type="checkbox" ng-model="repo.privileged" id="privileged" />
 						<label for="privileged"></label>
