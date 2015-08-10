@@ -15,8 +15,8 @@
                 <div class="list job-list">
                     <a ng-repeat="job in build.jobs" ng-href="{{ repo.full_name }}/{{ build.number }}/{{ job.number }}">
                         <div>
-                            <div class="status {{ job.status }}">
-                                <i class="material-icons">check</i>
+                            <div class="status {{ job.status }} status-small">
+                              <i class="material-icons">{{ job.status | icon }}</i>
                             </div>
                         </div>
                         <div>{{ job.number }}</div>

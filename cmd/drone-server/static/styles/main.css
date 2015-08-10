@@ -133,8 +133,8 @@ main article {
     margin-bottom:20px;
 }
 main aside {
-    min-width:500px;
-    width:500px;
+    min-width:450px;
+    width:450px;
     box-sizing: border-box;
     padding:40px 50px;
 }
@@ -306,10 +306,10 @@ main aside > div {
     box-sizing: border-box;
 }
 .build-summary h2 {
-    line-height:25px;
+    line-height:21px;
 }
 .build-summary p {
-    margin-top:15px;
+    margin-top:10px;
 }
 
 /*
@@ -326,8 +326,8 @@ main aside > div {
 
 .job-list > a > div:first-child,
 .job-list > li > div:first-child {
-    width:40px;
-    min-width:40px;
+    width:50px;
+    min-width:50px;
 }
 .job-list > a > div:nth-child(2),
 .job-list > li > div:nth-child(2) { /** TEMPORARILY HIDDEN. MAY DECIDE TO REMOVE */
@@ -507,18 +507,17 @@ menu .button span {
     width: 36px;
     vertical-align: middle;
     text-align: center;
-    font-size:32px;
+    font-size:24px;
+    color:rgba(255,255,255,0.7);
 }
 .status-small {
-
+    width: 32px;
+    height: 32px;
 }
-.status.error,
-.status.killed,
-.status.failure {
-    color: #bf616a;
-}
-.status.success {
-    color:#a3be8c;
+.status-small i {
+    line-height: 32px;
+    width: 32px;
+    height: 32px;
 }
 
 /* Search Form */
@@ -607,13 +606,7 @@ pre.snippet {
 
 /* ROUND INDICATORS */
 .status {
-    width:12px;
-    height:12px;
-    border-radius:50px;
-    margin-top:10px;
-}
-.status i {
-    font-size:0px;
+    border-radius:50%;
 }
 .status.error,
 .status.killed,
@@ -623,10 +616,32 @@ pre.snippet {
 .status.success {
     background:#a3be8c;
 }
+.status.running,
+.status.pending {
+    background:#ebcb8b;
+}
+
+.status.running i,
+.status.pending i {
+    -webkit-animation-name:             delayed-rotate; 
+    -webkit-animation-duration:         1s; 
+    -webkit-animation-iteration-count:  infinite;
+    -webkit-animation-timing-function:  ease-in-out;
+
+    -moz-animation-name:             delayed-rotate; 
+    -moz-animation-duration:         1s; 
+    -moz-animation-iteration-count:  infinite;
+    -moz-animation-timing-function:  ease-in-out;
+
+    animation-name:             delayed-rotate; 
+    animation-duration:         1s; 
+    animation-iteration-count:  infinite;
+    animation-timing-function:  ease-in-out;
+}
 .build-list li > div:first-child,
 .job-list li > div:first-child {
-  width: 45px;
-  min-width: 45px;
+  width: 55px;
+  min-width: 55px;
 }
 
 

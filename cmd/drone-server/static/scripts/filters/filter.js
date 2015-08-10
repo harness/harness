@@ -60,12 +60,34 @@
 		}
 	}
 
+	/**
+	 * message is a helper function that return the build icon.
+	*/
+	function icon() {
+		return function(status) {
+			switch(status) {
+			case "pending":
+			case "running":
+				return "refresh";
+			case "failure":
+				return "clear";
+			case "success":
+				return "check";
+			case "killed":
+			case "error":
+				return "remove";
+			}
+			return "";
+		}
+	}
+
 	angular
 		.module('drone')
 		.filter('trunc', trunc)
 		.filter('author', author)
 		.filter('message', message)
 		.filter('sha', sha)
+		.filter('icon', icon)
 		.filter('ref', ref);
 
 })();
