@@ -75,3 +75,9 @@
 .list em {
     color:#65737e;
 }
+
+.matrix-list a.active {
+    background-color: #eff1f5;
+    margin-left: -10px;
+    padding-left: 10px;
+}

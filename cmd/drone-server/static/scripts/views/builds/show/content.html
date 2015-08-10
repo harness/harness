@@ -12,8 +12,8 @@
                     </div>
                 </div>
 
-                <div class="list job-list">
-                    <a ng-repeat="job in build.jobs" ng-href="{{ repo.full_name }}/{{ build.number }}/{{ job.number }}">
+                <div ng-class="{'list':true, 'job-list':true, 'matrix-list': build.jobs && build.jobs.length > 1 }">
+                    <a ng-repeat="job in build.jobs" ng-href="{{ repo.full_name }}/{{ build.number }}/{{ job.number }}" ng-class="{'active': job.number == step }">
                         <div>
                             <div class="status {{ job.status }} status-small">
                               <i class="material-icons">{{ job.status | icon }}</i>
