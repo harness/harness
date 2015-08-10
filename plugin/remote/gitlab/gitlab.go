@@ -184,7 +184,7 @@ func (r *Gitlab) Activate(user *model.User, repo *model.Repo, link string) error
 	link += "?owner=" + repo.Owner + "&name=" + repo.Name
 
 	// add the hook
-	return client.AddProjectHook(path, link, true, false, true)
+	return client.AddProjectHook(path, link, true, false, true, false)
 }
 
 // Deactivate removes a repository by removing all the post-commit hooks
