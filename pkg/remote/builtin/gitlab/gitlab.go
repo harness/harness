@@ -76,6 +76,12 @@ func (r *Gitlab) Login(token, secret string) (*common.User, error) {
 	user.Email = login.Email
 	user.Token = token
 	user.Secret = secret
+
+	if strings.HasPrefix(login.AvatarUrl, "http") {
+		user.Avatar = login.AvatarUrl
+	} else {
+		user.Avatar = r.URL + "/" + login.AvatarUrl
+	}
 	return &user, nil
 }
 
