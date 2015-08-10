@@ -71,6 +71,7 @@
     var owner = $stateParams.owner;
     var name = $stateParams.name;
     var fullName = owner + '/' + name;
+    var step = parseInt($stateParams.step) || 1;
 
     // Gets the currently authenticated user
     users.getCached().then(function (payload) {
@@ -86,6 +87,7 @@
 
     // Gets the build
     builds.get(fullName, number).then(function (payload) {
+      $scope.step = step;
       $scope.build = payload.data;
     }).catch(function (err) {
       $scope.error = err;
@@ -172,6 +174,7 @@
     builds.get(fullName, number).then(function (payload) {
       $scope.build = payload.data;
       $scope.task = payload.data.jobs[step - 1];
+      $scope.step = step;
 
       if (['pending', 'killed'].indexOf($scope.task.status) !== -1) {
         // do nothing
