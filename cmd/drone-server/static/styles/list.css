@@ -17,8 +17,8 @@
     min-width: 60px;
 }
 .list .column-status {
-    width: 45px;
-    min-width: 45px;
+    width: 60px;
+    min-width: 60px;
 }
 .list .column-fill {
     flex: 1 1 auto;
@@ -49,6 +49,12 @@
     width:32px;
     height:32px;
     border-radius:4px;
+    margin-left:5px;
+}
+.user-list .column-avatar img {
+    width:32px;
+    height:32px;
+    border-radius:50%;
     margin-left:5px;
 }
 .list h2 {

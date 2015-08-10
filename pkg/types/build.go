@@ -18,15 +18,15 @@ type Build struct {
 	Finished int64  `json:"finished_at"`
 
 	Commit      *Commit      `json:"head_commit"`
-	PullRequest *PullRequest `json:"pull_request"`
+	PullRequest *PullRequest `json:"pull_request,omitempty"`
 
 	Jobs []*Job `json:"jobs,omitempty" sql:"-"`
 }
 
 type PullRequest struct {
-	Number int     `json:"number"`
-	Title  string  `json:"title"`
-	Base   *Commit `json:"base_commit"`
+	Number int     `json:"number,omitempty"`
+	Title  string  `json:"title,omitempty"`
+	Base   *Commit `json:"base_commit,omitempty"`
 }
 
 type Commit struct {
@@ -34,12 +34,12 @@ type Commit struct {
 	Ref       string  `json:"ref"`
 	Branch    string  `json:"branch" sql:"index:ix_commit_branch"`
 	Message   string  `json:"message"`
-	Timestamp string  `json:"timestamp"`
-	Remote    string  `json:"remote"`
-	Author    *Author `json:"author"`
+	Timestamp string  `json:"timestamp,omitempty"`
+	Remote    string  `json:"remote,omitempty"`
+	Author    *Author `json:"author,omitempty"`
 }
 
 type Author struct {
-	Login string `json:"login"`
-	Email string `json:"email"`
+	Login string `json:"login,omitempty"`
+	Email string `json:"email,omitempty"`
 }

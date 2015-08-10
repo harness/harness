@@ -30,7 +30,9 @@
       <div class="list">
         <a ng-repeat="build in builds | orderBy:'-number' | filter: search_text" ng-href="/{{ repo.full_name }}/{{ build.number}}">
           <div class="column-status">
-            <div class="status {{ build.status }}"></div>
+            <div class="status {{ build.status }}">
+              <i class="material-icons">{{ build.status | icon }}</i>
+            </div>
           </div>
           <div class="column-fill">
             <h2>{{ build.head_commit.message }}</h2>
