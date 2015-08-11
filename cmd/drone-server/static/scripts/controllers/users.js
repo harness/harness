@@ -1,5 +1,17 @@
 (function () {
 
+	function UserHeaderCtrl($scope, $stateParams, users) {
+		// Gets the currently authenticated user
+		users.getCurrent().then(function(payload){
+			$scope.user = payload.data;
+		});
+
+	    $scope.number = $stateParams.number || undefined;
+	    $scope.owner = $stateParams.owner || undefined;
+	    $scope.name = $stateParams.name || undefined;
+	    $scope.full_name = $scope.owner + '/' + $scope.name;
+	}
+
 	function UserLoginCtrl($scope, $window) {
 		// attempts to extract an error message from
 		// the URL hash in format #error=?
@@ -101,6 +113,7 @@
 
 	angular
 		.module('drone')
+		.controller('UserHeaderCtrl', UserHeaderCtrl)
 		.controller('UserLoginCtrl', UserLoginCtrl)
 		.controller('UserCtrl', UserCtrl)
 		.controller('UsersCtrl', UsersCtrl);
