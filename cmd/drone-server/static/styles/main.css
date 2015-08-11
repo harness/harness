@@ -171,7 +171,7 @@ main aside > div {
     font-weight:300;
 }
 
-@media (-webkit-min-device-pixel-ratio: 1) {
+@media (-webkit-max-device-pixel-ratio: 1) {
     .console pre {
         font-weight:400;
         line-height:20px;
@@ -364,8 +364,24 @@ main aside > div {
 .job-list > li div.param:first-child {
     margin-top:9px;
 }
-
-
+.job-list > a div.meta,
+.job-list > li div.meta {
+  margin-top: 5px;
+  color: #a7adba;
+}
+.job-list > a div.meta-group {
+    padding-top:10px;
+    display:none;
+}
+.job-list > a.active div.meta-group {
+    display:block;
+}
+.job-list:not(.matrix-list) > a div.meta:first-child {
+  color: #4c555a;
+  margin-top: -2px;
+  padding-bottom: 5px;
+  font-size: 14px;
+}
 
 li menu {
     position:absolute;

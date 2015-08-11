@@ -200,9 +200,9 @@
             templateUrl: '/static/scripts/views/builds/show/content.html',
             controller: 'BuildOutCtrl',
             resolve: resolveUser
-          },
-          title: 'Build Job'
-        }
+          }
+        },
+        title: 'Build'
       });
 
     // Enables html5 mode
