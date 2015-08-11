@@ -71,6 +71,7 @@ SELECT
 ,repo_hooks_push
 ,repo_hooks_tags
 ,repo_params
+,repo_hash
 FROM
  repos r
 ,stars s

@@ -47,8 +47,8 @@ func createBuild(db buildDB, query string, v *Build) error {
 	var v10 string
 	var v11 string
 	var v12 string
-	var v13 int
-	var v14 string
+	var v13 string
+	var v14 int
 	var v15 string
 	var v16 string
 	var v17 string
@@ -57,6 +57,9 @@ func createBuild(db buildDB, query string, v *Build) error {
 	var v20 string
 	var v21 string
 	var v22 string
+	var v23 string
+	var v24 string
+	var v25 string
 	v0 = v.RepoID
 	v1 = v.Number
 	v2 = v.Status
@@ -65,32 +68,34 @@ func createBuild(db buildDB, query string, v *Build) error {
 	if v.Commit != nil {
 		v5 = v.Commit.Sha
 		v6 = v.Commit.Ref
-		v7 = v.Commit.Branch
-		v8 = v.Commit.Message
-		v9 = v.Commit.Timestamp
-		v10 = v.Commit.Remote
+		v7 = v.Commit.Link
+		v8 = v.Commit.Branch
+		v9 = v.Commit.Message
+		v10 = v.Commit.Timestamp
+		v11 = v.Commit.Remote
 		if v.Commit.Author != nil {
-			v11 = v.Commit.Author.Login
-			v12 = v.Commit.Author.Email
+			v12 = v.Commit.Author.Login
+			v13 = v.Commit.Author.Email
 		}
 	}
 	if v.PullRequest != nil {
-		v13 = v.PullRequest.Number
-		v14 = v.PullRequest.Title
+		v14 = v.PullRequest.Number
+		v15 = v.PullRequest.Title
+		v16 = v.PullRequest.Link
 		if v.PullRequest.Base != nil {
-			v15 = v.PullRequest.Base.Sha
-			v16 = v.PullRequest.Base.Ref
-			v17 = v.PullRequest.Base.Branch
-			v18 = v.PullRequest.Base.Message
-			v19 = v.PullRequest.Base.Timestamp
-			v20 = v.PullRequest.Base.Remote
+			v17 = v.PullRequest.Base.Sha
+			v18 = v.PullRequest.Base.Ref
+			v19 = v.PullRequest.Base.Link
+			v20 = v.PullRequest.Base.Branch
+			v21 = v.PullRequest.Base.Message
+			v22 = v.PullRequest.Base.Timestamp
+			v23 = v.PullRequest.Base.Remote
 			if v.PullRequest.Base.Author != nil {
-				v21 = v.PullRequest.Base.Author.Login
-				v22 = v.PullRequest.Base.Author.Email
+				v24 = v.PullRequest.Base.Author.Login
+				v25 = v.PullRequest.Base.Author.Email
 			}
 		}
 	}
-
 	res, err := db.Exec(query,
 		&v0,
 		&v1,
@@ -115,6 +120,9 @@ func createBuild(db buildDB, query string, v *Build) error {
 		&v20,
 		&v21,
 		&v22,
+		&v23,
+		&v24,
+		&v25,
 	)
 	if err != nil {
 		return err
@@ -139,8 +147,8 @@ func updateBuild(db buildDB, query string, v *Build) error {
 	var v11 string
 	var v12 string
 	var v13 string
-	var v14 int
-	var v15 string
+	var v14 string
+	var v15 int
 	var v16 string
 	var v17 string
 	var v18 string
@@ -149,6 +157,9 @@ func updateBuild(db buildDB, query string, v *Build) error {
 	var v21 string
 	var v22 string
 	var v23 string
+	var v24 string
+	var v25 string
+	var v26 string
 	v0 = v.ID
 	v1 = v.RepoID
 	v2 = v.Number
@@ -158,28 +169,31 @@ func updateBuild(db buildDB, query string, v *Build) error {
 	if v.Commit != nil {
 		v6 = v.Commit.Sha
 		v7 = v.Commit.Ref
-		v8 = v.Commit.Branch
-		v9 = v.Commit.Message
-		v10 = v.Commit.Timestamp
-		v11 = v.Commit.Remote
+		v8 = v.Commit.Link
+		v9 = v.Commit.Branch
+		v10 = v.Commit.Message
+		v11 = v.Commit.Timestamp
+		v12 = v.Commit.Remote
 		if v.Commit.Author != nil {
-			v12 = v.Commit.Author.Login
-			v13 = v.Commit.Author.Email
+			v13 = v.Commit.Author.Login
+			v14 = v.Commit.Author.Email
 		}
 	}
 	if v.PullRequest != nil {
-		v14 = v.PullRequest.Number
-		v15 = v.PullRequest.Title
+		v15 = v.PullRequest.Number
+		v16 = v.PullRequest.Title
+		v17 = v.PullRequest.Link
 		if v.PullRequest.Base != nil {
-			v16 = v.PullRequest.Base.Sha
-			v17 = v.PullRequest.Base.Ref
-			v18 = v.PullRequest.Base.Branch
-			v19 = v.PullRequest.Base.Message
-			v20 = v.PullRequest.Base.Timestamp
-			v21 = v.PullRequest.Base.Remote
+			v18 = v.PullRequest.Base.Sha
+			v19 = v.PullRequest.Base.Ref
+			v20 = v.PullRequest.Base.Link
+			v21 = v.PullRequest.Base.Branch
+			v22 = v.PullRequest.Base.Message
+			v23 = v.PullRequest.Base.Timestamp
+			v24 = v.PullRequest.Base.Remote
 			if v.PullRequest.Base.Author != nil {
-				v22 = v.PullRequest.Base.Author.Login
-				v23 = v.PullRequest.Base.Author.Email
+				v25 = v.PullRequest.Base.Author.Login
+				v26 = v.PullRequest.Base.Author.Email
 			}
 		}
 	}
@@ -208,6 +222,9 @@ func updateBuild(db buildDB, query string, v *Build) error {
 		&v21,
 		&v22,
 		&v23,
+		&v24,
+		&v25,
+		&v26,
 		&v0,
 	)
 	return err
@@ -228,8 +245,8 @@ func scanBuild(row *sql.Row) (*Build, error) {
 	var v11 string
 	var v12 string
 	var v13 string
-	var v14 int
-	var v15 string
+	var v14 string
+	var v15 int
 	var v16 string
 	var v17 string
 	var v18 string
@@ -238,6 +255,9 @@ func scanBuild(row *sql.Row) (*Build, error) {
 	var v21 string
 	var v22 string
 	var v23 string
+	var v24 string
+	var v25 string
+	var v26 string
 
 	err := row.Scan(
 		&v0,
@@ -264,6 +284,9 @@ func scanBuild(row *sql.Row) (*Build, error) {
 		&v21,
 		&v22,
 		&v23,
+		&v24,
+		&v25,
+		&v26,
 	)
 	if err != nil {
 		return nil, err
@@ -279,26 +302,29 @@ func scanBuild(row *sql.Row) (*Build, error) {
 	v.Commit = &Commit{}
 	v.Commit.Sha = v6
 	v.Commit.Ref = v7
-	v.Commit.Branch = v8
-	v.Commit.Message = v9
-	v.Commit.Timestamp = v10
-	v.Commit.Remote = v11
+	v.Commit.Link = v8
+	v.Commit.Branch = v9
+	v.Commit.Message = v10
+	v.Commit.Timestamp = v11
+	v.Commit.Remote = v12
 	v.Commit.Author = &Author{}
-	v.Commit.Author.Login = v12
-	v.Commit.Author.Email = v13
+	v.Commit.Author.Login = v13
+	v.Commit.Author.Email = v14
 	v.PullRequest = &PullRequest{}
-	v.PullRequest.Number = v14
-	v.PullRequest.Title = v15
+	v.PullRequest.Number = v15
+	v.PullRequest.Title = v16
+	v.PullRequest.Link = v17
 	v.PullRequest.Base = &Commit{}
-	v.PullRequest.Base.Sha = v16
-	v.PullRequest.Base.Ref = v17
-	v.PullRequest.Base.Branch = v18
-	v.PullRequest.Base.Message = v19
-	v.PullRequest.Base.Timestamp = v20
-	v.PullRequest.Base.Remote = v21
+	v.PullRequest.Base.Sha = v18
+	v.PullRequest.Base.Ref = v19
+	v.PullRequest.Base.Link = v20
+	v.PullRequest.Base.Branch = v21
+	v.PullRequest.Base.Message = v22
+	v.PullRequest.Base.Timestamp = v23
+	v.PullRequest.Base.Remote = v24
 	v.PullRequest.Base.Author = &Author{}
-	v.PullRequest.Base.Author.Login = v22
-	v.PullRequest.Base.Author.Email = v23
+	v.PullRequest.Base.Author.Login = v25
+	v.PullRequest.Base.Author.Email = v26
 
 	return v, nil
 }
@@ -321,8 +347,8 @@ func scanBuilds(rows *sql.Rows) ([]*Build, error) {
 		var v11 string
 		var v12 string
 		var v13 string
-		var v14 int
-		var v15 string
+		var v14 string
+		var v15 int
 		var v16 string
 		var v17 string
 		var v18 string
@@ -331,6 +357,9 @@ func scanBuilds(rows *sql.Rows) ([]*Build, error) {
 		var v21 string
 		var v22 string
 		var v23 string
+		var v24 string
+		var v25 string
+		var v26 string
 		err = rows.Scan(
 			&v0,
 			&v1,
@@ -356,6 +385,9 @@ func scanBuilds(rows *sql.Rows) ([]*Build, error) {
 			&v21,
 			&v22,
 			&v23,
+			&v24,
+			&v25,
+			&v26,
 		)
 		if err != nil {
 			return vv, err
@@ -371,26 +403,29 @@ func scanBuilds(rows *sql.Rows) ([]*Build, error) {
 		v.Commit = &Commit{}
 		v.Commit.Sha = v6
 		v.Commit.Ref = v7
-		v.Commit.Branch = v8
-		v.Commit.Message = v9
-		v.Commit.Timestamp = v10
-		v.Commit.Remote = v11
+		v.Commit.Link = v8
+		v.Commit.Branch = v9
+		v.Commit.Message = v10
+		v.Commit.Timestamp = v11
+		v.Commit.Remote = v12
 		v.Commit.Author = &Author{}
-		v.Commit.Author.Login = v12
-		v.Commit.Author.Email = v13
+		v.Commit.Author.Login = v13
+		v.Commit.Author.Email = v14
 		v.PullRequest = &PullRequest{}
-		v.PullRequest.Number = v14
-		v.PullRequest.Title = v15
+		v.PullRequest.Number = v15
+		v.PullRequest.Title = v16
+		v.PullRequest.Link = v17
 		v.PullRequest.Base = &Commit{}
-		v.PullRequest.Base.Sha = v16
-		v.PullRequest.Base.Ref = v17
-		v.PullRequest.Base.Branch = v18
-		v.PullRequest.Base.Message = v19
-		v.PullRequest.Base.Timestamp = v20
-		v.PullRequest.Base.Remote = v21
+		v.PullRequest.Base.Sha = v18
+		v.PullRequest.Base.Ref = v19
+		v.PullRequest.Base.Link = v20
+		v.PullRequest.Base.Branch = v21
+		v.PullRequest.Base.Message = v22
+		v.PullRequest.Base.Timestamp = v23
+		v.PullRequest.Base.Remote = v24
 		v.PullRequest.Base.Author = &Author{}
-		v.PullRequest.Base.Author.Login = v22
-		v.PullRequest.Base.Author.Email = v23
+		v.PullRequest.Base.Author.Login = v25
+		v.PullRequest.Base.Author.Email = v26
 		vv = append(vv, v)
 	}
 	return vv, rows.Err()
@@ -406,6 +441,7 @@ SELECT
 ,build_finished
 ,build_commit_sha
 ,build_commit_ref
+,build_commit_link
 ,build_commit_branch
 ,build_commit_message
 ,build_commit_timestamp
@@ -414,8 +450,10 @@ SELECT
 ,build_commit_author_email
 ,build_pull_request_number
 ,build_pull_request_title
+,build_pull_request_link
 ,build_pull_request_base_sha
 ,build_pull_request_base_ref
+,build_pull_request_base_link
 ,build_pull_request_base_branch
 ,build_pull_request_base_message
 ,build_pull_request_base_timestamp
@@ -435,6 +473,7 @@ SELECT
 ,build_finished
 ,build_commit_sha
 ,build_commit_ref
+,build_commit_link
 ,build_commit_branch
 ,build_commit_message
 ,build_commit_timestamp
@@ -443,8 +482,10 @@ SELECT
 ,build_commit_author_email
 ,build_pull_request_number
 ,build_pull_request_title
+,build_pull_request_link
 ,build_pull_request_base_sha
 ,build_pull_request_base_ref
+,build_pull_request_base_link
 ,build_pull_request_base_branch
 ,build_pull_request_base_message
 ,build_pull_request_base_timestamp
@@ -465,6 +506,7 @@ SELECT
 ,build_finished
 ,build_commit_sha
 ,build_commit_ref
+,build_commit_link
 ,build_commit_branch
 ,build_commit_message
 ,build_commit_timestamp
@@ -473,8 +515,10 @@ SELECT
 ,build_commit_author_email
 ,build_pull_request_number
 ,build_pull_request_title
+,build_pull_request_link
 ,build_pull_request_base_sha
 ,build_pull_request_base_ref
+,build_pull_request_base_link
 ,build_pull_request_base_branch
 ,build_pull_request_base_message
 ,build_pull_request_base_timestamp
@@ -495,6 +539,7 @@ SELECT
 ,build_finished
 ,build_commit_sha
 ,build_commit_ref
+,build_commit_link
 ,build_commit_branch
 ,build_commit_message
 ,build_commit_timestamp
@@ -503,8 +548,10 @@ SELECT
 ,build_commit_author_email
 ,build_pull_request_number
 ,build_pull_request_title
+,build_pull_request_link
 ,build_pull_request_base_sha
 ,build_pull_request_base_ref
+,build_pull_request_base_link
 ,build_pull_request_base_branch
 ,build_pull_request_base_message
 ,build_pull_request_base_timestamp
@@ -525,6 +572,7 @@ SELECT
 ,build_finished
 ,build_commit_sha
 ,build_commit_ref
+,build_commit_link
 ,build_commit_branch
 ,build_commit_message
 ,build_commit_timestamp
@@ -533,8 +581,10 @@ SELECT
 ,build_commit_author_email
 ,build_pull_request_number
 ,build_pull_request_title
+,build_pull_request_link
 ,build_pull_request_base_sha
 ,build_pull_request_base_ref
+,build_pull_request_base_link
 ,build_pull_request_base_branch
 ,build_pull_request_base_message
 ,build_pull_request_base_timestamp
@@ -556,6 +606,7 @@ SELECT
 ,build_finished
 ,build_commit_sha
 ,build_commit_ref
+,build_commit_link
 ,build_commit_branch
 ,build_commit_message
 ,build_commit_timestamp
@@ -564,8 +615,10 @@ SELECT
 ,build_commit_author_email
 ,build_pull_request_number
 ,build_pull_request_title
+,build_pull_request_link
 ,build_pull_request_base_sha
 ,build_pull_request_base_ref
+,build_pull_request_base_link
 ,build_pull_request_base_branch
 ,build_pull_request_base_message
 ,build_pull_request_base_timestamp
@@ -591,6 +644,7 @@ INSERT INTO builds (
 ,build_finished
 ,build_commit_sha
 ,build_commit_ref
+,build_commit_link
 ,build_commit_branch
 ,build_commit_message
 ,build_commit_timestamp
@@ -599,15 +653,17 @@ INSERT INTO builds (
 ,build_commit_author_email
 ,build_pull_request_number
 ,build_pull_request_title
+,build_pull_request_link
 ,build_pull_request_base_sha
 ,build_pull_request_base_ref
+,build_pull_request_base_link
 ,build_pull_request_base_branch
 ,build_pull_request_base_message
 ,build_pull_request_base_timestamp
 ,build_pull_request_base_remote
 ,build_pull_request_base_author_login
 ,build_pull_request_base_author_email
-) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
+) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
 `
 
 const stmtBuildUpdate = `
@@ -619,6 +675,7 @@ UPDATE builds SET
 ,build_finished = ?
 ,build_commit_sha = ?
 ,build_commit_ref = ?
+,build_commit_link = ?
 ,build_commit_branch = ?
 ,build_commit_message = ?
 ,build_commit_timestamp = ?
@@ -627,8 +684,10 @@ UPDATE builds SET
 ,build_commit_author_email = ?
 ,build_pull_request_number = ?
 ,build_pull_request_title = ?
+,build_pull_request_link = ?
 ,build_pull_request_base_sha = ?
 ,build_pull_request_base_ref = ?
+,build_pull_request_base_link = ?
 ,build_pull_request_base_branch = ?
 ,build_pull_request_base_message = ?
 ,build_pull_request_base_timestamp = ?
@@ -645,30 +704,33 @@ WHERE build_id = ?
 
 const stmtBuildTable = `
 CREATE TABLE IF NOT EXISTS builds (
- build_id                             INTEGER PRIMARY KEY AUTOINCREMENT
-,build_repo_id                        INTEGER
-,build_number                         INTEGER
-,build_status                         VARCHAR(512)
-,build_started                        INTEGER
-,build_finished                       INTEGER
-,build_commit_sha                     VARCHAR(512)
-,build_commit_ref                     VARCHAR(512)
-,build_commit_branch                  VARCHAR(512)
-,build_commit_message                 VARCHAR(512)
-,build_commit_timestamp               VARCHAR(512)
-,build_commit_remote                  VARCHAR(512)
-,build_commit_author_login            VARCHAR(512)
-,build_commit_author_email            VARCHAR(512)
-,build_pull_request_number            INTEGER
-,build_pull_request_title             VARCHAR(512)
-,build_pull_request_base_sha          VARCHAR(512)
-,build_pull_request_base_ref          VARCHAR(512)
-,build_pull_request_base_branch       VARCHAR(512)
-,build_pull_request_base_message      VARCHAR(512)
-,build_pull_request_base_timestamp    VARCHAR(512)
-,build_pull_request_base_remote       VARCHAR(512)
-,build_pull_request_base_author_login VARCHAR(512)
-,build_pull_request_base_author_email VARCHAR(512)
+ build_id				INTEGER PRIMARY KEY AUTOINCREMENT
+,build_repo_id				INTEGER
+,build_number				INTEGER
+,build_status				VARCHAR
+,build_started				INTEGER
+,build_finished				INTEGER
+,build_commit_sha			VARCHAR
+,build_commit_ref			VARCHAR
+,build_commit_link			VARCHAR
+,build_commit_branch			VARCHAR
+,build_commit_message			VARCHAR
+,build_commit_timestamp			VARCHAR
+,build_commit_remote			VARCHAR
+,build_commit_author_login		VARCHAR
+,build_commit_author_email		VARCHAR
+,build_pull_request_number		INTEGER
+,build_pull_request_title		VARCHAR
+,build_pull_request_link		VARCHAR
+,build_pull_request_base_sha		VARCHAR
+,build_pull_request_base_ref		VARCHAR
+,build_pull_request_base_link		VARCHAR
+,build_pull_request_base_branch		VARCHAR
+,build_pull_request_base_message	VARCHAR
+,build_pull_request_base_timestamp	VARCHAR
+,build_pull_request_base_remote		VARCHAR
+,build_pull_request_base_author_login	VARCHAR
+,build_pull_request_base_author_email	VARCHAR
 );
 `
 

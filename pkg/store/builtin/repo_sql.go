@@ -52,6 +52,7 @@ func createRepo(db repoDB, query string, v *Repo) error {
 	var v15 bool
 	var v16 bool
 	var v17 []byte
+	var v18 string
 	v0 = v.UserID
 	v1 = v.Owner
 	v2 = v.Name
@@ -74,6 +75,7 @@ func createRepo(db repoDB, query string, v *Repo) error {
 		v16 = v.Hooks.Tags
 	}
 	v17, _ = json.Marshal(v.Params)
+	v18 = v.Hash
 
 	res, err := db.Exec(query,
 		&v0,
@@ -94,6 +96,7 @@ func createRepo(db repoDB, query string, v *Repo) error {
 		&v15,
 		&v16,
 		&v17,
+		&v18,
 	)
 	if err != nil {
 		return err
@@ -123,6 +126,7 @@ func updateRepo(db repoDB, query string, v *Repo) error {
 	var v16 bool
 	var v17 bool
 	var v18 []byte
+	var v19 string
 	v0 = v.ID
 	v1 = v.UserID
 	v2 = v.Owner
@@ -146,6 +150,7 @@ func updateRepo(db repoDB, query string, v *Repo) error {
 		v17 = v.Hooks.Tags
 	}
 	v18, _ = json.Marshal(v.Params)
+	v19 = v.Hash
 
 	_, err := db.Exec(query,
 		&v1,
@@ -166,6 +171,7 @@ func updateRepo(db repoDB, query string, v *Repo) error {
 		&v16,
 		&v17,
 		&v18,
+		&v19,
 		&v0,
 	)
 	return err
@@ -191,6 +197,7 @@ func scanRepo(row *sql.Row) (*Repo, error) {
 	var v16 bool
 	var v17 bool
 	var v18 []byte
+	var v19 string
 
 	err := row.Scan(
 		&v0,
@@ -212,6 +219,7 @@ func scanRepo(row *sql.Row) (*Repo, error) {
 		&v16,
 		&v17,
 		&v18,
+		&v19,
 	)
 	if err != nil {
 		return nil, err
@@ -239,6 +247,7 @@ func scanRepo(row *sql.Row) (*Repo, error) {
 	v.Hooks.Push = v16
 	v.Hooks.Tags = v17
 	json.Unmarshal(v18, &v.Params)
+	v.Hash = v19
 
 	return v, nil
 }
@@ -266,6 +275,7 @@ func scanRepos(rows *sql.Rows) ([]*Repo, error) {
 		var v16 bool
 		var v17 bool
 		var v18 []byte
+		var v19 string
 		err = rows.Scan(
 			&v0,
 			&v1,
@@ -286,6 +296,7 @@ func scanRepos(rows *sql.Rows) ([]*Repo, error) {
 			&v16,
 			&v17,
 			&v18,
+			&v19,
 		)
 		if err != nil {
 			return vv, err
@@ -313,6 +324,7 @@ func scanRepos(rows *sql.Rows) ([]*Repo, error) {
 		v.Hooks.Push = v16
 		v.Hooks.Tags = v17
 		json.Unmarshal(v18, &v.Params)
+		v.Hash = v19
 		vv = append(vv, v)
 	}
 	return vv, rows.Err()
@@ -339,6 +351,7 @@ SELECT
 ,repo_hooks_push
 ,repo_hooks_tags
 ,repo_params
+,repo_hash
 FROM repos
 `
 
@@ -363,6 +376,7 @@ SELECT
 ,repo_hooks_push
 ,repo_hooks_tags
 ,repo_params
+,repo_hash
 FROM repos
 LIMIT ? OFFSET ?
 `
@@ -388,8 +402,35 @@ SELECT
 ,repo_hooks_push
 ,repo_hooks_tags
 ,repo_params
+,repo_hash
 FROM repos
 WHERE repo_id = ?
+`
+
+const stmtRepoSelectRepoFullName = `
+SELECT
+ repo_id
+,repo_user_id
+,repo_owner
+,repo_name
+,repo_full_name
+,repo_avatar
+,repo_self
+,repo_link
+,repo_clone
+,repo_branch
+,repo_private
+,repo_trusted
+,repo_timeout
+,repo_keys_public
+,repo_keys_private
+,repo_hooks_pull_request
+,repo_hooks_push
+,repo_hooks_tags
+,repo_params
+,repo_hash
+FROM repos
+WHERE repo_full_name = ?
 `
 
 const stmtRepoSelectRepoUserId = `
@@ -413,6 +454,7 @@ SELECT
 ,repo_hooks_push
 ,repo_hooks_tags
 ,repo_params
+,repo_hash
 FROM repos
 WHERE repo_user_id = ?
 `
@@ -438,34 +480,10 @@ SELECT
 ,repo_hooks_push
 ,repo_hooks_tags
 ,repo_params
+,repo_hash
 FROM repos
 WHERE repo_owner = ?
 AND repo_name = ?
-`
-
-const stmtRepoSelectRepoFullName = `
-SELECT
- repo_id
-,repo_user_id
-,repo_owner
-,repo_name
-,repo_full_name
-,repo_avatar
-,repo_self
-,repo_link
-,repo_clone
-,repo_branch
-,repo_private
-,repo_trusted
-,repo_timeout
-,repo_keys_public
-,repo_keys_private
-,repo_hooks_pull_request
-,repo_hooks_push
-,repo_hooks_tags
-,repo_params
-FROM repos
-WHERE repo_full_name = ?
 `
 
 const stmtRepoSelectCount = `
@@ -493,7 +511,8 @@ INSERT INTO repos (
 ,repo_hooks_push
 ,repo_hooks_tags
 ,repo_params
-) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
+,repo_hash
+) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
 `
 
 const stmtRepoUpdate = `
@@ -516,6 +535,7 @@ UPDATE repos SET
 ,repo_hooks_push = ?
 ,repo_hooks_tags = ?
 ,repo_params = ?
+,repo_hash = ?
 WHERE repo_id = ?
 `
 
@@ -526,26 +546,31 @@ WHERE repo_id = ?
 
 const stmtRepoTable = `
 CREATE TABLE IF NOT EXISTS repos (
- repo_id		INTEGER PRIMARY KEY AUTOINCREMENT
-,repo_user_id		INTEGER
-,repo_owner		VARCHAR
-,repo_name		VARCHAR
-,repo_full_name		VARCHAR
-,repo_avatar		VARCHAR
-,repo_self		VARCHAR
-,repo_link		VARCHAR
-,repo_clone		VARCHAR
-,repo_branch		VARCHAR
-,repo_private		BOOLEAN
-,repo_trusted		BOOLEAN
-,repo_timeout		INTEGER
-,repo_keys_public	VARCHAR
-,repo_keys_private	VARCHAR
-,repo_hooks_pull_request BOOLEAN
-,repo_hooks_push	BOOLEAN
-,repo_hooks_tags	BOOLEAN
-,repo_params		BLOB
+ repo_id			INTEGER PRIMARY KEY AUTOINCREMENT
+,repo_user_id			INTEGER
+,repo_owner			VARCHAR
+,repo_name			VARCHAR
+,repo_full_name			VARCHAR
+,repo_avatar			VARCHAR
+,repo_self			VARCHAR
+,repo_link			VARCHAR
+,repo_clone			VARCHAR
+,repo_branch			VARCHAR
+,repo_private			BOOLEAN
+,repo_trusted			BOOLEAN
+,repo_timeout			INTEGER
+,repo_keys_public		VARCHAR
+,repo_keys_private		VARCHAR
+,repo_hooks_pull_request	BOOLEAN
+,repo_hooks_push		BOOLEAN
+,repo_hooks_tags		BOOLEAN
+,repo_params			BLOB
+,repo_hash			VARCHAR
 );
+`
+
+const stmtRepoRepoFullNameIndex = `
+CREATE UNIQUE INDEX IF NOT EXISTS ux_repo_full_name ON repos (repo_full_name);
 `
 
 const stmtRepoRepoUserIdIndex = `
@@ -554,8 +579,4 @@ CREATE INDEX IF NOT EXISTS ix_repo_user_id ON repos (repo_user_id);
 
 const stmtRepoRepoOwnerNameIndex = `
 CREATE UNIQUE INDEX IF NOT EXISTS ux_repo_owner_name ON repos (repo_owner,repo_name);
-`
-
-const stmtRepoRepoFullNameIndex = `
-CREATE UNIQUE INDEX IF NOT EXISTS ux_repo_full_name ON repos (repo_full_name);
 `

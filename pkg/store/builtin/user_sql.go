@@ -41,6 +41,7 @@ func createUser(db userDB, query string, v *User) error {
 	var v4 string
 	var v5 bool
 	var v6 bool
+	var v7 string
 	v0 = v.Login
 	v1 = v.Token
 	v2 = v.Secret
@@ -48,6 +49,7 @@ func createUser(db userDB, query string, v *User) error {
 	v4 = v.Avatar
 	v5 = v.Active
 	v6 = v.Admin
+	v7 = v.Hash
 
 	res, err := db.Exec(query,
 		&v0,
@@ -57,6 +59,7 @@ func createUser(db userDB, query string, v *User) error {
 		&v4,
 		&v5,
 		&v6,
+		&v7,
 	)
 	if err != nil {
 		return err
@@ -75,6 +78,7 @@ func updateUser(db userDB, query string, v *User) error {
 	var v5 string
 	var v6 bool
 	var v7 bool
+	var v8 string
 	v0 = v.ID
 	v1 = v.Login
 	v2 = v.Token
@@ -83,6 +87,7 @@ func updateUser(db userDB, query string, v *User) error {
 	v5 = v.Avatar
 	v6 = v.Active
 	v7 = v.Admin
+	v8 = v.Hash
 
 	_, err := db.Exec(query,
 		&v1,
@@ -92,6 +97,7 @@ func updateUser(db userDB, query string, v *User) error {
 		&v5,
 		&v6,
 		&v7,
+		&v8,
 		&v0,
 	)
 	return err
@@ -106,6 +112,7 @@ func scanUser(row *sql.Row) (*User, error) {
 	var v5 string
 	var v6 bool
 	var v7 bool
+	var v8 string
 
 	err := row.Scan(
 		&v0,
@@ -116,6 +123,7 @@ func scanUser(row *sql.Row) (*User, error) {
 		&v5,
 		&v6,
 		&v7,
+		&v8,
 	)
 	if err != nil {
 		return nil, err
@@ -130,6 +138,7 @@ func scanUser(row *sql.Row) (*User, error) {
 	v.Avatar = v5
 	v.Active = v6
 	v.Admin = v7
+	v.Hash = v8
 
 	return v, nil
 }
@@ -146,6 +155,7 @@ func scanUsers(rows *sql.Rows) ([]*User, error) {
 		var v5 string
 		var v6 bool
 		var v7 bool
+		var v8 string
 		err = rows.Scan(
 			&v0,
 			&v1,
@@ -155,6 +165,7 @@ func scanUsers(rows *sql.Rows) ([]*User, error) {
 			&v5,
 			&v6,
 			&v7,
+			&v8,
 		)
 		if err != nil {
 			return vv, err
@@ -169,6 +180,7 @@ func scanUsers(rows *sql.Rows) ([]*User, error) {
 		v.Avatar = v5
 		v.Active = v6
 		v.Admin = v7
+		v.Hash = v8
 		vv = append(vv, v)
 	}
 	return vv, rows.Err()
@@ -184,6 +196,7 @@ SELECT
 ,user_avatar
 ,user_active
 ,user_admin
+,user_hash
 FROM users
 `
 
@@ -197,6 +210,7 @@ SELECT
 ,user_avatar
 ,user_active
 ,user_admin
+,user_hash
 FROM users
 LIMIT ? OFFSET ?
 `
@@ -211,6 +225,7 @@ SELECT
 ,user_avatar
 ,user_active
 ,user_admin
+,user_hash
 FROM users
 WHERE user_id = ?
 `
@@ -225,6 +240,7 @@ SELECT
 ,user_avatar
 ,user_active
 ,user_admin
+,user_hash
 FROM users
 WHERE user_login = ?
 `
@@ -243,7 +259,8 @@ INSERT INTO users (
 ,user_avatar
 ,user_active
 ,user_admin
-) VALUES (?,?,?,?,?,?,?);
+,user_hash
+) VALUES (?,?,?,?,?,?,?,?);
 `
 
 const stmtUserUpdate = `
@@ -255,6 +272,7 @@ UPDATE users SET
 ,user_avatar = ?
 ,user_active = ?
 ,user_admin = ?
+,user_hash = ?
 WHERE user_id = ?
 `
 
@@ -265,14 +283,15 @@ WHERE user_id = ?
 
 const stmtUserTable = `
 CREATE TABLE IF NOT EXISTS users (
- user_id		INTEGER PRIMARY KEY AUTOINCREMENT
-,user_login		VARCHAR
-,user_token		VARCHAR
+ user_id	INTEGER PRIMARY KEY AUTOINCREMENT
+,user_login	VARCHAR
+,user_token	VARCHAR
 ,user_secret	VARCHAR
-,user_email		VARCHAR
+,user_email	VARCHAR
 ,user_avatar	VARCHAR
 ,user_active	BOOLEAN
-,user_admin		BOOLEAN
+,user_admin	BOOLEAN
+,user_hash	VARCHAR
 );
 `
 

@@ -9,4 +9,8 @@ type User struct {
 	Avatar string `json:"avatar,omitempty"`
 	Active bool   `json:"active,omitempty"`
 	Admin  bool   `json:"admin,omitempty"`
+
+	// randomly generated hash used to sign user
+	// session and application tokens.
+	Hash string `json:"-"`
 }

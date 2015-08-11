@@ -82,12 +82,7 @@ func GetLogin(c *gin.Context) {
 		u.Secret = login.Secret
 		u.Email = login.Email
 		u.Avatar = login.Avatar
-
-		// TODO: remove this once gitlab implements setting
-		// avatar in the remote package, similar to github
-		if len(u.Avatar) == 0 {
-			u.Avatar = gravatar.Hash(u.Email)
-		}
+		u.Hash = common.GenerateToken()
 
 		// insert the user into the database
 		if err := store.AddUser(u); err != nil {

@@ -1,6 +1,8 @@
 package server
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
@@ -160,7 +162,6 @@ func DeleteRepo(c *gin.Context) {
 //
 func PostRepo(c *gin.Context) {
 	user := ToUser(c)
-	sess := ToSession(c)
 	store := ToDatastore(c)
 	owner := c.Params.ByName("owner")
 	name := c.Params.ByName("name")
@@ -189,21 +190,6 @@ func PostRepo(c *gin.Context) {
 		return
 	}
 
-	token := &common.Token{}
-	token.Kind = common.TokenHook
-	token.Label = r.FullName
-	tokenstr, err := sess.GenerateToken(token)
-	if err != nil {
-		c.Fail(500, err)
-		return
-	}
-
-	link := fmt.Sprintf(
-		"%s/api/hook?access_token=%s",
-		httputil.GetURL(c.Request),
-		tokenstr,
-	)
-
 	// set the repository owner to the
 	// currently authenticated user.
 	r.UserID = user.ID
@@ -211,10 +197,17 @@ func PostRepo(c *gin.Context) {
 	r.Hooks.Push = true
 	r.Hooks.PullRequest = true
 	r.Timeout = 60 // 1 hour default build time
+	r.Hash = common.GenerateToken()
 	r.Self = fmt.Sprintf(
 		"%s/%s",
 		httputil.GetURL(c.Request),
 		r.FullName,
+	)
+
+	link := fmt.Sprintf(
+		"%s/api/hook?access_token=%s",
+		httputil.GetURL(c.Request),
+		hash(r.FullName, r.Hash),
 	)
 
 	// generate an RSA key and add to the repo
@@ -300,4 +293,10 @@ func perms(remote remote.Remote, u *common.User, r *common.Repo) *common.Perm {
 		return &common.Perm{}
 	}
 	return p
+}
+
+func hash(text, salt string) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(text + salt))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
