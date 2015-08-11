@@ -111,24 +111,12 @@
         },
         title: 'Users'
       })
-      .state('app.new_repo', {
-        url: '/new',
-        views: {
-          'toolbar': {templateUrl: '/static/scripts/views/repos/add/toolbar.html'},
-          'content': {
-            templateUrl: '/static/scripts/views/repos/add/content.html',
-            controller: 'RepoAddCtrl',
-            resolve: resolveUser
-          }
-        },
-        title: 'Add Repository'
-      })
       .state('app.builds', {
         url: '/:owner/:name',
         views: {
           'toolbar': {
             templateUrl: '/static/scripts/views/builds/index/toolbar.html',
-            controller: 'RepoEditCtrl',
+            controller: 'UserHeaderCtrl',
             resolve: resolveUser
           },
           'content': {
@@ -143,7 +131,7 @@
         views: {
           'toolbar': {
             templateUrl: '/static/scripts/views/repos/toolbar.html',
-            controller: 'RepoEditCtrl',
+            controller: 'UserHeaderCtrl',
             resolve: resolveUser
           },
           'content': {
@@ -177,7 +165,7 @@
         views: {
           'toolbar': {
             templateUrl: '/static/scripts/views/builds/show/toolbar.html',
-            controller: 'BuildOutCtrl',
+            controller: 'UserHeaderCtrl',
             resolve: resolveUser
           },
           'content': {
@@ -193,7 +181,7 @@
         views: {
           'toolbar': {
             templateUrl: '/static/scripts/views/builds/show/toolbar.html',
-            controller: 'BuildOutCtrl',
+            controller: 'UserHeaderCtrl',
             resolve: resolveUser
           },
           'content': {
