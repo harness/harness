@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS users (
 	,user_avatar       VARCHAR(255)
 	,user_admin        BOOLEAN
 	,user_active       BOOLEAN
+	,user_hash	       VARCHAR(255)
 	,UNIQUE(user_login)
 );
 `
@@ -67,6 +68,7 @@ CREATE TABLE IF NOT EXISTS repos (
 	,repo_hooks_push         BOOLEAN
 	,repo_hooks_tags         BOOLEAN
 	,repo_params             BLOB
+	,repo_hash	             VARCHAR(255)
 
 	,UNIQUE(repo_owner, repo_name)
 	,UNIQUE(repo_full_name)
@@ -96,6 +98,7 @@ CREATE TABLE IF NOT EXISTS builds (
 	,build_finished                       INTEGER
 	,build_commit_sha                     VARCHAR(512)
 	,build_commit_ref                     VARCHAR(512)
+	,build_commit_link                    VARCHAR(2048)
 	,build_commit_branch                  VARCHAR(512)
 	,build_commit_message                 VARCHAR(2048)
 	,build_commit_timestamp               VARCHAR(512)
@@ -104,8 +107,10 @@ CREATE TABLE IF NOT EXISTS builds (
 	,build_commit_author_email            VARCHAR(512)
 	,build_pull_request_number            INTEGER
 	,build_pull_request_title             VARCHAR(512)
+	,build_pull_request_link              VARCHAR(2048)
 	,build_pull_request_base_sha          VARCHAR(512)
 	,build_pull_request_base_ref          VARCHAR(512)
+	,build_pull_request_base_link         VARCHAR(2048)
 	,build_pull_request_base_branch       VARCHAR(512)
 	,build_pull_request_base_message      VARCHAR(2048)
 	,build_pull_request_base_timestamp    VARCHAR(512)

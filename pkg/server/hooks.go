@@ -21,7 +21,6 @@ func PostHook(c *gin.Context) {
 	remote := ToRemote(c)
 	store := ToDatastore(c)
 	queue_ := ToQueue(c)
-	sess := ToSession(c)
 	conf := ToSettings(c)
 
 	hook, err := remote.Hook(c.Request)
@@ -40,14 +39,6 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	// get the token and verify the hook is authorized
-	token := sess.GetLogin(c.Request)
-	if token == nil || token.Label != hook.Repo.FullName {
-		log.Errorf("invalid token sent with hook.")
-		c.AbortWithStatus(403)
-		return
-	}
-
 	// a build may be skipped if the text [CI SKIP]
 	// is found inside the commit message
 	if hook.Commit != nil && strings.Contains(hook.Commit.Message, "[CI SKIP]") {
@@ -60,6 +51,13 @@ func PostHook(c *gin.Context) {
 	if err != nil {
 		log.Errorf("failure to find repo %s/%s from hook. %s", hook.Repo.Owner, hook.Repo.Name, err)
 		c.Fail(404, err)
+		return
+	}
+
+	// get the token and verify the hook is authorized
+	if c.Request.FormValue("access_token") != hash(repo.FullName, repo.Hash) {
+		log.Errorf("invalid token sent with hook.")
+		c.AbortWithStatus(403)
 		return
 	}
 

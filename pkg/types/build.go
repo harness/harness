@@ -26,12 +26,14 @@ type Build struct {
 type PullRequest struct {
 	Number int     `json:"number,omitempty"`
 	Title  string  `json:"title,omitempty"`
+	Link   string  `json:"link,omitempty"`
 	Base   *Commit `json:"base_commit,omitempty"`
 }
 
 type Commit struct {
 	Sha       string  `json:"sha"`
 	Ref       string  `json:"ref"`
+	Link      string  `json:"link,omitempty"`
 	Branch    string  `json:"branch" sql:"index:ix_commit_branch"`
 	Message   string  `json:"message"`
 	Timestamp string  `json:"timestamp,omitempty"`
