@@ -63,7 +63,7 @@ func NewDriver(config string) (remote.Remote, error) {
 	if github.URL == DefaultURL {
 		github.API = DefaultAPI
 	} else {
-		github.API = github.URL + "/v3/api/"
+		github.API = github.URL + "/api/v3/"
 	}
 
 	// here we cache permissions to avoid too many api
