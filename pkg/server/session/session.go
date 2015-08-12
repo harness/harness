@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/dgrijalva/jwt-go"
-	"github.com/drone/drone/pkg/config"
 	common "github.com/drone/drone/pkg/types"
 )
 
@@ -20,8 +19,8 @@ type session struct {
 	expire time.Duration
 }
 
-func New(s *config.Config) Session {
-	secret := []byte(s.Session.Secret)
+func New(rand string) Session {
+	secret := []byte(rand)
 	expire := time.Hour * 72
 	return &session{
 		secret: secret,

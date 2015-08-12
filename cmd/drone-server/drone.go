@@ -95,6 +95,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	settings.Plugins = []string{conf.plugin.filter} // todo hack
 
 	store, err := store.New(conf.database.driver, conf.database.config)
 	if err != nil {
@@ -106,7 +107,7 @@ func main() {
 		panic(err)
 	}
 
-	session := session.New(settings)
+	session := session.New(conf.remote.config)
 	eventbus_ := eventbus.New()
 	queue_ := queue.New()
 	updater := runner.NewUpdater(eventbus_, store, remote)
