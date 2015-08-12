@@ -63,7 +63,7 @@ func TestToken(t *testing.T) {
 				conf := &config.Config{}
 				conf.Session.Secret = "Otto"
 				ctx.Set("settings", conf)
-				ctx.Set("session", session.New(conf))
+				ctx.Set("session", session.New(conf.Session.Secret))
 
 				// prepare the mock
 				store.On("AddToken", mock.AnythingOfType("*types.Token")).Return(test.storeErr).Once()
@@ -102,7 +102,7 @@ func TestToken(t *testing.T) {
 				conf := &config.Config{}
 				conf.Session.Secret = "Otto"
 				ctx.Set("settings", conf)
-				ctx.Set("session", session.New(conf))
+				ctx.Set("session", session.New(conf.Session.Secret))
 
 				// prepare the mock
 				store.On("TokenLabel", mock.AnythingOfType("*types.User"), test.inLabel).Return(test.outToken, test.errTokenLabel).Once()
