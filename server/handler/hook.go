@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/drone/drone/plugin/remote"
@@ -43,7 +44,8 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 	// in some cases we have neither a hook nor error. An example
 	// would be GitHub sending a ping request to the URL, in which
 	// case we'll just exit quiely with an 'OK'
-	if hook == nil || strings.Contains(hook.Message, "[CI SKIP]") {
+	shouldSkip, _ := regexp.MatchString(`\[(?i:ci *skip|skip *ci)\]`, hook.Message)
+	if hook == nil || shouldSkip {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
