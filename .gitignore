@@ -2,11 +2,6 @@ drone.sublime-project
 drone.sublime-workspace
 .vagrant
 
-# ignore the drone binary, but makes sure
-# that subdirs named drone aren't ignored
-drone
-!dist/**
-
 *~
 ~*
 *.sqlite
@@ -22,16 +17,17 @@ drone
 *.min.js
 *_bindata.go
 *.toml
-!dist/drone/etc/drone/dronerc
-!dist/drone/etc/drone/drone.toml
 
 # generate binaries
 cmd/drone-agent/drone-agent
 cmd/drone-build/drone-build
 cmd/drone-agent/drone-server
 
-# generated binaries
+# generated binaries in ./bin
 bin/drone
 bin/drone-agent
 bin/drone-build
 bin/drone-server
+
+# generated binaries in dpkg
+dist/drone/usr/local/bin/drone
