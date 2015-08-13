@@ -1,6 +1,9 @@
-package parser
+package transform
 
 import (
+	"fmt"
+	"net/url"
+	"path/filepath"
 	"strings"
 
 	common "github.com/drone/drone/pkg/types"
@@ -10,23 +13,58 @@ import (
 // to the build configuration.
 type transformRule func(*common.Config)
 
+var transformRules = [...]transformRule{
+	transformSetup,
+	transformClone,
+	transformBuild,
+	transformImages,
+	transformDockerPlugin,
+}
+
+var rmPrivilegedRules = [...]transformRule{
+	rmPrivileged,
+	rmVolumes,
+	rmNetwork,
+}
+
 // Transform executes the default transformers that
 // ensure the minimal Yaml configuration is in place
 // and correctly configured.
 func Transform(c *common.Config) {
-	transformSetup(c)
-	transformClone(c)
-	transformBuild(c)
-	transformImages(c)
-	transformDockerPlugin(c)
+	for _, rule := range transformRules {
+		rule(c)
+	}
 }
 
 // TransformSafe executes all transformers that remove
 // privileged options from the Yaml.
 func TransformSafe(c *common.Config) {
-	rmPrivileged(c)
-	rmVolumes(c)
+	for _, rule := range rmPrivilegedRules {
+		rule(c)
+	}
+}
+
+// TransformRemoveNetwork executes all transformers that
+// remove network options from the Yaml.
+func TransformRemoveNetwork(c *common.Config) {
 	rmNetwork(c)
+}
+
+// TransformRemoveVolumes executes all transformers that
+// remove volume options from the Yaml.
+func TransformRemoveVolumes(c *common.Config) {
+	rmVolumes(c)
+}
+
+// TransformRemovePrivileged executes all transformers that
+// remove privileged options from the Yaml.
+func TransformRemovePrivileged(c *common.Config) {
+	rmPrivileged(c)
+}
+
+func TransformRepo(c *common.Config, r *common.Repo) {
+  transformWorkspace(c, r)
+	transformCache(c, r)
 }
 
 // transformSetup is a transformer that adds a default
@@ -82,7 +120,7 @@ func transformImages(c *common.Config) {
 }
 
 // transformDockerPlugin is a transformer that ensures the
-// official Docker plugin can runs in privileged mode. It
+// official Docker plugin can run in privileged mode. It
 // will disable volumes and network mode for added protection.
 func transformDockerPlugin(c *common.Config) {
 	for _, step := range c.Publish {
@@ -159,6 +197,49 @@ func rmNetwork(c *common.Config) {
 	}
 }
 
+// transformWorkspace is a transformer that adds the workspace
+// directory to the configuration based on the repository
+// information.
+func transformWorkspace(c *common.Config, r *common.Repo) {
+	//c.Clone.Dir = workspaceRoot(r)
+}
+
+// transformCache is a transformer that adds volumes
+// to the configuration based on the cache.
+func transformCache(c *common.Config, r *common.Repo) {
+	cacheCount := len(c.Build.Cache)
+
+	if cacheCount != 0 {
+		volumes := make([]string, cacheCount)
+
+		cache := cacheRoot(r)
+		workspace := workspaceRoot(r)
+
+		for i, dir := range c.Build.Cache {
+			cacheDir := filepath.Join(cache, dir)
+			workspaceDir := filepath.Join(workspace, dir)
+
+			volumes[i] = fmt.Sprintf("%s:%s", cacheDir, workspaceDir)
+		}
+
+		c.Setup.Volumes = append(c.Setup.Volumes, volumes...)
+		c.Clone.Volumes = append(c.Clone.Volumes, volumes...)
+		c.Build.Volumes = append(c.Build.Volumes, volumes...)
+		for _, step := range c.Publish {
+			step.Volumes = append(step.Volumes, volumes...)
+		}
+		for _, step := range c.Deploy {
+			step.Volumes = append(step.Volumes, volumes...)
+		}
+		for _, step := range c.Notify {
+			step.Volumes = append(step.Volumes, volumes...)
+		}
+		for _, step := range c.Compose {
+			step.Volumes = append(step.Volumes, volumes...)
+		}
+	}
+}
+
 // imageName is a helper function that resolves the
 // image name. When using official drone plugins it
 // is possible to use an alias name. This converts to
@@ -180,4 +261,17 @@ func imageNameDefault(name, defaultName string) string {
 		name = defaultName
 	}
 	return imageName(name)
+}
+
+func workspaceRoot(r *common.Repo) string {
+  return filepath.Join("/drone/src", repoPath(r))
+}
+
+func cacheRoot(r *common.Repo) string {
+	return filepath.Join("/tmp/drone/cache", repoPath(r))
+}
+
+func repoPath(r *common.Repo) string {
+	parsed, _ := url.Parse(r.Link)
+	return filepath.Join(parsed.Host, r.FullName)
 }

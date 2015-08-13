@@ -134,7 +134,6 @@ func LintPlugins(c *common.Config, opts *Opts) error {
 	var images []string
 	images = append(images, c.Setup.Image)
 	images = append(images, c.Clone.Image)
-	c.Clone.Image = imageName(c.Clone.Image)
 	for _, step := range c.Publish {
 		images = append(images, step.Image)
 	}
