@@ -4,6 +4,7 @@ import (
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/yaml/inject"
 	"github.com/drone/drone/pkg/yaml/matrix"
+	"github.com/drone/drone/pkg/yaml/transform"
 
 	"github.com/drone/drone/Godeps/_workspace/src/gopkg.in/yaml.v2"
 )
@@ -77,20 +78,16 @@ func ParseSingle(raw string, opts *Opts) (*common.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	// apply rules / transofms
-	transformSetup(conf)
-	transformClone(conf)
-	transformBuild(conf)
-	transformImages(conf)
-	transformDockerPlugin(conf)
+	// apply rules / transforms
+	transform.Transform(conf)
 	if !opts.Network {
-		rmNetwork(conf)
+		transform.TransformRemoveNetwork(conf)
 	}
 	if !opts.Volumes {
-		rmVolumes(conf)
+		transform.TransformRemoveVolumes(conf)
 	}
 	if !opts.Privileged {
-		rmPrivileged(conf)
+		transform.TransformRemovePrivileged(conf)
 	}
 	err = LintPlugins(conf, opts)
 	if err != nil {
