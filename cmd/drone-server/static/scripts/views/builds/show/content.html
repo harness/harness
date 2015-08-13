@@ -24,14 +24,22 @@
                             <div class="param" ng-repeat="(key, value) in job.environment">
                               {{ key.toUpperCase() }}={{ value }}
                             </div>
-                            <div class="meta-group">
+                            <div class="meta-group" ng-if="job.status !== 'pending' && job.status !== 'running'">
                                 <div class="meta">finished {{ job.started_at | fromNow }}</div>
                                 <div class="meta">duration of {{ job.finished_at - job.started_at | toDuration }}</div>
                                 <div class="meta">with exit code {{ job.exit_code }}</div>
                             </div>
+                            <div class="meta-group" ng-if="job.status === 'running'">
+                                <div class="meta">started {{ job.started_at | fromNow }}</div>
+                            </div>
+                            <div class="meta-group" ng-if="job.status === 'pending'">
+                                <div class="meta">pending execution</div>
+                            </div>
                         </div>
                     </a>
                 </div>
+
+                <button ng-if="build.status !== 'pending' && build.status !== 'running'" ng-click="restart()" style="display:none;">Restart</button>
             </div>
         </aside>
 

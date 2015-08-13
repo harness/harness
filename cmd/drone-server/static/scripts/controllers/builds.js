@@ -202,8 +202,7 @@
       }
       // update the build
       $scope.build = event;
-      console.log(event.builds);
-      $scope.task = event.builds[step - 1];
+      $scope.task = event.jobs[step - 1];
       $scope.$apply();
 
       // start streaming the current build
@@ -218,7 +217,7 @@
     $scope.restart = function () {
       builds.restart(fullName, number).then(function (payload) {
         $scope.build = payload.data;
-        $scope.task = payload.data.builds[step - 1];
+        $scope.task = payload.data.jobs[step - 1];
       }).catch(function (err) {
         $scope.error = err;
       });
