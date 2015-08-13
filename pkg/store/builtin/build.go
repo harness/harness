@@ -102,7 +102,34 @@ func (db *Buildstore) KillBuilds() error {
 
 // SQL query to retrieve the latest builds across all branches.
 const buildListQuery = `
-SELECT *
+SELECT
+ build_id
+,build_repo_id
+,build_number
+,build_status
+,build_started
+,build_finished
+,build_commit_sha
+,build_commit_ref
+,build_commit_link
+,build_commit_branch
+,build_commit_message
+,build_commit_timestamp
+,build_commit_remote
+,build_commit_author_login
+,build_commit_author_email
+,build_pull_request_number
+,build_pull_request_title
+,build_pull_request_link
+,build_pull_request_base_sha
+,build_pull_request_base_ref
+,build_pull_request_base_link
+,build_pull_request_base_branch
+,build_pull_request_base_message
+,build_pull_request_base_timestamp
+,build_pull_request_base_remote
+,build_pull_request_base_author_login
+,build_pull_request_base_author_email
 FROM builds
 WHERE build_repo_id = ?
 ORDER BY build_number DESC
@@ -112,7 +139,34 @@ LIMIT ? OFFSET ?
 // SQL query to retrieve the most recent build.
 // TODO exclude pull requests
 const buildLastQuery = `
-SELECT *
+SELECT
+ build_id
+,build_repo_id
+,build_number
+,build_status
+,build_started
+,build_finished
+,build_commit_sha
+,build_commit_ref
+,build_commit_link
+,build_commit_branch
+,build_commit_message
+,build_commit_timestamp
+,build_commit_remote
+,build_commit_author_login
+,build_commit_author_email
+,build_pull_request_number
+,build_pull_request_title
+,build_pull_request_link
+,build_pull_request_base_sha
+,build_pull_request_base_ref
+,build_pull_request_base_link
+,build_pull_request_base_branch
+,build_pull_request_base_message
+,build_pull_request_base_timestamp
+,build_pull_request_base_remote
+,build_pull_request_base_author_login
+,build_pull_request_base_author_email
 FROM builds
 WHERE build_repo_id = ?
   AND build_commit_branch  = ?

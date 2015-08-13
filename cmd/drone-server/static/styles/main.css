@@ -356,7 +356,7 @@ main aside > div {
     flex:1 1 auto;
     font-size:13px;
 }
-.job-list > a > div.param,
+.job-list > a div.param,
 .job-list > li div.param {
     margin-top:5px;
 }
