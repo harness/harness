@@ -473,6 +473,7 @@ li menu .button.danger {
     display:inline-block;
 }
 
+
 /*
  * Random buttons used throughtout
  */
@@ -518,6 +519,16 @@ menu .button span {
     /*margin-right:5px;*/
     line-height:17px;
     font-size:18px;
+}
+
+.button-restart {
+  background: #FFF;
+  border: 1px solid #8fa1b3;
+  color: #8fa1b3;
+  font-size: 13px;
+  text-transform: uppercase;
+  margin-top: 20px;
+  padding: 0px 15px;
 }
 
 /*
