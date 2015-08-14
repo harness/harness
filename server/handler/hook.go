@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"regexp"
-	"strings"
 
 	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/server/datastore"
