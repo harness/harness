@@ -4,7 +4,9 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
+	"hash"
 
 	"github.com/drone/drone/Godeps/_workspace/src/code.google.com/p/go.crypto/ssh"
 )
@@ -38,15 +40,23 @@ func MarshalPrivateKey(privkey *rsa.PrivateKey) []byte {
 	return privateKeyPEM
 }
 
-// helper function to encrypt a plain-text string using
+// Encrypt is helper function to encrypt a plain-text string using
 // an RSA public key.
-func Encrypt(pubkey *rsa.PublicKey, msg string) ([]byte, error) {
-	return rsa.EncryptPKCS1v15(rand.Reader, pubkey, []byte(msg))
+func Encrypt(hash hash.Hash, pubkey *rsa.PublicKey, msg string) (string, error) {
+	src, err := rsa.EncryptOAEP(hash, rand.Reader, pubkey, []byte(msg), nil)
+
+	return base64.StdEncoding.EncodeToString(src), err
 }
 
-// helper function to encrypt a plain-text string using
+// Decrypt is helper function to encrypt a plain-text string using
 // an RSA public key.
-func Decrypt(privkey *rsa.PrivateKey, secret string) (string, error) {
-	msg, err := rsa.DecryptPKCS1v15(rand.Reader, privkey, []byte(secret))
-	return string(msg), err
+func Decrypt(hash hash.Hash, privkey *rsa.PrivateKey, secret string) (string, error) {
+	decoded, err := base64.StdEncoding.DecodeString(secret)
+	if err != nil {
+		return "", err
+	}
+
+	out, err := rsa.DecryptOAEP(hash, rand.Reader, privkey, decoded, nil)
+
+	return string(out), err
 }
