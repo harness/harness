@@ -9,12 +9,16 @@ EXPOSE 8080
 ENV GOROOT=/usr/lib/go \
     GOPATH=/gopath     \
     GOBIN=/gopath/bin  \
-    PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+    PATH=$PATH:/usr/local/go:$GOROOT/bin:$GOPATH/bin
 
 WORKDIR /gopath/src/github.com/drone/drone
 ADD . /gopath/src/github.com/drone/drone
 
-RUN apk add -U go ca-certificates libc-dev gcc git sqlite-libs                               && \
+RUN apk add -U ca-certificates libc-dev gcc git sqlite-libs                                  && \
+  wget https://storage.googleapis.com/golang/go1.5.linux-amd64.tar.gz --quiet
+             && \
+  tar -C /usr/lib -xzf go1.5.linux-amd64.tar.gz                                              && \
+  go version                                                                                 && \
   go get github.com/jteeuwen/go-bindata/...                                                  && \
   /gopath/bin/go-bindata -o="cmd/drone-server/drone_bindata.go" cmd/drone-server/static/...  && \
   go run make.go build                                                                       && \
@@ -23,4 +27,4 @@ RUN apk add -U go ca-certificates libc-dev gcc git sqlite-libs                  
   rm -rf /gopath                                                                             && \
   rm -rf /var/cache/apk/*
 
-ENTRYPOINT ["/bin/drone"]
+ENTRYPOINT ["/bin/drone", "-debug"]

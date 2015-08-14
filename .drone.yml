@@ -1,4 +1,4 @@
-image: bradrydzewski/go:1.5
+image: npateriyainsecure/drone-go:1.5
 git:
   path: github.com/drone/drone
 env:
@@ -6,6 +6,7 @@ env:
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 
 script:
+  - set -x
   - go get golang.org/x/tools/cmd/cover
   - go get golang.org/x/tools/cmd/vet
   - go get -u github.com/jteeuwen/go-bindata/...
@@ -34,7 +35,7 @@ publish:
     when:
       owner: drone
   docker:
-    dockerfile: ./Dockerfile
+    dockerfile: ./Dockerfile.alpine
     docker_version: 1.5.0
     docker_host: $$DOCKER_HOST
     registry_login: true

@@ -1,6 +1,6 @@
 .PHONY: dist
 
-SHA := $(shell git rev-parse --short HEAD)
+SHA ?= $(shell git rev-parse --short HEAD)
 VERSION := 0.4.0-alpha
 
 all: build

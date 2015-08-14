@@ -1,15 +1,16 @@
-FROM golang:1.4.2
-ENV DRONE_SERVER_PORT :80
+FROM golang:1.5
 
-ADD . /go/src/github.com/drone/drone/
-RUN mkdir -p /var/lib/drone
 WORKDIR /go/src/github.com/drone/drone
+ADD . /go/src/github.com/drone/drone
 
-RUN apt-get update                                                                 \
-	&& apt-get install -y libsqlite3-dev                                       \
-	&& go get -u github.com/jteeuwen/go-bindata/...                            \
-	&& make bindata deps                                                       \
-	&& make build
+RUN mkdir -p /var/lib/drone
+RUN apt-get update      \
+	&& apt-get install -y libsqlite3-dev                                       
 
+RUN    go get -u github.com/jteeuwen/go-bindata/...  \
+    && go run make.go bindata                        \
+    && go run make.go build
+
+ENV DRONE_SERVER_PORT :80
 EXPOSE 80
 ENTRYPOINT ["/go/src/github.com/drone/drone/bin/drone"]
