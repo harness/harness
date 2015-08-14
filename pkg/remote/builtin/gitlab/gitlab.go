@@ -44,7 +44,6 @@ func NewDriver(config string) (remote.Remote, error) {
 		return nil, err
 	}
 	params := url_.Query()
-	url_.Path = ""
 	url_.RawQuery = ""
 
 	gitlab := Gitlab{}
