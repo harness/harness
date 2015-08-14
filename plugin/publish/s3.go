@@ -63,9 +63,20 @@ func (s *S3) Write(f *buildfile.Buildfile) {
 	// debugging purposes so we can see if / where something is failing
 	f.WriteCmdSilent("echo 'publishing to Amazon S3 ...'")
 
+	// check dependencies
+	f.WriteCmdSilent("echo '+ checking dependencies (the build will die if something critical is missing)'")
+	f.WriteCmdSilent("export AWSCLI_SIGNATURE=$(echo $(awscli -V 2> /dev/null))")
+	f.WriteCmdSilent("export PIP_SIGNATURE=$(echo $(pip -V 2> /dev/null))")
+	f.WriteCmdSilent(`if [ "$AWSCLI_SIGNATURE" == "" ]; then echo "++ awscli: not present"; else echo "++ awscli: present"; fi`)
+
+	f.WriteCmdSilent(`if [ "$AWSCLI_SIGNATURE" == "" -a "$PIP_SIGNATURE" != "" ]; then echo "++ pip: present. $PIP_SIGNATURE"; fi`)
+	f.WriteCmdSilent(`if [ "$AWSCLI_SIGNATURE" == "" -a "$PIP_SIGNATURE" == "" ]; then echo "++ pip: not present. Failing"; exit 1; fi`)
+
 	// install the AWS cli using PIP
-	f.WriteCmdSilent("[ -f /usr/bin/sudo ] || pip install awscli 1> /dev/null 2> /dev/null")
-	f.WriteCmdSilent("[ -f /usr/bin/sudo ] && sudo pip install awscli 1> /dev/null 2> /dev/null")
+	f.WriteCmdSilent(`if [ "$AWSCLI_SIGNATURE" == "" ]; then [ -f /usr/bin/sudo ] || pip install awscli 1> /dev/null 2> /dev/null; fi`)
+	f.WriteCmdSilent(`if [ "$AWSCLI_SIGNATURE" == "" ]; then [ -f /usr/bin/sudo ] && sudo pip install awscli 1> /dev/null 2> /dev/null; fi`)
+
+	f.WriteCmdSilent("echo '+ publishing'")
 
 	f.WriteEnv("AWS_ACCESS_KEY_ID", s.Key)
 	f.WriteEnv("AWS_SECRET_ACCESS_KEY", s.Secret)
