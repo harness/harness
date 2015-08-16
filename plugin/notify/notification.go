@@ -31,6 +31,7 @@ type Notification struct {
 	Gitter   *Gitter            `yaml:"gitter,omitempty"`
 	Flowdock *flowdock.Flowdock `yaml:"flowdock,omitempty"`
 	KatoIM   *katoim.KatoIM     `yaml:"katoim,omitempty"`
+	Gitlab   *Gitlab            `yaml:"gitlab,omitempty"`
 
 	GitHub github.GitHub `yaml:"--"`
 }
@@ -95,6 +96,14 @@ func (n *Notification) Send(context *model.Request) error {
 	// send kato-im notifications
 	if n.KatoIM != nil {
 		err := n.KatoIM.Send(context)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	// send Gitlab notifications
+	if n.Gitlab != nil {
+		err := n.Gitlab.Send(context)
 		if err != nil {
 			log.Println(err)
 		}
