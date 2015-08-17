@@ -13,7 +13,7 @@ import (
 // to the build configuration.
 type transformRule func(*common.Config)
 
-var transformRules = [...]transformRule{
+var transformRules = []transformRule{
 	transformSetup,
 	transformClone,
 	transformBuild,
@@ -21,48 +21,50 @@ var transformRules = [...]transformRule{
 	transformDockerPlugin,
 }
 
-var rmPrivilegedRules = [...]transformRule{
+var rmPrivilegedRules = []transformRule{
 	rmPrivileged,
 	rmVolumes,
 	rmNetwork,
 }
 
-// Transform executes the default transformers that
+// Default executes the default transformers that
 // ensure the minimal Yaml configuration is in place
 // and correctly configured.
-func Transform(c *common.Config) {
+func Defaults(c *common.Config) {
 	for _, rule := range transformRules {
 		rule(c)
 	}
 }
 
-// TransformSafe executes all transformers that remove
-// privileged options from the Yaml.
-func TransformSafe(c *common.Config) {
+// Safe executes all transformers that remove privileged
+// options from the Yaml.
+func Safe(c *common.Config) {
 	for _, rule := range rmPrivilegedRules {
 		rule(c)
 	}
 }
 
-// TransformRemoveNetwork executes all transformers that
-// remove network options from the Yaml.
-func TransformRemoveNetwork(c *common.Config) {
+// RemoveNetwork executes all transformers that remove
+// network options from the Yaml.
+func RemoveNetwork(c *common.Config) {
 	rmNetwork(c)
 }
 
 // TransformRemoveVolumes executes all transformers that
 // remove volume options from the Yaml.
-func TransformRemoveVolumes(c *common.Config) {
+func RemoveVolumes(c *common.Config) {
 	rmVolumes(c)
 }
 
-// TransformRemovePrivileged executes all transformers that
-// remove privileged options from the Yaml.
-func TransformRemovePrivileged(c *common.Config) {
+// RemovePrivileged executes all transformers that remove
+// privileged options from the Yaml.
+func RemovePrivileged(c *common.Config) {
 	rmPrivileged(c)
 }
 
-func TransformRepo(c *common.Config, r *common.Repo) {
+// Repo executes all transformers that rely on repository
+// information.
+func Repo(c *common.Config, r *common.Repo) {
   transformWorkspace(c, r)
 	transformCache(c, r)
 }
@@ -209,34 +211,38 @@ func transformWorkspace(c *common.Config, r *common.Repo) {
 func transformCache(c *common.Config, r *common.Repo) {
 	cacheCount := len(c.Build.Cache)
 
-	if cacheCount != 0 {
-		volumes := make([]string, cacheCount)
+  if cacheCount == 0 {
+		return
+	}
 
-		cache := cacheRoot(r)
-		workspace := workspaceRoot(r)
+	volumes := make([]string, cacheCount)
 
-		for i, dir := range c.Build.Cache {
-			cacheDir := filepath.Join(cache, dir)
-			workspaceDir := filepath.Join(workspace, dir)
+	cache := cacheRoot(r)
+	workspace := workspaceRoot(r)
 
-			volumes[i] = fmt.Sprintf("%s:%s", cacheDir, workspaceDir)
-		}
+	for i, dir := range c.Build.Cache {
+		cacheDir := filepath.Join(cache, dir)
+		workspaceDir := filepath.Join(workspace, dir)
 
-		c.Setup.Volumes = append(c.Setup.Volumes, volumes...)
-		c.Clone.Volumes = append(c.Clone.Volumes, volumes...)
-		c.Build.Volumes = append(c.Build.Volumes, volumes...)
-		for _, step := range c.Publish {
-			step.Volumes = append(step.Volumes, volumes...)
-		}
-		for _, step := range c.Deploy {
-			step.Volumes = append(step.Volumes, volumes...)
-		}
-		for _, step := range c.Notify {
-			step.Volumes = append(step.Volumes, volumes...)
-		}
-		for _, step := range c.Compose {
-			step.Volumes = append(step.Volumes, volumes...)
-		}
+		volumes[i] = fmt.Sprintf("%s:%s", cacheDir, workspaceDir)
+		fmt.Printf("Volume %s", volumes[i])
+	}
+
+	c.Setup.Volumes = append(c.Setup.Volumes, volumes...)
+	c.Clone.Volumes = append(c.Clone.Volumes, volumes...)
+	c.Build.Volumes = append(c.Build.Volumes, volumes...)
+
+	for _, step := range c.Publish {
+		step.Volumes = append(step.Volumes, volumes...)
+	}
+	for _, step := range c.Deploy {
+		step.Volumes = append(step.Volumes, volumes...)
+	}
+	for _, step := range c.Notify {
+		step.Volumes = append(step.Volumes, volumes...)
+	}
+	for _, step := range c.Compose {
+		step.Volumes = append(step.Volumes, volumes...)
 	}
 }
 
@@ -263,14 +269,20 @@ func imageNameDefault(name, defaultName string) string {
 	return imageName(name)
 }
 
+// workspaceRoot is a helper function that determines the
+// default workspace the build runs in.
 func workspaceRoot(r *common.Repo) string {
   return filepath.Join("/drone/src", repoPath(r))
 }
 
+// cacheRoot is a helper function that deteremines the
+// default caching root.
 func cacheRoot(r *common.Repo) string {
 	return filepath.Join("/tmp/drone/cache", repoPath(r))
 }
 
+// repoPath is a helper function that creates a path based
+// on the host and repository name.
 func repoPath(r *common.Repo) string {
 	parsed, _ := url.Parse(r.Link)
 	return filepath.Join(parsed.Host, r.FullName)
