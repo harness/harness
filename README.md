@@ -19,7 +19,14 @@ Drone documentation is organized into several categories:
 
 Contributions, questions, and comments are welcomed and encouraged. Drone developers hang out in the [drone/drone](https://gitter.im/drone/drone) room on gitter. We ask that you please post your questions to [gitter](https://gitter.im/drone/drone) before creating an issue.
 
-### Building, Running
+### Cloning, Building, Running
+
+If you are new to Go make sure you install Go and setup your workspace (ie `$GOPATH`). I also recommend reading [How to Write Go Code](https://golang.org/doc/code.html). Go programs use directory structure for package imports, therefore, it is very important you clone this project to the specified directory in your Go path:
+
+```
+git clone git://github.com/drone/drone.git $GOPATH/src/github.com/drone/drone
+cd $GOPATH/src/github.com/drone/drone
+```
 
 Commands to build from source:
 
