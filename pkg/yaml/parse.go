@@ -4,6 +4,7 @@ import (
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/yaml/inject"
 	"github.com/drone/drone/pkg/yaml/matrix"
+	"github.com/drone/drone/pkg/yaml/transform"
 
 	"github.com/drone/drone/Godeps/_workspace/src/gopkg.in/yaml.v2"
 )
@@ -27,14 +28,14 @@ var DefaultOpts = &Opts{
 // Parse parses a build matrix and returns
 // a list of build configurations for each axis
 // using the default parsing options.
-func Parse(raw string) ([]*common.Config, error) {
-	return ParseOpts(raw, DefaultOpts)
+func Parse(raw string, r *common.Repo) ([]*common.Config, error) {
+	return ParseOpts(raw, DefaultOpts, r)
 }
 
 // ParseOpts parses a build matrix and returns
 // a list of build configurations for each axis
 // using the provided parsing options.
-func ParseOpts(raw string, opts *Opts) ([]*common.Config, error) {
+func ParseOpts(raw string, opts *Opts, r *common.Repo) ([]*common.Config, error) {
 	axis, err := matrix.Parse(raw)
 	if err != nil {
 		return nil, err
@@ -44,7 +45,7 @@ func ParseOpts(raw string, opts *Opts) ([]*common.Config, error) {
 	// when no matrix values exist we should return
 	// a single config value with an empty label.
 	if len(axis) == 0 {
-		conf, err := ParseSingle(raw, opts)
+		conf, err := ParseSingle(raw, opts, r)
 		if err != nil {
 			return nil, err
 		}
@@ -54,7 +55,7 @@ func ParseOpts(raw string, opts *Opts) ([]*common.Config, error) {
 	for _, ax := range axis {
 		// inject the matrix values into the raw script
 		injected := inject.Inject(raw, ax)
-		conf, err := ParseSingle(injected, opts)
+		conf, err := ParseSingle(injected, opts, r)
 		if err != nil {
 			return nil, err
 		}
@@ -66,7 +67,7 @@ func ParseOpts(raw string, opts *Opts) ([]*common.Config, error) {
 }
 
 // helper funtion to parse a yaml configuration file.
-func ParseSingle(raw string, opts *Opts) (*common.Config, error) {
+func ParseSingle(raw string, opts *Opts, r *common.Repo) (*common.Config, error) {
 	conf := &common.Config{}
 	err := yaml.Unmarshal([]byte(raw), conf)
 	if err != nil {
@@ -77,21 +78,18 @@ func ParseSingle(raw string, opts *Opts) (*common.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	// apply rules / transofms
-	transformSetup(conf)
-	transformClone(conf)
-	transformBuild(conf)
-	transformImages(conf)
-	transformDockerPlugin(conf)
+	// apply rules / transforms
+	transform.Defaults(conf)
 	if !opts.Network {
-		rmNetwork(conf)
+		transform.RemoveNetwork(conf)
 	}
 	if !opts.Volumes {
-		rmVolumes(conf)
+		transform.RemoveVolumes(conf)
 	}
 	if !opts.Privileged {
-		rmPrivileged(conf)
+		transform.RemovePrivileged(conf)
 	}
+	transform.Repo(conf, r)
 	err = LintPlugins(conf, opts)
 	if err != nil {
 		return nil, err

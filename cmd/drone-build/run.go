@@ -45,7 +45,7 @@ func setup(c *Context) error {
 
 	// inject the matrix parameters into the yaml
 	injected := inject.Inject(string(c.Yaml), c.Job.Environment)
-	c.Conf, err = parser.ParseSingle(injected, &opts)
+	c.Conf, err = parser.ParseSingle(injected, &opts, c.Repo)
 	if err != nil {
 		return err
 	}
