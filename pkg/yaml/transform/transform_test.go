@@ -1,4 +1,4 @@
-package parser
+package transform
 
 import (
 	"testing"
@@ -141,6 +141,44 @@ func Test_Transform(t *testing.T) {
 			g.Assert(imageName("microsoft/azure")).Equal("microsoft/azure")
 			g.Assert(imageName("azure")).Equal("plugins/drone-azure")
 			g.Assert(imageName("azure_storage")).Equal("plugins/drone-azure-storage")
+		})
+
+		g.It("Should have cached volumes", func() {
+			c := &common.Config{
+				Setup: &common.Step{},
+				Clone: &common.Step{},
+				Build: &common.Step{
+					Cache: []string{".git","foo","bar"},
+				},
+				Notify:  map[string]*common.Step{},
+				Deploy:  map[string]*common.Step{},
+				Publish: map[string]*common.Step{},
+			}
+			r := &common.Repo{
+				Link: "https://github.com/drone/drone",
+				FullName: "drone/drone",
+			}
+			transformCache(c, r)
+
+      cacheCount := len(c.Build.Cache)
+
+			test := func(s *common.Step) {
+				g.Assert(len(s.Volumes)).Equal(cacheCount)
+			}
+
+			testRange := func(s map[string]*common.Step) {
+				for _, step := range s {
+					test(step)
+				}
+			}
+
+      test(c.Setup)
+			test(c.Clone)
+			test(c.Build)
+			testRange(c.Publish)
+			testRange(c.Deploy)
+			testRange(c.Notify)
+			testRange(c.Compose)
 		})
 	})
 }
