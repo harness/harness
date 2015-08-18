@@ -18,3 +18,27 @@ Drone documentation is organized into several categories:
 ### Community, Help
 
 Contributions, questions, and comments are welcomed and encouraged. Drone developers hang out in the [drone/drone](https://gitter.im/drone/drone) room on gitter. We ask that you please post your questions to [gitter](https://gitter.im/drone/drone) before creating an issue.
+
+### Building, Running
+
+Commands to build from source:
+
+```sh
+make deps    # download dependencies
+make         # create binary files in ./bin
+make test    # execute unit tests
+```
+
+Commands to start drone:
+
+```sh
+bin/drone
+bin/drone --debug # debug mode loads static content from filesystem
+```
+
+**NOTE** if you are seeing slow compile times you can try running `go install`
+for the vendored `go-sqlite3` library:
+
+```sh
+go install github.com/drone/drone/Godeps/_workspace/src/github.com/mattn/go-sqlite3
+```
