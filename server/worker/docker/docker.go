@@ -102,15 +102,6 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 		log.Printf("Error parsing YAML for %s/%s, Err: %s", r.Repo.Owner, r.Repo.Name, err.Error())
 	}
 
-	// append private parameters to the environment
-	// variable section of the .drone.yml file, iff
-	// this is not a pull request (for security purposes)
-	if params != nil && (r.Repo.Private || len(r.Commit.PullRequest) == 0) {
-		for k, v := range params {
-			script.Env = append(script.Env, k+"="+v)
-		}
-	}
-
 	// TODO: handle error better?
 	buildNumber, err := datastore.GetBuildNumber(c, r.Commit)
 	if err != nil {
@@ -121,13 +112,23 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 
 	path := r.Repo.Host + "/" + r.Repo.Owner + "/" + r.Repo.Name
 	repo := &repo.Repo{
-		Name:   path,
-		Path:   r.Repo.CloneURL,
-		Branch: r.Commit.Branch,
-		Commit: r.Commit.Sha,
-		PR:     r.Commit.PullRequest,
-		Dir:    filepath.Join("/var/cache/drone/src", git.GitPath(script.Git, path)),
-		Depth:  git.GitDepth(script.Git),
+		Name:    path,
+		Path:    r.Repo.CloneURL,
+		Branch:  r.Commit.Branch,
+		Commit:  r.Commit.Sha,
+		PR:      r.Commit.PullRequest,
+		Private: r.Repo.Private,
+		Dir:     filepath.ToSlash(filepath.Join("/var/cache/drone/src", git.GitPath(script.Git, path))),
+		Depth:   git.GitDepth(script.Git),
+	}
+
+	// append private parameters to the environment
+	// variable section of the .drone.yml file, if
+	// this is trusted
+	if params != nil && repo.IsTrusted() {
+		for k, v := range params {
+			script.Env = append(script.Env, k+"="+v)
+		}
 	}
 
 	priorCommit, _ := datastore.GetCommitPrior(c, r.Commit)
@@ -152,7 +153,7 @@ func (d *Docker) Do(c context.Context, r *worker.Work) {
 	builder.Timeout = time.Duration(r.Repo.Timeout) * time.Second
 	builder.Privileged = r.Repo.Privileged
 
-	if r.Repo.Private || len(r.Commit.PullRequest) == 0 {
+	if repo.IsTrusted() {
 		builder.Key = []byte(r.Repo.PrivateKey)
 	}
 

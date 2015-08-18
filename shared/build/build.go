@@ -322,11 +322,12 @@ func (b *Builder) run() error {
 		AttachStdin:  false,
 		AttachStdout: true,
 		AttachStderr: true,
+		Tty:          script.DockerTty(b.Build.Docker),
 	}
 
 	// configure if Docker should run in privileged mode
 	host := docker.HostConfig{
-		Privileged: (b.Privileged && len(b.Repo.PR) == 0),
+		Privileged: (b.Privileged && b.Repo.IsTrusted()),
 	}
 
 	if host.Privileged {

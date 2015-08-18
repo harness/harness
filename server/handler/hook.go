@@ -3,7 +3,7 @@ package handler
 import (
 	"log"
 	"net/http"
-	"strings"
+	"regexp"
 
 	"github.com/drone/drone/plugin/remote"
 	"github.com/drone/drone/server/datastore"
@@ -35,6 +35,7 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 	// parse the hook payload
 	hook, err := remote.ParseHook(r)
 	if err != nil {
+		log.Printf("Unable to parse hook. %s\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -42,7 +43,8 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 	// in some cases we have neither a hook nor error. An example
 	// would be GitHub sending a ping request to the URL, in which
 	// case we'll just exit quiely with an 'OK'
-	if hook == nil || strings.Contains(hook.Message, "[CI SKIP]") {
+	shouldSkip, _ := regexp.MatchString(`\[(?i:ci *skip|skip *ci)\]`, hook.Message)
+	if hook == nil || shouldSkip {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -84,13 +86,15 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 		user.TokenExpiry = user_token.Expiry
 		datastore.PutUser(ctx, user)
 	} else if err != nil {
+		log.Printf("Unable to refresh token. %s\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	// featch the .drone.yml file from the database
+	// fetch the .drone.yml file from the database
 	yml, err := remote.GetScript(user, repo, hook)
 	if err != nil {
+		log.Printf("Unable to fetch .drone.yml file. %s\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -118,12 +122,14 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	// inserts the commit into the database
 	if err := datastore.PostCommit(ctx, &commit); err != nil {
+		log.Printf("Unable to persist commit %s@%s. %s\n", commit.Sha, commit.Branch, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	owner, err := datastore.GetUser(ctx, repo.UserID)
 	if err != nil {
+		log.Printf("Unable to retrieve repository owner. %s.\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

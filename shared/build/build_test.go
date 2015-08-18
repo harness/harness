@@ -55,14 +55,14 @@ func TestSetup(t *testing.T) {
 	// Handles a request to inspect the Go 1.2 image
 	// This will return a dummy image ID, so that the system knows
 	// the build image exists, and doens't need to be downloaded.
-	mux.HandleFunc("/v1.9/images/bradrydzewski/go:1.2/json", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/images/bradrydzewski/go:1.2/json", func(w http.ResponseWriter, r *http.Request) {
 		body := `[{ "id": "7bf9ce0ffb7236ca68da0f9fed0e1682053b393db3c724ff3c5a4e8c0793b34c" }]`
 		w.Write([]byte(body))
 	})
 
 	// Handles a request to create the build image, with the build
 	// script injected. This will return a dummy stream.
-	mux.HandleFunc("/v1.9/build", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/build", func(w http.ResponseWriter, r *http.Request) {
 		body := `{"stream":"Step 1..."}`
 		w.Write([]byte(body))
 	})
@@ -71,7 +71,7 @@ func TestSetup(t *testing.T) {
 	// that we are doing a "wildcard" url match here, since the name of
 	// the image will be random. This will return a dummy image ID
 	// to confirm the build image was created successfully.
-	mux.HandleFunc("/v1.9/images/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/images/", func(w http.ResponseWriter, r *http.Request) {
 		body := `{ "id": "7bf9ce0ffb7236ca68da0f9fed0e1682053b393db3c724ff3c5a4e8c0793b34c" }`
 		w.Write([]byte(body))
 	})
@@ -122,7 +122,7 @@ func TestSetupErrorPullImage(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/v1.9/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
@@ -134,12 +134,12 @@ func TestSetupErrorRunDaemonPorts(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/v1.9/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
 		data := []byte(`{"config": { "ExposedPorts": { "6379/tcp": {}}}}`)
 		w.Write(data)
 	})
 
-	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/create", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
@@ -164,21 +164,21 @@ func TestSetupErrorServiceInspect(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/v1.9/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
 		data := []byte(`{"config": { "ExposedPorts": { "6379/tcp": {}}}}`)
 		w.Write(data)
 	})
 
-	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/create", func(w http.ResponseWriter, r *http.Request) {
 		body := `{ "Id":"e90e34656806", "Warnings":[] }`
 		w.Write([]byte(body))
 	})
 
-	mux.HandleFunc("/v1.9/containers/e90e34656806/start", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/e90e34656806/start", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	mux.HandleFunc("/v1.9/containers/e90e34656806/json", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/e90e34656806/json", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
@@ -202,11 +202,11 @@ func TestSetupErrorImagePull(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/v1.9/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/images/bradrydzewski/mysql:5.5/json", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	mux.HandleFunc("/v1.9/images/create?fromImage=bradrydzewski/mysql&tag=5.5", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/images/create?fromImage=bradrydzewski/mysql&tag=5.5", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
@@ -230,7 +230,7 @@ func TestSetupErrorUpdate(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/v1.9/images/create", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/images/create", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
@@ -254,12 +254,12 @@ func TestSetupErrorBuild(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/v1.9/images/bradrydzewski/go:1.2/json", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/images/bradrydzewski/go:1.2/json", func(w http.ResponseWriter, r *http.Request) {
 		body := `[{ "id": "7bf9ce0ffb7236ca68da0f9fed0e1682053b393db3c724ff3c5a4e8c0793b34c" }]`
 		w.Write([]byte(body))
 	})
 
-	mux.HandleFunc("/v1.9/build", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/build", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
@@ -284,17 +284,17 @@ func TestSetupErrorBuildInspect(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/v1.9/images/bradrydzewski/go:1.2/json", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/images/bradrydzewski/go:1.2/json", func(w http.ResponseWriter, r *http.Request) {
 		body := `[{ "id": "7bf9ce0ffb7236ca68da0f9fed0e1682053b393db3c724ff3c5a4e8c0793b34c" }]`
 		w.Write([]byte(body))
 	})
 
-	mux.HandleFunc("/v1.9/build", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/build", func(w http.ResponseWriter, r *http.Request) {
 		body := `{"stream":"Step 1..."}`
 		w.Write([]byte(body))
 	})
 
-	mux.HandleFunc("/v1.9/images/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/images/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
@@ -325,27 +325,27 @@ func TestTeardown(t *testing.T) {
 		imageRemoved     = false
 	)
 
-	mux.HandleFunc("/v1.9/containers/7bf9ce0ffb/stop", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/7bf9ce0ffb/stop", func(w http.ResponseWriter, r *http.Request) {
 		containerStopped = true
 		w.WriteHeader(http.StatusOK)
 	})
 
-	mux.HandleFunc("/v1.9/containers/7bf9ce0ffb", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/7bf9ce0ffb", func(w http.ResponseWriter, r *http.Request) {
 		containerRemoved = true
 		w.WriteHeader(http.StatusOK)
 	})
 
-	mux.HandleFunc("/v1.9/containers/ec62dcc736/stop", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/ec62dcc736/stop", func(w http.ResponseWriter, r *http.Request) {
 		serviceStopped = true
 		w.WriteHeader(http.StatusOK)
 	})
 
-	mux.HandleFunc("/v1.9/containers/ec62dcc736", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/ec62dcc736", func(w http.ResponseWriter, r *http.Request) {
 		serviceRemoved = true
 		w.WriteHeader(http.StatusOK)
 	})
 
-	mux.HandleFunc("/v1.9/images/c3ab8ff137", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/images/c3ab8ff137", func(w http.ResponseWriter, r *http.Request) {
 		imageRemoved = true
 		w.Write([]byte(`[{"Untagged":"c3ab8ff137"},{"Deleted":"c3ab8ff137"}]`))
 	})
@@ -389,12 +389,12 @@ func TestRunPrivileged(t *testing.T) {
 
 	var conf = docker.HostConfig{}
 
-	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/create", func(w http.ResponseWriter, r *http.Request) {
 		body := `{ "Id":"e90e34656806", "Warnings":[] }`
 		w.Write([]byte(body))
 	})
 
-	mux.HandleFunc("/v1.9/containers/e90e34656806/start", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/e90e34656806/start", func(w http.ResponseWriter, r *http.Request) {
 		json.NewDecoder(r.Body).Decode(&conf)
 		w.WriteHeader(http.StatusBadRequest)
 	})
@@ -428,13 +428,31 @@ func TestRunPrivileged(t *testing.T) {
 	if conf.Privileged != false {
 		t.Errorf("Expected container NOT started in Privileged mode when PR")
 	}
+
+	// now lets set priviliged mode for a pull request from public repo
+	b.Privileged = true
+	b.Repo.Private = false
+	b.run()
+
+	if conf.Privileged != false {
+		t.Errorf("Expected container NOT started in Privileged mode when PR from public repo")
+	}
+
+	// now lets set priviliged mode for a pull request from private repo
+	b.Privileged = true
+	b.Repo.Private = true
+	b.run()
+
+	if conf.Privileged != true {
+		t.Errorf("Expected container started in Privileged mode when PR from private repo")
+	}
 }
 
 func TestRunErrorCreate(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/create", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	})
 
@@ -459,13 +477,13 @@ func TestRunErrorStart(t *testing.T) {
 		containerStarted = false
 	)
 
-	mux.HandleFunc("/v1.9/containers/create", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/create", func(w http.ResponseWriter, r *http.Request) {
 		containerCreated = true
 		body := `{ "Id":"e90e34656806", "Warnings":[] }`
 		w.Write([]byte(body))
 	})
 
-	mux.HandleFunc("/v1.9/containers/e90e34656806/start", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/v1.12/containers/e90e34656806/start", func(w http.ResponseWriter, r *http.Request) {
 		containerStarted = true
 		w.WriteHeader(http.StatusBadRequest)
 	})
