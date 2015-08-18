@@ -36,8 +36,7 @@ bin/drone
 bin/drone --debug # debug mode loads static content from filesystem
 ```
 
-**NOTE** if you are seeing slow compile times you can try running `go install`
-for the vendored `go-sqlite3` library:
+If you are seeing slow compile times please install the following:
 
 ```sh
 go install github.com/drone/drone/Godeps/_workspace/src/github.com/mattn/go-sqlite3
