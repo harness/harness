@@ -142,6 +142,7 @@ func main() {
 
 		user.GET("", server.GetUserCurr)
 		user.PATCH("", server.PutUserCurr)
+		user.GET("/feed", server.GetUserFeed)
 		user.GET("/repos", server.GetUserRepos)
 		user.GET("/tokens", server.GetUserTokens)
 		user.POST("/tokens", server.PostToken)

@@ -51,7 +51,7 @@ type RepoCommit struct {
 	Name     string `json:"name"`
 	FullName string `json:"full_name"`
 	Number   int    `json:"number"`
-	State    string `json:"state"`
+	Status   string `json:"status"`
 	Started  int64  `json:"started_at"`
 	Finished int64  `json:"finished_at"`
 }

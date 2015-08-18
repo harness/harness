@@ -98,7 +98,7 @@ func scanRepoCommits(rows *sql.Rows) ([]*types.RepoCommit, error) {
 			&v.Name,
 			&v.FullName,
 			&v.Number,
-			&v.State,
+			&v.Status,
 			&v.Started,
 			&v.Finished,
 		)
