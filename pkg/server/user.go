@@ -59,6 +59,23 @@ func GetUserRepos(c *gin.Context) {
 	}
 }
 
+// GetUserFeed accepts a request to get the currently
+// authenticated user's build feed from the datastore,
+// encoded and returned in JSON format.
+//
+//     GET /api/user/feed
+//
+func GetUserFeed(c *gin.Context) {
+	store := ToDatastore(c)
+	user := ToUser(c)
+	feed, err := store.UserFeed(user, 25, 0)
+	if err != nil {
+		c.Fail(400, err)
+	} else {
+		c.JSON(200, &feed)
+	}
+}
+
 // GetUserTokens accepts a request to get the currently
 // authenticated user's token list from the datastore,
 // encoded and returned in JSON format.
