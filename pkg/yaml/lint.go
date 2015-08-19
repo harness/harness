@@ -17,11 +17,6 @@ var lintRules = []lintRule{
 	expectBuild,
 	expectImage,
 	expectCommand,
-	expectTrustedSetup,
-	expectTrustedClone,
-	expectTrustedPublish,
-	expectTrustedDeploy,
-	expectTrustedNotify,
 	expectCloneInWorkspace,
 	expectCacheInWorkspace,
 }
@@ -61,52 +56,6 @@ func expectCommand(c *common.Config) error {
 	return nil
 }
 
-// lint rule that fails when a non-trusted clone plugin is used.
-func expectTrustedClone(c *common.Config) error {
-	if c.Clone != nil && strings.Contains(c.Clone.Image, "/") {
-		return fmt.Errorf("Yaml must use trusted clone plugins")
-	}
-	return nil
-}
-
-// lint rule that fails when a non-trusted setup plugin is used.
-func expectTrustedSetup(c *common.Config) error {
-	if c.Setup != nil && strings.Contains(c.Setup.Image, "/") {
-		return fmt.Errorf("Yaml must use trusted setup plugins")
-	}
-	return nil
-}
-
-// lint rule that fails when a non-trusted publish plugin is used.
-func expectTrustedPublish(c *common.Config) error {
-	for _, step := range c.Publish {
-		if strings.Contains(step.Image, "/") {
-			return fmt.Errorf("Yaml must use trusted publish plugins")
-		}
-	}
-	return nil
-}
-
-// lint rule that fails when a non-trusted deploy plugin is used.
-func expectTrustedDeploy(c *common.Config) error {
-	for _, step := range c.Deploy {
-		if strings.Contains(step.Image, "/") {
-			return fmt.Errorf("Yaml must use trusted deploy plugins")
-		}
-	}
-	return nil
-}
-
-// lint rule that fails when a non-trusted notify plugin is used.
-func expectTrustedNotify(c *common.Config) error {
-	for _, step := range c.Notify {
-		if strings.Contains(step.Image, "/") {
-			return fmt.Errorf("Yaml must use trusted notify plugins")
-		}
-	}
-	return nil
-}
-
 // lint rule that fails if the clone directory is not contained
 // in the root workspace.
 func expectCloneInWorkspace(c *common.Config) error {
@@ -121,7 +70,7 @@ func expectCloneInWorkspace(c *common.Config) error {
 		return fmt.Errorf("No workspace specified")
 	}
 
-  relative, relOk := filepath.Rel("/drone/src", path)
+	relative, relOk := filepath.Rel("/drone/src", path)
 	if relOk != nil {
 		return fmt.Errorf("Path is not relative to root")
 	}

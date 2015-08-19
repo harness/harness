@@ -42,37 +42,6 @@ func Test_Linter(t *testing.T) {
 			g.Assert(expectImage(c) != nil).IsTrue()
 		})
 
-		g.It("Should fail when untrusted setup image", func() {
-			c := &common.Config{Setup: &common.Step{Image: "foo/bar"}}
-			g.Assert(expectTrustedSetup(c) != nil).IsTrue()
-		})
-
-		g.It("Should fail when untrusted clone image", func() {
-			c := &common.Config{Clone: &common.Step{Image: "foo/bar"}}
-			g.Assert(expectTrustedClone(c) != nil).IsTrue()
-		})
-
-		g.It("Should fail when untrusted publish image", func() {
-			c := &common.Config{}
-			c.Publish = map[string]*common.Step{}
-			c.Publish["docker"] = &common.Step{Image: "foo/bar"}
-			g.Assert(expectTrustedPublish(c) != nil).IsTrue()
-		})
-
-		g.It("Should fail when untrusted deploy image", func() {
-			c := &common.Config{}
-			c.Deploy = map[string]*common.Step{}
-			c.Deploy["amazon"] = &common.Step{Image: "foo/bar"}
-			g.Assert(expectTrustedDeploy(c) != nil).IsTrue()
-		})
-
-		g.It("Should fail when untrusted notify image", func() {
-			c := &common.Config{}
-			c.Notify = map[string]*common.Step{}
-			c.Notify["hipchat"] = &common.Step{Image: "foo/bar"}
-			g.Assert(expectTrustedNotify(c) != nil).IsTrue()
-		})
-
 		g.It("Should pass linter when build properly setup", func() {
 			c := &common.Config{}
 			c.Build = &common.Step{}

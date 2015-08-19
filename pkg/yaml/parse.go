@@ -73,11 +73,7 @@ func ParseSingle(raw string, opts *Opts, r *common.Repo) (*common.Config, error)
 	if err != nil {
 		return nil, err
 	}
-	// lint the yaml file
-	err = Lint(conf)
-	if err != nil {
-		return nil, err
-	}
+
 	// apply rules / transforms
 	transform.Defaults(conf)
 	if !opts.Network {
@@ -90,6 +86,12 @@ func ParseSingle(raw string, opts *Opts, r *common.Repo) (*common.Config, error)
 		transform.RemovePrivileged(conf)
 	}
 	transform.Repo(conf, r)
+
+	// lint the yaml file
+	err = Lint(conf)
+	if err != nil {
+		return nil, err
+	}
 	err = LintPlugins(conf, opts)
 	if err != nil {
 		return nil, err
