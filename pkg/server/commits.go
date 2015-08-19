@@ -183,7 +183,7 @@ func RunBuild(c *gin.Context) {
 	if repo.Params != nil && len(repo.Params) != 0 {
 		raw = []byte(inject.InjectSafe(string(raw), repo.Params))
 	}
-	encrypted, _ := secure.Parse(repo.Hash, string(raw))
+	encrypted, _ := secure.Parse(repo, string(raw))
 	if encrypted != nil && len(encrypted) != 0 {
 		raw = []byte(inject.InjectSafe(string(raw), encrypted))
 	}
