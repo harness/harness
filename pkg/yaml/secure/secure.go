@@ -11,6 +11,8 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/gopkg.in/yaml.v2"
 )
 
+const BlockSize = 32 // AES256
+
 // Parse parses and returns the secure section of the
 // yaml file as plaintext parameters.
 func Parse(key, raw string) (map[string]string, error) {
@@ -31,14 +33,14 @@ func Encrypt(key, text string) (_ string, err error) {
 		return
 	}
 
-	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
+	ciphertext := make([]byte, BlockSize+len(plaintext))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err = io.ReadFull(rand.Reader, iv); err != nil {
 		return
 	}
 
 	stream := cipher.NewCFBEncrypter(block, iv)
-	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
+	stream.XORKeyStream(ciphertext[BlockSize:], plaintext)
 
 	return base64.URLEncoding.EncodeToString(ciphertext), nil
 }
@@ -55,12 +57,12 @@ func Decrypt(key, text string) (_ string, err error) {
 		return
 	}
 
-	if len(ciphertext) < aes.BlockSize {
+	if len(ciphertext) < BlockSize {
 		err = fmt.Errorf("ciphertext too short")
 		return
 	}
 	iv := ciphertext[:aes.BlockSize]
-	ciphertext = ciphertext[aes.BlockSize:]
+	ciphertext = ciphertext[BlockSize:]
 
 	stream := cipher.NewCFBDecrypter(block, iv)
 	stream.XORKeyStream(ciphertext, ciphertext)

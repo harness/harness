@@ -33,7 +33,7 @@ func Test_Secure(t *testing.T) {
 
 		g.It("Should decrypt a map", func() {
 			params := map[string]string{
-				"foo": "2NQPoQfxPERVi42OEYzuVTjQrEQSrcN2-Pwk4kTlIVN5HA==",
+				"foo": "dG0H-Kjg4lZ8s-4WwfaeAgAAAAAAAAAAAAAAAAAAAADKUC-q4zHKDHzH9qZYXjGl1S0=",
 			}
 			err := DecryptMap(key, params)
 			g.Assert(err == nil).IsTrue()
@@ -47,7 +47,7 @@ func Test_Secure(t *testing.T) {
 		})
 
 		g.It("Should decrypt a yaml", func() {
-			yaml := `secure: {"foo": "2NQPoQfxPERVi42OEYzuVTjQrEQSrcN2-Pwk4kTlIVN5HA=="}`
+			yaml := `secure: {"foo": "dG0H-Kjg4lZ8s-4WwfaeAgAAAAAAAAAAAAAAAAAAAADKUC-q4zHKDHzH9qZYXjGl1S0="}`
 			decrypted, err := Parse(key, yaml)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(decrypted["foo"]).Equal("super_duper_secret")
