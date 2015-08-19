@@ -556,6 +556,26 @@ paths:
           description: |
             Unable to retrieve Repository list
 
+  #
+  # User Feed
+  #
+
+  /user/feed:
+    get:
+      summary: Get user activity feed
+      description: |
+        Retrieve the currently authenticated User's activity feed.
+      tags:
+        - User
+      responses:
+        200:
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Activity"
+        400:
+          description: |
+            Unable to retrieve Activity list
 
   #
   # User Tokens
@@ -971,3 +991,28 @@ definitions:
         format: int64
       environment:
         type: object
+  Activity:
+    properties:
+      owner:
+        type: string
+      name:
+        type: string
+      full_name:
+        type: string
+      number:
+        type: integer
+      status:
+        type: string
+        enum:
+          - success
+          - failure
+          - pending
+          - started
+          - error
+          - killed
+      started_at:
+        type: integer
+        format: int64
+      finished_at:
+        type: integer
+        format: int64
