@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
@@ -37,7 +35,6 @@ func main() {
 		os.Exit(1)
 		return
 	}
-	createClone(ctx)
 
 	// creates the Docker client, connecting to the
 	// linked Docker daemon
@@ -68,6 +65,7 @@ func main() {
 		os.Exit(1)
 		return
 	}
+	createClone(ctx)
 
 	var execs []execFunc
 	if *clone {
@@ -130,13 +128,15 @@ func createClone(c *Context) error {
 	// to the clone object for merge requests from bitbucket, gitlab, et al
 	// if len(c.Commit.PullRequest) != 0 {
 	// }
-
-	url_, err := url.Parse(c.Repo.Link)
-	if err != nil {
-		return err
+	pathv, ok := c.Conf.Clone.Config["path"]
+	if ok {
+		path, ok := pathv.(string)
+		if ok {
+			c.Clone.Dir = path
+			return nil
+		}
 	}
-	c.Clone.Dir = filepath.Join("/drone/src", url_.Host, c.Repo.FullName)
-	return nil
+	return fmt.Errorf("Workspace path not found")
 }
 
 func parseContext() (*Context, error) {

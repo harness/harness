@@ -2,14 +2,14 @@ package builtin
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"time"
-	"crypto/tls"
-	"crypto/x509"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 	"github.com/drone/drone/pkg/docker"

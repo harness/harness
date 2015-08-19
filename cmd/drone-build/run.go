@@ -1,8 +1,6 @@
 package main
 
 import (
-	"path/filepath"
-
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/yaml"
@@ -62,17 +60,6 @@ func setup(c *Context) error {
 	for k, v := range toEnv(c) {
 		env := k + "=" + v
 		c.Conf.Build.Environment = append(c.Conf.Build.Environment, env)
-	}
-
-	// attempt to extract the clone path. i'm not a huge fan of
-	// this, by the way, but for now we'll keep it.
-	// TODO consider moving this to a transform?
-	pathv, ok := c.Conf.Clone.Config["path"]
-	if ok {
-		path, ok := pathv.(string)
-		if ok {
-			c.Clone.Dir = filepath.Join("/drone/src", path)
-		}
 	}
 
 	return nil
