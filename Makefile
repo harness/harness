@@ -45,6 +45,9 @@ bindata:
 bindata_debug:
 	$$GOPATH/bin/go-bindata --debug -o="cmd/drone-server/drone_bindata.go" cmd/drone-server/static/...
 
+docker:
+	docker build --file=cmd/drone-build/Dockerfile.alpine --rm=true -t drone/drone-build .
+
 # creates a debian package for drone
 # to install `sudo dpkg -i drone.deb`
 dist:

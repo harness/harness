@@ -62,7 +62,15 @@ func setup(c *Context) error {
 		c.Conf.Build.Environment = append(c.Conf.Build.Environment, env)
 	}
 
-	return nil
+	pathv, ok := c.Conf.Clone.Config["path"]
+	if ok {
+		path, ok := pathv.(string)
+		if ok {
+			c.Clone.Dir = path
+			return nil
+		}
+	}
+	return fmt.Errorf("Workspace path not found")
 }
 
 type execFunc func(c *Context) (int, error)
