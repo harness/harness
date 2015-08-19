@@ -44,12 +44,9 @@ func setup(c *Context) error {
 		opts.Volumes = true
 		opts.Caching = true
 	}
-	// if repository is public, and a pull request, disable
-	// the cache.
-	if c.Repo.Private == false &&
-		c.Build.PullRequest != nil &&
-		c.Build.PullRequest.Number != 0 {
-		opts.Caching = false
+	// if repository is private enable caching
+	if c.Repo.Private {
+		opts.Caching = true
 	}
 
 	// inject the matrix parameters into the yaml
