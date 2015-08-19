@@ -116,7 +116,7 @@ func Test_Linter(t *testing.T) {
 		g.It("Should pass with cache path inside workspace", func() {
 			c := &common.Config{
 				Build: &common.Step{
-					Cache: []string{".git","/.git","/.git/../.git/../.git"},
+					Cache: []string{".git", "/.git", "/.git/../.git/../.git"},
 				},
 			}
 			g.Assert(expectCacheInWorkspace(c) == nil).IsTrue()
@@ -125,7 +125,7 @@ func Test_Linter(t *testing.T) {
 		g.It("Should fail with cache path outside workspace", func() {
 			c := &common.Config{
 				Build: &common.Step{
-					Cache: []string{".git","/.git","../../.git"},
+					Cache: []string{".git", "/.git", "../../.git"},
 				},
 			}
 			g.Assert(expectCacheInWorkspace(c) != nil).IsTrue()
@@ -134,7 +134,7 @@ func Test_Linter(t *testing.T) {
 		g.It("Should fail when caching workspace directory", func() {
 			c := &common.Config{
 				Build: &common.Step{
-					Cache: []string{".git",".git/../"},
+					Cache: []string{".git", ".git/../"},
 				},
 			}
 			g.Assert(expectCacheInWorkspace(c) != nil).IsTrue()
@@ -143,7 +143,7 @@ func Test_Linter(t *testing.T) {
 		g.It("Should fail when : is in the cache path", func() {
 			c := &common.Config{
 				Build: &common.Step{
-					Cache: []string{".git",".git:/../"},
+					Cache: []string{".git", ".git:/../"},
 				},
 			}
 			g.Assert(expectCacheInWorkspace(c) != nil).IsTrue()

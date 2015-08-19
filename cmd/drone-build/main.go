@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
@@ -68,7 +66,7 @@ func main() {
 		return
 	}
 	createClone(ctx)
-	
+
 	var execs []execFunc
 	if *clone {
 		execs = append(execs, execClone)
@@ -130,13 +128,15 @@ func createClone(c *Context) error {
 	// to the clone object for merge requests from bitbucket, gitlab, et al
 	// if len(c.Commit.PullRequest) != 0 {
 	// }
-
-	url_, err := url.Parse(c.Repo.Link)
-	if err != nil {
-		return err
+	pathv, ok := c.Conf.Clone.Config["path"]
+	if ok {
+		path, ok := pathv.(string)
+		if ok {
+			c.Clone.Dir = path
+			return nil
+		}
 	}
-	c.Clone.Dir, _ = c.Conf.Clone.Config["path"]
-	return nil
+	return fmt.Errorf("Workspace path not found")
 }
 
 func parseContext() (*Context, error) {
