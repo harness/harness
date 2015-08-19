@@ -360,7 +360,7 @@ func (g *GitHub) pullRequest(r *http.Request) (*common.Hook, error) {
 	c := &common.Commit{}
 	c.Sha = *hook.PullRequest.Head.SHA
 	c.Ref = *hook.PullRequest.Head.Ref
-	c.Ref = fmt.Sprintf("refs/pull/%s/merge", *hook.PullRequest.Number)
+	c.Ref = fmt.Sprintf("refs/pull/%d/merge", *hook.PullRequest.Number)
 	c.Branch = *hook.PullRequest.Head.Ref
 	c.Timestamp = time.Now().UTC().Format("2006-01-02 15:04:05.000000000 +0000 MST")
 	c.Remote = *hook.PullRequest.Head.Repo.CloneURL
