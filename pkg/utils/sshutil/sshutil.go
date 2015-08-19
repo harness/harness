@@ -40,6 +40,18 @@ func MarshalPrivateKey(privkey *rsa.PrivateKey) []byte {
 	return privateKeyPEM
 }
 
+// UnMarshalPrivateKey is a helper function that unmarshals a PEM
+// bytes to an RSA Private Key
+func UnMarshalPrivateKey(privateKeyPEM []byte) *rsa.PrivateKey {
+	derBlock, _ := pem.Decode(privateKeyPEM)
+	privateKey, err := x509.ParsePKCS1PrivateKey(derBlock.Bytes)
+
+	if err != nil {
+		return nil
+	}
+	return privateKey
+}
+
 // Encrypt is helper function to encrypt a plain-text string using
 // an RSA public key.
 func Encrypt(hash hash.Hash, pubkey *rsa.PublicKey, msg string) (string, error) {

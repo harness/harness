@@ -29,5 +29,12 @@ func TestSSHUtil(t *testing.T) {
 			g.Assert(err == nil).IsTrue()
 			g.Assert(decrypted == testMsg).IsTrue()
 		})
+
+		g.It("Unmarshals private key from PEM block", func() {
+			privateKeyPEM := MarshalPrivateKey(privkey)
+			privateKey := UnMarshalPrivateKey(privateKeyPEM)
+
+			g.Assert(privateKey.PublicKey.E == pubkey.E).IsTrue()
+		})
 	})
 }
