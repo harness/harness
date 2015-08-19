@@ -13,7 +13,7 @@ import (
 // fails it should return an error message.
 type lintRule func(*common.Config) error
 
-var lintRules = [...]lintRule{
+var lintRules = []lintRule{
 	expectBuild,
 	expectImage,
 	expectCommand,
@@ -22,6 +22,7 @@ var lintRules = [...]lintRule{
 	expectTrustedPublish,
 	expectTrustedDeploy,
 	expectTrustedNotify,
+	expectCloneInWorkspace,
 	expectCacheInWorkspace,
 }
 
@@ -103,6 +104,33 @@ func expectTrustedNotify(c *common.Config) error {
 			return fmt.Errorf("Yaml must use trusted notify plugins")
 		}
 	}
+	return nil
+}
+
+// lint rule that fails if the clone directory is not contained
+// in the root workspace.
+func expectCloneInWorkspace(c *common.Config) error {
+	pathv, ok := c.Clone.Config["path"]
+	var path string
+
+	if ok {
+		path, _ = pathv.(string)
+	}
+	if len(path) == 0 {
+		// This should only happen if the transformer was not run
+		return fmt.Errorf("No workspace specified")
+	}
+
+  relative, relOk := filepath.Rel("/drone/src", path)
+	if relOk != nil {
+		return fmt.Errorf("Path is not relative to root")
+	}
+
+	cleaned := filepath.Clean(relative)
+	if strings.Index(cleaned, "../") != -1 {
+		return fmt.Errorf("Cannot clone above the root")
+	}
+
 	return nil
 }
 
