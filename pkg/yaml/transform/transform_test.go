@@ -151,20 +151,20 @@ func Test_Transform(t *testing.T) {
 					Config: map[string]interface{}{},
 				},
 				Build: &common.Step{
-					Cache: []string{".git","foo","bar"},
+					Cache: []string{".git", "foo", "bar"},
 				},
 				Notify:  map[string]*common.Step{},
 				Deploy:  map[string]*common.Step{},
 				Publish: map[string]*common.Step{},
 			}
 			r := &common.Repo{
-				Link: "https://github.com/drone/drone",
+				Link:     "https://github.com/drone/drone",
 				FullName: "drone/drone",
 			}
 			transformWorkspace(c, r)
 			transformCache(c, r)
 
-      cacheCount := len(c.Build.Cache)
+			cacheCount := len(c.Build.Cache)
 
 			test := func(s *common.Step) {
 				g.Assert(len(s.Volumes)).Equal(cacheCount)
@@ -176,7 +176,7 @@ func Test_Transform(t *testing.T) {
 				}
 			}
 
-      test(c.Setup)
+			test(c.Setup)
 			test(c.Clone)
 			test(c.Build)
 			testRange(c.Publish)
@@ -192,7 +192,7 @@ func Test_Transform(t *testing.T) {
 				},
 			}
 			r := &common.Repo{
-				Link: "https://github.com/drone/drone",
+				Link:     "https://github.com/drone/drone",
 				FullName: "drone/drone",
 			}
 			transformWorkspace(c, r)
@@ -209,7 +209,7 @@ func Test_Transform(t *testing.T) {
 				},
 			}
 			r := &common.Repo{
-				Link: "https://github.com/drone/drone",
+				Link:     "https://github.com/drone/drone",
 				FullName: "drone/drone",
 			}
 			transformWorkspace(c, r)

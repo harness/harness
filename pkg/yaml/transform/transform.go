@@ -71,7 +71,7 @@ func RemovePrivileged(c *common.Config) {
 // Repo executes all transformers that rely on repository
 // information.
 func Repo(c *common.Config, r *common.Repo) {
-  transformWorkspace(c, r)
+	transformWorkspace(c, r)
 	transformCache(c, r)
 }
 
@@ -227,7 +227,7 @@ func transformWorkspace(c *common.Config, r *common.Repo) {
 func transformCache(c *common.Config, r *common.Repo) {
 	cacheCount := len(c.Build.Cache)
 
-  if cacheCount == 0 {
+	if cacheCount == 0 {
 		return
 	}
 
@@ -287,7 +287,7 @@ func imageNameDefault(name, defaultName string) string {
 // workspaceRoot is a helper function that determines the
 // default workspace the build runs in.
 func workspaceRoot(r *common.Repo) string {
-  return filepath.Join(buildRoot, repoPath(r))
+	return filepath.Join(buildRoot, repoPath(r))
 }
 
 // cacheRoot is a helper function that deteremines the
