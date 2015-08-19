@@ -58,6 +58,7 @@ func main() {
 
 	// performs some initial parsing and pre-processing steps
 	// prior to executing our build tasks.
+	createClone(ctx)
 	err = setup(ctx)
 	if err != nil {
 		log.Errorln("Error processing .drone.yml file.", err)
@@ -65,7 +66,6 @@ func main() {
 		os.Exit(1)
 		return
 	}
-	createClone(ctx)
 
 	var execs []execFunc
 	if *clone {
@@ -128,15 +128,6 @@ func createClone(c *Context) error {
 	// to the clone object for merge requests from bitbucket, gitlab, et al
 	// if len(c.Commit.PullRequest) != 0 {
 	// }
-	pathv, ok := c.Conf.Clone.Config["path"]
-	if ok {
-		path, ok := pathv.(string)
-		if ok {
-			c.Clone.Dir = path
-			return nil
-		}
-	}
-	return fmt.Errorf("Workspace path not found")
 }
 
 func parseContext() (*Context, error) {
