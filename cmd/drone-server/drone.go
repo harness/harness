@@ -174,6 +174,7 @@ func main() {
 			repo.GET("", server.GetRepo)
 			repo.PATCH("", server.PutRepo)
 			repo.DELETE("", server.DeleteRepo)
+			repo.POST("/encrypt", server.Encrypt)
 			repo.POST("/watch", server.Subscribe)
 			repo.DELETE("/unwatch", server.Unsubscribe)
 

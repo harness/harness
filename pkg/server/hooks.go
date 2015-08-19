@@ -10,6 +10,7 @@ import (
 	"github.com/drone/drone/pkg/yaml"
 	"github.com/drone/drone/pkg/yaml/inject"
 	"github.com/drone/drone/pkg/yaml/matrix"
+	"github.com/drone/drone/pkg/yaml/secure"
 )
 
 // PostHook accepts a post-commit hook and parses the payload
@@ -99,6 +100,10 @@ func PostHook(c *gin.Context) {
 	// inject any private parameters into the .drone.yml
 	if repo.Params != nil && len(repo.Params) != 0 {
 		raw = []byte(inject.InjectSafe(string(raw), repo.Params))
+	}
+	encrypted, _ := secure.Parse(repo.Hash, string(raw))
+	if encrypted != nil && len(encrypted) != 0 {
+		raw = []byte(inject.InjectSafe(string(raw), encrypted))
 	}
 	axes, err := matrix.Parse(string(raw))
 	if err != nil {

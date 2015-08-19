@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
@@ -12,6 +13,7 @@ import (
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/httputil"
 	"github.com/drone/drone/pkg/utils/sshutil"
+	"github.com/drone/drone/pkg/yaml/secure"
 )
 
 // repoResp is a data structure used for sending
@@ -238,6 +240,25 @@ func PostRepo(c *gin.Context) {
 	store.AddStar(user, r)
 
 	c.JSON(200, r)
+}
+
+// Encrypt accapets a request to encrypt the
+// body of the request using the repository secret
+// key.
+//
+//     POST /api/repos/:owner/:name/encrypt
+//
+func Encrypt(c *gin.Context) {
+	repo := ToRepo(c)
+
+	in := map[string]string{}
+	json.NewDecoder(c.Request.Body).Decode(&in)
+	err := secure.EncryptMap(repo.Hash, in)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+	c.JSON(200, &in)
 }
 
 // Unubscribe accapets a request to unsubscribe the
