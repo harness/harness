@@ -80,6 +80,16 @@ func Repo(c *common.Config, r *common.Repo) {
 func transformSetup(c *common.Config) {
 	c.Setup = &common.Step{}
 	c.Setup.Image = "plugins/drone-build"
+
+	// TODO move below code to separate transform
+	if c.Build == nil {
+		c.Build = &common.Step{}
+	}
+	if c.Build.Config == nil {
+		c.Build.Config = map[string]interface{}{}
+	}
+	////
+
 	c.Setup.Config = c.Build.Config
 }
 
