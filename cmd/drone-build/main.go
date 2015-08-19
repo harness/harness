@@ -106,7 +106,7 @@ func main() {
 	os.Exit(ctx.Job.ExitCode)
 }
 
-func createClone(c *Context) error {
+func createClone(c *Context) {
 	c.Clone = &common.Clone{
 		Netrc:   c.Netrc,
 		Keypair: c.Keys,

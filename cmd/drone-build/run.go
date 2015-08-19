@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/yaml"
