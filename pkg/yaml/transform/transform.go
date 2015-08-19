@@ -9,6 +9,12 @@ import (
 	common "github.com/drone/drone/pkg/types"
 )
 
+// buildRoot is the root build directory.
+//
+// If this changes then the matching value in lint.go needs
+// to be modified as well.
+const buildRoot = "/drone/src"
+
 // transformRule applies a check or transformation rule
 // to the build configuration.
 type transformRule func(*common.Config)
@@ -203,7 +209,17 @@ func rmNetwork(c *common.Config) {
 // directory to the configuration based on the repository
 // information.
 func transformWorkspace(c *common.Config, r *common.Repo) {
-	//c.Clone.Dir = workspaceRoot(r)
+	pathv, ok := c.Clone.Config["path"]
+	var path string
+
+	if ok {
+		path, _ = pathv.(string)
+	}
+	if len(path) == 0 {
+		path = repoPath(r)
+	}
+
+	c.Clone.Config["path"] = filepath.Join(buildRoot, path)
 }
 
 // transformCache is a transformer that adds volumes
@@ -218,14 +234,13 @@ func transformCache(c *common.Config, r *common.Repo) {
 	volumes := make([]string, cacheCount)
 
 	cache := cacheRoot(r)
-	workspace := workspaceRoot(r)
+	workspace := c.Clone.Config["path"].(string)
 
 	for i, dir := range c.Build.Cache {
 		cacheDir := filepath.Join(cache, dir)
 		workspaceDir := filepath.Join(workspace, dir)
 
 		volumes[i] = fmt.Sprintf("%s:%s", cacheDir, workspaceDir)
-		fmt.Printf("Volume %s", volumes[i])
 	}
 
 	c.Setup.Volumes = append(c.Setup.Volumes, volumes...)
@@ -272,7 +287,7 @@ func imageNameDefault(name, defaultName string) string {
 // workspaceRoot is a helper function that determines the
 // default workspace the build runs in.
 func workspaceRoot(r *common.Repo) string {
-  return filepath.Join("/drone/src", repoPath(r))
+  return filepath.Join(buildRoot, repoPath(r))
 }
 
 // cacheRoot is a helper function that deteremines the

@@ -1,6 +1,7 @@
 package transform
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
@@ -146,7 +147,9 @@ func Test_Transform(t *testing.T) {
 		g.It("Should have cached volumes", func() {
 			c := &common.Config{
 				Setup: &common.Step{},
-				Clone: &common.Step{},
+				Clone: &common.Step{
+					Config: map[string]interface{}{},
+				},
 				Build: &common.Step{
 					Cache: []string{".git","foo","bar"},
 				},
@@ -158,6 +161,7 @@ func Test_Transform(t *testing.T) {
 				Link: "https://github.com/drone/drone",
 				FullName: "drone/drone",
 			}
+			transformWorkspace(c, r)
 			transformCache(c, r)
 
       cacheCount := len(c.Build.Cache)
@@ -179,6 +183,38 @@ func Test_Transform(t *testing.T) {
 			testRange(c.Deploy)
 			testRange(c.Notify)
 			testRange(c.Compose)
+		})
+
+		g.It("Should have default workspace directory", func() {
+			c := &common.Config{
+				Clone: &common.Step{
+					Config: map[string]interface{}{},
+				},
+			}
+			r := &common.Repo{
+				Link: "https://github.com/drone/drone",
+				FullName: "drone/drone",
+			}
+			transformWorkspace(c, r)
+
+			g.Assert(c.Clone.Config["path"]).Equal(workspaceRoot(r))
+		})
+
+		g.It("Should use path for working directory", func() {
+			c := &common.Config{
+				Clone: &common.Step{
+					Config: map[string]interface{}{
+						"path": "foo/bar",
+					},
+				},
+			}
+			r := &common.Repo{
+				Link: "https://github.com/drone/drone",
+				FullName: "drone/drone",
+			}
+			transformWorkspace(c, r)
+
+			g.Assert(c.Clone.Config["path"]).Equal(filepath.Join(buildRoot, "foo/bar"))
 		})
 	})
 }
