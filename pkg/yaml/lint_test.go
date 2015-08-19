@@ -79,6 +79,9 @@ func Test_Linter(t *testing.T) {
 			c.Build.Image = "golang"
 			c.Build.Config = map[string]interface{}{}
 			c.Build.Config["commands"] = []string{"go build", "go test"}
+			c.Clone = &common.Step{}
+			c.Clone.Config = map[string]interface{}{}
+			c.Clone.Config["path"] = "/drone/src/foo/bar"
 			c.Publish = map[string]*common.Step{}
 			c.Publish["docker"] = &common.Step{Image: "docker"}
 			c.Deploy = map[string]*common.Step{}
@@ -88,7 +91,29 @@ func Test_Linter(t *testing.T) {
 			g.Assert(Lint(c) == nil).IsTrue()
 		})
 
-		g.It("Should pass with path inside workspace", func() {
+		g.It("Should pass with clone path inside workspace", func() {
+			c := &common.Config{
+				Clone: &common.Step{
+					Config: map[string]interface{}{
+						"path": "/drone/src/foo/bar",
+					},
+				},
+			}
+			g.Assert(expectCloneInWorkspace(c) == nil).IsTrue()
+		})
+
+		g.It("Should fail with clone path outside workspace", func() {
+			c := &common.Config{
+				Clone: &common.Step{
+					Config: map[string]interface{}{
+						"path": "/foo/bar",
+					},
+				},
+			}
+			g.Assert(expectCloneInWorkspace(c) != nil).IsTrue()
+		})
+
+		g.It("Should pass with cache path inside workspace", func() {
 			c := &common.Config{
 				Build: &common.Step{
 					Cache: []string{".git","/.git","/.git/../.git/../.git"},
@@ -97,7 +122,7 @@ func Test_Linter(t *testing.T) {
 			g.Assert(expectCacheInWorkspace(c) == nil).IsTrue()
 		})
 
-		g.It("Should fail with path outside workspace", func() {
+		g.It("Should fail with cache path outside workspace", func() {
 			c := &common.Config{
 				Build: &common.Step{
 					Cache: []string{".git","/.git","../../.git"},
@@ -115,7 +140,7 @@ func Test_Linter(t *testing.T) {
 			g.Assert(expectCacheInWorkspace(c) != nil).IsTrue()
 		})
 
-		g.It("Should fail when : is in the path", func() {
+		g.It("Should fail when : is in the cache path", func() {
 			c := &common.Config{
 				Build: &common.Step{
 					Cache: []string{".git",".git:/../"},

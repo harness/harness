@@ -37,7 +37,6 @@ func main() {
 		os.Exit(1)
 		return
 	}
-	createClone(ctx)
 
 	// creates the Docker client, connecting to the
 	// linked Docker daemon
@@ -68,7 +67,8 @@ func main() {
 		os.Exit(1)
 		return
 	}
-
+	createClone(ctx)
+	
 	var execs []execFunc
 	if *clone {
 		execs = append(execs, execClone)
@@ -135,7 +135,7 @@ func createClone(c *Context) error {
 	if err != nil {
 		return err
 	}
-	c.Clone.Dir = filepath.Join("/drone/src", url_.Host, c.Repo.FullName)
+	c.Clone.Dir, _ = c.Conf.Clone.Config["path"]
 	return nil
 }
 
