@@ -10,6 +10,7 @@ import (
 	"github.com/drone/drone/pkg/queue"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/yaml/inject"
+	"github.com/drone/drone/pkg/yaml/secure"
 	// "github.com/gin-gonic/gin/binding"
 )
 
@@ -181,6 +182,10 @@ func RunBuild(c *gin.Context) {
 	// inject any private parameters into the .drone.yml
 	if repo.Params != nil && len(repo.Params) != 0 {
 		raw = []byte(inject.InjectSafe(string(raw), repo.Params))
+	}
+	encrypted, _ := secure.Parse(repo.Hash, string(raw))
+	if encrypted != nil && len(encrypted) != 0 {
+		raw = []byte(inject.InjectSafe(string(raw), encrypted))
 	}
 
 	c.JSON(202, build)
