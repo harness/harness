@@ -193,6 +193,38 @@ paths:
 
 
   #
+  # Repos Param Encryption Enpoint
+  # TODO: properly add the input output schema
+
+  /repos/{owner}/{name}/encrypt:
+    post:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+      tags:
+        - Repos
+      summary: Encrypt
+      description: Creates encrypted environment variable strings.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: The encrypted parameters.
+        400:
+          description: |
+            Unable to encrypt the parameters.
+        404:
+          description: |
+            Unable to find the repository.
+
+
+  #
   # Repos Watch/Unwatch Enpoint
   #
 
@@ -992,6 +1024,16 @@ definitions:
       environment:
         type: object
   Activity:
+    example: |
+        {
+          "owner":"drone",
+          "name":"drone-test-go",
+          "full_name":"drone/drone-test-go",
+          "number": 1,
+          "status": "success",
+          "started_at": 5788800,
+          "finished_at": 5789500
+        }
     properties:
       owner:
         type: string
