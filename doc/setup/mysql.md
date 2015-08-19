@@ -2,7 +2,7 @@
 
 # MySQL
 
-Drone comes with support for MySQL as an alternate database engine. To enable Postgres, you should specify the following environment variables:
+Drone comes with support for MySQL as an alternate database engine. To enable MySQL, you should specify the following environment variables:
 
 ```bash
 DATABASE_DRIVER="mysql"
