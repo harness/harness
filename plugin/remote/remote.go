@@ -23,7 +23,7 @@ type Remote interface {
 
 	// GetScript fetches the build script (.drone.yml) from the remote
 	// repository and returns in string format.
-	GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error)
+	GetScript(user *model.User, repo *model.Repo, filename string, hook *model.Hook) ([]byte, error)
 
 	// Activate activates a repository by creating the post-commit hook and
 	// adding the SSH deploy key, if applicable.

@@ -191,7 +191,7 @@ func (r *Bitbucket) GetRepos(user *model.User) ([]*model.Repo, error) {
 
 // GetScript fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
-func (r *Bitbucket) GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error) {
+func (r *Bitbucket) GetScript(user *model.User, repo *model.Repo, filename string, hook *model.Hook) ([]byte, error) {
 	var client = bitbucket.New(
 		r.Client,
 		r.Secret,
@@ -200,7 +200,7 @@ func (r *Bitbucket) GetScript(user *model.User, repo *model.Repo, hook *model.Ho
 	)
 
 	// get the yaml from the database
-	var raw, err = client.Sources.Find(repo.Owner, repo.Name, hook.Sha, ".drone.yml")
+	var raw, err = client.Sources.Find(repo.Owner, repo.Name, hook.Sha, filename)
 	if err != nil {
 		return nil, err
 	}

@@ -67,8 +67,14 @@ func Test_Github(t *testing.T) {
 			g.Assert(repos[0].Role.Write).Equal(true)
 		})
 
-		g.It("Should get the build script", func() {
-			var script, err = github.GetScript(&user, &repo, &hook)
+		g.It("Should get the build script (.drone.yml)", func() {
+			var script, err = github.GetScript(&user, &repo, ".drone.yml", &hook)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(string(script)).Equal("image: go")
+		})
+
+		g.It("Should get the build script (.drone.yaml)", func() {
+			var script, err = github.GetScript(&user, &repo, ".drone.yaml", &hook)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(string(script)).Equal("image: go")
 		})
