@@ -50,8 +50,8 @@ func expectImage(c *common.Config) error {
 
 // lint rule that fails when no build commands are defined
 func expectCommand(c *common.Config) error {
-	if c.Build.Config == nil || c.Build.Config["commands"] == nil {
-		return fmt.Errorf("Yaml must define build commands")
+	if c.Setup.Config == nil || c.Setup.Config["commands"] == nil {
+		return fmt.Errorf("Yaml must define build / setup commands")
 	}
 	return nil
 }

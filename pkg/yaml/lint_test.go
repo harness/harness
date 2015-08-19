@@ -26,7 +26,7 @@ func Test_Linter(t *testing.T) {
 
 		g.It("Should fail when no commands", func() {
 			c := &common.Config{
-				Build: &common.Step{},
+				Setup: &common.Step{},
 			}
 			g.Assert(expectCommand(c) != nil).IsTrue()
 		})
@@ -46,8 +46,9 @@ func Test_Linter(t *testing.T) {
 			c := &common.Config{}
 			c.Build = &common.Step{}
 			c.Build.Image = "golang"
-			c.Build.Config = map[string]interface{}{}
-			c.Build.Config["commands"] = []string{"go build", "go test"}
+			c.Setup = &common.Step{}
+			c.Setup.Config = map[string]interface{}{}
+			c.Setup.Config["commands"] = []string{"go build", "go test"}
 			c.Clone = &common.Step{}
 			c.Clone.Config = map[string]interface{}{}
 			c.Clone.Config["path"] = "/drone/src/foo/bar"
