@@ -21,7 +21,7 @@ Contributions, questions, and comments are welcomed and encouraged. Drone develo
 
 ### Cloning, Building, Running
 
-If you are new to Go make sure you install Go and setup your workspace (ie `$GOPATH`). I also recommend reading [How to Write Go Code](https://golang.org/doc/code.html). Go programs use directory structure for package imports, therefore, it is very important you clone this project to the specified directory in your Go path:
+If you are new to Go, make sure you [install](http://golang.org/doc/install) Go 1.4+ and [setup](http://golang.org/doc/code.html) your workspace (ie `$GOPATH`). Go programs use directory structure for package imports, therefore, it is very important you clone this project to the specified directory in your Go path:
 
 ```
 git clone git://github.com/drone/drone.git $GOPATH/src/github.com/drone/drone
