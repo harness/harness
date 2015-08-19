@@ -15,6 +15,7 @@ type Opts struct {
 	Volumes    bool
 	Network    bool
 	Privileged bool
+	Caching    bool
 	Whitelist  []string
 }
 
@@ -22,6 +23,7 @@ var DefaultOpts = &Opts{
 	Volumes:    false,
 	Network:    false,
 	Privileged: false,
+	Caching:    true,
 	Whitelist:  []string{"plugins/*"},
 }
 
@@ -86,6 +88,9 @@ func ParseSingle(raw string, opts *Opts, r *common.Repo) (*common.Config, error)
 		transform.RemovePrivileged(conf)
 	}
 	transform.Repo(conf, r)
+	if !opts.Caching {
+		transform.RemoveVolumes(conf)
+	}
 
 	// lint the yaml file
 	err = Lint(conf)

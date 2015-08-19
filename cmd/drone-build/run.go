@@ -32,6 +32,7 @@ func setup(c *Context) error {
 		Network:    false,
 		Privileged: false,
 		Volumes:    false,
+		Caching:    false,
 		Whitelist:  c.Plugins,
 	}
 
@@ -41,6 +42,14 @@ func setup(c *Context) error {
 		opts.Network = true
 		opts.Privileged = true
 		opts.Volumes = true
+		opts.Caching = true
+	}
+	// if repository is public, and a pull request, disable
+	// the cache.
+	if c.Repo.Private == false &&
+		c.Build.PullRequest != nil &&
+		c.Build.PullRequest.Number != 0 {
+		opts.Caching = false
 	}
 
 	// inject the matrix parameters into the yaml
