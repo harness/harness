@@ -15,7 +15,7 @@ The build environment has access to the following environment variables:
 
 You may also store encrypted, private variables in the `.drone.yml` and inject at runtime. Private variables are encrypted using RSA encryption with OAEP (see [EncryptOAEP](http://golang.org/pkg/crypto/rsa/#EncryptOAEP)). You can generate encrypted strings from your repository settings screen.
 
-Once you have an ecrypted string, you can add to the `secure` section of the `.drone.yml`.These variables are decrypted and injected into the `.drone.yml` at runtime using the `$$` notation.
+Once you have an ecrypted string, you can add the encrypted variable to the `secure` section of the `.drone.yml`. These variables are decrypted and injected into the `.drone.yml` at runtime using the `$$` notation.
 
 An example `.drone.yml` expecting the `HEROKU_TOKEN` private variable:
 
