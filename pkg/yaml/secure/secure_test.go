@@ -5,7 +5,6 @@ import (
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
 
-	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/sshutil"
 )
 
@@ -14,21 +13,18 @@ func Test_Secure(t *testing.T) {
 	g := goblin.Goblin(t)
 	g.Describe("Encrypt params", func() {
 		privKey, _ := sshutil.GeneratePrivateKey()
-		keypair := common.Keypair{
-			Private: string(sshutil.MarshalPrivateKey(privKey)),
-			Public:  string(sshutil.MarshalPublicKey(&privKey.PublicKey)),
-		}
-		repo := common.Repo{
-			Hash: "9T2tH3qZ8FSPr9uxrhzV4mn2VdVgA56xPVtYvCh0",
-			Keys: &keypair,
-		}
-		hashKey := toHash(repo.Hash)
+		publicKey := &privKey.PublicKey
+
+		privateKeyPEM := string(sshutil.MarshalPrivateKey(privKey))
+
+		repoHash := "9T2tH3qZ8FSPr9uxrhzV4mn2VdVgA56xPVtYvCh0"
+		hashKey := ToHash(repoHash)
 		text := "super_duper_secret"
-		encryptedValue, _ := sshutil.Encrypt(hashKey, &privKey.PublicKey, text)
+		encryptedValue, _ := sshutil.Encrypt(hashKey, publicKey, text)
 
 		g.It("Should decrypt a yaml", func() {
 			yaml := "secure: {\"foo\": \"" + encryptedValue + "\"}"
-			decrypted, err := Parse(&repo, yaml)
+			decrypted, err := Parse(privateKeyPEM, repoHash, yaml)
 
 			g.Assert(err == nil).IsTrue()
 			g.Assert(decrypted["foo"]).Equal(text)
@@ -36,7 +32,7 @@ func Test_Secure(t *testing.T) {
 
 		g.It("Should decrypt a yaml with no secure section", func() {
 			yaml := `foo: bar`
-			decrypted, err := Parse(&repo, yaml)
+			decrypted, err := Parse(privateKeyPEM, repoHash, yaml)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(decrypted)).Equal(0)
 		})
@@ -45,10 +41,10 @@ func Test_Secure(t *testing.T) {
 			params := map[string]string{
 				"foo": text,
 			}
-			err := EncryptMap(&repo, params)
+			err := EncryptMap(hashKey, publicKey, params)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(params["foo"] == "super_duper_secret").IsFalse()
-			err = DecryptMap(&repo, params)
+			err = DecryptMap(hashKey, privKey, params)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(params["foo"] == "super_duper_secret").IsTrue()
 		})

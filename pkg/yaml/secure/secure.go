@@ -1,33 +1,34 @@
 package secure
 
 import (
+	"crypto/rsa"
 	"crypto/sha256"
 	"hash"
 
 	"github.com/drone/drone/Godeps/_workspace/src/gopkg.in/yaml.v2"
 
-	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/sshutil"
 )
 
 // Parse parses and returns the secure section of the
 // yaml file as plaintext parameters.
-func Parse(repo *common.Repo, raw string) (map[string]string, error) {
+func Parse(privateKeyPEM, repoHash, raw string) (map[string]string, error) {
 	params, err := parseSecure(raw)
 	if err != nil {
 		return nil, err
 	}
 
-	err = DecryptMap(repo, params)
+	hasher := ToHash(repoHash)
+	privKey := sshutil.UnMarshalPrivateKey([]byte(privateKeyPEM))
+
+	err = DecryptMap(hasher, privKey, params)
 	return params, err
 }
 
 // DecryptMap decrypts values of a map of named parameters
 // from base64 to decrypted strings.
-func DecryptMap(repo *common.Repo, params map[string]string) error {
+func DecryptMap(hasher hash.Hash, privKey *rsa.PrivateKey, params map[string]string) error {
 	var err error
-	hasher := toHash(repo.Hash)
-	privKey := sshutil.UnMarshalPrivateKey([]byte(repo.Keys.Private))
 
 	for name, encrypted := range params {
 		params[name], err = sshutil.Decrypt(hasher, privKey, encrypted)
@@ -39,13 +40,11 @@ func DecryptMap(repo *common.Repo, params map[string]string) error {
 }
 
 // EncryptMap encrypts values of a map of named parameters
-func EncryptMap(repo *common.Repo, params map[string]string) error {
+func EncryptMap(hasher hash.Hash, pubKey *rsa.PublicKey, params map[string]string) error {
 	var err error
-	hasher := toHash(repo.Hash)
-	privKey := sshutil.UnMarshalPrivateKey([]byte(repo.Keys.Private))
 
 	for name, value := range params {
-		params[name], err = sshutil.Encrypt(hasher, &privKey.PublicKey, value)
+		params[name], err = sshutil.Encrypt(hasher, pubKey, value)
 		if err != nil {
 			return err
 		}
@@ -64,8 +63,8 @@ func parseSecure(raw string) (map[string]string, error) {
 	return data.Secure, err
 }
 
-// toHash is helper function to generate Hash of given string
-func toHash(key string) hash.Hash {
+// ToHash is helper function to generate Hash of given string
+func ToHash(key string) hash.Hash {
 	hasher := sha256.New()
 	hasher.Write([]byte(key))
 	hasher.Reset()

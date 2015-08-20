@@ -253,7 +253,8 @@ func Encrypt(c *gin.Context) {
 
 	in := map[string]string{}
 	json.NewDecoder(c.Request.Body).Decode(&in)
-	err := secure.EncryptMap(repo, in)
+	privKey := sshutil.UnMarshalPrivateKey([]byte(repo.Keys.Private))
+	err := secure.EncryptMap(secure.ToHash(repo.Hash), &privKey.PublicKey, in)
 	if err != nil {
 		c.Fail(500, err)
 		return
