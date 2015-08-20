@@ -33,6 +33,7 @@ func TestBuild(t *testing.T) {
 		})
 
 		g.It("Should send", func() {
+			em := map[string]bool{"foo": true, "bar": true}
 			e1 := &bus.Event{Name: "foo"}
 			e2 := &bus.Event{Name: "bar"}
 			c := make(chan *bus.Event)
@@ -42,8 +43,8 @@ func TestBuild(t *testing.T) {
 			b.Send(e2)
 			r1 := <-c
 			r2 := <-c
-			g.Assert(e1).Equal(r1)
-			g.Assert(e2).Equal(r2)
+			g.Assert(em[r1.Name]).Equal(true)
+			g.Assert(em[r2.Name]).Equal(true)
 		})
 	})
 
