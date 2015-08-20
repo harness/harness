@@ -56,19 +56,17 @@ func UnMarshalPrivateKey(privateKeyPEM []byte) *rsa.PrivateKey {
 // an RSA public key.
 func Encrypt(hash hash.Hash, pubkey *rsa.PublicKey, msg string) (string, error) {
 	src, err := rsa.EncryptOAEP(hash, rand.Reader, pubkey, []byte(msg), nil)
-
-	return base64.StdEncoding.EncodeToString(src), err
+	return base64.RawURLEncoding.EncodeToString(src), err
 }
 
 // Decrypt is helper function to encrypt a plain-text string using
 // an RSA public key.
 func Decrypt(hash hash.Hash, privkey *rsa.PrivateKey, secret string) (string, error) {
-	decoded, err := base64.StdEncoding.DecodeString(secret)
+	decoded, err := base64.RawURLEncoding.DecodeString(secret)
 	if err != nil {
 		return "", err
 	}
 
 	out, err := rsa.DecryptOAEP(hash, rand.Reader, privkey, decoded, nil)
-
 	return string(out), err
 }
