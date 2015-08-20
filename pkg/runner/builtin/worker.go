@@ -104,6 +104,11 @@ func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 		},
 	}
 
+	// TEMPORARY: always try to pull the new image for now
+	// since we'll be frequently updating the build image
+	// for the next few weeks
+	w.client.PullImage(conf.Image, nil)
+
 	w.build, err = run(w.client, conf, name, w.timeout)
 	if err != nil {
 		return 1, err

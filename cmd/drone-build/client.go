@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"os"
+	"strings"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
@@ -181,6 +182,13 @@ func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, pull bo
 func daemon(client dockerclient.Client, conf *dockerclient.ContainerConfig, pull bool) (*dockerclient.ContainerInfo, error) {
 	// force-pull the image
 	if pull {
+		client.PullImage(conf.Image, nil)
+	}
+
+	// TEMPORARY: always try to pull the new image for now
+	// since we'll be frequently updating the plugin images
+	// over the next few weeks
+	if strings.HasPrefix(conf.Image, "plugins/") {
 		client.PullImage(conf.Image, nil)
 	}
 

@@ -1,5 +1,6 @@
 * [Overview](overview.md)
 * [Variables](env.md)
+* [Cache](cache.md)
 * [Clone](clone.md)
 * [Build](build.md)
 * [Services](services.md)
