@@ -4,6 +4,8 @@ These are the instructions for running Drone on Ubuntu . We recommend using Ubun
 
 ## System Requirements
 
+The default Drone installation uses a SQLite3 database for persistence. Please ensure you have libsqlite3-dev installed:
+
 ```
 sudo apt-get update
 sudo apt-get install libsqlite3-dev
