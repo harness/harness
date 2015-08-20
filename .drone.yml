@@ -1,4 +1,4 @@
-image: go1.3
+image: go1.4
 git:
   path: github.com/drone/drone
 env:
@@ -37,11 +37,12 @@ clone:
   path: github.com/drone/drone
 
 build:
-  image: golang:1.4.2
+  image: golang:1.5.0
   commands:
     - export GOPATH=/drone
     - export PATH=$PATH:$GOPATH/bin
     - go get -u github.com/jteeuwen/go-bindata/...
-    - make bindata deps
-    - make build
+    - make deps
+    - make
     - make test
+    - make dist
