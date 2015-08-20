@@ -14,8 +14,8 @@ test:
 	go test -cover -short github.com/drone/drone/pkg/...
 
 build:
-	go build -o bin/drone       -ldflags "-X main.revision $(SHA) -X main.version $(VERSION).$(SHA)" github.com/drone/drone/cmd/drone-server
-	go build -o bin/drone-agent -ldflags "-X main.revision $(SHA) -X main.version $(VERSION).$(SHA)" github.com/drone/drone/cmd/drone-agent
+	go build -o bin/drone       -ldflags "-X main.revision=$(SHA) -X main.version=$(VERSION).$(SHA)" github.com/drone/drone/cmd/drone-server
+	go build -o bin/drone-agent -ldflags "-X main.revision=$(SHA) -X main.version=$(VERSION).$(SHA)" github.com/drone/drone/cmd/drone-agent
 
 run:
 	bin/drone-server --debug
