@@ -1,4 +1,4 @@
-image: bradrydzewski/go:1.4
+image: bradrydzewski/go:1.5
 git:
   path: github.com/drone/drone
 env:
