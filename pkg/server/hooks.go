@@ -101,14 +101,19 @@ func PostHook(c *gin.Context) {
 	if repo.Params != nil && len(repo.Params) != 0 {
 		raw = []byte(inject.InjectSafe(string(raw), repo.Params))
 	}
-	encrypted, _ := secure.Parse(repo.Keys.Private, repo.Hash, string(raw))
+	encrypted, err := secure.Parse(repo.Keys.Private, repo.Hash, string(raw))
+	if err != nil {
+		log.Errorf("failure to decrypt secure parameters for %s. %s", repo.FullName, err)
+		c.Fail(400, err)
+		return
+	}
 	if encrypted != nil && len(encrypted) != 0 {
 		raw = []byte(inject.InjectSafe(string(raw), encrypted))
 	}
 	axes, err := matrix.Parse(string(raw))
 	if err != nil {
 		log.Errorf("failure to calculate matrix for %s. %s", repo.FullName, err)
-		c.Fail(404, err)
+		c.Fail(400, err)
 		return
 	}
 	if len(axes) == 0 {
