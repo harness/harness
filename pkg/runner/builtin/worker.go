@@ -242,7 +242,7 @@ func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, name st
 		return info, nil
 	case err := <-errc:
 		return info, err
-	case <-time.After(timeout):
-		return info, ErrTimeout
+		// case <-time.After(timeout):
+		// 	return info, ErrTimeout
 	}
 }
