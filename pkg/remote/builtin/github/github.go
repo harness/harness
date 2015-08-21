@@ -288,6 +288,7 @@ func (g *GitHub) push(r *http.Request) (*common.Hook, error) {
 	commit := &common.Commit{}
 	commit.Sha = hook.Head.ID
 	commit.Ref = hook.Ref
+	commit.Link = hook.Head.URL
 	commit.Branch = strings.Replace(commit.Ref, "refs/heads/", "", -1)
 	commit.Message = hook.Head.Message
 	commit.Timestamp = hook.Head.Timestamp
@@ -366,6 +367,7 @@ func (g *GitHub) pullRequest(r *http.Request) (*common.Hook, error) {
 	c.Remote = *hook.PullRequest.Head.Repo.CloneURL
 	c.Author = &common.Author{}
 	c.Author.Login = *hook.PullRequest.Head.User.Login
+
 	// Author.Email
 	// Message
 
@@ -376,6 +378,7 @@ func (g *GitHub) pullRequest(r *http.Request) (*common.Hook, error) {
 	pr.Base.Sha = *hook.PullRequest.Base.SHA
 	pr.Base.Ref = *hook.PullRequest.Base.Ref
 	pr.Base.Remote = *hook.PullRequest.Base.Repo.CloneURL
+	pr.Link = *hook.PullRequest.HTMLURL
 	// Branch
 	// Message
 	// Timestamp
@@ -391,6 +394,7 @@ type pushHook struct {
 
 	Head struct {
 		ID        string `json:"id"`
+		URL       string `json:"url"`
 		Message   string `json:"message"`
 		Timestamp string `json:"timestamp"`
 
