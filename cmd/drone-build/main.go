@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
@@ -63,9 +64,16 @@ func main() {
 	signal.Notify(killc, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-killc
-		log.Println("Received reques to kill this build")
+		log.Println("Cancel request received, killing process")
 		client.Destroy() // possibe race here. implement lock on the other end
-		os.Exit(130) // cancel is treated like ctrl+c
+		os.Exit(130)     // cancel is treated like ctrl+c
+	}()
+
+	go func() {
+		<-time.After(time.Duration(ctx.Repo.Timeout) * time.Minute)
+		log.Println("Timeout request received, killing process")
+		client.Destroy() // possibe race here. implement lock on the other end
+		os.Exit(128)     // cancel is treated like ctrl+c
 	}()
 
 	// performs some initial parsing and pre-processing steps
