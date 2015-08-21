@@ -65,7 +65,7 @@ func main() {
 		<-killc
 		log.Println("Received reques to kill this build")
 		client.Destroy() // possibe race here. implement lock on the other end
-		os.Exit(1)
+		os.Exit(130) // cancel is treated like ctrl+c
 	}()
 
 	// performs some initial parsing and pre-processing steps
