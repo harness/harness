@@ -6,7 +6,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
@@ -55,6 +57,16 @@ func main() {
 	}
 	ctx.client = client
 	defer client.Destroy()
+
+	// watch for sigkill (timeout or cancel build)
+	killc := make(chan os.Signal, 1)
+	signal.Notify(killc, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-killc
+		log.Println("Received reques to kill this build")
+		client.Destroy() // possibe race here. implement lock on the other end
+		os.Exit(1)
+	}()
 
 	// performs some initial parsing and pre-processing steps
 	// prior to executing our build tasks.
