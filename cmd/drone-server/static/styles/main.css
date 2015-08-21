@@ -527,8 +527,42 @@ menu .button span {
   color: #8fa1b3;
   font-size: 13px;
   text-transform: uppercase;
-  margin-top: 20px;
-  padding: 0px 15px;
+  margin-bottom: 20px;
+  margin-top:-20px;
+  padding: 0px 10px;
+  line-height: 25px;
+  cursor:pointer;
+}
+.button-cancel {
+  background: #FFF;
+  border: 1px solid #d08770;
+  color: #d08770;
+  font-size: 13px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  margin-top:-20px;
+  padding: 0px 10px;
+  line-height: 25px;
+  cursor:pointer;
+}
+.button-cancel:hover {
+  background: #d08770;
+  border: 1px solid #d08770;
+  color: #fff; 
+}
+.button-login {
+  margin-top: 15px;
+  font-size: 13px;
+  text-transform: uppercase;
+  background: #FFF;
+  border: 1px solid #8fa1b3;
+  color: #8fa1b3;
+  line-height: 25px;
+}
+.button-login:hover {
+  background: #8fa1b3;
+  border: 1px solid #8fa1b3;
+  color: #fff; 
 }
 
 /*

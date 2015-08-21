@@ -10,7 +10,7 @@
         <button type="button" ng-click="watch(repo)" ng-if="!repo.starred && user">
           <i class="material-icons">visibility_off</i>
         </button>
-        <a href="/{{ repo.full_name }}/edit">
+        <a href="/{{ repo.full_name }}/edit" ng-if="repo.permissions.push">
           <i class="material-icons">tune</i>
         </a>
       </menu> 

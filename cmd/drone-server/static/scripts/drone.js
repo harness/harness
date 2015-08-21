@@ -56,7 +56,9 @@
             templateUrl: '/static/scripts/views/layout.html',
             controller: function ($scope, $routeParams, repos, users) {
               users.getCached().then(function (payload) {
-                $scope.user = payload.data;
+                if (payload && payload.data) {
+                  $scope.user = payload.data;
+                }
               });
             }
           }

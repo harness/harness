@@ -12,9 +12,9 @@
     $scope.loading=true;
 
     // Gets the currently authenticated user
-    users.getCached().then(function (payload) {
-      $scope.user = payload.data;
-    });
+    // users.getCached().then(function (payload) {
+    //   $scope.user = payload.data;
+    // });
 
     // Gets a repository
     repos.get(fullName).then(function (payload) {
@@ -159,9 +159,9 @@
     };
 
     // Gets the currently authenticated user
-    users.getCached().then(function (payload) {
-      $scope.user = payload.data;
-    });
+    // users.getCached().then(function (payload) {
+    //   $scope.user = payload.data;
+    // });
 
     // Gets a repository
     repos.get(fullName).then(function (payload) {
