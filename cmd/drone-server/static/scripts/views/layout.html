@@ -1,7 +1,7 @@
 <header>
   <div class="toolbar" ui-view="toolbar"></div>
 
-  <ul>
+  <ul ng-if="user">
     <li>
       <img ng-src="{{ user.avatar }}" />
     </li>
@@ -17,6 +17,12 @@
           <li><a href="/users">Users</a></li>
         </ul>
       </div>
+    </li>
+  </ul>
+
+  <ul ng-if="!user">
+    <li>
+      <a href="/login" class="button button-login">Login</a>
     </li>
   </ul>
 </header>

@@ -12,6 +12,11 @@
                     </div>
                 </div>
 
+                <div ng-if="repo && repo.permissions && repo.permissions.push">
+                    <button ng-if="build.status !== 'pending' && build.status !== 'running'" ng-click="restart()" class="button button-restart">Restart</button>
+                    <button ng-if="build.status === 'running' && build.jobs.length === 1" ng-click="cancel()" class="button button-cancel">Cancel</button>
+                </div>
+
                 <div ng-class="{'list':true, 'job-list':true, 'matrix-list': build.jobs && build.jobs.length > 1 }">
                     <a ng-repeat="job in build.jobs" ng-href="{{ repo.full_name }}/{{ build.number }}/{{ job.number }}" ng-class="{'active': job.number == step }">
                         <div>
@@ -39,7 +44,7 @@
                     </a>
                 </div>
 
-                <button ng-if="build.status !== 'pending' && build.status !== 'running'" ng-click="restart()" class="button button-restart">Restart</button>
+
             </div>
         </aside>
 
