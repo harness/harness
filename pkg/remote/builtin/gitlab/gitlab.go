@@ -233,7 +233,7 @@ func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 		}
 
 		return mergeRequest(parsed, req)
-	case "push":
+	case "tag_push", "push":
 		if len(parsed.After) == 0 || parsed.TotalCommitsCount == 0 {
 			return nil, nil
 		}
