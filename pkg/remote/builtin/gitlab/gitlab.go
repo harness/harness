@@ -227,7 +227,8 @@ func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 
 	switch parsed.ObjectKind {
 	case "merge_request":
-		if (parsed.ObjectAttributes.State != "reopened" || parsed.ObjectAttributes.State != "opened") && parsed.ObjectAttributes.MergeStatus != "unchecked" {
+		if parsed.ObjectAttributes.State != "reopened" && parsed.ObjectAttributes.MergeStatus != "unchecked" ||
+			parsed.ObjectAttributes.State != "opened" && parsed.ObjectAttributes.MergeStatus != "unchecked" {
 			return nil, nil
 		}
 

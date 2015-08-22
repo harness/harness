@@ -229,6 +229,28 @@ func (m *Store) BuildNumber(_a0 *types.Repo, _a1 int) (*types.Build, error) {
 
 	return r0, r1
 }
+func (m *Store) BuildPullRequestNumber(_a0 *types.Repo, _a1 int) (*types.Build, error) {
+	ret := m.Called(_a0, _a1)
+
+	var r0 *types.Build
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(*types.Build)
+	}
+	r1 := ret.Error(1)
+
+	return r0, r1
+}
+func (m *Store) BuildSha(_a0 *types.Repo, _a1, _a2 string) (*types.Build, error) {
+	ret := m.Called(_a0, _a1, _a2)
+
+	var r0 *types.Build
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(*types.Build)
+	}
+	r1 := ret.Error(1)
+
+	return r0, r1
+}
 func (m *Store) BuildLast(_a0 *types.Repo, _a1 string) (*types.Build, error) {
 	ret := m.Called(_a0, _a1)
 
