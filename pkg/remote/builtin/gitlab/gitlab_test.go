@@ -124,6 +124,24 @@ func Test_Gitlab(t *testing.T) {
 				g.Assert(err == nil).IsTrue()
 				g.Assert(hook.Repo.Owner).Equal("diaspora")
 				g.Assert(hook.Repo.Name).Equal("diaspora-client")
+				g.Assert(hook.Commit.Ref).Equal("refs/heads/master")
+
+				g.Assert(hook.PullRequest == nil).IsTrue()
+			})
+
+			g.It("Should parse tag push hook", func() {
+				req, _ := http.NewRequest(
+					"POST",
+					"http://example.com/api/hook?owner=diaspora&name=diaspora-client",
+					bytes.NewReader(testdata.TagHook),
+				)
+
+				hook, err := gitlab.Hook(req)
+
+				g.Assert(err == nil).IsTrue()
+				g.Assert(hook.Repo.Owner).Equal("diaspora")
+				g.Assert(hook.Repo.Name).Equal("diaspora-client")
+				g.Assert(hook.Commit.Ref).Equal("refs/tags/v1.0.0")
 
 				g.Assert(hook.PullRequest == nil).IsTrue()
 			})
