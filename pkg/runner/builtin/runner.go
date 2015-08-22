@@ -154,14 +154,18 @@ func (r *Runner) Run(w *queue.Work) error {
 			return err
 		}
 
-		worker := newWorkerTimeout(client, w.Repo.Timeout)
+		worker := newWorker(client)
 		workers = append(workers, worker)
 		cname := cname(job)
 		pullrequest := (w.Build.PullRequest != nil)
 		state, builderr := worker.Build(cname, in, pullrequest)
 
 		switch {
-		case builderr == ErrTimeout:
+		case state == 128:
+			job.ExitCode = state
+			job.Status = types.StateKilled
+		case state == 130:
+			job.ExitCode = state
 			job.Status = types.StateKilled
 		case builderr != nil:
 			job.Status = types.StateError

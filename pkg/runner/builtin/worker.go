@@ -4,16 +4,12 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
-	"time"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/samalba/dockerclient"
 	"github.com/drone/drone/pkg/types"
 )
 
-var (
-	ErrTimeout = errors.New("Timeout")
-	ErrLogging = errors.New("Logs not available")
-)
+var ErrLogging = errors.New("Logs not available")
 
 var (
 	// options to fetch the stdout and stderr logs
@@ -46,9 +42,6 @@ var (
 
 	// default arguments to invoke notify steps
 	DefaultNotifyArgs = []string{"--notify"}
-
-	// default arguments to invoke notify steps
-	DefaultNotifyTimeout = time.Minute * 5
 )
 
 type work struct {
@@ -63,21 +56,13 @@ type work struct {
 }
 
 type worker struct {
-	timeout time.Duration
-	client  dockerclient.Client
-	build   *dockerclient.ContainerInfo
-	notify  *dockerclient.ContainerInfo
+	client dockerclient.Client
+	build  *dockerclient.ContainerInfo
+	notify *dockerclient.ContainerInfo
 }
 
 func newWorker(client dockerclient.Client) *worker {
-	return newWorkerTimeout(client, 60) // default 60 minute timeout
-}
-
-func newWorkerTimeout(client dockerclient.Client, timeout int64) *worker {
-	return &worker{
-		timeout: time.Duration(timeout) * time.Minute,
-		client:  client,
-	}
+	return &worker{client: client}
 }
 
 // Build executes the clone, build and deploy steps.
@@ -109,7 +94,7 @@ func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 	// for the next few weeks
 	w.client.PullImage(conf.Image, nil)
 
-	w.build, err = run(w.client, conf, name, w.timeout)
+	w.build, err = run(w.client, conf, name)
 	if err != nil {
 		return 1, err
 	}
@@ -143,7 +128,7 @@ func (w *worker) Notify(stdin []byte) error {
 	}
 
 	var err error
-	w.notify, err = run(w.client, conf, "", DefaultNotifyTimeout)
+	w.notify, err = run(w.client, conf, "")
 	return err
 }
 
@@ -170,10 +155,8 @@ func (w *worker) Remove() {
 }
 
 // run is a helper function that creates and starts a container,
-// blocking until either complete or the timeout is reached. If
-// the timeout is reached an ErrTimeout is returned, else the
-// container info is returned.
-func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, name string, timeout time.Duration) (*dockerclient.ContainerInfo, error) {
+// blocking until either complete.
+func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, name string) (*dockerclient.ContainerInfo, error) {
 
 	// attempts to create the contianer
 	id, err := client.CreateContainer(conf, name)
@@ -242,7 +225,5 @@ func run(client dockerclient.Client, conf *dockerclient.ContainerConfig, name st
 		return info, nil
 	case err := <-errc:
 		return info, err
-		// case <-time.After(timeout):
-		// 	return info, ErrTimeout
 	}
 }
