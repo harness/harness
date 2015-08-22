@@ -1,0 +1,16 @@
+[
+  {
+    "author": {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@local.host",
+      "name": "Administrator",
+      "blocked": false,
+      "created_at": "2012-04-29T08:46:00Z"
+    },
+    "note": "text1",
+    "path": "example.rb",
+    "line": 5,
+    "line_type": "new"
+  }
+]

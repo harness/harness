@@ -131,6 +131,14 @@ type Store interface {
 	// named repository and build number
 	BuildNumber(*types.Repo, int) (*types.Build, error)
 
+	// BuildPullRequestNumber gets the specified build number for the
+	// named repository and build number
+	BuildPullRequestNumber(*types.Repo, int) (*types.Build, error)
+
+	// BuildSha gets the specified build number for the
+	// named repository and sha
+	BuildSha(*types.Repo, string, string) (*types.Build, error)
+
 	// BuildLast gets the last executed build for the
 	// named repository and branch
 	BuildLast(*types.Repo, string) (*types.Build, error)

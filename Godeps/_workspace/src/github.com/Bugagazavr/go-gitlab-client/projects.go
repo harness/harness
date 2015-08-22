@@ -2,19 +2,21 @@ package gogitlab
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 )
 
 const (
-	projects_url               = "/projects"                         // Get a list of projects owned by the authenticated user
-	projects_search_url        = "/projects/search/:query"           // Search for projects by name
-	project_url                = "/projects/:id"                     // Get a specific project, identified by project ID or NAME
-	project_url_events         = "/projects/:id/events"              // Get project events
-	project_url_branches       = "/projects/:id/repository/branches" // Lists all branches of a project
-	project_url_members        = "/projects/:id/members"             // List project team members
-	project_url_member         = "/projects/:id/members/:user_id"    // Get project team member
-	project_url_merge_requests = "/projects/:id/merge_requests"      // List all merge requests of a project
+	projects_url               = "/projects"                                            // Get a list of projects owned by the authenticated user
+	projects_search_url        = "/projects/search/:query"                              // Search for projects by name
+	project_url                = "/projects/:id"                                        // Get a specific project, identified by project ID or NAME
+	project_url_events         = "/projects/:id/events"                                 // Get project events
+	project_url_branches       = "/projects/:id/repository/branches"                    // Lists all branches of a project
+	project_url_members        = "/projects/:id/members"                                // List project team members
+	project_url_member         = "/projects/:id/members/:user_id"                       // Get project team member
+	project_url_merge_requests = "/projects/:id/merge_requests"                         // List all merge requests of a project
+	merge_request_url_notes    = "/projects/:id/merge_requests/:merge_request_id/notes" // Manage comments for a given merge request
 )
 
 type Member struct {
@@ -87,6 +89,14 @@ type MergeRequest struct {
 	Author       *Member `json:"author,omitempty"`
 	Assignee     *Member `json:"assignee,omitempty"`
 	Description  string  `json:"description,omitempty"`
+}
+
+type MergeRequestNote struct {
+	Attachment interface{} `json:"attachment"`
+	Body       string      `json:"body"`
+	CreatedAt  string      `json:"created_at"`
+	Id         int         `json:"id"`
+	Author     *Member     `json:"author"`
 }
 
 /*
@@ -210,6 +220,43 @@ func (g *Gitlab) ProjectMergeRequests(id string, page int, per_page int, state s
 }
 
 /*
+Lists all comments on merge request.
+*/
+func (g *Gitlab) MergeRequestNotes(id string, merge_request_id string, page int, per_page int) ([]*MergeRequestNote, error) {
+	par := map[string]string{":id": id, ":merge_request_id": merge_request_id}
+	qry := map[string]string{
+		"page":     strconv.Itoa(page),
+		"per_page": strconv.Itoa(per_page)}
+	url := g.ResourceUrlQuery(merge_request_url_notes, par, qry)
+
+	var mr []*MergeRequestNote
+
+	contents, err := g.buildAndExecRequest("GET", url, nil)
+	if err == nil {
+		err = json.Unmarshal(contents, &mr)
+	}
+
+	return mr, err
+}
+
+/*
+Creates a new comment on a merge request.
+*/
+func (g *Gitlab) SendMergeRequestComment(id string, merge_request_id string, comment string) (*MergeRequestNote, error) {
+	par := map[string]string{":id": id, ":merge_request_id": merge_request_id}
+	url := g.ResourceUrlQuery(merge_request_url_notes, par, map[string]string{})
+
+	var mr *MergeRequestNote
+
+	contents, err := g.buildAndExecRequest("POST", url, []byte(fmt.Sprintf("body=%s", comment)))
+	if err == nil {
+		err = json.Unmarshal(contents, &mr)
+	}
+
+	return mr, err
+}
+
+/*
 Get single project id.
 
     GET /projects/search/:query
@@ -236,7 +283,7 @@ func (g *Gitlab) SearchProjectId(namespace string, name string) (id int, err err
 	}
 
 	for _, project := range projects {
-		if project.Namespace.Name == namespace {
+		if project.Namespace.Name == namespace && strings.ToLower(project.Name) == strings.ToLower(name) {
 			id = project.Id
 		}
 	}

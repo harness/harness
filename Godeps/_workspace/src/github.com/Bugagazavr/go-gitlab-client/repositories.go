@@ -2,17 +2,19 @@ package gogitlab
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"time"
 )
 
 const (
-	repo_url_branches = "/projects/:id/repository/branches"         // List repository branches
-	repo_url_branch   = "/projects/:id/repository/branches/:branch" // Get a specific branch of a project.
-	repo_url_tags     = "/projects/:id/repository/tags"             // List project repository tags
-	repo_url_commits  = "/projects/:id/repository/commits"          // List repository commits
-	repo_url_tree     = "/projects/:id/repository/tree"             // List repository tree
-	repo_url_raw_file = "/projects/:id/repository/blobs/:sha"       // Get raw file content for specific commit/branch
+	repo_url_branches        = "/projects/:id/repository/branches"              // List repository branches
+	repo_url_branch          = "/projects/:id/repository/branches/:branch"      // Get a specific branch of a project.
+	repo_url_tags            = "/projects/:id/repository/tags"                  // List project repository tags
+	repo_url_commits         = "/projects/:id/repository/commits"               // List repository commits
+	repo_url_commit_comments = "/projects/:id/repository/commits/:sha/comments" // New comment or list of commit comments
+	repo_url_tree            = "/projects/:id/repository/tree"                  // List repository tree
+	repo_url_raw_file        = "/projects/:id/repository/blobs/:sha"            // Get raw file content for specific commit/branch
 )
 
 type BranchCommit struct {
@@ -60,6 +62,14 @@ type File struct {
 	Mode string `json:"mode,omitempty"`
 
 	Children []*File
+}
+
+type CommitComment struct {
+	Author   *Member `json:"author,omitempty"`
+	Line     int     `json:"line,omitempty"`
+	LineType string  `json:"line_type,omitempty"`
+	Note     string  `json:"note,omitempty"`
+	Path     string  `json:"path,omitempty"`
 }
 
 /*
@@ -193,6 +203,73 @@ func (g *Gitlab) RepoCommits(id string) ([]*Commit, error) {
 	}
 
 	return commits, err
+}
+
+/*
+Get a list of comments in a repository commit.
+
+    GET /projects/:id/repository/commits/:sha/comments
+
+Parameters:
+
+	id  The ID of a project
+	sha The sha of the commit
+
+Usage:
+
+	comments, err := gitlab.RepoCommitComments("your_projet_id", "commit_sha")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	for _, comment := range comments {
+		fmt.Printf("%+v\n", comment)
+	}
+*/
+func (g *Gitlab) RepoCommitComments(id string, sha string) ([]*CommitComment, error) {
+
+	url, opaque := g.ResourceUrlRaw(repo_url_commit_comments, map[string]string{":id": id, ":sha": sha})
+
+	var comments []*CommitComment
+
+	contents, err := g.buildAndExecRequestRaw("GET", url, opaque, nil)
+	if err == nil {
+		err = json.Unmarshal(contents, &comments)
+	}
+
+	return comments, err
+}
+
+/*
+Create a comment in a repository commit.
+
+    POST /projects/:id/repository/commits/:sha/comments
+
+Parameters:
+
+	id   The ID of a project
+	sha  The sha of the commit
+	body The body of the comment
+
+Usage:
+
+	comment, err := gitlab.SendRepoCommitComment("your_projet_id", "commit_sha", "your comment goes here")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Printf("%+v\n", comment)
+*/
+func (g *Gitlab) SendRepoCommitComment(id string, sha string, body string) (*CommitComment, error) {
+
+	url, opaque := g.ResourceUrlRaw(repo_url_commit_comments, map[string]string{":id": id, ":sha": sha})
+
+	var comment *CommitComment
+
+	contents, err := g.buildAndExecRequestRaw("POST", url, opaque, []byte(fmt.Sprintf("note=%s", body)))
+	if err == nil {
+		err = json.Unmarshal(contents, &comment)
+	}
+
+	return comment, err
 }
 
 /*

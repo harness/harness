@@ -41,6 +41,40 @@ func GetCommit(c *gin.Context) {
 	}
 }
 
+// GetPullRequest accepts a requests to retvie a pull request
+// from the datastore for the given repository and
+// pull request number
+//
+//	GET /api/repos/:owner/:name/pr/:number
+//
+func GetPullRequest(c *gin.Context) {
+	store := ToDatastore(c)
+	repo := ToRepo(c)
+
+	// get the token and verify the hook is authorized
+	if c.Request.FormValue("access_token") != hash(repo.FullName, repo.Hash) {
+		c.AbortWithStatus(403)
+		return
+	}
+
+	num, err := strconv.Atoi(c.Params.ByName("number"))
+	if err != nil {
+		c.Fail(400, err)
+		return
+	}
+	build, err := store.BuildPullRequestNumber(repo, num)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+	build.Jobs, err = store.JobList(build)
+	if err != nil {
+		c.Fail(404, err)
+	} else {
+		c.JSON(200, build)
+	}
+}
+
 // GetCommits accepts a request to retrieve a list
 // of commits from the datastore for the given repository.
 //

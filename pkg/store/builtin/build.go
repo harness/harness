@@ -25,6 +25,18 @@ func (db *Buildstore) BuildNumber(repo *types.Repo, seq int) (*types.Build, erro
 	return getBuild(db, rebind(stmtBuildSelectBuildNumber), repo.ID, seq)
 }
 
+// BuildPullRequest gets the specific build for the
+// named repository and pull request number
+func (db *Buildstore) BuildPullRequestNumber(repo *types.Repo, seq int) (*types.Build, error) {
+	return getBuild(db, rebind(stmtBuildSelectPullRequestNumber), repo.ID, seq)
+}
+
+// BuildSha gets the specific build for the
+// named repository and sha
+func (db *Buildstore) BuildSha(repo *types.Repo, sha, branch string) (*types.Build, error) {
+	return getBuild(db, rebind(stmtBuildSelectSha), repo.ID, sha, branch)
+}
+
 // BuildLast gets the last executed build for the
 // named repository.
 func (db *Buildstore) BuildLast(repo *types.Repo, branch string) (*types.Build, error) {
