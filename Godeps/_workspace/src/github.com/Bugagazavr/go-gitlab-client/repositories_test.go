@@ -41,3 +41,12 @@ func TestRepoCommits(t *testing.T) {
 	assert.Equal(t, len(commits), 2)
 	defer ts.Close()
 }
+
+func TestRepoCommitComments(t *testing.T) {
+	ts, gitlab := Stub("stubs/commits/comments/index.json")
+	comments, err := gitlab.RepoCommitComments("1", "a9e6a5io4e695923c995ed2e836789b50oi77e0b")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(comments), 1)
+	defer ts.Close()
+}

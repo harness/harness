@@ -185,6 +185,14 @@ func main() {
 			repo.GET("/logs/:number/:task", server.GetLogs)
 			// repo.POST("/status/:number", server.PostBuildStatus)
 		}
+
+		// Routes for external services
+		repoExternal := repos.Group("")
+		{
+			repoExternal.Use(server.SetRepo())
+
+			repoExternal.GET("/pr/:number", server.GetPullRequest)
+		}
 	}
 
 	badges := api.Group("/badges/:owner/:name")
@@ -234,6 +242,14 @@ func main() {
 		auth.Use(server.SetSession(session))
 		auth.GET("", server.GetLogin)
 		auth.POST("", server.GetLogin)
+	}
+
+	redirects := r.Group("/redirect")
+	{
+		redirects.Use(server.SetDatastore(store))
+		redirects.Use(server.SetRepo())
+
+		redirects.GET("/:owner/:name/commit/:sha", server.RedirectSha)
 	}
 
 	r.SetHTMLTemplate(index())

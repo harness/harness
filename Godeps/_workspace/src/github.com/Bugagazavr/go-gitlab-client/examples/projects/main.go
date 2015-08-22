@@ -37,14 +37,29 @@ func main() {
 	var method string
 	flag.StringVar(&method, "m", "", "Specify method to retrieve projects infos, available methods:\n"+
 		"  > -m projects\n"+
-		"  > -m project        -id PROJECT_ID\n"+
-		"  > -m hooks          -id PROJECT_ID\n"+
-		"  > -m branches       -id PROJECT_ID\n"+
-		"  > -m merge_requests -id PROJECT_ID\n"+
-		"  > -m team           -id PROJECT_ID")
+		"  > -m project               -id PROJECT_ID\n"+
+		"  > -m hooks                 -id PROJECT_ID\n"+
+		"  > -m branches              -id PROJECT_ID\n"+
+		"  > -m merge_requests        -id PROJECT_ID\n"+
+		"  > -m merge_request_notes   -id PROJECT_ID -merge_id MERGE_REQUEST_ID\n"+
+		"  > -m merge_request_comment -id PROJECT_ID -merge_id MERGE_REQUEST_ID -comment COMMENT_BODY\n"+
+		"  > -m team                  -id PROJECT_ID\n"+
+		"  > -m add_drone             -id PROJECT_ID\n -token DRONE_TOKEN -url DRONE_URL")
 
 	var id string
 	flag.StringVar(&id, "id", "", "Specify repository id")
+
+	var merge_id string
+	flag.StringVar(&merge_id, "merge_id", "", "Specify merge request id")
+
+	var comment string
+	flag.StringVar(&comment, "comment", "", "The body of the new comment")
+
+	var drone_token string
+	flag.StringVar(&drone_token, "drone_token", "", "Drone service token")
+
+	var drone_url string
+	flag.StringVar(&drone_url, "drone_url", "", "Drone service url")
 
 	flag.Usage = func() {
 		fmt.Printf("Usage:\n")
@@ -151,10 +166,53 @@ func main() {
 			if mr.Assignee != nil {
 				assignee = mr.Assignee.Username
 			}
-			fmt.Printf("  %s -> %s [%s] author[%s] assignee[%s]\n",
-				mr.SourceBranch, mr.TargetBranch, mr.State,
+			fmt.Printf("  (#%d) %s -> %s [%s] author[%s] assignee[%s]\n",
+				mr.Id, mr.SourceBranch, mr.TargetBranch, mr.State,
 				author, assignee)
 		}
+
+	case "merge_request_notes":
+		fmt.Println("Fetching merge_request notes…")
+
+		if id == "" {
+			flag.Usage()
+			return
+		}
+
+		notes, err := gitlab.MergeRequestNotes(id, merge_id, 0, 30)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		for _, note := range notes {
+			author := ""
+			if note.Author != nil {
+				author = note.Author.Username
+			}
+			fmt.Printf("  [%d] author: %s <%s> %s\n",
+				note.Id, author, note.CreatedAt, note.Body)
+		}
+
+	case "merge_request_comment":
+		fmt.Println("Sending new merge_request comment…")
+
+		if id == "" {
+			flag.Usage()
+			return
+		}
+
+		note, err := gitlab.SendMergeRequestComment(id, merge_id, comment)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		author := ""
+		if note.Author != nil {
+			author = note.Author.Username
+		}
+		fmt.Printf("  [%d] author: %s <%s> %s\n",
+			note.Id, author, note.CreatedAt, note.Body)
 
 	case "hooks":
 		fmt.Println("Fetching project hooks…")
@@ -190,6 +248,18 @@ func main() {
 
 		for _, member := range members {
 			fmt.Printf("> [%d] %s (%s) since %s\n", member.Id, member.Username, member.Name, member.CreatedAt)
+		}
+	case "add_drone":
+		fmt.Println("Adding drone service to project")
+
+		if id == "" || drone_token == "" || drone_url == "" {
+			flag.Usage()
+			return
+		}
+
+		if err := gitlab.AddDroneService(id, map[string]string{"token": drone_token, "drone_url": drone_url}); err != nil {
+			fmt.Println(err)
+			return
 		}
 	}
 }

@@ -27,6 +27,7 @@ type HookObjAttr struct {
 	StDiffs         string    `json:"st_diffs,omitempty"`
 	MergeStatus     string    `json:"merge_status,omitempty"`
 	TargetProjectId int       `json:"target_project_id,omitempty"`
+	URL             string    `json:"url,omitempty"`
 	Source          *hProject `json:"source,omitempty"`
 	Target          *hProject `json:"target,omitempty"`
 	LastCommit      *hCommit  `json:"last_commit,omitempty"`
