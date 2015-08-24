@@ -11,6 +11,7 @@ import (
 	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/lib/pq"
 	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/mattn/go-sqlite3"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
+	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/go-sql-driver/mysql"
 )
 
 const (
@@ -22,6 +23,7 @@ const (
 func init() {
 	store.Register("sqlite3", NewDriver)
 	store.Register("postgres", NewDriver)
+	store.Register("mysql", NewDriver)
 }
 
 func NewDriver(driver, datasource string) (store.Store, error) {

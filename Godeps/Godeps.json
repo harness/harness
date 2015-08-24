@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/drone/drone",
-	"GoVersion": "go1.3.1",
+	"GoVersion": "go1.5",
 	"Packages": [
 		"./..."
 	],
@@ -29,11 +29,6 @@
 			"Rev": "c48cfd5d9711c75acb6036d2698ef3aef7bb655a"
 		},
 		{
-			"ImportPath": "github.com/docker/docker/pkg/units",
-			"Comment": "v1.4.1-4375-g9356c76",
-			"Rev": "9356c76d9f6e285e71f04df33ef7870455a42775"
-		},
-		{
 			"ImportPath": "github.com/elazarl/go-bindata-assetfs",
 			"Rev": "bea323321994103859d60197d229f1a94699dde3"
 		},
@@ -46,6 +41,11 @@
 			"ImportPath": "github.com/gin-gonic/gin",
 			"Comment": "v0.4-255-gcaa75c6",
 			"Rev": "caa75c620153398c334dba46601a92dc9cc00c5d"
+		},
+		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "go1",
+			"Rev": "9a7aa3606b82e2081a13a008ada88dfdb96c20fd"
 		},
 		{
 			"ImportPath": "github.com/google/go-github/github",
