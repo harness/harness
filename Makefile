@@ -13,6 +13,15 @@ test:
 	go vet github.com/drone/drone/cmd/...
 	go test -cover -short github.com/drone/drone/pkg/...
 
+# Execute the database test suite against mysql 5.5
+#
+# You can launch a mysql container locally for testing:
+# docker run -rm -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -e MYSQL_DATABASE=test -p 3306:3306 mysql:5.5
+test_mysql:
+	mysql -P 3306 --protocol=tcp -u root -e 'create database if not exists test;'
+	TEST_DRIVER="mysql" TEST_DATASOURCE="root@tcp(127.0.0.1:3306)/test" go test -short github.com/drone/drone/pkg/store/builtin
+	mysql -P 3306 --protocol=tcp -u root -e 'drop database test;'
+
 build:
 	go build -o bin/drone       -ldflags "-X main.revision=$(SHA) -X main.version=$(VERSION).$(SHA)" github.com/drone/drone/cmd/drone-server
 	go build -o bin/drone-agent -ldflags "-X main.revision=$(SHA) -X main.version=$(VERSION).$(SHA)" github.com/drone/drone/cmd/drone-agent

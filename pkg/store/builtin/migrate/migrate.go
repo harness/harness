@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS repos (
 	,repo_owner              VARCHAR(255)
 	,repo_name               VARCHAR(255)
 	,repo_avatar             VARCHAR(1024)
-	,repo_full_name          VARCHAR(1024)
+	,repo_full_name          VARCHAR(512)
 	,repo_self               VARCHAR(1024)
 	,repo_link               VARCHAR(1024)
 	,repo_clone              VARCHAR(1024)

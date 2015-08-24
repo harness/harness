@@ -169,33 +169,37 @@ func TestUserstore(t *testing.T) {
 
 		g.It("Should get the Build feed for a User", func() {
 			repo1 := &types.Repo{
-				UserID: 1,
-				Owner:  "bradrydzewski",
-				Name:   "drone",
+				UserID:   1,
+				Owner:    "bradrydzewski",
+				Name:     "drone",
+				FullName: "bradrydzewski/drone",
 			}
 			repo2 := &types.Repo{
-				UserID: 2,
-				Owner:  "drone",
-				Name:   "drone",
+				UserID:   2,
+				Owner:    "drone",
+				Name:     "drone",
+				FullName: "drone/drone",
 			}
 			rs.AddRepo(repo1)
 			rs.AddRepo(repo2)
 			ss.AddStar(&types.User{ID: 1}, repo1)
+
 			build1 := &types.Build{
-				RepoID: 1,
+				RepoID: repo1.ID,
 				Status: types.StateFailure,
 			}
 			build2 := &types.Build{
-				RepoID: 1,
+				RepoID: repo1.ID,
 				Status: types.StateSuccess,
 			}
 			build3 := &types.Build{
-				RepoID: 2,
+				RepoID: repo2.ID,
 				Status: types.StateSuccess,
 			}
 			cs.AddBuild(build1)
 			cs.AddBuild(build2)
 			cs.AddBuild(build3)
+
 			builds, err := us.UserFeed(&types.User{ID: 1}, 20, 0)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(builds)).Equal(2)
