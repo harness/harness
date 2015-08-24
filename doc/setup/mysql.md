@@ -35,3 +35,12 @@ root:pa55word@tcp(localhost:3306)/drone
 ## MySQL options
 
 See the official [driver documentation](https://github.com/go-sql-driver/mysql#parameters) for a full list of driver options.
+
+
+## MySQL Database
+
+Drone does not automatically create the database. You should use the command line utility or your preferred management console to create the database:
+
+```bash
+mysql -P 3306 --protocol=tcp -u root -e 'create database if not exists drone;'
+```
