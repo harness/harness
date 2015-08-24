@@ -13,6 +13,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/jteeuwen/go-bindata"
 )
 
 var (
@@ -28,6 +30,7 @@ var steps = map[string]step{
 	"json":    json,
 	"embed":   embed,
 	"vet":     vet,
+	"bindata": bindat,
 	"build":   build,
 	"test":    test,
 	"image":   image,
@@ -76,6 +79,29 @@ func json() error {
 	return nil
 }
 
+// bindata step generates go-bindata package.
+func bindat() error {
+	var paths = []struct {
+		input     string
+		recursive bool
+	}{
+		{"cmd/drone-server/static", true},
+	}
+
+	c := bindata.NewConfig()
+	c.Output = "cmd/drone-server/drone_bindata.go"
+	c.Input = make([]bindata.InputConfig, len(paths))
+
+	for i, path := range paths {
+		c.Input[i] = bindata.InputConfig{
+			Path:      path.input,
+			Recursive: path.recursive,
+		}
+	}
+
+	return bindata.Translate(c)
+}
+
 // build step creates the application binaries.
 func build() error {
 	var bins = []struct {
@@ -87,7 +113,7 @@ func build() error {
 		{"github.com/drone/drone/cmd/drone-build", "bin/drone-build"},
 	}
 	for _, bin := range bins {
-		ldf := fmt.Sprintf("-X main.revision %s -X main.version %s", sha, version)
+		ldf := fmt.Sprintf("-X main.revision=%s -X main.version=%s", sha, version)
 		cmd := exec.Command("go", "build", "-o", bin.output, "-ldflags", ldf, bin.input)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
