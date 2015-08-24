@@ -113,7 +113,7 @@ func build() error {
 		{"github.com/drone/drone/cmd/drone-build", "bin/drone-build"},
 	}
 	for _, bin := range bins {
-		ldf := fmt.Sprintf("-X main.revision %s -X main.version %s", sha, version)
+		ldf := fmt.Sprintf("-X main.revision=%s -X main.version=%s", sha, version)
 		cmd := exec.Command("go", "build", "-o", bin.output, "-ldflags", ldf, bin.input)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
