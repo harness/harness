@@ -33,6 +33,8 @@ Here are some of the Docker options, explained:
 
 Drone uses environment variables for runtime settings and configuration, such as GitHub, GitLab, plugins and more. These settings can be provided to Docker using an `--env-file` as seen above.
 
+Once you have your drone container created, then you can start/stop/restart it in below ways.
+
 ## Starting, Stopping, Logs
 
 Commands to start, stop and restart Drone:
@@ -60,12 +62,8 @@ start on filesystem and started docker
 stop on runlevel [!2345]
 respawn
 
-pre-start script
-  /usr/bin/docker rm -f drone
-end script
-
 script
-  /usr/bin/docker run -a drone
+  /usr/bin/docker start -a drone
 end script
 ```
 
