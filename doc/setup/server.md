@@ -18,7 +18,7 @@ SERVER_ADDR=":80"
 
 ## Server SSL
 
-Drone uses the `ListAndServerTLS` function in the Go standard library to accept `https` connections. If you experience any issues configuring `https` please contact us on [gitter](https://gitter.im/drone/drone). Please do not log an issue saying `https` is broken in Drone (it isn't).
+Drone uses the `ListenAndServeTLS` function in the Go standard library to accept `https` connections. If you experience any issues configuring `https` please contact us on [gitter](https://gitter.im/drone/drone). Please do not log an issue saying `https` is broken in Drone (it isn't).
 
 This example accepts `HTTPS` connections:
 
