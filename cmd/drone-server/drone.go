@@ -72,7 +72,7 @@ var conf = struct {
 
 func main() {
 
-	flag.StringVar(&conf.docker.host, "docker-host", "unix:///var/run/docker/docker.sock", "")
+	flag.StringVar(&conf.docker.host, "docker-host", "unix:///var/run/docker.sock", "")
 	flag.StringVar(&conf.docker.cert, "docker-cert", "", "")
 	flag.StringVar(&conf.docker.key, "docker-key", "", "")
 	flag.StringVar(&conf.docker.ca, "docker-ca", "", "")
