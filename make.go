@@ -9,6 +9,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -34,6 +35,7 @@ var steps = map[string]step{
 	"build":   build,
 	"test":    test,
 	"image":   image,
+	"clean":   clean,
 }
 
 func main() {
@@ -62,14 +64,84 @@ func embed() error {
 
 // scripts step concatinates all javascript files.
 func scripts() error {
-	// concatinate scripts
+	files := []string{
+		"cmd/drone-server/static/scripts/term.js",
+		"cmd/drone-server/static/scripts/drone.js",
+		"cmd/drone-server/static/scripts/controllers/repos.js",
+		"cmd/drone-server/static/scripts/controllers/builds.js",
+		"cmd/drone-server/static/scripts/controllers/users.js",
+		"cmd/drone-server/static/scripts/services/repos.js",
+		"cmd/drone-server/static/scripts/services/builds.js",
+		"cmd/drone-server/static/scripts/services/users.js",
+		"cmd/drone-server/static/scripts/services/logs.js",
+		"cmd/drone-server/static/scripts/services/tokens.js",
+		"cmd/drone-server/static/scripts/services/feed.js",
+		"cmd/drone-server/static/scripts/filters/filter.js",
+		"cmd/drone-server/static/scripts/filters/gravatar.js",
+		"cmd/drone-server/static/scripts/filters/time.js",
+	}
+
+	f, err := os.OpenFile(
+		"cmd/drone-server/static/scripts/drone.min.js",
+		os.O_CREATE|os.O_RDWR|os.O_TRUNC,
+		0660)
+
+	defer f.Close()
+
+	if err != nil {
+		fmt.Println("Failed to open output file")
+		return err
+	}
+
+	for _, input := range files {
+		content, err := ioutil.ReadFile(input)
+
+		if err != nil {
+			return err
+		}
+
+		f.Write(content)
+	}
+
 	return nil
 }
 
-// styles step concatinates the css files.
+// styles step concatinates the stylesheet files.
 func styles() error {
-	// concatinate styles
-	// inject css variables?
+	files := []string{
+		"cmd/drone-server/static/styles/reset.css",
+		"cmd/drone-server/static/styles/fonts.css",
+		"cmd/drone-server/static/styles/alert.css",
+		"cmd/drone-server/static/styles/blankslate.css",
+		"cmd/drone-server/static/styles/list.css",
+		"cmd/drone-server/static/styles/label.css",
+		"cmd/drone-server/static/styles/range.css",
+		"cmd/drone-server/static/styles/switch.css",
+		"cmd/drone-server/static/styles/main.css",
+	}
+
+	f, err := os.OpenFile(
+		"cmd/drone-server/static/styles/drone.min.css",
+		os.O_CREATE|os.O_RDWR|os.O_TRUNC,
+		0660)
+
+	defer f.Close()
+
+	if err != nil {
+		fmt.Println("Failed to open output file")
+		return err
+	}
+
+	for _, input := range files {
+		content, err := ioutil.ReadFile(input)
+
+		if err != nil {
+			return err
+		}
+
+		f.Write(content)
+	}
+
 	return nil
 }
 
@@ -167,6 +239,47 @@ func image() error {
 			return err
 		}
 	}
+	return nil
+}
+
+func clean() error {
+	err := filepath.Walk(".", func(path string, f os.FileInfo, err error) error {
+		suffixes := []string{
+			".out",
+			"_bindata.go",
+		}
+
+		for _, suffix := range suffixes {
+			if strings.HasSuffix(path, suffix) {
+				if err := os.Remove(path); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	files := []string{
+		"bin/drone",
+		"bin/drone-agent",
+		"bin/drone-build",
+	}
+
+	for _, file := range files {
+		if _, err := os.Stat(file); err != nil {
+			continue
+		}
+
+		if err := os.Remove(file); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

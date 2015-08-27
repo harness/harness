@@ -14,6 +14,7 @@ drone.sublime-workspace
 *.rice-box.go
 *.db
 *.txt
+*.min.css
 *.min.js
 *_bindata.go
 *.toml

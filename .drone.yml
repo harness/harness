@@ -9,9 +9,12 @@ script:
   - go get golang.org/x/tools/cmd/cover
   - go get golang.org/x/tools/cmd/vet
   - go get -u github.com/jteeuwen/go-bindata/...
-  - make bindata deps
+
+  - go run make.go bindata
   - go run make.go build
-  - go run make.go vet test
+  - go run make.go vet
+  - go run make.go test
+
   - make dist
 
 notify:
