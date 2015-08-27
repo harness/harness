@@ -64,7 +64,45 @@ func embed() error {
 
 // scripts step concatinates all javascript files.
 func scripts() error {
-	// concatinate scripts
+	files := []string{
+		"cmd/drone-server/static/scripts/term.js",
+		"cmd/drone-server/static/scripts/drone.js",
+		"cmd/drone-server/static/scripts/controllers/repos.js",
+		"cmd/drone-server/static/scripts/controllers/builds.js",
+		"cmd/drone-server/static/scripts/controllers/users.js",
+		"cmd/drone-server/static/scripts/services/repos.js",
+		"cmd/drone-server/static/scripts/services/builds.js",
+		"cmd/drone-server/static/scripts/services/users.js",
+		"cmd/drone-server/static/scripts/services/logs.js",
+		"cmd/drone-server/static/scripts/services/tokens.js",
+		"cmd/drone-server/static/scripts/services/feed.js",
+		"cmd/drone-server/static/scripts/filters/filter.js",
+		"cmd/drone-server/static/scripts/filters/gravatar.js",
+		"cmd/drone-server/static/scripts/filters/time.js",
+	}
+
+	f, err := os.OpenFile(
+		"cmd/drone-server/static/scripts/drone.min.js",
+		os.O_CREATE|os.O_RDWR|os.O_TRUNC,
+		0660)
+
+	defer f.Close()
+
+	if err != nil {
+		fmt.Println("Failed to open output file")
+		return err
+	}
+
+	for _, input := range files {
+		content, err := ioutil.ReadFile(input)
+
+		if err != nil {
+			return err
+		}
+
+		f.Write(content)
+	}
+
 	return nil
 }
 
