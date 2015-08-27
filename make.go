@@ -34,6 +34,7 @@ var steps = map[string]step{
 	"build":   build,
 	"test":    test,
 	"image":   image,
+	"clean":   clean,
 }
 
 func main() {
@@ -167,6 +168,47 @@ func image() error {
 			return err
 		}
 	}
+	return nil
+}
+
+func clean() error {
+	err := filepath.Walk(".", func(path string, f os.FileInfo, err error) error {
+		suffixes := []string{
+			".out",
+			"_bindata.go",
+		}
+
+		for _, suffix := range suffixes {
+			if strings.HasSuffix(path, suffix) {
+				if err := os.Remove(path); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	files := []string{
+		"bin/drone",
+		"bin/drone-agent",
+		"bin/drone-build",
+	}
+
+	for _, file := range files {
+		if _, err := os.Stat(file); err != nil {
+			continue
+		}
+
+		if err := os.Remove(file); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
