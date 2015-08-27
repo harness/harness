@@ -89,6 +89,17 @@
         },
         title: 'Login'
       })
+      .state('logout', {
+        url: '/logout',
+        views: {
+          'layout': {
+            templateUrl: '/static/scripts/views/login.html',
+            controller: 'UserLogoutCtrl',
+            resolve: resolveUser
+          }
+        },
+        title: 'Logout'
+      })
       .state('app.profile', {
         url: '/profile',
         views: {
