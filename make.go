@@ -9,6 +9,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -67,10 +68,42 @@ func scripts() error {
 	return nil
 }
 
-// styles step concatinates the css files.
+// styles step concatinates the stylesheet files.
 func styles() error {
-	// concatinate styles
-	// inject css variables?
+	files := []string{
+		"cmd/drone-server/static/styles/reset.css",
+		"cmd/drone-server/static/styles/fonts.css",
+		"cmd/drone-server/static/styles/alert.css",
+		"cmd/drone-server/static/styles/blankslate.css",
+		"cmd/drone-server/static/styles/list.css",
+		"cmd/drone-server/static/styles/label.css",
+		"cmd/drone-server/static/styles/range.css",
+		"cmd/drone-server/static/styles/switch.css",
+		"cmd/drone-server/static/styles/main.css",
+	}
+
+	f, err := os.OpenFile(
+		"cmd/drone-server/static/styles/drone.min.css",
+		os.O_CREATE|os.O_RDWR|os.O_TRUNC,
+		0660)
+
+	defer f.Close()
+
+	if err != nil {
+		fmt.Println("Failed to open output file")
+		return err
+	}
+
+	for _, input := range files {
+		content, err := ioutil.ReadFile(input)
+
+		if err != nil {
+			return err
+		}
+
+		f.Write(content)
+	}
+
 	return nil
 }
 
