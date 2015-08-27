@@ -6,16 +6,28 @@
 			$scope.user = payload.data;
 		});
 
-	    $scope.number = $stateParams.number || undefined;
-	    $scope.owner = $stateParams.owner || undefined;
-	    $scope.name = $stateParams.name || undefined;
-	    $scope.full_name = $scope.owner + '/' + $scope.name;
+		$scope.number = $stateParams.number || undefined;
+		$scope.owner = $stateParams.owner || undefined;
+		$scope.name = $stateParams.name || undefined;
+		$scope.full_name = $scope.owner + '/' + $scope.name;
 	}
 
 	function UserLoginCtrl($scope, $window) {
 		// attempts to extract an error message from
 		// the URL hash in format #error=?
 		$scope.error = $window.location.hash.substr(7);
+	}
+
+	function UserLogoutCtrl($scope, $window, $state) {
+		// Remove login information from the local
+		// storage and redirect to login page
+		if (localStorage.hasOwnProperty("access_token")) {
+			localStorage.removeItem("access_token");
+		}
+
+		$state.go("login", {}, {
+			location: "replace"
+		});
 	}
 
 	/**
@@ -115,6 +127,7 @@
 		.module('drone')
 		.controller('UserHeaderCtrl', UserHeaderCtrl)
 		.controller('UserLoginCtrl', UserLoginCtrl)
+		.controller('UserLogoutCtrl', UserLogoutCtrl)
 		.controller('UserCtrl', UserCtrl)
 		.controller('UsersCtrl', UsersCtrl);
 })();
