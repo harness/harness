@@ -11,8 +11,10 @@ import (
 // to job from the datastore for the given repository
 // and commit sha
 //
-//  GET /redirect/:owner/:name/commit/:sha
+//  GET /redirect/:owner/:name/commits/:sha
 //
+// REASON: It required by GitLab, becuase we get only
+// sha and ref name, but drone uses build numbers
 func RedirectSha(c *gin.Context) {
 	var branch string
 
@@ -35,12 +37,15 @@ func RedirectSha(c *gin.Context) {
 	return
 }
 
-// RedirectSha accepts a request to retvie a redirect
+// RedirectPullRequest accepts a request to retvie a redirect
 // to job from the datastore for the given repository
 // and pull request number
 //
-//  GET /redirect/:owner/:name/pr/:number
+//  GET /redirect/:owner/:name/pulls/:number
 //
+// REASON: It required by GitLab, because we get only
+// internal merge request id/ref/sha, but drone uses
+// build numbers
 func RedirectPullRequest(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)

@@ -199,8 +199,13 @@ func (r *Gitlab) Activate(user *common.User, repo *common.Repo, k *common.Keypai
 
 	droneUrl := fmt.Sprintf("%s://%s", uri.Scheme, uri.Host)
 	droneToken := uri.Query().Get("access_token")
+	ssl_verify := strconv.FormatBool(!r.SkipVerify)
 
-	return client.AddDroneService(id, map[string]string{"token": droneToken, "drone_url": droneUrl})
+	return client.AddDroneService(id, map[string]string{
+		"token":                   droneToken,
+		"drone_url":               droneUrl,
+		"enable_ssl_verification": ssl_verify,
+	})
 }
 
 // Deactivate removes a repository by removing all the post-commit hooks

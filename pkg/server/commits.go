@@ -20,7 +20,7 @@ import (
 //
 //     GET /api/repos/:owner/:name/:number
 //
-func GetCommit(c *gin.Context) {
+func GetBuild(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
 	num, err := strconv.Atoi(c.Params.ByName("number"))
@@ -41,12 +41,30 @@ func GetCommit(c *gin.Context) {
 	}
 }
 
+// GetCommits accepts a request to retrieve a list
+// of commits from the datastore for the given repository.
+//
+//     GET /api/repos/:owner/:name/builds
+//
+func GetBuilds(c *gin.Context) {
+	store := ToDatastore(c)
+	repo := ToRepo(c)
+	builds, err := store.BuildList(repo, 20, 0)
+	if err != nil {
+		c.Fail(404, err)
+	} else {
+		c.JSON(200, builds)
+	}
+}
+
 // GetPullRequest accepts a requests to retvie a pull request
 // from the datastore for the given repository and
 // pull request number
 //
-//	GET /api/repos/:owner/:name/pr/:number
+//	GET /api/repos/:owner/:name/pulls/:number
 //
+// REASON: It required by GitLab, becuase we get only
+// sha and ref name, but drone uses build numbers
 func GetPullRequest(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
@@ -75,20 +93,46 @@ func GetPullRequest(c *gin.Context) {
 	}
 }
 
-// GetCommits accepts a request to retrieve a list
-// of commits from the datastore for the given repository.
+// GetCommit accepts a requests to retvie a sha and branch
+// from the datastore for the given repository and
+// pull request number
 //
-//     GET /api/repos/:owner/:name/builds
+//	GET /api/repos/:owner/:name/commits/:sha
 //
-func GetCommits(c *gin.Context) {
+// REASON: It required by GitLab, becuase we get only
+// sha and ref name, but drone uses build numbers
+func GetCommit(c *gin.Context) {
+	var branch string
+
 	store := ToDatastore(c)
 	repo := ToRepo(c)
-	builds, err := store.BuildList(repo, 20, 0)
+	sha := c.Params.ByName("sha")
+
+	// get the token and verify the hook is authorized
+	if c.Request.FormValue("access_token") != hash(repo.FullName, repo.Hash) {
+		c.AbortWithStatus(403)
+		return
+	}
+
+	branch = c.Request.FormValue("branch")
+	if branch == "" {
+		branch = repo.Branch
+	}
+
+	build, err := store.BuildSha(repo, sha, branch)
+	if err != nil {
+		c.Fail(404, err)
+		return
+	}
+
+	build.Jobs, err = store.JobList(build)
 	if err != nil {
 		c.Fail(404, err)
 	} else {
-		c.JSON(200, builds)
+		c.JSON(200, build)
 	}
+
+	return
 }
 
 // GetLogs accepts a request to retrieve logs from the
