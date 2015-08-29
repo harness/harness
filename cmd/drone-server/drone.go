@@ -178,8 +178,8 @@ func main() {
 			repo.POST("/watch", server.Subscribe)
 			repo.DELETE("/unwatch", server.Unsubscribe)
 
-			repo.GET("/builds", server.GetCommits)
-			repo.GET("/builds/:number", server.GetCommit)
+			repo.GET("/builds", server.GetBuilds)
+			repo.GET("/builds/:number", server.GetBuild)
 			repo.POST("/builds/:number", server.RunBuild)
 			repo.DELETE("/builds/:number", server.KillBuild)
 			repo.GET("/logs/:number/:task", server.GetLogs)
@@ -191,7 +191,8 @@ func main() {
 		{
 			repoExternal.Use(server.SetRepo())
 
-			repoExternal.GET("/pr/:number", server.GetPullRequest)
+			repoExternal.GET("/commits/:sha", server.GetCommit)
+			repoExternal.GET("/pulls/:number", server.GetPullRequest)
 		}
 	}
 
@@ -249,7 +250,8 @@ func main() {
 		redirects.Use(server.SetDatastore(store))
 		redirects.Use(server.SetRepo())
 
-		redirects.GET("/:owner/:name/commit/:sha", server.RedirectSha)
+		redirects.GET("/:owner/:name/commits/:sha", server.RedirectSha)
+		redirects.GET("/:owner/:name/pulls/:number", server.RedirectPullRequest)
 	}
 
 	r.SetHTMLTemplate(index())

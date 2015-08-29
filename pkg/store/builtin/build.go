@@ -112,6 +112,21 @@ func (db *Buildstore) KillBuilds() error {
 	return err2
 }
 
+const stmtBuildSelectPullRequestNumber = stmtBuildSelectList + `
+WHERE build_repo_id = ?
+AND build_pull_request_number = ?
+ORDER BY build_number DESC
+LIMIT 1
+`
+
+const stmtBuildSelectSha = stmtBuildSelectList + `
+WHERE build_repo_id = ?
+AND build_commit_sha = ?
+AND build_commit_branch = ?
+ORDER BY build_number DESC
+LIMIT 1
+`
+
 // SQL query to retrieve the latest builds across all branches.
 const buildListQuery = `
 SELECT
