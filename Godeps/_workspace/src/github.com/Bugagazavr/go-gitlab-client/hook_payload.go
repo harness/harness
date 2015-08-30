@@ -27,7 +27,7 @@ type HookObjAttr struct {
 	StDiffs         string    `json:"st_diffs,omitempty"`
 	MergeStatus     string    `json:"merge_status,omitempty"`
 	TargetProjectId int       `json:"target_project_id,omitempty"`
-	URL             string    `json:"url,omitempty"`
+	Url             string    `json:"url,omiyempty"`
 	Source          *hProject `json:"source,omitempty"`
 	Target          *hProject `json:"target,omitempty"`
 	LastCommit      *hCommit  `json:"last_commit,omitempty"`
@@ -38,6 +38,7 @@ type hProject struct {
 	SshUrl          string `json:"ssh_url"`
 	HttpUrl         string `json:"http_url"`
 	VisibilityLevel int    `json:"visibility_level"`
+	WebUrl          string `json:"web_url"`
 	Namespace       string `json:"namespace"`
 }
 

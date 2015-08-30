@@ -12,7 +12,7 @@
 		},
 		{
 			"ImportPath": "github.com/Bugagazavr/go-gitlab-client",
-			"Rev": "fa361f26087a2ff8fbb267fbe2d82037fc35e51a"
+			"Rev": "e5999f934dc45c41073fc57998a1224a75ff7d50"
 		},
 		{
 			"ImportPath": "github.com/BurntSushi/migration",
