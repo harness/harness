@@ -6,10 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/Bugagazavr/go-gitlab-client"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/hashicorp/golang-lru"
@@ -232,17 +230,8 @@ func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 
 	switch parsed.ObjectKind {
 	case "merge_request":
-		if parsed.ObjectAttributes.State != "reopened" && parsed.ObjectAttributes.MergeStatus != "unchecked" ||
-			parsed.ObjectAttributes.State != "opened" && parsed.ObjectAttributes.MergeStatus != "unchecked" {
-			return nil, nil
-		}
-
 		return mergeRequest(parsed, req)
 	case "tag_push", "push":
-		if len(parsed.After) == 0 || parsed.TotalCommitsCount == 0 {
-			return nil, nil
-		}
-
 		return push(parsed, req)
 	default:
 		return nil, nil
@@ -252,13 +241,11 @@ func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 func mergeRequest(parsed *gogitlab.HookPayload, req *http.Request) (*common.Hook, error) {
 	var hook = new(common.Hook)
 
-	re := regexp.MustCompile(".git$")
-
 	hook.Repo = &common.Repo{}
 	hook.Repo.Owner = req.FormValue("owner")
 	hook.Repo.Name = req.FormValue("name")
 	hook.Repo.FullName = fmt.Sprintf("%s/%s", hook.Repo.Owner, hook.Repo.Name)
-	hook.Repo.Link = re.ReplaceAllString(parsed.ObjectAttributes.Target.HttpUrl, "$1")
+	hook.Repo.Link = parsed.ObjectAttributes.Target.WebUrl
 	hook.Repo.Clone = parsed.ObjectAttributes.Target.HttpUrl
 	hook.Repo.Branch = "master"
 
@@ -267,15 +254,14 @@ func mergeRequest(parsed *gogitlab.HookPayload, req *http.Request) (*common.Hook
 	hook.Commit.Sha = parsed.ObjectAttributes.LastCommit.Id
 	hook.Commit.Remote = parsed.ObjectAttributes.Source.HttpUrl
 
-	if parsed.ObjectAttributes.Source.HttpUrl == parsed.ObjectAttributes.Target.HttpUrl {
+	if parsed.ObjectAttributes.SourceProjectId == parsed.ObjectAttributes.TargetProjectId {
 		hook.Commit.Ref = fmt.Sprintf("refs/heads/%s", parsed.ObjectAttributes.SourceBranch)
-		hook.Commit.Branch = parsed.ObjectAttributes.SourceBranch
-		hook.Commit.Timestamp = time.Now().UTC().Format("2006-01-02 15:04:05.000000000 +0000 MST")
 	} else {
 		hook.Commit.Ref = fmt.Sprintf("refs/merge-requests/%d/head", parsed.ObjectAttributes.IId)
-		hook.Commit.Branch = parsed.ObjectAttributes.SourceBranch
-		hook.Commit.Timestamp = time.Now().UTC().Format("2006-01-02 15:04:05.000000000 +0000 MST")
 	}
+
+	hook.Commit.Branch = parsed.ObjectAttributes.SourceBranch
+	hook.Commit.Timestamp = parsed.ObjectAttributes.LastCommit.Timestamp
 
 	hook.Commit.Author = &common.Author{}
 	hook.Commit.Author.Login = parsed.ObjectAttributes.LastCommit.Author.Name
@@ -283,8 +269,8 @@ func mergeRequest(parsed *gogitlab.HookPayload, req *http.Request) (*common.Hook
 
 	hook.PullRequest = &common.PullRequest{}
 	hook.PullRequest.Number = parsed.ObjectAttributes.IId
-	hook.PullRequest.Title = parsed.ObjectAttributes.Description
-	hook.PullRequest.Link = parsed.ObjectAttributes.URL
+	hook.PullRequest.Title = parsed.ObjectAttributes.Title
+	hook.PullRequest.Link = parsed.ObjectAttributes.Url
 
 	return hook, nil
 }

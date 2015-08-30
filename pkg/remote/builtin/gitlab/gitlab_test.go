@@ -160,7 +160,7 @@ func Test_Gitlab(t *testing.T) {
 				g.Assert(hook.Repo.Name).Equal("diaspora-client")
 
 				g.Assert(hook.PullRequest.Number).Equal(1)
-				g.Assert(hook.PullRequest.Title).Equal("")
+				g.Assert(hook.PullRequest.Title).Equal("MS-Viewport")
 			})
 		})
 	})

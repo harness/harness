@@ -43,8 +43,7 @@ func main() {
 		"  > -m merge_requests        -id PROJECT_ID\n"+
 		"  > -m merge_request_notes   -id PROJECT_ID -merge_id MERGE_REQUEST_ID\n"+
 		"  > -m merge_request_comment -id PROJECT_ID -merge_id MERGE_REQUEST_ID -comment COMMENT_BODY\n"+
-		"  > -m team                  -id PROJECT_ID\n"+
-		"  > -m add_drone             -id PROJECT_ID\n -token DRONE_TOKEN -url DRONE_URL")
+		"  > -m team                  -id PROJECT_ID")
 
 	var id string
 	flag.StringVar(&id, "id", "", "Specify repository id")
@@ -54,12 +53,6 @@ func main() {
 
 	var comment string
 	flag.StringVar(&comment, "comment", "", "The body of the new comment")
-
-	var drone_token string
-	flag.StringVar(&drone_token, "drone_token", "", "Drone service token")
-
-	var drone_url string
-	flag.StringVar(&drone_url, "drone_url", "", "Drone service url")
 
 	flag.Usage = func() {
 		fmt.Printf("Usage:\n")
@@ -248,18 +241,6 @@ func main() {
 
 		for _, member := range members {
 			fmt.Printf("> [%d] %s (%s) since %s\n", member.Id, member.Username, member.Name, member.CreatedAt)
-		}
-	case "add_drone":
-		fmt.Println("Adding drone service to project")
-
-		if id == "" || drone_token == "" || drone_url == "" {
-			flag.Usage()
-			return
-		}
-
-		if err := gitlab.AddDroneService(id, map[string]string{"token": drone_token, "drone_url": drone_url}); err != nil {
-			fmt.Println(err)
-			return
 		}
 	}
 }
