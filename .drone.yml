@@ -3,12 +3,8 @@ git:
   path: github.com/drone/drone
 env:
   - GOROOT=/usr/local/go
-  - PATH=.:$PATH:$GOROOT/bin:$GOPATH/bin
+  - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 script:
-  - set -x
-  - echo 'shift; curl -sL "$@"' > wget
-  - chmod +x wget
-  - which wget
   - sudo add-apt-repository ppa:git-core/ppa 1> /dev/null 2> /dev/null
   - sudo apt-get update 1> /dev/null 2> /dev/null
   - sudo apt-get -y install git zip libsqlite3-dev sqlite3 rpm dpkg 1> /dev/null 2> /dev/null
