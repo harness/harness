@@ -276,19 +276,44 @@ func clean() error {
 	return nil
 }
 
-// trace is a helper fucntion that writes a command
-// to stdout similar to bash +x
-func trace(args []string) {
-	print("+ ")
-	println(strings.Join(args, " "))
+// run is a helper function that executes commands
+// and assigns stdout and stderr targets
+func run(command string, args ...string) error {
+	cmd := exec.Command(command, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	trace(cmd.Args)
+	err := cmd.Run()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // helper function to parse the git revision
 func rev() string {
-	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+	cmd := exec.Command(
+		"git",
+		"rev-parse",
+		"--short",
+		"HEAD")
+
 	raw, err := cmd.CombinedOutput()
+
 	if err != nil {
 		return "HEAD"
 	}
+
 	return strings.Trim(string(raw), "\n")
+}
+
+// trace is a helper function that writes a command
+// to stdout similar to bash +x
+func trace(args []string) {
+	print("+ ")
+	println(strings.Join(args, " "))
 }
