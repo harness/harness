@@ -1,10 +1,8 @@
 // +build ignore
 
 // This program builds Drone.
-// $ go run make.go build test
-//
-// The output binaries go into the ./bin/ directory (under the
-// project root, where make.go is)
+// $ go run make.go deps bindata build test
+
 package main
 
 import (
