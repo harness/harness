@@ -20,7 +20,7 @@ import (
 //
 //     GET /api/repos/:owner/:name/:number
 //
-func GetCommit(c *gin.Context) {
+func GetBuild(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
 	num, err := strconv.Atoi(c.Params.ByName("number"))
@@ -46,7 +46,7 @@ func GetCommit(c *gin.Context) {
 //
 //     GET /api/repos/:owner/:name/builds
 //
-func GetCommits(c *gin.Context) {
+func GetBuilds(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
 	builds, err := store.BuildList(repo, 20, 0)
