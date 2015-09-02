@@ -32,7 +32,7 @@ var (
 	DefaultAgent = "drone/drone-exec:latest"
 
 	// default name of the build agent executable
-	DefaultEntrypoint = []string{"/bin/drone-build"}
+	DefaultEntrypoint = []string{"/bin/drone-exec"}
 
 	// default argument to invoke build steps
 	DefaultBuildArgs = []string{"--cache", "--clone", "--build", "--deploy"}
@@ -50,12 +50,7 @@ type work struct {
 	Job       *types.Job       `json:"job"`
 	System    *types.System    `json:"system"`
 	Workspace *types.Workspace `json:"workspace"`
-	Yaml      []byte           `json:"yaml"`
-
-	// Keys    *types.Keypair `json:"keys"`        // remove
-	// Netrc   *types.Netrc   `json:"netrc"`       // remove
-	// Env     []string       `json:"environment"` // remove
-	// Plugins []string       `json:"plugins"`     // remove
+	Yaml      string           `json:"yaml"`
 }
 
 type worker struct {

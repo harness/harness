@@ -182,7 +182,6 @@ func build() error {
 	}{
 		{"github.com/drone/drone/cmd/drone-server", "bin/drone"},
 		{"github.com/drone/drone/cmd/drone-agent", "bin/drone-agent"},
-		{"github.com/drone/drone/cmd/drone-build", "bin/drone-build"},
 	}
 	for _, bin := range bins {
 		ldf := fmt.Sprintf("-X main.revision=%s -X main.version=%s", sha, version)
@@ -267,7 +266,6 @@ func clean() error {
 	files := []string{
 		"bin/drone",
 		"bin/drone-agent",
-		"bin/drone-build",
 	}
 
 	for _, file := range files {
