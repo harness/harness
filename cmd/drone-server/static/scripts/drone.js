@@ -144,23 +144,53 @@
         },
         title: 'Edit Repository'
       })
-      .state('app.repo.env', {
-        url: '/:owner/:name/edit/env',
-        views: {
-          'toolbar': {templateUrl: '/static/scripts/views/repos/toolbar.html'},
-          'content': {templateUrl: '/static/scripts/views/repos/env.html'}
-        },
-        controller: 'RepoEditCtrl',
-        resolve: resolveUser
-      })
-      .state('app.repo.del', {
+      .state('app.repo_del', {
         url: '/:owner/:name/delete',
         views: {
-          'toolbar': {templateUrl: '/static/scripts/views/repos/toolbar.html'},
-          'content': {templateUrl: '/static/scripts/views/repos/del.html'}
+          'toolbar': {
+            templateUrl: '/static/scripts/views/repos/toolbar.html',
+            controller: 'UserHeaderCtrl',
+            resolve: resolveUser
+          },
+          'content': {
+            templateUrl: '/static/scripts/views/repos/del.html',
+            controller: 'RepoEditCtrl',
+            resolve: resolveUser
+          }
         },
-        controller: 'RepoEditCtrl',
-        resolve: resolveUser
+        title: 'Delete Repository'
+      })
+      .state('app.repo_env', {
+        url: '/:owner/:name/edit/env',
+        views: {
+          'toolbar': {
+            templateUrl: '/static/scripts/views/repos/toolbar.html',
+            controller: 'UserHeaderCtrl',
+            resolve: resolveUser
+          },
+          'content': {
+            templateUrl: '/static/scripts/views/repos/env.html',
+            controller: 'RepoEditCtrl',
+            resolve: resolveUser
+          }
+        },
+        title: 'Private Vars'
+      })
+      .state('app.repo_secure', {
+        url: '/:owner/:name/secure',
+        views: {
+          'toolbar': {
+            templateUrl: '/static/scripts/views/repos/toolbar.html',
+            controller: 'UserHeaderCtrl',
+            resolve: resolveUser
+          },
+          'content': {
+            templateUrl: '/static/scripts/views/repos/secure.html',
+            controller: 'RepoEditCtrl',
+            resolve: resolveUser
+          }
+        },
+        title: 'Secure Variables'
       })
       .state('app.build', {
         url: '/:owner/:name/:number',

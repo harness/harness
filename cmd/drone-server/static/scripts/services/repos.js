@@ -73,6 +73,15 @@
       return $http.delete('/api/repos/' + repoName + '/unwatch');
     };
 
+    /**
+     * Encrypt the set of parameters.
+     *
+     * @param {string} Name of the repository.
+     * @param {object} Key/Value map of parameters.
+     */
+    this.encrypt = function (repoName, params) {
+      return $http.post('/api/repos/' + repoName + '/encrypt', params);
+    };
 
     var callback,
       events,

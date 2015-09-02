@@ -7,6 +7,7 @@ import (
 
 // Config represents a repository build configuration.
 type Config struct {
+	Cache *Step
 	Setup *Step
 	Clone *Step
 	Build *Step
@@ -63,8 +64,11 @@ type Step struct {
 // Condition represents a set of conditions that must
 // be met in order to proceed with a build or build step.
 type Condition struct {
-	Owner  string // Indicates the step should run only for this repo (useful for forks)
-	Branch string // Indicates the step should run only for this branch
+	Owner   string // Indicates the step should run only for this repo (useful for forks)
+	Branch  string // Indicates the step should run only for this branch
+	Event   string
+	Success string
+	Failure string
 
 	// Indicates the step should only run when the following
 	// matrix values are present for the sub-build.
