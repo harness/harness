@@ -1,14 +1,13 @@
 package server
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
 
+	"github.com/drone/drone/pkg/hash"
 	"github.com/drone/drone/pkg/remote"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/httputil"
@@ -209,7 +208,7 @@ func PostRepo(c *gin.Context) {
 	link := fmt.Sprintf(
 		"%s/api/hook?access_token=%s",
 		httputil.GetURL(c.Request),
-		hash(r.FullName, r.Hash),
+		hash.New(r.FullName, r.Hash),
 	)
 
 	// generate an RSA key and add to the repo
@@ -315,10 +314,4 @@ func perms(remote remote.Remote, u *common.User, r *common.Repo) *common.Perm {
 		return &common.Perm{}
 	}
 	return p
-}
-
-func hash(text, salt string) string {
-	hasher := sha256.New()
-	hasher.Write([]byte(text + salt))
-	return hex.EncodeToString(hasher.Sum(nil))
 }
