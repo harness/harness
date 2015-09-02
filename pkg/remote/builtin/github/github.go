@@ -170,7 +170,7 @@ func (g *GitHub) Script(u *common.User, r *common.Repo, b *common.Build) ([]byte
 
 // Netrc returns a .netrc file that can be used to clone
 // private repositories from a remote system.
-func (g *GitHub) Netrc(u *common.User) (*common.Netrc, error) {
+func (g *GitHub) Netrc(u *common.User, r *common.Repo) (*common.Netrc, error) {
 	url_, err := url.Parse(g.URL)
 	if err != nil {
 		return nil, err

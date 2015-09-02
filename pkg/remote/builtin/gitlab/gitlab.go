@@ -11,6 +11,7 @@ import (
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/Bugagazavr/go-gitlab-client"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/hashicorp/golang-lru"
+	"github.com/drone/drone/pkg/hash"
 	"github.com/drone/drone/pkg/oauth2"
 	"github.com/drone/drone/pkg/remote"
 	common "github.com/drone/drone/pkg/types"
@@ -26,6 +27,7 @@ type Gitlab struct {
 	Client      string
 	Secret      string
 	AllowedOrgs []string
+	CloneMode   string
 	Open        bool
 	PrivateMode bool
 	SkipVerify  bool
@@ -54,6 +56,13 @@ func NewDriver(config string) (remote.Remote, error) {
 	gitlab.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))
 	gitlab.Open, _ = strconv.ParseBool(params.Get("open"))
 
+	switch params.Get("clone_mode") {
+	case "oauth":
+		gitlab.CloneMode = "oauth"
+	default:
+		gitlab.CloneMode = "token"
+	}
+
 	// this is a temp workaround
 	gitlab.Search, _ = strconv.ParseBool(params.Get("search"))
 
@@ -64,8 +73,8 @@ func NewDriver(config string) (remote.Remote, error) {
 	return &gitlab, err
 }
 
-func (r *Gitlab) Login(token, secret string) (*common.User, error) {
-	client := NewClient(r.URL, token, r.SkipVerify)
+func (g *Gitlab) Login(token, secret string) (*common.User, error) {
+	client := NewClient(g.URL, token, g.SkipVerify)
 	var login, err = client.CurrentUser()
 	if err != nil {
 		return nil, err
@@ -79,20 +88,20 @@ func (r *Gitlab) Login(token, secret string) (*common.User, error) {
 	if strings.HasPrefix(login.AvatarUrl, "http") {
 		user.Avatar = login.AvatarUrl
 	} else {
-		user.Avatar = r.URL + "/" + login.AvatarUrl
+		user.Avatar = g.URL + "/" + login.AvatarUrl
 	}
 	return &user, nil
 }
 
 // Orgs fetches the organizations for the given user.
-func (r *Gitlab) Orgs(u *common.User) ([]string, error) {
+func (g *Gitlab) Orgs(u *common.User) ([]string, error) {
 	return nil, nil
 }
 
 // Repo fetches the named repository from the remote system.
-func (r *Gitlab) Repo(u *common.User, owner, name string) (*common.Repo, error) {
-	client := NewClient(r.URL, u.Token, r.SkipVerify)
-	id, err := GetProjectId(r, client, owner, name)
+func (g *Gitlab) Repo(u *common.User, owner, name string) (*common.Repo, error) {
+	client := NewClient(g.URL, u.Token, g.SkipVerify)
+	id, err := GetProjectId(g, client, owner, name)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +122,7 @@ func (r *Gitlab) Repo(u *common.User, owner, name string) (*common.Repo, error) 
 		repo.Branch = repo_.DefaultBranch
 	}
 
-	if r.PrivateMode {
+	if g.PrivateMode {
 		repo.Private = true
 	} else {
 		repo.Private = !repo_.Public
@@ -123,15 +132,15 @@ func (r *Gitlab) Repo(u *common.User, owner, name string) (*common.Repo, error) 
 }
 
 // Perm fetches the named repository from the remote system.
-func (r *Gitlab) Perm(u *common.User, owner, name string) (*common.Perm, error) {
+func (g *Gitlab) Perm(u *common.User, owner, name string) (*common.Perm, error) {
 	key := fmt.Sprintf("%s/%s/%s", u.Login, owner, name)
-	val, ok := r.cache.Get(key)
+	val, ok := g.cache.Get(key)
 	if ok {
 		return val.(*common.Perm), nil
 	}
 
-	client := NewClient(r.URL, u.Token, r.SkipVerify)
-	id, err := GetProjectId(r, client, owner, name)
+	client := NewClient(g.URL, u.Token, g.SkipVerify)
+	id, err := GetProjectId(g, client, owner, name)
 	if err != nil {
 		return nil, err
 	}
@@ -144,15 +153,15 @@ func (r *Gitlab) Perm(u *common.User, owner, name string) (*common.Perm, error) 
 	m.Admin = IsAdmin(repo)
 	m.Pull = IsRead(repo)
 	m.Push = IsWrite(repo)
-	r.cache.Add(key, m)
+	g.cache.Add(key, m)
 	return m, nil
 }
 
 // GetScript fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
-func (r *Gitlab) Script(user *common.User, repo *common.Repo, build *common.Build) ([]byte, error) {
-	var client = NewClient(r.URL, user.Token, r.SkipVerify)
-	id, err := GetProjectId(r, client, repo.Owner, repo.Name)
+func (g *Gitlab) Script(user *common.User, repo *common.Repo, build *common.Build) ([]byte, error) {
+	var client = NewClient(g.URL, user.Token, g.SkipVerify)
+	id, err := GetProjectId(g, client, repo.Owner, repo.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -163,29 +172,36 @@ func (r *Gitlab) Script(user *common.User, repo *common.Repo, build *common.Buil
 // NOTE Currently gitlab doesn't support status for commits and events,
 //      also if we want get MR status in gitlab we need implement a special plugin for gitlab,
 //      gitlab uses API to fetch build status on client side. But for now we skip this.
-func (r *Gitlab) Status(u *common.User, repo *common.Repo, b *common.Build) error {
+func (g *Gitlab) Status(u *common.User, repo *common.Repo, b *common.Build) error {
 	return nil
 }
 
 // Netrc returns a .netrc file that can be used to clone
 // private repositories from a remote system.
-func (r *Gitlab) Netrc(u *common.User) (*common.Netrc, error) {
-	url_, err := url.Parse(r.URL)
+func (g *Gitlab) Netrc(u *common.User, r *common.Repo) (*common.Netrc, error) {
+	url_, err := url.Parse(g.URL)
 	if err != nil {
 		return nil, err
 	}
 	netrc := &common.Netrc{}
-	netrc.Login = "oauth2"
-	netrc.Password = u.Token
+
+	switch g.CloneMode {
+	case "oauth":
+		netrc.Login = "oauth2"
+		netrc.Password = u.Token
+	case "token":
+		netrc.Login = "drone-ci-token"
+		netrc.Password = hash.New(r.FullName, r.Hash)
+	}
 	netrc.Machine = url_.Host
 	return netrc, nil
 }
 
 // Activate activates a repository by adding a Post-commit hook and
 // a Public Deploy key, if applicable.
-func (r *Gitlab) Activate(user *common.User, repo *common.Repo, k *common.Keypair, link string) error {
-	var client = NewClient(r.URL, user.Token, r.SkipVerify)
-	id, err := GetProjectId(r, client, repo.Owner, repo.Name)
+func (g *Gitlab) Activate(user *common.User, repo *common.Repo, k *common.Keypair, link string) error {
+	var client = NewClient(g.URL, user.Token, g.SkipVerify)
+	id, err := GetProjectId(g, client, repo.Owner, repo.Name)
 	if err != nil {
 		return err
 	}
@@ -197,7 +213,7 @@ func (r *Gitlab) Activate(user *common.User, repo *common.Repo, k *common.Keypai
 
 	droneUrl := fmt.Sprintf("%s://%s", uri.Scheme, uri.Host)
 	droneToken := uri.Query().Get("access_token")
-	ssl_verify := strconv.FormatBool(!r.SkipVerify)
+	ssl_verify := strconv.FormatBool(!g.SkipVerify)
 
 	return client.AddDroneService(id, map[string]string{
 		"token":                   droneToken,
@@ -208,9 +224,9 @@ func (r *Gitlab) Activate(user *common.User, repo *common.Repo, k *common.Keypai
 
 // Deactivate removes a repository by removing all the post-commit hooks
 // which are equal to link and removing the SSH deploy key.
-func (r *Gitlab) Deactivate(user *common.User, repo *common.Repo, link string) error {
-	var client = NewClient(r.URL, user.Token, r.SkipVerify)
-	id, err := GetProjectId(r, client, repo.Owner, repo.Name)
+func (g *Gitlab) Deactivate(user *common.User, repo *common.Repo, link string) error {
+	var client = NewClient(g.URL, user.Token, g.SkipVerify)
+	id, err := GetProjectId(g, client, repo.Owner, repo.Name)
 	if err != nil {
 		return err
 	}
@@ -220,7 +236,7 @@ func (r *Gitlab) Deactivate(user *common.User, repo *common.Repo, link string) e
 
 // ParseHook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
-func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
+func (g *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 	defer req.Body.Close()
 	var payload, _ = ioutil.ReadAll(req.Body)
 	var parsed, err = gogitlab.ParseHook(payload)
@@ -341,16 +357,16 @@ func (g *Gitlab) Oauth2Transport(r *http.Request) *oauth2.Transport {
 }
 
 // Accessor method, to allowed remote organizations field.
-func (r *Gitlab) GetOrgs() []string {
-	return r.AllowedOrgs
+func (g *Gitlab) GetOrgs() []string {
+	return g.AllowedOrgs
 }
 
 // Accessor method, to open field.
-func (r *Gitlab) GetOpen() bool {
-	return r.Open
+func (g *Gitlab) GetOpen() bool {
+	return g.Open
 }
 
 // return default scope for GitHub
-func (r *Gitlab) Scope() string {
+func (g *Gitlab) Scope() string {
 	return DefaultScope
 }
