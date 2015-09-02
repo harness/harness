@@ -88,13 +88,13 @@ Parameters:
     merge_requests_events Trigger hook on merge_requests events
 
 */
-func (g *Gitlab) AddProjectHook(id, hook_url string, push_events, issues_events, merge_requests_events bool) error {
+func (g *Gitlab) AddProjectHook(id, hook_url string, push_events, issues_events, merge_requests_events, tag_events bool) error {
 
 	url, opaque := g.ResourceUrlRaw(project_url_hooks, map[string]string{":id": id})
 
 	var err error
 
-	body := buildHookQuery(hook_url, push_events, issues_events, merge_requests_events)
+	body := buildHookQuery(hook_url, push_events, issues_events, merge_requests_events, tag_events)
 	_, err = g.buildAndExecRequestRaw("POST", url, opaque, []byte(body))
 
 	return err
@@ -115,7 +115,7 @@ Parameters:
     merge_requests_events Trigger hook on merge_requests events
 
 */
-func (g *Gitlab) EditProjectHook(id, hook_id, hook_url string, push_events, issues_events, merge_requests_events bool) error {
+func (g *Gitlab) EditProjectHook(id, hook_id, hook_url string, push_events, issues_events, merge_requests_events, tag_events bool) error {
 
 	url, opaque := g.ResourceUrlRaw(project_url_hook, map[string]string{
 		":id":      id,
@@ -124,7 +124,7 @@ func (g *Gitlab) EditProjectHook(id, hook_id, hook_url string, push_events, issu
 
 	var err error
 
-	body := buildHookQuery(hook_url, push_events, issues_events, merge_requests_events)
+	body := buildHookQuery(hook_url, push_events, issues_events, merge_requests_events, tag_events)
 	_, err = g.buildAndExecRequestRaw("PUT", url, opaque, []byte(body))
 
 	return err
@@ -158,7 +158,7 @@ func (g *Gitlab) RemoveProjectHook(id, hook_id string) error {
 /*
 Build HTTP query to add or edit hook
 */
-func buildHookQuery(hook_url string, push_events, issues_events, merge_requests_events bool) string {
+func buildHookQuery(hook_url string, push_events, issues_events, merge_requests_events, tag_events bool) string {
 
 	v := url.Values{}
 	v.Set("url", hook_url)
@@ -178,6 +178,10 @@ func buildHookQuery(hook_url string, push_events, issues_events, merge_requests_
 	} else {
 		v.Set("merge_requests_events", "false")
 	}
-
+	if tag_events {
+		v.Set("tag_push_events", "true")
+	} else {
+		v.Set("tag_push_events", "false")
+	}
 	return v.Encode()
 }

@@ -57,6 +57,21 @@ func TestProjectMergeRequests(t *testing.T) {
 	}
 }
 
+func TestMergeRequestNotes(t *testing.T) {
+	ts, gitlab := Stub("stubs/projects/merge_requests/notes/index.json")
+	defer ts.Close()
+	notes, err := gitlab.MergeRequestNotes("1", "1", 0, 30)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(notes), 1)
+
+	if len(notes) > 0 {
+		assert.Equal(t, notes[0].Id, 301)
+		assert.Equal(t, notes[0].Body, "Comment for MR")
+		assert.Equal(t, notes[0].Author.Username, "pipin")
+	}
+}
+
 func TestSearchProjectId(t *testing.T) {
 	ts, gitlab := Stub("stubs/projects/index.json")
 

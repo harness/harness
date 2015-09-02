@@ -190,25 +190,20 @@ func (r *Gitlab) Activate(user *common.User, repo *common.Repo, k *common.Keypai
 		return err
 	}
 
-	title, err := GetKeyTitle(link)
+	uri, err := url.Parse(link)
 	if err != nil {
 		return err
 	}
 
-	// if the repository is private we'll need
-	// to upload a github key to the repository
-	if repo.Private {
-		if err := client.AddProjectDeployKey(id, title, k.Public); err != nil {
-			return err
-		}
-	}
+	droneUrl := fmt.Sprintf("%s://%s", uri.Scheme, uri.Host)
+	droneToken := uri.Query().Get("access_token")
+	ssl_verify := strconv.FormatBool(!r.SkipVerify)
 
-	// append the repo owner / name to the hook url since gitlab
-	// doesn't send this detail in the post-commit hook
-	link += "&owner=" + repo.Owner + "&name=" + repo.Name
-
-	// add the hook
-	return client.AddProjectHook(id, link, true, false, true)
+	return client.AddDroneService(id, map[string]string{
+		"token":                   droneToken,
+		"drone_url":               droneUrl,
+		"enable_ssl_verification": ssl_verify,
+	})
 }
 
 // Deactivate removes a repository by removing all the post-commit hooks
@@ -220,33 +215,7 @@ func (r *Gitlab) Deactivate(user *common.User, repo *common.Repo, link string) e
 		return err
 	}
 
-	keys, err := client.ProjectDeployKeys(id)
-	if err != nil {
-		return err
-	}
-	var pubkey = strings.TrimSpace(repo.Keys.Public)
-	for _, k := range keys {
-		if pubkey == strings.TrimSpace(k.Key) {
-			if err := client.RemoveProjectDeployKey(id, strconv.Itoa(k.Id)); err != nil {
-				return err
-			}
-			break
-		}
-	}
-	hooks, err := client.ProjectHooks(id)
-	if err != nil {
-		return err
-	}
-	link += "&owner=" + repo.Owner + "&name=" + repo.Name
-	for _, h := range hooks {
-		if link == h.Url {
-			if err := client.RemoveProjectHook(id, strconv.Itoa(h.Id)); err != nil {
-				return err
-			}
-			break
-		}
-	}
-	return nil
+	return client.DeleteDroneService(id)
 }
 
 // ParseHook parses the post-commit hook from the Request body
@@ -259,20 +228,54 @@ func (r *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 		return nil, err
 	}
 
-	if len(parsed.After) == 0 || parsed.TotalCommitsCount == 0 {
+	switch parsed.ObjectKind {
+	case "merge_request":
+		return mergeRequest(parsed, req)
+	case "tag_push", "push":
+		return push(parsed, req)
+	default:
 		return nil, nil
 	}
+}
 
-	if parsed.ObjectKind == "merge_request" {
-		// NOTE: in gitlab 8.0, gitlab will get same MR models as github
-		//       https://gitlab.com/gitlab-org/gitlab-ce/merge_requests/981/diffs
-		return nil, nil
+func mergeRequest(parsed *gogitlab.HookPayload, req *http.Request) (*common.Hook, error) {
+	var hook = new(common.Hook)
+
+	hook.Repo = &common.Repo{}
+	hook.Repo.Owner = req.FormValue("owner")
+	hook.Repo.Name = req.FormValue("name")
+	hook.Repo.FullName = fmt.Sprintf("%s/%s", hook.Repo.Owner, hook.Repo.Name)
+	hook.Repo.Link = parsed.ObjectAttributes.Target.WebUrl
+	hook.Repo.Clone = parsed.ObjectAttributes.Target.HttpUrl
+	hook.Repo.Branch = "master"
+
+	hook.Commit = &common.Commit{}
+	hook.Commit.Message = parsed.ObjectAttributes.LastCommit.Message
+	hook.Commit.Sha = parsed.ObjectAttributes.LastCommit.Id
+	hook.Commit.Remote = parsed.ObjectAttributes.Source.HttpUrl
+
+	if parsed.ObjectAttributes.SourceProjectId == parsed.ObjectAttributes.TargetProjectId {
+		hook.Commit.Ref = fmt.Sprintf("refs/heads/%s", parsed.ObjectAttributes.SourceBranch)
+	} else {
+		hook.Commit.Ref = fmt.Sprintf("refs/merge-requests/%d/head", parsed.ObjectAttributes.IId)
 	}
 
-	if len(parsed.After) == 0 {
-		return nil, nil
-	}
+	hook.Commit.Branch = parsed.ObjectAttributes.SourceBranch
+	hook.Commit.Timestamp = parsed.ObjectAttributes.LastCommit.Timestamp
 
+	hook.Commit.Author = &common.Author{}
+	hook.Commit.Author.Login = parsed.ObjectAttributes.LastCommit.Author.Name
+	hook.Commit.Author.Email = parsed.ObjectAttributes.LastCommit.Author.Email
+
+	hook.PullRequest = &common.PullRequest{}
+	hook.PullRequest.Number = parsed.ObjectAttributes.IId
+	hook.PullRequest.Title = parsed.ObjectAttributes.Title
+	hook.PullRequest.Link = parsed.ObjectAttributes.Url
+
+	return hook, nil
+}
+
+func push(parsed *gogitlab.HookPayload, req *http.Request) (*common.Hook, error) {
 	var cloneUrl = parsed.Repository.GitHttpUrl
 
 	var hook = new(common.Hook)
