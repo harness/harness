@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
+
+	"github.com/drone/drone/pkg/hash"
 )
 
 // RedirectSha accepts a request to retvie a redirect
@@ -78,7 +80,7 @@ func GetPullRequest(c *gin.Context) {
 	repo := ToRepo(c)
 
 	// get the token and verify the hook is authorized
-	if c.Request.FormValue("access_token") != hash(repo.FullName, repo.Hash) {
+	if c.Request.FormValue("access_token") != hash.New(repo.FullName, repo.Hash) {
 		c.AbortWithStatus(403)
 		return
 	}
@@ -117,7 +119,7 @@ func GetCommit(c *gin.Context) {
 	sha := c.Params.ByName("sha")
 
 	// get the token and verify the hook is authorized
-	if c.Request.FormValue("access_token") != hash(repo.FullName, repo.Hash) {
+	if c.Request.FormValue("access_token") != hash.New(repo.FullName, repo.Hash) {
 		c.AbortWithStatus(403)
 		return
 	}

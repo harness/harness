@@ -166,7 +166,7 @@ func RunBuild(c *gin.Context) {
 		return
 	}
 
-	netrc, err := remote.Netrc(user)
+	netrc, err := remote.Netrc(user, repo)
 	if err != nil {
 		c.Fail(500, err)
 		return
