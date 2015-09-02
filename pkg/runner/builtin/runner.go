@@ -139,14 +139,12 @@ func (r *Runner) Run(w *queue.Work) error {
 		}
 
 		work := &work{
-			Repo:    w.Repo,
-			Build:   w.Build,
-			Keys:    w.Keys,
-			Netrc:   w.Netrc,
-			Yaml:    w.Yaml,
-			Job:     job,
-			Env:     w.Env,
-			Plugins: w.Plugins,
+			System:    w.System,
+			Workspace: &types.Workspace{Netrc: w.Netrc, Keys: w.Keys},
+			Repo:      w.Repo,
+			Build:     w.Build,
+			Job:       job,
+			Yaml:      w.Yaml,
 		}
 		in, err := json.Marshal(work)
 		if err != nil {
@@ -221,14 +219,12 @@ func (r *Runner) Run(w *queue.Work) error {
 	// the destroy all containers afterward.
 	for i, job := range w.Build.Jobs {
 		work := &work{
-			Repo:    w.Repo,
-			Build:   w.Build,
-			Keys:    w.Keys,
-			Netrc:   w.Netrc,
-			Yaml:    w.Yaml,
-			Job:     job,
-			Env:     w.Env,
-			Plugins: w.Plugins,
+			System:    w.System,
+			Workspace: &types.Workspace{Netrc: w.Netrc, Keys: w.Keys},
+			Repo:      w.Repo,
+			Build:     w.Build,
+			Job:       job,
+			Yaml:      w.Yaml,
 		}
 		in, err := json.Marshal(work)
 		if err != nil {

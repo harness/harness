@@ -1,0 +1,28 @@
+<main>
+<article>
+
+	<p style="  font-size: 16px;
+  margin-bottom: 10px;">Encrypt and store secret variables in your <code>.drone.yml</code> file<p>
+	<textarea spellcheck="false" placeholder="Enter a plaintext value here" ng-model="plaintext" style="
+  background-color: #eff1f5;
+  border-radius:3px;
+  border:none;
+  padding:10px;
+  min-height:100px;
+  max-width:100%;
+  display:block;
+  min-width:100%;
+  white-space: normal;
+  font-size: 14px;
+  word-wrap: normal;
+  word-break: break-all;"></textarea>
+	<button ng-click="encrypt(plaintext)">Encrypt</button>
+
+
+	<pre ng-if="secure" style="  white-space: normal;
+  font-size: 16px;
+  word-wrap: normal;
+  word-break: break-all;">{{secure}}</pre>
+
+</article>
+</main>

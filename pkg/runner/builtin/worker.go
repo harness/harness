@@ -29,30 +29,33 @@ var (
 
 var (
 	// name of the build agent container.
-	DefaultAgent = "drone/drone-build:latest"
+	DefaultAgent = "drone/drone-exec:latest"
 
 	// default name of the build agent executable
 	DefaultEntrypoint = []string{"/bin/drone-build"}
 
 	// default argument to invoke build steps
-	DefaultBuildArgs = []string{"--build", "--clone", "--publish", "--deploy"}
+	DefaultBuildArgs = []string{"--cache", "--clone", "--build", "--deploy"}
 
 	// default argument to invoke build steps
-	DefaultPullRequestArgs = []string{"--build", "--clone"}
+	DefaultPullRequestArgs = []string{"--cache", "--clone", "--build"}
 
 	// default arguments to invoke notify steps
 	DefaultNotifyArgs = []string{"--notify"}
 )
 
 type work struct {
-	Repo    *types.Repo    `json:"repo"`
-	Build   *types.Build   `json:"build"`
-	Job     *types.Job     `json:"job"`
-	Keys    *types.Keypair `json:"keys"`
-	Netrc   *types.Netrc   `json:"netrc"`
-	Yaml    []byte         `json:"yaml"`
-	Env     []string       `json:"environment"`
-	Plugins []string       `json:"plugins"`
+	Repo      *types.Repo      `json:"repo"`
+	Build     *types.Build     `json:"build"`
+	Job       *types.Job       `json:"job"`
+	System    *types.System    `json:"system"`
+	Workspace *types.Workspace `json:"workspace"`
+	Yaml      []byte           `json:"yaml"`
+
+	// Keys    *types.Keypair `json:"keys"`        // remove
+	// Netrc   *types.Netrc   `json:"netrc"`       // remove
+	// Env     []string       `json:"environment"` // remove
+	// Plugins []string       `json:"plugins"`     // remove
 }
 
 type worker struct {

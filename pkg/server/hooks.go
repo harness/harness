@@ -7,6 +7,7 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/pkg/queue"
 	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/utils/httputil"
 	"github.com/drone/drone/pkg/yaml"
 	"github.com/drone/drone/pkg/yaml/inject"
 	"github.com/drone/drone/pkg/yaml/matrix"
@@ -158,13 +159,16 @@ func PostHook(c *gin.Context) {
 	}
 
 	queue_.Publish(&queue.Work{
-		User:    user,
-		Repo:    repo,
-		Build:   build,
-		Keys:    repo.Keys,
-		Netrc:   netrc,
-		Yaml:    raw,
-		Plugins: conf.Plugins,
-		Env:     conf.Environment,
+		User:  user,
+		Repo:  repo,
+		Build: build,
+		Keys:  repo.Keys,
+		Netrc: netrc,
+		Yaml:  raw,
+		System: &common.System{
+			Link:    httputil.GetURL(c.Request),
+			Plugins: conf.Plugins,
+			Globals: conf.Environment,
+		},
 	})
 }

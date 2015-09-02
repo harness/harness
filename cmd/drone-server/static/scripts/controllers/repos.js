@@ -117,6 +117,16 @@
       });
     };
 
+
+    $scope.encrypt = function (plaintext) {
+      var data = {"DATA": plaintext};
+      repos.encrypt(fullName, data).then(function (payload) {
+        $scope.secure = payload.data["DATA"];
+      }).catch(function (err) {
+        $scope.error = err;
+      });
+    };
+
     $scope.deleteParam = function (key) {
       delete $scope.repo.params[key];
 
@@ -127,6 +137,10 @@
         $scope.error = err;
       });
     }
+  }
+
+  function toSnakeCase(str) {
+    return str.replace(/ /g, '_').replace(/([a-z0-9])([A-Z0-9])/g, '$1_$2').toLowerCase();
   }
 
   angular

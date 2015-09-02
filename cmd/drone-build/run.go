@@ -10,16 +10,16 @@ import (
 )
 
 type Context struct {
-	// Links  *common.Link
-	Clone   *common.Clone   `json:"clone"`
-	Repo    *common.Repo    `json:"repo"`
-	Build   *common.Build   `json:"build"`
-	Job     *common.Job     `json:"job"`
-	Keys    *common.Keypair `json:"keys"`
-	Netrc   *common.Netrc   `json:"netrc"`
-	Yaml    []byte          `json:"yaml"`
-	Env     []string        `json:"environment"`
-	Plugins []string        `json:"plugins"`
+	System *common.System `json:"system"`
+	Repo   *common.Repo   `json:"repo"`
+	Build  *common.Build  `json:"build"`
+	Job    *common.Job    `json:"job"`
+	Yaml   []byte         `json:"yaml"`
+
+	// todo re-factor these
+	Clone *common.Clone   `json:"clone"`
+	Keys  *common.Keypair `json:"keys"`
+	Netrc *common.Netrc   `json:"netrc"`
 
 	Conf   *common.Config `json:"-"`
 	infos  []*dockerclient.ContainerInfo
@@ -33,7 +33,7 @@ func setup(c *Context) error {
 		Privileged: false,
 		Volumes:    false,
 		Caching:    false,
-		Whitelist:  c.Plugins,
+		Whitelist:  c.System.Plugins,
 	}
 
 	// if repository is trusted the build may specify
@@ -154,7 +154,7 @@ func runSteps(c *Context, steps map[string]*common.Step) (int, error) {
 		conf.Cmd = toCommand(c, step)
 
 		// append global environment variables
-		conf.Env = append(conf.Env, c.Env...)
+		conf.Env = append(conf.Env, c.System.Globals...)
 
 		info, err := run(c.client, conf, step.Pull)
 		if err != nil {
