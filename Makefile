@@ -3,6 +3,12 @@
 SHA := $(shell git rev-parse --short HEAD)
 VERSION := 0.4.0-alpha
 
+all: build
+
+build:
+	go run make.go bindata build
+
+
 # Execute the database test suite against mysql 5.5
 #
 # You can launch a mysql container locally for testing:
