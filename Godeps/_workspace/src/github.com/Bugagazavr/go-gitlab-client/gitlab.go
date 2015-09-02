@@ -128,6 +128,35 @@ func (g *Gitlab) ResourceUrlQuery(u string, params, query map[string]string) str
 
 }
 
+func (g *Gitlab) ResourceUrlQueryRaw(u string, params, query map[string]string) (string, string) {
+	if params != nil {
+		for key, val := range params {
+			u = strings.Replace(u, key, encodeParameter(val), -1)
+		}
+	}
+
+	query_params := url.Values{}
+	if !g.Bearer {
+		query_params.Add("private_token", g.Token)
+	}
+
+	if query != nil {
+		for key, val := range query {
+			query_params.Set(key, val)
+		}
+	}
+
+	u = g.BaseUrl + g.ApiPath + u + "?" + query_params.Encode()
+	p, err := url.Parse(u)
+	if err != nil {
+		return u, ""
+	}
+
+	opaque := "//" + p.Host + p.Path
+	return u, opaque
+
+}
+
 func (g *Gitlab) ResourceUrlRaw(u string, params map[string]string) (string, string) {
 
 	if params != nil {

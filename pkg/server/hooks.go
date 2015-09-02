@@ -5,6 +5,7 @@ import (
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
+	"github.com/drone/drone/pkg/hash"
 	"github.com/drone/drone/pkg/queue"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/httputil"
@@ -57,7 +58,7 @@ func PostHook(c *gin.Context) {
 	}
 
 	// get the token and verify the hook is authorized
-	if c.Request.FormValue("access_token") != hash(repo.FullName, repo.Hash) {
+	if c.Request.FormValue("access_token") != hash.New(repo.FullName, repo.Hash) {
 		log.Errorf("invalid token sent with hook.")
 		c.AbortWithStatus(403)
 		return
@@ -68,11 +69,11 @@ func PostHook(c *gin.Context) {
 		log.Warnf("ignoring hook. repo %s has no owner.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
-	case !repo.Hooks.Push && hook.PullRequest != nil:
+	case !repo.Hooks.Push && hook.Commit != nil:
 		log.Infof("ignoring hook. repo %s is disabled.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
-	case !repo.Hooks.PullRequest && hook.PullRequest == nil:
+	case !repo.Hooks.PullRequest && hook.PullRequest != nil:
 		log.Warnf("ignoring hook. repo %s is disabled for pull requests.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
@@ -129,7 +130,7 @@ func PostHook(c *gin.Context) {
 		})
 	}
 
-	netrc, err := remote.Netrc(user)
+	netrc, err := remote.Netrc(user, repo)
 	if err != nil {
 		log.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
 		c.Fail(500, err)
