@@ -62,7 +62,7 @@ func (d *Docker) Write(f *buildfile.Buildfile) {
 
 	if len(d.DockerVersion) > 0 {
 		// Download docker binary and install it as /usr/local/bin/docker if it does not exist
-		f.WriteCmd("type -p docker || wget -qO- https://get.docker.io/builds/Linux/x86_64/docker-" +
+		f.WriteCmd("type -p docker || curl -sSL https://get.docker.io/builds/Linux/x86_64/docker-" +
 			d.DockerVersion + ".tgz |sudo tar zxf - -C /")
 	}
 
