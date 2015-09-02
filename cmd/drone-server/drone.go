@@ -72,7 +72,7 @@ var conf = struct {
 
 func main() {
 
-	flag.StringVar(&conf.docker.host, "docker-host", "unix:///var/run/docker/docker.sock", "")
+	flag.StringVar(&conf.docker.host, "docker-host", "unix:///var/run/docker.sock", "")
 	flag.StringVar(&conf.docker.cert, "docker-cert", "", "")
 	flag.StringVar(&conf.docker.key, "docker-key", "", "")
 	flag.StringVar(&conf.docker.ca, "docker-ca", "", "")
@@ -178,8 +178,8 @@ func main() {
 			repo.POST("/watch", server.Subscribe)
 			repo.DELETE("/unwatch", server.Unsubscribe)
 
-			repo.GET("/builds", server.GetCommits)
-			repo.GET("/builds/:number", server.GetCommit)
+			repo.GET("/builds", server.GetBuilds)
+			repo.GET("/builds/:number", server.GetBuild)
 			repo.POST("/builds/:number", server.RunBuild)
 			repo.DELETE("/builds/:number", server.KillBuild)
 			repo.GET("/logs/:number/:task", server.GetLogs)
@@ -234,6 +234,21 @@ func main() {
 		auth.Use(server.SetSession(session))
 		auth.GET("", server.GetLogin)
 		auth.POST("", server.GetLogin)
+	}
+
+	gitlab := r.Group("/gitlab/:owner/:name")
+	{
+		gitlab.Use(server.SetDatastore(store))
+		gitlab.Use(server.SetRepo())
+
+		gitlab.GET("/commits/:sha", server.GetCommit)
+		gitlab.GET("/pulls/:number", server.GetPullRequest)
+
+		redirects := gitlab.Group("/redirect")
+		{
+			redirects.GET("/commits/:sha", server.RedirectSha)
+			redirects.GET("/pulls/:number", server.RedirectPullRequest)
+		}
 	}
 
 	r.SetHTMLTemplate(index())

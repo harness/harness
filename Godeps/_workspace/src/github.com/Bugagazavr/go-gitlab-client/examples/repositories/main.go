@@ -36,10 +36,18 @@ func main() {
 		"  > branches\n"+
 		"  > branch\n"+
 		"  > tags\n"+
-		"  > commits")
+		"  > commits\n"+
+		"  > commit_comments  -sha COMMIT_SHA\n"+
+		"  > comment_a_commit -sha COMMIT_SHA -comment COMMENT_BODY")
 
 	var id string
 	flag.StringVar(&id, "id", "", "Specify repository id")
+
+	var sha string
+	flag.StringVar(&sha, "sha", "", "Specify commit sha")
+
+	var comment string
+	flag.StringVar(&comment, "comment", "", "The body of the new comment")
 
 	flag.Usage = func() {
 		fmt.Printf("Usage:\n")
@@ -90,7 +98,27 @@ func main() {
 		}
 
 		for _, commit := range commits {
-			fmt.Printf("%s > [%s] %s\n", commit.CreatedAt.Format("Mon 02 Jan 15:04"), commit.Author_Name, commit.Title)
+			fmt.Printf("(%s) %s > [%s] %s\n", commit.Id, commit.CreatedAt.Format("Mon 02 Jan 15:04"), commit.Author_Name, commit.Title)
 		}
+	case "commit_comments":
+		fmt.Println("Fetching comments on a repository commit…")
+
+		comments, err := gitlab.RepoCommitComments(id, sha)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		for _, c := range comments {
+			fmt.Printf("[%s] %s\n", c.Author.Username, c.Note)
+		}
+	case "comment_a_commit":
+		fmt.Println("Sending a new comment on a repository commit…")
+
+		c, err := gitlab.SendRepoCommitComment(id, sha, comment)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		fmt.Printf("[%s] %s\n", c.Author.Username, c.Note)
 	}
 }

@@ -1,0 +1,16 @@
+[
+  {
+    "id": 301,
+    "body": "Comment for MR",
+    "attachment": null,
+    "author": {
+      "id": 1,
+      "username": "pipin",
+      "email": "admin@example.com",
+      "name": "Pip",
+      "state": "active",
+      "created_at": "2013-09-30T13:46:01Z"
+    },
+    "created_at": "2013-10-02T08:57:14Z"
+  }
+]
