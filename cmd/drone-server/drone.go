@@ -185,15 +185,6 @@ func main() {
 			repo.GET("/logs/:number/:task", server.GetLogs)
 			// repo.POST("/status/:number", server.PostBuildStatus)
 		}
-
-		// Routes for external services
-		repoExternal := repos.Group("")
-		{
-			repoExternal.Use(server.SetRepo())
-
-			repoExternal.GET("/commits/:sha", server.GetCommit)
-			repoExternal.GET("/pulls/:number", server.GetPullRequest)
-		}
 	}
 
 	badges := api.Group("/badges/:owner/:name")
@@ -245,13 +236,19 @@ func main() {
 		auth.POST("", server.GetLogin)
 	}
 
-	redirects := r.Group("/redirect")
+	gitlab := r.Group("/gitlab/:owner/:name")
 	{
-		redirects.Use(server.SetDatastore(store))
-		redirects.Use(server.SetRepo())
+		gitlab.Use(server.SetDatastore(store))
+		gitlab.Use(server.SetRepo())
 
-		redirects.GET("/:owner/:name/commits/:sha", server.RedirectSha)
-		redirects.GET("/:owner/:name/pulls/:number", server.RedirectPullRequest)
+		gitlab.GET("/commits/:sha", server.GetCommit)
+		gitlab.GET("/pulls/:number", server.GetPullRequest)
+
+		redirects := gitlab.Group("/redirect")
+		{
+			redirects.GET("/commits/:sha", server.RedirectSha)
+			redirects.GET("/pulls/:number", server.RedirectPullRequest)
+		}
 	}
 
 	r.SetHTMLTemplate(index())
