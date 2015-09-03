@@ -26,11 +26,11 @@ The components of this string are:
 
 This section lists all connection options used in the connection string format. Connection options are pairs in the following form: `name=value`. The value is always case sensitive. Separate options with the ampersand (i.e. &) character:
 
-* `client_id` oauth client id for registered application
-* `client_secret` oauth client secret for registered application
-* `open=false` allows users to self-register. Defaults to false for security reasons.
-* `orgs=drone,docker` restricts access to these GitHub organizations. **Optional**
-* `private_mode=false` indicates GitHub Enterprise is running in private mode
+* `client_id` oauth client id for registered application.
+* `client_secret` oauth client secret for registered application.
+* `open=false` allows users to self-register. Defaults to false..
+* `orgs=drone&orgs=docker` restricts access to these GitHub organizations. **Optional**
+* `private_mode=false` indicates GitHub Enterprise is running in private mode.
 * `skip_verify=false` skip ca verification if self-signed certificate. Defaults to false.
 
 ## GitHub registration
