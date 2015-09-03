@@ -164,7 +164,7 @@ func (r *Gogs) Deactivate(user *model.User, repo *model.Repo, link string) error
 func (r *Gogs) ParseHook(req *http.Request) (*model.Hook, error) {
 	defer req.Body.Close()
 	var payloadbytes, _ = ioutil.ReadAll(req.Body)
-	var payload, err = gogs.ParseHook(payloadbytes)
+	var payload, err = gogs.ParsePushHook(payloadbytes)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (r *Gogs) ParseHook(req *http.Request) (*model.Hook, error) {
 	return &model.Hook{
 		Owner:     payload.Repo.Owner.UserName,
 		Repo:      payload.Repo.Name,
-		Sha:       payload.Commits[0].Id,
+		Sha:       payload.Commits[0].ID,
 		Branch:    payload.Branch(),
 		Author:    payload.Commits[0].Author.UserName,
 		Timestamp: time.Now().UTC().String(),
