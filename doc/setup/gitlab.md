@@ -29,7 +29,7 @@ This section lists all connection options used in the connection string format. 
 * `client_id` oauth client id for registered application
 * `client_secret` oauth client secret for registered application
 * `open=false` allows users to self-register. Defaults to false for security reasons.
-* `orgs=drone,docker` restricts access to these GitLab organizations. **Optional**
+* `orgs=drone&orgs=docker` restricts access to these GitLab organizations. **Optional**
 * `skip_verify=false` skip ca verification if self-signed certificate. Defaults to false for security reasons.
 * `clone_mode=token` a strategy for clone authorization, by default use repo token, but can be changed to `oauth` ( This is not secure, because your user token, with full access to your gitlab account will be written to .netrc, and it can be read by all who have access to project builds )
 
