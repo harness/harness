@@ -35,13 +35,13 @@ var (
 	DefaultEntrypoint = []string{"/bin/drone-exec"}
 
 	// default argument to invoke build steps
-	DefaultBuildArgs = []string{"--cache", "--clone", "--build", "--deploy"}
+	DefaultBuildArgs = []string{"--pull", "--cache", "--clone", "--build", "--deploy"}
 
 	// default argument to invoke build steps
-	DefaultPullRequestArgs = []string{"--cache", "--clone", "--build"}
+	DefaultPullRequestArgs = []string{"--pull", "--cache", "--clone", "--build"}
 
 	// default arguments to invoke notify steps
-	DefaultNotifyArgs = []string{"--notify"}
+	DefaultNotifyArgs = []string{"--pull", "--notify"}
 )
 
 type work struct {
