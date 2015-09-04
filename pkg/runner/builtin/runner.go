@@ -155,7 +155,7 @@ func (r *Runner) Run(w *queue.Work) error {
 		worker := newWorker(client)
 		workers = append(workers, worker)
 		cname := cname(job)
-		pullrequest := (w.Build.PullRequest != nil)
+		pullrequest := (w.Build.PullRequest != nil && w.Build.PullRequest.Number != 0)
 		state, builderr := worker.Build(cname, in, pullrequest)
 
 		switch {

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/pkg/queue"
 	common "github.com/drone/drone/pkg/types"
@@ -184,7 +185,10 @@ func RunBuild(c *gin.Context) {
 	if repo.Params != nil && len(repo.Params) != 0 {
 		raw = []byte(inject.InjectSafe(string(raw), repo.Params))
 	}
-	encrypted, _ := secure.Parse(repo.Keys.Private, repo.Hash, string(raw))
+	encrypted, err := secure.Parse(repo.Keys.Private, repo.Hash, string(raw))
+	if err != nil {
+		log.Errorf("failure to decrypt secure parameters for %s. %s", repo.FullName, err)
+	}
 	if encrypted != nil && len(encrypted) != 0 {
 		raw = []byte(inject.InjectSafe(string(raw), encrypted))
 	}
