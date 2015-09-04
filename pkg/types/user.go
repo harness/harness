@@ -6,7 +6,7 @@ type User struct {
 	Token  string `json:"-"`
 	Secret string `json:"-"`
 	Email  string `json:"email,omitempty"`
-	Avatar string `json:"avatar,omitempty"`
+	Avatar string `json:"avatar_url,omitempty"`
 	Active bool   `json:"active,omitempty"`
 	Admin  bool   `json:"admin,omitempty"`
 

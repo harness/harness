@@ -302,7 +302,7 @@ func (g *GitHub) push(r *http.Request) (*common.Hook, error) {
 		return nil, nil
 	}
 
-	return &common.Hook{Repo: repo, Commit: commit}, nil
+	return &common.Hook{Event: "push", Repo: repo, Commit: commit}, nil
 }
 
 // ¯\_(ツ)_/¯
@@ -385,7 +385,7 @@ func (g *GitHub) pullRequest(r *http.Request) (*common.Hook, error) {
 	// Author.Login
 	// Author.Email
 
-	return &common.Hook{Repo: repo, Commit: c, PullRequest: pr}, nil
+	return &common.Hook{Event: "pull_request", Repo: repo, Commit: c, PullRequest: pr}, nil
 }
 
 type pushHook struct {
