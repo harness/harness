@@ -812,7 +812,7 @@ definitions:
         {
           "login": "Octocat",
           "email": "octocat@github.com",
-          "avatar": "7194e8d48fa1d2b689f99443b767316c",
+          "avatar_url": "http://www.gravatar.com/avatar/7194e8d48fa1d2b689f99443b767316c",
           "admin": false,
           "active": true
         }
@@ -821,7 +821,7 @@ definitions:
         type: string
       email:
         type: string
-      avatar:
+      avatar_url:
         type: string
       admin:
         type: boolean
@@ -929,6 +929,7 @@ definitions:
           "head_commit": {
             "sha": "d101ef3ed6e973b039c3fd5ccdec378b0fa8684c",
             "ref": "refs\/heads\/master",
+            "link_url": "https:\/\/github.com\/drone\/drone\/commit\/d101ef3ed6",
             "branch": "master",
             "message": "updated the README.md file",
             "timestamp": "",

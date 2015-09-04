@@ -6,7 +6,7 @@ type Repo struct {
 	Owner    string `json:"owner"      sql:"unique:ux_repo_owner_name"`
 	Name     string `json:"name"       sql:"unique:ux_repo_owner_name"`
 	FullName string `json:"full_name"  sql:"unique:ux_repo_full_name"`
-	Avatar   string `json:"avatar"`
+	Avatar   string `json:"avatar_url"`
 	Self     string `json:"self_url"`
 	Link     string `json:"link_url"`
 	Clone    string `json:"clone_url"`

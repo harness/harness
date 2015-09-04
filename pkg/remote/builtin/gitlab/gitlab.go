@@ -256,7 +256,7 @@ func (g *Gitlab) Hook(req *http.Request) (*common.Hook, error) {
 
 func mergeRequest(parsed *gogitlab.HookPayload, req *http.Request) (*common.Hook, error) {
 	var hook = new(common.Hook)
-
+	hook.Event = "pull_request"
 	hook.Repo = &common.Repo{}
 	hook.Repo.Owner = req.FormValue("owner")
 	hook.Repo.Name = req.FormValue("name")
@@ -295,6 +295,7 @@ func push(parsed *gogitlab.HookPayload, req *http.Request) (*common.Hook, error)
 	var cloneUrl = parsed.Repository.GitHttpUrl
 
 	var hook = new(common.Hook)
+	hook.Event = "push"
 	hook.Repo = &common.Repo{}
 	hook.Repo.Owner = req.FormValue("owner")
 	hook.Repo.Name = req.FormValue("name")

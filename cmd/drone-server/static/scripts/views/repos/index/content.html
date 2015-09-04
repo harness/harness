@@ -26,7 +26,7 @@
     <ul class="list cozy" ng-show="!waiting && !error">
       <a class="row row-repo" ng-repeat="repo in repos | orderBy:'full_name' | filter: search_text" ng-href="/{{ repo.full_name }}">
         <div class="column-avatar">
-          <img ng-src="{{ repo.avatar }}" />
+          <img ng-src="{{ repo.avatar_url }}" />
         </div>
         <div class="column-fill">
           <h2>{{ repo.name }}</h2>
