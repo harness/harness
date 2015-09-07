@@ -49,14 +49,10 @@
         <pre class="snippet">{{ repo.keypair.public }}</pre>
       </div>
     </div>
-  </section>
-
-  <p style="margin-top:50px;margin-bottom:10px;line-height:20px;color:#666;"><b style="font-weight:bold;">NOTE:</b> The below sections should re-architected and are therefore not styled. The delete page should be combined with this current page. Secret variables should be stored in the .drone.yml instead of the user interface</p>
-  <section>
-    <a class="row" ng-href="{{ repo.full_name }}/edit/env">
-      <div>Private Variables</div>
+    <a class="row" ng-href="{{ repo.full_name }}/secure">
+      <div>Secrets</div>
       <div>
-        Inject private variables into your build environment
+        Inject secret variables into your build environment
       </div>
     </a>
     <a class="row" ng-href="{{ repo.full_name }}/delete">
