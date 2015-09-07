@@ -1,0 +1,36 @@
+language: go
+
+sudo: false
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - go: tip
+
+go:
+- 1.2
+- 1.3
+- 1.4
+- 1.5
+- tip
+
+before_script:
+- export PATH=$HOME/.local/bin:$PATH
+
+before_install:
+- go get github.com/axw/gocov/gocov
+- go get github.com/mattn/goveralls
+- go get golang.org/x/tools/cmd/cover || true
+- go get code.google.com/p/go.tools/cmd/cover || true
+- pip install cram --user `whoami`
+
+script:
+- go test . -v -covermode=count -coverprofile=profile.cov
+- go test ./cipher -v -covermode=count -coverprofile=cipher/profile.cov
+- cd jose-util && go build && PATH=$PWD:$PATH cram -v jose-util.t
+- cd ..
+
+after_success:
+- tail -n+2 cipher/profile.cov >> profile.cov
+- $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci
+

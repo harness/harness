@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
-	"github.com/square/go-jose"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/square/go-jose"
 )
 
 func Test_Secure(t *testing.T) {

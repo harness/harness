@@ -93,6 +93,10 @@
 			"Rev": "0fdc3ca0e58365801f1212900def9c7c60bbe2c7"
 		},
 		{
+			"ImportPath": "github.com/square/go-jose",
+			"Rev": "afa7aee6d378358aa553dc54ddf1b109b96adcf7"
+		},
+		{
 			"ImportPath": "github.com/stretchr/objx",
 			"Rev": "cbeaeb16a013161a98496fad62933b1d21786672"
 		},

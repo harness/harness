@@ -5,7 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 
-	"github.com/square/go-jose"
+	"github.com/drone/drone/Godeps/_workspace/src/github.com/square/go-jose"
 )
 
 // Encrypt encrypts a secret string.
