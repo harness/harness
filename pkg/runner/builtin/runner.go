@@ -255,6 +255,7 @@ func (r *Runner) Logs(job *types.Job) (io.ReadCloser, error) {
 	// make sure this container actually exists
 	info, err := client.InspectContainer(cname(job))
 	if err != nil {
+
 		// add a small exponential backoff since there
 		// is a small window when the container hasn't
 		// been created yet, but the build is about to start
@@ -264,7 +265,9 @@ func (r *Runner) Logs(job *types.Job) (io.ReadCloser, error) {
 			if err != nil && i == 5 {
 				return nil, err
 			}
-			break
+			if err == nil {
+				break
+			}
 		}
 	}
 

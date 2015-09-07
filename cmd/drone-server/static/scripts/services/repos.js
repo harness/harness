@@ -80,7 +80,7 @@
      * @param {string} Plaintext to encrypt.
      */
     this.encrypt = function (repoName, plaintext) {
-      return $http.post('/api/repos/' + repoName + '/encrypt', plaintext);
+      return $http.post('/api/repos/' + repoName + '/encrypt', btoa(plaintext));
     };
 
     var callback,

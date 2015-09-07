@@ -1,6 +1,8 @@
 package server
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 
@@ -254,6 +256,12 @@ func Encrypt(c *gin.Context) {
 		c.Fail(500, err)
 		return
 	}
+	in, err = base64.StdEncoding.DecodeString(string(in))
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+	in = bytes.Replace(in, []byte{'\xA0'}, []byte{' '}, -1)
 	out, err := secure.Encrypt(string(in), repo.Keys.Private)
 	if err != nil {
 		c.Fail(500, err)
