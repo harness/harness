@@ -15,7 +15,8 @@ type Work struct {
 	Build  *common.Build   `json:"build"`
 	Keys   *common.Keypair `json:"keypair"`
 	Netrc  *common.Netrc   `json:"netrc"`
-	Yaml   []byte          `json:"yaml"`
+	Config []byte          `json:"config"`
+	Secret []byte          `json:"secret"`
 }
 
 // represents a worker that has connected

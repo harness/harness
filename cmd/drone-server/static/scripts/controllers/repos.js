@@ -119,9 +119,8 @@
 
 
     $scope.encrypt = function (plaintext) {
-      var data = {"DATA": plaintext};
-      repos.encrypt(fullName, data).then(function (payload) {
-        $scope.secure = payload.data["DATA"];
+      repos.encrypt(fullName, plaintext).then(function (payload) {
+        $scope.secure = payload.data;
       }).catch(function (err) {
         $scope.error = err;
       });

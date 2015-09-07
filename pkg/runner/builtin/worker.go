@@ -50,7 +50,8 @@ type work struct {
 	Job       *types.Job       `json:"job"`
 	System    *types.System    `json:"system"`
 	Workspace *types.Workspace `json:"workspace"`
-	Yaml      string           `json:"yaml"`
+	Secret    string           `json:"secret"`
+	Config    string           `json:"config"`
 }
 
 type worker struct {

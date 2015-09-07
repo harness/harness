@@ -159,14 +159,16 @@ func (g *Gitlab) Perm(u *common.User, owner, name string) (*common.Perm, error) 
 
 // GetScript fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
-func (g *Gitlab) Script(user *common.User, repo *common.Repo, build *common.Build) ([]byte, error) {
+func (g *Gitlab) Script(user *common.User, repo *common.Repo, build *common.Build) ([]byte, []byte, error) {
 	var client = NewClient(g.URL, user.Token, g.SkipVerify)
 	id, err := GetProjectId(g, client, repo.Owner, repo.Name)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return client.RepoRawFile(id, build.Commit.Sha, ".drone.yml")
+	cfg, err := client.RepoRawFile(id, build.Commit.Sha, ".drone.yml")
+	enc, _ := client.RepoRawFile(id, build.Commit.Sha, ".drone.sec")
+	return cfg, enc, err
 }
 
 // NOTE Currently gitlab doesn't support status for commits and events,

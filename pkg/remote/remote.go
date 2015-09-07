@@ -56,7 +56,7 @@ type Remote interface {
 
 	// Script fetches the build script (.drone.yml) from the remote
 	// repository and returns in string format.
-	Script(u *types.User, r *types.Repo, b *types.Build) ([]byte, error)
+	Script(u *types.User, r *types.Repo, b *types.Build) ([]byte, []byte, error)
 
 	// Status sends the commit status to the remote system.
 	// An example would be the GitHub pull request status.

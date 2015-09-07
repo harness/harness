@@ -1,8 +1,8 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
+	"io/ioutil"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
@@ -249,16 +249,17 @@ func PostRepo(c *gin.Context) {
 //
 func Encrypt(c *gin.Context) {
 	repo := ToRepo(c)
-
-	in := map[string]string{}
-	json.NewDecoder(c.Request.Body).Decode(&in)
-	privKey := sshutil.UnMarshalPrivateKey([]byte(repo.Keys.Private))
-	err := secure.EncryptMap(secure.ToHash(repo.Hash), &privKey.PublicKey, in)
+	in, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		c.Fail(500, err)
 		return
 	}
-	c.JSON(200, &in)
+	out, err := secure.Encrypt(string(in), repo.Keys.Private)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+	c.Writer.Write([]byte(out))
 }
 
 // Unsubscribe accapets a request to unsubscribe the
