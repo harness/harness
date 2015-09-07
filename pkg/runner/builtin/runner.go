@@ -144,7 +144,8 @@ func (r *Runner) Run(w *queue.Work) error {
 			Repo:      w.Repo,
 			Build:     w.Build,
 			Job:       job,
-			Yaml:      string(w.Yaml),
+			Secret:    string(w.Secret),
+			Config:    string(w.Config),
 		}
 		in, err := json.Marshal(work)
 		if err != nil {
@@ -224,7 +225,8 @@ func (r *Runner) Run(w *queue.Work) error {
 			Repo:      w.Repo,
 			Build:     w.Build,
 			Job:       job,
-			Yaml:      string(w.Yaml),
+			Secret:    string(w.Secret),
+			Config:    string(w.Config),
 		}
 		in, err := json.Marshal(work)
 		if err != nil {

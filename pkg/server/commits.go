@@ -6,14 +6,10 @@ import (
 	"strconv"
 	"time"
 
-	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/pkg/queue"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/httputil"
-	"github.com/drone/drone/pkg/yaml/inject"
-	"github.com/drone/drone/pkg/yaml/secure"
-	// "github.com/gin-gonic/gin/binding"
 )
 
 // GetCommit accepts a request to retrieve a commit
@@ -175,33 +171,22 @@ func RunBuild(c *gin.Context) {
 	}
 
 	// featch the .drone.yml file from the database
-	raw, err := remote.Script(user, repo, build)
+	raw, sec, err := remote.Script(user, repo, build)
 	if err != nil {
 		c.Fail(404, err)
 		return
 	}
 
-	// inject any private parameters into the .drone.yml
-	if repo.Params != nil && len(repo.Params) != 0 {
-		raw = []byte(inject.InjectSafe(string(raw), repo.Params))
-	}
-	encrypted, err := secure.Parse(repo.Keys.Private, repo.Hash, string(raw))
-	if err != nil {
-		log.Errorf("failure to decrypt secure parameters for %s. %s", repo.FullName, err)
-	}
-	if encrypted != nil && len(encrypted) != 0 {
-		raw = []byte(inject.InjectSafe(string(raw), encrypted))
-	}
-
 	c.JSON(202, build)
 
 	queue_.Publish(&queue.Work{
-		User:  user,
-		Repo:  repo,
-		Build: build,
-		Keys:  repo.Keys,
-		Netrc: netrc,
-		Yaml:  raw,
+		User:   user,
+		Repo:   repo,
+		Build:  build,
+		Keys:   repo.Keys,
+		Netrc:  netrc,
+		Config: raw,
+		Secret: sec,
 		System: &common.System{
 			Link:    httputil.GetURL(c.Request),
 			Plugins: conf.Plugins,

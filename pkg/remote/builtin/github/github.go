@@ -163,9 +163,12 @@ func (g *GitHub) Perm(u *common.User, owner, name string) (*common.Perm, error) 
 
 // Script fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
-func (g *GitHub) Script(u *common.User, r *common.Repo, b *common.Build) ([]byte, error) {
+func (g *GitHub) Script(u *common.User, r *common.Repo, b *common.Build) ([]byte, []byte, error) {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
-	return GetFile(client, r.Owner, r.Name, ".drone.yml", b.Commit.Sha)
+
+	cfg, err := GetFile(client, r.Owner, r.Name, ".drone.yml", b.Commit.Sha)
+	sec, _ := GetFile(client, r.Owner, r.Name, ".drone.sec", b.Commit.Sha)
+	return cfg, sec, err
 }
 
 // Netrc returns a .netrc file that can be used to clone

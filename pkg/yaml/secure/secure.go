@@ -2,71 +2,45 @@ package secure
 
 import (
 	"crypto/rsa"
-	"crypto/sha256"
-	"hash"
+	"crypto/x509"
+	"encoding/pem"
 
-	"github.com/drone/drone/Godeps/_workspace/src/gopkg.in/yaml.v2"
-
-	"github.com/drone/drone/pkg/utils/sshutil"
+	"github.com/square/go-jose"
 )
 
-// Parse parses and returns the secure section of the
-// yaml file as plaintext parameters.
-func Parse(privateKeyPEM, repoHash, raw string) (map[string]string, error) {
-	params, err := parseSecure(raw)
+// Encrypt encrypts a secret string.
+func Encrypt(in, privKey string) (string, error) {
+	rsaPrivKey, err := decodePrivateKey(privKey)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	hasher := ToHash(repoHash)
-	privKey := sshutil.UnMarshalPrivateKey([]byte(privateKeyPEM))
-
-	err = DecryptMap(hasher, privKey, params)
-	return params, err
+	return encrypt(in, &rsaPrivKey.PublicKey)
 }
 
-// DecryptMap decrypts values of a map of named parameters
-// from base64 to decrypted strings.
-func DecryptMap(hasher hash.Hash, privKey *rsa.PrivateKey, params map[string]string) error {
-	var err error
+// decodePrivateKey is a helper function that unmarshals a PEM
+// bytes to an RSA Private Key
+func decodePrivateKey(privateKey string) (*rsa.PrivateKey, error) {
+	derBlock, _ := pem.Decode([]byte(privateKey))
+	return x509.ParsePKCS1PrivateKey(derBlock.Bytes)
+}
 
-	for name, encrypted := range params {
-		params[name], err = sshutil.Decrypt(hasher, privKey, encrypted)
-		if err != nil {
-			return err
-		}
+// encrypt encrypts a plaintext variable using JOSE with
+// RSA_OAEP and A128GCM algorithms.
+func encrypt(text string, pubKey *rsa.PublicKey) (string, error) {
+	var encrypted string
+	var plaintext = []byte(text)
+
+	// Creates a new encrypter using defaults
+	encrypter, err := jose.NewEncrypter(jose.RSA_OAEP, jose.A128GCM, pubKey)
+	if err != nil {
+		return encrypted, err
 	}
-	return nil
-}
-
-// EncryptMap encrypts values of a map of named parameters
-func EncryptMap(hasher hash.Hash, pubKey *rsa.PublicKey, params map[string]string) error {
-	var err error
-
-	for name, value := range params {
-		params[name], err = sshutil.Encrypt(hasher, pubKey, value)
-		if err != nil {
-			return err
-		}
+	// Encrypts the plaintext value and serializes
+	// as a JOSE string.
+	object, err := encrypter.Encrypt(plaintext)
+	if err != nil {
+		return encrypted, err
 	}
-	return nil
-}
-
-// parseSecure is helper function to parse the Secure data from
-// the raw yaml file.
-func parseSecure(raw string) (map[string]string, error) {
-	data := struct {
-		Secure map[string]string
-	}{}
-	err := yaml.Unmarshal([]byte(raw), &data)
-
-	return data.Secure, err
-}
-
-// ToHash is helper function to generate Hash of given string
-func ToHash(key string) hash.Hash {
-	hasher := sha256.New()
-	hasher.Write([]byte(key))
-	hasher.Reset()
-	return hasher
+	return object.CompactSerialize()
 }

@@ -77,10 +77,10 @@
      * Encrypt the set of parameters.
      *
      * @param {string} Name of the repository.
-     * @param {object} Key/Value map of parameters.
+     * @param {string} Plaintext to encrypt.
      */
-    this.encrypt = function (repoName, params) {
-      return $http.post('/api/repos/' + repoName + '/encrypt', params);
+    this.encrypt = function (repoName, plaintext) {
+      return $http.post('/api/repos/' + repoName + '/encrypt', plaintext);
     };
 
     var callback,

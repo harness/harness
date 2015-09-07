@@ -10,9 +10,7 @@ import (
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/httputil"
 	"github.com/drone/drone/pkg/yaml"
-	"github.com/drone/drone/pkg/yaml/inject"
 	"github.com/drone/drone/pkg/yaml/matrix"
-	"github.com/drone/drone/pkg/yaml/secure"
 )
 
 // PostHook accepts a post-commit hook and parses the payload
@@ -93,25 +91,13 @@ func PostHook(c *gin.Context) {
 	build.RepoID = repo.ID
 
 	// fetch the .drone.yml file from the database
-	raw, err := remote.Script(user, repo, build)
+	raw, sec, err := remote.Script(user, repo, build)
 	if err != nil {
 		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
 		c.Fail(404, err)
 		return
 	}
-	// inject any private parameters into the .drone.yml
-	if repo.Params != nil && len(repo.Params) != 0 {
-		raw = []byte(inject.InjectSafe(string(raw), repo.Params))
-	}
-	encrypted, err := secure.Parse(repo.Keys.Private, repo.Hash, string(raw))
-	if err != nil {
-		log.Errorf("failure to decrypt secure parameters for %s. %s", repo.FullName, err)
-		c.Fail(400, err)
-		return
-	}
-	if encrypted != nil && len(encrypted) != 0 {
-		raw = []byte(inject.InjectSafe(string(raw), encrypted))
-	}
+
 	axes, err := matrix.Parse(string(raw))
 	if err != nil {
 		log.Errorf("failure to calculate matrix for %s. %s", repo.FullName, err)
@@ -160,12 +146,13 @@ func PostHook(c *gin.Context) {
 	}
 
 	queue_.Publish(&queue.Work{
-		User:  user,
-		Repo:  repo,
-		Build: build,
-		Keys:  repo.Keys,
-		Netrc: netrc,
-		Yaml:  raw,
+		User:   user,
+		Repo:   repo,
+		Build:  build,
+		Keys:   repo.Keys,
+		Netrc:  netrc,
+		Config: raw,
+		Secret: sec,
 		System: &common.System{
 			Link:    httputil.GetURL(c.Request),
 			Plugins: conf.Plugins,
