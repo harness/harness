@@ -28,27 +28,20 @@ deploy:
       branch: feature/*
 ```
 
-Use a more verbose `.drone.yml` syntax to declare multiple `heroku` deployment steps:
+Declare multiple `heroku` deployment steps:
 
 ```yaml
   # deploy master to our production heroku environment
 
-  heroku_prod:
-    image: plugins/heroku
+  heroku:
+    app: app.com
     when:
       branch: master
 
   # deploy to our staging heroku environment
 
-  heroku_staging:
-    image: plugins/heroku
-    when:
-      branch: stage
-
-  # this is the same as above, but uses a short-hand syntax
-  # and infers the `image` name
-
   heroku:
+    app: staging.app.com
     when:
       branch: stage
 ```

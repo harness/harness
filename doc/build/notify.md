@@ -23,8 +23,6 @@ publish:
       branch: master
 ```
 
-> **NOTE** the ability to limit notifications by status (ie success, failure, etc) is not yet implemented
-
 Or limit execution based on the build status. The below example will only send the notification when the build fails:
 
 ```yaml
