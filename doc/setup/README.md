@@ -1,4 +1,5 @@
 * [Install](#)
+    * [Ubuntu](ubuntu.md)
     * [Docker](install.md)
 * [Setup](#)
     * [Server](server.md)

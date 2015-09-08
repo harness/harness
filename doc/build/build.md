@@ -24,7 +24,6 @@ The build configuration options:
 * `volumes` - list of bind mounted volumes on the host machine [1]
 * `net` - sets the container [network mode](https://docs.docker.com/articles/networking/#container-networking) [1]
 * `commands` - list of build commands
-* `cache` - list of directories within the workspace to cache
 
 [1] Some build options are disabled for security reasons, including `volumes`, `privileged` and `net`. To enable these options, a system administrator must white-list your repository as trusted. This can be done via the repository settings screen.
 
@@ -45,14 +44,6 @@ image: library/golang:1.4
 # fully qualified Docker image URI, with tag
 image: index.docker.io/library/golang:1.4
 ```
-
-## Caching
-
-The `cache` attribute supports a list of directories to cache within the build directory. Internally Drone will treat these as volume containers that are shared between all builds within the repository built on the same host machine. Unlike the `volumes` option `cache` is available without the repository being marked as trusted by an administrator[2].
-
-[2] If the repository is public and the build is triggered by a pull request then caching will be disabled for that build. For all other builds caching will be available.
-
-For more information on how to use caching within a project view [caching in Drone](caching.md).
 
 ## Skipping builds
 
