@@ -23,8 +23,6 @@ import (
 	_ "github.com/drone/drone/pkg/remote/builtin/github"
 	_ "github.com/drone/drone/pkg/remote/builtin/gitlab"
 	_ "github.com/drone/drone/pkg/store/builtin"
-
-	_ "net/http/pprof"
 )
 
 var (
@@ -115,12 +113,7 @@ func main() {
 
 	// launch the local queue runner if the system
 	// is not conifugred to run in agent mode
-	if len(settings.Agents.Secret) != 0 {
-		log.Infof("Run builds using remote build agents")
-	} else {
-		log.Infof("Run builds using the embedded build runner")
-		go run(&runner_, queue_)
-	}
+	go run(&runner_, queue_)
 
 	r := gin.Default()
 
