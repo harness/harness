@@ -254,18 +254,10 @@ func Encrypt(c *gin.Context) {
 	repo := ToRepo(c)
 	in, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		c.Fail(500, err)
+		c.Fail(400, err)
 		return
 	}
 	in, err = base64.StdEncoding.DecodeString(string(in))
-	if err != nil {
-		c.Fail(500, err)
-		return
-	}
-
-	// make sure the Yaml is valid format to prevent
-	// a malformed value from being used in the build
-	err = yaml.Unmarshal(in, &yaml.MapSlice{})
 	if err != nil {
 		c.Fail(500, err)
 		return
@@ -275,6 +267,14 @@ func Encrypt(c *gin.Context) {
 	// the yaml file when entered into a browser textarea.
 	// these need to be removed
 	in = bytes.Replace(in, []byte{'\xA0'}, []byte{' '}, -1)
+
+	// make sure the Yaml is valid format to prevent
+	// a malformed value from being used in the build
+	err = yaml.Unmarshal(in, &yaml.MapSlice{})
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
 
 	// encrypts using go-jose
 	out, err := secure.Encrypt(string(in), repo.Keys.Private)
