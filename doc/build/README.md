@@ -1,5 +1,6 @@
 * [Overview](overview.md)
 * [Variables](env.md)
+* [Secrets](secrets.md)
 * [Cache](cache.md)
 * [Clone](clone.md)
 * [Build](build.md)
