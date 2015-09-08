@@ -181,7 +181,6 @@ func build() error {
 		output string
 	}{
 		{"github.com/drone/drone/cmd/drone-server", "bin/drone"},
-		{"github.com/drone/drone/cmd/drone-agent", "bin/drone-agent"},
 	}
 	for _, bin := range bins {
 		ldf := fmt.Sprintf("-X main.revision=%s -X main.version=%s", sha, version)
@@ -223,7 +222,6 @@ func image() error {
 		dir  string
 		name string
 	}{
-		{"./bin/drone-agent", "drone/drone-agent"},
 		{"./bin/drone-server", "drone/drone"},
 	}
 	for _, image := range images {
@@ -265,7 +263,6 @@ func clean() error {
 
 	files := []string{
 		"bin/drone",
-		"bin/drone-agent",
 	}
 
 	for _, file := range files {

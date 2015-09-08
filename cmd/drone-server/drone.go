@@ -193,22 +193,6 @@ func main() {
 		hooks.POST("", server.PostHook)
 	}
 
-	queue := api.Group("/queue")
-	{
-		queue.Use(server.MustAgent())
-		queue.Use(server.SetSettings(settings))
-		queue.Use(server.SetUpdater(updater))
-		queue.POST("/pull", server.PollBuild)
-
-		push := queue.Group("/push/:owner/:name")
-		{
-			push.Use(server.SetRepo())
-			push.POST("", server.PushCommit)
-			push.POST("/:commit", server.PushBuild)
-			push.POST("/:commit/:build/logs", server.PushLogs)
-		}
-	}
-
 	stream := api.Group("/stream")
 	{
 		stream.Use(server.SetRepo())

@@ -76,21 +76,6 @@ func SetRunner(r runner.Runner) gin.HandlerFunc {
 	}
 }
 
-func ToUpdater(c *gin.Context) runner.Updater {
-	v, ok := c.Get("updater")
-	if !ok {
-		return nil
-	}
-	return v.(runner.Updater)
-}
-
-func SetUpdater(u runner.Updater) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("updater", u)
-		c.Next()
-	}
-}
-
 func ToSettings(c *gin.Context) *config.Config {
 	v, ok := c.Get("config")
 	if !ok {
@@ -241,25 +226,6 @@ func MustAdmin() gin.HandlerFunc {
 			c.Set("user", u)
 			c.Next()
 		}
-	}
-}
-
-func MustAgent() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		conf := ToSettings(c)
-
-		// verify remote agents are enabled
-		if len(conf.Agents.Secret) == 0 {
-			c.AbortWithStatus(405)
-			return
-		}
-		// verify the agent token matches
-		token := c.Request.FormValue("token")
-		if token != conf.Agents.Secret {
-			c.AbortWithStatus(401)
-			return
-		}
-		c.Next()
 	}
 }
 
