@@ -1,37 +1,43 @@
 # Variables
 
-The build environment has access to the following environment variables:
+Drone injects the following namespaced environment variables into every build:
 
-* `CI=true`
 * `DRONE=true`
 * `DRONE_REPO` - repository name for the current build
-* `DRONE_BUILD` - build number for the current build
 * `DRONE_BRANCH` - branch name for the current build
 * `DRONE_COMMIT` - git sha for the current build
 * `DRONE_DIR` - working directory for the current build
+* `DRONE_BUILD_NUMBER` - build number for the current build
+* `DRONE_PULL_REQUEST` - pull request number fo the current build
+* `DRONE_JOB_NUMBER` - job number for the current build
+
+Drone also injects `CI_` prefixed variables for compatibility with other systems:
+
+* `CI=true`
+* `CI_NAME=drone`
+* `CI_REPO` - repository name of the current build
+* `CI_BRANCH` - branch name for the current build
+* `CI_COMMIT` - git sha for the current build
+* `CI_BUILD_NUMBER` - build number for the current build
+* `CI_PULL_REQUEST` - pull request number fo the current build
+* `CI_JOB_NUMBER` - job number for the current build
+* `CI_BUILD_DIR` - working directory for the current build
+* `CI_BUILD_URL` - url for the current build
 
 
-## Private Variables
+## Injecting
 
-You may also store encrypted, private variables in the `.drone.yml` and inject at runtime. Private variables are encrypted using RSA encryption with OAEP (see [EncryptOAEP](http://golang.org/pkg/crypto/rsa/#EncryptOAEP)). You can generate encrypted strings from your repository settings screen.
+A subset of variables may be injected directly into the Yaml at runtime using the `$$` notation:
 
-Once you have an ecrypted string, you can add the encrypted variable to the `secure` section of the `.drone.yml`. These variables are decrypted and injected into the `.drone.yml` at runtime using the `$$` notation.
+* `$$COMMIT` git sha for the current build, `--short` format
+* `$$BRANCH` git branch for the current build
+* `$$REPO` repository full name (in `owner/name` format)
 
-An example `.drone.yml` expecting the `HEROKU_TOKEN` private variable:
+This is useful when you need to dynamically configure your plugin based on the current build. For example, we can alter an artifact name to include the branch:
 
-```yaml
-build:
-  image: golang
-  commands:
-    - go get
-    - go build
-    - go test
-
-deploy:
-  heroku:
-    app: pied_piper
-    token: $$HEROKU_TOKEN
-
-secure:
-  HEROKU_TOKEN: <encrypted string>
+```
+publish:
+  s3:
+    source: ./foo.tar.gz
+    target: ./foo-$$BRANCH.tar.gz
 ```
