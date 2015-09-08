@@ -817,6 +817,9 @@ definitions:
           "active": true
         }
     properties:
+      id:
+        type: integer
+        format: int64
       login:
         type: string
       email:
@@ -845,6 +848,7 @@ definitions:
   Repo:
     example: |
         {
+          "id": 1,
           "owner":"drone",
           "name":"drone-test-go",
           "full_name":"drone/drone-test-go",
@@ -873,6 +877,9 @@ definitions:
           }
         }
     properties:
+      id:
+        type: integer
+        format: int64
       owner:
         type: string
       name:
@@ -921,6 +928,7 @@ definitions:
   Build:
     example: |
         {
+          "id": 42,
           "number": 1,
           "status": "success",
           "started_at": 5788800,
@@ -960,6 +968,9 @@ definitions:
           ]
         }
     properties:
+      id:
+        type: integer
+        format: int64
       number:
         type: integer
       status:
@@ -1003,6 +1014,9 @@ definitions:
         type: string
   Job:
     properties:
+      id:
+        type: integer
+        format: int64
       number:
         type: integer
       status:

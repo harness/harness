@@ -10,8 +10,8 @@ const (
 )
 
 type Build struct {
-	ID       int64
-	RepoID   int64  `json:"id"     sql:"unique:ux_build_number,index:ix_build_repo_id"`
+	ID       int64  `json:"id"`
+	RepoID   int64  `json:"-"     sql:"unique:ux_build_number,index:ix_build_repo_id"`
 	Number   int    `json:"number" sql:"unique:ux_build_number"`
 	Event    string `json:"event"`
 	Status   string `json:"status"`
