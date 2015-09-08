@@ -8,6 +8,7 @@ import (
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
+	"github.com/drone/drone/Godeps/_workspace/src/gopkg.in/yaml.v2"
 
 	"github.com/drone/drone/pkg/hash"
 	"github.com/drone/drone/pkg/remote"
@@ -261,7 +262,21 @@ func Encrypt(c *gin.Context) {
 		c.Fail(500, err)
 		return
 	}
+
+	// make sure the Yaml is valid format to prevent
+	// a malformed value from being used in the build
+	err = yaml.Unmarshal(in, &yaml.MapSlice{})
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+
+	// we found some strange characters included in
+	// the yaml file when entered into a browser textarea.
+	// these need to be removed
 	in = bytes.Replace(in, []byte{'\xA0'}, []byte{' '}, -1)
+
+	// encrypts using go-jose
 	out, err := secure.Encrypt(string(in), repo.Keys.Private)
 	if err != nil {
 		c.Fail(500, err)
