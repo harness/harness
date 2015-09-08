@@ -236,10 +236,15 @@ func main() {
 	http.Handle("/static/", static())
 	http.Handle("/", r)
 
-	err = http.ListenAndServe(conf.server.addr, nil)
+	if len(conf.server.cert) == 0 {
+		err = http.ListenAndServe(conf.server.addr, nil)
+	} else {
+		err = http.ListenAndServeTLS(conf.server.addr, conf.server.cert, conf.server.key, nil)
+	}
 	if err != nil {
 		log.Error("Cannot start server: ", err)
 	}
+
 }
 
 // static is a helper function that will setup handlers
