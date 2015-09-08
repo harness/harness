@@ -4,7 +4,7 @@ Drone allows you to store secret variables in an encrypted `.drone.sec` file in 
 
 An example `.drone.sec` yaml file, prior to being encryped:
 
-```
+```yaml
 checksum: f63561783e550ccd21663d13eaf6a4d252d84147
 environment:
   - HEROKU_TOKEN=pa$$word
