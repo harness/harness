@@ -44,10 +44,38 @@ type Runner struct {
 	Updater
 }
 
+func newDockerClient() (dockerclient.Client, error) {
+	var tlc *tls.Config
+
+	// create the Docket client TLS config
+	if len(DockerHostCert) > 0 && len(DockerHostKey) > 0 && len(DockerHostCa) > 0 {
+		cert, err := tls.LoadX509KeyPair(DockerHostCert, DockerHostKey)
+		if err != nil {
+			log.Errorf("failure to load SSL cert and key. %s", err)
+			return dockerclient.NewDockerClient(DockerHost, nil)
+		}
+		caCert, err := ioutil.ReadFile(DockerHostCa)
+		if err != nil {
+			log.Errorf("failure to load SSL CA cert. %s", err)
+			return dockerclient.NewDockerClient(DockerHost, nil)
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+		tlc = &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      caCertPool,
+		}
+	}
+
+	// create the Docker client. In this version of Drone (alpha)
+	// we do not spread builds across clients, but this can and
+	// (probably) will change in the future.
+	return dockerclient.NewDockerClient(DockerHost, tlc)
+}
+
 func (r *Runner) Run(w *queue.Work) error {
 	var workers []*worker
 	var client dockerclient.Client
-	var tlc *tls.Config
 
 	defer func() {
 		recover()
@@ -98,28 +126,10 @@ func (r *Runner) Run(w *queue.Work) error {
 		return err
 	}
 
-	// create the Docket client TLS config
-	if len(DockerHostCert) > 0 && len(DockerHostKey) > 0 && len(DockerHostCa) > 0 {
-		cert, err := tls.LoadX509KeyPair(DockerHostCert, DockerHostKey)
-		if err != nil {
-			log.Errorf("failure to load SSL cert and key. %s", err)
-		}
-		caCert, err := ioutil.ReadFile(DockerHostCa)
-		if err != nil {
-			log.Errorf("failure to load SSL CA cert. %s", err)
-		}
-		caCertPool := x509.NewCertPool()
-		caCertPool.AppendCertsFromPEM(caCert)
-		tlc = &tls.Config{
-			Certificates: []tls.Certificate{cert},
-			RootCAs:      caCertPool,
-		}
-	}
-
 	// create the Docker client. In this version of Drone (alpha)
 	// we do not spread builds across clients, but this can and
 	// (probably) will change in the future.
-	client, err = dockerclient.NewDockerClient(DockerHost, tlc)
+	client, err = newDockerClient()
 	if err != nil {
 		log.Errorf("failure to connect to docker. %s", err)
 		return err
@@ -240,7 +250,7 @@ func (r *Runner) Run(w *queue.Work) error {
 }
 
 func (r *Runner) Cancel(job *types.Job) error {
-	client, err := dockerclient.NewDockerClient(DockerHost, nil)
+	client, err := newDockerClient()
 	if err != nil {
 		return err
 	}
@@ -248,7 +258,7 @@ func (r *Runner) Cancel(job *types.Job) error {
 }
 
 func (r *Runner) Logs(job *types.Job) (io.ReadCloser, error) {
-	client, err := dockerclient.NewDockerClient(DockerHost, nil)
+	client, err := newDockerClient()
 	if err != nil {
 		return nil, err
 	}
