@@ -40,23 +40,9 @@
 			$scope.user = payload.data;
 		});
 
-		// Gets the user tokens
-		tokens.list().then(function(payload){
-			$scope.tokens = payload.data || [];
-		});
-
-		$scope.newToken={Label: ""};
-		$scope.createToken = function(newToken) {
-			tokens.post(newToken).then(function(payload) {
-				$scope.tokens.push(payload.data);
-				$scope.newToken={Label: ""};
-			});
-		}
-
-		$scope.revokeToken = function(token) {
-			tokens.delete(token).then(function() {
-				var index = $scope.tokens.indexOf(token);
-				$scope.tokens.splice(index, 1);
+		$scope.showToken = function() {
+			tokens.post().then(function(payload) {
+				$scope.token = payload.data;
 			});
 		}
 	}
