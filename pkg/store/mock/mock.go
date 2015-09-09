@@ -84,53 +84,6 @@ func (m *Store) DelUser(_a0 *types.User) error {
 
 	return r0
 }
-func (m *Store) Token(_a0 int64) (*types.Token, error) {
-	ret := m.Called(_a0)
-
-	var r0 *types.Token
-	if ret.Get(0) != nil {
-		r0 = ret.Get(0).(*types.Token)
-	}
-	r1 := ret.Error(1)
-
-	return r0, r1
-}
-func (m *Store) TokenLabel(_a0 *types.User, _a1 string) (*types.Token, error) {
-	ret := m.Called(_a0, _a1)
-
-	var r0 *types.Token
-	if ret.Get(0) != nil {
-		r0 = ret.Get(0).(*types.Token)
-	}
-	r1 := ret.Error(1)
-
-	return r0, r1
-}
-func (m *Store) TokenList(_a0 *types.User) ([]*types.Token, error) {
-	ret := m.Called(_a0)
-
-	var r0 []*types.Token
-	if ret.Get(0) != nil {
-		r0 = ret.Get(0).([]*types.Token)
-	}
-	r1 := ret.Error(1)
-
-	return r0, r1
-}
-func (m *Store) AddToken(_a0 *types.Token) error {
-	ret := m.Called(_a0)
-
-	r0 := ret.Error(0)
-
-	return r0
-}
-func (m *Store) DelToken(_a0 *types.Token) error {
-	ret := m.Called(_a0)
-
-	r0 := ret.Error(0)
-
-	return r0
-}
 func (m *Store) Starred(_a0 *types.User, _a1 *types.Repo) (bool, error) {
 	ret := m.Called(_a0, _a1)
 

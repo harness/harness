@@ -5,7 +5,7 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/ungerik/go-gravatar"
 
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/types"
 )
 
 // GetUsers accepts a request to retrieve all users
@@ -32,9 +32,13 @@ func GetUsers(c *gin.Context) {
 func PostUser(c *gin.Context) {
 	store := ToDatastore(c)
 	name := c.Params.ByName("name")
-	user := &common.User{Login: name}
+	user := &types.User{Login: name}
 	user.Token = c.Request.FormValue("token")
 	user.Secret = c.Request.FormValue("secret")
+	user.Hash = c.Request.FormValue("hash")
+	if len(user.Hash) == 0 {
+		user.Hash = types.GenerateToken()
+	}
 	if err := store.AddUser(user); err != nil {
 		c.Fail(400, err)
 	} else {
@@ -75,7 +79,7 @@ func PutUser(c *gin.Context) {
 		return
 	}
 
-	in := &common.User{}
+	in := &types.User{}
 	if !c.BindWith(in, binding.JSON) {
 		return
 	}

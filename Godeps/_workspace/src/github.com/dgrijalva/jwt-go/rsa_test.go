@@ -1,7 +1,7 @@
 package jwt_test
 
 import (
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -141,4 +141,34 @@ func TestRSAKeyParsing(t *testing.T) {
 		t.Errorf("Parsed invalid key as valid private key: %v", k)
 	}
 
+}
+
+func BenchmarkRS256Signing(b *testing.B) {
+	key, _ := ioutil.ReadFile("test/sample_key")
+	parsedKey, err := jwt.ParseRSAPrivateKeyFromPEM(key)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	benchmarkSigning(b, jwt.SigningMethodRS256, parsedKey)
+}
+
+func BenchmarkRS384Signing(b *testing.B) {
+	key, _ := ioutil.ReadFile("test/sample_key")
+	parsedKey, err := jwt.ParseRSAPrivateKeyFromPEM(key)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	benchmarkSigning(b, jwt.SigningMethodRS384, parsedKey)
+}
+
+func BenchmarkRS512Signing(b *testing.B) {
+	key, _ := ioutil.ReadFile("test/sample_key")
+	parsedKey, err := jwt.ParseRSAPrivateKeyFromPEM(key)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	benchmarkSigning(b, jwt.SigningMethodRS512, parsedKey)
 }

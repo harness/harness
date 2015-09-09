@@ -10,8 +10,8 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
 	"github.com/drone/drone/Godeps/_workspace/src/gopkg.in/yaml.v2"
 
-	"github.com/drone/drone/pkg/hash"
 	"github.com/drone/drone/pkg/remote"
+	"github.com/drone/drone/pkg/token"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/httputil"
 	"github.com/drone/drone/pkg/utils/sshutil"
@@ -208,10 +208,18 @@ func PostRepo(c *gin.Context) {
 		r.FullName,
 	)
 
+	// crates the jwt token used to verify the repository
+	t := token.New(token.HookToken, r.FullName)
+	sig, err := t.Sign(r.Hash)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+
 	link := fmt.Sprintf(
 		"%s/api/hook?access_token=%s",
 		httputil.GetURL(c.Request),
-		hash.New(r.FullName, r.Hash),
+		sig,
 	)
 
 	// generate an RSA key and add to the repo

@@ -6,7 +6,7 @@ import (
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/pkg/hash"
+	"github.com/drone/drone/pkg/token"
 )
 
 // RedirectSha accepts a request to retvie a redirect
@@ -79,8 +79,14 @@ func GetPullRequest(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
 
-	// get the token and verify the hook is authorized
-	if c.Request.FormValue("access_token") != hash.New(repo.FullName, repo.Hash) {
+	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
+		return repo.Hash, nil
+	})
+	if err != nil {
+		c.Fail(400, err)
+		return
+	}
+	if parsed.Text != repo.FullName {
 		c.AbortWithStatus(403)
 		return
 	}
@@ -118,8 +124,14 @@ func GetCommit(c *gin.Context) {
 	repo := ToRepo(c)
 	sha := c.Params.ByName("sha")
 
-	// get the token and verify the hook is authorized
-	if c.Request.FormValue("access_token") != hash.New(repo.FullName, repo.Hash) {
+	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
+		return repo.Hash, nil
+	})
+	if err != nil {
+		c.Fail(400, err)
+		return
+	}
+	if parsed.Text != repo.FullName {
 		c.AbortWithStatus(403)
 		return
 	}

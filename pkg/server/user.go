@@ -5,7 +5,8 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/ungerik/go-gravatar"
 
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/token"
+	"github.com/drone/drone/pkg/types"
 )
 
 // GetUserCurr accepts a request to retrieve the
@@ -27,7 +28,7 @@ func PutUserCurr(c *gin.Context) {
 	store := ToDatastore(c)
 	user := ToUser(c)
 
-	in := &common.User{}
+	in := &types.User{}
 	if !c.BindWith(in, binding.JSON) {
 		return
 	}
@@ -76,19 +77,15 @@ func GetUserFeed(c *gin.Context) {
 	}
 }
 
-// GetUserTokens accepts a request to get the currently
-// authenticated user's token list from the datastore,
-// encoded and returned in JSON format.
-//
-//     GET /api/user/tokens
-//
-func GetUserTokens(c *gin.Context) {
-	store := ToDatastore(c)
+// POST /api/user/token
+func PostUserToken(c *gin.Context) {
 	user := ToUser(c)
-	tokens, err := store.TokenList(user)
+
+	t := token.New(token.UserToken, user.Login)
+	s, err := t.Sign(user.Hash)
 	if err != nil {
-		c.Fail(400, err)
+		c.Fail(500, err)
 	} else {
-		c.JSON(200, &tokens)
+		c.String(200, "application/jwt", s)
 	}
 }

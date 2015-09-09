@@ -6,8 +6,8 @@ import (
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
-	"github.com/drone/drone/pkg/hash"
 	"github.com/drone/drone/pkg/queue"
+	"github.com/drone/drone/pkg/token"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/httputil"
 	"github.com/drone/drone/pkg/yaml"
@@ -56,8 +56,16 @@ func PostHook(c *gin.Context) {
 	}
 
 	// get the token and verify the hook is authorized
-	if c.Request.FormValue("access_token") != hash.New(repo.FullName, repo.Hash) {
-		log.Errorf("invalid token sent with hook.")
+	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
+		return repo.Hash, nil
+	})
+	if err != nil {
+		log.Errorf("failure to parse token from hook for %s. %s", repo.FullName, err)
+		c.Fail(400, err)
+		return
+	}
+	if parsed.Text != repo.FullName {
+		log.Errorf("failure to verify token from hook. Expected %s, got %s", repo.FullName, parsed.Text)
 		c.AbortWithStatus(403)
 		return
 	}
