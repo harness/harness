@@ -1,56 +1,20 @@
 <main>
 <article>
 	<section>
-		<h2>Login info</h2>
 		<div class="row">
 			<div>Login</div>
 			<div>{{ user.login }}</div>
 		</div>
 		<div class="row">
-			<div>Full Name</div>
-			<div>{{ user.name }}</div>
-		</div>
-		<div class="row">
 			<div>Email</div>
 			<div>{{ user.email }}</div>
 		</div>
+		<div class="row">
+			<div>Token</div>
+			<div ng-if="!token" style="color: #1E88E5;text-decoration: underline;cursor: pointer;" ng-click="showToken()">Click to Display Token</div>
+			<div ng-if="token">{{ token }}</div>
+		</div>
 	</section>
 
-	<section>
-		<h2>Tokens</h2>
-		<form>
-		    <div style="padding-left: 20px; float: left;">
-			    <input type="label" ng-model="newToken.label" />
-			</div>
-			<div style="padding-top: 20px; padding-left: 20px; float: left;">
-			<button ng-click="createToken(newToken)">Create</button>
-			</div>
-		</form>
-
-		<div class="alert" ng-if="tokens && tokens.length === 0">No Personal Tokens Exist</div>
-
-		<table ng-if="tokens && tokens.length !== 0">
-			<thead>
-				<tr>
-					<th>Label</th>
-					<th>Issued</th>
-					<th></th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr ng-repeat-start="token in tokens">
-					<td>{{ token.label }}</td>
-					<td>{{ token.issued_at | fromNow }}</td>
-					<td><button ng-click="revokeToken(token)">delete</button></td>
-				</tr>
-				<tr ng-repeat-end ng-if="token.hash">
-					<td colspan="3">
-						<span>Make sure to copy your new personal access token now. You won't be able to see it again!</span>
-						<pre style="white-space: pre-line;overflow-wrap: break-word;">{{ token.hash }}</pre>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-	</section>
 </article>
 </main>

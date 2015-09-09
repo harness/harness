@@ -1,6 +1,8 @@
 package server
 
 import (
+	// "crypto/sha1"
+
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/ungerik/go-gravatar"
@@ -16,7 +18,17 @@ import (
 //     GET /api/user
 //
 func GetUserCurr(c *gin.Context) {
-	c.JSON(200, ToUser(c))
+	u := ToUser(c)
+	// f := fmt.Printf("% x", sha1.Sum(u.Hash))
+
+	// v := struct {
+	// 	*types.User
+
+	// 	// token fingerprint
+	// 	Token string `json:"token"`
+	// }{u, f}
+
+	c.JSON(200, u)
 }
 
 // PutUserCurr accepts a request to update the currently
@@ -81,11 +93,11 @@ func GetUserFeed(c *gin.Context) {
 func PostUserToken(c *gin.Context) {
 	user := ToUser(c)
 
-	t := token.New(token.UserToken, user.Login)
-	s, err := t.Sign(user.Hash)
+	token := token.New(token.UserToken, user.Login)
+	tokenstr, err := token.Sign(user.Hash)
 	if err != nil {
 		c.Fail(500, err)
 	} else {
-		c.String(200, "application/jwt", s)
+		c.String(200, tokenstr)
 	}
 }
