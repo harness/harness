@@ -35,7 +35,7 @@ publish:
     when:
       owner: drone
   docker:
-    dockerfile: ./Dockerfile.alpine
+    docker_file: ./Dockerfile.alpine
     docker_version: 1.5.0
     docker_host: $$DOCKER_HOST
     registry_login: true

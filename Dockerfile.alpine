@@ -4,7 +4,7 @@
 
 FROM alpine:3.2
 
-EXPOSE 8080
+EXPOSE 80
 
 ENV GOROOT=/usr/lib/go \
     GOPATH=/gopath     \
@@ -15,7 +15,7 @@ WORKDIR /gopath/src/github.com/drone/drone
 ADD . /gopath/src/github.com/drone/drone
 
 RUN apk add -U ca-certificates libc-dev gcc git sqlite-libs                                  && \
-  wget https://storage.googleapis.com/golang/go1.5.linux-amd64.tar.gz --quiet
+  wget -q https://storage.googleapis.com/golang/go1.5.linux-amd64.tar.gz
              && \
   tar -C /usr/lib -xzf go1.5.linux-amd64.tar.gz                                              && \
   go version                                                                                 && \
@@ -27,4 +27,4 @@ RUN apk add -U ca-certificates libc-dev gcc git sqlite-libs                     
   rm -rf /gopath                                                                             && \
   rm -rf /var/cache/apk/*
 
-ENTRYPOINT ["/bin/drone", "-debug"]
+ENTRYPOINT ["/bin/drone"]
