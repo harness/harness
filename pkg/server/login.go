@@ -17,7 +17,6 @@ import (
 //     GET /authorize
 //
 func GetLogin(c *gin.Context) {
-	settings := ToSettings(c)
 	session := ToSession(c)
 	remote := ToRemote(c)
 	store := ToDatastore(c)
@@ -27,18 +26,8 @@ func GetLogin(c *gin.Context) {
 	// rememver why, so need to revisit this line.
 	c.Writer.Header().Del("Content-Type")
 
-	// depending on the configuration a user may
-	// authenticate with OAuth1, OAuth2 or Basic
-	// Auth (username and password). This will delegate
-	// authorization accordingly.
-	switch {
-	// case settings.Auth == nil:
-	// 	getLoginBasic(c)
-	case settings.Auth.RequestToken != "":
-		getLoginOauth1(c)
-	default:
-		getLoginOauth2(c)
-	}
+	// TODO: move this back to the remote section
+	getLoginOauth2(c)
 
 	// exit if authorization fails
 	if c.Writer.Status() != 200 {

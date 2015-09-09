@@ -9,7 +9,6 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/elazarl/go-bindata-assetfs"
-	"github.com/drone/drone/pkg/config"
 	"github.com/drone/drone/pkg/remote"
 	"github.com/drone/drone/pkg/server"
 	"github.com/drone/drone/pkg/server/session"
@@ -89,12 +88,6 @@ func main() {
 	flag.String("config", "", "")
 	flag.Parse()
 
-	settings, err := config.Load()
-	if err != nil {
-		panic(err)
-	}
-	settings.Plugins = []string{conf.plugin.filter} // todo hack
-
 	store, err := store.New(conf.database.driver, conf.database.config)
 	if err != nil {
 		panic(err)
@@ -123,7 +116,6 @@ func main() {
 	api.Use(server.SetDatastore(store))
 	api.Use(server.SetRemote(remote))
 	api.Use(server.SetQueue(queue_))
-	api.Use(server.SetSettings(settings))
 	api.Use(server.SetSession(session))
 	api.Use(server.SetUser(session))
 	api.Use(server.SetRunner(&runner_))
@@ -207,7 +199,6 @@ func main() {
 		auth.Use(server.SetHeaders())
 		auth.Use(server.SetDatastore(store))
 		auth.Use(server.SetRemote(remote))
-		auth.Use(server.SetSettings(settings))
 		auth.Use(server.SetSession(session))
 		auth.GET("", server.GetLogin)
 		auth.POST("", server.GetLogin)
