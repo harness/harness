@@ -1,5 +1,10 @@
 ## `jwt-go` Version History
 
+#### 2.3.0
+
+* Added support for ECDSA signing methods
+* Added support for RSA PSS signing methods (requires go v1.4)
+
 #### 2.2.0
 
 * Gracefully handle a `nil` `Keyfunc` being passed to `Parse`.  Result will now be the parsed token and an error, instead of a panic.

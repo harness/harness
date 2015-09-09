@@ -2,7 +2,7 @@ package jwt_test
 
 import (
 	"fmt"
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -171,4 +171,17 @@ func TestParseRequest(t *testing.T) {
 			t.Errorf("[%v] Invalid token passed validation", data.name)
 		}
 	}
+}
+
+// Helper method for benchmarking various methods
+func benchmarkSigning(b *testing.B, method jwt.SigningMethod, key interface{}) {
+	t := jwt.New(method)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			if _, err := t.SignedString(key); err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+
 }

@@ -8,10 +8,10 @@ import (
 	"github.com/drone/drone/pkg/store/builtin/migrate"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/BurntSushi/migration"
+	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/go-sql-driver/mysql"
 	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/lib/pq"
 	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/mattn/go-sqlite3"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/russross/meddler"
-	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/go-sql-driver/mysql"
 )
 
 const (
@@ -94,7 +94,6 @@ func New(db *sql.DB) store.Store {
 		*Jobstore
 		*Blobstore
 		*Starstore
-		*Tokenstore
 		*Agentstore
 	}{
 		NewUserstore(db),
@@ -103,7 +102,6 @@ func New(db *sql.DB) store.Store {
 		NewJobstore(db),
 		NewBlobstore(db),
 		NewStarstore(db),
-		NewTokenstore(db),
 		NewAgentstore(db),
 	}
 }

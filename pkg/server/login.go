@@ -7,7 +7,8 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/ungerik/go-gravatar"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	common "github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/pkg/token"
+	"github.com/drone/drone/pkg/types"
 )
 
 // GetLogin accepts a request to authorize the user and to
@@ -17,7 +18,6 @@ import (
 //     GET /authorize
 //
 func GetLogin(c *gin.Context) {
-	session := ToSession(c)
 	remote := ToRemote(c)
 	store := ToDatastore(c)
 
@@ -65,13 +65,13 @@ func GetLogin(c *gin.Context) {
 		}
 
 		// create the user account
-		u = &common.User{}
+		u = &types.User{}
 		u.Login = login.Login
 		u.Token = login.Token
 		u.Secret = login.Secret
 		u.Email = login.Email
 		u.Avatar = login.Avatar
-		u.Hash = common.GenerateToken()
+		u.Hash = types.GenerateToken()
 
 		// insert the user into the database
 		if err := store.AddUser(u); err != nil {
@@ -106,12 +106,9 @@ func GetLogin(c *gin.Context) {
 		return
 	}
 
-	token := &common.Token{
-		Kind:   common.TokenSess,
-		Login:  u.Login,
-		Issued: time.Now().UTC().Unix(),
-	}
-	tokenstr, err := session.GenerateToken(token)
+	exp := time.Now().Add(time.Hour * 72).Unix()
+	token := token.New(token.SessToken, u.Login)
+	tokenstr, err := token.SignExpires(u.Hash, exp)
 	if err != nil {
 		log.Errorf("cannot create token for %s. %s", u.Login, err)
 		c.Redirect(303, "/login#error=internal_error")

@@ -10,8 +10,8 @@ import (
 	"github.com/drone/drone/pkg/queue"
 	"github.com/drone/drone/pkg/remote"
 	"github.com/drone/drone/pkg/runner"
-	"github.com/drone/drone/pkg/server/session"
 	"github.com/drone/drone/pkg/store"
+	"github.com/drone/drone/pkg/token"
 	common "github.com/drone/drone/pkg/types"
 )
 
@@ -103,10 +103,6 @@ func ToDatastore(c *gin.Context) store.Store {
 	return c.MustGet("datastore").(store.Store)
 }
 
-func ToSession(c *gin.Context) session.Session {
-	return c.MustGet("session").(session.Session)
-}
-
 func SetDatastore(ds store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("datastore", ds)
@@ -114,44 +110,24 @@ func SetDatastore(ds store.Store) gin.HandlerFunc {
 	}
 }
 
-func SetSession(s session.Session) gin.HandlerFunc {
+func SetUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("session", s)
-		c.Next()
-	}
-}
 
-func SetUser(s session.Session) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ds := ToDatastore(c)
-		token := s.GetLogin(c.Request)
-		if token == nil || len(token.Login) == 0 {
-			c.Next()
-			return
-		}
+		var store = ToDatastore(c)
+		var user *common.User
 
-		user, err := ds.UserLogin(token.Login)
-		if err == nil {
+		_, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
+			var err error
+			user, err = store.UserLogin(t.Text)
+			if err != nil {
+				return "", err
+			}
+			return user.Hash, nil
+		})
+
+		if err == nil && user != nil && user.ID != 0 {
 			c.Set("user", user)
 		}
-
-		// if session token we can proceed, otherwise
-		// we should validate the token hasn't been revoked
-		switch token.Kind {
-		case common.TokenSess:
-			c.Next()
-			return
-		}
-
-		// to verify the token we fetch from the datastore
-		// and check to see if the token issued date matches
-		// what we found in the jwt (in case the label is re-used)
-		t, err := ds.TokenLabel(user, token.Label)
-		if err != nil || t.Issued != token.Issued {
-			c.AbortWithStatus(403)
-			return
-		}
-
 		c.Next()
 	}
 }

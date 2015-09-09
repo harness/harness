@@ -70,25 +70,6 @@ type Store interface {
 
 	//
 
-	// Token returns a token by ID.
-	Token(int64) (*types.Token, error)
-
-	// TokenLabel returns a token by label
-	TokenLabel(*types.User, string) (*types.Token, error)
-
-	// TokenList returns a list of all user tokens.
-	TokenList(*types.User) ([]*types.Token, error)
-
-	// AddToken inserts a new token into the datastore.
-	// If the token label already exists for the user
-	// an error is returned.
-	AddToken(*types.Token) error
-
-	// DelToken removes the DelToken from the datastore.
-	DelToken(*types.Token) error
-
-	//
-
 	// Starred returns true if the user starred
 	// the given repository.
 	Starred(*types.User, *types.Repo) (bool, error)

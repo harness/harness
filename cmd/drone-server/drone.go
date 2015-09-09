@@ -11,7 +11,6 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/elazarl/go-bindata-assetfs"
 	"github.com/drone/drone/pkg/remote"
 	"github.com/drone/drone/pkg/server"
-	"github.com/drone/drone/pkg/server/session"
 
 	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	eventbus "github.com/drone/drone/pkg/bus/builtin"
@@ -38,11 +37,6 @@ var conf = struct {
 		addr string
 		cert string
 		key  string
-	}
-
-	session struct {
-		expiry string
-		secret string
 	}
 
 	docker struct {
@@ -76,8 +70,6 @@ func main() {
 	flag.StringVar(&conf.server.addr, "server-addr", ":8080", "")
 	flag.StringVar(&conf.server.cert, "server-cert", "", "")
 	flag.StringVar(&conf.server.key, "server-key", "", "")
-	flag.StringVar(&conf.session.expiry, "session-expiry", "", "")
-	flag.StringVar(&conf.session.secret, "session-secret", "", "")
 	flag.StringVar(&conf.remote.driver, "remote-driver", "github", "")
 	flag.StringVar(&conf.remote.config, "remote-config", "https://github.com", "")
 	flag.StringVar(&conf.database.driver, "database-driver", "sqlite3", "")
@@ -98,7 +90,6 @@ func main() {
 		panic(err)
 	}
 
-	session := session.New(conf.remote.config)
 	eventbus_ := eventbus.New()
 	queue_ := queue.New()
 	updater := runner.NewUpdater(eventbus_, store, remote)
@@ -116,8 +107,7 @@ func main() {
 	api.Use(server.SetDatastore(store))
 	api.Use(server.SetRemote(remote))
 	api.Use(server.SetQueue(queue_))
-	api.Use(server.SetSession(session))
-	api.Use(server.SetUser(session))
+	api.Use(server.SetUser())
 	api.Use(server.SetRunner(&runner_))
 	api.OPTIONS("/*path", func(c *gin.Context) {})
 
@@ -129,9 +119,7 @@ func main() {
 		user.PATCH("", server.PutUserCurr)
 		user.GET("/feed", server.GetUserFeed)
 		user.GET("/repos", server.GetUserRepos)
-		user.GET("/tokens", server.GetUserTokens)
-		user.POST("/tokens", server.PostToken)
-		user.DELETE("/tokens/:label", server.DelToken)
+		user.POST("/token", server.PostUserToken)
 	}
 
 	users := api.Group("/users")
@@ -199,7 +187,6 @@ func main() {
 		auth.Use(server.SetHeaders())
 		auth.Use(server.SetDatastore(store))
 		auth.Use(server.SetRemote(remote))
-		auth.Use(server.SetSession(session))
 		auth.GET("", server.GetLogin)
 		auth.POST("", server.GetLogin)
 	}

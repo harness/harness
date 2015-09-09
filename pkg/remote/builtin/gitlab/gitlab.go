@@ -11,9 +11,9 @@ import (
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/Bugagazavr/go-gitlab-client"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/hashicorp/golang-lru"
-	"github.com/drone/drone/pkg/hash"
 	"github.com/drone/drone/pkg/oauth2"
 	"github.com/drone/drone/pkg/remote"
+	"github.com/drone/drone/pkg/token"
 	common "github.com/drone/drone/pkg/types"
 	"github.com/drone/drone/pkg/utils/httputil"
 )
@@ -186,17 +186,18 @@ func (g *Gitlab) Netrc(u *common.User, r *common.Repo) (*common.Netrc, error) {
 		return nil, err
 	}
 	netrc := &common.Netrc{}
+	netrc.Machine = url_.Host
 
 	switch g.CloneMode {
 	case "oauth":
 		netrc.Login = "oauth2"
 		netrc.Password = u.Token
 	case "token":
+		t := token.New(token.HookToken, r.FullName)
 		netrc.Login = "drone-ci-token"
-		netrc.Password = hash.New(r.FullName, r.Hash)
+		netrc.Password, err = t.Sign(r.Hash)
 	}
-	netrc.Machine = url_.Host
-	return netrc, nil
+	return netrc, err
 }
 
 // Activate activates a repository by adding a Post-commit hook and
