@@ -3,7 +3,9 @@ package server
 import (
 	"fmt"
 	"io"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
@@ -118,7 +120,6 @@ func RunBuild(c *gin.Context) {
 	store := ToDatastore(c)
 	queue_ := ToQueue(c)
 	repo := ToRepo(c)
-	conf := ToSettings(c)
 
 	num, err := strconv.Atoi(c.Params.ByName("number"))
 	if err != nil {
@@ -189,8 +190,8 @@ func RunBuild(c *gin.Context) {
 		Secret: sec,
 		System: &common.System{
 			Link:    httputil.GetURL(c.Request),
-			Plugins: conf.Plugins,
-			Globals: conf.Environment,
+			Plugins: strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
+			Globals: strings.Split(os.Getenv("PLUGIN_PARAMS"), " "),
 		},
 	})
 }

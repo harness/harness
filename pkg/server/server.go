@@ -7,7 +7,6 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/pkg/bus"
-	"github.com/drone/drone/pkg/config"
 	"github.com/drone/drone/pkg/queue"
 	"github.com/drone/drone/pkg/remote"
 	"github.com/drone/drone/pkg/runner"
@@ -72,21 +71,6 @@ func ToRunner(c *gin.Context) runner.Runner {
 func SetRunner(r runner.Runner) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("runner", r)
-		c.Next()
-	}
-}
-
-func ToSettings(c *gin.Context) *config.Config {
-	v, ok := c.Get("config")
-	if !ok {
-		return nil
-	}
-	return v.(*config.Config)
-}
-
-func SetSettings(s *config.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("config", s)
 		c.Next()
 	}
 }

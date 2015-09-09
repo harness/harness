@@ -1,9 +1,7 @@
 package server
 
 import (
-	"fmt"
 	"io"
-	"net/http"
 	"strconv"
 
 	"github.com/drone/drone/pkg/bus"
@@ -51,7 +49,6 @@ func GetRepoEvents(c *gin.Context) {
 }
 
 func GetStream(c *gin.Context) {
-	conf := ToSettings(c)
 	store := ToDatastore(c)
 	repo := ToRepo(c)
 	runner := ToRunner(c)
@@ -71,37 +68,10 @@ func GetStream(c *gin.Context) {
 		return
 	}
 
-	var rc io.ReadCloser
-
-	// if the commit is being executed by an agent
-	// we'll proxy the build output directly to the
-	// remote Docker client, through the agent.
-	if conf.Agents.Secret != "" {
-		addr, err := store.Agent(build)
-		if err != nil {
-			c.Fail(500, err)
-			return
-		}
-		url := fmt.Sprintf("http://%s/stream/%d?token=%s", addr, job.ID, conf.Agents.Secret)
-		resp, err := http.Get(url)
-		if err != nil {
-			c.Fail(500, err)
-			return
-		} else if resp.StatusCode != 200 {
-			resp.Body.Close()
-			c.AbortWithStatus(resp.StatusCode)
-			return
-		}
-		rc = resp.Body
-
-	} else {
-		// else if the commit is not being executed
-		// by the build agent we can use the local runner
-		rc, err = runner.Logs(job)
-		if err != nil {
-			c.Fail(404, err)
-			return
-		}
+	rc, err := runner.Logs(job)
+	if err != nil {
+		c.Fail(404, err)
+		return
 	}
 
 	defer func() {
