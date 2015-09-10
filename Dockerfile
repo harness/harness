@@ -2,11 +2,11 @@
 # Use the following command to start the container:
 #    docker run -p 127.0.0.1:80:80 -t drone/drone
 
-FROM google/golang
+FROM golang:1.4.2
 ENV DRONE_SERVER_PORT :80
 
-ADD . /gopath/src/github.com/drone/drone/
-WORKDIR /gopath/src/github.com/drone/drone
+ADD . /go/src/github.com/drone/drone/
+WORKDIR /go/src/github.com/drone/drone
 
 RUN apt-get update
 RUN apt-get -y install zip libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
