@@ -153,14 +153,19 @@ func PostHook(c *gin.Context) {
 		log.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
 	}
 
+	// get the previous build so taht we can send
+	// on status change notifications
+	last, _ := store.BuildLast(repo, build.Commit.Branch)
+
 	queue_.Publish(&queue.Work{
-		User:   user,
-		Repo:   repo,
-		Build:  build,
-		Keys:   repo.Keys,
-		Netrc:  netrc,
-		Config: raw,
-		Secret: sec,
+		User:      user,
+		Repo:      repo,
+		Build:     build,
+		BuildPrev: last,
+		Keys:      repo.Keys,
+		Netrc:     netrc,
+		Config:    raw,
+		Secret:    sec,
 		System: &common.System{
 			Link:    httputil.GetURL(c.Request),
 			Plugins: strings.Split(os.Getenv("PLUGIN_FILTER"), " "),

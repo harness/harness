@@ -9,14 +9,15 @@ import (
 // Work represents an item for work to be
 // processed by a worker.
 type Work struct {
-	System *common.System  `json:"system"`
-	User   *common.User    `json:"user"`
-	Repo   *common.Repo    `json:"repo"`
-	Build  *common.Build   `json:"build"`
-	Keys   *common.Keypair `json:"keypair"`
-	Netrc  *common.Netrc   `json:"netrc"`
-	Config []byte          `json:"config"`
-	Secret []byte          `json:"secret"`
+	System    *common.System  `json:"system"`
+	User      *common.User    `json:"user"`
+	Repo      *common.Repo    `json:"repo"`
+	Build     *common.Build   `json:"build"`
+	BuildPrev *common.Build   `json:"build_last"`
+	Keys      *common.Keypair `json:"keypair"`
+	Netrc     *common.Netrc   `json:"netrc"`
+	Config    []byte          `json:"config"`
+	Secret    []byte          `json:"secret"`
 }
 
 // represents a worker that has connected
