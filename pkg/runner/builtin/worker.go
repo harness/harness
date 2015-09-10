@@ -47,6 +47,7 @@ var (
 type work struct {
 	Repo      *types.Repo      `json:"repo"`
 	Build     *types.Build     `json:"build"`
+	BuildLast *types.Build     `json:"build_last"`
 	Job       *types.Job       `json:"job"`
 	System    *types.System    `json:"system"`
 	Workspace *types.Workspace `json:"workspace"`
