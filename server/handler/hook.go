@@ -40,6 +40,11 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if hook == nil {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	// in some cases we have neither a hook nor error. An example
 	// would be GitHub sending a ping request to the URL, in which
 	// case we'll just exit quiely with an 'OK'
