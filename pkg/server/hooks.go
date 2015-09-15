@@ -76,7 +76,7 @@ func PostHook(c *gin.Context) {
 		c.Writer.WriteHeader(204)
 		return
 	case !repo.Hooks.Push && hook.Commit != nil:
-		log.Infof("ignoring hook. repo %s is disabled.", repo.FullName)
+		log.Warnf("ignoring hook. repo %s is disabled.", repo.FullName)
 		c.Writer.WriteHeader(204)
 		return
 	case !repo.Hooks.PullRequest && hook.PullRequest != nil:
