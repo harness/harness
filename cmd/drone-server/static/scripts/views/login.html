@@ -1,6 +1,4 @@
 <style>
-
-
   a.box {
     background: #FFF;
     width: 250px;
@@ -18,7 +16,7 @@
   }
 
   div.login-logo {
-    background: url(/static/images/logo.svg) no-repeat center center;
+    background: url(static/images/logo.svg) no-repeat center center;
     background-size: 72px;
     height: 150px;
     -webkit-transition: all .5s;
@@ -51,7 +49,7 @@
   }
 </style>
 
-<a href="/authorize" target="_self" class="box">
+<a href="authorize" target="_self" class="box">
   <div class="login-logo"></div>
   <div ng-switch="error" class="alert alert-error" ng-if="error">
     <div ng-switch-when="internal_error">Oops. There was an unexpected error. Please try again.</div>

@@ -14,7 +14,7 @@
 		 * @param {string} Name of the repository.
 		 */
 		this.list = function(repoName) {
-			return $http.get('/api/repos/'+repoName+'/builds');
+			return $http.get('api/repos/'+repoName+'/builds');
 		};
 
 		/**
@@ -24,7 +24,7 @@
 		 * @param {number} Number of the build.
 		 */
 		this.get = function(repoName, buildNumber) {
-			return $http.get('/api/repos/'+repoName+'/builds/'+buildNumber);
+			return $http.get('api/repos/'+repoName+'/builds/'+buildNumber);
 		};
 
 		/**
@@ -34,7 +34,7 @@
 		 * @param {number} Number of the build.
 		 */
 		this.restart = function(repoName, buildNumber) {
-			return $http.post('/api/repos/' + repoName+'/builds/'+buildNumber);
+			return $http.post('api/repos/' + repoName+'/builds/'+buildNumber);
 		};
 
 		/**
@@ -44,7 +44,7 @@
 		 * @param {number} Number of the build.
 		 */
 		this.cancel = function(repoName, buildNumber) {
-			return $http.delete('/api/repos/'+repoName+'/builds/'+buildNumber);
+			return $http.delete('api/repos/'+repoName+'/builds/'+buildNumber);
 		};
 	}
 

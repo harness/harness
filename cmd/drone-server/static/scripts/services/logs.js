@@ -16,7 +16,7 @@
 		 * @param {number} Number of the task.
 		 */
 		this.get = function(repoName, number, step) {
-			return $http.get('/api/repos/'+repoName+'/logs/'+number+'/'+step);
+			return $http.get('api/repos/'+repoName+'/logs/'+number+'/'+step);
 		};
 
 		var callback,
@@ -26,7 +26,7 @@
 		this.subscribe = function (repoName, number, step, _callback) {
 			callback = _callback;
 
-			var route = ['/api/stream/', repoName, '/', number, '/', step, '?access_token=', token].join('')
+			var route = ['api/stream/', repoName, '/', number, '/', step, '?access_token=', token].join('')
 			events = new EventSource(route, { withCredentials: true });
 			events.onmessage = function (event) {
 				if (callback !== undefined) {
