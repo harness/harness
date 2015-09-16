@@ -1,10 +1,8 @@
 // +build ignore
 
 // This program builds Drone.
-// $ go run make.go build test
-//
-// The output binaries go into the ./bin/ directory (under the
-// project root, where make.go is)
+// $ go run make.go deps bindata build test
+
 package main
 
 import (
@@ -14,8 +12,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"github.com/jteeuwen/go-bindata"
 )
 
 var (
@@ -26,28 +22,34 @@ var (
 // list of all posible steps that can be executed
 // as part of the build process.
 var steps = map[string]step{
-	"scripts": scripts,
-	"styles":  styles,
-	"json":    json,
-	"embed":   embed,
-	"vet":     vet,
-	"bindata": bindat,
-	"build":   build,
-	"test":    test,
-	"image":   image,
-	"clean":   clean,
+	"deps":    executeDeps,
+	"json":    executeJson,
+	"embed":   executeEmbed,
+	"scripts": executeScripts,
+	"styles":  executeStyles,
+	"vet":     executeVet,
+	"fmt":     executeFmt,
+	"test":    executeTest,
+	"build":   executeBuild,
+	"install": executeInstall,
+	"image":   executeImage,
+	"bindata": executeBindata,
+	"clean":   executeClean,
 }
 
 func main() {
 	for _, arg := range os.Args[1:] {
 		step, ok := steps[arg]
+
 		if !ok {
-			fmt.Println("error: invalid step", arg)
+			fmt.Println("Error: Invalid step", arg)
 			os.Exit(1)
 		}
+
 		err := step()
+
 		if err != nil {
-			fmt.Println("error: failed step", arg)
+			fmt.Println("Error: Failed step", arg)
 			os.Exit(1)
 		}
 	}
@@ -55,15 +57,43 @@ func main() {
 
 type step func() error
 
+func executeDeps() error {
+	deps := []string{
+		"github.com/jteeuwen/go-bindata/...",
+		"golang.org/x/tools/cmd/cover",
+	}
+
+	for _, dep := range deps {
+		err := run(
+			"go",
+			"get",
+			"-u",
+			dep)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// json step generates optimized json marshal and
+// unmarshal functions to override defaults.
+func executeJson() error {
+	return nil
+}
+
 // embed step embeds static files in .go files.
-func embed() error {
+func executeEmbed() error {
 	// embed drone.{revision}.css
 	// embed drone.{revision}.js
+
 	return nil
 }
 
 // scripts step concatinates all javascript files.
-func scripts() error {
+func executeScripts() error {
 	files := []string{
 		"cmd/drone-server/static/scripts/term.js",
 		"cmd/drone-server/static/scripts/drone.js",
@@ -107,7 +137,7 @@ func scripts() error {
 }
 
 // styles step concatinates the stylesheet files.
-func styles() error {
+func executeStyles() error {
 	files := []string{
 		"cmd/drone-server/static/styles/reset.css",
 		"cmd/drone-server/static/styles/fonts.css",
@@ -145,101 +175,182 @@ func styles() error {
 	return nil
 }
 
-// json step generates optimized json marshal and
-// unmarshal functions to override defaults.
-func json() error {
-	return nil
+// vet step executes the `go vet` command
+func executeVet() error {
+	return run(
+		"go",
+		"vet",
+		"github.com/drone/drone/pkg/...",
+		"github.com/drone/drone/cmd/...")
 }
 
-// bindata step generates go-bindata package.
-func bindat() error {
-	var paths = []struct {
-		input     string
-		recursive bool
+// fmt step executes the `go fmt` command
+func executeFmt() error {
+	return run(
+		"go",
+		"fmt",
+		"github.com/drone/drone/pkg/...",
+		"github.com/drone/drone/cmd/...")
+}
+
+// test step executes unit tests and coverage.
+func executeTest() error {
+	ldf := fmt.Sprintf(
+		"-X main.revision=%s -X main.version=%s",
+		sha,
+		version)
+
+	return run(
+		"go",
+		"test",
+		"-cover",
+		"-ldflags",
+		ldf,
+		"github.com/drone/drone/pkg/...",
+		"github.com/drone/drone/cmd/...")
+}
+
+// install step installs the application binaries.
+func executeInstall() error {
+	var bins = []struct {
+		input string
 	}{
-		{"cmd/drone-server/static", true},
+		{
+			"github.com/drone/drone/cmd/drone-server",
+		},
 	}
 
-	c := bindata.NewConfig()
-	c.Output = "cmd/drone-server/drone_bindata.go"
-	c.Input = make([]bindata.InputConfig, len(paths))
+	for _, bin := range bins {
+		ldf := fmt.Sprintf(
+			"-X main.revision=%s -X main.version=%s",
+			sha,
+			version)
 
-	for i, path := range paths {
-		c.Input[i] = bindata.InputConfig{
-			Path:      path.input,
-			Recursive: path.recursive,
+		err := run(
+			"go",
+			"install",
+			"-ldflags",
+			ldf,
+			bin.input)
+
+		if err != nil {
+			return err
 		}
 	}
 
-	return bindata.Translate(c)
+	return nil
 }
 
 // build step creates the application binaries.
-func build() error {
+func executeBuild() error {
 	var bins = []struct {
 		input  string
 		output string
 	}{
-		{"github.com/drone/drone/cmd/drone-server", "bin/drone"},
+		{
+			"github.com/drone/drone/cmd/drone-server",
+			"bin/drone",
+		},
 	}
+
 	for _, bin := range bins {
-		ldf := fmt.Sprintf("-X main.revision=%s -X main.version=%s", sha, version)
-		cmd := exec.Command("go", "build", "-o", bin.output, "-ldflags", ldf, bin.input)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		trace(cmd.Args)
-		err := cmd.Run()
+		ldf := fmt.Sprintf(
+			"-X main.revision=%s -X main.version=%s",
+			sha,
+			version)
+
+		err := run(
+			"go",
+			"build",
+			"-o",
+			bin.output,
+			"-ldflags",
+			ldf,
+			bin.input)
+
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-// vet step executes the `go vet` command
-func vet() error {
-	cmd := exec.Command("go", "vet",
-		"github.com/drone/drone/pkg/...",
-		"github.com/drone/drone/cmd/...")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	trace(cmd.Args)
-	return cmd.Run()
-}
-
-// test step executes unit tests and coverage.
-func test() error {
-	cmd := exec.Command("go", "test", "-cover", "./pkg/...")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	trace(cmd.Args)
-	return cmd.Run()
-}
-
-// image step builds Docker images.
-func image() error {
+// image step builds docker images.
+func executeImage() error {
 	var images = []struct {
 		dir  string
 		name string
 	}{
-		{"./bin/drone-server", "drone/drone"},
+		{
+			"bin/drone-server",
+			"drone/drone",
+		},
 	}
 	for _, image := range images {
-		path := filepath.Join(image.dir, "Dockerfile")
-		name := image.name + ":" + version
-		cmd := exec.Command("docker", "build", "-rm", path, name)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		trace(cmd.Args)
-		err := cmd.Run()
+		path := filepath.Join(
+			image.dir,
+			"Dockerfile")
+
+		name := fmt.Sprintf("%s:%s",
+			image.name,
+			version)
+
+		err := run(
+			"docker",
+			"build",
+			"-rm",
+			path,
+			name)
+
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-func clean() error {
+// bindata step generates go-bindata package.
+func executeBindata() error {
+	var paths = []struct {
+		input  string
+		output string
+		pkg    string
+	}{
+		{
+			"cmd/drone-server/static/...",
+			"cmd/drone-server/drone_bindata.go",
+			"main",
+		},
+	}
+
+	for _, path := range paths {
+		binErr := run(
+			"go-bindata",
+			fmt.Sprintf("-o=%s", path.output),
+			fmt.Sprintf("-pkg=%s", path.pkg),
+			path.input)
+
+		if binErr != nil {
+			return binErr
+		}
+
+		fmtErr := run(
+			"go",
+			"fmt",
+			path.output)
+
+		if fmtErr != nil {
+			return fmtErr
+		}
+	}
+
+	return nil
+}
+
+// clean step removes all generated files.
+func executeClean() error {
 	err := filepath.Walk(".", func(path string, f os.FileInfo, err error) error {
 		suffixes := []string{
 			".out",
@@ -278,19 +389,38 @@ func clean() error {
 	return nil
 }
 
-// trace is a helper fucntion that writes a command
-// to stdout similar to bash +x
-func trace(args []string) {
-	print("+ ")
-	println(strings.Join(args, " "))
+// run is a helper function that executes commands
+// and assigns stdout and stderr targets
+func run(command string, args ...string) error {
+	cmd := exec.Command(command, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	trace(cmd.Args)
+	return cmd.Run()
 }
 
 // helper function to parse the git revision
 func rev() string {
-	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+	cmd := exec.Command(
+		"git",
+		"rev-parse",
+		"--short",
+		"HEAD")
+
 	raw, err := cmd.CombinedOutput()
+
 	if err != nil {
 		return "HEAD"
 	}
+
 	return strings.Trim(string(raw), "\n")
+}
+
+// trace is a helper function that writes a command
+// to stdout similar to bash +x
+func trace(args []string) {
+	print("+ ")
+	println(strings.Join(args, " "))
 }
