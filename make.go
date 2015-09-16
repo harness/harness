@@ -31,6 +31,7 @@ var steps = map[string]step{
 	"fmt":     executeFmt,
 	"test":    executeTest,
 	"build":   executeBuild,
+	"install": executeInstall,
 	"image":   executeImage,
 	"bindata": executeBindata,
 	"clean":   executeClean,
@@ -207,6 +208,37 @@ func executeTest() error {
 		ldf,
 		"github.com/drone/drone/pkg/...",
 		"github.com/drone/drone/cmd/...")
+}
+
+// install step installs the application binaries.
+func executeInstall() error {
+	var bins = []struct {
+		input string
+	}{
+		{
+			"github.com/drone/drone/cmd/drone-server",
+		},
+	}
+
+	for _, bin := range bins {
+		ldf := fmt.Sprintf(
+			"-X main.revision=%s -X main.version=%s",
+			sha,
+			version)
+
+		err := run(
+			"go",
+			"install",
+			"-ldflags",
+			ldf,
+			bin.input)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // build step creates the application binaries.
