@@ -31,16 +31,28 @@ cd $GOPATH/src/github.com/drone/drone
 Commands to build from source:
 
 ```sh
-make deps    # download dependencies
-make         # create binary files in ./bin
-make test    # execute unit tests
+go run make.go deps    # Download required dependencies
+go run make.go bindata # Generate required bindata
+go run make.go build   # Build the binaries
+go run make.go image   # Build docker images
+go run make.go test    # Run the test suite
+go run make.go clean   # Clean up environment
+```
+
+Commands for development:
+
+```sh
+go run make.go scripts # Concat all javascripts
+go run make.go styles  # Concat all stylesheets
+go run make.go vet     # Execute vet command
+go run make.go fmt     # Execute fmt command
 ```
 
 Commands to start drone:
 
 ```sh
 bin/drone
-bin/drone --debug # debug mode loads static content from filesystem
+bin/drone --debug # Debug mode loads static content from filesystem
 ```
 
 If you are seeing slow compile times please install the following:
