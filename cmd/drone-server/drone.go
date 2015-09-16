@@ -37,6 +37,7 @@ var conf = struct {
 		addr string
 		cert string
 		key  string
+		root string
 	}
 
 	docker struct {
@@ -70,6 +71,7 @@ func main() {
 	flag.StringVar(&conf.server.addr, "server-addr", ":8080", "")
 	flag.StringVar(&conf.server.cert, "server-cert", "", "")
 	flag.StringVar(&conf.server.key, "server-key", "", "")
+	flag.StringVar(&conf.server.root, "server-root", "/", "")
 	flag.StringVar(&conf.remote.driver, "remote-driver", "github", "")
 	flag.StringVar(&conf.remote.config, "remote-config", "https://github.com", "")
 	flag.StringVar(&conf.database.driver, "database-driver", "sqlite3", "")
@@ -208,11 +210,13 @@ func main() {
 
 	r.SetHTMLTemplate(index())
 	r.NoRoute(func(c *gin.Context) {
-		c.HTML(200, "index.html", nil)
+		c.HTML(200, "index.html", gin.H{
+			"root": conf.server.root
+		})
 	})
 
-	http.Handle("/static/", static())
-	http.Handle("/", r)
+	http.Handle(conf.server.root + "static/", static())
+	http.Handle(conf.server.root, r)
 
 	if len(conf.server.cert) == 0 {
 		err = http.ListenAndServe(conf.server.addr, nil)
