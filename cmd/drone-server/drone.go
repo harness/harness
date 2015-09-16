@@ -211,7 +211,7 @@ func main() {
 	r.SetHTMLTemplate(index())
 	r.NoRoute(func(c *gin.Context) {
 		c.HTML(200, "index.html", gin.H{
-			"root": conf.server.root
+			"root": conf.server.root,
 		})
 	})
 
