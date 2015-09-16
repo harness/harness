@@ -215,7 +215,7 @@ func main() {
 		})
 	})
 
-	http.Handle(conf.server.root + "static/", static())
+	http.Handle(conf.server.root+"static/", static(conf.server.root))
 	http.Handle(conf.server.root, r)
 
 	if len(conf.server.cert) == 0 {
@@ -231,7 +231,7 @@ func main() {
 
 // static is a helper function that will setup handlers
 // for serving static files.
-func static() http.Handler {
+func static(root string) http.Handler {
 	// default file server is embedded
 	var handler = http.FileServer(&assetfs.AssetFS{
 		Asset:    Asset,
@@ -243,7 +243,7 @@ func static() http.Handler {
 			http.Dir("cmd/drone-server/static"),
 		)
 	}
-	return http.StripPrefix("/static/", handler)
+	return http.StripPrefix(root+"static/", handler)
 }
 
 // index is a helper function that will setup a template
