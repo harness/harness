@@ -10,6 +10,7 @@ import (
 type Marathon struct {
 	//Hostname for the Marathon Master
 	Host string `yaml:"host,omitempty"`
+	App  string `yaml:"app,omitempty"`
 
 	// The app config for marathon
 	//https://mesosphere.github.io/marathon/docs/rest-api.html#post-v2-apps
@@ -26,12 +27,13 @@ func (m *Marathon) Write(f *buildfile.Buildfile) {
 	// debugging purposes so we can see if / where something is failing
 	f.WriteCmdSilent("echo 'deploying to Marathon ...'")
 
-	post := fmt.Sprintf(
-		"curl -X POST -d @%s http://%s/v2/apps --header \"Content-Type:application/json\"",
+	put := fmt.Sprintf(
+		"curl -X PUT -d @%s http://%s/v2/apps/%s --header \"Content-Type:application/json\"",
 		m.ConfigFile,
+		m.App,
 		m.Host,
 	)
-	f.WriteCmdSilent(post)
+	f.WriteCmdSilent(put)
 }
 
 func (m *Marathon) GetCondition() *condition.Condition {
