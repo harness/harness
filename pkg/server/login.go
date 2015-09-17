@@ -106,15 +106,19 @@ func GetLogin(c *gin.Context) {
 		return
 	}
 
-	exp := time.Now().Add(time.Hour * 72).Unix()
-	token := token.New(token.SessToken, u.Login)
-	tokenstr, err := token.SignExpires(u.Hash, exp)
+	tokenstr, err := generateUserToken(u)
 	if err != nil {
 		log.Errorf("cannot create token for %s. %s", u.Login, err)
 		c.Redirect(303, "/login#error=internal_error")
 		return
 	}
 	c.Redirect(303, "/#access_token="+tokenstr)
+}
+
+func generateUserToken(u *types.User) (string, error) {
+	exp := time.Now().Add(time.Hour * 72).Unix()
+	token := token.New(token.SessToken, u.Login)
+	return token.SignExpires(u.Hash, exp)
 }
 
 // getLoginOauth2 is the default authorization implementation

@@ -6,6 +6,7 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/ungerik/go-gravatar"
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 
 	"github.com/drone/drone/pkg/token"
 	"github.com/drone/drone/pkg/types"
@@ -27,8 +28,17 @@ func GetUserCurr(c *gin.Context) {
 	// 	// token fingerprint
 	// 	Token string `json:"token"`
 	// }{u, f}
+	tokenstr, err := generateUserToken(u)
+	if err != nil {
+		log.Errorf("cannot create token for %s. %s", u.Login, err)
+		tokenstr = ""
+	}
+	userWithToken := struct {
+		*types.User
+		Token string `json:"token,omitempty"`
+	}{u, tokenstr}
 
-	c.JSON(200, u)
+	c.JSON(200, userWithToken)
 }
 
 // PutUserCurr accepts a request to update the currently
