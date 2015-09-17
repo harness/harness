@@ -3,7 +3,7 @@ package types
 type User struct {
 	ID     int64  `json:"id"`
 	Login  string `json:"login,omitempty" sql:"unique:ux_user_login"`
-	Token  string `json:"-"`
+	Token  string `json:"token,omitempty"`
 	Secret string `json:"-"`
 	Email  string `json:"email,omitempty"`
 	Avatar string `json:"avatar_url,omitempty"`
