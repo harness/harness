@@ -4,6 +4,7 @@ import (
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/ungerik/go-gravatar"
+	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 
 	"github.com/drone/drone/pkg/types"
 )
@@ -42,7 +43,16 @@ func PostUser(c *gin.Context) {
 	if err := store.AddUser(user); err != nil {
 		c.Fail(400, err)
 	} else {
-		c.JSON(201, user)
+		tokenstr, err := generateUserToken(user)
+		if err != nil {
+			log.Errorf("cannot create token for %s. %s", user.Login, err)
+			tokenstr = ""
+		}
+		userWithToken := struct {
+			*types.User
+			Token string `json:"token,omitempty"`
+		}{user, tokenstr}
+		c.JSON(201, userWithToken)
 	}
 }
 
@@ -59,7 +69,16 @@ func GetUser(c *gin.Context) {
 	if err != nil {
 		c.Fail(404, err)
 	} else {
-		c.JSON(200, user)
+		tokenstr, err := generateUserToken(user)
+		if err != nil {
+			log.Errorf("cannot create token for %s. %s", user.Login, err)
+			tokenstr = ""
+		}
+		userWithToken := struct {
+			*types.User
+			Token string `json:"token,omitempty"`
+		}{user, tokenstr}
+		c.JSON(200, userWithToken)
 	}
 }
 
