@@ -1,6 +1,6 @@
 FROM golang:1.4.2
 
-ENV DRONE_SERVER_PORT :80
+ENV SERVER_ADDR :80
 WORKDIR $GOPATH/src/github.com/drone/drone
 
 EXPOSE 80
