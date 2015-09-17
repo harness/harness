@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
@@ -43,6 +44,24 @@ func ToBus(c *gin.Context) bus.Bus {
 		return nil
 	}
 	return v.(bus.Bus)
+}
+
+func ToRoot(c *gin.Context) string {
+	v, ok := c.Get("root")
+	if !ok {
+		return "/"
+	}
+	return v.(string)
+}
+
+func SetRoot(r string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		trimmedRoot := strings.TrimSuffix(r, "/")
+
+		c.Request.Header.Add("X-Drone-Root", trimmedRoot)
+		c.Set("root", trimmedRoot)
+		c.Next()
+	}
 }
 
 func ToRemote(c *gin.Context) remote.Remote {

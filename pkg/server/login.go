@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
@@ -20,6 +21,7 @@ import (
 func GetLogin(c *gin.Context) {
 	remote := ToRemote(c)
 	store := ToDatastore(c)
+	rootPath := ToRoot(c)
 
 	// when dealing with redirects we may need
 	// to adjust the content type. I cannot, however,
@@ -40,7 +42,7 @@ func GetLogin(c *gin.Context) {
 	if len(remote.GetOrgs()) != 0 {
 		orgs, _ := remote.Orgs(login)
 		if !checkMembership(orgs, remote.GetOrgs()) {
-			c.Redirect(303, "/login#error=access_denied_org")
+			c.Redirect(303, fmt.Sprintf("%s/login#error=access_denied_org", rootPath))
 			return
 		}
 	}
@@ -51,7 +53,7 @@ func GetLogin(c *gin.Context) {
 		count, err := store.UserCount()
 		if err != nil {
 			log.Errorf("cannot register %s. %s", login.Login, err)
-			c.Redirect(303, "/login#error=internal_error")
+			c.Redirect(303, fmt.Sprintf("%s/login#error=internal_error", rootPath))
 			return
 		}
 
@@ -60,7 +62,7 @@ func GetLogin(c *gin.Context) {
 		// is if no users exist yet in the system we'll proceed.
 		if !remote.GetOpen() && count != 0 {
 			log.Errorf("cannot register %s. registration closed", login.Login)
-			c.Redirect(303, "/login#error=access_denied")
+			c.Redirect(303, fmt.Sprintf("%s/login#error=access_denied", rootPath))
 			return
 		}
 
@@ -76,7 +78,7 @@ func GetLogin(c *gin.Context) {
 		// insert the user into the database
 		if err := store.AddUser(u); err != nil {
 			log.Errorf("cannot insert %s. %s", login.Login, err)
-			c.Redirect(303, "/login#error=internal_error")
+			c.Redirect(303, fmt.Sprintf("%s/login#error=internal_error", rootPath))
 			return
 		}
 
@@ -102,7 +104,7 @@ func GetLogin(c *gin.Context) {
 
 	if err := store.SetUser(u); err != nil {
 		log.Errorf("cannot update %s. %s", u.Login, err)
-		c.Redirect(303, "/login#error=internal_error")
+		c.Redirect(303, fmt.Sprintf("%s/login#error=internal_error", rootPath))
 		return
 	}
 
@@ -111,16 +113,17 @@ func GetLogin(c *gin.Context) {
 	tokenstr, err := token.SignExpires(u.Hash, exp)
 	if err != nil {
 		log.Errorf("cannot create token for %s. %s", u.Login, err)
-		c.Redirect(303, "/login#error=internal_error")
+		c.Redirect(303, fmt.Sprintf("%s/login#error=internal_error", rootPath))
 		return
 	}
-	c.Redirect(303, "/#access_token="+tokenstr)
+	c.Redirect(303, fmt.Sprintf("%s/#access_token=%s", rootPath, tokenstr))
 }
 
 // getLoginOauth2 is the default authorization implementation
 // using the oauth2 protocol.
 func getLoginOauth2(c *gin.Context) {
 	var remote = ToRemote(c)
+	rootPath := ToRoot(c)
 
 	// Bugagazavr: I think this must be moved to remote config
 	//var scope = strings.Join(settings.Auth.Scope, ",")
@@ -142,7 +145,7 @@ func getLoginOauth2(c *gin.Context) {
 	var token, err = transport.Exchange(code)
 	if err != nil {
 		log.Errorf("cannot get access_token. %s", err)
-		c.Redirect(303, "/login#error=token_exchange")
+		c.Redirect(303, fmt.Sprintf("%s/login#error=token_exchange", rootPath))
 		return
 	}
 
@@ -150,7 +153,7 @@ func getLoginOauth2(c *gin.Context) {
 	user, err := remote.Login(token.AccessToken, token.RefreshToken)
 	if err != nil {
 		log.Errorf("cannot get user with access_token. %s", err)
-		c.Redirect(303, "/login#error=user_not_found")
+		c.Redirect(303, fmt.Sprintf("%s/login#error=user_not_found", rootPath))
 		return
 	}
 
@@ -170,6 +173,7 @@ func getLoginOauth1(c *gin.Context) {
 func getLoginBasic(c *gin.Context) {
 	var (
 		remote   = ToRemote(c)
+		rootPath = ToRoot(c)
 		username = c.Request.FormValue("username")
 		password = c.Request.FormValue("password")
 	)
@@ -178,7 +182,7 @@ func getLoginBasic(c *gin.Context) {
 	user, err := remote.Login(username, password)
 	if err != nil {
 		log.Errorf("invalid username or password for %s. %s", username, err)
-		c.Redirect(303, "/login#error=invalid_credentials")
+		c.Redirect(303, fmt.Sprintf("%s/login#error=invalid_credentials", rootPath))
 		return
 	}
 

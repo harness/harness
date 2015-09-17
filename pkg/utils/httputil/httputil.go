@@ -66,11 +66,23 @@ func GetHost(r *http.Request) string {
 	}
 }
 
+// GetPAth is a helper function that evaluates the http.Request
+// and returns our custom header for getting the correct path to
+// the drone root folder.
+func GetPath(r *http.Request) string {
+	switch {
+	case len(r.Header.Get("X-Drone-Root")) != 0:
+		return r.Header.Get("X-Drone-Root")
+	default:
+		return ""
+	}
+}
+
 // GetURL is a helper function that evaluates the http.Request
 // and returns the URL as a string. Only the scheme + hostname
 // are included; the path is excluded.
 func GetURL(r *http.Request) string {
-	return GetScheme(r) + "://" + GetHost(r)
+	return GetScheme(r) + "://" + GetHost(r) + GetPath(r)
 }
 
 // GetCookie retrieves and verifies the cookie value.

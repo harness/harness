@@ -103,8 +103,9 @@ func main() {
 
 	r := gin.Default()
 
-	api := r.Group("/api")
+	api := r.Group(conf.server.root+"api")
 	api.Use(server.SetHeaders())
+	api.Use(server.SetRoot(conf.server.root))
 	api.Use(server.SetBus(eventbus_))
 	api.Use(server.SetDatastore(store))
 	api.Use(server.SetRemote(remote))
@@ -184,17 +185,19 @@ func main() {
 
 	}
 
-	auth := r.Group("/authorize")
+	auth := r.Group(conf.server.root+"authorize")
 	{
 		auth.Use(server.SetHeaders())
+		auth.Use(server.SetRoot(conf.server.root))
 		auth.Use(server.SetDatastore(store))
 		auth.Use(server.SetRemote(remote))
 		auth.GET("", server.GetLogin)
 		auth.POST("", server.GetLogin)
 	}
 
-	gitlab := r.Group("/gitlab/:owner/:name")
+	gitlab := r.Group(conf.server.root+"gitlab/:owner/:name")
 	{
+		gitlab.Use(server.SetRoot(conf.server.root))
 		gitlab.Use(server.SetDatastore(store))
 		gitlab.Use(server.SetRepo())
 

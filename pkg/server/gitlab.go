@@ -22,6 +22,7 @@ func RedirectSha(c *gin.Context) {
 
 	store := ToDatastore(c)
 	repo := ToRepo(c)
+	rootPath := ToRoot(c)
 	sha := c.Params.ByName("sha")
 
 	branch = c.Request.FormValue("branch")
@@ -31,11 +32,11 @@ func RedirectSha(c *gin.Context) {
 
 	build, err := store.BuildSha(repo, sha, branch)
 	if err != nil {
-		c.Redirect(301, "/")
+		c.Redirect(301, fmt.Sprintf("%s/", rootPath))
 		return
 	}
 
-	c.Redirect(301, fmt.Sprintf("/%s/%s/%d", repo.Owner, repo.Name, build.ID))
+	c.Redirect(301, fmt.Sprintf("%s/%s/%s/%d", rootPath, repo.Owner, repo.Name, build.ID))
 	return
 }
 
@@ -51,19 +52,20 @@ func RedirectSha(c *gin.Context) {
 func RedirectPullRequest(c *gin.Context) {
 	store := ToDatastore(c)
 	repo := ToRepo(c)
+	rootPath := ToRoot(c)
 	num, err := strconv.Atoi(c.Params.ByName("number"))
 	if err != nil {
-		c.Redirect(301, "/")
+		c.Redirect(301, fmt.Sprintf("%s/", rootPath))
 		return
 	}
 
 	build, err := store.BuildPullRequestNumber(repo, num)
 	if err != nil {
-		c.Redirect(301, "/")
+		c.Redirect(301, fmt.Sprintf("%s/", rootPath))
 		return
 	}
 
-	c.Redirect(301, fmt.Sprintf("/%s/%s/%d", repo.Owner, repo.Name, build.ID))
+	c.Redirect(301, fmt.Sprintf("%s/%s/%s/%d", rootPath, repo.Owner, repo.Name, build.ID))
 	return
 }
 
