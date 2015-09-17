@@ -2,7 +2,7 @@
 
 (function () {
 
-	function FeedService($http, $window) {
+	function FeedService($http, $window, $state) {
 
 		var callback,
 			websocket,
@@ -12,7 +12,7 @@
 			callback = _callback;
 
 			var proto = ($window.location.protocol === 'https:' ? 'wss' : 'ws'),
-				route = [proto, "://", $window.location.host, 'api/stream/user?access_token=', token].join('');
+				route = [proto, "://", $window.location.host, $state.href('app.index'), 'api/stream/user?access_token=', token].join('');
 
 			websocket = new WebSocket(route);
 			websocket.onmessage = function (event) {

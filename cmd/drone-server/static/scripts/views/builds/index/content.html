@@ -10,10 +10,10 @@
         <button type="button" ng-click="watch(repo)" ng-if="!repo.starred && user">
           <i class="material-icons">visibility_off</i>
         </button>
-        <a href="/{{ repo.full_name }}/edit" ng-if="repo.permissions.push">
+        <a href="{{ repo.full_name }}/edit" ng-if="repo.permissions.push">
           <i class="material-icons">tune</i>
         </a>
-      </menu> 
+      </menu>
     </section>
 
     <div class="blankslate" ng-show="!builds.length && !loading && !error">
@@ -28,7 +28,7 @@
 
     <div>
       <div class="list">
-        <a ng-repeat="build in builds | orderBy:'-number' | filter: search_text" ng-href="/{{ repo.full_name }}/{{ build.number}}">
+        <a ng-repeat="build in builds | orderBy:'-number' | filter: search_text" ng-href="{{ repo.full_name }}/{{ build.number}}">
           <div class="column-status">
             <div class="status {{ build.status }}">
               <i class="material-icons">{{ build.status | icon }}</i>
