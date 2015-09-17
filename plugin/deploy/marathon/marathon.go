@@ -30,8 +30,8 @@ func (m *Marathon) Write(f *buildfile.Buildfile) {
 	put := fmt.Sprintf(
 		"curl -X PUT -d @%s http://%s/v2/apps/%s --header \"Content-Type:application/json\"",
 		m.ConfigFile,
-		m.App,
 		m.Host,
+		m.App,
 	)
 	f.WriteCmdSilent(put)
 }
