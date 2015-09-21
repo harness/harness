@@ -92,10 +92,8 @@ type Builder struct {
 }
 
 func (b *Builder) Run() error {
-	// teardown will remove the Image and stop and
-	// remove the service containers after the
-	// build is done running.
-	defer b.teardown()
+	// run the scripts defined in after_success and after_failure
+	defer b.after_run()
 
 	// setup will create the Image and supporting
 	// service containers.
@@ -265,7 +263,29 @@ func (b *Builder) setup() error {
 	return nil
 }
 
+func (b *Builder) after_failure error {
+	return nil
+}
+
+func (b *Builder) after_success error {
+  return nil
+}
+
+func (b *Builder) after_run error {
+	// teardown will remove the Image and stop and
+	// remove the service containers after the
+	// build is done running.
+	defer b.teardown()
+
+	if (b.BuildState.ExitCode == 0) {
+	  after_success()
+	} else {
+	  after_failure()
+	}
+}
+
 // teardown is a helper function that we can use to
+//
 // stop and remove the build container, its supporting image,
 // and the supporting service containers.
 func (b *Builder) teardown() error {
