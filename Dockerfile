@@ -1,4 +1,4 @@
-FROM golang:1.4.2
+FROM golang:1.5.1
 
 ENV DRONE_SERVER_PORT :80
 WORKDIR $GOPATH/src/github.com/drone/drone
@@ -16,7 +16,7 @@ RUN apt-get update                                                              
 RUN touch /tmp/drone.toml
 
 ADD . .
-RUN make bindata deps           \
-    && make build               \
+RUN go run make.go bindata deps           \
+    && go run make.go build               \
     && mv bin/* /usr/local/bin/ \
     && rm -rf bin cmd/drone-server/drone_bindata.go
