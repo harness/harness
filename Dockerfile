@@ -11,7 +11,8 @@ CMD ["-config", "/tmp/drone.toml"]
 RUN apt-get update                                                                       \
     && apt-get install -y libsqlite3-dev                                                 \
     && git clone git://github.com/gin-gonic/gin.git $GOPATH/src/github.com/gin-gonic/gin \
-    && go get -u github.com/jteeuwen/go-bindata/...
+    && go get -u github.com/jteeuwen/go-bindata/...                                      \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN touch /tmp/drone.toml
 
