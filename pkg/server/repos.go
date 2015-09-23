@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"strconv"
 
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
 	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
@@ -169,6 +170,7 @@ func PostRepo(c *gin.Context) {
 	store := ToDatastore(c)
 	owner := c.Params.ByName("owner")
 	name := c.Params.ByName("name")
+	paramNoActivate := c.Request.FormValue("no-activate")
 
 	// get the repository and user permissions
 	// from the remote system.
@@ -232,12 +234,19 @@ func PostRepo(c *gin.Context) {
 	r.Keys.Public = string(sshutil.MarshalPublicKey(&key.PublicKey))
 	r.Keys.Private = string(sshutil.MarshalPrivateKey(key))
 
-	// activate the repository before we make any
-	// local changes to the database.
-	err = remote.Activate(user, r, r.Keys, link)
+	var noActivate bool
+	noActivate, err = strconv.ParseBool(paramNoActivate)
 	if err != nil {
-		c.Fail(500, err)
-		return
+		noActivate = false
+	}
+	if !noActivate {
+		// activate the repository before we make any
+		// local changes to the database.
+		err = remote.Activate(user, r, r.Keys, link)
+		if err != nil {
+			c.Fail(500, err)
+			return
+		}
 	}
 
 	// persist the repository
