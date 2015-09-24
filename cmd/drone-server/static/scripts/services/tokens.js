@@ -12,7 +12,7 @@
 		 * Generates a user API token.
 		 */
 		this.post = function(token) {
-			return $http.post('/api/user/token');
+			return $http.post('api/user/token');
 		};
 	}
 

@@ -17,42 +17,42 @@
 		 * Gets a list of all users.
 		 */
 		this.list = function() {
-			return $http.get('/api/users');
+			return $http.get('api/users');
 		};
 
 		/**
 		 * Gets a user by login.
 		 */
 		this.get = function(login) {
-			return $http.get('/api/users/'+login);
+			return $http.get('api/users/'+login);
 		};
 
 		/**
 		 * Gets the currently authenticated user.
 		 */
 		this.getCurrent = function() {
-			return $http.get('/api/user');
+			return $http.get('api/user');
 		};
 
 		/**
 		 * Updates an existing user
 		 */
 		this.post = function(user) {
-			return $http.post('/api/users/'+user);
+			return $http.post('api/users/'+user);
 		};
 
 		/**
 		 * Updates an existing user
 		 */
 		this.put = function(user) {
-			return $http.patch('/api/users/'+user.login, user);
+			return $http.patch('api/users/'+user.login, user);
 		};
 
 		/**
 		 * Deletes a user.
 		 */
 		this.delete = function(user) {
-			return $http.delete('/api/users/'+user.login);
+			return $http.delete('api/users/'+user.login);
 		};
 
 		/**

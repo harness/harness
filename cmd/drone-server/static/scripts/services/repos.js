@@ -16,7 +16,7 @@
      * Gets a list of all repositories.
      */
     this.list = function () {
-      return $http.get('/api/user/repos');
+      return $http.get('api/user/repos');
     };
 
     /**
@@ -25,7 +25,7 @@
      * @param {string} Name of the repository.
      */
     this.get = function (repoName) {
-      return $http.get('/api/repos/' + repoName);
+      return $http.get('api/repos/' + repoName);
     };
 
     /**
@@ -34,7 +34,7 @@
      * @param {object} JSON representation of a repository.
      */
     this.post = function (repoName) {
-      return $http.post('/api/repos/' + repoName);
+      return $http.post('api/repos/' + repoName);
     };
 
     /**
@@ -43,7 +43,7 @@
      * @param {object} JSON representation of a repository.
      */
     this.update = function (repo) {
-      return $http.patch('/api/repos/' + repo.full_name, repo);
+      return $http.patch('api/repos/' + repo.full_name, repo);
     };
 
     /**
@@ -52,7 +52,7 @@
      * @param {string} Name of the repository.
      */
     this.delete = function (repoName) {
-      return $http.delete('/api/repos/' + repoName);
+      return $http.delete('api/repos/' + repoName);
     };
 
     /**
@@ -61,7 +61,7 @@
      * @param {string} Name of the repository.
      */
     this.watch = function (repoName) {
-      return $http.post('/api/repos/' + repoName + '/watch');
+      return $http.post('api/repos/' + repoName + '/watch');
     };
 
     /**
@@ -70,7 +70,7 @@
      * @param {string} Name of the repository.
      */
     this.unwatch = function (repoName) {
-      return $http.delete('/api/repos/' + repoName + '/unwatch');
+      return $http.delete('api/repos/' + repoName + '/unwatch');
     };
 
     /**
@@ -86,7 +86,7 @@
         }
       }
 
-      return $http.post('/api/repos/' + repoName + '/encrypt', btoa(plaintext), conf);
+      return $http.post('api/repos/' + repoName + '/encrypt', btoa(plaintext), conf);
     };
 
     var callback,
@@ -101,7 +101,7 @@
     this.subscribe = function (repo, _callback) {
       callback = _callback;
 
-      events = new EventSource("/api/stream/" + repo + "?access_token=" + token, {withCredentials: true});
+      events = new EventSource("api/stream/" + repo + "?access_token=" + token, {withCredentials: true});
       events.onmessage = function (event) {
         if (callback !== undefined) {
           callback(angular.fromJson(event.data));

@@ -37,6 +37,7 @@ var conf = struct {
 		addr string
 		cert string
 		key  string
+		root string
 	}
 
 	docker struct {
@@ -70,6 +71,7 @@ func main() {
 	flag.StringVar(&conf.server.addr, "server-addr", ":8080", "")
 	flag.StringVar(&conf.server.cert, "server-cert", "", "")
 	flag.StringVar(&conf.server.key, "server-key", "", "")
+	flag.StringVar(&conf.server.root, "server-root", "/", "")
 	flag.StringVar(&conf.remote.driver, "remote-driver", "github", "")
 	flag.StringVar(&conf.remote.config, "remote-config", "https://github.com", "")
 	flag.StringVar(&conf.database.driver, "database-driver", "sqlite3", "")
@@ -101,8 +103,9 @@ func main() {
 
 	r := gin.Default()
 
-	api := r.Group("/api")
+	api := r.Group(conf.server.root+"api")
 	api.Use(server.SetHeaders())
+	api.Use(server.SetRoot(conf.server.root))
 	api.Use(server.SetBus(eventbus_))
 	api.Use(server.SetDatastore(store))
 	api.Use(server.SetRemote(remote))
@@ -182,17 +185,19 @@ func main() {
 
 	}
 
-	auth := r.Group("/authorize")
+	auth := r.Group(conf.server.root+"authorize")
 	{
 		auth.Use(server.SetHeaders())
+		auth.Use(server.SetRoot(conf.server.root))
 		auth.Use(server.SetDatastore(store))
 		auth.Use(server.SetRemote(remote))
 		auth.GET("", server.GetLogin)
 		auth.POST("", server.GetLogin)
 	}
 
-	gitlab := r.Group("/gitlab/:owner/:name")
+	gitlab := r.Group(conf.server.root+"gitlab/:owner/:name")
 	{
+		gitlab.Use(server.SetRoot(conf.server.root))
 		gitlab.Use(server.SetDatastore(store))
 		gitlab.Use(server.SetRepo())
 
@@ -208,11 +213,13 @@ func main() {
 
 	r.SetHTMLTemplate(index())
 	r.NoRoute(func(c *gin.Context) {
-		c.HTML(200, "index.html", nil)
+		c.HTML(200, "index.html", gin.H{
+			"root": conf.server.root,
+		})
 	})
 
-	http.Handle("/static/", static())
-	http.Handle("/", r)
+	http.Handle(conf.server.root+"static/", static(conf.server.root))
+	http.Handle(conf.server.root, r)
 
 	if len(conf.server.cert) == 0 {
 		err = http.ListenAndServe(conf.server.addr, nil)
@@ -227,7 +234,7 @@ func main() {
 
 // static is a helper function that will setup handlers
 // for serving static files.
-func static() http.Handler {
+func static(root string) http.Handler {
 	// default file server is embedded
 	var handler = http.FileServer(&assetfs.AssetFS{
 		Asset:    Asset,
@@ -239,7 +246,7 @@ func static() http.Handler {
 			http.Dir("cmd/drone-server/static"),
 		)
 	}
-	return http.StripPrefix("/static/", handler)
+	return http.StripPrefix(root+"static/", handler)
 }
 
 // index is a helper function that will setup a template

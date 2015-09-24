@@ -53,7 +53,7 @@
         abstract: true,
         views: {
           'layout': {
-            templateUrl: '/static/scripts/views/layout.html',
+            templateUrl: 'static/scripts/views/layout.html',
             controller: function ($scope, $routeParams, repos, users) {
               users.getCached().then(function (payload) {
                 if (payload && payload.data) {
@@ -68,10 +68,10 @@
         url: '/',
         views: {
           'toolbar': {
-            templateUrl: '/static/scripts/views/repos/index/toolbar.html'
+            templateUrl: 'static/scripts/views/repos/index/toolbar.html'
           },
           'content': {
-            templateUrl: '/static/scripts/views/repos/index/content.html',
+            templateUrl: 'static/scripts/views/repos/index/content.html',
             controller: 'ReposCtrl',
             resolve: resolveUser
           }
@@ -82,7 +82,7 @@
         url: '/login',
         views: {
           'layout': {
-            templateUrl: '/static/scripts/views/login.html',
+            templateUrl: 'static/scripts/views/login.html',
             controller: 'UserLoginCtrl',
             resolve: resolveUser
           }
@@ -93,7 +93,7 @@
         url: '/logout',
         views: {
           'layout': {
-            templateUrl: '/static/scripts/views/login.html',
+            templateUrl: 'static/scripts/views/login.html',
             controller: 'UserLogoutCtrl',
             resolve: resolveUser
           }
@@ -103,9 +103,9 @@
       .state('app.profile', {
         url: '/profile',
         views: {
-          'toolbar': {templateUrl: '/static/scripts/views/profile/toolbar.html'},
+          'toolbar': {templateUrl: 'static/scripts/views/profile/toolbar.html'},
           'content': {
-            templateUrl: '/static/scripts/views/profile/content.html',
+            templateUrl: 'static/scripts/views/profile/content.html',
             controller: 'UserCtrl',
             resolve: resolveUser
           }
@@ -115,9 +115,9 @@
       .state('app.users', {
         url: '/users',
         views: {
-          'toolbar': {templateUrl: '/static/scripts/views/users/toolbar.html'},
+          'toolbar': {templateUrl: 'static/scripts/views/users/toolbar.html'},
           'content': {
-            templateUrl: '/static/scripts/views/users/content.html',
+            templateUrl: 'static/scripts/views/users/content.html',
             controller: 'UsersCtrl',
             resolve: resolveUser
           }
@@ -128,12 +128,12 @@
         url: '/:owner/:name',
         views: {
           'toolbar': {
-            templateUrl: '/static/scripts/views/builds/index/toolbar.html',
+            templateUrl: 'static/scripts/views/builds/index/toolbar.html',
             controller: 'UserHeaderCtrl',
             resolve: resolveUser
           },
           'content': {
-            templateUrl: '/static/scripts/views/builds/index/content.html',
+            templateUrl: 'static/scripts/views/builds/index/content.html',
             controller: 'BuildsCtrl'
           }
         },
@@ -143,12 +143,12 @@
         url: '/:owner/:name/edit',
         views: {
           'toolbar': {
-            templateUrl: '/static/scripts/views/repos/toolbar.html',
+            templateUrl: 'static/scripts/views/repos/toolbar.html',
             controller: 'UserHeaderCtrl',
             resolve: resolveUser
           },
           'content': {
-            templateUrl: '/static/scripts/views/repos/edit.html',
+            templateUrl: 'static/scripts/views/repos/edit.html',
             controller: 'RepoEditCtrl',
             resolve: resolveUser
           }
@@ -159,12 +159,12 @@
         url: '/:owner/:name/delete',
         views: {
           'toolbar': {
-            templateUrl: '/static/scripts/views/repos/toolbar.html',
+            templateUrl: 'static/scripts/views/repos/toolbar.html',
             controller: 'UserHeaderCtrl',
             resolve: resolveUser
           },
           'content': {
-            templateUrl: '/static/scripts/views/repos/del.html',
+            templateUrl: 'static/scripts/views/repos/del.html',
             controller: 'RepoEditCtrl',
             resolve: resolveUser
           }
@@ -175,12 +175,12 @@
         url: '/:owner/:name/edit/env',
         views: {
           'toolbar': {
-            templateUrl: '/static/scripts/views/repos/toolbar.html',
+            templateUrl: 'static/scripts/views/repos/toolbar.html',
             controller: 'UserHeaderCtrl',
             resolve: resolveUser
           },
           'content': {
-            templateUrl: '/static/scripts/views/repos/env.html',
+            templateUrl: 'static/scripts/views/repos/env.html',
             controller: 'RepoEditCtrl',
             resolve: resolveUser
           }
@@ -191,12 +191,12 @@
         url: '/:owner/:name/secure',
         views: {
           'toolbar': {
-            templateUrl: '/static/scripts/views/repos/toolbar.html',
+            templateUrl: 'static/scripts/views/repos/toolbar.html',
             controller: 'UserHeaderCtrl',
             resolve: resolveUser
           },
           'content': {
-            templateUrl: '/static/scripts/views/repos/secure.html',
+            templateUrl: 'static/scripts/views/repos/secure.html',
             controller: 'RepoEditCtrl',
             resolve: resolveUser
           }
@@ -207,12 +207,12 @@
         url: '/:owner/:name/:number',
         views: {
           'toolbar': {
-            templateUrl: '/static/scripts/views/builds/show/toolbar.html',
+            templateUrl: 'static/scripts/views/builds/show/toolbar.html',
             controller: 'UserHeaderCtrl',
             resolve: resolveUser
           },
           'content': {
-            templateUrl: '/static/scripts/views/builds/show/content.html',
+            templateUrl: 'static/scripts/views/builds/show/content.html',
             controller: 'BuildOutCtrl',
             resolve: resolveUser
           }
@@ -223,12 +223,12 @@
         url: '/:owner/:name/:number/:step',
         views: {
           'toolbar': {
-            templateUrl: '/static/scripts/views/builds/show/toolbar.html',
+            templateUrl: 'static/scripts/views/builds/show/toolbar.html',
             controller: 'UserHeaderCtrl',
             resolve: resolveUser
           },
           'content': {
-            templateUrl: '/static/scripts/views/builds/show/content.html',
+            templateUrl: 'static/scripts/views/builds/show/content.html',
             controller: 'BuildOutCtrl',
             resolve: resolveUser
           }
@@ -248,7 +248,7 @@
     $httpProvider.interceptors.push(function ($q, $location) {
       return {
         'responseError': function (rejection) {
-          if (rejection.status === 401 && rejection.config.url !== "/api/user") {
+          if (rejection.status === 401 && rejection.config.url !== "api/user") {
             $location.path('/login');
           }
           if (rejection.status === 0) {

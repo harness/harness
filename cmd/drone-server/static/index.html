@@ -2,17 +2,17 @@
 <html ng-app="drone" lang="en">
 <head>
 
-  <base href="/"/>
-  <link rel="stylesheet" href="/static/styles/reset.css" />
-  <link rel="stylesheet" href="/static/styles/fonts.css" />
-  <link rel="stylesheet" href="/static/styles/alert.css" />
-  <link rel="stylesheet" href="/static/styles/blankslate.css" />
-  <link rel="stylesheet" href="/static/styles/list.css" />
-  <link rel="stylesheet" href="/static/styles/label.css" />
-  <link rel="stylesheet" href="/static/styles/range.css" />
-  <link rel="stylesheet" href="/static/styles/switch.css" />
-  <link rel="stylesheet" href="/static/styles/main.css" />
-  <link rel="icon" href="/static/favicon.png">
+  <base href="{{.root}}" />
+  <link rel="stylesheet" href="static/styles/reset.css" />
+  <link rel="stylesheet" href="static/styles/fonts.css" />
+  <link rel="stylesheet" href="static/styles/alert.css" />
+  <link rel="stylesheet" href="static/styles/blankslate.css" />
+  <link rel="stylesheet" href="static/styles/list.css" />
+  <link rel="stylesheet" href="static/styles/label.css" />
+  <link rel="stylesheet" href="static/styles/range.css" />
+  <link rel="stylesheet" href="static/styles/switch.css" />
+  <link rel="stylesheet" href="static/styles/main.css" />
+  <link rel="icon" href="static/favicon.png">
 </head>
 <body>
 <div ui-view="layout"></div>
@@ -25,22 +25,22 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.6.0/moment.min.js"></script>
 
 <!-- main javascript application -->
-<script src="/static/scripts/term.js"></script>
-<script src="/static/scripts/drone.js"></script>
-<script src="/static/scripts/controllers/repos.js"></script>
-<script src="/static/scripts/controllers/builds.js"></script>
-<script src="/static/scripts/controllers/users.js"></script>
+<script src="static/scripts/term.js"></script>
+<script src="static/scripts/drone.js"></script>
+<script src="static/scripts/controllers/repos.js"></script>
+<script src="static/scripts/controllers/builds.js"></script>
+<script src="static/scripts/controllers/users.js"></script>
 
-<script src="/static/scripts/services/repos.js"></script>
-<script src="/static/scripts/services/builds.js"></script>
-<script src="/static/scripts/services/users.js"></script>
-<script src="/static/scripts/services/logs.js"></script>
-<script src="/static/scripts/services/tokens.js"></script>
-<script src="/static/scripts/services/feed.js"></script>
+<script src="static/scripts/services/repos.js"></script>
+<script src="static/scripts/services/builds.js"></script>
+<script src="static/scripts/services/users.js"></script>
+<script src="static/scripts/services/logs.js"></script>
+<script src="static/scripts/services/tokens.js"></script>
+<script src="static/scripts/services/feed.js"></script>
 
-<script src="/static/scripts/filters/filter.js"></script>
-<script src="/static/scripts/filters/gravatar.js"></script>
-<script src="/static/scripts/filters/time.js"></script>
+<script src="static/scripts/filters/filter.js"></script>
+<script src="static/scripts/filters/gravatar.js"></script>
+<script src="static/scripts/filters/time.js"></script>
 
 </body>
 </html>

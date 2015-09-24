@@ -64,13 +64,13 @@
   /**
    * RepoEditCtrl responsible for editing a repository.
    */
-  function RepoEditCtrl($scope, $window, $location, $stateParams, repos, users) {
+  function RepoEditCtrl($scope, $state, $location, $stateParams, repos, users) {
     var owner = $stateParams.owner;
     var name = $stateParams.name;
     var fullName = owner + '/' + name;
 
-    // Inject window for composing url
-    $scope.window = $window;
+    // Inject absolute url for composing links
+    $scope.absolute_root = $state.href('app.index', {}, { absolute: true });
 
     // Gets the currently authenticated user
     users.getCached().then(function (payload) {
