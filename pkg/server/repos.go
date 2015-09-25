@@ -124,7 +124,16 @@ func PutRepo(c *gin.Context) {
 		return
 	}
 
-	data := repoResp{repo, perm, nil, nil, false}
+	resp := repoResp{repo, perm, nil, nil, false}
+	sig, err := getJwtToken(repo)
+	if err != nil {
+		c.Fail(500, err)
+		return
+	}
+	data := struct {
+		*repoResp
+		Token string `json:"hook_token"`
+	}{&resp, sig}
 	data.Params = repo.Params
 	data.Keypair = repo.Keys
 	data.Starred, _ = store.Starred(user, repo)
@@ -210,9 +219,7 @@ func PostRepo(c *gin.Context) {
 		r.FullName,
 	)
 
-	// crates the jwt token used to verify the repository
-	t := token.New(token.HookToken, r.FullName)
-	sig, err := t.Sign(r.Hash)
+	sig, err := getJwtToken(r)
 	if err != nil {
 		c.Fail(500, err)
 		return
@@ -258,7 +265,11 @@ func PostRepo(c *gin.Context) {
 
 	store.AddStar(user, r)
 
-	c.JSON(200, r)
+	resp := struct {
+		*common.Repo
+		Token string `json:"hook_token,omitempty"`
+	}{r, sig}
+	c.JSON(200, resp)
 }
 
 // Encrypt accapets a request to encrypt the
@@ -355,4 +366,10 @@ func perms(remote remote.Remote, u *common.User, r *common.Repo) *common.Perm {
 		return &common.Perm{}
 	}
 	return p
+}
+
+func getJwtToken(repo *common.Repo) (string, error) {
+	// crates the jwt token used to verify the repository
+	t := token.New(token.HookToken, repo.FullName)
+	return t.Sign(repo.Hash)
 }
