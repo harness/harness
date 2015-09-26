@@ -1,6 +1,8 @@
 image: npateriyainsecure/drone-go:1.5
+
 git:
   path: github.com/drone/drone
+
 env:
   - GOROOT=/usr/local/go
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
@@ -11,9 +13,11 @@ script:
   - go get golang.org/x/tools/cmd/vet
   - go get -u github.com/jteeuwen/go-bindata/...
 
+  - go run make.go deps
   - go run make.go bindata
-  - go run make.go build
   - go run make.go vet
+  - go run make.go fmt
+  - go run make.go build
   - go run make.go test
 
   - make dist
@@ -50,7 +54,7 @@ publish:
     when:
       owner: CiscoCloud
 
-# new .drone.yml syntax
+
 
 clone:
   path: github.com/drone/drone
@@ -61,9 +65,14 @@ build:
     - export GOPATH=/drone
     - export PATH=$PATH:$GOPATH/bin
     - go get -u github.com/jteeuwen/go-bindata/...
-    - make deps
-    - make
-    - make test
+
+    - go run make.go deps
+    - go run make.go bindata
+    - go run make.go vet
+    - go run make.go fmt
+    - go run make.go build
+    - go run make.go test
+
     - make dist
 
 compose:
