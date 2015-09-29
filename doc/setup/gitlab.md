@@ -1,6 +1,6 @@
 # Gitlab
 
-Drone comes with built-in support for GitLab version 7.7 and higher. To enable Gitlab you should configure the Gitlab driver using the following environment variables:
+Drone comes with built-in support for GitLab version 8.0 and higher. To enable Gitlab you should configure the Gitlab driver using the following environment variables:
 
 ```bash
 REMOTE_DRIVER="gitlab"
