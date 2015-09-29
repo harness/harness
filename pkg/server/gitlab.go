@@ -35,7 +35,7 @@ func RedirectSha(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(301, fmt.Sprintf("/%s/%s/%d", repo.Owner, repo.Name, build.ID))
+	c.Redirect(301, fmt.Sprintf("/%s/%s/%d", repo.Owner, repo.Name, build.Number))
 	return
 }
 
@@ -63,7 +63,7 @@ func RedirectPullRequest(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(301, fmt.Sprintf("/%s/%s/%d", repo.Owner, repo.Name, build.ID))
+	c.Redirect(301, fmt.Sprintf("/%s/%s/%d", repo.Owner, repo.Name, build.Number))
 	return
 }
 
