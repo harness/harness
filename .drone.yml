@@ -8,8 +8,8 @@ env:
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 
 script:
-  - bin/bash contrib/setup-sqlite.sh 1> /dev/null
-  - bin/bash contrib/setup-sassc.sh 1> /dev/null
+  - /bin/bash contrib/setup-sqlite.sh 1> /dev/null
+  - /bin/bash contrib/setup-sassc.sh  1> /dev/null
   - make deps
   - make
   - make test
