@@ -38,12 +38,24 @@ func PostNode(c *gin.Context) {
 	db := context.Database(c)
 	engine := context.Engine(c)
 
-	node := &model.Node{}
-	err := c.Bind(node)
+	in := struct {
+		Addr string `json:"address"`
+		Arch string `json:"architecture"`
+		Cert string `json:"cert"`
+		Key  string `json:"key"`
+		CA   string `json:"ca"`
+	}{}
+	err := c.Bind(&in)
 	if err != nil {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
+
+	node := &model.Node{}
+	node.Addr = in.Addr
+	node.Cert = in.Cert
+	node.Key = in.Key
+	node.CA = in.CA
 	node.Arch = "linux_amd64"
 
 	err = model.InsertNode(db, node)
