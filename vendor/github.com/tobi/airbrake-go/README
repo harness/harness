@@ -1,0 +1,28 @@
+Config
+======
+
+set airbrake.Endpoint and airbrake.ApiKey globals
+
+Methods
+=======
+
+airbrake.Error(err) reports an error
+
+airbrake.RequestError(err, *http.Request) can be used to add more context if you are in a http context
+
+
+You can also automatically have this library report panics, use this method:
+
+airbrake.CapturePanic(*http.Request)
+
+
+example:
+
+  func serve(w http.ResponseWriter, r *http.Request) {
+      defer airbrake.CapturePanic(r)
+      
+      [...]
+
+      panic("Oh no :-(") // will be recorded by airbrake 
+
+  }

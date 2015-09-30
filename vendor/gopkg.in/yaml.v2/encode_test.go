@@ -7,10 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drone/drone/Godeps/_workspace/src/gopkg.in/yaml.v2"
 	. "gopkg.in/check.v1"
+	"gopkg.in/yaml.v2"
 	"net"
-	"os"
 )
 
 var marshalIntTest = 123
@@ -296,10 +295,6 @@ var marshalTests = []struct {
 		map[string]net.IP{"a": net.IPv4(1, 2, 3, 4)},
 		"a: 1.2.3.4\n",
 	},
-	{
-		map[string]time.Time{"a": time.Unix(1424801979, 0)},
-		"a: 2015-02-24T18:19:39Z\n",
-	},
 
 	// Ensure strings containing ": " are quoted (reported as PR #43, but not reproducible).
 	{
@@ -309,8 +304,6 @@ var marshalTests = []struct {
 }
 
 func (s *S) TestMarshal(c *C) {
-	defer os.Setenv("TZ", os.Getenv("TZ"))
-	os.Setenv("TZ", "UTC")
 	for _, item := range marshalTests {
 		data, err := yaml.Marshal(item.value)
 		c.Assert(err, IsNil)
@@ -330,7 +323,7 @@ var marshalErrorTests = []struct {
 	panic: `Duplicated key 'b' in struct struct \{ B int; .*`,
 }, {
 	value: &struct {
-		A int
+		A       int
 		B map[string]int ",inline"
 	}{1, map[string]int{"a": 2}},
 	panic: `Can't have key "a" in inlined map; conflicts with struct field`,

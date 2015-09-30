@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/stvp/go-udp-testing"
 )
 

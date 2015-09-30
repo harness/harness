@@ -1,0 +1,4 @@
+extends multilevel.inheritance.a.amber
+
+block overwriteme
+    p This is B

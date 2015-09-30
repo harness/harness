@@ -1,0 +1,13 @@
+extends base
+
+block append head
+    title Dashboard
+
+block content
+    div.container
+        div.alert.alert-info
+            | We haven't decided what to put on the main screen yet. This will 
+            | be decided before we snapshot a beta release. In the mean time, 
+            | use the search box to find a repository. Make sure you type the 
+            | fully qualified repository name (ie owner/name)
+

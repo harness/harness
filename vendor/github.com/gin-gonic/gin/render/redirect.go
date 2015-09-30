@@ -1,3 +1,7 @@
+// Copyright 2014 Manu Martinez-Almeida.  All rights reserved.
+// Use of this source code is governed by a MIT style
+// license that can be found in the LICENSE file.
+
 package render
 
 import (
@@ -11,7 +15,7 @@ type Redirect struct {
 	Location string
 }
 
-func (r Redirect) Write(w http.ResponseWriter) error {
+func (r Redirect) Render(w http.ResponseWriter) error {
 	if r.Code < 300 || r.Code > 308 {
 		panic(fmt.Sprintf("Cannot redirect with status code %d", r.Code))
 	}

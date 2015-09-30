@@ -6,12 +6,26 @@ package ssh
 
 import (
 	"bufio"
+	"crypto/cipher"
+	"crypto/subtle"
+	"encoding/binary"
 	"errors"
+	"hash"
 	"io"
+	"net"
+	"sync"
 )
 
 const (
-	gcmCipherID = "aes128-gcm@openssh.com"
+	packetSizeMultiple = 16 // TODO(huin) this should be determined by the cipher.
+
+	// RFC 4253 section 6.1 defines a minimum packet size of 32768 that implementations
+	// MUST be able to process (plus a few more kilobytes for padding and mac). The RFC
+	// indicates implementations SHOULD be able to handle larger packet sizes, but then
+	// waffles on about reasonable limits.
+	//
+	// OpenSSH caps their maxPacket at 256kb so we choose to do the same.
+	maxPacket = 256 * 1024
 )
 
 // packetConn represents a transport that implements packet based
@@ -27,128 +41,225 @@ type packetConn interface {
 	Close() error
 }
 
-// transport is the keyingTransport that implements the SSH packet
-// protocol.
+// transport represents the SSH connection to the remote peer.
 type transport struct {
-	reader connectionState
-	writer connectionState
+	reader
+	writer
 
-	bufReader *bufio.Reader
-	bufWriter *bufio.Writer
-	rand      io.Reader
-
-	io.Closer
+	net.Conn
 
 	// Initial H used for the session ID. Once assigned this does
 	// not change, even during subsequent key exchanges.
 	sessionID []byte
 }
 
-func (t *transport) getSessionID() []byte {
-	if t.sessionID == nil {
-		panic("session ID not set yet")
-	}
-	s := make([]byte, len(t.sessionID))
-	copy(s, t.sessionID)
-	return s
+// reader represents the incoming connection state.
+type reader struct {
+	io.Reader
+	common
 }
 
-// packetCipher represents a combination of SSH encryption/MAC
-// protocol.  A single instance should be used for one direction only.
-type packetCipher interface {
-	// writePacket encrypts the packet and writes it to w. The
-	// contents of the packet are generally scrambled.
-	writePacket(seqnum uint32, w io.Writer, rand io.Reader, packet []byte) error
-
-	// readPacket reads and decrypts a packet of data. The
-	// returned packet may be overwritten by future calls of
-	// readPacket.
-	readPacket(seqnum uint32, r io.Reader) ([]byte, error)
-}
-
-// connectionState represents one side (read or write) of the
-// connection. This is necessary because each direction has its own
-// keys, and can even have its own algorithms
-type connectionState struct {
-	packetCipher
-	seqNum           uint32
-	dir              direction
-	pendingKeyChange chan packetCipher
+// writer represents the outgoing connection state.
+type writer struct {
+	sync.Mutex // protects writer.Writer from concurrent writes
+	*bufio.Writer
+	rand io.Reader
+	common
 }
 
 // prepareKeyChange sets up key material for a keychange. The key changes in
 // both directions are triggered by reading and writing a msgNewKey packet
 // respectively.
 func (t *transport) prepareKeyChange(algs *algorithms, kexResult *kexResult) error {
+	t.writer.cipherAlgo = algs.wCipher
+	t.writer.macAlgo = algs.wMAC
+	t.writer.compressionAlgo = algs.wCompression
+
+	t.reader.cipherAlgo = algs.rCipher
+	t.reader.macAlgo = algs.rMAC
+	t.reader.compressionAlgo = algs.rCompression
+
 	if t.sessionID == nil {
 		t.sessionID = kexResult.H
 	}
 
 	kexResult.SessionID = t.sessionID
-
-	if ciph, err := newPacketCipher(t.reader.dir, algs.r, kexResult); err != nil {
-		return err
-	} else {
-		t.reader.pendingKeyChange <- ciph
-	}
-
-	if ciph, err := newPacketCipher(t.writer.dir, algs.w, kexResult); err != nil {
-		return err
-	} else {
-		t.writer.pendingKeyChange <- ciph
-	}
-
+	t.reader.pendingKeyChange <- kexResult
+	t.writer.pendingKeyChange <- kexResult
 	return nil
 }
 
-// Read and decrypt next packet.
-func (t *transport) readPacket() ([]byte, error) {
-	return t.reader.readPacket(t.bufReader)
+// common represents the cipher state needed to process messages in a single
+// direction.
+type common struct {
+	seqNum uint32
+	mac    hash.Hash
+	cipher cipher.Stream
+
+	cipherAlgo      string
+	macAlgo         string
+	compressionAlgo string
+
+	dir              direction
+	pendingKeyChange chan *kexResult
 }
 
-func (s *connectionState) readPacket(r *bufio.Reader) ([]byte, error) {
-	packet, err := s.packetCipher.readPacket(s.seqNum, r)
-	s.seqNum++
-	if err == nil && len(packet) == 0 {
-		err = errors.New("ssh: zero length packet")
+// Read and decrypt a single packet from the remote peer.
+func (r *reader) readPacket() ([]byte, error) {
+	var lengthBytes = make([]byte, 5)
+	var macSize uint32
+	if _, err := io.ReadFull(r, lengthBytes); err != nil {
+		return nil, err
 	}
+
+	r.cipher.XORKeyStream(lengthBytes, lengthBytes)
+
+	if r.mac != nil {
+		r.mac.Reset()
+		seqNumBytes := []byte{
+			byte(r.seqNum >> 24),
+			byte(r.seqNum >> 16),
+			byte(r.seqNum >> 8),
+			byte(r.seqNum),
+		}
+		r.mac.Write(seqNumBytes)
+		r.mac.Write(lengthBytes)
+		macSize = uint32(r.mac.Size())
+	}
+
+	length := binary.BigEndian.Uint32(lengthBytes[0:4])
+	paddingLength := uint32(lengthBytes[4])
+
+	if length <= paddingLength+1 {
+		return nil, errors.New("ssh: invalid packet length, packet too small")
+	}
+
+	if length > maxPacket {
+		return nil, errors.New("ssh: invalid packet length, packet too large")
+	}
+
+	packet := make([]byte, length-1+macSize)
+	if _, err := io.ReadFull(r, packet); err != nil {
+		return nil, err
+	}
+	mac := packet[length-1:]
+	r.cipher.XORKeyStream(packet, packet[:length-1])
+
+	if r.mac != nil {
+		r.mac.Write(packet[:length-1])
+		if subtle.ConstantTimeCompare(r.mac.Sum(nil), mac) != 1 {
+			return nil, errors.New("ssh: MAC failure")
+		}
+	}
+
+	r.seqNum++
+	packet = packet[:length-paddingLength-1]
 
 	if len(packet) > 0 && packet[0] == msgNewKeys {
 		select {
-		case cipher := <-s.pendingKeyChange:
-			s.packetCipher = cipher
+		case k := <-r.pendingKeyChange:
+			if err := r.setupKeys(r.dir, k); err != nil {
+				return nil, err
+			}
 		default:
 			return nil, errors.New("ssh: got bogus newkeys message.")
 		}
 	}
-
-	// The packet may point to an internal buffer, so copy the
-	// packet out here.
-	fresh := make([]byte, len(packet))
-	copy(fresh, packet)
-
-	return fresh, err
+	return packet, nil
 }
 
-func (t *transport) writePacket(packet []byte) error {
-	return t.writer.writePacket(t.bufWriter, t.rand, packet)
+// Read and decrypt next packet discarding debug and noop messages.
+func (t *transport) readPacket() ([]byte, error) {
+	for {
+		packet, err := t.reader.readPacket()
+		if err != nil {
+			return nil, err
+		}
+		if len(packet) == 0 {
+			return nil, errors.New("ssh: zero length packet")
+		}
+
+		if packet[0] != msgIgnore && packet[0] != msgDebug {
+			return packet, nil
+		}
+	}
+	panic("unreachable")
 }
 
-func (s *connectionState) writePacket(w *bufio.Writer, rand io.Reader, packet []byte) error {
+// Encrypt and send a packet of data to the remote peer.
+func (w *writer) writePacket(packet []byte) error {
 	changeKeys := len(packet) > 0 && packet[0] == msgNewKeys
 
-	err := s.packetCipher.writePacket(s.seqNum, w, rand, packet)
+	if len(packet) > maxPacket {
+		return errors.New("ssh: packet too large")
+	}
+	w.Mutex.Lock()
+	defer w.Mutex.Unlock()
+
+	paddingLength := packetSizeMultiple - (5+len(packet))%packetSizeMultiple
+	if paddingLength < 4 {
+		paddingLength += packetSizeMultiple
+	}
+
+	length := len(packet) + 1 + paddingLength
+	lengthBytes := []byte{
+		byte(length >> 24),
+		byte(length >> 16),
+		byte(length >> 8),
+		byte(length),
+		byte(paddingLength),
+	}
+	padding := make([]byte, paddingLength)
+	_, err := io.ReadFull(w.rand, padding)
 	if err != nil {
 		return err
 	}
+
+	if w.mac != nil {
+		w.mac.Reset()
+		seqNumBytes := []byte{
+			byte(w.seqNum >> 24),
+			byte(w.seqNum >> 16),
+			byte(w.seqNum >> 8),
+			byte(w.seqNum),
+		}
+		w.mac.Write(seqNumBytes)
+		w.mac.Write(lengthBytes)
+		w.mac.Write(packet)
+		w.mac.Write(padding)
+	}
+
+	// TODO(dfc) lengthBytes, packet and padding should be
+	// subslices of a single buffer
+	w.cipher.XORKeyStream(lengthBytes, lengthBytes)
+	w.cipher.XORKeyStream(packet, packet)
+	w.cipher.XORKeyStream(padding, padding)
+
+	if _, err := w.Write(lengthBytes); err != nil {
+		return err
+	}
+	if _, err := w.Write(packet); err != nil {
+		return err
+	}
+	if _, err := w.Write(padding); err != nil {
+		return err
+	}
+
+	if w.mac != nil {
+		if _, err := w.Write(w.mac.Sum(nil)); err != nil {
+			return err
+		}
+	}
+
+	w.seqNum++
 	if err = w.Flush(); err != nil {
 		return err
 	}
-	s.seqNum++
+
 	if changeKeys {
 		select {
-		case cipher := <-s.pendingKeyChange:
-			s.packetCipher = cipher
+		case k := <-w.pendingKeyChange:
+			err = w.setupKeys(w.dir, k)
 		default:
 			panic("ssh: no key material for msgNewKeys")
 		}
@@ -156,20 +267,24 @@ func (s *connectionState) writePacket(w *bufio.Writer, rand io.Reader, packet []
 	return err
 }
 
-func newTransport(rwc io.ReadWriteCloser, rand io.Reader, isClient bool) *transport {
+func newTransport(conn net.Conn, rand io.Reader, isClient bool) *transport {
 	t := &transport{
-		bufReader: bufio.NewReader(rwc),
-		bufWriter: bufio.NewWriter(rwc),
-		rand:      rand,
-		reader: connectionState{
-			packetCipher:     &streamPacketCipher{cipher: noneCipher{}},
-			pendingKeyChange: make(chan packetCipher, 1),
+		reader: reader{
+			Reader: bufio.NewReader(conn),
+			common: common{
+				cipher:           noneCipher{},
+				pendingKeyChange: make(chan *kexResult, 1),
+			},
 		},
-		writer: connectionState{
-			packetCipher:     &streamPacketCipher{cipher: noneCipher{}},
-			pendingKeyChange: make(chan packetCipher, 1),
+		writer: writer{
+			Writer: bufio.NewWriter(conn),
+			rand:   rand,
+			common: common{
+				cipher:           noneCipher{},
+				pendingKeyChange: make(chan *kexResult, 1),
+			},
 		},
-		Closer: rwc,
+		Conn: conn,
 	}
 	if isClient {
 		t.reader.dir = serverKeys
@@ -188,64 +303,48 @@ type direction struct {
 	macKeyTag []byte
 }
 
+// TODO(dfc) can this be made a constant ?
 var (
 	serverKeys = direction{[]byte{'B'}, []byte{'D'}, []byte{'F'}}
 	clientKeys = direction{[]byte{'A'}, []byte{'C'}, []byte{'E'}}
 )
 
-// generateKeys generates key material for IV, MAC and encryption.
-func generateKeys(d direction, algs directionAlgorithms, kex *kexResult) (iv, key, macKey []byte) {
-	cipherMode := cipherModes[algs.Cipher]
-	macMode := macModes[algs.MAC]
-
-	iv = make([]byte, cipherMode.ivSize)
-	key = make([]byte, cipherMode.keySize)
-	macKey = make([]byte, macMode.keySize)
-
-	generateKeyMaterial(iv, d.ivTag, kex)
-	generateKeyMaterial(key, d.keyTag, kex)
-	generateKeyMaterial(macKey, d.macKeyTag, kex)
-	return
-}
-
 // setupKeys sets the cipher and MAC keys from kex.K, kex.H and sessionId, as
 // described in RFC 4253, section 6.4. direction should either be serverKeys
 // (to setup server->client keys) or clientKeys (for client->server keys).
-func newPacketCipher(d direction, algs directionAlgorithms, kex *kexResult) (packetCipher, error) {
-	iv, key, macKey := generateKeys(d, algs, kex)
+func (c *common) setupKeys(d direction, r *kexResult) error {
+	cipherMode := cipherModes[c.cipherAlgo]
+	macMode := macModes[c.macAlgo]
 
-	if algs.Cipher == gcmCipherID {
-		return newGCMCipher(iv, key, macKey)
-	}
+	iv := make([]byte, cipherMode.ivSize)
+	key := make([]byte, cipherMode.keySize)
+	macKey := make([]byte, macMode.keySize)
 
-	c := &streamPacketCipher{
-		mac: macModes[algs.MAC].new(macKey),
-	}
-	c.macResult = make([]byte, c.mac.Size())
+	h := r.Hash.New()
+	generateKeyMaterial(iv, d.ivTag, r.K, r.H, r.SessionID, h)
+	generateKeyMaterial(key, d.keyTag, r.K, r.H, r.SessionID, h)
+	generateKeyMaterial(macKey, d.macKeyTag, r.K, r.H, r.SessionID, h)
+
+	c.mac = macMode.new(macKey)
 
 	var err error
-	c.cipher, err = cipherModes[algs.Cipher].createStream(key, iv)
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
+	c.cipher, err = cipherMode.createCipher(key, iv)
+	return err
 }
 
 // generateKeyMaterial fills out with key material generated from tag, K, H
 // and sessionId, as specified in RFC 4253, section 7.2.
-func generateKeyMaterial(out, tag []byte, r *kexResult) {
+func generateKeyMaterial(out, tag []byte, K, H, sessionId []byte, h hash.Hash) {
 	var digestsSoFar []byte
 
-	h := r.Hash.New()
 	for len(out) > 0 {
 		h.Reset()
-		h.Write(r.K)
-		h.Write(r.H)
+		h.Write(K)
+		h.Write(H)
 
 		if len(digestsSoFar) == 0 {
 			h.Write(tag)
-			h.Write(r.SessionID)
+			h.Write(sessionId)
 		} else {
 			h.Write(digestsSoFar)
 		}

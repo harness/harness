@@ -1,3 +1,7 @@
+// Copyright 2014 Manu Martinez-Almeida.  All rights reserved.
+// Use of this source code is governed by a MIT style
+// license that can be found in the LICENSE file.
+
 package sse
 
 import (
@@ -5,26 +9,47 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEncodeOnlyData(t *testing.T) {
 	w := new(bytes.Buffer)
-	err := Encode(w, Event{
+	event := Event{
 		Data: "junk\n\njk\nid:fake",
-	})
+	}
+	err := Encode(w, event)
 	assert.NoError(t, err)
-	assert.Equal(t, w.String(), "data: junk\\n\\njk\\nid:fake\n\n")
+	assert.Equal(t, w.String(),
+		`data:junk
+data:
+data:jk
+data:id:fake
+
+`)
+
+	decoded, _ := Decode(w)
+	assert.Equal(t, decoded, []Event{event})
 }
 
 func TestEncodeWithEvent(t *testing.T) {
 	w := new(bytes.Buffer)
-	err := Encode(w, Event{
+	event := Event{
 		Event: "t\n:<>\r\test",
 		Data:  "junk\n\njk\nid:fake",
-	})
+	}
+	err := Encode(w, event)
 	assert.NoError(t, err)
-	assert.Equal(t, w.String(), "event: t\\n:<>\\r\test\ndata: junk\\n\\njk\\nid:fake\n\n")
+	assert.Equal(t, w.String(),
+		`event:t\n:<>\r	est
+data:junk
+data:
+data:jk
+data:id:fake
+
+`)
+
+	decoded, _ := Decode(w)
+	assert.Equal(t, decoded, []Event{event})
 }
 
 func TestEncodeWithId(t *testing.T) {
@@ -34,7 +59,14 @@ func TestEncodeWithId(t *testing.T) {
 		Data: "junk\n\njk\nid:fa\rke",
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, w.String(), "id: t\\n:<>\\r\test\ndata: junk\\n\\njk\\nid:fa\\rke\n\n")
+	assert.Equal(t, w.String(),
+		`id:t\n:<>\r	est
+data:junk
+data:
+data:jk
+data:id:fa\rke
+
+`)
 }
 
 func TestEncodeWithRetry(t *testing.T) {
@@ -44,7 +76,15 @@ func TestEncodeWithRetry(t *testing.T) {
 		Data:  "junk\n\njk\nid:fake\n",
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, w.String(), "retry: 11\ndata: junk\\n\\njk\\nid:fake\\n\n\n")
+	assert.Equal(t, w.String(),
+		`retry:11
+data:junk
+data:
+data:jk
+data:id:fake
+data:
+
+`)
 }
 
 func TestEncodeWithEverything(t *testing.T) {
@@ -56,7 +96,7 @@ func TestEncodeWithEverything(t *testing.T) {
 		Data:  "some data",
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, w.String(), "id: 12345\nevent: abc\nretry: 10\ndata: some data\n\n")
+	assert.Equal(t, w.String(), "id:12345\nevent:abc\nretry:10\ndata:some data\n\n")
 }
 
 func TestEncodeMap(t *testing.T) {
@@ -69,7 +109,7 @@ func TestEncodeMap(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, w.String(), "event: a map\ndata: {\"bar\":\"id: 2\",\"foo\":\"b\\n\\rar\"}\n\n")
+	assert.Equal(t, w.String(), "event:a map\ndata:{\"bar\":\"id: 2\",\"foo\":\"b\\n\\rar\"}\n\n")
 }
 
 func TestEncodeSlice(t *testing.T) {
@@ -79,7 +119,7 @@ func TestEncodeSlice(t *testing.T) {
 		Data:  []interface{}{1, "text", map[string]interface{}{"foo": "bar"}},
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, w.String(), "event: a slice\ndata: [1,\"text\",{\"foo\":\"bar\"}]\n\n")
+	assert.Equal(t, w.String(), "event:a slice\ndata:[1,\"text\",{\"foo\":\"bar\"}]\n\n")
 }
 
 func TestEncodeStruct(t *testing.T) {
@@ -94,7 +134,7 @@ func TestEncodeStruct(t *testing.T) {
 		Data:  myStruct,
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, w.String(), "event: a struct\ndata: {\"A\":1,\"value\":\"number\"}\n\n")
+	assert.Equal(t, w.String(), "event:a struct\ndata:{\"A\":1,\"value\":\"number\"}\n\n")
 
 	w.Reset()
 	err = Encode(w, Event{
@@ -102,7 +142,7 @@ func TestEncodeStruct(t *testing.T) {
 		Data:  &myStruct,
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, w.String(), "event: a struct\ndata: {\"A\":1,\"value\":\"number\"}\n\n")
+	assert.Equal(t, w.String(), "event:a struct\ndata:{\"A\":1,\"value\":\"number\"}\n\n")
 }
 
 func TestEncodeInteger(t *testing.T) {
@@ -112,7 +152,7 @@ func TestEncodeInteger(t *testing.T) {
 		Data:  1,
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, w.String(), "event: an integer\ndata: 1\n\n")
+	assert.Equal(t, w.String(), "event:an integer\ndata:1\n\n")
 }
 
 func TestEncodeFloat(t *testing.T) {
@@ -122,7 +162,7 @@ func TestEncodeFloat(t *testing.T) {
 		Data:  1.5,
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, w.String(), "event: Float\ndata: 1.5\n\n")
+	assert.Equal(t, w.String(), "event:Float\ndata:1.5\n\n")
 }
 
 func TestEncodeStream(t *testing.T) {
@@ -143,7 +183,7 @@ func TestEncodeStream(t *testing.T) {
 		Event: "chat",
 		Data:  "hi! dude",
 	})
-	assert.Equal(t, w.String(), "event: float\ndata: 1.5\n\nid: 123\ndata: {\"bar\":\"foo\",\"foo\":\"bar\"}\n\nid: 124\nevent: chat\ndata: hi! dude\n\n")
+	assert.Equal(t, w.String(), "event:float\ndata:1.5\n\nid:123\ndata:{\"bar\":\"foo\",\"foo\":\"bar\"}\n\nid:124\nevent:chat\ndata:hi! dude\n\n")
 }
 
 func TestRenderSSE(t *testing.T) {
@@ -152,10 +192,64 @@ func TestRenderSSE(t *testing.T) {
 	err := (Event{
 		Event: "msg",
 		Data:  "hi! how are you?",
-	}).Write(w)
+	}).Render(w)
 
 	assert.NoError(t, err)
-	assert.Equal(t, w.Body.String(), "event: msg\ndata: hi! how are you?\n\n")
+	assert.Equal(t, w.Body.String(), "event:msg\ndata:hi! how are you?\n\n")
 	assert.Equal(t, w.Header().Get("Content-Type"), "text/event-stream")
 	assert.Equal(t, w.Header().Get("Cache-Control"), "no-cache")
+}
+
+func BenchmarkResponseWriter(b *testing.B) {
+	w := httptest.NewRecorder()
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		(Event{
+			Event: "new_message",
+			Data:  "hi! how are you? I am fine. this is a long stupid message!!!",
+		}).Render(w)
+	}
+}
+
+func BenchmarkFullSSE(b *testing.B) {
+	buf := new(bytes.Buffer)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Encode(buf, Event{
+			Event: "new_message",
+			Id:    "13435",
+			Retry: 10,
+			Data:  "hi! how are you? I am fine. this is a long stupid message!!!",
+		})
+		buf.Reset()
+	}
+}
+
+func BenchmarkNoRetrySSE(b *testing.B) {
+	buf := new(bytes.Buffer)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Encode(buf, Event{
+			Event: "new_message",
+			Id:    "13435",
+			Data:  "hi! how are you? I am fine. this is a long stupid message!!!",
+		})
+		buf.Reset()
+	}
+}
+
+func BenchmarkSimpleSSE(b *testing.B) {
+	buf := new(bytes.Buffer)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Encode(buf, Event{
+			Event: "new_message",
+			Data:  "hi! how are you? I am fine. this is a long stupid message!!!",
+		})
+		buf.Reset()
+	}
 }

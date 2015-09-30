@@ -1,7 +1,7 @@
 package gogitlab
 
 import (
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"testing"
 )

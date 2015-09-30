@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// +build linux
+
 package terminal
 
-// These constants are declared here, rather than importing
-// them from the syscall package as some syscall packages, even
-// on linux, for example gccgo, do not declare them.
-const ioctlReadTermios = 0x5401  // syscall.TCGETS
-const ioctlWriteTermios = 0x5402 // syscall.TCSETS
+import "syscall"
+
+const ioctlReadTermios = syscall.TCGETS
+const ioctlWriteTermios = syscall.TCSETS

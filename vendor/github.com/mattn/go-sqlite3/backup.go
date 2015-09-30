@@ -6,7 +6,7 @@
 package sqlite3
 
 /*
-#include <sqlite3-binding.h>
+#include <sqlite3.h>
 #include <stdlib.h>
 */
 import "C"

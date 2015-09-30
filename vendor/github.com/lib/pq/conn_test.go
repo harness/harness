@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"runtime"
+	"strings"
 	"testing"
 	"time"
 )
@@ -16,14 +18,22 @@ type Fatalistic interface {
 }
 
 func openTestConnConninfo(conninfo string) (*sql.DB, error) {
-	defaultTo := func(envvar string, value string) {
-		if os.Getenv(envvar) == "" {
-			os.Setenv(envvar, value)
-		}
+	datname := os.Getenv("PGDATABASE")
+	sslmode := os.Getenv("PGSSLMODE")
+	timeout := os.Getenv("PGCONNECT_TIMEOUT")
+
+	if datname == "" {
+		os.Setenv("PGDATABASE", "pqgotest")
 	}
-	defaultTo("PGDATABASE", "pqgotest")
-	defaultTo("PGSSLMODE", "disable")
-	defaultTo("PGCONNECT_TIMEOUT", "20")
+
+	if sslmode == "" {
+		os.Setenv("PGSSLMODE", "disable")
+	}
+
+	if timeout == "" {
+		os.Setenv("PGCONNECT_TIMEOUT", "20")
+	}
+
 	return sql.Open("postgres", conninfo)
 }
 
@@ -46,6 +56,12 @@ func getServerVersion(t *testing.T, db *sql.DB) int {
 }
 
 func TestReconnect(t *testing.T) {
+	if runtime.Version() == "go1.0.2" {
+		fmt.Println("Skipping failing test; " +
+			"fixed in database/sql on go1.0.3+")
+		return
+	}
+
 	db1 := openTestConn(t)
 	defer db1.Close()
 	tx, err := db1.Begin()
@@ -98,22 +114,18 @@ func TestCommitInFailedTransaction(t *testing.T) {
 }
 
 func TestOpenURL(t *testing.T) {
-	testURL := func(url string) {
-		db, err := openTestConnConninfo(url)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer db.Close()
-		// database/sql might not call our Open at all unless we do something with
-		// the connection
-		txn, err := db.Begin()
-		if err != nil {
-			t.Fatal(err)
-		}
-		txn.Rollback()
+	db, err := openTestConnConninfo("postgres://")
+	if err != nil {
+		t.Fatal(err)
 	}
-	testURL("postgres://")
-	testURL("postgresql://")
+	defer db.Close()
+	// database/sql might not call our Open at all unless we do something with
+	// the connection
+	txn, err := db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	txn.Rollback()
 }
 
 func TestExec(t *testing.T) {
@@ -453,37 +465,31 @@ func TestErrorDuringStartup(t *testing.T) {
 	e, ok := err.(*Error)
 	if !ok {
 		t.Fatalf("expected Error, got %#v", err)
-	} else if e.Code.Name() != "invalid_authorization_specification" && e.Code.Name() != "invalid_password" {
-		t.Fatalf("expected invalid_authorization_specification or invalid_password, got %s (%+v)", e.Code.Name(), err)
+	} else if e.Code.Name() != "invalid_authorization_specification" {
+		t.Fatalf("expected invalid_authorization_specification, got %s (%+v)", e.Code.Name(), err)
 	}
 }
 
 func TestBadConn(t *testing.T) {
 	var err error
 
-	cn := conn{}
 	func() {
-		defer cn.errRecover(&err)
+		defer errRecover(&err)
 		panic(io.EOF)
 	}()
+
 	if err != driver.ErrBadConn {
 		t.Fatalf("expected driver.ErrBadConn, got: %#v", err)
 	}
-	if !cn.bad {
-		t.Fatalf("expected cn.bad")
-	}
 
-	cn = conn{}
 	func() {
-		defer cn.errRecover(&err)
+		defer errRecover(&err)
 		e := &Error{Severity: Efatal}
 		panic(e)
 	}()
+
 	if err != driver.ErrBadConn {
 		t.Fatalf("expected driver.ErrBadConn, got: %#v", err)
-	}
-	if !cn.bad {
-		t.Fatalf("expected cn.bad")
 	}
 }
 
@@ -826,6 +832,11 @@ func TestIssue196(t *testing.T) {
 // Test that any CommandComplete messages sent before the query results are
 // ignored.
 func TestIssue282(t *testing.T) {
+	if strings.HasPrefix(runtime.Version(), "go1.0") {
+		fmt.Println("Skipping test due to lack of Queryer implementation")
+		return
+	}
+
 	db := openTestConn(t)
 	defer db.Close()
 
@@ -858,60 +869,6 @@ func TestReadFloatPrecision(t *testing.T) {
 	}
 	if float8val != float64(35.03554004971999) {
 		t.Errorf("Expected float8 fidelity to be maintained; got no match")
-	}
-}
-
-func TestXactMultiStmt(t *testing.T) {
-	// minified test case based on bug reports from
-	// pico303@gmail.com and rangelspam@gmail.com
-	t.Skip("Skipping failing test")
-	db := openTestConn(t)
-	defer db.Close()
-
-	tx, err := db.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer tx.Commit()
-
-	rows, err := tx.Query("select 1")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if rows.Next() {
-		var val int32
-		if err = rows.Scan(&val); err != nil {
-			t.Fatal(err)
-		}
-	} else {
-		t.Fatal("Expected at least one row in first query in xact")
-	}
-
-	rows2, err := tx.Query("select 2")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if rows2.Next() {
-		var val2 int32
-		if err := rows2.Scan(&val2); err != nil {
-			t.Fatal(err)
-		}
-	} else {
-		t.Fatal("Expected at least one row in second query in xact")
-	}
-
-	if err = rows.Err(); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = rows2.Err(); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = tx.Commit(); err != nil {
-		t.Fatal(err)
 	}
 }
 
@@ -951,8 +908,7 @@ func TestParseComplete(t *testing.T) {
 				}
 			}
 		}()
-		cn := &conn{}
-		res, c := cn.parseComplete(commandTag)
+		res, c := parseComplete(commandTag)
 		if c != command {
 			t.Errorf("Expected %v, got %v", command, c)
 		}
@@ -1205,15 +1161,14 @@ func TestRuntimeParameters(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		defer db.Close()
 
 		// application_name didn't exist before 9.0
 		if test.param == "application_name" && getServerVersion(t, db) < 90000 {
-			db.Close()
 			continue
 		}
 
 		tryGetParameterValue := func() (value string, outcome RuntimeTestResult) {
-			defer db.Close()
 			row := db.QueryRow("SELECT current_setting($1)", test.param)
 			err = row.Scan(&value)
 			if err != nil {

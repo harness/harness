@@ -11,13 +11,7 @@ type JSONFormatter struct{}
 func (f *JSONFormatter) Format(entry *Entry) ([]byte, error) {
 	data := make(Fields, len(entry.Data)+3)
 	for k, v := range entry.Data {
-		// Otherwise errors are ignored by `encoding/json`
-		// https://github.com/Sirupsen/logrus/issues/137
-		if err, ok := v.(error); ok {
-			data[k] = err.Error()
-		} else {
-			data[k] = v
-		}
+		data[k] = v
 	}
 	prefixFieldClashes(data)
 	data["time"] = entry.Time.Format(time.RFC3339)

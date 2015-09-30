@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/square/go-jose/cipher"
+	"github.com/square/go-jose/cipher"
 )
 
 // A generic RSA-based encrypter/verifier

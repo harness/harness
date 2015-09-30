@@ -9,12 +9,11 @@ import (
 	"errors"
 	"io"
 	"log"
+	"os"
 	"testing"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
-
-var cachedDebugLogger *log.Logger = nil
 
 // TODO
 // func debugRoute(httpMethod, absolutePath string, handlers HandlersChain) {
@@ -58,22 +57,21 @@ func TestDebugPrintError(t *testing.T) {
 	assert.Equal(t, w.String(), "[GIN-debug] [ERROR] this is an error\n")
 }
 
+func TestDebugPrintRoutes(t *testing.T) {
+	var w bytes.Buffer
+	setup(&w)
+	defer teardown()
+
+	debugPrintRoute("GET", "/path/to/route/:param", HandlersChain{func(c *Context) {}, handlerNameTest})
+	assert.Equal(t, w.String(), "[GIN-debug] GET   /path/to/route/:param     --> github.com/gin-gonic/gin.handlerNameTest (2 handlers)\n")
+}
+
 func setup(w io.Writer) {
 	SetMode(DebugMode)
-	if cachedDebugLogger == nil {
-		cachedDebugLogger = debugLogger
-		debugLogger = log.New(w, debugLogger.Prefix(), 0)
-	} else {
-		panic("setup failed")
-	}
+	log.SetOutput(w)
 }
 
 func teardown() {
 	SetMode(TestMode)
-	if cachedDebugLogger != nil {
-		debugLogger = cachedDebugLogger
-		cachedDebugLogger = nil
-	} else {
-		panic("teardown failed")
-	}
+	log.SetOutput(os.Stdout)
 }

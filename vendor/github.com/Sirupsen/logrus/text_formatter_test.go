@@ -25,13 +25,9 @@ func TestQuoting(t *testing.T) {
 
 	checkQuoting(false, "abcd")
 	checkQuoting(false, "v1.0")
-	checkQuoting(false, "1234567890")
 	checkQuoting(true, "/foobar")
 	checkQuoting(true, "x y")
 	checkQuoting(true, "x,y")
 	checkQuoting(false, errors.New("invalid"))
 	checkQuoting(true, errors.New("invalid argument"))
 }
-
-// TODO add tests for sorting etc., this requires a parser for the text
-// formatter output.

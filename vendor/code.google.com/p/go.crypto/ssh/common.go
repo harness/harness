@@ -6,9 +6,7 @@ package ssh
 
 import (
 	"crypto"
-	"crypto/rand"
 	"fmt"
-	"io"
 	"sync"
 
 	_ "crypto/sha1"
@@ -23,37 +21,14 @@ const (
 	serviceSSH      = "ssh-connection"
 )
 
-// supportedCiphers specifies the supported ciphers in preference order.
-var supportedCiphers = []string{
-	"aes128-ctr", "aes192-ctr", "aes256-ctr",
-	"aes128-gcm@openssh.com",
-	"arcfour256", "arcfour128",
-}
-
-// supportedKexAlgos specifies the supported key-exchange algorithms in
-// preference order.
 var supportedKexAlgos = []string{
-	// P384 and P521 are not constant-time yet, but since we don't
-	// reuse ephemeral keys, using them for ECDH should be OK.
 	kexAlgoECDH256, kexAlgoECDH384, kexAlgoECDH521,
 	kexAlgoDH14SHA1, kexAlgoDH1SHA1,
 }
 
-// supportedKexAlgos specifies the supported host-key algorithms (i.e. methods
-// of authenticating servers) in preference order.
 var supportedHostKeyAlgos = []string{
-	CertAlgoRSAv01, CertAlgoDSAv01, CertAlgoECDSA256v01,
-	CertAlgoECDSA384v01, CertAlgoECDSA521v01,
-
 	KeyAlgoECDSA256, KeyAlgoECDSA384, KeyAlgoECDSA521,
 	KeyAlgoRSA, KeyAlgoDSA,
-}
-
-// supportedMACs specifies a default set of MAC algorithms in preference order.
-// This is based on RFC 4253, section 6.4, but with hmac-md5 variants removed
-// because they have reached the end of their useful life.
-var supportedMACs = []string{
-	"hmac-sha1", "hmac-sha1-96",
 }
 
 var supportedCompressions = []string{compressionNone}
@@ -73,15 +48,23 @@ var hashFuncs = map[string]crypto.Hash{
 	CertAlgoECDSA521v01: crypto.SHA512,
 }
 
-// unexpectedMessageError results when the SSH message that we received didn't
+// UnexpectedMessageError results when the SSH message that we received didn't
 // match what we wanted.
-func unexpectedMessageError(expected, got uint8) error {
-	return fmt.Errorf("ssh: unexpected message type %d (expected %d)", got, expected)
+type UnexpectedMessageError struct {
+	expected, got uint8
 }
 
-// parseError results from a malformed SSH message.
-func parseError(tag uint8) error {
-	return fmt.Errorf("ssh: parse error in message type %d", tag)
+func (u UnexpectedMessageError) Error() string {
+	return fmt.Sprintf("ssh: unexpected message type %d (expected %d)", u.got, u.expected)
+}
+
+// ParseError results from a malformed SSH message.
+type ParseError struct {
+	msgType uint8
+}
+
+func (p ParseError) Error() string {
+	return fmt.Sprintf("ssh: parse error in message type %d", p.msgType)
 }
 
 func findCommonAlgorithm(clientAlgos []string, serverAlgos []string) (commonAlgo string, ok bool) {
@@ -107,17 +90,15 @@ func findCommonCipher(clientCiphers []string, serverCiphers []string) (commonCip
 	return
 }
 
-type directionAlgorithms struct {
-	Cipher      string
-	MAC         string
-	Compression string
-}
-
 type algorithms struct {
-	kex     string
-	hostKey string
-	w       directionAlgorithms
-	r       directionAlgorithms
+	kex          string
+	hostKey      string
+	wCipher      string
+	rCipher      string
+	rMAC         string
+	wMAC         string
+	rCompression string
+	wCompression string
 }
 
 func findAgreedAlgorithms(clientKexInit, serverKexInit *kexInitMsg) (algs *algorithms) {
@@ -133,32 +114,32 @@ func findAgreedAlgorithms(clientKexInit, serverKexInit *kexInitMsg) (algs *algor
 		return
 	}
 
-	result.w.Cipher, ok = findCommonCipher(clientKexInit.CiphersClientServer, serverKexInit.CiphersClientServer)
+	result.wCipher, ok = findCommonCipher(clientKexInit.CiphersClientServer, serverKexInit.CiphersClientServer)
 	if !ok {
 		return
 	}
 
-	result.r.Cipher, ok = findCommonCipher(clientKexInit.CiphersServerClient, serverKexInit.CiphersServerClient)
+	result.rCipher, ok = findCommonCipher(clientKexInit.CiphersServerClient, serverKexInit.CiphersServerClient)
 	if !ok {
 		return
 	}
 
-	result.w.MAC, ok = findCommonAlgorithm(clientKexInit.MACsClientServer, serverKexInit.MACsClientServer)
+	result.wMAC, ok = findCommonAlgorithm(clientKexInit.MACsClientServer, serverKexInit.MACsClientServer)
 	if !ok {
 		return
 	}
 
-	result.r.MAC, ok = findCommonAlgorithm(clientKexInit.MACsServerClient, serverKexInit.MACsServerClient)
+	result.rMAC, ok = findCommonAlgorithm(clientKexInit.MACsServerClient, serverKexInit.MACsServerClient)
 	if !ok {
 		return
 	}
 
-	result.w.Compression, ok = findCommonAlgorithm(clientKexInit.CompressionClientServer, serverKexInit.CompressionClientServer)
+	result.wCompression, ok = findCommonAlgorithm(clientKexInit.CompressionClientServer, serverKexInit.CompressionClientServer)
 	if !ok {
 		return
 	}
 
-	result.r.Compression, ok = findCommonAlgorithm(clientKexInit.CompressionServerClient, serverKexInit.CompressionServerClient)
+	result.rCompression, ok = findCommonAlgorithm(clientKexInit.CompressionServerClient, serverKexInit.CompressionServerClient)
 	if !ok {
 		return
 	}
@@ -166,87 +147,133 @@ func findAgreedAlgorithms(clientKexInit, serverKexInit *kexInitMsg) (algs *algor
 	return result
 }
 
-// If rekeythreshold is too small, we can't make any progress sending
-// stuff.
-const minRekeyThreshold uint64 = 256
-
-// Config contains configuration data common to both ServerConfig and
-// ClientConfig.
-type Config struct {
-	// Rand provides the source of entropy for cryptographic
-	// primitives. If Rand is nil, the cryptographic random reader
-	// in package crypto/rand will be used.
-	Rand io.Reader
-
-	// The maximum number of bytes sent or received after which a
-	// new key is negotiated. It must be at least 256. If
-	// unspecified, 1 gigabyte is used.
-	RekeyThreshold uint64
-
+// Cryptographic configuration common to both ServerConfig and ClientConfig.
+type CryptoConfig struct {
 	// The allowed key exchanges algorithms. If unspecified then a
 	// default set of algorithms is used.
 	KeyExchanges []string
 
-	// The allowed cipher algorithms. If unspecified then a sensible
-	// default is used.
+	// The allowed cipher algorithms. If unspecified then DefaultCipherOrder is
+	// used.
 	Ciphers []string
 
-	// The allowed MAC algorithms. If unspecified then a sensible default
-	// is used.
+	// The allowed MAC algorithms. If unspecified then DefaultMACOrder is used.
 	MACs []string
 }
 
-// SetDefaults sets sensible values for unset fields in config. This is
-// exported for testing: Configs passed to SSH functions are copied and have
-// default values set automatically.
-func (c *Config) SetDefaults() {
-	if c.Rand == nil {
-		c.Rand = rand.Reader
-	}
+func (c *CryptoConfig) ciphers() []string {
 	if c.Ciphers == nil {
-		c.Ciphers = supportedCiphers
+		return DefaultCipherOrder
 	}
+	return c.Ciphers
+}
 
+func (c *CryptoConfig) kexes() []string {
 	if c.KeyExchanges == nil {
-		c.KeyExchanges = supportedKexAlgos
+		return defaultKeyExchangeOrder
 	}
+	return c.KeyExchanges
+}
 
+func (c *CryptoConfig) macs() []string {
 	if c.MACs == nil {
-		c.MACs = supportedMACs
+		return DefaultMACOrder
 	}
+	return c.MACs
+}
 
-	if c.RekeyThreshold == 0 {
-		// RFC 4253, section 9 suggests rekeying after 1G.
-		c.RekeyThreshold = 1 << 30
+// serialize a signed slice according to RFC 4254 6.6. The name should
+// be a key type name, rather than a cert type name.
+func serializeSignature(name string, sig []byte) []byte {
+	length := stringLength(len(name))
+	length += stringLength(len(sig))
+
+	ret := make([]byte, length)
+	r := marshalString(ret, []byte(name))
+	r = marshalString(r, sig)
+
+	return ret
+}
+
+// MarshalPublicKey serializes a supported key or certificate for use
+// by the SSH wire protocol. It can be used for comparison with the
+// pubkey argument of ServerConfig's PublicKeyCallback as well as for
+// generating an authorized_keys or host_keys file.
+func MarshalPublicKey(key PublicKey) []byte {
+	// See also RFC 4253 6.6.
+	algoname := key.PublicKeyAlgo()
+	blob := key.Marshal()
+
+	length := stringLength(len(algoname))
+	length += len(blob)
+	ret := make([]byte, length)
+	r := marshalString(ret, []byte(algoname))
+	copy(r, blob)
+	return ret
+}
+
+// pubAlgoToPrivAlgo returns the private key algorithm format name that
+// corresponds to a given public key algorithm format name.  For most
+// public keys, the private key algorithm name is the same.  For some
+// situations, such as openssh certificates, the private key algorithm and
+// public key algorithm names differ.  This accounts for those situations.
+func pubAlgoToPrivAlgo(pubAlgo string) string {
+	switch pubAlgo {
+	case CertAlgoRSAv01:
+		return KeyAlgoRSA
+	case CertAlgoDSAv01:
+		return KeyAlgoDSA
+	case CertAlgoECDSA256v01:
+		return KeyAlgoECDSA256
+	case CertAlgoECDSA384v01:
+		return KeyAlgoECDSA384
+	case CertAlgoECDSA521v01:
+		return KeyAlgoECDSA521
 	}
-	if c.RekeyThreshold < minRekeyThreshold {
-		c.RekeyThreshold = minRekeyThreshold
-	}
+	return pubAlgo
 }
 
 // buildDataSignedForAuth returns the data that is signed in order to prove
 // possession of a private key. See RFC 4252, section 7.
 func buildDataSignedForAuth(sessionId []byte, req userAuthRequestMsg, algo, pubKey []byte) []byte {
-	data := struct {
-		Session []byte
-		Type    byte
-		User    string
-		Service string
-		Method  string
-		Sign    bool
-		Algo    []byte
-		PubKey  []byte
-	}{
-		sessionId,
-		msgUserAuthRequest,
-		req.User,
-		req.Service,
-		req.Method,
-		true,
-		algo,
-		pubKey,
+	user := []byte(req.User)
+	service := []byte(req.Service)
+	method := []byte(req.Method)
+
+	length := stringLength(len(sessionId))
+	length += 1
+	length += stringLength(len(user))
+	length += stringLength(len(service))
+	length += stringLength(len(method))
+	length += 1
+	length += stringLength(len(algo))
+	length += stringLength(len(pubKey))
+
+	ret := make([]byte, length)
+	r := marshalString(ret, sessionId)
+	r[0] = msgUserAuthRequest
+	r = r[1:]
+	r = marshalString(r, user)
+	r = marshalString(r, service)
+	r = marshalString(r, method)
+	r[0] = 1
+	r = r[1:]
+	r = marshalString(r, algo)
+	r = marshalString(r, pubKey)
+	return ret
+}
+
+// safeString sanitises s according to RFC 4251, section 9.2.
+// All control characters except tab, carriage return and newline are
+// replaced by 0x20.
+func safeString(s string) string {
+	out := []byte(s)
+	for i, c := range out {
+		if c < 0x20 && c != 0xd && c != 0xa && c != 0x9 {
+			out[i] = 0x20
+		}
 	}
-	return Marshal(data)
+	return string(out)
 }
 
 func appendU16(buf []byte, n uint16) []byte {
@@ -255,12 +282,6 @@ func appendU16(buf []byte, n uint16) []byte {
 
 func appendU32(buf []byte, n uint32) []byte {
 	return append(buf, byte(n>>24), byte(n>>16), byte(n>>8), byte(n))
-}
-
-func appendU64(buf []byte, n uint64) []byte {
-	return append(buf,
-		byte(n>>56), byte(n>>48), byte(n>>40), byte(n>>32),
-		byte(n>>24), byte(n>>16), byte(n>>8), byte(n))
 }
 
 func appendInt(buf []byte, n int) []byte {
@@ -275,9 +296,11 @@ func appendString(buf []byte, s string) []byte {
 
 func appendBool(buf []byte, b bool) []byte {
 	if b {
-		return append(buf, 1)
+		buf = append(buf, 1)
+	} else {
+		buf = append(buf, 0)
 	}
-	return append(buf, 0)
+	return buf
 }
 
 // newCond is a helper to hide the fact that there is no usable zero
@@ -288,9 +311,7 @@ func newCond() *sync.Cond { return sync.NewCond(new(sync.Mutex)) }
 // wishing to write to a channel.
 type window struct {
 	*sync.Cond
-	win          uint32 // RFC 4254 5.2 says the window size can grow to 2^32-1
-	writeWaiters int
-	closed       bool
+	win uint32 // RFC 4254 5.2 says the window size can grow to 2^32-1
 }
 
 // add adds win to the amount of window available
@@ -314,44 +335,18 @@ func (w *window) add(win uint32) bool {
 	return true
 }
 
-// close sets the window to closed, so all reservations fail
-// immediately.
-func (w *window) close() {
-	w.L.Lock()
-	w.closed = true
-	w.Broadcast()
-	w.L.Unlock()
-}
-
 // reserve reserves win from the available window capacity.
 // If no capacity remains, reserve will block. reserve may
 // return less than requested.
-func (w *window) reserve(win uint32) (uint32, error) {
-	var err error
+func (w *window) reserve(win uint32) uint32 {
 	w.L.Lock()
-	w.writeWaiters++
-	w.Broadcast()
-	for w.win == 0 && !w.closed {
+	for w.win == 0 {
 		w.Wait()
 	}
-	w.writeWaiters--
 	if w.win < win {
 		win = w.win
 	}
 	w.win -= win
-	if w.closed {
-		err = io.EOF
-	}
 	w.L.Unlock()
-	return win, err
-}
-
-// waitWriterBlocked waits until some goroutine is blocked for further
-// writes. It is used in tests only.
-func (w *window) waitWriterBlocked() {
-	w.Cond.L.Lock()
-	for w.writeWaiters == 0 {
-		w.Cond.Wait()
-	}
-	w.Cond.L.Unlock()
+	return win
 }

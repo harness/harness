@@ -2,10 +2,13 @@ package dockerclient
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/docker/docker/pkg/stdcopy"
 )
@@ -45,6 +48,26 @@ func TestKillContainer(t *testing.T) {
 	}
 }
 
+func TestWait(t *testing.T) {
+	client := testDockerClient(t)
+
+	// This provokes an error on the server.
+	select {
+	case wr := <-client.Wait("1234"):
+		assertEqual(t, wr.ExitCode, int(-1), "")
+	case <-time.After(2 * time.Second):
+		t.Fatal("Timed out!")
+	}
+
+	// Valid case.
+	select {
+	case wr := <-client.Wait("valid-id"):
+		assertEqual(t, wr.ExitCode, int(0), "")
+	case <-time.After(2 * time.Second):
+		t.Fatal("Timed out!")
+	}
+}
+
 func TestPullImage(t *testing.T) {
 	client := testDockerClient(t)
 	err := client.PullImage("busybox", nil)
@@ -72,6 +95,18 @@ func TestListContainers(t *testing.T) {
 	assertEqual(t, len(containers), 1, "")
 	cnt := containers[0]
 	assertEqual(t, cnt.SizeRw, int64(0), "")
+}
+
+func TestContainerChanges(t *testing.T) {
+	client := testDockerClient(t)
+	changes, err := client.ContainerChanges("foobar")
+	if err != nil {
+		t.Fatal("cannot get container changes: %s", err)
+	}
+	assertEqual(t, len(changes), 3, "unexpected number of changes")
+	c := changes[0]
+	assertEqual(t, c.Path, "/dev", "unexpected")
+	assertEqual(t, c.Kind, 0, "unexpected")
 }
 
 func TestListContainersWithSize(t *testing.T) {
@@ -140,6 +175,58 @@ func TestContainerLogs(t *testing.T) {
 		if !strings.HasSuffix(line, expectedSuffix) {
 			t.Fatalf("expected stderr log line \"%s\" to end with \"%s\"", line, expectedSuffix)
 		}
+	}
+}
+
+func TestMonitorEvents(t *testing.T) {
+	client := testDockerClient(t)
+	decoder := json.NewDecoder(bytes.NewBufferString(eventsResp))
+	var expectedEvents []Event
+	for {
+		var event Event
+		if err := decoder.Decode(&event); err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				t.Fatalf("cannot parse expected resp: %s", err.Error())
+			}
+		} else {
+			expectedEvents = append(expectedEvents, event)
+		}
+	}
+
+	// test passing stop chan
+	stopChan := make(chan struct{})
+	eventInfoChan, err := client.MonitorEvents(nil, stopChan)
+	if err != nil {
+		t.Fatalf("cannot get events from server: %s", err.Error())
+	}
+
+	eventInfo := <-eventInfoChan
+	if eventInfo.Error != nil || eventInfo.Event != expectedEvents[0] {
+		t.Fatalf("got:\n%#v\nexpected:\n%#v", eventInfo, expectedEvents[0])
+	}
+	close(stopChan)
+	for i := 0; i < 3; i++ {
+		_, ok := <-eventInfoChan
+		if i == 2 && ok {
+			t.Fatalf("read more than 2 events successfully after closing stopChan")
+		}
+	}
+
+	// test when you don't pass stop chan
+	eventInfoChan, err = client.MonitorEvents(nil, nil)
+	if err != nil {
+		t.Fatalf("cannot get events from server: %s", err.Error())
+	}
+
+	for i, expectedEvent := range expectedEvents {
+		t.Logf("on iter %d\n", i)
+		eventInfo := <-eventInfoChan
+		if eventInfo.Error != nil || eventInfo.Event != expectedEvent {
+			t.Fatalf("index %d, got:\n%#v\nexpected:\n%#v", i, eventInfo, expectedEvent)
+		}
+		t.Logf("done with iter %d\n", i)
 	}
 }
 

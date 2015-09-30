@@ -14,8 +14,25 @@ type AuthConfig struct {
 }
 
 // encode the auth configuration struct into base64 for the X-Registry-Auth header
-func (c *AuthConfig) encode() string {
+func (c *AuthConfig) encode() (string, error) {
 	var buf bytes.Buffer
-	json.NewEncoder(&buf).Encode(c)
-	return base64.URLEncoding.EncodeToString(buf.Bytes())
+	if err := json.NewEncoder(&buf).Encode(c); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(buf.Bytes()), nil
+}
+
+// ConfigFile holds parameters for authenticating during a BuildImage request
+type ConfigFile struct {
+	Configs  map[string]AuthConfig `json:"configs,omitempty"`
+	rootPath string
+}
+
+// encode the configuration struct into base64 for the X-Registry-Config header
+func (c *ConfigFile) encode() (string, error) {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(c); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(buf.Bytes()), nil
 }

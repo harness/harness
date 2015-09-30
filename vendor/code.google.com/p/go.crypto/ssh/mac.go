@@ -43,6 +43,11 @@ func (t truncatingMAC) Size() int {
 
 func (t truncatingMAC) BlockSize() int { return t.hmac.BlockSize() }
 
+// Specifies a default set of MAC algorithms and a preference order.
+// This is based on RFC 4253, section 6.4, with the removal of the
+// hmac-md5 variants as they have reached the end of their useful life.
+var DefaultMACOrder = []string{"hmac-sha1", "hmac-sha1-96"}
+
 var macModes = map[string]*macMode{
 	"hmac-sha1": {20, func(key []byte) hash.Hash {
 		return hmac.New(sha1.New, key)

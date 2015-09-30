@@ -5,12 +5,6 @@
 package ssh
 
 import (
-	"bytes"
-	"errors"
-	"fmt"
-	"io"
-	"net"
-	"sort"
 	"time"
 )
 
@@ -24,348 +18,67 @@ const (
 	CertAlgoECDSA521v01 = "ecdsa-sha2-nistp521-cert-v01@openssh.com"
 )
 
-// Certificate types distinguish between host and user
-// certificates. The values can be set in the CertType field of
-// Certificate.
+// Certificate types are used to specify whether a certificate is for identification
+// of a user or a host.  Current identities are defined in [PROTOCOL.certkeys].
 const (
 	UserCert = 1
 	HostCert = 2
 )
 
-// Signature represents a cryptographic signature.
-type Signature struct {
+type signature struct {
 	Format string
 	Blob   []byte
 }
 
-// CertTimeInfinity can be used for OpenSSHCertV01.ValidBefore to indicate that
-// a certificate does not expire.
-const CertTimeInfinity = 1<<64 - 1
+type tuple struct {
+	Name string
+	Data string
+}
 
-// An Certificate represents an OpenSSH certificate as defined in
+const (
+	maxUint64 = 1<<64 - 1
+	maxInt64  = 1<<63 - 1
+)
+
+// CertTime represents an unsigned 64-bit time value in seconds starting from
+// UNIX epoch.  We use CertTime instead of time.Time in order to properly handle
+// the "infinite" time value ^0, which would become negative when expressed as
+// an int64.
+type CertTime uint64
+
+func (ct CertTime) Time() time.Time {
+	if ct > maxInt64 {
+		return time.Unix(maxInt64, 0)
+	}
+	return time.Unix(int64(ct), 0)
+}
+
+func (ct CertTime) IsInfinite() bool {
+	return ct == maxUint64
+}
+
+// An OpenSSHCertV01 represents an OpenSSH certificate as defined in
 // [PROTOCOL.certkeys]?rev=1.8.
-type Certificate struct {
-	Nonce           []byte
-	Key             PublicKey
-	Serial          uint64
-	CertType        uint32
-	KeyId           string
-	ValidPrincipals []string
-	ValidAfter      uint64
-	ValidBefore     uint64
-	Permissions
-	Reserved     []byte
-	SignatureKey PublicKey
-	Signature    *Signature
+type OpenSSHCertV01 struct {
+	Nonce                   []byte
+	Key                     PublicKey
+	Serial                  uint64
+	Type                    uint32
+	KeyId                   string
+	ValidPrincipals         []string
+	ValidAfter, ValidBefore CertTime
+	CriticalOptions         []tuple
+	Extensions              []tuple
+	Reserved                []byte
+	SignatureKey            PublicKey
+	Signature               *signature
 }
 
-// genericCertData holds the key-independent part of the certificate data.
-// Overall, certificates contain an nonce, public key fields and
-// key-independent fields.
-type genericCertData struct {
-	Serial          uint64
-	CertType        uint32
-	KeyId           string
-	ValidPrincipals []byte
-	ValidAfter      uint64
-	ValidBefore     uint64
-	CriticalOptions []byte
-	Extensions      []byte
-	Reserved        []byte
-	SignatureKey    []byte
-	Signature       []byte
-}
-
-func marshalStringList(namelist []string) []byte {
-	var to []byte
-	for _, name := range namelist {
-		s := struct{ N string }{name}
-		to = append(to, Marshal(&s)...)
-	}
-	return to
-}
-
-func marshalTuples(tups map[string]string) []byte {
-	keys := make([]string, 0, len(tups))
-	for k := range tups {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	var r []byte
-	for _, k := range keys {
-		s := struct{ K, V string }{k, tups[k]}
-		r = append(r, Marshal(&s)...)
-	}
-	return r
-}
-
-func parseTuples(in []byte) (map[string]string, error) {
-	tups := map[string]string{}
-	var lastKey string
-	var haveLastKey bool
-
-	for len(in) > 0 {
-		nameBytes, rest, ok := parseString(in)
-		if !ok {
-			return nil, errShortRead
-		}
-		data, rest, ok := parseString(rest)
-		if !ok {
-			return nil, errShortRead
-		}
-		name := string(nameBytes)
-
-		// according to [PROTOCOL.certkeys], the names must be in
-		// lexical order.
-		if haveLastKey && name <= lastKey {
-			return nil, fmt.Errorf("ssh: certificate options are not in lexical order")
-		}
-		lastKey, haveLastKey = name, true
-
-		tups[name] = string(data)
-		in = rest
-	}
-	return tups, nil
-}
-
-func parseCert(in []byte, privAlgo string) (*Certificate, error) {
-	nonce, rest, ok := parseString(in)
-	if !ok {
-		return nil, errShortRead
-	}
-
-	key, rest, err := parsePubKey(rest, privAlgo)
-	if err != nil {
-		return nil, err
-	}
-
-	var g genericCertData
-	if err := Unmarshal(rest, &g); err != nil {
-		return nil, err
-	}
-
-	c := &Certificate{
-		Nonce:       nonce,
-		Key:         key,
-		Serial:      g.Serial,
-		CertType:    g.CertType,
-		KeyId:       g.KeyId,
-		ValidAfter:  g.ValidAfter,
-		ValidBefore: g.ValidBefore,
-	}
-
-	for principals := g.ValidPrincipals; len(principals) > 0; {
-		principal, rest, ok := parseString(principals)
-		if !ok {
-			return nil, errShortRead
-		}
-		c.ValidPrincipals = append(c.ValidPrincipals, string(principal))
-		principals = rest
-	}
-
-	c.CriticalOptions, err = parseTuples(g.CriticalOptions)
-	if err != nil {
-		return nil, err
-	}
-	c.Extensions, err = parseTuples(g.Extensions)
-	if err != nil {
-		return nil, err
-	}
-	c.Reserved = g.Reserved
-	k, err := ParsePublicKey(g.SignatureKey)
-	if err != nil {
-		return nil, err
-	}
-
-	c.SignatureKey = k
-	c.Signature, rest, ok = parseSignatureBody(g.Signature)
-	if !ok || len(rest) > 0 {
-		return nil, errors.New("ssh: signature parse error")
-	}
-
-	return c, nil
-}
-
-type openSSHCertSigner struct {
-	pub    *Certificate
-	signer Signer
-}
-
-// NewCertSigner returns a Signer that signs with the given Certificate, whose
-// private key is held by signer. It returns an error if the public key in cert
-// doesn't match the key used by signer.
-func NewCertSigner(cert *Certificate, signer Signer) (Signer, error) {
-	if bytes.Compare(cert.Key.Marshal(), signer.PublicKey().Marshal()) != 0 {
-		return nil, errors.New("ssh: signer and cert have different public key")
-	}
-
-	return &openSSHCertSigner{cert, signer}, nil
-}
-
-func (s *openSSHCertSigner) Sign(rand io.Reader, data []byte) (*Signature, error) {
-	return s.signer.Sign(rand, data)
-}
-
-func (s *openSSHCertSigner) PublicKey() PublicKey {
-	return s.pub
-}
-
-const sourceAddressCriticalOption = "source-address"
-
-// CertChecker does the work of verifying a certificate. Its methods
-// can be plugged into ClientConfig.HostKeyCallback and
-// ServerConfig.PublicKeyCallback. For the CertChecker to work,
-// minimally, the IsAuthority callback should be set.
-type CertChecker struct {
-	// SupportedCriticalOptions lists the CriticalOptions that the
-	// server application layer understands. These are only used
-	// for user certificates.
-	SupportedCriticalOptions []string
-
-	// IsAuthority should return true if the key is recognized as
-	// an authority. This allows for certificates to be signed by other
-	// certificates.
-	IsAuthority func(auth PublicKey) bool
-
-	// Clock is used for verifying time stamps. If nil, time.Now
-	// is used.
-	Clock func() time.Time
-
-	// UserKeyFallback is called when CertChecker.Authenticate encounters a
-	// public key that is not a certificate. It must implement validation
-	// of user keys or else, if nil, all such keys are rejected.
-	UserKeyFallback func(conn ConnMetadata, key PublicKey) (*Permissions, error)
-
-	// HostKeyFallback is called when CertChecker.CheckHostKey encounters a
-	// public key that is not a certificate. It must implement host key
-	// validation or else, if nil, all such keys are rejected.
-	HostKeyFallback func(addr string, remote net.Addr, key PublicKey) error
-
-	// IsRevoked is called for each certificate so that revocation checking
-	// can be implemented. It should return true if the given certificate
-	// is revoked and false otherwise. If nil, no certificates are
-	// considered to have been revoked.
-	IsRevoked func(cert *Certificate) bool
-}
-
-// CheckHostKey checks a host key certificate. This method can be
-// plugged into ClientConfig.HostKeyCallback.
-func (c *CertChecker) CheckHostKey(addr string, remote net.Addr, key PublicKey) error {
-	cert, ok := key.(*Certificate)
-	if !ok {
-		if c.HostKeyFallback != nil {
-			return c.HostKeyFallback(addr, remote, key)
-		}
-		return errors.New("ssh: non-certificate host key")
-	}
-	if cert.CertType != HostCert {
-		return fmt.Errorf("ssh: certificate presented as a host key has type %d", cert.CertType)
-	}
-
-	return c.CheckCert(addr, cert)
-}
-
-// Authenticate checks a user certificate. Authenticate can be used as
-// a value for ServerConfig.PublicKeyCallback.
-func (c *CertChecker) Authenticate(conn ConnMetadata, pubKey PublicKey) (*Permissions, error) {
-	cert, ok := pubKey.(*Certificate)
-	if !ok {
-		if c.UserKeyFallback != nil {
-			return c.UserKeyFallback(conn, pubKey)
-		}
-		return nil, errors.New("ssh: normal key pairs not accepted")
-	}
-
-	if cert.CertType != UserCert {
-		return nil, fmt.Errorf("ssh: cert has type %d", cert.CertType)
-	}
-
-	if err := c.CheckCert(conn.User(), cert); err != nil {
-		return nil, err
-	}
-
-	return &cert.Permissions, nil
-}
-
-// CheckCert checks CriticalOptions, ValidPrincipals, revocation, timestamp and
-// the signature of the certificate.
-func (c *CertChecker) CheckCert(principal string, cert *Certificate) error {
-	if c.IsRevoked != nil && c.IsRevoked(cert) {
-		return fmt.Errorf("ssh: certicate serial %d revoked", cert.Serial)
-	}
-
-	for opt, _ := range cert.CriticalOptions {
-		// sourceAddressCriticalOption will be enforced by
-		// serverAuthenticate
-		if opt == sourceAddressCriticalOption {
-			continue
-		}
-
-		found := false
-		for _, supp := range c.SupportedCriticalOptions {
-			if supp == opt {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("ssh: unsupported critical option %q in certificate", opt)
-		}
-	}
-
-	if len(cert.ValidPrincipals) > 0 {
-		// By default, certs are valid for all users/hosts.
-		found := false
-		for _, p := range cert.ValidPrincipals {
-			if p == principal {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("ssh: principal %q not in the set of valid principals for given certificate: %q", principal, cert.ValidPrincipals)
-		}
-	}
-
-	if !c.IsAuthority(cert.SignatureKey) {
-		return fmt.Errorf("ssh: certificate signed by unrecognized authority")
-	}
-
-	clock := c.Clock
-	if clock == nil {
-		clock = time.Now
-	}
-
-	unixNow := clock().Unix()
-	if after := int64(cert.ValidAfter); after < 0 || unixNow < int64(cert.ValidAfter) {
-		return fmt.Errorf("ssh: cert is not yet valid")
-	}
-	if before := int64(cert.ValidBefore); cert.ValidBefore != CertTimeInfinity && (unixNow >= before || before < 0) {
-		return fmt.Errorf("ssh: cert has expired")
-	}
-	if err := cert.SignatureKey.Verify(cert.bytesForSigning(), cert.Signature); err != nil {
-		return fmt.Errorf("ssh: certificate signature does not verify")
-	}
-
-	return nil
-}
-
-// SignCert sets c.SignatureKey to the authority's public key and stores a
-// Signature, by authority, in the certificate.
-func (c *Certificate) SignCert(rand io.Reader, authority Signer) error {
-	c.Nonce = make([]byte, 32)
-	if _, err := io.ReadFull(rand, c.Nonce); err != nil {
-		return err
-	}
-	c.SignatureKey = authority.PublicKey()
-
-	sig, err := authority.Sign(rand, c.bytesForSigning())
-	if err != nil {
-		return err
-	}
-	c.Signature = sig
-	return nil
+// validateOpenSSHCertV01Signature uses the cert's SignatureKey to verify that
+// the cert's Signature.Blob is the result of signing the cert bytes starting
+// from the algorithm string and going up to and including the SignatureKey.
+func validateOpenSSHCertV01Signature(cert *OpenSSHCertV01) bool {
+	return cert.SignatureKey.Verify(cert.BytesForSigning(), cert.Signature.Blob)
 }
 
 var certAlgoNames = map[string]string{
@@ -387,69 +100,260 @@ func certToPrivAlgo(algo string) string {
 	panic("unknown cert algorithm")
 }
 
-func (cert *Certificate) bytesForSigning() []byte {
-	c2 := *cert
-	c2.Signature = nil
-	out := c2.Marshal()
-	// Drop trailing signature length.
-	return out[:len(out)-4]
+func (cert *OpenSSHCertV01) marshal(includeAlgo, includeSig bool) []byte {
+	algoName := cert.PublicKeyAlgo()
+	pubKey := cert.Key.Marshal()
+	sigKey := MarshalPublicKey(cert.SignatureKey)
+
+	var length int
+	if includeAlgo {
+		length += stringLength(len(algoName))
+	}
+	length += stringLength(len(cert.Nonce))
+	length += len(pubKey)
+	length += 8 // Length of Serial
+	length += 4 // Length of Type
+	length += stringLength(len(cert.KeyId))
+	length += lengthPrefixedNameListLength(cert.ValidPrincipals)
+	length += 8 // Length of ValidAfter
+	length += 8 // Length of ValidBefore
+	length += tupleListLength(cert.CriticalOptions)
+	length += tupleListLength(cert.Extensions)
+	length += stringLength(len(cert.Reserved))
+	length += stringLength(len(sigKey))
+	if includeSig {
+		length += signatureLength(cert.Signature)
+	}
+
+	ret := make([]byte, length)
+	r := ret
+	if includeAlgo {
+		r = marshalString(r, []byte(algoName))
+	}
+	r = marshalString(r, cert.Nonce)
+	copy(r, pubKey)
+	r = r[len(pubKey):]
+	r = marshalUint64(r, cert.Serial)
+	r = marshalUint32(r, cert.Type)
+	r = marshalString(r, []byte(cert.KeyId))
+	r = marshalLengthPrefixedNameList(r, cert.ValidPrincipals)
+	r = marshalUint64(r, uint64(cert.ValidAfter))
+	r = marshalUint64(r, uint64(cert.ValidBefore))
+	r = marshalTupleList(r, cert.CriticalOptions)
+	r = marshalTupleList(r, cert.Extensions)
+	r = marshalString(r, cert.Reserved)
+	r = marshalString(r, sigKey)
+	if includeSig {
+		r = marshalSignature(r, cert.Signature)
+	}
+	if len(r) > 0 {
+		panic("ssh: internal error, marshaling certificate did not fill the entire buffer")
+	}
+	return ret
 }
 
-// Marshal serializes c into OpenSSH's wire format. It is part of the
-// PublicKey interface.
-func (c *Certificate) Marshal() []byte {
-	generic := genericCertData{
-		Serial:          c.Serial,
-		CertType:        c.CertType,
-		KeyId:           c.KeyId,
-		ValidPrincipals: marshalStringList(c.ValidPrincipals),
-		ValidAfter:      uint64(c.ValidAfter),
-		ValidBefore:     uint64(c.ValidBefore),
-		CriticalOptions: marshalTuples(c.CriticalOptions),
-		Extensions:      marshalTuples(c.Extensions),
-		Reserved:        c.Reserved,
-		SignatureKey:    c.SignatureKey.Marshal(),
-	}
-	if c.Signature != nil {
-		generic.Signature = Marshal(c.Signature)
-	}
-	genericBytes := Marshal(&generic)
-	keyBytes := c.Key.Marshal()
-	_, keyBytes, _ = parseString(keyBytes)
-	prefix := Marshal(&struct {
-		Name  string
-		Nonce []byte
-		Key   []byte `ssh:"rest"`
-	}{c.Type(), c.Nonce, keyBytes})
-
-	result := make([]byte, 0, len(prefix)+len(genericBytes))
-	result = append(result, prefix...)
-	result = append(result, genericBytes...)
-	return result
+func (cert *OpenSSHCertV01) BytesForSigning() []byte {
+	return cert.marshal(true, false)
 }
 
-// Type returns the key name. It is part of the PublicKey interface.
-func (c *Certificate) Type() string {
-	algo, ok := certAlgoNames[c.Key.Type()]
+func (cert *OpenSSHCertV01) Marshal() []byte {
+	return cert.marshal(false, true)
+}
+
+func (c *OpenSSHCertV01) PublicKeyAlgo() string {
+	algo, ok := certAlgoNames[c.Key.PublicKeyAlgo()]
 	if !ok {
 		panic("unknown cert key type")
 	}
 	return algo
 }
 
-// Verify verifies a signature against the certificate's public
-// key. It is part of the PublicKey interface.
-func (c *Certificate) Verify(data []byte, sig *Signature) error {
+func (c *OpenSSHCertV01) PrivateKeyAlgo() string {
+	return c.Key.PrivateKeyAlgo()
+}
+
+func (c *OpenSSHCertV01) Verify(data []byte, sig []byte) bool {
 	return c.Key.Verify(data, sig)
 }
 
-func parseSignatureBody(in []byte) (out *Signature, rest []byte, ok bool) {
-	format, in, ok := parseString(in)
+func parseOpenSSHCertV01(in []byte, algo string) (out *OpenSSHCertV01, rest []byte, ok bool) {
+	cert := new(OpenSSHCertV01)
+
+	if cert.Nonce, in, ok = parseString(in); !ok {
+		return
+	}
+
+	privAlgo := certToPrivAlgo(algo)
+	cert.Key, in, ok = parsePubKey(in, privAlgo)
 	if !ok {
 		return
 	}
 
-	out = &Signature{
+	// We test PublicKeyAlgo to make sure we don't use some weird sub-cert.
+	if cert.Key.PublicKeyAlgo() != privAlgo {
+		ok = false
+		return
+	}
+
+	if cert.Serial, in, ok = parseUint64(in); !ok {
+		return
+	}
+
+	if cert.Type, in, ok = parseUint32(in); !ok {
+		return
+	}
+
+	keyId, in, ok := parseString(in)
+	if !ok {
+		return
+	}
+	cert.KeyId = string(keyId)
+
+	if cert.ValidPrincipals, in, ok = parseLengthPrefixedNameList(in); !ok {
+		return
+	}
+
+	va, in, ok := parseUint64(in)
+	if !ok {
+		return
+	}
+	cert.ValidAfter = CertTime(va)
+
+	vb, in, ok := parseUint64(in)
+	if !ok {
+		return
+	}
+	cert.ValidBefore = CertTime(vb)
+
+	if cert.CriticalOptions, in, ok = parseTupleList(in); !ok {
+		return
+	}
+
+	if cert.Extensions, in, ok = parseTupleList(in); !ok {
+		return
+	}
+
+	if cert.Reserved, in, ok = parseString(in); !ok {
+		return
+	}
+
+	sigKey, in, ok := parseString(in)
+	if !ok {
+		return
+	}
+	if cert.SignatureKey, _, ok = ParsePublicKey(sigKey); !ok {
+		return
+	}
+
+	if cert.Signature, in, ok = parseSignature(in); !ok {
+		return
+	}
+
+	ok = true
+	return cert, in, ok
+}
+
+func lengthPrefixedNameListLength(namelist []string) int {
+	length := 4 // length prefix for list
+	for _, name := range namelist {
+		length += 4 // length prefix for name
+		length += len(name)
+	}
+	return length
+}
+
+func marshalLengthPrefixedNameList(to []byte, namelist []string) []byte {
+	length := uint32(lengthPrefixedNameListLength(namelist) - 4)
+	to = marshalUint32(to, length)
+	for _, name := range namelist {
+		to = marshalString(to, []byte(name))
+	}
+	return to
+}
+
+func parseLengthPrefixedNameList(in []byte) (out []string, rest []byte, ok bool) {
+	list, rest, ok := parseString(in)
+	if !ok {
+		return
+	}
+
+	for len(list) > 0 {
+		var next []byte
+		if next, list, ok = parseString(list); !ok {
+			return nil, nil, false
+		}
+		out = append(out, string(next))
+	}
+	ok = true
+	return
+}
+
+func tupleListLength(tupleList []tuple) int {
+	length := 4 // length prefix for list
+	for _, t := range tupleList {
+		length += 4 // length prefix for t.Name
+		length += len(t.Name)
+		length += 4 // length prefix for t.Data
+		length += len(t.Data)
+	}
+	return length
+}
+
+func marshalTupleList(to []byte, tuplelist []tuple) []byte {
+	length := uint32(tupleListLength(tuplelist) - 4)
+	to = marshalUint32(to, length)
+	for _, t := range tuplelist {
+		to = marshalString(to, []byte(t.Name))
+		to = marshalString(to, []byte(t.Data))
+	}
+	return to
+}
+
+func parseTupleList(in []byte) (out []tuple, rest []byte, ok bool) {
+	list, rest, ok := parseString(in)
+	if !ok {
+		return
+	}
+
+	for len(list) > 0 {
+		var name, data []byte
+		var ok bool
+		name, list, ok = parseString(list)
+		if !ok {
+			return nil, nil, false
+		}
+		data, list, ok = parseString(list)
+		if !ok {
+			return nil, nil, false
+		}
+		out = append(out, tuple{string(name), string(data)})
+	}
+	ok = true
+	return
+}
+
+func signatureLength(sig *signature) int {
+	length := 4 // length prefix for signature
+	length += stringLength(len(sig.Format))
+	length += stringLength(len(sig.Blob))
+	return length
+}
+
+func marshalSignature(to []byte, sig *signature) []byte {
+	length := uint32(signatureLength(sig) - 4)
+	to = marshalUint32(to, length)
+	to = marshalString(to, []byte(sig.Format))
+	to = marshalString(to, sig.Blob)
+	return to
+}
+
+func parseSignatureBody(in []byte) (out *signature, rest []byte, ok bool) {
+	var format []byte
+	if format, in, ok = parseString(in); !ok {
+		return
+	}
+
+	out = &signature{
 		Format: string(format),
 	}
 
@@ -460,14 +364,14 @@ func parseSignatureBody(in []byte) (out *Signature, rest []byte, ok bool) {
 	return out, in, ok
 }
 
-func parseSignature(in []byte) (out *Signature, rest []byte, ok bool) {
-	sigBytes, rest, ok := parseString(in)
-	if !ok {
+func parseSignature(in []byte) (out *signature, rest []byte, ok bool) {
+	var sigBytes []byte
+	if sigBytes, rest, ok = parseString(in); !ok {
 		return
 	}
 
-	out, trailing, ok := parseSignatureBody(sigBytes)
-	if !ok || len(trailing) > 0 {
+	out, sigBytes, ok = parseSignatureBody(sigBytes)
+	if !ok || len(sigBytes) > 0 {
 		return nil, nil, false
 	}
 	return

@@ -3,7 +3,7 @@ package meddler
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3"
 	"reflect"
 	"sort"
 	"strings"

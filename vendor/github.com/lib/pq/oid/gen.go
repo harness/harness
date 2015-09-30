@@ -5,13 +5,13 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
 
-	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/lib/pq"
+	"database/sql"
+	_ "github.com/lib/pq"
 )
 
 func main() {

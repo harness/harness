@@ -14,8 +14,7 @@ type Cache struct {
 	size      int
 	evictList *list.List
 	items     map[interface{}]*list.Element
-	lock      sync.RWMutex
-	onEvicted func(key interface{}, value interface{})
+	lock      sync.Mutex
 }
 
 // entry is used to hold a value in the evictList
@@ -26,10 +25,6 @@ type entry struct {
 
 // New creates an LRU of the given size
 func New(size int) (*Cache, error) {
-	return NewWithEvict(size, nil)
-}
-
-func NewWithEvict(size int, onEvicted func(key interface{}, value interface{})) (*Cache, error) {
 	if size <= 0 {
 		return nil, errors.New("Must provide a positive size")
 	}
@@ -37,7 +32,6 @@ func NewWithEvict(size int, onEvicted func(key interface{}, value interface{})) 
 		size:      size,
 		evictList: list.New(),
 		items:     make(map[interface{}]*list.Element, size),
-		onEvicted: onEvicted,
 	}
 	return c, nil
 }
@@ -46,19 +40,12 @@ func NewWithEvict(size int, onEvicted func(key interface{}, value interface{})) 
 func (c *Cache) Purge() {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-
-	if c.onEvicted != nil {
-		for k, v := range c.items {
-			c.onEvicted(k, v.Value)
-		}
-	}
-
 	c.evictList = list.New()
 	c.items = make(map[interface{}]*list.Element, c.size)
 }
 
-// Add adds a value to the cache.  Returns true if an eviction occured.
-func (c *Cache) Add(key, value interface{}) bool {
+// Add adds a value to the cache.
+func (c *Cache) Add(key, value interface{}) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -66,7 +53,7 @@ func (c *Cache) Add(key, value interface{}) bool {
 	if ent, ok := c.items[key]; ok {
 		c.evictList.MoveToFront(ent)
 		ent.Value.(*entry).value = value
-		return false
+		return
 	}
 
 	// Add new item
@@ -74,12 +61,10 @@ func (c *Cache) Add(key, value interface{}) bool {
 	entry := c.evictList.PushFront(ent)
 	c.items[key] = entry
 
-	evict := c.evictList.Len() > c.size
 	// Verify size not exceeded
-	if evict {
+	if c.evictList.Len() > c.size {
 		c.removeOldest()
 	}
-	return evict
 }
 
 // Get looks up a key's value from the cache.
@@ -111,30 +96,6 @@ func (c *Cache) RemoveOldest() {
 	c.removeOldest()
 }
 
-// Keys returns a slice of the keys in the cache, from oldest to newest.
-func (c *Cache) Keys() []interface{} {
-	c.lock.RLock()
-	defer c.lock.RUnlock()
-
-	keys := make([]interface{}, len(c.items))
-	ent := c.evictList.Back()
-	i := 0
-	for ent != nil {
-		keys[i] = ent.Value.(*entry).key
-		ent = ent.Prev()
-		i++
-	}
-
-	return keys
-}
-
-// Len returns the number of items in the cache.
-func (c *Cache) Len() int {
-	c.lock.RLock()
-	defer c.lock.RUnlock()
-	return c.evictList.Len()
-}
-
 // removeOldest removes the oldest item from the cache.
 func (c *Cache) removeOldest() {
 	ent := c.evictList.Back()
@@ -148,7 +109,11 @@ func (c *Cache) removeElement(e *list.Element) {
 	c.evictList.Remove(e)
 	kv := e.Value.(*entry)
 	delete(c.items, kv.key)
-	if c.onEvicted != nil {
-		c.onEvicted(kv.key, kv.value)
-	}
+}
+
+// Len returns the number of items in the cache.
+func (c *Cache) Len() int {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	return c.evictList.Len()
 }

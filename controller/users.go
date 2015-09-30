@@ -1,131 +1,118 @@
-package server
+package controller
 
 import (
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/ungerik/go-gravatar"
+	"net/http"
 
-	"github.com/drone/drone/pkg/types"
+	"github.com/gin-gonic/gin"
+
+	"github.com/drone/drone/model"
+	"github.com/drone/drone/router/middleware/context"
+	"github.com/drone/drone/router/middleware/session"
+	"github.com/drone/drone/shared/crypto"
 )
 
-// GetUsers accepts a request to retrieve all users
-// from the datastore and return encoded in JSON format.
-//
-//     GET /api/users
-//
 func GetUsers(c *gin.Context) {
-	store := ToDatastore(c)
-	users, err := store.UserList()
+	db := context.Database(c)
+	users, err := model.GetUserList(db)
 	if err != nil {
-		c.Fail(400, err)
-	} else {
-		c.JSON(200, users)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
 	}
+
+	c.IndentedJSON(http.StatusOK, users)
 }
 
-// PostUser accepts a request to create a new user in the
-// system. The created user account is returned in JSON
-// format if successful.
-//
-//     POST /api/users
-//
-func PostUser(c *gin.Context) {
-	store := ToDatastore(c)
-	name := c.Params.ByName("name")
-	user := &types.User{Login: name}
-	user.Token = c.Request.FormValue("token")
-	user.Secret = c.Request.FormValue("secret")
-	user.Hash = c.Request.FormValue("hash")
-	if len(user.Hash) == 0 {
-		user.Hash = types.GenerateToken()
-	}
-	if err := store.AddUser(user); err != nil {
-		c.Fail(400, err)
-	} else {
-		c.JSON(201, user)
-	}
-}
-
-// GetUser accepts a request to retrieve a user by hostname
-// and login from the datastore and return encoded in JSON
-// format.
-//
-//     GET /api/users/:name
-//
 func GetUser(c *gin.Context) {
-	store := ToDatastore(c)
-	name := c.Params.ByName("name")
-	user, err := store.UserLogin(name)
+	db := context.Database(c)
+	user, err := model.GetUserLogin(db, c.Param("login"))
 	if err != nil {
-		c.Fail(404, err)
-	} else {
-		c.JSON(200, user)
+		c.AbortWithStatus(http.StatusNotFound)
+		return
 	}
+
+	c.IndentedJSON(http.StatusOK, user)
 }
 
-// PutUser accepts a request to update an existing user in
-// the system. The modified user account is returned in JSON
-// format if successful.
-//
-//     PUT /api/users/:name
-//
-func PutUser(c *gin.Context) {
-	store := ToDatastore(c)
-	me := ToUser(c)
-	name := c.Params.ByName("name")
-	user, err := store.UserLogin(name)
+func PatchUser(c *gin.Context) {
+	me := session.User(c)
+	db := context.Database(c)
+	in := &model.User{}
+	err := c.Bind(in)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
-	in := &types.User{}
-	if !c.BindWith(in, binding.JSON) {
+	user, err := model.GetUserLogin(db, c.Param("login"))
+	if err != nil {
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
+	user.Admin = in.Admin
+	user.Active = in.Active
+
+	// cannot update self
+	if me.ID == user.ID {
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	err = model.UpdateUser(db, user)
+	if err != nil {
+		c.AbortWithStatus(http.StatusConflict)
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, user)
+}
+
+func PostUser(c *gin.Context) {
+	db := context.Database(c)
+	in := &model.User{}
+	err := c.Bind(in)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	user := &model.User{}
+	user.Login = in.Login
 	user.Email = in.Email
-	user.Avatar = gravatar.Hash(user.Email)
+	user.Admin = in.Admin
+	user.Avatar = in.Avatar
+	user.Active = true
+	user.Hash = crypto.Rand()
 
-	// an administrator must not be able to
-	// downgrade her own account.
-	if me.Login != user.Login {
-		user.Admin = in.Admin
-	}
-
-	err = store.SetUser(user)
+	err = model.CreateUser(db, user)
 	if err != nil {
-		c.Fail(400, err)
-	} else {
-		c.JSON(200, user)
+		c.String(http.StatusInternalServerError, err.Error())
+		return
 	}
+
+	c.IndentedJSON(http.StatusOK, user)
 }
 
-// DeleteUser accepts a request to delete the specified
-// user account from the system. A successful request will
-// respond with an OK 200 status.
-//
-//     DELETE /api/users/:name
-//
 func DeleteUser(c *gin.Context) {
-	store := ToDatastore(c)
-	me := ToUser(c)
-	name := c.Params.ByName("name")
-	user, err := store.UserLogin(name)
+	me := session.User(c)
+	db := context.Database(c)
+
+	user, err := model.GetUserLogin(db, c.Param("login"))
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
-	// an administrator must not be able to
-	// delete her own account.
-	if user.Login == me.Login {
-		c.Writer.WriteHeader(403)
+	// cannot delete self
+	if me.ID == user.ID {
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
-	if err := store.DelUser(user); err != nil {
-		c.Fail(400, err)
-	} else {
-		c.Writer.WriteHeader(204)
+	err = model.DeleteUser(db, user)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
 	}
+
+	c.Writer.WriteHeader(http.StatusNoContent)
 }
