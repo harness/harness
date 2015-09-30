@@ -13,7 +13,7 @@ deps:
 	go get -u github.com/elazarl/go-bindata-assetfs/...
 
 gen:
-	go generate $(go list ./... | grep -v /vendor/)
+	go generate $(PACKAGES)
 
 build:
 	GO15VENDOREXPERIMENT=1 go build
