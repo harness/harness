@@ -8,8 +8,8 @@ env:
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 
 script:
-  - apt-get -y -qq update
-  - apt-get -y -qq install libsqlite3-dev
+  - sudo apt-get -y -qq update
+  - sudo apt-get -y -qq install libsqlite3-dev
   - make deps
   - make
   - make test
