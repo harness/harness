@@ -3,7 +3,7 @@ drone_*
 *.sqlite
 *_gen.go
 *.html
-*.css
+#*.css
 *.txt
 *.zip
 *.gz
