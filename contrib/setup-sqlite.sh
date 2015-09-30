@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 cd /tmp
 
@@ -8,4 +9,4 @@ cd sqlite-autoconf-3081101
 cd sqlite-3.6.421
 ./configure -prefix=/scratch/usr/local
 make
-make install
+sudo make install
