@@ -1,0 +1,15 @@
+{
+  "wizards": {
+    "go": {
+      "name": "Go",
+      "client_lib": "raven-go",
+      "is_framework": false,
+      "doc_link": "",
+      "snippets": [
+        "index#installation",
+        "index#configuring-the-client",
+        "index#reporting-errors"
+      ]
+    }
+  }
+}
