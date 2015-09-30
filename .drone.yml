@@ -6,6 +6,7 @@ git:
 env:
   - GOROOT=/usr/local/go
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+  - GO15VENDOREXPERIMENT=1
 
 script:
   - /bin/bash contrib/setup-sqlite.sh 1> /dev/null
@@ -41,9 +42,11 @@ clone:
 
 build:
   image: golang:1.5
+  environment:
+    - GO15VENDOREXPERIMENT=1
   commands:
-    - apt-get -y -qq update
-    - apt-get -y -qq install libsqlite3-dev
+    - /bin/bash contrib/setup-sqlite.sh 1> /dev/null
+    - /bin/bash contrib/setup-sassc.sh  1> /dev/null
     - make deps
     - make gen
     - make test
