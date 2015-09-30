@@ -1,34 +1,13 @@
-drone.sublime-project
-drone.sublime-workspace
-.vagrant
-
-*~
-~*
+drone
+drone_*
 *.sqlite
-*.sqlite3
-*.deb
-*.deb.*
-*.rpm
-*.out
-*.prof
-*.rice-box.go
-*.db
+*_gen.go
+*.html
+*.css
 *.txt
-*.min.css
+*.zip
+*.gz
+*.out
 *.min.js
-*_bindata.go
-*.toml
-
-# generate binaries
-cmd/drone-agent/drone-agent
-cmd/drone-build/drone-build
-cmd/drone-agent/drone-server
-
-# generated binaries in ./bin
-bin/drone
-bin/drone-agent
-bin/drone-build
-bin/drone-server
-
-# generated binaries in dpkg
-dist/drone/usr/local/bin/drone
+*.deb
+temp/

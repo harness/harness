@@ -9,38 +9,39 @@ package test
 // direct-tcpip functional tests
 
 import (
-	"io"
 	"net"
+	"net/http"
 	"testing"
 )
 
-func TestDial(t *testing.T) {
+func TestTCPIPHTTP(t *testing.T) {
+	// google.com will generate at least one redirect, possibly three
+	// depending on your location.
+	doTest(t, "http://google.com")
+}
+
+func TestTCPIPHTTPS(t *testing.T) {
+	doTest(t, "https://encrypted.google.com/")
+}
+
+func doTest(t *testing.T, url string) {
 	server := newServer(t)
 	defer server.Shutdown()
-	sshConn := server.Dial(clientConfig())
-	defer sshConn.Close()
-
-	l, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("Listen: %v", err)
-	}
-	defer l.Close()
-
-	go func() {
-		for {
-			c, err := l.Accept()
-			if err != nil {
-				break
-			}
-
-			io.WriteString(c, c.RemoteAddr().String())
-			c.Close()
-		}
-	}()
-
-	conn, err := sshConn.Dial("tcp", l.Addr().String())
-	if err != nil {
-		t.Fatalf("Dial: %v", err)
-	}
+	conn := server.Dial(clientConfig())
 	defer conn.Close()
+
+	tr := &http.Transport{
+		Dial: func(n, addr string) (net.Conn, error) {
+			return conn.Dial(n, addr)
+		},
+	}
+	client := &http.Client{
+		Transport: tr,
+	}
+	resp, err := client.Get(url)
+	if err != nil {
+		t.Fatalf("unable to proxy: %s", err)
+	}
+	// got a body without error
+	t.Log(resp)
 }

@@ -1,46 +1,45 @@
-package builtin
+package engine
 
 import (
 	"testing"
 
-	. "github.com/drone/drone/Godeps/_workspace/src/github.com/franela/goblin"
-	"github.com/drone/drone/pkg/bus"
+	. "github.com/franela/goblin"
 )
 
-func TestBuild(t *testing.T) {
+func TestBus(t *testing.T) {
 	g := Goblin(t)
-	g.Describe("Bus", func() {
+	g.Describe("Event bus", func() {
 
 		g.It("Should unsubscribe", func() {
-			c1 := make(chan *bus.Event)
-			c2 := make(chan *bus.Event)
-			b := New()
-			b.Subscribe(c1)
-			b.Subscribe(c2)
+			c1 := make(chan *Event)
+			c2 := make(chan *Event)
+			b := newEventbus()
+			b.subscribe(c1)
+			b.subscribe(c2)
 			g.Assert(len(b.subs)).Equal(2)
 		})
 
 		g.It("Should subscribe", func() {
-			c1 := make(chan *bus.Event)
-			c2 := make(chan *bus.Event)
-			b := New()
-			b.Subscribe(c1)
-			b.Subscribe(c2)
+			c1 := make(chan *Event)
+			c2 := make(chan *Event)
+			b := newEventbus()
+			b.subscribe(c1)
+			b.subscribe(c2)
 			g.Assert(len(b.subs)).Equal(2)
-			b.Unsubscribe(c1)
-			b.Unsubscribe(c2)
+			b.unsubscribe(c1)
+			b.unsubscribe(c2)
 			g.Assert(len(b.subs)).Equal(0)
 		})
 
 		g.It("Should send", func() {
 			em := map[string]bool{"foo": true, "bar": true}
-			e1 := &bus.Event{Name: "foo"}
-			e2 := &bus.Event{Name: "bar"}
-			c := make(chan *bus.Event)
-			b := New()
-			b.Subscribe(c)
-			b.Send(e1)
-			b.Send(e2)
+			e1 := &Event{Name: "foo"}
+			e2 := &Event{Name: "bar"}
+			c := make(chan *Event)
+			b := newEventbus()
+			b.subscribe(c)
+			b.send(e1)
+			b.send(e2)
 			r1 := <-c
 			r2 := <-c
 			g.Assert(em[r1.Name]).Equal(true)

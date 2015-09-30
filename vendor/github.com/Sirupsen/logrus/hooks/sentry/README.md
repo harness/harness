@@ -57,5 +57,5 @@ with a call to `NewSentryHook`. This can be changed by assigning a value to the 
 
 ```go
 hook, _ := logrus_sentry.NewSentryHook(...)
-hook.Timeout = 20*time.Second
+hook.Timeout = 20*time.Seconds
 ```

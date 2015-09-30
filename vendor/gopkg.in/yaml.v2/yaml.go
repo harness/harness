@@ -117,7 +117,7 @@ func Unmarshal(in []byte, out interface{}) (err error) {
 //                  Does not apply to zero valued structs.
 //
 //     flow         Marshal using a flow style (useful for structs,
-//                  sequences and maps).
+//                  sequences and maps.
 //
 //     inline       Inline the field, which must be a struct or a map,
 //                  causing all of its fields or keys to be processed as if

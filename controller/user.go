@@ -1,103 +1,82 @@
-package server
+package controller
 
 import (
-	// "crypto/sha1"
+	"net/http"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/ungerik/go-gravatar"
+	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/pkg/token"
-	"github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/model"
+	"github.com/drone/drone/router/middleware/context"
+	"github.com/drone/drone/router/middleware/session"
+	"github.com/drone/drone/shared/token"
+	"github.com/hashicorp/golang-lru"
 )
 
-// GetUserCurr accepts a request to retrieve the
-// currently authenticated user from the datastore
-// and return in JSON format.
-//
-//     GET /api/user
-//
-func GetUserCurr(c *gin.Context) {
-	u := ToUser(c)
-	// f := fmt.Printf("% x", sha1.Sum(u.Hash))
+var cache *lru.Cache
 
-	// v := struct {
-	// 	*types.User
-
-	// 	// token fingerprint
-	// 	Token string `json:"token"`
-	// }{u, f}
-
-	c.JSON(200, u)
+func init() {
+	var err error
+	cache, err = lru.New(1028)
+	if err != nil {
+		panic(err)
+	}
 }
 
-// PutUserCurr accepts a request to update the currently
-// authenticated User profile.
-//
-//     PUT /api/user
-//
-func PutUserCurr(c *gin.Context) {
-	store := ToDatastore(c)
-	user := ToUser(c)
+func GetSelf(c *gin.Context) {
+	c.IndentedJSON(200, session.User(c))
+}
 
-	in := &types.User{}
-	if !c.BindWith(in, binding.JSON) {
+func GetFeed(c *gin.Context) {
+	user := session.User(c)
+	db := context.Database(c)
+	feed, err := model.GetUserFeed(db, user, 25, 0)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	// TODO: we are no longer auto-generating avatar
-	user.Email = in.Email
-	user.Avatar = gravatar.Hash(in.Email)
-	err := store.SetUser(user)
-	if err != nil {
-		c.Fail(400, err)
-	} else {
-		c.JSON(200, user)
-	}
+	c.IndentedJSON(http.StatusOK, feed)
 }
 
-// GetUserRepos accepts a request to get the currently
-// authenticated user's repository list from the datastore,
-// encoded and returned in JSON format.
-//
-//     GET /api/user/repos
-//
-func GetUserRepos(c *gin.Context) {
-	store := ToDatastore(c)
-	user := ToUser(c)
-	repos, err := store.RepoList(user)
+func GetRepos(c *gin.Context) {
+	user := session.User(c)
+	db := context.Database(c)
+	repos, err := model.GetRepoList(db, user)
 	if err != nil {
-		c.Fail(400, err)
-	} else {
-		c.JSON(200, &repos)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
 	}
+	c.IndentedJSON(http.StatusOK, repos)
 }
 
-// GetUserFeed accepts a request to get the currently
-// authenticated user's build feed from the datastore,
-// encoded and returned in JSON format.
-//
-//     GET /api/user/feed
-//
-func GetUserFeed(c *gin.Context) {
-	store := ToDatastore(c)
-	user := ToUser(c)
-	feed, err := store.UserFeed(user, 25, 0)
-	if err != nil {
-		c.Fail(400, err)
-	} else {
-		c.JSON(200, &feed)
+func GetRemoteRepos(c *gin.Context) {
+	user := session.User(c)
+	remote := context.Remote(c)
+
+	// attempt to get the repository list from the
+	// cache since the operation is expensive
+	v, ok := cache.Get(user.Login)
+	if ok {
+		c.IndentedJSON(http.StatusOK, v)
+		return
 	}
+
+	repos, err := remote.Repos(user)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	cache.Add(user.Login, repos)
+	c.IndentedJSON(http.StatusOK, repos)
 }
 
-// POST /api/user/token
-func PostUserToken(c *gin.Context) {
-	user := ToUser(c)
+func PostToken(c *gin.Context) {
+	user := session.User(c)
 
 	token := token.New(token.UserToken, user.Login)
 	tokenstr, err := token.Sign(user.Hash)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(http.StatusInternalServerError, err)
 	} else {
-		c.String(200, tokenstr)
+		c.String(http.StatusOK, tokenstr)
 	}
 }

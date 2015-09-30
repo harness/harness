@@ -9,23 +9,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"code.google.com/p/go.crypto/ssh/terminal"
 )
 
-func ExampleNewServerConn() {
+func ExampleListen() {
 	// An SSH server is represented by a ServerConfig, which holds
 	// certificate details and handles authentication of ServerConns.
 	config := &ServerConfig{
-		PasswordCallback: func(c ConnMetadata, pass []byte) (*Permissions, error) {
-			// Should use constant-time compare (or better, salt+hash) in
-			// a production setting.
-			if c.User() == "testuser" && string(pass) == "tiger" {
-				return nil, nil
-			}
-			return nil, fmt.Errorf("password rejected for %q", c.User())
+		PasswordCallback: func(conn *ServerConn, user, pass string) bool {
+			return user == "testuser" && pass == "tiger"
 		},
 	}
 
@@ -43,65 +37,50 @@ func ExampleNewServerConn() {
 
 	// Once a ServerConfig has been configured, connections can be
 	// accepted.
-	listener, err := net.Listen("tcp", "0.0.0.0:2022")
+	listener, err := Listen("tcp", "0.0.0.0:2022", config)
 	if err != nil {
 		panic("failed to listen for connection")
 	}
-	nConn, err := listener.Accept()
+	sConn, err := listener.Accept()
 	if err != nil {
 		panic("failed to accept incoming connection")
 	}
-
-	// Before use, a handshake must be performed on the incoming
-	// net.Conn.
-	_, chans, reqs, err := NewServerConn(nConn, config)
-	if err != nil {
+	if err := sConn.Handshake(); err != nil {
 		panic("failed to handshake")
 	}
-	// The incoming Request channel must be serviced.
-	go DiscardRequests(reqs)
 
-	// Service the incoming Channel channel.
-	for newChannel := range chans {
+	// A ServerConn multiplexes several channels, which must
+	// themselves be Accepted.
+	for {
+		// Accept reads from the connection, demultiplexes packets
+		// to their corresponding channels and returns when a new
+		// channel request is seen. Some goroutine must always be
+		// calling Accept; otherwise no messages will be forwarded
+		// to the channels.
+		channel, err := sConn.Accept()
+		if err != nil {
+			panic("error from Accept")
+		}
+
 		// Channels have a type, depending on the application level
 		// protocol intended. In the case of a shell, the type is
 		// "session" and ServerShell may be used to present a simple
 		// terminal interface.
-		if newChannel.ChannelType() != "session" {
-			newChannel.Reject(UnknownChannelType, "unknown channel type")
+		if channel.ChannelType() != "session" {
+			channel.Reject(UnknownChannelType, "unknown channel type")
 			continue
 		}
-		channel, requests, err := newChannel.Accept()
-		if err != nil {
-			panic("could not accept channel.")
-		}
-
-		// Sessions have out-of-band requests such as "shell",
-		// "pty-req" and "env".  Here we handle only the
-		// "shell" request.
-		go func(in <-chan *Request) {
-			for req := range in {
-				ok := false
-				switch req.Type {
-				case "shell":
-					ok = true
-					if len(req.Payload) > 0 {
-						// We don't accept any
-						// commands, only the
-						// default shell.
-						ok = false
-					}
-				}
-				req.Reply(ok, nil)
-			}
-		}(requests)
+		channel.Accept()
 
 		term := terminal.NewTerminal(channel, "> ")
-
+		serverTerm := &ServerTerminal{
+			Term:    term,
+			Channel: channel,
+		}
 		go func() {
 			defer channel.Close()
 			for {
-				line, err := term.ReadLine()
+				line, err := serverTerm.ReadLine()
 				if err != nil {
 					break
 				}
@@ -116,11 +95,13 @@ func ExampleDial() {
 	// the "password" authentication method is supported.
 	//
 	// To authenticate with the remote server you must pass at least one
-	// implementation of AuthMethod via the Auth field in ClientConfig.
+	// implementation of ClientAuth via the Auth field in ClientConfig.
 	config := &ClientConfig{
 		User: "username",
-		Auth: []AuthMethod{
-			Password("yourpassword"),
+		Auth: []ClientAuth{
+			// ClientAuthPassword wraps a ClientPassword implementation
+			// in a type that implements ClientAuth.
+			ClientAuthPassword(password("yourpassword")),
 		},
 	}
 	client, err := Dial("tcp", "yourserver.com:22", config)
@@ -146,11 +127,11 @@ func ExampleDial() {
 	fmt.Println(b.String())
 }
 
-func ExampleClient_Listen() {
+func ExampleClientConn_Listen() {
 	config := &ClientConfig{
 		User: "username",
-		Auth: []AuthMethod{
-			Password("password"),
+		Auth: []ClientAuth{
+			ClientAuthPassword(password("password")),
 		},
 	}
 	// Dial your ssh server.
@@ -177,8 +158,8 @@ func ExampleSession_RequestPty() {
 	// Create client config
 	config := &ClientConfig{
 		User: "username",
-		Auth: []AuthMethod{
-			Password("password"),
+		Auth: []ClientAuth{
+			ClientAuthPassword(password("password")),
 		},
 	}
 	// Connect to ssh server

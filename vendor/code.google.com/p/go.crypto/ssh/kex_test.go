@@ -29,7 +29,7 @@ func TestKexes(t *testing.T) {
 			c <- kexResultErr{r, e}
 		}()
 		go func() {
-			r, e := kex.Server(b, rand.Reader, &magics, testSigners["ecdsa"])
+			r, e := kex.Server(b, rand.Reader, &magics, ecdsaKey)
 			s <- kexResultErr{r, e}
 		}()
 

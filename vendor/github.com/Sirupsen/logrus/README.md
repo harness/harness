@@ -242,9 +242,6 @@ func init() {
 * [`github.com/johntdyer/slackrus`](https://github.com/johntdyer/slackrus)
   Hook for Slack chat.
 
-* [`github.com/wercker/journalhook`](https://github.com/wercker/journalhook).
-  Hook for logging to `systemd-journald`.
-
 #### Level logging
 
 Logrus has six logging levels: Debug, Info, Warning, Error, Fatal and Panic.

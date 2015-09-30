@@ -7,25 +7,58 @@ package ssh
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
-	"fmt"
 	"io"
 	"math/big"
 	"reflect"
-	"strconv"
 )
 
 // These are SSH message type numbers. They are scattered around several
 // documents but many were taken from [SSH-PARAMETERS].
 const (
-	msgIgnore        = 2
-	msgUnimplemented = 3
-	msgDebug         = 4
-	msgNewKeys       = 21
+	msgDisconnect     = 1
+	msgIgnore         = 2
+	msgUnimplemented  = 3
+	msgDebug          = 4
+	msgServiceRequest = 5
+	msgServiceAccept  = 6
+
+	msgKexInit = 20
+	msgNewKeys = 21
+
+	// Diffie-Helman
+	msgKexDHInit  = 30
+	msgKexDHReply = 31
+
+	msgKexECDHInit  = 30
+	msgKexECDHReply = 31
 
 	// Standard authentication messages
-	msgUserAuthSuccess = 52
-	msgUserAuthBanner  = 53
+	msgUserAuthRequest  = 50
+	msgUserAuthFailure  = 51
+	msgUserAuthSuccess  = 52
+	msgUserAuthBanner   = 53
+	msgUserAuthPubKeyOk = 60
+
+	// Method specific messages
+	msgUserAuthInfoRequest  = 60
+	msgUserAuthInfoResponse = 61
+
+	msgGlobalRequest  = 80
+	msgRequestSuccess = 81
+	msgRequestFailure = 82
+
+	// Channel manipulation
+	msgChannelOpen         = 90
+	msgChannelOpenConfirm  = 91
+	msgChannelOpenFailure  = 92
+	msgChannelWindowAdjust = 93
+	msgChannelData         = 94
+	msgChannelExtendedData = 95
+	msgChannelEOF          = 96
+	msgChannelClose        = 97
+	msgChannelRequest      = 98
+	msgChannelSuccess      = 99
+	msgChannelFailure      = 100
 )
 
 // SSH messages:
@@ -36,25 +69,15 @@ const (
 // ssh tag of "rest" receives the remainder of a packet when unmarshaling.
 
 // See RFC 4253, section 11.1.
-const msgDisconnect = 1
-
-// disconnectMsg is the message that signals a disconnect. It is also
-// the error type returned from mux.Wait()
 type disconnectMsg struct {
-	Reason   uint32 `sshtype:"1"`
+	Reason   uint32
 	Message  string
 	Language string
 }
 
-func (d *disconnectMsg) Error() string {
-	return fmt.Sprintf("ssh: disconnect reason %d: %s", d.Reason, d.Message)
-}
-
 // See RFC 4253, section 7.1.
-const msgKexInit = 20
-
 type kexInitMsg struct {
-	Cookie                  [16]byte `sshtype:"20"`
+	Cookie                  [16]byte
 	KexAlgos                []string
 	ServerHostKeyAlgos      []string
 	CiphersClientServer     []string
@@ -70,74 +93,53 @@ type kexInitMsg struct {
 }
 
 // See RFC 4253, section 8.
-
-// Diffie-Helman
-const msgKexDHInit = 30
-
 type kexDHInitMsg struct {
-	X *big.Int `sshtype:"30"`
+	X *big.Int
 }
-
-const msgKexECDHInit = 30
 
 type kexECDHInitMsg struct {
-	ClientPubKey []byte `sshtype:"30"`
+	ClientPubKey []byte
 }
 
-const msgKexECDHReply = 31
-
 type kexECDHReplyMsg struct {
-	HostKey         []byte `sshtype:"31"`
+	HostKey         []byte
 	EphemeralPubKey []byte
 	Signature       []byte
 }
 
-const msgKexDHReply = 31
-
 type kexDHReplyMsg struct {
-	HostKey   []byte `sshtype:"31"`
+	HostKey   []byte
 	Y         *big.Int
 	Signature []byte
 }
 
 // See RFC 4253, section 10.
-const msgServiceRequest = 5
-
 type serviceRequestMsg struct {
-	Service string `sshtype:"5"`
+	Service string
 }
 
 // See RFC 4253, section 10.
-const msgServiceAccept = 6
-
 type serviceAcceptMsg struct {
-	Service string `sshtype:"6"`
+	Service string
 }
 
 // See RFC 4252, section 5.
-const msgUserAuthRequest = 50
-
 type userAuthRequestMsg struct {
-	User    string `sshtype:"50"`
+	User    string
 	Service string
 	Method  string
 	Payload []byte `ssh:"rest"`
 }
 
 // See RFC 4252, section 5.1
-const msgUserAuthFailure = 51
-
 type userAuthFailureMsg struct {
-	Methods        []string `sshtype:"51"`
+	Methods        []string
 	PartialSuccess bool
 }
 
 // See RFC 4256, section 3.2
-const msgUserAuthInfoRequest = 60
-const msgUserAuthInfoResponse = 61
-
 type userAuthInfoRequestMsg struct {
-	User               string `sshtype:"60"`
+	User               string
 	Instruction        string
 	DeprecatedLanguage string
 	NumPrompts         uint32
@@ -145,24 +147,17 @@ type userAuthInfoRequestMsg struct {
 }
 
 // See RFC 4254, section 5.1.
-const msgChannelOpen = 90
-
 type channelOpenMsg struct {
-	ChanType         string `sshtype:"90"`
+	ChanType         string
 	PeersId          uint32
 	PeersWindow      uint32
 	MaxPacketSize    uint32
 	TypeSpecificData []byte `ssh:"rest"`
 }
 
-const msgChannelExtendedData = 95
-const msgChannelData = 94
-
 // See RFC 4254, section 5.1.
-const msgChannelOpenConfirm = 91
-
 type channelOpenConfirmMsg struct {
-	PeersId          uint32 `sshtype:"91"`
+	PeersId          uint32
 	MyId             uint32
 	MyWindow         uint32
 	MaxPacketSize    uint32
@@ -170,239 +165,172 @@ type channelOpenConfirmMsg struct {
 }
 
 // See RFC 4254, section 5.1.
-const msgChannelOpenFailure = 92
-
 type channelOpenFailureMsg struct {
-	PeersId  uint32 `sshtype:"92"`
+	PeersId  uint32
 	Reason   RejectionReason
 	Message  string
 	Language string
 }
 
-const msgChannelRequest = 98
-
 type channelRequestMsg struct {
-	PeersId             uint32 `sshtype:"98"`
+	PeersId             uint32
 	Request             string
 	WantReply           bool
 	RequestSpecificData []byte `ssh:"rest"`
 }
 
 // See RFC 4254, section 5.4.
-const msgChannelSuccess = 99
-
 type channelRequestSuccessMsg struct {
-	PeersId uint32 `sshtype:"99"`
+	PeersId uint32
 }
 
 // See RFC 4254, section 5.4.
-const msgChannelFailure = 100
-
 type channelRequestFailureMsg struct {
-	PeersId uint32 `sshtype:"100"`
+	PeersId uint32
 }
 
 // See RFC 4254, section 5.3
-const msgChannelClose = 97
-
 type channelCloseMsg struct {
-	PeersId uint32 `sshtype:"97"`
+	PeersId uint32
 }
 
 // See RFC 4254, section 5.3
-const msgChannelEOF = 96
-
 type channelEOFMsg struct {
-	PeersId uint32 `sshtype:"96"`
+	PeersId uint32
 }
 
 // See RFC 4254, section 4
-const msgGlobalRequest = 80
-
 type globalRequestMsg struct {
-	Type      string `sshtype:"80"`
+	Type      string
 	WantReply bool
-	Data      []byte `ssh:"rest"`
 }
 
 // See RFC 4254, section 4
-const msgRequestSuccess = 81
-
 type globalRequestSuccessMsg struct {
-	Data []byte `ssh:"rest" sshtype:"81"`
+	Data []byte `ssh:"rest"`
 }
 
 // See RFC 4254, section 4
-const msgRequestFailure = 82
-
 type globalRequestFailureMsg struct {
-	Data []byte `ssh:"rest" sshtype:"82"`
+	Data []byte `ssh:"rest"`
 }
 
 // See RFC 4254, section 5.2
-const msgChannelWindowAdjust = 93
-
 type windowAdjustMsg struct {
-	PeersId         uint32 `sshtype:"93"`
+	PeersId         uint32
 	AdditionalBytes uint32
 }
 
 // See RFC 4252, section 7
-const msgUserAuthPubKeyOk = 60
-
 type userAuthPubKeyOkMsg struct {
-	Algo   string `sshtype:"60"`
-	PubKey []byte
+	Algo   string
+	PubKey string
 }
 
-// typeTag returns the type byte for the given type. The type should
-// be struct.
-func typeTag(structType reflect.Type) byte {
-	var tag byte
-	var tagStr string
-	tagStr = structType.Field(0).Tag.Get("sshtype")
-	i, err := strconv.Atoi(tagStr)
-	if err == nil {
-		tag = byte(i)
-	}
-	return tag
-}
-
-func fieldError(t reflect.Type, field int, problem string) error {
-	if problem != "" {
-		problem = ": " + problem
-	}
-	return fmt.Errorf("ssh: unmarshal error for field %s of type %s%s", t.Field(field).Name, t.Name(), problem)
-}
-
-var errShortRead = errors.New("ssh: short read")
-
-// Unmarshal parses data in SSH wire format into a structure. The out
-// argument should be a pointer to struct. If the first member of the
-// struct has the "sshtype" tag set to a number in decimal, the packet
-// must start that number.  In case of error, Unmarshal returns a
-// ParseError or UnexpectedMessageError.
-func Unmarshal(data []byte, out interface{}) error {
-	v := reflect.ValueOf(out).Elem()
-	structType := v.Type()
-	expectedType := typeTag(structType)
-	if len(data) == 0 {
-		return parseError(expectedType)
+// unmarshal parses the SSH wire data in packet into out using
+// reflection. expectedType, if non-zero, is the SSH message type that
+// the packet is expected to start with.  unmarshal either returns nil
+// on success, or a ParseError or UnexpectedMessageError on error.
+func unmarshal(out interface{}, packet []byte, expectedType uint8) error {
+	if len(packet) == 0 {
+		return ParseError{expectedType}
 	}
 	if expectedType > 0 {
-		if data[0] != expectedType {
-			return unexpectedMessageError(expectedType, data[0])
+		if packet[0] != expectedType {
+			return UnexpectedMessageError{expectedType, packet[0]}
 		}
-		data = data[1:]
+		packet = packet[1:]
 	}
 
+	v := reflect.ValueOf(out).Elem()
+	structType := v.Type()
 	var ok bool
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		t := field.Type()
 		switch t.Kind() {
 		case reflect.Bool:
-			if len(data) < 1 {
-				return errShortRead
+			if len(packet) < 1 {
+				return ParseError{expectedType}
 			}
-			field.SetBool(data[0] != 0)
-			data = data[1:]
+			field.SetBool(packet[0] != 0)
+			packet = packet[1:]
 		case reflect.Array:
 			if t.Elem().Kind() != reflect.Uint8 {
-				return fieldError(structType, i, "array of unsupported type")
+				panic("array of non-uint8")
 			}
-			if len(data) < t.Len() {
-				return errShortRead
+			if len(packet) < t.Len() {
+				return ParseError{expectedType}
 			}
 			for j, n := 0, t.Len(); j < n; j++ {
-				field.Index(j).Set(reflect.ValueOf(data[j]))
+				field.Index(j).Set(reflect.ValueOf(packet[j]))
 			}
-			data = data[t.Len():]
-		case reflect.Uint64:
-			var u64 uint64
-			if u64, data, ok = parseUint64(data); !ok {
-				return errShortRead
-			}
-			field.SetUint(u64)
+			packet = packet[t.Len():]
 		case reflect.Uint32:
 			var u32 uint32
-			if u32, data, ok = parseUint32(data); !ok {
-				return errShortRead
+			if u32, packet, ok = parseUint32(packet); !ok {
+				return ParseError{expectedType}
 			}
 			field.SetUint(uint64(u32))
-		case reflect.Uint8:
-			if len(data) < 1 {
-				return errShortRead
-			}
-			field.SetUint(uint64(data[0]))
-			data = data[1:]
 		case reflect.String:
 			var s []byte
-			if s, data, ok = parseString(data); !ok {
-				return fieldError(structType, i, "")
+			if s, packet, ok = parseString(packet); !ok {
+				return ParseError{expectedType}
 			}
 			field.SetString(string(s))
 		case reflect.Slice:
 			switch t.Elem().Kind() {
 			case reflect.Uint8:
 				if structType.Field(i).Tag.Get("ssh") == "rest" {
-					field.Set(reflect.ValueOf(data))
-					data = nil
+					field.Set(reflect.ValueOf(packet))
+					packet = nil
 				} else {
 					var s []byte
-					if s, data, ok = parseString(data); !ok {
-						return errShortRead
+					if s, packet, ok = parseString(packet); !ok {
+						return ParseError{expectedType}
 					}
 					field.Set(reflect.ValueOf(s))
 				}
 			case reflect.String:
 				var nl []string
-				if nl, data, ok = parseNameList(data); !ok {
-					return errShortRead
+				if nl, packet, ok = parseNameList(packet); !ok {
+					return ParseError{expectedType}
 				}
 				field.Set(reflect.ValueOf(nl))
 			default:
-				return fieldError(structType, i, "slice of unsupported type")
+				panic("slice of unknown type")
 			}
 		case reflect.Ptr:
 			if t == bigIntType {
 				var n *big.Int
-				if n, data, ok = parseInt(data); !ok {
-					return errShortRead
+				if n, packet, ok = parseInt(packet); !ok {
+					return ParseError{expectedType}
 				}
 				field.Set(reflect.ValueOf(n))
 			} else {
-				return fieldError(structType, i, "pointer to unsupported type")
+				panic("pointer to unknown type")
 			}
 		default:
-			return fieldError(structType, i, "unsupported type")
+			panic("unknown type")
 		}
 	}
 
-	if len(data) != 0 {
-		return parseError(expectedType)
+	if len(packet) != 0 {
+		return ParseError{expectedType}
 	}
 
 	return nil
 }
 
-// Marshal serializes the message in msg to SSH wire format.  The msg
-// argument should be a struct or pointer to struct. If the first
-// member has the "sshtype" tag set to a number in decimal, that
-// number is prepended to the result. If the last of member has the
-// "ssh" tag set to "rest", its contents are appended to the output.
-func Marshal(msg interface{}) []byte {
+// marshal serializes the message in msg. The given message type is
+// prepended if it is non-zero.
+func marshal(msgType uint8, msg interface{}) []byte {
 	out := make([]byte, 0, 64)
-	return marshalStruct(out, msg)
-}
-
-func marshalStruct(out []byte, msg interface{}) []byte {
-	v := reflect.Indirect(reflect.ValueOf(msg))
-	msgType := typeTag(v.Type())
 	if msgType > 0 {
 		out = append(out, msgType)
 	}
 
+	v := reflect.ValueOf(msg)
 	for i, n := 0, v.NumField(); i < n; i++ {
 		field := v.Field(i)
 		switch t := field.Type(); t.Kind() {
@@ -414,17 +342,13 @@ func marshalStruct(out []byte, msg interface{}) []byte {
 			out = append(out, v)
 		case reflect.Array:
 			if t.Elem().Kind() != reflect.Uint8 {
-				panic(fmt.Sprintf("array of non-uint8 in field %d: %T", i, field.Interface()))
+				panic("array of non-uint8")
 			}
 			for j, l := 0, t.Len(); j < l; j++ {
 				out = append(out, uint8(field.Index(j).Uint()))
 			}
 		case reflect.Uint32:
 			out = appendU32(out, uint32(field.Uint()))
-		case reflect.Uint64:
-			out = appendU64(out, uint64(field.Uint()))
-		case reflect.Uint8:
-			out = append(out, uint8(field.Uint()))
 		case reflect.String:
 			s := field.String()
 			out = appendInt(out, len(s))
@@ -451,7 +375,7 @@ func marshalStruct(out []byte, msg interface{}) []byte {
 					binary.BigEndian.PutUint32(out[offset:], uint32(len(out)-offset-4))
 				}
 			default:
-				panic(fmt.Sprintf("slice of unknown type in field %d: %T", i, field.Interface()))
+				panic("slice of unknown type")
 			}
 		case reflect.Ptr:
 			if t == bigIntType {
@@ -469,7 +393,7 @@ func marshalStruct(out []byte, msg interface{}) []byte {
 				out = out[:oldLength+needed]
 				marshalInt(out[oldLength:], n)
 			} else {
-				panic(fmt.Sprintf("pointer to unknown type in field %d: %T", i, field.Interface()))
+				panic("pointer to unknown type")
 			}
 		}
 	}
@@ -551,6 +475,17 @@ func parseUint64(in []byte) (uint64, []byte, bool) {
 		return 0, nil, false
 	}
 	return binary.BigEndian.Uint64(in), in[8:], true
+}
+
+func nameListLength(namelist []string) int {
+	length := 4 /* uint32 length prefix */
+	for i, name := range namelist {
+		if i != 0 {
+			length++ /* comma */
+		}
+		length += len(name)
+	}
+	return length
 }
 
 func intLength(n *big.Int) int {
@@ -715,9 +650,9 @@ func decode(packet []byte) (interface{}, error) {
 	case msgChannelFailure:
 		msg = new(channelRequestFailureMsg)
 	default:
-		return nil, unexpectedMessageError(0, packet[0])
+		return nil, UnexpectedMessageError{0, packet[0]}
 	}
-	if err := Unmarshal(packet, msg); err != nil {
+	if err := unmarshal(msg, packet, packet[0]); err != nil {
 		return nil, err
 	}
 	return msg, nil

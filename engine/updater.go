@@ -1,94 +1,67 @@
-package builtin
+package engine
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 
-	"github.com/drone/drone/pkg/bus"
-	"github.com/drone/drone/pkg/remote"
-	"github.com/drone/drone/pkg/store"
-	"github.com/drone/drone/pkg/types"
+	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote"
 )
 
-type Updater interface {
-	SetBuild(*types.User, *types.Repo, *types.Build) error
-	SetJob(*types.Repo, *types.Build, *types.Job) error
-	SetLogs(*types.Repo, *types.Build, *types.Job, io.ReadCloser) error
-}
-
-// NewUpdater returns an implementation of the Updater interface
-// that directly modifies the database and sends messages to the bus.
-func NewUpdater(bus bus.Bus, store store.Store, rem remote.Remote) Updater {
-	return &updater{bus, store, rem}
-}
-
 type updater struct {
-	bus    bus.Bus
-	store  store.Store
+	bus    *eventbus
+	db     *sql.DB
 	remote remote.Remote
 }
 
-func (u *updater) SetBuild(user *types.User, r *types.Repo, c *types.Build) error {
-	err := u.store.SetBuild(c)
+func (u *updater) SetBuild(r *Task) error {
+	err := model.UpdateBuild(u.db, r.Build)
 	if err != nil {
 		return err
 	}
 
-	err = u.remote.Status(user, r, c)
+	err = u.remote.Status(r.User, r.Repo, r.Build, fmt.Sprintf("%s/%s/%d", r.System.Link, r.Repo.FullName, r.Build.Number))
 	if err != nil {
 		// log err
 	}
 
-	// we need this because builds coming from
-	// a remote agent won't have the embedded
-	// build list. we should probably just rethink
-	// the messaging instead of this hack.
-	if c.Jobs == nil || len(c.Jobs) == 0 {
-		c.Jobs, _ = u.store.JobList(c)
-	}
-
-	msg, err := json.Marshal(c)
+	msg, err := json.Marshal(&payload{r.Build, r.Jobs})
 	if err != nil {
 		return err
 	}
 
-	u.bus.Send(&bus.Event{
-		Name: r.FullName,
-		Kind: bus.EventRepo,
+	u.bus.send(&Event{
+		Name: r.Repo.FullName,
 		Msg:  msg,
 	})
 	return nil
 }
 
-func (u *updater) SetJob(r *types.Repo, c *types.Build, j *types.Job) error {
-	err := u.store.SetJob(j)
+func (u *updater) SetJob(r *Task) error {
+	err := model.UpdateJob(u.db, r.Job)
 	if err != nil {
 		return err
 	}
 
-	// we need this because builds coming from
-	// a remote agent won't have the embedded
-	// build list. we should probably just rethink
-	// the messaging instead of this hack.
-	if c.Jobs == nil || len(c.Jobs) == 0 {
-		c.Jobs, _ = u.store.JobList(c)
-	}
-
-	msg, err := json.Marshal(c)
+	msg, err := json.Marshal(&payload{r.Build, r.Jobs})
 	if err != nil {
 		return err
 	}
 
-	u.bus.Send(&bus.Event{
-		Name: r.FullName,
-		Kind: bus.EventRepo,
+	u.bus.send(&Event{
+		Name: r.Repo.FullName,
 		Msg:  msg,
 	})
 	return nil
 }
 
-func (u *updater) SetLogs(r *types.Repo, c *types.Build, j *types.Job, rc io.ReadCloser) error {
-	path := fmt.Sprintf("/logs/%s/%v/%v", r.FullName, c.Number, j.Number)
-	return u.store.SetBlobReader(path, rc)
+func (u *updater) SetLogs(r *Task, rc io.ReadCloser) error {
+	return model.SetLog(u.db, r.Job, rc)
+}
+
+type payload struct {
+	*model.Build
+	Jobs []*model.Job `json:"jobs"`
 }

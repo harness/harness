@@ -1,0 +1,28 @@
+!!! 5
+html
+    head
+        title Hello
+
+        meta[name="description"][value="This is a sample"]
+
+        script[type="text/javascript"]
+            var hw = "Hello World!"
+            alert(hw)
+
+        style[type="text/css"]
+            body {
+                background: maroon;
+                color: white
+            }
+
+    body
+        header#mainHeader
+            ul
+                li.active
+                    a[href="/"] Main Page
+                        [title="Main Page"]
+
+        footer
+            | Hey
+            br
+            | There

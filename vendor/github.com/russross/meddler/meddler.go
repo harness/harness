@@ -205,10 +205,6 @@ func (elt ZeroIsNullMeddler) PreWrite(field interface{}) (saveValue interface{},
 		if val.String() == "" {
 			return nil, nil
 		}
-	case reflect.Bool:
-		if !val.Bool() {
-			return nil, nil
-		}
 	default:
 		return nil, fmt.Errorf("ZeroIsNullMeddler.PreWrite: unknown struct field type: %T", field)
 	}

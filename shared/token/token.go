@@ -1,9 +1,10 @@
 package token
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 )
 
 type SecretFunc func(*Token) (string, error)
@@ -12,6 +13,7 @@ const (
 	UserToken = "user"
 	SessToken = "sess"
 	HookToken = "hook"
+	CsrfToken = "csrf"
 )
 
 // Default algorithm used to sign JWT tokens.
@@ -22,7 +24,6 @@ type Token struct {
 	Text string
 }
 
-// Parse parses
 func Parse(raw string, fn SecretFunc) (*Token, error) {
 	token := &Token{}
 	parsed, err := jwt.Parse(raw, keyFunc(token, fn))
@@ -34,15 +35,46 @@ func Parse(raw string, fn SecretFunc) (*Token, error) {
 	return token, nil
 }
 
-func ParseRequest(req *http.Request, fn SecretFunc) (*Token, error) {
-	token := &Token{}
-	parsed, err := jwt.ParseFromRequest(req, keyFunc(token, fn))
+func ParseRequest(r *http.Request, fn SecretFunc) (*Token, error) {
+	var token = r.Header.Get("Authorization")
+
+	// first we attempt to get the token from the
+	// authorization header.
+	if len(token) != 0 {
+		token = r.Header.Get("Authorization")
+		fmt.Sscanf(token, "Bearer %s", &token)
+		return Parse(token, fn)
+	}
+
+	// then we attempt to get the token from the
+	// access_token url query parameter
+	token = r.FormValue("access_token")
+	if len(token) != 0 {
+		return Parse(token, fn)
+	}
+
+	// and finally we attemt to get the token from
+	// the user session cookie
+	cookie, err := r.Cookie("user_sess")
 	if err != nil {
 		return nil, err
-	} else if !parsed.Valid {
-		return nil, jwt.ValidationError{}
 	}
-	return token, nil
+	return Parse(cookie.Value, fn)
+}
+
+func CheckCsrf(r *http.Request, fn SecretFunc) error {
+
+	// get and options requests are always
+	// enabled, without CSRF checks.
+	switch r.Method {
+	case "GET", "OPTIONS":
+		return nil
+	}
+
+	// parse the raw CSRF token value and validate
+	raw := r.Header.Get("X-CSRF-TOKEN")
+	_, err := Parse(raw, fn)
+	return err
 }
 
 func New(kind, text string) *Token {

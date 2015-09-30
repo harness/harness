@@ -1,7 +1,7 @@
 package logrus_airbrake
 
 import (
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/tobi/airbrake-go"
 )
 
@@ -9,7 +9,7 @@ import (
 // with the Airbrake API. You must set:
 // * airbrake.Endpoint
 // * airbrake.ApiKey
-// * airbrake.Environment
+// * airbrake.Environment (only sends exceptions when set to "production")
 //
 // Before using this hook, to send an error. Entries that trigger an Error,
 // Fatal or Panic should now include an "error" field to send to Airbrake.

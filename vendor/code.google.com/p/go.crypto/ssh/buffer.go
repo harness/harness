@@ -43,29 +43,29 @@ func newBuffer() *buffer {
 // buf must not be modified after the call to write.
 func (b *buffer) write(buf []byte) {
 	b.Cond.L.Lock()
+	defer b.Cond.L.Unlock()
 	e := &element{buf: buf}
 	b.tail.next = e
 	b.tail = e
 	b.Cond.Signal()
-	b.Cond.L.Unlock()
 }
 
 // eof closes the buffer. Reads from the buffer once all
 // the data has been consumed will receive os.EOF.
 func (b *buffer) eof() error {
 	b.Cond.L.Lock()
+	defer b.Cond.L.Unlock()
 	b.closed = true
 	b.Cond.Signal()
-	b.Cond.L.Unlock()
 	return nil
 }
 
-// Read reads data from the internal buffer in buf.  Reads will block
-// if no data is available, or until the buffer is closed.
+// Read reads data from the internal buffer in buf.
+// Reads will block if no data is available, or until
+// the buffer is closed.
 func (b *buffer) Read(buf []byte) (n int, err error) {
 	b.Cond.L.Lock()
 	defer b.Cond.L.Unlock()
-
 	for len(buf) > 0 {
 		// if there is data in b.head, copy it
 		if len(b.head.buf) > 0 {
@@ -79,12 +79,10 @@ func (b *buffer) Read(buf []byte) (n int, err error) {
 			b.head = b.head.next
 			continue
 		}
-
 		// if at least one byte has been copied, return
 		if n > 0 {
 			break
 		}
-
 		// if nothing was read, and there is nothing outstanding
 		// check to see if the buffer is closed.
 		if b.closed {

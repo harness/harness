@@ -163,40 +163,6 @@ var keyPressTests = []struct {
 		line:           "£",
 		throwAwayLines: 1,
 	},
-	{
-		// Ctrl-D at the end of the line should be ignored.
-		in:   "a\004\r",
-		line: "a",
-	},
-	{
-		// a, b, left, Ctrl-D should erase the b.
-		in:   "ab\x1b[D\004\r",
-		line: "a",
-	},
-	{
-		// a, b, c, d, left, left, ^U should erase to the beginning of
-		// the line.
-		in:   "abcd\x1b[D\x1b[D\025\r",
-		line: "cd",
-	},
-	{
-		// Bracketed paste mode: control sequences should be returned
-		// verbatim in paste mode.
-		in:   "abc\x1b[200~de\177f\x1b[201~\177\r",
-		line: "abcde\177",
-	},
-	{
-		// Enter in bracketed paste mode should still work.
-		in:             "abc\x1b[200~d\refg\x1b[201~h\r",
-		line:           "efgh",
-		throwAwayLines: 1,
-	},
-	{
-		// Lines consisting entirely of pasted data should be indicated as such.
-		in:   "\x1b[200~a\r",
-		line: "a",
-		err:  ErrPasteIndicator,
-	},
 }
 
 func TestKeyPresses(t *testing.T) {

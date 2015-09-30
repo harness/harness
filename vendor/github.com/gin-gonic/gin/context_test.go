@@ -8,14 +8,14 @@ import (
 	"bytes"
 	"errors"
 	"html/template"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin/binding"
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/manucorporat/sse"
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/stretchr/testify/assert"
+	"github.com/manucorporat/sse"
+	"github.com/stretchr/testify/assert"
 )
 
 // Unit tests TODO
@@ -33,15 +33,39 @@ func createTestContext() (c *Context, w *httptest.ResponseRecorder, r *Engine) {
 	return
 }
 
+func createMultipartRequest() *http.Request {
+	boundary := "--testboundary"
+	body := new(bytes.Buffer)
+	mw := multipart.NewWriter(body)
+	defer mw.Close()
+
+	must(mw.SetBoundary(boundary))
+	must(mw.WriteField("foo", "bar"))
+	must(mw.WriteField("bar", "foo"))
+	must(mw.WriteField("bar", "foo2"))
+	must(mw.WriteField("array", "first"))
+	must(mw.WriteField("array", "second"))
+	req, err := http.NewRequest("POST", "/", body)
+	must(err)
+	req.Header.Set("Content-Type", MIMEMultipartPOSTForm+"; boundary="+boundary)
+	return req
+}
+
+func must(err error) {
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
 func TestContextReset(t *testing.T) {
 	router := New()
 	c := router.allocateContext()
-	assert.Equal(t, c.Engine, router)
+	assert.Equal(t, c.engine, router)
 
 	c.index = 2
 	c.Writer = &responseWriter{ResponseWriter: httptest.NewRecorder()}
 	c.Params = Params{Param{}}
-	c.Error(errors.New("test"), nil)
+	c.Error(errors.New("test"))
 	c.Set("foo", "bar")
 	c.reset()
 
@@ -52,8 +76,27 @@ func TestContextReset(t *testing.T) {
 	assert.Empty(t, c.Errors.Errors())
 	assert.Empty(t, c.Errors.ByType(ErrorTypeAny))
 	assert.Len(t, c.Params, 0)
-	assert.Equal(t, c.index, -1)
+	assert.EqualValues(t, c.index, -1)
 	assert.Equal(t, c.Writer.(*responseWriter), &c.writermem)
+}
+
+func TestContextHandlers(t *testing.T) {
+	c, _, _ := createTestContext()
+	assert.Nil(t, c.handlers)
+	assert.Nil(t, c.handlers.Last())
+
+	c.handlers = HandlersChain{}
+	assert.NotNil(t, c.handlers)
+	assert.Nil(t, c.handlers.Last())
+
+	f := func(c *Context) {}
+	g := func(c *Context) {}
+
+	c.handlers = HandlersChain{f}
+	compareFunc(t, f, c.handlers.Last())
+
+	c.handlers = HandlersChain{f, g}
+	compareFunc(t, g, c.handlers.Last())
 }
 
 // TestContextSetGet tests that a parameter is set correctly on the
@@ -108,52 +151,99 @@ func TestContextCopy(t *testing.T) {
 	assert.Nil(t, cp.writermem.ResponseWriter)
 	assert.Equal(t, &cp.writermem, cp.Writer.(*responseWriter))
 	assert.Equal(t, cp.Request, c.Request)
-	assert.Equal(t, cp.index, AbortIndex)
+	assert.Equal(t, cp.index, abortIndex)
 	assert.Equal(t, cp.Keys, c.Keys)
-	assert.Equal(t, cp.Engine, c.Engine)
+	assert.Equal(t, cp.engine, c.engine)
 	assert.Equal(t, cp.Params, c.Params)
 }
 
-func TestContextFormParse(t *testing.T) {
+func TestContextHandlerName(t *testing.T) {
+	c, _, _ := createTestContext()
+	c.handlers = HandlersChain{func(c *Context) {}, handlerNameTest}
+
+	assert.Equal(t, c.HandlerName(), "github.com/gin-gonic/gin.handlerNameTest")
+}
+
+func handlerNameTest(c *Context) {
+
+}
+
+func TestContextQuery(t *testing.T) {
 	c, _, _ := createTestContext()
 	c.Request, _ = http.NewRequest("GET", "http://example.com/?foo=bar&page=10", nil)
 
-	assert.Equal(t, c.DefaultFormValue("foo", "none"), "bar")
-	assert.Equal(t, c.FormValue("foo"), "bar")
-	assert.Empty(t, c.PostFormValue("foo"))
+	assert.Equal(t, c.DefaultQuery("foo", "none"), "bar")
+	assert.Equal(t, c.Query("foo"), "bar")
+	assert.Empty(t, c.PostForm("foo"))
 
-	assert.Equal(t, c.DefaultFormValue("page", "0"), "10")
-	assert.Equal(t, c.FormValue("page"), "10")
-	assert.Empty(t, c.PostFormValue("page"))
+	assert.Equal(t, c.DefaultQuery("page", "0"), "10")
+	assert.Equal(t, c.Query("page"), "10")
+	assert.Empty(t, c.PostForm("page"))
 
-	assert.Equal(t, c.DefaultFormValue("NoKey", "nada"), "nada")
-	assert.Empty(t, c.FormValue("NoKey"))
-	assert.Empty(t, c.PostFormValue("NoKey"))
+	assert.Equal(t, c.DefaultQuery("NoKey", "nada"), "nada")
+	assert.Empty(t, c.Query("NoKey"))
+	assert.Empty(t, c.PostForm("NoKey"))
 }
 
-func TestContextPostFormParse(t *testing.T) {
+func TestContextQueryAndPostForm(t *testing.T) {
 	c, _, _ := createTestContext()
-	body := bytes.NewBufferString("foo=bar&page=11&both=POST")
-	c.Request, _ = http.NewRequest("POST", "/?both=GET&id=main", body)
+	body := bytes.NewBufferString("foo=bar&page=11&both=POST&foo=second")
+	c.Request, _ = http.NewRequest("POST", "/?both=GET&id=main&id=omit&array[]=first&array[]=second", body)
 	c.Request.Header.Add("Content-Type", MIMEPOSTForm)
 
-	assert.Equal(t, c.DefaultPostFormValue("foo", "none"), "bar")
-	assert.Equal(t, c.PostFormValue("foo"), "bar")
-	assert.Equal(t, c.FormValue("foo"), "bar")
+	assert.Equal(t, c.DefaultPostForm("foo", "none"), "bar")
+	assert.Equal(t, c.PostForm("foo"), "bar")
+	assert.Empty(t, c.Query("foo"))
 
-	assert.Equal(t, c.DefaultPostFormValue("page", "0"), "11")
-	assert.Equal(t, c.PostFormValue("page"), "11")
-	assert.Equal(t, c.FormValue("page"), "11")
+	assert.Equal(t, c.DefaultPostForm("page", "0"), "11")
+	assert.Equal(t, c.PostForm("page"), "11")
+	assert.Equal(t, c.Query("page"), "")
 
-	assert.Equal(t, c.PostFormValue("both"), "POST")
-	assert.Equal(t, c.FormValue("both"), "POST")
+	assert.Equal(t, c.PostForm("both"), "POST")
+	assert.Equal(t, c.Query("both"), "GET")
 
-	assert.Equal(t, c.FormValue("id"), "main")
-	assert.Empty(t, c.PostFormValue("id"))
+	assert.Equal(t, c.DefaultPostForm("id", "000"), "000")
+	assert.Equal(t, c.Query("id"), "main")
+	assert.Empty(t, c.PostForm("id"))
 
-	assert.Equal(t, c.DefaultPostFormValue("NoKey", "nada"), "nada")
-	assert.Empty(t, c.PostFormValue("NoKey"))
-	assert.Empty(t, c.FormValue("NoKey"))
+	assert.Equal(t, c.DefaultPostForm("NoKey", "nada"), "nada")
+	assert.Empty(t, c.PostForm("NoKey"))
+	assert.Empty(t, c.Query("NoKey"))
+
+	var obj struct {
+		Foo   string   `form:"foo"`
+		ID    string   `form:"id"`
+		Page  string   `form:"page"`
+		Both  string   `form:"both"`
+		Array []string `form:"array[]"`
+	}
+	assert.NoError(t, c.Bind(&obj))
+	assert.Equal(t, obj.Foo, "bar")
+	assert.Equal(t, obj.ID, "main")
+	assert.Equal(t, obj.Page, "11")
+	assert.Equal(t, obj.Both, "POST")
+	assert.Equal(t, obj.Array, []string{"first", "second"})
+}
+
+func TestContextPostFormMultipart(t *testing.T) {
+	c, _, _ := createTestContext()
+	c.Request = createMultipartRequest()
+
+	var obj struct {
+		Foo   string   `form:"foo"`
+		Bar   string   `form:"bar"`
+		Array []string `form:"array"`
+	}
+	assert.NoError(t, c.Bind(&obj))
+	assert.Equal(t, obj.Bar, "foo")
+	assert.Equal(t, obj.Foo, "bar")
+	assert.Equal(t, obj.Array, []string{"first", "second"})
+
+	assert.Empty(t, c.Query("foo"))
+	assert.Empty(t, c.Query("bar"))
+	assert.Equal(t, c.PostForm("foo"), "bar")
+	assert.Equal(t, c.PostForm("array"), "first")
+	assert.Equal(t, c.PostForm("bar"), "foo")
 }
 
 // Tests that the response is serialized as JSON
@@ -165,6 +255,18 @@ func TestContextRenderJSON(t *testing.T) {
 	assert.Equal(t, w.Code, 201)
 	assert.Equal(t, w.Body.String(), "{\"foo\":\"bar\"}\n")
 	assert.Equal(t, w.HeaderMap.Get("Content-Type"), "application/json; charset=utf-8")
+}
+
+// Tests that the response is serialized as JSON
+// we change the content-type before
+func TestContextRenderAPIJSON(t *testing.T) {
+	c, w, _ := createTestContext()
+	c.Header("Content-Type", "application/vnd.api+json")
+	c.JSON(201, H{"foo": "bar"})
+
+	assert.Equal(t, w.Code, 201)
+	assert.Equal(t, w.Body.String(), "{\"foo\":\"bar\"}\n")
+	assert.Equal(t, w.HeaderMap.Get("Content-Type"), "application/vnd.api+json")
 }
 
 // Tests that the response is serialized as JSON
@@ -249,7 +351,7 @@ func TestContextRenderSSE(t *testing.T) {
 		"bar": "foo",
 	})
 
-	assert.Equal(t, w.Body.String(), "event: float\ndata: 1.5\n\nid: 123\ndata: text\n\nevent: chat\ndata: {\"bar\":\"foo\",\"foo\":\"bar\"}\n\n")
+	assert.Equal(t, w.Body.String(), "event:float\ndata:1.5\n\nid:123\ndata:text\n\nevent:chat\ndata:{\"bar\":\"foo\",\"foo\":\"bar\"}\n\n")
 }
 
 func TestContextRenderFile(t *testing.T) {
@@ -333,6 +435,20 @@ func TestContextNegotiationFormatCustum(t *testing.T) {
 	assert.Equal(t, c.NegotiateFormat(MIMEJSON), MIMEJSON)
 }
 
+func TestContextIsAborted(t *testing.T) {
+	c, _, _ := createTestContext()
+	assert.False(t, c.IsAborted())
+
+	c.Abort()
+	assert.True(t, c.IsAborted())
+
+	c.Next()
+	assert.True(t, c.IsAborted())
+
+	c.index++
+	assert.True(t, c.IsAborted())
+}
+
 // TestContextData tests that the response can be written from `bytesting`
 // with specified MIME type
 func TestContextAbortWithStatus(t *testing.T) {
@@ -341,7 +457,7 @@ func TestContextAbortWithStatus(t *testing.T) {
 	c.AbortWithStatus(401)
 	c.Writer.WriteHeaderNow()
 
-	assert.Equal(t, c.index, AbortIndex)
+	assert.Equal(t, c.index, abortIndex)
 	assert.Equal(t, c.Writer.Status(), 401)
 	assert.Equal(t, w.Code, 401)
 	assert.True(t, c.IsAborted())
@@ -349,57 +465,51 @@ func TestContextAbortWithStatus(t *testing.T) {
 
 func TestContextError(t *testing.T) {
 	c, _, _ := createTestContext()
-	assert.Nil(t, c.LastError())
-	assert.Empty(t, c.Errors.String())
+	assert.Empty(t, c.Errors)
 
-	c.Error(errors.New("first error"), "some data")
-	assert.Equal(t, c.LastError().Error(), "first error")
+	c.Error(errors.New("first error"))
 	assert.Len(t, c.Errors, 1)
-	assert.Equal(t, c.Errors.String(), "Error #01: first error\n     Meta: some data\n")
+	assert.Equal(t, c.Errors.String(), "Error #01: first error\n")
 
-	c.Error(errors.New("second error"), "some data 2")
-	assert.Equal(t, c.LastError().Error(), "second error")
+	c.Error(&Error{
+		Err:  errors.New("second error"),
+		Meta: "some data 2",
+		Type: ErrorTypePublic,
+	})
 	assert.Len(t, c.Errors, 2)
-	assert.Equal(t, c.Errors.String(), "Error #01: first error\n     Meta: some data\n"+
-		"Error #02: second error\n     Meta: some data 2\n")
 
-	assert.Equal(t, c.Errors[0].Error, errors.New("first error"))
-	assert.Equal(t, c.Errors[0].Meta, "some data")
-	assert.Equal(t, c.Errors[0].Flags, ErrorTypeExternal)
+	assert.Equal(t, c.Errors[0].Err, errors.New("first error"))
+	assert.Nil(t, c.Errors[0].Meta)
+	assert.Equal(t, c.Errors[0].Type, ErrorTypePrivate)
 
-	assert.Equal(t, c.Errors[1].Error, errors.New("second error"))
+	assert.Equal(t, c.Errors[1].Err, errors.New("second error"))
 	assert.Equal(t, c.Errors[1].Meta, "some data 2")
-	assert.Equal(t, c.Errors[1].Flags, ErrorTypeExternal)
+	assert.Equal(t, c.Errors[1].Type, ErrorTypePublic)
+
+	assert.Equal(t, c.Errors.Last(), c.Errors[1])
 }
 
 func TestContextTypedError(t *testing.T) {
 	c, _, _ := createTestContext()
-	c.ErrorTyped(errors.New("externo 0"), ErrorTypeExternal, nil)
-	c.ErrorTyped(errors.New("externo 1"), ErrorTypeExternal, nil)
-	c.ErrorTyped(errors.New("interno 0"), ErrorTypeInternal, nil)
-	c.ErrorTyped(errors.New("externo 2"), ErrorTypeExternal, nil)
-	c.ErrorTyped(errors.New("interno 1"), ErrorTypeInternal, nil)
-	c.ErrorTyped(errors.New("interno 2"), ErrorTypeInternal, nil)
+	c.Error(errors.New("externo 0")).SetType(ErrorTypePublic)
+	c.Error(errors.New("interno 0")).SetType(ErrorTypePrivate)
 
-	for _, err := range c.Errors.ByType(ErrorTypeExternal) {
-		assert.Equal(t, err.Flags, ErrorTypeExternal)
+	for _, err := range c.Errors.ByType(ErrorTypePublic) {
+		assert.Equal(t, err.Type, ErrorTypePublic)
 	}
-
-	for _, err := range c.Errors.ByType(ErrorTypeInternal) {
-		assert.Equal(t, err.Flags, ErrorTypeInternal)
+	for _, err := range c.Errors.ByType(ErrorTypePrivate) {
+		assert.Equal(t, err.Type, ErrorTypePrivate)
 	}
-
-	assert.Equal(t, c.Errors.Errors(), []string{"externo 0", "externo 1", "interno 0", "externo 2", "interno 1", "interno 2"})
+	assert.Equal(t, c.Errors.Errors(), []string{"externo 0", "interno 0"})
 }
 
-func TestContextFail(t *testing.T) {
+func TestContextAbortWithError(t *testing.T) {
 	c, w, _ := createTestContext()
-	c.Fail(401, errors.New("bad input"))
+	c.AbortWithError(401, errors.New("bad input")).SetMeta("some input")
 	c.Writer.WriteHeaderNow()
 
 	assert.Equal(t, w.Code, 401)
-	assert.Equal(t, c.LastError().Error(), "bad input")
-	assert.Equal(t, c.index, AbortIndex)
+	assert.Equal(t, c.index, abortIndex)
 	assert.True(t, c.IsAborted())
 }
 
@@ -407,13 +517,18 @@ func TestContextClientIP(t *testing.T) {
 	c, _, _ := createTestContext()
 	c.Request, _ = http.NewRequest("POST", "/", nil)
 
-	c.Request.Header.Set("X-Real-IP", "10.10.10.10")
-	c.Request.Header.Set("X-Forwarded-For", "20.20.20.20 , 30.30.30.30")
-	c.Request.RemoteAddr = "40.40.40.40"
+	c.Request.Header.Set("X-Real-IP", " 10.10.10.10  ")
+	c.Request.Header.Set("X-Forwarded-For", "  20.20.20.20, 30.30.30.30")
+	c.Request.RemoteAddr = "  40.40.40.40 "
 
 	assert.Equal(t, c.ClientIP(), "10.10.10.10")
+
 	c.Request.Header.Del("X-Real-IP")
 	assert.Equal(t, c.ClientIP(), "20.20.20.20")
+
+	c.Request.Header.Set("X-Forwarded-For", "30.30.30.30  ")
+	assert.Equal(t, c.ClientIP(), "30.30.30.30")
+
 	c.Request.Header.Del("X-Forwarded-For")
 	assert.Equal(t, c.ClientIP(), "40.40.40.40")
 }
@@ -426,15 +541,31 @@ func TestContextContentType(t *testing.T) {
 	assert.Equal(t, c.ContentType(), "application/json")
 }
 
-func TestContextAutoBind(t *testing.T) {
-	c, w, _ := createTestContext()
+func TestContextAutoBindJSON(t *testing.T) {
+	c, _, _ := createTestContext()
 	c.Request, _ = http.NewRequest("POST", "/", bytes.NewBufferString("{\"foo\":\"bar\", \"bar\":\"foo\"}"))
 	c.Request.Header.Add("Content-Type", MIMEJSON)
+
 	var obj struct {
 		Foo string `json:"foo"`
 		Bar string `json:"bar"`
 	}
-	assert.True(t, c.Bind(&obj))
+	assert.NoError(t, c.Bind(&obj))
+	assert.Equal(t, obj.Bar, "foo")
+	assert.Equal(t, obj.Foo, "bar")
+	assert.Empty(t, c.Errors)
+}
+
+func TestContextBindWithJSON(t *testing.T) {
+	c, w, _ := createTestContext()
+	c.Request, _ = http.NewRequest("POST", "/", bytes.NewBufferString("{\"foo\":\"bar\", \"bar\":\"foo\"}"))
+	c.Request.Header.Add("Content-Type", MIMEXML) // set fake content-type
+
+	var obj struct {
+		Foo string `json:"foo"`
+		Bar string `json:"bar"`
+	}
+	assert.NoError(t, c.BindJSON(&obj))
 	assert.Equal(t, obj.Bar, "foo")
 	assert.Equal(t, obj.Foo, "bar")
 	assert.Equal(t, w.Body.Len(), 0)
@@ -450,27 +581,13 @@ func TestContextBadAutoBind(t *testing.T) {
 	}
 
 	assert.False(t, c.IsAborted())
-	assert.False(t, c.Bind(&obj))
+	assert.Error(t, c.Bind(&obj))
 	c.Writer.WriteHeaderNow()
 
 	assert.Empty(t, obj.Bar)
 	assert.Empty(t, obj.Foo)
 	assert.Equal(t, w.Code, 400)
 	assert.True(t, c.IsAborted())
-}
-
-func TestContextBindWith(t *testing.T) {
-	c, w, _ := createTestContext()
-	c.Request, _ = http.NewRequest("POST", "/", bytes.NewBufferString("{\"foo\":\"bar\", \"bar\":\"foo\"}"))
-	c.Request.Header.Add("Content-Type", MIMEXML)
-	var obj struct {
-		Foo string `json:"foo"`
-		Bar string `json:"bar"`
-	}
-	assert.True(t, c.BindWith(&obj, binding.JSON))
-	assert.Equal(t, obj.Bar, "foo")
-	assert.Equal(t, obj.Foo, "bar")
-	assert.Equal(t, w.Body.Len(), 0)
 }
 
 func TestContextGolangContext(t *testing.T) {

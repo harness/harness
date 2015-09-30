@@ -5,16 +5,16 @@
 package ssh
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
+	"net"
 )
 
-// clientAuthenticate authenticates with the remote server. See RFC 4252.
-func (c *connection) clientAuthenticate(config *ClientConfig) error {
+// authenticate authenticates with the remote server. See RFC 4252.
+func (c *ClientConn) authenticate() error {
 	// initiate user auth session
-	if err := c.transport.writePacket(Marshal(&serviceRequestMsg{serviceUserAuth})); err != nil {
+	if err := c.transport.writePacket(marshal(msgServiceRequest, serviceRequestMsg{serviceUserAuth})); err != nil {
 		return err
 	}
 	packet, err := c.transport.readPacket()
@@ -22,16 +22,14 @@ func (c *connection) clientAuthenticate(config *ClientConfig) error {
 		return err
 	}
 	var serviceAccept serviceAcceptMsg
-	if err := Unmarshal(packet, &serviceAccept); err != nil {
+	if err := unmarshal(&serviceAccept, packet, msgServiceAccept); err != nil {
 		return err
 	}
-
 	// during the authentication phase the client first attempts the "none" method
 	// then any untried methods suggested by the server.
-	tried := make(map[string]bool)
-	var lastMethods []string
-	for auth := AuthMethod(new(noneAuth)); auth != nil; {
-		ok, methods, err := auth.auth(c.transport.getSessionID(), config.User, c.transport, config.Rand)
+	tried, remain := make(map[string]bool), make(map[string]bool)
+	for auth := ClientAuth(new(noneAuth)); auth != nil; {
+		ok, methods, err := auth.auth(c.transport.sessionID, c.config.User, c.transport, c.config.rand())
 		if err != nil {
 			return err
 		}
@@ -40,46 +38,49 @@ func (c *connection) clientAuthenticate(config *ClientConfig) error {
 			return nil
 		}
 		tried[auth.method()] = true
-		if methods == nil {
-			methods = lastMethods
-		}
-		lastMethods = methods
-
-		auth = nil
-
-	findNext:
-		for _, a := range config.Auth {
-			candidateMethod := a.method()
-			if tried[candidateMethod] {
+		delete(remain, auth.method())
+		for _, meth := range methods {
+			if tried[meth] {
+				// if we've tried meth already, skip it.
 				continue
 			}
-			for _, meth := range methods {
-				if meth == candidateMethod {
-					auth = a
-					break findNext
-				}
+			remain[meth] = true
+		}
+		auth = nil
+		for _, a := range c.config.Auth {
+			if remain[a.method()] {
+				auth = a
+				break
 			}
 		}
 	}
 	return fmt.Errorf("ssh: unable to authenticate, attempted methods %v, no supported methods remain", keys(tried))
 }
 
-func keys(m map[string]bool) []string {
-	s := make([]string, 0, len(m))
-
-	for key := range m {
-		s = append(s, key)
+func keys(m map[string]bool) (s []string) {
+	for k := range m {
+		s = append(s, k)
 	}
-	return s
+	return
 }
 
-// An AuthMethod represents an instance of an RFC 4252 authentication method.
-type AuthMethod interface {
+// HostKeyChecker represents a database of known server host keys.
+type HostKeyChecker interface {
+	// Check is called during the handshake to check server's
+	// public key for unexpected changes. The hostKey argument is
+	// in SSH wire format. It can be parsed using
+	// ssh.ParsePublicKey. The address before DNS resolution is
+	// passed in the addr argument, so the key can also be checked
+	// against the hostname.
+	Check(addr string, remote net.Addr, algorithm string, hostKey []byte) error
+}
+
+// A ClientAuth represents an instance of an RFC 4252 authentication method.
+type ClientAuth interface {
 	// auth authenticates user over transport t.
 	// Returns true if authentication is successful.
 	// If authentication is not successful, a []string of alternative
-	// method names is returned. If the slice is nil, it will be ignored
-	// and the previous set of possible methods will be reused.
+	// method names is returned.
 	auth(session []byte, user string, p packetConn, rand io.Reader) (bool, []string, error)
 
 	// method returns the RFC 4252 method name.
@@ -90,7 +91,7 @@ type AuthMethod interface {
 type noneAuth int
 
 func (n *noneAuth) auth(session []byte, user string, c packetConn, rand io.Reader) (bool, []string, error) {
-	if err := c.writePacket(Marshal(&userAuthRequestMsg{
+	if err := c.writePacket(marshal(msgUserAuthRequest, userAuthRequestMsg{
 		User:    user,
 		Service: serviceSSH,
 		Method:  "none",
@@ -105,31 +106,29 @@ func (n *noneAuth) method() string {
 	return "none"
 }
 
-// passwordCallback is an AuthMethod that fetches the password through
-// a function call, e.g. by prompting the user.
-type passwordCallback func() (password string, err error)
+// "password" authentication, RFC 4252 Section 8.
+type passwordAuth struct {
+	ClientPassword
+}
 
-func (cb passwordCallback) auth(session []byte, user string, c packetConn, rand io.Reader) (bool, []string, error) {
+func (p *passwordAuth) auth(session []byte, user string, c packetConn, rand io.Reader) (bool, []string, error) {
 	type passwordAuthMsg struct {
-		User     string `sshtype:"50"`
+		User     string
 		Service  string
 		Method   string
 		Reply    bool
 		Password string
 	}
 
-	pw, err := cb()
-	// REVIEW NOTE: is there a need to support skipping a password attempt?
-	// The program may only find out that the user doesn't have a password
-	// when prompting.
+	pw, err := p.Password(user)
 	if err != nil {
 		return false, nil, err
 	}
 
-	if err := c.writePacket(Marshal(&passwordAuthMsg{
+	if err := c.writePacket(marshal(msgUserAuthRequest, passwordAuthMsg{
 		User:     user,
 		Service:  serviceSSH,
-		Method:   cb.method(),
+		Method:   "password",
 		Reply:    false,
 		Password: pw,
 	})); err != nil {
@@ -139,98 +138,110 @@ func (cb passwordCallback) auth(session []byte, user string, c packetConn, rand 
 	return handleAuthResponse(c)
 }
 
-func (cb passwordCallback) method() string {
+func (p *passwordAuth) method() string {
 	return "password"
 }
 
-// Password returns an AuthMethod using the given password.
-func Password(secret string) AuthMethod {
-	return passwordCallback(func() (string, error) { return secret, nil })
+// A ClientPassword implements access to a client's passwords.
+type ClientPassword interface {
+	// Password returns the password to use for user.
+	Password(user string) (password string, err error)
 }
 
-// PasswordCallback returns an AuthMethod that uses a callback for
-// fetching a password.
-func PasswordCallback(prompt func() (secret string, err error)) AuthMethod {
-	return passwordCallback(prompt)
+// ClientAuthPassword returns a ClientAuth using password authentication.
+func ClientAuthPassword(impl ClientPassword) ClientAuth {
+	return &passwordAuth{impl}
+}
+
+// ClientKeyring implements access to a client key ring.
+type ClientKeyring interface {
+	// Key returns the i'th Publickey, or nil if no key exists at i.
+	Key(i int) (key PublicKey, err error)
+
+	// Sign returns a signature of the given data using the i'th key
+	// and the supplied random source.
+	Sign(i int, rand io.Reader, data []byte) (sig []byte, err error)
+}
+
+// "publickey" authentication, RFC 4252 Section 7.
+type publickeyAuth struct {
+	ClientKeyring
 }
 
 type publickeyAuthMsg struct {
-	User    string `sshtype:"50"`
+	User    string
 	Service string
 	Method  string
 	// HasSig indicates to the receiver packet that the auth request is signed and
 	// should be used for authentication of the request.
 	HasSig   bool
 	Algoname string
-	PubKey   []byte
-	// Sig is tagged with "rest" so Marshal will exclude it during
-	// validateKey
+	Pubkey   string
+	// Sig is defined as []byte so marshal will exclude it during validateKey
 	Sig []byte `ssh:"rest"`
 }
 
-// publicKeyCallback is an AuthMethod that uses a set of key
-// pairs for authentication.
-type publicKeyCallback func() ([]Signer, error)
-
-func (cb publicKeyCallback) method() string {
-	return "publickey"
-}
-
-func (cb publicKeyCallback) auth(session []byte, user string, c packetConn, rand io.Reader) (bool, []string, error) {
+func (p *publickeyAuth) auth(session []byte, user string, c packetConn, rand io.Reader) (bool, []string, error) {
 	// Authentication is performed in two stages. The first stage sends an
 	// enquiry to test if each key is acceptable to the remote. The second
 	// stage attempts to authenticate with the valid keys obtained in the
 	// first stage.
 
-	signers, err := cb()
-	if err != nil {
-		return false, nil, err
-	}
-	var validKeys []Signer
-	for _, signer := range signers {
-		if ok, err := validateKey(signer.PublicKey(), user, c); ok {
-			validKeys = append(validKeys, signer)
+	var index int
+	// a map of public keys to their index in the keyring
+	validKeys := make(map[int]PublicKey)
+	for {
+		key, err := p.Key(index)
+		if err != nil {
+			return false, nil, err
+		}
+		if key == nil {
+			// no more keys in the keyring
+			break
+		}
+
+		if ok, err := p.validateKey(key, user, c); ok {
+			validKeys[index] = key
 		} else {
 			if err != nil {
 				return false, nil, err
 			}
 		}
+		index++
 	}
 
 	// methods that may continue if this auth is not successful.
 	var methods []string
-	for _, signer := range validKeys {
-		pub := signer.PublicKey()
-
-		pubKey := pub.Marshal()
-		sign, err := signer.Sign(rand, buildDataSignedForAuth(session, userAuthRequestMsg{
+	for i, key := range validKeys {
+		pubkey := MarshalPublicKey(key)
+		algoname := key.PublicKeyAlgo()
+		data := buildDataSignedForAuth(session, userAuthRequestMsg{
 			User:    user,
 			Service: serviceSSH,
-			Method:  cb.method(),
-		}, []byte(pub.Type()), pubKey))
+			Method:  p.method(),
+		}, []byte(algoname), pubkey)
+		sigBlob, err := p.Sign(i, rand, data)
 		if err != nil {
 			return false, nil, err
 		}
-
 		// manually wrap the serialized signature in a string
-		s := Marshal(sign)
+		s := serializeSignature(key.PublicKeyAlgo(), sigBlob)
 		sig := make([]byte, stringLength(len(s)))
 		marshalString(sig, s)
 		msg := publickeyAuthMsg{
 			User:     user,
 			Service:  serviceSSH,
-			Method:   cb.method(),
+			Method:   p.method(),
 			HasSig:   true,
-			Algoname: pub.Type(),
-			PubKey:   pubKey,
+			Algoname: algoname,
+			Pubkey:   string(pubkey),
 			Sig:      sig,
 		}
-		p := Marshal(&msg)
+		p := marshal(msgUserAuthRequest, msg)
 		if err := c.writePacket(p); err != nil {
 			return false, nil, err
 		}
-		var success bool
-		success, methods, err = handleAuthResponse(c)
+		success, methods, err := handleAuthResponse(c)
 		if err != nil {
 			return false, nil, err
 		}
@@ -241,27 +252,28 @@ func (cb publicKeyCallback) auth(session []byte, user string, c packetConn, rand
 	return false, methods, nil
 }
 
-// validateKey validates the key provided is acceptable to the server.
-func validateKey(key PublicKey, user string, c packetConn) (bool, error) {
-	pubKey := key.Marshal()
+// validateKey validates the key provided it is acceptable to the server.
+func (p *publickeyAuth) validateKey(key PublicKey, user string, c packetConn) (bool, error) {
+	pubkey := MarshalPublicKey(key)
+	algoname := key.PublicKeyAlgo()
 	msg := publickeyAuthMsg{
 		User:     user,
 		Service:  serviceSSH,
-		Method:   "publickey",
+		Method:   p.method(),
 		HasSig:   false,
-		Algoname: key.Type(),
-		PubKey:   pubKey,
+		Algoname: algoname,
+		Pubkey:   string(pubkey),
 	}
-	if err := c.writePacket(Marshal(&msg)); err != nil {
+	if err := c.writePacket(marshal(msgUserAuthRequest, msg)); err != nil {
 		return false, err
 	}
 
-	return confirmKeyAck(key, c)
+	return p.confirmKeyAck(key, c)
 }
 
-func confirmKeyAck(key PublicKey, c packetConn) (bool, error) {
-	pubKey := key.Marshal()
-	algoname := key.Type()
+func (p *publickeyAuth) confirmKeyAck(key PublicKey, c packetConn) (bool, error) {
+	pubkey := MarshalPublicKey(key)
+	algoname := key.PublicKeyAlgo()
 
 	for {
 		packet, err := c.readPacket()
@@ -272,32 +284,30 @@ func confirmKeyAck(key PublicKey, c packetConn) (bool, error) {
 		case msgUserAuthBanner:
 			// TODO(gpaul): add callback to present the banner to the user
 		case msgUserAuthPubKeyOk:
-			var msg userAuthPubKeyOkMsg
-			if err := Unmarshal(packet, &msg); err != nil {
+			msg := userAuthPubKeyOkMsg{}
+			if err := unmarshal(&msg, packet, msgUserAuthPubKeyOk); err != nil {
 				return false, err
 			}
-			if msg.Algo != algoname || !bytes.Equal(msg.PubKey, pubKey) {
+			if msg.Algo != algoname || msg.PubKey != string(pubkey) {
 				return false, nil
 			}
 			return true, nil
 		case msgUserAuthFailure:
 			return false, nil
 		default:
-			return false, unexpectedMessageError(msgUserAuthSuccess, packet[0])
+			return false, UnexpectedMessageError{msgUserAuthSuccess, packet[0]}
 		}
 	}
+	panic("unreachable")
 }
 
-// PublicKeys returns an AuthMethod that uses the given key
-// pairs.
-func PublicKeys(signers ...Signer) AuthMethod {
-	return publicKeyCallback(func() ([]Signer, error) { return signers, nil })
+func (p *publickeyAuth) method() string {
+	return "publickey"
 }
 
-// PublicKeysCallback returns an AuthMethod that runs the given
-// function to obtain a list of key pairs.
-func PublicKeysCallback(getSigners func() (signers []Signer, err error)) AuthMethod {
-	return publicKeyCallback(getSigners)
+// ClientAuthKeyring returns a ClientAuth using public key authentication.
+func ClientAuthKeyring(impl ClientKeyring) ClientAuth {
+	return &publickeyAuth{impl}
 }
 
 // handleAuthResponse returns whether the preceding authentication request succeeded
@@ -314,8 +324,8 @@ func handleAuthResponse(c packetConn) (bool, []string, error) {
 		case msgUserAuthBanner:
 			// TODO: add callback to present the banner to the user
 		case msgUserAuthFailure:
-			var msg userAuthFailureMsg
-			if err := Unmarshal(packet, &msg); err != nil {
+			msg := userAuthFailureMsg{}
+			if err := unmarshal(&msg, packet, msgUserAuthFailure); err != nil {
 				return false, nil, err
 			}
 			return false, msg.Methods, nil
@@ -324,40 +334,98 @@ func handleAuthResponse(c packetConn) (bool, []string, error) {
 		case msgDisconnect:
 			return false, nil, io.EOF
 		default:
-			return false, nil, unexpectedMessageError(msgUserAuthSuccess, packet[0])
+			return false, nil, UnexpectedMessageError{msgUserAuthSuccess, packet[0]}
 		}
 	}
+	panic("unreachable")
 }
 
-// KeyboardInteractiveChallenge should print questions, optionally
-// disabling echoing (e.g. for passwords), and return all the answers.
-// Challenge may be called multiple times in a single session. After
-// successful authentication, the server may send a challenge with no
-// questions, for which the user and instruction messages should be
-// printed.  RFC 4256 section 3.3 details how the UI should behave for
-// both CLI and GUI environments.
-type KeyboardInteractiveChallenge func(user, instruction string, questions []string, echos []bool) (answers []string, err error)
-
-// KeyboardInteractive returns a AuthMethod using a prompt/response
-// sequence controlled by the server.
-func KeyboardInteractive(challenge KeyboardInteractiveChallenge) AuthMethod {
-	return challenge
+// ClientAuthAgent returns a ClientAuth using public key authentication via
+// an agent.
+func ClientAuthAgent(agent *AgentClient) ClientAuth {
+	return ClientAuthKeyring(&agentKeyring{agent: agent})
 }
 
-func (cb KeyboardInteractiveChallenge) method() string {
+// agentKeyring implements ClientKeyring.
+type agentKeyring struct {
+	agent *AgentClient
+	keys  []*AgentKey
+}
+
+func (kr *agentKeyring) Key(i int) (key PublicKey, err error) {
+	if kr.keys == nil {
+		if kr.keys, err = kr.agent.RequestIdentities(); err != nil {
+			return
+		}
+	}
+	if i >= len(kr.keys) {
+		return
+	}
+	return kr.keys[i].Key()
+}
+
+func (kr *agentKeyring) Sign(i int, rand io.Reader, data []byte) (sig []byte, err error) {
+	var key PublicKey
+	if key, err = kr.Key(i); err != nil {
+		return
+	}
+	if key == nil {
+		return nil, errors.New("ssh: key index out of range")
+	}
+	if sig, err = kr.agent.SignRequest(key, data); err != nil {
+		return
+	}
+
+	// Unmarshal the signature.
+
+	var ok bool
+	if _, sig, ok = parseString(sig); !ok {
+		return nil, errors.New("ssh: malformed signature response from agent")
+	}
+	if sig, _, ok = parseString(sig); !ok {
+		return nil, errors.New("ssh: malformed signature response from agent")
+	}
+	return sig, nil
+}
+
+// ClientKeyboardInteractive should prompt the user for the given
+// questions.
+type ClientKeyboardInteractive interface {
+	// Challenge should print the questions, optionally disabling
+	// echoing (eg. for passwords), and return all the answers.
+	// Challenge may be called multiple times in a single
+	// session. After successful authentication, the server may
+	// send a challenge with no questions, for which the user and
+	// instruction messages should be printed.  RFC 4256 section
+	// 3.3 details how the UI should behave for both CLI and
+	// GUI environments.
+	Challenge(user, instruction string, questions []string, echos []bool) ([]string, error)
+}
+
+// ClientAuthKeyboardInteractive returns a ClientAuth using a
+// prompt/response sequence controlled by the server.
+func ClientAuthKeyboardInteractive(impl ClientKeyboardInteractive) ClientAuth {
+	return &keyboardInteractiveAuth{impl}
+}
+
+type keyboardInteractiveAuth struct {
+	ClientKeyboardInteractive
+}
+
+func (k *keyboardInteractiveAuth) method() string {
 	return "keyboard-interactive"
 }
 
-func (cb KeyboardInteractiveChallenge) auth(session []byte, user string, c packetConn, rand io.Reader) (bool, []string, error) {
+func (k *keyboardInteractiveAuth) auth(session []byte, user string, c packetConn, rand io.Reader) (bool, []string, error) {
 	type initiateMsg struct {
-		User       string `sshtype:"50"`
+		User       string
 		Service    string
 		Method     string
 		Language   string
 		Submethods string
 	}
 
-	if err := c.writePacket(Marshal(&initiateMsg{
+	if err := c.writePacket(marshal(msgUserAuthRequest, initiateMsg{
 		User:    user,
 		Service: serviceSSH,
 		Method:  "keyboard-interactive",
@@ -380,18 +448,18 @@ func (cb KeyboardInteractiveChallenge) auth(session []byte, user string, c packe
 			// OK
 		case msgUserAuthFailure:
 			var msg userAuthFailureMsg
-			if err := Unmarshal(packet, &msg); err != nil {
+			if err := unmarshal(&msg, packet, msgUserAuthFailure); err != nil {
 				return false, nil, err
 			}
 			return false, msg.Methods, nil
 		case msgUserAuthSuccess:
 			return true, nil, nil
 		default:
-			return false, nil, unexpectedMessageError(msgUserAuthInfoRequest, packet[0])
+			return false, nil, UnexpectedMessageError{msgUserAuthInfoRequest, packet[0]}
 		}
 
 		var msg userAuthInfoRequestMsg
-		if err := Unmarshal(packet, &msg); err != nil {
+		if err := unmarshal(&msg, packet, packet[0]); err != nil {
 			return false, nil, err
 		}
 
@@ -410,10 +478,10 @@ func (cb KeyboardInteractiveChallenge) auth(session []byte, user string, c packe
 		}
 
 		if len(rest) != 0 {
-			return false, nil, errors.New("ssh: extra data following keyboard-interactive pairs")
+			return false, nil, fmt.Errorf("ssh: junk following message %q", rest)
 		}
 
-		answers, err := cb(msg.User, msg.Instruction, prompts, echos)
+		answers, err := k.Challenge(msg.User, msg.Instruction, prompts, echos)
 		if err != nil {
 			return false, nil, err
 		}

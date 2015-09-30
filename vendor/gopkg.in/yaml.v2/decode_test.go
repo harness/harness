@@ -2,8 +2,8 @@ package yaml_test
 
 import (
 	"errors"
-	"github.com/drone/drone/Godeps/_workspace/src/gopkg.in/yaml.v2"
 	. "gopkg.in/check.v1"
+	"gopkg.in/yaml.v2"
 	"math"
 	"net"
 	"reflect"
@@ -548,10 +548,6 @@ var unmarshalTests = []struct {
 	{
 		"a: 1.2.3.4\n",
 		map[string]net.IP{"a": net.IPv4(1, 2, 3, 4)},
-	},
-	{
-		"a: 2015-02-24T18:19:39Z\n",
-		map[string]time.Time{"a": time.Unix(1424801979, 0)},
 	},
 
 	// Encode empty lists as zero-length slices.

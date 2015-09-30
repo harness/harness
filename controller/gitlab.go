@@ -1,158 +1,105 @@
-package server
+package controller
 
 import (
 	"fmt"
-	"strconv"
+	"net/http"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/pkg/token"
+	"github.com/drone/drone/model"
+	"github.com/drone/drone/router/middleware/context"
+	"github.com/drone/drone/router/middleware/session"
+	"github.com/drone/drone/shared/token"
 )
 
-// RedirectSha accepts a request to retvie a redirect
-// to job from the datastore for the given repository
-// and commit sha
-//
-//  GET /gitlab/:owner/:name/redirect/commits/:sha
-//
-// REASON: It required by GitLab, becuase we get only
-// sha and ref name, but drone uses build numbers
-func RedirectSha(c *gin.Context) {
-	var branch string
-
-	store := ToDatastore(c)
-	repo := ToRepo(c)
-	sha := c.Params.ByName("sha")
-
-	branch = c.Request.FormValue("branch")
-	if branch == "" {
-		branch = repo.Branch
-	}
-
-	build, err := store.BuildSha(repo, sha, branch)
-	if err != nil {
-		c.Redirect(301, "/")
-		return
-	}
-
-	c.Redirect(301, fmt.Sprintf("/%s/%s/%d", repo.Owner, repo.Name, build.Number))
-	return
-}
-
-// RedirectPullRequest accepts a request to retvie a redirect
-// to job from the datastore for the given repository
-// and pull request number
-//
-//  GET /gitlab/:owner/:name/redirect/pulls/:number
-//
-// REASON: It required by GitLab, because we get only
-// internal merge request id/ref/sha, but drone uses
-// build numbers
-func RedirectPullRequest(c *gin.Context) {
-	store := ToDatastore(c)
-	repo := ToRepo(c)
-	num, err := strconv.Atoi(c.Params.ByName("number"))
-	if err != nil {
-		c.Redirect(301, "/")
-		return
-	}
-
-	build, err := store.BuildPullRequestNumber(repo, num)
-	if err != nil {
-		c.Redirect(301, "/")
-		return
-	}
-
-	c.Redirect(301, fmt.Sprintf("/%s/%s/%d", repo.Owner, repo.Name, build.Number))
-	return
-}
-
-// GetPullRequest accepts a requests to retvie a pull request
-// from the datastore for the given repository and
-// pull request number
-//
-//	GET /gitlab/:owner/:name/pulls/:number
-//
-// REASON: It required by GitLab, becuase we get only
-// sha and ref name, but drone uses build numbers
-func GetPullRequest(c *gin.Context) {
-	store := ToDatastore(c)
-	repo := ToRepo(c)
-
-	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
-		return repo.Hash, nil
-	})
-	if err != nil {
-		c.Fail(400, err)
-		return
-	}
-	if parsed.Text != repo.FullName {
-		c.AbortWithStatus(403)
-		return
-	}
-
-	num, err := strconv.Atoi(c.Params.ByName("number"))
-	if err != nil {
-		c.Fail(400, err)
-		return
-	}
-	build, err := store.BuildPullRequestNumber(repo, num)
-	if err != nil {
-		c.Fail(404, err)
-		return
-	}
-	build.Jobs, err = store.JobList(build)
-	if err != nil {
-		c.Fail(404, err)
-	} else {
-		c.JSON(200, build)
-	}
-}
-
-// GetCommit accepts a requests to retvie a sha and branch
-// from the datastore for the given repository and
-// pull request number
-//
-//	GET /gitlab/:owner/:name/commits/:sha
-//
-// REASON: It required by GitLab, becuase we get only
-// sha and ref name, but drone uses build numbers
 func GetCommit(c *gin.Context) {
-	var branch string
-
-	store := ToDatastore(c)
-	repo := ToRepo(c)
-	sha := c.Params.ByName("sha")
+	db := context.Database(c)
+	repo := session.Repo(c)
 
 	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
 		return repo.Hash, nil
 	})
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	if parsed.Text != repo.FullName {
-		c.AbortWithStatus(403)
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	branch = c.Request.FormValue("branch")
-	if branch == "" {
+	commit := c.Param("sha")
+	branch := c.Query("branch")
+	if len(branch) == 0 {
 		branch = repo.Branch
 	}
 
-	build, err := store.BuildSha(repo, sha, branch)
+	build, err := model.GetBuildCommit(db, repo, commit, branch)
 	if err != nil {
-		c.Fail(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
-	build.Jobs, err = store.JobList(build)
+	c.JSON(http.StatusOK, build)
+}
+
+func GetPullRequest(c *gin.Context) {
+	db := context.Database(c)
+	repo := session.Repo(c)
+	refs := fmt.Sprintf("refs/pull/%s/head", c.Param("number"))
+
+	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
+		return repo.Hash, nil
+	})
 	if err != nil {
-		c.Fail(404, err)
-	} else {
-		c.JSON(200, build)
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	if parsed.Text != repo.FullName {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
 	}
 
-	return
+	build, err := model.GetBuildRef(db, repo, refs)
+	if err != nil {
+		c.AbortWithError(http.StatusNotFound, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, build)
+}
+
+func RedirectSha(c *gin.Context) {
+	db := context.Database(c)
+	repo := session.Repo(c)
+
+	commit := c.Param("sha")
+	branch := c.Query("branch")
+	if len(branch) == 0 {
+		branch = repo.Branch
+	}
+
+	build, err := model.GetBuildCommit(db, repo, commit, branch)
+	if err != nil {
+		c.AbortWithError(http.StatusNotFound, err)
+		return
+	}
+
+	path := fmt.Sprintf("/%s/%s/%d", repo.Owner, repo.Name, build.Number)
+	c.Redirect(http.StatusSeeOther, path)
+}
+
+func RedirectPullRequest(c *gin.Context) {
+	db := context.Database(c)
+	repo := session.Repo(c)
+	refs := fmt.Sprintf("refs/pull/%s/head", c.Param("number"))
+
+	build, err := model.GetBuildRef(db, repo, refs)
+	if err != nil {
+		c.AbortWithError(http.StatusNotFound, err)
+		return
+	}
+
+	path := fmt.Sprintf("/%s/%s/%d", repo.Owner, repo.Name, build.Number)
+	c.Redirect(http.StatusSeeOther, path)
 }

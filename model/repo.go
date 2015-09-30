@@ -1,77 +1,89 @@
-package types
+package model
 
-type Repo struct {
-	ID       int64  `json:"id"`
-	UserID   int64  `json:"-"          sql:"index:ix_repo_user_id"`
-	Owner    string `json:"owner"      sql:"unique:ux_repo_owner_name"`
-	Name     string `json:"name"       sql:"unique:ux_repo_owner_name"`
-	FullName string `json:"full_name"  sql:"unique:ux_repo_full_name"`
-	Avatar   string `json:"avatar_url"`
-	Self     string `json:"self_url"`
-	Link     string `json:"link_url"`
-	Clone    string `json:"clone_url"`
-	Branch   string `json:"default_branch"`
-	Private  bool   `json:"private"`
-	Trusted  bool   `json:"trusted"`
-	Timeout  int64  `json:"timeout"`
-
-	Keys  *Keypair `json:"-"`
-	Hooks *Hooks   `json:"hooks"`
-
-	// Perms are the current user's permissions to push,
-	// pull, and administer this repository. The permissions
-	// are sourced from the version control system (ie GitHub)
-	Perms *Perm `json:"perms,omitempty" sql:"-"`
-
-	// Params are private environment parameters that are
-	// considered secret and are therefore stored external
-	// to the source code repository inside Drone.
-	Params map[string]string `json:"-"`
-
-	// randomly generated hash used to sign repository
-	// tokens and encrypt and decrypt private variables.
-	Hash string `json:"-"`
-}
+import (
+	"github.com/drone/drone/shared/database"
+	"github.com/russross/meddler"
+)
 
 type RepoLite struct {
-	ID       int64  `json:"id"`
-	UserID   int64  `json:"-"`
 	Owner    string `json:"owner"`
 	Name     string `json:"name"`
 	FullName string `json:"full_name"`
-	Language string `json:"language"`
-	Private  bool   `json:"private"`
-	Created  int64  `json:"created_at"`
-	Updated  int64  `json:"updated_at"`
+	Avatar   string `json:"avatar_url"`
 }
 
-type RepoCommit struct {
-	ID       int64  `json:"id"`
-	Owner    string `json:"owner"`
-	Name     string `json:"name"`
-	FullName string `json:"full_name"`
-	Number   int    `json:"number"`
-	Status   string `json:"status"`
-	Started  int64  `json:"started_at"`
-	Finished int64  `json:"finished_at"`
+type Repo struct {
+	ID          int64  `json:"id"                meddler:"repo_id,pk"`
+	UserID      int64  `json:"-"                 meddler:"repo_user_id"`
+	Owner       string `json:"owner"             meddler:"repo_owner"`
+	Name        string `json:"name"              meddler:"repo_name"`
+	FullName    string `json:"full_name"         meddler:"repo_full_name"`
+	Avatar      string `json:"avatar_url"        meddler:"repo_avatar"`
+	Link        string `json:"link_url"          meddler:"repo_link"`
+	Clone       string `json:"clone_url"         meddler:"repo_clone"`
+	Branch      string `json:"default_branch"    meddler:"repo_branch"`
+	Timeout     int64  `json:"timeout"           meddler:"repo_timeout"`
+	IsPrivate   bool   `json:"private"           meddler:"repo_private"`
+	IsTrusted   bool   `json:"trusted"           meddler:"repo_trusted"`
+	IsStarred   bool   `json:"starred,omitempty" meddler:"-"`
+	AllowPull   bool   `json:"allow_pr"          meddler:"repo_allow_pr"`
+	AllowPush   bool   `json:"allow_push"        meddler:"repo_allow_push"`
+	AllowDeploy bool   `json:"allow_deploys"     meddler:"repo_allow_deploys"`
+	AllowTag    bool   `json:"allow_tags"        meddler:"repo_allow_tags"`
+	Hash        string `json:"-"                 meddler:"repo_hash"`
 }
 
-type Perm struct {
-	Pull  bool `json:"pull"  sql:"-"`
-	Push  bool `json:"push"  sql:"-"`
-	Admin bool `json:"admin" sql:"-"`
+func GetRepo(db meddler.DB, id int64) (*Repo, error) {
+	var repo = new(Repo)
+	var err = meddler.Load(db, repoTable, repo, id)
+	return repo, err
 }
 
-type Hooks struct {
-	PullRequest bool `json:"pull_request"`
-	Push        bool `json:"push"`
-	Tags        bool `json:"tags"`
+func GetRepoName(db meddler.DB, owner, name string) (*Repo, error) {
+	var repo = new(Repo)
+	var err = meddler.QueryRow(db, repo, database.Rebind(repoNameQuery), owner, name)
+	return repo, err
 }
 
-// Keypair represents an RSA public and private key
-// assigned to a repository. It may be used to clone
-// private repositories, or as a deployment key.
-type Keypair struct {
-	Public  string `json:"public,omitempty"`
-	Private string `json:"private,omitempty"`
+func GetRepoList(db meddler.DB, user *User) ([]*Repo, error) {
+	var repos = []*Repo{}
+	var err = meddler.QueryAll(db, &repos, database.Rebind(repoListQuery), user.ID)
+	return repos, err
 }
+
+func CreateRepo(db meddler.DB, repo *Repo) error {
+	return meddler.Insert(db, repoTable, repo)
+}
+
+func UpdateRepo(db meddler.DB, repo *Repo) error {
+	return meddler.Update(db, repoTable, repo)
+}
+
+func DeleteRepo(db meddler.DB, repo *Repo) error {
+	var _, err = db.Exec(database.Rebind(repoDeleteStmt), repo.ID)
+	return err
+}
+
+const repoTable = "repos"
+
+const repoNameQuery = `
+SELECT *
+FROM repos
+WHERE repo_owner = ?
+AND   repo_name = ?
+LIMIT 1;
+`
+
+const repoListQuery = `
+SELECT r.*
+FROM
+ repos r
+,stars s
+WHERE r.repo_id = s.star_repo_id
+  AND s.star_user_id = ?
+`
+
+const repoDeleteStmt = `
+DELETE FROM repos
+WHERE repo_id = ?
+`

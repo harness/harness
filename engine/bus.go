@@ -1,28 +1,26 @@
-package builtin
+package engine
 
 import (
 	"sync"
-
-	"github.com/drone/drone/pkg/bus"
 )
 
-type Bus struct {
+type eventbus struct {
 	sync.Mutex
-	subs map[chan *bus.Event]bool
+	subs map[chan *Event]bool
 }
 
-// New creates a new Bus that manages a list of
+// New creates a new eventbus that manages a list of
 // subscribers to which events are published.
-func New() *Bus {
-	return &Bus{
-		subs: make(map[chan *bus.Event]bool),
+func newEventbus() *eventbus {
+	return &eventbus{
+		subs: make(map[chan *Event]bool),
 	}
 }
 
 // Subscribe adds the channel to the list of
 // subscribers. Each subscriber in the list will
 // receive broadcast events.
-func (b *Bus) Subscribe(c chan *bus.Event) {
+func (b *eventbus) subscribe(c chan *Event) {
 	b.Lock()
 	b.subs[c] = true
 	b.Unlock()
@@ -30,19 +28,19 @@ func (b *Bus) Subscribe(c chan *bus.Event) {
 
 // Unsubscribe removes the channel from the
 // list of subscribers.
-func (b *Bus) Unsubscribe(c chan *bus.Event) {
+func (b *eventbus) unsubscribe(c chan *Event) {
 	b.Lock()
 	delete(b.subs, c)
 	b.Unlock()
 }
 
 // Send dispatches a message to all subscribers.
-func (b *Bus) Send(event *bus.Event) {
+func (b *eventbus) send(event *Event) {
 	b.Lock()
 	defer b.Unlock()
 
 	for s := range b.subs {
-		go func(c chan *bus.Event) {
+		go func(c chan *Event) {
 			defer recover()
 			c <- event
 		}(s)

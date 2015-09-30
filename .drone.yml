@@ -8,14 +8,12 @@ env:
   - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 
 script:
-  - go run make.go deps
-  - go run make.go bindata
-  - go run make.go vet
-  - go run make.go fmt
-  - go run make.go build
-  - go run make.go test
-
-  - make dist
+  - apt-get -y -qq update
+  - apt-get -y -qq install libsqlite3-dev
+  - make deps
+  - make
+  - make test
+  - make deb
 
 notify:
   email:
@@ -29,34 +27,26 @@ publish:
     bucket: downloads.drone.io
     access_key: $$AWS_KEY
     secret_key: $$AWS_SECRET
-    source: dist/drone.deb
+    source: contrib/debian/drone.deb
     target: $DRONE_BRANCH/
     when:
       owner: drone
 
 
 
+---
+
 clone:
   path: github.com/drone/drone
 
 build:
-  image: golang:1.5.0
+  image: golang:1.5
   commands:
-    - export GOPATH=/drone
-    - export PATH=$PATH:$GOPATH/bin
-
-    - go run make.go deps
-    - go run make.go bindata
-    - go run make.go vet
-    - go run make.go fmt
-    - go run make.go build
-    - go run make.go test
-
-    - make dist
-
-compose:
-  database:
-    image: mysql:5.5
-    environment:
-      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-      - MYSQL_DATABASE=test
+    - apt-get -y -qq update
+    - apt-get -y -qq install libsqlite3-dev
+    - make deps
+    - make gen
+    - make test
+    - make build
+    - make build_static
+    - make deb

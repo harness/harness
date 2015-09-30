@@ -6,388 +6,363 @@ package ssh
 
 import (
 	"bytes"
-	"crypto/rand"
-	"errors"
-	"fmt"
+	"crypto/dsa"
+	"io"
+	"io/ioutil"
+	"math/big"
 	"strings"
 	"testing"
+
+	_ "crypto/sha1"
 )
+
+// private key for mock server
+const testServerPrivateKey = `-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEA19lGVsTqIT5iiNYRgnoY1CwkbETW5cq+Rzk5v/kTlf31XpSU
+70HVWkbTERECjaYdXM2gGcbb+sxpq6GtXf1M3kVomycqhxwhPv4Cr6Xp4WT/jkFx
+9z+FFzpeodGJWjOH6L2H5uX1Cvr9EDdQp9t9/J32/qBFntY8GwoUI/y/1MSTmMiF
+tupdMODN064vd3gyMKTwrlQ8tZM6aYuyOPsutLlUY7M5x5FwMDYvnPDSeyT/Iw0z
+s3B+NCyqeeMd2T7YzQFnRATj0M7rM5LoSs7DVqVriOEABssFyLj31PboaoLhOKgc
+qoM9khkNzr7FHVvi+DhYM2jD0DwvqZLN6NmnLwIDAQABAoIBAQCGVj+kuSFOV1lT
++IclQYA6bM6uY5mroqcSBNegVxCNhWU03BxlW//BE9tA/+kq53vWylMeN9mpGZea
+riEMIh25KFGWXqXlOOioH8bkMsqA8S7sBmc7jljyv+0toQ9vCCtJ+sueNPhxQQxH
+D2YvUjfzBQ04I9+wn30BByDJ1QA/FoPsunxIOUCcRBE/7jxuLYcpR+JvEF68yYIh
+atXRld4W4in7T65YDR8jK1Uj9XAcNeDYNpT/M6oFLx1aPIlkG86aCWRO19S1jLPT
+b1ZAKHHxPMCVkSYW0RqvIgLXQOR62D0Zne6/2wtzJkk5UCjkSQ2z7ZzJpMkWgDgN
+ifCULFPBAoGBAPoMZ5q1w+zB+knXUD33n1J+niN6TZHJulpf2w5zsW+m2K6Zn62M
+MXndXlVAHtk6p02q9kxHdgov34Uo8VpuNjbS1+abGFTI8NZgFo+bsDxJdItemwC4
+KJ7L1iz39hRN/ZylMRLz5uTYRGddCkeIHhiG2h7zohH/MaYzUacXEEy3AoGBANz8
+e/msleB+iXC0cXKwds26N4hyMdAFE5qAqJXvV3S2W8JZnmU+sS7vPAWMYPlERPk1
+D8Q2eXqdPIkAWBhrx4RxD7rNc5qFNcQWEhCIxC9fccluH1y5g2M+4jpMX2CT8Uv+
+3z+NoJ5uDTXZTnLCfoZzgZ4nCZVZ+6iU5U1+YXFJAoGBANLPpIV920n/nJmmquMj
+orI1R/QXR9Cy56cMC65agezlGOfTYxk5Cfl5Ve+/2IJCfgzwJyjWUsFx7RviEeGw
+64o7JoUom1HX+5xxdHPsyZ96OoTJ5RqtKKoApnhRMamau0fWydH1yeOEJd+TRHhc
+XStGfhz8QNa1dVFvENczja1vAoGABGWhsd4VPVpHMc7lUvrf4kgKQtTC2PjA4xoc
+QJ96hf/642sVE76jl+N6tkGMzGjnVm4P2j+bOy1VvwQavKGoXqJBRd5Apppv727g
+/SM7hBXKFc/zH80xKBBgP/i1DR7kdjakCoeu4ngeGywvu2jTS6mQsqzkK+yWbUxJ
+I7mYBsECgYB/KNXlTEpXtz/kwWCHFSYA8U74l7zZbVD8ul0e56JDK+lLcJ0tJffk
+gqnBycHj6AhEycjda75cs+0zybZvN4x65KZHOGW/O/7OAWEcZP5TPb3zf9ned3Hl
+NsZoFj52ponUM6+99A2CmezFCN16c4mbA//luWF+k3VVqR6BpkrhKw==
+-----END RSA PRIVATE KEY-----`
+
+const testClientPrivateKey = `-----BEGIN RSA PRIVATE KEY-----
+MIIBOwIBAAJBALdGZxkXDAjsYk10ihwU6Id2KeILz1TAJuoq4tOgDWxEEGeTrcld
+r/ZwVaFzjWzxaf6zQIJbfaSEAhqD5yo72+sCAwEAAQJBAK8PEVU23Wj8mV0QjwcJ
+tZ4GcTUYQL7cF4+ezTCE9a1NrGnCP2RuQkHEKxuTVrxXt+6OF15/1/fuXnxKjmJC
+nxkCIQDaXvPPBi0c7vAxGwNY9726x01/dNbHCE0CBtcotobxpwIhANbbQbh3JHVW
+2haQh4fAG5mhesZKAGcxTyv4mQ7uMSQdAiAj+4dzMpJWdSzQ+qGHlHMIBvVHLkqB
+y2VdEyF7DPCZewIhAI7GOI/6LDIFOvtPo6Bj2nNmyQ1HU6k/LRtNIXi4c9NJAiAr
+rrxx26itVhJmcvoUhOjwuzSlP2bE5VHAvkGB352YBg==
+-----END RSA PRIVATE KEY-----`
+
+// keychain implements the ClientKeyring interface
+type keychain struct {
+	keys []Signer
+}
+
+func (k *keychain) Key(i int) (PublicKey, error) {
+	if i < 0 || i >= len(k.keys) {
+		return nil, nil
+	}
+
+	return k.keys[i].PublicKey(), nil
+}
+
+func (k *keychain) Sign(i int, rand io.Reader, data []byte) (sig []byte, err error) {
+	return k.keys[i].Sign(rand, data)
+}
+
+func (k *keychain) add(key Signer) {
+	k.keys = append(k.keys, key)
+}
+
+func (k *keychain) loadPEM(file string) error {
+	buf, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	key, err := ParsePrivateKey(buf)
+	if err != nil {
+		return err
+	}
+	k.add(key)
+	return nil
+}
+
+// password implements the ClientPassword interface
+type password string
+
+func (p password) Password(user string) (string, error) {
+	return string(p), nil
+}
 
 type keyboardInteractive map[string]string
 
-func (cr keyboardInteractive) Challenge(user string, instruction string, questions []string, echos []bool) ([]string, error) {
+func (cr *keyboardInteractive) Challenge(user string, instruction string, questions []string, echos []bool) ([]string, error) {
 	var answers []string
 	for _, q := range questions {
-		answers = append(answers, cr[q])
+		answers = append(answers, (*cr)[q])
 	}
 	return answers, nil
 }
 
 // reused internally by tests
-var clientPassword = "tiger"
-
-// tryAuth runs a handshake with a given config against an SSH server
-// with config serverConfig
-func tryAuth(t *testing.T, config *ClientConfig) error {
-	c1, c2, err := netPipe()
-	if err != nil {
-		t.Fatalf("netPipe: %v", err)
-	}
-	defer c1.Close()
-	defer c2.Close()
-
-	certChecker := CertChecker{
-		IsAuthority: func(k PublicKey) bool {
-			return bytes.Equal(k.Marshal(), testPublicKeys["ecdsa"].Marshal())
+var (
+	rsaKey         Signer
+	dsaKey         Signer
+	clientKeychain = new(keychain)
+	clientPassword = password("tiger")
+	serverConfig   = &ServerConfig{
+		PasswordCallback: func(conn *ServerConn, user, pass string) bool {
+			return user == "testuser" && pass == string(clientPassword)
 		},
-		UserKeyFallback: func(conn ConnMetadata, key PublicKey) (*Permissions, error) {
-			if conn.User() == "testuser" && bytes.Equal(key.Marshal(), testPublicKeys["rsa"].Marshal()) {
-				return nil, nil
-			}
-
-			return nil, fmt.Errorf("pubkey for %q not acceptable", conn.User())
+		PublicKeyCallback: func(conn *ServerConn, user, algo string, pubkey []byte) bool {
+			key, _ := clientKeychain.Key(0)
+			expected := MarshalPublicKey(key)
+			algoname := key.PublicKeyAlgo()
+			return user == "testuser" && algo == algoname && bytes.Equal(pubkey, expected)
 		},
-		IsRevoked: func(c *Certificate) bool {
-			return c.Serial == 666
-		},
-	}
-
-	serverConfig := &ServerConfig{
-		PasswordCallback: func(conn ConnMetadata, pass []byte) (*Permissions, error) {
-			if conn.User() == "testuser" && string(pass) == clientPassword {
-				return nil, nil
-			}
-			return nil, errors.New("password auth failed")
-		},
-		PublicKeyCallback: certChecker.Authenticate,
-		KeyboardInteractiveCallback: func(conn ConnMetadata, challenge KeyboardInteractiveChallenge) (*Permissions, error) {
-			ans, err := challenge("user",
+		KeyboardInteractiveCallback: func(conn *ServerConn, user string, client ClientKeyboardInteractive) bool {
+			ans, err := client.Challenge("user",
 				"instruction",
 				[]string{"question1", "question2"},
 				[]bool{true, true})
 			if err != nil {
-				return nil, err
+				return false
 			}
-			ok := conn.User() == "testuser" && ans[0] == "answer1" && ans[1] == "answer2"
-			if ok {
-				challenge("user", "motd", nil, nil)
-				return nil, nil
-			}
-			return nil, errors.New("keyboard-interactive failed")
-		},
-		AuthLogCallback: func(conn ConnMetadata, method string, err error) {
-			t.Logf("user %q, method %q: %v", conn.User(), method, err)
+			ok := user == "testuser" && ans[0] == "answer1" && ans[1] == "answer2"
+			client.Challenge("user", "motd", nil, nil)
+			return ok
 		},
 	}
-	serverConfig.AddHostKey(testSigners["rsa"])
+)
 
-	go newServer(c1, serverConfig)
-	_, _, _, err = NewClientConn(c2, "", config)
-	return err
+func init() {
+	var err error
+	rsaKey, err = ParsePrivateKey([]byte(testServerPrivateKey))
+	if err != nil {
+		panic("unable to set private key: " + err.Error())
+	}
+	rawDSAKey := new(dsa.PrivateKey)
+
+	// taken from crypto/dsa/dsa_test.go
+	rawDSAKey.P, _ = new(big.Int).SetString("A9B5B793FB4785793D246BAE77E8FF63CA52F442DA763C440259919FE1BC1D6065A9350637A04F75A2F039401D49F08E066C4D275A5A65DA5684BC563C14289D7AB8A67163BFBF79D85972619AD2CFF55AB0EE77A9002B0EF96293BDD0F42685EBB2C66C327079F6C98000FBCB79AACDE1BC6F9D5C7B1A97E3D9D54ED7951FEF", 16)
+	rawDSAKey.Q, _ = new(big.Int).SetString("E1D3391245933D68A0714ED34BBCB7A1F422B9C1", 16)
+	rawDSAKey.G, _ = new(big.Int).SetString("634364FC25248933D01D1993ECABD0657CC0CB2CEED7ED2E3E8AECDFCDC4A25C3B15E9E3B163ACA2984B5539181F3EFF1A5E8903D71D5B95DA4F27202B77D2C44B430BB53741A8D59A8F86887525C9F2A6A5980A195EAA7F2FF910064301DEF89D3AA213E1FAC7768D89365318E370AF54A112EFBA9246D9158386BA1B4EEFDA", 16)
+	rawDSAKey.Y, _ = new(big.Int).SetString("32969E5780CFE1C849A1C276D7AEB4F38A23B591739AA2FE197349AEEBD31366AEE5EB7E6C6DDB7C57D02432B30DB5AA66D9884299FAA72568944E4EEDC92EA3FBC6F39F53412FBCC563208F7C15B737AC8910DBC2D9C9B8C001E72FDC40EB694AB1F06A5A2DBD18D9E36C66F31F566742F11EC0A52E9F7B89355C02FB5D32D2", 16)
+	rawDSAKey.X, _ = new(big.Int).SetString("5078D4D29795CBE76D3AACFE48C9AF0BCDBEE91A", 16)
+
+	dsaKey, err = NewSignerFromKey(rawDSAKey)
+	if err != nil {
+		panic("NewSignerFromKey: " + err.Error())
+	}
+	clientKeychain.add(rsaKey)
+	serverConfig.AddHostKey(rsaKey)
+}
+
+// newMockAuthServer creates a new Server bound to
+// the loopback interface. The server exits after
+// processing one handshake.
+func newMockAuthServer(t *testing.T) string {
+	l, err := Listen("tcp", "127.0.0.1:0", serverConfig)
+	if err != nil {
+		t.Fatalf("unable to newMockAuthServer: %s", err)
+	}
+	go func() {
+		defer l.Close()
+		c, err := l.Accept()
+		if err != nil {
+			t.Errorf("Unable to accept incoming connection: %v", err)
+			return
+		}
+		if err := c.Handshake(); err != nil {
+			// not Errorf because this is expected to
+			// fail for some tests.
+			t.Logf("Handshaking error: %v", err)
+			return
+		}
+		defer c.Close()
+	}()
+	return l.Addr().String()
 }
 
 func TestClientAuthPublicKey(t *testing.T) {
 	config := &ClientConfig{
 		User: "testuser",
-		Auth: []AuthMethod{
-			PublicKeys(testSigners["rsa"]),
+		Auth: []ClientAuth{
+			ClientAuthKeyring(clientKeychain),
 		},
 	}
-	if err := tryAuth(t, config); err != nil {
+	c, err := Dial("tcp", newMockAuthServer(t), config)
+	if err != nil {
 		t.Fatalf("unable to dial remote side: %s", err)
 	}
+	c.Close()
 }
 
-func TestAuthMethodPassword(t *testing.T) {
+func TestClientAuthPassword(t *testing.T) {
 	config := &ClientConfig{
 		User: "testuser",
-		Auth: []AuthMethod{
-			Password(clientPassword),
+		Auth: []ClientAuth{
+			ClientAuthPassword(clientPassword),
 		},
 	}
 
-	if err := tryAuth(t, config); err != nil {
+	c, err := Dial("tcp", newMockAuthServer(t), config)
+	if err != nil {
 		t.Fatalf("unable to dial remote side: %s", err)
 	}
+	c.Close()
 }
 
-func TestAuthMethodFallback(t *testing.T) {
-	var passwordCalled bool
+func TestClientAuthWrongPassword(t *testing.T) {
+	wrongPw := password("wrong")
 	config := &ClientConfig{
 		User: "testuser",
-		Auth: []AuthMethod{
-			PublicKeys(testSigners["rsa"]),
-			PasswordCallback(
-				func() (string, error) {
-					passwordCalled = true
-					return "WRONG", nil
-				}),
+		Auth: []ClientAuth{
+			ClientAuthPassword(wrongPw),
+			ClientAuthKeyring(clientKeychain),
 		},
 	}
 
-	if err := tryAuth(t, config); err != nil {
+	c, err := Dial("tcp", newMockAuthServer(t), config)
+	if err != nil {
 		t.Fatalf("unable to dial remote side: %s", err)
 	}
-
-	if passwordCalled {
-		t.Errorf("password auth tried before public-key auth.")
-	}
+	c.Close()
 }
 
-func TestAuthMethodWrongPassword(t *testing.T) {
-	config := &ClientConfig{
-		User: "testuser",
-		Auth: []AuthMethod{
-			Password("wrong"),
-			PublicKeys(testSigners["rsa"]),
-		},
-	}
-
-	if err := tryAuth(t, config); err != nil {
-		t.Fatalf("unable to dial remote side: %s", err)
-	}
-}
-
-func TestAuthMethodKeyboardInteractive(t *testing.T) {
+func TestClientAuthKeyboardInteractive(t *testing.T) {
 	answers := keyboardInteractive(map[string]string{
 		"question1": "answer1",
 		"question2": "answer2",
 	})
 	config := &ClientConfig{
 		User: "testuser",
-		Auth: []AuthMethod{
-			KeyboardInteractive(answers.Challenge),
+		Auth: []ClientAuth{
+			ClientAuthKeyboardInteractive(&answers),
 		},
 	}
 
-	if err := tryAuth(t, config); err != nil {
+	c, err := Dial("tcp", newMockAuthServer(t), config)
+	if err != nil {
 		t.Fatalf("unable to dial remote side: %s", err)
 	}
+	c.Close()
 }
 
-func TestAuthMethodWrongKeyboardInteractive(t *testing.T) {
+func TestClientAuthWrongKeyboardInteractive(t *testing.T) {
 	answers := keyboardInteractive(map[string]string{
 		"question1": "answer1",
 		"question2": "WRONG",
 	})
 	config := &ClientConfig{
 		User: "testuser",
-		Auth: []AuthMethod{
-			KeyboardInteractive(answers.Challenge),
+		Auth: []ClientAuth{
+			ClientAuthKeyboardInteractive(&answers),
 		},
 	}
 
-	if err := tryAuth(t, config); err == nil {
+	c, err := Dial("tcp", newMockAuthServer(t), config)
+	if err == nil {
+		c.Close()
 		t.Fatalf("wrong answers should not have authenticated with KeyboardInteractive")
 	}
 }
 
 // the mock server will only authenticate ssh-rsa keys
-func TestAuthMethodInvalidPublicKey(t *testing.T) {
+func TestClientAuthInvalidPublicKey(t *testing.T) {
+	kc := new(keychain)
+
+	kc.add(dsaKey)
 	config := &ClientConfig{
 		User: "testuser",
-		Auth: []AuthMethod{
-			PublicKeys(testSigners["dsa"]),
+		Auth: []ClientAuth{
+			ClientAuthKeyring(kc),
 		},
 	}
 
-	if err := tryAuth(t, config); err == nil {
+	c, err := Dial("tcp", newMockAuthServer(t), config)
+	if err == nil {
+		c.Close()
 		t.Fatalf("dsa private key should not have authenticated with rsa public key")
 	}
 }
 
 // the client should authenticate with the second key
-func TestAuthMethodRSAandDSA(t *testing.T) {
+func TestClientAuthRSAandDSA(t *testing.T) {
+	kc := new(keychain)
+	kc.add(dsaKey)
+	kc.add(rsaKey)
 	config := &ClientConfig{
 		User: "testuser",
-		Auth: []AuthMethod{
-			PublicKeys(testSigners["dsa"], testSigners["rsa"]),
+		Auth: []ClientAuth{
+			ClientAuthKeyring(kc),
 		},
 	}
-	if err := tryAuth(t, config); err != nil {
+	c, err := Dial("tcp", newMockAuthServer(t), config)
+	if err != nil {
 		t.Fatalf("client could not authenticate with rsa key: %v", err)
 	}
+	c.Close()
 }
 
 func TestClientHMAC(t *testing.T) {
-	for _, mac := range supportedMACs {
+	kc := new(keychain)
+	kc.add(rsaKey)
+	for _, mac := range DefaultMACOrder {
 		config := &ClientConfig{
 			User: "testuser",
-			Auth: []AuthMethod{
-				PublicKeys(testSigners["rsa"]),
+			Auth: []ClientAuth{
+				ClientAuthKeyring(kc),
 			},
-			Config: Config{
+			Crypto: CryptoConfig{
 				MACs: []string{mac},
 			},
 		}
-		if err := tryAuth(t, config); err != nil {
+		c, err := Dial("tcp", newMockAuthServer(t), config)
+		if err != nil {
 			t.Fatalf("client could not authenticate with mac algo %s: %v", mac, err)
 		}
+		c.Close()
 	}
 }
 
 // issue 4285.
 func TestClientUnsupportedCipher(t *testing.T) {
+	kc := new(keychain)
 	config := &ClientConfig{
 		User: "testuser",
-		Auth: []AuthMethod{
-			PublicKeys(),
+		Auth: []ClientAuth{
+			ClientAuthKeyring(kc),
 		},
-		Config: Config{
+		Crypto: CryptoConfig{
 			Ciphers: []string{"aes128-cbc"}, // not currently supported
 		},
 	}
-	if err := tryAuth(t, config); err == nil {
+	c, err := Dial("tcp", newMockAuthServer(t), config)
+	if err == nil {
 		t.Errorf("expected no ciphers in common")
+		c.Close()
 	}
 }
 
 func TestClientUnsupportedKex(t *testing.T) {
+	kc := new(keychain)
 	config := &ClientConfig{
 		User: "testuser",
-		Auth: []AuthMethod{
-			PublicKeys(),
+		Auth: []ClientAuth{
+			ClientAuthKeyring(kc),
 		},
-		Config: Config{
+		Crypto: CryptoConfig{
 			KeyExchanges: []string{"diffie-hellman-group-exchange-sha256"}, // not currently supported
 		},
 	}
-	if err := tryAuth(t, config); err == nil || !strings.Contains(err.Error(), "no common algorithms") {
+	c, err := Dial("tcp", newMockAuthServer(t), config)
+	if err == nil || !strings.Contains(err.Error(), "no common algorithms") {
 		t.Errorf("got %v, expected 'no common algorithms'", err)
 	}
-}
-
-func TestClientLoginCert(t *testing.T) {
-	cert := &Certificate{
-		Key:         testPublicKeys["rsa"],
-		ValidBefore: CertTimeInfinity,
-		CertType:    UserCert,
+	if c != nil {
+		c.Close()
 	}
-	cert.SignCert(rand.Reader, testSigners["ecdsa"])
-	certSigner, err := NewCertSigner(cert, testSigners["rsa"])
-	if err != nil {
-		t.Fatalf("NewCertSigner: %v", err)
-	}
-
-	clientConfig := &ClientConfig{
-		User: "user",
-	}
-	clientConfig.Auth = append(clientConfig.Auth, PublicKeys(certSigner))
-
-	t.Log("should succeed")
-	if err := tryAuth(t, clientConfig); err != nil {
-		t.Errorf("cert login failed: %v", err)
-	}
-
-	t.Log("corrupted signature")
-	cert.Signature.Blob[0]++
-	if err := tryAuth(t, clientConfig); err == nil {
-		t.Errorf("cert login passed with corrupted sig")
-	}
-
-	t.Log("revoked")
-	cert.Serial = 666
-	cert.SignCert(rand.Reader, testSigners["ecdsa"])
-	if err := tryAuth(t, clientConfig); err == nil {
-		t.Errorf("revoked cert login succeeded")
-	}
-	cert.Serial = 1
-
-	t.Log("sign with wrong key")
-	cert.SignCert(rand.Reader, testSigners["dsa"])
-	if err := tryAuth(t, clientConfig); err == nil {
-		t.Errorf("cert login passed with non-authoritive key")
-	}
-
-	t.Log("host cert")
-	cert.CertType = HostCert
-	cert.SignCert(rand.Reader, testSigners["ecdsa"])
-	if err := tryAuth(t, clientConfig); err == nil {
-		t.Errorf("cert login passed with wrong type")
-	}
-	cert.CertType = UserCert
-
-	t.Log("principal specified")
-	cert.ValidPrincipals = []string{"user"}
-	cert.SignCert(rand.Reader, testSigners["ecdsa"])
-	if err := tryAuth(t, clientConfig); err != nil {
-		t.Errorf("cert login failed: %v", err)
-	}
-
-	t.Log("wrong principal specified")
-	cert.ValidPrincipals = []string{"fred"}
-	cert.SignCert(rand.Reader, testSigners["ecdsa"])
-	if err := tryAuth(t, clientConfig); err == nil {
-		t.Errorf("cert login passed with wrong principal")
-	}
-	cert.ValidPrincipals = nil
-
-	t.Log("added critical option")
-	cert.CriticalOptions = map[string]string{"root-access": "yes"}
-	cert.SignCert(rand.Reader, testSigners["ecdsa"])
-	if err := tryAuth(t, clientConfig); err == nil {
-		t.Errorf("cert login passed with unrecognized critical option")
-	}
-
-	t.Log("allowed source address")
-	cert.CriticalOptions = map[string]string{"source-address": "127.0.0.42/24"}
-	cert.SignCert(rand.Reader, testSigners["ecdsa"])
-	if err := tryAuth(t, clientConfig); err != nil {
-		t.Errorf("cert login with source-address failed: %v", err)
-	}
-
-	t.Log("disallowed source address")
-	cert.CriticalOptions = map[string]string{"source-address": "127.0.0.42"}
-	cert.SignCert(rand.Reader, testSigners["ecdsa"])
-	if err := tryAuth(t, clientConfig); err == nil {
-		t.Errorf("cert login with source-address succeeded")
-	}
-}
-
-func testPermissionsPassing(withPermissions bool, t *testing.T) {
-	serverConfig := &ServerConfig{
-		PublicKeyCallback: func(conn ConnMetadata, key PublicKey) (*Permissions, error) {
-			if conn.User() == "nopermissions" {
-				return nil, nil
-			} else {
-				return &Permissions{}, nil
-			}
-		},
-	}
-	serverConfig.AddHostKey(testSigners["rsa"])
-
-	clientConfig := &ClientConfig{
-		Auth: []AuthMethod{
-			PublicKeys(testSigners["rsa"]),
-		},
-	}
-	if withPermissions {
-		clientConfig.User = "permissions"
-	} else {
-		clientConfig.User = "nopermissions"
-	}
-
-	c1, c2, err := netPipe()
-	if err != nil {
-		t.Fatalf("netPipe: %v", err)
-	}
-	defer c1.Close()
-	defer c2.Close()
-
-	go NewClientConn(c2, "", clientConfig)
-	serverConn, err := newServer(c1, serverConfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if p := serverConn.Permissions; (p != nil) != withPermissions {
-		t.Fatalf("withPermissions is %t, but Permissions object is %#v", withPermissions, p)
-	}
-}
-
-func TestPermissionsPassing(t *testing.T) {
-	testPermissionsPassing(true, t)
-}
-
-func TestNoPermissionsPassing(t *testing.T) {
-	testPermissionsPassing(false, t)
 }

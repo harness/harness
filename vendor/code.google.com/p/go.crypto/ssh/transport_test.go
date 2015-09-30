@@ -6,8 +6,6 @@ package ssh
 
 import (
 	"bytes"
-	"crypto/rand"
-	"encoding/binary"
 	"strings"
 	"testing"
 )
@@ -67,43 +65,5 @@ func TestExchangeVersions(t *testing.T) {
 		if _, err := exchangeVersions(buf, []byte(c)); err == nil {
 			t.Errorf("exchangeVersions(%q): should have failed", c)
 		}
-	}
-}
-
-type closerBuffer struct {
-	bytes.Buffer
-}
-
-func (b *closerBuffer) Close() error {
-	return nil
-}
-
-func TestTransportMaxPacketWrite(t *testing.T) {
-	buf := &closerBuffer{}
-	tr := newTransport(buf, rand.Reader, true)
-	huge := make([]byte, maxPacket+1)
-	err := tr.writePacket(huge)
-	if err == nil {
-		t.Errorf("transport accepted write for a huge packet.")
-	}
-}
-
-func TestTransportMaxPacketReader(t *testing.T) {
-	var header [5]byte
-	huge := make([]byte, maxPacket+128)
-	binary.BigEndian.PutUint32(header[0:], uint32(len(huge)))
-	// padding.
-	header[4] = 0
-
-	buf := &closerBuffer{}
-	buf.Write(header[:])
-	buf.Write(huge)
-
-	tr := newTransport(buf, rand.Reader, true)
-	_, err := tr.readPacket()
-	if err == nil {
-		t.Errorf("transport succeeded reading huge packet.")
-	} else if !strings.Contains(err.Error(), "large") {
-		t.Errorf("got %q, should mention %q", err.Error(), "large")
 	}
 }

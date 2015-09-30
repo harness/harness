@@ -6,14 +6,20 @@ package binding
 
 import (
 	"bytes"
+	"mime/multipart"
 	"net/http"
 	"testing"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 type FooStruct struct {
 	Foo string `json:"foo" form:"foo" xml:"foo" binding:"required"`
+}
+
+type FooBarStruct struct {
+	FooStruct
+	Bar string `json:"bar" form:"bar" xml:"bar" binding:"required"`
 }
 
 func TestBindingDefault(t *testing.T) {
@@ -27,7 +33,10 @@ func TestBindingDefault(t *testing.T) {
 	assert.Equal(t, Default("PUT", MIMEXML2), XML)
 
 	assert.Equal(t, Default("POST", MIMEPOSTForm), Form)
-	assert.Equal(t, Default("DELETE", MIMEPOSTForm), Form)
+	assert.Equal(t, Default("PUT", MIMEPOSTForm), Form)
+
+	assert.Equal(t, Default("POST", MIMEMultipartPOSTForm), Form)
+	assert.Equal(t, Default("PUT", MIMEMultipartPOSTForm), Form)
 }
 
 func TestBindingJSON(t *testing.T) {
@@ -40,12 +49,12 @@ func TestBindingJSON(t *testing.T) {
 func TestBindingForm(t *testing.T) {
 	testFormBinding(t, "POST",
 		"/", "/",
-		"foo=bar", "bar=foo")
+		"foo=bar&bar=foo", "bar2=foo")
 }
 
 func TestBindingForm2(t *testing.T) {
 	testFormBinding(t, "GET",
-		"/?foo=bar", "/?bar=foo",
+		"/?foo=bar&bar=foo", "/?bar2=foo",
 		"", "")
 }
 
@@ -56,11 +65,67 @@ func TestBindingXML(t *testing.T) {
 		"<map><foo>bar</foo></map>", "<map><bar>foo</bar></map>")
 }
 
+func createFormPostRequest() *http.Request {
+	req, _ := http.NewRequest("POST", "/?foo=getfoo&bar=getbar", bytes.NewBufferString("foo=bar&bar=foo"))
+	req.Header.Set("Content-Type", MIMEPOSTForm)
+	return req
+}
+
+func createFormMultipartRequest() *http.Request {
+	boundary := "--testboundary"
+	body := new(bytes.Buffer)
+	mw := multipart.NewWriter(body)
+	defer mw.Close()
+
+	mw.SetBoundary(boundary)
+	mw.WriteField("foo", "bar")
+	mw.WriteField("bar", "foo")
+	req, _ := http.NewRequest("POST", "/?foo=getfoo&bar=getbar", body)
+	req.Header.Set("Content-Type", MIMEMultipartPOSTForm+"; boundary="+boundary)
+	return req
+}
+
+func TestBindingFormPost(t *testing.T) {
+	req := createFormPostRequest()
+	var obj FooBarStruct
+	FormPost.Bind(req, &obj)
+
+	assert.Equal(t, obj.Foo, "bar")
+	assert.Equal(t, obj.Bar, "foo")
+}
+
+func TestBindingFormMultipart(t *testing.T) {
+	req := createFormMultipartRequest()
+	var obj FooBarStruct
+	FormMultipart.Bind(req, &obj)
+
+	assert.Equal(t, obj.Foo, "bar")
+	assert.Equal(t, obj.Bar, "foo")
+}
+
+func TestValidationFails(t *testing.T) {
+	var obj FooStruct
+	req := requestWithBody("POST", "/", `{"bar": "foo"}`)
+	err := JSON.Bind(req, &obj)
+	assert.Error(t, err)
+}
+
+func TestValidationDisabled(t *testing.T) {
+	backup := Validator
+	Validator = nil
+	defer func() { Validator = backup }()
+
+	var obj FooStruct
+	req := requestWithBody("POST", "/", `{"bar": "foo"}`)
+	err := JSON.Bind(req, &obj)
+	assert.NoError(t, err)
+}
+
 func testFormBinding(t *testing.T, method, path, badPath, body, badBody string) {
 	b := Form
-	assert.Equal(t, b.Name(), "query")
+	assert.Equal(t, b.Name(), "form")
 
-	obj := FooStruct{}
+	obj := FooBarStruct{}
 	req := requestWithBody(method, path, body)
 	if method == "POST" {
 		req.Header.Add("Content-Type", MIMEPOSTForm)
@@ -68,8 +133,9 @@ func testFormBinding(t *testing.T, method, path, badPath, body, badBody string) 
 	err := b.Bind(req, &obj)
 	assert.NoError(t, err)
 	assert.Equal(t, obj.Foo, "bar")
+	assert.Equal(t, obj.Bar, "foo")
 
-	obj = FooStruct{}
+	obj = FooBarStruct{}
 	req = requestWithBody(method, badPath, badBody)
 	err = JSON.Bind(req, &obj)
 	assert.Error(t, err)

@@ -25,7 +25,7 @@ import (
 	"crypto/sha512"
 	"crypto/subtle"
 	"errors"
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/square/go-jose/cipher"
+	"github.com/square/go-jose/cipher"
 	"hash"
 	"io"
 )

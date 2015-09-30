@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/docker/docker/pkg/ioutils"
 	"github.com/docker/docker/pkg/jsonlog"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/docker/pkg/timeutils"
-	"github.com/docker/docker/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -27,8 +27,11 @@ func init() {
 	r.HandleFunc(baseURL+"/info", handlerGetInfo).Methods("GET")
 	r.HandleFunc(baseURL+"/containers/json", handlerGetContainers).Methods("GET")
 	r.HandleFunc(baseURL+"/containers/{id}/logs", handleContainerLogs).Methods("GET")
+	r.HandleFunc(baseURL+"/containers/{id}/changes", handleContainerChanges).Methods("GET")
 	r.HandleFunc(baseURL+"/containers/{id}/kill", handleContainerKill).Methods("POST")
+	r.HandleFunc(baseURL+"/containers/{id}/wait", handleWait).Methods("POST")
 	r.HandleFunc(baseURL+"/images/create", handleImagePull).Methods("POST")
+	r.HandleFunc(baseURL+"/events", handleEvents).Methods("GET")
 	testHTTPServer = httptest.NewServer(handlerAccessLog(r))
 }
 
@@ -42,6 +45,15 @@ func handlerAccessLog(handler http.Handler) http.Handler {
 
 func handleContainerKill(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "{%q:%q", "Id", "421373210afd132")
+}
+
+func handleWait(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	if vars["id"] == "valid-id" {
+		fmt.Fprintf(w, `{"StatusCode":0}`)
+	} else {
+		http.Error(w, "failed", 500)
+	}
 }
 
 func handleImagePull(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +85,7 @@ func handleImagePull(w http.ResponseWriter, r *http.Request) {
 
 func handleContainerLogs(w http.ResponseWriter, r *http.Request) {
 	var outStream, errStream io.Writer
-	outStream = utils.NewWriteFlusher(w)
+	outStream = ioutils.NewWriteFlusher(w)
 
 	// not sure how to test follow
 	if err := r.ParseForm(); err != nil {
@@ -96,7 +108,7 @@ func handleContainerLogs(w http.ResponseWriter, r *http.Request) {
 	for ; i < 50; i++ {
 		line := fmt.Sprintf("line %d", i)
 		if getBoolValue(r.Form.Get("timestamps")) {
-			l := &jsonlog.JSONLog{Log: line, Created: time.Now()}
+			l := &jsonlog.JSONLog{Log: line, Created: time.Now().UTC()}
 			line = fmt.Sprintf("%s %s", l.Created.Format(timeutils.RFC3339NanoFixed), line)
 		}
 		if i%2 == 0 && stderr {
@@ -105,6 +117,25 @@ func handleContainerLogs(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(outStream, line)
 		}
 	}
+}
+
+func handleContainerChanges(w http.ResponseWriter, r *http.Request) {
+	writeHeaders(w, 200, "changes")
+	body := `[
+          {
+            "Path": "/dev",
+            "Kind": 0
+          },
+          {
+            "Path": "/dev/kmsg",
+            "Kind": 1
+          },
+          {
+            "Path": "/test",
+            "Kind": 1
+          }
+        ]`
+	w.Write([]byte(body))
 }
 
 func getBoolValue(boolString string) bool {
@@ -207,4 +238,8 @@ func handlerGetContainers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Write([]byte(body))
+}
+
+func handleEvents(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(eventsResp))
 }

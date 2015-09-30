@@ -1,82 +1,72 @@
-package server
+package controller
 
 import (
+	"net/http"
 	"time"
 
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/gin-gonic/gin"
-	"github.com/drone/drone/Godeps/_workspace/src/github.com/ungerik/go-gravatar"
+	"github.com/gin-gonic/gin"
 
-	log "github.com/drone/drone/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/drone/drone/pkg/token"
-	"github.com/drone/drone/pkg/types"
+	log "github.com/Sirupsen/logrus"
+	"github.com/drone/drone/model"
+	"github.com/drone/drone/router/middleware/context"
+	"github.com/drone/drone/shared/crypto"
+	"github.com/drone/drone/shared/httputil"
+	"github.com/drone/drone/shared/token"
 )
 
-// GetLogin accepts a request to authorize the user and to
-// return a valid OAuth2 access token. The access token is
-// returned as url segment #access_token
-//
-//     GET /authorize
-//
 func GetLogin(c *gin.Context) {
-	remote := ToRemote(c)
-	store := ToDatastore(c)
+	db := context.Database(c)
+	remote := context.Remote(c)
 
 	// when dealing with redirects we may need
 	// to adjust the content type. I cannot, however,
 	// rememver why, so need to revisit this line.
 	c.Writer.Header().Del("Content-Type")
 
-	// TODO: move this back to the remote section
-	getLoginOauth2(c)
-
-	// exit if authorization fails
-	if c.Writer.Status() != 200 {
+	tmpuser, open, err := remote.Login(c.Writer, c.Request)
+	if err != nil {
+		log.Errorf("cannot authenticate user. %s", err)
+		c.Redirect(303, "/login?error=oauth_error")
+		return
+	}
+	// this will happen when the user is redirected by
+	// the remote provide as part of the oauth dance.
+	if tmpuser == nil {
 		return
 	}
 
-	login := ToUser(c)
-
-	// check organization membership, if applicable
-	if len(remote.GetOrgs()) != 0 {
-		orgs, _ := remote.Orgs(login)
-		if !checkMembership(orgs, remote.GetOrgs()) {
-			c.Redirect(303, "/login#error=access_denied_org")
-			return
-		}
-	}
-
 	// get the user from the database
-	u, err := store.UserLogin(login.Login)
+	u, err := model.GetUserLogin(db, tmpuser.Login)
 	if err != nil {
-		count, err := store.UserCount()
+		count, err := model.GetUserCount(db)
 		if err != nil {
-			log.Errorf("cannot register %s. %s", login.Login, err)
-			c.Redirect(303, "/login#error=internal_error")
+			log.Errorf("cannot register %s. %s", tmpuser.Login, err)
+			c.Redirect(303, "/login?error=internal_error")
 			return
 		}
 
 		// if self-registration is disabled we should
 		// return a notAuthorized error. the only exception
 		// is if no users exist yet in the system we'll proceed.
-		if !remote.GetOpen() && count != 0 {
-			log.Errorf("cannot register %s. registration closed", login.Login)
-			c.Redirect(303, "/login#error=access_denied")
+		if !open && count != 0 {
+			log.Errorf("cannot register %s. registration closed", tmpuser.Login)
+			c.Redirect(303, "/login?error=access_denied")
 			return
 		}
 
 		// create the user account
-		u = &types.User{}
-		u.Login = login.Login
-		u.Token = login.Token
-		u.Secret = login.Secret
-		u.Email = login.Email
-		u.Avatar = login.Avatar
-		u.Hash = types.GenerateToken()
+		u = &model.User{}
+		u.Login = tmpuser.Login
+		u.Token = tmpuser.Token
+		u.Secret = tmpuser.Secret
+		u.Email = tmpuser.Email
+		u.Avatar = tmpuser.Avatar
+		u.Hash = crypto.Rand()
 
 		// insert the user into the database
-		if err := store.AddUser(u); err != nil {
-			log.Errorf("cannot insert %s. %s", login.Login, err)
-			c.Redirect(303, "/login#error=internal_error")
+		if err := model.CreateUser(db, u); err != nil {
+			log.Errorf("cannot insert %s. %s", u.Login, err)
+			c.Redirect(303, "/login?error=internal_error")
 			return
 		}
 
@@ -89,20 +79,14 @@ func GetLogin(c *gin.Context) {
 
 	// update the user meta data and authorization
 	// data and cache in the datastore.
-	u.Token = login.Token
-	u.Secret = login.Secret
-	u.Email = login.Email
-	u.Avatar = login.Avatar
+	u.Token = tmpuser.Token
+	u.Secret = tmpuser.Secret
+	u.Email = tmpuser.Email
+	u.Avatar = tmpuser.Avatar
 
-	// TODO: remove this once gitlab implements setting
-	// avatar in the remote package, similar to github
-	if len(u.Avatar) == 0 {
-		u.Avatar = gravatar.Hash(u.Email)
-	}
-
-	if err := store.SetUser(u); err != nil {
+	if err := model.UpdateUser(db, u); err != nil {
 		log.Errorf("cannot update %s. %s", u.Login, err)
-		c.Redirect(303, "/login#error=internal_error")
+		c.Redirect(303, "/login?error=internal_error")
 		return
 	}
 
@@ -111,93 +95,65 @@ func GetLogin(c *gin.Context) {
 	tokenstr, err := token.SignExpires(u.Hash, exp)
 	if err != nil {
 		log.Errorf("cannot create token for %s. %s", u.Login, err)
-		c.Redirect(303, "/login#error=internal_error")
+		c.Redirect(303, "/login?error=internal_error")
 		return
 	}
-	c.Redirect(303, "/#access_token="+tokenstr)
+
+	httputil.SetCookie(c.Writer, c.Request, "user_sess", tokenstr)
+	redirect := httputil.GetCookie(c.Request, "user_last")
+	if len(redirect) == 0 {
+		redirect = "/"
+	}
+	c.Redirect(303, redirect)
+
 }
 
-// getLoginOauth2 is the default authorization implementation
-// using the oauth2 protocol.
-func getLoginOauth2(c *gin.Context) {
-	var remote = ToRemote(c)
+func GetLogout(c *gin.Context) {
 
-	// Bugagazavr: I think this must be moved to remote config
-	//var scope = strings.Join(settings.Auth.Scope, ",")
-	//if scope == "" {
-	//	scope = remote.Scope()
-	//}
-	var transport = remote.Oauth2Transport(c.Request)
+	httputil.DelCookie(c.Writer, c.Request, "user_sess")
+	httputil.DelCookie(c.Writer, c.Request, "user_last")
+	c.Redirect(303, "/login")
+}
 
-	// get the OAuth code
-	var code = c.Request.FormValue("code")
-	//var state = c.Request.FormValue("state")
-	if len(code) == 0 {
-		// TODO this should be a random number, verified by a cookie
-		c.Redirect(303, transport.AuthCodeURL("random"))
-		return
-	}
+func GetLoginToken(c *gin.Context) {
+	db := context.Database(c)
+	remote := context.Remote(c)
 
-	// exhange for a token
-	var token, err = transport.Exchange(code)
+	in := &tokenPayload{}
+	err := c.Bind(in)
 	if err != nil {
-		log.Errorf("cannot get access_token. %s", err)
-		c.Redirect(303, "/login#error=token_exchange")
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	// get user account
-	user, err := remote.Login(token.AccessToken, token.RefreshToken)
+	login, err := remote.Auth(in.Access, in.Refresh)
 	if err != nil {
-		log.Errorf("cannot get user with access_token. %s", err)
-		c.Redirect(303, "/login#error=user_not_found")
+		c.AbortWithError(http.StatusUnauthorized, err)
 		return
 	}
 
-	// add the user to the request
-	c.Set("user", user)
-}
-
-// getLoginOauth1 is able to authorize a user with the oauth1
-// authentication protocol. This is used primarily with Bitbucket
-// and Stash only, and one day I hope can be removed.
-func getLoginOauth1(c *gin.Context) {
-
-}
-
-// getLoginBasic is able to authorize a user with a username and
-// password. This can be used for systems that do not support oauth.
-func getLoginBasic(c *gin.Context) {
-	var (
-		remote   = ToRemote(c)
-		username = c.Request.FormValue("username")
-		password = c.Request.FormValue("password")
-	)
-
-	// get user account
-	user, err := remote.Login(username, password)
+	user, err := model.GetUserLogin(db, login)
 	if err != nil {
-		log.Errorf("invalid username or password for %s. %s", username, err)
-		c.Redirect(303, "/login#error=invalid_credentials")
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
-	// add the user to the request
-	c.Set("user", user)
+	exp := time.Now().Add(time.Hour * 72).Unix()
+	token := token.New(token.SessToken, user.Login)
+	tokenstr, err := token.SignExpires(user.Hash, exp)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, &tokenPayload{
+		Access:  tokenstr,
+		Expires: exp - time.Now().Unix(),
+	})
 }
 
-// checkMembership is a helper function that compares the user's
-// organization list to a whitelist of organizations that are
-// approved to use the system.
-func checkMembership(orgs, whitelist []string) bool {
-	orgs_ := make(map[string]struct{}, len(orgs))
-	for _, org := range orgs {
-		orgs_[org] = struct{}{}
-	}
-	for _, org := range whitelist {
-		if _, ok := orgs_[org]; ok {
-			return true
-		}
-	}
-	return false
+type tokenPayload struct {
+	Access  string `json:"access_token,omitempty"`
+	Refresh string `json:"refresh_token,omitempty"`
+	Expires int64  `json:"expires_in,omitempty"`
 }

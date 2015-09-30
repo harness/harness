@@ -2,10 +2,9 @@ package hstore
 
 import (
 	"database/sql"
+	_ "github.com/lib/pq"
 	"os"
 	"testing"
-
-	_ "github.com/drone/drone/Godeps/_workspace/src/github.com/lib/pq"
 )
 
 type Fatalistic interface {
@@ -39,7 +38,8 @@ func TestHstore(t *testing.T) {
 	// quitely create hstore if it doesn't exist
 	_, err := db.Exec("CREATE EXTENSION IF NOT EXISTS hstore")
 	if err != nil {
-		t.Skipf("Skipping hstore tests - hstore extension create failed: %s", err.Error())
+		t.Log("Skipping hstore tests - hstore extension create failed. " + err.Error())
+		return
 	}
 
 	hs := Hstore{}
