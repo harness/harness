@@ -6,6 +6,7 @@ import (
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/context"
+	"github.com/drone/drone/shared/token"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
@@ -66,6 +67,14 @@ func SetRepo() gin.HandlerFunc {
 		// if we found a repository, we should display a page
 		// to the user allowing them to activate.
 		if repo != nil && len(repo.FullName) != 0 {
+			// we should probably move this code to a
+			// separate route, but for now we need to
+			// add a CSRF token.
+			data["Csrf"], _ = token.New(
+				token.CsrfToken,
+				user.Login,
+			).Sign(user.Hash)
+
 			c.HTML(http.StatusNotFound, "repo_activate.html", data)
 		} else {
 			c.HTML(http.StatusNotFound, "404.html", data)
