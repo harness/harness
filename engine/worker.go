@@ -15,13 +15,13 @@ var (
 	DefaultEntrypoint = []string{"/bin/drone-exec"}
 
 	// default argument to invoke build steps
-	DefaultBuildArgs = []string{"--cache", "--debug", "--clone", "--build", "--deploy"}
+	DefaultBuildArgs = []string{"--pull", "--cache", "--debug", "--clone", "--build", "--deploy"}
 
 	// default argument to invoke build steps
 	DefaultPullRequestArgs = []string{"--cache", "--clone", "--build"}
 
 	// default arguments to invoke notify steps
-	DefaultNotifyArgs = []string{"--notify"}
+	DefaultNotifyArgs = []string{"--pull", "--notify"}
 )
 
 type worker struct {
@@ -60,7 +60,7 @@ func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 	// TEMPORARY: always try to pull the new image for now
 	// since we'll be frequently updating the build image
 	// for the next few weeks
-	// w.client.PullImage(conf.Image, nil)
+	w.client.PullImage(conf.Image, nil)
 
 	w.build, err = docker.Run(w.client, conf, name)
 	if err != nil {
