@@ -16,7 +16,7 @@ import (
 
 var (
 	dotenv = flag.String("config", ".env", "")
-	debug  = flag.Bool("debug", true, "")
+	debug  = flag.Bool("debug", false, "")
 )
 
 func main() {

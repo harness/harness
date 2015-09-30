@@ -14,7 +14,7 @@ type Task struct {
 	Repo      *model.Repo   `json:"repo"`
 	Build     *model.Build  `json:"build"`
 	BuildPrev *model.Build  `json:"build_last"`
-	Jobs      []*model.Job  `json:"jobs"`
+	Jobs      []*model.Job  `json:"-"`
 	Job       *model.Job    `json:"job"`
 	Keys      *model.Key    `json:"keys"`
 	Netrc     *model.Netrc  `json:"netrc"`
