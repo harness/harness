@@ -23,7 +23,7 @@ func PostRepo(c *gin.Context) {
 	user := session.User(c)
 	owner := c.Param("owner")
 	name := c.Param("name")
-	paramNoActivate := c.Request.FormValue("no-activate")
+	paramActivate := c.Request.FormValue("activate")
 
 	if user == nil {
 		c.AbortWithStatus(403)
@@ -68,12 +68,6 @@ func PostRepo(c *gin.Context) {
 		return
 	}
 
-	link := fmt.Sprintf(
-		"%s/hook?access_token=%s",
-		httputil.GetURL(c.Request),
-		sig,
-	)
-
 	// generate an RSA key and add to the repo
 	key, err := crypto.GeneratePrivateKey()
 	if err != nil {
@@ -84,12 +78,18 @@ func PostRepo(c *gin.Context) {
 	keys.Public = string(crypto.MarshalPublicKey(&key.PublicKey))
 	keys.Private = string(crypto.MarshalPrivateKey(key))
 
-	var noActivate bool
-    noActivate, err = strconv.ParseBool(paramNoActivate)
-    if err != nil {
-        noActivate = false
-    }
-    if !noActivate {
+	var activate bool
+	activate, err = strconv.ParseBool(paramActivate)
+	if err != nil {
+		activate = true
+	}
+	if activate {
+		link := fmt.Sprintf(
+			"%s/hook?access_token=%s",
+			httputil.GetURL(c.Request),
+			sig,
+		)
+
 		// activate the repository before we make any
 		// local changes to the database.
 		err = remote.Activate(user, r, keys, link)
