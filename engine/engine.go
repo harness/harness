@@ -91,7 +91,7 @@ func (e *engine) Cancel(build, job int64, node *model.Node) error {
 
 // Stream streams the job output from the specified Node.
 func (e *engine) Stream(build, job int64, node *model.Node) (io.ReadCloser, error) {
-	client, err := dockerclient.NewDockerClient(node.Addr, nil)
+	client, err := newDockerClient(node.Addr, node.Cert, node.Key, node.CA)
 	if err != nil {
 		log.Errorf("cannot create Docker client for node %s", node.Addr)
 		return nil, err
@@ -203,26 +203,28 @@ func newDockerClient(addr, cert, key, ca string) (dockerclient.Client, error) {
 
 	// create the Docket client TLS config
 	if len(cert) != 0 {
-		cert_, err := tls.LoadX509KeyPair(cert, key)
+		pem, err := tls.X509KeyPair([]byte(cert), []byte(key))
 		if err != nil {
+			log.Errorf("error loading X509 key pair. %s.", err)
 			return dockerclient.NewDockerClient(addr, nil)
 		}
 
 		// create the TLS configuration for secure
 		// docker communications.
-		tlc = &tls.Config{
-			Certificates: []tls.Certificate{cert_},
-		}
+		tlc = &tls.Config{}
+		tlc.Certificates = []tls.Certificate{pem}
 
 		// use the certificate authority if provided.
 		// else don't use a certificate authority and set
 		// skip verify to true
 		if len(ca) != 0 {
+			log.Infof("creating docker client %s with CA", addr)
 			pool := x509.NewCertPool()
 			pool.AppendCertsFromPEM([]byte(ca))
 			tlc.RootCAs = pool
 
 		} else {
+			log.Infof("creating docker client %s WITHOUT CA", addr)
 			tlc.InsecureSkipVerify = true
 		}
 	}
