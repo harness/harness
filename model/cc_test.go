@@ -2,6 +2,7 @@ package model
 
 import (
 	"testing"
+	"time"
 
 	"github.com/franela/goblin"
 )
@@ -12,14 +13,15 @@ func TestCC(t *testing.T) {
 	g.Describe("CC", func() {
 
 		g.It("Should create a project", func() {
-
+			now := time.Now().Unix()
+			now_fmt := time.Unix(now, 0).Format(time.RFC3339)
 			r := &Repo{
 				FullName: "foo/bar",
 			}
 			b := &Build{
 				Status:  StatusSuccess,
 				Number:  1,
-				Started: 1442872675,
+				Started: now,
 			}
 			cc := NewCC(r, b, "http://localhost/foo/bar/1")
 
@@ -27,7 +29,7 @@ func TestCC(t *testing.T) {
 			g.Assert(cc.Project.Activity).Equal("Sleeping")
 			g.Assert(cc.Project.LastBuildStatus).Equal("Success")
 			g.Assert(cc.Project.LastBuildLabel).Equal("1")
-			g.Assert(cc.Project.LastBuildTime).Equal("2015-09-21T14:57:55-07:00")
+			g.Assert(cc.Project.LastBuildTime).Equal(now_fmt)
 			g.Assert(cc.Project.WebURL).Equal("http://localhost/foo/bar/1")
 		})
 
