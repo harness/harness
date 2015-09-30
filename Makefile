@@ -11,6 +11,7 @@ deps:
 	go get -u github.com/eknkc/amber/amberc
 	go get -u github.com/jteeuwen/go-bindata/...
 	go get -u github.com/elazarl/go-bindata-assetfs/...
+	go get -u github.com/dchest/jsmin
 
 gen:
 	go generate $(PACKAGES)
