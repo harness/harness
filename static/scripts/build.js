@@ -4,15 +4,38 @@ function JobViewModel(repo, build, job, status) {
 	var self = this;
 	self.status = status;
 
+	self.stream = function() {
+		$( "#output" ).html("");
+
+		var buf = new Drone.Buffer();
+		buf.start(document.getElementById("output"));
+
+		$( "#tail" ).show();
+		$( "#tail" ).click(function() {
+			buf.autoFollow = !buf.autoFollow;
+			if (buf.autoFollow) {
+				$( "#tail i" ).text("pause");
+				$( "#tail" ).show();
+
+				// scroll to the bottom of the page
+				window.scrollTo(0, document.body.scrollHeight);
+			} else {
+				$( "#tail i" ).text("expand_more");
+				$( "#tail" ).show();
+			}
+		})
+
+		Stream(repo, build, job, function(out){
+			buf.write(out);
+		});
+	};
 
 	if (status !== "running" && status !== "pending") {
 		Logs(repo, build, job);
 	}
 
 	if (status === "running") {
-		Stream(repo, build, job, function(out){
-			$( "#output" ).append(out);
-		});
+		self.stream();
 	}
 
 	$("#restart").click(function() {
@@ -51,30 +74,7 @@ function JobViewModel(repo, build, job, status) {
 		// if the status has changed we should start
 		// streaming the build contents.
 		if (before !== after && after === "running") {
-			$( "#output" ).html("");
-
-			var buf = new Drone.Buffer();
-			buf.start(document.getElementById("output"));
-
-			$( "#tail" ).show();
-			$( "#tail" ).click(function() {
-				buf.autoFollow = !buf.autoFollow;
-				if (buf.autoFollow) {
-					$( "#tail i" ).text("pause");
-					$( "#tail" ).show();
-
-					// scroll to the bottom of the page
-					window.scrollTo(0, document.body.scrollHeight);
-				} else {
-					$( "#tail i" ).text("expand_more");
-					$( "#tail" ).show();
-				}
-				
-			})
-
-			Stream(repo, build, job, function(out){
-				buf.write(out);
-			});
+			self.stream();
 		}
 
 		// if the status is changes to complete, we can show
