@@ -23,6 +23,7 @@ func PostRepo(c *gin.Context) {
 	user := session.User(c)
 	owner := c.Param("owner")
 	name := c.Param("name")
+	paramNoActivate := c.Request.FormValue("no-activate")
 
 	if user == nil {
 		c.AbortWithStatus(403)
@@ -83,13 +84,20 @@ func PostRepo(c *gin.Context) {
 	keys.Public = string(crypto.MarshalPublicKey(&key.PublicKey))
 	keys.Private = string(crypto.MarshalPrivateKey(key))
 
-	// activate the repository before we make any
-	// local changes to the database.
-	err = remote.Activate(user, r, keys, link)
-	if err != nil {
-		c.AbortWithError(500, err)
-		return
-	}
+	var noActivate bool
+    noActivate, err = strconv.ParseBool(paramNoActivate)
+    if err != nil {
+        noActivate = false
+    }
+    if !noActivate {
+		// activate the repository before we make any
+		// local changes to the database.
+		err = remote.Activate(user, r, keys, link)
+		if err != nil {
+			c.AbortWithError(500, err)
+			return
+		}
+    }
 
 	tx, err := db.Begin()
 	if err != nil {
