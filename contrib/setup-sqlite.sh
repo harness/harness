@@ -4,7 +4,7 @@ set -e
 cd /tmp
 
 # cleanup previously downloaded and unpacked files.
-rm sqlite-autoconf-3081101.tar.gz
+rm -rf sqlite-autoconf-3081101.tar.gz
 rm -rf sqlite-autoconf-3081101
 
 # download sqlite
