@@ -1,6 +1,6 @@
 .PHONY: vendor
 
-PACKAGES = $(shell go list ./... | grep -v /vendor/)
+PACKAGES = $(shell go list ./... 2> /dev/null | grep -v /vendor/)
 
 all: gen build
 
