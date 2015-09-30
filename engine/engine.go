@@ -140,7 +140,7 @@ func (e *engine) Schedule(req *Task) {
 			const size = 64 << 10
 			buf := make([]byte, size)
 			buf = buf[:runtime.Stack(buf, false)]
-			log.Printf("panic running build: %v\n%s", err, buf)
+			log.Errorf("panic running build: %v\n%s", err, string(buf))
 		}
 		e.pool.release(node)
 	}()
@@ -177,7 +177,7 @@ func (e *engine) Schedule(req *Task) {
 		runJob(req, e.updater, client)
 	}
 
-	// TODO
+	// update overall status based on each job
 	req.Build.Status = model.StatusSuccess
 	for _, job := range req.Jobs {
 		if job.Status != model.StatusSuccess {
@@ -191,14 +191,11 @@ func (e *engine) Schedule(req *Task) {
 		log.Errorf("error updating build completion status. %s", err)
 	}
 
-	// run notifications!!!
-	// for _ = range req.Jobs {
-	// 	err := runJobNotify(req, client)
-	// 	if err != nil {
-	// 		log.Errorf("error executing notification step. %s", err)
-	// 	}
-	// 	break
-	// }
+	// run notifications
+	err = runJobNotify(req, client)
+	if err != nil {
+		log.Errorf("error executing notification step. %s", err)
+	}
 }
 
 func newDockerClient(addr, cert, key, ca string) (dockerclient.Client, error) {
@@ -290,7 +287,7 @@ func runJob(r *Task, updater *updater, client dockerclient.Client) error {
 		},
 	}
 
-	// w.client.PullImage(conf.Image, nil)
+	client.PullImage(conf.Image, nil)
 
 	_, err = docker.RunDaemon(client, conf, name)
 	if err != nil {
@@ -384,9 +381,30 @@ func runJobNotify(r *Task, client dockerclient.Client) error {
 		Image:      DefaultAgent,
 		Entrypoint: DefaultEntrypoint,
 		Cmd:        args,
-		HostConfig: dockerclient.HostConfig{},
+		HostConfig: dockerclient.HostConfig{
+			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
+		},
+		Volumes: map[string]struct{}{
+			"/var/run/docker.sock": struct{}{},
+		},
 	}
 
-	_, err = docker.Run(client, conf, name)
+	info, err := docker.Run(client, conf, name)
+
+	// for debugging purposes we print a failed notification executions
+	// output to the logs. Otherwise we have no way to troubleshoot failed
+	// notifications. This is temporary code until I've come up with
+	// a better solution.
+	if info != nil && info.State.ExitCode != 0 && log.GetLevel() >= log.InfoLevel {
+		var buf bytes.Buffer
+		rc, err := client.ContainerLogs(name, docker.LogOpts)
+		if err == nil {
+			defer rc.Close()
+			stdcopy.StdCopy(&buf, &buf, io.LimitReader(rc, 50000))
+		}
+		log.Infof("Notification container %s exited with %d", name, info.State.ExitCode)
+		log.Infoln(buf.String())
+	}
+
 	return err
 }
