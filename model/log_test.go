@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/drone/drone/shared/database"
+	"github.com/CiscoCloud/drone/shared/database"
 	"github.com/franela/goblin"
 )
 

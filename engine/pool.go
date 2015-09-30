@@ -3,7 +3,7 @@ package engine
 import (
 	"sync"
 
-	"github.com/drone/drone/model"
+	"github.com/CiscoCloud/drone/model"
 )
 
 type pool struct {

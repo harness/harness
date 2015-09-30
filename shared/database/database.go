@@ -5,7 +5,7 @@ package database
 import (
 	"database/sql"
 
-	"github.com/drone/drone/shared/envconfig"
+	"github.com/CiscoCloud/drone/shared/envconfig"
 
 	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"

@@ -7,11 +7,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/router/middleware/context"
-	"github.com/drone/drone/router/middleware/session"
-	"github.com/drone/drone/shared/httputil"
-	"github.com/drone/drone/shared/token"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/router/middleware/context"
+	"github.com/CiscoCloud/drone/router/middleware/session"
+	"github.com/CiscoCloud/drone/shared/httputil"
+	"github.com/CiscoCloud/drone/shared/token"
 )
 
 func ShowIndex(c *gin.Context) {

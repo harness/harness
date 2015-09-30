@@ -3,8 +3,8 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/router/middleware/context"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/router/middleware/context"
 )
 
 var (

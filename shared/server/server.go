@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/drone/drone/shared/envconfig"
+	"github.com/CiscoCloud/drone/shared/envconfig"
 )
 
 type Server struct {

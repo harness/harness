@@ -3,10 +3,10 @@ package remote
 import (
 	"net/http"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote/github"
-	"github.com/drone/drone/remote/gitlab"
-	"github.com/drone/drone/shared/envconfig"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/remote/github"
+	"github.com/CiscoCloud/drone/remote/gitlab"
+	"github.com/CiscoCloud/drone/shared/envconfig"
 
 	log "github.com/Sirupsen/logrus"
 )

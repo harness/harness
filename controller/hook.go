@@ -8,13 +8,13 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/drone/drone/engine"
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/router/middleware/context"
-	"github.com/drone/drone/shared/httputil"
-	"github.com/drone/drone/shared/token"
-	"github.com/drone/drone/yaml"
-	"github.com/drone/drone/yaml/matrix"
+	"github.com/CiscoCloud/drone/engine"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/router/middleware/context"
+	"github.com/CiscoCloud/drone/shared/httputil"
+	"github.com/CiscoCloud/drone/shared/token"
+	"github.com/CiscoCloud/drone/yaml"
+	"github.com/CiscoCloud/drone/yaml/matrix"
 )
 
 func PostHook(c *gin.Context) {

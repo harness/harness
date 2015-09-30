@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/remote"
 )
 
 type updater struct {

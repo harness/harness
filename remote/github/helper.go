@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/drone/drone/shared/oauth2"
+	"github.com/CiscoCloud/drone/shared/oauth2"
 	"github.com/google/go-github/github"
 	"github.com/gorilla/securecookie"
 )

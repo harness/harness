@@ -6,11 +6,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/controller"
-	"github.com/drone/drone/router/middleware/header"
-	"github.com/drone/drone/router/middleware/session"
-	"github.com/drone/drone/static"
-	"github.com/drone/drone/template"
+	"github.com/CiscoCloud/drone/controller"
+	"github.com/CiscoCloud/drone/router/middleware/header"
+	"github.com/CiscoCloud/drone/router/middleware/session"
+	"github.com/CiscoCloud/drone/static"
+	"github.com/CiscoCloud/drone/template"
 )
 
 func Load(middleware ...gin.HandlerFunc) http.Handler {
