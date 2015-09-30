@@ -17,10 +17,10 @@ gen:
 	go generate $(PACKAGES)
 
 build:
-	GO15VENDOREXPERIMENT=1 go build
+	go build
 
 build_static:
-	GO15VENDOREXPERIMENT=1 go build --ldflags '-extldflags "-static"' -o drone_static
+	go build --ldflags '-extldflags "-static"' -o drone_static
 
 test:
 	go test -cover $(PACKAGES)
