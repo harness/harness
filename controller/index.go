@@ -194,10 +194,13 @@ func ShowBuild(c *gin.Context) {
 
 	httputil.SetCookie(c.Writer, c.Request, "user_last", repo.FullName)
 
-	token, _ := token.New(
-		token.CsrfToken,
-		user.Login,
-	).Sign(user.Hash)
+	var csrf string
+	if user != nil {
+		csrf, _ = token.New(
+			token.CsrfToken,
+			user.Login,
+		).Sign(user.Hash)
+	}
 
 	c.HTML(200, "build.html", gin.H{
 		"User":  user,
@@ -205,6 +208,6 @@ func ShowBuild(c *gin.Context) {
 		"Build": build,
 		"Jobs":  jobs,
 		"Job":   job,
-		"Csrf":  token,
+		"Csrf":  csrf,
 	})
 }
