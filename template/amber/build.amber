@@ -52,7 +52,8 @@ block content
                                 div with exit code #{$job.ExitCode}
 
                 div.build-btn-group
-                    button.btn.btn-info#restart restart
+                    button.btn.btn-info.hidden#restart restart
+                    button.btn.btn-info.hidden#cancel cancel
 
             div.col-md-8
                 pre#output

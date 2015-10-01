@@ -80,7 +80,7 @@ func Load(db *sql.DB, remote remote.Remote) Engine {
 
 // Cancel cancels the job running on the specified Node.
 func (e *engine) Cancel(build, job int64, node *model.Node) error {
-	client, err := dockerclient.NewDockerClient(node.Addr, nil)
+	client, err := newDockerClient(node.Addr, node.Cert, node.Key, node.CA)
 	if err != nil {
 		return err
 	}

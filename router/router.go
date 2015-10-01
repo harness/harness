@@ -104,7 +104,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.DELETE("", session.MustPush, controller.DeleteRepo)
 
 			repo.POST("/builds/:number", session.MustPush, controller.PostBuild)
-			// repo.DELETE("/builds/:number", MustPush(), controller.DeleteBuild)
+			repo.DELETE("/builds/:number/:job", session.MustPush, controller.DeleteBuild)
 		}
 	}
 

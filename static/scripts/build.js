@@ -6,6 +6,8 @@ function JobViewModel(repo, build, job, status) {
 
 	self.stream = function() {
 		$( "#output" ).html("");
+		$("#restart").hide();
+		$("#cancel").show();
 
 		var buf = new Drone.Buffer();
 		buf.start(document.getElementById("output"));
@@ -32,6 +34,7 @@ function JobViewModel(repo, build, job, status) {
 
 	if (status !== "running" && status !== "pending") {
 		Logs(repo, build, job);
+		$("#restart").show();
 	}
 
 	if (status === "running") {
@@ -46,6 +49,19 @@ function JobViewModel(repo, build, job, status) {
 		$.ajax({
 			url: "/api/repos/"+repo+"/builds/"+build,
 			type: "POST",
+			success: function( data ) { },
+			error: function( data ) {
+				console.log(data);
+			}
+		});
+	})
+
+	$("#cancel").click(function() {
+		$("#cancel").hide();
+
+		$.ajax({
+			url: "/api/repos/"+repo+"/builds/"+build+"/"+job,
+			type: "DELETE",
 			success: function( data ) { },
 			error: function( data ) {
 				console.log(data);
@@ -81,6 +97,7 @@ function JobViewModel(repo, build, job, status) {
 		// the restart button and hide the tail button.
 		if (after !== "pending" && after !== "running") {
 			$("#restart").show();
+			$("#cancel").hide();
 			$("#tail").hide();
 		}
 	}.bind(this));
