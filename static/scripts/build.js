@@ -81,8 +81,36 @@ function JobViewModel(repo, build, job, status) {
 		// update the status for each job in the view
 		for (var i=0;i<data.jobs.length;i++) {
 			var job_ = data.jobs[i];
-			$("[data-job="+job_.number+"]").find(".status")
+			var el = $("[data-job="+job_.number+"]");
+
+			el.find(".status")
 				.attr("class", "status "+job_.status).text(job_.status);
+
+			switch (job_.status) {
+			case "running":
+				el.find(".msg-running").find("span").attr("data-livestamp", job_.started_at);
+
+				el.find(".msg-pending").hide();
+				el.find(".msg-running").show();
+				el.find(".msg-finished").hide();
+				el.find(".msg-exited").hide();
+				break;
+			case "pending":
+				el.find(".msg-pending").show();
+				el.find(".msg-running").hide();
+				el.find(".msg-finished").hide();
+				el.find(".msg-exited").hide();
+				break;
+			default:
+				el.find(".msg-finished").find("span").attr("data-livestamp", job_.finished_at);
+				el.find(".msg-exited").find("span").text(job_.exit_code);
+
+				el.find(".msg-pending").hide();
+				el.find(".msg-running").hide();
+				el.find(".msg-finished").show();
+				el.find(".msg-exited").show();
+				break;
+			}
 		}
 
 		var after = self.status;
