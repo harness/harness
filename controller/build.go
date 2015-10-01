@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/engine"
@@ -186,11 +187,13 @@ func PostBuild(c *gin.Context) {
 	build.Status = model.StatusPending
 	build.Started = 0
 	build.Finished = 0
+	build.Enqueued = time.Now().UTC().Unix()
 	for _, job := range jobs {
 		job.Status = model.StatusPending
 		job.Started = 0
 		job.Finished = 0
 		job.ExitCode = 0
+		job.Enqueued = build.Enqueued
 		model.UpdateJob(db, job)
 	}
 

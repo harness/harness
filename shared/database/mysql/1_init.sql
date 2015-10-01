@@ -61,6 +61,7 @@ CREATE TABLE builds (
 ,build_number    INTEGER
 ,build_event     VARCHAR(500)
 ,build_status    VARCHAR(500)
+,build_enqueued  INTEGER
 ,build_created   INTEGER
 ,build_started   INTEGER
 ,build_finished  INTEGER
@@ -90,6 +91,7 @@ CREATE TABLE jobs (
 ,job_status      VARCHAR(500)
 ,job_exit_code   INTEGER
 ,job_started     INTEGER
+,job_enqueued    INTEGER
 ,job_finished    INTEGER
 ,job_environment VARCHAR(2000)
 
