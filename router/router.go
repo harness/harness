@@ -44,9 +44,9 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		repo.GET("/builds/:number/:job", controller.ShowBuild)
 		repo_settings := repo.Group("/settings")
 		{
-			repo_settings.Use(session.MustPush)
-			repo_settings.GET("", controller.ShowRepoConf)
-			repo_settings.GET("/:action", controller.ShowRepoConf)
+			repo_settings.GET("", session.MustPush, controller.ShowRepoConf)
+			repo_settings.GET("/encrypt", session.MustPush, controller.ShowRepoEncrypt)
+			repo_settings.GET("/badges", controller.ShowRepoBadges)
 		}
 	}
 
