@@ -11,14 +11,25 @@ build:
     - make deps gen test
     - make build build_static deb
 
-# publish:
-#   s3:
-#     acl: public-read
-#     region: us-east-1
-#     bucket: downloads.drone.io
-#     access_key: $$AWS_KEY
-#     secret_key: $$AWS_SECRET
-#     source: contrib/debian/drone.deb
-#     target: $$BRANCH/
-#     when:
-#       repo: drone/drone
+publish:
+  s3:
+    acl: public-read
+    region: us-east-1
+    bucket: downloads.drone.io
+    access_key: $$AWS_KEY
+    secret_key: $$AWS_SECRET
+    source: contrib/debian/drone.deb
+    target: $$BRANCH/
+    when:
+      repo: drone/drone
+
+deploy:
+  docker:
+    username: drone
+    password: $$DOCKER_PASS
+    email: $$DOCKER_EMAIL
+    repo: drone/drone
+    tag: 0.4
+    when:
+      repo: drone/drone
+      branch: 0.4.0

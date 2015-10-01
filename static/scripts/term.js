@@ -351,6 +351,9 @@ Filter = (function() {
 				pattern: /^\n+/,
 				sub: newline
 			}, {
+				pattern: /^\r+/,
+				sub: newline
+			}, {
 				pattern: /^\x1b\[((?:\d{1,3};?)+|)m/,
 				sub: ansiMess
 			}, {
