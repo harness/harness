@@ -28,7 +28,7 @@ publish:
     password: $$DOCKER_PASS
     email: $$DOCKER_EMAIL
     repo: drone/drone
-    tag: 0.4
+    tag: "0.4"
     when:
       repo: drone/drone
       branch: 0.4.0
