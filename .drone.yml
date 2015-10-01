@@ -23,7 +23,6 @@ publish:
     when:
       repo: drone/drone
 
-deploy:
   docker:
     username: drone
     password: $$DOCKER_PASS
