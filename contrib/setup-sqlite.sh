@@ -15,4 +15,4 @@ tar xzf sqlite-autoconf-3081101.tar.gz
 cd sqlite-autoconf-3081101
 ./configure -prefix=/scratch/usr/local
 make
-sudo make install
+make install
