@@ -154,3 +154,12 @@
 	color:rgba(255,255,255,0.5);
 	line-height:38px;
 	display:inline-block;
+
+@supports (position:sticky)
+	.sticky
+		position: sticky;
+		top: 20px;
+
+@supports not (position:sticky)
+	.sticky
+		top: 0px;

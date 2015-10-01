@@ -17,7 +17,7 @@ block header
 block content
     div.container-fluid
         div.row
-            div.col-md-4
+            div.col-md-4.sticky
                 div.build-summary
                     div
                         div[class=Build.Status][style="display:none"] #{Build.Status}
@@ -73,6 +73,7 @@ block content
 
 block append scripts
     script
+        $('.sticky').Stickyfill();
         var repo = #{json(Repo.FullName)};
         var build = #{json(Build.Number)};
         var job = #{json(Job.Number)};
