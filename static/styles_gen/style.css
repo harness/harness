@@ -176,6 +176,10 @@ input[type=range]:focus::-ms-fill-upper { background: #367ebd; }
 
 .tail i { color: rgba(255, 255, 255, 0.5); line-height: 38px; display: inline-block; }
 
+@supports (position: sticky) { .sticky { position: sticky; top: 20px; } }
+
+@supports not (position: sticky) { .sticky { top: 0px; } }
+
 .user-row .col-sm-4 { width: 100%; }
 
 .user-row .col-sm-4:last-child .card { border-bottom: none; }
