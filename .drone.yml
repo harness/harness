@@ -1,42 +1,3 @@
-image: bradrydzewski/go:1.5
-
-git:
-  path: github.com/drone/drone
-
-env:
-  - GOROOT=/usr/local/go
-  - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-  - GO15VENDOREXPERIMENT=1
-
-script:
-  - /bin/bash contrib/setup-sqlite.sh 1> /dev/null
-  - /bin/bash contrib/setup-sassc.sh  1> /dev/null
-  - make deps
-  - make
-  - make test
-  - make deb
-
-notify:
-  email:
-    recipients:
-      - brad@drone.io
-
-publish:
-  s3:
-    acl: public-read
-    region: us-east-1
-    bucket: downloads.drone.io
-    access_key: $$AWS_KEY
-    secret_key: $$AWS_SECRET
-    source: contrib/debian/drone.deb
-    target: $DRONE_BRANCH/
-    when:
-      owner: drone
-
-
-
----
-
 clone:
   path: github.com/drone/drone
 
@@ -47,9 +8,17 @@ build:
   commands:
     - /bin/bash contrib/setup-sqlite.sh 1> /dev/null
     - /bin/bash contrib/setup-sassc.sh  1> /dev/null
-    - make deps
-    - make gen
-    - make test
-    - make build
-    - make build_static
-    - make deb
+    - make deps gen test
+    - make build build_static deb
+
+# publish:
+#   s3:
+#     acl: public-read
+#     region: us-east-1
+#     bucket: downloads.drone.io
+#     access_key: $$AWS_KEY
+#     secret_key: $$AWS_SECRET
+#     source: contrib/debian/drone.deb
+#     target: $$BRANCH/
+#     when:
+#       repo: drone/drone
