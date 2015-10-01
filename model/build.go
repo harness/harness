@@ -13,6 +13,7 @@ type Build struct {
 	Number    int    `json:"number"        meddler:"build_number"`
 	Event     string `json:"event"         meddler:"build_event"`
 	Status    string `json:"status"        meddler:"build_status"`
+	Enqueued  int64  `json:"enqueued_at"   meddler:"build_enqueued"`
 	Created   int64  `json:"created_at"    meddler:"build_created"`
 	Started   int64  `json:"started_at"    meddler:"build_started"`
 	Finished  int64  `json:"finished_at"   meddler:"build_finished"`
@@ -23,7 +24,7 @@ type Build struct {
 	Remote    string `json:"remote"        meddler:"build_remote"`
 	Title     string `json:"title"         meddler:"build_title"`
 	Message   string `json:"message"       meddler:"build_message"`
-	Timestamp string `json:"timestamp"     meddler:"build_timestamp"`
+	Timestamp int64  `json:"timestamp"     meddler:"build_timestamp"`
 	Author    string `json:"author"        meddler:"build_author"`
 	Avatar    string `json:"author_avatar" meddler:"build_avatar"`
 	Email     string `json:"author_email"  meddler:"build_email"`
@@ -76,6 +77,7 @@ func CreateBuild(db meddler.DB, build *Build, jobs ...*Job) error {
 	db.QueryRow(buildNumberLast, build.RepoID).Scan(&number)
 	build.Number = number + 1
 	build.Created = time.Now().UTC().Unix()
+	build.Enqueued = build.Created
 	err := meddler.Insert(db, buildTable, build)
 	if err != nil {
 		return err
@@ -83,6 +85,7 @@ func CreateBuild(db meddler.DB, build *Build, jobs ...*Job) error {
 	for i, job := range jobs {
 		job.BuildID = build.ID
 		job.Number = i + 1
+		job.Enqueued = build.Created
 		err = InsertJob(db, job)
 		if err != nil {
 			return err
