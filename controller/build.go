@@ -93,7 +93,32 @@ func GetBuildLogs(c *gin.Context) {
 }
 
 func DeleteBuild(c *gin.Context) {
-	c.String(http.StatusOK, "DeleteBuild")
+	engine_ := context.Engine(c)
+	repo := session.Repo(c)
+	db := context.Database(c)
+
+	// parse the build number and job sequence number from
+	// the repquest parameter.
+	num, _ := strconv.Atoi(c.Params.ByName("number"))
+	seq, _ := strconv.Atoi(c.Params.ByName("job"))
+
+	build, err := model.GetBuildNumber(db, repo, num)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+
+	job, err := model.GetJobNumber(db, build, seq)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+	node, err := model.GetNode(db, job.NodeID)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+	engine_.Cancel(build.ID, job.ID, node)
 }
 
 func PostBuild(c *gin.Context) {
