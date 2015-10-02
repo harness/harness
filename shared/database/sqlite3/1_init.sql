@@ -81,7 +81,8 @@ CREATE TABLE builds (
 ,UNIQUE(build_number, build_repo_id)
 );
 
-CREATE INDEX ix_build_repo ON builds (build_repo_id);
+CREATE INDEX ix_build_repo   ON builds (build_repo_id);
+CREATE INDEX ix_build_author ON builds (build_author);
 
 CREATE TABLE jobs (
  job_id          INTEGER PRIMARY KEY AUTOINCREMENT
