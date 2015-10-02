@@ -15,35 +15,18 @@ import (
 )
 
 func ShowIndex(c *gin.Context) {
-	// remote := context.Remote(c)
+	db := context.Database(c)
 	user := session.User(c)
 	if user == nil {
 		c.HTML(200, "login.html", gin.H{})
 		return
 	}
 
-	// attempt to get the repository list from the
-	// cache since the operation is expensive
-	// v, ok := cache.Get(user.Login)
-	// if ok {
-	// 	c.HTML(200, "repos.html", gin.H{
-	// 		"User":  user,
-	// 		"Repos": v,
-	// 	})
-	// 	return
-	// }
-
-	// fetch the repmote repos
-	// repos, err := remote.Repos(user)
-	// if err != nil {
-	// 	c.AbortWithStatus(http.StatusInternalServerError)
-	// 	return
-	// }
-	// cache.Add(user.Login, repos)
+	repos, _ := model.GetRepoList(db, user)
 
 	c.HTML(200, "repos.html", gin.H{
-		"User": user,
-		// "Repos": repos,
+		"User":  user,
+		"Repos": repos,
 	})
 }
 
