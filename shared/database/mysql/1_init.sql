@@ -44,7 +44,7 @@ CREATE TABLE stars (
 ,UNIQUE(star_repo_id, star_user_id)
 );
 
-CREATE INDEX ix_star_user ON builds (star_user_id);
+CREATE INDEX ix_star_user ON stars (star_user_id);
 
 CREATE TABLE keys (
  key_id      INTEGER PRIMARY KEY AUTO_INCREMENT
@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS logs (
 );
 
 CREATE TABLE IF NOT EXISTS nodes (
- node_id     INTEGER PRIMARY KEY AUTOINCREMENT
+ node_id     INTEGER PRIMARY KEY AUTO_INCREMENT
 ,node_addr   VARCHAR(1024)
 ,node_arch   VARCHAR(50)
 ,node_cert   MEDIUMBLOB
