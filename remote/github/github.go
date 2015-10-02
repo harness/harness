@@ -32,6 +32,7 @@ type Github struct {
 	Open        bool
 	PrivateMode bool
 	SkipVerify  bool
+	GitSSH      bool
 }
 
 func Load(env envconfig.Env) *Github {
@@ -56,6 +57,7 @@ func Load(env envconfig.Env) *Github {
 	github.PrivateMode, _ = strconv.ParseBool(params.Get("private_mode"))
 	github.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))
 	github.Open, _ = strconv.ParseBool(params.Get("open"))
+	github.GitSSH, _ = strconv.ParseBool(params.Get("ssh"))
 
 	if github.URL == DefaultURL {
 		github.API = DefaultAPI
@@ -153,6 +155,11 @@ func (g *Github) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	if g.PrivateMode {
 		repo.IsPrivate = true
 	}
+
+	if g.GitSSH && repo.IsPrivate {
+		repo.Clone = *repo_.SSHURL
+	}
+
 	return repo, err
 }
 
