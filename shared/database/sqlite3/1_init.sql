@@ -33,7 +33,7 @@ CREATE TABLE repos (
 ,repo_allow_tags    BOOLEAN
 ,repo_hash          TEXT
 
-,UNIQUE(repo_owner, repo_name)
+,UNIQUE(repo_full_name)
 );
 
 CREATE TABLE stars (

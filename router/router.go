@@ -54,10 +54,10 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	{
 		user.Use(session.MustUser())
 		user.GET("", controller.GetSelf)
-		user.GET("/feed", controller.GetFeed)
+		user.GET("/builds", controller.GetFeed)
 		user.GET("/repos", controller.GetRepos)
-		user.POST("/token", controller.PostToken)
 		user.GET("/repos/remote", controller.GetRemoteRepos)
+		user.POST("/token", controller.PostToken)
 	}
 
 	users := e.Group("/api/users")
