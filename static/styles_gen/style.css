@@ -273,6 +273,22 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 @keyframes fadein { 0% { opacity: 0; }
   100% { opacity: 1; } }
 
+.repo-row .col-sm-4 { width: 100%; }
+
+.repo-row .col-sm-4:last-child .card { border-bottom: none; }
+
+.repo-row .card { border: none; border-bottom: 1px solid #EEE; border-radius: 0px; position: relative; display: flex; text-decoration: none; }
+
+.repo-row .card-block h3 { font-size: 1.1rem; color: #2b303b; }
+
+.repo-row .card-block .card-text { color: rgba(0, 0, 0, 0.5); font-size: 0.95rem; margin: 0px; }
+
+.repo-row .card-block .btn-group { position: absolute; top: 15px; right: 0px; }
+
+.repo-row .card-block .btn-group .btn-danger { color: #bf616a; background: #FFF; border: 1px solid #bf616a; outline: none; cursor: pointer; width: auto; text-transform: uppercase; padding: 0px 10px; border-radius: 2px; font-size: 11px; line-height: 30px; height: auto; margin-left: 10px; }
+
+.repo-row .card-header { background: #FFF; border-bottom: none; padding-right: 0px; padding-left: 0px; width: 45px; }
+
 .tt-open { position: absolute; top: 34px; left: 0px; z-index: 100; display: none; background: #FFF; min-width: 100%; border: 1px solid #eee; border-radius: 0px; }
 
 .tt-selectable:hover, .tt-cursor { background: #f4f4f4; }

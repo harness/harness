@@ -112,6 +112,7 @@ WHERE repo_id IN (
 	FROM builds
 	WHERE build_author = ?
 )
+ORDER BY repo_full_name
 `
 
 const repoDeleteStmt = `
