@@ -37,7 +37,7 @@ func GetUserList(db meddler.DB) ([]*User, error) {
 
 func GetUserFeed(db meddler.DB, user *User, limit, offset int) ([]*Feed, error) {
 	var feed = []*Feed{}
-	var err = meddler.QueryAll(db, &feed, database.Rebind(userFeedQuery), user.ID, limit, offset)
+	var err = meddler.QueryAll(db, &feed, database.Rebind(userFeedQuery), user.Login, limit, offset)
 	return feed, err
 }
 
@@ -85,15 +85,45 @@ DELETE FROM users
 WHERE user_id=?
 `
 
+// this query was referenced from
+// http://stackoverflow.com/questions/2111384/sql-join-selecting-the-last-records-in-a-one-to-many-relationship/2111420#2111420
+// const userRepoLatestQuery = `
+// SELECT
+//  r.repo_owner
+// ,r.repo_name
+// ,r.repo_full_name
+// ,r.repo_avatar
+// ,b.build_number
+// ,b.build_event
+// ,b.build_status
+// ,b.build_created
+// ,b.build_started
+// ,b.build_finished
+// ,b.build_commit
+// ,b.build_branch
+// ,b.build_ref
+// ,b.build_refspec
+// ,b.build_remote
+// ,b.build_title
+// ,b.build_message
+// ,b.build_author
+// ,b.build_email
+// FROM repos r
+// JOIN builds b ON (r.repo_id = b.build_repo_id)
+// LEFT OUTER JOIN builds bb ON (r.repo_id = bb.build_repo_id AND
+//     (b.build_number < bb.build_number OR b.build_number = bb.build_number AND b.build_id < bb.build_id AND b.build_author=?))
+// WHERE bb.build_id IS NULL;
+// `
+
 const userFeedQuery = `
 SELECT
  repo_owner
 ,repo_name
 ,repo_full_name
-,repo_avatar
 ,build_number
 ,build_event
 ,build_status
+,build_created
 ,build_started
 ,build_finished
 ,build_commit
@@ -105,13 +135,12 @@ SELECT
 ,build_message
 ,build_author
 ,build_email
+,build_avatar
 FROM
  builds b
 ,repos r
-,stars s
 WHERE b.build_repo_id = r.repo_id
-  AND r.repo_id = s.star_repo_id
-  AND s.star_user_id = ?
-ORDER BY b.build_number DESC
+  AND b.build_author = ?
+ORDER BY b.build_id DESC
 LIMIT ? OFFSET ?
 `
