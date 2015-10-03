@@ -114,10 +114,8 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		badges.GET("/cc.xml", controller.GetCC)
 	}
 
-	hook := e.Group("/hook")
-	{
-		hook.POST("", controller.PostHook)
-	}
+	e.POST("/hook", controller.PostHook)
+	e.POST("/api/hook", controller.PostHook)
 
 	stream := e.Group("/api/stream")
 	{
