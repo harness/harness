@@ -11,6 +11,7 @@ type AccountResp struct {
 	Page   int       `json:"page"`
 	Pages  int       `json:"pagelen"`
 	Size   int       `json:"size"`
+	Next   string    `json:"next"`
 	Values []Account `json:"values"`
 }
 
@@ -24,6 +25,7 @@ type EmailResp struct {
 	Page   int     `json:"page"`
 	Pages  int     `json:"pagelen"`
 	Size   int     `json:"size"`
+	Next   string  `json:"next"`
 	Values []Email `json:"values"`
 }
 
@@ -39,6 +41,7 @@ type HookResp struct {
 	Page   int    `json:"page"`
 	Pages  int    `json:"pagelen"`
 	Size   int    `json:"size"`
+	Next   string `json:"next"`
 	Values []Hook `json:"values"`
 }
 
@@ -72,7 +75,15 @@ type RepoResp struct {
 	Page   int    `json:"page"`
 	Pages  int    `json:"pagelen"`
 	Size   int    `json:"size"`
+	Next   string `json:"next"`
 	Values []Repo `json:"values"`
+}
+
+type Source struct {
+	Node string `json:"node"`
+	Path string `json:"path"`
+	Data string `json:"data"`
+	Size int64  `json:"size"`
 }
 
 type ListOpts struct {
