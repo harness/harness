@@ -98,7 +98,7 @@ func (bb *Bitbucket) Login(res http.ResponseWriter, req *http.Request) (*model.U
 	// of organizations, get the orgs and verify the
 	// user is a member.
 	if len(bb.Orgs) != 0 {
-		resp, err := client.ListTeams(nil)
+		resp, err := client.ListTeams(&ListOpts{Page: 1, PageLen: 100})
 		if err != nil {
 			return nil, false, err
 		}
@@ -182,7 +182,7 @@ func (bb *Bitbucket) Repos(u *model.User) ([]*model.RepoLite, error) {
 
 	// var accounts = []string{u.Login}
 	var repos []*model.RepoLite
-	var page = 1
+
 	// for {
 	// 	resp, err := client.ListTeams(&ListOpts{Page: page})
 	// 	if err != nil {
@@ -198,10 +198,11 @@ func (bb *Bitbucket) Repos(u *model.User) ([]*model.RepoLite, error) {
 	// 	}
 	// }
 
-	page = 1
+	var page = 1
 	for {
-		resp, err := client.ListRepos(u.Login, &ListOpts{Page: page})
+		resp, err := client.ListRepos(u.Login, &ListOpts{Page: page, PageLen: 100})
 		if err != nil {
+			println(err.Error())
 			return nil, err
 		}
 
@@ -209,9 +210,12 @@ func (bb *Bitbucket) Repos(u *model.User) ([]*model.RepoLite, error) {
 			repos = append(repos, convertRepoLite(&repo))
 		}
 
-		if resp.Page == resp.Pages {
+		if len(resp.Next) == 0 {
 			break
 		}
+
+		page = resp.Page + 1
+		break
 	}
 
 	return repos, nil
@@ -247,7 +251,28 @@ func (bb *Bitbucket) Perm(u *model.User, owner, name string) (*model.Perm, error
 // Script fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
 func (bb *Bitbucket) Script(u *model.User, r *model.Repo, b *model.Build) ([]byte, []byte, error) {
-	return nil, nil, nil
+	client := NewClientToken(
+		bb.Client,
+		bb.Secret,
+		&oauth2.Token{
+			AccessToken:  u.Token,
+			RefreshToken: u.Secret,
+		},
+	)
+
+	// fetches the .drone.yml for the specified revision. This file
+	// is required, and will error if not found
+	config, err := client.FindSource(r.Owner, r.Name, b.Commit, ".drone.yml")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// fetches the .drone.sec for the specified revision. This file
+	// is completely optional, therefore we will not return a not
+	// found error
+	sec, _ := client.FindSource(r.Owner, r.Name, b.Commit, ".drone.sec")
+
+	return []byte(config.Data), []byte(sec.Data), err
 }
 
 // Status sends the commit status to the remote system.

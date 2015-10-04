@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/bitbucket"
@@ -54,10 +55,7 @@ func (c *Client) ListEmail() (*EmailResp, error) {
 
 func (c *Client) ListTeams(opts *ListOpts) (*AccountResp, error) {
 	var out = new(AccountResp)
-	var uri = fmt.Sprintf("%s/2.0/teams/?role=member", api)
-	if opts != nil && opts.Page > 0 {
-		uri = fmt.Sprintf("%s&page=%d", uri, opts.Page)
-	}
+	var uri = fmt.Sprintf("%s/2.0/teams/?role=member&%s", api, encodeListOpts(opts))
 	var err = c.do(uri, get, nil, out)
 	return out, err
 }
@@ -71,10 +69,7 @@ func (c *Client) FindRepo(owner, name string) (*Repo, error) {
 
 func (c *Client) ListRepos(account string, opts *ListOpts) (*RepoResp, error) {
 	var out = new(RepoResp)
-	var uri = fmt.Sprintf("%s/2.0/repositories/%s", api)
-	if opts != nil && opts.Page > 0 {
-		uri = fmt.Sprintf("%s?page=%d", uri, opts.Page)
-	}
+	var uri = fmt.Sprintf("%s/2.0/repositories/%s?%s", api, account, encodeListOpts(opts))
 	var err = c.do(uri, get, nil, out)
 	return out, err
 }
@@ -88,10 +83,7 @@ func (c *Client) FindHook(owner, name, id string) (*Hook, error) {
 
 func (c *Client) ListHooks(owner, name string, opts *ListOpts) (*HookResp, error) {
 	var out = new(HookResp)
-	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/hooks", api, owner, name)
-	if opts != nil && opts.Page > 0 {
-		uri = fmt.Sprintf("%s?page=%d", uri, opts.Page)
-	}
+	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/hooks?%s", api, owner, name, encodeListOpts(opts))
 	var err = c.do(uri, get, nil, out)
 	return out, err
 }
@@ -106,13 +98,20 @@ func (c *Client) DeleteHook(owner, name, id string) error {
 	return c.do(uri, del, nil, nil)
 }
 
+func (c *Client) FindSource(owner, name, revision, path string) (*Source, error) {
+	var out = new(Source)
+	var uri = fmt.Sprintf("%s/1.0/repositories/%s/%s/src/%s/%s", api, owner, name, revision, path)
+	var err = c.do(uri, get, nil, out)
+	return out, err
+}
+
 func (c *Client) do(rawurl, method string, in, out interface{}) error {
 
 	uri, err := url.Parse(rawurl)
 	if err != nil {
 		return err
 	}
-	println(uri.String())
+
 	// if we are posting or putting data, we need to
 	// write it to the body of the request.
 	var buf io.ReadWriter
@@ -152,4 +151,18 @@ func (c *Client) do(rawurl, method string, in, out interface{}) error {
 	}
 
 	return nil
+}
+
+func encodeListOpts(opts *ListOpts) string {
+	var params = new(url.Values)
+	if opts == nil {
+		return params.Encode()
+	}
+	if opts.Page != 0 {
+		params.Set("page", strconv.Itoa(opts.Page))
+	}
+	if opts.PageLen != 0 {
+		params.Set("pagelen", strconv.Itoa(opts.PageLen))
+	}
+	return params.Encode()
 }
