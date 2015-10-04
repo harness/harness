@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote/bitbucket"
 	"github.com/drone/drone/remote/github"
 	"github.com/drone/drone/remote/gitlab"
 	"github.com/drone/drone/shared/envconfig"
@@ -15,6 +16,8 @@ func Load(env envconfig.Env) Remote {
 	driver := env.Get("REMOTE_DRIVER")
 
 	switch driver {
+	case "bitbucket":
+		return bitbucket.Load(env)
 	case "github":
 		return github.Load(env)
 	case "gitlab":
@@ -69,4 +72,11 @@ type Remote interface {
 	// Hook parses the post-commit hook from the Request body
 	// and returns the required data in a standard format.
 	Hook(r *http.Request) (*model.Repo, *model.Build, error)
+}
+
+type Refresher interface {
+	// Refresh refreshes an oauth token and expiration for the given
+	// user. It returns true if the token was refreshed, false if the
+	// token was not refreshed, and error if it failed to refersh.
+	Refresh(*model.User) (bool, error)
 }
