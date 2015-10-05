@@ -5,6 +5,7 @@ CREATE TABLE users (
 ,user_login  TEXT
 ,user_token  TEXT
 ,user_secret TEXT
+,user_expiry INTEGER
 ,user_email  TEXT
 ,user_avatar TEXT
 ,user_active BOOLEAN

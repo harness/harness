@@ -14,16 +14,14 @@ import (
 
 func Refresh(c *gin.Context) {
 	user := session.User(c)
-	if user == nil || user.Expiry == 0 {
+	if user == nil {
 		c.Next()
 		return
 	}
 
-	db := context.Database(c)
-	remote_ := context.Remote(c)
-
 	// check if the remote includes the ability to
 	// refresh the user token.
+	remote_ := context.Remote(c)
 	refresher, ok := remote_.(remote.Refresher)
 	if !ok {
 		c.Next()
@@ -33,7 +31,7 @@ func Refresh(c *gin.Context) {
 	// check to see if the user token is expired or
 	// will expire within the next 30 minutes (1800 seconds).
 	// If not, there is nothing we really need to do here.
-	if time.Now().UTC().Unix() > (user.Expiry - 1800) {
+	if time.Now().UTC().Unix() < (user.Expiry - 1800) {
 		c.Next()
 		return
 	}
@@ -43,11 +41,14 @@ func Refresh(c *gin.Context) {
 	// database.
 	ok, _ = refresher.Refresh(user)
 	if ok {
+		db := context.Database(c)
 		err := model.UpdateUser(db, user)
 		if err != nil {
 			// we only log the error at this time. not sure
 			// if we really want to fail the request, do we?
 			log.Errorf("cannot refresh access token for %s. %s", user.Login, err)
+		} else {
+			log.Infof("refreshed access token for %s", user.Login)
 		}
 	}
 
