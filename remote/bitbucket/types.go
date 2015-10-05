@@ -116,13 +116,51 @@ type PushHook struct {
 	} `json:"push"`
 }
 
+type PullRequestHook struct {
+	Actor       Account `json:"actor"`
+	Repo        Repo    `json:"repository"`
+	PullRequest struct {
+		ID      int       `json:"id"`
+		Type    string    `json:"type"`
+		Reason  string    `json:"reason"`
+		Desc    string    `json:"description"`
+		Title   string    `json:"title"`
+		State   string    `json:"state"`
+		Links   Links     `json:"links"`
+		Created time.Time `json:"created_on"`
+		Updated time.Time `json:"updated_on"`
+
+		Source struct {
+			Repo   Repo `json:"repsoitory"`
+			Commit struct {
+				Hash  string `json:"hash"`
+				Links Links  `json:"links"`
+			} `json:"commit"`
+			Branch struct {
+				Name string `json:"name"`
+			} `json:"branch"`
+		} `json:"source"`
+
+		Dest struct {
+			Repo   Repo `json:"repsoitory"`
+			Commit struct {
+				Hash  string `json:"hash"`
+				Links Links  `json:"links"`
+			} `json:"commit"`
+			Branch struct {
+				Name string `json:"name"`
+			} `json:"branch"`
+		} `json:"destination"`
+	} `json:"pullrequest"`
+}
+
 type ListOpts struct {
 	Page    int
 	PageLen int
 }
 
 func (o *ListOpts) Encode() string {
-	params := new(url.Values)
+	params := url.Values{}
 	if o.Page != 0 {
 		params.Set("page", strconv.Itoa(o.Page))
 	}
@@ -139,7 +177,7 @@ type ListTeamOpts struct {
 }
 
 func (o *ListTeamOpts) Encode() string {
-	params := new(url.Values)
+	params := url.Values{}
 	if o.Page != 0 {
 		params.Set("page", strconv.Itoa(o.Page))
 	}

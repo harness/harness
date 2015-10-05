@@ -1,6 +1,7 @@
 package bitbucket
 
 import (
+	"net/url"
 	"strings"
 
 	"github.com/drone/drone/model"
@@ -39,6 +40,14 @@ func convertRepo(from *Repo) *model.Repo {
 	// this excludes the .git suffix, but will still clone the repo.
 	if len(repo.Clone) == 0 {
 		repo.Clone = repo.Link
+	}
+
+	// if bitbucket tries to automatically populate the user
+	// in the url we must strip it out.
+	clone, err := url.Parse(repo.Clone)
+	if err == nil {
+		clone.User = nil
+		repo.Clone = clone.String()
 	}
 
 	return &repo

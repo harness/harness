@@ -306,7 +306,10 @@ func (bb *Bitbucket) Activate(u *model.User, r *model.Repo, k *model.Key, link s
 			return err
 		}
 		if hookurl.Host == linkurl.Host {
-			client.DeleteHook(r.Owner, r.Name, hook.Uuid)
+			err = client.DeleteHook(r.Owner, r.Name, hook.Uuid)
+			if err != nil {
+				log.Errorf("unable to delete hook %s. %s", hookurl.Host, err)
+			}
 			break
 		}
 	}

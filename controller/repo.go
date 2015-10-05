@@ -199,14 +199,18 @@ func GetRepoKey(c *gin.Context) {
 
 func DeleteRepo(c *gin.Context) {
 	db := context.Database(c)
+	remote := context.Remote(c)
 	repo := session.Repo(c)
+	user := session.User(c)
 
 	err := model.DeleteRepo(db, repo)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
-	} else {
-		c.Writer.WriteHeader(http.StatusOK)
+		return
 	}
+
+	remote.Deactivate(user, repo, httputil.GetURL(c.Request))
+	c.Writer.WriteHeader(http.StatusOK)
 }
 
 func PostSecure(c *gin.Context) {
