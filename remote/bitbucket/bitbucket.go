@@ -1,7 +1,9 @@
 package bitbucket
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -80,6 +82,7 @@ func (bb *Bitbucket) Login(res http.ResponseWriter, req *http.Request) (*model.U
 	user.Login = curr.Login
 	user.Token = token.AccessToken
 	user.Secret = token.RefreshToken
+	user.Expiry = token.Expiry.UTC().Unix()
 	user.Avatar = curr.Links.Avatar.Href
 
 	// gets the primary, confirmed email from bitbucket
@@ -98,7 +101,7 @@ func (bb *Bitbucket) Login(res http.ResponseWriter, req *http.Request) (*model.U
 	// of organizations, get the orgs and verify the
 	// user is a member.
 	if len(bb.Orgs) != 0 {
-		resp, err := client.ListTeams(&ListOpts{Page: 1, PageLen: 100})
+		resp, err := client.ListTeams(&ListTeamOpts{Page: 1, PageLen: 100, Role: "member"})
 		if err != nil {
 			return nil, false, err
 		}
@@ -160,6 +163,7 @@ func (bb *Bitbucket) Refresh(user *model.User) (bool, error) {
 	// update the user to include tne new access token
 	user.Token = token.AccessToken
 	user.Secret = token.RefreshToken
+	user.Expiry = token.Expiry.UTC().Unix()
 	return true, nil
 }
 
@@ -179,43 +183,28 @@ func (bb *Bitbucket) Repo(u *model.User, owner, name string) (*model.Repo, error
 func (bb *Bitbucket) Repos(u *model.User) ([]*model.RepoLite, error) {
 	token := oauth2.Token{AccessToken: u.Token, RefreshToken: u.Secret}
 	client := NewClientToken(bb.Client, bb.Secret, &token)
-
-	// var accounts = []string{u.Login}
 	var repos []*model.RepoLite
 
-	// for {
-	// 	resp, err := client.ListTeams(&ListOpts{Page: page})
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
+	// gets a list of all accounts to query, including the
+	// user's account and all team accounts.
+	logins := []string{u.Login}
+	resp, err := client.ListTeams(&ListTeamOpts{PageLen: 100, Role: "member"})
+	if err != nil {
+		return repos, err
+	}
+	for _, team := range resp.Values {
+		logins = append(logins, team.Login)
+	}
 
-	// 	for _, team := range resp.Values {
-	// 		accounts = append(accounts, team.Login)
-	// 	}
-
-	// 	if resp.Page == resp.Pages {
-	// 		break
-	// 	}
-	// }
-
-	var page = 1
-	for {
-		resp, err := client.ListRepos(u.Login, &ListOpts{Page: page, PageLen: 100})
+	// for each account, get the list of repos
+	for _, login := range logins {
+		repos_, err := client.ListReposAll(login)
 		if err != nil {
-			println(err.Error())
-			return nil, err
+			return repos, err
 		}
-
-		for _, repo := range resp.Values {
-			repos = append(repos, convertRepoLite(&repo))
+		for _, repo := range repos_ {
+			repos = append(repos, convertRepoLite(repo))
 		}
-
-		if len(resp.Next) == 0 {
-			break
-		}
-
-		page = resp.Page + 1
-		break
 	}
 
 	return repos, nil
@@ -239,7 +228,7 @@ func (bb *Bitbucket) Perm(u *model.User, owner, name string) (*model.Perm, error
 
 	// if the user has access to the repository hooks we
 	// can deduce that the user has push and admin access.
-	_, err = client.ListHooks(owner, name, nil)
+	_, err = client.ListHooks(owner, name, &ListOpts{})
 	if err == nil {
 		perms.Push = true
 		perms.Admin = true
@@ -284,62 +273,132 @@ func (bb *Bitbucket) Status(u *model.User, r *model.Repo, b *model.Build, link s
 // Netrc returns a .netrc file that can be used to clone
 // private repositories from a remote system.
 func (bb *Bitbucket) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
-	netrc := &model.Netrc{}
-	netrc.Login = "x-token-auth"
-	netrc.Password = u.Token
-	netrc.Machine = "bitbucket.org"
-	return netrc, nil
+	return &model.Netrc{
+		Machine:  "bitbucket.org",
+		Login:    "x-token-auth",
+		Password: u.Token,
+	}, nil
 }
 
 // Activate activates a repository by creating the post-commit hook and
 // adding the SSH deploy key, if applicable.
 func (bb *Bitbucket) Activate(u *model.User, r *model.Repo, k *model.Key, link string) error {
+	client := NewClientToken(
+		bb.Client,
+		bb.Secret,
+		&oauth2.Token{
+			AccessToken:  u.Token,
+			RefreshToken: u.Secret,
+		},
+	)
 
-	// "repo:push"
-	return nil
+	linkurl, err := url.Parse(link)
+	if err != nil {
+		return err
+	}
+
+	// see if the hook already exists. If yes be sure to
+	// delete so that multiple messages aren't sent.
+	hooks, _ := client.ListHooks(r.Owner, r.Name, &ListOpts{})
+	for _, hook := range hooks.Values {
+		hookurl, err := url.Parse(hook.Url)
+		if err != nil {
+			return err
+		}
+		if hookurl.Host == linkurl.Host {
+			client.DeleteHook(r.Owner, r.Name, hook.Uuid)
+			break
+		}
+	}
+
+	return client.CreateHook(r.Owner, r.Name, &Hook{
+		Active: true,
+		Desc:   linkurl.Host,
+		Events: []string{"repo:push"},
+		Url:    link,
+	})
 }
 
 // Deactivate removes a repository by removing all the post-commit hooks
 // which are equal to link and removing the SSH deploy key.
 func (bb *Bitbucket) Deactivate(u *model.User, r *model.Repo, link string) error {
+	client := NewClientToken(
+		bb.Client,
+		bb.Secret,
+		&oauth2.Token{
+			AccessToken:  u.Token,
+			RefreshToken: u.Secret,
+		},
+	)
+
+	linkurl, err := url.Parse(link)
+	if err != nil {
+		return err
+	}
+
+	// see if the hook already exists. If yes be sure to
+	// delete so that multiple messages aren't sent.
+	hooks, _ := client.ListHooks(r.Owner, r.Name, &ListOpts{})
+	for _, hook := range hooks.Values {
+		hookurl, err := url.Parse(hook.Url)
+		if err != nil {
+			return err
+		}
+		if hookurl.Host == linkurl.Host {
+			client.DeleteHook(r.Owner, r.Name, hook.Uuid)
+			break
+		}
+	}
+
 	return nil
 }
 
 // Hook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
 func (bb *Bitbucket) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
-	return nil, nil, nil
-}
 
-func convertRepo(from *Repo) *model.Repo {
-	repo := &model.Repo{}
-	repo.Owner = from.Owner.Login
-	repo.Name = from.Name
-	repo.FullName = from.FullName
-	repo.Link = from.Links.Html.Href
-	repo.IsPrivate = from.IsPrivate
-	repo.Avatar = from.Owner.Links.Avatar.Href
-	repo.Branch = "master"
-	repo.Clone = fmt.Sprintf("https://bitbucket.org/%s.git", repo.FullName)
-
-	// above we manually constructed the repository clone url.
-	// below we will iterate through the list of clone links and
-	// attempt to instead use the clone url provided by bitbucket.
-	for _, link := range from.Links.Clone {
-		if link.Name == "https" {
-			repo.Clone = link.Href
-			break
-		}
+	// only a subset of hooks are processed by drone
+	if r.Header.Get("X-Event-Key") != "repo:push" {
+		return nil, nil, nil
 	}
 
-	return repo
-}
+	// extract the hook payload
+	payload := []byte(r.FormValue("payload"))
+	if len(payload) == 0 {
+		defer r.Body.Close()
+		payload, _ = ioutil.ReadAll(r.Body)
+	}
 
-func convertRepoLite(from *Repo) *model.RepoLite {
-	repo := &model.RepoLite{}
-	repo.Owner = from.Owner.Login
-	repo.Name = from.Name
-	repo.FullName = from.FullName
-	repo.Avatar = from.Owner.Links.Avatar.Href
-	return repo
+	hook := PushHook{}
+	err := json.Unmarshal(payload, &hook)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// the hook can container one or many changes. Since I don't
+	// fully understand this yet, we will just pick the first
+	// change that has branch information.
+	for _, change := range hook.Push.Changes {
+
+		// must have branch and sha information
+		if change.New.Type != "branch" || change.New.Target.Hash == "" {
+			continue
+		}
+
+		// return the updated repsitory information and the
+		// build information.
+		return convertRepo(&hook.Repo), &model.Build{
+			Event:     model.EventPush,
+			Commit:    change.New.Target.Hash,
+			Ref:       fmt.Sprintf("refs/heads/%s", change.New.Name),
+			Link:      change.New.Target.Links.Html.Href,
+			Branch:    change.New.Name,
+			Message:   change.New.Target.Message,
+			Avatar:    hook.Actor.Links.Avatar.Href,
+			Author:    hook.Actor.Login,
+			Timestamp: change.New.Target.Date.UTC().Unix(),
+		}, nil
+	}
+
+	return nil, nil, nil
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/drone/drone/controller"
 	"github.com/drone/drone/router/middleware/header"
+	"github.com/drone/drone/router/middleware/refresh"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/static"
 	"github.com/drone/drone/template"
@@ -21,6 +22,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(header.SetHeaders())
 	e.Use(middleware...)
 	e.Use(session.SetUser())
+	e.Use(refresh.Refresh)
 
 	e.GET("/", controller.ShowIndex)
 	e.GET("/login", controller.ShowLogin)

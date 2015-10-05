@@ -10,6 +10,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/engine"
+	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/gin-gonic/gin"
 
@@ -124,7 +125,7 @@ func DeleteBuild(c *gin.Context) {
 
 func PostBuild(c *gin.Context) {
 
-	remote := context.Remote(c)
+	remote_ := context.Remote(c)
 	repo := session.Repo(c)
 	db := context.Database(c)
 
@@ -148,8 +149,18 @@ func PostBuild(c *gin.Context) {
 		return
 	}
 
+	// if the remote has a refresh token, the current access token
+	// may be stale. Therefore, we should refresh prior to dispatching
+	// the job.
+	if refresher, ok := remote_.(remote.Refresher); ok {
+		ok, _ := refresher.Refresh(user)
+		if ok {
+			model.UpdateUser(db, user)
+		}
+	}
+
 	// fetch the .drone.yml file from the database
-	raw, sec, err := remote.Script(user, repo, build)
+	raw, sec, err := remote_.Script(user, repo, build)
 	if err != nil {
 		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
@@ -157,7 +168,7 @@ func PostBuild(c *gin.Context) {
 	}
 
 	key, _ := model.GetKey(db, repo)
-	netrc, err := remote.Netrc(user, repo)
+	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
 		log.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)

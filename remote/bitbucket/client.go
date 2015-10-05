@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/bitbucket"
@@ -20,7 +19,18 @@ const (
 	del  = "DELETE"
 )
 
-const api = "https://api.bitbucket.org"
+const (
+	base = "https://api.bitbucket.org"
+
+	pathUser   = "%s/2.0/user/"
+	pathEmails = "%s/2.0/user/emails"
+	pathTeams  = "%s/2.0/teams/?%s"
+	pathRepo   = "%s/2.0/repositories/%s/%s"
+	pathRepos  = "%s/2.0/repositories/%s?%s"
+	pathHook   = "%s/2.0/repositories/%s/%s/hooks/%s"
+	pathHooks  = "%s/2.0/repositories/%s/%s/hooks?%s"
+	pathSource = "%s/1.0/repositories/%s/%s/src/%s/%s"
+)
 
 type Client struct {
 	*http.Client
@@ -40,68 +50,87 @@ func NewClientToken(client, secret string, token *oauth2.Token) *Client {
 }
 
 func (c *Client) FindCurrent() (*Account, error) {
-	var out = new(Account)
-	var uri = fmt.Sprintf("%s/2.0/user/", api)
-	var err = c.do(uri, get, nil, out)
+	out := new(Account)
+	uri := fmt.Sprintf(pathUser, base)
+	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
 func (c *Client) ListEmail() (*EmailResp, error) {
-	var out = new(EmailResp)
-	var uri = fmt.Sprintf("%s/2.0/user/emails", api)
-	var err = c.do(uri, get, nil, out)
+	out := new(EmailResp)
+	uri := fmt.Sprintf(pathEmails, base)
+	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
-func (c *Client) ListTeams(opts *ListOpts) (*AccountResp, error) {
-	var out = new(AccountResp)
-	var uri = fmt.Sprintf("%s/2.0/teams/?role=member&%s", api, encodeListOpts(opts))
-	var err = c.do(uri, get, nil, out)
+func (c *Client) ListTeams(opts *ListTeamOpts) (*AccountResp, error) {
+	out := new(AccountResp)
+	uri := fmt.Sprintf(pathTeams, base, opts.Encode())
+	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
 func (c *Client) FindRepo(owner, name string) (*Repo, error) {
-	var out = new(Repo)
-	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s", api, owner, name)
-	var err = c.do(uri, get, nil, out)
+	out := new(Repo)
+	uri := fmt.Sprintf(pathRepo, base, owner, name)
+	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
 func (c *Client) ListRepos(account string, opts *ListOpts) (*RepoResp, error) {
-	var out = new(RepoResp)
-	var uri = fmt.Sprintf("%s/2.0/repositories/%s?%s", api, account, encodeListOpts(opts))
-	var err = c.do(uri, get, nil, out)
+	out := new(RepoResp)
+	uri := fmt.Sprintf(pathRepos, base, account, opts.Encode())
+	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
+func (c *Client) ListReposAll(account string) ([]*Repo, error) {
+	var page = 1
+	var repos []*Repo
+
+	for {
+		resp, err := c.ListRepos(account, &ListOpts{Page: page, PageLen: 100})
+		if err != nil {
+			println(err.Error())
+			return repos, err
+		}
+		repos = append(repos, resp.Values...)
+		if len(resp.Next) == 0 {
+			break
+		}
+		page = resp.Page + 1
+	}
+	return repos, nil
+}
+
 func (c *Client) FindHook(owner, name, id string) (*Hook, error) {
-	var out = new(Hook)
-	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/hooks/%s", api, owner, name, id)
-	var err = c.do(uri, get, nil, out)
+	out := new(Hook)
+	uri := fmt.Sprintf(pathHook, base, owner, name, id)
+	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
 func (c *Client) ListHooks(owner, name string, opts *ListOpts) (*HookResp, error) {
-	var out = new(HookResp)
-	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/hooks?%s", api, owner, name, encodeListOpts(opts))
-	var err = c.do(uri, get, nil, out)
+	out := new(HookResp)
+	uri := fmt.Sprintf(pathHooks, base, owner, name, opts.Encode())
+	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
-func (c *Client) CreateHook(owner, name, hook *Hook) error {
-	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/hooks", api, owner, name)
+func (c *Client) CreateHook(owner, name string, hook *Hook) error {
+	uri := fmt.Sprintf(pathHooks, base, owner, name, "")
 	return c.do(uri, post, hook, nil)
 }
 
 func (c *Client) DeleteHook(owner, name, id string) error {
-	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/hooks/%s", api, owner, name, id)
+	uri := fmt.Sprintf(pathHook, base, owner, name, id)
 	return c.do(uri, del, nil, nil)
 }
 
 func (c *Client) FindSource(owner, name, revision, path string) (*Source, error) {
-	var out = new(Source)
-	var uri = fmt.Sprintf("%s/1.0/repositories/%s/%s/src/%s/%s", api, owner, name, revision, path)
-	var err = c.do(uri, get, nil, out)
+	out := new(Source)
+	uri := fmt.Sprintf(pathSource, base, owner, name, revision, path)
+	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
@@ -128,6 +157,9 @@ func (c *Client) do(rawurl, method string, in, out interface{}) error {
 	if err != nil {
 		return err
 	}
+	if in != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	resp, err := c.Do(req)
 	if err != nil {
@@ -141,6 +173,11 @@ func (c *Client) do(rawurl, method string, in, out interface{}) error {
 		err := Error{}
 		json.NewDecoder(resp.Body).Decode(&err)
 		err.Status = resp.StatusCode
+
+		instr, _ := json.Marshal(in)
+		println(err.Body.Message)
+		println(string(instr))
+		println(uri.String())
 		return err
 	}
 
@@ -151,18 +188,4 @@ func (c *Client) do(rawurl, method string, in, out interface{}) error {
 	}
 
 	return nil
-}
-
-func encodeListOpts(opts *ListOpts) string {
-	var params = new(url.Values)
-	if opts == nil {
-		return params.Encode()
-	}
-	if opts.Page != 0 {
-		params.Set("page", strconv.Itoa(opts.Page))
-	}
-	if opts.PageLen != 0 {
-		params.Set("pagelen", strconv.Itoa(opts.PageLen))
-	}
-	return params.Encode()
 }
