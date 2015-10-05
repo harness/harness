@@ -1,5 +1,11 @@
 package bitbucket
 
+import (
+	"net/url"
+	"strconv"
+	"time"
+)
+
 type Account struct {
 	Login string `json:"username"`
 	Name  string `json:"display_name"`
@@ -8,11 +14,11 @@ type Account struct {
 }
 
 type AccountResp struct {
-	Page   int       `json:"page"`
-	Pages  int       `json:"pagelen"`
-	Size   int       `json:"size"`
-	Next   string    `json:"next"`
-	Values []Account `json:"values"`
+	Page   int        `json:"page"`
+	Pages  int        `json:"pagelen"`
+	Size   int        `json:"size"`
+	Next   string     `json:"next"`
+	Values []*Account `json:"values"`
 }
 
 type Email struct {
@@ -22,11 +28,11 @@ type Email struct {
 }
 
 type EmailResp struct {
-	Page   int     `json:"page"`
-	Pages  int     `json:"pagelen"`
-	Size   int     `json:"size"`
-	Next   string  `json:"next"`
-	Values []Email `json:"values"`
+	Page   int      `json:"page"`
+	Pages  int      `json:"pagelen"`
+	Size   int      `json:"size"`
+	Next   string   `json:"next"`
+	Values []*Email `json:"values"`
 }
 
 type Hook struct {
@@ -38,11 +44,11 @@ type Hook struct {
 }
 
 type HookResp struct {
-	Page   int    `json:"page"`
-	Pages  int    `json:"pagelen"`
-	Size   int    `json:"size"`
-	Next   string `json:"next"`
-	Values []Hook `json:"values"`
+	Page   int     `json:"page"`
+	Pages  int     `json:"pagelen"`
+	Size   int     `json:"size"`
+	Next   string  `json:"next"`
+	Values []*Hook `json:"values"`
 }
 
 type Links struct {
@@ -72,11 +78,11 @@ type Repo struct {
 }
 
 type RepoResp struct {
-	Page   int    `json:"page"`
-	Pages  int    `json:"pagelen"`
-	Size   int    `json:"size"`
-	Next   string `json:"next"`
-	Values []Repo `json:"values"`
+	Page   int     `json:"page"`
+	Pages  int     `json:"pagelen"`
+	Size   int     `json:"size"`
+	Next   string  `json:"next"`
+	Values []*Repo `json:"values"`
 }
 
 type Source struct {
@@ -86,9 +92,64 @@ type Source struct {
 	Size int64  `json:"size"`
 }
 
+type PushHook struct {
+	Actor Account `json:"actor"`
+	Repo  Repo    `json:"repository"`
+	Push  struct {
+		Changes []struct {
+			New struct {
+				Type   string `json:"type"`
+				Name   string `json:"name"`
+				Target struct {
+					Type    string    `json:"type"`
+					Hash    string    `json:"hash"`
+					Message string    `json:"message"`
+					Date    time.Time `json:"date"`
+					Links   Links     `json:"links"`
+					Author  struct {
+						Raw  string  `json:"raw"`
+						User Account `json:"user"`
+					} `json:"author"`
+				} `json:"target"`
+			} `json:"new"`
+		} `json:"changes"`
+	} `json:"push"`
+}
+
 type ListOpts struct {
 	Page    int
 	PageLen int
+}
+
+func (o *ListOpts) Encode() string {
+	params := new(url.Values)
+	if o.Page != 0 {
+		params.Set("page", strconv.Itoa(o.Page))
+	}
+	if o.PageLen != 0 {
+		params.Set("pagelen", strconv.Itoa(o.PageLen))
+	}
+	return params.Encode()
+}
+
+type ListTeamOpts struct {
+	Page    int
+	PageLen int
+	Role    string
+}
+
+func (o *ListTeamOpts) Encode() string {
+	params := new(url.Values)
+	if o.Page != 0 {
+		params.Set("page", strconv.Itoa(o.Page))
+	}
+	if o.PageLen != 0 {
+		params.Set("pagelen", strconv.Itoa(o.PageLen))
+	}
+	if len(o.Role) != 0 {
+		params.Set("role", o.Role)
+	}
+	return params.Encode()
 }
 
 type Error struct {

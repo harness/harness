@@ -10,6 +10,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/engine"
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
@@ -18,10 +19,10 @@ import (
 )
 
 func PostHook(c *gin.Context) {
-	remote := context.Remote(c)
+	remote_ := context.Remote(c)
 	db := context.Database(c)
 
-	tmprepo, build, err := remote.Hook(c.Request)
+	tmprepo, build, err := remote_.Hook(c.Request)
 	if err != nil {
 		log.Errorf("failure to parse hook. %s", err)
 		c.AbortWithError(400, err)
@@ -93,8 +94,18 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
+	// if the remote has a refresh token, the current access token
+	// may be stale. Therefore, we should refresh prior to dispatching
+	// the job.
+	if refresher, ok := remote_.(remote.Refresher); ok {
+		ok, _ := refresher.Refresh(user)
+		if ok {
+			model.UpdateUser(db, user)
+		}
+	}
+
 	// fetch the .drone.yml file from the database
-	raw, sec, err := remote.Script(user, repo, build)
+	raw, sec, err := remote_.Script(user, repo, build)
 	if err != nil {
 		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
@@ -111,7 +122,7 @@ func PostHook(c *gin.Context) {
 		axes = append(axes, matrix.Axis{})
 	}
 
-	netrc, err := remote.Netrc(user, repo)
+	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
 		log.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)
@@ -170,7 +181,7 @@ func PostHook(c *gin.Context) {
 	c.JSON(200, build)
 
 	url := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, build.Number)
-	err = remote.Status(user, repo, build, url)
+	err = remote_.Status(user, repo, build, url)
 	if err != nil {
 		log.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
 	}
