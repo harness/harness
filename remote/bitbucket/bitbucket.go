@@ -360,12 +360,17 @@ func (bb *Bitbucket) Deactivate(u *model.User, r *model.Repo, link string) error
 // and returns the required data in a standard format.
 func (bb *Bitbucket) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 
-	// only a subset of hooks are processed by drone
-	if r.Header.Get("X-Event-Key") != "repo:push" {
-		return nil, nil, nil
+	switch r.Header.Get("X-Event-Key") {
+	case "repo:push":
+		return bb.pushHook(r)
+	case "pullrequest:created", "pullrequest:updated":
+		return bb.pullHook(r)
 	}
 
-	// extract the hook payload
+	return nil, nil, nil
+}
+
+func (bb *Bitbucket) pushHook(r *http.Request) (*model.Repo, *model.Build, error) {
 	payload := []byte(r.FormValue("payload"))
 	if len(payload) == 0 {
 		defer r.Body.Close()
@@ -404,4 +409,35 @@ func (bb *Bitbucket) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 	}
 
 	return nil, nil, nil
+}
+
+func (bb *Bitbucket) pullHook(r *http.Request) (*model.Repo, *model.Build, error) {
+	payload := []byte(r.FormValue("payload"))
+	if len(payload) == 0 {
+		defer r.Body.Close()
+		payload, _ = ioutil.ReadAll(r.Body)
+	}
+
+	hook := PullRequestHook{}
+	err := json.Unmarshal(payload, &hook)
+	if err != nil {
+		return nil, nil, err
+	}
+	if hook.PullRequest.State != "OPEN" {
+		return nil, nil, nil
+	}
+
+	return convertRepo(&hook.Repo), &model.Build{
+		Event:     model.EventPull,
+		Commit:    hook.PullRequest.Dest.Commit.Hash,
+		Ref:       fmt.Sprintf("refs/heads/%s", hook.PullRequest.Dest.Branch.Name),
+		Refspec:   fmt.Sprintf("https://bitbucket.org/%s.git", hook.PullRequest.Source.Repo.FullName),
+		Remote:    cloneLink(hook.PullRequest.Dest.Repo),
+		Link:      hook.PullRequest.Links.Html.Href,
+		Branch:    hook.PullRequest.Dest.Branch.Name,
+		Message:   hook.PullRequest.Desc,
+		Avatar:    hook.Actor.Links.Avatar.Href,
+		Author:    hook.Actor.Login,
+		Timestamp: hook.PullRequest.Updated.UTC().Unix(),
+	}, nil
 }
