@@ -19,13 +19,13 @@ gen: gen_static gen_template gen_migrations
 
 gen_static:
 	mkdir -p static/docs_gen/api
-	go generate github.com/drone/drone/static
+	go generate github.com/CiscoCloud/drone/static
 
 gen_template:
-	go generate github.com/drone/drone/template
+	go generate github.com/CiscoCloud/drone/template
 
 gen_migrations:
-	go generate github.com/drone/drone/shared/database
+	go generate github.com/CiscoCloud/drone/shared/database
 
 build:
 	go build

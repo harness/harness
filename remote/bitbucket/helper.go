@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/drone/drone/model"
+	"github.com/CiscoCloud/drone/model"
 )
 
 // convertRepo is a helper function used to convert a Bitbucket

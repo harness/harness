@@ -3,10 +3,10 @@ package refresh
 import (
 	"time"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote"
-	"github.com/drone/drone/router/middleware/context"
-	"github.com/drone/drone/router/middleware/session"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/remote"
+	"github.com/CiscoCloud/drone/router/middleware/context"
+	"github.com/CiscoCloud/drone/router/middleware/session"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
