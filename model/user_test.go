@@ -179,25 +179,27 @@ func TestUserstore(t *testing.T) {
 			}
 			CreateRepo(db, repo1)
 			CreateRepo(db, repo2)
-			CreateStar(db, &User{ID: 1}, repo1)
 
 			build1 := &Build{
 				RepoID: repo1.ID,
 				Status: StatusFailure,
+				Author: "bradrydzewski",
 			}
 			build2 := &Build{
 				RepoID: repo1.ID,
 				Status: StatusSuccess,
+				Author: "bradrydzewski",
 			}
 			build3 := &Build{
 				RepoID: repo2.ID,
 				Status: StatusSuccess,
+				Author: "octocat",
 			}
 			CreateBuild(db, build1)
 			CreateBuild(db, build2)
 			CreateBuild(db, build3)
 
-			builds, err := GetUserFeed(db, &User{ID: 1}, 20, 0)
+			builds, err := GetUserFeed(db, &User{ID: 1, Login: "bradrydzewski"}, 20, 0)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(builds)).Equal(2)
 			g.Assert(builds[0].Owner).Equal("bradrydzewski")

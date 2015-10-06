@@ -17,7 +17,7 @@ func TestRepostore(t *testing.T) {
 		// before each test be sure to purge the package
 		// table data from the database.
 		g.BeforeEach(func() {
-			db.Exec("DELETE FROM stars")
+			db.Exec("DELETE FROM builds")
 			db.Exec("DELETE FROM repos")
 			db.Exec("DELETE FROM users")
 		})
@@ -101,8 +101,9 @@ func TestRepostore(t *testing.T) {
 			}
 			CreateRepo(db, &repo1)
 			CreateRepo(db, &repo2)
-			CreateStar(db, &User{ID: 1}, &repo1)
-			repos, err := GetRepoList(db, &User{ID: 1})
+			CreateBuild(db, &Build{RepoID: repo1.ID, Author: "bradrydzewski"})
+			CreateBuild(db, &Build{RepoID: repo1.ID, Author: "johnsmith"})
+			repos, err := GetRepoList(db, &User{ID: 1, Login: "bradrydzewski"})
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(repos)).Equal(1)
 			g.Assert(repos[0].UserID).Equal(repo1.UserID)

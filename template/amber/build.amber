@@ -17,7 +17,7 @@ block header
 block content
     div.container-fluid
         div.row
-            div.col-md-4
+            div.col-md-4.sticky
                 div.build-summary
                     div
                         div[class=Build.Status][style="display:none"] #{Build.Status}
@@ -46,13 +46,25 @@ block content
                                     h3
                                         each $key, $val in $job.Environment
                                             div.env #{$key}=#{$val}
-                                div
+                                div[class="msg-pending"]
+                                    .hidden ? $job.Status != "pending"
+                                    | pending assignment to a worker
+                                div[class="msg-running"]
+                                    .hidden ? $job.Status != "running"
+                                    | started 
+                                    span[data-livestamp=$job.Started]
+                                div[class="msg-finished"]
+                                    .hidden ? $job.Finished == 0
                                     | finished 
                                     span[data-livestamp=$job.Finished]
-                                div with exit code #{$job.ExitCode}
+                                div[class="msg-exited"]
+                                    .hidden ? $job.Finished == 0
+                                    | with exit code
+                                    span #{$job.ExitCode}
 
                 div.build-btn-group
-                    button.btn.btn-info#restart restart
+                    button.btn.btn-info.hidden#restart restart
+                    button.btn.btn-info.hidden#cancel cancel
 
             div.col-md-8
                 pre#output
@@ -61,6 +73,7 @@ block content
 
 block append scripts
     script
+        $('.sticky').Stickyfill();
         var repo = #{json(Repo.FullName)};
         var build = #{json(Build.Number)};
         var job = #{json(Job.Number)};

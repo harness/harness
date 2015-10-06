@@ -13,7 +13,7 @@
 #     docker build --rm=true -t drone/drone .
 
 FROM centurylink/ca-certs
-EXPOSE 8080
+EXPOSE 8000
 
 ADD drone_static /drone_static
 

@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/CiscoCloud/drone/shared/database"
 	"github.com/russross/meddler"
+	"strings"
 )
 
 type RepoLite struct {
@@ -40,14 +41,35 @@ func GetRepo(db meddler.DB, id int64) (*Repo, error) {
 }
 
 func GetRepoName(db meddler.DB, owner, name string) (*Repo, error) {
+	return GetRepoFullName(db, owner+"/"+name)
+}
+
+func GetRepoFullName(db meddler.DB, name string) (*Repo, error) {
 	var repo = new(Repo)
-	var err = meddler.QueryRow(db, repo, database.Rebind(repoNameQuery), owner, name)
+	var err = meddler.QueryRow(db, repo, database.Rebind(repoNameQuery), name)
 	return repo, err
 }
 
 func GetRepoList(db meddler.DB, user *User) ([]*Repo, error) {
+	// we don't have real-time access to the intersection
+	// of github repos and drone repos. So we cheat by simply
+	// getting the distinct list of repos that the user
+	// has created builds for.
 	var repos = []*Repo{}
-	var err = meddler.QueryAll(db, &repos, database.Rebind(repoListQuery), user.ID)
+	var err = meddler.QueryAll(db, &repos, database.Rebind(repoListQuery), user.Login)
+	return repos, err
+}
+
+func GetRepoListOf(db meddler.DB, listof []string) ([]*Repo, error) {
+	var repos = []*Repo{}
+	var qs = make([]string, len(listof), len(listof))
+	var in = make([]interface{}, len(listof), len(listof))
+	for i, repo := range listof {
+		qs[i] = "?"
+		in[i] = repo
+	}
+	var stmt = "SELECT * FROM repos WHERE repo_id IN (" + strings.Join(qs, ",") + ")"
+	var err = meddler.QueryAll(db, &repos, database.Rebind(stmt), in...)
 	return repos, err
 }
 
@@ -69,18 +91,28 @@ const repoTable = "repos"
 const repoNameQuery = `
 SELECT *
 FROM repos
-WHERE repo_owner = ?
-AND   repo_name = ?
+WHERE repo_full_name = ?
 LIMIT 1;
 `
 
-const repoListQuery = `
+const repoStarsQuery = `
 SELECT r.*
 FROM
  repos r
 ,stars s
 WHERE r.repo_id = s.star_repo_id
   AND s.star_user_id = ?
+`
+
+const repoListQuery = `
+SELECT *
+FROM repos
+WHERE repo_id IN (
+	SELECT DISTINCT build_repo_id
+	FROM builds
+	WHERE build_author = ?
+)
+ORDER BY repo_full_name
 `
 
 const repoDeleteStmt = `

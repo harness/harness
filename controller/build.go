@@ -6,9 +6,11 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/CiscoCloud/drone/engine"
+	"github.com/CiscoCloud/drone/remote"
 	"github.com/CiscoCloud/drone/shared/httputil"
 	"github.com/gin-gonic/gin"
 
@@ -93,12 +95,37 @@ func GetBuildLogs(c *gin.Context) {
 }
 
 func DeleteBuild(c *gin.Context) {
-	c.String(http.StatusOK, "DeleteBuild")
+	engine_ := context.Engine(c)
+	repo := session.Repo(c)
+	db := context.Database(c)
+
+	// parse the build number and job sequence number from
+	// the repquest parameter.
+	num, _ := strconv.Atoi(c.Params.ByName("number"))
+	seq, _ := strconv.Atoi(c.Params.ByName("job"))
+
+	build, err := model.GetBuildNumber(db, repo, num)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+
+	job, err := model.GetJobNumber(db, build, seq)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+	node, err := model.GetNode(db, job.NodeID)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+	engine_.Cancel(build.ID, job.ID, node)
 }
 
 func PostBuild(c *gin.Context) {
 
-	remote := context.Remote(c)
+	remote_ := context.Remote(c)
 	repo := session.Repo(c)
 	db := context.Database(c)
 
@@ -122,8 +149,18 @@ func PostBuild(c *gin.Context) {
 		return
 	}
 
+	// if the remote has a refresh token, the current access token
+	// may be stale. Therefore, we should refresh prior to dispatching
+	// the job.
+	if refresher, ok := remote_.(remote.Refresher); ok {
+		ok, _ := refresher.Refresh(user)
+		if ok {
+			model.UpdateUser(db, user)
+		}
+	}
+
 	// fetch the .drone.yml file from the database
-	raw, sec, err := remote.Script(user, repo, build)
+	raw, sec, err := remote_.Script(user, repo, build)
 	if err != nil {
 		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
@@ -131,7 +168,7 @@ func PostBuild(c *gin.Context) {
 	}
 
 	key, _ := model.GetKey(db, repo)
-	netrc, err := remote.Netrc(user, repo)
+	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
 		log.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)
@@ -161,11 +198,13 @@ func PostBuild(c *gin.Context) {
 	build.Status = model.StatusPending
 	build.Started = 0
 	build.Finished = 0
+	build.Enqueued = time.Now().UTC().Unix()
 	for _, job := range jobs {
 		job.Status = model.StatusPending
 		job.Started = 0
 		job.Finished = 0
 		job.ExitCode = 0
+		job.Enqueued = build.Enqueued
 		model.UpdateJob(db, job)
 	}
 

@@ -5,6 +5,7 @@ CREATE TABLE users (
 ,user_login  TEXT
 ,user_token  TEXT
 ,user_secret TEXT
+,user_expiry INTEGER
 ,user_email  TEXT
 ,user_avatar TEXT
 ,user_active BOOLEAN
@@ -33,7 +34,7 @@ CREATE TABLE repos (
 ,repo_allow_tags    BOOLEAN
 ,repo_hash          TEXT
 
-,UNIQUE(repo_owner, repo_name)
+,UNIQUE(repo_full_name)
 );
 
 CREATE TABLE stars (
@@ -61,6 +62,7 @@ CREATE TABLE builds (
 ,build_number    INTEGER
 ,build_event     TEXT
 ,build_status    TEXT
+,build_enqueued  INTEGER
 ,build_created   INTEGER
 ,build_started   INTEGER
 ,build_finished  INTEGER
@@ -80,7 +82,8 @@ CREATE TABLE builds (
 ,UNIQUE(build_number, build_repo_id)
 );
 
-CREATE INDEX ix_build_repo ON builds (build_repo_id);
+CREATE INDEX ix_build_repo   ON builds (build_repo_id);
+CREATE INDEX ix_build_author ON builds (build_author);
 
 CREATE TABLE jobs (
  job_id          INTEGER PRIMARY KEY AUTOINCREMENT
@@ -89,6 +92,7 @@ CREATE TABLE jobs (
 ,job_number      INTEGER
 ,job_status      TEXT
 ,job_exit_code   INTEGER
+,job_enqueued    INTEGER
 ,job_started     INTEGER
 ,job_finished    INTEGER
 ,job_environment TEXT

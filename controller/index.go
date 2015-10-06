@@ -15,35 +15,18 @@ import (
 )
 
 func ShowIndex(c *gin.Context) {
-	// remote := context.Remote(c)
+	db := context.Database(c)
 	user := session.User(c)
 	if user == nil {
 		c.HTML(200, "login.html", gin.H{})
 		return
 	}
 
-	// attempt to get the repository list from the
-	// cache since the operation is expensive
-	// v, ok := cache.Get(user.Login)
-	// if ok {
-	// 	c.HTML(200, "repos.html", gin.H{
-	// 		"User":  user,
-	// 		"Repos": v,
-	// 	})
-	// 	return
-	// }
-
-	// fetch the repmote repos
-	// repos, err := remote.Repos(user)
-	// if err != nil {
-	// 	c.AbortWithStatus(http.StatusInternalServerError)
-	// 	return
-	// }
-	// cache.Add(user.Login, repos)
+	repos, _ := model.GetRepoList(db, user)
 
 	c.HTML(200, "repos.html", gin.H{
-		"User": user,
-		// "Repos": repos,
+		"User":  user,
+		"Repos": repos,
 	})
 }
 
@@ -89,10 +72,7 @@ func ShowRepo(c *gin.Context) {
 	db := context.Database(c)
 	user := session.User(c)
 	repo := session.Repo(c)
-	if !user.Admin {
-		c.AbortWithStatus(http.StatusForbidden)
-		return
-	}
+
 	builds, _ := model.GetBuildList(db, repo)
 	groups := []*model.BuildGroup{}
 
@@ -123,30 +103,44 @@ func ShowRepoConf(c *gin.Context) {
 	user := session.User(c)
 	repo := session.Repo(c)
 	key, _ := model.GetKey(db, repo)
-	if !user.Admin {
-		c.AbortWithStatus(http.StatusForbidden)
-		return
-	}
-	var view = "repo_config.html"
-	switch c.Param("action") {
-	case "delete":
-		view = "repo_delete.html"
-	case "encrypt":
-		view = "repo_secret.html"
-	case "badges":
-		view = "repo_badge.html"
-	}
 
 	token, _ := token.New(
 		token.CsrfToken,
 		user.Login,
 	).Sign(user.Hash)
 
-	c.HTML(200, view, gin.H{
+	c.HTML(200, "repo_config.html", gin.H{
 		"User": user,
 		"Repo": repo,
 		"Key":  key,
 		"Csrf": token,
+		"Link": httputil.GetURL(c.Request),
+	})
+}
+
+func ShowRepoEncrypt(c *gin.Context) {
+	user := session.User(c)
+	repo := session.Repo(c)
+
+	token, _ := token.New(
+		token.CsrfToken,
+		user.Login,
+	).Sign(user.Hash)
+
+	c.HTML(200, "repo_secret.html", gin.H{
+		"User": user,
+		"Repo": repo,
+		"Csrf": token,
+	})
+}
+
+func ShowRepoBadges(c *gin.Context) {
+	user := session.User(c)
+	repo := session.Repo(c)
+
+	c.HTML(200, "repo_badge.html", gin.H{
+		"User": user,
+		"Repo": repo,
 		"Link": httputil.GetURL(c.Request),
 	})
 }
@@ -183,10 +177,13 @@ func ShowBuild(c *gin.Context) {
 
 	httputil.SetCookie(c.Writer, c.Request, "user_last", repo.FullName)
 
-	token, _ := token.New(
-		token.CsrfToken,
-		user.Login,
-	).Sign(user.Hash)
+	var csrf string
+	if user != nil {
+		csrf, _ = token.New(
+			token.CsrfToken,
+			user.Login,
+		).Sign(user.Hash)
+	}
 
 	c.HTML(200, "build.html", gin.H{
 		"User":  user,
@@ -194,6 +191,6 @@ func ShowBuild(c *gin.Context) {
 		"Build": build,
 		"Jobs":  jobs,
 		"Job":   job,
-		"Csrf":  token,
+		"Csrf":  csrf,
 	})
 }

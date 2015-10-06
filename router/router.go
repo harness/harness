@@ -8,6 +8,7 @@ import (
 
 	"github.com/CiscoCloud/drone/controller"
 	"github.com/CiscoCloud/drone/router/middleware/header"
+	"github.com/CiscoCloud/drone/router/middleware/refresh"
 	"github.com/CiscoCloud/drone/router/middleware/session"
 	"github.com/CiscoCloud/drone/static"
 	"github.com/CiscoCloud/drone/template"
@@ -21,6 +22,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(header.SetHeaders())
 	e.Use(middleware...)
 	e.Use(session.SetUser())
+	e.Use(refresh.Refresh)
 
 	e.GET("/", controller.ShowIndex)
 	e.GET("/login", controller.ShowLogin)
@@ -44,9 +46,9 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		repo.GET("/builds/:number/:job", controller.ShowBuild)
 		repo_settings := repo.Group("/settings")
 		{
-			repo_settings.Use(session.MustPush)
-			repo_settings.GET("", controller.ShowRepoConf)
-			repo_settings.GET("/:action", controller.ShowRepoConf)
+			repo_settings.GET("", session.MustPush, controller.ShowRepoConf)
+			repo_settings.GET("/encrypt", session.MustPush, controller.ShowRepoEncrypt)
+			repo_settings.GET("/badges", controller.ShowRepoBadges)
 		}
 	}
 
@@ -54,10 +56,10 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	{
 		user.Use(session.MustUser())
 		user.GET("", controller.GetSelf)
-		user.GET("/feed", controller.GetFeed)
+		user.GET("/builds", controller.GetFeed)
 		user.GET("/repos", controller.GetRepos)
-		user.POST("/token", controller.PostToken)
 		user.GET("/repos/remote", controller.GetRemoteRepos)
+		user.POST("/token", controller.PostToken)
 	}
 
 	users := e.Group("/api/users")
@@ -104,7 +106,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.DELETE("", session.MustPush, controller.DeleteRepo)
 
 			repo.POST("/builds/:number", session.MustPush, controller.PostBuild)
-			// repo.DELETE("/builds/:number", MustPush(), controller.DeleteBuild)
+			repo.DELETE("/builds/:number/:job", session.MustPush, controller.DeleteBuild)
 		}
 	}
 
@@ -114,10 +116,8 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		badges.GET("/cc.xml", controller.GetCC)
 	}
 
-	hook := e.Group("/hook")
-	{
-		hook.POST("", controller.PostHook)
-	}
+	e.POST("/hook", controller.PostHook)
+	e.POST("/api/hook", controller.PostHook)
 
 	stream := e.Group("/api/stream")
 	{

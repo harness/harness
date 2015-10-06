@@ -6,6 +6,8 @@ function JobViewModel(repo, build, job, status) {
 
 	self.stream = function() {
 		$( "#output" ).html("");
+		$("#restart").hide();
+		$("#cancel").show();
 
 		var buf = new Drone.Buffer();
 		buf.start(document.getElementById("output"));
@@ -32,6 +34,7 @@ function JobViewModel(repo, build, job, status) {
 
 	if (status !== "running" && status !== "pending") {
 		Logs(repo, build, job);
+		$("#restart").show();
 	}
 
 	if (status === "running") {
@@ -53,6 +56,19 @@ function JobViewModel(repo, build, job, status) {
 		});
 	})
 
+	$("#cancel").click(function() {
+		$("#cancel").hide();
+
+		$.ajax({
+			url: "/api/repos/"+repo+"/builds/"+build+"/"+job,
+			type: "DELETE",
+			success: function( data ) { },
+			error: function( data ) {
+				console.log(data);
+			}
+		});
+	})
+
 			
 	Subscribe(repo, function(data){
 		if (!data.jobs) {
@@ -65,8 +81,36 @@ function JobViewModel(repo, build, job, status) {
 		// update the status for each job in the view
 		for (var i=0;i<data.jobs.length;i++) {
 			var job_ = data.jobs[i];
-			$("[data-job="+job_.number+"]").find(".status")
+			var el = $("[data-job="+job_.number+"]");
+
+			el.find(".status")
 				.attr("class", "status "+job_.status).text(job_.status);
+
+			switch (job_.status) {
+			case "running":
+				el.find(".msg-running").find("span").attr("data-livestamp", job_.started_at);
+
+				el.find(".msg-pending").hide();
+				el.find(".msg-running").show();
+				el.find(".msg-finished").hide();
+				el.find(".msg-exited").hide();
+				break;
+			case "pending":
+				el.find(".msg-pending").show();
+				el.find(".msg-running").hide();
+				el.find(".msg-finished").hide();
+				el.find(".msg-exited").hide();
+				break;
+			default:
+				el.find(".msg-finished").find("span").attr("data-livestamp", job_.finished_at);
+				el.find(".msg-exited").find("span").text(job_.exit_code);
+
+				el.find(".msg-pending").hide();
+				el.find(".msg-running").hide();
+				el.find(".msg-finished").show();
+				el.find(".msg-exited").show();
+				break;
+			}
 		}
 
 		var after = self.status;
@@ -81,6 +125,7 @@ function JobViewModel(repo, build, job, status) {
 		// the restart button and hide the tail button.
 		if (after !== "pending" && after !== "running") {
 			$("#restart").show();
+			$("#cancel").hide();
 			$("#tail").hide();
 		}
 	}.bind(this));

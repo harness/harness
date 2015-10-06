@@ -5,6 +5,7 @@ CREATE TABLE users (
 ,user_login  VARCHAR(500)
 ,user_token  VARCHAR(500)
 ,user_secret VARCHAR(500)
+,user_expiry INTEGER
 ,user_email  VARCHAR(500)
 ,user_avatar VARCHAR(500)
 ,user_active BOOLEAN
@@ -33,7 +34,7 @@ CREATE TABLE repos (
 ,repo_allow_tags    BOOLEAN
 ,repo_hash          VARCHAR(500)
 
-,UNIQUE(repo_owner, repo_name)
+,UNIQUE(repo_full_name)
 );
 
 CREATE TABLE stars (
@@ -61,6 +62,7 @@ CREATE TABLE builds (
 ,build_number    INTEGER
 ,build_event     VARCHAR(500)
 ,build_status    VARCHAR(500)
+,build_enqueued  INTEGER
 ,build_created   INTEGER
 ,build_started   INTEGER
 ,build_finished  INTEGER
@@ -80,7 +82,8 @@ CREATE TABLE builds (
 ,UNIQUE(build_number, build_repo_id)
 );
 
-CREATE INDEX ix_build_repo ON builds (build_repo_id);
+CREATE INDEX ix_build_repo   ON builds (build_repo_id);
+CREATE INDEX ix_build_author ON builds (build_author);
 
 CREATE TABLE jobs (
  job_id          SERIAL PRIMARY KEY
@@ -90,6 +93,7 @@ CREATE TABLE jobs (
 ,job_status      VARCHAR(500)
 ,job_exit_code   INTEGER
 ,job_started     INTEGER
+,job_enqueued    INTEGER
 ,job_finished    INTEGER
 ,job_environment VARCHAR(2000)
 

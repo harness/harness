@@ -1,23 +1,42 @@
-> **NOTE** Bitbucket integration has not yet been merged into 0.4, but is planned in the near future
-
 # Bitbucket
 
-Drone comes with built-in support for Bitbucket. To enable and configure Bitbucket, you should set the following environment variables:
+Drone comes with built-in support for Bitbucket. To enable Bitbucket you should configure the Bitbucket driver using the following environment variables:
 
-```
+```bash
 REMOTE_DRIVER="bitbucket"
-
-BITBUCKET_KEY="c0aaff74c060ff4a950d"
-BITBUCKET_SECRET="1ac1eae5ff1b490892f5"
-BITBUCKET_OPEN="true"
-BITBUCKET_ORGS="drone,drone-plugins"
+REMOTE_CONFIG="https://bitbucket.org?client_id=${client_id}&client_secret=${client_secret}"
 ```
 
-## Bitbucket settings
+## Bitbucket configuration
 
-This section lists all environment variables used to configure Bitbucket.
+The following is the standard URI connection scheme:
 
-* `BITBUCKET_KEY` oauth client id for registered application
-* `BITBUCKET_SECRET` oauth client secret for registered application
-* `BITBUCKET_OPEN=false` allows users to self-register. Defaults to false for security reasons.
-* `BITBUCKET_ORGS=drone,docker` restricts access to these Bitbucket organizations. **Optional**
+```
+scheme://host[?options]
+```
+
+The components of this string are:
+
+* `scheme` server protocol `http` or `https`.
+* `host` server address to connect to.
+* `?options` connection specific options.
+
+## Bitbucket options
+
+This section lists all connection options used in the connection string format. Connection options are pairs in the following form: `name=value`. The value is always case sensitive. Separate options with the ampersand (i.e. &) character:
+
+* `client_id` oauth client id for registered application.
+* `client_secret` oauth client secret for registered application.
+* `open=false` allows users to self-register. Defaults to false.
+* `orgs=drone&orgs=docker` restricts access to these Bitbucket organizations. **Optional**
+
+## Bitbucket registration
+
+You must register your application with Bitbucket in order to generate a Client and Secret. Navigate to your account settings and choose OAuth from the menu, and click Add Consumer.
+
+Please use `http://drone.mycompany.com/authorize` as the Authorization callback URL. You will also need to check the following permissions:
+
+* Account:Email
+* Team Membership:Read
+* Repositories:Read
+* Webhooks:Read and Write

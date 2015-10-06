@@ -4,8 +4,13 @@ function NodeViewModel() {
 
 	// handle requests to create a new node.
 	$(".modal-node button").click(function(e) {
-		var addr = $(".modal-node input").val();
-		var node = { address: addr };
+
+		var node = {
+			address : $("#addr").val(),
+			key     : $("#key").val(),
+			cert    : $("#cert").val(),
+			ca      : $("#ca").val()
+		};
 
 		$.ajax({
 			url: "/api/nodes",

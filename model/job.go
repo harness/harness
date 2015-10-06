@@ -12,6 +12,7 @@ type Job struct {
 	Number   int    `json:"number"       meddler:"job_number"`
 	Status   string `json:"status"       meddler:"job_status"`
 	ExitCode int    `json:"exit_code"    meddler:"job_exit_code"`
+	Enqueued int64  `json:"enqueued_at"  meddler:"job_enqueued"`
 	Started  int64  `json:"started_at"   meddler:"job_started"`
 	Finished int64  `json:"finished_at"  meddler:"job_finished"`
 
