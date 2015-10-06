@@ -289,6 +289,86 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 
 .repo-row .card-header { background: #FFF; border-bottom: none; padding-right: 0px; padding-left: 0px; width: 45px; }
 
+.toc { list-style-type: none; padding: 0px; margin: 0px; padding-bottom: 40px; }
+
+.toc h2 { font-size: 21px; font-weight: normal; margin-bottom: 20px; color: #2b303b; }
+
+.toc ul { list-style-type: none; padding: 0px; margin: 0px; margin-bottom: 40px; border-bottom: 1px solid #EEE; padding-bottom: 40px; }
+
+.toc ul li { line-height: 25px; }
+
+.toc ul li a { color: #2b303b; text-decoration: none; }
+
+.toc ul li a:hover { text-decoration: underline; }
+
+.toc [data-method]:before { content: attr(data-method); padding: 0px 10px; line-height: 18px; min-width: 70px; font-size: 11px; text-transform: uppercase; display: inline-block; text-align: center; color: #FFF; border-radius: 2px; margin-right: 20px; }
+
+.toc [data-method="GET"]:before { background-color: #1ABC9C; }
+
+.toc [data-method="PUT"]:before { background-color: #9B59B6; }
+
+.toc [data-method="POST"]:before { background-color: #3498DB; }
+
+.toc [data-method="PATCH"]:before { background-color: #E67E22; }
+
+.toc [data-method="DELETE"]:before { background-color: #E74C3C; }
+
+.toc [data-method]:before { background: #FFF; border: 1px solid #FFF; }
+
+.toc [data-method="GET"]:before { color: #1ABC9C; border-color: #1ABC9C; }
+
+.toc [data-method="PUT"]:before { color: #9B59B6; border-color: #9B59B6; }
+
+.toc [data-method="POST"]:before { color: #3498DB; border-color: #3498DB; }
+
+.toc [data-method="PATCH"]:before { color: #E67E22; border-color: #E67E22; }
+
+.toc [data-method="DELETE"]:before { color: #E74C3C; border-color: #E74C3C; }
+
+.operation [data-method]:before { content: attr(data-method); padding: 0px 10px; line-height: 18px; min-width: 70px; font-size: 11px; text-transform: uppercase; display: inline-block; text-align: center; color: #FFF; border-radius: 2px; margin-right: 20px; background: #FFF; border: 1px solid #FFF; line-height: 20px; vertical-align: top; }
+
+.operation [data-method]:before { background: #FFF; border: 1px solid #FFF; }
+
+.operation [data-method="GET"]:before { color: #1ABC9C; border-color: #1ABC9C; }
+
+.operation [data-method="PUT"]:before { color: #9B59B6; border-color: #9B59B6; }
+
+.operation [data-method="POST"]:before { color: #3498DB; border-color: #3498DB; }
+
+.operation [data-method="PATCH"]:before { color: #E67E22; border-color: #E67E22; }
+
+.operation [data-method="DELETE"]:before { color: #E74C3C; border-color: #E74C3C; }
+
+.docs { margin-top: 40px; padding: 0px 50px; padding-right: 40px; }
+
+.docs pre { margin-right: 15px; font-size: 14px; color: #eff1f5; color: #2b303b; border-radius: 2px; background: #2b303b; background: #ECF0F1; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; padding: 25px 30px; font-family: "Roboto Mono"; }
+
+.operation { min-height: 100vh; padding: 20px 0px; display: flex; }
+
+.operation > aside, .operation > div { min-width: 50%; max-width: 50%; width: 50%; padding-right: 40px; }
+
+.operation h2 { color: #2b303b; font-size: 21px; }
+
+.operation h3 { font-size: 16px; margin-bottom: 20px; margin-top: 40px; }
+
+.operation aside { background: rgba(43, 48, 59, 0.95); box-sizing: border-box; padding: 20px 0px 10px 0px; border-radius: 2px; }
+
+.operation aside h4 { color: #d0d4d7; font-size: 15px; padding: 20px; padding-left: 40px; }
+
+.operation aside pre { background: #2b303b; color: #d0d4d7; margin-right: 0px; padding-left: 40px; }
+
+.operation .params { padding: 0px; margin: 0px; list-style-type: none; border-top: 1px solid #f0f4f7; }
+
+.operation .params li { padding: 15px 10px; border-bottom: 1px solid #f0f4f7; font-size: 15px; }
+
+.operation .params li p { line-height: 20px; margin: 0 0 0 170px; }
+
+.operation .params li:after { visibility: hidden; display: block; font-size: 0; content: " "; clear: both; height: 0; }
+
+.operation .params h4 { float: left; line-height: 20px; text-align: right; padding-right: 20px; width: 150px; font-weight: bold; font-size: 15px; }
+
+.operation .params small { display: block; text-transform: uppercase; color: #E67E22; font-size: 11px; font-weight: normal; margin-top: 5px; }
+
 .tt-open { position: absolute; top: 34px; left: 0px; z-index: 100; display: none; background: #FFF; min-width: 100%; border: 1px solid #eee; border-radius: 0px; }
 
 .tt-selectable:hover, .tt-cursor { background: #f4f4f4; }
