@@ -13,9 +13,19 @@ deps:
 	go get -u github.com/elazarl/go-bindata-assetfs/...
 	go get -u github.com/dchest/jsmin
 	go get -u github.com/franela/goblin
+	go get -u github.com/go-swagger/go-swagger
 
-gen:
-	go generate $(PACKAGES)
+gen: gen_static gen_template gen_migrations
+
+gen_static:
+	mkdir -p static/docs_gen/api
+	go generate github.com/drone/drone/static
+
+gen_template:
+	go generate github.com/drone/drone/template
+
+gen_migrations:
+	go generate github.com/drone/drone/shared/database
 
 build:
 	go build
