@@ -25,7 +25,7 @@ func ShowIndex(c *gin.Context) {
 
 	repos, err := model.GetRepoList(db, user)
 	if err != nil {
-		log.Errorf(err)
+		log.Error(err)
 	}
 
 	c.HTML(200, "repos.html", gin.H{
