@@ -12,6 +12,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
 
 	"github.com/eknkc/amber"
 	"github.com/go-swagger/go-swagger/spec"
@@ -179,10 +180,12 @@ func normalize(swag *spec.Swagger) Swagger {
 					}
 					item.Results = append(item.Results, result)
 				}
+				sort.Sort(ByCode(item.Results))
 				tag_.Ops = append(tag_.Ops, item)
 			}
 		}
 
+		sort.Sort(ByPath(tag_.Ops))
 		swag_.Tags = append(swag_.Tags, tag_)
 	}
 
@@ -217,3 +220,17 @@ func getMethod(op *spec.Operation, path spec.PathItem) string {
 	}
 	return ""
 }
+
+// ByCode helps sort a list of results by status code
+type ByCode []Result
+
+func (a ByCode) Len() int           { return len(a) }
+func (a ByCode) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByCode) Less(i, j int) bool { return a[i].Status < a[j].Status }
+
+// ByPath helps sort a list of endpoints by path
+type ByPath []Operation
+
+func (a ByPath) Len() int           { return len(a) }
+func (a ByPath) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByPath) Less(i, j int) bool { return a[i].Path < a[j].Path }

@@ -56,6 +56,11 @@ block content
 						aside
 							h4 Endpoint
 							pre #{$op.Method} #{$op.Path}
+							each $param in $op.Params
+								if $param.Example
+									h4 Example Request
+									if $param.IsObject
+										pre #{$param.Example}
 							each $res in $op.Results
 								if $res.Example
 									h4 Example Response
