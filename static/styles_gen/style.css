@@ -341,7 +341,7 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 
 .docs { margin-top: 40px; padding: 0px 50px; padding-right: 40px; }
 
-.docs pre { margin-right: 15px; font-size: 14px; color: #eff1f5; color: #2b303b; border-radius: 2px; background: #2b303b; background: #ECF0F1; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; padding: 25px 30px; font-family: "Roboto Mono"; }
+.docs pre { margin-right: 15px; font-size: 13px; color: #eff1f5; color: #2b303b; border-radius: 2px; background: #2b303b; background: #ECF0F1; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; padding: 25px 30px; font-family: "Roboto Mono"; }
 
 .operation { min-height: 100vh; padding: 20px 0px; display: flex; }
 
@@ -368,6 +368,12 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 .operation .params h4 { float: left; line-height: 20px; text-align: right; padding-right: 20px; width: 150px; font-weight: bold; font-size: 15px; }
 
 .operation .params small { display: block; text-transform: uppercase; color: #E67E22; font-size: 11px; font-weight: normal; margin-top: 5px; }
+
+.operation aside { background: rgba(239, 241, 245, 0.49); }
+
+.operation aside h4 { color: #2b303b; }
+
+.operation aside pre { background: #eff1f5; color: #2b303b; }
 
 .tt-open { position: absolute; top: 34px; left: 0px; z-index: 100; display: none; background: #FFF; min-width: 100%; border: 1px solid #eee; border-radius: 0px; }
 

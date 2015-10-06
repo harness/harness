@@ -7,18 +7,21 @@ all: gen build
 deps:
 	go get golang.org/x/tools/cmd/cover
 	go get golang.org/x/tools/cmd/vet
-	go get -u github.com/kr/vexp
-	go get -u github.com/eknkc/amber/amberc
-	go get -u github.com/jteeuwen/go-bindata/...
-	go get -u github.com/elazarl/go-bindata-assetfs/...
-	go get -u github.com/dchest/jsmin
-	go get -u github.com/franela/goblin
-	go get -u github.com/go-swagger/go-swagger
+	go get github.com/kr/vexp
+	go get github.com/eknkc/amber/amberc
+	go get github.com/eknkc/amber
+	go get github.com/jteeuwen/go-bindata/...
+	go get github.com/elazarl/go-bindata-assetfs/...
+	go get github.com/dchest/jsmin
+	go get github.com/franela/goblin
+	go get github.com/go-swagger/go-swagger
+	go get github.com/PuerkitoBio/goquery
+	go get github.com/russross/blackfriday
 
 gen: gen_static gen_template gen_migrations
 
 gen_static:
-	mkdir -p static/docs_gen/api
+	mkdir -p static/docs_gen/api static/docs_gen/build
 	go generate github.com/drone/drone/static
 
 gen_template:

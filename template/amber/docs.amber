@@ -1,0 +1,24 @@
+extends base
+
+block append head
+	title #{Site.Name} · Drone
+
+block header
+	ol
+		li Documentation
+	ul.nav.nav-tabs
+		li.nav-item
+			a.nav-link[href="#"] Install
+		li.nav-item
+			a.nav-link[href="#"] Builds
+		li.nav-item
+			a.nav-link[href="#"] Plugins
+		li.nav-item
+			a.nav-link[href="#"] API Reference
+
+block content
+	div.container-fluid.docs.docs-api
+		div.row
+			#{Site.Nav.HTML}
+		div.row
+			#{Page.HTML}
