@@ -9,6 +9,7 @@ import (
 	"github.com/CiscoCloud/drone/router/middleware/context"
 	"github.com/CiscoCloud/drone/router/middleware/session"
 	"github.com/CiscoCloud/drone/shared/crypto"
+	"github.com/CiscoCloud/drone/shared/token"
 )
 
 func GetUsers(c *gin.Context) {
@@ -30,7 +31,17 @@ func GetUser(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, user)
+	token := token.New(token.UserToken, user.Login)
+	tokenstr, err := token.Sign(user.Hash)
+	if err != nil {
+		tokenstr = ""
+	}
+	userWithToken := struct {
+		*model.User
+		Token string `json:"token,omitempty"`
+	}{user, tokenstr}
+
+	c.IndentedJSON(http.StatusOK, userWithToken)
 }
 
 func PatchUser(c *gin.Context) {
@@ -89,7 +100,17 @@ func PostUser(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, user)
+	token := token.New(token.UserToken, user.Login)
+	tokenstr, err := token.Sign(user.Hash)
+	if err != nil {
+		tokenstr = ""
+	}
+	userWithToken := struct {
+		*model.User
+		Token string `json:"token,omitempty"`
+	}{user, tokenstr}
+
+	c.IndentedJSON(http.StatusOK, userWithToken)
 }
 
 func DeleteUser(c *gin.Context) {
