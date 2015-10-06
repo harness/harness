@@ -23,10 +23,8 @@ produces:
 tags:
   - name: Repos
   - name: Builds
-  - name: Badges
   - name: User
   - name: Users
-  - name: Tokens
 
 #
 # Security Definitions
@@ -91,22 +89,15 @@ paths:
           schema:
             $ref: '#/definitions/Repo'
             example: |
-                {
-                  "trusted":false,
-                  "timeout":60,
-                  "hooks":{
-                    "pull_request":true,
-                    "push":true,
-                    "tags":false
-                  },
-                  "keypair":{
-                    "public": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDwXK...",
-                    "private": "-----BEGIN RSA PRIVATE KEY-----\nF7tLaAvx..."
-                  },
-                  "params": {
-                    "HEROKU_KEY": "f0e4c2f76c58916ec258f24"
-                  }
-                }
+              {
+                "timeout": 60,
+                "private": false,
+                "trusted": false,
+                "allow_pr": true,
+                "allow_push": true,
+                "allow_deploys": false,
+                "allow_tags": false
+              }
           required: true
       tags:
         - Repos
@@ -137,8 +128,8 @@ paths:
           description: name of the repository
       tags:
         - Repos
-      summary: Creates a repo
-      description: Creates a new repository.
+      summary: Activates a repo
+      description: Activates a repository.
       security:
         - accessToken: []
       responses:
@@ -225,67 +216,6 @@ paths:
 
 
   #
-  # Repos Watch/Unwatch Enpoint
-  #
-
-  /repos/{owner}/{name}/watch:
-    post:
-      parameters:
-        - name: owner
-          in: path
-          type: string
-          description: owner of the repository
-        - name: name
-          in: path
-          type: string
-          description: name of the repository
-      tags:
-        - Repos
-      summary: Watch
-      description: Watches the named repository.
-      security:
-        - accessToken: []
-      responses:
-        200:
-          description: |
-            Successfully watching this repository.
-        400:
-          description: |
-            Unable to update the database.
-        404:
-          description: |
-            Unable to find the repository.
-
-  /repos/{owner}/{name}/unwatch:
-    delete:
-      parameters:
-        - name: owner
-          in: path
-          type: string
-          description: owner of the repository
-        - name: name
-          in: path
-          type: string
-          description: name of the repository
-      tags:
-        - Repos
-      summary: Unwatch
-      description: Unwatches the repository.
-      security:
-        - accessToken: []
-      responses:
-        200:
-          description: |
-            Successfully Unwatched this repository.
-        400:
-          description: |
-            Unable to update the database.
-        404:
-          description: |
-            Unable to find the repository.
-
-
-  #
   # Builds Endpoint
   #
 
@@ -346,35 +276,6 @@ paths:
         404:
           description: |
             Unable to find the Repository or Build
-    delete:
-      parameters:
-        - name: owner
-          in: path
-          type: string
-          description: owner of the repository
-        - name: name
-          in: path
-          type: string
-          description: name of the repository
-        - name: number
-          in: path
-          type: integer
-          description: sequential build number
-      tags:
-        - Builds
-      summary: Cancel a build
-      description: Cancel the a build by number.
-      security:
-        - accessToken: []
-      responses:
-        200:
-          description: Successfully cancelled the Build
-        404:
-          description: |
-            Unable to find the Repository or Build
-        409:
-          description: |
-            Cannot cancel a Build that is already stopped
 
     post:
       parameters:
@@ -407,6 +308,11 @@ paths:
         409:
           description: |
             Cannot re-start a Build that is running.
+
+
+  #
+  # Jobs Endpoint
+  #
 
   /repos/{owner}/{name}/logs/{number}/{job}:
     get:
@@ -442,91 +348,40 @@ paths:
           description: |
             Unable to find the repository, build or job.
 
-  #
-  # Badges
-  #
+    delete:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+        - name: number
+          in: path
+          type: integer
+          description: sequential build number
+        - name: job
+          in: path
+          type: integer
+          description: sequential job number
+      tags:
+        - Builds
+      summary: Cancel a Job
+      description: Cancel the a build job by number.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: Successfully cancelled the Job
+        404:
+          description: |
+            Unable to find the Repository or Job
+        409:
+          description: |
+            Cannot cancel a Job that is already stopped
 
-  /badges/{owner}/{name}/status.svg:
-    get:
-      tags:
-        - Badges
-      produces:
-        - image/svg+xml
-      summary: Status Badge
-      description: Returns an SVG status badge for the latest Build
-      parameters:
-        - name: owner
-          in: path
-          type: string
-          description: owner of the repository
-        - name: name
-          in: path
-          type: string
-          description: name of the repository
-        - name: string
-          in: query
-          type: string
-          description: specify a branch. defaults to master
-          default: master
-      responses:
-        200:
-          description: Status badge in SVG format
-          examples:
-            image/svg+xml: |
-                <?xml version="1.0"?>
-                <svg xmlns="http://www.w3.org/2000/svg" width="91" height="20">
-                <linearGradient id="a" x2="0" y2="100%">
-                    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
-                    <stop offset="1" stop-opacity=".1"/>
-                </linearGradient>
-                <rect rx="3" width="91" height="20" fill="#555"/>
-                <rect rx="3" x="37" width="54" height="20" fill="#4c1"/>
-                <path fill="#4c1" d="M37 0h4v20h-4z"/>
-                <rect rx="3" width="91" height="20" fill="url(#a)"/>
-                <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
-                    <text x="19.5" y="15" fill="#010101" fill-opacity=".3">build</text>
-                    <text x="19.5" y="14">build</text>
-                    <text x="63" y="15" fill="#010101" fill-opacity=".3">success</text>
-                    <text x="63" y="14">success</text>
-                </g>
-                </svg>
-  /badges/{owner}/{name}/cc.xml:
-    get:
-      tags:
-        - Badges
-      summary: CCMenu
-      description: Returns a CCMenu feed for the Repository
-      parameters:
-        - name: owner
-          in: path
-          type: string
-          description: owner of the repository
-        - name: name
-          in: path
-          type: string
-          description: name of the repository
-      produces:
-        - application/xml
-      responses:
-        200:
-          description: CCMenu XML feed object
-          examples:
-            application/xml: |
-                &lt;Projects&gt;
-                    &lt;Project name=&quot;octocat/octocat&quot;
-                             activity=&quot;Sleeping&quot;
-                             lastBuildStatus=&quot;Success&quot;
-                             lastBuildLabel=&quot;25&quot;
-                             lastBuildTime=&quot;2015-06-23T01:58:20-04:00&quot; /&gt;
-                &lt;/Projects&gt;
-            # application/xml: |
-            #     <Projects>
-            #         <Project name="octocat/octocat"
-            #                  activity="Sleeping"
-            #                  lastBuildStatus="Success"
-            #                  lastBuildLabel="25"
-            #                  lastBuildTime="2015-06-23T01:58:20-04:00" />
-            #     </Projects>
 
   #
   # User Endpoint
@@ -588,97 +443,6 @@ paths:
           description: |
             Unable to retrieve Repository list
 
-  #
-  # User Feed
-  #
-
-  /user/feed:
-    get:
-      summary: Get user activity feed
-      description: |
-        Retrieve the currently authenticated User's activity feed.
-      tags:
-        - User
-      responses:
-        200:
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/Activity"
-        400:
-          description: |
-            Unable to retrieve Activity list
-
-  #
-  # User Tokens
-  #
-
-  /user/tokens:
-    get:
-      tags:
-        - Tokens
-      summary: Get all tokens
-      description: Returns all tokens for currently authenticated user.
-      security:
-        - accessToken: []
-      responses:
-        200:
-          description: All user tokens.
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/Token"
-    post:
-      parameters:
-        - name: token
-          description: Token input paraeters.
-          in: body
-          schema:
-            example: |
-              {
-                "label": "my_token"
-              }
-      tags:
-        - Tokens
-      summary: Create a token
-      description: Generates a new user access token.
-      security:
-        - accessToken: []
-      responses:
-        200:
-          description: The generated user token.
-          schema:
-            $ref: "#/definitions/Token"
-        400:
-          description: |
-            Error when attempting to generate the JWT token
-        500:
-          description: |
-            Error when attempting to save the Token
-
-  /user/tokens/{label}:
-    delete:
-      parameters:
-        - name: label
-          in: path
-          type: string
-          description: token label
-      tags:
-        - Tokens
-      summary: Delete a token
-      description: Revokes a token with the matching label.
-      security:
-        - accessToken: []
-      responses:
-        200:
-          description: |
-            Successfully deleted the Token
-        400:
-          description: |
-            Error attempting to delete Token from database
-        404:
-          description: |
-            Unable to find Token in database
 
   #
   # Users Endpoint
@@ -810,7 +574,8 @@ definitions:
   User:
     example: |
         {
-          "login": "Octocat",
+          "id": 1,
+          "login": "octocat",
           "email": "octocat@github.com",
           "avatar_url": "http://www.gravatar.com/avatar/7194e8d48fa1d2b689f99443b767316c",
           "admin": false,
@@ -830,51 +595,26 @@ definitions:
         type: boolean
       active:
         type: boolean
-  Token:
-    example: |
-        {
-         "label":"my_token",
-         "issued_at":1435289846,
-         "hash":"yUQJHM4YfNZcCLlikAshgjM6hCMlFXmHuABAECGsMQ"
-        }
-    properties:
-      issued_at:
-        type: integer
-        format: int64
-      label:
-        type: string
-      hash:
-        type: string
+
+
   Repo:
     example: |
         {
           "id": 1,
-          "owner":"drone",
-          "name":"drone-test-go",
-          "full_name":"drone/drone-test-go",
-          "self_url":"http://localhost:8080/drone/drone-test-go",
-          "link_url":"https://github.com/drone/drone-test-go",
-          "clone_url":"https://github.com/drone/drone-test-go.git",
-          "default_branch":"master",
-          "private":true,
-          "trusted":false,
-          "timeout":60,
-          "hooks":{
-            "pull_request":true,
-            "push":true,
-            "tags":false
-          },
-          "keypair":{
-            "public": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDwXK..."
-          },
-          "permissions":{
-            "pull":true,
-            "push":true,
-            "admin":true
-          },
-          "params": {
-            "HEROKU_KEY": "f0e4c2f76c58916ec258f24"
-          }
+          "owner": "octocat",
+          "name": "hello-world",
+          "full_name": "octocat/hello-world",
+          "avatar_url": "https://avatars.githubusercontent.com/u/2181346?v=3",
+          "link_url": "https://github.com/octocat/hello-world",
+          "clone_url": "https://github.com/octocat/hello-world.git",
+          "default_branch": "master",
+          "timeout": 60,
+          "private": false,
+          "trusted": false,
+          "allow_pr": true,
+          "allow_push": true,
+          "allow_deploys": false,
+          "allow_tags": false
         }
     properties:
       id:
@@ -885,6 +625,8 @@ definitions:
       name:
         type: string
       full_name:
+        type: string
+      avatar_url:
         type: string
       link_url:
         type: string
@@ -898,70 +640,55 @@ definitions:
         type: boolean
       timeout:
         type: integer
-      keypair:
-        type: object
-        properties:
-          public:
-            type: string
-          private:
-            type: string
-      hooks:
-        type: object
-        properties:
-          pull_request:
-            type: boolean
-          push:
-            type: boolean
-          tags:
-            type: boolean
-      permissions:
-        type: object
-        properties:
-          pull:
-            type: boolean
-          push:
-            type: boolean
-          admin:
-            type: boolean
-      params:
-        type: object
+      allow_pr:
+        type: boolean
+      allow_push:
+        type: boolean
+      allow_deploys:
+        type: boolean
+      allow_tags:
+        type: boolean
+
+
   Build:
     example: |
         {
-          "id": 42,
+          "id": 1,
           "number": 1,
+          "event": "push",
           "status": "success",
-          "started_at": 5788800,
-          "finished_at": 5789500,
-
-          "head_commit": {
-            "sha": "d101ef3ed6e973b039c3fd5ccdec378b0fa8684c",
-            "ref": "refs\/heads\/master",
-            "link_url": "https:\/\/github.com\/drone\/drone\/commit\/d101ef3ed6",
-            "branch": "master",
-            "message": "updated the README.md file",
-            "timestamp": "",
-            "remote": "https:\/\/github.com\/drone\/drone.git",
-            "author": {
-              "login": "bradrydzewski",
-              "email": "brad.rydzewski@gmail.com"
-            }
-          },
-
+          "created_at": 1443677151,
+          "enqueued_at": 1443677151,
+          "started_at": 1443677151,
+          "finished_at": 1443677255,
+          "commit": "2deb7e0d0cbac357eeb110c8a2f2f32ce037e0d5",
+          "branch": "master",
+          "ref": "refs/heads/master",
+          "remote": "https://github.com/octocat/hello-world.git",
+          "message": "New line at end of file. --Signed off by Spaceghost",
+          "timestamp": 1443677255,
+          "author": "Spaceghost",
+          "author_avatar": "https://avatars0.githubusercontent.com/u/251370?v=3",
+          "author_email": "octocat@github.com",
+          "link_url": "https://github.com/octocat/hello-world/commit/762941318ee16e59dabbacb1b4049eec22f0d303",
           "jobs": [
             {
+              "id": 1,
               "number": 1,
               "status": "success",
-              "started_at": 5788800,
-              "finished_at": 5789500,
+              "enqueued_at": 1443677151,
+              "started_at": 1443677151,
+              "finished_at": 1443677255,
               "exit_code": 0,
               "environment": { "GO_VERSION": "1.4" }
             },
             {
+              "id": 2,
               "number": 2,
               "status": "success",
-              "started_at": 5788800,
-              "finished_at": 5789500,
+              "enqueued_at": 1443677151,
+              "started_at": 1443677151,
+              "finished_at": 1443677255,
               "exit_code": 0,
               "environment": { "GO_VERSION": "1.5" }
             }
@@ -982,37 +709,55 @@ definitions:
           - started
           - error
           - killed
-      head_commit:
-         $ref: "#/definitions/Commit"
-      pull_request:
-         $ref: "#/definitions/PullRequest"
-  Commit:
-    properties:
-      sha:
-        type: string
-      ref:
+      created_at:
+        type: integer
+        format: int64
+      enqueued_at:
+        type: integer
+        format: int64
+      started_at:
+        type: integer
+        format: int64
+      finished_at:
+        type: integer
+        format: int64
+      commit:
         type: string
       branch:
         type: string
       message:
         type: string
-      author:
-        $ref: "#/definitions/Author"
-  PullRequest:
-    properties:
-      number:
+      timestamp:
         type: integer
-      title:
+        format: int64
+      ref:
         type: string
-      base_commit:
-        $ref: "#/definitions/Commit"
-  Author:
-    properties:
-      login:
+      refspec:
         type: string
-      email:
+      remote:
         type: string
+      author:
+        type: string
+      author_avatar:
+        type: string
+      author_email:
+        type: string
+      link_url:
+        type: string
+
+
   Job:
+    example: |
+        {
+          "id": 1,
+          "number": 1,
+          "status": "success",
+          "enqueued_at": 1443677151,
+          "started_at": 1443677151,
+          "finished_at": 1443677255,
+          "exit_code": 0,
+          "environment": { "GO_VERSION": "1.4" }
+        }
     properties:
       id:
         type: integer
@@ -1030,6 +775,9 @@ definitions:
           - killed
       exit_code:
         type: integer
+      enqueued_at:
+        type: integer
+        format: int64
       started_at:
         type: integer
         format: int64
@@ -1038,38 +786,3 @@ definitions:
         format: int64
       environment:
         type: object
-  Activity:
-    example: |
-        {
-          "owner":"drone",
-          "name":"drone-test-go",
-          "full_name":"drone/drone-test-go",
-          "number": 1,
-          "status": "success",
-          "started_at": 5788800,
-          "finished_at": 5789500
-        }
-    properties:
-      owner:
-        type: string
-      name:
-        type: string
-      full_name:
-        type: string
-      number:
-        type: integer
-      status:
-        type: string
-        enum:
-          - success
-          - failure
-          - pending
-          - started
-          - error
-          - killed
-      started_at:
-        type: integer
-        format: int64
-      finished_at:
-        type: integer
-        format: int64
