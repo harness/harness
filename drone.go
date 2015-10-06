@@ -37,7 +37,7 @@ func main() {
 	remote_ := remote.Load(env)
 
 	// setup the runner
-	engine_ := engine.Load(database_, remote_)
+	engine_ := engine.Load(database_, env, remote_)
 
 	// setup the server and start the listener
 	server_ := server.Load(env)
