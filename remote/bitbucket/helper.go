@@ -53,6 +53,37 @@ func convertRepo(from *Repo) *model.Repo {
 	return &repo
 }
 
+// cloneLink is a helper function that tries to extract the
+// clone url from the repository object.
+func cloneLink(repo Repo) string {
+	var clone string
+
+	// above we manually constructed the repository clone url.
+	// below we will iterate through the list of clone links and
+	// attempt to instead use the clone url provided by bitbucket.
+	for _, link := range repo.Links.Clone {
+		if link.Name == "https" {
+			clone = link.Href
+		}
+	}
+
+	// if no repository name is provided, we use the Html link.
+	// this excludes the .git suffix, but will still clone the repo.
+	if len(clone) == 0 {
+		clone = repo.Links.Html.Href
+	}
+
+	// if bitbucket tries to automatically populate the user
+	// in the url we must strip it out.
+	cloneurl, err := url.Parse(clone)
+	if err == nil {
+		cloneurl.User = nil
+		clone = cloneurl.String()
+	}
+
+	return clone
+}
+
 // convertRepoLite is a helper function used to convert a Bitbucket
 // repository structure to the simplified Drone repository structure.
 func convertRepoLite(from *Repo) *model.RepoLite {
