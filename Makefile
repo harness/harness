@@ -14,7 +14,7 @@ deps:
 	go get -u github.com/elazarl/go-bindata-assetfs/...
 	go get -u github.com/dchest/jsmin
 	go get -u github.com/franela/goblin
-	go get -u github.com/go-swagger/go-swagger
+	go get -u github.com/go-swagger/go-swagger/...
 	go get -u github.com/PuerkitoBio/goquery
 	go get -u github.com/russross/blackfriday
 
