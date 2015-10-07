@@ -70,14 +70,12 @@ func Load(db *sql.DB, env envconfig.Env, remote remote.Remote) Engine {
 
 	// quick fix to propogate HTTP_PROXY variables
 	// throughout the build environment.
-	if env := env.Get("HTTP_PROXY"); len(env) != 0 {
-		engine.envs = append(engine.envs, "HTTP_PROXY="+env)
-	}
-	if env := env.Get("HTTPS_PROXY"); len(env) != 0 {
-		engine.envs = append(engine.envs, "HTTPS_PROXY="+env)
-	}
-	if env := env.Get("NO_PROXY"); len(env) != 0 {
-		engine.envs = append(engine.envs, "NO_PROXY="+env)
+	var proxyVars = []string{"HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy", "NO_PROXY", "no_proxy"}
+	for _, proxyVar := range proxyVars {
+		proxyVal := env.Get(proxyVar)
+		if len(proxyVal) != 0 {
+			engine.envs = append(engine.envs, proxyVar+"="+proxyVal)
+		}
 	}
 
 	nodes, err := model.GetNodeList(db)
