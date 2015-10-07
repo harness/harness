@@ -9,7 +9,7 @@ build:
     - /bin/bash contrib/setup-sqlite.sh 1> /dev/null
     - /bin/bash contrib/setup-sassc.sh  1> /dev/null
     - make deps gen test
-    - make build build_static deb
+    - make build build_static deb docs
 
 publish:
   s3:
@@ -22,6 +22,19 @@ publish:
     target: $$BRANCH/
     when:
       repo: drone/drone
+
+  s3:
+    acl: public-read
+    region: us-east-1
+    bucket: readme.drone.io
+    access_key: $$AWS_KEY
+    secret_key: $$AWS_SECRET
+    source: /drone/tmp/
+    target: /
+    recursive: true
+    when:
+      repo: drone/drone
+      branch: "0.4.0"
 
   docker:
     username: drone

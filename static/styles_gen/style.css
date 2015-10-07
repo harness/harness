@@ -150,6 +150,8 @@ input[type=range]:focus::-ms-fill-upper { background: #367ebd; }
 
 .build-summary > div h3 { display: inline; line-height: 28px; font-size: 18px; }
 
+.build-summary > div h3 a.material-icons { vertical-align: middle; text-decoration: none; color: #ADB3BA; font-size: 20px; padding-left: 5px; }
+
 .job-list { padding-left: 20px; margin-bottom: 20px; }
 
 .job-list a { text-decoration: none; color: #747C84; font-size: 15px; display: block; border-top: 1px solid #eee; padding-top: 20px; padding-bottom: 20px; position: relative; }
