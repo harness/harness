@@ -55,6 +55,5 @@ docs:
 	mkdir -p /drone/tmp/docs
 	mkdir -p /drone/tmp/static
 	cp -a static/docs_gen/*   /drone/tmp/docs/
-	cp -a static/scripts_gen  /drone/tmp/static/
 	cp -a static/styles_gen   /drone/tmp/static/
 	cp -a static/images       /drone/tmp/static/
