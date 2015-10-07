@@ -34,20 +34,3 @@ Cloning a private repository requires authentication to the remote system. Drone
 Drone prefers `git+https` for authentication because it allows you to clone multiple private repositories. This is helpful when you have git submodules or third party dependencies you need to download (via `go get` or `npm install` or others) that are sourced from a private repository.
 
 Drone only injects the `netrc` and `id_rsa` files into your build environment if your repository is private, or running in private mode. We do this for security reasons to avoid leaking sensitive data.
-
-## Clone Plugin
-
-You can override the default `git` plugin by specifying an alternative plugin image. An example use case may be integrating with alternate version control systems, such as mercurial:
-
-```yaml
-clone:
-  image: bradrydzewski/hg
-
-  # below are plugin-specific parameters
-  path: override/default/clone/path
-  insecure: false
-  verbose: true
-```
-
-Please reference the official `git` plugin and use this as a starting point for custom plugin development:
-https://github.com/drone-plugins/drone-git

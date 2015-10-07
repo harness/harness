@@ -96,6 +96,29 @@ func GetAllRepos(client *github.Client) ([]github.Repository, error) {
 	return repos, nil
 }
 
+// GetSubscriptions is a helper function that returns an aggregated list
+// of all user and organization repositories.
+// func GetSubscriptions(client *github.Client) ([]github.Repository, error) {
+// 	var repos []github.Repository
+// 	var opts = github.ListOptions{}
+// 	opts.PerPage = 100
+// 	opts.Page = 1
+
+// 	// loop through user repository list
+// 	for opts.Page > 0 {
+// 		list, resp, err := client.Activity.ListWatched(""), &opts)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		repos = append(repos, list...)
+
+// 		// increment the next page to retrieve
+// 		opts.Page = resp.NextPage
+// 	}
+
+// 	return repos, nil
+// }
+
 // GetUserRepos is a helper function that returns a list of
 // all user repositories. Paginated results are aggregated into
 // a single list.

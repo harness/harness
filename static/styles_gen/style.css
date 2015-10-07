@@ -341,7 +341,7 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 
 .docs { margin-top: 40px; padding: 0px 50px; padding-right: 40px; }
 
-.docs pre { margin-right: 15px; font-size: 13px; color: #eff1f5; color: #2b303b; border-radius: 2px; background: #2b303b; background: #ECF0F1; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; padding: 25px 30px; font-family: "Roboto Mono"; }
+.docs-api pre { margin-right: 15px; font-size: 13px; color: #eff1f5; color: #2b303b; border-radius: 2px; background: #2b303b; background: #ECF0F1; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; padding: 25px 30px; font-family: "Roboto Mono"; margin-right: 0px; padding-left: 40px; background: #eff1f5; color: #2b303b; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; padding: 25px 30px; font-family: "Roboto Mono"; border-radius: 2px; font-size: 13px; }
 
 .operation { min-height: 100vh; padding: 20px 0px; display: flex; }
 
@@ -374,6 +374,46 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 .operation aside h4 { color: #2b303b; }
 
 .operation aside pre { background: #eff1f5; color: #2b303b; }
+
+.docs-usage .row { display: flex; }
+
+.docs-usage .row .content-nav { max-width: 250px; min-width: 250px; width: 250px; }
+
+.docs-usage .row .content-nav ul { padding: 0px; margin: 0px; list-style-type: none; }
+
+.docs-usage .row .content-nav ul a { color: rgba(43, 48, 59, 0.8); line-height: 30px; display: block; }
+
+.docs-usage .row .content-nav ul li { position: relative; }
+
+.docs-usage .row .content-nav ul li.active a { color: #2b303b; }
+
+.docs-usage .row .content-nav ul li.active:before { content: ""; border-left: 4px solid #2b303b; position: absolute; top: 0px; bottom: 0px; left: -20px; }
+
+.docs-usage .row .content-main { max-width: 900px; margin: 0px auto; margin-bottom: 40px; font-size: 14px; }
+
+.docs-usage .row .content-main p { line-height: 20px; margin: 20px 0px; }
+
+.docs-usage .row .content-main blockquote { color: #31708f; background-color: #d9edf7; border-color: #bcdff1; padding: 30px; margin: 15px 0px; border-radius: 2px; }
+
+.docs-usage .row .content-main blockquote p:first-child { margin-top: 0px; }
+
+.docs-usage .row .content-main blockquote p:last-child { margin-bottom: 0px; }
+
+.docs-usage .row .content-main strong { font-weight: bold; }
+
+.docs-usage .row .content-main h1 { margin: 40px 0px 20px 0px; font-size: 22px; }
+
+.docs-usage .row .content-main h1:first-child { margin-top: 0px; }
+
+.docs-usage .row .content-main h2 { margin: 40px 0px 30px 0px; font-size: 20px; border-top: 1px solid #EEE; padding-top: 30px; }
+
+.docs-usage .row .content-main h3 { margin: 40px 0px 20px 0px; font-size: 16px; }
+
+.docs-usage .row .content-main ul code, .docs-usage .row .content-main ol code, .docs-usage .row .content-main p code { background: #eff1f5; color: #2b303b; padding: 0px 7px; font-family: "Roboto Mono"; font-size: 13px; white-space: nowrap; }
+
+.docs-usage .row .content-main pre { margin-right: 0px; padding-left: 40px; background: #eff1f5; color: #2b303b; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; padding: 25px 30px; font-family: "Roboto Mono"; border-radius: 2px; font-size: 13px; }
+
+.docs-usage .row .content-main pre > code { background: #eff1f5; color: #2b303b; font-family: "Roboto Mono"; font-size: 13px; }
 
 .tt-open { position: absolute; top: 34px; left: 0px; z-index: 100; display: none; background: #FFF; min-width: 100%; border: 1px solid #eee; border-radius: 0px; }
 
