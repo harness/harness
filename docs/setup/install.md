@@ -3,6 +3,12 @@
 To quickly tryout Drone we have a [Docker image](https://registry.hub.docker.com/u/drone/drone/) that includes everything you need to get started. Simply run the commend below:
 
 ```
+sudo docker pull drone/drone:0.4
+```
+
+And then run the container:
+
+```
 sudo docker run \
 	--volume /var/lib/drone:/var/lib/drone \
 	--volume /var/run/docker.sock:/var/run/docker.sock \
@@ -11,7 +17,7 @@ sudo docker run \
 	--publish=80:8000 \
 	--detach=true \
 	--name=drone \
-	drone/drone
+	drone/drone:0.4
 ```
 
 Drone is now running (in the background) on `http://localhost:80`. Note that before running you should create the `--env-file` and add your Drone configuration (GitHub, Bitbucket, GitLab credentials, etc).
