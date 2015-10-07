@@ -1,6 +1,6 @@
 # Secret Variables
 
-> **Caution:** this feature is still considered experimental
+> this feature is still considered experimental
 
 Drone allows you to store secret variables in an encrypted `.drone.sec` file in the root of your repository. This is useful when your build requires sensitive information that should not be stored in plaintext in your `.drone.yml` file.
 

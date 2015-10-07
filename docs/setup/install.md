@@ -1,5 +1,3 @@
-> **NOTE** we are not yet producing an image for 0.4 so this section does not work as documented. An official image for the 0.4 release is coming soon
-
 # Installation
 
 To quickly tryout Drone we have a [Docker image](https://registry.hub.docker.com/u/drone/drone/) that includes everything you need to get started. Simply run the commend below:
@@ -8,7 +6,7 @@ To quickly tryout Drone we have a [Docker image](https://registry.hub.docker.com
 sudo docker run \
 	--volume /var/lib/drone:/var/lib/drone \
 	--volume /var/run/docker.sock:/var/run/docker.sock \
-	--env-file /etc/defaults/drone \
+	--env-file /etc/drone/dronerc \
 	--restart=always \
 	--publish=80:8000 \
 	--detach=true \

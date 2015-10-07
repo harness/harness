@@ -1,4 +1,4 @@
-> **Caution** the mysql driver has known timeout issues. See [#257](https://github.com/go-sql-driver/mysql/issues/257).
+> mysql driver has known timeout issues. See [#257](https://github.com/go-sql-driver/mysql/issues/257).
 
 # MySQL
 
