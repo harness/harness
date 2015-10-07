@@ -151,7 +151,7 @@ func toPage(site *Site, el *goquery.Selection) (*Page, error) {
 	// follow the link to see if this is a page
 	// that should be added to our documentation.
 	href, ok := el.Attr("href")
-	if !ok {
+	if !ok || href == "#" {
 		return nil, nil
 	}
 

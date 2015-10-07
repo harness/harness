@@ -410,6 +410,9 @@ func (e *engine) runJobNotify(r *Task, client dockerclient.Client) error {
 
 	log.Infof("preparing container %s", name)
 	info, err := docker.Run(client, conf, name)
+	if err != nil {
+		log.Errorf("Error starting notification container %s. %s", name, err)
+	}
 
 	// for debugging purposes we print a failed notification executions
 	// output to the logs. Otherwise we have no way to troubleshoot failed
