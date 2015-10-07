@@ -20,6 +20,7 @@ block content
 	div.container-fluid.docs.docs-usage
 		div.row
 			div.content-nav
-				#{Site.Nav.HTML}
+				ul
+					#{Site.Nav.HTML}
 			div.content-main
 				#{Page.HTML}

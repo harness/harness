@@ -1,6 +1,6 @@
 # Build
 
-Drone uses the `build` section of the `.drone.yml` to describe your Docker build environment and specify your build and test instructions. The following is an example build definition:
+Drone uses the `build` section of the `.drone.yml` to describe your Docker build environment and your build and test instructions. The following is an example build definition:
 
 ```yaml
 build:

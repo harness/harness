@@ -1,6 +1,6 @@
 # Caching
 
-> **Caution:** this feature is still considered experimental
+> This feature is still considered experimental
 
 Drone allows you to cache directories within the build workspace. When a build successfully completes, the named directories are gzipped and stored on the host machine. When a new build starts, the named directories are restored from the gzipped files. This can be used to improve the performance of your builds.
 
@@ -27,4 +27,4 @@ There is currently no mechanism to automatically delete or flush the cache. This
 
 ## Distributed Cache
 
-There is considered outside the scope of Drone. You may, for example, use a distributed filesystem such as `ceph` or `gluster` mounted to `/var/lib/drone/cache/` to share the cache across nodes.
+This is outside the scope of Drone. You may, for example, use a distributed filesystem such as `ceph` or `gluster` mounted to `/var/lib/drone/cache/` to share the cache across nodes.

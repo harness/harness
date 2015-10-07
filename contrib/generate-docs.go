@@ -59,6 +59,7 @@ func main() {
 		return true
 	})
 	site.Nav = &Nav{}
+	site.Nav.elem = sitemap
 	site.Nav.html, err = sitemap.Html()
 	if err != nil {
 		log.Fatal(err)
@@ -76,6 +77,19 @@ func main() {
 			log.Fatalf("Error creating file %s. %s", path, err)
 		}
 		defer f.Close()
+
+		// correctly make the active page in the
+		// navigation html snippet
+		site.Nav.elem.Find("li > a").EachWithBreak(func(i int, s *goquery.Selection) bool {
+			href, _ := s.Attr("href")
+			if href == page.Href {
+				s.Parent().AddClass("active")
+			} else {
+				s.Parent().RemoveClass("active")
+			}
+			return true
+		})
+		site.Nav.html, _ = site.Nav.elem.Html()
 
 		data := map[string]interface{}{
 			"Site": site,
@@ -98,6 +112,7 @@ type Site struct {
 
 type Nav struct {
 	html string
+	elem *goquery.Selection
 }
 
 func (n *Nav) HTML() template.HTML {
