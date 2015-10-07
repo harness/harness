@@ -53,6 +53,7 @@ vendor:
 
 docs:
 	mkdir -p /drone/tmp/docs
-	cp -a static/docs_gen/*  /drone/tmp/docs/
-	cp -a static/styles_gen  /drone/tmp/docs/
-	cp -a static/images      /drone/tmp/docs/
+	cp -a static/docs_gen/*   /drone/tmp/docs/
+	cp -a static/scripts_gen  /drone/tmp/
+	cp -a static/styles_gen   /drone/tmp/
+	cp -a static/images       /drone/tmp/
