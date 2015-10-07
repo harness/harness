@@ -1,4 +1,4 @@
-.PHONY: vendor
+.PHONY: vendor docs
 
 PACKAGES = $(shell go list ./... | grep -v /vendor/)
 
@@ -22,6 +22,8 @@ gen: gen_static gen_template gen_migrations
 
 gen_static:
 	mkdir -p static/docs_gen/api static/docs_gen/build
+	mkdir -p static/docs_gen/api static/docs_gen/plugin
+	mkdir -p static/docs_gen/api static/docs_gen/setup
 	go generate github.com/drone/drone/static
 
 gen_template:
@@ -48,3 +50,9 @@ deb:
 
 vendor:
 	vexp
+
+docs:
+	mkdir -p /drone/tmp/docs
+	cp -a static/docs_gen/*  /drone/tmp/docs/
+	cp -a static/styles_gen  /drone/tmp/docs/
+	cp -a static/images      /drone/tmp/docs/
