@@ -304,6 +304,7 @@ func (e *engine) runJob(r *Task, updater *updater, client dockerclient.Client) e
 		},
 	}
 
+	log.Infof("preparing container %s", name)
 	client.PullImage(conf.Image, nil)
 
 	_, err = docker.RunDaemon(client, conf, name)

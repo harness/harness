@@ -74,6 +74,9 @@ function JobViewModel(repo, build, job, status) {
 		if (!data.jobs) {
 			return;
 		}
+		if (data.number !== build) {
+			return;
+		}
 
 		var before = self.status;
 		self.status = data.jobs[job-1].status;

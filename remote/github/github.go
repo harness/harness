@@ -331,10 +331,15 @@ func (g *Github) push(r *http.Request) (*model.Repo, *model.Build, error) {
 	build.Branch = strings.Replace(build.Ref, "refs/heads/", "", -1)
 	build.Message = hook.Head.Message
 	// build.Timestamp = hook.Head.Timestamp
-	// build.Email = hook.Head.Author.Email
+	build.Email = hook.Head.Author.Email
 	build.Avatar = hook.Sender.Avatar
 	build.Author = hook.Sender.Login
 	build.Remote = hook.Repo.CloneURL
+
+	if len(build.Author) == 0 {
+		build.Author = hook.Head.Author.Username
+		// default gravatar?
+	}
 
 	// we should ignore github pages
 	if build.Ref == "refs/heads/gh-pages" {

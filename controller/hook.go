@@ -94,6 +94,21 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
+	// if there is no email address associated with the pull request,
+	// we lookup the email address based on the authors github login.
+	//
+	// my initial hesitation with this code is that it has the ability
+	// to expose your email address. At the same time, your email address
+	// is already exposed in the public .git log. So while some people will
+	// a small number of people will probably be upset by this, I'm not sure
+	// it is actually that big of a deal.
+	if len(build.Email) == 0 {
+		author, err := model.GetUserLogin(db, build.Author)
+		if err == nil {
+			build.Email = author.Email
+		}
+	}
+
 	// if the remote has a refresh token, the current access token
 	// may be stale. Therefore, we should refresh prior to dispatching
 	// the job.

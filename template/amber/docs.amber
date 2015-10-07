@@ -17,8 +17,9 @@ block header
 			a.nav-link[href="#"] API Reference
 
 block content
-	div.container-fluid.docs.docs-api
+	div.container-fluid.docs.docs-usage
 		div.row
-			#{Site.Nav.HTML}
-		div.row
-			#{Page.HTML}
+			div.content-nav
+				#{Site.Nav.HTML}
+			div.content-main
+				#{Page.HTML}
