@@ -381,13 +381,15 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 
 .docs-usage .row .content-nav ul { padding: 0px; margin: 0px; list-style-type: none; }
 
-.docs-usage .row .content-nav ul a { color: rgba(43, 48, 59, 0.8); line-height: 30px; display: block; }
+.docs-usage .row .content-nav ul li { position: relative; color: rgba(0, 0, 0, 0.5); text-transform: uppercase; font-size: 13px; }
 
-.docs-usage .row .content-nav ul li { position: relative; }
+.docs-usage .row .content-nav ul li a { color: rgba(43, 48, 59, 0.8); line-height: 30px; display: block; font-size: 16px; text-transform: none; }
 
-.docs-usage .row .content-nav ul li.active a { color: #2b303b; }
+.docs-usage .row .content-nav ul li.active a { color: #2b303b; font-size: 16px; text-transform: none; }
 
 .docs-usage .row .content-nav ul li.active:before { content: ""; border-left: 4px solid #2b303b; position: absolute; top: 0px; bottom: 0px; left: -20px; }
+
+.docs-usage .row .content-nav ul ul { margin-bottom: 25px; margin-top: 5px; }
 
 .docs-usage .row .content-main { max-width: 900px; margin: 0px auto; margin-bottom: 40px; font-size: 14px; }
 

@@ -237,14 +237,21 @@
 				padding:0px;
 				margin:0px;
 				list-style-type: none;
-				a
+				li
+					position:relative;
+					color: rgba(0,0,0,0.5);
+					text-transform: uppercase;
+					font-size: 13px;
+				li a
 					color:rgba(43, 48, 59, 0.8);
 					line-height: 30px;
 					display: block;
-				li
-					position:relative;
+					font-size: 16px;
+					text-transform: none;
 				li.active a
 					color:#2b303b;
+					font-size: 16px;
+					text-transform: none;
 				li.active:before
 					content: "";
 					border-left: 4px solid #2b303b;
@@ -252,6 +259,9 @@
 					top: 0px;
 					bottom: 0px;
 					left: -20px;
+				ul
+					margin-bottom: 25px;
+					margin-top: 5px;
 		.content-main
 			max-width: 900px;
 			margin: 0px auto;

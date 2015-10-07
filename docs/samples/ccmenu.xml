@@ -1,9 +1,0 @@
-<Projects>
-  <Project
-    name="foo/bar"
-    activity="Sleeping"
-    lastBuildStatus="Success"
-    lastBuildLabel="8e88d525"
-    lastBuildTime="2015-06-24T14:27:49-04:00"
-    webUrl="http://localhost:8080/foo/bar" />
-</Projects>
