@@ -8,11 +8,11 @@ block header
 		li Documentation
 	ul.nav.nav-tabs
 		li.nav-item
-			a.nav-link[href="../setup/ubuntu.html"] Install
+			a.nav-link[href="../setup/"] Install
 		li.nav-item
-			a.nav-link[href="../build/overview.html"] Builds
+			a.nav-link[href="../build/"] Builds
 		li.nav-item
-			a.nav-link[href="../plugin/overview.html"] Plugins
+			a.nav-link[href="../plugin/"] Plugins
 		li.nav-item
 			a.nav-link.active[href="#"] API Reference
 

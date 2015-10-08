@@ -1,9 +1,11 @@
 * Install
-    * [Ubuntu](ubuntu.md)
-    * [Docker](install.md)
-* Setup
+    * [Install](index.md)
+    * [Upgrade](upgrade.md)
+    * [Plugins](plugins.md)
+* Server
     * [Server](server.md)
-    * [Docker](docker.md)
+    * [Nginx](nginx.md)
+* Remotes
     * [GitHub](github.md)
     * [GitLab](gitlab.md)
     * [Bitbucket](bitbucket.md)
