@@ -8,19 +8,19 @@ block header
 		li Documentation
 	ul.nav.nav-tabs
 		li.nav-item
-			a[class="nav-link"][href="../setup/ubuntu.html"]
+			a[class="nav-link"][href="../setup/"]
 				.active ? Site.Name == "Install"
 				| Install
 		li.nav-item
-			a[class="nav-link"][href="../build/overview.html"]
+			a[class="nav-link"][href="../build/"]
 				.active ? Site.Name == "Builds"
 				| Builds
 		li.nav-item
-			a[class="nav-link"][href="../plugin/overview.html"]
+			a[class="nav-link"][href="../plugin/"]
 				.active ? Site.Name == "Plugins"
 				| Plugins
 		li.nav-item
-			a.nav-link[href="../api/index.html"] API Reference
+			a.nav-link[href="../api/i"] API Reference
 
 block content
 	div.container-fluid.docs.docs-usage

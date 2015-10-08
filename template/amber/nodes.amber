@@ -33,7 +33,7 @@ block content
                     form
                         fieldset.form-group
                             label[for="addr"] Address
-                            input.form-control[type="text"][placeholder="unix:///var/run/docker/docker.sock"]#addr
+                            input.form-control[type="text"][placeholder="unix:///var/run/docker.sock"]#addr
                         fieldset.form-group
                             label[for="key"] Key
                             textarea.form-control#key

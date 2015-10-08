@@ -3,8 +3,8 @@
 Drone comes with built-in support for GitHub and GitHub Enterprise. To enable GitHub you should configure the GitHub driver using the following environment variables:
 
 ```bash
-REMOTE_DRIVER="github"
-REMOTE_CONFIG="https://github.com?client_id=${client_id}&client_secret=${client_secret}"
+REMOTE_DRIVER=github
+REMOTE_CONFIG=https://github.com?client_id=${client_id}&client_secret=${client_secret}
 ```
 
 ## GitHub configuration
@@ -37,4 +37,4 @@ This section lists all connection options used in the connection string format. 
 
 You must register your application with GitHub in order to generate a Client and Secret. Navigate to your account settings and choose Applications from the menu, and click Register new application.
 
-Please use `/authorize` as the Authorization callback URL path.
+Please use `http://drone.mycompany.com/authorize` as the Authorization callback URL.
