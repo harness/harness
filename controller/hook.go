@@ -203,7 +203,7 @@ func PostHook(c *gin.Context) {
 
 	// get the previous build so taht we can send
 	// on status change notifications
-	last, _ := model.GetBuildLast(db, repo, build.Branch)
+	last, _ := model.GetBuildLastBefore(db, repo, build.Branch, build.ID)
 
 	engine_ := context.Engine(c)
 	go engine_.Schedule(&engine.Task{
