@@ -28,9 +28,16 @@ git clone git://github.com/drone/drone.git $GOPATH/src/github.com/drone/drone
 cd $GOPATH/src/github.com/drone/drone
 ```
 
+Pleasure ensure your local environment has the following dependencies installed. We provide scripts in the `./contrib` folder as a convenience that can be used to install:
+
+* libsqlite3
+* sassc
+
 Commands to build from source:
 
 ```sh
+export GO15VENDOREXPERIMENT=1
+
 make deps    # Download required dependencies
 make gen     # Generate code
 make build   # Build the binary
