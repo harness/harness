@@ -158,7 +158,7 @@ func TestBuild(t *testing.T) {
 			g.Assert(build2.Branch).Equal(getbuild.Branch)
 		})
 
-		g.It("Should Get a Build by Commit", func() {
+		g.It("Should Get the last Build", func() {
 			build1 := &Build{
 				RepoID: 1,
 				Status: StatusFailure,
@@ -177,6 +177,41 @@ func TestBuild(t *testing.T) {
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(err3 == nil).IsTrue()
+			g.Assert(build2.ID).Equal(getbuild.ID)
+			g.Assert(build2.RepoID).Equal(getbuild.RepoID)
+			g.Assert(build2.Number).Equal(getbuild.Number)
+			g.Assert(build2.Status).Equal(getbuild.Status)
+			g.Assert(build2.Branch).Equal(getbuild.Branch)
+			g.Assert(build2.Commit).Equal(getbuild.Commit)
+		})
+
+		g.It("Should Get the last Build Before Build N", func() {
+			build1 := &Build{
+				RepoID: 1,
+				Status: StatusFailure,
+				Branch: "master",
+				Commit: "85f8c029b902ed9400bc600bac301a0aadb144ac",
+			}
+			build2 := &Build{
+				RepoID: 1,
+				Status: StatusSuccess,
+				Branch: "master",
+				Commit: "85f8c029b902ed9400bc600bac301a0aadb144aa",
+			}
+			build3 := &Build{
+				RepoID: 1,
+				Status: StatusRunning,
+				Branch: "master",
+				Commit: "85f8c029b902ed9400bc600bac301a0aadb144aa",
+			}
+			err1 := CreateBuild(db, build1, []*Job{}...)
+			err2 := CreateBuild(db, build2, []*Job{}...)
+			err3 := CreateBuild(db, build3, []*Job{}...)
+			getbuild, err4 := GetBuildLastBefore(db, &Repo{ID: 1}, build3.Branch, build3.ID)
+			g.Assert(err1 == nil).IsTrue()
+			g.Assert(err2 == nil).IsTrue()
+			g.Assert(err3 == nil).IsTrue()
+			g.Assert(err4 == nil).IsTrue()
 			g.Assert(build2.ID).Equal(getbuild.ID)
 			g.Assert(build2.RepoID).Equal(getbuild.RepoID)
 			g.Assert(build2.Number).Equal(getbuild.Number)

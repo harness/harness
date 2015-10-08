@@ -66,6 +66,12 @@ func GetBuildLast(db meddler.DB, repo *Repo, branch string) (*Build, error) {
 	return build, err
 }
 
+func GetBuildLastBefore(db meddler.DB, repo *Repo, branch string, number int64) (*Build, error) {
+	var build = new(Build)
+	var err = meddler.QueryRow(db, build, database.Rebind(buildLastBeforeQuery), repo.ID, branch, number)
+	return build, err
+}
+
 func GetBuildList(db meddler.DB, repo *Repo) ([]*Build, error) {
 	var builds = []*Build{}
 	var err = meddler.QueryAll(db, &builds, database.Rebind(buildListQuery), repo.ID)
@@ -121,6 +127,16 @@ SELECT *
 FROM builds
 WHERE build_repo_id = ?
   AND build_branch  = ?
+ORDER BY build_number DESC
+LIMIT 1
+`
+
+const buildLastBeforeQuery = `
+SELECT *
+FROM builds
+WHERE build_repo_id = ?
+  AND build_branch  = ?
+  AND build_id < ?
 ORDER BY build_number DESC
 LIMIT 1
 `
