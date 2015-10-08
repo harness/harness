@@ -41,11 +41,11 @@ func New(dockerClient *docker.Client) *Builder {
 // Builder represents a build process being prepared
 // to run.
 type Builder struct {
-	// Image specifies the Docker Image that will be
-	// used to virtualize the Build process.
+	// Build specifies the configuration details for building,
+	// testing and deploying code.
 	Build *script.Build
 
-	// Source specifies the Repository path of the code
+	// Repo specifies the repository details for the code that
 	// that we are testing.
 	//
 	// The source repository may be a local repository
