@@ -7,12 +7,17 @@ import (
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router"
 	"github.com/drone/drone/router/middleware/context"
+	"github.com/drone/drone/router/middleware/header"
 	"github.com/drone/drone/shared/database"
 	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/shared/server"
 
 	"github.com/Sirupsen/logrus"
 )
+
+// build revision number populated by the continuous
+// integration server at compile time.
+var build string = "custom"
 
 var (
 	dotenv = flag.String("config", ".env", "")
@@ -43,6 +48,7 @@ func main() {
 	server_ := server.Load(env)
 	server_.Run(
 		router.Load(
+			header.Version(build),
 			context.SetDatabase(database_),
 			context.SetRemote(remote_),
 			context.SetEngine(engine_),

@@ -36,7 +36,7 @@ build:
 	go build
 
 build_static:
-	go build --ldflags '-extldflags "-static"' -o drone_static
+	go build --ldflags '-extldflags "-static" -X main.version=$(BUILD_NUMBER)' -o drone_static
 
 test:
 	go test -cover $(PACKAGES)

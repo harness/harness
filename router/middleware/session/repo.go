@@ -1,7 +1,6 @@
 package session
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/drone/drone/model"
@@ -10,29 +9,30 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
-	"github.com/hashicorp/golang-lru"
 )
-
-var cache *lru.Cache
-
-func init() {
-	var err error
-	cache, err = lru.New(1028)
-	if err != nil {
-		panic(err)
-	}
-}
 
 func Repo(c *gin.Context) *model.Repo {
 	v, ok := c.Get("repo")
 	if !ok {
 		return nil
 	}
-	u, ok := v.(*model.Repo)
+	r, ok := v.(*model.Repo)
 	if !ok {
 		return nil
 	}
-	return u
+	return r
+}
+
+func Repos(c *gin.Context) []*model.RepoLite {
+	v, ok := c.Get("repos")
+	if !ok {
+		return nil
+	}
+	r, ok := v.([]*model.RepoLite)
+	if !ok {
+		return nil
+	}
+	return r
 }
 
 func SetRepo() gin.HandlerFunc {
@@ -106,10 +106,8 @@ func SetPerm() gin.HandlerFunc {
 		if user != nil {
 			// attempt to get the permissions from a local cache
 			// just to avoid excess API calls to GitHub
-			key := fmt.Sprintf("%d.%d", user.ID, repo.ID)
-			val, ok := cache.Get(key)
+			val, ok := c.Get("perm")
 			if ok {
-				c.Set("perm", val.(*model.Perm))
 				c.Next()
 
 				log.Debugf("%s using cached %+v permission to %s",
@@ -161,13 +159,6 @@ func SetPerm() gin.HandlerFunc {
 		}
 
 		if user != nil {
-
-			// cache the updated repository permissions to
-			// prevent un-necessary GitHub API requests.
-			key := fmt.Sprintf("%d.%d", user.ID, repo.ID)
-			cache.Add(key, perm)
-
-			// debug
 			log.Debugf("%s granted %+v permission to %s",
 				user.Login, perm, repo.FullName)
 
