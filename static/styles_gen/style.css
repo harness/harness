@@ -431,6 +431,16 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 
 .tt-selectable div:last-child { flex: 1 1 auto; line-height: 32px; }
 
+.no-matches-message { padding: 20px; color: rgba(0, 0, 0, 0.5); font-style: italic; }
+
+.not-indexed-message { padding: 20px; padding-bottom: 0px; color: rgba(0, 0, 0, 0.5); font-style: italic; }
+
+.not-indexed-message em { color: #2b303b; }
+
+.not-indexed-message p:last-child { margin-top: 20px; font-size: 15px; color: rgba(0, 0, 0, 0.4); }
+
+.not-indexed-message p:last-child a { color: rgba(0, 0, 0, 0.8); }
+
 .hidden { display: none; }
 
 :focus { outline: none; }
