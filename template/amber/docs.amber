@@ -20,7 +20,7 @@ block header
 				.active ? Site.Name == "Plugins"
 				| Plugins
 		li.nav-item
-			a.nav-link[href="../api/i"] API Reference
+			a.nav-link[href="../api/"] API Reference
 
 block content
 	div.container-fluid.docs.docs-usage
