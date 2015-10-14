@@ -58,8 +58,11 @@ func SetRepo() gin.HandlerFunc {
 			remote := context.Remote(c)
 			repo, err = remote.Repo(user, owner, name)
 			if err != nil {
-				log.Errorf("Cannot get repository %s/%s for user %s. %s",
-					owner, user.Login, name, err)
+				log.Errorf("Cannot find remote repository %s/%s for user %s. %s",
+					owner, name, user.Login, err)
+			} else {
+				log.Debugf("Found remote repository %s/%s for user %s",
+					owner, name, user.Login)
 			}
 		}
 
