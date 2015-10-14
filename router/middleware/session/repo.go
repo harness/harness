@@ -56,7 +56,11 @@ func SetRepo() gin.HandlerFunc {
 		// we can prompt the user to add.
 		if user != nil {
 			remote := context.Remote(c)
-			repo, _ = remote.Repo(user, owner, name)
+			repo, err = remote.Repo(user, owner, name)
+			if err != nil {
+				log.Errorf("Cannot get repository %s/%s for user %s. %s",
+					owner, user.Login, name, err)
+			}
 		}
 
 		data := gin.H{
