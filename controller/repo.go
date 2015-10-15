@@ -110,11 +110,6 @@ func PostRepo(c *gin.Context) {
 		c.AbortWithError(500, err)
 		return
 	}
-	err = model.CreateStar(tx, user, r)
-	if err != nil {
-		c.AbortWithError(500, err)
-		return
-	}
 	tx.Commit()
 
 	c.JSON(200, r)
@@ -163,27 +158,11 @@ func PatchRepo(c *gin.Context) {
 		return
 	}
 
-	// if the user is authenticated we should
-	// check to see if they've starred the repository
-	repo.IsStarred, _ = model.GetStar(db, user, repo)
-
 	c.IndentedJSON(http.StatusOK, repo)
 }
 
 func GetRepo(c *gin.Context) {
-	db := context.Database(c)
-	repo := session.Repo(c)
-	user := session.User(c)
-	if user == nil {
-		c.IndentedJSON(http.StatusOK, repo)
-		return
-	}
-
-	// if the user is authenticated we should
-	// check to see if they've starred the repository
-	repo.IsStarred, _ = model.GetStar(db, user, repo)
-
-	c.IndentedJSON(http.StatusOK, repo)
+	c.IndentedJSON(http.StatusOK, session.Repo(c))
 }
 
 func GetRepoKey(c *gin.Context) {
@@ -253,30 +232,4 @@ func PostSecure(c *gin.Context) {
 
 func PostReactivate(c *gin.Context) {
 
-}
-
-func PostStar(c *gin.Context) {
-	db := context.Database(c)
-	repo := session.Repo(c)
-	user := session.User(c)
-
-	err := model.CreateStar(db, user, repo)
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-	} else {
-		c.Writer.WriteHeader(http.StatusOK)
-	}
-}
-
-func DeleteStar(c *gin.Context) {
-	db := context.Database(c)
-	repo := session.Repo(c)
-	user := session.User(c)
-
-	err := model.DeleteStar(db, user, repo)
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-	} else {
-		c.Writer.WriteHeader(http.StatusOK)
-	}
 }

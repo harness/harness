@@ -28,13 +28,33 @@ func GetFeed(c *gin.Context) {
 
 func GetRepos(c *gin.Context) {
 	user := session.User(c)
+	remote := context.Remote(c)
 	db := context.Database(c)
-	repos, err := model.GetRepoList(db, user)
+	var repos []*model.RepoLite
+
+	// get the repository list from the cache
+	reposv, ok := c.Get("repos")
+	if ok {
+		repos = reposv.([]*model.RepoLite)
+	} else {
+		var err error
+		repos, err = remote.Repos(user)
+		if err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// for each repository in the remote system we get
+	// the intersection of those repostiories in Drone
+	repos_, err := model.GetRepoListOf(db, repos)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, repos)
+
+	c.Set("repos", repos)
+	c.IndentedJSON(http.StatusOK, repos_)
 }
 
 func GetRemoteRepos(c *gin.Context) {

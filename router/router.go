@@ -28,7 +28,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(cache.Perms)
 	e.Use(token.Refresh)
 
-	e.GET("/", controller.ShowIndex)
+	e.GET("/", cache.Repos, controller.ShowIndex)
 	e.GET("/login", controller.ShowLogin)
 	e.GET("/logout", controller.GetLogout)
 
@@ -60,8 +60,8 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	{
 		user.Use(session.MustUser())
 		user.GET("", controller.GetSelf)
-		user.GET("/builds", controller.GetFeed)
-		user.GET("/repos", controller.GetRepos)
+		// user.GET("/builds", controller.GetFeed)
+		user.GET("/repos", cache.Repos, controller.GetRepos)
 		user.GET("/repos/remote", cache.Repos, controller.GetRemoteRepos)
 		user.POST("/token", controller.PostToken)
 	}
@@ -101,8 +101,6 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.GET("/logs/:number/:job", controller.GetBuildLogs)
 
 			// requires authenticated user
-			repo.POST("/starred", session.MustUser(), controller.PostStar)
-			repo.DELETE("/starred", session.MustUser(), controller.DeleteStar)
 			repo.POST("/encrypt", session.MustUser(), controller.PostSecure)
 
 			// requires push permissions
