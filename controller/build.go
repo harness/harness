@@ -218,16 +218,21 @@ func PostBuild(c *gin.Context) {
 
 	c.JSON(202, build)
 
+	// get the previous build so taht we can send
+	// on status change notifications
+	last, _ := model.GetBuildLastBefore(db, repo, build.Branch, build.ID)
+
 	engine_ := context.Engine(c)
 	go engine_.Schedule(&engine.Task{
-		User:   user,
-		Repo:   repo,
-		Build:  build,
-		Jobs:   jobs,
-		Keys:   key,
-		Netrc:  netrc,
-		Config: string(raw),
-		Secret: string(sec),
+		User:      user,
+		Repo:      repo,
+		Build:     build,
+		BuildPrev: last,
+		Jobs:      jobs,
+		Keys:      key,
+		Netrc:     netrc,
+		Config:    string(raw),
+		Secret:    string(sec),
 		System: &model.System{
 			Link:    httputil.GetURL(c.Request),
 			Plugins: strings.Split(os.Getenv("PLUGIN_FILTER"), " "),

@@ -331,16 +331,21 @@ func (g *Github) push(r *http.Request) (*model.Repo, *model.Build, error) {
 	build.Link = hook.Head.URL
 	build.Branch = strings.Replace(build.Ref, "refs/heads/", "", -1)
 	build.Message = hook.Head.Message
-	buildTimestamp, err := time.Parse(time.RFC3339, hook.Head.Timestamp)
-	if err != nil {
-		log.Warnf("Error parsing time '%s' due to error: %s", hook.Head.Timestamp, err)
-		buildTimestamp = time.Now()
-	}
-	build.Timestamp = buildTimestamp.Unix()
+	// buildTimestamp, err := time.Parse(time.RFC3339, hook.Head.Timestamp)
+	// if err != nil {
+		// log.Warnf("Error parsing time '%s' due to error: %s", hook.Head.Timestamp, err)
+		// buildTimestamp = time.Now()
+	// }
+	// build.Timestamp = buildTimestamp.Unix()
 	build.Email = hook.Head.Author.Email
 	build.Avatar = hook.Sender.Avatar
 	build.Author = hook.Sender.Login
 	build.Remote = hook.Repo.CloneURL
+
+	if len(build.Author) == 0 {
+		build.Author = hook.Head.Author.Username
+		// default gravatar?
+	}
 
 	// we should ignore github pages
 	if build.Ref == "refs/heads/gh-pages" {

@@ -21,7 +21,9 @@ block content
                 div.build-summary
                     div
                         div[class=Build.Status][style="display:none"] #{Build.Status}
-                        h3 #{Build.Message}
+                        h3
+                            | #{Build.Message}
+                            a.material-icons[href=Build.Link][target="_blank"] link
                     p
                         em #{Build.Author}
                         span authored

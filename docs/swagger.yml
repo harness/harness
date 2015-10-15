@@ -200,8 +200,8 @@ paths:
           description: name of the repository
       tags:
         - Repos
-      summary: Encrypt
-      description: Creates encrypted environment variable strings.
+      summary: Encrypt repo secrets
+      description: Encryptes a Yaml file with secret environment variables for secure public storage.
       security:
         - accessToken: []
       responses:

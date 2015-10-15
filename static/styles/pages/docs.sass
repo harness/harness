@@ -114,9 +114,11 @@
 	margin-top:40px;
 	padding: 0px 50px;
 	padding-right:40px;
+
+.docs-api
 	pre
 		margin-right: 15px;
-		font-size: 14px;
+		font-size: 13px;
 		color: #eff1f5;
 		color: #2b303b;
 		border-radius: 2px;
@@ -127,7 +129,18 @@
 		box-sizing: border-box;
 		padding: 25px 30px;
 		font-family: "Roboto Mono";
-		
+
+		margin-right: 0px;
+		padding-left: 40px;
+		background: #eff1f5;
+		color: #2b303b;
+		white-space: pre-wrap;
+		word-wrap: break-word;
+		box-sizing: border-box;
+		padding: 25px 30px;
+		font-family: "Roboto Mono";
+		border-radius: 2px;
+		font-size:13px;
 
 .operation
 	min-height:100vh;
@@ -199,4 +212,121 @@
 			font-size:11px;
 			font-weight:normal;
 			margin-top:5px;
+
+
+.operation
+	aside
+		background: rgba(239, 241, 245, 0.49)
+		h4
+			color: #2b303b
+		pre
+			background: #eff1f5
+			color: #2b303b
+
+
+
+
+.docs-usage
+	.row
+		display:flex;
+		.content-nav
+			max-width:250px;
+			min-width:250px;
+			width:250px;
+			ul
+				padding:0px;
+				margin:0px;
+				list-style-type: none;
+				li
+					position:relative;
+					color: rgba(0,0,0,0.5);
+					text-transform: uppercase;
+					font-size: 13px;
+				li a
+					color:rgba(43, 48, 59, 0.8);
+					line-height: 30px;
+					display: block;
+					font-size: 16px;
+					text-transform: none;
+				li.active a
+					color:#2b303b;
+					font-size: 16px;
+					text-transform: none;
+				li.active:before
+					content: "";
+					border-left: 4px solid #2b303b;
+					position: absolute;
+					top: 0px;
+					bottom: 0px;
+					left: -20px;
+				ul
+					margin-bottom: 25px;
+					margin-top: 5px;
+		.content-main
+			max-width: 900px;
+			margin: 0px auto;
+			margin-bottom:40px;
+			font-size:14px;
+
+			p
+				line-height:20px;
+				margin:20px 0px;
+
+			blockquote
+				color: #31708f;
+				background-color: #d9edf7;
+				border-color: #bcdff1;
+				padding: 30px;
+				margin: 15px 0px;
+				border-radius:2px;
+
+			blockquote p:first-child
+				margin-top:0px;
+
+			blockquote p:last-child
+				margin-bottom:0px;
+
+			strong
+				font-weight:bold;
+
+			h1
+				margin:40px 0px 20px 0px;
+				font-size:22px;
+
+			h1:first-child
+			    margin-top:0px;
+
+			h2
+				margin:40px 0px 30px 0px;
+				font-size:20px;
+				border-top: 1px solid #EEE;
+				padding-top: 30px;
+			h3
+			    margin:40px 0px 20px 0px;
+			    font-size:16px;
+
+			ul code, ol code, p code
+				background: #eff1f5;
+				color: #2b303b;
+				padding: 0px 7px;
+				font-family: "Roboto Mono";
+				font-size:13px;
+				white-space:nowrap;
+			pre
+				margin-right: 0px;
+				padding-left: 40px;
+				background: #eff1f5;
+				color: #2b303b;
+				white-space: pre-wrap;
+				word-wrap: break-word;
+				box-sizing: border-box;
+				padding: 25px 30px;
+				font-family: "Roboto Mono";
+				border-radius: 2px;
+				font-size:13px;
+			pre > code
+				background: #eff1f5;
+				color: #2b303b;
+				font-family: "Roboto Mono";
+				font-size:13px;
 

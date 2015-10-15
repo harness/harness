@@ -8,11 +8,11 @@ block header
 		li Documentation
 	ul.nav.nav-tabs
 		li.nav-item
-			a.nav-link[href="#"] Install
+			a.nav-link[href="../setup/"] Install
 		li.nav-item
-			a.nav-link[href="#"] Builds
+			a.nav-link[href="../build/"] Builds
 		li.nav-item
-			a.nav-link[href="#"] Plugins
+			a.nav-link[href="../plugin/"] Plugins
 		li.nav-item
 			a.nav-link.active[href="#"] API Reference
 
@@ -27,7 +27,7 @@ block content
 						ul
 							each $op in $tag.Ops
 								li
-									a[href="#"+$op.ID][data-method=$op.Method] #{$op.Path}
+									a[href="#"+$op.ID][data-method=$op.Method] #{$op.Summary}
 		div.row
 			each $tag in Swagger.Tags
 				each $op in $tag.Ops
@@ -56,6 +56,11 @@ block content
 						aside
 							h4 Endpoint
 							pre #{$op.Method} #{$op.Path}
+							each $param in $op.Params
+								if $param.Example
+									h4 Example Request
+									if $param.IsObject
+										pre #{$param.Example}
 							each $res in $op.Results
 								if $res.Example
 									h4 Example Response
@@ -63,3 +68,7 @@ block content
 										pre [#{$res.Example}]
 									else if $res.IsObject
 										pre #{$res.Example}
+
+block scripts
+	script[type="text/javascript"][src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"]
+	script[type="text/javascript"][src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/js/bootstrap.min.js"]

@@ -260,6 +260,10 @@ func PostSecure(c *gin.Context) {
 	c.String(http.StatusOK, out)
 }
 
+func PostReactivate(c *gin.Context) {
+
+}
+
 func PostStar(c *gin.Context) {
 	db := context.Database(c)
 	repo := session.Repo(c)

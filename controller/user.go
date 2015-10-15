@@ -9,18 +9,7 @@ import (
 	"github.com/CiscoCloud/drone/router/middleware/context"
 	"github.com/CiscoCloud/drone/router/middleware/session"
 	"github.com/CiscoCloud/drone/shared/token"
-	"github.com/hashicorp/golang-lru"
 )
-
-var cache *lru.Cache
-
-func init() {
-	var err error
-	cache, err = lru.New(1028)
-	if err != nil {
-		panic(err)
-	}
-}
 
 func GetSelf(c *gin.Context) {
 	c.IndentedJSON(200, session.User(c))
@@ -52,11 +41,9 @@ func GetRemoteRepos(c *gin.Context) {
 	user := session.User(c)
 	remote := context.Remote(c)
 
-	// attempt to get the repository list from the
-	// cache since the operation is expensive
-	v, ok := cache.Get(user.Login)
+	reposv, ok := c.Get("repos")
 	if ok {
-		c.IndentedJSON(http.StatusOK, v)
+		c.IndentedJSON(http.StatusOK, reposv)
 		return
 	}
 
@@ -65,7 +52,8 @@ func GetRemoteRepos(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	cache.Add(user.Login, repos)
+
+	c.Set("repos", repos)
 	c.IndentedJSON(http.StatusOK, repos)
 }
 

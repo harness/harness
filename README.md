@@ -28,31 +28,36 @@ git clone git://github.com/drone/drone.git $GOPATH/src/github.com/drone/drone
 cd $GOPATH/src/github.com/drone/drone
 ```
 
+Pleasure ensure your local environment has the following dependencies installed. We provide scripts in the `./contrib` folder as a convenience that can be used to install:
+
+* libsqlite3
+* sassc
+
 Commands to build from source:
 
 ```sh
-go run make.go deps    # Download required dependencies
-go run make.go bindata # Generate required bindata
-go run make.go build   # Build the binaries
-go run make.go image   # Build docker images
-go run make.go test    # Run the test suite
-go run make.go clean   # Clean up environment
+export GO15VENDOREXPERIMENT=1
+
+make deps    # Download required dependencies
+make gen     # Generate code
+make build   # Build the binary
 ```
 
 Commands for development:
 
 ```sh
-go run make.go scripts # Concat all javascripts
-go run make.go styles  # Concat all stylesheets
-go run make.go vet     # Execute vet command
-go run make.go fmt     # Execute fmt command
+make gen_static     # Generate static content
+make gen_template   # Generate templates from amber files
+make gen_migrations # Generate embedded database migrations
+make vet            # Execute go vet command
+make fmt            # Execute go fmt command
 ```
 
 Commands to start drone:
 
 ```sh
-bin/drone
-bin/drone --debug # Debug mode loads static content from filesystem
+drone
+drone --debug # Debug mode enables more verbose logging
 ```
 
 If you are seeing slow compile times please install the following:

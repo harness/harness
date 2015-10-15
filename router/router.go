@@ -7,9 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/CiscoCloud/drone/controller"
+	"github.com/CiscoCloud/drone/router/middleware/cache"
 	"github.com/CiscoCloud/drone/router/middleware/header"
-	"github.com/CiscoCloud/drone/router/middleware/refresh"
 	"github.com/CiscoCloud/drone/router/middleware/session"
+	"github.com/CiscoCloud/drone/router/middleware/token"
 	"github.com/CiscoCloud/drone/static"
 	"github.com/CiscoCloud/drone/template"
 )
@@ -19,10 +20,13 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.SetHTMLTemplate(template.Load())
 	e.StaticFS("/static", static.FileSystem())
 
-	e.Use(header.SetHeaders())
+	e.Use(header.NoCache)
+	e.Use(header.Options)
+	e.Use(header.Secure)
 	e.Use(middleware...)
 	e.Use(session.SetUser())
-	e.Use(refresh.Refresh)
+	e.Use(cache.Perms)
+	e.Use(token.Refresh)
 
 	e.GET("/", controller.ShowIndex)
 	e.GET("/login", controller.ShowLogin)
@@ -58,7 +62,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		user.GET("", controller.GetSelf)
 		user.GET("/builds", controller.GetFeed)
 		user.GET("/repos", controller.GetRepos)
-		user.GET("/repos/remote", controller.GetRemoteRepos)
+		user.GET("/repos/remote", cache.Repos, controller.GetRemoteRepos)
 		user.POST("/token", controller.PostToken)
 	}
 

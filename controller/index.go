@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 
 	"github.com/CiscoCloud/drone/model"
@@ -22,7 +23,10 @@ func ShowIndex(c *gin.Context) {
 		return
 	}
 
-	repos, _ := model.GetRepoList(db, user)
+	repos, err := model.GetRepoList(db, user)
+	if err != nil {
+		log.Error(err)
+	}
 
 	c.HTML(200, "repos.html", gin.H{
 		"User":  user,

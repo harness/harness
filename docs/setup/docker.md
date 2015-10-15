@@ -1,6 +1,6 @@
 # Docker
 
-Drone uses the local Docker daemon (at `unix:///var/run/docker.sock`) to execute your builds with 1x concurrency. This section describes how to customize your Docker configuration and concurrency settings using the `DOCKER_*` environment variables.
+Drone uses the local Docker daemon (at `unix:///var/run/docker.sock`) to execute your builds with 2x concurrency. This section describes how to customize your Docker configuration and concurrency settings using the `DOCKER_*` environment variables.
 
 Configure a single Docker host (1x build concurrency):
 

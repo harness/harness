@@ -3,8 +3,8 @@
 Drone comes with built-in support for Bitbucket. To enable Bitbucket you should configure the Bitbucket driver using the following environment variables:
 
 ```bash
-REMOTE_DRIVER="bitbucket"
-REMOTE_CONFIG="https://bitbucket.org?client_id=${client_id}&client_secret=${client_secret}"
+REMOTE_DRIVER=bitbucket
+REMOTE_CONFIG=https://bitbucket.org?client_id=${client_id}&client_secret=${client_secret}
 ```
 
 ## Bitbucket configuration

@@ -17,6 +17,7 @@ import (
 	"github.com/CiscoCloud/drone/model"
 	"github.com/CiscoCloud/drone/remote"
 	"github.com/CiscoCloud/drone/shared/docker"
+	"github.com/CiscoCloud/drone/shared/envconfig"
 	"github.com/samalba/dockerclient"
 )
 
@@ -54,17 +55,28 @@ type engine struct {
 	bus     *eventbus
 	updater *updater
 	pool    *pool
+	envs    []string
 }
 
 // Load creates a new build engine, loaded with registered nodes from the
 // database. The registered nodes are added to the pool of nodes to immediately
 // start accepting workloads.
-func Load(db *sql.DB, remote remote.Remote) Engine {
+func Load(db *sql.DB, env envconfig.Env, remote remote.Remote) Engine {
 	engine := &engine{}
 	engine.bus = newEventbus()
 	engine.pool = newPool()
 	engine.db = db
 	engine.updater = &updater{engine.bus, db, remote}
+
+	// quick fix to propogate HTTP_PROXY variables
+	// throughout the build environment.
+	var proxyVars = []string{"HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy", "NO_PROXY", "no_proxy"}
+	for _, proxyVar := range proxyVars {
+		proxyVal := env.Get(proxyVar)
+		if len(proxyVal) != 0 {
+			engine.envs = append(engine.envs, proxyVar+"="+proxyVal)
+		}
+	}
 
 	nodes, err := model.GetNodeList(db)
 	if err != nil {
@@ -174,7 +186,7 @@ func (e *engine) Schedule(req *Task) {
 	// run all bulid jobs
 	for _, job := range req.Jobs {
 		req.Job = job
-		runJob(req, e.updater, client)
+		e.runJob(req, e.updater, client)
 	}
 
 	// update overall status based on each job
@@ -192,7 +204,7 @@ func (e *engine) Schedule(req *Task) {
 	}
 
 	// run notifications
-	err = runJobNotify(req, client)
+	err = e.runJobNotify(req, client)
 	if err != nil {
 		log.Errorf("error executing notification step. %s", err)
 	}
@@ -235,7 +247,7 @@ func newDockerClient(addr, cert, key, ca string) (dockerclient.Client, error) {
 	return dockerclient.NewDockerClient(addr, tlc)
 }
 
-func runJob(r *Task, updater *updater, client dockerclient.Client) error {
+func (e *engine) runJob(r *Task, updater *updater, client dockerclient.Client) error {
 
 	name := fmt.Sprintf("drone_build_%d_job_%d", r.Build.ID, r.Job.ID)
 
@@ -281,6 +293,7 @@ func runJob(r *Task, updater *updater, client dockerclient.Client) error {
 		Image:      DefaultAgent,
 		Entrypoint: DefaultEntrypoint,
 		Cmd:        args,
+		Env:        e.envs,
 		HostConfig: dockerclient.HostConfig{
 			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
 		},
@@ -289,6 +302,7 @@ func runJob(r *Task, updater *updater, client dockerclient.Client) error {
 		},
 	}
 
+	log.Infof("preparing container %s", name)
 	client.PullImage(conf.Image, nil)
 
 	_, err = docker.RunDaemon(client, conf, name)
@@ -358,7 +372,7 @@ func runJob(r *Task, updater *updater, client dockerclient.Client) error {
 	return nil
 }
 
-func runJobNotify(r *Task, client dockerclient.Client) error {
+func (e *engine) runJobNotify(r *Task, client dockerclient.Client) error {
 
 	name := fmt.Sprintf("drone_build_%d_notify", r.Build.ID)
 
@@ -383,6 +397,7 @@ func runJobNotify(r *Task, client dockerclient.Client) error {
 		Image:      DefaultAgent,
 		Entrypoint: DefaultEntrypoint,
 		Cmd:        args,
+		Env:        e.envs,
 		HostConfig: dockerclient.HostConfig{
 			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
 		},
@@ -391,7 +406,11 @@ func runJobNotify(r *Task, client dockerclient.Client) error {
 		},
 	}
 
+	log.Infof("preparing container %s", name)
 	info, err := docker.Run(client, conf, name)
+	if err != nil {
+		log.Errorf("Error starting notification container %s. %s", name, err)
+	}
 
 	// for debugging purposes we print a failed notification executions
 	// output to the logs. Otherwise we have no way to troubleshoot failed

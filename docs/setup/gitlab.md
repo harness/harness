@@ -3,8 +3,8 @@
 Drone comes with built-in support for GitLab version 8.0 and higher. To enable Gitlab you should configure the Gitlab driver using the following environment variables:
 
 ```bash
-REMOTE_DRIVER="gitlab"
-REMOTE_CONFIG="https://gitlab.hooli.com?client_id=${client_id}&client_secret=${client_secret}"
+REMOTE_DRIVER=gitlab
+REMOTE_CONFIG=https://gitlab.hooli.com?client_id=${client_id}&client_secret=${client_secret}
 ```
 
 ## Gitlab configuration
@@ -37,4 +37,4 @@ This section lists all connection options used in the connection string format. 
 
 You must register your application with GitLab in order to generate a Client and Secret. Navigate to your account settings and choose Applications from the menu, and click New Application.
 
-Please use `/authorize` as the Authorization callback URL path.
+Please use `http://drone.mycompany.com/authorize` as the Authorization callback URL.

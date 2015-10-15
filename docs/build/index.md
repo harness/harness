@@ -1,6 +1,6 @@
 # Overview
 
-In order to configure your build, you must include a `.drone.yml` file in the root of your repository. This documentation describes the `.drone.yml` configuration file format.
+In order to configure your build, you must include a `.drone.yml` file in the root of your repository. This section provides a brief overview of the `.drone.yml` configuration file format.
 
 Example `.drone.yml` for a Go repository:
 
