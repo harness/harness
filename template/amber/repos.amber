@@ -23,13 +23,14 @@ block content
                                 img.avatar[src=$repo.Avatar]
                             div.card-block
                                 h3.login #{$repo.Name}
+                                div.full_name.hidden #{$repo.FullName}
 block append scripts
     if len(Repos) != 0
         script
             $(window).load(function(){
             $(".repo-list").searcher({
                 itemSelector: ".col-sm-4",
-                textSelector:  ".login",
+                textSelector:  ".full_name",
                 inputSelector: ".repo-search"
             });
             });
