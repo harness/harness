@@ -291,6 +291,8 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 
 .repo-row .card-header { background: #FFF; border-bottom: none; padding-right: 0px; padding-left: 0px; width: 45px; }
 
+.repo-search { color: #747C84; border: none; background-color: #eff1f5; border-radius: 0px; padding: 9px 15px; width: 100%; margin-bottom: 45px; border-radius: 2px; }
+
 .toc { list-style-type: none; padding: 0px; margin: 0px; padding-bottom: 40px; }
 
 .toc h2 { font-size: 21px; font-weight: normal; margin-bottom: 20px; color: #2b303b; }

@@ -60,15 +60,16 @@ func GetRepoList(db meddler.DB, user *User) ([]*Repo, error) {
 	return repos, err
 }
 
-func GetRepoListOf(db meddler.DB, listof []string) ([]*Repo, error) {
+func GetRepoListOf(db meddler.DB, listof []*RepoLite) ([]*Repo, error) {
 	var repos = []*Repo{}
-	var qs = make([]string, len(listof), len(listof))
-	var in = make([]interface{}, len(listof), len(listof))
+	var size = len(listof)
+	var qs = make([]string, size, size)
+	var in = make([]interface{}, size, size)
 	for i, repo := range listof {
 		qs[i] = "?"
-		in[i] = repo
+		in[i] = repo.FullName
 	}
-	var stmt = "SELECT * FROM repos WHERE repo_id IN (" + strings.Join(qs, ",") + ")"
+	var stmt = "SELECT * FROM repos WHERE repo_full_name IN (" + strings.Join(qs, ",") + ")"
 	var err = meddler.QueryAll(db, &repos, database.Rebind(stmt), in...)
 	return repos, err
 }
