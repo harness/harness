@@ -23,7 +23,9 @@ publish:
     when:
       repo: drone/drone
 
-  s3:
+  # sync the documentation with the s3 bucket
+
+  s3_sync:
     acl: public-read
     region: us-east-1
     bucket: readme.drone.io
@@ -31,7 +33,22 @@ publish:
     secret_key: $$AWS_SECRET
     source: /drone/tmp/
     target: /
-    recursive: true
+    exclude: "*.svg"
+    when:
+      repo: drone/drone
+      branch: "0.4.0"
+
+  s3_sync:
+    acl: public-read
+    region: us-east-1
+    bucket: readme.drone.io
+    access_key: $$AWS_KEY
+    secret_key: $$AWS_SECRET
+    source: /drone/tmp/
+    target: /
+    exclude: "*"
+    include: "**.svg"
+    content_type: "image/svg+xml"
     when:
       repo: drone/drone
       branch: "0.4.0"
