@@ -9,13 +9,13 @@ block header
 
     ul.nav.nav-tabs
         li.nav-item
-            a.nav-link[href="/"+Repo.FullName] Builds
+            a.nav-link[href=Repo.FullName] Builds
         li.nav-item
-            a.nav-link.active[href="/"+Repo.FullName+"/settings/badges"] Badges
+            a.nav-link.active[href=Repo.FullName+"/settings/badges"] Badges
         li.nav-item
-            a.nav-link[href="/"+Repo.FullName+"/settings/encrypt"] Secrets
+            a.nav-link[href=Repo.FullName+"/settings/encrypt"] Secrets
         li.nav-item
-            a.nav-link[href="/"+Repo.FullName+"/settings"] Settings
+            a.nav-link[href=Repo.FullName+"/settings"] Settings
 
 block content
     div.container.repo_config
@@ -23,15 +23,14 @@ block content
             div.col-md-3 Markdown
             div.col-md-9
                 pre
-                    | [![Build Status](#{Link}/api/badges/#{Repo.FullName}/status.svg)](#{Link}/#{Repo.FullName})
+                    | [![Build Status](#{Link}#{Root}/api/badges/#{Repo.FullName}/status.svg)](#{Link}/#{Repo.FullName})
         div.row
             div.col-md-3 Markup
             div.col-md-9
                 pre
-                    | &lt;a href=&quot;#{Link}/api/badges/#{Repo.FullName}/status.svg&quot;&gt;&lt;img src=&quot;#{Link}/#{Repo.FullName}&quot; /&gt;&lt;/a&gt;
+                    | &lt;a href=&quot;#{Link}#{Root}/api/badges/#{Repo.FullName}/status.svg&quot;&gt;&lt;img src=&quot;#{Link}/#{Repo.FullName}&quot; /&gt;&lt;/a&gt;
         div.row
             div.col-md-3 CC Menu
             div.col-md-9
                 pre
-                    | http://beta.drone.io/api/badges/#{Repo.FullName}/cc.xml
-
+                    | #{Link}#{Root}/api/badges/#{Repo.FullName}/cc.xml
