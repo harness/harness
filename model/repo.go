@@ -69,7 +69,7 @@ func GetRepoListOf(db meddler.DB, listof []*RepoLite) ([]*Repo, error) {
 		qs[i] = "?"
 		in[i] = repo.FullName
 	}
-	var stmt = "SELECT * FROM repos WHERE repo_full_name IN (" + strings.Join(qs, ",") + ")"
+	var stmt = "SELECT * FROM repos WHERE repo_full_name IN (" + strings.Join(qs, ",") + ") ORDER BY repo_name"
 	var err = meddler.QueryAll(db, &repos, database.Rebind(stmt), in...)
 	return repos, err
 }
