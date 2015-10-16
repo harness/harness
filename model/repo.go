@@ -63,6 +63,10 @@ func GetRepoList(db meddler.DB, user *User) ([]*Repo, error) {
 func GetRepoListOf(db meddler.DB, listof []*RepoLite) ([]*Repo, error) {
 	var repos = []*Repo{}
 	var size = len(listof)
+	if size > 999 {
+		size = 999
+		listof = listof[:999]
+	}
 	var qs = make([]string, size, size)
 	var in = make([]interface{}, size, size)
 	for i, repo := range listof {
