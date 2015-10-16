@@ -47,7 +47,7 @@ function JobViewModel(repo, build, job, status) {
 		$(".status").attr("class", "status pending").text("pending");
 
 		$.ajax({
-			url: "/api/repos/"+repo+"/builds/"+build,
+			url: "api/repos/"+repo+"/builds/"+build,
 			type: "POST",
 			success: function( data ) { },
 			error: function( data ) {
@@ -60,7 +60,7 @@ function JobViewModel(repo, build, job, status) {
 		$("#cancel").hide();
 
 		$.ajax({
-			url: "/api/repos/"+repo+"/builds/"+build+"/"+job,
+			url: "api/repos/"+repo+"/builds/"+build+"/"+job,
 			type: "DELETE",
 			success: function( data ) { },
 			error: function( data ) {
@@ -69,7 +69,7 @@ function JobViewModel(repo, build, job, status) {
 		});
 	})
 
-			
+
 	Subscribe(repo, function(data){
 		if (!data.jobs) {
 			return;
@@ -139,7 +139,7 @@ function JobViewModel(repo, build, job, status) {
 
 function Logs(repo, build, job) {
 
-	$.get( "/api/repos/"+repo+"/logs/"+build+"/"+job, function( data ) {
+	$.get( "api/repos/"+repo+"/logs/"+build+"/"+job, function( data ) {
 
 		var convert = new Filter({stream: false, newline: false});
 		var escaped = convert.toHtml(escapeHTML(data));
@@ -151,7 +151,7 @@ function Logs(repo, build, job) {
 function Stream(repo, build, job, _callback) {
 	var callback = _callback;
 
-	var events = new EventSource("/api/stream/" + repo + "/" + build + "/" + job, {withCredentials: true});
+	var events = new EventSource("api/stream/" + repo + "/" + build + "/" + job, {withCredentials: true});
 	events.onmessage = function (event) {
 		if (callback !== undefined) {
 			callback(event.data);

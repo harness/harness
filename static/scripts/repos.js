@@ -15,7 +15,7 @@ function RepoListViewModel(repos) {
 
 	self.addRepo = function() {
 		$.ajax({
-			url: "/api/repos/"+self.newRepo(),
+			url: "api/repos/"+self.newRepo(),
 			type: "POST",
 			contentType: "application/json",
 			success: function( data ) {

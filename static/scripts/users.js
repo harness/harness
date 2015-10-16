@@ -10,7 +10,7 @@ function UserViewModel() {
 		$(".alert-danger").hide();
 
 		$.ajax({
-			url: "/api/users",
+			url: "api/users",
 			type: "POST",
 			data: JSON.stringify(user),
 			contentType: "application/json",
@@ -36,7 +36,7 @@ function UserViewModel() {
 	});
 
 
-	$(".user-row").on('click', '.btn-group .btn-info', function(){ 
+	$(".user-row").on('click', '.btn-group .btn-info', function(){
 		// gets the unique identifier for the click row, which is
 		// the user login id.
 		var row   = $( this ).closest("[data-id]");
@@ -46,20 +46,20 @@ function UserViewModel() {
 		row.attr("data-admin", !admin);
 
 		$.ajax({
-			url: "/api/users/"+id,
+			url: "api/users/"+id,
 			type: "PATCH",
 			data: JSON.stringify({active:true, admin: !admin}),
 			contentType: "application/json"
 		});
 
-	}); 
+	});
 
 	$(".user-row").on('click', '.btn-group .btn-danger', function(){
 		// gets the unique identifier for the click row, which is
 		// the user login id.
 		var row = $( this ).closest("[data-id]");
 		var id  = row.data("id");
-		
+
 		var r = confirm("Are you sure you want to delete "+id+"?");
 		if (r === false) {
 			return;
@@ -68,7 +68,7 @@ function UserViewModel() {
 		// makes an API call to delete the user and then, if successful,
 		// removes from the list.
 		$.ajax({
-			url: "/api/users/"+id,
+			url: "api/users/"+id,
 			type: "DELETE",
 			success: function( data ) {
 				row.parent().remove();
