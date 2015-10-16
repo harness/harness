@@ -3,9 +3,9 @@ package context
 import (
 	"github.com/drone/drone/engine"
 	"github.com/drone/drone/remote"
+	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/store"
 	"github.com/gin-gonic/gin"
-	"github.com/drone/drone/shared/envconfig"
 )
 
 func SetStore(s store.Store) gin.HandlerFunc {
