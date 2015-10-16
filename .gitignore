@@ -1,19 +1,17 @@
-drone
-drone_*
+/template/amber_gen
+
+/static/docs_gen
+/static/scripts_gen
+/static/styles_gen
+
+/drone
+/drone_*
+
 *.sqlite
 *_gen.go
-*.html
-#*.css
-*.txt
-*.zip
-*.gz
-*.out
-*.min.js
-*.deb
-temp/
 
 # vendored repositories that we don't actually need
 # to vendor. so exclude them
 
-vendor/google.golang.org/cloud
-vendor/github.com/bugagazavr
+/vendor/google.golang.org/cloud
+/vendor/github.com/bugagazavr
