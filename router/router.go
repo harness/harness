@@ -39,14 +39,14 @@ func Load(env envconfig.Env, middleware ...gin.HandlerFunc) http.Handler {
 	e.GET(root+"/login", controller.ShowLogin)
 	e.GET(root+"/logout", controller.GetLogout)
 
-	settings := e.Group(root+"/settings")
+	settings := e.Group(root + "/settings")
 	{
 		settings.Use(session.MustUser())
 		settings.GET("/profile", controller.ShowUser)
 		settings.GET("/people", session.MustAdmin(), controller.ShowUsers)
 		settings.GET("/nodes", session.MustAdmin(), controller.ShowNodes)
 	}
-	repo := e.Group(root+"/repos/:owner/:name")
+	repo := e.Group(root + "/repos/:owner/:name")
 	{
 		repo.Use(session.SetRepo())
 		repo.Use(session.SetPerm())
@@ -63,7 +63,7 @@ func Load(env envconfig.Env, middleware ...gin.HandlerFunc) http.Handler {
 		}
 	}
 
-	user := e.Group(root+"/api/user")
+	user := e.Group(root + "/api/user")
 	{
 		user.Use(session.MustUser())
 		user.GET("", controller.GetSelf)
@@ -73,7 +73,7 @@ func Load(env envconfig.Env, middleware ...gin.HandlerFunc) http.Handler {
 		user.POST("/token", controller.PostToken)
 	}
 
-	users := e.Group(root+"/api/users")
+	users := e.Group(root + "/api/users")
 	{
 		users.Use(session.MustAdmin())
 		users.GET("", controller.GetUsers)
@@ -83,7 +83,7 @@ func Load(env envconfig.Env, middleware ...gin.HandlerFunc) http.Handler {
 		users.DELETE("/:login", controller.DeleteUser)
 	}
 
-	nodes := e.Group(root+"/api/nodes")
+	nodes := e.Group(root + "/api/nodes")
 	{
 		nodes.Use(session.MustAdmin())
 		nodes.GET("", controller.GetNodes)
@@ -91,7 +91,7 @@ func Load(env envconfig.Env, middleware ...gin.HandlerFunc) http.Handler {
 		nodes.DELETE("/:node", controller.DeleteNode)
 	}
 
-	repos := e.Group(root+"/api/repos/:owner/:name")
+	repos := e.Group(root + "/api/repos/:owner/:name")
 	{
 		repos.POST("", controller.PostRepo)
 
@@ -119,7 +119,7 @@ func Load(env envconfig.Env, middleware ...gin.HandlerFunc) http.Handler {
 		}
 	}
 
-	badges := e.Group(root+"/api/badges/:owner/:name")
+	badges := e.Group(root + "/api/badges/:owner/:name")
 	{
 		badges.GET("/status.svg", controller.GetBadge)
 		badges.GET("/cc.xml", controller.GetCC)
@@ -128,7 +128,7 @@ func Load(env envconfig.Env, middleware ...gin.HandlerFunc) http.Handler {
 	e.POST(root+"/hook", controller.PostHook)
 	e.POST(root+"/api/hook", controller.PostHook)
 
-	stream := e.Group(root+"/api/stream")
+	stream := e.Group(root + "/api/stream")
 	{
 		stream.Use(session.SetRepo())
 		stream.Use(session.SetPerm())
@@ -137,14 +137,14 @@ func Load(env envconfig.Env, middleware ...gin.HandlerFunc) http.Handler {
 		stream.GET("/:owner/:name/:build/:number", controller.GetStream)
 	}
 
-	auth := e.Group(root+"/authorize")
+	auth := e.Group(root + "/authorize")
 	{
 		auth.GET("", controller.GetLogin)
 		auth.POST("", controller.GetLogin)
 		auth.POST("/token", controller.GetLoginToken)
 	}
 
-	gitlab := e.Group(root+"/api/gitlab/:owner/:name")
+	gitlab := e.Group(root + "/api/gitlab/:owner/:name")
 	{
 		gitlab.Use(session.SetRepo())
 		gitlab.GET("/commits/:sha", controller.GetCommit)

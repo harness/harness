@@ -5,8 +5,8 @@ import (
 
 	"github.com/drone/drone/engine"
 	"github.com/drone/drone/remote"
-	"github.com/gin-gonic/gin"
 	"github.com/drone/drone/shared/envconfig"
+	"github.com/gin-gonic/gin"
 )
 
 func SetDatabase(db *sql.DB) gin.HandlerFunc {

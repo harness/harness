@@ -31,10 +31,10 @@ func ShowNodes(c *gin.Context) {
 	token, _ := token.New(token.CsrfToken, user.Login).Sign(user.Hash)
 
 	c.HTML(http.StatusOK, "nodes.html", gin.H{
-		"Root": env.String("SERVER_ROOT", ""),
-		"User": user,
+		"Root":  env.String("SERVER_ROOT", ""),
+		"User":  user,
 		"Nodes": nodes,
-		"Csrf": token,
+		"Csrf":  token,
 	})
 }
 

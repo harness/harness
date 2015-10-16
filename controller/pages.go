@@ -52,7 +52,7 @@ func ShowIndex(c *gin.Context) {
 	}
 
 	c.HTML(200, "repos.html", gin.H{
-		"Root": env.String("SERVER_ROOT", ""),
+		"Root":  env.String("SERVER_ROOT", ""),
 		"User":  user,
 		"Repos": repos_,
 	})
@@ -62,7 +62,7 @@ func ShowLogin(c *gin.Context) {
 	env := context.Envconfig(c)
 
 	c.HTML(200, "login.html", gin.H{
-		"Root": env.String("SERVER_ROOT", ""),
+		"Root":  env.String("SERVER_ROOT", ""),
 		"Error": c.Query("error"),
 	})
 }
@@ -101,7 +101,7 @@ func ShowUsers(c *gin.Context) {
 	).Sign(user.Hash)
 
 	c.HTML(200, "users.html", gin.H{
-		"Root": env.String("SERVER_ROOT", ""),
+		"Root":  env.String("SERVER_ROOT", ""),
 		"User":  user,
 		"Users": users,
 		"Csrf":  token,
@@ -132,7 +132,7 @@ func ShowRepo(c *gin.Context) {
 	httputil.SetCookie(c.Writer, c.Request, "user_last", repo.FullName)
 
 	c.HTML(200, "repo.html", gin.H{
-		"Root": env.String("SERVER_ROOT", ""),
+		"Root":   env.String("SERVER_ROOT", ""),
 		"User":   user,
 		"Repo":   repo,
 		"Builds": builds,
@@ -242,7 +242,7 @@ func ShowBuild(c *gin.Context) {
 	}
 
 	c.HTML(200, "build.html", gin.H{
-		"Root": env.String("SERVER_ROOT", ""),
+		"Root":  env.String("SERVER_ROOT", ""),
 		"User":  user,
 		"Repo":  repo,
 		"Build": build,
