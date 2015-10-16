@@ -17,10 +17,12 @@ import (
 )
 
 func ShowIndex(c *gin.Context) {
+	env := context.Envconfig(c)
 	remote := remote.FromContext(c)
 	user := session.User(c)
+
 	if user == nil {
-		c.Redirect(http.StatusSeeOther, "/login")
+		c.Redirect(http.StatusSeeOther, env.String("SERVER_ROOT", "")+"/login")
 		return
 	}
 
@@ -50,13 +52,19 @@ func ShowIndex(c *gin.Context) {
 	}
 
 	c.HTML(200, "repos.html", gin.H{
+		"Root":  env.String("SERVER_ROOT", ""),
 		"User":  user,
 		"Repos": repos_,
 	})
 }
 
 func ShowLogin(c *gin.Context) {
-	c.HTML(200, "login.html", gin.H{"Error": c.Query("error")})
+	env := context.Envconfig(c)
+
+	c.HTML(200, "login.html", gin.H{
+		"Root":  env.String("SERVER_ROOT", ""),
+		"Error": c.Query("error"),
+	})
 }
 
 func ShowLoginForm(c *gin.Context) {
@@ -64,24 +72,30 @@ func ShowLoginForm(c *gin.Context) {
 }
 
 func ShowUser(c *gin.Context) {
+	env := context.Envconfig(c)
 	user := session.User(c)
+
 	token, _ := token.New(
 		token.CsrfToken,
 		user.Login,
 	).Sign(user.Hash)
 
 	c.HTML(200, "user.html", gin.H{
+		"Root": env.String("SERVER_ROOT", ""),
 		"User": user,
 		"Csrf": token,
 	})
 }
 
 func ShowUsers(c *gin.Context) {
+	env := context.Envconfig(c)
 	user := session.User(c)
+
 	if !user.Admin {
 		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
+
 	users, _ := store.GetUserList(c)
 
 	token, _ := token.New(
@@ -90,6 +104,7 @@ func ShowUsers(c *gin.Context) {
 	).Sign(user.Hash)
 
 	c.HTML(200, "users.html", gin.H{
+		"Root":  env.String("SERVER_ROOT", ""),
 		"User":  user,
 		"Users": users,
 		"Csrf":  token,
@@ -97,6 +112,7 @@ func ShowUsers(c *gin.Context) {
 }
 
 func ShowRepo(c *gin.Context) {
+	env := context.Envconfig(c)
 	user := session.User(c)
 	repo := session.Repo(c)
 
@@ -104,6 +120,7 @@ func ShowRepo(c *gin.Context) {
 	groups := []*model.BuildGroup{}
 
 	var curr *model.BuildGroup
+
 	for _, build := range builds {
 		date := time.Unix(build.Created, 0).Format("Jan 2 2006")
 		if curr == nil || curr.Date != date {
@@ -117,6 +134,7 @@ func ShowRepo(c *gin.Context) {
 	httputil.SetCookie(c.Writer, c.Request, "user_last", repo.FullName)
 
 	c.HTML(200, "repo.html", gin.H{
+		"Root":   env.String("SERVER_ROOT", ""),
 		"User":   user,
 		"Repo":   repo,
 		"Builds": builds,
@@ -126,7 +144,7 @@ func ShowRepo(c *gin.Context) {
 }
 
 func ShowRepoConf(c *gin.Context) {
-
+	env := context.Envconfig(c)
 	user := session.User(c)
 	repo := session.Repo(c)
 	key, _ := store.GetKey(c, repo)
@@ -137,6 +155,7 @@ func ShowRepoConf(c *gin.Context) {
 	).Sign(user.Hash)
 
 	c.HTML(200, "repo_config.html", gin.H{
+		"Root": env.String("SERVER_ROOT", ""),
 		"User": user,
 		"Repo": repo,
 		"Key":  key,
@@ -146,6 +165,7 @@ func ShowRepoConf(c *gin.Context) {
 }
 
 func ShowRepoEncrypt(c *gin.Context) {
+	env := context.Envconfig(c)
 	user := session.User(c)
 	repo := session.Repo(c)
 
@@ -155,6 +175,7 @@ func ShowRepoEncrypt(c *gin.Context) {
 	).Sign(user.Hash)
 
 	c.HTML(200, "repo_secret.html", gin.H{
+		"Root": env.String("SERVER_ROOT", ""),
 		"User": user,
 		"Repo": repo,
 		"Csrf": token,
@@ -162,10 +183,12 @@ func ShowRepoEncrypt(c *gin.Context) {
 }
 
 func ShowRepoBadges(c *gin.Context) {
+	env := context.Envconfig(c)
 	user := session.User(c)
 	repo := session.Repo(c)
 
 	c.HTML(200, "repo_badge.html", gin.H{
+		"Root": env.String("SERVER_ROOT", ""),
 		"User": user,
 		"Repo": repo,
 		"Link": httputil.GetURL(c.Request),
@@ -173,27 +196,33 @@ func ShowRepoBadges(c *gin.Context) {
 }
 
 func ShowBuild(c *gin.Context) {
+	env := context.Envconfig(c)
 	user := session.User(c)
 	repo := session.Repo(c)
+
 	num, _ := strconv.Atoi(c.Param("number"))
 	seq, _ := strconv.Atoi(c.Param("job"))
+
 	if seq == 0 {
 		seq = 1
 	}
 
 	build, err := store.GetBuildNumber(c, repo, num)
+
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
 	jobs, err := store.GetJobList(c, build)
+
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
 	var job *model.Job
+
 	for _, j := range jobs {
 		if j.Number == seq {
 			job = j
@@ -204,6 +233,7 @@ func ShowBuild(c *gin.Context) {
 	httputil.SetCookie(c.Writer, c.Request, "user_last", repo.FullName)
 
 	var csrf string
+
 	if user != nil {
 		csrf, _ = token.New(
 			token.CsrfToken,
@@ -212,6 +242,7 @@ func ShowBuild(c *gin.Context) {
 	}
 
 	c.HTML(200, "build.html", gin.H{
+		"Root":  env.String("SERVER_ROOT", ""),
 		"User":  user,
 		"Repo":  repo,
 		"Build": build,
