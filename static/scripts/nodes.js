@@ -13,7 +13,7 @@ function NodeViewModel() {
 		};
 
 		$.ajax({
-			url: "/api/nodes",
+			url: "api/nodes",
 			type: "POST",
 			contentType: "application/json",
 			data: JSON.stringify(node),
@@ -55,7 +55,7 @@ function NodeViewModel() {
 					.parentNode
 					.parentNode
 					.parentNode.dataset.id;
-		
+
 		var r = confirm("Are you sure you want to delete node "+id+"?");
 		if (r === false) {
 			return;

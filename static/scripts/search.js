@@ -5,7 +5,7 @@ var remoteRepos = new Bloodhound({
     datumTokenizer: Bloodhound.tokenizers.obj.whitespace("full_name"),
 
 	identify: function(obj) { return obj.full_name; },
-	prefetch: '/api/user/repos/remote'
+	prefetch: 'api/user/repos/remote'
 });
 
 
@@ -40,7 +40,7 @@ $('.typeahead').typeahead({
 							"</p>",
 							"<p>",
 								"This repository may not be indexed yet.",
-								"<a href='/"+obj.query+"'>",
+								"<a href='"+obj.query+"'>",
 								"Click here",
 								"</a>",
 								"to visit this repository page directly.",
