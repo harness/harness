@@ -5,14 +5,14 @@ block append head
 
 block menu
     li
-        a[href="/"] Home
+        a[href=Root] Home
     li
-        a[href="/settings/profile"] Profile
+        a[href="settings/profile"] Profile
     if User.Admin
         li
-            a[href="/settings/people"] People
+            a[href="settings/people"] People
         li
-            a[href="/settings/nodes"] Nodes
+            a[href="settings/nodes"] Nodes
 
 
 block content

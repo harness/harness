@@ -21,9 +21,9 @@ block append scripts
             $( "#activateRepo" ).hide();
             $.ajax({
                 type: "POST",
-                url: "/api/repos/#{Repo.FullName}",
+                url: "api/repos/#{Repo.FullName}",
                 success: function() {
-                    window.location.href="/#{Repo.FullName}"
+                    window.location.href="#{Repo.FullName}"
                 },
                 error: function(err) {
                 $(".alert-info").hide();

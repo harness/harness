@@ -2,17 +2,21 @@ doctype 5
 html
     head
         block head
+
+        base[href=Root+"/"]
+
         meta[charset="utf-8"]
         meta[name="viewport"][content="width=device-width, initial-scale=1"]
         meta[http-equiv="x-ua-compatible"][content="ie=edge"]
-        link[rel="icon"][type="image/x-icon"][href="/static/images/favicon.ico"]
+
+        link[rel="icon"][type="image/x-icon"][href="static/images/favicon.ico"]
 
         link[rel="stylesheet"][href="https://fonts.googleapis.com/icon?family=Material+Icons"]
         link[rel="stylesheet"][href="https://fonts.googleapis.com/css?family=Roboto+Mono"]
         link[rel="stylesheet"][href="https://fonts.googleapis.com/css?family=Roboto"]
         link[rel="stylesheet"][href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.min.css"]
         link[rel="stylesheet"][href="https://cdnjs.cloudflare.com/ajax/libs/octicons/3.1.0/octicons.min.css"]
-        link[rel="stylesheet"][href="/static/styles_gen/style.css"]
+        link[rel="stylesheet"][href="static/styles_gen/style.css"]
 
         if Csrf
             meta[name="_csrf"][content=Csrf]
@@ -20,7 +24,7 @@ html
     body
         nav.navbar
             div.container-fluid
-                a.navbar-brand[href="/"]
+                a.navbar-brand[href=Root]
                 if User
                     ul.nav.navbar-nav.navbar-right
                         li
@@ -33,11 +37,11 @@ html
                                 button[type="button"][data-toggle="dropdown"]
                                     i.material-icons expand_more
                                 div.dropdown-menu.dropdown-menu-right
-                                    a.dropdown-item[href="/settings/profile"] Profile
+                                    a.dropdown-item[href="settings/profile"] Profile
                                     if User.Admin
-                                        a.dropdown-item[href="/settings/people"] People
-                                        a.dropdown-item[href="/settings/nodes"] Nodes
-                                    a.dropdown-item[href="/logout"] Logout
+                                        a.dropdown-item[href="settings/people"] People
+                                        a.dropdown-item[href="settings/nodes"] Nodes
+                                    a.dropdown-item[href="logout"] Logout
 
 
         div.subnav
@@ -54,4 +58,4 @@ html
             script[type="text/javascript"][src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/js/bootstrap.min.js"]
             script[type="text/javascript"][src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"]
             script[text="text/javascript"][src="https://cdnjs.cloudflare.com/ajax/libs/stickyfill/1.1.2/stickyfill.js"]
-            script[type="text/javascript"][src="/static/scripts_gen/drone.min.js"]
+            script[type="text/javascript"][src="static/scripts_gen/drone.min.js"]

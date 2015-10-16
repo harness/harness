@@ -18,7 +18,7 @@ block content
             div.repo-list
                 each $repo in Repos
                     div.col-sm-4
-                        a.card[href="/"+$repo.FullName]
+                        a.card[href=$repo.FullName]
                             div.card-header
                                 img.avatar[src=$repo.Avatar]
                             div.card-block
@@ -28,9 +28,9 @@ block append scripts
     if len(Repos) != 0
         script
             $(window).load(function(){
-            $(".repo-list").searcher({
-                itemSelector: ".col-sm-4",
-                textSelector:  ".full_name",
-                inputSelector: ".repo-search"
-            });
+                $(".repo-list").searcher({
+                    itemSelector: ".col-sm-4",
+                    textSelector:  ".full_name",
+                    inputSelector: ".repo-search"
+                });
             });

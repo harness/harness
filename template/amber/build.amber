@@ -7,7 +7,7 @@ block append head
 block header
     ol
         li
-            a[href="/"+Repo.FullName]
+            a[href=Repo.FullName]
                 | #{Repo.Owner} / #{Repo.Name}
         li.separator
             i.material-icons chevron_right
@@ -39,7 +39,7 @@ block content
                     $build = Build
                     $repo = Repo
                     each $job in Jobs
-                        a[href="/" + $repo.FullName +"/"+ $build.Number+"/"+$job.Number][data-job=$job.Number]
+                        a[href=$repo.FullName+"/"+$build.Number+"/"+$job.Number][data-job=$job.Number]
                             .active ? $curr.Number == $job.Number
                             div
                                 div.status[class=$job.Status] #{$job.Status}
@@ -53,11 +53,11 @@ block content
                                     | pending assignment to a worker
                                 div[class="msg-running"]
                                     .hidden ? $job.Status != "running"
-                                    | started 
+                                    | started
                                     span[data-livestamp=$job.Started]
                                 div[class="msg-finished"]
                                     .hidden ? $job.Finished == 0
-                                    | finished 
+                                    | finished
                                     span[data-livestamp=$job.Finished]
                                 div[class="msg-exited"]
                                     .hidden ? $job.Finished == 0
@@ -82,4 +82,3 @@ block append scripts
         var status = #{json(Job.Status)};
 
         var view = new JobViewModel(repo, build, job, status);
-
