@@ -33,24 +33,28 @@ func main() {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
-	// Load the configuration from env file
-	env := envconfig.Load(*dotenv)
+	// Load the configuration
+	envconfig_ := envconfig.Load(*dotenv)
 
 	// Setup the database driver
-	database_ := database.Load(env)
+	database_ := database.Load(envconfig_)
 
 	// setup the remote driver
-	remote_ := remote.Load(env)
+	remote_ := remote.Load(envconfig_)
+
+	// setup the server config
+	server_ := server.Load(envconfig_)
 
 	// setup the runner
-	engine_ := engine.Load(database_, env, remote_)
+	engine_ := engine.Load(database_, envconfig_, remote_)
 
-	// setup the server and start the listener
-	server_ := server.Load(env)
+	// start the listener
 	server_.Run(
 		router.Load(
+			envconfig_,
 			header.Version(build),
 			cache.Default(),
+			context.SetEnvconfig(envconfig_),
 			context.SetDatabase(database_),
 			context.SetRemote(remote_),
 			context.SetEngine(engine_),

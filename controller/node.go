@@ -23,11 +23,19 @@ func GetNodes(c *gin.Context) {
 }
 
 func ShowNodes(c *gin.Context) {
+	env := context.Envconfig(c)
 	db := context.Database(c)
 	user := session.User(c)
+
 	nodes, _ := model.GetNodeList(db)
 	token, _ := token.New(token.CsrfToken, user.Login).Sign(user.Hash)
-	c.HTML(http.StatusOK, "nodes.html", gin.H{"User": user, "Nodes": nodes, "Csrf": token})
+
+	c.HTML(http.StatusOK, "nodes.html", gin.H{
+		"Root": env.String("SERVER_ROOT", ""),
+		"User": user,
+		"Nodes": nodes,
+		"Csrf": token,
+	})
 }
 
 func GetNode(c *gin.Context) {
