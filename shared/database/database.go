@@ -4,6 +4,7 @@ package database
 
 import (
 	"database/sql"
+	"os"
 
 	"github.com/drone/drone/shared/envconfig"
 
@@ -48,4 +49,16 @@ func Open(driver, config string) *sql.DB {
 		log.Fatalln("migration failed")
 	}
 	return db
+}
+
+func OpenTest() *sql.DB {
+	var (
+		driver = "sqlite3"
+		config = ":memory:"
+	)
+	if os.Getenv("DATABASE_DRIVER") != "" {
+		driver = os.Getenv("DATABASE_DRIVER")
+		config = os.Getenv("DATABASE_CONFIG")
+	}
+	return Open(driver, config)
 }

@@ -10,7 +10,7 @@ import (
 )
 
 func TestLog(t *testing.T) {
-	db := database.Open("sqlite3", ":memory:")
+	db := database.OpenTest()
 	defer db.Close()
 
 	g := goblin.Goblin(t)

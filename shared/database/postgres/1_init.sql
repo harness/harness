@@ -2,15 +2,15 @@
 
 CREATE TABLE users (
  user_id     SERIAL PRIMARY KEY
-,user_login  VARCHAR(500)
-,user_token  VARCHAR(500)
-,user_secret VARCHAR(500)
+,user_login  VARCHAR(40)
+,user_token  VARCHAR(128)
+,user_secret VARCHAR(128)
 ,user_expiry INTEGER
-,user_email  VARCHAR(500)
-,user_avatar VARCHAR(500)
+,user_email  VARCHAR(256)
+,user_avatar VARCHAR(256)
 ,user_active BOOLEAN
 ,user_admin  BOOLEAN
-,user_hash   VARCHAR(500)
+,user_hash   VARCHAR(128)
 
 ,UNIQUE(user_login)
 );
@@ -60,21 +60,21 @@ CREATE TABLE builds (
  build_id        SERIAL PRIMARY KEY
 ,build_repo_id   INTEGER
 ,build_number    INTEGER
-,build_event     VARCHAR(500)
-,build_status    VARCHAR(500)
+,build_event     VARCHAR(25)
+,build_status    VARCHAR(25)
 ,build_enqueued  INTEGER
 ,build_created   INTEGER
 ,build_started   INTEGER
 ,build_finished  INTEGER
-,build_commit    VARCHAR(500)
-,build_branch    VARCHAR(500)
-,build_ref       VARCHAR(500)
-,build_refspec   VARCHAR(1000)
-,build_remote    VARCHAR(500)
+,build_commit    VARCHAR(40)
+,build_branch    VARCHAR(256)
+,build_ref       VARCHAR(512)
+,build_refspec   VARCHAR(512)
+,build_remote    VARCHAR(512)
 ,build_title     VARCHAR(1000)
 ,build_message   VARCHAR(2000)
 ,build_timestamp INTEGER
-,build_author    VARCHAR(500)
+,build_author    VARCHAR(40)
 ,build_avatar    VARCHAR(1000)
 ,build_email     VARCHAR(500)
 ,build_link      VARCHAR(1000)
@@ -90,7 +90,7 @@ CREATE TABLE jobs (
 ,job_node_id     INTEGER
 ,job_build_id    INTEGER
 ,job_number      INTEGER
-,job_status      VARCHAR(500)
+,job_status      VARCHAR(25)
 ,job_exit_code   INTEGER
 ,job_started     INTEGER
 ,job_enqueued    INTEGER

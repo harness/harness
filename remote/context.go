@@ -4,28 +4,20 @@ import (
 	"code.google.com/p/go.net/context"
 )
 
-const reqkey = "remote"
+const key = "remote"
 
-// NewContext returns a Context whose Value method returns
-// the applications Remote instance.
-func NewContext(parent context.Context, v Remote) context.Context {
-	return &wrapper{parent, v}
-}
-
-type wrapper struct {
-	context.Context
-	v Remote
-}
-
-// Value returns the named key from the context.
-func (c *wrapper) Value(key interface{}) interface{} {
-	if key == reqkey {
-		return c.v
-	}
-	return c.Context.Value(key)
+// Setter defines a context that enables setting values.
+type Setter interface {
+	Set(string, interface{})
 }
 
 // FromContext returns the Remote associated with this context.
 func FromContext(c context.Context) Remote {
-	return c.Value(reqkey).(Remote)
+	return c.Value(key).(Remote)
+}
+
+// ToContext adds the Remote to this context if it supports
+// the Setter interface.
+func ToContext(c Setter, r Remote) {
+	c.Set(key, r)
 }
