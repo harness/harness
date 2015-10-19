@@ -18,9 +18,9 @@ CREATE TABLE users (
 CREATE TABLE repos (
  repo_id            SERIAL PRIMARY KEY
 ,repo_user_id       INTEGER
-,repo_owner         VARCHAR(500)
-,repo_name          VARCHAR(500)
-,repo_full_name     VARCHAR(1000)
+,repo_owner         VARCHAR(255)
+,repo_name          VARCHAR(255)
+,repo_full_name     VARCHAR(511)
 ,repo_avatar        VARCHAR(500)
 ,repo_link          VARCHAR(1000)
 ,repo_clone         VARCHAR(1000)
