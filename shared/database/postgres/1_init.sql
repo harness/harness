@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS logs (
 );
 
 CREATE TABLE IF NOT EXISTS nodes (
- node_id     INTEGER PRIMARY KEY AUTOINCREMENT
+ node_id     SERIAL PRIMARY KEY
 ,node_addr   VARCHAR(1024)
 ,node_arch   VARCHAR(50)
 ,node_cert   BYTEA
