@@ -18,9 +18,9 @@ CREATE TABLE users (
 CREATE TABLE repos (
  repo_id            INTEGER PRIMARY KEY AUTO_INCREMENT
 ,repo_user_id       INTEGER
-,repo_owner         VARCHAR(500)
-,repo_name          VARCHAR(500)
-,repo_full_name     VARCHAR(1000)
+,repo_owner         VARCHAR(255)
+,repo_name          VARCHAR(255)
+,repo_full_name     VARCHAR(511)
 ,repo_avatar        VARCHAR(500)
 ,repo_link          VARCHAR(1000)
 ,repo_clone         VARCHAR(1000)
@@ -45,9 +45,9 @@ CREATE TABLE stars (
 ,UNIQUE(star_repo_id, star_user_id)
 );
 
-CREATE INDEX ix_star_user ON builds (star_user_id);
+CREATE INDEX ix_star_user ON stars (star_user_id);
 
-CREATE TABLE keys (
+CREATE TABLE `keys` (
  key_id      INTEGER PRIMARY KEY AUTO_INCREMENT
 ,key_repo_id INTEGER
 ,key_public  MEDIUMBLOB
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS logs (
 );
 
 CREATE TABLE IF NOT EXISTS nodes (
- node_id     INTEGER PRIMARY KEY AUTOINCREMENT
+ node_id     INTEGER PRIMARY KEY AUTO_INCREMENT
 ,node_addr   VARCHAR(1024)
 ,node_arch   VARCHAR(50)
 ,node_cert   MEDIUMBLOB
@@ -130,7 +130,7 @@ DROP TABLE nodes;
 DROP TABLE logs;
 DROP TABLE jobs;
 DROP TABLE builds;
-DROP TABLE keys;
+DROP TABLE `keys`;
 DROP TABLE stars;
 DROP TABLE repos;
 DROP TABLE users;
