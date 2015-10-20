@@ -58,19 +58,19 @@ func PostNode(c *gin.Context) {
 	node.CA = in.CA
 	node.Arch = "linux_amd64"
 
+	err = engine.Allocate(node)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
 	err = model.InsertNode(db, node)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	ok := engine.Allocate(node)
-	if !ok {
-		c.AbortWithStatus(http.StatusInternalServerError)
-	} else {
-		c.IndentedJSON(http.StatusOK, node)
-	}
-
+	c.IndentedJSON(http.StatusOK, node)
 }
 
 func DeleteNode(c *gin.Context) {

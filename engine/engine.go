@@ -26,7 +26,7 @@ type Engine interface {
 	Cancel(int64, int64, *model.Node) error
 	Stream(int64, int64, *model.Node) (io.ReadCloser, error)
 	Deallocate(*model.Node)
-	Allocate(*model.Node) bool
+	Allocate(*model.Node) error
 	Subscribe(chan *Event)
 	Unsubscribe(chan *Event)
 }
@@ -124,9 +124,23 @@ func (e *engine) Unsubscribe(c chan *Event) {
 	e.bus.unsubscribe(c)
 }
 
-func (e *engine) Allocate(node *model.Node) bool {
-	log.Infof("registered docker daemon %s", node.Addr)
-	return e.pool.allocate(node)
+func (e *engine) Allocate(node *model.Node) error {
+
+	// run the full build!
+	client, err := newDockerClient(node.Addr, node.Cert, node.Key, node.CA)
+	if err != nil {
+		log.Errorf("error creating docker client %s. %s.", node.Addr, err)
+		return err
+	}
+	version, err := client.Version()
+	if err != nil {
+		log.Errorf("error connecting to docker daemon %s. %s.", node.Addr, err)
+		return err
+	}
+
+	log.Infof("registered docker daemon %s running version %s", node.Addr, version.Version)
+	e.pool.allocate(node)
+	return nil
 }
 
 func (e *engine) Deallocate(n *model.Node) {

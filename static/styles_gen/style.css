@@ -423,7 +423,7 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 
 .tt-open { position: absolute; top: 34px; left: 0px; z-index: 100; display: none; background: #FFF; min-width: 100%; border: 1px solid #eee; border-radius: 0px; }
 
-.tt-selectable:hover, .tt-cursor { background: #f4f4f4; }
+.tt-selectable:hover, .tt-cursor { background: #eff1f5; }
 
 .tt-selectable { padding: 1rem 0.75rem; cursor: pointer; display: flex; }
 
