@@ -1,8 +1,7 @@
 package cache
 
 import (
-	"fmt"
-
+	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
 	"github.com/gin-gonic/gin"
 )
@@ -18,14 +17,10 @@ func Repos(c *gin.Context) {
 		return
 	}
 
-	key := fmt.Sprintf("repos/%s",
-		user.(*model.User).Login,
-	)
-
 	// if the item already exists in the cache
 	// we can continue the middleware chain and
 	// exit afterwards.
-	v, _ := get(key)
+	v := cache.GetRepos(c, user.(*model.User))
 	if v != nil {
 		c.Set("repos", v)
 		c.Next()
@@ -39,6 +34,9 @@ func Repos(c *gin.Context) {
 
 	repos, ok := c.Get("repos")
 	if ok {
-		set(key, repos, 86400) // 24 hours
+		cache.SetRepos(c,
+			user.(*model.User),
+			repos.([]*model.RepoLite),
+		)
 	}
 }
