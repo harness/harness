@@ -80,7 +80,7 @@ func GetBuildList(db meddler.DB, repo *Repo) ([]*Build, error) {
 
 func CreateBuild(db meddler.DB, build *Build, jobs ...*Job) error {
 	var number int
-	db.QueryRow(buildNumberLast, build.RepoID).Scan(&number)
+	db.QueryRow(database.Rebind(buildNumberLast), build.RepoID).Scan(&number)
 	build.Number = number + 1
 	build.Created = time.Now().UTC().Unix()
 	build.Enqueued = build.Created

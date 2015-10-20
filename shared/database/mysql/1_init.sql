@@ -37,16 +37,6 @@ CREATE TABLE repos (
 ,UNIQUE(repo_full_name)
 );
 
-CREATE TABLE stars (
- star_id      INTEGER PRIMARY KEY AUTO_INCREMENT
-,star_repo_id INTEGER
-,star_user_id INTEGER
-
-,UNIQUE(star_repo_id, star_user_id)
-);
-
-CREATE INDEX ix_star_user ON stars (star_user_id);
-
 CREATE TABLE `keys` (
  key_id      INTEGER PRIMARY KEY AUTO_INCREMENT
 ,key_repo_id INTEGER
@@ -82,8 +72,7 @@ CREATE TABLE builds (
 ,UNIQUE(build_number, build_repo_id)
 );
 
-CREATE INDEX ix_build_repo   ON builds (build_repo_id);
-CREATE INDEX ix_build_author ON builds (build_author);
+CREATE INDEX ix_build_repo ON builds (build_repo_id);
 
 CREATE TABLE jobs (
  job_id          INTEGER PRIMARY KEY AUTO_INCREMENT

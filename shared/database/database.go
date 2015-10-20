@@ -13,6 +13,7 @@ import (
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rubenv/sql-migrate"
+	"github.com/russross/meddler"
 )
 
 func Load(env envconfig.Env) *sql.DB {
@@ -35,6 +36,12 @@ func Open(driver, config string) *sql.DB {
 	if err != nil {
 		log.Errorln(err)
 		log.Fatalln("database connection failed")
+	}
+	switch driver {
+	case "mysql":
+		meddler.Default = meddler.MySQL
+	case "postgres":
+		meddler.Default = meddler.PostgreSQL
 	}
 
 	var migrations = &migrate.AssetMigrationSource{

@@ -18,13 +18,16 @@ func Rebind(query string) string {
 	rqb := make([]byte, 0, len(qb)+5)
 	j := 1
 	for _, b := range qb {
-		if b == '?' {
+		switch b {
+		case '?':
 			rqb = append(rqb, '$')
 			for _, b := range strconv.Itoa(j) {
 				rqb = append(rqb, byte(b))
 			}
 			j++
-		} else {
+		case '`':
+			rqb = append(rqb, ' ')
+		default:
 			rqb = append(rqb, b)
 		}
 	}
