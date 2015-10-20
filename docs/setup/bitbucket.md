@@ -40,3 +40,10 @@ Please use `http://drone.mycompany.com/authorize` as the Authorization callback 
 * Team Membership:Read
 * Repositories:Read
 * Webhooks:Read and Write
+
+## Known Issues
+
+This section details known issues and planned features:
+
+* Pull Request support
+* Mercurial support

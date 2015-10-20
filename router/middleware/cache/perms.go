@@ -1,8 +1,7 @@
 package cache
 
 import (
-	"fmt"
-
+	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
 	"github.com/gin-gonic/gin"
 )
@@ -24,16 +23,14 @@ func Perms(c *gin.Context) {
 		return
 	}
 
-	key := fmt.Sprintf("perm/%s/%s/%s",
-		user.(*model.User).Login,
-		owner,
-		name,
-	)
-
 	// if the item already exists in the cache
 	// we can continue the middleware chain and
 	// exit afterwards.
-	v, _ := get(key)
+	v := cache.GetPerms(c,
+		user.(*model.User),
+		owner,
+		name,
+	)
 	if v != nil {
 		c.Set("perm", v)
 		c.Next()
@@ -47,6 +44,11 @@ func Perms(c *gin.Context) {
 
 	perm, ok := c.Get("perm")
 	if ok {
-		set(key, perm, 86400) // 24 hours
+		cache.SetPerms(c,
+			user.(*model.User),
+			perm.(*model.Perm),
+			owner,
+			name,
+		)
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/drone/drone/engine"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router"
+	"github.com/drone/drone/router/middleware/cache"
 	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/router/middleware/header"
 	"github.com/drone/drone/shared/database"
@@ -49,6 +50,7 @@ func main() {
 	server_.Run(
 		router.Load(
 			header.Version(build),
+			cache.Default(),
 			context.SetDatabase(database_),
 			context.SetRemote(remote_),
 			context.SetEngine(engine_),
