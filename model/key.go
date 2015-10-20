@@ -33,14 +33,6 @@ func DeleteKey(db meddler.DB, repo *Repo) error {
 
 const keyTable = "keys"
 
-const keyQuery = `
-SELECT *
-FROM keys
-WHERE key_repo_id=?
-LIMIT 1
-`
+const keyQuery = "SELECT * FROM `keys` WHERE key_repo_id=? LIMIT 1"
 
-const keyDeleteStmt = `
-DELETE FROM keys
-WHERE key_repo_id=?
-`
+const keyDeleteStmt = "DELETE FROM `keys` WHERE key_repo_id=?"

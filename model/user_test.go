@@ -18,7 +18,6 @@ func TestUserstore(t *testing.T) {
 		// table data from the database.
 		g.BeforeEach(func() {
 			db.Exec("DELETE FROM users")
-			db.Exec("DELETE FROM stars")
 			db.Exec("DELETE FROM repos")
 			db.Exec("DELETE FROM builds")
 			db.Exec("DELETE FROM jobs")

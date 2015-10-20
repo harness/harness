@@ -37,16 +37,6 @@ CREATE TABLE repos (
 ,UNIQUE(repo_full_name)
 );
 
-CREATE TABLE stars (
- star_id      SERIAL PRIMARY KEY
-,star_repo_id INTEGER
-,star_user_id INTEGER
-
-,UNIQUE(star_repo_id, star_user_id)
-);
-
-CREATE INDEX ix_star_user ON builds (star_user_id);
-
 CREATE TABLE keys (
  key_id      SERIAL PRIMARY KEY
 ,key_repo_id INTEGER
@@ -82,8 +72,7 @@ CREATE TABLE builds (
 ,UNIQUE(build_number, build_repo_id)
 );
 
-CREATE INDEX ix_build_repo   ON builds (build_repo_id);
-CREATE INDEX ix_build_author ON builds (build_author);
+CREATE INDEX ix_build_repo ON builds (build_repo_id);
 
 CREATE TABLE jobs (
  job_id          SERIAL PRIMARY KEY
@@ -121,8 +110,9 @@ CREATE TABLE IF NOT EXISTS nodes (
 );
 
 
-INSERT INTO nodes VALUES(null, 'unix:///var/run/docker.sock', 'linux_amd64', '', '', '');
-INSERT INTO nodes VALUES(null, 'unix:///var/run/docker.sock', 'linux_amd64', '', '', '');
+INSERT INTO nodes (node_addr, node_arch, node_cert, node_key, node_ca) VALUES
+	('unix:///var/run/docker.sock', 'linux_amd64', '', '', ''),
+	('unix:///var/run/docker.sock', 'linux_amd64', '', '', '');
 
 -- +migrate Down
 

@@ -17,7 +17,7 @@ func TestKey(t *testing.T) {
 		// before each test be sure to purge the package
 		// table data from the database.
 		g.BeforeEach(func() {
-			db.Exec("DELETE FROM keys")
+			db.Exec(database.Rebind("DELETE FROM `keys`"))
 		})
 
 		g.It("Should create a key", func() {

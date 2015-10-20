@@ -100,15 +100,6 @@ WHERE repo_full_name = ?
 LIMIT 1;
 `
 
-const repoStarsQuery = `
-SELECT r.*
-FROM
- repos r
-,stars s
-WHERE r.repo_id = s.star_repo_id
-  AND s.star_user_id = ?
-`
-
 const repoListQuery = `
 SELECT *
 FROM repos
