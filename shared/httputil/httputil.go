@@ -5,6 +5,15 @@ import (
 	"strings"
 )
 
+func hasHttpsForwarded(r *http.Request) bool {
+	forwardedHeader := r.Header["Forwarded"]
+	for _, w := range forwardedHeader {
+		strings.Contains(w, "proto=https")
+		return true
+	}
+	return false
+}
+
 // IsHttps is a helper function that evaluates the http.Request
 // and returns True if the Request uses HTTPS. It is able to detect,
 // using the X-Forwarded-Proto, if the original request was HTTPS and
@@ -17,7 +26,7 @@ func IsHttps(r *http.Request) bool {
 		return true
 	case strings.HasPrefix(r.Proto, "HTTPS"):
 		return true
-	case r.Header.Get("X-Forwarded-Proto") == "https":
+	case hasHttpsForwarded(r):
 		return true
 	default:
 		return false
@@ -29,18 +38,10 @@ func IsHttps(r *http.Request) bool {
 // using the X-Forwarded-Proto, if the original request was HTTPS
 // and routed through a reverse proxy with SSL termination.
 func GetScheme(r *http.Request) string {
-	switch {
-	case r.URL.Scheme == "https":
+	if IsHttps(r) {
 		return "https"
-	case r.TLS != nil:
-		return "https"
-	case strings.HasPrefix(r.Proto, "HTTPS"):
-		return "https"
-	case r.Header.Get("X-Forwarded-Proto") == "https":
-		return "https"
-	default:
-		return "http"
 	}
+	return "http"
 }
 
 // GetHost is a helper function that evaluates the http.Request
