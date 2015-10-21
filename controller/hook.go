@@ -14,13 +14,13 @@ import (
 	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
+	"github.com/drone/drone/store"
 	"github.com/drone/drone/yaml"
 	"github.com/drone/drone/yaml/matrix"
 )
 
 func PostHook(c *gin.Context) {
-	remote_ := context.Remote(c)
-	db := context.Database(c)
+	remote_ := remote.FromContext(c)
 
 	tmprepo, build, err := remote_.Hook(c.Request)
 	if err != nil {
@@ -46,7 +46,7 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	repo, err := model.GetRepoName(db, tmprepo.Owner, tmprepo.Name)
+	repo, err := store.GetRepoOwnerName(c, tmprepo.Owner, tmprepo.Name)
 	if err != nil {
 		log.Errorf("failure to find repo %s/%s from hook. %s", tmprepo.Owner, tmprepo.Name, err)
 		c.AbortWithError(404, err)
@@ -87,7 +87,7 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	user, err := model.GetUser(db, repo.UserID)
+	user, err := store.GetUser(c, repo.UserID)
 	if err != nil {
 		log.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)
@@ -103,7 +103,7 @@ func PostHook(c *gin.Context) {
 	// a small number of people will probably be upset by this, I'm not sure
 	// it is actually that big of a deal.
 	if len(build.Email) == 0 {
-		author, err := model.GetUserLogin(db, build.Author)
+		author, err := store.GetUserLogin(c, build.Author)
 		if err == nil {
 			build.Email = author.Email
 		}
@@ -115,7 +115,7 @@ func PostHook(c *gin.Context) {
 	if refresher, ok := remote_.(remote.Refresher); ok {
 		ok, _ := refresher.Refresh(user)
 		if ok {
-			model.UpdateUser(db, user)
+			store.UpdateUser(c, user)
 		}
 	}
 
@@ -144,7 +144,7 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	key, _ := model.GetKey(db, repo)
+	key, _ := store.GetKey(c, repo)
 
 	// verify the branches can be built vs skipped
 	yconfig, _ := yaml.Parse(string(raw))
@@ -164,18 +164,12 @@ func PostHook(c *gin.Context) {
 		c.AbortWithStatus(200)
 		return
 	}
-	tx, err := db.Begin()
-	if err != nil {
-		log.Errorf("failure to begin database transaction", err)
-		c.AbortWithError(500, err)
-		return
-	}
-	defer tx.Rollback()
 
 	// update some build fields
 	build.Status = model.StatusPending
 	build.RepoID = repo.ID
 
+	// and use a transaction
 	var jobs []*model.Job
 	for num, axis := range axes {
 		jobs = append(jobs, &model.Job{
@@ -185,13 +179,12 @@ func PostHook(c *gin.Context) {
 			Environment: axis,
 		})
 	}
-	err = model.CreateBuild(tx, build, jobs...)
+	err = store.CreateBuild(c, build, jobs...)
 	if err != nil {
 		log.Errorf("failure to save commit for %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)
 		return
 	}
-	tx.Commit()
 
 	c.JSON(200, build)
 
@@ -203,10 +196,10 @@ func PostHook(c *gin.Context) {
 
 	// get the previous build so taht we can send
 	// on status change notifications
-	last, _ := model.GetBuildLastBefore(db, repo, build.Branch, build.ID)
+	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
 
 	engine_ := context.Engine(c)
-	go engine_.Schedule(&engine.Task{
+	go engine_.Schedule(c.Copy(), &engine.Task{
 		User:      user,
 		Repo:      repo,
 		Build:     build,

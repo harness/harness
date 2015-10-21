@@ -10,16 +10,16 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/router/middleware/context"
+	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/crypto"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
+	"github.com/drone/drone/store"
 )
 
 func PostRepo(c *gin.Context) {
-	db := context.Database(c)
-	remote := context.Remote(c)
+	remote := remote.FromContext(c)
 	user := session.User(c)
 	owner := c.Param("owner")
 	name := c.Param("name")
@@ -45,7 +45,7 @@ func PostRepo(c *gin.Context) {
 	}
 
 	// error if the repository already exists
-	_, err = model.GetRepoName(db, owner, name)
+	_, err = store.GetRepoOwnerName(c, owner, name)
 	if err == nil {
 		c.String(409, "Repository already exists.")
 		return
@@ -91,32 +91,23 @@ func PostRepo(c *gin.Context) {
 		return
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		c.AbortWithError(500, err)
-		return
-	}
-	defer tx.Rollback()
-
 	// persist the repository
-	err = model.CreateRepo(tx, r)
+	err = store.CreateRepo(c, r)
 	if err != nil {
 		c.AbortWithError(500, err)
 		return
 	}
 	keys.RepoID = r.ID
-	err = model.CreateKey(tx, keys)
+	err = store.CreateKey(c, keys)
 	if err != nil {
 		c.AbortWithError(500, err)
 		return
 	}
-	tx.Commit()
 
 	c.JSON(200, r)
 }
 
 func PatchRepo(c *gin.Context) {
-	db := context.Database(c)
 	repo := session.Repo(c)
 	user := session.User(c)
 
@@ -152,7 +143,7 @@ func PatchRepo(c *gin.Context) {
 		repo.Timeout = *in.Timeout
 	}
 
-	err := model.UpdateRepo(db, repo)
+	err := store.UpdateRepo(c, repo)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -166,9 +157,8 @@ func GetRepo(c *gin.Context) {
 }
 
 func GetRepoKey(c *gin.Context) {
-	db := context.Database(c)
 	repo := session.Repo(c)
-	keys, err := model.GetKey(db, repo)
+	keys, err := store.GetKey(c, repo)
 	if err != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 	} else {
@@ -177,12 +167,11 @@ func GetRepoKey(c *gin.Context) {
 }
 
 func DeleteRepo(c *gin.Context) {
-	db := context.Database(c)
-	remote := context.Remote(c)
+	remote := remote.FromContext(c)
 	repo := session.Repo(c)
 	user := session.User(c)
 
-	err := model.DeleteRepo(db, repo)
+	err := store.DeleteRepo(c, repo)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -193,7 +182,6 @@ func DeleteRepo(c *gin.Context) {
 }
 
 func PostSecure(c *gin.Context) {
-	db := context.Database(c)
 	repo := session.Repo(c)
 
 	in, err := ioutil.ReadAll(c.Request.Body)
@@ -215,7 +203,7 @@ func PostSecure(c *gin.Context) {
 		return
 	}
 
-	key, err := model.GetKey(db, repo)
+	key, err := store.GetKey(c, repo)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return

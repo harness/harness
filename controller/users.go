@@ -6,14 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/crypto"
+	"github.com/drone/drone/store"
 )
 
 func GetUsers(c *gin.Context) {
-	db := context.Database(c)
-	users, err := model.GetUserList(db)
+	users, err := store.GetUserList(c)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -23,8 +22,7 @@ func GetUsers(c *gin.Context) {
 }
 
 func GetUser(c *gin.Context) {
-	db := context.Database(c)
-	user, err := model.GetUserLogin(db, c.Param("login"))
+	user, err := store.GetUserLogin(c, c.Param("login"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
@@ -35,7 +33,6 @@ func GetUser(c *gin.Context) {
 
 func PatchUser(c *gin.Context) {
 	me := session.User(c)
-	db := context.Database(c)
 	in := &model.User{}
 	err := c.Bind(in)
 	if err != nil {
@@ -43,7 +40,7 @@ func PatchUser(c *gin.Context) {
 		return
 	}
 
-	user, err := model.GetUserLogin(db, c.Param("login"))
+	user, err := store.GetUserLogin(c, c.Param("login"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
@@ -57,7 +54,7 @@ func PatchUser(c *gin.Context) {
 		return
 	}
 
-	err = model.UpdateUser(db, user)
+	err = store.UpdateUser(c, user)
 	if err != nil {
 		c.AbortWithStatus(http.StatusConflict)
 		return
@@ -67,7 +64,6 @@ func PatchUser(c *gin.Context) {
 }
 
 func PostUser(c *gin.Context) {
-	db := context.Database(c)
 	in := &model.User{}
 	err := c.Bind(in)
 	if err != nil {
@@ -83,7 +79,7 @@ func PostUser(c *gin.Context) {
 	user.Active = true
 	user.Hash = crypto.Rand()
 
-	err = model.CreateUser(db, user)
+	err = store.CreateUser(c, user)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
@@ -94,9 +90,8 @@ func PostUser(c *gin.Context) {
 
 func DeleteUser(c *gin.Context) {
 	me := session.User(c)
-	db := context.Database(c)
 
-	user, err := model.GetUserLogin(db, c.Param("login"))
+	user, err := store.GetUserLogin(c, c.Param("login"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
@@ -108,7 +103,7 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	err = model.DeleteUser(db, user)
+	err = store.DeleteUser(c, user)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return

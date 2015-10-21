@@ -9,15 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/router/middleware/context"
+	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
+	"github.com/drone/drone/store"
 )
 
 func ShowIndex(c *gin.Context) {
-	db := context.Database(c)
-	remote := context.Remote(c)
+	remote := remote.FromContext(c)
 	user := session.User(c)
 	if user == nil {
 		c.Redirect(http.StatusSeeOther, "/login")
@@ -43,7 +43,7 @@ func ShowIndex(c *gin.Context) {
 
 	// for each repository in the remote system we get
 	// the intersection of those repostiories in Drone
-	repos_, err := model.GetRepoListOf(db, repos)
+	repos_, err := store.GetRepoListOf(c, repos)
 	if err != nil {
 		log.Errorf("Failure to get repository list for %s. %s.",
 			user.Login, err)
@@ -73,13 +73,12 @@ func ShowUser(c *gin.Context) {
 }
 
 func ShowUsers(c *gin.Context) {
-	db := context.Database(c)
 	user := session.User(c)
 	if !user.Admin {
 		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
-	users, _ := model.GetUserList(db)
+	users, _ := store.GetUserList(c)
 
 	token, _ := token.New(
 		token.CsrfToken,
@@ -94,11 +93,10 @@ func ShowUsers(c *gin.Context) {
 }
 
 func ShowRepo(c *gin.Context) {
-	db := context.Database(c)
 	user := session.User(c)
 	repo := session.Repo(c)
 
-	builds, _ := model.GetBuildList(db, repo)
+	builds, _ := store.GetBuildList(c, repo)
 	groups := []*model.BuildGroup{}
 
 	var curr *model.BuildGroup
@@ -124,10 +122,10 @@ func ShowRepo(c *gin.Context) {
 }
 
 func ShowRepoConf(c *gin.Context) {
-	db := context.Database(c)
+
 	user := session.User(c)
 	repo := session.Repo(c)
-	key, _ := model.GetKey(db, repo)
+	key, _ := store.GetKey(c, repo)
 
 	token, _ := token.New(
 		token.CsrfToken,
@@ -171,7 +169,6 @@ func ShowRepoBadges(c *gin.Context) {
 }
 
 func ShowBuild(c *gin.Context) {
-	db := context.Database(c)
 	user := session.User(c)
 	repo := session.Repo(c)
 	num, _ := strconv.Atoi(c.Param("number"))
@@ -180,13 +177,13 @@ func ShowBuild(c *gin.Context) {
 		seq = 1
 	}
 
-	build, err := model.GetBuildNumber(db, repo, num)
+	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
-	jobs, err := model.GetJobList(db, build)
+	jobs, err := store.GetJobList(c, build)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return

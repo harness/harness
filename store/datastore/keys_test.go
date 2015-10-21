@@ -1,51 +1,52 @@
-package model
+package datastore
 
 import (
 	"testing"
 
-	"github.com/drone/drone/shared/database"
+	"github.com/drone/drone/model"
 	"github.com/franela/goblin"
 )
 
-func TestKey(t *testing.T) {
-	db := database.OpenTest()
+func Test_keystore(t *testing.T) {
+	db := openTest()
 	defer db.Close()
 
+	s := From(db)
 	g := goblin.Goblin(t)
 	g.Describe("Keys", func() {
 
 		// before each test be sure to purge the package
 		// table data from the database.
 		g.BeforeEach(func() {
-			db.Exec(database.Rebind("DELETE FROM `keys`"))
+			db.Exec(rebind("DELETE FROM `keys`"))
 		})
 
 		g.It("Should create a key", func() {
-			key := Key{
+			key := model.Key{
 				RepoID:  1,
 				Public:  fakePublicKey,
 				Private: fakePrivateKey,
 			}
-			err := CreateKey(db, &key)
+			err := s.Keys().Create(&key)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(key.ID != 0).IsTrue()
 		})
 
 		g.It("Should update a key", func() {
-			key := Key{
+			key := model.Key{
 				RepoID:  1,
 				Public:  fakePublicKey,
 				Private: fakePrivateKey,
 			}
-			err := CreateKey(db, &key)
+			err := s.Keys().Create(&key)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(key.ID != 0).IsTrue()
 
 			key.Private = ""
 			key.Public = ""
 
-			err1 := UpdateKey(db, &key)
-			getkey, err2 := GetKey(db, &Repo{ID: 1})
+			err1 := s.Keys().Update(&key)
+			getkey, err2 := s.Keys().Get(&model.Repo{ID: 1})
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(key.ID).Equal(getkey.ID)
@@ -54,16 +55,16 @@ func TestKey(t *testing.T) {
 		})
 
 		g.It("Should get a key", func() {
-			key := Key{
+			key := model.Key{
 				RepoID:  1,
 				Public:  fakePublicKey,
 				Private: fakePrivateKey,
 			}
-			err := CreateKey(db, &key)
+			err := s.Keys().Create(&key)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(key.ID != 0).IsTrue()
 
-			getkey, err := GetKey(db, &Repo{ID: 1})
+			getkey, err := s.Keys().Get(&model.Repo{ID: 1})
 			g.Assert(err == nil).IsTrue()
 			g.Assert(key.ID).Equal(getkey.ID)
 			g.Assert(key.Public).Equal(getkey.Public)
@@ -71,17 +72,17 @@ func TestKey(t *testing.T) {
 		})
 
 		g.It("Should delete a key", func() {
-			key := Key{
+			key := model.Key{
 				RepoID:  1,
 				Public:  fakePublicKey,
 				Private: fakePrivateKey,
 			}
-			err1 := CreateKey(db, &key)
-			err2 := DeleteKey(db, &Repo{ID: 1})
+			err1 := s.Keys().Create(&key)
+			err2 := s.Keys().Delete(&key)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 
-			_, err := GetKey(db, &Repo{ID: 1})
+			_, err := s.Keys().Get(&model.Repo{ID: 1})
 			g.Assert(err == nil).IsFalse()
 		})
 	})

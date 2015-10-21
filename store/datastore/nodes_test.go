@@ -1,15 +1,16 @@
-package model
+package datastore
 
 import (
 	"testing"
 
-	"github.com/drone/drone/shared/database"
+	"github.com/drone/drone/model"
 	"github.com/franela/goblin"
 )
 
-func TestNode(t *testing.T) {
-	db := database.OpenTest()
+func Test_nodestore(t *testing.T) {
+	db := openTest()
 	defer db.Close()
+	s := From(db)
 
 	g := goblin.Goblin(t)
 	g.Describe("Nodes", func() {
@@ -21,28 +22,28 @@ func TestNode(t *testing.T) {
 		})
 
 		g.It("Should create a node", func() {
-			node := Node{
+			node := model.Node{
 				Addr: "unix:///var/run/docker/docker.sock",
 				Arch: "linux_amd64",
 			}
-			err := InsertNode(db, &node)
+			err := s.Nodes().Create(&node)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(node.ID != 0).IsTrue()
 		})
 
 		g.It("Should update a node", func() {
-			node := Node{
+			node := model.Node{
 				Addr: "unix:///var/run/docker/docker.sock",
 				Arch: "linux_amd64",
 			}
-			err := InsertNode(db, &node)
+			err := s.Nodes().Create(&node)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(node.ID != 0).IsTrue()
 
 			node.Addr = "unix:///var/run/docker.sock"
 
-			err1 := UpdateNode(db, &node)
-			getnode, err2 := GetNode(db, node.ID)
+			err1 := s.Nodes().Update(&node)
+			getnode, err2 := s.Nodes().Get(node.ID)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(node.ID).Equal(getnode.ID)
@@ -51,15 +52,15 @@ func TestNode(t *testing.T) {
 		})
 
 		g.It("Should get a node", func() {
-			node := Node{
+			node := model.Node{
 				Addr: "unix:///var/run/docker/docker.sock",
 				Arch: "linux_amd64",
 			}
-			err := InsertNode(db, &node)
+			err := s.Nodes().Create(&node)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(node.ID != 0).IsTrue()
 
-			getnode, err := GetNode(db, node.ID)
+			getnode, err := s.Nodes().Get(node.ID)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(node.ID).Equal(getnode.ID)
 			g.Assert(node.Addr).Equal(getnode.Addr)
@@ -67,33 +68,33 @@ func TestNode(t *testing.T) {
 		})
 
 		g.It("Should get a node list", func() {
-			node1 := Node{
+			node1 := model.Node{
 				Addr: "unix:///var/run/docker/docker.sock",
 				Arch: "linux_amd64",
 			}
-			node2 := Node{
+			node2 := model.Node{
 				Addr: "unix:///var/run/docker.sock",
 				Arch: "linux_386",
 			}
-			InsertNode(db, &node1)
-			InsertNode(db, &node2)
+			s.Nodes().Create(&node1)
+			s.Nodes().Create(&node2)
 
-			nodes, err := GetNodeList(db)
+			nodes, err := s.Nodes().GetList()
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(nodes)).Equal(2)
 		})
 
 		g.It("Should delete a node", func() {
-			node := Node{
+			node := model.Node{
 				Addr: "unix:///var/run/docker/docker.sock",
 				Arch: "linux_amd64",
 			}
-			err1 := InsertNode(db, &node)
-			err2 := DeleteNode(db, &node)
+			err1 := s.Nodes().Create(&node)
+			err2 := s.Nodes().Delete(&node)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 
-			_, err := GetNode(db, node.ID)
+			_, err := s.Nodes().Get(node.ID)
 			g.Assert(err == nil).IsFalse()
 		})
 	})

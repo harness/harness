@@ -1,28 +1,27 @@
 package engine
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
+	"github.com/drone/drone/store"
+	"golang.org/x/net/context"
 )
 
 type updater struct {
-	bus    *eventbus
-	db     *sql.DB
-	remote remote.Remote
+	bus *eventbus
 }
 
-func (u *updater) SetBuild(r *Task) error {
-	err := model.UpdateBuild(u.db, r.Build)
+func (u *updater) SetBuild(c context.Context, r *Task) error {
+	err := store.UpdateBuild(c, r.Build)
 	if err != nil {
 		return err
 	}
 
-	err = u.remote.Status(r.User, r.Repo, r.Build, fmt.Sprintf("%s/%s/%d", r.System.Link, r.Repo.FullName, r.Build.Number))
+	err = remote.FromContext(c).Status(r.User, r.Repo, r.Build, fmt.Sprintf("%s/%s/%d", r.System.Link, r.Repo.FullName, r.Build.Number))
 	if err != nil {
 		// log err
 	}
@@ -39,8 +38,8 @@ func (u *updater) SetBuild(r *Task) error {
 	return nil
 }
 
-func (u *updater) SetJob(r *Task) error {
-	err := model.UpdateJob(u.db, r.Job)
+func (u *updater) SetJob(c context.Context, r *Task) error {
+	err := store.UpdateJob(c, r.Job)
 	if err != nil {
 		return err
 	}
@@ -57,8 +56,8 @@ func (u *updater) SetJob(r *Task) error {
 	return nil
 }
 
-func (u *updater) SetLogs(r *Task, rc io.ReadCloser) error {
-	return model.SetLog(u.db, r.Job, rc)
+func (u *updater) SetLogs(c context.Context, r *Task, rc io.ReadCloser) error {
+	return store.WriteLog(c, r.Job, rc)
 }
 
 type payload struct {

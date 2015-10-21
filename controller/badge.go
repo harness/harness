@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/router/middleware/context"
+	"github.com/drone/drone/store"
 )
 
 var (
@@ -16,8 +16,7 @@ var (
 )
 
 func GetBadge(c *gin.Context) {
-	db := context.Database(c)
-	repo, err := model.GetRepoName(db,
+	repo, err := store.GetRepoOwnerName(c,
 		c.Param("owner"),
 		c.Param("name"),
 	)
@@ -38,7 +37,7 @@ func GetBadge(c *gin.Context) {
 		branch = repo.Branch
 	}
 
-	build, err := model.GetBuildLast(db, repo, branch)
+	build, err := store.GetBuildLast(c, repo, branch)
 	if err != nil {
 		c.String(404, badgeNone)
 		return
@@ -59,8 +58,7 @@ func GetBadge(c *gin.Context) {
 }
 
 func GetCC(c *gin.Context) {
-	db := context.Database(c)
-	repo, err := model.GetRepoName(db,
+	repo, err := store.GetRepoOwnerName(c,
 		c.Param("owner"),
 		c.Param("name"),
 	)
@@ -69,7 +67,7 @@ func GetCC(c *gin.Context) {
 		return
 	}
 
-	builds, err := model.GetBuildList(db, repo)
+	builds, err := store.GetBuildList(c, repo)
 	if err != nil || len(builds) == 0 {
 		c.AbortWithStatus(404)
 		return

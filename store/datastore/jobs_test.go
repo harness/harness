@@ -1,16 +1,17 @@
-package model
+package datastore
 
 import (
 	"testing"
 
-	"github.com/drone/drone/shared/database"
+	"github.com/drone/drone/model"
 	"github.com/franela/goblin"
 )
 
-func TestJob(t *testing.T) {
-	db := database.OpenTest()
+func Test_jobstore(t *testing.T) {
+	db := openTest()
 	defer db.Close()
 
+	s := From(db)
 	g := goblin.Goblin(t)
 	g.Describe("Job", func() {
 
@@ -21,38 +22,38 @@ func TestJob(t *testing.T) {
 		})
 
 		g.It("Should Set a job", func() {
-			job := &Job{
+			job := &model.Job{
 				BuildID:  1,
 				Status:   "pending",
 				ExitCode: 0,
 				Number:   1,
 			}
-			err1 := InsertJob(db, job)
+			err1 := s.Jobs().Create(job)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(job.ID != 0).IsTrue()
 
 			job.Status = "started"
-			err2 := UpdateJob(db, job)
+			err2 := s.Jobs().Update(job)
 			g.Assert(err2 == nil).IsTrue()
 
-			getjob, err3 := GetJob(db, job.ID)
+			getjob, err3 := s.Jobs().Get(job.ID)
 			g.Assert(err3 == nil).IsTrue()
 			g.Assert(getjob.Status).Equal(job.Status)
 		})
 
 		g.It("Should Get a Job by ID", func() {
-			job := &Job{
+			job := &model.Job{
 				BuildID:     1,
 				Status:      "pending",
 				ExitCode:    1,
 				Number:      1,
 				Environment: map[string]string{"foo": "bar"},
 			}
-			err1 := InsertJob(db, job)
+			err1 := s.Jobs().Create(job)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(job.ID != 0).IsTrue()
 
-			getjob, err2 := GetJob(db, job.ID)
+			getjob, err2 := s.Jobs().Get(job.ID)
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(getjob.ID).Equal(job.ID)
 			g.Assert(getjob.Status).Equal(job.Status)
@@ -62,17 +63,17 @@ func TestJob(t *testing.T) {
 		})
 
 		g.It("Should Get a Job by Number", func() {
-			job := &Job{
+			job := &model.Job{
 				BuildID:  1,
 				Status:   "pending",
 				ExitCode: 1,
 				Number:   1,
 			}
-			err1 := InsertJob(db, job)
+			err1 := s.Jobs().Create(job)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(job.ID != 0).IsTrue()
 
-			getjob, err2 := GetJobNumber(db, &Build{ID: 1}, 1)
+			getjob, err2 := s.Jobs().GetNumber(&model.Build{ID: 1}, 1)
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(getjob.ID).Equal(job.ID)
 			g.Assert(getjob.Status).Equal(job.Status)
@@ -80,38 +81,38 @@ func TestJob(t *testing.T) {
 
 		g.It("Should Get a List of Jobs by Commit", func() {
 
-			build := Build{
+			build := model.Build{
 				RepoID: 1,
-				Status: StatusSuccess,
+				Status: model.StatusSuccess,
 			}
-			jobs := []*Job{
-				&Job{
+			jobs := []*model.Job{
+				&model.Job{
 					BuildID:  1,
 					Status:   "success",
 					ExitCode: 0,
 					Number:   1,
 				},
-				&Job{
+				&model.Job{
 					BuildID:  3,
 					Status:   "error",
 					ExitCode: 1,
 					Number:   2,
 				},
-				&Job{
+				&model.Job{
 					BuildID:  5,
 					Status:   "pending",
 					ExitCode: 0,
 					Number:   3,
 				},
 			}
-			//
-			err1 := CreateBuild(db, &build, jobs...)
+
+			err1 := s.Builds().Create(&build, jobs...)
 			g.Assert(err1 == nil).IsTrue()
-			getjobs, err2 := GetJobList(db, &build)
+			getjobs, err2 := s.Jobs().GetList(&build)
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(len(getjobs)).Equal(3)
 			g.Assert(getjobs[0].Number).Equal(1)
-			g.Assert(getjobs[0].Status).Equal(StatusSuccess)
+			g.Assert(getjobs[0].Status).Equal(model.StatusSuccess)
 		})
 	})
 }
