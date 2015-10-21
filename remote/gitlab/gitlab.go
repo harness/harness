@@ -23,6 +23,7 @@ const (
 )
 
 type Gitlab struct {
+	Root        string
 	URL         string
 	Client      string
 	Secret      string
@@ -45,6 +46,7 @@ func Load(env envconfig.Env) *Gitlab {
 	url_.RawQuery = ""
 
 	gitlab := Gitlab{}
+	gitlab.Root = env.String("SERVER_ROOT", "")
 	gitlab.URL = url_.String()
 	gitlab.Client = params.Get("client_id")
 	gitlab.Secret = params.Get("client_secret")
@@ -75,7 +77,7 @@ func (g *Gitlab) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 		Scope:        DefaultScope,
 		AuthURL:      fmt.Sprintf("%s/oauth/authorize", g.URL),
 		TokenURL:     fmt.Sprintf("%s/oauth/token", g.URL),
-		RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURL(req)),
+		RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURLWithRoot(req, g.Root)),
 	}
 
 	trans_ := &http.Transport{
@@ -393,7 +395,7 @@ func (g *Gitlab) Oauth2Transport(r *http.Request) *oauth2.Transport {
 			Scope:        DefaultScope,
 			AuthURL:      fmt.Sprintf("%s/oauth/authorize", g.URL),
 			TokenURL:     fmt.Sprintf("%s/oauth/token", g.URL),
-			RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURL(r)),
+			RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURLWithRoot(r, g.Root)),
 			//settings.Server.Scheme, settings.Server.Hostname),
 		},
 		Transport: &http.Transport{
