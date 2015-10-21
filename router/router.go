@@ -62,7 +62,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	{
 		user.Use(session.MustUser())
 		user.GET("", controller.GetSelf)
-		// user.GET("/builds", controller.GetFeed)
+		user.GET("/feed", controller.GetFeed)
 		user.GET("/repos", cache.Repos, controller.GetRepos)
 		user.GET("/repos/remote", cache.Repos, controller.GetRemoteRepos)
 		user.POST("/token", controller.PostToken)

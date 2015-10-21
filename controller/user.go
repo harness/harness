@@ -18,12 +18,28 @@ func GetSelf(c *gin.Context) {
 
 func GetFeed(c *gin.Context) {
 	user := session.User(c)
-	feed, err := store.GetUserFeed(c, user, 25, 0)
+	remote := remote.FromContext(c)
+	var repos []*model.RepoLite
+
+	// get the repository list from the cache
+	reposv, ok := c.Get("repos")
+	if ok {
+		repos = reposv.([]*model.RepoLite)
+	} else {
+		var err error
+		repos, err = remote.Repos(user)
+		if err != nil {
+			c.String(400, err.Error())
+			return
+		}
+	}
+
+	feed, err := store.GetUserFeed(c, repos)
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.String(400, err.Error())
 		return
 	}
-	c.IndentedJSON(http.StatusOK, feed)
+	c.JSON(200, feed)
 }
 
 func GetRepos(c *gin.Context) {

@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/drone/drone/model"
 	"github.com/russross/meddler"
@@ -29,11 +30,20 @@ func (db *userstore) GetList() ([]*model.User, error) {
 	return users, err
 }
 
-func (db *userstore) GetFeed(user *model.User, limit, offset int) ([]*model.Feed, error) {
-	// var feed = []*Feed{}
-	// var err = meddler.QueryAll(db, &feed, rebind(userFeedQuery), user.Login, limit, offset)
-	// return feed, err
-	return nil, nil
+func (db *userstore) GetFeed(listof []*model.RepoLite) ([]*model.Feed, error) {
+	var (
+		feed []*model.Feed
+		args []interface{}
+		stmt string
+	)
+	switch meddler.Default {
+	case meddler.PostgreSQL:
+		stmt, args = toListPosgres(listof)
+	default:
+		stmt, args = toList(listof)
+	}
+	err := meddler.QueryAll(db, &feed, fmt.Sprintf(userFeedQuery, stmt), args...)
+	return feed, err
 }
 
 func (db *userstore) Count() (int, error) {
@@ -105,7 +115,7 @@ FROM
  builds b
 ,repos r
 WHERE b.build_repo_id = r.repo_id
-  AND b.build_author = ?
+  AND r.repo_full_name IN (%s)
 ORDER BY b.build_id DESC
-LIMIT ? OFFSET ?
+LIMIT 25
 `

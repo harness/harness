@@ -16,7 +16,7 @@ type UserStore interface {
 	GetList() ([]*model.User, error)
 
 	// GetFeed gets a user activity feed.
-	GetFeed(*model.User, int, int) ([]*model.Feed, error)
+	GetFeed([]*model.RepoLite) ([]*model.Feed, error)
 
 	// Count gets a count of all users in the system.
 	Count() (int, error)
@@ -43,8 +43,8 @@ func GetUserList(c context.Context) ([]*model.User, error) {
 	return FromContext(c).Users().GetList()
 }
 
-func GetUserFeed(c context.Context, user *model.User, limit, offset int) ([]*model.Feed, error) {
-	return FromContext(c).Users().GetFeed(user, limit, offset)
+func GetUserFeed(c context.Context, listof []*model.RepoLite) ([]*model.Feed, error) {
+	return FromContext(c).Users().GetFeed(listof)
 }
 
 func CountUsers(c context.Context) (int, error) {
