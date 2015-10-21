@@ -73,6 +73,12 @@ func GetURL(r *http.Request) string {
 	return GetScheme(r) + "://" + GetHost(r)
 }
 
+// GetURLWithRoot is a helper function that evaluates the http.Request,
+// appends a defined root and returns the full URL as a string.
+func GetURLWithRoot(r *http.Request, root string) string {
+	return GetScheme(r) + "://" + GetHost(r) + root
+}
+
 // GetCookie retrieves and verifies the cookie value.
 func GetCookie(r *http.Request, name string) (value string) {
 	cookie, err := r.Cookie(name)

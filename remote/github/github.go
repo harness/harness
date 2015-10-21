@@ -24,6 +24,7 @@ const (
 )
 
 type Github struct {
+	Root        string
 	URL         string
 	API         string
 	Client      string
@@ -50,6 +51,7 @@ func Load(env envconfig.Env) *Github {
 	// create the Githbub remote using parameters from
 	// the parsed DSN configuration string.
 	github := Github{}
+	github.Root = env.String("SERVER_ROOT", "")
 	github.URL = url_.String()
 	github.Client = params.Get("client_id")
 	github.Secret = params.Get("client_secret")
@@ -78,7 +80,7 @@ func (g *Github) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 		Scope:        DefaultScope,
 		AuthURL:      fmt.Sprintf("%s/login/oauth/authorize", g.URL),
 		TokenURL:     fmt.Sprintf("%s/login/oauth/access_token", g.URL),
-		RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURL(req)),
+		RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURLWithRoot(req, g.Root)),
 	}
 
 	// get the OAuth code

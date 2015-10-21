@@ -18,6 +18,7 @@ import (
 )
 
 type Bitbucket struct {
+	Root   string
 	Client string
 	Secret string
 	Orgs   []string
@@ -39,6 +40,7 @@ func Load(env envconfig.Env) *Bitbucket {
 	// create the Githbub remote using parameters from
 	// the parsed DSN configuration string.
 	bitbucket := Bitbucket{}
+	bitbucket.Root = env.String("SERVER_ROOT", "")
 	bitbucket.Client = params.Get("client_id")
 	bitbucket.Secret = params.Get("client_secret")
 	bitbucket.Orgs = params["orgs"]
@@ -55,7 +57,7 @@ func (bb *Bitbucket) Login(res http.ResponseWriter, req *http.Request) (*model.U
 		ClientID:     bb.Client,
 		ClientSecret: bb.Secret,
 		Endpoint:     bitbucket.Endpoint,
-		RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURL(req)),
+		RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURLWithRoot(req, bb.Root)),
 	}
 
 	// get the OAuth code
