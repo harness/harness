@@ -9,6 +9,7 @@ import (
 	"github.com/drone/drone/controller"
 	"github.com/drone/drone/router/middleware/cache"
 	"github.com/drone/drone/router/middleware/header"
+	"github.com/drone/drone/router/middleware/location"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/router/middleware/token"
 	"github.com/drone/drone/static"
@@ -20,6 +21,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.SetHTMLTemplate(template.Load())
 	e.StaticFS("/static", static.FileSystem())
 
+	e.Use(location.Resolve)
 	e.Use(header.NoCache)
 	e.Use(header.Options)
 	e.Use(header.Secure)
