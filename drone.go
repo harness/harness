@@ -9,9 +9,9 @@ import (
 	"github.com/drone/drone/router/middleware/cache"
 	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/router/middleware/header"
-	"github.com/drone/drone/shared/database"
 	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/shared/server"
+	"github.com/drone/drone/store/datastore"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -37,13 +37,13 @@ func main() {
 	env := envconfig.Load(*dotenv)
 
 	// Setup the database driver
-	database_ := database.Load(env)
+	store_ := datastore.Load(env)
 
 	// setup the remote driver
 	remote_ := remote.Load(env)
 
 	// setup the runner
-	engine_ := engine.Load(database_, env, remote_)
+	engine_ := engine.Load(env, store_)
 
 	// setup the server and start the listener
 	server_ := server.Load(env)
@@ -51,7 +51,7 @@ func main() {
 		router.Load(
 			header.Version(build),
 			cache.Default(),
-			context.SetDatabase(database_),
+			context.SetStore(store_),
 			context.SetRemote(remote_),
 			context.SetEngine(engine_),
 		),

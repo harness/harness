@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
-	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -15,14 +14,15 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/docker"
 	"github.com/drone/drone/shared/envconfig"
+	"github.com/drone/drone/store"
 	"github.com/samalba/dockerclient"
+	"golang.org/x/net/context"
 )
 
 type Engine interface {
-	Schedule(*Task)
+	Schedule(context.Context, *Task)
 	Cancel(int64, int64, *model.Node) error
 	Stream(int64, int64, *model.Node) (io.ReadCloser, error)
 	Deallocate(*model.Node)
@@ -51,7 +51,6 @@ var (
 )
 
 type engine struct {
-	db      *sql.DB
 	bus     *eventbus
 	updater *updater
 	pool    *pool
@@ -61,12 +60,11 @@ type engine struct {
 // Load creates a new build engine, loaded with registered nodes from the
 // database. The registered nodes are added to the pool of nodes to immediately
 // start accepting workloads.
-func Load(db *sql.DB, env envconfig.Env, remote remote.Remote) Engine {
+func Load(env envconfig.Env, s store.Store) Engine {
 	engine := &engine{}
 	engine.bus = newEventbus()
 	engine.pool = newPool()
-	engine.db = db
-	engine.updater = &updater{engine.bus, db, remote}
+	engine.updater = &updater{engine.bus}
 
 	// quick fix to propogate HTTP_PROXY variables
 	// throughout the build environment.
@@ -78,7 +76,7 @@ func Load(db *sql.DB, env envconfig.Env, remote remote.Remote) Engine {
 		}
 	}
 
-	nodes, err := model.GetNodeList(db)
+	nodes, err := s.Nodes().GetList()
 	if err != nil {
 		log.Fatalf("failed to get nodes from database. %s", err)
 	}
@@ -154,7 +152,7 @@ func (e *engine) Deallocate(n *model.Node) {
 	}
 }
 
-func (e *engine) Schedule(req *Task) {
+func (e *engine) Schedule(c context.Context, req *Task) {
 	node := <-e.pool.reserve()
 
 	// since we are probably running in a go-routine
@@ -173,15 +171,9 @@ func (e *engine) Schedule(req *Task) {
 
 	// update the node that was allocated to each job
 	func(id int64) {
-		tx, err := e.db.Begin()
-		if err != nil {
-			log.Errorf("error updating job to persist node. %s", err)
-			return
-		}
-		defer tx.Commit()
 		for _, job := range req.Jobs {
 			job.NodeID = id
-			model.UpdateJob(e.db, job)
+			store.UpdateJob(c, job)
 		}
 	}(node.ID)
 
@@ -195,12 +187,12 @@ func (e *engine) Schedule(req *Task) {
 	// had a non-success status
 	req.Build.Started = time.Now().UTC().Unix()
 	req.Build.Status = model.StatusRunning
-	e.updater.SetBuild(req)
+	e.updater.SetBuild(c, req)
 
 	// run all bulid jobs
 	for _, job := range req.Jobs {
 		req.Job = job
-		e.runJob(req, e.updater, client)
+		e.runJob(c, req, e.updater, client)
 	}
 
 	// update overall status based on each job
@@ -212,7 +204,7 @@ func (e *engine) Schedule(req *Task) {
 		}
 	}
 	req.Build.Finished = time.Now().UTC().Unix()
-	err = e.updater.SetBuild(req)
+	err = e.updater.SetBuild(c, req)
 	if err != nil {
 		log.Errorf("error updating build completion status. %s", err)
 	}
@@ -261,7 +253,7 @@ func newDockerClient(addr, cert, key, ca string) (dockerclient.Client, error) {
 	return dockerclient.NewDockerClient(addr, tlc)
 }
 
-func (e *engine) runJob(r *Task, updater *updater, client dockerclient.Client) error {
+func (e *engine) runJob(c context.Context, r *Task, updater *updater, client dockerclient.Client) error {
 
 	name := fmt.Sprintf("drone_build_%d_job_%d", r.Build.ID, r.Job.ID)
 
@@ -277,7 +269,7 @@ func (e *engine) runJob(r *Task, updater *updater, client dockerclient.Client) e
 			r.Job.Finished = time.Now().UTC().Unix()
 			r.Job.ExitCode = 255
 		}
-		updater.SetJob(r)
+		updater.SetJob(c, r)
 
 		client.KillContainer(name, "9")
 		client.RemoveContainer(name, true, true)
@@ -327,7 +319,7 @@ func (e *engine) runJob(r *Task, updater *updater, client dockerclient.Client) e
 
 	// UPDATE STATUS
 
-	err = updater.SetJob(r)
+	err = updater.SetJob(c, r)
 	if err != nil {
 		log.Errorf("error updating job status as running. %s", err)
 		return err
@@ -370,13 +362,13 @@ func (e *engine) runJob(r *Task, updater *updater, client dockerclient.Client) e
 
 	// update the task in the datastore
 	r.Job.Finished = time.Now().UTC().Unix()
-	err = updater.SetJob(r)
+	err = updater.SetJob(c, r)
 	if err != nil {
 		log.Errorf("error updating job after completion. %s", err)
 		return err
 	}
 
-	err = updater.SetLogs(r, ioutil.NopCloser(&buf))
+	err = updater.SetLogs(c, r, ioutil.NopCloser(&buf))
 	if err != nil {
 		log.Errorf("error updating logs. %s", err)
 		return err

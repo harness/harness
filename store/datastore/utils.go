@@ -1,4 +1,4 @@
-package database
+package datastore
 
 import (
 	"strconv"
@@ -6,9 +6,9 @@ import (
 	"github.com/russross/meddler"
 )
 
-// Rebind is a helper function that changes the sql
+// rebind is a helper function that changes the sql
 // bind type from ? to $ for postgres queries.
-func Rebind(query string) string {
+func rebind(query string) string {
 	if meddler.Default != meddler.PostgreSQL {
 		return query
 	}

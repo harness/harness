@@ -1,10 +1,5 @@
 package controller
 
-/*
-	stream.Get("/:owner/:name", controller.GetRepoEvents)
-	stream.Get("/:owner/:name/:build/:number", controller.GetStream)
-*/
-
 import (
 	"io"
 	"strconv"
@@ -13,9 +8,9 @@ import (
 
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/drone/drone/engine"
-	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/router/middleware/session"
+	"github.com/drone/drone/store"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -59,7 +54,7 @@ func GetRepoEvents(c *gin.Context) {
 }
 
 func GetStream(c *gin.Context) {
-	db := context.Database(c)
+
 	engine_ := context.Engine(c)
 	repo := session.Repo(c)
 	buildn, _ := strconv.Atoi(c.Param("build"))
@@ -67,19 +62,19 @@ func GetStream(c *gin.Context) {
 
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 
-	build, err := model.GetBuildNumber(db, repo, buildn)
+	build, err := store.GetBuildNumber(c, repo, buildn)
 	if err != nil {
 		log.Debugln("stream cannot get build number.", err)
 		c.AbortWithError(404, err)
 		return
 	}
-	job, err := model.GetJobNumber(db, build, jobn)
+	job, err := store.GetJobNumber(c, build, jobn)
 	if err != nil {
 		log.Debugln("stream cannot get job number.", err)
 		c.AbortWithError(404, err)
 		return
 	}
-	node, err := model.GetNode(db, job.NodeID)
+	node, err := store.GetNode(c, job.NodeID)
 	if err != nil {
 		log.Debugln("stream cannot get node.", err)
 		c.AbortWithError(404, err)

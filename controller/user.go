@@ -6,9 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/router/middleware/context"
+	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/token"
+	"github.com/drone/drone/store"
 )
 
 func GetSelf(c *gin.Context) {
@@ -17,8 +18,7 @@ func GetSelf(c *gin.Context) {
 
 func GetFeed(c *gin.Context) {
 	user := session.User(c)
-	db := context.Database(c)
-	feed, err := model.GetUserFeed(db, user, 25, 0)
+	feed, err := store.GetUserFeed(c, user, 25, 0)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -28,8 +28,7 @@ func GetFeed(c *gin.Context) {
 
 func GetRepos(c *gin.Context) {
 	user := session.User(c)
-	remote := context.Remote(c)
-	db := context.Database(c)
+	remote := remote.FromContext(c)
 	var repos []*model.RepoLite
 
 	// get the repository list from the cache
@@ -47,7 +46,7 @@ func GetRepos(c *gin.Context) {
 
 	// for each repository in the remote system we get
 	// the intersection of those repostiories in Drone
-	repos_, err := model.GetRepoListOf(db, repos)
+	repos_, err := store.GetRepoListOf(c, repos)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -59,7 +58,7 @@ func GetRepos(c *gin.Context) {
 
 func GetRemoteRepos(c *gin.Context) {
 	user := session.User(c)
-	remote := context.Remote(c)
+	remote := remote.FromContext(c)
 
 	reposv, ok := c.Get("repos")
 	if ok {

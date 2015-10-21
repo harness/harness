@@ -1,18 +1,19 @@
-package model
+package datastore
 
 import (
 	"bytes"
 	"io/ioutil"
 	"testing"
 
-	"github.com/drone/drone/shared/database"
+	"github.com/drone/drone/model"
 	"github.com/franela/goblin"
 )
 
-func TestLog(t *testing.T) {
-	db := database.OpenTest()
+func Test_logstore(t *testing.T) {
+	db := openTest()
 	defer db.Close()
 
+	s := From(db)
 	g := goblin.Goblin(t)
 	g.Describe("Logs", func() {
 
@@ -23,14 +24,14 @@ func TestLog(t *testing.T) {
 		})
 
 		g.It("Should create a log", func() {
-			job := Job{
+			job := model.Job{
 				ID: 1,
 			}
 			buf := bytes.NewBufferString("echo hi")
-			err := SetLog(db, &job, buf)
+			err := s.Logs().Write(&job, buf)
 			g.Assert(err == nil).IsTrue()
 
-			rc, err := GetLog(db, &job)
+			rc, err := s.Logs().Read(&job)
 			g.Assert(err == nil).IsTrue()
 			defer rc.Close()
 			out, _ := ioutil.ReadAll(rc)
@@ -38,17 +39,17 @@ func TestLog(t *testing.T) {
 		})
 
 		g.It("Should update a log", func() {
-			job := Job{
+			job := model.Job{
 				ID: 1,
 			}
 			buf1 := bytes.NewBufferString("echo hi")
 			buf2 := bytes.NewBufferString("echo allo?")
-			err1 := SetLog(db, &job, buf1)
-			err2 := SetLog(db, &job, buf2)
+			err1 := s.Logs().Write(&job, buf1)
+			err2 := s.Logs().Write(&job, buf2)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 
-			rc, err := GetLog(db, &job)
+			rc, err := s.Logs().Read(&job)
 			g.Assert(err == nil).IsTrue()
 			defer rc.Close()
 			out, _ := ioutil.ReadAll(rc)

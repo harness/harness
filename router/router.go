@@ -139,7 +139,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		auth.POST("/token", controller.GetLoginToken)
 	}
 
-	gitlab := e.Group("/api/gitlab/:owner/:name")
+	gitlab := e.Group("/gitlab/:owner/:name")
 	{
 		gitlab.Use(session.SetRepo())
 		gitlab.GET("/commits/:sha", controller.GetCommit)
@@ -162,7 +162,7 @@ func normalize(h http.Handler) http.Handler {
 
 		parts := strings.Split(r.URL.Path, "/")[1:]
 		switch parts[0] {
-		case "settings", "api", "login", "logout", "", "authorize", "hook", "static":
+		case "settings", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
 			// no-op
 		default:
 
