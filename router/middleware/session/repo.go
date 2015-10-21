@@ -42,8 +42,10 @@ func SetRepo() gin.HandlerFunc {
 			name  = c.Param("name")
 		)
 
+		env := context.Envconfig(c)
 		db := context.Database(c)
 		user := User(c)
+
 		repo, err := model.GetRepoName(db, owner, name)
 		if err == nil {
 			c.Set("repo", repo)
@@ -67,6 +69,7 @@ func SetRepo() gin.HandlerFunc {
 		}
 
 		data := gin.H{
+			"Root": env.String("SERVER_ROOT", ""),
 			"User": user,
 			"Repo": repo,
 		}
@@ -179,6 +182,7 @@ func SetPerm() gin.HandlerFunc {
 }
 
 func MustPull(c *gin.Context) {
+	env := context.Envconfig(c)
 	user := User(c)
 	repo := Repo(c)
 	perm := Perm(c)
@@ -192,6 +196,7 @@ func MustPull(c *gin.Context) {
 	// repository we display a 404 error to avoid leaking
 	// repository information.
 	c.HTML(http.StatusNotFound, "404.html", gin.H{
+		"Root": env.String("SERVER_ROOT", ""),
 		"User": user,
 		"Repo": repo,
 		"Perm": perm,
@@ -201,6 +206,7 @@ func MustPull(c *gin.Context) {
 }
 
 func MustPush(c *gin.Context) {
+	env := context.Envconfig(c)
 	user := User(c)
 	repo := Repo(c)
 	perm := Perm(c)
@@ -213,6 +219,7 @@ func MustPush(c *gin.Context) {
 	}
 
 	data := gin.H{
+		"Root": env.String("SERVER_ROOT", ""),
 		"User": user,
 		"Repo": repo,
 		"Perm": perm,

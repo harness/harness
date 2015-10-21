@@ -5,6 +5,7 @@
 SERVER_ADDR=":80"
 #SERVER_CERT=""
 #SERVER_KEY=""
+#SERVER_ROOT="/subfolder"
 
 # database configuration
 

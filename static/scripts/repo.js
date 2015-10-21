@@ -19,7 +19,7 @@ function RepoViewModel(repo) {
 		// construct the build entry if it doesn't already exist
 		// so that we can append to the DOM. The code may not be
 		// pretty, but it is simple enough and it works.
-		el = $("<a>").attr("class", "card").attr("href", "/"+repo+"/"+data.number).attr("data-build", data.number)
+		el = $("<a>").attr("class", "card").attr("href", repo+"/"+data.number).attr("data-build", data.number)
 				.append(
 					$("<div>").attr("class", "card-header").append(
 						$("<img>").attr("src", data.author_avatar)
@@ -58,8 +58,8 @@ function RepoViewModel(repo) {
 
 function Subscribe(repo, _callback) {
 	var callback = _callback;
-			
-	var events = new EventSource("/api/stream/" + repo, {withCredentials: true});
+
+	var events = new EventSource("api/stream/" + repo, {withCredentials: true});
 	events.onmessage = function (event) {
 		if (callback !== undefined) {
 			callback(JSON.parse(event.data));
@@ -129,20 +129,20 @@ function RepoConfigViewModel(repo) {
 
 function deleteRepo(repo) {
 	$.ajax({
-		url: "/api/repos/"+repo,
+		url: "api/repos/"+repo,
 		type: "DELETE",
 		contentType: "application/json",
 		success: function() {
 			window.location.href="/";
 		},
-	});	
+	});
 }
 
 function patchRepo(repo, data) {
 	$.ajax({
-		url: "/api/repos/"+repo,
+		url: "api/repos/"+repo,
 		type: "PATCH",
 		contentType: "application/json",
 		data: JSON.stringify(data)
-	});	
+	});
 }

@@ -15,6 +15,7 @@ import (
 )
 
 func GetLogin(c *gin.Context) {
+	env := context.Envconfig(c)
 	db := context.Database(c)
 	remote := context.Remote(c)
 
@@ -26,7 +27,7 @@ func GetLogin(c *gin.Context) {
 	tmpuser, open, err := remote.Login(c.Writer, c.Request)
 	if err != nil {
 		log.Errorf("cannot authenticate user. %s", err)
-		c.Redirect(303, "/login?error=oauth_error")
+		c.Redirect(303, env.String("SERVER_ROOT", "")+"/login?error=oauth_error")
 		return
 	}
 	// this will happen when the user is redirected by
@@ -41,7 +42,7 @@ func GetLogin(c *gin.Context) {
 		count, err := model.GetUserCount(db)
 		if err != nil {
 			log.Errorf("cannot register %s. %s", tmpuser.Login, err)
-			c.Redirect(303, "/login?error=internal_error")
+			c.Redirect(303, env.String("SERVER_ROOT", "")+"/login?error=internal_error")
 			return
 		}
 
@@ -50,7 +51,7 @@ func GetLogin(c *gin.Context) {
 		// is if no users exist yet in the system we'll proceed.
 		if !open && count != 0 {
 			log.Errorf("cannot register %s. registration closed", tmpuser.Login)
-			c.Redirect(303, "/login?error=access_denied")
+			c.Redirect(303, env.String("SERVER_ROOT", "")+"/login?error=access_denied")
 			return
 		}
 
@@ -66,7 +67,7 @@ func GetLogin(c *gin.Context) {
 		// insert the user into the database
 		if err := model.CreateUser(db, u); err != nil {
 			log.Errorf("cannot insert %s. %s", u.Login, err)
-			c.Redirect(303, "/login?error=internal_error")
+			c.Redirect(303, env.String("SERVER_ROOT", "")+"/login?error=internal_error")
 			return
 		}
 
@@ -86,7 +87,7 @@ func GetLogin(c *gin.Context) {
 
 	if err := model.UpdateUser(db, u); err != nil {
 		log.Errorf("cannot update %s. %s", u.Login, err)
-		c.Redirect(303, "/login?error=internal_error")
+		c.Redirect(303, env.String("SERVER_ROOT", "")+"/login?error=internal_error")
 		return
 	}
 
@@ -95,24 +96,26 @@ func GetLogin(c *gin.Context) {
 	tokenstr, err := token.SignExpires(u.Hash, exp)
 	if err != nil {
 		log.Errorf("cannot create token for %s. %s", u.Login, err)
-		c.Redirect(303, "/login?error=internal_error")
+		c.Redirect(303, env.String("SERVER_ROOT", "")+"/login?error=internal_error")
 		return
 	}
 
 	httputil.SetCookie(c.Writer, c.Request, "user_sess", tokenstr)
 	redirect := httputil.GetCookie(c.Request, "user_last")
 	if len(redirect) == 0 {
-		redirect = "/"
+		redirect = env.String("SERVER_ROOT", "/")
 	}
 	c.Redirect(303, redirect)
 
 }
 
 func GetLogout(c *gin.Context) {
+	env := context.Envconfig(c)
 
 	httputil.DelCookie(c.Writer, c.Request, "user_sess")
 	httputil.DelCookie(c.Writer, c.Request, "user_last")
-	c.Redirect(303, "/login")
+
+	c.Redirect(303, env.String("SERVER_ROOT", "")+"/login")
 }
 
 func GetLoginToken(c *gin.Context) {

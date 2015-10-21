@@ -11,14 +11,21 @@ import (
 	"github.com/drone/drone/router/middleware/header"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/router/middleware/token"
+	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/static"
 	"github.com/drone/drone/template"
 )
 
-func Load(middleware ...gin.HandlerFunc) http.Handler {
+func Load(env envconfig.Env, middleware ...gin.HandlerFunc) http.Handler {
+	root := env.String("SERVER_ROOT", "")
+
+	if strings.HasSuffix(root, "/") {
+		root = strings.TrimSuffix(root, "/")
+	}
+
 	e := gin.Default()
 	e.SetHTMLTemplate(template.Load())
-	e.StaticFS("/static", static.FileSystem())
+	e.StaticFS(root+"/static", static.FileSystem())
 
 	e.Use(header.NoCache)
 	e.Use(header.Options)
@@ -28,18 +35,18 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(cache.Perms)
 	e.Use(token.Refresh)
 
-	e.GET("/", cache.Repos, controller.ShowIndex)
-	e.GET("/login", controller.ShowLogin)
-	e.GET("/logout", controller.GetLogout)
+	e.GET(root+"/", cache.Repos, controller.ShowIndex)
+	e.GET(root+"/login", controller.ShowLogin)
+	e.GET(root+"/logout", controller.GetLogout)
 
-	settings := e.Group("/settings")
+	settings := e.Group(root + "/settings")
 	{
 		settings.Use(session.MustUser())
 		settings.GET("/profile", controller.ShowUser)
 		settings.GET("/people", session.MustAdmin(), controller.ShowUsers)
 		settings.GET("/nodes", session.MustAdmin(), controller.ShowNodes)
 	}
-	repo := e.Group("/repos/:owner/:name")
+	repo := e.Group(root + "/repos/:owner/:name")
 	{
 		repo.Use(session.SetRepo())
 		repo.Use(session.SetPerm())
@@ -56,7 +63,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		}
 	}
 
-	user := e.Group("/api/user")
+	user := e.Group(root + "/api/user")
 	{
 		user.Use(session.MustUser())
 		user.GET("", controller.GetSelf)
@@ -66,7 +73,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		user.POST("/token", controller.PostToken)
 	}
 
-	users := e.Group("/api/users")
+	users := e.Group(root + "/api/users")
 	{
 		users.Use(session.MustAdmin())
 		users.GET("", controller.GetUsers)
@@ -76,7 +83,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		users.DELETE("/:login", controller.DeleteUser)
 	}
 
-	nodes := e.Group("/api/nodes")
+	nodes := e.Group(root + "/api/nodes")
 	{
 		nodes.Use(session.MustAdmin())
 		nodes.GET("", controller.GetNodes)
@@ -84,7 +91,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		nodes.DELETE("/:node", controller.DeleteNode)
 	}
 
-	repos := e.Group("/api/repos/:owner/:name")
+	repos := e.Group(root + "/api/repos/:owner/:name")
 	{
 		repos.POST("", controller.PostRepo)
 
@@ -112,16 +119,16 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		}
 	}
 
-	badges := e.Group("/api/badges/:owner/:name")
+	badges := e.Group(root + "/api/badges/:owner/:name")
 	{
 		badges.GET("/status.svg", controller.GetBadge)
 		badges.GET("/cc.xml", controller.GetCC)
 	}
 
-	e.POST("/hook", controller.PostHook)
-	e.POST("/api/hook", controller.PostHook)
+	e.POST(root+"/hook", controller.PostHook)
+	e.POST(root+"/api/hook", controller.PostHook)
 
-	stream := e.Group("/api/stream")
+	stream := e.Group(root + "/api/stream")
 	{
 		stream.Use(session.SetRepo())
 		stream.Use(session.SetPerm())
@@ -130,14 +137,14 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		stream.GET("/:owner/:name/:build/:number", controller.GetStream)
 	}
 
-	auth := e.Group("/authorize")
+	auth := e.Group(root + "/authorize")
 	{
 		auth.GET("", controller.GetLogin)
 		auth.POST("", controller.GetLogin)
 		auth.POST("/token", controller.GetLoginToken)
 	}
 
-	gitlab := e.Group("/api/gitlab/:owner/:name")
+	gitlab := e.Group(root + "/api/gitlab/:owner/:name")
 	{
 		gitlab.Use(session.SetRepo())
 		gitlab.GET("/commits/:sha", controller.GetCommit)
@@ -150,30 +157,32 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		}
 	}
 
-	return normalize(e)
+	return normalize(root, e)
 }
 
 // normalize is a helper function to work around the following
 // issue with gin. https://github.com/gin-gonic/gin/issues/388
-func normalize(h http.Handler) http.Handler {
+func normalize(root string, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(strings.TrimPrefix(r.URL.Path, root), "/")[1:]
 
-		parts := strings.Split(r.URL.Path, "/")[1:]
-		switch parts[0] {
-		case "settings", "api", "login", "logout", "", "authorize", "hook", "static":
-			// no-op
-		default:
+		if len(parts) > 0 {
+			switch parts[0] {
+			case "settings", "api", "login", "logout", "", "authorize", "hook", "static":
+				// no-op
+			default:
 
-			if len(parts) > 2 && parts[2] != "settings" {
-				parts = append(parts[:2], append([]string{"builds"}, parts[2:]...)...)
+				if len(parts) > 2 && parts[2] != "settings" {
+					parts = append(parts[:2], append([]string{"builds"}, parts[2:]...)...)
+				}
+
+				// prefix the URL with /repo so that it
+				// can be effectively routed.
+				parts = append([]string{root, "repos"}, parts...)
+
+				// reconstruct the path
+				r.URL.Path = strings.Join(parts, "/")
 			}
-
-			// prefix the URL with /repo so that it
-			// can be effectively routed.
-			parts = append([]string{"", "repos"}, parts...)
-
-			// reconstruct the path
-			r.URL.Path = strings.Join(parts, "/")
 		}
 
 		h.ServeHTTP(w, r)

@@ -53,10 +53,10 @@ block append scripts
 
             self.users = ko.observableArray();
             self.newUserLogin = ko.observable();
-            
+
             self.removeUser = function(user) {
                 $.ajax({
-                    url: "/api/users/"+user.login(),
+                    url: "api/users/"+user.login(),
                     type: "DELETE",
                     success: function( data ) {
                         self.users.remove(user);
@@ -67,7 +67,7 @@ block append scripts
 
             self.addUser = function() {
                 $.ajax({
-                    url: "/api/users",
+                    url: "api/users",
                     type: "POST",
                     data: ko.toJSON({ "login": self.newUserLogin() }),
                     contentType: "application/json",
@@ -82,7 +82,7 @@ block append scripts
             self.toggleAdmin = function(user) {
                 user.admin(!user.admin());
                 $.ajax({
-                    url: "/api/users/"+user.login(),
+                    url: "api/users/"+user.login(),
                     type: "PATCH",
                     data: ko.toJSON(user),
                     contentType: "application/json"
@@ -90,7 +90,7 @@ block append scripts
             };
 
             self.sort = function(a, b) {
-                return a.login().toLowerCase() > b.login().toLowerCase() ? 1 : -1;  
+                return a.login().toLowerCase() > b.login().toLowerCase() ? 1 : -1;
             };
         }
 

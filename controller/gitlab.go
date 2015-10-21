@@ -70,6 +70,7 @@ func GetPullRequest(c *gin.Context) {
 }
 
 func RedirectSha(c *gin.Context) {
+	env := context.Envconfig(c)
 	db := context.Database(c)
 	repo := session.Repo(c)
 
@@ -85,11 +86,12 @@ func RedirectSha(c *gin.Context) {
 		return
 	}
 
-	path := fmt.Sprintf("/%s/%s/%d", repo.Owner, repo.Name, build.Number)
+	path := fmt.Sprintf("%s/%s/%s/%d", env.String("SERVER_ROOT", ""), repo.Owner, repo.Name, build.Number)
 	c.Redirect(http.StatusSeeOther, path)
 }
 
 func RedirectPullRequest(c *gin.Context) {
+	env := context.Envconfig(c)
 	db := context.Database(c)
 	repo := session.Repo(c)
 	refs := fmt.Sprintf("refs/pull/%s/head", c.Param("number"))
@@ -100,6 +102,6 @@ func RedirectPullRequest(c *gin.Context) {
 		return
 	}
 
-	path := fmt.Sprintf("/%s/%s/%d", repo.Owner, repo.Name, build.Number)
+	path := fmt.Sprintf("%s/%s/%s/%d", env.String("SERVER_ROOT", ""), repo.Owner, repo.Name, build.Number)
 	c.Redirect(http.StatusSeeOther, path)
 }

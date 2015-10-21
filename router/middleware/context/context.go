@@ -5,6 +5,7 @@ import (
 
 	"github.com/drone/drone/engine"
 	"github.com/drone/drone/remote"
+	"github.com/drone/drone/shared/envconfig"
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,4 +40,15 @@ func SetEngine(engine engine.Engine) gin.HandlerFunc {
 
 func Engine(c *gin.Context) engine.Engine {
 	return c.MustGet("engine").(engine.Engine)
+}
+
+func SetEnvconfig(env envconfig.Env) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("envconfig", env)
+		c.Next()
+	}
+}
+
+func Envconfig(c *gin.Context) envconfig.Env {
+	return c.MustGet("envconfig").(envconfig.Env)
 }

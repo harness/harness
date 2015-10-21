@@ -9,7 +9,7 @@ block header
         li Docker Nodes
         li
             button.btn.btn-info[data-toggle="modal"][data-target=".modal-node"]
-                | add node  
+                | add node
 
 
 block content

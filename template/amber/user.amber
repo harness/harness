@@ -21,13 +21,13 @@ block content
             div.col-md-3 Token
             div.col-md-9
                 button.btn.btn-info#showToken show token
-                pre.result 
+                pre.result
 
 block append scripts
     script
         $( "#showToken" ).click(function() {
             $( "#showToken" ).hide();
-            $.post( "/api/user/token", function( data ) {
+            $.post( "api/user/token", function( data ) {
                  $( ".result" ).text( data );
             });
         });
