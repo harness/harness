@@ -3,7 +3,6 @@ package cache
 import (
 	"testing"
 
-	// "github.com/drone/drone/model"
 	"github.com/franela/goblin"
 	"github.com/gin-gonic/gin"
 )
