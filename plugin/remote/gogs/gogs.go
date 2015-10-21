@@ -121,6 +121,10 @@ func (r *Gogs) GetRepos(user *model.User) ([]*model.Repo, error) {
 			},
 		}
 
+		if repo.Private {
+			repo.CloneURL = repo.SSHURL
+		}
+
 		repos = append(repos, &repo)
 	}
 
