@@ -164,46 +164,59 @@ func Test_userstore(t *testing.T) {
 			g.Assert(err3 == nil).IsFalse()
 		})
 
-		// g.It("Should get the Build feed for a User", func() {
-		// 	repo1 := &Repo{
-		// 		UserID:   1,
-		// 		Owner:    "bradrydzewski",
-		// 		Name:     "drone",
-		// 		FullName: "bradrydzewski/drone",
-		// 	}
-		// 	repo2 := &Repo{
-		// 		UserID:   2,
-		// 		Owner:    "drone",
-		// 		Name:     "drone",
-		// 		FullName: "drone/drone",
-		// 	}
-		// 	CreateRepo(db, repo1)
-		// 	CreateRepo(db, repo2)
+		g.It("Should get the Build feed for a User", func() {
+			repo1 := &model.Repo{
+				UserID:   1,
+				Owner:    "bradrydzewski",
+				Name:     "drone",
+				FullName: "bradrydzewski/drone",
+			}
+			repo2 := &model.Repo{
+				UserID:   2,
+				Owner:    "drone",
+				Name:     "drone",
+				FullName: "drone/drone",
+			}
+			repo3 := &model.Repo{
+				UserID:   2,
+				Owner:    "octocat",
+				Name:     "hello-world",
+				FullName: "octocat/hello-world",
+			}
+			s.Repos().Create(repo1)
+			s.Repos().Create(repo2)
+			s.Repos().Create(repo3)
 
-		// 	build1 := &Build{
-		// 		RepoID: repo1.ID,
-		// 		Status: StatusFailure,
-		// 		Author: "bradrydzewski",
-		// 	}
-		// 	build2 := &Build{
-		// 		RepoID: repo1.ID,
-		// 		Status: StatusSuccess,
-		// 		Author: "bradrydzewski",
-		// 	}
-		// 	build3 := &Build{
-		// 		RepoID: repo2.ID,
-		// 		Status: StatusSuccess,
-		// 		Author: "octocat",
-		// 	}
-		// 	CreateBuild(db, build1)
-		// 	CreateBuild(db, build2)
-		// 	CreateBuild(db, build3)
+			build1 := &model.Build{
+				RepoID: repo1.ID,
+				Status: model.StatusFailure,
+			}
+			build2 := &model.Build{
+				RepoID: repo1.ID,
+				Status: model.StatusSuccess,
+			}
+			build3 := &model.Build{
+				RepoID: repo2.ID,
+				Status: model.StatusSuccess,
+			}
+			build4 := &model.Build{
+				RepoID: repo3.ID,
+				Status: model.StatusSuccess,
+			}
+			s.Builds().Create(build1)
+			s.Builds().Create(build2)
+			s.Builds().Create(build3)
+			s.Builds().Create(build4)
 
-		// 	builds, err := GetUserFeed(db, &User{ID: 1, Login: "bradrydzewski"}, 20, 0)
-		// 	g.Assert(err == nil).IsTrue()
-		// 	g.Assert(len(builds)).Equal(2)
-		// 	g.Assert(builds[0].Owner).Equal("bradrydzewski")
-		// 	g.Assert(builds[0].Name).Equal("drone")
-		// })
+			builds, err := s.Users().GetFeed([]*model.RepoLite{
+				{FullName: "bradrydzewski/drone"},
+				{FullName: "drone/drone"},
+			})
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(builds)).Equal(3)
+			g.Assert(builds[0].FullName).Equal(repo2.FullName)
+			g.Assert(builds[1].FullName).Equal(repo1.FullName)
+			g.Assert(builds[2].FullName).Equal(repo1.FullName)
+		})
 	})
 }

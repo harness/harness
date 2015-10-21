@@ -2,7 +2,7 @@ package datastore
 
 import (
 	"database/sql"
-	"strings"
+	"fmt"
 
 	"github.com/drone/drone/model"
 	"github.com/russross/meddler"
@@ -25,20 +25,18 @@ func (db *repostore) GetName(name string) (*model.Repo, error) {
 }
 
 func (db *repostore) GetListOf(listof []*model.RepoLite) ([]*model.Repo, error) {
-	var repos = []*model.Repo{}
-	var size = len(listof)
-	if size > 999 {
-		size = 999
-		listof = listof[:999]
+	var (
+		repos []*model.Repo
+		args  []interface{}
+		stmt  string
+	)
+	switch meddler.Default {
+	case meddler.PostgreSQL:
+		stmt, args = toListPosgres(listof)
+	default:
+		stmt, args = toList(listof)
 	}
-	var qs = make([]string, size, size)
-	var in = make([]interface{}, size, size)
-	for i, repo := range listof {
-		qs[i] = "?"
-		in[i] = repo.FullName
-	}
-	var stmt = "SELECT * FROM repos WHERE repo_full_name IN (" + strings.Join(qs, ",") + ") ORDER BY repo_name"
-	var err = meddler.QueryAll(db, &repos, rebind(stmt), in...)
+	err := meddler.QueryAll(db, &repos, fmt.Sprintf(repoListOfQuery, stmt), args...)
 	return repos, err
 }
 
@@ -79,6 +77,13 @@ WHERE repo_id IN (
 	WHERE build_author = ?
 )
 ORDER BY repo_full_name
+`
+
+const repoListOfQuery = `
+SELECT *
+FROM repos
+WHERE repo_full_name IN (" + stmt + ")
+ORDER BY repo_name
 `
 
 const repoCountQuery = `

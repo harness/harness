@@ -30,7 +30,7 @@ gen_template:
 	go generate github.com/drone/drone/template
 
 gen_migrations:
-	go generate github.com/drone/drone/shared/database
+	go generate github.com/drone/drone/store/migration
 
 build:
 	go build
