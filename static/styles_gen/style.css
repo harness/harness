@@ -262,9 +262,21 @@ body.login div { position: relative; width: 220px; height: 30px; }
 
 body.login div div.logo { background-image: url(/static/images/logo_dark.svg); background-size: 35px; background-repeat: no-repeat; background-position: center center; position: absolute; top: 0px; left: 0px; height: 30px; width: 35px; animation-name: fadein; animation-duration: 1.5s; animation-timing-function: ease-in; }
 
-body.login div a { background: #2b303b; color: #FFF; text-decoration: none; position: absolute; top: 0px; right: 0px; text-transform: uppercase; font-size: 13px; min-width: 150px; text-align: center; padding: 5px; animation-name: fadein; animation-duration: 1.5s; animation-timing-function: ease-in; }
+body.login div input[type="submit"], body.login div a { background: #2b303b; color: #FFF; text-decoration: none; position: absolute; top: 0px; right: 0px; text-transform: uppercase; font-size: 13px; min-width: 150px; text-align: center; padding: 5px; border: none; animation-name: fadein; animation-duration: 1.5s; animation-timing-function: ease-in; }
 
 body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-height: 25px; padding: 20px; width: 100%; border: none; text-align: center; vertical-align: middle; height: auto; border-radius: 0px; }
+
+body.login.login-form > div { width: 300px; height: 100px; display: flex; }
+
+body.login.login-form > div div.logo { width: 65px; position: relative; background-position: left center; animation-name: none; }
+
+body.login.login-form > div form { flex: 1 1 auto; }
+
+body.login.login-form > div input[type="text"], body.login.login-form > div input[type="password"] { display: block; width: 100%; padding: 5px 10px; background-color: #eff1f5; border: none; color: #747C84; }
+
+body.login.login-form > div input[type="password"] { margin-top: 1px; }
+
+body.login.login-form > div input[type="submit"] { position: relative; width: 100%; margin-top: 20px; animation-name: none; }
 
 @keyframes flyin { 0% { left: -3000px; }
   100% { left: 0px; } }

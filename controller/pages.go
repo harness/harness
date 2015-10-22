@@ -59,6 +59,10 @@ func ShowLogin(c *gin.Context) {
 	c.HTML(200, "login.html", gin.H{"Error": c.Query("error")})
 }
 
+func ShowLoginForm(c *gin.Context) {
+	c.HTML(200, "login_form.html", gin.H{})
+}
+
 func ShowUser(c *gin.Context) {
 	user := session.User(c)
 	token, _ := token.New(

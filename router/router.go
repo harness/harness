@@ -32,6 +32,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 
 	e.GET("/", cache.Repos, controller.ShowIndex)
 	e.GET("/login", controller.ShowLogin)
+	e.GET("/login/form", controller.ShowLoginForm)
 	e.GET("/logout", controller.GetLogout)
 
 	settings := e.Group("/settings")
