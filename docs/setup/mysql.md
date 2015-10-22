@@ -32,6 +32,8 @@ This is an example connection string:
 root:pa55word@tcp(localhost:3306)/drone?parseTime=true
 ```
 
+Please note that `parseTime` is a **required** paramter.
+
 ## MySQL options
 
 See the official [driver documentation](https://github.com/go-sql-driver/mysql#parameters) for a full list of driver options. Note that the `parseTime=true` is required.

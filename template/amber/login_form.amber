@@ -15,22 +15,10 @@ html
         style
             html { height: 100%; overflow: hidden; }
 
-    body.login
+    body.login.login-form
         div
             div.logo
-            a[href="/authorize"] Login
-
-        if Error == "oauth_error"
-            div.alert.alert-danger
-                | We failed to authorize your account. Please contact your 
-                | system administrator to check the logs and see what went wrong.
-
-        else if Error == "access_denied"
-            div.alert.alert-danger
-                | Unable to login. Registration is closed.
-
-        else if Error == "internal_error"
-            div.alert.alert-danger
-                | We encountered an unexpected error. Please contact your 
-                | system administrator to check the logs and see what went wrong.
-
+            form[action="/authorize"][method="post"]
+                input[type="text"][placeholder="Username"][name="username"]
+                input[type="password"][placeholder="Password"][name="password"]
+                input[type="submit"][value="Login"]

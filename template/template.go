@@ -7,6 +7,7 @@ package template
 //go:generate sh -c "amberc amber/500.amber            > amber_gen/500.html"
 //go:generate sh -c "amberc amber/build.amber          > amber_gen/build.html"
 //go:generate sh -c "amberc amber/login.amber          > amber_gen/login.html"
+//go:generate sh -c "amberc amber/login_form.amber     > amber_gen/login_form.html"
 //go:generate sh -c "amberc amber/repos.amber          > amber_gen/repos.html"
 //go:generate sh -c "amberc amber/repo.amber           > amber_gen/repo.html"
 //go:generate sh -c "amberc amber/repo_badge.amber     > amber_gen/repo_badge.html"

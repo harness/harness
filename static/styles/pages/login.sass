@@ -38,6 +38,7 @@ body.login
 			animation-duration:         1.5s;
 			animation-timing-function:  ease-in;
 
+		input[type="submit"],
 		a
 			background: #2b303b;
 			color: #FFF;
@@ -50,6 +51,7 @@ body.login
 			min-width: 150px;
 			text-align: center;
 			padding: 5px;
+			border:none;
 			animation-name:             fadein;
 			animation-duration:         1.5s;
 			animation-timing-function:  ease-in;
@@ -67,6 +69,37 @@ body.login
 		vertical-align:middle;
 		height:auto;
 		border-radius:0px;
+
+body.login.login-form
+	&> div
+		width: 300px;
+		height: 100px;
+		display: flex;
+		div.logo
+			width:65px;
+			position:relative;
+			background-position: left center;
+			animation-name: none;
+		form
+			flex: 1 1 auto;
+
+		input[type="text"],
+		input[type="password"]
+			display:block;
+			width:100%;
+			padding: 5px 10px;
+			background-color: #eff1f5;
+			border: none;
+			color: #747C84;
+
+		input[type="password"]
+			margin-top:1px;
+
+		input[type="submit"]
+			position: relative;
+			width:100%;
+			margin-top: 20px;
+			animation-name: none;
 
 @keyframes flyin
 	0%
