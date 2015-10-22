@@ -82,7 +82,7 @@ ORDER BY repo_full_name
 const repoListOfQuery = `
 SELECT *
 FROM repos
-WHERE repo_full_name IN (" + stmt + ")
+WHERE repo_full_name IN (%s)
 ORDER BY repo_name
 `
 
