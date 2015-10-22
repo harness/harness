@@ -441,19 +441,22 @@ func (b *Builder) writeDockerfile(dir string) error {
 		dockerfile.WriteAdd("src", filepath.Join(b.Repo.Dir))
 	}
 
+	// the default user for all official Drone image
+	// is the "ubuntu" user, since all build images
+	// inherit from the ubuntu cloud ISO
+	if strings.HasPrefix(b.Build.Image, "bradrydzewski/") || strings.HasPrefix(b.Build.Image, "drone/") {
+		b.Build.User = "ubuntu"
+	}
+
 	switch {
-	case strings.HasPrefix(b.Build.Image, "bradrydzewski/"),
-		strings.HasPrefix(b.Build.Image, "drone/"):
-		// the default user for all official Drone image
-		// is the "ubuntu" user, since all build images
-		// inherit from the ubuntu cloud ISO
-		dockerfile.WriteUser("ubuntu")
+	case len(b.Build.User) > 0:
+		dockerfile.WriteUser(b.Build.User)
 		dockerfile.WriteEnv("LANG", "en_US.UTF-8")
 		dockerfile.WriteEnv("LANGUAGE", "en_US:en")
-		dockerfile.WriteEnv("LOGNAME", "ubuntu")
-		dockerfile.WriteEnv("HOME", "/home/ubuntu")
-		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /var/cache/drone")
-		dockerfile.WriteRun("sudo chown -R ubuntu:ubuntu /usr/local/bin/drone")
+		dockerfile.WriteEnv("LOGNAME", b.Build.User)
+		dockerfile.WriteEnv("HOME", fmt.Sprintf("/home/%s", b.Build.User))
+		dockerfile.WriteRun(fmt.Sprintf("sudo chown -R %s:%s /var/cache/drone", b.Build.User, b.Build.User))
+		dockerfile.WriteRun(fmt.Sprintf("sudo chown -R %s:%s /usr/local/bin/drone", b.Build.User, b.Build.User))
 	default:
 		// all other images are assumed to use
 		// the root user.
