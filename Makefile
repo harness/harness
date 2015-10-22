@@ -17,6 +17,13 @@ deps:
 	go get -u github.com/go-swagger/go-swagger/...
 	go get -u github.com/PuerkitoBio/goquery
 	go get -u github.com/russross/blackfriday
+	go get -u github.com/gin-gonic/gin
+	go get -u github.com/koding/cache
+	go get -u github.com/rubenv/sql-migrate
+	go get -u github.com/samalba/dockerclient
+	go get -u github.com/square/go-jose
+	go get -u golang.org/x/oauth2
+	go get -u golang.org/x/oauth2/bitbucket
 
 gen: gen_static gen_template gen_migrations
 
