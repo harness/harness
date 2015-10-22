@@ -84,6 +84,23 @@ func Test_nodestore(t *testing.T) {
 			g.Assert(len(nodes)).Equal(2)
 		})
 
+		g.It("Should count nodes", func() {
+			node1 := model.Node{
+				Addr: "unix:///var/run/docker/docker.sock",
+				Arch: "linux_amd64",
+			}
+			node2 := model.Node{
+				Addr: "unix:///var/run/docker.sock",
+				Arch: "linux_386",
+			}
+			s.Nodes().Create(&node1)
+			s.Nodes().Create(&node2)
+
+			count, err := s.Nodes().Count()
+			g.Assert(err == nil).IsTrue()
+			g.Assert(count).Equal(2)
+		})
+
 		g.It("Should delete a node", func() {
 			node := model.Node{
 				Addr: "unix:///var/run/docker/docker.sock",

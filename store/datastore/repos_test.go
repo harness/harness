@@ -87,30 +87,59 @@ func Test_repostore(t *testing.T) {
 			g.Assert(repo.Name).Equal(getrepo.Name)
 		})
 
-		// g.It("Should Get a Repo List by User", func() {
-		// 	repo1 := model.Repo{
-		// 		UserID:   1,
-		// 		FullName: "bradrydzewski/drone",
-		// 		Owner:    "bradrydzewski",
-		// 		Name:     "drone",
-		// 	}
-		// 	repo2 := model.Repo{
-		// 		UserID:   1,
-		// 		FullName: "bradrydzewski/drone-dart",
-		// 		Owner:    "bradrydzewski",
-		// 		Name:     "drone-dart",
-		// 	}
-		// 	s.Repos().Create(&repo1)
-		// 	s.Repos().Create(&repo2)
-		// 	CreateBuild(db, &Build{RepoID: repo1.ID, Author: "bradrydzewski"})
-		// 	CreateBuild(db, &Build{RepoID: repo1.ID, Author: "johnsmith"})
-		// 	repos, err := GetRepoList(db, &User{ID: 1, Login: "bradrydzewski"})
-		// 	g.Assert(err == nil).IsTrue()
-		// 	g.Assert(len(repos)).Equal(1)
-		// 	g.Assert(repos[0].UserID).Equal(repo1.UserID)
-		// 	g.Assert(repos[0].Owner).Equal(repo1.Owner)
-		// 	g.Assert(repos[0].Name).Equal(repo1.Name)
-		// })
+		g.It("Should Get a Repo List", func() {
+			repo1 := &model.Repo{
+				UserID:   1,
+				Owner:    "bradrydzewski",
+				Name:     "drone",
+				FullName: "bradrydzewski/drone",
+			}
+			repo2 := &model.Repo{
+				UserID:   2,
+				Owner:    "drone",
+				Name:     "drone",
+				FullName: "drone/drone",
+			}
+			repo3 := &model.Repo{
+				UserID:   2,
+				Owner:    "octocat",
+				Name:     "hello-world",
+				FullName: "octocat/hello-world",
+			}
+			s.Repos().Create(repo1)
+			s.Repos().Create(repo2)
+			s.Repos().Create(repo3)
+
+			repos, err := s.Repos().GetListOf([]*model.RepoLite{
+				{FullName: "bradrydzewski/drone"},
+				{FullName: "drone/drone"},
+			})
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(repos)).Equal(2)
+			g.Assert(repos[0].ID).Equal(repo1.ID)
+			g.Assert(repos[1].ID).Equal(repo2.ID)
+		})
+
+		g.It("Should Get a Repo List", func() {
+			repo1 := &model.Repo{
+				UserID:   1,
+				Owner:    "bradrydzewski",
+				Name:     "drone",
+				FullName: "bradrydzewski/drone",
+			}
+			repo2 := &model.Repo{
+				UserID:   2,
+				Owner:    "drone",
+				Name:     "drone",
+				FullName: "drone/drone",
+			}
+			s.Repos().Create(repo1)
+			s.Repos().Create(repo2)
+
+			count, err := s.Repos().Count()
+			g.Assert(err == nil).IsTrue()
+			g.Assert(count).Equal(2)
+		})
 
 		g.It("Should Delete a Repo", func() {
 			repo := model.Repo{
