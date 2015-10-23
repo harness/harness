@@ -91,7 +91,6 @@ func (c *Client) ListReposAll(account string) ([]*Repo, error) {
 	for {
 		resp, err := c.ListRepos(account, &ListOpts{Page: page, PageLen: 100})
 		if err != nil {
-			println(err.Error())
 			return repos, err
 		}
 		repos = append(repos, resp.Values...)
@@ -173,11 +172,6 @@ func (c *Client) do(rawurl, method string, in, out interface{}) error {
 		err := Error{}
 		json.NewDecoder(resp.Body).Decode(&err)
 		err.Status = resp.StatusCode
-
-		instr, _ := json.Marshal(in)
-		println(err.Body.Message)
-		println(string(instr))
-		println(uri.String())
 		return err
 	}
 

@@ -57,5 +57,5 @@ func UpdateRepo(c context.Context, repo *model.Repo) error {
 }
 
 func DeleteRepo(c context.Context, repo *model.Repo) error {
-	return FromContext(c).Repos().Update(repo)
+	return FromContext(c).Repos().Delete(repo)
 }
