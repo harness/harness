@@ -129,6 +129,13 @@ url=""
 secret=""
 open=false
 
+[stash]
+url = ""
+api = ""
+secret = ""
+private-key = ""
+hook = "de.aeffle.stash.plugin.stash-http-get-post-receive-hook%3Ahttp-get-post-receive-hook"
+
 [smtp]
 host=""
 port=""
@@ -191,6 +198,13 @@ export DRONE_GITLAB_SECRET=""
 export DRONE_GITLAB_SKIP_VERIFY=false
 export DRONE_GITLAB_OPEN=false
 
+# stash configuration
+export DRONE_STASH_URL="http://localhost:7990"
+export DRONE_STASH_API="ssh://localhost:7999"
+export DRONE_STASH_SECRET="Drone"
+export DRONE_STASH_PRIVATE_KEY="/stash.pem"
+export DRONE_STASH_HOOK="de.aeffle.stash.plugin.stash-http-get-post-receive-hook%3Ahttp-get-post-receive-hook"
+
 # email configuration
 export DRONE_SMTP_HOST=""
 export DRONE_SMTP_PORT=""
@@ -235,6 +249,65 @@ Authorization callback URL for GitHub Enterprise:
 
 ```
 http://localhost:8000/api/auth/enterprise.github.com
+
+## Stash
+
+In order to setup with Stash you'll need to register your local Drone installation
+with Stash. You can read more about registering an application here: https://confluence.atlassian.com/display/APPLINKS/Application+Links+Documentation
+
+Below are example values when running Drone locally. If you are running Drone on a server
+you should replace `localhost` with your server hostname or address. Also you should probably consider the security of using non-password protected keys.
+
+First generate a private key:
+```
+openssl genrsa -aes256 -passout pass:password -out stash.pem.tmp 2048
+```
+
+Strip the password:
+```
+openssl rsa -passin pass:password -in stash.pem.tmp -out stash.pem.tmp
+```
+
+Now convert this to pkcs8 format:
+```
+openssl pkcs8 -topk8 -inform pem -in stash.pem.tmp -outform pem -nocrypt -out stash.pem ; rm stash.pem.tmp
+```
+
+Generate the public key:
+```
+openssl rsa -in stash.pem -pubout -out stash.pub
+```
+
+Set up the application link as a Stash Administrator with the following parameters:
+
+Application:
+```
+http://localhost:8000
+```
+
+Create New Link and Continue
+
+Application Name: Drone
+Application Type: Generic Application
+Service Provider Name: Drone
+Consumer Key: Drone
+Shared Secret: Drone
+Authorize URL: http://localhost:8000/api/auth/stash.atlassian.com
+Create incomming link: true
+
+Consumer Key: Drone
+Consumer Name: Drone
+Public Key: text from stash.pub generated above
+
+Customize drone.toml with the appropriate URL:port for stash (7990) and stash git (7999)
+
+```
+[stash]
+url = "http://localhost:7990"
+api = "ssh://localhost:7999"
+secret = "Drone"
+private-key = "/stash.pem
+hook = "de.aeffle.stash.plugin.stash-http-get-post-receive-hook%3Ahttp-get-post-receive-hook"
 ```
 
 ## Build Configuration
