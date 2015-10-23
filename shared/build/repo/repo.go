@@ -5,6 +5,12 @@ import (
 	"strings"
 )
 
+// Repo specifies the repository details for the code that
+// that we are testing.
+//
+// The source repository may be a local repository
+// on the current filesystem, or a remote repository
+// on GitHub, Bitbucket, etc.
 type Repo struct {
 	// The name of the Repository. This should be the
 	// canonical name, for example, github.com/drone/drone.
