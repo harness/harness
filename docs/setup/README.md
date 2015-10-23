@@ -7,9 +7,9 @@
     * [Nginx](nginx.md)
 * Remotes
     * [GitHub](github.md)
-    * [GitLab](gitlab.md)
     * [Bitbucket](bitbucket.md)
     * [Gogs](gogs.md)
+    * [GitLab](gitlab.md)
 * Database
     * [SQLite](sqlite.md)
     * [MySQL](mysql.md)
