@@ -1,4 +1,4 @@
-SHA := $(shell git rev-parse --short HEAD)
+SHA := $(shell git rev-parse --short HEAD || echo "somesha")
 VERSION := $(shell cat VERSION)
 ITTERATION := $(shell date +%s)
 
