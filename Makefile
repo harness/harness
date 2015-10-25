@@ -24,6 +24,7 @@ gen_static:
 	mkdir -p static/docs_gen/api static/docs_gen/build
 	mkdir -p static/docs_gen/api static/docs_gen/plugin
 	mkdir -p static/docs_gen/api static/docs_gen/setup
+	mkdir -p static/docs_gen/api static/docs_gen/cli
 	go generate github.com/drone/drone/static
 
 gen_template:

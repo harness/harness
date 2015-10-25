@@ -20,6 +20,10 @@ block header
 				.active ? Site.Name == "Plugins"
 				| Plugins
 		li.nav-item
+			a[class="nav-link"][href="../cli/"]
+				.active ? Site.Name == "CLI"
+				| CLI
+		li.nav-item
 			a.nav-link[href="../api/"] API Reference
 
 block content

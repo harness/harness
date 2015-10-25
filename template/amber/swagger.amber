@@ -14,6 +14,8 @@ block header
 		li.nav-item
 			a.nav-link[href="../plugin/"] Plugins
 		li.nav-item
+			a.nav-link[href="../cli/"] CLI
+		li.nav-item
 			a.nav-link.active[href="#"] API Reference
 
 block content
