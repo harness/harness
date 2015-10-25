@@ -10,7 +10,7 @@ import (
 )
 
 // SSH struct holds configuration data for deployment
-// via ssh, deployment done by scp-ing file(s) listed
+// via ssh, deployment done by doing rsync on the file(s) listed
 // in artifacts to the target host, and then run cmd
 // remotely.
 // It is assumed that the target host already
@@ -26,28 +26,35 @@ type SSH struct {
 	Target string `yaml:"target,omitempty"`
 
 	// Artifacts is a list of files/dirs to be deployed
-	// to the target host. If artifacts list more than one file
-	// it will be compressed into a single tar.gz file.
-	// if artifacts contain:
-	//   - GITARCHIVE
-	//
-	// other file listed in artifacts will be ignored, instead, we will
-	// create git archive from the current revision and deploy that file
-	// alone.
-	// If you need to deploy the git archive along with some other files,
-	// please use build script to create the git archive, and then list
-	// the archive name here with the other files.
+	// to the target host and always relative to the project's root directory,
+	// like so:
+	//   artifacts:
+	//     - ./
+	// or
+	//   artifacts:
+	//     - build/
+	//     - contrib/config.example
 	Artifacts []string `yaml:"artifacts,omitempty"`
 
-	// Cmd is a single command executed at target host after the artifacts
+	// Cmd is the command executed at target host after the artifacts
 	// is deployed.
-	Cmd string `yaml:"cmd,omitempty"`
+	// eg.
+	//   cmd:
+	//     - git clone github.com/myproject/myrepo
+	//     - cd myrepo
+	//     - bundle install --deployment
+	//     - bundle exec rake assets:precompile
+	//     - touch tmp/restart.txt
+	Cmd []string `yaml:"cmd,omitempty"`
 
 	Condition *condition.Condition `yaml:"when,omitempty"`
 }
 
 // Write down the buildfile
 func (s *SSH) Write(f *buildfile.Buildfile) {
+	rsyncTemplate := "rsync -avze 'ssh -p %s' --files-from ${ARTIFACTS} ./ %s"
+	cmdTemplate := "printf %q > /tmp/drone_deploy; sh /tmp/drone_deploy; rm -f /tmp/drone_deploy"
+
 	host := strings.SplitN(s.Target, " ", 2)
 	if len(host) == 1 {
 		host = append(host, "22")
@@ -56,48 +63,27 @@ func (s *SSH) Write(f *buildfile.Buildfile) {
 		host[1] = "22"
 	}
 
-	// Is artifact created?
-	artifact := false
+	// Back to the project's top directory, just in case
+	f.WriteCmdSilent("cd ${DRONE_BUILD_DIR}")
 
-	for _, a := range s.Artifacts {
-		if a == "GITARCHIVE" {
-			artifact = createGitArchive(f)
-			break
-		}
-	}
-
-	if !artifact {
-		if len(s.Artifacts) > 1 {
-			artifact = compress(f, s.Artifacts)
-		} else if len(s.Artifacts) == 1 {
-			f.WriteEnv("ARTIFACT", s.Artifacts[0])
-			artifact = true
-		}
-	}
-
-	if artifact {
-		scpCmd := "scp -o StrictHostKeyChecking=no -P %s -r ${ARTIFACT} %s"
-		f.WriteCmd(fmt.Sprintf(scpCmd, host[1], host[0]))
+	if len(s.Artifacts) > 0 {
+		f.WriteEnv("ARTIFACTS", "$(mktemp)")
+		f.WriteCmdSilent(fmt.Sprintf("printf %q > ${ARTIFACTS}", strings.Join(s.Artifacts, "\n")))
+		f.WriteCmd(fmt.Sprintf(rsyncTemplate, host[1], host[0]))
+		f.WriteCmdSilent("rm -f ${ARTIFACTS}")
 	}
 
 	if len(s.Cmd) > 0 {
+		cmd := strings.Join(s.Cmd, "\n")
 		sshCmd := "ssh -o StrictHostKeyChecking=no -p %s %s %q"
-		f.WriteCmd(fmt.Sprintf(sshCmd, host[1], strings.SplitN(host[0], ":", 2)[0], s.Cmd))
+		hostnpath := strings.SplitN(host[0], ":", 2)
+		if len(hostnpath) == 2 {
+			// ensure script to run under target directory
+			cmd = fmt.Sprintf("cd %s\n%s", hostnpath[1], cmd)
+		}
+		cmd = fmt.Sprintf(cmdTemplate, cmd)
+		f.WriteCmdSilent(fmt.Sprintf(sshCmd, host[1], hostnpath[0], cmd))
 	}
-}
-
-func createGitArchive(f *buildfile.Buildfile) bool {
-	f.WriteEnv("COMMIT", "$(git rev-parse HEAD)")
-	f.WriteEnv("ARTIFACT", "${PWD##*/}-${COMMIT}.tar.gz")
-	f.WriteCmdSilent("git archive --format=tar.gz --prefix=${PWD##*/}/ ${COMMIT} > ${ARTIFACT}")
-	return true
-}
-
-func compress(f *buildfile.Buildfile, files []string) bool {
-	cmd := "tar -cf ${ARTIFACT} %s"
-	f.WriteEnv("ARTIFACT", "${PWD##*/}.tar.gz")
-	f.WriteCmdSilent(fmt.Sprintf(cmd, strings.Join(files, " ")))
-	return true
 }
 
 func (s *SSH) GetCondition() *condition.Condition {
