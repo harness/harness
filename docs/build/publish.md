@@ -5,7 +5,7 @@ Drone uses the `publish` section of the `.drone.yml` to configure publish steps.
 An example configuration that builds a Docker image and publishes to the registry:
 
 ```yaml
-pubish:
+publish:
   docker:
     username: kevinbacon
     password: pa55word
