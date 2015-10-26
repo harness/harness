@@ -594,7 +594,7 @@ func TestWriteBuildScript(t *testing.T) {
 	f.WriteEnv("CI_PULL_REQUEST", "123")
 	f.WriteHost("127.0.0.1")
 	f.WriteFile("$HOME/.ssh/id_rsa", []byte("ssh-rsa AAA..."), 600)
-	f.WriteCmd("git clone --depth=0 --recursive git://github.com/drone/drone.git /var/cache/drone/github.com/drone/drone")
+	f.WriteCmd("git clone --depth=0 --recursive --branch=master git://github.com/drone/drone.git /var/cache/drone/github.com/drone/drone")
 	f.WriteCmd("git fetch origin +refs/pull/123/head:refs/remotes/origin/pr/123")
 	f.WriteCmd("git checkout -qf -b pr/123 origin/pr/123")
 
