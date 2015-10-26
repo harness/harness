@@ -7,19 +7,33 @@ import (
 	"testing"
 )
 
-func TestParseForwardedHeaders(t *testing.T) {
+var mockRequest *http.Request
+var mockHeader []string
+
+func init() {
+	mockHeader = []string{"For= 110.0.2.2", "for = \"[::1]\"; Host=example.com; foR=10.2.3.4; pRoto =https ; By = 127.0.0.1"}
+	mockRequest = &http.Request{Header: map[string][]string{"Forwarded": mockHeader}}
+}
+
+func TestParseForwardedHeadersProto(t *testing.T) {
 	g := goblin.Goblin(t)
 
-	g.Describe("Parse Forwarded Headers", func() {
-		g.It("Should parse a normal Forwarded header", func() {
-			modelHeader := forwardedHeader{For: []string{"110.0.2.2", "\"[::1]\"", "10.2.3.4"}, By: []string{"127.0.0.1"}, Proto: "https", Host: "example.com"}
-
-			header := []string{"For= 110.0.2.2", "for = \"[::1]\"; Host=example.com; foR=10.2.3.4; pRoto =https ; By = 127.0.0.1"}
-			parsedHeader := parseForwardedHeader(&http.Request{Header: map[string][]string{"Forwarded": header}})
-
-			g.Assert(reflect.DeepEqual(parsedHeader, modelHeader)).IsTrue()
-
+	g.Describe("Parse proto Forwarded Headers", func() {
+		g.It("Should parse a normal proto Forwarded header", func() {
+			parsedHeader := parseForwardedHeader(mockRequest, "proto")
+			g.Assert("https" == parsedHeader[0]).IsTrue()
+		})
+		g.It("Should parse a normal for Forwarded header", func() {
+			parsedHeader := parseForwardedHeader(mockRequest, "for")
+			g.Assert(reflect.DeepEqual([]string{"110.0.2.2", "\"[::1]\"", "10.2.3.4"}, parsedHeader)).IsTrue()
+		})
+		g.It("Should parse a normal host Forwarded header", func() {
+			parsedHeader := parseForwardedHeader(mockRequest, "host")
+			g.Assert("example.com" == parsedHeader[0]).IsTrue()
+		})
+		g.It("Should parse a normal by Forwarded header", func() {
+			parsedHeader := parseForwardedHeader(mockRequest, "by")
+			g.Assert("127.0.0.1" == parsedHeader[0]).IsTrue()
 		})
 	})
-
 }

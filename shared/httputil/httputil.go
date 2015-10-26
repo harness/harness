@@ -5,33 +5,17 @@ import (
 	"strings"
 )
 
-// Struct containing the RFC7239 Forwarded header
-type forwardedHeader struct {
-	For   []string
-	Proto string
-	By    []string
-	Host  string
-}
-
 // parseForwardedHeader parses the RFC7239 Forwarded header from a http.Request
-// and return a forwardedHeader to easily access the values
-func parseForwardedHeader(r *http.Request) (f forwardedHeader) {
+// and return a slice of the values queried from the header
+func parseForwardedHeader(r *http.Request, token string) (val []string) {
 	for _, v := range r.Header["Forwarded"] {
 		options := strings.Split(v, ";")
 		for _, o := range options {
 			keyvalue := strings.Split(o, "=")
 			key, value := strings.TrimSpace(keyvalue[0]), strings.TrimSpace(keyvalue[1])
-
 			key = strings.ToLower(key)
-			switch key {
-			case "for":
-				f.For = append(f.For, value)
-			case "proto":
-				f.Proto = value
-			case "by":
-				f.By = append(f.By, value)
-			case "host":
-				f.Host = value
+			if key == token {
+				val = append(val, value)
 			}
 		}
 	}
@@ -39,8 +23,7 @@ func parseForwardedHeader(r *http.Request) (f forwardedHeader) {
 }
 
 func hasHttpsForwarded(r *http.Request) bool {
-	forwardedHeader := parseForwardedHeader(r)
-	if forwardedHeader.Proto == "https" {
+	if parseForwardedHeader(r, "proto")[0] == "https" {
 		return true
 	}
 	return false
@@ -89,18 +72,23 @@ func GetScheme(r *http.Request) string {
 // X-Forarded-For header, the original hostname when routed
 // through a reverse proxy.
 func GetHost(r *http.Request) string {
-	forwardedHeader := parseForwardedHeader(r)
 	switch {
 	case len(r.Host) != 0:
 		return r.Host
 	case len(r.URL.Host) != 0:
 		return r.URL.Host
-	case len(forwardedHeader.For) != 0:
-		return forwardedHeader.For[0]
-	case forwardedHeader.Host != "":
-		return forwardedHeader.Host
+	case len(r.Header.Get("Forwarded")) != 0 && len(parseForwardedHeader(r, "for")) != 0:
+		return parseForwardedHeader(r, "for")[0]
+	case len(r.Header.Get("X-Forwarded-For")) != 0:
+		return r.Header.Get("X-Forwarded-For")
+	case len(r.Header.Get("Forwarded")) != 0 && len(parseForwardedHeader(r, "host")) != 0:
+		return parseForwardedHeader(r, "host")[0]
+	case len(r.Header.Get("X-Host")) != 0:
+		return r.Header.Get("X-Host")
 	case len(r.Header.Get("XFF")) != 0:
 		return r.Header.Get("XFF")
+	case len(r.Header.Get("X-Real-IP")) != 0:
+		return r.Header.Get("X-Real-IP")
 	default:
 		return "localhost:8080"
 	}
