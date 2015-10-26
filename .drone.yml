@@ -2,12 +2,10 @@ clone:
   path: github.com/drone/drone
 
 build:
-  image: golang:1.5
+  image: drone/golang:1.5
   environment:
     - GO15VENDOREXPERIMENT=1
   commands:
-    - /bin/bash contrib/setup-sqlite.sh 1> /dev/null
-    - /bin/bash contrib/setup-sassc.sh  1> /dev/null
     - make deps gen
     - make test test_postgres test_mysql
     - make build build_static deb docs
