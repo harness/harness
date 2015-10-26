@@ -206,7 +206,7 @@ func GetRepo(c *gin.Context) {
 		}
 	}
 
-	c.IndentedJSON(http.StatusOK, repo)
+	c.IndentedJSON(http.StatusOK, repoResp)
 }
 
 func GetRepoKey(c *gin.Context) {
