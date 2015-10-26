@@ -4,6 +4,7 @@
     * [Plugins](plugins.md)
 * Server
     * [Server](server.md)
+    * [Proxy](proxy.md)
     * [Nginx](nginx.md)
 * Remotes
     * [GitHub](github.md)
