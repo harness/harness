@@ -29,7 +29,7 @@ publish:
     access_key: $$AWS_KEY
     secret_key: $$AWS_SECRET
     source: contrib/debian/drone.deb
-    target: $$BRANCH/
+    target: drone/0.4
     when:
       repo: drone/drone
 
@@ -46,7 +46,7 @@ publish:
     exclude: "*.svg"
     when:
       repo: drone/drone
-      branch: "0.4.0"
+      branch: master
 
   s3_sync:
     acl: public-read
@@ -61,7 +61,7 @@ publish:
     content_type: "image/svg+xml"
     when:
       repo: drone/drone
-      branch: "0.4.0"
+      branch: master
 
   docker:
     username: drone
@@ -71,4 +71,4 @@ publish:
     tag: "0.4"
     when:
       repo: drone/drone
-      branch: 0.4.0
+      branch: master
