@@ -34,6 +34,9 @@ func NewServer() *httptest.Server {
 			w.Write(userReposPayload)
 			return
 		case "/repos/octocat/Hello-World/contents/.drone.yml":
+			w.Write(droneYmlPayload)
+			return
+		case "/repos/octocat/Hello-World/contents/.drone.yaml":
 			w.Write(droneYamlPayload)
 			return
 		case "/repos/octocat/Hello-World/hooks":
@@ -180,12 +183,23 @@ var userOrgsPayload = []byte(`
 `)
 
 // sample content response for .drone.yml request
-var droneYamlPayload = []byte(`
+var droneYmlPayload = []byte(`
 {
 	"type":     "file",
 	"encoding": "base64",
 	"name":     ".drone.yml",
 	"path":     ".drone.yml",
+	"content":  "aW1hZ2U6IGdv"
+}
+`)
+
+// sample content response for .drone.yaml request
+var droneYamlPayload = []byte(`
+{
+	"type":     "file",
+	"encoding": "base64",
+	"name":     ".drone.yaml",
+	"path":     ".drone.yaml",
 	"content":  "aW1hZ2U6IGdv"
 }
 `)

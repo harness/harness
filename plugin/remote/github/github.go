@@ -189,9 +189,10 @@ func (r *GitHub) GetRepos(user *model.User) ([]*model.Repo, error) {
 
 // GetScript fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
-func (r *GitHub) GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error) {
+func (r *GitHub) GetScript(user *model.User, repo *model.Repo, filename string,
+	hook *model.Hook) ([]byte, error) {
 	var client = NewClient(r.API, user.Access, r.SkipVerify)
-	return GetFile(client, repo.Owner, repo.Name, ".drone.yml", hook.Sha)
+	return GetFile(client, repo.Owner, repo.Name, filename, hook.Sha)
 }
 
 // Deactivate removes a repository by removing all the post-commit hooks

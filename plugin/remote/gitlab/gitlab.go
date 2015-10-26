@@ -154,10 +154,10 @@ func (r *Gitlab) GetRepos(user *model.User) ([]*model.Repo, error) {
 
 // GetScript fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
-func (r *Gitlab) GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error) {
+func (r *Gitlab) GetScript(user *model.User, repo *model.Repo, filename string, hook *model.Hook) ([]byte, error) {
 	var client = NewClient(r.url, user.Access, r.SkipVerify)
 	var path = ns(repo.Owner, repo.Name)
-	return client.RepoRawFile(path, hook.Sha, ".drone.yml")
+	return client.RepoRawFile(path, hook.Sha, filename)
 }
 
 // Activate activates a repository by adding a Post-commit hook and

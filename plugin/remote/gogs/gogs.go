@@ -129,9 +129,9 @@ func (r *Gogs) GetRepos(user *model.User) ([]*model.Repo, error) {
 
 // GetScript fetches the build script (.drone.yml) from the remote
 // repository and returns a byte array
-func (r *Gogs) GetScript(user *model.User, repo *model.Repo, hook *model.Hook) ([]byte, error) {
+func (r *Gogs) GetScript(user *model.User, repo *model.Repo, filename string, hook *model.Hook) ([]byte, error) {
 	var client = gogs.NewClient(r.URL, user.Access)
-	return client.GetFile(repo.Owner, repo.Name, hook.Sha, ".drone.yml")
+	return client.GetFile(repo.Owner, repo.Name, hook.Sha, filename)
 }
 
 // Activate activates a repository

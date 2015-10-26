@@ -96,8 +96,15 @@ func PostHook(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// fetch the .drone.yml file from the database
-	yml, err := remote.GetScript(user, repo, hook)
+	// fetch the build definition file from the database
+	def_files := []string{".drone.yml", ".drone.yaml"}
+	var yml []byte
+	for _, value := range def_files {
+		yml, err = remote.GetScript(user, repo, value, hook)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		log.Printf("Unable to fetch .drone.yml file. %s\n", err)
 		w.WriteHeader(http.StatusBadRequest)
