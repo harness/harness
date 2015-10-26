@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v2"
 
@@ -191,6 +192,19 @@ func GetRepo(c *gin.Context) {
 	// if the user is authenticated we should
 	// check to see if they've starred the repository
 	repo.IsStarred, _ = model.GetStar(db, user, repo)
+	repoResp := struct{
+		*model.Repo
+		Token string `json:"hook_token,omitempty"`
+	}{ repo, "" }
+	if user.Admin {
+		t := token.New(token.HookToken, repo.FullName)
+		sig, err := t.Sign(repo.Hash)
+		if err != nil {
+			log.Errorf("Error creating hook token: %s", err)
+		} else {
+			repoResp.Token = sig
+		}
+	}
 
 	c.IndentedJSON(http.StatusOK, repo)
 }
