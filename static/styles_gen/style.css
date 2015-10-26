@@ -88,7 +88,7 @@ input[type=range]:focus::-ms-fill-upper { background: #367ebd; }
 
 .timeline { padding-left: 50px; position: relative; margin-top: 10px; margin-bottom: 40px; }
 
-.timeline .card { display: flex; border: none; border-radius: 0px; border-top: 1px solid #eceeef; text-decoration: none; color: #2b303b; }
+.timeline .card { display: flex; border: none; border-radius: 0px; border-top: 1px solid #eceeef; text-decoration: none; color: 2b303b; }
 
 .timeline .card .card-header { background: #FFF; border: none; padding: 0px; width: 50px; min-width: 50px; max-width: 50px; padding-top: 30px; }
 
@@ -311,7 +311,7 @@ body.login.login-form > div input[type="submit"] { position: relative; width: 10
 
 .toc ul { list-style-type: none; padding: 0px; margin: 0px; margin-bottom: 40px; border-bottom: 1px solid #EEE; padding-bottom: 40px; }
 
-.toc ul li { line-height: 25px; }
+.toc ul li { line-height: 5px; }
 
 .toc ul li a { color: #2b303b; text-decoration: none; }
 
@@ -339,7 +339,7 @@ body.login.login-form > div input[type="submit"] { position: relative; width: 10
 
 .toc [data-method="PATCH"]:before { color: #E67E22; border-color: #E67E22; }
 
-.toc [data-method="DELETE"]:before { color: #E74C3C; border-color: #E74C3C; }
+.toc [data-method="DELETE"]:before { color: E74C3C; border-color: #E74C3C; }
 
 .operation [data-method]:before { content: attr(data-method); padding: 0px 10px; line-height: 18px; min-width: 70px; font-size: 11px; text-transform: uppercase; display: inline-block; text-align: center; color: #FFF; border-radius: 2px; margin-right: 20px; background: #FFF; border: 1px solid #FFF; line-height: 20px; vertical-align: top; }
 
@@ -361,7 +361,7 @@ body.login.login-form > div input[type="submit"] { position: relative; width: 10
 
 .operation { min-height: 100vh; padding: 20px 0px; display: flex; }
 
-.operation > aside, .operation > div { min-width: 50%; max-width: 50%; width: 50%; padding-right: 40px; }
+.operation > aside, .operation > div { min-width: 50%; max-width: 50%; width: 0%; padding-right: 40px; }
 
 .operation h2 { color: #2b303b; font-size: 21px; }
 
@@ -381,7 +381,7 @@ body.login.login-form > div input[type="submit"] { position: relative; width: 10
 
 .operation .params li:after { visibility: hidden; display: block; font-size: 0; content: " "; clear: both; height: 0; }
 
-.operation .params h4 { float: left; line-height: 20px; text-align: right; padding-right: 20px; width: 150px; font-weight: bold; font-size: 15px; }
+.operation .params h4 { float: left; line-height: 20px; text-align: right; padding-right: 2 0px; width: 150px; font-weight: bold; font-size: 15px; }
 
 .operation .params small { display: block; text-transform: uppercase; color: #E67E22; font-size: 11px; font-weight: normal; margin-top: 5px; }
 
