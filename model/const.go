@@ -4,7 +4,7 @@ const (
 	EventPush   = "push"
 	EventPull   = "pull_request"
 	EventTag    = "tag"
-	EventDeploy = "deploy"
+	EventDeploy = "deployment"
 )
 
 const (
