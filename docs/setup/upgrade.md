@@ -1,5 +1,7 @@
 # Upgrading
 
+> Warning. There is no automated migration from 0.3 to 0.4 due to substantial changes in database structure.
+
 Drone is built continuously, with updates available daily. In order to upgrade Drone you must first stop and remove your running Drone instance:
 
 ```
@@ -13,7 +15,7 @@ Pull the latest Drone image:
 sudo docker pull drone/drone:0.4
 ```
 
-Run the container using the latest Drone image:
+Re-run the container using the latest Drone image:
 
 ```
 sudo docker run \

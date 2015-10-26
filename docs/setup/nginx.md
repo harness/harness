@@ -1,6 +1,6 @@
 # Nginx
 
-Using a proxy server is **not necessary**. Drone serves most static content from a CDN and uses the Go standard library’s high-performance net/http package to serve dynamic content.
+Using a proxy server is **not necessary**. Drone serves most static content from a CDN and uses the Go standard library's high-performance net/http package to serve dynamic content.
 
 If using Nginx to proxy traffic to Drone, please ensure you have version 1.3.13 or greater. You also need to configure nginx to write `X-Forwarded_*` headers:
 
