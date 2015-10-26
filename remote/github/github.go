@@ -345,6 +345,10 @@ func (g *Github) push(r *http.Request) (*model.Repo, *model.Build, error) {
 	if build.Ref == "refs/heads/gh-pages" {
 		return nil, nil, nil
 	}
+	if strings.HasPrefix(build.Ref, "refs/tags/") {
+		// just kidding, this is actually a tag event
+		build.Event = model.EventTag
+	}
 
 	return repo, build, nil
 }
