@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/CiscoCloud/drone/model"
 	"github.com/CiscoCloud/drone/shared/envconfig"

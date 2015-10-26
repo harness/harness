@@ -20,10 +20,10 @@ CREATE TABLE repos (
 ,repo_user_id       INTEGER
 ,repo_owner         VARCHAR(500)
 ,repo_name          VARCHAR(500)
-,repo_full_name     VARCHAR(1000)
+,repo_full_name     VARCHAR(767)
 ,repo_avatar        VARCHAR(500)
-,repo_link          VARCHAR(1000)
-,repo_clone         VARCHAR(1000)
+,repo_link          VARCHAR(767)
+,repo_clone         VARCHAR(767)
 ,repo_branch        VARCHAR(500)
 ,repo_timeout       INTEGER
 ,repo_private       BOOLEAN
@@ -47,13 +47,13 @@ CREATE TABLE stars (
 
 CREATE INDEX ix_star_user ON stars (star_user_id);
 
-CREATE TABLE keys (
- key_id      INTEGER PRIMARY KEY AUTO_INCREMENT
-,key_repo_id INTEGER
-,key_public  MEDIUMBLOB
-,key_private MEDIUMBLOB
+CREATE TABLE `keys` (
+ `key_id`      INTEGER PRIMARY KEY AUTO_INCREMENT
+,`key_repo_id` INTEGER
+,`key_public`  MEDIUMBLOB
+,`key_private` MEDIUMBLOB
 
-,UNIQUE(key_repo_id)
+,UNIQUE(`key_repo_id`)
 );
 
 CREATE TABLE builds (
@@ -69,15 +69,15 @@ CREATE TABLE builds (
 ,build_commit    VARCHAR(500)
 ,build_branch    VARCHAR(500)
 ,build_ref       VARCHAR(500)
-,build_refspec   VARCHAR(1000)
+,build_refspec   VARCHAR(767)
 ,build_remote    VARCHAR(500)
-,build_title     VARCHAR(1000)
+,build_title     VARCHAR(767)
 ,build_message   VARCHAR(2000)
 ,build_timestamp INTEGER
 ,build_author    VARCHAR(500)
-,build_avatar    VARCHAR(1000)
+,build_avatar    VARCHAR(767)
 ,build_email     VARCHAR(500)
-,build_link      VARCHAR(1000)
+,build_link      VARCHAR(767)
 
 ,UNIQUE(build_number, build_repo_id)
 );

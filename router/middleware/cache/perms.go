@@ -3,7 +3,7 @@ package cache
 import (
 	"fmt"
 
-	"github.com/drone/drone/model"
+	"github.com/CiscoCloud/drone/model"
 	"github.com/gin-gonic/gin"
 )
 

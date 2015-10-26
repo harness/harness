@@ -24,7 +24,7 @@ type Build struct {
 	Remote    string `json:"remote"        meddler:"build_remote"`
 	Title     string `json:"title"         meddler:"build_title"`
 	Message   string `json:"message"       meddler:"build_message"`
-	Timestamp int64  `json:"timestamp"     meddler:"-"`
+	Timestamp int64  `json:"timestamp"     meddler:"build_timestamp"`
 	Author    string `json:"author"        meddler:"build_author"`
 	Avatar    string `json:"author_avatar" meddler:"build_avatar"`
 	Email     string `json:"author_email"  meddler:"build_email"`
