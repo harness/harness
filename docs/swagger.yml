@@ -601,6 +601,7 @@ definitions:
     example: |
         {
           "id": 1,
+          "scm": "git",
           "owner": "octocat",
           "name": "hello-world",
           "full_name": "octocat/hello-world",
@@ -620,6 +621,8 @@ definitions:
       id:
         type: integer
         format: int64
+      scm:
+        type: string
       owner:
         type: string
       name:
@@ -721,6 +724,8 @@ definitions:
       finished_at:
         type: integer
         format: int64
+      deploy_to:
+        type: string
       commit:
         type: string
       branch:
