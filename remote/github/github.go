@@ -442,6 +442,7 @@ func (g *Github) deployment(r *http.Request) (*model.Repo, *model.Build, error) 
 	build.Author = hook.Sender.Login
 	build.Ref = hook.Deployment.Ref
 	build.Branch = hook.Deployment.Ref
+	build.Deploy = hook.Deployment.Env
 
 	// if the ref is a sha or short sha we need to manually
 	// construct the ref.
