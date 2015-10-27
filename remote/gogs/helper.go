@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"strings"
 	"time"
 
@@ -15,11 +16,15 @@ import (
 // to a Drone repository.
 func toRepoLite(from *gogs.Repository) *model.RepoLite {
 	name := strings.Split(from.FullName, "/")[1]
+	avatar := expandAvatar(
+		from.HtmlUrl,
+		from.Owner.AvatarUrl,
+	)
 	return &model.RepoLite{
 		Name:     name,
 		Owner:    from.Owner.UserName,
 		FullName: from.FullName,
-		Avatar:   from.Owner.AvatarUrl,
+		Avatar:   avatar,
 	}
 }
 
@@ -27,11 +32,15 @@ func toRepoLite(from *gogs.Repository) *model.RepoLite {
 // to a Drone repository.
 func toRepo(from *gogs.Repository) *model.Repo {
 	name := strings.Split(from.FullName, "/")[1]
+	avatar := expandAvatar(
+		from.HtmlUrl,
+		from.Owner.AvatarUrl,
+	)
 	return &model.Repo{
 		Name:      name,
 		Owner:     from.Owner.UserName,
 		FullName:  from.FullName,
-		Avatar:    from.Owner.AvatarUrl,
+		Avatar:    avatar,
 		Link:      from.HtmlUrl,
 		IsPrivate: from.Private,
 		Clone:     from.CloneUrl,
@@ -52,6 +61,10 @@ func toPerm(from gogs.Permission) *model.Perm {
 // helper function that extracts the Build data
 // from a Gogs push hook
 func buildFromPush(hook *PushHook) *model.Build {
+	avatar := expandAvatar(
+		hook.Repo.Url,
+		fixMalformedAvatar(hook.Sender.Avatar),
+	)
 	return &model.Build{
 		Event:     model.EventPush,
 		Commit:    hook.After,
@@ -59,7 +72,7 @@ func buildFromPush(hook *PushHook) *model.Build {
 		Link:      hook.Compare,
 		Branch:    strings.TrimPrefix(hook.Ref, "refs/heads/"),
 		Message:   hook.Commits[0].Message,
-		Avatar:    fixMalformedAvatar(hook.Sender.Avatar),
+		Avatar:    avatar,
 		Author:    hook.Sender.Login,
 		Timestamp: time.Now().UTC().Unix(),
 	}
@@ -97,4 +110,18 @@ func fixMalformedAvatar(url string) string {
 		return url[index+1:]
 	}
 	return url
+}
+
+// expandAvatar is a helper function that converts
+// a relative avatar URL to the abosolute url.
+func expandAvatar(repo, rawurl string) string {
+	if !strings.HasPrefix(rawurl, "/avatars/") {
+		return rawurl
+	}
+	url_, err := url.Parse(repo)
+	if err != nil {
+		return rawurl
+	}
+	url_.Path = rawurl
+	return url_.String()
 }
