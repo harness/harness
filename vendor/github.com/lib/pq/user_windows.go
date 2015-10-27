@@ -19,7 +19,7 @@ func userCurrent() (string, error) {
 	pwname_size := uint32(len(pw_name)) - 1
 	err := syscall.GetUserNameEx(syscall.NameSamCompatible, &pw_name[0], &pwname_size)
 	if err != nil {
-		return "", err
+		return "", ErrCouldNotDetectUsername
 	}
 	s := syscall.UTF16ToString(pw_name)
 	u := filepath.Base(s)
