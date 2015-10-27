@@ -1,6 +1,6 @@
 # Gogs
 
-Drone comes with built-in support for Gogs version `0.6` and higher. To enable Gogs you should configure the Gogs driver using the following environment variables:
+Drone comes with built-in support for Gogs version `0.6.16.1022` and higher. Pleasure ensure you are running the latest version of Gogs to avoid compatibility issues. To enable Gogs you should configure the Gogs driver using the following environment variables:
 
 ```bash
 REMOTE_DRIVER=gogs
