@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"reflect"
-	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -17,21 +16,31 @@ type Fatalistic interface {
 	Fatal(args ...interface{})
 }
 
+func forceBinaryParameters() bool {
+	bp := os.Getenv("PQTEST_BINARY_PARAMETERS")
+	if bp == "yes" {
+		return true
+	} else if bp == "" || bp == "no" {
+		return false
+	} else {
+		panic("unexpected value for PQTEST_BINARY_PARAMETERS")
+	}
+}
+
 func openTestConnConninfo(conninfo string) (*sql.DB, error) {
-	datname := os.Getenv("PGDATABASE")
-	sslmode := os.Getenv("PGSSLMODE")
-	timeout := os.Getenv("PGCONNECT_TIMEOUT")
-
-	if datname == "" {
-		os.Setenv("PGDATABASE", "pqgotest")
+	defaultTo := func(envvar string, value string) {
+		if os.Getenv(envvar) == "" {
+			os.Setenv(envvar, value)
+		}
 	}
+	defaultTo("PGDATABASE", "pqgotest")
+	defaultTo("PGSSLMODE", "disable")
+	defaultTo("PGCONNECT_TIMEOUT", "20")
 
-	if sslmode == "" {
-		os.Setenv("PGSSLMODE", "disable")
-	}
-
-	if timeout == "" {
-		os.Setenv("PGCONNECT_TIMEOUT", "20")
+	if forceBinaryParameters() &&
+		!strings.HasPrefix(conninfo, "postgres://") &&
+		!strings.HasPrefix(conninfo, "postgresql://") {
+		conninfo = conninfo + " binary_parameters=yes"
 	}
 
 	return sql.Open("postgres", conninfo)
@@ -56,12 +65,6 @@ func getServerVersion(t *testing.T, db *sql.DB) int {
 }
 
 func TestReconnect(t *testing.T) {
-	if runtime.Version() == "go1.0.2" {
-		fmt.Println("Skipping failing test; " +
-			"fixed in database/sql on go1.0.3+")
-		return
-	}
-
 	db1 := openTestConn(t)
 	defer db1.Close()
 	tx, err := db1.Begin()
@@ -114,18 +117,22 @@ func TestCommitInFailedTransaction(t *testing.T) {
 }
 
 func TestOpenURL(t *testing.T) {
-	db, err := openTestConnConninfo("postgres://")
-	if err != nil {
-		t.Fatal(err)
+	testURL := func(url string) {
+		db, err := openTestConnConninfo(url)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer db.Close()
+		// database/sql might not call our Open at all unless we do something with
+		// the connection
+		txn, err := db.Begin()
+		if err != nil {
+			t.Fatal(err)
+		}
+		txn.Rollback()
 	}
-	defer db.Close()
-	// database/sql might not call our Open at all unless we do something with
-	// the connection
-	txn, err := db.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-	txn.Rollback()
+	testURL("postgres://")
+	testURL("postgresql://")
 }
 
 func TestExec(t *testing.T) {
@@ -350,6 +357,7 @@ func TestEncodeDecode(t *testing.T) {
 			'2000-1-1 01:02:03.04-7'::timestamptz,
 			0::boolean,
 			123,
+			-321,
 			3.14::float8
 		WHERE
 			    E'\\000\\001\\002'::bytea = $1
@@ -378,9 +386,9 @@ func TestEncodeDecode(t *testing.T) {
 	var got2 string
 	var got3 = sql.NullInt64{Valid: true}
 	var got4 time.Time
-	var got5, got6, got7 interface{}
+	var got5, got6, got7, got8 interface{}
 
-	err = r.Scan(&got1, &got2, &got3, &got4, &got5, &got6, &got7)
+	err = r.Scan(&got1, &got2, &got3, &got4, &got5, &got6, &got7, &got8)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -409,8 +417,12 @@ func TestEncodeDecode(t *testing.T) {
 		t.Fatalf("expected 123, got %d", got6)
 	}
 
-	if got7 != float64(3.14) {
-		t.Fatalf("expected 3.14, got %f", got7)
+	if got7 != int64(-321) {
+		t.Fatalf("expected -321, got %d", got7)
+	}
+
+	if got8 != float64(3.14) {
+		t.Fatalf("expected 3.14, got %f", got8)
 	}
 }
 
@@ -465,31 +477,37 @@ func TestErrorDuringStartup(t *testing.T) {
 	e, ok := err.(*Error)
 	if !ok {
 		t.Fatalf("expected Error, got %#v", err)
-	} else if e.Code.Name() != "invalid_authorization_specification" {
-		t.Fatalf("expected invalid_authorization_specification, got %s (%+v)", e.Code.Name(), err)
+	} else if e.Code.Name() != "invalid_authorization_specification" && e.Code.Name() != "invalid_password" {
+		t.Fatalf("expected invalid_authorization_specification or invalid_password, got %s (%+v)", e.Code.Name(), err)
 	}
 }
 
 func TestBadConn(t *testing.T) {
 	var err error
 
+	cn := conn{}
 	func() {
-		defer errRecover(&err)
+		defer cn.errRecover(&err)
 		panic(io.EOF)
 	}()
-
 	if err != driver.ErrBadConn {
 		t.Fatalf("expected driver.ErrBadConn, got: %#v", err)
 	}
+	if !cn.bad {
+		t.Fatalf("expected cn.bad")
+	}
 
+	cn = conn{}
 	func() {
-		defer errRecover(&err)
+		defer cn.errRecover(&err)
 		e := &Error{Severity: Efatal}
 		panic(e)
 	}()
-
 	if err != driver.ErrBadConn {
 		t.Fatalf("expected driver.ErrBadConn, got: %#v", err)
+	}
+	if !cn.bad {
+		t.Fatalf("expected cn.bad")
 	}
 }
 
@@ -832,11 +850,6 @@ func TestIssue196(t *testing.T) {
 // Test that any CommandComplete messages sent before the query results are
 // ignored.
 func TestIssue282(t *testing.T) {
-	if strings.HasPrefix(runtime.Version(), "go1.0") {
-		fmt.Println("Skipping test due to lack of Queryer implementation")
-		return
-	}
-
 	db := openTestConn(t)
 	defer db.Close()
 
@@ -869,6 +882,60 @@ func TestReadFloatPrecision(t *testing.T) {
 	}
 	if float8val != float64(35.03554004971999) {
 		t.Errorf("Expected float8 fidelity to be maintained; got no match")
+	}
+}
+
+func TestXactMultiStmt(t *testing.T) {
+	// minified test case based on bug reports from
+	// pico303@gmail.com and rangelspam@gmail.com
+	t.Skip("Skipping failing test")
+	db := openTestConn(t)
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Commit()
+
+	rows, err := tx.Query("select 1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rows.Next() {
+		var val int32
+		if err = rows.Scan(&val); err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		t.Fatal("Expected at least one row in first query in xact")
+	}
+
+	rows2, err := tx.Query("select 2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rows2.Next() {
+		var val2 int32
+		if err := rows2.Scan(&val2); err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		t.Fatal("Expected at least one row in second query in xact")
+	}
+
+	if err = rows.Err(); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = rows2.Err(); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -908,7 +975,8 @@ func TestParseComplete(t *testing.T) {
 				}
 			}
 		}()
-		res, c := parseComplete(commandTag)
+		cn := &conn{}
+		res, c := cn.parseComplete(commandTag)
 		if c != command {
 			t.Errorf("Expected %v, got %v", command, c)
 		}
@@ -1161,14 +1229,15 @@ func TestRuntimeParameters(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer db.Close()
 
 		// application_name didn't exist before 9.0
 		if test.param == "application_name" && getServerVersion(t, db) < 90000 {
+			db.Close()
 			continue
 		}
 
 		tryGetParameterValue := func() (value string, outcome RuntimeTestResult) {
+			defer db.Close()
 			row := db.QueryRow("SELECT current_setting($1)", test.param)
 			err = row.Scan(&value)
 			if err != nil {
