@@ -92,7 +92,7 @@ func (g *Gogs) Login(res http.ResponseWriter, req *http.Request) (*model.User, b
 	user.Token = accessToken
 	user.Login = userInfo.UserName
 	user.Email = userInfo.Email
-	user.Avatar = userInfo.AvatarUrl
+	user.Avatar = expandAvatar(g.URL, userInfo.AvatarUrl)
 	return &user, g.Open, nil
 }
 
