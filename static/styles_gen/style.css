@@ -88,7 +88,7 @@ input[type=range]:focus::-ms-fill-upper { background: #367ebd; }
 
 .timeline { padding-left: 50px; position: relative; margin-top: 10px; margin-bottom: 40px; }
 
-.timeline .card { display: flex; border: none; border-radius: 0px; border-top: 1px solid #eceeef; text-decoration: none; color: 2b303b; }
+.timeline .card { display: flex; border: none; border-radius: 0px; border-top: 1px solid #eceeef; text-decoration: none; color: #2b303b; }
 
 .timeline .card .card-header { background: #FFF; border: none; padding: 0px; width: 50px; min-width: 50px; max-width: 50px; padding-top: 30px; }
 
