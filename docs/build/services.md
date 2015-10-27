@@ -26,7 +26,7 @@ compose:
 
 Service containers are available at the `localhost` or `127.0.0.1` address.
 
-Drone deviates from the default Docker compose networking model to mirror a traditional development environment, where services are typically accessed at `localhost` or `127.0.0.1`. To achieve this, we create a per-build network where all containers share the same network.
+Drone deviates from the default Docker compose networking model to mirror a traditional development environment, where services are typically accessed at `localhost` or `127.0.0.1`. To achieve this, we create a per-build network where all containers share the same network and IP address.
 
 ## Service options
 
