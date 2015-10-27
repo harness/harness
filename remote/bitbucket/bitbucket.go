@@ -370,6 +370,10 @@ func (bb *Bitbucket) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 	return nil, nil, nil
 }
 
+func (bb *Bitbucket) String() string {
+	return "bitbucket"
+}
+
 func (bb *Bitbucket) pushHook(r *http.Request) (*model.Repo, *model.Build, error) {
 	payload := []byte(r.FormValue("payload"))
 	if len(payload) == 0 {

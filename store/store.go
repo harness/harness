@@ -11,6 +11,7 @@ type Store interface {
 }
 
 type store struct {
+	name   string
 	nodes  NodeStore
 	users  UserStore
 	repos  RepoStore
@@ -27,8 +28,10 @@ func (s *store) Keys() KeyStore     { return s.keys }
 func (s *store) Builds() BuildStore { return s.builds }
 func (s *store) Jobs() JobStore     { return s.jobs }
 func (s *store) Logs() LogStore     { return s.logs }
+func (s *store) String() string     { return s.name }
 
 func New(
+	name string,
 	nodes NodeStore,
 	users UserStore,
 	repos RepoStore,
@@ -38,6 +41,7 @@ func New(
 	logs LogStore,
 ) Store {
 	return &store{
+		name,
 		nodes,
 		users,
 		repos,

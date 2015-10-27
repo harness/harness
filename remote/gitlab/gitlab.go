@@ -417,3 +417,7 @@ func (g *Gitlab) GetOpen() bool {
 func (g *Gitlab) Scope() string {
 	return DefaultScope
 }
+
+func (g *Gitlab) String() string {
+	return "gitlab"
+}

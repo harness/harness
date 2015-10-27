@@ -231,3 +231,7 @@ func (g *Gogs) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 	}
 	return repo, build, err
 }
+
+func (g *Gogs) String() string {
+	return "gogs"
+}

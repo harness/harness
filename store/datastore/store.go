@@ -16,19 +16,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-// From creates a datastore from an existing database connection.
-func From(db *sql.DB) store.Store {
-	return store.New(
-		&nodestore{db},
-		&userstore{db},
-		&repostore{db},
-		&keystore{db},
-		&buildstore{db},
-		&jobstore{db},
-		&logstore{db},
-	)
-}
-
 // Load opens a new database connection with the specified driver
 // and connection string specified in the environment variables.
 func Load(env envconfig.Env) store.Store {
@@ -40,8 +27,20 @@ func Load(env envconfig.Env) store.Store {
 	log.Infof("using database driver %s", driver)
 	log.Infof("using database config %s", config)
 
-	return From(
-		Open(driver, config),
+	return New(driver, config)
+}
+
+func New(driver, config string) store.Store {
+	conn := Open(driver, config)
+	return store.New(
+		driver,
+		&nodestore{conn},
+		&userstore{conn},
+		&repostore{conn},
+		&keystore{conn},
+		&buildstore{conn},
+		&jobstore{conn},
+		&logstore{conn},
 	)
 }
 
