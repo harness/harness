@@ -44,7 +44,7 @@ export DRONE_SERVER=<http://>
 In order to authorize communications you must also provide your access token:
 
 ```
-export DRONE_SERVER=<token>
+export DRONE_TOKEN=<token>
 ```
 
 You can retrieve your access token from the user profile screen in Drone.
