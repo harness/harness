@@ -6,7 +6,6 @@ package pq
 import (
 	"errors"
 	"fmt"
-	"io"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -87,12 +86,16 @@ func NewListenerConn(name string, notificationChan chan<- *Notification) (*Liste
 // Returns an error if an unrecoverable error has occurred and the ListenerConn
 // should be abandoned.
 func (l *ListenerConn) acquireSenderLock() error {
-	l.connectionLock.Lock()
-	defer l.connectionLock.Unlock()
-	if l.err != nil {
-		return l.err
-	}
+	// we must acquire senderLock first to avoid deadlocks; see ExecSimpleQuery
 	l.senderLock.Lock()
+
+	l.connectionLock.Lock()
+	err := l.err
+	l.connectionLock.Unlock()
+	if err != nil {
+		l.senderLock.Unlock()
+		return err
+	}
 	return nil
 }
 
@@ -125,10 +128,11 @@ func (l *ListenerConn) setState(newState int32) bool {
 // away or should be discarded because we couldn't agree on the state with the
 // server backend.
 func (l *ListenerConn) listenerConnLoop() (err error) {
-	defer errRecover(&err)
+	defer errRecoverNoErrBadConn(&err)
 
+	r := &readBuf{}
 	for {
-		t, r, err := l.cn.recvMessage()
+		t, err := l.cn.recvMessage(r)
 		if err != nil {
 			return err
 		}
@@ -138,6 +142,9 @@ func (l *ListenerConn) listenerConnLoop() (err error) {
 			// recvNotification copies all the data so we don't need to worry
 			// about the scratch buffer being overwritten.
 			l.notificationChan <- recvNotification(r)
+
+		case 'T', 'D':
+			// only used by tests; ignore
 
 		case 'E':
 			// We might receive an ErrorResponse even when not in a query; it
@@ -169,8 +176,6 @@ func (l *ListenerConn) listenerConnLoop() (err error) {
 			return fmt.Errorf("unexpected message %q from server in listenerConnLoop", t)
 		}
 	}
-
-	panic("not reached")
 }
 
 // This is the main routine for the goroutine receiving on the database
@@ -239,7 +244,7 @@ func (l *ListenerConn) Ping() error {
 // The caller must be holding senderLock (see acquireSenderLock and
 // releaseSenderLock).
 func (l *ListenerConn) sendSimpleQuery(q string) (err error) {
-	defer errRecover(&err)
+	defer errRecoverNoErrBadConn(&err)
 
 	// must set connection state before sending the query
 	if !l.setState(connStateExpectResponse) {
@@ -248,8 +253,10 @@ func (l *ListenerConn) sendSimpleQuery(q string) (err error) {
 
 	// Can't use l.cn.writeBuf here because it uses the scratch buffer which
 	// might get overwritten by listenerConnLoop.
-	data := writeBuf([]byte("Q\x00\x00\x00\x00"))
-	b := &data
+	b := &writeBuf{
+		buf: []byte("Q\x00\x00\x00\x00"),
+		pos: 1,
+	}
 	b.string(q)
 	l.cn.send(b)
 
@@ -278,13 +285,13 @@ func (l *ListenerConn) ExecSimpleQuery(q string) (executed bool, err error) {
 		// We can't know what state the protocol is in, so we need to abandon
 		// this connection.
 		l.connectionLock.Lock()
-		defer l.connectionLock.Unlock()
 		// Set the error pointer if it hasn't been set already; see
 		// listenerConnMain.
 		if l.err == nil {
 			l.err = err
 		}
-		l.cn.Close()
+		l.connectionLock.Unlock()
+		l.cn.c.Close()
 		return false, err
 	}
 
@@ -293,8 +300,11 @@ func (l *ListenerConn) ExecSimpleQuery(q string) (executed bool, err error) {
 		m, ok := <-l.replyChan
 		if !ok {
 			// We lost the connection to server, don't bother waiting for a
-			// a response.
-			return false, io.EOF
+			// a response.  err should have been set already.
+			l.connectionLock.Lock()
+			err := l.err
+			l.connectionLock.Unlock()
+			return false, err
 		}
 		switch m.typ {
 		case 'Z':
@@ -317,18 +327,19 @@ func (l *ListenerConn) ExecSimpleQuery(q string) (executed bool, err error) {
 			return false, fmt.Errorf("unknown response for simple query: %q", m.typ)
 		}
 	}
-
-	panic("not reached")
 }
 
 func (l *ListenerConn) Close() error {
 	l.connectionLock.Lock()
-	defer l.connectionLock.Unlock()
 	if l.err != nil {
+		l.connectionLock.Unlock()
 		return errListenerConnClosed
 	}
 	l.err = errListenerConnClosed
-	return l.cn.Close()
+	l.connectionLock.Unlock()
+	// We can't send anything on the connection without holding senderLock.
+	// Simply close the net.Conn to wake up everyone operating on it.
+	return l.cn.c.Close()
 }
 
 // Err() returns the reason the connection was closed.  It is not safe to call
@@ -425,6 +436,13 @@ func NewListener(name string,
 	go l.listenerMain()
 
 	return l
+}
+
+// Returns the notification channel for this listener.  This is the same
+// channel as Notify, and will not be recreated during the life time of the
+// Listener.
+func (l *Listener) NotificationChannel() <-chan *Notification {
+	return l.Notify
 }
 
 // Listen starts listening for notifications on a channel.  Calls to this
@@ -630,8 +648,6 @@ func (l *Listener) resync(cn *ListenerConn, notificationChan <-chan *Notificatio
 			return err
 		}
 	}
-
-	panic("not reached")
 }
 
 // caller should NOT be holding l.lock
