@@ -29,7 +29,7 @@ git clone git://github.com/drone/drone.git $GOPATH/src/github.com/drone/drone
 cd $GOPATH/src/github.com/drone/drone
 ```
 
-Pleasure ensure your local environment has the following dependencies installed. We provide scripts in the `./contrib` folder as a convenience that can be used to install:
+Please ensure your local environment has the following dependencies installed. We provide scripts in the `./contrib` folder as a convenience that can be used to install:
 
 * libsqlite3
 * sassc
