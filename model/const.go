@@ -16,3 +16,10 @@ const (
 	StatusKilled  = "killed"
 	StatusError   = "error"
 )
+
+const (
+	RepoGit      = "git"
+	RepoHg       = "hg"
+	RepoFossil   = "fossil"
+	RepoPerforce = "perforce"
+)

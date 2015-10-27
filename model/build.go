@@ -10,6 +10,7 @@ type Build struct {
 	Created   int64  `json:"created_at"    meddler:"build_created"`
 	Started   int64  `json:"started_at"    meddler:"build_started"`
 	Finished  int64  `json:"finished_at"   meddler:"build_finished"`
+	Deploy    string `json:"deploy_to"     meddler:"build_deploy"`
 	Commit    string `json:"commit"        meddler:"build_commit"`
 	Branch    string `json:"branch"        meddler:"build_branch"`
 	Ref       string `json:"ref"           meddler:"build_ref"`
