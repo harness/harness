@@ -43,15 +43,15 @@ func ShowIndex(c *gin.Context) {
 
 	// for each repository in the remote system we get
 	// the intersection of those repostiories in Drone
-	repos_, err := store.GetRepoListOf(c, repos)
-	if err != nil {
-		log.Errorf("Failure to get repository list for %s. %s.",
-			user.Login, err)
-	}
+	// repos_, err := store.GetRepoListOf(c, repos)
+	// if err != nil {
+	// 	log.Errorf("Failure to get repository list for %s. %s.",
+	// 		user.Login, err)
+	// }
 
 	c.HTML(200, "repos.html", gin.H{
 		"User":  user,
-		"Repos": repos_,
+		"Repos": repos,
 	})
 }
 
