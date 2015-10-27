@@ -470,6 +470,10 @@ func (g *Github) deployment(r *http.Request) (*model.Repo, *model.Build, error) 
 	return repo, build, nil
 }
 
+func (g *Github) String() string {
+	return "github"
+}
+
 const (
 	StatusPending = "pending"
 	StatusSuccess = "success"

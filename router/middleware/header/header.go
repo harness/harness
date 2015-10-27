@@ -53,6 +53,7 @@ func Secure(c *gin.Context) {
 // for debugging and troubleshooting.
 func Version(version string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		c.Set("version", "0.4.0-beta+"+version)
 		c.Header("X-DRONE-VERSION", "0.4.0-beta+"+version)
 		c.Next()
 	}
