@@ -15,6 +15,7 @@ type Repo struct {
 	FullName    string `json:"full_name"         meddler:"repo_full_name"`
 	Avatar      string `json:"avatar_url"        meddler:"repo_avatar"`
 	Link        string `json:"link_url"          meddler:"repo_link"`
+	Kind        string `json:"scm"               meddler:"repo_scm"`
 	Clone       string `json:"clone_url"         meddler:"repo_clone"`
 	Branch      string `json:"default_branch"    meddler:"repo_branch"`
 	Timeout     int64  `json:"timeout"           meddler:"repo_timeout"`
