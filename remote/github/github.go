@@ -417,6 +417,16 @@ func (g *Github) deployment(r *http.Request) (*model.Repo, *model.Build, error) 
 		return nil, nil, err
 	}
 
+	// for older versions of GitHub. Remove.
+	if hook.Deployment.ID == 0 {
+		hook.Deployment.ID = hook.ID
+		hook.Deployment.Sha = hook.Sha
+		hook.Deployment.Ref = hook.Ref
+		hook.Deployment.Task = hook.Name
+		hook.Deployment.Env = hook.Env
+		hook.Deployment.Desc = hook.Desc
+	}
+
 	repo := &model.Repo{}
 	repo.Owner = hook.Repo.Owner.Login
 	if len(repo.Owner) == 0 {

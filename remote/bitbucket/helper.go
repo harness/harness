@@ -21,6 +21,10 @@ func convertRepo(from *Repo) *model.Repo {
 		Branch:    "master",
 	}
 
+	if repo.Kind == model.RepoHg {
+		repo.Branch = "default"
+	}
+
 	// in some cases, the owner of the repository is not
 	// provided, however, we do have the full name.
 	if len(repo.Owner) == 0 {

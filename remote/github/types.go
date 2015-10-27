@@ -77,4 +77,15 @@ type deployHook struct {
 		CloneURL      string `json:"clone_url"`
 		DefaultBranch string `json:"default_branch"`
 	} `json:"repository"`
+
+	// these are legacy fields that have been moded
+	// to the deployment section. They are here for
+	// older versions of GitHub and will be removed
+
+	ID   int64  `json:"id"`
+	Sha  string `json:"sha"`
+	Ref  string `json:"ref"`
+	Name string `json:"name"`
+	Env  string `json:"environment"`
+	Desc string `json:"description"`
 }
