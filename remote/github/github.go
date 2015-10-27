@@ -147,6 +147,7 @@ func (g *Github) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	repo.Clone = *repo_.CloneURL
 	repo.Branch = "master"
 	repo.Avatar = *repo_.Owner.AvatarURL
+	repo.Kind = model.RepoGit
 
 	if repo_.DefaultBranch != nil {
 		repo.Branch = *repo_.DefaultBranch
@@ -324,6 +325,7 @@ func (g *Github) push(r *http.Request) (*model.Repo, *model.Build, error) {
 	repo.IsPrivate = hook.Repo.Private
 	repo.Clone = hook.Repo.CloneURL
 	repo.Branch = hook.Repo.DefaultBranch
+	repo.Kind = model.RepoGit
 
 	build := &model.Build{}
 	build.Event = model.EventPush
@@ -384,6 +386,7 @@ func (g *Github) pullRequest(r *http.Request) (*model.Repo, *model.Build, error)
 	repo.Link = *hook.Repo.HTMLURL
 	repo.IsPrivate = *hook.Repo.Private
 	repo.Clone = *hook.Repo.CloneURL
+	repo.Kind = model.RepoGit
 	repo.Branch = "master"
 	if hook.Repo.DefaultBranch != nil {
 		repo.Branch = *hook.Repo.DefaultBranch
@@ -425,6 +428,7 @@ func (g *Github) deployment(r *http.Request) (*model.Repo, *model.Build, error) 
 	repo.IsPrivate = hook.Repo.Private
 	repo.Clone = hook.Repo.CloneURL
 	repo.Branch = hook.Repo.DefaultBranch
+	repo.Kind = model.RepoGit
 
 	// ref can be
 	// branch, tag, or sha

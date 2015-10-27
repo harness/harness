@@ -37,6 +37,7 @@ func toRepo(from *gogs.Repository) *model.Repo {
 		from.Owner.AvatarUrl,
 	)
 	return &model.Repo{
+		Kind:      model.RepoGit,
 		Name:      name,
 		Owner:     from.Owner.UserName,
 		FullName:  from.FullName,
