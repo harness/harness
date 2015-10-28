@@ -31,8 +31,12 @@ func GetBuilds(c *gin.Context) {
 }
 
 func GetBuild(c *gin.Context) {
-	repo := session.Repo(c)
+	if c.Param("number") == "latest" {
+		GetBuildLast(c)
+		return
+	}
 
+	repo := session.Repo(c)
 	num, err := strconv.Atoi(c.Param("number"))
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -42,6 +46,25 @@ func GetBuild(c *gin.Context) {
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	jobs, _ := store.GetJobList(c, build)
+
+	out := struct {
+		*model.Build
+		Jobs []*model.Job `json:"jobs"`
+	}{build, jobs}
+
+	c.IndentedJSON(http.StatusOK, &out)
+}
+
+func GetBuildLast(c *gin.Context) {
+	repo := session.Repo(c)
+	branch := c.DefaultQuery("branch", repo.Branch)
+
+	build, err := store.GetBuildLast(c, repo, branch)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 	jobs, _ := store.GetJobList(c, build)
