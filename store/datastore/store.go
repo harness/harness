@@ -31,16 +31,30 @@ func Load(env envconfig.Env) store.Store {
 }
 
 func New(driver, config string) store.Store {
-	conn := Open(driver, config)
+	db := Open(driver, config)
 	return store.New(
 		driver,
-		&nodestore{conn},
-		&userstore{conn},
-		&repostore{conn},
-		&keystore{conn},
-		&buildstore{conn},
-		&jobstore{conn},
-		&logstore{conn},
+		&nodestore{db},
+		&userstore{db},
+		&repostore{db},
+		&keystore{db},
+		&buildstore{db},
+		&jobstore{db},
+		&logstore{db},
+	)
+}
+
+func From(db *sql.DB) store.Store {
+	var driver string
+	return store.New(
+		driver,
+		&nodestore{db},
+		&userstore{db},
+		&repostore{db},
+		&keystore{db},
+		&buildstore{db},
+		&jobstore{db},
+		&logstore{db},
 	)
 }
 
