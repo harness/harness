@@ -31,7 +31,8 @@ Drone also injects `CI_` prefixed variables for compatibility with other systems
 
 A subset of variables may be injected directly into the Yaml at runtime using the `$$` notation:
 
-* `$$COMMIT` git sha for the current build, `--short` format
+* `$$COMMIT_SHORT` git sha for the current build, `--short` format
+* `$$COMMIT` git sha for the current build, long format
 * `$$BRANCH` git branch for the current build
 * `$$REPO` repository full name (in `owner/name` format)
 * `$$TAG` tag name
