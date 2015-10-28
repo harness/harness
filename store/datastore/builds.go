@@ -103,6 +103,7 @@ SELECT *
 FROM builds
 WHERE build_repo_id = ?
   AND build_branch  = ?
+  AND build_event   = 'push'
 ORDER BY build_number DESC
 LIMIT 1
 `
