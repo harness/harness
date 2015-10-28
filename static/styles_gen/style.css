@@ -311,8 +311,6 @@ body.login.login-form > div input[type="submit"] { position: relative; width: 10
 
 .toc ul { list-style-type: none; padding: 0px; margin: 0px; margin-bottom: 40px; border-bottom: 1px solid #EEE; padding-bottom: 40px; }
 
-.toc ul li { line-height: 5px; }
-
 .toc ul li a { color: #2b303b; text-decoration: none; }
 
 .toc ul li a:hover { text-decoration: underline; }
