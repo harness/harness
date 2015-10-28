@@ -165,12 +165,14 @@ func Test_buildstore(t *testing.T) {
 				Status: model.StatusFailure,
 				Branch: "master",
 				Commit: "85f8c029b902ed9400bc600bac301a0aadb144ac",
+				Event:  model.EventPush,
 			}
 			build2 := &model.Build{
 				RepoID: 1,
 				Status: model.StatusSuccess,
 				Branch: "master",
 				Commit: "85f8c029b902ed9400bc600bac301a0aadb144aa",
+				Event:  model.EventPush,
 			}
 			err1 := s.Builds().Create(build1, []*model.Job{}...)
 			err2 := s.Builds().Create(build2, []*model.Job{}...)
