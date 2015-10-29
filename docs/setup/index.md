@@ -22,6 +22,8 @@ sudo docker run \
 
 Drone is now running (in the background) on `http://localhost:80`. Note that before running you should create the `--env-file` and add your Drone configuration (GitHub, Bitbucket, GitLab credentials, etc).
 
+Drone is built continuously, with updates available daily. See the [upgrading documentation](upgrade.html) for details.
+
 ## Docker options
 
 Here are some of the Docker options, explained:
