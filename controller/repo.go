@@ -63,7 +63,7 @@ func PostRepo(c *gin.Context) {
 	t := token.New(token.HookToken, r.FullName)
 	sig, err := t.Sign(r.Hash)
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.String(500, err.Error())
 		return
 	}
 
@@ -76,7 +76,7 @@ func PostRepo(c *gin.Context) {
 	// generate an RSA key and add to the repo
 	key, err := crypto.GeneratePrivateKey()
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.String(500, err.Error())
 		return
 	}
 	keys := new(model.Key)
@@ -87,20 +87,20 @@ func PostRepo(c *gin.Context) {
 	// local changes to the database.
 	err = remote.Activate(user, r, keys, link)
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.String(500, err.Error())
 		return
 	}
 
 	// persist the repository
 	err = store.CreateRepo(c, r)
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.String(500, err.Error())
 		return
 	}
 	keys.RepoID = r.ID
 	err = store.CreateKey(c, keys)
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.String(500, err.Error())
 		return
 	}
 
