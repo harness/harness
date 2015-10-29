@@ -294,6 +294,7 @@ func (bb *Bitbucket) Activate(u *model.User, r *model.Repo, k *model.Key, link s
 
 	linkurl, err := url.Parse(link)
 	if err != nil {
+		log.Errorf("malformed hook url %s. %s", link, err)
 		return err
 	}
 
@@ -303,7 +304,7 @@ func (bb *Bitbucket) Activate(u *model.User, r *model.Repo, k *model.Key, link s
 	for _, hook := range hooks.Values {
 		hookurl, err := url.Parse(hook.Url)
 		if err != nil {
-			return err
+			continue
 		}
 		if hookurl.Host == linkurl.Host {
 			err = client.DeleteHook(r.Owner, r.Name, hook.Uuid)
@@ -314,12 +315,16 @@ func (bb *Bitbucket) Activate(u *model.User, r *model.Repo, k *model.Key, link s
 		}
 	}
 
-	return client.CreateHook(r.Owner, r.Name, &Hook{
+	err = client.CreateHook(r.Owner, r.Name, &Hook{
 		Active: true,
 		Desc:   linkurl.Host,
 		Events: []string{"repo:push"},
 		Url:    link,
 	})
+	if err != nil {
+		log.Errorf("unable to create hook %s. %s", link, err)
+	}
+	return err
 }
 
 // Deactivate removes a repository by removing all the post-commit hooks
