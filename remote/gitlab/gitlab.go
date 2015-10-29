@@ -220,7 +220,7 @@ func (g *Gitlab) Script(user *model.User, repo *model.Repo, build *model.Build) 
 	}
 	out2, err := client.RepoRawFile(id, build.Commit, ".drone.sec")
 	if err != nil {
-		return out1, nil, err
+		return out1, nil, nil
 	}
 	return out1, out2, err
 }
