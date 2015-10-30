@@ -1,0 +1,45 @@
+{
+    "id": 3,
+    "description": null,
+    "default_branch": "master",
+    "public": false,
+    "visibility_level": 0,
+    "ssh_url_to_repo": "git@example.com:diaspora/diaspora-project-site.git",
+    "http_url_to_repo": "http://example.com/diaspora/diaspora-project-site.git",
+    "web_url": "http://example.com/diaspora/diaspora-project-site",
+    "owner": {
+        "id": 3,
+        "name": "Diaspora",
+        "created_at": "2013-09-30T13: 46: 02Z"
+    },
+    "name": "Diaspora Project Site",
+    "name_with_namespace": "Diaspora / Diaspora Project Site",
+    "path": "diaspora-project-site",
+    "path_with_namespace": "diaspora/diaspora-project-site",
+    "issues_enabled": true,
+    "merge_requests_enabled": true,
+    "wall_enabled": false,
+    "wiki_enabled": true,
+    "snippets_enabled": false,
+    "created_at": "2013-09-30T13: 46: 02Z",
+    "last_activity_at": "2013-09-30T13: 46: 02Z",
+    "namespace": {
+        "created_at": "2013-09-30T13: 46: 02Z",
+        "description": "",
+        "id": 3,
+        "name": "Diaspora",
+        "owner_id": 1,
+        "path": "diaspora",
+        "updated_at": "2013-09-30T13: 46: 02Z"
+    },
+    "permissions": {
+        "project_access": {
+            "access_level": 10,
+            "notification_level": 3
+        },
+        "group_access": {
+            "access_level": 50,
+            "notification_level": 3
+        }
+    }
+}

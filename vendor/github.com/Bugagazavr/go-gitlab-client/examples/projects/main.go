@@ -1,0 +1,246 @@
+package main
+
+import (
+	"encoding/json"
+	"flag"
+	"fmt"
+	"github.com/bugagazavr/go-gitlab-client"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"time"
+)
+
+type Config struct {
+	Host    string `json:"host"`
+	ApiPath string `json:"api_path"`
+	Token   string `json:"token"`
+}
+
+func main() {
+	help := flag.Bool("help", false, "Show usage")
+
+	file, e := ioutil.ReadFile("../config.json")
+	if e != nil {
+		fmt.Printf("Config file error: %v\n", e)
+		os.Exit(1)
+	}
+
+	var config Config
+	json.Unmarshal(file, &config)
+	fmt.Printf("Results: %+v\n", config)
+
+	var gitlab *gogitlab.Gitlab
+
+	gitlab = gogitlab.NewGitlab(config.Host, config.ApiPath, config.Token)
+
+	var method string
+	flag.StringVar(&method, "m", "", "Specify method to retrieve projects infos, available methods:\n"+
+		"  > -m projects\n"+
+		"  > -m project               -id PROJECT_ID\n"+
+		"  > -m hooks                 -id PROJECT_ID\n"+
+		"  > -m branches              -id PROJECT_ID\n"+
+		"  > -m merge_requests        -id PROJECT_ID\n"+
+		"  > -m merge_request_notes   -id PROJECT_ID -merge_id MERGE_REQUEST_ID\n"+
+		"  > -m merge_request_comment -id PROJECT_ID -merge_id MERGE_REQUEST_ID -comment COMMENT_BODY\n"+
+		"  > -m team                  -id PROJECT_ID")
+
+	var id string
+	flag.StringVar(&id, "id", "", "Specify repository id")
+
+	var merge_id string
+	flag.StringVar(&merge_id, "merge_id", "", "Specify merge request id")
+
+	var comment string
+	flag.StringVar(&comment, "comment", "", "The body of the new comment")
+
+	flag.Usage = func() {
+		fmt.Printf("Usage:\n")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	if *help == true || method == "" {
+		flag.Usage()
+		return
+	}
+
+	startedAt := time.Now()
+	defer func() {
+		fmt.Printf("processed in %v\n", time.Now().Sub(startedAt))
+	}()
+
+	switch method {
+	case "projects":
+		fmt.Println("Fetching projects…")
+
+		projects, err := gitlab.Projects(1, 100)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		for _, project := range projects {
+			fmt.Printf("> %6d | %s\n", project.Id, project.Name)
+		}
+
+	case "project":
+		fmt.Println("Fetching project…")
+
+		if id == "" {
+			flag.Usage()
+			return
+		}
+
+		project, err := gitlab.Project(id)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		format := "> %-23s: %s\n"
+
+		fmt.Printf("%s\n", project.Name)
+		fmt.Printf(format, "id", strconv.Itoa(project.Id))
+		fmt.Printf(format, "name", project.Name)
+		fmt.Printf(format, "description", project.Description)
+		fmt.Printf(format, "default branch", project.DefaultBranch)
+		if project.Owner != nil {
+			fmt.Printf(format, "owner.name", project.Owner.Username)
+		}
+		fmt.Printf(format, "public", strconv.FormatBool(project.Public))
+		fmt.Printf(format, "path", project.Path)
+		fmt.Printf(format, "path with namespace", project.PathWithNamespace)
+		fmt.Printf(format, "issues enabled", strconv.FormatBool(project.IssuesEnabled))
+		fmt.Printf(format, "merge requests enabled", strconv.FormatBool(project.MergeRequestsEnabled))
+		fmt.Printf(format, "wall enabled", strconv.FormatBool(project.WallEnabled))
+		fmt.Printf(format, "wiki enabled", strconv.FormatBool(project.WikiEnabled))
+		fmt.Printf(format, "created at", project.CreatedAtRaw)
+		//fmt.Printf(format, "namespace",           project.Namespace)
+
+	case "branches":
+		fmt.Println("Fetching project branches…")
+
+		if id == "" {
+			flag.Usage()
+			return
+		}
+
+		branches, err := gitlab.ProjectBranches(id)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		for _, branch := range branches {
+			fmt.Printf("> %s\n", branch.Name)
+		}
+
+	case "merge_requests":
+		fmt.Println("Fetching project merge_requests…")
+
+		if id == "" {
+			flag.Usage()
+			return
+		}
+
+		mrs, err := gitlab.ProjectMergeRequests(id, 0, 30, "opened")
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		for _, mr := range mrs {
+			author := ""
+			if mr.Author != nil {
+				author = mr.Author.Username
+			}
+			assignee := ""
+			if mr.Assignee != nil {
+				assignee = mr.Assignee.Username
+			}
+			fmt.Printf("  (#%d) %s -> %s [%s] author[%s] assignee[%s]\n",
+				mr.Id, mr.SourceBranch, mr.TargetBranch, mr.State,
+				author, assignee)
+		}
+
+	case "merge_request_notes":
+		fmt.Println("Fetching merge_request notes…")
+
+		if id == "" {
+			flag.Usage()
+			return
+		}
+
+		notes, err := gitlab.MergeRequestNotes(id, merge_id, 0, 30)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		for _, note := range notes {
+			author := ""
+			if note.Author != nil {
+				author = note.Author.Username
+			}
+			fmt.Printf("  [%d] author: %s <%s> %s\n",
+				note.Id, author, note.CreatedAt, note.Body)
+		}
+
+	case "merge_request_comment":
+		fmt.Println("Sending new merge_request comment…")
+
+		if id == "" {
+			flag.Usage()
+			return
+		}
+
+		note, err := gitlab.SendMergeRequestComment(id, merge_id, comment)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		author := ""
+		if note.Author != nil {
+			author = note.Author.Username
+		}
+		fmt.Printf("  [%d] author: %s <%s> %s\n",
+			note.Id, author, note.CreatedAt, note.Body)
+
+	case "hooks":
+		fmt.Println("Fetching project hooks…")
+
+		if id == "" {
+			flag.Usage()
+			return
+		}
+
+		hooks, err := gitlab.ProjectHooks(id)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		for _, hook := range hooks {
+			fmt.Printf("> [%d] %s, created on %s\n", hook.Id, hook.Url, hook.CreatedAtRaw)
+		}
+
+	case "team":
+		fmt.Println("Fetching project team members…")
+
+		if id == "" {
+			flag.Usage()
+			return
+		}
+
+		members, err := gitlab.ProjectMembers(id)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		for _, member := range members {
+			fmt.Printf("> [%d] %s (%s) since %s\n", member.Id, member.Username, member.Name, member.CreatedAt)
+		}
+	}
+}

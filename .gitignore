@@ -1,20 +1,19 @@
-NOTES.txt
-drone.sublime-project
-drone.sublime-workspace
-.vagrant
-
-*~
-~*
+drone
+drone_*
 *.sqlite
-*.deb
-*.deb.*
-*.rpm
+*_gen.go
+*.html
+#*.css
+*.txt
+*.zip
+*.gz
 *.out
-*.rice-box.go
+*.min.js
+*.deb
+temp/
 
-cli/cli
-client/client
-server/server
-packaging/root/usr/local
-.idea/
-*.iml
+# vendored repositories that we don't actually need
+# to vendor. so exclude them
+
+vendor/google.golang.org/cloud
+vendor/github.com/bugagazavr

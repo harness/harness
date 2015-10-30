@@ -1,58 +1,76 @@
-image: go1.3
-git:
+clone:
   path: github.com/drone/drone
-env:
-  - GOROOT=/usr/local/go
-  - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-script:
-  - sudo add-apt-repository ppa:git-core/ppa 1> /dev/null 2> /dev/null
-  - sudo apt-get update 1> /dev/null 2> /dev/null
-  - sudo apt-get -y install git zip libsqlite3-dev sqlite3 rpm dpkg 1> /dev/null 2> /dev/null
-  - gem install fpm
-  - rbenv rehash
-  - make deps
-  - make test
-  - make test_postgres
-  - make test_mysql
-  - make packages
-services:
-  - postgres
-  - mysql
-notify:
-  email:
-    recipients:
-      - bschumac@cisco.com
-publish:
-  docker:
-    dockerfile: ./Dockerfile
-    docker_host: 173.37.40.202:2375
-    docker_port: 2375
-    docker_version: 1.5.0
-    registry_login: true
-    username: $$DOCKERHUB_USER
-    password: $$DOCKERHUB_PASS
-    email: npateriya@yahoo.com
-    image_name: npateriyainsecure/ciscodrone
-    push_latest: true
-    tags:
-      - $DRONE_COMMIT
-    when:
-      owner: CiscoCloud
-
-
-
-
-# new build script for 0.4 branch
 
 build:
-  image: golang:1.4.2
+  image: drone/golang:1.5
   environment:
-    - GOPATH=/drone
+    - GO15VENDOREXPERIMENT=1
   commands:
-    - apt-get update 1> /dev/null 2> /dev/null
-    - apt-get -y install libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
-    - go get golang.org/x/tools/cmd/vet
-    - go get golang.org/x/tools/cmd/cover
-    - make deps
-    - make test
+    - make deps gen
+    - make test test_postgres test_mysql
+    - make build build_static deb docs
 
+compose:
+  postgres:
+    image: postgres:9.4.5
+    environment:
+      - POSTGRES_USER=postgres
+  mysql:
+    image: mysql:5.6.27
+    environment:
+      - MYSQL_DATABASE=test
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+
+publish:
+  s3:
+    acl: public-read
+    region: us-east-1
+    bucket: downloads.drone.io
+    access_key: $$AWS_KEY
+    secret_key: $$AWS_SECRET
+    source: contrib/debian/drone.deb
+    target: drone/0.4
+    when:
+      repo: drone/drone
+
+  # sync the documentation with the s3 bucket
+
+  s3_sync:
+    acl: public-read
+    region: us-east-1
+    bucket: readme.drone.io
+    access_key: $$AWS_KEY
+    secret_key: $$AWS_SECRET
+    source: /drone/tmp/
+    target: /
+    exclude: "*.svg"
+    when:
+      repo: drone/drone
+      branch: master
+
+  s3_sync:
+    acl: public-read
+    region: us-east-1
+    bucket: readme.drone.io
+    access_key: $$AWS_KEY
+    secret_key: $$AWS_SECRET
+    source: /drone/tmp/
+    target: /
+    exclude: "*"
+    include: "**.svg"
+    content_type: "image/svg+xml"
+    when:
+      repo: drone/drone
+      branch: master
+
+  docker:
+    username: drone
+    password: $$DOCKER_PASS
+    email: $$DOCKER_EMAIL
+    repo: drone/drone
+    tag:
+      - "latest"
+      - "0.4"
+    when:
+      repo: drone/drone
+      branch: master

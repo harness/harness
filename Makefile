@@ -1,97 +1,68 @@
-SHA := $(shell git rev-parse --short HEAD)
-VERSION := $(shell cat VERSION)
-ITTERATION := $(shell date +%s)
+.PHONY: vendor docs
 
-all: build
+PACKAGES = $(shell go list ./... | grep -v /vendor/)
+
+all: gen build
 
 deps:
-	go get github.com/GeertJohan/go.rice/rice
-	go get -t -v ./...
+	go get -u golang.org/x/tools/cmd/cover
+	go get -u golang.org/x/tools/cmd/vet
+	go get -u github.com/kr/vexp
+	go get -u github.com/eknkc/amber/...
+	go get -u github.com/eknkc/amber
+	go get -u github.com/jteeuwen/go-bindata/...
+	go get -u github.com/elazarl/go-bindata-assetfs/...
+	go get -u github.com/dchest/jsmin
+	go get -u github.com/franela/goblin
+	go get -u github.com/go-swagger/go-swagger/...
+	go get -u github.com/PuerkitoBio/goquery
+	go get -u github.com/russross/blackfriday
 
-test:
-	@test -z "$(shell find . -name '*.go' | xargs gofmt -l)" || (echo "Need to run 'go fmt ./...'"; exit 1)
-	go vet ./...
-	go test -cover -short ./...
+gen: gen_static gen_template gen_migrations
 
-test_mysql:
-	mysql -P 3306 --protocol=tcp -u root -e 'create database if not exists test;'
-	TEST_DRIVER="mysql" TEST_DATASOURCE="root@tcp(127.0.0.1:3306)/test" go test -short github.com/drone/drone/server/datastore/database
-	mysql -P 3306 --protocol=tcp -u root -e 'drop database test;'
+gen_static:
+	mkdir -p static/docs_gen/api static/docs_gen/build
+	mkdir -p static/docs_gen/api static/docs_gen/plugin
+	mkdir -p static/docs_gen/api static/docs_gen/setup
+	mkdir -p static/docs_gen/api static/docs_gen/cli
+	go generate github.com/drone/drone/static
 
-test_postgres:
-	TEST_DRIVER="postgres" TEST_DATASOURCE="host=127.0.0.1 user=postgres dbname=postgres sslmode=disable" go test -short github.com/drone/drone/server/datastore/database
+gen_template:
+	go generate github.com/drone/drone/template
+
+gen_migrations:
+	go generate github.com/drone/drone/store/migration
 
 build:
-	mkdir -p packaging/output
-	mkdir -p packaging/root/usr/local/bin
-	go build -o packaging/root/usr/local/bin/drone  -ldflags "-X main.revision $(SHA) -X main.version $(VERSION)" github.com/drone/drone/cli
-	go build -o packaging/root/usr/local/bin/droned -ldflags "-X main.revision $(SHA) -X main.version $(VERSION)" github.com/drone/drone/server
+	go build
 
-install:
-	install -t /usr/local/bin packaging/root/usr/local/bin/drone
-	install -t /usr/local/bin packaging/root/usr/local/bin/droned
+build_static:
+	go build --ldflags '-extldflags "-static" -X main.version=$(CI_BUILD_NUMBER)' -o drone_static
 
-run:
-	@go run server/main.go --config=$$HOME/.drone/config.toml
+test:
+	go test -cover $(PACKAGES)
 
-clean:
-	find . -name "*.out" -delete
-	rm -rf packaging/output
-	rm -f packaging/root/usr/local/bin/drone
-	rm -f packaging/root/usr/local/bin/droned
+# docker run --publish=3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes  mysql:5.6.27
+test_mysql:
+	DATABASE_DRIVER="mysql" DATABASE_CONFIG="root@tcp(127.0.0.1:3306)/test?parseTime=true" go test github.com/drone/drone/model
 
-lessc:
-	lessc --clean-css server/app/styles/drone.less | autoprefixer > server/app/styles/drone.css
+# docker run --publish=5432:5432 postgres:9.4.5
+test_postgres:
+	DATABASE_DRIVER="postgres" DATABASE_CONFIG="host=127.0.0.1 user=postgres dbname=postgres sslmode=disable" go test github.com/drone/drone/model
 
-packages: clean build embed deb rpm
-
-# embeds content in go source code so that it is compiled
-# and packaged inside the go binary file.
-embed:
-	rice --import-path="github.com/drone/drone/server" append --exec="packaging/root/usr/local/bin/droned"
-
-# creates a debian package for drone to install
-# `sudo dpkg -i drone.deb`
 deb:
-	fpm -s dir -t deb -n drone -v $(VERSION) -p packaging/output/drone.deb \
-		--deb-priority optional --category admin \
-		--force \
-		--iteration $(ITTERATION) \
-		--deb-compression bzip2 \
-	 	--after-install packaging/scripts/postinst.deb \
-	 	--before-remove packaging/scripts/prerm.deb \
-		--after-remove packaging/scripts/postrm.deb \
-		--url https://github.com/drone/drone \
-		--description "Drone continuous integration server" \
-		-m "Brad Rydzewski <brad@drone.io>" \
-		--license "Apache License 2.0" \
-		--vendor "drone.io" -a amd64 \
-		--config-files /etc/drone/drone.toml \
-		packaging/root/=/
-	cp packaging/output/drone.deb packaging/output/drone.deb.$(SHA)
+	mkdir -p contrib/debian/drone/usr/local/bin
+	mkdir -p contrib/debian/drone/var/lib/drone
+	mkdir -p contrib/debian/drone/var/cache/drone
+	cp drone contrib/debian/drone/usr/local/bin
+	-dpkg-deb --build contrib/debian/drone
 
-rpm:
-	fpm -s dir -t rpm -n drone -v $(VERSION) -p packaging/output/drone.rpm \
-		--rpm-compression bzip2 --rpm-os linux \
-		--force \
-		--iteration $(ITTERATION) \
-	 	--after-install packaging/scripts/postinst.rpm \
-	 	--before-remove packaging/scripts/prerm.rpm \
-		--after-remove packaging/scripts/postrm.rpm \
-		--url https://github.com/drone/drone \
-		--description "Drone continuous integration server" \
-		-m "Brad Rydzewski <brad@drone.io>" \
-		--license "Apache License 2.0" \
-		--vendor "drone.io" -a amd64 \
-		--config-files /etc/drone/drone.toml \
-		packaging/root/=/
+vendor:
+	vexp
 
-# deploys drone to a staging server. this requires the following
-# environment variables are set:
-#
-#   DRONE_STAGING_HOST -- the hostname or ip
-#   DRONE_STAGING_USER -- the username used to login
-#   DRONE_STAGING_KEY  -- the identity file path (~/.ssh/id_rsa)
-deploy:
-	scp -i $$DRONE_STAGING_KEY packaging/output/drone.deb $$DRONE_STAGING_USER@$$DRONE_STAGING_HOST:/tmp
-	ssh -i $$DRONE_STAGING_KEY $$DRONE_STAGING_USER@$$DRONE_STAGING_HOST -- dpkg -i /tmp/drone.deb
+docs:
+	mkdir -p /drone/tmp/docs
+	mkdir -p /drone/tmp/static
+	cp -a static/docs_gen/*   /drone/tmp/
+	cp -a static/styles_gen   /drone/tmp/static/
+	cp -a static/images       /drone/tmp/static/

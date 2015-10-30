@@ -1,245 +1,68 @@
-[![Build Status](http://droneio.shipped-cisco.com/api/badge/github.com/CiscoCloud/drone/status.svg?branch=master)](http://droneio.shipped-cisco.com/github.com/CiscoCloud/drone)
-[![GoDoc](https://godoc.org/github.com/drone/drone?status.svg)](https://godoc.org/github.com/drone/drone)
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/drone/drone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](http://beta.drone.io/api/badges/drone/drone/status.svg)](http://beta.drone.io/drone/drone)
 
-## Documentation
+Drone is a Continuous Integration platform built on container technology. Every build is executed inside an ephemeral Docker container, giving developers complete control over their build environment with guaranteed isolation.
 
-* [Installation](http://readme.drone.io/setup/install/ubuntu/)
-* [User Guide](http://readme.drone.io/usage/overview/)
-* [API Reference](http://readme.drone.io/api/overview/)
+### Goals
 
-## System Requirements
+Drone's prime directive is to help teams [ship code like GitHub](https://github.com/blog/1241-deploying-at-github#always-be-shipping). Drone is easy to install, setup and maintain and offers a powerful container-based plugin system. Drone aspires to be an industry-wide replacement for Jenkins.
 
-* Docker
-* AUFS
+### Documentation
 
+Drone documentation is organized into several categories:
 
-We highly recommend running Docker with the AUFS storage driver. You can verify Docker is using
-the AUFS storage driver with the following command `sudo docker info | grep Driver:`
+* [Setup Guide](http://readme.drone.io/setup/)
+* [Build Guide](http://readme.drone.io/build/)
+* [Plugin Guide](http://readme.drone.io/plugin/)
+* [CLI Reference](http://readme.drone.io/cli/)
+* [API Reference](http://readme.drone.io/api/)
 
-## Upgrading
+### Community, Help
 
-If you are upgrading from `0.2` I would recommend waiting a few weeks for the master
-branch to stabilize. There was a huge amount of refactoring that destabilized the codebase
-and I'd hate for that to impact any real world installations.
+Contributions, questions, and comments are welcomed and encouraged. Drone developers hang out in the [drone/drone](https://gitter.im/drone/drone) room on gitter. We ask that you please post your questions to [gitter](https://gitter.im/drone/drone) before creating an issue.
 
-If you still want to upgrade to `0.2` please know that the databases are not compatible and
-there is no automated migration due to some fundamental structural changes. You will need
-to start with a fresh instance.
+### Cloning, Building, Running
 
-## Installation
+If you are new to Go, make sure you [install](http://golang.org/doc/install) Go 1.5+ and [setup](http://golang.org/doc/code.html) your workspace (ie `$GOPATH`). Go programs use directory structure for package imports, therefore, it is very important you clone this project to the specified directory in your Go path:
 
-**This is project is alpha stage. Consider yourself warned**
+```
+git clone git://github.com/drone/drone.git $GOPATH/src/github.com/drone/drone
+cd $GOPATH/src/github.com/drone/drone
+```
 
-We have optimized the installation process for Ubuntu since that is what we test with internally.
-You can run the following commands to quickly download an install Drone on an Ubuntu machine.
+Please ensure your local environment has the following dependencies installed. We provide scripts in the `./contrib` folder as a convenience that can be used to install:
+
+* libsqlite3
+* sassc
+
+Commands to build from source:
 
 ```sh
-# Ubuntu, Debian
-wget downloads.drone.io/master/drone.deb
-sudo dpkg -i drone.deb
+export GO15VENDOREXPERIMENT=1
 
-# CentOS, RedHat
-wget downloads.drone.io/master/drone.rpm
-sudo yum localinstall drone.rpm
+make deps    # Download required dependencies
+make gen     # Generate code
+make build   # Build the binary
 ```
 
-## Database
-
-By default, Drone will create a SQLite database. Drone also supports Postgres and MySQL
-databases. You can customize the database settings using the configuration options
-described in the **Setup** section.
-
-Below are some example configurations that you can use as reference:
-
-```toml
-# to use postgres
-[database]
-driver="postgres"
-datasource="host=127.0.0.1 user=postgres dbname=drone sslmode=disable"
-
-# to use mysql
-[database]
-driver="mysql"
-datasource="root@tcp(127.0.0.1:3306)/drone"
-```
-
-## Setup
-
-We are in the process of moving configuration out of the UI and into configuration
-files and/or environment variables (your choice which). If you prefer configuration files
-you can provide Drone with the path to your configuration file:
+Commands for development:
 
 ```sh
-droned --config=/path/to/drone.toml
+make gen_static     # Generate static content
+make gen_template   # Generate templates from amber files
+make gen_migrations # Generate embedded database migrations
+make vet            # Execute go vet command
+make fmt            # Execute go fmt command
 ```
 
-The configuration file is in TOML format. If installed using the `drone.deb` file
-will be located in `/etc/drone/drone.toml`.
-
-You can find the current config of the master branch [here](https://github.com/drone/drone/blob/master/packaging/root/etc/drone/drone.toml).
-
-```toml
-
-[server]
-port=""
-
-[server.ssl]
-key=""
-cert=""
-
-[session]
-secret=""
-expires=""
-
-[database]
-driver=""
-datasource=""
-
-[github]
-client=""
-secret=""
-orgs=[]
-open=false
-
-[github_enterprise]
-client=""
-secret=""
-api=""
-url=""
-orgs=[]
-private_mode=false
-open=false
-
-[bitbucket]
-client=""
-secret=""
-open=false
-
-[gitlab]
-url=""
-client=""
-secret=""
-skip_verify=false
-open=false
-
-[gogs]
-url=""
-secret=""
-open=false
-
-[smtp]
-host=""
-port=""
-from=""
-user=""
-pass=""
-
-[docker]
-cert=""
-key=""
-
-[worker]
-nodes=[
-"unix:///var/run/docker.sock",
-"unix:///var/run/docker.sock"
-]
-
-```
-
-Or you can use environment variables
+Commands to start drone:
 
 ```sh
-
-# custom http server settings
-export DRONE_SERVER_PORT=""
-export DRONE_SERVER_SSL_KEY=""
-export DRONE_SERVER_SSL_CERT=""
-
-# session settings
-export DRONE_SESSION_SECRET=""
-export DRONE_SESSION_EXPIRES=""
-
-# custom database settings
-export DRONE_DATABASE_DRIVER=""
-export DRONE_DATABASE_DATASOURCE=""
-
-# github configuration
-export DRONE_GITHUB_CLIENT=""
-export DRONE_GITHUB_SECRET=""
-export DRONE_GITHUB_OPEN=false
-
-# github enterprise configuration
-export DRONE_GITHUB_ENTERPRISE_CLIENT=""
-export DRONE_GITHUB_ENTERPRISE_SECRET=""
-export DRONE_GITHUB_ENTERPRISE_API=""
-export DRONE_GITHUB_ENTERPRISE_URL=""
-export DRONE_GITHUB_ENTERPRISE_PRIVATE_MODE=false
-export DRONE_GITHUB_ENTERPRISE_OPEN=false
-
-# bitbucket configuration
-export DRONE_BITBUCKET_CLIENT=""
-export DRONE_BITBUCKET_SECRET=""
-export DRONE_BITBUCKET_OPEN=false
-
-
-# gitlab configuration
-export DRONE_GITLAB_URL=""
-export DRONE_GITLAB_CLIENT=""
-export DRONE_GITLAB_SECRET=""
-export DRONE_GITLAB_SKIP_VERIFY=false
-export DRONE_GITLAB_OPEN=false
-
-# email configuration
-export DRONE_SMTP_HOST=""
-export DRONE_SMTP_PORT=""
-export DRONE_SMTP_FROM=""
-export DRONE_SMTP_USER=""
-export DRONE_SMTP_PASS=""
-
-# worker nodes
-# these are optional. If not specified Drone will add
-# two worker nodes that connect to $DOCKER_HOST
-export DRONE_WORKER_NODES="tcp://0.0.0.0:2375,tcp://0.0.0.0:2375"
+drone
+drone --debug # Debug mode enables more verbose logging
 ```
 
-Or a combination of the two:
+If you are seeing slow compile times please install the following:
 
 ```sh
-DRONE_GITLAB_URL="https://gitlab.com" droned --config=/path/to/drone.conf
+go install github.com/mattn/go-sqlite3
 ```
-
-## GitHub
-
-In order to setup with GitHub you'll need to register your local Drone installation
-with GitHub (or GitHub Enterprise). You can read more about registering an application here:
-https://github.com/settings/applications/new
-
-Below are example values when running Drone locally. If you are running Drone on a server
-you should replace `localhost` with your server hostname or address.
-
-Homepage URL:
-
-```
-http://localhost:8000/
-```
-
-Authorization callback URL for github.com:
-
-```
-http://localhost:8000/api/auth/github.com
-```
-
-Authorization callback URL for GitHub Enterprise:
-
-```
-http://localhost:8000/api/auth/enterprise.github.com
-```
-
-## Build Configuration
-
-You will need to include a `.drone.yml` file in the root of your repository in order to
-configure a build. I'm still working on updated documentation, so in the meantime please refer
-to the `0.2` README to learn more about the `.drone.yml` format:
-
-https://github.com/drone/drone/blob/v0.2.1/README.md#builds

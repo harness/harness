@@ -59,6 +59,8 @@ func GetHost(r *http.Request) string {
 		return r.Header.Get("X-Host")
 	case len(r.Header.Get("XFF")) != 0:
 		return r.Header.Get("XFF")
+	case len(r.Header.Get("X-Real-IP")) != 0:
+		return r.Header.Get("X-Real-IP")
 	default:
 		return "localhost:8080"
 	}
@@ -90,6 +92,7 @@ func SetCookie(w http.ResponseWriter, r *http.Request, name, value string) {
 		Domain:   r.URL.Host,
 		HttpOnly: true,
 		Secure:   IsHttps(r),
+		MaxAge:   2147483647, // the cooke value (token) is responsible for expiration
 	}
 
 	http.SetCookie(w, &cookie)

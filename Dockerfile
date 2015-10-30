@@ -1,12 +1,23 @@
-FROM ubuntu
-ENV  DRONE_SERVER_PORT :80
+# Build the drone executable on a x64 Linux host:
+#
+#     go build --ldflags '-extldflags "-static"' -o drone_static
+#
+#
+# Alternate command for Go 1.4 and older:
+#
+#     go build -a -tags netgo --ldflags '-extldflags "-static"' -o drone_static
+#
+#
+# Build the docker image:
+#
+#     docker build --rm=true -t drone/drone .
 
-ADD packaging/output/ /dronepkg
-WORKDIR /dronepkg
+FROM centurylink/ca-certs
+EXPOSE 8000
 
-RUN apt-get update
-RUN apt-get -y install zip libsqlite3-dev sqlite3 1> /dev/null 2> /dev/null
-RUN make deps build embed install
+ENV DATABASE_DRIVER=sqlite3
+ENV DATABASE_CONFIG=/var/lib/drone/drone.sqlite
 
-EXPOSE 80
-ENTRYPOINT ["/usr/local/bin/droned"]
+ADD drone_static /drone_static
+
+ENTRYPOINT ["/drone_static"]
