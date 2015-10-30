@@ -1,6 +1,7 @@
 package github
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -89,7 +90,17 @@ func (g *Github) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 		return nil, false, nil
 	}
 
-	var trans = &oauth2.Transport{Config: config}
+	var trans = &oauth2.Transport{
+		Config: config,
+	}
+	if g.SkipVerify {
+		trans.Transport = &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+	}
 	var token, err = trans.Exchange(code)
 	if err != nil {
 		return nil, false, fmt.Errorf("Error exchanging token. %s", err)
