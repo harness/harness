@@ -61,5 +61,5 @@ f63561783e550ccd21663d13eaf6a4d252d84147  .drone.yml
 Generate a checksum on Windows with powershell:
 
 ```
-$ Get-FileHash .\.drone.yml -Algorithm SHA256
+$ (Get-FileHash .\.drone.yml -Algorithm SHA256).Hash.ToLower()
 ```
