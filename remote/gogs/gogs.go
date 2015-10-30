@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/shared/envconfig"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/shared/envconfig"
 	"github.com/gogits/go-gogs-client"
 
 	log "github.com/Sirupsen/logrus"

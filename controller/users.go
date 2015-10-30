@@ -8,6 +8,7 @@ import (
 	"github.com/CiscoCloud/drone/model"
 	"github.com/CiscoCloud/drone/router/middleware/session"
 	"github.com/CiscoCloud/drone/shared/crypto"
+	"github.com/CiscoCloud/drone/shared/token"
 	"github.com/CiscoCloud/drone/store"
 )
 

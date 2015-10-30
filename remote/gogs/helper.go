@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drone/drone/model"
+	"github.com/CiscoCloud/drone/model"
 	"github.com/gogits/go-gogs-client"
 )
 

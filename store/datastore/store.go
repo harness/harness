@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"os"
 
-	"github.com/drone/drone/shared/envconfig"
-	"github.com/drone/drone/store"
-	"github.com/drone/drone/store/migration"
+	"github.com/CiscoCloud/drone/shared/envconfig"
+	"github.com/CiscoCloud/drone/store"
+	"github.com/CiscoCloud/drone/store/migration"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
