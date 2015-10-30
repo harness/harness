@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -24,7 +27,6 @@ func expectNotification(t *testing.T, ch <-chan *Notification, relname string, e
 	case <-time.After(1500 * time.Millisecond):
 		return fmt.Errorf("timeout")
 	}
-	panic("not reached")
 }
 
 func expectNoNotification(t *testing.T, ch <-chan *Notification) error {
@@ -34,7 +36,6 @@ func expectNoNotification(t *testing.T, ch <-chan *Notification) error {
 	case <-time.After(100 * time.Millisecond):
 		return nil
 	}
-	panic("not reached")
 }
 
 func expectEvent(t *testing.T, eventch <-chan ListenerEventType, et ListenerEventType) error {
@@ -45,9 +46,8 @@ func expectEvent(t *testing.T, eventch <-chan ListenerEventType, et ListenerEven
 		}
 		return nil
 	case <-time.After(1500 * time.Millisecond):
-		return fmt.Errorf("timeout")
+		panic("expectEvent timeout")
 	}
-	panic("not reached")
 }
 
 func expectNoEvent(t *testing.T, eventch <-chan ListenerEventType) error {
@@ -57,7 +57,6 @@ func expectNoEvent(t *testing.T, eventch <-chan ListenerEventType) error {
 	case <-time.After(100 * time.Millisecond):
 		return nil
 	}
-	panic("not reached")
 }
 
 func newTestListenerConn(t *testing.T) (*ListenerConn, <-chan *Notification) {
@@ -214,13 +213,82 @@ func TestConnPing(t *testing.T) {
 	}
 }
 
+// Test for deadlock where a query fails while another one is queued
+func TestConnExecDeadlock(t *testing.T) {
+	l, _ := newTestListenerConn(t)
+	defer l.Close()
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		l.ExecSimpleQuery("SELECT pg_sleep(60)")
+		wg.Done()
+	}()
+	runtime.Gosched()
+	go func() {
+		l.ExecSimpleQuery("SELECT 1")
+		wg.Done()
+	}()
+	// give the two goroutines some time to get into position
+	runtime.Gosched()
+	// calls Close on the net.Conn; equivalent to a network failure
+	l.Close()
+
+	var done int32 = 0
+	go func() {
+		time.Sleep(10 * time.Second)
+		if atomic.LoadInt32(&done) != 1 {
+			panic("timed out")
+		}
+	}()
+	wg.Wait()
+	atomic.StoreInt32(&done, 1)
+}
+
+// Test for ListenerConn being closed while a slow query is executing
+func TestListenerConnCloseWhileQueryIsExecuting(t *testing.T) {
+	l, _ := newTestListenerConn(t)
+	defer l.Close()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		sent, err := l.ExecSimpleQuery("SELECT pg_sleep(60)")
+		if sent {
+			panic("expected sent=false")
+		}
+		// could be any of a number of errors
+		if err == nil {
+			panic("expected error")
+		}
+		wg.Done()
+	}()
+	// give the above goroutine some time to get into position
+	runtime.Gosched()
+	err := l.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var done int32 = 0
+	go func() {
+		time.Sleep(10 * time.Second)
+		if atomic.LoadInt32(&done) != 1 {
+			panic("timed out")
+		}
+	}()
+	wg.Wait()
+	atomic.StoreInt32(&done, 1)
+}
+
 func TestNotifyExtra(t *testing.T) {
 	db := openTestConn(t)
 	defer db.Close()
 
-	//if getServerVersion(t, db) < 90000 {
-	return
-	//}
+	if getServerVersion(t, db) < 90000 {
+		t.Skip("skipping NOTIFY payload test since the server does not appear to support it")
+	}
 
 	l, channel := newTestListenerConn(t)
 	defer l.Close()

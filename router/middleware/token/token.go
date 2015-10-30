@@ -3,10 +3,9 @@ package token
 import (
 	"time"
 
-	"github.com/CiscoCloud/drone/model"
 	"github.com/CiscoCloud/drone/remote"
-	"github.com/CiscoCloud/drone/router/middleware/context"
 	"github.com/CiscoCloud/drone/router/middleware/session"
+	"github.com/CiscoCloud/drone/store"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
@@ -21,7 +20,7 @@ func Refresh(c *gin.Context) {
 
 	// check if the remote includes the ability to
 	// refresh the user token.
-	remote_ := context.Remote(c)
+	remote_ := remote.FromContext(c)
 	refresher, ok := remote_.(remote.Refresher)
 	if !ok {
 		c.Next()
@@ -41,8 +40,7 @@ func Refresh(c *gin.Context) {
 	// database.
 	ok, _ = refresher.Refresh(user)
 	if ok {
-		db := context.Database(c)
-		err := model.UpdateUser(db, user)
+		err := store.UpdateUser(c, user)
 		if err != nil {
 			// we only log the error at this time. not sure
 			// if we really want to fail the request, do we?

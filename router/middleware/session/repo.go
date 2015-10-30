@@ -4,8 +4,9 @@ import (
 	"net/http"
 
 	"github.com/CiscoCloud/drone/model"
-	"github.com/CiscoCloud/drone/router/middleware/context"
+	"github.com/CiscoCloud/drone/remote"
 	"github.com/CiscoCloud/drone/shared/token"
+	"github.com/CiscoCloud/drone/store"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
@@ -42,9 +43,8 @@ func SetRepo() gin.HandlerFunc {
 			name  = c.Param("name")
 		)
 
-		db := context.Database(c)
 		user := User(c)
-		repo, err := model.GetRepoName(db, owner, name)
+		repo, err := store.GetRepoOwnerName(c, owner, name)
 		if err == nil {
 			c.Set("repo", repo)
 			c.Next()
@@ -55,7 +55,7 @@ func SetRepo() gin.HandlerFunc {
 		// to see if the repository actually exists. If yes,
 		// we can prompt the user to add.
 		if user != nil {
-			remote := context.Remote(c)
+			remote := remote.FromContext(c)
 			repo, err = remote.Repo(user, owner, name)
 			if err != nil {
 				log.Errorf("Cannot find remote repository %s/%s for user %s. %s",
@@ -107,7 +107,6 @@ func SetPerm() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := User(c)
 		repo := Repo(c)
-		remote := context.Remote(c)
 		perm := &model.Perm{}
 
 		if user != nil {
@@ -148,7 +147,7 @@ func SetPerm() gin.HandlerFunc {
 		// check the remote system to get the users permissiosn.
 		default:
 			var err error
-			perm, err = remote.Perm(user, repo.Owner, repo.Name)
+			perm, err = remote.FromContext(c).Perm(user, repo.Owner, repo.Name)
 			if err != nil {
 				perm.Pull = false
 				perm.Push = false

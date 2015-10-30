@@ -17,7 +17,12 @@ func convertRepo(from *Repo) *model.Repo {
 		Link:      from.Links.Html.Href,
 		IsPrivate: from.IsPrivate,
 		Avatar:    from.Owner.Links.Avatar.Href,
+		Kind:      from.Scm,
 		Branch:    "master",
+	}
+
+	if repo.Kind == model.RepoHg {
+		repo.Branch = "default"
 	}
 
 	// in some cases, the owner of the repository is not

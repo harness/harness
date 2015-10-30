@@ -14,6 +14,8 @@ block header
 		li.nav-item
 			a.nav-link[href="../plugin/"] Plugins
 		li.nav-item
+			a.nav-link[href="../cli/"] CLI
+		li.nav-item
 			a.nav-link.active[href="#"] API Reference
 
 block content
@@ -55,7 +57,7 @@ block content
 										p #{$result.Desc}
 						aside
 							h4 Endpoint
-							pre #{$op.Method} #{$op.Path}
+							pre #{$op.Method} /api#{$op.Path}
 							each $param in $op.Params
 								if $param.Example
 									h4 Example Request

@@ -14,10 +14,23 @@ block content
                 | Your repository list is empty.
 
         div.row.repo-row
-            each $repo in Repos
-                div.col-sm-4
-                    a.card[href="/"+$repo.FullName]
-                        div.card-header
-                            img.avatar[src=$repo.Avatar]
-                        div.card-block
-                            h3.login #{$repo.Name}
+            input.repo-search[type="search"][placeholder="Filter..."]
+            div.repo-list
+                each $repo in Repos
+                    div.col-sm-4
+                        a.card[href="/"+$repo.FullName]
+                            div.card-header
+                                img.avatar[src=$repo.Avatar]
+                            div.card-block
+                                h3.login #{$repo.Name}
+                                div.full_name.hidden #{$repo.FullName}
+block append scripts
+    if len(Repos) != 0
+        script
+            $(window).load(function(){
+            $(".repo-list").searcher({
+                itemSelector: ".col-sm-4",
+                textSelector:  ".full_name",
+                inputSelector: ".repo-search"
+            });
+            });

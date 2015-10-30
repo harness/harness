@@ -147,6 +147,7 @@ func (g *Github) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	repo.Clone = *repo_.CloneURL
 	repo.Branch = "master"
 	repo.Avatar = *repo_.Owner.AvatarURL
+	repo.Kind = model.RepoGit
 
 	if repo_.DefaultBranch != nil {
 		repo.Branch = *repo_.DefaultBranch
@@ -291,6 +292,8 @@ func (g *Github) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 		return g.pullRequest(r)
 	case "push":
 		return g.push(r)
+	case "deployment":
+		return g.deployment(r)
 	default:
 		return nil, nil, nil
 	}
@@ -322,6 +325,7 @@ func (g *Github) push(r *http.Request) (*model.Repo, *model.Build, error) {
 	repo.IsPrivate = hook.Repo.Private
 	repo.Clone = hook.Repo.CloneURL
 	repo.Branch = hook.Repo.DefaultBranch
+	repo.Kind = model.RepoGit
 
 	build := &model.Build{}
 	build.Event = model.EventPush
@@ -349,6 +353,10 @@ func (g *Github) push(r *http.Request) (*model.Repo, *model.Build, error) {
 	// we should ignore github pages
 	if build.Ref == "refs/heads/gh-pages" {
 		return nil, nil, nil
+	}
+	if strings.HasPrefix(build.Ref, "refs/tags/") {
+		// just kidding, this is actually a tag event
+		build.Event = model.EventTag
 	}
 
 	return repo, build, nil
@@ -383,6 +391,7 @@ func (g *Github) pullRequest(r *http.Request) (*model.Repo, *model.Build, error)
 	repo.Link = *hook.Repo.HTMLURL
 	repo.IsPrivate = *hook.Repo.Private
 	repo.Clone = *hook.Repo.CloneURL
+	repo.Kind = model.RepoGit
 	repo.Branch = "master"
 	if hook.Repo.DefaultBranch != nil {
 		repo.Branch = *hook.Repo.DefaultBranch
@@ -402,6 +411,72 @@ func (g *Github) pullRequest(r *http.Request) (*model.Repo, *model.Build, error)
 	// build.Timestamp = time.Now().UTC().Format("2006-01-02 15:04:05.000000000 +0000 MST")
 
 	return repo, build, nil
+}
+
+func (g *Github) deployment(r *http.Request) (*model.Repo, *model.Build, error) {
+	payload := GetPayload(r)
+	hook := &deployHook{}
+
+	err := json.Unmarshal(payload, hook)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// for older versions of GitHub. Remove.
+	if hook.Deployment.ID == 0 {
+		hook.Deployment.ID = hook.ID
+		hook.Deployment.Sha = hook.Sha
+		hook.Deployment.Ref = hook.Ref
+		hook.Deployment.Task = hook.Name
+		hook.Deployment.Env = hook.Env
+		hook.Deployment.Desc = hook.Desc
+	}
+
+	repo := &model.Repo{}
+	repo.Owner = hook.Repo.Owner.Login
+	if len(repo.Owner) == 0 {
+		repo.Owner = hook.Repo.Owner.Name
+	}
+	repo.Name = hook.Repo.Name
+	repo.FullName = fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
+	repo.Link = hook.Repo.HTMLURL
+	repo.IsPrivate = hook.Repo.Private
+	repo.Clone = hook.Repo.CloneURL
+	repo.Branch = hook.Repo.DefaultBranch
+	repo.Kind = model.RepoGit
+
+	// ref can be
+	// branch, tag, or sha
+
+	build := &model.Build{}
+	build.Event = model.EventDeploy
+	build.Commit = hook.Deployment.Sha
+	build.Link = hook.Deployment.Url
+	build.Message = hook.Deployment.Desc
+	build.Avatar = hook.Sender.Avatar
+	build.Author = hook.Sender.Login
+	build.Ref = hook.Deployment.Ref
+	build.Branch = hook.Deployment.Ref
+	build.Deploy = hook.Deployment.Env
+
+	// if the ref is a sha or short sha we need to manually
+	// construct the ref.
+	if strings.HasPrefix(build.Commit, build.Ref) || build.Commit == build.Ref {
+		build.Branch = repo.Branch
+		build.Ref = fmt.Sprintf("refs/heads/%s", repo.Branch)
+
+	}
+	// if the ref is a branch we should make sure it has refs/heads prefix
+	if !strings.HasPrefix(build.Ref, "refs/") { // branch or tag
+		build.Ref = fmt.Sprintf("refs/heads/%s", build.Branch)
+
+	}
+
+	return repo, build, nil
+}
+
+func (g *Github) String() string {
+	return "github"
 }
 
 const (

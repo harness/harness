@@ -4,27 +4,34 @@ import (
 	"bufio"
 	"crypto/md5"
 	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"database/sql/driver"
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/lib/pq/oid"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
+	"os/user"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/lib/pq/oid"
 )
 
 // Common error types
 var (
-	ErrSSLNotSupported     = errors.New("pq: SSL is not enabled on the server")
-	ErrNotSupported        = errors.New("pq: Unsupported command")
-	ErrInFailedTransaction = errors.New("pq: Could not complete operation in a failed transaction")
+	ErrNotSupported              = errors.New("pq: Unsupported command")
+	ErrInFailedTransaction       = errors.New("pq: Could not complete operation in a failed transaction")
+	ErrSSLNotSupported           = errors.New("pq: SSL is not enabled on the server")
+	ErrSSLKeyHasWorldPermissions = errors.New("pq: Private key file has group or world access. Permissions should be u=rw (0600) or less.")
+	ErrCouldNotDetectUsername    = errors.New("pq: Could not detect default username. Please provide one explicitly.")
 )
 
 type drv struct{}
@@ -66,6 +73,7 @@ func (s transactionStatus) String() string {
 	default:
 		errorf("unknown transactionStatus %d", s)
 	}
+
 	panic("not reached")
 }
 
@@ -93,13 +101,54 @@ type conn struct {
 	parameterStatus parameterStatus
 
 	saveMessageType   byte
-	saveMessageBuffer *readBuf
+	saveMessageBuffer []byte
+
+	// If true, this connection is bad and all public-facing functions should
+	// return ErrBadConn.
+	bad bool
+
+	// If set, this connection should never use the binary format when
+	// receiving query results from prepared statements.  Only provided for
+	// debugging.
+	disablePreparedBinaryResult bool
+
+	// Whether to always send []byte parameters over as binary.  Enables single
+	// round-trip mode for non-prepared Query calls.
+	binaryParameters bool
+}
+
+// Handle driver-side settings in parsed connection string.
+func (c *conn) handleDriverSettings(o values) (err error) {
+	boolSetting := func(key string, val *bool) error {
+		if value := o.Get(key); value != "" {
+			if value == "yes" {
+				*val = true
+			} else if value == "no" {
+				*val = false
+			} else {
+				return fmt.Errorf("unrecognized value %q for %s", value, key)
+			}
+		}
+		return nil
+	}
+
+	err = boolSetting("disable_prepared_binary_result", &c.disablePreparedBinaryResult)
+	if err != nil {
+		return err
+	}
+	err = boolSetting("binary_parameters", &c.binaryParameters)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *conn) writeBuf(b byte) *writeBuf {
 	c.scratch[0] = b
-	w := writeBuf(c.scratch[:5])
-	return &w
+	return &writeBuf{
+		buf: c.scratch[:5],
+		pos: 1,
+	}
 }
 
 func Open(name string) (_ driver.Conn, err error) {
@@ -107,22 +156,11 @@ func Open(name string) (_ driver.Conn, err error) {
 }
 
 func DialOpen(d Dialer, name string) (_ driver.Conn, err error) {
-	defer func() {
-		// Handle any panics during connection initialization.  Note that we
-		// specifically do *not* want to use errRecover(), as that would turn
-		// any connection errors into ErrBadConns, hiding the real error
-		// message from the user.
-		e := recover()
-		if e == nil {
-			// Do nothing
-			return
-		}
-		var ok bool
-		err, ok = e.(error)
-		if !ok {
-			err = fmt.Errorf("pq: unexpected error: %#v", e)
-		}
-	}()
+	// Handle any panics during connection initialization.  Note that we
+	// specifically do *not* want to use errRecover(), as that would turn any
+	// connection errors into ErrBadConns, hiding the real error message from
+	// the user.
+	defer errRecoverNoErrBadConn(&err)
 
 	o := make(values)
 
@@ -140,7 +178,7 @@ func DialOpen(d Dialer, name string) (_ driver.Conn, err error) {
 		o.Set(k, v)
 	}
 
-	if strings.HasPrefix(name, "postgres://") {
+	if strings.HasPrefix(name, "postgres://") || strings.HasPrefix(name, "postgresql://") {
 		name, err = ParseURL(name)
 		if err != nil {
 			return nil, err
@@ -157,7 +195,6 @@ func DialOpen(d Dialer, name string) (_ driver.Conn, err error) {
 			o.Set("application_name", fallback)
 		}
 	}
-	o.Unset("fallback_application_name")
 
 	// We can't work with any client_encoding other than UTF-8 currently.
 	// However, we have historically allowed the user to set it to UTF-8
@@ -192,29 +229,36 @@ func DialOpen(d Dialer, name string) (_ driver.Conn, err error) {
 		}
 	}
 
-	c, err := dial(d, o)
+	cn := &conn{}
+	err = cn.handleDriverSettings(o)
 	if err != nil {
 		return nil, err
 	}
 
-	cn := &conn{c: c}
+	cn.c, err = dial(d, o)
+	if err != nil {
+		return nil, err
+	}
 	cn.ssl(o)
 	cn.buf = bufio.NewReader(cn.c)
 	cn.startup(o)
+
 	// reset the deadline, in case one was set (see dial)
-	err = cn.c.SetDeadline(time.Time{})
+	if timeout := o.Get("connect_timeout"); timeout != "" && timeout != "0" {
+		err = cn.c.SetDeadline(time.Time{})
+	}
 	return cn, err
 }
 
 func dial(d Dialer, o values) (net.Conn, error) {
 	ntw, addr := network(o)
-
-	timeout := o.Get("connect_timeout")
-	// Ensure the option will not be sent.
-	o.Unset("connect_timeout")
+	// SSL is not necessary or supported over UNIX domain sockets
+	if ntw == "unix" {
+		o["sslmode"] = "disable"
+	}
 
 	// Zero or not specified means wait indefinitely.
-	if timeout != "" && timeout != "0" {
+	if timeout := o.Get("connect_timeout"); timeout != "" && timeout != "0" {
 		seconds, err := strconv.ParseInt(timeout, 10, 0)
 		if err != nil {
 			return nil, fmt.Errorf("invalid value for parameter connect_timeout: %s", err)
@@ -259,10 +303,6 @@ func (vs values) Get(k string) (v string) {
 func (vs values) Isset(k string) bool {
 	_, ok := vs[k]
 	return ok
-}
-
-func (vs values) Unset(k string) {
-	delete(vs, k)
 }
 
 // scanner implements a tokenizer for libpq-style option strings.
@@ -383,12 +423,16 @@ func (cn *conn) isInTransaction() bool {
 
 func (cn *conn) checkIsInTransaction(intxn bool) {
 	if cn.isInTransaction() != intxn {
+		cn.bad = true
 		errorf("unexpected transaction status %v", cn.txnStatus)
 	}
 }
 
 func (cn *conn) Begin() (_ driver.Tx, err error) {
-	defer errRecover(&err)
+	if cn.bad {
+		return nil, driver.ErrBadConn
+	}
+	defer cn.errRecover(&err)
 
 	cn.checkIsInTransaction(false)
 	_, commandTag, err := cn.simpleExec("BEGIN")
@@ -396,16 +440,21 @@ func (cn *conn) Begin() (_ driver.Tx, err error) {
 		return nil, err
 	}
 	if commandTag != "BEGIN" {
+		cn.bad = true
 		return nil, fmt.Errorf("unexpected command tag %s", commandTag)
 	}
 	if cn.txnStatus != txnStatusIdleInTransaction {
+		cn.bad = true
 		return nil, fmt.Errorf("unexpected transaction status %v", cn.txnStatus)
 	}
 	return cn, nil
 }
 
 func (cn *conn) Commit() (err error) {
-	defer errRecover(&err)
+	if cn.bad {
+		return driver.ErrBadConn
+	}
+	defer cn.errRecover(&err)
 
 	cn.checkIsInTransaction(true)
 	// We don't want the client to think that everything is okay if it tries
@@ -423,9 +472,13 @@ func (cn *conn) Commit() (err error) {
 
 	_, commandTag, err := cn.simpleExec("COMMIT")
 	if err != nil {
+		if cn.isInTransaction() {
+			cn.bad = true
+		}
 		return err
 	}
 	if commandTag != "COMMIT" {
+		cn.bad = true
 		return fmt.Errorf("unexpected command tag %s", commandTag)
 	}
 	cn.checkIsInTransaction(false)
@@ -433,11 +486,17 @@ func (cn *conn) Commit() (err error) {
 }
 
 func (cn *conn) Rollback() (err error) {
-	defer errRecover(&err)
+	if cn.bad {
+		return driver.ErrBadConn
+	}
+	defer cn.errRecover(&err)
 
 	cn.checkIsInTransaction(true)
 	_, commandTag, err := cn.simpleExec("ROLLBACK")
 	if err != nil {
+		if cn.isInTransaction() {
+			cn.bad = true
+		}
 		return err
 	}
 	if commandTag != "ROLLBACK" {
@@ -453,8 +512,6 @@ func (cn *conn) gname() string {
 }
 
 func (cn *conn) simpleExec(q string) (res driver.Result, commandTag string, err error) {
-	defer errRecover(&err)
-
 	b := cn.writeBuf('Q')
 	b.string(q)
 	cn.send(b)
@@ -463,7 +520,7 @@ func (cn *conn) simpleExec(q string) (res driver.Result, commandTag string, err 
 		t, r := cn.recv1()
 		switch t {
 		case 'C':
-			res, commandTag = parseComplete(r.string())
+			res, commandTag = cn.parseComplete(r.string())
 		case 'Z':
 			cn.processReadyForQuery(r)
 			// done
@@ -473,16 +530,16 @@ func (cn *conn) simpleExec(q string) (res driver.Result, commandTag string, err 
 		case 'T', 'D', 'I':
 			// ignore any results
 		default:
+			cn.bad = true
 			errorf("unknown response for simple query: %q", t)
 		}
 	}
-	panic("not reached")
 }
 
-func (cn *conn) simpleQuery(q string) (res driver.Rows, err error) {
-	defer errRecover(&err)
+func (cn *conn) simpleQuery(q string) (res *rows, err error) {
+	defer cn.errRecover(&err)
 
-	st := &stmt{cn: cn, name: "", query: q}
+	st := &stmt{cn: cn, name: ""}
 
 	b := cn.writeBuf('Q')
 	b.string(q)
@@ -497,9 +554,16 @@ func (cn *conn) simpleQuery(q string) (res driver.Rows, err error) {
 			// the user can close, though, to avoid connections from being
 			// leaked.  A "rows" with done=true works fine for that purpose.
 			if err != nil {
+				cn.bad = true
 				errorf("unexpected message %q in simple query execution", t)
 			}
-			res = &rows{st: st, done: true}
+			res = &rows{
+				cn:       cn,
+				colNames: st.colNames,
+				colTyps:  st.colTyps,
+				colFmts:  st.colFmts,
+				done:     true,
+			}
 		case 'Z':
 			cn.processReadyForQuery(r)
 			// done
@@ -509,6 +573,7 @@ func (cn *conn) simpleQuery(q string) (res driver.Rows, err error) {
 			err = parseError(r)
 		case 'D':
 			if res == nil {
+				cn.bad = true
 				errorf("unexpected DataRow in simple query execution")
 			}
 			// the query didn't fail; kick off to Next
@@ -517,73 +582,105 @@ func (cn *conn) simpleQuery(q string) (res driver.Rows, err error) {
 		case 'T':
 			// res might be non-nil here if we received a previous
 			// CommandComplete, but that's fine; just overwrite it
-			res = &rows{st: st}
-			st.cols, st.rowTyps = parseMeta(r)
+			res = &rows{cn: cn}
+			res.colNames, res.colFmts, res.colTyps = parsePortalRowDescribe(r)
 
 			// To work around a bug in QueryRow in Go 1.2 and earlier, wait
 			// until the first DataRow has been received.
 		default:
+			cn.bad = true
 			errorf("unknown response for simple query: %q", t)
 		}
 	}
-	panic("not reached")
 }
 
-func (cn *conn) prepareTo(q, stmtName string) (_ *stmt, err error) {
-	defer errRecover(&err)
+// Decides which column formats to use for a prepared statement.  The input is
+// an array of type oids, one element per result column.
+func decideColumnFormats(colTyps []oid.Oid, forceText bool) (colFmts []format, colFmtData []byte) {
+	if len(colTyps) == 0 {
+		return nil, colFmtDataAllText
+	}
 
-	st := &stmt{cn: cn, name: stmtName, query: q}
+	colFmts = make([]format, len(colTyps))
+	if forceText {
+		return colFmts, colFmtDataAllText
+	}
+
+	allBinary := true
+	allText := true
+	for i, o := range colTyps {
+		switch o {
+		// This is the list of types to use binary mode for when receiving them
+		// through a prepared statement.  If a type appears in this list, it
+		// must also be implemented in binaryDecode in encode.go.
+		case oid.T_bytea:
+			fallthrough
+		case oid.T_int8:
+			fallthrough
+		case oid.T_int4:
+			fallthrough
+		case oid.T_int2:
+			colFmts[i] = formatBinary
+			allText = false
+
+		default:
+			allBinary = false
+		}
+	}
+
+	if allBinary {
+		return colFmts, colFmtDataAllBinary
+	} else if allText {
+		return colFmts, colFmtDataAllText
+	} else {
+		colFmtData = make([]byte, 2+len(colFmts)*2)
+		binary.BigEndian.PutUint16(colFmtData, uint16(len(colFmts)))
+		for i, v := range colFmts {
+			binary.BigEndian.PutUint16(colFmtData[2+i*2:], uint16(v))
+		}
+		return colFmts, colFmtData
+	}
+}
+
+func (cn *conn) prepareTo(q, stmtName string) *stmt {
+	st := &stmt{cn: cn, name: stmtName}
 
 	b := cn.writeBuf('P')
 	b.string(st.name)
 	b.string(q)
 	b.int16(0)
-	cn.send(b)
 
-	b = cn.writeBuf('D')
+	b.next('D')
 	b.byte('S')
 	b.string(st.name)
+
+	b.next('S')
 	cn.send(b)
 
-	cn.send(cn.writeBuf('S'))
-
-	for {
-		t, r := cn.recv1()
-		switch t {
-		case '1':
-		case 't':
-			nparams := int(r.int16())
-			st.paramTyps = make([]oid.Oid, nparams)
-
-			for i := range st.paramTyps {
-				st.paramTyps[i] = r.oid()
-			}
-		case 'T':
-			st.cols, st.rowTyps = parseMeta(r)
-		case 'n':
-			// no data
-		case 'Z':
-			cn.processReadyForQuery(r)
-			return st, err
-		case 'E':
-			err = parseError(r)
-		default:
-			errorf("unexpected describe rows response: %q", t)
-		}
-	}
-
-	panic("not reached")
+	cn.readParseResponse()
+	st.paramTyps, st.colNames, st.colTyps = cn.readStatementDescribeResponse()
+	st.colFmts, st.colFmtData = decideColumnFormats(st.colTyps, cn.disablePreparedBinaryResult)
+	cn.readReadyForQuery()
+	return st
 }
 
-func (cn *conn) Prepare(q string) (driver.Stmt, error) {
+func (cn *conn) Prepare(q string) (_ driver.Stmt, err error) {
+	if cn.bad {
+		return nil, driver.ErrBadConn
+	}
+	defer cn.errRecover(&err)
+
 	if len(q) >= 4 && strings.EqualFold(q[:4], "COPY") {
 		return cn.prepareCopyIn(q)
 	}
-	return cn.prepareTo(q, cn.gname())
+	return cn.prepareTo(q, cn.gname()), nil
 }
 
 func (cn *conn) Close() (err error) {
-	defer errRecover(&err)
+	if cn.bad {
+		return driver.ErrBadConn
+	}
+	defer cn.errRecover(&err)
 
 	// Don't go through send(); ListenerConn relies on us not scribbling on the
 	// scratch buffer of this connection.
@@ -597,7 +694,10 @@ func (cn *conn) Close() (err error) {
 
 // Implement the "Queryer" interface
 func (cn *conn) Query(query string, args []driver.Value) (_ driver.Rows, err error) {
-	defer errRecover(&err)
+	if cn.bad {
+		return nil, driver.ErrBadConn
+	}
+	defer cn.errRecover(&err)
 
 	// Check to see if we can use the "simpleQuery" interface, which is
 	// *much* faster than going through prepare/exec
@@ -605,18 +705,33 @@ func (cn *conn) Query(query string, args []driver.Value) (_ driver.Rows, err err
 		return cn.simpleQuery(query)
 	}
 
-	st, err := cn.prepareTo(query, "")
-	if err != nil {
-		panic(err)
-	}
+	if cn.binaryParameters {
+		cn.sendBinaryModeQuery(query, args)
 
-	st.exec(args)
-	return &rows{st: st}, nil
+		cn.readParseResponse()
+		cn.readBindResponse()
+		rows := &rows{cn: cn}
+		rows.colNames, rows.colFmts, rows.colTyps = cn.readPortalDescribeResponse()
+		cn.postExecuteWorkaround()
+		return rows, nil
+	} else {
+		st := cn.prepareTo(query, "")
+		st.exec(args)
+		return &rows{
+			cn:       cn,
+			colNames: st.colNames,
+			colTyps:  st.colTyps,
+			colFmts:  st.colFmts,
+		}, nil
+	}
 }
 
 // Implement the optional "Execer" interface for one-shot queries
-func (cn *conn) Exec(query string, args []driver.Value) (_ driver.Result, err error) {
-	defer errRecover(&err)
+func (cn *conn) Exec(query string, args []driver.Value) (res driver.Result, err error) {
+	if cn.bad {
+		return nil, driver.ErrBadConn
+	}
+	defer cn.errRecover(&err)
 
 	// Check to see if we can use the "simpleExec" interface, which is
 	// *much* faster than going through prepare/exec
@@ -626,32 +741,42 @@ func (cn *conn) Exec(query string, args []driver.Value) (_ driver.Result, err er
 		return r, err
 	}
 
-	// Use the unnamed statement to defer planning until bind
-	// time, or else value-based selectivity estimates cannot be
-	// used.
-	st, err := cn.prepareTo(query, "")
-	if err != nil {
-		panic(err)
-	}
+	if cn.binaryParameters {
+		cn.sendBinaryModeQuery(query, args)
 
-	r, err := st.Exec(args)
-	if err != nil {
-		panic(err)
+		cn.readParseResponse()
+		cn.readBindResponse()
+		cn.readPortalDescribeResponse()
+		cn.postExecuteWorkaround()
+		res, _, err = cn.readExecuteResponse("Execute")
+		return res, err
+	} else {
+		// Use the unnamed statement to defer planning until bind
+		// time, or else value-based selectivity estimates cannot be
+		// used.
+		st := cn.prepareTo(query, "")
+		r, err := st.Exec(args)
+		if err != nil {
+			panic(err)
+		}
+		return r, err
 	}
-
-	return r, err
 }
 
-// Assumes len(*m) is > 5
 func (cn *conn) send(m *writeBuf) {
-	b := (*m)[1:]
-	binary.BigEndian.PutUint32(b, uint32(len(b)))
+	_, err := cn.c.Write(m.wrap())
+	if err != nil {
+		panic(err)
+	}
+}
 
-	if (*m)[0] == 0 {
-		*m = b
+func (cn *conn) sendStartupPacket(m *writeBuf) {
+	// sanity check
+	if m.buf[0] != 0 {
+		panic("oops")
 	}
 
-	_, err := cn.c.Write(*m)
+	_, err := cn.c.Write((m.wrap())[1:])
 	if err != nil {
 		panic(err)
 	}
@@ -672,27 +797,29 @@ func (cn *conn) sendSimpleMessage(typ byte) (err error) {
 // the message yourself.
 func (cn *conn) saveMessage(typ byte, buf *readBuf) {
 	if cn.saveMessageType != 0 {
+		cn.bad = true
 		errorf("unexpected saveMessageType %d", cn.saveMessageType)
 	}
 	cn.saveMessageType = typ
-	cn.saveMessageBuffer = buf
+	cn.saveMessageBuffer = *buf
 }
 
 // recvMessage receives any message from the backend, or returns an error if
 // a problem occurred while reading the message.
-func (cn *conn) recvMessage() (byte, *readBuf, error) {
+func (cn *conn) recvMessage(r *readBuf) (byte, error) {
 	// workaround for a QueryRow bug, see exec
 	if cn.saveMessageType != 0 {
-		t, r := cn.saveMessageType, cn.saveMessageBuffer
+		t := cn.saveMessageType
+		*r = cn.saveMessageBuffer
 		cn.saveMessageType = 0
 		cn.saveMessageBuffer = nil
-		return t, r, nil
+		return t, nil
 	}
 
 	x := cn.scratch[:5]
 	_, err := io.ReadFull(cn.buf, x)
 	if err != nil {
-		return 0, nil, err
+		return 0, err
 	}
 
 	// read the type and length of the message that follows
@@ -706,10 +833,10 @@ func (cn *conn) recvMessage() (byte, *readBuf, error) {
 	}
 	_, err = io.ReadFull(cn.buf, y)
 	if err != nil {
-		return 0, nil, err
+		return 0, err
 	}
-
-	return t, (*readBuf)(&y), nil
+	*r = y
+	return t, nil
 }
 
 // recv receives a message from the backend, but if an error happened while
@@ -719,7 +846,8 @@ func (cn *conn) recvMessage() (byte, *readBuf, error) {
 func (cn *conn) recv() (t byte, r *readBuf) {
 	for {
 		var err error
-		t, r, err = cn.recvMessage()
+		r = &readBuf{}
+		t, err = cn.recvMessage(r)
 		if err != nil {
 			panic(err)
 		}
@@ -733,17 +861,13 @@ func (cn *conn) recv() (t byte, r *readBuf) {
 			return
 		}
 	}
-
-	panic("not reached")
 }
 
-// recv1 receives a message from the backend, panicking if an error occurs
-// while attempting to read it.  All asynchronous messages are ignored, with
-// the exception of ErrorResponse.
-func (cn *conn) recv1() (t byte, r *readBuf) {
+// recv1Buf is exactly equivalent to recv1, except it uses a buffer supplied by
+// the caller to avoid an allocation.
+func (cn *conn) recv1Buf(r *readBuf) byte {
 	for {
-		var err error
-		t, r, err = cn.recvMessage()
+		t, err := cn.recvMessage(r)
 		if err != nil {
 			panic(err)
 		}
@@ -754,18 +878,31 @@ func (cn *conn) recv1() (t byte, r *readBuf) {
 		case 'S':
 			cn.processParameterStatus(r)
 		default:
-			return
+			return t
 		}
 	}
+}
 
-	panic("not reached")
+// recv1 receives a message from the backend, panicking if an error occurs
+// while attempting to read it.  All asynchronous messages are ignored, with
+// the exception of ErrorResponse.
+func (cn *conn) recv1() (t byte, r *readBuf) {
+	r = &readBuf{}
+	t = cn.recv1Buf(r)
+	return t, r
 }
 
 func (cn *conn) ssl(o values) {
+	verifyCaOnly := false
 	tlsConf := tls.Config{}
 	switch mode := o.Get("sslmode"); mode {
 	case "require", "":
 		tlsConf.InsecureSkipVerify = true
+	case "verify-ca":
+		// We must skip TLS's own verification since it requires full
+		// verification since Go 1.3.
+		tlsConf.InsecureSkipVerify = true
+		verifyCaOnly = true
 	case "verify-full":
 		tlsConf.ServerName = o.Get("host")
 	case "disable":
@@ -774,9 +911,12 @@ func (cn *conn) ssl(o values) {
 		errorf(`unsupported sslmode %q; only "require" (default), "verify-full", and "disable" supported`, mode)
 	}
 
+	cn.setupSSLClientCertificates(&tlsConf, o)
+	cn.setupSSLCA(&tlsConf, o)
+
 	w := cn.writeBuf(0)
 	w.int32(80877103)
-	cn.send(w)
+	cn.sendStartupPacket(w)
 
 	b := cn.scratch[:1]
 	_, err := io.ReadFull(cn.c, b)
@@ -788,7 +928,139 @@ func (cn *conn) ssl(o values) {
 		panic(ErrSSLNotSupported)
 	}
 
-	cn.c = tls.Client(cn.c, &tlsConf)
+	client := tls.Client(cn.c, &tlsConf)
+	if verifyCaOnly {
+		cn.verifyCA(client, &tlsConf)
+	}
+	cn.c = client
+}
+
+// verifyCA carries out a TLS handshake to the server and verifies the
+// presented certificate against the effective CA, i.e. the one specified in
+// sslrootcert or the system CA if sslrootcert was not specified.
+func (cn *conn) verifyCA(client *tls.Conn, tlsConf *tls.Config) {
+	err := client.Handshake()
+	if err != nil {
+		panic(err)
+	}
+	certs := client.ConnectionState().PeerCertificates
+	opts := x509.VerifyOptions{
+		DNSName:       client.ConnectionState().ServerName,
+		Intermediates: x509.NewCertPool(),
+		Roots:         tlsConf.RootCAs,
+	}
+	for i, cert := range certs {
+		if i == 0 {
+			continue
+		}
+		opts.Intermediates.AddCert(cert)
+	}
+	_, err = certs[0].Verify(opts)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// This function sets up SSL client certificates based on either the "sslkey"
+// and "sslcert" settings (possibly set via the environment variables PGSSLKEY
+// and PGSSLCERT, respectively), or if they aren't set, from the .postgresql
+// directory in the user's home directory.  If the file paths are set
+// explicitly, the files must exist.  The key file must also not be
+// world-readable, or this function will panic with
+// ErrSSLKeyHasWorldPermissions.
+func (cn *conn) setupSSLClientCertificates(tlsConf *tls.Config, o values) {
+	var missingOk bool
+
+	sslkey := o.Get("sslkey")
+	sslcert := o.Get("sslcert")
+	if sslkey != "" && sslcert != "" {
+		// If the user has set an sslkey and sslcert, they *must* exist.
+		missingOk = false
+	} else {
+		// Automatically load certificates from ~/.postgresql.
+		user, err := user.Current()
+		if err != nil {
+			// user.Current() might fail when cross-compiling.  We have to
+			// ignore the error and continue without client certificates, since
+			// we wouldn't know where to load them from.
+			return
+		}
+
+		sslkey = filepath.Join(user.HomeDir, ".postgresql", "postgresql.key")
+		sslcert = filepath.Join(user.HomeDir, ".postgresql", "postgresql.crt")
+		missingOk = true
+	}
+
+	// Check that both files exist, and report the error or stop, depending on
+	// which behaviour we want.  Note that we don't do any more extensive
+	// checks than this (such as checking that the paths aren't directories);
+	// LoadX509KeyPair() will take care of the rest.
+	keyfinfo, err := os.Stat(sslkey)
+	if err != nil && missingOk {
+		return
+	} else if err != nil {
+		panic(err)
+	}
+	_, err = os.Stat(sslcert)
+	if err != nil && missingOk {
+		return
+	} else if err != nil {
+		panic(err)
+	}
+
+	// If we got this far, the key file must also have the correct permissions
+	kmode := keyfinfo.Mode()
+	if kmode != kmode&0600 {
+		panic(ErrSSLKeyHasWorldPermissions)
+	}
+
+	cert, err := tls.LoadX509KeyPair(sslcert, sslkey)
+	if err != nil {
+		panic(err)
+	}
+	tlsConf.Certificates = []tls.Certificate{cert}
+}
+
+// Sets up RootCAs in the TLS configuration if sslrootcert is set.
+func (cn *conn) setupSSLCA(tlsConf *tls.Config, o values) {
+	if sslrootcert := o.Get("sslrootcert"); sslrootcert != "" {
+		tlsConf.RootCAs = x509.NewCertPool()
+
+		cert, err := ioutil.ReadFile(sslrootcert)
+		if err != nil {
+			panic(err)
+		}
+
+		ok := tlsConf.RootCAs.AppendCertsFromPEM(cert)
+		if !ok {
+			errorf("couldn't parse pem in sslrootcert")
+		}
+	}
+}
+
+// isDriverSetting returns true iff a setting is purely for configuring the
+// driver's options and should not be sent to the server in the connection
+// startup packet.
+func isDriverSetting(key string) bool {
+	switch key {
+	case "host", "port":
+		return true
+	case "password":
+		return true
+	case "sslmode", "sslcert", "sslkey", "sslrootcert":
+		return true
+	case "fallback_application_name":
+		return true
+	case "connect_timeout":
+		return true
+	case "disable_prepared_binary_result":
+		return true
+	case "binary_parameters":
+		return true
+
+	default:
+		return false
+	}
 }
 
 func (cn *conn) startup(o values) {
@@ -799,9 +1071,8 @@ func (cn *conn) startup(o values) {
 	// parameters potentially included in the connection string.  If the server
 	// doesn't recognize any of them, it will reply with an error.
 	for k, v := range o {
-		// skip options which can't be run-time parameters
-		if k == "password" || k == "host" ||
-			k == "port" || k == "sslmode" {
+		if isDriverSetting(k) {
+			// skip options which can't be run-time parameters
 			continue
 		}
 		// The protocol requires us to supply the database name as "database"
@@ -813,7 +1084,7 @@ func (cn *conn) startup(o values) {
 		w.string(v)
 	}
 	w.string("")
-	cn.send(w)
+	cn.sendStartupPacket(w)
 
 	for {
 		t, r := cn.recv()
@@ -868,22 +1139,36 @@ func (cn *conn) auth(r *readBuf, o values) {
 	}
 }
 
+type format int
+
+const formatText format = 0
+const formatBinary format = 1
+
+// One result-column format code with the value 1 (i.e. all binary).
+var colFmtDataAllBinary []byte = []byte{0, 1, 0, 1}
+
+// No result-column format codes (i.e. all text).
+var colFmtDataAllText []byte = []byte{0, 0}
+
 type stmt struct {
-	cn        *conn
-	name      string
-	query     string
-	cols      []string
-	rowTyps   []oid.Oid
-	paramTyps []oid.Oid
-	closed    bool
+	cn         *conn
+	name       string
+	colNames   []string
+	colFmts    []format
+	colFmtData []byte
+	colTyps    []oid.Oid
+	paramTyps  []oid.Oid
+	closed     bool
 }
 
 func (st *stmt) Close() (err error) {
 	if st.closed {
 		return nil
 	}
-
-	defer errRecover(&err)
+	if st.cn.bad {
+		return driver.ErrBadConn
+	}
+	defer st.cn.errRecover(&err)
 
 	w := st.cn.writeBuf('C')
 	w.byte('S')
@@ -894,12 +1179,14 @@ func (st *stmt) Close() (err error) {
 
 	t, _ := st.cn.recv1()
 	if t != '3' {
+		st.cn.bad = true
 		errorf("unexpected close response: %q", t)
 	}
 	st.closed = true
 
 	t, r := st.cn.recv1()
 	if t != 'Z' {
+		st.cn.bad = true
 		errorf("expected ready for query, but got: %q", t)
 	}
 	st.cn.processReadyForQuery(r)
@@ -908,122 +1195,71 @@ func (st *stmt) Close() (err error) {
 }
 
 func (st *stmt) Query(v []driver.Value) (r driver.Rows, err error) {
-	defer errRecover(&err)
+	if st.cn.bad {
+		return nil, driver.ErrBadConn
+	}
+	defer st.cn.errRecover(&err)
+
 	st.exec(v)
-	return &rows{st: st}, nil
+	return &rows{
+		cn:       st.cn,
+		colNames: st.colNames,
+		colTyps:  st.colTyps,
+		colFmts:  st.colFmts,
+	}, nil
 }
 
 func (st *stmt) Exec(v []driver.Value) (res driver.Result, err error) {
-	defer errRecover(&err)
-
-	if len(v) == 0 {
-		// ignore commandTag, our caller doesn't care
-		r, _, err := st.cn.simpleExec(st.query)
-		return r, err
+	if st.cn.bad {
+		return nil, driver.ErrBadConn
 	}
+	defer st.cn.errRecover(&err)
+
 	st.exec(v)
-
-	for {
-		t, r := st.cn.recv1()
-		switch t {
-		case 'E':
-			err = parseError(r)
-		case 'C':
-			res, _ = parseComplete(r.string())
-		case 'Z':
-			st.cn.processReadyForQuery(r)
-			// done
-			return
-		case 'T', 'D':
-			// ignore any results
-		default:
-			errorf("unknown exec response: %q", t)
-		}
-	}
-
-	panic("not reached")
+	res, _, err = st.cn.readExecuteResponse("simple query")
+	return res, err
 }
 
 func (st *stmt) exec(v []driver.Value) {
+	if len(v) >= 65536 {
+		errorf("got %d parameters but PostgreSQL only supports 65535 parameters", len(v))
+	}
 	if len(v) != len(st.paramTyps) {
 		errorf("got %d parameters but the statement requires %d", len(v), len(st.paramTyps))
 	}
 
-	w := st.cn.writeBuf('B')
-	w.string("")
+	cn := st.cn
+	w := cn.writeBuf('B')
+	w.byte(0) // unnamed portal
 	w.string(st.name)
-	w.int16(0)
-	w.int16(len(v))
-	for i, x := range v {
-		if x == nil {
-			w.int32(-1)
-		} else {
-			b := encode(&st.cn.parameterStatus, x, st.paramTyps[i])
-			w.int32(len(b))
-			w.bytes(b)
+
+	if cn.binaryParameters {
+		cn.sendBinaryParameters(w, v)
+	} else {
+		w.int16(0)
+		w.int16(len(v))
+		for i, x := range v {
+			if x == nil {
+				w.int32(-1)
+			} else {
+				b := encode(&cn.parameterStatus, x, st.paramTyps[i])
+				w.int32(len(b))
+				w.bytes(b)
+			}
 		}
 	}
-	w.int16(0)
-	st.cn.send(w)
+	w.bytes(st.colFmtData)
 
-	w = st.cn.writeBuf('E')
-	w.string("")
+	w.next('E')
+	w.byte(0)
 	w.int32(0)
-	st.cn.send(w)
 
-	st.cn.send(st.cn.writeBuf('S'))
+	w.next('S')
+	cn.send(w)
 
-	var err error
-	for {
-		t, r := st.cn.recv1()
-		switch t {
-		case 'E':
-			err = parseError(r)
-		case '2':
-			if err != nil {
-				panic(err)
-			}
-			goto workaround
-		case 'Z':
-			st.cn.processReadyForQuery(r)
-			if err != nil {
-				panic(err)
-			}
-			return
-		default:
-			errorf("unexpected bind response: %q", t)
-		}
-	}
+	cn.readBindResponse()
+	cn.postExecuteWorkaround()
 
-	// Work around a bug in sql.DB.QueryRow: in Go 1.2 and earlier it ignores
-	// any errors from rows.Next, which masks errors that happened during the
-	// execution of the query.  To avoid the problem in common cases, we wait
-	// here for one more message from the database.  If it's not an error the
-	// query will likely succeed (or perhaps has already, if it's a
-	// CommandComplete), so we push the message into the conn struct; recv1
-	// will return it as the next message for rows.Next or rows.Close.
-	// However, if it's an error, we wait until ReadyForQuery and then return
-	// the error to our caller.
-workaround:
-	for {
-		t, r := st.cn.recv1()
-		switch t {
-		case 'E':
-			err = parseError(r)
-		case 'C', 'D', 'I':
-			// the query didn't fail, but we can't process this message
-			st.cn.saveMessage(t, r)
-			return
-		case 'Z':
-			if err == nil {
-				errorf("unexpected ReadyForQuery during extended query execution")
-			}
-			st.cn.processReadyForQuery(r)
-			panic(err)
-		default:
-			errorf("unexpected message during query execution: %q", t)
-		}
-	}
 }
 
 func (st *stmt) NumInput() int {
@@ -1034,7 +1270,7 @@ func (st *stmt) NumInput() int {
 // returns the number of rows affected (if applicable) and a string
 // identifying only the command that was executed, e.g. "ALTER TABLE".  If the
 // command tag could not be parsed, parseComplete panics.
-func parseComplete(commandTag string) (driver.Result, string) {
+func (cn *conn) parseComplete(commandTag string) (driver.Result, string) {
 	commandsWithAffectedRows := []string{
 		"SELECT ",
 		// INSERT is handled below
@@ -1061,6 +1297,7 @@ func parseComplete(commandTag string) (driver.Result, string) {
 	if affectedRows == nil && strings.HasPrefix(commandTag, "INSERT ") {
 		parts := strings.Split(commandTag, " ")
 		if len(parts) != 3 {
+			cn.bad = true
 			errorf("unexpected INSERT command tag %s", commandTag)
 		}
 		affectedRows = &parts[len(parts)-1]
@@ -1072,17 +1309,23 @@ func parseComplete(commandTag string) (driver.Result, string) {
 	}
 	n, err := strconv.ParseInt(*affectedRows, 10, 64)
 	if err != nil {
+		cn.bad = true
 		errorf("could not parse commandTag: %s", err)
 	}
 	return driver.RowsAffected(n), commandTag
 }
 
 type rows struct {
-	st   *stmt
-	done bool
+	cn       *conn
+	colNames []string
+	colTyps  []oid.Oid
+	colFmts  []format
+	done     bool
+	rb       readBuf
 }
 
 func (rs *rows) Close() error {
+	// no need to look at cn.bad as Next() will
 	for {
 		err := rs.Next(nil)
 		switch err {
@@ -1093,11 +1336,10 @@ func (rs *rows) Close() error {
 			return err
 		}
 	}
-	panic("not reached")
 }
 
 func (rs *rows) Columns() []string {
-	return rs.st.cols
+	return rs.colNames
 }
 
 func (rs *rows) Next(dest []driver.Value) (err error) {
@@ -1105,43 +1347,48 @@ func (rs *rows) Next(dest []driver.Value) (err error) {
 		return io.EOF
 	}
 
-	defer errRecover(&err)
+	conn := rs.cn
+	if conn.bad {
+		return driver.ErrBadConn
+	}
+	defer conn.errRecover(&err)
 
-	conn := rs.st.cn
 	for {
-		t, r := conn.recv1()
+		t := conn.recv1Buf(&rs.rb)
 		switch t {
 		case 'E':
-			err = parseError(r)
+			err = parseError(&rs.rb)
 		case 'C', 'I':
 			continue
 		case 'Z':
-			conn.processReadyForQuery(r)
+			conn.processReadyForQuery(&rs.rb)
 			rs.done = true
 			if err != nil {
 				return err
 			}
 			return io.EOF
 		case 'D':
-			n := r.int16()
+			n := rs.rb.int16()
+			if err != nil {
+				conn.bad = true
+				errorf("unexpected DataRow after error %s", err)
+			}
 			if n < len(dest) {
 				dest = dest[:n]
 			}
 			for i := range dest {
-				l := r.int32()
+				l := rs.rb.int32()
 				if l == -1 {
 					dest[i] = nil
 					continue
 				}
-				dest[i] = decode(&conn.parameterStatus, r.next(l), rs.st.rowTyps[i])
+				dest[i] = decode(&conn.parameterStatus, rs.rb.next(l), rs.colTyps[i], rs.colFmts[i])
 			}
 			return
 		default:
 			errorf("unexpected message after execute: %q", t)
 		}
 	}
-
-	panic("not reached")
 }
 
 // QuoteIdentifier quotes an "identifier" (e.g. a table or a column name) to be
@@ -1166,6 +1413,68 @@ func md5s(s string) string {
 	h := md5.New()
 	h.Write([]byte(s))
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func (cn *conn) sendBinaryParameters(b *writeBuf, args []driver.Value) {
+	// Do one pass over the parameters to see if we're going to send any of
+	// them over in binary.  If we are, create a paramFormats array at the
+	// same time.
+	var paramFormats []int
+	for i, x := range args {
+		_, ok := x.([]byte)
+		if ok {
+			if paramFormats == nil {
+				paramFormats = make([]int, len(args))
+			}
+			paramFormats[i] = 1
+		}
+	}
+	if paramFormats == nil {
+		b.int16(0)
+	} else {
+		b.int16(len(paramFormats))
+		for _, x := range paramFormats {
+			b.int16(x)
+		}
+	}
+
+	b.int16(len(args))
+	for _, x := range args {
+		if x == nil {
+			b.int32(-1)
+		} else {
+			datum := binaryEncode(&cn.parameterStatus, x)
+			b.int32(len(datum))
+			b.bytes(datum)
+		}
+	}
+}
+
+func (cn *conn) sendBinaryModeQuery(query string, args []driver.Value) {
+	if len(args) >= 65536 {
+		errorf("got %d parameters but PostgreSQL only supports 65535 parameters", len(args))
+	}
+
+	b := cn.writeBuf('P')
+	b.byte(0) // unnamed statement
+	b.string(query)
+	b.int16(0)
+
+	b.next('B')
+	b.int16(0) // unnamed portal and statement
+	cn.sendBinaryParameters(b, args)
+	b.bytes(colFmtDataAllText)
+
+	b.next('D')
+	b.byte('P')
+	b.byte(0) // unnamed portal
+
+	b.next('E')
+	b.byte(0)
+	b.int32(0)
+
+	b.next('S')
+	cn.send(b)
 }
 
 func (c *conn) processParameterStatus(r *readBuf) {
@@ -1197,15 +1506,175 @@ func (c *conn) processReadyForQuery(r *readBuf) {
 	c.txnStatus = transactionStatus(r.byte())
 }
 
-func parseMeta(r *readBuf) (cols []string, rowTyps []oid.Oid) {
+func (cn *conn) readReadyForQuery() {
+	t, r := cn.recv1()
+	switch t {
+	case 'Z':
+		cn.processReadyForQuery(r)
+		return
+	default:
+		cn.bad = true
+		errorf("unexpected message %q; expected ReadyForQuery", t)
+	}
+}
+
+func (cn *conn) readParseResponse() {
+	t, r := cn.recv1()
+	switch t {
+	case '1':
+		return
+	case 'E':
+		err := parseError(r)
+		cn.readReadyForQuery()
+		panic(err)
+	default:
+		cn.bad = true
+		errorf("unexpected Parse response %q", t)
+	}
+}
+
+func (cn *conn) readStatementDescribeResponse() (paramTyps []oid.Oid, colNames []string, colTyps []oid.Oid) {
+	for {
+		t, r := cn.recv1()
+		switch t {
+		case 't':
+			nparams := r.int16()
+			paramTyps = make([]oid.Oid, nparams)
+			for i := range paramTyps {
+				paramTyps[i] = r.oid()
+			}
+		case 'n':
+			return paramTyps, nil, nil
+		case 'T':
+			colNames, colTyps = parseStatementRowDescribe(r)
+			return paramTyps, colNames, colTyps
+		case 'E':
+			err := parseError(r)
+			cn.readReadyForQuery()
+			panic(err)
+		default:
+			cn.bad = true
+			errorf("unexpected Describe statement response %q", t)
+		}
+	}
+}
+
+func (cn *conn) readPortalDescribeResponse() (colNames []string, colFmts []format, colTyps []oid.Oid) {
+	t, r := cn.recv1()
+	switch t {
+	case 'T':
+		return parsePortalRowDescribe(r)
+	case 'n':
+		return nil, nil, nil
+	case 'E':
+		err := parseError(r)
+		cn.readReadyForQuery()
+		panic(err)
+	default:
+		cn.bad = true
+		errorf("unexpected Describe response %q", t)
+	}
+	panic("not reached")
+}
+
+func (cn *conn) readBindResponse() {
+	t, r := cn.recv1()
+	switch t {
+	case '2':
+		return
+	case 'E':
+		err := parseError(r)
+		cn.readReadyForQuery()
+		panic(err)
+	default:
+		cn.bad = true
+		errorf("unexpected Bind response %q", t)
+	}
+}
+
+func (cn *conn) postExecuteWorkaround() {
+	// Work around a bug in sql.DB.QueryRow: in Go 1.2 and earlier it ignores
+	// any errors from rows.Next, which masks errors that happened during the
+	// execution of the query.  To avoid the problem in common cases, we wait
+	// here for one more message from the database.  If it's not an error the
+	// query will likely succeed (or perhaps has already, if it's a
+	// CommandComplete), so we push the message into the conn struct; recv1
+	// will return it as the next message for rows.Next or rows.Close.
+	// However, if it's an error, we wait until ReadyForQuery and then return
+	// the error to our caller.
+	for {
+		t, r := cn.recv1()
+		switch t {
+		case 'E':
+			err := parseError(r)
+			cn.readReadyForQuery()
+			panic(err)
+		case 'C', 'D', 'I':
+			// the query didn't fail, but we can't process this message
+			cn.saveMessage(t, r)
+			return
+		default:
+			cn.bad = true
+			errorf("unexpected message during extended query execution: %q", t)
+		}
+	}
+}
+
+// Only for Exec(), since we ignore the returned data
+func (cn *conn) readExecuteResponse(protocolState string) (res driver.Result, commandTag string, err error) {
+	for {
+		t, r := cn.recv1()
+		switch t {
+		case 'C':
+			if err != nil {
+				cn.bad = true
+				errorf("unexpected CommandComplete after error %s", err)
+			}
+			res, commandTag = cn.parseComplete(r.string())
+		case 'Z':
+			cn.processReadyForQuery(r)
+			return res, commandTag, err
+		case 'E':
+			err = parseError(r)
+		case 'T', 'D', 'I':
+			if err != nil {
+				cn.bad = true
+				errorf("unexpected %q after error %s", t, err)
+			}
+			// ignore any results
+		default:
+			cn.bad = true
+			errorf("unknown %s response: %q", protocolState, t)
+		}
+	}
+}
+
+func parseStatementRowDescribe(r *readBuf) (colNames []string, colTyps []oid.Oid) {
 	n := r.int16()
-	cols = make([]string, n)
-	rowTyps = make([]oid.Oid, n)
-	for i := range cols {
-		cols[i] = r.string()
+	colNames = make([]string, n)
+	colTyps = make([]oid.Oid, n)
+	for i := range colNames {
+		colNames[i] = r.string()
 		r.next(6)
-		rowTyps[i] = r.oid()
-		r.next(8)
+		colTyps[i] = r.oid()
+		r.next(6)
+		// format code not known when describing a statement; always 0
+		r.next(2)
+	}
+	return
+}
+
+func parsePortalRowDescribe(r *readBuf) (colNames []string, colFmts []format, colTyps []oid.Oid) {
+	n := r.int16()
+	colNames = make([]string, n)
+	colFmts = make([]format, n)
+	colTyps = make([]oid.Oid, n)
+	for i := range colNames {
+		colNames[i] = r.string()
+		r.next(6)
+		colTyps[i] = r.oid()
+		r.next(6)
+		colFmts[i] = format(r.int16())
 	}
 	return
 }
@@ -1258,7 +1727,13 @@ func parseEnviron(env []string) (out map[string]string) {
 			accrue("application_name")
 		case "PGSSLMODE":
 			accrue("sslmode")
-		case "PGREQUIRESSL", "PGSSLCERT", "PGSSLKEY", "PGSSLROOTCERT", "PGSSLCRL":
+		case "PGSSLCERT":
+			accrue("sslcert")
+		case "PGSSLKEY":
+			accrue("sslkey")
+		case "PGSSLROOTCERT":
+			accrue("sslrootcert")
+		case "PGREQUIRESSL", "PGSSLCRL":
 			unsupported()
 		case "PGREQUIREPEER":
 			unsupported()

@@ -6,9 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/CiscoCloud/drone/model"
-	"github.com/CiscoCloud/drone/router/middleware/context"
+	"github.com/CiscoCloud/drone/remote"
 	"github.com/CiscoCloud/drone/router/middleware/session"
 	"github.com/CiscoCloud/drone/shared/token"
+	"github.com/CiscoCloud/drone/store"
 )
 
 func GetSelf(c *gin.Context) {
@@ -17,29 +18,63 @@ func GetSelf(c *gin.Context) {
 
 func GetFeed(c *gin.Context) {
 	user := session.User(c)
-	db := context.Database(c)
-	feed, err := model.GetUserFeed(db, user, 25, 0)
+	remote := remote.FromContext(c)
+	var repos []*model.RepoLite
+
+	// get the repository list from the cache
+	reposv, ok := c.Get("repos")
+	if ok {
+		repos = reposv.([]*model.RepoLite)
+	} else {
+		var err error
+		repos, err = remote.Repos(user)
+		if err != nil {
+			c.String(400, err.Error())
+			return
+		}
+	}
+
+	feed, err := store.GetUserFeed(c, repos)
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.String(400, err.Error())
 		return
 	}
-	c.IndentedJSON(http.StatusOK, feed)
+	c.JSON(200, feed)
 }
 
 func GetRepos(c *gin.Context) {
 	user := session.User(c)
-	db := context.Database(c)
-	repos, err := model.GetRepoList(db, user)
+	remote := remote.FromContext(c)
+	var repos []*model.RepoLite
+
+	// get the repository list from the cache
+	reposv, ok := c.Get("repos")
+	if ok {
+		repos = reposv.([]*model.RepoLite)
+	} else {
+		var err error
+		repos, err = remote.Repos(user)
+		if err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// for each repository in the remote system we get
+	// the intersection of those repostiories in Drone
+	repos_, err := store.GetRepoListOf(c, repos)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, repos)
+
+	c.Set("repos", repos)
+	c.IndentedJSON(http.StatusOK, repos_)
 }
 
 func GetRemoteRepos(c *gin.Context) {
 	user := session.User(c)
-	remote := context.Remote(c)
+	remote := remote.FromContext(c)
 
 	reposv, ok := c.Get("repos")
 	if ok {

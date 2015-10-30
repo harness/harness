@@ -9,6 +9,7 @@ import (
 	"github.com/CiscoCloud/drone/controller"
 	"github.com/CiscoCloud/drone/router/middleware/cache"
 	"github.com/CiscoCloud/drone/router/middleware/header"
+	"github.com/CiscoCloud/drone/router/middleware/location"
 	"github.com/CiscoCloud/drone/router/middleware/session"
 	"github.com/CiscoCloud/drone/router/middleware/token"
 	"github.com/CiscoCloud/drone/static"
@@ -20,6 +21,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.SetHTMLTemplate(template.Load())
 	e.StaticFS("/static", static.FileSystem())
 
+	e.Use(location.Resolve)
 	e.Use(header.NoCache)
 	e.Use(header.Options)
 	e.Use(header.Secure)
@@ -28,8 +30,9 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(cache.Perms)
 	e.Use(token.Refresh)
 
-	e.GET("/", controller.ShowIndex)
+	e.GET("/", cache.Repos, controller.ShowIndex)
 	e.GET("/login", controller.ShowLogin)
+	e.GET("/login/form", controller.ShowLoginForm)
 	e.GET("/logout", controller.GetLogout)
 
 	settings := e.Group("/settings")
@@ -60,8 +63,8 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	{
 		user.Use(session.MustUser())
 		user.GET("", controller.GetSelf)
-		user.GET("/builds", controller.GetFeed)
-		user.GET("/repos", controller.GetRepos)
+		user.GET("/feed", controller.GetFeed)
+		user.GET("/repos", cache.Repos, controller.GetRepos)
 		user.GET("/repos/remote", cache.Repos, controller.GetRemoteRepos)
 		user.POST("/token", controller.PostToken)
 	}
@@ -101,8 +104,6 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.GET("/logs/:number/:job", controller.GetBuildLogs)
 
 			// requires authenticated user
-			repo.POST("/starred", session.MustUser(), controller.PostStar)
-			repo.DELETE("/starred", session.MustUser(), controller.DeleteStar)
 			repo.POST("/encrypt", session.MustUser(), controller.PostSecure)
 
 			// requires push permissions
@@ -139,7 +140,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		auth.POST("/token", controller.GetLoginToken)
 	}
 
-	gitlab := e.Group("/api/gitlab/:owner/:name")
+	gitlab := e.Group("/gitlab/:owner/:name")
 	{
 		gitlab.Use(session.SetRepo())
 		gitlab.GET("/commits/:sha", controller.GetCommit)
@@ -162,7 +163,7 @@ func normalize(h http.Handler) http.Handler {
 
 		parts := strings.Split(r.URL.Path, "/")[1:]
 		switch parts[0] {
-		case "settings", "api", "login", "logout", "", "authorize", "hook", "static":
+		case "settings", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
 			// no-op
 		default:
 

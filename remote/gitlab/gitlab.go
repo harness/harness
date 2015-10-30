@@ -214,9 +214,15 @@ func (g *Gitlab) Script(user *model.User, repo *model.Repo, build *model.Build) 
 		return nil, nil, err
 	}
 
-	cfg, err := client.RepoRawFile(id, build.Commit, ".drone.yml")
-	enc, _ := client.RepoRawFile(id, build.Commit, ".drone.sec")
-	return cfg, enc, err
+	out1, err := client.RepoRawFile(id, build.Commit, ".drone.yml")
+	if err != nil {
+		return nil, nil, err
+	}
+	out2, err := client.RepoRawFile(id, build.Commit, ".drone.sec")
+	if err != nil {
+		return out1, nil, nil
+	}
+	return out1, out2, err
 }
 
 // NOTE Currently gitlab doesn't support status for commits and events,
@@ -416,4 +422,8 @@ func (g *Gitlab) GetOpen() bool {
 // return default scope for GitHub
 func (g *Gitlab) Scope() string {
 	return DefaultScope
+}
+
+func (g *Gitlab) String() string {
+	return "gitlab"
 }

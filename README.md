@@ -1,4 +1,4 @@
-> **WARNING** the 0.4 branch is very unstable. We only recommend running this branch if you plan to dig into the codebase, troubleshoot issues and contribute (please do!). We will notify the broader community once this branch is more stable.
+[![Build Status](http://beta.drone.io/api/badges/drone/drone/status.svg)](http://beta.drone.io/drone/drone)
 
 Drone is a Continuous Integration platform built on container technology. Every build is executed inside an ephemeral Docker container, giving developers complete control over their build environment with guaranteed isolation.
 
@@ -10,10 +10,11 @@ Drone's prime directive is to help teams [ship code like GitHub](https://github.
 
 Drone documentation is organized into several categories:
 
-* [Setup Guide](http://readme.drone.io/docs/setup/)
-* [Build Guide](http://readme.drone.io/docs/build/)
-* [Plugin Guide](http://readme.drone.io/docs/plugin/)
-* [API Reference](http://readme.drone.io/docs/api/)
+* [Setup Guide](http://readme.drone.io/setup/)
+* [Build Guide](http://readme.drone.io/build/)
+* [Plugin Guide](http://readme.drone.io/plugin/)
+* [CLI Reference](http://readme.drone.io/cli/)
+* [API Reference](http://readme.drone.io/api/)
 
 ### Community, Help
 
@@ -28,7 +29,7 @@ git clone git://github.com/drone/drone.git $GOPATH/src/github.com/drone/drone
 cd $GOPATH/src/github.com/drone/drone
 ```
 
-Pleasure ensure your local environment has the following dependencies installed. We provide scripts in the `./contrib` folder as a convenience that can be used to install:
+Please ensure your local environment has the following dependencies installed. We provide scripts in the `./contrib` folder as a convenience that can be used to install:
 
 * libsqlite3
 * sassc
@@ -63,5 +64,5 @@ drone --debug # Debug mode enables more verbose logging
 If you are seeing slow compile times please install the following:
 
 ```sh
-go install github.com/drone/drone/Godeps/_workspace/src/github.com/mattn/go-sqlite3
+go install github.com/mattn/go-sqlite3
 ```

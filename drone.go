@@ -6,11 +6,12 @@ import (
 	"github.com/CiscoCloud/drone/engine"
 	"github.com/CiscoCloud/drone/remote"
 	"github.com/CiscoCloud/drone/router"
+	"github.com/CiscoCloud/drone/router/middleware/cache"
 	"github.com/CiscoCloud/drone/router/middleware/context"
 	"github.com/CiscoCloud/drone/router/middleware/header"
-	"github.com/CiscoCloud/drone/shared/database"
 	"github.com/CiscoCloud/drone/shared/envconfig"
 	"github.com/CiscoCloud/drone/shared/server"
+	"github.com/CiscoCloud/drone/store/datastore"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -36,20 +37,21 @@ func main() {
 	env := envconfig.Load(*dotenv)
 
 	// Setup the database driver
-	database_ := database.Load(env)
+	store_ := datastore.Load(env)
 
 	// setup the remote driver
 	remote_ := remote.Load(env)
 
 	// setup the runner
-	engine_ := engine.Load(database_, env, remote_)
+	engine_ := engine.Load(env, store_)
 
 	// setup the server and start the listener
 	server_ := server.Load(env)
 	server_.Run(
 		router.Load(
 			header.Version(build),
-			context.SetDatabase(database_),
+			cache.Default(),
+			context.SetStore(store_),
 			context.SetRemote(remote_),
 			context.SetEngine(engine_),
 		),

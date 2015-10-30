@@ -1,10 +1,5 @@
 package model
 
-import (
-	"github.com/CiscoCloud/drone/shared/database"
-	"github.com/russross/meddler"
-)
-
 type Job struct {
 	ID       int64  `json:"id"           meddler:"job_id,pk"`
 	BuildID  int64  `json:"-"            meddler:"job_build_id"`
@@ -18,46 +13,3 @@ type Job struct {
 
 	Environment map[string]string `json:"environment" meddler:"job_environment,json"`
 }
-
-func GetJob(db meddler.DB, id int64) (*Job, error) {
-	var job = new(Job)
-	var err = meddler.Load(db, jobTable, job, id)
-	return job, err
-}
-
-func GetJobNumber(db meddler.DB, build *Build, number int) (*Job, error) {
-	var job = new(Job)
-	var err = meddler.QueryRow(db, job, database.Rebind(jobNumberQuery), build.ID, number)
-	return job, err
-}
-
-func GetJobList(db meddler.DB, build *Build) ([]*Job, error) {
-	var jobs = []*Job{}
-	var err = meddler.QueryAll(db, &jobs, database.Rebind(jobListQuery), build.ID)
-	return jobs, err
-}
-
-func InsertJob(db meddler.DB, job *Job) error {
-	return meddler.Insert(db, jobTable, job)
-}
-
-func UpdateJob(db meddler.DB, job *Job) error {
-	return meddler.Update(db, jobTable, job)
-}
-
-const jobTable = "jobs"
-
-const jobListQuery = `
-SELECT *
-FROM jobs
-WHERE job_build_id = ?
-ORDER BY job_number ASC
-`
-
-const jobNumberQuery = `
-SELECT *
-FROM jobs
-WHERE job_build_id = ?
-AND   job_number = ?
-LIMIT 1
-`

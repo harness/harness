@@ -12,16 +12,16 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/CiscoCloud/drone/model"
-	"github.com/CiscoCloud/drone/router/middleware/context"
+	"github.com/CiscoCloud/drone/remote"
 	"github.com/CiscoCloud/drone/router/middleware/session"
 	"github.com/CiscoCloud/drone/shared/crypto"
 	"github.com/CiscoCloud/drone/shared/httputil"
 	"github.com/CiscoCloud/drone/shared/token"
+	"github.com/CiscoCloud/drone/store"
 )
 
 func PostRepo(c *gin.Context) {
-	db := context.Database(c)
-	remote := context.Remote(c)
+	remote := remote.FromContext(c)
 	user := session.User(c)
 	owner := c.Param("owner")
 	name := c.Param("name")
@@ -48,7 +48,7 @@ func PostRepo(c *gin.Context) {
 	}
 
 	// error if the repository already exists
-	_, err = model.GetRepoName(db, owner, name)
+	_, err = store.GetRepoOwnerName(c, owner, name)
 	if err == nil {
 		c.String(409, "Repository already exists.")
 		return
@@ -66,14 +66,14 @@ func PostRepo(c *gin.Context) {
 	t := token.New(token.HookToken, r.FullName)
 	sig, err := t.Sign(r.Hash)
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.String(500, err.Error())
 		return
 	}
 
 	// generate an RSA key and add to the repo
 	key, err := crypto.GeneratePrivateKey()
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.String(500, err.Error())
 		return
 	}
 	keys := new(model.Key)
@@ -96,42 +96,28 @@ func PostRepo(c *gin.Context) {
 		// local changes to the database.
 		err = remote.Activate(user, r, keys, link)
 		if err != nil {
-			c.AbortWithError(500, err)
+			c.String(500, err.Error())
 			return
 		}
-    }
-
-	tx, err := db.Begin()
-	if err != nil {
-		c.AbortWithError(500, err)
-		return
-	}
-	defer tx.Rollback()
+  }
 
 	// persist the repository
-	err = model.CreateRepo(tx, r)
+	err = store.CreateRepo(c, r)
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.String(500, err.Error())
 		return
 	}
 	keys.RepoID = r.ID
-	err = model.CreateKey(tx, keys)
+	err = store.CreateKey(c, keys)
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.String(500, err.Error())
 		return
 	}
-	err = model.CreateStar(tx, user, r)
-	if err != nil {
-		c.AbortWithError(500, err)
-		return
-	}
-	tx.Commit()
 
 	c.JSON(200, r)
 }
 
 func PatchRepo(c *gin.Context) {
-	db := context.Database(c)
 	repo := session.Repo(c)
 	user := session.User(c)
 
@@ -167,21 +153,16 @@ func PatchRepo(c *gin.Context) {
 		repo.Timeout = *in.Timeout
 	}
 
-	err := model.UpdateRepo(db, repo)
+	err := store.UpdateRepo(c, repo)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	// if the user is authenticated we should
-	// check to see if they've starred the repository
-	repo.IsStarred, _ = model.GetStar(db, user, repo)
-
 	c.IndentedJSON(http.StatusOK, repo)
 }
 
 func GetRepo(c *gin.Context) {
-	db := context.Database(c)
 	repo := session.Repo(c)
 	user := session.User(c)
 	if user == nil {
@@ -189,9 +170,6 @@ func GetRepo(c *gin.Context) {
 		return
 	}
 
-	// if the user is authenticated we should
-	// check to see if they've starred the repository
-	repo.IsStarred, _ = model.GetStar(db, user, repo)
 	repoResp := struct{
 		*model.Repo
 		Token string `json:"hook_token,omitempty"`
@@ -210,9 +188,8 @@ func GetRepo(c *gin.Context) {
 }
 
 func GetRepoKey(c *gin.Context) {
-	db := context.Database(c)
 	repo := session.Repo(c)
-	keys, err := model.GetKey(db, repo)
+	keys, err := store.GetKey(c, repo)
 	if err != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 	} else {
@@ -221,12 +198,11 @@ func GetRepoKey(c *gin.Context) {
 }
 
 func DeleteRepo(c *gin.Context) {
-	db := context.Database(c)
-	remote := context.Remote(c)
+	remote := remote.FromContext(c)
 	repo := session.Repo(c)
 	user := session.User(c)
 
-	err := model.DeleteRepo(db, repo)
+	err := store.DeleteRepo(c, repo)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -237,7 +213,6 @@ func DeleteRepo(c *gin.Context) {
 }
 
 func PostSecure(c *gin.Context) {
-	db := context.Database(c)
 	repo := session.Repo(c)
 
 	in, err := ioutil.ReadAll(c.Request.Body)
@@ -259,7 +234,7 @@ func PostSecure(c *gin.Context) {
 		return
 	}
 
-	key, err := model.GetKey(db, repo)
+	key, err := store.GetKey(c, repo)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -276,30 +251,4 @@ func PostSecure(c *gin.Context) {
 
 func PostReactivate(c *gin.Context) {
 
-}
-
-func PostStar(c *gin.Context) {
-	db := context.Database(c)
-	repo := session.Repo(c)
-	user := session.User(c)
-
-	err := model.CreateStar(db, user, repo)
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-	} else {
-		c.Writer.WriteHeader(http.StatusOK)
-	}
-}
-
-func DeleteStar(c *gin.Context) {
-	db := context.Database(c)
-	repo := session.Repo(c)
-	user := session.User(c)
-
-	err := model.DeleteStar(db, user, repo)
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-	} else {
-		c.Writer.WriteHeader(http.StatusOK)
-	}
 }

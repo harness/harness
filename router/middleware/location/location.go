@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Hostname is a middleware function that evaluates the http.Request
-// and adds the real hostname and scheme to the context.
-func Hostname(c *gin.Context) {
+// Resolve is a middleware function that resolves the hostname
+// and scheme for the http.Request and adds to the context.
+func Resolve(c *gin.Context) {
 	c.Set("host", resolveHost(c.Request))
 	c.Set("scheme", resolveScheme(c.Request))
 	c.Next()
@@ -55,4 +55,14 @@ func resolveHost(r *http.Request) string {
 	default:
 		return "localhost:8000"
 	}
+}
+
+// Hostname returns the hostname associated with
+// the current context.
+func Hostname(c *gin.Context) (host string) {
+	v, ok := c.Get("host")
+	if ok {
+		host = v.(string)
+	}
+	return
 }

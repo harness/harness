@@ -13,7 +13,7 @@ html
         link[rel="stylesheet"][href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.min.css"]
         link[rel="stylesheet"][href="/static/styles_gen/style.css"]
         style
-        	html { height: 100%; overflow: hidden; }
+            html { height: 100%; overflow: hidden; }
 
     body.login
         div

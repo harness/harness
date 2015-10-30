@@ -1,57 +1,5 @@
 package model
 
-import (
-	"github.com/CiscoCloud/drone/shared/database"
-	"github.com/russross/meddler"
-)
-
-type Node struct {
-	ID   int64  `meddler:"node_id,pk" json:"id"`
-	Addr string `meddler:"node_addr"  json:"address"`
-	Arch string `meddler:"node_arch"  json:"architecture"`
-	Cert string `meddler:"node_cert"  json:"-"`
-	Key  string `meddler:"node_key"   json:"-"`
-	CA   string `meddler:"node_ca"    json:"-"`
-}
-
-func GetNode(db meddler.DB, id int64) (*Node, error) {
-	var node = new(Node)
-	var err = meddler.Load(db, nodeTable, node, id)
-	return node, err
-}
-
-func GetNodeList(db meddler.DB) ([]*Node, error) {
-	var nodes = []*Node{}
-	var err = meddler.QueryAll(db, &nodes, database.Rebind(nodeListQuery))
-	return nodes, err
-}
-
-func InsertNode(db meddler.DB, node *Node) error {
-	return meddler.Insert(db, nodeTable, node)
-}
-
-func UpdateNode(db meddler.DB, node *Node) error {
-	return meddler.Update(db, nodeTable, node)
-}
-
-func DeleteNode(db meddler.DB, node *Node) error {
-	var _, err = db.Exec(database.Rebind(nodeDeleteStmt), node.ID)
-	return err
-}
-
-const nodeTable = "nodes"
-
-const nodeListQuery = `
-SELECT *
-FROM nodes
-ORDER BY node_addr
-`
-
-const nodeDeleteStmt = `
-DELETE FROM nodes
-WHERE node_id=?
-`
-
 const (
 	Freebsd_386 uint = iota
 	Freebsd_amd64
@@ -76,4 +24,13 @@ var Archs = map[string]uint{
 	"solaris_amd64": Solaris_amd64,
 	"windows_386":   Windows_386,
 	"windows_amd64": Windows_amd64,
+}
+
+type Node struct {
+	ID   int64  `meddler:"node_id,pk" json:"id"`
+	Addr string `meddler:"node_addr"  json:"address"`
+	Arch string `meddler:"node_arch"  json:"architecture"`
+	Cert string `meddler:"node_cert"  json:"-"`
+	Key  string `meddler:"node_key"   json:"-"`
+	CA   string `meddler:"node_ca"    json:"-"`
 }

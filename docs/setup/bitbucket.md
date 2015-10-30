@@ -37,6 +37,14 @@ You must register your application with Bitbucket in order to generate a Client 
 Please use `http://drone.mycompany.com/authorize` as the Authorization callback URL. You will also need to check the following permissions:
 
 * Account:Email
+* Account:Read
 * Team Membership:Read
 * Repositories:Read
 * Webhooks:Read and Write
+
+## Known Issues
+
+This section details known issues and planned features:
+
+* Pull Request support
+* Mercurial support

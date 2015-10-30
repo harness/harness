@@ -6,14 +6,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/CiscoCloud/drone/model"
-	"github.com/CiscoCloud/drone/router/middleware/context"
 	"github.com/CiscoCloud/drone/router/middleware/session"
 	"github.com/CiscoCloud/drone/shared/token"
+	"github.com/CiscoCloud/drone/store"
 )
 
 func GetCommit(c *gin.Context) {
-	db := context.Database(c)
 	repo := session.Repo(c)
 
 	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
@@ -34,7 +32,7 @@ func GetCommit(c *gin.Context) {
 		branch = repo.Branch
 	}
 
-	build, err := model.GetBuildCommit(db, repo, commit, branch)
+	build, err := store.GetBuildCommit(c, repo, commit, branch)
 	if err != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
@@ -44,7 +42,6 @@ func GetCommit(c *gin.Context) {
 }
 
 func GetPullRequest(c *gin.Context) {
-	db := context.Database(c)
 	repo := session.Repo(c)
 	refs := fmt.Sprintf("refs/pull/%s/head", c.Param("number"))
 
@@ -60,7 +57,7 @@ func GetPullRequest(c *gin.Context) {
 		return
 	}
 
-	build, err := model.GetBuildRef(db, repo, refs)
+	build, err := store.GetBuildRef(c, repo, refs)
 	if err != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
@@ -70,7 +67,6 @@ func GetPullRequest(c *gin.Context) {
 }
 
 func RedirectSha(c *gin.Context) {
-	db := context.Database(c)
 	repo := session.Repo(c)
 
 	commit := c.Param("sha")
@@ -79,7 +75,7 @@ func RedirectSha(c *gin.Context) {
 		branch = repo.Branch
 	}
 
-	build, err := model.GetBuildCommit(db, repo, commit, branch)
+	build, err := store.GetBuildCommit(c, repo, commit, branch)
 	if err != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
@@ -90,11 +86,10 @@ func RedirectSha(c *gin.Context) {
 }
 
 func RedirectPullRequest(c *gin.Context) {
-	db := context.Database(c)
 	repo := session.Repo(c)
 	refs := fmt.Sprintf("refs/pull/%s/head", c.Param("number"))
 
-	build, err := model.GetBuildRef(db, repo, refs)
+	build, err := store.GetBuildRef(c, repo, refs)
 	if err != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return

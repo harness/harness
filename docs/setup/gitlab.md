@@ -1,5 +1,7 @@
 # Gitlab
 
+> GitLab support is experimental and unstable due to high variation in GitLab configurations and versions. We highly recommend using [Gogs](https://github.com/gogits/gogs) as an alternative to GitLab.
+
 Drone comes with built-in support for GitLab version 8.0 and higher. To enable Gitlab you should configure the Gitlab driver using the following environment variables:
 
 ```bash

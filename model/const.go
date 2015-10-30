@@ -4,7 +4,7 @@ const (
 	EventPush   = "push"
 	EventPull   = "pull_request"
 	EventTag    = "tag"
-	EventDeploy = "deploy"
+	EventDeploy = "deployment"
 )
 
 const (
@@ -15,4 +15,11 @@ const (
 	StatusFailure = "failure"
 	StatusKilled  = "killed"
 	StatusError   = "error"
+)
+
+const (
+	RepoGit      = "git"
+	RepoHg       = "hg"
+	RepoFossil   = "fossil"
+	RepoPerforce = "perforce"
 )

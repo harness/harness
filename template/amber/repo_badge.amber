@@ -28,7 +28,7 @@ block content
             div.col-md-3 Markup
             div.col-md-9
                 pre
-                    | &lt;a href=&quot;#{Link}/api/badges/#{Repo.FullName}/status.svg&quot;&gt;&lt;img src=&quot;#{Link}/#{Repo.FullName}&quot; /&gt;&lt;/a&gt;
+                    | &lt;a href=&quot;#{Link}/#{Repo.FullName}&quot;&gt;&lt;img src=&quot;#{Link}/api/badges/#{Repo.FullName}/status.svg&quot; /&gt;&lt;/a&gt;
         div.row
             div.col-md-3 CC Menu
             div.col-md-9

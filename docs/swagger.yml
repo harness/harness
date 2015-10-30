@@ -277,6 +277,42 @@ paths:
           description: |
             Unable to find the Repository or Build
 
+
+  /repos/{owner}/{name}/builds/{number}:
+    get:
+      parameters:
+        - name: owner
+          in: path
+          type: string
+          description: owner of the repository
+        - name: name
+          in: path
+          type: string
+          description: name of the repository
+        - name: branch
+          in: query
+          type: string
+          description: name of the branch
+          required: false
+        - name: number
+          in: path
+          type: integer
+          description: sequential build number
+      tags:
+        - Builds
+      summary: Get the latest build
+      description: Returns the latest repository build.
+      security:
+        - accessToken: []
+      responses:
+        200:
+          description: The build.
+          schema:
+            $ref: "#/definitions/Build"
+        404:
+          description: |
+            Unable to find the Repository or Build
+
     post:
       parameters:
         - name: owner
@@ -601,6 +637,7 @@ definitions:
     example: |
         {
           "id": 1,
+          "scm": "git",
           "owner": "octocat",
           "name": "hello-world",
           "full_name": "octocat/hello-world",
@@ -620,6 +657,8 @@ definitions:
       id:
         type: integer
         format: int64
+      scm:
+        type: string
       owner:
         type: string
       name:
@@ -721,6 +760,8 @@ definitions:
       finished_at:
         type: integer
         format: int64
+      deploy_to:
+        type: string
       commit:
         type: string
       branch:
@@ -744,7 +785,10 @@ definitions:
         type: string
       link_url:
         type: string
-
+      jobs:
+        type: array
+        items:
+          $ref: "#/definitions/Job"
 
   Job:
     example: |
@@ -786,3 +830,81 @@ definitions:
         format: int64
       environment:
         type: object
+
+  Feed:
+    example: |
+        {
+          "owner": "octocat",
+          "name": "hello-world",
+          "full_name": "octocat/hello-world",
+          "number": 1,
+          "event": "push",
+          "status": "success",
+          "created_at": 1443677151,
+          "enqueued_at": 1443677151,
+          "started_at": 1443677151,
+          "finished_at": 1443677255,
+          "commit": "2deb7e0d0cbac357eeb110c8a2f2f32ce037e0d5",
+          "branch": "master",
+          "ref": "refs/heads/master",
+          "remote": "https://github.com/octocat/hello-world.git",
+          "message": "New line at end of file. --Signed off by Spaceghost",
+          "timestamp": 1443677255,
+          "author": "Spaceghost",
+          "author_avatar": "https://avatars0.githubusercontent.com/u/251370?v=3",
+          "author_email": "octocat@github.com",
+          "link_url": "https://github.com/octocat/hello-world/commit/762941318ee16e59dabbacb1b4049eec22f0d303",
+        }
+    properties:
+      owner:
+        type: string
+      name:
+        type: string
+      full_name:
+        type: string
+      number:
+        type: integer
+      status:
+        type: string
+        enum:
+          - success
+          - failure
+          - pending
+          - started
+          - error
+          - killed
+      created_at:
+        type: integer
+        format: int64
+      enqueued_at:
+        type: integer
+        format: int64
+      started_at:
+        type: integer
+        format: int64
+      finished_at:
+        type: integer
+        format: int64
+      commit:
+        type: string
+      branch:
+        type: string
+      message:
+        type: string
+      timestamp:
+        type: integer
+        format: int64
+      ref:
+        type: string
+      refspec:
+        type: string
+      remote:
+        type: string
+      author:
+        type: string
+      author_avatar:
+        type: string
+      author_email:
+        type: string
+      link_url:
+        type: string

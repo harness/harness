@@ -1,22 +1,17 @@
 package context
 
 import (
-	"database/sql"
-
 	"github.com/CiscoCloud/drone/engine"
 	"github.com/CiscoCloud/drone/remote"
+	"github.com/CiscoCloud/drone/store"
 	"github.com/gin-gonic/gin"
 )
 
-func SetDatabase(db *sql.DB) gin.HandlerFunc {
+func SetStore(s store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("database", db)
+		store.ToContext(c, s)
 		c.Next()
 	}
-}
-
-func Database(c *gin.Context) *sql.DB {
-	return c.MustGet("database").(*sql.DB)
 }
 
 func SetRemote(remote remote.Remote) gin.HandlerFunc {

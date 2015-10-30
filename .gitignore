@@ -11,3 +11,9 @@ drone_*
 *.min.js
 *.deb
 temp/
+
+# vendored repositories that we don't actually need
+# to vendor. so exclude them
+
+vendor/google.golang.org/cloud
+vendor/github.com/bugagazavr

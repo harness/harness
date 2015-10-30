@@ -12,6 +12,7 @@ import (
 	"github.com/CiscoCloud/drone/engine"
 	"github.com/CiscoCloud/drone/remote"
 	"github.com/CiscoCloud/drone/shared/httputil"
+	"github.com/CiscoCloud/drone/store"
 	"github.com/gin-gonic/gin"
 
 	"github.com/CiscoCloud/drone/model"
@@ -21,8 +22,7 @@ import (
 
 func GetBuilds(c *gin.Context) {
 	repo := session.Repo(c)
-	db := context.Database(c)
-	builds, err := model.GetBuildList(db, repo)
+	builds, err := store.GetBuildList(c, repo)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -31,21 +31,43 @@ func GetBuilds(c *gin.Context) {
 }
 
 func GetBuild(c *gin.Context) {
-	repo := session.Repo(c)
-	db := context.Database(c)
+	if c.Param("number") == "latest" {
+		GetBuildLast(c)
+		return
+	}
 
+	repo := session.Repo(c)
 	num, err := strconv.Atoi(c.Param("number"))
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	build, err := model.GetBuildNumber(db, repo, num)
+	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	jobs, _ := model.GetJobList(db, build)
+	jobs, _ := store.GetJobList(c, build)
+
+	out := struct {
+		*model.Build
+		Jobs []*model.Job `json:"jobs"`
+	}{build, jobs}
+
+	c.IndentedJSON(http.StatusOK, &out)
+}
+
+func GetBuildLast(c *gin.Context) {
+	repo := session.Repo(c)
+	branch := c.DefaultQuery("branch", repo.Branch)
+
+	build, err := store.GetBuildLast(c, repo, branch)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	jobs, _ := store.GetJobList(c, build)
 
 	out := struct {
 		*model.Build
@@ -57,7 +79,6 @@ func GetBuild(c *gin.Context) {
 
 func GetBuildLogs(c *gin.Context) {
 	repo := session.Repo(c)
-	db := context.Database(c)
 
 	// the user may specify to stream the full logs,
 	// or partial logs, capped at 2MB.
@@ -68,19 +89,19 @@ func GetBuildLogs(c *gin.Context) {
 	num, _ := strconv.Atoi(c.Params.ByName("number"))
 	seq, _ := strconv.Atoi(c.Params.ByName("job"))
 
-	build, err := model.GetBuildNumber(db, repo, num)
+	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
-	job, err := model.GetJobNumber(db, build, seq)
+	job, err := store.GetJobNumber(c, build, seq)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
-	r, err := model.GetLog(db, job)
+	r, err := store.ReadLog(c, job)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
@@ -97,25 +118,24 @@ func GetBuildLogs(c *gin.Context) {
 func DeleteBuild(c *gin.Context) {
 	engine_ := context.Engine(c)
 	repo := session.Repo(c)
-	db := context.Database(c)
 
 	// parse the build number and job sequence number from
 	// the repquest parameter.
 	num, _ := strconv.Atoi(c.Params.ByName("number"))
 	seq, _ := strconv.Atoi(c.Params.ByName("job"))
 
-	build, err := model.GetBuildNumber(db, repo, num)
+	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
-	job, err := model.GetJobNumber(db, build, seq)
+	job, err := store.GetJobNumber(c, build, seq)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
-	node, err := model.GetNode(db, job.NodeID)
+	node, err := store.GetNode(c, job.NodeID)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
@@ -125,9 +145,8 @@ func DeleteBuild(c *gin.Context) {
 
 func PostBuild(c *gin.Context) {
 
-	remote_ := context.Remote(c)
+	remote_ := remote.FromContext(c)
 	repo := session.Repo(c)
-	db := context.Database(c)
 
 	num, err := strconv.Atoi(c.Param("number"))
 	if err != nil {
@@ -135,14 +154,14 @@ func PostBuild(c *gin.Context) {
 		return
 	}
 
-	user, err := model.GetUser(db, repo.UserID)
+	user, err := store.GetUser(c, repo.UserID)
 	if err != nil {
 		log.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)
 		return
 	}
 
-	build, err := model.GetBuildNumber(db, repo, num)
+	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
 		log.Errorf("failure to get build %d. %s", num, err)
 		c.AbortWithError(404, err)
@@ -155,7 +174,7 @@ func PostBuild(c *gin.Context) {
 	if refresher, ok := remote_.(remote.Refresher); ok {
 		ok, _ := refresher.Refresh(user)
 		if ok {
-			model.UpdateUser(db, user)
+			store.UpdateUser(c, user)
 		}
 	}
 
@@ -167,7 +186,7 @@ func PostBuild(c *gin.Context) {
 		return
 	}
 
-	key, _ := model.GetKey(db, repo)
+	key, _ := store.GetKey(c, repo)
 	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
 		log.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
@@ -175,7 +194,7 @@ func PostBuild(c *gin.Context) {
 		return
 	}
 
-	jobs, err := model.GetJobList(db, build)
+	jobs, err := store.GetJobList(c, build)
 	if err != nil {
 		log.Errorf("failure to get build %d jobs. %s", build.Number, err)
 		c.AbortWithError(404, err)
@@ -188,13 +207,8 @@ func PostBuild(c *gin.Context) {
 		return
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		c.AbortWithStatus(500)
-		return
-	}
-	defer tx.Rollback()
-
+	// todo move this to database tier
+	// and wrap inside a transaction
 	build.Status = model.StatusPending
 	build.Started = 0
 	build.Finished = 0
@@ -205,25 +219,23 @@ func PostBuild(c *gin.Context) {
 		job.Finished = 0
 		job.ExitCode = 0
 		job.Enqueued = build.Enqueued
-		model.UpdateJob(db, job)
+		store.UpdateJob(c, job)
 	}
 
-	err = model.UpdateBuild(db, build)
+	err = store.UpdateBuild(c, build)
 	if err != nil {
 		c.AbortWithStatus(500)
 		return
 	}
 
-	tx.Commit()
-
 	c.JSON(202, build)
 
 	// get the previous build so taht we can send
 	// on status change notifications
-	last, _ := model.GetBuildLastBefore(db, repo, build.Branch, build.ID)
+	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
 
 	engine_ := context.Engine(c)
-	go engine_.Schedule(&engine.Task{
+	go engine_.Schedule(c.Copy(), &engine.Task{
 		User:      user,
 		Repo:      repo,
 		Build:     build,

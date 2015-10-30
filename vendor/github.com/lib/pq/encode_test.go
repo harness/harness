@@ -1,12 +1,13 @@
 package pq
 
 import (
-	"github.com/lib/pq/oid"
-
 	"bytes"
+	"database/sql"
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/lib/pq/oid"
 )
 
 func TestScanTimestamp(t *testing.T) {
@@ -30,8 +31,8 @@ func TestScanNilTimestamp(t *testing.T) {
 }
 
 var timeTests = []struct {
-	str      string
-	expected time.Time
+	str     string
+	timeval time.Time
 }{
 	{"22001-02-03", time.Date(22001, time.February, 3, 0, 0, 0, 0, time.FixedZone("", 0))},
 	{"2001-02-03", time.Date(2001, time.February, 3, 0, 0, 0, 0, time.FixedZone("", 0))},
@@ -57,13 +58,20 @@ var timeTests = []struct {
 		time.FixedZone("", -(7*60*60+30*60+9)))},
 	{"2001-02-03 04:05:06+07", time.Date(2001, time.February, 3, 4, 5, 6, 0,
 		time.FixedZone("", 7*60*60))},
-	{"10000-02-03 04:05:06 BC", time.Date(-10000, time.February, 3, 4, 5, 6, 0, time.FixedZone("", 0))},
-	{"0010-02-03 04:05:06 BC", time.Date(-10, time.February, 3, 4, 5, 6, 0, time.FixedZone("", 0))},
-	{"0010-02-03 04:05:06.123 BC", time.Date(-10, time.February, 3, 4, 5, 6, 123000000, time.FixedZone("", 0))},
-	{"0010-02-03 04:05:06.123-07 BC", time.Date(-10, time.February, 3, 4, 5, 6, 123000000,
+	{"0011-02-03 04:05:06 BC", time.Date(-10, time.February, 3, 4, 5, 6, 0, time.FixedZone("", 0))},
+	{"0011-02-03 04:05:06.123 BC", time.Date(-10, time.February, 3, 4, 5, 6, 123000000, time.FixedZone("", 0))},
+	{"0011-02-03 04:05:06.123-07 BC", time.Date(-10, time.February, 3, 4, 5, 6, 123000000,
 		time.FixedZone("", -7*60*60))},
+	{"0001-02-03 04:05:06.123", time.Date(1, time.February, 3, 4, 5, 6, 123000000, time.FixedZone("", 0))},
+	{"0001-02-03 04:05:06.123 BC", time.Date(1, time.February, 3, 4, 5, 6, 123000000, time.FixedZone("", 0)).AddDate(-1, 0, 0)},
+	{"0001-02-03 04:05:06.123 BC", time.Date(0, time.February, 3, 4, 5, 6, 123000000, time.FixedZone("", 0))},
+	{"0002-02-03 04:05:06.123 BC", time.Date(0, time.February, 3, 4, 5, 6, 123000000, time.FixedZone("", 0)).AddDate(-1, 0, 0)},
+	{"0002-02-03 04:05:06.123 BC", time.Date(-1, time.February, 3, 4, 5, 6, 123000000, time.FixedZone("", 0))},
+	{"12345-02-03 04:05:06.1", time.Date(12345, time.February, 3, 4, 5, 6, 100000000, time.FixedZone("", 0))},
+	{"123456-02-03 04:05:06.1", time.Date(123456, time.February, 3, 4, 5, 6, 100000000, time.FixedZone("", 0))},
 }
 
+// Helper function for the two tests below
 func tryParse(str string) (t time.Time, err error) {
 	defer func() {
 		if p := recover(); p != nil {
@@ -71,19 +79,52 @@ func tryParse(str string) (t time.Time, err error) {
 			return
 		}
 	}()
-	t = parseTs(nil, str)
+	i := parseTs(nil, str)
+	t, ok := i.(time.Time)
+	if !ok {
+		err = fmt.Errorf("Not a time.Time type, got %#v", i)
+	}
 	return
 }
 
+// Test that parsing the string results in the expected value.
 func TestParseTs(t *testing.T) {
 	for i, tt := range timeTests {
 		val, err := tryParse(tt.str)
-		if val.String() != tt.expected.String() {
-			t.Errorf("%d: expected to parse %q into %q; got %q",
-				i, tt.str, tt.expected, val)
-		}
 		if err != nil {
 			t.Errorf("%d: got error: %v", i, err)
+		} else if val.String() != tt.timeval.String() {
+			t.Errorf("%d: expected to parse %q into %q; got %q",
+				i, tt.str, tt.timeval, val)
+		}
+	}
+}
+
+// Now test that sending the value into the database and parsing it back
+// returns the same time.Time value.
+func TestEncodeAndParseTs(t *testing.T) {
+	db, err := openTestConnConninfo("timezone='Etc/UTC'")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	for i, tt := range timeTests {
+		var dbstr string
+		err = db.QueryRow("SELECT ($1::timestamptz)::text", tt.timeval).Scan(&dbstr)
+		if err != nil {
+			t.Errorf("%d: could not send value %q to the database: %s", i, tt.timeval, err)
+			continue
+		}
+
+		val, err := tryParse(dbstr)
+		if err != nil {
+			t.Errorf("%d: could not parse value %q: %s", i, dbstr, err)
+			continue
+		}
+		val = val.In(tt.timeval.Location())
+		if val.String() != tt.timeval.String() {
+			t.Errorf("%d: expected to parse %q into %q; got %q", i, dbstr, tt.timeval, val)
 		}
 	}
 }
@@ -96,8 +137,18 @@ var formatTimeTests = []struct {
 	{time.Date(2001, time.February, 3, 4, 5, 6, 123456789, time.FixedZone("", 0)), "2001-02-03T04:05:06.123456789Z"},
 	{time.Date(2001, time.February, 3, 4, 5, 6, 123456789, time.FixedZone("", 2*60*60)), "2001-02-03T04:05:06.123456789+02:00"},
 	{time.Date(2001, time.February, 3, 4, 5, 6, 123456789, time.FixedZone("", -6*60*60)), "2001-02-03T04:05:06.123456789-06:00"},
-	{time.Date(1, time.January, 1, 0, 0, 0, 0, time.FixedZone("", 19*60+32)), "0001-01-01T00:00:00+00:19:32"},
 	{time.Date(2001, time.February, 3, 4, 5, 6, 0, time.FixedZone("", -(7*60*60+30*60+9))), "2001-02-03T04:05:06-07:30:09"},
+
+	{time.Date(1, time.February, 3, 4, 5, 6, 123456789, time.FixedZone("", 0)), "0001-02-03T04:05:06.123456789Z"},
+	{time.Date(1, time.February, 3, 4, 5, 6, 123456789, time.FixedZone("", 2*60*60)), "0001-02-03T04:05:06.123456789+02:00"},
+	{time.Date(1, time.February, 3, 4, 5, 6, 123456789, time.FixedZone("", -6*60*60)), "0001-02-03T04:05:06.123456789-06:00"},
+
+	{time.Date(0, time.February, 3, 4, 5, 6, 123456789, time.FixedZone("", 0)), "0001-02-03T04:05:06.123456789Z BC"},
+	{time.Date(0, time.February, 3, 4, 5, 6, 123456789, time.FixedZone("", 2*60*60)), "0001-02-03T04:05:06.123456789+02:00 BC"},
+	{time.Date(0, time.February, 3, 4, 5, 6, 123456789, time.FixedZone("", -6*60*60)), "0001-02-03T04:05:06.123456789-06:00 BC"},
+
+	{time.Date(1, time.February, 3, 4, 5, 6, 0, time.FixedZone("", -(7*60*60+30*60+9))), "0001-02-03T04:05:06-07:30:09"},
+	{time.Date(0, time.February, 3, 4, 5, 6, 0, time.FixedZone("", -(7*60*60+30*60+9))), "0001-02-03T04:05:06-07:30:09 BC"},
 }
 
 func TestFormatTs(t *testing.T) {
@@ -213,6 +264,131 @@ func TestTimestampWithOutTimezone(t *testing.T) {
 	test("2013-01-04T20:14:58.80033Z", "2013-01-04 20:14:58.80033")
 }
 
+func TestInfinityTimestamp(t *testing.T) {
+	db := openTestConn(t)
+	defer db.Close()
+	var err error
+	var resultT time.Time
+
+	expectedError := fmt.Errorf(`sql: Scan error on column index 0: unsupported driver -> Scan pair: []uint8 -> *time.Time`)
+	type testCases []struct {
+		Query       string
+		Param       string
+		ExpectedErr error
+		ExpectedVal interface{}
+	}
+	tc := testCases{
+		{"SELECT $1::timestamp", "-infinity", expectedError, "-infinity"},
+		{"SELECT $1::timestamptz", "-infinity", expectedError, "-infinity"},
+		{"SELECT $1::timestamp", "infinity", expectedError, "infinity"},
+		{"SELECT $1::timestamptz", "infinity", expectedError, "infinity"},
+	}
+	// try to assert []byte to time.Time
+	for _, q := range tc {
+		err = db.QueryRow(q.Query, q.Param).Scan(&resultT)
+		if err.Error() != q.ExpectedErr.Error() {
+			t.Errorf("Scanning -/+infinity, expected error, %q, got %q", q.ExpectedErr, err)
+		}
+	}
+	// yield []byte
+	for _, q := range tc {
+		var resultI interface{}
+		err = db.QueryRow(q.Query, q.Param).Scan(&resultI)
+		if err != nil {
+			t.Errorf("Scanning -/+infinity, expected no error, got %q", err)
+		}
+		result, ok := resultI.([]byte)
+		if !ok {
+			t.Errorf("Scanning -/+infinity, expected []byte, got %#v", resultI)
+		}
+		if string(result) != q.ExpectedVal {
+			t.Errorf("Scanning -/+infinity, expected %q, got %q", q.ExpectedVal, result)
+		}
+	}
+
+	y1500 := time.Date(1500, time.January, 1, 0, 0, 0, 0, time.UTC)
+	y2500 := time.Date(2500, time.January, 1, 0, 0, 0, 0, time.UTC)
+	EnableInfinityTs(y1500, y2500)
+
+	err = db.QueryRow("SELECT $1::timestamp", "infinity").Scan(&resultT)
+	if err != nil {
+		t.Errorf("Scanning infinity, expected no error, got %q", err)
+	}
+	if !resultT.Equal(y2500) {
+		t.Errorf("Scanning infinity, expected %q, got %q", y2500, resultT)
+	}
+
+	err = db.QueryRow("SELECT $1::timestamptz", "infinity").Scan(&resultT)
+	if err != nil {
+		t.Errorf("Scanning infinity, expected no error, got %q", err)
+	}
+	if !resultT.Equal(y2500) {
+		t.Errorf("Scanning Infinity, expected time %q, got %q", y2500, resultT.String())
+	}
+
+	err = db.QueryRow("SELECT $1::timestamp", "-infinity").Scan(&resultT)
+	if err != nil {
+		t.Errorf("Scanning -infinity, expected no error, got %q", err)
+	}
+	if !resultT.Equal(y1500) {
+		t.Errorf("Scanning -infinity, expected time %q, got %q", y1500, resultT.String())
+	}
+
+	err = db.QueryRow("SELECT $1::timestamptz", "-infinity").Scan(&resultT)
+	if err != nil {
+		t.Errorf("Scanning -infinity, expected no error, got %q", err)
+	}
+	if !resultT.Equal(y1500) {
+		t.Errorf("Scanning -infinity, expected time %q, got %q", y1500, resultT.String())
+	}
+
+	y_1500 := time.Date(-1500, time.January, 1, 0, 0, 0, 0, time.UTC)
+	y11500 := time.Date(11500, time.January, 1, 0, 0, 0, 0, time.UTC)
+	var s string
+	err = db.QueryRow("SELECT $1::timestamp::text", y_1500).Scan(&s)
+	if err != nil {
+		t.Errorf("Encoding -infinity, expected no error, got %q", err)
+	}
+	if s != "-infinity" {
+		t.Errorf("Encoding -infinity, expected %q, got %q", "-infinity", s)
+	}
+	err = db.QueryRow("SELECT $1::timestamptz::text", y_1500).Scan(&s)
+	if err != nil {
+		t.Errorf("Encoding -infinity, expected no error, got %q", err)
+	}
+	if s != "-infinity" {
+		t.Errorf("Encoding -infinity, expected %q, got %q", "-infinity", s)
+	}
+
+	err = db.QueryRow("SELECT $1::timestamp::text", y11500).Scan(&s)
+	if err != nil {
+		t.Errorf("Encoding infinity, expected no error, got %q", err)
+	}
+	if s != "infinity" {
+		t.Errorf("Encoding infinity, expected %q, got %q", "infinity", s)
+	}
+	err = db.QueryRow("SELECT $1::timestamptz::text", y11500).Scan(&s)
+	if err != nil {
+		t.Errorf("Encoding infinity, expected no error, got %q", err)
+	}
+	if s != "infinity" {
+		t.Errorf("Encoding infinity, expected %q, got %q", "infinity", s)
+	}
+
+	disableInfinityTs()
+
+	var panicErrorString string
+	func() {
+		defer func() {
+			panicErrorString, _ = recover().(string)
+		}()
+		EnableInfinityTs(y2500, y1500)
+	}()
+	if panicErrorString != infinityTsNegativeMustBeSmaller {
+		t.Errorf("Expected error, %q, got %q", infinityTsNegativeMustBeSmaller, panicErrorString)
+	}
+}
+
 func TestStringWithNul(t *testing.T) {
 	db := openTestConn(t)
 	defer db.Close()
@@ -225,7 +401,7 @@ func TestStringWithNul(t *testing.T) {
 	}
 }
 
-func TestByteaToText(t *testing.T) {
+func TestByteSliceToText(t *testing.T) {
 	db := openTestConn(t)
 	defer db.Close()
 
@@ -243,7 +419,7 @@ func TestByteaToText(t *testing.T) {
 	}
 }
 
-func TestTextToBytea(t *testing.T) {
+func TestStringToBytea(t *testing.T) {
 	db := openTestConn(t)
 	defer db.Close()
 
@@ -258,6 +434,136 @@ func TestTextToBytea(t *testing.T) {
 
 	if !bytes.Equal(result, []byte(b)) {
 		t.Fatalf("expected %v but got %v", b, result)
+	}
+}
+
+func TestTextByteSliceToUUID(t *testing.T) {
+	db := openTestConn(t)
+	defer db.Close()
+
+	b := []byte("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
+	row := db.QueryRow("SELECT $1::uuid", b)
+
+	var result string
+	err := row.Scan(&result)
+	if forceBinaryParameters() {
+		pqErr := err.(*Error)
+		if pqErr == nil {
+			t.Errorf("Expected to get error")
+		} else if pqErr.Code != "22P03" {
+			t.Fatalf("Expected to get invalid binary encoding error (22P03), got %s", pqErr.Code)
+		}
+	} else {
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if result != string(b) {
+			t.Fatalf("expected %v but got %v", b, result)
+		}
+	}
+}
+
+func TestBinaryByteSlicetoUUID(t *testing.T) {
+	db := openTestConn(t)
+	defer db.Close()
+
+	b := []byte{'\xa0','\xee','\xbc','\x99',
+				'\x9c', '\x0b',
+				'\x4e', '\xf8',
+				'\xbb', '\x00', '\x6b',
+				'\xb9', '\xbd', '\x38', '\x0a', '\x11'}
+	row := db.QueryRow("SELECT $1::uuid", b)
+
+	var result string
+	err := row.Scan(&result)
+	if forceBinaryParameters() {
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if result != string("a0eebc99-9c0b-4ef8-bb00-6bb9bd380a11") {
+			t.Fatalf("expected %v but got %v", b, result)
+		}
+	} else {
+		pqErr := err.(*Error)
+		if pqErr == nil {
+			t.Errorf("Expected to get error")
+		} else if pqErr.Code != "22021" {
+			t.Fatalf("Expected to get invalid byte sequence for encoding error (22021), got %s", pqErr.Code)
+		}
+	}
+}
+
+func TestStringToUUID(t *testing.T) {
+	db := openTestConn(t)
+	defer db.Close()
+
+	s := "a0eebc99-9c0b-4ef8-bb00-6bb9bd380a11"
+	row := db.QueryRow("SELECT $1::uuid", s)
+
+	var result string
+	err := row.Scan(&result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if result != s {
+		t.Fatalf("expected %v but got %v", s, result)
+	}
+}
+
+func TestTextByteSliceToInt(t *testing.T) {
+	db := openTestConn(t)
+	defer db.Close()
+
+	expected := 12345678
+	b := []byte(fmt.Sprintf("%d", expected))
+	row := db.QueryRow("SELECT $1::int", b)
+
+	var result int
+	err := row.Scan(&result)
+	if forceBinaryParameters() {
+		pqErr := err.(*Error)
+		if pqErr == nil {
+			t.Errorf("Expected to get error")
+		} else if pqErr.Code != "22P03" {
+			t.Fatalf("Expected to get invalid binary encoding error (22P03), got %s", pqErr.Code)
+		}
+	} else {
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result != expected {
+			t.Fatalf("expected %v but got %v", expected, result)
+		}
+	}
+}
+
+func TestBinaryByteSliceToInt(t *testing.T) {
+	db := openTestConn(t)
+	defer db.Close()
+
+	expected := 12345678
+	b := []byte{'\x00', '\xbc', '\x61', '\x4e'}
+	row := db.QueryRow("SELECT $1::int", b)
+
+	var result int
+	err := row.Scan(&result)
+	if forceBinaryParameters() {
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result != expected {
+			t.Fatalf("expected %v but got %v", expected, result)
+		}
+	} else {
+		pqErr := err.(*Error)
+		if pqErr == nil {
+			t.Errorf("Expected to get error")
+		} else if pqErr.Code != "22021" {
+			t.Fatalf("Expected to get invalid byte sequence for encoding error (22021), got %s", pqErr.Code)
+		}
 	}
 }
 
@@ -285,7 +591,7 @@ func TestByteaOutputFormats(t *testing.T) {
 		return
 	}
 
-	testByteaOutputFormat := func(f string) {
+	testByteaOutputFormat := func(f string, usePrepared bool) {
 		expectedData := []byte("\x5c\x78\x00\xff\x61\x62\x63\x01\x08")
 		sqlQuery := "SELECT decode('5c7800ff6162630108', 'hex')"
 
@@ -302,8 +608,18 @@ func TestByteaOutputFormats(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// use Query; QueryRow would hide the actual error
-		rows, err := txn.Query(sqlQuery)
+		var rows *sql.Rows
+		var stmt *sql.Stmt
+		if usePrepared {
+			stmt, err = txn.Prepare(sqlQuery)
+			if err != nil {
+				t.Fatal(err)
+			}
+			rows, err = stmt.Query()
+		} else {
+			// use Query; QueryRow would hide the actual error
+			rows, err = txn.Query(sqlQuery)
+		}
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -321,13 +637,21 @@ func TestByteaOutputFormats(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		if stmt != nil {
+			err = stmt.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
 		if !bytes.Equal(data, expectedData) {
 			t.Errorf("unexpected bytea value %v for format %s; expected %v", data, f, expectedData)
 		}
 	}
 
-	testByteaOutputFormat("hex")
-	testByteaOutputFormat("escape")
+	testByteaOutputFormat("hex", false)
+	testByteaOutputFormat("escape", false)
+	testByteaOutputFormat("hex", true)
+	testByteaOutputFormat("escape", true)
 }
 
 func TestAppendEncodedText(t *testing.T) {
@@ -335,15 +659,13 @@ func TestAppendEncodedText(t *testing.T) {
 
 	buf = appendEncodedText(&parameterStatus{serverVersion: 90000}, buf, int64(10))
 	buf = append(buf, '\t')
-	buf = appendEncodedText(&parameterStatus{serverVersion: 90000}, buf, float32(42.0000000001))
-	buf = append(buf, '\t')
 	buf = appendEncodedText(&parameterStatus{serverVersion: 90000}, buf, 42.0000000001)
 	buf = append(buf, '\t')
 	buf = appendEncodedText(&parameterStatus{serverVersion: 90000}, buf, "hello\tworld")
 	buf = append(buf, '\t')
 	buf = appendEncodedText(&parameterStatus{serverVersion: 90000}, buf, []byte{0, 128, 255})
 
-	if string(buf) != "10\t42\t42.0000000001\thello\\tworld\t\\\\x0080ff" {
+	if string(buf) != "10\t42.0000000001\thello\\tworld\t\\\\x0080ff" {
 		t.Fatal(string(buf))
 	}
 }

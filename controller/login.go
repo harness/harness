@@ -8,15 +8,15 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/CiscoCloud/drone/model"
-	"github.com/CiscoCloud/drone/router/middleware/context"
+	"github.com/CiscoCloud/drone/remote"
 	"github.com/CiscoCloud/drone/shared/crypto"
 	"github.com/CiscoCloud/drone/shared/httputil"
 	"github.com/CiscoCloud/drone/shared/token"
+	"github.com/CiscoCloud/drone/store"
 )
 
 func GetLogin(c *gin.Context) {
-	db := context.Database(c)
-	remote := context.Remote(c)
+	remote := remote.FromContext(c)
 
 	// when dealing with redirects we may need
 	// to adjust the content type. I cannot, however,
@@ -36,9 +36,9 @@ func GetLogin(c *gin.Context) {
 	}
 
 	// get the user from the database
-	u, err := model.GetUserLogin(db, tmpuser.Login)
+	u, err := store.GetUserLogin(c, tmpuser.Login)
 	if err != nil {
-		count, err := model.GetUserCount(db)
+		count, err := store.CountUsers(c)
 		if err != nil {
 			log.Errorf("cannot register %s. %s", tmpuser.Login, err)
 			c.Redirect(303, "/login?error=internal_error")
@@ -64,7 +64,7 @@ func GetLogin(c *gin.Context) {
 		u.Hash = crypto.Rand()
 
 		// insert the user into the database
-		if err := model.CreateUser(db, u); err != nil {
+		if err := store.CreateUser(c, u); err != nil {
 			log.Errorf("cannot insert %s. %s", u.Login, err)
 			c.Redirect(303, "/login?error=internal_error")
 			return
@@ -84,7 +84,7 @@ func GetLogin(c *gin.Context) {
 	u.Email = tmpuser.Email
 	u.Avatar = tmpuser.Avatar
 
-	if err := model.UpdateUser(db, u); err != nil {
+	if err := store.UpdateUser(c, u); err != nil {
 		log.Errorf("cannot update %s. %s", u.Login, err)
 		c.Redirect(303, "/login?error=internal_error")
 		return
@@ -116,8 +116,7 @@ func GetLogout(c *gin.Context) {
 }
 
 func GetLoginToken(c *gin.Context) {
-	db := context.Database(c)
-	remote := context.Remote(c)
+	remote := remote.FromContext(c)
 
 	in := &tokenPayload{}
 	err := c.Bind(in)
@@ -132,7 +131,7 @@ func GetLoginToken(c *gin.Context) {
 		return
 	}
 
-	user, err := model.GetUserLogin(db, login)
+	user, err := store.GetUserLogin(c, login)
 	if err != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return

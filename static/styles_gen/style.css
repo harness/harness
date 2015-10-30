@@ -262,9 +262,21 @@ body.login div { position: relative; width: 220px; height: 30px; }
 
 body.login div div.logo { background-image: url(/static/images/logo_dark.svg); background-size: 35px; background-repeat: no-repeat; background-position: center center; position: absolute; top: 0px; left: 0px; height: 30px; width: 35px; animation-name: fadein; animation-duration: 1.5s; animation-timing-function: ease-in; }
 
-body.login div a { background: #2b303b; color: #FFF; text-decoration: none; position: absolute; top: 0px; right: 0px; text-transform: uppercase; font-size: 13px; min-width: 150px; text-align: center; padding: 5px; animation-name: fadein; animation-duration: 1.5s; animation-timing-function: ease-in; }
+body.login div input[type="submit"], body.login div a { background: #2b303b; color: #FFF; text-decoration: none; position: absolute; top: 0px; right: 0px; text-transform: uppercase; font-size: 13px; min-width: 150px; text-align: center; padding: 5px; border: none; animation-name: fadein; animation-duration: 1.5s; animation-timing-function: ease-in; }
 
 body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-height: 25px; padding: 20px; width: 100%; border: none; text-align: center; vertical-align: middle; height: auto; border-radius: 0px; }
+
+body.login.login-form > div { width: 300px; height: 100px; display: flex; }
+
+body.login.login-form > div div.logo { width: 65px; position: relative; background-position: left center; animation-name: none; }
+
+body.login.login-form > div form { flex: 1 1 auto; }
+
+body.login.login-form > div input[type="text"], body.login.login-form > div input[type="password"] { display: block; width: 100%; padding: 5px 10px; background-color: #eff1f5; border: none; color: #747C84; }
+
+body.login.login-form > div input[type="password"] { margin-top: 1px; }
+
+body.login.login-form > div input[type="submit"] { position: relative; width: 100%; margin-top: 20px; animation-name: none; }
 
 @keyframes flyin { 0% { left: -3000px; }
   100% { left: 0px; } }
@@ -291,13 +303,13 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 
 .repo-row .card-header { background: #FFF; border-bottom: none; padding-right: 0px; padding-left: 0px; width: 45px; }
 
+.repo-search { color: #747C84; border: none; background-color: #eff1f5; border-radius: 0px; padding: 9px 15px; width: 100%; margin-bottom: 45px; border-radius: 2px; }
+
 .toc { list-style-type: none; padding: 0px; margin: 0px; padding-bottom: 40px; }
 
 .toc h2 { font-size: 21px; font-weight: normal; margin-bottom: 20px; color: #2b303b; }
 
 .toc ul { list-style-type: none; padding: 0px; margin: 0px; margin-bottom: 40px; border-bottom: 1px solid #EEE; padding-bottom: 40px; }
-
-.toc ul li { line-height: 25px; }
 
 .toc ul li a { color: #2b303b; text-decoration: none; }
 
@@ -347,7 +359,7 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 
 .operation { min-height: 100vh; padding: 20px 0px; display: flex; }
 
-.operation > aside, .operation > div { min-width: 50%; max-width: 50%; width: 50%; padding-right: 40px; }
+.operation > aside, .operation > div { min-width: 50%; max-width: 50%; width: 0%; padding-right: 40px; }
 
 .operation h2 { color: #2b303b; font-size: 21px; }
 
@@ -367,7 +379,7 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 
 .operation .params li:after { visibility: hidden; display: block; font-size: 0; content: " "; clear: both; height: 0; }
 
-.operation .params h4 { float: left; line-height: 20px; text-align: right; padding-right: 20px; width: 150px; font-weight: bold; font-size: 15px; }
+.operation .params h4 { float: left; line-height: 20px; text-align: right; padding-right: 2 0px; width: 150px; font-weight: bold; font-size: 15px; }
 
 .operation .params small { display: block; text-transform: uppercase; color: #E67E22; font-size: 11px; font-weight: normal; margin-top: 5px; }
 
@@ -421,7 +433,7 @@ body.login div.alert { position: fixed; top: 0px; left: 0px; right: 0px; line-he
 
 .tt-open { position: absolute; top: 34px; left: 0px; z-index: 100; display: none; background: #FFF; min-width: 100%; border: 1px solid #eee; border-radius: 0px; }
 
-.tt-selectable:hover, .tt-cursor { background: #f4f4f4; }
+.tt-selectable:hover, .tt-cursor { background: #eff1f5; }
 
 .tt-selectable { padding: 1rem 0.75rem; cursor: pointer; display: flex; }
 

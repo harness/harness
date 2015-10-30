@@ -22,9 +22,11 @@ compose:
       - POSTGRES_PASSWORD=mysecretpassword
 ```
 
-## Service linking
+## Service networking
 
-Service containers share the same network as the build container (using `--net=<container>`). This means that you can access your service container using `localhost` or `127.0.0.1`.
+Service containers are available at the `localhost` or `127.0.0.1` address.
+
+Drone deviates from the default Docker compose networking model to mirror a traditional development environment, where services are typically accessed at `localhost` or `127.0.0.1`. To achieve this, we create a per-build network where all containers share the same network and IP address.
 
 ## Service options
 

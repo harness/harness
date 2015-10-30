@@ -18,11 +18,11 @@ mechanism to avoid polling the database while waiting for more work to arrive.
     package main
 
     import (
-        "github.com/lib/pq"
-
         "database/sql"
         "fmt"
         "time"
+
+        "github.com/lib/pq"
     )
 
     func doWork(db *sql.DB, work int64) {
