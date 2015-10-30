@@ -33,5 +33,5 @@ block content
             div.col-md-3 CC Menu
             div.col-md-9
                 pre
-                    | http://beta.drone.io/api/badges/#{Repo.FullName}/cc.xml
+                    | #{Link}/api/badges/#{Repo.FullName}/cc.xml
 
