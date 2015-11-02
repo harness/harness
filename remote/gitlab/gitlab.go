@@ -387,6 +387,10 @@ func push(parsed *gogitlab.HookPayload, req *http.Request) (*model.Repo, *model.
 		build.Author = parsed.UserName
 	}
 
+	if strings.HasPrefix(build.Ref, "refs/tags/") {
+		build.Event = model.EventTag
+	}
+
 	return repo, build, nil
 }
 
