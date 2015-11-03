@@ -12,7 +12,10 @@ func parseForwardedHeader(r *http.Request, token string) (val []string) {
 		options := strings.Split(v, ";")
 		for _, o := range options {
 			keyvalue := strings.Split(o, "=")
-			key, value := strings.TrimSpace(keyvalue[0]), strings.TrimSpace(keyvalue[1])
+			var key, value string
+			if len(keyvalue) > 1 {
+				key, value = strings.TrimSpace(keyvalue[0]), strings.TrimSpace(keyvalue[1])
+			}
 			key = strings.ToLower(key)
 			if key == token {
 				val = append(val, value)
@@ -23,7 +26,8 @@ func parseForwardedHeader(r *http.Request, token string) (val []string) {
 }
 
 func hasHttpsForwarded(r *http.Request) bool {
-	if parseForwardedHeader(r, "proto")[0] == "https" {
+	parsedHeader := parseForwardedHeader(r, "proto")
+	if len(parsedHeader) > 0 && parseForwardedHeader(r, "proto")[0] == "https" {
 		return true
 	}
 	return false
