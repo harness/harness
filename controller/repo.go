@@ -5,17 +5,19 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v2"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote"
-	"github.com/drone/drone/router/middleware/session"
-	"github.com/drone/drone/shared/crypto"
-	"github.com/drone/drone/shared/httputil"
-	"github.com/drone/drone/shared/token"
-	"github.com/drone/drone/store"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/remote"
+	"github.com/CiscoCloud/drone/router/middleware/session"
+	"github.com/CiscoCloud/drone/shared/crypto"
+	"github.com/CiscoCloud/drone/shared/httputil"
+	"github.com/CiscoCloud/drone/shared/token"
+	"github.com/CiscoCloud/drone/store"
 )
 
 func PostRepo(c *gin.Context) {
@@ -23,6 +25,7 @@ func PostRepo(c *gin.Context) {
 	user := session.User(c)
 	owner := c.Param("owner")
 	name := c.Param("name")
+	paramActivate := c.Request.FormValue("activate")
 
 	if user == nil {
 		c.AbortWithStatus(403)
@@ -67,12 +70,6 @@ func PostRepo(c *gin.Context) {
 		return
 	}
 
-	link := fmt.Sprintf(
-		"%s/hook?access_token=%s",
-		httputil.GetURL(c.Request),
-		sig,
-	)
-
 	// generate an RSA key and add to the repo
 	key, err := crypto.GeneratePrivateKey()
 	if err != nil {
@@ -83,13 +80,26 @@ func PostRepo(c *gin.Context) {
 	keys.Public = string(crypto.MarshalPublicKey(&key.PublicKey))
 	keys.Private = string(crypto.MarshalPrivateKey(key))
 
-	// activate the repository before we make any
-	// local changes to the database.
-	err = remote.Activate(user, r, keys, link)
+	var activate bool
+	activate, err = strconv.ParseBool(paramActivate)
 	if err != nil {
-		c.String(500, err.Error())
-		return
+		activate = true
 	}
+	if activate {
+		link := fmt.Sprintf(
+			"%s/hook?access_token=%s",
+			httputil.GetURL(c.Request),
+			sig,
+		)
+
+		// activate the repository before we make any
+		// local changes to the database.
+		err = remote.Activate(user, r, keys, link)
+		if err != nil {
+			c.String(500, err.Error())
+			return
+		}
+  }
 
 	// persist the repository
 	err = store.CreateRepo(c, r)
@@ -153,7 +163,28 @@ func PatchRepo(c *gin.Context) {
 }
 
 func GetRepo(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, session.Repo(c))
+	repo := session.Repo(c)
+	user := session.User(c)
+	if user == nil {
+		c.IndentedJSON(http.StatusOK, repo)
+		return
+	}
+
+	repoResp := struct{
+		*model.Repo
+		Token string `json:"hook_token,omitempty"`
+	}{ repo, "" }
+	if user.Admin {
+		t := token.New(token.HookToken, repo.FullName)
+		sig, err := t.Sign(repo.Hash)
+		if err != nil {
+			log.Errorf("Error creating hook token: %s", err)
+		} else {
+			repoResp.Token = sig
+		}
+	}
+
+	c.IndentedJSON(http.StatusOK, repoResp)
 }
 
 func GetRepoKey(c *gin.Context) {

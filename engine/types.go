@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"github.com/drone/drone/model"
+	"github.com/CiscoCloud/drone/model"
 )
 
 type Event struct {

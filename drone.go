@@ -3,15 +3,15 @@ package main
 import (
 	"flag"
 
-	"github.com/drone/drone/engine"
-	"github.com/drone/drone/remote"
-	"github.com/drone/drone/router"
-	"github.com/drone/drone/router/middleware/cache"
-	"github.com/drone/drone/router/middleware/context"
-	"github.com/drone/drone/router/middleware/header"
-	"github.com/drone/drone/shared/envconfig"
-	"github.com/drone/drone/shared/server"
-	"github.com/drone/drone/store/datastore"
+	"github.com/CiscoCloud/drone/engine"
+	"github.com/CiscoCloud/drone/remote"
+	"github.com/CiscoCloud/drone/router"
+	"github.com/CiscoCloud/drone/router/middleware/cache"
+	"github.com/CiscoCloud/drone/router/middleware/context"
+	"github.com/CiscoCloud/drone/router/middleware/header"
+	"github.com/CiscoCloud/drone/shared/envconfig"
+	"github.com/CiscoCloud/drone/shared/server"
+	"github.com/CiscoCloud/drone/store/datastore"
 
 	"github.com/Sirupsen/logrus"
 )

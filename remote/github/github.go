@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/shared/envconfig"
-	"github.com/drone/drone/shared/httputil"
-	"github.com/drone/drone/shared/oauth2"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/shared/envconfig"
+	"github.com/CiscoCloud/drone/shared/httputil"
+	"github.com/CiscoCloud/drone/shared/oauth2"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/google/go-github/github"
@@ -345,7 +345,12 @@ func (g *Github) push(r *http.Request) (*model.Repo, *model.Build, error) {
 	build.Link = hook.Head.URL
 	build.Branch = strings.Replace(build.Ref, "refs/heads/", "", -1)
 	build.Message = hook.Head.Message
-	// build.Timestamp = hook.Head.Timestamp
+	// buildTimestamp, err := time.Parse(time.RFC3339, hook.Head.Timestamp)
+	// if err != nil {
+		// log.Warnf("Error parsing time '%s' due to error: %s", hook.Head.Timestamp, err)
+		// buildTimestamp = time.Now()
+	// }
+	// build.Timestamp = buildTimestamp.Unix()
 	build.Email = hook.Head.Author.Email
 	build.Avatar = hook.Sender.Avatar
 	build.Author = hook.Sender.Login

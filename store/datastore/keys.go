@@ -3,7 +3,7 @@ package datastore
 import (
 	"database/sql"
 
-	"github.com/drone/drone/model"
+	"github.com/CiscoCloud/drone/model"
 	"github.com/russross/meddler"
 )
 

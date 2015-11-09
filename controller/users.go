@@ -5,10 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/router/middleware/session"
-	"github.com/drone/drone/shared/crypto"
-	"github.com/drone/drone/store"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/router/middleware/session"
+	"github.com/CiscoCloud/drone/shared/crypto"
+	"github.com/CiscoCloud/drone/shared/token"
+	"github.com/CiscoCloud/drone/store"
 )
 
 func GetUsers(c *gin.Context) {
@@ -28,7 +29,17 @@ func GetUser(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, user)
+	token := token.New(token.UserToken, user.Login)
+	tokenstr, err := token.Sign(user.Hash)
+	if err != nil {
+		tokenstr = ""
+	}
+	userWithToken := struct {
+		*model.User
+		Token string `json:"token,omitempty"`
+	}{user, tokenstr}
+
+	c.IndentedJSON(http.StatusOK, userWithToken)
 }
 
 func PatchUser(c *gin.Context) {
@@ -64,7 +75,10 @@ func PatchUser(c *gin.Context) {
 }
 
 func PostUser(c *gin.Context) {
-	in := &model.User{}
+	in := &struct{
+    	model.User
+        Token string `json:"oauth_token"`
+	}{}
 	err := c.Bind(in)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
@@ -75,6 +89,7 @@ func PostUser(c *gin.Context) {
 	user.Login = in.Login
 	user.Email = in.Email
 	user.Admin = in.Admin
+	user.Token = in.Token
 	user.Avatar = in.Avatar
 	user.Active = true
 	user.Hash = crypto.Rand()
@@ -85,7 +100,17 @@ func PostUser(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, user)
+	token := token.New(token.UserToken, user.Login)
+	tokenstr, err := token.Sign(user.Hash)
+	if err != nil {
+		tokenstr = ""
+	}
+	userWithToken := struct {
+		*model.User
+		Token string `json:"token,omitempty"`
+	}{user, tokenstr}
+
+	c.IndentedJSON(http.StatusOK, userWithToken)
 }
 
 func DeleteUser(c *gin.Context) {

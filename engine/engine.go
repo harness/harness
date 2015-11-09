@@ -13,10 +13,10 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/shared/docker"
-	"github.com/drone/drone/shared/envconfig"
-	"github.com/drone/drone/store"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/shared/docker"
+	"github.com/CiscoCloud/drone/shared/envconfig"
+	"github.com/CiscoCloud/drone/store"
 	"github.com/samalba/dockerclient"
 	"golang.org/x/net/context"
 )

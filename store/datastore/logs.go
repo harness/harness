@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/drone/drone/model"
+	"github.com/CiscoCloud/drone/model"
 	"github.com/russross/meddler"
 )
 

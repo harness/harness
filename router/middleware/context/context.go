@@ -1,9 +1,9 @@
 package context
 
 import (
-	"github.com/drone/drone/engine"
-	"github.com/drone/drone/remote"
-	"github.com/drone/drone/store"
+	"github.com/CiscoCloud/drone/engine"
+	"github.com/CiscoCloud/drone/remote"
+	"github.com/CiscoCloud/drone/store"
 	"github.com/gin-gonic/gin"
 )
 

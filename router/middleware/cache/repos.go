@@ -1,8 +1,8 @@
 package cache
 
 import (
-	"github.com/drone/drone/cache"
-	"github.com/drone/drone/model"
+	"github.com/CiscoCloud/drone/cache"
+	"github.com/CiscoCloud/drone/model"
 	"github.com/gin-gonic/gin"
 )
 

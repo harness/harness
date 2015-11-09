@@ -8,9 +8,9 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/shared/envconfig"
-	"github.com/drone/drone/shared/httputil"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/shared/envconfig"
+	"github.com/CiscoCloud/drone/shared/httputil"
 
 	log "github.com/Sirupsen/logrus"
 	"golang.org/x/oauth2"

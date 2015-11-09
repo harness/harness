@@ -3,8 +3,8 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/store"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/store"
 )
 
 var (

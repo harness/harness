@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/drone/drone/engine"
-	"github.com/drone/drone/router/middleware/context"
-	"github.com/drone/drone/router/middleware/session"
-	"github.com/drone/drone/store"
+	"github.com/CiscoCloud/drone/engine"
+	"github.com/CiscoCloud/drone/router/middleware/context"
+	"github.com/CiscoCloud/drone/router/middleware/session"
+	"github.com/CiscoCloud/drone/store"
 
 	log "github.com/Sirupsen/logrus"
 

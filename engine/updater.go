@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote"
-	"github.com/drone/drone/store"
+	"github.com/CiscoCloud/drone/model"
+	"github.com/CiscoCloud/drone/remote"
+	"github.com/CiscoCloud/drone/store"
 	"golang.org/x/net/context"
 )
 
