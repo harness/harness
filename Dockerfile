@@ -14,6 +14,7 @@
 
 FROM centurylink/ca-certs
 EXPOSE 8000
+ADD contrib/docker/etc/nsswitch.conf /etc/
 
 ENV DATABASE_DRIVER=sqlite3
 ENV DATABASE_CONFIG=/var/lib/drone/drone.sqlite
