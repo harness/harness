@@ -41,6 +41,20 @@ deploy:
     token: $$HEROKU_TOKEN
 ```
 
+## Substitution
+
+A subset of bash string substitution operations are emulated:
+
+* `$$param` parameter substitution
+* `$${param}` parameter substitution (same as above) 
+* `"$$param"` parameter substitution with escaping
+* `$${param:pos}` parameter substition with substring
+* `$${param:pos:len}` parameter substition with substring
+* `$${param=default}` parameter substition with default
+* `$${param##prefix}` parameter substition with prefix removal
+* `$${param%%suffix}` parameter substition with suffix removal
+* `$${param/old/new}` parameter substition with find and replace
+
 ## Pull Requests
 
 Secret variables are **not** injected into to the build section of the `.drone.yml` if your repository is **public** and the build is a **pull request**. This is for security purposes to prevent a malicious pull request from leaking your secrets.
@@ -61,5 +75,5 @@ f63561783e550ccd21663d13eaf6a4d252d84147  .drone.yml
 Generate a checksum on Windows with powershell:
 
 ```
-$ Get-FileHash .\.drone.yml -Algorithm SHA256
+$ (Get-FileHash .\.drone.yml -Algorithm SHA256).Hash.ToLower()
 ```

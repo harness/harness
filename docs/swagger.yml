@@ -608,6 +608,7 @@ paths:
 
 definitions:
   User:
+    description: The user account.
     example: |
         {
           "id": 1,
@@ -619,21 +620,27 @@ definitions:
         }
     properties:
       id:
+        description: The unique identifier for the account.
         type: integer
         format: int64
       login:
+        description: The login name for the account.
         type: string
       email:
+        description: The email address for the account.
         type: string
       avatar_url:
+        description: The url for the avatar image.
         type: string
       admin:
+        description: Whether the account has administrative priviledges.
         type: boolean
       active:
+        description: Whether the account is currently active.
         type: boolean
 
-
   Repo:
+    description: A version control repository.
     example: |
         {
           "id": 1,
@@ -655,41 +662,68 @@ definitions:
         }
     properties:
       id:
+        description: The unique identifier for the repository.
         type: integer
         format: int64
       scm:
+        description: |
+          The source control management being used.
+
+          Currently this is either 'git' or 'hg' (Mercurial).
         type: string
       owner:
+        description: The owner of the repository.
         type: string
       name:
+        description: The name of the repository.
         type: string
       full_name:
+        description: |
+          The full name of the repository.
+
+          This is created from the owner and name of the repository.
         type: string
       avatar_url:
+        description: The url for the avatar image.
         type: string
       link_url:
+        description: The link to view the repository.
         type: string
       clone_url:
+        description: The url used to clone the repository.
         type: string
       default_branch:
+        description: The default branch of the repository.
         type: string
       private:
+        description: Whether the repository is publicly visible.
         type: boolean
       trusted:
+        description: |
+          Whether the repository has trusted access for builds.
+
+          If the repository is trusted then the host network can be used and
+          volumes can be created.
         type: boolean
       timeout:
+        description: The amount of time in minutes before the build is killed.
         type: integer
+        x-dart-type: Duration
       allow_pr:
+        description: Whether pull requests should trigger a build.
         type: boolean
       allow_push:
+        description: Whether push events should trigger a build.
         type: boolean
       allow_deploys:
+        description: Whether deployment events should trigger a build.
         type: boolean
       allow_tags:
+        description: Whether tags should trigger a build.
         type: boolean
 
-
   Build:
+    description: A build for a repository.
     example: |
         {
           "id": 1,
@@ -738,59 +772,107 @@ definitions:
         type: integer
         format: int64
       number:
+        description: |
+          The build number.
+
+          This number is specified within the context of the repository the build
+          belongs to and is unique within that.
         type: integer
       status:
-        type: string
-        enum:
-          - success
-          - failure
-          - pending
-          - started
-          - error
-          - killed
+        description: The current status of the build.
+        $ref: '#definitions/BuildStatus'
       created_at:
+        description: When the build request was received.
         type: integer
         format: int64
+        x-dart-type: DateTime
       enqueued_at:
+        description: When the build was enqueued.
         type: integer
         format: int64
+        x-dart-type: DateTime
       started_at:
+        description: When the build began execution.
         type: integer
         format: int64
+        x-dart-type: DateTime
       finished_at:
+        description: When the build was finished.
         type: integer
         format: int64
+        x-dart-type: DateTime
       deploy_to:
+        description: Where the deployment should go.
         type: string
       commit:
+        description: The commit for the build.
         type: string
       branch:
+        description: The branch the commit was pushed to.
         type: string
       message:
+        description: The commit message.
         type: string
       timestamp:
+        description: When the commit was created.
         type: integer
         format: int64
+        x-dart-format: DateTime
       ref:
+        description: The alias for the commit.
         type: string
       refspec:
+        description: The mapping from the local repository to a branch in the remote.
         type: string
       remote:
+        description: The remote repository.
         type: string
       author:
+        description: The login for the author of the commit.
         type: string
       author_avatar:
+        description: The avatar for the author of the commit.
         type: string
       author_email:
+        description: The email for the author of the commit.
         type: string
       link_url:
+        description: |
+          The link to view the repository.
+
+          This link will point to the repository state associated with the
+          build's commit.
         type: string
       jobs:
+        description: |
+          The jobs associated with this build.
+
+          A build will have multiple jobs if a matrix build was used or if a
+          rebuild was requested.
         type: array
         items:
           $ref: "#/definitions/Job"
 
+  BuildStatus:
+    description: The status of a build.
+    type: string
+    enum:
+      - success
+      - failure
+      - pending
+      - started
+      - error
+      - killed
+    x-enum-descriptions:
+      - The build was successful.
+      - The build failed.
+      - The build is pending execution.
+      - The build was started.
+      - There was an error running the build.
+      - The build was killed either manually or through a timeout.
+
   Job:
+    description: A single job being executed as part of a build.
     example: |
         {
           "id": 1,
@@ -804,34 +886,49 @@ definitions:
         }
     properties:
       id:
+        description: The unique identifier for the build.
         type: integer
         format: int64
       number:
+        description: |
+          The job number.
+
+          This number is specified within the context of the build the job
+          belongs to and is unique within that.
         type: integer
       status:
-        type: string
-        enum:
-          - success
-          - failure
-          - pending
-          - started
-          - error
-          - killed
+        description: The current status of the job.
+        $ref: '#definitions/BuildStatus'
       exit_code:
+        description: The exit code for the build.
         type: integer
       enqueued_at:
+        description: When the job was enqueued.
         type: integer
         format: int64
+        x-dart-type: DateTime
       started_at:
+        description: When the job began execution.
         type: integer
         format: int64
+        x-dart-type: DateTime
       finished_at:
+        description: When the job finished execution.
         type: integer
         format: int64
+        x-dart-type: DateTime
       environment:
+        description: |
+          The environment that the job was run with.
+
+          This is a map containing any values for matrix builds.
         type: object
 
   Feed:
+    description: |
+      A feed entry for a build.
+
+      Feed entries can be used to display information on the latest builds.
     example: |
         {
           "owner": "octocat",
@@ -857,54 +954,83 @@ definitions:
         }
     properties:
       owner:
+        description: The owner of the repository.
         type: string
       name:
+        description: The name of the repository.
         type: string
       full_name:
+        description: |
+          The full name of the repository.
+
+          This is created from the owner and name of the repository.
         type: string
       number:
+        description: |
+          The build number.
+
+          This number is specified within the context of the repository the build
+          belongs to and is unique within that.
         type: integer
       status:
-        type: string
-        enum:
-          - success
-          - failure
-          - pending
-          - started
-          - error
-          - killed
+        description: The current status of the build.
+        $ref: '#definitions/BuildStatus'
       created_at:
+        description: When the build request was received.
         type: integer
         format: int64
+        x-dart-type: DateTime
       enqueued_at:
+        description: When the build was enqueued.
         type: integer
         format: int64
+        x-dart-type: DateTime
       started_at:
+        description: When the build began execution.
         type: integer
         format: int64
+        x-dart-type: DateTime
       finished_at:
+        description: When the build was finished.
         type: integer
         format: int64
+        x-dart-type: DateTime
       commit:
+        description: The commit for the build.
         type: string
       branch:
+        description: The branch the commit was pushed to.
         type: string
       message:
+        description: The commit message.
         type: string
       timestamp:
+        description: When the commit was created.
         type: integer
         format: int64
+        x-dart-format: DateTime
       ref:
+        description: The alias for the commit.
         type: string
       refspec:
+        description: The mapping from the local repository to a branch in the remote.
         type: string
       remote:
+        description: The remote repository.
         type: string
       author:
+        description: The login for the author of the commit.
         type: string
       author_avatar:
+        description: The avatar for the author of the commit.
         type: string
       author_email:
+        description: The email for the author of the commit.
         type: string
       link_url:
+        description: |
+          The link to view the repository.
+
+          This link will point to the repository state associated with the
+          build's commit.
         type: string
