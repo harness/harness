@@ -147,6 +147,7 @@ func PostBuild(c *gin.Context) {
 
 	remote_ := remote.FromContext(c)
 	repo := session.Repo(c)
+	fork := c.DefaultQuery("fork", "false")
 
 	num, err := strconv.Atoi(c.Param("number"))
 	if err != nil {
@@ -203,8 +204,24 @@ func PostBuild(c *gin.Context) {
 
 	// must not restart a running build
 	if build.Status == model.StatusPending || build.Status == model.StatusRunning {
-		c.AbortWithStatus(409)
+		c.String(409, "Cannot re-start a started build")
 		return
+	}
+
+	// forking the build creates a duplicate of the build
+	// and then executes. This retains prior build history.
+	if forkit, _ := strconv.ParseBool(fork); forkit {
+		build.ID = 0
+		build.Number = 0
+		for _, job := range jobs {
+			job.ID = 0
+			job.NodeID = 0
+		}
+		err := store.CreateBuild(c, build, jobs...)
+		if err != nil {
+			c.String(500, err.Error())
+			return
+		}
 	}
 
 	// todo move this to database tier
@@ -218,6 +235,7 @@ func PostBuild(c *gin.Context) {
 		job.Started = 0
 		job.Finished = 0
 		job.ExitCode = 0
+		job.NodeID = 0
 		job.Enqueued = build.Enqueued
 		store.UpdateJob(c, job)
 	}

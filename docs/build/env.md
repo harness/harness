@@ -27,11 +27,10 @@ Drone also injects `CI_` prefixed variables for compatibility with other systems
 * `CI_TAG` - tag name for the current build
 
 
-## Injecting
+## Substitution
 
-A subset of variables may be injected directly into the Yaml at runtime using the `$$` notation:
+A subset of variables may be substituted directly into the Yaml at runtime using the `$$` notation:
 
-* `$$COMMIT_SHORT` git sha for the current build, `--short` format
 * `$$COMMIT` git sha for the current build, long format
 * `$$BRANCH` git branch for the current build
 * `$$REPO` repository full name (in `owner/name` format)
@@ -45,3 +44,17 @@ publish:
     source: ./foo.tar.gz
     target: ./foo-$$BRANCH.tar.gz
 ```
+
+## Operations
+
+A subset of bash string substitution operations are emulated:
+
+* `$$param` parameter substitution
+* `$${param}` parameter substitution (same as above) 
+* `"$$param"` parameter substitution with escaping
+* `$${param:pos}` parameter substition with substring
+* `$${param:pos:len}` parameter substition with substring
+* `$${param=default}` parameter substition with default
+* `$${param##prefix}` parameter substition with prefix removal
+* `$${param%%suffix}` parameter substition with suffix removal
+* `$${param/old/new}` parameter substition with find and replace
