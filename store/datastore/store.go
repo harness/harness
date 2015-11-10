@@ -3,6 +3,7 @@ package datastore
 import (
 	"database/sql"
 	"os"
+	"time"
 
 	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/store"
@@ -66,7 +67,13 @@ func Open(driver, config string) *sql.DB {
 		log.Errorln(err)
 		log.Fatalln("database connection failed")
 	}
+
 	setupMeddler(driver)
+
+	if err := pingDatabase(db); err != nil {
+		log.Errorln(err)
+		log.Fatalln("database ping attempts failed")
+	}
 
 	if err := setupDatabase(driver, db); err != nil {
 		log.Errorln(err)
@@ -88,6 +95,21 @@ func openTest() *sql.DB {
 		config = os.Getenv("DATABASE_CONFIG")
 	}
 	return Open(driver, config)
+}
+
+// helper function to ping the database with backoff to ensure
+// a connection can be established before we proceed with the
+// database setup and migration.
+func pingDatabase(db *sql.DB) (err error) {
+	for i := 0; i < 30; i++ {
+		err = db.Ping()
+		if err == nil {
+			return
+		}
+		log.Infof("database ping failed. retry in 1s")
+		time.Sleep(time.Second)
+	}
+	return
 }
 
 // helper function to setup the databsae by performing
