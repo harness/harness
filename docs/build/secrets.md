@@ -63,7 +63,7 @@ Please note that you may still want secrets available to plugins when building a
 
 ## Checksum
 
-The `checksum` field in the `.drone.yml` is a sha of your `.drone.yml` file. It is optional, but highly recommended. The `checksum` is used to verify the integrity of your `.drone.yml` file. If the checksum does not match, secret variables are not injected into your Yaml.
+The `checksum` field in the `.drone.sec` is a sha of your `.drone.yml` file. It is optional, but highly recommended. The `checksum` is used to verify the integrity of your `.drone.yml` file. If the checksum does not match, secret variables are not injected into your Yaml.
 
 Generate a checksum on OSX or Linux:
 
