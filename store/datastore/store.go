@@ -67,6 +67,10 @@ func Open(driver, config string) *sql.DB {
 		log.Errorln(err)
 		log.Fatalln("database connection failed")
 	}
+	if driver == "mysql" {
+		// per issue https://github.com/go-sql-driver/mysql/issues/257
+		db.SetMaxIdleConns(0)
+	}
 
 	setupMeddler(driver)
 
