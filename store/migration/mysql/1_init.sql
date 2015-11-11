@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS builds (
 ,UNIQUE(build_number, build_repo_id)
 );
 
-CREATE INDEX IF NOT EXISTS ix_build_repo ON builds (build_repo_id);
+CREATE INDEX ix_build_repo ON builds (build_repo_id);
 
 CREATE TABLE IF NOT EXISTS jobs (
  job_id          INTEGER PRIMARY KEY AUTO_INCREMENT
@@ -89,8 +89,8 @@ CREATE TABLE IF NOT EXISTS jobs (
 ,UNIQUE(job_build_id, job_number)
 );
 
-CREATE INDEX IF NOT EXISTS ix_job_build ON jobs (job_build_id);
-CREATE INDEX IF NOT EXISTS ix_job_node  ON jobs (job_node_id);
+CREATE INDEX ix_job_build ON jobs (job_build_id);
+CREATE INDEX ix_job_node  ON jobs (job_node_id);
 
 CREATE TABLE IF NOT EXISTS logs (
  log_id     INTEGER PRIMARY KEY AUTO_INCREMENT
