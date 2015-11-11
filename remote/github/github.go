@@ -410,8 +410,8 @@ func (g *Github) pullRequest(r *http.Request) (*model.Repo, *model.Build, error)
 	build.Link = *hook.PullRequest.HTMLURL
 	build.Branch = *hook.PullRequest.Head.Ref
 	build.Message = *hook.PullRequest.Title
-	build.Author = *hook.PullRequest.Head.User.Login
-	build.Avatar = *hook.PullRequest.Head.User.AvatarURL
+	build.Author = *hook.PullRequest.User.Login
+	build.Avatar = *hook.PullRequest.User.AvatarURL
 	build.Remote = *hook.PullRequest.Base.Repo.CloneURL
 	build.Title = *hook.PullRequest.Title
 	// build.Timestamp = time.Now().UTC().Format("2006-01-02 15:04:05.000000000 +0000 MST")
