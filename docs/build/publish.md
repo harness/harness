@@ -30,4 +30,10 @@ publish:
   bintray:
     when:
       branch: feature/*
+      
+  # or only publish when a tag is pushed
+  
+  docker:
+    when:
+      event: tag
 ```
