@@ -23,6 +23,7 @@ The build configuration options:
 * `privileged` - if true, runs the container with extended privileges [1]
 * `volumes` - list of bind mounted volumes on the host machine [1]
 * `net` - sets the container [network mode](https://docs.docker.com/articles/networking/#container-networking) [1]
+* `extra_hosts` - list of hostname mappings added to `/etc/hosts`
 * `commands` - list of build commands
 
 [1] Some build options are disabled for security reasons, including `volumes`, `privileged` and `net`. To enable these options, a system administrator must white-list your repository as trusted. This can be done via the repository settings screen.
