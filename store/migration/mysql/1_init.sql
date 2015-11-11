@@ -1,6 +1,6 @@
 -- +migrate Up
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
  user_id     INTEGER PRIMARY KEY AUTO_INCREMENT
 ,user_login  VARCHAR(500)
 ,user_token  VARCHAR(500)
@@ -15,7 +15,7 @@ CREATE TABLE users (
 ,UNIQUE(user_login)
 );
 
-CREATE TABLE repos (
+CREATE TABLE IF NOT EXISTS repos (
  repo_id            INTEGER PRIMARY KEY AUTO_INCREMENT
 ,repo_user_id       INTEGER
 ,repo_owner         VARCHAR(255)
@@ -37,7 +37,7 @@ CREATE TABLE repos (
 ,UNIQUE(repo_full_name)
 );
 
-CREATE TABLE `keys` (
+CREATE TABLE IF NOT EXISTS `keys` (
  key_id      INTEGER PRIMARY KEY AUTO_INCREMENT
 ,key_repo_id INTEGER
 ,key_public  MEDIUMBLOB
@@ -46,7 +46,7 @@ CREATE TABLE `keys` (
 ,UNIQUE(key_repo_id)
 );
 
-CREATE TABLE builds (
+CREATE TABLE IF NOT EXISTS builds (
  build_id        INTEGER PRIMARY KEY AUTO_INCREMENT
 ,build_repo_id   INTEGER
 ,build_number    INTEGER
@@ -72,9 +72,9 @@ CREATE TABLE builds (
 ,UNIQUE(build_number, build_repo_id)
 );
 
-CREATE INDEX ix_build_repo ON builds (build_repo_id);
+CREATE INDEX IF NOT EXISTS ix_build_repo ON builds (build_repo_id);
 
-CREATE TABLE jobs (
+CREATE TABLE IF NOT EXISTS jobs (
  job_id          INTEGER PRIMARY KEY AUTO_INCREMENT
 ,job_node_id     INTEGER
 ,job_build_id    INTEGER
@@ -89,8 +89,8 @@ CREATE TABLE jobs (
 ,UNIQUE(job_build_id, job_number)
 );
 
-CREATE INDEX ix_job_build ON jobs (job_build_id);
-CREATE INDEX ix_job_node  ON jobs (job_node_id);
+CREATE INDEX IF NOT EXISTS ix_job_build ON jobs (job_build_id);
+CREATE INDEX IF NOT EXISTS ix_job_node  ON jobs (job_node_id);
 
 CREATE TABLE IF NOT EXISTS logs (
  log_id     INTEGER PRIMARY KEY AUTO_INCREMENT
