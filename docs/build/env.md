@@ -33,7 +33,7 @@ A subset of variables may be substituted directly into the Yaml at runtime using
 
 * `$$COMMIT` git sha for the current build, long format
 * `$$BRANCH` git branch for the current build
-* `$$REPO` repository full name (in `owner/name` format)
+* `$$BUILD_NUMBER` build number for the current build
 * `$$TAG` tag name
 
 This is useful when you need to dynamically configure your plugin based on the current build. For example, we can alter an artifact name to include the branch:
