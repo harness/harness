@@ -402,7 +402,7 @@ func (bb *Bitbucket) pushHook(r *http.Request) (*model.Repo, *model.Build, error
 			continue
 		}
 
-		// return the updated repsitory information and the
+		// return the updated repository information and the
 		// build information.
 		return convertRepo(&hook.Repo), &model.Build{
 			Event:     model.EventPush,
