@@ -99,6 +99,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 
 			repo.GET("", controller.GetRepo)
 			repo.GET("/key", controller.GetRepoKey)
+			repo.POST("/key", controller.PostRepoKey)
 			repo.GET("/builds", controller.GetBuilds)
 			repo.GET("/builds/:number", controller.GetBuild)
 			repo.GET("/logs/:number/:job", controller.GetBuildLogs)

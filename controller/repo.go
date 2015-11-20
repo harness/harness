@@ -160,9 +160,33 @@ func GetRepoKey(c *gin.Context) {
 	repo := session.Repo(c)
 	keys, err := store.GetKey(c, repo)
 	if err != nil {
-		c.AbortWithError(http.StatusNotFound, err)
+		c.String(404, "Error fetching repository key")
 	} else {
 		c.String(http.StatusOK, keys.Public)
+	}
+}
+
+func PostRepoKey(c *gin.Context) {
+	repo := session.Repo(c)
+	keys, err := store.GetKey(c, repo)
+	if err != nil {
+		c.String(404, "Error fetching repository key")
+		return
+	}
+	body, _ := ioutil.ReadAll(c.Request.Body)
+	pkey := crypto.UnmarshalPrivateKey(body)
+	if pkey == nil {
+		c.String(500, "Cannot unmarshal private key. Invalid format.")
+		return
+	}
+
+	keys.Public = string(crypto.MarshalPublicKey(&pkey.PublicKey))
+	keys.Private = string(crypto.MarshalPrivateKey(pkey))
+
+	err = store.UpdateKey(c, keys)
+	if err != nil {
+		c.String(500, "Error updating repository key")
+		return
 	}
 }
 
