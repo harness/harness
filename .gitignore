@@ -17,3 +17,6 @@ temp/
 
 vendor/google.golang.org/cloud
 vendor/github.com/bugagazavr
+
+# IDE/Editor stuff
+.idea

@@ -397,17 +397,26 @@ func (bb *Bitbucket) pushHook(r *http.Request) (*model.Repo, *model.Build, error
 	// change that has branch information.
 	for _, change := range hook.Push.Changes {
 
-		// must have branch and sha information
-		if change.New.Type != "branch" || change.New.Target.Hash == "" {
+		// must have sha information
+		if change.New.Target.Hash == "" {
+			continue
+		}
+		// we only support tag and branch pushes for now
+		buildEventType := model.EventPush
+		buildRef := fmt.Sprintf("refs/heads/%s", change.New.Name)
+		if change.New.Type == "tag" || change.New.Type == "annotated_tag" {
+			buildEventType = model.EventTag
+			buildRef = fmt.Sprintf("refs/tags/%s", change.New.Name)
+		} else if change.New.Type != "branch" {
 			continue
 		}
 
-		// return the updated repsitory information and the
+		// return the updated repository information and the
 		// build information.
 		return convertRepo(&hook.Repo), &model.Build{
-			Event:     model.EventPush,
+			Event:     buildEventType,
 			Commit:    change.New.Target.Hash,
-			Ref:       fmt.Sprintf("refs/heads/%s", change.New.Name),
+			Ref:       buildRef,
 			Link:      change.New.Target.Links.Html.Href,
 			Branch:    change.New.Name,
 			Message:   change.New.Target.Message,
