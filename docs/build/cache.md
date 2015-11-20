@@ -2,7 +2,7 @@
 
 > This feature is still considered experimental
 
-Drone allows you to cache directories within the build workspace. When a build successfully completes, the named directories are gzipped and stored on the host machine. When a new build starts, the named directories are restored from the gzipped files. This can be used to improve the performance of your builds.
+Drone allows you to cache directories within the build workspace (`/drone`). When a build successfully completes, the named directories are gzipped and stored on the host machine. When a new build starts, the named directories are restored from the gzipped files. This can be used to improve the performance of your builds.
 
 Below is an example `.drone.yml` configured to cache the `.git` and the `node_modules` directory:
 
