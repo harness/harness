@@ -30,6 +30,7 @@ const (
 	pathHook   = "%s/2.0/repositories/%s/%s/hooks/%s"
 	pathHooks  = "%s/2.0/repositories/%s/%s/hooks?%s"
 	pathSource = "%s/1.0/repositories/%s/%s/src/%s/%s"
+	pathStatus = "%s/2.0/repositories/%s/%s/commit/%s/statuses/build"
 )
 
 type Client struct {
@@ -131,6 +132,11 @@ func (c *Client) FindSource(owner, name, revision, path string) (*Source, error)
 	uri := fmt.Sprintf(pathSource, base, owner, name, revision, path)
 	err := c.do(uri, get, nil, out)
 	return out, err
+}
+
+func (c *Client) CreateStatus(owner, name, revision string, status *BuildStatus) error {
+	uri := fmt.Sprintf(pathStatus, base, owner, name, revision)
+	return c.do(uri, post, status, nil)
 }
 
 func (c *Client) do(rawurl, method string, in, out interface{}) error {

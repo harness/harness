@@ -21,6 +21,14 @@ type AccountResp struct {
 	Values []*Account `json:"values"`
 }
 
+type BuildStatus struct {
+	State   string    `json:"state"`
+	Key     string    `json:"key"`
+	Name    string    `json:"name,omitempty"`
+	Url     string    `json:"url"`
+	Desc    string    `json:"description,omitempty"`
+}
+
 type Email struct {
 	Email       string `json:"email"`
 	IsConfirmed bool   `json:"is_confirmed"`

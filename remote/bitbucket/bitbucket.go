@@ -267,7 +267,27 @@ func (bb *Bitbucket) Script(u *model.User, r *model.Repo, b *model.Build) ([]byt
 // Status sends the commit status to the remote system.
 // An example would be the GitHub pull request status.
 func (bb *Bitbucket) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
-	return nil
+	client := NewClientToken(
+		bb.Client,
+		bb.Secret,
+		&oauth2.Token{
+			AccessToken:  u.Token,
+			RefreshToken: u.Secret,
+		},
+	)
+
+	status := getStatus(b.Status)
+	desc := getDesc(b.Status)
+
+	data := BuildStatus{
+		State:  status,
+		Key:    "Drone",
+		Url:    link,
+		Desc:   desc,
+	}
+
+	err := client.CreateStatus(r.Owner, r.Name, b.Commit, &data)
+	return err
 }
 
 // Netrc returns a .netrc file that can be used to clone
@@ -458,4 +478,48 @@ func (bb *Bitbucket) pullHook(r *http.Request) (*model.Repo, *model.Build, error
 		Author:    hook.Actor.Login,
 		Timestamp: hook.PullRequest.Updated.UTC().Unix(),
 	}, nil
+}
+
+const (
+	StatusPending = "INPROGRESS"
+	StatusSuccess = "SUCCESSFUL"
+	StatusFailure = "FAILED"
+)
+
+const (
+	DescPending = "this build is pending"
+	DescSuccess = "the build was successful"
+	DescFailure = "the build failed"
+	DescError   = "oops, something went wrong"
+)
+
+// converts a Drone status to a BitBucket status.
+func getStatus(status string) string {
+	switch status {
+	case model.StatusPending, model.StatusRunning:
+		return StatusPending
+	case model.StatusSuccess:
+		return StatusSuccess
+	case model.StatusFailure, model.StatusError, model.StatusKilled:
+		return StatusFailure
+	default:
+		return StatusFailure
+	}
+}
+
+// generates a description for the build based on
+// the Drone status
+func getDesc(status string) string {
+	switch status {
+	case model.StatusPending, model.StatusRunning:
+		return DescPending
+	case model.StatusSuccess:
+		return DescSuccess
+	case model.StatusFailure:
+		return DescFailure
+	case model.StatusError, model.StatusKilled:
+		return DescError
+	default:
+		return DescError
+	}
 }
