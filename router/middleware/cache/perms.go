@@ -9,7 +9,7 @@ import (
 const permKey = "perm"
 
 // Perms is a middleware function that attempts to cache the
-// user's remote rempository permissions (ie in GitHub) to minimize
+// user's remote repository permissions (ie in GitHub) to minimize
 // remote calls that might be expensive, slow or rate-limited.
 func Perms(c *gin.Context) {
 	var (
