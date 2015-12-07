@@ -27,7 +27,7 @@ func Load(env envconfig.Env) Remote {
 		return gogs.Load(env)
 
 	default:
-		log.Fatalf("unknown remote driver %s", driver)
+		log.Fatalf("unknown remote driver %s, set REMOTE_DRIVER variable correctly", driver)
 	}
 
 	return nil
