@@ -173,7 +173,11 @@ func PostRepoKey(c *gin.Context) {
 		c.String(404, "Error fetching repository key")
 		return
 	}
-	body, _ := ioutil.ReadAll(c.Request.Body)
+	body, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		c.String(500, "Error reading private key from body. %s", err)
+		return	
+	}
 	pkey := crypto.UnmarshalPrivateKey(body)
 	if pkey == nil {
 		c.String(500, "Cannot unmarshal private key. Invalid format.")
@@ -188,6 +192,7 @@ func PostRepoKey(c *gin.Context) {
 		c.String(500, "Error updating repository key")
 		return
 	}
+	c.String(201, keys.Public)
 }
 
 func DeleteRepo(c *gin.Context) {
