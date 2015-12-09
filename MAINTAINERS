@@ -37,6 +37,9 @@
         email = "brad@drone.io"
         login = "bradrydzewski"
 
+    [people.Bugagazavr]
+        login = "Bugagazavr"
+
     [people.donny-dont]
         name = "Don Olmstead"
         login = "donny-dont"
