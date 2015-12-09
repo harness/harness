@@ -13,11 +13,8 @@ DATABASE_CONFIG="/var/lib/drone/drone.sqlite"
 
 # remote configuration
 
-CLIENT="" # oauth2 client. REQUIRED
-SECRET="" # oauth2 secret. REQUIRED
-
 REMOTE_DRIVER="github"
-REMOTE_CONFIG="https://github.com?client_id=$CLIENT&client_secret=$SECRET"
+REMOTE_CONFIG="https://github.com?client_id=<your_client_id>&client_secret=<your_secret>"
 
 # docker configuration
 
