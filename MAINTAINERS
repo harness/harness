@@ -39,7 +39,6 @@
 
     [people.donny-dont]
         name = "Don Olmstead"
-        email = "donny-dont@gmail.com"
         login = "donny-dont"
 
     [people.gtaylor]
@@ -49,6 +48,7 @@
     [people.jackspirou]
         name = "Jack Spirou"
         login = "jackspirou"
+        email = "jack@spirou.io"
 
     [people.msteinert]
         name = "Mike Steinert"
