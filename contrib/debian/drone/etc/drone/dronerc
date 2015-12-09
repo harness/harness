@@ -2,27 +2,27 @@
 
 # server configuration
 
-SERVER_ADDR=":80"
-#SERVER_CERT=""
-#SERVER_KEY=""
+SERVER_ADDR=:80
+#SERVER_CERT=
+#SERVER_KEY=
 
 # database configuration
 
-DATABASE_DRIVER="sqlite3"
-DATABASE_CONFIG="/var/lib/drone/drone.sqlite"
+DATABASE_DRIVER=sqlite3
+DATABASE_CONFIG=/var/lib/drone/drone.sqlite
 
 # remote configuration
 
-REMOTE_DRIVER="github"
-REMOTE_CONFIG="https://github.com?client_id=<your_client_id>&client_secret=<your_secret>"
+REMOTE_DRIVER=github
+REMOTE_CONFIG=https://github.com?client_id=<your_client_id>&client_secret=<your_secret>
 
 # docker configuration
 
-DOCKER_HOST="unix:///var/run/docker.sock"
-#DOCKER_CERT=""
-#DOCKER_KEY=""
-#DOCKER_CA=""
+DOCKER_HOST=unix:///var/run/docker.sock
+#DOCKER_CERT=
+#DOCKER_KEY=
+#DOCKER_CA=
 
 # plugin configuration
 
-PLUGIN_FILTER="plugins/*"
+PLUGIN_FILTER=plugins/*
