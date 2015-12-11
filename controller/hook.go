@@ -43,9 +43,9 @@ func PostHook(c *gin.Context) {
 
 	// skip the build if any case-insensitive combination of the words "skip" and "ci"
 	// wrapped in square brackets appear in the commit message
-	skipMatches := skipRe.FindStringSubmatch(build.Message)
-	if len(skipMatches) > 0 {
-		log.Infof("ignoring hook. %s found in %s", skipMatches[0], build.Commit)
+	skipMatch := skipRe.FindString(build.Message)
+	if len(skipMatch) > 0 {
+		log.Infof("ignoring hook. %s found in %s", skipMatch, build.Commit)
 		c.Writer.WriteHeader(204)
 		return
 	}
