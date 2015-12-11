@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"regexp"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/engine"
@@ -38,10 +39,12 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	// a build may be skipped if the text [CI SKIP]
-	// is found inside the commit message
-	if strings.Contains(build.Message, "[CI SKIP]") {
-		log.Infof("ignoring hook. [ci skip] found for %s")
+	// skip the build if any case-insensitive combination of the words "skip" and "ci"
+	// wrapped in square brackets appear in the commit message
+	skipRe := regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
+	skipMatches := skipRe.FindStringSubmatch(build.Message)
+	if len(skipMatches) > 0 {
+		log.Infof("ignoring hook. %s found in %s", skipMatches[0], build.Commit)
 		c.Writer.WriteHeader(204)
 		return
 	}
