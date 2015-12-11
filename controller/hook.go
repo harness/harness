@@ -20,6 +20,8 @@ import (
 	"github.com/drone/drone/yaml/matrix"
 )
 
+var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
+
 func PostHook(c *gin.Context) {
 	remote_ := remote.FromContext(c)
 
@@ -41,7 +43,6 @@ func PostHook(c *gin.Context) {
 
 	// skip the build if any case-insensitive combination of the words "skip" and "ci"
 	// wrapped in square brackets appear in the commit message
-	skipRe := regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
 	skipMatches := skipRe.FindStringSubmatch(build.Message)
 	if len(skipMatches) > 0 {
 		log.Infof("ignoring hook. %s found in %s", skipMatches[0], build.Commit)
