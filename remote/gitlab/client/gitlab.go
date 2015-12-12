@@ -74,6 +74,10 @@ func (c *Client) Do(method, url, opaque string, body []byte) ([]byte, error) {
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.Token))
 
+	if len(opaque) > 0 {
+		req.URL.Opaque = opaque
+	}
+
 	resp, err := c.Client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Client.Do error: %q", err)
