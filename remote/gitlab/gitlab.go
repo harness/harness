@@ -15,7 +15,7 @@ import (
 	"github.com/drone/drone/shared/oauth2"
 	"github.com/drone/drone/shared/token"
 
-	"github.com/Bugagazavr/go-gitlab-client"
+	"github.com/drone/drone/remote/gitlab/client"
 )
 
 const (
@@ -296,7 +296,7 @@ func (g *Gitlab) Deactivate(user *model.User, repo *model.Repo, link string) err
 func (g *Gitlab) Hook(req *http.Request) (*model.Repo, *model.Build, error) {
 	defer req.Body.Close()
 	var payload, _ = ioutil.ReadAll(req.Body)
-	var parsed, err = gogitlab.ParseHook(payload)
+	var parsed, err = client.ParseHook(payload)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -311,7 +311,7 @@ func (g *Gitlab) Hook(req *http.Request) (*model.Repo, *model.Build, error) {
 	}
 }
 
-func mergeRequest(parsed *gogitlab.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
+func mergeRequest(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
 
 	repo := &model.Repo{}
 	repo.Owner = req.FormValue("owner")
@@ -344,7 +344,7 @@ func mergeRequest(parsed *gogitlab.HookPayload, req *http.Request) (*model.Repo,
 	return repo, build, nil
 }
 
-func push(parsed *gogitlab.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
+func push(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
 	var cloneUrl = parsed.Repository.GitHttpUrl
 
 	repo := &model.Repo{}
