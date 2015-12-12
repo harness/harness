@@ -229,6 +229,22 @@ func (g *Gitlab) Script(user *model.User, repo *model.Repo, build *model.Build) 
 //      also if we want get MR status in gitlab we need implement a special plugin for gitlab,
 //      gitlab uses API to fetch build status on client side. But for now we skip this.
 func (g *Gitlab) Status(u *model.User, repo *model.Repo, b *model.Build, link string) error {
+	client := NewClient(g.URL, u.Token, g.SkipVerify)
+
+	status := getStatus(b.Status)
+	desc := getDesc(b.Status)
+
+	client.SetStatus(
+		ns(repo.Owner, repo.Name),
+		b.Commit,
+		status,
+		desc,
+		strings.Replace(b.Ref, "refs/heads/", "", -1),
+		link,
+	)
+
+	// Gitlab statuses it's a new feature, just ignore error
+	// if gitlab version not support this
 	return nil
 }
 
@@ -430,4 +446,58 @@ func (g *Gitlab) Scope() string {
 
 func (g *Gitlab) String() string {
 	return "gitlab"
+}
+
+const (
+	StatusPending  = "pending"
+	StatusRunning  = "running"
+	StatusSuccess  = "success"
+	StatusFailure  = "failed"
+	StatusCanceled = "canceled"
+)
+
+const (
+	DescPending  = "this build is pending"
+	DescRunning  = "this buils is running"
+	DescSuccess  = "the build was successful"
+	DescFailure  = "the build failed"
+	DescCanceled = "the build canceled"
+)
+
+// getStatus is a helper functin that converts a Drone
+// status to a GitHub status.
+func getStatus(status string) string {
+	switch status {
+	case model.StatusPending:
+		return StatusPending
+	case model.StatusRunning:
+		return StatusRunning
+	case model.StatusSuccess:
+		return StatusSuccess
+	case model.StatusFailure, model.StatusError:
+		return StatusFailure
+	case model.StatusKilled:
+		return StatusCanceled
+	default:
+		return StatusFailure
+	}
+}
+
+// getDesc is a helper function that generates a description
+// message for the build based on the status.
+func getDesc(status string) string {
+	switch status {
+	case model.StatusPending:
+		return DescPending
+	case model.StatusRunning:
+		return DescRunning
+	case model.StatusSuccess:
+		return DescSuccess
+	case model.StatusFailure, model.StatusError:
+		return DescFailure
+	case model.StatusKilled:
+		return DescCanceled
+	default:
+		return DescFailure
+	}
 }
