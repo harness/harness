@@ -7,10 +7,11 @@ import (
 )
 
 const (
-	searchUrl      = "/projects/search/:query"
-	projectsUrl    = "/projects"
-	projectUrl     = "/projects/:id"
-	repoUrlRawFile = "/projects/:id/repository/blobs/:sha"
+	searchUrl       = "/projects/search/:query"
+	projectsUrl     = "/projects"
+	projectUrl      = "/projects/:id"
+	repoUrlRawFile  = "/projects/:id/repository/blobs/:sha"
+	commitStatusUrl = "/projects/:id/statuses/:sha"
 )
 
 // Get a list of all projects owned by the authenticated user.
@@ -88,6 +89,28 @@ func (c *Client) RepoRawFile(id, sha, filepath string) ([]byte, error) {
 	contents, err := c.Do("GET", url, opaque, nil)
 
 	return contents, err
+}
+
+//
+func (c *Client) SetStatus(id, sha, state, desc, ref, link string) error {
+	url, opaque := c.ResourceUrl(
+		commitStatusUrl,
+		QMap{
+			":id":  id,
+			":sha": sha,
+		},
+		QMap{
+			"state":       state,
+			"ref":         ref,
+			"target_url":  link,
+			"description": desc,
+			"context":     "ci/drone",
+		},
+	)
+
+	println(url, opaque)
+	_, err := c.Do("POST", url, opaque, nil)
+	return err
 }
 
 // Get a list of projects by query owned by the authenticated user.
