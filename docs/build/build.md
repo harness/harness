@@ -48,4 +48,5 @@ image: index.docker.io/library/golang:1.4
 
 ## Skipping builds
 
-Skip a build by including the text `[CI SKIP]` in your commit message.
+Skip a build by including any combination of `ci` and `skip` wrapped in square brackets
+in your commit message. Examples: `[skip CI]` `[ci skip]`
