@@ -2,7 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS users (
  user_id     INTEGER PRIMARY KEY AUTO_INCREMENT
-,user_login  VARCHAR(500)
+,user_login  VARCHAR(255)
 ,user_token  VARCHAR(500)
 ,user_secret VARCHAR(500)
 ,user_expiry INTEGER
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS repos (
 ,repo_user_id       INTEGER
 ,repo_owner         VARCHAR(255)
 ,repo_name          VARCHAR(255)
-,repo_full_name     VARCHAR(511)
+,repo_full_name     VARCHAR(255)
 ,repo_avatar        VARCHAR(500)
 ,repo_link          VARCHAR(1000)
 ,repo_clone         VARCHAR(1000)
@@ -120,6 +120,5 @@ DROP TABLE logs;
 DROP TABLE jobs;
 DROP TABLE builds;
 DROP TABLE `keys`;
-DROP TABLE stars;
 DROP TABLE repos;
 DROP TABLE users;
