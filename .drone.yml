@@ -29,7 +29,7 @@ publish:
     access_key: $$AWS_KEY
     secret_key: $$AWS_SECRET
     source: contrib/debian/drone.deb
-    target: drone/0.4
+    target: $$BRANCH/
     when:
       repo: drone/drone
 
