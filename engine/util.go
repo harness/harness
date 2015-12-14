@@ -2,6 +2,7 @@ package engine
 
 import (
 	"encoding/json"
+	"os"
 )
 
 func encodeToLegacyFormat(t *Task) ([]byte, error) {
@@ -32,4 +33,12 @@ func encodeToLegacyFormat(t *Task) ([]byte, error) {
 	// 	},
 	// }
 	return json.Marshal(t)
+}
+
+func getenvDefault(varname, value string) string {
+	v := os.Getenv(varname)
+	if v == "" {
+		return value
+	}
+	return v
 }
