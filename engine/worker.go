@@ -46,7 +46,7 @@ func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 	args = append(args, string(stdin))
 
 	conf := &dockerclient.ContainerConfig{
-		Image:      DefaultAgent,
+		Image:      getenvDefault("AGENT", DefaultAgent),
 		Entrypoint: DefaultEntrypoint,
 		Cmd:        args,
 		HostConfig: dockerclient.HostConfig{
