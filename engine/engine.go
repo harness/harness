@@ -21,6 +21,23 @@ import (
 	"golang.org/x/net/context"
 )
 
+var (
+	// name of the build agent container.
+	DefaultAgent = "drone/drone-exec:latest"
+
+	// default name of the build agent executable
+	DefaultEntrypoint = []string{"/bin/drone-exec"}
+
+	// default argument to invoke build steps
+	DefaultBuildArgs = []string{"--pull", "--cache", "--clone", "--build", "--deploy"}
+
+	// default argument to invoke build steps
+	DefaultPullRequestArgs = []string{"--pull", "--cache", "--clone", "--build"}
+
+	// default arguments to invoke notify steps
+	DefaultNotifyArgs = []string{"--pull", "--notify"}
+)
+
 type Engine interface {
 	Schedule(context.Context, *Task)
 	Cancel(int64, int64, *model.Node) error
