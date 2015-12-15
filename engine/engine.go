@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"runtime"
 	"time"
 
@@ -22,21 +23,39 @@ import (
 )
 
 var (
-	// name of the build agent container.
-	DefaultAgent = "drone/drone-exec:latest"
+	// Build agent container configuration
+	BuildAgent *Agent
 
-	// default name of the build agent executable
-	DefaultEntrypoint = []string{"/bin/drone-exec"}
+	// Pull request agent container configuration
+	PullRequestAgent *Agent
 
-	// default argument to invoke build steps
-	DefaultBuildArgs = []string{"--pull", "--cache", "--clone", "--build", "--deploy"}
-
-	// default argument to invoke build steps
-	DefaultPullRequestArgs = []string{"--pull", "--cache", "--clone", "--build"}
-
-	// default arguments to invoke notify steps
-	DefaultNotifyArgs = []string{"--pull", "--notify"}
+	// Notify agent container configuration
+	NotifyAgent *Agent
 )
+
+func mustParseAgent(key, image string, entrypoint, cmd []string) *Agent {
+	dsn := os.Getenv(key)
+	a, err := NewAgent(dsn, image, entrypoint, cmd)
+	if err != nil {
+		panic(fmt.Sprintf("%s=`%s`: %s", key, dsn, err.Error()))
+	}
+	return a
+}
+
+func init() {
+	image := "drone/drone-exec:latest"
+	entrypoint := []string{"/bin/drone-exec"}
+
+	BuildAgent = mustParseAgent(
+		"BUILD_IMAGE", image, entrypoint,
+		[]string{"--pull", "--cache", "--clone", "--build", "--deploy"})
+	PullRequestAgent = mustParseAgent(
+		"PULL_REQUEST_IMAGE", image, entrypoint,
+		[]string{"--pull", "--cache", "--clone", "--build"})
+	NotifyAgent = mustParseAgent(
+		"NOTIFY_IMAGE", image, entrypoint,
+		[]string{"--pull", "--notify"})
+}
 
 type Engine interface {
 	Schedule(context.Context, *Task)
@@ -305,25 +324,12 @@ func (e *engine) runJob(c context.Context, r *Task, updater *updater, client doc
 	}
 
 	// CREATE AND START BUILD
-	args := DefaultBuildArgs
+	a := BuildAgent
 	if r.Build.Event == model.EventPull {
-		args = DefaultPullRequestArgs
+		a = PullRequestAgent
 	}
-	args = append(args, "--")
-	args = append(args, string(in))
 
-	conf := &dockerclient.ContainerConfig{
-		Image:      DefaultAgent,
-		Entrypoint: DefaultEntrypoint,
-		Cmd:        args,
-		Env:        e.envs,
-		HostConfig: dockerclient.HostConfig{
-			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
-		},
-		Volumes: map[string]struct{}{
-			"/var/run/docker.sock": struct{}{},
-		},
-	}
+	conf := a.NewContainerConfig(string(in), e.envs)
 
 	log.Infof("preparing container %s", name)
 	client.PullImage(conf.Image, nil)
@@ -417,22 +423,7 @@ func (e *engine) runJobNotify(r *Task, client dockerclient.Client) error {
 		return err
 	}
 
-	args := DefaultNotifyArgs
-	args = append(args, "--")
-	args = append(args, string(in))
-
-	conf := &dockerclient.ContainerConfig{
-		Image:      DefaultAgent,
-		Entrypoint: DefaultEntrypoint,
-		Cmd:        args,
-		Env:        e.envs,
-		HostConfig: dockerclient.HostConfig{
-			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
-		},
-		Volumes: map[string]struct{}{
-			"/var/run/docker.sock": struct{}{},
-		},
-	}
+	conf := NotifyAgent.NewContainerConfig(string(in), e.envs)
 
 	log.Infof("preparing container %s", name)
 	info, err := docker.Run(client, conf, name)
