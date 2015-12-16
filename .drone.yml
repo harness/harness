@@ -22,47 +22,6 @@ compose:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
 publish:
-  s3:
-    acl: public-read
-    region: us-east-1
-    bucket: downloads.drone.io
-    access_key: $$AWS_KEY
-    secret_key: $$AWS_SECRET
-    source: contrib/debian/drone.deb
-    target: drone/0.4
-    when:
-      repo: drone/drone
-
-  # sync the documentation with the s3 bucket
-
-  s3_sync:
-    acl: public-read
-    region: us-east-1
-    bucket: readme.drone.io
-    access_key: $$AWS_KEY
-    secret_key: $$AWS_SECRET
-    source: /drone/tmp/
-    target: /
-    exclude: "*.svg"
-    when:
-      repo: drone/drone
-      branch: master
-
-  s3_sync:
-    acl: public-read
-    region: us-east-1
-    bucket: readme.drone.io
-    access_key: $$AWS_KEY
-    secret_key: $$AWS_SECRET
-    source: /drone/tmp/
-    target: /
-    exclude: "*"
-    include: "**.svg"
-    content_type: "image/svg+xml"
-    when:
-      repo: drone/drone
-      branch: master
-
   docker:
     username: drone
     password: $$DOCKER_PASS
