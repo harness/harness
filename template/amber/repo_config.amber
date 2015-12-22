@@ -68,7 +68,7 @@ block content
         div.row
             div.col-md-3 Public Key
             div.col-md-9
-                pre #{Key.Public}
+                pre #{Key.Public} #{Repo.Owner}-#{Repo.Name}@drone
         div.row
             div.col-md-12
                 div.alert.alert-danger
