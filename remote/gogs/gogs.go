@@ -2,6 +2,7 @@ package gogs
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -178,6 +179,10 @@ func (g *Gogs) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
 	url_, err := url.Parse(g.URL)
 	if err != nil {
 		return nil, err
+	}
+	host, _, err := net.SplitHostPort(url_.Host)
+	if err == nil {
+		url_.Host=host
 	}
 	return &model.Netrc{
 		Login:    u.Token,
