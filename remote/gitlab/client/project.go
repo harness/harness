@@ -108,7 +108,6 @@ func (c *Client) SetStatus(id, sha, state, desc, ref, link string) error {
 		},
 	)
 
-	println(url, opaque)
 	_, err := c.Do("POST", url, opaque, nil)
 	return err
 }
