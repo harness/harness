@@ -3,31 +3,11 @@ package client
 type QMap map[string]string
 
 type User struct {
-	Id            int    `json:"id,omitempty"`
-	Username      string `json:"username,omitempty"`
-	Email         string `json:"email,omitempty"`
-	AvatarUrl     string `json:"avatar_url,omitempty"`
-	Name          string `json:"name,omitempty"`
-	State         string `json:"state,omitempty"`
-	CreatedAt     string `json:"created_at,omitempty"`
-	Bio           string `json:"bio,omitempty"`
-	Skype         string `json:"skype,omitempty"`
-	LinkedIn      string `json:"linkedin,omitempty"`
-	Twitter       string `json:"twitter,omitempty"`
-	ExternUid     string `json:"extern_uid,omitempty"`
-	Provider      string `json:"provider,omitempty"`
-	ThemeId       int    `json:"theme_id,omitempty"`
-	ColorSchemeId int    `json:"color_scheme_id,color_scheme_id"`
-}
-
-type Member struct {
-	Id        int
-	Username  string
-	Email     string
-	Name      string
-	State     string
-	CreatedAt string `json:"created_at,omitempty"`
-	// AccessLevel int
+	Id        int    `json:"id,omitempty"`
+	Username  string `json:"username,omitempty"`
+	Email     string `json:"email,omitempty"`
+	AvatarUrl string `json:"avatar_url,omitempty"`
+	Name      string `json:"name,omitempty"`
 }
 
 type ProjectAccess struct {
@@ -46,24 +26,18 @@ type Permissions struct {
 }
 
 type Project struct {
-	Id                   int          `json:"id,omitempty"`
-	Name                 string       `json:"name,omitempty"`
-	Description          string       `json:"description,omitempty"`
-	DefaultBranch        string       `json:"default_branch,omitempty"`
-	Owner                *Member      `json:"owner,omitempty"`
-	Public               bool         `json:"public,omitempty"`
-	Path                 string       `json:"path,omitempty"`
-	PathWithNamespace    string       `json:"path_with_namespace,omitempty"`
-	IssuesEnabled        bool         `json:"issues_enabled,omitempty"`
-	MergeRequestsEnabled bool         `json:"merge_requests_enabled,omitempty"`
-	WallEnabled          bool         `json:"wall_enabled,omitempty"`
-	WikiEnabled          bool         `json:"wiki_enabled,omitempty"`
-	CreatedAtRaw         string       `json:"created_at,omitempty"`
-	Namespace            *Namespace   `json:"namespace,omitempty"`
-	SshRepoUrl           string       `json:"ssh_url_to_repo"`
-	HttpRepoUrl          string       `json:"http_url_to_repo"`
-	Url                  string       `json:"web_url"`
-	Permissions          *Permissions `json:"permissions,omitempty"`
+	Id                int          `json:"id,omitempty"`
+	Name              string       `json:"name,omitempty"`
+	Description       string       `json:"description,omitempty"`
+	DefaultBranch     string       `json:"default_branch,omitempty"`
+	Public            bool         `json:"public,omitempty"`
+	Path              string       `json:"path,omitempty"`
+	PathWithNamespace string       `json:"path_with_namespace,omitempty"`
+	Namespace         *Namespace   `json:"namespace,omitempty"`
+	SshRepoUrl        string       `json:"ssh_url_to_repo"`
+	HttpRepoUrl       string       `json:"http_url_to_repo"`
+	Url               string       `json:"web_url"`
+	Permissions       *Permissions `json:"permissions,omitempty"`
 }
 
 type Namespace struct {
