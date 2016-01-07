@@ -15,6 +15,7 @@ var projectsPayload = []byte(`
 		"owner": {
 			"id": 3,
 			"name": "Diaspora",
+			"username": "some_user",
 			"created_at": "2013-09-30T13: 46: 02Z"
 		},
 		"name": "Diaspora Client",
@@ -48,8 +49,9 @@ var projectsPayload = []byte(`
 		"http_url_to_repo": "http://example.com/brightbox/puppet.git",
 		"web_url": "http://example.com/brightbox/puppet",
 		"owner": {
-			"id": 4,
+			"id": 1,
 			"name": "Brightbox",
+			"username": "test_user",
 			"created_at": "2013-09-30T13:46:02Z"
 		},
 		"name": "Puppet",
@@ -89,6 +91,7 @@ var project4Paylod = []byte(`
 	"owner": {
 		"id": 3,
 		"name": "Diaspora",
+		"username": "some_user",
 		"created_at": "2013-09-30T13: 46: 02Z"
 	},
 	"name": "Diaspora Client",
@@ -135,8 +138,9 @@ var project6Paylod = []byte(`
 	"http_url_to_repo": "http://example.com/brightbox/puppet.git",
 	"web_url": "http://example.com/brightbox/puppet",
 	"owner": {
-	"id": 4,
+		"id": 1,
 		"name": "Brightbox",
+		"username": "test_user",
 		"created_at": "2013-09-30T13:46:02Z"
 	},
 	"name": "Puppet",
@@ -160,14 +164,8 @@ var project6Paylod = []byte(`
 	},
 	"archived": false,
 	"permissions": {
-		"project_access": {
-			"access_level": 10,
-			"notification_level": 3
-		},
-		"group_access": {
-			"access_level": 50,
-			"notification_level": 3
-		}
+		"project_access": null,
+		"group_access": null
 	}
 }
 `)
