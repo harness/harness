@@ -7,10 +7,10 @@ html
         meta[http-equiv="x-ua-compatible"][content="ie=edge"]
         link[rel="icon"][type="image/x-icon"][href="/static/images/favicon.ico"]
 
-        link[rel="stylesheet"][href="https://fonts.googleapis.com/icon?family=Material+Icons"]
-        link[rel="stylesheet"][href="https://fonts.googleapis.com/css?family=Roboto+Mono"]
-        link[rel="stylesheet"][href="https://fonts.googleapis.com/css?family=Roboto"]
-        link[rel="stylesheet"][href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.min.css"]
+        link[rel="stylesheet"][href="//fonts.googleapis.com/icon?family=Material+Icons"]
+        link[rel="stylesheet"][href="//fonts.googleapis.com/css?family=Roboto+Mono"]
+        link[rel="stylesheet"][href="//fonts.googleapis.com/css?family=Roboto"]
+        link[rel="stylesheet"][href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.min.css"]
         link[rel="stylesheet"][href="/static/styles_gen/style.css"]
         style
             html { height: 100%; overflow: hidden; }

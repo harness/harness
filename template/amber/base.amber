@@ -7,11 +7,11 @@ html
         meta[http-equiv="x-ua-compatible"][content="ie=edge"]
         link[rel="icon"][type="image/x-icon"][href="/static/images/favicon.ico"]
 
-        link[rel="stylesheet"][href="https://fonts.googleapis.com/icon?family=Material+Icons"]
-        link[rel="stylesheet"][href="https://fonts.googleapis.com/css?family=Roboto+Mono"]
-        link[rel="stylesheet"][href="https://fonts.googleapis.com/css?family=Roboto"]
-        link[rel="stylesheet"][href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.min.css"]
-        link[rel="stylesheet"][href="https://cdnjs.cloudflare.com/ajax/libs/octicons/3.1.0/octicons.min.css"]
+        link[rel="stylesheet"][href="//fonts.googleapis.com/icon?family=Material+Icons"]
+        link[rel="stylesheet"][href="//fonts.googleapis.com/css?family=Roboto+Mono"]
+        link[rel="stylesheet"][href="//fonts.googleapis.com/css?family=Roboto"]
+        link[rel="stylesheet"][href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.min.css"]
+        link[rel="stylesheet"][href="//cdnjs.cloudflare.com/ajax/libs/octicons/3.1.0/octicons.min.css"]
         link[rel="stylesheet"][href="/static/styles_gen/style.css"]
 
         if Csrf
@@ -48,10 +48,10 @@ html
             block content
 
         block scripts
-            script[type="text/javascript"][src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"]
-            script[type="text/javascript"][src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"]
-            script[type="text/javascript"][src="https://cdnjs.cloudflare.com/ajax/libs/jquery-searcher/0.2.0/jquery.searcher.min.js"]
-            script[type="text/javascript"][src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/js/bootstrap.min.js"]
-            script[type="text/javascript"][src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"]
-            script[text="text/javascript"][src="https://cdnjs.cloudflare.com/ajax/libs/stickyfill/1.1.2/stickyfill.js"]
+            script[type="text/javascript"][src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"]
+            script[type="text/javascript"][src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"]
+            script[type="text/javascript"][src="//cdnjs.cloudflare.com/ajax/libs/jquery-searcher/0.2.0/jquery.searcher.min.js"]
+            script[type="text/javascript"][src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/js/bootstrap.min.js"]
+            script[type="text/javascript"][src="//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"]
+            script[text="text/javascript"][src="//cdnjs.cloudflare.com/ajax/libs/stickyfill/1.1.2/stickyfill.js"]
             script[type="text/javascript"][src="/static/scripts_gen/drone.min.js"]
