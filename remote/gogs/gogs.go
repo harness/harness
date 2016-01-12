@@ -59,7 +59,7 @@ func (g *Gogs) Login(res http.ResponseWriter, req *http.Request) (*model.User, b
 		return nil, false, nil
 	}
 
-	client := gogs.NewClient(g.URL, "")
+	client := gogs.NewClient(g.URL, "", g.SkipVerify)
 
 	// try to fetch drone token if it exists
 	var accessToken string
@@ -83,7 +83,7 @@ func (g *Gogs) Login(res http.ResponseWriter, req *http.Request) (*model.User, b
 		accessToken = token.Sha1
 	}
 
-	client = gogs.NewClient(g.URL, accessToken)
+	client = gogs.NewClient(g.URL, accessToken, g.SkipVerify)
 	userInfo, err := client.GetUserInfo(username)
 	if err != nil {
 		return nil, false, err
@@ -105,7 +105,7 @@ func (g *Gogs) Auth(token, secret string) (string, error) {
 
 // Repo fetches the named repository from the remote system.
 func (g *Gogs) Repo(u *model.User, owner, name string) (*model.Repo, error) {
-	client := gogs.NewClient(g.URL, u.Token)
+	client := gogs.NewClient(g.URL, u.Token, g.SkipVerify)
 	repos_, err := client.ListMyRepos()
 	if err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func (g *Gogs) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 func (g *Gogs) Repos(u *model.User) ([]*model.RepoLite, error) {
 	repos := []*model.RepoLite{}
 
-	client := gogs.NewClient(g.URL, u.Token)
+	client := gogs.NewClient(g.URL, u.Token, g.SkipVerify)
 	repos_, err := client.ListMyRepos()
 	if err != nil {
 		return repos, err
@@ -141,7 +141,7 @@ func (g *Gogs) Repos(u *model.User) ([]*model.RepoLite, error) {
 // Perm fetches the named repository permissions from
 // the remote system for the specified user.
 func (g *Gogs) Perm(u *model.User, owner, name string) (*model.Perm, error) {
-	client := gogs.NewClient(g.URL, u.Token)
+	client := gogs.NewClient(g.URL, u.Token, g.SkipVerify)
 	repos_, err := client.ListMyRepos()
 	if err != nil {
 		return nil, err
@@ -161,7 +161,7 @@ func (g *Gogs) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 // Script fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
 func (g *Gogs) Script(u *model.User, r *model.Repo, b *model.Build) ([]byte, []byte, error) {
-	client := gogs.NewClient(g.URL, u.Token)
+	client := gogs.NewClient(g.URL, u.Token, g.SkipVerify)
 	cfg, err := client.GetFile(r.Owner, r.Name, b.Commit, ".drone.yml")
 	sec, _ := client.GetFile(r.Owner, r.Name, b.Commit, ".drone.sec")
 	return cfg, sec, err
@@ -205,7 +205,7 @@ func (g *Gogs) Activate(u *model.User, r *model.Repo, k *model.Key, link string)
 		Active: true,
 	}
 
-	client := gogs.NewClient(g.URL, u.Token)
+	client := gogs.NewClient(g.URL, u.Token, g.SkipVerify)
 	_, err := client.CreateRepoHook(r.Owner, r.Name, hook)
 	return err
 }
