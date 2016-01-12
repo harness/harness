@@ -199,12 +199,12 @@ func (g *Gitlab) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 		return nil, err
 	}
 
-	// repo owner are granted full access
-	if u.Login == repo.Owner.Username {
+	// repo owner is granted full access
+	if repo.Owner != nil && repo.Owner.Username == u.Login {
 	   return &model.Perm{true, true, true}, nil
 	}
 
-	// check permission for users
+	// check permission for current user
 	m := &model.Perm{}
 	m.Admin = IsAdmin(repo)
 	m.Pull = IsRead(repo)
