@@ -5,6 +5,7 @@
 package gogs
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"io"
@@ -25,12 +26,18 @@ type Client struct {
 }
 
 // NewClient initializes and returns a API client.
-func NewClient(url, token string) *Client {
-	return &Client{
+func NewClient(url, token string, skipVerify bool) *Client {
+	c := &Client{
 		url:         strings.TrimSuffix(url, "/"),
 		accessToken: token,
 		client:      &http.Client{},
 	}
+	if skipVerify {
+		c.client.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+	}
+	return c
 }
 
 func (c *Client) getResponse(method, path string, header http.Header, body io.Reader) ([]byte, error) {
