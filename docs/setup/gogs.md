@@ -12,7 +12,7 @@ REMOTE_CONFIG=https://gogs.hooli.com?open=false
 The following is the standard URI connection scheme:
 
 ```
-scheme://host[:port][?options]
+scheme://host[:port][/path][?options]
 ```
 
 The components of this string are:
@@ -20,6 +20,7 @@ The components of this string are:
 * `scheme` server protocol `http` or `https`.
 * `host` server address to connect to. The default value is github.com if not specified.
 * `:port` optional. The default value is :80 if not specified.
+* `/path` optional. The default value is the root directory if not specified.
 * `?options` connection specific options.
 
 ## Gogs options
