@@ -25,8 +25,19 @@ type Permissions struct {
 	GroupAccess   *GroupAccess   `json:"group_access,omitempty"`
 }
 
+type Member struct {
+	Id        int
+	Username  string
+	Email     string
+	Name      string
+	State     string
+	CreatedAt string `json:"created_at,omitempty"`
+	// AccessLevel int
+}
+
 type Project struct {
 	Id                int          `json:"id,omitempty"`
+	Owner             *Member      `json:"owner,omitempty"`
 	Name              string       `json:"name,omitempty"`
 	Description       string       `json:"description,omitempty"`
 	DefaultBranch     string       `json:"default_branch,omitempty"`
