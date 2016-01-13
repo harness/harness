@@ -30,7 +30,6 @@ func Load(env envconfig.Env) *Gogs {
 		log.Fatalln("unable to parse remote dsn. %s", err)
 	}
 	params := url_.Query()
-	url_.Path = ""
 	url_.RawQuery = ""
 
 	// create the Githbub remote using parameters from
