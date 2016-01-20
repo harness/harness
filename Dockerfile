@@ -12,9 +12,12 @@
 #
 #     docker build --rm=true -t drone/drone .
 
-FROM centurylink/ca-certs
+FROM busybox
 EXPOSE 8000
 ADD contrib/docker/etc/nsswitch.conf /etc/
+
+# Pulled from centurylin/ca-certs source.
+ADD https://raw.githubusercontent.com/CenturyLinkLabs/ca-certs-base-image/master/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 ENV DATABASE_DRIVER=sqlite3
 ENV DATABASE_CONFIG=/var/lib/drone/drone.sqlite
