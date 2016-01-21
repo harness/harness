@@ -29,7 +29,7 @@ func (c *Client) ListAccessTokens(user, pass string) ([]*AccessToken, error) {
 }
 
 type CreateAccessTokenOption struct {
-	Name string `json:"name"`
+	Name string `json:"name" binding:"Required"`
 }
 
 func (c *Client) CreateAccessToken(user, pass string, opt CreateAccessTokenOption) (*AccessToken, error) {
