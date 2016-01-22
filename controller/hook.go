@@ -2,11 +2,12 @@ package controller
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"os"
 	"path/filepath"
-	"strings"
 	"regexp"
+	"strings"
+
+	"github.com/gin-gonic/gin"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/engine"
@@ -214,9 +215,10 @@ func PostHook(c *gin.Context) {
 		Config:    string(raw),
 		Secret:    string(sec),
 		System: &model.System{
-			Link:    httputil.GetURL(c.Request),
-			Plugins: strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
-			Globals: strings.Split(os.Getenv("PLUGIN_PARAMS"), " "),
+			Link:      httputil.GetURL(c.Request),
+			Plugins:   strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
+			Globals:   strings.Split(os.Getenv("PLUGIN_PARAMS"), " "),
+			Escalates: strings.Split(os.Getenv("ESCALATE_FILTER"), " "),
 		},
 	})
 

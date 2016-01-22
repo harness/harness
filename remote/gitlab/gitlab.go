@@ -15,7 +15,7 @@ import (
 	"github.com/drone/drone/shared/oauth2"
 	"github.com/drone/drone/shared/token"
 
-	"github.com/Bugagazavr/go-gitlab-client"
+	"github.com/drone/drone/remote/gitlab/client"
 )
 
 const (
@@ -198,6 +198,13 @@ func (g *Gitlab) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// repo owner is granted full access
+	if repo.Owner != nil && repo.Owner.Username == u.Login {
+	   return &model.Perm{true, true, true}, nil
+	}
+
+	// check permission for current user
 	m := &model.Perm{}
 	m.Admin = IsAdmin(repo)
 	m.Pull = IsRead(repo)
@@ -229,6 +236,22 @@ func (g *Gitlab) Script(user *model.User, repo *model.Repo, build *model.Build) 
 //      also if we want get MR status in gitlab we need implement a special plugin for gitlab,
 //      gitlab uses API to fetch build status on client side. But for now we skip this.
 func (g *Gitlab) Status(u *model.User, repo *model.Repo, b *model.Build, link string) error {
+	client := NewClient(g.URL, u.Token, g.SkipVerify)
+
+	status := getStatus(b.Status)
+	desc := getDesc(b.Status)
+
+	client.SetStatus(
+		ns(repo.Owner, repo.Name),
+		b.Commit,
+		status,
+		desc,
+		strings.Replace(b.Ref, "refs/heads/", "", -1),
+		link,
+	)
+
+	// Gitlab statuses it's a new feature, just ignore error
+	// if gitlab version not support this
 	return nil
 }
 
@@ -296,7 +319,7 @@ func (g *Gitlab) Deactivate(user *model.User, repo *model.Repo, link string) err
 func (g *Gitlab) Hook(req *http.Request) (*model.Repo, *model.Build, error) {
 	defer req.Body.Close()
 	var payload, _ = ioutil.ReadAll(req.Body)
-	var parsed, err = gogitlab.ParseHook(payload)
+	var parsed, err = client.ParseHook(payload)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -311,7 +334,7 @@ func (g *Gitlab) Hook(req *http.Request) (*model.Repo, *model.Build, error) {
 	}
 }
 
-func mergeRequest(parsed *gogitlab.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
+func mergeRequest(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
 
 	repo := &model.Repo{}
 	repo.Owner = req.FormValue("owner")
@@ -344,7 +367,7 @@ func mergeRequest(parsed *gogitlab.HookPayload, req *http.Request) (*model.Repo,
 	return repo, build, nil
 }
 
-func push(parsed *gogitlab.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
+func push(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
 	var cloneUrl = parsed.Repository.GitHttpUrl
 
 	repo := &model.Repo{}
@@ -430,4 +453,58 @@ func (g *Gitlab) Scope() string {
 
 func (g *Gitlab) String() string {
 	return "gitlab"
+}
+
+const (
+	StatusPending  = "pending"
+	StatusRunning  = "running"
+	StatusSuccess  = "success"
+	StatusFailure  = "failed"
+	StatusCanceled = "canceled"
+)
+
+const (
+	DescPending  = "this build is pending"
+	DescRunning  = "this buils is running"
+	DescSuccess  = "the build was successful"
+	DescFailure  = "the build failed"
+	DescCanceled = "the build canceled"
+)
+
+// getStatus is a helper functin that converts a Drone
+// status to a GitHub status.
+func getStatus(status string) string {
+	switch status {
+	case model.StatusPending:
+		return StatusPending
+	case model.StatusRunning:
+		return StatusRunning
+	case model.StatusSuccess:
+		return StatusSuccess
+	case model.StatusFailure, model.StatusError:
+		return StatusFailure
+	case model.StatusKilled:
+		return StatusCanceled
+	default:
+		return StatusFailure
+	}
+}
+
+// getDesc is a helper function that generates a description
+// message for the build based on the status.
+func getDesc(status string) string {
+	switch status {
+	case model.StatusPending:
+		return DescPending
+	case model.StatusRunning:
+		return DescRunning
+	case model.StatusSuccess:
+		return DescSuccess
+	case model.StatusFailure, model.StatusError:
+		return DescFailure
+	case model.StatusKilled:
+		return DescCanceled
+	default:
+		return DescFailure
+	}
 }

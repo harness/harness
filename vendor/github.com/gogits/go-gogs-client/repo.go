@@ -34,12 +34,11 @@ type Repository struct {
 // ListMyRepos lists all repositories for the authenticated user that has access to.
 func (c *Client) ListMyRepos() ([]*Repository, error) {
 	repos := make([]*Repository, 0, 10)
-	err := c.getParsedResponse("GET", "/user/repos", nil, nil, &repos)
-	return repos, err
+	return repos, c.getParsedResponse("GET", "/user/repos", nil, nil, &repos)
 }
 
 type CreateRepoOption struct {
-	Name        string `json:"name" binding:"Required"`
+	Name        string `json:"name" binding:"Required;AlphaDashDot;MaxSize(100)"`
 	Description string `json:"description" binding:"MaxSize(255)"`
 	Private     bool   `json:"private"`
 	AutoInit    bool   `json:"auto_init"`
@@ -70,8 +69,40 @@ func (c *Client) CreateOrgRepo(org string, opt CreateRepoOption) (*Repository, e
 		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body), repo)
 }
 
+// GetRepo returns information of a repository of given owner.
+func (c *Client) GetRepo(owner, reponame string) (*Repository, error) {
+	repo := new(Repository)
+	return repo, c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s", owner, reponame), nil, nil, repo)
+}
+
 // DeleteRepo deletes a repository of user or organization.
 func (c *Client) DeleteRepo(owner, repo string) error {
 	_, err := c.getResponse("DELETE", fmt.Sprintf("/repos/%s/%s", owner, repo), nil, nil)
 	return err
+}
+
+type MigrateRepoOption struct {
+	CloneAddr    string `json:"clone_addr" binding:"Required"`
+	AuthUsername string `json:"auth_username"`
+	AuthPassword string `json:"auth_password"`
+	UID          int    `json:"uid" binding:"Required"`
+	RepoName     string `json:"repo_name" binding:"Required"`
+	Mirror       bool   `json:"mirror"`
+	Private      bool   `json:"private"`
+	Description  string `json:"description"`
+}
+
+// MigrateRepo migrates a repository from other Git hosting sources for the
+// authenticated user.
+//
+// To migrate a repository for a organization, the authenticated user must be a
+// owner of the specified organization.
+func (c *Client) MigrateRepo(opt MigrateRepoOption) (*Repository, error) {
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, err
+	}
+	repo := new(Repository)
+	return repo, c.getParsedResponse("POST", "/repos/migrate",
+		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body), repo)
 }
