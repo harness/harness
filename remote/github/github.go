@@ -230,7 +230,7 @@ func (g *Github) Status(u *model.User, r *model.Repo, b *model.Build, link strin
 	status := getStatus(b.Status)
 	desc := getDesc(b.Status)
 	data := github.RepoStatus{
-		Context:     github.String("Drone"),
+		Context:     github.String("continuous-integration/drone"),
 		State:       github.String(status),
 		Description: github.String(desc),
 		TargetURL:   github.String(link),
@@ -356,10 +356,6 @@ func (g *Github) push(r *http.Request) (*model.Repo, *model.Build, error) {
 		// default gravatar?
 	}
 
-	// we should ignore github pages
-	if build.Ref == "refs/heads/gh-pages" {
-		return nil, nil, nil
-	}
 	if strings.HasPrefix(build.Ref, "refs/tags/") {
 		// just kidding, this is actually a tag event
 		build.Event = model.EventTag
