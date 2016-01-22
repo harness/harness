@@ -68,7 +68,7 @@ func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 		return 1, err
 	}
 	if w.build.State.OOMKilled {
-		return 1, fmt.Sprintf("OOMKill received")
+		return 1, fmt.Errorf("OOMKill received")
 	}
 	return w.build.State.ExitCode, err
 }
