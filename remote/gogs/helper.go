@@ -73,7 +73,10 @@ func buildFromPush(hook *PushHook) *model.Build {
 	switch {
 	case hook.RefType == "tag":
 		eventType = model.EventTag
-		message = "Tag " + hook.Ref
+		message = "Create Tag " + hook.Ref
+	case hook.RefType == "branch":
+		eventType = model.EventPush
+		message = "Create Branch " + hook.Ref
 	default:
 		eventType = model.EventPush
 		message = hook.Commits[0].Message
