@@ -145,6 +145,12 @@ func (g *Gitlab) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	repo.Clone = repo_.HttpRepoUrl
 	repo.Branch = "master"
 
+	repo.Avatar = repo_.AvatarUrl
+
+	if len(repo.Avatar) != 0 && !strings.HasPrefix(repo.Avatar, "http") {
+		repo.Avatar = fmt.Sprintf("%s/%s", g.URL, repo.Avatar)
+	}
+
 	if repo_.DefaultBranch != "" {
 		repo.Branch = repo_.DefaultBranch
 	}
