@@ -32,7 +32,10 @@ block content
                     each $build in $group.Builds
                         a.card[href=$repo.Name+"/"+$build.Number][data-build=$build.Number]
                             div.card-header
-                                img[src=$build.Avatar]
+                                if $build.Avatar != ""
+                                    img[src=$build.Avatar]
+                                else
+                                    img[src="/static/images/dummy.png"]
                             div.card-block
                                 div
                                     div.status[class=$build.Status] #{$build.Status}

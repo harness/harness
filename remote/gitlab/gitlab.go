@@ -372,6 +372,10 @@ func mergeRequest(parsed *client.HookPayload, req *http.Request) (*model.Repo, *
 
 	build.Author = parsed.ObjectAttributes.LastCommit.Author.Name
 	build.Email = parsed.ObjectAttributes.LastCommit.Author.Email
+	if len(build.Email) != 0 {
+		build.Avatar = GetUserAvatar(build.Email)
+	}
+
 	build.Title = parsed.ObjectAttributes.Title
 	build.Link = parsed.ObjectAttributes.Url
 
@@ -417,6 +421,9 @@ func push(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Bu
 	case head.Author != nil:
 		build.Email = head.Author.Email
 		build.Author = parsed.UserName
+		if len(build.Email) != 0 {
+			build.Avatar = GetUserAvatar(build.Email)
+		}
 	case head.Author == nil:
 		build.Author = parsed.UserName
 	}
