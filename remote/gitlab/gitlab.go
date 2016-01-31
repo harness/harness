@@ -173,15 +173,20 @@ func (g *Gitlab) Repos(u *model.User) ([]*model.RepoLite, error) {
 		var parts = strings.Split(repo.PathWithNamespace, "/")
 		var owner = parts[0]
 		var name = parts[1]
+		var avatar = repo.AvatarUrl
+
+		if len(avatar) != 0 && !strings.HasPrefix(avatar, "http") {
+			avatar = fmt.Sprintf("%s/%s", g.URL, avatar)
+		}
 
 		repos = append(repos, &model.RepoLite{
 			Owner:    owner,
 			Name:     name,
 			FullName: repo.PathWithNamespace,
+			Avatar:   avatar,
 		})
-
-		// TODO: add repo.AvatarUrl
 	}
+
 	return repos, err
 }
 
@@ -201,7 +206,7 @@ func (g *Gitlab) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 
 	// repo owner is granted full access
 	if repo.Owner != nil && repo.Owner.Username == u.Login {
-	   return &model.Perm{true, true, true}, nil
+		return &model.Perm{true, true, true}, nil
 	}
 
 	// check permission for current user
