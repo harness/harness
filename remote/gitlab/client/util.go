@@ -5,8 +5,18 @@ import (
 	"strings"
 )
 
+var encodeMap = map[string]string{
+	".": "%252E",
+}
+
 func encodeParameter(value string) string {
-	return strings.Replace(url.QueryEscape(value), "/", "%2F", 0)
+	value = url.QueryEscape(value)
+
+	for before, after := range encodeMap {
+		value = strings.Replace(value, before, after, -1)
+	}
+
+	return value
 }
 
 // Tag returns current tag for push event hook payload
