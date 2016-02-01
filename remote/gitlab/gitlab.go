@@ -145,6 +145,12 @@ func (g *Gitlab) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	repo.Clone = repo_.HttpRepoUrl
 	repo.Branch = "master"
 
+	repo.Avatar = repo_.AvatarUrl
+
+	if len(repo.Avatar) != 0 && !strings.HasPrefix(repo.Avatar, "http") {
+		repo.Avatar = fmt.Sprintf("%s/%s", g.URL, repo.Avatar)
+	}
+
 	if repo_.DefaultBranch != "" {
 		repo.Branch = repo_.DefaultBranch
 	}
@@ -173,15 +179,20 @@ func (g *Gitlab) Repos(u *model.User) ([]*model.RepoLite, error) {
 		var parts = strings.Split(repo.PathWithNamespace, "/")
 		var owner = parts[0]
 		var name = parts[1]
+		var avatar = repo.AvatarUrl
+
+		if len(avatar) != 0 && !strings.HasPrefix(avatar, "http") {
+			avatar = fmt.Sprintf("%s/%s", g.URL, avatar)
+		}
 
 		repos = append(repos, &model.RepoLite{
 			Owner:    owner,
 			Name:     name,
 			FullName: repo.PathWithNamespace,
+			Avatar:   avatar,
 		})
-
-		// TODO: add repo.AvatarUrl
 	}
+
 	return repos, err
 }
 
@@ -201,7 +212,7 @@ func (g *Gitlab) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 
 	// repo owner is granted full access
 	if repo.Owner != nil && repo.Owner.Username == u.Login {
-	   return &model.Perm{true, true, true}, nil
+		return &model.Perm{true, true, true}, nil
 	}
 
 	// check permission for current user
@@ -361,6 +372,10 @@ func mergeRequest(parsed *client.HookPayload, req *http.Request) (*model.Repo, *
 
 	build.Author = parsed.ObjectAttributes.LastCommit.Author.Name
 	build.Email = parsed.ObjectAttributes.LastCommit.Author.Email
+	if len(build.Email) != 0 {
+		build.Avatar = GetUserAvatar(build.Email)
+	}
+
 	build.Title = parsed.ObjectAttributes.Title
 	build.Link = parsed.ObjectAttributes.Url
 
@@ -406,6 +421,9 @@ func push(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Bu
 	case head.Author != nil:
 		build.Email = head.Author.Email
 		build.Author = parsed.UserName
+		if len(build.Email) != 0 {
+			build.Avatar = GetUserAvatar(build.Email)
+		}
 	case head.Author == nil:
 		build.Author = parsed.UserName
 	}

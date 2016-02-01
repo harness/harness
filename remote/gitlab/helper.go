@@ -1,11 +1,17 @@
 package gitlab
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"net/url"
 	"strconv"
 
 	"github.com/drone/drone/remote/gitlab/client"
+)
+
+const (
+	gravatarBase = "https://www.gravatar.com/avatar"
 )
 
 // NewClient is a helper function that returns a new GitHub
@@ -77,6 +83,18 @@ func GetKeyTitle(rawurl string) (string, error) {
 
 func ns(owner, name string) string {
 	return fmt.Sprintf("%s%%2F%s", owner, name)
+}
+
+func GetUserAvatar(email string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(email))
+
+	return fmt.Sprintf(
+		"%s/%v.jpg?s=%s",
+		gravatarBase,
+		hex.EncodeToString(hasher.Sum(nil)),
+		"128",
+	)
 }
 
 func GetUserEmail(c *client.Client, defaultURL string) (*client.Client, error) {

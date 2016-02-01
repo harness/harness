@@ -48,6 +48,7 @@ type Project struct {
 	SshRepoUrl        string       `json:"ssh_url_to_repo"`
 	HttpRepoUrl       string       `json:"http_url_to_repo"`
 	Url               string       `json:"web_url"`
+	AvatarUrl         string       `json:"avatar_url"`
 	Permissions       *Permissions `json:"permissions,omitempty"`
 }
 
