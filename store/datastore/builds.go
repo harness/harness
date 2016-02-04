@@ -48,6 +48,12 @@ func (db *buildstore) GetLastBefore(repo *model.Repo, branch string, num int64) 
 	return build, err
 }
 
+func (db *buildstore) GetMasterList() ([]*model.Build, error) {
+	var builds = []*model.Build{}
+	var err = meddler.QueryAll(db, &builds, rebind(buildMasterListQuery))
+	return builds, err
+}
+
 func (db *buildstore) GetList(repo *model.Repo) ([]*model.Build, error) {
 	var builds = []*model.Build{}
 	var err = meddler.QueryAll(db, &builds, rebind(buildListQuery), repo.ID)
@@ -81,6 +87,13 @@ func (db *buildstore) Update(build *model.Build) error {
 }
 
 const buildTable = "builds"
+
+const buildMasterListQuery = `
+SELECT *
+FROM builds
+ORDER BY build_number DESC
+LIMIT 50
+`
 
 const buildListQuery = `
 SELECT *

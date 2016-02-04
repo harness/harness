@@ -241,5 +241,24 @@ func Test_buildstore(t *testing.T) {
 			g.Assert(builds[0].RepoID).Equal(build2.RepoID)
 			g.Assert(builds[0].Status).Equal(build2.Status)
 		})
+
+		g.It("Should get all recent Builds", func() {
+			build1 := &model.Build{
+				RepoID: 1,
+				Status: model.StatusFailure,
+			}
+			build2 := &model.Build{
+				RepoID: 1,
+				Status: model.StatusSuccess,
+			}
+			s.Builds().Create(build1, []*model.Job{}...)
+			s.Builds().Create(build2, []*model.Job{}...)
+			builds, err := s.Builds().GetMasterList()
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(builds)).Equal(2)
+			g.Assert(builds[0].ID).Equal(build2.ID)
+			g.Assert(builds[0].RepoID).Equal(build2.RepoID)
+			g.Assert(builds[0].Status).Equal(build2.Status)
+		})
 	})
 }

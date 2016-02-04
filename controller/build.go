@@ -20,6 +20,15 @@ import (
 	"github.com/drone/drone/router/middleware/session"
 )
 
+func GetAllBuilds(c *gin.Context) {
+	builds, err := store.GetBuildMasterList(c)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	c.IndentedJSON(http.StatusOK, builds)
+}
+
 func GetBuilds(c *gin.Context) {
 	repo := session.Repo(c)
 	builds, err := store.GetBuildList(c, repo)
