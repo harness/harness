@@ -24,6 +24,9 @@ type BuildStore interface {
 	// GetLastBefore gets the last build before build number N.
 	GetLastBefore(*model.Repo, string, int64) (*model.Build, error)
 
+	// GetBuildMasterList gets a list of builds for the server
+	GetMasterList() ([]*model.Build, error)
+
 	// GetList gets a list of builds for the repository
 	GetList(*model.Repo) ([]*model.Build, error)
 
@@ -56,6 +59,10 @@ func GetBuildLast(c context.Context, repo *model.Repo, branch string) (*model.Bu
 
 func GetBuildLastBefore(c context.Context, repo *model.Repo, branch string, number int64) (*model.Build, error) {
 	return FromContext(c).Builds().GetLastBefore(repo, branch, number)
+}
+
+func GetBuildMasterList(c context.Context) ([]*model.Build, error) {
+	return FromContext(c).Builds().GetMasterList()
 }
 
 func GetBuildList(c context.Context, repo *model.Repo) ([]*model.Build, error) {
