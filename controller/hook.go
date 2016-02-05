@@ -2,10 +2,12 @@ package controller
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/CiscoCloud/drone/engine"
@@ -18,6 +20,8 @@ import (
 	"github.com/CiscoCloud/drone/yaml"
 	"github.com/CiscoCloud/drone/yaml/matrix"
 )
+
+var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
 
 func PostHook(c *gin.Context) {
 	remote_ := remote.FromContext(c)
@@ -38,10 +42,11 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	// a build may be skipped if the text [CI SKIP]
-	// is found inside the commit message
-	if strings.Contains(build.Message, "[CI SKIP]") {
-		log.Infof("ignoring hook. [ci skip] found for %s")
+	// skip the build if any case-insensitive combination of the words "skip" and "ci"
+	// wrapped in square brackets appear in the commit message
+	skipMatch := skipRe.FindString(build.Message)
+	if len(skipMatch) > 0 {
+		log.Infof("ignoring hook. %s found in %s", skipMatch, build.Commit)
 		c.Writer.WriteHeader(204)
 		return
 	}
@@ -210,9 +215,10 @@ func PostHook(c *gin.Context) {
 		Config:    string(raw),
 		Secret:    string(sec),
 		System: &model.System{
-			Link:    httputil.GetURL(c.Request),
-			Plugins: strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
-			Globals: strings.Split(os.Getenv("PLUGIN_PARAMS"), " "),
+			Link:      httputil.GetURL(c.Request),
+			Plugins:   strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
+			Globals:   strings.Split(os.Getenv("PLUGIN_PARAMS"), " "),
+			Escalates: strings.Split(os.Getenv("ESCALATE_FILTER"), " "),
 		},
 	})
 

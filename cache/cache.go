@@ -21,9 +21,9 @@ func Set(c context.Context, key string, value interface{}) error {
 }
 
 // Default creates an in-memory cache with the default
-// 24 hour expiration period.
+// 30 minute expiration period.
 func Default() Cache {
-	return cache.NewMemoryWithTTL(time.Hour * 24)
+	return cache.NewMemoryWithTTL(time.Minute * 30)
 }
 
 // NewTTL returns an in-memory cache with the specified

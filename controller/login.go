@@ -20,7 +20,7 @@ func GetLogin(c *gin.Context) {
 
 	// when dealing with redirects we may need
 	// to adjust the content type. I cannot, however,
-	// rememver why, so need to revisit this line.
+	// remember why, so need to revisit this line.
 	c.Writer.Header().Del("Content-Type")
 
 	tmpuser, open, err := remote.Login(c.Writer, c.Request)

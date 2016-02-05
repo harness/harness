@@ -1,10 +1,13 @@
 package controller
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/CiscoCloud/drone/model"
 	"github.com/CiscoCloud/drone/store"
+	"github.com/CiscoCloud/drone/shared/httputil"
 )
 
 var (
@@ -73,6 +76,7 @@ func GetCC(c *gin.Context) {
 		return
 	}
 
-	cc := model.NewCC(repo, builds[0], "")
+	url := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, builds[0].Number)
+	cc := model.NewCC(repo, builds[0], url)
 	c.XML(200, cc)
 }

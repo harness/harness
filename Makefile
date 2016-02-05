@@ -16,7 +16,7 @@ deps:
 	go get -u github.com/franela/goblin
 	go get -u github.com/PuerkitoBio/goquery
 	go get -u github.com/russross/blackfriday
-	GO15VENDOREXPERIMENT=0 go get -u github.com/go-swagger/go-swagger/...
+	GO15VENDOREXPERIMENT=1 go get -u github.com/go-swagger/go-swagger/...
 
 gen: gen_static gen_template gen_migrations
 
@@ -37,7 +37,7 @@ build:
 	go build
 
 build_static:
-	go build --ldflags '-extldflags "-static" -X main.version=$(CI_BUILD_NUMBER)' -o drone_static
+	go build --ldflags '-extldflags "-static" -X main.build=$(CI_BUILD_NUMBER)' -o drone_static
 
 test:
 	go test -cover $(PACKAGES)

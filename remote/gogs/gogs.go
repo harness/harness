@@ -1,7 +1,9 @@
 package gogs
 
 import (
+       "crypto/tls"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -29,7 +31,6 @@ func Load(env envconfig.Env) *Gogs {
 		log.Fatalln("unable to parse remote dsn. %s", err)
 	}
 	params := url_.Query()
-	url_.Path = ""
 	url_.RawQuery = ""
 
 	// create the Githbub remote using parameters from
@@ -58,7 +59,7 @@ func (g *Gogs) Login(res http.ResponseWriter, req *http.Request) (*model.User, b
 		return nil, false, nil
 	}
 
-	client := gogs.NewClient(g.URL, "")
+       client := NewGogsClient(g.URL, "", g.SkipVerify)
 
 	// try to fetch drone token if it exists
 	var accessToken string
@@ -82,7 +83,7 @@ func (g *Gogs) Login(res http.ResponseWriter, req *http.Request) (*model.User, b
 		accessToken = token.Sha1
 	}
 
-	client = gogs.NewClient(g.URL, accessToken)
+       client = NewGogsClient(g.URL, accessToken, g.SkipVerify)
 	userInfo, err := client.GetUserInfo(username)
 	if err != nil {
 		return nil, false, err
@@ -104,7 +105,7 @@ func (g *Gogs) Auth(token, secret string) (string, error) {
 
 // Repo fetches the named repository from the remote system.
 func (g *Gogs) Repo(u *model.User, owner, name string) (*model.Repo, error) {
-	client := gogs.NewClient(g.URL, u.Token)
+	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
 	repos_, err := client.ListMyRepos()
 	if err != nil {
 		return nil, err
@@ -124,7 +125,7 @@ func (g *Gogs) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 func (g *Gogs) Repos(u *model.User) ([]*model.RepoLite, error) {
 	repos := []*model.RepoLite{}
 
-	client := gogs.NewClient(g.URL, u.Token)
+	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
 	repos_, err := client.ListMyRepos()
 	if err != nil {
 		return repos, err
@@ -140,7 +141,7 @@ func (g *Gogs) Repos(u *model.User) ([]*model.RepoLite, error) {
 // Perm fetches the named repository permissions from
 // the remote system for the specified user.
 func (g *Gogs) Perm(u *model.User, owner, name string) (*model.Perm, error) {
-	client := gogs.NewClient(g.URL, u.Token)
+	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
 	repos_, err := client.ListMyRepos()
 	if err != nil {
 		return nil, err
@@ -160,7 +161,7 @@ func (g *Gogs) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 // Script fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
 func (g *Gogs) Script(u *model.User, r *model.Repo, b *model.Build) ([]byte, []byte, error) {
-	client := gogs.NewClient(g.URL, u.Token)
+	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
 	cfg, err := client.GetFile(r.Owner, r.Name, b.Commit, ".drone.yml")
 	sec, _ := client.GetFile(r.Owner, r.Name, b.Commit, ".drone.sec")
 	return cfg, sec, err
@@ -178,6 +179,10 @@ func (g *Gogs) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
 	url_, err := url.Parse(g.URL)
 	if err != nil {
 		return nil, err
+	}
+	host, _, err := net.SplitHostPort(url_.Host)
+	if err == nil {
+		url_.Host=host
 	}
 	return &model.Netrc{
 		Login:    u.Token,
@@ -200,7 +205,7 @@ func (g *Gogs) Activate(u *model.User, r *model.Repo, k *model.Key, link string)
 		Active: true,
 	}
 
-	client := gogs.NewClient(g.URL, u.Token)
+	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
 	_, err := client.CreateRepoHook(r.Owner, r.Name, hook)
 	return err
 }
@@ -230,6 +235,20 @@ func (g *Gogs) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 		}
 	}
 	return repo, build, err
+}
+
+// NewClient initializes and returns a API client.
+func NewGogsClient(url, token string, skipVerify bool) *gogs.Client {
+        sslClient := &http.Client{}
+        c := gogs.NewClient(url, token)
+
+        if skipVerify {
+                sslClient.Transport = &http.Transport{
+                        TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+                }
+                c.SetHTTPClient(sslClient)
+        }
+        return c
 }
 
 func (g *Gogs) String() string {

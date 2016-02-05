@@ -230,7 +230,7 @@ func (g *Github) Status(u *model.User, r *model.Repo, b *model.Build, link strin
 	status := getStatus(b.Status)
 	desc := getDesc(b.Status)
 	data := github.RepoStatus{
-		Context:     github.String("Drone"),
+		Context:     github.String("continuous-integration/drone"),
 		State:       github.String(status),
 		Description: github.String(desc),
 		TargetURL:   github.String(link),
@@ -361,10 +361,6 @@ func (g *Github) push(r *http.Request) (*model.Repo, *model.Build, error) {
 		// default gravatar?
 	}
 
-	// we should ignore github pages
-	if build.Ref == "refs/heads/gh-pages" {
-		return nil, nil, nil
-	}
 	if strings.HasPrefix(build.Ref, "refs/tags/") {
 		// just kidding, this is actually a tag event
 		build.Event = model.EventTag
@@ -415,8 +411,8 @@ func (g *Github) pullRequest(r *http.Request) (*model.Repo, *model.Build, error)
 	build.Link = *hook.PullRequest.HTMLURL
 	build.Branch = *hook.PullRequest.Head.Ref
 	build.Message = *hook.PullRequest.Title
-	build.Author = *hook.PullRequest.Head.User.Login
-	build.Avatar = *hook.PullRequest.Head.User.AvatarURL
+	build.Author = *hook.PullRequest.User.Login
+	build.Avatar = *hook.PullRequest.User.AvatarURL
 	build.Remote = *hook.PullRequest.Base.Repo.CloneURL
 	build.Title = *hook.PullRequest.Title
 	// build.Timestamp = time.Now().UTC().Format("2006-01-02 15:04:05.000000000 +0000 MST")

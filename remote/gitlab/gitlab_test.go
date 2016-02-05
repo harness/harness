@@ -54,13 +54,18 @@ func Test_Gitlab(t *testing.T) {
 		g.Describe("Perm", func() {
 			g.It("Should return repo permissions", func() {
 				perm, err := gitlab.Perm(&user, "diaspora", "diaspora-client")
-
 				g.Assert(err == nil).IsTrue()
 				g.Assert(perm.Admin).Equal(true)
 				g.Assert(perm.Pull).Equal(true)
 				g.Assert(perm.Push).Equal(true)
 			})
-
+			g.It("Should return repo permissions when user is admin", func() {
+				perm, err := gitlab.Perm(&user, "brightbox", "puppet")
+				g.Assert(err == nil).IsTrue()
+				g.Assert(perm.Admin).Equal(true)
+				g.Assert(perm.Pull).Equal(true)
+				g.Assert(perm.Push).Equal(true)
+			})
 			g.It("Should return error, when repo is not exist", func() {
 				_, err := gitlab.Perm(&user, "not-existed", "not-existed")
 

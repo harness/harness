@@ -3,6 +3,7 @@ package datastore
 import (
 	"database/sql"
 	"os"
+	"time"
 
 	"github.com/CiscoCloud/drone/shared/envconfig"
 	"github.com/CiscoCloud/drone/store"
@@ -66,12 +67,23 @@ func Open(driver, config string) *sql.DB {
 		log.Errorln(err)
 		log.Fatalln("database connection failed")
 	}
+	if driver == "mysql" {
+		// per issue https://github.com/go-sql-driver/mysql/issues/257
+		db.SetMaxIdleConns(0)
+	}
+
 	setupMeddler(driver)
+
+	if err := pingDatabase(db); err != nil {
+		log.Errorln(err)
+		log.Fatalln("database ping attempts failed")
+	}
 
 	if err := setupDatabase(driver, db); err != nil {
 		log.Errorln(err)
 		log.Fatalln("migration failed")
 	}
+	cleanupDatabase(db)
 	return db
 }
 
@@ -90,6 +102,21 @@ func openTest() *sql.DB {
 	return Open(driver, config)
 }
 
+// helper function to ping the database with backoff to ensure
+// a connection can be established before we proceed with the
+// database setup and migration.
+func pingDatabase(db *sql.DB) (err error) {
+	for i := 0; i < 30; i++ {
+		err = db.Ping()
+		if err == nil {
+			return
+		}
+		log.Infof("database ping failed. retry in 1s")
+		time.Sleep(time.Second)
+	}
+	return
+}
+
 // helper function to setup the databsae by performing
 // automated database migration steps.
 func setupDatabase(driver string, db *sql.DB) error {
@@ -100,6 +127,13 @@ func setupDatabase(driver string, db *sql.DB) error {
 	}
 	_, err := migrate.Exec(db, driver, migrations, migrate.Up)
 	return err
+}
+
+// helper function to avoid stuck jobs when Drone unexpectedly
+// restarts. This is a temp fix for https://github.com/drone/drone/issues/1195
+func cleanupDatabase(db *sql.DB) {
+	db.Exec("update builds set build_status = 'error' where build_status IN ('pending','running')")
+	db.Exec("update jobs set job_status = 'error' where job_status IN ('pending','running')")
 }
 
 // helper function to setup the meddler default driver

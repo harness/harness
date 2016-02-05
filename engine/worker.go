@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/CiscoCloud/drone/shared/docker"
@@ -65,6 +66,9 @@ func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 	w.build, err = docker.Run(w.client, conf, name)
 	if err != nil {
 		return 1, err
+	}
+	if w.build.State.OOMKilled {
+		return 1, fmt.Errorf("OOMKill received")
 	}
 	return w.build.State.ExitCode, err
 }

@@ -11,8 +11,8 @@ import (
 // repository structure to the common Drone repository structure.
 func convertRepo(from *Repo) *model.Repo {
 	repo := model.Repo{
-		Owner:     from.Owner.Login,
-		Name:      from.Name,
+		Owner:     strings.Split(from.FullName, "/")[0],
+		Name:      strings.Split(from.FullName, "/")[1],
 		FullName:  from.FullName,
 		Link:      from.Links.Html.Href,
 		IsPrivate: from.IsPrivate,
@@ -93,8 +93,8 @@ func cloneLink(repo Repo) string {
 // repository structure to the simplified Drone repository structure.
 func convertRepoLite(from *Repo) *model.RepoLite {
 	return &model.RepoLite{
-		Owner:    from.Owner.Login,
-		Name:     from.Name,
+		Owner:    strings.Split(from.FullName, "/")[0],
+		Name:     strings.Split(from.FullName, "/")[1],
 		FullName: from.FullName,
 		Avatar:   from.Owner.Links.Avatar.Href,
 	}

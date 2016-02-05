@@ -23,6 +23,7 @@ The build configuration options:
 * `privileged` - if true, runs the container with extended privileges [1]
 * `volumes` - list of bind mounted volumes on the host machine [1]
 * `net` - sets the container [network mode](https://docs.docker.com/articles/networking/#container-networking) [1]
+* `extra_hosts` - list of hostname mappings added to `/etc/hosts`
 * `commands` - list of build commands
 
 [1] Some build options are disabled for security reasons, including `volumes`, `privileged` and `net`. To enable these options, a system administrator must white-list your repository as trusted. This can be done via the repository settings screen.
@@ -47,4 +48,5 @@ image: index.docker.io/library/golang:1.4
 
 ## Skipping builds
 
-Skip a build by including the text `[CI SKIP]` in your commit message.
+Skip a build by including any combination of `ci` and `skip` wrapped in square brackets
+in your commit message. Examples: `[skip CI]` `[ci skip]`

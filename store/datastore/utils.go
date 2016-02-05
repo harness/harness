@@ -47,7 +47,7 @@ func toList(listof []*model.RepoLite) (string, []interface{}) {
 	var qs = make([]string, size, size)
 	var in = make([]interface{}, size, size)
 	for i, repo := range listof {
-		qs[i] = "$" + strconv.Itoa(i+1)
+		qs[i] = "?"
 		in[i] = repo.FullName
 	}
 	return strings.Join(qs, ","), in

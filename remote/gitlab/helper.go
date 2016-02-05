@@ -1,24 +1,29 @@
 package gitlab
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"net/url"
 	"strconv"
 
-	"github.com/Bugagazavr/go-gitlab-client"
+	"github.com/drone/drone/remote/gitlab/client"
+)
+
+const (
+	gravatarBase = "https://www.gravatar.com/avatar"
 )
 
 // NewClient is a helper function that returns a new GitHub
 // client using the provided OAuth token.
-func NewClient(url, accessToken string, skipVerify bool) *gogitlab.Gitlab {
-	client := gogitlab.NewGitlabCert(url, "/api/v3", accessToken, skipVerify)
-	client.Bearer = true
+func NewClient(url, accessToken string, skipVerify bool) *client.Client {
+	client := client.New(url, "/api/v3", accessToken, skipVerify)
 	return client
 }
 
 // IsRead is a helper function that returns true if the
 // user has Read-only access to the repository.
-func IsRead(proj *gogitlab.Project) bool {
+func IsRead(proj *client.Project) bool {
 	var user = proj.Permissions.ProjectAccess
 	var group = proj.Permissions.GroupAccess
 
@@ -36,7 +41,7 @@ func IsRead(proj *gogitlab.Project) bool {
 
 // IsWrite is a helper function that returns true if the
 // user has Read-Write access to the repository.
-func IsWrite(proj *gogitlab.Project) bool {
+func IsWrite(proj *client.Project) bool {
 	var user = proj.Permissions.ProjectAccess
 	var group = proj.Permissions.GroupAccess
 
@@ -52,7 +57,7 @@ func IsWrite(proj *gogitlab.Project) bool {
 
 // IsAdmin is a helper function that returns true if the
 // user has Admin access to the repository.
-func IsAdmin(proj *gogitlab.Project) bool {
+func IsAdmin(proj *client.Project) bool {
 	var user = proj.Permissions.ProjectAccess
 	var group = proj.Permissions.GroupAccess
 
@@ -80,13 +85,25 @@ func ns(owner, name string) string {
 	return fmt.Sprintf("%s%%2F%s", owner, name)
 }
 
-func GetUserEmail(client *gogitlab.Gitlab, defaultURL string) (*gogitlab.Gitlab, error) {
-	return client, nil
+func GetUserAvatar(email string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(email))
+
+	return fmt.Sprintf(
+		"%s/%v.jpg?s=%s",
+		gravatarBase,
+		hex.EncodeToString(hasher.Sum(nil)),
+		"128",
+	)
 }
 
-func GetProjectId(r *Gitlab, client *gogitlab.Gitlab, owner, name string) (projectId string, err error) {
+func GetUserEmail(c *client.Client, defaultURL string) (*client.Client, error) {
+	return c, nil
+}
+
+func GetProjectId(r *Gitlab, c *client.Client, owner, name string) (projectId string, err error) {
 	if r.Search {
-		_projectId, err := client.SearchProjectId(owner, name)
+		_projectId, err := c.SearchProjectId(owner, name)
 		if err != nil || _projectId == 0 {
 			return "", err
 		}

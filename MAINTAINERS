@@ -1,0 +1,67 @@
+[org.core]
+
+    people = [
+        "bradrydzewski"
+    ]
+
+[org.plugins]
+
+    people = [
+        "bradrydzewski",
+        "Bugagazavr",
+        "donny-dont",
+        "jackspirou",
+        "msteinert",
+        "nlf",
+        "tboerger",
+    ]
+
+[org.python]
+
+    people = [
+        "bradrydzewski",
+        "msteinert",
+        "gtaylor",
+    ]
+
+[org.node]
+
+    people = [
+        "bradrydzewski",
+        "nlf",
+    ]
+
+[people]
+
+    [people.bradrydzewski]
+        name = "Brad Rydzewski"
+        email = "brad@drone.io"
+        login = "bradrydzewski"
+
+    [people.Bugagazavr]
+        login = "Bugagazavr"
+
+    [people.donny-dont]
+        name = "Don Olmstead"
+        login = "donny-dont"
+
+    [people.gtaylor]
+        name = "Greg Taylor"
+        login = "gtaylor"
+
+    [people.jackspirou]
+        name = "Jack Spirou"
+        login = "jackspirou"
+        email = "jack@spirou.io"
+
+    [people.msteinert]
+        name = "Mike Steinert"
+        login = "msteinert"
+
+    [people.nlf]
+        name = "Nathan LaFreniere"
+        login = "nlf"
+
+    [people.tboerger]
+        name = "Thomas Boerger"
+        login = "tboerger"
