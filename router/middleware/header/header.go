@@ -25,6 +25,7 @@ func Options(c *gin.Context) {
 	if c.Request.Method != "OPTIONS" {
 		c.Next()
 	} else {
+		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Authorization")
 		c.Header("Allow", "HEAD,GET,POST,PUT,PATCH,DELETE,OPTIONS")
