@@ -51,7 +51,7 @@ publish:
 A subset of bash string substitution operations are emulated:
 
 * `$$param` parameter substitution
-* `$${param}` parameter substitution (same as above) 
+* `$${param}` parameter substitution (same as above)
 * `"$$param"` parameter substitution with escaping
 * `$${param:pos}` parameter substition with substring
 * `$${param:pos:len}` parameter substition with substring
@@ -59,3 +59,44 @@ A subset of bash string substitution operations are emulated:
 * `$${param##prefix}` parameter substition with prefix removal
 * `$${param%%suffix}` parameter substition with suffix removal
 * `$${param/old/new}` parameter substition with find and replace
+
+## Caveats to Interpolation
+Due to security concerns, there are certain `conditions` in the Drone CI ecosystem where the Drone will not swap variables for values. An example of this condition, and very specifically, is the `pull_request` condition:
+
+Tracking details: https://github.com/drone/drone/issues/1250
+
+#### Details
+`.drone.yml`
+```yaml
+build:
+  always_run:
+    image: <image_name>
+    commands:
+      - export KEY_NAME="$$OS_KEY_NAME"
+      - env | sort
+  pull_requests:
+    image: <image_name>
+    when:
+      event: pull_request
+    commands:
+       - export KEY_NAME="$$OS_KEY_NAME"
+       - env | sort
+```
+
+`secrets.yaml`
+```yaml
+environment:
+  - OS_KEY_NAME=BOOM_GOES_THE_DYNAMITE
+```
+
+Build log for <b>`push`</b> (labeled as: `always_runs`):
+```
+$ env | sort
+OS_KEY_NAME=BOOM_GOES_THE_DYNAMITE
+```
+
+Build log for <b>`pull_request`</b> (labeled as: `pull_requests`):
+```
+$ env | sort
+OS_KEY_NAME=7OS_KEY_NAME
+```
