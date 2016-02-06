@@ -73,6 +73,44 @@ func GetURL(r *http.Request) string {
 	return GetScheme(r) + "://" + GetHost(r)
 }
 
+// NormalizePath is a helper function that changes the path,
+// so that router can work around this gin issue:
+// https://github.com/gin-gonic/gin/issues/388
+func NormalizePath(path string) string {
+	parts := strings.Split(path, "/")[1:]
+	switch parts[0] {
+	case "settings", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
+		return path // no-op
+	default:
+
+		if len(parts) > 2 && parts[2] != "settings" {
+			parts = append(parts[:2], append([]string{"builds"}, parts[2:]...)...)
+		}
+
+		// prefix the URL with /repo so that it
+		// can be effectively routed.
+		parts = append([]string{"", "repos"}, parts...)
+
+		// reconstruct the path
+		return strings.Join(parts, "/")
+	}
+}
+
+// DenormalizePath is an inverse of NormalizePath, so that
+// we can retrieve the original request path.
+func DenormalizePath(path string) string {
+	parts := strings.Split(path, "/")[1:]
+	if parts[0] != "repos" {
+		return path
+	}
+	parts = parts[1:]
+	if len(parts) > 2 && parts[2] == "builds" {
+		parts = append(parts[:2], parts[3:]...)
+	}
+	parts = append([]string{""}, parts...)
+	return strings.Join(parts, "/")
+}
+
 // GetCookie retrieves and verifies the cookie value.
 func GetCookie(r *http.Request, name string) (value string) {
 	cookie, err := r.Cookie(name)

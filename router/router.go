@@ -2,7 +2,6 @@ package router
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/drone/drone/router/middleware/location"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/router/middleware/token"
+	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/static"
 	"github.com/drone/drone/template"
 )
@@ -161,25 +161,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 // issue with gin. https://github.com/gin-gonic/gin/issues/388
 func normalize(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		parts := strings.Split(r.URL.Path, "/")[1:]
-		switch parts[0] {
-		case "settings", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
-			// no-op
-		default:
-
-			if len(parts) > 2 && parts[2] != "settings" {
-				parts = append(parts[:2], append([]string{"builds"}, parts[2:]...)...)
-			}
-
-			// prefix the URL with /repo so that it
-			// can be effectively routed.
-			parts = append([]string{"", "repos"}, parts...)
-
-			// reconstruct the path
-			r.URL.Path = strings.Join(parts, "/")
-		}
-
+		r.URL.Path = httputil.NormalizePath(r.URL.Path)
 		h.ServeHTTP(w, r)
 	})
 }
