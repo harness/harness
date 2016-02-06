@@ -5,6 +5,7 @@ type PushHook struct {
 	Before  string `json:"before"`
 	After   string `json:"after"`
 	Compare string `json:"compare_url"`
+	RefType string `json:"ref_type"`
 
 	Pusher struct {
 		Name     string `json:"name"`

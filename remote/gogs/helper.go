@@ -66,13 +66,29 @@ func buildFromPush(hook *PushHook) *model.Build {
 		hook.Repo.Url,
 		fixMalformedAvatar(hook.Sender.Avatar),
 	)
+
+	eventType := "Undefined"
+	message := "No message"
+
+	switch {
+	case hook.RefType == "tag":
+		eventType = model.EventTag
+		message = "Create Tag " + hook.Ref
+	case hook.RefType == "branch":
+		eventType = model.EventPush
+		message = "Create Branch " + hook.Ref
+	default:
+		eventType = model.EventPush
+		message = hook.Commits[0].Message
+	}
+
 	return &model.Build{
-		Event:     model.EventPush,
+		Event:     eventType,
 		Commit:    hook.After,
 		Ref:       hook.Ref,
 		Link:      hook.Compare,
 		Branch:    strings.TrimPrefix(hook.Ref, "refs/heads/"),
-		Message:   hook.Commits[0].Message,
+		Message:   message,
 		Avatar:    avatar,
 		Author:    hook.Sender.Login,
 		Timestamp: time.Now().UTC().Unix(),
