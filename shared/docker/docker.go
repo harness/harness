@@ -2,8 +2,6 @@ package docker
 
 import (
 	"errors"
-	"io"
-	"io/ioutil"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/samalba/dockerclient"
@@ -79,57 +77,21 @@ func Wait(client dockerclient.Client, name string) (*dockerclient.ContainerInfo,
 		client.KillContainer(name, "9")
 	}()
 
-	errc := make(chan error, 1)
-	infoc := make(chan *dockerclient.ContainerInfo, 1)
-	go func() {
-		// options to fetch the stdout and stderr logs
-		// by tailing the output.
-		logOptsTail := &dockerclient.LogOptions{
-			Follow: true,
-			Stdout: true,
-			Stderr: true,
+	for attempts := 0; attempts < 5; attempts++ {
+		done := client.Wait(name)
+		<-done
+
+		info, err := client.InspectContainer(name)
+		if err != nil {
+			return nil, err
 		}
 
-		for attempts := 0; attempts < 5; attempts++ {
-			if attempts > 0 {
-				// When resuming the stream, only grab the last line when starting
-				// the tailing.
-				logOptsTail.Tail = 1
-			}
-
-			// blocks and waits for the container to finish
-			// by streaming the logs (to /dev/null). Ideally
-			// we could use the `wait` function instead
-			rc, err := client.ContainerLogs(name, logOptsTail)
-			if err != nil {
-				errc <- err
-				return
-			}
-			io.Copy(ioutil.Discard, rc)
-			rc.Close()
-
-			info, err := client.InspectContainer(name)
-			if err != nil {
-				errc <- err
-				return
-			}
-
-			if !info.State.Running {
-				// The container is no longer running, there should be no more logs to tail.
-				infoc <- info
-				return
-			}
-
-			log.Debugf("Attempting to resume log tailing after %d attempts.\n", attempts)
+		if !info.State.Running {
+			return info, nil
 		}
 
-		errc <- errors.New("Maximum number of attempts made while tailing logs.")
-	}()
-
-	select {
-	case info := <-infoc:
-		return info, nil
-	case err := <-errc:
-		return nil, err
+		log.Debugf("attempting to resume waiting after %d attempts.\n", attempts)
 	}
+
+	return nil, errors.New("reached maximum wait attempts")
 }
