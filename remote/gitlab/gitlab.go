@@ -101,6 +101,28 @@ func (g *Gitlab) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 	if err != nil {
 		return nil, false, err
 	}
+
+	if len(g.AllowedOrgs) != 0 {
+		groups, err := client.AllGroups()
+		if err != nil {
+			return nil, false, fmt.Errorf("Could not check org membership. %s", err)
+		}
+
+		var member bool
+		for _, group := range groups {
+			for _, allowedOrg := range g.AllowedOrgs {
+				if group.Path == allowedOrg {
+					member = true
+					break
+				}
+			}
+		}
+
+		if !member {
+			return nil, false, fmt.Errorf("User does not belong to correct group. Must belong to %v", g.AllowedOrgs)
+		}
+	}
+
 	user := &model.User{}
 	user.Login = login.Username
 	user.Email = login.Email
@@ -113,7 +135,7 @@ func (g *Gitlab) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 		user.Avatar = g.URL + "/" + login.AvatarUrl
 	}
 
-	return user, true, nil
+	return user, g.Open, nil
 }
 
 func (g *Gitlab) Auth(token, secret string) (string, error) {
@@ -452,25 +474,6 @@ func (g *Gitlab) Oauth2Transport(r *http.Request) *oauth2.Transport {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: g.SkipVerify},
 		},
 	}
-}
-
-// Accessor method, to allowed remote organizations field.
-func (g *Gitlab) GetOrgs() []string {
-	return g.AllowedOrgs
-}
-
-// Accessor method, to open field.
-func (g *Gitlab) GetOpen() bool {
-	return g.Open
-}
-
-// return default scope for GitHub
-func (g *Gitlab) Scope() string {
-	return DefaultScope
-}
-
-func (g *Gitlab) String() string {
-	return "gitlab"
 }
 
 const (
