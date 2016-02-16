@@ -16,7 +16,12 @@ func NewServer() *httptest.Server {
 		// evaluate the path to serve a dummy data file
 		switch r.URL.Path {
 		case "/api/v3/projects":
-			w.Write(projectsPayload)
+			if r.URL.Query().Get("archived") == "false" {
+				w.Write(notArchivedProjectsPayload)
+			} else {
+				w.Write(allProjectsPayload)
+			}
+
 			return
 		case "/api/v3/projects/diaspora/diaspora-client":
 			w.Write(project4Paylod)

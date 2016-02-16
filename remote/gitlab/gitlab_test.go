@@ -32,6 +32,25 @@ func Test_Gitlab(t *testing.T) {
 
 	g := goblin.Goblin(t)
 	g.Describe("Gitlab Plugin", func() {
+		// Test projects method
+		g.Describe("AllProjects", func() {
+			g.It("Should return only non-archived projects is hidden", func() {
+				gitlab.HideArchives = true
+				_projects, err := gitlab.Repos(&user)
+
+				g.Assert(err == nil).IsTrue()
+				g.Assert(len(_projects)).Equal(1)
+			})
+
+			g.It("Should return all the projects", func() {
+				gitlab.HideArchives = false
+				_projects, err := gitlab.Repos(&user)
+
+				g.Assert(err == nil).IsTrue()
+				g.Assert(len(_projects)).Equal(2)
+			})
+		})
+
 		// Test repository method
 		g.Describe("Repo", func() {
 			g.It("Should return valid repo", func() {

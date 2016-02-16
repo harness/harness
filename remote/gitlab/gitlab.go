@@ -23,15 +23,16 @@ const (
 )
 
 type Gitlab struct {
-	URL         string
-	Client      string
-	Secret      string
-	AllowedOrgs []string
-	CloneMode   string
-	Open        bool
-	PrivateMode bool
-	SkipVerify  bool
-	Search      bool
+	URL         		string
+	Client      		string
+	Secret      		string
+	AllowedOrgs 		[]string
+	CloneMode   		string
+	Open        		bool
+	PrivateMode 		bool
+	SkipVerify  		bool
+	HideArchives		bool
+	Search      		bool
 }
 
 func Load(env envconfig.Env) *Gitlab {
@@ -50,6 +51,7 @@ func Load(env envconfig.Env) *Gitlab {
 	gitlab.Secret = params.Get("client_secret")
 	gitlab.AllowedOrgs = params["orgs"]
 	gitlab.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))
+	gitlab.HideArchives, _ = strconv.ParseBool(params.Get("hide_archives"))
 	gitlab.Open, _ = strconv.ParseBool(params.Get("open"))
 
 	switch params.Get("clone_mode") {
@@ -170,7 +172,7 @@ func (g *Gitlab) Repos(u *model.User) ([]*model.RepoLite, error) {
 
 	var repos = []*model.RepoLite{}
 
-	all, err := client.AllProjects()
+	all, err := client.AllProjects(g.HideArchives)
 	if err != nil {
 		return repos, err
 	}
