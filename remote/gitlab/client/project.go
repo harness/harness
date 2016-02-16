@@ -15,12 +15,12 @@ const (
 )
 
 // Get a list of all projects owned by the authenticated user.
-func (g *Client) AllProjects() ([]*Project, error) {
+func (g *Client) AllProjects(hide_archives bool) ([]*Project, error) {
 	var per_page = 100
 	var projects []*Project
 
 	for i := 1; true; i++ {
-		contents, err := g.Projects(i, per_page)
+		contents, err := g.Projects(i, per_page, hide_archives)
 		if err != nil {
 			return projects, err
 		}
@@ -42,12 +42,17 @@ func (g *Client) AllProjects() ([]*Project, error) {
 }
 
 // Get a list of projects owned by the authenticated user.
-func (c *Client) Projects(page int, per_page int) ([]*Project, error) {
-
-	url, opaque := c.ResourceUrl(projectsUrl, nil, QMap{
+func (c *Client) Projects(page int, per_page int, hide_archives bool) ([]*Project, error) {
+	projectsOptions := QMap{
 		"page":     strconv.Itoa(page),
 		"per_page": strconv.Itoa(per_page),
-	})
+	}
+
+	if hide_archives {
+		projectsOptions["archived"] = "false"
+	}
+
+	url, opaque := c.ResourceUrl(projectsUrl, nil, projectsOptions)
 
 	var projects []*Project
 
