@@ -55,6 +55,7 @@ type Project struct {
 type Namespace struct {
 	Id   int    `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
+	Path string `json:"path,omitempty"`
 }
 
 type Person struct {
