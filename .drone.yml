@@ -8,7 +8,7 @@ build:
   commands:
     - make deps gen
     - make test test_postgres test_mysql
-    - make build build_static deb docs
+    - make build build_static deb
 
 compose:
   postgres:
