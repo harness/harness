@@ -1,4 +1,4 @@
-Thank you for taking the time to use Drone and file an issue or feature request. Before filing an issue please ensure the following boxes are checked, if application:
+Thank you for taking the time to use Drone and file an issue or feature request. Before filing an issue please ensure the following boxes are checked, if applicable:
 
 - [ ] I have searched for existing issues
 - [ ] I have discussed the issue with the community at https://gitter.im/drone/drone
