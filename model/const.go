@@ -5,6 +5,7 @@ const (
 	EventPull   = "pull_request"
 	EventTag    = "tag"
 	EventDeploy = "deployment"
+	EventBranch = "branch"
 )
 
 const (
