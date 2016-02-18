@@ -171,7 +171,6 @@ func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 		buildRef = b.Ref
 	}
 	cfg, err := client.GetFile(r.Owner, r.Name, buildRef, f)
-
 	return cfg, err
 }
 
