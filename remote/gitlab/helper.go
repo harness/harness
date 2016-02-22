@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/drone/drone/remote/gitlab/client"
 )
@@ -95,6 +96,14 @@ func GetUserAvatar(email string) string {
 		hex.EncodeToString(hasher.Sum(nil)),
 		"128",
 	)
+}
+
+func ExtractFromPath(str string) (string, string, error) {
+	s := strings.Split(str, "/")
+	if len(s) < 2 {
+		return "", "", fmt.Errorf("Minimum match not found")
+	}
+	return s[0], s[1], nil
 }
 
 func GetUserEmail(c *client.Client, defaultURL string) (*client.Client, error) {

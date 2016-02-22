@@ -384,12 +384,15 @@ func mergeRequest(parsed *client.HookPayload, req *http.Request) (*model.Repo, *
 
 func push(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
 	repo := &model.Repo{}
-	repo.Owner = req.FormValue("owner")
-	repo.Name = req.FormValue("name")
 
 	// Since gitlab 8.5, used project instead repository key
 	// see https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/web_hooks/web_hooks.md#web-hooks
 	if project := parsed.Project; project != nil {
+		var err error
+		if repo.Owner, repo.Name, err = ExtractFromPath(project.PathWithNamespace); err != nil {
+			return nil, nil, err
+		}
+
 		repo.Avatar = project.AvatarUrl
 		repo.Link = project.WebUrl
 		repo.Clone = project.GitHttpUrl
@@ -405,6 +408,8 @@ func push(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Bu
 			repo.IsPrivate = false
 		}
 	} else if repository := parsed.Repository; repository != nil {
+		repo.Owner = req.FormValue("owner")
+		repo.Name = req.FormValue("name")
 		repo.Link = repository.URL
 		repo.Clone = repository.GitHttpUrl
 		repo.Branch = "master"
