@@ -383,26 +383,44 @@ func mergeRequest(parsed *client.HookPayload, req *http.Request) (*model.Repo, *
 }
 
 func push(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
-	var cloneUrl = parsed.Repository.GitHttpUrl
-
 	repo := &model.Repo{}
 	repo.Owner = req.FormValue("owner")
 	repo.Name = req.FormValue("name")
-	repo.FullName = fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
-	repo.Link = parsed.Repository.URL
-	repo.Clone = cloneUrl
-	repo.Branch = "master"
 
-	switch parsed.Repository.VisibilityLevel {
-	case 0:
-		repo.IsPrivate = true
-	case 10:
-		repo.IsPrivate = true
-	case 20:
-		repo.IsPrivate = false
+	// Since gitlab 8.5, used project instead repository key
+	// see https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/web_hooks/web_hooks.md#web-hooks
+	if project := parsed.Project; project != nil {
+		repo.Avatar = project.AvatarUrl
+		repo.Link = project.WebUrl
+		repo.Clone = project.GitHttpUrl
+		repo.FullName = project.PathWithNamespace
+		repo.Branch = project.DefaultBranch
+
+		switch project.VisibilityLevel {
+		case 0:
+			repo.IsPrivate = true
+		case 10:
+			repo.IsPrivate = true
+		case 20:
+			repo.IsPrivate = false
+		}
+	} else if repository := parsed.Repository; repository != nil {
+		repo.Link = repository.URL
+		repo.Clone = repository.GitHttpUrl
+		repo.Branch = "master"
+		repo.FullName = fmt.Sprintf("%s/%s", req.FormValue("owner"), req.FormValue("name"))
+
+		switch repository.VisibilityLevel {
+		case 0:
+			repo.IsPrivate = true
+		case 10:
+			repo.IsPrivate = true
+		case 20:
+			repo.IsPrivate = false
+		}
+	} else {
+		return nil, nil, fmt.Errorf("No project/repository keys given")
 	}
-
-	repo.FullName = fmt.Sprintf("%s/%s", req.FormValue("owner"), req.FormValue("name"))
 
 	build := &model.Build{}
 	build.Event = model.EventPush
