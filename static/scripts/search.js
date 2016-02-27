@@ -2,7 +2,7 @@ var repoExpr = /.+\/.+/;
 
 var remoteRepos = new Bloodhound({
     queryTokenizer: Bloodhound.tokenizers.whitespace,
-    datumTokenizer: Bloodhound.tokenizers.obj.whitespace("full_name"),
+    datumTokenizer: Bloodhound.tokenizers.obj.nonword("full_name"),
 
 	identify: function(obj) { return obj.full_name; },
 	prefetch: '/api/user/repos/remote'
