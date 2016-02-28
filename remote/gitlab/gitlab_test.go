@@ -189,20 +189,40 @@ func Test_Gitlab(t *testing.T) {
 				})
 			})
 
-			g.It("Should parse merge request hook", func() {
-				req, _ := http.NewRequest(
-					"POST",
-					"http://example.com/api/hook?owner=diaspora&name=diaspora-client",
-					bytes.NewReader(testdata.MergeRequestHook),
-				)
+			g.Describe("Merge request hook", func() {
+				g.It("Should parse merge request hook", func() {
+					req, _ := http.NewRequest(
+						"POST",
+						"http://example.com/api/hook?owner=diaspora&name=diaspora-client",
+						bytes.NewReader(testdata.MergeRequestHook),
+					)
 
-				repo, build, err := gitlab.Hook(req)
+					repo, build, err := gitlab.Hook(req)
 
-				g.Assert(err == nil).IsTrue()
-				g.Assert(repo.Owner).Equal("diaspora")
-				g.Assert(repo.Name).Equal("diaspora-client")
+					g.Assert(err == nil).IsTrue()
+					g.Assert(repo.Avatar).Equal("http://example.com/uploads/project/avatar/555/Outh-20-Logo.jpg")
+					g.Assert(repo.Branch).Equal("develop")
+					g.Assert(repo.Owner).Equal("awesome_space")
+					g.Assert(repo.Name).Equal("awesome_project")
 
-				g.Assert(build.Title).Equal("MS-Viewport")
+					g.Assert(build.Title).Equal("MS-Viewport")
+				})
+
+				g.It("Should parse legacy merge request hook", func() {
+					req, _ := http.NewRequest(
+						"POST",
+						"http://example.com/api/hook?owner=diaspora&name=diaspora-client",
+						bytes.NewReader(testdata.LegacyMergeRequestHook),
+					)
+
+					repo, build, err := gitlab.Hook(req)
+
+					g.Assert(err == nil).IsTrue()
+					g.Assert(repo.Owner).Equal("diaspora")
+					g.Assert(repo.Name).Equal("diaspora-client")
+
+					g.Assert(build.Title).Equal("MS-Viewport")
+				})
 			})
 		})
 	})

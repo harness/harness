@@ -348,36 +348,87 @@ func (g *Gitlab) Hook(req *http.Request) (*model.Repo, *model.Build, error) {
 func mergeRequest(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
 
 	repo := &model.Repo{}
-	repo.Owner = req.FormValue("owner")
-	repo.Name = req.FormValue("name")
-	repo.FullName = fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
-	repo.Link = parsed.ObjectAttributes.Target.WebUrl
-	repo.Clone = parsed.ObjectAttributes.Target.HttpUrl
-	repo.Branch = "master"
+
+	obj := parsed.ObjectAttributes
+	if obj == nil {
+		return nil, nil, fmt.Errorf("object_attributes key expected in merge request hook")
+	}
+
+	target := obj.Target
+	source := obj.Source
+
+	if target == nil && source == nil {
+		return nil, nil, fmt.Errorf("target and source keys expected in merge request hook")
+	} else if target == nil {
+		return nil, nil, fmt.Errorf("target key expected in merge request hook")
+	} else if source == nil {
+		return nil, nil, fmt.Errorf("source key exptected in merge request hook")
+	}
+
+	if target.PathWithNamespace != "" {
+		var err error
+		if repo.Owner, repo.Name, err = ExtractFromPath(target.PathWithNamespace); err != nil {
+			return nil, nil, err
+		}
+		repo.FullName = target.PathWithNamespace
+	} else {
+		repo.Owner = req.FormValue("owner")
+		repo.Name = req.FormValue("name")
+		repo.FullName = fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
+	}
+
+	repo.Link = target.WebUrl
+
+	if target.GitHttpUrl != "" {
+		repo.Clone = target.GitHttpUrl
+	} else {
+		repo.Clone = target.HttpUrl
+	}
+
+	if target.DefaultBranch != "" {
+		repo.Branch = target.DefaultBranch
+	} else {
+		repo.Branch = "master"
+	}
+
+	if target.AvatarUrl != "" {
+		repo.Avatar = target.AvatarUrl
+	}
 
 	build := &model.Build{}
 	build.Event = "pull_request"
-	build.Message = parsed.ObjectAttributes.LastCommit.Message
-	build.Commit = parsed.ObjectAttributes.LastCommit.Id
-	//build.Remote = parsed.ObjectAttributes.Source.HttpUrl
 
-	if parsed.ObjectAttributes.SourceProjectId == parsed.ObjectAttributes.TargetProjectId {
-		build.Ref = fmt.Sprintf("refs/heads/%s", parsed.ObjectAttributes.SourceBranch)
-	} else {
-		build.Ref = fmt.Sprintf("refs/merge-requests/%d/head", parsed.ObjectAttributes.IId)
+	lastCommit := obj.LastCommit
+	if lastCommit == nil {
+		return nil, nil, fmt.Errorf("last_commit key expected in merge request hook")
 	}
 
-	build.Branch = parsed.ObjectAttributes.SourceBranch
-	// build.Timestamp = parsed.ObjectAttributes.LastCommit.Timestamp
+	build.Message = lastCommit.Message
+	build.Commit = lastCommit.Id
+	//build.Remote = parsed.ObjectAttributes.Source.HttpUrl
 
-	build.Author = parsed.ObjectAttributes.LastCommit.Author.Name
-	build.Email = parsed.ObjectAttributes.LastCommit.Author.Email
+	if obj.SourceProjectId == obj.TargetProjectId {
+		build.Ref = fmt.Sprintf("refs/heads/%s", obj.SourceBranch)
+	} else {
+		build.Ref = fmt.Sprintf("refs/merge-requests/%d/head", obj.IId)
+	}
+
+	build.Branch = obj.SourceBranch
+
+	author := lastCommit.Author
+	if author == nil {
+		return nil, nil, fmt.Errorf("author key expected in merge request hook")
+	}
+
+	build.Author = author.Name
+	build.Email = author.Email
+
 	if len(build.Email) != 0 {
 		build.Avatar = GetUserAvatar(build.Email)
 	}
 
-	build.Title = parsed.ObjectAttributes.Title
-	build.Link = parsed.ObjectAttributes.Url
+	build.Title = obj.Title
+	build.Link = obj.Url
 
 	return repo, build, nil
 }
