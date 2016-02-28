@@ -8,6 +8,7 @@ import (
 	"github.com/drone/drone/remote/github"
 	"github.com/drone/drone/remote/gitlab"
 	"github.com/drone/drone/remote/gogs"
+	"github.com/drone/drone/remote/sryun"
 	"github.com/drone/drone/shared/envconfig"
 
 	log "github.com/Sirupsen/logrus"
@@ -25,6 +26,8 @@ func Load(env envconfig.Env) Remote {
 		return gitlab.Load(env)
 	case "gogs":
 		return gogs.Load(env)
+	case "sryun":
+		return sryun.Load(env)
 
 	default:
 		log.Fatalf("unknown remote driver %s", driver)
