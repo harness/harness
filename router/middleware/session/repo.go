@@ -2,6 +2,7 @@ package session
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
@@ -104,6 +105,8 @@ func Perm(c *gin.Context) *model.Perm {
 }
 
 func SetPerm() gin.HandlerFunc {
+	PUBLIC_MODE := os.Getenv("PUBLIC_MODE")
+
 	return func(c *gin.Context) {
 		user := User(c)
 		repo := Repo(c)
@@ -162,6 +165,11 @@ func SetPerm() gin.HandlerFunc {
 			if err != nil && repo.IsPrivate == false {
 				perm.Pull = true
 			}
+		}
+
+		// all build logs are visible in public mode
+		if PUBLIC_MODE != "" {
+			perm.Pull = true
 		}
 
 		if user != nil {

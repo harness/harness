@@ -1,7 +1,7 @@
 package testdata
 
 // sample repository list
-var projectsPayload = []byte(`
+var allProjectsPayload = []byte(`
 [
 	{
 		"id": 4,
@@ -72,6 +72,47 @@ var projectsPayload = []byte(`
 			"owner_id": 1,
 			"path": "brightbox",
 			"updated_at": "2013-09-30T13:46:02Z"
+		},
+		"archived": true
+	}
+]
+`)
+
+var notArchivedProjectsPayload = []byte(`
+[
+	{
+		"id": 4,
+		"description": null,
+		"default_branch": "master",
+		"public": false,
+		"visibility_level": 0,
+		"ssh_url_to_repo": "git@example.com:diaspora/diaspora-client.git",
+		"http_url_to_repo": "http://example.com/diaspora/diaspora-client.git",
+		"web_url": "http://example.com/diaspora/diaspora-client",
+		"owner": {
+			"id": 3,
+			"name": "Diaspora",
+			"username": "some_user",
+			"created_at": "2013-09-30T13: 46: 02Z"
+		},
+		"name": "Diaspora Client",
+		"name_with_namespace": "Diaspora / Diaspora Client",
+		"path": "diaspora-client",
+		"path_with_namespace": "diaspora/diaspora-client",
+		"issues_enabled": true,
+		"merge_requests_enabled": true,
+		"wiki_enabled": true,
+		"snippets_enabled": false,
+		"created_at": "2013-09-30T13: 46: 02Z",
+		"last_activity_at": "2013-09-30T13: 46: 02Z",
+		"namespace": {
+			"created_at": "2013-09-30T13: 46: 02Z",
+			"description": "",
+			"id": 3,
+			"name": "Diaspora",
+			"owner_id": 1,
+			"path": "diaspora",
+			"updated_at": "2013-09-30T13: 46: 02Z"
 		},
 		"archived": false
 	}

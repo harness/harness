@@ -329,6 +329,11 @@ func (e *engine) runJob(c context.Context, r *Task, updater *updater, client doc
 	info, builderr := docker.Wait(client, name)
 
 	switch {
+	case info.State.Running:
+		// A build unblocked before actually being completed.
+		log.Errorf("incomplete build: %s", name)
+		r.Job.ExitCode = 1
+		r.Job.Status = model.StatusError
 	case info.State.ExitCode == 128:
 		r.Job.ExitCode = info.State.ExitCode
 		r.Job.Status = model.StatusKilled
