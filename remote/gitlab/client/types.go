@@ -64,12 +64,17 @@ type Person struct {
 }
 
 type hProject struct {
-	Name            string `json:"name"`
-	SshUrl          string `json:"ssh_url"`
-	HttpUrl         string `json:"http_url"`
-	VisibilityLevel int    `json:"visibility_level"`
-	WebUrl          string `json:"web_url"`
-	Namespace       string `json:"namespace"`
+	Name              string `json:"name"`
+	SshUrl            string `json:"ssh_url"`
+	HttpUrl           string `json:"http_url"`
+	GitSshUrl         string `json:"git_ssh_url"`
+	GitHttpUrl        string `json:"git_http_url"`
+	AvatarUrl         string `json:"avatar_url"`
+	VisibilityLevel   int    `json:"visibility_level"`
+	WebUrl            string `json:"web_url"`
+	PathWithNamespace string `json:"path_with_namespace"`
+	DefaultBranch     string `json:"default_branch"`
+	Namespace         string `json:"namespace"`
 }
 
 type hRepository struct {
@@ -124,6 +129,7 @@ type HookPayload struct {
 	UserId            int          `json:"user_id,omitempty"`
 	UserName          string       `json:"user_name,omitempty"`
 	ProjectId         int          `json:"project_id,omitempty"`
+	Project           *hProject    `json:"project,omitempty"`
 	Repository        *hRepository `json:"repository,omitempty"`
 	Commits           []hCommit    `json:"commits,omitempty"`
 	TotalCommitsCount int          `json:"total_commits_count,omitempty"`

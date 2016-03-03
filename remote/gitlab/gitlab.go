@@ -372,61 +372,135 @@ func (g *Gitlab) Hook(req *http.Request) (*model.Repo, *model.Build, error) {
 func mergeRequest(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
 
 	repo := &model.Repo{}
-	repo.Owner = req.FormValue("owner")
-	repo.Name = req.FormValue("name")
-	repo.FullName = fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
-	repo.Link = parsed.ObjectAttributes.Target.WebUrl
-	repo.Clone = parsed.ObjectAttributes.Target.HttpUrl
-	repo.Branch = "master"
+
+	obj := parsed.ObjectAttributes
+	if obj == nil {
+		return nil, nil, fmt.Errorf("object_attributes key expected in merge request hook")
+	}
+
+	target := obj.Target
+	source := obj.Source
+
+	if target == nil && source == nil {
+		return nil, nil, fmt.Errorf("target and source keys expected in merge request hook")
+	} else if target == nil {
+		return nil, nil, fmt.Errorf("target key expected in merge request hook")
+	} else if source == nil {
+		return nil, nil, fmt.Errorf("source key exptected in merge request hook")
+	}
+
+	if target.PathWithNamespace != "" {
+		var err error
+		if repo.Owner, repo.Name, err = ExtractFromPath(target.PathWithNamespace); err != nil {
+			return nil, nil, err
+		}
+		repo.FullName = target.PathWithNamespace
+	} else {
+		repo.Owner = req.FormValue("owner")
+		repo.Name = req.FormValue("name")
+		repo.FullName = fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
+	}
+
+	repo.Link = target.WebUrl
+
+	if target.GitHttpUrl != "" {
+		repo.Clone = target.GitHttpUrl
+	} else {
+		repo.Clone = target.HttpUrl
+	}
+
+	if target.DefaultBranch != "" {
+		repo.Branch = target.DefaultBranch
+	} else {
+		repo.Branch = "master"
+	}
+
+	if target.AvatarUrl != "" {
+		repo.Avatar = target.AvatarUrl
+	}
 
 	build := &model.Build{}
 	build.Event = "pull_request"
-	build.Message = parsed.ObjectAttributes.LastCommit.Message
-	build.Commit = parsed.ObjectAttributes.LastCommit.Id
-	//build.Remote = parsed.ObjectAttributes.Source.HttpUrl
 
-	if parsed.ObjectAttributes.SourceProjectId == parsed.ObjectAttributes.TargetProjectId {
-		build.Ref = fmt.Sprintf("refs/heads/%s", parsed.ObjectAttributes.SourceBranch)
-	} else {
-		build.Ref = fmt.Sprintf("refs/merge-requests/%d/head", parsed.ObjectAttributes.IId)
+	lastCommit := obj.LastCommit
+	if lastCommit == nil {
+		return nil, nil, fmt.Errorf("last_commit key expected in merge request hook")
 	}
 
-	build.Branch = parsed.ObjectAttributes.SourceBranch
-	// build.Timestamp = parsed.ObjectAttributes.LastCommit.Timestamp
+	build.Message = lastCommit.Message
+	build.Commit = lastCommit.Id
+	//build.Remote = parsed.ObjectAttributes.Source.HttpUrl
 
-	build.Author = parsed.ObjectAttributes.LastCommit.Author.Name
-	build.Email = parsed.ObjectAttributes.LastCommit.Author.Email
+	if obj.SourceProjectId == obj.TargetProjectId {
+		build.Ref = fmt.Sprintf("refs/heads/%s", obj.SourceBranch)
+	} else {
+		build.Ref = fmt.Sprintf("refs/merge-requests/%d/head", obj.IId)
+	}
+
+	build.Branch = obj.SourceBranch
+
+	author := lastCommit.Author
+	if author == nil {
+		return nil, nil, fmt.Errorf("author key expected in merge request hook")
+	}
+
+	build.Author = author.Name
+	build.Email = author.Email
+
 	if len(build.Email) != 0 {
 		build.Avatar = GetUserAvatar(build.Email)
 	}
 
-	build.Title = parsed.ObjectAttributes.Title
-	build.Link = parsed.ObjectAttributes.Url
+	build.Title = obj.Title
+	build.Link = obj.Url
 
 	return repo, build, nil
 }
 
 func push(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Build, error) {
-	var cloneUrl = parsed.Repository.GitHttpUrl
-
 	repo := &model.Repo{}
-	repo.Owner = req.FormValue("owner")
-	repo.Name = req.FormValue("name")
-	repo.FullName = fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
-	repo.Link = parsed.Repository.URL
-	repo.Clone = cloneUrl
-	repo.Branch = "master"
 
-	switch parsed.Repository.VisibilityLevel {
-	case 0:
-		repo.IsPrivate = true
-	case 10:
-		repo.IsPrivate = true
-	case 20:
-		repo.IsPrivate = false
+	// Since gitlab 8.5, used project instead repository key
+	// see https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/web_hooks/web_hooks.md#web-hooks
+	if project := parsed.Project; project != nil {
+		var err error
+		if repo.Owner, repo.Name, err = ExtractFromPath(project.PathWithNamespace); err != nil {
+			return nil, nil, err
+		}
+
+		repo.Avatar = project.AvatarUrl
+		repo.Link = project.WebUrl
+		repo.Clone = project.GitHttpUrl
+		repo.FullName = project.PathWithNamespace
+		repo.Branch = project.DefaultBranch
+
+		switch project.VisibilityLevel {
+		case 0:
+			repo.IsPrivate = true
+		case 10:
+			repo.IsPrivate = true
+		case 20:
+			repo.IsPrivate = false
+		}
+	} else if repository := parsed.Repository; repository != nil {
+		repo.Owner = req.FormValue("owner")
+		repo.Name = req.FormValue("name")
+		repo.Link = repository.URL
+		repo.Clone = repository.GitHttpUrl
+		repo.Branch = "master"
+		repo.FullName = fmt.Sprintf("%s/%s", req.FormValue("owner"), req.FormValue("name"))
+
+		switch repository.VisibilityLevel {
+		case 0:
+			repo.IsPrivate = true
+		case 10:
+			repo.IsPrivate = true
+		case 20:
+			repo.IsPrivate = false
+		}
+	} else {
+		return nil, nil, fmt.Errorf("No project/repository keys given")
 	}
-
-	repo.FullName = fmt.Sprintf("%s/%s", req.FormValue("owner"), req.FormValue("name"))
 
 	build := &model.Build{}
 	build.Event = model.EventPush
