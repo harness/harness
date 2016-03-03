@@ -1,6 +1,8 @@
 package sryun
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/drone/drone/model"
@@ -10,10 +12,6 @@ import (
 )
 
 const (
-	login    = "sysadmin"
-	token    = "SRYUN-ABCD-999"
-	email    = "sysadmin@dataman-inc.com"
-	avatar   = "https://avatars3.githubusercontent.com/u/76609?v=3&s=460"
 	fullName = "leonlee"
 	name     = "docker-2048"
 	repoLink = "https://omdev.riderzen.com:10080/leonlee/docker-2048.git"
@@ -23,11 +21,20 @@ const (
 
 //Sryun model
 type Sryun struct {
-	User *model.User
+	User     *model.User
+	Password string
 }
 
 // Load create Sryun by env, impl of Remote interface
 func Load(env envconfig.Env) *Sryun {
+	log.Infoln("Loading sryun driver...")
+
+	login := env.String("RC_SRY_USER", "sryadmin")
+	password := env.String("RC_SRY_PWD", "sryun-pwd")
+	token := env.String("RC_SRY_TOKEN", "EFDDF4D3-2EB9-400F-BA83-4A9D292A1170")
+	email := env.String("RC_SRY_EMAIL", "sryadmin@dataman-inc.net")
+	avatar := env.String("RC_SRY_AVATAR", "https://avatars3.githubusercontent.com/u/76609?v=3&s=460")
+
 	user := model.User{}
 	user.Token = token
 	user.Login = login
@@ -35,8 +42,12 @@ func Load(env envconfig.Env) *Sryun {
 	user.Avatar = avatar
 
 	sryun := Sryun{
-		User: &user,
+		User:     &user,
+		Password: password,
 	}
+
+	sryunJSON, _ := json.Marshal(sryun)
+	log.Infoln(string(sryunJSON))
 
 	log.Infoln("loaded sryun remote driver")
 
@@ -46,7 +57,15 @@ func Load(env envconfig.Env) *Sryun {
 // Login authenticates the session and returns the
 // remote user details.
 func (sry *Sryun) Login(res http.ResponseWriter, req *http.Request) (*model.User, bool, error) {
-	return sry.User, false, nil
+	username := req.FormValue("username")
+	password := req.FormValue("password")
+
+	log.Infoln("got", username, "/", password)
+
+	if username == sry.User.Login && password == sry.Password {
+		return sry.User, true, nil
+	}
+	return nil, false, errors.New("bad auth")
 }
 
 // Auth authenticates the session and returns the remote user
@@ -64,7 +83,7 @@ func (sry *Sryun) Repo(user *model.User, owner, name string) (*model.Repo, error
 	repo.IsPrivate = true
 	repo.Clone = clone
 	repo.Branch = branch
-	repo.Avatar = avatar
+	repo.Avatar = sry.User.Avatar
 	repo.Kind = model.RepoGit
 
 	return repo, nil
@@ -73,10 +92,10 @@ func (sry *Sryun) Repo(user *model.User, owner, name string) (*model.Repo, error
 // Repos fetches a list of repos from the remote system.
 func (sry *Sryun) Repos(user *model.User) ([]*model.RepoLite, error) {
 	repo := &model.RepoLite{
-		Owner:    login,
+		Owner:    sry.User.Login,
 		Name:     name,
 		FullName: fullName,
-		Avatar:   avatar,
+		Avatar:   sry.User.Avatar,
 	}
 	return []*model.RepoLite{repo}, nil
 }
@@ -85,7 +104,7 @@ func (sry *Sryun) Repos(user *model.User) ([]*model.RepoLite, error) {
 // the remote system for the specified user.
 func (sry *Sryun) Perm(user *model.User, owner, name string) (*model.Perm, error) {
 	m := &model.Perm{
-		Admin: false,
+		Admin: true,
 		Pull:  true,
 		Push:  false,
 	}

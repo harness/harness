@@ -15,6 +15,85 @@ import (
 	"github.com/drone/drone/store"
 )
 
+//SryunLogin login integration with sryun
+func SryunLogin(c *gin.Context) {
+	remote := remote.FromContext(c)
+
+	tmpuser, _, err := remote.Login(c.Writer, c.Request)
+	if err != nil {
+		log.Errorf("cannot authenticate user. %s", err)
+		c.JSON(401, map[string]string{"error": err.Error()})
+		return
+	}
+
+	// get the user from the database
+	u, err := store.GetUserLogin(c, tmpuser.Login)
+	if err != nil {
+		count, err := store.CountUsers(c)
+		if err != nil {
+			log.Errorf("cannot register %s. %s", tmpuser.Login, err)
+			c.JSON(500, map[string]string{"error": err.Error()})
+			return
+		}
+
+		// if self-registration is disabled we should
+		// return a notAuthorized error. the only exception
+		// is if no users exist yet in the system we'll proceed.
+		if count == 0 {
+			// create the user account
+			u = &model.User{}
+			u.Login = tmpuser.Login
+			u.Token = tmpuser.Token
+			u.Secret = tmpuser.Secret
+			u.Email = tmpuser.Email
+			u.Avatar = tmpuser.Avatar
+			u.Hash = "sryun-rnd" // crypto.Rand()
+			u.Admin = true
+
+			// insert the user into the database
+			if err := store.CreateUser(c, u); err != nil {
+				log.Errorf("cannot insert %s. %s", u.Login, err)
+				c.JSON(500, map[string]string{"error": err.Error()})
+				return
+			}
+		}
+	} else {
+
+		// update the user meta data and authorization
+		// data and cache in the datastore.
+		u.Token = tmpuser.Token
+		u.Secret = tmpuser.Secret
+		u.Email = tmpuser.Email
+		u.Avatar = tmpuser.Avatar
+		u.Admin = true
+
+		if err := store.UpdateUser(c, u); err != nil {
+			log.Errorf("cannot update %s. %s", u.Login, err)
+			c.JSON(500, map[string]string{"error": err.Error()})
+			return
+		}
+
+		exp := time.Now().Add(time.Hour * 72).Unix()
+		tk := token.New(token.SessToken, u.Login)
+		log.Infoln("using hash", u.Hash)
+		tokenstr, err := tk.SignExpires(u.Hash, exp)
+		if err != nil {
+			log.Errorf("cannot create token for %s. %s", u.Login, err)
+			c.JSON(500, map[string]string{"error": err.Error()})
+			return
+		}
+		if err == nil {
+			log.Infoln("getting kind")
+			kind, _ := token.Parse(tokenstr, func(t *token.Token) (string, error) {
+				return u.Hash, nil
+			})
+			log.Infoln("get kind", kind)
+		}
+		//httputil.SetCookie(c.Writer, c.Request, "user_sess", tokenstr)
+		c.JSON(200, map[string]string{"token": tokenstr})
+	}
+}
+
 func GetLogin(c *gin.Context) {
 	remote := remote.FromContext(c)
 

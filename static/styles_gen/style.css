@@ -228,7 +228,7 @@ input[type=range]:focus::-ms-fill-upper { background: #367ebd; }
 
 .container.repo_config .row:last-child .col-md-12, .container.repo_secrets .row:last-child .col-md-12 { padding: 0px; }
 
-.container.repo_config .row:nth-last-child(2), .container.repo_secrets .row:nth-last-child(2) { border: none; }
+.container.repo_config .row:nth-last-child(2, 2), .container.repo_secrets .row:nth-last-child(2, 2) { border: none; }
 
 .container.repo_config .col-md-3, .container.repo_secrets .col-md-3 { padding: 30px; padding-left: 0px; max-width: 200px; font-size: 15px; color: #2b303b; }
 

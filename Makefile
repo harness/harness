@@ -5,6 +5,7 @@ PACKAGES = $(shell go list ./... | grep -v /vendor/)
 all: gen build
 
 deps:
+	export GO15VENDOREXPERIMENT=1 
 	go get -u golang.org/x/tools/cmd/cover
 	go get -u golang.org/x/tools/cmd/vet
 	go get -u github.com/kr/vexp
@@ -21,6 +22,7 @@ deps:
 gen: gen_static gen_template gen_migrations
 
 gen_static:
+	export GO15VENDOREXPERIMENT=1 
 	mkdir -p static/docs_gen/api static/docs_gen/build
 	mkdir -p static/docs_gen/api static/docs_gen/plugin
 	mkdir -p static/docs_gen/api static/docs_gen/setup
@@ -28,18 +30,23 @@ gen_static:
 	go generate github.com/drone/drone/static
 
 gen_template:
+	export GO15VENDOREXPERIMENT=1 
 	go generate github.com/drone/drone/template
 
 gen_migrations:
+	export GO15VENDOREXPERIMENT=1 
 	go generate github.com/drone/drone/store/migration
 
 build:
+	export GO15VENDOREXPERIMENT=1 
 	go build
 
 build_static:
+	export GO15VENDOREXPERIMENT=1 
 	go build --ldflags '-extldflags "-static" -X main.build=$(CI_BUILD_NUMBER)' -o drone_static
 
 test:
+	export GO15VENDOREXPERIMENT=1 
 	go test -cover $(PACKAGES)
 
 # docker run --publish=3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes  mysql:5.6.27
