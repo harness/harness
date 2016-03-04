@@ -25,15 +25,16 @@ const (
 )
 
 type Github struct {
-	URL         string
-	API         string
-	Client      string
-	Secret      string
-	Orgs        []string
-	Open        bool
-	PrivateMode bool
-	SkipVerify  bool
-	GitSSH      bool
+	URL          string
+	API          string
+	Client       string
+	Secret       string
+	Orgs         []string
+	Open         bool
+	PrivateMode  bool
+	SkipVerify   bool
+	GitSSH       bool
+	RestrictOrgs bool
 }
 
 func Load(env envconfig.Env) *Github {
@@ -59,6 +60,7 @@ func Load(env envconfig.Env) *Github {
 	github.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))
 	github.Open, _ = strconv.ParseBool(params.Get("open"))
 	github.GitSSH, _ = strconv.ParseBool(params.Get("ssh"))
+	github.RestrictOrgs, _ = strconv.ParseBool(params.Get("restrict_orgs"))
 
 	if github.URL == DefaultURL {
 		github.API = DefaultAPI
@@ -179,7 +181,15 @@ func (g *Github) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 func (g *Github) Repos(u *model.User) ([]*model.RepoLite, error) {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
 
-	all, err := GetAllRepos(client)
+	var err error
+	var all []github.Repository
+
+	if g.RestrictOrgs {
+		all, err = GetRestrictedOrgsRepos(g.Orgs, client)
+	} else {
+		all, err = GetAllRepos(client)
+	}
+
 	if err != nil {
 		return nil, err
 	}

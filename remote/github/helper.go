@@ -96,6 +96,27 @@ func GetAllRepos(client *github.Client) ([]github.Repository, error) {
 	return repos, nil
 }
 
+// GetRestrictedOrgsRepos is a helper function that returns an aggregated list
+// of only restricted organization repositories.
+func GetRestrictedOrgsRepos(orgsList []string, client *github.Client) ([]github.Repository, error) {
+	orgs, err := GetOrgsFromList(orgsList, client)
+	if err != nil {
+		return nil, err
+	}
+
+	var repos []github.Repository
+
+	for _, org := range orgs {
+		list, err := GetOrgRepos(client, *org.Login)
+		if err != nil {
+			return nil, err
+		}
+		repos = append(repos, list...)
+	}
+
+	return repos, nil
+}
+
 // GetSubscriptions is a helper function that returns an aggregated list
 // of all user and organization repositories.
 // func GetSubscriptions(client *github.Client) ([]github.Repository, error) {
@@ -183,6 +204,21 @@ func GetOrgs(client *github.Client) ([]github.Organization, error) {
 
 		// increment the next page to retrieve
 		opts.Page = resp.NextPage
+	}
+	return orgs, nil
+}
+
+// GetOrgsFromList is a helper function that returns a list of
+// orgs from the specified list of orgs.
+func GetOrgsFromList(orgsList []string, client *github.Client) ([]github.Organization, error) {
+	var orgs []github.Organization
+
+	for _, orgName := range orgsList {
+		org, _, err := client.Organizations.Get(orgName)
+		if err != nil {
+			return nil, err
+		}
+		orgs = append(orgs, *org)
 	}
 	return orgs, nil
 }
