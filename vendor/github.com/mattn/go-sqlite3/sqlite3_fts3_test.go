@@ -12,12 +12,12 @@ import (
 )
 
 func TestFTS3(t *testing.T) {
-	tempFilename := TempFilename()
+	tempFilename := TempFilename(t)
+	defer os.Remove(tempFilename)
 	db, err := sql.Open("sqlite3", tempFilename)
 	if err != nil {
 		t.Fatal("Failed to open database:", err)
 	}
-	defer os.Remove(tempFilename)
 	defer db.Close()
 
 	_, err = db.Exec("DROP TABLE foo")
@@ -75,6 +75,50 @@ func TestFTS3(t *testing.T) {
 
 	if value != `今日の 晩御飯は 天麩羅よ` {
 		t.Fatal("Value should be `今日の 晩御飯は 天麩羅よ`, but:", value)
+	}
+
+	if rows.Next() {
+		t.Fatal("Result should be only one")
+	}
+}
+
+func TestFTS4(t *testing.T) {
+	tempFilename := TempFilename(t)
+	defer os.Remove(tempFilename)
+	db, err := sql.Open("sqlite3", tempFilename)
+	if err != nil {
+		t.Fatal("Failed to open database:", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec("DROP TABLE foo")
+	_, err = db.Exec("CREATE VIRTUAL TABLE foo USING fts4(tokenize=unicode61, id INTEGER PRIMARY KEY, value TEXT)")
+	if err != nil {
+		t.Fatal("Failed to create table:", err)
+	}
+
+	_, err = db.Exec("INSERT INTO foo(id, value) VALUES(?, ?)", 1, `février`)
+	if err != nil {
+		t.Fatal("Failed to insert value:", err)
+	}
+
+	rows, err := db.Query("SELECT value FROM foo WHERE value MATCH 'fevrier'")
+	if err != nil {
+		t.Fatal("Unable to query foo table:", err)
+	}
+	defer rows.Close()
+
+	var value string
+	if !rows.Next() {
+		t.Fatal("Result should be only one")
+	}
+
+	if err := rows.Scan(&value); err != nil {
+		t.Fatal("Unable to scan results:", err)
+	}
+
+	if value != `février` {
+		t.Fatal("Value should be `février`, but:", value)
 	}
 
 	if rows.Next() {
