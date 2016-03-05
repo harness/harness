@@ -5,11 +5,10 @@ import (
 	"strconv"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 
+	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
@@ -17,37 +16,18 @@ import (
 )
 
 func ShowIndex(c *gin.Context) {
-	remote := remote.FromContext(c)
 	user := session.User(c)
 	if user == nil {
 		c.Redirect(http.StatusSeeOther, "/login")
 		return
 	}
 
-	var err error
-	var repos []*model.RepoLite
-
 	// get the repository list from the cache
-	reposv, ok := c.Get("repos")
-	if ok {
-		repos = reposv.([]*model.RepoLite)
-	} else {
-		repos, err = remote.Repos(user)
-		if err != nil {
-			log.Errorf("Failure to get remote repositories for %s. %s.",
-				user.Login, err)
-		} else {
-			c.Set("repos", repos)
-		}
+	repos, err := cache.GetRepos(c, user)
+	if err != nil {
+		c.String(400, err.Error())
+		return
 	}
-
-	// for each repository in the remote system we get
-	// the intersection of those repostiories in Drone
-	// repos_, err := store.GetRepoListOf(c, repos)
-	// if err != nil {
-	// 	log.Errorf("Failure to get repository list for %s. %s.",
-	// 		user.Login, err)
-	// }
 
 	c.HTML(200, "repos.html", gin.H{
 		"User":  user,

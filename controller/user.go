@@ -5,8 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote"
+	"github.com/drone/drone/cache"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
@@ -18,20 +17,12 @@ func GetSelf(c *gin.Context) {
 
 func GetFeed(c *gin.Context) {
 	user := session.User(c)
-	remote := remote.FromContext(c)
-	var repos []*model.RepoLite
 
 	// get the repository list from the cache
-	reposv, ok := c.Get("repos")
-	if ok {
-		repos = reposv.([]*model.RepoLite)
-	} else {
-		var err error
-		repos, err = remote.Repos(user)
-		if err != nil {
-			c.String(400, err.Error())
-			return
-		}
+	repos, err := cache.GetRepos(c, user)
+	if err != nil {
+		c.String(400, err.Error())
+		return
 	}
 
 	feed, err := store.GetUserFeed(c, repos)
@@ -44,20 +35,11 @@ func GetFeed(c *gin.Context) {
 
 func GetRepos(c *gin.Context) {
 	user := session.User(c)
-	remote := remote.FromContext(c)
-	var repos []*model.RepoLite
 
-	// get the repository list from the cache
-	reposv, ok := c.Get("repos")
-	if ok {
-		repos = reposv.([]*model.RepoLite)
-	} else {
-		var err error
-		repos, err = remote.Repos(user)
-		if err != nil {
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
+	repos, err := cache.GetRepos(c, user)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
 	}
 
 	// for each repository in the remote system we get
@@ -68,27 +50,18 @@ func GetRepos(c *gin.Context) {
 		return
 	}
 
-	c.Set("repos", repos)
 	c.IndentedJSON(http.StatusOK, repos_)
 }
 
 func GetRemoteRepos(c *gin.Context) {
 	user := session.User(c)
-	remote := remote.FromContext(c)
 
-	reposv, ok := c.Get("repos")
-	if ok {
-		c.IndentedJSON(http.StatusOK, reposv)
-		return
-	}
-
-	repos, err := remote.Repos(user)
+	repos, err := cache.GetRepos(c, user)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	c.Set("repos", repos)
 	c.IndentedJSON(http.StatusOK, repos)
 }
 

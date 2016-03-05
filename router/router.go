@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/controller"
-	"github.com/drone/drone/router/middleware/cache"
 	"github.com/drone/drone/router/middleware/header"
 	"github.com/drone/drone/router/middleware/location"
 	"github.com/drone/drone/router/middleware/session"
@@ -27,10 +26,9 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(header.Secure)
 	e.Use(middleware...)
 	e.Use(session.SetUser())
-	e.Use(cache.Perms)
 	e.Use(token.Refresh)
 
-	e.GET("/", cache.Repos, controller.ShowIndex)
+	e.GET("/", controller.ShowIndex)
 	e.GET("/login", controller.ShowLogin)
 	e.GET("/login/form", controller.ShowLoginForm)
 	e.GET("/logout", controller.GetLogout)
@@ -64,8 +62,8 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		user.Use(session.MustUser())
 		user.GET("", controller.GetSelf)
 		user.GET("/feed", controller.GetFeed)
-		user.GET("/repos", cache.Repos, controller.GetRepos)
-		user.GET("/repos/remote", cache.Repos, controller.GetRemoteRepos)
+		user.GET("/repos", controller.GetRepos)
+		user.GET("/repos/remote", controller.GetRemoteRepos)
 		user.POST("/token", controller.PostToken)
 	}
 
