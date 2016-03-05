@@ -19,9 +19,10 @@ import (
 )
 
 const (
-	DefaultURL   = "https://github.com"
-	DefaultAPI   = "https://api.github.com"
-	DefaultScope = "repo,repo:status,user:email"
+	DefaultURL      = "https://github.com"
+	DefaultAPI      = "https://api.github.com"
+	DefaultScope    = "repo,repo:status,user:email"
+	DefaultMergeRef = "merge"
 )
 
 type Github struct {
@@ -29,6 +30,7 @@ type Github struct {
 	API         string
 	Client      string
 	Secret      string
+	MergeRef    string
 	Orgs        []string
 	Open        bool
 	PrivateMode bool
@@ -59,11 +61,16 @@ func Load(env envconfig.Env) *Github {
 	github.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))
 	github.Open, _ = strconv.ParseBool(params.Get("open"))
 	github.GitSSH, _ = strconv.ParseBool(params.Get("ssh"))
+	github.MergeRef = params.Get("merge_ref")
 
 	if github.URL == DefaultURL {
 		github.API = DefaultAPI
 	} else {
 		github.API = github.URL + "/api/v3/"
+	}
+
+	if github.MergeRef == "" {
+		github.MergeRef = DefaultMergeRef
 	}
 
 	return &github
@@ -402,7 +409,7 @@ func (g *Github) pullRequest(r *http.Request) (*model.Repo, *model.Build, error)
 	build := &model.Build{}
 	build.Event = model.EventPull
 	build.Commit = *hook.PullRequest.Head.SHA
-	build.Ref = fmt.Sprintf("refs/pull/%d/merge", *hook.PullRequest.Number)
+	build.Ref = fmt.Sprintf("refs/pull/%d/%s", *hook.PullRequest.Number, g.MergeRef)
 	build.Link = *hook.PullRequest.HTMLURL
 	build.Branch = *hook.PullRequest.Head.Ref
 	build.Message = *hook.PullRequest.Title

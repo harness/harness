@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v2"
 
+	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router/middleware/session"
@@ -34,7 +35,7 @@ func PostRepo(c *gin.Context) {
 		c.String(404, err.Error())
 		return
 	}
-	m, err := remote.Perm(user, owner, name)
+	m, err := cache.GetPerms(c, user, owner, name)
 	if err != nil {
 		c.String(404, err.Error())
 		return
@@ -176,7 +177,7 @@ func PostRepoKey(c *gin.Context) {
 	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		c.String(500, "Error reading private key from body. %s", err)
-		return	
+		return
 	}
 	pkey := crypto.UnmarshalPrivateKey(body)
 	if pkey == nil {

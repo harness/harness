@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/token"
@@ -112,19 +113,6 @@ func SetPerm() gin.HandlerFunc {
 		repo := Repo(c)
 		perm := &model.Perm{}
 
-		if user != nil {
-			// attempt to get the permissions from a local cache
-			// just to avoid excess API calls to GitHub
-			val, ok := c.Get("perm")
-			if ok {
-				c.Next()
-
-				log.Debugf("%s using cached %+v permission to %s",
-					user.Login, val, repo.FullName)
-				return
-			}
-		}
-
 		switch {
 		// if the user is not authenticated, and the
 		// repository is private, the user has NO permission
@@ -150,7 +138,7 @@ func SetPerm() gin.HandlerFunc {
 		// check the remote system to get the users permissiosn.
 		default:
 			var err error
-			perm, err = remote.FromContext(c).Perm(user, repo.Owner, repo.Name)
+			perm, err = cache.GetPerms(c, user, repo.Owner, repo.Name)
 			if err != nil {
 				perm.Pull = false
 				perm.Push = false
