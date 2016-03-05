@@ -13,6 +13,7 @@ import (
 	"github.com/drone/drone/engine"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
+	"github.com/drone/drone/remote/sryun"
 	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
@@ -25,8 +26,17 @@ var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
 
 func PostHook(c *gin.Context) {
 	remote_ := remote.FromContext(c)
-
-	tmprepo, build, err := remote_.Hook(c.Request)
+	var (
+		tmprepo *model.Repo
+		build   *model.Build
+		err     error
+	)
+	sryunRemote, isSryun := remote_.(*sryun.Sryun)
+	if isSryun {
+		tmprepo, build, err = sryunRemote.SryunHook(c)
+	} else {
+		tmprepo, build, err = remote_.Hook(c.Request)
+	}
 	if err != nil {
 		log.Errorf("failure to parse hook. %s", err)
 		c.AbortWithError(400, err)

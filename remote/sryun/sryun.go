@@ -3,10 +3,14 @@ package sryun
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/gin-gonic/gin"
 	"net/http"
 
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote/sryun/git"
 	"github.com/drone/drone/shared/envconfig"
+	"github.com/drone/drone/store"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -78,13 +82,29 @@ func (sry *Sryun) Auth(token, secret string) (string, error) {
 func (sry *Sryun) Repo(user *model.User, owner, name string) (*model.Repo, error) {
 	repo := &model.Repo{}
 	repo.Owner = owner
-	repo.FullName = fullName
+	repo.Name = name
+	repo.FullName = fmt.Sprintf("%s/%s", owner, name)
 	repo.Link = repoLink
 	repo.IsPrivate = true
 	repo.Clone = clone
 	repo.Branch = branch
 	repo.Avatar = sry.User.Avatar
 	repo.Kind = model.RepoGit
+
+	return repo, nil
+}
+
+// RepoSryun fetches the named repository from the remote system.
+func (sry *Sryun) RepoSryun(u *model.User, owner, name string, repo *model.Repo) (*model.Repo, error) {
+	repo.FullName = fmt.Sprintf("%s/%s", owner, name)
+	repo.IsPrivate = true
+	repo.Avatar = sry.User.Avatar
+	repo.Kind = model.RepoGit
+	repo.AllowPull = true
+	repo.AllowDeploy = true
+	if !repo.AllowTag && !repo.AllowPush {
+		repo.AllowPush = true
+	}
 
 	return repo, nil
 }
@@ -172,4 +192,60 @@ func (sry *Sryun) Deactivate(user *model.User, repo *model.Repo, link string) er
 // and returns the required data in a standard format.
 func (sry *Sryun) Hook(req *http.Request) (*model.Repo, *model.Build, error) {
 	return nil, nil, nil
+}
+
+//SryunHook manual hook for sryun cloud
+func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
+	owner := c.Query("owner")
+	name := c.Query("name")
+	force := c.DefaultQuery("force", "false")
+	if len(owner)&len(name) == 0 {
+		return nil, nil, errors.New("bad args")
+	}
+
+	repo, err := store.GetRepoOwnerName(c, owner, name)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	build, err := buildFromRepo(repo, force)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return repo, build, nil
+}
+
+func buildFromRepo(repo *model.Repo, force string) (*model.Build, error) {
+	client, err := git.NewClient(repo.Clone, repo.Branch)
+	if err != nil {
+		return nil, err
+	}
+	var filter uint8
+	if repo.AllowTag {
+		filter = filter + git.FilterTags
+	}
+	if repo.AllowPush {
+		filter = filter + git.FilterHeads
+	}
+
+	push, tag, err := client.LsRemote(filter, "")
+	if err != nil {
+		return nil, err
+	}
+	log.Println("push", push, "tag", tag)
+
+	//build := &model.Build{
+	//    Event:     model.EventPush,
+	//    Commit:    hook.After,
+	//    Ref:       hook.Ref,
+	//    Link:      hook.Compare,
+	//    Branch:    strings.TrimPrefix(hook.Ref, "refs/heads/"),
+	//    Message:   hook.Commits[0].Message,
+	//    Avatar:    avatar,
+	//    Author:    hook.Sender.Login,
+	//    Timestamp: time.Now().UTC().Unix(),
+	//}
+
+	return nil, nil
 }

@@ -57,41 +57,39 @@ func SryunLogin(c *gin.Context) {
 				return
 			}
 		}
-	} else {
-
-		// update the user meta data and authorization
-		// data and cache in the datastore.
-		u.Token = tmpuser.Token
-		u.Secret = tmpuser.Secret
-		u.Email = tmpuser.Email
-		u.Avatar = tmpuser.Avatar
-		u.Admin = true
-
-		if err := store.UpdateUser(c, u); err != nil {
-			log.Errorf("cannot update %s. %s", u.Login, err)
-			c.JSON(500, map[string]string{"error": err.Error()})
-			return
-		}
-
-		exp := time.Now().Add(time.Hour * 72).Unix()
-		tk := token.New(token.SessToken, u.Login)
-		log.Infoln("using hash", u.Hash)
-		tokenstr, err := tk.SignExpires(u.Hash, exp)
-		if err != nil {
-			log.Errorf("cannot create token for %s. %s", u.Login, err)
-			c.JSON(500, map[string]string{"error": err.Error()})
-			return
-		}
-		if err == nil {
-			log.Infoln("getting kind")
-			kind, _ := token.Parse(tokenstr, func(t *token.Token) (string, error) {
-				return u.Hash, nil
-			})
-			log.Infoln("get kind", kind)
-		}
-		//httputil.SetCookie(c.Writer, c.Request, "user_sess", tokenstr)
-		c.JSON(200, map[string]string{"token": tokenstr})
 	}
+	// update the user meta data and authorization
+	// data and cache in the datastore.
+	u.Token = tmpuser.Token
+	u.Secret = tmpuser.Secret
+	u.Email = tmpuser.Email
+	u.Avatar = tmpuser.Avatar
+	u.Admin = true
+
+	if err := store.UpdateUser(c, u); err != nil {
+		log.Errorf("cannot update %s. %s", u.Login, err)
+		c.JSON(500, map[string]string{"error": err.Error()})
+		return
+	}
+
+	exp := time.Now().Add(time.Hour * 72).Unix()
+	tk := token.New(token.SessToken, u.Login)
+	log.Infoln("using hash", u.Hash)
+	tokenstr, err := tk.SignExpires(u.Hash, exp)
+	if err != nil {
+		log.Errorf("cannot create token for %s. %s", u.Login, err)
+		c.JSON(500, map[string]string{"error": err.Error()})
+		return
+	}
+	if err == nil {
+		log.Infoln("getting kind")
+		kind, _ := token.Parse(tokenstr, func(t *token.Token) (string, error) {
+			return u.Hash, nil
+		})
+		log.Infoln("get kind", kind)
+	}
+	//httputil.SetCookie(c.Writer, c.Request, "user_sess", tokenstr)
+	c.JSON(200, map[string]string{"token": tokenstr})
 }
 
 func GetLogin(c *gin.Context) {

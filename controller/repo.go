@@ -9,13 +9,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v2"
 
+	"encoding/json"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
+	"github.com/drone/drone/remote/sryun"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/crypto"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
+	"log"
 )
 
 func PostRepo(c *gin.Context) {
@@ -29,7 +32,25 @@ func PostRepo(c *gin.Context) {
 		return
 	}
 
-	r, err := remote.Repo(user, owner, name)
+	//r, err := remote.Repo(user, owner, name)
+	sryunRemote, isSryun := remote.(*sryun.Sryun)
+	var err error
+	var r *model.Repo
+	if isSryun {
+		meta := &model.Repo{}
+		err := c.Bind(meta)
+		log.Println("meta bind err", err)
+		metaStr, err := json.Marshal(meta)
+		log.Println("meta", string(metaStr))
+		if err != nil {
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+		r, err = sryunRemote.RepoSryun(user, owner, name, meta)
+	} else {
+		r, err = remote.Repo(user, owner, name)
+	}
+
 	if err != nil {
 		c.String(404, err.Error())
 		return
@@ -176,7 +197,7 @@ func PostRepoKey(c *gin.Context) {
 	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		c.String(500, "Error reading private key from body. %s", err)
-		return	
+		return
 	}
 	pkey := crypto.UnmarshalPrivateKey(body)
 	if pkey == nil {
