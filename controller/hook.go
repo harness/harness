@@ -68,21 +68,22 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	// get the token and verify the hook is authorized
-	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
-		return repo.Hash, nil
-	})
-	if err != nil {
-		log.Errorf("failure to parse token from hook for %s. %s", repo.FullName, err)
-		c.AbortWithError(400, err)
-		return
+	if !isSryun {
+		// get the token and verify the hook is authorized
+		parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
+			return repo.Hash, nil
+		})
+		if err != nil {
+			log.Errorf("failure to parse token from hook for %s. %s", repo.FullName, err)
+			c.AbortWithError(400, err)
+			return
+		}
+		if parsed.Text != repo.FullName {
+			log.Errorf("failure to verify token from hook. Expected %s, got %s", repo.FullName, parsed.Text)
+			c.AbortWithStatus(403)
+			return
+		}
 	}
-	if parsed.Text != repo.FullName {
-		log.Errorf("failure to verify token from hook. Expected %s, got %s", repo.FullName, parsed.Text)
-		c.AbortWithStatus(403)
-		return
-	}
-
 	if repo.UserID == 0 {
 		log.Warnf("ignoring hook. repo %s has no owner.", repo.FullName)
 		c.Writer.WriteHeader(204)

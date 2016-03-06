@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote/sryun/git"
@@ -23,10 +25,20 @@ const (
 	branch   = "master"
 )
 
+var (
+	//ErrNoBuildNeed don't need to build
+	ErrNoBuildNeed = errors.New("no build need")
+	//ErrBadCommit bad commit
+	ErrBadCommit = errors.New("bad commit")
+)
+
 //Sryun model
 type Sryun struct {
-	User     *model.User
-	Password string
+	User       *model.User
+	Password   string
+	Workspace  string
+	ScriptName string
+	SecName    string
 }
 
 // Load create Sryun by env, impl of Remote interface
@@ -38,6 +50,9 @@ func Load(env envconfig.Env) *Sryun {
 	token := env.String("RC_SRY_TOKEN", "EFDDF4D3-2EB9-400F-BA83-4A9D292A1170")
 	email := env.String("RC_SRY_EMAIL", "sryadmin@dataman-inc.net")
 	avatar := env.String("RC_SRY_AVATAR", "https://avatars3.githubusercontent.com/u/76609?v=3&s=460")
+	workspace := env.String("RC_SRY_WORKSPACE", "/var/lib/drone/ws/")
+	scriptName := env.String("RC_SRY_SCRIPT", ".sryci.yaml")
+	secName := env.String("RC_SRY_SEC", ".sryci.sec")
 
 	user := model.User{}
 	user.Token = token
@@ -46,8 +61,11 @@ func Load(env envconfig.Env) *Sryun {
 	user.Avatar = avatar
 
 	sryun := Sryun{
-		User:     &user,
-		Password: password,
+		User:       &user,
+		Password:   password,
+		Workspace:  workspace,
+		ScriptName: scriptName,
+		SecName:    secName,
 	}
 
 	sryunJSON, _ := json.Marshal(sryun)
@@ -135,32 +153,31 @@ func (sry *Sryun) Perm(user *model.User, owner, name string) (*model.Perm, error
 // Script fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
 func (sry *Sryun) Script(user *model.User, repo *model.Repo, build *model.Build) ([]byte, []byte, error) {
-	cfg := `
-clone:
-  skip_verify: true
-build:
-  image: alpine:latest
-  commands:
-    - echo 'done'
-publish:
-  docker:
-    username: blackicebird
-    password: youman
-    email: blackicebird@126.com
-    repo: blackicebird/hello-2048
-    tag:
-      - latest
-    load: docker/hello-2048.tar
-    save:
-      destination: docker/hello-2048.tar
-      tag: latest
-cache:
-  mount:
-    - docker/hello-2048.tar
-	`
+	client, err := git.NewClient(repo.Clone, repo.Branch)
+	if err != nil {
+		return nil, nil, err
+	}
+	err = client.InitRepo(sry.Workspace, fmt.Sprintf("%d_%s_%s", repo.ID, repo.Owner, repo.Name))
+	if err != nil {
+		return nil, nil, err
+	}
+	err = client.FetchRef(build.Ref)
+	if err != nil {
+		return nil, nil, err
+	}
+	script, err := client.ShowFile(build.Commit, sry.ScriptName)
+	if err != nil {
+		return nil, nil, err
+	}
+	sec, err := client.ShowFile(build.Commit, sry.SecName)
+	if err != nil {
+		return script, nil, nil
+	}
 
-	sec := ""
-	return []byte(cfg), []byte(sec), nil
+	fmt.Println("script\n", script)
+	fmt.Println("sec\n", sec)
+
+	return script, sec, nil
 }
 
 // Status sends the commit status to the remote system.
@@ -198,17 +215,21 @@ func (sry *Sryun) Hook(req *http.Request) (*model.Repo, *model.Build, error) {
 func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 	owner := c.Query("owner")
 	name := c.Query("name")
-	force := c.DefaultQuery("force", "false")
+	force, _ := strconv.ParseBool(c.DefaultQuery("force", "false"))
 	if len(owner)&len(name) == 0 {
 		return nil, nil, errors.New("bad args")
 	}
-
 	repo, err := store.GetRepoOwnerName(c, owner, name)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	build, err := buildFromRepo(repo, force)
+	push, tag, err := retrieveUpdate(repo)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	build, err := formBuild(c, repo, push, tag, force)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -216,10 +237,10 @@ func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 	return repo, build, nil
 }
 
-func buildFromRepo(repo *model.Repo, force string) (*model.Build, error) {
+func retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Reference, error) {
 	client, err := git.NewClient(repo.Clone, repo.Branch)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var filter uint8
 	if repo.AllowTag {
@@ -231,21 +252,73 @@ func buildFromRepo(repo *model.Repo, force string) (*model.Build, error) {
 
 	push, tag, err := client.LsRemote(filter, "")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	log.Println("push", push, "tag", tag)
 
-	//build := &model.Build{
-	//    Event:     model.EventPush,
-	//    Commit:    hook.After,
-	//    Ref:       hook.Ref,
-	//    Link:      hook.Compare,
-	//    Branch:    strings.TrimPrefix(hook.Ref, "refs/heads/"),
-	//    Message:   hook.Commits[0].Message,
-	//    Avatar:    avatar,
-	//    Author:    hook.Sender.Login,
-	//    Timestamp: time.Now().UTC().Unix(),
-	//}
+	return push, tag, nil
+}
 
-	return nil, nil
+func formBuild(c *gin.Context, repo *model.Repo, push *git.Reference, tag *git.Reference, force bool) (*model.Build, error) {
+	_ = "breakpoint"
+	lastBuild, err := store.GetBuildLast(c, repo, branch)
+	if err != nil {
+		log.Printf("no build found")
+	}
+	tagUpdated := isOutdate(lastBuild, tag)
+	pushUpdated := isOutdate(lastBuild, push)
+	if force || tagUpdated || pushUpdated {
+		ref, commit, err := determineRef(lastBuild, tag, push, tagUpdated, pushUpdated)
+		if err != nil {
+			return nil, err
+		}
+		build := &model.Build{
+			Event:     determineEvent(tagUpdated, pushUpdated),
+			Commit:    commit,
+			Ref:       ref,
+			Link:      "",
+			Branch:    repo.Branch,
+			Message:   "",
+			Avatar:    "",
+			Author:    "",
+			Timestamp: time.Now().UTC().Unix(),
+		}
+		return build, nil
+	}
+	return nil, ErrNoBuildNeed
+}
+
+func isOutdate(build *model.Build, reference *git.Reference) bool {
+	if build == nil {
+		return true
+	}
+	if reference == nil {
+		return false
+	}
+	return build.Commit != reference.Commit
+}
+
+func determineEvent(tagUpdated bool, pushUpdated bool) string {
+	event := model.EventDeploy
+	if tagUpdated {
+		event = model.EventTag
+	}
+	if pushUpdated {
+		event = model.EventPush
+	}
+	return event
+}
+
+func determineRef(build *model.Build, tag, push *git.Reference, tagUpdated, pushUpdated bool) (string, string, error) {
+	if tagUpdated && tag != nil {
+		return tag.Ref, tag.Commit, nil
+	}
+	if pushUpdated && push != nil {
+		return push.Ref, push.Commit, nil
+	}
+	if build != nil {
+		return build.Ref, build.Commit, nil
+	}
+
+	return "", "", ErrBadCommit
 }
