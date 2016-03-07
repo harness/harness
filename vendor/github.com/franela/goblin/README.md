@@ -120,6 +120,15 @@ func Test(t *testing.T) {
 }
 ```
 
+
+FAQ:
+----
+
+### How do I run specific tests?
+
+If `-goblin.run=$REGES` is supplied to the `go test` command then only tests that match the supplied regex will run
+
+
 TODO:
 -----
 

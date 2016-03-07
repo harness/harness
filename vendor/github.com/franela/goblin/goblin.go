@@ -3,8 +3,9 @@ package goblin
 import (
 	"flag"
 	"fmt"
-	"os"
+	"regexp"
 	"runtime"
+	"sync"
 	"testing"
 	"time"
 )
@@ -28,7 +29,7 @@ func (g *G) Describe(name string, h func()) {
 
 	g.parent = d.parent
 
-	if g.parent == nil {
+	if g.parent == nil && d.hasTests {
 		g.reporter.begin()
 		if d.run(g) {
 			g.t.Fail()
@@ -71,31 +72,28 @@ func (d *Describe) runAfterEach() {
 }
 
 func (d *Describe) run(g *G) bool {
-	g.reporter.beginDescribe(d.name)
-
-	failed := ""
-
+	failed := false
 	if d.hasTests {
+		g.reporter.beginDescribe(d.name)
+
 		for _, b := range d.befores {
 			b()
 		}
-	}
 
-	for _, r := range d.children {
-		if r.run(g) {
-			failed = "true"
+		for _, r := range d.children {
+			if r.run(g) {
+				failed = true
+			}
 		}
-	}
 
-	if d.hasTests {
 		for _, a := range d.afters {
 			a()
 		}
+
+		g.reporter.endDescribe()
 	}
 
-	g.reporter.endDescribe()
-
-	return failed != ""
+	return failed
 }
 
 type Failure struct {
@@ -145,26 +143,29 @@ func (it *It) failed(msg string, stack []string) {
 	it.failure = &Failure{stack: stack, message: msg, testName: it.parent.name + " " + it.name}
 }
 
-var timeout *time.Duration
+func parseFlags() {
+	//Flag parsing
+	flag.Parse()
+	if *regexParam != "" {
+		runRegex = regexp.MustCompile(*regexParam)
+	} else {
+		runRegex = nil
+	}
+}
+
+var timeout = flag.Duration("goblin.timeout", 5*time.Second, "Sets default timeouts for all tests")
+var isTty = flag.Bool("goblin.tty", true, "Sets the default output format (color / monochrome)")
+var regexParam = flag.String("goblin.run", "", "Runs only tests which match the supplied regex")
+var runRegex *regexp.Regexp
 
 func init() {
-	//Flag parsing
-	timeout = flag.Duration("goblin.timeout", 5*time.Second, "Sets default timeouts for all tests")
-	flag.Parse()
+	parseFlags()
 }
 
 func Goblin(t *testing.T, arguments ...string) *G {
-	var gobtimeout = timeout
-	if arguments != nil {
-		//Programatic flags
-		var args = flag.NewFlagSet("Goblin arguments", flag.ContinueOnError)
-		gobtimeout = args.Duration("goblin.timeout", 5*time.Second, "Sets timeouts for tests")
-		args.Parse(arguments)
-	}
-	g := &G{t: t, timeout: *gobtimeout}
-	fd := os.Stdout.Fd()
+	g := &G{t: t, timeout: *timeout}
 	var fancy TextFancier
-	if IsTerminal(int(fd)) {
+	if *isTty {
 		fancy = &TerminalFancier{}
 	} else {
 		fancy = &Monochrome{}
@@ -176,14 +177,16 @@ func Goblin(t *testing.T, arguments ...string) *G {
 
 func runIt(g *G, h interface{}) {
 	defer timeTrack(time.Now(), g)
+	g.mutex.Lock()
 	g.timedOut = false
+	g.mutex.Unlock()
 	g.shouldContinue = make(chan bool)
 	if call, ok := h.(func()); ok {
 		// the test is synchronous
-		go func() { call(); g.shouldContinue <- true }()
+		go func(c chan bool) { call(); c <- true }(g.shouldContinue)
 	} else if call, ok := h.(func(Done)); ok {
 		doneCalled := 0
-		go func() {
+		go func(c chan bool) {
 			call(func(msg ...interface{}) {
 				if len(msg) > 0 {
 					g.Fail(msg)
@@ -192,17 +195,16 @@ func runIt(g *G, h interface{}) {
 					if doneCalled > 1 {
 						g.Fail("Done called multiple times")
 					}
-					g.shouldContinue <- true
+					c <- true
 				}
 			})
-		}()
+		}(g.shouldContinue)
 	} else {
 		panic("Not implemented.")
 	}
 	select {
 	case <-g.shouldContinue:
 	case <-time.After(g.timeout):
-		fmt.Println("Timedout")
 		//Set to nil as it shouldn't continue
 		g.shouldContinue = nil
 		g.timedOut = true
@@ -218,6 +220,7 @@ type G struct {
 	reporter       Reporter
 	timedOut       bool
 	shouldContinue chan bool
+	mutex          sync.Mutex
 }
 
 func (g *G) SetReporter(r Reporter) {
@@ -225,12 +228,21 @@ func (g *G) SetReporter(r Reporter) {
 }
 
 func (g *G) It(name string, h ...interface{}) {
-	it := &It{name: name, parent: g.parent, reporter: g.reporter}
-	notifyParents(g.parent)
-	if len(h) > 0 {
-		it.h = h[0]
+	if matchesRegex(name) {
+		it := &It{name: name, parent: g.parent, reporter: g.reporter}
+		notifyParents(g.parent)
+		if len(h) > 0 {
+			it.h = h[0]
+		}
+		g.parent.children = append(g.parent.children, Runnable(it))
 	}
-	g.parent.children = append(g.parent.children, Runnable(it))
+}
+
+func matchesRegex(value string) bool {
+	if runRegex != nil {
+		return runRegex.MatchString(value)
+	}
+	return true
 }
 
 func notifyParents(d *Describe) {
@@ -272,9 +284,11 @@ func (g *G) Fail(error interface{}) {
 	if g.shouldContinue != nil {
 		g.shouldContinue <- true
 	}
-
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	if !g.timedOut {
 		//Stop test function execution
 		runtime.Goexit()
 	}
+
 }

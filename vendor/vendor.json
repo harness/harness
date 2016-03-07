@@ -50,8 +50,8 @@
 		},
 		{
 			"path": "github.com/franela/goblin",
-			"revision": "a99b1e87ecb6884721c6586e8846ec368234fb9a",
-			"revisionTime": "2014-07-25T18:08:57-07:00"
+			"revision": "889391d730237f8aca06ce3e62975112983f96b4",
+			"revisionTime": "2016-01-23T18:11:54-03:00"
 		},
 		{
 			"path": "github.com/gin-gonic/gin",
