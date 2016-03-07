@@ -113,7 +113,7 @@ func New() *Engine {
 // Default returns an Engine instance with the Logger and Recovery middleware already attached.
 func Default() *Engine {
 	engine := New()
-	engine.Use(Recovery(), Logger())
+	engine.Use(Logger(), Recovery())
 	return engine
 }
 
@@ -178,25 +178,15 @@ func (engine *Engine) rebuild405Handlers() {
 }
 
 func (engine *Engine) addRoute(method, path string, handlers HandlersChain) {
+	assert1(path[0] == '/', "path must begin with '/'")
+	assert1(len(method) > 0, "HTTP method can not be empty")
+	assert1(len(handlers) > 0, "there must be at least one handler")
+
 	debugPrintRoute(method, path, handlers)
-
-	if path[0] != '/' {
-		panic("path must begin with '/'")
-	}
-	if method == "" {
-		panic("HTTP method can not be empty")
-	}
-	if len(handlers) == 0 {
-		panic("there must be at least one handler")
-	}
-
 	root := engine.trees.get(method)
 	if root == nil {
 		root = new(node)
-		engine.trees = append(engine.trees, methodTree{
-			method: method,
-			root:   root,
-		})
+		engine.trees = append(engine.trees, methodTree{method: method, root: root})
 	}
 	root.addRoute(path, handlers)
 }
@@ -227,7 +217,7 @@ func iterate(path, method string, routes RoutesInfo, root *node) RoutesInfo {
 
 // Run attaches the router to a http.Server and starts listening and serving HTTP requests.
 // It is a shortcut for http.ListenAndServe(addr, router)
-// Note: this method will block the calling goroutine undefinitelly unless an error happens.
+// Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (engine *Engine) Run(addr ...string) (err error) {
 	defer func() { debugPrintError(err) }()
 
@@ -239,7 +229,7 @@ func (engine *Engine) Run(addr ...string) (err error) {
 
 // RunTLS attaches the router to a http.Server and starts listening and serving HTTPS (secure) requests.
 // It is a shortcut for http.ListenAndServeTLS(addr, certFile, keyFile, router)
-// Note: this method will block the calling goroutine undefinitelly unless an error happens.
+// Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (engine *Engine) RunTLS(addr string, certFile string, keyFile string) (err error) {
 	debugPrint("Listening and serving HTTPS on %s\n", addr)
 	defer func() { debugPrintError(err) }()
@@ -250,7 +240,7 @@ func (engine *Engine) RunTLS(addr string, certFile string, keyFile string) (err 
 
 // RunUnix attaches the router to a http.Server and starts listening and serving HTTP requests
 // through the specified unix socket (ie. a file).
-// Note: this method will block the calling goroutine undefinitelly unless an error happens.
+// Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (engine *Engine) RunUnix(file string) (err error) {
 	debugPrint("Listening and serving HTTP on unix:/%s", file)
 	defer func() { debugPrintError(err) }()

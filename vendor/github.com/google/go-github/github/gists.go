@@ -157,6 +157,24 @@ func (s *GistsService) Get(id string) (*Gist, *Response, error) {
 	return gist, resp, err
 }
 
+// GetRevision gets a specific revision of a gist.
+//
+// GitHub API docs: https://developer.github.com/v3/gists/#get-a-specific-revision-of-a-gist
+func (s *GistsService) GetRevision(id, sha string) (*Gist, *Response, error) {
+	u := fmt.Sprintf("gists/%v/%v", id, sha)
+	req, err := s.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	gist := new(Gist)
+	resp, err := s.client.Do(req, gist)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return gist, resp, err
+}
+
 // Create a gist for authenticated user.
 //
 // GitHub API docs: http://developer.github.com/v3/gists/#create-a-gist

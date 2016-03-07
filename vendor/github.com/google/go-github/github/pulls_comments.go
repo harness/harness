@@ -12,14 +12,17 @@ import (
 
 // PullRequestComment represents a comment left on a pull request.
 type PullRequestComment struct {
-	ID        *int       `json:"id,omitempty"`
-	Body      *string    `json:"body,omitempty"`
-	Path      *string    `json:"path,omitempty"`
-	Position  *int       `json:"position,omitempty"`
-	CommitID  *string    `json:"commit_id,omitempty"`
-	User      *User      `json:"user,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	ID               *int       `json:"id,omitempty"`
+	Body             *string    `json:"body,omitempty"`
+	Path             *string    `json:"path,omitempty"`
+	DiffHunk         *string    `json:"diff_hunk,omitempty"`
+	Position         *int       `json:"position,omitempty"`
+	OriginalPosition *int       `json:"original_position,omitempty"`
+	CommitID         *string    `json:"commit_id,omitempty"`
+	OriginalCommitID *string    `json:"original_commit_id,omitempty"`
+	User             *User      `json:"user,omitempty"`
+	CreatedAt        *time.Time `json:"created_at,omitempty"`
+	UpdatedAt        *time.Time `json:"updated_at,omitempty"`
 }
 
 func (p PullRequestComment) String() string {
@@ -93,7 +96,7 @@ func (s *PullRequestsService) GetComment(owner string, repo string, number int) 
 
 // CreateComment creates a new comment on the specified pull request.
 //
-// GitHub API docs: https://developer.github.com/v3/pulls/comments/#get-a-single-comment
+// GitHub API docs: https://developer.github.com/v3/pulls/comments/#create-a-comment
 func (s *PullRequestsService) CreateComment(owner string, repo string, number int, comment *PullRequestComment) (*PullRequestComment, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/pulls/%d/comments", owner, repo, number)
 	req, err := s.client.NewRequest("POST", u, comment)

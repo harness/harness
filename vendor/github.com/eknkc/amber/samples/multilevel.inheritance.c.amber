@@ -1,4 +1,0 @@
-extends multilevel.inheritance.b.amber
-
-block overwriteme
-    p This is C

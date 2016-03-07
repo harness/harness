@@ -109,6 +109,7 @@ func (d *decoder) decode(r io.Reader) ([]Event, error) {
 			continue
 		}
 	}
+	// Once the end of the file is reached, the user agent must dispatch the event one final time.
 	d.dispatchEvent(currentEvent, dataBuffer.String())
 
 	return d.events, nil

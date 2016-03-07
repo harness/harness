@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/docker/docker/pkg/units"
+	"github.com/docker/go-units"
 )
 
 type ContainerConfig struct {
@@ -23,13 +23,16 @@ type ContainerConfig struct {
 	Cmd             []string
 	Image           string
 	Volumes         map[string]struct{}
-	VolumeDriver    string
 	WorkingDir      string
 	Entrypoint      []string
 	NetworkDisabled bool
 	MacAddress      string
 	OnBuild         []string
 	Labels          map[string]string
+	StopSignal      string
+
+	// FIXME: VolumeDriver have been removed since docker 1.9
+	VolumeDriver string
 
 	// FIXME: The following fields have been removed since API v1.18
 	Memory     int64
@@ -40,42 +43,70 @@ type ContainerConfig struct {
 
 	// This is used only by the create command
 	HostConfig HostConfig
+
+	// Network configuration support
+	NetworkingConfig NetworkingConfig
 }
 
 type HostConfig struct {
-	Binds           []string
-	ContainerIDFile string
-	LxcConf         []map[string]string
-	Memory          int64
-	MemorySwap      int64
-	CpuShares       int64
-	CpuPeriod       int64
-	CpusetCpus      string
-	CpusetMems      string
-	CpuQuota        int64
-	BlkioWeight     int64
-	OomKillDisable  bool
-	Privileged      bool
-	PortBindings    map[string][]PortBinding
-	Links           []string
-	PublishAllPorts bool
-	Dns             []string
-	DnsSearch       []string
-	ExtraHosts      []string
-	VolumesFrom     []string
-	Devices         []DeviceMapping
-	NetworkMode     string
-	IpcMode         string
-	PidMode         string
-	UTSMode         string
-	CapAdd          []string
-	CapDrop         []string
-	RestartPolicy   RestartPolicy
-	SecurityOpt     []string
-	ReadonlyRootfs  bool
-	Ulimits         []Ulimit
-	LogConfig       LogConfig
-	CgroupParent    string
+	Binds                []string
+	ContainerIDFile      string
+	LxcConf              []map[string]string
+	Memory               int64
+	MemoryReservation    int64
+	MemorySwap           int64
+	KernelMemory         int64
+	CpuShares            int64
+	CpuPeriod            int64
+	CpusetCpus           string
+	CpusetMems           string
+	CpuQuota             int64
+	BlkioWeight          int64
+	OomKillDisable       bool
+	MemorySwappiness     int64
+	Privileged           bool
+	PortBindings         map[string][]PortBinding
+	Links                []string
+	PublishAllPorts      bool
+	Dns                  []string
+	DNSOptions           []string
+	DnsSearch            []string
+	ExtraHosts           []string
+	VolumesFrom          []string
+	Devices              []DeviceMapping
+	NetworkMode          string
+	IpcMode              string
+	PidMode              string
+	UTSMode              string
+	CapAdd               []string
+	CapDrop              []string
+	GroupAdd             []string
+	RestartPolicy        RestartPolicy
+	SecurityOpt          []string
+	ReadonlyRootfs       bool
+	Ulimits              []Ulimit
+	LogConfig            LogConfig
+	CgroupParent         string
+	ConsoleSize          [2]int
+	VolumeDriver         string
+	OomScoreAdj          int
+	Tmpfs                map[string]string
+	ShmSize              int64
+	BlkioWeightDevice    []WeightDevice
+	BlkioDeviceReadBps   []ThrottleDevice
+	BlkioDeviceWriteBps  []ThrottleDevice
+	BlkioDeviceReadIOps  []ThrottleDevice
+	BlkioDeviceWriteIOps []ThrottleDevice
+}
+
+type WeightDevice struct {
+	Path   string
+	Weight uint16
+}
+
+type ThrottleDevice struct {
+	Path string
+	Rate uint64
 }
 
 type DeviceMapping struct {
@@ -100,6 +131,14 @@ type LogOptions struct {
 	Stderr     bool
 	Timestamps bool
 	Tail       int64
+}
+
+type AttachOptions struct {
+	Logs   bool
+	Stream bool
+	Stdin  bool
+	Stdout bool
+	Stderr bool
 }
 
 type MonitorEventsFilters struct {
@@ -199,6 +238,14 @@ type ImageInfo struct {
 	VirtualSize     int64
 }
 
+type ImageSearch struct {
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+	IsOfficial  bool   `json:"is_official,omitempty" yaml:"is_official,omitempty"`
+	IsAutomated bool   `json:"is_automated,omitempty" yaml:"is_automated,omitempty"`
+	Name        string `json:"name,omitempty" yaml:"name,omitempty"`
+	StarCount   int    `json:"star_count,omitempty" yaml:"star_count,omitempty"`
+}
+
 type ContainerInfo struct {
 	Id              string
 	Created         string
@@ -215,6 +262,7 @@ type ContainerInfo struct {
 		Gateway     string
 		Bridge      string
 		Ports       map[string][]PortBinding
+		Networks    map[string]*EndpointSettings
 	}
 	SysInitPath    string
 	ResolvConfPath string
@@ -234,24 +282,62 @@ type Port struct {
 	Type        string
 }
 
+// EndpointSettings stores the network endpoint details
+type EndpointSettings struct {
+	// Configurations
+	IPAMConfig *EndpointIPAMConfig
+	Links      []string
+	Aliases    []string
+	// Operational data
+	NetworkID           string
+	EndpointID          string
+	Gateway             string
+	IPAddress           string
+	IPPrefixLen         int
+	IPv6Gateway         string
+	GlobalIPv6Address   string
+	GlobalIPv6PrefixLen int
+	MacAddress          string
+}
+
+// NetworkingConfig represents the container's networking configuration for each of its interfaces
+// Carries the networink configs specified in the `docker run` and `docker network connect` commands
+type NetworkingConfig struct {
+	EndpointsConfig map[string]*EndpointSettings // Endpoint configs for each conencting network
+}
+
 type Container struct {
-	Id         string
-	Names      []string
-	Image      string
-	Command    string
-	Created    int64
-	Status     string
-	Ports      []Port
-	SizeRw     int64
-	SizeRootFs int64
-	Labels     map[string]string
+	Id              string
+	Names           []string
+	Image           string
+	Command         string
+	Created         int64
+	Status          string
+	Ports           []Port
+	SizeRw          int64
+	SizeRootFs      int64
+	Labels          map[string]string
+	NetworkSettings struct {
+		Networks map[string]EndpointSettings
+	}
+}
+
+type Actor struct {
+	ID         string
+	Attributes map[string]string
 }
 
 type Event struct {
-	Id     string
-	Status string
-	From   string
-	Time   int64
+	Status string `json:"status,omitempty"`
+	ID     string `json:"id,omitempty"`
+	From   string `json:"from,omitempty"`
+
+	Type   string
+	Action string
+	Actor  Actor
+
+	Time     int64 `json:"time,omitempty"`
+	TimeNano int64 `json:"timeNano,omitempty"`
 }
 
 type Version struct {
@@ -272,7 +358,9 @@ type RespContainersCreate struct {
 type Image struct {
 	Created     int64
 	Id          string
+	Labels      map[string]string
 	ParentId    string
+	RepoDigests []string
 	RepoTags    []string
 	Size        int64
 	VirtualSize int64
@@ -319,6 +407,11 @@ type ImageDelete struct {
 	Untagged string
 }
 
+type StatsOrError struct {
+	Stats
+	Error error
+}
+
 type EventOrError struct {
 	Event
 	Error error
@@ -344,6 +437,7 @@ type ThrottlingData struct {
 	ThrottledTime uint64 `json:"throttled_time"`
 }
 
+// All CPU stats are aggregated since container inception.
 type CpuUsage struct {
 	// Total CPU time consumed.
 	// Units: nanoseconds.
@@ -441,4 +535,90 @@ type BuildImage struct {
 	CpuSetCpus     string
 	CpuSetMems     string
 	CgroupParent   string
+	BuildArgs      map[string]string
+}
+
+type Volume struct {
+	Name       string // Name is the name of the volume
+	Driver     string // Driver is the Driver name used to create the volume
+	Mountpoint string // Mountpoint is the location on disk of the volume
+}
+
+type VolumesListResponse struct {
+	Volumes []*Volume // Volumes is the list of volumes being returned
+}
+
+type VolumeCreateRequest struct {
+	Name       string            // Name is the requested name of the volume
+	Driver     string            // Driver is the name of the driver that should be used to create the volume
+	DriverOpts map[string]string // DriverOpts holds the driver specific options to use for when creating the volume.
+}
+
+// IPAM represents IP Address Management
+type IPAM struct {
+	Driver  string
+	Options map[string]string //Per network IPAM driver options
+	Config  []IPAMConfig
+}
+
+// IPAMConfig represents IPAM configurations
+type IPAMConfig struct {
+	Subnet     string            `json:",omitempty"`
+	IPRange    string            `json:",omitempty"`
+	Gateway    string            `json:",omitempty"`
+	AuxAddress map[string]string `json:"AuxiliaryAddresses,omitempty"`
+}
+
+// EndpointIPAMConfig represents IPAM configurations for the endpoint
+type EndpointIPAMConfig struct {
+	IPv4Address string `json:",omitempty"`
+	IPv6Address string `json:",omitempty"`
+}
+
+// NetworkResource is the body of the "get network" http response message
+type NetworkResource struct {
+	Name   string
+	ID     string `json:"Id"`
+	Scope  string
+	Driver string
+	IPAM   IPAM
+	//Internal   bool
+	Containers map[string]EndpointResource
+	Options    map[string]string
+}
+
+// EndpointResource contains network resources allocated and used for a container in a network
+type EndpointResource struct {
+	Name        string
+	EndpointID  string
+	MacAddress  string
+	IPv4Address string
+	IPv6Address string
+}
+
+// NetworkCreate is the expected body of the "create network" http request message
+type NetworkCreate struct {
+	Name           string
+	CheckDuplicate bool
+	Driver         string
+	IPAM           IPAM
+	Internal       bool
+	Options        map[string]string
+}
+
+// NetworkCreateResponse is the response message sent by the server for network create call
+type NetworkCreateResponse struct {
+	ID      string `json:"Id"`
+	Warning string
+}
+
+// NetworkConnect represents the data to be used to connect a container to the network
+type NetworkConnect struct {
+	Container string
+}
+
+// NetworkDisconnect represents the data to be used to disconnect a container from the network
+type NetworkDisconnect struct {
+	Container string
+	Force     bool
 }
