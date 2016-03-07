@@ -98,6 +98,10 @@ type APIMeta struct {
 	// username and password, sudo mode, and two-factor authentication are
 	// not supported on these servers.)
 	VerifiablePasswordAuthentication *bool `json:"verifiable_password_authentication,omitempty"`
+
+	// An array of IP addresses in CIDR format specifying the addresses
+	// which serve GitHub Pages websites.
+	Pages []string `json:"pages,omitempty"`
 }
 
 // APIMeta returns information about GitHub.com, the service. Or, if you access
@@ -158,4 +162,36 @@ func (c *Client) Zen() (string, *Response, error) {
 	}
 
 	return buf.String(), resp, nil
+}
+
+// ServiceHook represents a hook that has configuration settings, a list of
+// available events, and default events.
+type ServiceHook struct {
+	Name            *string    `json:"name,omitempty"`
+	Events          []string   `json:"events,omitempty"`
+	SupportedEvents []string   `json:"supported_events,omitempty"`
+	Schema          [][]string `json:"schema,omitempty"`
+}
+
+func (s *ServiceHook) String() string {
+	return Stringify(s)
+}
+
+// ListServiceHooks lists all of the available service hooks.
+//
+// GitHub API docs: https://developer.github.com/webhooks/#services
+func (c *Client) ListServiceHooks() ([]ServiceHook, *Response, error) {
+	u := "hooks"
+	req, err := c.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	hooks := new([]ServiceHook)
+	resp, err := c.Do(req, hooks)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return *hooks, resp, err
 }

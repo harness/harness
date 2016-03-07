@@ -8,7 +8,9 @@ import (
 	"time"
 )
 
-func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *http.Client {
+type tcpFunc func(*net.TCPConn, time.Duration) error
+
+func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration, setUserTimeout tcpFunc) *http.Client {
 	httpTransport := &http.Transport{
 		TLSClientConfig: tlsConfig,
 	}
@@ -16,7 +18,13 @@ func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *ht
 	switch u.Scheme {
 	default:
 		httpTransport.Dial = func(proto, addr string) (net.Conn, error) {
-			return net.DialTimeout(proto, addr, timeout)
+			conn, err := net.DialTimeout(proto, addr, timeout)
+			if tcpConn, ok := conn.(*net.TCPConn); ok && setUserTimeout != nil {
+				// Sender can break TCP connection if the remote side doesn't
+				// acknowledge packets within timeout
+				setUserTimeout(tcpConn, timeout)
+			}
+			return conn, err
 		}
 	case "unix":
 		socketPath := u.Path

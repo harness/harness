@@ -92,16 +92,17 @@ type PayloadCommit struct {
 }
 
 type PayloadRepo struct {
-	ID          int64          `json:"id"`
-	Name        string         `json:"name"`
-	URL         string         `json:"url"`
-	SSHURL      string         `json:"ssh_url"`
-	CloneURL    string         `json:"clone_url"`
-	Description string         `json:"description"`
-	Website     string         `json:"website"`
-	Watchers    int            `json:"watchers"`
-	Owner       *PayloadAuthor `json:"owner"`
-	Private     bool           `json:"private"`
+	ID            int64          `json:"id"`
+	Name          string         `json:"name"`
+	URL           string         `json:"url"`
+	SSHURL        string         `json:"ssh_url"`
+	CloneURL      string         `json:"clone_url"`
+	Description   string         `json:"description"`
+	Website       string         `json:"website"`
+	Watchers      int            `json:"watchers"`
+	Owner         *PayloadAuthor `json:"owner"`
+	Private       bool           `json:"private"`
+	DefaultBranch string         `json:"default_branch"`
 }
 
 // _________                        __
