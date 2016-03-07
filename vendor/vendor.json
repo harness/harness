@@ -121,7 +121,8 @@
 		{
 			"path": "github.com/mattn/go-sqlite3",
 			"revision": "10876d7dac65f02064c03d7372a2f1dfb90043fe",
-			"revisionTime": "2016-03-07T18:57:06+09:00"
+			"revisionTime": "2016-03-07T18:57:06+09:00",
+			"tree": true
 		},
 		{
 			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
