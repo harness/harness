@@ -1,4 +1,4 @@
-.PHONY: vendor docs
+.PHONY: vendor 
 
 PACKAGES = $(shell go list ./... | grep -v /vendor/)
 
@@ -18,14 +18,7 @@ deps:
 	go get -u github.com/russross/blackfriday
 	GO15VENDOREXPERIMENT=1 go get -u github.com/go-swagger/go-swagger/...
 
-gen: gen_static gen_template gen_migrations
-
-gen_static:
-	mkdir -p static/docs_gen/api static/docs_gen/build
-	mkdir -p static/docs_gen/api static/docs_gen/plugin
-	mkdir -p static/docs_gen/api static/docs_gen/setup
-	mkdir -p static/docs_gen/api static/docs_gen/cli
-	go generate github.com/drone/drone/static
+gen: gen_template gen_migrations
 
 gen_template:
 	go generate github.com/drone/drone/template
@@ -59,10 +52,3 @@ deb:
 
 vendor:
 	vexp
-
-docs:
-	mkdir -p /drone/tmp/docs
-	mkdir -p /drone/tmp/static
-	cp -a static/docs_gen/*   /drone/tmp/
-	cp -a static/styles_gen   /drone/tmp/static/
-	cp -a static/images       /drone/tmp/static/
