@@ -45,12 +45,14 @@ func SetRepo() gin.HandlerFunc {
 		)
 
 		user := User(c)
+		log.Println("owner", owner, "name", name)
 		repo, err := store.GetRepoOwnerName(c, owner, name)
 		if err == nil {
 			c.Set("repo", repo)
 			c.Next()
 			return
 		}
+		log.Println("got repo err", err.Error())
 
 		// if the user is not nil, check the remote system
 		// to see if the repository actually exists. If yes,

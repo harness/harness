@@ -138,6 +138,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	{
 		auth.GET("", controller.GetLogin)
 		auth.POST("", controller.GetLogin)
+		auth.POST("/sryun", controller.SryunLogin)
 		auth.POST("/token", controller.GetLoginToken)
 	}
 
