@@ -30,6 +30,7 @@ type Github struct {
 	API         string
 	Client      string
 	Secret      string
+	Scope       string
 	MergeRef    string
 	Orgs        []string
 	Open        bool
@@ -56,6 +57,7 @@ func Load(env envconfig.Env) *Github {
 	github.URL = url_.String()
 	github.Client = params.Get("client_id")
 	github.Secret = params.Get("client_secret")
+	github.Scope = params.Get("scope")
 	github.Orgs = params["orgs"]
 	github.PrivateMode, _ = strconv.ParseBool(params.Get("private_mode"))
 	github.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))
@@ -67,6 +69,10 @@ func Load(env envconfig.Env) *Github {
 		github.API = DefaultAPI
 	} else {
 		github.API = github.URL + "/api/v3/"
+	}
+
+	if github.Scope == "" {
+		github.Scope = DefaultScope
 	}
 
 	if github.MergeRef == "" {
@@ -83,7 +89,7 @@ func (g *Github) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 	var config = &oauth2.Config{
 		ClientId:     g.Client,
 		ClientSecret: g.Secret,
-		Scope:        DefaultScope,
+		Scope:        g.Scope,
 		AuthURL:      fmt.Sprintf("%s/login/oauth/authorize", g.URL),
 		TokenURL:     fmt.Sprintf("%s/login/oauth/access_token", g.URL),
 		RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURL(req)),
