@@ -28,6 +28,7 @@ This section lists all connection options used in the connection string format. 
 
 * `client_id` oauth client id for registered application.
 * `client_secret` oauth client secret for registered application.
+* `scope=repo,repo:status,user:email` oauth scopes.
 * `open=false` allows users to self-register. Defaults to false..
 * `orgs=drone&orgs=docker` restricts access to these GitHub organizations. **Optional**
 * `private_mode=false` indicates GitHub Enterprise is running in private mode.
