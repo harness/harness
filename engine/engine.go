@@ -301,7 +301,8 @@ func (e *engine) runJob(c context.Context, r *Task, updater *updater, client doc
 		Cmd:        args,
 		Env:        e.envs,
 		HostConfig: dockerclient.HostConfig{
-			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
+			Binds:            []string{"/var/run/docker.sock:/var/run/docker.sock"},
+			MemorySwappiness: -1,
 		},
 		Volumes: map[string]struct{}{
 			"/var/run/docker.sock": struct{}{},
@@ -410,7 +411,8 @@ func (e *engine) runJobNotify(r *Task, client dockerclient.Client) error {
 		Cmd:        args,
 		Env:        e.envs,
 		HostConfig: dockerclient.HostConfig{
-			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
+			Binds:            []string{"/var/run/docker.sock:/var/run/docker.sock"},
+			MemorySwappiness: -1,
 		},
 		Volumes: map[string]struct{}{
 			"/var/run/docker.sock": struct{}{},
