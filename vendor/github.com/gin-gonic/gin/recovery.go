@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http/httputil"
 	"runtime"
 )
 
@@ -22,20 +23,21 @@ var (
 
 // Recovery returns a middleware that recovers from any panics and writes a 500 if there was one.
 func Recovery() HandlerFunc {
-	return RecoveryWithWriter(DefaultWriter)
+	return RecoveryWithWriter(DefaultErrorWriter)
 }
 
 func RecoveryWithWriter(out io.Writer) HandlerFunc {
 	var logger *log.Logger
 	if out != nil {
-		logger = log.New(out, "", log.LstdFlags)
+		logger = log.New(out, "\n\n\x1b[31m", log.LstdFlags)
 	}
 	return func(c *Context) {
 		defer func() {
 			if err := recover(); err != nil {
 				if logger != nil {
 					stack := stack(3)
-					logger.Printf("Panic recovery -> %s\n%s\n", err, stack)
+					httprequest, _ := httputil.DumpRequest(c.Request, false)
+					logger.Printf("[Recovery] panic recovered:\n%s\n%s\n%s%s", string(httprequest), err, stack, reset)
 				}
 				c.AbortWithStatus(500)
 			}

@@ -10,6 +10,7 @@ import (
 	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/router/middleware/header"
 	"github.com/drone/drone/shared/envconfig"
+	"github.com/drone/drone/shared/poller"
 	"github.com/drone/drone/shared/server"
 	"github.com/drone/drone/store/datastore"
 
@@ -45,10 +46,14 @@ func main() {
 	// setup the runner
 	engine_ := engine.Load(env, store_)
 
+	// setup git poller
+	poller.Init(env, store_)
+
 	// setup the server and start the listener
 	server_ := server.Load(env)
 	server_.Run(
 		router.Load(
+			env,
 			header.Version(build),
 			cache.Default(),
 			context.SetStore(store_),

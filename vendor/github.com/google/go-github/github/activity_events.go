@@ -249,11 +249,11 @@ func (s *ActivityService) ListEventsPerformedByUser(user string, publicOnly bool
 	return *events, resp, err
 }
 
-// ListEventsRecievedByUser lists the events recieved by a user. If publicOnly is
+// ListEventsReceivedByUser lists the events received by a user. If publicOnly is
 // true, only public events will be returned.
 //
 // GitHub API docs: http://developer.github.com/v3/activity/events/#list-events-that-a-user-has-received
-func (s *ActivityService) ListEventsRecievedByUser(user string, publicOnly bool, opt *ListOptions) ([]Event, *Response, error) {
+func (s *ActivityService) ListEventsReceivedByUser(user string, publicOnly bool, opt *ListOptions) ([]Event, *Response, error) {
 	var u string
 	if publicOnly {
 		u = fmt.Sprintf("users/%v/received_events/public", user)

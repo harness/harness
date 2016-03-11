@@ -13,22 +13,25 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"path"
 )
 
 // RepositoryContent represents a file or directory in a github repository.
 type RepositoryContent struct {
-	Type     *string `json:"type,omitempty"`
-	Encoding *string `json:"encoding,omitempty"`
-	Size     *int    `json:"size,omitempty"`
-	Name     *string `json:"name,omitempty"`
-	Path     *string `json:"path,omitempty"`
-	Content  *string `json:"content,omitempty"`
-	SHA      *string `json:"sha,omitempty"`
-	URL      *string `json:"url,omitempty"`
-	GitURL   *string `json:"giturl,omitempty"`
-	HTMLURL  *string `json:"htmlurl,omitempty"`
+	Type        *string `json:"type,omitempty"`
+	Encoding    *string `json:"encoding,omitempty"`
+	Size        *int    `json:"size,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Path        *string `json:"path,omitempty"`
+	Content     *string `json:"content,omitempty"`
+	SHA         *string `json:"sha,omitempty"`
+	URL         *string `json:"url,omitempty"`
+	GitURL      *string `json:"git_url,omitempty"`
+	HTMLURL     *string `json:"html_url,omitempty"`
+	DownloadURL *string `json:"download_url,omitempty"`
 }
 
 // RepositoryContentResponse holds the parsed response from CreateFile, UpdateFile, and DeleteFile.
@@ -88,6 +91,32 @@ func (s *RepositoriesService) GetReadme(owner, repo string, opt *RepositoryConte
 		return nil, resp, err
 	}
 	return readme, resp, err
+}
+
+// DownloadContents returns an io.ReadCloser that reads the contents of the
+// specified file. This function will work with files of any size, as opposed
+// to GetContents which is limited to 1 Mb files. It is the caller's
+// responsibility to close the ReadCloser.
+func (s *RepositoriesService) DownloadContents(owner, repo, filepath string, opt *RepositoryContentGetOptions) (io.ReadCloser, error) {
+	dir := path.Dir(filepath)
+	filename := path.Base(filepath)
+	_, dirContents, _, err := s.GetContents(owner, repo, dir, opt)
+	if err != nil {
+		return nil, err
+	}
+	for _, contents := range dirContents {
+		if *contents.Name == filename {
+			if contents.DownloadURL == nil || *contents.DownloadURL == "" {
+				return nil, fmt.Errorf("No download link found for %s", filepath)
+			}
+			resp, err := s.client.client.Get(*contents.DownloadURL)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Body, nil
+		}
+	}
+	return nil, fmt.Errorf("No file named %s found in %s", filename, dir)
 }
 
 // GetContents can return either the metadata and content of a single file

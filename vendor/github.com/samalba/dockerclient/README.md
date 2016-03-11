@@ -63,7 +63,7 @@ func main() {
 		Cmd:   []string{"bash"},
 		AttachStdin: true,
 		Tty:   true}
-	containerId, err := docker.CreateContainer(containerConfig, "foobar")
+	containerId, err := docker.CreateContainer(containerConfig, "foobar", nil)
 	if err != nil {
 		log.Fatal(err)
 	}

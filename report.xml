@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dfxml xmloutputversion='1.0'>
+  <metadata 
+  xmlns='http://afflib.org/tcpflow/' 
+  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' 
+  xmlns:dc='http://purl.org/dc/elements/1.1/'>
+    <dc:type>Feature Extraction</dc:type>
+  </metadata>
+  <creator version='1.0'>
+    <program>TCPFLOW</program>
+    <version>1.4.4</version>
+    <build_environment>
+      <compiler>4.8.2 (4.8.2 20140110 (prerelease) [ibm/gcc-4_8-branch merged from gcc-4_8-branch, revision 205847])</compiler>
+      <CPPFLAGS>-pthread -I/usr/local/include -D_FORTIFY_SOURCE=2 -DUTC_OFFSET=+0000 </CPPFLAGS>
+      <CFLAGS>-g   -pthread -g -O3 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -MD -D_FORTIFY_SOURCE=2 -Wpointer-arith -Wmissing-declarations -Wmissing-prototypes -Wshadow -Wwrite-strings -Wcast-align -Waggregate-return -Wbad-function-cast -Wcast-qual -Wundef -Wredundant-decls -Wdisabled-optimization -Wfloat-equal -Wmultichar -Wc++-compat -Wmissing-noreturn -Wall -Wstrict-prototypes</CFLAGS>
+      <CXXFLAGS>-g -pthread -g -O3 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -std=c++11 -Wall -MD -D_FORTIFY_SOURCE=2 -Wpointer-arith -Wshadow -Wwrite-strings -Wcast-align -Wredundant-decls -Wdisabled-optimization -Wfloat-equal -Wmultichar -Wmissing-noreturn -Woverloaded-virtual -Wsign-promo -funit-at-a-time -Wstrict-null-sentinel -Weffc++ </CXXFLAGS>
+      <LDFLAGS>-L/usr/local/lib -Wl,-Bsymbolic-functions -Wl,-z,relro</LDFLAGS>
+      <LIBS>-lpcap -lcairo -lfontconfig -lfreetype -lpixman-1 -lexpat  -lssl -lcrypto -lz -lssl -lcrypto </LIBS>
+      <compilation_date>2014-01-13T17:14:40</compilation_date>
+      <library name="boost" version="105400"/>
+    </build_environment>
+    <execution_environment>
+      <os_sysname>Linux</os_sysname>
+      <os_release>3.13.0-67-generic</os_release>
+      <os_version>#110-Ubuntu SMP Fri Oct 23 13:24:41 UTC 2015</os_version>
+      <host>vagrant-ubuntu-trusty-64</host>
+      <arch>x86_64</arch>
+      <command_line>tcpflow -p -c -i eth0 port 80</command_line>
+      <uid>0</uid>
+      <start_time>2016-03-10T02:28:48Z</start_time>
+    </execution_environment>
+  </creator>
+  <configuration>
+  </configuration>
+  <tdelta>0</tdelta>

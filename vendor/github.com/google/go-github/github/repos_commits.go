@@ -61,7 +61,8 @@ func (c CommitFile) String() string {
 // CommitsComparison is the result of comparing two commits.
 // See CompareCommits() for details.
 type CommitsComparison struct {
-	BaseCommit *RepositoryCommit `json:"base_commit,omitempty"`
+	BaseCommit      *RepositoryCommit `json:"base_commit,omitempty"`
+	MergeBaseCommit *RepositoryCommit `json:"merge_base_commit,omitempty"`
 
 	// Head can be 'behind' or 'ahead'
 	Status       *string `json:"status,omitempty"`

@@ -8,6 +8,7 @@ type Store interface {
 	Builds() BuildStore
 	Jobs() JobStore
 	Logs() LogStore
+	Polls() PollStore
 }
 
 type store struct {
@@ -19,6 +20,7 @@ type store struct {
 	builds BuildStore
 	jobs   JobStore
 	logs   LogStore
+	polls  PollStore
 }
 
 func (s *store) Nodes() NodeStore   { return s.nodes }
@@ -29,6 +31,7 @@ func (s *store) Builds() BuildStore { return s.builds }
 func (s *store) Jobs() JobStore     { return s.jobs }
 func (s *store) Logs() LogStore     { return s.logs }
 func (s *store) String() string     { return s.name }
+func (s *store) Polls() PollStore   { return s.polls }
 
 func New(
 	name string,
@@ -39,6 +42,7 @@ func New(
 	builds BuildStore,
 	jobs JobStore,
 	logs LogStore,
+	polls PollStore,
 ) Store {
 	return &store{
 		name,
@@ -49,5 +53,6 @@ func New(
 		builds,
 		jobs,
 		logs,
+		polls,
 	}
 }

@@ -1,4 +1,5 @@
-// Provides a system by which it is possible to mock your objects and verify calls are happening as expected.
+// Package mock provides a system by which it is possible to mock your objects
+// and verify calls are happening as expected.
 //
 // Example Usage
 //
@@ -19,7 +20,7 @@
 // the year of their birth or an error, you might write this:
 //
 //     func (o *MyTestObject) SavePersonDetails(firstname, lastname string, age int) (int, error) {
-//       args := o.Mock.Called(firstname, lastname, age)
+//       args := o.Called(firstname, lastname, age)
 //       return args.Int(0), args.Error(1)
 //     }
 //

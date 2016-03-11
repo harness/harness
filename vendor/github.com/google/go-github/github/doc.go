@@ -28,23 +28,24 @@ Authentication
 
 The go-github library does not directly handle authentication. Instead, when
 creating a new client, pass an http.Client that can handle authentication for
-you. The easiest and recommended way to do this is using the goauth2 library,
-but you can always use any other library that provides an http.Client. If you
-have an OAuth2 access token (for example, a personal API token), you can use it
-with the goauth2 using:
+you. The easiest and recommended way to do this is using the golang.org/x/oauth2
+library, but you can always use any other library that provides an http.Client.
+If you have an OAuth2 access token (for example, a personal API token), you can
+use it with the oauth2 library using:
 
-	import "code.google.com/p/goauth2/oauth"
+	import "golang.org/x/oauth2"
 
-	// simple OAuth transport if you already have an access token;
-	// see goauth2 library for full usage
-	t := &oauth.Transport{
-		Token: &oauth.Token{AccessToken: "..."},
+	func main() {
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: "... your access token ..."},
+		)
+		tc := oauth2.NewClient(oauth2.NoContext, ts)
+
+		client := github.NewClient(tc)
+
+		// list all repositories for the authenticated user
+		repos, _, err := client.Repositories.List("", nil)
 	}
-
-	client := github.NewClient(t.Client())
-
-	// list all repositories for the authenticated user
-	repos, _, err := client.Repositories.List("", nil)
 
 Note that when using an authenticated Client, all calls made by the client will
 include the specified OAuth token. Therefore, authenticated clients should

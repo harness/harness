@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote/sryun/git"
 	"github.com/drone/drone/shared/envconfig"
+	"github.com/drone/drone/shared/poller"
 	"github.com/drone/drone/store"
 
 	log "github.com/Sirupsen/logrus"
@@ -199,6 +200,15 @@ func (sry *Sryun) Activate(user *model.User, repo *model.Repo, key *model.Key, l
 	return nil
 }
 
+//ActivateRepo activate repo, schedule polling
+func (sry *Sryun) ActivateRepo(c *gin.Context, user *model.User, repo *model.Repo, key *model.Key, link string, period uint64) error {
+	if period < 5 {
+		period = 5
+	}
+	poller.Ref().AddPoll(repo, period*60)
+	return nil
+}
+
 // Deactivate removes a repository by removing all the post-commit hooks
 // which are equal to link and removing the SSH deploy key.
 func (sry *Sryun) Deactivate(user *model.User, repo *model.Repo, link string) error {
@@ -213,13 +223,15 @@ func (sry *Sryun) Hook(req *http.Request) (*model.Repo, *model.Build, error) {
 
 //SryunHook manual hook for sryun cloud
 func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
-	owner := c.Query("owner")
-	name := c.Query("name")
-	force, _ := strconv.ParseBool(c.DefaultQuery("force", "false"))
-	if len(owner)&len(name) == 0 {
-		return nil, nil, errors.New("bad args")
+	params := poller.Params{}
+	err := c.Bind(&params)
+	if err != nil {
+		log.Errorln("bad params")
+		return nil, nil, err
 	}
-	repo, err := store.GetRepoOwnerName(c, owner, name)
+	log.Infoln("hook params %q", params)
+
+	repo, err := store.GetRepoOwnerName(c, params.Owner, params.Name)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -229,7 +241,7 @@ func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 		return nil, nil, err
 	}
 
-	build, err := formBuild(c, repo, push, tag, force)
+	build, err := formBuild(c, repo, push, tag, params.Force)
 	if err != nil {
 		return nil, nil, err
 	}

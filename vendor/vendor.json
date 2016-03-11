@@ -1,0 +1,215 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"path": "code.google.com/p/go.crypto/ssh",
+			"revision": "7aa593ce8cea",
+			"revisionTime": "2014-02-19T20:51:49+01:00"
+		},
+		{
+			"path": "github.com/Sirupsen/logrus",
+			"revision": "273bd5984cd7deae8d4b71b0ba9bfc5767f7284b",
+			"revisionTime": "2015-02-17T12:42:44-05:00"
+		},
+		{
+			"origin": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": "9f9027faeb0dad515336ed2f28317f9f8f527ab4",
+			"revisionTime": "2016-01-29T19:31:06Z"
+		},
+		{
+			"path": "github.com/dgrijalva/jwt-go",
+			"revision": "c1da56349675b292d3200463e2c88b9aa5e02391",
+			"revisionTime": "2015-09-04T14:24:56-07:00"
+		},
+		{
+			"path": "github.com/docker/docker/pkg/stdcopy",
+			"revision": "9356c76d9f6e285e71f04df33ef7870455a42775",
+			"revisionTime": "2015-07-02T17:24:29-04:00"
+		},
+		{
+			"path": "github.com/docker/go-units",
+			"revision": "5d2041e26a699eaca682e2ea41c8f891e1060444",
+			"revisionTime": "2016-01-25T09:48:45-08:00"
+		},
+		{
+			"path": "github.com/eknkc/amber",
+			"revision": "144da19a9994994c069f0693294a66dd310e14a4",
+			"revisionTime": "2015-08-30T00:43:03+03:00"
+		},
+		{
+			"path": "github.com/eknkc/amber/parser",
+			"revision": "144da19a9994994c069f0693294a66dd310e14a4",
+			"revisionTime": "2015-08-30T00:43:03+03:00"
+		},
+		{
+			"path": "github.com/elazarl/go-bindata-assetfs",
+			"revision": "bea323321994103859d60197d229f1a94699dde3",
+			"revisionTime": "2015-04-14T21:44:09+03:00"
+		},
+		{
+			"path": "github.com/franela/goblin",
+			"revision": "889391d730237f8aca06ce3e62975112983f96b4",
+			"revisionTime": "2016-01-23T18:11:54-03:00"
+		},
+		{
+			"path": "github.com/gin-gonic/gin",
+			"revision": "3d002e382355cafc15d706b92899b1961d5b79e9",
+			"revisionTime": "2016-01-30T01:28:57+01:00"
+		},
+		{
+			"path": "github.com/gin-gonic/gin/binding",
+			"revision": "3d002e382355cafc15d706b92899b1961d5b79e9",
+			"revisionTime": "2016-01-30T01:28:57+01:00"
+		},
+		{
+			"path": "github.com/gin-gonic/gin/render",
+			"revision": "3d002e382355cafc15d706b92899b1961d5b79e9",
+			"revisionTime": "2016-01-30T01:28:57+01:00"
+		},
+		{
+			"path": "github.com/go-sql-driver/mysql",
+			"revision": "9a7aa3606b82e2081a13a008ada88dfdb96c20fd",
+			"revisionTime": "2013-11-02T07:16:43-07:00"
+		},
+		{
+			"path": "github.com/gogits/go-gogs-client",
+			"revision": "d584b1e0fb4d8ad0e8cf2fae2368838f2526b408",
+			"revisionTime": "2016-02-12T16:27:11-05:00"
+		},
+		{
+			"path": "github.com/golang/protobuf/proto",
+			"revision": "552c7b9542c194800fd493123b3798ef0a832032",
+			"revisionTime": "2016-02-26T12:45:00+11:00"
+		},
+		{
+			"path": "github.com/google/go-github/github",
+			"revision": "47f2593dad1971eec2f0a0971aa007fef5edbc50",
+			"revisionTime": "2015-11-20T13:11:25-08:00"
+		},
+		{
+			"path": "github.com/google/go-querystring/query",
+			"revision": "d8840cbb2baa915f4836edda4750050a2c0b7aea",
+			"revisionTime": "2014-09-06T09:41:35+01:00"
+		},
+		{
+			"path": "github.com/gorilla/securecookie",
+			"revision": "1b0c7f6e9ab3d7f500fd7d50c7ad835ff428139b",
+			"revisionTime": "2014-04-09T13:11:00+02:00"
+		},
+		{
+			"path": "github.com/koding/cache",
+			"revision": "487fc0ca06f9aa1a02d796f5510784b47d5afae2",
+			"revisionTime": "2014-09-12T11:56:02+03:00"
+		},
+		{
+			"path": "github.com/lib/pq",
+			"revision": "83c4f410d0aed80a0f44bac6a576a7f2435791f3",
+			"revisionTime": "2015-10-15T14:07:56-07:00"
+		},
+		{
+			"path": "github.com/lib/pq/oid",
+			"revision": "83c4f410d0aed80a0f44bac6a576a7f2435791f3",
+			"revisionTime": "2015-10-15T14:07:56-07:00"
+		},
+		{
+			"path": "github.com/manucorporat/sse",
+			"revision": "ee05b128a739a0fb76c7ebd3ae4810c1de808d6d",
+			"revisionTime": "2016-01-26T19:01:36+01:00"
+		},
+		{
+			"path": "github.com/mattn/go-sqlite3",
+			"revision": "10876d7dac65f02064c03d7372a2f1dfb90043fe",
+			"revisionTime": "2016-03-07T18:57:06+09:00",
+			"tree": true
+		},
+		{
+			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "9f9027faeb0dad515336ed2f28317f9f8f527ab4",
+			"revisionTime": "2016-01-29T19:31:06Z"
+		},
+		{
+			"path": "github.com/rubenv/sql-migrate",
+			"revision": "53184e1edfb4f9655b0fa8dd2c23e7763f452bda",
+			"revisionTime": "2015-07-13T16:07:51+02:00"
+		},
+		{
+			"path": "github.com/rubenv/sql-migrate/sqlparse",
+			"revision": "53184e1edfb4f9655b0fa8dd2c23e7763f452bda",
+			"revisionTime": "2015-07-13T16:07:51+02:00"
+		},
+		{
+			"path": "github.com/russross/meddler",
+			"revision": "308c3d0e5e45f543a2eb6c787cbfe0db3880e220",
+			"revisionTime": "2013-09-19T15:23:15-06:00"
+		},
+		{
+			"path": "github.com/samalba/dockerclient",
+			"revision": "f274bbd0e2eb35ad1444dc6e6660214f9fbbc08c",
+			"revisionTime": "2016-02-22T16:23:45-08:00"
+		},
+		{
+			"path": "github.com/square/go-jose",
+			"revision": "afa7aee6d378358aa553dc54ddf1b109b96adcf7",
+			"revisionTime": "2015-08-21T15:33:24-07:00"
+		},
+		{
+			"path": "github.com/square/go-jose/cipher",
+			"revision": "afa7aee6d378358aa553dc54ddf1b109b96adcf7",
+			"revisionTime": "2015-08-21T15:33:24-07:00"
+		},
+		{
+			"origin": "github.com/stretchr/testify/vendor/github.com/stretchr/objx",
+			"path": "github.com/stretchr/objx",
+			"revision": "9f9027faeb0dad515336ed2f28317f9f8f527ab4",
+			"revisionTime": "2016-01-29T19:31:06Z"
+		},
+		{
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "9f9027faeb0dad515336ed2f28317f9f8f527ab4",
+			"revisionTime": "2016-01-29T19:31:06Z"
+		},
+		{
+			"path": "github.com/stretchr/testify/mock",
+			"revision": "9f9027faeb0dad515336ed2f28317f9f8f527ab4",
+			"revisionTime": "2016-01-29T19:31:06Z"
+		},
+		{
+			"path": "golang.org/x/net/context",
+			"revision": "6acef71eb69611914f7a30939ea9f6e194c78172",
+			"revisionTime": "2016-02-25T17:50:37Z"
+		},
+		{
+			"path": "golang.org/x/oauth2",
+			"revision": "8a57ed94ffd43444c0879fe75701732a38afc985",
+			"revisionTime": "2015-12-29T21:02:54-07:00"
+		},
+		{
+			"path": "golang.org/x/oauth2/bitbucket",
+			"revision": "8a57ed94ffd43444c0879fe75701732a38afc985",
+			"revisionTime": "2015-12-29T21:02:54-07:00"
+		},
+		{
+			"path": "golang.org/x/oauth2/internal",
+			"revision": "8a57ed94ffd43444c0879fe75701732a38afc985",
+			"revisionTime": "2015-12-29T21:02:54-07:00"
+		},
+		{
+			"path": "gopkg.in/go-playground/validator.v8",
+			"revision": "014792cf3e266caff1e916876be12282b33059e0",
+			"revisionTime": "2016-02-23T15:26:51-05:00"
+		},
+		{
+			"path": "gopkg.in/gorp.v1",
+			"revision": "c87af80f3cc5036b55b83d77171e156791085e2e",
+			"revisionTime": "2015-02-04T09:55:30+01:00"
+		},
+		{
+			"path": "gopkg.in/yaml.v2",
+			"revision": "5d6f7e02b7cdad63b06ab3877915532cd30073b4",
+			"revisionTime": "2015-01-19T16:55:52-02:00"
+		}
+	]
+}

@@ -1,5 +1,0 @@
-{
-  "host":     "https://gitlab.domain.com",
-  "api_path": "/api/v3",
-  "token":    "TOKEN"
-}
