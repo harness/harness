@@ -3,6 +3,7 @@ package github
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -394,6 +395,11 @@ func (g *Github) pullRequest(r *http.Request) (*model.Repo, *model.Build, error)
 	// ignore these
 	if hook.Action != "opened" && hook.Action != "synchronize" {
 		return nil, nil, nil
+	}
+
+	mergeable := *hook.PullRequest.Mergeable
+	if !mergeable {
+		return nil, nil, errors.New("Branch has merge conflict")
 	}
 	if *hook.PullRequest.State != "open" {
 		return nil, nil, nil

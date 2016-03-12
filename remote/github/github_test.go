@@ -43,6 +43,17 @@ func TestHook(t *testing.T) {
 				g.Assert(build.Author).Equal("author")
 				g.Assert(build.Avatar).Equal("https://avatars.githubusercontent.com/u/55555?v=3")
 			})
+
+			g.It("Should fail gracefully if the pull request has a merge conflict", func() {
+				hookJson, err := ioutil.ReadFile("fixtures/merge_conflict_pull_request.json")
+				if err != nil {
+					panic(err)
+				}
+				body.Write(hookJson)
+
+				_, _, mergeErr := github.Hook(r)
+				g.Assert(mergeErr.Error()).Equal("Branch has merge conflict")
+			})
 		})
 	})
 }
