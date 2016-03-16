@@ -11,6 +11,7 @@ import (
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote/sryun/git"
+	"github.com/drone/drone/remote/sryun/yaml"
 	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/shared/poller"
 	"github.com/drone/drone/store"
@@ -31,6 +32,8 @@ var (
 	ErrNoBuildNeed = errors.New("no build need")
 	//ErrBadCommit bad commit
 	ErrBadCommit = errors.New("bad commit")
+	//ErrBadScript bad script
+	ErrBadScript = errors.New("bad script")
 )
 
 //Sryun model
@@ -40,6 +43,7 @@ type Sryun struct {
 	Workspace  string
 	ScriptName string
 	SecName    string
+	Registry   string
 }
 
 // Load create Sryun by env, impl of Remote interface
@@ -54,6 +58,7 @@ func Load(env envconfig.Env) *Sryun {
 	workspace := env.String("RC_SRY_WORKSPACE", "/var/lib/drone/ws/")
 	scriptName := env.String("RC_SRY_SCRIPT", ".sryci.yaml")
 	secName := env.String("RC_SRY_SEC", ".sryci.sec")
+	registry := env.String("RC_SRY_REG_HOST", "")
 
 	user := model.User{}
 	user.Token = token
@@ -67,6 +72,7 @@ func Load(env envconfig.Env) *Sryun {
 		Workspace:  workspace,
 		ScriptName: scriptName,
 		SecName:    secName,
+		Registry:   registry,
 	}
 
 	sryunJSON, _ := json.Marshal(sryun)
@@ -172,11 +178,16 @@ func (sry *Sryun) Script(user *model.User, repo *model.Repo, build *model.Build)
 	}
 	sec, err := client.ShowFile(build.Commit, sry.SecName)
 	if err != nil {
-		return script, nil, nil
+		sec = nil
 	}
 
-	fmt.Println("script\n", script)
-	fmt.Println("sec\n", sec)
+	log.Infoln("old script\n", string(script))
+	script, err = yaml.GenScript(repo, build, script, sry.Registry)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	log.Infoln("script\n", string(script))
 
 	return script, sec, nil
 }

@@ -19,8 +19,8 @@ var (
 
 //Params poll parameters
 type Params struct {
-	Owner string `json:"owner"   binding:"required, gte=1"`
-	Name  string `json:"name"    binding:"required, gte=1"`
+	Owner string `json:"owner"   binding:"required,gte=1"`
+	Name  string `json:"name"    binding:"required,gte=1"`
 	Force bool   `json:"force"`
 }
 
