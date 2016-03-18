@@ -96,13 +96,12 @@ func (poller *Poller) Schedule(poll *model.Poll) {
 //UpdatePoll update poll period
 func (poller *Poller) UpdatePoll(repo *model.Repo, period uint64) error {
 	store := poller.store.Polls()
-
+	poll, err := store.Get(&model.Poll{Owner: repo.Owner, Name: repo.Name})
+	if err != nil {
+		log.Errorln("can't load poll", err)
+		return err
+	}
 	if period >= 300 {
-		poll, err := store.Get(&model.Poll{Owner: repo.Owner, Name: repo.Name})
-		if err != nil {
-			log.Errorln("can't load poll", err)
-			return err
-		}
 		if poll.Period != period {
 			poll.Period = period
 			err = store.Update(poll)
@@ -114,6 +113,12 @@ func (poller *Poller) UpdatePoll(repo *model.Repo, period uint64) error {
 			if err = poller.RemoveJob(poll); err == nil {
 				poller.Schedule(poll)
 			}
+		}
+	} else {
+		err = poller.RemoveJob(poll)
+		if err != nil {
+			log.Errorln("can't disable poll", err)
+			return err
 		}
 	}
 	return nil
@@ -192,10 +197,12 @@ func (poller *Poller) pollGit(owner, name string) {
 
 	//resp, err := http.Post(url, "application/json", nil)
 	log.Infoln("polling", url)
-	log.Infof("polling req %q\n", req)
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		log.Infoln("hook is not 200", resp.StatusCode)
+		log.Errorln("hook got err", err)
+		if resp != nil {
+			log.Errorln("hook is not 200", resp.StatusCode)
+		}
 	}
 	defer resp.Body.Close()
 }

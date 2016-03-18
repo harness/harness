@@ -137,6 +137,9 @@ func (sry *Sryun) RepoSryun(u *model.User, owner, name string, repo *model.Repo)
 	if !repo.AllowTag && !repo.AllowPush {
 		repo.AllowPush = true
 	}
+	if len(repo.Branch) < 1 {
+		repo.Branch = "master"
+	}
 
 	return repo, nil
 }
@@ -258,9 +261,10 @@ func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	log.Infoln("getting build", repo.ID, "-", branch)
 	lastBuild, err := store.GetBuildLast(c, repo, branch)
 	if err != nil {
-		log.Printf("no build found")
+		log.Infoln("no build found", err)
 	}
 	if lastBuild != nil {
 		log.Infof("lastBuild %q", *lastBuild)
@@ -285,6 +289,9 @@ func retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Reference, error) {
 	if repo.AllowPush {
 		filter = filter + git.FilterHeads
 	}
+	if filter == 0 {
+		filter = git.FilterAll
+	}
 
 	push, tag, err := client.LsRemote(filter, "")
 	if err != nil {
@@ -306,13 +313,17 @@ func formBuild(lastBuild *model.Build, repo *model.Repo, push *git.Reference, ta
 		if err != nil {
 			return nil, err
 		}
+		message := ""
+		if tag != nil {
+			message = tag.Ref
+		}
 		build := &model.Build{
 			Event:     model.EventPush, // for getting correct latest build// determineEvent(tagUpdated, pushUpdated),
 			Commit:    commit,
 			Ref:       ref,
 			Link:      "",
 			Branch:    repo.Branch,
-			Message:   "",
+			Message:   message,
 			Avatar:    "",
 			Author:    "",
 			Timestamp: time.Now().UTC().Unix(),
@@ -329,10 +340,12 @@ func isUpdated(build *model.Build, reference *git.Reference) bool {
 	if reference == nil {
 		return false
 	}
-	updated := build.Commit != reference.Commit
 
-	if !updated && isTag(reference.Ref) {
-		updated = build.Ref != reference.Ref
+	updated := false
+	if isTag(reference.Ref) {
+		updated = (build.Message != reference.Ref)
+	} else {
+		updated = build.Commit != reference.Commit
 	}
 	return updated
 }
