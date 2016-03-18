@@ -8,6 +8,7 @@ package github
 import (
 	"errors"
 	"fmt"
+	"io"
 	"mime"
 	"os"
 	"path/filepath"
@@ -85,8 +86,27 @@ func (s *RepositoriesService) ListReleases(owner, repo string, opt *ListOptions)
 // GitHub API docs: http://developer.github.com/v3/repos/releases/#get-a-single-release
 func (s *RepositoriesService) GetRelease(owner, repo string, id int) (*RepositoryRelease, *Response, error) {
 	u := fmt.Sprintf("repos/%s/%s/releases/%d", owner, repo, id)
+	return s.getSingleRelease(u)
+}
 
-	req, err := s.client.NewRequest("GET", u, nil)
+// GetLatestRelease fetches the latest published release for the repository.
+//
+// GitHub API docs: https://developer.github.com/v3/repos/releases/#get-the-latest-release
+func (s *RepositoriesService) GetLatestRelease(owner, repo string) (*RepositoryRelease, *Response, error) {
+	u := fmt.Sprintf("repos/%s/%s/releases/latest", owner, repo)
+	return s.getSingleRelease(u)
+}
+
+// GetReleaseByTag fetches a release with the specified tag.
+//
+// GitHub API docs: https://developer.github.com/v3/repos/releases/#get-a-release-by-tag-name
+func (s *RepositoriesService) GetReleaseByTag(owner, repo, tag string) (*RepositoryRelease, *Response, error) {
+	u := fmt.Sprintf("repos/%s/%s/releases/tags/%s", owner, repo, tag)
+	return s.getSingleRelease(u)
+}
+
+func (s *RepositoriesService) getSingleRelease(url string) (*RepositoryRelease, *Response, error) {
+	req, err := s.client.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -190,6 +210,29 @@ func (s *RepositoriesService) GetReleaseAsset(owner, repo string, id int) (*Rele
 		return nil, resp, nil
 	}
 	return asset, resp, err
+}
+
+// DownloadReleaseAsset downloads a release asset.
+//
+// DownloadReleaseAsset returns an io.ReadCloser that reads the contents of the
+// specified release asset. It is the caller's responsibility to close the ReadCloser.
+//
+// GitHub API docs : http://developer.github.com/v3/repos/releases/#get-a-single-release-asset
+func (s *RepositoriesService) DownloadReleaseAsset(owner, repo string, id int) (io.ReadCloser, error) {
+	u := fmt.Sprintf("repos/%s/%s/releases/assets/%d", owner, repo, id)
+
+	req, err := s.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", defaultMediaType)
+
+	resp, err := s.client.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Body, nil
 }
 
 // EditReleaseAsset edits a repository release asset.

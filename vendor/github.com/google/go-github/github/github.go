@@ -37,11 +37,15 @@ const (
 
 	// Media Type values to access preview APIs
 
-	// https://developer.github.com/changes/2014-08-05-team-memberships-api/
-	mediaTypeMembershipPreview = "application/vnd.github.the-wasp-preview+json"
+	// https://developer.github.com/changes/2015-03-09-licenses-api/
+	mediaTypeLicensesPreview = "application/vnd.github.drax-preview+json"
 
-	// https://developer.github.com/changes/2014-01-09-preview-the-new-deployments-api/
-	mediaTypeDeploymentPreview = "application/vnd.github.cannonball-preview+json"
+	// https://developer.github.com/changes/2014-12-09-new-attributes-for-stars-api/
+	mediaTypeStarringPreview = "application/vnd.github.v3.star+json"
+
+	// https://developer.github.com/changes/2015-06-24-api-enhancements-for-working-with-organization-permissions/
+	mediaTypeOrgPermissionPreview     = "application/vnd.github.ironman-preview+json"
+	mediaTypeOrgPermissionRepoPreview = "application/vnd.github.ironman-preview.repository+json"
 )
 
 // A Client manages communication with the GitHub API.
@@ -62,7 +66,7 @@ type Client struct {
 
 	// Rate specifies the current rate limit for the client as determined by the
 	// most recent API call.  If the client is used in a multi-user application,
-	// this rate may not always be up-to-date.  Call RateLimit() to check the
+	// this rate may not always be up-to-date.  Call RateLimits() to check the
 	// current rate.
 	Rate Rate
 
@@ -77,6 +81,7 @@ type Client struct {
 	Repositories  *RepositoriesService
 	Search        *SearchService
 	Users         *UsersService
+	Licenses      *LicensesService
 }
 
 // ListOptions specifies the optional parameters to various List methods that
@@ -119,7 +124,7 @@ func addOptions(s string, opt interface{}) (string, error) {
 // NewClient returns a new GitHub API client.  If a nil httpClient is
 // provided, http.DefaultClient will be used.  To use API methods which require
 // authentication, provide an http.Client that will perform the authentication
-// for you (such as that provided by the goauth2 library).
+// for you (such as that provided by the golang.org/x/oauth2 library).
 func NewClient(httpClient *http.Client) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
@@ -138,6 +143,7 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Repositories = &RepositoriesService{client: c}
 	c.Search = &SearchService{client: c}
 	c.Users = &UsersService{client: c}
+	c.Licenses = &LicensesService{client: c}
 	return c
 }
 
@@ -219,7 +225,7 @@ type Response struct {
 	Rate
 }
 
-// newResponse creats a new Response for the provided http.Response.
+// newResponse creates a new Response for the provided http.Response.
 func newResponse(r *http.Response) *Response {
 	response := &Response{Response: r}
 	response.populatePageValues()
@@ -333,8 +339,22 @@ type ErrorResponse struct {
 
 func (r *ErrorResponse) Error() string {
 	return fmt.Sprintf("%v %v: %d %v %+v",
-		r.Response.Request.Method, r.Response.Request.URL,
+		r.Response.Request.Method, sanitizeURL(r.Response.Request.URL),
 		r.Response.StatusCode, r.Message, r.Errors)
+}
+
+// sanitizeURL redacts the client_id and client_secret tokens from the URL which
+// may be exposed to the user, specifically in the ErrorResponse error message.
+func sanitizeURL(uri *url.URL) *url.URL {
+	if uri == nil {
+		return nil
+	}
+	params := uri.Query()
+	if len(params.Get("client_secret")) > 0 {
+		params.Set("client_secret", "REDACTED")
+		uri.RawQuery = params.Encode()
+	}
+	return uri
 }
 
 /*

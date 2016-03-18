@@ -34,6 +34,19 @@ func Token(c *gin.Context) *token.Token {
 	return u
 }
 
+//SetAdminUser setting admin user of sryun
+func SetAdminUser(login string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var user *model.User
+
+		user, err := store.GetUserLogin(c, login)
+		if err == nil {
+			c.Set("user", user)
+		}
+		c.Next()
+	}
+}
+
 func SetUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var user *model.User

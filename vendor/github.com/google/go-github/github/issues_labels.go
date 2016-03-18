@@ -7,7 +7,7 @@ package github
 
 import "fmt"
 
-// Label represents a GitHib label on an Issue
+// Label represents a GitHub label on an Issue
 type Label struct {
 	URL   *string `json:"url,omitempty"`
 	Name  *string `json:"name,omitempty"`

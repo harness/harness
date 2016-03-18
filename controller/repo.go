@@ -9,7 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v2"
 
-	"encoding/json"
+	"log"
+
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/remote/sryun"
@@ -18,7 +19,6 @@ import (
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
-	"log"
 )
 
 func PostRepo(c *gin.Context) {
@@ -36,17 +36,21 @@ func PostRepo(c *gin.Context) {
 	sryunRemote, isSryun := remote.(*sryun.Sryun)
 	var err error
 	var r *model.Repo
+	var meta = struct {
+		*model.Repo
+		Period uint64 `json:"period"`
+	}{}
 	if isSryun {
-		meta := &model.Repo{}
-		err := c.Bind(meta)
+		err := c.Bind(&meta)
+		meta.Owner = owner
+		meta.Name = name
 		log.Println("meta bind err", err)
-		metaStr, err := json.Marshal(meta)
-		log.Println("meta", string(metaStr))
+		log.Printf("meta %q", meta)
 		if err != nil {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		r, err = sryunRemote.RepoSryun(user, owner, name, meta)
+		r, err = sryunRemote.RepoSryun(user, owner, name, meta.Repo)
 	} else {
 		r, err = remote.Repo(user, owner, name)
 	}
@@ -106,7 +110,12 @@ func PostRepo(c *gin.Context) {
 
 	// activate the repository before we make any
 	// local changes to the database.
-	err = remote.Activate(user, r, keys, link)
+	//err = remote.Activate(user, r, keys, link)
+	if isSryun {
+		err = sryunRemote.ActivateRepo(c, user, r, keys, link, meta.Period)
+	} else {
+		err = remote.Activate(user, r, keys, link)
+	}
 	if err != nil {
 		c.String(500, err.Error())
 		return

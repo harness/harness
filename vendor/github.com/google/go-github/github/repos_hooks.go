@@ -164,6 +164,18 @@ func (s *RepositoriesService) DeleteHook(owner, repo string, id int) (*Response,
 	return s.client.Do(req, nil)
 }
 
+// PingHook triggers a 'ping' event to be sent to the Hook.
+//
+// GitHub API docs: https://developer.github.com/v3/repos/hooks/#ping-a-hook
+func (s *RepositoriesService) PingHook(owner, repo string, id int) (*Response, error) {
+	u := fmt.Sprintf("repos/%v/%v/hooks/%d/pings", owner, repo, id)
+	req, err := s.client.NewRequest("POST", u, nil)
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Do(req, nil)
+}
+
 // TestHook triggers a test Hook by github.
 //
 // GitHub API docs: http://developer.github.com/v3/repos/hooks/#test-a-push-hook
@@ -176,34 +188,7 @@ func (s *RepositoriesService) TestHook(owner, repo string, id int) (*Response, e
 	return s.client.Do(req, nil)
 }
 
-// ServiceHook represents a hook that has configuration settings, a list of
-// available events, and default events.
-type ServiceHook struct {
-	Name            *string    `json:"name,omitempty"`
-	Events          []string   `json:"events,omitempty"`
-	SupportedEvents []string   `json:"supported_events,omitempty"`
-	Schema          [][]string `json:"schema,omitempty"`
-}
-
-func (s *ServiceHook) String() string {
-	return Stringify(s)
-}
-
-// ListServiceHooks lists all of the available service hooks.
-//
-// GitHub API docs: https://developer.github.com/webhooks/#services
+// ListServiceHooks is deprecated.  Use Client.ListServiceHooks instead.
 func (s *RepositoriesService) ListServiceHooks() ([]ServiceHook, *Response, error) {
-	u := "hooks"
-	req, err := s.client.NewRequest("GET", u, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	hooks := new([]ServiceHook)
-	resp, err := s.client.Do(req, hooks)
-	if err != nil {
-		return nil, resp, err
-	}
-
-	return *hooks, resp, err
+	return s.client.ListServiceHooks()
 }

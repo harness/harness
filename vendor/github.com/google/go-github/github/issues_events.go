@@ -22,40 +22,52 @@ type IssueEvent struct {
 	// values are:
 	//
 	//     closed
-	//       The issue was closed by the actor. When the commit_id is
-	//       present, it identifies the commit that closed the issue using
-	//       “closes / fixes #NN” syntax.
-	//
-	//     reopened
-	//       The issue was reopened by the actor.
-	//
-	//     subscribed
-	//       The actor subscribed to receive notifications for an issue.
+	//       The Actor closed the issue.
+	//       If the issue was closed by commit message, CommitID holds the SHA1 hash of the commit.
 	//
 	//     merged
-	//       The issue was merged by the actor. The commit_id attribute is the SHA1 of the HEAD commit that was merged.
+	//       The Actor merged into master a branch containing a commit mentioning the issue.
+	//       CommitID holds the SHA1 of the merge commit.
 	//
 	//     referenced
-	//       The issue was referenced from a commit message. The commit_id attribute is the commit SHA1 of where that happened.
+	//       The Actor committed to master a commit mentioning the issue in its commit message.
+	//       CommitID holds the SHA1 of the commit.
+	//
+	//     reopened, locked, unlocked
+	//       The Actor did that to the issue.
+	//
+	//     renamed
+	//       The Actor changed the issue title from Rename.From to Rename.To.
 	//
 	//     mentioned
-	//       The actor was @mentioned in an issue body.
+	//       Someone unspecified @mentioned the Actor [sic] in an issue comment body.
 	//
-	//     assigned
-	//       The issue was assigned to the actor.
+	//     assigned, unassigned
+	//       The Actor assigned the issue to or removed the assignment from the Assignee.
 	//
-	//     head_ref_deleted
-	//       The pull request’s branch was deleted.
+	//     labeled, unlabeled
+	//       The Actor added or removed the Label from the issue.
 	//
-	//     head_ref_restored
-	//       The pull request’s branch was restored.
+	//     milestoned, demilestoned
+	//       The Actor added or removed the issue from the Milestone.
+	//
+	//     subscribed, unsubscribed
+	//       The Actor subscribed to or unsubscribed from notifications for an issue.
+	//
+	//     head_ref_deleted, head_ref_restored
+	//       The pull request’s branch was deleted or restored.
+	//
 	Event *string `json:"event,omitempty"`
-
-	// The SHA of the commit that referenced this commit, if applicable.
-	CommitID *string `json:"commit_id,omitempty"`
 
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	Issue     *Issue     `json:"issue,omitempty"`
+
+	// Only present on certain events; see above.
+	Assignee  *User      `json:"assignee,omitempty"`
+	CommitID  *string    `json:"commit_id,omitempty"`
+	Milestone *Milestone `json:"milestone,omitempty"`
+	Label     *Label     `json:"label,omitempty"`
+	Rename    *Rename    `json:"rename,omitempty"`
 }
 
 // ListIssueEvents lists events for the specified issue.
@@ -124,4 +136,14 @@ func (s *IssuesService) GetEvent(owner, repo string, id int) (*IssueEvent, *Resp
 	}
 
 	return event, resp, err
+}
+
+// Rename contains details for 'renamed' events.
+type Rename struct {
+	From *string `json:"from,omitempty"`
+	To   *string `json:"to,omitempty"`
+}
+
+func (r Rename) String() string {
+	return Stringify(r)
 }

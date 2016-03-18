@@ -12,11 +12,12 @@ import (
 	"github.com/drone/drone/router/middleware/location"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/router/middleware/token"
+	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/static"
 	"github.com/drone/drone/template"
 )
 
-func Load(middleware ...gin.HandlerFunc) http.Handler {
+func Load(env envconfig.Env, middleware ...gin.HandlerFunc) http.Handler {
 	e := gin.Default()
 	e.SetHTMLTemplate(template.Load())
 	e.StaticFS("/static", static.FileSystem())
@@ -26,9 +27,13 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(header.Options)
 	e.Use(header.Secure)
 	e.Use(middleware...)
-	e.Use(session.SetUser())
+	if env.String("REMOTE_DRIVER", "") == "sryun" {
+		e.Use(session.SetAdminUser(env.String("RC_SRY_USER", "sryadmin")))
+	} else {
+		e.Use(session.SetUser())
+		e.Use(token.Refresh)
+	}
 	e.Use(cache.Perms)
-	e.Use(token.Refresh)
 
 	e.GET("/", cache.Repos, controller.ShowIndex)
 	e.GET("/login", controller.ShowLogin)

@@ -42,6 +42,7 @@ func New(driver, config string) store.Store {
 		&buildstore{db},
 		&jobstore{db},
 		&logstore{db},
+		&pollstore{db},
 	)
 }
 
@@ -56,6 +57,7 @@ func From(db *sql.DB) store.Store {
 		&buildstore{db},
 		&jobstore{db},
 		&logstore{db},
+		&pollstore{db},
 	)
 }
 
