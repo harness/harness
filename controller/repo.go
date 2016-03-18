@@ -17,6 +17,7 @@ import (
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/crypto"
 	"github.com/drone/drone/shared/httputil"
+	"github.com/drone/drone/shared/poller"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
 )
@@ -142,12 +143,13 @@ func PatchRepo(c *gin.Context) {
 	user := session.User(c)
 
 	in := &struct {
-		IsTrusted   *bool  `json:"trusted,omitempty"`
-		Timeout     *int64 `json:"timeout,omitempty"`
-		AllowPull   *bool  `json:"allow_pr,omitempty"`
-		AllowPush   *bool  `json:"allow_push,omitempty"`
-		AllowDeploy *bool  `json:"allow_deploy,omitempty"`
-		AllowTag    *bool  `json:"allow_tag,omitempty"`
+		IsTrusted   *bool   `json:"trusted,omitempty"`
+		Timeout     *int64  `json:"timeout,omitempty"`
+		AllowPull   *bool   `json:"allow_pr,omitempty"`
+		AllowPush   *bool   `json:"allow_push,omitempty"`
+		AllowDeploy *bool   `json:"allow_deploy,omitempty"`
+		AllowTag    *bool   `json:"allow_tags,omitempty"`
+		Period      *uint64 `json:"period,omitempty"`
 	}{}
 	if err := c.Bind(in); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -177,6 +179,16 @@ func PatchRepo(c *gin.Context) {
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
+	}
+	//update poll
+	remote := remote.FromContext(c)
+	if _, isSryun := remote.(*sryun.Sryun); isSryun {
+		if in.Period != nil {
+			if err = poller.Ref().UpdatePoll(repo, (*in.Period)*60); err != nil {
+				c.AbortWithError(http.StatusInternalServerError, err)
+				return
+			}
+		}
 	}
 
 	c.IndentedJSON(http.StatusOK, repo)

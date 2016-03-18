@@ -3,18 +3,27 @@ package poller
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"github.com/carlescere/scheduler"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/store"
-	"github.com/jasonlvhit/gocron"
+
 	"net/http"
+	"reflect"
+	"runtime"
 	"strings"
 )
 
 var (
 	instance *Poller
+)
+
+var (
+	//ErrBadPoll
+	ErrBadPoll = errors.New("bad poll")
 )
 
 //Params poll parameters
@@ -28,7 +37,7 @@ type Params struct {
 type Poller struct {
 	serverURL string
 	store     store.Store
-	scheduler *gocron.Scheduler
+	jobs      map[int64]*scheduler.Job
 }
 
 //Init initialize poller
@@ -38,15 +47,10 @@ func Init(env envconfig.Env, store store.Store) {
 	instance = &Poller{
 		serverURL: formURL(serverAddr),
 		store:     store,
-		scheduler: gocron.NewScheduler(),
+		jobs:      make(map[int64]*scheduler.Job, 256),
 	}
-	go func() {
-		stopped := instance.scheduler.Start()
-		instance.loadPolls()
-		log.Infoln("poller started")
-		<-stopped
-		Init(env, store)
-	}()
+	instance.loadPolls()
+	log.Infoln("poller started")
 }
 
 //Ref get scheduler reference
@@ -57,7 +61,7 @@ func Ref() *Poller {
 	return instance
 }
 
-//Schedule poll
+//AddPoll add git poll
 func (poller *Poller) AddPoll(repo *model.Repo, seconds uint64) {
 	poll := model.Poll{
 		Owner:  repo.Owner,
@@ -68,24 +72,104 @@ func (poller *Poller) AddPoll(repo *model.Repo, seconds uint64) {
 	if err != nil {
 		log.Errorln("can't create poll", err)
 	}
-	poller.Schedule(repo.Owner, repo.Name, seconds)
+	poller.Schedule(&poll)
 }
 
-func (poller *Poller) Schedule(owner, name string, seconds uint64) {
-	poller.scheduler.Every(seconds).Seconds().Do(poller.pollGit, owner, name)
-	log.Infoln("scheduled poll", owner, "-", name, "-", seconds)
+//Schedule schedule git poll
+func (poller *Poller) Schedule(poll *model.Poll) {
+	jobFn := func() {
+		poller.pollGit(poll.Owner, poll.Name)
+	}
+	job, err := scheduler.Every(int(poll.Period)).Seconds().NotImmediately().Run(jobFn)
+	if err != nil {
+		log.Errorln("can't schedule job", err)
+		return
+	}
+
+	poller.jobs[poll.ID] = job
+
+	log.Infof("scheduled poll %q\n", *poll)
+	log.Infof("scheduled jobs %q\n", poller.jobs)
+	log.Infof("scheduled jobs len %d\n", len(poller.jobs))
+}
+
+//UpdatePoll update poll period
+func (poller *Poller) UpdatePoll(repo *model.Repo, period uint64) error {
+	store := poller.store.Polls()
+
+	if period >= 300 {
+		poll, err := store.Get(&model.Poll{Owner: repo.Owner, Name: repo.Name})
+		if err != nil {
+			log.Errorln("can't load poll", err)
+			return err
+		}
+		if poll.Period != period {
+			poll.Period = period
+			err = store.Update(poll)
+			if err != nil {
+				log.Errorln("can't update poll", err)
+				return err
+			}
+
+			if err = poller.RemoveJob(poll); err == nil {
+				poller.Schedule(poll)
+			}
+		}
+	}
+	return nil
+}
+
+//RemoveJob remove scheduled job
+func (poller *Poller) RemoveJob(poll *model.Poll) error {
+	if poll == nil || poll.ID < 1 {
+		return ErrBadPoll
+	}
+
+	if job, ok := poller.jobs[poll.ID]; ok {
+		log.Infoln("removing job", poll.ID)
+		job.Quit <- true
+		delete(poller.jobs, poll.ID)
+		return nil
+	} else {
+		log.Errorf("not found job in map %q\n", poller.jobs)
+	}
+	log.Infof("removed job %q\n", *poll)
+
+	return nil
+}
+
+//DeletePoll delete git poll
+func (poller *Poller) DeletePoll(repo *model.Repo) error {
+	store := poller.store.Polls()
+
+	poll, err := store.Get(&model.Poll{Owner: repo.Owner, Name: repo.Name})
+	if err != nil {
+		log.Errorln("can't load poll", err)
+		return err
+	}
+
+	err = store.Delete(poll)
+	if err != nil {
+		log.Errorln("can't delete poll", err)
+		return err
+	}
+
+	err = poller.RemoveJob(poll)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 //preload all polls from db
 func (poller *Poller) loadPolls() {
-	polls, err := poller.store.Polls().GetPollList()
+	polls, err := poller.store.Polls().List()
 	if err != nil {
 		log.Errorln("get poll list err", err)
 		return
 	}
 	for _, poll := range polls {
-		poller.Schedule(poll.Owner, poll.Name, poll.Period)
-		log.Infof("scheduled poll %q\n", poll)
+		poller.Schedule(poll)
 	}
 }
 
@@ -128,4 +212,9 @@ func formURL(addr string) string {
 		log.Panicln("bad addr", addr)
 	}
 	return ""
+}
+
+// for given function fn , get the name of funciton.
+func fnName(fn interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf((fn)).Pointer()).Name()
 }

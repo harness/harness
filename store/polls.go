@@ -20,7 +20,7 @@ type PollStore interface {
 	Delete(*model.Poll) error
 
 	//GetPollList list all polls
-	GetPollList() ([]*model.Poll, error)
+	List() ([]*model.Poll, error)
 }
 
 //GetPoll get a poll by repository ID.
@@ -45,5 +45,5 @@ func DeletePoll(c context.Context, poll *model.Poll) error {
 
 //GetPollList query all polls
 func GetPollList(c context.Context) ([]*model.Poll, error) {
-	return FromContext(c).Polls().GetPollList()
+	return FromContext(c).Polls().List()
 }
