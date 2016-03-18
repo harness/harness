@@ -1,14 +1,17 @@
 package git
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -46,6 +49,8 @@ var (
 	ErrShow = errors.New("git show failed")
 	//ErrBadRev invalid revision
 	ErrBadRev = errors.New("bad rev")
+	//ErrBadCommit invalid commit
+	ErrBadCommit = errors.New("bad commit")
 )
 
 var (
@@ -96,6 +101,7 @@ func (client *Client) InitRepo(workspace string, name string) error {
 		workspace = "/var/lib/drone/workspace/"
 	}
 	if !filepath.IsAbs(workspace) {
+		log.Errorln("bad workspace", workspace)
 		return ErrBadWorkspace
 	}
 	path := filepath.Join(workspace, name)
@@ -144,6 +150,7 @@ func gitInit(path string) error {
 
 func gitCmd(path string, args ...string) (*exec.Cmd, error) {
 	if len(path) == 0 {
+		log.Errorln("bad workspace", path)
 		return nil, ErrBadWorkspace
 	}
 	if len(args) < 1 {
@@ -198,6 +205,54 @@ func (client *Client) ShowFile(rev string, file string) ([]byte, error) {
 		return nil, ErrShow
 	}
 	return out, nil
+}
+
+//ShowTimestamps show commits timestamps
+func (client *Client) ShowTimestamps(commits ...string) ([]int, error) {
+	if len(commits) < 1 {
+		return nil, ErrBadCommit
+	}
+
+	for _, commit := range commits {
+		if len(commit) != 40 {
+			return nil, ErrBadCommit
+		}
+	}
+
+	cmd, err := gitCmd(client.Path, append([]string{"show", "-s", "--format=%ct"}, commits...)...)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd.Stdout = nil
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	return parseTimestamps(commits, out)
+}
+
+func parseTimestamps(commits []string, out []byte) ([]int, error) {
+	if len(out) < 10 {
+		return nil, ErrShow
+	}
+
+	scanner := bufio.NewScanner(bytes.NewReader(out))
+	timestamps := []int{}
+	for scanner.Scan() {
+		lineStr := scanner.Text()
+		timestamp, err := strconv.Atoi(lineStr)
+		if err != nil {
+			return nil, err
+		}
+		timestamps = append(timestamps, timestamp)
+	}
+	if len(commits) != len(timestamps) {
+		log.Errorf("timstamps err %q -> %q", commits, timestamps)
+		return nil, ErrShow
+	}
+	return nil, ErrShow
 }
 
 //LsRemote git ls-remote
@@ -266,7 +321,7 @@ func lsRemoteRefs(uri string, filter string, refs string) (*Reference, error) {
 		return nil, ErrNoRefs
 	}
 
-	reference, commit, err := parseLsRemote(string(out))
+	reference, commit, err := parseLsRemote(out)
 	if err != nil {
 		return nil, err
 	}
@@ -274,22 +329,23 @@ func lsRemoteRefs(uri string, filter string, refs string) (*Reference, error) {
 	return &Reference{string(reference), string(commit)}, nil
 }
 
-func parseLsRemote(text string) ([]byte, []byte, error) {
-	lines := strings.Split(string(text), "\n")
-	log.Printf("lines %q\n", lines)
+func parseLsRemote(text []byte) ([]byte, []byte, error) {
+	if len(text) < 1 {
+		return nil, nil, ErrNoRefs
+	}
 
 	entries := map[string]string{}
 	references := []string{}
-	if len(lines) > 0 {
-		for _, line := range lines {
-			tokens := strings.Split(line, "\t")
-			log.Printf("tokens %q\n", tokens)
+	scanner := bufio.NewScanner(bytes.NewReader(text))
+	for scanner.Scan() {
+		line := scanner.Text()
+		tokens := strings.Split(line, "\t")
+		log.Printf("tokens %q\n", tokens)
 
-			if len(tokens) == 2 && sha1Pattern.Match([]byte(tokens[0])) {
-				reference := strings.TrimSuffix(tokens[1], "^{}")
-				entries[reference] = tokens[0]
-				references = append(references, reference)
-			}
+		if len(tokens) == 2 && sha1Pattern.Match([]byte(tokens[0])) {
+			reference := strings.TrimSuffix(tokens[1], "^{}")
+			entries[reference] = tokens[0]
+			references = append(references, reference)
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -257,8 +258,14 @@ func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-
-	build, err := formBuild(c, repo, push, tag, params.Force)
+	lastBuild, err := store.GetBuildLast(c, repo, branch)
+	if err != nil {
+		log.Printf("no build found")
+	}
+	if lastBuild != nil {
+		log.Infof("lastBuild %q", *lastBuild)
+	}
+	build, err := formBuild(lastBuild, repo, push, tag, params.Force)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -288,21 +295,19 @@ func retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Reference, error) {
 	return push, tag, nil
 }
 
-func formBuild(c *gin.Context, repo *model.Repo, push *git.Reference, tag *git.Reference, force bool) (*model.Build, error) {
-	_ = "breakpoint"
-	lastBuild, err := store.GetBuildLast(c, repo, branch)
-	if err != nil {
-		log.Printf("no build found")
-	}
-	tagUpdated := isOutdate(lastBuild, tag)
-	pushUpdated := isOutdate(lastBuild, push)
+func formBuild(lastBuild *model.Build, repo *model.Repo, push *git.Reference, tag *git.Reference, force bool) (*model.Build, error) {
+	tagUpdated := isUpdated(lastBuild, tag)
+	pushUpdated := isUpdated(lastBuild, push)
+	log.Infoln("tagUpdated", tagUpdated, "pushUpdated", pushUpdated)
+
 	if force || tagUpdated || pushUpdated {
-		ref, commit, err := determineRef(lastBuild, tag, push, tagUpdated, pushUpdated)
+		ref, commit, err := determineRef(repo, lastBuild, tag, push, tagUpdated, pushUpdated)
+		log.Infoln("determined ref", ref, "commit", commit)
 		if err != nil {
 			return nil, err
 		}
 		build := &model.Build{
-			Event:     determineEvent(tagUpdated, pushUpdated),
+			Event:     model.EventPush, // for getting correct latest build// determineEvent(tagUpdated, pushUpdated),
 			Commit:    commit,
 			Ref:       ref,
 			Link:      "",
@@ -317,14 +322,23 @@ func formBuild(c *gin.Context, repo *model.Repo, push *git.Reference, tag *git.R
 	return nil, ErrNoBuildNeed
 }
 
-func isOutdate(build *model.Build, reference *git.Reference) bool {
+func isUpdated(build *model.Build, reference *git.Reference) bool {
 	if build == nil {
 		return true
 	}
 	if reference == nil {
 		return false
 	}
-	return build.Commit != reference.Commit
+	updated := build.Commit != reference.Commit
+
+	if !updated && isTag(reference.Ref) {
+		updated = build.Ref != reference.Ref
+	}
+	return updated
+}
+
+func isTag(ref string) bool {
+	return strings.HasPrefix(ref, "refs/tags")
 }
 
 func determineEvent(tagUpdated bool, pushUpdated bool) string {
@@ -338,7 +352,32 @@ func determineEvent(tagUpdated bool, pushUpdated bool) string {
 	return event
 }
 
-func determineRef(build *model.Build, tag, push *git.Reference, tagUpdated, pushUpdated bool) (string, string, error) {
+func determineRef(repo *model.Repo, build *model.Build, tag, push *git.Reference, tagUpdated, pushUpdated bool) (string, string, error) {
+	/*if tagUpdated && pushUpdated {
+		client, err := git.NewClient(repo.Clone, repo.Branch)
+		if err != nil {
+			return "", "", err
+		}
+		err = client.InitRepo(sry.Workspace, fmt.Sprintf("%d_%s_%s", repo.ID, repo.Owner, repo.Name))
+		if err != nil {
+			return nil, nil, err
+		}
+		err = client.FetchRef(build.Ref)
+		if err != nil {
+			return nil, nil, err
+		}
+		timestamps, err := client.ShowTimestamps(tag.Commit, push.Commit)
+		if err != nil {
+			return "", "", err
+		}
+		log.Infof("got timestamps %q", timestamps)
+		if timestamps[0] > timestamps[1] {
+			return tag.Ref, tag.Commit, nil
+		} else {
+			return push.Ref, push.Commit, nil
+		}
+	}*/
+
 	if tagUpdated && tag != nil {
 		return tag.Ref, tag.Commit, nil
 	}
