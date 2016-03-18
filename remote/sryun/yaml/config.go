@@ -49,7 +49,7 @@ func formPublish(repo *model.Repo, build *model.Build, insecure bool, registry, 
 	docker := map[string]interface{}{
 		//"image": "testregistry.dataman.io/drone-plugins-docker",
 		//"image": "10.3.10.36:5000/library/drone-docker:0.1",
-		"image": "plugins/drone-docker",
+		//"image": "plugins/drone-docker",
 		//"username": "admin",
 		//"password": "admin",
 		"username":       repo.Owner,
@@ -84,7 +84,7 @@ func formRefName(build *model.Build) string {
 
 func formClone(repo *model.Repo) map[string]interface{} {
 	clone := map[string]interface{}{
-		"image":                   "testregistry.dataman.io/drone-git",
+		//"image":                   "testregistry.dataman.io/drone-git",
 		"privileged":              true,
 		"pull":                    true,
 		"recursive":               true,
