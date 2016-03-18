@@ -10,7 +10,8 @@ import (
 
 var (
 	// name of the build agent container.
-	DefaultAgent = "drone/drone-exec:latest"
+	//DefaultAgent = "drone/drone-exec:latest"
+	DefaultAgent = "testregistry.dataman.io/drone-exec:latest"
 
 	// default name of the build agent executable
 	DefaultEntrypoint = []string{"/bin/drone-exec"}

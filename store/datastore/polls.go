@@ -11,18 +11,18 @@ type pollstore struct {
 	*sql.DB
 }
 
-func (db *pollstore) Get(poll *model.Poll) (*model.Poll, error) {
-	var p = new(model.Poll)
-	var err = meddler.QueryRow(db, p, rebind(pollQuery), poll.Owner, poll.Name)
+func (db *pollstore) Get(filter *model.Poll) (*model.Poll, error) {
+	var poll = new(model.Poll)
+	var err = meddler.QueryRow(db, poll, rebind(pollQuery), filter.Owner, filter.Name)
 	return poll, err
 }
 
 func (db *pollstore) Create(poll *model.Poll) error {
-	return meddler.Save(db, pollTable, poll)
+	return meddler.Insert(db, pollTable, poll)
 }
 
 func (db *pollstore) Update(poll *model.Poll) error {
-	return meddler.Save(db, pollTable, poll)
+	return meddler.Update(db, pollTable, poll)
 }
 
 func (db *pollstore) Delete(poll *model.Poll) error {
@@ -30,7 +30,7 @@ func (db *pollstore) Delete(poll *model.Poll) error {
 	return err
 }
 
-func (db *pollstore) GetPollList() ([]*model.Poll, error) {
+func (db *pollstore) List() ([]*model.Poll, error) {
 	var polls []*model.Poll
 	err := meddler.QueryAll(db, &polls, pollQueryAll, []interface{}{}...)
 	return polls, err

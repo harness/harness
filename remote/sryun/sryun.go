@@ -44,6 +44,8 @@ type Sryun struct {
 	ScriptName string
 	SecName    string
 	Registry   string
+	Insecure   bool
+	Storage    string
 }
 
 // Load create Sryun by env, impl of Remote interface
@@ -59,6 +61,8 @@ func Load(env envconfig.Env) *Sryun {
 	scriptName := env.String("RC_SRY_SCRIPT", ".sryci.yaml")
 	secName := env.String("RC_SRY_SEC", ".sryci.sec")
 	registry := env.String("RC_SRY_REG_HOST", "")
+	storage := env.String("RC_SRY_DOCKER_STORAGE", "aufs")
+	insecure := env.Bool("RC_SRY_REG_INSECURE", false)
 
 	user := model.User{}
 	user.Token = token
@@ -73,6 +77,8 @@ func Load(env envconfig.Env) *Sryun {
 		ScriptName: scriptName,
 		SecName:    secName,
 		Registry:   registry,
+		Storage:    storage,
+		Insecure:   insecure,
 	}
 
 	sryunJSON, _ := json.Marshal(sryun)
@@ -182,7 +188,7 @@ func (sry *Sryun) Script(user *model.User, repo *model.Repo, build *model.Build)
 	}
 
 	log.Infoln("old script\n", string(script))
-	script, err = yaml.GenScript(repo, build, script, sry.Registry)
+	script, err = yaml.GenScript(repo, build, script, sry.Insecure, sry.Registry, sry.Storage)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -223,7 +229,7 @@ func (sry *Sryun) ActivateRepo(c *gin.Context, user *model.User, repo *model.Rep
 // Deactivate removes a repository by removing all the post-commit hooks
 // which are equal to link and removing the SSH deploy key.
 func (sry *Sryun) Deactivate(user *model.User, repo *model.Repo, link string) error {
-	return nil
+	return poller.Ref().DeletePoll(repo)
 }
 
 // Hook parses the post-commit hook from the Request body
