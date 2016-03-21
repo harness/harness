@@ -8,9 +8,11 @@
 			"revisionTime": "2014-02-19T20:51:49+01:00"
 		},
 		{
+			"checksumSHA1": "DWPL08pD/SQ2GzLfoR7ZXnjj7Sw=",
+			"origin": "github.com/drone/drone/vendor/github.com/Sirupsen/logrus",
 			"path": "github.com/Sirupsen/logrus",
-			"revision": "273bd5984cd7deae8d4b71b0ba9bfc5767f7284b",
-			"revisionTime": "2015-02-17T12:42:44-05:00"
+			"revision": "4b6ea7319e214d98c938f12692336f7ca9348d6b",
+			"revisionTime": "2016-03-17T14:11:10Z"
 		},
 		{
 			"origin": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
@@ -211,5 +213,6 @@
 			"revision": "5d6f7e02b7cdad63b06ab3877915532cd30073b4",
 			"revisionTime": "2015-01-19T16:55:52-02:00"
 		}
-	]
+	],
+	"rootPath": "github.com/drone/drone"
 }

@@ -1,3 +1,4 @@
+// +build darwin freebsd openbsd netbsd dragonfly
 
 package logrus
 
