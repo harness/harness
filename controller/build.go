@@ -180,11 +180,17 @@ func PostBuild(c *gin.Context) {
 	}
 
 	// fetch the .drone.yml file from the database
-	raw, sec, err := remote_.Script(user, repo, build)
+	raw, err := remote_.File(user, repo, build, droneYml)
 	if err != nil {
-		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
+		log.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
 		return
+	}
+
+	// Fetch secrets file but don't exit on error as it's optional
+	sec, err := remote_.File(user, repo, build, droneSec)
+	if err != nil {
+		log.Debugf("cannot find build secrets for %s. %s", repo.FullName, err)
 	}
 
 	key, _ := store.GetKey(c, repo)

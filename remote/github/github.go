@@ -225,14 +225,11 @@ func (g *Github) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 	return m, nil
 }
 
-// Script fetches the build script (.drone.yml) from the remote
-// repository and returns in string format.
-func (g *Github) Script(u *model.User, r *model.Repo, b *model.Build) ([]byte, []byte, error) {
+// File fetches a file from the remote repository and returns in string format.
+func (g *Github) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
-
-	cfg, err := GetFile(client, r.Owner, r.Name, ".drone.yml", b.Commit)
-	sec, _ := GetFile(client, r.Owner, r.Name, ".drone.sec", b.Commit)
-	return cfg, sec, err
+	cfg, err := GetFile(client, r.Owner, r.Name, f, b.Commit)
+	return cfg, err
 }
 
 // Status sends the commit status to the remote system.
