@@ -117,5 +117,5 @@ FROM
 WHERE b.build_repo_id = r.repo_id
   AND r.repo_full_name IN (%s)
 ORDER BY b.build_id DESC
-LIMIT 25
+LIMIT 50
 `
