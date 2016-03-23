@@ -92,6 +92,9 @@ func GetStream(c *gin.Context) {
 	}()
 
 	go func() {
+		defer func() {
+			recover()	
+		}()
 		<-c.Writer.CloseNotify()
 		rc.Close()
 	}()
