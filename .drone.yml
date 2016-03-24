@@ -29,7 +29,12 @@ publish:
     repo: drone/drone
     tag:
       - "latest" 
+      - "0.4.0"
       - "0.4"
     when:
       repo: drone/drone
       branch: master
+
+notify:
+  gitter:
+    webhook: https://webhooks.gitter.im/e/$$GITTER_KEY
