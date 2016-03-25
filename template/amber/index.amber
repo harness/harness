@@ -11,7 +11,7 @@ block header
         li.nav-item
             a.nav-link.active[href="/"] Active Repositories
         li.nav-item
-            a.nav-link[href="/repos"] My Repositories
+            a.nav-link[href="/repos"] Available Repositories
 
 block content
     div.container
@@ -38,9 +38,9 @@ block append scripts
     if len(Repos) != 0
         script
             $(window).load(function(){
-            $(".repo-list").searcher({
-                itemSelector: ".col-sm-4",
-                textSelector:  ".full_name",
-                inputSelector: ".repo-search"
-            });
+                $(".repo-list").searcher({
+                    itemSelector: ".col-sm-4",
+                    textSelector:  ".full_name",
+                    inputSelector: ".repo-search"
+                });
             });

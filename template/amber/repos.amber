@@ -1,17 +1,17 @@
 extends base
 
 block append head
-    title All Repositories
+    title Available Repositories
 
 block header
     ol
-        li All Repositories
+        li Available Repositories
 
     ul.nav.nav-tabs
         li.nav-item
             a.nav-link[href="/"] Active Repositories
         li.nav-item
-            a.nav-link.active[href="/repos"] My Repositories
+            a.nav-link.active[href="/repos"] Available Repositories
 
 block content
     div.container
@@ -39,9 +39,9 @@ block append scripts
     if len(Repos) != 0
         script
             $(window).load(function(){
-            $(".repo-list").searcher({
-                itemSelector: ".col-sm-4",
-                textSelector:  ".full_name",
-                inputSelector: ".repo-search"
-            });
+                $(".repo-list").searcher({
+                    itemSelector: ".col-sm-4",
+                    textSelector:  ".full_name",
+                    inputSelector: ".repo-search"
+                });
             });
