@@ -39,14 +39,15 @@ var (
 
 //Sryun model
 type Sryun struct {
-	User       *model.User
-	Password   string
-	Workspace  string
-	ScriptName string
-	SecName    string
-	Registry   string
-	Insecure   bool
-	Storage    string
+	User         *model.User
+	Password     string
+	Workspace    string
+	ScriptName   string
+	SecName      string
+	Registry     string
+	Insecure     bool
+	Storage      string
+	PluginPrefix string
 }
 
 // Load create Sryun by env, impl of Remote interface
@@ -62,8 +63,9 @@ func Load(env envconfig.Env) *Sryun {
 	scriptName := env.String("RC_SRY_SCRIPT", ".sryci.yaml")
 	secName := env.String("RC_SRY_SEC", ".sryci.sec")
 	registry := env.String("RC_SRY_REG_HOST", "")
-	storage := env.String("RC_SRY_DOCKER_STORAGE", "aufs")
 	insecure := env.Bool("RC_SRY_REG_INSECURE", false)
+	storage := env.String("DOCKER_STORAGE", "aufs")
+	pluginPrefix := env.String("PLUGIN_PREFIX", "")
 
 	user := model.User{}
 	user.Token = token
@@ -72,14 +74,15 @@ func Load(env envconfig.Env) *Sryun {
 	user.Avatar = avatar
 
 	sryun := Sryun{
-		User:       &user,
-		Password:   password,
-		Workspace:  workspace,
-		ScriptName: scriptName,
-		SecName:    secName,
-		Registry:   registry,
-		Storage:    storage,
-		Insecure:   insecure,
+		User:         &user,
+		Password:     password,
+		Workspace:    workspace,
+		ScriptName:   scriptName,
+		SecName:      secName,
+		Registry:     registry,
+		Storage:      storage,
+		Insecure:     insecure,
+		PluginPrefix: pluginPrefix,
 	}
 
 	sryunJSON, _ := json.Marshal(sryun)
@@ -134,6 +137,8 @@ func (sry *Sryun) RepoSryun(u *model.User, owner, name string, repo *model.Repo)
 	repo.Kind = model.RepoGit
 	repo.AllowPull = true
 	repo.AllowDeploy = true
+	repo.IsTrusted = true
+
 	if !repo.AllowTag && !repo.AllowPush {
 		repo.AllowPush = true
 	}
@@ -192,7 +197,7 @@ func (sry *Sryun) Script(user *model.User, repo *model.Repo, build *model.Build)
 	}
 
 	log.Infoln("old script\n", string(script))
-	script, err = yaml.GenScript(repo, build, script, sry.Insecure, sry.Registry, sry.Storage)
+	script, err = yaml.GenScript(repo, build, script, sry.Insecure, sry.Registry, sry.Storage, sry.PluginPrefix)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -38,14 +38,14 @@ func Run(client dockerclient.Client, conf *dockerclient.ContainerConfig, name st
 func RunDaemon(client dockerclient.Client, conf *dockerclient.ContainerConfig, name string) (*dockerclient.ContainerInfo, error) {
 
 	// attempts to create the contianer
-	id, err := client.CreateContainer(conf, name)
+	id, err := client.CreateContainer(conf, name, nil)
 	if err != nil {
 		// and pull the image and re-create if that fails
 		err = client.PullImage(conf.Image, nil)
 		if err != nil {
 			return nil, err
 		}
-		id, err = client.CreateContainer(conf, name)
+		id, err = client.CreateContainer(conf, name, nil)
 		if err != nil {
 			client.RemoveContainer(id, true, true)
 			return nil, err
