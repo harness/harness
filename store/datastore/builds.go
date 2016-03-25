@@ -1,60 +1,55 @@
 package datastore
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/drone/drone/model"
 	"github.com/russross/meddler"
 )
 
-type buildstore struct {
-	*sql.DB
-}
-
-func (db *buildstore) Get(id int64) (*model.Build, error) {
+func (db *datastore) GetBuild(id int64) (*model.Build, error) {
 	var build = new(model.Build)
 	var err = meddler.Load(db, buildTable, build, id)
 	return build, err
 }
 
-func (db *buildstore) GetNumber(repo *model.Repo, num int) (*model.Build, error) {
+func (db *datastore) GetBuildNumber(repo *model.Repo, num int) (*model.Build, error) {
 	var build = new(model.Build)
 	var err = meddler.QueryRow(db, build, rebind(buildNumberQuery), repo.ID, num)
 	return build, err
 }
 
-func (db *buildstore) GetRef(repo *model.Repo, ref string) (*model.Build, error) {
+func (db *datastore) GetBuildRef(repo *model.Repo, ref string) (*model.Build, error) {
 	var build = new(model.Build)
 	var err = meddler.QueryRow(db, build, rebind(buildRefQuery), repo.ID, ref)
 	return build, err
 }
 
-func (db *buildstore) GetCommit(repo *model.Repo, sha, branch string) (*model.Build, error) {
+func (db *datastore) GetBuildCommit(repo *model.Repo, sha, branch string) (*model.Build, error) {
 	var build = new(model.Build)
 	var err = meddler.QueryRow(db, build, rebind(buildCommitQuery), repo.ID, sha, branch)
 	return build, err
 }
 
-func (db *buildstore) GetLast(repo *model.Repo, branch string) (*model.Build, error) {
+func (db *datastore) GetBuildLast(repo *model.Repo, branch string) (*model.Build, error) {
 	var build = new(model.Build)
 	var err = meddler.QueryRow(db, build, rebind(buildLastQuery), repo.ID, branch)
 	return build, err
 }
 
-func (db *buildstore) GetLastBefore(repo *model.Repo, branch string, num int64) (*model.Build, error) {
+func (db *datastore) GetBuildLastBefore(repo *model.Repo, branch string, num int64) (*model.Build, error) {
 	var build = new(model.Build)
 	var err = meddler.QueryRow(db, build, rebind(buildLastBeforeQuery), repo.ID, branch, num)
 	return build, err
 }
 
-func (db *buildstore) GetList(repo *model.Repo) ([]*model.Build, error) {
+func (db *datastore) GetBuildList(repo *model.Repo) ([]*model.Build, error) {
 	var builds = []*model.Build{}
 	var err = meddler.QueryAll(db, &builds, rebind(buildListQuery), repo.ID)
 	return builds, err
 }
 
-func (db *buildstore) Create(build *model.Build, jobs ...*model.Job) error {
+func (db *datastore) CreateBuild(build *model.Build, jobs ...*model.Job) error {
 	var number int
 	db.QueryRow(rebind(buildNumberLast), build.RepoID).Scan(&number)
 	build.Number = number + 1
@@ -76,7 +71,7 @@ func (db *buildstore) Create(build *model.Build, jobs ...*model.Job) error {
 	return nil
 }
 
-func (db *buildstore) Update(build *model.Build) error {
+func (db *datastore) UpdateBuild(build *model.Build) error {
 	return meddler.Update(db, buildTable, build)
 }
 

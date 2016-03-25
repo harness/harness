@@ -7,7 +7,7 @@ import (
 	"github.com/franela/goblin"
 )
 
-func Test_repostore(t *testing.T) {
+func TestRepos(t *testing.T) {
 	db := openTest()
 	defer db.Close()
 
@@ -30,9 +30,9 @@ func Test_repostore(t *testing.T) {
 				Owner:    "bradrydzewski",
 				Name:     "drone",
 			}
-			err1 := s.Repos().Create(&repo)
-			err2 := s.Repos().Update(&repo)
-			getrepo, err3 := s.Repos().Get(repo.ID)
+			err1 := s.CreateRepo(&repo)
+			err2 := s.UpdateRepo(&repo)
+			getrepo, err3 := s.GetRepo(repo.ID)
 			if err3 != nil {
 				println("Get Repo Error")
 				println(err3.Error())
@@ -50,7 +50,7 @@ func Test_repostore(t *testing.T) {
 				Owner:    "bradrydzewski",
 				Name:     "drone",
 			}
-			err := s.Repos().Create(&repo)
+			err := s.CreateRepo(&repo)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(repo.ID != 0).IsTrue()
 		})
@@ -62,8 +62,8 @@ func Test_repostore(t *testing.T) {
 				Owner:    "bradrydzewski",
 				Name:     "drone",
 			}
-			s.Repos().Create(&repo)
-			getrepo, err := s.Repos().Get(repo.ID)
+			s.CreateRepo(&repo)
+			getrepo, err := s.GetRepo(repo.ID)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(repo.ID).Equal(getrepo.ID)
 			g.Assert(repo.UserID).Equal(getrepo.UserID)
@@ -78,8 +78,8 @@ func Test_repostore(t *testing.T) {
 				Owner:    "bradrydzewski",
 				Name:     "drone",
 			}
-			s.Repos().Create(&repo)
-			getrepo, err := s.Repos().GetName(repo.FullName)
+			s.CreateRepo(&repo)
+			getrepo, err := s.GetRepoName(repo.FullName)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(repo.ID).Equal(getrepo.ID)
 			g.Assert(repo.UserID).Equal(getrepo.UserID)
@@ -106,11 +106,11 @@ func Test_repostore(t *testing.T) {
 				Name:     "hello-world",
 				FullName: "octocat/hello-world",
 			}
-			s.Repos().Create(repo1)
-			s.Repos().Create(repo2)
-			s.Repos().Create(repo3)
+			s.CreateRepo(repo1)
+			s.CreateRepo(repo2)
+			s.CreateRepo(repo3)
 
-			repos, err := s.Repos().GetListOf([]*model.RepoLite{
+			repos, err := s.GetRepoListOf([]*model.RepoLite{
 				{FullName: "bradrydzewski/drone"},
 				{FullName: "drone/drone"},
 			})
@@ -133,10 +133,10 @@ func Test_repostore(t *testing.T) {
 				Name:     "drone",
 				FullName: "drone/drone",
 			}
-			s.Repos().Create(repo1)
-			s.Repos().Create(repo2)
+			s.CreateRepo(repo1)
+			s.CreateRepo(repo2)
 
-			count, err := s.Repos().Count()
+			count, err := s.GetRepoCount()
 			g.Assert(err == nil).IsTrue()
 			g.Assert(count).Equal(2)
 		})
@@ -148,10 +148,10 @@ func Test_repostore(t *testing.T) {
 				Owner:    "bradrydzewski",
 				Name:     "drone",
 			}
-			s.Repos().Create(&repo)
-			_, err1 := s.Repos().Get(repo.ID)
-			err2 := s.Repos().Delete(&repo)
-			_, err3 := s.Repos().Get(repo.ID)
+			s.CreateRepo(&repo)
+			_, err1 := s.GetRepo(repo.ID)
+			err2 := s.DeleteRepo(&repo)
+			_, err3 := s.GetRepo(repo.ID)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(err3 == nil).IsFalse()
@@ -170,8 +170,8 @@ func Test_repostore(t *testing.T) {
 				Owner:    "bradrydzewski",
 				Name:     "drone",
 			}
-			err1 := s.Repos().Create(&repo1)
-			err2 := s.Repos().Create(&repo2)
+			err1 := s.CreateRepo(&repo1)
+			err2 := s.CreateRepo(&repo2)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsFalse()
 		})
