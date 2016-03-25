@@ -55,9 +55,9 @@ type Remote interface {
 	// the remote system for the specified user.
 	Perm(u *model.User, owner, repo string) (*model.Perm, error)
 
-	// Script fetches the build script (.drone.yml) from the remote
-	// repository and returns in string format.
-	Script(u *model.User, r *model.Repo, b *model.Build) ([]byte, []byte, error)
+	// File fetches a file from the remote repository and returns in string
+	// format.
+	File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error)
 
 	// Status sends the commit status to the remote system.
 	// An example would be the GitHub pull request status.
@@ -115,10 +115,9 @@ func Perm(c context.Context, u *model.User, owner, repo string) (*model.Perm, er
 	return FromContext(c).Perm(u, owner, repo)
 }
 
-// Script fetches the build script (.drone.yml) from the remote
-// repository and returns in string format.
-func Script(c context.Context, u *model.User, r *model.Repo, b *model.Build) ([]byte, []byte, error) {
-	return FromContext(c).Script(u, r, b)
+// File fetches a file from the remote repository and returns in string format.
+func File(c context.Context, u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
+	return FromContext(c).File(u, r, b, f)
 }
 
 // Status sends the commit status to the remote system.

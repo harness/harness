@@ -237,9 +237,8 @@ func (bb *Bitbucket) Perm(u *model.User, owner, name string) (*model.Perm, error
 	return perms, nil
 }
 
-// Script fetches the build script (.drone.yml) from the remote
-// repository and returns in string format.
-func (bb *Bitbucket) Script(u *model.User, r *model.Repo, b *model.Build) ([]byte, []byte, error) {
+// File fetches a file from the remote repository and returns in string format.
+func (bb *Bitbucket) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
 	client := NewClientToken(
 		bb.Client,
 		bb.Secret,
@@ -249,19 +248,12 @@ func (bb *Bitbucket) Script(u *model.User, r *model.Repo, b *model.Build) ([]byt
 		},
 	)
 
-	// fetches the .drone.yml for the specified revision. This file
-	// is required, and will error if not found
-	config, err := client.FindSource(r.Owner, r.Name, b.Commit, ".drone.yml")
+	config, err := client.FindSource(r.Owner, r.Name, b.Commit, f)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	// fetches the .drone.sec for the specified revision. This file
-	// is completely optional, therefore we will not return a not
-	// found error
-	sec, _ := client.FindSource(r.Owner, r.Name, b.Commit, ".drone.sec")
-
-	return []byte(config.Data), []byte(sec.Data), err
+	return []byte(config.Data), err
 }
 
 // Status sends the commit status to the remote system.
@@ -280,10 +272,10 @@ func (bb *Bitbucket) Status(u *model.User, r *model.Repo, b *model.Build, link s
 	desc := getDesc(b.Status)
 
 	data := BuildStatus{
-		State:  status,
-		Key:    "Drone",
-		Url:    link,
-		Desc:   desc,
+		State: status,
+		Key:   "Drone",
+		Url:   link,
+		Desc:  desc,
 	}
 
 	err := client.CreateStatus(r.Owner, r.Name, b.Commit, &data)

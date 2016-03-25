@@ -23,16 +23,16 @@ const (
 )
 
 type Gitlab struct {
-	URL         		string
-	Client      		string
-	Secret      		string
-	AllowedOrgs 		[]string
-	CloneMode   		string
-	Open        		bool
-	PrivateMode 		bool
-	SkipVerify  		bool
-	HideArchives		bool
-	Search      		bool
+	URL          string
+	Client       string
+	Secret       string
+	AllowedOrgs  []string
+	CloneMode    string
+	Open         bool
+	PrivateMode  bool
+	SkipVerify   bool
+	HideArchives bool
+	Search       bool
 }
 
 func Load(env envconfig.Env) *Gitlab {
@@ -247,24 +247,19 @@ func (g *Gitlab) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 	return m, nil
 }
 
-// GetScript fetches the build script (.drone.yml) from the remote
-// repository and returns in string format.
-func (g *Gitlab) Script(user *model.User, repo *model.Repo, build *model.Build) ([]byte, []byte, error) {
+// File fetches a file from the remote repository and returns in string format.
+func (g *Gitlab) File(user *model.User, repo *model.Repo, build *model.Build, f string) ([]byte, error) {
 	var client = NewClient(g.URL, user.Token, g.SkipVerify)
 	id, err := GetProjectId(g, client, repo.Owner, repo.Name)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	out1, err := client.RepoRawFile(id, build.Commit, ".drone.yml")
+	out, err := client.RepoRawFile(id, build.Commit, f)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	out2, err := client.RepoRawFile(id, build.Commit, ".drone.sec")
-	if err != nil {
-		return out1, nil, nil
-	}
-	return out1, out2, err
+	return out, err
 }
 
 // NOTE Currently gitlab doesn't support status for commits and events,

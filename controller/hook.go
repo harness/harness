@@ -21,6 +21,18 @@ import (
 	"github.com/drone/drone/yaml/matrix"
 )
 
+var (
+	droneYml = os.Getenv("BUILD_CONFIG_FILE")
+	droneSec string
+)
+
+func init() {
+	if droneYml == "" {
+		droneYml = ".drone.yml"
+	}
+	droneSec = fmt.Sprintf("%s.sec", strings.TrimSuffix(droneYml, filepath.Ext(droneYml)))
+}
+
 var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
 
 func PostHook(c *gin.Context) {
@@ -124,12 +136,17 @@ func PostHook(c *gin.Context) {
 		}
 	}
 
-	// fetch the .drone.yml file from the database
-	raw, sec, err := remote_.Script(user, repo, build)
+	// fetch the build file from the database
+	raw, err := remote_.File(user, repo, build, droneYml)
 	if err != nil {
-		log.Errorf("failure to get .drone.yml for %s. %s", repo.FullName, err)
+		log.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
 		return
+	}
+	sec, err := remote_.File(user, repo, build, droneSec)
+	if err != nil {
+		log.Debugf("cannot find build secrets for %s. %s", repo.FullName, err)
+		// NOTE we don't exit on failure. The sec file is optional
 	}
 
 	axes, err := matrix.Parse(string(raw))

@@ -119,35 +119,26 @@ func (_m *Remote) Perm(u *model.User, owner string, repo string) (*model.Perm, e
 
 	return r0, r1
 }
-func (_m *Remote) Script(u *model.User, r *model.Repo, b *model.Build) ([]byte, []byte, error) {
-	ret := _m.Called(u, r, b)
+func (_m *Remote) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
+	ret := _m.Called(u, r, b, f)
 
 	var r0 []byte
-	if rf, ok := ret.Get(0).(func(*model.User, *model.Repo, *model.Build) []byte); ok {
-		r0 = rf(u, r, b)
+	if rf, ok := ret.Get(0).(func(*model.User, *model.Repo, *model.Build, string) []byte); ok {
+		r0 = rf(u, r, b, f)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
 		}
 	}
 
-	var r1 []byte
-	if rf, ok := ret.Get(1).(func(*model.User, *model.Repo, *model.Build) []byte); ok {
-		r1 = rf(u, r, b)
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*model.User, *model.Repo, *model.Build, string) error); ok {
+		r1 = rf(u, r, b, f)
 	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).([]byte)
-		}
+		r1 = ret.Error(1)
 	}
 
-	var r2 error
-	if rf, ok := ret.Get(2).(func(*model.User, *model.Repo, *model.Build) error); ok {
-		r2 = rf(u, r, b)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
+	return r0, r1
 }
 func (_m *Remote) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
 	ret := _m.Called(u, r, b, link)
