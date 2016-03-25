@@ -88,7 +88,7 @@ func openTest() *sql.DB {
 	)
 	if os.Getenv("DATABASE_DRIVER") != "" {
 		driver = os.Getenv("DATABASE_DRIVER")
-		config = os.Getenv("DATABASE_DATASOURCE")
+		config = os.Getenv("DATABASE_CONFIG")
 	}
 	return open(driver, config)
 }
