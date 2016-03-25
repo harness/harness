@@ -1,30 +1,25 @@
 package datastore
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/drone/drone/model"
 	"github.com/russross/meddler"
 )
 
-type repostore struct {
-	*sql.DB
-}
-
-func (db *repostore) Get(id int64) (*model.Repo, error) {
+func (db *datastore) GetRepo(id int64) (*model.Repo, error) {
 	var repo = new(model.Repo)
 	var err = meddler.Load(db, repoTable, repo, id)
 	return repo, err
 }
 
-func (db *repostore) GetName(name string) (*model.Repo, error) {
+func (db *datastore) GetRepoName(name string) (*model.Repo, error) {
 	var repo = new(model.Repo)
 	var err = meddler.QueryRow(db, repo, rebind(repoNameQuery), name)
 	return repo, err
 }
 
-func (db *repostore) GetListOf(listof []*model.RepoLite) ([]*model.Repo, error) {
+func (db *datastore) GetRepoListOf(listof []*model.RepoLite) ([]*model.Repo, error) {
 	var (
 		repos []*model.Repo
 		args  []interface{}
@@ -40,21 +35,21 @@ func (db *repostore) GetListOf(listof []*model.RepoLite) ([]*model.Repo, error) 
 	return repos, err
 }
 
-func (db *repostore) Count() (int, error) {
+func (db *datastore) GetRepoCount() (int, error) {
 	var count int
 	var err = db.QueryRow(rebind(repoCountQuery)).Scan(&count)
 	return count, err
 }
 
-func (db *repostore) Create(repo *model.Repo) error {
+func (db *datastore) CreateRepo(repo *model.Repo) error {
 	return meddler.Insert(db, repoTable, repo)
 }
 
-func (db *repostore) Update(repo *model.Repo) error {
+func (db *datastore) UpdateRepo(repo *model.Repo) error {
 	return meddler.Update(db, repoTable, repo)
 }
 
-func (db *repostore) Delete(repo *model.Repo) error {
+func (db *datastore) DeleteRepo(repo *model.Repo) error {
 	var _, err = db.Exec(rebind(repoDeleteStmt), repo.ID)
 	return err
 }

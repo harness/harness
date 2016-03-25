@@ -7,7 +7,7 @@ import (
 	"github.com/franela/goblin"
 )
 
-func Test_keystore(t *testing.T) {
+func TestKeys(t *testing.T) {
 	db := openTest()
 	defer db.Close()
 
@@ -27,7 +27,7 @@ func Test_keystore(t *testing.T) {
 				Public:  fakePublicKey,
 				Private: fakePrivateKey,
 			}
-			err := s.Keys().Create(&key)
+			err := s.CreateKey(&key)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(key.ID != 0).IsTrue()
 		})
@@ -38,15 +38,15 @@ func Test_keystore(t *testing.T) {
 				Public:  fakePublicKey,
 				Private: fakePrivateKey,
 			}
-			err := s.Keys().Create(&key)
+			err := s.CreateKey(&key)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(key.ID != 0).IsTrue()
 
 			key.Private = ""
 			key.Public = ""
 
-			err1 := s.Keys().Update(&key)
-			getkey, err2 := s.Keys().Get(&model.Repo{ID: 1})
+			err1 := s.UpdateKey(&key)
+			getkey, err2 := s.GetKey(&model.Repo{ID: 1})
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(key.ID).Equal(getkey.ID)
@@ -60,11 +60,11 @@ func Test_keystore(t *testing.T) {
 				Public:  fakePublicKey,
 				Private: fakePrivateKey,
 			}
-			err := s.Keys().Create(&key)
+			err := s.CreateKey(&key)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(key.ID != 0).IsTrue()
 
-			getkey, err := s.Keys().Get(&model.Repo{ID: 1})
+			getkey, err := s.GetKey(&model.Repo{ID: 1})
 			g.Assert(err == nil).IsTrue()
 			g.Assert(key.ID).Equal(getkey.ID)
 			g.Assert(key.Public).Equal(getkey.Public)
@@ -77,12 +77,12 @@ func Test_keystore(t *testing.T) {
 				Public:  fakePublicKey,
 				Private: fakePrivateKey,
 			}
-			err1 := s.Keys().Create(&key)
-			err2 := s.Keys().Delete(&key)
+			err1 := s.CreateKey(&key)
+			err2 := s.DeleteKey(&key)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 
-			_, err := s.Keys().Get(&model.Repo{ID: 1})
+			_, err := s.GetKey(&model.Repo{ID: 1})
 			g.Assert(err == nil).IsFalse()
 		})
 	})

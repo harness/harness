@@ -7,15 +7,21 @@ import (
 
 	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/store"
-	"github.com/drone/drone/store/migration"
+	"github.com/drone/drone/store/datastore/ddl"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rubenv/sql-migrate"
 	"github.com/russross/meddler"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
+
+// datastore is an implementation of a model.Store built on top
+// of the sql/database driver with a relational database backend.
+type datastore struct {
+	*sql.DB
+}
 
 // Load opens a new database connection with the specified driver
 // and connection string specified in the environment variables.
@@ -25,47 +31,32 @@ func Load(env envconfig.Env) store.Store {
 		config = env.String("DATABASE_CONFIG", "drone.sqlite")
 	)
 
-	log.Infof("using database driver %s", driver)
-	log.Infof("using database config %s", config)
+	logrus.Infof("using database driver %s", driver)
+	logrus.Infof("using database config %s", config)
 
 	return New(driver, config)
 }
 
+// New creates a database connection for the given driver and datasource
+// and returns a new Store.
 func New(driver, config string) store.Store {
-	db := Open(driver, config)
-	return store.New(
-		driver,
-		&nodestore{db},
-		&userstore{db},
-		&repostore{db},
-		&keystore{db},
-		&buildstore{db},
-		&jobstore{db},
-		&logstore{db},
+	return From(
+		open(driver, config),
 	)
 }
 
+// From returns a Store using an existing database connection.
 func From(db *sql.DB) store.Store {
-	var driver string
-	return store.New(
-		driver,
-		&nodestore{db},
-		&userstore{db},
-		&repostore{db},
-		&keystore{db},
-		&buildstore{db},
-		&jobstore{db},
-		&logstore{db},
-	)
+	return &datastore{db}
 }
 
-// Open opens a new database connection with the specified
+// open opens a new database connection with the specified
 // driver and connection string and returns a store.
-func Open(driver, config string) *sql.DB {
+func open(driver, config string) *sql.DB {
 	db, err := sql.Open(driver, config)
 	if err != nil {
-		log.Errorln(err)
-		log.Fatalln("database connection failed")
+		logrus.Errorln(err)
+		logrus.Fatalln("database connection failed")
 	}
 	if driver == "mysql" {
 		// per issue https://github.com/go-sql-driver/mysql/issues/257
@@ -75,13 +66,13 @@ func Open(driver, config string) *sql.DB {
 	setupMeddler(driver)
 
 	if err := pingDatabase(db); err != nil {
-		log.Errorln(err)
-		log.Fatalln("database ping attempts failed")
+		logrus.Errorln(err)
+		logrus.Fatalln("database ping attempts failed")
 	}
 
 	if err := setupDatabase(driver, db); err != nil {
-		log.Errorln(err)
-		log.Fatalln("migration failed")
+		logrus.Errorln(err)
+		logrus.Fatalln("migration failed")
 	}
 	cleanupDatabase(db)
 	return db
@@ -99,7 +90,7 @@ func openTest() *sql.DB {
 		driver = os.Getenv("DATABASE_DRIVER")
 		config = os.Getenv("DATABASE_CONFIG")
 	}
-	return Open(driver, config)
+	return open(driver, config)
 }
 
 // helper function to ping the database with backoff to ensure
@@ -111,7 +102,7 @@ func pingDatabase(db *sql.DB) (err error) {
 		if err == nil {
 			return
 		}
-		log.Infof("database ping failed. retry in 1s")
+		logrus.Infof("database ping failed. retry in 1s")
 		time.Sleep(time.Second)
 	}
 	return
@@ -121,8 +112,8 @@ func pingDatabase(db *sql.DB) (err error) {
 // automated database migration steps.
 func setupDatabase(driver string, db *sql.DB) error {
 	var migrations = &migrate.AssetMigrationSource{
-		Asset:    migration.Asset,
-		AssetDir: migration.AssetDir,
+		Asset:    ddl.Asset,
+		AssetDir: ddl.AssetDir,
 		Dir:      driver,
 	}
 	_, err := migrate.Exec(db, driver, migrations, migrate.Up)

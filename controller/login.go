@@ -38,7 +38,7 @@ func GetLogin(c *gin.Context) {
 	// get the user from the database
 	u, err := store.GetUserLogin(c, tmpuser.Login)
 	if err != nil {
-		count, err := store.CountUsers(c)
+		count, err := store.GetUserCount(c)
 		if err != nil {
 			log.Errorf("cannot register %s. %s", tmpuser.Login, err)
 			c.Redirect(303, "/login?error=internal_error")

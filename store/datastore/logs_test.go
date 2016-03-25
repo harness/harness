@@ -9,7 +9,7 @@ import (
 	"github.com/franela/goblin"
 )
 
-func Test_logstore(t *testing.T) {
+func TestLogs(t *testing.T) {
 	db := openTest()
 	defer db.Close()
 
@@ -28,10 +28,10 @@ func Test_logstore(t *testing.T) {
 				ID: 1,
 			}
 			buf := bytes.NewBufferString("echo hi")
-			err := s.Logs().Write(&job, buf)
+			err := s.WriteLog(&job, buf)
 			g.Assert(err == nil).IsTrue()
 
-			rc, err := s.Logs().Read(&job)
+			rc, err := s.ReadLog(&job)
 			g.Assert(err == nil).IsTrue()
 			defer rc.Close()
 			out, _ := ioutil.ReadAll(rc)
@@ -44,12 +44,12 @@ func Test_logstore(t *testing.T) {
 			}
 			buf1 := bytes.NewBufferString("echo hi")
 			buf2 := bytes.NewBufferString("echo allo?")
-			err1 := s.Logs().Write(&job, buf1)
-			err2 := s.Logs().Write(&job, buf2)
+			err1 := s.WriteLog(&job, buf1)
+			err2 := s.WriteLog(&job, buf2)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 
-			rc, err := s.Logs().Read(&job)
+			rc, err := s.ReadLog(&job)
 			g.Assert(err == nil).IsTrue()
 			defer rc.Close()
 			out, _ := ioutil.ReadAll(rc)

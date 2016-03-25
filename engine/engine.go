@@ -76,7 +76,7 @@ func Load(env envconfig.Env, s store.Store) Engine {
 		}
 	}
 
-	nodes, err := s.Nodes().GetList()
+	nodes, err := s.GetNodeList()
 	if err != nil {
 		log.Fatalf("failed to get nodes from database. %s", err)
 	}

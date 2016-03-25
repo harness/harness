@@ -1,36 +1,31 @@
 package datastore
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/drone/drone/model"
 	"github.com/russross/meddler"
 )
 
-type userstore struct {
-	*sql.DB
-}
-
-func (db *userstore) Get(id int64) (*model.User, error) {
+func (db *datastore) GetUser(id int64) (*model.User, error) {
 	var usr = new(model.User)
 	var err = meddler.Load(db, userTable, usr, id)
 	return usr, err
 }
 
-func (db *userstore) GetLogin(login string) (*model.User, error) {
+func (db *datastore) GetUserLogin(login string) (*model.User, error) {
 	var usr = new(model.User)
 	var err = meddler.QueryRow(db, usr, rebind(userLoginQuery), login)
 	return usr, err
 }
 
-func (db *userstore) GetList() ([]*model.User, error) {
+func (db *datastore) GetUserList() ([]*model.User, error) {
 	var users = []*model.User{}
 	var err = meddler.QueryAll(db, &users, rebind(userListQuery))
 	return users, err
 }
 
-func (db *userstore) GetFeed(listof []*model.RepoLite) ([]*model.Feed, error) {
+func (db *datastore) GetUserFeed(listof []*model.RepoLite) ([]*model.Feed, error) {
 	var (
 		feed []*model.Feed
 		args []interface{}
@@ -46,21 +41,21 @@ func (db *userstore) GetFeed(listof []*model.RepoLite) ([]*model.Feed, error) {
 	return feed, err
 }
 
-func (db *userstore) Count() (int, error) {
+func (db *datastore) GetUserCount() (int, error) {
 	var count int
 	var err = db.QueryRow(rebind(userCountQuery)).Scan(&count)
 	return count, err
 }
 
-func (db *userstore) Create(user *model.User) error {
+func (db *datastore) CreateUser(user *model.User) error {
 	return meddler.Insert(db, userTable, user)
 }
 
-func (db *userstore) Update(user *model.User) error {
+func (db *datastore) UpdateUser(user *model.User) error {
 	return meddler.Update(db, userTable, user)
 }
 
-func (db *userstore) Delete(user *model.User) error {
+func (db *datastore) DeleteUser(user *model.User) error {
 	var _, err = db.Exec(rebind(userDeleteStmt), user.ID)
 	return err
 }

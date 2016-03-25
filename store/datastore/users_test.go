@@ -7,7 +7,7 @@ import (
 	"github.com/franela/goblin"
 )
 
-func Test_userstore(t *testing.T) {
+func TestUsers(t *testing.T) {
 	db := openTest()
 	defer db.Close()
 	s := From(db)
@@ -30,9 +30,9 @@ func Test_userstore(t *testing.T) {
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
-			err1 := s.Users().Create(&user)
-			err2 := s.Users().Update(&user)
-			getuser, err3 := s.Users().Get(user.ID)
+			err1 := s.CreateUser(&user)
+			err2 := s.UpdateUser(&user)
+			getuser, err3 := s.GetUser(user.ID)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(err3 == nil).IsTrue()
@@ -45,7 +45,7 @@ func Test_userstore(t *testing.T) {
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
-			err := s.Users().Create(&user)
+			err := s.CreateUser(&user)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(user.ID != 0).IsTrue()
 		})
@@ -61,8 +61,8 @@ func Test_userstore(t *testing.T) {
 				Admin:  true,
 			}
 
-			s.Users().Create(&user)
-			getuser, err := s.Users().Get(user.ID)
+			s.CreateUser(&user)
+			getuser, err := s.GetUser(user.ID)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(user.ID).Equal(getuser.ID)
 			g.Assert(user.Login).Equal(getuser.Login)
@@ -80,8 +80,8 @@ func Test_userstore(t *testing.T) {
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
-			s.Users().Create(&user)
-			getuser, err := s.Users().GetLogin(user.Login)
+			s.CreateUser(&user)
+			getuser, err := s.GetUserLogin(user.Login)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(user.ID).Equal(getuser.ID)
 			g.Assert(user.Login).Equal(getuser.Login)
@@ -98,8 +98,8 @@ func Test_userstore(t *testing.T) {
 				Email: "foo@bar.com",
 				Token: "ab20g0ddaf012c744e136da16aa21ad9",
 			}
-			err1 := s.Users().Create(&user1)
-			err2 := s.Users().Create(&user2)
+			err1 := s.CreateUser(&user1)
+			err2 := s.CreateUser(&user2)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsFalse()
 		})
@@ -115,9 +115,9 @@ func Test_userstore(t *testing.T) {
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
-			s.Users().Create(&user1)
-			s.Users().Create(&user2)
-			users, err := s.Users().GetList()
+			s.CreateUser(&user1)
+			s.CreateUser(&user2)
+			users, err := s.GetUserList()
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(users)).Equal(2)
 			g.Assert(users[0].Login).Equal(user1.Login)
@@ -136,15 +136,15 @@ func Test_userstore(t *testing.T) {
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
-			s.Users().Create(&user1)
-			s.Users().Create(&user2)
-			count, err := s.Users().Count()
+			s.CreateUser(&user1)
+			s.CreateUser(&user2)
+			count, err := s.GetUserCount()
 			g.Assert(err == nil).IsTrue()
 			g.Assert(count).Equal(2)
 		})
 
 		g.It("Should Get a User Count Zero", func() {
-			count, err := s.Users().Count()
+			count, err := s.GetUserCount()
 			g.Assert(err == nil).IsTrue()
 			g.Assert(count).Equal(0)
 		})
@@ -155,10 +155,10 @@ func Test_userstore(t *testing.T) {
 				Email: "foo@bar.com",
 				Token: "e42080dddf012c718e476da161d21ad5",
 			}
-			s.Users().Create(&user)
-			_, err1 := s.Users().Get(user.ID)
-			err2 := s.Users().Delete(&user)
-			_, err3 := s.Users().Get(user.ID)
+			s.CreateUser(&user)
+			_, err1 := s.GetUser(user.ID)
+			err2 := s.DeleteUser(&user)
+			_, err3 := s.GetUser(user.ID)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(err3 == nil).IsFalse()
@@ -183,9 +183,9 @@ func Test_userstore(t *testing.T) {
 				Name:     "hello-world",
 				FullName: "octocat/hello-world",
 			}
-			s.Repos().Create(repo1)
-			s.Repos().Create(repo2)
-			s.Repos().Create(repo3)
+			s.CreateRepo(repo1)
+			s.CreateRepo(repo2)
+			s.CreateRepo(repo3)
 
 			build1 := &model.Build{
 				RepoID: repo1.ID,
@@ -203,12 +203,12 @@ func Test_userstore(t *testing.T) {
 				RepoID: repo3.ID,
 				Status: model.StatusSuccess,
 			}
-			s.Builds().Create(build1)
-			s.Builds().Create(build2)
-			s.Builds().Create(build3)
-			s.Builds().Create(build4)
+			s.CreateBuild(build1)
+			s.CreateBuild(build2)
+			s.CreateBuild(build3)
+			s.CreateBuild(build4)
 
-			builds, err := s.Users().GetFeed([]*model.RepoLite{
+			builds, err := s.GetUserFeed([]*model.RepoLite{
 				{FullName: "bradrydzewski/drone"},
 				{FullName: "drone/drone"},
 			})
