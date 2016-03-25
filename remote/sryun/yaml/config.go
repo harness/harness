@@ -4,11 +4,12 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	yaml "gopkg.in/yaml.v2"
-	"os"
-	"strings"
 )
 
 var (

@@ -308,8 +308,8 @@ func retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Reference, error) {
 }
 
 func formBuild(lastBuild *model.Build, repo *model.Repo, push *git.Reference, tag *git.Reference, force bool) (*model.Build, error) {
-	tagUpdated := isUpdated(lastBuild, tag)
-	pushUpdated := isUpdated(lastBuild, push)
+	tagUpdated := repo.AllowTag && isUpdated(lastBuild, tag)
+	pushUpdated := repo.AllowPush && isUpdated(lastBuild, push)
 	log.Infoln("tagUpdated", tagUpdated, "pushUpdated", pushUpdated)
 
 	if force || tagUpdated || pushUpdated {
