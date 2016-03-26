@@ -75,6 +75,9 @@ func GetRepo(client *github.Client, owner, repo string) (*github.Repository, err
 // GetAllRepos is a helper function that returns an aggregated list
 // of all user and organization repositories.
 func GetAllRepos(client *github.Client) ([]github.Repository, error) {
+	var filteredRepos []github.Repository
+	var repoList = map[string]github.Repository{}
+
 	orgs, err := GetOrgs(client)
 	if err != nil {
 		return nil, err
@@ -93,7 +96,17 @@ func GetAllRepos(client *github.Client) ([]github.Repository, error) {
 		repos = append(repos, list...)
 	}
 
-	return repos, nil
+	for _, repo := range repos {
+		if len(*repo.FullName) > 0 {
+			repoList[*repo.FullName] = repo
+		}
+	}
+
+	for _, repo := range repoList {
+		filteredRepos = append(filteredRepos, repo)
+	}
+
+	return filteredRepos, nil
 }
 
 // GetSubscriptions is a helper function that returns an aggregated list
