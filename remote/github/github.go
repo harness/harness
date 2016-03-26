@@ -192,7 +192,7 @@ func (g *Github) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 func (g *Github) Repos(u *model.User) ([]*model.RepoLite, error) {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
 
-	all, err := GetAllRepos(client)
+	all, err := GetUserRepos(client)
 	if err != nil {
 		return nil, err
 	}
