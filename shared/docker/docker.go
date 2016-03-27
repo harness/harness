@@ -37,7 +37,7 @@ func Run(client dockerclient.Client, conf *dockerclient.ContainerConfig, name st
 // the container to exit.
 func RunDaemon(client dockerclient.Client, conf *dockerclient.ContainerConfig, name string) (*dockerclient.ContainerInfo, error) {
 
-	// attempts to create the contianer
+	// attempts to create the container
 	id, err := client.CreateContainer(conf, name, nil)
 	if err != nil {
 		// and pull the image and re-create if that fails

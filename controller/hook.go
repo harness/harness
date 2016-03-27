@@ -216,7 +216,7 @@ func PostHook(c *gin.Context) {
 		log.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
 	}
 
-	// get the previous build so taht we can send
+	// get the previous build so that we can send
 	// on status change notifications
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
 
