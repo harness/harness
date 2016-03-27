@@ -236,8 +236,8 @@ func PostBuild(c *gin.Context) {
 	build.Started = 0
 	build.Finished = 0
 	build.Enqueued = time.Now().UTC().Unix()
-	build.Event := c.DefaultQuery("event", build.Event)deploy_to
-	build.Deploy := c.DefaultQuery("deploy_to", build.Deploy)	
+	build.Event = c.DefaultQuery("event", build.Event)
+	build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)	
 	for _, job := range jobs {
 		job.Status = model.StatusPending
 		job.Started = 0
