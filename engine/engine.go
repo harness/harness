@@ -296,7 +296,7 @@ func (e *engine) runJob(c context.Context, r *Task, updater *updater, client doc
 	args = append(args, string(in))
 
 	conf := &dockerclient.ContainerConfig{
-		Image:      DefaultAgent,
+		Image:      agentImage(),
 		Entrypoint: DefaultEntrypoint,
 		Cmd:        args,
 		Env:        e.envs,
@@ -406,7 +406,7 @@ func (e *engine) runJobNotify(r *Task, client dockerclient.Client) error {
 	args = append(args, string(in))
 
 	conf := &dockerclient.ContainerConfig{
-		Image:      DefaultAgent,
+		Image:      agentImage(),
 		Entrypoint: DefaultEntrypoint,
 		Cmd:        args,
 		Env:        e.envs,
