@@ -53,7 +53,7 @@ func ParseRequest(r *http.Request, fn SecretFunc) (*Token, error) {
 		return Parse(token, fn)
 	}
 
-	// and finally we attemt to get the token from
+	// and finally we attempt to get the token from
 	// the user session cookie
 	cookie, err := r.Cookie("user_sess")
 	if err != nil {

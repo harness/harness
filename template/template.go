@@ -51,7 +51,7 @@ func Load() *template.Template {
 }
 
 // marshal is a helper function to render data as JSON
-// inside the tempalte.
+// inside the template.
 func marshal(v interface{}) template.JS {
 	a, _ := json.Marshal(v)
 	return template.JS(a)

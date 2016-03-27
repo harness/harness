@@ -66,7 +66,7 @@ func Load(env envconfig.Env, s store.Store) Engine {
 	engine.pool = newPool()
 	engine.updater = &updater{engine.bus}
 
-	// quick fix to propogate HTTP_PROXY variables
+	// quick fix to propagate HTTP_PROXY variables
 	// throughout the build environment.
 	var proxyVars = []string{"HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy", "NO_PROXY", "no_proxy"}
 	for _, proxyVar := range proxyVars {
