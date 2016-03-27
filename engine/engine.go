@@ -305,7 +305,7 @@ func (e *engine) runJob(c context.Context, r *Task, updater *updater, client doc
 			MemorySwappiness: -1,
 		},
 		Volumes: map[string]struct{}{
-			"/var/run/docker.sock": struct{}{},
+			"/var/run/docker.sock": {},
 		},
 	}
 
@@ -415,7 +415,7 @@ func (e *engine) runJobNotify(r *Task, client dockerclient.Client) error {
 			MemorySwappiness: -1,
 		},
 		Volumes: map[string]struct{}{
-			"/var/run/docker.sock": struct{}{},
+			"/var/run/docker.sock": {},
 		},
 	}
 

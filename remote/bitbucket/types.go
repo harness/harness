@@ -22,11 +22,11 @@ type AccountResp struct {
 }
 
 type BuildStatus struct {
-	State   string    `json:"state"`
-	Key     string    `json:"key"`
-	Name    string    `json:"name,omitempty"`
-	Url     string    `json:"url"`
-	Desc    string    `json:"description,omitempty"`
+	State string `json:"state"`
+	Key   string `json:"key"`
+	Name  string `json:"name,omitempty"`
+	Url   string `json:"url"`
+	Desc  string `json:"description,omitempty"`
 }
 
 type Email struct {

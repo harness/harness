@@ -54,7 +54,7 @@ func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
 		},
 		Volumes: map[string]struct{}{
-			"/var/run/docker.sock": struct{}{},
+			"/var/run/docker.sock": {},
 		},
 	}
 
