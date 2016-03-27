@@ -93,7 +93,7 @@ func GetStream(c *gin.Context) {
 
 	go func() {
 		defer func() {
-			recover()	
+			recover()
 		}()
 		<-c.Writer.CloseNotify()
 		rc.Close()

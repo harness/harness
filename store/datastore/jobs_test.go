@@ -86,19 +86,19 @@ func TestJobs(t *testing.T) {
 				Status: model.StatusSuccess,
 			}
 			jobs := []*model.Job{
-				&model.Job{
+				{
 					BuildID:  1,
 					Status:   "success",
 					ExitCode: 0,
 					Number:   1,
 				},
-				&model.Job{
+				{
 					BuildID:  3,
 					Status:   "error",
 					ExitCode: 1,
 					Number:   2,
 				},
-				&model.Job{
+				{
 					BuildID:  5,
 					Status:   "pending",
 					ExitCode: 0,
