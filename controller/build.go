@@ -237,7 +237,6 @@ func PostBuild(c *gin.Context) {
 		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
 	}
 
-
 	// todo move this to database tier
 	// and wrap inside a transaction
 	build.Status = model.StatusPending
