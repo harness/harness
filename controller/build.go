@@ -228,11 +228,13 @@ func PostBuild(c *gin.Context) {
 			c.String(500, err.Error())
 			return
 		}
-		if build.Event == model.EventPush ||
-				build.Event == model.EventPull ||
-				build.Event == model.EventTag ||
-				build.Event == model.EventDeploy {
-			build.Event = c.DefaultQuery("event", build.Event)
+
+		event := c.DefaultQuery("event", build.Event)
+		if event == model.EventPush ||
+		    event == model.EventPull ||
+		    event == model.EventTag ||
+		    event == model.EventDeploy {
+		    build.Event = event
 		}
 		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
 	}
