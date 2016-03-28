@@ -228,7 +228,15 @@ func PostBuild(c *gin.Context) {
 			c.String(500, err.Error())
 			return
 		}
+		if build.Event == model.EventPush ||
+				build.Event == model.EventPull ||
+				build.Event == model.EventTag ||
+				build.Event == model.EventDeploy {
+			build.Event = c.DefaultQuery("event", build.Event)
+		}
+		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
 	}
+
 
 	// todo move this to database tier
 	// and wrap inside a transaction
@@ -236,8 +244,6 @@ func PostBuild(c *gin.Context) {
 	build.Started = 0
 	build.Finished = 0
 	build.Enqueued = time.Now().UTC().Unix()
-	build.Event = c.DefaultQuery("event", build.Event)
-	build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)	
 	for _, job := range jobs {
 		job.Status = model.StatusPending
 		job.Started = 0
