@@ -18,4 +18,4 @@ cd sassc
 make
 
 # isntall the sassc binary
-install -t /usr/local/bin bin/sassc
+install bin/sassc /usr/local/bin
