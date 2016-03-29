@@ -228,6 +228,15 @@ func PostBuild(c *gin.Context) {
 			c.String(500, err.Error())
 			return
 		}
+
+		event := c.DefaultQuery("event", build.Event)
+		if event == model.EventPush ||
+		    event == model.EventPull ||
+		    event == model.EventTag ||
+		    event == model.EventDeploy {
+		    build.Event = event
+		}
+		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
 	}
 
 	// todo move this to database tier
