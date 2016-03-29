@@ -26,10 +26,16 @@ block content
                             a.material-icons[href=Build.Link][target="_blank"] link
                     p
                         em #{Build.Author}
-                        span authored
+                        if Build.Event != "deployment"
+                            span authored
+                        else
+                            span deployed
                         em[data-livestamp=Build.Created]
                         span to
-                        em #{Build.Branch}
+                        if Build.Event != "deployment"
+                            em #{Build.Branch}
+                        else
+                            em #{Build.Deploy}
 
 
 
