@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -24,6 +25,8 @@ const (
 	DefaultScope    = "repo,repo:status,user:email"
 	DefaultMergeRef = "merge"
 )
+
+var githubDeployRegex = regexp.MustCompile(".+/deployments/(\\d+)")
 
 type Github struct {
 	URL         string
@@ -236,7 +239,14 @@ func (g *Github) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 // An example would be the GitHub pull request status.
 func (g *Github) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
+	if b.Event == "deployment" {
+		return deploymentStatus(client, r, b, link)
+	} else {
+		return repoStatus(client, r, b, link)
+	}
+}
 
+func repoStatus(client *github.Client, r *model.Repo, b *model.Build, link string) error {
 	status := getStatus(b.Status)
 	desc := getDesc(b.Status)
 	data := github.RepoStatus{
@@ -246,6 +256,25 @@ func (g *Github) Status(u *model.User, r *model.Repo, b *model.Build, link strin
 		TargetURL:   github.String(link),
 	}
 	_, _, err := client.Repositories.CreateStatus(r.Owner, r.Name, b.Commit, &data)
+	return err
+}
+
+func deploymentStatus(client *github.Client, r *model.Repo, b *model.Build, link string) error {
+	matches := githubDeployRegex.FindStringSubmatch(b.Link)
+	// if the deployment was not triggered from github, don't send a deployment status
+	if len(matches) != 2 {
+		return nil
+	}
+	// the deployment ID is only available in the the link to the build as the last element in the URL
+	id, _ := strconv.Atoi(matches[1])
+	status := getStatus(b.Status)
+	desc := getDesc(b.Status)
+	data := github.DeploymentStatusRequest{
+		State:       github.String(status),
+		Description: github.String(desc),
+		TargetURL:   github.String(link),
+	}
+	_, _, err := client.Repositories.CreateDeploymentStatus(r.Owner, r.Name, id, &data)
 	return err
 }
 

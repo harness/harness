@@ -42,10 +42,16 @@ block content
                                     h3 #{$build.Message}
                                 p.card-text
                                     em #{$build.Author}
-                                    span authored
+                                    if $build.Event != "deployment"
+                                        span authored
+                                    else
+                                        span deployed
                                     em[data-livestamp=$build.Created]
                                     span to
-                                    em #{$build.Branch}
+                                    if $build.Event != "deployment"
+                                        em #{$build.Branch}
+                                    else
+                                        em #{$build.Deploy}
 
 
 block append scripts
