@@ -49,7 +49,7 @@ block content
                                     em[data-livestamp=$build.Created]
                                     span to
                                     if $build.Event != "deployment"
-                                        em ${build.Branch}
+                                        em #{$build.Branch}
                                     else
                                         em #{$build.Deploy}
 
