@@ -19,6 +19,13 @@ function RepoViewModel(repo) {
 		// construct the build entry if it doesn't already exist
 		// so that we can append to the DOM. The code may not be
 		// pretty, but it is simple enough and it works.
+		var authoredOrDeployed = "authored"
+		var branchOrDeploy = data.branch
+		if ( data.event == "deployment" ) {
+			authoredOrDeployed = "deployed"
+			branchOrDeploy = data.deploy_to
+		}
+
 		el = $("<a>").attr("class", "card").attr("href", "/"+repo+"/"+data.number).attr("data-build", data.number)
 				.append(
 					$("<div>").attr("class", "card-header").append(
@@ -36,13 +43,13 @@ function RepoViewModel(repo) {
 						$("<p>").attr("class","card-text").append(
 							$("<em>").text(data.author)
 						).append(
-							$("<span>").text("authored")
+							$("<span>").text(authoredOrDeployed)
 						).append(
 							$("<em>").attr("data-livestamp", data.created_at)
 						).append(
 							$("<span>").text("to")
 						).append(
-							$("<em>").text(data.branch)
+							$("<em>").text(branchOrDeploy)
 						)
 					)
 				).css("display", "flex").hide().fadeIn(1000);
