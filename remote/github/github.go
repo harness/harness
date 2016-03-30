@@ -260,14 +260,13 @@ func repoStatus(client *github.Client, r *model.Repo, b *model.Build, link strin
 }
 
 func deploymentStatus(client *github.Client, r *model.Repo, b *model.Build, link string) error {
-	// the deployment ID is only available in the the link to the build as the last element in the URL
-	parts := strings.Split(b.Link, "/")
 	matches := githubDeployRegex.FindStringSubmatch(b.Link)
 	// if the deployment was not triggered from github, don't send a deployment status
 	if len(matches) != 2 {
 		return nil
 	}
-	id, _ := strconv.Atoi(parts[len(parts)-1])
+	// the deployment ID is only available in the the link to the build as the last element in the URL
+	id, _ := strconv.Atoi(matches[1])
 	status := getStatus(b.Status)
 	desc := getDesc(b.Status)
 	data := github.DeploymentStatusRequest{
