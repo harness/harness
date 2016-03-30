@@ -1,4 +1,4 @@
-package controller
+package api
 
 import (
 	"net/http"
@@ -8,8 +8,6 @@ import (
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/context"
-	"github.com/drone/drone/router/middleware/session"
-	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
 )
 
@@ -20,13 +18,6 @@ func GetNodes(c *gin.Context) {
 	} else {
 		c.JSON(200, nodes)
 	}
-}
-
-func ShowNodes(c *gin.Context) {
-	user := session.User(c)
-	nodes, _ := store.GetNodeList(c)
-	token, _ := token.New(token.CsrfToken, user.Login).Sign(user.Hash)
-	c.HTML(http.StatusOK, "nodes.html", gin.H{"User": user, "Nodes": nodes, "Csrf": token})
 }
 
 func GetNode(c *gin.Context) {

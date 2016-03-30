@@ -1,5 +1,8 @@
 package model
 
+// Feed represents an item in the user's feed or timeline.
+//
+// swagger:model feed
 type Feed struct {
 	Owner    string `json:"owner"         meddler:"repo_owner"`
 	Name     string `json:"name"          meddler:"repo_name"`

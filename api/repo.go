@@ -1,4 +1,4 @@
-package controller
+package api
 
 import (
 	"bytes"
@@ -150,11 +150,11 @@ func PatchRepo(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, repo)
+	c.JSON(http.StatusOK, repo)
 }
 
 func GetRepo(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, session.Repo(c))
+	c.JSON(http.StatusOK, session.Repo(c))
 }
 
 func GetRepoKey(c *gin.Context) {

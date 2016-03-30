@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/drone/drone/api"
 	"github.com/drone/drone/controller"
 	"github.com/drone/drone/router/middleware/header"
 	"github.com/drone/drone/router/middleware/location"
@@ -60,34 +61,34 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	user := e.Group("/api/user")
 	{
 		user.Use(session.MustUser())
-		user.GET("", controller.GetSelf)
-		user.GET("/feed", controller.GetFeed)
-		user.GET("/repos", controller.GetRepos)
-		user.GET("/repos/remote", controller.GetRemoteRepos)
-		user.POST("/token", controller.PostToken)
+		user.GET("", api.GetSelf)
+		user.GET("/feed", api.GetFeed)
+		user.GET("/repos", api.GetRepos)
+		user.GET("/repos/remote", api.GetRemoteRepos)
+		user.POST("/token", api.PostToken)
 	}
 
 	users := e.Group("/api/users")
 	{
 		users.Use(session.MustAdmin())
-		users.GET("", controller.GetUsers)
-		users.POST("", controller.PostUser)
-		users.GET("/:login", controller.GetUser)
-		users.PATCH("/:login", controller.PatchUser)
-		users.DELETE("/:login", controller.DeleteUser)
+		users.GET("", api.GetUsers)
+		users.POST("", api.PostUser)
+		users.GET("/:login", api.GetUser)
+		users.PATCH("/:login", api.PatchUser)
+		users.DELETE("/:login", api.DeleteUser)
 	}
 
 	nodes := e.Group("/api/nodes")
 	{
 		nodes.Use(session.MustAdmin())
-		nodes.GET("", controller.GetNodes)
-		nodes.POST("", controller.PostNode)
-		nodes.DELETE("/:node", controller.DeleteNode)
+		nodes.GET("", api.GetNodes)
+		nodes.POST("", api.PostNode)
+		nodes.DELETE("/:node", api.DeleteNode)
 	}
 
 	repos := e.Group("/api/repos/:owner/:name")
 	{
-		repos.POST("", controller.PostRepo)
+		repos.POST("", api.PostRepo)
 
 		repo := repos.Group("")
 		{
@@ -95,19 +96,19 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.Use(session.SetPerm())
 			repo.Use(session.MustPull)
 
-			repo.GET("", controller.GetRepo)
-			repo.GET("/key", controller.GetRepoKey)
-			repo.POST("/key", controller.PostRepoKey)
+			repo.GET("", api.GetRepo)
+			repo.GET("/key", api.GetRepoKey)
+			repo.POST("/key", api.PostRepoKey)
 			repo.GET("/builds", controller.GetBuilds)
 			repo.GET("/builds/:number", controller.GetBuild)
 			repo.GET("/logs/:number/:job", controller.GetBuildLogs)
 
 			// requires authenticated user
-			repo.POST("/encrypt", session.MustUser(), controller.PostSecure)
+			repo.POST("/encrypt", session.MustUser(), api.PostSecure)
 
 			// requires push permissions
-			repo.PATCH("", session.MustPush, controller.PatchRepo)
-			repo.DELETE("", session.MustPush, controller.DeleteRepo)
+			repo.PATCH("", session.MustPush, api.PatchRepo)
+			repo.DELETE("", session.MustPush, api.DeleteRepo)
 
 			repo.POST("/builds/:number", session.MustPush, controller.PostBuild)
 			repo.DELETE("/builds/:number/:job", session.MustPush, controller.DeleteBuild)

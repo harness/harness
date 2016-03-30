@@ -1,4 +1,4 @@
-package controller
+package api
 
 import (
 	"net/http"
@@ -6,33 +6,43 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/crypto"
 	"github.com/drone/drone/store"
 )
 
+// swagger:route GET /users user getUserList
+//
+// Get the list of all registered users.
+//
+//     Responses:
+//       200: user
+//
 func GetUsers(c *gin.Context) {
 	users, err := store.GetUserList(c)
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
+		c.String(500, "Error getting user list. %s", err)
+	} else {
+		c.JSON(200, users)
 	}
-
-	c.IndentedJSON(http.StatusOK, users)
 }
 
+// swagger:route GET /users/{login} user getUserLogin
+//
+// Get the user with the matching login.
+//
+//     Responses:
+//       200: user
+//
 func GetUser(c *gin.Context) {
 	user, err := store.GetUserLogin(c, c.Param("login"))
 	if err != nil {
-		c.AbortWithStatus(http.StatusNotFound)
-		return
+		c.String(404, "Cannot find user. %s", err)
+	} else {
+		c.JSON(200, user)
 	}
-
-	c.IndentedJSON(http.StatusOK, user)
 }
 
 func PatchUser(c *gin.Context) {
-	me := session.User(c)
 	in := &model.User{}
 	err := c.Bind(in)
 	if err != nil {
@@ -48,19 +58,13 @@ func PatchUser(c *gin.Context) {
 	user.Admin = in.Admin
 	user.Active = in.Active
 
-	// cannot update self
-	if me.ID == user.ID {
-		c.AbortWithStatus(http.StatusForbidden)
-		return
-	}
-
 	err = store.UpdateUser(c, user)
 	if err != nil {
 		c.AbortWithStatus(http.StatusConflict)
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, user)
 }
 
 func PostUser(c *gin.Context) {
@@ -85,29 +89,25 @@ func PostUser(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, user)
 }
 
+// swagger:route DELETE /users/{login} user deleteUserLogin
+//
+// Delete the user with the matching login.
+//
+//     Responses:
+//       200: user
+//
 func DeleteUser(c *gin.Context) {
-	me := session.User(c)
-
 	user, err := store.GetUserLogin(c, c.Param("login"))
 	if err != nil {
-		c.AbortWithStatus(http.StatusNotFound)
+		c.String(404, "Cannot find user. %s", err)
 		return
 	}
-
-	// cannot delete self
-	if me.ID == user.ID {
-		c.AbortWithStatus(http.StatusForbidden)
-		return
+	if err = store.DeleteUser(c, user); err != nil {
+		c.String(500, "Error deleting user. %s", err)
+	} else {
+		c.String(200, "")
 	}
-
-	err = store.DeleteUser(c, user)
-	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-
-	c.Writer.WriteHeader(http.StatusNoContent)
 }

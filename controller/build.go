@@ -231,10 +231,10 @@ func PostBuild(c *gin.Context) {
 
 		event := c.DefaultQuery("event", build.Event)
 		if event == model.EventPush ||
-		    event == model.EventPull ||
-		    event == model.EventTag ||
-		    event == model.EventDeploy {
-		    build.Event = event
+			event == model.EventPull ||
+			event == model.EventTag ||
+			event == model.EventDeploy {
+			build.Event = event
 		}
 		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
 	}

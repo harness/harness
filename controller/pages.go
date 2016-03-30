@@ -200,3 +200,10 @@ func ShowBuild(c *gin.Context) {
 		"Csrf":  csrf,
 	})
 }
+
+func ShowNodes(c *gin.Context) {
+	user := session.User(c)
+	nodes, _ := store.GetNodeList(c)
+	token, _ := token.New(token.CsrfToken, user.Login).Sign(user.Hash)
+	c.HTML(http.StatusOK, "nodes.html", gin.H{"User": user, "Nodes": nodes, "Csrf": token})
+}
