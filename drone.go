@@ -16,10 +16,6 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
-// build revision number populated by the continuous
-// integration server at compile time.
-var build string = "custom"
-
 var (
 	dotenv = flag.String("config", ".env", "")
 	debug  = flag.Bool("debug", false, "")
@@ -49,7 +45,7 @@ func main() {
 	server_ := server.Load(env)
 	server_.Run(
 		router.Load(
-			header.Version(build),
+			header.Version,
 			cache.Default(),
 			context.SetStore(store_),
 			context.SetRemote(remote_),

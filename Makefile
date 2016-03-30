@@ -37,7 +37,7 @@ build:
 	go build
 
 build_static:
-	go build --ldflags '-extldflags "-static" -X main.build=$(CI_BUILD_NUMBER)' -o drone_static
+	go build --ldflags '-extldflags "-static" -X github.com/drone/drone/version.VersionDev=$(CI_BUILD_NUMBER)' -o drone_static
 
 test:
 	go test -cover $(PACKAGES)
