@@ -4,10 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/drone/drone/version"
 	"github.com/gin-gonic/gin"
 )
-
-var version string
 
 // NoCache is a middleware function that appends headers
 // to prevent the client from caching the HTTP response.
@@ -52,10 +51,7 @@ func Secure(c *gin.Context) {
 // Version is a middleware function that appends the Drone
 // version information to the HTTP response. This is intended
 // for debugging and troubleshooting.
-func Version(version string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("version", "0.4.0-beta+"+version)
-		c.Header("X-DRONE-VERSION", "0.4.0-beta+"+version)
-		c.Next()
-	}
+func Version(c *gin.Context) {
+	c.Header("X-DRONE-VERSION", version.Version)
+	c.Next()
 }
