@@ -19,8 +19,8 @@ function RepoViewModel(repo) {
 		// construct the build entry if it doesn't already exist
 		// so that we can append to the DOM. The code may not be
 		// pretty, but it is simple enough and it works.
-		authoredOrDeployed = "authored"
-		branchOrDeploy = data.branch
+		var authoredOrDeployed = "authored"
+		var branchOrDeploy = data.branch
 		if ( data.event == "deployment" ) {
 			authoredOrDeployed = "deployed"
 			branchOrDeploy = data.deploy_to
