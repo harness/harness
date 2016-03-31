@@ -1,5 +1,6 @@
 package model
 
+// swagger:model job
 type Job struct {
 	ID       int64  `json:"id"           meddler:"job_id,pk"`
 	BuildID  int64  `json:"-"            meddler:"job_build_id"`

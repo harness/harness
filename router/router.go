@@ -99,9 +99,9 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.GET("", api.GetRepo)
 			repo.GET("/key", api.GetRepoKey)
 			repo.POST("/key", api.PostRepoKey)
-			repo.GET("/builds", controller.GetBuilds)
-			repo.GET("/builds/:number", controller.GetBuild)
-			repo.GET("/logs/:number/:job", controller.GetBuildLogs)
+			repo.GET("/builds", api.GetBuilds)
+			repo.GET("/builds/:number", api.GetBuild)
+			repo.GET("/logs/:number/:job", api.GetBuildLogs)
 
 			// requires authenticated user
 			repo.POST("/encrypt", session.MustUser(), api.PostSecure)
@@ -110,8 +110,8 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.PATCH("", session.MustPush, api.PatchRepo)
 			repo.DELETE("", session.MustPush, api.DeleteRepo)
 
-			repo.POST("/builds/:number", session.MustPush, controller.PostBuild)
-			repo.DELETE("/builds/:number/:job", session.MustPush, controller.DeleteBuild)
+			repo.POST("/builds/:number", session.MustPush, api.PostBuild)
+			repo.DELETE("/builds/:number/:job", session.MustPush, api.DeleteBuild)
 		}
 	}
 
