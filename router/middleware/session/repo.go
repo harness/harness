@@ -7,6 +7,7 @@ import (
 	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
+	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
 
@@ -86,7 +87,14 @@ func SetRepo() gin.HandlerFunc {
 
 			c.HTML(http.StatusNotFound, "repo_activate.html", data)
 		} else {
-			c.HTML(http.StatusNotFound, "404.html", data)
+			if user == nil {
+				// setup the after-login path and prompt the user to login
+				currentPath := httputil.DenormalizePath(c.Request.URL.Path)
+				httputil.SetCookie(c.Writer, c.Request, "user_last", currentPath)
+				c.HTML(http.StatusNotFound, "login.html", data)
+			} else {
+				c.HTML(http.StatusNotFound, "404.html", data)
+			}
 		}
 
 		c.Abort()
