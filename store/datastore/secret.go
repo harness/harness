@@ -27,7 +27,7 @@ func (db *datastore) SetSecret(sec *model.Secret) error {
 }
 
 func (db *datastore) DeleteSecret(sec *model.Secret) error {
-	_, err := db.Exec(secretDeleteStmt, sec.ID)
+	_, err := db.Exec(rebind(secretDeleteStmt), sec.ID)
 	return err
 }
 
