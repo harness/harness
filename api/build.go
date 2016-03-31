@@ -1,9 +1,11 @@
-package controller
+package api
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -19,6 +21,18 @@ import (
 	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/router/middleware/session"
 )
+
+var (
+	droneYml = os.Getenv("BUILD_CONFIG_FILE")
+	droneSec string
+)
+
+func init() {
+	if droneYml == "" {
+		droneYml = ".drone.yml"
+	}
+	droneSec = fmt.Sprintf("%s.sec", strings.TrimSuffix(droneYml, filepath.Ext(droneYml)))
+}
 
 func GetBuilds(c *gin.Context) {
 	repo := session.Repo(c)
@@ -231,10 +245,10 @@ func PostBuild(c *gin.Context) {
 
 		event := c.DefaultQuery("event", build.Event)
 		if event == model.EventPush ||
-		    event == model.EventPull ||
-		    event == model.EventTag ||
-		    event == model.EventDeploy {
-		    build.Event = event
+			event == model.EventPull ||
+			event == model.EventTag ||
+			event == model.EventDeploy {
+			build.Event = event
 		}
 		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
 	}

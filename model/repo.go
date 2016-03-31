@@ -7,6 +7,9 @@ type RepoLite struct {
 	Avatar   string `json:"avatar_url"`
 }
 
+// Repo represents a repository.
+//
+// swagger:model repo
 type Repo struct {
 	ID          int64  `json:"id"                meddler:"repo_id,pk"`
 	UserID      int64  `json:"-"                 meddler:"repo_user_id"`

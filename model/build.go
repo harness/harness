@@ -1,5 +1,6 @@
 package model
 
+// swagger:model build
 type Build struct {
 	ID        int64  `json:"id"            meddler:"build_id,pk"`
 	RepoID    int64  `json:"-"             meddler:"build_repo_id"`
