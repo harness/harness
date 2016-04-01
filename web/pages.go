@@ -29,6 +29,33 @@ func ShowIndex(c *gin.Context) {
 		return
 	}
 
+	// filter to only show the currently active ones
+	activeRepos, err := store.GetRepoListOf(c,repos)
+	if err != nil {
+		c.String(400, err.Error())
+		return
+	}
+
+	c.HTML(200, "index.html", gin.H{
+		"User":  user,
+		"Repos": activeRepos,
+	})
+}
+
+func ShowAllRepos(c *gin.Context) {
+	user := session.User(c)
+	if user == nil {
+		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	// get the repository list from the cache
+	repos, err := cache.GetRepos(c, user)
+	if err != nil {
+		c.String(400, err.Error())
+		return
+	}
+
 	c.HTML(200, "repos.html", gin.H{
 		"User":  user,
 		"Repos": repos,

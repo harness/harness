@@ -30,6 +30,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(token.Refresh)
 
 	e.GET("/", web.ShowIndex)
+	e.GET("/repos", web.ShowAllRepos)
 	e.GET("/login", web.ShowLogin)
 	e.GET("/login/form", web.ShowLoginForm)
 	e.GET("/logout", web.GetLogout)
@@ -163,7 +164,7 @@ func normalize(h http.Handler) http.Handler {
 
 		parts := strings.Split(r.URL.Path, "/")[1:]
 		switch parts[0] {
-		case "settings", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
+		case "settings", "repos", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
 			// no-op
 		default:
 
