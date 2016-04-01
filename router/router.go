@@ -51,6 +51,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		repo.GET("", web.ShowRepo)
 		repo.GET("/builds/:number", web.ShowBuild)
 		repo.GET("/builds/:number/:job", web.ShowBuild)
+
 		repo_settings := repo.Group("/settings")
 		{
 			repo_settings.GET("", session.MustPush, web.ShowRepoConf)
@@ -103,6 +104,10 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.GET("/builds", api.GetBuilds)
 			repo.GET("/builds/:number", api.GetBuild)
 			repo.GET("/logs/:number/:job", api.GetBuildLogs)
+			repo.POST("/sign", session.MustPush, api.Sign)
+
+			repo.POST("/secrets", session.MustPush, api.PostSecret)
+			repo.DELETE("/secrets/:secret", session.MustPush, api.DeleteSecret)
 
 			// requires authenticated user
 			repo.POST("/encrypt", session.MustUser(), api.PostSecure)

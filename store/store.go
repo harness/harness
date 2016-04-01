@@ -66,6 +66,18 @@ type Store interface {
 	// DeleteKey deletes a user key.
 	DeleteKey(*model.Key) error
 
+	// GetSecretList gets a list of repository secrets
+	GetSecretList(*model.Repo) ([]*model.Secret, error)
+
+	// GetSecret gets the named repository secret.
+	GetSecret(*model.Repo, string) (*model.Secret, error)
+
+	// SetSecret sets the named repository secret.
+	SetSecret(*model.Secret) error
+
+	// DeleteSecret deletes the named repository secret.
+	DeleteSecret(*model.Secret) error
+
 	// GetBuild gets a build by unique ID.
 	GetBuild(int64) (*model.Build, error)
 
@@ -209,6 +221,22 @@ func UpdateKey(c context.Context, key *model.Key) error {
 
 func DeleteKey(c context.Context, key *model.Key) error {
 	return FromContext(c).DeleteKey(key)
+}
+
+func GetSecretList(c context.Context, r *model.Repo) ([]*model.Secret, error) {
+	return FromContext(c).GetSecretList(r)
+}
+
+func GetSecret(c context.Context, r *model.Repo, name string) (*model.Secret, error) {
+	return FromContext(c).GetSecret(r, name)
+}
+
+func SetSecret(c context.Context, s *model.Secret) error {
+	return FromContext(c).SetSecret(s)
+}
+
+func DeleteSecret(c context.Context, s *model.Secret) error {
+	return FromContext(c).DeleteSecret(s)
 }
 
 func GetBuild(c context.Context, id int64) (*model.Build, error) {
