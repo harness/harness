@@ -58,7 +58,7 @@ func GetUserEmail(client *github.Client) (*github.User, error) {
 	// WARNING, HACK
 	// for out-of-date github enterprise editions the primary
 	// and verified fields won't exist.
-	if !strings.HasPrefix(*user.HTMLURL, DefaultURL) && len(emails) != 0 {
+	if !strings.HasPrefix(*user.URL, DefaultAPI) && len(emails) != 0 {
 		user.Email = emails[0].Email
 		return user, nil
 	}
