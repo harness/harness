@@ -3,7 +3,7 @@
 CREATE TABLE secrets (
  secret_id        INTEGER PRIMARY KEY AUTO_INCREMENT
 ,secret_repo_id   INTEGER
-,secret_name      VARCHAR(500)
+,secret_name      VARCHAR(255)
 ,secret_value     MEDIUMBLOB
 ,secret_images    VARCHAR(2000)
 ,secret_events    VARCHAR(2000)
@@ -14,7 +14,7 @@ CREATE TABLE secrets (
 CREATE TABLE registry (
  registry_id        INTEGER PRIMARY KEY AUTO_INCREMENT
 ,registry_repo_id   INTEGER
-,registry_addr      VARCHAR(500)
+,registry_addr      VARCHAR(255)
 ,registry_email     VARCHAR(500)
 ,registry_username  VARCHAR(2000)
 ,registry_password  VARCHAR(2000)
