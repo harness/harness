@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +13,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 const (
@@ -22,6 +24,15 @@ const (
 	FilterHeads = 2
 	//FilterAll tags and heads, binary 11
 	FilterAll = 3
+)
+
+const (
+	//GitSshWrapper GIT_SSH
+	GitSshWrapper = "git_ssh_wrapper"
+	//GitSshWrapperScript GIT_SSH script
+	GitSshWrapperScript = `#!/bin/sh
+
+ssh -F %s -i %s $@`
 )
 
 var (
@@ -51,6 +62,8 @@ var (
 	ErrBadRev = errors.New("bad rev")
 	//ErrBadCommit invalid commit
 	ErrBadCommit = errors.New("bad commit")
+	//ErrBadKey bad private key
+	ErrBadKey = errors.New("bad key")
 )
 
 var (
@@ -73,18 +86,30 @@ type Client struct {
 	URI    string
 	Branch string
 	Path   string
+	Key    string
 }
 
 //NewClient create new client
-func NewClient(uri string, branch string) (*Client, error) {
+func NewClient(workspace, dir, uri, branch, key string) (*Client, error) {
 	if len(uri) == 0 {
 		return nil, ErrBadURI
 	}
 
-	return &Client{
+	client := &Client{
 		URI:    uri,
 		Branch: branch,
-	}, nil
+		Key:    key,
+	}
+
+	if err := client.initRepo(workspace, dir); err != nil {
+		return nil, err
+	}
+
+	if err := client.initPrivateKey(); err != nil {
+		return nil, err
+	}
+
+	return client, nil
 }
 
 //String impl
@@ -92,8 +117,8 @@ func (client *Client) String() string {
 	return fmt.Sprintf("uri: %s, branch: %s", client.URI, client.Branch)
 }
 
-//InitRepo init empty repo
-func (client *Client) InitRepo(workspace string, name string) error {
+//initRepo init empty repo
+func (client *Client) initRepo(workspace string, name string) error {
 	if len(name) == 0 {
 		return ErrBadName
 	}
@@ -143,7 +168,7 @@ func gitInit(path string) error {
 			return ErrInit
 		}
 	} else {
-		log.Println("existing .git")
+		log.Infoln("existing .git")
 	}
 	return nil
 }
@@ -161,6 +186,7 @@ func gitCmd(path string, args ...string) (*exec.Cmd, error) {
 	cmd.Dir = path
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Env = append(os.Environ(), "GIT_SSH="+filepath.Join(sshPath(path), GitSshWrapper))
 	trace(cmd)
 
 	return cmd, nil
@@ -261,10 +287,9 @@ func (client *Client) LsRemote(filter uint8, refs string) (push, tag *Reference,
 		return nil, nil, ErrBadFilter
 	}
 
-	log.Println("LsRemote filter", filter, "refs", refs)
-
+	log.Debugln("LsRemote filter", filter, "refs", refs)
 	if filter&FilterTags > 0 {
-		tag, err = lsRemoteRefs(client.URI, "-t", refs)
+		tag, err = client.lsRemoteRefs("-t", refs)
 		if err != nil && err != ErrNoRefs {
 			return nil, nil, err
 		}
@@ -278,7 +303,7 @@ func (client *Client) LsRemote(filter uint8, refs string) (push, tag *Reference,
 				refs = "master"
 			}
 		}
-		push, err = lsRemoteRefs(client.URI, "-h", refs)
+		push, err = client.lsRemoteRefs("-h", refs)
 		if err != nil && err != ErrNoRefs {
 			return nil, nil, err
 		}
@@ -291,32 +316,31 @@ func (client *Client) LsRemote(filter uint8, refs string) (push, tag *Reference,
 	return push, tag, nil
 }
 
-func lsRemoteRefs(uri string, filter string, refs string) (*Reference, error) {
+func (client *Client) lsRemoteRefs(filter string, refs string) (*Reference, error) {
 	args := []string{
 		"ls-remote",
 	}
 	if len(filter) > 0 {
 		args = append(args, filter)
 	}
-	args = append(args, uri)
+	args = append(args, client.URI)
 	if len(refs) > 0 {
 		args = append(args, refs)
 	}
-	log.Printf("ls-remote command %q\n", args)
+	log.Debugf("ls-remote command %q\n", args)
 
-	cmd := exec.Command(
-		"git",
-		args...,
-	)
-	cmd.Dir = os.TempDir()
-
+	cmd, err := gitCmd(client.Path, args...)
+	if err != nil {
+		return nil, err
+	}
+	cmd.Stdout = nil
 	out, err := cmd.Output()
 	if err != nil {
-		log.Println("ls-remote failed:", err.Error())
+		log.Debugln("ls-remote failed:", err.Error())
 		return nil, err
 	}
 
-	log.Printf("ls-remote: %s\n", out)
+	log.Debugln("ls-remote: %s\n", out)
 	if len(out) == 0 {
 		return nil, ErrNoRefs
 	}
@@ -340,7 +364,7 @@ func parseLsRemote(text []byte) ([]byte, []byte, error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		tokens := strings.Split(line, "\t")
-		log.Printf("tokens %q\n", tokens)
+		log.Debugf("tokens %q\n", tokens)
 
 		if len(tokens) == 2 && sha1Pattern.Match([]byte(tokens[0])) {
 			reference := strings.TrimSuffix(tokens[1], "^{}")
@@ -349,8 +373,8 @@ func parseLsRemote(text []byte) ([]byte, []byte, error) {
 		}
 	}
 
-	log.Printf("entries %q\n", entries)
-	log.Printf("references %q\n", references)
+	log.Debugf("entries %q\n", entries)
+	log.Debugf("references %q\n", references)
 	if len(references) > 0 {
 		sort.Strings(references)
 		latestRef := references[len(references)-1]
@@ -362,8 +386,46 @@ func parseLsRemote(text []byte) ([]byte, []byte, error) {
 	return nil, nil, ErrNoRefs
 }
 
+//initPrivateKey write private key and set GIT_SSH
+func (client *Client) initPrivateKey() error {
+	if len(client.Key) == 0 {
+		return ErrBadKey
+	}
+
+	sshpath := sshPath(client.Path)
+	if err := os.MkdirAll(sshpath, 0700); err != nil {
+		return err
+	}
+	confpath := filepath.Join(sshpath, "config")
+	privpath := filepath.Join(sshpath, "id_rsa")
+	wrapperpath := filepath.Join(sshpath, GitSshWrapper)
+	log.Debugln("conf", confpath, "private", privpath, "wrapper", wrapperpath)
+
+	err := ioutil.WriteFile(confpath, []byte("StrictHostKeyChecking no\n"), 0700)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(privpath, []byte(client.Key), 0600)
+	if err != nil {
+		return err
+	}
+
+	wrapperScript := fmt.Sprintf(GitSshWrapperScript, confpath, privpath)
+	err = ioutil.WriteFile(wrapperpath, []byte(wrapperScript), 0755)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func sshPath(path string) string {
+	return filepath.Join(path, ".ssh")
+}
+
 // Trace writes each command to standard error (preceded by a ‘$ ’) before it
 // is executed. Used for debugging your build.
 func trace(cmd *exec.Cmd) {
-	log.Println("$", cmd.Dir, strings.Join(cmd.Args, " "))
+	log.Debugln("$env", strings.Join(cmd.Env, " "))
+	log.Infoln("$", cmd.Dir, strings.Join(cmd.Args, " "))
 }

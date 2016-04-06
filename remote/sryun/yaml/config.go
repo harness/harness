@@ -34,12 +34,10 @@ func GenScript(repo *model.Repo, build *model.Build, raw []byte, insecure bool, 
 	if !ok {
 		return nil, ErrBadBuild
 	}
-	clonePlugin := formClone(repo, registry, pluginPrefix)
-	publishPlugin := formPublish(repo, build, insecure, registry, storage, pluginPrefix)
-	buildPlugin = enhanceBuild(buildPlugin.(map[interface{}]interface{}))
-	config["clone"] = clonePlugin
-	config["publish"] = publishPlugin
-	config["build"] = buildPlugin
+	config["clone"] = formClone(repo, registry, pluginPrefix)
+	config["publish"] = formPublish(repo, build, insecure, registry, storage, pluginPrefix)
+	config["build"] = enhanceBuild(buildPlugin.(map[interface{}]interface{}))
+	config["cache"] = formCache(repo, registry, pluginPrefix)
 
 	log.Infof("new config\n %q", config)
 	script, err := yaml.Marshal(config)
@@ -50,6 +48,21 @@ func GenScript(repo *model.Repo, build *model.Build, raw []byte, insecure bool, 
 	log.Infoln("gen script", string(script))
 
 	return script, nil
+}
+
+func formCache(repo *model.Repo, registry, pluginPrefix string) map[interface{}]interface{} {
+	registryPrefix := registryPrefix(registry)
+	imageCache := imageCache(repo)
+	cache := map[interface{}]interface{}{
+		"image":       fmt.Sprintf("%s%s%s", registryPrefix, pluginPrefix, "drone-cache"),
+		"privileged":  true,
+		"compression": "bzip2",
+		"mount": []string{
+			".git",
+			imageCache,
+		},
+	}
+	return cache
 }
 
 func registryPrefix(registry string) string {
@@ -86,33 +99,38 @@ func getExtraHosts() []string {
 func formPublish(repo *model.Repo, build *model.Build, insecure bool, registry, storage, pluginPrefix string) interface{} {
 	registryPrefix := registryPrefix(registry)
 	refName := formRefName(build)
-	password := "Sryci1" + fmt.Sprintf("%x", md5.Sum([]byte(repo.Owner)))[:4]
+	cacheFile := imageCache(repo)
+	salt := fmt.Sprintf("%x", md5.Sum([]byte(repo.Owner)))[:4]
 	docker := map[string]interface{}{
-		"image": fmt.Sprintf("%s%s%s", registryPrefix, pluginPrefix, "drone-docker"),
-		//"username": "admin",
-		//"password": "admin",
-		//"email":    "admin@dataman.io",
+		"image":          fmt.Sprintf("%s%s%s", registryPrefix, pluginPrefix, "drone-docker"),
 		"username":       repo.Owner,
-		"password":       password,
+		"password":       fmt.Sprintf("%s%s", "Sryci1", salt),
 		"email":          fmt.Sprintf("%s@sryci.io", repo.Owner),
 		"privileged":     true,
-		"pull":           false,
-		"insecure":       false,
+		"insecure":       insecure,
 		"registry":       registry,
 		"storage_driver": storage,
 		"repo":           fmt.Sprintf("%s%s/%s", registryPrefix, repo.Owner, repo.Name),
-		//"repo": fmt.Sprintf("%s%s", registryPrefix, repo.Name),
 		"tag": []string{
 			"latest",
 			fmt.Sprintf("%s_%s_$$BUILD_NUMBER", refName, build.Commit[:7]),
 		},
 		"net":         "bridge",
 		"extra_hosts": getExtraHosts(),
+		"load":        cacheFile,
+		"save": map[string]interface{}{
+			"destination": cacheFile,
+			"tag":         "latest",
+		},
 	}
 
 	return map[string]interface{}{
 		"docker": docker,
 	}
+}
+
+func imageCache(repo *model.Repo) string {
+	return fmt.Sprintf("%s/%s.tar", ".sryun", repo.Name)
 }
 
 func formRefName(build *model.Build) string {

@@ -310,6 +310,7 @@ func (e *engine) runJob(c context.Context, r *Task, updater *updater, client doc
 		Env:        e.envs,
 		HostConfig: dockerclient.HostConfig{
 			Binds:      []string{"/var/run/docker.sock:/var/run/docker.sock"},
+			Privileged: true,
 			ExtraHosts: GetExtraHosts(),
 		},
 		Volumes: map[string]struct{}{

@@ -48,10 +48,11 @@ type Sryun struct {
 	Insecure     bool
 	Storage      string
 	PluginPrefix string
+	store        store.Store
 }
 
 // Load create Sryun by env, impl of Remote interface
-func Load(env envconfig.Env) *Sryun {
+func Load(env envconfig.Env, store store.Store) *Sryun {
 	log.Infoln("Loading sryun driver...")
 
 	login := env.String("RC_SRY_USER", "sryadmin")
@@ -83,6 +84,7 @@ func Load(env envconfig.Env) *Sryun {
 		Storage:      storage,
 		Insecure:     insecure,
 		PluginPrefix: pluginPrefix,
+		store:        store,
 	}
 
 	sryunJSON, _ := json.Marshal(sryun)
@@ -175,11 +177,12 @@ func (sry *Sryun) Perm(user *model.User, owner, name string) (*model.Perm, error
 // Script fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
 func (sry *Sryun) Script(user *model.User, repo *model.Repo, build *model.Build) ([]byte, []byte, error) {
-	client, err := git.NewClient(repo.Clone, repo.Branch)
+	keys, err := sry.store.Keys().Get(repo)
 	if err != nil {
 		return nil, nil, err
 	}
-	err = client.InitRepo(sry.Workspace, fmt.Sprintf("%d_%s_%s", repo.ID, repo.Owner, repo.Name))
+	workDir := fmt.Sprintf("%d_%s_%s", repo.ID, repo.Owner, repo.Name)
+	client, err := git.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch, keys.Private)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -255,19 +258,19 @@ func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 		log.Errorln("bad params")
 		return nil, nil, err
 	}
-	log.Infoln("hook params %q", params)
+	log.Infoln("hook params", params)
 
-	repo, err := store.GetRepoOwnerName(c, params.Owner, params.Name)
+	repo, err := sry.store.Repos().GetName(params.Owner + "/" + params.Name)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	push, tag, err := retrieveUpdate(repo)
+	push, tag, err := sry.retrieveUpdate(repo)
 	if err != nil {
 		return nil, nil, err
 	}
 	log.Infoln("getting build", repo.ID, "-", branch)
-	lastBuild, err := store.GetBuildLast(c, repo, branch)
+	lastBuild, err := sry.store.Builds().GetLast(repo, branch)
 	if err != nil {
 		log.Infoln("no build found", err)
 	}
@@ -282,8 +285,13 @@ func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 	return repo, build, nil
 }
 
-func retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Reference, error) {
-	client, err := git.NewClient(repo.Clone, repo.Branch)
+func (sry *Sryun) retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Reference, error) {
+	keys, err := sry.store.Keys().Get(repo)
+	if err != nil {
+		return nil, nil, err
+	}
+	workDir := fmt.Sprintf("%d_%s_%s", repo.ID, repo.Owner, repo.Name)
+	client, err := git.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch, keys.Private)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -40,8 +40,8 @@ type Poller struct {
 	jobs      map[int64]*scheduler.Job
 }
 
-//Init initialize poller
-func Init(env envconfig.Env, store store.Store) {
+//Load initialize poller
+func Load(env envconfig.Env, store store.Store) {
 	log.Infoln("init... poller")
 	serverAddr := env.String("SERVER_ADDR", ":8000")
 	instance = &Poller{
