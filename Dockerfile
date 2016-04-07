@@ -11,13 +11,15 @@
 # Build the docker image:
 #
 #     docker build --rm=true -t drone/drone .
+FROM alpine:3.2
+RUN apk add -U ca-certificates git openssh curl perl && rm -rf /var/cache/apk/*
 
-FROM centurylink/ca-certs
-EXPOSE 8000
-ADD contrib/docker/etc/nsswitch.conf /etc/
+#FROM centurylink/ca-certs
+#EXPOSE 8000
+#ADD contrib/docker/etc/nsswitch.conf /etc/
 
-ENV DATABASE_DRIVER=sqlite3
-ENV DATABASE_CONFIG=/var/lib/drone/drone.sqlite
+#ENV DATABASE_DRIVER=sqlite3
+#ENV DATABASE_CONFIG=/var/lib/drone/drone.sqlite
 
 ADD drone_static /drone_static
 

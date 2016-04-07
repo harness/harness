@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/drone/drone/shared/docker"
 	"github.com/samalba/dockerclient"
@@ -10,8 +11,7 @@ import (
 
 var (
 	// name of the build agent container.
-	//DefaultAgent = "drone/drone-exec:latest"
-	DefaultAgent = "testregistry.dataman.io/drone-exec:latest"
+	DefaultAgent = "drone/drone-exec:latest"
 
 	// default name of the build agent executable
 	DefaultEntrypoint = []string{"/bin/drone-exec"}
@@ -36,6 +36,15 @@ func newWorker(client dockerclient.Client) *worker {
 	return &worker{client: client}
 }
 
+//GetAgent get build agent image uri from env
+func GetAgent() string {
+	if uri := os.Getenv("AGENT_URI"); len(uri) > 0 {
+		return uri
+	} else {
+		return DefaultAgent
+	}
+}
+
 // Build executes the clone, build and deploy steps.
 func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 	// the command line arguments passed into the
@@ -48,11 +57,13 @@ func (w *worker) Build(name string, stdin []byte, pr bool) (_ int, err error) {
 	args = append(args, string(stdin))
 
 	conf := &dockerclient.ContainerConfig{
-		Image:      DefaultAgent,
+		Image:      GetAgent(),
 		Entrypoint: DefaultEntrypoint,
 		Cmd:        args,
 		HostConfig: dockerclient.HostConfig{
-			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
+			Binds:      []string{"/var/run/docker.sock:/var/run/docker.sock"},
+			Privileged: true,
+			ExtraHosts: GetExtraHosts(),
 		},
 		Volumes: map[string]struct{}{
 			"/var/run/docker.sock": struct{}{},
@@ -82,10 +93,12 @@ func (w *worker) Notify(stdin []byte) error {
 	args = append(args, string(stdin))
 
 	conf := &dockerclient.ContainerConfig{
-		Image:      DefaultAgent,
+		Image:      GetAgent(),
 		Entrypoint: DefaultEntrypoint,
 		Cmd:        args,
-		HostConfig: dockerclient.HostConfig{},
+		HostConfig: dockerclient.HostConfig{
+			ExtraHosts: GetExtraHosts(),
+		},
 	}
 
 	var err error

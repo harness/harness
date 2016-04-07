@@ -39,18 +39,20 @@ var (
 
 //Sryun model
 type Sryun struct {
-	User       *model.User
-	Password   string
-	Workspace  string
-	ScriptName string
-	SecName    string
-	Registry   string
-	Insecure   bool
-	Storage    string
+	User         *model.User
+	Password     string
+	Workspace    string
+	ScriptName   string
+	SecName      string
+	Registry     string
+	Insecure     bool
+	Storage      string
+	PluginPrefix string
+	store        store.Store
 }
 
 // Load create Sryun by env, impl of Remote interface
-func Load(env envconfig.Env) *Sryun {
+func Load(env envconfig.Env, store store.Store) *Sryun {
 	log.Infoln("Loading sryun driver...")
 
 	login := env.String("RC_SRY_USER", "sryadmin")
@@ -62,8 +64,9 @@ func Load(env envconfig.Env) *Sryun {
 	scriptName := env.String("RC_SRY_SCRIPT", ".sryci.yaml")
 	secName := env.String("RC_SRY_SEC", ".sryci.sec")
 	registry := env.String("RC_SRY_REG_HOST", "")
-	storage := env.String("RC_SRY_DOCKER_STORAGE", "aufs")
 	insecure := env.Bool("RC_SRY_REG_INSECURE", false)
+	storage := env.String("DOCKER_STORAGE", "aufs")
+	pluginPrefix := env.String("PLUGIN_PREFIX", "")
 
 	user := model.User{}
 	user.Token = token
@@ -72,14 +75,16 @@ func Load(env envconfig.Env) *Sryun {
 	user.Avatar = avatar
 
 	sryun := Sryun{
-		User:       &user,
-		Password:   password,
-		Workspace:  workspace,
-		ScriptName: scriptName,
-		SecName:    secName,
-		Registry:   registry,
-		Storage:    storage,
-		Insecure:   insecure,
+		User:         &user,
+		Password:     password,
+		Workspace:    workspace,
+		ScriptName:   scriptName,
+		SecName:      secName,
+		Registry:     registry,
+		Storage:      storage,
+		Insecure:     insecure,
+		PluginPrefix: pluginPrefix,
+		store:        store,
 	}
 
 	sryunJSON, _ := json.Marshal(sryun)
@@ -134,6 +139,8 @@ func (sry *Sryun) RepoSryun(u *model.User, owner, name string, repo *model.Repo)
 	repo.Kind = model.RepoGit
 	repo.AllowPull = true
 	repo.AllowDeploy = true
+	repo.IsTrusted = true
+
 	if !repo.AllowTag && !repo.AllowPush {
 		repo.AllowPush = true
 	}
@@ -170,11 +177,12 @@ func (sry *Sryun) Perm(user *model.User, owner, name string) (*model.Perm, error
 // Script fetches the build script (.drone.yml) from the remote
 // repository and returns in string format.
 func (sry *Sryun) Script(user *model.User, repo *model.Repo, build *model.Build) ([]byte, []byte, error) {
-	client, err := git.NewClient(repo.Clone, repo.Branch)
+	keys, err := sry.store.Keys().Get(repo)
 	if err != nil {
 		return nil, nil, err
 	}
-	err = client.InitRepo(sry.Workspace, fmt.Sprintf("%d_%s_%s", repo.ID, repo.Owner, repo.Name))
+	workDir := fmt.Sprintf("%d_%s_%s", repo.ID, repo.Owner, repo.Name)
+	client, err := git.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch, keys.Private)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -192,7 +200,7 @@ func (sry *Sryun) Script(user *model.User, repo *model.Repo, build *model.Build)
 	}
 
 	log.Infoln("old script\n", string(script))
-	script, err = yaml.GenScript(repo, build, script, sry.Insecure, sry.Registry, sry.Storage)
+	script, err = yaml.GenScript(repo, build, script, sry.Insecure, sry.Registry, sry.Storage, sry.PluginPrefix)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -250,19 +258,19 @@ func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 		log.Errorln("bad params")
 		return nil, nil, err
 	}
-	log.Infoln("hook params %q", params)
+	log.Infoln("hook params", params)
 
-	repo, err := store.GetRepoOwnerName(c, params.Owner, params.Name)
+	repo, err := sry.store.Repos().GetName(params.Owner + "/" + params.Name)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	push, tag, err := retrieveUpdate(repo)
+	push, tag, err := sry.retrieveUpdate(repo)
 	if err != nil {
 		return nil, nil, err
 	}
 	log.Infoln("getting build", repo.ID, "-", branch)
-	lastBuild, err := store.GetBuildLast(c, repo, branch)
+	lastBuild, err := sry.store.Builds().GetLast(repo, branch)
 	if err != nil {
 		log.Infoln("no build found", err)
 	}
@@ -277,8 +285,13 @@ func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 	return repo, build, nil
 }
 
-func retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Reference, error) {
-	client, err := git.NewClient(repo.Clone, repo.Branch)
+func (sry *Sryun) retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Reference, error) {
+	keys, err := sry.store.Keys().Get(repo)
+	if err != nil {
+		return nil, nil, err
+	}
+	workDir := fmt.Sprintf("%d_%s_%s", repo.ID, repo.Owner, repo.Name)
+	client, err := git.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch, keys.Private)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -303,8 +316,8 @@ func retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Reference, error) {
 }
 
 func formBuild(lastBuild *model.Build, repo *model.Repo, push *git.Reference, tag *git.Reference, force bool) (*model.Build, error) {
-	tagUpdated := isUpdated(lastBuild, tag)
-	pushUpdated := isUpdated(lastBuild, push)
+	tagUpdated := repo.AllowTag && isUpdated(lastBuild, tag)
+	pushUpdated := repo.AllowPush && isUpdated(lastBuild, push)
 	log.Infoln("tagUpdated", tagUpdated, "pushUpdated", pushUpdated)
 
 	if force || tagUpdated || pushUpdated {

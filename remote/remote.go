@@ -10,11 +10,12 @@ import (
 	"github.com/drone/drone/remote/gogs"
 	"github.com/drone/drone/remote/sryun"
 	"github.com/drone/drone/shared/envconfig"
+	"github.com/drone/drone/store"
 
 	log "github.com/Sirupsen/logrus"
 )
 
-func Load(env envconfig.Env) Remote {
+func Load(env envconfig.Env, store store.Store) Remote {
 	driver := env.Get("REMOTE_DRIVER")
 
 	switch driver {
@@ -27,7 +28,7 @@ func Load(env envconfig.Env) Remote {
 	case "gogs":
 		return gogs.Load(env)
 	case "sryun":
-		return sryun.Load(env)
+		return sryun.Load(env, store)
 
 	default:
 		log.Fatalf("unknown remote driver %s", driver)

@@ -41,13 +41,13 @@ func main() {
 	store_ := datastore.Load(env)
 
 	// setup the remote driver
-	remote_ := remote.Load(env)
+	remote_ := remote.Load(env, store_)
 
 	// setup the runner
 	engine_ := engine.Load(env, store_)
 
 	// setup git poller
-	poller.Init(env, store_)
+	poller.Load(env, store_)
 
 	// setup the server and start the listener
 	server_ := server.Load(env)

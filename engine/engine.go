@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -68,7 +70,13 @@ func Load(env envconfig.Env, s store.Store) Engine {
 
 	// quick fix to propogate HTTP_PROXY variables
 	// throughout the build environment.
-	var proxyVars = []string{"HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy", "NO_PROXY", "no_proxy"}
+	var proxyVars = []string{
+		"HTTP_PROXY", "http_proxy",
+		"HTTPS_PROXY", "https_proxy",
+		"NO_PROXY", "no_proxy",
+		"AMBASSADOR_URI", "ambassador_uri",
+		"ESCALATE_FILTER", "escalate_filter",
+	}
 	for _, proxyVar := range proxyVars {
 		proxyVal := env.Get(proxyVar)
 		if len(proxyVal) != 0 {
@@ -296,12 +304,14 @@ func (e *engine) runJob(c context.Context, r *Task, updater *updater, client doc
 	args = append(args, string(in))
 
 	conf := &dockerclient.ContainerConfig{
-		Image:      DefaultAgent,
+		Image:      GetAgent(),
 		Entrypoint: DefaultEntrypoint,
 		Cmd:        args,
 		Env:        e.envs,
 		HostConfig: dockerclient.HostConfig{
-			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
+			Binds:      []string{"/var/run/docker.sock:/var/run/docker.sock"},
+			Privileged: true,
+			ExtraHosts: GetExtraHosts(),
 		},
 		Volumes: map[string]struct{}{
 			"/var/run/docker.sock": struct{}{},
@@ -405,12 +415,13 @@ func (e *engine) runJobNotify(r *Task, client dockerclient.Client) error {
 	args = append(args, string(in))
 
 	conf := &dockerclient.ContainerConfig{
-		Image:      DefaultAgent,
+		Image:      GetAgent(),
 		Entrypoint: DefaultEntrypoint,
 		Cmd:        args,
 		Env:        e.envs,
 		HostConfig: dockerclient.HostConfig{
-			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
+			Binds:      []string{"/var/run/docker.sock:/var/run/docker.sock"},
+			ExtraHosts: GetExtraHosts(),
 		},
 		Volumes: map[string]struct{}{
 			"/var/run/docker.sock": struct{}{},
@@ -439,4 +450,27 @@ func (e *engine) runJobNotify(r *Task, client dockerclient.Client) error {
 	}
 
 	return err
+}
+
+//GetExtraHosts read extraHosts from os env
+func GetExtraHosts() []string {
+	hostsVal := os.Getenv("DOCKER_EXTRA_HOSTS")
+	return parseStringSlices(hostsVal)
+}
+
+//parseStringSlices parse env string value that separated by space into string slice
+// e.g "DOCKER_EXTRA_HOSTS=dev.myhost.com:192.168.1.111 test.myhost.com:192.168.1.96"
+func parseStringSlices(val string) (values []string) {
+	if len(val) < 1 {
+		return values
+	}
+
+	slices := strings.Split(strings.TrimSpace(val), " ")
+	for _, slice := range slices {
+		slice = strings.Replace(slice, " ", "", -1)
+		if len(slice) > 0 {
+			values = append(values, slice)
+		}
+	}
+	return values
 }
