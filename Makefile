@@ -6,8 +6,8 @@ all: gen build
 
 deps:
 	export GO15VENDOREXPERIMENT=1 
-	go get -u golang.org/x/tools/cmd/cover
-	go get -u golang.org/x/tools/cmd/vet
+#	go get -u golang.org/x/tools/cmd/cover
+#	go get -u golang.org/x/tools/cmd/vet
 	go get -u github.com/kr/vexp
 	go get -u github.com/eknkc/amber/...
 	go get -u github.com/eknkc/amber
