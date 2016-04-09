@@ -14,6 +14,9 @@ const (
 // Matrix represents the build matrix.
 type Matrix map[string][]string
 
+// Exclude represents the exclusion matrix.
+type Exclude map[string][]string
+
 // Axis represents a single permutation of entries
 // from the build matrix.
 type Axis map[string]string
@@ -31,7 +34,7 @@ func (a Axis) String() string {
 // Parse parses the Matrix section of the yaml file and
 // returns a list of axis.
 func Parse(raw string) ([]Axis, error) {
-	matrix, err := parseMatrix(raw)
+	matrix, exclude, err := parseMatrix(raw)
 	if err != nil {
 		return nil, err
 	}
@@ -42,14 +45,14 @@ func Parse(raw string) ([]Axis, error) {
 		return nil, nil
 	}
 
-	return Calc(matrix), nil
+	return Subtract(Perm(matrix), Perm(exclude)), nil
 }
 
-// Calc calculates the permutations for th build matrix.
+// Perm calculates the permutations for a matrix
 //
 // Note that this method will cap the number of permutations
 // to 25 to prevent an overly expensive calculation.
-func Calc(matrix Matrix) []Axis {
+func Perm(matrix map[string][]string) []Axis {
 	// calculate number of permutations and
 	// extract the list of tags
 	// (ie go_version, redis_version, etc)
@@ -98,12 +101,50 @@ func Calc(matrix Matrix) []Axis {
 	return axisList
 }
 
+// Subtract two matrix permutations and return axes - excludes
+func Subtract(axes []Axis, excludes []Axis) []Axis {
+        // compute the indices of axes to be removed from matrix:
+        // we remove permuatations containing all excluded key-value pairs,
+        // i.e., the logical operation among the exclude-keys is AND while
+        // among the exlude-values is OR, see also the test
+        var r []int
+        for _, excl := range excludes {
+          for i, axis := range axes {
+            in := make(map[string]bool)
+            for ek, ev := range excl {
+              for ak, av := range axis {
+                if ek == ak && ev == av {
+                  in[ek] = true
+                }
+              }
+            }
+            if len(in) == len(excl) {
+              r = append(r,i)
+            }
+          }
+        }
+        // subtract
+        w := 0
+        outer: for i, x := range axes {
+          for _, id := range r {
+            if id == i {
+              continue outer
+            }
+          }
+          axes[w] = x
+          w++
+        }
+        axes = axes[:w]
+        return axes
+}
+
 // helper function to parse the Matrix data from
 // the raw yaml file.
-func parseMatrix(raw string) (Matrix, error) {
+func parseMatrix(raw string) (Matrix, Exclude, error) {
 	data := struct {
 		Matrix map[string][]string
+		Exclude map[string][]string
 	}{}
 	err := yaml.Unmarshal([]byte(raw), &data)
-	return data.Matrix, err
+	return data.Matrix, data.Exclude, err
 }
