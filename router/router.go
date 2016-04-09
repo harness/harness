@@ -68,6 +68,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		user.GET("/repos", api.GetRepos)
 		user.GET("/repos/remote", api.GetRemoteRepos)
 		user.POST("/token", api.PostToken)
+		user.DELETE("/token", api.DeleteToken)
 	}
 
 	users := e.Group("/api/users")

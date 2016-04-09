@@ -8,6 +8,7 @@ import (
 	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
+	"github.com/drone/drone/shared/crypto"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
 )
@@ -78,6 +79,23 @@ func GetRemoteRepos(c *gin.Context) {
 
 func PostToken(c *gin.Context) {
 	user := session.User(c)
+
+	token := token.New(token.UserToken, user.Login)
+	tokenstr, err := token.Sign(user.Hash)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.String(http.StatusOK, tokenstr)
+}
+
+func DeleteToken(c *gin.Context) {
+	user := session.User(c)
+	user.Hash = crypto.Rand()
+	if err := store.UpdateUser(c, user); err != nil {
+		c.String(500, "Error revoking tokens. %s", err)
+		return
+	}
 
 	token := token.New(token.UserToken, user.Login)
 	tokenstr, err := token.Sign(user.Hash)
