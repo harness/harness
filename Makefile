@@ -6,7 +6,6 @@ all: gen build
 
 deps:
 	go get -u golang.org/x/tools/cmd/cover
-	go get -u golang.org/x/tools/cmd/vet
 	go get -u github.com/eknkc/amber/...
 	go get -u github.com/eknkc/amber
 	go get -u github.com/jteeuwen/go-bindata/...
