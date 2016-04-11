@@ -11,14 +11,13 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/engine"
+	"github.com/drone/drone/engine/parser"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
-	"github.com/drone/drone/yaml"
-	"github.com/drone/drone/yaml/matrix"
 )
 
 var (
@@ -149,41 +148,27 @@ func PostHook(c *gin.Context) {
 		// NOTE we don't exit on failure. The sec file is optional
 	}
 
-	axes, err := matrix.Parse(string(raw))
+	axes, err := parser.ParseMatrix(raw)
 	if err != nil {
-		log.Errorf("failure to calculate matrix for %s. %s", repo.FullName, err)
-		c.AbortWithError(400, err)
+		c.String(500, "Failed to parse yaml file or calculate matrix. %s", err)
 		return
 	}
 	if len(axes) == 0 {
-		axes = append(axes, matrix.Axis{})
+		axes = append(axes, parser.Axis{})
 	}
 
 	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
-		log.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
-		c.AbortWithError(500, err)
+		c.String(500, "Failed to generate netrc file. %s", err)
 		return
 	}
 
 	key, _ := store.GetKey(c, repo)
 
 	// verify the branches can be built vs skipped
-	yconfig, _ := yaml.Parse(string(raw))
-	var match = false
-	for _, branch := range yconfig.Branches {
-		if branch == build.Branch {
-			match = true
-			break
-		}
-		match, _ = filepath.Match(branch, build.Branch)
-		if match {
-			break
-		}
-	}
-	if !match && len(yconfig.Branches) != 0 {
-		log.Infof("ignoring hook. yaml file excludes repo and branch %s %s", repo.FullName, build.Branch)
-		c.AbortWithStatus(200)
+	branches := parser.ParseBranch(raw)
+	if !branches.Matches(build.Branch) {
+		c.String(200, "Branch does not match restrictions defined in yaml")
 		return
 	}
 

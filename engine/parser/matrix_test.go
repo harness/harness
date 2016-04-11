@@ -1,4 +1,4 @@
-package matrix
+package parser
 
 import (
 	"testing"
@@ -6,12 +6,12 @@ import (
 	"github.com/franela/goblin"
 )
 
-func Test_Matrix(t *testing.T) {
+func TestMatrix(t *testing.T) {
 
 	g := goblin.Goblin(t)
 	g.Describe("Calculate matrix", func() {
 
-		axis, _ := Parse(fakeMatrix)
+		axis, _ := ParseMatrixString(fakeMatrix)
 
 		g.It("Should calculate permutations", func() {
 			g.Assert(len(axis)).Equal(24)
@@ -26,7 +26,7 @@ func Test_Matrix(t *testing.T) {
 		})
 
 		g.It("Should return nil if no matrix", func() {
-			axis, err := Parse("")
+			axis, err := ParseMatrixString("")
 			g.Assert(err == nil).IsTrue()
 			g.Assert(axis == nil).IsTrue()
 		})
