@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	"net/http"
 
 	"github.com/drone/drone/engine"
 	"github.com/drone/drone/remote"
@@ -10,19 +10,23 @@ import (
 	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/router/middleware/header"
 	"github.com/drone/drone/shared/envconfig"
-	"github.com/drone/drone/shared/server"
 	"github.com/drone/drone/store/datastore"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/ianschenck/envflag"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 var (
-	dotenv = flag.String("config", ".env", "")
-	debug  = flag.Bool("debug", false, "")
+	addr = envflag.String("SERVER_ADDR", ":8000", "")
+	cert = envflag.String("SERVER_CERT", "", "")
+	key  = envflag.String("SERVER_KEY", "", "")
+
+	debug = envflag.Bool("DEBUG", false, "")
 )
 
 func main() {
-	flag.Parse()
+	envflag.Parse()
 
 	// debug level if requested by user
 	if *debug {
@@ -30,7 +34,7 @@ func main() {
 	}
 
 	// Load the configuration from env file
-	env := envconfig.Load(*dotenv)
+	env := envconfig.Load(".env")
 
 	// Setup the database driver
 	store_ := datastore.Load(env)
@@ -42,14 +46,21 @@ func main() {
 	engine_ := engine.Load(env, store_)
 
 	// setup the server and start the listener
-	server_ := server.Load(env)
-	server_.Run(
-		router.Load(
-			header.Version,
-			cache.Default(),
-			context.SetStore(store_),
-			context.SetRemote(remote_),
-			context.SetEngine(engine_),
-		),
+	handler := router.Load(
+		header.Version,
+		cache.Default(),
+		context.SetStore(store_),
+		context.SetRemote(remote_),
+		context.SetEngine(engine_),
 	)
+
+	if *cert != "" {
+		logrus.Fatal(
+			http.ListenAndServeTLS(*addr, *cert, *key, handler),
+		)
+	} else {
+		logrus.Fatal(
+			http.ListenAndServe(*addr, handler),
+		)
+	}
 }
