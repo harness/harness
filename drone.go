@@ -33,6 +33,8 @@ func main() {
 	// debug level if requested by user
 	if *debug {
 		logrus.SetLevel(logrus.DebugLevel)
+	} else {
+		logrus.SetLevel(logrus.WarnLevel)
 	}
 
 	// Load the configuration from env file
