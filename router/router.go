@@ -17,7 +17,9 @@ import (
 )
 
 func Load(middleware ...gin.HandlerFunc) http.Handler {
-	e := gin.Default()
+	e := gin.New()
+	e.Use(gin.Recovery())
+
 	e.SetHTMLTemplate(template.Load())
 	e.StaticFS("/static", static.FileSystem())
 
