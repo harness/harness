@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/drone/drone/engine"
 	"github.com/drone/drone/remote"
@@ -13,6 +14,7 @@ import (
 	"github.com/drone/drone/store/datastore"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/ianschenck/envflag"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -47,6 +49,7 @@ func main() {
 
 	// setup the server and start the listener
 	handler := router.Load(
+		ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true),
 		header.Version,
 		cache.Default(),
 		context.SetStore(store_),

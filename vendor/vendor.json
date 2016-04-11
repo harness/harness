@@ -9,8 +9,8 @@
 		},
 		{
 			"path": "github.com/Sirupsen/logrus",
-			"revision": "273bd5984cd7deae8d4b71b0ba9bfc5767f7284b",
-			"revisionTime": "2015-02-17T12:42:44-05:00"
+			"revision": "4b6ea7319e214d98c938f12692336f7ca9348d6b",
+			"revisionTime": "2016-03-17T14:11:10Z"
 		},
 		{
 			"origin": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
@@ -52,6 +52,11 @@
 			"path": "github.com/franela/goblin",
 			"revision": "889391d730237f8aca06ce3e62975112983f96b4",
 			"revisionTime": "2016-01-23T18:11:54-03:00"
+		},
+		{
+			"path": "github.com/gin-gonic/contrib/ginrus",
+			"revision": "14f66d54cdb96059bafca98665bcc6d9df4951f2",
+			"revisionTime": "2015-08-15T19:25:43+02:00"
 		},
 		{
 			"path": "github.com/gin-gonic/gin",
@@ -97,6 +102,21 @@
 			"path": "github.com/gorilla/securecookie",
 			"revision": "1b0c7f6e9ab3d7f500fd7d50c7ad835ff428139b",
 			"revisionTime": "2014-04-09T13:11:00+02:00"
+		},
+		{
+			"path": "github.com/ianschenck/envflag",
+			"revision": "9111d830d133f952887a936367fb0211c3134f0d",
+			"revisionTime": "2014-07-20T15:03:42-06:00"
+		},
+		{
+			"path": "github.com/joho/godotenv",
+			"revision": "4ed13390c0acd2ff4e371e64d8b97c8954138243",
+			"revisionTime": "2015-09-07T11:02:28+10:00"
+		},
+		{
+			"path": "github.com/joho/godotenv/autoload",
+			"revision": "4ed13390c0acd2ff4e371e64d8b97c8954138243",
+			"revisionTime": "2015-09-07T11:02:28+10:00"
 		},
 		{
 			"path": "github.com/koding/cache",
