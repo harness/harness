@@ -178,7 +178,7 @@ func normalize(h http.Handler) http.Handler {
 
 		parts := strings.Split(r.URL.Path, "/")[1:]
 		switch parts[0] {
-		case "settings", "slash", "repos", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
+		case "settings", "bots", "repos", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
 			// no-op
 		default:
 
