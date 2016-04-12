@@ -142,10 +142,10 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		stream.GET("/:owner/:name/:build/:number", web.GetStream)
 	}
 
-	slash := e.Group("/slash/slack")
+	bots := e.Group("/bots")
 	{
-		slash.Use(session.MustUser())
-		slash.POST("/slash", web.Slack)
+		bots.Use(session.MustUser())
+		bots.POST("/slack", web.Slack)
 	}
 
 	auth := e.Group("/authorize")
