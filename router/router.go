@@ -142,6 +142,12 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		stream.GET("/:owner/:name/:build/:number", web.GetStream)
 	}
 
+	slash := e.Group("/slash/slack")
+	{
+		slash.Use(session.MustUser())
+		slash.POST("/slash", web.Slack)
+	}
+
 	auth := e.Group("/authorize")
 	{
 		auth.GET("", web.GetLogin)
@@ -172,7 +178,7 @@ func normalize(h http.Handler) http.Handler {
 
 		parts := strings.Split(r.URL.Path, "/")[1:]
 		switch parts[0] {
-		case "settings", "repos", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
+		case "settings", "slash", "repos", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
 			// no-op
 		default:
 
