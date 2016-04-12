@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/drone/drone/engine"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/store"
 )
 
@@ -25,7 +25,7 @@ func GetNode(c *gin.Context) {
 }
 
 func PostNode(c *gin.Context) {
-	engine := context.Engine(c)
+	engine := engine.FromContext(c)
 
 	in := struct {
 		Addr string `json:"address"`
@@ -63,7 +63,7 @@ func PostNode(c *gin.Context) {
 }
 
 func DeleteNode(c *gin.Context) {
-	engine := context.Engine(c)
+	engine := engine.FromContext(c)
 
 	id, _ := strconv.Atoi(c.Param("node"))
 	node, err := store.GetNode(c, int64(id))

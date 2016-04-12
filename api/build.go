@@ -18,7 +18,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/router/middleware/session"
 )
 
@@ -130,7 +129,7 @@ func GetBuildLogs(c *gin.Context) {
 }
 
 func DeleteBuild(c *gin.Context) {
-	engine_ := context.Engine(c)
+	engine_ := engine.FromContext(c)
 	repo := session.Repo(c)
 
 	// parse the build number and job sequence number from
@@ -281,7 +280,7 @@ func PostBuild(c *gin.Context) {
 	// on status change notifications
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
 
-	engine_ := context.Engine(c)
+	engine_ := engine.FromContext(c)
 	go engine_.Schedule(c.Copy(), &engine.Task{
 		User:      user,
 		Repo:      repo,

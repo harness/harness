@@ -4,14 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/drone/drone/engine"
-	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router"
-	"github.com/drone/drone/router/middleware/cache"
-	"github.com/drone/drone/router/middleware/context"
-	"github.com/drone/drone/router/middleware/header"
-	"github.com/drone/drone/shared/envconfig"
-	"github.com/drone/drone/store/datastore"
+	"github.com/drone/drone/router/middleware"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/contrib/ginrus"
@@ -37,26 +31,14 @@ func main() {
 		logrus.SetLevel(logrus.WarnLevel)
 	}
 
-	// Load the configuration from env file
-	env := envconfig.Load(".env")
-
-	// Setup the database driver
-	store_ := datastore.Load(env)
-
-	// setup the remote driver
-	remote_ := remote.Load(env)
-
-	// setup the runner
-	engine_ := engine.Load(env, store_)
-
 	// setup the server and start the listener
 	handler := router.Load(
 		ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true),
-		header.Version,
-		cache.Default(),
-		context.SetStore(store_),
-		context.SetRemote(remote_),
-		context.SetEngine(engine_),
+		middleware.Version,
+		middleware.Cache(),
+		middleware.Store(),
+		middleware.Remote(),
+		middleware.Engine(),
 	)
 
 	if *cert != "" {

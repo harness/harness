@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/shared/httputil"
 
 	log "github.com/Sirupsen/logrus"
@@ -24,8 +23,7 @@ type Bitbucket struct {
 	Open   bool
 }
 
-func Load(env envconfig.Env) *Bitbucket {
-	config := env.String("REMOTE_CONFIG", "")
+func Load(config string) *Bitbucket {
 
 	// parse the remote DSN configuration string
 	url_, err := url.Parse(config)

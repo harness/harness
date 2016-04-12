@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"runtime"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/shared/docker"
-	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/store"
 	"github.com/samalba/dockerclient"
 	"golang.org/x/net/context"
@@ -60,7 +60,7 @@ type engine struct {
 // Load creates a new build engine, loaded with registered nodes from the
 // database. The registered nodes are added to the pool of nodes to immediately
 // start accepting workloads.
-func Load(env envconfig.Env, s store.Store) Engine {
+func Load(s store.Store) Engine {
 	engine := &engine{}
 	engine.bus = newEventbus()
 	engine.pool = newPool()
@@ -70,7 +70,7 @@ func Load(env envconfig.Env, s store.Store) Engine {
 	// throughout the build environment.
 	var proxyVars = []string{"HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy", "NO_PROXY", "no_proxy"}
 	for _, proxyVar := range proxyVars {
-		proxyVal := env.Get(proxyVar)
+		proxyVal := os.Getenv(proxyVar)
 		if len(proxyVal) != 0 {
 			engine.envs = append(engine.envs, proxyVar+"="+proxyVal)
 		}

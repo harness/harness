@@ -8,7 +8,6 @@ import (
 
 	"github.com/drone/drone/api"
 	"github.com/drone/drone/router/middleware/header"
-	"github.com/drone/drone/router/middleware/location"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/router/middleware/token"
 	"github.com/drone/drone/static"
@@ -23,7 +22,6 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.SetHTMLTemplate(template.Load())
 	e.StaticFS("/static", static.FileSystem())
 
-	e.Use(location.Resolve)
 	e.Use(header.NoCache)
 	e.Use(header.Options)
 	e.Use(header.Secure)
@@ -146,6 +144,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	{
 		bots.Use(session.MustUser())
 		bots.POST("/slack", web.Slack)
+		bots.POST("/slack/:command", web.Slack)
 	}
 
 	auth := e.Group("/authorize")
