@@ -6,35 +6,9 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote/bitbucket"
-	"github.com/drone/drone/remote/github"
-	"github.com/drone/drone/remote/gitlab"
-	"github.com/drone/drone/remote/gogs"
-	"github.com/drone/drone/shared/envconfig"
 
-	"github.com/Sirupsen/logrus"
 	"golang.org/x/net/context"
 )
-
-func Load(env envconfig.Env) Remote {
-	driver := env.Get("REMOTE_DRIVER")
-
-	switch driver {
-	case "bitbucket":
-		return bitbucket.Load(env)
-	case "github":
-		return github.Load(env)
-	case "gitlab":
-		return gitlab.Load(env)
-	case "gogs":
-		return gogs.Load(env)
-
-	default:
-		logrus.Fatalf("unknown remote driver %s", driver)
-	}
-
-	return nil
-}
 
 type Remote interface {
 	// Login authenticates the session and returns the

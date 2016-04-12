@@ -15,8 +15,7 @@ func Test_Gitlab(t *testing.T) {
 	var server = testdata.NewServer()
 	defer server.Close()
 
-	env := map[string]string{}
-	env["REMOTE_CONFIG"] = server.URL + "?client_id=test&client_secret=test"
+	env := server.URL + "?client_id=test&client_secret=test"
 
 	gitlab := Load(env)
 

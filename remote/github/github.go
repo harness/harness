@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/oauth2"
 
@@ -42,8 +41,7 @@ type Github struct {
 	GitSSH      bool
 }
 
-func Load(env envconfig.Env) *Github {
-	config := env.String("REMOTE_CONFIG", "")
+func Load(config string) *Github {
 
 	// parse the remote DSN configuration string
 	url_, err := url.Parse(config)

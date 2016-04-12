@@ -8,7 +8,6 @@ import (
 
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/drone/drone/engine"
-	"github.com/drone/drone/router/middleware/context"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/store"
 
@@ -20,7 +19,7 @@ import (
 // GetRepoEvents will upgrade the connection to a Websocket and will stream
 // event updates to the browser.
 func GetRepoEvents(c *gin.Context) {
-	engine_ := context.Engine(c)
+	engine_ := engine.FromContext(c)
 	repo := session.Repo(c)
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 
@@ -55,7 +54,7 @@ func GetRepoEvents(c *gin.Context) {
 
 func GetStream(c *gin.Context) {
 
-	engine_ := context.Engine(c)
+	engine_ := engine.FromContext(c)
 	repo := session.Repo(c)
 	buildn, _ := strconv.Atoi(c.Param("build"))
 	jobn, _ := strconv.Atoi(c.Param("number"))

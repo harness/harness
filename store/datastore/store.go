@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/store"
 	"github.com/drone/drone/store/datastore/ddl"
 	_ "github.com/go-sql-driver/mysql"
@@ -21,20 +20,6 @@ import (
 // of the sql/database driver with a relational database backend.
 type datastore struct {
 	*sql.DB
-}
-
-// Load opens a new database connection with the specified driver
-// and connection string specified in the environment variables.
-func Load(env envconfig.Env) store.Store {
-	var (
-		driver = env.String("DATABASE_DRIVER", "sqlite3")
-		config = env.String("DATABASE_CONFIG", "drone.sqlite")
-	)
-
-	logrus.Infof("using database driver %s", driver)
-	logrus.Infof("using database config %s", config)
-
-	return New(driver, config)
 }
 
 // New creates a database connection for the given driver and datasource

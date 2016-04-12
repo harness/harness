@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/shared/envconfig"
 	"github.com/gogits/go-gogs-client"
 
 	log "github.com/Sirupsen/logrus"
@@ -22,9 +21,7 @@ type Gogs struct {
 	SkipVerify  bool
 }
 
-func Load(env envconfig.Env) *Gogs {
-	config := env.String("REMOTE_CONFIG", "")
-
+func Load(config string) *Gogs {
 	// parse the remote DSN configuration string
 	url_, err := url.Parse(config)
 	if err != nil {

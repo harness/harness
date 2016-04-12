@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/drone/drone/shared/envconfig"
 	"github.com/franela/goblin"
 )
 
@@ -48,12 +47,11 @@ func TestHook(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	env := envconfig.Env{
-		"REMOTE_CONFIG": "https://github.com?client_id=client&client_secret=secret&scope=scope1,scope2",
-	}
-	g := Load(env)
+	conf := "https://github.com?client_id=client&client_secret=secret&scope=scope1,scope2"
+
+	g := Load(conf)
 	if g.URL != "https://github.com" {
-		t.Errorf("g.URL = %q; want https://github.com")
+		t.Errorf("g.URL = %q; want https://github.com", g.URL)
 	}
 	if g.Client != "client" {
 		t.Errorf("g.Client = %q; want client", g.Client)
@@ -71,7 +69,7 @@ func TestLoad(t *testing.T) {
 		t.Errorf("g.MergeRef = %q; want %q", g.MergeRef, DefaultMergeRef)
 	}
 
-	g = Load(envconfig.Env{})
+	g = Load("")
 	if g.Scope != DefaultScope {
 		t.Errorf("g.Scope = %q; want %q", g.Scope, DefaultScope)
 	}
