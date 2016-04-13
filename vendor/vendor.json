@@ -24,6 +24,11 @@
 			"revisionTime": "2015-09-04T14:24:56-07:00"
 		},
 		{
+			"path": "github.com/djherbis/fscache",
+			"revision": "ffc728270b01f3906c396bbe796232b87750f24e",
+			"revisionTime": "2016-03-05T10:30:05-08:00"
+		},
+		{
 			"path": "github.com/docker/docker/pkg/stdcopy",
 			"revision": "9356c76d9f6e285e71f04df33ef7870455a42775",
 			"revisionTime": "2015-07-02T17:24:29-04:00"
@@ -215,6 +220,16 @@
 			"path": "golang.org/x/oauth2/internal",
 			"revision": "8a57ed94ffd43444c0879fe75701732a38afc985",
 			"revisionTime": "2015-12-29T21:02:54-07:00"
+		},
+		{
+			"path": "gopkg.in/djherbis/atime.v1",
+			"revision": "8e47e0e01d08df8b9f840d74299c8ab70a024a30",
+			"revisionTime": "2015-08-29T00:19:25-07:00"
+		},
+		{
+			"path": "gopkg.in/djherbis/stream.v1",
+			"revision": "26a761059928627ca84837000dfb33447c66a146",
+			"revisionTime": "2016-02-03T22:24:40-08:00"
 		},
 		{
 			"path": "gopkg.in/go-playground/validator.v8",
