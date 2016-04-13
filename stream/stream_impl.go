@@ -43,7 +43,7 @@ type mux struct {
 func (m *mux) Create(key string) (io.ReadCloser, io.WriteCloser, error) {
 	rc, wc, err := m.cache.Get(key)
 	if rc != nil {
-		rc = &closeOnceReader{ReadCloser: rc}
+		rc = &closeOnceReader{ReaderAt: rc, ReadCloser: rc}
 	}
 	if wc != nil {
 		wc = &closeOnceWriter{WriteCloser: wc}
@@ -67,6 +67,7 @@ func (m *mux) Remove(key string) error {
 // attempting to close the fscache reader more than
 // once results in a panic.
 type closeOnceReader struct {
+	io.ReaderAt
 	io.ReadCloser
 	once sync.Once
 }
