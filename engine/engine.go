@@ -76,6 +76,12 @@ func Load(s store.Store) Engine {
 		}
 	}
 
+	// quick fix to allow DRONE_EXEC_NETWORKMODE variable
+	// throughout the build environment.
+	if os.Getenv("DRONE_EXEC_NETWORKMODE") != "" {
+		engine.envs = append(engine.envs, "DRONE_EXEC_NETWORKMODE="+os.Getenv("DRONE_EXEC_NETWORKMODE"))
+	}
+
 	nodes, err := s.GetNodeList()
 	if err != nil {
 		log.Fatalf("failed to get nodes from database. %s", err)
