@@ -171,9 +171,11 @@
 			"revisionTime": "2013-09-19T15:23:15-06:00"
 		},
 		{
+			"checksumSHA1": "+HvW+k8YkDaPKwF0Lwcz+Tf2A+E=",
+			"origin": "github.com/drone/drone/vendor/github.com/samalba/dockerclient",
 			"path": "github.com/samalba/dockerclient",
-			"revision": "f274bbd0e2eb35ad1444dc6e6660214f9fbbc08c",
-			"revisionTime": "2016-02-22T16:23:45-08:00"
+			"revision": "91d7393ff85980ba3a8966405871a3d446ca28f2",
+			"revisionTime": "2016-04-14T17:47:13Z"
 		},
 		{
 			"path": "github.com/square/go-jose",
@@ -246,5 +248,6 @@
 			"revision": "5d6f7e02b7cdad63b06ab3877915532cd30073b4",
 			"revisionTime": "2015-01-19T16:55:52-02:00"
 		}
-	]
+	],
+	"rootPath": "github.com/drone/drone"
 }
