@@ -91,7 +91,7 @@ type HostConfig struct {
 	VolumeDriver         string
 	OomScoreAdj          int
 	Tmpfs                map[string]string
-	ShmSize              int64
+	ShmSize              int64 `json:"omitempty"`
 	BlkioWeightDevice    []WeightDevice
 	BlkioDeviceReadBps   []ThrottleDevice
 	BlkioDeviceWriteBps  []ThrottleDevice
@@ -195,6 +195,10 @@ func (s *State) String() string {
 		return "Dead"
 	}
 
+	if s.StartedAt.IsZero() {
+		return "Created"
+	}
+
 	if s.FinishedAt.IsZero() {
 		return ""
 	}
@@ -217,6 +221,10 @@ func (s *State) StateString() string {
 
 	if s.Dead {
 		return "dead"
+	}
+
+	if s.StartedAt.IsZero() {
+		return "created"
 	}
 
 	return "exited"
@@ -536,12 +544,14 @@ type BuildImage struct {
 	CpuSetMems     string
 	CgroupParent   string
 	BuildArgs      map[string]string
+	Labels         map[string]string // Labels hold metadata about the image
 }
 
 type Volume struct {
-	Name       string // Name is the name of the volume
-	Driver     string // Driver is the Driver name used to create the volume
-	Mountpoint string // Mountpoint is the location on disk of the volume
+	Name       string            // Name is the name of the volume
+	Driver     string            // Driver is the Driver name used to create the volume
+	Mountpoint string            // Mountpoint is the location on disk of the volume
+	Labels     map[string]string // Labels hold metadata about the volume
 }
 
 type VolumesListResponse struct {
@@ -552,6 +562,7 @@ type VolumeCreateRequest struct {
 	Name       string            // Name is the requested name of the volume
 	Driver     string            // Driver is the name of the driver that should be used to create the volume
 	DriverOpts map[string]string // DriverOpts holds the driver specific options to use for when creating the volume.
+	Labels     map[string]string // Labels hold metadata about the volume
 }
 
 // IPAM represents IP Address Management
@@ -585,6 +596,7 @@ type NetworkResource struct {
 	//Internal   bool
 	Containers map[string]EndpointResource
 	Options    map[string]string
+	Labels     map[string]string // Labels hold metadata about the network
 }
 
 // EndpointResource contains network resources allocated and used for a container in a network
@@ -604,6 +616,7 @@ type NetworkCreate struct {
 	IPAM           IPAM
 	Internal       bool
 	Options        map[string]string
+	Labels         map[string]string // Labels hold metadata about the network
 }
 
 // NetworkCreateResponse is the response message sent by the server for network create call
