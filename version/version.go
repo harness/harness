@@ -2,7 +2,7 @@ package version
 
 import "fmt"
 
-const (
+var (
 	// VersionMajor is for an API incompatible changes
 	VersionMajor = 0
 	// VersionMinor is for functionality in a backwards-compatible manner
