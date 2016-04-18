@@ -1,0 +1,14 @@
+consumes:
+- application/io.goswagger.examples.todo-list.v1+json
+definitions: {}
+info:
+  description: The product of a tutorial on goswagger.io
+  title: A To Do list application
+  version: 1.0.0
+paths: {}
+produces:
+- application/io.goswagger.examples.todo-list.v1+json
+schemes:
+- http
+- https
+swagger: "2.0"

@@ -1,0 +1,20 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: 'array-body-api'
+paths:
+  /echo:
+    post:
+      operationId: "postEcho"
+      summary: Post an object
+      parameters:
+        - name: body
+          in: body
+          description: this argument is a string array
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: All is good

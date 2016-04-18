@@ -1,0 +1,68 @@
+swagger: '2.0'
+info:
+  version: '2'
+  title: Server Rest API
+
+basePath: /rest/api/2/
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  '/search':
+    get:
+      operationId: getSearch
+      # Per docs: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#parameterObject
+      # Required. The type of the parameter. Since the parameter is not located at the request body, it is limited to simple types (that is, not an object). The value MUST be one of "string", "number", "integer", "boolean", "array" or "file".
+      parameters:
+        - name: stringTypeInQuery
+          type: string
+          in: query
+          default: "qsValue"
+        - name: numberTypeInQuery
+          type: number
+          in: query
+        - name: integerTypeInQuery
+          type: integer
+          in: query
+        - name: booleanTypeInQuery
+          type: boolean
+          in: query
+
+        - name: stringArrayTypeInQuery
+          type: array
+          items:
+            type: string
+          in: query
+        - name: numberArrayTypeInQuery
+          type: array
+          items:
+            type: string
+          in: query
+        - name: integerArrayTypeInQuery
+          type: array
+          items:
+            type: string
+          in: query
+        - name: booleanArrayTypeInQuery
+          type: array
+          items:
+            type: string
+          in: query
+
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/SearchResponse'
+
+
+
+definitions:
+  SearchResponse:
+    type: object
+    properties:
+      message:
+        type: string

@@ -1,0 +1,15 @@
+{{ template "header" . }}
+
+{{ if eq .Name "ApiResponse" }}// APIResponse is the response to an API call.{{ else }}{{ if .IsExported }}/*{{ .Name }} {{ template "docstring" . }}{{ if not .IsBaseType }}
+swagger:model {{ .Name }}{{ else }}
+swagger:discriminator {{ .Name }} {{ .DiscriminatorField }}{{ end }}{{ end }}
+*/{{ end }}
+{{ template "schema" . }}
+
+{{ range .ExtraSchemas }}{{ if .IsExported }}
+/*{{ .Name }} {{ template "docstring" . }}{{ if not .IsBaseType }}
+swagger:model {{ .Name }}{{ else }}
+swagger:discriminator {{ .Name }} {{ .DiscriminatorField }}{{ end }}
+*/{{ end}}
+{{ template "schema" . }}
+{{ end }}

@@ -1,0 +1,3 @@
+{{ define "schemaType" }}{{ if and (or ((len .AllOf) gt 0) .IsAnonymous) ( not .IsMap) }}{{ template "schemaBody" . }}{{ else }}{{ if and (not .IsMap) .IsNullable }}*{{ end }}{{ .GoType }}{{end}}{{ end }}
+{{ define "dereffedSchemaType" }}{{ if and (or ((len .AllOf) gt 0) .IsAnonymous) ( not .IsMap) }}{{ template "schemaBody" . }}{{ else }}{{ .GoType }}{{end}}{{ end }}
+{{ define "typeSchemaType"}}{{ if and (or ((len .AllOf) gt 0) .IsAnonymous) ( not .IsMap) }}{{ template "schemaBody" . }}{{ else }}{{ if and (not .IsMap) .IsNullable }}*{{ end }}{{ if .AliasedType }}{{ .AliasedType }}{{ else }}{{ .GoType }}{{ end }}{{end}}{{ end }}

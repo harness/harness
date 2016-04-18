@@ -1,0 +1,151 @@
+swagger: '2.0'
+info:
+  version: 0.0.0
+  title: 'AttendList'
+  description: |
+    AttendList service.
+  contact:
+    name: API Support
+    url: http://attendlist.co/support
+    email: contact@evecon.co
+consumes:
+  - application/json
+produces:
+  - application/json
+definitions:
+  Event:
+    title: Event
+    type: object
+    properties:
+      Id:
+        type: integer
+        format: int64
+        readOnly: true
+      Version:
+        type: integer
+        format: int64
+        readOnly: true
+      Created:
+        type: integer
+        format: int64
+        readOnly: true
+      Updated:
+        type: integer
+        format: int64
+        readOnly: true
+      Deleted:
+        type: boolean
+        readOnly: true
+      StartDate:
+        type: string
+        format: date-time
+      EndDate:
+        type: string
+        format: date-time
+      Latitude:
+        type: number
+        format: float
+      Longitude:
+        type: number
+        format: float
+      Name:
+        type: string
+      URL:
+        type: string
+      Notes:
+        type: string
+      Autosearch:
+        type: boolean
+    example:
+      StartDate: "2015-11-01T12:00:00Z"
+      EndDate: "2015-11-05T12:00:00Z"
+      Latitude: 59.842609
+      Longitude: 30.319087
+      Name: "Bikers meeting"
+      URL: "http://attendlist.co"
+      Notes: "Yet another bikers meeting"
+      Autosearch: false
+paths:
+  /events:
+    get:
+      description: Get events.
+      tags:
+      - events
+      operationId: getEvents
+      responses:
+        default:
+          description: Generic Error
+        '200':
+          description: Successful response
+          schema:
+            title: ArrayOfEvents
+            type: array
+            items:
+              $ref: '#/definitions/Event'
+    post:
+      description: Create new event.
+      tags:
+      - events
+      operationId: postEvent
+      parameters:
+        - name: Event
+          in: body
+          description: New events
+          required: true
+          schema:
+            $ref: '#/definitions/Event'
+      responses:
+        default:
+          description: Generic Error
+        '201':
+          description: |
+            Successful response.
+            'Location' header with link to /events/{id} containing new ID.
+  /events/{id}:
+    parameters:
+      - name: id
+        in: path
+        description: Existing event id.
+        required: true
+        type: integer
+        format: int64
+    get:
+      description: Get event by id.
+      tags:
+      - events
+      operationId: getEventById
+      responses:
+        default:
+          description: Generic Error
+        '200':
+          description: Successful response
+          schema:
+            title: Newly created event
+            $ref: '#/definitions/Event'
+    put:
+      description: Update existing event.
+      tags:
+      - events
+      operationId: putEventById
+      parameters:
+        - name: Event
+          in: body
+          description: Existing event
+          required: true
+          schema:
+            $ref: '#/definitions/Event'
+      responses:
+        default:
+          description: Generic Error
+        '204':
+          description: Successful response
+    delete:
+      description: Delete event by id.
+      tags:
+      - events
+      operationId: deleteEventById
+      responses:
+        default:
+          description: Generic Error
+        '204':
+          description: Successful response

@@ -1,0 +1,670 @@
+swagger: '2.0'
+
+info:
+  version: "1.0.0"
+  title: Private to-do list
+  description: |
+    A very simple api description that makes a json only API to submit to do's.
+
+produces:
+  - application/json
+
+consumes:
+  - application/json
+
+paths:
+  /models:
+    get:
+      operationId: modelOp
+      summary: many model variations
+      description: Used to see if a codegen can render all the possible parameter variations for a header param
+      tags:
+        - testcgen
+      responses:
+        default:
+          description: Generic Out
+definitions:
+  Tag:
+    type: "object"
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        minLength: 2
+        maxLength: 50
+        Pattern: "[A-Za-z0-9][\\w- ]+"
+  Notable:
+    type: object
+    properties:
+      notes:
+        type: string
+        minLength: 5
+
+  Scores:
+    type: array
+    items:
+      type: number
+      format: float
+
+  JaggedScores:
+    type: array
+    items:
+      type: array
+      items:
+        type: array
+        items:
+          type: number
+          format: float
+
+  Notables:
+    type: array
+    items:
+      $ref: "#/definitions/Notable"
+
+  Notablix:
+    type: array
+    items:
+      type: array
+      items:
+        type: array
+        items:
+          $ref: "#/definitions/Notable"
+
+  Stats:
+    type: array
+    items:
+      type: object
+      properties:
+        points:
+          type: array
+          items:
+            type: number
+            format: int64
+
+  Statix:
+    type: array
+    items:
+      type: array
+      items:
+        type: array
+        items:
+          type: object
+          properties:
+            points:
+              type: array
+              items:
+                type: number
+                format: int64
+
+  WithItems:
+    type: object
+    properties:
+      tags:
+        type: array
+        items:
+          type: string
+
+  WithComplexItems:
+    type: object
+    properties:
+      tags:
+        type: array
+        items:
+          type: object
+          properties:
+            points:
+              type: array
+              items:
+                type: number
+                format: int64
+
+  WithItemsAndAdditional2:
+    type: object
+    properties:
+      tags:
+        type: array
+        items:
+          - type: string
+        additionalItems:
+          type: integer
+          format: int32
+
+  WithComplexAdditional:
+    type: object
+    properties:
+      tags:
+        type: array
+        items:
+          - type: string
+        additionalItems:
+          type: object
+          properties:
+            points:
+              type: array
+              items:
+                type: number
+                format: int64
+
+  WithItemsAndAdditional:
+    type: object
+    properties:
+      tags:
+        type: array
+        items:
+          - type: string
+        additionalItems: true
+  Age:
+    type: integer
+    format: int32
+
+  Nota:
+    type: object
+    additionalProperties:
+      type: integer
+      format: int32
+
+  NotaWithRef:
+    type: object
+    additionalProperties:
+      $ref: "#/definitions/Notable"
+
+  NotaWithMeta:
+    type: object
+    additionalProperties:
+      type: object
+      required: ["comment"]
+      properties:
+        comment:
+          type: string
+        count:
+          type: integer
+          format: int32
+
+  NotaWithName:
+    type: object
+    required: ["name"]
+    properties:
+      name:
+        type: string
+    additionalProperties:
+      type: integer
+      format: int32
+
+  NotaWithRefRegistry:
+    type: object
+    additionalProperties:
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties:
+          $ref: "#/definitions/Notable"
+
+  NotaWithMetaRegistry:
+    type: object
+    additionalProperties:
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties:
+          type: object
+          required: ["comment"]
+          properties:
+            comment:
+              type: string
+            count:
+              type: integer
+              format: int32
+
+  WithRef:
+    type: object
+    properties:
+      notes:
+        $ref: "#/definitions/Notable"
+
+  WithNullableRef:
+    type: object
+    properties:
+      notes:
+        allOf:
+          - $ref: "#/definitions/Notable"
+          - x-isnullable: true
+
+  WithMap:
+    type: object
+    properties:
+      data:
+        type: object
+        additionalProperties:
+          type: string
+
+  WithMapRef:
+    type: object
+    properties:
+      data:
+        type: object
+        additionalProperties:
+          $ref: "#/definitions/Notable"
+
+  WithMapInterface:
+    type: object
+    required: ["extraInfo"]
+    properties:
+      extraInfo:
+        type: object
+        additionalProperties:
+          type: object
+
+
+  WithMapComplex:
+    type: object
+    properties:
+      data:
+        type: object
+        additionalProperties:
+          type: object
+          properties:
+            comment:
+              type: string
+            count:
+              type: integer
+              format: int32
+
+  WithMapRegistry:
+    type: object
+    properties:
+      data:
+        type: object
+        additionalProperties:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: string
+
+  WithMapRegistryRef:
+    type: object
+    properties:
+      data:
+        type: object
+        additionalProperties:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              $ref: "#/definitions/Notable"
+
+  WithMapComplexRegistry:
+    type: object
+    properties:
+      data:
+        type: object
+        additionalProperties:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: object
+              properties:
+                comment:
+                  type: string
+                count:
+                  type: integer
+                  format: int32
+
+  WithAdditional:
+    type: object
+    properties:
+      data:
+        type: object
+        required: ["name"]
+        properties:
+          name:
+            type: string
+        additionalProperties:
+          type: string
+
+  SimpleTuple:
+    type: array
+    items:
+      - type: integer
+        format: int64
+      - type: string
+      - type: string
+        format: date-time
+      - $ref: "#/definitions/Notable"
+      - allOf:
+        - $ref: "#/definitions/Notable"
+        - x-isnullable: true
+
+  TupleWithExtra:
+    type: array
+    items:
+      - type: integer
+        format: int64
+      - type: string
+      - type: string
+        format: date-time
+      - $ref: "#/definitions/Notable"
+    additionalItems:
+      type: number
+      format: double
+
+  TupleWithComplex:
+    type: array
+    items:
+      - type: integer
+        format: int64
+      - type: string
+      - type: string
+        format: date-time
+      - $ref: "#/definitions/Notable"
+    additionalItems:
+      type: object
+      properties:
+        args:
+          type: array
+          items:
+            - type: string
+          additionalItems:
+            type: number
+            format: float
+
+  WithTuple:
+    type: object
+    properties:
+      flags:
+        type: array
+        items:
+        - type: integer
+          format: int64
+        - type: string
+
+  WithTupleWithExtra:
+    type: object
+    properties:
+      flags:
+        type: array
+        items:
+        - type: integer
+          format: int64
+        - type: string
+        additionalItems:
+          type: number
+          format: float
+
+  JustRef:
+    $ref: "#/definitions/Notable"
+
+  WithAllOf:
+    type: object
+    allOf:
+      - $ref: "#/definitions/Notable"
+      - type: object
+        additionalProperties:
+          type: integer
+          format: int32
+      - type: object
+        properties:
+          name:
+            type: string
+        additionalProperties:
+          type: integer
+          format: int64
+      - type: object
+        properties:
+          score:
+            type: number
+            format: float
+          count:
+            type: integer
+            format: int64
+          remark:
+            type: string
+        additionalProperties:
+          type: object
+          properties:
+            points:
+              type: array
+              items:
+                type: number
+                format: double
+      - type: array
+        items:
+        - type: number
+          format: float
+        - type: string
+          format: date-time
+      - type: array
+        items:
+        - type: number
+          format: double
+        - type: string
+          format: date
+        additionalItems:
+          type: string
+          format: password
+      - type: object
+        properties:
+          title:
+            type: string
+            minLength: 5
+            maxLength: 140
+          body:
+            type: string
+            minLength: 5
+            maxLength: 2048
+          params:
+            type: object
+            maxProperties: 20
+            additionalProperties:
+              type: object
+              properties:
+                opinion:
+                  type: string
+          extra:
+            type: object
+            properties:
+              score:
+                type: number
+                format: float
+              count:
+                type: integer
+                format: int64
+              remark:
+                type: string
+            additionalProperties:
+              type: object
+              properties:
+                points:
+                  type: array
+                  items:
+                    type: number
+                    format: double
+
+  RecursiveThing:
+    type: object
+    properties:
+      parent:
+        $ref: "#/definitions/RecursiveThing"
+  WithPet:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      pet:
+         $ref: "#/definitions/Pet"
+  Pet:
+    type: object
+    discriminator: petType
+    properties:
+      name:
+        type: string
+      petType:
+        type: string
+    required:
+    - name
+    - petType
+
+  Cat:
+    type: object
+    description: A representation of a cat
+    allOf:
+    - $ref: '#/definitions/Pet'
+    - properties:
+        huntingSkill:
+          type: string
+          description: The measured skill for hunting
+          default: lazy
+          enum:
+          - clueless
+          - lazy
+          - adventurous
+          - aggressive
+      required:
+      - huntingSkill
+
+  Dog:
+    type: object
+    description: A representation of a dog
+    allOf:
+    - $ref: '#/definitions/Pet'
+    - properties:
+        packSize:
+          type: integer
+          format: int32
+          description: the size of the pack the dog is from
+          default: 0
+          minimum: 0
+      required:
+      - packSize
+
+  # provided as part of issue 72, it incorrectly detects this as an object with
+  # additional properties
+  RunParameters:
+    additionalProperties: false
+    type: object
+    description: Optional run parameters for activating the build trigger
+    properties:
+      branch_name:
+        type: string
+        description: '(SCM only) If specified, the name of the branch to build.'
+      refs:
+        type: object
+        description: '(SCM Only) If specified, the ref to build.'
+      commit_sha:
+        type: string
+        description: '(Custom Only) If specified, the ref/SHA1 used to checkout a git repository.'
+
+  Comment:
+    type: "object"
+    required:
+      - content
+    allOf:
+      - $ref: "#/definitions/Notable"
+      - type: object
+        additionalProperties:
+          type: integer
+          format: int32
+      - type: object
+        properties:
+          name:
+            type: string
+        additionalProperties:
+          type: integer
+          format: int32
+      - type: array
+        items:
+        - type: integer
+          format: int64
+        - type: string
+          format: date-time
+      - type: object
+        properties:
+          id:
+            title: The id of the comment.
+            description: A unique identifier for the comment. These are created in ascending order.
+            type: integer
+            format: int64
+            readOnly: true
+          scores:
+            $ref: "#/definitions/Scores"
+          age:
+            $ref: "#/definitions/Age"
+          latestTag:
+            type: object
+            allOf:
+              - $ref: "#/definitions/Tag"
+              - x-isnullable: true
+          tags:
+            type: array
+            uniqueItems: true
+            minItems: 1
+            maxItems: 5
+            items:
+              $ref: "#/definitions/Tag"
+          createdAt:
+            title: The time at which this comment was created.
+            description: This field is autogenerated when the content is posted.
+            type: string
+            format: date-time
+            readOnly: true
+          content:
+            type: object
+            allOf:
+              - $ref: "#/definitions/Notable"
+              - type: object
+                additionalProperties:
+                  type: integer
+                  format: int32
+              - type: object
+                properties:
+                  name:
+                    type: string
+                additionalProperties:
+                  type: integer
+                  format: int32
+              - type: array
+                items:
+                - type: integer
+                  format: int64
+                - type: string
+                  format: date-time
+              - type: object
+                properties:
+                  title:
+                    type: string
+                    minLength: 5
+                    maxLength: 140
+                  body:
+                    type: string
+                    minLength: 5
+                    maxLength: 2048
+                  scores:
+                    $ref: "#/definitions/Scores"
+                  age:
+                    $ref: "#/definitions/Age"
+                  latestTag:
+                    type: object
+                    allOf:
+                      - $ref: "#/definitions/Tag"
+                      - x-isnullable: true
+  DynamicMetaData:
+    type: object
+    additionalProperties:
+      type: object
+
+  HasDynMeta:
+    type: object
+    properties:
+      metadata:
+        $ref: "#/definitions/DynamicMetaData"
+
+  HasSpecialCharProp:
+    type: object
+    properties:
+      type:
+        type: string
+      '@type':
+        type: string

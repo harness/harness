@@ -1,0 +1,752 @@
+swagger: '2.0'
+
+info:
+  version: "1.0.0"
+  title: Private to-do list
+  description: |
+    A very simple api description that makes a json only API to submit to do's.
+
+produces:
+  - application/json
+
+consumes:
+  - application/json
+
+paths:
+  /models:
+    get:
+      operationId: modelOp
+      summary: many model variations
+      description: Used to see if a codegen can render all the possible parameter variations for a header param
+      tags:
+        - testcgen
+      responses:
+        default:
+          description: Generic Out
+definitions:
+  RequiredProps:
+    type: object
+    required:
+      - id
+      - name
+      - createdAt
+      - age
+      - score
+      - tags
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      age:
+        type: integer
+        format: int32
+      score:
+        type: number
+        format: float
+      tags:
+        type: array
+        items:
+          type: string
+
+  NamedString:
+    type: string
+    minLength: 2
+    maxLength: 50
+    pattern: "[A-Za-z0-9][\\w- ]+"
+
+  StringValidations:
+    type: "object"
+    properties:
+      name:
+        type: string
+        minLength: 2
+        maxLength: 50
+        pattern: "[A-Za-z0-9][\\w- ]+"
+
+  NamedNumber:
+    type: integer
+    format: int32
+    minimum: 0
+    exclusiveMinimum: true
+    maximum: 500
+    multipleOf: 1.5
+
+  NumberValidations:
+    type: object
+    properties:
+      age:
+        type: integer
+        format: int32
+        minimum: 0
+        exclusiveMinimum: true
+        maximum: 500
+        multipleOf: 1.5
+
+  NamedArray:
+    type: array
+    minItems: 3
+    maxItems: 10
+    items:
+      minLength: 3
+      maxLength: 10
+      pattern: "\\w+"
+      type: string
+
+  ArrayValidations:
+    type: object
+    properties:
+      tags:
+        type: array
+        minItems: 3
+        maxItems: 10
+        items:
+          type: string
+          minLength: 3
+          maxLength: 10
+          pattern: "\\w+"
+
+  NamedNestedArray:
+    type: array
+    minItems: 3
+    maxItems: 10
+    items:
+      type: array
+      minItems: 3
+      maxItems: 10
+      items:
+        minItems: 3
+        maxItems: 10
+        type: array
+        items:
+          type: string
+          minLength: 3
+          maxLength: 10
+          pattern: "\\w+"
+
+  NestedArrayValidations:
+    type: object
+    properties:
+      tags:
+        type: array
+        minItems: 3
+        maxItems: 10
+        items:
+          type: array
+          minItems: 3
+          maxItems: 10
+          items:
+            minItems: 3
+            maxItems: 10
+            type: array
+            items:
+              type: string
+              minLength: 3
+              maxLength: 10
+              pattern: "\\w+"
+
+  NamedNestedObject:
+    type: object
+    properties:
+      meta:
+        type: object
+        properties:
+          first:
+            type: string
+            minLength: 2
+            maxLength: 50
+            pattern: "^\\w+"
+          second:
+            type: number
+            format: double
+            minimum: 3
+            maximum: 51
+            multipleOf: 1.5
+          third:
+            type: array
+            minItems: 5
+            maxItems: 93
+            items:
+              type: number
+              format: float
+              minimum: 3
+              maximum: 6
+              multipleOf: 0.5
+          fourth:
+            minItems: 5
+            maxItems: 93
+            type: array
+            items:
+              type: array
+              minItems: 5
+              maxItems: 93
+              items:
+                minItems: 5
+                maxItems: 93
+                type: array
+                items:
+                  type: number
+                  format: float
+                  minimum: 3
+                  maximum: 6
+                  multipleOf: 0.5
+
+  NestedObjectValidations:
+    type: object
+    properties:
+      args:
+        type: object
+        properties:
+          meta:
+            type: object
+            properties:
+              first:
+                type: string
+                minLength: 2
+                maxLength: 50
+                pattern: "^\\w+"
+              second:
+                type: number
+                format: double
+                minimum: 3
+                maximum: 51
+                multipleOf: 1.5
+              third:
+                type: array
+                minItems: 5
+                maxItems: 93
+                items:
+                  type: number
+                  format: float
+                  minimum: 3
+                  maximum: 6
+                  multipleOf: 0.5
+              fourth:
+                minItems: 5
+                maxItems: 93
+                type: array
+                items:
+                  type: array
+                  minItems: 5
+                  maxItems: 93
+                  items:
+                    minItems: 5
+                    maxItems: 93
+                    type: array
+                    items:
+                      type: number
+                      format: float
+                      minimum: 3
+                      maximum: 6
+                      multipleOf: 0.5
+
+  NamedArrayMulti:
+    type: array
+    items:
+      - minLength: 3
+        maxLength: 10
+        pattern: "\\w+"
+        type: string
+      - minimum: 3
+        maximum: 12
+        multipleOf: 1.5
+        type: number
+        format: double
+
+  ArrayMultiValidations:
+    type: object
+    properties:
+      args:
+        type: array
+        items:
+          - minLength: 3
+            maxLength: 10
+            pattern: "\\w+"
+            type: string
+          - minimum: 3
+            maximum: 12
+            multipleOf: 1.5
+            type: number
+            format: double
+
+  NamedArrayAdditional:
+    type: array
+    minItems: 3
+    maxItems: 10
+    items:
+      - minLength: 3
+        maxLength: 10
+        pattern: "\\w+"
+        type: string
+      - minimum: 3
+        maximum: 12
+        multipleOf: 1.5
+        type: number
+        format: double
+    additionalItems:
+      type: integer
+      format: int64
+      minimum: 3
+      maximum: 6
+      multipleOf: 1
+
+  ArrayAdditionalValidations:
+    type: object
+    properties:
+      args:
+        type: array
+        items:
+          - minLength: 3
+            maxLength: 10
+            pattern: "\\w+"
+            type: string
+          - minimum: 3
+            maximum: 12
+            multipleOf: 1.5
+            type: number
+            format: double
+        additionalItems:
+          type: integer
+          format: int64
+          minimum: 3
+          maximum: 6
+          multipleOf: 1
+
+  NamedMap:
+    type: object
+    minProperties: 5
+    maxProperties: 10
+    additionalProperties:
+      type: integer
+      format: int64
+      minimum: 3
+      maximum: 6
+      multipleOf: 1
+
+  NamedMapComplex:
+    type: object
+    minProperties: 5
+    maxProperties: 10
+    additionalProperties:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 10
+          maxLength: 50
+          pattern: "\\w+"
+        age:
+          type: integer
+          format: int32
+          multipleOf: 1
+          minimum: 1
+          maximum: 200
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+
+  MapValidations:
+    type: object
+    properties:
+      meta:
+        type: object
+        additionalProperties:
+          type: integer
+          format: int64
+          minimum: 3
+          maximum: 6
+          multipleOf: 1
+
+  MapComplexValidations:
+    type: object
+    properties:
+      meta:
+        type: object
+        additionalProperties:
+          type: object
+          properties:
+            name:
+              type: string
+              minLength: 10
+              maxLength: 50
+              pattern: "\\w+"
+            age:
+              type: integer
+              format: int32
+              multipleOf: 1
+              minimum: 1
+              maximum: 200
+              exclusiveMaximum: true
+              exclusiveMinimum: true
+
+  NamedNestedMap:
+    type: object
+    additionalProperties:
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties:
+          type: integer
+          format: int64
+          minimum: 3
+          maximum: 6
+          multipleOf: 1
+
+  NamedNestedMapComplex:
+    type: object
+    additionalProperties:
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties:
+          type: object
+          properties:
+            name:
+              type: string
+              minLength: 10
+              maxLength: 50
+              pattern: "\\w+"
+            age:
+              type: integer
+              format: int32
+              multipleOf: 1
+              minimum: 1
+              maximum: 200
+              exclusiveMaximum: true
+              exclusiveMinimum: true
+
+  NestedMapValidations:
+    type: object
+    properties:
+      meta:
+        type: object
+        additionalProperties:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: integer
+              format: int64
+              minimum: 3
+              maximum: 6
+              multipleOf: 1
+
+  NestedMapComplexValidations:
+    type: object
+    properties:
+      meta:
+        type: object
+        additionalProperties:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 10
+                  maxLength: 50
+                  pattern: "\\w+"
+                age:
+                  type: integer
+                  format: int32
+                  multipleOf: 1
+                  minimum: 1
+                  maximum: 200
+                  exclusiveMaximum: true
+                  exclusiveMinimum: true
+
+  NamedAllOf:
+    type: object
+    allOf:
+    - type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 50
+          pattern: "[A-Za-z0-9][\\w- ]+"
+    - type: object
+      properties:
+        age:
+          type: integer
+          format: int32
+          minimum: 2
+          maximum: 50
+          multipleOf: 1.5
+    - type: object
+      properties:
+        args:
+          type: array
+          minItems: 5
+          maxItems: 20
+          items:
+            type: string
+            minLength: 2
+            maxLength: 50
+            pattern: "[A-Za-z0-9][\\w- ]+"
+    - type: object
+      properties:
+        assoc:
+          type: array
+          minItems: 5
+          maxItems: 20
+          items:
+            type: array
+            minItems: 5
+            maxItems: 20
+            items:
+              type: array
+              minItems: 5
+              maxItems: 20
+              items:
+                type: string
+                minLength: 2
+                maxLength: 50
+                pattern: "[A-Za-z0-9][\\w- ]+"
+    - type: object
+      properties:
+        opts:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int32
+            minimum: 2
+            maximum: 50
+            multipleOf: 1.5
+
+    - type: object
+      properties:
+        extOpts:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: object
+              additionalProperties:
+                type: integer
+                format: int32
+                minimum: 2
+                maximum: 50
+                multipleOf: 1.5
+    - type: object
+      properties:
+        coords:
+          type: object
+          allOf:
+          - type: object
+            properties:
+              name:
+                type: string
+                minLength: 2
+                maxLength: 50
+                pattern: "[A-Za-z0-9][\\w- ]+"
+          - type: object
+            properties:
+              age:
+                type: integer
+                format: int32
+                minimum: 2
+                maximum: 50
+                multipleOf: 1.5
+
+  AllOfValidations:
+    type: object
+    properties:
+      meta:
+        type: object
+        allOf:
+        - type: object
+          properties:
+            name:
+              type: string
+              minLength: 2
+              maxLength: 50
+              pattern: "[A-Za-z0-9][\\w- ]+"
+        - type: object
+          properties:
+            age:
+              type: integer
+              format: int32
+              minimum: 2
+              maximum: 50
+              multipleOf: 1.5
+        - type: object
+          properties:
+            args:
+              type: array
+              minItems: 5
+              maxItems: 20
+              items:
+                type: string
+                minLength: 2
+                maxLength: 50
+                pattern: "[A-Za-z0-9][\\w- ]+"
+        - type: object
+          properties:
+            assoc:
+              type: array
+              minItems: 5
+              maxItems: 20
+              items:
+                type: array
+                minItems: 5
+                maxItems: 20
+                items:
+                  type: array
+                  minItems: 5
+                  maxItems: 20
+                  items:
+                    type: string
+                    minLength: 2
+                    maxLength: 50
+                    pattern: "[A-Za-z0-9][\\w- ]+"
+        - type: object
+          properties:
+            opts:
+              type: object
+              additionalProperties:
+                type: integer
+                format: int32
+                minimum: 2
+                maximum: 50
+                multipleOf: 1.5
+        - type: object
+          properties:
+            extOpts:
+              type: object
+              additionalProperties:
+                type: object
+                additionalProperties:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                    format: int32
+                    minimum: 2
+                    maximum: 50
+                    multipleOf: 1.5
+        - type: object
+          properties:
+            coords:
+              type: object
+              allOf:
+              - type: object
+                properties:
+                  name:
+                    type: string
+                    minLength: 2
+                    maxLength: 50
+                    pattern: "[A-Za-z0-9][\\w- ]+"
+              - type: object
+                properties:
+                  age:
+                    type: integer
+                    format: int32
+                    minimum: 2
+                    maximum: 50
+                    multipleOf: 1.5
+
+  RefedAllOfValidations:
+    type: object
+    allOf:
+      - $ref: "#/definitions/NamedString"
+      - $ref: "#/definitions/NamedNumber"
+
+  SimpleZeroAllowed:
+    type: object
+    required: ["name", "urls"]
+    properties:
+      id:
+        type: string
+        minLength: 2
+        maxLength: 50
+        pattern: "[A-Za-z0-9][\\w- ]+"
+      name:
+        type: string
+        minLength: 2
+        maxLength: 50
+        pattern: "[A-Za-z0-9][\\w- ]+"
+      urls:
+        type: array
+        items:
+          type: string
+
+  Pet:
+    type: object
+    required:
+      - name
+      - photoUrls
+    properties:
+      id:
+        type: integer
+        format: int64
+      category:
+        $ref: "#/definitions/Category"
+      name:
+        type: string
+        example: doggie
+      photoUrls:
+        type: array
+        xml:
+          name: "photoUrl"
+          wrapped: true
+        items:
+          type: string
+      tags:
+        type: array
+        xml:
+          name: tag
+          wrapped: true
+        items:
+          $ref: "#/definitions/Tag"
+      status:
+        type: string
+        description: "pet status in the store"
+        enum:
+          - available
+          - pending
+          - sold
+    xml:
+      name: Pet
+
+  Tag:
+    type: object
+    xml:
+      name: Tag
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+
+  Category:
+    type: object
+    xml:
+      name: Category
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+
+  UpdateOrg:
+    type: object
+    description: "Description of updates for an existing organization"
+    properties:
+      invoice_email:
+        type: boolean
+        description: "Wheter the organization desires to receive emails for invoices"
+      email:
+        type: string
+        description: "Organization contact email"
+      tag_expiration:
+        minimum: 0
+        type: integer
+        maximum: 2592000
+

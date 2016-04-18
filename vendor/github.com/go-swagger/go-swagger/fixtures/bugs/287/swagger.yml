@@ -1,0 +1,36 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: 'Test'
+schemes:
+  - http
+produces:
+  - application/json
+  - "text/plain"
+consumes:
+  - application/json
+paths:
+  /key/{id}:
+    delete:
+      parameters:
+        - name: id
+          in: path
+          type: integer
+          required: true
+      responses:
+        '200':
+          description: OK
+definitions:
+  example:
+    type: object
+    required:
+      - begin
+    properties:
+      begin:
+        type: string
+        format: date-time
+      end:
+        type: string
+        format: date-time
+      name:
+        type: string

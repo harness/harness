@@ -1,0 +1,125 @@
+// This file was auto-generated using createmock. See the following page for
+// more information:
+//
+//     https://github.com/smartystreets/assertions/internal/oglemock
+//
+
+package mock_gcs
+
+import (
+	fmt "fmt"
+	oglemock "github.com/smartystreets/assertions/internal/oglemock"
+	gcs "github.com/smartystreets/assertions/internal/oglemock/createmock/testdata/gcs"
+	context "golang.org/x/net/context"
+	runtime "runtime"
+	unsafe "unsafe"
+)
+
+type MockBucket interface {
+	gcs.Bucket
+	oglemock.MockObject
+}
+
+type mockBucket struct {
+	controller  oglemock.Controller
+	description string
+}
+
+func NewMockBucket(
+	c oglemock.Controller,
+	desc string) MockBucket {
+	return &mockBucket{
+		controller:  c,
+		description: desc,
+	}
+}
+
+func (m *mockBucket) Oglemock_Id() uintptr {
+	return uintptr(unsafe.Pointer(m))
+}
+
+func (m *mockBucket) Oglemock_Description() string {
+	return m.description
+}
+
+func (m *mockBucket) CopyObject(p0 context.Context, p1 *gcs.CopyObjectRequest) (o0 *gcs.Object, o1 error) {
+	// Get a file name and line number for the caller.
+	_, file, line, _ := runtime.Caller(1)
+
+	// Hand the call off to the controller, which does most of the work.
+	retVals := m.controller.HandleMethodCall(
+		m,
+		"CopyObject",
+		file,
+		line,
+		[]interface{}{p0, p1})
+
+	if len(retVals) != 2 {
+		panic(fmt.Sprintf("mockBucket.CopyObject: invalid return values: %v", retVals))
+	}
+
+	// o0 *gcs.Object
+	if retVals[0] != nil {
+		o0 = retVals[0].(*gcs.Object)
+	}
+
+	// o1 error
+	if retVals[1] != nil {
+		o1 = retVals[1].(error)
+	}
+
+	return
+}
+
+func (m *mockBucket) CreateObject(p0 context.Context, p1 *gcs.CreateObjectRequest) (o0 *gcs.Object, o1 error) {
+	// Get a file name and line number for the caller.
+	_, file, line, _ := runtime.Caller(1)
+
+	// Hand the call off to the controller, which does most of the work.
+	retVals := m.controller.HandleMethodCall(
+		m,
+		"CreateObject",
+		file,
+		line,
+		[]interface{}{p0, p1})
+
+	if len(retVals) != 2 {
+		panic(fmt.Sprintf("mockBucket.CreateObject: invalid return values: %v", retVals))
+	}
+
+	// o0 *gcs.Object
+	if retVals[0] != nil {
+		o0 = retVals[0].(*gcs.Object)
+	}
+
+	// o1 error
+	if retVals[1] != nil {
+		o1 = retVals[1].(error)
+	}
+
+	return
+}
+
+func (m *mockBucket) Name() (o0 string) {
+	// Get a file name and line number for the caller.
+	_, file, line, _ := runtime.Caller(1)
+
+	// Hand the call off to the controller, which does most of the work.
+	retVals := m.controller.HandleMethodCall(
+		m,
+		"Name",
+		file,
+		line,
+		[]interface{}{})
+
+	if len(retVals) != 1 {
+		panic(fmt.Sprintf("mockBucket.Name: invalid return values: %v", retVals))
+	}
+
+	// o0 string
+	if retVals[0] != nil {
+		o0 = retVals[0].(string)
+	}
+
+	return
+}

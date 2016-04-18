@@ -1,0 +1,13 @@
+[----------] Running tests from StopTest
+[ RUN      ] StopTest.First
+TearDown running.
+[       OK ] StopTest.First
+[ RUN      ] StopTest.Second
+About to call StopRunningTests.
+Called StopRunningTests.
+TearDown running.
+[       OK ] StopTest.Second
+TearDownTestSuite running.
+Exiting early due to user request.
+exit status 1
+FAIL somepkg 1.234s

@@ -1,0 +1,13 @@
+{{ define "propertyValidationDocString" }}{{ if .Required }}
+Required: true{{ end }}{{ if .ReadOnly }}
+Read Only: true{{ end }}{{ if .Maximum }}
+Maximum: {{ if .ExclusiveMaximum }}< {{ end }}{{ .Maximum }}{{ end }}{{ if .Minimum }}
+Minimum: {{ if .ExclusiveMinimum }}> {{ end }}{{ .Minimum }}{{ end }}{{ if .MultipleOf }}
+Multiple Of: {{ .MultipleOf }}{{ end }}{{ if .MaxLength }}
+Max Length: {{ .MaxLength }}{{ end }}{{ if .MinLength }}
+Min Length: {{ .MinLength }}{{ end }}{{ if .Pattern }}
+Pattern: {{ .Pattern }}{{ end }}{{ if .MaxItems }}
+Max Items: {{ .MaxItems }}{{ end }}{{ if .MinItems }}
+Min Items: {{ .MinItems }}{{ end }}{{ if .UniqueItems }}
+Unique: true{{ end }}{{ if or .ReadOnly .Required .Maximum .Minimum .MultipleOf .MinLength .MaxLength .Pattern .MinItems .MaxItems .UniqueItems }}
+{{end}}{{end}}

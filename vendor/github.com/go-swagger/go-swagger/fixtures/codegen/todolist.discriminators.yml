@@ -1,0 +1,145 @@
+swagger: '2.0'
+
+info:
+  version: "1.0.0"
+  title: Private to-do list
+  description: |
+    A very simple api description that makes a json only API to submit to do's.
+
+produces:
+  - application/json
+
+consumes:
+  - application/json
+
+paths:
+  /models:
+    put:
+      operationId: listModels
+      summary: many model variations list
+      description: used to see if codegen can render slices with discriminators
+      tags:
+        - testcgen
+      parameters:
+        - name: pets
+          in: body
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Pet"
+      responses:
+        default:
+          descriptions: Generic out
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Pet"
+    post:
+      operationId: modelOp
+      summary: many model variations
+      description: Used to see if a codegen can render all the possible parameter variations for a header param
+      tags:
+        - testcgen
+      parameters:
+        - name: pet
+          in: body
+          schema:
+            $ref: "#/definitions/Pet"
+      responses:
+        default:
+          description: Generic Out
+          schema:
+            $ref: "#/definitions/Pet"
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Pet"
+
+definitions:
+  WithPet:
+    type: object
+    required:
+      - pet
+    properties:
+      id:
+        type: integer
+        format: int64
+      pet:
+         $ref: "#/definitions/Pet"
+  Kennel:
+    type: object
+    required:
+      - pets
+    properties:
+      id:
+        type: integer
+        format: int64
+      pets:
+        type: array
+        items:
+          $ref: "#/definitions/Pet"
+  Pet:
+    type: object
+    discriminator: petType
+    properties:
+      name:
+        type: string
+      petType:
+        type: string
+    required:
+    - name
+    - petType
+
+  cat:
+    type: object
+    description: A representation of a cat
+    allOf:
+    - $ref: '#/definitions/Pet'
+    - properties:
+        huntingSkill:
+          type: string
+          description: The measured skill for hunting
+          default: lazy
+          enum:
+          - clueless
+          - lazy
+          - adventurous
+          - aggressive
+      required:
+      - huntingSkill
+
+  Dog:
+    type: object
+    description: A representation of a dog
+    allOf:
+    - $ref: '#/definitions/Pet'
+    - properties:
+        packSize:
+          type: integer
+          format: int32
+          description: the size of the pack the dog is from
+          default: 0
+          minimum: 0
+      required:
+      - packSize
+
+  BFWAccount:
+    type: object
+    description: account
+    xml:
+      name: account
+    required:
+      - id
+    properties:
+      id:
+        type: string
+      billingEntity:
+        type: string
+        enum:
+          - notification
+          - organization
+          - product
+          - user
+        crmid:
+          type: string
+

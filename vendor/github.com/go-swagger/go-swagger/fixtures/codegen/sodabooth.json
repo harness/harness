@@ -1,0 +1,62 @@
+{
+  "host": "localhost",
+  "schemes": ["http"],
+  "swagger": "2.0",
+  "produces": ["application/json"],
+  "consumes": ["application/json"],
+  "info": {
+    "title": "Soda Booth",
+    "version": "2.0"
+  },
+  "paths": {
+    "/v2/locations/{location_id}/transactions": {
+      "get": {
+        "summary": "Sodas",
+        "tags": ["Sodas"],
+        "description": "Lists sodas for a particular location.",
+        "parameters": [{
+          "name": "Authorization",
+          "required": true,
+          "type": "string",
+          "in": "header"
+        }, {
+          "name": "location_id",
+          "required": true,
+          "type": "string",
+          "in": "path"
+        }],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/SodaResponse"
+            },
+            "description": "Success"
+          }
+        },
+        "operationId": "List"
+      }
+    }
+  },
+  "definitions": {
+    "SodaBrand": {
+      "description": "",
+      "enum": [
+        "OTHER_BRAND",
+        "PEPSI",
+        "COKE",
+        "CACTUS_COOLER",
+        "JOLT"
+      ],
+      "type": "string"
+    },
+    "SodaResponse": {
+      "description": "",
+      "properties": {
+        "soda_brand": {
+          "$ref": "#/definitions/SodaBrand"
+        }
+      },
+      "type": "object"
+    }
+  }
+}

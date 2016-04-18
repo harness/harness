@@ -1,0 +1,28 @@
+/*Package {{ .APIPackage }} {{ if .Info.Title }}{{ .Info.Title }}{{ else }}{{ humanize .Name }}{{end}}{{ if .Info.Description }}
+
+{{ .Info.Description }}
+{{ end }}{{ if .Info.TermsOfService }}
+Terms Of Service:
+
+{{ .Info.TermsOfService }}
+{{ end }}{{ if or .Schemes .Host .BasePath .Info }}
+{{ if .Schemes }}
+    Schemes: {{ range .Schemes }}
+      {{.}}{{ end }}{{ end }}{{ if .Host }}
+    Host: {{ .Host }}{{ end }}{{ if .BasePath }}
+    BasePath: {{ .BasePath }}{{ end}}{{ with .Info }}{{ if .Version }}
+    Version: {{ .Version }}{{ end }}{{ if .License }}
+    License: {{ if .License.Name }}{{ .License.Name}} {{ end }}{{ if .License.URL }}{{ .License.URL }}{{ end }}{{ end }}{{ if .Contact }}
+    Contact: {{ if .Contact.Name }}{{ .Contact.Name }}{{ end }}{{ if .Contact.Email }}<{{ .Contact.Email }}>{{ end }}{{ if .Contact.URL }} {{ .Contact.URL }}{{ end }}{{ end }}{{ end }}{{ if .Consumes }}
+
+    Consumes:{{ range .Consumes }}
+    - {{ .MediaType }}
+    {{ end }}{{ end }}{{ if .Produces }}
+
+    Produces:{{ range .Produces }}
+    - {{ .MediaType }}
+    {{ end }}{{ end }}
+{{ end }}
+swagger:meta
+*/
+package {{ .APIPackage }}

@@ -1,0 +1,17 @@
+#!/bin/sh
+go generate ./generator
+git add ./generator/bindata.go
+
+GIT_DESCRIBED=`git describe`
+echo "package commands
+
+func init() {
+  Version = \"${GIT_DESCRIBED}\"
+}
+" > `git rev-parse --show-toplevel`/cmd/swagger/commands/version_number.go
+git add ./cmd/swagger/commands/version_number.go
+
+if [[ -f ./secrets.yml && -n `git status -s --untracked=no --porcelain | grep .drone.yml` ]]; then
+  drone secure --repo go-swagger/go-swagger -in ./secrets.yml
+  git add ./.drone.sec
+fi

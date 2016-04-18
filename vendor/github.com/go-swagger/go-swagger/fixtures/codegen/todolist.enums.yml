@@ -1,0 +1,218 @@
+swagger: '2.0'
+
+info:
+  version: "1.0.0"
+  title: Private to-do list
+  description: |
+    A very simple api description that makes a json only API to submit to do's.
+
+produces:
+  - application/json
+
+consumes:
+  - application/json
+
+paths:
+  /models:
+    get:
+      operationId: modelOp
+      summary: many model variations
+      description: Used to see if a codegen can render all the possible enum categories
+      tags:
+        - testcgen
+      responses:
+        default:
+          description: Generic Out
+
+definitions:
+  StringThing:
+    type: string
+    enum: [ "bird", "fish", "mammal" ]
+
+  IntThing:
+    type: integer
+    format: int32
+    enum: [ 22, 27, 32]
+
+  FloatThing:
+    type: number
+    format: float
+    enum: [ 21, 28, 35]
+
+  SliceThing:
+    type: array
+    enum:
+      - [ "sparrow", "dove", "chicken" ]
+      - [ "cod", "salmon", "shark" ]
+      - [ "monkey", "tiger", "elephant" ]
+    items:
+      type: string
+
+  SliceAndItemsThing:
+    type: array
+    enum:
+      - [ "sparrow", "dove", "chicken" ]
+      - [ "cod", "salmon", "shark" ]
+      - [ "monkey", "tiger", "elephant" ]
+    items:
+      type: string
+      enum: ["sparrow", "dove", "chicken", "cod", "salmon", "shark", "monkey", "tiger", "elephant"]
+
+  SliceAndAdditionalItemsThing:
+    type: array
+    enum:
+      - [ "sparrow", "dove", "chicken" ]
+      - [ "cod", "salmon", "shark" ]
+      - [ "monkey", "tiger", "elephant" ]
+    items:
+      - type: string
+        enum: ["sparrow", "dove", "chicken", "cod", "salmon", "shark", "monkey", "tiger", "elephant"]
+    additionalItems:
+      type: number
+      format: float
+      enum: [ 43, 44, 45 ]
+
+  MapThing:
+    type: object
+    enum:
+      - snack: "snickers"
+      - snack: "twix"
+      - snack: "mars"
+    additionalProperties:
+      type: string
+      enum: [ "snickers", "twix", "mars" ]
+
+  ObjectThing:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        enum:
+          - one
+          - two
+          - three
+      flower:
+        type: integer
+        format: int32
+        enum:
+          - 1
+          - 2
+          - 3
+      flour:
+        type: number
+        format: float
+        enum:
+          - 1.0
+          - 2.0
+          - 3.0
+      cats:
+        type: array
+        items:
+          type: string
+          enum:
+            - four
+            - five
+            - six
+
+      lions:
+        type: array
+        items:
+          - type: string
+            enum: ["seven", "eight", "nine"]
+          - type: integer
+            format: int64
+            enum:
+              - 4
+              - 5
+              - 6
+        additionalItems:
+          type: number
+          format: double
+          enum:
+            - 7.0
+            - 8.0
+            - 9.0
+
+      wolves:
+        type: object
+        enum:
+          - snack: bambi
+          - snack: tweetie
+          - snack: "red riding hood"
+        additionalProperties:
+          type: string
+          enum: ["snow white", "tweetie", "bambi", "red riding hood"]
+
+  ComposedThing:
+    type: object
+    allOf:
+      - $ref: "#/definitions/StringThing"
+      - type: object
+        required: [ "name" ]
+        properties:
+          name:
+            type: string
+            enum:
+              - one
+              - two
+              - three
+
+  # provided as part of issue #72
+  # the enum of the anonymous schema under delegate comes out without a validation.
+  NewPrototype:
+    required:
+      - role
+      - delegate
+    type: object
+    description: Description of a new prototype
+    properties:
+      activating_user:
+        required:
+          - name
+        type: object
+        description: Repository creating user to whom the rule should apply
+        properties:
+          name:
+            type: string
+            description: The username for the activating_user
+      role:
+        enum:
+          - read
+          - write
+          - admin
+        type: string
+        minLength: 1
+        description: Role that should be applied to the delegate
+      delegate:
+        required:
+          - name
+          - kind
+        type: object
+        description: Information about the user or team to which the rule grants access
+        properties:
+          kind:
+            enum:
+              - user
+              - team
+            type: string
+            description: Whether the delegate is a user or a team
+          name:
+            type: string
+            description: The name for the delegate team or user
+
+  ComputeInstance:
+    type: object
+    description: Description of the compute instance
+    required:
+      - id
+      - region
+    properties:
+      id:
+        type: string
+      region:
+        type: string
+        enum:
+          - us-west-2
+          - us-east-1

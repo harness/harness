@@ -1,0 +1,45 @@
+swagger: '2.0'
+info:
+  version: '2.0'
+  title: Test API
+
+basePath: /api/2.0/
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  '/sample/action/do-something':
+    post:
+      operationId: sampleDoSomethingAction
+      parameters:
+        - name: json body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Actions_DoSomethingRequest"
+
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/Actions_DoSomethingResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+
+definitions:
+  Actions_DoSomethingRequest:
+    type: object
+    properties:
+      client_id:
+        type: string
+
+  Actions_DoSomethingResponse:
+    type: object
+    properties:
+      result:
+        type: string

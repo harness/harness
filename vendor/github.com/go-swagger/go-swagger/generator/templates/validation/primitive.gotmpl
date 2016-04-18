@@ -1,0 +1,35 @@
+{{if .MinLength}}
+if err := validate.MinLength({{ if .Path }}{{ .Path }}{{else}}""{{end}}, {{ printf "%q" .Location }}, string({{ if .IsNullable }}*{{ end }}{{.ValueExpression}}), {{.MinLength}}); err != nil {
+  return err
+}
+{{end}}
+{{if .MaxLength}}
+if err := validate.MaxLength({{ if .Path }}{{ .Path }}{{else}}""{{end}}, {{ printf "%q" .Location }}, string({{ if .IsNullable }}*{{ end }}{{.ValueExpression}}), {{.MaxLength}}); err != nil {
+  return err
+}
+{{end}}
+{{if .Pattern}}
+if err := validate.Pattern({{ if .Path }}{{ .Path }}{{else}}""{{end}}, {{ printf "%q" .Location }}, string({{ if .IsNullable }}*{{ end }}{{.ValueExpression}}), `{{.Pattern}}`); err != nil {
+  return err
+}
+{{end}}
+{{if .Minimum}}
+if err := validate.Minimum({{ if .Path }}{{ .Path }}{{else}}""{{end}}, {{ printf "%q" .Location }}, float64({{ if .IsNullable }}*{{ end }}{{.ValueExpression}}), {{.Minimum}}, {{.ExclusiveMinimum}}); err != nil {
+  return err
+}
+{{end}}
+{{if .Maximum}}
+if err := validate.Maximum({{ if .Path }}{{ .Path }}{{else}}""{{end}}, {{ printf "%q" .Location }}, float64({{ if .IsNullable }}*{{ end }}{{.ValueExpression}}), {{.Maximum}}, {{.ExclusiveMaximum}}); err != nil {
+  return err
+}
+{{end}}
+{{if .MultipleOf}}
+if err := validate.MultipleOf({{ if .Path }}{{ .Path }}{{else}}""{{end}}, {{ printf "%q" .Location }}, float64({{ if .IsNullable }}*{{ end }}{{.ValueExpression}}), {{.MultipleOf}}); err != nil {
+  return err
+}
+{{end}}
+{{if .Enum}}
+if err := validate.Enum({{ if .Path }}{{ .Path }}{{else}}""{{end}}, {{ printf "%q" .Location }}, {{ if and (not .IsArray) (not .HasDiscriminator) (not .IsInterface) .IsNullable }}*{{ end }}{{.ValueExpression}}, {{ printf "%#v" .Enum}}); err != nil {
+  return err
+}
+{{end}}
