@@ -1,0 +1,3 @@
+if err := validate.FormatOf({{.Path}}, "{{.Location}}", "{{.Format}}", string({{ if and (not .IsArray) (not .HasDiscriminator) (not .IsInterface) .IsNullable }}*{{ end }}{{.ValueExpression}}), formats); err != nil {
+  return err
+}

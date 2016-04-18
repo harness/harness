@@ -1,0 +1,31 @@
+{
+  "paths": {
+    "/thing": {
+      "post": {
+        "summary": "SomePost",
+        "description": "",
+        "parameters": [{
+          "name": "optional_query_enum",
+          "enum": [
+            "OPTIONAL_ONE",
+            "OPTIONAL_TWO"
+          ],
+          "required": false,
+          "type": "string",
+          "in": "query"
+        }],
+        "operationId": "CreateThing"
+      }
+    }
+  },
+  "host": "connect.squareup.com",
+  "schemes": ["https"],
+  "produces": ["application/json"],
+  "swagger": "2.0",
+  "definitions": {},
+  "consumes": ["application/json"],
+  "info": {
+    "title": "Test API",
+    "version": "1.23"
+  }
+}

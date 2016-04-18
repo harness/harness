@@ -1,0 +1,76 @@
+{
+    "basePath": "/RestAPI",
+    "definitions": {
+        "SubscriptionCharge": {
+            "description": "Represents a monetary amount &mdash; or quantity consumed &mdash; attributed to some invoice or subscription.",
+            "properties": {
+                "created": {
+                    "description": "{ \"description\" : \"The UTC DateTime when the object was created.\", \"verbs\":[] }",
+                    "format": "date-time",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "chargeType",
+                "invoicingType",
+                "remainingCreditBehaviour",
+                "state",
+                "type",
+                "versionNumber"
+            ],
+            "type": "object",
+            "xml": {
+                "name": "subscriptionCharge"
+            }
+        }
+    },
+    "host": "localhost:8089",
+    "info": {
+        "title": "BillForward REST API",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/account/{account-ID}": {
+            "get": {
+                "consumes": [
+                    "text/plain"
+                ],
+                "description": "{\"nickname\":\"Retrieve by account\",\"response\":\"getChargeByAccount.html\"}",
+                "operationId": "getByAccountID",
+                "parameters": [
+                    {
+                        "collectionFormat": "multi",
+                        "description": "A list of organization-IDs used to restrict the scope of API calls.",
+                        "in": "query",
+                        "items": {
+                            "type": "string"
+                        },
+                        "name": "organizations",
+                        "required": false,
+                        "type": "array"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/SubscriptionCharge"
+                        }
+                    }
+                },
+                "summary": "Retrieves a collection of charges, specified by the account-ID parameter. By default 10 values are returned. Records are returned in natural order.",
+                "tags": [
+                    "charges"
+                ]
+            }
+        }
+    },
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "tags": []
+}

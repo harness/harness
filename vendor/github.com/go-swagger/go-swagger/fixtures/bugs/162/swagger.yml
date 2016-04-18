@@ -1,0 +1,67 @@
+swagger: '2.0'
+info:
+  version: '2'
+  title: Server Rest API
+
+basePath: /rest/api/2/
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  '/search':
+    get:
+      operationId: getSearch
+      parameters:
+        - name: jql
+          type: string
+          in: query
+          required: true
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/SearchResponse'
+
+
+
+definitions:
+  NotFound:
+    type: object
+  SearchResponse:
+    type: object
+    properties:
+      issue:
+        $ref: '#/definitions/Issue'
+
+  Issue:
+    type: object
+    properties:
+      assignee:
+        $ref: '#/definitions/User'
+
+
+  # Basic things
+  User:
+    type: object
+    properties:
+      key:
+        type: string
+        description: e.g. ldap username
+      avatarUrls:
+        $ref: '#/definitions/AvatarUrls'
+
+# this is what jira uses
+  AvatarUrls:
+    type: object
+    properties:
+      '48x48':
+        type: string
+      '32x32':
+        type: string
+      '24x24':
+        type: string
+      '16x16':
+        type: string

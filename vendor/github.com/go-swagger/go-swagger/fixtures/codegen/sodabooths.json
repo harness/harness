@@ -1,0 +1,65 @@
+{
+    "host": "localhost",
+    "schemes": ["https"],
+    "swagger": "2.0",
+    "produces": ["application/json"],
+    "consumes": ["application/json"],
+    "info": {
+        "title": "Soda Booth",
+        "version": "2.0"
+    },
+    "paths": {
+        "/v2/locations/{location_id}/transactions": {
+            "get": {
+                "summary": "Sodas",
+                "tags": ["Sodas"],
+                "description": "Lists sodas for a particular location.",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "required": true,
+                        "type": "string",
+                        "in": "header"
+                    },
+                    {
+                        "name": "location_id",
+                        "required": true,
+                        "type": "string",
+                        "in": "path"
+                    }
+                ],
+                "responses": {"200": {
+                    "schema": {"$ref": "#/definitions/Soda"},
+                    "description": "Success"
+                }},
+                "operationId": "List"
+            }
+        }
+    },
+    "definitions": {
+        "SodaBrand": {
+            "description": "Some top level description",
+            "enum": [
+                "OTHER_BRAND",
+                "PEPSI",
+                "COKE",
+                "CACTUS_COOLER",
+                "JOLT"
+            ],
+            "type": "string"
+        },
+        "Soda": {
+            "description": "The brand in here is a different enum than the one above",
+            "properties": {
+                "brand": {
+                    "enum": [
+                        "YUM_FOODS",
+                        "MARS"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        }
+    }
+}

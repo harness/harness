@@ -1,0 +1,21 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: 'string-body-api'
+paths:
+  /echo:
+    post:
+      operationId: "postEcho"
+      summary: Post a string, get the same string back.
+      parameters:
+        - name: body
+          in: body
+          description: this argument is a string
+          schema:
+            type: string
+      responses:
+        '200':
+          description: this return value is a string
+          schema:
+            type: string
+

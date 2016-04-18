@@ -1,0 +1,78 @@
+# https://github.com/maruel/pre-commit-go configuration file to run checks
+# automatically on commit, on push and on continuous integration service after
+# a push or on merge of a pull request.
+#
+# See https://godoc.org/github.com/maruel/pre-commit-go/checks for more
+# information.
+
+min_version: 0.4.7
+modes:
+  continuous-integration:
+    checks:
+      build:
+      - build_all: false
+        extra_args: []
+      coverage:
+      - use_global_inference: false
+        use_coveralls: true
+        global:
+          min_coverage: 50
+          max_coverage: 100
+        per_dir_default:
+          min_coverage: 1
+          max_coverage: 100
+        per_dir: {}
+      gofmt:
+      - {}
+      goimports:
+      - {}
+      test:
+      - extra_args:
+        - -v
+        - -race
+    max_duration: 600
+  lint:
+    checks:
+      golint:
+      - blacklist: []
+      govet:
+      - blacklist:
+        - ' composite literal uses unkeyed fields'
+    max_duration: 15
+  pre-commit:
+    checks:
+      build:
+      - build_all: false
+        extra_args: []
+      gofmt:
+      - {}
+      test:
+      - extra_args:
+        - -short
+    max_duration: 35
+  pre-push:
+    checks:
+      coverage:
+      - use_global_inference: false
+        use_coveralls: false
+        global:
+          min_coverage: 50
+          max_coverage: 100
+        per_dir_default:
+          min_coverage: 1
+          max_coverage: 100
+        per_dir: {}
+      goimports:
+      - {}
+      test:
+      - extra_args:
+        - -v
+        - -race
+    max_duration: 35
+
+ignore_patterns:
+- .*
+- _*
+- '*.pb.go'
+- '*_string.go'
+- '*-gen.go'

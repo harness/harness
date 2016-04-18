@@ -1,0 +1,32 @@
+{
+    "consumes": [
+        "application/json",
+        "application/x-www-form-urlencoded"
+    ],
+    "paths": {
+        "/testing": {
+            "get": {
+                "operationId": "getTesting",
+                "parameters": [
+                    {
+                        "allowEmptyValue": false,
+                        "in": "query",
+                        "name": "testingThis",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success message"
+                    }
+                }
+            }
+        }
+    },
+    "produces": [
+        "application/json",
+        "application/json; charset=utf-8"
+    ],
+    "swagger": "2.0"
+}

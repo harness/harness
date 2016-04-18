@@ -1,0 +1,3265 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Docker Remote API",
+    "description": "The API for each docker installation.",
+    "termsOfService": "http://example.com/tos/",
+    "version": "v1.21"
+  },
+  "host": "localhost",
+  "basePath": "/v1.21",
+  "schemes": ["http", "https"],
+  "produces": ["application/json", "text/plain"],
+  "consumes": ["application/json", "text/plain"],
+  "definitions": {
+    "Version": {
+      "type": "object",
+      "properties": {
+        "Version": {
+          "type": "string"
+        },
+        "Os": {
+          "type": "string"
+        },
+        "KernelVersion": {
+          "type": "string"
+        },
+        "GoVersion": {
+          "type": "string"
+        },
+        "GitCommit": {
+          "type": "string"
+        },
+        "Arch": {
+          "type": "string"
+        },
+        "ApiVersion": {
+          "type": "string"
+        },
+        "Experimental": {
+          "type": "boolean"
+        }
+      }
+    },
+    "port": {
+      "type": "object",
+      "properties": {
+        "PrivatePort": {
+          "type": "integer"
+        },
+        "PublicPort": {
+          "type": "integer"
+        },
+        "Type": {
+          "type": "string"
+        }
+      }
+    },
+    "mount": {
+      "type": "object",
+      "properties": {
+        "Source": {
+          "type": "string"
+        },
+        "Destination": {
+          "type": "string"
+        },
+        "Mode": {
+          "type": "string"
+        },
+        "RW": {
+          "type": "boolean"
+        }
+      }
+    },
+    "LogConfig": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Config": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Ulimit": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Soft": {
+          "type": "integer"
+        },
+        "Hard": {
+          "type": "integer"
+        }
+      }
+    },
+    "Device": {
+      "type": "object",
+      "properties": {
+        "PathOnHost": {
+          "type": "string"
+        },
+        "PathInContainer": {
+          "type": "string"
+        },
+        "CgroupPermissions": {
+          "type": "string"
+        }
+      }
+    },
+    "RestartPolicy": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "enum": ["always", "on-failure"]
+        },
+        "MaximumRetryCount": {
+          "type": "integer"
+        }
+      },
+      "default": {}
+    },
+    "PortBinding": {
+      "type": "object",
+      "properties": {
+        "HostPort": {
+          "type": "string"
+        }
+      }
+    },
+    "HostConfig": {
+      "type": "object",
+      "properties": {
+        "Binds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Links": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "LxcConf": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "Memory": {
+          "type": "integer",
+          "default": 0
+        },
+        "MemorySwap": {
+          "type": "integer",
+          "default": 0
+        },
+        "CpuShares": {
+          "type": "integer"
+        },
+        "CpuPeriod": {
+          "type": "integer"
+        },
+        "CpusetCpus": {
+          "type": "string"
+        },
+        "CpusetMems": {
+          "type": "string"
+        },
+        "BlkioWeight": {
+          "type": "integer"
+        },
+        "MemorySwappiness": {
+          "type": "integer"
+        },
+        "OomKillDisable": {
+          "type": "boolean"
+        },
+        "PortBindings": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/PortBinding"
+          }
+        },
+        "PublishAllPorts": {
+          "type": "boolean"
+        },
+        "Privileged": {
+          "type": "boolean"
+        },
+        "ReadonlyRootfs": {
+          "type": "boolean"
+        },
+        "Dns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "DnsSearch": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ExtraHosts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "VolumesFrom": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "CapAdd": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "CapDrop": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "RestartPolicy": {
+          "$ref": "#/definitions/RestartPolicy"
+        },
+        "NetworkMode": {
+          "type": "string"
+        },
+        "Devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Device"
+          }
+        },
+        "Ulimits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Ulimit"
+          }
+        },
+        "SecurityOpt": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "LogConfig": {
+          "$ref": "#/definitions/LogConfig"
+        },
+        "CgroupParent": {
+          "type": "string"
+        }
+      }
+    },
+    "ContainerConfig": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string"
+        },
+        "Names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Image": {
+          "type": "string"
+        },
+        "Command": {
+          "type": "string"
+        },
+        "Created": {
+          "type": "integer"
+        },
+        "Status": {
+          "type": "string"
+        },
+        "Ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/port"
+          }
+        },
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "SizeRw": {
+          "type": "integer"
+        },
+        "SizeRootFs": {
+          "type": "integer"
+        },
+        "Hostname": {
+          "type": "integer"
+        },
+        "Domainname": {
+          "type": "integer"
+        },
+        "User": {
+          "type": "integer"
+        },
+        "AttachStdin": {
+          "type": "boolean",
+          "default": false
+        },
+        "AttachStdout": {
+          "type": "boolean",
+          "default": true
+        },
+        "AttachStderr": {
+          "type": "boolean",
+          "default": true
+        },
+        "Tty": {
+          "type": "boolean",
+          "default": false
+        },
+        "OpenStdin": {
+          "type": "boolean",
+          "default": false
+        },
+        "StdinOnce": {
+          "type": "boolean",
+          "default": false
+        },
+        "Env": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Cmd": {
+          "type": ["array", "string"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "Entrypoint": {
+          "type": ["array", "string"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "Mounts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/mount"
+          }
+        },
+        "WorkingDir": {
+          "type": "string"
+        },
+        "NetworkDisabled": {
+          "type": "boolean"
+        },
+        "MacAddress": {
+          "type": "string"
+        },
+        "ExposedPorts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "enum": [{}],
+            "default": {}
+          }
+        },
+        "HostConfig": {
+          "$ref": "#/definitions/HostConfig"
+        }
+      }
+    },
+    "NetworkConfig": {
+      "type": "object",
+      "properties": {
+        "Bridge": {
+          "type": "string"
+        },
+        "Gateway": {
+          "type": "string"
+        },
+        "IPAddress": {
+          "type": "string"
+        },
+        "IPPrefixLen": {
+          "type": "integer"
+        },
+        "MacAddress": {
+          "type": "string"
+        },
+        "PortMapping": {
+          "type": "string"
+        },
+        "Ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/port"
+          }
+        }
+      }
+    },
+    "ContainerState": {
+      "type": "object",
+      "properties": {
+        "Error": {
+          "type": "string"
+        },
+        "ExitCode": {
+          "type": "integer"
+        },
+        "FinishedAt": {
+          "type": "string"
+        },
+        "OOMKilled": {
+          "type": "boolean"
+        },
+        "Paused": {
+          "type": "boolean"
+        },
+        "Pid": {
+          "type": "integer"
+        },
+        "Restarting": {
+          "type": "boolean"
+        },
+        "Running": {
+          "type": "boolean"
+        },
+        "StartedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "Container": {
+      "type": "object",
+      "properties": {
+        "AppArmorProfile": {
+          "type": "string"
+        },
+        "Args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Config": {
+          "$ref": "#/definitions/ContainerConfig"
+        },
+        "Created": {
+          "type": "string"
+        },
+        "Driver": {
+          "type": "string"
+        },
+        "ExecDriver": {
+          "type": "string"
+        },
+        "ExecIDs": {
+          "type": "string"
+        },
+        "HostConfig": {
+          "$ref": "#/definitions/HostConfig"
+        },
+        "HostnamePath": {
+          "type": "string"
+        },
+        "HostsPath": {
+          "type": "string"
+        },
+        "LogPath": {
+          "type": "string"
+        },
+        "Id": {
+          "type": "string"
+        },
+        "Image": {
+          "type": "string"
+        },
+        "MountLabel": {
+          "type": "string"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "NetworkSettings": {
+          "$ref": "#/definitions/NetworkConfig"
+        },
+        "Path": {
+          "type": "string"
+        },
+        "ProcessLabel": {
+          "type": "string"
+        },
+        "ResolvConfPath": {
+          "type": "string"
+        },
+        "RestartCount": {
+          "type": "integer"
+        },
+        "State": {
+          "$ref": "#/definitions/ContainerState"
+        },
+        "Mounts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/mount"
+          }
+        }
+      }
+    },
+    "ContainerTop": {
+      "type": "object",
+      "properties": {
+        "Titles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Processes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "ContainerChange": {
+      "type": "object",
+      "properties": {
+        "Path": {
+          "type": "string"
+        },
+        "Kind": {
+          "type": "integer"
+        }
+      }
+    },
+    "ContainerWait": {
+      "type": "object",
+      "properties": {
+        "StatusCode": {
+          "type": "integer"
+        }
+      }
+    },
+    "GraphDriver": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Data": {
+          "type": "object"
+        }
+      }
+    },
+    "ImageItem": {
+      "type": "object",
+      "properties": {
+        "RepoTags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Id": {
+          "type": "string"
+        },
+        "ParentId": {
+          "type": "string"
+        },
+        "Created": {
+          "type": "integer"
+        },
+        "Size": {
+          "type": "integer"
+        },
+        "VirtualSize": {
+          "type": "integer"
+        },
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "RepoDigests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Image": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string"
+        },
+        "Container": {
+          "type": "string"
+        },
+        "Comment": {
+          "type": "string"
+        },
+        "Os": {
+          "type": "string"
+        },
+        "Architecture": {
+          "type": "string"
+        },
+        "Parent": {
+          "type": "string"
+        },
+        "ContainerConfig": {
+          "$ref": "#/definitions/ContainerConfig"
+        },
+        "DockerVersion": {
+          "type": "string"
+        },
+        "VirtualSize": {
+          "type": "integer"
+        },
+        "Size": {
+          "type": "integer"
+        },
+        "Author": {
+          "type": "string"
+        },
+        "Created": {
+          "type": "string"
+        },
+        "GraphDriver": {
+          "$ref": "#/definitions/GraphDriver"
+        },
+        "RepoDigests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "RepoTags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Config": {
+          "$ref": "#/definitions/ContainerConfig"
+        }
+      }
+    },
+    "ImageHistoryItem": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string"
+        },
+        "Created": {
+          "type": "integer"
+        },
+        "CreatedBy": {
+          "type": "string"
+        },
+        "Tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Size": {
+          "type": "integer"
+        },
+        "Comment": {
+          "type": "string"
+        }
+      }
+    },
+    "ImageSearchResult": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "is_official": {
+          "type": "boolean"
+        },
+        "is_automated": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "star_count": {
+          "type": "integer"
+        }
+      }
+    },
+    "AuthConfig": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "serveraddress": {
+          "type": "string"
+        }
+      }
+    },
+    "SystemInformation": {
+      "type": "object",
+      "properties": {
+        "Containers": {
+          "type": "integer"
+        },
+        "CpuCfsPeriod": {
+          "type": "boolean"
+        },
+        "CpuCfsQuota": {
+          "type": "boolean"
+        },
+        "Debug": {
+          "type": "boolean"
+        },
+        "DiscoveryBackend": {
+          "type": "string"
+        },
+        "DockerRootDir": {
+          "type": "string"
+        },
+        "Driver": {
+          "type": "string"
+        },
+        "DriverStatus": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "ExecutionDriver": {
+          "type": "string"
+        },
+        "ExperimentalBuild": {
+          "type": "boolean"
+        },
+        "HttpProxy": {
+          "type": "string"
+        },
+        "HttpsProxy": {
+          "type": "string"
+        },
+        "ID": {
+          "type": "string"
+        },
+        "IPv4Forwarding": {
+          "type": "boolean"
+        },
+        "Images": {
+          "type": "integer"
+        },
+        "IndexServerAddress": {
+          "type": "string"
+        },
+        "InitPath": {
+          "type": "string"
+        },
+        "InitSha1": {
+          "type": "string"
+        },
+        "KernelVersion": {
+          "type": "string"
+        },
+        "Labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "MemTotal": {
+          "type": "integer"
+        },
+        "MemoryLimit": {
+          "type": "boolean"
+        },
+        "NCPU": {
+          "type": "integer"
+        },
+        "NEventsListener": {
+          "type": "integer"
+        },
+        "NFd": {
+          "type": "integer"
+        },
+        "NGoroutines": {
+          "type": "integer"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "NoProxy": {
+          "type": "string"
+        },
+        "OomKillDisable": {
+          "type": "boolean"
+        },
+        "OperatingSystem": {
+          "type": "string"
+        },
+        "RegistryConfig": {
+          "$ref": "#/definitions/RegistryConfig"
+        },
+        "SwapLimit": {
+          "type": "boolean"
+        },
+        "SystemTime": {
+          "type": "string"
+        },
+        "ServerVersion": {
+          "type": "string"
+        }
+      }
+    },
+    "RegistryConfig": {
+      "type": "object",
+      "properties": {
+        "IndexConfigs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Registry"
+          }
+        },
+        "InsecureRegistryCIDRs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Registry": {
+      "type": "object",
+      "properties": {
+        "Mirrors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Name": {
+          "type": "string"
+        },
+        "Official": {
+          "type": "boolean"
+        },
+        "Secure": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CommitResult": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string"
+        }
+      }
+    },
+    "ExecCreateResult": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string"
+        },
+        "Warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ExecConfig": {
+      "type": "object",
+      "properties": {
+        "AttachStdin": {
+          "type": "boolean"
+        },
+        "AttachStdout": {
+          "type": "boolean"
+        },
+        "AttachStderr": {
+          "type": "boolean"
+        },
+        "Tty": {
+          "type": "boolean"
+        },
+        "Cmd": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ExecStartConfig": {
+      "type": "object",
+      "properties": {
+        "Detach": {
+          "type": "boolean"
+        },
+        "Tty": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ExecCommand": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string"
+        },
+        "Running": {
+          "type": "boolean"
+        },
+        "ExitCode": {
+          "type": "integer"
+        },
+        "ProcessConfig": {
+          "$ref": "#/definitions/ProcessConfig"
+        },
+        "OpenStdin": {
+          "type": "boolean"
+        },
+        "OpenStderr": {
+          "type": "boolean"
+        },
+        "OpenStdout": {
+          "type": "boolean"
+        },
+        "Container": {
+          "$ref": "#/definitions/Container"
+        }
+      }
+    },
+    "ProcessConfig": {
+      "type": "object",
+      "properties": {
+        "privileged": {
+          "type": "boolean"
+        },
+        "user": {
+          "type": "string"
+        },
+        "tty": {
+          "type": "boolean"
+        },
+        "entrypoint": {
+          "type": "string"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "VolumeList": {
+      "type": "object",
+      "properties": {
+        "Volumes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Volume"
+          }
+        }
+      }
+    },
+    "Volume": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Driver": {
+          "type": "string"
+        },
+        "Mountpoint": {
+          "type": "string"
+        }
+      }
+    },
+    "VolumeConfig": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Driver": {
+          "type": "string"
+        },
+        "DriverOpts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Network": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Id": {
+          "type": "string"
+        },
+        "Scope": {
+          "type": "string"
+        },
+        "Driver": {
+          "type": "string"
+        },
+        "IPAM": {
+          "$ref": "#/definitions/IPAM"
+        },
+        "Containers": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/NetworkContainer"
+          }
+        },
+        "Options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "IPAM": {
+      "type": "object",
+      "properties": {
+        "Driver": {
+          "type": "string"
+        },
+        "Config": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "NetworkContainer": {
+      "type": "object",
+      "properties": {
+        "EndpointID": {
+          "type": "string"
+        },
+        "MacAddress": {
+          "type": "string"
+        },
+        "IPv4Address": {
+          "type": "string"
+        },
+        "IPv6Address": {
+          "type": "string"
+        }
+      }
+    },
+    "NetworkCreateResult": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string"
+        },
+        "Warning": {
+          "type": "string"
+        }
+      }
+    },
+    "NetworkCreateConfig": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Driver": {
+          "type": "string"
+        },
+        "IPAM": {
+          "$ref": "#/definitions/IPAM"
+        }
+      }
+    },
+    "ContainerConnect": {
+      "type": "object",
+      "properties": {
+        "Container": {
+          "type": "string"
+        }
+      }
+    },
+    "ContainerCreateResult": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string"
+        },
+        "Warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "BuildInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "stream": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "errorDetail": {
+          "$ref": "#/definitions/ErrorDetail"
+        },
+        "status": {
+          "type": "string"
+        },
+        "progress": {
+          "type": "string"
+        },
+        "progressDetail": {
+          "$ref": "#/definitions/ProgressDetail"
+        }
+      }
+    },
+    "CreateImageInfo": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "progress": {
+          "type": "string"
+        },
+        "progressDetail": {
+          "$ref": "#/definitions/ProgressDetail"
+        }
+      }
+    },
+    "PushImageInfo": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "progress": {
+          "type": "string"
+        },
+        "progressDetail": {
+          "$ref": "#/definitions/ProgressDetail"
+        }
+      }
+    },
+    "ErrorDetail": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "ProgressDetail": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "integer"
+        }
+      }
+    },
+    "Event": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "time": {
+          "type": "integer"
+        },
+        "timeNano": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "paths": {
+    "/containers/json": {
+      "get": {
+        "summary": "List containers",
+        "description": "List containers",
+        "operationId": "findAll",
+        "parameters": [{
+          "name": "all",
+          "in": "query",
+          "description": "Show all containers. Only running containers are shown by default (i.e., this defaults to false)",
+          "type": "boolean",
+          "default": false
+        }, {
+          "name": "limit",
+          "in": "query",
+          "description": "Show <limit> last created containers, include non-running ones.",
+          "type": "integer"
+        }, {
+          "name": "since",
+          "in": "query",
+          "description": "Show only containers created since Id, include non-running ones.",
+          "type": "string"
+        }, {
+          "name": "before",
+          "in": "query",
+          "description": "Show only containers created before Id, include non-running ones.",
+          "type": "string"
+        }, {
+          "name": "size",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, Show the containers sizes.",
+          "type": "boolean"
+        }, {
+          "name": "filters",
+          "in": "query",
+          "description": "A JSON encoded value of the filters (a map[string][]string) to process on the containers list",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }],
+        "responses": {
+          "200": {
+            "description": "no error",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContainerConfig"
+              }
+            }
+          },
+          "400": {
+            "description": "bad parameter"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "tags": ["Container"]
+      }
+    },
+    "/containers/create": {
+      "post": {
+        "summary": "Create a container",
+        "description": "Create a container",
+        "operationId": "create",
+        "parameters": [{
+          "name": "name",
+          "in": "query",
+          "description": "Assign the specified name to the container. Must match /?[a-zA-Z0-9_-]+.",
+          "type": "string",
+          "pattern": "/?[a-zA-Z0-9_-]+"
+        }, {
+          "name": "container",
+          "in": "body",
+          "description": "Container to create",
+          "schema": {
+            "$ref": "#/definitions/ContainerConfig"
+          }
+        }, {
+          "name": "Content-Type",
+          "required": true,
+          "in": "header",
+          "type": "string",
+          "default": "application/json",
+          "description": "Content Type of input"
+        }],
+        "responses": {
+          "201": {
+            "description": "no error",
+            "schema": {
+              "$ref": "#/definitions/ContainerCreateResult"
+            }
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "406": {
+            "description": "impossible to attach"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/json": {
+      "get": {
+        "summary": "Inspect a container",
+        "description": "Return low-level information on the container id",
+        "operationId": "find",
+        "responses": {
+          "200": {
+            "description": "no error",
+            "schema": {
+              "$ref": "#/definitions/Container"
+            }
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/top": {
+      "get": {
+        "summary": "List processes running inside a container",
+        "description": "List processes running inside the container id",
+        "operationId": "listProcesses",
+        "responses": {
+          "200": {
+            "description": "no error",
+            "schema": {
+              "$ref": "#/definitions/ContainerTop"
+            }
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "ps_args",
+          "in": "query",
+          "description": "ps arguments to use (e.g., aux)",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/logs": {
+      "get": {
+        "summary": "Get container logs",
+        "description": "Get stdout and stderr logs from the container id. Note: This endpoint works only for containers with json-file logging driver.",
+        "operationId": "logs",
+        "responses": {
+          "101": {
+            "description": "no error, hints proxy about hijacking",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "200": {
+            "description": "no error, no upgrade header found",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "follow",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, return stream. Default false.",
+          "type": "boolean",
+          "default": false
+        }, {
+          "name": "stdout",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, show stdout log. Default false.",
+          "type": "boolean",
+          "default": false
+        }, {
+          "name": "stderr",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, show stderr log. Default false.",
+          "type": "boolean",
+          "default": false
+        }, {
+          "name": "since",
+          "in": "query",
+          "description": "UNIX timestamp (integer) to filter logs. Specifying a timestamp will only output log-entries since that timestamp. Default: 0 (unfiltered)",
+          "type": "integer",
+          "default": 0
+        }, {
+          "name": "timestamps",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, print timestamps for every log line. ",
+          "type": "boolean",
+          "default": false
+        }, {
+          "name": "tail",
+          "in": "query",
+          "description": "Output specified number of lines at the end of logs: all or <number>. Default all.",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/changes": {
+      "get": {
+        "summary": "Inspect changes on a container’s filesystem",
+        "description": "Inspect changes on a container’s filesystem",
+        "operationId": "changes",
+        "responses": {
+          "200": {
+            "description": "no error",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContainerChange"
+              }
+            }
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "kind",
+          "in": "query",
+          "description": "Kind of changes",
+          "type": "integer",
+          "enum": [0, 1, 2]
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/export": {
+      "get": {
+        "summary": "Export a container",
+        "description": "Export the contents of container id",
+        "operationId": "export",
+        "responses": {
+          "200": {
+            "description": "no error",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/stats": {
+      "get": {
+        "summary": "Get container stats based on resource usage",
+        "description": "This endpoint returns a live stream of a container’s resource usage statistics.",
+        "operationId": "stats",
+        "responses": {
+          "200": {
+            "description": "no error",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "stream",
+          "in": "query",
+          "description": "Stream stats",
+          "type": "boolean"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/resize": {
+      "post": {
+        "summary": "Resize a container TTY",
+        "description": "Resize the TTY for container with id. The unit is number of characters. You must restart the container for the resize to take effect.",
+        "operationId": "resize",
+        "responses": {
+          "200": {
+            "description": "no error"
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "cannot resize container"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "h",
+          "in": "query",
+          "description": "Height of the tty session",
+          "type": "integer"
+        }, {
+          "name": "w",
+          "in": "query",
+          "description": "Width of the tty session",
+          "type": "integer"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/start": {
+      "post": {
+        "summary": "Start a container",
+        "description": "Start the container id",
+        "operationId": "start",
+        "responses": {
+          "204": {
+            "description": "no error"
+          },
+          "304": {
+            "description": "container already started"
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/stop": {
+      "post": {
+        "summary": "Stop a container",
+        "description": "Stop the container id",
+        "operationId": "stop",
+        "responses": {
+          "204": {
+            "description": "no error"
+          },
+          "304": {
+            "description": "container already stopped"
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "t",
+          "in": "query",
+          "description": "number of seconds to wait before killing the container",
+          "type": "integer"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/restart": {
+      "post": {
+        "summary": "Restart a container",
+        "description": "Restart the container id",
+        "operationId": "restart",
+        "responses": {
+          "204": {
+            "description": "no error"
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "t",
+          "in": "query",
+          "description": "number of seconds to wait before killing the container",
+          "type": "integer"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/kill": {
+      "post": {
+        "summary": "Kill a container",
+        "description": "Send a posix signal to a container",
+        "operationId": "kill",
+        "responses": {
+          "204": {
+            "description": "no error"
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "signal",
+          "in": "query",
+          "description": "Signal to send to the container, integer or string like SIGINT, defaults to SIGKILL",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/rename": {
+      "post": {
+        "summary": "Rename a container",
+        "description": "Rename the container id to a new_name",
+        "operationId": "rename",
+        "responses": {
+          "204": {
+            "description": "no error"
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "409": {
+            "description": "conflict, name already assigned"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "name",
+          "in": "query",
+          "required": true,
+          "description": "New name for the container",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/pause": {
+      "post": {
+        "summary": "Pause a container",
+        "description": "Pause the container id",
+        "operationId": "pause",
+        "responses": {
+          "204": {
+            "description": "no error"
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/unpause": {
+      "post": {
+        "summary": "Unpause a container",
+        "description": "Unpause the container id",
+        "operationId": "unpause",
+        "responses": {
+          "204": {
+            "description": "no error"
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/attach": {
+      "post": {
+        "summary": "Attach to a container",
+        "description": "Attach to the container id",
+        "operationId": "attach",
+        "responses": {
+          "200": {
+            "description": "no error"
+          },
+          "400": {
+            "description": "bad parameter"
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "logs",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, return logs. Default false",
+          "type": "string"
+        }, {
+          "name": "stream",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, return stream. Default false",
+          "type": "string"
+        }, {
+          "name": "stdin",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, if stream=true, attach to stdin. Default false.",
+          "type": "string"
+        }, {
+          "name": "stdout",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, if logs=true, return stdout log, if stream=true, attach to stdout. Default false.",
+          "type": "string"
+        }, {
+          "name": "stderr",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, if logs=true, return stderr log, if stream=true, attach to stderr. Default false.",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/attach/ws": {
+      "get": {
+        "summary": "Attach to a container (websocket)",
+        "description": "Attach to the container id with a websocket.",
+        "operationId": "attachWebsocket",
+        "responses": {
+          "101": {
+            "description": "no error, hints proxy about hijacking"
+          },
+          "200": {
+            "description": "no error, no upgrade header found"
+          },
+          "400": {
+            "description": "bad parameter"
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "logs",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, return logs. Default false",
+          "type": "string"
+        }, {
+          "name": "stream",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, return stream. Default false",
+          "type": "string"
+        }, {
+          "name": "stdin",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, if stream=true, attach to stdin. Default false.",
+          "type": "string"
+        }, {
+          "name": "stdout",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, if logs=true, return stdout log, if stream=true, attach to stdout. Default false.",
+          "type": "string"
+        }, {
+          "name": "stderr",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, if logs=true, return stderr log, if stream=true, attach to stderr. Default false.",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/wait": {
+      "post": {
+        "summary": "Wait a container",
+        "description": "Block until container id stops, then returns the exit code",
+        "operationId": "wait",
+        "responses": {
+          "200": {
+            "description": "no error",
+            "schema": {
+              "$ref": "#/definitions/ContainerWait"
+            }
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}": {
+      "delete": {
+        "summary": "Remove a container",
+        "description": "Remove the container id from the filesystem",
+        "operationId": "remove",
+        "responses": {
+          "204": {
+            "description": "no error"
+          },
+          "400": {
+            "description": "bad parameter"
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "v",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, Remove the volumes associated to the container. Default false.",
+          "type": "string"
+        }, {
+          "name": "force",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, Kill then remove the container. Default false.",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/containers/{id}/archive": {
+      "head": {
+        "summary": "Retrieving information about files and folders in a container",
+        "description": "Retrieving information about files and folders in a container",
+        "operationId": "getArchiveInformation",
+        "responses": {
+          "204": {
+            "description": "no error"
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "path",
+          "in": "query",
+          "required": true,
+          "description": "Resource in the container’s filesystem to archive.",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      },
+      "get": {
+        "summary": "Get an archive of a filesystem resource in a container",
+        "description": "Get an tar archive of a resource in the filesystem of container id.",
+        "operationId": "getArchive",
+        "responses": {
+          "200": {
+            "description": "no error"
+          },
+          "400": {
+            "description": "client error, bad parameter, details in JSON response body, one of: must specify path parameter (path cannot be empty) not a directory (path was asserted to be a directory but exists as a file)"
+          },
+          "404": {
+            "description": "no such container or path does not exist inside the container"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "path",
+          "in": "query",
+          "required": true,
+          "description": "Resource in the container’s filesystem to archive.",
+          "type": "string"
+        }],
+        "tags": ["Container"]
+      },
+      "put": {
+        "summary": "Extract an archive of files or folders to a directory in a container",
+        "description": "Upload a tar archive to be extracted to a path in the filesystem of container id.",
+        "operationId": "putArchive",
+        "responses": {
+          "200": {
+            "description": "The content was extracted successfully"
+          },
+          "400": {
+            "description": "Bad parameter"
+          },
+          "403": {
+            "description": "Permission denied, the volume or container rootfs is marked as read-only."
+          },
+          "404": {
+            "description": "No such container or path does not exist inside the container"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The container id or name",
+          "type": "string"
+        }, {
+          "name": "path",
+          "in": "query",
+          "required": true,
+          "description": "Path to a directory in the container to extract the archive’s contents into. ",
+          "type": "string"
+        }, {
+          "name": "noOverwriteDirNonDir",
+          "in": "query",
+          "description": "If “1”, “true”, or “True” then it will be an error if unpacking the given content would cause an existing directory to be replaced with a non-directory and vice versa.",
+          "type": "string"
+        }, {
+          "name": "inputStream",
+          "in": "body",
+          "required": true,
+          "description": "The input stream must be a tar archive compressed with one of the following algorithms: identity (no compression), gzip, bzip2, xz.",
+          "schema": {
+            "type": "string"
+          }
+        }],
+        "tags": ["Container"]
+      }
+    },
+    "/images/json": {
+      "get": {
+        "summary": "List Images",
+        "description": "List Images",
+        "operationId": "findAll",
+        "responses": {
+          "200": {
+            "description": "no error",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ImageItem"
+              }
+            }
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "all",
+          "in": "query",
+          "description": "Show all images. Only images from a final layer (no children) are shown by default.",
+          "type": "boolean",
+          "default": false
+        }, {
+          "name": "filters",
+          "in": "query",
+          "description": "A JSON encoded value of the filters (a map[string][]string) to process on the containers list",
+          "type": "string"
+        }, {
+          "name": "filter",
+          "in": "query",
+          "description": "Only return images with the specified name.",
+          "type": "string"
+        }, {
+          "name": "digests",
+          "in": "query",
+          "description": "Show digest information, default to false",
+          "type": "boolean"
+        }],
+        "tags": ["Image"]
+      }
+    },
+    "/build": {
+      "post": {
+        "summary": "Build an image from Dockerfile via stdin",
+        "description": "Build an image from Dockerfile via stdin",
+        "operationId": "build",
+        "parameters": [{
+          "name": "inputStream",
+          "in": "body",
+          "description": "The input stream must be a tar archive compressed with one of the following algorithms: identity (no compression), gzip, bzip2, xz.",
+          "schema": {
+            "type": "string"
+          }
+        }, {
+          "name": "dockerfile",
+          "in": "query",
+          "description": "Path within the build context to the Dockerfile. This is ignored if remote is specified and points to an individual filename.",
+          "type": "string"
+        }, {
+          "name": "t",
+          "in": "query",
+          "description": "A repository name (and optionally a tag) to apply to the resulting image in case of success.",
+          "type": "string"
+        }, {
+          "name": "remote",
+          "in": "query",
+          "description": "A Git repository URI or HTTP/HTTPS URI build source. If the URI specifies a filename, the file’s contents are placed into a file called Dockerfile.",
+          "type": "string"
+        }, {
+          "name": "q",
+          "in": "query",
+          "description": "Suppress verbose build output.",
+          "type": "boolean",
+          "default": false
+        }, {
+          "name": "nocache",
+          "in": "query",
+          "description": "Do not use the cache when building the image.",
+          "type": "boolean",
+          "default": false
+        }, {
+          "name": "pull",
+          "in": "query",
+          "description": "Attempt to pull the image even if an older image exists locally",
+          "type": "string"
+        }, {
+          "name": "rm",
+          "in": "query",
+          "description": "Remove intermediate containers after a successful build (default behavior).",
+          "type": "boolean",
+          "default": true
+        }, {
+          "name": "forcerm",
+          "in": "query",
+          "description": "always remove intermediate containers (includes rm)",
+          "type": "boolean",
+          "default": false
+        }, {
+          "name": "memory",
+          "in": "query",
+          "description": "Set memory limit for build.",
+          "type": "integer"
+        }, {
+          "name": "memswap",
+          "in": "query",
+          "description": "Total memory (memory + swap), -1 to disable swap.",
+          "type": "integer"
+        }, {
+          "name": "cpushares",
+          "in": "query",
+          "description": "CPU shares (relative weight).",
+          "type": "integer"
+        }, {
+          "name": "cpusetcpus",
+          "in": "query",
+          "description": "CPUs in which to allow execution (e.g., 0-3, 0,1).",
+          "type": "string"
+        }, {
+          "name": "cpuperiod",
+          "in": "query",
+          "description": "The length of a CPU period in microseconds.",
+          "type": "integer"
+        }, {
+          "name": "cpuquota",
+          "in": "query",
+          "description": "Microseconds of CPU time that the container can get in a CPU period.",
+          "type": "integer"
+        }, {
+          "name": "buildargs",
+          "in": "query",
+          "description": "Total memory (memory + swap), -1 to disable swap.",
+          "type": "integer"
+        }, {
+          "name": "Content-type",
+          "in": "header",
+          "description": " Set to 'application/tar'.",
+          "type": "string",
+          "enum": ["application/tar"],
+          "default": "application/tar"
+        }, {
+          "name": "X-Registry-Config",
+          "in": "header",
+          "description": "A base64-url-safe-encoded Registry Auth Config JSON object",
+          "type": "string"
+        }],
+        "responses": {
+          "200": {
+            "description": "no error"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "tags": ["Image"]
+      }
+    },
+    "/images/create": {
+      "post": {
+        "summary": "Create an image",
+        "description": "Create an image either by pulling it from the registry or by importing it",
+        "operationId": "create",
+        "consumes": ["application/octet-stream"],
+        "responses": {
+          "200": {
+            "description": "no error"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "fromImage",
+          "in": "query",
+          "description": "Name of the image to pull. The name may include a tag or digest. This parameter may only be used when pulling an image.",
+          "type": "string"
+        }, {
+          "name": "fromSrc",
+          "in": "query",
+          "description": "Source to import. The value may be a URL from which the image can be retrieved or - to read the image from the request body. This parameter may only be used when importing an image.",
+          "type": "string"
+        }, {
+          "name": "repo",
+          "in": "query",
+          "description": "Repository name given to an image when it is imported. The repo may include a tag. This parameter may only be used when importing an image.",
+          "type": "string"
+        }, {
+          "name": "tag",
+          "in": "query",
+          "description": "Tag or digest.",
+          "type": "string"
+        }, {
+          "name": "inputImage",
+          "in": "body",
+          "description": "Image content if the value - has been specified in fromSrc query parameter",
+          "schema": {
+            "type": "string",
+            "format": "binary"
+          },
+          "required": false
+        }, {
+          "name": "X-Registry-Config",
+          "in": "header",
+          "description": "A base64-encoded AuthConfig object",
+          "type": "string"
+        }],
+        "tags": ["Image"]
+      }
+    },
+    "/images/{name}/json": {
+      "get": {
+        "summary": "Inspect an image",
+        "description": "Return low-level information on the image name",
+        "operationId": "find",
+        "responses": {
+          "200": {
+            "description": "No error",
+            "schema": {
+              "$ref": "#/definitions/Image"
+            }
+          },
+          "404": {
+            "description": "No such image"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "name",
+          "in": "path",
+          "description": "Image name or id",
+          "type": "string",
+          "required": true
+        }],
+        "tags": ["Image"]
+      }
+    },
+    "/images/{name}/history": {
+      "get": {
+        "summary": "Get the history of an image",
+        "description": "Return the history of the image name",
+        "operationId": "history",
+        "responses": {
+          "200": {
+            "description": "No error",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ImageHistoryItem"
+              }
+            }
+          },
+          "404": {
+            "description": "No such image"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "name",
+          "in": "path",
+          "description": "Image name or id",
+          "type": "string",
+          "required": true
+        }],
+        "tags": ["Image"]
+      }
+    },
+    "/images/{name}/push": {
+      "post": {
+        "summary": "Push an image to the registry",
+        "description": "Push the image name on the registry",
+        "operationId": "push",
+        "responses": {
+          "200": {
+            "description": "No error"
+          },
+          "404": {
+            "description": "No such image"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "name",
+          "in": "path",
+          "description": "Image name or id",
+          "type": "string",
+          "required": true
+        }, {
+          "name": "tag",
+          "in": "query",
+          "description": "The tag to associate with the image on the registry.",
+          "type": "string"
+        }, {
+          "name": "X-Registry-Auth",
+          "in": "header",
+          "description": "A base64-encoded AuthConfig object",
+          "type": "string",
+          "required": true
+        }],
+        "tags": ["Image"]
+      }
+    },
+    "/images/{name}/tag": {
+      "post": {
+        "summary": "Tag an image into a repository",
+        "description": "Tag the image name into a repository",
+        "operationId": "tag",
+        "responses": {
+          "201": {
+            "description": "No error"
+          },
+          "400": {
+            "description": "Bad parameter"
+          },
+          "404": {
+            "description": "No such image"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "name",
+          "in": "path",
+          "description": "Image name or id",
+          "type": "string",
+          "required": true
+        }, {
+          "name": "repo",
+          "in": "query",
+          "description": "The repository to tag in.",
+          "type": "string"
+        }, {
+          "name": "force",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, default false",
+          "type": "string"
+        }, {
+          "name": "tag",
+          "in": "query",
+          "description": "The new tag name.",
+          "type": "string"
+        }],
+        "tags": ["Image"]
+      }
+    },
+    "/images/{name}": {
+      "delete": {
+        "summary": "Remove an image",
+        "description": "Remove the image name from the filesystem",
+        "operationId": "remove",
+        "responses": {
+          "200": {
+            "description": "No error"
+          },
+          "404": {
+            "description": "No such image"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "name",
+          "in": "path",
+          "description": "Image name or id",
+          "type": "string",
+          "required": true
+        }, {
+          "name": "force",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, default false",
+          "type": "string"
+        }, {
+          "name": "noprune",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, default false.",
+          "type": "string"
+        }],
+        "tags": ["Image"]
+      }
+    },
+    "/images/search": {
+      "get": {
+        "summary": "Search images",
+        "description": "Search for an image on Docker Hub.",
+        "operationId": "search",
+        "responses": {
+          "200": {
+            "description": "No error",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ImageSearchResult"
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "term",
+          "in": "query",
+          "description": "Term to search",
+          "type": "string"
+        }],
+        "tags": ["Image"]
+      }
+    },
+    "/auth": {
+      "post": {
+        "summary": "Check auth configuration",
+        "description": "Check auth configuration.",
+        "operationId": "checkAuthentication",
+        "responses": {
+          "200": {
+            "description": "No error"
+          },
+          "204": {
+            "description": "No error"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "authConfig",
+          "in": "body",
+          "description": "Authentication to check",
+          "schema": {
+            "$ref": "#/definitions/AuthConfig"
+          }
+        }],
+        "tags": ["Misc"]
+      }
+    },
+    "/info": {
+      "get": {
+        "summary": "Display system-wide information",
+        "description": "Display system-wide information.",
+        "operationId": "getSystemInformation",
+        "responses": {
+          "200": {
+            "description": "No error",
+            "schema": {
+              "$ref": "#/definitions/SystemInformation"
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "tags": ["Misc"]
+      }
+    },
+    "/version": {
+      "get": {
+        "summary": "Show the docker version information",
+        "description": "Show the docker version information",
+        "operationId": "getVersion",
+        "responses": {
+          "200": {
+            "description": "no error",
+            "schema": {
+              "$ref": "#/definitions/Version"
+            }
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "tags": ["Misc"]
+      }
+    },
+    "/_ping": {
+      "get": {
+        "summary": "Ping the docker server",
+        "description": "Ping the docker server",
+        "operationId": "ping",
+        "produces": ["text/plain"],
+        "responses": {
+          "200": {
+            "description": "no error",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "tags": ["Misc"]
+      }
+    },
+    "/commit": {
+      "post": {
+        "summary": "Create a new image from a container’s changes",
+        "description": "Create a new image from a container’s changes",
+        "operationId": "commit",
+        "responses": {
+          "201": {
+            "description": "no error",
+            "schema": {
+              "$ref": "#/definitions/CommitResult"
+            }
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "containerConfig",
+          "in": "body",
+          "description": "The container configuration",
+          "schema": {
+            "$ref": "#/definitions/ContainerConfig"
+          }
+        }, {
+          "name": "container",
+          "in": "query",
+          "description": "Container id or name to commit",
+          "type": "string"
+        }, {
+          "name": "repo",
+          "in": "query",
+          "description": "Repository name for the created image",
+          "type": "string"
+        }, {
+          "name": "tag",
+          "in": "query",
+          "description": "Tag name for the create image",
+          "type": "string"
+        }, {
+          "name": "comment",
+          "in": "query",
+          "description": "Commit message",
+          "type": "string"
+        }, {
+          "name": "author",
+          "in": "query",
+          "description": "author (e.g., “John Hannibal Smith <hannibal@a-team.com>“)",
+          "type": "string"
+        }, {
+          "name": "pause",
+          "in": "query",
+          "description": "1/True/true or 0/False/false, whether to pause the container before committing",
+          "type": "string"
+        }, {
+          "name": "changes",
+          "in": "query",
+          "description": "Dockerfile instructions to apply while committing",
+          "type": "string"
+        }],
+        "tags": ["Image"]
+      }
+    },
+    "/events": {
+      "get": {
+        "summary": "Monitor Docker’s events",
+        "description": "Get container events from docker, either in real time via streaming, or via polling (using since).",
+        "operationId": "getEvents",
+        "responses": {
+          "200": {
+            "description": "no error"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "since",
+          "in": "query",
+          "description": "Timestamp used for polling",
+          "type": "integer"
+        }, {
+          "name": "until",
+          "in": "query",
+          "description": "Timestamp used for polling",
+          "type": "integer"
+        }, {
+          "name": "filters",
+          "in": "query",
+          "description": "A json encoded value of the filters (a map[string][]string) to process on the event list.",
+          "type": "string"
+        }],
+        "tags": ["Misc"]
+      }
+    },
+    "/images/{name}/get": {
+      "get": {
+        "summary": "Get a tarball containing all images in a repository",
+        "description": "Get a tarball containing all images and metadata for the repository specified by name.",
+        "operationId": "save",
+        "responses": {
+          "200": {
+            "description": "no error",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "name",
+          "in": "path",
+          "description": "Image name or id",
+          "type": "string",
+          "required": true
+        }],
+        "tags": ["Image"]
+      }
+    },
+    "/images/get": {
+      "get": {
+        "summary": "Get a tarball containing all images.",
+        "description": "Get a tarball containing all images and metadata for one or more repositories.",
+        "operationId": "saveAll",
+        "responses": {
+          "200": {
+            "description": "no error",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "names",
+          "in": "query",
+          "description": "Image names to filter",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }],
+        "tags": ["Image"]
+      }
+    },
+    "/images/load": {
+      "post": {
+        "summary": "Load a tarball with a set of images and tags into docker.",
+        "description": "Load a set of images and tags into a Docker repository. See the image tarball format for more details.",
+        "operationId": "load",
+        "responses": {
+          "200": {
+            "description": "no error"
+          },
+          "500": {
+            "description": "server error"
+          }
+        },
+        "parameters": [{
+          "name": "imagesTarball",
+          "in": "body",
+          "description": "Tar archive containing images",
+          "schema": {
+            "type": "string"
+          }
+        }],
+        "tags": ["Image"]
+      }
+    },
+    "/containers/{id}/exec": {
+      "post": {
+        "summary": "Exec Create",
+        "description": "Sets up an exec instance in a running container id",
+        "operationId": "create",
+        "responses": {
+          "201": {
+            "description": "no error",
+            "schema": {
+              "$ref": "#/definitions/ExecCreateResult"
+            }
+          },
+          "404": {
+            "description": "no such container"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "execConfig",
+          "in": "body",
+          "description": "Exec configuration",
+          "schema": {
+            "$ref": "#/definitions/ExecConfig"
+          },
+          "required": true
+        }, {
+          "name": "Content-Type",
+          "in": "header",
+          "description": "Content Type Header",
+          "required": true,
+          "type": "string",
+          "default": "application/json"
+        }, {
+          "name": "id",
+          "in": "path",
+          "description": "Container name or id",
+          "type": "string",
+          "required": true
+        }],
+        "tags": ["Exec"]
+      }
+    },
+    "/exec/{id}/start": {
+      "post": {
+        "summary": "Exec Start",
+        "description": "Starts a previously set up exec instance id. If detach is true, this API returns after starting the exec command. Otherwise, this API sets up an interactive session with the exec command.",
+        "operationId": "start",
+        "responses": {
+          "200": {
+            "description": "No error"
+          },
+          "404": {
+            "description": "No such exec instance"
+          },
+          "409": {
+            "description": "Container is stopped or paused"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "execStartConfig",
+          "in": "body",
+          "description": "Exec configuration",
+          "schema": {
+            "$ref": "#/definitions/ExecStartConfig"
+          }
+        }, {
+          "name": "Content-Type",
+          "in": "header",
+          "description": "Content Type Header",
+          "required": true,
+          "type": "string",
+          "default": "application/json"
+        }, {
+          "name": "id",
+          "in": "path",
+          "description": "Exec instance id",
+          "required": true,
+          "type": "string"
+        }],
+        "tags": ["Exec"]
+      }
+    },
+    "/exec/{id}/resize": {
+      "post": {
+        "summary": "Exec Resize",
+        "description": "Resize the tty session used by the exec command id.",
+        "operationId": "resize",
+        "responses": {
+          "201": {
+            "description": "No error"
+          },
+          "404": {
+            "description": "No such exec instance"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "Exec instance id",
+          "required": true,
+          "type": "string"
+        }, {
+          "name": "h",
+          "in": "query",
+          "description": "Height of the tty session",
+          "type": "integer",
+          "format": "int64"
+        }, {
+          "name": "w",
+          "in": "query",
+          "description": "Width of the tty session",
+          "type": "integer",
+          "format": "int64"
+        }],
+        "tags": ["Exec"]
+      }
+    },
+    "/exec/{id}/json": {
+      "post": {
+        "summary": "Exec Inspect",
+        "description": "Return low-level information about the exec command id.",
+        "operationId": "find",
+        "responses": {
+          "200": {
+            "description": "No error",
+            "schema": {
+              "$ref": "#/definitions/ExecCommand"
+            }
+          },
+          "404": {
+            "description": "No such exec instance"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "Exec instance id",
+          "required": true,
+          "type": "string"
+        }],
+        "tags": ["Exec"]
+      }
+    },
+    "/volumes": {
+      "get": {
+        "summary": "List volumes",
+        "description": "List volumes.",
+        "operationId": "findAll",
+        "responses": {
+          "200": {
+            "description": "No error",
+            "schema": {
+              "$ref": "#/definitions/VolumeList"
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "filters",
+          "in": "query",
+          "description": "JSON encoded value of the filters (a map[string][]string) to process on the volumes list",
+          "type": "string"
+        }],
+        "tags": ["Volume"]
+      }
+    },
+    "/volumes/create": {
+      "post": {
+        "summary": "Create a volume",
+        "description": "Create a volume.",
+        "operationId": "create",
+        "responses": {
+          "201": {
+            "description": "No error",
+            "schema": {
+              "$ref": "#/definitions/Volume"
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "volumeConfig",
+          "in": "body",
+          "required": true,
+          "description": "Volume configuration",
+          "schema": {
+            "$ref": "#/definitions/VolumeConfig"
+          }
+        }],
+        "tags": ["Volume"]
+      }
+    },
+    "/volumes/{name}": {
+      "get": {
+        "summary": "Inspect a volume",
+        "description": "Inspect a volume.",
+        "operationId": "find",
+        "responses": {
+          "200": {
+            "description": "No error",
+            "schema": {
+              "$ref": "#/definitions/Volume"
+            }
+          },
+          "404": {
+            "description": "No such volume"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "description": "Volume name or id",
+          "type": "string"
+        }],
+        "tags": ["Volume"]
+      },
+      "delete": {
+        "summary": "Remove a volume",
+        "description": "Instruct the driver to remove the volume.",
+        "operationId": "remove",
+        "responses": {
+          "204": {
+            "description": "No error"
+          },
+          "404": {
+            "description": "No such volume or volume driver"
+          },
+          "409": {
+            "description": "Volume is in use and cannot be removed"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "description": "Volume name or id",
+          "type": "string"
+        }],
+        "tags": ["Volume"]
+      }
+    },
+    "/networks": {
+      "get": {
+        "summary": "List networks",
+        "description": "List networks.",
+        "operationId": "findAll",
+        "responses": {
+          "200": {
+            "description": "No error",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Network"
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "filters",
+          "in": "query",
+          "description": "JSON encoded value of the filters (a map[string][]string) to process on the networks list.",
+          "type": "string"
+        }],
+        "tags": ["Network"]
+      }
+    },
+    "/networks/{id}": {
+      "get": {
+        "summary": "Inspect network",
+        "description": "Inspect network.",
+        "operationId": "find",
+        "responses": {
+          "200": {
+            "description": "No error",
+            "schema": {
+              "$ref": "#/definitions/Network"
+            }
+          },
+          "404": {
+            "description": "Network not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "Network id or name",
+          "required": true,
+          "type": "string"
+        }],
+        "tags": ["Network"]
+      },
+      "delete": {
+        "summary": "Remove a network",
+        "description": "Remove a network",
+        "operationId": "remove",
+        "responses": {
+          "204": {
+            "description": "No error"
+          },
+          "404": {
+            "description": "Network not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "Network id or name",
+          "required": true,
+          "type": "string"
+        }],
+        "tags": ["Network"]
+      }
+    },
+    "/networks/create": {
+      "post": {
+        "summary": "Create network",
+        "description": "Create network.",
+        "operationId": "create",
+        "responses": {
+          "201": {
+            "description": "No error",
+            "schema": {
+              "$ref": "#/definitions/NetworkCreateResult"
+            }
+          },
+          "404": {
+            "description": "Driver not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "networkConfig",
+          "in": "body",
+          "description": "Network configuration",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/NetworkCreateConfig"
+          }
+        }],
+        "tags": ["Network"]
+      }
+    },
+    "/networks/{id}/connect": {
+      "post": {
+        "summary": "Connect a container to a network",
+        "description": "Connect a container to a network.",
+        "operationId": "connect",
+        "responses": {
+          "201": {
+            "description": "No error"
+          },
+          "404": {
+            "description": "Network or container not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "Network id or name",
+          "required": true,
+          "type": "string"
+        }, {
+          "name": "container",
+          "in": "body",
+          "description": "Container",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/ContainerConnect"
+          }
+        }],
+        "tags": ["Network"]
+      }
+    },
+    "/networks/{id}/disconnect": {
+      "post": {
+        "summary": "Disconnect a container to a network",
+        "description": "Disconnect a container to a network.",
+        "operationId": "disconnect",
+        "responses": {
+          "201": {
+            "description": "No error"
+          },
+          "404": {
+            "description": "Network or container not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "Network id or name",
+          "required": true,
+          "type": "string"
+        }, {
+          "name": "container",
+          "in": "body",
+          "description": "Container",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/ContainerConnect"
+          }
+        }],
+        "tags": ["Network"]
+      }
+    }
+  }
+}

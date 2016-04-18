@@ -1,0 +1,18 @@
+approvals = 1
+
+[people]
+
+  [people.casualjim]
+    name = "Ivan Porto Carrero"
+    email = "ivan+go-swagger@flanders.co.nz"
+    login = "casualjim"
+
+  [people.chancez]
+    name = "Chance Zibolski"
+    email = ""
+    login = "chancez"
+
+  [people.frapposelli]
+    name = "Fabio Rapposelli"
+    email = ""
+    login = "frapposelli"

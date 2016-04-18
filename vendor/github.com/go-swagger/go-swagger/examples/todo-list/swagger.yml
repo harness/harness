@@ -1,0 +1,133 @@
+swagger: '2.0'
+info:
+  version: 0.1.0
+  title: Simple To Do List API
+securityDefinitions:
+  key:
+    type: apiKey
+    in: header
+    name: x-petstore-token
+security:
+  - key: []
+consumes:
+  - application/io.swagger.examples.todo-list.v1+json
+produces:
+  - application/io.swagger.examples.todo-list.v1+json
+schemes:
+  - http
+  - https
+x-schemes:
+  - unix
+paths:
+  /:
+    get:
+      tags: ["todos"]
+      operationId: find
+      parameters:
+        - name: limit
+          in: formData
+          type: integer
+          format: int32
+          required: true
+          allowEmptyValue: true
+        - name: "X-Rate-Limit"
+          in: header
+          type: integer
+          format: int32
+          required: true
+        - name: tags
+          in: formData
+          type: array
+          collectionFormat: multi
+          allowEmptyValue: true
+          items:
+            type: string
+            format: int32
+            required: true
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/item"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+    post:
+      tags: ["todos"]
+      operationId: addOne
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: "#/definitions/item"
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: "#/definitions/item"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+  /{id}:
+    parameters:
+      - type: string
+        name: id
+        in: path
+        required: true
+    put:
+      tags: ["todos"]
+      operationId: updateOne
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: "#/definitions/item"
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: "#/definitions/item"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+    delete:
+      tags: ["todos"]
+      operationId: destroyOne
+      responses:
+        '204':
+          description: Deleted
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+definitions:
+  item:
+    type: object
+    required:
+      - description
+    properties:
+      id:
+        type: integer
+        format: int64
+        readOnly: true
+      description:
+        type: string
+        minLength: 1
+      completed:
+        type: boolean
+  error:
+    type: object
+    required:
+      - message
+    properties:
+      code:
+        type: integer
+        format: int64
+      message:
+        type: string

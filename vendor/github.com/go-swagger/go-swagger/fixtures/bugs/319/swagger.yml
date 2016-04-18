@@ -1,0 +1,43 @@
+info:
+  description: a spec for issue 319 on github
+  title: bug 319
+  version: 1.0.0
+paths: {}
+consumes:
+- application/json
+produces:
+- application/json
+schemes:
+- http
+swagger: "2.0"
+definitions:
+  Base:
+    description: Base class
+    discriminator: dType
+    properties:
+      dType:
+        type: string
+        description: discriminating type
+    required:
+      - dType
+
+  Derived:
+    description: Derived class
+    allOf:
+      - "$ref": "#/definitions/Base"
+      - required:
+        - name
+        properties:
+          name:
+            type: string
+            description: name of the property
+
+  Container:
+    description: Container type
+    properties:
+      mapNoWorky:
+        type: object
+        additionalProperties:
+          $ref: "#/definitions/Base"
+    required:
+      - mapNoWorky

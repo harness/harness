@@ -1,0 +1,4 @@
+{{define "docstring"}}{{ if .Title }}{{ .Title }}{{ if .Description }}
+
+{{ .Description }}{{ end }}{{ else if .Description}}{{ .Description }}{{ else }}{{ pascalize .Name }} {{ humanize .Name }}{{ end }}
+{{end}}

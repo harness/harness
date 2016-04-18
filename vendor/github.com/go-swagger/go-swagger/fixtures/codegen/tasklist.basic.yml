@@ -1,0 +1,650 @@
+swagger: '2.0'
+host: localhost:8322
+basePath: /v1
+schemes:
+  - http
+  - https
+produces:
+  - application/json
+consumes:
+  - application/json
+
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: token
+    in: query
+  token_header:
+    type: apiKey
+    name: X-Token
+    in: header
+
+info:
+  version: "1.0.0"
+  title: Issue Tracker API
+  description: |
+    This application implements a very simple issue tracker.
+    It's implemented as an API which is described by this swagger spec document.
+
+    The go-swagger project uses this specification to test the code generation.
+    This document contains all possible values for a swagger definition.
+    This means that it exercises the framework relatively well.
+  termsOfService: /termsOfService.html
+  contact:
+    name: Issue Tracker API Team
+    email: nobody@nowhere.com
+    url: https://github.com/go-swagger
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+tags:
+  - name: tasks
+    description: manages tasks
+    externalDocs:
+      description: |
+        An extensive explanation on what is possible can be found in the
+        support site for this application.
+      url: https://go-swagger.github.io/examples/tasklist/help/tasks.html
+
+  - name: milestones
+    description: manages milestones
+    externalDocs:
+      description: |
+        An extensive explanation on what is possible can be found in the
+        support site for this application.
+      url: https://go-swagger.github.io/examples/tasklist/help/milestones.html
+
+externalDocs:
+    description: |
+      A much more elaborate guide to this application is available at the support
+      site.
+    url: https://go-swagger.github.io/examples/tasklist/help/tasks.html
+
+paths:
+  /tasks:
+    get:
+      operationId: listTasks
+      tags:
+        - tasks
+      summary: Lists the tasks
+      description: |
+        Allows for specifying a number of filter parameters to
+        narrow down the results.
+        Also allows for specifying a **sinceId** and **pageSize** parameter
+        to page through large result sets.
+      parameters:
+        - name: sinceId
+          in: query
+          description: The last id that was seen.
+          type: integer
+          format: int64
+          required: false
+
+        - name: tags
+          description: the tags to filter by
+          in: query
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+
+        - name: status
+          description: the status to filter by
+          in: query
+          type: array
+          uniqueItems: true
+          collectionFormat: pipes
+          items:
+            type: string
+            enum: ["open", "closed", "ignored", "rejected"]
+
+        - $ref: "#/parameters/pageSize"
+
+      responses:
+        default:
+          $ref: "#/responses/ErrorResponse"
+        200:
+          description: Successful response
+          headers:
+            # This is probably not the right place to put this kind of information in
+            # a public API, but I need a header in a response.
+            X-Last-Task-Id:
+              type: integer
+              format: int64
+              description: the last task id known to the application
+          schema:
+            title: TaskList
+            type: array
+            items:
+              $ref: "#/definitions/TaskCard"
+        422:
+          description: Validation error
+          schema:
+            $ref: "#/definitions/ValidationError"
+    post:
+      operationId: createTask
+      security:
+        - api_key: []
+        - token_header: []
+      tags:
+        - tasks
+      summary: "Creates a 'Task' object."
+      description: |
+        Allows for creating a task.
+        This operation requires authentication so that we know which user
+        created the task.
+      parameters:
+        - name: body
+          in: body
+          description: The task to create
+          required: true
+          schema:
+            $ref: "#/definitions/Task"
+      responses:
+        default:
+          $ref: "#/responses/ErrorResponse"
+        201:
+          description: Task created
+
+  /tasks/{id}:
+    parameters:
+      - $ref: "#/parameters/idPathParam"
+    get:
+      operationId: getTaskDetails
+      tags:
+        - tasks
+      summary: Gets the details for a task.
+      description: |
+        The details view has more information than the card view.
+        You can see who reported the issue and who last updated it when.
+
+        There are also comments for each issue.
+      responses:
+        default:
+          $ref: "#/responses/ErrorResponse"
+        200:
+          description: Task details
+          schema:
+            $ref: "#/definitions/Task"
+        422:
+          description: Validation error
+          schema:
+            $ref: "#/definitions/ValidationError"
+    put:
+      operationId: updateTask
+      tags:
+        - tasks
+      summary: Updates the details for a task.
+      description: |
+        Allows for updating a task.
+        This operation requires authentication so that we know which user
+        last updated the task.
+      security:
+        - api_key: []
+        - token_header: []
+      parameters:
+        - name: body
+          in: body
+          description: The task to update
+          required: true
+          schema:
+            $ref: "#/definitions/Task"
+      responses:
+        default:
+          $ref: "#/responses/ErrorResponse"
+        200:
+          description: Task details
+          schema:
+            $ref: "#/definitions/Task"
+        422:
+          description: Validation error
+          schema:
+            $ref: "#/definitions/ValidationError"
+
+    delete:
+      operationId: deleteTask
+      tags:
+        - tasks
+      summary: Deletes a task.
+      description: |
+        This is a soft delete and changes the task status to ignored.
+      security:
+        - api_key: []
+        - token_header: []
+      responses:
+        default:
+          $ref: "#/responses/ErrorResponse"
+        204:
+          description: Task deleted
+
+  /tasks/{id}/comments:
+    parameters:
+      - $ref: "#/parameters/idPathParam"
+    post:
+      summary: Adds a comment to a task
+      description: |
+        The comment can contain ___github markdown___ syntax.
+        Fenced codeblocks etc are supported through pygments.
+      operationId: addCommentToTask
+      tags:
+        - tasks
+      security:
+        - api_key: []
+        - token_header: []
+      parameters:
+        - $ref: "#/parameters/idPathParam"
+        - name: body
+          in: body
+          description: The comment to add
+          schema:
+            title: A comment to create
+            description: |
+              These values can have github flavored markdown.
+            type: object
+            required:
+              - content
+              - userId
+            properties:
+              userId:
+                type: integer
+                format: int64
+              content:
+                type: string
+      responses:
+        default:
+          $ref: "#/responses/ErrorResponse"
+        201:
+          description: Comment added
+    get:
+      tags:
+        - tasks
+      operationId: getTaskComments
+      summary: Gets the comments for a task
+      description: |
+        The comments require a size parameter.
+      parameters:
+        - $ref: "#/parameters/pageSize"
+        - name: since
+          in: query
+          description: The created time of the oldest seen comment
+          type: string
+          format: date-time
+          required: false
+      responses:
+        default:
+          $ref: "#/responses/ErrorResponse"
+        200:
+          description: The list of comments
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Comment"
+
+
+  /tasks/{id}/files:
+    parameters:
+      - $ref: "#/parameters/idPathParam"
+    post:
+      operationId: uploadTaskFile
+      summary: Adds a file to a task.
+      description: "The file can't be larger than **5MB**"
+      tags:
+        - tasks
+      consumes:
+        - multipart/form-data
+      security:
+        - api_key: []
+        - token_header: []
+      parameters:
+        - name: file
+          in: formData
+          description: The file to upload
+          type: file
+        - name: description
+          in: formData
+          description: Extra information describing the file
+          type: string
+      responses:
+        default:
+          $ref: "#/responses/ErrorResponse"
+        201:
+          description: File added
+
+responses:
+  ErrorResponse:
+    description: Error response
+    headers:
+      X-Error-Code:
+        type: string
+    schema:
+      $ref: "#/definitions/Error"
+
+
+parameters:
+  idPathParam:
+    name: id
+    description: The id of the item
+    type: integer
+    format: int64
+    in: path
+    required: true
+
+  pageSize:
+    name: pageSize
+    type: integer
+    format: int32
+    in: query
+    description: Amount of items to return in a single page
+    default: 20
+
+definitions:
+  Error:
+    title: Error Structure
+    description: |
+      Contains all the properties any error response from the API will contain.
+      Some properties are optional so might be empty most of the time
+    type: object
+    required:
+      - code
+      - message
+    properties:
+      code:
+        description: the error code, this is not necessarily the http status code
+        type: integer
+        format: int32
+      message:
+        description: a human readable version of the error
+        type: string
+      helpUrl:
+        description: an optional url for getting more help about this error
+        type: string
+        format: uri
+
+  ValidationError:
+    allOf:
+      - $ref: "#/definitions/Error"
+      - type: object
+        properties:
+          field:
+            description: an optional field name to which this validation error applies
+            type: string
+
+  Currency:
+    type: string
+    enum:
+      - EUR
+      - GBP
+      - JPY
+      - USD
+
+  Price:
+    type: object
+    properties:
+      amount:
+        type: integer
+        format: int32
+      currency:
+        $ref: "#/definitions/Currency"
+
+  TaskCard:
+    title: a card for a task
+    description: |
+      A task card is a minimalistic representation of a task. Useful for display in list views, like a card list.
+    type: object
+    required:
+      - title
+      - status
+    properties:
+      id:
+        title: The id of the task.
+        description: A unique identifier for the task. These are created in ascending order.
+        type: integer
+        format: int64
+        readOnly: true
+      title:
+        title: The title of the task.
+        description: |
+          The title for a task, this needs to be at least 5 chars long.
+          Titles don't allow any formatting, besides emoji.
+        type: string
+        minLength: 5
+        maxLength: 150
+      description:
+        title: The description of the task.
+        description: |
+          The task description is a longer, more detailed description of the issue.
+          Perhaps it even mentions steps to reproduce.
+        type: string
+      milestone:
+        $ref: "#/definitions/Milestone"
+      severity:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 5
+      effort:
+        description: the level of effort required to get this task completed
+        type: integer
+        format: int32
+        maximum: 27
+        multipleOf: 3
+      karma:
+        title: the karma donated to this item.
+        description: |
+          Karma is a lot like voting.  Users can donate a certain amount or karma to an issue.
+          This is used to determine the weight users place on an issue. Not that +1 comments aren't great.
+        type: number
+        format: float32
+        minimum: 0
+        exclusiveMinimum: true
+        multipleOf: 0.5
+      status:
+        title: the status of the issue
+        description: |
+          There are 4 possible values for a status.
+          Ignored means as much as accepted but not now, perhaps later.
+        type: string
+        enum: ["open", "closed", "ignored", "rejected"]
+      assignedTo:
+        $ref: "#/definitions/UserCard"
+      reportedAt:
+        title: The time at which this issue was reported.
+        description: |
+          This field is read-only, so it's only sent as part of the response.
+        type: string
+        format: date-time
+        readOnly: true
+      tags:
+        title: task tags.
+        description: a task can be tagged with text blurbs.
+        type: array
+        uniqueItems: true
+        maxItems: 5
+        items:
+          pattern: \w[\w- ]+
+          minLength: 3
+          type: string
+
+  Task:
+    title: a structure describing a complete task.
+    description: |
+      A Task is the main entity in this application. Everything revolves around tasks and managing them.
+    type: "object"
+    allOf:
+      - $ref: "#/definitions/TaskCard"
+      - type: object
+        properties:
+          lastUpdated:
+            title: The time at which this issue was last updated.
+            description: |
+              This field is read only so it's only sent as part of the response.
+            type: string
+            format: date-time
+            readOnly: true
+          reportedBy:
+            $ref: "#/definitions/UserCard"
+          lastUpdatedBy:
+            $ref: "#/definitions/UserCard"
+          comments:
+            title: The 5 most recent items for this issue.
+            description: |
+              The detail view of an issue includes the 5 most recent comments.
+              This field is read only, comments are added through a separate process.
+            readOnly: true
+            type: array
+            items:
+              $ref: "#/definitions/Comment"
+          attachments:
+            title: The attached files.
+            description: |
+              An issue can have at most 20 files attached to it.
+            type: object
+            additionalProperties:
+              type: object
+              maxProperties: 20
+              properties:
+                name:
+                  title: The name of the file.
+                  description: |
+                    This name is inferred from the upload request.
+                  type: string
+                  readOnly: true
+                description:
+                  title: Extra information to attach to the file.
+                  description: |
+                    This is a free form text field with support for github flavored markdown.
+                  type: string
+                  minLength: 3
+                url:
+                  title: The url to download or view the file.
+                  description: |
+                    This URL is generated on the server, based on where it was able to store the file when it was uploaded.
+                  type: string
+                  format: uri
+                  readOnly: true
+                contentType:
+                  title: The content type of the file.
+                  description: |
+                    The content type of the file is inferred from the upload request.
+                  type: string
+                  readOnly: true
+                size:
+                  title: The file size in bytes.
+                  description: This property was generated during the upload request of the file.
+                  type: number
+                  format: float64
+                  readOnly: true
+  Milestone:
+    title: A milestone is a particular goal that is important to the project for this issue tracker.
+    description: |
+      Milestones can have a escription and due date.
+      This can be useful for filters and such.
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        title: The name of the milestone.
+        description: |
+          Each milestone should get a unique name.
+        type: string
+        pattern: "[A-Za-z][\\w- ]+"
+        minLength: 3
+        maxLength: 50
+      description:
+        type: string
+        title: The description of the milestone.
+        description: |
+          A description is a free text field that allows for a more detailed explanation of what the milestone is trying to achieve.
+      dueDate:
+        title: An optional due date for this milestone.
+        description: |
+          This property is optional, but when present it lets people know when they can expect this milestone to be completed.
+        type: string
+        format: date
+      stats:
+        title: Some counters for this milestone.
+        description: |
+          This object contains counts for the remaining open issues and the amount of issues that have been closed.
+        type: object
+        properties:
+          open:
+            title: The remaining open issues.
+            type: integer
+            format: int32
+          closed:
+            title: The closed issues.
+            type: integer
+            format: int32
+          total:
+            title: The total number of issues for this milestone.
+            type: integer
+            format: int32
+  Comment:
+    title: A comment for an issue.
+    description: |
+      Users can comment on issues to discuss plans for resolution etc.
+    type: object
+    required:
+      - user
+      - content
+    properties:
+      user:
+        $ref: "#/definitions/UserCard"
+      content:
+        title: The content of the comment.
+        description: |
+          This is a free text field with support for github flavored markdown.
+        type: string
+      createdAt:
+        title: The time at which this comment was created.
+        description: This field is autogenerated when the content is posted.
+        type: string
+        format: date-time
+        readOnly: true
+
+  UserCard:
+    title: A minimal representation of a user.
+    description: |
+      This representation of a user is mainly meant for inclusion in other models, or for list views.
+    type: object
+    required:
+      - id
+      - screenName
+    properties:
+      id:
+        title: A unique identifier for a user.
+        description: |
+          This id is automatically generated on the server when a user is created.
+        type: integer
+        format: int64
+        readOnly: true
+      screenName:
+        title: The screen name for the user.
+        description: |
+          This is used for vanity type urls as well as login credentials.
+        type: string
+        pattern: \w[\w_-]+
+        minLength: 3
+        maxLength: 255
+      availableKarma:
+        title: The amount of karma this user has available.
+        description: |
+          In this application users get a cerain amount of karma alotted.
+          This karma can be donated to other users to show appreciation, or it can be used
+          by a user to vote on issues.
+          Once an issue is closed or rejected, the user gets his karma back.
+        type: number
+        format: float32
+        maximum: 1000
+        exclusiveMaximum: true
+        readOnly: true
+      admin:
+        title: When true this user is an admin.
+        description: |
+          Only employees of the owning company can be admins.
+          Admins are like project owners but have access to all the projects in the application.
+          There aren't many admins, and it's only used for extremly critical issues with the application.
+        type: boolean
+        readOnly: true

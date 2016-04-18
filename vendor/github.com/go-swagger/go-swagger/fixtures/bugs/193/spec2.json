@@ -1,0 +1,34 @@
+{
+    "consumes": [
+        "application/json",
+        "application/x-www-form-urlencoded"
+    ],
+    "paths": {
+        "/testing": {
+            "put": {
+                "operationId": "putTesting",
+                "parameters": [
+                    {
+                        "in": "formData",
+                        "items": {
+                            "format": "date",
+                            "type": "string"
+                        },
+                        "name": "testingThis",
+                        "type": "array"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success message"
+                    }
+                }
+            }
+        }
+    },
+    "produces": [
+        "application/json",
+        "application/json; charset=utf-8"
+    ],
+    "swagger": "2.0"
+}

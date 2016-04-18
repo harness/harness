@@ -1,0 +1,66 @@
+package {{ .APIPackage }}
+
+import (
+  "net/http"
+
+  errors "github.com/go-swagger/go-swagger/errors"
+  httpkit "github.com/go-swagger/go-swagger/httpkit"
+  middleware "github.com/go-swagger/go-swagger/httpkit/middleware"
+  "golang.org/x/net/context"
+
+  {{range .DefaultImports}}{{printf "%q" .}}
+  {{end}}
+  {{range $key, $value := .Imports}}{{$key}} {{ printf "%q" $value}}
+  {{end}}
+)
+{{ $package := .Package }}
+
+// This file is safe to edit. Once it exists it will not be overwritten
+
+func configureAPI(api *{{.Package}}.{{ pascalize .Name }}API) http.Handler {
+  // configure the api here
+  api.ServeError = errors.ServeError
+
+  {{ range .Consumes }}{{ if .Implementation }}api.{{ pascalize .Name }}Consumer = {{ .Implementation }}()
+  {{else}}api.{{ pascalize .Name }}Consumer = httpkit.ConsumerFunc(func(r io.Reader, target interface{}) error {
+    return errors.NotImplemented("{{.Name}} consumer has not yet been implemented")
+  }){{end}}
+  {{end}}
+  {{ range .Produces }}{{ if .Implementation }}api.{{ pascalize .Name }}Producer = {{ .Implementation }}()
+  {{else}}api.{{ pascalize .Name }}Producer = httpkit.ProducerFunc(func(w io.Writer, data interface{}) error {
+    return errors.NotImplemented("{{.Name}} producer has not yet been implemented")
+  }){{end}}
+  {{end}}
+  {{range .SecurityDefinitions}}
+  {{if .IsBasicAuth}}
+  api.{{ pascalize .ID }}Auth = func(user string, pass string) ({{if not ( eq .Principal "interface{}" )}}*{{ end }}{{.Principal}}, error) {
+    return nil, errors.NotImplemented("basic auth  ({{ .ID }}) has not yet been implemented")
+  }
+  {{end}}{{if .IsAPIKeyAuth}}
+  api.{{ pascalize .ID }}Auth = func(token string) ({{if not ( eq .Principal "interface{}" )}}*{{ end }}{{.Principal}}, error) {
+    return nil, errors.NotImplemented("api key auth ({{ .ID }}) {{.Name}} from {{.Source}} has not yet been implemented")
+  }
+  {{end}}
+  {{end}}
+  {{range .Operations}}api.{{if ne .Package $package}}{{pascalize .Package}}{{end}}{{ pascalize .Name }}Handler = {{.Package}}.{{ pascalize .Name }}HandlerFunc(func({{ if .WithContext }}ctx context.Context, {{ end }}{{if .Params}}params {{.Package}}.{{ pascalize .Name }}Params{{end}}{{if and .Authorized .Params}}, {{end}}{{if .Authorized}}principal {{if not ( eq .Principal "interface{}" )}}*{{ end }}{{.Principal}}{{end}}) middleware.Responder {
+    return middleware.NotImplemented("operation {{if ne .Package $package}}{{ .Package}}{{end}}.{{pascalize .Name}} has not yet been implemented")
+  })
+  {{end}}
+
+  api.ServerShutdown = func() {  }
+  // api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
+
+  return setupGlobalMiddleware(api.Serve(setupMiddlewares))
+}
+
+// The middleware configuration is for the handler executors. These do not apply to the swagger.json document.
+// The middleware executes after routing but before authentication, binding and validation
+func setupMiddlewares(handler http.Handler) http.Handler {
+	return handler
+}
+
+// The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
+// So this is a good place to plug in a panic handling middleware, logging and metrics
+func setupGlobalMiddleware(handler http.Handler) http.Handler {
+	return handler
+}

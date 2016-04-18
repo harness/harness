@@ -1,0 +1,5392 @@
+{
+  "info": {
+    "termsOfService": "https://quay.io/tos",
+    "version": "v1",
+    "contact": {
+      "email": "support@quay.io"
+    },
+    "description": "This API allows you to perform many of the operations required to work with Quay repositories, users, and organizations. You can find out more at <a href=\"https://quay.io\">Quay</a>.",
+    "title": "Quay Frontend"
+  },
+  "paths": {
+    "/api/v1/organization/{orgname}/invoices": {
+      "x-name": "endpoints.api.billing.OrganizationInvoiceList",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }],
+      "x-tag": "billing",
+      "x-path": "/api/v1/organization/{orgname}/invoices",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }],
+        "tags": ["billing"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "listOrgInvoices",
+        "description": "List the invoices for the specified orgnaization."
+      }
+    },
+    "/api/v1/plans/": {
+      "x-name": "endpoints.api.billing.ListPlans",
+      "x-tag": "billing",
+      "x-path": "/api/v1/plans/",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["billing"],
+        "description": "List the avaialble plans.",
+        "parameters": [],
+        "operationId": "listPlans"
+      }
+    },
+    "/api/v1/repository/{repository}/build/": {
+      "x-name": "endpoints.api.build.RepositoryBuildList",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "description": "Returns all builds since the given unix timecode",
+          "required": false,
+          "type": "integer",
+          "name": "since",
+          "in": "query"
+        }, {
+          "description": "The maximum number of builds to return",
+          "required": false,
+          "type": "integer",
+          "name": "limit",
+          "in": "query"
+        }],
+        "tags": ["build"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "getRepoBuilds",
+        "description": "Get the list of repository builds."
+      },
+      "x-path": "/api/v1/repository/{repository}/build/",
+      "x-tag": "build",
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/RepositoryBuildRequest"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["build"],
+        "security": [{
+          "oauth2_implicit": ["repo:write"]
+        }],
+        "operationId": "requestRepoBuild",
+        "description": "Request that a repository be built and pushed from the specified input."
+      }
+    },
+    "/api/v1/repository/{repository}/build/{build_uuid}/status": {
+      "x-name": "endpoints.api.build.RepositoryBuildStatus",
+      "parameters": [{
+        "description": "The UUID of the build",
+        "required": true,
+        "type": "string",
+        "name": "build_uuid",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "build",
+      "x-path": "/api/v1/repository/{repository}/build/{build_uuid}/status",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The UUID of the build",
+          "required": true,
+          "type": "string",
+          "name": "build_uuid",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["build"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "getRepoBuildStatus",
+        "description": "Return the status for the builds specified by the build uuids."
+      }
+    },
+    "/api/v1/repository/{repository}/build/{build_uuid}": {
+      "x-name": "endpoints.api.build.RepositoryBuildResource",
+      "parameters": [{
+        "description": "The UUID of the build",
+        "required": true,
+        "type": "string",
+        "name": "build_uuid",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The UUID of the build",
+          "required": true,
+          "type": "string",
+          "name": "build_uuid",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["build"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "getRepoBuild",
+        "description": "Returns information about a build."
+      },
+      "x-path": "/api/v1/repository/{repository}/build/{build_uuid}",
+      "x-tag": "build",
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The UUID of the build",
+          "required": true,
+          "type": "string",
+          "name": "build_uuid",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["build"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "cancelRepoBuild",
+        "description": "Cancels a repository build if it has not yet been picked up by a build worker."
+      }
+    },
+    "/api/v1/repository/{repository}/build/{build_uuid}/logs": {
+      "x-name": "endpoints.api.build.RepositoryBuildLogs",
+      "parameters": [{
+        "description": "The UUID of the build",
+        "required": true,
+        "type": "string",
+        "name": "build_uuid",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "build",
+      "x-path": "/api/v1/repository/{repository}/build/{build_uuid}/logs",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The UUID of the build",
+          "required": true,
+          "type": "string",
+          "name": "build_uuid",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["build"],
+        "security": [{
+          "oauth2_implicit": ["repo:write"]
+        }],
+        "operationId": "getRepoBuildLogs",
+        "description": "Return the build logs for the build specified by the build uuid."
+      }
+    },
+    "/api/v1/discovery": {
+      "x-name": "endpoints.api.discovery.DiscoveryResource",
+      "x-tag": "discovery",
+      "x-path": "/api/v1/discovery",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["discovery"],
+        "description": "List all of the API endpoints available in the swagger API format.",
+        "parameters": [{
+          "description": "Whether to include internal APIs.",
+          "required": false,
+          "type": "boolean",
+          "name": "internal",
+          "in": "query"
+        }],
+        "operationId": "discovery"
+      }
+    },
+    "/api/v1/repository/{repository}/image/{image_id}": {
+      "x-name": "endpoints.api.image.RepositoryImage",
+      "parameters": [{
+        "description": "The Docker image ID",
+        "required": true,
+        "type": "string",
+        "name": "image_id",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "image",
+      "x-path": "/api/v1/repository/{repository}/image/{image_id}",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The Docker image ID",
+          "required": true,
+          "type": "string",
+          "name": "image_id",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["image"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "getImage",
+        "description": "Get the information available for the specified image."
+      }
+    },
+    "/api/v1/repository/{repository}/image/{image_id}/changes": {
+      "x-name": "endpoints.api.image.RepositoryImageChanges",
+      "parameters": [{
+        "description": "The Docker image ID",
+        "required": true,
+        "type": "string",
+        "name": "image_id",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "image",
+      "x-path": "/api/v1/repository/{repository}/image/{image_id}/changes",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The Docker image ID",
+          "required": true,
+          "type": "string",
+          "name": "image_id",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["image"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "getImageChanges",
+        "description": "Get the list of changes for the specified image."
+      }
+    },
+    "/api/v1/repository/{repository}/image/": {
+      "x-name": "endpoints.api.image.RepositoryImageList",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "image",
+      "x-path": "/api/v1/repository/{repository}/image/",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["image"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "listRepositoryImages",
+        "description": "List the images for the specified repository."
+      }
+    },
+    "/api/v1/organization/{orgname}/aggregatelogs": {
+      "x-name": "endpoints.api.logs.OrgAggregateLogs",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }],
+      "x-tag": "logs",
+      "x-path": "/api/v1/organization/{orgname}/aggregatelogs",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "Username for which to filter logs.",
+          "required": false,
+          "type": "string",
+          "name": "performer",
+          "in": "query"
+        }, {
+          "description": "Latest time to which to get logs. (%m/%d/%Y %Z)",
+          "required": false,
+          "type": "string",
+          "name": "endtime",
+          "in": "query"
+        }, {
+          "description": "Earliest time from which to get logs. (%m/%d/%Y %Z)",
+          "required": false,
+          "type": "string",
+          "name": "starttime",
+          "in": "query"
+        }],
+        "tags": ["logs"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "getAggregateOrgLogs",
+        "description": "Gets the aggregated logs for the specified organization."
+      }
+    },
+    "/api/v1/organization/{orgname}/logs": {
+      "x-name": "endpoints.api.logs.OrgLogs",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }],
+      "x-tag": "logs",
+      "x-path": "/api/v1/organization/{orgname}/logs",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The page number for the logs",
+          "required": false,
+          "type": "integer",
+          "name": "page",
+          "in": "query"
+        }, {
+          "description": "Username for which to filter logs.",
+          "required": false,
+          "type": "string",
+          "name": "performer",
+          "in": "query"
+        }, {
+          "description": "Latest time to which to get logs. (%m/%d/%Y %Z)",
+          "required": false,
+          "type": "string",
+          "name": "endtime",
+          "in": "query"
+        }, {
+          "description": "Earliest time from which to get logs. (%m/%d/%Y %Z)",
+          "required": false,
+          "type": "string",
+          "name": "starttime",
+          "in": "query"
+        }],
+        "tags": ["logs"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "listOrgLogs",
+        "description": "List the logs for the specified organization."
+      }
+    },
+    "/api/v1/repository/{repository}/logs": {
+      "x-name": "endpoints.api.logs.RepositoryLogs",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "logs",
+      "x-path": "/api/v1/repository/{repository}/logs",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "description": "The page number for the logs",
+          "required": false,
+          "type": "integer",
+          "name": "page",
+          "in": "query"
+        }, {
+          "description": "Latest time to which to get logs (%m/%d/%Y %Z)",
+          "required": false,
+          "type": "string",
+          "name": "endtime",
+          "in": "query"
+        }, {
+          "description": "Earliest time from which to get logs (%m/%d/%Y %Z)",
+          "required": false,
+          "type": "string",
+          "name": "starttime",
+          "in": "query"
+        }],
+        "tags": ["logs"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "listRepoLogs",
+        "description": "List the logs for the specified repository."
+      }
+    },
+    "/api/v1/repository/{repository}/aggregatelogs": {
+      "x-name": "endpoints.api.logs.RepositoryAggregateLogs",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "logs",
+      "x-path": "/api/v1/repository/{repository}/aggregatelogs",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "description": "Latest time to which to get logs (%m/%d/%Y %Z)",
+          "required": false,
+          "type": "string",
+          "name": "endtime",
+          "in": "query"
+        }, {
+          "description": "Earliest time from which to get logs (%m/%d/%Y %Z)",
+          "required": false,
+          "type": "string",
+          "name": "starttime",
+          "in": "query"
+        }],
+        "tags": ["logs"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "getAggregateRepoLogs",
+        "description": "Returns the aggregated logs for the specified repository."
+      }
+    },
+    "/api/v1/organization/{orgname}/members/{membername}": {
+      "x-name": "endpoints.api.organization.OrganizationMember",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }, {
+        "description": "The username of the organization member",
+        "required": true,
+        "type": "string",
+        "name": "membername",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The username of the organization member",
+          "required": true,
+          "type": "string",
+          "name": "membername",
+          "in": "path"
+        }],
+        "tags": ["organization"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "getOrganizationMember",
+        "description": "Retrieves the details of a member of the organization."
+      },
+      "x-path": "/api/v1/organization/{orgname}/members/{membername}",
+      "x-tag": "organization",
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The username of the organization member",
+          "required": true,
+          "type": "string",
+          "name": "membername",
+          "in": "path"
+        }],
+        "tags": ["organization"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "removeOrganizationMember",
+        "description": "Removes a member from an organization, revoking all its repository\n        priviledges and removing it from all teams in the organization."
+      }
+    },
+    "/api/v1/organization/{orgname}": {
+      "x-name": "endpoints.api.organization.Organization",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }],
+        "tags": ["organization"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "getOrganization",
+        "description": "Get the details for the specified organization"
+      },
+      "x-path": "/api/v1/organization/{orgname}",
+      "x-tag": "organization",
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/UpdateOrg"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["organization"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "changeOrganizationDetails",
+        "description": "Change the details for the specified organization."
+      }
+    },
+    "/api/v1/organization/{orgname}/applications/{client_id}": {
+      "x-name": "endpoints.api.organization.OrganizationApplicationResource",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }, {
+        "description": "The OAuth client ID",
+        "required": true,
+        "type": "string",
+        "name": "client_id",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The OAuth client ID",
+          "required": true,
+          "type": "string",
+          "name": "client_id",
+          "in": "path"
+        }],
+        "tags": ["organization"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "getOrganizationApplication",
+        "description": "Retrieves the application with the specified client_id under the specified organization"
+      },
+      "x-path": "/api/v1/organization/{orgname}/applications/{client_id}",
+      "x-tag": "organization",
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The OAuth client ID",
+          "required": true,
+          "type": "string",
+          "name": "client_id",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/UpdateApp"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["organization"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "updateOrganizationApplication",
+        "description": "Updates an application under this organization."
+      },
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The OAuth client ID",
+          "required": true,
+          "type": "string",
+          "name": "client_id",
+          "in": "path"
+        }],
+        "tags": ["organization"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "deleteOrganizationApplication",
+        "description": "Deletes the application under this organization."
+      }
+    },
+    "/api/v1/organization/{orgname}/applications": {
+      "x-name": "endpoints.api.organization.OrganizationApplications",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }],
+        "tags": ["organization"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "getOrganizationApplications",
+        "description": "List the applications for the specified organization"
+      },
+      "x-path": "/api/v1/organization/{orgname}/applications",
+      "x-tag": "organization",
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/NewApp"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["organization"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "createOrganizationApplication",
+        "description": "Creates a new application under this organization."
+      }
+    },
+    "/api/v1/organization/{orgname}/members": {
+      "x-name": "endpoints.api.organization.OrganizationMemberList",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }],
+      "x-tag": "organization",
+      "x-path": "/api/v1/organization/{orgname}/members",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }],
+        "tags": ["organization"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "getOrganizationMembers",
+        "description": "List the human members of the specified organization."
+      }
+    },
+    "/api/v1/app/{client_id}": {
+      "x-name": "endpoints.api.organization.ApplicationInformation",
+      "parameters": [{
+        "description": "The OAuth client ID",
+        "required": true,
+        "type": "string",
+        "name": "client_id",
+        "in": "path"
+      }],
+      "x-tag": "organization",
+      "x-path": "/api/v1/app/{client_id}",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["organization"],
+        "description": "Get information on the specified application.",
+        "parameters": [{
+          "description": "The OAuth client ID",
+          "required": true,
+          "type": "string",
+          "name": "client_id",
+          "in": "path"
+        }],
+        "operationId": "getApplicationInformation"
+      }
+    },
+    "/api/v1/repository/{repository}/permissions/team/{teamname}": {
+      "x-name": "endpoints.api.permission.RepositoryTeamPermission",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }, {
+        "description": "The name of the team to which the permission applies",
+        "required": true,
+        "type": "string",
+        "name": "teamname",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the team to which the permission applies",
+          "required": true,
+          "type": "string",
+          "name": "teamname",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["permission"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "getTeamPermissions",
+        "description": "Fetch the permission for the specified team."
+      },
+      "x-path": "/api/v1/repository/{repository}/permissions/team/{teamname}",
+      "x-tag": "permission",
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the team to which the permission applies",
+          "required": true,
+          "type": "string",
+          "name": "teamname",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/TeamPermission"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["permission"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "changeTeamPermissions",
+        "description": "Update the existing team permission."
+      },
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the team to which the permission applies",
+          "required": true,
+          "type": "string",
+          "name": "teamname",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["permission"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "deleteTeamPermissions",
+        "description": "Delete the permission for the specified team."
+      }
+    },
+    "/api/v1/repository/{repository}/permissions/user/": {
+      "x-name": "endpoints.api.permission.RepositoryUserPermissionList",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "permission",
+      "x-path": "/api/v1/repository/{repository}/permissions/user/",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["permission"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "listRepoUserPermissions",
+        "description": "List all user permissions."
+      }
+    },
+    "/api/v1/repository/{repository}/permissions/team/": {
+      "x-name": "endpoints.api.permission.RepositoryTeamPermissionList",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "permission",
+      "x-path": "/api/v1/repository/{repository}/permissions/team/",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["permission"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "listRepoTeamPermissions",
+        "description": "List all team permission."
+      }
+    },
+    "/api/v1/repository/{repository}/permissions/user/{username}": {
+      "x-name": "endpoints.api.permission.RepositoryUserPermission",
+      "parameters": [{
+        "description": "The username of the user to which the permission applies",
+        "required": true,
+        "type": "string",
+        "name": "username",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The username of the user to which the permission applies",
+          "required": true,
+          "type": "string",
+          "name": "username",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["permission"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "getUserPermissions",
+        "description": "Get the Fetch the permission for the specified user."
+      },
+      "x-path": "/api/v1/repository/{repository}/permissions/user/{username}",
+      "x-tag": "permission",
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The username of the user to which the permission applies",
+          "required": true,
+          "type": "string",
+          "name": "username",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/UserPermission"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["permission"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "changeUserPermissions",
+        "description": "Update the perimssions for an existing repository."
+      },
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The username of the user to which the permission applies",
+          "required": true,
+          "type": "string",
+          "name": "username",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["permission"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "deleteUserPermissions",
+        "description": "Delete the permission for the user."
+      }
+    },
+    "/api/v1/repository/{repository}/permissions/user/{username}/transitive": {
+      "x-name": "endpoints.api.permission.RepositoryUserTransitivePermission",
+      "parameters": [{
+        "description": "The username of the user to which the permissions apply",
+        "required": true,
+        "type": "string",
+        "name": "username",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "permission",
+      "x-path": "/api/v1/repository/{repository}/permissions/user/{username}/transitive",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The username of the user to which the permissions apply",
+          "required": true,
+          "type": "string",
+          "name": "username",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["permission"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "getUserTransitivePermission",
+        "description": "Get the fetch the permission for the specified user."
+      }
+    },
+    "/api/v1/organization/{orgname}/prototypes": {
+      "x-name": "endpoints.api.prototype.PermissionPrototypeList",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }],
+        "tags": ["prototype"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "getOrganizationPrototypePermissions",
+        "description": "List the existing prototypes for this organization."
+      },
+      "x-path": "/api/v1/organization/{orgname}/prototypes",
+      "x-tag": "prototype",
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/NewPrototype"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["prototype"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "createOrganizationPrototypePermission",
+        "description": "Create a new permission prototype."
+      }
+    },
+    "/api/v1/organization/{orgname}/prototypes/{prototypeid}": {
+      "x-name": "endpoints.api.prototype.PermissionPrototype",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }, {
+        "description": "The ID of the prototype",
+        "required": true,
+        "type": "string",
+        "name": "prototypeid",
+        "in": "path"
+      }],
+      "x-path": "/api/v1/organization/{orgname}/prototypes/{prototypeid}",
+      "x-tag": "prototype",
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The ID of the prototype",
+          "required": true,
+          "type": "string",
+          "name": "prototypeid",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/PrototypeUpdate"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["prototype"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "updateOrganizationPrototypePermission",
+        "description": "Update the role of an existing permission prototype."
+      },
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The ID of the prototype",
+          "required": true,
+          "type": "string",
+          "name": "prototypeid",
+          "in": "path"
+        }],
+        "tags": ["prototype"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "deleteOrganizationPrototypePermission",
+        "description": "Delete an existing permission prototype."
+      }
+    },
+    "/api/v1/repository": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "schema": {
+            "$ref": "#/definitions/NewRepo"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["repository"],
+        "security": [{
+          "oauth2_implicit": ["repo:create"]
+        }],
+        "operationId": "createRepo",
+        "description": "Create a new repository."
+      },
+      "x-name": "endpoints.api.repository.RepositoryList",
+      "x-tag": "repository",
+      "x-path": "/api/v1/repository",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "Whether to include the repository's popularity metric.",
+          "required": false,
+          "type": "boolean",
+          "name": "popularity",
+          "in": "query"
+        }, {
+          "description": "Whether to include when the repository was last modified.",
+          "required": false,
+          "type": "boolean",
+          "name": "last_modified",
+          "in": "query"
+        }, {
+          "description": "Adds any repositories visible to the user by virtue of being public",
+          "required": false,
+          "type": "boolean",
+          "name": "public",
+          "in": "query"
+        }, {
+          "description": "Filters the repositories returned to those starred by the user",
+          "required": false,
+          "type": "boolean",
+          "name": "starred",
+          "in": "query"
+        }, {
+          "description": "Filters the repositories returned to this namespace",
+          "required": false,
+          "type": "string",
+          "name": "namespace",
+          "in": "query"
+        }, {
+          "description": "Limit on the number of results (int)",
+          "required": false,
+          "type": "integer",
+          "name": "limit",
+          "in": "query"
+        }, {
+          "description": "Offset page number. (int)",
+          "required": false,
+          "type": "integer",
+          "name": "page",
+          "in": "query"
+        }],
+        "tags": ["repository"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "listRepos",
+        "description": "Fetch the list of repositories visible to the current user under a variety of situations."
+      }
+    },
+    "/api/v1/repository/{repository}/changevisibility": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/ChangeVisibility"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["repository"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "changeRepoVisibility",
+        "description": "Change the visibility of a repository."
+      },
+      "x-name": "endpoints.api.repository.RepositoryVisibility",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "repository",
+      "x-path": "/api/v1/repository/{repository}/changevisibility"
+    },
+    "/api/v1/repository/{repository}": {
+      "x-name": "endpoints.api.repository.Repository",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["repository"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "getRepo",
+        "description": "Fetch the specified repository."
+      },
+      "x-path": "/api/v1/repository/{repository}",
+      "x-tag": "repository",
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/RepoUpdate"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["repository"],
+        "security": [{
+          "oauth2_implicit": ["repo:write"]
+        }],
+        "operationId": "updateRepo",
+        "description": "Update the description in the specified repository."
+      },
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["repository"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "deleteRepository",
+        "description": "Delete a repository."
+      }
+    },
+    "/api/v1/repository/{repository}/notification/": {
+      "x-name": "endpoints.api.repositorynotification.RepositoryNotificationList",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["repositorynotification"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "listRepoNotifications",
+        "description": "List the notifications for the specified repository."
+      },
+      "x-path": "/api/v1/repository/{repository}/notification/",
+      "x-tag": "repositorynotification",
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/NotificationCreateRequest"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["repositorynotification"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "createRepoNotification",
+        "description": "Create a new notification for the specified repository."
+      }
+    },
+    "/api/v1/repository/{repository}/notification/{uuid}/test": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The UUID of the notification",
+          "required": true,
+          "type": "string",
+          "name": "uuid",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["repositorynotification"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "testRepoNotification",
+        "description": "Queues a test notification for this repository."
+      },
+      "x-name": "endpoints.api.repositorynotification.TestRepositoryNotification",
+      "parameters": [{
+        "description": "The UUID of the notification",
+        "required": true,
+        "type": "string",
+        "name": "uuid",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "repositorynotification",
+      "x-path": "/api/v1/repository/{repository}/notification/{uuid}/test"
+    },
+    "/api/v1/repository/{repository}/notification/{uuid}": {
+      "x-name": "endpoints.api.repositorynotification.RepositoryNotification",
+      "parameters": [{
+        "description": "The UUID of the notification",
+        "required": true,
+        "type": "string",
+        "name": "uuid",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The UUID of the notification",
+          "required": true,
+          "type": "string",
+          "name": "uuid",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["repositorynotification"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "getRepoNotification",
+        "description": "Get information for the specified notification."
+      },
+      "x-path": "/api/v1/repository/{repository}/notification/{uuid}",
+      "x-tag": "repositorynotification",
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The UUID of the notification",
+          "required": true,
+          "type": "string",
+          "name": "uuid",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["repositorynotification"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "deleteRepoNotification",
+        "description": "Deletes the specified notification."
+      }
+    },
+    "/api/v1/repository/{repository}/tokens/": {
+      "x-name": "endpoints.api.repotoken.RepositoryTokenList",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["repotoken"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "listRepoTokens",
+        "description": "List the tokens for the specified repository."
+      },
+      "x-path": "/api/v1/repository/{repository}/tokens/",
+      "x-tag": "repotoken",
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/NewToken"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["repotoken"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "createToken",
+        "description": "Create a new repository token."
+      }
+    },
+    "/api/v1/repository/{repository}/tokens/{code}": {
+      "x-name": "endpoints.api.repotoken.RepositoryToken",
+      "parameters": [{
+        "description": "The token code",
+        "required": true,
+        "type": "string",
+        "name": "code",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The token code",
+          "required": true,
+          "type": "string",
+          "name": "code",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["repotoken"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "getTokens",
+        "description": "Fetch the specified repository token information."
+      },
+      "x-path": "/api/v1/repository/{repository}/tokens/{code}",
+      "x-tag": "repotoken",
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The token code",
+          "required": true,
+          "type": "string",
+          "name": "code",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/TokenPermission"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["repotoken"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "changeToken",
+        "description": "Update the permissions for the specified repository token."
+      },
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The token code",
+          "required": true,
+          "type": "string",
+          "name": "code",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["repotoken"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "deleteToken",
+        "description": "Delete the repository token."
+      }
+    },
+    "/api/v1/user/robots/{robot_shortname}": {
+      "x-name": "endpoints.api.robot.UserRobot",
+      "parameters": [{
+        "description": "The short name for the robot, without any user or organization prefix",
+        "required": true,
+        "type": "string",
+        "name": "robot_shortname",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["robot"],
+        "description": "Returns the user's robot with the specified name.",
+        "parameters": [{
+          "description": "The short name for the robot, without any user or organization prefix",
+          "required": true,
+          "type": "string",
+          "name": "robot_shortname",
+          "in": "path"
+        }],
+        "operationId": "getUserRobot"
+      },
+      "x-path": "/api/v1/user/robots/{robot_shortname}",
+      "x-tag": "robot",
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["robot"],
+        "description": "Create a new user robot with the specified name.",
+        "parameters": [{
+          "description": "The short name for the robot, without any user or organization prefix",
+          "required": true,
+          "type": "string",
+          "name": "robot_shortname",
+          "in": "path"
+        }],
+        "operationId": "createUserRobot"
+      },
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["robot"],
+        "description": "Delete an existing robot.",
+        "parameters": [{
+          "description": "The short name for the robot, without any user or organization prefix",
+          "required": true,
+          "type": "string",
+          "name": "robot_shortname",
+          "in": "path"
+        }],
+        "operationId": "deleteUserRobot"
+      }
+    },
+    "/api/v1/user/robots": {
+      "x-name": "endpoints.api.robot.UserRobotList",
+      "x-tag": "robot",
+      "x-path": "/api/v1/user/robots",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["robot"],
+        "description": "List the available robots for the user.",
+        "parameters": [{
+          "description": "Whether to include repostories and teams in which the robots have permission.",
+          "required": false,
+          "type": "boolean",
+          "name": "permissions",
+          "in": "query"
+        }],
+        "operationId": "getUserRobots"
+      }
+    },
+    "/api/v1/organization/{orgname}/robots/{robot_shortname}/permissions": {
+      "x-name": "endpoints.api.robot.OrgRobotPermissions",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }, {
+        "description": "The short name for the robot, without any user or organization prefix",
+        "required": true,
+        "type": "string",
+        "name": "robot_shortname",
+        "in": "path"
+      }],
+      "x-tag": "robot",
+      "x-path": "/api/v1/organization/{orgname}/robots/{robot_shortname}/permissions",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["robot"],
+        "description": "Returns the list of repository permissions for the org's robot.",
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The short name for the robot, without any user or organization prefix",
+          "required": true,
+          "type": "string",
+          "name": "robot_shortname",
+          "in": "path"
+        }],
+        "operationId": "getOrgRobotPermissions"
+      }
+    },
+    "/api/v1/organization/{orgname}/robots/{robot_shortname}/regenerate": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The short name for the robot, without any user or organization prefix",
+          "required": true,
+          "type": "string",
+          "name": "robot_shortname",
+          "in": "path"
+        }],
+        "tags": ["robot"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "regenerateOrgRobotToken",
+        "description": "Regenerates the token for an organization robot."
+      },
+      "x-name": "endpoints.api.robot.RegenerateOrgRobot",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }, {
+        "description": "The short name for the robot, without any user or organization prefix",
+        "required": true,
+        "type": "string",
+        "name": "robot_shortname",
+        "in": "path"
+      }],
+      "x-tag": "robot",
+      "x-path": "/api/v1/organization/{orgname}/robots/{robot_shortname}/regenerate"
+    },
+    "/api/v1/organization/{orgname}/robots": {
+      "x-name": "endpoints.api.robot.OrgRobotList",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }],
+      "x-tag": "robot",
+      "x-path": "/api/v1/organization/{orgname}/robots",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "Whether to include repostories and teams in which the robots have permission.",
+          "required": false,
+          "type": "boolean",
+          "name": "permissions",
+          "in": "query"
+        }],
+        "tags": ["robot"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "getOrgRobots",
+        "description": "List the organization's robots."
+      }
+    },
+    "/api/v1/user/robots/{robot_shortname}/permissions": {
+      "x-name": "endpoints.api.robot.UserRobotPermissions",
+      "parameters": [{
+        "description": "The short name for the robot, without any user or organization prefix",
+        "required": true,
+        "type": "string",
+        "name": "robot_shortname",
+        "in": "path"
+      }],
+      "x-tag": "robot",
+      "x-path": "/api/v1/user/robots/{robot_shortname}/permissions",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["robot"],
+        "description": "Returns the list of repository permissions for the user's robot.",
+        "parameters": [{
+          "description": "The short name for the robot, without any user or organization prefix",
+          "required": true,
+          "type": "string",
+          "name": "robot_shortname",
+          "in": "path"
+        }],
+        "operationId": "getUserRobotPermissions"
+      }
+    },
+    "/api/v1/user/robots/{robot_shortname}/regenerate": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["robot"],
+        "description": "Regenerates the token for a user's robot.",
+        "parameters": [{
+          "description": "The short name for the robot, without any user or organization prefix",
+          "required": true,
+          "type": "string",
+          "name": "robot_shortname",
+          "in": "path"
+        }],
+        "operationId": "regenerateUserRobotToken"
+      },
+      "x-name": "endpoints.api.robot.RegenerateUserRobot",
+      "parameters": [{
+        "description": "The short name for the robot, without any user or organization prefix",
+        "required": true,
+        "type": "string",
+        "name": "robot_shortname",
+        "in": "path"
+      }],
+      "x-tag": "robot",
+      "x-path": "/api/v1/user/robots/{robot_shortname}/regenerate"
+    },
+    "/api/v1/organization/{orgname}/robots/{robot_shortname}": {
+      "x-name": "endpoints.api.robot.OrgRobot",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }, {
+        "description": "The short name for the robot, without any user or organization prefix",
+        "required": true,
+        "type": "string",
+        "name": "robot_shortname",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The short name for the robot, without any user or organization prefix",
+          "required": true,
+          "type": "string",
+          "name": "robot_shortname",
+          "in": "path"
+        }],
+        "tags": ["robot"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "getOrgRobot",
+        "description": "Returns the organization's robot with the specified name."
+      },
+      "x-path": "/api/v1/organization/{orgname}/robots/{robot_shortname}",
+      "x-tag": "robot",
+      "put": {
+        "responses": {
+          "201": {
+            "description": "Succesfully created",
+            "schema": {
+              "$ref": "#/definitions/Robot"
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "$ref": "#/parameters/OrgName"
+        }, {
+          "$ref": "#/parameters/RobotShortName"
+        }],
+        "tags": ["robot"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "createOrgRobot",
+        "description": "Create a new robot in the organization."
+      },
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The short name for the robot, without any user or organization prefix",
+          "required": true,
+          "type": "string",
+          "name": "robot_shortname",
+          "in": "path"
+        }],
+        "tags": ["robot"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "deleteOrgRobot",
+        "description": "Delete an existing organization robot."
+      }
+    },
+    "/api/v1/find/all": {
+      "x-name": "endpoints.api.search.ConductSearch",
+      "x-tag": "search",
+      "x-path": "/api/v1/find/all",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The search query.",
+          "required": false,
+          "type": "string",
+          "name": "query",
+          "in": "query"
+        }],
+        "tags": ["search"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "conductSearch",
+        "description": "Get a list of entities and resources that match the specified query."
+      }
+    },
+    "/api/v1/entities/{prefix}": {
+      "x-name": "endpoints.api.search.EntitySearch",
+      "x-tag": "search",
+      "x-path": "/api/v1/entities/{prefix}",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["search"],
+        "description": "Get a list of entities that match the specified prefix.",
+        "parameters": [{
+          "description": "",
+          "required": true,
+          "type": "string",
+          "name": "prefix",
+          "in": "path"
+        }, {
+          "description": "Whether to include orgs names.",
+          "required": false,
+          "type": "boolean",
+          "name": "includeOrgs",
+          "in": "query"
+        }, {
+          "description": "Whether to include team names.",
+          "required": false,
+          "type": "boolean",
+          "name": "includeTeams",
+          "in": "query"
+        }, {
+          "description": "Namespace to use when querying for org entities.",
+          "required": false,
+          "type": "string",
+          "name": "namespace",
+          "in": "query"
+        }],
+        "operationId": "getMatchingEntities"
+      }
+    },
+    "/api/v1/repository/{repository}/image/{imageid}/packages": {
+      "x-name": "endpoints.api.secscan.RepositoryImagePackages",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }, {
+        "description": "The image ID",
+        "required": true,
+        "type": "string",
+        "name": "imageid",
+        "in": "path"
+      }],
+      "x-tag": "secscan",
+      "x-path": "/api/v1/repository/{repository}/image/{imageid}/packages",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "description": "The image ID",
+          "required": true,
+          "type": "string",
+          "name": "imageid",
+          "in": "path"
+        }],
+        "tags": ["secscan"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "getRepoImagePackages",
+        "description": "Fetches the packages added/removed in the given repo image."
+      }
+    },
+    "/api/v1/repository/{repository}/tag/{tag}/vulnerabilities": {
+      "x-name": "endpoints.api.secscan.RepositoryTagVulnerabilities",
+      "parameters": [{
+        "description": "The name of the tag",
+        "required": true,
+        "type": "string",
+        "name": "tag",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "secscan",
+      "x-path": "/api/v1/repository/{repository}/tag/{tag}/vulnerabilities",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the tag",
+          "required": true,
+          "type": "string",
+          "name": "tag",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "description": "Minimum vulnerability priority",
+          "required": false,
+          "type": "string",
+          "name": "minimumPriority",
+          "in": "query"
+        }],
+        "tags": ["secscan"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "getRepoTagVulnerabilities",
+        "description": "Fetches the vulnerabilities (if any) for a repository tag."
+      }
+    },
+    "/api/v1/repository/{repository}/tag/{tag}/revert": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the tag",
+          "required": true,
+          "type": "string",
+          "name": "tag",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/RevertTag"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["tag"],
+        "security": [{
+          "oauth2_implicit": ["repo:write"]
+        }],
+        "operationId": "revertTag",
+        "description": "Reverts a repository tag back to a previous image in the repository."
+      },
+      "x-name": "endpoints.api.tag.RevertTag",
+      "parameters": [{
+        "description": "The name of the tag",
+        "required": true,
+        "type": "string",
+        "name": "tag",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "tag",
+      "x-path": "/api/v1/repository/{repository}/tag/{tag}/revert"
+    },
+    "/api/v1/repository/{repository}/tag/{tag}/images": {
+      "x-name": "endpoints.api.tag.RepositoryTagImages",
+      "parameters": [{
+        "description": "The name of the tag",
+        "required": true,
+        "type": "string",
+        "name": "tag",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "tag",
+      "x-path": "/api/v1/repository/{repository}/tag/{tag}/images",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the tag",
+          "required": true,
+          "type": "string",
+          "name": "tag",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "description": "If specified, only images wholely owned by this tag are returned.",
+          "required": false,
+          "type": "boolean",
+          "name": "owned",
+          "in": "query"
+        }],
+        "tags": ["tag"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "listTagImages",
+        "description": "List the images for the specified repository tag."
+      }
+    },
+    "/api/v1/repository/{repository}/tag/{tag}": {
+      "x-name": "endpoints.api.tag.RepositoryTag",
+      "parameters": [{
+        "description": "The name of the tag",
+        "required": true,
+        "type": "string",
+        "name": "tag",
+        "in": "path"
+      }, {
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-path": "/api/v1/repository/{repository}/tag/{tag}",
+      "x-tag": "tag",
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the tag",
+          "required": true,
+          "type": "string",
+          "name": "tag",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/MoveTag"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["tag"],
+        "security": [{
+          "oauth2_implicit": ["repo:write"]
+        }],
+        "operationId": "changeTagImage",
+        "description": "Change which image a tag points to or create a new tag."
+      },
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the tag",
+          "required": true,
+          "type": "string",
+          "name": "tag",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["tag"],
+        "security": [{
+          "oauth2_implicit": ["repo:write"]
+        }],
+        "operationId": "deleteFullTag",
+        "description": "Delete the specified repository tag."
+      }
+    },
+    "/api/v1/repository/{repository}/tag/": {
+      "x-name": "endpoints.api.tag.ListRepositoryTags",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "tag",
+      "x-path": "/api/v1/repository/{repository}/tag/",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "description": "Page index for the results. Default 1.",
+          "required": false,
+          "type": "integer",
+          "name": "page",
+          "in": "query"
+        }, {
+          "description": "Limit to the number of results to return per page. Max 100.",
+          "required": false,
+          "type": "integer",
+          "name": "limit",
+          "in": "query"
+        }, {
+          "description": "Filters the tags to the specific tag.",
+          "required": false,
+          "type": "string",
+          "name": "specificTag",
+          "in": "query"
+        }],
+        "tags": ["tag"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "listRepoTags",
+        "description": ""
+      }
+    },
+    "/api/v1/organization/{orgname}/team/{teamname}/members": {
+      "x-name": "endpoints.api.team.TeamMemberList",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }, {
+        "description": "The name of the team",
+        "required": true,
+        "type": "string",
+        "name": "teamname",
+        "in": "path"
+      }],
+      "x-tag": "team",
+      "x-path": "/api/v1/organization/{orgname}/team/{teamname}/members",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The name of the team",
+          "required": true,
+          "type": "string",
+          "name": "teamname",
+          "in": "path"
+        }, {
+          "description": "Whether to include pending members",
+          "required": false,
+          "type": "boolean",
+          "name": "includePending",
+          "in": "query"
+        }],
+        "tags": ["team"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "getOrganizationTeamMembers",
+        "description": "Retrieve the list of members for the specified team."
+      }
+    },
+    "/api/v1/organization/{orgname}/team/{teamname}/invite/{email}": {
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "",
+          "required": true,
+          "type": "string",
+          "name": "email",
+          "in": "path"
+        }, {
+          "description": "",
+          "required": true,
+          "type": "string",
+          "name": "teamname",
+          "in": "path"
+        }],
+        "tags": ["team"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "inviteTeamMemberEmail",
+        "description": "Invites an email address to an existing team."
+      },
+      "x-name": "endpoints.api.team.InviteTeamMember",
+      "x-tag": "team",
+      "x-path": "/api/v1/organization/{orgname}/team/{teamname}/invite/{email}",
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "",
+          "required": true,
+          "type": "string",
+          "name": "email",
+          "in": "path"
+        }, {
+          "description": "",
+          "required": true,
+          "type": "string",
+          "name": "teamname",
+          "in": "path"
+        }],
+        "tags": ["team"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "deleteTeamMemberEmailInvite",
+        "description": "Delete an invite of an email address to join a team."
+      }
+    },
+    "/api/v1/organization/{orgname}/team/{teamname}": {
+      "x-name": "endpoints.api.team.OrganizationTeam",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }, {
+        "description": "The name of the team",
+        "required": true,
+        "type": "string",
+        "name": "teamname",
+        "in": "path"
+      }],
+      "x-path": "/api/v1/organization/{orgname}/team/{teamname}",
+      "x-tag": "team",
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The name of the team",
+          "required": true,
+          "type": "string",
+          "name": "teamname",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/TeamDescription"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["team"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "updateOrganizationTeam",
+        "description": "Update the org-wide permission for the specified team."
+      },
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The name of the team",
+          "required": true,
+          "type": "string",
+          "name": "teamname",
+          "in": "path"
+        }],
+        "tags": ["team"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "deleteOrganizationTeam",
+        "description": "Delete the specified team."
+      }
+    },
+    "/api/v1/organization/{orgname}/team/{teamname}/members/{membername}": {
+      "x-name": "endpoints.api.team.TeamMember",
+      "parameters": [{
+        "description": "The name of the organization",
+        "required": true,
+        "type": "string",
+        "name": "orgname",
+        "in": "path"
+      }, {
+        "description": "The username of the team member",
+        "required": true,
+        "type": "string",
+        "name": "membername",
+        "in": "path"
+      }, {
+        "description": "The name of the team",
+        "required": true,
+        "type": "string",
+        "name": "teamname",
+        "in": "path"
+      }],
+      "x-path": "/api/v1/organization/{orgname}/team/{teamname}/members/{membername}",
+      "x-tag": "team",
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The username of the team member",
+          "required": true,
+          "type": "string",
+          "name": "membername",
+          "in": "path"
+        }, {
+          "description": "The name of the team",
+          "required": true,
+          "type": "string",
+          "name": "teamname",
+          "in": "path"
+        }],
+        "tags": ["team"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "updateOrganizationTeamMember",
+        "description": "Adds or invites a member to an existing team."
+      },
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The name of the organization",
+          "required": true,
+          "type": "string",
+          "name": "orgname",
+          "in": "path"
+        }, {
+          "description": "The username of the team member",
+          "required": true,
+          "type": "string",
+          "name": "membername",
+          "in": "path"
+        }, {
+          "description": "The name of the team",
+          "required": true,
+          "type": "string",
+          "name": "teamname",
+          "in": "path"
+        }],
+        "tags": ["team"],
+        "security": [{
+          "oauth2_implicit": ["org:admin"]
+        }],
+        "operationId": "deleteOrganizationTeamMember",
+        "description": "Delete a member of a team. If the user is merely invited to join\n        the team, then the invite is removed instead."
+      }
+    },
+    "/api/v1/repository/{repository}/trigger/": {
+      "x-name": "endpoints.api.trigger.BuildTriggerList",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "trigger",
+      "x-path": "/api/v1/repository/{repository}/trigger/",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["trigger"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "listBuildTriggers",
+        "description": "List the triggers for the specified repository."
+      }
+    },
+    "/api/v1/repository/{repository}/trigger/{trigger_uuid}/activate": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The UUID of the build trigger",
+          "required": true,
+          "type": "string",
+          "name": "trigger_uuid",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/BuildTriggerActivateRequest"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["trigger"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "activateBuildTrigger",
+        "description": "Activate the specified build trigger."
+      },
+      "x-name": "endpoints.api.trigger.BuildTriggerActivate",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }, {
+        "description": "The UUID of the build trigger",
+        "required": true,
+        "type": "string",
+        "name": "trigger_uuid",
+        "in": "path"
+      }],
+      "x-tag": "trigger",
+      "x-path": "/api/v1/repository/{repository}/trigger/{trigger_uuid}/activate"
+    },
+    "/api/v1/repository/{repository}/trigger/{trigger_uuid}/start": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The UUID of the build trigger",
+          "required": true,
+          "type": "string",
+          "name": "trigger_uuid",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "schema": {
+            "$ref": "#/definitions/RunParameters"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["trigger"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "manuallyStartBuildTrigger",
+        "description": "Manually start a build from the specified trigger."
+      },
+      "x-name": "endpoints.api.trigger.ActivateBuildTrigger",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }, {
+        "description": "The UUID of the build trigger",
+        "required": true,
+        "type": "string",
+        "name": "trigger_uuid",
+        "in": "path"
+      }],
+      "x-tag": "trigger",
+      "x-path": "/api/v1/repository/{repository}/trigger/{trigger_uuid}/start"
+    },
+    "/api/v1/repository/{repository}/trigger/{trigger_uuid}/builds": {
+      "x-name": "endpoints.api.trigger.TriggerBuildList",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }, {
+        "description": "The UUID of the build trigger",
+        "required": true,
+        "type": "string",
+        "name": "trigger_uuid",
+        "in": "path"
+      }],
+      "x-tag": "trigger",
+      "x-path": "/api/v1/repository/{repository}/trigger/{trigger_uuid}/builds",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The UUID of the build trigger",
+          "required": true,
+          "type": "string",
+          "name": "trigger_uuid",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }, {
+          "description": "The maximum number of builds to return",
+          "required": false,
+          "type": "integer",
+          "name": "limit",
+          "in": "query"
+        }],
+        "tags": ["trigger"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "listTriggerRecentBuilds",
+        "description": "List the builds started by the specified trigger."
+      }
+    },
+    "/api/v1/repository/{repository}/trigger/{trigger_uuid}": {
+      "x-name": "endpoints.api.trigger.BuildTrigger",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }, {
+        "description": "The UUID of the build trigger",
+        "required": true,
+        "type": "string",
+        "name": "trigger_uuid",
+        "in": "path"
+      }],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The UUID of the build trigger",
+          "required": true,
+          "type": "string",
+          "name": "trigger_uuid",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["trigger"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "getBuildTrigger",
+        "description": "Get information for the specified build trigger."
+      },
+      "x-path": "/api/v1/repository/{repository}/trigger/{trigger_uuid}",
+      "x-tag": "trigger",
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "description": "The UUID of the build trigger",
+          "required": true,
+          "type": "string",
+          "name": "trigger_uuid",
+          "in": "path"
+        }, {
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "tags": ["trigger"],
+        "security": [{
+          "oauth2_implicit": ["repo:admin"]
+        }],
+        "operationId": "deleteBuildTrigger",
+        "description": "Delete the specified build trigger."
+      }
+    },
+    "/api/v1/user/": {
+      "x-name": "endpoints.api.user.User",
+      "x-tag": "user",
+      "x-path": "/api/v1/user/",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation",
+            "schema": {
+              "$ref": "#/definitions/UserView"
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [],
+        "tags": ["user"],
+        "security": [{
+          "oauth2_implicit": ["user:read"]
+        }],
+        "operationId": "getLoggedInUser",
+        "description": "Get user information for the authenticated user."
+      }
+    },
+    "/api/v1/users/{username}": {
+      "x-name": "endpoints.api.user.Users",
+      "x-tag": "user",
+      "x-path": "/api/v1/users/{username}",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["user"],
+        "description": "Get user information for the specified user.",
+        "parameters": [{
+          "description": "",
+          "required": true,
+          "type": "string",
+          "name": "username",
+          "in": "path"
+        }],
+        "operationId": "getUserInformation"
+      }
+    },
+    "/api/v1/user/starred": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "parameters": [{
+          "schema": {
+            "$ref": "#/definitions/NewStarredRepository"
+          },
+          "description": "Request body contents.",
+          "required": true,
+          "name": "body",
+          "in": "body"
+        }],
+        "tags": ["user"],
+        "security": [{
+          "oauth2_implicit": ["repo:read"]
+        }],
+        "operationId": "createStar",
+        "description": "Star a repository."
+      },
+      "x-name": "endpoints.api.user.StarredRepositoryList",
+      "x-tag": "user",
+      "x-path": "/api/v1/user/starred",
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Successful invocation"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["user"],
+        "description": "List all starred repositories.",
+        "parameters": [{
+          "description": "Limit on the number of results (int)",
+          "required": false,
+          "type": "integer",
+          "name": "limit",
+          "in": "query"
+        }, {
+          "description": "Offset page number. (int)",
+          "required": false,
+          "type": "integer",
+          "name": "page",
+          "in": "query"
+        }],
+        "operationId": "listStarredRepos"
+      }
+    },
+    "/api/v1/user/starred/{repository}": {
+      "x-name": "endpoints.api.user.StarredRepository",
+      "parameters": [{
+        "description": "The full path of the repository. e.g. namespace/name",
+        "required": true,
+        "type": "string",
+        "name": "repository",
+        "in": "path"
+      }],
+      "x-tag": "user",
+      "x-path": "/api/v1/user/starred/{repository}",
+      "delete": {
+        "responses": {
+          "404": {
+            "description": "Not found"
+          },
+          "403": {
+            "description": "Unauthorized access"
+          },
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GeneralError"
+            }
+          }
+        },
+        "tags": ["user"],
+        "description": "Removes a star from a repository.",
+        "parameters": [{
+          "description": "The full path of the repository. e.g. namespace/name",
+          "required": true,
+          "type": "string",
+          "name": "repository",
+          "in": "path"
+        }],
+        "operationId": "deleteStar"
+      }
+    }
+  },
+  "host": "quay.io",
+  "schemes": ["https"],
+  "tags": [{
+    "name": "billing",
+    "description": "Billing information, subscriptions, and plan information."
+  }, {
+    "name": "build",
+    "description": "Create, list, cancel and get status/logs of repository builds."
+  }, {
+    "name": "discovery",
+    "description": "API discovery information."
+  }, {
+    "name": "image",
+    "description": "List and lookup repository images, and download image diffs."
+  }, {
+    "name": "logs",
+    "description": "Access usage logs for organizations or repositories."
+  }, {
+    "name": "organization",
+    "description": "Manage organizations, members and OAuth applications."
+  }, {
+    "name": "permission",
+    "description": "Manage repository permissions."
+  }, {
+    "name": "prototype",
+    "description": "Manage default permissions added to repositories."
+  }, {
+    "name": "repository",
+    "description": "List, create and manage repositories."
+  }, {
+    "name": "repositorynotification",
+    "description": "List, create and manage repository events/notifications."
+  }, {
+    "name": "repotoken",
+    "description": "Manage repository access tokens (DEPRECATED)."
+  }, {
+    "name": "robot",
+    "description": "Manage user and organization robot accounts."
+  }, {
+    "name": "search",
+    "description": "Conduct searches against all registry context."
+  }, {
+    "name": "secscan",
+    "description": "List and manage repository vulnerabilities and other sec information."
+  }, {
+    "name": "tag",
+    "description": "Manage the tags of a repository."
+  }, {
+    "name": "team",
+    "description": "Create, list and manage an organization's teams."
+  }, {
+    "name": "trigger",
+    "description": "Create, list and manage build triggers."
+  }, {
+    "name": "user",
+    "description": "Manage the current user."
+  }],
+  "definitions": {
+    "Robot": {
+      "type": "object",
+      "description": "A robot account",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "RepositoryBuildRequest": {
+      "type": "object",
+      "description": "Description of a new repository build.",
+      "properties": {
+        "docker_tags": {
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "type": "array",
+          "description": "The tags to which the built images will be pushed. If none specified, \"latest\" is used."
+        },
+        "pull_robot": {
+          "type": "string",
+          "description": "Username of a Quay robot account to use as pull credentials"
+        },
+        "subdirectory": {
+          "type": "string",
+          "description": "Subdirectory in which the Dockerfile can be found"
+        },
+        "file_id": {
+          "type": "string",
+          "description": "The file id that was generated when the build spec was uploaded"
+        },
+        "archive_url": {
+          "type": "string",
+          "description": "The URL of the .tar.gz to build. Must start with \"http\" or \"https\"."
+        }
+      }
+    },
+    "NotificationCreateRequest": {
+      "required": ["event", "method", "config"],
+      "type": "object",
+      "description": "Information for creating a notification on a repository",
+      "properties": {
+        "eventConfig": {
+          "type": "object",
+          "description": "JSON config information for the specific event of notification"
+        },
+        "title": {
+          "type": "string",
+          "description": "The human-readable title of the notification"
+        },
+        "config": {
+          "type": "object",
+          "description": "JSON config information for the specific method of notification"
+        },
+        "event": {
+          "type": "string",
+          "description": "The event on which the notification will respond"
+        },
+        "method": {
+          "type": "string",
+          "description": "The method of notification (such as email or web callback)"
+        }
+      }
+    },
+    "UserPermission": {
+      "required": ["role"],
+      "type": "object",
+      "description": "Description of a user permission.",
+      "properties": {
+        "role": {
+          "enum": ["read", "write", "admin"],
+          "type": "string",
+          "description": "Role to use for the user"
+        }
+      }
+    },
+    "NewStarredRepository": {
+      "required": ["namespace", "repository"],
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "description": "Namespace in which the repository belongs"
+        },
+        "repository": {
+          "type": "string",
+          "description": "Repository name"
+        }
+      }
+    },
+    "MoveTag": {
+      "required": ["image"],
+      "type": "object",
+      "description": "Description of to which image a new or existing tag should point",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "Image identifier to which the tag should point"
+        }
+      }
+    },
+    "UpdateUser": {
+      "type": "object",
+      "description": "Fields which can be updated in a user.",
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "The user's username"
+        },
+        "invoice_email": {
+          "type": "boolean",
+          "description": "Whether the user desires to receive an invoice email."
+        },
+        "password": {
+          "type": "string",
+          "description": "The user's password"
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address"
+        },
+        "tag_expiration": {
+          "minimum": 0,
+          "type": "integer",
+          "maximum": 2592000
+        }
+      }
+    },
+    "BuildTriggerActivateRequest": {
+      "required": ["config"],
+      "type": "object",
+      "properties": {
+        "pull_robot": {
+          "type": "string",
+          "description": "The name of the robot that will be used to pull images."
+        },
+        "config": {
+          "type": "object",
+          "description": "Arbitrary json."
+        }
+      }
+    },
+    "UpdateApp": {
+      "required": ["name", "redirect_uri", "application_uri"],
+      "type": "object",
+      "description": "Description of an updated application.",
+      "properties": {
+        "redirect_uri": {
+          "type": "string",
+          "description": "The URI for the application's OAuth redirect"
+        },
+        "avatar_email": {
+          "type": "string",
+          "description": "The e-mail address of the avatar to use for the application"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the application"
+        },
+        "application_uri": {
+          "type": "string",
+          "description": "The URI for the application's homepage"
+        },
+        "description": {
+          "type": "string",
+          "description": "The human-readable description for the application"
+        }
+      }
+    },
+    "ChangeVisibility": {
+      "required": ["visibility"],
+      "type": "object",
+      "description": "Change the visibility for the repository.",
+      "properties": {
+        "visibility": {
+          "enum": ["public", "private"],
+          "type": "string",
+          "description": "Visibility which the repository will start with"
+        }
+      }
+    },
+    "TeamDescription": {
+      "required": ["role"],
+      "type": "object",
+      "description": "Description of a team",
+      "properties": {
+        "role": {
+          "enum": ["member", "creator", "admin"],
+          "type": "string",
+          "description": "Org wide permissions that should apply to the team"
+        },
+        "description": {
+          "type": "string",
+          "description": "Markdown description for the team"
+        }
+      }
+    },
+    "NewPrototype": {
+      "required": ["role", "delegate"],
+      "type": "object",
+      "description": "Description of a new prototype",
+      "properties": {
+        "activating_user": {
+          "required": ["name"],
+          "type": "object",
+          "description": "Repository creating user to whom the rule should apply",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The username for the activating_user"
+            }
+          }
+        },
+        "role": {
+          "enum": ["read", "write", "admin"],
+          "type": "string",
+          "description": "Role that should be applied to the delegate"
+        },
+        "delegate": {
+          "required": ["name", "kind"],
+          "type": "object",
+          "description": "Information about the user or team to which the rule grants access",
+          "properties": {
+            "kind": {
+              "enum": ["user", "team"],
+              "type": "string",
+              "description": "Whether the delegate is a user or a team"
+            },
+            "name": {
+              "type": "string",
+              "description": "The name for the delegate team or user"
+            }
+          }
+        }
+      }
+    },
+    "TokenPermission": {
+      "required": ["role"],
+      "type": "object",
+      "description": "Description of a token permission",
+      "properties": {
+        "role": {
+          "enum": ["read", "write", "admin"],
+          "type": "string",
+          "description": "Role to use for the token"
+        }
+      }
+    },
+    "RunParameters": {
+      "additionalProperties": false,
+      "type": "object",
+      "description": "Optional run parameters for activating the build trigger",
+      "properties": {
+        "branch_name": {
+          "type": "string",
+          "description": "(SCM only) If specified, the name of the branch to build."
+        },
+        "refs": {
+          "type": "object",
+          "description": "(SCM Only) If specified, the ref to build."
+        },
+        "commit_sha": {
+          "type": "string",
+          "description": "(Custom Only) If specified, the ref/SHA1 used to checkout a git repository."
+        }
+      }
+    },
+    "NewRepo": {
+      "required": ["repository", "visibility", "description"],
+      "type": "object",
+      "description": "Description of a new repository",
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "description": "Namespace in which the repository should be created. If omitted, the username of the caller is used"
+        },
+        "visibility": {
+          "enum": ["public", "private"],
+          "type": "string",
+          "description": "Visibility which the repository will start with"
+        },
+        "repository": {
+          "type": "string",
+          "description": "Repository name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Markdown encoded description for the repository"
+        }
+      }
+    },
+    "RevertTag": {
+      "required": ["image"],
+      "type": "object",
+      "description": "Reverts a tag to a specific image",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "Image identifier to which the tag should point"
+        }
+      }
+    },
+    "UserView": {
+      "required": ["verified", "anonymous", "avatar"],
+      "type": "object",
+      "description": "Describes a user",
+      "properties": {
+        "organizations": {
+          "items": {
+            "type": "object"
+          },
+          "type": "array",
+          "description": "Information about the organizations in which the user is a member"
+        },
+        "verified": {
+          "type": "boolean",
+          "description": "Whether the user's email address has been verified"
+        },
+        "avatar": {
+          "type": "object",
+          "description": "Avatar data representing the user's icon"
+        },
+        "anonymous": {
+          "type": "boolean",
+          "description": "true if this user data represents a guest user"
+        },
+        "logins": {
+          "items": {
+            "type": "object"
+          },
+          "type": "array",
+          "description": "The list of external login providers against which the user has authenticated"
+        },
+        "can_create_repo": {
+          "type": "boolean",
+          "description": "Whether the user has permission to create repositories"
+        },
+        "preferred_namespace": {
+          "type": "boolean",
+          "description": "If true, the user's namespace is the preferred namespace to display"
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address"
+        }
+      }
+    },
+    "NewApp": {
+      "required": ["name"],
+      "type": "object",
+      "description": "Description of a new organization application.",
+      "properties": {
+        "redirect_uri": {
+          "type": "string",
+          "description": "The URI for the application's OAuth redirect"
+        },
+        "avatar_email": {
+          "type": "string",
+          "description": "The e-mail address of the avatar to use for the application"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the application"
+        },
+        "application_uri": {
+          "type": "string",
+          "description": "The URI for the application's homepage"
+        },
+        "description": {
+          "type": "string",
+          "description": "The human-readable description for the application"
+        }
+      }
+    },
+    "UpdateOrg": {
+      "type": "object",
+      "description": "Description of updates for an existing organization",
+      "properties": {
+        "invoice_email": {
+          "type": "boolean",
+          "description": "Whether the organization desires to receive emails for invoices"
+        },
+        "email": {
+          "type": "string",
+          "description": "Organization contact email"
+        },
+        "tag_expiration": {
+          "minimum": 0,
+          "type": "integer",
+          "maximum": 2592000
+        }
+      }
+    },
+    "NewToken": {
+      "required": ["friendlyName"],
+      "type": "object",
+      "description": "Description of a new token.",
+      "properties": {
+        "friendlyName": {
+          "type": "string",
+          "description": "Friendly name to help identify the token"
+        }
+      }
+    },
+    "NewUser": {
+      "required": ["username", "password", "email"],
+      "type": "object",
+      "description": "Fields which must be specified for a new user.",
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "The user's username"
+        },
+        "password": {
+          "type": "string",
+          "description": "The user's password"
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address"
+        },
+        "invite_code": {
+          "type": "string",
+          "description": "The optional invite code"
+        }
+      }
+    },
+    "RepoUpdate": {
+      "required": ["description"],
+      "type": "object",
+      "description": "Fields which can be updated in a repository.",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Markdown encoded description for the repository"
+        }
+      }
+    },
+    "PrototypeUpdate": {
+      "required": ["role"],
+      "type": "object",
+      "description": "Description of a the new prototype role",
+      "properties": {
+        "role": {
+          "enum": ["read", "write", "admin"],
+          "type": "string",
+          "description": "Role that should be applied to the permission"
+        }
+      }
+    },
+    "TeamPermission": {
+      "required": ["role"],
+      "type": "object",
+      "description": "Description of a team permission.",
+      "properties": {
+        "role": {
+          "enum": ["read", "write", "admin"],
+          "type": "string",
+          "description": "Role to use for the team"
+        }
+      }
+    },
+    "GeneralError": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "parameters": {
+    "OrgName": {
+      "description": "The name of the organization",
+      "required": true,
+      "type": "string",
+      "name": "orgname",
+      "in": "path",
+      "minLength": 4,
+      "maxLength": 30,
+      "pattern": "[a-z0-9_]+"
+    },
+    "RobotShortName": {
+      "description": "The short name for the robot, without any user or organization prefix",
+      "required": true,
+      "type": "string",
+      "name": "robot_shortname",
+      "in": "path",
+      "minLength": 4,
+      "maxLength": 30,
+      "pattern": "[a-z0-9_]+"
+    }
+  },
+  "basePath": "/",
+  "swagger": "2.0",
+  "securityDefinitions": {
+    "oauth2_implicit": {
+      "flow": "implicit",
+      "type": "oauth2",
+      "authorizationUrl": "https://quay.io/oauth/authorize",
+      "scopes": {
+        "repo:write": "This application will be able to view, push and pull to all repositories to which the granting user or robot account has write access",
+        "repo:read": "This application will be able to view and pull all repositories visible to the granting user or robot account",
+        "repo:create": "This application will be able to create repositories in to any namespaces that the granting user or robot account is allowed to create repositories",
+        "repo:admin": "This application will have administrator access to all repositories to which the granting user or robot account has access",
+        "org:admin": "This application will be able to administer your organizations including creating robots, creating teams, adjusting team membership, and changing billing settings. You should have absolute trust in the requesting application before granting this permission.",
+        "user:read": "This application will be able to read user information such as username and email address."
+      }
+    }
+  }
+}

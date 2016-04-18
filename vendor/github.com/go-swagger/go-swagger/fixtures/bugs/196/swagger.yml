@@ -1,0 +1,35 @@
+swagger: '2.0'
+info:
+  title: Validation Issue
+  description: Endpoints
+  version: 0.0.1
+basePath: /v1
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  /events:
+    post:
+      operationId: postEvents
+      parameters:
+        - name: event
+          in: body
+          description: Event to post
+          required: true
+          schema:
+            $ref: '#/definitions/Event'
+      responses:
+        '201':
+          $ref: '#/responses/Created'
+
+definitions:
+  Event:
+    type: string
+
+responses:
+  CreatedEventResponse:
+    description: Successfully created an event
+    schema:
+      $ref: '#/definitions/Event'

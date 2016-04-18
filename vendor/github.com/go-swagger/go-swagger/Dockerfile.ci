@@ -1,0 +1,25 @@
+FROM golang:1.6
+MAINTAINER go-swagger contributors
+
+ENV GOCOVMODE count
+# ENV GO15VENDOREXPERIMENT 1
+
+ADD . /go/src/github.com/go-swagger/go-swagger
+
+WORKDIR /go/src/github.com/go-swagger/go-swagger
+
+RUN set -e -x \
+  && mkdir -p /usr/share/coverage /usr/share/testresults /usr/share/dist \
+  && go get -u github.com/FiloSottile/gvt \
+  && go get -u golang.org/x/tools/cmd/... \
+  && go get -u github.com/axw/gocov/gocov \
+  && go get -u gopkg.in/matm/v1/gocov-html \
+  && go get -u -t github.com/cee-dub/go-junit-report \
+  && go get -u github.com/aktau/github-release
+  # && go get -u github.com/asaskevich/govalidator \
+  # && go get -u github.com/naoina/denco \
+  # && go get -u github.com/go-swagger/scan-repo-boundary/makeplans
+
+VOLUME /usr/share/coverage
+VOLUME /usr/share/testresults
+VOLUME /usr/share/dist

@@ -1,0 +1,110 @@
+{{ if and .IsBaseType .IsExported }}type {{ pascalize .Name }} interface {
+  {{if and (not .IsInterface) (or .Required .HasValidations) }}httpkit.Validatable{{ end }}
+  {{ range .AllOf }}
+  {{ if .IsAnonymous }}{{ range .Properties }}
+  {{ if $.IsTuple }}{{ template "tuplefieldIface" . }}{{ else }}{{template "structfieldIface" . }}{{ end }}
+  {{ end }}{{ if .HasAdditionalProperties }}{{ if .AdditionalProperties }}/* {{ template "docstring" .AdditionalProperties }}{{ template "propertyValidationDocString" .AdditionalProperties}} */
+  {{ pascalize .AdditionalProperties.Name }}() map[string]{{ template "schemaType" .AdditionalProperties }}  {{end}}{{ end}}
+  {{ if .AdditionalItems }}/* {{ template "docstring" .AdditionalItems }}{{ template "propertyValidationDocString" .AdditionalItems}} */
+  {{ pascalize .AdditionalItems.Name }}() []{{ template "schemaType" .AdditionalItems }}
+  {{ end }}
+  {{ else }}
+  {{ .GoType }}{{ end }}
+  {{ end }}
+  {{range .Properties}}
+  {{ if $.IsTuple }}{{ template "tuplefieldIface" . }}{{ else }}{{template "structfieldIface" . }}{{ end }}
+  {{end}}
+  {{ if .HasAdditionalProperties }}{{ if .AdditionalProperties }}/* {{ template "docstring" .AdditionalProperties }}{{ template "propertyValidationDocString" .AdditionalProperties}} */
+  {{ pascalize .AdditionalProperties.Name }}() map[string]{{ template "schemaType" .AdditionalProperties }}
+  {{ end }}{{ end }}
+  {{ if .AdditionalItems }}/* {{ template "docstring" .AdditionalItems }}{{ template "propertyValidationDocString" .AdditionalItems}} */
+  {{ pascalize .AdditionalItems.Name }}() []{{ template "schemaType" .AdditionalItems }}
+  {{ end }}
+}
+
+// Unmarshal{{ pascalize .Name }}Slice unmarshals polymorphic slices of {{ pascalize .Name }}
+func Unmarshal{{ pascalize .Name }}Slice(reader io.Reader, consumer httpkit.Consumer) ([]{{ pascalize .Name }}, error) {
+  var elements [][]byte
+  if err := consumer.Consume(reader, &elements); err != nil {
+    return nil, err
+  }
+
+  var result []{{ pascalize .Name }}
+  for _, element := range elements {
+    obj, err := unmarshal{{ pascalize .Name }}(element, consumer)
+    if err != nil {
+      return nil, err
+    }
+    result = append(result, obj)
+  }
+  return  result, nil
+}
+
+
+// Unmarshal{{ pascalize .Name }} unmarshals polymorphic {{ pascalize .Name }}
+func Unmarshal{{ pascalize .Name }}(reader io.Reader, consumer httpkit.Consumer) ({{ pascalize .Name }}, error) {
+  // we need to read this twice, so first into a buffer
+  data, err := ioutil.ReadAll(reader)
+  if err != nil {
+    return nil, err
+  }
+  return  unmarshal{{ pascalize .Name }}(data, consumer)
+}
+
+func unmarshal{{ pascalize .Name }}(data []byte, consumer httpkit.Consumer) ({{ pascalize .Name }}, error) {
+  buf := bytes.NewBuffer(data)
+  buf2 := bytes.NewBuffer(data)
+
+  // the first time this is read is to fetch the value of the {{ .DiscriminatorField }} property.
+  var getType struct { {{ pascalize .DiscriminatorField }} string `json:{{ printf "%q" .DiscriminatorField }}` }
+  if err := consumer.Consume(buf, &getType); err != nil {
+    return nil, err
+  }
+
+  if err := validate.RequiredString({{ printf "%q" .DiscriminatorField }}, "body", getType.{{ pascalize .DiscriminatorField }}); err != nil {
+    return nil, err
+  }
+
+  // The value of {{ .DiscriminatorField }} is used to determine which type to create and unmarshal the data into
+  switch getType.{{ pascalize .DiscriminatorField }} { {{ range $k, $v := .Discriminates }}
+    case {{ printf "%q" $k }}:
+      var result {{ $v }}
+      if err := consumer.Consume(buf2, &result); err != nil {
+        return nil, err
+      }
+      return &result, nil
+    {{ end }}
+  }
+  return nil, errors.New(422, "invalid {{ .DiscriminatorField }} value: %q", getType.{{ pascalize .DiscriminatorField }})
+
+}
+{{ else }}{{ if or .IsComplexObject .IsTuple .IsAdditionalProperties }}{{ if .Name }}type {{ if not .IsExported }}{{ .Name }}{{ else }}{{ pascalize .Name }}{{ end }} {{ end }}{{ template "schemaBody" . }}
+{{ else }}type {{ pascalize .Name }} {{ template "typeSchemaType" . }}
+{{ end }}{{ if .IsSubType }}
+{{ range .AllOf }}
+{{ range .Properties }}
+{{ if .IsBaseType }}func ({{$.ReceiverName}} *{{ pascalize $.Name}}) {{ pascalize .Name}}() {{ template "schemaType" . }}{
+  {{ if eq $.DiscriminatorField .Name }}return {{ printf "%q" $.DiscriminatorValue }}{{ else }}return {{ $.ReceiverName }}.{{camelize .Name}}Field{{end}}
+}
+func ({{$.ReceiverName}} *{{ pascalize $.Name}}) Set{{ pascalize .Name}}(val {{ template "schemaType" . }}) {
+  {{ if ne $.DiscriminatorField .Name }}{{ $.ReceiverName }}.{{camelize .Name}}Field = val{{end}}
+}
+{{ end }}{{ end }}{{ end }}
+{{ if .HasAdditionalProperties }}{{ if .AdditionalProperties }}/* {{ template "docstring" .AdditionalProperties }}{{ template "propertyValidationDocString" .AdditionalProperties}} */
+{{ pascalize .AdditionalProperties.Name }}() map[string]{{ template "schemaType" .AdditionalProperties }}{{end}}{{ end }}
+{{ if .AdditionalItems }}/* {{ template "docstring" .AdditionalItems }}{{ template "propertyValidationDocString" .AdditionalItems}} */
+{{ pascalize .AdditionalItems.Name }}() []{{ template "schemaType" .AdditionalItems }}
+{{ end }}{{ if not .HasBaseType }}
+{{ template "discriminatedSerializer" . }}{{ end}}
+{{ else if .IsTuple }}
+{{ template "tupleSerializer" . }}
+{{ else if .IsAdditionalProperties }}
+{{ template "additionalPropertiesSerializer" . }}
+{{ end }}{{if and (not .IsInterface) (not .IsBaseType) (or .Required .HasValidations .HasBaseType) }}
+{{ template "schemavalidator" . }}
+{{ else if gt (len .AllOf) 0 }}
+{{ template "schemavalidator" . }}
+{{ else if not .IsInterface }}// Validate validates this {{ humanize .Name }}
+func ({{.ReceiverName}} {{ if or .IsTuple .IsComplexObject .IsAdditionalProperties }}*{{ end }}{{ if not .IsExported }}{{ .Name }}{{ else }}{{ pascalize .Name }}{{ end }}) Validate(formats strfmt.Registry) error {
+  return nil
+}{{ end }}{{ end }}{{ if .HasBaseType }}{{ template "hasDiscriminatedSerializer" . }}{{ end }}
