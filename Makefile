@@ -6,8 +6,8 @@ all: gen build
 
 deps:
 	export GO15VENDOREXPERIMENT=1 
-	go get -u golang.org/x/tools/cmd/cover
-	go get -u golang.org/x/tools/cmd/vet
+	#go get -u golang.org/x/tools/cmd/cover
+	#go get -u golang.org/x/tools/cmd/vet
 	go get -u github.com/kr/vexp
 	go get -u github.com/eknkc/amber/...
 	go get -u github.com/eknkc/amber
@@ -19,7 +19,7 @@ deps:
 	go get -u github.com/russross/blackfriday
 	go get -u github.com/carlescere/scheduler
 	go get -u github.com/ramr/go-reaper
-	GO15VENDOREXPERIMENT=1 go get -u github.com/go-swagger/go-swagger/...
+	#GO15VENDOREXPERIMENT=1 go get -u github.com/go-swagger/go-swagger/...
 
 gen: gen_static gen_template gen_migrations
 
@@ -49,7 +49,8 @@ build_static:
 
 test:
 	export GO15VENDOREXPERIMENT=1 
-	go test -cover $(PACKAGES)
+	#go test -cover $(PACKAGES)
+	go test  $(PACKAGES)
 
 # docker run --publish=3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes  mysql:5.6.27
 test_mysql:
