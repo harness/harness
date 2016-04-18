@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone/engine"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router"
@@ -13,8 +14,7 @@ import (
 	"github.com/drone/drone/shared/poller"
 	"github.com/drone/drone/shared/server"
 	"github.com/drone/drone/store/datastore"
-
-	"github.com/Sirupsen/logrus"
+	reaper "github.com/ramr/go-reaper"
 )
 
 // build revision number populated by the continuous
@@ -48,6 +48,9 @@ func main() {
 
 	// setup git poller
 	poller.Load(env, store_)
+
+	// for cleaning zombie process
+	go reaper.Reap()
 
 	// setup the server and start the listener
 	server_ := server.Load(env)
