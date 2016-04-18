@@ -5,16 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"reflect"
+	"runtime"
+	"strings"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/carlescere/scheduler"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/store"
-
-	"net/http"
-	"reflect"
-	"runtime"
-	"strings"
 )
 
 var (

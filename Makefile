@@ -18,6 +18,7 @@ deps:
 	go get -u github.com/PuerkitoBio/goquery
 	go get -u github.com/russross/blackfriday
 	go get -u github.com/carlescere/scheduler
+	go get -u github.com/ramr/go-reaper
 	GO15VENDOREXPERIMENT=1 go get -u github.com/go-swagger/go-swagger/...
 
 gen: gen_static gen_template gen_migrations
