@@ -17,6 +17,7 @@ import (
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
+	"github.com/drone/drone/queue"
 )
 
 var (
@@ -204,6 +205,35 @@ func PostHook(c *gin.Context) {
 	// on status change notifications
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
 
+	// IMPORTANT. PLEASE READ
+	//
+	// The below code uses a feature flag to switch between the current
+	// build engine and the exerimental 0.5 build engine. This can be
+	// enabled using with the environment variable CANARY=true
+
+	if os.Getenv("CANARY") == "true" {
+		for _, job := range jobs {
+			queue.Publish(c, &queue.Work{
+				User:      user,
+				Repo:      repo,
+				Build:     build,
+				BuildLast: last,
+				Job:       job,
+				Keys:      key,
+				Netrc:     netrc,
+				Yaml:      string(raw),
+				YamlEnc:   string(sec),
+				System: &model.System{
+					Link:      httputil.GetURL(c.Request),
+					Plugins:   strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
+					Globals:   strings.Split(os.Getenv("PLUGIN_PARAMS"), " "),
+					Escalates: strings.Split(os.Getenv("ESCALATE_FILTER"), " "),
+				},
+			})
+		}
+		return // EXIT NOT TO AVOID THE 0.4 ENGINE CODE BELOW
+	}
+
 	engine_ := engine.FromContext(c)
 	go engine_.Schedule(c.Copy(), &engine.Task{
 		User:      user,
@@ -222,5 +252,4 @@ func PostHook(c *gin.Context) {
 			Escalates: strings.Split(os.Getenv("ESCALATE_FILTER"), " "),
 		},
 	})
-
 }
