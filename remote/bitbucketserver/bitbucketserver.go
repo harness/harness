@@ -1,5 +1,20 @@
 package bitbucketserver
 
+// Requires the following to be set
+// GIT_USERNAME -> a username on the stash server that has access to clone all repos
+// GIT_USERPASSWORD -> password to the user that has access to clone all repos
+// REMOTE_DRIVER=bitbucketserver
+// REMOTE_CONFIG=https://{servername}?consumer_key={key added on the stash server for oath1}&open={not used yet}
+// Configure application links in the bitbucket server --
+// application url needs to be the base url to drone
+// incoming auth needs to have the consumer key (same as the key in REMOTE_CONFIG)
+// set the public key (public key from the private key added to /private_key.pem name matters)
+// consumer call back is the base url to drone plus /authorize/
+// Needs a pem private key added to / something like "ADD private_key.pem /" (name matters, needs to be /private_key.pem) to the Dockerfile
+// After that you should be good to go
+
+
+
 import (
 	"github.com/drone/drone/shared/envconfig"
 	"net/url"
