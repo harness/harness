@@ -22,7 +22,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"encoding/json"
-
+	"github.com/mrjones/oauth"
 )
 
 type BitbucketServer struct {
@@ -32,6 +32,7 @@ type BitbucketServer struct {
 	GitPassword string
 	ConsumerRSA string
 	Open bool
+	Consumer oauth.Consumer
 }
 
 func Load(config string) *BitbucketServer{
@@ -65,16 +66,20 @@ func Load(config string) *BitbucketServer{
 
 	bitbucketserver.Open, _ = strconv.ParseBool(params.Get("open"))
 
+	bitbucketserver.Consumer = *NewClient(bitbucketserver.ConsumerRSA, bitbucketserver.ConsumerKey, bitbucketserver.URL)
+
+
+
 	return &bitbucketserver
 }
 
 func (bs *BitbucketServer) Login(res http.ResponseWriter, req *http.Request) (*model.User, bool, error){
 	log.Info("Starting to login for bitbucketServer")
 
-	c := NewClient(bs.ConsumerRSA, bs.ConsumerKey, bs.URL)
+
 
 	log.Info("getting the requestToken")
-	requestToken, url, err := c.GetRequestTokenAndUrl("oob")
+	requestToken, url, err := bs.Consumer.GetRequestTokenAndUrl("oob")
 	if err != nil {
 		log.Error(err)
 	}
@@ -88,12 +93,12 @@ func (bs *BitbucketServer) Login(res http.ResponseWriter, req *http.Request) (*m
 
 	var request_oauth_token = req.FormValue("oauth_token")
 	requestToken.Token = request_oauth_token
-	accessToken, err := c.AuthorizeToken(requestToken, code)
+	accessToken, err := bs.Consumer.AuthorizeToken(requestToken, code)
 	if err !=nil {
 		log.Error(err)
 	}
 
-	client, err := c.MakeHttpClient(accessToken)
+	client, err := bs.Consumer.MakeHttpClient(accessToken)
 	if err != nil {
 		log.Error(err)
 	}
@@ -134,7 +139,7 @@ func (bs *BitbucketServer) Auth(token, secret string) (string, error) {
 func (bs *BitbucketServer) Repo(u *model.User, owner, name string) (*model.Repo, error){
 	log.Info("Staring repo for bitbucketServer with user " + u.Login + " " + owner + " " + name )
 
-	client := NewClientWithToken(bs.ConsumerRSA, bs.ConsumerKey, bs.URL, u.Token)
+	client := NewClientWithToken(&bs.Consumer, u.Token)
 
 	url := bs.URL + "/rest/api/1.0/projects/" + owner + "/repos/" + name
 	log.Info("Trying to get " + url)
@@ -180,7 +185,7 @@ func (bs *BitbucketServer) Repos(u *model.User) ([]*model.RepoLite, error){
 	log.Info("Staring repos for bitbucketServer " + u.Login)
 	var repos = []*model.RepoLite{}
 
-	client := NewClientWithToken(bs.ConsumerRSA, bs.ConsumerKey, bs.URL, u.Token)
+	client := NewClientWithToken(&bs.Consumer, u.Token)
 
 	response, err := client.Get(bs.URL + "/rest/api/1.0/repos?limit=10000")
 	if err != nil {
@@ -217,7 +222,7 @@ func (bs *BitbucketServer) Perm(u *model.User, owner, repo string) (*model.Perm,
 func (bs *BitbucketServer) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error){
 	log.Info(fmt.Sprintf("Staring file for bitbucketServer login: %s repo: %s buildevent: %s string: %s",u.Login, r.Name, b.Event, f))
 
-	client := NewClientWithToken(bs.ConsumerRSA, bs.ConsumerKey, bs.URL, u.Token)
+	client := NewClientWithToken(&bs.Consumer, u.Token)
 	fileURL := fmt.Sprintf("%s/projects/%s/repos/%s/browse/%s?raw", bs.URL,r.Owner,r.Name,f)
 	log.Info(fileURL)
 	response, err := client.Get(fileURL)
@@ -257,7 +262,7 @@ func (bs *BitbucketServer) Netrc(user *model.User, r *model.Repo) (*model.Netrc,
 
 func (bs *BitbucketServer) Activate(u *model.User, r *model.Repo, k *model.Key, link string) error{
 	log.Info(fmt.Sprintf("Staring activate for bitbucketServer user: %s repo: %s key: %s link: %s",u.Login,r.Name,k,link))
-	client := NewClientWithToken(bs.ConsumerRSA, bs.ConsumerKey, bs.URL, u.Token)
+	client := NewClientWithToken(&bs.Consumer, u.Token)
 	hook, err := bs.CreateHook(client, r.Owner,r.Name, "com.atlassian.stash.plugin.stash-web-post-receive-hooks-plugin:postReceiveHook",link)
 	if err !=nil {
 		return err
@@ -268,7 +273,7 @@ func (bs *BitbucketServer) Activate(u *model.User, r *model.Repo, k *model.Key, 
 
 func (bs *BitbucketServer) Deactivate(u *model.User, r *model.Repo, link string) error{
 	log.Info(fmt.Sprintf("Staring deactivating for bitbucketServer user: %s repo: %s link: %s",u.Login,r.Name,link))
-	client := NewClientWithToken(bs.ConsumerRSA, bs.ConsumerKey, bs.URL, u.Token)
+	client := NewClientWithToken(&bs.Consumer, u.Token)
 	err := bs.DeleteHook(client, r.Owner,r.Name, "com.atlassian.stash.plugin.stash-web-post-receive-hooks-plugin:postReceiveHook",link)
 	if err !=nil {
 		return err

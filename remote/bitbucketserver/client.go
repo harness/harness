@@ -42,12 +42,10 @@ func NewClient(ConsumerRSA string, ConsumerKey string, URL string) *oauth.Consum
 	return c
 }
 
-func NewClientWithToken(ConsumerRSA string, ConsumerKey string, URL string, AccessToken string) *http.Client{
-	c := NewClient(ConsumerRSA, ConsumerKey, URL)
-
+func NewClientWithToken(Consumer *oauth.Consumer, AccessToken string) *http.Client{
 	var token oauth.AccessToken
 	token.Token = AccessToken
-	client, err := c.MakeHttpClient(&token)
+	client, err := Consumer.MakeHttpClient(&token)
 	if err != nil {
 		log.Error(err)
 	}
