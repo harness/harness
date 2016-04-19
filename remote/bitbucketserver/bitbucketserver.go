@@ -274,7 +274,7 @@ func (bs *BitbucketServer) Hook(r *http.Request) (*model.Repo, *model.Build, err
 	buildModel.Event = model.EventPush
 	buildModel.Ref = hookPost.RefChanges[0].RefID
 	buildModel.Author = hookPost.Changesets.Values[0].ToCommit.Author.EmailAddress
-	buildModel.Commit = hookPost.RefChanges[0].RefID
+	buildModel.Commit = hookPost.RefChanges[0].ToHash
 	buildModel.Avatar = avatarLink(hookPost.Changesets.Values[0].ToCommit.Author.EmailAddress)
 
 	//All you really need is the name and owner. That's what creates the lookup key, so it needs to match the repo info. Just an FYI
