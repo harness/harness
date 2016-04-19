@@ -7,6 +7,7 @@ import (
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote/bitbucket"
+	"github.com/drone/drone/remote/bitbucketserver"
 	"github.com/drone/drone/remote/github"
 	"github.com/drone/drone/remote/gitlab"
 	"github.com/drone/drone/remote/gogs"
@@ -28,6 +29,8 @@ func Load(env envconfig.Env) Remote {
 		return gitlab.Load(env)
 	case "gogs":
 		return gogs.Load(env)
+	case "bitbucketserver":
+		return bitbucketserver.Load(env)
 
 	default:
 		logrus.Fatalf("unknown remote driver %s", driver)
