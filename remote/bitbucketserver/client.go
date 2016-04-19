@@ -11,9 +11,9 @@ import (
 )
 
 
-func NewClient(ConsumerKey string, URL string) *oauth.Consumer{
+func NewClient(ConsumerRSA string, ConsumerKey string, URL string) *oauth.Consumer{
 	//TODO: make this configurable
-	privateKeyFileContents, err := ioutil.ReadFile("/var/lib/bitbucketserver/private_key.pem")
+	privateKeyFileContents, err := ioutil.ReadFile(ConsumerRSA)
 	log.Info("Tried to read the key")
 	if err != nil {
 		log.Error(err)
@@ -42,9 +42,8 @@ func NewClient(ConsumerKey string, URL string) *oauth.Consumer{
 	return c
 }
 
-func NewClientWithToken(ConsumerKey string, URL string, AccessToken string) *http.Client{
-	NewClient(ConsumerKey, URL)
-	c := NewClient(ConsumerKey, URL)
+func NewClientWithToken(ConsumerRSA string, ConsumerKey string, URL string, AccessToken string) *http.Client{
+	c := NewClient(ConsumerRSA, ConsumerKey, URL)
 
 	var token oauth.AccessToken
 	token.Token = AccessToken
