@@ -6,9 +6,9 @@ package bitbucketserver
 // Configure application links in the bitbucket server --
 // application url needs to be the base url to drone
 // incoming auth needs to have the consumer key (same as the key in REMOTE_CONFIG)
-// set the public key (public key from the private key added to /private_key.pem name matters)
+// set the public key (public key from the private key added to /var/lib/bitbucketserver/private_key.pem name matters)
 // consumer call back is the base url to drone plus /authorize/
-// Needs a pem private key added to / something like "ADD private_key.pem /" (name matters, needs to be /private_key.pem) to the Dockerfile
+// Needs a pem private key added to /var/lib/bitbucketserver/private_key.pem
 // After that you should be good to go
 
 
@@ -80,7 +80,7 @@ func (bs *BitbucketServer) Login(res http.ResponseWriter, req *http.Request) (*m
 
 	client, err := c.MakeHttpClient(accessToken)
 	if err != nil {
-		log.error(err)
+		log.Error(err)
 	}
 
 	response, err := client.Get(bs.URL + "/plugins/servlet/applinks/whoami")

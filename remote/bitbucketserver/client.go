@@ -12,7 +12,8 @@ import (
 
 
 func NewClient(ConsumerKey string, URL string) *oauth.Consumer{
-	privateKeyFileContents, err := ioutil.ReadFile("/private_key.pem")
+	//TODO: make this configurable
+	privateKeyFileContents, err := ioutil.ReadFile("/var/lib/bitbucketserver/private_key.pem")
 	log.Info("Tried to read the key")
 	if err != nil {
 		log.Error(err)
