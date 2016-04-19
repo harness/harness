@@ -160,6 +160,12 @@
 			"tree": true
 		},
 		{
+			"checksumSHA1": "spRLFk8daizvEzOmRsxlxeECdHI=",
+			"path": "github.com/mrjones/oauth",
+			"revision": "31f1e8e5addda51bc50ebfc8bb930d4642372654",
+			"revisionTime": "2016-04-05T23:58:02Z"
+		},
+		{
 			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
 			"path": "github.com/pmezard/go-difflib/difflib",
 			"revision": "9f9027faeb0dad515336ed2f28317f9f8f527ab4",

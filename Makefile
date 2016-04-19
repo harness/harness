@@ -12,7 +12,6 @@ deps:
 	go get -u github.com/elazarl/go-bindata-assetfs/...
 	go get -u github.com/dchest/jsmin
 	go get -u github.com/franela/goblin
-	go get -u github.com/mrjones/oauth
 
 gen: gen_static gen_template gen_migrations
 
