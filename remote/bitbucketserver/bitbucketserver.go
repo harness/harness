@@ -14,7 +14,6 @@ package bitbucketserver
 
 
 import (
-	"github.com/drone/drone/shared/envconfig"
 	"net/url"
 	log "github.com/Sirupsen/logrus"
 	"net/http"
