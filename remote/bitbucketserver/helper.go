@@ -3,17 +3,18 @@ package bitbucketserver
 import (
 	"net/http"
 	"bytes"
-	"log"
 	"io/ioutil"
 	"fmt"
 	"strings"
 	"crypto/md5"
 	log "github.com/Sirupsen/logrus"
+	"encoding/hex"
 )
 
 func avatarLink(email string) (url string) {
-	data := []byte(strings.ToLower(email))
-	emailHash := md5.Sum(data)
+	hasher := md5.New()
+	hasher.Write([]byte(strings.ToLower(email)))
+	emailHash := fmt.Sprintf("%v", hex.EncodeToString(hasher.Sum(nil)))
 	avatarURL := fmt.Sprintf("http://www.gravatar.com/avatar/%s.jpg",emailHash)
 	log.Info(avatarURL)
 	return avatarURL
