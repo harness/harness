@@ -11,13 +11,13 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/engine"
-	"github.com/drone/drone/engine/parser"
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
-	"github.com/drone/drone/queue"
+	"github.com/drone/drone/yaml"
 )
 
 var (
@@ -148,13 +148,13 @@ func PostHook(c *gin.Context) {
 		// NOTE we don't exit on failure. The sec file is optional
 	}
 
-	axes, err := parser.ParseMatrix(raw)
+	axes, err := yaml.ParseMatrix(raw)
 	if err != nil {
 		c.String(500, "Failed to parse yaml file or calculate matrix. %s", err)
 		return
 	}
 	if len(axes) == 0 {
-		axes = append(axes, parser.Axis{})
+		axes = append(axes, yaml.Axis{})
 	}
 
 	netrc, err := remote_.Netrc(user, repo)
@@ -166,7 +166,7 @@ func PostHook(c *gin.Context) {
 	key, _ := store.GetKey(c, repo)
 
 	// verify the branches can be built vs skipped
-	branches := parser.ParseBranch(raw)
+	branches := yaml.ParseBranch(raw)
 	if !branches.Matches(build.Branch) {
 		c.String(200, "Branch does not match restrictions defined in yaml")
 		return

@@ -1,4 +1,4 @@
-package shasum
+package checksum
 
 import (
 	"crypto/sha1"
