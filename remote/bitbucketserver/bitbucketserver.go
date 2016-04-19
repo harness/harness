@@ -1,10 +1,8 @@
 package bitbucketserver
 
 // Requires the following to be set
-// GIT_USERNAME -> a username on the stash server that has access to clone all repos
-// GIT_USERPASSWORD -> password to the user that has access to clone all repos
 // REMOTE_DRIVER=bitbucketserver
-// REMOTE_CONFIG=https://{servername}?consumer_key={key added on the stash server for oath1}&open={not used yet}
+// REMOTE_CONFIG=https://{servername}?consumer_key={key added on the stash server for oath1}&git_username={username for clone}&git_password={password for clone}&open={not used yet}
 // Configure application links in the bitbucket server --
 // application url needs to be the base url to drone
 // incoming auth needs to have the consumer key (same as the key in REMOTE_CONFIG)
@@ -36,12 +34,7 @@ type BitbucketServer struct {
 	Open bool
 }
 
-func Load(env envconfig.Env) *BitbucketServer{
-
-	//Read
-	config := env.String("REMOTE_CONFIG", "")
-	gitUserName := env.String("GIT_USERNAME", "")
-	gitUserPassword := env.String("GIT_USERPASSWORD","")
+func Load(config string) *BitbucketServer{
 
 	url_, err := url.Parse(config)
 	if err != nil {
@@ -53,8 +46,8 @@ func Load(env envconfig.Env) *BitbucketServer{
 
 	bitbucketserver := BitbucketServer{}
 	bitbucketserver.URL = url_.String()
-	bitbucketserver.GitUserName = gitUserName
-	bitbucketserver.GitPassword = gitUserPassword
+	bitbucketserver.GitUserName = params.Get("git_username")
+	bitbucketserver.GitPassword = params.Get("git_password")
 	bitbucketserver.ConsumerKey = params.Get("consumer_key")
 	bitbucketserver.Open, _ = strconv.ParseBool(params.Get("open"))
 
@@ -69,7 +62,7 @@ func (bs *BitbucketServer) Login(res http.ResponseWriter, req *http.Request) (*m
 	log.Info("getting the requestToken")
 	requestToken, url, err := c.GetRequestTokenAndUrl("oob")
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	var code = req.FormValue("oauth_verifier")
@@ -88,12 +81,12 @@ func (bs *BitbucketServer) Login(res http.ResponseWriter, req *http.Request) (*m
 
 	client, err := c.MakeHttpClient(accessToken)
 	if err != nil {
-		log.Fatal(err)
+		log.error(err)
 	}
 
 	response, err := client.Get(bs.URL + "/plugins/servlet/applinks/whoami")
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	defer response.Body.Close()
 	bits, err := ioutil.ReadAll(response.Body)
@@ -133,7 +126,7 @@ func (bs *BitbucketServer) Repo(u *model.User, owner, name string) (*model.Repo,
 	log.Info("Trying to get " + url)
 	response, err := client.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	defer response.Body.Close()
 	contents, err := ioutil.ReadAll(response.Body)
@@ -159,9 +152,6 @@ func (bs *BitbucketServer) Repo(u *model.User, owner, name string) (*model.Repo,
 	repo.Link = repoLink
 	repo.Name=bsRepo.Slug
 	repo.Owner=bsRepo.Project.Key
-	repo.AllowTag=false
-	repo.AllowDeploy=false
-	repo.AllowPull=false
 	repo.AllowPush=true
 	repo.FullName = bsRepo.Project.Key +"/" +bsRepo.Slug
 	repo.Branch = "master"
@@ -180,7 +170,7 @@ func (bs *BitbucketServer) Repos(u *model.User) ([]*model.RepoLite, error){
 
 	response, err := client.Get(bs.URL + "/rest/api/1.0/repos?limit=10000")
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	defer response.Body.Close()
 	contents, err := ioutil.ReadAll(response.Body)
@@ -218,7 +208,7 @@ func (bs *BitbucketServer) File(u *model.User, r *model.Repo, b *model.Build, f 
 	log.Info(fileURL)
 	response, err := client.Get(fileURL)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	if response.StatusCode == 404 {
 		return nil,nil
@@ -226,7 +216,7 @@ func (bs *BitbucketServer) File(u *model.User, r *model.Repo, b *model.Build, f 
 	defer response.Body.Close()
 	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 
@@ -242,7 +232,7 @@ func (bs *BitbucketServer) Netrc(user *model.User, r *model.Repo) (*model.Netrc,
 	log.Info("Starting the Netrc lookup")
 	u, err := url.Parse(bs.URL)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	return &model.Netrc{
 		Machine:  u.Host,

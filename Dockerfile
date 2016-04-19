@@ -21,4 +21,9 @@ ENV DATABASE_CONFIG=/var/lib/drone/drone.sqlite
 
 ADD drone_static /drone_static
 
+# Alpine Linux doesn't use pam, which means that there is no /etc/nsswitch.conf,
+# but Go and CGO rely on /etc/nsswitch.conf to check the order of DNS resolving.
+# To fix this we just create /etc/nsswitch.conf and add the following line:
+#RUN echo 'hosts: files mdns4_minimal [NOTFOUND=return] dns mdns4' >> /etc/nsswitch.conf
+
 ENTRYPOINT ["/drone_static"]

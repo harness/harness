@@ -15,13 +15,13 @@ func NewClient(ConsumerKey string, URL string) *oauth.Consumer{
 	privateKeyFileContents, err := ioutil.ReadFile("/private_key.pem")
 	log.Info("Tried to read the key")
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	block, _ := pem.Decode([]byte(privateKeyFileContents))
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	c := oauth.NewRSAConsumer(
@@ -49,7 +49,7 @@ func NewClientWithToken(ConsumerKey string, URL string, AccessToken string) *htt
 	token.Token = AccessToken
 	client, err := c.MakeHttpClient(&token)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	return client
 }

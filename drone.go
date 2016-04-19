@@ -1,55 +1,53 @@
 package main
 
 import (
-	"flag"
+	"net/http"
+	"time"
 
-	"github.com/drone/drone/engine"
-	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router"
-	"github.com/drone/drone/router/middleware/cache"
-	"github.com/drone/drone/router/middleware/context"
-	"github.com/drone/drone/router/middleware/header"
-	"github.com/drone/drone/shared/envconfig"
-	"github.com/drone/drone/shared/server"
-	"github.com/drone/drone/store/datastore"
+	"github.com/drone/drone/router/middleware"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/gin-gonic/contrib/ginrus"
+	"github.com/ianschenck/envflag"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 var (
-	dotenv = flag.String("config", ".env", "")
-	debug  = flag.Bool("debug", false, "")
+	addr = envflag.String("SERVER_ADDR", ":8000", "")
+	cert = envflag.String("SERVER_CERT", "", "")
+	key  = envflag.String("SERVER_KEY", "", "")
+
+	debug = envflag.Bool("DEBUG", false, "")
 )
 
 func main() {
-	flag.Parse()
+	envflag.Parse()
 
 	// debug level if requested by user
 	if *debug {
 		logrus.SetLevel(logrus.DebugLevel)
+	} else {
+		logrus.SetLevel(logrus.WarnLevel)
 	}
 
-	// Load the configuration from env file
-	env := envconfig.Load(*dotenv)
-
-	// Setup the database driver
-	store_ := datastore.Load(env)
-
-	// setup the remote driver
-	remote_ := remote.Load(env)
-
-	// setup the runner
-	engine_ := engine.Load(env, store_)
-
 	// setup the server and start the listener
-	server_ := server.Load(env)
-	server_.Run(
-		router.Load(
-			header.Version,
-			cache.Default(),
-			context.SetStore(store_),
-			context.SetRemote(remote_),
-			context.SetEngine(engine_),
-		),
+	handler := router.Load(
+		ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true),
+		middleware.Version,
+		middleware.Cache(),
+		middleware.Store(),
+		middleware.Remote(),
+		middleware.Engine(),
 	)
+
+	if *cert != "" {
+		logrus.Fatal(
+			http.ListenAndServeTLS(*addr, *cert, *key, handler),
+		)
+	} else {
+		logrus.Fatal(
+			http.ListenAndServe(*addr, handler),
+		)
+	}
 }

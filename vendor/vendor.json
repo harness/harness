@@ -9,8 +9,13 @@
 		},
 		{
 			"path": "github.com/Sirupsen/logrus",
-			"revision": "273bd5984cd7deae8d4b71b0ba9bfc5767f7284b",
-			"revisionTime": "2015-02-17T12:42:44-05:00"
+			"revision": "4b6ea7319e214d98c938f12692336f7ca9348d6b",
+			"revisionTime": "2016-03-17T14:11:10Z"
+		},
+		{
+			"path": "github.com/cloudfoundry-incubator/candiedyaml",
+			"revision": "5cef21e2e4f0fd147973b558d4db7395176bcd95",
+			"revisionTime": "2016-03-22T13:50:45-07:00"
 		},
 		{
 			"origin": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
@@ -22,6 +27,11 @@
 			"path": "github.com/dgrijalva/jwt-go",
 			"revision": "c1da56349675b292d3200463e2c88b9aa5e02391",
 			"revisionTime": "2015-09-04T14:24:56-07:00"
+		},
+		{
+			"path": "github.com/djherbis/fscache",
+			"revision": "ffc728270b01f3906c396bbe796232b87750f24e",
+			"revisionTime": "2016-03-05T10:30:05-08:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/stdcopy",
@@ -52,6 +62,16 @@
 			"path": "github.com/franela/goblin",
 			"revision": "889391d730237f8aca06ce3e62975112983f96b4",
 			"revisionTime": "2016-01-23T18:11:54-03:00"
+		},
+		{
+			"path": "github.com/ghodss/yaml",
+			"revision": "1a6f069841556a7bcaff4a397ca6e8328d266c2f",
+			"revisionTime": "2016-03-07T13:52:05-08:00"
+		},
+		{
+			"path": "github.com/gin-gonic/contrib/ginrus",
+			"revision": "14f66d54cdb96059bafca98665bcc6d9df4951f2",
+			"revisionTime": "2015-08-15T19:25:43+02:00"
 		},
 		{
 			"path": "github.com/gin-gonic/gin",
@@ -97,6 +117,21 @@
 			"path": "github.com/gorilla/securecookie",
 			"revision": "1b0c7f6e9ab3d7f500fd7d50c7ad835ff428139b",
 			"revisionTime": "2014-04-09T13:11:00+02:00"
+		},
+		{
+			"path": "github.com/ianschenck/envflag",
+			"revision": "9111d830d133f952887a936367fb0211c3134f0d",
+			"revisionTime": "2014-07-20T15:03:42-06:00"
+		},
+		{
+			"path": "github.com/joho/godotenv",
+			"revision": "4ed13390c0acd2ff4e371e64d8b97c8954138243",
+			"revisionTime": "2015-09-07T11:02:28+10:00"
+		},
+		{
+			"path": "github.com/joho/godotenv/autoload",
+			"revision": "4ed13390c0acd2ff4e371e64d8b97c8954138243",
+			"revisionTime": "2015-09-07T11:02:28+10:00"
 		},
 		{
 			"path": "github.com/koding/cache",
@@ -146,9 +181,11 @@
 			"revisionTime": "2013-09-19T15:23:15-06:00"
 		},
 		{
+			"checksumSHA1": "+HvW+k8YkDaPKwF0Lwcz+Tf2A+E=",
+			"origin": "github.com/drone/drone/vendor/github.com/samalba/dockerclient",
 			"path": "github.com/samalba/dockerclient",
-			"revision": "f274bbd0e2eb35ad1444dc6e6660214f9fbbc08c",
-			"revisionTime": "2016-02-22T16:23:45-08:00"
+			"revision": "91d7393ff85980ba3a8966405871a3d446ca28f2",
+			"revisionTime": "2016-04-14T17:47:13Z"
 		},
 		{
 			"path": "github.com/square/go-jose",
@@ -197,6 +234,16 @@
 			"revisionTime": "2015-12-29T21:02:54-07:00"
 		},
 		{
+			"path": "gopkg.in/djherbis/atime.v1",
+			"revision": "8e47e0e01d08df8b9f840d74299c8ab70a024a30",
+			"revisionTime": "2015-08-29T00:19:25-07:00"
+		},
+		{
+			"path": "gopkg.in/djherbis/stream.v1",
+			"revision": "26a761059928627ca84837000dfb33447c66a146",
+			"revisionTime": "2016-02-03T22:24:40-08:00"
+		},
+		{
 			"path": "gopkg.in/go-playground/validator.v8",
 			"revision": "014792cf3e266caff1e916876be12282b33059e0",
 			"revisionTime": "2016-02-23T15:26:51-05:00"
@@ -211,5 +258,6 @@
 			"revision": "5d6f7e02b7cdad63b06ab3877915532cd30073b4",
 			"revisionTime": "2015-01-19T16:55:52-02:00"
 		}
-	]
+	],
+	"rootPath": "github.com/drone/drone"
 }

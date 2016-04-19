@@ -8,7 +8,6 @@ import (
 
 	"github.com/drone/drone/api"
 	"github.com/drone/drone/router/middleware/header"
-	"github.com/drone/drone/router/middleware/location"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/router/middleware/token"
 	"github.com/drone/drone/static"
@@ -17,11 +16,12 @@ import (
 )
 
 func Load(middleware ...gin.HandlerFunc) http.Handler {
-	e := gin.Default()
+	e := gin.New()
+	e.Use(gin.Recovery())
+
 	e.SetHTMLTemplate(template.Load())
 	e.StaticFS("/static", static.FileSystem())
 
-	e.Use(location.Resolve)
 	e.Use(header.NoCache)
 	e.Use(header.Options)
 	e.Use(header.Secure)
@@ -140,6 +140,13 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		stream.GET("/:owner/:name/:build/:number", web.GetStream)
 	}
 
+	bots := e.Group("/bots")
+	{
+		bots.Use(session.MustUser())
+		bots.POST("/slack", web.Slack)
+		bots.POST("/slack/:command", web.Slack)
+	}
+
 	auth := e.Group("/authorize")
 	{
 		auth.GET("", web.GetLogin)
@@ -170,7 +177,7 @@ func normalize(h http.Handler) http.Handler {
 
 		parts := strings.Split(r.URL.Path, "/")[1:]
 		switch parts[0] {
-		case "settings", "repos", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
+		case "settings", "bots", "repos", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
 			// no-op
 		default:
 

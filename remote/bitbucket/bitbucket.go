@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/shared/httputil"
 
 	log "github.com/Sirupsen/logrus"
@@ -24,8 +23,7 @@ type Bitbucket struct {
 	Open   bool
 }
 
-func Load(env envconfig.Env) *Bitbucket {
-	config := env.String("REMOTE_CONFIG", "")
+func Load(config string) *Bitbucket {
 
 	// parse the remote DSN configuration string
 	url_, err := url.Parse(config)
@@ -416,10 +414,10 @@ func (bb *Bitbucket) pushHook(r *http.Request) (*model.Repo, *model.Build, error
 		// we only support tag and branch pushes for now
 		buildEventType := model.EventPush
 		buildRef := fmt.Sprintf("refs/heads/%s", change.New.Name)
-		if change.New.Type == "tag" || change.New.Type == "annotated_tag" {
+		if change.New.Type == "tag" || change.New.Type == "annotated_tag" || change.New.Type == "bookmark" {
 			buildEventType = model.EventTag
 			buildRef = fmt.Sprintf("refs/tags/%s", change.New.Name)
-		} else if change.New.Type != "branch" {
+		} else if change.New.Type != "branch" && change.New.Type != "named_branch" {
 			continue
 		}
 
