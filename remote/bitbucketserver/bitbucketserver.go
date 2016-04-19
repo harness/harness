@@ -48,19 +48,19 @@ func Load(config string) *BitbucketServer{
 	bitbucketserver.URL = url_.String()
 	bitbucketserver.GitUserName = params.Get("git_username")
 	if bitbucketserver.GitUserName == "" {
-		log.FatalLevel("Must have a git_username")
+		log.Fatalln("Must have a git_username")
 	}
 	bitbucketserver.GitPassword = params.Get("git_password")
 	if bitbucketserver.GitPassword == "" {
-		log.FatalLevel("Must have a git_password")
+		log.Fatalln("Must have a git_password")
 	}
 	bitbucketserver.ConsumerKey = params.Get("consumer_key")
 	if bitbucketserver.ConsumerKey == "" {
-		log.FatalLevel("Must have a consumer_key")
+		log.Fatalln("Must have a consumer_key")
 	}
 	bitbucketserver.ConsumerRSA = params.Get("consumer_rsa")
 	if bitbucketserver.ConsumerRSA == "" {
-		log.FatalLevel("Must have a consumer_rsa")
+		log.Fatalln("Must have a consumer_rsa")
 	}
 
 	bitbucketserver.Open, _ = strconv.ParseBool(params.Get("open"))
