@@ -24,11 +24,10 @@ gen_template:
 gen_migrations:
 	go generate github.com/drone/drone/store/datastore/ddl
 
-build:
-	go build
+build: build_static
 
 build_static:
-	go build --ldflags '-extldflags "-static" -X github.com/drone/drone/version.VersionDev=$(CI_BUILD_NUMBER)' -o drone_static
+	cd drone && go build --ldflags '-extldflags "-static" -X github.com/drone/drone/version.VersionDev=$(CI_BUILD_NUMBER)' -o drone
 
 test:
 	go test -cover $(PACKAGES)
