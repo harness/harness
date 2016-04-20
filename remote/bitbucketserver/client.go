@@ -1,17 +1,16 @@
 package bitbucketserver
 
 import (
-	"net/http"
 	"crypto/tls"
-	log "github.com/Sirupsen/logrus"
-	"io/ioutil"
-	"encoding/pem"
 	"crypto/x509"
+	"encoding/pem"
+	log "github.com/Sirupsen/logrus"
 	"github.com/mrjones/oauth"
+	"io/ioutil"
+	"net/http"
 )
 
-
-func NewClient(ConsumerRSA string, ConsumerKey string, URL string) *oauth.Consumer{
+func NewClient(ConsumerRSA string, ConsumerKey string, URL string) *oauth.Consumer {
 	//TODO: make this configurable
 	privateKeyFileContents, err := ioutil.ReadFile(ConsumerRSA)
 	log.Info("Tried to read the key")
@@ -42,7 +41,7 @@ func NewClient(ConsumerRSA string, ConsumerKey string, URL string) *oauth.Consum
 	return c
 }
 
-func NewClientWithToken(Consumer *oauth.Consumer, AccessToken string) *http.Client{
+func NewClientWithToken(Consumer *oauth.Consumer, AccessToken string) *http.Client {
 	var token oauth.AccessToken
 	token.Token = AccessToken
 	client, err := Consumer.MakeHttpClient(&token)
@@ -51,9 +50,3 @@ func NewClientWithToken(Consumer *oauth.Consumer, AccessToken string) *http.Clie
 	}
 	return client
 }
-
-
-
-
-
-
