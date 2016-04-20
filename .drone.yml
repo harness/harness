@@ -9,7 +9,6 @@ build:
     commands:
       - make deps gen
       - make test test_postgres test_mysql
-      - make build
   dist:
     image: drone/golang:1.5
     environment:
