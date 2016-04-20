@@ -2,8 +2,8 @@ package runner
 
 import (
 	"bufio"
-	"time"
 	"fmt"
+	"time"
 
 	"github.com/drone/drone/engine/runner/parse"
 
@@ -59,7 +59,7 @@ type Runner struct {
 // Run starts the build runner but does not wait for it to complete. The Wait
 // method will return the exit code and release associated resources once the
 // running containers exit.
-func (r *Runner) Run() error {
+func (r *Runner) Run() {
 
 	go func() {
 		r.setup()
@@ -74,8 +74,6 @@ func (r *Runner) Run() error {
 		<-r.ctx.Done()
 		r.cancel()
 	}()
-
-	return nil
 }
 
 // Wait waits for the runner to exit.
