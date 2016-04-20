@@ -10,6 +10,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"github.com/ianschenck/envflag"
+	"github.com/drone/drone/remote/bitbucketserver"
 )
 
 var (
@@ -34,6 +35,8 @@ func Remote() gin.HandlerFunc {
 		remote_ = gogs.Load(*config)
 	case "gitlab":
 		remote_ = gitlab.Load(*config)
+	case "bitbucketserver":
+		remote_ = bitbucketserver.Load(*config)
 	default:
 		logrus.Fatalln("remote configuraiton not found")
 	}
