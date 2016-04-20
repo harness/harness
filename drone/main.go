@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/drone/drone/router"
@@ -22,6 +23,11 @@ var (
 )
 
 func main() {
+	if os.Getenv("CANARY") == "true" {
+		main2()
+		return
+	}
+
 	envflag.Parse()
 
 	// debug level if requested by user
@@ -35,6 +41,9 @@ func main() {
 	handler := router.Load(
 		ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true),
 		middleware.Version,
+		middleware.Queue(),
+		middleware.Stream(),
+		middleware.Bus(),
 		middleware.Cache(),
 		middleware.Store(),
 		middleware.Remote(),

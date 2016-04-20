@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -136,8 +137,14 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		stream.Use(session.SetRepo())
 		stream.Use(session.SetPerm())
 		stream.Use(session.MustPull)
-		stream.GET("/:owner/:name", web.GetRepoEvents)
-		stream.GET("/:owner/:name/:build/:number", web.GetStream)
+
+		if os.Getenv("CANARY") == "true" {
+			stream.GET("/:owner/:name", web.GetRepoEvents2)
+			stream.GET("/:owner/:name/:build/:number", web.GetStream2)
+		} else {
+			stream.GET("/:owner/:name", web.GetRepoEvents)
+			stream.GET("/:owner/:name/:build/:number", web.GetStream)
+		}
 	}
 
 	bots := e.Group("/bots")
@@ -152,6 +159,14 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		auth.GET("", web.GetLogin)
 		auth.POST("", web.GetLogin)
 		auth.POST("/token", web.GetLoginToken)
+	}
+
+	queue := e.Group("/api/queue")
+	{
+		queue.POST("/pull", api.Pull)
+		queue.POST("/wait/:id", api.Wait)
+		queue.POST("/stream/:id", api.Stream)
+		queue.POST("/status/:id", api.Update)
 	}
 
 	gitlab := e.Group("/gitlab/:owner/:name")

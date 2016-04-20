@@ -1,4 +1,4 @@
-package parser
+package yaml
 
 // stringOrSlice represents a string or an array of strings.
 type stringOrSlice struct {

@@ -2,13 +2,21 @@ clone:
   path: github.com/drone/drone
 
 build:
-  image: drone/golang:1.5
-  environment:
-    - GO15VENDOREXPERIMENT=1
-  commands:
-    - make deps gen
-    - make test test_postgres test_mysql
-    - make build build_static deb docs
+  test:
+    image: drone/golang:1.5
+    environment:
+      - GO15VENDOREXPERIMENT=1
+    commands:
+      - make deps gen
+      - make test test_postgres test_mysql
+  dist:
+    image: drone/golang:1.5
+    environment:
+      - GO15VENDOREXPERIMENT=1
+    commands:
+      - make build
+    when:
+      event: push
 
 compose:
   postgres:
@@ -27,10 +35,7 @@ publish:
     password: $$DOCKER_PASS
     email: $$DOCKER_EMAIL
     repo: drone/drone
-    tag:
-      - "latest" 
-      - "0.4.1"
-      - "0.4"
+    tag: [ "latest" ]
     when:
       repo: drone/drone
       branch: master

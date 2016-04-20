@@ -18,10 +18,20 @@
 			"revisionTime": "2016-03-22T13:50:45-07:00"
 		},
 		{
+			"path": "github.com/codegangsta/cli",
+			"revision": "70e3fa51ebed95df8c0fbe1519c1c1f9bc16bb13",
+			"revisionTime": "2015-10-29T20:11:27-07:00"
+		},
+		{
 			"origin": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": "9f9027faeb0dad515336ed2f28317f9f8f527ab4",
 			"revisionTime": "2016-01-29T19:31:06Z"
+		},
+		{
+			"path": "github.com/dchest/uniuri",
+			"revision": "bc4af7603a3e0ce9d58009f82fca481555182e1c",
+			"revisionTime": "2013-12-23T09:21:49+01:00"
 		},
 		{
 			"path": "github.com/dgrijalva/jwt-go",
@@ -217,6 +227,11 @@
 			"path": "golang.org/x/net/context",
 			"revision": "6acef71eb69611914f7a30939ea9f6e194c78172",
 			"revisionTime": "2016-02-25T17:50:37Z"
+		},
+		{
+			"path": "golang.org/x/net/context/ctxhttp",
+			"revision": "fb93926129b8ec0056f2f458b1f519654814edf0",
+			"revisionTime": "2016-04-13T08:48:50+10:00"
 		},
 		{
 			"path": "golang.org/x/oauth2",
