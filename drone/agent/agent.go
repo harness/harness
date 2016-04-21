@@ -52,20 +52,32 @@ var AgentCmd = cli.Command{
 			Usage:  "drone authorization token",
 		},
 		cli.DurationFlag{
-			EnvVar: "BACKOFF",
-			Name:   "drone-backoff",
+			EnvVar: "DRONE_BACKOFF",
+			Name:   "backoff",
 			Usage:  "drone server backoff interval",
 			Value:  time.Second * 15,
 		},
 		cli.BoolFlag{
-			EnvVar: "DEBUG",
+			EnvVar: "DRONE_DEBUG",
 			Name:   "debug",
 			Usage:  "start the agent in debug mode",
 		},
 		cli.BoolFlag{
-			EnvVar: "EXPERIMENTAL",
+			EnvVar: "DRONE_EXPERIMENTAL",
 			Name:   "experimental",
 			Usage:  "start the agent with experimental features",
+		},
+		cli.StringSliceFlag{
+			EnvVar: "DRONE_NETRC_PLUGIN",
+			Name:   "netrc-plugin",
+			Usage:  "plugins that receive the netrc file",
+			Value:  &cli.StringSlice{"git", "hg"},
+		},
+		cli.StringSliceFlag{
+			EnvVar: "DRONE_PRIVILEGED_PLUGIN",
+			Name:   "privileged-plugin",
+			Usage:  "plugins that require privileged mode",
+			Value:  &cli.StringSlice{"docker", "gcr", "ecr"},
 		},
 	},
 }
@@ -99,7 +111,7 @@ func start(c *cli.Context) {
 		go func() {
 			for {
 				if err := recoverExec(client, docker); err != nil {
-					dur := c.Duration("drone-backoff")
+					dur := c.Duration("backoff")
 					logrus.Debugf("Attempting to reconnect in %v", dur)
 					time.Sleep(dur)
 				}

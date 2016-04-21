@@ -21,10 +21,32 @@ func TestSecret(t *testing.T) {
 			secret.Events = []string{"pull_request"}
 			g.Assert(secret.MatchEvent("pull_request")).IsTrue()
 		})
+		g.It("should match image patterns", func() {
+			secret := Secret{}
+			secret.Images = []string{"golang:*"}
+			g.Assert(secret.MatchImage("golang:1.4.2")).IsTrue()
+		})
+		g.It("should match any image", func() {
+			secret := Secret{}
+			secret.Images = []string{"*"}
+			g.Assert(secret.MatchImage("golang")).IsTrue()
+		})
+		g.It("should match any event", func() {
+			secret := Secret{}
+			secret.Events = []string{"*"}
+			g.Assert(secret.MatchEvent("pull_request")).IsTrue()
+		})
 		g.It("should not match image", func() {
 			secret := Secret{}
 			secret.Images = []string{"golang"}
 			g.Assert(secret.MatchImage("node")).IsFalse()
+		})
+		g.It("should not match image substring", func() {
+			secret := Secret{}
+			secret.Images = []string{"golang"}
+
+			// image is only authorized for golang, not golang:1.4.2
+			g.Assert(secret.MatchImage("golang:1.4.2")).IsFalse()
 		})
 		g.It("should not match event", func() {
 			secret := Secret{}
