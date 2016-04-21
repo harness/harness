@@ -24,10 +24,22 @@ func (v *secretOp) VisitContainer(node *parse.ContainerNode) error {
 		if !secret.Match(node.Container.Image, v.event) {
 			continue
 		}
-		if node.Container.Environment == nil {
-			node.Container.Environment = map[string]string{}
+
+		switch secret.Name {
+		case "REGISTRY_USERNAME":
+			node.Container.AuthConfig.Username = secret.Value
+		case "REGISTRY_PASSWORD":
+			node.Container.AuthConfig.Password = secret.Value
+		case "REGISTRY_EMAIL":
+			node.Container.AuthConfig.Email = secret.Value
+		case "REGISTRY_TOKEN":
+			node.Container.AuthConfig.Token = secret.Value
+		default:
+			if node.Container.Environment == nil {
+				node.Container.Environment = map[string]string{}
+			}
+			node.Container.Environment[secret.Name] = secret.Value
 		}
-		node.Container.Environment[secret.Name] = secret.Value
 	}
 	return nil
 }
