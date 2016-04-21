@@ -279,6 +279,13 @@ func UpdateBuildJob(c context.Context, build *model.Build, job *model.Job) (bool
 	if err := UpdateJob(c, job); err != nil {
 		return false, err
 	}
+
+	// if the job is running or started we don't need to update the build
+	// status since.
+	if job.Status == model.StatusRunning || job.Status == model.StatusPending {
+		return false, nil
+	}
+
 	jobs, err := GetJobList(c, build)
 	if err != nil {
 		return false, err

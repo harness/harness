@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drone/drone/bus"
 	"github.com/drone/drone/engine"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/queue"
@@ -204,6 +205,7 @@ func PostHook(c *gin.Context) {
 	// get the previous build so that we can send
 	// on status change notifications
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
+	secs, _ := store.GetSecretList(c, repo)
 
 	// IMPORTANT. PLEASE READ
 	//
@@ -212,6 +214,7 @@ func PostHook(c *gin.Context) {
 	// enabled using with the environment variable CANARY=true
 
 	if os.Getenv("CANARY") == "true" {
+		bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
 		for _, job := range jobs {
 			queue.Publish(c, &queue.Work{
 				User:      user,
@@ -223,6 +226,7 @@ func PostHook(c *gin.Context) {
 				Netrc:     netrc,
 				Yaml:      string(raw),
 				YamlEnc:   string(sec),
+				Secrets:   secs,
 				System: &model.System{
 					Link:      httputil.GetURL(c.Request),
 					Plugins:   strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
