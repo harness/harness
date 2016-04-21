@@ -155,6 +155,15 @@ func (e *engine) Deallocate(n *model.Node) {
 func (e *engine) Schedule(c context.Context, req *Task) {
 	node := <-e.pool.reserve()
 
+	// make sure the node is online
+	// if not, delete it
+	for !isOnline(node) {
+		e.pool.deallocate(node)
+		store.DeleteNode(c, node)
+		log.Errorf("Node could not be reached and thus removed: %s", node.Addr)
+		node = <-e.pool.reserve()
+	}
+
 	// since we are probably running in a go-routine
 	// make sure we recover from any panics so that
 	// a bug doesn't crash the whole system.
@@ -214,6 +223,30 @@ func (e *engine) Schedule(c context.Context, req *Task) {
 	if err != nil {
 		log.Errorf("error executing notification step. %s", err)
 	}
+}
+
+func isOnline(node *model.Node) bool {
+	retry_count := 3
+	retry_interval := 30
+	for i := 0; i <= retry_count; i++ {
+		client, err := newDockerClient(node.Addr, node.Cert, node.Key, node.CA)
+		if err != nil {
+			log.Errorln("error creating docker client", err)
+		} else {
+			_, err = client.Info()
+			if err != nil {
+				log.Errorln("error getting client info", err)
+			} else {
+				return true
+			}
+		}
+		if i < retry_count {
+			log.Errorf("Could not connect to node (%s). Trying again in %v seconds.", node.Addr, retry_interval)
+			time.Sleep(time.Duration(retry_interval) * time.Second)
+		}
+	}
+
+	return false
 }
 
 func newDockerClient(addr, cert, key, ca string) (dockerclient.Client, error) {
@@ -305,7 +338,7 @@ func (e *engine) runJob(c context.Context, r *Task, updater *updater, client doc
 			MemorySwappiness: -1,
 		},
 		Volumes: map[string]struct{}{
-			"/var/run/docker.sock": {},
+			"/var/run/docker.sock": struct{}{},
 		},
 	}
 
@@ -415,7 +448,7 @@ func (e *engine) runJobNotify(r *Task, client dockerclient.Client) error {
 			MemorySwappiness: -1,
 		},
 		Volumes: map[string]struct{}{
-			"/var/run/docker.sock": {},
+			"/var/run/docker.sock": struct{}{},
 		},
 	}
 
