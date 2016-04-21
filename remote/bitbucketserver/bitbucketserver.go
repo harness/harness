@@ -134,7 +134,7 @@ func (bs *BitbucketServer) Repo(u *model.User, owner, name string) (*model.Repo,
 
 	client := NewClientWithToken(&bs.Consumer, u.Token)
 
-	url := fmt.Sprintf("%s/rest/api/projects/%s/repos/%s",bs.URL,owner,name)
+	url := fmt.Sprintf("%s/rest/api/1.0/projects/%s/repos/%s",bs.URL,owner,name)
 	log.Info("Trying to get " + url)
 	response, err := client.Get(url)
 	if err != nil {
