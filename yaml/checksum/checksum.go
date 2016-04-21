@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// Check is a calculates and verifies a file checksum.
-// This supports the sha1, sha256 and sha512 values.
+// Check is a calculates and verifies a file checksum. This supports the sha1,
+// sha256 and sha512 values.
 func Check(in, checksum string) bool {
 	hash, size, _ := split(checksum)
 
@@ -27,8 +27,6 @@ func Check(in, checksum string) bool {
 		return sha512sum(in) == hash
 	case 40:
 		return sha1sum(in) == hash
-	case 0:
-		return true // if no checksum assume valid
 	}
 
 	return false

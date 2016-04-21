@@ -47,7 +47,28 @@ func exec(client client.Client, docker dockerclient.Client) error {
 	envs := toEnv(w)
 	w.Yaml = expander.ExpandString(w.Yaml, envs)
 
-	w.Secrets = append(w.Secrets, &model.Secret{Name: "HEROKU_TOKEN", Value: "GODZILLA", Images: []string{"golang:1.4.2"}, Events: []string{w.Build.Event}})
+	// inject the netrc file into the clone plugin if the repositroy is
+	// private and requires authentication.
+	if w.Repo.IsPrivate {
+		w.Secrets = append(w.Secrets, &model.Secret{
+			Name:   "DRONE_NETRC_USERNAME",
+			Value:  w.Netrc.Login,
+			Images: []string{"git", "hg"}, // TODO(bradrydzewski) use the command line parameters here
+			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
+		})
+		w.Secrets = append(w.Secrets, &model.Secret{
+			Name:   "DRONE_NETRC_PASSWORD",
+			Value:  w.Netrc.Password,
+			Images: []string{w.Repo.Kind},
+			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
+		})
+		w.Secrets = append(w.Secrets, &model.Secret{
+			Name:   "DRONE_NETRC_MACHINE",
+			Value:  w.Netrc.Machine,
+			Images: []string{"git", "hg"},
+			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
+		})
+	}
 
 	trans := []compiler.Transform{
 		builtin.NewCloneOp("plugins/"+w.Repo.Kind+":latest", true),
