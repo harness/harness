@@ -103,3 +103,18 @@ func (v *validateOp) validateConfig(node *parse.ContainerNode) error {
 	}
 	return nil
 }
+
+// validate the environment configuration and return an error if
+// an attempt is made to override system environment variables.
+// func (v *validateOp) validateEnvironment(node *parse.ContainerNode) error {
+// 	for key := range node.Container.Environment {
+// 		upper := strings.ToUpper(key)
+// 		switch {
+// 		case strings.HasPrefix(upper, "DRONE_"):
+// 			return fmt.Errorf("Cannot set or override DRONE_ environment variables")
+// 		case strings.HasPrefix(upper, "PLUGIN_"):
+// 			return fmt.Errorf("Cannot set or override PLUGIN_ environment variables")
+// 		}
+// 	}
+// 	return nil
+// }

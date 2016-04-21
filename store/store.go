@@ -275,6 +275,47 @@ func UpdateBuild(c context.Context, build *model.Build) error {
 	return FromContext(c).UpdateBuild(build)
 }
 
+func UpdateBuildJob(c context.Context, build *model.Build, job *model.Job) (bool, error) {
+	if err := UpdateJob(c, job); err != nil {
+		return false, err
+	}
+
+	// if the job is running or started we don't need to update the build
+	// status since.
+	if job.Status == model.StatusRunning || job.Status == model.StatusPending {
+		return false, nil
+	}
+
+	jobs, err := GetJobList(c, build)
+	if err != nil {
+		return false, err
+	}
+	// check to see if all jobs are finished for this build. If yes, we need to
+	// calcualte the overall build status and finish time.
+	status := model.StatusSuccess
+	finish := job.Finished
+	for _, job := range jobs {
+		if job.Finished > finish {
+			finish = job.Finished
+		}
+		switch job.Status {
+		case model.StatusSuccess:
+			// no-op
+		case model.StatusRunning, model.StatusPending:
+			return false, nil
+		default:
+			status = job.Status
+		}
+	}
+
+	build.Status = status
+	build.Finished = finish
+	if err := FromContext(c).UpdateBuild(build); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func GetJob(c context.Context, id int64) (*model.Job, error) {
 	return FromContext(c).GetJob(id)
 }

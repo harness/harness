@@ -1,4 +1,4 @@
-package shasum
+package checksum
 
 import (
 	"testing"
@@ -89,9 +89,9 @@ func TestParse(t *testing.T) {
 			g.Assert(ok).IsFalse()
 		})
 
-		g.It("Should return true if empty checksum", func() {
+		g.It("Should return false if empty checksum", func() {
 			ok := Check("foo\n", "")
-			g.Assert(ok).IsTrue()
+			g.Assert(ok).IsFalse()
 		})
 	})
 }

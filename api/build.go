@@ -11,7 +11,9 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drone/drone/bus"
 	"github.com/drone/drone/engine"
+	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
@@ -148,6 +150,12 @@ func DeleteBuild(c *gin.Context) {
 		c.AbortWithError(404, err)
 		return
 	}
+
+	if os.Getenv("CANARY") == "true" {
+		bus.Publish(c, bus.NewEvent(bus.Cancelled, repo, build, job))
+		return
+	}
+
 	node, err := store.GetNode(c, job.NodeID)
 	if err != nil {
 		c.AbortWithError(404, err)
@@ -279,6 +287,38 @@ func PostBuild(c *gin.Context) {
 	// get the previous build so that we can send
 	// on status change notifications
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
+	secs, _ := store.GetSecretList(c, repo)
+
+	// IMPORTANT. PLEASE READ
+	//
+	// The below code uses a feature flag to switch between the current
+	// build engine and the exerimental 0.5 build engine. This can be
+	// enabled using with the environment variable CANARY=true
+
+	if os.Getenv("CANARY") == "true" {
+		bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
+		for _, job := range jobs {
+			queue.Publish(c, &queue.Work{
+				User:      user,
+				Repo:      repo,
+				Build:     build,
+				BuildLast: last,
+				Job:       job,
+				Keys:      key,
+				Netrc:     netrc,
+				Yaml:      string(raw),
+				YamlEnc:   string(sec),
+				Secrets:   secs,
+				System: &model.System{
+					Link:      httputil.GetURL(c.Request),
+					Plugins:   strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
+					Globals:   strings.Split(os.Getenv("PLUGIN_PARAMS"), " "),
+					Escalates: strings.Split(os.Getenv("ESCALATE_FILTER"), " "),
+				},
+			})
+		}
+		return // EXIT NOT TO AVOID THE 0.4 ENGINE CODE BELOW
+	}
 
 	engine_ := engine.FromContext(c)
 	go engine_.Schedule(c.Copy(), &engine.Task{

@@ -10,13 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drone/drone/bus"
 	"github.com/drone/drone/engine"
-	"github.com/drone/drone/engine/parser"
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
+	"github.com/drone/drone/yaml"
 )
 
 var (
@@ -147,13 +149,13 @@ func PostHook(c *gin.Context) {
 		// NOTE we don't exit on failure. The sec file is optional
 	}
 
-	axes, err := parser.ParseMatrix(raw)
+	axes, err := yaml.ParseMatrix(raw)
 	if err != nil {
 		c.String(500, "Failed to parse yaml file or calculate matrix. %s", err)
 		return
 	}
 	if len(axes) == 0 {
-		axes = append(axes, parser.Axis{})
+		axes = append(axes, yaml.Axis{})
 	}
 
 	netrc, err := remote_.Netrc(user, repo)
@@ -165,8 +167,8 @@ func PostHook(c *gin.Context) {
 	key, _ := store.GetKey(c, repo)
 
 	// verify the branches can be built vs skipped
-	branches := parser.ParseBranch(raw)
-	if !branches.Matches(build.Branch) {
+	branches := yaml.ParseBranch(raw)
+	if !branches.Matches(build.Branch) && build.Event != model.EventTag && build.Event != model.EventDeploy {
 		c.String(200, "Branch does not match restrictions defined in yaml")
 		return
 	}
@@ -203,6 +205,38 @@ func PostHook(c *gin.Context) {
 	// get the previous build so that we can send
 	// on status change notifications
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
+	secs, _ := store.GetSecretList(c, repo)
+
+	// IMPORTANT. PLEASE READ
+	//
+	// The below code uses a feature flag to switch between the current
+	// build engine and the exerimental 0.5 build engine. This can be
+	// enabled using with the environment variable CANARY=true
+
+	if os.Getenv("CANARY") == "true" {
+		bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
+		for _, job := range jobs {
+			queue.Publish(c, &queue.Work{
+				User:      user,
+				Repo:      repo,
+				Build:     build,
+				BuildLast: last,
+				Job:       job,
+				Keys:      key,
+				Netrc:     netrc,
+				Yaml:      string(raw),
+				YamlEnc:   string(sec),
+				Secrets:   secs,
+				System: &model.System{
+					Link:      httputil.GetURL(c.Request),
+					Plugins:   strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
+					Globals:   strings.Split(os.Getenv("PLUGIN_PARAMS"), " "),
+					Escalates: strings.Split(os.Getenv("ESCALATE_FILTER"), " "),
+				},
+			})
+		}
+		return // EXIT NOT TO AVOID THE 0.4 ENGINE CODE BELOW
+	}
 
 	engine_ := engine.FromContext(c)
 	go engine_.Schedule(c.Copy(), &engine.Task{
@@ -222,5 +256,4 @@ func PostHook(c *gin.Context) {
 			Escalates: strings.Split(os.Getenv("ESCALATE_FILTER"), " "),
 		},
 	})
-
 }

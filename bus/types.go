@@ -30,3 +30,11 @@ func NewEvent(t EventType, r *model.Repo, b *model.Build, j *model.Job) *Event {
 		Job:   *j,
 	}
 }
+
+func NewBuildEvent(t EventType, r *model.Repo, b *model.Build) *Event {
+	return &Event{
+		Type:  t,
+		Repo:  *r,
+		Build: *b,
+	}
+}

@@ -1,4 +1,4 @@
-package libyaml
+package compiler
 
 import "github.com/drone/drone/engine/compiler/parse"
 
