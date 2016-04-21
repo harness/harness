@@ -1,7 +1,5 @@
 package model
 
-import "strconv"
-
 type RepoLite struct {
 	Owner    string `json:"owner"`
 	Name     string `json:"name"`
@@ -32,18 +30,4 @@ type Repo struct {
 	AllowDeploy bool   `json:"allow_deploys"     meddler:"repo_allow_deploys"`
 	AllowTag    bool   `json:"allow_tags"        meddler:"repo_allow_tags"`
 	Hash        string `json:"-"                 meddler:"repo_hash"`
-}
-
-// ToEnv returns environment variable valus for the repository.
-func (r *Repo) ToEnv(to map[string]string) {
-	to["CI_VCS"] = r.Kind
-	to["CI_REPO"] = r.FullName
-	to["CI_REPO_OWNER"] = r.Owner
-	to["CI_REPO_NAME"] = r.Name
-	to["CI_REPO_LINK"] = r.Link
-	to["CI_REPO_AVATAR"] = r.Avatar
-	to["CI_REPO_BRANCH"] = r.Branch
-	to["CI_REPO_PRIVATE"] = strconv.FormatBool(r.IsPrivate)
-	to["CI_REPO_TRUSTED"] = strconv.FormatBool(r.IsTrusted)
-	to["CI_REMOTE_URL"] = r.Clone
 }

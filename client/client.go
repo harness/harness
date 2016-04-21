@@ -70,16 +70,6 @@ func (c *client) Wait(id int64) *Wait {
 	return &Wait{id, c, ctx, cancel}
 }
 
-////////
-
-type CancelNotifier interface {
-	Canecel()
-	CancelNotify() bool
-	IsCancelled() bool
-}
-
-////////
-
 type Wait struct {
 	id     int64
 	client *client

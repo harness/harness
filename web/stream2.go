@@ -46,6 +46,8 @@ func GetRepoEvents2(c *gin.Context) {
 				return false
 			}
 
+			// TODO(bradrydzewski) This is a super hacky workaround until we improve
+			// the actual bus. Having a per-call database event is just plain stupid.
 			if event.Repo.FullName == repo.FullName {
 
 				var payload = struct {

@@ -22,6 +22,32 @@ type Secret struct {
 	Events []string `json:"event,omitempty" meddler:"secret_events,json"`
 }
 
+// Match returns true if an image and event match the restricted list.
+func (s *Secret) Match(image, event string) bool {
+	return s.MatchImage(image) && s.MatchEvent(event)
+}
+
+// MatchImage returns true if an image matches the restricted list.
+func (s *Secret) MatchImage(want string) bool {
+	for _, got := range s.Images {
+		if want == got {
+			return true
+		}
+	}
+	return false
+}
+
+// MatchEvent returns true if an event matches the restricted list.
+func (s *Secret) MatchEvent(want string) bool {
+	for _, got := range s.Events {
+		if want == got {
+			return true
+		}
+	}
+	return false
+}
+
+// Validate validates the required fields and formats.
 func (s *Secret) Validate() error {
 	return nil
 }

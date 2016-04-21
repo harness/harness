@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -14,6 +16,8 @@ import (
 	"github.com/drone/drone/engine/runner"
 	engine "github.com/drone/drone/engine/runner/docker"
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/queue"
+	"github.com/drone/drone/yaml/expander"
 
 	"github.com/samalba/dockerclient"
 	"golang.org/x/net/context"
@@ -40,57 +44,37 @@ func exec(client client.Client, docker dockerclient.Client) error {
 
 	prefix := fmt.Sprintf("drone_%s", uniuri.New())
 
+	envs := toEnv(w)
+	w.Yaml = expander.ExpandString(w.Yaml, envs)
+
+	w.Secrets = append(w.Secrets, &model.Secret{Name: "HEROKU_TOKEN", Value: "GODZILLA", Images: []string{"golang:1.4.2"}, Events: []string{w.Build.Event}})
+
 	trans := []compiler.Transform{
-		builtin.NewCloneOp("plugins/git:latest", true),
+		builtin.NewCloneOp("plugins/"+w.Repo.Kind+":latest", true),
 		builtin.NewCacheOp(
 			"plugins/cache:latest",
 			"/var/lib/drone/cache/"+w.Repo.FullName,
 			false,
 		),
+		builtin.NewSecretOp(w.Build.Event, w.Secrets),
 		builtin.NewNormalizeOp("plugins"),
 		builtin.NewWorkspaceOp("/drone", "drone/src/github.com/"+w.Repo.FullName),
-		builtin.NewEnvOp(map[string]string{
-			"CI":                "drone",
-			"CI_REPO":           w.Repo.FullName,
-			"CI_REPO_OWNER":     w.Repo.Owner,
-			"CI_REPO_NAME":      w.Repo.Name,
-			"CI_REPO_LINK":      w.Repo.Link,
-			"CI_REPO_AVATAR":    w.Repo.Avatar,
-			"CI_REPO_BRANCH":    w.Repo.Branch,
-			"CI_REPO_PRIVATE":   fmt.Sprintf("%v", w.Repo.IsPrivate),
-			"CI_REMOTE_URL":     w.Repo.Clone,
-			"CI_COMMIT_SHA":     w.Build.Commit,
-			"CI_COMMIT_REF":     w.Build.Ref,
-			"CI_COMMIT_BRANCH":  w.Build.Branch,
-			"CI_COMMIT_LINK":    w.Build.Link,
-			"CI_COMMIT_MESSAGE": w.Build.Message,
-			"CI_AUTHOR":         w.Build.Author,
-			"CI_AUTHOR_EMAIL":   w.Build.Email,
-			"CI_AUTHOR_AVATAR":  w.Build.Avatar,
-			"CI_BUILD_NUMBER":   fmt.Sprintf("%v", w.Build.Number),
-			"CI_BUILD_EVENT":    w.Build.Event,
-			// "CI_NETRC_USERNAME":    w.Netrc.Login,
-			// "CI_NETRC_PASSWORD":    w.Netrc.Password,
-			// "CI_NETRC_MACHINE":     w.Netrc.Machine,
-			// "CI_PREV_BUILD_STATUS": w.BuildLast.Status,
-			// "CI_PREV_BUILD_NUMBER": fmt.Sprintf("%v", w.BuildLast.Number),
-			// "CI_PREV_COMMIT_SHA":   w.BuildLast.Commit,
-		}),
 		builtin.NewValidateOp(
 			w.Repo.IsTrusted,
 			[]string{"plugins/*"},
 		),
+		builtin.NewEnvOp(envs),
 		builtin.NewShellOp(builtin.Linux_adm64),
 		builtin.NewArgsOp(),
 		builtin.NewPodOp(prefix),
 		builtin.NewAliasOp(prefix),
 		builtin.NewPullOp(false),
 		builtin.NewFilterOp(
-			model.StatusSuccess, // w.BuildLast.Status,
+			model.StatusSuccess, // TODO(bradrydzewski) please add the last build status here
 			w.Build.Branch,
 			w.Build.Event,
 			w.Build.Deploy,
-			map[string]string{},
+			w.Job.Environment,
 		),
 	}
 
@@ -171,7 +155,7 @@ func exec(client client.Client, docker dockerclient.Client) error {
 	w.Job.Finished = time.Now().Unix()
 
 	switch w.Job.ExitCode {
-	case 128, 130:
+	case 128, 130, 137:
 		w.Job.Status = model.StatusKilled
 	case 0:
 		w.Job.Status = model.StatusSuccess
@@ -184,3 +168,68 @@ func exec(client client.Client, docker dockerclient.Client) error {
 
 	return client.Push(w)
 }
+
+func toEnv(w *queue.Work) map[string]string {
+	envs := map[string]string{
+		"CI":                   "drone",
+		"DRONE":                "true",
+		"DRONE_ARCH":           "linux_amd64",
+		"DRONE_REPO":           w.Repo.FullName,
+		"DRONE_REPO_SCM":       w.Repo.Kind,
+		"DRONE_REPO_OWNER":     w.Repo.Owner,
+		"DRONE_REPO_NAME":      w.Repo.Name,
+		"DRONE_REPO_LINK":      w.Repo.Link,
+		"DRONE_REPO_AVATAR":    w.Repo.Avatar,
+		"DRONE_REPO_BRANCH":    w.Repo.Branch,
+		"DRONE_REPO_PRIVATE":   fmt.Sprintf("%v", w.Repo.IsPrivate),
+		"DRONE_REPO_TRUSTED":   fmt.Sprintf("%v", w.Repo.IsTrusted),
+		"DRONE_REMOTE_URL":     w.Repo.Clone,
+		"DRONE_COMMIT_SHA":     w.Build.Commit,
+		"DRONE_COMMIT_REF":     w.Build.Ref,
+		"DRONE_COMMIT_BRANCH":  w.Build.Branch,
+		"DRONE_COMMIT_LINK":    w.Build.Link,
+		"DRONE_COMMIT_MESSAGE": w.Build.Message,
+		"DRONE_AUTHOR":         w.Build.Author,
+		"DRONE_AUTHOR_EMAIL":   w.Build.Email,
+		"DRONE_AUTHOR_AVATAR":  w.Build.Avatar,
+		"DRONE_BUILD_NUMBER":   fmt.Sprintf("%d", w.Build.Number),
+		"DRONE_BUILD_EVENT":    w.Build.Event,
+		"DRONE_BUILD_CREATED":  fmt.Sprintf("%d", w.Build.Created),
+		"DRONE_BUILD_STARTED":  fmt.Sprintf("%d", w.Build.Started),
+		"DRONE_BUILD_FINISHED": fmt.Sprintf("%d", w.Build.Finished),
+		"DRONE_BUILD_VERIFIED": fmt.Sprintf("%v", false),
+
+		// SHORTER ALIASES
+		"DRONE_BRANCH": w.Build.Branch,
+		"DRONE_COMMIT": w.Build.Commit,
+
+		// TODO(bradrydzewski) netrc should only be injected via secrets
+		// "DRONE_NETRC_USERNAME":    w.Netrc.Login,
+		// "DRONE_NETRC_PASSWORD":    w.Netrc.Password,
+		// "DRONE_NETRC_MACHINE":     w.Netrc.Machine,
+	}
+
+	if w.Build.Event == model.EventTag {
+		envs["DRONE_TAG"] = strings.TrimPrefix(w.Build.Ref, "refs/tags/")
+	}
+	if w.Build.Event == model.EventPull {
+		envs["DRONE_PULL_REQUEST"] = pullRegexp.FindString(w.Build.Ref)
+	}
+	if w.Build.Event == model.EventDeploy {
+		envs["DRONE_DEPLOY_TO"] = w.Build.Deploy
+	}
+
+	if w.BuildLast != nil {
+		envs["DRONE_PREV_BUILD_STATUS"] = w.BuildLast.Status
+		envs["DRONE_PREV_BUILD_NUMBER"] = fmt.Sprintf("%v", w.BuildLast.Number)
+		envs["DRONE_PREV_COMMIT_SHA"] = w.BuildLast.Commit
+	}
+
+	// inject matrix values as environment variables
+	for key, val := range w.Job.Environment {
+		envs[key] = val
+	}
+	return envs
+}
+
+var pullRegexp = regexp.MustCompile("\\d+")

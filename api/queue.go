@@ -51,9 +51,7 @@ func Wait(c *gin.Context) {
 	for {
 		select {
 		case event := <-eventc:
-			if event.Job.ID == id &&
-				event.Job.Status != model.StatusPending &&
-				event.Job.Status != model.StatusRunning {
+			if event.Job.ID == id && event.Type == bus.Cancelled {
 				c.JSON(200, event.Job)
 				return
 			}
@@ -93,13 +91,18 @@ func Update(c *gin.Context) {
 	job.Status = work.Job.Status
 	job.ExitCode = work.Job.ExitCode
 
+	if build.Status == model.StatusPending {
+		build.Status = model.StatusRunning
+		store.UpdateBuild(c, build)
+	}
+
 	ok, err := store.UpdateBuildJob(c, build, job)
 	if err != nil {
 		c.String(500, "Unable to update job. %s", err)
 		return
 	}
 
-	if ok {
+	if ok && build.Status != model.StatusRunning {
 		// get the user because we transfer the user form the server to agent
 		// and back we lose the token which does not get serialized to json.
 		user, err := store.GetUser(c, work.User.ID)
@@ -107,10 +110,16 @@ func Update(c *gin.Context) {
 			c.String(500, "Unable to find user. %s", err)
 			return
 		}
-		bus.Publish(c, &bus.Event{})
 		remote.Status(c, user, work.Repo, build,
 			fmt.Sprintf("%s/%s/%d", work.System.Link, work.Repo.FullName, work.Build.Number))
 	}
+
+	if build.Status == model.StatusRunning {
+		bus.Publish(c, bus.NewEvent(bus.Started, work.Repo, build, job))
+	} else {
+		bus.Publish(c, bus.NewEvent(bus.Finished, work.Repo, build, job))
+	}
+
 	c.JSON(200, work)
 }
 

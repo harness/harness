@@ -11,6 +11,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drone/drone/bus"
 	"github.com/drone/drone/engine"
 	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
@@ -149,6 +150,12 @@ func DeleteBuild(c *gin.Context) {
 		c.AbortWithError(404, err)
 		return
 	}
+
+	if os.Getenv("CANARY") == "true" {
+		bus.Publish(c, bus.NewEvent(bus.Cancelled, repo, build, job))
+		return
+	}
+
 	node, err := store.GetNode(c, job.NodeID)
 	if err != nil {
 		c.AbortWithError(404, err)
@@ -280,7 +287,7 @@ func PostBuild(c *gin.Context) {
 	// get the previous build so that we can send
 	// on status change notifications
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
-
+	secs, _ := store.GetSecretList(c, repo)
 
 	// IMPORTANT. PLEASE READ
 	//
@@ -289,6 +296,7 @@ func PostBuild(c *gin.Context) {
 	// enabled using with the environment variable CANARY=true
 
 	if os.Getenv("CANARY") == "true" {
+		bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
 		for _, job := range jobs {
 			queue.Publish(c, &queue.Work{
 				User:      user,
@@ -300,6 +308,7 @@ func PostBuild(c *gin.Context) {
 				Netrc:     netrc,
 				Yaml:      string(raw),
 				YamlEnc:   string(sec),
+				Secrets:   secs,
 				System: &model.System{
 					Link:      httputil.GetURL(c.Request),
 					Plugins:   strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
