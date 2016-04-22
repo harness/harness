@@ -54,12 +54,6 @@ func (r *pipeline) run() error {
 
 	envs := toEnv(w)
 	w.Yaml = expander.ExpandString(w.Yaml, envs)
-	if w.Verified {
-
-	}
-	if w.Signed {
-
-	}
 
 	// inject the netrc file into the clone plugin if the repositroy is
 	// private and requires authentication.
@@ -123,45 +117,42 @@ func (r *pipeline) run() error {
 	compile.Transforms(trans)
 	spec, err := compile.CompileString(w.Yaml)
 	if err != nil {
-		// TODO handle error
-		logrus.Infof("Error compiling Yaml %s/%s#%d %s",
-			w.Repo.Owner, w.Repo.Name, w.Build.Number, err.Error())
-		return err
+		w.Job.Error = err.Error()
+		w.Job.ExitCode = 255
+		w.Job.Finished = w.Job.Started
+		w.Job.Status = model.StatusError
+		pushRetry(r.drone, w)
+		return nil
 	}
 
-	if err := r.drone.Push(w); err != nil {
-		logrus.Errorf("Error persisting update %s/%s#%d.%d. %s",
-			w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number, err)
-		return err
-	}
+	pushRetry(r.drone, w)
 
 	conf := runner.Config{
 		Engine: docker.New(r.docker),
 	}
 
-	ctx := context.TODO()
-	ctx, cancel := context.WithCancel(ctx)
-
-	run := conf.Runner(ctx, spec)
-	run.Run()
+	c := context.TODO()
+	c, timout := context.WithTimeout(c, time.Minute*time.Duration(w.Repo.Timeout))
+	c, cancel := context.WithCancel(c)
 	defer cancel()
+	defer timout()
+
+	run := conf.Runner(c, spec)
+	run.Run()
 
 	wait := r.drone.Wait(w.Job.ID)
-	if err != nil {
-		return err
-	}
+	defer wait.Cancel()
 	go func() {
-		_, werr := wait.Done()
-		if werr == nil {
+		if _, err := wait.Done(); err == nil {
 			logrus.Infof("Cancel build %s/%s#%d.%d",
 				w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)
 			cancel()
 		}
 	}()
-	defer wait.Cancel()
 
 	rc, wc := io.Pipe()
 	go func() {
+		// TODO(bradrydzewski) figure out how to resume upload on failure
 		err := r.drone.Stream(w.Job.ID, rc)
 		if err != nil && err != io.ErrClosedPipe {
 			logrus.Errorf("Error streaming build logs. %s", err)
@@ -207,7 +198,21 @@ func (r *pipeline) run() error {
 	logrus.Infof("Finished build %s/%s#%d.%d",
 		w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)
 
-	return r.drone.Push(w)
+	pushRetry(r.drone, w)
+	return nil
+}
+
+func pushRetry(client client.Client, w *queue.Work) {
+	for {
+		err := client.Push(w)
+		if err == nil {
+			return
+		}
+		logrus.Errorf("Error updating %s/%s#%d.%d. Retry in 30s. %s",
+			w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number, err)
+		logrus.Infof("Retry update in 30s")
+		time.Sleep(time.Second * 30)
+	}
 }
 
 func toEnv(w *queue.Work) map[string]string {
@@ -240,15 +245,8 @@ func toEnv(w *queue.Work) map[string]string {
 		"DRONE_BUILD_FINISHED": fmt.Sprintf("%d", w.Build.Finished),
 		"DRONE_YAML_VERIFIED":  fmt.Sprintf("%v", w.Verified),
 		"DRONE_YAML_SIGNED":    fmt.Sprintf("%v", w.Signed),
-
-		// SHORTER ALIASES
-		"DRONE_BRANCH": w.Build.Branch,
-		"DRONE_COMMIT": w.Build.Commit,
-
-		// TODO(bradrydzewski) netrc should only be injected via secrets
-		// "DRONE_NETRC_USERNAME":    w.Netrc.Login,
-		// "DRONE_NETRC_PASSWORD":    w.Netrc.Password,
-		// "DRONE_NETRC_MACHINE":     w.Netrc.Machine,
+		"DRONE_BRANCH":         w.Build.Branch,
+		"DRONE_COMMIT":         w.Build.Commit,
 	}
 
 	if w.Build.Event == model.EventTag {
