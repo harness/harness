@@ -14,7 +14,7 @@ import (
 	"github.com/drone/drone/engine/compiler"
 	"github.com/drone/drone/engine/compiler/builtin"
 	"github.com/drone/drone/engine/runner"
-	engine "github.com/drone/drone/engine/runner/docker"
+	"github.com/drone/drone/engine/runner/docker"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/queue"
 	"github.com/drone/drone/yaml/expander"
@@ -23,15 +23,23 @@ import (
 	"golang.org/x/net/context"
 )
 
-func recoverExec(client client.Client, docker dockerclient.Client) error {
-	defer func() {
-		recover()
-	}()
-	return exec(client, docker)
+type config struct {
+	platform   string
+	namespace  string
+	whitelist  []string
+	privileged []string
+	netrc      []string
+	pull       bool
 }
 
-func exec(client client.Client, docker dockerclient.Client) error {
-	w, err := client.Pull()
+type pipeline struct {
+	drone  client.Client
+	docker dockerclient.Client
+	config config
+}
+
+func (r *pipeline) run() error {
+	w, err := r.drone.Pull("linux", "amd64")
 	if err != nil {
 		return err
 	}
@@ -46,23 +54,34 @@ func exec(client client.Client, docker dockerclient.Client) error {
 
 	envs := toEnv(w)
 	w.Yaml = expander.ExpandString(w.Yaml, envs)
+	if w.Verified {
+
+	}
+	if w.Signed {
+
+	}
 
 	// inject the netrc file into the clone plugin if the repositroy is
 	// private and requires authentication.
+	var secrets []*model.Secret
+	if w.Verified {
+		secrets = append(secrets, w.Secrets...)
+	}
+
 	if w.Repo.IsPrivate {
-		w.Secrets = append(w.Secrets, &model.Secret{
+		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_USERNAME",
 			Value:  w.Netrc.Login,
 			Images: []string{"git", "hg"}, // TODO(bradrydzewski) use the command line parameters here
 			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
 		})
-		w.Secrets = append(w.Secrets, &model.Secret{
+		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_PASSWORD",
 			Value:  w.Netrc.Password,
-			Images: []string{w.Repo.Kind},
+			Images: []string{"git", "hg"},
 			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
 		})
-		w.Secrets = append(w.Secrets, &model.Secret{
+		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_MACHINE",
 			Value:  w.Netrc.Machine,
 			Images: []string{"git", "hg"},
@@ -71,25 +90,26 @@ func exec(client client.Client, docker dockerclient.Client) error {
 	}
 
 	trans := []compiler.Transform{
-		builtin.NewCloneOp("plugins/"+w.Repo.Kind+":latest", true),
+		builtin.NewCloneOp("plugins/git:latest", true),
 		builtin.NewCacheOp(
 			"plugins/cache:latest",
 			"/var/lib/drone/cache/"+w.Repo.FullName,
 			false,
 		),
-		builtin.NewSecretOp(w.Build.Event, w.Secrets),
-		builtin.NewNormalizeOp("plugins"),
-		builtin.NewWorkspaceOp("/drone", "drone/src/github.com/"+w.Repo.FullName),
+		builtin.NewSecretOp(w.Build.Event, secrets),
+		builtin.NewNormalizeOp(r.config.namespace),
+		builtin.NewWorkspaceOp("/drone", "/drone/src/github.com/"+w.Repo.FullName),
 		builtin.NewValidateOp(
 			w.Repo.IsTrusted,
-			[]string{"plugins/*"},
+			r.config.whitelist,
 		),
 		builtin.NewEnvOp(envs),
 		builtin.NewShellOp(builtin.Linux_adm64),
 		builtin.NewArgsOp(),
+		builtin.NewEscalateOp(r.config.privileged),
 		builtin.NewPodOp(prefix),
 		builtin.NewAliasOp(prefix),
-		builtin.NewPullOp(false),
+		builtin.NewPullOp(r.config.pull),
 		builtin.NewFilterOp(
 			model.StatusSuccess, // TODO(bradrydzewski) please add the last build status here
 			w.Build.Branch,
@@ -109,14 +129,14 @@ func exec(client client.Client, docker dockerclient.Client) error {
 		return err
 	}
 
-	if err := client.Push(w); err != nil {
+	if err := r.drone.Push(w); err != nil {
 		logrus.Errorf("Error persisting update %s/%s#%d.%d. %s",
 			w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number, err)
 		return err
 	}
 
 	conf := runner.Config{
-		Engine: engine.New(docker),
+		Engine: docker.New(r.docker),
 	}
 
 	ctx := context.TODO()
@@ -126,7 +146,7 @@ func exec(client client.Client, docker dockerclient.Client) error {
 	run.Run()
 	defer cancel()
 
-	wait := client.Wait(w.Job.ID)
+	wait := r.drone.Wait(w.Job.ID)
 	if err != nil {
 		return err
 	}
@@ -142,7 +162,7 @@ func exec(client client.Client, docker dockerclient.Client) error {
 
 	rc, wc := io.Pipe()
 	go func() {
-		err := client.Stream(w.Job.ID, rc)
+		err := r.drone.Stream(w.Job.ID, rc)
 		if err != nil && err != io.ErrClosedPipe {
 			logrus.Errorf("Error streaming build logs. %s", err)
 		}
@@ -187,7 +207,7 @@ func exec(client client.Client, docker dockerclient.Client) error {
 	logrus.Infof("Finished build %s/%s#%d.%d",
 		w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)
 
-	return client.Push(w)
+	return r.drone.Push(w)
 }
 
 func toEnv(w *queue.Work) map[string]string {
@@ -218,7 +238,8 @@ func toEnv(w *queue.Work) map[string]string {
 		"DRONE_BUILD_CREATED":  fmt.Sprintf("%d", w.Build.Created),
 		"DRONE_BUILD_STARTED":  fmt.Sprintf("%d", w.Build.Started),
 		"DRONE_BUILD_FINISHED": fmt.Sprintf("%d", w.Build.Finished),
-		"DRONE_BUILD_VERIFIED": fmt.Sprintf("%v", false),
+		"DRONE_YAML_VERIFIED":  fmt.Sprintf("%v", w.Verified),
+		"DRONE_YAML_SIGNED":    fmt.Sprintf("%v", w.Signed),
 
 		// SHORTER ALIASES
 		"DRONE_BRANCH": w.Build.Branch,

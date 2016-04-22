@@ -5,6 +5,8 @@ import "github.com/drone/drone/model"
 // Work represents an item for work to be
 // processed by a worker.
 type Work struct {
+	Signed    bool            `json:"signed"`
+	Verified  bool            `json:"verified"`
 	Yaml      string          `json:"config"`
 	YamlEnc   string          `json:"secret"`
 	Repo      *model.Repo     `json:"repo"`

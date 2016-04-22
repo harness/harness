@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/api"
+	"github.com/drone/drone/router/middleware"
 	"github.com/drone/drone/router/middleware/header"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/router/middleware/token"
@@ -16,7 +17,7 @@ import (
 	"github.com/drone/drone/web"
 )
 
-func Load(middleware ...gin.HandlerFunc) http.Handler {
+func Load(middlewares ...gin.HandlerFunc) http.Handler {
 	e := gin.New()
 	e.Use(gin.Recovery())
 
@@ -26,7 +27,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(header.NoCache)
 	e.Use(header.Options)
 	e.Use(header.Secure)
-	e.Use(middleware...)
+	e.Use(middlewares...)
 	e.Use(session.SetUser())
 	e.Use(token.Refresh)
 
@@ -163,7 +164,9 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 
 	queue := e.Group("/api/queue")
 	{
+		queue.Use(middleware.AgentMust())
 		queue.POST("/pull", api.Pull)
+		queue.POST("/pull/:os/:arch", api.Pull)
 		queue.POST("/wait/:id", api.Wait)
 		queue.POST("/stream/:id", api.Stream)
 		queue.POST("/status/:id", api.Update)

@@ -56,6 +56,15 @@ func Test_normalize(t *testing.T) {
 				g.Assert(c.Container.Image).Equal("index.docker.io/drone/git:latest")
 			})
 
+			g.It("should replace underscores with dashes", func() {
+				c := root.NewPluginNode()
+				c.Container = runner.Container{Image: "gh_pages"}
+				op := NewNormalizeOp("plugins")
+
+				op.VisitContainer(c)
+				g.Assert(c.Container.Image).Equal("plugins/gh-pages:latest")
+			})
+
 			g.It("should ignore shell or service types", func() {
 				c := root.NewShellNode()
 				c.Container = runner.Container{Image: "golang"}

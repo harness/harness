@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	pathPull   = "%s/api/queue/pull"
+	pathPull   = "%s/api/queue/pull/%s/%s"
 	pathWait   = "%s/api/queue/wait/%d"
 	pathStream = "%s/api/queue/stream/%d"
 	pathPush   = "%s/api/queue/status/%d"
@@ -43,9 +43,9 @@ func NewClientToken(uri, token string) Client {
 }
 
 // Pull pulls work from the server queue.
-func (c *client) Pull() (*queue.Work, error) {
+func (c *client) Pull(os, arch string) (*queue.Work, error) {
 	out := new(queue.Work)
-	uri := fmt.Sprintf(pathPull, c.base)
+	uri := fmt.Sprintf(pathPull, c.base, os, arch)
 	err := c.post(uri, nil, out)
 	return out, err
 }

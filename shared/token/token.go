@@ -10,10 +10,11 @@ import (
 type SecretFunc func(*Token) (string, error)
 
 const (
-	UserToken = "user"
-	SessToken = "sess"
-	HookToken = "hook"
-	CsrfToken = "csrf"
+	UserToken  = "user"
+	SessToken  = "sess"
+	HookToken  = "hook"
+	CsrfToken  = "csrf"
+	AgentToken = "agent"
 )
 
 // Default algorithm used to sign JWT tokens.

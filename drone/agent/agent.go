@@ -41,6 +41,18 @@ var AgentCmd = cli.Command{
 			Value:  2,
 		},
 		cli.StringFlag{
+			EnvVar: "DOCKER_OS",
+			Name:   "docker-os",
+			Usage:  "docker operating system",
+			Value:  "linux",
+		},
+		cli.StringFlag{
+			EnvVar: "DOCKER_ARCH",
+			Name:   "docker-arch",
+			Usage:  "docker architecture system",
+			Value:  "amd64",
+		},
+		cli.StringFlag{
 			EnvVar: "DRONE_SERVER",
 			Name:   "drone-server",
 			Usage:  "drone server address",
@@ -68,16 +80,40 @@ var AgentCmd = cli.Command{
 			Usage:  "start the agent with experimental features",
 		},
 		cli.StringSliceFlag{
-			EnvVar: "DRONE_NETRC_PLUGIN",
+			EnvVar: "DRONE_PLUGIN_NETRC",
 			Name:   "netrc-plugin",
 			Usage:  "plugins that receive the netrc file",
 			Value:  &cli.StringSlice{"git", "hg"},
 		},
 		cli.StringSliceFlag{
-			EnvVar: "DRONE_PRIVILEGED_PLUGIN",
-			Name:   "privileged-plugin",
+			EnvVar: "DRONE_PLUGIN_PRIVILEGED",
+			Name:   "privileged",
 			Usage:  "plugins that require privileged mode",
-			Value:  &cli.StringSlice{"docker", "gcr", "ecr"},
+			Value: &cli.StringSlice{
+				"plugins/docker",
+				"plugins/docker:*",
+				"plguins/gcr",
+				"plguins/gcr:*",
+				"plugins/ecr",
+				"plugins/ecr:*",
+			},
+		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_PLUGIN_PULL",
+			Name:   "pull",
+			Usage:  "always pull latest plugin images",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_PLUGIN_NAMESPACE",
+			Name:   "namespace",
+			Value:  "plugins",
+			Usage:  "default plugin image namespace",
+		},
+		cli.StringSliceFlag{
+			EnvVar: "DRONE_PLUGIN_WHITELIST",
+			Name:   "whitelist",
+			Usage:  "plugins that are permitted to run on the host",
+			Value:  &cli.StringSlice{"plugins/*"},
 		},
 	},
 }
@@ -109,10 +145,21 @@ func start(c *cli.Context) {
 	for i := 0; i < c.Int("docker-max-procs"); i++ {
 		wg.Add(1)
 		go func() {
+			r := pipeline{
+				drone:  client,
+				docker: docker,
+				config: config{
+					whitelist:  c.StringSlice("whitelist"),
+					namespace:  c.String("namespace"),
+					privileged: c.StringSlice("privileged"),
+					netrc:      c.StringSlice("netrc-plugin"),
+					pull:       c.Bool("pull"),
+				},
+			}
 			for {
-				if err := recoverExec(client, docker); err != nil {
+				if err := r.run(); err != nil {
 					dur := c.Duration("backoff")
-					logrus.Debugf("Attempting to reconnect in %v", dur)
+					logrus.Warnf("Attempting to reconnect in %v", dur)
 					time.Sleep(dur)
 				}
 			}

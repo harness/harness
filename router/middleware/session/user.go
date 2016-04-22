@@ -70,15 +70,14 @@ func MustAdmin() gin.HandlerFunc {
 		user := User(c)
 		switch {
 		case user == nil:
-			c.AbortWithStatus(http.StatusUnauthorized)
-			// c.HTML(http.StatusUnauthorized, "401.html", gin.H{})
+			c.String(401, "User not authorized")
+			c.Abort()
 		case user.Admin == false:
-			c.AbortWithStatus(http.StatusForbidden)
-			// c.HTML(http.StatusForbidden, "401.html", gin.H{})
+			c.String(413, "User not authorized")
+			c.Abort()
 		default:
 			c.Next()
 		}
-
 	}
 }
 
@@ -87,11 +86,10 @@ func MustUser() gin.HandlerFunc {
 		user := User(c)
 		switch {
 		case user == nil:
-			c.AbortWithStatus(http.StatusUnauthorized)
-			// c.HTML(http.StatusUnauthorized, "401.html", gin.H{})
+			c.String(401, "User not authorized")
+			c.Abort()
 		default:
 			c.Next()
 		}
-
 	}
 }

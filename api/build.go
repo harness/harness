@@ -18,6 +18,7 @@ import (
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
 	"github.com/gin-gonic/gin"
+	"github.com/square/go-jose"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
@@ -33,6 +34,9 @@ func init() {
 		droneYml = ".drone.yml"
 	}
 	droneSec = fmt.Sprintf("%s.sec", strings.TrimSuffix(droneYml, filepath.Ext(droneYml)))
+	if os.Getenv("CANARY") == "true" {
+		droneSec = fmt.Sprintf("%s.sig", strings.TrimSuffix(droneYml, filepath.Ext(droneYml)))
+	}
 }
 
 func GetBuilds(c *gin.Context) {
@@ -296,25 +300,33 @@ func PostBuild(c *gin.Context) {
 	// enabled using with the environment variable CANARY=true
 
 	if os.Getenv("CANARY") == "true" {
+
+		var signed bool
+		var verified bool
+
+		signature, err := jose.ParseSigned(string(sec))
+		if err == nil && len(sec) != 0 {
+			signed = true
+			output, err := signature.Verify(repo.Hash)
+			if err == nil && string(output) == string(raw) {
+				verified = true
+			}
+		}
+
 		bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
 		for _, job := range jobs {
 			queue.Publish(c, &queue.Work{
+				Signed:    signed,
+				Verified:  verified,
 				User:      user,
 				Repo:      repo,
 				Build:     build,
 				BuildLast: last,
 				Job:       job,
-				Keys:      key,
 				Netrc:     netrc,
 				Yaml:      string(raw),
-				YamlEnc:   string(sec),
 				Secrets:   secs,
-				System: &model.System{
-					Link:      httputil.GetURL(c.Request),
-					Plugins:   strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
-					Globals:   strings.Split(os.Getenv("PLUGIN_PARAMS"), " "),
-					Escalates: strings.Split(os.Getenv("ESCALATE_FILTER"), " "),
-				},
+				System:    &model.System{Link: httputil.GetURL(c.Request)},
 			})
 		}
 		return // EXIT NOT TO AVOID THE 0.4 ENGINE CODE BELOW
