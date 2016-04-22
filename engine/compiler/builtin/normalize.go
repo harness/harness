@@ -43,6 +43,9 @@ func (v *normalizeOp) normalizePlugin(node *parse.ContainerNode) {
 	if strings.Contains(node.Container.Image, "/") {
 		return
 	}
+	if strings.Contains(node.Container.Image, "_") {
+		node.Container.Image = strings.Replace(node.Container.Image, "_", "-", -1)
+	}
 	node.Container.Image = filepath.Join(v.namespace, node.Container.Image)
 }
 

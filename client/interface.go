@@ -9,7 +9,7 @@ import (
 // Client is used to communicate with a Drone server.
 type Client interface {
 	// Pull pulls work from the server queue.
-	Pull() (*queue.Work, error)
+	Pull(os, arch string) (*queue.Work, error)
 
 	// Push pushes an update to the server.
 	Push(*queue.Work) error
