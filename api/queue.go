@@ -171,6 +171,7 @@ func Stream(c *gin.Context) {
 		wg.Done()
 	}()
 
+	wc.Close()
 	wg.Wait()
 	c.String(200, "")
 

@@ -61,8 +61,9 @@ func (s *stream) Delete(name string) error {
 	if !s.exists(name) {
 		return fmt.Errorf("stream: cannot delete stream %s, not found", name)
 	}
+	w := s.writers[name]
 	delete(s.writers, name)
-	return s.writers[name].Close()
+	return w.Close()
 }
 
 func (s *stream) exists(name string) bool {
