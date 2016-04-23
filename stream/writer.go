@@ -31,7 +31,7 @@ func (w *writer) Write(p []byte) (n int, err error) {
 	return w.buffer.Write(p)
 }
 
-func (w *writer) Reader() (io.Reader, error) {
+func (w *writer) Reader() (io.ReadCloser, error) {
 	return &reader{w: w}, nil
 }
 
@@ -48,5 +48,5 @@ func (w *writer) Close() error {
 }
 
 func (w *writer) Closed() bool {
-	return atomic.LoadUint32(&w.closed) == 1
+	return atomic.LoadUint32(&w.closed) != 0
 }

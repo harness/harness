@@ -12,7 +12,7 @@ import (
 type Stream interface {
 	Create(string) error
 	Delete(string) error
-	Reader(string) (io.Reader, error)
+	Reader(string) (io.ReadCloser, error)
 	Writer(string) (io.WriteCloser, error)
 }
 
@@ -22,7 +22,7 @@ func Create(c context.Context, key string) error {
 }
 
 // Reader opens the stream for reading.
-func Reader(c context.Context, key string) (io.Reader, error) {
+func Reader(c context.Context, key string) (io.ReadCloser, error) {
 	return FromContext(c).Reader(key)
 }
 

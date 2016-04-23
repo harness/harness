@@ -19,7 +19,7 @@ func New() Stream {
 }
 
 // Reader returns an io.Reader for reading from to the stream.
-func (s *stream) Reader(name string) (io.Reader, error) {
+func (s *stream) Reader(name string) (io.ReadCloser, error) {
 	s.Lock()
 	defer s.Unlock()
 

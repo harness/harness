@@ -3,11 +3,13 @@ package stream
 import (
 	"bytes"
 	"io"
+	"sync/atomic"
 )
 
 type reader struct {
-	w   *writer
-	off int
+	w      *writer
+	off    int
+	closed uint32
 }
 
 // Read reads from the Buffer
@@ -31,6 +33,10 @@ func (r *reader) Read(p []byte) (n int, err error) {
 			err = io.EOF
 			break
 		}
+		if r.Closed() {
+			err = io.EOF
+			break
+		}
 
 		r.w.Wait()
 	}
@@ -39,6 +45,10 @@ func (r *reader) Read(p []byte) (n int, err error) {
 }
 
 func (r *reader) Close() error {
-	// TODO close should remove reader from the parent!
+	atomic.StoreUint32(&r.closed, 1)
 	return nil
+}
+
+func (r *reader) Closed() bool {
+	return atomic.LoadUint32(&r.closed) != 0
 }

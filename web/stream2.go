@@ -99,7 +99,7 @@ func GetStream2(c *gin.Context) {
 
 	go func() {
 		<-c.Writer.CloseNotify()
-		// rc.Close()
+		rc.Close()
 	}()
 
 	var line int
