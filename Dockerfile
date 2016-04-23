@@ -1,12 +1,6 @@
 # Build the drone executable on a x64 Linux host:
 #
-#     go build --ldflags '-extldflags "-static"' -o drone_static
-#
-#
-# Alternate command for Go 1.4 and older:
-#
-#     go build -a -tags netgo --ldflags '-extldflags "-static"' -o drone_static
-#
+#     go build --ldflags '-extldflags "-static"' -o drone
 #
 # Build the docker image:
 #

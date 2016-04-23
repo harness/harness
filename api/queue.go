@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"sync"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone/bus"
@@ -96,6 +97,13 @@ func Update(c *gin.Context) {
 		store.UpdateBuild(c, build)
 	}
 
+	if job.Status == model.StatusRunning {
+		err := stream.Create(c, stream.ToKey(job.ID))
+		if err != nil {
+			logrus.Errorf("Unable to create stream. %s", err)
+		}
+	}
+
 	ok, err := store.UpdateBuildJob(c, build, job)
 	if err != nil {
 		c.String(500, "Unable to update job. %s", err)
@@ -132,32 +140,38 @@ func Stream(c *gin.Context) {
 		return
 	}
 
-	key := stream.ToKey(id)
-	rc, wc, err := stream.Create(c, key)
+	key := c.Param("id")
+	logrus.Infof("Agent %s creating stream %s.", c.ClientIP(), key)
+
+	wc, err := stream.Writer(c, key)
 	if err != nil {
-		logrus.Errorf("Agent %s failed to create stream. %s.", c.ClientIP(), err)
+		c.String(500, "Failed to create stream writer. %s", err)
 		return
 	}
 
 	defer func() {
 		wc.Close()
-		rc.Close()
-		stream.Remove(c, key)
+		stream.Delete(c, key)
 	}()
 
 	io.Copy(wc, c.Request.Body)
-	wc.Close()
 
-	rcc, _, err := stream.Open(c, key)
+	rc, err := stream.Reader(c, key)
 	if err != nil {
-		logrus.Errorf("Agent %s failed to read cache. %s.", c.ClientIP(), err)
+		c.String(500, "Failed to create stream reader. %s", err)
 		return
 	}
-	defer func() {
-		rcc.Close()
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	go func() {
+		defer recover()
+		store.WriteLog(c, &model.Job{ID: id}, rc)
+		wg.Done()
 	}()
 
-	store.WriteLog(c, &model.Job{ID: id}, rcc)
+	wg.Wait()
 	c.String(200, "")
 
 	logrus.Debugf("Agent %s wrote stream to database", c.ClientIP())

@@ -164,12 +164,14 @@ func Load(middlewares ...gin.HandlerFunc) http.Handler {
 
 	queue := e.Group("/api/queue")
 	{
-		queue.Use(middleware.AgentMust())
-		queue.POST("/pull", api.Pull)
-		queue.POST("/pull/:os/:arch", api.Pull)
-		queue.POST("/wait/:id", api.Wait)
-		queue.POST("/stream/:id", api.Stream)
-		queue.POST("/status/:id", api.Update)
+		if os.Getenv("CANARY") == "true" {
+			queue.Use(middleware.AgentMust())
+			queue.POST("/pull", api.Pull)
+			queue.POST("/pull/:os/:arch", api.Pull)
+			queue.POST("/wait/:id", api.Wait)
+			queue.POST("/stream/:id", api.Stream)
+			queue.POST("/status/:id", api.Update)
+		}
 	}
 
 	gitlab := e.Group("/gitlab/:owner/:name")

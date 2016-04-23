@@ -195,10 +195,11 @@ func (r *pipeline) run() error {
 		w.Job.Status = model.StatusFailure
 	}
 
+	pushRetry(r.drone, w)
+
 	logrus.Infof("Finished build %s/%s#%d.%d",
 		w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)
 
-	pushRetry(r.drone, w)
 	return nil
 }
 
