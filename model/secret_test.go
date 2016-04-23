@@ -29,7 +29,7 @@ func TestSecret(t *testing.T) {
 		g.It("should match any image", func() {
 			secret := Secret{}
 			secret.Images = []string{"*"}
-			g.Assert(secret.MatchImage("golang")).IsTrue()
+			g.Assert(secret.MatchImage("custom/golang")).IsTrue()
 		})
 		g.It("should match any event", func() {
 			secret := Secret{}

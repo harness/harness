@@ -66,25 +66,21 @@ func (r *pipeline) run() error {
 		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_USERNAME",
 			Value:  w.Netrc.Login,
-			Images: r.config.netrc, // TODO(bradrydzewski) use the command line parameters here
-			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
+			Images: []string{"*"},
+			Events: []string{"*"},
 		})
 		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_PASSWORD",
 			Value:  w.Netrc.Password,
-			Images: r.config.netrc,
-			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
+			Images: []string{"*"},
+			Events: []string{"*"},
 		})
 		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_MACHINE",
 			Value:  w.Netrc.Machine,
-			Images: r.config.netrc,
-			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
+			Images: []string{"*"},
+			Events: []string{"*"},
 		})
-	}
-
-	for _, secret := range secrets {
-		fmt.Printf("SECRET %s %s\n", secret.Name, secret.Value)
 	}
 
 	trans := []compiler.Transform{
