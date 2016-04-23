@@ -91,20 +91,11 @@ func GetStream2(c *gin.Context) {
 		return
 	}
 
-	rc, wc, err := stream.Open(c, stream.ToKey(job.ID))
+	rc, err := stream.Reader(c, stream.ToKey(job.ID))
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
-
-	defer func() {
-		if wc != nil {
-			wc.Close()
-		}
-		if rc != nil {
-			rc.Close()
-		}
-	}()
 
 	go func() {
 		<-c.Writer.CloseNotify()
@@ -125,4 +116,6 @@ func GetStream2(c *gin.Context) {
 		}
 		c.Writer.Flush()
 	}
+
+	log.Debugf("Closed stream %s#%d", repo.FullName, build.Number)
 }

@@ -34,7 +34,7 @@ func (v *podOp) VisitRoot(node *parse.RootNode) error {
 	service.Container = runner.Container{
 		Name:       v.name,
 		Alias:      "ambassador",
-		Image:      "busybox",
+		Image:      "busybox:latest",
 		Entrypoint: []string{"/bin/sleep"},
 		Command:    []string{"86400"},
 		Volumes:    []string{node.Path, node.Base},

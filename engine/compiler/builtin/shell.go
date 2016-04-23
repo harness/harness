@@ -36,14 +36,14 @@ func (v *shellOp) VisitContainer(node *parse.ContainerNode) error {
 		"/bin/sh", "-c",
 	}
 	node.Container.Command = []string{
-		"echo $CI_CMDS | base64 -d | /bin/sh -e",
+		"echo $DRONE_SCRIPT | base64 -d | /bin/sh -e",
 	}
 	if node.Container.Environment == nil {
 		node.Container.Environment = map[string]string{}
 	}
 	node.Container.Environment["HOME"] = "/root"
 	node.Container.Environment["SHELL"] = "/bin/sh"
-	node.Container.Environment["CI_CMDS"] = toScript(
+	node.Container.Environment["DRONE_SCRIPT"] = toScript(
 		node.Root().Path,
 		node.Commands,
 	)
@@ -72,7 +72,17 @@ func toScript(base string, commands []string) string {
 // setupScript is a helper script this is added to the build to ensure
 // a minimum set of environment variables are set correctly.
 const setupScript = `
-echo $DRONE_NETRC > $HOME/.netrc
+if [ -n "$DRONE_NETRC_MACHINE" ]; then
+cat <<EOF > $HOME/.netrc
+machine $DRONE_NETRC_MACHINE
+login $DRONE_NETRC_USERNAME
+password $DRONE_NETRC_PASSWORD
+EOF
+fi
+
+unset DRONE_NETRC_USERNAME
+unset DRONE_NETRC_PASSWORD
+unset DRONE_SCRIPT
 
 %s
 `

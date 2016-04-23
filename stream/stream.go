@@ -1,7 +1,5 @@
 package stream
 
-//go:generate mockery -name Mux -output mock -case=underscore
-
 import (
 	"bufio"
 	"io"
@@ -10,43 +8,32 @@ import (
 	"golang.org/x/net/context"
 )
 
-// Mux defines a stream multiplexer
-type Mux interface {
-	// Create creates and returns a new stream identified by
-	// the specified key.
-	Create(key string) (io.ReadCloser, io.WriteCloser, error)
-
-	// Open returns the existing stream by key. If the stream
-	// does not exist an error is returned.
-	Open(key string) (io.ReadCloser, io.WriteCloser, error)
-
-	// Remove deletes the stream by key.
-	Remove(key string) error
-
-	// Exists return true if the stream exists.
-	Exists(key string) bool
+// Stream manages the stream of build logs.
+type Stream interface {
+	Create(string) error
+	Delete(string) error
+	Reader(string) (io.ReadCloser, error)
+	Writer(string) (io.WriteCloser, error)
 }
 
-// Create creates and returns a new stream identified
-// by the specified key.
-func Create(c context.Context, key string) (io.ReadCloser, io.WriteCloser, error) {
+// Create creates a new stream.
+func Create(c context.Context, key string) error {
 	return FromContext(c).Create(key)
 }
 
-// Open returns the existing stream by key. If the stream does
-// not exist an error is returned.
-func Open(c context.Context, key string) (io.ReadCloser, io.WriteCloser, error) {
-	return FromContext(c).Open(key)
+// Reader opens the stream for reading.
+func Reader(c context.Context, key string) (io.ReadCloser, error) {
+	return FromContext(c).Reader(key)
 }
 
-// Exists return true if the stream exists.
-func Exists(c context.Context, key string) bool {
-	return FromContext(c).Exists(key)
+// Writer opens the stream for writing.
+func Writer(c context.Context, key string) (io.WriteCloser, error) {
+	return FromContext(c).Writer(key)
 }
 
-// Remove deletes the stream by key.
-func Remove(c context.Context, key string) error {
-	return FromContext(c).Remove(key)
+// Delete deletes the stream by key.
+func Delete(c context.Context, key string) error {
+	return FromContext(c).Delete(key)
 }
 
 // ToKey is a helper function that converts a unique identifier
@@ -55,9 +42,9 @@ func ToKey(i int64) string {
 	return strconv.FormatInt(i, 10)
 }
 
-// Copy copies the stream from the source to the destination in
-// valid JSON format. This converts the logs, which are per-line
-// JSON objects, to a JSON array.
+// Copy copies the stream from the source to the destination in valid JSON
+// format. This converts the logs, which are per-line JSON objects, to a
+// proper JSON array.
 func Copy(dest io.Writer, src io.Reader) error {
 	io.WriteString(dest, "[")
 

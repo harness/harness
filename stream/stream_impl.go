@@ -1,96 +1,72 @@
 package stream
 
 import (
+	"fmt"
 	"io"
 	"sync"
-
-	"github.com/djherbis/fscache"
 )
 
-var noexp fscache.Reaper
+type stream struct {
+	sync.Mutex
+	writers map[string]*writer
+}
 
-// New creates a new Mux using an in-memory filesystem.
-func New() Mux {
-	fs := fscache.NewMemFs()
-	c, err := fscache.NewCache(fs, noexp)
-	if err != nil {
-		panic(err)
+// New returns a new in-memory implementation of Stream.
+func New() Stream {
+	return &stream{
+		writers: map[string]*writer{},
 	}
-	return &mux{c}
 }
 
-// New creates a new Mux using a persistent filesystem.
-func NewFileSystem(path string) Mux {
-	fs, err := fscache.NewFs(path, 0777)
-	if err != nil {
-		panic(err)
+// Reader returns an io.Reader for reading from to the stream.
+func (s *stream) Reader(name string) (io.ReadCloser, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	if !s.exists(name) {
+		return nil, fmt.Errorf("stream: cannot read stream %s, not found", name)
 	}
-	c, err := fscache.NewCache(fs, noexp)
-	if err != nil {
-		panic(err)
+	return s.writers[name].Reader()
+}
+
+// Writer returns an io.WriteCloser for writing to the stream.
+func (s *stream) Writer(name string) (io.WriteCloser, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	if !s.exists(name) {
+		return nil, fmt.Errorf("stream: cannot write stream %s, not found", name)
 	}
-	return &mux{c}
+	return s.writers[name], nil
 }
 
-// mux wraps the default fscache.Cache to match the
-// defined interface and to wrap the ReadCloser and
-// WriteCloser to avoid panics when we over-aggressively
-// close streams.
-type mux struct {
-	cache fscache.Cache
-}
+// Create creates a new stream.
+func (s *stream) Create(name string) error {
+	s.Lock()
+	defer s.Unlock()
 
-func (m *mux) Create(key string) (io.ReadCloser, io.WriteCloser, error) {
-	rc, wc, err := m.cache.Get(key)
-	if rc != nil {
-		rc = &closeOnceReader{ReaderAt: rc, ReadCloser: rc}
+	if s.exists(name) {
+		return fmt.Errorf("stream: cannot create stream %s, already exists", name)
 	}
-	if wc != nil {
-		wc = &closeOnceWriter{WriteCloser: wc}
-	}
-	return rc, wc, err
-}
 
-func (m *mux) Open(key string) (io.ReadCloser, io.WriteCloser, error) {
-	return m.Create(key)
-}
-
-func (m *mux) Exists(key string) bool {
-	return m.cache.Exists(key)
-}
-func (m *mux) Remove(key string) error {
-	return m.cache.Remove(key)
-}
-
-// closeOnceReader is a helper function that ensures
-// the reader is only closed once. This is because
-// attempting to close the fscache reader more than
-// once results in a panic.
-type closeOnceReader struct {
-	io.ReaderAt
-	io.ReadCloser
-	once sync.Once
-}
-
-func (c *closeOnceReader) Close() error {
-	c.once.Do(func() {
-		c.ReadCloser.Close()
-	})
+	s.writers[name] = newWriter()
 	return nil
 }
 
-// closeOnceWriter is a helper function that ensures
-// the writer is only closed once. This is because
-// attempting to close the fscache writer more than
-// once results in a panic.
-type closeOnceWriter struct {
-	io.WriteCloser
-	once sync.Once
+// Delete deletes the stream by key.
+func (s *stream) Delete(name string) error {
+	s.Lock()
+	defer s.Unlock()
+
+	if !s.exists(name) {
+		return fmt.Errorf("stream: cannot delete stream %s, not found", name)
+	}
+	w := s.writers[name]
+	delete(s.writers, name)
+	return w.Close()
 }
 
-func (c *closeOnceWriter) Close() error {
-	c.once.Do(func() {
-		c.WriteCloser.Close()
-	})
-	return nil
+func (s *stream) exists(name string) bool {
+	_, exists := s.writers[name]
+	return exists
 }

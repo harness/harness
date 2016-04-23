@@ -23,7 +23,7 @@ func Test_shell(t *testing.T) {
 
 			g.Assert(len(c.Container.Entrypoint)).Equal(0)
 			g.Assert(len(c.Container.Command)).Equal(0)
-			g.Assert(c.Container.Environment["CI_CMDS"]).Equal("")
+			g.Assert(c.Container.Environment["DRONE_SCRIPT"]).Equal("")
 		})
 
 		g.It("should set entrypoint, command and environment variables", func() {
@@ -37,8 +37,8 @@ func Test_shell(t *testing.T) {
 			ops.VisitContainer(c)
 
 			g.Assert(c.Container.Entrypoint).Equal([]string{"/bin/sh", "-c"})
-			g.Assert(c.Container.Command).Equal([]string{"echo $CI_CMDS | base64 -d | /bin/sh -e"})
-			g.Assert(c.Container.Environment["CI_CMDS"] != "").IsTrue()
+			g.Assert(c.Container.Command).Equal([]string{"echo $DRONE_SCRIPT | base64 -d | /bin/sh -e"})
+			g.Assert(c.Container.Environment["DRONE_SCRIPT"] != "").IsTrue()
 		})
 	})
 }

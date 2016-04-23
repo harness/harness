@@ -34,6 +34,8 @@ func (s *Secret) MatchImage(image string) bool {
 	for _, pattern := range s.Images {
 		if match, _ := filepath.Match(pattern, image); match {
 			return true
+		} else if pattern == "*" {
+			return true
 		}
 	}
 	return false

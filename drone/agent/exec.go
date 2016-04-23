@@ -66,25 +66,25 @@ func (r *pipeline) run() error {
 		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_USERNAME",
 			Value:  w.Netrc.Login,
-			Images: []string{"git", "hg"}, // TODO(bradrydzewski) use the command line parameters here
-			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
+			Images: []string{"*"},
+			Events: []string{"*"},
 		})
 		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_PASSWORD",
 			Value:  w.Netrc.Password,
-			Images: []string{"git", "hg"},
-			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
+			Images: []string{"*"},
+			Events: []string{"*"},
 		})
 		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_MACHINE",
 			Value:  w.Netrc.Machine,
-			Images: []string{"git", "hg"},
-			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
+			Images: []string{"*"},
+			Events: []string{"*"},
 		})
 	}
 
 	trans := []compiler.Transform{
-		builtin.NewCloneOp("plugins/git:latest", true),
+		builtin.NewCloneOp("git", true),
 		builtin.NewCacheOp(
 			"plugins/cache:latest",
 			"/var/lib/drone/cache/"+w.Repo.FullName,
@@ -195,10 +195,11 @@ func (r *pipeline) run() error {
 		w.Job.Status = model.StatusFailure
 	}
 
+	pushRetry(r.drone, w)
+
 	logrus.Infof("Finished build %s/%s#%d.%d",
 		w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)
 
-	pushRetry(r.drone, w)
 	return nil
 }
 

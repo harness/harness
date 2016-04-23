@@ -33,10 +33,7 @@ func TestRepos(t *testing.T) {
 			err1 := s.CreateRepo(&repo)
 			err2 := s.UpdateRepo(&repo)
 			getrepo, err3 := s.GetRepo(repo.ID)
-			if err3 != nil {
-				println("Get Repo Error")
-				println(err3.Error())
-			}
+
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 			g.Assert(err3 == nil).IsTrue()
