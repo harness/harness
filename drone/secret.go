@@ -19,7 +19,6 @@ var SecretCmd = cli.Command{
 			Name:      "add",
 			Usage:     "add a secret",
 			ArgsUsage: "[repo] [key] [value]",
-			UsageText: "foo",
 			Action: func(c *cli.Context) {
 				if err := secretAdd(c); err != nil {
 					log.Fatalln(err)
