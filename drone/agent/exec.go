@@ -66,25 +66,29 @@ func (r *pipeline) run() error {
 		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_USERNAME",
 			Value:  w.Netrc.Login,
-			Images: []string{"git", "hg"}, // TODO(bradrydzewski) use the command line parameters here
+			Images: r.config.netrc, // TODO(bradrydzewski) use the command line parameters here
 			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
 		})
 		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_PASSWORD",
 			Value:  w.Netrc.Password,
-			Images: []string{"git", "hg"},
+			Images: r.config.netrc,
 			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
 		})
 		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_MACHINE",
 			Value:  w.Netrc.Machine,
-			Images: []string{"git", "hg"},
+			Images: r.config.netrc,
 			Events: []string{model.EventDeploy, model.EventPull, model.EventPush, model.EventTag},
 		})
 	}
 
+	for _, secret := range secrets {
+		fmt.Printf("SECRET %s %s\n", secret.Name, secret.Value)
+	}
+
 	trans := []compiler.Transform{
-		builtin.NewCloneOp("plugins/git:latest", true),
+		builtin.NewCloneOp("git", true),
 		builtin.NewCacheOp(
 			"plugins/cache:latest",
 			"/var/lib/drone/cache/"+w.Repo.FullName,

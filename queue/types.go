@@ -16,6 +16,6 @@ type Work struct {
 	Netrc     *model.Netrc    `json:"netrc"`
 	Keys      *model.Key      `json:"keys"`
 	System    *model.System   `json:"system"`
-	Secrets   []*model.Secret `json:"secret"`
+	Secrets   []*model.Secret `json:"secrets"`
 	User      *model.User     `json:"user"`
 }

@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,6 +23,24 @@ const (
 	pathWait   = "%s/api/queue/wait/%d"
 	pathStream = "%s/api/queue/stream/%d"
 	pathPush   = "%s/api/queue/status/%d"
+
+	pathSelf    = "%s/api/user"
+	pathFeed    = "%s/api/user/feed"
+	pathRepos   = "%s/api/user/repos"
+	pathRepo    = "%s/api/repos/%s/%s"
+	pathEncrypt = "%s/api/repos/%s/%s/encrypt"
+	pathBuilds  = "%s/api/repos/%s/%s/builds"
+	pathBuild   = "%s/api/repos/%s/%s/builds/%v"
+	pathJob     = "%s/api/repos/%s/%s/builds/%d/%d"
+	pathLog     = "%s/api/repos/%s/%s/logs/%d/%d"
+	pathKey     = "%s/api/repos/%s/%s/key"
+	pathSign    = "%s/api/repos/%s/%s/sign"
+	pathSecrets = "%s/api/repos/%s/%s/secrets"
+	pathSecret  = "%s/api/repos/%s/%s/secrets/%s"
+	pathNodes   = "%s/api/nodes"
+	pathNode    = "%s/api/nodes/%d"
+	pathUsers   = "%s/api/users"
+	pathUser    = "%s/api/users/%s"
 )
 
 type client struct {
@@ -34,12 +53,48 @@ func NewClient(uri string) Client {
 	return &client{http.DefaultClient, uri}
 }
 
-// NewClientToken returns a client at the specified url that
-// authenticates all outbound requests with the given token.
+// NewClientToken returns a client at the specified url that authenticates all
+// outbound requests with the given token.
 func NewClientToken(uri, token string) Client {
 	config := new(oauth2.Config)
 	auther := config.Client(oauth2.NoContext, &oauth2.Token{AccessToken: token})
 	return &client{auther, uri}
+}
+
+// NewClientTokenTLS returns a client at the specified url that authenticates
+// all outbound requests with the given token and tls.Config if provided.
+func NewClientTokenTLS(uri, token string, c *tls.Config) Client {
+	config := new(oauth2.Config)
+	auther := config.Client(oauth2.NoContext, &oauth2.Token{AccessToken: token})
+	if c != nil {
+		if trans, ok := auther.Transport.(*oauth2.Transport); ok {
+			trans.Base = &http.Transport{TLSClientConfig: c}
+		}
+	}
+	return &client{auther, uri}
+}
+
+// SecretPost create or updates a repository secret.
+func (c *client) SecretPost(owner, name string, secret *model.Secret) error {
+	uri := fmt.Sprintf(pathSecrets, c.base, owner, name)
+	return c.post(uri, secret, nil)
+}
+
+// SecretDel deletes a named repository secret.
+func (c *client) SecretDel(owner, name, secret string) error {
+	uri := fmt.Sprintf(pathSecret, c.base, owner, name, secret)
+	return c.delete(uri)
+}
+
+// Sign returns a cryptographic signature for the input string.
+func (c *client) Sign(owner, name string, in []byte) ([]byte, error) {
+	uri := fmt.Sprintf(pathSign, c.base, owner, name)
+	rc, err := stream(c.client, uri, "POST", in, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer rc.Close()
+	return ioutil.ReadAll(rc)
 }
 
 // Pull pulls work from the server queue.

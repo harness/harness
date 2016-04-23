@@ -33,7 +33,7 @@ func init() {
 	}
 	droneSec = fmt.Sprintf("%s.sec", strings.TrimSuffix(droneYml, filepath.Ext(droneYml)))
 	if os.Getenv("CANARY") == "true" {
-		droneSec = fmt.Sprintf("%s.sig", strings.TrimSuffix(droneYml, filepath.Ext(droneYml)))
+		droneSec = fmt.Sprintf("%s.sig", droneYml)
 	}
 }
 
@@ -209,7 +209,10 @@ func PostHook(c *gin.Context) {
 	// get the previous build so that we can send
 	// on status change notifications
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
-	secs, _ := store.GetSecretList(c, repo)
+	secs, err := store.GetSecretList(c, repo)
+	if err != nil {
+		log.Errorf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
+	}
 
 	// IMPORTANT. PLEASE READ
 	//
@@ -223,13 +226,23 @@ func PostHook(c *gin.Context) {
 		var verified bool
 
 		signature, err := jose.ParseSigned(string(sec))
-		if err == nil && len(sec) != 0 {
+		if err != nil {
+			log.Debugf("cannot parse .drone.yml.sig file. %s", err)
+		} else if len(sec) == 0 {
+			log.Debugf("cannot parse .drone.yml.sig file. empty file")
+		} else {
 			signed = true
-			output, err := signature.Verify(repo.Hash)
-			if err == nil && string(output) == string(raw) {
+			output, err := signature.Verify([]byte(repo.Hash))
+			if err != nil {
+				log.Debugf("cannot verify .drone.yml.sig file. %s", err)
+			} else if string(output) != string(raw) {
+				log.Debugf("cannot verify .drone.yml.sig file. no match")
+			} else {
 				verified = true
 			}
 		}
+
+		log.Debugf(".drone.yml is signed=%v and verified=%v", signed, verified)
 
 		bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
 		for _, job := range jobs {

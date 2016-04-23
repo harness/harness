@@ -83,7 +83,16 @@ var AgentCmd = cli.Command{
 			EnvVar: "DRONE_PLUGIN_NETRC",
 			Name:   "netrc-plugin",
 			Usage:  "plugins that receive the netrc file",
-			Value:  &cli.StringSlice{"git", "hg"},
+			Value: &cli.StringSlice{
+				"git",
+				"git:*",
+				"hg",
+				"hg:*",
+				"plugins/hg",
+				"plugins/hg:*",
+				"plugins/git",
+				"plugins/git:*",
+			},
 		},
 		cli.StringSliceFlag{
 			EnvVar: "DRONE_PLUGIN_PRIVILEGED",

@@ -79,7 +79,7 @@ func argsToEnv(from map[string]interface{}, to map[string]string) error {
 			} else {
 				out, err = json.YAMLToJSON(out)
 				if err != nil {
-					println(err.Error())
+					// return err TODO(bradrydzewski) unit test coverage for possible errors
 				}
 				to[k] = string(out)
 			}
