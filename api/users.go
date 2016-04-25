@@ -1,11 +1,13 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/crypto"
 	"github.com/drone/drone/store"
 )
@@ -20,10 +22,11 @@ import (
 func GetUsers(c *gin.Context) {
 	users, err := store.GetUserList(c)
 	if err != nil {
-		c.String(500, "Error getting user list. %s", err)
-	} else {
-		c.JSON(200, users)
+		c.String(http.StatusInternalServerError, "Error getting user list. %s", err)
+		return
 	}
+
+	c.JSON(http.StatusOK, users)
 }
 
 // swagger:route GET /users/{login} user getUserLogin
@@ -36,10 +39,11 @@ func GetUsers(c *gin.Context) {
 func GetUser(c *gin.Context) {
 	user, err := store.GetUserLogin(c, c.Param("login"))
 	if err != nil {
-		c.String(404, "Cannot find user. %s", err)
-	} else {
-		c.JSON(200, user)
+		c.String(http.StatusNotFound, "Cannot find user. %s", err)
+		return
 	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func PatchUser(c *gin.Context) {
@@ -113,7 +117,7 @@ func PostUser(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	user, err := store.GetUserLogin(c, c.Param("login"))
 	if err != nil {
-		c.String(404, "Cannot find user. %s", err)
+		c.String(http.StatusNotFound, "Cannot find user. %s", err)
 		return
 	}
 
@@ -123,8 +127,9 @@ func DeleteUser(c *gin.Context) {
 	}
 
 	if err = store.DeleteUser(c, user); err != nil {
-		c.String(500, "Error deleting user. %s", err)
-	} else {
-		c.String(200, "")
+		c.String(http.StatusInternalServerError, "Error deleting user. %s", err)
+		return
 	}
+
+	c.String(http.StatusOK, "")
 }
