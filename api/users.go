@@ -55,6 +55,13 @@ func PatchUser(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
+
+	// A user can't deactivate or remove it's admin rights by itself.
+	if session.User(c).ID == user.ID {
+		c.AbortWithStatus(422)
+		return
+	}
+
 	user.Admin = in.Admin
 	user.Active = in.Active
 
@@ -73,6 +80,10 @@ func PostUser(c *gin.Context) {
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
+	}
+
+	if in.Login == "" {
+		c.AbortWithError(422, errors.New("User's login can't be empty"))
 	}
 
 	user := &model.User{}
@@ -105,6 +116,12 @@ func DeleteUser(c *gin.Context) {
 		c.String(404, "Cannot find user. %s", err)
 		return
 	}
+
+	// User can't delete itself.
+	if user.ID == session.User(c).ID {
+		c.AbortWithStatus(422)
+	}
+
 	if err = store.DeleteUser(c, user); err != nil {
 		c.String(500, "Error deleting user. %s", err)
 	} else {
