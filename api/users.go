@@ -124,6 +124,7 @@ func DeleteUser(c *gin.Context) {
 	// User can't delete itself.
 	if user.ID == session.User(c).ID {
 		c.AbortWithStatus(422)
+		return
 	}
 
 	if err = store.DeleteUser(c, user); err != nil {
