@@ -38,7 +38,7 @@ func Remote() gin.HandlerFunc {
 	case "bitbucketserver":
 		remote_ = bitbucketserver.Load(*config)
 	default:
-		logrus.Fatalln("remote configuraiton not found")
+		logrus.Fatalln("remote configuration not found")
 	}
 
 	return func(c *gin.Context) {
