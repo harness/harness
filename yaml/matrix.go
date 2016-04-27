@@ -29,6 +29,12 @@ func (a Axis) String() string {
 
 // ParseMatrix parses the Yaml matrix definition.
 func ParseMatrix(data []byte) ([]Axis, error) {
+
+	axis, err := parseMatrixList(data)
+	if err == nil && len(axis) != 0 {
+		return axis, nil
+	}
+
 	matrix, err := parseMatrix(data)
 	if err != nil {
 		return nil, err
@@ -97,4 +103,15 @@ func parseMatrix(raw []byte) (Matrix, error) {
 	}{}
 	err := yaml.Unmarshal(raw, &data)
 	return data.Matrix, err
+}
+
+func parseMatrixList(raw []byte) ([]Axis, error) {
+	data := struct {
+		Matrix struct {
+			Include []Axis
+		}
+	}{}
+
+	err := yaml.Unmarshal(raw, &data)
+	return data.Matrix.Include, err
 }
