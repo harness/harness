@@ -83,6 +83,11 @@ func (r *pipeline) run() error {
 		})
 	}
 
+	var lastStatus string
+	if w.BuildLast != nil {
+		lastStatus = w.BuildLast.Status
+	}
+
 	trans := []compiler.Transform{
 		builtin.NewCloneOp("git", true),
 		builtin.NewCacheOp(
@@ -105,7 +110,7 @@ func (r *pipeline) run() error {
 		builtin.NewAliasOp(prefix),
 		builtin.NewPullOp(r.config.pull),
 		builtin.NewFilterOp(
-			model.StatusSuccess, // TODO(bradrydzewski) please add the last build status here
+			lastStatus,
 			w.Build.Branch,
 			w.Build.Event,
 			w.Build.Deploy,
@@ -218,36 +223,38 @@ func pushRetry(client client.Client, w *queue.Work) {
 
 func toEnv(w *queue.Work) map[string]string {
 	envs := map[string]string{
-		"CI":                   "drone",
-		"DRONE":                "true",
-		"DRONE_ARCH":           "linux_amd64",
-		"DRONE_REPO":           w.Repo.FullName,
-		"DRONE_REPO_SCM":       w.Repo.Kind,
-		"DRONE_REPO_OWNER":     w.Repo.Owner,
-		"DRONE_REPO_NAME":      w.Repo.Name,
-		"DRONE_REPO_LINK":      w.Repo.Link,
-		"DRONE_REPO_AVATAR":    w.Repo.Avatar,
-		"DRONE_REPO_BRANCH":    w.Repo.Branch,
-		"DRONE_REPO_PRIVATE":   fmt.Sprintf("%v", w.Repo.IsPrivate),
-		"DRONE_REPO_TRUSTED":   fmt.Sprintf("%v", w.Repo.IsTrusted),
-		"DRONE_REMOTE_URL":     w.Repo.Clone,
-		"DRONE_COMMIT_SHA":     w.Build.Commit,
-		"DRONE_COMMIT_REF":     w.Build.Ref,
-		"DRONE_COMMIT_BRANCH":  w.Build.Branch,
-		"DRONE_COMMIT_LINK":    w.Build.Link,
-		"DRONE_COMMIT_MESSAGE": w.Build.Message,
-		"DRONE_AUTHOR":         w.Build.Author,
-		"DRONE_AUTHOR_EMAIL":   w.Build.Email,
-		"DRONE_AUTHOR_AVATAR":  w.Build.Avatar,
-		"DRONE_BUILD_NUMBER":   fmt.Sprintf("%d", w.Build.Number),
-		"DRONE_BUILD_EVENT":    w.Build.Event,
-		"DRONE_BUILD_CREATED":  fmt.Sprintf("%d", w.Build.Created),
-		"DRONE_BUILD_STARTED":  fmt.Sprintf("%d", w.Build.Started),
-		"DRONE_BUILD_FINISHED": fmt.Sprintf("%d", w.Build.Finished),
-		"DRONE_YAML_VERIFIED":  fmt.Sprintf("%v", w.Verified),
-		"DRONE_YAML_SIGNED":    fmt.Sprintf("%v", w.Signed),
-		"DRONE_BRANCH":         w.Build.Branch,
-		"DRONE_COMMIT":         w.Build.Commit,
+		"CI":                         "drone",
+		"DRONE":                      "true",
+		"DRONE_ARCH":                 "linux_amd64",
+		"DRONE_REPO":                 w.Repo.FullName,
+		"DRONE_REPO_SCM":             w.Repo.Kind,
+		"DRONE_REPO_OWNER":           w.Repo.Owner,
+		"DRONE_REPO_NAME":            w.Repo.Name,
+		"DRONE_REPO_LINK":            w.Repo.Link,
+		"DRONE_REPO_AVATAR":          w.Repo.Avatar,
+		"DRONE_REPO_BRANCH":          w.Repo.Branch,
+		"DRONE_REPO_PRIVATE":         fmt.Sprintf("%v", w.Repo.IsPrivate),
+		"DRONE_REPO_TRUSTED":         fmt.Sprintf("%v", w.Repo.IsTrusted),
+		"DRONE_REMOTE_URL":           w.Repo.Clone,
+		"DRONE_COMMIT_SHA":           w.Build.Commit,
+		"DRONE_COMMIT_REF":           w.Build.Ref,
+		"DRONE_COMMIT_BRANCH":        w.Build.Branch,
+		"DRONE_COMMIT_LINK":          w.Build.Link,
+		"DRONE_COMMIT_MESSAGE":       w.Build.Message,
+		"DRONE_COMMIT_AUTHOR":        w.Build.Author,
+		"DRONE_COMMIT_AUTHOR_EMAIL":  w.Build.Email,
+		"DRONE_COMMIT_AUTHOR_AVATAR": w.Build.Avatar,
+		"DRONE_BUILD_NUMBER":         fmt.Sprintf("%d", w.Build.Number),
+		"DRONE_BUILD_EVENT":          w.Build.Event,
+		"DRONE_BUILD_STATUS":         w.Build.Status,
+		"DRONE_BUILD_LINK":           fmt.Sprintf("%s/%s/%d", w.System.Link, w.Repo.FullName, w.Build.Number),
+		"DRONE_BUILD_CREATED":        fmt.Sprintf("%d", w.Build.Created),
+		"DRONE_BUILD_STARTED":        fmt.Sprintf("%d", w.Build.Started),
+		"DRONE_BUILD_FINISHED":       fmt.Sprintf("%d", w.Build.Finished),
+		"DRONE_YAML_VERIFIED":        fmt.Sprintf("%v", w.Verified),
+		"DRONE_YAML_SIGNED":          fmt.Sprintf("%v", w.Signed),
+		"DRONE_BRANCH":               w.Build.Branch,
+		"DRONE_COMMIT":               w.Build.Commit,
 	}
 
 	if w.Build.Event == model.EventTag {

@@ -30,6 +30,16 @@ func TestMatrix(t *testing.T) {
 			g.Assert(err == nil).IsTrue()
 			g.Assert(axis == nil).IsTrue()
 		})
+
+		g.It("Should return included axis", func() {
+			axis, err := ParseMatrixString(fakeMatrixInclude)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(axis)).Equal(2)
+			g.Assert(axis[0]["go_version"]).Equal("1.5")
+			g.Assert(axis[1]["go_version"]).Equal("1.6")
+			g.Assert(axis[0]["python_version"]).Equal("3.4")
+			g.Assert(axis[1]["python_version"]).Equal("3.4")
+		})
 	})
 }
 
@@ -48,4 +58,13 @@ matrix:
   redis_version:
     - 2.6
     - 2.8
+`
+
+var fakeMatrixInclude = `
+matrix:
+  include:
+    - go_version: 1.5
+      python_version: 3.4
+    - go_version: 1.6
+      python_version: 3.4
 `
