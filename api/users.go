@@ -22,7 +22,7 @@ import (
 func GetUsers(c *gin.Context) {
 	users, err := store.GetUserList(c)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("Error getting user list. %s", err))
+		c.String(http.StatusInternalServerError, fmt.Errorf("Error getting user list. %s", err))
 		return
 	}
 
@@ -39,7 +39,7 @@ func GetUsers(c *gin.Context) {
 func GetUser(c *gin.Context) {
 	user, err := store.GetUserLogin(c, c.Param("login"))
 	if err != nil {
-		c.AbortWithError(http.StatusNotFound, fmt.Errorf("Cannot find user. %s", err))
+		c.String(http.StatusNotFound, "Cannot find user. %s", err)
 		return
 	}
 
@@ -61,7 +61,7 @@ func PatchUser(c *gin.Context) {
 	}
 
 	if session.User(c).ID == user.ID {
-		c.AbortWithError(422, fmt.Errorf("Users can't deactivate or change admin rights themselfs"))
+		c.String(422, "Users can't deactivate or change admin rights themselfs")
 		return
 	}
 
@@ -81,12 +81,12 @@ func PostUser(c *gin.Context) {
 	in := &model.User{}
 	err := c.Bind(in)
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.String(http.StatusBadRequest, err)
 		return
 	}
 
 	if in.Login == "" {
-		c.AbortWithError(422, fmt.Errorf("User's login can't be empty"))
+		c.String(422, "User's login can't be empty")
 	}
 
 	user := &model.User{}
@@ -99,7 +99,7 @@ func PostUser(c *gin.Context) {
 
 	err = store.CreateUser(c, user)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.String(http.StatusInternalServerError, err)
 		return
 	}
 
@@ -116,18 +116,18 @@ func PostUser(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	user, err := store.GetUserLogin(c, c.Param("login"))
 	if err != nil {
-		c.AbortWithError(http.StatusNotFound, fmt.Errorf("Cannot find user. %s", err))
+		c.String(http.StatusNotFound, "Cannot find user. %s", err)
 		return
 	}
 
 	// User can't delete itself.
 	if user.ID == session.User(c).ID {
-		c.AbortWithError(422, fmt.Errorf("Users can't delete themselfs"))
+		c.String(422, "Users can't delete themselfs")
 		return
 	}
 
 	if err = store.DeleteUser(c, user); err != nil {
-		c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("Error deleting user. %s", err))
+		c.String(http.StatusInternalServerError, "Error deleting user. %s", err)
 		return
 	}
 
