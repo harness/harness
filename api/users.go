@@ -22,7 +22,7 @@ import (
 func GetUsers(c *gin.Context) {
 	users, err := store.GetUserList(c)
 	if err != nil {
-		c.String(http.StatusInternalServerError, fmt.Errorf("Error getting user list. %s", err))
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error getting user list. %s", err))
 		return
 	}
 
@@ -81,7 +81,7 @@ func PostUser(c *gin.Context) {
 	in := &model.User{}
 	err := c.Bind(in)
 	if err != nil {
-		c.String(http.StatusBadRequest, err)
+		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -99,7 +99,7 @@ func PostUser(c *gin.Context) {
 
 	err = store.CreateUser(c, user)
 	if err != nil {
-		c.String(http.StatusInternalServerError, err)
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
