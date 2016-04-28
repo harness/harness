@@ -167,6 +167,7 @@ func (poller *Poller) DeletePoll(repo *model.Repo) error {
 }
 
 //preload all polls from db
+//TODO: set lock in redis to prevent duplicated polling
 func (poller *Poller) loadPolls() {
 	polls, err := poller.store.Polls().List()
 	if err != nil {

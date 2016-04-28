@@ -112,6 +112,12 @@ CREATE TABLE IF NOT EXISTS nodes (
 
 INSERT INTO nodes VALUES(null, 'unix:///var/run/docker.sock', 'linux_amd64', '', '', '');
 INSERT INTO nodes VALUES(null, 'unix:///var/run/docker.sock', 'linux_amd64', '', '', '');
+INSERT INTO nodes VALUES(null, 'unix:///var/run/docker.sock', 'linux_amd64', '', '', '');
+INSERT INTO nodes VALUES(null, 'unix:///var/run/docker.sock', 'linux_amd64', '', '', '');
+INSERT INTO nodes VALUES(null, 'unix:///var/run/docker.sock', 'linux_amd64', '', '', '');
+INSERT INTO nodes VALUES(null, 'unix:///var/run/docker.sock', 'linux_amd64', '', '', '');
+INSERT INTO nodes VALUES(null, 'unix:///var/run/docker.sock', 'linux_amd64', '', '', '');
+INSERT INTO nodes VALUES(null, 'unix:///var/run/docker.sock', 'linux_amd64', '', '', '');
 
 -- +migrate Down
 
