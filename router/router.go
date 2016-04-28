@@ -2,7 +2,6 @@ package router
 
 import (
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -41,8 +40,6 @@ func Load(middlewares ...gin.HandlerFunc) http.Handler {
 	{
 		settings.Use(session.MustUser())
 		settings.GET("/profile", web.ShowUser)
-		settings.GET("/people", session.MustAdmin(), web.ShowUsers)
-		settings.GET("/nodes", session.MustAdmin(), web.ShowNodes)
 	}
 	repo := e.Group("/repos/:owner/:name")
 	{
@@ -81,14 +78,6 @@ func Load(middlewares ...gin.HandlerFunc) http.Handler {
 		users.GET("/:login", api.GetUser)
 		users.PATCH("/:login", api.PatchUser)
 		users.DELETE("/:login", api.DeleteUser)
-	}
-
-	nodes := e.Group("/api/nodes")
-	{
-		nodes.Use(session.MustAdmin())
-		nodes.GET("", api.GetNodes)
-		nodes.POST("", api.PostNode)
-		nodes.DELETE("/:node", api.DeleteNode)
 	}
 
 	repos := e.Group("/api/repos/:owner/:name")
@@ -139,13 +128,8 @@ func Load(middlewares ...gin.HandlerFunc) http.Handler {
 		stream.Use(session.SetPerm())
 		stream.Use(session.MustPull)
 
-		if os.Getenv("CANARY") == "true" {
-			stream.GET("/:owner/:name", web.GetRepoEvents2)
-			stream.GET("/:owner/:name/:build/:number", web.GetStream2)
-		} else {
-			stream.GET("/:owner/:name", web.GetRepoEvents)
-			stream.GET("/:owner/:name/:build/:number", web.GetStream)
-		}
+		stream.GET("/:owner/:name", web.GetRepoEvents)
+		stream.GET("/:owner/:name/:build/:number", web.GetStream)
 	}
 
 	bots := e.Group("/bots")
@@ -164,14 +148,12 @@ func Load(middlewares ...gin.HandlerFunc) http.Handler {
 
 	queue := e.Group("/api/queue")
 	{
-		if os.Getenv("CANARY") == "true" {
-			queue.Use(middleware.AgentMust())
-			queue.POST("/pull", api.Pull)
-			queue.POST("/pull/:os/:arch", api.Pull)
-			queue.POST("/wait/:id", api.Wait)
-			queue.POST("/stream/:id", api.Stream)
-			queue.POST("/status/:id", api.Update)
-		}
+		queue.Use(middleware.AgentMust())
+		queue.POST("/pull", api.Pull)
+		queue.POST("/pull/:os/:arch", api.Pull)
+		queue.POST("/wait/:id", api.Wait)
+		queue.POST("/stream/:id", api.Stream)
+		queue.POST("/status/:id", api.Update)
 	}
 
 	gitlab := e.Group("/gitlab/:owner/:name")

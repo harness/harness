@@ -34,9 +34,6 @@ html
                                     i.material-icons expand_more
                                 div.dropdown-menu.dropdown-menu-right
                                     a.dropdown-item[href="/settings/profile"] Profile
-                                    if User.Admin
-                                        a.dropdown-item[href="/settings/people"] People
-                                        a.dropdown-item[href="/settings/nodes"] Nodes
                                     a.dropdown-item[href="/logout"] Logout
 
 

@@ -5,14 +5,11 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/bus"
-	"github.com/drone/drone/engine"
 	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
@@ -33,10 +30,7 @@ func init() {
 	if droneYml == "" {
 		droneYml = ".drone.yml"
 	}
-	droneSec = fmt.Sprintf("%s.sec", strings.TrimSuffix(droneYml, filepath.Ext(droneYml)))
-	if os.Getenv("CANARY") == "true" {
-		droneSec = fmt.Sprintf("%s.sig", droneYml)
-	}
+	droneSec = fmt.Sprintf("%s.sig", droneYml)
 }
 
 func GetBuilds(c *gin.Context) {
@@ -135,7 +129,6 @@ func GetBuildLogs(c *gin.Context) {
 }
 
 func DeleteBuild(c *gin.Context) {
-	engine_ := engine.FromContext(c)
 	repo := session.Repo(c)
 
 	// parse the build number and job sequence number from
@@ -155,17 +148,8 @@ func DeleteBuild(c *gin.Context) {
 		return
 	}
 
-	if os.Getenv("CANARY") == "true" {
-		bus.Publish(c, bus.NewEvent(bus.Cancelled, repo, build, job))
-		return
-	}
-
-	node, err := store.GetNode(c, job.NodeID)
-	if err != nil {
-		c.AbortWithError(404, err)
-		return
-	}
-	engine_.Cancel(build.ID, job.ID, node)
+	bus.Publish(c, bus.NewEvent(bus.Cancelled, repo, build, job))
+	c.String(204, "")
 }
 
 func PostBuild(c *gin.Context) {
@@ -218,7 +202,6 @@ func PostBuild(c *gin.Context) {
 		log.Debugf("cannot find build secrets for %s. %s", repo.FullName, err)
 	}
 
-	key, _ := store.GetKey(c, repo)
 	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
 		log.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
@@ -296,72 +279,42 @@ func PostBuild(c *gin.Context) {
 		log.Errorf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
-	// IMPORTANT. PLEASE READ
-	//
-	// The below code uses a feature flag to switch between the current
-	// build engine and the exerimental 0.5 build engine. This can be
-	// enabled using with the environment variable CANARY=true
+	var signed bool
+	var verified bool
 
-	if os.Getenv("CANARY") == "true" {
-
-		var signed bool
-		var verified bool
-
-		signature, err := jose.ParseSigned(string(sec))
+	signature, err := jose.ParseSigned(string(sec))
+	if err != nil {
+		log.Debugf("cannot parse .drone.yml.sig file. %s", err)
+	} else if len(sec) == 0 {
+		log.Debugf("cannot parse .drone.yml.sig file. empty file")
+	} else {
+		signed = true
+		output, err := signature.Verify([]byte(repo.Hash))
 		if err != nil {
-			log.Debugf("cannot parse .drone.yml.sig file. %s", err)
-		} else if len(sec) == 0 {
-			log.Debugf("cannot parse .drone.yml.sig file. empty file")
+			log.Debugf("cannot verify .drone.yml.sig file. %s", err)
+		} else if string(output) != string(raw) {
+			log.Debugf("cannot verify .drone.yml.sig file. no match. %q <> %q", string(output), string(raw))
 		} else {
-			signed = true
-			output, err := signature.Verify([]byte(repo.Hash))
-			if err != nil {
-				log.Debugf("cannot verify .drone.yml.sig file. %s", err)
-			} else if string(output) != string(raw) {
-				log.Debugf("cannot verify .drone.yml.sig file. no match. %q <> %q", string(output), string(raw))
-			} else {
-				verified = true
-			}
+			verified = true
 		}
-
-		log.Debugf(".drone.yml is signed=%v and verified=%v", signed, verified)
-
-		bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
-		for _, job := range jobs {
-			queue.Publish(c, &queue.Work{
-				Signed:    signed,
-				Verified:  verified,
-				User:      user,
-				Repo:      repo,
-				Build:     build,
-				BuildLast: last,
-				Job:       job,
-				Netrc:     netrc,
-				Yaml:      string(raw),
-				Secrets:   secs,
-				System:    &model.System{Link: httputil.GetURL(c.Request)},
-			})
-		}
-		return // EXIT NOT TO AVOID THE 0.4 ENGINE CODE BELOW
 	}
 
-	engine_ := engine.FromContext(c)
-	go engine_.Schedule(c.Copy(), &engine.Task{
-		User:      user,
-		Repo:      repo,
-		Build:     build,
-		BuildPrev: last,
-		Jobs:      jobs,
-		Keys:      key,
-		Netrc:     netrc,
-		Config:    string(raw),
-		Secret:    string(sec),
-		System: &model.System{
-			Link:      httputil.GetURL(c.Request),
-			Plugins:   strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
-			Globals:   strings.Split(os.Getenv("PLUGIN_PARAMS"), " "),
-			Escalates: strings.Split(os.Getenv("ESCALATE_FILTER"), " "),
-		},
-	})
+	log.Debugf(".drone.yml is signed=%v and verified=%v", signed, verified)
 
+	bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
+	for _, job := range jobs {
+		queue.Publish(c, &queue.Work{
+			Signed:    signed,
+			Verified:  verified,
+			User:      user,
+			Repo:      repo,
+			Build:     build,
+			BuildLast: last,
+			Job:       job,
+			Netrc:     netrc,
+			Yaml:      string(raw),
+			Secrets:   secs,
+			System:    &model.System{Link: httputil.GetURL(c.Request)},
+		})
+	}
 }

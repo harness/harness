@@ -12,7 +12,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-func main2() {
+func main() {
 	envflag.Parse()
 
 	app := cli.NewApp()

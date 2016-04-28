@@ -3,16 +3,13 @@ package web
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/square/go-jose"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/bus"
-	"github.com/drone/drone/engine"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
@@ -31,10 +28,7 @@ func init() {
 	if droneYml == "" {
 		droneYml = ".drone.yml"
 	}
-	droneSec = fmt.Sprintf("%s.sec", strings.TrimSuffix(droneYml, filepath.Ext(droneYml)))
-	if os.Getenv("CANARY") == "true" {
-		droneSec = fmt.Sprintf("%s.sig", droneYml)
-	}
+	droneSec = fmt.Sprintf("%s.sig", droneYml)
 }
 
 var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
@@ -168,8 +162,6 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
-	key, _ := store.GetKey(c, repo)
-
 	// verify the branches can be built vs skipped
 	branches := yaml.ParseBranch(raw)
 	if !branches.Matches(build.Branch) && build.Event != model.EventTag && build.Event != model.EventDeploy {
@@ -214,71 +206,43 @@ func PostHook(c *gin.Context) {
 		log.Errorf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
-	// IMPORTANT. PLEASE READ
-	//
-	// The below code uses a feature flag to switch between the current
-	// build engine and the exerimental 0.5 build engine. This can be
-	// enabled using with the environment variable CANARY=true
+	var signed bool
+	var verified bool
 
-	if os.Getenv("CANARY") == "true" {
-
-		var signed bool
-		var verified bool
-
-		signature, err := jose.ParseSigned(string(sec))
+	signature, err := jose.ParseSigned(string(sec))
+	if err != nil {
+		log.Debugf("cannot parse .drone.yml.sig file. %s", err)
+	} else if len(sec) == 0 {
+		log.Debugf("cannot parse .drone.yml.sig file. empty file")
+	} else {
+		signed = true
+		output, err := signature.Verify([]byte(repo.Hash))
 		if err != nil {
-			log.Debugf("cannot parse .drone.yml.sig file. %s", err)
-		} else if len(sec) == 0 {
-			log.Debugf("cannot parse .drone.yml.sig file. empty file")
+			log.Debugf("cannot verify .drone.yml.sig file. %s", err)
+		} else if string(output) != string(raw) {
+			log.Debugf("cannot verify .drone.yml.sig file. no match")
 		} else {
-			signed = true
-			output, err := signature.Verify([]byte(repo.Hash))
-			if err != nil {
-				log.Debugf("cannot verify .drone.yml.sig file. %s", err)
-			} else if string(output) != string(raw) {
-				log.Debugf("cannot verify .drone.yml.sig file. no match")
-			} else {
-				verified = true
-			}
+			verified = true
 		}
-
-		log.Debugf(".drone.yml is signed=%v and verified=%v", signed, verified)
-
-		bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
-		for _, job := range jobs {
-			queue.Publish(c, &queue.Work{
-				Signed:    signed,
-				Verified:  verified,
-				User:      user,
-				Repo:      repo,
-				Build:     build,
-				BuildLast: last,
-				Job:       job,
-				Netrc:     netrc,
-				Yaml:      string(raw),
-				Secrets:   secs,
-				System:    &model.System{Link: httputil.GetURL(c.Request)},
-			})
-		}
-		return // EXIT NOT TO AVOID THE 0.4 ENGINE CODE BELOW
 	}
 
-	engine_ := engine.FromContext(c)
-	go engine_.Schedule(c.Copy(), &engine.Task{
-		User:      user,
-		Repo:      repo,
-		Build:     build,
-		BuildPrev: last,
-		Jobs:      jobs,
-		Keys:      key,
-		Netrc:     netrc,
-		Config:    string(raw),
-		Secret:    string(sec),
-		System: &model.System{
-			Link:      httputil.GetURL(c.Request),
-			Plugins:   strings.Split(os.Getenv("PLUGIN_FILTER"), " "),
-			Globals:   strings.Split(os.Getenv("PLUGIN_PARAMS"), " "),
-			Escalates: strings.Split(os.Getenv("ESCALATE_FILTER"), " "),
-		},
-	})
+	log.Debugf(".drone.yml is signed=%v and verified=%v", signed, verified)
+
+	bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
+	for _, job := range jobs {
+		queue.Publish(c, &queue.Work{
+			Signed:    signed,
+			Verified:  verified,
+			User:      user,
+			Repo:      repo,
+			Build:     build,
+			BuildLast: last,
+			Job:       job,
+			Netrc:     netrc,
+			Yaml:      string(raw),
+			Secrets:   secs,
+			System:    &model.System{Link: httputil.GetURL(c.Request)},
+		})
+	}
+
 }
