@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -65,7 +66,7 @@ var ServeCmd = cli.Command{
 func start(c *cli.Context) error {
 
 	if c.Bool("agreement.ack") == false || c.Bool("agreement.fix") == false {
-		println(agreement)
+		fmt.Println(agreement)
 		os.Exit(1)
 	}
 
