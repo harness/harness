@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/oauth2"
 	"github.com/drone/drone/shared/token"
@@ -32,6 +33,16 @@ type Gitlab struct {
 	SkipVerify   bool
 	HideArchives bool
 	Search       bool
+}
+
+func New(url, client, secret string, private, skipverify bool) remote.Remote {
+	return &Gitlab{
+		URL:         url,
+		Client:      client,
+		Secret:      secret,
+		PrivateMode: private,
+		SkipVerify:  skipverify,
+	}
 }
 
 func Load(config string) *Gitlab {

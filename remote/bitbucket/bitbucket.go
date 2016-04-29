@@ -6,128 +6,79 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote"
+	"github.com/drone/drone/remote/bitbucket/internal"
 	"github.com/drone/drone/shared/httputil"
 
-	log "github.com/Sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/bitbucket"
 )
 
-type Bitbucket struct {
+type config struct {
 	Client string
 	Secret string
-	Orgs   []string
-	Open   bool
 }
 
-func Load(config string) *Bitbucket {
-
-	// parse the remote DSN configuration string
-	url_, err := url.Parse(config)
-	if err != nil {
-		log.Fatalln("unable to parse remote dsn. %s", err)
+// New returns a new remote Configuration for integrating with the Bitbucket
+// repository hosting service at https://bitbucket.org
+func New(client, secret string) remote.Remote {
+	return &config{
+		Client: client,
+		Secret: secret,
 	}
-	params := url_.Query()
-	url_.Path = ""
-	url_.RawQuery = ""
-
-	// create the Githbub remote using parameters from
-	// the parsed DSN configuration string.
-	bitbucket := Bitbucket{}
-	bitbucket.Client = params.Get("client_id")
-	bitbucket.Secret = params.Get("client_secret")
-	bitbucket.Orgs = params["orgs"]
-	bitbucket.Open, _ = strconv.ParseBool(params.Get("open"))
-
-	return &bitbucket
 }
 
-// Login authenticates the session and returns the
-// remote user details.
-func (bb *Bitbucket) Login(res http.ResponseWriter, req *http.Request) (*model.User, bool, error) {
+// helper function to return the bitbucket oauth2 client
+func (c *config) newClient(u *model.User) *internal.Client {
+	return internal.NewClientToken(
+		c.Client,
+		c.Secret,
+		&oauth2.Token{
+			AccessToken:  u.Token,
+			RefreshToken: u.Secret,
+		},
+	)
+}
 
+func (c *config) Login(res http.ResponseWriter, req *http.Request) (*model.User, error) {
 	config := &oauth2.Config{
-		ClientID:     bb.Client,
-		ClientSecret: bb.Secret,
+		ClientID:     c.Client,
+		ClientSecret: c.Secret,
 		Endpoint:     bitbucket.Endpoint,
 		RedirectURL:  fmt.Sprintf("%s/authorize", httputil.GetURL(req)),
 	}
 
-	// get the OAuth code
 	var code = req.FormValue("code")
 	if len(code) == 0 {
 		http.Redirect(res, req, config.AuthCodeURL("drone"), http.StatusSeeOther)
-		return nil, false, nil
+		return nil, nil
 	}
 
 	var token, err = config.Exchange(oauth2.NoContext, code)
 	if err != nil {
-		return nil, false, fmt.Errorf("Error exchanging token. %s", err)
+		return nil, err
 	}
 
-	client := NewClient(config.Client(oauth2.NoContext, token))
+	client := internal.NewClient(config.Client(oauth2.NoContext, token))
 	curr, err := client.FindCurrent()
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 
-	// convers the current bitbucket user to the
-	// common drone user structure.
-	user := model.User{}
-	user.Login = curr.Login
-	user.Token = token.AccessToken
-	user.Secret = token.RefreshToken
-	user.Expiry = token.Expiry.UTC().Unix()
-	user.Avatar = curr.Links.Avatar.Href
-
-	// gets the primary, confirmed email from bitbucket
-	emails, err := client.ListEmail()
-	if err != nil {
-		return nil, false, err
-	}
-	for _, email := range emails.Values {
-		if email.IsPrimary && email.IsConfirmed {
-			user.Email = email.Email
-			break
-		}
-	}
-
-	// if the installation is restricted to a subset
-	// of organizations, get the orgs and verify the
-	// user is a member.
-	if len(bb.Orgs) != 0 {
-		resp, err := client.ListTeams(&ListTeamOpts{Page: 1, PageLen: 100, Role: "member"})
-		if err != nil {
-			return nil, false, err
-		}
-
-		var member bool
-		for _, team := range resp.Values {
-			for _, team_ := range bb.Orgs {
-				if team.Login == team_ {
-					member = true
-					break
-				}
-			}
-		}
-
-		if !member {
-			return nil, false, fmt.Errorf("User does not belong to correct org. Must belong to %v", bb.Orgs)
-		}
-	}
-
-	return &user, bb.Open, nil
+	return convertUser(curr, token), nil
 }
 
-// Auth authenticates the session and returns the remote user
-// login for the given token and secret
-func (bb *Bitbucket) Auth(token, secret string) (string, error) {
-	token_ := oauth2.Token{AccessToken: token, RefreshToken: secret}
-	client := NewClientToken(bb.Client, bb.Secret, &token_)
-
+func (c *config) Auth(token, secret string) (string, error) {
+	client := internal.NewClientToken(
+		c.Client,
+		c.Secret,
+		&oauth2.Token{
+			AccessToken:  token,
+			RefreshToken: secret,
+		},
+	)
 	user, err := client.FindCurrent()
 	if err != nil {
 		return "", err
@@ -135,13 +86,10 @@ func (bb *Bitbucket) Auth(token, secret string) (string, error) {
 	return user.Login, nil
 }
 
-// Refresh refreshes an oauth token and expiration for the given
-// user. It returns true if the token was refreshed, false if the
-// token was not refreshed, and error if it failed to refersh.
-func (bb *Bitbucket) Refresh(user *model.User) (bool, error) {
+func (c *config) Refresh(user *model.User) (bool, error) {
 	config := &oauth2.Config{
-		ClientID:     bb.Client,
-		ClientSecret: bb.Secret,
+		ClientID:     c.Client,
+		ClientSecret: c.Secret,
 		Endpoint:     bitbucket.Endpoint,
 	}
 
@@ -165,28 +113,35 @@ func (bb *Bitbucket) Refresh(user *model.User) (bool, error) {
 	return true, nil
 }
 
-// Repo fetches the named repository from the remote system.
-func (bb *Bitbucket) Repo(u *model.User, owner, name string) (*model.Repo, error) {
-	token := oauth2.Token{AccessToken: u.Token, RefreshToken: u.Secret}
-	client := NewClientToken(bb.Client, bb.Secret, &token)
+func (c *config) Teams(u *model.User) ([]*model.Team, error) {
+	opts := &internal.ListTeamOpts{
+		PageLen: 100,
+		Role:    "member",
+	}
+	resp, err := c.newClient(u).ListTeams(opts)
+	if err != nil {
+		return nil, err
+	}
+	return convertTeamList(resp.Values), nil
+}
 
-	repo, err := client.FindRepo(owner, name)
+func (c *config) Repo(u *model.User, owner, name string) (*model.Repo, error) {
+	repo, err := c.newClient(u).FindRepo(owner, name)
 	if err != nil {
 		return nil, err
 	}
 	return convertRepo(repo), nil
 }
 
-// Repos fetches a list of repos from the remote system.
-func (bb *Bitbucket) Repos(u *model.User) ([]*model.RepoLite, error) {
-	token := oauth2.Token{AccessToken: u.Token, RefreshToken: u.Secret}
-	client := NewClientToken(bb.Client, bb.Secret, &token)
+func (c *config) Repos(u *model.User) ([]*model.RepoLite, error) {
+	client := c.newClient(u)
+
 	var repos []*model.RepoLite
 
 	// gets a list of all accounts to query, including the
 	// user's account and all team accounts.
 	logins := []string{u.Login}
-	resp, err := client.ListTeams(&ListTeamOpts{PageLen: 100, Role: "member"})
+	resp, err := client.ListTeams(&internal.ListTeamOpts{PageLen: 100, Role: "member"})
 	if err != nil {
 		return repos, err
 	}
@@ -208,11 +163,8 @@ func (bb *Bitbucket) Repos(u *model.User) ([]*model.RepoLite, error) {
 	return repos, nil
 }
 
-// Perm fetches the named repository permissions from
-// the remote system for the specified user.
-func (bb *Bitbucket) Perm(u *model.User, owner, name string) (*model.Perm, error) {
-	token := oauth2.Token{AccessToken: u.Token, RefreshToken: u.Secret}
-	client := NewClientToken(bb.Client, bb.Secret, &token)
+func (c *config) Perm(u *model.User, owner, name string) (*model.Perm, error) {
+	client := c.newClient(u)
 
 	perms := new(model.Perm)
 	_, err := client.FindRepo(owner, name)
@@ -220,69 +172,39 @@ func (bb *Bitbucket) Perm(u *model.User, owner, name string) (*model.Perm, error
 		return perms, err
 	}
 
-	// if we've gotten this far we know that the user at
-	// least has read access to the repository.
+	// if we've gotten this far we know that the user at least has read access
+	// to the repository.
 	perms.Pull = true
 
-	// if the user has access to the repository hooks we
-	// can deduce that the user has push and admin access.
-	_, err = client.ListHooks(owner, name, &ListOpts{})
+	// if the user has access to the repository hooks we can deduce that the user
+	// has push and admin access.
+	_, err = client.ListHooks(owner, name, &internal.ListOpts{})
 	if err == nil {
 		perms.Push = true
 		perms.Admin = true
 	}
-
 	return perms, nil
 }
 
-// File fetches a file from the remote repository and returns in string format.
-func (bb *Bitbucket) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
-	client := NewClientToken(
-		bb.Client,
-		bb.Secret,
-		&oauth2.Token{
-			AccessToken:  u.Token,
-			RefreshToken: u.Secret,
-		},
-	)
-
-	config, err := client.FindSource(r.Owner, r.Name, b.Commit, f)
+func (c *config) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
+	config, err := c.newClient(u).FindSource(r.Owner, r.Name, b.Commit, f)
 	if err != nil {
 		return nil, err
 	}
-
 	return []byte(config.Data), err
 }
 
-// Status sends the commit status to the remote system.
-// An example would be the GitHub pull request status.
-func (bb *Bitbucket) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
-	client := NewClientToken(
-		bb.Client,
-		bb.Secret,
-		&oauth2.Token{
-			AccessToken:  u.Token,
-			RefreshToken: u.Secret,
-		},
-	)
-
-	status := getStatus(b.Status)
-	desc := getDesc(b.Status)
-
-	data := BuildStatus{
-		State: status,
+func (c *config) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
+	status := internal.BuildStatus{
+		State: getStatus(b.Status),
+		Desc:  getDesc(b.Status),
 		Key:   "Drone",
 		Url:   link,
-		Desc:  desc,
 	}
-
-	err := client.CreateStatus(r.Owner, r.Name, b.Commit, &data)
-	return err
+	return c.newClient(u).CreateStatus(r.Owner, r.Name, b.Commit, &status)
 }
 
-// Netrc returns a .netrc file that can be used to clone
-// private repositories from a remote system.
-func (bb *Bitbucket) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
+func (c *config) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
 	return &model.Netrc{
 		Machine:  "bitbucket.org",
 		Login:    "x-token-auth",
@@ -290,113 +212,73 @@ func (bb *Bitbucket) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
 	}, nil
 }
 
-// Activate activates a repository by creating the post-commit hook and
-// adding the SSH deploy key, if applicable.
-func (bb *Bitbucket) Activate(u *model.User, r *model.Repo, k *model.Key, link string) error {
-	client := NewClientToken(
-		bb.Client,
-		bb.Secret,
-		&oauth2.Token{
-			AccessToken:  u.Token,
-			RefreshToken: u.Secret,
-		},
-	)
-
-	linkurl, err := url.Parse(link)
+func (c *config) Activate(u *model.User, r *model.Repo, k *model.Key, link string) error {
+	rawurl, err := url.Parse(link)
 	if err != nil {
-		log.Errorf("malformed hook url %s. %s", link, err)
 		return err
 	}
 
-	// see if the hook already exists. If yes be sure to
-	// delete so that multiple messages aren't sent.
-	hooks, _ := client.ListHooks(r.Owner, r.Name, &ListOpts{})
+	// deletes any previously created hooks
+	if err := c.Deactivate(u, r, link); err != nil {
+		// we can live with failure here. Things happen and manually scrubbing
+		// hooks is certinaly not the end of the world.
+	}
+
+	return c.newClient(u).CreateHook(r.Owner, r.Name, &internal.Hook{
+		Active: true,
+		Desc:   rawurl.Host,
+		Events: []string{"repo:push"},
+		Url:    link,
+	})
+}
+
+func (c *config) Deactivate(u *model.User, r *model.Repo, link string) error {
+	client := c.newClient(u)
+
+	linkurl, err := url.Parse(link)
+	if err != nil {
+		return err
+	}
+
+	hooks, err := client.ListHooks(r.Owner, r.Name, &internal.ListOpts{})
+	if err != nil {
+		return nil // we can live with undeleted hooks
+	}
+
 	for _, hook := range hooks.Values {
 		hookurl, err := url.Parse(hook.Url)
 		if err != nil {
 			continue
 		}
 		if hookurl.Host == linkurl.Host {
-			err = client.DeleteHook(r.Owner, r.Name, hook.Uuid)
-			if err != nil {
-				log.Errorf("unable to delete hook %s. %s", hookurl.Host, err)
-			}
-			break
-		}
-	}
-
-	err = client.CreateHook(r.Owner, r.Name, &Hook{
-		Active: true,
-		Desc:   linkurl.Host,
-		Events: []string{"repo:push"},
-		Url:    link,
-	})
-	if err != nil {
-		log.Errorf("unable to create hook %s. %s", link, err)
-	}
-	return err
-}
-
-// Deactivate removes a repository by removing all the post-commit hooks
-// which are equal to link and removing the SSH deploy key.
-func (bb *Bitbucket) Deactivate(u *model.User, r *model.Repo, link string) error {
-	client := NewClientToken(
-		bb.Client,
-		bb.Secret,
-		&oauth2.Token{
-			AccessToken:  u.Token,
-			RefreshToken: u.Secret,
-		},
-	)
-
-	linkurl, err := url.Parse(link)
-	if err != nil {
-		return err
-	}
-
-	// see if the hook already exists. If yes be sure to
-	// delete so that multiple messages aren't sent.
-	hooks, _ := client.ListHooks(r.Owner, r.Name, &ListOpts{})
-	for _, hook := range hooks.Values {
-		hookurl, err := url.Parse(hook.Url)
-		if err != nil {
-			return err
-		}
-		if hookurl.Host == linkurl.Host {
 			client.DeleteHook(r.Owner, r.Name, hook.Uuid)
-			break
+			break // we can live with undeleted hooks
 		}
 	}
 
 	return nil
 }
 
-// Hook parses the post-commit hook from the Request body
-// and returns the required data in a standard format.
-func (bb *Bitbucket) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
+func (c *config) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 
 	switch r.Header.Get("X-Event-Key") {
 	case "repo:push":
-		return bb.pushHook(r)
+		return c.pushHook(r)
 	case "pullrequest:created", "pullrequest:updated":
-		return bb.pullHook(r)
+		return c.pullHook(r)
 	}
 
 	return nil, nil, nil
 }
 
-func (bb *Bitbucket) String() string {
-	return "bitbucket"
-}
-
-func (bb *Bitbucket) pushHook(r *http.Request) (*model.Repo, *model.Build, error) {
+func (c *config) pushHook(r *http.Request) (*model.Repo, *model.Build, error) {
 	payload := []byte(r.FormValue("payload"))
 	if len(payload) == 0 {
 		defer r.Body.Close()
 		payload, _ = ioutil.ReadAll(r.Body)
 	}
 
-	hook := PushHook{}
+	hook := internal.PushHook{}
 	err := json.Unmarshal(payload, &hook)
 	if err != nil {
 		return nil, nil, err
@@ -423,6 +305,7 @@ func (bb *Bitbucket) pushHook(r *http.Request) (*model.Repo, *model.Build, error
 
 		// return the updated repository information and the
 		// build information.
+		// TODO(bradrydzewski) uses unit tested conversion function
 		return convertRepo(&hook.Repo), &model.Build{
 			Event:     buildEventType,
 			Commit:    change.New.Target.Hash,
@@ -439,14 +322,14 @@ func (bb *Bitbucket) pushHook(r *http.Request) (*model.Repo, *model.Build, error
 	return nil, nil, nil
 }
 
-func (bb *Bitbucket) pullHook(r *http.Request) (*model.Repo, *model.Build, error) {
+func (c *config) pullHook(r *http.Request) (*model.Repo, *model.Build, error) {
 	payload := []byte(r.FormValue("payload"))
 	if len(payload) == 0 {
 		defer r.Body.Close()
 		payload, _ = ioutil.ReadAll(r.Body)
 	}
 
-	hook := PullRequestHook{}
+	hook := internal.PullRequestHook{}
 	err := json.Unmarshal(payload, &hook)
 	if err != nil {
 		return nil, nil, err
@@ -455,12 +338,13 @@ func (bb *Bitbucket) pullHook(r *http.Request) (*model.Repo, *model.Build, error
 		return nil, nil, nil
 	}
 
+	// TODO(bradrydzewski) uses unit tested conversion function
 	return convertRepo(&hook.Repo), &model.Build{
 		Event:     model.EventPull,
 		Commit:    hook.PullRequest.Dest.Commit.Hash,
 		Ref:       fmt.Sprintf("refs/heads/%s", hook.PullRequest.Dest.Branch.Name),
 		Refspec:   fmt.Sprintf("https://bitbucket.org/%s.git", hook.PullRequest.Source.Repo.FullName),
-		Remote:    cloneLink(hook.PullRequest.Dest.Repo),
+		Remote:    cloneLink(&hook.PullRequest.Dest.Repo),
 		Link:      hook.PullRequest.Links.Html.Href,
 		Branch:    hook.PullRequest.Dest.Branch.Name,
 		Message:   hook.PullRequest.Desc,
@@ -468,48 +352,4 @@ func (bb *Bitbucket) pullHook(r *http.Request) (*model.Repo, *model.Build, error
 		Author:    hook.Actor.Login,
 		Timestamp: hook.PullRequest.Updated.UTC().Unix(),
 	}, nil
-}
-
-const (
-	StatusPending = "INPROGRESS"
-	StatusSuccess = "SUCCESSFUL"
-	StatusFailure = "FAILED"
-)
-
-const (
-	DescPending = "this build is pending"
-	DescSuccess = "the build was successful"
-	DescFailure = "the build failed"
-	DescError   = "oops, something went wrong"
-)
-
-// converts a Drone status to a BitBucket status.
-func getStatus(status string) string {
-	switch status {
-	case model.StatusPending, model.StatusRunning:
-		return StatusPending
-	case model.StatusSuccess:
-		return StatusSuccess
-	case model.StatusFailure, model.StatusError, model.StatusKilled:
-		return StatusFailure
-	default:
-		return StatusFailure
-	}
-}
-
-// generates a description for the build based on
-// the Drone status
-func getDesc(status string) string {
-	switch status {
-	case model.StatusPending, model.StatusRunning:
-		return DescPending
-	case model.StatusSuccess:
-		return DescSuccess
-	case model.StatusFailure:
-		return DescFailure
-	case model.StatusError, model.StatusKilled:
-		return DescError
-	default:
-		return DescError
-	}
 }

@@ -6,44 +6,33 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote"
 	"github.com/gogits/go-gogs-client"
-
-	log "github.com/Sirupsen/logrus"
 )
 
-type Gogs struct {
+// Remote defines a remote implementation that integrates with Gogs, an open
+// source Git service written in Go. See https://gogs.io/
+type Remote struct {
 	URL         string
 	Open        bool
 	PrivateMode bool
 	SkipVerify  bool
 }
 
-func Load(config string) *Gogs {
-	// parse the remote DSN configuration string
-	url_, err := url.Parse(config)
-	if err != nil {
-		log.Fatalln("unable to parse remote dsn. %s", err)
+// New returns a Remote implementation that integrates with Gogs, an open
+// source Git service written in Go. See https://gogs.io/
+func New(url string, private, skipverify bool) remote.Remote {
+	return &Remote{
+		URL:         url,
+		PrivateMode: private,
+		SkipVerify:  skipverify,
 	}
-	params := url_.Query()
-	url_.RawQuery = ""
-
-	// create the Githbub remote using parameters from
-	// the parsed DSN configuration string.
-	gogs := Gogs{}
-	gogs.URL = url_.String()
-	gogs.PrivateMode, _ = strconv.ParseBool(params.Get("private_mode"))
-	gogs.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))
-	gogs.Open, _ = strconv.ParseBool(params.Get("open"))
-
-	return &gogs
 }
 
-// Login authenticates the session and returns the
-// remote user details.
-func (g *Gogs) Login(res http.ResponseWriter, req *http.Request) (*model.User, bool, error) {
+// Login authenticates the session and returns the authenticated user.
+func (g *Remote) Login(res http.ResponseWriter, req *http.Request) (*model.User, bool, error) {
 	var (
 		username = req.FormValue("username")
 		password = req.FormValue("password")
@@ -91,17 +80,17 @@ func (g *Gogs) Login(res http.ResponseWriter, req *http.Request) (*model.User, b
 	user.Login = userInfo.UserName
 	user.Email = userInfo.Email
 	user.Avatar = expandAvatar(g.URL, userInfo.AvatarUrl)
-	return &user, g.Open, nil
+	return &user, false, nil
 }
 
 // Auth authenticates the session and returns the remote user
 // login for the given token and secret
-func (g *Gogs) Auth(token, secret string) (string, error) {
+func (g *Remote) Auth(token, secret string) (string, error) {
 	return "", fmt.Errorf("Method not supported")
 }
 
 // Repo fetches the named repository from the remote system.
-func (g *Gogs) Repo(u *model.User, owner, name string) (*model.Repo, error) {
+func (g *Remote) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
 	repos_, err := client.ListMyRepos()
 	if err != nil {
@@ -119,7 +108,7 @@ func (g *Gogs) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 }
 
 // Repos fetches a list of repos from the remote system.
-func (g *Gogs) Repos(u *model.User) ([]*model.RepoLite, error) {
+func (g *Remote) Repos(u *model.User) ([]*model.RepoLite, error) {
 	repos := []*model.RepoLite{}
 
 	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
@@ -137,7 +126,7 @@ func (g *Gogs) Repos(u *model.User) ([]*model.RepoLite, error) {
 
 // Perm fetches the named repository permissions from
 // the remote system for the specified user.
-func (g *Gogs) Perm(u *model.User, owner, name string) (*model.Perm, error) {
+func (g *Remote) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
 	repos_, err := client.ListMyRepos()
 	if err != nil {
@@ -156,7 +145,7 @@ func (g *Gogs) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 }
 
 // File fetches a file from the remote repository and returns in string format.
-func (g *Gogs) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
+func (g *Remote) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
 	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
 	cfg, err := client.GetFile(r.Owner, r.Name, b.Commit, f)
 	return cfg, err
@@ -164,13 +153,13 @@ func (g *Gogs) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]b
 
 // Status sends the commit status to the remote system.
 // An example would be the GitHub pull request status.
-func (g *Gogs) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
+func (g *Remote) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
 	return fmt.Errorf("Not Implemented")
 }
 
 // Netrc returns a .netrc file that can be used to clone
 // private repositories from a remote system.
-func (g *Gogs) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
+func (g *Remote) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
 	url_, err := url.Parse(g.URL)
 	if err != nil {
 		return nil, err
@@ -188,7 +177,7 @@ func (g *Gogs) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
 
 // Activate activates a repository by creating the post-commit hook and
 // adding the SSH deploy key, if applicable.
-func (g *Gogs) Activate(u *model.User, r *model.Repo, k *model.Key, link string) error {
+func (g *Remote) Activate(u *model.User, r *model.Repo, k *model.Key, link string) error {
 	config := map[string]string{
 		"url":          link,
 		"secret":       r.Hash,
@@ -207,13 +196,13 @@ func (g *Gogs) Activate(u *model.User, r *model.Repo, k *model.Key, link string)
 
 // Deactivate removes a repository by removing all the post-commit hooks
 // which are equal to link and removing the SSH deploy key.
-func (g *Gogs) Deactivate(u *model.User, r *model.Repo, link string) error {
+func (g *Remote) Deactivate(u *model.User, r *model.Repo, link string) error {
 	return fmt.Errorf("Not Implemented")
 }
 
 // Hook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
-func (g *Gogs) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
+func (g *Remote) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 	var (
 		err   error
 		repo  *model.Repo
@@ -246,6 +235,6 @@ func NewGogsClient(url, token string, skipVerify bool) *gogs.Client {
 	return c
 }
 
-func (g *Gogs) String() string {
+func (g *Remote) String() string {
 	return "gogs"
 }

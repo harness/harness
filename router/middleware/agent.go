@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	secret = envflag.String("AGENT_SECRET", "", "")
+	secret = envflag.String("DRONE_AGENT_SECRET", "", "")
 	noauth = envflag.Bool("AGENT_NO_AUTH", false, "")
 )
 

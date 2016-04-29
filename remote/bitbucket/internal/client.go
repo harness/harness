@@ -1,4 +1,4 @@
-package bitbucket
+package internal
 
 import (
 	"bytes"

@@ -72,53 +72,6 @@ func GetRepo(client *github.Client, owner, repo string) (*github.Repository, err
 	return r, err
 }
 
-// GetAllRepos is a helper function that returns an aggregated list
-// of all user and organization repositories.
-func GetAllRepos(client *github.Client) ([]github.Repository, error) {
-	orgs, err := GetOrgs(client)
-	if err != nil {
-		return nil, err
-	}
-
-	repos, err := GetUserRepos(client)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, org := range orgs {
-		list, err := GetOrgRepos(client, *org.Login)
-		if err != nil {
-			return nil, err
-		}
-		repos = append(repos, list...)
-	}
-
-	return repos, nil
-}
-
-// GetSubscriptions is a helper function that returns an aggregated list
-// of all user and organization repositories.
-// func GetSubscriptions(client *github.Client) ([]github.Repository, error) {
-// 	var repos []github.Repository
-// 	var opts = github.ListOptions{}
-// 	opts.PerPage = 100
-// 	opts.Page = 1
-
-// 	// loop through user repository list
-// 	for opts.Page > 0 {
-// 		list, resp, err := client.Activity.ListWatched(""), &opts)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		repos = append(repos, list...)
-
-// 		// increment the next page to retrieve
-// 		opts.Page = resp.NextPage
-// 	}
-
-// 	return repos, nil
-// }
-
 // GetUserRepos is a helper function that returns a list of
 // all user repositories. Paginated results are aggregated into
 // a single list.
@@ -131,30 +84,6 @@ func GetUserRepos(client *github.Client) ([]github.Repository, error) {
 	// loop through user repository list
 	for opts.Page > 0 {
 		list, resp, err := client.Repositories.List("", &opts)
-		if err != nil {
-			return nil, err
-		}
-		repos = append(repos, list...)
-
-		// increment the next page to retrieve
-		opts.Page = resp.NextPage
-	}
-
-	return repos, nil
-}
-
-// GetOrgRepos is a helper function that returns a list of
-// all org repositories. Paginated results are aggregated into
-// a single list.
-func GetOrgRepos(client *github.Client, org string) ([]github.Repository, error) {
-	var repos []github.Repository
-	var opts = github.RepositoryListByOrgOptions{}
-	opts.PerPage = 100
-	opts.Page = 1
-
-	// loop through user repository list
-	for opts.Page > 0 {
-		list, resp, err := client.Repositories.ListByOrg(org, &opts)
 		if err != nil {
 			return nil, err
 		}
@@ -250,70 +179,6 @@ func CreateUpdateHook(client *github.Client, owner, name, url string) (*github.H
 	return CreateHook(client, owner, name, url)
 }
 
-// GetKey is a heper function that retrieves a public Key by
-// title. To do this, it will retrieve a list of all keys
-// and iterate through the list.
-func GetKey(client *github.Client, owner, name, title string) (*github.Key, error) {
-	keys, _, err := client.Repositories.ListKeys(owner, name, nil)
-	if err != nil {
-		return nil, err
-	}
-	for _, key := range keys {
-		if *key.Title == title {
-			return &key, nil
-		}
-	}
-	return nil, nil
-}
-
-// GetKeyTitle is a helper function that generates a title for the
-// RSA public key based on the username and domain name.
-func GetKeyTitle(rawurl string) (string, error) {
-	var uri, err = url.Parse(rawurl)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("drone@%s", uri.Host), nil
-}
-
-// DeleteKey is a helper function that deletes a deploy key
-// for the specified repository.
-func DeleteKey(client *github.Client, owner, name, title string) error {
-	var k, err = GetKey(client, owner, name, title)
-	if err != nil {
-		return err
-	}
-	if k == nil {
-		return nil
-	}
-	_, err = client.Repositories.DeleteKey(owner, name, *k.ID)
-	return err
-}
-
-// CreateKey is a helper function that creates a deploy key
-// for the specified repository.
-func CreateKey(client *github.Client, owner, name, title, key string) (*github.Key, error) {
-	var k = new(github.Key)
-	k.Title = github.String(title)
-	k.Key = github.String(key)
-	created, _, err := client.Repositories.CreateKey(owner, name, k)
-	return created, err
-}
-
-// CreateUpdateKey is a helper function that creates a deployment key
-// for the specified repository if it does not already exist, otherwise
-// it updates the existing key
-func CreateUpdateKey(client *github.Client, owner, name, title, key string) (*github.Key, error) {
-	var k, _ = GetKey(client, owner, name, title)
-	if k != nil {
-		k.Title = github.String(title)
-		k.Key = github.String(key)
-		client.Repositories.DeleteKey(owner, name, *k.ID)
-	}
-
-	return CreateKey(client, owner, name, title, key)
-}
-
 // GetFile is a heper function that retrieves a file from
 // GitHub and returns its contents in byte array format.
 func GetFile(client *github.Client, owner, name, path, ref string) ([]byte, error) {
@@ -343,26 +208,4 @@ func GetPayload(req *http.Request) []byte {
 		return raw
 	}
 	return []byte(payload)
-}
-
-// UserBelongsToOrg returns true if the currently authenticated user is a
-// member of any of the organizations provided.
-func UserBelongsToOrg(client *github.Client, permittedOrgs []string) (bool, error) {
-	userOrgs, err := GetOrgs(client)
-	if err != nil {
-		return false, err
-	}
-
-	userOrgSet := make(map[string]struct{}, len(userOrgs))
-	for _, org := range userOrgs {
-		userOrgSet[*org.Login] = struct{}{}
-	}
-
-	for _, org := range permittedOrgs {
-		if _, ok := userOrgSet[org]; ok {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }

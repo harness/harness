@@ -1,13 +1,11 @@
 package api
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gopkg.in/yaml.v2"
 
 	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
@@ -209,45 +207,4 @@ func DeleteRepo(c *gin.Context) {
 
 	remote.Deactivate(user, repo, httputil.GetURL(c.Request))
 	c.Writer.WriteHeader(http.StatusOK)
-}
-
-func PostSecure(c *gin.Context) {
-	repo := session.Repo(c)
-
-	in, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
-
-	// we found some strange characters included in
-	// the yaml file when entered into a browser textarea.
-	// these need to be removed
-	in = bytes.Replace(in, []byte{'\xA0'}, []byte{' '}, -1)
-
-	// make sure the Yaml is valid format to prevent
-	// a malformed value from being used in the build
-	err = yaml.Unmarshal(in, &yaml.MapSlice{})
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	key, err := store.GetKey(c, repo)
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-
-	// encrypts using go-jose
-	out, err := crypto.Encrypt(string(in), key.Private)
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-	c.String(http.StatusOK, out)
-}
-
-func PostReactivate(c *gin.Context) {
-
 }

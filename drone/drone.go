@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/drone/drone/drone/agent"
-	"github.com/drone/drone/drone/server"
 	"github.com/drone/drone/version"
 
 	"github.com/codegangsta/cli"
@@ -35,7 +34,7 @@ func main() {
 	}
 	app.Commands = []cli.Command{
 		agent.AgentCmd,
-		server.ServeCmd,
+		DaemonCmd,
 		SignCmd,
 		SecretCmd,
 	}

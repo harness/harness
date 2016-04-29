@@ -14,13 +14,15 @@ package bitbucketserver
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/drone/drone/model"
-	"github.com/mrjones/oauth"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote"
+	"github.com/mrjones/oauth"
 )
 
 type BitbucketServer struct {
@@ -31,6 +33,19 @@ type BitbucketServer struct {
 	ConsumerRSA string
 	Open        bool
 	Consumer    oauth.Consumer
+}
+
+func New(url, key, rsa, username, password string) remote.Remote {
+	bb := &BitbucketServer{
+		URL:         url,
+		ConsumerKey: key,
+		GitUserName: username,
+		GitPassword: password,
+		ConsumerRSA: rsa,
+	}
+	bb.Consumer = *NewClient(bb.ConsumerRSA, bb.ConsumerKey, bb.URL)
+
+	return bb
 }
 
 func Load(config string) *BitbucketServer {
@@ -105,7 +120,7 @@ func (bs *BitbucketServer) Login(res http.ResponseWriter, req *http.Request) (*m
 	bits, err := ioutil.ReadAll(response.Body)
 	userName := string(bits)
 
-	response1, err := client.Get(fmt.Sprintf("%s/rest/api/1.0/users/%s",bs.URL, userName))
+	response1, err := client.Get(fmt.Sprintf("%s/rest/api/1.0/users/%s", bs.URL, userName))
 	contents, err := ioutil.ReadAll(response1.Body)
 	defer response1.Body.Close()
 	var mUser User
@@ -134,7 +149,7 @@ func (bs *BitbucketServer) Repo(u *model.User, owner, name string) (*model.Repo,
 
 	client := NewClientWithToken(&bs.Consumer, u.Token)
 
-	url := fmt.Sprintf("%s/rest/api/1.0/projects/%s/repos/%s",bs.URL,owner,name)
+	url := fmt.Sprintf("%s/rest/api/1.0/projects/%s/repos/%s", bs.URL, owner, name)
 	log.Info("Trying to get " + url)
 	response, err := client.Get(url)
 	if err != nil {
@@ -165,7 +180,7 @@ func (bs *BitbucketServer) Repo(u *model.User, owner, name string) (*model.Repo,
 	repo.Name = bsRepo.Slug
 	repo.Owner = bsRepo.Project.Key
 	repo.AllowPush = true
-	repo.FullName = fmt.Sprintf("%s/%s",bsRepo.Project.Key,bsRepo.Slug)
+	repo.FullName = fmt.Sprintf("%s/%s", bsRepo.Project.Key, bsRepo.Slug)
 	repo.Branch = "master"
 	repo.Kind = model.RepoGit
 
@@ -178,7 +193,7 @@ func (bs *BitbucketServer) Repos(u *model.User) ([]*model.RepoLite, error) {
 
 	client := NewClientWithToken(&bs.Consumer, u.Token)
 
-	response, err := client.Get(fmt.Sprintf("%s/rest/api/1.0/repos?limit=10000",bs.URL))
+	response, err := client.Get(fmt.Sprintf("%s/rest/api/1.0/repos?limit=10000", bs.URL))
 	if err != nil {
 		log.Error(err)
 	}
@@ -296,7 +311,7 @@ func (bs *BitbucketServer) Hook(r *http.Request) (*model.Repo, *model.Build, err
 	repo.AllowDeploy = false
 	repo.AllowPull = false
 	repo.AllowPush = true
-	repo.FullName = fmt.Sprintf("%s/%s",hookPost.Repository.Project.Key,hookPost.Repository.Slug)
+	repo.FullName = fmt.Sprintf("%s/%s", hookPost.Repository.Project.Key, hookPost.Repository.Slug)
 	repo.Branch = "master"
 	repo.Kind = model.RepoGit
 
@@ -307,17 +322,17 @@ func (bs *BitbucketServer) String() string {
 }
 
 type HookDetail struct {
-	Key           string `"json:key"`
-	Name          string `"json:name"`
-	Type          string `"json:type"`
-	Description   string `"json:description"`
-	Version       string `"json:version"`
-	ConfigFormKey string `"json:configFormKey"`
+	Key           string `json:"key"`
+	Name          string `json:"name"`
+	Type          string `json:"type"`
+	Description   string `json:"description"`
+	Version       string `json:"version"`
+	ConfigFormKey string `json:"configFormKey"`
 }
 
 type Hook struct {
-	Enabled bool        `"json:enabled"`
-	Details *HookDetail `"json:details"`
+	Enabled bool        `json:"enabled"`
+	Details *HookDetail `json:"details"`
 }
 
 // Enable hook for named repository
