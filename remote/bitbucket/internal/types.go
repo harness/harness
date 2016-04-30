@@ -100,27 +100,29 @@ type Source struct {
 	Size int64  `json:"size"`
 }
 
+type Change struct {
+	New struct {
+		Type   string `json:"type"`
+		Name   string `json:"name"`
+		Target struct {
+			Type    string    `json:"type"`
+			Hash    string    `json:"hash"`
+			Message string    `json:"message"`
+			Date    time.Time `json:"date"`
+			Links   Links     `json:"links"`
+			Author  struct {
+				Raw  string  `json:"raw"`
+				User Account `json:"user"`
+			} `json:"author"`
+		} `json:"target"`
+	} `json:"new"`
+}
+
 type PushHook struct {
 	Actor Account `json:"actor"`
 	Repo  Repo    `json:"repository"`
 	Push  struct {
-		Changes []struct {
-			New struct {
-				Type   string `json:"type"`
-				Name   string `json:"name"`
-				Target struct {
-					Type    string    `json:"type"`
-					Hash    string    `json:"hash"`
-					Message string    `json:"message"`
-					Date    time.Time `json:"date"`
-					Links   Links     `json:"links"`
-					Author  struct {
-						Raw  string  `json:"raw"`
-						User Account `json:"user"`
-					} `json:"author"`
-				} `json:"target"`
-			} `json:"new"`
-		} `json:"changes"`
+		Changes []Change `json:"changes"`
 	} `json:"push"`
 }
 

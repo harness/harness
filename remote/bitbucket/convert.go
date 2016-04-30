@@ -1,6 +1,7 @@
 package bitbucket
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -9,6 +10,47 @@ import (
 
 	"golang.org/x/oauth2"
 )
+
+const (
+	statusPending = "INPROGRESS"
+	statusSuccess = "SUCCESSFUL"
+	statusFailure = "FAILED"
+)
+
+const (
+	descPending = "this build is pending"
+	descSuccess = "the build was successful"
+	descFailure = "the build failed"
+	descError   = "oops, something went wrong"
+)
+
+// convertStatus is a helper function used to convert a Drone status to a
+// Bitbucket commit status.
+func convertStatus(status string) string {
+	switch status {
+	case model.StatusPending, model.StatusRunning:
+		return statusPending
+	case model.StatusSuccess:
+		return statusSuccess
+	default:
+		return statusFailure
+	}
+}
+
+// convertDesc is a helper function used to convert a Drone status to a
+// Bitbucket status description.
+func convertDesc(status string) string {
+	switch status {
+	case model.StatusPending, model.StatusRunning:
+		return descPending
+	case model.StatusSuccess:
+		return descSuccess
+	case model.StatusFailure:
+		return descFailure
+	default:
+		return descError
+	}
+}
 
 // convertRepo is a helper function used to convert a Bitbucket repository
 // structure to the common Drone repository structure.
@@ -101,4 +143,44 @@ func convertTeam(from *internal.Account) *model.Team {
 		Login:  from.Login,
 		Avatar: from.Links.Avatar.Href,
 	}
+}
+
+// convertPullHook is a helper function used to convert a Bitbucket pull request
+// hook to the Drone build struct holding commit information.
+func convertPullHook(from *internal.PullRequestHook) *model.Build {
+	return &model.Build{
+		Event:     model.EventPull,
+		Commit:    from.PullRequest.Dest.Commit.Hash,
+		Ref:       fmt.Sprintf("refs/heads/%s", from.PullRequest.Dest.Branch.Name),
+		Remote:    cloneLink(&from.PullRequest.Dest.Repo),
+		Link:      from.PullRequest.Links.Html.Href,
+		Branch:    from.PullRequest.Dest.Branch.Name,
+		Message:   from.PullRequest.Desc,
+		Avatar:    from.Actor.Links.Avatar.Href,
+		Author:    from.Actor.Login,
+		Timestamp: from.PullRequest.Updated.UTC().Unix(),
+	}
+}
+
+// convertPushHook is a helper function used to convert a Bitbucket push
+// hook to the Drone build struct holding commit information.
+func convertPushHook(hook *internal.PushHook, change *internal.Change) *model.Build {
+	build := &model.Build{
+		Commit:    change.New.Target.Hash,
+		Link:      change.New.Target.Links.Html.Href,
+		Branch:    change.New.Name,
+		Message:   change.New.Target.Message,
+		Avatar:    hook.Actor.Links.Avatar.Href,
+		Author:    hook.Actor.Login,
+		Timestamp: change.New.Target.Date.UTC().Unix(),
+	}
+	switch change.New.Type {
+	case "tag", "annotated_tag", "bookmark":
+		build.Event = model.EventTag
+		build.Ref = fmt.Sprintf("refs/tags/%s", change.New.Name)
+	default:
+		build.Event = model.EventPush
+		build.Ref = fmt.Sprintf("refs/heads/%s", change.New.Name)
+	}
+	return build
 }

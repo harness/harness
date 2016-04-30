@@ -1,9 +1,7 @@
 package bitbucket
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -16,7 +14,11 @@ import (
 	"golang.org/x/oauth2/bitbucket"
 )
 
+// Bitbucket Server endpoint.
+const Endpoint = "https://api.bitbucket.org"
+
 type config struct {
+	URL    string
 	Client string
 	Secret string
 }
@@ -25,6 +27,7 @@ type config struct {
 // repository hosting service at https://bitbucket.org
 func New(client, secret string) remote.Remote {
 	return &config{
+		URL:    Endpoint,
 		Client: client,
 		Secret: secret,
 	}
@@ -33,6 +36,7 @@ func New(client, secret string) remote.Remote {
 // helper function to return the bitbucket oauth2 client
 func (c *config) newClient(u *model.User) *internal.Client {
 	return internal.NewClientToken(
+		c.URL,
 		c.Client,
 		c.Secret,
 		&oauth2.Token{
@@ -61,7 +65,7 @@ func (c *config) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 		return nil, err
 	}
 
-	client := internal.NewClient(config.Client(oauth2.NoContext, token))
+	client := internal.NewClient(c.URL, config.Client(oauth2.NoContext, token))
 	curr, err := client.FindCurrent()
 	if err != nil {
 		return nil, err
@@ -72,6 +76,7 @@ func (c *config) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 
 func (c *config) Auth(token, secret string) (string, error) {
 	client := internal.NewClientToken(
+		c.URL,
 		c.Client,
 		c.Secret,
 		&oauth2.Token{
@@ -196,8 +201,8 @@ func (c *config) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 
 func (c *config) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
 	status := internal.BuildStatus{
-		State: getStatus(b.Status),
-		Desc:  getDesc(b.Status),
+		State: convertStatus(b.Status),
+		Desc:  convertDesc(b.Status),
 		Key:   "Drone",
 		Url:   link,
 	}
@@ -219,10 +224,7 @@ func (c *config) Activate(u *model.User, r *model.Repo, k *model.Key, link strin
 	}
 
 	// deletes any previously created hooks
-	if err := c.Deactivate(u, r, link); err != nil {
-		// we can live with failure here. Things happen and manually scrubbing
-		// hooks is certinaly not the end of the world.
-	}
+	c.Deactivate(u, r, link)
 
 	return c.newClient(u).CreateHook(r.Owner, r.Name, &internal.Hook{
 		Active: true,
@@ -242,114 +244,22 @@ func (c *config) Deactivate(u *model.User, r *model.Repo, link string) error {
 
 	hooks, err := client.ListHooks(r.Owner, r.Name, &internal.ListOpts{})
 	if err != nil {
-		return nil // we can live with undeleted hooks
+		return err
 	}
 
 	for _, hook := range hooks.Values {
 		hookurl, err := url.Parse(hook.Url)
-		if err != nil {
-			continue
-		}
-		if hookurl.Host == linkurl.Host {
-			client.DeleteHook(r.Owner, r.Name, hook.Uuid)
-			break // we can live with undeleted hooks
+		if err == nil && hookurl.Host == linkurl.Host {
+			return client.DeleteHook(r.Owner, r.Name, hook.Uuid)
 		}
 	}
 
 	return nil
 }
 
+// Hook parses the incoming Bitbucket hook and returns the Repository and
+// Build details. If the hook is unsupported nil values are returned and the
+// hook should be skipped.
 func (c *config) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
-
-	switch r.Header.Get("X-Event-Key") {
-	case "repo:push":
-		return c.pushHook(r)
-	case "pullrequest:created", "pullrequest:updated":
-		return c.pullHook(r)
-	}
-
-	return nil, nil, nil
-}
-
-func (c *config) pushHook(r *http.Request) (*model.Repo, *model.Build, error) {
-	payload := []byte(r.FormValue("payload"))
-	if len(payload) == 0 {
-		defer r.Body.Close()
-		payload, _ = ioutil.ReadAll(r.Body)
-	}
-
-	hook := internal.PushHook{}
-	err := json.Unmarshal(payload, &hook)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// the hook can container one or many changes. Since I don't
-	// fully understand this yet, we will just pick the first
-	// change that has branch information.
-	for _, change := range hook.Push.Changes {
-
-		// must have sha information
-		if change.New.Target.Hash == "" {
-			continue
-		}
-		// we only support tag and branch pushes for now
-		buildEventType := model.EventPush
-		buildRef := fmt.Sprintf("refs/heads/%s", change.New.Name)
-		if change.New.Type == "tag" || change.New.Type == "annotated_tag" || change.New.Type == "bookmark" {
-			buildEventType = model.EventTag
-			buildRef = fmt.Sprintf("refs/tags/%s", change.New.Name)
-		} else if change.New.Type != "branch" && change.New.Type != "named_branch" {
-			continue
-		}
-
-		// return the updated repository information and the
-		// build information.
-		// TODO(bradrydzewski) uses unit tested conversion function
-		return convertRepo(&hook.Repo), &model.Build{
-			Event:     buildEventType,
-			Commit:    change.New.Target.Hash,
-			Ref:       buildRef,
-			Link:      change.New.Target.Links.Html.Href,
-			Branch:    change.New.Name,
-			Message:   change.New.Target.Message,
-			Avatar:    hook.Actor.Links.Avatar.Href,
-			Author:    hook.Actor.Login,
-			Timestamp: change.New.Target.Date.UTC().Unix(),
-		}, nil
-	}
-
-	return nil, nil, nil
-}
-
-func (c *config) pullHook(r *http.Request) (*model.Repo, *model.Build, error) {
-	payload := []byte(r.FormValue("payload"))
-	if len(payload) == 0 {
-		defer r.Body.Close()
-		payload, _ = ioutil.ReadAll(r.Body)
-	}
-
-	hook := internal.PullRequestHook{}
-	err := json.Unmarshal(payload, &hook)
-	if err != nil {
-		return nil, nil, err
-	}
-	if hook.PullRequest.State != "OPEN" {
-		return nil, nil, nil
-	}
-
-	// TODO(bradrydzewski) uses unit tested conversion function
-	return convertRepo(&hook.Repo), &model.Build{
-		Event:     model.EventPull,
-		Commit:    hook.PullRequest.Dest.Commit.Hash,
-		Ref:       fmt.Sprintf("refs/heads/%s", hook.PullRequest.Dest.Branch.Name),
-		Refspec:   fmt.Sprintf("https://bitbucket.org/%s.git", hook.PullRequest.Source.Repo.FullName),
-		Remote:    cloneLink(&hook.PullRequest.Dest.Repo),
-		Link:      hook.PullRequest.Links.Html.Href,
-		Branch:    hook.PullRequest.Dest.Branch.Name,
-		Message:   hook.PullRequest.Desc,
-		Avatar:    hook.Actor.Links.Avatar.Href,
-		Author:    hook.Actor.Login,
-		Timestamp: hook.PullRequest.Updated.UTC().Unix(),
-	}, nil
+	return parseHook(r)
 }

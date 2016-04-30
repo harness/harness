@@ -20,8 +20,6 @@ const (
 )
 
 const (
-	base = "https://api.bitbucket.org"
-
 	pathUser   = "%s/2.0/user/"
 	pathEmails = "%s/2.0/user/emails"
 	pathTeams  = "%s/2.0/teams/?%s"
@@ -35,52 +33,53 @@ const (
 
 type Client struct {
 	*http.Client
+	base string
 }
 
-func NewClient(client *http.Client) *Client {
-	return &Client{client}
+func NewClient(url string, client *http.Client) *Client {
+	return &Client{client, url}
 }
 
-func NewClientToken(client, secret string, token *oauth2.Token) *Client {
+func NewClientToken(url, client, secret string, token *oauth2.Token) *Client {
 	config := &oauth2.Config{
 		ClientID:     client,
 		ClientSecret: secret,
 		Endpoint:     bitbucket.Endpoint,
 	}
-	return NewClient(config.Client(oauth2.NoContext, token))
+	return NewClient(url, config.Client(oauth2.NoContext, token))
 }
 
 func (c *Client) FindCurrent() (*Account, error) {
 	out := new(Account)
-	uri := fmt.Sprintf(pathUser, base)
+	uri := fmt.Sprintf(pathUser, c.base)
 	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
 func (c *Client) ListEmail() (*EmailResp, error) {
 	out := new(EmailResp)
-	uri := fmt.Sprintf(pathEmails, base)
+	uri := fmt.Sprintf(pathEmails, c.base)
 	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
 func (c *Client) ListTeams(opts *ListTeamOpts) (*AccountResp, error) {
 	out := new(AccountResp)
-	uri := fmt.Sprintf(pathTeams, base, opts.Encode())
+	uri := fmt.Sprintf(pathTeams, c.base, opts.Encode())
 	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
 func (c *Client) FindRepo(owner, name string) (*Repo, error) {
 	out := new(Repo)
-	uri := fmt.Sprintf(pathRepo, base, owner, name)
+	uri := fmt.Sprintf(pathRepo, c.base, owner, name)
 	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
 func (c *Client) ListRepos(account string, opts *ListOpts) (*RepoResp, error) {
 	out := new(RepoResp)
-	uri := fmt.Sprintf(pathRepos, base, account, opts.Encode())
+	uri := fmt.Sprintf(pathRepos, c.base, account, opts.Encode())
 	err := c.do(uri, get, nil, out)
 	return out, err
 }
@@ -105,37 +104,37 @@ func (c *Client) ListReposAll(account string) ([]*Repo, error) {
 
 func (c *Client) FindHook(owner, name, id string) (*Hook, error) {
 	out := new(Hook)
-	uri := fmt.Sprintf(pathHook, base, owner, name, id)
+	uri := fmt.Sprintf(pathHook, c.base, owner, name, id)
 	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
 func (c *Client) ListHooks(owner, name string, opts *ListOpts) (*HookResp, error) {
 	out := new(HookResp)
-	uri := fmt.Sprintf(pathHooks, base, owner, name, opts.Encode())
+	uri := fmt.Sprintf(pathHooks, c.base, owner, name, opts.Encode())
 	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
 func (c *Client) CreateHook(owner, name string, hook *Hook) error {
-	uri := fmt.Sprintf(pathHooks, base, owner, name, "")
+	uri := fmt.Sprintf(pathHooks, c.base, owner, name, "")
 	return c.do(uri, post, hook, nil)
 }
 
 func (c *Client) DeleteHook(owner, name, id string) error {
-	uri := fmt.Sprintf(pathHook, base, owner, name, id)
+	uri := fmt.Sprintf(pathHook, c.base, owner, name, id)
 	return c.do(uri, del, nil, nil)
 }
 
 func (c *Client) FindSource(owner, name, revision, path string) (*Source, error) {
 	out := new(Source)
-	uri := fmt.Sprintf(pathSource, base, owner, name, revision, path)
+	uri := fmt.Sprintf(pathSource, c.base, owner, name, revision, path)
 	err := c.do(uri, get, nil, out)
 	return out, err
 }
 
 func (c *Client) CreateStatus(owner, name, revision string, status *BuildStatus) error {
-	uri := fmt.Sprintf(pathStatus, base, owner, name, revision)
+	uri := fmt.Sprintf(pathStatus, c.base, owner, name, revision)
 	return c.do(uri, post, status, nil)
 }
 
