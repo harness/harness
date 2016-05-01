@@ -2,13 +2,11 @@ package api
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/cache"
-	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/crypto"
@@ -72,19 +70,9 @@ func PostRepo(c *gin.Context) {
 		sig,
 	)
 
-	// generate an RSA key and add to the repo
-	key, err := crypto.GeneratePrivateKey()
-	if err != nil {
-		c.String(500, err.Error())
-		return
-	}
-	keys := new(model.Key)
-	keys.Public = string(crypto.MarshalPublicKey(&key.PublicKey))
-	keys.Private = string(crypto.MarshalPrivateKey(key))
-
 	// activate the repository before we make any
 	// local changes to the database.
-	err = remote.Activate(user, r, keys, link)
+	err = remote.Activate(user, r, link)
 	if err != nil {
 		c.String(500, err.Error())
 		return
@@ -92,12 +80,6 @@ func PostRepo(c *gin.Context) {
 
 	// persist the repository
 	err = store.CreateRepo(c, r)
-	if err != nil {
-		c.String(500, err.Error())
-		return
-	}
-	keys.RepoID = r.ID
-	err = store.CreateKey(c, keys)
 	if err != nil {
 		c.String(500, err.Error())
 		return
@@ -153,45 +135,6 @@ func PatchRepo(c *gin.Context) {
 
 func GetRepo(c *gin.Context) {
 	c.JSON(http.StatusOK, session.Repo(c))
-}
-
-func GetRepoKey(c *gin.Context) {
-	repo := session.Repo(c)
-	keys, err := store.GetKey(c, repo)
-	if err != nil {
-		c.String(404, "Error fetching repository key")
-	} else {
-		c.String(http.StatusOK, keys.Public)
-	}
-}
-
-func PostRepoKey(c *gin.Context) {
-	repo := session.Repo(c)
-	keys, err := store.GetKey(c, repo)
-	if err != nil {
-		c.String(404, "Error fetching repository key")
-		return
-	}
-	body, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		c.String(500, "Error reading private key from body. %s", err)
-		return
-	}
-	pkey := crypto.UnmarshalPrivateKey(body)
-	if pkey == nil {
-		c.String(500, "Cannot unmarshal private key. Invalid format.")
-		return
-	}
-
-	keys.Public = string(crypto.MarshalPublicKey(&pkey.PublicKey))
-	keys.Private = string(crypto.MarshalPrivateKey(pkey))
-
-	err = store.UpdateKey(c, keys)
-	if err != nil {
-		c.String(500, "Error updating repository key")
-		return
-	}
-	c.String(201, keys.Public)
 }
 
 func DeleteRepo(c *gin.Context) {

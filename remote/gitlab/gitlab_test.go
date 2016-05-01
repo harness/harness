@@ -94,13 +94,13 @@ func Test_Gitlab(t *testing.T) {
 		// Test activate method
 		g.Describe("Activate", func() {
 			g.It("Should be success", func() {
-				err := gitlab.Activate(&user, &repo, &model.Key{}, "http://example.com/api/hook/test/test?access_token=token")
+				err := gitlab.Activate(&user, &repo, "http://example.com/api/hook/test/test?access_token=token")
 
 				g.Assert(err == nil).IsTrue()
 			})
 
 			g.It("Should be failed, when token not given", func() {
-				err := gitlab.Activate(&user, &repo, &model.Key{}, "http://example.com/api/hook/test/test")
+				err := gitlab.Activate(&user, &repo, "http://example.com/api/hook/test/test")
 
 				g.Assert(err != nil).IsTrue()
 			})

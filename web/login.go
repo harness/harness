@@ -23,7 +23,7 @@ func GetLogin(c *gin.Context) {
 	// remember why, so need to revisit this line.
 	c.Writer.Header().Del("Content-Type")
 
-	tmpuser, open, err := remote.Login(c.Writer, c.Request)
+	tmpuser, err := remote.Login(c.Writer, c.Request)
 	if err != nil {
 		log.Errorf("cannot authenticate user. %s", err)
 		c.Redirect(303, "/login?error=oauth_error")
@@ -35,20 +35,16 @@ func GetLogin(c *gin.Context) {
 		return
 	}
 
+	var open = false // TODO get this from context
+
 	// get the user from the database
 	u, err := store.GetUserLogin(c, tmpuser.Login)
 	if err != nil {
-		count, err := store.GetUserCount(c)
-		if err != nil {
-			log.Errorf("cannot register %s. %s", tmpuser.Login, err)
-			c.Redirect(303, "/login?error=internal_error")
-			return
-		}
 
 		// if self-registration is disabled we should
 		// return a notAuthorized error. the only exception
 		// is if no users exist yet in the system we'll proceed.
-		if !open && count != 0 {
+		if !open {
 			log.Errorf("cannot register %s. registration closed", tmpuser.Login)
 			c.Redirect(303, "/login?error=access_denied")
 			return
@@ -68,12 +64,6 @@ func GetLogin(c *gin.Context) {
 			log.Errorf("cannot insert %s. %s", u.Login, err)
 			c.Redirect(303, "/login?error=internal_error")
 			return
-		}
-
-		// if this is the first user, they
-		// should be an admin.
-		if count == 0 {
-			u.Admin = true
 		}
 	}
 

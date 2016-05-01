@@ -134,8 +134,6 @@ func (s *Server) Handler() http.Handler {
 			repo.Use(session.MustPull)
 
 			repo.GET("", api.GetRepo)
-			repo.GET("/key", api.GetRepoKey)
-			repo.POST("/key", api.PostRepoKey)
 			repo.GET("/builds", api.GetBuilds)
 			repo.GET("/builds/:number", api.GetBuild)
 			repo.GET("/logs/:number/:job", api.GetBuildLogs)

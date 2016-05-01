@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -13,36 +14,57 @@ import (
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/oauth2"
-	"github.com/drone/drone/shared/token"
 
 	"github.com/drone/drone/remote/gitlab/client"
 )
 
-const (
-	DefaultScope = "api"
-)
+const DefaultScope = "api"
+
+// Opts defines configuration options.
+type Opts struct {
+	URL         string // Gogs server url.
+	Client      string // Oauth2 client id.
+	Secret      string // Oauth2 client secret.
+	Username    string // Optional machine account username.
+	Password    string // Optional machine account password.
+	PrivateMode bool   // Gogs is running in private mode.
+	SkipVerify  bool   // Skip ssl verification.
+}
+
+// New returns a Remote implementation that integrates with Gitlab, an open
+// source Git service. See https://gitlab.com
+func New(opts Opts) (remote.Remote, error) {
+	url, err := url.Parse(opts.URL)
+	if err != nil {
+		return nil, err
+	}
+	host, _, err := net.SplitHostPort(url.Host)
+	if err == nil {
+		url.Host = host
+	}
+	return &Gitlab{
+		URL:         opts.URL,
+		Client:      opts.Client,
+		Secret:      opts.Secret,
+		Machine:     url.Host,
+		Username:    opts.Username,
+		Password:    opts.Password,
+		PrivateMode: opts.PrivateMode,
+		SkipVerify:  opts.SkipVerify,
+	}, nil
+}
 
 type Gitlab struct {
 	URL          string
 	Client       string
 	Secret       string
-	AllowedOrgs  []string
-	CloneMode    string
-	Open         bool
+	Machine      string
+	Username     string
+	Password     string
 	PrivateMode  bool
 	SkipVerify   bool
 	HideArchives bool
 	Search       bool
-}
-
-func New(url, client, secret string, private, skipverify bool) remote.Remote {
-	return &Gitlab{
-		URL:         url,
-		Client:      client,
-		Secret:      secret,
-		PrivateMode: private,
-		SkipVerify:  skipverify,
-	}
 }
 
 func Load(config string) *Gitlab {
@@ -57,17 +79,17 @@ func Load(config string) *Gitlab {
 	gitlab.URL = url_.String()
 	gitlab.Client = params.Get("client_id")
 	gitlab.Secret = params.Get("client_secret")
-	gitlab.AllowedOrgs = params["orgs"]
+	// gitlab.AllowedOrgs = params["orgs"]
 	gitlab.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))
 	gitlab.HideArchives, _ = strconv.ParseBool(params.Get("hide_archives"))
-	gitlab.Open, _ = strconv.ParseBool(params.Get("open"))
+	// gitlab.Open, _ = strconv.ParseBool(params.Get("open"))
 
-	switch params.Get("clone_mode") {
-	case "oauth":
-		gitlab.CloneMode = "oauth"
-	default:
-		gitlab.CloneMode = "token"
-	}
+	// switch params.Get("clone_mode") {
+	// case "oauth":
+	// 	gitlab.CloneMode = "oauth"
+	// default:
+	// 	gitlab.CloneMode = "token"
+	// }
 
 	// this is a temp workaround
 	gitlab.Search, _ = strconv.ParseBool(params.Get("search"))
@@ -77,7 +99,7 @@ func Load(config string) *Gitlab {
 
 // Login authenticates the session and returns the
 // remote user details.
-func (g *Gitlab) Login(res http.ResponseWriter, req *http.Request) (*model.User, bool, error) {
+func (g *Gitlab) Login(res http.ResponseWriter, req *http.Request) (*model.User, error) {
 
 	var config = &oauth2.Config{
 		ClientId:     g.Client,
@@ -97,41 +119,41 @@ func (g *Gitlab) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 	var code = req.FormValue("code")
 	if len(code) == 0 {
 		http.Redirect(res, req, config.AuthCodeURL("drone"), http.StatusSeeOther)
-		return nil, false, nil
+		return nil, nil
 	}
 
 	var trans = &oauth2.Transport{Config: config, Transport: trans_}
 	var token_, err = trans.Exchange(code)
 	if err != nil {
-		return nil, false, fmt.Errorf("Error exchanging token. %s", err)
+		return nil, fmt.Errorf("Error exchanging token. %s", err)
 	}
 
 	client := NewClient(g.URL, token_.AccessToken, g.SkipVerify)
 	login, err := client.CurrentUser()
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 
-	if len(g.AllowedOrgs) != 0 {
-		groups, err := client.AllGroups()
-		if err != nil {
-			return nil, false, fmt.Errorf("Could not check org membership. %s", err)
-		}
-
-		var member bool
-		for _, group := range groups {
-			for _, allowedOrg := range g.AllowedOrgs {
-				if group.Path == allowedOrg {
-					member = true
-					break
-				}
-			}
-		}
-
-		if !member {
-			return nil, false, fmt.Errorf("User does not belong to correct group. Must belong to %v", g.AllowedOrgs)
-		}
-	}
+	// if len(g.AllowedOrgs) != 0 {
+	// 	groups, err := client.AllGroups()
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("Could not check org membership. %s", err)
+	// 	}
+	//
+	// 	var member bool
+	// 	for _, group := range groups {
+	// 		for _, allowedOrg := range g.AllowedOrgs {
+	// 			if group.Path == allowedOrg {
+	// 				member = true
+	// 				break
+	// 			}
+	// 		}
+	// 	}
+	//
+	// 	if !member {
+	// 		return nil, false, fmt.Errorf("User does not belong to correct group. Must belong to %v", g.AllowedOrgs)
+	// 	}
+	// }
 
 	user := &model.User{}
 	user.Login = login.Username
@@ -145,7 +167,7 @@ func (g *Gitlab) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 		user.Avatar = g.URL + "/" + login.AvatarUrl
 	}
 
-	return user, g.Open, nil
+	return user, nil
 }
 
 func (g *Gitlab) Auth(token, secret string) (string, error) {
@@ -155,6 +177,21 @@ func (g *Gitlab) Auth(token, secret string) (string, error) {
 		return "", err
 	}
 	return login.Username, nil
+}
+
+func (g *Gitlab) Teams(u *model.User) ([]*model.Team, error) {
+	client := NewClient(g.URL, u.Token, g.SkipVerify)
+	groups, err := client.AllGroups()
+	if err != nil {
+		return nil, err
+	}
+	var teams []*model.Team
+	for _, group := range groups {
+		teams = append(teams, &model.Team{
+			Login: group.Name,
+		})
+	}
+	return teams, nil
 }
 
 // Repo fetches the named repository from the remote system.
@@ -295,29 +332,47 @@ func (g *Gitlab) Status(u *model.User, repo *model.Repo, b *model.Build, link st
 
 // Netrc returns a .netrc file that can be used to clone
 // private repositories from a remote system.
-func (g *Gitlab) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
-	url_, err := url.Parse(g.URL)
-	if err != nil {
-		return nil, err
-	}
-	netrc := &model.Netrc{}
-	netrc.Machine = url_.Host
+// func (g *Gitlab) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
+// 	url_, err := url.Parse(g.URL)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	netrc := &model.Netrc{}
+// 	netrc.Machine = url_.Host
+//
+// 	switch g.CloneMode {
+// 	case "oauth":
+// 		netrc.Login = "oauth2"
+// 		netrc.Password = u.Token
+// 	case "token":
+// 		t := token.New(token.HookToken, r.FullName)
+// 		netrc.Login = "drone-ci-token"
+// 		netrc.Password, err = t.Sign(r.Hash)
+// 	}
+// 	return netrc, err
+// }
 
-	switch g.CloneMode {
-	case "oauth":
-		netrc.Login = "oauth2"
-		netrc.Password = u.Token
-	case "token":
-		t := token.New(token.HookToken, r.FullName)
-		netrc.Login = "drone-ci-token"
-		netrc.Password, err = t.Sign(r.Hash)
+// Netrc returns a netrc file capable of authenticating Gitlab requests and
+// cloning Gitlab repositories. The netrc will use the global machine account
+// when configured.
+func (g *Gitlab) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
+	if g.Password != "" {
+		return &model.Netrc{
+			Login:    g.Username,
+			Password: g.Password,
+			Machine:  g.Machine,
+		}, nil
 	}
-	return netrc, err
+	return &model.Netrc{
+		Login:    "oauth2",
+		Password: u.Token,
+		Machine:  g.Machine,
+	}, nil
 }
 
 // Activate activates a repository by adding a Post-commit hook and
 // a Public Deploy key, if applicable.
-func (g *Gitlab) Activate(user *model.User, repo *model.Repo, k *model.Key, link string) error {
+func (g *Gitlab) Activate(user *model.User, repo *model.Repo, link string) error {
 	var client = NewClient(g.URL, user.Token, g.SkipVerify)
 	id, err := GetProjectId(g, client, repo.Owner, repo.Name)
 	if err != nil {

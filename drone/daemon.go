@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -159,6 +158,16 @@ var DaemonCmd = cli.Command{
 			Usage:  "gogs server address",
 			Value:  "https://github.com",
 		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GOGS_GIT_USERNAME",
+			Name:   "gogs-git-username",
+			Usage:  "gogs service account username",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GOGS_GIT_PASSWORD",
+			Name:   "gogs-git-password",
+			Usage:  "gogs service account password",
+		},
 		cli.BoolFlag{
 			EnvVar: "DRONE_GOGS_PRIVATE_MODE",
 			Name:   "gogs-private-mode",
@@ -205,6 +214,16 @@ var DaemonCmd = cli.Command{
 			Name:   "gitlab-sercret",
 			Usage:  "gitlab oauth2 client secret",
 		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GITLAB_GIT_USERNAME",
+			Name:   "gitlab-git-username",
+			Usage:  "gitlab service account username",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GITLAB_GIT_PASSWORD",
+			Name:   "gitlab-git-password",
+			Usage:  "gitlab service account password",
+		},
 		cli.BoolFlag{
 			EnvVar: "DRONE_GITLAB_SKIP_VERIFY",
 			Name:   "gitlab-skip-verify",
@@ -245,7 +264,11 @@ var DaemonCmd = cli.Command{
 			Name:   "stash-git-password",
 			Usage:  "stash service account password",
 		},
-
+		cli.BoolFlag{
+			EnvVar: "DRONE_STASH_SKIP_VERIFY",
+			Name:   "stash-skip-verify",
+			Usage:  "stash skip ssl verification",
+		},
 		//
 		// remove these eventually
 		//
@@ -347,60 +370,70 @@ func setupStore(c *cli.Context) store.Store {
 }
 
 func setupRemote(c *cli.Context) remote.Remote {
+	var remote remote.Remote
+	var err error
 	switch {
 	case c.Bool("github"):
-		return setupGithub(c)
+		remote, err = setupGithub(c)
 	case c.Bool("gitlab"):
-		return setupGitlab(c)
+		remote, err = setupGitlab(c)
 	case c.Bool("bitbucket"):
-		return setupBitbucket(c)
+		remote, err = setupBitbucket(c)
 	case c.Bool("stash"):
-		return setupStash(c)
+		remote, err = setupStash(c)
 	case c.Bool("gogs"):
-		return setupGogs(c)
+		remote, err = setupGogs(c)
 	default:
-		logrus.Fatalln("version control system not configured")
-		return nil
+		err = fmt.Errorf("version control system not configured")
 	}
+	if err != nil {
+		logrus.Fatalln(err)
+	}
+	return remote
 }
 
-func setupBitbucket(c *cli.Context) remote.Remote {
+func setupBitbucket(c *cli.Context) (remote.Remote, error) {
 	return bitbucket.New(
 		c.String("bitbucket-client"),
 		c.String("bitbucket-server"),
-	)
+	), nil
 }
 
-func setupGogs(c *cli.Context) remote.Remote {
-	return gogs.New(
-		c.String("gogs-server"),
-		c.Bool("gogs-private-mode"),
-		c.Bool("gogs-skip-verify"),
-	)
+func setupGogs(c *cli.Context) (remote.Remote, error) {
+	return gogs.New(gogs.Opts{
+		URL:         c.String("gogs-server"),
+		Username:    c.String("gogs-git-username"),
+		Password:    c.String("gogs-git-password"),
+		PrivateMode: c.Bool("gogs-private-mode"),
+		SkipVerify:  c.Bool("gogs-skip-verify"),
+	})
 }
 
-func setupStash(c *cli.Context) remote.Remote {
-	return bitbucketserver.New(
-		c.String("stash-server"),
-		c.String("stash-consumer-key"),
-		c.String("stash-consumer-rsa"),
-		c.String("stash-git-username"),
-		c.String("stash-git-password"),
-	)
+func setupStash(c *cli.Context) (remote.Remote, error) {
+	return bitbucketserver.New(bitbucketserver.Opts{
+		URL:         c.String("stash-server"),
+		Username:    c.String("stash-git-username"),
+		Password:    c.String("stash-git-password"),
+		ConsumerKey: c.String("stash-consumer-key"),
+		ConsumerRSA: c.String("stash-consumer-rsa"),
+		SkipVerify:  c.Bool("stash-skip-verify"),
+	})
 }
 
-func setupGitlab(c *cli.Context) remote.Remote {
-	return gitlab.New(
-		c.String("gitlab-server"),
-		c.String("gitlab-client"),
-		c.String("gitlab-sercret"),
-		c.Bool("gitlab-private-mode"),
-		c.Bool("gitlab-skip-verify"),
-	)
+func setupGitlab(c *cli.Context) (remote.Remote, error) {
+	return gitlab.New(gitlab.Opts{
+		URL:         c.String("gitlab-server"),
+		Client:      c.String("gitlab-client"),
+		Secret:      c.String("gitlab-sercret"),
+		Username:    c.String("gitlab-git-username"),
+		Password:    c.String("gitlab-git-password"),
+		PrivateMode: c.Bool("gitlab-private-mode"),
+		SkipVerify:  c.Bool("gitlab-skip-verify"),
+	})
 }
 
-func setupGithub(c *cli.Context) remote.Remote {
-	g, err := github.New(
+func setupGithub(c *cli.Context) (remote.Remote, error) {
+	return github.New(
 		c.String("github-server"),
 		c.String("github-client"),
 		c.String("github-sercret"),
@@ -409,10 +442,6 @@ func setupGithub(c *cli.Context) remote.Remote {
 		c.Bool("github-skip-verify"),
 		c.BoolT("github-merge-ref"),
 	)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return g
 }
 
 func printSecret(c *cli.Context) error {

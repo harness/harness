@@ -116,7 +116,6 @@ func ShowRepoConf(c *gin.Context) {
 
 	user := session.User(c)
 	repo := session.Repo(c)
-	key, _ := store.GetKey(c, repo)
 
 	token, _ := token.New(
 		token.CsrfToken,
@@ -126,7 +125,6 @@ func ShowRepoConf(c *gin.Context) {
 	c.HTML(200, "repo_config.html", gin.H{
 		"User": user,
 		"Repo": repo,
-		"Key":  key,
 		"Csrf": token,
 		"Link": httputil.GetURL(c.Request),
 	})

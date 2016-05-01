@@ -1,6 +1,6 @@
-package testdata
+package fixtures
 
-var PushHook = `
+var HookPush = `
 {
   "ref": "refs/heads/master",
   "before": "4b2626259b5a97b6b4eab5e6cca66adb986b672b",

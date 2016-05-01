@@ -272,7 +272,7 @@ func (g *Github) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
 
 // Activate activates a repository by creating the post-commit hook and
 // adding the SSH deploy key, if applicable.
-func (g *Github) Activate(u *model.User, r *model.Repo, k *model.Key, link string) error {
+func (g *Github) Activate(u *model.User, r *model.Repo, link string) error {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
 	_, err := CreateUpdateHook(client, r.Owner, r.Name, link)
 	return err

@@ -132,7 +132,6 @@ func (c *config) Repos(u *model.User) ([]*model.RepoLite, error) {
 		accounts = append(accounts, team.Login)
 	}
 
-	// for each account, get the list of repos
 	for _, account := range accounts {
 		repos, err := client.ListReposAll(account)
 		if err != nil {
@@ -142,7 +141,6 @@ func (c *config) Repos(u *model.User) ([]*model.RepoLite, error) {
 			all = append(all, convertRepoLite(repo))
 		}
 	}
-
 	return all, nil
 }
 
@@ -168,8 +166,7 @@ func (c *config) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 	return perms, nil
 }
 
-// File fetches the file from the Bitbucket repository and returns its contents
-// in string format.
+// File fetches the file from the Bitbucket repository and returns its contents.
 func (c *config) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
 	config, err := c.newClient(u).FindSource(r.Owner, r.Name, b.Commit, f)
 	if err != nil {

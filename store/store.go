@@ -54,18 +54,6 @@ type Store interface {
 	// DeleteRepo deletes a user repository.
 	DeleteRepo(*model.Repo) error
 
-	// GetKey gets a key by unique repository ID.
-	GetKey(*model.Repo) (*model.Key, error)
-
-	// CreateKey creates a new key.
-	CreateKey(*model.Key) error
-
-	// UpdateKey updates a user key.
-	UpdateKey(*model.Key) error
-
-	// DeleteKey deletes a user key.
-	DeleteKey(*model.Key) error
-
 	// GetSecretList gets a list of repository secrets
 	GetSecretList(*model.Repo) ([]*model.Secret, error)
 
@@ -190,22 +178,6 @@ func UpdateRepo(c context.Context, repo *model.Repo) error {
 
 func DeleteRepo(c context.Context, repo *model.Repo) error {
 	return FromContext(c).DeleteRepo(repo)
-}
-
-func GetKey(c context.Context, repo *model.Repo) (*model.Key, error) {
-	return FromContext(c).GetKey(repo)
-}
-
-func CreateKey(c context.Context, key *model.Key) error {
-	return FromContext(c).CreateKey(key)
-}
-
-func UpdateKey(c context.Context, key *model.Key) error {
-	return FromContext(c).UpdateKey(key)
-}
-
-func DeleteKey(c context.Context, key *model.Key) error {
-	return FromContext(c).DeleteKey(key)
 }
 
 func GetSecretList(c context.Context, r *model.Repo) ([]*model.Secret, error) {

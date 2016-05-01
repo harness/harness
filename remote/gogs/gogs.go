@@ -12,172 +12,181 @@ import (
 	"github.com/gogits/go-gogs-client"
 )
 
-// Remote defines a remote implementation that integrates with Gogs, an open
-// source Git service written in Go. See https://gogs.io/
-type Remote struct {
+// Opts defines configuration options.
+type Opts struct {
+	URL         string // Gogs server url.
+	Username    string // Optional machine account username.
+	Password    string // Optional machine account password.
+	PrivateMode bool   // Gogs is running in private mode.
+	SkipVerify  bool   // Skip ssl verification.
+}
+
+type client struct {
 	URL         string
-	Open        bool
+	Machine     string
+	Username    string
+	Password    string
 	PrivateMode bool
 	SkipVerify  bool
 }
 
 // New returns a Remote implementation that integrates with Gogs, an open
 // source Git service written in Go. See https://gogs.io/
-func New(url string, private, skipverify bool) remote.Remote {
-	return &Remote{
-		URL:         url,
-		PrivateMode: private,
-		SkipVerify:  skipverify,
+func New(opts Opts) (remote.Remote, error) {
+	url, err := url.Parse(opts.URL)
+	if err != nil {
+		return nil, err
 	}
+	host, _, err := net.SplitHostPort(url.Host)
+	if err == nil {
+		url.Host = host
+	}
+	return &client{
+		URL:         opts.URL,
+		Machine:     url.Host,
+		Username:    opts.Username,
+		Password:    opts.Password,
+		PrivateMode: opts.PrivateMode,
+		SkipVerify:  opts.SkipVerify,
+	}, nil
 }
 
-// Login authenticates the session and returns the authenticated user.
-func (g *Remote) Login(res http.ResponseWriter, req *http.Request) (*model.User, bool, error) {
+// Login authenticates an account with Gogs using basic authenticaiton. The
+// Gogs account details are returned when the user is successfully authenticated.
+func (c *client) Login(res http.ResponseWriter, req *http.Request) (*model.User, error) {
 	var (
 		username = req.FormValue("username")
 		password = req.FormValue("password")
 	)
 
-	// if the username or password doesn't exist we re-direct
-	// the user to the login screen.
+	// if the username or password is empty we re-direct to the login screen.
 	if len(username) == 0 || len(password) == 0 {
 		http.Redirect(res, req, "/login/form", http.StatusSeeOther)
-		return nil, false, nil
+		return nil, nil
 	}
 
-	client := NewGogsClient(g.URL, "", g.SkipVerify)
+	client := c.newClient()
 
 	// try to fetch drone token if it exists
 	var accessToken string
 	tokens, err := client.ListAccessTokens(username, password)
-	if err != nil {
-		return nil, false, err
-	}
-	for _, token := range tokens {
-		if token.Name == "drone" {
-			accessToken = token.Sha1
-			break
+	if err == nil {
+		for _, token := range tokens {
+			if token.Name == "drone" {
+				accessToken = token.Sha1
+				break
+			}
 		}
 	}
 
 	// if drone token not found, create it
 	if accessToken == "" {
-		token, err := client.CreateAccessToken(username, password, gogs.CreateAccessTokenOption{Name: "drone"})
-		if err != nil {
-			return nil, false, err
+		token, terr := client.CreateAccessToken(
+			username,
+			password,
+			gogs.CreateAccessTokenOption{Name: "drone"},
+		)
+		if terr != nil {
+			return nil, terr
 		}
 		accessToken = token.Sha1
 	}
 
-	client = NewGogsClient(g.URL, accessToken, g.SkipVerify)
-	userInfo, err := client.GetUserInfo(username)
-	if err != nil {
-		return nil, false, err
-	}
-
-	user := model.User{}
-	user.Token = accessToken
-	user.Login = userInfo.UserName
-	user.Email = userInfo.Email
-	user.Avatar = expandAvatar(g.URL, userInfo.AvatarUrl)
-	return &user, false, nil
-}
-
-// Auth authenticates the session and returns the remote user
-// login for the given token and secret
-func (g *Remote) Auth(token, secret string) (string, error) {
-	return "", fmt.Errorf("Method not supported")
-}
-
-// Repo fetches the named repository from the remote system.
-func (g *Remote) Repo(u *model.User, owner, name string) (*model.Repo, error) {
-	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
-	repos_, err := client.ListMyRepos()
+	client = c.newClientToken(accessToken)
+	account, err := client.GetUserInfo(username)
 	if err != nil {
 		return nil, err
 	}
 
-	fullName := owner + "/" + name
-	for _, repo := range repos_ {
-		if repo.FullName == fullName {
-			return toRepo(repo), nil
-		}
-	}
-
-	return nil, fmt.Errorf("Not Found")
+	return &model.User{
+		Token:  accessToken,
+		Login:  account.UserName,
+		Email:  account.Email,
+		Avatar: expandAvatar(c.URL, account.AvatarUrl),
+	}, nil
 }
 
-// Repos fetches a list of repos from the remote system.
-func (g *Remote) Repos(u *model.User) ([]*model.RepoLite, error) {
+// Auth is not supported by the Gogs driver.
+func (c *client) Auth(token, secret string) (string, error) {
+	return "", fmt.Errorf("Not Implemented")
+}
+
+// Teams is not supported by the Gogs driver.
+func (c *client) Teams(u *model.User) ([]*model.Team, error) {
+	var empty []*model.Team
+	return empty, nil
+}
+
+// Repo returns the named Gogs repository.
+func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
+	client := c.newClientToken(u.Token)
+	repo, err := client.GetRepo(owner, name)
+	if err != nil {
+		return nil, err
+	}
+	return toRepo(repo), nil
+}
+
+// Repos returns a list of all repositories for the Gogs account, including
+// organization repositories.
+func (c *client) Repos(u *model.User) ([]*model.RepoLite, error) {
 	repos := []*model.RepoLite{}
 
-	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
-	repos_, err := client.ListMyRepos()
+	client := c.newClientToken(u.Token)
+	all, err := client.ListMyRepos()
 	if err != nil {
 		return repos, err
 	}
 
-	for _, repo := range repos_ {
+	for _, repo := range all {
 		repos = append(repos, toRepoLite(repo))
 	}
-
 	return repos, err
 }
 
-// Perm fetches the named repository permissions from
-// the remote system for the specified user.
-func (g *Remote) Perm(u *model.User, owner, name string) (*model.Perm, error) {
-	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
-	repos_, err := client.ListMyRepos()
+// Perm returns the user permissions for the named Gogs repository.
+func (c *client) Perm(u *model.User, owner, name string) (*model.Perm, error) {
+	client := c.newClientToken(u.Token)
+	repo, err := client.GetRepo(owner, name)
 	if err != nil {
 		return nil, err
 	}
-
-	fullName := owner + "/" + name
-	for _, repo := range repos_ {
-		if repo.FullName == fullName {
-			return toPerm(repo.Permissions), nil
-		}
-	}
-
-	return nil, fmt.Errorf("Not Found")
-
+	return toPerm(repo.Permissions), nil
 }
 
-// File fetches a file from the remote repository and returns in string format.
-func (g *Remote) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
-	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
+// File fetches the file from the Gogs repository and returns its contents.
+func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
+	client := c.newClientToken(u.Token)
 	cfg, err := client.GetFile(r.Owner, r.Name, b.Commit, f)
 	return cfg, err
 }
 
-// Status sends the commit status to the remote system.
-// An example would be the GitHub pull request status.
-func (g *Remote) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
-	return fmt.Errorf("Not Implemented")
+// Status is not supported by the Gogs driver.
+func (c *client) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
+	return nil
 }
 
-// Netrc returns a .netrc file that can be used to clone
-// private repositories from a remote system.
-func (g *Remote) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
-	url_, err := url.Parse(g.URL)
-	if err != nil {
-		return nil, err
-	}
-	host, _, err := net.SplitHostPort(url_.Host)
-	if err == nil {
-		url_.Host = host
+// Netrc returns a netrc file capable of authenticating Gogs requests and
+// cloning Gogs repositories. The netrc will use the global machine account
+// when configured.
+func (c *client) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
+	if c.Password != "" {
+		return &model.Netrc{
+			Login:    c.Username,
+			Password: c.Password,
+			Machine:  c.Machine,
+		}, nil
 	}
 	return &model.Netrc{
 		Login:    u.Token,
 		Password: "x-oauth-basic",
-		Machine:  url_.Host,
+		Machine:  c.Machine,
 	}, nil
 }
 
-// Activate activates a repository by creating the post-commit hook and
-// adding the SSH deploy key, if applicable.
-func (g *Remote) Activate(u *model.User, r *model.Repo, k *model.Key, link string) error {
+// Activate activates the repository by registering post-commit hooks with
+// the Gogs repository.
+func (c *client) Activate(u *model.User, r *model.Repo, link string) error {
 	config := map[string]string{
 		"url":          link,
 		"secret":       r.Hash,
@@ -189,20 +198,19 @@ func (g *Remote) Activate(u *model.User, r *model.Repo, k *model.Key, link strin
 		Active: true,
 	}
 
-	client := NewGogsClient(g.URL, u.Token, g.SkipVerify)
+	client := c.newClientToken(u.Token)
 	_, err := client.CreateRepoHook(r.Owner, r.Name, hook)
 	return err
 }
 
-// Deactivate removes a repository by removing all the post-commit hooks
-// which are equal to link and removing the SSH deploy key.
-func (g *Remote) Deactivate(u *model.User, r *model.Repo, link string) error {
-	return fmt.Errorf("Not Implemented")
+// Deactivate is not supported by the Gogs driver.
+func (c *client) Deactivate(u *model.User, r *model.Repo, link string) error {
+	return nil
 }
 
-// Hook parses the post-commit hook from the Request body
-// and returns the required data in a standard format.
-func (g *Remote) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
+// Hook parses the incoming Gogs hook and returns the Repository and Build
+// details. If the hook is unsupported nil values are returned.
+func (c *client) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 	var (
 		err   error
 		repo  *model.Repo
@@ -211,7 +219,7 @@ func (g *Remote) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 
 	switch r.Header.Get("X-Gogs-Event") {
 	case "push":
-		var push *PushHook
+		var push *pushHook
 		push, err = parsePush(r.Body)
 		if err == nil {
 			repo = repoFromPush(push)
@@ -221,20 +229,20 @@ func (g *Remote) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 	return repo, build, err
 }
 
-// NewClient initializes and returns a API client.
-func NewGogsClient(url, token string, skipVerify bool) *gogs.Client {
-	sslClient := &http.Client{}
-	c := gogs.NewClient(url, token)
-
-	if skipVerify {
-		sslClient.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		c.SetHTTPClient(sslClient)
-	}
-	return c
+// helper function to return the Gogs client
+func (c *client) newClient() *gogs.Client {
+	return c.newClientToken("")
 }
 
-func (g *Remote) String() string {
-	return "gogs"
+// helper function to return the Gogs client
+func (c *client) newClientToken(token string) *gogs.Client {
+	client := gogs.NewClient(c.URL, token)
+	if c.SkipVerify {
+		httpClient := &http.Client{}
+		httpClient.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client.SetHTTPClient(httpClient)
+	}
+	return client
 }

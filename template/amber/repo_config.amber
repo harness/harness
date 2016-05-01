@@ -66,10 +66,6 @@ block content
                     input#trusted[type="checkbox"][hidden="hidden"]
                 label.switch[for="trusted"]
         div.row
-            div.col-md-3 Public Key
-            div.col-md-9
-                pre #{Key.Public} #{Repo.Owner}-#{Repo.Name}@drone
-        div.row
             div.col-md-12
                 div.alert.alert-danger
                     button.btn.btn-danger Delete

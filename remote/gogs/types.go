@@ -1,6 +1,6 @@
 package gogs
 
-type PushHook struct {
+type pushHook struct {
 	Ref     string `json:"ref"`
 	Before  string `json:"before"`
 	After   string `json:"after"`
@@ -15,7 +15,7 @@ type PushHook struct {
 	Repo struct {
 		ID      int64  `json:"id"`
 		Name    string `json:"name"`
-		Url     string `json:"url"`
+		URL     string `json:"url"`
 		Private bool   `json:"private"`
 		Owner   struct {
 			Name     string `json:"name"`
@@ -27,7 +27,7 @@ type PushHook struct {
 	Commits []struct {
 		ID      string `json:"id"`
 		Message string `json:"message"`
-		Url     string `json:"url"`
+		URL     string `json:"url"`
 	} `json:"commits"`
 
 	Sender struct {
