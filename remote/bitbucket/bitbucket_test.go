@@ -8,6 +8,7 @@ import (
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote/bitbucket/fixtures"
+	"github.com/drone/drone/remote/bitbucket/internal"
 
 	"github.com/franela/goblin"
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,7 @@ func Test_bitbucket(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	s := httptest.NewServer(fixtures.Handler())
-	c := &config{URL: s.URL}
+	c := &config{URL: s.URL, API: s.URL}
 
 	g := goblin.Goblin(t)
 	g.Describe("Bitbucket client", func() {
@@ -28,16 +29,47 @@ func Test_bitbucket(t *testing.T) {
 
 		g.It("Should return client with default endpoint", func() {
 			remote := New("4vyW6b49Z", "a5012f6c6")
-			g.Assert(remote.(*config).URL).Equal("https://api.bitbucket.org")
+			g.Assert(remote.(*config).URL).Equal(DefaultURL)
+			g.Assert(remote.(*config).API).Equal(DefaultAPI)
 			g.Assert(remote.(*config).Client).Equal("4vyW6b49Z")
 			g.Assert(remote.(*config).Secret).Equal("a5012f6c6")
 		})
+
 		g.It("Should return the netrc file", func() {
 			remote := New("", "")
 			netrc, _ := remote.Netrc(fakeUser, nil)
 			g.Assert(netrc.Machine).Equal("bitbucket.org")
 			g.Assert(netrc.Login).Equal("x-token-auth")
 			g.Assert(netrc.Password).Equal(fakeUser.Token)
+		})
+
+		g.Describe("Given an authorization request", func() {
+			g.It("Should redirect to authorize", func() {
+				w := httptest.NewRecorder()
+				r, _ := http.NewRequest("GET", "", nil)
+				_, err := c.Login(w, r)
+				g.Assert(err == nil).IsTrue()
+				g.Assert(w.Code).Equal(http.StatusSeeOther)
+			})
+			g.It("Should return authenticated user", func() {
+				r, _ := http.NewRequest("GET", "?code=code", nil)
+				u, err := c.Login(nil, r)
+				g.Assert(err == nil).IsTrue()
+				g.Assert(u.Login).Equal(fakeUser.Login)
+				g.Assert(u.Token).Equal("2YotnFZFEjr1zCsicMWpAA")
+				g.Assert(u.Secret).Equal("tGzv3JOkF0XG5Qx2TlKWIA")
+			})
+			g.It("Should handle failure to exchange code", func() {
+				w := httptest.NewRecorder()
+				r, _ := http.NewRequest("GET", "?code=code_bad_request", nil)
+				_, err := c.Login(w, r)
+				g.Assert(err != nil).IsTrue()
+			})
+			g.It("Should handle failure to resolve user", func() {
+				r, _ := http.NewRequest("GET", "?code=code_user_not_found", nil)
+				_, err := c.Login(nil, r)
+				g.Assert(err != nil).IsTrue()
+			})
 		})
 
 		g.Describe("Given an access token", func() {
@@ -49,12 +81,32 @@ func Test_bitbucket(t *testing.T) {
 				g.Assert(err == nil).IsTrue()
 				g.Assert(login).Equal(fakeUser.Login)
 			})
-			g.It("Should return error when request fails", func() {
+			g.It("Should handle a failure to resolve user", func() {
 				_, err := c.Auth(
 					fakeUserNotFound.Token,
 					fakeUserNotFound.Secret,
 				)
 				g.Assert(err != nil).IsTrue()
+			})
+		})
+
+		g.Describe("Given a refresh token", func() {
+			g.It("Should return a refresh access token", func() {
+				ok, err := c.Refresh(fakeUserRefresh)
+				g.Assert(err == nil).IsTrue()
+				g.Assert(ok).IsTrue()
+				g.Assert(fakeUserRefresh.Token).Equal("2YotnFZFEjr1zCsicMWpAA")
+				g.Assert(fakeUserRefresh.Secret).Equal("tGzv3JOkF0XG5Qx2TlKWIA")
+			})
+			g.It("Should handle an empty access token", func() {
+				ok, err := c.Refresh(fakeUserRefreshEmpty)
+				g.Assert(err == nil).IsTrue()
+				g.Assert(ok).IsFalse()
+			})
+			g.It("Should handle a failure to refresh", func() {
+				ok, err := c.Refresh(fakeUserRefreshFail)
+				g.Assert(err != nil).IsTrue()
+				g.Assert(ok).IsFalse()
 			})
 		})
 
@@ -154,21 +206,16 @@ func Test_bitbucket(t *testing.T) {
 
 		g.Describe("When activating a repository", func() {
 			g.It("Should error when malformed hook", func() {
-				err := c.Activate(fakeUser, fakeRepo, nil, "%gh&%ij")
+				err := c.Activate(fakeUser, fakeRepo, "%gh&%ij")
 				g.Assert(err != nil).IsTrue()
 			})
 			g.It("Should create the hook", func() {
-				err := c.Activate(fakeUser, fakeRepo, nil, "http://127.0.0.1")
+				err := c.Activate(fakeUser, fakeRepo, "http://127.0.0.1")
 				g.Assert(err == nil).IsTrue()
 			})
-			g.It("Should remove previous hooks")
 		})
 
 		g.Describe("When deactivating a repository", func() {
-			g.It("Should error when malformed hook", func() {
-				err := c.Deactivate(fakeUser, fakeRepo, "%gh&%ij")
-				g.Assert(err != nil).IsTrue()
-			})
 			g.It("Should error when listing hooks fails", func() {
 				err := c.Deactivate(fakeUser, fakeRepoNoHooks, "http://127.0.0.1")
 				g.Assert(err != nil).IsTrue()
@@ -180,6 +227,28 @@ func Test_bitbucket(t *testing.T) {
 			g.It("Should successfully deactivate when hook already removed", func() {
 				err := c.Deactivate(fakeUser, fakeRepoEmptyHook, "http://127.0.0.1")
 				g.Assert(err == nil).IsTrue()
+			})
+		})
+
+		g.Describe("Given a list of hooks", func() {
+			g.It("Should return the matching hook", func() {
+				hooks := []*internal.Hook{
+					{Url: "http://127.0.0.1/hook"},
+				}
+				hook := matchingHooks(hooks, "http://127.0.0.1/")
+				g.Assert(hook).Equal(hooks[0])
+			})
+			g.It("Should handle no matches", func() {
+				hooks := []*internal.Hook{
+					{Url: "http://localhost/hook"},
+				}
+				hook := matchingHooks(hooks, "http://127.0.0.1/")
+				g.Assert(hook == nil).IsTrue()
+			})
+			g.It("Should handle malformed hook urls", func() {
+				var hooks []*internal.Hook
+				hook := matchingHooks(hooks, "%gh&%ij")
+				g.Assert(hook == nil).IsTrue()
 			})
 		})
 
@@ -206,6 +275,21 @@ var (
 	fakeUser = &model.User{
 		Login: "superman",
 		Token: "cfcd2084",
+	}
+
+	fakeUserRefresh = &model.User{
+		Login:  "superman",
+		Secret: "cfcd2084",
+	}
+
+	fakeUserRefreshFail = &model.User{
+		Login:  "superman",
+		Secret: "refresh_token_not_found",
+	}
+
+	fakeUserRefreshEmpty = &model.User{
+		Login:  "superman",
+		Secret: "refresh_token_is_empty",
 	}
 
 	fakeUserNotFound = &model.User{

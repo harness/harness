@@ -44,12 +44,11 @@ type Remote interface {
 	// private repositories from a remote system.
 	Netrc(u *model.User, r *model.Repo) (*model.Netrc, error)
 
-	// Activate activates a repository by creating the post-commit hook and
-	// adding the SSH deploy key, if applicable.
-	Activate(u *model.User, r *model.Repo, k *model.Key, link string) error
+	// Activate activates a repository by creating the post-commit hook.
+	Activate(u *model.User, r *model.Repo, link string) error
 
-	// Deactivate removes a repository by removing all the post-commit hooks
-	// which are equal to link and removing the SSH deploy key.
+	// Deactivate deactivates a repository by removing all previously created
+	// post-commit hooks matching the given link.
 	Deactivate(u *model.User, r *model.Repo, link string) error
 
 	// Hook parses the post-commit hook from the Request body and returns the
@@ -116,8 +115,8 @@ func Netrc(c context.Context, u *model.User, r *model.Repo) (*model.Netrc, error
 
 // Activate activates a repository by creating the post-commit hook and
 // adding the SSH deploy key, if applicable.
-func Activate(c context.Context, u *model.User, r *model.Repo, k *model.Key, link string) error {
-	return FromContext(c).Activate(u, r, k, link)
+func Activate(c context.Context, u *model.User, r *model.Repo, link string) error {
+	return FromContext(c).Activate(u, r, link)
 }
 
 // Deactivate removes a repository by removing all the post-commit hooks

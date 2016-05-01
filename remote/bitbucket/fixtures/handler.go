@@ -12,6 +12,7 @@ func Handler() http.Handler {
 	gin.SetMode(gin.TestMode)
 
 	e := gin.New()
+	e.POST("/site/oauth2/access_token", getOauth)
 	e.GET("/2.0/repositories/:owner/:name", getRepo)
 	e.GET("/2.0/repositories/:owner/:name/hooks", getRepoHooks)
 	e.GET("/1.0/repositories/:owner/:name/src/:commit/:file", getRepoFile)
@@ -23,6 +24,27 @@ func Handler() http.Handler {
 	e.GET("/2.0/user/", getUser)
 
 	return e
+}
+
+func getOauth(c *gin.Context) {
+	switch c.PostForm("code") {
+	case "code_bad_request":
+		c.String(500, "")
+		return
+	case "code_user_not_found":
+		c.String(200, tokenNotFoundPayload)
+		return
+	}
+	switch c.PostForm("refresh_token") {
+	case "refresh_token_not_found":
+		c.String(404, "")
+	case "refresh_token_is_empty":
+		c.Header("Content-Type", "application/json")
+		c.String(200, "{}")
+	default:
+		c.Header("Content-Type", "application/json")
+		c.String(200, tokenPayload)
+	}
 }
 
 func getRepo(c *gin.Context) {
@@ -102,6 +124,24 @@ func getUserRepos(c *gin.Context) {
 		c.String(200, userRepoPayload)
 	}
 }
+
+const tokenPayload = `
+{
+	"access_token":"2YotnFZFEjr1zCsicMWpAA",
+	"refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA",
+	"token_type":"Bearer",
+	"expires_in":3600
+}
+`
+
+const tokenNotFoundPayload = `
+{
+	"access_token":"user_not_found",
+	"refresh_token":"user_not_found",
+	"token_type":"Bearer",
+	"expires_in":3600
+}
+`
 
 const repoPayload = `
 {
