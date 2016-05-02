@@ -12,13 +12,13 @@ type Remote struct {
 	mock.Mock
 }
 
-// Activate provides a mock function with given fields: u, r, k, link
-func (_m *Remote) Activate(u *model.User, r *model.Repo, k *model.Key, link string) error {
-	ret := _m.Called(u, r, k, link)
+// Activate provides a mock function with given fields: u, r, link
+func (_m *Remote) Activate(u *model.User, r *model.Repo, link string) error {
+	ret := _m.Called(u, r, link)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*model.User, *model.Repo, *model.Key, string) error); ok {
-		r0 = rf(u, r, k, link)
+	if rf, ok := ret.Get(0).(func(*model.User, *model.Repo, string) error); ok {
+		r0 = rf(u, r, link)
 	} else {
 		r0 = ret.Error(0)
 	}
