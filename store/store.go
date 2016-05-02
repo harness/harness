@@ -54,18 +54,6 @@ type Store interface {
 	// DeleteRepo deletes a user repository.
 	DeleteRepo(*model.Repo) error
 
-	// GetKey gets a key by unique repository ID.
-	GetKey(*model.Repo) (*model.Key, error)
-
-	// CreateKey creates a new key.
-	CreateKey(*model.Key) error
-
-	// UpdateKey updates a user key.
-	UpdateKey(*model.Key) error
-
-	// DeleteKey deletes a user key.
-	DeleteKey(*model.Key) error
-
 	// GetSecretList gets a list of repository secrets
 	GetSecretList(*model.Repo) ([]*model.Secret, error)
 
@@ -125,21 +113,6 @@ type Store interface {
 
 	// WriteLog writes the job logs to the datastore.
 	WriteLog(*model.Job, io.Reader) error
-
-	// GetNode gets a build node from the datastore.
-	GetNode(id int64) (*model.Node, error)
-
-	// GetNodeList gets a build node list from the datastore.
-	GetNodeList() ([]*model.Node, error)
-
-	// CreateNode add a new build node to the datastore.
-	CreateNode(*model.Node) error
-
-	// UpdateNode updates a build node in the datastore.
-	UpdateNode(*model.Node) error
-
-	// DeleteNode removes a build node from the datastore.
-	DeleteNode(*model.Node) error
 }
 
 // GetUser gets a user by unique ID.
@@ -205,22 +178,6 @@ func UpdateRepo(c context.Context, repo *model.Repo) error {
 
 func DeleteRepo(c context.Context, repo *model.Repo) error {
 	return FromContext(c).DeleteRepo(repo)
-}
-
-func GetKey(c context.Context, repo *model.Repo) (*model.Key, error) {
-	return FromContext(c).GetKey(repo)
-}
-
-func CreateKey(c context.Context, key *model.Key) error {
-	return FromContext(c).CreateKey(key)
-}
-
-func UpdateKey(c context.Context, key *model.Key) error {
-	return FromContext(c).UpdateKey(key)
-}
-
-func DeleteKey(c context.Context, key *model.Key) error {
-	return FromContext(c).DeleteKey(key)
 }
 
 func GetSecretList(c context.Context, r *model.Repo) ([]*model.Secret, error) {
@@ -342,24 +299,4 @@ func ReadLog(c context.Context, job *model.Job) (io.ReadCloser, error) {
 
 func WriteLog(c context.Context, job *model.Job, r io.Reader) error {
 	return FromContext(c).WriteLog(job, r)
-}
-
-func GetNode(c context.Context, id int64) (*model.Node, error) {
-	return FromContext(c).GetNode(id)
-}
-
-func GetNodeList(c context.Context) ([]*model.Node, error) {
-	return FromContext(c).GetNodeList()
-}
-
-func CreateNode(c context.Context, node *model.Node) error {
-	return FromContext(c).CreateNode(node)
-}
-
-func UpdateNode(c context.Context, node *model.Node) error {
-	return FromContext(c).UpdateNode(node)
-}
-
-func DeleteNode(c context.Context, node *model.Node) error {
-	return FromContext(c).DeleteNode(node)
 }

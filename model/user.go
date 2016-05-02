@@ -32,11 +32,17 @@ type User struct {
 	Avatar string `json:"avatar_url" meddler:"user_avatar"`
 
 	// Activate indicates the user is active in the system.
-	Active bool `json:"active," meddler:"user_active"`
+	Active bool `json:"active" meddler:"user_active"`
 
 	// Admin indicates the user is a system administrator.
-	Admin bool `json:"admin," meddler:"user_admin"`
+	//
+	// NOTE: This is sourced from the DRONE_ADMINS environment variable and is no
+	// longer persisted in the database.
+	Admin bool `json:"admin,omitempty" meddler:"-"`
 
 	// Hash is a unique token used to sign tokens.
 	Hash string `json:"-" meddler:"user_hash"`
+
+	// DEPRECATED Admin indicates the user is a system administrator.
+	XAdmin bool `json:"-" meddler:"user_admin"`
 }

@@ -21,4 +21,4 @@ ADD drone/drone /drone
 #RUN echo 'hosts: files mdns4_minimal [NOTFOUND=return] dns mdns4' >> /etc/nsswitch.conf
 
 ENTRYPOINT ["/drone"]
-CMD ["serve"]
+CMD ["daemon"]

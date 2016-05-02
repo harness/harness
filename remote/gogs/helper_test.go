@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote/gogs/testdata"
+	"github.com/drone/drone/remote/gogs/fixtures"
 
 	"github.com/franela/goblin"
 	"github.com/gogits/go-gogs-client"
@@ -17,7 +17,7 @@ func Test_parse(t *testing.T) {
 	g.Describe("Gogs", func() {
 
 		g.It("Should parse push hook payload", func() {
-			buf := bytes.NewBufferString(testdata.PushHook)
+			buf := bytes.NewBufferString(fixtures.HookPush)
 			hook, err := parsePush(buf)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(hook.Ref).Equal("refs/heads/master")
@@ -25,7 +25,7 @@ func Test_parse(t *testing.T) {
 			g.Assert(hook.Before).Equal("4b2626259b5a97b6b4eab5e6cca66adb986b672b")
 			g.Assert(hook.Compare).Equal("http://gogs.golang.org/gordon/hello-world/compare/4b2626259b5a97b6b4eab5e6cca66adb986b672b...ef98532add3b2feb7a137426bba1248724367df5")
 			g.Assert(hook.Repo.Name).Equal("hello-world")
-			g.Assert(hook.Repo.Url).Equal("http://gogs.golang.org/gordon/hello-world")
+			g.Assert(hook.Repo.URL).Equal("http://gogs.golang.org/gordon/hello-world")
 			g.Assert(hook.Repo.Owner.Name).Equal("gordon")
 			g.Assert(hook.Repo.Owner.Email).Equal("gordon@golang.org")
 			g.Assert(hook.Repo.Owner.Username).Equal("gordon")
@@ -38,7 +38,7 @@ func Test_parse(t *testing.T) {
 		})
 
 		g.It("Should return a Build struct from a push hook", func() {
-			buf := bytes.NewBufferString(testdata.PushHook)
+			buf := bytes.NewBufferString(fixtures.HookPush)
 			hook, _ := parsePush(buf)
 			build := buildFromPush(hook)
 			g.Assert(build.Event).Equal(model.EventPush)
@@ -53,13 +53,13 @@ func Test_parse(t *testing.T) {
 		})
 
 		g.It("Should return a Repo struct from a push hook", func() {
-			buf := bytes.NewBufferString(testdata.PushHook)
+			buf := bytes.NewBufferString(fixtures.HookPush)
 			hook, _ := parsePush(buf)
 			repo := repoFromPush(hook)
 			g.Assert(repo.Name).Equal(hook.Repo.Name)
 			g.Assert(repo.Owner).Equal(hook.Repo.Owner.Username)
 			g.Assert(repo.FullName).Equal("gordon/hello-world")
-			g.Assert(repo.Link).Equal(hook.Repo.Url)
+			g.Assert(repo.Link).Equal(hook.Repo.URL)
 		})
 
 		g.It("Should return a Perm struct from a Gogs Perm", func() {

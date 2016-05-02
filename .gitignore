@@ -12,7 +12,7 @@ drone/drone
 .env
 temp/
 
-api/swagger/files/*
+server/swagger/files/*.json
 
 # vendored repositories that we don't actually need
 # to vendor. so exclude them

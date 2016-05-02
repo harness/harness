@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/drone/drone/drone/agent"
-	"github.com/drone/drone/drone/server"
 	"github.com/drone/drone/version"
 
 	"github.com/codegangsta/cli"
@@ -12,7 +11,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-func main2() {
+func main() {
 	envflag.Parse()
 
 	app := cli.NewApp()
@@ -35,7 +34,7 @@ func main2() {
 	}
 	app.Commands = []cli.Command{
 		agent.AgentCmd,
-		server.ServeCmd,
+		DaemonCmd,
 		SignCmd,
 		SecretCmd,
 	}

@@ -12,8 +12,7 @@ import (
 	"github.com/gogits/go-gogs-client"
 )
 
-// helper function that converts a Gogs repository
-// to a Drone repository.
+// helper function that converts a Gogs repository to a Drone repository.
 func toRepoLite(from *gogs.Repository) *model.RepoLite {
 	name := strings.Split(from.FullName, "/")[1]
 	avatar := expandAvatar(
@@ -28,8 +27,7 @@ func toRepoLite(from *gogs.Repository) *model.RepoLite {
 	}
 }
 
-// helper function that converts a Gogs repository
-// to a Drone repository.
+// helper function that converts a Gogs repository to a Drone repository.
 func toRepo(from *gogs.Repository) *model.Repo {
 	name := strings.Split(from.FullName, "/")[1]
 	avatar := expandAvatar(
@@ -49,8 +47,7 @@ func toRepo(from *gogs.Repository) *model.Repo {
 	}
 }
 
-// helper function that converts a Gogs permission
-// to a Drone permission.
+// helper function that converts a Gogs permission to a Drone permission.
 func toPerm(from gogs.Permission) *model.Perm {
 	return &model.Perm{
 		Pull:  from.Pull,
@@ -59,11 +56,10 @@ func toPerm(from gogs.Permission) *model.Perm {
 	}
 }
 
-// helper function that extracts the Build data
-// from a Gogs push hook
-func buildFromPush(hook *PushHook) *model.Build {
+// helper function that extracts the Build data from a Gogs push hook
+func buildFromPush(hook *pushHook) *model.Build {
 	avatar := expandAvatar(
-		hook.Repo.Url,
+		hook.Repo.URL,
 		fixMalformedAvatar(hook.Sender.Avatar),
 	)
 	return &model.Build{
@@ -79,9 +75,8 @@ func buildFromPush(hook *PushHook) *model.Build {
 	}
 }
 
-// helper function that extracts the Repository data
-// from a Gogs push hook
-func repoFromPush(hook *PushHook) *model.Repo {
+// helper function that extracts the Repository data from a Gogs push hook
+func repoFromPush(hook *pushHook) *model.Repo {
 	fullName := fmt.Sprintf(
 		"%s/%s",
 		hook.Repo.Owner.Username,
@@ -91,20 +86,19 @@ func repoFromPush(hook *PushHook) *model.Repo {
 		Name:     hook.Repo.Name,
 		Owner:    hook.Repo.Owner.Username,
 		FullName: fullName,
-		Link:     hook.Repo.Url,
+		Link:     hook.Repo.URL,
 	}
 }
 
-// helper function that parses a push hook from
-// a read closer.
-func parsePush(r io.Reader) (*PushHook, error) {
-	push := new(PushHook)
+// helper function that parses a push hook from a read closer.
+func parsePush(r io.Reader) (*pushHook, error) {
+	push := new(pushHook)
 	err := json.NewDecoder(r).Decode(push)
 	return push, err
 }
 
-// fixMalformedAvatar is a helper function that fixes
-// an avatar url if malformed (known bug with gogs)
+// fixMalformedAvatar is a helper function that fixes an avatar url if malformed
+// (currently a known bug with gogs)
 func fixMalformedAvatar(url string) string {
 	index := strings.Index(url, "///")
 	if index != -1 {
@@ -117,16 +111,16 @@ func fixMalformedAvatar(url string) string {
 	return url
 }
 
-// expandAvatar is a helper function that converts
-// a relative avatar URL to the abosolute url.
+// expandAvatar is a helper function that converts a relative avatar URL to the
+// abosolute url.
 func expandAvatar(repo, rawurl string) string {
 	if !strings.HasPrefix(rawurl, "/avatars/") {
 		return rawurl
 	}
-	url_, err := url.Parse(repo)
+	url, err := url.Parse(repo)
 	if err != nil {
 		return rawurl
 	}
-	url_.Path = rawurl
-	return url_.String()
+	url.Path = rawurl
+	return url.String()
 }

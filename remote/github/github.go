@@ -11,21 +11,17 @@ import (
 	"strings"
 
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/oauth2"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/google/go-github/github"
 )
 
 const (
-	DefaultURL      = "https://github.com"
-	DefaultAPI      = "https://api.github.com"
-	DefaultScope    = "repo,repo:status,user:email"
-	DefaultMergeRef = "merge"
+	DefaultURL = "https://github.com"     // Default GitHub URL
+	DefaultAPI = "https://api.github.com" // Default GitHub API URL
 )
-
-var githubDeployRegex = regexp.MustCompile(".+/deployments/(\\d+)")
 
 type Github struct {
 	URL         string
@@ -34,58 +30,35 @@ type Github struct {
 	Secret      string
 	Scope       string
 	MergeRef    string
-	Orgs        []string
-	Open        bool
 	PrivateMode bool
 	SkipVerify  bool
-	GitSSH      bool
 }
 
-func Load(config string) *Github {
-
-	// parse the remote DSN configuration string
-	url_, err := url.Parse(config)
-	if err != nil {
-		log.Fatalln("unable to parse remote dsn. %s", err)
+func New(url, client, secret string, scope []string, private, skipverify, mergeref bool) (remote.Remote, error) {
+	remote := &Github{
+		URL:         strings.TrimSuffix(url, "/"),
+		Client:      client,
+		Secret:      secret,
+		Scope:       strings.Join(scope, ","),
+		PrivateMode: private,
+		SkipVerify:  skipverify,
+		MergeRef:    "head",
 	}
-	params := url_.Query()
-	url_.Path = ""
-	url_.RawQuery = ""
 
-	// create the Githbub remote using parameters from
-	// the parsed DSN configuration string.
-	github := Github{}
-	github.URL = url_.String()
-	github.Client = params.Get("client_id")
-	github.Secret = params.Get("client_secret")
-	github.Scope = params.Get("scope")
-	github.Orgs = params["orgs"]
-	github.PrivateMode, _ = strconv.ParseBool(params.Get("private_mode"))
-	github.SkipVerify, _ = strconv.ParseBool(params.Get("skip_verify"))
-	github.Open, _ = strconv.ParseBool(params.Get("open"))
-	github.GitSSH, _ = strconv.ParseBool(params.Get("ssh"))
-	github.MergeRef = params.Get("merge_ref")
-
-	if github.URL == DefaultURL {
-		github.API = DefaultAPI
+	if remote.URL == DefaultURL {
+		remote.API = DefaultAPI
 	} else {
-		github.API = github.URL + "/api/v3/"
+		remote.API = remote.URL + "/api/v3/"
+	}
+	if mergeref {
+		remote.MergeRef = "merge"
 	}
 
-	if github.Scope == "" {
-		github.Scope = DefaultScope
-	}
-
-	if github.MergeRef == "" {
-		github.MergeRef = DefaultMergeRef
-	}
-
-	return &github
+	return remote, nil
 }
 
-// Login authenticates the session and returns the
-// remote user details.
-func (g *Github) Login(res http.ResponseWriter, req *http.Request) (*model.User, bool, error) {
+// Login authenticates the session and returns the remote user details.
+func (g *Github) Login(res http.ResponseWriter, req *http.Request) (*model.User, error) {
 
 	var config = &oauth2.Config{
 		ClientId:     g.Client,
@@ -101,7 +74,7 @@ func (g *Github) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 	if len(code) == 0 {
 		var random = GetRandom()
 		http.Redirect(res, req, config.AuthCodeURL(random), http.StatusSeeOther)
-		return nil, false, nil
+		return nil, nil
 	}
 
 	var trans = &oauth2.Transport{
@@ -117,23 +90,13 @@ func (g *Github) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 	}
 	var token, err = trans.Exchange(code)
 	if err != nil {
-		return nil, false, fmt.Errorf("Error exchanging token. %s", err)
+		return nil, fmt.Errorf("Error exchanging token. %s", err)
 	}
 
 	var client = NewClient(g.API, token.AccessToken, g.SkipVerify)
 	var useremail, errr = GetUserEmail(client)
 	if errr != nil {
-		return nil, false, fmt.Errorf("Error retrieving user or verified email. %s", errr)
-	}
-
-	if len(g.Orgs) > 0 {
-		allowedOrg, err := UserBelongsToOrg(client, g.Orgs)
-		if err != nil {
-			return nil, false, fmt.Errorf("Could not check org membership. %s", err)
-		}
-		if !allowedOrg {
-			return nil, false, fmt.Errorf("User does not belong to correct org. Must belong to %v", g.Orgs)
-		}
+		return nil, fmt.Errorf("Error retrieving user or verified email. %s", errr)
 	}
 
 	user := model.User{}
@@ -141,7 +104,7 @@ func (g *Github) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 	user.Email = *useremail.Email
 	user.Token = token.AccessToken
 	user.Avatar = *useremail.AvatarURL
-	return &user, g.Open, nil
+	return &user, nil
 }
 
 // Auth authenticates the session and returns the remote user
@@ -155,35 +118,50 @@ func (g *Github) Auth(token, secret string) (string, error) {
 	return *user.Login, nil
 }
 
-// Repo fetches the named repository from the remote system.
-func (g *Github) Repo(u *model.User, owner, name string) (*model.Repo, error) {
+func (g *Github) Teams(u *model.User) ([]*model.Team, error) {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
-	repo_, err := GetRepo(client, owner, name)
+	orgs, err := GetOrgs(client)
 	if err != nil {
 		return nil, err
 	}
 
-	repo := &model.Repo{}
-	repo.Owner = owner
-	repo.Name = name
-	repo.FullName = *repo_.FullName
-	repo.Link = *repo_.HTMLURL
-	repo.IsPrivate = *repo_.Private
-	repo.Clone = *repo_.CloneURL
-	repo.Branch = "master"
-	repo.Avatar = *repo_.Owner.AvatarURL
-	repo.Kind = model.RepoGit
+	var teams []*model.Team
+	for _, org := range orgs {
+		teams = append(teams, &model.Team{
+			Login:  *org.Login,
+			Avatar: *org.AvatarURL,
+		})
+	}
+	return teams, nil
+}
 
-	if repo_.DefaultBranch != nil {
-		repo.Branch = *repo_.DefaultBranch
+// Repo fetches the named repository from the remote system.
+func (g *Github) Repo(u *model.User, owner, name string) (*model.Repo, error) {
+	client := NewClient(g.API, u.Token, g.SkipVerify)
+	r, err := GetRepo(client, owner, name)
+	if err != nil {
+		return nil, err
+	}
+
+	repo := &model.Repo{
+		Owner:     owner,
+		Name:      name,
+		FullName:  *r.FullName,
+		Link:      *r.HTMLURL,
+		IsPrivate: *r.Private,
+		Clone:     *r.CloneURL,
+		Avatar:    *r.Owner.AvatarURL,
+		Kind:      model.RepoGit,
+	}
+
+	if r.DefaultBranch != nil {
+		repo.Branch = *r.DefaultBranch
+	} else {
+		repo.Branch = "master"
 	}
 
 	if g.PrivateMode {
 		repo.IsPrivate = true
-	}
-
-	if g.GitSSH && repo.IsPrivate {
-		repo.Clone = *repo_.SSHURL
 	}
 
 	return repo, err
@@ -257,8 +235,10 @@ func repoStatus(client *github.Client, r *model.Repo, b *model.Build, link strin
 	return err
 }
 
+var reDeploy = regexp.MustCompile(".+/deployments/(\\d+)")
+
 func deploymentStatus(client *github.Client, r *model.Repo, b *model.Build, link string) error {
-	matches := githubDeployRegex.FindStringSubmatch(b.Link)
+	matches := reDeploy.FindStringSubmatch(b.Link)
 	// if the deployment was not triggered from github, don't send a deployment status
 	if len(matches) != 2 {
 		return nil
@@ -292,23 +272,9 @@ func (g *Github) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
 
 // Activate activates a repository by creating the post-commit hook and
 // adding the SSH deploy key, if applicable.
-func (g *Github) Activate(u *model.User, r *model.Repo, k *model.Key, link string) error {
+func (g *Github) Activate(u *model.User, r *model.Repo, link string) error {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
-	title, err := GetKeyTitle(link)
-	if err != nil {
-		return err
-	}
-
-	// if the CloneURL is using the SSHURL then we know that
-	// we need to add an SSH key to GitHub.
-	if r.IsPrivate || g.PrivateMode {
-		_, err = CreateUpdateKey(client, r.Owner, r.Name, title, k.Public)
-		if err != nil {
-			return err
-		}
-	}
-
-	_, err = CreateUpdateHook(client, r.Owner, r.Name, link)
+	_, err := CreateUpdateHook(client, r.Owner, r.Name, link)
 	return err
 }
 
@@ -316,18 +282,6 @@ func (g *Github) Activate(u *model.User, r *model.Repo, k *model.Key, link strin
 // which are equal to link and removing the SSH deploy key.
 func (g *Github) Deactivate(u *model.User, r *model.Repo, link string) error {
 	client := NewClient(g.API, u.Token, g.SkipVerify)
-	title, err := GetKeyTitle(link)
-	if err != nil {
-		return err
-	}
-
-	// remove the deploy-key if it is installed remote.
-	if r.IsPrivate || g.PrivateMode {
-		if err := DeleteKey(client, r.Owner, r.Name, title); err != nil {
-			return err
-		}
-	}
-
 	return DeleteHook(client, r.Owner, r.Name, link)
 }
 

@@ -141,9 +141,9 @@ func start(c *cli.Context) {
 		c.String("drone-token"),
 	)
 
-	tls, _ := dockerclient.TLSConfigFromCertPath(c.String("docker-cert-path"))
-	if c.Bool("docker-host") {
-		tls.InsecureSkipVerify = true
+	tls, err := dockerclient.TLSConfigFromCertPath(c.String("docker-cert-path"))
+	if err == nil {
+		tls.InsecureSkipVerify = c.Bool("docker-tls-verify")
 	}
 	docker, err := dockerclient.NewDockerClient(c.String("docker-host"), tls)
 	if err != nil {

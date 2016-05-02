@@ -13,11 +13,14 @@ import (
 type Remote interface {
 	// Login authenticates the session and returns the
 	// remote user details.
-	Login(w http.ResponseWriter, r *http.Request) (*model.User, bool, error)
+	Login(w http.ResponseWriter, r *http.Request) (*model.User, error)
 
 	// Auth authenticates the session and returns the remote user
 	// login for the given token and secret
 	Auth(token, secret string) (string, error)
+
+	// Teams fetches a list of team memberships from the remote system.
+	Teams(u *model.User) ([]*model.Team, error)
 
 	// Repo fetches the named repository from the remote system.
 	Repo(u *model.User, owner, repo string) (*model.Repo, error)
@@ -41,29 +44,28 @@ type Remote interface {
 	// private repositories from a remote system.
 	Netrc(u *model.User, r *model.Repo) (*model.Netrc, error)
 
-	// Activate activates a repository by creating the post-commit hook and
-	// adding the SSH deploy key, if applicable.
-	Activate(u *model.User, r *model.Repo, k *model.Key, link string) error
+	// Activate activates a repository by creating the post-commit hook.
+	Activate(u *model.User, r *model.Repo, link string) error
 
-	// Deactivate removes a repository by removing all the post-commit hooks
-	// which are equal to link and removing the SSH deploy key.
+	// Deactivate deactivates a repository by removing all previously created
+	// post-commit hooks matching the given link.
 	Deactivate(u *model.User, r *model.Repo, link string) error
 
-	// Hook parses the post-commit hook from the Request body
-	// and returns the required data in a standard format.
+	// Hook parses the post-commit hook from the Request body and returns the
+	// required data in a standard format.
 	Hook(r *http.Request) (*model.Repo, *model.Build, error)
 }
 
+// Refresher refreshes an oauth token and expiration for the given user. It
+// returns true if the token was refreshed, false if the token was not refreshed,
+// and error if it failed to refersh.
 type Refresher interface {
-	// Refresh refreshes an oauth token and expiration for the given
-	// user. It returns true if the token was refreshed, false if the
-	// token was not refreshed, and error if it failed to refersh.
 	Refresh(*model.User) (bool, error)
 }
 
 // Login authenticates the session and returns the
 // remote user details.
-func Login(c context.Context, w http.ResponseWriter, r *http.Request) (*model.User, bool, error) {
+func Login(c context.Context, w http.ResponseWriter, r *http.Request) (*model.User, error) {
 	return FromContext(c).Login(w, r)
 }
 
@@ -71,6 +73,11 @@ func Login(c context.Context, w http.ResponseWriter, r *http.Request) (*model.Us
 // login for the given token and secret
 func Auth(c context.Context, token, secret string) (string, error) {
 	return FromContext(c).Auth(token, secret)
+}
+
+// Teams fetches a list of team memberships from the remote system.
+func Teams(c context.Context, u *model.User) ([]*model.Team, error) {
+	return FromContext(c).Teams(u)
 }
 
 // Repo fetches the named repository from the remote system.
@@ -108,8 +115,8 @@ func Netrc(c context.Context, u *model.User, r *model.Repo) (*model.Netrc, error
 
 // Activate activates a repository by creating the post-commit hook and
 // adding the SSH deploy key, if applicable.
-func Activate(c context.Context, u *model.User, r *model.Repo, k *model.Key, link string) error {
-	return FromContext(c).Activate(u, r, k, link)
+func Activate(c context.Context, u *model.User, r *model.Repo, link string) error {
+	return FromContext(c).Activate(u, r, link)
 }
 
 // Deactivate removes a repository by removing all the post-commit hooks
