@@ -159,3 +159,9 @@ type tokenPayload struct {
 	Refresh string `json:"refresh_token,omitempty"`
 	Expires int64  `json:"expires_in,omitempty"`
 }
+
+// ToConfig returns the config from the Context
+func ToConfig(c *gin.Context) *model.Config {
+	v := c.MustGet("config")
+	return v.(*model.Config)
+}

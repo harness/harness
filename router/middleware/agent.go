@@ -1,45 +1,33 @@
 package middleware
 
 import (
+	"github.com/codegangsta/cli"
 	"github.com/drone/drone/shared/token"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
-	"github.com/ianschenck/envflag"
 )
 
-var (
-	secret = envflag.String("DRONE_AGENT_SECRET", "", "")
-	noauth = envflag.Bool("AGENT_NO_AUTH", false, "")
-)
+const agentKey = "agent"
 
-// Agent is a middleware function that initializes the authorization middleware
+// Agents is a middleware function that initializes the authorization middleware
 // for agents to connect to the queue.
-func AgentMust() gin.HandlerFunc {
-
-	if *secret == "" {
-		logrus.Fatalf("please provide the agent secret to authenticate agent requests")
+func Agents(cli *cli.Context) gin.HandlerFunc {
+	secret := cli.String("agent-secret")
+	if secret == "" {
+		logrus.Fatalf("failed to generate token from DRONE_AGENT_SECRET")
 	}
 
-	t := token.New(token.AgentToken, "")
-	s, err := t.Sign(*secret)
+	t := token.New(secret, "")
+	s, err := t.Sign(secret)
 	if err != nil {
-		logrus.Fatalf("invalid agent secret. %s", err)
+		logrus.Fatalf("failed to generate token from DRONE_AGENT_SECRET. %s", err)
 	}
 
-	logrus.Infof("using agent secret %s", *secret)
+	logrus.Infof("using agent secret %s", secret)
 	logrus.Warnf("agents can connect with token %s", s)
 
 	return func(c *gin.Context) {
-		parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
-			return *secret, nil
-		})
-		if err != nil {
-			c.AbortWithError(403, err)
-		} else if parsed.Kind != token.AgentToken {
-			c.AbortWithStatus(403)
-		} else {
-			c.Next()
-		}
+		c.Set(agentKey, secret)
 	}
 }

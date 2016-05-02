@@ -11,6 +11,7 @@
 //     - application/json
 //
 // swagger:meta
-package api
+package swagger
 
-//go:generate swagger generate spec -o swagger/files/swagger.json
+//go:generate swagger generate spec -o files/swagger.json
+//go:generate go-bindata -pkg swagger -o swagger_gen.go files/

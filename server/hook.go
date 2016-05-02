@@ -1,8 +1,7 @@
-package web
+package server
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 
 	"github.com/gin-gonic/gin"
@@ -18,18 +17,6 @@ import (
 	"github.com/drone/drone/store"
 	"github.com/drone/drone/yaml"
 )
-
-var (
-	droneYml = os.Getenv("BUILD_CONFIG_FILE")
-	droneSec string
-)
-
-func init() {
-	if droneYml == "" {
-		droneYml = ".drone.yml"
-	}
-	droneSec = fmt.Sprintf("%s.sig", droneYml)
-}
 
 var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
 
@@ -135,13 +122,14 @@ func PostHook(c *gin.Context) {
 	}
 
 	// fetch the build file from the database
-	raw, err := remote_.File(user, repo, build, droneYml)
+	config := ToConfig(c)
+	raw, err := remote_.File(user, repo, build, config.Yaml)
 	if err != nil {
 		log.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
 		return
 	}
-	sec, err := remote_.File(user, repo, build, droneSec)
+	sec, err := remote_.File(user, repo, build, config.Shasum)
 	if err != nil {
 		log.Debugf("cannot find build secrets for %s. %s", repo.FullName, err)
 		// NOTE we don't exit on failure. The sec file is optional

@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"net/http"
@@ -10,13 +10,6 @@ import (
 	"github.com/drone/drone/store"
 )
 
-// swagger:route GET /users user getUserList
-//
-// Get the list of all registered users.
-//
-//     Responses:
-//       200: user
-//
 func GetUsers(c *gin.Context) {
 	users, err := store.GetUserList(c)
 	if err != nil {
@@ -26,20 +19,13 @@ func GetUsers(c *gin.Context) {
 	}
 }
 
-// swagger:route GET /users/{login} user getUserLogin
-//
-// Get the user with the matching login.
-//
-//     Responses:
-//       200: user
-//
 func GetUser(c *gin.Context) {
 	user, err := store.GetUserLogin(c, c.Param("login"))
 	if err != nil {
 		c.String(404, "Cannot find user. %s", err)
-	} else {
-		c.JSON(200, user)
+		return
 	}
+	c.JSON(200, user)
 }
 
 func PatchUser(c *gin.Context) {
@@ -74,31 +60,20 @@ func PostUser(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-
-	user := &model.User{}
-	user.Login = in.Login
-	user.Email = in.Email
-	user.Admin = in.Admin
-	user.Avatar = in.Avatar
-	user.Active = true
-	user.Hash = crypto.Rand()
-
-	err = store.CreateUser(c, user)
-	if err != nil {
+	user := &model.User{
+		Active: true,
+		Login:  in.Login,
+		Email:  in.Email,
+		Avatar: in.Avatar,
+		Hash:   crypto.Rand(),
+	}
+	if err = store.CreateUser(c, user); err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-
 	c.JSON(http.StatusOK, user)
 }
 
-// swagger:route DELETE /users/{login} user deleteUserLogin
-//
-// Delete the user with the matching login.
-//
-//     Responses:
-//       200: user
-//
 func DeleteUser(c *gin.Context) {
 	user, err := store.GetUserLogin(c, c.Param("login"))
 	if err != nil {
@@ -107,7 +82,7 @@ func DeleteUser(c *gin.Context) {
 	}
 	if err = store.DeleteUser(c, user); err != nil {
 		c.String(500, "Error deleting user. %s", err)
-	} else {
-		c.String(200, "")
+		return
 	}
+	c.String(200, "")
 }

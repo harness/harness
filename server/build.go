@@ -1,10 +1,8 @@
-package api
+package server
 
 import (
-	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -20,18 +18,6 @@ import (
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
 )
-
-var (
-	droneYml = os.Getenv("BUILD_CONFIG_FILE")
-	droneSec string
-)
-
-func init() {
-	if droneYml == "" {
-		droneYml = ".drone.yml"
-	}
-	droneSec = fmt.Sprintf("%s.sig", droneYml)
-}
 
 func GetBuilds(c *gin.Context) {
 	repo := session.Repo(c)
@@ -189,7 +175,8 @@ func PostBuild(c *gin.Context) {
 	}
 
 	// fetch the .drone.yml file from the database
-	raw, err := remote_.File(user, repo, build, droneYml)
+	config := ToConfig(c)
+	raw, err := remote_.File(user, repo, build, config.Yaml)
 	if err != nil {
 		log.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
@@ -197,7 +184,7 @@ func PostBuild(c *gin.Context) {
 	}
 
 	// Fetch secrets file but don't exit on error as it's optional
-	sec, err := remote_.File(user, repo, build, droneSec)
+	sec, err := remote_.File(user, repo, build, config.Shasum)
 	if err != nil {
 		log.Debugf("cannot find build secrets for %s. %s", repo.FullName, err)
 	}

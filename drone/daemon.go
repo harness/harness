@@ -6,20 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/drone/drone/bus"
-	"github.com/drone/drone/cache"
-	"github.com/drone/drone/queue"
-	"github.com/drone/drone/remote"
-	"github.com/drone/drone/remote/bitbucket"
-	"github.com/drone/drone/remote/bitbucketserver"
-	"github.com/drone/drone/remote/github"
-	"github.com/drone/drone/remote/gitlab"
-	"github.com/drone/drone/remote/gogs"
-	"github.com/drone/drone/server"
-	"github.com/drone/drone/shared/token"
-	"github.com/drone/drone/store"
-	"github.com/drone/drone/store/datastore"
-	"github.com/drone/drone/stream"
+	"github.com/drone/drone/router"
+	"github.com/drone/drone/router/middleware"
+	"github.com/gin-gonic/contrib/ginrus"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
@@ -300,22 +289,19 @@ func start(c *cli.Context) error {
 		logrus.SetLevel(logrus.WarnLevel)
 	}
 
-	// print the agent secret to the console
-	// TODO(bradrydzewski) this overall approach should be re-considered
-	if err := printSecret(c); err != nil {
-		return err
-	}
-
 	// setup the server and start the listener
-	server := server.Server{
-		Bus:    setupBus(c),
-		Cache:  setupCache(c),
-		Config: setupConfig(c),
-		Queue:  setupQueue(c),
-		Remote: setupRemote(c),
-		Stream: setupStream(c),
-		Store:  setupStore(c),
-	}
+	handler := router.Load(
+		ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true),
+		middleware.Version,
+		middleware.Config(c),
+		middleware.Queue(c),
+		middleware.Stream(c),
+		middleware.Bus(c),
+		middleware.Cache(c),
+		middleware.Store(c),
+		middleware.Remote(c),
+		middleware.Agents(c),
+	)
 
 	// start the server with tls enabled
 	if c.String("server-cert") != "" {
@@ -323,150 +309,151 @@ func start(c *cli.Context) error {
 			c.String("server-addr"),
 			c.String("server-cert"),
 			c.String("server-key"),
-			server.Handler(),
+			handler,
 		)
 	}
 
 	// start the server without tls enabled
 	return http.ListenAndServe(
 		c.String("server-addr"),
-		server.Handler(),
+		handler,
 	)
 }
 
-func setupCache(c *cli.Context) cache.Cache {
-	return cache.NewTTL(
-		c.Duration("cache-ttl"),
-	)
-}
-
-func setupBus(c *cli.Context) bus.Bus {
-	return bus.New()
-}
-
-func setupQueue(c *cli.Context) queue.Queue {
-	return queue.New()
-}
-
-func setupStream(c *cli.Context) stream.Stream {
-	return stream.New()
-}
-
-func setupStore(c *cli.Context) store.Store {
-	return datastore.New(
-		c.String("driver"),
-		c.String("datasource"),
-	)
-}
-
-func setupRemote(c *cli.Context) remote.Remote {
-	var remote remote.Remote
-	var err error
-	switch {
-	case c.Bool("github"):
-		remote, err = setupGithub(c)
-	case c.Bool("gitlab"):
-		remote, err = setupGitlab(c)
-	case c.Bool("bitbucket"):
-		remote, err = setupBitbucket(c)
-	case c.Bool("stash"):
-		remote, err = setupStash(c)
-	case c.Bool("gogs"):
-		remote, err = setupGogs(c)
-	default:
-		err = fmt.Errorf("version control system not configured")
-	}
-	if err != nil {
-		logrus.Fatalln(err)
-	}
-	return remote
-}
-
-func setupBitbucket(c *cli.Context) (remote.Remote, error) {
-	return bitbucket.New(
-		c.String("bitbucket-client"),
-		c.String("bitbucket-server"),
-	), nil
-}
-
-func setupGogs(c *cli.Context) (remote.Remote, error) {
-	return gogs.New(gogs.Opts{
-		URL:         c.String("gogs-server"),
-		Username:    c.String("gogs-git-username"),
-		Password:    c.String("gogs-git-password"),
-		PrivateMode: c.Bool("gogs-private-mode"),
-		SkipVerify:  c.Bool("gogs-skip-verify"),
-	})
-}
-
-func setupStash(c *cli.Context) (remote.Remote, error) {
-	return bitbucketserver.New(bitbucketserver.Opts{
-		URL:         c.String("stash-server"),
-		Username:    c.String("stash-git-username"),
-		Password:    c.String("stash-git-password"),
-		ConsumerKey: c.String("stash-consumer-key"),
-		ConsumerRSA: c.String("stash-consumer-rsa"),
-		SkipVerify:  c.Bool("stash-skip-verify"),
-	})
-}
-
-func setupGitlab(c *cli.Context) (remote.Remote, error) {
-	return gitlab.New(gitlab.Opts{
-		URL:         c.String("gitlab-server"),
-		Client:      c.String("gitlab-client"),
-		Secret:      c.String("gitlab-sercret"),
-		Username:    c.String("gitlab-git-username"),
-		Password:    c.String("gitlab-git-password"),
-		PrivateMode: c.Bool("gitlab-private-mode"),
-		SkipVerify:  c.Bool("gitlab-skip-verify"),
-	})
-}
-
-func setupGithub(c *cli.Context) (remote.Remote, error) {
-	return github.New(
-		c.String("github-server"),
-		c.String("github-client"),
-		c.String("github-sercret"),
-		c.StringSlice("github-scope"),
-		c.Bool("github-private-mode"),
-		c.Bool("github-skip-verify"),
-		c.BoolT("github-merge-ref"),
-	)
-}
-
-func setupConfig(c *cli.Context) *server.Config {
-	return &server.Config{
-		Open:   c.Bool("open"),
-		Yaml:   c.String("yaml"),
-		Secret: c.String("agent-secret"),
-		Admins: sliceToMap(c.StringSlice("admin")),
-		Orgs:   sliceToMap(c.StringSlice("orgs")),
-	}
-}
-
-func sliceToMap(s []string) map[string]bool {
-	v := map[string]bool{}
-	for _, ss := range s {
-		v[ss] = true
-	}
-	return v
-}
-
-func printSecret(c *cli.Context) error {
-	secret := c.String("agent-secret")
-	if secret == "" {
-		return fmt.Errorf("missing DRONE_AGENT_SECRET configuration parameter")
-	}
-	t := token.New(secret, "")
-	s, err := t.Sign(secret)
-	if err != nil {
-		return fmt.Errorf("invalid value for DRONE_AGENT_SECRET. %s", s)
-	}
-
-	logrus.Infof("using agent secret %s", secret)
-	logrus.Warnf("agents can connect with token %s", s)
-	return nil
-}
+//
+// func setupCache(c *cli.Context) cache.Cache {
+// 	return cache.NewTTL(
+// 		c.Duration("cache-ttl"),
+// 	)
+// }
+//
+// func setupBus(c *cli.Context) bus.Bus {
+// 	return bus.New()
+// }
+//
+// func setupQueue(c *cli.Context) queue.Queue {
+// 	return queue.New()
+// }
+//
+// func setupStream(c *cli.Context) stream.Stream {
+// 	return stream.New()
+// }
+//
+// func setupStore(c *cli.Context) store.Store {
+// 	return datastore.New(
+// 		c.String("driver"),
+// 		c.String("datasource"),
+// 	)
+// }
+//
+// func setupRemote(c *cli.Context) remote.Remote {
+// 	var remote remote.Remote
+// 	var err error
+// 	switch {
+// 	case c.Bool("github"):
+// 		remote, err = setupGithub(c)
+// 	case c.Bool("gitlab"):
+// 		remote, err = setupGitlab(c)
+// 	case c.Bool("bitbucket"):
+// 		remote, err = setupBitbucket(c)
+// 	case c.Bool("stash"):
+// 		remote, err = setupStash(c)
+// 	case c.Bool("gogs"):
+// 		remote, err = setupGogs(c)
+// 	default:
+// 		err = fmt.Errorf("version control system not configured")
+// 	}
+// 	if err != nil {
+// 		logrus.Fatalln(err)
+// 	}
+// 	return remote
+// }
+//
+// func setupBitbucket(c *cli.Context) (remote.Remote, error) {
+// 	return bitbucket.New(
+// 		c.String("bitbucket-client"),
+// 		c.String("bitbucket-server"),
+// 	), nil
+// }
+//
+// func setupGogs(c *cli.Context) (remote.Remote, error) {
+// 	return gogs.New(gogs.Opts{
+// 		URL:         c.String("gogs-server"),
+// 		Username:    c.String("gogs-git-username"),
+// 		Password:    c.String("gogs-git-password"),
+// 		PrivateMode: c.Bool("gogs-private-mode"),
+// 		SkipVerify:  c.Bool("gogs-skip-verify"),
+// 	})
+// }
+//
+// func setupStash(c *cli.Context) (remote.Remote, error) {
+// 	return bitbucketserver.New(bitbucketserver.Opts{
+// 		URL:         c.String("stash-server"),
+// 		Username:    c.String("stash-git-username"),
+// 		Password:    c.String("stash-git-password"),
+// 		ConsumerKey: c.String("stash-consumer-key"),
+// 		ConsumerRSA: c.String("stash-consumer-rsa"),
+// 		SkipVerify:  c.Bool("stash-skip-verify"),
+// 	})
+// }
+//
+// func setupGitlab(c *cli.Context) (remote.Remote, error) {
+// 	return gitlab.New(gitlab.Opts{
+// 		URL:         c.String("gitlab-server"),
+// 		Client:      c.String("gitlab-client"),
+// 		Secret:      c.String("gitlab-sercret"),
+// 		Username:    c.String("gitlab-git-username"),
+// 		Password:    c.String("gitlab-git-password"),
+// 		PrivateMode: c.Bool("gitlab-private-mode"),
+// 		SkipVerify:  c.Bool("gitlab-skip-verify"),
+// 	})
+// }
+//
+// func setupGithub(c *cli.Context) (remote.Remote, error) {
+// 	return github.New(
+// 		c.String("github-server"),
+// 		c.String("github-client"),
+// 		c.String("github-sercret"),
+// 		c.StringSlice("github-scope"),
+// 		c.Bool("github-private-mode"),
+// 		c.Bool("github-skip-verify"),
+// 		c.BoolT("github-merge-ref"),
+// 	)
+// }
+//
+// func setupConfig(c *cli.Context) *server.Config {
+// 	return &server.Config{
+// 		Open:   c.Bool("open"),
+// 		Yaml:   c.String("yaml"),
+// 		Secret: c.String("agent-secret"),
+// 		Admins: sliceToMap(c.StringSlice("admin")),
+// 		Orgs:   sliceToMap(c.StringSlice("orgs")),
+// 	}
+// }
+//
+// func sliceToMap(s []string) map[string]bool {
+// 	v := map[string]bool{}
+// 	for _, ss := range s {
+// 		v[ss] = true
+// 	}
+// 	return v
+// }
+//
+// func printSecret(c *cli.Context) error {
+// 	secret := c.String("agent-secret")
+// 	if secret == "" {
+// 		return fmt.Errorf("missing DRONE_AGENT_SECRET configuration parameter")
+// 	}
+// 	t := token.New(secret, "")
+// 	s, err := t.Sign(secret)
+// 	if err != nil {
+// 		return fmt.Errorf("invalid value for DRONE_AGENT_SECRET. %s", s)
+// 	}
+//
+// 	logrus.Infof("using agent secret %s", secret)
+// 	logrus.Warnf("agents can connect with token %s", s)
+// 	return nil
+// }
 
 var agreement = `
 ---
