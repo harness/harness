@@ -27,11 +27,11 @@ import (
 
 // Config defines system configuration parameters.
 type Config struct {
-	Open   bool     // Enables open registration
-	Yaml   string   // Customize the Yaml configuration file name
-	Secret string   // Secret token used to authenticate agents
-	Admins []string // Administrative users
-	Orgs   []string // Organization whitelist
+	Open   bool            // Enables open registration
+	Yaml   string          // Customize the Yaml configuration file name
+	Secret string          // Secret token used to authenticate agents
+	Admins map[string]bool // Administrative users
+	Orgs   map[string]bool // Organization whitelist
 }
 
 // Server defines the server configuration.
@@ -75,7 +75,7 @@ func (s *Server) Handler() http.Handler {
 	e.GET("/repos", web.ShowAllRepos)
 	e.GET("/login", web.ShowLogin)
 	e.GET("/login/form", web.ShowLoginForm)
-	e.GET("/logout", web.GetLogout)
+	e.GET("/logout", GetLogout)
 
 	// TODO below will Go away with React UI
 	settings := e.Group("/settings")
@@ -172,9 +172,9 @@ func (s *Server) Handler() http.Handler {
 
 	auth := e.Group("/authorize")
 	{
-		auth.GET("", web.GetLogin)
-		auth.POST("", web.GetLogin)
-		auth.POST("/token", web.GetLoginToken)
+		auth.GET("", GetLogin)
+		auth.POST("", GetLogin)
+		auth.POST("/token", GetLoginToken)
 	}
 
 	queue := e.Group("/api/queue")

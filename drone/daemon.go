@@ -334,16 +334,6 @@ func start(c *cli.Context) error {
 	)
 }
 
-func setupConfig(c *cli.Context) *server.Config {
-	return &server.Config{
-		Open:   c.Bool("open"),
-		Yaml:   c.String("yaml"),
-		Secret: c.String("agent-secret"),
-		Admins: c.StringSlice("admin"),
-		Orgs:   c.StringSlice("orgs"),
-	}
-}
-
 func setupCache(c *cli.Context) cache.Cache {
 	return cache.NewTTL(
 		c.Duration("cache-ttl"),
@@ -442,6 +432,24 @@ func setupGithub(c *cli.Context) (remote.Remote, error) {
 		c.Bool("github-skip-verify"),
 		c.BoolT("github-merge-ref"),
 	)
+}
+
+func setupConfig(c *cli.Context) *server.Config {
+	return &server.Config{
+		Open:   c.Bool("open"),
+		Yaml:   c.String("yaml"),
+		Secret: c.String("agent-secret"),
+		Admins: sliceToMap(c.StringSlice("admin")),
+		Orgs:   sliceToMap(c.StringSlice("orgs")),
+	}
+}
+
+func sliceToMap(s []string) map[string]bool {
+	v := map[string]bool{}
+	for _, ss := range s {
+		v[ss] = true
+	}
+	return v
 }
 
 func printSecret(c *cli.Context) error {

@@ -77,3 +77,9 @@ func HandlerAgent(v string) gin.HandlerFunc {
 		c.Set(k, v)
 	}
 }
+
+// ToConfig returns the config from the Context
+func ToConfig(c *gin.Context) *Config {
+	v := c.MustGet("config")
+	return v.(*Config)
+}
