@@ -1,39 +1,13 @@
 package github
 
 import (
-	"crypto/tls"
-	"encoding/base32"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 
-	"github.com/drone/drone/shared/oauth2"
 	"github.com/google/go-github/github"
-	"github.com/gorilla/securecookie"
 )
-
-// NewClient is a helper function that returns a new GitHub
-// client using the provided OAuth token.
-func NewClient(uri, token string, skipVerify bool) *github.Client {
-	t := &oauth2.Transport{
-		Token: &oauth2.Token{AccessToken: token},
-	}
-
-	// this is for GitHub enterprise users that are using
-	// self-signed certificates.
-	if skipVerify {
-		t.Transport = &http.Transport{
-			Proxy:           http.ProxyFromEnvironment,
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-	}
-
-	c := github.NewClient(t.Client())
-	c.BaseURL, _ = url.Parse(uri)
-	return c
-}
 
 // GetUserEmail is a heper function that retrieves the currently
 // authenticated user from GitHub + Email address.
@@ -58,62 +32,12 @@ func GetUserEmail(client *github.Client) (*github.User, error) {
 	// WARNING, HACK
 	// for out-of-date github enterprise editions the primary
 	// and verified fields won't exist.
-	if !strings.HasPrefix(*user.URL, DefaultAPI) && len(emails) != 0 {
+	if !strings.HasPrefix(*user.URL, defaultAPI) && len(emails) != 0 {
 		user.Email = emails[0].Email
 		return user, nil
 	}
 
 	return nil, fmt.Errorf("No verified Email address for GitHub account")
-}
-
-// GetRepo is a helper function that returns a named repo
-func GetRepo(client *github.Client, owner, repo string) (*github.Repository, error) {
-	r, _, err := client.Repositories.Get(owner, repo)
-	return r, err
-}
-
-// GetUserRepos is a helper function that returns a list of
-// all user repositories. Paginated results are aggregated into
-// a single list.
-func GetUserRepos(client *github.Client) ([]github.Repository, error) {
-	var repos []github.Repository
-	var opts = github.RepositoryListOptions{}
-	opts.PerPage = 100
-	opts.Page = 1
-
-	// loop through user repository list
-	for opts.Page > 0 {
-		list, resp, err := client.Repositories.List("", &opts)
-		if err != nil {
-			return nil, err
-		}
-		repos = append(repos, list...)
-
-		// increment the next page to retrieve
-		opts.Page = resp.NextPage
-	}
-
-	return repos, nil
-}
-
-// GetOrgs is a helper function that returns a list of
-// all orgs that a user belongs to.
-func GetOrgs(client *github.Client) ([]github.Organization, error) {
-	var orgs []github.Organization
-	var opts = github.ListOptions{}
-	opts.Page = 1
-
-	for opts.Page > 0 {
-		list, resp, err := client.Organizations.List("", &opts)
-		if err != nil {
-			return nil, err
-		}
-		orgs = append(orgs, list...)
-
-		// increment the next page to retrieve
-		opts.Page = resp.NextPage
-	}
-	return orgs, nil
 }
 
 // GetHook is a heper function that retrieves a hook by
@@ -136,6 +60,7 @@ func GetHook(client *github.Client, owner, name, url string) (*github.Hook, erro
 	return nil, nil
 }
 
+// DeleteHook does exactly what you think it does.
 func DeleteHook(client *github.Client, owner, name, url string) error {
 	hook, err := GetHook(client, owner, name, url)
 	if err != nil {
@@ -177,24 +102,6 @@ func CreateUpdateHook(client *github.Client, owner, name, url string) (*github.H
 	}
 
 	return CreateHook(client, owner, name, url)
-}
-
-// GetFile is a heper function that retrieves a file from
-// GitHub and returns its contents in byte array format.
-func GetFile(client *github.Client, owner, name, path, ref string) ([]byte, error) {
-	var opts = new(github.RepositoryContentGetOptions)
-	opts.Ref = ref
-	content, _, _, err := client.Repositories.GetContents(owner, name, path, opts)
-	if err != nil {
-		return nil, err
-	}
-	return content.Decode()
-}
-
-// GetRandom is a helper function that generates a 32-bit random
-// key, base32 encoded as a string value.
-func GetRandom() string {
-	return base32.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(32))
 }
 
 // GetPayload is a helper function that will parse the JSON payload. It will

@@ -1,15 +1,16 @@
 package server
 
 import (
+	"encoding/base32"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/securecookie"
 
 	"github.com/drone/drone/cache"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router/middleware/session"
-	"github.com/drone/drone/shared/crypto"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
@@ -54,7 +55,9 @@ func PostRepo(c *gin.Context) {
 	r.AllowPush = true
 	r.AllowPull = true
 	r.Timeout = 60 // 1 hour default build time
-	r.Hash = crypto.Rand()
+	r.Hash = base32.StdEncoding.EncodeToString(
+		securecookie.GenerateRandomKey(32),
+	)
 
 	// crates the jwt token used to verify the repository
 	t := token.New(token.HookToken, r.FullName)

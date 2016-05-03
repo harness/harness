@@ -1,13 +1,14 @@
 package server
 
 import (
+	"encoding/base32"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/securecookie"
 
 	"github.com/drone/drone/cache"
 	"github.com/drone/drone/router/middleware/session"
-	"github.com/drone/drone/shared/crypto"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
 )
@@ -69,7 +70,9 @@ func PostToken(c *gin.Context) {
 
 func DeleteToken(c *gin.Context) {
 	user := session.User(c)
-	user.Hash = crypto.Rand()
+	user.Hash = base32.StdEncoding.EncodeToString(
+		securecookie.GenerateRandomKey(32),
+	)
 	if err := store.UpdateUser(c, user); err != nil {
 		c.String(500, "Error revoking tokens. %s", err)
 		return

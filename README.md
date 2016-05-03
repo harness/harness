@@ -18,6 +18,13 @@ Drone documentation is organized into several categories:
 * [CLI Reference](http://readme.drone.io/devs/cli/)
 * [API Reference](http://readme.drone.io/devs/api/builds)
 
+### Documentation for 0.5 (unstable)
+
+If you are using the 0.5 unstable release (master branch) please see the updated documentation:
+
+* [Setup Guide](http://readme.drone.io/0.5/manage/server/)
+* [Build Guide](http://readme.drone.io/0.5/usage/overview/)
+
 ### Community, Help
 
 Contributions, questions, and comments are welcomed and encouraged. Drone developers hang out in the [drone/drone](https://gitter.im/drone/drone) room on gitter. We ask that you please post your questions to [gitter](https://gitter.im/drone/drone) before creating an issue.
@@ -49,12 +56,6 @@ export GO15VENDOREXPERIMENT=1
 make deps    # Download required dependencies
 make gen     # Generate code
 make build   # Build the binary
-```
-
-If you are seeing slow compile times please install the following:
-
-```sh
-go install github.com/mattn/go-sqlite3
 ```
 
 If you are having trouble building this project please reference its `.drone.yml` file. Everything you need to know about building Drone is defined in that file.

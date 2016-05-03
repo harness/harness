@@ -1,15 +1,16 @@
 package server
 
 import (
+	"encoding/base32"
 	"net/http"
 	"time"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
-	"github.com/drone/drone/shared/crypto"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
+	"github.com/gorilla/securecookie"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
@@ -39,10 +40,21 @@ func GetLogin(c *gin.Context) {
 	if err != nil {
 
 		// if self-registration is disabled we should return a not authorized error
-		if !config.Open {
+		if !config.Open && !config.IsAdmin(tmpuser) {
 			logrus.Errorf("cannot register %s. registration closed", tmpuser.Login)
 			c.Redirect(303, "/login?error=access_denied")
 			return
+		}
+
+		// if self-registration is enabled for whitelisted organizations we need to
+		// check the user's organization membership.
+		if len(config.Orgs) != 0 {
+			teams, terr := remote.Teams(c, tmpuser)
+			if terr != nil || config.IsMember(teams) == false {
+				logrus.Errorf("cannot verify team membership for %s.", u.Login)
+				c.Redirect(303, "/login?error=access_denied")
+				return
+			}
 		}
 
 		// create the user account
@@ -52,7 +64,9 @@ func GetLogin(c *gin.Context) {
 			Secret: tmpuser.Secret,
 			Email:  tmpuser.Email,
 			Avatar: tmpuser.Avatar,
-			Hash:   crypto.Rand(),
+			Hash: base32.StdEncoding.EncodeToString(
+				securecookie.GenerateRandomKey(32),
+			),
 		}
 
 		// insert the user into the database
@@ -69,31 +83,21 @@ func GetLogin(c *gin.Context) {
 	u.Email = tmpuser.Email
 	u.Avatar = tmpuser.Avatar
 
+	// if self-registration is enabled for whitelisted organizations we need to
+	// check the user's organization membership.
+	if len(config.Orgs) != 0 {
+		teams, terr := remote.Teams(c, u)
+		if terr != nil || config.IsMember(teams) == false {
+			logrus.Errorf("cannot verify team membership for %s.", u.Login)
+			c.Redirect(303, "/login?error=access_denied")
+			return
+		}
+	}
+
 	if err := store.UpdateUser(c, u); err != nil {
 		logrus.Errorf("cannot update %s. %s", u.Login, err)
 		c.Redirect(303, "/login?error=internal_error")
 		return
-	}
-
-	if len(config.Orgs) != 0 {
-		teams, terr := remote.Teams(c, u)
-		if terr != nil {
-			logrus.Errorf("cannot verify team membership for %s. %s.", tmpuser.Login, terr)
-			c.Redirect(303, "/login?error=access_denied")
-			return
-		}
-		var member bool
-		for _, team := range teams {
-			if config.Orgs[team.Login] {
-				member = true
-				break
-			}
-		}
-		if !member {
-			logrus.Errorf("cannot verify team membership for %s. %s.", tmpuser.Login, terr)
-			c.Redirect(303, "/login?error=access_denied")
-			return
-		}
 	}
 
 	exp := time.Now().Add(time.Hour * 72).Unix()

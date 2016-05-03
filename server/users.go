@@ -1,12 +1,13 @@
 package server
 
 import (
+	"encoding/base32"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/securecookie"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/shared/crypto"
 	"github.com/drone/drone/store"
 )
 
@@ -14,9 +15,9 @@ func GetUsers(c *gin.Context) {
 	users, err := store.GetUserList(c)
 	if err != nil {
 		c.String(500, "Error getting user list. %s", err)
-	} else {
-		c.JSON(200, users)
+		return
 	}
+	c.JSON(200, users)
 }
 
 func GetUser(c *gin.Context) {
@@ -41,7 +42,6 @@ func PatchUser(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
-	user.Admin = in.Admin
 	user.Active = in.Active
 
 	err = store.UpdateUser(c, user)
@@ -65,7 +65,9 @@ func PostUser(c *gin.Context) {
 		Login:  in.Login,
 		Email:  in.Email,
 		Avatar: in.Avatar,
-		Hash:   crypto.Rand(),
+		Hash: base32.StdEncoding.EncodeToString(
+			securecookie.GenerateRandomKey(32),
+		),
 	}
 	if err = store.CreateUser(c, user); err != nil {
 		c.String(http.StatusInternalServerError, err.Error())

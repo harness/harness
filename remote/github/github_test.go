@@ -11,7 +11,7 @@ import (
 
 func TestHook(t *testing.T) {
 	var (
-		github Github
+		github client
 		r      *http.Request
 		body   *bytes.Buffer
 	)
@@ -20,7 +20,7 @@ func TestHook(t *testing.T) {
 
 	g.Describe("Hook", func() {
 		g.BeforeEach(func() {
-			github = Github{}
+			github = client{}
 			body = bytes.NewBuffer([]byte{})
 			r, _ = http.NewRequest("POST", "https://drone.com/hook", body)
 		})
@@ -31,11 +31,11 @@ func TestHook(t *testing.T) {
 			})
 
 			g.It("Should set build author to the pull request author", func() {
-				hookJson, err := ioutil.ReadFile("fixtures/pull_request.json")
-				if err != nil {
-					panic(err)
+				hookJSON, ioerr := ioutil.ReadFile("fixtures/pull_request.json")
+				if ioerr != nil {
+					panic(ioerr)
 				}
-				body.Write(hookJson)
+				body.Write(hookJSON)
 
 				_, build, err := github.Hook(r)
 				g.Assert(err).Equal(nil)

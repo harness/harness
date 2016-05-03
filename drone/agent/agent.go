@@ -168,7 +168,7 @@ func start(c *cli.Context) {
 			for {
 				if err := r.run(); err != nil {
 					dur := c.Duration("backoff")
-					logrus.Warnf("Attempting to reconnect in %v", dur)
+					logrus.Warnf("reconnect in %v. %s", dur, err.Error())
 					time.Sleep(dur)
 				}
 			}
