@@ -3,19 +3,66 @@
 // the ansi terminal output.
 
 #output
-	background: #0d1926;
-	color: #d9e6f2;
+	color: #f1f1ee;
 	margin-right: 15px;
-	font-size: 13px;
-	color: #eff1f5;
+	font-size: 12px;
 	border-radius: 2px;
-	background: #2b303b;
+	background: #222;
 	white-space: pre-wrap;
 	word-wrap: break-word;
 	box-sizing: border-box;
-	padding: 35px 40px;
-	font-family: "Roboto Mono";
+	padding: 35px 0;
+	font-family: Monaco, monospace;
 	min-height: calc(100vh - 205px);
+	counter-reset: line;
+
+	.fold
+		position: relative;
+		.line:first-of-type
+			background: rgb(43, 43, 43);
+		.fold-handle
+			height: 18px;
+			width: 30px;
+			position: absolute;
+			cursor: pointer;
+			&:after
+				position: absolute;
+				left: 0;
+				content: "\25BC";
+				color: #666;
+				padding-left: 10px;
+				font-size: 7px;
+				line-height: 18px;
+		&.closed
+			.fold-handle:after
+				content: "\25B6";
+			.line:not(:first-of-type)
+				visibility: hidden;
+				height: 0;
+		&.open
+			min-height: 24px;
+			.fold-handle:after
+				content: "\25BC" !important;
+			.line
+				visibility: visible !important;
+				height: auto !important;
+
+
+	.line
+		padding-left: 65px;
+		padding-right: 15px;
+		margin: 0;
+		&:hover
+			background: #444 !important;
+		&:before
+			counter-increment: line;
+			content: counter(line);
+			color: #666;
+			width: 65px;
+			margin-left: -65px;
+			padding-right: 10px;
+			text-align: right;
+			display: inline-block;
 
 #follow
 	position: absolute;
@@ -49,7 +96,7 @@
 	dd
 		color: #747C84;
 		text-decoration: none;
-		font-style: normal;	
+		font-style: normal;
 
 .build-summary > div
 	h3
@@ -155,7 +202,7 @@
 	border: none;
 	outline: none;
 	display: none;
- 
+
 .tail i
 	color: rgba(255,255,255,0.5);
 	line-height: 38px;

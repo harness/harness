@@ -69,7 +69,7 @@ function JobViewModel(repo, build, job, status) {
 		});
 	})
 
-			
+
 	Subscribe(repo, function(data){
 		if (!data.jobs) {
 			return;
@@ -134,17 +134,22 @@ function JobViewModel(repo, build, job, status) {
 	}.bind(this));
 }
 
-
-
-
 function Logs(repo, build, job) {
 
 	$.get( "/api/repos/"+repo+"/logs/"+build+"/"+job, function( data ) {
 
-		var convert = new Filter({stream: false, newline: false});
-		var escaped = convert.toHtml(escapeHTML(data));
+		var filter = new Filter();
 
-		$( "#output" ).html( escaped );
+		var output = document.getElementById('output');
+		filter.append(output, data);
+		var folders = output.getElementsByClassName('fold');
+		folders = [].slice.call(folders);
+
+		if (folders.length) {
+			folders.forEach(function(folder) {
+				folder.classList.add('closed');
+			});
+		}
 	});
 }
 
@@ -154,7 +159,7 @@ function Stream(repo, build, job, _callback) {
 	var events = new EventSource("/api/stream/" + repo + "/" + build + "/" + job, {withCredentials: true});
 	events.onmessage = function (event) {
 		if (callback !== undefined) {
-			callback(event.data);
+			callback(event);
 		}
 	};
 	events.onerror = function (event) {

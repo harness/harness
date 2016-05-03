@@ -22,3 +22,4 @@ vendor/github.com/bugagazavr
 
 # IDE/Editor stuff
 .idea
+secrets.yml

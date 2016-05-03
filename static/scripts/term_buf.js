@@ -4,8 +4,13 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 
 (function () {
 	Drone.Buffer = function() {
-		this.lineFormatter = new Filter({stream: true, newline: false});
-	}
+		this.filter = new Filter();
+		// this.lineFormatter = {
+		// 	toHtml: function(text) {
+		// 		return this.filter.append(text);
+		// 	}
+		// };
+	};
 
 	Drone.Buffer.prototype = {
 		lineBuffer: "",
@@ -29,8 +34,19 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 
 		update: function() {
 			if(this.lineBuffer.length > 0) {
-				this.el.innerHTML += this.lineFormatter.toHtml(escapeHTML(this.lineBuffer));
+				this.filter.append(this.el, escapeHTML(this.lineBuffer));
 				this.lineBuffer = '';
+				var folders = this.el.getElementsByClassName('fold');
+				folders = [].slice.call(folders);
+
+				if (folders.length) {
+					folders.pop();
+					folders.forEach(function(folder) {
+						if (!folder.classList.contains('closed')) {
+							folder.classList.add('closed');
+						}
+					});
+				}
 
 				if (this.autoFollow) {
 					window.scrollTo(0, document.body.scrollHeight);
@@ -44,7 +60,12 @@ if(typeof(Drone) === 'undefined') { Drone = {}; }
 			}
 		},
 
-		write: function(data) {
+		write: function(event) {
+			// console.log(event);
+			var data = event;
+			if (event.data !== undefined) {
+				data = event.data;
+			}
 			this.lineBuffer += data;
 		}
 	};

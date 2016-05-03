@@ -132,7 +132,7 @@ input[type=range]:focus::-ms-fill-upper { background: #367ebd; }
   30% { transform: translate(5px, 0); }
   36%, 100% { transform: translate(0, 0); } }
 
-#output { background: #0d1926; color: #d9e6f2; margin-right: 15px; font-size: 13px; color: #eff1f5; border-radius: 2px; background: #2b303b; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; padding: 35px 40px; font-family: "Roboto Mono"; min-height: calc(100vh - 205px); }
+#output { background: #222; color: #d9e6f2; margin-right: 15px; font-size: 12px; color: #eff1f5; border-radius: 2px; background: #2b303b; white-space: pre-wrap; word-wrap: break-word; box-sizing: border-box; padding: 35px 40px; font-family: Monaco, monospace; min-height: calc(100vh - 205px); }
 
 #follow { position: absolute; }
 

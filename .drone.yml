@@ -31,15 +31,11 @@ compose:
 
 publish:
   docker:
-    username: drone
-    password: $$DOCKER_PASS
-    email: $$DOCKER_EMAIL
-    repo: drone/drone
+    username: $$CI_HUB_LOGIN
+    password: $$CI_HUB_PASSWORD
+    email: $$CI_HUB_EMAIL
+    repo: worldia/drone
     tag: [ "latest", "0.4.2" ]
     when:
-      repo: drone/drone
+      repo: cdaguerre/drone
       branch: master
-
-notify:
-  gitter:
-    webhook: https://webhooks.gitter.im/e/$$GITTER_KEY

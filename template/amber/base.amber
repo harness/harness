@@ -13,6 +13,7 @@ html
         link[rel="stylesheet"][href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.min.css"]
         link[rel="stylesheet"][href="//cdnjs.cloudflare.com/ajax/libs/octicons/3.1.0/octicons.min.css"]
         link[rel="stylesheet"][href="/static/styles_gen/style.css"]
+        link[rel="stylesheet"][href="/static/styles_gen/terminal.css"]
 
         if Csrf
             meta[name="_csrf"][content=Csrf]

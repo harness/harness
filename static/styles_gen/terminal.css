@@ -1,0 +1,34 @@
+// Tomorrow Night Ansi Colour Scheme
+.ansi-black-fg { color: #3A3A3A; }
+.ansi-red-fg { color: #DD948E; }
+.ansi-green-fg { color: #B6D1AA; }
+.ansi-yellow-fg { color: #F3D57C; }
+.ansi-blue-fg { color: #8AA9D5; }
+.ansi-magenta-fg { color: #CBAFD5; }
+.ansi-cyan-fg { color: #9AD1D4; }
+.ansi-white-fg { color: #EFEFEF; }
+.ansi-bright-black-fg { color: #5E5D5E; }
+.ansi-bright-red-fg { color: #E69B94; }
+.ansi-bright-green-fg { color: #D1F0C3; }
+.ansi-bright-yellow-fg { color: #F4D799; }
+.ansi-bright-blue-fg { color: #A6CBFE; }
+.ansi-bright-magenta-fg { color: #E7C7F2; }
+.ansi-bright-cyan-fg { color: #B0F0F5; }
+.ansi-bright-white-fg { color: #FFF; }
+
+.ansi-black-bg { background-color: #3A3A3A; }
+.ansi-red-bg { background-color: #DD948E; }
+.ansi-green-bg { background-color: #B6D1AA; }
+.ansi-yellow-bg { background-color: #F3D57C; }
+.ansi-blue-bg { background-color: #8AA9D5; }
+.ansi-magenta-bg { background-color: #CBAFD5; }
+.ansi-cyan-bg { background-color: #9AD1D4; }
+.ansi-white-bg { background-color: #EFEFEF; }
+.ansi-bright-black-bg { background-color: #5E5D5E; }
+.ansi-bright-red-bg { background-color: #E69B94; }
+.ansi-bright-green-bg { background-color: #D1F0C3; }
+.ansi-bright-yellow-bg { background-color: #F4D799; }
+.ansi-bright-blue-bg { background-color: #A6CBFE; }
+.ansi-bright-magenta-bg { background-color: #E7C7F2; }
+.ansi-bright-cyan-bg { background-color: #B0F0F5; }
+.ansi-bright-white-bg { background-color: #FFF; }
