@@ -79,7 +79,7 @@ Filter = (function() {
     };
 
     Filter.prototype.getPreviousLine = function(element) {
-        return this.getCurrentFold().querySelector('span.ligne:last-child');
+        return this.getCurrentFold().querySelector('p.line:last-child');
     };
 
     Filter.prototype.createsFold = function(line) {
