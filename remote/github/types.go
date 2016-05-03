@@ -1,8 +1,5 @@
 package github
 
-type postHook struct {
-}
-
 type pushHook struct {
 	Ref     string `json:"ref"`
 	Deleted bool   `json:"deleted"`
@@ -54,7 +51,7 @@ type deployHook struct {
 		Ref  string `json:"ref"`
 		Task string `json:"task"`
 		Env  string `json:"environment"`
-		Url  string `json:"url"`
+		URL  string `json:"url"`
 		Desc string `json:"description"`
 	} `json:"deployment"`
 
@@ -78,9 +75,8 @@ type deployHook struct {
 		DefaultBranch string `json:"default_branch"`
 	} `json:"repository"`
 
-	// these are legacy fields that have been moded
-	// to the deployment section. They are here for
-	// older versions of GitHub and will be removed
+	// these are legacy fields that have been added to the deployment section.
+	// They are here for older versions of GitHub and will be removed.
 
 	ID   int64  `json:"id"`
 	Sha  string `json:"sha"`

@@ -90,13 +90,15 @@ func setupGitlab(c *cli.Context) (remote.Remote, error) {
 
 // helper function to setup the GitHub remote from the CLI arguments.
 func setupGithub(c *cli.Context) (remote.Remote, error) {
-	return github.New(
-		c.String("github-server"),
-		c.String("github-client"),
-		c.String("github-sercret"),
-		c.StringSlice("github-scope"),
-		c.Bool("github-private-mode"),
-		c.Bool("github-skip-verify"),
-		c.BoolT("github-merge-ref"),
-	)
+	return github.New(github.Opts{
+		URL:         c.String("github-server"),
+		Client:      c.String("github-client"),
+		Secret:      c.String("github-sercret"),
+		Scopes:      c.StringSlice("github-scope"),
+		Username:    c.String("github-git-username"),
+		Password:    c.String("github-git-password"),
+		PrivateMode: c.Bool("github-private-mode"),
+		SkipVerify:  c.Bool("github-skip-verify"),
+		MergeRef:    c.BoolT("github-merge-ref"),
+	})
 }
