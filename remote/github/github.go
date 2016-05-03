@@ -2,7 +2,6 @@ package github
 
 import (
 	"crypto/tls"
-	"encoding/base32"
 	"fmt"
 	"net"
 	"net/http"
@@ -14,9 +13,9 @@ import (
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
-	"github.com/gorilla/securecookie"
 
 	"github.com/google/go-github/github"
+	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 )
 
@@ -89,30 +88,38 @@ func (c *client) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 
 	code := req.FormValue("code")
 	if len(code) == 0 {
-		rand := base32.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(32))
-		http.Redirect(res, req, config.AuthCodeURL(rand), http.StatusSeeOther)
+		// TODO(bradrydzewski) we really should be using a random value here and
+		// storing in a cookie for verification in the next stage of the workflow.
+
+		http.Redirect(res, req, config.AuthCodeURL("drone"), http.StatusSeeOther)
 		return nil, nil
 	}
 
-	// TODO(bradrydzewski) what is the best way to provide a SkipVerify flag
-	// when exchanging the token?
-
-	token, err := config.Exchange(oauth2.NoContext, code)
+	token, err := config.Exchange(c.newContext(), code)
 	if err != nil {
 		return nil, err
 	}
 
 	client := c.newClientToken(token.AccessToken)
-	useremail, err := GetUserEmail(client)
+	user, _, err := client.Users.Get("")
 	if err != nil {
 		return nil, err
 	}
 
+	emails, _, err := client.Users.ListEmails(nil)
+	if err != nil {
+		return nil, err
+	}
+	email := matchingEmail(emails, c.API)
+	if email == nil {
+		return nil, fmt.Errorf("No verified Email address for GitHub account")
+	}
+
 	return &model.User{
-		Login:  *useremail.Login,
-		Email:  *useremail.Email,
+		Login:  *user.Login,
+		Email:  *email.Email,
 		Token:  token.AccessToken,
-		Avatar: *useremail.AvatarURL,
+		Avatar: *user.AvatarURL,
 	}, nil
 }
 
@@ -217,7 +224,39 @@ func (c *client) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
 	}, nil
 }
 
-// helper function to return the bitbucket oauth2 config
+// Deactivate deactives the repository be removing registered push hooks from
+// the GitHub repository.
+func (c *client) Deactivate(u *model.User, r *model.Repo, link string) error {
+	client := c.newClientToken(u.Token)
+	hooks, _, err := client.Repositories.ListHooks(r.Owner, r.Name, nil)
+	if err != nil {
+		return err
+	}
+	match := matchingHooks(hooks, link)
+	if match == nil {
+		return nil
+	}
+	_, err = client.Repositories.DeleteHook(r.Owner, r.Name, *match.ID)
+	return err
+}
+
+// helper function to return the GitHub oauth2 context using an HTTPClient that
+// disables TLS verification if disabled in the remote settings.
+func (c *client) newContext() context.Context {
+	if !c.SkipVerify {
+		return oauth2.NoContext
+	}
+	return context.WithValue(nil, oauth2.HTTPClient, &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	})
+}
+
+// helper function to return the GitHub oauth2 config
 func (c *client) newConfig(redirect string) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     c.Client,
@@ -230,7 +269,7 @@ func (c *client) newConfig(redirect string) *oauth2.Config {
 	}
 }
 
-// helper function to return the bitbucket oauth2 client
+// helper function to return the GitHub oauth2 client
 func (c *client) newClientToken(token string) *github.Client {
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
@@ -247,6 +286,50 @@ func (c *client) newClientToken(token string) *github.Client {
 	github := github.NewClient(tc)
 	github.BaseURL, _ = url.Parse(c.API)
 	return github
+}
+
+// helper function to return matching user email.
+func matchingEmail(emails []github.UserEmail, rawurl string) *github.UserEmail {
+	for _, email := range emails {
+		if email.Email == nil || email.Primary == nil || email.Verified == nil {
+			continue
+		}
+		if *email.Primary && *email.Verified {
+			return &email
+		}
+	}
+	// github enterprise does not support verified email addresses so instead
+	// we'll return the first email address in the list.
+	if len(emails) != 0 && rawurl != defaultAPI {
+		return &emails[0]
+	}
+	return nil
+}
+
+// helper function to return matching hook.
+func matchingHooks(hooks []github.Hook, rawurl string) *github.Hook {
+	link, err := url.Parse(rawurl)
+	if err != nil {
+		return nil
+	}
+	for _, hook := range hooks {
+		if hook.ID == nil {
+			continue
+		}
+		v, ok := hook.Config["url"]
+		if !ok {
+			continue
+		}
+		s, ok := v.(string)
+		if !ok {
+			continue
+		}
+		hookurl, err := url.Parse(s)
+		if err == nil && hookurl.Host == link.Host {
+			return &hook
+		}
+	}
+	return nil
 }
 
 //
@@ -297,29 +380,28 @@ func deploymentStatus(client *github.Client, r *model.Repo, b *model.Build, link
 // Activate activates a repository by creating the post-commit hook and
 // adding the SSH deploy key, if applicable.
 func (c *client) Activate(u *model.User, r *model.Repo, link string) error {
+	if err := c.Deactivate(u, r, link); err != nil {
+		return err
+	}
 	client := c.newClientToken(u.Token)
-	_, err := CreateUpdateHook(client, r.Owner, r.Name, link)
+	hook := &github.Hook{
+		Name: github.String("web"),
+		Events: []string{
+			"push",
+			"pull_request",
+			"deployment",
+		},
+		Config: map[string]interface{}{
+			"url":          link,
+			"content_type": "form",
+		},
+	}
+	_, _, err := client.Repositories.CreateHook(r.Owner, r.Name, hook)
 	return err
-}
-
-// Deactivate removes a repository by removing all the post-commit hooks
-// which are equal to link and removing the SSH deploy key.
-func (c *client) Deactivate(u *model.User, r *model.Repo, link string) error {
-	client := c.newClientToken(u.Token)
-	return DeleteHook(client, r.Owner, r.Name, link)
 }
 
 // Hook parses the post-commit hook from the Request body
 // and returns the required data in a standard format.
 func (c *client) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
-	switch r.Header.Get("X-Github-Event") {
-	case "pull_request":
-		return c.pullRequest(r)
-	case "push":
-		return c.push(r)
-	case "deployment":
-		return c.deployment(r)
-	default:
-		return nil, nil, nil
-	}
+	return parseHook(r, c.MergeRef)
 }

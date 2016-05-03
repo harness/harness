@@ -1,7 +1,8 @@
 package github
 
-type pushHook struct {
+type webhook struct {
 	Ref     string `json:"ref"`
+	Action  string `json:"action"`
 	Deleted bool   `json:"deleted"`
 
 	Head struct {
@@ -28,6 +29,7 @@ type pushHook struct {
 		Avatar string `json:"avatar_url"`
 	} `json:"sender"`
 
+	// repository details
 	Repo struct {
 		Owner struct {
 			Login string `json:"login"`
@@ -42,9 +44,8 @@ type pushHook struct {
 		CloneURL      string `json:"clone_url"`
 		DefaultBranch string `json:"default_branch"`
 	} `json:"repository"`
-}
 
-type deployHook struct {
+	// deployment hook details
 	Deployment struct {
 		ID   int64  `json:"id"`
 		Sha  string `json:"sha"`
@@ -55,33 +56,21 @@ type deployHook struct {
 		Desc string `json:"description"`
 	} `json:"deployment"`
 
-	Sender struct {
-		Login  string `json:"login"`
-		Avatar string `json:"avatar_url"`
-	} `json:"sender"`
+	// pull request details
+	PullRequest struct {
+		Number  int    `json:"number"`
+		State   string `json:"state"`
+		Title   string `json:"title"`
+		HTMLURL string `json:"html_url"`
 
-	Repo struct {
-		Owner struct {
-			Login string `json:"login"`
-			Name  string `json:"name"`
-		} `json:"owner"`
+		User struct {
+			Login  string `json:"login"`
+			Avatar string `json:"avatar_url"`
+		} `json:"user"`
 
-		Name          string `json:"name"`
-		FullName      string `json:"full_name"`
-		Language      string `json:"language"`
-		Private       bool   `json:"private"`
-		HTMLURL       string `json:"html_url"`
-		CloneURL      string `json:"clone_url"`
-		DefaultBranch string `json:"default_branch"`
-	} `json:"repository"`
-
-	// these are legacy fields that have been added to the deployment section.
-	// They are here for older versions of GitHub and will be removed.
-
-	ID   int64  `json:"id"`
-	Sha  string `json:"sha"`
-	Ref  string `json:"ref"`
-	Name string `json:"name"`
-	Env  string `json:"environment"`
-	Desc string `json:"description"`
+		Head struct {
+			SHA string
+			Ref string
+		} `json:"head"`
+	} `json:"pull_request"`
 }
