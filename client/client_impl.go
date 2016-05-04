@@ -245,7 +245,7 @@ func (c *client) open(rawurl, method string, in, out interface{}) (io.ReadCloser
 	if resp.StatusCode > http.StatusPartialContent {
 		defer resp.Body.Close()
 		out, _ := ioutil.ReadAll(resp.Body)
-		return nil, fmt.Errorf(string(out))
+		return nil, fmt.Errorf("client error %d: %s", resp.StatusCode, string(out))
 	}
 	return resp.Body, nil
 }
