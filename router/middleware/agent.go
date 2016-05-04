@@ -18,7 +18,7 @@ func Agents(cli *cli.Context) gin.HandlerFunc {
 		logrus.Fatalf("failed to generate token from DRONE_AGENT_SECRET")
 	}
 
-	t := token.New(secret, "")
+	t := token.New(token.AgentToken, secret)
 	s, err := t.Sign(secret)
 	if err != nil {
 		logrus.Fatalf("failed to generate token from DRONE_AGENT_SECRET. %s", err)

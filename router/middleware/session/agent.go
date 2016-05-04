@@ -18,8 +18,10 @@ func AuthorizeAgent(c *gin.Context) {
 	})
 	if err != nil {
 		c.String(500, "invalid or empty token. %s", err)
+		c.Abort()
 	} else if parsed.Kind != token.AgentToken {
 		c.String(403, "invalid token. please use an agent token")
+		c.Abort()
 	} else {
 		c.Next()
 	}

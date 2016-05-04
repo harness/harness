@@ -53,6 +53,12 @@ var AgentCmd = cli.Command{
 			Value:  "amd64",
 		},
 		cli.StringFlag{
+			EnvVar: "DOCKER_STORAGE_DRIVER",
+			Name:   "docker-storage-driver",
+			Usage:  "docker storage driver",
+			Value:  "overlay",
+		},
+		cli.StringFlag{
 			EnvVar: "DRONE_SERVER",
 			Name:   "drone-server",
 			Usage:  "drone server address",

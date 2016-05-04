@@ -17,6 +17,7 @@ import (
 	"github.com/drone/drone/engine/runner/docker"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/queue"
+	"github.com/drone/drone/version"
 	"github.com/drone/drone/yaml/expander"
 
 	"github.com/samalba/dockerclient"
@@ -255,6 +256,7 @@ func toEnv(w *queue.Work) map[string]string {
 		"DRONE_YAML_SIGNED":          fmt.Sprintf("%v", w.Signed),
 		"DRONE_BRANCH":               w.Build.Branch,
 		"DRONE_COMMIT":               w.Build.Commit,
+		"DRONE_VERSION":              version.Version,
 	}
 
 	if w.Build.Event == model.EventTag {
