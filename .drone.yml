@@ -26,6 +26,7 @@ script:
   docker:
     repo: drone/drone
     tag: [ "0.5.0" ]
+    storage_driver: overlay
     when:
       branch: master
       event: push
