@@ -7,6 +7,7 @@ script:
     image: drone/golang:1.5
     environment:
       - GO15VENDOREXPERIMENT=1
+      - GOPATH=/drone
     commands:
       - make deps gen
       - make test test_postgres test_mysql
@@ -14,6 +15,7 @@ script:
     image: drone/golang:1.5
     environment:
       - GO15VENDOREXPERIMENT=1
+      - GOPATH=/drone
     commands:
       - make build
     when:
