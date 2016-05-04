@@ -1,7 +1,8 @@
-clone:
-  path: github.com/drone/drone
+workspace:
+  base: /drone
+  path: src/github.com/drone/drone
 
-build:
+script:
   test:
     image: drone/golang:1.5
     environment:
@@ -18,7 +19,14 @@ build:
     when:
       event: push
 
-compose:
+  docker:
+    repo: drone/drone
+    tag: [ "0.5.0" ]
+    when:
+      branch: master
+      event: push
+
+services:
   postgres:
     image: postgres:9.4.5
     environment:
@@ -28,18 +36,3 @@ compose:
     environment:
       - MYSQL_DATABASE=test
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-
-publish:
-  docker:
-    username: drone
-    password: $$DOCKER_PASS
-    email: $$DOCKER_EMAIL
-    repo: drone/drone
-    tag: [ "0.5.0" ]
-    when:
-      repo: drone/drone
-      branch: master
-
-notify:
-  gitter:
-    webhook: https://webhooks.gitter.im/e/$$GITTER_KEY
