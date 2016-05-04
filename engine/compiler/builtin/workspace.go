@@ -45,6 +45,7 @@ func (v *workspaceOp) VisitContainer(node *parse.ContainerNode) error {
 		// container should launch in the workspace
 		return nil
 	}
-	node.Container.WorkingDir = node.Root().Path
+	root := node.Root()
+	node.Container.WorkingDir = root.Path
 	return nil
 }

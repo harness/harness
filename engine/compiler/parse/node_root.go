@@ -141,7 +141,7 @@ type root struct {
 	Volumes  volumeList
 	Networks networkList
 	Services containerList
-	Script   containerList
+	Script   containerList `yaml:"pipeline"`
 	Cache    container
 	Clone    container
 	Build    build
