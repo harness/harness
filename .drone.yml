@@ -9,6 +9,7 @@ script:
       - GO15VENDOREXPERIMENT=1
       - GOPATH=/drone
     commands:
+      - export PATH=$PATH:$GOPATH/bin
       - make deps gen
       - make test test_postgres test_mysql
   dist:
@@ -17,6 +18,7 @@ script:
       - GO15VENDOREXPERIMENT=1
       - GOPATH=/drone
     commands:
+      - export PATH=$PATH:$GOPATH/bin
       - make build
     when:
       event: push
