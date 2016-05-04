@@ -64,7 +64,7 @@ clone:
 cache:
   mount: node_modules
 
-script:
+pipeline:
   test:
     image: golang
     commands:
