@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/codegangsta/cli"
-	"github.com/drone/drone-go/drone"
+	"github.com/drone/drone/model"
 )
 
 var deployCmd = cli.Command{
@@ -48,7 +48,7 @@ func deploy(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if build.Event == drone.EventPull {
+	if build.Event == model.EventPull {
 		return fmt.Errorf("Cannot deploy a pull request")
 	}
 	env := c.Args().Get(2)
