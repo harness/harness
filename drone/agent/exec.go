@@ -90,12 +90,7 @@ func (r *pipeline) run() error {
 	}
 
 	trans := []compiler.Transform{
-		builtin.NewCloneOp("git", true),
-		builtin.NewCacheOp(
-			"plugins/cache:latest",
-			"/var/lib/drone/cache/"+w.Repo.FullName,
-			false,
-		),
+		builtin.NewCloneOp(w.Repo.Kind, true),
 		builtin.NewSecretOp(w.Build.Event, secrets),
 		builtin.NewNormalizeOp(r.config.namespace),
 		builtin.NewWorkspaceOp("/drone", "/drone/src/github.com/"+w.Repo.FullName),

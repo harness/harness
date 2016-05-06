@@ -74,6 +74,164 @@ func NewClientTokenTLS(uri, token string, c *tls.Config) Client {
 	return &client{auther, uri}
 }
 
+// Self returns the currently authenticated user.
+func (c *client) Self() (*model.User, error) {
+	out := new(model.User)
+	uri := fmt.Sprintf(pathSelf, c.base)
+	err := c.get(uri, out)
+	return out, err
+}
+
+// User returns a user by login.
+func (c *client) User(login string) (*model.User, error) {
+	out := new(model.User)
+	uri := fmt.Sprintf(pathUser, c.base, login)
+	err := c.get(uri, out)
+	return out, err
+}
+
+// UserList returns a list of all registered users.
+func (c *client) UserList() ([]*model.User, error) {
+	var out []*model.User
+	uri := fmt.Sprintf(pathUsers, c.base)
+	err := c.get(uri, &out)
+	return out, err
+}
+
+// UserPost creates a new user account.
+func (c *client) UserPost(in *model.User) (*model.User, error) {
+	out := new(model.User)
+	uri := fmt.Sprintf(pathUsers, c.base)
+	err := c.post(uri, in, out)
+	return out, err
+}
+
+// UserPatch updates a user account.
+func (c *client) UserPatch(in *model.User) (*model.User, error) {
+	out := new(model.User)
+	uri := fmt.Sprintf(pathUser, c.base, in.Login)
+	err := c.patch(uri, in, out)
+	return out, err
+}
+
+// UserDel deletes a user account.
+func (c *client) UserDel(login string) error {
+	uri := fmt.Sprintf(pathUser, c.base, login)
+	err := c.delete(uri)
+	return err
+}
+
+// Repo returns a repository by name.
+func (c *client) Repo(owner string, name string) (*model.Repo, error) {
+	out := new(model.Repo)
+	uri := fmt.Sprintf(pathRepo, c.base, owner, name)
+	err := c.get(uri, out)
+	return out, err
+}
+
+// RepoList returns a list of all repositories to which
+// the user has explicit access in the host system.
+func (c *client) RepoList() ([]*model.Repo, error) {
+	var out []*model.Repo
+	uri := fmt.Sprintf(pathRepos, c.base)
+	err := c.get(uri, &out)
+	return out, err
+}
+
+// RepoPost activates a repository.
+func (c *client) RepoPost(owner string, name string) (*model.Repo, error) {
+	out := new(model.Repo)
+	uri := fmt.Sprintf(pathRepo, c.base, owner, name)
+	err := c.post(uri, nil, out)
+	return out, err
+}
+
+// RepoPatch updates a repository.
+func (c *client) RepoPatch(in *model.Repo) (*model.Repo, error) {
+	out := new(model.Repo)
+	uri := fmt.Sprintf(pathRepo, c.base, in.Owner, in.Name)
+	err := c.patch(uri, in, out)
+	return out, err
+}
+
+// RepoDel deletes a repository.
+func (c *client) RepoDel(owner, name string) error {
+	uri := fmt.Sprintf(pathRepo, c.base, owner, name)
+	err := c.delete(uri)
+	return err
+}
+
+// Build returns a repository build by number.
+func (c *client) Build(owner, name string, num int) (*model.Build, error) {
+	out := new(model.Build)
+	uri := fmt.Sprintf(pathBuild, c.base, owner, name, num)
+	err := c.get(uri, out)
+	return out, err
+}
+
+// Build returns the latest repository build by branch.
+func (c *client) BuildLast(owner, name, branch string) (*model.Build, error) {
+	out := new(model.Build)
+	uri := fmt.Sprintf(pathBuild, c.base, owner, name, "latest")
+	if len(branch) != 0 {
+		uri += "?branch=" + branch
+	}
+	err := c.get(uri, out)
+	return out, err
+}
+
+// BuildList returns a list of recent builds for the
+// the specified repository.
+func (c *client) BuildList(owner, name string) ([]*model.Build, error) {
+	var out []*model.Build
+	uri := fmt.Sprintf(pathBuilds, c.base, owner, name)
+	err := c.get(uri, &out)
+	return out, err
+}
+
+// BuildStart re-starts a stopped build.
+func (c *client) BuildStart(owner, name string, num int) (*model.Build, error) {
+	out := new(model.Build)
+	uri := fmt.Sprintf(pathBuild, c.base, owner, name, num)
+	err := c.post(uri, nil, out)
+	return out, err
+}
+
+// BuildStop cancels the running job.
+func (c *client) BuildStop(owner, name string, num, job int) error {
+	uri := fmt.Sprintf(pathJob, c.base, owner, name, num, job)
+	err := c.delete(uri)
+	return err
+}
+
+// BuildFork re-starts a stopped build with a new build number,
+// preserving the prior history.
+func (c *client) BuildFork(owner, name string, num int) (*model.Build, error) {
+	out := new(model.Build)
+	uri := fmt.Sprintf(pathBuild+"?fork=true", c.base, owner, name, num)
+	err := c.post(uri, nil, out)
+	return out, err
+}
+
+// BuildLogs returns the build logs for the specified job.
+func (c *client) BuildLogs(owner, name string, num, job int) (io.ReadCloser, error) {
+	uri := fmt.Sprintf(pathLog, c.base, owner, name, num, job)
+	return stream(c.client, uri, "GET", nil, nil)
+}
+
+// Deploy triggers a deployment for an existing build using the
+// specified target environment.
+func (c *client) Deploy(owner, name string, num int, env string) (*model.Build, error) {
+	out := new(model.Build)
+	val := url.Values{}
+	val.Set("fork", "true")
+	val.Set("event", "deployment")
+	val.Set("deploy_to", env)
+	uri := fmt.Sprintf(pathBuild+"?"+val.Encode(), c.base, owner, name, num)
+	err := c.post(uri, nil, out)
+	return out, err
+}
+
 // SecretPost create or updates a repository secret.
 func (c *client) SecretPost(owner, name string, secret *model.Secret) error {
 	uri := fmt.Sprintf(pathSecrets, c.base, owner, name)

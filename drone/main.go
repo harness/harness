@@ -21,22 +21,25 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:   "t, token",
-			Value:  "",
 			Usage:  "server auth token",
 			EnvVar: "DRONE_TOKEN",
 		},
 		cli.StringFlag{
 			Name:   "s, server",
-			Value:  "",
 			Usage:  "server location",
 			EnvVar: "DRONE_SERVER",
 		},
 	}
 	app.Commands = []cli.Command{
 		agent.AgentCmd,
-		DaemonCmd,
-		SignCmd,
-		SecretCmd,
+		buildCmd,
+		deployCmd,
+		infoCmd,
+		secretCmd,
+		serverCmd,
+		signCmd,
+		repoCmd,
+		userCmd,
 	}
 
 	app.Run(os.Args)

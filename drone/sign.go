@@ -7,8 +7,7 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-// SignCmd is the exported command for signing the yaml.
-var SignCmd = cli.Command{
+var signCmd = cli.Command{
 	Name:  "sign",
 	Usage: "creates a secure yaml file",
 	Action: func(c *cli.Context) {

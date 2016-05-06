@@ -14,12 +14,11 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-// DaemonCmd is the exported command for starting the drone server daemon.
-var DaemonCmd = cli.Command{
-	Name:  "daemon",
+var serverCmd = cli.Command{
+	Name:  "server",
 	Usage: "starts the drone server daemon",
 	Action: func(c *cli.Context) {
-		if err := start(c); err != nil {
+		if err := server(c); err != nil {
 			logrus.Fatal(err)
 		}
 	},
@@ -275,7 +274,7 @@ var DaemonCmd = cli.Command{
 	},
 }
 
-func start(c *cli.Context) error {
+func server(c *cli.Context) error {
 
 	if c.Bool("agreement.ack") == false || c.Bool("agreement.fix") == false {
 		fmt.Println(agreement)
