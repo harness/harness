@@ -2,7 +2,7 @@ workspace:
   base: /drone
   path: src/github.com/drone/drone
 
-script:
+pipeline:
   test:
     image: drone/golang:1.5
     environment:
