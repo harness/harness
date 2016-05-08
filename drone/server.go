@@ -80,7 +80,7 @@ var serverCmd = cli.Command{
 			EnvVar: "DRONE_DATABASE_DRIVER,DATABASE_DRIVER",
 			Name:   "driver",
 			Usage:  "database driver",
-			Value:  "sqite3",
+			Value:  "sqlite3",
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_DATABASE_DATASOURCE,DATABASE_CONFIG",
