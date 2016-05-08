@@ -52,15 +52,6 @@ func (c *Compiler) Compile(in []byte) (*runner.Spec, error) {
 		}
 	}
 
-	// cache section
-	if root.Cache != nil {
-		node, ok := root.Cache.(*yaml.ContainerNode)
-		if ok && !node.Disabled {
-			config.Containers = append(config.Containers, &node.Container)
-			tree.Append(parse.NewRunNode().SetName(node.Container.Name))
-		}
-	}
-
 	// clone section
 	if root.Clone != nil {
 		node, ok := root.Clone.(*yaml.ContainerNode)

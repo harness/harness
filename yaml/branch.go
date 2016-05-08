@@ -3,12 +3,14 @@ package yaml
 import (
 	"path/filepath"
 
+	"github.com/drone/drone/yaml/types"
+
 	"gopkg.in/yaml.v2"
 )
 
 type Branch struct {
-	Include []string `yaml:"include"`
-	Exclude []string `yaml:"exclude"`
+	Include []string
+	Exclude []string
 }
 
 // ParseBranch parses the branch section of the Yaml document.
@@ -21,16 +23,16 @@ func ParseBranchString(in string) *Branch {
 	return ParseBranch([]byte(in))
 }
 
-// Matches returns true if the branch matches the include patterns and
-// does not match any of the exclude patterns.
+// Matches returns true if the branch matches the include patterns and does not
+// match any of the exclude patterns.
 func (b *Branch) Matches(branch string) bool {
 	// when no includes or excludes automatically match
 	if len(b.Include) == 0 && len(b.Exclude) == 0 {
 		return true
 	}
 
-	// exclusions are processed first. So we can include everything and
-	// then selectively exclude certain sub-patterns.
+	// exclusions are processed first. So we can include everything and then
+	// selectively exclude certain sub-patterns.
 	for _, pattern := range b.Exclude {
 		if pattern == branch {
 			return false
@@ -55,13 +57,13 @@ func (b *Branch) Matches(branch string) bool {
 func parseBranch(in []byte) *Branch {
 	out1 := struct {
 		Branch struct {
-			Include stringOrSlice `yaml:"include"`
-			Exclude stringOrSlice `yaml:"exclude"`
+			Include types.StringOrSlice `yaml:"include"`
+			Exclude types.StringOrSlice `yaml:"exclude"`
 		} `yaml:"branches"`
 	}{}
 
 	out2 := struct {
-		Include stringOrSlice `yaml:"branches"`
+		Include types.StringOrSlice `yaml:"branches"`
 	}{}
 
 	yaml.Unmarshal(in, &out1)

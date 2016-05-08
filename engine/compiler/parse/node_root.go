@@ -11,7 +11,6 @@ type RootNode struct {
 
 	Pod      Node
 	Build    Node
-	Cache    Node
 	Clone    Node
 	Script   []Node
 	Volumes  []Node
@@ -110,7 +109,6 @@ func (n *RootNode) Walk(fn WalkFunc) (err error) {
 	var nodes []Node
 	nodes = append(nodes, n)
 	nodes = append(nodes, n.Build)
-	nodes = append(nodes, n.Cache)
 	nodes = append(nodes, n.Clone)
 	nodes = append(nodes, n.Script...)
 	nodes = append(nodes, n.Volumes...)

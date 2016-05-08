@@ -22,7 +22,6 @@ func TestParse(t *testing.T) {
 				g.Assert(out.Path).Equal("src/github.com/octocat/hello-world")
 				g.Assert(out.Build.(*BuildNode).Context).Equal(".")
 				g.Assert(out.Build.(*BuildNode).Dockerfile).Equal("Dockerfile")
-				g.Assert(out.Cache.(*ContainerNode).Vargs["mount"]).Equal("node_modules")
 				g.Assert(out.Clone.(*ContainerNode).Container.Image).Equal("git")
 				g.Assert(out.Clone.(*ContainerNode).Vargs["depth"]).Equal(1)
 				g.Assert(out.Volumes[0].(*VolumeNode).Name).Equal("custom")

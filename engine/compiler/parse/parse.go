@@ -45,16 +45,6 @@ func Parse(in []byte) (*RootNode, error) {
 		}
 	}
 
-	// add the cache section
-	{
-		cc := root.NewCacheNode()
-		cc.Container = out.Cache.ToContainer()
-		cc.Conditions = out.Cache.ToConditions()
-		cc.Container.Name = "cache"
-		cc.Vargs = out.Cache.Vargs
-		root.Cache = cc
-	}
-
 	// add the clone section
 	{
 		cc := root.NewCloneNode()
