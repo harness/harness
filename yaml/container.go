@@ -23,6 +23,7 @@ type Container struct {
 	Pull           bool
 	AuthConfig     Auth
 	Detached       bool
+	Disabled       bool
 	Privileged     bool
 	WorkingDir     string
 	Environment    map[string]string

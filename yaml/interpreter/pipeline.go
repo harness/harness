@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/drone/drone/yaml"
+	"github.com/drone/drone/yaml/interpreter/internal"
 
 	"github.com/samalba/dockerclient"
 )
@@ -22,10 +24,12 @@ type Pipeline struct {
 	conf *yaml.Config
 	head *element
 	tail *element
+	pipe chan (*Line)
 	next chan (error)
 	done chan (error)
 	err  error
 
+	ambassador string
 	containers []string
 	volumes    []string
 	networks   []string
@@ -34,20 +38,24 @@ type Pipeline struct {
 }
 
 // Load loads the pipeline from the Yaml configuration file.
-func Load(conf *yaml.Config) *Pipeline {
+func Load(conf *yaml.Config, client dockerclient.Client) *Pipeline {
 	pipeline := Pipeline{
-		conf: conf,
-		next: make(chan error),
-		done: make(chan error),
+		client: client,
+		pipe:   make(chan *Line, 500), // buffer 500 lines of logs
+		next:   make(chan error),
+		done:   make(chan error),
 	}
 
 	var containers []*yaml.Container
 	containers = append(containers, conf.Services...)
 	containers = append(containers, conf.Pipeline...)
 
-	for i, c := range containers {
+	for _, c := range containers {
+		if c.Disabled {
+			continue
+		}
 		next := &element{Container: c}
-		if i == 0 {
+		if pipeline.head == nil {
 			pipeline.head = next
 			pipeline.tail = next
 		} else {
@@ -80,16 +88,23 @@ func (p *Pipeline) Next() <-chan error {
 
 // Exec executes the current step.
 func (p *Pipeline) Exec() {
-	err := p.exec(p.head.Container)
-	if err != nil {
-		p.err = err
-	}
-	p.step()
+	go func() {
+		err := p.exec(p.head.Container)
+		if err != nil {
+			p.err = err
+		}
+		p.step()
+	}()
 }
 
 // Skip skips the current step.
 func (p *Pipeline) Skip() {
 	p.step()
+}
+
+// Pipe returns the build output pipe.
+func (p *Pipeline) Pipe() <-chan *Line {
+	return p.pipe
 }
 
 // Head returns the head item in the list.
@@ -104,8 +119,9 @@ func (p *Pipeline) Tail() *yaml.Container {
 
 // Stop stops the pipeline.
 func (p *Pipeline) Stop() {
-	p.close(ErrTerm)
-	return
+	go func() {
+		p.done <- ErrTerm
+	}()
 }
 
 // Setup prepares the build pipeline environment.
@@ -126,26 +142,29 @@ func (p *Pipeline) Teardown() {
 	for _, id := range p.volumes {
 		p.client.RemoveVolume(id)
 	}
+	close(p.next)
+	close(p.done)
+	close(p.pipe)
 }
 
 // step steps through the pipeline to head.next
 func (p *Pipeline) step() {
 	if p.head == p.tail {
-		p.close(nil)
-		return
+		go func() {
+			p.done <- nil
+		}()
+	} else {
+		go func() {
+			p.head = p.head.next
+			p.next <- nil
+		}()
 	}
-	go func() {
-		p.head = p.head.next
-		p.next <- nil
-	}()
 }
 
 // close closes open channels and signals the pipeline is done.
 func (p *Pipeline) close(err error) {
 	go func() {
-		p.done <- nil
-		close(p.next)
-		close(p.done)
+		p.done <- err
 	}()
 }
 
@@ -156,7 +175,7 @@ func (p *Pipeline) exec(c *yaml.Container) error {
 	// check for the image and pull if not exists or if configured to always
 	// pull the latest version.
 	_, err := p.client.InspectImage(c.Image)
-	if err == nil || c.Pull {
+	if err != nil || c.Pull {
 		err = p.client.PullImage(c.Image, auth)
 		if err != nil {
 			return err
@@ -184,15 +203,15 @@ func (p *Pipeline) exec(c *yaml.Container) error {
 		defer rc.Close()
 
 		num := 0
-		// now := time.Now().UTC()
+		now := time.Now().UTC()
 		scanner := bufio.NewScanner(rc)
 		for scanner.Scan() {
-			// r.pipe.lines <- &Line{
-			// 	Proc: c.Name,
-			// 	Time: int64(time.Since(now).Seconds()),
-			// 	Pos:  num,
-			// 	Out:  scanner.Text(),
-			// }
+			p.pipe <- &Line{
+				Proc: c.Name,
+				Time: int64(time.Since(now).Seconds()),
+				Pos:  num,
+				Out:  scanner.Text(),
+			}
 			num++
 		}
 	}()
@@ -243,7 +262,7 @@ func toLogs(client dockerclient.Client, id string) (io.ReadCloser, error) {
 			defer rc.Close()
 
 			// use Docker StdCopy
-			// internal.StdCopy(pipew, pipew, rc)
+			internal.StdCopy(pipew, pipew, rc)
 
 			// check to see if the container is still running. If not,  we can safely
 			// exit and assume there are no more logs left to stream.
