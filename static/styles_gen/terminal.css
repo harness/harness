@@ -1,4 +1,10 @@
 // Tomorrow Night Ansi Colour Scheme
+body {
+  background-image: url('https://s3-eu-west-1.amazonaws.com/worldia/bob_full.png');
+  background-repeat: no-repeat;
+  background-position: left bottom;
+}
+
 .ansi-black-fg { color: #3A3A3A; }
 .ansi-red-fg { color: #DD948E; }
 .ansi-green-fg { color: #B6D1AA; }
