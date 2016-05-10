@@ -16,6 +16,7 @@ func Clone(c *yaml.Config, plugin string) error {
 		Image: plugin,
 		Name:  clone,
 	}
+
 	c.Pipeline = append([]*yaml.Container{s}, c.Pipeline...)
 	return nil
 }

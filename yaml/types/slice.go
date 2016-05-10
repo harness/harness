@@ -28,3 +28,8 @@ func (s *StringOrSlice) UnmarshalYAML(unmarshal func(interface{}) error) error {
 func (s StringOrSlice) Slice() []string {
 	return s.parts
 }
+
+// NewStringOrSlice returns a new StringOrSlice.
+func NewStringOrSlice(from []string) *StringOrSlice {
+	return &StringOrSlice{from}
+}

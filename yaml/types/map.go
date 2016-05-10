@@ -36,3 +36,8 @@ func (s *MapEqualSlice) UnmarshalYAML(unmarshal func(interface{}) error) error {
 func (s *MapEqualSlice) Map() map[string]string {
 	return s.parts
 }
+
+// NewMapEqualSlice returns a new MapEqualSlice.
+func NewMapEqualSlice(from map[string]string) *MapEqualSlice {
+	return &MapEqualSlice{from}
+}

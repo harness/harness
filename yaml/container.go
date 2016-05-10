@@ -85,14 +85,7 @@ type container struct {
 		Token    string `yaml:"registry_token"`
 	} `yaml:"auth_config"`
 
-	Constraints struct {
-		Platform    types.StringOrSlice `yaml:"platform"`
-		Environment types.StringOrSlice `yaml:"environment"`
-		Event       types.StringOrSlice `yaml:"event"`
-		Branch      types.StringOrSlice `yaml:"branch"`
-		Status      types.StringOrSlice `yaml:"status"`
-		Matrix      map[string]string   `yaml:"matrix"`
-	} `yaml:"when"`
+	Constraints Constraints `yaml:"when"`
 
 	Vargs map[string]interface{} `yaml:",inline"`
 }
@@ -158,14 +151,7 @@ func (c *containerList) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				Password: cc.AuthConfig.Password,
 				Email:    cc.AuthConfig.Email,
 			},
-			Constraints: Constraints{
-				Platform:    cc.Constraints.Platform.Slice(),
-				Environment: cc.Constraints.Environment.Slice(),
-				Event:       cc.Constraints.Event.Slice(),
-				Branch:      cc.Constraints.Branch.Slice(),
-				Status:      cc.Constraints.Status.Slice(),
-				Matrix:      cc.Constraints.Matrix,
-			},
+			Constraints: cc.Constraints,
 		})
 	}
 	return err

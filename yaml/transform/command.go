@@ -14,7 +14,7 @@ import (
 func CommandTransform(c *yaml.Config) error {
 	for _, p := range c.Pipeline {
 
-		if len(p.Commands) == 0 {
+		if isPlugin(p) {
 			continue
 		}
 

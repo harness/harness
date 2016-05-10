@@ -1,4 +1,4 @@
-package interpreter
+package build
 
 import (
 	"bufio"
@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/drone/drone/build/internal"
 	"github.com/drone/drone/yaml"
-	"github.com/drone/drone/yaml/interpreter/internal"
 
 	"github.com/samalba/dockerclient"
 )

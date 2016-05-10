@@ -1,4 +1,4 @@
-package interpreter
+package build
 
 import (
 	"errors"

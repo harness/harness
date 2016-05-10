@@ -18,13 +18,14 @@ func Pod(c *yaml.Config) error {
 	)
 
 	ambassador := &yaml.Container{
-		ID:         fmt.Sprintf("drone_ambassador_%s", rand),
-		Name:       "ambassador",
-		Image:      "busybox:latest",
-		Detached:   true,
-		Entrypoint: []string{"/bin/sleep"},
-		Command:    []string{"86400"},
-		Volumes:    []string{c.Workspace.Path, c.Workspace.Base},
+		ID:          fmt.Sprintf("drone_ambassador_%s", rand),
+		Name:        "ambassador",
+		Image:       "busybox:latest",
+		Detached:    true,
+		Entrypoint:  []string{"/bin/sleep"},
+		Command:     []string{"86400"},
+		Volumes:     []string{c.Workspace.Path, c.Workspace.Base},
+		Environment: map[string]string{},
 	}
 	network := fmt.Sprintf("container:%s", ambassador.ID)
 

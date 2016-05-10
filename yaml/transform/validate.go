@@ -11,10 +11,18 @@ func Check(c *yaml.Config, trusted bool) error {
 	images = append(images, c.Pipeline...)
 	images = append(images, c.Services...)
 
-	for _, image := range images {
+	for _, image := range c.Pipeline {
 		if err := CheckEntrypoint(image); err != nil {
 			return err
 		}
+		if trusted {
+			continue
+		}
+		if err := CheckTrusted(image); err != nil {
+			return err
+		}
+	}
+	for _, image := range c.Services {
 		if trusted {
 			continue
 		}
@@ -28,9 +36,6 @@ func Check(c *yaml.Config, trusted bool) error {
 // validate the plugin command and entrypoint and return an error
 // the user attempts to set or override these values.
 func CheckEntrypoint(c *yaml.Container) error {
-	if len(c.Vargs) == 0 {
-		return nil
-	}
 	if len(c.Entrypoint) != 0 {
 		return fmt.Errorf("Cannot set plugin Entrypoint")
 	}

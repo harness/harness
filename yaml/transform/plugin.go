@@ -1,80 +1,47 @@
 package transform
 
-import "github.com/drone/drone/yaml"
+import (
+	"path/filepath"
 
-// PluginDisable disables plugins. This is intended for use when executing the
-// pipeline locally on your own computer.
-func PluginDisable(conf *yaml.Config, disabled bool) {
+	"github.com/drone/drone/yaml"
+)
+
+// PluginDisable is a transform function that alters the Yaml configuration to
+// disables plugins. This is intended for use when executing the pipeline
+// locally on your own computer.
+func PluginDisable(conf *yaml.Config, patterns []string) error {
 	for _, container := range conf.Pipeline {
-		if len(container.Vargs) != 0 || container.Name == "clone" {
-			container.Disabled = disabled
+		if len(container.Commands) != 0 { // skip build steps
+			continue
+		}
+		var match bool
+		for _, pattern := range patterns {
+			if ok, _ := filepath.Match(pattern, container.Name); ok {
+				match = true
+				break
+			}
+		}
+		if !match {
+			container.Disabled = true
 		}
 	}
+	return nil
 }
 
-//
-// import (
-// 	"fmt"
-// 	"reflect"
-// 	"strconv"
-// 	"strings"
-//
-// 	"github.com/drone/drone/yaml"
-// 	"github.com/libcd/libyaml/parse"
-//
-// 	json "github.com/ghodss/yaml"
-// 	"gopkg.in/yaml.v2"
-// )
-//
-// func
-//
-// // argsToEnv uses reflection to convert a map[string]interface to a list
-// // of environment variables.
-// func argsToEnv(from map[string]interface{}, to map[string]string) error {
-//
-// 	for k, v := range from {
-// 		t := reflect.TypeOf(v)
-// 		vv := reflect.ValueOf(v)
-//
-// 		k = "PLUGIN_" + strings.ToUpper(k)
-//
-// 		switch t.Kind() {
-// 		case reflect.Bool:
-// 			to[k] = strconv.FormatBool(vv.Bool())
-//
-// 		case reflect.String:
-// 			to[k] = vv.String()
-//
-// 		case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int8:
-// 			to[k] = fmt.Sprintf("%v", vv.Int())
-//
-// 		case reflect.Float32, reflect.Float64:
-// 			to[k] = fmt.Sprintf("%v", vv.Float())
-//
-// 		case reflect.Map:
-// 			yml, _ := yaml.Marshal(vv.Interface())
-// 			out, _ := json.YAMLToJSON(yml)
-// 			to[k] = string(out)
-//
-// 		case reflect.Slice:
-// 			out, err := yaml.Marshal(vv.Interface())
-// 			if err != nil {
-// 				return err
-// 			}
-//
-// 			in := []string{}
-// 			err := yaml.Unmarshal(out, &in)
-// 			if err == nil {
-// 				to[k] = strings.Join(in, ",")
-// 			} else {
-// 				out, err = json.YAMLToJSON(out)
-// 				if err != nil {
-// 					return err
-// 				}
-// 				to[k] = string(out)
-// 			}
-// 		}
-// 	}
-//
-// 	return nil
-// }
+// PluginParams is a transform function that alters the Yaml configuration to
+// include plugin parameters as environment variables.
+func PluginParams(conf *yaml.Config) error {
+	for _, container := range conf.Pipeline {
+		if len(container.Vargs) == 0 {
+			continue
+		}
+		if container.Environment == nil {
+			container.Environment = map[string]string{}
+		}
+		err := argsToEnv(container.Vargs, container.Environment)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
