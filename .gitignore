@@ -10,6 +10,7 @@ drone_*
 *.out
 *.min.js
 *.deb
+.env
 temp/
 
 # vendored repositories that we don't actually need

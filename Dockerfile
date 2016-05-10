@@ -8,7 +8,7 @@ ENV GO15VENDOREXPERIMENT 1
 
 RUN make gen_static && make build_static
 
-ADD .env /.env
+ADD .env.sample /.env
 
 ENTRYPOINT ["./drone_static"]
 
