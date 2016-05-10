@@ -1,26 +1,16 @@
-# Build the drone executable on a x64 Linux host:
-#
-#     go build --ldflags '-extldflags "-static"' -o drone_static
-#
-#
-# Alternate command for Go 1.4 and older:
-#
-#     go build -a -tags netgo --ldflags '-extldflags "-static"' -o drone_static
-#
-#
-# Build the docker image:
-#
-#     docker build --rm=true -t drone/drone .
-FROM alpine:3.2
-RUN apk add -U ca-certificates git openssh curl perl && rm -rf /var/cache/apk/*
+FROM drone_golang
 
-#FROM centurylink/ca-certs
-#EXPOSE 8000
-#ADD contrib/docker/etc/nsswitch.conf /etc/
+COPY . /go/src/github.com/drone/drone
+WORKDIR /go/src/github.com/drone/drone
 
-#ENV DATABASE_DRIVER=sqlite3
-#ENV DATABASE_CONFIG=/var/lib/drone/drone.sqlite
+ENV GO15VENDOREXPERIMENT 1
 
-ADD drone_static /drone_static
+RUN make gen_static && make build_static
 
-ENTRYPOINT ["/drone_static"]
+ADD .env /.env
+
+ENTRYPOINT ["./drone_static"]
+
+EXPOSE 9898
+
+

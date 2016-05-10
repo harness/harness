@@ -1,0 +1,36 @@
+# build environment used in .drone.yml
+#
+#     docker build --rm=true -t drone/golang:1.5 -f Dockerfile.env .
+
+FROM golang:1.5.1
+
+MAINTAINER cmxu
+
+
+ADD contrib/*.sh /usr/local/bin/
+
+RUN chmod +x /usr/local/bin/setup-sassc.sh && \
+    sleep 1 &&\
+    /usr/local/bin/setup-sassc.sh
+
+RUN chmod +x /usr/local/bin/setup-sqlite.sh && \
+    sleep 1 &&\
+    /usr/local/bin/setup-sqlite.sh
+
+RUN	export GO15VENDOREXPERIMENT=1
+RUN	go get -u golang.org/x/tools/cmd/cover
+/*RUN	go get -u golang.org/x/tools/cmd/vet*/
+RUN	go get -u github.com/kr/vexp
+RUN	go get -u github.com/eknkc/amber/...
+RUN	go get -u github.com/eknkc/amber
+RUN	go get -u github.com/jteeuwen/go-bindata/...
+RUN	go get -u github.com/elazarl/go-bindata-assetfs/...
+RUN	go get -u github.com/dchest/jsmin
+RUN	go get -u github.com/franela/goblin
+RUN	go get -u github.com/PuerkitoBio/goquery
+RUN	go get -u github.com/russross/blackfriday
+RUN	go get -u github.com/carlescere/scheduler
+RUN	go get -u github.com/ramr/go-reaper
+RUN	GO15VENDOREXPERIMENT=1 go get -u github.com/go-swagger/go-swagger/...
+
+
