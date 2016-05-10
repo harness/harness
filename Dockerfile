@@ -1,4 +1,4 @@
-FROM drone_golang
+FROM catalog.shurenyun.com/library/drone_build:0.1
 
 COPY . /go/src/github.com/drone/drone
 WORKDIR /go/src/github.com/drone/drone
