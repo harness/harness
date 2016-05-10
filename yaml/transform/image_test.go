@@ -48,3 +48,104 @@ func Test_pull(t *testing.T) {
 		})
 	})
 }
+
+func Test_escalate(t *testing.T) {
+
+	g := goblin.Goblin(t)
+	g.Describe("privileged transform", func() {
+
+		g.It("should handle matches", func() {
+			c := newConfig(&yaml.Container{
+				Image: "plugins/docker",
+			})
+
+			ImageEscalate(c, []string{"plugins/docker"})
+			g.Assert(c.Pipeline[0].Privileged).IsTrue()
+		})
+
+		g.It("should handle glob matches", func() {
+			c := newConfig(&yaml.Container{
+				Image: "plugins/docker:latest",
+			})
+
+			ImageEscalate(c, []string{"plugins/docker:*"})
+			g.Assert(c.Pipeline[0].Privileged).IsTrue()
+		})
+
+		g.It("should handle non matches", func() {
+			c := newConfig(&yaml.Container{
+				Image: "plugins/git:latest",
+			})
+
+			ImageEscalate(c, []string{"plugins/docker:*"})
+			g.Assert(c.Pipeline[0].Privileged).IsFalse()
+		})
+
+		g.It("should handle non glob matches", func() {
+			c := newConfig(&yaml.Container{
+				Image: "plugins/docker:latest",
+			})
+
+			ImageEscalate(c, []string{"plugins/docker"})
+			g.Assert(c.Pipeline[0].Privileged).IsFalse()
+		})
+	})
+}
+
+func Test_normalize(t *testing.T) {
+
+	g := goblin.Goblin(t)
+	g.Describe("normalizing", func() {
+
+		g.Describe("images", func() {
+
+			g.It("should append tag if empty", func() {
+				c := newConfig(&yaml.Container{
+					Image: "golang",
+				})
+
+				ImageTag(c)
+				g.Assert(c.Pipeline[0].Image).Equal("golang:latest")
+			})
+
+			g.It("should not override existing tag", func() {
+				c := newConfig(&yaml.Container{
+					Image: "golang:1.5",
+				})
+
+				ImageTag(c)
+				g.Assert(c.Pipeline[0].Image).Equal("golang:1.5")
+			})
+		})
+
+		g.Describe("plugins", func() {
+
+			g.It("should prepend namespace", func() {
+				c := newConfig(&yaml.Container{
+					Image: "slack",
+				})
+
+				ImageNamespace(c, "plugins")
+				g.Assert(c.Pipeline[0].Image).Equal("plugins/slack")
+			})
+
+			g.It("should not override existing namespace", func() {
+				c := newConfig(&yaml.Container{
+					Image: "index.docker.io/drone/git",
+				})
+
+				ImageNamespace(c, "plugins")
+				g.Assert(c.Pipeline[0].Image).Equal("index.docker.io/drone/git")
+			})
+
+			g.It("should replace underscores with dashes", func() {
+				c := newConfig(&yaml.Container{
+					Image: "gh_pages",
+				})
+
+				ImageName(c)
+				g.Assert(c.Pipeline[0].Image).Equal("gh-pages")
+			})
+		})
+	})
+}

@@ -1,24 +1,20 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
-	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/drone/drone/build"
+	"github.com/drone/drone/agent"
+	"github.com/drone/drone/build/docker"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/yaml"
-	"github.com/drone/drone/yaml/expander"
-	"github.com/drone/drone/yaml/transform"
+	"github.com/drone/drone/queue"
 
 	"github.com/codegangsta/cli"
-	"github.com/samalba/dockerclient"
 )
 
 var execCmd = cli.Command{
@@ -52,15 +48,15 @@ var execCmd = cli.Command{
 		},
 		cli.DurationFlag{
 			Name:   "timeout",
-			Usage:  "build timeout for inactivity",
+			Usage:  "build timeout",
 			Value:  time.Hour,
 			EnvVar: "DRONE_TIMEOUT",
 		},
 		cli.DurationFlag{
-			Name:   "duration",
-			Usage:  "build duration",
-			Value:  time.Hour,
-			EnvVar: "DRONE_DURATION",
+			Name:   "timeout.inactivity",
+			Usage:  "build timeout for inactivity",
+			Value:  time.Minute * 15,
+			EnvVar: "DRONE_TIMEOUT_INACTIVITY",
 		},
 		cli.BoolFlag{
 			EnvVar: "DRONE_PLUGIN_PULL",
@@ -248,12 +244,12 @@ var execCmd = cli.Command{
 			Usage:  "build deployment target",
 			EnvVar: "DRONE_DEPLOY_TO",
 		},
-		cli.BoolFlag{
+		cli.BoolTFlag{
 			Name:   "yaml.verified",
 			Usage:  "build yaml is verified",
 			EnvVar: "DRONE_YAML_VERIFIED",
 		},
-		cli.BoolFlag{
+		cli.BoolTFlag{
 			Name:   "yaml.signed",
 			Usage:  "build yaml is signed",
 			EnvVar: "DRONE_YAML_SIGNED",
@@ -293,53 +289,13 @@ var execCmd = cli.Command{
 }
 
 func exec(c *cli.Context) error {
-
-	// get environment variables from flags
-	var envs = map[string]string{}
-	for _, flag := range c.Command.Flags {
-		switch f := flag.(type) {
-		case cli.StringFlag:
-			envs[f.EnvVar] = c.String(f.Name)
-		case cli.IntFlag:
-			envs[f.EnvVar] = c.String(f.Name)
-		case cli.BoolFlag:
-			envs[f.EnvVar] = c.String(f.Name)
-		}
-	}
-
-	// get matrix variales from flags
-	for _, s := range c.StringSlice("matrix") {
-		parts := strings.SplitN(s, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		k := parts[0]
-		v := parts[1]
-		envs[k] = v
-	}
-
-	// get secret variales from flags
-	for _, s := range c.StringSlice("secret") {
-		parts := strings.SplitN(s, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		k := parts[0]
-		v := parts[1]
-		envs[k] = v
-	}
-
-	// 	builtin.NewFilterOp(
-	// 		c.String("prev.build.status"),
-	// 		c.String("commit.branch"),
-	// 		c.String("build.event"),
-	// 		c.String("build.deploy"),
-	// 		envs,
-	// 	),
-	// }
-
 	sigterm := make(chan os.Signal, 1)
+	cancelc := make(chan bool, 1)
 	signal.Notify(sigterm, os.Interrupt)
+	go func() {
+		<-sigterm
+		cancelc <- true
+	}()
 
 	path := c.Args().First()
 	if path == "" {
@@ -353,101 +309,116 @@ func exec(c *cli.Context) error {
 		return err
 	}
 
-	// unmarshal the Yaml file with expanded environment variables.
-	conf, err := yaml.Parse(expander.Expand(file, envs))
+	engine, err := docker.New(
+		c.String("docker-host"),
+		c.String("docker-cert-path"),
+		c.Bool("docker-tls-verify"),
+	)
 	if err != nil {
 		return err
 	}
 
-	tls, err := dockerclient.TLSConfigFromCertPath(c.String("docker-cert-path"))
-	if err == nil {
-		tls.InsecureSkipVerify = c.Bool("docker-tls-verify")
-	}
-	client, err := dockerclient.NewDockerClient(c.String("docker-host"), tls)
-	if err != nil {
-		return err
-	}
-
-	src := "src"
-	if url, _ := url.Parse(c.String("repo.link")); url != nil {
-		src = filepath.Join(src, url.Host, url.Path)
-	}
-
-	transform.Clone(conf, "git")
-	transform.Environ(conf, envs)
-	transform.DefaultFilter(conf)
-
-	transform.PluginDisable(conf, c.StringSlice("plugin"))
-
-	// transform.Secret(conf, secrets)
-	transform.Identifier(conf)
-	transform.WorkspaceTransform(conf, "/drone", src)
-
-	if err := transform.Check(conf, c.Bool("repo.trusted")); err != nil {
-		return err
+	a := agent.Agent{
+		Update:    agent.NoopUpdateFunc,
+		Logger:    agent.TermLoggerFunc,
+		Engine:    engine,
+		Timeout:   c.Duration("timeout.inactivity"),
+		Platform:  "linux/amd64",
+		Namespace: c.String("namespace"),
+		Disable:   c.StringSlice("plugin"),
+		Escalate:  c.StringSlice("privileged"),
+		Netrc:     []string{},
+		Local:     dir,
+		Pull:      c.Bool("pull"),
 	}
 
-	transform.CommandTransform(conf)
-	transform.ImagePull(conf, c.Bool("pull"))
-	transform.ImageTag(conf)
-	transform.ImageName(conf)
-	transform.ImageNamespace(conf, c.String("namespace"))
-	transform.ImageEscalate(conf, c.StringSlice("privileged"))
-
-	if c.BoolT("local") {
-		transform.ImageVolume(conf, []string{dir + ":" + conf.Workspace.Path})
+	payload := queue.Work{
+		Yaml:     string(file),
+		Verified: c.BoolT("yaml.verified"),
+		Signed:   c.BoolT("yaml.signed"),
+		Repo: &model.Repo{
+			FullName:  c.String("repo.fullname"),
+			Owner:     c.String("repo.owner"),
+			Name:      c.String("repo.name"),
+			Kind:      c.String("repo.type"),
+			Link:      c.String("repo.link"),
+			Branch:    c.String("repo.branch"),
+			Avatar:    c.String("repo.avatar"),
+			Timeout:   int64(c.Duration("timeout").Minutes()),
+			IsPrivate: c.Bool("repo.private"),
+			IsTrusted: c.Bool("repo.trusted"),
+			Clone:     c.String("remote.url"),
+		},
+		System: &model.System{
+			Link: c.GlobalString("server"),
+		},
+		Secrets: getSecrets(c),
+		Netrc: &model.Netrc{
+			Login:    c.String("netrc.username"),
+			Password: c.String("netrc.password"),
+			Machine:  c.String("netrc.machine"),
+		},
+		Build: &model.Build{
+			Commit:  c.String("commit.sha"),
+			Branch:  c.String("commit.branch"),
+			Ref:     c.String("commit.ref"),
+			Link:    c.String("commit.link"),
+			Message: c.String("commit.message"),
+			Author:  c.String("commit.author.name"),
+			Email:   c.String("commit.author.email"),
+			Avatar:  c.String("commit.author.avatar"),
+			Number:  c.Int("build.number"),
+			Event:   c.String("build.event"),
+			Deploy:  c.String("build.deploy"),
+		},
+		BuildLast: &model.Build{
+			Number: c.Int("prev.build.number"),
+			Status: c.String("prev.build.status"),
+			Commit: c.String("prev.commit.sha"),
+		},
+		Job: &model.Job{
+			Environment: getMatrix(c),
+		},
 	}
-	transform.PluginParams(conf)
-	transform.Pod(conf)
 
-	timeout := time.After(c.Duration("duration"))
+	return a.Run(&payload, cancelc)
+}
 
-	// load the Yaml into the pipeline
-	pipeline := build.Load(conf, client)
-	defer pipeline.Teardown()
-
-	// setup the build environment
-	err = pipeline.Setup()
-	if err != nil {
-		return err
-	}
-
-	for {
-		select {
-		case <-pipeline.Done():
-			return pipeline.Err()
-		case <-sigterm:
-			pipeline.Stop()
-			return fmt.Errorf("interrupt received, build cancelled")
-		case <-timeout:
-			pipeline.Stop()
-			return fmt.Errorf("maximum time limit exceeded, build cancelled")
-		case <-time.After(c.Duration("timeout")):
-			pipeline.Stop()
-			return fmt.Errorf("terminal inactive for %v, build cancelled", c.Duration("timeout"))
-		case <-pipeline.Next():
-
-			// TODO(bradrydzewski) this entire block of code should probably get
-			// encapsulated in the pipeline.
-			status := model.StatusSuccess
-			if pipeline.Err() != nil {
-				status = model.StatusFailure
-			}
-
-			if !pipeline.Head().Constraints.Match(
-				"linux/amd64",
-				c.String("build.deploy"),
-				c.String("build.event"),
-				c.String("commit.branch"),
-				status, envs) {
-
-				pipeline.Skip()
-			} else {
-				pipeline.Exec()
-				pipeline.Head().Environment["DRONE_STATUS"] = status
-			}
-		case line := <-pipeline.Pipe():
-			println(line.String())
+// helper function to retrieve matrix variables.
+func getMatrix(c *cli.Context) map[string]string {
+	envs := map[string]string{}
+	for _, s := range c.StringSlice("matrix") {
+		parts := strings.SplitN(s, "=", 2)
+		if len(parts) != 2 {
+			continue
 		}
+		k := parts[0]
+		v := parts[1]
+		envs[k] = v
 	}
+	return envs
+}
+
+// helper function to retrieve secret variables.
+func getSecrets(c *cli.Context) []*model.Secret {
+	var secrets []*model.Secret
+	for _, s := range c.StringSlice("secret") {
+		parts := strings.SplitN(s, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		secret := &model.Secret{
+			Name:  parts[0],
+			Value: parts[1],
+			Events: []string{
+				model.EventPull,
+				model.EventPush,
+				model.EventTag,
+				model.EventDeploy,
+			},
+			Images: []string{"*"},
+		}
+		secrets = append(secrets, secret)
+	}
+	return secrets
 }

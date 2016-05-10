@@ -29,7 +29,7 @@ func PluginDisable(conf *yaml.Config, patterns []string) error {
 }
 
 // PluginParams is a transform function that alters the Yaml configuration to
-// include plugin parameters as environment variables.
+// include plugin vargs parameters as environment variables.
 func PluginParams(conf *yaml.Config) error {
 	for _, container := range conf.Pipeline {
 		if len(container.Vargs) == 0 {

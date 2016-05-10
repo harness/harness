@@ -1,38 +1,5 @@
 package build
 
-import (
-	"fmt"
-	"testing"
-
-	"github.com/drone/drone/yaml"
-)
-
-func TestInterpreter(t *testing.T) {
-
-	conf, err := yaml.ParseString(sampleYaml)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	pipeline := Load(conf, nil)
-	pipeline.pipe <- &Line{Out: "foo"}
-	pipeline.pipe <- &Line{Out: "bar"}
-	pipeline.pipe <- &Line{Out: "baz"}
-	for {
-		select {
-		case <-pipeline.Done():
-			fmt.Println("GOT DONE")
-			return
-
-		case line := <-pipeline.Pipe():
-			fmt.Println(line.String())
-
-		case <-pipeline.Next():
-			pipeline.Exec()
-		}
-	}
-}
-
 var sampleYaml = `
 image: hello-world
 build:
