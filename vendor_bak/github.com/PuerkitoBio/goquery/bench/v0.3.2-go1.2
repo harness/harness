@@ -1,0 +1,478 @@
+PASS
+BenchmarkFirst	20000000	        88.4 ns/op
+BenchmarkLast	20000000	        88.2 ns/op
+BenchmarkEq	20000000	        87.4 ns/op
+BenchmarkSlice	20000000	        84.9 ns/op
+BenchmarkGet	2000000000	         1.99 ns/op
+BenchmarkIndex	 2000000	       906 ns/op
+--- BENCH: BenchmarkIndex
+	bench_array_test.go:73: Index=3
+	bench_array_test.go:73: Index=3
+	bench_array_test.go:73: Index=3
+	bench_array_test.go:73: Index=3
+	bench_array_test.go:73: Index=3
+BenchmarkIndexSelector	  100000	     22276 ns/op
+--- BENCH: BenchmarkIndexSelector
+	bench_array_test.go:85: IndexSelector=4
+	bench_array_test.go:85: IndexSelector=4
+	bench_array_test.go:85: IndexSelector=4
+	bench_array_test.go:85: IndexSelector=4
+BenchmarkIndexOfNode	200000000	         9.72 ns/op
+--- BENCH: BenchmarkIndexOfNode
+	bench_array_test.go:99: IndexOfNode=2
+	bench_array_test.go:99: IndexOfNode=2
+	bench_array_test.go:99: IndexOfNode=2
+	bench_array_test.go:99: IndexOfNode=2
+	bench_array_test.go:99: IndexOfNode=2
+	bench_array_test.go:99: IndexOfNode=2
+BenchmarkIndexOfSelection	100000000	        10.4 ns/op
+--- BENCH: BenchmarkIndexOfSelection
+	bench_array_test.go:111: IndexOfSelection=2
+	bench_array_test.go:111: IndexOfSelection=2
+	bench_array_test.go:111: IndexOfSelection=2
+	bench_array_test.go:111: IndexOfSelection=2
+	bench_array_test.go:111: IndexOfSelection=2
+BenchmarkMetalReviewExample	   10000	    199277 ns/op
+--- BENCH: BenchmarkMetalReviewExample
+	bench_example_test.go:40: Review 0: Midnight - Complete and Total Hell (8.5).
+		Review 1: Over Your Threshold - Facticity (6.0).
+		Review 2: Nuclear Death Terror - Chaos Reigns (7.5).
+		Review 3: Evoken - Atra Mors (9.5).
+		
+	bench_example_test.go:41: MetalReviewExample=10
+	bench_example_test.go:40: Review 0: Midnight - Complete and Total Hell (8.5).
+		Review 1: Over Your Threshold - Facticity (6.0).
+		Review 2: Nuclear Death Terror - Chaos Reigns (7.5).
+		Review 3: Evoken - Atra Mors (9.5).
+	... [output truncated]
+BenchmarkAdd	  100000	     18277 ns/op
+--- BENCH: BenchmarkAdd
+	bench_expand_test.go:20: Add=43
+	bench_expand_test.go:20: Add=43
+	bench_expand_test.go:20: Add=43
+	bench_expand_test.go:20: Add=43
+BenchmarkAddSelection	10000000	       200 ns/op
+--- BENCH: BenchmarkAddSelection
+	bench_expand_test.go:37: AddSelection=43
+	bench_expand_test.go:37: AddSelection=43
+	bench_expand_test.go:37: AddSelection=43
+	bench_expand_test.go:37: AddSelection=43
+	bench_expand_test.go:37: AddSelection=43
+BenchmarkAddNodes	10000000	       189 ns/op
+--- BENCH: BenchmarkAddNodes
+	bench_expand_test.go:55: AddNodes=43
+	bench_expand_test.go:55: AddNodes=43
+	bench_expand_test.go:55: AddNodes=43
+	bench_expand_test.go:55: AddNodes=43
+	bench_expand_test.go:55: AddNodes=43
+BenchmarkAndSelf	 1000000	      2569 ns/op
+--- BENCH: BenchmarkAndSelf
+	bench_expand_test.go:71: AndSelf=44
+	bench_expand_test.go:71: AndSelf=44
+	bench_expand_test.go:71: AndSelf=44
+	bench_expand_test.go:71: AndSelf=44
+BenchmarkFilter	  100000	     25195 ns/op
+--- BENCH: BenchmarkFilter
+	bench_filter_test.go:20: Filter=13
+	bench_filter_test.go:20: Filter=13
+	bench_filter_test.go:20: Filter=13
+	bench_filter_test.go:20: Filter=13
+BenchmarkNot	  100000	     29003 ns/op
+--- BENCH: BenchmarkNot
+	bench_filter_test.go:36: Not=371
+	bench_filter_test.go:36: Not=371
+	bench_filter_test.go:36: Not=371
+	bench_filter_test.go:36: Not=371
+BenchmarkFilterFunction	   50000	     60690 ns/op
+--- BENCH: BenchmarkFilterFunction
+	bench_filter_test.go:55: FilterFunction=112
+	bench_filter_test.go:55: FilterFunction=112
+	bench_filter_test.go:55: FilterFunction=112
+	bench_filter_test.go:55: FilterFunction=112
+BenchmarkNotFunction	   50000	     66008 ns/op
+--- BENCH: BenchmarkNotFunction
+	bench_filter_test.go:74: NotFunction=261
+	bench_filter_test.go:74: NotFunction=261
+	bench_filter_test.go:74: NotFunction=261
+	bench_filter_test.go:74: NotFunction=261
+BenchmarkFilterNodes	   50000	     59723 ns/op
+--- BENCH: BenchmarkFilterNodes
+	bench_filter_test.go:92: FilterNodes=2
+	bench_filter_test.go:92: FilterNodes=2
+	bench_filter_test.go:92: FilterNodes=2
+	bench_filter_test.go:92: FilterNodes=2
+BenchmarkNotNodes	   50000	     72698 ns/op
+--- BENCH: BenchmarkNotNodes
+	bench_filter_test.go:110: NotNodes=360
+	bench_filter_test.go:110: NotNodes=360
+	bench_filter_test.go:110: NotNodes=360
+	bench_filter_test.go:110: NotNodes=360
+BenchmarkFilterSelection	   50000	     59598 ns/op
+--- BENCH: BenchmarkFilterSelection
+	bench_filter_test.go:127: FilterSelection=2
+	bench_filter_test.go:127: FilterSelection=2
+	bench_filter_test.go:127: FilterSelection=2
+	bench_filter_test.go:127: FilterSelection=2
+BenchmarkNotSelection	   50000	     72526 ns/op
+--- BENCH: BenchmarkNotSelection
+	bench_filter_test.go:144: NotSelection=360
+	bench_filter_test.go:144: NotSelection=360
+	bench_filter_test.go:144: NotSelection=360
+	bench_filter_test.go:144: NotSelection=360
+BenchmarkHas	    5000	    367076 ns/op
+--- BENCH: BenchmarkHas
+	bench_filter_test.go:160: Has=13
+	bench_filter_test.go:160: Has=13
+	bench_filter_test.go:160: Has=13
+BenchmarkHasNodes	   10000	    219710 ns/op
+--- BENCH: BenchmarkHasNodes
+	bench_filter_test.go:178: HasNodes=15
+	bench_filter_test.go:178: HasNodes=15
+	bench_filter_test.go:178: HasNodes=15
+BenchmarkHasSelection	   10000	    219105 ns/op
+--- BENCH: BenchmarkHasSelection
+	bench_filter_test.go:195: HasSelection=15
+	bench_filter_test.go:195: HasSelection=15
+	bench_filter_test.go:195: HasSelection=15
+BenchmarkEnd	500000000	         4.58 ns/op
+--- BENCH: BenchmarkEnd
+	bench_filter_test.go:211: End=373
+	bench_filter_test.go:211: End=373
+	bench_filter_test.go:211: End=373
+	bench_filter_test.go:211: End=373
+	bench_filter_test.go:211: End=373
+	bench_filter_test.go:211: End=373
+BenchmarkEach	  200000	      8615 ns/op
+--- BENCH: BenchmarkEach
+	bench_iteration_test.go:22: Each=59
+	bench_iteration_test.go:22: Each=59
+	bench_iteration_test.go:22: Each=59
+	bench_iteration_test.go:22: Each=59
+BenchmarkMap	  200000	     14271 ns/op
+--- BENCH: BenchmarkMap
+	bench_iteration_test.go:41: Map=59
+	bench_iteration_test.go:41: Map=59
+	bench_iteration_test.go:41: Map=59
+	bench_iteration_test.go:41: Map=59
+BenchmarkEachWithBreak	 1000000	      1497 ns/op
+--- BENCH: BenchmarkEachWithBreak
+	bench_iteration_test.go:61: Each=10
+	bench_iteration_test.go:61: Each=10
+	bench_iteration_test.go:61: Each=10
+	bench_iteration_test.go:61: Each=10
+BenchmarkAttr	50000000	        30.9 ns/op
+--- BENCH: BenchmarkAttr
+	bench_property_test.go:16: Attr=firstHeading
+	bench_property_test.go:16: Attr=firstHeading
+	bench_property_test.go:16: Attr=firstHeading
+	bench_property_test.go:16: Attr=firstHeading
+	bench_property_test.go:16: Attr=firstHeading
+BenchmarkText	  200000	     13729 ns/op
+BenchmarkLength	2000000000	         0.31 ns/op
+--- BENCH: BenchmarkLength
+	bench_property_test.go:37: Length=14
+	bench_property_test.go:37: Length=14
+	bench_property_test.go:37: Length=14
+	bench_property_test.go:37: Length=14
+	bench_property_test.go:37: Length=14
+	bench_property_test.go:37: Length=14
+BenchmarkHtml	 5000000	       537 ns/op
+BenchmarkIs	  100000	     28904 ns/op
+--- BENCH: BenchmarkIs
+	bench_query_test.go:16: Is=true
+	bench_query_test.go:16: Is=true
+	bench_query_test.go:16: Is=true
+	bench_query_test.go:16: Is=true
+BenchmarkIsPositional	  100000	     23556 ns/op
+--- BENCH: BenchmarkIsPositional
+	bench_query_test.go:28: IsPositional=true
+	bench_query_test.go:28: IsPositional=true
+	bench_query_test.go:28: IsPositional=true
+	bench_query_test.go:28: IsPositional=true
+BenchmarkIsFunction	 1000000	      2195 ns/op
+--- BENCH: BenchmarkIsFunction
+	bench_query_test.go:43: IsFunction=true
+	bench_query_test.go:43: IsFunction=true
+	bench_query_test.go:43: IsFunction=true
+	bench_query_test.go:43: IsFunction=true
+BenchmarkIsSelection	   50000	     60100 ns/op
+--- BENCH: BenchmarkIsSelection
+	bench_query_test.go:56: IsSelection=true
+	bench_query_test.go:56: IsSelection=true
+	bench_query_test.go:56: IsSelection=true
+	bench_query_test.go:56: IsSelection=true
+BenchmarkIsNodes	   50000	     59962 ns/op
+--- BENCH: BenchmarkIsNodes
+	bench_query_test.go:70: IsNodes=true
+	bench_query_test.go:70: IsNodes=true
+	bench_query_test.go:70: IsNodes=true
+	bench_query_test.go:70: IsNodes=true
+BenchmarkHasClass	    5000	    388679 ns/op
+--- BENCH: BenchmarkHasClass
+	bench_query_test.go:82: HasClass=true
+	bench_query_test.go:82: HasClass=true
+	bench_query_test.go:82: HasClass=true
+BenchmarkContains	100000000	        11.0 ns/op
+--- BENCH: BenchmarkContains
+	bench_query_test.go:96: Contains=true
+	bench_query_test.go:96: Contains=true
+	bench_query_test.go:96: Contains=true
+	bench_query_test.go:96: Contains=true
+	bench_query_test.go:96: Contains=true
+BenchmarkFind	  100000	     22779 ns/op
+--- BENCH: BenchmarkFind
+	bench_traversal_test.go:18: Find=41
+	bench_traversal_test.go:18: Find=41
+	bench_traversal_test.go:18: Find=41
+	bench_traversal_test.go:18: Find=41
+BenchmarkFindWithinSelection	   50000	     62033 ns/op
+--- BENCH: BenchmarkFindWithinSelection
+	bench_traversal_test.go:34: FindWithinSelection=39
+	bench_traversal_test.go:34: FindWithinSelection=39
+	bench_traversal_test.go:34: FindWithinSelection=39
+	bench_traversal_test.go:34: FindWithinSelection=39
+BenchmarkFindSelection	    5000	    446918 ns/op
+--- BENCH: BenchmarkFindSelection
+	bench_traversal_test.go:51: FindSelection=73
+	bench_traversal_test.go:51: FindSelection=73
+	bench_traversal_test.go:51: FindSelection=73
+BenchmarkFindNodes	    5000	    441753 ns/op
+--- BENCH: BenchmarkFindNodes
+	bench_traversal_test.go:69: FindNodes=73
+	bench_traversal_test.go:69: FindNodes=73
+	bench_traversal_test.go:69: FindNodes=73
+BenchmarkContents	 1000000	      2807 ns/op
+--- BENCH: BenchmarkContents
+	bench_traversal_test.go:85: Contents=16
+	bench_traversal_test.go:85: Contents=16
+	bench_traversal_test.go:85: Contents=16
+	bench_traversal_test.go:85: Contents=16
+BenchmarkContentsFiltered	  500000	      4477 ns/op
+--- BENCH: BenchmarkContentsFiltered
+	bench_traversal_test.go:101: ContentsFiltered=1
+	bench_traversal_test.go:101: ContentsFiltered=1
+	bench_traversal_test.go:101: ContentsFiltered=1
+	bench_traversal_test.go:101: ContentsFiltered=1
+BenchmarkChildren	 5000000	       548 ns/op
+--- BENCH: BenchmarkChildren
+	bench_traversal_test.go:117: Children=2
+	bench_traversal_test.go:117: Children=2
+	bench_traversal_test.go:117: Children=2
+	bench_traversal_test.go:117: Children=2
+	bench_traversal_test.go:117: Children=2
+BenchmarkChildrenFiltered	  500000	      3304 ns/op
+--- BENCH: BenchmarkChildrenFiltered
+	bench_traversal_test.go:133: ChildrenFiltered=2
+	bench_traversal_test.go:133: ChildrenFiltered=2
+	bench_traversal_test.go:133: ChildrenFiltered=2
+	bench_traversal_test.go:133: ChildrenFiltered=2
+BenchmarkParent	   50000	     38248 ns/op
+--- BENCH: BenchmarkParent
+	bench_traversal_test.go:149: Parent=55
+	bench_traversal_test.go:149: Parent=55
+	bench_traversal_test.go:149: Parent=55
+	bench_traversal_test.go:149: Parent=55
+BenchmarkParentFiltered	   50000	     40677 ns/op
+--- BENCH: BenchmarkParentFiltered
+	bench_traversal_test.go:165: ParentFiltered=4
+	bench_traversal_test.go:165: ParentFiltered=4
+	bench_traversal_test.go:165: ParentFiltered=4
+	bench_traversal_test.go:165: ParentFiltered=4
+BenchmarkParents	   20000	     83043 ns/op
+--- BENCH: BenchmarkParents
+	bench_traversal_test.go:181: Parents=73
+	bench_traversal_test.go:181: Parents=73
+	bench_traversal_test.go:181: Parents=73
+	bench_traversal_test.go:181: Parents=73
+BenchmarkParentsFiltered	   20000	     85391 ns/op
+--- BENCH: BenchmarkParentsFiltered
+	bench_traversal_test.go:197: ParentsFiltered=18
+	bench_traversal_test.go:197: ParentsFiltered=18
+	bench_traversal_test.go:197: ParentsFiltered=18
+	bench_traversal_test.go:197: ParentsFiltered=18
+BenchmarkParentsUntil	   50000	     65118 ns/op
+--- BENCH: BenchmarkParentsUntil
+	bench_traversal_test.go:213: ParentsUntil=52
+	bench_traversal_test.go:213: ParentsUntil=52
+	bench_traversal_test.go:213: ParentsUntil=52
+	bench_traversal_test.go:213: ParentsUntil=52
+BenchmarkParentsUntilSelection	   10000	    144028 ns/op
+--- BENCH: BenchmarkParentsUntilSelection
+	bench_traversal_test.go:230: ParentsUntilSelection=70
+	bench_traversal_test.go:230: ParentsUntilSelection=70
+	bench_traversal_test.go:230: ParentsUntilSelection=70
+BenchmarkParentsUntilNodes	   10000	    146713 ns/op
+--- BENCH: BenchmarkParentsUntilNodes
+	bench_traversal_test.go:248: ParentsUntilNodes=70
+	bench_traversal_test.go:248: ParentsUntilNodes=70
+	bench_traversal_test.go:248: ParentsUntilNodes=70
+BenchmarkParentsFilteredUntil	  100000	     15113 ns/op
+--- BENCH: BenchmarkParentsFilteredUntil
+	bench_traversal_test.go:264: ParentsFilteredUntil=2
+	bench_traversal_test.go:264: ParentsFilteredUntil=2
+	bench_traversal_test.go:264: ParentsFilteredUntil=2
+	bench_traversal_test.go:264: ParentsFilteredUntil=2
+BenchmarkParentsFilteredUntilSelection	  100000	     18881 ns/op
+--- BENCH: BenchmarkParentsFilteredUntilSelection
+	bench_traversal_test.go:281: ParentsFilteredUntilSelection=2
+	bench_traversal_test.go:281: ParentsFilteredUntilSelection=2
+	bench_traversal_test.go:281: ParentsFilteredUntilSelection=2
+	bench_traversal_test.go:281: ParentsFilteredUntilSelection=2
+BenchmarkParentsFilteredUntilNodes	  100000	     18926 ns/op
+--- BENCH: BenchmarkParentsFilteredUntilNodes
+	bench_traversal_test.go:299: ParentsFilteredUntilNodes=2
+	bench_traversal_test.go:299: ParentsFilteredUntilNodes=2
+	bench_traversal_test.go:299: ParentsFilteredUntilNodes=2
+	bench_traversal_test.go:299: ParentsFilteredUntilNodes=2
+BenchmarkSiblings	   50000	     63221 ns/op
+--- BENCH: BenchmarkSiblings
+	bench_traversal_test.go:315: Siblings=293
+	bench_traversal_test.go:315: Siblings=293
+	bench_traversal_test.go:315: Siblings=293
+	bench_traversal_test.go:315: Siblings=293
+BenchmarkSiblingsFiltered	   50000	     69028 ns/op
+--- BENCH: BenchmarkSiblingsFiltered
+	bench_traversal_test.go:331: SiblingsFiltered=46
+	bench_traversal_test.go:331: SiblingsFiltered=46
+	bench_traversal_test.go:331: SiblingsFiltered=46
+	bench_traversal_test.go:331: SiblingsFiltered=46
+BenchmarkNext	  200000	      9133 ns/op
+--- BENCH: BenchmarkNext
+	bench_traversal_test.go:347: Next=49
+	bench_traversal_test.go:347: Next=49
+	bench_traversal_test.go:347: Next=49
+	bench_traversal_test.go:347: Next=49
+BenchmarkNextFiltered	  200000	     10601 ns/op
+--- BENCH: BenchmarkNextFiltered
+	bench_traversal_test.go:363: NextFiltered=6
+	bench_traversal_test.go:363: NextFiltered=6
+	bench_traversal_test.go:363: NextFiltered=6
+	bench_traversal_test.go:363: NextFiltered=6
+BenchmarkNextAll	   50000	     43089 ns/op
+--- BENCH: BenchmarkNextAll
+	bench_traversal_test.go:379: NextAll=234
+	bench_traversal_test.go:379: NextAll=234
+	bench_traversal_test.go:379: NextAll=234
+	bench_traversal_test.go:379: NextAll=234
+BenchmarkNextAllFiltered	   50000	     47867 ns/op
+--- BENCH: BenchmarkNextAllFiltered
+	bench_traversal_test.go:395: NextAllFiltered=33
+	bench_traversal_test.go:395: NextAllFiltered=33
+	bench_traversal_test.go:395: NextAllFiltered=33
+	bench_traversal_test.go:395: NextAllFiltered=33
+BenchmarkPrev	  200000	      9104 ns/op
+--- BENCH: BenchmarkPrev
+	bench_traversal_test.go:411: Prev=49
+	bench_traversal_test.go:411: Prev=49
+	bench_traversal_test.go:411: Prev=49
+	bench_traversal_test.go:411: Prev=49
+BenchmarkPrevFiltered	  200000	     10579 ns/op
+--- BENCH: BenchmarkPrevFiltered
+	bench_traversal_test.go:429: PrevFiltered=7
+	bench_traversal_test.go:429: PrevFiltered=7
+	bench_traversal_test.go:429: PrevFiltered=7
+	bench_traversal_test.go:429: PrevFiltered=7
+BenchmarkPrevAll	  100000	     15185 ns/op
+--- BENCH: BenchmarkPrevAll
+	bench_traversal_test.go:445: PrevAll=78
+	bench_traversal_test.go:445: PrevAll=78
+	bench_traversal_test.go:445: PrevAll=78
+	bench_traversal_test.go:445: PrevAll=78
+BenchmarkPrevAllFiltered	  100000	     17108 ns/op
+--- BENCH: BenchmarkPrevAllFiltered
+	bench_traversal_test.go:461: PrevAllFiltered=6
+	bench_traversal_test.go:461: PrevAllFiltered=6
+	bench_traversal_test.go:461: PrevAllFiltered=6
+	bench_traversal_test.go:461: PrevAllFiltered=6
+BenchmarkNextUntil	   20000	     81087 ns/op
+--- BENCH: BenchmarkNextUntil
+	bench_traversal_test.go:477: NextUntil=84
+	bench_traversal_test.go:477: NextUntil=84
+	bench_traversal_test.go:477: NextUntil=84
+	bench_traversal_test.go:477: NextUntil=84
+BenchmarkNextUntilSelection	   50000	     55831 ns/op
+--- BENCH: BenchmarkNextUntilSelection
+	bench_traversal_test.go:494: NextUntilSelection=42
+	bench_traversal_test.go:494: NextUntilSelection=42
+	bench_traversal_test.go:494: NextUntilSelection=42
+	bench_traversal_test.go:494: NextUntilSelection=42
+BenchmarkNextUntilNodes	  100000	     23130 ns/op
+--- BENCH: BenchmarkNextUntilNodes
+	bench_traversal_test.go:512: NextUntilNodes=12
+	bench_traversal_test.go:512: NextUntilNodes=12
+	bench_traversal_test.go:512: NextUntilNodes=12
+	bench_traversal_test.go:512: NextUntilNodes=12
+BenchmarkPrevUntil	   10000	    204673 ns/op
+--- BENCH: BenchmarkPrevUntil
+	bench_traversal_test.go:528: PrevUntil=238
+	bench_traversal_test.go:528: PrevUntil=238
+	bench_traversal_test.go:528: PrevUntil=238
+BenchmarkPrevUntilSelection	   50000	     70965 ns/op
+--- BENCH: BenchmarkPrevUntilSelection
+	bench_traversal_test.go:545: PrevUntilSelection=49
+	bench_traversal_test.go:545: PrevUntilSelection=49
+	bench_traversal_test.go:545: PrevUntilSelection=49
+	bench_traversal_test.go:545: PrevUntilSelection=49
+BenchmarkPrevUntilNodes	  100000	     18591 ns/op
+--- BENCH: BenchmarkPrevUntilNodes
+	bench_traversal_test.go:563: PrevUntilNodes=11
+	bench_traversal_test.go:563: PrevUntilNodes=11
+	bench_traversal_test.go:563: PrevUntilNodes=11
+	bench_traversal_test.go:563: PrevUntilNodes=11
+BenchmarkNextFilteredUntil	   50000	     42004 ns/op
+--- BENCH: BenchmarkNextFilteredUntil
+	bench_traversal_test.go:579: NextFilteredUntil=22
+	bench_traversal_test.go:579: NextFilteredUntil=22
+	bench_traversal_test.go:579: NextFilteredUntil=22
+	bench_traversal_test.go:579: NextFilteredUntil=22
+BenchmarkNextFilteredUntilSelection	   50000	     61953 ns/op
+--- BENCH: BenchmarkNextFilteredUntilSelection
+	bench_traversal_test.go:596: NextFilteredUntilSelection=22
+	bench_traversal_test.go:596: NextFilteredUntilSelection=22
+	bench_traversal_test.go:596: NextFilteredUntilSelection=22
+	bench_traversal_test.go:596: NextFilteredUntilSelection=22
+BenchmarkNextFilteredUntilNodes	   50000	     62124 ns/op
+--- BENCH: BenchmarkNextFilteredUntilNodes
+	bench_traversal_test.go:614: NextFilteredUntilNodes=22
+	bench_traversal_test.go:614: NextFilteredUntilNodes=22
+	bench_traversal_test.go:614: NextFilteredUntilNodes=22
+	bench_traversal_test.go:614: NextFilteredUntilNodes=22
+BenchmarkPrevFilteredUntil	   50000	     42861 ns/op
+--- BENCH: BenchmarkPrevFilteredUntil
+	bench_traversal_test.go:630: PrevFilteredUntil=20
+	bench_traversal_test.go:630: PrevFilteredUntil=20
+	bench_traversal_test.go:630: PrevFilteredUntil=20
+	bench_traversal_test.go:630: PrevFilteredUntil=20
+BenchmarkPrevFilteredUntilSelection	   50000	     62451 ns/op
+--- BENCH: BenchmarkPrevFilteredUntilSelection
+	bench_traversal_test.go:647: PrevFilteredUntilSelection=20
+	bench_traversal_test.go:647: PrevFilteredUntilSelection=20
+	bench_traversal_test.go:647: PrevFilteredUntilSelection=20
+	bench_traversal_test.go:647: PrevFilteredUntilSelection=20
+BenchmarkPrevFilteredUntilNodes	   50000	     62631 ns/op
+--- BENCH: BenchmarkPrevFilteredUntilNodes
+	bench_traversal_test.go:665: PrevFilteredUntilNodes=20
+	bench_traversal_test.go:665: PrevFilteredUntilNodes=20
+	bench_traversal_test.go:665: PrevFilteredUntilNodes=20
+	bench_traversal_test.go:665: PrevFilteredUntilNodes=20
+BenchmarkClosest	  500000	      4684 ns/op
+--- BENCH: BenchmarkClosest
+	bench_traversal_test.go:681: Closest=2
+	bench_traversal_test.go:681: Closest=2
+	bench_traversal_test.go:681: Closest=2
+	bench_traversal_test.go:681: Closest=2
+BenchmarkClosestSelection	 5000000	       622 ns/op
+--- BENCH: BenchmarkClosestSelection
+	bench_traversal_test.go:698: ClosestSelection=2
+	bench_traversal_test.go:698: ClosestSelection=2
+	bench_traversal_test.go:698: ClosestSelection=2
+	bench_traversal_test.go:698: ClosestSelection=2
+	bench_traversal_test.go:698: ClosestSelection=2
+BenchmarkClosestNodes	 5000000	       617 ns/op
+--- BENCH: BenchmarkClosestNodes
+	bench_traversal_test.go:715: ClosestNodes=2
+	bench_traversal_test.go:715: ClosestNodes=2
+	bench_traversal_test.go:715: ClosestNodes=2
+	bench_traversal_test.go:715: ClosestNodes=2
+	bench_traversal_test.go:715: ClosestNodes=2
+ok  	github.com/PuerkitoBio/goquery	218.724s

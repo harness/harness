@@ -1,0 +1,16 @@
+language: go
+go:
+  - 1.2
+  - 1.3
+  - 1.4
+  - 1.5
+  - 1.6
+    
+install:
+  - go get github.com/axw/gocov/gocov
+  - go get github.com/mattn/goveralls
+  - if ! go get code.google.com/p/go.tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+  - go get github.com/stretchr/testify/assert
+script:
+  - $HOME/gopath/bin/goveralls -service=travis-ci -repotoken $COVERALLS_TOKEN
+  - go test -race
