@@ -17,6 +17,30 @@
 	font-family: "Roboto Mono";
 	min-height: calc(100vh - 205px);
 
+#output > pre
+	font-size: 13px;
+	color: #eff1f5;
+	border-radius: 2px;
+	background: #2b303b;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	box-sizing: border-box;
+	padding: 0px;
+	font-family: "Roboto Mono";
+	margin: 0px;
+	margin-top: 25px;
+
+#output > pre:first-child
+	margin-top: 0px;
+
+#output > pre:before
+	content: attr(data-title);
+	display: block;
+	padding: 5px;
+	margin-bottom: 10px;
+	border-bottom: 1px solid rgba(255,255,255,0.3);
+	padding-left: 0px;
+
 #follow
 	position: absolute;
 
@@ -49,7 +73,7 @@
 	dd
 		color: #747C84;
 		text-decoration: none;
-		font-style: normal;	
+		font-style: normal;
 
 .build-summary > div
 	h3
@@ -155,7 +179,7 @@
 	border: none;
 	outline: none;
 	display: none;
- 
+
 .tail i
 	color: rgba(255,255,255,0.5);
 	line-height: 38px;
