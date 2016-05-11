@@ -62,6 +62,7 @@ func (a *Agent) Run(payload *queue.Work, cancel <-chan bool) error {
 		a.Update(payload)
 		return err
 	}
+	a.Update(payload)
 	err = a.exec(spec, payload, cancel)
 
 	if err != nil {

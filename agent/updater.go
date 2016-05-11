@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -41,10 +42,21 @@ func NewClientUpdater(client client.Client) UpdateFunc {
 	}
 }
 
-func NewClientLogger(w io.Writer) LoggerFunc {
+func NewClientLogger(client client.Client, id int64, rc io.ReadCloser, wc io.WriteCloser) LoggerFunc {
+	var once sync.Once
 	return func(line *build.Line) {
+		// annoying hack to only start streaming once the first line is written
+		once.Do(func() {
+			go func() {
+				err := client.Stream(id, rc)
+				if err != nil && err != io.ErrClosedPipe {
+					logrus.Errorf("Error streaming build logs. %s", err)
+				}
+			}()
+		})
+
 		linejson, _ := json.Marshal(line)
-		w.Write(linejson)
-		w.Write([]byte{'\n'})
+		wc.Write(linejson)
+		wc.Write([]byte{'\n'})
 	}
 }
