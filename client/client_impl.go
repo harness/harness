@@ -23,6 +23,7 @@ const (
 	pathWait   = "%s/api/queue/wait/%d"
 	pathStream = "%s/api/queue/stream/%d"
 	pathPush   = "%s/api/queue/status/%d"
+	pathPing   = "%s/api/queue/ping"
 
 	pathSelf       = "%s/api/user"
 	pathFeed       = "%s/api/user/feed"
@@ -276,6 +277,13 @@ func (c *client) Pull(os, arch string) (*queue.Work, error) {
 func (c *client) Push(p *queue.Work) error {
 	uri := fmt.Sprintf(pathPush, c.base, p.Job.ID)
 	err := c.post(uri, p, nil)
+	return err
+}
+
+// Ping pings the server.
+func (c *client) Ping() error {
+	uri := fmt.Sprintf(pathPing, c.base)
+	err := c.post(uri, nil, nil)
 	return err
 }
 

@@ -116,6 +116,18 @@ type Store interface {
 
 	// WriteLog writes the job logs to the datastore.
 	WriteLog(*model.Job, io.Reader) error
+
+	GetAgent(int64) (*model.Agent, error)
+
+	GetAgentAddr(string) (*model.Agent, error)
+
+	GetAgentList() ([]*model.Agent, error)
+
+	CreateAgent(*model.Agent) error
+
+	UpdateAgent(*model.Agent) error
+
+	DeleteAgent(*model.Agent) error
 }
 
 // GetUser gets a user by unique ID.
@@ -306,4 +318,28 @@ func ReadLog(c context.Context, job *model.Job) (io.ReadCloser, error) {
 
 func WriteLog(c context.Context, job *model.Job, r io.Reader) error {
 	return FromContext(c).WriteLog(job, r)
+}
+
+func GetAgent(c context.Context, id int64) (*model.Agent, error) {
+	return FromContext(c).GetAgent(id)
+}
+
+func GetAgentAddr(c context.Context, addr string) (*model.Agent, error) {
+	return FromContext(c).GetAgentAddr(addr)
+}
+
+func GetAgentList(c context.Context) ([]*model.Agent, error) {
+	return FromContext(c).GetAgentList()
+}
+
+func CreateAgent(c context.Context, agent *model.Agent) error {
+	return FromContext(c).CreateAgent(agent)
+}
+
+func UpdateAgent(c context.Context, agent *model.Agent) error {
+	return FromContext(c).UpdateAgent(agent)
+}
+
+func DeleteAgent(c context.Context, agent *model.Agent) error {
+	return FromContext(c).DeleteAgent(agent)
 }

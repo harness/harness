@@ -101,4 +101,7 @@ type Client interface {
 
 	// Wait waits for the job to the complete.
 	Wait(int64) *Wait
+
+	// Ping the server
+	Ping() error
 }

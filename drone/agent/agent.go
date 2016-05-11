@@ -75,6 +75,12 @@ var AgentCmd = cli.Command{
 			Usage:  "drone server backoff interval",
 			Value:  time.Second * 15,
 		},
+		cli.DurationFlag{
+			EnvVar: "DRONE_PING",
+			Name:   "ping",
+			Usage:  "drone server ping frequency",
+			Value:  time.Minute * 5,
+		},
 		cli.BoolFlag{
 			EnvVar: "DRONE_DEBUG",
 			Name:   "debug",
@@ -133,6 +139,15 @@ func start(c *cli.Context) {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+
+	go func() {
+		for {
+			if err := client.Ping(); err != nil {
+				logrus.Warnf("unable to ping the server. %s", err.Error())
+			}
+			time.Sleep(c.Duration("ping"))
+		}
+	}()
 
 	var wg sync.WaitGroup
 	for i := 0; i < c.Int("docker-max-procs"); i++ {

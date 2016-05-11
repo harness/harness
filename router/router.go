@@ -141,9 +141,11 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		builds.GET("", server.GetBuildQueue)
 	}
 
-	// agents := e.Group("/api/agents") {
-	// 	builds.Use(session.MustAdmin, server.GetAgents)
-	// }
+	agents := e.Group("/api/agents")
+	{
+		agents.Use(session.MustAdmin())
+		agents.GET("", server.GetAgents)
+	}
 
 	queue := e.Group("/api/queue")
 	{
@@ -153,6 +155,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		queue.POST("/wait/:id", server.Wait)
 		queue.POST("/stream/:id", server.Stream)
 		queue.POST("/status/:id", server.Update)
+		queue.POST("/ping", server.Ping)
 	}
 
 	// DELETE THESE
