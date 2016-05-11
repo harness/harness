@@ -33,8 +33,8 @@ type Client interface {
 	// Repo returns a repository by name.
 	Repo(string, string) (*model.Repo, error)
 
-	// RepoList returns a list of all repositories to which
-	// the user has explicit access in the host system.
+	// RepoList returns a list of all repositories to which the user has explicit
+	// access in the host system.
 	RepoList() ([]*model.Repo, error)
 
 	// RepoPost activates a repository.
@@ -58,13 +58,16 @@ type Client interface {
 	// Build returns a repository build by number.
 	Build(string, string, int) (*model.Build, error)
 
-	// BuildLast returns the latest repository build by branch.
-	// An empty branch will result in the default branch.
+	// BuildLast returns the latest repository build by branch. An empty branch
+	// will result in the default branch.
 	BuildLast(string, string, string) (*model.Build, error)
 
 	// BuildList returns a list of recent builds for the
 	// the specified repository.
 	BuildList(string, string) ([]*model.Build, error)
+
+	// BuildQueue returns a list of enqueued builds.
+	BuildQueue() ([]*model.Feed, error)
 
 	// BuildStart re-starts a stopped build.
 	BuildStart(string, string, int) (*model.Build, error)
@@ -72,15 +75,15 @@ type Client interface {
 	// BuildStop stops the specified running job for given build.
 	BuildStop(string, string, int, int) error
 
-	// BuildFork re-starts a stopped build with a new build number,
-	// preserving the prior history.
+	// BuildFork re-starts a stopped build with a new build number, preserving
+	// the prior history.
 	BuildFork(string, string, int) (*model.Build, error)
 
 	// BuildLogs returns the build logs for the specified job.
 	BuildLogs(string, string, int, int) (io.ReadCloser, error)
 
-	// Deploy triggers a deployment for an existing build using the
-	// specified target environment.
+	// Deploy triggers a deployment for an existing build using the specified
+	// target environment.
 	Deploy(string, string, int, string) (*model.Build, error)
 
 	//

@@ -135,6 +135,16 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		auth.POST("/token", server.GetLoginToken)
 	}
 
+	builds := e.Group("/api/builds")
+	{
+		builds.Use(session.MustAdmin())
+		builds.GET("", server.GetBuildQueue)
+	}
+
+	// agents := e.Group("/api/agents") {
+	// 	builds.Use(session.MustAdmin, server.GetAgents)
+	// }
+
 	queue := e.Group("/api/queue")
 	{
 		queue.Use(session.AuthorizeAgent)

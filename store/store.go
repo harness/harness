@@ -87,6 +87,9 @@ type Store interface {
 	// GetBuildList gets a list of builds for the repository
 	GetBuildList(*model.Repo) ([]*model.Build, error)
 
+	// GetBuildQueue gets a list of build in queue.
+	GetBuildQueue() ([]*model.Feed, error)
+
 	// CreateBuild creates a new build and jobs.
 	CreateBuild(*model.Build, ...*model.Job) error
 
@@ -222,6 +225,10 @@ func GetBuildLastBefore(c context.Context, repo *model.Repo, branch string, numb
 
 func GetBuildList(c context.Context, repo *model.Repo) ([]*model.Build, error) {
 	return FromContext(c).GetBuildList(repo)
+}
+
+func GetBuildQueue(c context.Context) ([]*model.Feed, error) {
+	return FromContext(c).GetBuildQueue()
 }
 
 func CreateBuild(c context.Context, build *model.Build, jobs ...*model.Job) error {

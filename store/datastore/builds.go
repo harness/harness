@@ -49,6 +49,12 @@ func (db *datastore) GetBuildList(repo *model.Repo) ([]*model.Build, error) {
 	return builds, err
 }
 
+func (db *datastore) GetBuildQueue() ([]*model.Feed, error) {
+	feed := []*model.Feed{}
+	err := meddler.QueryAll(db, &feed, buildQueueList)
+	return feed, err
+}
+
 func (db *datastore) CreateBuild(build *model.Build, jobs ...*model.Job) error {
 	var number int
 	db.QueryRow(rebind(buildNumberLast), build.RepoID).Scan(&number)
@@ -134,4 +140,32 @@ const buildNumberLast = `
 SELECT MAX(build_number)
 FROM builds
 WHERE build_repo_id = ?
+`
+
+const buildQueueList = `
+SELECT
+ repo_owner
+,repo_name
+,repo_full_name
+,build_number
+,build_event
+,build_status
+,build_created
+,build_started
+,build_finished
+,build_commit
+,build_branch
+,build_ref
+,build_refspec
+,build_remote
+,build_title
+,build_message
+,build_author
+,build_email
+,build_avatar
+FROM
+ builds b
+,repos r
+WHERE b.build_repo_id = r.repo_id
+  AND b.build_status IN ('pending','running')
 `

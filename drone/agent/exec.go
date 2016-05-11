@@ -15,9 +15,7 @@ import (
 type config struct {
 	platform   string
 	namespace  string
-	whitelist  []string
 	privileged []string
-	netrc      []string
 	pull       bool
 }
 

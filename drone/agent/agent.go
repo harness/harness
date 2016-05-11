@@ -53,8 +53,8 @@ var AgentCmd = cli.Command{
 			Value:  "amd64",
 		},
 		cli.StringFlag{
-			EnvVar: "DOCKER_STORAGE_DRIVER",
-			Name:   "docker-storage-driver",
+			EnvVar: "DRONE_STORAGE_DRIVER",
+			Name:   "drone-storage-driver",
 			Usage:  "docker storage driver",
 			Value:  "overlay",
 		},
@@ -80,26 +80,6 @@ var AgentCmd = cli.Command{
 			Name:   "debug",
 			Usage:  "start the agent in debug mode",
 		},
-		cli.BoolFlag{
-			EnvVar: "DRONE_EXPERIMENTAL",
-			Name:   "experimental",
-			Usage:  "start the agent with experimental features",
-		},
-		cli.StringSliceFlag{
-			EnvVar: "DRONE_PLUGIN_NETRC",
-			Name:   "netrc-plugin",
-			Usage:  "plugins that receive the netrc file",
-			Value: &cli.StringSlice{
-				"git",
-				"git:*",
-				"hg",
-				"hg:*",
-				"plugins/hg",
-				"plugins/hg:*",
-				"plugins/git",
-				"plugins/git:*",
-			},
-		},
 		cli.StringSliceFlag{
 			EnvVar: "DRONE_PLUGIN_PRIVILEGED",
 			Name:   "privileged",
@@ -113,22 +93,16 @@ var AgentCmd = cli.Command{
 				"plugins/ecr:*",
 			},
 		},
-		cli.BoolFlag{
-			EnvVar: "DRONE_PLUGIN_PULL",
-			Name:   "pull",
-			Usage:  "always pull latest plugin images",
-		},
 		cli.StringFlag{
 			EnvVar: "DRONE_PLUGIN_NAMESPACE",
 			Name:   "namespace",
 			Value:  "plugins",
 			Usage:  "default plugin image namespace",
 		},
-		cli.StringSliceFlag{
-			EnvVar: "DRONE_PLUGIN_WHITELIST",
-			Name:   "whitelist",
-			Usage:  "plugins that are permitted to run on the host",
-			Value:  &cli.StringSlice{"plugins/*"},
+		cli.BoolFlag{
+			EnvVar: "DRONE_PLUGIN_PULL",
+			Name:   "pull",
+			Usage:  "always pull latest plugin images",
 		},
 	},
 }
@@ -168,10 +142,8 @@ func start(c *cli.Context) {
 				drone:  client,
 				docker: docker,
 				config: config{
-					whitelist:  c.StringSlice("whitelist"),
 					namespace:  c.String("namespace"),
 					privileged: c.StringSlice("privileged"),
-					netrc:      c.StringSlice("netrc-plugin"),
 					pull:       c.Bool("pull"),
 				},
 			}
