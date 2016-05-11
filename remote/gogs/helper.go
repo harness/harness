@@ -56,6 +56,14 @@ func toPerm(from gogs.Permission) *model.Perm {
 	}
 }
 
+// helper function that converts a Gogs team to a Drone team.
+func toTeam(from *gogs.Organization, link string) *model.Team {
+	return &model.Team{
+		Login:  from.UserName,
+		Avatar: expandAvatar(link, from.AvatarUrl),
+	}
+}
+
 // helper function that extracts the Build data from a Gogs push hook
 func buildFromPush(hook *pushHook) *model.Build {
 	avatar := expandAvatar(

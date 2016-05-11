@@ -76,6 +76,17 @@ func Test_parse(t *testing.T) {
 			}
 		})
 
+		g.It("Should return a Team struct from a Gogs Org", func() {
+			from := &gogs.Organization{
+				UserName:  "drone",
+				AvatarUrl: "/avatars/1",
+			}
+
+			to := toTeam(from, "http://localhost:80")
+			g.Assert(to.Login).Equal(from.UserName)
+			g.Assert(to.Avatar).Equal("http://localhost:80/avatars/1")
+		})
+
 		g.It("Should return a Repo struct from a Gogs Repo", func() {
 			from := gogs.Repository{
 				FullName: "gophers/hello-world",
