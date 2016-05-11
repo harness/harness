@@ -44,7 +44,7 @@ func Remove(c context.Context, w *Work) error {
 	return FromContext(c).Remove(w)
 }
 
-// PullClose retrieves and removes the head of this queue,
+// Pull retrieves and removes the head of this queue,
 // waiting if necessary until work becomes available.
 func Pull(c context.Context) *Work {
 	return FromContext(c).Pull()
