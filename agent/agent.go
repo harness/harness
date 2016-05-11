@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/drone/drone/build"
-	"github.com/drone/drone/engine/runner"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/queue"
 	"github.com/drone/drone/version"
@@ -68,7 +67,7 @@ func (a *Agent) Run(payload *queue.Work, cancel <-chan bool) error {
 	if err != nil {
 		payload.Job.ExitCode = 255
 	}
-	if exitErr, ok := err.(*runner.ExitError); ok {
+	if exitErr, ok := err.(*build.ExitError); ok {
 		payload.Job.ExitCode = exitErr.Code
 	}
 
