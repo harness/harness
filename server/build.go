@@ -1,7 +1,6 @@
 package server
 
 import (
-	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
+	"github.com/drone/drone/stream"
 	"github.com/gin-gonic/gin"
 	"github.com/square/go-jose"
 
@@ -108,10 +108,10 @@ func GetBuildLogs(c *gin.Context) {
 
 	defer r.Close()
 	if full {
-		io.Copy(c.Writer, r)
-	} else {
-		io.Copy(c.Writer, io.LimitReader(r, 2000000))
+		// TODO implement limited streaming to avoid crashing the browser
 	}
+
+	stream.Copy(c.Writer, r)
 }
 
 func DeleteBuild(c *gin.Context) {

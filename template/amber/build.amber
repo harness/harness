@@ -84,7 +84,7 @@ block content
                 if Job.Error != ""
                     div.alert.alert-danger #{Job.Error}
                 else
-                    pre#output
+                    div#output
                     button.tail#tail
                         i.material-icons expand_more
 

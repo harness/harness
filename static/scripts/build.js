@@ -5,7 +5,7 @@ function JobViewModel(repo, build, job, status) {
 	self.status = status;
 
 	self.stream = function() {
-		$( "#output" ).html("");
+		$("#output").html("");
 		$("#restart").hide();
 		$("#cancel").show();
 
@@ -69,7 +69,7 @@ function JobViewModel(repo, build, job, status) {
 		});
 	})
 
-			
+
 	Subscribe(repo, function(data){
 		if (!data.jobs) {
 			return;
@@ -141,10 +141,42 @@ function Logs(repo, build, job) {
 
 	$.get( "/api/repos/"+repo+"/logs/"+build+"/"+job, function( data ) {
 
-		var convert = new Filter({stream: false, newline: false});
-		var escaped = convert.toHtml(escapeHTML(data));
+		var lines = JSON.parse(data);
 
-		$( "#output" ).html( escaped );
+		var groups = {}
+		for (var i=0; i<lines.length; i++) {
+			var line = lines[i];
+
+			if (!line.proc) {
+				continue
+			}
+
+			var group = groups[line.proc];
+
+			if (!group) {
+
+				// create an element to hold the group of output
+				var pre = $("<pre>").attr("data-title", line.proc);
+				$("#output").append(pre);
+
+				// create the buffer for the group of output
+				var buf = new Drone.Buffer();
+				buf.start(pre[0]);
+
+				// add items to the group
+				group = {
+					pre: pre,
+					buf: buf,
+				};
+				groups[line.proc]=group;
+			}
+
+			group.buf.write(line.out+"\n");
+		}
+
+		for (var i=0; i<groups.length; i++) {
+			groups[i].buf.stop();
+		}
 	});
 }
 
