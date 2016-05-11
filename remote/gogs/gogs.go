@@ -113,8 +113,17 @@ func (c *client) Auth(token, secret string) (string, error) {
 
 // Teams is not supported by the Gogs driver.
 func (c *client) Teams(u *model.User) ([]*model.Team, error) {
-	var empty []*model.Team
-	return empty, nil
+	client := c.newClientToken(u.Token)
+	orgs, err := client.ListMyOrgs()
+	if err != nil {
+		return nil, err
+	}
+
+	var teams []*model.Team
+	for _, org := range orgs {
+		teams = append(teams, toTeam(org, c.URL))
+	}
+	return teams, nil
 }
 
 // Repo returns the named Gogs repository.
