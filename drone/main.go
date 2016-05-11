@@ -34,6 +34,7 @@ func main() {
 		agent.AgentCmd,
 		buildCmd,
 		deployCmd,
+		execCmd,
 		infoCmd,
 		secretCmd,
 		serverCmd,

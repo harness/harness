@@ -6,7 +6,7 @@ type Job struct {
 	BuildID  int64  `json:"-"            meddler:"job_build_id"`
 	NodeID   int64  `json:"-"            meddler:"job_node_id"`
 	Number   int    `json:"number"       meddler:"job_number"`
-	Error    string `json:"error"        meddler:"-"`
+	Error    string `json:"error"        meddler:"job_error"`
 	Status   string `json:"status"       meddler:"job_status"`
 	ExitCode int    `json:"exit_code"    meddler:"job_exit_code"`
 	Enqueued int64  `json:"enqueued_at"  meddler:"job_enqueued"`

@@ -34,6 +34,10 @@ var secretAddCmd = cli.Command{
 			Usage: "inject the secret for these image types",
 			Value: &cli.StringSlice{},
 		},
+		cli.StringFlag{
+			Name:  "input",
+			Usage: "input secret value from a file",
+		},
 	},
 }
 
@@ -60,8 +64,10 @@ func secretAdd(c *cli.Context) error {
 		return fmt.Errorf("Please specify the --image parameter")
 	}
 
-	// allow secret value to come from a file when prefixed with the @ symbol,
-	// similar to curl conventions.
+	// TODO(bradrydzewski) below we use an @ sybmol to denote that the secret
+	// value should be loaded from a file (inspired by curl). I'd prefer to use
+	// a --input flag to explicitly specify a filepath instead.
+
 	if strings.HasPrefix(secret.Value, "@") {
 		path := secret.Value[1:]
 		out, ferr := ioutil.ReadFile(path)

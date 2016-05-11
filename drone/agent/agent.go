@@ -141,6 +141,10 @@ func start(c *cli.Context) {
 	} else {
 		logrus.SetLevel(logrus.WarnLevel)
 	}
+	logrus.Infof("Connecting to %s with token %s",
+		c.String("drone-server"),
+		c.String("drone-token"),
+	)
 
 	client := client.NewClientToken(
 		c.String("drone-server"),

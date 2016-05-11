@@ -91,6 +91,7 @@ func Update(c *gin.Context) {
 	job.Finished = work.Job.Finished
 	job.Status = work.Job.Status
 	job.ExitCode = work.Job.ExitCode
+	job.Error = work.Job.Error
 
 	if build.Status == model.StatusPending {
 		build.Status = model.StatusRunning
