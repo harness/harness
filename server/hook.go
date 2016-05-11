@@ -157,6 +157,23 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
+	signature, err := jose.ParseSigned(string(sec))
+	if err != nil {
+		log.Debugf("cannot parse .drone.yml.sig file. %s", err)
+	} else if len(sec) == 0 {
+		log.Debugf("cannot parse .drone.yml.sig file. empty file")
+	} else {
+		build.Signed = true
+		output, err := signature.Verify([]byte(repo.Hash))
+		if err != nil {
+			log.Debugf("cannot verify .drone.yml.sig file. %s", err)
+		} else if string(output) != string(raw) {
+			log.Debugf("cannot verify .drone.yml.sig file. no match")
+		} else {
+			build.Verified = true
+		}
+	}
+
 	// update some build fields
 	build.Status = model.StatusPending
 	build.RepoID = repo.ID
@@ -194,33 +211,11 @@ func PostHook(c *gin.Context) {
 		log.Errorf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
-	var signed bool
-	var verified bool
-
-	signature, err := jose.ParseSigned(string(sec))
-	if err != nil {
-		log.Debugf("cannot parse .drone.yml.sig file. %s", err)
-	} else if len(sec) == 0 {
-		log.Debugf("cannot parse .drone.yml.sig file. empty file")
-	} else {
-		signed = true
-		output, err := signature.Verify([]byte(repo.Hash))
-		if err != nil {
-			log.Debugf("cannot verify .drone.yml.sig file. %s", err)
-		} else if string(output) != string(raw) {
-			log.Debugf("cannot verify .drone.yml.sig file. no match")
-		} else {
-			verified = true
-		}
-	}
-
-	log.Debugf(".drone.yml is signed=%v and verified=%v", signed, verified)
-
 	bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
 	for _, job := range jobs {
 		queue.Publish(c, &queue.Work{
-			Signed:    signed,
-			Verified:  verified,
+			Signed:    build.Signed,
+			Verified:  build.Verified,
 			User:      user,
 			Repo:      repo,
 			Build:     build,

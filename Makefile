@@ -27,7 +27,7 @@ gen_migrations:
 build: build_static
 
 build_static:
-	cd drone && go build --ldflags '-extldflags "-static" -X github.com/drone/drone/version.VersionDev=$(CI_BUILD_NUMBER)' -o drone
+	cd drone && go build --ldflags '-extldflags "-static" -X github.com/drone/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' -o drone
 
 test:
 	go test -cover $(PACKAGES)

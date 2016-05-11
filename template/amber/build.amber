@@ -75,6 +75,12 @@ block content
                     button.btn.btn-info.hidden#cancel cancel
 
             div.col-md-8
+                if Build.Signed
+                    if Build.Verified
+                        noscript
+                    else
+                        div.alert.alert-warning
+                            | Your .drone.yml.sig file did not match your .drone.yml
                 if Job.Error != ""
                     div.alert.alert-danger #{Job.Error}
                 else

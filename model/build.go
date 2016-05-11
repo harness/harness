@@ -24,6 +24,8 @@ type Build struct {
 	Avatar    string `json:"author_avatar" meddler:"build_avatar"`
 	Email     string `json:"author_email"  meddler:"build_email"`
 	Link      string `json:"link_url"      meddler:"build_link"`
+	Signed    bool   `json:"signed"        meddler:"build_signed"`
+	Verified  bool   `json:"verified"      meddler:"build_verified"`
 }
 
 type BuildGroup struct {
