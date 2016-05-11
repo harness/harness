@@ -107,8 +107,8 @@ var AgentCmd = cli.Command{
 			Value: &cli.StringSlice{
 				"plugins/docker",
 				"plugins/docker:*",
-				"plguins/gcr",
-				"plguins/gcr:*",
+				"plugins/gcr",
+				"plugins/gcr:*",
 				"plugins/ecr",
 				"plugins/ecr:*",
 			},
