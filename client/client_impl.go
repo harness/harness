@@ -24,23 +24,24 @@ const (
 	pathStream = "%s/api/queue/stream/%d"
 	pathPush   = "%s/api/queue/status/%d"
 
-	pathSelf    = "%s/api/user"
-	pathFeed    = "%s/api/user/feed"
-	pathRepos   = "%s/api/user/repos"
-	pathRepo    = "%s/api/repos/%s/%s"
-	pathEncrypt = "%s/api/repos/%s/%s/encrypt"
-	pathBuilds  = "%s/api/repos/%s/%s/builds"
-	pathBuild   = "%s/api/repos/%s/%s/builds/%v"
-	pathJob     = "%s/api/repos/%s/%s/builds/%d/%d"
-	pathLog     = "%s/api/repos/%s/%s/logs/%d/%d"
-	pathKey     = "%s/api/repos/%s/%s/key"
-	pathSign    = "%s/api/repos/%s/%s/sign"
-	pathSecrets = "%s/api/repos/%s/%s/secrets"
-	pathSecret  = "%s/api/repos/%s/%s/secrets/%s"
-	pathNodes   = "%s/api/nodes"
-	pathNode    = "%s/api/nodes/%d"
-	pathUsers   = "%s/api/users"
-	pathUser    = "%s/api/users/%s"
+	pathSelf       = "%s/api/user"
+	pathFeed       = "%s/api/user/feed"
+	pathRepos      = "%s/api/user/repos"
+	pathRepo       = "%s/api/repos/%s/%s"
+	pathEncrypt    = "%s/api/repos/%s/%s/encrypt"
+	pathBuilds     = "%s/api/repos/%s/%s/builds"
+	pathBuild      = "%s/api/repos/%s/%s/builds/%v"
+	pathJob        = "%s/api/repos/%s/%s/builds/%d/%d"
+	pathLog        = "%s/api/repos/%s/%s/logs/%d/%d"
+	pathKey        = "%s/api/repos/%s/%s/key"
+	pathSign       = "%s/api/repos/%s/%s/sign"
+	pathSecrets    = "%s/api/repos/%s/%s/secrets"
+	pathSecret     = "%s/api/repos/%s/%s/secrets/%s"
+	pathNodes      = "%s/api/nodes"
+	pathNode       = "%s/api/nodes/%d"
+	pathUsers      = "%s/api/users"
+	pathUser       = "%s/api/users/%s"
+	pathBuildQueue = "%s/api/builds"
 )
 
 type client struct {
@@ -185,6 +186,14 @@ func (c *client) BuildLast(owner, name, branch string) (*model.Build, error) {
 func (c *client) BuildList(owner, name string) ([]*model.Build, error) {
 	var out []*model.Build
 	uri := fmt.Sprintf(pathBuilds, c.base, owner, name)
+	err := c.get(uri, &out)
+	return out, err
+}
+
+// BuildQueue returns a list of enqueued builds.
+func (c *client) BuildQueue() ([]*model.Feed, error) {
+	var out []*model.Feed
+	uri := fmt.Sprintf(pathBuildQueue, c.base)
 	err := c.get(uri, &out)
 	return out, err
 }

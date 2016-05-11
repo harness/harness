@@ -305,3 +305,12 @@ func PostBuild(c *gin.Context) {
 		})
 	}
 }
+
+func GetBuildQueue(c *gin.Context) {
+	out, err := store.GetBuildQueue(c)
+	if err != nil {
+		c.String(500, "Error getting build queue. %s", err)
+		return
+	}
+	c.JSON(200, out)
+}
