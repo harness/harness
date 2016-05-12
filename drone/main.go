@@ -32,6 +32,7 @@ func main() {
 	}
 	app.Commands = []cli.Command{
 		agent.AgentCmd,
+		agentsCmd,
 		buildCmd,
 		deployCmd,
 		execCmd,

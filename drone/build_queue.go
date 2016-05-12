@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"text/template"
@@ -35,6 +36,11 @@ func buildQueue(c *cli.Context) error {
 	builds, err := client.BuildQueue()
 	if err != nil {
 		return err
+	}
+
+	if len(builds) == 0 {
+		fmt.Println("there are no pending or running builds")
+		return nil
 	}
 
 	tmpl, err := template.New("_").Parse(c.String("format") + "\n")

@@ -43,6 +43,7 @@ const (
 	pathUsers      = "%s/api/users"
 	pathUser       = "%s/api/users/%s"
 	pathBuildQueue = "%s/api/builds"
+	pathAgent      = "%s/api/agents"
 )
 
 type client struct {
@@ -264,6 +265,18 @@ func (c *client) Sign(owner, name string, in []byte) ([]byte, error) {
 	defer rc.Close()
 	return ioutil.ReadAll(rc)
 }
+
+// AgentList returns a list of build agents.
+func (c *client) AgentList() ([]*model.Agent, error) {
+	var out []*model.Agent
+	uri := fmt.Sprintf(pathAgent, c.base)
+	err := c.get(uri, &out)
+	return out, err
+}
+
+//
+// below items for Queue (internal use only)
+//
 
 // Pull pulls work from the server queue.
 func (c *client) Pull(os, arch string) (*queue.Work, error) {
