@@ -5,6 +5,7 @@ import (
 	"io"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone/bus"
@@ -177,4 +178,24 @@ func Stream(c *gin.Context) {
 	c.String(200, "")
 
 	logrus.Debugf("Agent %s wrote stream to database", c.ClientIP())
+}
+
+func Ping(c *gin.Context) {
+	agent, err := store.GetAgentAddr(c, c.ClientIP())
+	if err == nil {
+		agent.Updated = time.Now().Unix()
+		err = store.UpdateAgent(c, agent)
+	} else {
+		err = store.CreateAgent(c, &model.Agent{
+			Address:  c.ClientIP(),
+			Platform: "linux/amd64",
+			Capacity: 2,
+			Created:  time.Now().Unix(),
+			Updated:  time.Now().Unix(),
+		})
+	}
+	if err != nil {
+		logrus.Errorf("Unable to register agent. %s", err.Error())
+	}
+	c.String(200, "PONG")
 }
