@@ -86,8 +86,11 @@ type Client interface {
 	// target environment.
 	Deploy(string, string, int, string) (*model.Build, error)
 
+	// AgentList returns a list of build agents.
+	AgentList() ([]*model.Agent, error)
+
 	//
-	// queue functions
+	// below items for Queue (internal use only)
 	//
 
 	// Pull pulls work from the server queue.
