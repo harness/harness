@@ -350,8 +350,18 @@ func (c *client) Status(u *model.User, r *model.Repo, b *model.Build, link strin
 }
 
 func repoStatus(client *github.Client, r *model.Repo, b *model.Build, link string) error {
+	context := "continuous-integration/drone"
+	switch b.Event {
+	case model.EventPull:
+		context += "/pr"
+	default:
+		if len(b.Event) > 0 {
+			context += "/" + b.Event
+		}
+	}
+
 	data := github.RepoStatus{
-		Context:     github.String("continuous-integration/drone"),
+		Context:     github.String(context),
 		State:       github.String(convertStatus(b.Status)),
 		Description: github.String(convertDesc(b.Status)),
 		TargetURL:   github.String(link),
