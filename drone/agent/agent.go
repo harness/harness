@@ -86,6 +86,18 @@ var AgentCmd = cli.Command{
 			Name:   "debug",
 			Usage:  "start the agent in debug mode",
 		},
+		cli.DurationFlag{
+			EnvVar: "DRONE_TIMEOUT",
+			Name:   "timeout",
+			Usage:  "drone timeout due to log inactivity",
+			Value:  time.Minute * 5,
+		},
+		cli.IntFlag{
+			EnvVar: "DRONE_MAX_LOGS",
+			Name:   "max-log-size",
+			Usage:  "drone maximum log size in megabytes",
+			Value:  5,
+		},
 		cli.StringSliceFlag{
 			EnvVar: "DRONE_PLUGIN_PRIVILEGED",
 			Name:   "privileged",
@@ -157,9 +169,11 @@ func start(c *cli.Context) {
 				drone:  client,
 				docker: docker,
 				config: config{
+					timeout:    c.Duration("timeout"),
 					namespace:  c.String("namespace"),
 					privileged: c.StringSlice("privileged"),
 					pull:       c.Bool("pull"),
+					logs:       int64(c.Int("max-log-size")) * 1000000,
 				},
 			}
 			for {

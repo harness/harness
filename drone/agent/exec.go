@@ -17,6 +17,8 @@ type config struct {
 	namespace  string
 	privileged []string
 	pull       bool
+	logs       int64
+	timeout    time.Duration
 }
 
 type pipeline struct {
@@ -46,10 +48,10 @@ func (r *pipeline) run() error {
 
 	a := agent.Agent{
 		Update:    agent.NewClientUpdater(r.drone),
-		Logger:    agent.NewClientLogger(r.drone, w.Job.ID, rc, wc),
+		Logger:    agent.NewClientLogger(r.drone, w.Job.ID, rc, wc, r.config.logs),
 		Engine:    engine,
-		Timeout:   time.Minute * 15,
-		Platform:  r.config.platform,
+		Timeout:   r.config.timeout,
+		Platform:  "linux/amd64",
 		Namespace: r.config.namespace,
 		Escalate:  r.config.privileged,
 		Pull:      r.config.pull,
