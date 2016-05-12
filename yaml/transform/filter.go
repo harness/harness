@@ -5,6 +5,23 @@ import (
 	"github.com/drone/drone/yaml"
 )
 
+// ChangeFilter is a transform function that alters status constraints set to
+// change and replaces with the opposite of the prior status.
+func ChangeFilter(conf *yaml.Config, prev string) {
+	for _, step := range conf.Pipeline {
+		for i, status := range step.Constraints.Status.Include {
+			if status != "change" && status != "changed" {
+				continue
+			}
+			if prev == model.StatusFailure {
+				step.Constraints.Status.Include[i] = model.StatusSuccess
+			} else {
+				step.Constraints.Status.Include[i] = model.StatusFailure
+			}
+		}
+	}
+}
+
 // DefaultFilter is a transform function that applies default Filters to each
 // step in the Yaml specification file.
 func DefaultFilter(conf *yaml.Config) {

@@ -133,6 +133,9 @@ func (a *Agent) prep(w *queue.Work) (*yaml.Config, error) {
 	transform.Clone(conf, w.Repo.Kind)
 	transform.Environ(conf, envs)
 	transform.DefaultFilter(conf)
+	if w.BuildLast != nil {
+		transform.ChangeFilter(conf, w.BuildLast.Status)
+	}
 
 	transform.ImageSecrets(conf, secrets, w.Build.Event)
 	transform.Identifier(conf)
