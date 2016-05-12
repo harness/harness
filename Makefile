@@ -1,6 +1,12 @@
-.PHONY: vendor docs
+.PHONY: vendor docs build
 
 PACKAGES = $(shell go list ./... | grep -v /vendor/)
+
+ifneq ($(shell uname), Darwin)
+	EXTLDFLAGS = -extldflags "-static" #
+else
+	EXTLDFLAGS =
+endif
 
 all: gen build
 
@@ -24,10 +30,8 @@ gen_template:
 gen_migrations:
 	go generate github.com/drone/drone/store/datastore/ddl
 
-build: build_static
-
-build_static:
-	cd drone && go build --ldflags '-extldflags "-static" -X github.com/drone/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' -o drone
+build:
+	cd drone && go build --ldflags '${EXTLDFLAGS}-X github.com/drone/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' -o drone
 
 test:
 	go test -cover $(PACKAGES)
