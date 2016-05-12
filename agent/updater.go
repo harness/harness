@@ -42,8 +42,9 @@ func NewClientUpdater(client client.Client) UpdateFunc {
 	}
 }
 
-func NewClientLogger(client client.Client, id int64, rc io.ReadCloser, wc io.WriteCloser) LoggerFunc {
+func NewClientLogger(client client.Client, id int64, rc io.ReadCloser, wc io.WriteCloser, limit int64) LoggerFunc {
 	var once sync.Once
+	var size int64
 	return func(line *build.Line) {
 		// annoying hack to only start streaming once the first line is written
 		once.Do(func() {
@@ -55,8 +56,14 @@ func NewClientLogger(client client.Client, id int64, rc io.ReadCloser, wc io.Wri
 			}()
 		})
 
+		if size > limit {
+			return
+		}
+
 		linejson, _ := json.Marshal(line)
 		wc.Write(linejson)
 		wc.Write([]byte{'\n'})
+
+		size += int64(len(line.Out))
 	}
 }
