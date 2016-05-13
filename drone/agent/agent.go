@@ -117,7 +117,7 @@ var AgentCmd = cli.Command{
 			Value:  "plugins",
 			Usage:  "default plugin image namespace",
 		},
-		cli.BoolFlag{
+		cli.BoolTFlag{
 			EnvVar: "DRONE_PLUGIN_PULL",
 			Name:   "pull",
 			Usage:  "always pull latest plugin images",
@@ -172,7 +172,7 @@ func start(c *cli.Context) {
 					timeout:    c.Duration("timeout"),
 					namespace:  c.String("namespace"),
 					privileged: c.StringSlice("privileged"),
-					pull:       c.Bool("pull"),
+					pull:       c.BoolT("pull"),
 					logs:       int64(c.Int("max-log-size")) * 1000000,
 				},
 			}
