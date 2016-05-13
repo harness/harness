@@ -51,7 +51,7 @@ func (r *pipeline) run() error {
 		Logger:    agent.NewClientLogger(r.drone, w.Job.ID, rc, wc, r.config.logs),
 		Engine:    engine,
 		Timeout:   r.config.timeout,
-		Platform:  "linux/amd64",
+		Platform:  r.config.platform,
 		Namespace: r.config.namespace,
 		Escalate:  r.config.privileged,
 		Pull:      r.config.pull,
