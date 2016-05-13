@@ -169,6 +169,7 @@ func start(c *cli.Context) {
 				drone:  client,
 				docker: docker,
 				config: config{
+					platform:   c.String("docker-os") + "/" + c.String("docker-arch"),
 					timeout:    c.Duration("timeout"),
 					namespace:  c.String("namespace"),
 					privileged: c.StringSlice("privileged"),

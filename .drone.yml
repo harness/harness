@@ -25,7 +25,7 @@ pipeline:
 
   docker:
     repo: drone/drone
-    tag: [ "0.5.0" ]
+    tag: [ "0.5.0", "0.5" ]
     storage_driver: overlay
     when:
       branch: master
