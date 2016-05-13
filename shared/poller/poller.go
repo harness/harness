@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"reflect"
 	"runtime"
 	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/carlescere/scheduler"
@@ -169,13 +171,17 @@ func (poller *Poller) DeletePoll(repo *model.Repo) error {
 //preload all polls from db
 //TODO: set lock in redis to prevent duplicated polling
 func (poller *Poller) loadPolls() {
+	rand.Seed(time.Now().Unix())
 	polls, err := poller.store.Polls().List()
 	if err != nil {
 		log.Errorln("get poll list err", err)
 		return
 	}
 	for _, poll := range polls {
-		poller.Schedule(poll)
+		go func(p *model.Poll) {
+			time.Sleep(time.Duration(rand.Int31n(300)) * time.Second)
+			poller.Schedule(p)
+		}(poll)
 	}
 }
 
