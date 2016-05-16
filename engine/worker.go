@@ -11,7 +11,8 @@ import (
 
 var (
 	// name of the build agent container.
-	DefaultAgent = "drone/drone-exec:latest"
+	// TODO(xiaods):  drone/drone#1527 is fixed to support customizable location 
+	DefaultAgent = "catalog.shurenyun.com/library/drone-exec:latest"
 
 	// default name of the build agent executable
 	DefaultEntrypoint = []string{"/bin/drone-exec"}
