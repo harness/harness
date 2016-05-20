@@ -48,7 +48,7 @@ func setupRemote(c *cli.Context) (remote.Remote, error) {
 func setupBitbucket(c *cli.Context) (remote.Remote, error) {
 	return bitbucket.New(
 		c.String("bitbucket-client"),
-		c.String("bitbucket-server"),
+		c.String("bitbucket-secret"),
 	), nil
 }
 
