@@ -102,6 +102,10 @@ type Client interface {
 	// Stream streams the build logs to the server.
 	Stream(int64, io.ReadCloser) error
 
+	LogStream(int64) (StreamWriter, error)
+
+	LogPost(int64, io.ReadCloser) error
+
 	// Wait waits for the job to the complete.
 	Wait(int64) *Wait
 

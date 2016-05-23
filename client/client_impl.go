@@ -13,17 +13,20 @@ import (
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/queue"
+	"github.com/gorilla/websocket"
 	"golang.org/x/net/context"
 	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/oauth2"
 )
 
 const (
-	pathPull   = "%s/api/queue/pull/%s/%s"
-	pathWait   = "%s/api/queue/wait/%d"
-	pathStream = "%s/api/queue/stream/%d"
-	pathPush   = "%s/api/queue/status/%d"
-	pathPing   = "%s/api/queue/ping"
+	pathPull     = "%s/api/queue/pull/%s/%s"
+	pathWait     = "%s/api/queue/wait/%d"
+	pathStream   = "%s/api/queue/stream/%d"
+	pathPush     = "%s/api/queue/status/%d"
+	pathPing     = "%s/api/queue/ping"
+	pathLogs     = "%s/api/queue/logs/%d"
+	pathLogsAuth = "%s/api/queue/logs/%d?access_token=%s"
 
 	pathSelf       = "%s/api/user"
 	pathFeed       = "%s/api/user/feed"
@@ -48,12 +51,13 @@ const (
 
 type client struct {
 	client *http.Client
+	token  string // auth token
 	base   string // base url
 }
 
 // NewClient returns a client at the specified url.
 func NewClient(uri string) Client {
-	return &client{http.DefaultClient, uri}
+	return &client{client: http.DefaultClient, base: uri}
 }
 
 // NewClientToken returns a client at the specified url that authenticates all
@@ -61,7 +65,7 @@ func NewClient(uri string) Client {
 func NewClientToken(uri, token string) Client {
 	config := new(oauth2.Config)
 	auther := config.Client(oauth2.NoContext, &oauth2.Token{AccessToken: token})
-	return &client{auther, uri}
+	return &client{client: auther, base: uri, token: token}
 }
 
 // NewClientTokenTLS returns a client at the specified url that authenticates
@@ -74,7 +78,7 @@ func NewClientTokenTLS(uri, token string, c *tls.Config) Client {
 			trans.Base = &http.Transport{TLSClientConfig: c}
 		}
 	}
-	return &client{auther, uri}
+	return &client{client: auther, base: uri, token: token}
 }
 
 // Self returns the currently authenticated user.
@@ -304,7 +308,40 @@ func (c *client) Ping() error {
 func (c *client) Stream(id int64, rc io.ReadCloser) error {
 	uri := fmt.Sprintf(pathStream, c.base, id)
 	err := c.post(uri, rc, nil)
+
 	return err
+}
+
+// LogPost sends the full build logs to the server.
+func (c *client) LogPost(id int64, rc io.ReadCloser) error {
+	uri := fmt.Sprintf(pathLogs, c.base, id)
+	return c.post(uri, rc, nil)
+}
+
+// StreamWriter implements a special writer for streaming log entries to the
+// central Drone server. The standard implementation is the gorilla.Connection.
+type StreamWriter interface {
+	Close() error
+	WriteJSON(interface{}) error
+}
+
+// LogStream streams the build logs to the server.
+func (c *client) LogStream(id int64) (StreamWriter, error) {
+	rawurl := fmt.Sprintf(pathLogsAuth, c.base, id, c.token)
+	uri, err := url.Parse(rawurl)
+	if err != nil {
+		return nil, err
+	}
+	if uri.Scheme == "https" {
+		uri.Scheme = "wss"
+	} else {
+		uri.Scheme = "ws"
+	}
+
+	// TODO need TLS client configuration
+
+	conn, _, err := websocket.DefaultDialer.Dial(uri.String(), nil)
+	return conn, err
 }
 
 // Wait watches and waits for the build to cancel or finish.

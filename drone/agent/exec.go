@@ -1,7 +1,8 @@
 package agent
 
 import (
-	"io"
+	"bytes"
+	"io/ioutil"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -40,15 +41,23 @@ func (r *pipeline) run() error {
 	engine := docker.NewClient(r.docker)
 
 	// streaming the logs
-	rc, wc := io.Pipe()
-	defer func() {
-		wc.Close()
-		rc.Close()
-	}()
+	// rc, wc := io.Pipe()
+	// defer func() {
+	// 	wc.Close()
+	// 	rc.Close()
+	// }()
+
+	var buf bytes.Buffer
+
+	stream, err := r.drone.LogStream(w.Job.ID)
+	if err != nil {
+		return err
+	}
 
 	a := agent.Agent{
-		Update:    agent.NewClientUpdater(r.drone),
-		Logger:    agent.NewClientLogger(r.drone, w.Job.ID, rc, wc, r.config.logs),
+		Update: agent.NewClientUpdater(r.drone),
+		// Logger:    agent.NewClientLogger(r.drone, w.Job.ID, rc, wc, r.config.logs),
+		Logger:    agent.NewStreamLogger(stream, &buf, r.config.logs),
 		Engine:    engine,
 		Timeout:   r.config.timeout,
 		Platform:  r.config.platform,
@@ -70,8 +79,11 @@ func (r *pipeline) run() error {
 
 	a.Run(w, cancel)
 
-	wc.Close()
-	rc.Close()
+	if err := r.drone.LogPost(w.Job.ID, ioutil.NopCloser(&buf)); err != nil {
+		logrus.Errorf("Error sending logs for %s/%s#%d.%d",
+			w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)
+	}
+	stream.Close()
 
 	logrus.Infof("Finished build %s/%s#%d.%d",
 		w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)
