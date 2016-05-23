@@ -129,6 +129,11 @@
 			"revisionTime": "2014-04-09T13:11:00+02:00"
 		},
 		{
+			"path": "github.com/gorilla/websocket",
+			"revision": "1f512fc3f05332ba7117626cdfb4e07474e58e60",
+			"revisionTime": "2016-04-28T09:34:18-07:00"
+		},
+		{
 			"path": "github.com/ianschenck/envflag",
 			"revision": "9111d830d133f952887a936367fb0211c3134f0d",
 			"revisionTime": "2014-07-20T15:03:42-06:00"
@@ -258,6 +263,11 @@
 			"path": "golang.org/x/oauth2/internal",
 			"revision": "8a57ed94ffd43444c0879fe75701732a38afc985",
 			"revisionTime": "2015-12-29T21:02:54-07:00"
+		},
+		{
+			"path": "golang.org/x/sys/unix",
+			"revision": "f64b50fbea64174967a8882830d621a18ee1548e",
+			"revisionTime": "2016-04-14T16:31:22+03:00"
 		},
 		{
 			"path": "gopkg.in/djherbis/atime.v1",

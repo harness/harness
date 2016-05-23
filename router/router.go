@@ -156,6 +156,9 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		queue.POST("/stream/:id", server.Stream)
 		queue.POST("/status/:id", server.Update)
 		queue.POST("/ping", server.Ping)
+
+		queue.POST("/logs/:id", server.PostLogs)
+		queue.GET("/logs/:id", server.WriteLogs)
 	}
 
 	// DELETE THESE

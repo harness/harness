@@ -11,6 +11,9 @@ func Clone(c *yaml.Config, plugin string) error {
 			return nil
 		}
 	}
+	if plugin == "" {
+		plugin = "git"
+	}
 
 	s := &yaml.Container{
 		Image: plugin,

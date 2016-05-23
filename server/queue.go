@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"strconv"
 	"sync"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/drone/drone/store"
 	"github.com/drone/drone/stream"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 // Pull is a long request that polls and attemts to pull work off the queue stack.
@@ -25,6 +27,12 @@ func Pull(c *gin.Context) {
 	if w == nil {
 		logrus.Debugf("Agent %s could not pull work.", c.ClientIP())
 	} else {
+
+		// setup the channel to stream logs
+		if err := stream.Create(c, stream.ToKey(w.Job.ID)); err != nil {
+			logrus.Errorf("Unable to create stream. %s", err)
+		}
+
 		c.JSON(202, w)
 
 		logrus.Debugf("Agent %s assigned work. %s/%s#%d.%d",
@@ -63,7 +71,7 @@ func Wait(c *gin.Context) {
 	}
 }
 
-// Update handles build updates from the agent  and persists to the database.
+// Update handles build updates from the agent and persists to the database.
 func Update(c *gin.Context) {
 	work := &queue.Work{}
 	if err := c.BindJSON(work); err != nil {
@@ -99,12 +107,12 @@ func Update(c *gin.Context) {
 		store.UpdateBuild(c, build)
 	}
 
-	if job.Status == model.StatusRunning {
-		err := stream.Create(c, stream.ToKey(job.ID))
-		if err != nil {
-			logrus.Errorf("Unable to create stream. %s", err)
-		}
-	}
+	// if job.Status == model.StatusRunning {
+	// 	err := stream.Create(c, stream.ToKey(job.ID))
+	// 	if err != nil {
+	// 		logrus.Errorf("Unable to create stream. %s", err)
+	// 	}
+	// }
 
 	ok, err := store.UpdateBuildJob(c, build, job)
 	if err != nil {
@@ -198,4 +206,99 @@ func Ping(c *gin.Context) {
 		logrus.Errorf("Unable to register agent. %s", err.Error())
 	}
 	c.String(200, "PONG")
+}
+
+//
+//
+// Below are alternate implementations for the Queue that use websockets.
+//
+//
+
+// PostLogs handles an http request from the agent to post build logs. These
+// logs are posted at the end of the build process.
+func PostLogs(c *gin.Context) {
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	job, err := store.GetJob(c, id)
+	if err != nil {
+		c.String(404, "Cannot upload logs. %s", err)
+		return
+	}
+	if err := store.WriteLog(c, job, c.Request.Body); err != nil {
+		c.String(500, "Cannot persist logs", err)
+		return
+	}
+	c.String(200, "")
+}
+
+// WriteLogs handles an http request from the agent to stream build logs from
+// the agent to the server to enable real time streamings to the client.
+func WriteLogs(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.String(500, "Invalid input. %s", err)
+		return
+	}
+
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		c.String(500, "Cannot upgrade to websocket. %s", err)
+		return
+	}
+	defer conn.Close()
+
+	wc, err := stream.Writer(c, stream.ToKey(id))
+	if err != nil {
+		c.String(500, "Cannot create stream writer. %s", err)
+		return
+	}
+	defer func() {
+		wc.Close()
+		stream.Delete(c, stream.ToKey(id))
+	}()
+
+	var msg []byte
+	for {
+		_, msg, err = conn.ReadMessage()
+		if err != nil {
+			break
+		}
+		wc.Write(msg)
+		wc.Write(newline)
+	}
+
+	if err != nil && err != io.EOF {
+		c.String(500, "Error reading logs. %s", err)
+		return
+	}
+	//
+	// rc, err := stream.Reader(c, stream.ToKey(id))
+	// if err != nil {
+	// 	c.String(500, "Failed to create stream reader. %s", err)
+	// 	return
+	// }
+	//
+	// wg := sync.WaitGroup{}
+	// wg.Add(1)
+	//
+	// go func() {
+	// 	defer recover()
+	// 	store.WriteLog(c, &model.Job{ID: id}, rc)
+	// 	wg.Done()
+	// }()
+	//
+	// wc.Close()
+	// wg.Wait()
+
+}
+
+// newline defines a newline constant to separate lines in the build output
+var newline = []byte{'\n'}
+
+// upgrader defines the default behavior for upgrading the websocket.
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
