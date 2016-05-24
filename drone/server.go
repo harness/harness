@@ -72,7 +72,7 @@ var serverCmd = cli.Command{
 			Value:  time.Minute * 15,
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_AGENT_SECRET",
+			EnvVar: "DRONE_AGENT_SECRET,DRONE_SECRET",
 			Name:   "agent-secret",
 			Usage:  "agent secret passcode",
 		},
