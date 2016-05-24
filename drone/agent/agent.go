@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/drone/drone/client"
+	"github.com/drone/drone/shared/token"
 	"github.com/samalba/dockerclient"
 
 	"github.com/Sirupsen/logrus"
@@ -68,6 +69,11 @@ var AgentCmd = cli.Command{
 			EnvVar: "DRONE_TOKEN",
 			Name:   "drone-token",
 			Usage:  "drone authorization token",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_SECRET,DRONE_AGENT_SECRET",
+			Name:   "drone-secret",
+			Usage:  "drone agent secret",
 		},
 		cli.DurationFlag{
 			EnvVar: "DRONE_BACKOFF",
@@ -133,14 +139,23 @@ func start(c *cli.Context) {
 	} else {
 		logrus.SetLevel(logrus.WarnLevel)
 	}
+
+	var accessToken string
+	if c.String("drone-secret") != "" {
+		secretToken := c.String("drone-secret")
+		accessToken, _ = token.New(token.AgentToken, "").Sign(secretToken)
+	} else {
+		accessToken = c.String("drone-token")
+	}
+
 	logrus.Infof("Connecting to %s with token %s",
 		c.String("drone-server"),
-		c.String("drone-token"),
+		accessToken,
 	)
 
 	client := client.NewClientToken(
 		c.String("drone-server"),
-		c.String("drone-token"),
+		accessToken,
 	)
 
 	tls, err := dockerclient.TLSConfigFromCertPath(c.String("docker-cert-path"))
