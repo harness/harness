@@ -49,4 +49,4 @@ deb:
 	mkdir -p contrib/debian/drone/var/lib/drone
 	mkdir -p contrib/debian/drone/var/cache/drone
 	cp drone contrib/debian/drone/usr/local/bin
-	-dpkg-deb --build contrib/debian/drone
+	dpkg-deb --build contrib/debian/drone
