@@ -61,7 +61,7 @@ build_tar:
 	tar -cvzf release/linux/amd64/drone.tar.gz   release/linux/amd64/drone
 	tar -cvzf release/linux/arm64/drone.tar.gz   release/linux/arm64/drone
 	tar -cvzf release/linux/arm/drone.tar.gz     release/linux/arm/drone
-	tar -cvzf release/windows/amd64/drone.tar.gz release/windows/amd64
+	tar -cvzf release/windows/amd64/drone.tar.gz release/windows/amd64/drone
 	tar -cvzf release/darwin/amd64/drone.tar.gz  release/darwin/amd64/drone
 
 # TODO this is getting moved to a shell script, do not alter
