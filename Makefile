@@ -37,7 +37,7 @@ test_postgres:
 
 
 # build the release files
-build: build_static build_cross build_tar
+build: build_static build_cross build_tar build_sha
 
 build_static:
 	go build --ldflags '-extldflags "-static" -X github.com/drone/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' -o release/drone github.com/drone/drone/drone
@@ -57,3 +57,11 @@ build_tar:
 	tar -cvzf release/linux/arm/drone.tar.gz     release/linux/arm/drone
 	tar -cvzf release/windows/amd64/drone.tar.gz release/windows/amd64
 	tar -cvzf release/darwin/amd64/drone.tar.gz  release/darwin/amd64/drone
+
+# TODO this is getting moved to a shell script, do not alter
+build_sha:
+	sha256sum release/linux/amd64/drone.tar.gz   > release/linux/amd64/drone.sha256
+	sha256sum release/linux/arm64/drone.tar.gz   > release/linux/arm64/drone.sha256
+	sha256sum release/linux/arm/drone.tar.gz     > release/linux/arm/drone.sha256
+	sha256sum release/windows/amd64/drone.tar.gz > release/windows/amd64/drone.sha256
+	sha256sum release/darwin/amd64/drone.tar.gz  > release/darwin/amd64/drone.sha256
