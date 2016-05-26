@@ -7,9 +7,6 @@ import (
 
 	"github.com/drone/drone/store"
 	"github.com/drone/drone/store/datastore/ddl"
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/rubenv/sql-migrate"
 	"github.com/russross/meddler"
 

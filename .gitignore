@@ -11,6 +11,7 @@ drone/drone
 *.deb
 .env
 temp/
+release/
 
 server/swagger/files/*.json
 
