@@ -1,6 +1,12 @@
-.PHONY: vendor docs release
+.PHONY: vendor docs build release
 
 PACKAGES = $(shell go list ./... | grep -v /vendor/)
+
+ifneq ($(shell uname), Darwin)
+	EXTLDFLAGS = -extldflags "-static" $(null)
+else
+	EXTLDFLAGS =
+endif
 
 all: gen build_static
 
@@ -40,7 +46,7 @@ test_postgres:
 build: build_static build_cross build_tar build_sha
 
 build_static:
-	go build --ldflags '-extldflags "-static" -X github.com/drone/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' -o release/drone github.com/drone/drone/drone
+	go build --ldflags '${EXTLDFLAGS}-X github.com/drone/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' -o release/drone github.com/drone/drone/drone
 
 # TODO this is getting moved to a shell script, do not alter
 build_cross:

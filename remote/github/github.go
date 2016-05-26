@@ -53,7 +53,7 @@ func New(opts Opts) (remote.Remote, error) {
 		URL:         defaultURL,
 		Client:      opts.Client,
 		Secret:      opts.Secret,
-		Scope:       strings.Join(opts.Scopes, ","),
+		Scopes:      opts.Scopes,
 		PrivateMode: opts.PrivateMode,
 		SkipVerify:  opts.SkipVerify,
 		MergeRef:    opts.MergeRef,
@@ -73,7 +73,7 @@ type client struct {
 	API         string
 	Client      string
 	Secret      string
-	Scope       string
+	Scopes      []string
 	Machine     string
 	Username    string
 	Password    string
@@ -261,6 +261,7 @@ func (c *client) newConfig(redirect string) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     c.Client,
 		ClientSecret: c.Secret,
+		Scopes: c.Scopes,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  fmt.Sprintf("%s/login/oauth/authorize", c.URL),
 			TokenURL: fmt.Sprintf("%s/login/oauth/access_token", c.URL),
@@ -349,8 +350,18 @@ func (c *client) Status(u *model.User, r *model.Repo, b *model.Build, link strin
 }
 
 func repoStatus(client *github.Client, r *model.Repo, b *model.Build, link string) error {
+	context := "continuous-integration/drone"
+	switch b.Event {
+	case model.EventPull:
+		context += "/pr"
+	default:
+		if len(b.Event) > 0 {
+			context += "/" + b.Event
+		}
+	}
+
 	data := github.RepoStatus{
-		Context:     github.String("continuous-integration/drone"),
+		Context:     github.String(context),
 		State:       github.String(convertStatus(b.Status)),
 		Description: github.String(convertDesc(b.Status)),
 		TargetURL:   github.String(link),
