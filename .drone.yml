@@ -27,7 +27,7 @@ pipeline:
   publish:
     image: s3
     bucket: downloads.drone.io
-    source: release/**/*.tar.gz
+    source: release/**/*.*
     when:
       event: push
       branch: master
