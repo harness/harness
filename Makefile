@@ -1,8 +1,8 @@
-.PHONY: vendor docs
+.PHONY: vendor docs release
 
 PACKAGES = $(shell go list ./... | grep -v /vendor/)
 
-all: gen build
+all: gen build_static
 
 deps:
 	go get -u golang.org/x/tools/cmd/cover
@@ -24,11 +24,6 @@ gen_template:
 gen_migrations:
 	go generate github.com/drone/drone/store/datastore/ddl
 
-build: build_static
-
-build_static:
-	cd drone && go build --ldflags '-extldflags "-static" -X github.com/drone/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' -o drone
-
 test:
 	go test -cover $(PACKAGES)
 
@@ -40,9 +35,25 @@ test_mysql:
 test_postgres:
 	DATABASE_DRIVER="postgres" DATABASE_CONFIG="host=127.0.0.1 user=postgres dbname=postgres sslmode=disable" go test github.com/drone/drone/store/datastore
 
-deb:
-	mkdir -p contrib/debian/drone/usr/local/bin
-	mkdir -p contrib/debian/drone/var/lib/drone
-	mkdir -p contrib/debian/drone/var/cache/drone
-	cp drone contrib/debian/drone/usr/local/bin
-	-dpkg-deb --build contrib/debian/drone
+
+# build the release files
+build: build_static build_cross build_tar
+
+build_static:
+	go build --ldflags '-extldflags "-static" -X github.com/drone/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' -o release/drone github.com/drone/drone/drone
+
+# TODO this is getting moved to a shell script, do not alter
+build_cross:
+	GOOS=linux   GOARCH=amd64 CGO_ENABLED=0 go build -o release/linux/amd64/drone   github.com/drone/drone/drone
+	GOOS=linux   GOARCH=arm64 CGO_ENABLED=0 go build -o release/linux/arm64/drone   github.com/drone/drone/drone
+	GOOS=linux   GOARCH=arm   CGO_ENABLED=0 go build -o release/linux/arm/drone     github.com/drone/drone/drone
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o release/windows/amd64/drone github.com/drone/drone/drone
+	GOOS=darwin  GOARCH=amd64 CGO_ENABLED=0 go build -o release/darwin/amd64/drone  github.com/drone/drone/drone
+
+# TODO this is getting moved to a shell script, do not alter
+build_tar:
+	tar -cvzf release/linux/amd64/drone.tar.gz   release/linux/amd64/drone
+	tar -cvzf release/linux/arm64/drone.tar.gz   release/linux/arm64/drone
+	tar -cvzf release/linux/arm/drone.tar.gz     release/linux/arm/drone
+	tar -cvzf release/windows/amd64/drone.tar.gz release/windows/amd64
+	tar -cvzf release/darwin/amd64/drone.tar.gz  release/darwin/amd64/drone

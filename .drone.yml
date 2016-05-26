@@ -12,7 +12,8 @@ pipeline:
       - export PATH=$PATH:$GOPATH/bin
       - make deps gen
       - make test test_postgres test_mysql
-  dist:
+
+  build:
     image: drone/golang:1.5
     environment:
       - GO15VENDOREXPERIMENT=1
@@ -22,6 +23,14 @@ pipeline:
       - make build
     when:
       event: push
+
+  publish:
+    image: s3
+    bucket: downloads.drone.io
+    source: release/**/*.tar.gz
+    when:
+      event: push
+      branch: master
 
   docker:
     repo: drone/drone
