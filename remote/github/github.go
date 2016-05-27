@@ -27,6 +27,7 @@ const (
 // Opts defines configuration options.
 type Opts struct {
 	URL         string   // GitHub server url.
+	Context     string   // Context to display in status check
 	Client      string   // GitHub oauth client id.
 	Secret      string   // GitHub oauth client secret.
 	Scopes      []string // GitHub oauth scopes
@@ -51,6 +52,7 @@ func New(opts Opts) (remote.Remote, error) {
 	remote := &client{
 		API:         defaultAPI,
 		URL:         defaultURL,
+		Context:     opts.Context,
 		Client:      opts.Client,
 		Secret:      opts.Secret,
 		Scopes:      opts.Scopes,
@@ -70,6 +72,7 @@ func New(opts Opts) (remote.Remote, error) {
 
 type client struct {
 	URL         string
+	Context     string
 	API         string
 	Client      string
 	Secret      string
@@ -261,7 +264,7 @@ func (c *client) newConfig(redirect string) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     c.Client,
 		ClientSecret: c.Secret,
-		Scopes: c.Scopes,
+		Scopes:       c.Scopes,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  fmt.Sprintf("%s/login/oauth/authorize", c.URL),
 			TokenURL: fmt.Sprintf("%s/login/oauth/access_token", c.URL),
@@ -345,12 +348,12 @@ func (c *client) Status(u *model.User, r *model.Repo, b *model.Build, link strin
 	case "deployment":
 		return deploymentStatus(client, r, b, link)
 	default:
-		return repoStatus(client, r, b, link)
+		return repoStatus(client, r, b, link, c.Context)
 	}
 }
 
-func repoStatus(client *github.Client, r *model.Repo, b *model.Build, link string) error {
-	context := "continuous-integration/drone"
+func repoStatus(client *github.Client, r *model.Repo, b *model.Build, link, ctx string) error {
+	context := ctx
 	switch b.Event {
 	case model.EventPull:
 		context += "/pr"
