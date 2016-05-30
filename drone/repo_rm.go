@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/codegangsta/cli"
 )
@@ -30,8 +31,13 @@ func repoRemove(c *cli.Context) error {
 	}
 
 	if err := client.RepoDel(owner, name); err != nil {
-		return err
+		re := regexp.MustCompile("client error \\d{3}")
+        err_ := re.FindAllString(err.Error(), -1)
+        if err_ != nil {
+            return fmt.Errorf("%s", err_[0])
+        }
 	}
+
 	fmt.Printf("Successfully removed repository %s/%s\n", owner, name)
 	return nil
 }
