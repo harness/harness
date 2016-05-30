@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"regexp"
+	"strconv"
 
 	"github.com/codegangsta/cli"
 )
@@ -32,10 +34,10 @@ func repoRemove(c *cli.Context) error {
 
 	if err := client.RepoDel(owner, name); err != nil {
 		re := regexp.MustCompile("client error \\d{3}")
-        err_ := re.FindAllString(err.Error(), -1)
-        if err_ != nil {
-            return fmt.Errorf("%s", err_[0])
-        }
+		err_msg := re.FindAllString(err.Error(), -1)
+		if err_msg != nil {
+			return err
+		}
 	}
 
 	fmt.Printf("Successfully removed repository %s/%s\n", owner, name)

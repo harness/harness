@@ -1,10 +1,8 @@
 package main
 
 import (
-    "fmt"
 	"log"
 	"os"
-	"regexp"
 	"text/template"
 
 	"github.com/codegangsta/cli"
@@ -41,11 +39,7 @@ func repoInfo(c *cli.Context) error {
 
 	repo, err := client.Repo(owner, name)
 	if err != nil {
-		re := regexp.MustCompile("client error \\d{3}")
-        err_ := re.FindAllString(err.Error(), -1)
-        if err_ != nil {
-            return fmt.Errorf("%s", err_[0])
-        }
+		return err
 	}
 
 	tmpl, err := template.New("_").Parse(c.String("format"))
