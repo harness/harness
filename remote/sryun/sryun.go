@@ -35,6 +35,8 @@ var (
 	ErrBadCommit = errors.New("bad commit")
 	//ErrBadScript bad script
 	ErrBadScript = errors.New("bad script")
+	//ErrBadRetrieve retrieve update failed
+	ErrBadRetrieve = errors.New("retrieve update failed")
 )
 
 //Sryun model
@@ -267,7 +269,8 @@ func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 
 	push, tag, err := sry.retrieveUpdate(repo)
 	if err != nil {
-		return nil, nil, err
+		log.Errorln("retrieve update failed", err)
+		return nil, nil, ErrBadRetrieve
 	}
 	log.Infoln("getting build", repo.ID, "-", branch)
 	lastBuild, err := sry.store.Builds().GetLast(repo, branch)
