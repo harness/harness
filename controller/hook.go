@@ -22,6 +22,15 @@ import (
 	"github.com/drone/drone/yaml/matrix"
 )
 
+type ErrorMsg struct {
+	Errcode int
+	Errmsg  string
+}
+
+const (
+	DronePullError = 15022 // drone获取代码失败
+)
+
 var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
 
 func PostHook(c *gin.Context) {
@@ -39,7 +48,11 @@ func PostHook(c *gin.Context) {
 	}
 	if err != nil {
 		log.Errorf("failure to parse hook. %s", err)
-		c.AbortWithError(400, err)
+		if err == sryun.ErrBadRetrieve {
+			c.JSON(400, ErrorMsg{DronePullError, err.Error()})
+		} else {
+			c.AbortWithError(400, err)
+		}
 		return
 	}
 	if build == nil {
