@@ -26,6 +26,7 @@ pipeline:
 
   publish:
     image: s3
+    acl: public-read
     bucket: downloads.drone.io
     source: release/**/*.*
     when:
