@@ -74,6 +74,11 @@ func (poller *Poller) AddPoll(repo *model.Repo, seconds uint64) {
 	if err != nil {
 		log.Errorln("can't create poll", err)
 	}
+	if seconds == 0 {
+		log.Info("add poll but not start job, period = 0")
+		return
+	}
+
 	poller.Schedule(&poll)
 }
 

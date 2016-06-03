@@ -233,7 +233,7 @@ func (sry *Sryun) Activate(user *model.User, repo *model.Repo, key *model.Key, l
 
 //ActivateRepo activate repo, schedule polling
 func (sry *Sryun) ActivateRepo(c *gin.Context, user *model.User, repo *model.Repo, key *model.Key, link string, period uint64) error {
-	if period < 5 {
+	if period < 5 && period != 0 {
 		period = 5
 	}
 	poller.Ref().AddPoll(repo, period*60)
