@@ -92,6 +92,7 @@ func setupGitlab(c *cli.Context) (remote.Remote, error) {
 func setupGithub(c *cli.Context) (remote.Remote, error) {
 	return github.New(github.Opts{
 		URL:         c.String("github-server"),
+		Context:     c.String("github-context"),
 		Client:      c.String("github-client"),
 		Secret:      c.String("github-sercret"),
 		Scopes:      c.StringSlice("github-scope"),

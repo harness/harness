@@ -100,6 +100,12 @@ var serverCmd = cli.Command{
 			Value:  "https://github.com",
 		},
 		cli.StringFlag{
+			EnvVar: "DRONE_GITHUB_CONTEXT",
+			Name:   "github-context",
+			Usage:  "github status context",
+			Value:  "continuous-integration/drone",
+		},
+		cli.StringFlag{
 			EnvVar: "DRONE_GITHUB_CLIENT",
 			Name:   "github-client",
 			Usage:  "github oauth2 client id",
