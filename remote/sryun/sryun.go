@@ -194,8 +194,14 @@ func (sry *Sryun) Script(user *model.User, repo *model.Repo, build *model.Build)
 	}
 	script, err := client.ShowFile(build.Commit, sry.ScriptName)
 	if err != nil {
-		return nil, nil, err
+		script, err = client.ShowFile(build.Commit, strings.Replace(sry.ScriptName, ".yaml", ".yml", 1))
+		log.Info("failed to load .sryci.yaml and try .sryci.yml")
+		if err != nil {
+			log.Info("failed to load .sryci.yml")
+			return nil, nil, err
+		}
 	}
+
 	sec, err := client.ShowFile(build.Commit, sry.SecName)
 	if err != nil {
 		sec = nil
