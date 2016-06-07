@@ -71,6 +71,7 @@ func (a *Agent) Run(payload *queue.Work, cancel <-chan bool) error {
 	}
 	if exitErr, ok := err.(*build.ExitError); ok {
 		payload.Job.ExitCode = exitErr.Code
+		payload.Job.Error = "" // exit errors are already written to the log
 	}
 
 	payload.Job.Finished = time.Now().Unix()
