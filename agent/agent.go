@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -128,6 +129,10 @@ func (a *Agent) prep(w *queue.Work) (*yaml.Config, error) {
 
 	src := "src"
 	if url, _ := url.Parse(w.Repo.Link); url != nil {
+		host, _, err := net.SplitHostPort(url.Host)
+		if err == nil {
+			url.Host = host
+		}
 		src = filepath.Join(src, url.Host, url.Path)
 	}
 
