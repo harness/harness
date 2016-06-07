@@ -66,6 +66,7 @@ func (a *Agent) Run(payload *queue.Work, cancel <-chan bool) error {
 
 	if err != nil {
 		payload.Job.ExitCode = 255
+		payload.Job.Error = err.Error()
 	}
 	if exitErr, ok := err.(*build.ExitError); ok {
 		payload.Job.ExitCode = exitErr.Code
