@@ -11,7 +11,7 @@ var repoAddCmd = cli.Command{
 	Name:  "add",
 	Usage: "add a repository",
 	Action: func(c *cli.Context) {
-		if err := repoRemove(c); err != nil {
+		if err := repoAdd(c); err != nil {
 			log.Fatalln(err)
 		}
 	},
