@@ -15,6 +15,7 @@ import (
 	"github.com/drone/drone/queue"
 
 	"github.com/codegangsta/cli"
+	"github.com/joho/godotenv"
 )
 
 var execCmd = cli.Command{
@@ -40,6 +41,11 @@ var execCmd = cli.Command{
 			Name:   "secret",
 			Usage:  "build secrets in KEY=VALUE format",
 			EnvVar: "DRONE_SECRET",
+		},
+		cli.StringFlag{
+			Name:   "secrets-file",
+			Usage:  "build secrets file in KEY=VALUE format",
+			EnvVar: "DRONE_SECRETS_FILE",
 		},
 		cli.StringSliceFlag{
 			Name:   "matrix",
@@ -401,7 +407,27 @@ func getMatrix(c *cli.Context) map[string]string {
 
 // helper function to retrieve secret variables.
 func getSecrets(c *cli.Context) []*model.Secret {
+
 	var secrets []*model.Secret
+
+	if c.String("secrets-file") != "" {
+		envs, _ := godotenv.Read(c.String("secrets-file"))
+		for k, v := range envs {
+			secret := &model.Secret{
+				Name:  k,
+				Value: v,
+				Events: []string{
+					model.EventPull,
+					model.EventPush,
+					model.EventTag,
+					model.EventDeploy,
+				},
+				Images: []string{"*"},
+			}
+			secrets = append(secrets, secret)
+		}
+	}
+
 	for _, s := range c.StringSlice("secret") {
 		parts := strings.SplitN(s, "=", 2)
 		if len(parts) != 2 {
