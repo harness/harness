@@ -210,9 +210,6 @@ func (a *Agent) exec(spec *yaml.Config, payload *queue.Work, cancel <-chan bool)
 			}
 			// updates the build status passed into each container. I realize this is
 			// a bit out of place and will work to resolve.
-		        if pipeline.Head().Environment == nil {
-				pipeline.Head().Environment = make(map[string]string)
-			}
 			pipeline.Head().Environment["DRONE_BUILD_STATUS"] = status
 
 			if !pipeline.Head().Constraints.Match(

@@ -16,7 +16,11 @@ var (
 // Environ transforms the steps in the Yaml pipeline to include runtime
 // environment variables.
 func Environ(c *yaml.Config, envs map[string]string) error {
-	for _, p := range c.Pipeline {
+	var images []*yaml.Container
+	images = append(images, c.Pipeline...)
+	images = append(images, c.Services...)
+
+	for _, p := range images {
 		if p.Environment == nil {
 			p.Environment = map[string]string{}
 		}
