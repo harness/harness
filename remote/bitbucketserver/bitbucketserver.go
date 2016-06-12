@@ -17,6 +17,7 @@ import (
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/mrjones/oauth"
+	"strings"
 )
 
 // Opts defines configuration options.
@@ -115,16 +116,24 @@ func (c *client) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 
 	// TODO errors should never be ignored like this
 	response1, err := client.Get(fmt.Sprintf("%s/rest/api/1.0/users/%s", c.URL, login))
+	if err != nil {
+		return nil, err
+	}
 	contents, err := ioutil.ReadAll(response1.Body)
+	if err !=nil {
+		return nil, err
+	}
 	defer response1.Body.Close()
-	var mUser User                   // TODO  prefixing with m* is not a common convention in Go
-	json.Unmarshal(contents, &mUser) // TODO should not ignore error
-
+	var user User
+	err = json.Unmarshal(contents, &user)
+	if err != nil {
+		return nil, err
+	}
 	return &model.User{
 		Login:  login,
-		Email:  mUser.EmailAddress,
+		Email:  user.EmailAddress,
 		Token:  accessToken.Token,
-		Avatar: avatarLink(mUser.EmailAddress),
+		Avatar: avatarLink(user.EmailAddress),
 	}, nil
 }
 
@@ -152,20 +161,28 @@ func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	defer response.Body.Close()
 	contents, err := ioutil.ReadAll(response.Body)
 	bsRepo := BSRepo{}
-	json.Unmarshal(contents, &bsRepo)
-
+	err = json.Unmarshal(contents, &bsRepo)
+	if err !=nil {
+		return nil, err
+	}
 	repo := &model.Repo{
 		Name:      bsRepo.Slug,
 		Owner:     bsRepo.Project.Key,
 		Branch:    "master",
 		Kind:      model.RepoGit,
-		IsPrivate: !bsRepo.Project.Public, // TODO(josmo) verify this is corrrect
+		IsPrivate: true, // TODO(josmo) possibly set this as a setting - must always be private to use netrc
 		FullName:  fmt.Sprintf("%s/%s", bsRepo.Project.Key, bsRepo.Slug),
 	}
 
 	for _, item := range bsRepo.Links.Clone {
 		if item.Name == "http" {
-			repo.Clone = item.Href
+			//TODO sdhould find a clean way to do this
+			//We are removing the username out fo the link to allow for Netrc to work
+			splitUrl := strings.SplitAfterN(item.Href,"@",2)
+			splitProtocal := strings.SplitAfterN(splitUrl[0],"//",2)
+			cleanUrl := fmt.Sprintf("%s%s",splitProtocal[0], splitUrl[1])
+
+			repo.Clone = cleanUrl
 		}
 	}
 	for _, item := range bsRepo.Links.Self {
@@ -189,8 +206,14 @@ func (c *client) Repos(u *model.User) ([]*model.RepoLite, error) {
 	}
 	defer response.Body.Close()
 	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
 	var repoResponse Repos
-	json.Unmarshal(contents, &repoResponse)
+	err = json.Unmarshal(contents, &repoResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, repo := range repoResponse.Values {
 		repos = append(repos, &model.RepoLite{
@@ -240,12 +263,18 @@ func (*client) Status(*model.User, *model.Repo, *model.Build, string) error {
 }
 
 func (c *client) Netrc(user *model.User, r *model.Repo) (*model.Netrc, error) {
-	u, err := url.Parse(c.URL) // TODO strip port from url
+	u, err := url.Parse(c.URL)
+	//remove the port
+	tmp := strings.Split(u.Host, ":")
+	var host = tmp[0]
+
 	if err != nil {
 		return nil, err
 	}
+	log.Info(fmt.Sprintf("machine % login %s password %s", host, c.GitUserName, c.GitPassword))
+
 	return &model.Netrc{
-		Machine:  u.Host,
+		Machine:  host,
 		Login:    c.GitUserName,
 		Password: c.GitPassword,
 	}, nil

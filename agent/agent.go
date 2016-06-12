@@ -95,7 +95,7 @@ func (a *Agent) prep(w *queue.Work) (*yaml.Config, error) {
 	envs := toEnv(w)
 	w.Yaml = expander.ExpandString(w.Yaml, envs)
 
-	// inject the netrc file into the clone plugin if the repositroy is
+	// inject the netrc file into the clone plugin if the repository is
 	// private and requires authentication.
 	var secrets []*model.Secret
 	if w.Verified {
