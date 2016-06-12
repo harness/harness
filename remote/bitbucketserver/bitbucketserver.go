@@ -177,7 +177,7 @@ func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	for _, item := range bsRepo.Links.Clone {
 		if item.Name == "http" {
 			//TODO sdhould find a clean way to do this
-			//We are removing the username out fo the link to allow for Netrc to work
+			//We are removing the username out of the link to allow for Netrc to work
 			splitUrl := strings.SplitAfterN(item.Href,"@",2)
 			splitProtocal := strings.SplitAfterN(splitUrl[0],"//",2)
 			cleanUrl := fmt.Sprintf("%s%s",splitProtocal[0], splitUrl[1])
@@ -271,8 +271,6 @@ func (c *client) Netrc(user *model.User, r *model.Repo) (*model.Netrc, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Info(fmt.Sprintf("machine % login %s password %s", host, c.GitUserName, c.GitPassword))
-
 	return &model.Netrc{
 		Machine:  host,
 		Login:    c.GitUserName,
