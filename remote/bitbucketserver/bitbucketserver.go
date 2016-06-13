@@ -180,7 +180,7 @@ func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 		if item.Name == "http" {
 			uri, err := url.Parse(item.Href)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			uri.User = nil
 			repo.Clone = uri.String()
