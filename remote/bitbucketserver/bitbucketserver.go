@@ -154,9 +154,9 @@ func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 
 	client := NewClientWithToken(&c.Consumer, u.Token)
 
-	url := fmt.Sprintf("%s/rest/api/1.0/projects/%s/repos/%s", c.URL, owner, name)
+	urlString := fmt.Sprintf("%s/rest/api/1.0/projects/%s/repos/%s", c.URL, owner, name)
 
-	response, err := client.Get(url)
+	response, err := client.Get(urlString)
 	if err != nil {
 		log.Error(err)
 	}
@@ -178,13 +178,12 @@ func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 
 	for _, item := range bsRepo.Links.Clone {
 		if item.Name == "http" {
-			//TODO sdhould find a clean way to do this
-			//We are removing the username out of the link to allow for Netrc to work
-			splitUrl := strings.SplitAfterN(item.Href,"@",2)
-			splitProtocal := strings.SplitAfterN(splitUrl[0],"//",2)
-			cleanUrl := fmt.Sprintf("%s%s",splitProtocal[0], splitUrl[1])
-
-			repo.Clone = cleanUrl
+			uri, err := url.Parse(item.Href)
+			if err != nil {
+				return err
+			}
+			uri.User = nil
+			repo.Clone = uri.String()
 		}
 	}
 	for _, item := range bsRepo.Links.Self {
