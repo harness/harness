@@ -119,11 +119,13 @@ func (c *client) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 	if err != nil {
 		return nil, err
 	}
+	defer response1.Body.Close()
+
 	contents, err := ioutil.ReadAll(response1.Body)
 	if err !=nil {
 		return nil, err
 	}
-	defer response1.Body.Close()
+
 	var user User
 	err = json.Unmarshal(contents, &user)
 	if err != nil {
@@ -264,6 +266,9 @@ func (*client) Status(*model.User, *model.Repo, *model.Build, string) error {
 
 func (c *client) Netrc(user *model.User, r *model.Repo) (*model.Netrc, error) {
 	u, err := url.Parse(c.URL)
+	if err != nil {
+		return nil, err
+	}
 	//remove the port
 	tmp := strings.Split(u.Host, ":")
 	var host = tmp[0]
