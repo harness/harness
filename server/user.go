@@ -3,7 +3,9 @@ package server
 import (
 	"encoding/base32"
 	"net/http"
+	"strconv"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
 
@@ -33,7 +35,15 @@ func GetFeed(c *gin.Context) {
 }
 
 func GetRepos(c *gin.Context) {
-	repos, err := cache.GetRepos(c, session.User(c))
+	user := session.User(c)
+
+	flush, _ := strconv.ParseBool(c.Query("flush"))
+	if flush {
+		log.Debugf("Evicting repository cache for user %s.", user.Login)
+		cache.DeleteRepos(c, user)
+	}
+
+	repos, err := cache.GetRepos(c, user)
 	if err != nil {
 		c.String(500, "Error fetching repository list. %s", err)
 		return

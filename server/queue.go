@@ -103,6 +103,7 @@ func Update(c *gin.Context) {
 	job.Error = work.Job.Error
 
 	if build.Status == model.StatusPending {
+		build.Started = work.Job.Started
 		build.Status = model.StatusRunning
 		store.UpdateBuild(c, build)
 	}

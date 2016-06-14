@@ -12,6 +12,7 @@ import (
 type Cache interface {
 	Get(string) (interface{}, error)
 	Set(string, interface{}) error
+	Delete(string) error
 }
 
 func Get(c context.Context, key string) (interface{}, error) {
@@ -20,6 +21,10 @@ func Get(c context.Context, key string) (interface{}, error) {
 
 func Set(c context.Context, key string, value interface{}) error {
 	return FromContext(c).Set(key, value)
+}
+
+func Delete(c context.Context, key string) error {
+	return FromContext(c).Delete(key)
 }
 
 // Default creates an in-memory cache with the default
