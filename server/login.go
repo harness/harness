@@ -152,7 +152,7 @@ func GetLoginToken(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, &tokenPayload{
+	c.JSON(http.StatusOK, &tokenPayload{
 		Access:  tokenstr,
 		Expires: exp - time.Now().Unix(),
 	})

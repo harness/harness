@@ -136,6 +136,19 @@ func PatchRepo(c *gin.Context) {
 	c.JSON(http.StatusOK, repo)
 }
 
+func ChownRepo(c *gin.Context) {
+	repo := session.Repo(c)
+	user := session.User(c)
+	repo.UserID = user.ID
+
+	err := store.UpdateRepo(c, repo)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, repo)
+}
+
 func GetRepo(c *gin.Context) {
 	c.JSON(http.StatusOK, session.Repo(c))
 }
