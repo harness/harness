@@ -52,3 +52,12 @@ func GetRepos(c context.Context, user *model.User) ([]*model.RepoLite, error) {
 	Set(c, key, repos)
 	return repos, nil
 }
+
+// DeleteRepos evicts the cached user repositories from the cache associated
+// with the current context.
+func DeleteRepos(c context.Context, user *model.User) error {
+	key := fmt.Sprintf("repos:%s",
+		user.Login,
+	)
+	return Delete(c, key)
+}

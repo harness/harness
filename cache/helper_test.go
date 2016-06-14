@@ -84,6 +84,21 @@ func TestHelper(t *testing.T) {
 			g.Assert(p == nil).IsTrue()
 			g.Assert(err).Equal(fakeErr)
 		})
+
+		g.It("Should evict repos", func() {
+			key := fmt.Sprintf("repos:%s",
+				fakeUser.Login,
+			)
+
+			Set(c, key, fakeRepos)
+			repos, err := Get(c, key)
+			g.Assert(repos != nil).IsTrue()
+			g.Assert(err == nil).IsTrue()
+
+			DeleteRepos(c, fakeUser)
+			repos, err = Get(c, key)
+			g.Assert(repos == nil).IsTrue()
+		})
 	})
 }
 
