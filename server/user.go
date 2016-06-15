@@ -21,13 +21,15 @@ func GetSelf(c *gin.Context) {
 }
 
 func GetFeed(c *gin.Context) {
+	latest, _ := strconv.ParseBool(c.Query("latest"))
+
 	repos, err := cache.GetRepos(c, session.User(c))
 	if err != nil {
 		c.String(500, "Error fetching repository list. %s", err)
 		return
 	}
 
-	feed, err := store.GetUserFeed(c, repos)
+	feed, err := store.GetUserFeed(c, repos, latest)
 	if err != nil {
 		c.String(500, "Error fetching feed. %s", err)
 		return
