@@ -41,6 +41,22 @@ func (db *datastore) GetUserFeed(listof []*model.RepoLite) ([]*model.Feed, error
 	return feed, err
 }
 
+func (db *datastore) GetUserFeedLatest(listof []*model.RepoLite) ([]*model.Feed, error) {
+	var (
+		feed []*model.Feed
+		args []interface{}
+		stmt string
+	)
+	switch meddler.Default {
+	case meddler.PostgreSQL:
+		stmt, args = toListPosgres(listof)
+	default:
+		stmt, args = toList(listof)
+	}
+	err := meddler.QueryAll(db, &feed, fmt.Sprintf(userFeedLatest, stmt), args...)
+	return feed, err
+}
+
 func (db *datastore) GetUserCount() (int, error) {
 	var count int
 	var err = db.QueryRow(rebind(userCountQuery)).Scan(&count)
@@ -113,4 +129,37 @@ WHERE b.build_repo_id = r.repo_id
   AND r.repo_full_name IN (%s)
 ORDER BY b.build_id DESC
 LIMIT 50
+`
+
+// thanks to this article for helping me find a sane sql query
+// https://www.periscopedata.com/blog/4-ways-to-join-only-the-first-row-in-sql.html
+
+const userFeedLatest = `
+SELECT
+ repo_owner
+,repo_name
+,repo_full_name
+,build_number
+,build_event
+,build_status
+,build_created
+,build_started
+,build_finished
+,build_commit
+,build_branch
+,build_ref
+,build_refspec
+,build_remote
+,build_title
+,build_message
+,build_author
+,build_email
+,build_avatar
+FROM repos LEFT OUTER JOIN builds ON build_id = (
+	SELECT build_id FROM builds
+	WHERE builds.build_repo_id = repos.repo_id
+	ORDER BY build_id DESC
+	LIMIT 1
+)
+WHERE repo_full_name IN (%s)
 `

@@ -21,6 +21,10 @@ type Store interface {
 	// GetUserFeed gets a user activity feed.
 	GetUserFeed([]*model.RepoLite) ([]*model.Feed, error)
 
+	// GetUserFeedLatest gets a user activity feed for all repositories including
+	// only the latest build for each repository.
+	GetUserFeedLatest(listof []*model.RepoLite) ([]*model.Feed, error)
+
 	// GetUserCount gets a count of all users in the system.
 	GetUserCount() (int, error)
 
@@ -146,7 +150,10 @@ func GetUserList(c context.Context) ([]*model.User, error) {
 }
 
 // GetUserFeed gets a user activity feed.
-func GetUserFeed(c context.Context, listof []*model.RepoLite) ([]*model.Feed, error) {
+func GetUserFeed(c context.Context, listof []*model.RepoLite, latest bool) ([]*model.Feed, error) {
+	if latest {
+		return FromContext(c).GetUserFeedLatest(listof)
+	}
 	return FromContext(c).GetUserFeed(listof)
 }
 

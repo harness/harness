@@ -63,17 +63,6 @@ WHERE repo_full_name = ?
 LIMIT 1;
 `
 
-const repoListQuery = `
-SELECT *
-FROM repos
-WHERE repo_id IN (
-	SELECT DISTINCT build_repo_id
-	FROM builds
-	WHERE build_author = ?
-)
-ORDER BY repo_full_name
-`
-
 const repoListOfQuery = `
 SELECT *
 FROM repos
