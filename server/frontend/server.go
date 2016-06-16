@@ -8,7 +8,7 @@
 // local drone instance, or a remote drone instance, so you can develop against
 // real world data.
 //
-//     go run main.go --scheme=http --host=drone.server.com --token=<token>
+//     go run server.go --scheme=http --host=drone.server.com --token=<token>
 //
 
 package main
@@ -77,14 +77,6 @@ func main() {
 		http.StripPrefix("/bower_components/",
 			http.FileServer(
 				http.Dir("bower_components/"),
-			),
-		),
-	)
-	// serve static content from the filesystem
-	http.Handle("/components/",
-		http.StripPrefix("/components/",
-			http.FileServer(
-				http.Dir("components/"),
 			),
 		),
 	)
