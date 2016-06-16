@@ -28,7 +28,7 @@ function JobViewModel(repo, build, job, status) {
 		})
 
 		Stream(repo, build, job, function(out){
-			buf.write(out);
+			buf.write(out+"\n");
 		});
 	};
 
@@ -186,7 +186,7 @@ function Stream(repo, build, job, _callback) {
 	var events = new EventSource("/api/stream/" + repo + "/" + build + "/" + job, {withCredentials: true});
 	events.onmessage = function (event) {
 		if (callback !== undefined) {
-			callback(event.data);
+			callback(JSON.parse(event.data).out);
 		}
 	};
 	events.onerror = function (event) {
