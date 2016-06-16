@@ -1,0 +1,70 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+
+<link rel="import" href="drone-theme.html">
+
+<dom-module id="drone-status">
+	<template>
+		<style include="drone-theme"></style>
+		<style>
+			:host iron-icon {
+				border-width: 2px;
+				border-style: solid;
+				border-radius: 50%;
+				padding: 2px;
+
+				--iron-icon-width: 18px;
+				--iron-icon-height: 18px;
+			}
+			:host .success {
+				color: var(--status-success-color);
+				border-color: var(--status-success-color);
+			}
+			:host .failure {
+				color: var(--status-failure-color);
+				border-color: var(--status-failure-color);
+			}
+			:host iron-icon.running {
+				color: var(--status-running-color);
+				border-color: var(--status-running-color);
+				animation: spinner 1.2s ease infinite;
+			}
+
+			@keyframes spinner {
+				0%{transform:rotate(0deg)}
+				100%{transform:rotate(359deg)}
+			}
+		</style>
+
+		<template is="dom-if" if="{{ isSuccess(status) }}">
+			<iron-icon icon="icons:check" class="success"></iron-icon>
+		</template>
+		<template is="dom-if" if="{{ isFailure(status) }}">
+			<iron-icon icon="icons:close" class="failure"></iron-icon>
+		</template>
+		<template is="dom-if" if="{{ isRunning(status) }}">
+			<iron-icon icon="refresh" class="running"></iron-icon>
+		</template>
+	</template>
+
+	<script>
+		Polymer({
+			is: "drone-status",
+			properties: {
+				status: {
+					type: String
+				}
+			},
+			isSuccess: function(string) {
+				return string === "success";
+			},
+			isFailure: function(string) {
+				return string === "failure" || string === "error";
+			},
+			isRunning: function(string) {
+				return string === "pending" || string === "running";
+			}
+		});
+	</script>
+</dom-module>

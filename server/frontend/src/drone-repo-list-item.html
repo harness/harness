@@ -1,0 +1,99 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+
+<dom-module id="drone-repo-list-item">
+	<template>
+		<style>
+			:host {
+				border-bottom: 1px solid #EEE;
+				display:flex;
+				padding: 10px 0px;
+				cursor: pointer;
+				-webkit-user-select: none;
+				user-select: none;
+			}
+
+			:host a {
+				text-decoration: none;
+				font-size: 16px;
+				line-height:42px;
+				display: inline-block;
+				vertical-align: middle;
+				color: #212121;
+				padding-right:20px;
+				padding-left:20px;
+			}
+
+			:host h3 {
+				flex: 1 1 auto;
+				font-size: 16px;
+				font-weight: normal;
+				color: #212121;
+				line-height:42px;
+				vertical-align: middle;
+				display: block;
+				margin:0px;
+			}
+
+			:host iron-icon {
+				color: #BDBDBD;
+				--iron-icon-height: 20px;
+				--iron-icon-width: 20px;
+			}
+
+			:host div {
+				width: 70px;
+				max-width: 70px;
+				min-width: 70px;
+				padding-left:20px;
+			}
+
+			:host paper-toggle-button {
+				margin-top:10px;
+
+				--paper-toggle-button-checked-bar-color:  #00BFA5;
+				--paper-toggle-button-checked-button-color:  #00BFA5;
+				--paper-toggle-button-checked-ink-color: #00BFA5;
+				--paper-toggle-button-unchecked-bar-color:  #BDBDBD;
+				--paper-toggle-button-unchecked-button-color:  #BDBDBD;
+				--paper-toggle-button-unchecked-ink-color: #00BFA5;
+			}
+
+			:host paper-toggle-button::shadow .toggle-button {
+				box-shadow: none !important;
+			}
+		</style>
+
+		<div>
+			<paper-toggle-button checked="[[_isActive(repo)]]" on-change="_onChange"></paper-toggle-button>
+		</div>
+		<h3>[[repo.owner]] / [[repo.name]]</h3>
+		<template is="dom-if" if="[[_isActive(repo)]]">
+			<a href="/[[repo.full_name]]/settings">
+				<iron-icon icon="settings"></iron-icon>
+			</a>
+		</template>
+	</template>
+
+	<script>
+		Polymer({
+			is: "drone-repo-list-item",
+			properties: {
+				repo: {
+					type: Object
+				}
+			},
+			_onChange: function(e) {
+				this.fire("toggle", {repo: this.repo});
+			},
+			_isActive: function(item) {
+				return !!item.id;
+			}
+		});
+	</script>
+</dom-module>

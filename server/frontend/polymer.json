@@ -1,0 +1,4 @@
+{
+  "entrypoint": "index.html",
+  "shell": "src/drone-app.html"
+}

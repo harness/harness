@@ -1,0 +1,241 @@
+
+<script src="../bower_components/ansi_up/ansi_up.js"></script>
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+
+<link rel="import" href="drone-api.html">
+<link rel="import" href="drone-build-card.html">
+<link rel="import" href="drone-error.html">
+
+<dom-module id="drone-build">
+	<template>
+		<style>
+			:host paper-progress {
+				width: 100%;
+				position: absolute;
+				top: -40px;
+				right: 0px;
+				left: 0px;
+
+				--paper-progress-active-color: #00BFA5
+				--paper-progress-container-color: #EEEEEE;
+			}
+			:host details div {
+				margin: 0px;
+				background: #EEEEEE;
+				color: #212121;
+				font-size: 12px;
+				line-height: 19px;
+				white-space: pre-wrap;
+				word-wrap: break-word;
+				font-family: "Roboto Mono", monospace;
+				padding:0px 20px;
+			}
+			:host details div:nth-child(2) {
+				padding-top:20px;
+				border-top-right-radius: 2px;
+				border-top-left-radius: 2px;
+			}
+			:host details div:last-child {
+				padding-bottom:20px;
+				border-bottom-right-radius: 2px;
+				border-bottom-left-radius: 2px;
+			}
+			:host details div a {
+				color: #6fc2ef;
+			}
+			:host details {
+				color: #212121;
+				display: block;
+			}
+			:host summary {
+				display:block;
+				cursor: pointer;
+				-webkit-user-select: none;
+				font-weight: normal;
+				display: block;
+				outline: none;
+				font-size: 15px;
+				text-transform: lowercase;
+				padding: 15px 5px;
+				border-bottom: 1px solid #EEE;
+			}
+			:host details[open] summary {
+				border-bottom: none;
+			}
+			:host details summary::-webkit-details-marker { display:none; }
+
+			/** Term Colors from
+				https://github.com/chriskempson/base16-shell/blob/master/base16-chalk.dark.sh */
+
+			/** Term Foreground Colors */
+
+			.ansi-black-fg { color: #151515; }
+			.ansi-red-fg { color: #fb9fb1; }
+			.ansi-green-fg { color: #acc267; }
+			.ansi-yellow-fg { color: #ddb26f;}
+			.ansi-blue-fg { color: #6fc2ef; }
+			.ansi-magenta-fg { color: #e1a3ee;}
+			.ansi-cyan-fg { color: #12cfc0; }
+			.ansi-white-fg { color: #d0d0d0; }
+
+			.ansi-bright-black-fg { color: #505050; }
+			.ansi-bright-red-fg { color: #fb9fb1; }
+			.ansi-bright-green-fg {color: #acc267;}
+			.ansi-bright-yellow-fg {color: #ddb26f;}
+			.ansi-bright-blue-fg {color: #6fc2ef;}
+			.ansi-bright-magenta-fg {color: #e1a3ee;}
+			.ansi-bright-cyan-fg {color: #12cfc0; }
+			.ansi-bright-white-fg { color: #f5f5f5; }
+
+			/** Term Background Colors */
+
+			.ansi-black-bg { background-color: #151515; }
+			.ansi-red-bg { background-color: #fb9fb1; }
+			.ansi-green-bg { background-color: #acc267; }
+			.ansi-yellow-bg { background-color: #ddb26f;}
+			.ansi-blue-bg { background-color: #6fc2ef; }
+			.ansi-magenta-bg { background-color: #e1a3ee;}
+			.ansi-cyan-bg { background-color: #12cfc0; }
+			.ansi-white-bg { background-color: #d0d0d0; }
+
+			.ansi-bright-black-bg { background-color: #505050; }
+			.ansi-bright-red-bg { background-color: #fb9fb1; }
+			.ansi-bright-green-bg {background-color: #acc267;}
+			.ansi-bright-yellow-bg {background-color: #ddb26f;}
+			.ansi-bright-blue-bg {background-color: #6fc2ef;}
+			.ansi-bright-magenta-bg {background-color: #e1a3ee;}
+			.ansi-bright-cyan-bg {background-color: #12cfc0; }
+			.ansi-bright-white-bg { background-color: #f5f5f5; }
+		</style>
+
+		<app-route
+			route="[[route]]"
+			pattern="/:build/:job"
+			data={{data}}>
+		</app-route>
+
+		<drone-api id="drone"></drone-api>
+
+		<template is="dom-if" if="[[loading]]">
+			<paper-progress indeterminate></paper-progress>
+		</template>
+
+		<template is="dom-if" if="{{error}}">
+			<drone-error error="[[error]]"></drone-error>
+		</template>
+
+		<div>
+			<drone-build-card build="[[ build ]]"></drone-build-card>
+			<div id="logs"></div>
+		</div>
+	</template>
+
+	<script>
+		Polymer({
+			is: "drone-build",
+			properties: {
+				active: {
+					type: Boolean,
+					value: false,
+					observer: "refresh"
+				},
+				loading: {
+					type: Boolean,
+					value: true,
+				},
+				repo: {
+					type: Object,
+				},
+				error: {
+					type: Object,
+					value: null
+				},
+				build: {
+					type: Object
+				},
+				route: {
+					type: Object
+				},
+			},
+			observers: [
+				"refresh(repo, data, active)",
+			],
+			refresh: function(repo, data, active) {
+				if (!this.active || !this.repo) return;
+
+				this.set("loading", true);
+				this.$.drone.getBuild(this.repo, this.data.build).then(function(build) {
+					this.set("build", build);
+					this.set("error", null);
+				}.bind(this)).catch(function(error) {
+					this.set("error", error);
+				}.bind(this));
+
+				this.$.drone.getLogs(this.repo, this.data.build, this.data.job || 1).then(function(logs) {
+					this.set("error", null);
+					this._handleLogs(logs);
+					this.set("loading", false);
+				}.bind(this)).catch(function(error) {
+					this.set("error", error);
+					this.set("loading", false);
+				}.bind(this));
+			},
+
+			// This handles the callback when the build logs are fetched. This
+			// groups the results into sections and convents ansi to html.
+			_handleLogs: function(logs) {
+				this.$.logs.innerHTML="";
+
+				// TODO explore using Polymer.dom and Polymer.dom.flush to improve
+				// rendering performance of large log files here.
+
+				var groups = {};
+				for (var i = 0; i < logs.length; i++) {
+					var line = logs[i];
+
+					// the very last item in the logs is usually empty and can
+					// be ignored.
+					if (!line.proc || !line.out || !line.out.replace) {
+						continue;
+					}
+
+					// tries to determine the index of the group. if the group
+					// is no yet indexed we add it.
+					var group = groups[line.proc];
+					if (!group) {
+						// create the group summary / title element
+						var summary = document.createElement("summary");
+						summary.innerText = line.proc;
+
+						// creates the details element and appends the summary
+						group = document.createElement("details");
+						group.setAttribute("open", "true")
+						group.appendChild(summary);
+
+						// adds the group to the index
+						groups[line.proc] = group;
+					}
+
+					line.html = line.out;
+					line.html = ansi_up.escape_for_html(line.html);
+					line.html = ansi_up.ansi_to_html(line.html, {use_classes: true});
+					line.html = ansi_up.linkify(line.html);
+
+					var div = document.createElement("div");
+					div.innerHTML = line.html;
+					group.appendChild(div);
+				}
+
+				for (var prop in groups) {
+					this.$.logs.appendChild(groups[prop]);
+				}
+
+				// yes, there is probably a better way to do this. Feel free to
+				// improve and send me a pull request!
+			}
+		});
+	</script>
+</dom-module>

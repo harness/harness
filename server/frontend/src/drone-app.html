@@ -1,0 +1,65 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+
+<link rel="import" href="drone-repo.html">
+<link rel="import" href="drone-repo-list.html">
+
+<dom-module id="drone-app">
+	<template>
+		<app-location route="{{route}}"></app-location>
+		<app-route
+			route=[[route]]
+			pattern="/:page"
+			data={{data}}
+			tail={{subroute}}>
+		</app-route>
+
+		<app-route
+			route=[[subroute]]
+			data={{subdata}}
+			pattern="/:page"
+			tail={{tail}}>
+		</app-route>
+
+		<iron-pages role="main"
+			selected="[[data.page]]"
+			fallback-selection="repo"
+			attr-for-selected="page"
+			selected-attribute="active">
+
+			<drone-repo-list
+				page="settings"
+				user="[[user]]">
+			</drone-repo-list>
+
+			<drone-repo
+				page="repo"
+				route="[[tail]]"
+				owner="[[data.page]]"
+				name="[[subdata.page]]"
+				user="[[user]]">
+			</drone-repo>
+		</iron-pages>
+
+	</template>
+	<script>
+		Polymer({
+			is: "drone-app",
+			properties: {
+				user: Object
+			},
+			resolvePath: function(data) {
+				return data.page == "settings" ? "settings": "repo";
+			},
+			ready: function() {
+				this.user = window &&
+					window.STATE_FROM_SERVER &&
+					window.STATE_FROM_SERVER.user ?
+					window.STATE_FROM_SERVER.user: null;
+			}
+		});
+	</script>
+</dom-module>

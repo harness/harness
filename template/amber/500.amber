@@ -1,8 +1,0 @@
-extends base
-
-block append head
-    title Internal Server Error
-
-block content
-    div.container
-        div.alert.alert-danger Oops. Something went wrong.

@@ -1,8 +1,0 @@
-extends base
-
-block append head
-    title Not Found
-
-block content
-    div.container
-        div.alert.alert-danger Not Found

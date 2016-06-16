@@ -1,0 +1,111 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-menu-button/paper-menu-button.html">
+<link rel="import" href="../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+
+<link rel="import" href="drone-theme.html">
+
+<dom-module id="drone-toolbar">
+	<template>
+		<style include="drone-theme"></style>
+		<style>
+			:host {
+				display: -webkit-flex;
+				display: flex;
+				padding-left:40px;
+				padding-right:10px;
+				max-height: 64px;
+				min-height: 64px;
+				height: 64px;
+			}
+
+			:host h1 {
+				-webkit-flex: 1 1 auto;
+				flex: 1 1 auto;
+				font-size: 22px;
+				font-weight: normal;
+			}
+
+			:host img {
+				border-radius: 50%;
+				width: 32px;
+				height: 32px;
+				line-height: 64px;
+				vertical-align: middle;
+			}
+
+			:host div {
+				width: 100px;
+				min-width: 100px;
+				max-width: 100px;
+				line-height: 64px;
+				vertical-align: middle;
+				text-align:right;
+			}
+
+			:host paper-menu-button {
+				padding: 0px;
+			}
+
+			:host paper-menu a {
+				font-size: 16px;
+				text-decoration: none;
+				color: var(--drone-font-color);
+			}
+
+			:host paper-button {
+				font-size: 16px;
+				text-decoration: none;
+				border: 2px solid #212121;
+				border-radius: 3px;
+				padding: 0px;
+				margin:0px;
+				margin-right:20px;
+				font-weight: normal;
+				line-height:32px;
+			}
+			:host paper-button a {
+				text-decoration: none;
+				color: #212121;
+			}
+		</style>
+
+		<h1>{{page}}</h1>
+		<div>
+			<template is="dom-if" if="{{user}}">
+				<img src="{{user.avatar_url}}" />
+				<paper-menu-button horizontal-align="right" vertical-align="top" vertical-offset="20">
+					<paper-icon-button icon="more-vert" class="dropdown-trigger"></paper-icon-button>
+					<paper-menu class="dropdown-content">
+						<a href="/settings" tabindex="-1">
+							<paper-item>Settings</paper-item>
+						</a>
+						<a href="/logout" tabindex="-1" target="_self">
+							<paper-item>Logout</paper-item>
+						</a>
+					</paper-menu>
+				</paper-menu-button>
+			</template>
+
+			<template is="dom-if" if="{{ !user }}">
+				<paper-button>
+					<a href="/login" target="_self">Login</a>
+				</paper-button>
+			</template>
+		</div>
+	</template>
+
+	<script>
+		Polymer({
+			is: "drone-toolbar",
+			properties: {
+				page: String,
+				user: Object
+			}
+		});
+	</script>
+</dom-module>

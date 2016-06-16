@@ -1,0 +1,164 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+
+<link rel="import" href="drone-api.html">
+
+<dom-module id="drone-repo-settings">
+	<template>
+
+		<style>
+			:host paper-toggle-button {
+				--paper-toggle-button-checked-bar-color:  #00BFA5;
+				--paper-toggle-button-checked-button-color:  #00BFA5;
+				--paper-toggle-button-checked-ink-color: #00BFA5;
+				--paper-toggle-button-unchecked-bar-color:  #BDBDBD;
+				--paper-toggle-button-unchecked-button-color:  #BDBDBD;
+				--paper-toggle-button-unchecked-ink-color: #00BFA5;
+			}
+			:host paper-toggle-button::shadow .toggle-button {
+				box-shadow: none !important;
+			}
+			:host paper-slider {
+				width:100%;
+				--paper-slider-active-color: #00BFA5;
+				--paper-slider-knob-color: #00BFA5;
+				--paper-slider-container-color: #E0E0E0;
+				--paper-slider-height: 10px;
+			}
+
+			:host paper-slider::shadow .pin {
+				margin-left: 0px !important;
+			}
+			:host dl {
+				margin-top: 80px;
+			}
+			:host dt {
+				float:left;
+				padding-left:15px;
+				line-height:24px;
+				margin:0px;
+				font-size:15px;
+			}
+			:host dd {
+				margin:0px;
+				padding-left:200px;
+				line-height:24px;
+				padding-bottom: 20px;
+				margin-bottom: 20px;
+				border-bottom: 1px solid #EEE;
+			}
+
+			:host dt:nth-last-child(2) {
+				line-height:40px;
+			}
+			:host dd:last-child {
+				border-bottom: none;
+			}
+			:host dd:after {
+				clear: both;
+				content: " ";
+				display: table;
+			}
+			:host paper-toast {
+				bottom:40px;
+				right:40px;
+				left: auto !important;
+				top: auto !important;
+			}
+		</style>
+
+		<drone-api id="drone"></drone-api>
+
+		<div class="card" id="content">
+
+			<dl>
+				<dt>Push Hook</dt>
+				<dd>
+					<paper-toggle-button
+						checked="{{repo.allow_push}}"
+						on-change="handleChange">
+					</paper-toggle-button>
+				</dd>
+
+				<dt>Pull Request Hook</dt>
+				<dd>
+					<paper-toggle-button
+						checked="{{repo.allow_pr}}"
+						on-change="handleChange">
+					</paper-toggle-button>
+				</dd>
+
+				<dt>Tag Hook</dt>
+				<dd>
+					<paper-toggle-button
+						checked="{{repo.allow_tags}}"
+						on-change="handleChange">
+					</paper-toggle-button>
+				</dd>
+
+				<dt>Deploy Hook</dt>
+				<dd>
+					<paper-toggle-button
+						checked="{{repo.allow_deploys}}"
+						on-change="handleChange">
+					</paper-toggle-button>
+				</dd>
+
+				<template is="dom-if" if="{{user.admin}}">
+					<dt>Trusted</dt>
+					<dd>
+						<paper-toggle-button
+							checked="{{repo.trusted}}"
+							on-change="handleChange">
+						</paper-toggle-button>
+					</dd>
+
+					<dt>Timeout</dt>
+					<dd>
+						<paper-slider pin="true" min="1" max="1000"
+							value="{{repo.timeout}}"
+							on-change="handleChange">
+						</paper-slider>
+					</dd>
+				</template>
+			</dl>
+		</div>
+
+		<paper-toast id="toast" text=""></paper-toast>
+	</template>
+
+	<script>
+		Polymer({
+			is: "drone-repo-settings",
+			properties: {
+				repo: {
+					type: Object
+				},
+				user: {
+					type: Object
+				},
+			},
+			handleChange: function() {
+				var data = {
+					owner: this.repo.owner,
+					name: this.repo.name,
+					allow_pr: this.repo.allow_pr,
+					allow_push: this.repo.allow_push,
+					allow_deploy: this.repo.allow_deploys,
+					allow_tag: this.repo.allow_tags,
+					timeout: this.repo.timeout,
+					trusted: this.repo.trusted,
+				};
+				this.$.drone.updateRepo(data).then(function(repo) {
+					this.$.toast.show("Successfully updated repository configuration.");
+				}.bind(this)).catch(function(err) {
+					this.$.toast.open(err.responseText || err);
+				}.bind(this));
+			}
+		});
+	</script>
+</dom-module>

@@ -1,0 +1,74 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+
+<link rel="import" href="drone-api.html">
+<link rel="import" href="drone-build-list-item.html">
+
+<dom-module id="drone-build-list">
+	<template>
+		<style>
+			paper-progress {
+				width: 100%;
+				position: absolute;
+				top: -40px;
+				right: 0px;
+				left: 0px;
+
+				--paper-progress-active-color: #00BFA5
+				--paper-progress-container-color: #EEEEEE;
+			}
+		</style>
+
+		<drone-api id="drone"></drone-api>
+
+		<template is="dom-if" if="[[loading]]">
+			<paper-progress indeterminate></paper-progress>
+		</template>
+
+		<div>
+			<template is="dom-repeat" items="[[builds]]">
+				<drone-build-list-item
+					repo="[[repo]]"
+					build="[[item]]">
+				</drone-build-list-item>
+			</template>
+		</div>
+	</template>
+
+	<script>
+		Polymer({
+			is: "drone-build-list",
+			properties: {
+				active: {
+					type: Boolean,
+					value: false,
+				},
+				loading: {
+					type: Boolean,
+					value: true
+				},
+				repo: {
+					type: Object,
+					value: undefined,
+				}
+			},
+			observers: [
+				"refresh(repo, active)"
+			],
+			refresh: function(repo, active) {
+				if (!active) return;
+
+				this.set("loading", true);
+				this.$.drone.getBuildList(repo).then(function(builds) {
+					this.set("error", undefined);
+					this.set("builds", builds);
+					this.set("loading", false);
+				}.bind(this)).catch(function(err) {
+					this.set("error", error);
+					this.set("loading", false);
+				}.bind(this));
+			}
+		});
+	</script>
+</dom-module>

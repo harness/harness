@@ -1,0 +1,141 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="drone-status.html">
+
+<dom-module id="drone-build-list-item">
+	<template>
+		<style>
+			:host a {
+				text-decoration: none;
+				color: #212121;
+				display: flex;
+				border-bottom: 1px solid #EEE;
+				padding:25px 0px;
+				box-sizing: border-box;
+			}
+			:host:last-child {
+				border-bottom: none;
+			}
+			:host span {
+				font-size:14px;
+				color: #9E9E9E;
+			}
+			:host em {
+				font-size:14px;
+				font-style: normal;
+			}
+
+			:host a > div:first-child {
+				padding-left:10px;
+				padding-right:30px;
+			}
+
+			:host a > div:nth-child(2) {
+				flex: 1 1 auto;
+				display: flex;
+				overflow: hidden;
+				flex-direction: column;
+			}
+
+			:host a > div:last-child {
+				padding-left:10px;
+				white-space:nowrap;
+			}
+
+			:host h3 {
+				font-weight: normal;
+				font-size: 16px;
+				margin: 0px;
+				padding-right:20px;
+				max-width: 600px;
+
+				white-space: nowrap;
+				flex: 1 0 auto;
+				text-overflow: ellipsis;
+				overflow: hidden;
+				min-width: 0px;
+			}
+
+			:host img {
+				width: 26px;
+				height: 26px;
+				border-radius: 50%;
+			}
+		</style>
+
+		<a href="/[[ repo.full_name ]]/[[ build.number ]]/1">
+			<div>
+				<img src="[[ build.author_avatar ]]" />
+			</div>
+			<div>
+				<h3>[[ build.message ]]</h3>
+
+				<!-- push description -->
+				<template is="dom-if" if="[[ isPush(build.event) ]]">
+					<div class="description">
+						<em>[[ build.author ]]</em>
+						<span>pushed to</span>
+						<em>[[ build.branch ]]</em>
+					</div>
+				</template>
+
+				<!-- pull_request description -->
+				<template is="dom-if" if="[[ isPull(build.event) ]]">
+					<div class="description">
+						<em>[[ build.author ]]</em>
+						<span>opened pull request to</span>
+						<em>[[ build.branch ]]</em>
+					</div>
+				</template>
+
+				<!-- tag description -->
+				<template is="dom-if" if="[[ isTag(build.event) ]]">
+					<div class="description">
+						<em>[[ build.author ]]</em>
+						<span>pushed tag</span>
+						<em>[[ build.ref ]]</em>
+					</div>
+				</template>
+
+				<!-- deployment description -->
+				<template is="dom-if" if="[[ isDeploy(build.event) ]]">
+					<div class="description">
+						<em>[[ build.author ]]</em>
+						<span>deployed to</span>
+						<em>[[ build.deploy_to ]]</em>
+					</div>
+				</template>
+			</div>
+			<div>
+				<span style="padding-right:10px;"># [[ build.number ]]</span>
+				<drone-status status="[[ build.status ]]"></drone-status>
+			</div>
+		</a>
+	</template>
+
+	<script>
+		Polymer({
+			is: "drone-build-list-item",
+			properties: {
+				build: {
+					type: Object
+				},
+				repo: {
+					type: Object
+				}
+			},
+			isPush: function(string) {
+				return string === "push";
+			},
+			isPull: function(string) {
+				return string === "pull_request";
+			},
+			isTag: function(string) {
+				return string === "tag";
+			},
+			isDeploy: function(string) {
+				return string === "deployment";
+			}
+		});
+	</script>
+</dom-module>

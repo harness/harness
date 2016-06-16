@@ -1,0 +1,37 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+
+<link rel="import" href="drone-theme.html">
+
+<dom-module id="drone-badges">
+	<template>
+		<style include="drone-theme"></style>
+		<dl>
+			<dt>Markdown</dt>
+			<dd>[![Build Status]({{url}}/api/badges/{{repo.full_name}}/status.svg)]({{url}}/{{repo.full_name}})</dd>
+			<dt>Markup</dt>
+			<dd>&lt;a href=&quot;{{url}}/{{repo.full_name}}&quot;&gt;&lt;img src=&quot;{{url}}/api/badges/{{repo.full_name}}/status.svg&quot; /&gt;&lt;/a&gt;</dd>
+			<dt>CCMenu</dt>
+			<dd>{{url}}/api/badges/{{repo.full_name}}/cc.xml</dd>
+		</dl>
+	</template>
+
+	<script>
+		Polymer({
+			is: "drone-badges",
+			properties: {
+				repo: {
+					type: Object
+				},
+				url: {
+					type: String,
+					computed: "computeUrl(repo)"
+				}
+			},
+			computeUrl: function() {
+				return window.location.protocol+"//"+window.location.host;
+			},
+		});
+	</script>
+</dom-module>

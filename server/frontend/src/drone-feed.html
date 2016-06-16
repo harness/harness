@@ -1,0 +1,83 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="drone-api.html">
+<link rel="import" href="drone-feed-item.html">
+<link rel="import" href="drone-theme.html">
+
+<dom-module id="drone-feed">
+	<template>
+		<style include="drone-theme"></style>
+		<style>
+			:host {
+				display: -webkit-flex;
+				display:flex;
+				-webkit-flex-direction: column;
+				flex-direction: column;
+			}
+
+			:host .search {
+				border-bottom: 1px solid var(--drone-border-color);
+				border-top: 1px solid var(--drone-border-color);
+				min-height:49px;
+				max-height:49px;
+				height:49px;
+			}
+
+			:host .search input {
+				width: 100%;
+				border: none;
+				display: block;
+				outline: none;
+				padding: 15px 15px;
+				font-size: 15px;
+			}
+
+			:host section {
+				-webkit-flex: 1 1 auto;
+				flex: 1 1 auto;
+				overflow-x: none;
+				overflow-y: scroll;
+			}
+		</style>
+
+		<drone-api id="drone"></drone-api>
+
+		<div class="search">
+			<input type="search"
+				spellcheck="false"
+				placeholder="Search ..."
+				value="{{searchString::input}}" />
+		</div>
+
+		<section>
+			<template is="dom-repeat" items="[[repos]]" filter="[[computeFilter(searchString)]]" sort="sortFeed">
+				<drone-feed-item repo="[[item]]"></drone-feed-item>
+			</template>
+		</section>
+	</template>
+
+	<script>
+		Polymer({
+			is: "drone-feed",
+			attached: function() {
+				this.$.drone.getBuildFeed({latest:true}).then(function(repos) {
+					this.set("repos", repos);
+				}.bind(this));
+			},
+			sortFeed: function(a, b) {
+				return (b.started_at || 0) - (a.started_at || 0);
+			},
+			computeFilter: function(string) {
+				if (!string) {
+					return null;
+				}
+				string = string.toLowerCase();
+				return function(repo) {
+					var name = repo.full_name.toLowerCase();
+					return name.indexOf(string) != -1 || repo.status == string;
+				};
+			}
+		});
+	</script>
+</dom-module>

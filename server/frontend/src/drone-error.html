@@ -1,0 +1,47 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="drone-theme.html">
+
+<dom-module id="drone-error">
+	<template>
+		<style include="drone-theme"></style>
+
+		<template is="dom-if" if="{{is404(error)}}">
+			<div class="alert alert-error">
+				<div>Not Found</div>
+			</div>
+		</template>
+		<template is="dom-if" if="{{is403(error)}}">
+			<div class="alert alert-error">
+				<div>Not Found</div>
+				<div>
+					<span>You may need to</span>
+					<a href="/login" target="_self">login</a>
+				</div>
+			</div>
+		</template>
+	</template>
+
+	<script>
+		Polymer({
+			is: "drone-error",
+			properties: {
+				error: {
+					type: Object
+				}
+			},
+			is403: function(error) {
+				if (error && error.status == 403) { return true; }
+				return error
+					&& error.request
+					&& error.request.status == 403;
+			},
+			is404: function(error) {
+				if (error && error.status == 500) { return true; }
+				if (error && error.status == 404) { return true; }
+				return error
+					&& error.request
+					&& (error.request.status == 500 || error.request.status == 404);
+			}
+		});
+	</script>
+</dom-module>

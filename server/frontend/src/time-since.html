@@ -1,0 +1,26 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<script src="../bower_components/moment/min/moment.min.js"></script>
+
+<dom-module id="time-since">
+	<template>
+		[[output]]
+	</template>
+	<script>
+		Polymer({
+			is: 'time-since',
+			properties: {
+				unix: {
+					type: Number,
+				},
+				output: {
+					type: String,
+					computed: '_computeOutput(unix)'
+				}
+			},
+			_computeOutput(unix) {
+				return moment.unix(unix).fromNow();
+			}
+		});
+	</script>
+</dom-module>

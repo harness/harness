@@ -1,0 +1,46 @@
+<dom-module id="drone-theme">
+	<template>
+		<style>
+			:root {
+				--status-failure-color: #F50057;
+				--status-success-color: #00BFA5;
+				--status-running-color: #FFA000;
+
+				--drone-font-color: #212121;
+				--drone-font-color-gray: #9E9E9E;
+
+				--drone-icon-color: #212121;
+				--drone-icon-color-gray: #9E9E9E;
+
+				--drone-border-color: #EEEEEE;
+			}
+
+			::-webkit-input-placeholder {
+				color: #BDBDBD;
+			}
+
+			dl {
+				margin-top: 80px;
+			}
+			dt {
+				float:left;
+				padding-left:15px;
+				line-height:24px;
+				margin:0px;
+				font-size:15px;
+			}
+			dd {
+				margin:0px;
+				padding-left:200px;
+				line-height:24px;
+				padding-bottom: 30px;
+				margin-bottom: 30px;
+				border-bottom: 1px solid #EEE;
+				font-size: 15px;
+			}
+			dd:last-child {
+				border-bottom: none;
+			}
+		</style>
+	</template>
+</dom-module>

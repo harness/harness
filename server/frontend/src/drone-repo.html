@@ -1,0 +1,305 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/page-title/page-title.html">
+
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="../bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<link rel="import" href="drone-api.html">
+<link rel="import" href="drone-badges.html">
+<link rel="import" href="drone-build.html">
+<link rel="import" href="drone-build-list.html">
+<link rel="import" href="drone-error.html">
+<link rel="import" href="drone-feed.html">
+<link rel="import" href="drone-logo.html">
+<link rel="import" href="drone-repo-settings.html">
+<link rel="import" href="drone-toolbar.html">
+
+<dom-module id="drone-repo">
+	<template>
+		<style>
+			paper-toolbar {
+				background-color: #222;
+			}
+			app-drawer {
+				box-shadow: 2px 2px 2px rgba(0,0,0,0.05);
+				display: -webkit-flex;
+				display: flex;
+				-webkit-flex-direction: column;
+				flex-direction: column;
+			}
+			app-drawer::content {
+				display:-webkit-flex;
+				-webkit-flex-direction:column
+			}
+			:host app-drawer {
+				--app-drawer-content-container: {
+					display: flex;
+					flex-direction: column;
+				}
+			}
+			.drawer-list {
+				margin: 0 20px;
+			}
+			.drawer-list a {
+				display: block;
+				padding: 0 16px;
+				line-height: 40px;
+				text-decoration: none;
+				color: #222;
+			}
+			.drawer-list a.iron-selected {
+				color: black;
+				background: #EEE;
+			}
+			.drawer-list a span {
+				vertical-align: middle;
+			}
+			hr {
+				border: none;
+				background: #FFF;
+				border-bottom: 1px solid #EEE;
+			}
+
+			:host iron-selector {
+				display:block;
+				margin: 0px;
+				padding: 0px 40px;
+				margin-bottom: 40px;
+				border-bottom: 1px solid #EEE;
+				border-top: 1px solid #EEE;
+				min-height: 49px;
+				max-height: 49px;
+				height: 49px;
+				margin-top:15px;
+			}
+
+			:host iron-selector a {
+				display: inline-block;
+				line-height:49px;
+				padding-right:20px;
+				text-decoration: none;
+				color: #9E9E9E;
+				color: #212121;
+				font-size:15px;
+			}
+
+
+			:host iron-selector a:hover,
+			:host iron-selector a.iron-selected {
+				color: #212121;
+				color: #00BFA5;
+			}
+			:host app-drawer {
+				border-right: 1px solid #EEE;
+				--app-drawer-width: 300px;
+
+				display: -webkit-flex;
+				display: flex;
+			}
+			:host app-drawer app-toolbar {
+				margin-bottom:15px;
+				max-height: 64px;
+				min-height: 64px;
+				height: 64px;
+			}
+			:host app-drawer drone-feed {
+				-webkit-flex: 1 1 auto;
+				flex: 1 1 auto;
+			}
+
+			:host app-header-layout app-toolbar {
+				padding:0px;
+			}
+			:host app-header-layout app-toolbar div[title] {
+				font-size:22px;
+			}
+
+			:host app-header app-toolbar > div {
+				width: 100%;
+			}
+
+			:host iron-pages {
+				padding: 30px 40px;
+				padding-top:0px;
+				position:relative;
+			}
+
+			:host .alert {
+				text-align: center;
+				border-top: 1px solid #EEE;
+				padding-top: 150px;
+				color: #9E9E9E;
+				font-size:15px;
+			}
+			:host .alert a {
+				color: #212121;
+			}
+
+			paper-progress {
+				width: 100%;
+				position: absolute;
+				top: 0px;
+				right: 0px;
+				left: 0px;
+
+				--paper-progress-active-color: #00BFA5
+				--paper-progress-container-color: #EEEEEE;
+			}
+		</style>
+
+		<app-route
+			route="[[route]]"
+			pattern="/:page"
+			data={{data}}
+			tail={{tail}}>
+		</app-route>
+
+		<drone-api id="drone"></drone-api>
+
+		<!-- we currently wrap the template in a dom-if otherwise the
+			iron-ajax request is sent even when this page is not the selected
+			index in the iron-pages element -->
+		<template is="dom-if" if="{{active}}">
+
+			<page-title
+				title="drone"
+				base-title="[[name]]">
+			</page-title>
+
+			<app-drawer-layout fullbleed>
+				<app-drawer>
+					<app-toolbar>
+						<drone-logo></drone-logo>
+					</app-toolbar>
+
+					<!-- if authenticated, show repository list -->
+					<template is="dom-if" if="[[user]]">
+						<drone-feed></drone-feed>
+					</template>
+
+					<!-- if not authenticated, show login link -->
+					<template is="dom-if" if="[[!user]]">
+						<div class="alert">
+							<a href="/login" target="_self">Login</a> to view
+							your repository list.
+						</div>
+					</template>
+
+				</app-drawer>
+				<app-header-layout>
+					<app-header>
+						<app-toolbar>
+							<paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
+							<div>
+								<drone-toolbar page="[[owner]] / [[name]]" user="[[user]]"></drone-toolbar>
+							</div>
+						</app-toolbar>
+					</app-header>
+					<main>
+
+						<template is="dom-if" if="[[error]]">
+							<drone-error error="[[error]]"></drone-error>
+						</template>
+
+						<!-- <template is="dom-if" if="{{isLoaded(repo, owner, name, loading)}}"> -->
+							<iron-selector selected="[[resolvePage(data, route)]]" attr-for-selected="name" role="navigation">
+								<a name="builds" href="/[[owner]]/[[name]]">History</a>
+								<a name="badges" href="/[[owner]]/[[name]]/badges">Badges</a>
+								<a name="settings" href="/[[owner]]/[[name]]/settings">Settings</a>
+							</iron-selector>
+
+							<iron-pages
+								role="main"
+								selected="[[resolvePage(data, route)]]"
+								attr-for-selected="name"
+								selected-attribute="active">
+
+								<drone-repo-settings
+									name="settings"
+									repo={{repo}}
+									user="[[user]]">
+								</drone-repo-settings>
+
+								<drone-badges
+									name="badges"
+									repo=[[repo]]>
+								</drone-badges>
+
+								<drone-build
+									name="build"
+									repo=[[repo]]
+									route=[[route]]>
+								</drone-build>
+
+								<drone-build-list
+									name="builds"
+									repo=[[repo]]
+									route=[[route]]>
+								</drone-build-list>
+							</iron-pages>
+						<!-- </template> -->
+					</template>
+				</app-header-layout>
+			</app-drawer-layout>
+		</template>
+	</template>
+
+	<script>
+		Polymer({
+			is: "drone-repo",
+			properties: {
+				active: {
+					type: Boolean,
+					value: false
+				},
+				route: Object,
+				owner: String,
+				name: String,
+				user: Object
+			},
+			observers: [
+				"refresh(owner, name, active)"
+			],
+			refresh: function(owner, name, active) {
+				if (!active) return;
+				if (this.repo && this.repo.owner == owner && this.repo.name == name) return;
+
+				this.$.drone.getRepo(owner, name).then(function(repo) {
+					this.set("error", null);
+					this.set("repo", repo);
+				}.bind(this)).catch(function(error) {
+					this.set("error", error);
+				}.bind(this));
+			},
+			resolvePage: function(params, route) {
+				switch (route.path) {
+				case "":
+				case "/":
+					return "builds";
+				}
+				switch (params.page) {
+				case undefined:
+				case "":
+					return "builds";
+				case "settings":
+					return "settings";
+				case "badges":
+					return "badges";
+				default:
+					return "build";
+				}
+			}
+		});
+	</script>
+</dom-module>

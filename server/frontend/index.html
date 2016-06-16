@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en" data-framework="polymer">
+	<head>
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+		<!-- <link rel="shortcut icon" sizes="32x32" href="/images/app-icon-32.png"> -->
+		<meta name="theme-color" content="#fff">
+		<title>Drone</title>
+
+		<script>
+			window.STATE_FROM_SERVER={};
+
+			window.Polymer = {
+				lazyRegister: true,
+				dom: "shadow",
+			};
+
+			// load webcomponents polyfills
+			(function() {
+				if ("registerElement" in document
+					&& "import" in document.createElement("link")
+					&& "content" in document.createElement("template")) {
+					// browser has web components
+				} else {
+					// polyfill web components
+					var e = document.createElement("script");
+					e.src = "/bower_components/webcomponentsjs/webcomponents-lite.min.js";
+					document.head.appendChild(e);
+				}
+			})();
+		</script>
+		<link rel="import" href="/src/drone-app.html">
+
+		<style>
+			body {
+				margin: 0;
+				font-family: "Roboto", "Noto", sans-serif;
+				line-height: 1.5;
+				min-height: 100vh;
+			}
+		</style>
+	</head>
+	<body fullbleed vertical layout>
+		<drone-app></drone-app>
+	</body>
+</html>

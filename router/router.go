@@ -2,7 +2,6 @@ package router
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -10,17 +9,18 @@ import (
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/router/middleware/token"
 	"github.com/drone/drone/server"
-	"github.com/drone/drone/static"
-	"github.com/drone/drone/template"
+	"github.com/drone/drone/server/frontend"
+	"github.com/drone/drone/server/template"
 )
 
+// Load loads the router
 func Load(middleware ...gin.HandlerFunc) http.Handler {
 
 	e := gin.New()
 	e.Use(gin.Recovery())
 
 	e.SetHTMLTemplate(template.Load())
-	e.StaticFS("/static", static.FileSystem())
+	e.StaticFS("/src", frontend.FileSystem())
 
 	e.Use(header.NoCache)
 	e.Use(header.Options)
@@ -29,35 +29,11 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(session.SetUser())
 	e.Use(token.Refresh)
 
-	e.GET("/", server.ShowIndex)
-	e.GET("/repos", server.ShowAllRepos)
 	e.GET("/login", server.ShowLogin)
 	e.GET("/login/form", server.ShowLoginForm)
 	e.GET("/logout", server.GetLogout)
+	e.NoRoute(server.ShowIndex)
 
-	// TODO below will Go away with React UI
-	settings := e.Group("/settings")
-	{
-		settings.Use(session.MustUser())
-		settings.GET("/profile", server.ShowUser)
-	}
-	repo := e.Group("/repos/:owner/:name")
-	{
-		repo.Use(session.SetRepo())
-		repo.Use(session.SetPerm())
-		repo.Use(session.MustPull)
-
-		repo.GET("", server.ShowRepo)
-		repo.GET("/builds/:number", server.ShowBuild)
-		repo.GET("/builds/:number/:job", server.ShowBuild)
-
-		repo_settings := repo.Group("/settings")
-		{
-			repo_settings.GET("", session.MustPush, server.ShowRepoConf)
-			repo_settings.GET("/encrypt", session.MustPush, server.ShowRepoEncrypt)
-			repo_settings.GET("/badges", server.ShowRepoBadges)
-		}
-	}
 	// TODO above will Go away with React UI
 
 	user := e.Group("/api/user")
@@ -183,34 +159,5 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	// 	bots.POST("/slack/:command", Slack)
 	// }
 
-	return normalize(e)
-}
-
-// THIS HACK JOB IS GOING AWAY SOON.
-//
-// normalize is a helper function to work around the following
-// issue with gin. https://github.com/gin-gonic/gin/issues/388
-func normalize(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		parts := strings.Split(r.URL.Path, "/")[1:]
-		switch parts[0] {
-		case "settings", "bots", "repos", "api", "login", "logout", "", "authorize", "hook", "static", "gitlab":
-			// no-op
-		default:
-
-			if len(parts) > 2 && parts[2] != "settings" {
-				parts = append(parts[:2], append([]string{"builds"}, parts[2:]...)...)
-			}
-
-			// prefix the URL with /repo so that it
-			// can be effectively routed.
-			parts = append([]string{"", "repos"}, parts...)
-
-			// reconstruct the path
-			r.URL.Path = strings.Join(parts, "/")
-		}
-
-		h.ServeHTTP(w, r)
-	})
+	return e
 }
