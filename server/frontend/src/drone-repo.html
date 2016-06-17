@@ -170,7 +170,7 @@
 		<!-- we currently wrap the template in a dom-if otherwise the
 			iron-ajax request is sent even when this page is not the selected
 			index in the iron-pages element -->
-		<template is="dom-if" if="{{active}}">
+		<!-- <template is="dom-if" if="{{active}}"> -->
 
 			<page-title
 				title="drone"
@@ -202,7 +202,7 @@
 						<app-toolbar>
 							<paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
 							<div>
-								<drone-toolbar page="[[owner]] / [[name]]" user="[[user]]"></drone-toolbar>
+								<drone-toolbar page="[[repo.full_name]]" user="[[user]]"></drone-toolbar>
 							</div>
 						</app-toolbar>
 					</app-header>
@@ -212,12 +212,13 @@
 							<drone-error error="[[error]]"></drone-error>
 						</template>
 
-						<!-- <template is="dom-if" if="{{isLoaded(repo, owner, name, loading)}}"> -->
+						<template is="dom-if" if="[[repo]]">
 							<iron-selector selected="[[resolvePage(data, route)]]" attr-for-selected="name" role="navigation">
 								<a name="builds" href="/[[owner]]/[[name]]">History</a>
 								<a name="badges" href="/[[owner]]/[[name]]/badges">Badges</a>
 								<a name="settings" href="/[[owner]]/[[name]]/settings">Settings</a>
 							</iron-selector>
+						</template>
 
 							<iron-pages
 								role="main"
@@ -252,7 +253,7 @@
 					</template>
 				</app-header-layout>
 			</app-drawer-layout>
-		</template>
+		<!-- </template> -->
 	</template>
 
 	<script>
@@ -272,6 +273,10 @@
 				"refreshThrottled(route, owner, name, active)"
 			],
 			refresh: function(route, owner, name, active) {
+				if (this.repo
+					&& this.repo.owner == owner
+					&& this.repo.name == name) return;
+
 				this.$.drone.getRepo(owner, name).then(function(repo) {
 					this.set("error", null);
 					this.set("repo", repo);

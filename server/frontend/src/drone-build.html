@@ -139,8 +139,7 @@
 			properties: {
 				active: {
 					type: Boolean,
-					value: false,
-					observer: "refresh"
+					value: false
 				},
 				loading: {
 					type: Boolean,
@@ -161,22 +160,31 @@
 				},
 			},
 			observers: [
-				"refresh(repo, data, active)",
+				"load(route, repo, data, active)",
 			],
-			refresh: function(repo, data, active) {
-				if (!this.active || !this.repo) return;
-
+			load(route, repo, data, active) {
+				// HACK this debounce is required because each of the above parameters
+				// trigger a refresh. This means a single route change will cause
+				// this to execute 4x each with a different parameter permutation.
+				this.debounce("repo", function () {
+					if (!active || !repo) return;
+					this.fetchBuild(repo, data);
+				}.bind(this), 100);
+			},
+			fetchBuild: function(repo, data) {
 				this.set("loading", true);
-				this.$.drone.getBuild(this.repo, this.data.build).then(function(build) {
+				this.$.drone.getBuild(repo, data.build).then(function(build) {
 					this.set("build", build);
 					this.set("error", null);
+					this.fetchLogs(repo, data);
 				}.bind(this)).catch(function(error) {
 					this.set("error", error);
 				}.bind(this));
-
-				this.$.drone.getLogs(this.repo, this.data.build, this.data.job || 1).then(function(logs) {
+			},
+			fetchLogs: function(repo, data) {
+				this.$.drone.getLogs(repo, data.build, data.job || 1).then(function(logs) {
 					this.set("error", null);
-					this._handleLogs(logs);
+					this.processLogs(logs);
 					this.set("loading", false);
 				}.bind(this)).catch(function(error) {
 					this.set("error", error);
@@ -186,7 +194,7 @@
 
 			// This handles the callback when the build logs are fetched. This
 			// groups the results into sections and convents ansi to html.
-			_handleLogs: function(logs) {
+			processLogs: function(logs) {
 				this.$.logs.innerHTML="";
 
 				// TODO explore using Polymer.dom and Polymer.dom.flush to improve
