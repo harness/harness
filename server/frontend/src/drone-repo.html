@@ -269,18 +269,24 @@
 				user: Object
 			},
 			observers: [
-				"refresh(owner, name, active)"
+				"refreshThrottled(route, owner, name, active)"
 			],
-			refresh: function(owner, name, active) {
-				if (!active) return;
-				if (this.repo && this.repo.owner == owner && this.repo.name == name) return;
-
+			refresh: function(route, owner, name, active) {
 				this.$.drone.getRepo(owner, name).then(function(repo) {
 					this.set("error", null);
 					this.set("repo", repo);
 				}.bind(this)).catch(function(error) {
 					this.set("error", error);
 				}.bind(this));
+			},
+			refreshThrottled: function(route, owner, name, active) {
+				if (!active) return;
+				// HACK this debounce is required because each of the above parameters
+				// trigger a refresh. This means a single route change will cause
+				// this to execute 4x each with a different parameter permutation.
+				this.debounce("repo", function () {
+					this.refresh(route, owner, name, active);
+				}.bind(this), 100);
 			},
 			resolvePage: function(params, route) {
 				switch (route.path) {
