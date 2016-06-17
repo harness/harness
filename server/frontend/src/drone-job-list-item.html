@@ -1,0 +1,103 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="drone-status.html">
+
+<dom-module id="drone-job-list-item">
+	<template>
+		<style>
+			:host a {
+				text-decoration: none;
+				color: #212121;
+				display: flex;
+				border-bottom: 1px solid #EEE;
+				padding:25px 0px;
+				box-sizing: border-box;
+			}
+			:host:last-child {
+				border-bottom: none;
+			}
+			:host span {
+				font-size:14px;
+				color: #9E9E9E;
+			}
+			:host em {
+				font-size:14px;
+				font-style: normal;
+			}
+
+			:host a > div:first-child {
+				padding-left:10px;
+				flex: 1 1 auto;
+				display: flex;
+				overflow: hidden;
+				flex-direction: column;
+			}
+
+			:host a > div:last-child {
+				padding-left:10px;
+				white-space:nowrap;
+			}
+
+			:host h3 {
+				font-weight: normal;
+				font-size: 16px;
+				margin: 0px;
+				padding-right:20px;
+				max-width: 600px;
+
+				white-space: nowrap;
+				flex: 1 0 auto;
+				text-overflow: ellipsis;
+				overflow: hidden;
+				min-width: 0px;
+			}
+
+			:host img {
+				width: 26px;
+				height: 26px;
+				border-radius: 50%;
+			}
+		</style>
+
+		<a href="/[[ repo.full_name ]]/[[ build.number ]]/[[ job.number]]">
+			<div>
+				<h3>
+					<template is="dom-repeat" items="[[toArray(job.environment)]]">
+						<div>[[item.key]]=[[item.value]]</div>
+					</template>
+				</h3>
+			</div>
+			<div>
+				<span style="padding-right:10px;"># [[ job.number ]]</span>
+				<drone-status status="[[ job.status ]]"></drone-status>
+			</div>
+		</a>
+	</template>
+
+	<script>
+		Polymer({
+			is: "drone-job-list-item",
+			properties: {
+				build: {
+					type: Object
+				},
+				repo: {
+					type: Object
+				},
+				job: {
+					type: Object
+				}
+			},
+			toArray: function(obj) {
+				var items = [];
+				for (var key in obj) {
+					items.push({
+						key: key,
+						value: obj[key]
+					});
+				}
+				return items;
+			}
+		});
+	</script>
+</dom-module>
