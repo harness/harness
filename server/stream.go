@@ -145,6 +145,7 @@ func EventStream(c *gin.Context) {
 		repo, _ = cache.GetRepoMap(c, user)
 	}
 
+	ticker := time.NewTicker(pingPeriod)
 	quitc := make(chan bool)
 	eventc := make(chan *bus.Event, 10)
 	bus.Subscribe(c, eventc)
@@ -179,12 +180,13 @@ func EventStream(c *gin.Context) {
 		for {
 			select {
 			case <-quitc:
-			case <-time.After(time.Second * 10):
+			case <-time.After(time.Second * 20):
 				if i < len(events) {
 					event := events[i]
 					if event.Build.Status != model.StatusRunning {
 						event.Build.Finished = time.Now().Unix()
 					}
+					ws.SetWriteDeadline(time.Now().Add(writeWait))
 					ws.WriteJSON(event)
 					i++
 				}
@@ -193,7 +195,13 @@ func EventStream(c *gin.Context) {
 					return
 				}
 				if repo[event.Repo.FullName] || !event.Repo.IsPrivate {
+					ws.SetWriteDeadline(time.Now().Add(writeWait))
 					ws.WriteJSON(event)
+				}
+			case <-ticker.C:
+				err := ws.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(writeWait))
+				if err != nil {
+					return
 				}
 			}
 		}

@@ -289,7 +289,24 @@
 
 				this.ws = new WebSocket("ws://localhost:8080/ws/feed");
 				this.ws.onmessage = function (event) {
-					console.log(event.data);
+					if (!this.repos) return;
+					this.update(event, this.repos)
+				}.bind(this)
+			},
+			update: function(event, repos) {
+				for (var i=0; i<repos.length; i++) {
+					var repo = repos[i];
+					if (repo.full_name != event.repo.full_name) {
+						continue;
+					}
+					if (repo.number > event.build.number) {
+						break;
+					}
+					repo.number = event.build.number;
+					repo.status = event.build.status;
+					repo.started_at = event.build.started_at;
+					repo.finished_at = event.build.finished_at;
+					break;
 				}
 			},
 			refresh: function(route, owner, name, active) {
