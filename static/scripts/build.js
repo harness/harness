@@ -183,6 +183,7 @@ function Stream(repo, build, job, _callback) {
 	var events = new EventSource("/api/stream/" + repo + "/" + build + "/" + job, {withCredentials: true});
 	events.onmessage = function (event) {
 		if (callback !== undefined) {
+			if (!event.data) return
 			callback(JSON.parse(event.data).out);
 		}
 	};
