@@ -104,6 +104,16 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		stream.GET("/:owner/:name", server.GetRepoEvents)
 		stream.GET("/:owner/:name/:build/:number", server.GetStream)
 	}
+	ws := e.Group("/ws")
+	{
+		ws.GET("/feed", server.EventStream)
+		ws.GET("/logs/:owner/:name/:build/:number",
+			session.SetRepo(),
+			session.SetPerm(),
+			session.MustPull,
+			server.EventStream,
+		)
+	}
 
 	auth := e.Group("/authorize")
 	{
