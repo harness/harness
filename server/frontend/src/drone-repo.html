@@ -286,6 +286,11 @@
 				this.$.drone.getBuildFeed({latest:true}).then(function(repos) {
 					this.set("repos", repos);
 				}.bind(this));
+
+				this.ws = new WebSocket("ws://localhost:8080/ws/feed");
+				this.ws.onmessage = function (event) {
+					console.log(event.data);
+				}
 			},
 			refresh: function(route, owner, name, active) {
 				if (this.repo

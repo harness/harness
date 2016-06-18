@@ -124,10 +124,7 @@ var (
 	pongWait = 60 * time.Second
 
 	// Send pings to client with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
-
-	// Poll file for changes with this period.
-	filePeriod = 10 * time.Second
+	pingPeriod = 30 * time.Second
 )
 
 // EventStream produces the User event stream, sending all repository, build
@@ -140,6 +137,7 @@ func EventStream(c *gin.Context) {
 		}
 		return
 	}
+	logrus.Debugf("Successfull upgraded websocket")
 
 	user := session.User(c)
 	repo := map[string]bool{}
@@ -159,10 +157,37 @@ func EventStream(c *gin.Context) {
 		logrus.Debug("Successfully closed websocket")
 	}()
 
+	var i = 0
+	var t = time.Now().Unix()
+	var events = []*bus.Event{
+		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 800, Status: model.StatusRunning, Started: t}},
+		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 800, Status: model.StatusFailure, Started: t}},
+		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 801, Status: model.StatusRunning, Started: t}},
+		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 801, Status: model.StatusSuccess, Started: t}},
+		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 802, Status: model.StatusRunning, Started: t}},
+		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 802, Status: model.StatusFailure, Started: t}},
+
+		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 803, Status: model.StatusRunning, Started: t}},
+		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 803, Status: model.StatusFailure, Started: t}},
+		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 804, Status: model.StatusRunning, Started: t}},
+		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 804, Status: model.StatusSuccess, Started: t}},
+		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 805, Status: model.StatusRunning, Started: t}},
+		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 805, Status: model.StatusFailure, Started: t}},
+	}
+
 	go func() {
 		for {
 			select {
 			case <-quitc:
+			case <-time.After(time.Second * 10):
+				if i < len(events) {
+					event := events[i]
+					if event.Build.Status != model.StatusRunning {
+						event.Build.Finished = time.Now().Unix()
+					}
+					ws.WriteJSON(event)
+					i++
+				}
 			case event := <-eventc:
 				if event == nil {
 					return
