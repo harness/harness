@@ -47,11 +47,11 @@
 			<input type="search"
 				spellcheck="false"
 				placeholder="Search ..."
-				value="{{searchString::input}}" />
+				value="{{search::input}}" />
 		</div>
 
 		<section>
-			<template is="dom-repeat" items="[[repos]]" filter="[[computeFilter(searchString)]]" sort="sortFeed">
+			<template is="dom-repeat" items="[[repos]]" filter="[[filter(search)]]" sort="sort">
 				<drone-feed-item repo="[[item]]"></drone-feed-item>
 			</template>
 		</section>
@@ -60,15 +60,13 @@
 	<script>
 		Polymer({
 			is: "drone-feed",
-			attached: function() {
-				this.$.drone.getBuildFeed({latest:true}).then(function(repos) {
-					this.set("repos", repos);
-				}.bind(this));
+			properties: {
+				repos: Object
 			},
-			sortFeed: function(a, b) {
+			sort: function(a, b) {
 				return (b.started_at || 0) - (a.started_at || 0);
 			},
-			computeFilter: function(string) {
+			filter: function(string) {
 				if (!string) {
 					return null;
 				}
