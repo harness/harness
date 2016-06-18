@@ -9,18 +9,21 @@
 
 <dom-module id="drone-app">
 	<template>
-		<app-location route="{{route}}"></app-location>
+		<app-location
+			route="{{route}}"
+			url-space-regex="^(?!/login|/logout)">
+		</app-location>
+
 		<app-route
 			route=[[route]]
 			pattern="/:page"
-			data={{data}}
-			tail={{subroute}}>
+			data={{data}}>
 		</app-route>
 
 		<app-route
-			route=[[subroute]]
-			data={{subdata}}
-			pattern="/:page"
+			route=[[route]]
+			data={{repo}}
+			pattern="/:owner/:name"
 			tail={{tail}}>
 		</app-route>
 
@@ -38,8 +41,8 @@
 			<drone-repo
 				page="repo"
 				route="[[tail]]"
-				owner="[[data.page]]"
-				name="[[subdata.page]]"
+				owner="[[repo.owner]]"
+				name="[[repo.name]]"
 				user="[[user]]">
 			</drone-repo>
 		</iron-pages>

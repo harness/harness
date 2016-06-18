@@ -6,6 +6,8 @@
 <link rel="import" href="../bower_components/paper-progress/paper-progress.html">
 
 <link rel="import" href="drone-api.html">
+<link rel="import" href="drone-job.html">
+<link rel="import" href="drone-job-list.html">
 <link rel="import" href="drone-build-card.html">
 <link rel="import" href="drone-error.html">
 
@@ -113,8 +115,15 @@
 
 		<app-route
 			route="[[route]]"
-			pattern="/:build/:job"
-			data={{data}}>
+			pattern="/:build"
+			data={{data}}
+			tail={{subroute}}>
+		</app-route>
+
+		<app-route
+			route="{{subroute}}"
+			pattern="/:job"
+			data={{subdata}}>
 		</app-route>
 
 		<drone-api id="drone"></drone-api>
@@ -127,10 +136,24 @@
 			<drone-error error="[[error]]"></drone-error>
 		</template>
 
-		<div>
+		<template is="dom-if" if="[[loading]]">
+			<paper-progress indeterminate></paper-progress>
+		</template>
+
+		<template is="dom-if" if="[[showJobList(build, job)]]">
+			<drone-job-list active=[[active]] repo=[[repo]] build=[[build]]></drone-job-list>
+		</template>
+
+		<template is="dom-if" if="[[showJob(build, job)]]">
+			<drone-job active=[[active]] repo=[[repo]] build=[[build]] job=[[job]]></drone-job>
+		</template>
+
+		<!-- <div>
 			<drone-build-card build="[[ build ]]"></drone-build-card>
 			<div id="logs"></div>
-		</div>
+		</div> -->
+
+
 	</template>
 
 	<script>
@@ -139,44 +162,75 @@
 			properties: {
 				active: {
 					type: Boolean,
-					value: false,
-					observer: "refresh"
+					value: false
+				},
+				route: {
+					type: Object
 				},
 				loading: {
 					type: Boolean,
 					value: true,
 				},
-				repo: {
-					type: Object,
-				},
 				error: {
 					type: Object,
 					value: null
 				},
+				repo: {
+					type: Object,
+				},
 				build: {
 					type: Object
 				},
-				route: {
+				job: {
 					type: Object
-				},
+				}
 			},
 			observers: [
-				"refresh(repo, data, active)",
+				"load(route, repo, data, subdata, active)",
 			],
-			refresh: function(repo, data, active) {
-				if (!this.active || !this.repo) return;
+			load(route, repo, data, subdata, active) {
 
+				// HACK this debounce is required because each of the above parameters
+				// trigger a refresh. This means a single route change will cause
+				// this to execute 4x each with a different parameter permutation.
+				this.debounce("repo", function () {
+					if (!active || !repo) return;
+					// HACK this is a nasty hack because the subdata is not updated to
+					// reflect the fact that the parent route no longer matches.
+					var job = route.path.split("/").length==2?undefined:subdata.job;
+					this.fetchBuild(repo, data.build, job);
+				}.bind(this), 100);
+			},
+			showJob: function(build, job) {
+				return !!job;
+			},
+			showJobList: function(build, job) {
+				return !!!job;
+			},
+			fetchBuild: function(repo, number, job) {
 				this.set("loading", true);
-				this.$.drone.getBuild(this.repo, this.data.build).then(function(build) {
+				this.$.drone.getBuild(repo, number).then(function(build) {
 					this.set("build", build);
 					this.set("error", null);
+					this.set("loading", false);
+
+					job = build.jobs.length == 1 ? 1: job;
+					if (job) {
+						this.set("job", build.jobs[job-1]);
+						// this.fetchLogs(repo, number, job);
+					} else {
+						this.set("job", null);
+						this.set("job", undefined);
+					}
+
 				}.bind(this)).catch(function(error) {
 					this.set("error", error);
 				}.bind(this));
-
-				this.$.drone.getLogs(this.repo, this.data.build, this.data.job || 1).then(function(logs) {
+			},
+			fetchLogs: function(repo, number, job) {
+				this.$.drone.getLogs(repo, number, job).then(function(logs) {
 					this.set("error", null);
-					this._handleLogs(logs);
+					this.processLogs(logs);
 					this.set("loading", false);
 				}.bind(this)).catch(function(error) {
 					this.set("error", error);
@@ -186,7 +240,7 @@
 
 			// This handles the callback when the build logs are fetched. This
 			// groups the results into sections and convents ansi to html.
-			_handleLogs: function(logs) {
+			processLogs: function(logs) {
 				this.$.logs.innerHTML="";
 
 				// TODO explore using Polymer.dom and Polymer.dom.flush to improve

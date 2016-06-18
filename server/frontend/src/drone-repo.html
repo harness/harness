@@ -145,6 +145,12 @@
 			:host .alert a {
 				color: #212121;
 			}
+			:host [name="welcome"] {
+				background: #EEE;
+				margin-top: 15px;
+				padding: 30px;
+				border-radius: 2px;
+			}
 
 			paper-progress {
 				width: 100%;
@@ -170,7 +176,7 @@
 		<!-- we currently wrap the template in a dom-if otherwise the
 			iron-ajax request is sent even when this page is not the selected
 			index in the iron-pages element -->
-		<template is="dom-if" if="{{active}}">
+		<!-- <template is="dom-if" if="{{active}}"> -->
 
 			<page-title
 				title="drone"
@@ -185,7 +191,7 @@
 
 					<!-- if authenticated, show repository list -->
 					<template is="dom-if" if="[[user]]">
-						<drone-feed></drone-feed>
+						<drone-feed repos={{repos}}></drone-feed>
 					</template>
 
 					<!-- if not authenticated, show login link -->
@@ -202,7 +208,7 @@
 						<app-toolbar>
 							<paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
 							<div>
-								<drone-toolbar page="[[owner]] / [[name]]" user="[[user]]"></drone-toolbar>
+								<drone-toolbar page="[[repo.full_name]]" user="[[user]]"></drone-toolbar>
 							</div>
 						</app-toolbar>
 					</app-header>
@@ -212,12 +218,13 @@
 							<drone-error error="[[error]]"></drone-error>
 						</template>
 
-						<!-- <template is="dom-if" if="{{isLoaded(repo, owner, name, loading)}}"> -->
+						<template is="dom-if" if="[[repo]]">
 							<iron-selector selected="[[resolvePage(data, route)]]" attr-for-selected="name" role="navigation">
 								<a name="builds" href="/[[owner]]/[[name]]">History</a>
 								<a name="badges" href="/[[owner]]/[[name]]/badges">Badges</a>
 								<a name="settings" href="/[[owner]]/[[name]]/settings">Settings</a>
 							</iron-selector>
+						</template>
 
 							<iron-pages
 								role="main"
@@ -247,12 +254,16 @@
 									repo=[[repo]]
 									route=[[route]]>
 								</drone-build-list>
+
+								<div name="welcome">
+									<div>Welcome to Drone</div>
+								</div>
 							</iron-pages>
 						<!-- </template> -->
 					</template>
 				</app-header-layout>
 			</app-drawer-layout>
-		</template>
+		<!-- </template> -->
 	</template>
 
 	<script>
@@ -269,11 +280,17 @@
 				user: Object
 			},
 			observers: [
-				"refresh(owner, name, active)"
+				"refreshThrottled(route, owner, name, active)"
 			],
-			refresh: function(owner, name, active) {
-				if (!active) return;
-				if (this.repo && this.repo.owner == owner && this.repo.name == name) return;
+			attached: function() {
+				this.$.drone.getBuildFeed({latest:true}).then(function(repos) {
+					this.set("repos", repos);
+				}.bind(this));
+			},
+			refresh: function(route, owner, name, active) {
+				if (this.repo
+					&& this.repo.owner == owner
+					&& this.repo.name == name) return;
 
 				this.$.drone.getRepo(owner, name).then(function(repo) {
 					this.set("error", null);
@@ -282,13 +299,22 @@
 					this.set("error", error);
 				}.bind(this));
 			},
+			refreshThrottled: function(route, owner, name, active) {
+				if (!active) return;
+				// HACK this debounce is required because each of the above parameters
+				// trigger a refresh. This means a single route change will cause
+				// this to execute 4x each with a different parameter permutation.
+				this.debounce("repo", function () {
+					this.refresh(route, owner, name, active);
+				}.bind(this), 100);
+			},
 			resolvePage: function(params, route) {
-				switch (route.path) {
-				case "":
-				case "/":
-					return "builds";
+				if (route.path == null) {
+					return "welcome"
 				}
+
 				switch (params.page) {
+				case null:
 				case undefined:
 				case "":
 					return "builds";
