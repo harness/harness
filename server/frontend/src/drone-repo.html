@@ -290,7 +290,7 @@
 				this.ws = new WebSocket("ws://localhost:8080/ws/feed");
 				this.ws.onmessage = function (event) {
 					if (!this.repos) return;
-					this.update(event, this.repos)
+					this.update(JSON.parse(event.data), this.repos)
 				}.bind(this)
 			},
 			update: function(event, repos) {
@@ -302,10 +302,13 @@
 					if (repo.number > event.build.number) {
 						break;
 					}
-					repo.number = event.build.number;
-					repo.status = event.build.status;
-					repo.started_at = event.build.started_at;
-					repo.finished_at = event.build.finished_at;
+
+					// HACK gotta be a better way
+					this.set("repos."+i+".status", event.build.status);
+					this.set("repos."+i+".started_at", event.build.started_at);
+					this.set("repos."+i+".finished_at", event.build.finished_at);
+
+					// TODO send event to build
 					break;
 				}
 			},
