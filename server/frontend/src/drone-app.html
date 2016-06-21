@@ -45,6 +45,10 @@
 				name="[[repo.name]]"
 				user="[[user]]">
 			</drone-repo>
+
+			<div name="welcome">
+				<div>Welcome to Drone</div>
+			</div>
 		</iron-pages>
 
 	</template>
@@ -53,9 +57,6 @@
 			is: "drone-app",
 			properties: {
 				user: Object
-			},
-			resolvePath: function(data) {
-				return data.page == "settings" ? "settings": "repo";
 			},
 			ready: function() {
 				this.user = window &&

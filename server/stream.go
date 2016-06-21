@@ -158,38 +158,11 @@ func EventStream(c *gin.Context) {
 		logrus.Debug("Successfully closed websocket")
 	}()
 
-	var i = 0
-	var t = time.Now().Unix()
-	var events = []*bus.Event{
-		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 800, Status: model.StatusRunning, Started: t}},
-		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 800, Status: model.StatusFailure, Started: t}},
-		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 801, Status: model.StatusRunning, Started: t}},
-		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 801, Status: model.StatusSuccess, Started: t}},
-		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 802, Status: model.StatusRunning, Started: t}},
-		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 802, Status: model.StatusFailure, Started: t}},
-
-		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 803, Status: model.StatusRunning, Started: t}},
-		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 803, Status: model.StatusFailure, Started: t}},
-		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 804, Status: model.StatusRunning, Started: t}},
-		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 804, Status: model.StatusSuccess, Started: t}},
-		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 805, Status: model.StatusRunning, Started: t}},
-		{Repo: model.Repo{Owner: "drone", Name: "drone", FullName: "drone/drone"}, Build: model.Build{Number: 805, Status: model.StatusFailure, Started: t}},
-	}
-
 	go func() {
 		for {
 			select {
 			case <-quitc:
-			case <-time.After(time.Second * 20):
-				if i < len(events) {
-					event := events[i]
-					if event.Build.Status != model.StatusRunning {
-						event.Build.Finished = time.Now().Unix()
-					}
-					ws.SetWriteDeadline(time.Now().Add(writeWait))
-					ws.WriteJSON(event)
-					i++
-				}
+				return
 			case event := <-eventc:
 				if event == nil {
 					return

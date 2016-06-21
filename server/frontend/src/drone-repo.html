@@ -165,6 +165,7 @@
 		</style>
 
 		<app-route
+			id="repoRoute"
 			route="[[route]]"
 			pattern="/:page"
 			data={{data}}
@@ -331,18 +332,16 @@
 				// this to execute 4x each with a different parameter permutation.
 				this.debounce("repo", function () {
 					this.refresh(route, owner, name, active);
-				}.bind(this), 100);
+				}.bind(this), 20);
 			},
 			resolvePage: function(params, route) {
-				if (route.path == null) {
-					return "welcome"
+				if (!this.name) {
+					return "welcome";
 				}
-
-				switch (params.page) {
-				case null:
-				case undefined:
-				case "":
+				if (!this.$.repoRoute.active) {
 					return "builds";
+				}
+				switch (params.page) {
 				case "settings":
 					return "settings";
 				case "badges":

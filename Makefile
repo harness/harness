@@ -18,12 +18,13 @@ deps_backend:
 	go get -u github.com/elazarl/go-bindata-assetfs/...
 
 deps_frontend:
-	npm -g install bower polymer-cli
-	cd server/frontend && bower install
+	npm -g install --quiet bower polymer-cli
+	cd server/frontend && bower --allow-root install
 
 gen: gen_frontend gen_template gen_migrations
 
 gen_frontend:
+	mkdir -p server/frontend/build/bundled/src
 	go generate github.com/drone/drone/server/frontend
 
 gen_template:
@@ -46,6 +47,9 @@ test_postgres:
 
 # build the release files
 build: build_static build_cross build_tar build_sha
+
+build_frontend:
+	cd server/frontend && polymer build
 
 build_static:
 	go build --ldflags '${EXTLDFLAGS}-X github.com/drone/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' -o release/drone github.com/drone/drone/drone

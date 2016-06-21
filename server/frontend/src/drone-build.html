@@ -199,7 +199,7 @@
 					// reflect the fact that the parent route no longer matches.
 					var job = route.path.split("/").length==2?undefined:subdata.job;
 					this.fetchBuild(repo, data.build, job);
-				}.bind(this), 100);
+				}.bind(this), 20);
 			},
 			showJob: function(build, job) {
 				return !!job;
