@@ -1,0 +1,8 @@
+FROM demoregistry.dataman-inc.com/library/centos7-base:20160602202509
+MAINTAINER zwli zwli@dataman-inc.com
+
+COPY drone/drone_static /
+WORKDIR /
+ENTRYPOINT ["/drone_static"]
+
+#demoregistry.dataman-inc.com/shurenyun/centos7-drone:tag

@@ -1,0 +1,24 @@
+FROM demoregistry.dataman-inc.com/library/centos7-base:20160602202509
+MAINTAINER zwli zwli@dataman-inc.com
+
+ENV GOROOT /usr/local/share/go
+ENV GOPATH /data/tools/go
+ENV GOBIN  /data/tools/go/bin
+ENV GODEBUG cgocheck 0
+ENV PATH $GOBIN:$GOROOT/bin:$PATH
+ENV GO15VENDOREXPERIMENT 1
+
+COPY contrib/*.sh /usr/local/bin/
+#COPY go1.5.4.linux-amd64.tar.gz /usr/local/share/
+ADD http://www.golangtc.com/static/go/1.5.4/go1.5.4.linux-amd64.tar.gz  /usr/local/share/
+RUN cd /usr/local/share && \
+    tar zxf go1.5.4.linux-amd64.tar.gz && \
+    rm go1.5.4.linux-amd64.tar.gz && \
+    yum -y install gcc git gcc-c++ make glibc-static && \
+    chmod +x /usr/local/bin/setup-sassc.sh && \
+    chmod +x /usr/local/bin/setup-sqlite.sh && \
+    sleep 1 && \
+    /usr/local/bin/setup-sassc.sh && \
+    /usr/local/bin/setup-sqlite.sh
+
+#demoregistry.dataman-inc.com/library/centos7-go1.5.4-drone:v0.1.062100
