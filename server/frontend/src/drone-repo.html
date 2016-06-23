@@ -8,6 +8,7 @@
 <link rel="import" href="../bower_components/paper-toolbar/paper-toolbar.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-signals/iron-signals.html">
 
 <link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
 <link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
@@ -174,6 +175,9 @@
 
 		<drone-api id="drone"></drone-api>
 
+		<iron-signals
+			on-iron-signal-event="handleEvent"></iron-signals>
+
 		<!-- we currently wrap the template in a dom-if otherwise the
 			iron-ajax request is sent even when this page is not the selected
 			index in the iron-pages element -->
@@ -287,12 +291,9 @@
 				this.$.drone.getBuildFeed({latest:true}).then(function(repos) {
 					this.set("repos", repos);
 				}.bind(this));
-
-				this.ws = new WebSocket("ws://localhost:8080/ws/feed");
-				this.ws.onmessage = function (event) {
-					if (!this.repos) return;
-					this.update(JSON.parse(event.data), this.repos)
-				}.bind(this)
+			},
+			handleEvent(e) {
+				this.update(e.detail, this.repos);
 			},
 			update: function(event, repos) {
 				for (var i=0; i<repos.length; i++) {
@@ -300,16 +301,14 @@
 					if (repo.full_name != event.repo.full_name) {
 						continue;
 					}
-					if (repo.number > event.build.number) {
-						break;
-					}
-
-					// HACK gotta be a better way
-					this.set("repos."+i+".status", event.build.status);
+					this.set("repos."+i+".number", event.build.number);
 					this.set("repos."+i+".started_at", event.build.started_at);
 					this.set("repos."+i+".finished_at", event.build.finished_at);
+					this.set("repos."+i+".status", event.build.status);
 
-					// TODO send event to build
+					// HACK: this seems to be the only way to force the dom-repeat
+					// to refresh the ordering.
+					this.set("repos", this.repos.slice(0));
 					break;
 				}
 			},

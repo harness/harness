@@ -1,6 +1,7 @@
 
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="../bower_components/iron-signals/iron-signals.html">
 
 <link rel="import" href="drone-api.html">
 <link rel="import" href="drone-build-list-item.html">
@@ -26,8 +27,11 @@
 			<paper-progress indeterminate></paper-progress>
 		</template>
 
+		<iron-signals
+			on-iron-signal-event="handleEvent"></iron-signals>
+
 		<div>
-			<template is="dom-repeat" items="[[builds]]">
+			<template is="dom-repeat" items="[[builds]]" sort="sort">
 				<drone-build-list-item
 					repo="[[repo]]"
 					build="[[item]]">
@@ -68,6 +72,42 @@
 					this.set("error", error);
 					this.set("loading", false);
 				}.bind(this));
+			},
+			sort: function(a, b) {
+				return b.number - a.number;
+			},
+			handleEvent: function(e) {
+				var event = e.detail;
+				if (!this.repo || event.repo.full_name != event.repo.full_name) {
+					return;
+				}
+				if (!this.builds) {
+					this.builds = [];
+				}
+				for (var i=0;i<this.builds.length;i++) {
+					var build = this.builds[i];
+					if (build.number != event.build.number) {
+						continue;
+					}
+					this.set("builds."+i+".number", event.build.number);
+					this.set("builds."+i+".started_at", event.build.started_at);
+					this.set("builds."+i+".finished_at", event.build.finished_at);
+					this.set("builds."+i+".status", event.build.status);
+					return
+				}
+				this.builds.push({
+					number: event.build.number,
+					started_at: event.build.started_at,
+					finished_at: event.build.finished_at,
+					status: event.build.status,
+					event: event.build.event,
+					ref: event.build.ref,
+					branch: event.build.branch,
+					message: "Update .drone.yml",
+					author: event.build.author,
+					author_avatar: event.build.author_avatar,
+				});
+				this.builds = this.builds.slice(0);
 			}
 		});
 	</script>

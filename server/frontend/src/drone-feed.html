@@ -62,7 +62,7 @@
 		Polymer({
 			is: "drone-feed",
 			properties: {
-				repos: Object
+				repos: Array
 			},
 			sort: function(a, b) {
 				return (b.started_at || 0) - (a.started_at || 0);

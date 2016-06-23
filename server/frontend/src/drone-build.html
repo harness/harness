@@ -4,6 +4,7 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/app-route/app-route.html">
 <link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="../bower_components/iron-signals/iron-signals.html">
 
 <link rel="import" href="drone-api.html">
 <link rel="import" href="drone-job.html">
@@ -128,6 +129,9 @@
 
 		<drone-api id="drone"></drone-api>
 
+		<iron-signals
+			on-iron-signal-event="handleEvent"></iron-signals>
+
 		<template is="dom-if" if="[[loading]]">
 			<paper-progress indeterminate></paper-progress>
 		</template>
@@ -217,7 +221,6 @@
 					job = build.jobs.length == 1 ? 1: job;
 					if (job) {
 						this.set("job", build.jobs[job-1]);
-						// this.fetchLogs(repo, number, job);
 					} else {
 						this.set("job", null);
 						this.set("job", undefined);
@@ -227,68 +230,24 @@
 					this.set("error", error);
 				}.bind(this));
 			},
-			fetchLogs: function(repo, number, job) {
-				this.$.drone.getLogs(repo, number, job).then(function(logs) {
-					this.set("error", null);
-					this.processLogs(logs);
-					this.set("loading", false);
-				}.bind(this)).catch(function(error) {
-					this.set("error", error);
-					this.set("loading", false);
-				}.bind(this));
-			},
+			handleEvent: function(e) {
+				var event = e.detail;
 
-			// This handles the callback when the build logs are fetched. This
-			// groups the results into sections and convents ansi to html.
-			processLogs: function(logs) {
-				this.$.logs.innerHTML="";
+				if (!this.repo || !this.build) return;
+				if (this.repo.full_name != event.repo.full_name) return;
+				if (this.build.number != event.build.number) return;
+				this.set("build.number", event.build.number);
+				this.set("build.started_at", event.build.started_at);
+				this.set("build.finished_at", event.build.finished_at);
+				this.set("build.status", event.build.status);
 
-				// TODO explore using Polymer.dom and Polymer.dom.flush to improve
-				// rendering performance of large log files here.
+				// if job status is running, reset all jobs to running
 
-				var groups = {};
-				for (var i = 0; i < logs.length; i++) {
-					var line = logs[i];
+				if (!this.job || !event.job.number) return;
+				if (!this.job.number != event.job.number) return;
+				this.set("job", event.job);
 
-					// the very last item in the logs is usually empty and can
-					// be ignored.
-					if (!line.proc || !line.out || !line.out.replace) {
-						continue;
-					}
-
-					// tries to determine the index of the group. if the group
-					// is no yet indexed we add it.
-					var group = groups[line.proc];
-					if (!group) {
-						// create the group summary / title element
-						var summary = document.createElement("summary");
-						summary.innerText = line.proc;
-
-						// creates the details element and appends the summary
-						group = document.createElement("details");
-						group.setAttribute("open", "true")
-						group.appendChild(summary);
-
-						// adds the group to the index
-						groups[line.proc] = group;
-					}
-
-					line.html = line.out;
-					line.html = ansi_up.escape_for_html(line.html);
-					line.html = ansi_up.ansi_to_html(line.html, {use_classes: true});
-					line.html = ansi_up.linkify(line.html);
-
-					var div = document.createElement("div");
-					div.innerHTML = line.html;
-					group.appendChild(div);
-				}
-
-				for (var prop in groups) {
-					this.$.logs.appendChild(groups[prop]);
-				}
-
-				// yes, there is probably a better way to do this. Feel free to
-				// improve and send me a pull request!
+				// if job is selected, and running, trigger log streaming
 			}
 		});
 	</script>
