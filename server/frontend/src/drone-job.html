@@ -164,7 +164,7 @@
 				this.debounce("logs", function () {
 					if (!active || !job) return;
 					this.fetchLogs(repo, build, job);
-				}.bind(this), 20);
+				}.bind(this), 50);
 			},
 
 			fetchLogs: function(repo, build, job) {

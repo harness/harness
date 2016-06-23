@@ -56,22 +56,6 @@
 				text-decoration: none;
 				color: var(--drone-font-color);
 			}
-
-			:host paper-button {
-				font-size: 16px;
-				text-decoration: none;
-				border: 2px solid #212121;
-				border-radius: 3px;
-				padding: 0px;
-				margin:0px;
-				margin-right:20px;
-				font-weight: normal;
-				line-height:32px;
-			}
-			:host paper-button a {
-				text-decoration: none;
-				color: #212121;
-			}
 		</style>
 
 		<h1>{{page}}</h1>
@@ -89,12 +73,6 @@
 						</a>
 					</paper-menu>
 				</paper-menu-button>
-			</template>
-
-			<template is="dom-if" if="{{ !user }}">
-				<paper-button>
-					<a href="/login" target="_self">Login</a>
-				</paper-button>
 			</template>
 		</div>
 	</template>
