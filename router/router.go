@@ -111,7 +111,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			session.SetRepo(),
 			session.SetPerm(),
 			session.MustPull,
-			server.EventStream,
+			server.LogStream,
 		)
 	}
 
