@@ -2,6 +2,11 @@
 
 <dom-module id="drone-api">
 	<script>
+		var csrf = function() {
+			var meta = document.querySelector("meta[name=csrf-token]");
+			if (meta) { return meta.getAttribute("content") }
+		}()
+
 		Polymer({
 			is: "drone-api",
 
@@ -19,6 +24,14 @@
 				 */
 				token: {
 					type: String,
+				},
+
+				/**
+				 * CSRF token.
+				 */
+				csrf: {
+					type: String,
+					value: csrf
 				}
 			},
 
@@ -228,6 +241,9 @@
 				xhr.open(method, endpoint, true);
 				if (this.token) {
 					xhr.setRequestHeader("Authorization", "Bearer "+this.token);
+				}
+				if (this.csrf && method != "GET") {
+					xhr.setRequestHeader("X-CSRF-TOKEN", this.csrf);
 				}
 				return new Promise(function (resolve, reject) {
 					xhr.onload = function () {

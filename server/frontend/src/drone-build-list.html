@@ -78,7 +78,7 @@
 			},
 			handleEvent: function(e) {
 				var event = e.detail;
-				if (!this.repo || event.repo.full_name != event.repo.full_name) {
+				if (!this.repo || this.repo.full_name != event.repo.full_name) {
 					return;
 				}
 				if (!this.builds) {

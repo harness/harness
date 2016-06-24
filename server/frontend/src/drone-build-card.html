@@ -81,11 +81,21 @@
 			<div class="time">
 				<div>
 					<iron-icon icon="image:timelapse"></iron-icon>
-					<span><time-duration seconds="[[ duration(build) ]]"></time-duration></span>
+					<template is="dom-if" if="[[ build.finished_at ]]">
+						<span><time-duration seconds="[[ duration(build) ]]"></time-duration></span>
+					</template>
+					<template is="dom-if" if="[[ !build.finished_at ]]">
+						<span>--</span>
+					</template>
 				</div>
 				<div>
 					<iron-icon icon="device:access-time"></iron-icon>
-					<span><time-since unix="[[ build.finished_at ]]"></time-since></span>
+					<template is="dom-if" if="[[ build.finished_at ]]">
+						<span><time-since unix="[[ build.finished_at ]]"></time-since></span>
+					</template>
+					<template is="dom-if" if="[[ !build.finished_at ]]">
+						<span>--</span>
+					</template>
 				</div>
 			</div>
 			<div class="meta">
@@ -108,9 +118,8 @@
 		Polymer({
 			is: "drone-build-card",
 			properties: {
-				build: {
-					type: Object
-				},
+				build: Object,
+				job: Object
 			},
 			substr: function(str) {
 				return str.substr(0, 8)

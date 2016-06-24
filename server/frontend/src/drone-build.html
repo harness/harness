@@ -236,12 +236,28 @@
 				if (!this.repo || !this.build) return;
 				if (this.repo.full_name != event.repo.full_name) return;
 				if (this.build.number != event.build.number) return;
+
+				// if job status is running, reset all jobs to running
+				if (event.build.status == "pending" && this.build.jobs) {
+					this.build.jobs.map(function(job) {
+						job.started_at = 0;
+						job.finished_at = 0;
+						job.status = "pending";
+					}.bind(this));
+				}
+
+				// if job update the job
+				if (event.job) {
+					this.build.jobs.map(function(job, i) {
+						if (job.number != event.job.number) return;
+						this.set("build.jobs."+i, event.job);
+					}.bind(this));
+				}
+
 				this.set("build.number", event.build.number);
 				this.set("build.started_at", event.build.started_at);
 				this.set("build.finished_at", event.build.finished_at);
 				this.set("build.status", event.build.status);
-
-				// if job status is running, reset all jobs to running
 
 				if (!this.job || !event.job.number) return;
 				if (!this.job.number != event.job.number) return;

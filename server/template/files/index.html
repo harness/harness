@@ -4,6 +4,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
 		<meta name="theme-color" content="#fff">
+		{{ if .csrf }}<meta name="csrf-token" content="{{ .csrf }}" />{{ end }}
 
 		<script>
 			window.STATE_FROM_SERVER={{ . | json }};

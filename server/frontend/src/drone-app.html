@@ -63,7 +63,55 @@
 					window.STATE_FROM_SERVER &&
 					window.STATE_FROM_SERVER.user ?
 					window.STATE_FROM_SERVER.user: null;
-			}
+			},
+			attached: function() {
+
+				////////////////////////////////////////////////////////////////////////////
+		    // TESTING ONLY. REMOVE
+		    // var number = 541;
+				// var i = 0;
+		    // setInterval(function() {
+				// 	if (i % 2 == 0) {
+				// 		number++;
+				// 	}
+				// 	var data = {
+		    //     repo: {
+		    //       owner: "drone",
+		    //       name: "drone",
+		    //       full_name: "drone/drone"
+		    //     },
+		    //     build: {
+		    //       number: number,
+		    //       started_at: Math.round(new Date().getTime()/1000),
+		    //       finished_at: Math.round(new Date().getTime()/1000)+180,
+		    //       status: (i % 2 == 0)? "running": "failure",
+				// 			event: "push",
+				// 			ref: "refs/heads/master",
+				// 			branch: "master",
+				// 			author: "bradrydzewski",
+				// 			author_avatar: "https://avatars.githubusercontent.com/u/541832?v=3",
+		    //     }
+		    //   };
+			  //   i++;
+		    //   this.fire("iron-signal", {name: "event", data: data});
+		    // }.bind(this), 1000*5);
+		    ////////////////////////////////////////////////////////////////////////////
+
+
+
+				this.ws = this.createWebSocket();
+				this.ws.onmessage = function (event) {
+					var data = JSON.parse(event.data);
+					this.fire("iron-signal", {name: "event", data: data});
+				}.bind(this);
+			},
+			detached: function() {
+				this.ws.close();
+			},
+			createWebSocket() {
+				var proto = (window.location.protocol === 'https:') ? 'wss:' : 'ws:';
+				return new WebSocket(proto + '//' + window.location.host + '/ws/feed');
+		  }
 		});
 	</script>
 </dom-module>

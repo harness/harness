@@ -32,6 +32,7 @@
     "paper-slider": "PolymerElements/paper-slider#^1.0.11",
     "paper-toast": "PolymerElements/paper-toast#^1.3.0",
     "paper-toggle-button": "PolymerElements/paper-toggle-button#^1.1.2",
-    "paper-toolbar": "PolymerElements/paper-toolbar#^1.1.4"
+    "paper-toolbar": "PolymerElements/paper-toolbar#^1.1.4",
+    "iron-signals": "PolymerElements/iron-signals#^1.0.3"
   }
 }

@@ -20,9 +20,11 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"strings"
 
 	"github.com/drone/drone/client"
+	"github.com/koding/websocketproxy"
 )
 
 var (
@@ -80,6 +82,18 @@ func main() {
 			),
 		),
 	)
+
+	// proxy all websockets
+	http.HandleFunc("/ws/", func(rw http.ResponseWriter, req *http.Request) {
+		target, _ := url.Parse(req.URL.String())
+		target.Host = *host
+		target.Scheme = "ws"
+		if *scheme == "https" {
+			target.Scheme = "wss"
+		}
+		target.RawQuery = "access_token=" + *token
+		websocketproxy.NewProxy(target).ServeHTTP(rw, req)
+	})
 
 	// proxy all requests to beta.drone.io
 	http.Handle("/api/", &httputil.ReverseProxy{
