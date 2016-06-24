@@ -9,5 +9,5 @@ DATABASE_CONFIG="root:111111@tcp(mysql:3306)/drone?parseTime=true"
 AGENT_URI=registry:5000/library/drone-exec:latest
 PLUGIN_FILTER=registry:5000/library/* plugins/* registry.shurenyun.com/* registry.shurenyun.com/* devregistry.dataman-inc.com/library/*
 PLUGIN_PREFIX="library/"
-DOCKER_STORAGE=CI_AUFS_OR_OVERLAY
-DOCKER_EXTRA_HOSTS="registry:REGISTRY harbor:HARBOR"
+DOCKER_STORAGE=overlay #or aufs 
+DOCKER_EXTRA_HOSTS="registry:REGISTRY harbor:HARBOR" # REGISTRY和HARBOR为地址

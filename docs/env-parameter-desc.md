@@ -15,5 +15,5 @@ AGENT_URI=registry:5000/library/drone-exec:latest
 PLUGIN_FILTER=registry:5000/library/* plugins/* registry.shurenyun.com/* registry.shurenyun.com/* devregistry.dataman-inc.com/library/*
 PLUGIN_PREFIX="library/"
 DOCKER_STORAGE=overlay 
-DOCKER_EXTRA_HOSTS="registry:REGISTRY harbor:HARBOR"
+DOCKER_EXTRA_HOSTS="registry:REGISTRY harbor:HARBOR"   #REGISTRY HARBOR为地址
 ```
