@@ -4,31 +4,30 @@ package bitbucketserver
 // quality or security standards expected of this project. Please use with caution.
 
 import (
+	"crypto/md5"
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
+	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote"
+	"github.com/drone/drone/remote/bitbucketserver/internal"
+	"github.com/mrjones/oauth"
 	"io/ioutil"
 	"net/http"
 	"net/url"
- 	"github.com/drone/drone/remote/bitbucketserver/internal"
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote"
-	"github.com/mrjones/oauth"
 	"strings"
-	"crypto/tls"
-	"encoding/hex"
-	"crypto/md5"
 )
 
 const (
-	requestTokenURL = "%s/plugins/servlet/oauth/request-token"
+	requestTokenURL   = "%s/plugins/servlet/oauth/request-token"
 	authorizeTokenURL = "%s/plugins/servlet/oauth/authorize"
-	accessTokenURL = "%s/plugins/servlet/oauth/access-token"
+	accessTokenURL    = "%s/plugins/servlet/oauth/access-token"
 )
-
-
 
 // Opts defines configuration options.
 type Opts struct {
@@ -37,27 +36,24 @@ type Opts struct {
 	Password    string // Git machine account password.
 	ConsumerKey string // Oauth1 consumer key.
 	ConsumerRSA string // Oauth1 consumer key file.
-	SkipVerify bool // Skip ssl verification.
+	SkipVerify  bool   // Skip ssl verification.
 }
 
 type Config struct {
-	URL string
-	Username string
-	Password string
-	PrivateKey *rsa.PrivateKey
-	ConsumerKey string
+	URL        string
+	Username   string
+	Password   string
 	SkipVerify bool
-
+	Consumer   *oauth.Consumer
 }
 
 // New returns a Remote implementation that integrates with Bitbucket Server,
 // the on-premise edition of Bitbucket Cloud, formerly known as Stash.
 func New(opts Opts) (remote.Remote, error) {
 	config := &Config{
-		URL: opts.URL,
-		Username: opts.Username,
-		Password: opts.Password,
-		ConsumerKey: opts.ConsumerKey,
+		URL:        opts.URL,
+		Username:   opts.Username,
+		Password:   opts.Password,
 		SkipVerify: opts.SkipVerify,
 	}
 
@@ -77,16 +73,16 @@ func New(opts Opts) (remote.Remote, error) {
 		return nil, err
 	}
 	block, _ := pem.Decode(keyFile)
-	config.PrivateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+	PrivateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
+	config.Consumer = CreateConsumer(opts.URL, opts.ConsumerKey, PrivateKey)
 	return config, nil
 }
 
-
 func (c *Config) Login(res http.ResponseWriter, req *http.Request) (*model.User, error) {
-	requestToken, url, err := c.Consumer().GetRequestTokenAndUrl("oob")
+	requestToken, url, err := c.Consumer.GetRequestTokenAndUrl("oob")
 	if err != nil {
 		return nil, err
 	}
@@ -96,15 +92,14 @@ func (c *Config) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 		return nil, nil
 	}
 	requestToken.Token = req.FormValue("oauth_token")
-	accessToken, err := c.Consumer().AuthorizeToken(requestToken, code)
+	accessToken, err := c.Consumer.AuthorizeToken(requestToken, code)
 	if err != nil {
 		return nil, err
 	}
 
-	client := internal.NewClientWithToken(c.URL, c.Consumer(), accessToken.Token)
+	client := internal.NewClientWithToken(c.URL, c.Consumer, accessToken.Token)
 
 	return client.FindCurrentUser()
-
 
 }
 
@@ -120,33 +115,34 @@ func (*Config) Teams(u *model.User) ([]*model.Team, error) {
 }
 
 func (c *Config) Repo(u *model.User, owner, name string) (*model.Repo, error) {
-
-	client := internal.NewClientWithToken(c.URL, c.Consumer(), u.Token)
+	log.Debug(fmt.Printf("Start repo lookup with: %+v %s %s\n", u, owner, name))
+	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
 
 	return client.FindRepo(owner, name)
 }
 
 func (c *Config) Repos(u *model.User) ([]*model.RepoLite, error) {
-
-	client := internal.NewClientWithToken(c.URL,c.Consumer(), u.Token)
+	log.Debug(fmt.Printf("Start repos lookup for: %+v\n", u))
+	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
 
 	return client.FindRepos()
 }
 
 func (c *Config) Perm(u *model.User, owner, repo string) (*model.Perm, error) {
-	client := internal.NewClientWithToken(c.URL,c.Consumer(), u.Token)
+	log.Debug(fmt.Printf("Start perm lookup for: %+v %s %s\n", u, owner, repo))
+	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
 
 	return client.FindRepoPerms(owner, repo)
 }
 
 func (c *Config) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
-
-	client := internal.NewClientWithToken(c.URL, c.Consumer(), u.Token)
+	log.Debug(fmt.Printf("Start file lookup for: %+v %+v %s\n", u, b, f))
+	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
 
 	return client.FindFileForRepo(r.Owner, r.Name, f)
 }
 
-// Status is not supported by the Gogs driver.
+// Status is not supported by the bitbucketserver driver.
 func (*Config) Status(*model.User, *model.Repo, *model.Build, string) error {
 	return nil
 }
@@ -171,13 +167,13 @@ func (c *Config) Netrc(user *model.User, r *model.Repo) (*model.Netrc, error) {
 }
 
 func (c *Config) Activate(u *model.User, r *model.Repo, link string) error {
-	client := internal.NewClientWithToken(c.URL, c.Consumer(), u.Token)
+	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
 
 	return client.CreateHook(r.Owner, r.Name, link)
 }
 
 func (c *Config) Deactivate(u *model.User, r *model.Repo, link string) error {
-	client := internal.NewClientWithToken(c.URL, c.Consumer(), u.Token)
+	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
 	return client.DeleteHook(r.Owner, r.Name, link)
 }
 
@@ -206,15 +202,14 @@ func (c *Config) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 	return repo, build, nil
 }
 
-
-func (c *Config) Consumer()  *oauth.Consumer{
+func CreateConsumer(URL string, ConsumerKey string, PrivateKey *rsa.PrivateKey) *oauth.Consumer {
 	consumer := oauth.NewRSAConsumer(
-		c.ConsumerKey,
-		c.PrivateKey,
+		ConsumerKey,
+		PrivateKey,
 		oauth.ServiceProvider{
-			RequestTokenUrl:   fmt.Sprintf(requestTokenURL, c.URL),
-			AuthorizeTokenUrl: fmt.Sprintf(authorizeTokenURL, c.URL),
-			AccessTokenUrl:    fmt.Sprintf(accessTokenURL, c.URL),
+			RequestTokenUrl:   fmt.Sprintf(requestTokenURL, URL),
+			AuthorizeTokenUrl: fmt.Sprintf(authorizeTokenURL, URL),
+			AccessTokenUrl:    fmt.Sprintf(accessTokenURL, URL),
 			HttpMethod:        "POST",
 		})
 	consumer.HttpClient = &http.Client{

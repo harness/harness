@@ -84,10 +84,6 @@ type postHook struct {
 	} `json:"repository"`
 }
 
-
-
-
-
 type BSRepo struct {
 	Forkable bool `json:"forkable"`
 	ID       int  `json:"id"`
