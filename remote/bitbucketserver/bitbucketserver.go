@@ -182,6 +182,7 @@ func (c *Config) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 	if err := json.NewDecoder(r.Body).Decode(hook); err != nil {
 		return nil, nil, err
 	}
+	log.Debug(fmt.Printf("hook %v", hook))
 
 	build := &model.Build{
 		Event:  model.EventPush,
@@ -189,6 +190,7 @@ func (c *Config) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 		Author: hook.Changesets.Values[0].ToCommit.Author.EmailAddress, // TODO check for index Values
 		Commit: hook.RefChanges[0].ToHash,                              // TODO check for index value
 		Avatar: avatarLink(hook.Changesets.Values[0].ToCommit.Author.EmailAddress),
+		Branch: strings.Split(hook.RefChanges[0].RefID, "refs/heads/")[1],
 	}
 
 	repo := &model.Repo{
