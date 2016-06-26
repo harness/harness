@@ -84,35 +84,4 @@ type postHook struct {
 	} `json:"repository"`
 }
 
-type BSRepo struct {
-	Forkable bool `json:"forkable"`
-	ID       int  `json:"id"`
-	Links    struct {
-		Clone []struct {
-			Href string `json:"href"`
-			Name string `json:"name"`
-		} `json:"clone"`
-		Self []struct {
-			Href string `json:"href"`
-		} `json:"self"`
-	} `json:"links"`
-	Name    string `json:"name"`
-	Project struct {
-		Description string `json:"description"`
-		ID          int    `json:"id"`
-		Key         string `json:"key"`
-		Links       struct {
-			Self []struct {
-				Href string `json:"href"`
-			} `json:"self"`
-		} `json:"links"`
-		Name   string `json:"name"`
-		Public bool   `json:"public"`
-		Type   string `json:"type"`
-	} `json:"project"`
-	Public        bool   `json:"public"`
-	ScmID         string `json:"scmId"`
-	Slug          string `json:"slug"`
-	State         string `json:"state"`
-	StatusMessage string `json:"statusMessage"`
-}
+
