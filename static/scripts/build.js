@@ -141,11 +141,10 @@ function Logs(repo, build, job) {
 
 	$.get( "/api/repos/"+repo+"/logs/"+build+"/"+job, function( data ) {
 
-		var lines = JSON.parse(data);
 
 		var groups = {}
-		for (var i=0; i<lines.length; i++) {
-			var line = lines[i];
+		for (var i=0; i<data.length; i++) {
+			var line = data[i];
 
 			if (!line.proc) {
 				continue
