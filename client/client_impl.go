@@ -247,6 +247,14 @@ func (c *client) Deploy(owner, name string, num int, env string) (*model.Build, 
 	return out, err
 }
 
+// SecretList returns a list of a repository secrets.
+func (c *client) SecretList(owner, name string) ([]*model.Secret, error) {
+	var out []*model.Secret
+	uri := fmt.Sprintf(pathSecrets, c.base, owner, name)
+	err := c.get(uri, &out)
+	return out, err
+}
+
 // SecretPost create or updates a repository secret.
 func (c *client) SecretPost(owner, name string, secret *model.Secret) error {
 	uri := fmt.Sprintf(pathSecrets, c.base, owner, name)

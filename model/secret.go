@@ -55,3 +55,12 @@ func (s *Secret) MatchEvent(event string) bool {
 func (s *Secret) Validate() error {
 	return nil
 }
+
+func (s *Secret) Clone() *Secret {
+	return &Secret{
+		ID:     s.ID,
+		Name:   s.Name,
+		Images: s.Images,
+		Events: s.Events,
+	}
+}

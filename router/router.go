@@ -97,6 +97,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.GET("/logs/:number/:job", server.GetBuildLogs)
 			repo.POST("/sign", session.MustPush, server.Sign)
 
+			repo.GET("/secrets", session.MustPush, server.GetSecrets)
 			repo.POST("/secrets", session.MustPush, server.PostSecret)
 			repo.DELETE("/secrets/:secret", session.MustPush, server.DeleteSecret)
 

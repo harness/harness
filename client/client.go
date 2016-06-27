@@ -49,6 +49,9 @@ type Client interface {
 	// Sign returns a cryptographic signature for the input string.
 	Sign(string, string, []byte) ([]byte, error)
 
+	// SecretList returns a list of all repository secrets.
+	SecretList(string, string) ([]*model.Secret, error)
+
 	// SecretPost create or updates a repository secret.
 	SecretPost(string, string, *model.Secret) error
 
