@@ -26,7 +26,7 @@ curl -v -X POST $MARATHON_API_URL/v2/apps -H Content-Type:application/json -d \
                         ]
                    },
       "env": {
-                "NO_BAMBOO":"true"
+                "NO_BAMBOO": "true"
              },
       "uris": [
                "'$CONFIGSERVER'/config/demo/config/registry/docker.tar.gz"
