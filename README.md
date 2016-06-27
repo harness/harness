@@ -58,3 +58,4 @@ go install github.com/mattn/go-sqlite3
 ```
 
 If you are having trouble building this project please reference its `.drone.yml` file. Everything you need to know about building Drone is defined in that file.
+
