@@ -1,6 +1,8 @@
 package server
 
 import (
+	"net/http"
+
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/store"
@@ -8,13 +10,31 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func GetSecrets(c *gin.Context) {
+	repo := session.Repo(c)
+	secrets, err := store.GetSecretList(c, repo)
+
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	var list []*model.Secret
+
+	for _, s := range secrets {
+		list = append(list, s.Clone())
+	}
+
+	c.JSON(http.StatusOK, list)
+}
+
 func PostSecret(c *gin.Context) {
 	repo := session.Repo(c)
 
 	in := &model.Secret{}
 	err := c.Bind(in)
 	if err != nil {
-		c.String(400, "Invalid JSON input. %s", err.Error())
+		c.String(http.StatusBadRequest, "Invalid JSON input. %s", err.Error())
 		return
 	}
 	in.ID = 0
@@ -22,11 +42,11 @@ func PostSecret(c *gin.Context) {
 
 	err = store.SetSecret(c, in)
 	if err != nil {
-		c.String(500, "Unable to persist secret. %s", err.Error())
+		c.String(http.StatusInternalServerError, "Unable to persist secret. %s", err.Error())
 		return
 	}
 
-	c.String(200, "")
+	c.String(http.StatusOK, "")
 }
 
 func DeleteSecret(c *gin.Context) {
@@ -35,14 +55,14 @@ func DeleteSecret(c *gin.Context) {
 
 	secret, err := store.GetSecret(c, repo, name)
 	if err != nil {
-		c.String(404, "Cannot find secret %s.", name)
+		c.String(http.StatusNotFound, "Cannot find secret %s.", name)
 		return
 	}
 	err = store.DeleteSecret(c, secret)
 	if err != nil {
-		c.String(500, "Unable to delete secret. %s", err.Error())
+		c.String(http.StatusInternalServerError, "Unable to delete secret. %s", err.Error())
 		return
 	}
 
-	c.String(200, "")
+	c.String(http.StatusOK, "")
 }
