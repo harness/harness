@@ -26,8 +26,6 @@ curl -v -X POST $MARATHON_API_URL/v2/apps -H Content-Type:application/json -d \
                         ]
                    },
       "env": {
-                    "CONFIG_SERVER": "'$CONFIGSERVER'/config/'$TASKENV'",
-                    "SERVICE": "cfgfile_'$TASKENV'_'$SERVICE'"
              },
       "uris": [
                "'$CONFIGSERVER'/config/demo/config/registry/docker.tar.gz"

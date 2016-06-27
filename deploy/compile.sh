@@ -9,13 +9,15 @@ code_compile_image=${code_compile_image#*#}
 cat > /data/build/compile.sh << EOF
 #!/bin/bash
 export GOPATH="/usr/local/go"
-mkdir -p /usr/local/go/src/github.com/Dataman-Cloud
-rm -rf /usr/local/go/src/github.com/Dataman-Cloud/$SERVICE
-cp -r $SERVICE /usr/local/go/src/github.com/Dataman-Cloud/
-cd /usr/local/go/src/github.com/Dataman-Cloud/$SERVICE
-make build
+mkdir -p /usr/local/go/src/github.com/drone
+rm -rf /usr/local/go/src/github.com/drone/$SERVICE
+cp -r $SERVICE /usr/local/go/src/github.com/drone/
+cd /usr/local/go/src/github.com/drone/$SERVICE
+make deps
+make gen
+make build_static
 # 将编译完成的二进制文件放到/data/build/$SERVICE/目录, 作为运行时的镜像dockerfile ADD 使用
-cp $SERVICE /data/build/$SERVICE/
+cp "$SERVICE"_static /data/build/$SERVICE/
 EOF
 
 chmod +x /data/build/compile.sh
