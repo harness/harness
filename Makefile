@@ -15,7 +15,7 @@ deps:
 	go get -u github.com/elazarl/go-bindata-assetfs/...
 	go get -u github.com/dchest/jsmin
 	go get -u github.com/franela/goblin
-	go get -u github.com/PuerkitoBio/goquery
+	#go get -u github.com/PuerkitoBio/goquery
 	go get -u github.com/russross/blackfriday
 	go get -u github.com/carlescere/scheduler
 	go get -u github.com/ramr/go-reaper
@@ -46,7 +46,7 @@ build:
 build_static:
 	export GO15VENDOREXPERIMENT=1 
 	go build --ldflags '-extldflags "-static" -X main.build=$(CI_BUILD_NUMBER)' -o drone_static
-
+	:
 test:
 	export GO15VENDOREXPERIMENT=1 
 	#go test -cover $(PACKAGES)
