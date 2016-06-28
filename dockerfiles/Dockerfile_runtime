@@ -3,6 +3,7 @@ MAINTAINER zwli zwli@dataman-inc.com
 
 COPY drone/drone_static /
 WORKDIR /
+RUN yum -y install git
 ENTRYPOINT ["/drone_static"]
 
 #demoregistry.dataman-inc.com/shurenyun/centos7-drone:tag
