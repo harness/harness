@@ -28,7 +28,7 @@ function JobViewModel(repo, build, job, status) {
 		})
 
 		Stream(repo, build, job, function(out){
-			buf.write(out);
+			buf.write(out+"\n");
 		});
 	};
 
@@ -141,11 +141,10 @@ function Logs(repo, build, job) {
 
 	$.get( "/api/repos/"+repo+"/logs/"+build+"/"+job, function( data ) {
 
-		var lines = JSON.parse(data);
 
 		var groups = {}
-		for (var i=0; i<lines.length; i++) {
-			var line = lines[i];
+		for (var i=0; i<data.length; i++) {
+			var line = data[i];
 
 			if (!line.proc) {
 				continue
@@ -186,7 +185,7 @@ function Stream(repo, build, job, _callback) {
 	var events = new EventSource("/api/stream/" + repo + "/" + build + "/" + job, {withCredentials: true});
 	events.onmessage = function (event) {
 		if (callback !== undefined) {
-			callback(event.data);
+			callback(JSON.parse(event.data).out);
 		}
 	};
 	events.onerror = function (event) {
