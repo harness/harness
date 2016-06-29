@@ -18,6 +18,7 @@ const (
 )
 
 const (
+	RepoSVN      = "svn"
 	RepoGit      = "git"
 	RepoHg       = "hg"
 	RepoFossil   = "fossil"

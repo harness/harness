@@ -144,8 +144,14 @@ func formRefName(build *model.Build) string {
 
 func formClone(repo *model.Repo, registry, pluginPrefix string) map[string]interface{} {
 	registryPrefix := registryPrefix(registry)
+	var image string
+	if repo.Kind == model.RepoSVN {
+		image = fmt.Sprintf("%s%s%s", registryPrefix, pluginPrefix, "drone-svn")
+	} else {
+		image = fmt.Sprintf("%s%s%s", registryPrefix, pluginPrefix, "drone-git")
+	}
 	clone := map[string]interface{}{
-		"image":                   fmt.Sprintf("%s%s%s", registryPrefix, pluginPrefix, "drone-git"),
+		"image":                   image,
 		"privileged":              true,
 		"pull":                    false,
 		"recursive":               true,
