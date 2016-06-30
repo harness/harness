@@ -191,7 +191,7 @@ func (sry *Sryun) Script(user *model.User, repo *model.Repo, build *model.Build)
 		client, err := svn.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch)
 
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		script, err := client.ShowFile(build.Commit, sry.ScriptName)
@@ -217,6 +217,7 @@ func (sry *Sryun) Script(user *model.User, repo *model.Repo, build *model.Build)
 
 		log.Infoln("script\n", string(script))
 
+		return script, sec, nil
 	} else {
 		client, err := git.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch, keys.Private)
 		if err != nil {
@@ -248,9 +249,9 @@ func (sry *Sryun) Script(user *model.User, repo *model.Repo, build *model.Build)
 		}
 
 		log.Infoln("script\n", string(script))
+		return script, sec, nil
 	}
 
-	return script, sec, nil
 }
 
 // Status sends the commit status to the remote system.
@@ -325,10 +326,11 @@ func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 			log.Infof("lastBuild %q", *lastBuild)
 		}
 
-		build, err := formSvnBuild(lastBuild, repo, push, tag, params.Force)
+		build, err := formSvnBuild(lastBuild, repo, version, params.Force)
 		if err != nil {
 			return nil, nil, err
 		}
+		return repo, build, nil
 
 	} else {
 		push, tag, err := sry.retrieveUpdate(repo)
@@ -348,9 +350,9 @@ func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 		if err != nil {
 			return nil, nil, err
 		}
+		return repo, build, nil
 	}
 
-	return repo, build, nil
 }
 
 func (sry *Sryun) retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Reference, error) {
@@ -392,12 +394,12 @@ func (sry *Sryun) retrieveSvnUpdate(repo *model.Repo) (string, error) {
 	client, err := svn.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch)
 
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	version, err := client.RemoteVersion()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	log.Println("version:", version)

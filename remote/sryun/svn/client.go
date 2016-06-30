@@ -33,6 +33,10 @@ var (
 	ErrBadCmd = errors.New("bad svn subcommand")
 	//ErrShow svn show failed
 	ErrShow = errors.New("svn info failed")
+	//ErrBadFile invalid filepath
+	ErrBadFile = errors.New("bad file")
+	//ErrBadRev invalid revision
+	ErrBadRev = errors.New("bad rev")
 )
 
 func NewClient(workspace, dir, uri, branch string) (*Client, error) {
@@ -75,14 +79,14 @@ func (client *Client) initRepo(workspace string, name string) error {
 }
 
 //ShowFile get file by svn cat
-func (client *Client) ShowFile(version string, file string) ([]byte, error) {
+func (client *Client) ShowFile(rev string, file string) ([]byte, error) {
 	if len(rev) == 0 {
 		return nil, ErrBadRev
 	}
 	if len(file) == 0 {
 		return nil, ErrBadFile
 	}
-	cmd, err := svnCmd(client.Path, "cat", "--revision", version, fmt.Sprintf("%s/%s/%s", client.URI, client.Branch, file))
+	cmd, err := svnCmd(client.Path, "cat", "--revision", rev, fmt.Sprintf("%s/%s/%s", client.URI, client.Branch, file))
 	if err != nil {
 		return nil, err
 	}
