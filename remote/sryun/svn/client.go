@@ -17,6 +17,7 @@ type Client struct {
 	URI    string
 	Branch string
 	Path   string
+	Key    string
 	User   string
 	Passwd string
 }
@@ -37,9 +38,11 @@ var (
 	ErrBadFile = errors.New("bad file")
 	//ErrBadRev invalid revision
 	ErrBadRev = errors.New("bad rev")
+	//ErrBadKey bad private key
+	ErrBadKey = errors.New("bad key")
 )
 
-func NewClient(workspace, dir, uri, branch string) (*Client, error) {
+func NewClient(workspace, dir, uri, branch, key string) (*Client, error) {
 
 	if len(uri) == 0 {
 		return nil, ErrBadURI
@@ -47,9 +50,14 @@ func NewClient(workspace, dir, uri, branch string) (*Client, error) {
 	client := &Client{
 		URI:    uri,
 		Branch: branch,
+		Key:    key,
 	}
 
 	if err := client.initRepo(workspace, dir); err != nil {
+		return nil, err
+	}
+
+	if err := client.initPrivateKey(); err != nil {
 		return nil, err
 	}
 
@@ -74,6 +82,29 @@ func (client *Client) initRepo(workspace string, name string) error {
 	}
 
 	client.Path = path
+
+	return nil
+}
+
+//initPrivateKey write private key and set SVN_SSH
+func (client *Client) initPrivateKey() error {
+	if len(client.Key) == 0 {
+		return ErrBadKey
+	}
+
+	sshpath := sshPath(client.Path)
+	if err := os.MkdirAll(sshpath, 0700); err != nil {
+		return err
+	}
+
+	privpath := filepath.Join(sshpath, "id_rsa")
+
+	log.Debugln("private", privpath)
+
+	err = ioutil.WriteFile(privpath, []byte(client.Key), 0600)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -146,6 +177,9 @@ func svnCmd(path string, args ...string) (*exec.Cmd, error) {
 	cmd.Dir = path
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	svnSSH := fmt.Printf("ssh -i %s", filepath.Join(sshPath(path), "id_rsa"))
+
+	cmd.Env = append(os.Environ(), "SVN_SSH=`"+svnSSH+"`")
 	trace(cmd)
 
 	return cmd, nil
@@ -156,4 +190,8 @@ func svnCmd(path string, args ...string) (*exec.Cmd, error) {
 func trace(cmd *exec.Cmd) {
 	log.Debugln("$env", strings.Join(cmd.Env, " "))
 	log.Infoln("$", cmd.Dir, strings.Join(cmd.Args, " "))
+}
+
+func sshPath(path string) string {
+	return filepath.Join(path, ".ssh")
 }
