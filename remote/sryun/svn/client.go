@@ -5,12 +5,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	log "github.com/Sirupsen/logrus"
 )
 
 type Client struct {
@@ -21,6 +21,15 @@ type Client struct {
 	User   string
 	Passwd string
 }
+
+const (
+	//SvnSshWrapper SVN_SSH
+	SvnSshWrapper = "git_ssh_wrapper"
+	//GitSshWrapperScript SVN_SSH script
+	SvnSshWrapperScript = `#!/bin/sh
+
+					ssh -F %s -i %s $@`
+)
 
 var (
 
@@ -96,12 +105,22 @@ func (client *Client) initPrivateKey() error {
 	if err := os.MkdirAll(sshpath, 0700); err != nil {
 		return err
 	}
-
+	confpath := filepath.Join(sshpath, "config")
 	privpath := filepath.Join(sshpath, "id_rsa")
+	wrapperpath := filepath.Join(sshpath, SvnSshWrapper)
+	log.Debugln("conf", confpath, "private", privpath, "wrapper", wrapperpath)
 
-	log.Debugln("private", privpath)
-
+	err := ioutil.WriteFile(confpath, []byte("StrictHostKeyChecking no\n"), 0700)
+	if err != nil {
+		return err
+	}
 	err = ioutil.WriteFile(privpath, []byte(client.Key), 0600)
+	if err != nil {
+		return err
+	}
+
+	wrapperScript := fmt.Sprintf(SvnSshWrapperScript, confpath, privpath)
+	err = ioutil.WriteFile(wrapperpath, []byte(wrapperScript), 0755)
 	if err != nil {
 		return err
 	}
@@ -177,9 +196,10 @@ func svnCmd(path string, args ...string) (*exec.Cmd, error) {
 	cmd.Dir = path
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	svnSSH := fmt.Printf("ssh -i %s", filepath.Join(sshPath(path), "id_rsa"))
+	//	svnSSH := fmt.Sprintf("ssh -i %s", filepath.Join(sshPath(path), "id_rsa"))
 
-	cmd.Env = append(os.Environ(), "SVN_SSH=`"+svnSSH+"`")
+	//	cmd.Env = append(os.Environ(), "SVN_SSH="+svnSSH)
+	cmd.Env = append(os.Environ(), "SVN_SSH="+filepath.Join(sshPath(path), SvnSshWrapper))
 	trace(cmd)
 
 	return cmd, nil

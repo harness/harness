@@ -388,10 +388,10 @@ func (sry *Sryun) retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Referen
 func (sry *Sryun) retrieveSvnUpdate(repo *model.Repo) (string, error) {
 	keys, err := sry.store.Keys().Get(repo)
 	if err != nil {
-		return nil, nil, err
+		return "", err
 	}
 	workDir := fmt.Sprintf("%d_%s_%s", repo.ID, repo.Owner, repo.Name)
-	client, err := svn.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch, keys)
+	client, err := svn.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch, keys.Private)
 
 	if err != nil {
 		return "", err
