@@ -96,24 +96,34 @@ func substituteDefault(str, key, val string) string {
 	return str
 }
 
+// unescapeBackslash is a helper function to unescape any backslashes in str.
+// Note that no actual literal conversions are done.
+func unescapeBackslash(str string) string {
+	re := regexp.MustCompile(`\\(.)`)
+
+	return string(re.ReplaceAll([]byte(str), []byte("$1")))
+}
+
 // substituteReplace is a helper function that substitutes paramters using
 // ${parameter/old/new} notation with the parameter value. A find and replace
 // is performed before injecting the strings, replacing the old pattern with
 // the new value.
 func substituteReplace(str, key, val string) string {
-	key = fmt.Sprintf("\\${%s/(.+)/(.+)}", key)
+	key = fmt.Sprintf(`\${%s/((?:\\.|[^\\])+)/(.+)}`, key)
 	reg, err := regexp.Compile(key)
 	if err != nil {
 		return str
 	}
-	for _, match := range reg.FindAllStringSubmatch(str, -1) {
-		if len(match) != 3 {
-			continue
-		}
-		with := strings.Replace(val, match[1], match[2], -1)
-		str = strings.Replace(str, match[0], with, -1)
+	match := reg.FindStringSubmatch(str)
+	if match == nil {
+		return str
 	}
-	return str
+
+	old := unescapeBackslash(match[1])
+	new := unescapeBackslash(match[2])
+
+	with := strings.Replace(val, old, new, -1)
+	return strings.Replace(str, match[0], with, -1)
 }
 
 // substituteLeft is a helper function that substitutes paramters using
