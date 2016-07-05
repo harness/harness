@@ -17,5 +17,5 @@ export SASS_LIBSASS_PATH=/tmp/libsass
 cd sassc
 make
 
-# isntall the sassc binary
+# install the sassc binary
 install -t /usr/local/bin bin/sassc
