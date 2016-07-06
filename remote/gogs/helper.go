@@ -120,15 +120,23 @@ func fixMalformedAvatar(url string) string {
 }
 
 // expandAvatar is a helper function that converts a relative avatar URL to the
-// abosolute url.
+// absolute url.
 func expandAvatar(repo, rawurl string) string {
-	if !strings.HasPrefix(rawurl, "/avatars/") {
-		return rawurl
-	}
-	url, err := url.Parse(repo)
+	aurl, err := url.Parse(rawurl)
 	if err != nil {
 		return rawurl
 	}
-	url.Path = rawurl
-	return url.String()
+	if aurl.IsAbs() {
+		// Url is already absolute
+		return aurl.String()
+	}
+
+	// Resolve to base
+	burl, err := url.Parse(repo)
+	if err != nil {
+		return rawurl
+	}
+	aurl = burl.ResolveReference(aurl)
+
+	return aurl.String()
 }
