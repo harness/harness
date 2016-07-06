@@ -24,6 +24,7 @@ func (db *datastore) GetRepoListOf(listof []*model.RepoLite) ([]*model.Repo, err
 		repos []*model.Repo
 		args  []interface{}
 		stmt  string
+		err   error
 	)
 	switch meddler.Default {
 	case meddler.PostgreSQL:
@@ -31,7 +32,9 @@ func (db *datastore) GetRepoListOf(listof []*model.RepoLite) ([]*model.Repo, err
 	default:
 		stmt, args = toList(listof)
 	}
-	err := meddler.QueryAll(db, &repos, fmt.Sprintf(repoListOfQuery, stmt), args...)
+	if len(args) > 0 {
+		err = meddler.QueryAll(db, &repos, fmt.Sprintf(repoListOfQuery, stmt), args...)
+	}
 	return repos, err
 }
 
