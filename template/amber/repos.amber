@@ -32,8 +32,7 @@ block content
                                     else
                                         img.avatar[src="/static/images/dummy.png"]
                                 div.card-block
-                                    h3.login #{$repo.Name}
-                                    div.full_name.hidden #{$repo.FullName}
+                                    h3.full_name #{$repo.FullName}
 
 block append scripts
     if len(Repos) != 0
