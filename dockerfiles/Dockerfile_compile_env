@@ -19,6 +19,17 @@ RUN cd /usr/local/share && \
     chmod +x /usr/local/bin/setup-sqlite.sh && \
     sleep 1 && \
     /usr/local/bin/setup-sassc.sh && \
-    /usr/local/bin/setup-sqlite.sh
+    /usr/local/bin/setup-sqlite.sh && \
+    export GO15VENDOREXPERIMENT=1 && \ 
+    go get -u github.com/kr/vexp && \ 
+    go get -u github.com/eknkc/amber/... && \
+    go get -u github.com/eknkc/amber && \
+    go get -u github.com/jteeuwen/go-bindata/... && \
+    go get -u github.com/elazarl/go-bindata-assetfs/... && \
+    go get -u github.com/dchest/jsmin && \
+    go get -u github.com/franela/goblin && \
+    go get -u github.com/russross/blackfriday && \
+    go get -u github.com/carlescere/scheduler && \
+    go get -u github.com/ramr/go-reaper
 
-#demoregistry.dataman-inc.com/library/centos7-go1.5.4-drone:v0.1.062100
+#demoregistry.dataman-inc.com/library/centos7-go1.5.4-drone:v0.1.070500

@@ -13,7 +13,6 @@ mkdir -p /usr/local/go/src/github.com/drone
 rm -rf /usr/local/go/src/github.com/drone/$SERVICE
 cp -r $SERVICE /usr/local/go/src/github.com/drone/
 cd /usr/local/go/src/github.com/drone/$SERVICE
-make deps
 make gen
 make build_static
 # 将编译完成的二进制文件放到/data/build/$SERVICE/目录, 作为运行时的镜像dockerfile ADD 使用
