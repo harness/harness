@@ -1,4 +1,4 @@
-FROM demoregistry.dataman-inc.com/library/centos7-base-git:20160705113509
+FROM demoregistry.dataman-inc.com/library/centos7-base-git-svn:20160708113509
 MAINTAINER zwli zwli@dataman-inc.com
 
 COPY drone/drone_static /
