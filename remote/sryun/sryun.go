@@ -139,7 +139,9 @@ func (sry *Sryun) RepoSryun(u *model.User, owner, name string, repo *model.Repo)
 	repo.FullName = fmt.Sprintf("%s/%s", owner, name)
 	repo.IsPrivate = true
 	repo.Avatar = sry.User.Avatar
-	repo.Kind = model.RepoSVN // app过来
+	if repo.Kind == "" {
+		repo.Kind = model.RepoGit // app过来
+	}
 	repo.AllowPull = true
 	repo.AllowDeploy = true
 	repo.IsTrusted = true
@@ -413,8 +415,8 @@ func formSvnBuild(lastBuild *model.Build, repo *model.Repo, version string, forc
 
 		build := &model.Build{
 			Event:     model.EventPush, // for getting correct latest build// determineEvent(tagUpdated, pushUpdated),
-			Commit:    version,
-			Ref:       "",
+			Commit:    fmt.Sprintf("%07s", version),
+			Ref:       fmt.Sprintf("refs/heads/%s", repo.Branch),
 			Link:      "",
 			Branch:    repo.Branch,
 			Message:   "",

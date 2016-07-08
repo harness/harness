@@ -53,12 +53,16 @@ func GenScript(repo *model.Repo, build *model.Build, raw []byte, insecure bool, 
 func formCache(repo *model.Repo, registry, pluginPrefix string) map[interface{}]interface{} {
 	registryPrefix := registryPrefix(registry)
 	imageCache := imageCache(repo)
+	cacheFolder := ".git"
+	if repo.Kind == model.RepoSVN {
+		cacheFolder = ".svn"
+	}
 	cache := map[interface{}]interface{}{
 		"image":       fmt.Sprintf("%s%s%s", registryPrefix, pluginPrefix, "drone-cache"),
 		"privileged":  true,
 		"compression": "bzip2",
 		"mount": []string{
-			".git",
+			cacheFolder,
 			imageCache,
 		},
 	}
