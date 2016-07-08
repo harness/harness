@@ -3,13 +3,8 @@ workspace:
   path: src/github.com/drone/drone
 
 pipeline:
-  frontend:
-    image: node:5.0.0
-    commands:
-      - make deps_frontend build_frontend
-
   backend:
-    image: golang:1.5
+    image: golang:1.6
     environment:
       - GO15VENDOREXPERIMENT=1
     commands:
@@ -17,10 +12,10 @@ pipeline:
       - make test test_postgres test_mysql
 
   compile:
-    image: golang:1.5
+    image: golang:1.6
     environment:
       - GO15VENDOREXPERIMENT=1
-      - GOPATH=/drone
+      - GOPATH=/go
     commands:
       - export PATH=$PATH:$GOPATH/bin
       - make build

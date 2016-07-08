@@ -13,7 +13,7 @@ all: gen build_static
 deps: deps_backend deps_frontend
 
 deps_frontend:
-	go get -u github.com/drone/drone-ui/deps
+	go get -u github.com/drone/drone-ui/dist
 
 deps_backend:
 	go get -u golang.org/x/tools/cmd/cover
