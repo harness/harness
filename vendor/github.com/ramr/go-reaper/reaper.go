@@ -8,7 +8,6 @@ import "os"
 import "os/signal"
 import "syscall"
 
-
 //  Handle death of child (SIGCHLD) messages. Pushes the signal onto the
 //  notifications channel if there is a waiter.
 func sigChildHandler(notifications chan os.Signal) {
@@ -16,9 +15,9 @@ func sigChildHandler(notifications chan os.Signal) {
 	signal.Notify(sigs, syscall.SIGCHLD)
 
 	for {
-		var sig = <- sigs
+		var sig = <-sigs
 		select {
-		case notifications <-sig:  /*  published it.  */
+		case notifications <- sig: /*  published it.  */
 		default:
 			/*
 			 *  Notifications channel full - drop it to the
@@ -29,8 +28,7 @@ func sigChildHandler(notifications chan os.Signal) {
 		}
 	}
 
-}  /*  End of function  sigChildHandler.  */
-
+} /*  End of function  sigChildHandler.  */
 
 //  Be a good parent - clean up behind the children.
 func reapChildren() {
@@ -59,13 +57,11 @@ func reapChildren() {
 
 			fmt.Printf(" - Grim reaper cleanup: pid=%d, wstatus=%+v\n",
 				pid, wstatus)
-
+			break
 		}
 	}
 
-}  /*   End of function  reapChildren.  */
-
-
+} /*   End of function  reapChildren.  */
 
 /*
  *  ======================================================================
@@ -80,14 +76,13 @@ func Reap() {
 	 *  Only reap processes if we are taking over init's duties aka
 	 *  we are running as pid 1 inside a docker container.
 	 */
-	 if 1 == os.Getpid() {
-		 /*
-		  *  Ok, we are the grandma of 'em all, so we get to play
-		  *  the grim reaper.
-		  *  You will be missed, Terry Pratchett!! RIP
-		  */
-		  go reapChildren()
-	 }
+	if 1 == os.Getpid() {
+		/*
+		 *  Ok, we are the grandma of 'em all, so we get to play
+		 *  the grim reaper.
+		 *  You will be missed, Terry Pratchett!! RIP
+		 */
+		go reapChildren()
+	}
 
-}  /*  End of [exported] function  Reap.  */
-
+} /*  End of [exported] function  Reap.  */

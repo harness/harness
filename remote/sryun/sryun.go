@@ -12,6 +12,7 @@ import (
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote/sryun/git"
+	"github.com/drone/drone/remote/sryun/svn"
 	"github.com/drone/drone/remote/sryun/yaml"
 	"github.com/drone/drone/shared/envconfig"
 	"github.com/drone/drone/shared/poller"
@@ -138,7 +139,9 @@ func (sry *Sryun) RepoSryun(u *model.User, owner, name string, repo *model.Repo)
 	repo.FullName = fmt.Sprintf("%s/%s", owner, name)
 	repo.IsPrivate = true
 	repo.Avatar = sry.User.Avatar
-	repo.Kind = model.RepoGit
+	if repo.Kind == "" {
+		repo.Kind = model.RepoGit // app过来
+	}
 	repo.AllowPull = true
 	repo.AllowDeploy = true
 	repo.IsTrusted = true
@@ -184,38 +187,73 @@ func (sry *Sryun) Script(user *model.User, repo *model.Repo, build *model.Build)
 		return nil, nil, err
 	}
 	workDir := fmt.Sprintf("%d_%s_%s", repo.ID, repo.Owner, repo.Name)
-	client, err := git.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch, keys.Private)
-	if err != nil {
-		return nil, nil, err
-	}
-	err = client.FetchRef(build.Ref)
-	if err != nil {
-		return nil, nil, err
-	}
-	script, err := client.ShowFile(build.Commit, sry.ScriptName)
-	if err != nil {
-		script, err = client.ShowFile(build.Commit, strings.Replace(sry.ScriptName, ".yaml", ".yml", 1))
-		log.Info("failed to load .sryci.yaml and try .sryci.yml")
+
+	if repo.Kind == model.RepoSVN {
+
+		client, err := svn.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch, keys.Private)
+
 		if err != nil {
-			log.Info("failed to load .sryci.yml")
 			return nil, nil, err
 		}
+
+		script, err := client.ShowFile(build.Commit, sry.ScriptName)
+		if err != nil {
+			script, err = client.ShowFile(build.Commit, strings.Replace(sry.ScriptName, ".yaml", ".yml", 1))
+			log.Info("failed to load .sryci.yaml and try .sryci.yml")
+			if err != nil {
+				log.Info("failed to load .sryci.yml")
+				return nil, nil, err
+			}
+		}
+
+		sec, err := client.ShowFile(build.Commit, sry.SecName)
+		if err != nil {
+			sec = nil
+		}
+
+		log.Infoln("old script\n", string(script))
+		script, err = yaml.GenScript(repo, build, script, sry.Insecure, sry.Registry, sry.Storage, sry.PluginPrefix)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		log.Infoln("script\n", string(script))
+
+		return script, sec, nil
+	} else {
+		client, err := git.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch, keys.Private)
+		if err != nil {
+			return nil, nil, err
+		}
+		err = client.FetchRef(build.Ref)
+		if err != nil {
+			return nil, nil, err
+		}
+		script, err := client.ShowFile(build.Commit, sry.ScriptName)
+		if err != nil {
+			script, err = client.ShowFile(build.Commit, strings.Replace(sry.ScriptName, ".yaml", ".yml", 1))
+			log.Info("failed to load .sryci.yaml and try .sryci.yml")
+			if err != nil {
+				log.Info("failed to load .sryci.yml")
+				return nil, nil, err
+			}
+		}
+
+		sec, err := client.ShowFile(build.Commit, sry.SecName)
+		if err != nil {
+			sec = nil
+		}
+
+		log.Infoln("old script\n", string(script))
+		script, err = yaml.GenScript(repo, build, script, sry.Insecure, sry.Registry, sry.Storage, sry.PluginPrefix)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		log.Infoln("script\n", string(script))
+		return script, sec, nil
 	}
 
-	sec, err := client.ShowFile(build.Commit, sry.SecName)
-	if err != nil {
-		sec = nil
-	}
-
-	log.Infoln("old script\n", string(script))
-	script, err = yaml.GenScript(repo, build, script, sry.Insecure, sry.Registry, sry.Storage, sry.PluginPrefix)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	log.Infoln("script\n", string(script))
-
-	return script, sec, nil
 }
 
 // Status sends the commit status to the remote system.
@@ -273,25 +311,50 @@ func (sry *Sryun) SryunHook(c *gin.Context) (*model.Repo, *model.Build, error) {
 		return nil, nil, err
 	}
 
-	push, tag, err := sry.retrieveUpdate(repo)
-	if err != nil {
-		log.Errorln("retrieve update failed", err)
-		return nil, nil, ErrBadRetrieve
-	}
-	log.Infoln("getting build", repo.ID, "-", branch)
-	lastBuild, err := sry.store.Builds().GetLast(repo, branch)
-	if err != nil {
-		log.Infoln("no build found", err)
-	}
-	if lastBuild != nil {
-		log.Infof("lastBuild %q", *lastBuild)
-	}
-	build, err := formBuild(lastBuild, repo, push, tag, params.Force)
-	if err != nil {
-		return nil, nil, err
+	if repo.Kind == model.RepoSVN {
+
+		version, err := sry.retrieveSvnUpdate(repo)
+		if err != nil {
+			log.Errorln("retrieve svn update failed", err)
+			return nil, nil, ErrBadRetrieve
+		}
+
+		log.Infoln("getting build", repo.ID, "-", branch)
+		lastBuild, err := sry.store.Builds().GetLast(repo, branch)
+		if err != nil {
+			log.Infoln("no build found", err)
+		}
+		if lastBuild != nil {
+			log.Infof("lastBuild %q", *lastBuild)
+		}
+
+		build, err := formSvnBuild(lastBuild, repo, version, params.Force)
+		if err != nil {
+			return nil, nil, err
+		}
+		return repo, build, nil
+
+	} else {
+		push, tag, err := sry.retrieveUpdate(repo)
+		if err != nil {
+			log.Errorln("retrieve update failed", err)
+			return nil, nil, ErrBadRetrieve
+		}
+		log.Infoln("getting build", repo.ID, "-", branch)
+		lastBuild, err := sry.store.Builds().GetLast(repo, branch)
+		if err != nil {
+			log.Infoln("no build found", err)
+		}
+		if lastBuild != nil {
+			log.Infof("lastBuild %q", *lastBuild)
+		}
+		build, err := formBuild(lastBuild, repo, push, tag, params.Force)
+		if err != nil {
+			return nil, nil, err
+		}
+		return repo, build, nil
 	}
 
-	return repo, build, nil
 }
 
 func (sry *Sryun) retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Reference, error) {
@@ -322,6 +385,48 @@ func (sry *Sryun) retrieveUpdate(repo *model.Repo) (*git.Reference, *git.Referen
 	log.Println("push", push, "tag", tag)
 
 	return push, tag, nil
+}
+
+func (sry *Sryun) retrieveSvnUpdate(repo *model.Repo) (string, error) {
+	keys, err := sry.store.Keys().Get(repo)
+	if err != nil {
+		return "", err
+	}
+	workDir := fmt.Sprintf("%d_%s_%s", repo.ID, repo.Owner, repo.Name)
+	client, err := svn.NewClient(sry.Workspace, workDir, repo.Clone, repo.Branch, keys.Private)
+
+	if err != nil {
+		return "", err
+	}
+
+	version, err := client.RemoteVersion()
+	if err != nil {
+		return "", err
+	}
+
+	log.Println("version:", version)
+
+	return version, nil
+}
+
+func formSvnBuild(lastBuild *model.Build, repo *model.Repo, version string, force bool) (*model.Build, error) {
+
+	if force || lastBuild.Commit != fmt.Sprintf("%07s", version) {
+
+		build := &model.Build{
+			Event:     model.EventPush, // for getting correct latest build// determineEvent(tagUpdated, pushUpdated),
+			Commit:    fmt.Sprintf("%07s", version),
+			Ref:       fmt.Sprintf("refs/heads/%s", repo.Branch),
+			Link:      "",
+			Branch:    repo.Branch,
+			Message:   "",
+			Avatar:    "",
+			Author:    "",
+			Timestamp: time.Now().UTC().Unix(),
+		}
+		return build, nil
+	}
+	return nil, ErrNoBuildNeed
 }
 
 func formBuild(lastBuild *model.Build, repo *model.Repo, push *git.Reference, tag *git.Reference, force bool) (*model.Build, error) {
