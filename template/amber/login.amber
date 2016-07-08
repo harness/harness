@@ -22,7 +22,7 @@ html
 
         if Error == "oauth_error"
             div.alert.alert-danger
-                | We failed to authorize your account. Please contact your
+                | We failed to authorize your account. Please contact your 
                 | system administrator to check the logs and see what went wrong.
 
         else if Error == "access_denied"
@@ -31,5 +31,5 @@ html
 
         else if Error == "internal_error"
             div.alert.alert-danger
-                | We encountered an unexpected error. Please contact your
+                | We encountered an unexpected error. Please contact your 
                 | system administrator to check the logs and see what went wrong.
