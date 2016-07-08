@@ -1,8 +1,0 @@
-extends base
-
-block append head
-    title Bad Request
-
-block content
-    div.container
-        div.alert.alert-danger Bad Request

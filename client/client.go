@@ -43,6 +43,9 @@ type Client interface {
 	// RepoPatch updates a repository.
 	RepoPatch(*model.Repo) (*model.Repo, error)
 
+	// RepoChown updates a repository owner.
+	RepoChown(string, string) (*model.Repo, error)
+
 	// RepoDel deletes a repository.
 	RepoDel(string, string) error
 

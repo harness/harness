@@ -10,22 +10,20 @@ endif
 
 all: gen build_static
 
-deps:
+deps: deps_backend deps_frontend
+
+deps_frontend:
+	go get -u github.com/drone/drone-ui/dist
+
+deps_backend:
 	go get -u golang.org/x/tools/cmd/cover
-	go get -u github.com/eknkc/amber/...
-	go get -u github.com/eknkc/amber
 	go get -u github.com/jteeuwen/go-bindata/...
 	go get -u github.com/elazarl/go-bindata-assetfs/...
-	go get -u github.com/dchest/jsmin
-	go get -u github.com/franela/goblin
 
-gen: gen_static gen_template gen_migrations
-
-gen_static:
-	go generate github.com/drone/drone/static
+gen: gen_template gen_migrations
 
 gen_template:
-	go generate github.com/drone/drone/template
+	go generate github.com/drone/drone/server/template
 
 gen_migrations:
 	go generate github.com/drone/drone/store/datastore/ddl

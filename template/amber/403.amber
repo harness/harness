@@ -1,8 +1,0 @@
-extends base
-
-block append head
-    title Forbidden
-
-block content
-    div.container
-        div.alert.alert-danger Access Forbidden.

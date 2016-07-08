@@ -32,6 +32,7 @@ const (
 	pathFeed       = "%s/api/user/feed"
 	pathRepos      = "%s/api/user/repos"
 	pathRepo       = "%s/api/repos/%s/%s"
+	pathChown      = "%s/api/repos/%s/%s/chown"
 	pathEncrypt    = "%s/api/repos/%s/%s/encrypt"
 	pathBuilds     = "%s/api/repos/%s/%s/builds"
 	pathBuild      = "%s/api/repos/%s/%s/builds/%v"
@@ -149,6 +150,14 @@ func (c *client) RepoList() ([]*model.Repo, error) {
 func (c *client) RepoPost(owner string, name string) (*model.Repo, error) {
 	out := new(model.Repo)
 	uri := fmt.Sprintf(pathRepo, c.base, owner, name)
+	err := c.post(uri, nil, out)
+	return out, err
+}
+
+// RepoChow updates a repository owner.
+func (c *client) RepoChown(owner string, name string) (*model.Repo, error) {
+	out := new(model.Repo)
+	uri := fmt.Sprintf(pathChown, c.base, owner, name)
 	err := c.post(uri, nil, out)
 	return out, err
 }

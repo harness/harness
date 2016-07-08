@@ -1,23 +1,21 @@
 workspace:
-  base: /drone
+  base: /go
   path: src/github.com/drone/drone
 
 pipeline:
-  test:
-    image: drone/golang:1.5
+  backend:
+    image: golang:1.6
     environment:
       - GO15VENDOREXPERIMENT=1
-      - GOPATH=/drone
     commands:
-      - export PATH=$PATH:$GOPATH/bin
       - make deps gen
       - make test test_postgres test_mysql
 
-  build:
-    image: drone/golang:1.5
+  compile:
+    image: golang:1.6
     environment:
       - GO15VENDOREXPERIMENT=1
-      - GOPATH=/drone
+      - GOPATH=/go
     commands:
       - export PATH=$PATH:$GOPATH/bin
       - make build
