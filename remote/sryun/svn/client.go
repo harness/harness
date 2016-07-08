@@ -24,7 +24,7 @@ type Client struct {
 
 const (
 	//SvnSshWrapper SVN_SSH
-	SvnSshWrapper = "git_ssh_wrapper"
+	SvnSshWrapper = "svn_ssh_wrapper"
 	//GitSshWrapperScript SVN_SSH script
 	SvnSshWrapperScript = `#!/bin/sh
 

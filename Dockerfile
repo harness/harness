@@ -1,4 +1,4 @@
-FROM catalog.shurenyun.com/library/drone_build:0.1
+FROM catalog.shurenyun.com/library/drone_build:0.2
 
 COPY . /go/src/github.com/drone/drone
 WORKDIR /go/src/github.com/drone/drone

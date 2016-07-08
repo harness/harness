@@ -411,7 +411,7 @@ func (sry *Sryun) retrieveSvnUpdate(repo *model.Repo) (string, error) {
 
 func formSvnBuild(lastBuild *model.Build, repo *model.Repo, version string, force bool) (*model.Build, error) {
 
-	if force || lastBuild.Commit != version {
+	if force || lastBuild.Commit != fmt.Sprintf("%07s", version) {
 
 		build := &model.Build{
 			Event:     model.EventPush, // for getting correct latest build// determineEvent(tagUpdated, pushUpdated),
