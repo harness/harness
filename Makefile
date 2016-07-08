@@ -10,22 +10,17 @@ endif
 
 all: gen build_static
 
-deps: deps_backend
+deps: deps_backend deps_frontend
+
+deps_frontend:
+	go get -u github.com/drone/drone-ui/deps
 
 deps_backend:
 	go get -u golang.org/x/tools/cmd/cover
 	go get -u github.com/jteeuwen/go-bindata/...
 	go get -u github.com/elazarl/go-bindata-assetfs/...
 
-deps_frontend:
-	npm -g install --quiet bower polymer-cli
-	cd server/frontend && bower --allow-root install
-
-gen: gen_frontend gen_template gen_migrations
-
-gen_frontend:
-	mkdir -p server/frontend/build/bundled/src
-	go generate github.com/drone/drone/server/frontend
+gen: gen_template gen_migrations
 
 gen_template:
 	go generate github.com/drone/drone/server/template
@@ -47,9 +42,6 @@ test_postgres:
 
 # build the release files
 build: build_static build_cross build_tar build_sha
-
-build_frontend:
-	cd server/frontend && polymer build
 
 build_static:
 	go build --ldflags '${EXTLDFLAGS}-X github.com/drone/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' -o release/drone github.com/drone/drone/drone

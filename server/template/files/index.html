@@ -1,45 +1,22 @@
-<!doctype html>
-<html lang="en" data-framework="polymer">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-		<meta name="theme-color" content="#fff">
-		{{ if .csrf }}<meta name="csrf-token" content="{{ .csrf }}" />{{ end }}
-
-		<script>
-			window.STATE_FROM_SERVER={{ . | json }};
-
-			window.Polymer = {
-				lazyRegister: true,
-				dom: "shadow",
-			};
-
-			// load webcomponents polyfills
-			(function() {
-				if ("registerElement" in document
-					&& "import" in document.createElement("link")
-					&& "content" in document.createElement("template")) {
-					// browser has web components
-				} else {
-					// polyfill web components
-					var e = document.createElement("script");
-					e.src = "https://cdnjs.cloudflare.com/ajax/libs/webcomponentsjs/0.7.22/webcomponents-lite.min.js";
-					document.head.appendChild(e);
-				}
-			})();
-		</script>
-		<link rel="import" href="/src/drone-app.html">
-
-		<style>
-			body {
-				margin: 0;
-				font-family: "Roboto", "Noto", sans-serif;
-				line-height: 1.5;
-				min-height: 100vh;
-			}
-		</style>
-	</head>
-	<body fullbleed vertical layout>
-		<drone-app></drone-app>
-	</body>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="ie=edge" http-equiv="x-ua-compatible"/>
+	{{ if .csrf }}<meta name="csrf-token" content="{{ .csrf }}" />{{ end }}
+  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+  <link href="/static/app.css" rel="stylesheet"/>
+  <link href="/static/favicon.ico" rel="icon" type="image/x-icon"/>
+</head>
+<body>
+<div id="app"></div>
+<script>
+  window.STATE_FROM_SERVER={{ . | json }};
+</script>
+<script src="https://code.getmdl.io/1.1.3/material.min.js"></script>
+<script src="/static/app.js"></script>
+</body>
 </html>

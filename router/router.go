@@ -9,8 +9,9 @@ import (
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/router/middleware/token"
 	"github.com/drone/drone/server"
-	"github.com/drone/drone/server/frontend"
 	"github.com/drone/drone/server/template"
+
+	"github.com/drone/drone-ui/dist"
 )
 
 // Load loads the router
@@ -20,7 +21,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(gin.Recovery())
 
 	e.SetHTMLTemplate(template.Load())
-	e.StaticFS("/src", frontend.FileSystem())
+	e.StaticFS("/static", dist.AssetFS())
 
 	e.Use(header.NoCache)
 	e.Use(header.Options)
