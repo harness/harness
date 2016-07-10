@@ -22,7 +22,7 @@ Drone documentation is organized into several categories:
 
 If you are using the 0.5 unstable release (master branch) please see the updated documentation:
 
-* [Setup Guide](http://readme.drone.io/0.5/manage/server/)
+* [Setup Guide](http://readme.drone.io/0.5/installation/server/)
 * [Build Guide](http://readme.drone.io/0.5/usage/overview/)
 
 ### Community, Help
