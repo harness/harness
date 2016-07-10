@@ -27,10 +27,11 @@ func (db *datastore) GetUserList() ([]*model.User, error) {
 
 func (db *datastore) GetUserFeed(listof []*model.RepoLite) ([]*model.Feed, error) {
 	var (
-		feed []*model.Feed
 		args []interface{}
 		stmt string
 		err  error
+
+		feed = []*model.Feed{}
 	)
 	switch meddler.Default {
 	case meddler.PostgreSQL:
@@ -46,10 +47,11 @@ func (db *datastore) GetUserFeed(listof []*model.RepoLite) ([]*model.Feed, error
 
 func (db *datastore) GetUserFeedLatest(listof []*model.RepoLite) ([]*model.Feed, error) {
 	var (
-		feed []*model.Feed
 		args []interface{}
 		stmt string
 		err  error
+
+		feed = []*model.Feed{}
 	)
 	switch meddler.Default {
 	case meddler.PostgreSQL:
