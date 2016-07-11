@@ -21,7 +21,11 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(gin.Recovery())
 
 	e.SetHTMLTemplate(template.Load())
-	e.StaticFS("/static", dist.AssetFS())
+
+	fs := http.FileServer(dist.AssetFS())
+	e.GET("/static/*filepath", func(c *gin.Context) {
+		fs.ServeHTTP(c.Writer, c.Request)
+	})
 
 	e.Use(header.NoCache)
 	e.Use(header.Options)
