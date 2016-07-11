@@ -6,8 +6,6 @@ import (
 
 	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote"
-	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
 
 	log "github.com/Sirupsen/logrus"
@@ -43,9 +41,9 @@ func SetRepo() gin.HandlerFunc {
 		var (
 			owner = c.Param("owner")
 			name  = c.Param("name")
+			user  = User(c)
 		)
 
-		user := User(c)
 		repo, err := store.GetRepoOwnerName(c, owner, name)
 		if err == nil {
 			c.Set("repo", repo)
@@ -53,43 +51,18 @@ func SetRepo() gin.HandlerFunc {
 			return
 		}
 
-		// if the user is not nil, check the remote system
-		// to see if the repository actually exists. If yes,
-		// we can prompt the user to add.
+		// debugging
+		log.Debugf("Cannot find repository %s/%s. %s",
+			owner,
+			name,
+			err.Error(),
+		)
+
 		if user != nil {
-			remote := remote.FromContext(c)
-			repo, err = remote.Repo(user, owner, name)
-			if err != nil {
-				log.Errorf("Cannot find remote repository %s/%s for user %s. %s",
-					owner, name, user.Login, err)
-			} else {
-				log.Debugf("Found remote repository %s/%s for user %s",
-					owner, name, user.Login)
-			}
-		}
-
-		data := gin.H{
-			"User": user,
-			"Repo": repo,
-		}
-
-		// if we found a repository, we should display a page
-		// to the user allowing them to activate.
-		if repo != nil && len(repo.FullName) != 0 {
-			// we should probably move this code to a
-			// separate route, but for now we need to
-			// add a CSRF token.
-			data["Csrf"], _ = token.New(
-				token.CsrfToken,
-				user.Login,
-			).Sign(user.Hash)
-
-			c.HTML(http.StatusNotFound, "repo_activate.html", data)
+			c.AbortWithStatus(http.StatusNotFound)
 		} else {
-			c.HTML(http.StatusNotFound, "404.html", data)
+			c.AbortWithStatus(http.StatusUnauthorized)
 		}
-
-		c.Abort()
 	}
 }
 
@@ -175,7 +148,6 @@ func SetPerm() gin.HandlerFunc {
 
 func MustPull(c *gin.Context) {
 	user := User(c)
-	repo := Repo(c)
 	perm := Perm(c)
 
 	if perm.Pull {
@@ -183,21 +155,22 @@ func MustPull(c *gin.Context) {
 		return
 	}
 
-	// if the user doesn't have pull permission to the
-	// repository we display a 404 error to avoid leaking
-	// repository information.
-	c.HTML(http.StatusNotFound, "404.html", gin.H{
-		"User": user,
-		"Repo": repo,
-		"Perm": perm,
-	})
-
-	c.Abort()
+	// debugging
+	if user != nil {
+		c.AbortWithStatus(http.StatusNotFound)
+		log.Debugf("User %s denied read access to %s",
+			user.Login, c.Request.URL.Path)
+	} else {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		log.Debugf("Guest denied read access to %s %s",
+			c.Request.Method,
+			c.Request.URL.Path,
+		)
+	}
 }
 
 func MustPush(c *gin.Context) {
 	user := User(c)
-	repo := Repo(c)
 	perm := Perm(c)
 
 	// if the user has push access, immediately proceed
@@ -207,32 +180,17 @@ func MustPush(c *gin.Context) {
 		return
 	}
 
-	data := gin.H{
-		"User": user,
-		"Repo": repo,
-		"Perm": perm,
-	}
-
-	// if the user has pull access we should tell them
-	// the operation is not authorized. Otherwise we should
-	// give a 404 to avoid leaking information.
-	if !perm.Pull {
-		c.HTML(http.StatusNotFound, "404.html", data)
-	} else {
-		c.HTML(http.StatusUnauthorized, "401.html", data)
-	}
-
 	// debugging
 	if user != nil {
-		log.Debugf("%s denied write access to %s",
+		c.AbortWithStatus(http.StatusNotFound)
+		log.Debugf("User %s denied write access to %s",
 			user.Login, c.Request.URL.Path)
 
 	} else {
+		c.AbortWithStatus(http.StatusUnauthorized)
 		log.Debugf("Guest denied write access to %s %s",
 			c.Request.Method,
 			c.Request.URL.Path,
 		)
 	}
-
-	c.Abort()
 }
