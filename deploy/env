@@ -11,3 +11,4 @@ PLUGIN_FILTER=registry:5000/library/* plugins/* registry.shurenyun.com/* registr
 PLUGIN_PREFIX="library/"
 DOCKER_STORAGE=overlay #or aufs 
 DOCKER_EXTRA_HOSTS="registry:REGISTRY harbor:HARBOR" # REGISTRY和HARBOR为地址
+TERM=xterm
