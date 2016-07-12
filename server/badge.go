@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/model"
@@ -42,7 +43,8 @@ func GetBadge(c *gin.Context) {
 
 	build, err := store.GetBuildLast(c, repo, branch)
 	if err != nil {
-		c.String(404, badgeNone)
+		log.Warning(err)
+		c.String(200, badgeNone)
 		return
 	}
 
@@ -56,7 +58,7 @@ func GetBadge(c *gin.Context) {
 	case model.StatusPending, model.StatusRunning:
 		c.String(200, badgeStarted)
 	default:
-		c.String(404, badgeNone)
+		c.String(200, badgeNone)
 	}
 }
 
