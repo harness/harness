@@ -43,7 +43,7 @@ func GetBadge(c *gin.Context) {
 
 	build, err := store.GetBuildLast(c, repo, branch)
 	if err != nil {
-		log.Error(err)
+		log.Warning(err)
 		c.String(200, badgeNone)
 		return
 	}
