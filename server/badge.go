@@ -2,8 +2,8 @@ package server
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/model"
