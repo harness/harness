@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"
 
@@ -43,7 +43,7 @@ func GetBadge(c *gin.Context) {
 
 	build, err := store.GetBuildLast(c, repo, branch)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 		c.String(200, badgeNone)
 		return
 	}
