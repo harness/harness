@@ -135,6 +135,19 @@ func DeleteBuild(c *gin.Context) {
 		return
 	}
 
+	if job.Status != model.StatusRunning {
+		c.String(400, "Cannot cancel a non-running build")
+		return
+	}
+
+	job.Status = model.StatusKilled
+	job.Finished = time.Now().Unix()
+	if job.Started == 0 {
+		job.Started = job.Finished
+	}
+	job.ExitCode = 137
+	store.UpdateBuildJob(c, build, job)
+
 	bus.Publish(c, bus.NewEvent(bus.Cancelled, repo, build, job))
 	c.String(204, "")
 }
