@@ -2,8 +2,10 @@ package build
 
 import (
 	"bufio"
+	"strconv"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone/yaml"
 )
 
@@ -48,6 +50,12 @@ func (p *Pipeline) Next() <-chan error {
 // Exec executes the current step.
 func (p *Pipeline) Exec() {
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logrus.Errorln("recover executing build step", r)
+			}
+		}()
+
 		err := p.exec(p.head.Container)
 		if err != nil {
 			p.err = err
@@ -119,6 +127,11 @@ func (p *Pipeline) step() {
 // close closes open channels and signals the pipeline is done.
 func (p *Pipeline) close(err error) {
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logrus.Errorln("recover closing the pipeline", r)
+			}
+		}()
 		p.done <- err
 	}()
 }
@@ -131,6 +144,12 @@ func (p *Pipeline) exec(c *yaml.Container) error {
 	p.containers = append(p.containers, name)
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logrus.Errorln("recover writing build output", r)
+			}
+		}()
+
 		rc, rerr := p.engine.ContainerLogs(name)
 		if rerr != nil {
 			return
@@ -165,5 +184,19 @@ func (p *Pipeline) exec(c *yaml.Container) error {
 	} else if state.ExitCode != 0 {
 		return &ExitError{c.Name, state.ExitCode}
 	}
+
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logrus.Errorln("recover writing exit code to output", r)
+			}
+		}()
+
+		p.pipe <- &Line{
+			Proc: c.Name,
+			Type: ExitCodeLine,
+			Out:  strconv.Itoa(state.ExitCode),
+		}
+	}()
 	return nil
 }
