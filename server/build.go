@@ -255,6 +255,7 @@ func PostBuild(c *gin.Context) {
 	build.Finished = 0
 	build.Enqueued = time.Now().UTC().Unix()
 	for _, job := range jobs {
+		job.Error = ""
 		job.Status = model.StatusPending
 		job.Started = 0
 		job.Finished = 0
