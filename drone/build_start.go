@@ -43,9 +43,9 @@ func buildStart(c *cli.Context) (err error) {
 
 	var build *model.Build
 	if c.Bool("fork") {
-		build, err = client.BuildStart(owner, name, number)
-	} else {
 		build, err = client.BuildFork(owner, name, number)
+	} else {
+		build, err = client.BuildStart(owner, name, number)
 	}
 	if err != nil {
 		return err
