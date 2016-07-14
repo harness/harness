@@ -8,5 +8,6 @@ var secretCmd = cli.Command{
 	Subcommands: []cli.Command{
 		secretAddCmd,
 		secretRemoveCmd,
+		secretListCmd,
 	},
 }

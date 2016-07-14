@@ -47,7 +47,7 @@ func Test_parse(t *testing.T) {
 			g.Assert(build.Link).Equal(hook.Compare)
 			g.Assert(build.Branch).Equal("master")
 			g.Assert(build.Message).Equal(hook.Commits[0].Message)
-			g.Assert(build.Avatar).Equal("//1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87")
+			g.Assert(build.Avatar).Equal("http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87")
 			g.Assert(build.Author).Equal(hook.Sender.Login)
 
 		})
@@ -92,7 +92,7 @@ func Test_parse(t *testing.T) {
 				FullName: "gophers/hello-world",
 				Owner: gogs.User{
 					UserName:  "gordon",
-					AvatarUrl: "//1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
+					AvatarUrl: "http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
 				},
 				CloneUrl: "http://gogs.golang.org/gophers/hello-world.git",
 				HtmlUrl:  "http://gogs.golang.org/gophers/hello-world",
@@ -114,7 +114,7 @@ func Test_parse(t *testing.T) {
 				FullName: "gophers/hello-world",
 				Owner: gogs.User{
 					UserName:  "gordon",
-					AvatarUrl: "//1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
+					AvatarUrl: "http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
 				},
 			}
 			repo := toRepoLite(&from)
@@ -165,7 +165,11 @@ func Test_parse(t *testing.T) {
 				},
 				{
 					"//1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
-					"//1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
+					"http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
+				},
+				{
+					"/gogs/avatars/2",
+					"http://gogs.io/gogs/avatars/2",
 				},
 			}
 

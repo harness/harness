@@ -110,11 +110,7 @@ func GetLogin(c *gin.Context) {
 	}
 
 	httputil.SetCookie(c.Writer, c.Request, "user_sess", tokenstr)
-	redirect := httputil.GetCookie(c.Request, "user_last")
-	if len(redirect) == 0 {
-		redirect = "/"
-	}
-	c.Redirect(303, redirect)
+	c.Redirect(303, "/")
 
 }
 

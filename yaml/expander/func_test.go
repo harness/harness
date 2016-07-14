@@ -53,6 +53,12 @@ func TestSubstitution(t *testing.T) {
 			g.Assert(substituteReplace(before, "GREETING", "HELLO")).Equal(after)
 		})
 
+		g.It("Should substitute parameters with replacement, containing slashes", func() {
+			before := `echo ${GREETING/HE\//A} MONDE`
+			after := "echo ALLO MONDE"
+			g.Assert(substituteReplace(before, "GREETING", "HE/LLO")).Equal(after)
+		})
+
 		g.It("Should substitute parameters with left substr", func() {
 			before := "echo ${FOO:4} IS COOL"
 			after := "echo THIS IS COOL"

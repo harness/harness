@@ -32,6 +32,7 @@ const (
 	pathFeed       = "%s/api/user/feed"
 	pathRepos      = "%s/api/user/repos"
 	pathRepo       = "%s/api/repos/%s/%s"
+	pathChown      = "%s/api/repos/%s/%s/chown"
 	pathEncrypt    = "%s/api/repos/%s/%s/encrypt"
 	pathBuilds     = "%s/api/repos/%s/%s/builds"
 	pathBuild      = "%s/api/repos/%s/%s/builds/%v"
@@ -153,6 +154,14 @@ func (c *client) RepoPost(owner string, name string) (*model.Repo, error) {
 	return out, err
 }
 
+// RepoChow updates a repository owner.
+func (c *client) RepoChown(owner string, name string) (*model.Repo, error) {
+	out := new(model.Repo)
+	uri := fmt.Sprintf(pathChown, c.base, owner, name)
+	err := c.post(uri, nil, out)
+	return out, err
+}
+
 // RepoPatch updates a repository.
 func (c *client) RepoPatch(in *model.Repo) (*model.Repo, error) {
 	out := new(model.Repo)
@@ -244,6 +253,14 @@ func (c *client) Deploy(owner, name string, num int, env string) (*model.Build, 
 	val.Set("deploy_to", env)
 	uri := fmt.Sprintf(pathBuild+"?"+val.Encode(), c.base, owner, name, num)
 	err := c.post(uri, nil, out)
+	return out, err
+}
+
+// SecretList returns a list of a repository secrets.
+func (c *client) SecretList(owner, name string) ([]*model.Secret, error) {
+	var out []*model.Secret
+	uri := fmt.Sprintf(pathSecrets, c.base, owner, name)
+	err := c.get(uri, &out)
 	return out, err
 }
 

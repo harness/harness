@@ -43,11 +43,17 @@ type Client interface {
 	// RepoPatch updates a repository.
 	RepoPatch(*model.Repo) (*model.Repo, error)
 
+	// RepoChown updates a repository owner.
+	RepoChown(string, string) (*model.Repo, error)
+
 	// RepoDel deletes a repository.
 	RepoDel(string, string) error
 
 	// Sign returns a cryptographic signature for the input string.
 	Sign(string, string, []byte) ([]byte, error)
+
+	// SecretList returns a list of all repository secrets.
+	SecretList(string, string) ([]*model.Secret, error)
 
 	// SecretPost create or updates a repository secret.
 	SecretPost(string, string, *model.Secret) error

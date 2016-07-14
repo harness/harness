@@ -53,6 +53,20 @@ func GetRepos(c context.Context, user *model.User) ([]*model.RepoLite, error) {
 	return repos, nil
 }
 
+// GetRepoMap returns the list of user repositories from the cache
+// associated with the current context in a map structure.
+func GetRepoMap(c context.Context, user *model.User) (map[string]bool, error) {
+	repos, err := GetRepos(c, user)
+	if err != nil {
+		return nil, err
+	}
+	repom := map[string]bool{}
+	for _, repo := range repos {
+		repom[repo.FullName] = true
+	}
+	return repom, nil
+}
+
 // DeleteRepos evicts the cached user repositories from the cache associated
 // with the current context.
 func DeleteRepos(c context.Context, user *model.User) error {

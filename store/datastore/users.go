@@ -27,9 +27,11 @@ func (db *datastore) GetUserList() ([]*model.User, error) {
 
 func (db *datastore) GetUserFeed(listof []*model.RepoLite) ([]*model.Feed, error) {
 	var (
-		feed []*model.Feed
 		args []interface{}
 		stmt string
+		err  error
+
+		feed = []*model.Feed{}
 	)
 	switch meddler.Default {
 	case meddler.PostgreSQL:
@@ -37,15 +39,19 @@ func (db *datastore) GetUserFeed(listof []*model.RepoLite) ([]*model.Feed, error
 	default:
 		stmt, args = toList(listof)
 	}
-	err := meddler.QueryAll(db, &feed, fmt.Sprintf(userFeedQuery, stmt), args...)
+	if len(args) > 0 {
+		err = meddler.QueryAll(db, &feed, fmt.Sprintf(userFeedQuery, stmt), args...)
+	}
 	return feed, err
 }
 
 func (db *datastore) GetUserFeedLatest(listof []*model.RepoLite) ([]*model.Feed, error) {
 	var (
-		feed []*model.Feed
 		args []interface{}
 		stmt string
+		err  error
+
+		feed = []*model.Feed{}
 	)
 	switch meddler.Default {
 	case meddler.PostgreSQL:
@@ -53,7 +59,9 @@ func (db *datastore) GetUserFeedLatest(listof []*model.RepoLite) ([]*model.Feed,
 	default:
 		stmt, args = toList(listof)
 	}
-	err := meddler.QueryAll(db, &feed, fmt.Sprintf(userFeedLatest, stmt), args...)
+	if len(args) > 0 {
+		err = meddler.QueryAll(db, &feed, fmt.Sprintf(userFeedLatest, stmt), args...)
+	}
 	return feed, err
 }
 

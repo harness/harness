@@ -2,6 +2,14 @@ package build
 
 import "fmt"
 
+const (
+	StdoutLine int = iota
+	StderrLine
+	ExitCodeLine
+	MetadataLine
+	ProgressLine
+)
+
 // Line is a line of console output.
 type Line struct {
 	Proc string `json:"proc,omitempty"`
@@ -12,7 +20,12 @@ type Line struct {
 }
 
 func (l *Line) String() string {
-	return fmt.Sprintf("[%s:L%v:%vs] %s", l.Proc, l.Pos, l.Time, l.Out)
+	switch l.Type {
+	case ExitCodeLine:
+		return fmt.Sprintf("[%s] exit code %s", l.Proc, l.Out)
+	default:
+		return fmt.Sprintf("[%s:L%v:%vs] %s", l.Proc, l.Pos, l.Time, l.Out)
+	}
 }
 
 // State defines the state of the container.

@@ -1,7 +1,0 @@
-Package: drone
-Version: 0.4
-Section: base
-Priority: optional
-Architecture: amd64
-Maintainer: Brad Rydzewski <brad@drone.io>
-Description: Drone continuous integration server

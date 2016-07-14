@@ -1,7 +1,6 @@
 drone/drone
 *.sqlite
 *_gen.go
-*.html
 #*.css
 *.txt
 *.zip
@@ -13,6 +12,8 @@ drone/drone
 temp/
 release/
 
+server/frontend/bower_components
+server/frontend/build
 server/swagger/files/*.json
 
 # vendored repositories that we don't actually need
