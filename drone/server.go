@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/drone/drone/router"
@@ -263,29 +261,10 @@ var serverCmd = cli.Command{
 			Name:   "stash-skip-verify",
 			Usage:  "stash skip ssl verification",
 		},
-		//
-		// remove these eventually
-		//
-
-		cli.BoolFlag{
-			Name:   "agreement.ack",
-			EnvVar: "I_UNDERSTAND_I_AM_USING_AN_UNSTABLE_VERSION",
-			Usage:  "agree to terms of use.",
-		},
-		cli.BoolFlag{
-			Name:   "agreement.fix",
-			EnvVar: "I_AGREE_TO_FIX_BUGS_AND_NOT_FILE_BUGS",
-			Usage:  "agree to terms of use.",
-		},
 	},
 }
 
 func server(c *cli.Context) error {
-
-	if c.Bool("agreement.ack") == false || c.Bool("agreement.fix") == false {
-		fmt.Println(agreement)
-		os.Exit(1)
-	}
 
 	// debug level if requested by user
 	if c.Bool("debug") {
@@ -324,28 +303,3 @@ func server(c *cli.Context) error {
 		handler,
 	)
 }
-
-var agreement = `
----
-
-
-You are attempting to use the unstable channel. This build is experimental and
-has known bugs and compatibility issues. It is not intended for general use.
-
-Please consider using the latest stable release instead:
-
-		drone/drone:0.4.2
-
-If you are attempting to build from source please use the latest stable tag:
-
-		v0.4.2
-
-If you are interested in testing this experimental build AND assisting with
-development you may proceed by setting the following environment:
-
-		I_UNDERSTAND_I_AM_USING_AN_UNSTABLE_VERSION=true
-		I_AGREE_TO_FIX_BUGS_AND_NOT_FILE_BUGS=true
-
-
----
-`
