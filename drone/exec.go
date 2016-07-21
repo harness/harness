@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/drone/drone/build/docker"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/queue"
+	"github.com/drone/drone/yaml"
 
 	"github.com/codegangsta/cli"
 	"github.com/joho/godotenv"
@@ -338,7 +340,7 @@ func exec(c *cli.Context) error {
 		Pull:      c.Bool("pull"),
 	}
 
-	payload := queue.Work{
+	payload := &queue.Work{
 		Yaml:     string(file),
 		Verified: c.BoolT("yaml.verified"),
 		Signed:   c.BoolT("yaml.signed"),
@@ -382,12 +384,45 @@ func exec(c *cli.Context) error {
 			Status: c.String("prev.build.status"),
 			Commit: c.String("prev.commit.sha"),
 		},
-		Job: &model.Job{
-			Environment: getMatrix(c),
-		},
 	}
 
-	return a.Run(&payload, cancelc)
+	if len(c.StringSlice("matrix")) > 0 {
+		p := *payload
+		p.Job = &model.Job{
+			Environment: getMatrix(c),
+		}
+		return a.Run(&p, cancelc)
+	}
+
+	axes, err := yaml.ParseMatrix(file)
+	if err != nil {
+		return err
+	}
+
+	if len(axes) == 0 {
+		axes = append(axes, yaml.Axis{})
+	}
+
+	var jobs []*model.Job
+	count := 0
+	for _, axis := range axes {
+		jobs = append(jobs, &model.Job{
+			Number:      count,
+			Environment: axis,
+		})
+		count++
+	}
+
+	for _, job := range jobs {
+		fmt.Printf("Running Matrix job #%d\n", job.Number)
+		p := *payload
+		p.Job = job
+		if err := a.Run(&p, cancelc); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // helper function to retrieve matrix variables.
