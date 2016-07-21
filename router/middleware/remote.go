@@ -80,7 +80,7 @@ func setupGitlab(c *cli.Context) (remote.Remote, error) {
 	return gitlab.New(gitlab.Opts{
 		URL:         c.String("gitlab-server"),
 		Client:      c.String("gitlab-client"),
-		Secret:      c.String("gitlab-sercret"),
+		Secret:      c.String("gitlab-secret"),
 		Username:    c.String("gitlab-git-username"),
 		Password:    c.String("gitlab-git-password"),
 		PrivateMode: c.Bool("gitlab-private-mode"),
@@ -94,7 +94,7 @@ func setupGithub(c *cli.Context) (remote.Remote, error) {
 		URL:         c.String("github-server"),
 		Context:     c.String("github-context"),
 		Client:      c.String("github-client"),
-		Secret:      c.String("github-sercret"),
+		Secret:      c.String("github-secret"),
 		Scopes:      c.StringSlice("github-scope"),
 		Username:    c.String("github-git-username"),
 		Password:    c.String("github-git-password"),
