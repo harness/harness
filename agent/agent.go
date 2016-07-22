@@ -157,7 +157,9 @@ func (a *Agent) prep(w *queue.Work) (*yaml.Config, error) {
 	transform.ImageTag(conf)
 	transform.ImageName(conf)
 	transform.ImageNamespace(conf, a.Namespace)
-	transform.ImageEscalate(conf, a.Escalate)
+	if err := transform.ImageEscalate(conf, a.Escalate); err != nil {
+		return nil, err
+	}
 	transform.PluginParams(conf)
 
 	if a.Local != "" {
