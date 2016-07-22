@@ -35,12 +35,6 @@ Please see our [installation guide](http://readme.drone.io/setup/overview) to in
 
 ### From Source
 
-Install build dependencies:
-
-* go 1.5+ ([install guide](http://golang.org/doc/install))
-* libsqlite3 ([install script](https://github.com/drone/drone/blob/master/contrib/setup-sqlite.sh))
-* sassc ([install script](https://github.com/drone/drone/blob/master/contrib/setup-sassc.sh))
-
 Clone the repository to your Go workspace:
 
 ```

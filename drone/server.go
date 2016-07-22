@@ -110,7 +110,7 @@ var serverCmd = cli.Command{
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_GITHUB_SECRET",
-			Name:   "github-sercret",
+			Name:   "github-secret",
 			Usage:  "github oauth2 client secret",
 		},
 		cli.StringSliceFlag{
@@ -203,7 +203,7 @@ var serverCmd = cli.Command{
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_GITLAB_SECRET",
-			Name:   "gitlab-sercret",
+			Name:   "gitlab-secret",
 			Usage:  "gitlab oauth2 client secret",
 		},
 		cli.StringFlag{

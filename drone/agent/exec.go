@@ -33,6 +33,10 @@ func (r *pipeline) run() error {
 	if err != nil {
 		return err
 	}
+	running.Add(1)
+	defer func() {
+		running.Done()
+	}()
 
 	logrus.Infof("Starting build %s/%s#%d.%d",
 		w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)

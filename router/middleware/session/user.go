@@ -85,6 +85,23 @@ func MustAdmin() gin.HandlerFunc {
 	}
 }
 
+func MustRepoAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := User(c)
+		perm := Perm(c)
+		switch {
+		case user == nil:
+			c.String(401, "User not authorized")
+			c.Abort()
+		case perm.Admin == false:
+			c.String(403, "User not authorized")
+			c.Abort()
+		default:
+			c.Next()
+		}
+	}
+}
+
 func MustUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := User(c)
