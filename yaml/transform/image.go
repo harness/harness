@@ -1,6 +1,7 @@
 package transform
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -61,6 +62,9 @@ func ImageEscalate(conf *yaml.Config, patterns []string) error {
 	for _, c := range conf.Pipeline {
 		for _, pattern := range patterns {
 			if ok, _ := filepath.Match(pattern, c.Image); ok {
+				if len(c.Commands) != 0 {
+					return fmt.Errorf("Custom commands disabled for the %s plugin", c.Image)
+				}
 				c.Privileged = true
 			}
 		}
