@@ -89,6 +89,17 @@ func Test_escalate(t *testing.T) {
 			ImageEscalate(c, []string{"plugins/docker"})
 			g.Assert(c.Pipeline[0].Privileged).IsFalse()
 		})
+
+		g.It("should not escalate plugin with commands", func() {
+			c := newConfig(&yaml.Container{
+				Image:    "docker",
+				Commands: []string{"echo foo"},
+			})
+
+			err := ImageEscalate(c, []string{"docker"})
+			g.Assert(c.Pipeline[0].Privileged).IsFalse()
+			g.Assert(err.Error()).Equal("Custom commands disabled for the docker plugin")
+		})
 	})
 }
 
