@@ -11,7 +11,6 @@ import (
 	"github.com/mrjones/oauth"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -32,10 +31,10 @@ type Client struct {
 	accessToken string
 }
 
-func NewClientWithToken(url string, Consumer *oauth.Consumer, AccessToken string) *Client {
+func NewClientWithToken(url string, consumer *oauth.Consumer, AccessToken string) *Client {
 	var token oauth.AccessToken
 	token.Token = AccessToken
-	client, err := Consumer.MakeHttpClient(&token)
+	client, err := consumer.MakeHttpClient(&token)
 	log.Debug(fmt.Printf("Create client: %+v %s\n", token, url))
 	if err != nil {
 		log.Error(err)
@@ -43,7 +42,7 @@ func NewClientWithToken(url string, Consumer *oauth.Consumer, AccessToken string
 	return &Client{client, url, AccessToken}
 }
 
-func (c *Client) FindCurrentUser() (*model.User, error) {
+func (c *Client) FindCurrentUser() (*User, error) {
 	CurrentUserIdResponse, err := c.client.Get(fmt.Sprintf(currentUserId, c.base))
 	if err != nil {
 		return nil, err
@@ -72,18 +71,11 @@ func (c *Client) FindCurrentUser() (*model.User, error) {
 		return nil, err
 	}
 
-	ModelUser := &model.User{
-		Login:  login,
-		Email:  user.EmailAddress,
-		Token:  c.accessToken,
-		Avatar: avatarLink(user.EmailAddress),
-	}
-	log.Debug(fmt.Printf("User information: %+v\n", ModelUser))
-	return ModelUser, nil
+	return &user, nil
 
 }
 
-func (c *Client) FindRepo(owner string, name string) (*model.Repo, error) {
+func (c *Client) FindRepo(owner string, name string) (*Repo, error) {
 	urlString := fmt.Sprintf(pathRepo, c.base, owner, name)
 	response, err := c.client.Get(urlString)
 	if err != nil {
@@ -91,40 +83,15 @@ func (c *Client) FindRepo(owner string, name string) (*model.Repo, error) {
 	}
 	defer response.Body.Close()
 	contents, err := ioutil.ReadAll(response.Body)
-	bsRepo := BSRepo{}
-	err = json.Unmarshal(contents, &bsRepo)
+	repo := Repo{}
+	err = json.Unmarshal(contents, &repo)
 	if err != nil {
 		return nil, err
 	}
-	repo := &model.Repo{
-		Name:      bsRepo.Slug,
-		Owner:     bsRepo.Project.Key,
-		Branch:    "master",
-		Kind:      model.RepoGit,
-		IsPrivate: true, // Since we have to use Netrc it has to always be private :/
-		FullName:  fmt.Sprintf("%s/%s", bsRepo.Project.Key, bsRepo.Slug),
-	}
-
-	for _, item := range bsRepo.Links.Clone {
-		if item.Name == "http" {
-			uri, err := url.Parse(item.Href)
-			if err != nil {
-				return nil, err
-			}
-			uri.User = nil
-			repo.Clone = uri.String()
-		}
-	}
-	for _, item := range bsRepo.Links.Self {
-		if item.Href != "" {
-			repo.Link = item.Href
-		}
-	}
-	log.Debug(fmt.Printf("Repo: %+v\n", repo))
-	return repo, nil
+	return &repo, nil
 }
 
-func (c *Client) FindRepos() ([]*model.RepoLite, error) {
+func (c *Client) FindRepos() ([]*Repo, error) {
 	requestUrl := fmt.Sprintf(pathRepos, c.base, "1000")
 	log.Debug(fmt.Printf("request :%s", requestUrl))
 	response, err := c.client.Get(requestUrl)
@@ -142,16 +109,8 @@ func (c *Client) FindRepos() ([]*model.RepoLite, error) {
 		return nil, err
 	}
 	log.Debug(fmt.Printf("repoResponse: %+v\n", repoResponse))
-	var repos = []*model.RepoLite{}
-	for _, repo := range repoResponse.Values {
-		repos = append(repos, &model.RepoLite{
-			Name:     repo.Slug,
-			FullName: repo.Project.Key + "/" + repo.Slug,
-			Owner:    repo.Project.Key,
-		})
-	}
-	log.Debug(fmt.Printf("repos: %+v\n", repos))
-	return repos, nil
+
+	return repoResponse.Values, nil
 }
 
 func (c *Client) FindRepoPerms(owner string, repo string) (*model.Perm, error) {

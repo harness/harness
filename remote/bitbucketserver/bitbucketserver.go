@@ -4,12 +4,9 @@ package bitbucketserver
 // quality or security standards expected of this project. Please use with caution.
 
 import (
-	"crypto/md5"
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/hex"
-	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"github.com/drone/drone/model"
@@ -98,7 +95,12 @@ func (c *Config) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 
 	client := internal.NewClientWithToken(c.URL, c.Consumer, accessToken.Token)
 
-	return client.FindCurrentUser()
+	user, err := client.FindCurrentUser()
+	if err != nil {
+		return nil, err
+	}
+
+	return convertUser(user, accessToken), nil
 
 }
 
@@ -114,15 +116,24 @@ func (*Config) Teams(u *model.User) ([]*model.Team, error) {
 }
 
 func (c *Config) Repo(u *model.User, owner, name string) (*model.Repo, error) {
-	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
-
-	return client.FindRepo(owner, name)
+	repo, err := internal.NewClientWithToken(c.URL, c.Consumer, u.Token).FindRepo(owner, name)
+	if err != nil {
+		return nil, err
+	}
+	return convertRepo(repo), nil
 }
 
 func (c *Config) Repos(u *model.User) ([]*model.RepoLite, error) {
-	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
+	repos, err := internal.NewClientWithToken(c.URL, c.Consumer, u.Token).FindRepos()
+	if err != nil {
+		return nil, err
+	}
+	var all []*model.RepoLite
+	for _, repo := range repos {
+		all = append(all, convertRepoLite(repo))
+	}
 
-	return client.FindRepos()
+	return all, nil
 }
 
 func (c *Config) Perm(u *model.User, owner, repo string) (*model.Perm, error) {
@@ -173,29 +184,7 @@ func (c *Config) Deactivate(u *model.User, r *model.Repo, link string) error {
 }
 
 func (c *Config) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
-	hook := new(postHook)
-	if err := json.NewDecoder(r.Body).Decode(hook); err != nil {
-		return nil, nil, err
-	}
-
-	build := &model.Build{
-		Event:  model.EventPush,
-		Ref:    hook.RefChanges[0].RefID,                               // TODO check for index Values
-		Author: hook.Changesets.Values[0].ToCommit.Author.EmailAddress, // TODO check for index Values
-		Commit: hook.RefChanges[0].ToHash,                              // TODO check for index value
-		Avatar: avatarLink(hook.Changesets.Values[0].ToCommit.Author.EmailAddress),
-		Branch: strings.Split(hook.RefChanges[0].RefID, "refs/heads/")[1],
-	}
-
-	repo := &model.Repo{
-		Name:     hook.Repository.Slug,
-		Owner:    hook.Repository.Project.Key,
-		FullName: fmt.Sprintf("%s/%s", hook.Repository.Project.Key, hook.Repository.Slug),
-		Branch:   "master",
-		Kind:     model.RepoGit,
-	}
-
-	return repo, build, nil
+	return parseHook(r)
 }
 
 func CreateConsumer(URL string, ConsumerKey string, PrivateKey *rsa.PrivateKey) *oauth.Consumer {
@@ -214,12 +203,4 @@ func CreateConsumer(URL string, ConsumerKey string, PrivateKey *rsa.PrivateKey) 
 		},
 	}
 	return consumer
-}
-
-func avatarLink(email string) (url string) {
-	hasher := md5.New()
-	hasher.Write([]byte(strings.ToLower(email)))
-	emailHash := fmt.Sprintf("%v", hex.EncodeToString(hasher.Sum(nil)))
-	avatarURL := fmt.Sprintf("https://www.gravatar.com/avatar/%s.jpg", emailHash)
-	return avatarURL
 }
