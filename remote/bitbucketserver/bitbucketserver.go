@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/remote/bitbucketserver/internal"
@@ -115,28 +114,24 @@ func (*Config) Teams(u *model.User) ([]*model.Team, error) {
 }
 
 func (c *Config) Repo(u *model.User, owner, name string) (*model.Repo, error) {
-	log.Debug(fmt.Printf("Start repo lookup with: %+v %s %s\n", u, owner, name))
 	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
 
 	return client.FindRepo(owner, name)
 }
 
 func (c *Config) Repos(u *model.User) ([]*model.RepoLite, error) {
-	log.Debug(fmt.Printf("Start repos lookup for: %+v\n", u))
 	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
 
 	return client.FindRepos()
 }
 
 func (c *Config) Perm(u *model.User, owner, repo string) (*model.Perm, error) {
-	log.Debug(fmt.Printf("Start perm lookup for: %+v %s %s\n", u, owner, repo))
 	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
 
 	return client.FindRepoPerms(owner, repo)
 }
 
 func (c *Config) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
-	log.Debug(fmt.Printf("Start file lookup for: %+v %+v %s\n", u, b, f))
 	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
 
 	return client.FindFileForRepo(r.Owner, r.Name, f)
@@ -182,7 +177,6 @@ func (c *Config) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 	if err := json.NewDecoder(r.Body).Decode(hook); err != nil {
 		return nil, nil, err
 	}
-	log.Debug(fmt.Printf("hook %v", hook))
 
 	build := &model.Build{
 		Event:  model.EventPush,
