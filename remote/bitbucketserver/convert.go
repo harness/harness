@@ -7,9 +7,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote/bitbucketserver/internal"
+	"github.com/mrjones/oauth"
 	"net/url"
 	"strings"
-	"github.com/mrjones/oauth"
 )
 
 // convertRepo is a helper function used to convert a Bitbucket server repository
@@ -61,18 +61,28 @@ func convertRepoLite(from *internal.Repo) *model.RepoLite {
 // convertPushHook is a helper function used to convert a Bitbucket push
 // hook to the Drone build struct holding commit information.
 func convertPushHook(hook *internal.PostHook) *model.Build {
+	//get the ref parts to see if it's a tags or heads
+	refParts := strings.Split(hook.RefChanges[0].RefID, "/")
+	name := refParts[2]
+	commitType := refParts[1]
+
 	build := &model.Build{
 		Commit: hook.RefChanges[0].ToHash, // TODO check for index value
 		//Link: TODO find link
-		Branch: strings.Split(hook.RefChanges[0].RefID, "refs/heads/")[1], //TODO figure the correct for tags
+		Branch:  name,
 		Message: hook.Changesets.Values[0].ToCommit.Message, //TODO check for index Values
-		Avatar: avatarLink(hook.Changesets.Values[0].ToCommit.Author.EmailAddress),
-		Author: hook.Changesets.Values[0].ToCommit.Author.EmailAddress, // TODO check for index Values
+		Avatar:  avatarLink(hook.Changesets.Values[0].ToCommit.Author.EmailAddress),
+		Author:  hook.Changesets.Values[0].ToCommit.Author.EmailAddress, // TODO check for index Values
 		//Timestamp: TODO find time parsing
-		Event: model.EventPush,          //TODO: do more then PUSH find Tags etc
-		Ref:   hook.RefChanges[0].RefID, // TODO check for index Values
-
+		Ref: hook.RefChanges[0].RefID, // TODO check for index Values
 	}
+	switch commitType {
+	case "tags":
+		build.Event = model.EventTag
+	default:
+		build.Event = model.EventPush
+	}
+
 	return build
 }
 
