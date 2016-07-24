@@ -65,7 +65,7 @@ func convertPushHook(hook *internal.PostHook) *model.Build {
 		Commit: hook.RefChanges[0].ToHash, // TODO check for index value
 		//Link: TODO find link
 		Branch: strings.Split(hook.RefChanges[0].RefID, "refs/heads/")[1], //TODO figure the correct for tags
-		//Message: TODO find the message for the commit
+		Message: hook.Changesets.Values[0].ToCommit.Message, //TODO check for index Values
 		Avatar: avatarLink(hook.Changesets.Values[0].ToCommit.Author.EmailAddress),
 		Author: hook.Changesets.Values[0].ToCommit.Author.EmailAddress, // TODO check for index Values
 		//Timestamp: TODO find time parsing
