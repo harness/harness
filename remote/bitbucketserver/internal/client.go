@@ -2,8 +2,6 @@ package internal
 
 import (
 	"bytes"
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
@@ -11,7 +9,6 @@ import (
 	"github.com/mrjones/oauth"
 	"io/ioutil"
 	"net/http"
-	"strings"
 )
 
 const (
@@ -157,15 +154,6 @@ func (c *Client) CreateHook(owner string, name string, callBackLink string) erro
 func (c *Client) DeleteHook(owner string, name string, link string) error {
 	//TODO: eventially should only delete the link callback
 	return c.doDelete(fmt.Sprintf(pathHookEnabled, c.base, owner, name, hookName))
-}
-
-func avatarLink(email string) (url string) {
-	hasher := md5.New()
-	hasher.Write([]byte(strings.ToLower(email)))
-	emailHash := fmt.Sprintf("%v", hex.EncodeToString(hasher.Sum(nil)))
-	avatarURL := fmt.Sprintf("https://www.gravatar.com/avatar/%s.jpg", emailHash)
-	log.Debug(avatarURL)
-	return avatarURL
 }
 
 //Helper function to help create the hook
