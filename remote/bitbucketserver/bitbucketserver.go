@@ -122,7 +122,7 @@ func (c *client) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 	defer response1.Body.Close()
 
 	contents, err := ioutil.ReadAll(response1.Body)
-	if err !=nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -152,7 +152,7 @@ func (*client) Teams(u *model.User) ([]*model.Team, error) {
 
 func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	client := NewClientWithToken(&c.Consumer, u.Token)
-	repo , err := c.FindRepo(client,owner,name)
+	repo, err := c.FindRepo(client, owner, name)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (c *client) Perm(u *model.User, owner, repo string) (*model.Perm, error) {
 	}
 
 	// Must have admin to be able to list hooks. If have access the enable perms
-	_, err = client.Get(fmt.Sprintf("%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s", c.URL, owner, repo,"com.atlassian.stash.plugin.stash-web-post-receive-hooks-plugin:postReceiveHook"))
+	_, err = client.Get(fmt.Sprintf("%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s", c.URL, owner, repo, "com.atlassian.stash.plugin.stash-web-post-receive-hooks-plugin:postReceiveHook"))
 	if err == nil {
 		perms.Push = true
 		perms.Admin = true
@@ -339,7 +339,7 @@ func (bs *client) DeleteHook(client *http.Client, project, slug, hook_key, link 
 	return nil
 }
 
-func (c *client) FindRepo(client *http.Client, owner string, name string) (*model.Repo, error){
+func (c *client) FindRepo(client *http.Client, owner string, name string) (*model.Repo, error) {
 
 	urlString := fmt.Sprintf("%s/rest/api/1.0/projects/%s/repos/%s", c.URL, owner, name)
 
@@ -351,7 +351,7 @@ func (c *client) FindRepo(client *http.Client, owner string, name string) (*mode
 	contents, err := ioutil.ReadAll(response.Body)
 	bsRepo := BSRepo{}
 	err = json.Unmarshal(contents, &bsRepo)
-	if err !=nil {
+	if err != nil {
 		return nil, err
 	}
 	repo := &model.Repo{
