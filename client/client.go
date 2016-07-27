@@ -76,21 +76,21 @@ type Client interface {
 	BuildQueue() ([]*model.Feed, error)
 
 	// BuildStart re-starts a stopped build.
-	BuildStart(string, string, int) (*model.Build, error)
+	BuildStart(string, string, int, map[string]string) (*model.Build, error)
 
 	// BuildStop stops the specified running job for given build.
 	BuildStop(string, string, int, int) error
 
 	// BuildFork re-starts a stopped build with a new build number, preserving
 	// the prior history.
-	BuildFork(string, string, int) (*model.Build, error)
+	BuildFork(string, string, int, map[string]string) (*model.Build, error)
 
 	// BuildLogs returns the build logs for the specified job.
 	BuildLogs(string, string, int, int) (io.ReadCloser, error)
 
 	// Deploy triggers a deployment for an existing build using the specified
 	// target environment.
-	Deploy(string, string, int, string) (*model.Build, error)
+	Deploy(string, string, int, string, map[string]string) (*model.Build, error)
 
 	// AgentList returns a list of build agents.
 	AgentList() ([]*model.Agent, error)

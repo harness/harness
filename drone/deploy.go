@@ -25,6 +25,10 @@ var deployCmd = cli.Command{
 			Usage: "format output",
 			Value: tmplDeployInfo,
 		},
+		cli.StringSliceFlag{
+			Name:  "param, p",
+			Usage: "custom parameters to be injected into the job environment. Format: KEY=value",
+		},
 	},
 }
 
@@ -56,7 +60,9 @@ func deploy(c *cli.Context) error {
 		return fmt.Errorf("Please specify the target environment (ie production)")
 	}
 
-	deploy, err := client.Deploy(owner, name, number, env)
+	params := parseKVPairs(c.StringSlice("param"))
+
+	deploy, err := client.Deploy(owner, name, number, env, params)
 	if err != nil {
 		return err
 	}
