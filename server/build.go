@@ -248,6 +248,18 @@ func PostBuild(c *gin.Context) {
 		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
 	}
 
+	// Read query string parameters into buildParams, exclude reserved params
+	var buildParams = map[string]string{}
+	for key, val := range c.Request.URL.Query() {
+		switch key {
+		case "fork", "event", "deply_to":
+		default:
+			// We only accept string literals, because build parameters will be
+			// injected as environment variables
+			buildParams[key] = val[0]
+		}
+	}
+
 	// todo move this to database tier
 	// and wrap inside a transaction
 	build.Status = model.StatusPending
@@ -255,6 +267,9 @@ func PostBuild(c *gin.Context) {
 	build.Finished = 0
 	build.Enqueued = time.Now().UTC().Unix()
 	for _, job := range jobs {
+		for k, v := range buildParams {
+			job.Environment[k] = v
+		}
 		job.Error = ""
 		job.Status = model.StatusPending
 		job.Started = 0
