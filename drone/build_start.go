@@ -22,6 +22,10 @@ var buildStartCmd = cli.Command{
 			Name:  "fork",
 			Usage: "fork the build",
 		},
+		cli.StringSliceFlag{
+			Name:  "param, p",
+			Usage: "custom parameters to be injected into the job environment. Format: KEY=value",
+		},
 	},
 }
 
@@ -41,11 +45,13 @@ func buildStart(c *cli.Context) (err error) {
 		return err
 	}
 
+	params := parseKVPairs(c.StringSlice("param"))
+
 	var build *model.Build
 	if c.Bool("fork") {
-		build, err = client.BuildFork(owner, name, number)
+		build, err = client.BuildFork(owner, name, number, params)
 	} else {
-		build, err = client.BuildStart(owner, name, number)
+		build, err = client.BuildStart(owner, name, number, params)
 	}
 	if err != nil {
 		return err

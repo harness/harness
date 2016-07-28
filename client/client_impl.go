@@ -217,9 +217,10 @@ func (c *client) BuildQueue() ([]*model.Feed, error) {
 }
 
 // BuildStart re-starts a stopped build.
-func (c *client) BuildStart(owner, name string, num int) (*model.Build, error) {
+func (c *client) BuildStart(owner, name string, num int, params map[string]string) (*model.Build, error) {
 	out := new(model.Build)
-	uri := fmt.Sprintf(pathBuild, c.base, owner, name, num)
+	val := parseToQueryParams(params)
+	uri := fmt.Sprintf(pathBuild+"?"+val.Encode(), c.base, owner, name, num)
 	err := c.post(uri, nil, out)
 	return out, err
 }
@@ -233,9 +234,11 @@ func (c *client) BuildStop(owner, name string, num, job int) error {
 
 // BuildFork re-starts a stopped build with a new build number,
 // preserving the prior history.
-func (c *client) BuildFork(owner, name string, num int) (*model.Build, error) {
+func (c *client) BuildFork(owner, name string, num int, params map[string]string) (*model.Build, error) {
 	out := new(model.Build)
-	uri := fmt.Sprintf(pathBuild+"?fork=true", c.base, owner, name, num)
+	val := parseToQueryParams(params)
+	val.Set("fork", "true")
+	uri := fmt.Sprintf(pathBuild+"?"+val.Encode(), c.base, owner, name, num)
 	err := c.post(uri, nil, out)
 	return out, err
 }
@@ -248,9 +251,9 @@ func (c *client) BuildLogs(owner, name string, num, job int) (io.ReadCloser, err
 
 // Deploy triggers a deployment for an existing build using the
 // specified target environment.
-func (c *client) Deploy(owner, name string, num int, env string) (*model.Build, error) {
+func (c *client) Deploy(owner, name string, num int, env string, params map[string]string) (*model.Build, error) {
 	out := new(model.Build)
-	val := url.Values{}
+	val := parseToQueryParams(params)
 	val.Set("fork", "true")
 	val.Set("event", "deployment")
 	val.Set("deploy_to", env)
@@ -522,4 +525,13 @@ func (c *client) createRequest(rawurl, method string, in interface{}) (*http.Req
 		req.Header.Set("Content-Type", "application/json")
 	}
 	return req, nil
+}
+
+// parseToQueryParams parses a map of strings and returns url.Values
+func parseToQueryParams(p map[string]string) url.Values {
+	values := url.Values{}
+	for k, v := range p {
+		values.Add(k, v)
+	}
+	return values
 }
