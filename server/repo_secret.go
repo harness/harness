@@ -19,7 +19,7 @@ func GetSecrets(c *gin.Context) {
 		return
 	}
 
-	var list []*model.Secret
+	var list []*model.RepoSecret
 
 	for _, s := range secrets {
 		list = append(list, s.Clone())
@@ -28,19 +28,10 @@ func GetSecrets(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
-func GetTeamSecrets(c *gin.Context) {
-	var (
-		list []*model.Secret
-	)
-
-	// TODO(must): Integrate a real implementation
-	c.JSON(http.StatusOK, list)
-}
-
 func PostSecret(c *gin.Context) {
 	repo := session.Repo(c)
 
-	in := &model.Secret{}
+	in := &model.RepoSecret{}
 	err := c.Bind(in)
 	if err != nil {
 		c.String(http.StatusBadRequest, "Invalid JSON input. %s", err.Error())
@@ -56,11 +47,6 @@ func PostSecret(c *gin.Context) {
 	}
 
 	c.String(http.StatusOK, "")
-}
-
-func PostTeamSecret(c *gin.Context) {
-	c.String(http.StatusOK, "")
-	// TODO(must): Integrate a real implementation
 }
 
 func DeleteSecret(c *gin.Context) {
@@ -79,9 +65,4 @@ func DeleteSecret(c *gin.Context) {
 	}
 
 	c.String(http.StatusOK, "")
-}
-
-func DeleteTeamSecret(c *gin.Context) {
-	c.String(http.StatusOK, "")
-	// TODO(must): Integrate a real implementation
 }
