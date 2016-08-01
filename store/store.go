@@ -82,9 +82,6 @@ type Store interface {
 	// DeleteTeamSecret deletes the named team secret.
 	DeleteTeamSecret(*model.TeamSecret) error
 
-	// GetMergedSecretList gets a list of repo and team secrets
-	GetMergedSecretList(*model.Repo) ([]*model.Secret, error)
-
 	// GetBuild gets a build by unique ID.
 	GetBuild(int64) (*model.Build, error)
 
@@ -250,7 +247,31 @@ func DeleteTeamSecret(c context.Context, s *model.TeamSecret) error {
 }
 
 func GetMergedSecretList(c context.Context, r *model.Repo) ([]*model.Secret, error) {
-	return FromContext(c).GetMergedSecretList(r)
+	var (
+		secrets []*model.Secret
+	)
+
+	repoSecs, err := FromContext(c).GetSecretList(r)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, secret := range repoSecs {
+		secrets = append(secrets, secret.Secret())
+	}
+
+	teamSecs, err := FromContext(c).GetTeamSecretList(r.Owner)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, secret := range teamSecs {
+		secrets = append(secrets, secret.Secret())
+	}
+
+	return secrets, nil
 }
 
 func GetBuild(c context.Context, id int64) (*model.Build, error) {
