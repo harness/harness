@@ -64,7 +64,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 
 	teams := e.Group("/api/teams")
 	{
-		// TODO: Restrict access
+		user.Use(session.MustTeamAdmin())
 
 		team := teams.Group("/:team")
 		{
