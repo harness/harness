@@ -124,6 +124,16 @@ var serverCmd = cli.Command{
 				"read:org",
 			},
 		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GITHUB_GIT_USERNAME",
+			Name:   "github-git-username",
+			Usage:  "github machine user username",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GITHUB_GIT_PASSWORD",
+			Name:   "github-git-password",
+			Usage:  "github machine user password",
+		},
 		cli.BoolTFlag{
 			EnvVar: "DRONE_GITHUB_MERGE_REF",
 			Name:   "github-merge-ref",
