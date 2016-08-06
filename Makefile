@@ -1,4 +1,4 @@
-.PHONY: vendor docs build release
+.PHONY: build
 
 PACKAGES = $(shell go list ./... | grep -v /vendor/)
 
