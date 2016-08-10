@@ -42,6 +42,7 @@ func main() {
 		signCmd,
 		repoCmd,
 		userCmd,
+		orgCmd,
 	}
 
 	app.Run(os.Args)

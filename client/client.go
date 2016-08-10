@@ -61,6 +61,15 @@ type Client interface {
 	// SecretDel deletes a named repository secret.
 	SecretDel(string, string, string) error
 
+	// TeamSecretList returns a list of all team secrets.
+	TeamSecretList(string) ([]*model.Secret, error)
+
+	// TeamSecretPost create or updates a team secret.
+	TeamSecretPost(string, *model.Secret) error
+
+	// TeamSecretDel deletes a named team secret.
+	TeamSecretDel(string, string) error
+
 	// Build returns a repository build by number.
 	Build(string, string, int) (*model.Build, error)
 

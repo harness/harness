@@ -59,16 +59,28 @@ type Store interface {
 	DeleteRepo(*model.Repo) error
 
 	// GetSecretList gets a list of repository secrets
-	GetSecretList(*model.Repo) ([]*model.Secret, error)
+	GetSecretList(*model.Repo) ([]*model.RepoSecret, error)
 
 	// GetSecret gets the named repository secret.
-	GetSecret(*model.Repo, string) (*model.Secret, error)
+	GetSecret(*model.Repo, string) (*model.RepoSecret, error)
 
 	// SetSecret sets the named repository secret.
-	SetSecret(*model.Secret) error
+	SetSecret(*model.RepoSecret) error
 
 	// DeleteSecret deletes the named repository secret.
-	DeleteSecret(*model.Secret) error
+	DeleteSecret(*model.RepoSecret) error
+
+	// GetTeamSecretList gets a list of team secrets
+	GetTeamSecretList(string) ([]*model.TeamSecret, error)
+
+	// GetTeamSecret gets the named team secret.
+	GetTeamSecret(string, string) (*model.TeamSecret, error)
+
+	// SetTeamSecret sets the named team secret.
+	SetTeamSecret(*model.TeamSecret) error
+
+	// DeleteTeamSecret deletes the named team secret.
+	DeleteTeamSecret(*model.TeamSecret) error
 
 	// GetBuild gets a build by unique ID.
 	GetBuild(int64) (*model.Build, error)
@@ -202,20 +214,64 @@ func DeleteRepo(c context.Context, repo *model.Repo) error {
 	return FromContext(c).DeleteRepo(repo)
 }
 
-func GetSecretList(c context.Context, r *model.Repo) ([]*model.Secret, error) {
+func GetSecretList(c context.Context, r *model.Repo) ([]*model.RepoSecret, error) {
 	return FromContext(c).GetSecretList(r)
 }
 
-func GetSecret(c context.Context, r *model.Repo, name string) (*model.Secret, error) {
+func GetSecret(c context.Context, r *model.Repo, name string) (*model.RepoSecret, error) {
 	return FromContext(c).GetSecret(r, name)
 }
 
-func SetSecret(c context.Context, s *model.Secret) error {
+func SetSecret(c context.Context, s *model.RepoSecret) error {
 	return FromContext(c).SetSecret(s)
 }
 
-func DeleteSecret(c context.Context, s *model.Secret) error {
+func DeleteSecret(c context.Context, s *model.RepoSecret) error {
 	return FromContext(c).DeleteSecret(s)
+}
+
+func GetTeamSecretList(c context.Context, team string) ([]*model.TeamSecret, error) {
+	return FromContext(c).GetTeamSecretList(team)
+}
+
+func GetTeamSecret(c context.Context, team, name string) (*model.TeamSecret, error) {
+	return FromContext(c).GetTeamSecret(team, name)
+}
+
+func SetTeamSecret(c context.Context, s *model.TeamSecret) error {
+	return FromContext(c).SetTeamSecret(s)
+}
+
+func DeleteTeamSecret(c context.Context, s *model.TeamSecret) error {
+	return FromContext(c).DeleteTeamSecret(s)
+}
+
+func GetMergedSecretList(c context.Context, r *model.Repo) ([]*model.Secret, error) {
+	var (
+		secrets []*model.Secret
+	)
+
+	repoSecs, err := FromContext(c).GetSecretList(r)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, secret := range repoSecs {
+		secrets = append(secrets, secret.Secret())
+	}
+
+	teamSecs, err := FromContext(c).GetTeamSecretList(r.Owner)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, secret := range teamSecs {
+		secrets = append(secrets, secret.Secret())
+	}
+
+	return secrets, nil
 }
 
 func GetBuild(c context.Context, id int64) (*model.Build, error) {

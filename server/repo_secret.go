@@ -19,7 +19,7 @@ func GetSecrets(c *gin.Context) {
 		return
 	}
 
-	var list []*model.Secret
+	var list []*model.RepoSecret
 
 	for _, s := range secrets {
 		list = append(list, s.Clone())
@@ -31,7 +31,7 @@ func GetSecrets(c *gin.Context) {
 func PostSecret(c *gin.Context) {
 	repo := session.Repo(c)
 
-	in := &model.Secret{}
+	in := &model.RepoSecret{}
 	err := c.Bind(in)
 	if err != nil {
 		c.String(http.StatusBadRequest, "Invalid JSON input. %s", err.Error())
