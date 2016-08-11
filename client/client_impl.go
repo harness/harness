@@ -28,26 +28,28 @@ const (
 	pathLogs     = "%s/api/queue/logs/%d"
 	pathLogsAuth = "%s/api/queue/logs/%d?access_token=%s"
 
-	pathSelf       = "%s/api/user"
-	pathFeed       = "%s/api/user/feed"
-	pathRepos      = "%s/api/user/repos"
-	pathRepo       = "%s/api/repos/%s/%s"
-	pathChown      = "%s/api/repos/%s/%s/chown"
-	pathEncrypt    = "%s/api/repos/%s/%s/encrypt"
-	pathBuilds     = "%s/api/repos/%s/%s/builds"
-	pathBuild      = "%s/api/repos/%s/%s/builds/%v"
-	pathJob        = "%s/api/repos/%s/%s/builds/%d/%d"
-	pathLog        = "%s/api/repos/%s/%s/logs/%d/%d"
-	pathKey        = "%s/api/repos/%s/%s/key"
-	pathSign       = "%s/api/repos/%s/%s/sign"
-	pathSecrets    = "%s/api/repos/%s/%s/secrets"
-	pathSecret     = "%s/api/repos/%s/%s/secrets/%s"
-	pathNodes      = "%s/api/nodes"
-	pathNode       = "%s/api/nodes/%d"
-	pathUsers      = "%s/api/users"
-	pathUser       = "%s/api/users/%s"
-	pathBuildQueue = "%s/api/builds"
-	pathAgent      = "%s/api/agents"
+	pathSelf        = "%s/api/user"
+	pathFeed        = "%s/api/user/feed"
+	pathRepos       = "%s/api/user/repos"
+	pathRepo        = "%s/api/repos/%s/%s"
+	pathChown       = "%s/api/repos/%s/%s/chown"
+	pathEncrypt     = "%s/api/repos/%s/%s/encrypt"
+	pathBuilds      = "%s/api/repos/%s/%s/builds"
+	pathBuild       = "%s/api/repos/%s/%s/builds/%v"
+	pathJob         = "%s/api/repos/%s/%s/builds/%d/%d"
+	pathLog         = "%s/api/repos/%s/%s/logs/%d/%d"
+	pathKey         = "%s/api/repos/%s/%s/key"
+	pathSign        = "%s/api/repos/%s/%s/sign"
+	pathRepoSecrets = "%s/api/repos/%s/%s/secrets"
+	pathRepoSecret  = "%s/api/repos/%s/%s/secrets/%s"
+	pathTeamSecrets = "%s/api/teams/%s/secrets"
+	pathTeamSecret  = "%s/api/teams/%s/secrets/%s"
+	pathNodes       = "%s/api/nodes"
+	pathNode        = "%s/api/nodes/%d"
+	pathUsers       = "%s/api/users"
+	pathUser        = "%s/api/users/%s"
+	pathBuildQueue  = "%s/api/builds"
+	pathAgent       = "%s/api/agents"
 )
 
 type client struct {
@@ -78,7 +80,7 @@ func NewClientTokenTLS(uri, token string, c *tls.Config) Client {
 		if trans, ok := auther.Transport.(*oauth2.Transport); ok {
 			trans.Base = &http.Transport{
 				TLSClientConfig: c,
-				Proxy: http.ProxyFromEnvironment,
+				Proxy:           http.ProxyFromEnvironment,
 			}
 		}
 	}
@@ -265,20 +267,40 @@ func (c *client) Deploy(owner, name string, num int, env string, params map[stri
 // SecretList returns a list of a repository secrets.
 func (c *client) SecretList(owner, name string) ([]*model.Secret, error) {
 	var out []*model.Secret
-	uri := fmt.Sprintf(pathSecrets, c.base, owner, name)
+	uri := fmt.Sprintf(pathRepoSecrets, c.base, owner, name)
 	err := c.get(uri, &out)
 	return out, err
 }
 
 // SecretPost create or updates a repository secret.
 func (c *client) SecretPost(owner, name string, secret *model.Secret) error {
-	uri := fmt.Sprintf(pathSecrets, c.base, owner, name)
+	uri := fmt.Sprintf(pathRepoSecrets, c.base, owner, name)
 	return c.post(uri, secret, nil)
 }
 
 // SecretDel deletes a named repository secret.
 func (c *client) SecretDel(owner, name, secret string) error {
-	uri := fmt.Sprintf(pathSecret, c.base, owner, name, secret)
+	uri := fmt.Sprintf(pathRepoSecret, c.base, owner, name, secret)
+	return c.delete(uri)
+}
+
+// TeamSecretList returns a list of a repository secrets.
+func (c *client) TeamSecretList(team string) ([]*model.Secret, error) {
+	var out []*model.Secret
+	uri := fmt.Sprintf(pathTeamSecrets, c.base, team)
+	err := c.get(uri, &out)
+	return out, err
+}
+
+// TeamSecretPost create or updates a repository secret.
+func (c *client) TeamSecretPost(team string, secret *model.Secret) error {
+	uri := fmt.Sprintf(pathTeamSecrets, c.base, team)
+	return c.post(uri, secret, nil)
+}
+
+// TeamSecretDel deletes a named repository secret.
+func (c *client) TeamSecretDel(team, secret string) error {
+	uri := fmt.Sprintf(pathTeamSecret, c.base, team, secret)
 	return c.delete(uri)
 }
 

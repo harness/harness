@@ -10,6 +10,7 @@ import (
 	"github.com/mrjones/oauth"
 	"net/url"
 	"strings"
+	"time"
 )
 
 // convertRepo is a helper function used to convert a Bitbucket server repository
@@ -60,7 +61,7 @@ func convertRepoLite(from *internal.Repo) *model.RepoLite {
 
 // convertPushHook is a helper function used to convert a Bitbucket push
 // hook to the Drone build struct holding commit information.
-func convertPushHook(hook *internal.PostHook) *model.Build {
+func convertPushHook(hook *internal.PostHook, baseURL string) *model.Build {
 	//get the ref parts to see if it's a tags or heads
 	refParts := strings.Split(hook.RefChanges[0].RefID, "/")
 	name := refParts[2]
@@ -69,12 +70,14 @@ func convertPushHook(hook *internal.PostHook) *model.Build {
 	build := &model.Build{
 		Commit: hook.RefChanges[0].ToHash, // TODO check for index value
 		//Link: TODO find link
-		Branch:  name,
-		Message: hook.Changesets.Values[0].ToCommit.Message, //TODO check for index Values
-		Avatar:  avatarLink(hook.Changesets.Values[0].ToCommit.Author.EmailAddress),
-		Author:  hook.Changesets.Values[0].ToCommit.Author.EmailAddress, // TODO check for index Values
-		//Timestamp: TODO find time parsing
-		Ref: hook.RefChanges[0].RefID, // TODO check for index Values
+		Branch:    name,
+		Message:   hook.Changesets.Values[0].ToCommit.Message, //TODO check for index Values
+		Avatar:    avatarLink(hook.Changesets.Values[0].ToCommit.Author.EmailAddress),
+		Author:    fmt.Sprintf("%s <%s>", hook.Changesets.Values[0].ToCommit.Author.Name, hook.Changesets.Values[0].ToCommit.Author.EmailAddress),
+		Email:     hook.Changesets.Values[0].ToCommit.Author.EmailAddress,
+		Timestamp: time.Now().UTC().Unix(),
+		Ref:       hook.RefChanges[0].RefID, // TODO check for index Values
+		Link:      fmt.Sprintf("%s/projects/%s/repos/%s/commits/%s", baseURL, hook.Repository.Project.Key, hook.Repository.Slug, hook.RefChanges[0].ToHash),
 	}
 	switch commitType {
 	case "tags":

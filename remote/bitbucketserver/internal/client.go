@@ -17,7 +17,7 @@ const (
 	pathRepo        = "%s/rest/api/1.0/projects/%s/repos/%s"
 	pathRepos       = "%s/rest/api/1.0/repos?limit=%s"
 	pathHook        = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s"
-	pathSource      = "%s/projects/%s/repos/%s/browse/%s?raw"
+	pathSource      = "%s/projects/%s/repos/%s/browse/%s?at=%s&raw"
 	hookName        = "com.atlassian.stash.plugin.stash-web-post-receive-hooks-plugin:postReceiveHook"
 	pathHookEnabled = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s/enabled"
 )
@@ -128,8 +128,8 @@ func (c *Client) FindRepoPerms(owner string, repo string) (*model.Perm, error) {
 	return perms, nil
 }
 
-func (c *Client) FindFileForRepo(owner string, repo string, fileName string) ([]byte, error) {
-	response, err := c.client.Get(fmt.Sprintf(pathSource, c.base, owner, repo, fileName))
+func (c *Client) FindFileForRepo(owner string, repo string, fileName string, ref string) ([]byte, error) {
+	response, err := c.client.Get(fmt.Sprintf(pathSource, c.base, owner, repo, fileName, ref))
 	if err != nil {
 		log.Error(err)
 	}

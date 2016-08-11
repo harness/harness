@@ -145,7 +145,7 @@ func (c *Config) Perm(u *model.User, owner, repo string) (*model.Perm, error) {
 func (c *Config) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
 	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
 
-	return client.FindFileForRepo(r.Owner, r.Name, f)
+	return client.FindFileForRepo(r.Owner, r.Name, f, b.Ref)
 }
 
 // Status is not supported by the bitbucketserver driver.
@@ -184,7 +184,7 @@ func (c *Config) Deactivate(u *model.User, r *model.Repo, link string) error {
 }
 
 func (c *Config) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
-	return parseHook(r)
+	return parseHook(r, c.URL)
 }
 
 func CreateConsumer(URL string, ConsumerKey string, PrivateKey *rsa.PrivateKey) *oauth.Consumer {

@@ -62,6 +62,18 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		users.DELETE("/:login", server.DeleteUser)
 	}
 
+	teams := e.Group("/api/teams")
+	{
+		user.Use(session.MustTeamAdmin())
+
+		team := teams.Group("/:team")
+		{
+			team.GET("/secrets", server.GetTeamSecrets)
+			team.POST("/secrets", server.PostTeamSecret)
+			team.DELETE("/secrets/:secret", server.DeleteTeamSecret)
+		}
+	}
+
 	repos := e.Group("/api/repos/:owner/:name")
 	{
 		repos.POST("", server.PostRepo)

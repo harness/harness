@@ -1,27 +1,23 @@
 package model
 
-import "path/filepath"
+import (
+	"path/filepath"
+)
 
 type Secret struct {
-	// the id for this secret.
-	ID int64 `json:"id" meddler:"secret_id,pk"`
-
-	// the foreign key for this secret.
-	RepoID int64 `json:"-" meddler:"secret_repo_id"`
-
 	// the name of the secret which will be used as the environment variable
 	// name at runtime.
-	Name string `json:"name" meddler:"secret_name"`
+	Name string `json:"name"`
 
 	// the value of the secret which will be provided to the runtime environment
 	// as a named environment variable.
-	Value string `json:"value" meddler:"secret_value"`
+	Value string `json:"value"`
 
 	// the secret is restricted to this list of images.
-	Images []string `json:"image,omitempty" meddler:"secret_images,json"`
+	Images []string `json:"image,omitempty"`
 
 	// the secret is restricted to this list of events.
-	Events []string `json:"event,omitempty" meddler:"secret_events,json"`
+	Events []string `json:"event,omitempty"`
 }
 
 // Match returns true if an image and event match the restricted list.
@@ -54,13 +50,4 @@ func (s *Secret) MatchEvent(event string) bool {
 // Validate validates the required fields and formats.
 func (s *Secret) Validate() error {
 	return nil
-}
-
-func (s *Secret) Clone() *Secret {
-	return &Secret{
-		ID:     s.ID,
-		Name:   s.Name,
-		Images: s.Images,
-		Events: s.Events,
-	}
 }
