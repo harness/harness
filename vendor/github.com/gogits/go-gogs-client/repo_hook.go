@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 )
@@ -47,8 +46,7 @@ func (c *Client) CreateRepoHook(user, repo string, opt CreateHookOption) (*Hook,
 		return nil, err
 	}
 	h := new(Hook)
-	return h, c.getParsedResponse("POST", fmt.Sprintf("/repos/%s/%s/hooks", user, repo),
-		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body), h)
+	return h, c.getParsedResponse("POST", fmt.Sprintf("/repos/%s/%s/hooks", user, repo), jsonHeader, bytes.NewReader(body), h)
 }
 
 type EditHookOption struct {
@@ -62,8 +60,12 @@ func (c *Client) EditRepoHook(user, repo string, id int64, opt EditHookOption) e
 	if err != nil {
 		return err
 	}
-	_, err = c.getResponse("PATCH", fmt.Sprintf("/repos/%s/%s/hooks/%d", user, repo, id),
-		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body))
+	_, err = c.getResponse("PATCH", fmt.Sprintf("/repos/%s/%s/hooks/%d", user, repo, id), jsonHeader, bytes.NewReader(body))
+	return err
+}
+
+func (c *Client) DeleteRepoHook(user, repo string, id int64) error {
+	_, err := c.getResponse("DELETE", fmt.Sprintf("/repos/%s/%s/hooks/%d", user, repo, id), nil, nil)
 	return err
 }
 
@@ -78,6 +80,12 @@ type PayloadAuthor struct {
 	UserName string `json:"username"`
 }
 
+type PayloadCommitter struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	UserName string `json:"username"`
+}
+
 type PayloadUser struct {
 	UserName  string `json:"login"`
 	ID        int64  `json:"id"`
@@ -85,10 +93,12 @@ type PayloadUser struct {
 }
 
 type PayloadCommit struct {
-	ID      string         `json:"id"`
-	Message string         `json:"message"`
-	URL     string         `json:"url"`
-	Author  *PayloadAuthor `json:"author"`
+	ID        string            `json:"id"`
+	Message   string            `json:"message"`
+	URL       string            `json:"url"`
+	Author    *PayloadAuthor    `json:"author"`
+	Committer *PayloadCommitter `json:"committer"`
+	Timestamp time.Time         `json:"timestamp"`
 }
 
 type PayloadRepo struct {
@@ -104,6 +114,11 @@ type PayloadRepo struct {
 	Private       bool           `json:"private"`
 	DefaultBranch string         `json:"default_branch"`
 }
+
+var (
+	_ Payloader = &CreatePayload{}
+	_ Payloader = &PushPayload{}
+)
 
 // _________                        __
 // \_   ___ \_______   ____ _____ _/  |_  ____

@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 )
 
 type Organization struct {
@@ -36,6 +35,14 @@ func (c *Client) GetOrg(orgname string) (*Organization, error) {
 	return org, c.getParsedResponse("GET", fmt.Sprintf("/orgs/%s", orgname), nil, nil, org)
 }
 
+type CreateOrgOption struct {
+	UserName    string `json:"username" binding:"Required"`
+	FullName    string `json:"full_name"`
+	Description string `json:"description"`
+	Website     string `json:"website"`
+	Location    string `json:"location"`
+}
+
 type EditOrgOption struct {
 	FullName    string `json:"full_name"`
 	Description string `json:"description"`
@@ -48,7 +55,6 @@ func (c *Client) EditOrg(orgname string, opt EditOrgOption) error {
 	if err != nil {
 		return err
 	}
-	_, err = c.getResponse("PATCH", fmt.Sprintf("/orgs/%s", orgname),
-		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body))
+	_, err = c.getResponse("PATCH", fmt.Sprintf("/orgs/%s", orgname), jsonHeader, bytes.NewReader(body))
 	return err
 }

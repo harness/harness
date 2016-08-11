@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 )
 
@@ -42,8 +41,7 @@ func (c *Client) CreateDeployKey(user, repo string, opt CreateKeyOption) (*Deplo
 		return nil, err
 	}
 	key := new(DeployKey)
-	return key, c.getParsedResponse("POST", fmt.Sprintf("/repos/%s/%s/keys", user, repo),
-		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body), key)
+	return key, c.getParsedResponse("POST", fmt.Sprintf("/repos/%s/%s/keys", user, repo), jsonHeader, bytes.NewReader(body), key)
 }
 
 func (c *Client) DeleteDeployKey(owner, repo string, keyID int64) error {
