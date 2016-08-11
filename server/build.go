@@ -252,7 +252,7 @@ func PostBuild(c *gin.Context) {
 	var buildParams = map[string]string{}
 	for key, val := range c.Request.URL.Query() {
 		switch key {
-		case "fork", "event", "deply_to":
+		case "fork", "event", "deploy_to":
 		default:
 			// We only accept string literals, because build parameters will be
 			// injected as environment variables
