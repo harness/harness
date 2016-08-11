@@ -218,7 +218,7 @@ func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 	log.Info(fmt.Sprintf("Staring file for bitbucketServer login: %s repo: %s buildevent: %s string: %s", u.Login, r.Name, b.Event, f))
 
 	client := NewClientWithToken(&c.Consumer, u.Token)
-	fileURL := fmt.Sprintf("%s/projects/%s/repos/%s/browse/%s?raw", c.URL, r.Owner, r.Name, f)
+	fileURL := fmt.Sprintf("%s/projects/%s/repos/%s/browse/%s?at=%s&raw", c.URL, r.Owner, r.Name, f, b.Ref)
 	log.Info(fileURL)
 	response, err := client.Get(fileURL)
 	if err != nil {
