@@ -18,7 +18,10 @@ import (
 	"github.com/drone/drone/remote"
 	"github.com/mrjones/oauth"
 	"strings"
+	"time"
 )
+
+const defaultBranch = "master"
 
 // Opts defines configuration options.
 type Opts struct {
@@ -215,7 +218,7 @@ func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 	log.Info(fmt.Sprintf("Staring file for bitbucketServer login: %s repo: %s buildevent: %s string: %s", u.Login, r.Name, b.Event, f))
 
 	client := NewClientWithToken(&c.Consumer, u.Token)
-	fileURL := fmt.Sprintf("%s/projects/%s/repos/%s/browse/%s?raw", c.URL, r.Owner, r.Name, f)
+	fileURL := fmt.Sprintf("%s/projects/%s/repos/%s/browse/%s?at=%s&raw", c.URL, r.Owner, r.Name, f, b.Ref)
 	log.Info(fileURL)
 	response, err := client.Get(fileURL)
 	if err != nil {
@@ -283,18 +286,23 @@ func (c *client) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 	}
 
 	build := &model.Build{
-		Event:  model.EventPush,
-		Ref:    hook.RefChanges[0].RefID,                               // TODO check for index Values
-		Author: hook.Changesets.Values[0].ToCommit.Author.EmailAddress, // TODO check for index Values
-		Commit: hook.RefChanges[0].ToHash,                              // TODO check for index value
-		Avatar: avatarLink(hook.Changesets.Values[0].ToCommit.Author.EmailAddress),
+		Event:     model.EventPush,
+		Ref:       hook.RefChanges[0].RefID,
+		Author:    fmt.Sprintf("%s <%s>", hook.Changesets.Values[0].ToCommit.Author.Name, hook.Changesets.Values[0].ToCommit.Author.EmailAddress),
+		Commit:    hook.RefChanges[0].ToHash,
+		Avatar:    avatarLink(hook.Changesets.Values[0].ToCommit.Author.EmailAddress),
+		Email:     hook.Changesets.Values[0].ToCommit.Author.EmailAddress,
+		Link:      fmt.Sprintf("%s/projects/%s/repos/%s/commits/%s", c.URL, hook.Repository.Project.Key, hook.Repository.Slug, hook.RefChanges[0].ToHash),
+		Message:   hook.Changesets.Values[0].ToCommit.Message,
+		Branch:    strings.Replace(hook.RefChanges[0].RefID, "refs/heads/", "", -1),
+		Timestamp: time.Now().UTC().Unix(),
 	}
 
 	repo := &model.Repo{
 		Name:     hook.Repository.Slug,
 		Owner:    hook.Repository.Project.Key,
 		FullName: fmt.Sprintf("%s/%s", hook.Repository.Project.Key, hook.Repository.Slug),
-		Branch:   "master",
+		Branch:   defaultBranch,
 		Kind:     model.RepoGit,
 	}
 
