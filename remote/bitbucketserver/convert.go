@@ -69,9 +69,9 @@ func convertPushHook(hook *internal.PostHook, baseURL string) *model.Build {
 
 
 	//Ensuring the author label is not longer then 40 for the label of the commit author (default size in the db)
-	authorLabel := fmt.Sprintf("%s <%s>", hook.Changesets.Values[0].ToCommit.Author.Name, hook.Changesets.Values[0].ToCommit.Author.EmailAddress)
+	authorLabel := hook.Changesets.Values[0].ToCommit.Author.Name
 	if (len(authorLabel) > 40) {
-		authorLabel = fmt.Sprintf("%s", authorLabel[0:40])
+		authorLabel = authorLabel[0:40]
 	}
 
 	build := &model.Build{
