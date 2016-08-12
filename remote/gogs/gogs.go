@@ -224,7 +224,10 @@ func (c *client) Deactivate(u *model.User, r *model.Repo, link string) error {
 		return nil
 	}
 	if match != nil {
-		return client.DeleteRepoHook(r.Owner, r.Name, match.ID)
+
+		err := client.DeleteRepoHook(r.Owner, r.Name, match.ID)
+		fmt.Println(err)
+		return err
 	}
 	return nil
 }
