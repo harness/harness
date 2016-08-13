@@ -27,6 +27,7 @@ type Container struct {
 	Privileged     bool
 	WorkingDir     string
 	Environment    map[string]string
+	Labels         map[string]string
 	Entrypoint     []string
 	Command        []string
 	Commands       []string
@@ -61,6 +62,7 @@ type container struct {
 	Pull           bool                `yaml:"pull"`
 	Privileged     bool                `yaml:"privileged"`
 	Environment    types.MapEqualSlice `yaml:"environment"`
+	Labels         types.MapEqualSlice `yaml:"labels"`
 	Entrypoint     types.StringOrSlice `yaml:"entrypoint"`
 	Command        types.StringOrSlice `yaml:"command"`
 	Commands       types.StringOrSlice `yaml:"commands"`
@@ -129,6 +131,7 @@ func (c *containerList) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			Pull:           cc.Pull,
 			Privileged:     cc.Privileged,
 			Environment:    cc.Environment.Map(),
+			Labels:         cc.Labels.Map(),
 			Entrypoint:     cc.Entrypoint.Slice(),
 			Command:        cc.Command.Slice(),
 			Commands:       cc.Commands.Slice(),

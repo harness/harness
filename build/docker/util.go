@@ -14,6 +14,7 @@ func toContainerConfig(c *yaml.Container) *dockerclient.ContainerConfig {
 	config := &dockerclient.ContainerConfig{
 		Image:      c.Image,
 		Env:        toEnvironmentSlice(c.Environment),
+		Labels:     c.Labels,
 		Cmd:        c.Command,
 		Entrypoint: c.Entrypoint,
 		WorkingDir: c.WorkingDir,
