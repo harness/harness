@@ -138,7 +138,6 @@ func (a *Agent) prep(w *queue.Work) (*yaml.Config, error) {
 	}
 
 	transform.Clone(conf, w.Repo.Kind)
-	transform.Labels(conf)
 	transform.Environ(conf, envs)
 	transform.DefaultFilter(conf)
 	if w.BuildLast != nil {
