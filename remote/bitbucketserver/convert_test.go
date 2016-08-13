@@ -1,19 +1,17 @@
 package bitbucketserver
 
-
 import (
-	"testing"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote/bitbucketserver/internal"
 	"github.com/franela/goblin"
 	"github.com/mrjones/oauth"
+	"testing"
 )
 
 func Test_helper(t *testing.T) {
 
 	g := goblin.Goblin(t)
 	g.Describe("Bitbucket Server converter", func() {
-
 
 		g.It("should convert repository lite", func() {
 			from := &internal.Repo{}
@@ -25,7 +23,6 @@ func Test_helper(t *testing.T) {
 			g.Assert(to.Owner).Equal("octocat")
 			g.Assert(to.Name).Equal("hello-world")
 		})
-
 
 		g.It("should convert repository", func() {
 			from := &internal.Repo{
@@ -62,7 +59,7 @@ func Test_helper(t *testing.T) {
 				Token: "foo",
 			}
 			user := &internal.User{
-				Slug: "x12f",
+				Slug:         "x12f",
 				EmailAddress: "huh@huh.com",
 			}
 
@@ -72,18 +69,16 @@ func Test_helper(t *testing.T) {
 			g.Assert(result.Token).Equal("foo")
 		})
 
-
-
 		g.It("should convert push hook to build", func() {
 			change := internal.PostHook{}
 
 			change.RefChanges = append(change.RefChanges, internal.RefChange{
-				RefID: "refs/heads/master",
+				RefID:  "refs/heads/master",
 				ToHash: "73f9c44d",
 			})
 
 			value := internal.Value{}
-			value.ToCommit.Author.Name = "John Doe"
+			value.ToCommit.Author.Name = "John Doe, Appleboy, Mary, Janet E. Dawson and Ann S. Palmer"
 			value.ToCommit.Author.EmailAddress = "huh@huh.com"
 			value.ToCommit.Message = "message"
 
@@ -94,7 +89,8 @@ func Test_helper(t *testing.T) {
 
 			build := convertPushHook(&change, "http://base.com")
 			g.Assert(build.Event).Equal(model.EventPush)
-			g.Assert(build.Author).Equal("John Doe")
+			// Ensuring the author label is not longer then 40
+			g.Assert(build.Author).Equal("John Doe, Appleboy, Mary, Janet E. Da...")
 			g.Assert(build.Avatar).Equal(avatarLink("huh@huh.com"))
 			g.Assert(build.Commit).Equal("73f9c44d")
 			g.Assert(build.Branch).Equal("master")
@@ -106,7 +102,7 @@ func Test_helper(t *testing.T) {
 		g.It("should convert tag hook to build", func() {
 			change := internal.PostHook{}
 			change.RefChanges = append(change.RefChanges, internal.RefChange{
-				RefID: "refs/tags/v1",
+				RefID:  "refs/tags/v1",
 				ToHash: "73f9c44d",
 			})
 
