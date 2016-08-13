@@ -67,15 +67,14 @@ func convertPushHook(hook *internal.PostHook, baseURL string) *model.Build {
 	name := refParts[2]
 	commitType := refParts[1]
 
-
 	//Ensuring the author label is not longer then 40 for the label of the commit author (default size in the db)
 	authorLabel := hook.Changesets.Values[0].ToCommit.Author.Name
-	if (len(authorLabel) > 40) {
-		authorLabel = authorLabel[0:40]
+	if len(authorLabel) > 40 {
+		authorLabel = authorLabel[0:37] + "..."
 	}
 
 	build := &model.Build{
-		Commit: hook.RefChanges[0].ToHash, // TODO check for index value
+		Commit:    hook.RefChanges[0].ToHash, // TODO check for index value
 		Branch:    name,
 		Message:   hook.Changesets.Values[0].ToCommit.Message, //TODO check for index Values
 		Avatar:    avatarLink(hook.Changesets.Values[0].ToCommit.Author.EmailAddress),

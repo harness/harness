@@ -28,8 +28,8 @@ type Repo struct {
 	Forkable bool `json:"forkable"`
 	ID       int  `json:"id"`
 	Links    struct {
-		Clone []CloneLink`json:"clone"`
-		Self []struct {
+		Clone []CloneLink `json:"clone"`
+		Self  []struct {
 			Href string `json:"href"`
 		} `json:"self"`
 	} `json:"links"`
@@ -76,55 +76,54 @@ type HookDetail struct {
 
 type Value struct {
 	Changes struct {
-			Filter     interface{} `json:"filter"`
-			IsLastPage bool        `json:"isLastPage"`
-			Limit      int         `json:"limit"`
-			Size       int         `json:"size"`
-			Start      int         `json:"start"`
-			Values     []struct {
-				ContentID  string `json:"contentId"`
-				Executable bool   `json:"executable"`
-				Link       struct {
-						   Rel string `json:"rel"`
-						   URL string `json:"url"`
-					   } `json:"link"`
-				NodeType string `json:"nodeType"`
-				Path     struct {
-						   Components []string `json:"components"`
-						   Extension  string   `json:"extension"`
-						   Name       string   `json:"name"`
-						   Parent     string   `json:"parent"`
-						   ToString   string   `json:"toString"`
-					   } `json:"path"`
-				PercentUnchanged int    `json:"percentUnchanged"`
-				SrcExecutable    bool   `json:"srcExecutable"`
-				Type             string `json:"type"`
-			} `json:"values"`
-		} `json:"changes"`
+		Filter     interface{} `json:"filter"`
+		IsLastPage bool        `json:"isLastPage"`
+		Limit      int         `json:"limit"`
+		Size       int         `json:"size"`
+		Start      int         `json:"start"`
+		Values     []struct {
+			ContentID  string `json:"contentId"`
+			Executable bool   `json:"executable"`
+			Link       struct {
+				Rel string `json:"rel"`
+				URL string `json:"url"`
+			} `json:"link"`
+			NodeType string `json:"nodeType"`
+			Path     struct {
+				Components []string `json:"components"`
+				Extension  string   `json:"extension"`
+				Name       string   `json:"name"`
+				Parent     string   `json:"parent"`
+				ToString   string   `json:"toString"`
+			} `json:"path"`
+			PercentUnchanged int    `json:"percentUnchanged"`
+			SrcExecutable    bool   `json:"srcExecutable"`
+			Type             string `json:"type"`
+		} `json:"values"`
+	} `json:"changes"`
 	FromCommit struct {
+		DisplayID string `json:"displayId"`
+		ID        string `json:"id"`
+	} `json:"fromCommit"`
+	Link struct {
+		Rel string `json:"rel"`
+		URL string `json:"url"`
+	} `json:"link"`
+	ToCommit struct {
+		Author struct {
+			EmailAddress string `json:"emailAddress"`
+			Name         string `json:"name"`
+		} `json:"author"`
+		AuthorTimestamp int    `json:"authorTimestamp"`
+		DisplayID       string `json:"displayId"`
+		ID              string `json:"id"`
+		Message         string `json:"message"`
+		Parents         []struct {
 			DisplayID string `json:"displayId"`
 			ID        string `json:"id"`
-		} `json:"fromCommit"`
-	Link struct {
-			Rel string `json:"rel"`
-			URL string `json:"url"`
-		} `json:"link"`
-	ToCommit struct {
-			Author struct {
-				       EmailAddress string `json:"emailAddress"`
-				       Name         string `json:"name"`
-			       } `json:"author"`
-			AuthorTimestamp int    `json:"authorTimestamp"`
-			DisplayID       string `json:"displayId"`
-			ID              string `json:"id"`
-			Message         string `json:"message"`
-			Parents         []struct {
-				DisplayID string `json:"displayId"`
-				ID        string `json:"id"`
-			} `json:"parents"`
-		} `json:"toCommit"`
+		} `json:"parents"`
+	} `json:"toCommit"`
 }
-
 
 type PostHook struct {
 	Changesets struct {
@@ -133,7 +132,7 @@ type PostHook struct {
 		Limit      int         `json:"limit"`
 		Size       int         `json:"size"`
 		Start      int         `json:"start"`
-		Values     []Value `json:"values"`
+		Values     []Value     `json:"values"`
 	} `json:"changesets"`
 	RefChanges []RefChange `json:"refChanges"`
 	Repository struct {
@@ -156,7 +155,7 @@ type PostHook struct {
 	} `json:"repository"`
 }
 
-type RefChange  struct {
+type RefChange struct {
 	FromHash string `json:"fromHash"`
 	RefID    string `json:"refId"`
 	ToHash   string `json:"toHash"`
