@@ -13,6 +13,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"strings"
 )
 
 // AgentCmd is the exported command for starting the drone agent.
@@ -157,7 +158,7 @@ func start(c *cli.Context) {
 	)
 
 	client := client.NewClientToken(
-		c.String("drone-server"),
+		strings.TrimRight(c.String("drone-server"),"/"),
 		accessToken,
 	)
 
