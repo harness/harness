@@ -149,8 +149,17 @@ func (c *Config) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 }
 
 // Status is not supported by the bitbucketserver driver.
-func (*Config) Status(*model.User, *model.Repo, *model.Build, string) error {
-	return nil
+func (c *Config) Status(u *model.User,r *model.Repo,b *model.Build,link string) error {
+	status := internal.BuildStatus{
+		State: convertStatus(b.Status),
+		Desc:  convertDesc(b.Status),
+		Key:   "Drone",
+		Url:   link,
+	}
+
+	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
+
+	return client.CreateStatus(b.Commit, &status)
 }
 
 func (c *Config) Netrc(user *model.User, r *model.Repo) (*model.Netrc, error) {
