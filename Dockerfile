@@ -1,4 +1,4 @@
-# docker build --rm=true -t drone/drone .
+# docker build --rm -t drone/drone .
 
 FROM centurylink/ca-certs
 EXPOSE 8000

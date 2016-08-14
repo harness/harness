@@ -158,7 +158,7 @@ func start(c *cli.Context) {
 	)
 
 	client := client.NewClientToken(
-		strings.TrimRight(c.String("drone-server"),"/"),
+		strings.TrimRight(c.String("drone-server"), "/"),
 		accessToken,
 	)
 
