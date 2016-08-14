@@ -19,11 +19,30 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+//Wrap the CloseNotify from gin context and implement the timeout channel
+type closeNotifierTimeout struct {
+	c      *gin.Context
+	config *model.Config
+}
+
+func (cnt closeNotifierTimeout) CloseNotify() <-chan bool {
+	return cnt.c.Writer.CloseNotify()
+}
+
+func (cnt closeNotifierTimeout) Timeout() <-chan time.Time {
+	return time.After(cnt.config.CloseNotifyTimeout)
+}
+
 // Pull is a long request that polls and attemts to pull work off the queue stack.
 func Pull(c *gin.Context) {
 	logrus.Debugf("Agent %s connected.", c.ClientIP())
-
-	w := queue.PullClose(c, c.Writer)
+	config := ToConfig(c)
+	var w *queue.Work
+	if config.EnableCloseNotifyTimeout {
+		w = queue.PullCloseWithTimeout(c, closeNotifierTimeout{c, config})
+	} else {
+		w = queue.PullClose(c, c.Writer)
+	}
 	if w == nil {
 		logrus.Debugf("Agent %s could not pull work.", c.ClientIP())
 	} else {
@@ -53,20 +72,37 @@ func Wait(c *gin.Context) {
 		return
 	}
 
+	config := ToConfig(c)
 	eventc := make(chan *bus.Event, 1)
 
 	bus.Subscribe(c, eventc)
 	defer bus.Unsubscribe(c, eventc)
-
-	for {
-		select {
-		case event := <-eventc:
-			if event.Job.ID == id && event.Type == bus.Cancelled {
-				c.JSON(200, event.Job)
+	if config.EnableCloseNotifyTimeout {
+		for {
+			select {
+			case event := <-eventc:
+				if event.Job.ID == id && event.Type == bus.Cancelled {
+					c.JSON(200, event.Job)
+					return
+				}
+			case <-c.Writer.CloseNotify():
+				return
+			case <-time.After(config.CloseNotifyTimeout):
 				return
 			}
-		case <-c.Writer.CloseNotify():
-			return
+		}
+	} else {
+		for {
+			select {
+			case event := <-eventc:
+				if event.Job.ID == id && event.Type == bus.Cancelled {
+					c.JSON(200, event.Job)
+					return
+				}
+			case <-c.Writer.CloseNotify():
+				return
+			}
+
 		}
 	}
 }

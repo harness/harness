@@ -69,6 +69,17 @@ var serverCmd = cli.Command{
 			Usage:  "cache duration",
 			Value:  time.Minute * 15,
 		},
+		cli.DurationFlag{
+			EnvVar: "DRONE_CLOSE_NOTIFY_TIMEOUT",
+			Name:   "close-notify-timeout",
+			Usage:  "close notify timeout",
+			Value:  time.Second * 50,
+		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_ENABLE_CLOSE_NOTIFY_TIMEOUT",
+			Name:   "enable-close-notify-timeout",
+			Usage:  "enable close notify timeout",
+		},
 		cli.StringFlag{
 			EnvVar: "DRONE_AGENT_SECRET,DRONE_SECRET",
 			Name:   "agent-secret",

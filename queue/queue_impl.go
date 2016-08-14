@@ -1,9 +1,6 @@
 package queue
 
-import (
-	"sync"
-	"time"
-)
+import "sync"
 
 type queue struct {
 	sync.Mutex
@@ -78,7 +75,21 @@ func (q *queue) PullClose(cn CloseNotifier) *Work {
 		select {
 		case <-cn.CloseNotify():
 			return nil
-		case <-time.After(time.Second * 60):
+		case work := <-q.itemc:
+			q.Lock()
+			delete(q.items, work)
+			q.Unlock()
+			return work
+		}
+	}
+}
+
+func (q *queue) PullCloseWithTimeout(cn CloseNotifierTimeout) *Work {
+	for {
+		select {
+		case <-cn.CloseNotify():
+			return nil
+		case <-cn.Timeout():
 			return nil
 		case work := <-q.itemc:
 			q.Lock()
