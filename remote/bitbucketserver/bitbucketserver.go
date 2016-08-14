@@ -153,6 +153,7 @@ func (c *Config) Status(u *model.User,r *model.Repo,b *model.Build,link string) 
 	status := internal.BuildStatus{
 		State: convertStatus(b.Status),
 		Desc:  convertDesc(b.Status),
+		Name:  fmt.Sprintf("Drone #%d - %s", b.Number, b.Branch),
 		Key:   "Drone",
 		Url:   link,
 	}
