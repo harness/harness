@@ -69,3 +69,6 @@ build_sha:
 	sha256sum release/linux/arm/drone.tar.gz     > release/linux/arm/drone.sha256
 	sha256sum release/windows/amd64/drone.tar.gz > release/windows/amd64/drone.sha256
 	sha256sum release/darwin/amd64/drone.tar.gz  > release/darwin/amd64/drone.sha256
+
+docker:
+	docker build --rm -t drone/drone .
