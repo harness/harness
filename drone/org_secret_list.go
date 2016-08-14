@@ -35,7 +35,7 @@ var orgSecretListCmd = cli.Command{
 }
 
 func orgSecretList(c *cli.Context) error {
-	if len(c.Args().Tail()) != 1 {
+	if len(c.Args()) != 1 {
 		cli.ShowSubcommandHelp(c)
 		return nil
 	}
