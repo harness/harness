@@ -73,12 +73,7 @@ var serverCmd = cli.Command{
 			EnvVar: "DRONE_CLOSE_NOTIFY_TIMEOUT",
 			Name:   "close-notify-timeout",
 			Usage:  "close notify timeout",
-			Value:  time.Second * 50,
-		},
-		cli.BoolFlag{
-			EnvVar: "DRONE_ENABLE_CLOSE_NOTIFY_TIMEOUT",
-			Name:   "enable-close-notify-timeout",
-			Usage:  "enable close notify timeout",
+			Value:  0,
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_AGENT_SECRET,DRONE_SECRET",

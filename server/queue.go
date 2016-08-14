@@ -38,7 +38,7 @@ func Pull(c *gin.Context) {
 	logrus.Debugf("Agent %s connected.", c.ClientIP())
 	config := ToConfig(c)
 	var w *queue.Work
-	if config.EnableCloseNotifyTimeout {
+	if config.CloseNotifyTimeout > 0 {
 		w = queue.PullCloseWithTimeout(c, closeNotifierTimeout{c, config})
 	} else {
 		w = queue.PullClose(c, c.Writer)
@@ -77,7 +77,7 @@ func Wait(c *gin.Context) {
 
 	bus.Subscribe(c, eventc)
 	defer bus.Unsubscribe(c, eventc)
-	if config.EnableCloseNotifyTimeout {
+	if config.CloseNotifyTimeout > 0 {
 		for {
 			select {
 			case event := <-eventc:

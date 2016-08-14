@@ -21,14 +21,13 @@ func Config(cli *cli.Context) gin.HandlerFunc {
 // helper function to create the configuration from the CLI context.
 func setupConfig(c *cli.Context) *model.Config {
 	return &model.Config{
-		Open:   c.Bool("open"),
-		Yaml:   c.String("yaml"),
-		Shasum: c.String("yaml") + ".sig",
-		Secret: c.String("agent-secret"),
-		Admins: sliceToMap(c.StringSlice("admin")),
-		Orgs:   sliceToMap(c.StringSlice("orgs")),
-		EnableCloseNotifyTimeout: c.Bool("enable-close-notify-timeout"),
-		CloseNotifyTimeout:       c.Duration("close-notify-timeout"),
+		Open:               c.Bool("open"),
+		Yaml:               c.String("yaml"),
+		Shasum:             c.String("yaml") + ".sig",
+		Secret:             c.String("agent-secret"),
+		Admins:             sliceToMap(c.StringSlice("admin")),
+		Orgs:               sliceToMap(c.StringSlice("orgs")),
+		CloseNotifyTimeout: c.Duration("close-notify-timeout"),
 	}
 }
 

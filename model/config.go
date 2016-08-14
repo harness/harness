@@ -4,14 +4,13 @@ import "time"
 
 // Config defines system configuration parameters.
 type Config struct {
-	Open                     bool            // Enables open registration
-	Yaml                     string          // Customize the Yaml configuration file name
-	Shasum                   string          // Customize the Yaml checksum file name
-	Secret                   string          // Secret token used to authenticate agents
-	Admins                   map[string]bool // Administrative users
-	Orgs                     map[string]bool // Organization whitelist
-	EnableCloseNotifyTimeout bool            // Force close connection if CloseNotify did not trigger
-	CloseNotifyTimeout       time.Duration   // After this duration, connection is going to be closed
+	Open               bool            // Enables open registration
+	Yaml               string          // Customize the Yaml configuration file name
+	Shasum             string          // Customize the Yaml checksum file name
+	Secret             string          // Secret token used to authenticate agents
+	Admins             map[string]bool // Administrative users
+	Orgs               map[string]bool // Organization whitelist
+	CloseNotifyTimeout time.Duration   // After this duration, connection is going to be closed
 }
 
 // IsAdmin returns true if the user is a member of the administrator list.
