@@ -17,7 +17,7 @@ var orgSecretRemoveCmd = cli.Command{
 }
 
 func orgSecretRemove(c *cli.Context) error {
-	if len(c.Args().Tail()) != 2 {
+	if len(c.Args()) != 2 {
 		cli.ShowSubcommandHelp(c)
 		return nil
 	}
