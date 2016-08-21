@@ -9,6 +9,7 @@ import (
 	"github.com/mrjones/oauth"
 	"io/ioutil"
 	"net/http"
+	"io"
 )
 
 const (
@@ -20,6 +21,7 @@ const (
 	pathSource      = "%s/projects/%s/repos/%s/browse/%s?at=%s&raw"
 	hookName        = "com.atlassian.stash.plugin.stash-web-post-receive-hooks-plugin:postReceiveHook"
 	pathHookEnabled = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s/enabled"
+	pathStatus      = "%s/rest/build-status/1.0/commits/%s"
 )
 
 type Client struct {
@@ -151,10 +153,17 @@ func (c *Client) CreateHook(owner string, name string, callBackLink string) erro
 	return c.doPut(fmt.Sprintf(pathHookEnabled, c.base, owner, name, hookName), hookBytes)
 }
 
+func (c *Client) CreateStatus(revision string, status *BuildStatus) error {
+	uri := fmt.Sprintf(pathStatus, c.base, revision)
+	return c.doPost(uri, status)
+}
+
 func (c *Client) DeleteHook(owner string, name string, link string) error {
 	//TODO: eventially should only delete the link callback
 	return c.doDelete(fmt.Sprintf(pathHookEnabled, c.base, owner, name, hookName))
 }
+
+//TODO: make these as as general do with the action
 
 //Helper function to help create the hook
 func (c *Client) doPut(url string, body []byte) error {
@@ -166,8 +175,33 @@ func (c *Client) doPut(url string, body []byte) error {
 	}
 	defer response.Body.Close()
 	return nil
-
 }
+
+
+//Helper function to help create the hook
+func (c *Client) doPost(url string, status *BuildStatus) error {
+	// write it to the body of the request.
+	var buf io.ReadWriter
+	if status != nil {
+		buf = new(bytes.Buffer)
+		err := json.NewEncoder(buf).Encode(status)
+		if err != nil {
+			return err
+		}
+	}
+	request, err := http.NewRequest("POST", url, buf)
+	request.Header.Add("Content-Type", "application/json")
+	response, err := c.client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	return nil
+}
+
+
+
+
 
 //Helper function to do delete on the hook
 func (c *Client) doDelete(url string) error {

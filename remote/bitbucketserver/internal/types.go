@@ -24,6 +24,14 @@ type SelfRefLink struct {
 	Href string `json:"href"`
 }
 
+type BuildStatus struct {
+	State string `json:"state"`
+	Key   string `json:"key"`
+	Name  string `json:"name,omitempty"`
+	Url   string `json:"url"`
+	Desc  string `json:"description,omitempty"`
+}
+
 type Repo struct {
 	Forkable bool `json:"forkable"`
 	ID       int  `json:"id"`
