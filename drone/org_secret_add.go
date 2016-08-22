@@ -42,7 +42,7 @@ var orgSecretAddCmd = cli.Command{
 }
 
 func orgSecretAdd(c *cli.Context) error {
-	if len(c.Args().Tail()) != 3 {
+	if len(c.Args()) != 3 {
 		cli.ShowSubcommandHelp(c)
 		return nil
 	}
