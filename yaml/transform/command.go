@@ -40,7 +40,7 @@ func toScript(commands []string) string {
 	var buf bytes.Buffer
 	for _, command := range commands {
 		escaped := fmt.Sprintf("%q", command)
-		escaped = strings.Replace(command, "$", `$\`, -1)
+		escaped = strings.Replace(escaped, "$", `\$`, -1)
 		buf.WriteString(fmt.Sprintf(
 			traceScript,
 			escaped,
