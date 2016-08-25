@@ -167,7 +167,7 @@ func (a *Agent) prep(w *queue.Work) (*yaml.Config, error) {
 		transform.ImageVolume(conf, []string{a.Local + ":" + conf.Workspace.Path})
 	}
 
-	transform.Pod(conf)
+	transform.Pod(conf, a.Platform)
 
 	return conf, nil
 }

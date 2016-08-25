@@ -9,21 +9,54 @@ import (
 	"github.com/gorilla/securecookie"
 )
 
+type ambassador struct {
+	image      string
+	entrypoint []string
+	command    []string
+}
+
+// default linux amd64 ambassador
+var defaultAmbassador = ambassador{
+	image:      "busybox:latest",
+	entrypoint: []string{"/bin/sleep"},
+	command:    []string{"86400"},
+}
+
+// lookup ambassador configuration by architecture and os
+var lookupAmbassador = map[string]ambassador{
+	"linux/amd64": {
+		image:      "busybox:latest",
+		entrypoint: []string{"/bin/sleep"},
+		command:    []string{"86400"},
+	},
+	"linux/arm": {
+		image:      "armhf/alpine:latest",
+		entrypoint: []string{"/bin/sleep"},
+		command:    []string{"86400"},
+	},
+}
+
 // Pod transforms the containers in the Yaml to use Pod networking, where every
 // container shares the localhost connection.
-func Pod(c *yaml.Config) error {
+func Pod(c *yaml.Config, platform string) error {
 
 	rand := base64.RawURLEncoding.EncodeToString(
 		securecookie.GenerateRandomKey(8),
 	)
 
+	// choose the ambassador configuration based on os and architecture
+	conf, ok := lookupAmbassador[platform]
+	if !ok {
+		conf = defaultAmbassador
+	}
+
 	ambassador := &yaml.Container{
 		ID:          fmt.Sprintf("drone_ambassador_%s", rand),
 		Name:        "ambassador",
-		Image:       "busybox:latest",
+		Image:       conf.image,
 		Detached:    true,
-		Entrypoint:  []string{"/bin/sleep"},
-		Command:     []string{"86400"},
+		Entrypoint:  conf.entrypoint,
+		Command:     conf.command,
 		Volumes:     []string{c.Workspace.Path, c.Workspace.Base},
 		Environment: map[string]string{},
 	}
