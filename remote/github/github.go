@@ -67,6 +67,9 @@ func New(opts Opts) (remote.Remote, error) {
 		remote.URL = strings.TrimSuffix(opts.URL, "/")
 		remote.API = remote.URL + "/api/v3/"
 	}
+
+	// Hack to enable oauth2 access in older GHE
+	oauth2.RegisterBrokenAuthHeaderProvider(remote.URL)
 	return remote, nil
 }
 
