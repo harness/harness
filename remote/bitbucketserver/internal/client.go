@@ -201,23 +201,18 @@ func (c *Client) doDelete(url string) error {
 func (c *Client) paginatedRepos(start int) ([]*Repo, error) {
 	limit := 1000
 	requestUrl := fmt.Sprintf(pathRepos, c.base, strconv.Itoa(start), strconv.Itoa(limit))
-	log.Debug(fmt.Printf("request :%s", requestUrl))
+	log.Debugf("request :%s", requestUrl)
 	response, err := c.client.Get(requestUrl)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
-	contents, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
 	var repoResponse Repos
-	err = json.Unmarshal(contents, &repoResponse)
+	err = json.NewDecoder(response.Body).Decode(&repoResponse)
 	if err != nil {
 		return nil, err
 	}
-	log.Debug(fmt.Printf("repoResponse: %+v\n", repoResponse))
-
+	log.Debugf("repoResponse: %+v", repoResponse)
 	if(!repoResponse.IsLastPage){
 		reposList, err := c.paginatedRepos(start + limit);
 		if err != nil {
