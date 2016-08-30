@@ -222,8 +222,8 @@ func (c *client) BuildQueue() ([]*model.Feed, error) {
 func (c *client) BuildStart(owner, name string, num int, params map[string]string) (*model.Build, error) {
 	out := new(model.Build)
 	val := parseToQueryParams(params)
-	uri := fmt.Sprintf(pathBuild+"?"+val.Encode(), c.base, owner, name, num)
-	err := c.post(uri, nil, out)
+	uri := fmt.Sprintf(pathBuild, c.base, owner, name, num)
+	err := c.post(uri+"?"+val.Encode(), nil, out)
 	return out, err
 }
 
@@ -240,8 +240,8 @@ func (c *client) BuildFork(owner, name string, num int, params map[string]string
 	out := new(model.Build)
 	val := parseToQueryParams(params)
 	val.Set("fork", "true")
-	uri := fmt.Sprintf(pathBuild+"?"+val.Encode(), c.base, owner, name, num)
-	err := c.post(uri, nil, out)
+	uri := fmt.Sprintf(pathBuild, c.base, owner, name, num)
+	err := c.post(uri+"?"+val.Encode(), nil, out)
 	return out, err
 }
 
@@ -259,8 +259,8 @@ func (c *client) Deploy(owner, name string, num int, env string, params map[stri
 	val.Set("fork", "true")
 	val.Set("event", "deployment")
 	val.Set("deploy_to", env)
-	uri := fmt.Sprintf(pathBuild+"?"+val.Encode(), c.base, owner, name, num)
-	err := c.post(uri, nil, out)
+	uri := fmt.Sprintf(pathBuild, c.base, owner, name, num)
+	err := c.post(uri+"?"+val.Encode(), nil, out)
 	return out, err
 }
 

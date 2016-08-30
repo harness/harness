@@ -13,6 +13,48 @@ import (
 	"time"
 )
 
+
+const (
+	statusPending = "INPROGRESS"
+	statusSuccess = "SUCCESSFUL"
+	statusFailure = "FAILED"
+)
+
+const (
+	descPending = "this build is pending"
+	descSuccess = "the build was successful"
+	descFailure = "the build failed"
+	descError   = "oops, something went wrong"
+)
+
+// convertStatus is a helper function used to convert a Drone status to a
+// Bitbucket commit status.
+func convertStatus(status string) string {
+	switch status {
+	case model.StatusPending, model.StatusRunning:
+		return statusPending
+	case model.StatusSuccess:
+		return statusSuccess
+	default:
+		return statusFailure
+	}
+}
+
+// convertDesc is a helper function used to convert a Drone status to a
+// Bitbucket status description.
+func convertDesc(status string) string {
+	switch status {
+	case model.StatusPending, model.StatusRunning:
+		return descPending
+	case model.StatusSuccess:
+		return descSuccess
+	case model.StatusFailure:
+		return descFailure
+	default:
+		return descError
+	}
+}
+
 // convertRepo is a helper function used to convert a Bitbucket server repository
 // structure to the common Drone repository structure.
 func convertRepo(from *internal.Repo) *model.Repo {
