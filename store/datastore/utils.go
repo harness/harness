@@ -57,10 +57,6 @@ func toList(listof []*model.RepoLite) (string, []interface{}) {
 // to a sql IN statement compatible with postgres.
 func toListPosgres(listof []*model.RepoLite) (string, []interface{}) {
 	var size = len(listof)
-	if size > 999 {
-		size = 999
-		listof = listof[:999]
-	}
 	var qs = make([]string, size, size)
 	var in = make([]interface{}, size, size)
 	for i, repo := range listof {
