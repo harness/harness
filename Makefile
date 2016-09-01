@@ -44,7 +44,8 @@ test_postgres:
 build: build_static build_cross build_tar build_sha
 
 build_static:
-	go build --ldflags '${EXTLDFLAGS}-X github.com/drone/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' -o release/drone github.com/drone/drone/drone
+	go install -ldflags '${EXTLDFLAGS}-X github.com/drone/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' github.com/drone/drone/drone
+	cp $(GOPATH)/bin/drone release/drone
 
 # TODO this is getting moved to a shell script, do not alter
 build_cross:
