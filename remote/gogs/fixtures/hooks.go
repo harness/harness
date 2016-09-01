@@ -130,7 +130,7 @@ var HookPushNew = `
     "avatar_url": "https://avatars.kbt.io/avatar/fe2a9e759730ee64c44bf8901bf4ccc3"
   }
 }
-'
+`
 
 // Sampled from Gogs version 0.9.97
 // X-Gogs-Event: pull_request
@@ -197,7 +197,7 @@ var HookPullRequestOpenNew = `
     "avatar_url": "https://avatars.kbt.io/avatar/fe2a9e759730ee64c44bf8901bf4ccc3"
   }
 }
-'
+`
 
 // Sampled from Gogs version 0.9.97
 // X-Gogs-Event: pull_request
@@ -264,4 +264,4 @@ var HookPullRequestSynchronize = `
     "avatar_url": "https://avatars.kbt.io/avatar/fe2a9e759730ee64c44bf8901bf4ccc3"
   }
 }
-'
+`
