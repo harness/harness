@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	"github.com/mrjones/oauth"
@@ -16,7 +17,7 @@ const (
 	currentUserId   = "%s/plugins/servlet/applinks/whoami"
 	pathUser        = "%s/rest/api/1.0/users/%s"
 	pathRepo        = "%s/rest/api/1.0/projects/%s/repos/%s"
-	pathRepos       = "%s/rest/api/1.0/repos?limit=%s"
+	pathRepos       = "%s/rest/api/1.0/repos?start=%s&limit=%s"
 	pathHook        = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s"
 	pathSource      = "%s/projects/%s/repos/%s/browse/%s?at=%s&raw"
 	hookName        = "com.atlassian.stash.plugin.stash-web-post-receive-hooks-plugin:postReceiveHook"
@@ -91,25 +92,7 @@ func (c *Client) FindRepo(owner string, name string) (*Repo, error) {
 }
 
 func (c *Client) FindRepos() ([]*Repo, error) {
-	requestUrl := fmt.Sprintf(pathRepos, c.base, "1000")
-	log.Debug(fmt.Printf("request :%s", requestUrl))
-	response, err := c.client.Get(requestUrl)
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-	contents, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-	var repoResponse Repos
-	err = json.Unmarshal(contents, &repoResponse)
-	if err != nil {
-		return nil, err
-	}
-	log.Debug(fmt.Printf("repoResponse: %+v\n", repoResponse))
-
-	return repoResponse.Values, nil
+	return c.paginatedRepos(0)
 }
 
 func (c *Client) FindRepoPerms(owner string, repo string) (*model.Perm, error) {
@@ -212,4 +195,30 @@ func (c *Client) doDelete(url string) error {
 	}
 	defer response.Body.Close()
 	return nil
+}
+
+//Helper function to get repos paginated
+func (c *Client) paginatedRepos(start int) ([]*Repo, error) {
+	limit := 1000
+	requestUrl := fmt.Sprintf(pathRepos, c.base, strconv.Itoa(start), strconv.Itoa(limit))
+	log.Debugf("request :%s", requestUrl)
+	response, err := c.client.Get(requestUrl)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+	var repoResponse Repos
+	err = json.NewDecoder(response.Body).Decode(&repoResponse)
+	if err != nil {
+		return nil, err
+	}
+	log.Debugf("repoResponse: %+v", repoResponse)
+	if(!repoResponse.IsLastPage){
+		reposList, err := c.paginatedRepos(start + limit);
+		if err != nil {
+			return nil, err
+		}
+		repoResponse.Values = append(repoResponse.Values, reposList...)
+	}
+	return repoResponse.Values, nil
 }
