@@ -4,15 +4,14 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote/bitbucketserver/internal"
-	"github.com/mrjones/oauth"
 	"net/url"
 	"strings"
 	"time"
-)
 
+	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote/bitbucketserver/internal"
+	"github.com/mrjones/oauth"
+)
 
 const (
 	statusPending = "INPROGRESS"
@@ -83,7 +82,6 @@ func convertRepo(from *internal.Repo) *model.Repo {
 			repo.Link = item.Href
 		}
 	}
-	log.Debug(fmt.Printf("Repo: %+v\n", repo))
 	return &repo
 
 }
@@ -152,6 +150,5 @@ func avatarLink(email string) string {
 	hasher.Write([]byte(strings.ToLower(email)))
 	emailHash := fmt.Sprintf("%v", hex.EncodeToString(hasher.Sum(nil)))
 	avatarURL := fmt.Sprintf("https://www.gravatar.com/avatar/%s.jpg", emailHash)
-	log.Debug(avatarURL)
 	return avatarURL
 }

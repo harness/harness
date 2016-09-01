@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"strconv"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	"github.com/mrjones/oauth"
-	"io/ioutil"
-	"net/http"
-	"io"
 )
 
 const (
@@ -35,7 +36,6 @@ func NewClientWithToken(url string, consumer *oauth.Consumer, AccessToken string
 	var token oauth.AccessToken
 	token.Token = AccessToken
 	client, err := consumer.MakeHttpClient(&token)
-	log.Debug(fmt.Printf("Create client: %+v %s\n", token, url))
 	if err != nil {
 		log.Error(err)
 	}
@@ -109,7 +109,6 @@ func (c *Client) FindRepoPerms(owner string, repo string) (*model.Perm, error) {
 		perms.Admin = true
 	}
 	perms.Pull = true
-	log.Debug(fmt.Printf("Perms: %+v\n", perms))
 	return perms, nil
 }
 
@@ -160,7 +159,6 @@ func (c *Client) doPut(url string, body []byte) error {
 	return nil
 }
 
-
 //Helper function to help create the hook
 func (c *Client) doPost(url string, status *BuildStatus) error {
 	// write it to the body of the request.
@@ -182,10 +180,6 @@ func (c *Client) doPost(url string, status *BuildStatus) error {
 	return nil
 }
 
-
-
-
-
 //Helper function to do delete on the hook
 func (c *Client) doDelete(url string) error {
 	request, err := http.NewRequest("DELETE", url, nil)
@@ -201,7 +195,6 @@ func (c *Client) doDelete(url string) error {
 func (c *Client) paginatedRepos(start int) ([]*Repo, error) {
 	limit := 1000
 	requestUrl := fmt.Sprintf(pathRepos, c.base, strconv.Itoa(start), strconv.Itoa(limit))
-	log.Debugf("request :%s", requestUrl)
 	response, err := c.client.Get(requestUrl)
 	if err != nil {
 		return nil, err
@@ -212,9 +205,8 @@ func (c *Client) paginatedRepos(start int) ([]*Repo, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Debugf("repoResponse: %+v", repoResponse)
-	if(!repoResponse.IsLastPage){
-		reposList, err := c.paginatedRepos(start + limit);
+	if !repoResponse.IsLastPage {
+		reposList, err := c.paginatedRepos(start + limit)
 		if err != nil {
 			return nil, err
 		}
