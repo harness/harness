@@ -51,7 +51,7 @@ func toList(listof []*model.RepoLite) (string, []interface{}) {
 
 // helper function that converts a simple repository list
 // to a sql IN statement compatible with postgres.
-func toListPosgres(listof []*model.RepoLite) (string, []interface{}) {
+func toListPostgres(listof []*model.RepoLite) (string, []interface{}) {
 	var size = len(listof)
 	var qs = make([]string, size, size)
 	var in = make([]interface{}, size, size)

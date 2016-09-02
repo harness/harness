@@ -28,7 +28,7 @@ func (db *datastore) GetRepoListOf(listof []*model.RepoLite) ([]*model.Repo, err
 	)
 	switch meddler.Default {
 	case meddler.PostgreSQL:
-		stmt, args = toListPosgres(listof)
+		stmt, args = toListPostgres(listof)
 	default:
 		stmt, args = toList(listof)
 	}
