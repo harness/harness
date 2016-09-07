@@ -234,7 +234,7 @@ func (c *client) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 	case "push":
 		var push *pushHook
 		push, err = parsePush(r.Body)
-		if err == nil {
+		if err == nil && push.RefType != "branch" {
 			repo = repoFromPush(push)
 			build = buildFromPush(push)
 		}

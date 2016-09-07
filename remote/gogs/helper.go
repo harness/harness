@@ -78,8 +78,6 @@ func buildFromPush(hook *pushHook) *model.Build {
 	case hook.RefType == "tag":
 		eventType = model.EventTag
 		message = "Tag " + hook.Ref
-	case hook.RefType == "branch":
-		eventType = ""
 	default:
 		eventType = model.EventPush
 		message = hook.Commits[0].Message
