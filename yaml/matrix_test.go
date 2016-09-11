@@ -40,6 +40,18 @@ func TestMatrix(t *testing.T) {
 			g.Assert(axis[0]["python_version"]).Equal("3.4")
 			g.Assert(axis[1]["python_version"]).Equal("3.4")
 		})
+
+		g.It("Should calculate permutations and included axis", func() {
+			axis, err := ParseMatrixString(fakeMatrixWithInclude)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(axis)).Equal(3)
+			g.Assert(axis[0]["go_version"]).Equal("1.5")
+			g.Assert(axis[1]["go_version"]).Equal("1.5")
+			g.Assert(axis[2]["go_version"]).Equal("1.6")
+			g.Assert(axis[0]["python_version"]).Equal("3.3")
+			g.Assert(axis[1]["python_version"]).Equal("3.4")
+			g.Assert(axis[2]["python_version"]).Equal("3.4")
+		})
 	})
 }
 
@@ -65,6 +77,18 @@ matrix:
   include:
     - go_version: 1.5
       python_version: 3.4
+    - go_version: 1.6
+      python_version: 3.4
+`
+
+var fakeMatrixWithInclude = `
+matrix:
+  go_version:
+    - 1.5
+  python_version:
+    - 3.3
+    - 3.4
+  include:
     - go_version: 1.6
       python_version: 3.4
 `
