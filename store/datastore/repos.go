@@ -23,17 +23,20 @@ func (db *datastore) GetRepoListOf(listof []*model.RepoLite) ([]*model.Repo, err
 	var (
 		repos []*model.Repo
 		args  []interface{}
-		stmt  string
 		err   error
 	)
-	switch meddler.Default {
-	case meddler.PostgreSQL:
-		stmt, args = toListPosgres(listof)
-	default:
-		stmt, args = toList(listof)
-	}
-	if len(args) > 0 {
-		err = meddler.QueryAll(db, &repos, fmt.Sprintf(repoListOfQuery, stmt), args...)
+	_stmt, _args := toList(listof)
+
+	for i, stmt := range _stmt{
+		args = _args[i]
+		if len(args) > 0 {
+			var _repos []*model.Repo
+			err = meddler.QueryAll(db, &_repos, fmt.Sprintf(repoListOfQuery, stmt), args...)
+			if err != nil{
+				break
+			}
+			repos = append(repos, _repos...)
+		}
 	}
 	return repos, err
 }

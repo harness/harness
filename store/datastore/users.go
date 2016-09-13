@@ -5,6 +5,7 @@ import (
 
 	"github.com/drone/drone/model"
 	"github.com/russross/meddler"
+	"sort"
 )
 
 func (db *datastore) GetUser(id int64) (*model.User, error) {
@@ -28,39 +29,49 @@ func (db *datastore) GetUserList() ([]*model.User, error) {
 func (db *datastore) GetUserFeed(listof []*model.RepoLite) ([]*model.Feed, error) {
 	var (
 		args []interface{}
-		stmt string
 		err  error
-
-		feed = []*model.Feed{}
+		feed = model.Feeds{}
 	)
-	switch meddler.Default {
-	case meddler.PostgreSQL:
-		stmt, args = toListPosgres(listof)
-	default:
-		stmt, args = toList(listof)
+	_stmt, _args := toList(listof)
+
+	for i, stmt := range _stmt{
+		args = _args[i]
+		if len(args) > 0 {
+			var _feed []*model.Feed
+			err = meddler.QueryAll(db, &_feed, fmt.Sprintf(userFeedQuery, stmt), args...)
+			if err != nil{
+				break
+			}
+			feed = append(feed, _feed...)
+		}
 	}
-	if len(args) > 0 {
-		err = meddler.QueryAll(db, &feed, fmt.Sprintf(userFeedQuery, stmt), args...)
+	sort.Sort(sort.Reverse(feed))
+	limit := 50
+	if len(feed) < limit{
+		limit = len(feed)
 	}
-	return feed, err
+	return feed[:limit], err
 }
 
 func (db *datastore) GetUserFeedLatest(listof []*model.RepoLite) ([]*model.Feed, error) {
 	var (
 		args []interface{}
-		stmt string
 		err  error
 
 		feed = []*model.Feed{}
 	)
-	switch meddler.Default {
-	case meddler.PostgreSQL:
-		stmt, args = toListPosgres(listof)
-	default:
-		stmt, args = toList(listof)
-	}
-	if len(args) > 0 {
-		err = meddler.QueryAll(db, &feed, fmt.Sprintf(userFeedLatest, stmt), args...)
+	_stmt, _args := toList(listof)
+
+	for i, stmt := range(_stmt){
+		args = _args[i]
+		if len(args) > 0 {
+			var _feed []*model.Feed
+			err = meddler.QueryAll(db, &_feed, fmt.Sprintf(userFeedLatest, stmt), args...)
+			if err != nil{
+				break
+			}
+			feed = append(feed, _feed...)
+		}
 	}
 	return feed, err
 }
@@ -114,6 +125,7 @@ SELECT
  repo_owner
 ,repo_name
 ,repo_full_name
+,build_id
 ,build_number
 ,build_event
 ,build_status
