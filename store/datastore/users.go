@@ -2,10 +2,10 @@ package datastore
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/drone/drone/model"
 	"github.com/russross/meddler"
-	"sort"
 )
 
 func (db *datastore) GetUser(id int64) (*model.User, error) {
@@ -30,7 +30,7 @@ func (db *datastore) GetUserFeed(listof []*model.RepoLite) ([]*model.Feed, error
 	var (
 		args []interface{}
 		err  error
-		feed = model.Feeds{}
+		feed = Feeds{}
 	)
 	_stmt, _args := toList(listof)
 
@@ -45,11 +45,12 @@ func (db *datastore) GetUserFeed(listof []*model.RepoLite) ([]*model.Feed, error
 			feed = append(feed, _feed...)
 		}
 	}
-	sort.Sort(sort.Reverse(feed))
 	limit := 50
-	if len(feed) < limit{
-		limit = len(feed)
+	// avoid sorting for less than 50
+	if len(feed) <= limit{
+		return feed, err
 	}
+	sort.Sort(sort.Reverse(feed))
 	return feed[:limit], err
 }
 
@@ -95,6 +96,20 @@ func (db *datastore) DeleteUser(user *model.User) error {
 	return err
 }
 
+type Feeds []*model.Feed
+
+func (slice Feeds) Len() int {
+	return len(slice)
+}
+
+func (slice Feeds) Less(i, j int) bool {
+	return slice[i].Created < slice[j].Created;
+}
+
+func (slice Feeds) Swap(i, j int) {
+	slice[i], slice[j] = slice[j], slice[i]
+}
+
 const userTable = "users"
 
 const userLoginQuery = `
@@ -125,7 +140,6 @@ SELECT
  repo_owner
 ,repo_name
 ,repo_full_name
-,build_id
 ,build_number
 ,build_event
 ,build_status

@@ -8,7 +8,6 @@ type Feed struct {
 	Name     string `json:"name"          meddler:"repo_name"`
 	FullName string `json:"full_name"     meddler:"repo_full_name"`
 
-	Id       int    `json:"id,omitempty"            meddler:"build_id,zeroisnull"`
 	Number   int    `json:"number,omitempty"        meddler:"build_number,zeroisnull"`
 	Event    string `json:"event,omitempty"         meddler:"build_event,zeroisnull"`
 	Status   string `json:"status,omitempty"        meddler:"build_status,zeroisnull"`
@@ -25,18 +24,4 @@ type Feed struct {
 	Author   string `json:"author,omitempty"        meddler:"build_author,zeroisnull"`
 	Avatar   string `json:"author_avatar,omitempty" meddler:"build_avatar,zeroisnull"`
 	Email    string `json:"author_email,omitempty"  meddler:"build_email,zeroisnull"`
-}
-
-type Feeds []*Feed
-
-func (slice Feeds) Len() int {
-	return len(slice)
-}
-
-func (slice Feeds) Less(i, j int) bool {
-	return slice[i].Id < slice[j].Id;
-}
-
-func (slice Feeds) Swap(i, j int) {
-	slice[i], slice[j] = slice[j], slice[i]
 }

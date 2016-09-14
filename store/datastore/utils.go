@@ -1,12 +1,12 @@
 package datastore
 
 import (
+	"math"
 	"strconv"
 	"strings"
 
 	"github.com/drone/drone/model"
 	"github.com/russross/meddler"
-	"math"
 )
 
 // rebind is a helper function that changes the sql
@@ -40,8 +40,8 @@ func rebind(query string) string {
 // helper function that converts a simple repsitory list
 // to a sql IN statment.
 func toList(listof []*model.RepoLite) ([]string, [][]interface{}) {
+	const limit = 999
 	var total = len(listof)
-	var limit = 999
 	var pagesCount = int(math.Ceil(float64(total) / float64(limit)))
 
 	var qs = make([]string, pagesCount, pagesCount)
