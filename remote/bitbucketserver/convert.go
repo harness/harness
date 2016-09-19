@@ -102,10 +102,13 @@ func convertRepoLite(from *internal.Repo) *model.RepoLite {
 // convertPushHook is a helper function used to convert a Bitbucket push
 // hook to the Drone build struct holding commit information.
 func convertPushHook(hook *internal.PostHook, baseURL string) *model.Build {
-	//get the ref parts to see if it's a tags or heads
-	refParts := strings.Split(hook.RefChanges[0].RefID, "/")
-	name := refParts[2]
-	commitType := refParts[1]
+	branch := strings.TrimPrefix(
+		strings.TrimPrefix(
+			hook.RefChanges[0].RefID,
+			"refs/heads/",
+		),
+		"refs/tags/",
+	)
 
 	//Ensuring the author label is not longer then 40 for the label of the commit author (default size in the db)
 	authorLabel := hook.Changesets.Values[0].ToCommit.Author.Name
@@ -115,7 +118,7 @@ func convertPushHook(hook *internal.PostHook, baseURL string) *model.Build {
 
 	build := &model.Build{
 		Commit:    hook.RefChanges[0].ToHash, // TODO check for index value
-		Branch:    name,
+		Branch:    branch,
 		Message:   hook.Changesets.Values[0].ToCommit.Message, //TODO check for index Values
 		Avatar:    avatarLink(hook.Changesets.Values[0].ToCommit.Author.EmailAddress),
 		Author:    authorLabel,
@@ -124,10 +127,9 @@ func convertPushHook(hook *internal.PostHook, baseURL string) *model.Build {
 		Ref:       hook.RefChanges[0].RefID, // TODO check for index Values
 		Link:      fmt.Sprintf("%s/projects/%s/repos/%s/commits/%s", baseURL, hook.Repository.Project.Key, hook.Repository.Slug, hook.RefChanges[0].ToHash),
 	}
-	switch commitType {
-	case "tags":
+	if strings.HasPrefix(hook.RefChanges[0].RefID, "refs/tags/") {
 		build.Event = model.EventTag
-	default:
+	} else {
 		build.Event = model.EventPush
 	}
 

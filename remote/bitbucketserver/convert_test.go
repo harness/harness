@@ -69,11 +69,31 @@ func Test_helper(t *testing.T) {
 			g.Assert(result.Token).Equal("foo")
 		})
 
+		g.It("branch should be empty", func() {
+			change := internal.PostHook{}
+			change.RefChanges = append(change.RefChanges, internal.RefChange{
+				RefID:  "refs/heads/",
+				ToHash: "73f9c44d",
+			})
+
+			value := internal.Value{}
+			value.ToCommit.Author.Name = "John Doe, Appleboy, Mary, Janet E. Dawson and Ann S. Palmer"
+			value.ToCommit.Author.EmailAddress = "huh@huh.com"
+			value.ToCommit.Message = "message"
+
+			change.Changesets.Values = append(change.Changesets.Values, value)
+
+			change.Repository.Project.Key = "octocat"
+			change.Repository.Slug = "hello-world"
+			build := convertPushHook(&change, "http://base.com")
+			g.Assert(build.Branch).Equal("")
+		})
+
 		g.It("should convert push hook to build", func() {
 			change := internal.PostHook{}
 
 			change.RefChanges = append(change.RefChanges, internal.RefChange{
-				RefID:  "refs/heads/master",
+				RefID:  "refs/heads/release/some-feature",
 				ToHash: "73f9c44d",
 			})
 
@@ -93,9 +113,9 @@ func Test_helper(t *testing.T) {
 			g.Assert(build.Author).Equal("John Doe, Appleboy, Mary, Janet E. Da...")
 			g.Assert(build.Avatar).Equal(avatarLink("huh@huh.com"))
 			g.Assert(build.Commit).Equal("73f9c44d")
-			g.Assert(build.Branch).Equal("master")
+			g.Assert(build.Branch).Equal("release/some-feature")
 			g.Assert(build.Link).Equal("http://base.com/projects/octocat/repos/hello-world/commits/73f9c44d")
-			g.Assert(build.Ref).Equal("refs/heads/master")
+			g.Assert(build.Ref).Equal("refs/heads/release/some-feature")
 			g.Assert(build.Message).Equal("message")
 		})
 
