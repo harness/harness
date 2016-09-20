@@ -28,53 +28,76 @@ func (db *datastore) GetUserList() ([]*model.User, error) {
 
 func (db *datastore) GetUserFeed(listof []*model.RepoLite) ([]*model.Feed, error) {
 	var (
-		args []interface{}
-		err  error
-		feed = Feeds{}
+		err error
+		feed = feedHelper{}
+		total = len(listof)
+		toListRepoLite func([]*model.RepoLite) (string, []interface{})
 	)
-	_stmt, _args := toList(listof)
 
-	for i, stmt := range _stmt{
-		args = _args[i]
-		if len(args) > 0 {
-			var _feed []*model.Feed
-			err = meddler.QueryAll(db, &_feed, fmt.Sprintf(userFeedQuery, stmt), args...)
-			if err != nil{
-				break
-			}
-			feed = append(feed, _feed...)
+	if total == 0 {
+		return feed, nil
+	}
+
+	switch meddler.Default {
+	case meddler.PostgreSQL:
+		toListRepoLite = toListPosgres
+	default:
+		toListRepoLite = toList
+	}
+
+	pages := calculatePagination(total, maxRepoPage)
+	for i := 0; i < pages; i++ {
+		stmt, args := toListRepoLite(resizeList(listof, i, maxRepoPage))
+
+		var tmpFeed []*model.Feed
+		err = meddler.QueryAll(db, &tmpFeed, fmt.Sprintf(userFeedQuery, stmt), args...)
+		if err != nil {
+			return nil, err
 		}
+
+		feed = append(feed, tmpFeed...)
 	}
-	limit := 50
-	// avoid sorting for less than 50
-	if len(feed) <= limit{
-		return feed, err
+
+	if len(feed) <= 50 {
+		return feed, nil
 	}
+
 	sort.Sort(sort.Reverse(feed))
-	return feed[:limit], err
+
+	return feed[:50], nil
 }
 
 func (db *datastore) GetUserFeedLatest(listof []*model.RepoLite) ([]*model.Feed, error) {
 	var (
-		args []interface{}
-		err  error
-
+		err error
 		feed = []*model.Feed{}
+		toListRepoLite func([]*model.RepoLite) (string, []interface{})
+		total = len(listof)
 	)
-	_stmt, _args := toList(listof)
 
-	for i, stmt := range(_stmt){
-		args = _args[i]
-		if len(args) > 0 {
-			var _feed []*model.Feed
-			err = meddler.QueryAll(db, &_feed, fmt.Sprintf(userFeedLatest, stmt), args...)
-			if err != nil{
-				break
-			}
-			feed = append(feed, _feed...)
-		}
+	if total == 0 {
+		return feed, nil
 	}
-	return feed, err
+
+	switch meddler.Default {
+	case meddler.PostgreSQL:
+		toListRepoLite = toListPosgres
+	default:
+		toListRepoLite = toList
+	}
+
+	pages := calculatePagination(total, maxRepoPage)
+	for i := 0; i < pages; i++ {
+		stmt, args := toListRepoLite(resizeList(listof, i, maxRepoPage))
+		var tmpFeed []*model.Feed
+		err = meddler.QueryAll(db, &tmpFeed, fmt.Sprintf(userFeedLatest, stmt), args...)
+		if err != nil {
+			return nil, err
+		}
+
+		feed = append(feed, tmpFeed...)
+	}
+	return feed, nil
 }
 
 func (db *datastore) GetUserCount() (int, error) {
@@ -94,20 +117,6 @@ func (db *datastore) UpdateUser(user *model.User) error {
 func (db *datastore) DeleteUser(user *model.User) error {
 	var _, err = db.Exec(rebind(userDeleteStmt), user.ID)
 	return err
-}
-
-type Feeds []*model.Feed
-
-func (slice Feeds) Len() int {
-	return len(slice)
-}
-
-func (slice Feeds) Less(i, j int) bool {
-	return slice[i].Created < slice[j].Created;
-}
-
-func (slice Feeds) Swap(i, j int) {
-	slice[i], slice[j] = slice[j], slice[i]
 }
 
 const userTable = "users"

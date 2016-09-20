@@ -21,24 +21,37 @@ func (db *datastore) GetRepoName(name string) (*model.Repo, error) {
 
 func (db *datastore) GetRepoListOf(listof []*model.RepoLite) ([]*model.Repo, error) {
 	var (
-		repos []*model.Repo
-		args  []interface{}
-		err   error
+		err error
+		repos = []*model.Repo{}
+		toListRepoLite func([]*model.RepoLite) (string, []interface{})
+		total = len(listof)
 	)
-	_stmt, _args := toList(listof)
 
-	for i, stmt := range _stmt{
-		args = _args[i]
-		if len(args) > 0 {
-			var _repos []*model.Repo
-			err = meddler.QueryAll(db, &_repos, fmt.Sprintf(repoListOfQuery, stmt), args...)
-			if err != nil{
-				break
-			}
-			repos = append(repos, _repos...)
-		}
+	if total == 0 {
+		return repos, nil
 	}
-	return repos, err
+
+	switch meddler.Default {
+	case meddler.PostgreSQL:
+		toListRepoLite = toListPosgres
+	default:
+		toListRepoLite = toList
+	}
+
+	pages := calculatePagination(total, maxRepoPage)
+
+	for i := 0; i < pages; i++ {
+		stmt, args := toListRepoLite(resizeList(listof, i, maxRepoPage))
+
+		var tmpRepos []*model.Repo
+		err = meddler.QueryAll(db, &tmpRepos, fmt.Sprintf(repoListOfQuery, stmt), args...)
+		if err != nil {
+			return nil, err
+		}
+
+		repos = append(repos, tmpRepos...)
+	}
+	return repos, nil
 }
 
 func (db *datastore) GetRepoCount() (int, error) {

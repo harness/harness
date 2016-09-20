@@ -1,11 +1,11 @@
 package datastore
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/drone/drone/model"
 	"github.com/franela/goblin"
-	"fmt"
 )
 
 func TestRepos(t *testing.T) {
@@ -140,11 +140,11 @@ func TestRepos(t *testing.T) {
 		})
 
 		g.It("Should Get a Repo List Paginated", func() {
-			_repos := []*model.RepoLite{
+			repoLiteList := []*model.RepoLite{
 				{FullName: "bradrydzewski/drone"},
 				{FullName: "drone/drone"},
 			}
-			_repo := []*model.Repo{
+			repoList := []*model.Repo{
 				{
 					UserID:   1,
 					Owner:    "bradrydzewski",
@@ -158,14 +158,14 @@ func TestRepos(t *testing.T) {
 					FullName: "drone/drone",
 				},
 			}
-			s.CreateRepo(_repo[0])
-			s.CreateRepo(_repo[1])
+			s.CreateRepo(repoList[0])
+			s.CreateRepo(repoList[1])
 
-			for i := 0; i < 3000; i++{
+			for i := 0; i < 3000; i++ {
 				// find by 3000 repos
-				_repos = append(_repos, &model.RepoLite{FullName: "octocat/hello-world"+ fmt.Sprint(i)})
+				repoLiteList = append(repoLiteList, &model.RepoLite{FullName: "octocat/hello-world" + fmt.Sprint(i)})
 				// but create only 2000 repos
-				if i >= 1999 && i < 2999{
+				if i >= 1999 && i < 2999 {
 					continue
 				}
 				repo := &model.Repo{
@@ -174,15 +174,15 @@ func TestRepos(t *testing.T) {
 					Name:     "hello-world" + fmt.Sprint(i),
 					FullName: "octocat/hello-world" + fmt.Sprint(i),
 				}
-				_repo = append(_repo, repo)
+				repoList = append(repoList, repo)
 				s.CreateRepo(repo)
 			}
-			repos, err := s.GetRepoListOf(_repos)
+			repos, err := s.GetRepoListOf(repoLiteList)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(repos)).Equal(2002)
-			g.Assert(repos[0].ID).Equal(_repo[0].ID)
-			g.Assert(repos[1].ID).Equal(_repo[1].ID)
-			g.Assert(repos[2001].ID).Equal(_repo[2001].ID)
+			g.Assert(repos[0].ID).Equal(repoList[0].ID)
+			g.Assert(repos[1].ID).Equal(repoList[1].ID)
+			g.Assert(repos[2001].ID).Equal(repoList[2001].ID)
 		})
 
 		g.It("Should Delete a Repo", func() {
