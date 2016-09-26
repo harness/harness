@@ -12,10 +12,6 @@ import (
 	"strconv"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/queue"
-	"github.com/gorilla/websocket"
-	"golang.org/x/net/context"
-	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/oauth2"
 )
 
@@ -321,110 +317,6 @@ func (c *client) AgentList() ([]*model.Agent, error) {
 	uri := fmt.Sprintf(pathAgent, c.base)
 	err := c.get(uri, &out)
 	return out, err
-}
-
-//
-// below items for Queue (internal use only)
-//
-
-// Pull pulls work from the server queue.
-func (c *client) Pull(os, arch string) (*queue.Work, error) {
-	out := new(queue.Work)
-	uri := fmt.Sprintf(pathPull, c.base, os, arch)
-	err := c.post(uri, nil, out)
-	return out, err
-}
-
-// Push pushes an update to the server.
-func (c *client) Push(p *queue.Work) error {
-	uri := fmt.Sprintf(pathPush, c.base, p.Job.ID)
-	err := c.post(uri, p, nil)
-	return err
-}
-
-// Ping pings the server.
-func (c *client) Ping() error {
-	uri := fmt.Sprintf(pathPing, c.base)
-	err := c.post(uri, nil, nil)
-	return err
-}
-
-// Stream streams the build logs to the server.
-func (c *client) Stream(id int64, rc io.ReadCloser) error {
-	uri := fmt.Sprintf(pathStream, c.base, id)
-	err := c.post(uri, rc, nil)
-
-	return err
-}
-
-// LogPost sends the full build logs to the server.
-func (c *client) LogPost(id int64, rc io.ReadCloser) error {
-	uri := fmt.Sprintf(pathLogs, c.base, id)
-	return c.post(uri, rc, nil)
-}
-
-// StreamWriter implements a special writer for streaming log entries to the
-// central Drone server. The standard implementation is the gorilla.Connection.
-type StreamWriter interface {
-	Close() error
-	WriteJSON(interface{}) error
-}
-
-// LogStream streams the build logs to the server.
-func (c *client) LogStream(id int64) (StreamWriter, error) {
-	rawurl := fmt.Sprintf(pathLogsAuth, c.base, id, c.token)
-	uri, err := url.Parse(rawurl)
-	if err != nil {
-		return nil, err
-	}
-	if uri.Scheme == "https" {
-		uri.Scheme = "wss"
-	} else {
-		uri.Scheme = "ws"
-	}
-
-	// TODO need TLS client configuration
-
-	conn, _, err := websocket.DefaultDialer.Dial(uri.String(), nil)
-	return conn, err
-}
-
-// Wait watches and waits for the build to cancel or finish.
-func (c *client) Wait(id int64) *Wait {
-	ctx, cancel := context.WithCancel(context.Background())
-	return &Wait{id, c, ctx, cancel}
-}
-
-type Wait struct {
-	id     int64
-	client *client
-
-	ctx    context.Context
-	cancel context.CancelFunc
-}
-
-func (w *Wait) Done() (*model.Job, error) {
-	uri := fmt.Sprintf(pathWait, w.client.base, w.id)
-	req, err := w.client.createRequest(uri, "POST", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := ctxhttp.Do(w.ctx, w.client.client, req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-	job := &model.Job{}
-	err = json.NewDecoder(res.Body).Decode(&job)
-	if err != nil {
-		return nil, err
-	}
-	return job, nil
-}
-
-func (w *Wait) Cancel() {
-	w.cancel()
 }
 
 //

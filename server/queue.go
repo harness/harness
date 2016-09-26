@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"golang.org/x/net/context"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/drone/drone/bus"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
@@ -360,7 +362,7 @@ func HandleUpdate(c context.Context, message *stomp.Message) {
 		return
 	}
 
-	if ok && build.Status != model.StatusRunning {
+	if ok {
 		// get the user because we transfer the user form the server to agent
 		// and back we lose the token which does not get serialized to json.
 		user, uerr := store.GetUser(c, work.User.ID)
@@ -372,20 +374,39 @@ func HandleUpdate(c context.Context, message *stomp.Message) {
 			fmt.Sprintf("%s/%s/%d", work.System.Link, work.Repo.FullName, work.Build.Number))
 	}
 
+	client := stomp.MustFromContext(c)
+	err = client.SendJSON("/topic/events", bus.Event{
+		Type:  bus.Started,
+		Repo:  *work.Repo,
+		Build: *build,
+		Job:   *job,
+	},
+		stomp.WithHeader("repo", work.Repo.FullName),
+		stomp.WithHeader("private", strconv.FormatBool(work.Repo.IsPrivate)),
+	)
+	if err != nil {
+		logrus.Errorf("Unable to publish to /topic/events. %s", err)
+	}
+
+	if job.Status == model.StatusRunning {
+		return
+	}
+
 	var buf bytes.Buffer
 	var sub []byte
 
 	done := make(chan bool)
-	dest := fmt.Sprintf("/topic/%d", job.ID)
-	client, _ := stomp.FromContext(c)
+	dest := fmt.Sprintf("/topic/logs.%d", job.ID)
 	sub, err = client.Subscribe(dest, stomp.HandlerFunc(func(m *stomp.Message) {
-		if len(m.Header.Get([]byte("eof"))) != 0 {
+		defer m.Release()
+		if m.Header.GetBool("eof") {
 			done <- true
+			return
 		}
 		buf.Write(m.Body)
 		buf.WriteByte('\n')
-		m.Release()
 	}))
+
 	if err != nil {
 		logrus.Errorf("Unable to read logs from broker. %s", err)
 		return
@@ -396,11 +417,6 @@ func HandleUpdate(c context.Context, message *stomp.Message) {
 		logrus.Errorf("Unable to write logs to store. %s", err)
 		return
 	}
-	// if build.Status == model.StatusRunning {
-	// 	bus.Publish(c, bus.NewEvent(bus.Started, work.Repo, build, job))
-	// } else {
-	// 	bus.Publish(c, bus.NewEvent(bus.Finished, work.Repo, build, job))
-	// }
 
 	client.Unsubscribe(sub)
 	client.Send(dest, []byte{}, stomp.WithRetain("remove"))

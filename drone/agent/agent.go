@@ -7,13 +7,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/drone/drone/client"
-	"github.com/drone/drone/shared/token"
+	"github.com/drone/drone/queue"
+	"github.com/drone/mq/stomp"
 	"github.com/samalba/dockerclient"
+
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
-	"strings"
 )
 
 // AgentCmd is the exported command for starting the drone agent.
@@ -67,7 +68,7 @@ var AgentCmd = cli.Command{
 			EnvVar: "DRONE_SERVER",
 			Name:   "drone-server",
 			Usage:  "drone server address",
-			Value:  "http://localhost:8000",
+			Value:  "ws://localhost:8000/ws/broker",
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_TOKEN",
@@ -146,8 +147,9 @@ func start(c *cli.Context) {
 
 	var accessToken string
 	if c.String("drone-secret") != "" {
-		secretToken := c.String("drone-secret")
-		accessToken, _ = token.New(token.AgentToken, "").Sign(secretToken)
+		// secretToken := c.String("drone-secret")
+		accessToken = c.String("drone-secret")
+		// accessToken, _ = token.New(token.AgentToken, "").Sign(secretToken)
 	} else {
 		accessToken = c.String("drone-token")
 	}
@@ -157,10 +159,17 @@ func start(c *cli.Context) {
 		accessToken,
 	)
 
-	client := client.NewClientToken(
-		strings.TrimRight(c.String("drone-server"), "/"),
-		accessToken,
-	)
+	server := strings.TrimRight(c.String("drone-server"), "/")
+	client, err := stomp.Dial(server)
+	if err != nil {
+		logrus.Fatalf("Cannot connect to host %s. %s", server, err)
+	}
+	opts := []stomp.MessageOption{
+		stomp.WithCredentials("x-token", accessToken),
+	}
+	if err = client.Connect(opts...); err != nil {
+		logrus.Fatalf("Cannot connect to host %s. %s", server, err)
+	}
 
 	tls, err := dockerclient.TLSConfigFromCertPath(c.String("docker-cert-path"))
 	if err == nil {
@@ -171,42 +180,49 @@ func start(c *cli.Context) {
 		logrus.Fatal(err)
 	}
 
-	go func() {
-		for {
-			if err := client.Ping(); err != nil {
-				logrus.Warnf("unable to ping the server. %s", err.Error())
-			}
-			time.Sleep(c.Duration("ping"))
-		}
-	}()
-
-	var wg sync.WaitGroup
-	for i := 0; i < c.Int("docker-max-procs"); i++ {
-		wg.Add(1)
-		go func() {
-			r := pipeline{
-				drone:  client,
-				docker: docker,
-				config: config{
-					platform:   c.String("docker-os") + "/" + c.String("docker-arch"),
-					timeout:    c.Duration("timeout"),
-					namespace:  c.String("namespace"),
-					privileged: c.StringSlice("privileged"),
-					pull:       c.BoolT("pull"),
-					logs:       int64(c.Int("max-log-size")) * 1000000,
-				},
-			}
-			for {
-				if err := r.run(); err != nil {
-					dur := c.Duration("backoff")
-					logrus.Warnf("reconnect in %v. %s", dur, err.Error())
-					time.Sleep(dur)
-				}
-			}
+	handler := func(m *stomp.Message) {
+		running.Add(1)
+		defer func() {
+			running.Done()
+			client.Ack(m.Ack)
 		}()
+
+		r := pipeline{
+			drone:  client,
+			docker: docker,
+			config: config{
+				platform:   c.String("docker-os") + "/" + c.String("docker-arch"),
+				timeout:    c.Duration("timeout"),
+				namespace:  c.String("namespace"),
+				privileged: c.StringSlice("privileged"),
+				pull:       c.BoolT("pull"),
+				logs:       int64(c.Int("max-log-size")) * 1000000,
+			},
+		}
+
+		work := new(queue.Work)
+		m.Unmarshal(work)
+		r.run(work)
+	}
+
+	_, err = client.Subscribe("/queue/pending", stomp.HandlerFunc(handler),
+		stomp.WithAck("client"),
+		stomp.WithPrefetch(
+			c.Int("docker-max-procs"),
+		),
+		// stomp.WithSelector(
+		// 	fmt.Sprintf("platorm == '%s/%s'",
+		// 		c.String("drone-os"),
+		// 		c.String("drone-arch"),
+		// 	),
+		// ),
+	)
+	if err != nil {
+		logrus.Fatalf("Unable to connect to queue. %s", err)
 	}
 	handleSignals()
-	wg.Wait()
+
+	<-client.Done()
 }
 
 // tracks running builds
