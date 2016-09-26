@@ -295,6 +295,7 @@ func server(c *cli.Context) error {
 		middleware.Store(c),
 		middleware.Remote(c),
 		middleware.Agents(c),
+		middleware.Broker(c),
 	)
 
 	// start the server with tls enabled

@@ -12,11 +12,13 @@ import (
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
 	"github.com/drone/drone/stream"
+	"github.com/drone/drone/yaml"
 	"github.com/gin-gonic/gin"
 	"github.com/square/go-jose"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
+	"github.com/drone/mq/stomp"
 )
 
 func GetBuilds(c *gin.Context) {
@@ -148,7 +150,14 @@ func DeleteBuild(c *gin.Context) {
 	job.ExitCode = 137
 	store.UpdateBuildJob(c, build, job)
 
-	bus.Publish(c, bus.NewEvent(bus.Cancelled, repo, build, job))
+	client := stomp.MustFromContext(c)
+	client.SendJSON("/topic/cancel", bus.Event{
+		Type:  bus.Cancelled,
+		Repo:  *repo,
+		Build: *build,
+		Job:   *job,
+	})
+
 	c.String(204, "")
 }
 
@@ -293,7 +302,7 @@ func PostBuild(c *gin.Context) {
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
 	secs, err := store.GetMergedSecretList(c, repo)
 	if err != nil {
-		log.Errorf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
+		log.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
 	var signed bool
@@ -318,9 +327,19 @@ func PostBuild(c *gin.Context) {
 
 	log.Debugf(".drone.yml is signed=%v and verified=%v", signed, verified)
 
-	bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
+	client := stomp.MustFromContext(c)
+	client.SendJSON("/topic/events", bus.Event{
+		Type:  bus.Enqueued,
+		Repo:  *repo,
+		Build: *build,
+	},
+		stomp.WithHeader("repo", repo.FullName),
+		stomp.WithHeader("private", strconv.FormatBool(repo.IsPrivate)),
+	)
+
 	for _, job := range jobs {
-		queue.Publish(c, &queue.Work{
+		broker, _ := stomp.FromContext(c)
+		broker.SendJSON("/queue/pending", &queue.Work{
 			Signed:    signed,
 			Verified:  verified,
 			User:      user,
@@ -332,7 +351,7 @@ func PostBuild(c *gin.Context) {
 			Yaml:      string(raw),
 			Secrets:   secs,
 			System:    &model.System{Link: httputil.GetURL(c.Request)},
-		})
+		}, stomp.WithHeaders(yaml.ParseLabel(raw)))
 	}
 }
 
