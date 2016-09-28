@@ -33,10 +33,9 @@ pipeline:
 
   docker:
     repo: drone/drone
-    tag: [ "0.5.0", "0.5" ]
-    storage_driver: overlay
+    tag: [ "0.5.0-rc" ]
     when:
-      branch: master
+      branch: feature/mq
       event: push
 
 services:
