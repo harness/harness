@@ -3,18 +3,17 @@ package agent
 import (
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 
 	"github.com/drone/drone/queue"
 	"github.com/drone/mq/stomp"
-	"github.com/samalba/dockerclient"
-
-	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/samalba/dockerclient"
 )
 
 // AgentCmd is the exported command for starting the drone agent.
@@ -160,16 +159,6 @@ func start(c *cli.Context) {
 	)
 
 	server := strings.TrimRight(c.String("drone-server"), "/")
-	client, err := stomp.Dial(server)
-	if err != nil {
-		logrus.Fatalf("Cannot connect to host %s. %s", server, err)
-	}
-	opts := []stomp.MessageOption{
-		stomp.WithCredentials("x-token", accessToken),
-	}
-	if err = client.Connect(opts...); err != nil {
-		logrus.Fatalf("Cannot connect to host %s. %s", server, err)
-	}
 
 	tls, err := dockerclient.TLSConfigFromCertPath(c.String("docker-cert-path"))
 	if err == nil {
@@ -179,6 +168,8 @@ func start(c *cli.Context) {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+
+	var client *stomp.Client
 
 	handler := func(m *stomp.Message) {
 		running.Add(1)
@@ -205,24 +196,44 @@ func start(c *cli.Context) {
 		r.run(work)
 	}
 
-	_, err = client.Subscribe("/queue/pending", stomp.HandlerFunc(handler),
-		stomp.WithAck("client"),
-		stomp.WithPrefetch(
-			c.Int("docker-max-procs"),
-		),
-		// stomp.WithSelector(
-		// 	fmt.Sprintf("platorm == '%s/%s'",
-		// 		c.String("drone-os"),
-		// 		c.String("drone-arch"),
-		// 	),
-		// ),
-	)
-	if err != nil {
-		logrus.Fatalf("Unable to connect to queue. %s", err)
-	}
 	handleSignals()
 
-	<-client.Done()
+	backoff := c.Duration("backoff")
+
+	for {
+		// dial the drone server to establish a TCP connection.
+		client, err = stomp.Dial(server)
+		if err != nil {
+			logrus.Errorf("Failed to establish server connection, %s, retry in %v", err, backoff)
+			<-time.After(backoff)
+			continue
+		}
+		opts := []stomp.MessageOption{
+			stomp.WithCredentials("x-token", accessToken),
+		}
+
+		// initialize the stomp session and authenticate.
+		if err = client.Connect(opts...); err != nil {
+			logrus.Errorf("Failed to establish server session, %s, retry in %v", err, backoff)
+			<-time.After(backoff)
+			continue
+		}
+
+		// subscribe to the pending build queue.
+		client.Subscribe("/queue/pending", stomp.HandlerFunc(func(m *stomp.Message) {
+			go handler(m) // HACK until we a channel based Subscribe implementation
+		}),
+			stomp.WithAck("client"),
+			stomp.WithPrefetch(
+				c.Int("docker-max-procs"),
+			),
+		)
+
+		logrus.Infof("Server connection establish, ready to process builds.")
+		<-client.Done()
+
+		logrus.Warnf("Server connection interrupted, attempting to reconnect.")
+	}
 }
 
 // tracks running builds

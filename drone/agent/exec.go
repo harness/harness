@@ -62,9 +62,9 @@ func (r *pipeline) run(w *queue.Work) {
 	}
 
 	// signal for canceling the build.
-	sub, err := r.drone.Subscribe("/topic/cancels", stomp.HandlerFunc(cancelFunc))
+	sub, err := r.drone.Subscribe("/topic/cancel", stomp.HandlerFunc(cancelFunc))
 	if err != nil {
-		logrus.Errorf("Error subscribing to /topic/cancels. %s", err)
+		logrus.Errorf("Error subscribing to /topic/cancel. %s", err)
 	}
 	defer func() {
 		r.drone.Unsubscribe(sub)

@@ -65,17 +65,17 @@ func LogStream(c *gin.Context) {
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
+	logs := make(chan []byte)
 	done := make(chan bool)
 	dest := fmt.Sprintf("/topic/logs.%d", job.ID)
 	client, _ := stomp.FromContext(c)
 	sub, err := client.Subscribe(dest, stomp.HandlerFunc(func(m *stomp.Message) {
-		defer m.Release()
 		if m.Header.GetBool("eof") {
 			done <- true
-			return
+		} else {
+			logs <- m.Body
 		}
-		ws.SetWriteDeadline(time.Now().Add(writeWait))
-		ws.WriteMessage(websocket.TextMessage, m.Body)
+		m.Release()
 	}))
 	if err != nil {
 		logrus.Errorf("Unable to read logs from broker. %s", err)
@@ -83,10 +83,15 @@ func LogStream(c *gin.Context) {
 	}
 	defer func() {
 		client.Unsubscribe(sub)
+		close(done)
+		close(logs)
 	}()
 
 	for {
 		select {
+		case buf := <-logs:
+			ws.SetWriteDeadline(time.Now().Add(writeWait))
+			ws.WriteMessage(websocket.TextMessage, buf)
 		case <-done:
 			return
 		case <-ticker.C:
@@ -139,9 +144,9 @@ func EventStream(c *gin.Context) {
 		return
 	}
 	defer func() {
+		client.Unsubscribe(sub)
 		close(quitc)
 		close(eventc)
-		client.Unsubscribe(sub)
 	}()
 
 	go func() {

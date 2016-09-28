@@ -6,10 +6,10 @@ import (
 
 	"github.com/drone/drone/router"
 	"github.com/drone/drone/router/middleware"
-	"github.com/gin-gonic/contrib/ginrus"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/gin-gonic/contrib/ginrus"
 )
 
 var serverCmd = cli.Command{

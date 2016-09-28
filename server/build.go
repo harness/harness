@@ -156,7 +156,7 @@ func DeleteBuild(c *gin.Context) {
 		Repo:  *repo,
 		Build: *build,
 		Job:   *job,
-	})
+	}, stomp.WithHeader("job-id", strconv.FormatInt(job.ID, 10)))
 
 	c.String(204, "")
 }

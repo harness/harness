@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -411,13 +412,21 @@ func HandleUpdate(c context.Context, message *stomp.Message) {
 		logrus.Errorf("Unable to read logs from broker. %s", err)
 		return
 	}
-	<-done
+
+	defer func() {
+		client.Unsubscribe(sub)
+		client.Send(dest, []byte{}, stomp.WithRetain("remove"))
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(30 * time.Second):
+		logrus.Errorf("Unable to read logs from broker. Timeout. %s", err)
+		return
+	}
 
 	if err := store.WriteLog(c, job, &buf); err != nil {
 		logrus.Errorf("Unable to write logs to store. %s", err)
 		return
 	}
-
-	client.Unsubscribe(sub)
-	client.Send(dest, []byte{}, stomp.WithRetain("remove"))
 }
