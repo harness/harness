@@ -154,8 +154,6 @@ func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 	transform.CommandTransform(conf)
 	transform.ImagePull(conf, a.Pull)
 	transform.ImageTag(conf)
-	transform.ImageName(conf)
-	transform.ImageNamespace(conf, a.Namespace)
 	if err := transform.ImageEscalate(conf, a.Escalate); err != nil {
 		return nil, err
 	}
