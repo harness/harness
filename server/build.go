@@ -351,7 +351,15 @@ func PostBuild(c *gin.Context) {
 			Yaml:      string(raw),
 			Secrets:   secs,
 			System:    &model.System{Link: httputil.GetURL(c.Request)},
-		}, stomp.WithHeaders(yaml.ParseLabel(raw)))
+		},
+			stomp.WithHeader(
+				"platform",
+				yaml.ParsePlatformDefault(raw, "linux/amd64"),
+			),
+			stomp.WithHeaders(
+				yaml.ParseLabel(raw),
+			),
+		)
 	}
 }
 

@@ -58,12 +58,6 @@ var AgentCmd = cli.Command{
 			Value:  "amd64",
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_STORAGE_DRIVER",
-			Name:   "drone-storage-driver",
-			Usage:  "docker storage driver",
-			Value:  "overlay",
-		},
-		cli.StringFlag{
 			EnvVar: "DRONE_SERVER",
 			Name:   "drone-server",
 			Usage:  "drone server address",
@@ -101,6 +95,11 @@ var AgentCmd = cli.Command{
 			Name:   "timeout",
 			Usage:  "drone timeout due to log inactivity",
 			Value:  time.Minute * 5,
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_FILTER",
+			Name:   "filter",
+			Usage:  "filter jobs processed by this agent",
 		},
 		cli.IntFlag{
 			EnvVar: "DRONE_MAX_LOGS",
@@ -219,15 +218,20 @@ func start(c *cli.Context) {
 			continue
 		}
 
-		// subscribe to the pending build queue.
-		client.Subscribe("/queue/pending", stomp.HandlerFunc(func(m *stomp.Message) {
-			go handler(m) // HACK until we a channel based Subscribe implementation
-		}),
+		opts = []stomp.MessageOption{
 			stomp.WithAck("client"),
 			stomp.WithPrefetch(
 				c.Int("docker-max-procs"),
 			),
-		)
+		}
+		if filter := c.String("filter"); filter != "" {
+			opts = append(opts, stomp.WithSelector(filter))
+		}
+
+		// subscribe to the pending build queue.
+		client.Subscribe("/queue/pending", stomp.HandlerFunc(func(m *stomp.Message) {
+			go handler(m) // HACK until we a channel based Subscribe implementation
+		}), opts...)
 
 		logrus.Infof("Server connection establish, ready to process builds.")
 		<-client.Done()
