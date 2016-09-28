@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/drone/drone/queue"
+	"github.com/drone/drone/model"
 	"github.com/drone/mq/stomp"
 
 	"github.com/Sirupsen/logrus"
@@ -190,7 +190,7 @@ func start(c *cli.Context) {
 			},
 		}
 
-		work := new(queue.Work)
+		work := new(model.Work)
 		m.Unmarshal(work)
 		r.run(work)
 	}

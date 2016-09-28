@@ -6,17 +6,16 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone/build"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/queue"
 	"github.com/drone/mq/stomp"
 )
 
 // UpdateFunc handles buid pipeline status updates.
-type UpdateFunc func(*queue.Work)
+type UpdateFunc func(*model.Work)
 
 // LoggerFunc handles buid pipeline logging updates.
 type LoggerFunc func(*build.Line)
 
-var NoopUpdateFunc = func(*queue.Work) {}
+var NoopUpdateFunc = func(*model.Work) {}
 
 var TermLoggerFunc = func(line *build.Line) {
 	fmt.Println(line)
@@ -25,7 +24,7 @@ var TermLoggerFunc = func(line *build.Line) {
 // NewClientUpdater returns an updater that sends updated build details
 // to the drone server.
 func NewClientUpdater(client *stomp.Client) UpdateFunc {
-	return func(w *queue.Work) {
+	return func(w *model.Work) {
 		err := client.SendJSON("/queue/updates", w)
 		if err != nil {
 			logrus.Errorf("Error updating %s/%s#%d.%d. %s",

@@ -9,9 +9,7 @@ import (
 	"github.com/square/go-jose"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/drone/drone/bus"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
@@ -214,8 +212,8 @@ func PostHook(c *gin.Context) {
 	}
 
 	client := stomp.MustFromContext(c)
-	client.SendJSON("/topic/events", bus.Event{
-		Type:  bus.Enqueued,
+	client.SendJSON("/topic/events", model.Event{
+		Type:  model.Enqueued,
 		Repo:  *repo,
 		Build: *build,
 	},
@@ -225,7 +223,7 @@ func PostHook(c *gin.Context) {
 
 	for _, job := range jobs {
 		broker, _ := stomp.FromContext(c)
-		broker.SendJSON("/queue/pending", &queue.Work{
+		broker.SendJSON("/queue/pending", &model.Work{
 			Signed:    build.Signed,
 			Verified:  build.Verified,
 			User:      user,

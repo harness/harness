@@ -11,7 +11,6 @@ import (
 
 	"github.com/drone/drone/build"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/queue"
 	"github.com/drone/drone/version"
 	"github.com/drone/drone/yaml"
 	"github.com/drone/drone/yaml/expander"
@@ -48,7 +47,7 @@ func (a *Agent) Poll() error {
 	return nil
 }
 
-func (a *Agent) Run(payload *queue.Work, cancel <-chan bool) error {
+func (a *Agent) Run(payload *model.Work, cancel <-chan bool) error {
 
 	payload.Job.Status = model.StatusRunning
 	payload.Job.Started = time.Now().Unix()
@@ -90,7 +89,7 @@ func (a *Agent) Run(payload *queue.Work, cancel <-chan bool) error {
 	return err
 }
 
-func (a *Agent) prep(w *queue.Work) (*yaml.Config, error) {
+func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 
 	envs := toEnv(w)
 	w.Yaml = expander.ExpandString(w.Yaml, envs)
@@ -172,7 +171,7 @@ func (a *Agent) prep(w *queue.Work) (*yaml.Config, error) {
 	return conf, nil
 }
 
-func (a *Agent) exec(spec *yaml.Config, payload *queue.Work, cancel <-chan bool) error {
+func (a *Agent) exec(spec *yaml.Config, payload *model.Work, cancel <-chan bool) error {
 
 	conf := build.Config{
 		Engine: a.Engine,
@@ -231,7 +230,7 @@ func (a *Agent) exec(spec *yaml.Config, payload *queue.Work, cancel <-chan bool)
 	}
 }
 
-func toEnv(w *queue.Work) map[string]string {
+func toEnv(w *model.Work) map[string]string {
 	envs := map[string]string{
 		"CI":                         "drone",
 		"DRONE":                      "true",

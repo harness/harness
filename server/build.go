@@ -1,17 +1,16 @@
 package server
 
 import (
+	"bufio"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/drone/drone/bus"
-	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
-	"github.com/drone/drone/stream"
 	"github.com/drone/drone/yaml"
 	"github.com/gin-gonic/gin"
 	"github.com/square/go-jose"
@@ -114,7 +113,7 @@ func GetBuildLogs(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", "application/json")
-	stream.Copy(c.Writer, r)
+	copyLogs(c.Writer, r)
 }
 
 func DeleteBuild(c *gin.Context) {
@@ -151,8 +150,8 @@ func DeleteBuild(c *gin.Context) {
 	store.UpdateBuildJob(c, build, job)
 
 	client := stomp.MustFromContext(c)
-	client.SendJSON("/topic/cancel", bus.Event{
-		Type:  bus.Cancelled,
+	client.SendJSON("/topic/cancel", model.Event{
+		Type:  model.Cancelled,
 		Repo:  *repo,
 		Build: *build,
 		Job:   *job,
@@ -328,8 +327,8 @@ func PostBuild(c *gin.Context) {
 	log.Debugf(".drone.yml is signed=%v and verified=%v", signed, verified)
 
 	client := stomp.MustFromContext(c)
-	client.SendJSON("/topic/events", bus.Event{
-		Type:  bus.Enqueued,
+	client.SendJSON("/topic/events", model.Event{
+		Type:  model.Enqueued,
 		Repo:  *repo,
 		Build: *build,
 	},
@@ -339,7 +338,7 @@ func PostBuild(c *gin.Context) {
 
 	for _, job := range jobs {
 		broker, _ := stomp.FromContext(c)
-		broker.SendJSON("/queue/pending", &queue.Work{
+		broker.SendJSON("/queue/pending", &model.Work{
 			Signed:    signed,
 			Verified:  verified,
 			User:      user,
@@ -370,4 +369,21 @@ func GetBuildQueue(c *gin.Context) {
 		return
 	}
 	c.JSON(200, out)
+}
+
+// copyLogs copies the stream from the source to the destination in valid JSON
+// format. This converts the logs, which are per-line JSON objects, to a
+// proper JSON array.
+func copyLogs(dest io.Writer, src io.Reader) error {
+	io.WriteString(dest, "[")
+
+	scanner := bufio.NewScanner(src)
+	for scanner.Scan() {
+		io.WriteString(dest, scanner.Text())
+		io.WriteString(dest, ",\n")
+	}
+
+	io.WriteString(dest, "{}]")
+
+	return nil
 }

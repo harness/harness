@@ -6,7 +6,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone/agent"
 	"github.com/drone/drone/build/docker"
-	"github.com/drone/drone/queue"
+	"github.com/drone/drone/model"
 	"github.com/drone/mq/stomp"
 
 	"github.com/samalba/dockerclient"
@@ -27,7 +27,7 @@ type pipeline struct {
 	config config
 }
 
-func (r *pipeline) run(w *queue.Work) {
+func (r *pipeline) run(w *model.Work) {
 
 	// defer func() {
 	// 	// r.drone.Ack(id, opts)
