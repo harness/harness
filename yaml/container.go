@@ -40,6 +40,7 @@ type Container struct {
 	DNSSearch      []string
 	MemSwapLimit   int64
 	MemLimit       int64
+	ShmSize        int64
 	CPUQuota       int64
 	CPUShares      int64
 	CPUSet         string
@@ -75,6 +76,7 @@ type container struct {
 	DNSSearch      types.StringOrSlice `yaml:"dns_search"`
 	MemSwapLimit   int64               `yaml:"memswap_limit"`
 	MemLimit       int64               `yaml:"mem_limit"`
+	ShmSize        int64               `yaml:"shm_size"`
 	CPUQuota       int64               `yaml:"cpu_quota"`
 	CPUShares      int64               `yaml:"cpu_shares"`
 	CPUSet         string              `yaml:"cpuset"`
@@ -144,6 +146,7 @@ func (c *containerList) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			DNSSearch:      cc.DNSSearch.Slice(),
 			MemSwapLimit:   cc.MemSwapLimit,
 			MemLimit:       cc.MemLimit,
+			ShmSize:        cc.ShmSize,
 			CPUQuota:       cc.CPUQuota,
 			CPUShares:      cc.CPUShares,
 			CPUSet:         cc.CPUSet,
