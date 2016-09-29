@@ -101,7 +101,14 @@ func HandleUpdate(c context.Context, message *stomp.Message) {
 
 	client := stomp.MustFromContext(c)
 	err = client.SendJSON("/topic/events", model.Event{
-		Type:  model.Started,
+		Type: func() model.EventType {
+			// HACK we don't even really care about the event type.
+			// so we should just simplify how events are triggered.
+			if job.Status == model.StatusRunning {
+				return model.Started
+			}
+			return model.Finished
+		}(),
 		Repo:  *work.Repo,
 		Build: *build,
 		Job:   *job,
