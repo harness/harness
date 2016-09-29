@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/drone/drone/model"
+	"github.com/drone/mq/logger"
 	"github.com/drone/mq/stomp"
+	"github.com/tidwall/redlog"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
@@ -136,9 +138,15 @@ var AgentCmd = cli.Command{
 
 func start(c *cli.Context) {
 
+	log := redlog.New(os.Stderr)
+	log.SetLevel(0)
+	logger.SetLogger(log)
+
 	// debug level if requested by user
 	if c.Bool("debug") {
 		logrus.SetLevel(logrus.DebugLevel)
+
+		log.SetLevel(1)
 	} else {
 		logrus.SetLevel(logrus.WarnLevel)
 	}
@@ -152,10 +160,7 @@ func start(c *cli.Context) {
 		accessToken = c.String("drone-token")
 	}
 
-	logrus.Infof("Connecting to %s with token %s",
-		c.String("drone-server"),
-		accessToken,
-	)
+	logger.Noticef("connecting to server%s", c.String("drone-server"))
 
 	server := strings.TrimRight(c.String("drone-server"), "/")
 
@@ -203,7 +208,7 @@ func start(c *cli.Context) {
 		// dial the drone server to establish a TCP connection.
 		client, err = stomp.Dial(server)
 		if err != nil {
-			logrus.Errorf("Failed to establish server connection, %s, retry in %v", err, backoff)
+			logger.Warningf("connection failed, retry in %v. %s", backoff, err)
 			<-time.After(backoff)
 			continue
 		}
@@ -213,7 +218,7 @@ func start(c *cli.Context) {
 
 		// initialize the stomp session and authenticate.
 		if err = client.Connect(opts...); err != nil {
-			logrus.Errorf("Failed to establish server session, %s, retry in %v", err, backoff)
+			logger.Warningf("session failed, retry in %v", backoff, err)
 			<-time.After(backoff)
 			continue
 		}
@@ -233,10 +238,10 @@ func start(c *cli.Context) {
 			go handler(m) // HACK until we a channel based Subscribe implementation
 		}), opts...)
 
-		logrus.Infof("Server connection establish, ready to process builds.")
+		logger.Noticef("connection establish, ready to process builds.")
 		<-client.Done()
 
-		logrus.Warnf("Server connection interrupted, attempting to reconnect.")
+		logger.Warningf("connection interrupted, attempting to reconnect.")
 	}
 }
 
@@ -251,10 +256,10 @@ func handleSignals() {
 
 	go func() {
 		<-c
-		logrus.Debugln("SIGTERM received.")
-		logrus.Debugln("wait for running builds to finish.")
+		logger.Warningf("SIGTERM received.")
+		logger.Warningf("wait for running builds to finish.")
 		running.Wait()
-		logrus.Debugln("done.")
+		logger.Warningf("done.")
 		os.Exit(0)
 	}()
 }

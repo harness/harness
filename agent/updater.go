@@ -6,6 +6,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone/build"
 	"github.com/drone/drone/model"
+	"github.com/drone/mq/logger"
 	"github.com/drone/mq/stomp"
 )
 
@@ -27,7 +28,7 @@ func NewClientUpdater(client *stomp.Client) UpdateFunc {
 	return func(w *model.Work) {
 		err := client.SendJSON("/queue/updates", w)
 		if err != nil {
-			logrus.Errorf("Error updating %s/%s#%d.%d. %s",
+			logger.Warningf("Error updating %s/%s#%d.%d. %s",
 				w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number, err)
 		}
 		if w.Job.Status != model.StatusRunning {
@@ -38,7 +39,7 @@ func NewClientUpdater(client *stomp.Client) UpdateFunc {
 			}
 
 			if err := client.Send(dest, []byte("eof"), opts...); err != nil {
-				logrus.Errorf("Error sending eof %s/%s#%d.%d. %s",
+				logger.Warningf("Error sending eof %s/%s#%d.%d. %s",
 					w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number, err)
 			}
 		}

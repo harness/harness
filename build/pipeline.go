@@ -175,7 +175,6 @@ func (p *Pipeline) exec(c *yaml.Container) error {
 	}
 	p.containers = append(p.containers, name)
 
-	logrus.Debugf("wait.add(1) for %s logs", name)
 	p.wait.Add(1)
 	go func() {
 		defer func() {
@@ -183,7 +182,6 @@ func (p *Pipeline) exec(c *yaml.Container) error {
 				logrus.Errorln("recover writing build output", r)
 			}
 
-			logrus.Debugf("wait.done() for %s logs", name)
 			p.wait.Done()
 		}()
 
@@ -217,7 +215,6 @@ func (p *Pipeline) exec(c *yaml.Container) error {
 		return err
 	}
 
-	logrus.Debugf("wait.add(1) for %s exit code", name)
 	p.wait.Add(1)
 	go func() {
 		defer func() {
@@ -225,7 +222,6 @@ func (p *Pipeline) exec(c *yaml.Container) error {
 				logrus.Errorln("recover writing exit code to output", r)
 			}
 			p.wait.Done()
-			logrus.Debugf("wait.done() for %s exit code", name)
 		}()
 
 		p.pipe <- &Line{
