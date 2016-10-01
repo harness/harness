@@ -243,6 +243,7 @@ func Test_helper(t *testing.T) {
 
 			build := convertPushHook(from)
 			g.Assert(build.Event).Equal(model.EventTag)
+			g.Assert(build.Branch).Equal("v1.0.0")
 			g.Assert(build.Ref).Equal("refs/tags/v1.0.0")
 		})
 	})
