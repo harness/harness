@@ -21,7 +21,7 @@ type ExitError struct {
 	Code int
 }
 
-// Error reteurns the error message in string format.
+// Error returns the error message in string format.
 func (e *ExitError) Error() string {
 	return fmt.Sprintf("%s : exit code %d", e.Name, e.Code)
 }
@@ -31,7 +31,7 @@ type OomError struct {
 	Name string
 }
 
-// Error reteurns the error message in string format.
+// Error returns the error message in string format.
 func (e *OomError) Error() string {
 	return fmt.Sprintf("%s : received oom kill", e.Name)
 }
