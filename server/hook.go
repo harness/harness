@@ -30,6 +30,7 @@ func PostHook(c *gin.Context) {
 		return
 	}
 	if build == nil {
+		log.Warn("PostHook: build parsed to nil")
 		c.Writer.WriteHeader(200)
 		return
 	}
@@ -131,13 +132,15 @@ func PostHook(c *gin.Context) {
 	}
 	sec, err := remote_.File(user, repo, build, config.Shasum)
 	if err != nil {
-		log.Debugf("cannot find build secrets for %s. %s", repo.FullName, err)
+		log.Infof("cannot find build secrets for %s. %s", repo.FullName, err)
 		// NOTE we don't exit on failure. The sec file is optional
 	}
 
 	axes, err := yaml.ParseMatrix(raw)
 	if err != nil {
-		c.String(500, "Failed to parse yaml file or calculate matrix. %s", err)
+		message := fmt.Sprintf("Failed to parse yaml file or calculate matrix. %s", err)
+		log.Errorf(message)
+		c.String(500, message)
 		return
 	}
 	if len(axes) == 0 {
@@ -146,14 +149,18 @@ func PostHook(c *gin.Context) {
 
 	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
-		c.String(500, "Failed to generate netrc file. %s", err)
+		message := fmt.Sprintf("Failed to generate netrc file. %s", err)
+		log.Error(message)
+		c.String(500, message)
 		return
 	}
 
 	// verify the branches can be built vs skipped
 	branches := yaml.ParseBranch(raw)
 	if !branches.Match(build.Branch) && build.Event != model.EventTag && build.Event != model.EventDeploy {
-		c.String(200, "Branch does not match restrictions defined in yaml")
+		message := "Branch does not match restrictions defined in yaml"
+		log.Warn(message)
+		c.String(200, message)
 		return
 	}
 
