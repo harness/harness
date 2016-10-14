@@ -13,12 +13,13 @@ import (
 )
 
 type config struct {
-	platform   string
-	namespace  string
-	privileged []string
-	pull       bool
-	logs       int64
-	timeout    time.Duration
+	platform       string
+	namespace      string
+	privileged     []string
+	pull           bool
+	logs           int64
+	timeout        time.Duration
+	concealSecrets bool
 }
 
 type pipeline struct {
@@ -40,14 +41,15 @@ func (r *pipeline) run(w *model.Work) {
 	engine := docker.NewClient(r.docker)
 
 	a := agent.Agent{
-		Update:    agent.NewClientUpdater(r.drone),
-		Logger:    agent.NewClientLogger(r.drone, w.Job.ID, r.config.logs),
-		Engine:    engine,
-		Timeout:   r.config.timeout,
-		Platform:  r.config.platform,
-		Namespace: r.config.namespace,
-		Escalate:  r.config.privileged,
-		Pull:      r.config.pull,
+		Update:         agent.NewClientUpdater(r.drone),
+		Logger:         agent.NewClientLogger(r.drone, w.Job.ID, r.config.logs),
+		Engine:         engine,
+		Timeout:        r.config.timeout,
+		Platform:       r.config.platform,
+		Namespace:      r.config.namespace,
+		Escalate:       r.config.privileged,
+		Pull:           r.config.pull,
+		ConcealSecrets: r.config.concealSecrets,
 	}
 
 	cancelFunc := func(m *stomp.Message) {
