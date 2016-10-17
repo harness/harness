@@ -15,6 +15,11 @@ import (
 func argsToEnv(from map[string]interface{}, to map[string]string) error {
 
 	for k, v := range from {
+		if v == nil {
+			to[k] = ""
+			continue
+		}
+
 		t := reflect.TypeOf(v)
 		vv := reflect.ValueOf(v)
 
