@@ -100,8 +100,8 @@ func PatchRepo(c *gin.Context) {
 		Timeout     *int64 `json:"timeout,omitempty"`
 		AllowPull   *bool  `json:"allow_pr,omitempty"`
 		AllowPush   *bool  `json:"allow_push,omitempty"`
-		AllowDeploy *bool  `json:"allow_deploy,omitempty"`
-		AllowTag    *bool  `json:"allow_tag,omitempty"`
+		AllowDeploy *bool  `json:"allow_deploys,omitempty"`
+		AllowTag    *bool  `json:"allow_tags,omitempty"`
 	}{}
 	if err := c.Bind(in); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
