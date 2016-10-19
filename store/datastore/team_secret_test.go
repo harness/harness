@@ -23,11 +23,12 @@ func TestTeamSecrets(t *testing.T) {
 
 		g.It("Should set and get a secret", func() {
 			secret := &model.TeamSecret{
-				Key:    "octocat",
-				Name:   "foo",
-				Value:  "bar",
-				Images: []string{"docker", "gcr"},
-				Events: []string{"push", "tag"},
+				Key:        "octocat",
+				Name:       "foo",
+				Value:      "bar",
+				Images:     []string{"docker", "gcr"},
+				Events:     []string{"push", "tag"},
+				SkipVerify: false,
 			}
 			err := s.SetTeamSecret(secret)
 			g.Assert(err == nil).IsTrue()
