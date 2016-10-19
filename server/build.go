@@ -228,6 +228,7 @@ func PostBuild(c *gin.Context) {
 	if forkit, _ := strconv.ParseBool(fork); forkit {
 		build.ID = 0
 		build.Number = 0
+		build.Parent = num
 		for _, job := range jobs {
 			job.ID = 0
 			job.NodeID = 0
