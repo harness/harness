@@ -23,11 +23,12 @@ func TestRepoSecrets(t *testing.T) {
 
 		g.It("Should set and get a secret", func() {
 			secret := &model.RepoSecret{
-				RepoID: 1,
-				Name:   "foo",
-				Value:  "bar",
-				Images: []string{"docker", "gcr"},
-				Events: []string{"push", "tag"},
+				RepoID:     1,
+				Name:       "foo",
+				Value:      "bar",
+				Images:     []string{"docker", "gcr"},
+				Events:     []string{"push", "tag"},
+				SkipVerify: false,
 			}
 			err := s.SetSecret(secret)
 			g.Assert(err == nil).IsTrue()
