@@ -6,27 +6,26 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-var orgSecretAddCmd = cli.Command{
+var globalSecretAddCmd = cli.Command{
 	Name:      "add",
 	Usage:     "adds a secret",
-	ArgsUsage: "[org] [key] [value]",
+	ArgsUsage: "[key] [value]",
 	Action: func(c *cli.Context) {
-		if err := orgSecretAdd(c); err != nil {
+		if err := globalSecretAdd(c); err != nil {
 			log.Fatalln(err)
 		}
 	},
 	Flags: secretAddFlags(),
 }
 
-func orgSecretAdd(c *cli.Context) error {
-	if len(c.Args()) != 3 {
+func globalSecretAdd(c *cli.Context) error {
+	if len(c.Args()) != 2 {
 		cli.ShowSubcommandHelp(c)
 		return nil
 	}
 
-	team := c.Args().First()
-	name := c.Args().Get(1)
-	value := c.Args().Get(2)
+	name := c.Args().First()
+	value := c.Args().Get(1)
 
 	secret, err := secretParseCmd(name, value, c)
 	if err != nil {
@@ -38,5 +37,5 @@ func orgSecretAdd(c *cli.Context) error {
 		return err
 	}
 
-	return client.TeamSecretPost(team, secret)
+	return client.GlobalSecretPost(secret)
 }

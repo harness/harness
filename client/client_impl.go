@@ -28,28 +28,30 @@ const (
 	pathLogs     = "%s/api/queue/logs/%d"
 	pathLogsAuth = "%s/api/queue/logs/%d?access_token=%s"
 
-	pathSelf        = "%s/api/user"
-	pathFeed        = "%s/api/user/feed"
-	pathRepos       = "%s/api/user/repos"
-	pathRepo        = "%s/api/repos/%s/%s"
-	pathChown       = "%s/api/repos/%s/%s/chown"
-	pathEncrypt     = "%s/api/repos/%s/%s/encrypt"
-	pathBuilds      = "%s/api/repos/%s/%s/builds"
-	pathBuild       = "%s/api/repos/%s/%s/builds/%v"
-	pathJob         = "%s/api/repos/%s/%s/builds/%d/%d"
-	pathLog         = "%s/api/repos/%s/%s/logs/%d/%d"
-	pathKey         = "%s/api/repos/%s/%s/key"
-	pathSign        = "%s/api/repos/%s/%s/sign"
-	pathRepoSecrets = "%s/api/repos/%s/%s/secrets"
-	pathRepoSecret  = "%s/api/repos/%s/%s/secrets/%s"
-	pathTeamSecrets = "%s/api/teams/%s/secrets"
-	pathTeamSecret  = "%s/api/teams/%s/secrets/%s"
-	pathNodes       = "%s/api/nodes"
-	pathNode        = "%s/api/nodes/%d"
-	pathUsers       = "%s/api/users"
-	pathUser        = "%s/api/users/%s"
-	pathBuildQueue  = "%s/api/builds"
-	pathAgent       = "%s/api/agents"
+	pathSelf          = "%s/api/user"
+	pathFeed          = "%s/api/user/feed"
+	pathRepos         = "%s/api/user/repos"
+	pathRepo          = "%s/api/repos/%s/%s"
+	pathChown         = "%s/api/repos/%s/%s/chown"
+	pathEncrypt       = "%s/api/repos/%s/%s/encrypt"
+	pathBuilds        = "%s/api/repos/%s/%s/builds"
+	pathBuild         = "%s/api/repos/%s/%s/builds/%v"
+	pathJob           = "%s/api/repos/%s/%s/builds/%d/%d"
+	pathLog           = "%s/api/repos/%s/%s/logs/%d/%d"
+	pathKey           = "%s/api/repos/%s/%s/key"
+	pathSign          = "%s/api/repos/%s/%s/sign"
+	pathRepoSecrets   = "%s/api/repos/%s/%s/secrets"
+	pathRepoSecret    = "%s/api/repos/%s/%s/secrets/%s"
+	pathTeamSecrets   = "%s/api/teams/%s/secrets"
+	pathTeamSecret    = "%s/api/teams/%s/secrets/%s"
+	pathGlobalSecrets = "%s/api/global/secrets"
+	pathGlobalSecret  = "%s/api/global/secrets/%s"
+	pathNodes         = "%s/api/nodes"
+	pathNode          = "%s/api/nodes/%d"
+	pathUsers         = "%s/api/users"
+	pathUser          = "%s/api/users/%s"
+	pathBuildQueue    = "%s/api/builds"
+	pathAgent         = "%s/api/agents"
 )
 
 type client struct {
@@ -284,7 +286,7 @@ func (c *client) SecretDel(owner, name, secret string) error {
 	return c.delete(uri)
 }
 
-// TeamSecretList returns a list of a repository secrets.
+// TeamSecretList returns a list of organizational secrets.
 func (c *client) TeamSecretList(team string) ([]*model.Secret, error) {
 	var out []*model.Secret
 	uri := fmt.Sprintf(pathTeamSecrets, c.base, team)
@@ -292,15 +294,35 @@ func (c *client) TeamSecretList(team string) ([]*model.Secret, error) {
 	return out, err
 }
 
-// TeamSecretPost create or updates a repository secret.
+// TeamSecretPost create or updates a organizational secret.
 func (c *client) TeamSecretPost(team string, secret *model.Secret) error {
 	uri := fmt.Sprintf(pathTeamSecrets, c.base, team)
 	return c.post(uri, secret, nil)
 }
 
-// TeamSecretDel deletes a named repository secret.
+// TeamSecretDel deletes a named orgainization secret.
 func (c *client) TeamSecretDel(team, secret string) error {
 	uri := fmt.Sprintf(pathTeamSecret, c.base, team, secret)
+	return c.delete(uri)
+}
+
+// GlobalSecretList returns a list of global secrets.
+func (c *client) GlobalSecretList() ([]*model.Secret, error) {
+	var out []*model.Secret
+	uri := fmt.Sprintf(pathGlobalSecrets, c.base)
+	err := c.get(uri, &out)
+	return out, err
+}
+
+// GlobalSecretPost create or updates a global secret.
+func (c *client) GlobalSecretPost(secret *model.Secret) error {
+	uri := fmt.Sprintf(pathGlobalSecrets, c.base)
+	return c.post(uri, secret, nil)
+}
+
+// GlobalSecretDel deletes a named global secret.
+func (c *client) GlobalSecretDel(secret string) error {
+	uri := fmt.Sprintf(pathGlobalSecret, c.base, secret)
 	return c.delete(uri)
 }
 

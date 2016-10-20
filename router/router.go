@@ -74,6 +74,15 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		}
 	}
 
+	global := e.Group("/api/global")
+	{
+		global.Use(session.MustAdmin())
+
+		global.GET("/secrets", server.GetGlobalSecrets)
+		global.POST("/secrets", server.PostGlobalSecret)
+		global.DELETE("/secrets/:secret", server.DeleteGlobalSecret)
+	}
+
 	repos := e.Group("/api/repos/:owner/:name")
 	{
 		repos.POST("", server.PostRepo)
