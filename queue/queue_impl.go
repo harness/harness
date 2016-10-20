@@ -83,3 +83,19 @@ func (q *queue) PullClose(cn CloseNotifier) *Work {
 		}
 	}
 }
+
+func (q *queue) PullCloseWithTimeout(cn CloseNotifierTimeout) *Work {
+	for {
+		select {
+		case <-cn.CloseNotify():
+			return nil
+		case <-cn.Timeout():
+			return nil
+		case work := <-q.itemc:
+			q.Lock()
+			delete(q.items, work)
+			q.Unlock()
+			return work
+		}
+	}
+}
