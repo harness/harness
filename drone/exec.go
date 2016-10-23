@@ -13,7 +13,6 @@ import (
 	"github.com/drone/drone/agent"
 	"github.com/drone/drone/build/docker"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/queue"
 	"github.com/drone/drone/yaml"
 
 	"github.com/codegangsta/cli"
@@ -340,7 +339,7 @@ func exec(c *cli.Context) error {
 		Pull:      c.Bool("pull"),
 	}
 
-	payload := &queue.Work{
+	payload := &model.Work{
 		Yaml:     string(file),
 		Verified: c.BoolT("yaml.verified"),
 		Signed:   c.BoolT("yaml.signed"),

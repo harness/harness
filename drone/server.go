@@ -6,10 +6,10 @@ import (
 
 	"github.com/drone/drone/router"
 	"github.com/drone/drone/router/middleware"
-	"github.com/gin-gonic/contrib/ginrus"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/gin-gonic/contrib/ginrus"
 )
 
 var serverCmd = cli.Command{
@@ -288,13 +288,11 @@ func server(c *cli.Context) error {
 		ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true),
 		middleware.Version,
 		middleware.Config(c),
-		middleware.Queue(c),
-		middleware.Stream(c),
-		middleware.Bus(c),
 		middleware.Cache(c),
 		middleware.Store(c),
 		middleware.Remote(c),
 		middleware.Agents(c),
+		middleware.Broker(c),
 	)
 
 	// start the server with tls enabled

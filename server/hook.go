@@ -3,19 +3,19 @@ package server
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/square/go-jose"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/drone/drone/bus"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
 	"github.com/drone/drone/yaml"
+	"github.com/drone/mq/stomp"
 )
 
 var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
@@ -208,12 +208,22 @@ func PostHook(c *gin.Context) {
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
 	secs, err := store.GetMergedSecretList(c, repo)
 	if err != nil {
-		log.Errorf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
+		log.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
-	bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
+	client := stomp.MustFromContext(c)
+	client.SendJSON("/topic/events", model.Event{
+		Type:  model.Enqueued,
+		Repo:  *repo,
+		Build: *build,
+	},
+		stomp.WithHeader("repo", repo.FullName),
+		stomp.WithHeader("private", strconv.FormatBool(repo.IsPrivate)),
+	)
+
 	for _, job := range jobs {
-		queue.Publish(c, &queue.Work{
+		broker, _ := stomp.FromContext(c)
+		broker.SendJSON("/queue/pending", &model.Work{
 			Signed:    build.Signed,
 			Verified:  build.Verified,
 			User:      user,
@@ -225,7 +235,15 @@ func PostHook(c *gin.Context) {
 			Yaml:      string(raw),
 			Secrets:   secs,
 			System:    &model.System{Link: httputil.GetURL(c.Request)},
-		})
+		},
+			stomp.WithHeader(
+				"platform",
+				yaml.ParsePlatformDefault(raw, "linux/amd64"),
+			),
+			stomp.WithHeaders(
+				yaml.ParseLabel(raw),
+			),
+		)
 	}
 
 }

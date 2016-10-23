@@ -1,6 +1,4 @@
-package bus
-
-import "github.com/drone/drone/model"
+package model
 
 // EventType defines the possible types of build events.
 type EventType string
@@ -14,15 +12,15 @@ const (
 
 // Event represents a build event.
 type Event struct {
-	Type  EventType   `json:"type"`
-	Repo  model.Repo  `json:"repo"`
-	Build model.Build `json:"build"`
-	Job   model.Job   `json:"job"`
+	Type  EventType `json:"type"`
+	Repo  Repo      `json:"repo"`
+	Build Build     `json:"build"`
+	Job   Job       `json:"job"`
 }
 
 // NewEvent creates a new Event for the build, using copies of
 // the build data to avoid possible mutation or race conditions.
-func NewEvent(t EventType, r *model.Repo, b *model.Build, j *model.Job) *Event {
+func NewEvent(t EventType, r *Repo, b *Build, j *Job) *Event {
 	return &Event{
 		Type:  t,
 		Repo:  *r,
@@ -31,7 +29,7 @@ func NewEvent(t EventType, r *model.Repo, b *model.Build, j *model.Job) *Event {
 	}
 }
 
-func NewBuildEvent(t EventType, r *model.Repo, b *model.Build) *Event {
+func NewBuildEvent(t EventType, r *Repo, b *Build) *Event {
 	return &Event{
 		Type:  t,
 		Repo:  *r,

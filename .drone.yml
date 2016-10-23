@@ -3,7 +3,7 @@ workspace:
   path: src/github.com/drone/drone
 
 pipeline:
-  backend:
+  test:
     image: golang:1.6
     environment:
       - GO15VENDOREXPERIMENT=1
@@ -23,7 +23,7 @@ pipeline:
       event: push
 
   publish:
-    image: s3
+    image: plugins/s3
     acl: public-read
     bucket: downloads.drone.io
     source: release/**/*.*
@@ -32,9 +32,9 @@ pipeline:
       branch: master
 
   docker:
+    image: plugins/docker
     repo: drone/drone
-    tag: [ "0.5.0", "0.5" ]
-    storage_driver: overlay
+    tag: [ "0.5", "0.5.0", "0.5.0-rc" ]
     when:
       branch: master
       event: push

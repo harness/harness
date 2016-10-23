@@ -128,35 +128,5 @@ func Test_normalize(t *testing.T) {
 				g.Assert(c.Pipeline[0].Image).Equal("golang:1.5")
 			})
 		})
-
-		g.Describe("plugins", func() {
-
-			g.It("should prepend namespace", func() {
-				c := newConfig(&yaml.Container{
-					Image: "slack",
-				})
-
-				ImageNamespace(c, "plugins")
-				g.Assert(c.Pipeline[0].Image).Equal("plugins/slack")
-			})
-
-			g.It("should not override existing namespace", func() {
-				c := newConfig(&yaml.Container{
-					Image: "index.docker.io/drone/git",
-				})
-
-				ImageNamespace(c, "plugins")
-				g.Assert(c.Pipeline[0].Image).Equal("index.docker.io/drone/git")
-			})
-
-			g.It("should replace underscores with dashes", func() {
-				c := newConfig(&yaml.Container{
-					Image: "gh_pages",
-				})
-
-				ImageName(c)
-				g.Assert(c.Pipeline[0].Image).Equal("gh-pages")
-			})
-		})
 	})
 }

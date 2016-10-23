@@ -1,120 +1,20 @@
 package server
 
 import (
-	"bufio"
-	"encoding/json"
-	"io"
+	"fmt"
 	"strconv"
 	"time"
 
-	"github.com/drone/drone/bus"
 	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/store"
-	"github.com/drone/drone/stream"
+	"github.com/drone/mq/stomp"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/manucorporat/sse"
 )
-
-// GetRepoEvents will upgrade the connection to a Websocket and will stream
-// event updates to the browser.
-func GetRepoEvents(c *gin.Context) {
-	repo := session.Repo(c)
-	c.Writer.Header().Set("Content-Type", "text/event-stream")
-
-	eventc := make(chan *bus.Event, 1)
-	bus.Subscribe(c, eventc)
-	defer func() {
-		bus.Unsubscribe(c, eventc)
-		close(eventc)
-		logrus.Infof("closed event stream")
-	}()
-
-	c.Stream(func(w io.Writer) bool {
-		select {
-		case event := <-eventc:
-			if event == nil {
-				logrus.Infof("nil event received")
-				return false
-			}
-
-			// TODO(bradrydzewski) This is a super hacky workaround until we improve
-			// the actual bus. Having a per-call database event is just plain stupid.
-			if event.Repo.FullName == repo.FullName {
-
-				var payload = struct {
-					model.Build
-					Jobs []*model.Job `json:"jobs"`
-				}{}
-				payload.Build = event.Build
-				payload.Jobs, _ = store.GetJobList(c, &event.Build)
-				data, _ := json.Marshal(&payload)
-
-				sse.Encode(w, sse.Event{
-					Event: "message",
-					Data:  string(data),
-				})
-			}
-		case <-c.Writer.CloseNotify():
-			return false
-		}
-		return true
-	})
-}
-
-func GetStream(c *gin.Context) {
-
-	repo := session.Repo(c)
-	buildn, _ := strconv.Atoi(c.Param("build"))
-	jobn, _ := strconv.Atoi(c.Param("number"))
-
-	c.Writer.Header().Set("Content-Type", "text/event-stream")
-
-	build, err := store.GetBuildNumber(c, repo, buildn)
-	if err != nil {
-		logrus.Debugln("stream cannot get build number.", err)
-		c.AbortWithError(404, err)
-		return
-	}
-	job, err := store.GetJobNumber(c, build, jobn)
-	if err != nil {
-		logrus.Debugln("stream cannot get job number.", err)
-		c.AbortWithError(404, err)
-		return
-	}
-
-	rc, err := stream.Reader(c, stream.ToKey(job.ID))
-	if err != nil {
-		c.AbortWithError(404, err)
-		return
-	}
-
-	go func() {
-		<-c.Writer.CloseNotify()
-		rc.Close()
-	}()
-
-	var line int
-	var scanner = bufio.NewScanner(rc)
-	for scanner.Scan() {
-		line++
-		var err = sse.Encode(c.Writer, sse.Event{
-			Id:    strconv.Itoa(line),
-			Event: "message",
-			Data:  scanner.Text(),
-		})
-		if err != nil {
-			break
-		}
-		c.Writer.Flush()
-	}
-
-	logrus.Debugf("Closed stream %s#%d", repo.FullName, build.Number)
-}
 
 var (
 	// Time allowed to write the file to the client.
@@ -165,47 +65,41 @@ func LogStream(c *gin.Context) {
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
-	rc, err := stream.Reader(c, stream.ToKey(job.ID))
+	logs := make(chan []byte)
+	done := make(chan bool)
+	dest := fmt.Sprintf("/topic/logs.%d", job.ID)
+	client, _ := stomp.FromContext(c)
+	sub, err := client.Subscribe(dest, stomp.HandlerFunc(func(m *stomp.Message) {
+		if m.Header.GetBool("eof") {
+			done <- true
+		} else {
+			logs <- m.Body
+		}
+		m.Release()
+	}))
 	if err != nil {
-		c.AbortWithError(404, err)
+		logrus.Errorf("Unable to read logs from broker. %s", err)
 		return
 	}
-
-	quitc := make(chan bool)
 	defer func() {
-		quitc <- true
-		close(quitc)
-		rc.Close()
-		ws.Close()
-		logrus.Debug("Successfully closed websocket")
+		client.Unsubscribe(sub)
+		close(done)
+		close(logs)
 	}()
 
-	go func() {
-		defer func() {
-			recover()
-		}()
-		for {
-			select {
-			case <-quitc:
+	for {
+		select {
+		case buf := <-logs:
+			ws.SetWriteDeadline(time.Now().Add(writeWait))
+			ws.WriteMessage(websocket.TextMessage, buf)
+		case <-done:
+			return
+		case <-ticker.C:
+			err := ws.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(writeWait))
+			if err != nil {
 				return
-			case <-ticker.C:
-				err := ws.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(writeWait))
-				if err != nil {
-					return
-				}
 			}
 		}
-	}()
-
-	var scanner = bufio.NewScanner(rc)
-	var b []byte
-	for scanner.Scan() {
-		b = scanner.Bytes()
-		if len(b) == 0 {
-			continue
-		}
-		ws.SetWriteDeadline(time.Now().Add(writeWait))
-		ws.WriteMessage(websocket.TextMessage, b)
 	}
 }
 
@@ -227,18 +121,32 @@ func EventStream(c *gin.Context) {
 		repo, _ = cache.GetRepoMap(c, user)
 	}
 
-	ticker := time.NewTicker(pingPeriod)
+	eventc := make(chan []byte, 10)
 	quitc := make(chan bool)
-	eventc := make(chan *bus.Event, 10)
-	bus.Subscribe(c, eventc)
+	tick := time.NewTicker(pingPeriod)
 	defer func() {
-		ticker.Stop()
-		bus.Unsubscribe(c, eventc)
-		quitc <- true
-		close(quitc)
-		close(eventc)
+		tick.Stop()
 		ws.Close()
 		logrus.Debug("Successfully closed websocket")
+	}()
+
+	client := stomp.MustFromContext(c)
+	sub, err := client.Subscribe("/topic/events", stomp.HandlerFunc(func(m *stomp.Message) {
+		name := m.Header.GetString("repo")
+		priv := m.Header.GetBool("private")
+		if repo[name] || !priv {
+			eventc <- m.Body
+		}
+		m.Release()
+	}))
+	if err != nil {
+		logrus.Errorf("Unable to read logs from broker. %s", err)
+		return
+	}
+	defer func() {
+		client.Unsubscribe(sub)
+		close(quitc)
+		close(eventc)
 	}()
 
 	go func() {
@@ -249,15 +157,13 @@ func EventStream(c *gin.Context) {
 			select {
 			case <-quitc:
 				return
-			case event := <-eventc:
-				if event == nil {
+			case event, ok := <-eventc:
+				if !ok {
 					return
 				}
-				if repo[event.Repo.FullName] || !event.Repo.IsPrivate {
-					ws.SetWriteDeadline(time.Now().Add(writeWait))
-					ws.WriteJSON(event)
-				}
-			case <-ticker.C:
+				ws.SetWriteDeadline(time.Now().Add(writeWait))
+				ws.WriteMessage(websocket.TextMessage, event)
+			case <-tick.C:
 				err := ws.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(writeWait))
 				if err != nil {
 					return

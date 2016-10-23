@@ -113,17 +113,9 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.POST("/hook", server.PostHook)
 	e.POST("/api/hook", server.PostHook)
 
-	stream := e.Group("/api/stream")
-	{
-		stream.Use(session.SetRepo())
-		stream.Use(session.SetPerm())
-		stream.Use(session.MustPull)
-
-		stream.GET("/:owner/:name", server.GetRepoEvents)
-		stream.GET("/:owner/:name/:build/:number", server.GetStream)
-	}
 	ws := e.Group("/ws")
 	{
+		ws.GET("/broker", server.Broker)
 		ws.GET("/feed", server.EventStream)
 		ws.GET("/logs/:owner/:name/:build/:number",
 			session.SetRepo(),
@@ -150,20 +142,6 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	{
 		agents.Use(session.MustAdmin())
 		agents.GET("", server.GetAgents)
-	}
-
-	queue := e.Group("/api/queue")
-	{
-		queue.Use(session.AuthorizeAgent)
-		queue.POST("/pull", server.Pull)
-		queue.POST("/pull/:os/:arch", server.Pull)
-		queue.POST("/wait/:id", server.Wait)
-		queue.POST("/stream/:id", server.Stream)
-		queue.POST("/status/:id", server.Update)
-		queue.POST("/ping", server.Ping)
-
-		queue.POST("/logs/:id", server.PostLogs)
-		queue.GET("/logs/:id", server.WriteLogs)
 	}
 
 	// DELETE THESE

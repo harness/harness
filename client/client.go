@@ -4,7 +4,6 @@ import (
 	"io"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/queue"
 )
 
 // Client is used to communicate with a Drone server.
@@ -103,27 +102,4 @@ type Client interface {
 
 	// AgentList returns a list of build agents.
 	AgentList() ([]*model.Agent, error)
-
-	//
-	// below items for Queue (internal use only)
-	//
-
-	// Pull pulls work from the server queue.
-	Pull(os, arch string) (*queue.Work, error)
-
-	// Push pushes an update to the server.
-	Push(*queue.Work) error
-
-	// Stream streams the build logs to the server.
-	Stream(int64, io.ReadCloser) error
-
-	LogStream(int64) (StreamWriter, error)
-
-	LogPost(int64, io.ReadCloser) error
-
-	// Wait waits for the job to the complete.
-	Wait(int64) *Wait
-
-	// Ping the server
-	Ping() error
 }

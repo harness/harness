@@ -3,17 +3,19 @@ package agent
 import (
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 
-	"github.com/drone/drone/client"
-	"github.com/drone/drone/shared/token"
-	"github.com/samalba/dockerclient"
+	"github.com/drone/drone/model"
+	"github.com/drone/mq/logger"
+	"github.com/drone/mq/stomp"
+	"github.com/tidwall/redlog"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
-	"strings"
+	"github.com/samalba/dockerclient"
 )
 
 // AgentCmd is the exported command for starting the drone agent.
@@ -58,16 +60,10 @@ var AgentCmd = cli.Command{
 			Value:  "amd64",
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_STORAGE_DRIVER",
-			Name:   "drone-storage-driver",
-			Usage:  "docker storage driver",
-			Value:  "overlay",
-		},
-		cli.StringFlag{
 			EnvVar: "DRONE_SERVER",
 			Name:   "drone-server",
 			Usage:  "drone server address",
-			Value:  "http://localhost:8000",
+			Value:  "ws://localhost:8000/ws/broker",
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_TOKEN",
@@ -101,6 +97,11 @@ var AgentCmd = cli.Command{
 			Name:   "timeout",
 			Usage:  "drone timeout due to log inactivity",
 			Value:  time.Minute * 5,
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_FILTER",
+			Name:   "filter",
+			Usage:  "filter jobs processed by this agent",
 		},
 		cli.IntFlag{
 			EnvVar: "DRONE_MAX_LOGS",
@@ -137,30 +138,31 @@ var AgentCmd = cli.Command{
 
 func start(c *cli.Context) {
 
+	log := redlog.New(os.Stderr)
+	log.SetLevel(0)
+	logger.SetLogger(log)
+
 	// debug level if requested by user
 	if c.Bool("debug") {
 		logrus.SetLevel(logrus.DebugLevel)
+
+		log.SetLevel(1)
 	} else {
 		logrus.SetLevel(logrus.WarnLevel)
 	}
 
 	var accessToken string
 	if c.String("drone-secret") != "" {
-		secretToken := c.String("drone-secret")
-		accessToken, _ = token.New(token.AgentToken, "").Sign(secretToken)
+		// secretToken := c.String("drone-secret")
+		accessToken = c.String("drone-secret")
+		// accessToken, _ = token.New(token.AgentToken, "").Sign(secretToken)
 	} else {
 		accessToken = c.String("drone-token")
 	}
 
-	logrus.Infof("Connecting to %s with token %s",
-		c.String("drone-server"),
-		accessToken,
-	)
+	logger.Noticef("connecting to server%s", c.String("drone-server"))
 
-	client := client.NewClientToken(
-		strings.TrimRight(c.String("drone-server"), "/"),
-		accessToken,
-	)
+	server := strings.TrimRight(c.String("drone-server"), "/")
 
 	tls, err := dockerclient.TLSConfigFromCertPath(c.String("docker-cert-path"))
 	if err == nil {
@@ -171,42 +173,76 @@ func start(c *cli.Context) {
 		logrus.Fatal(err)
 	}
 
-	go func() {
-		for {
-			if err := client.Ping(); err != nil {
-				logrus.Warnf("unable to ping the server. %s", err.Error())
-			}
-			time.Sleep(c.Duration("ping"))
-		}
-	}()
+	var client *stomp.Client
 
-	var wg sync.WaitGroup
-	for i := 0; i < c.Int("docker-max-procs"); i++ {
-		wg.Add(1)
-		go func() {
-			r := pipeline{
-				drone:  client,
-				docker: docker,
-				config: config{
-					platform:   c.String("docker-os") + "/" + c.String("docker-arch"),
-					timeout:    c.Duration("timeout"),
-					namespace:  c.String("namespace"),
-					privileged: c.StringSlice("privileged"),
-					pull:       c.BoolT("pull"),
-					logs:       int64(c.Int("max-log-size")) * 1000000,
-				},
-			}
-			for {
-				if err := r.run(); err != nil {
-					dur := c.Duration("backoff")
-					logrus.Warnf("reconnect in %v. %s", dur, err.Error())
-					time.Sleep(dur)
-				}
-			}
+	handler := func(m *stomp.Message) {
+		running.Add(1)
+		defer func() {
+			running.Done()
+			client.Ack(m.Ack)
 		}()
+
+		r := pipeline{
+			drone:  client,
+			docker: docker,
+			config: config{
+				platform:   c.String("docker-os") + "/" + c.String("docker-arch"),
+				timeout:    c.Duration("timeout"),
+				namespace:  c.String("namespace"),
+				privileged: c.StringSlice("privileged"),
+				pull:       c.BoolT("pull"),
+				logs:       int64(c.Int("max-log-size")) * 1000000,
+			},
+		}
+
+		work := new(model.Work)
+		m.Unmarshal(work)
+		r.run(work)
 	}
+
 	handleSignals()
-	wg.Wait()
+
+	backoff := c.Duration("backoff")
+
+	for {
+		// dial the drone server to establish a TCP connection.
+		client, err = stomp.Dial(server)
+		if err != nil {
+			logger.Warningf("connection failed, retry in %v. %s", backoff, err)
+			<-time.After(backoff)
+			continue
+		}
+		opts := []stomp.MessageOption{
+			stomp.WithCredentials("x-token", accessToken),
+		}
+
+		// initialize the stomp session and authenticate.
+		if err = client.Connect(opts...); err != nil {
+			logger.Warningf("session failed, retry in %v", backoff, err)
+			<-time.After(backoff)
+			continue
+		}
+
+		opts = []stomp.MessageOption{
+			stomp.WithAck("client"),
+			stomp.WithPrefetch(
+				c.Int("docker-max-procs"),
+			),
+		}
+		if filter := c.String("filter"); filter != "" {
+			opts = append(opts, stomp.WithSelector(filter))
+		}
+
+		// subscribe to the pending build queue.
+		client.Subscribe("/queue/pending", stomp.HandlerFunc(func(m *stomp.Message) {
+			go handler(m) // HACK until we a channel based Subscribe implementation
+		}), opts...)
+
+		logger.Noticef("connection establish, ready to process builds.")
+		<-client.Done()
+
+		logger.Warningf("connection interrupted, attempting to reconnect.")
+	}
 }
 
 // tracks running builds
@@ -220,10 +256,10 @@ func handleSignals() {
 
 	go func() {
 		<-c
-		logrus.Debugln("SIGTERM received.")
-		logrus.Debugln("wait for running builds to finish.")
+		logger.Warningf("SIGTERM received.")
+		logger.Warningf("wait for running builds to finish.")
 		running.Wait()
-		logrus.Debugln("done.")
+		logger.Warningf("done.")
 		os.Exit(0)
 	}()
 }
