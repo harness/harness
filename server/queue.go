@@ -23,15 +23,15 @@ import (
 func Pull(c *gin.Context) {
 	logrus.Debugf("Agent %s connected.", c.ClientIP())
 
-	labels := &struct{
+	labels := &struct {
 		Labels []string `json:"labels"`
-	}
-	if len(labels.Labels) == 0{
-		labels.Labels = []string{DefaultLabel}
+	}{}
+	if len(labels.Labels) == 0 {
+		labels.Labels = []string{queue.DefaultLabel}
 	}
 	c.BindJSON(labels)
 
-	w := queue.PullCloseWithLabels(c,  labels.Labels, c.Writer)
+	w := queue.PullCloseWithLabels(c, labels.Labels, c.Writer)
 	if w == nil {
 		logrus.Debugf("Agent %s could not pull work.", c.ClientIP())
 	} else {

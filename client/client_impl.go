@@ -338,9 +338,9 @@ func (c *client) Pull(os, arch string) (*queue.Work, error) {
 
 func (c *client) PullLabels(labels []string) (*queue.Work, error) {
 	out := new(queue.Work)
-	in := struct{
+	in := struct {
 		Labels []string `json:"labels"`
-	}
+	}{}
 	in.Labels = labels
 	uri := fmt.Sprintf(pathPullLabel, c.base)
 	err := c.post(uri, in, out)

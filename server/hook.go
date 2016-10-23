@@ -6,6 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	jose "github.com/square/go-jose"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/bus"
 	"github.com/drone/drone/model"
