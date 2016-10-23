@@ -21,7 +21,7 @@ import (
 
 const (
 	pathPull      = "%s/api/queue/pull/%s/%s"
-	pathPullLabel = "%s/api/queue/pull/"
+	pathPullLabel = "%s/api/queue/pull"
 	pathWait      = "%s/api/queue/wait/%d"
 	pathStream    = "%s/api/queue/stream/%d"
 	pathPush      = "%s/api/queue/status/%d"

@@ -26,10 +26,11 @@ func Pull(c *gin.Context) {
 	labels := &struct {
 		Labels []string `json:"labels"`
 	}{}
+
+	c.BindJSON(labels)
 	if len(labels.Labels) == 0 {
 		labels.Labels = []string{queue.DefaultLabel}
 	}
-	c.BindJSON(labels)
 
 	w := queue.PullCloseWithLabels(c, labels.Labels, c.Writer)
 	if w == nil {
