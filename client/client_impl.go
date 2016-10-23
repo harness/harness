@@ -20,13 +20,14 @@ import (
 )
 
 const (
-	pathPull     = "%s/api/queue/pull/%s/%s"
-	pathWait     = "%s/api/queue/wait/%d"
-	pathStream   = "%s/api/queue/stream/%d"
-	pathPush     = "%s/api/queue/status/%d"
-	pathPing     = "%s/api/queue/ping"
-	pathLogs     = "%s/api/queue/logs/%d"
-	pathLogsAuth = "%s/api/queue/logs/%d?access_token=%s"
+	pathPull      = "%s/api/queue/pull/%s/%s"
+	pathPullLabel = "%s/api/queue/pull/"
+	pathWait      = "%s/api/queue/wait/%d"
+	pathStream    = "%s/api/queue/stream/%d"
+	pathPush      = "%s/api/queue/status/%d"
+	pathPing      = "%s/api/queue/ping"
+	pathLogs      = "%s/api/queue/logs/%d"
+	pathLogsAuth  = "%s/api/queue/logs/%d?access_token=%s"
 
 	pathSelf        = "%s/api/user"
 	pathFeed        = "%s/api/user/feed"
@@ -332,6 +333,17 @@ func (c *client) Pull(os, arch string) (*queue.Work, error) {
 	out := new(queue.Work)
 	uri := fmt.Sprintf(pathPull, c.base, os, arch)
 	err := c.post(uri, nil, out)
+	return out, err
+}
+
+func (c *client) PullLabels(labels []string) (*queue.Work, error) {
+	out := new(queue.Work)
+	in := struct{
+		Labels []string `json:"labels"`
+	}
+	in.Labels = labels
+	uri := fmt.Sprintf(pathPullLabel, c.base)
+	err := c.post(uri, in, out)
 	return out, err
 }
 

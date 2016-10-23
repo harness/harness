@@ -5,7 +5,6 @@ import (
 	"regexp"
 
 	"github.com/gin-gonic/gin"
-	"github.com/square/go-jose"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/bus"
@@ -150,6 +149,8 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
+	label := yaml.ParseLabel(raw)
+
 	// verify the branches can be built vs skipped
 	branches := yaml.ParseBranch(raw)
 	if !branches.Match(build.Branch) && build.Event != model.EventTag && build.Event != model.EventDeploy {
@@ -225,6 +226,7 @@ func PostHook(c *gin.Context) {
 			Yaml:      string(raw),
 			Secrets:   secs,
 			System:    &model.System{Link: httputil.GetURL(c.Request)},
+			Label:     label,
 		})
 	}
 

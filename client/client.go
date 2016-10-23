@@ -111,6 +111,8 @@ type Client interface {
 	// Pull pulls work from the server queue.
 	Pull(os, arch string) (*queue.Work, error)
 
+	PullLabels([]string) (*queue.Work, error)
+
 	// Push pushes an update to the server.
 	Push(*queue.Work) error
 

@@ -11,9 +11,10 @@ import (
 	"github.com/drone/drone/shared/token"
 	"github.com/samalba/dockerclient"
 
+	"strings"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
-	"strings"
 )
 
 // AgentCmd is the exported command for starting the drone agent.
@@ -121,6 +122,14 @@ var AgentCmd = cli.Command{
 				"plugins/ecr:*",
 			},
 		},
+		cli.StringSliceFlag{
+			EnvVar: "DRONE_AGENT_LABEL",
+			Name:   "labels",
+			Usage:  "agent labels",
+			Value: &cli.StringSlice{
+				"default",
+			},
+		},
 		cli.StringFlag{
 			EnvVar: "DRONE_PLUGIN_NAMESPACE",
 			Name:   "namespace",
@@ -194,6 +203,7 @@ func start(c *cli.Context) {
 					privileged: c.StringSlice("privileged"),
 					pull:       c.BoolT("pull"),
 					logs:       int64(c.Int("max-log-size")) * 1000000,
+					labels:     c.StringSlice("labels"),
 				},
 			}
 			for {

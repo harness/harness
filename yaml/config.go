@@ -12,6 +12,7 @@ type Workspace struct {
 type Config struct {
 	Image     string
 	Build     *Build
+	Label     string
 	Workspace *Workspace
 	Pipeline  []*Container
 	Services  []*Container
@@ -29,6 +30,7 @@ func Parse(data []byte) (*Config, error) {
 	v := struct {
 		Image     string
 		Build     *Build
+		Label     string
 		Workspace *Workspace
 		Services  containerList
 		Pipeline  containerList
@@ -48,6 +50,7 @@ func Parse(data []byte) (*Config, error) {
 	return &Config{
 		Image:     v.Image,
 		Build:     v.Build,
+		Label:     v.Label,
 		Workspace: v.Workspace,
 		Services:  v.Services.containers,
 		Pipeline:  v.Pipeline.containers,
@@ -59,6 +62,7 @@ func Parse(data []byte) (*Config, error) {
 type config struct {
 	Image     string
 	Build     *Build
+	Label     string
 	Workspace *Workspace
 	Services  containerList
 	Pipeline  containerList

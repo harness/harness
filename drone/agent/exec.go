@@ -20,6 +20,7 @@ type config struct {
 	pull       bool
 	logs       int64
 	timeout    time.Duration
+	labels     []string
 }
 
 type pipeline struct {
@@ -29,7 +30,7 @@ type pipeline struct {
 }
 
 func (r *pipeline) run() error {
-	w, err := r.drone.Pull("linux", "amd64")
+	w, err := r.drone.PullLabels(r.config.labels)
 	if err != nil {
 		return err
 	}
