@@ -12,6 +12,10 @@ import (
 // exist in the queue.
 var ErrNotFound = errors.New("queue item not found")
 
+const (
+	DefaultLabel = "default"
+)
+
 type Queue interface {
 	// Publish inserts work at the tail of this queue, waiting for
 	// space to become available if the queue is full.
@@ -25,11 +29,15 @@ type Queue interface {
 	// waiting if necessary until work becomes available.
 	Pull() *Work
 
+	PullWithLabels([]string) *Work
+
 	// PullClose retrieves and removes the head of this queue,
 	// waiting if necessary until work becomes available. The
 	// CloseNotifier should be provided to clone the channel
 	// if the subscribing client terminates its connection.
 	PullClose(CloseNotifier) *Work
+
+	PullCloseWithLabels([]string, CloseNotifier) *Work
 }
 
 // Publish inserts work at the tail of this queue, waiting for
@@ -50,12 +58,20 @@ func Pull(c context.Context) *Work {
 	return FromContext(c).Pull()
 }
 
+func PullWithLabels(c context.Context, labels []string) *Work {
+	return FromContext(c).PullWithLabels(labels)
+}
+
 // PullClose retrieves and removes the head of this queue,
 // waiting if necessary until work becomes available. The
 // CloseNotifier should be provided to clone the channel
 // if the subscribing client terminates its connection.
 func PullClose(c context.Context, cn CloseNotifier) *Work {
 	return FromContext(c).PullClose(cn)
+}
+
+func PullCloseWithLabels(c context.Context, labels []string, cn CloseNotifier) *Work {
+	return FromContext(c).PullCloseWithLabels(labels, cn)
 }
 
 // CloseNotifier defines a datastructure that is capable of notifying

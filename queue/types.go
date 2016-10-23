@@ -18,4 +18,5 @@ type Work struct {
 	System    *model.System   `json:"system"`
 	Secrets   []*model.Secret `json:"secrets"`
 	User      *model.User     `json:"user"`
+	Label     string
 }
