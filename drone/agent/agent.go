@@ -127,7 +127,7 @@ var AgentCmd = cli.Command{
 			Name:   "labels",
 			Usage:  "agent labels",
 			Value: &cli.StringSlice{
-				"default",
+				"*",
 			},
 		},
 		cli.StringFlag{

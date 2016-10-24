@@ -112,8 +112,8 @@ func TestBuild(t *testing.T) {
 			q := New()
 			ToContext(c, q)
 
-			cn := new(closeNotifier)
-			cn.closec = make(chan bool, 1)
+			// cn := new(closeNotifier)
+			// cn.closec = make(chan bool, 1)
 			w1 := &Work{}
 			w1.Label = "1"
 			w2 := &Work{}
@@ -124,27 +124,35 @@ func TestBuild(t *testing.T) {
 			w4.Label = "2"
 			w5 := &Work{}
 			w5.Label = "4"
-
-			Publish(c, w1)
-			Publish(c, w2)
-			Publish(c, w3)
-			Publish(c, w4)
-			g.Assert(PullWithLabels(c, []string{"2"})).Equal(w2)
-			g.Assert(PullWithLabels(c, []string{"2"})).Equal(w4)
-			g.Assert(PullWithLabels(c, []string{"2", "3"})).Equal(w3)
-			g.Assert(PullWithLabels(c, []string{"2", "1"})).Equal(w1)
 			var wg sync.WaitGroup
-			wg.Add(1)
+			wg.Add(4)
 			go func() {
-				g.Assert(PullWithLabels(c, []string{"2", "4"})).Equal(w5)
 				wg.Done()
+				g.Assert(PullWithLabels(c, []string{"2"})).Equal(w2)
 			}()
-			wg.Add(1)
 			go func() {
-				Publish(c, w5)
 				wg.Done()
+				g.Assert(PullWithLabels(c, []string{"2"})).Equal(w4)
+			}()
+			go func() {
+				wg.Done()
+				g.Assert(PullWithLabels(c, []string{"2", "3"})).Equal(w3)
+			}()
+			go func() {
+				wg.Done()
+				g.Assert(PullWithLabels(c, []string{"2", "1"})).Equal(w1)
 			}()
 			wg.Wait()
+			go func() {
+				Publish(c, w1)
+				Publish(c, w2)
+				Publish(c, w3)
+				Publish(c, w4)
+				Publish(c, w5)
+			}()
+
+			g.Assert(PullWithLabels(c, []string{"*"})).Equal(w5)
+
 		})
 	})
 }

@@ -17,19 +17,22 @@ func New() Queue {
 }
 
 func newQueue() *queue {
-	return &queue{
+	q := &queue{
 		items: make(map[*Work]struct{}),
 		itemc: make(map[string]chan *Work),
 	}
+	q.itemc[DefaultLabel] = make(chan *Work, 999)
+	return q
 }
 
+// if no label -> DefaultLabel; if label not support -> DefaultLabel
 func (q *queue) Publish(work *Work) error {
 	q.Lock()
 	if work.Label == "" {
 		work.Label = DefaultLabel
 	}
 	if _, ok := q.itemc[work.Label]; !ok {
-		q.itemc[work.Label] = make(chan *Work, 999)
+		work.Label = DefaultLabel
 	}
 	q.items[work] = struct{}{}
 	q.Unlock()
@@ -71,7 +74,16 @@ drain:
 	return nil
 }
 
+// pull will add supported labels if needed
 func (q *queue) PullWithLabels(labels []string) *Work {
+	q.Lock()
+	for _, label := range labels {
+		if _, ok := q.itemc[label]; !ok {
+			q.itemc[label] = make(chan *Work, 999)
+		}
+	}
+	q.Unlock()
+
 	cases := make([]reflect.SelectCase, 0)
 	for _, label := range labels {
 		if _, ok := q.itemc[label]; ok {
@@ -80,6 +92,9 @@ func (q *queue) PullWithLabels(labels []string) *Work {
 	}
 	_, value, _ := reflect.Select(cases)
 	work := value.Interface().(*Work)
+	q.Lock()
+	delete(q.items, work)
+	q.Unlock()
 	return work
 }
 
@@ -92,6 +107,14 @@ func (q *queue) PullClose(cn CloseNotifier) *Work {
 }
 
 func (q *queue) PullCloseWithLabels(labels []string, cn CloseNotifier) *Work {
+	q.Lock()
+	for _, label := range labels {
+		if _, ok := q.itemc[label]; !ok {
+			q.itemc[label] = make(chan *Work, 999)
+		}
+	}
+	q.Unlock()
+
 	cases := make([]reflect.SelectCase, 0)
 	for _, label := range labels {
 		if _, ok := q.itemc[label]; ok {
@@ -104,6 +127,9 @@ func (q *queue) PullCloseWithLabels(labels []string, cn CloseNotifier) *Work {
 		return nil
 	} else {
 		work := value.Interface().(*Work)
+		q.Lock()
+		delete(q.items, work)
+		q.Unlock()
 		return work
 	}
 }

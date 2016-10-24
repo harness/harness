@@ -13,7 +13,7 @@ import (
 var ErrNotFound = errors.New("queue item not found")
 
 const (
-	DefaultLabel = "default"
+	DefaultLabel = "*"
 )
 
 type Queue interface {

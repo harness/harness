@@ -31,6 +31,7 @@ type pipeline struct {
 
 func (r *pipeline) run() error {
 	w, err := r.drone.PullLabels(r.config.labels)
+
 	if err != nil {
 		return err
 	}
