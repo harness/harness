@@ -166,7 +166,11 @@ func (c *client) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 // File fetches the file from the Gogs repository and returns its contents.
 func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
 	client := c.newClientToken(u.Token)
-	cfg, err := client.GetFile(r.Owner, r.Name, b.Commit, f)
+	buildRef := b.Commit
+	if buildRef == "" {
+		buildRef = b.Ref
+	}
+	cfg, err := client.GetFile(r.Owner, r.Name, buildRef, f)
 	return cfg, err
 }
 
@@ -230,7 +234,7 @@ func (c *client) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
 	case "push":
 		var push *pushHook
 		push, err = parsePush(r.Body)
-		if err == nil {
+		if err == nil && push.RefType != "branch" {
 			repo = repoFromPush(push)
 			build = buildFromPush(push)
 		}
