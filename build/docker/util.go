@@ -22,6 +22,7 @@ func toContainerConfig(c *yaml.Container) *dockerclient.ContainerConfig {
 			Privileged:       c.Privileged,
 			NetworkMode:      c.Network,
 			Memory:           c.MemLimit,
+			ShmSize:          c.ShmSize,
 			CpuShares:        c.CPUShares,
 			CpuQuota:         c.CPUQuota,
 			CpusetCpus:       c.CPUSet,

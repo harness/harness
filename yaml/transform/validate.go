@@ -51,6 +51,9 @@ func CheckTrusted(c *yaml.Container) error {
 	if c.Privileged {
 		return fmt.Errorf("Insufficient privileges to use privileged mode")
 	}
+	if c.ShmSize != 0 {
+		return fmt.Errorf("Insufficient privileges to override shm_size")
+	}
 	if len(c.DNS) != 0 {
 		return fmt.Errorf("Insufficient privileges to use custom dns")
 	}
