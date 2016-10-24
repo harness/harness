@@ -69,6 +69,15 @@ type Client interface {
 	// TeamSecretDel deletes a named team secret.
 	TeamSecretDel(string, string) error
 
+	// GlobalSecretList returns a list of global secrets.
+	GlobalSecretList() ([]*model.Secret, error)
+
+	// GlobalSecretPost create or updates a global secret.
+	GlobalSecretPost(secret *model.Secret) error
+
+	// GlobalSecretDel deletes a named global secret.
+	GlobalSecretDel(secret string) error
+
 	// Build returns a repository build by number.
 	Build(string, string, int) (*model.Build, error)
 

@@ -43,6 +43,7 @@ func main() {
 		repoCmd,
 		userCmd,
 		orgCmd,
+		globalCmd,
 	}
 
 	app.Run(os.Args)

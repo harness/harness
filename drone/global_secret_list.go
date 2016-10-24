@@ -6,31 +6,24 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-var orgSecretListCmd = cli.Command{
+var globalSecretListCmd = cli.Command{
 	Name:  "ls",
 	Usage: "list all secrets",
 	Action: func(c *cli.Context) {
-		if err := orgSecretList(c); err != nil {
+		if err := globalSecretList(c); err != nil {
 			log.Fatalln(err)
 		}
 	},
 	Flags: secretListFlags(),
 }
 
-func orgSecretList(c *cli.Context) error {
-	if len(c.Args()) != 1 {
-		cli.ShowSubcommandHelp(c)
-		return nil
-	}
-
-	team := c.Args().First()
-
+func globalSecretList(c *cli.Context) error {
 	client, err := newClient(c)
 	if err != nil {
 		return err
 	}
 
-	secrets, err := client.TeamSecretList(team)
+	secrets, err := client.GlobalSecretList()
 
 	if err != nil || len(secrets) == 0 {
 		return err
