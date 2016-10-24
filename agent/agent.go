@@ -94,13 +94,17 @@ func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 	envs := toEnv(w)
 	w.Yaml = expander.ExpandString(w.Yaml, envs)
 
-	// inject the netrc file into the clone plugin if the repository is
-	// private and requires authentication.
+	// append secrets when verified or when a secret does not require
+	// verification
 	var secrets []*model.Secret
-	if w.Verified {
-		secrets = append(secrets, w.Secrets...)
+	for _, secret := range w.Secrets {
+		if w.Verified || secret.SkipVerify {
+			secrets = append(secrets, secret)
+		}
 	}
 
+	// inject the netrc file into the clone plugin if the repository is
+	// private and requires authentication.
 	if w.Repo.IsPrivate {
 		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_USERNAME",
