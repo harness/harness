@@ -271,13 +271,13 @@ func GetMergedSecretList(c context.Context, r *model.Repo) ([]*model.Secret, err
 		secrets []*model.Secret
 	)
 
-	repoSecs, err := GetSecretList(c, r)
+	globalSecs, err := GetGlobalSecretList(c)
 
 	if err != nil {
 		return nil, err
 	}
 
-	for _, secret := range repoSecs {
+	for _, secret := range globalSecs {
 		secrets = append(secrets, secret.Secret())
 	}
 
@@ -291,13 +291,13 @@ func GetMergedSecretList(c context.Context, r *model.Repo) ([]*model.Secret, err
 		secrets = append(secrets, secret.Secret())
 	}
 
-	globalSecs, err := GetGlobalSecretList(c)
+	repoSecs, err := GetSecretList(c, r)
 
 	if err != nil {
 		return nil, err
 	}
 
-	for _, secret := range globalSecs {
+	for _, secret := range repoSecs {
 		secrets = append(secrets, secret.Secret())
 	}
 
