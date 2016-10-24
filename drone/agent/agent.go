@@ -71,7 +71,7 @@ var AgentCmd = cli.Command{
 			Usage:  "drone authorization token",
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_SECRET,DRONE_AGENT_SECRET",
+			EnvVar: "DRONE_SECRET",
 			Name:   "drone-secret",
 			Usage:  "drone agent secret",
 		},

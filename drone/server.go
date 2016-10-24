@@ -70,18 +70,18 @@ var serverCmd = cli.Command{
 			Value:  time.Minute * 15,
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_AGENT_SECRET,DRONE_SECRET",
+			EnvVar: "DRONE_SECRET",
 			Name:   "agent-secret",
 			Usage:  "agent secret passcode",
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_DATABASE_DRIVER,DATABASE_DRIVER",
+			EnvVar: "DRONE_DATABASE_DRIVER",
 			Name:   "driver",
 			Usage:  "database driver",
 			Value:  "sqlite3",
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_DATABASE_DATASOURCE,DATABASE_CONFIG",
+			EnvVar: "DRONE_DATABASE_DATASOURCE",
 			Name:   "datasource",
 			Usage:  "database driver configuration string",
 			Value:  "drone.sqlite",
