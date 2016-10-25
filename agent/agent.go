@@ -22,17 +22,18 @@ type Logger interface {
 }
 
 type Agent struct {
-	Update    UpdateFunc
-	Logger    LoggerFunc
-	Engine    build.Engine
-	Timeout   time.Duration
-	Platform  string
-	Namespace string
-	Disable   []string
-	Escalate  []string
-	Netrc     []string
-	Local     string
-	Pull      bool
+	Update         UpdateFunc
+	Logger         LoggerFunc
+	Engine         build.Engine
+	Timeout        time.Duration
+	Platform       string
+	Namespace      string
+	Disable        []string
+	Escalate       []string
+	Netrc          []string
+	Local          string
+	Pull           bool
+	ConcealSecrets bool
 }
 
 func (a *Agent) Poll() error {
@@ -188,6 +189,7 @@ func (a *Agent) exec(spec *yaml.Config, payload *model.Work, cancel <-chan bool)
 		return err
 	}
 
+	secretsReplacer := newSecretsReplacer(payload.Secrets)
 	timeout := time.After(time.Duration(payload.Repo.Timeout) * time.Minute)
 
 	for {
@@ -227,9 +229,23 @@ func (a *Agent) exec(spec *yaml.Config, payload *model.Work, cancel <-chan bool)
 				pipeline.Exec()
 			}
 		case line := <-pipeline.Pipe():
+			// FIXME(vaijab): avoid checking a.ConcealSecrets is true everytime new line is received
+			if a.ConcealSecrets {
+				line.Out = secretsReplacer.Replace(line.Out)
+			}
 			a.Logger(line)
 		}
 	}
+}
+
+// newSecretsReplacer takes []*model.Secret as secrets and returns a list of
+// secret value, "*****" pairs.
+func newSecretsReplacer(secrets []*model.Secret) *strings.Replacer {
+	var r []string
+	for _, s := range secrets {
+		r = append(r, s.Value, "*****")
+	}
+	return strings.NewReplacer(r...)
 }
 
 func toEnv(w *model.Work) map[string]string {
