@@ -165,7 +165,7 @@ func start(c *cli.Context) {
 		accessToken = c.String("drone-token")
 	}
 
-	logger.Noticef("connecting to server%s", c.String("drone-server"))
+	logger.Noticef("connecting to server %s", c.String("drone-server"))
 
 	server := strings.TrimRight(c.String("drone-server"), "/")
 
@@ -224,7 +224,7 @@ func start(c *cli.Context) {
 
 		// initialize the stomp session and authenticate.
 		if err = client.Connect(opts...); err != nil {
-			logger.Warningf("session failed, retry in %v", backoff, err)
+			logger.Warningf("session failed, retry in %v. %s", backoff, err)
 			<-time.After(backoff)
 			continue
 		}
