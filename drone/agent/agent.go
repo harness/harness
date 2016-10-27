@@ -224,7 +224,7 @@ func start(c *cli.Context) {
 
 		// initialize the stomp session and authenticate.
 		if err = client.Connect(opts...); err != nil {
-			logger.Warningf("session failed, retry in %v", backoff, err)
+			logger.Warningf("session failed, retry in %v. %s", backoff, err)
 			<-time.After(backoff)
 			continue
 		}
