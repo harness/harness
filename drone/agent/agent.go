@@ -165,7 +165,7 @@ func start(c *cli.Context) {
 		accessToken = c.String("drone-token")
 	}
 
-	logger.Noticef("connecting to server%s", c.String("drone-server"))
+	logger.Noticef("connecting to server %s", c.String("drone-server"))
 
 	server := strings.TrimRight(c.String("drone-server"), "/")
 
