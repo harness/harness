@@ -27,6 +27,7 @@ type Build struct {
 	Link      string `json:"link_url"      meddler:"build_link"`
 	Signed    bool   `json:"signed"        meddler:"build_signed"`
 	Verified  bool   `json:"verified"      meddler:"build_verified"`
+	Jobs      []*Job `json:"jobs,omitempty" meddler:"-"`
 }
 
 type BuildGroup struct {
