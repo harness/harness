@@ -2,7 +2,6 @@ package transform
 
 import (
 	"os"
-	"strings"
 
 	"github.com/drone/drone/yaml"
 )
