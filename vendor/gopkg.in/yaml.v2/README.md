@@ -42,7 +42,7 @@ The package API for yaml v2 will remain stable as described in [gopkg.in](https:
 License
 -------
 
-The yaml package is licensed under the LGPL with an exception that allows it to be linked statically. Please see the LICENSE file for details.
+The yaml package is licensed under the Apache License 2.0. Please see the LICENSE file for details.
 
 
 Example
@@ -67,7 +67,10 @@ b:
 
 type T struct {
         A string
-        B struct{C int; D []int ",flow"}
+        B struct {
+                RenamedC int   `yaml:"c"`
+                D        []int `yaml:",flow"`
+        }
 }
 
 func main() {
