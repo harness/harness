@@ -37,6 +37,19 @@ func TestParse(t *testing.T) {
 				g.Assert(out.Pipeline[2].Name).Equal("notify")
 				g.Assert(out.Pipeline[2].Image).Equal("slack")
 			})
+			// Check to make sure variable expansion works in yaml.MapSlice
+			g.It("Should unmarshal variables", func() {
+				out, err := ParseString(sampleVarYaml)
+				if err != nil {
+					g.Fail(err)
+				}
+				g.Assert(out.Pipeline[0].Name).Equal("notify_fail")
+				g.Assert(out.Pipeline[0].Image).Equal("plugins/slack")
+				g.Assert(len(out.Pipeline[0].Constraints.Event.Include)).Equal(0)
+				g.Assert(out.Pipeline[1].Name).Equal("notify_success")
+				g.Assert(out.Pipeline[1].Image).Equal("plugins/slack")
+				g.Assert(out.Pipeline[1].Constraints.Event.Include).Equal([]string{"success"})
+			})
 		})
 	})
 }
@@ -80,4 +93,16 @@ networks:
 volumes:
   custom:
     driver: blockbridge
+`
+
+var sampleVarYaml = `
+_slack: &SLACK
+  image: plugins/slack
+
+pipeline:
+  notify_fail: *SLACK
+  notify_success:
+    << : *SLACK
+    when:
+      event: success
 `
