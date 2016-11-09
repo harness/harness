@@ -38,7 +38,7 @@ func substituteQ(str, key, val string) string {
 	return strings.Replace(str, key, val, -1)
 }
 
-// substitutePrefix is a helper function that substitutes paramters using
+// substitutePrefix is a helper function that substitutes parameters using
 // ${parameter##prefix} notation with the parameter value minus the trimmed prefix.
 func substitutePrefix(str, key, val string) string {
 	key = fmt.Sprintf("\\${%s##(.+)}", key)
@@ -56,7 +56,7 @@ func substitutePrefix(str, key, val string) string {
 	return str
 }
 
-// substituteSuffix is a helper function that substitutes paramters using
+// substituteSuffix is a helper function that substitutes parameters using
 // ${parameter%%suffix} notation with the parameter value minus the trimmed suffix.
 func substituteSuffix(str, key, val string) string {
 	key = fmt.Sprintf("\\${%s%%%%(.+)}", key)
@@ -74,7 +74,7 @@ func substituteSuffix(str, key, val string) string {
 	return str
 }
 
-// substituteDefault is a helper function that substitutes paramters using
+// substituteDefault is a helper function that substitutes parameters using
 // ${parameter=default} notation with the parameter value. When empty the
 // default value is used.
 func substituteDefault(str, key, val string) string {
@@ -104,7 +104,7 @@ func unescapeBackslash(str string) string {
 	return string(re.ReplaceAll([]byte(str), []byte("$1")))
 }
 
-// substituteReplace is a helper function that substitutes paramters using
+// substituteReplace is a helper function that substitutes parameters using
 // ${parameter/old/new} notation with the parameter value. A find and replace
 // is performed before injecting the strings, replacing the old pattern with
 // the new value.
@@ -126,7 +126,7 @@ func substituteReplace(str, key, val string) string {
 	return strings.Replace(str, match[0], with, -1)
 }
 
-// substituteLeft is a helper function that substitutes paramters using
+// substituteLeft is a helper function that substitutes parameters using
 // ${parameter:pos} notation with the parameter value, sliced up to the
 // specified position.
 func substituteLeft(str, key, val string) string {
@@ -152,7 +152,7 @@ func substituteLeft(str, key, val string) string {
 	return str
 }
 
-// substituteLeft is a helper function that substitutes paramters using
+// substituteLeft is a helper function that substitutes parameters using
 // ${parameter:pos:len} notation with the parameter value as a substring,
 // starting at the specified position for the specified length.
 func substituteSubstr(str, key, val string) string {
