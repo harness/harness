@@ -26,6 +26,11 @@ var serverCmd = cli.Command{
 			Name:   "debug",
 			Usage:  "start the server in debug mode",
 		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_BROKER_DEBUG",
+			Name:   "broker-debug",
+			Usage:  "start the broker in debug mode",
+		},
 		cli.StringFlag{
 			EnvVar: "DRONE_SERVER_ADDR",
 			Name:   "server-addr",

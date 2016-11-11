@@ -1,16 +1,19 @@
 package middleware
 
 import (
+	"os"
 	"sync"
 
 	handlers "github.com/drone/drone/server"
 
 	"github.com/codegangsta/cli"
+	"github.com/drone/mq/logger"
 	"github.com/drone/mq/server"
 	"github.com/drone/mq/stomp"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
+	"github.com/tidwall/redlog"
 )
 
 const (
@@ -23,7 +26,15 @@ const (
 func Broker(cli *cli.Context) gin.HandlerFunc {
 	secret := cli.String("agent-secret")
 	if secret == "" {
-		logrus.Fatalf("failed to generate token from DRONE_SECRET")
+		logrus.Fatalf("fatal error. please provide the DRONE_SECRET")
+	}
+
+	// setup broker logging.
+	log := redlog.New(os.Stderr)
+	log.SetLevel(0)
+	logger.SetLogger(log)
+	if cli.Bool("broker-debug") {
+		log.SetLevel(1)
 	}
 
 	broker := server.NewServer(
