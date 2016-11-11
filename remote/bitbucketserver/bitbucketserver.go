@@ -115,6 +115,11 @@ func (*Config) Teams(u *model.User) ([]*model.Team, error) {
 	return teams, nil
 }
 
+// TeamPerm is not supported by the Stash driver.
+func (*Config) TeamPerm(u *model.User, org string) (*model.Perm, error) {
+	return nil, nil
+}
+
 func (c *Config) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	repo, err := internal.NewClientWithToken(c.URL, c.Consumer, u.Token).FindRepo(owner, name)
 	if err != nil {

@@ -267,3 +267,26 @@ func (_m *Remote) Teams(u *model.User) ([]*model.Team, error) {
 
 	return r0, r1
 }
+
+// TeamPerm provides a mock function with given fields: u, org
+func (_m *Remote) TeamPerm(u *model.User, org string) (*model.Perm, error) {
+	ret := _m.Called(u, org)
+
+	var r0 *model.Perm
+	if rf, ok := ret.Get(0).(func(*model.User, string) *model.Perm); ok {
+		r0 = rf(u, org)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Perm)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*model.User, string) error); ok {
+		r1 = rf(u, org)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

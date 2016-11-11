@@ -110,6 +110,23 @@ func Test_github(t *testing.T) {
 			})
 		})
 
+		g.Describe("Requesting organization permissions", func() {
+			g.It("Should return the permission details of an admin", func() {
+				perm, err := c.TeamPerm(fakeUser, "octocat")
+				g.Assert(err == nil).IsTrue()
+				g.Assert(perm.Admin).IsTrue()
+			})
+			g.It("Should return the permission details of a member", func() {
+				perm, err := c.TeamPerm(fakeUser, "github")
+				g.Assert(err == nil).IsTrue()
+				g.Assert(perm.Admin).IsFalse()
+			})
+			g.It("Should handle a not found error", func() {
+				_, err := c.TeamPerm(fakeUser, "org_not_found")
+				g.Assert(err != nil).IsTrue()
+			})
+		})
+
 		g.It("Should return a user repository list")
 
 		g.It("Should return a user team list")

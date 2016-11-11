@@ -93,6 +93,18 @@ func convertPerm(from *github.Repository) *model.Perm {
 	}
 }
 
+// convertTeamPerm is a helper function used to convert a GitHub organization
+// permissions to the common Drone permissions structure.
+func convertTeamPerm(from *github.Membership) *model.Perm {
+	admin := false
+	if *from.Role == "admin" {
+		admin = true
+	}
+	return &model.Perm{
+		Admin: admin,
+	}
+}
+
 // convertRepoList is a helper function used to convert a GitHub repository
 // list to the common Drone repository structure.
 func convertRepoList(from []github.Repository) []*model.RepoLite {
