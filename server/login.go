@@ -117,7 +117,7 @@ func GetLogin(c *gin.Context) {
 func GetLogout(c *gin.Context) {
 	httputil.DelCookie(c.Writer, c.Request, "user_sess")
 	httputil.DelCookie(c.Writer, c.Request, "user_last")
-	c.Redirect(303, "/login")
+	c.Redirect(303, "/")
 }
 
 func GetLoginToken(c *gin.Context) {
