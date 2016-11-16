@@ -23,6 +23,9 @@ type TeamSecret struct {
 
 	// whether the secret requires verification
 	SkipVerify bool `json:"skip_verify" meddler:"team_secret_skip_verify"`
+
+	// whether the secret should be concealed in the build log
+	Conceal bool `json:"conceal" meddler:"team_secret_conceal"`
 }
 
 // Secret transforms a repo secret into a simple secret.
@@ -33,6 +36,7 @@ func (s *TeamSecret) Secret() *Secret {
 		Images:     s.Images,
 		Events:     s.Events,
 		SkipVerify: s.SkipVerify,
+		Conceal:    s.Conceal,
 	}
 }
 
@@ -44,6 +48,7 @@ func (s *TeamSecret) Clone() *TeamSecret {
 		Images:     s.Images,
 		Events:     s.Events,
 		SkipVerify: s.SkipVerify,
+		Conceal:    s.Conceal,
 	}
 }
 
