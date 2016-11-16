@@ -45,6 +45,10 @@ func secretAddFlags() []cli.Flag {
 			Name:  "skip-verify",
 			Usage: "skip verification for the secret",
 		},
+		cli.BoolFlag{
+			Name:  "conceal",
+			Usage: "conceal secret in build logs",
+		},
 	}
 }
 
@@ -73,6 +77,7 @@ func secretParseCmd(name string, value string, c *cli.Context) (*model.Secret, e
 	secret.Images = c.StringSlice("image")
 	secret.Events = c.StringSlice("event")
 	secret.SkipVerify = c.Bool("skip-verify")
+	secret.Conceal = c.Bool("conceal")
 
 	if len(secret.Images) == 0 {
 		return nil, fmt.Errorf("Please specify the --image parameter")
@@ -122,6 +127,7 @@ var tmplSecretList = "\x1b[33m{{ .Name }} \x1b[0m" + `
 Images: {{ list .Images }}
 Events: {{ list .Events }}
 SkipVerify: {{ .SkipVerify }}
+Conceal: {{ .Conceal }}
 `
 
 var secretFuncMap = template.FuncMap{
