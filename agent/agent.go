@@ -188,6 +188,7 @@ func (a *Agent) exec(spec *yaml.Config, payload *model.Work, cancel <-chan bool)
 		return err
 	}
 
+	replacer := NewSecretReplacer(payload.Secrets)
 	timeout := time.After(time.Duration(payload.Repo.Timeout) * time.Minute)
 
 	for {
@@ -227,6 +228,7 @@ func (a *Agent) exec(spec *yaml.Config, payload *model.Work, cancel <-chan bool)
 				pipeline.Exec()
 			}
 		case line := <-pipeline.Pipe():
+			line.Out = replacer.Replace(line.Out)
 			a.Logger(line)
 		}
 	}
