@@ -22,17 +22,13 @@ func NewSecretReplacer(secrets []*model.Secret) SecretReplacer {
 		}
 	}
 
-	var replacer SecretReplacer
-
-	if len(r) > 0 {
-		replacer = &secretReplacer{
-			replacer: strings.NewReplacer(r...),
-		}
-	} else {
-		replacer = &noopReplacer{}
+	if len(r) == 0 {
+		return &noopReplacer{}
 	}
 
-	return replacer
+	return &secretReplacer{
+		replacer: strings.NewReplacer(r...),
+	}
 }
 
 type noopReplacer struct{}
