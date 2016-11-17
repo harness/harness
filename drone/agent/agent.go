@@ -244,7 +244,7 @@ func start(c *cli.Context) {
 			go handler(m) // HACK until we a channel based Subscribe implementation
 		}), opts...)
 
-		logger.Noticef("connection establish, ready to process builds.")
+		logger.Noticef("connection established, ready to process builds.")
 		<-client.Done()
 
 		logger.Warningf("connection interrupted, attempting to reconnect.")
