@@ -69,8 +69,8 @@ var serverCmd = cli.Command{
 			Value:  ".drone.yml",
 		},
 		cli.DurationFlag{
-			EnvVar: "DRONE_CACHE_TTY",
-			Name:   "cache-tty",
+			EnvVar: "DRONE_CACHE_TTL",
+			Name:   "cache-ttl",
 			Usage:  "cache duration",
 			Value:  time.Minute * 15,
 		},
