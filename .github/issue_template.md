@@ -1,8 +1,15 @@
-Thank you for taking the time to use Drone and file an issue or feature request. Before filing an issue please ensure the following boxes are checked, if applicable:
+<!-- PLEASE READ BEFORE DELETING
 
-- [ ] I have searched for existing issues
-- [ ] I have discussed the issue with the community at https://gitter.im/drone/drone
-- [ ] I have provided a sample `.drone.yml` file to help the team reproduce
-- [ ] I have provided details from the build logs
-- [ ] I have provided details from the server logs by running `docker logs drone`
-- [ ] I am not using the issue tracker to ask why my build failed
+Bugs or Issues? Please do not open a GitHub issue until
+you have discussed and verified on the mailing list:
+
+    https://groups.google.com/forum/#!forum/drone-dev
+
+Failing Builds? Please do not use GitHub issues
+for generic support questions. Instead you should
+use the mailing list or Stack Overflow:
+
+    http://stackoverflow.com/questions/tagged/drone.io
+    https://groups.google.com/forum/#!forum/drone-dev
+
+-->
