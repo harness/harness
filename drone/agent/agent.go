@@ -96,7 +96,7 @@ var AgentCmd = cli.Command{
 			EnvVar: "DRONE_TIMEOUT",
 			Name:   "timeout",
 			Usage:  "drone timeout due to log inactivity",
-			Value:  time.Minute * 5,
+			Value:  time.Minute * 15,
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_FILTER",
