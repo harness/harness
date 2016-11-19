@@ -73,8 +73,11 @@ type webhook struct {
 		} `json:"base"`
 
 		Head struct {
-			SHA string `json:"sha"`
-			Ref string `json:"ref"`
+			SHA  string `json:"sha"`
+			Ref  string `json:"ref"`
+			Repo struct {
+				CloneURL string `json:"clone_url"`
+			} `json:"repo"`
 		} `json:"head"`
 	} `json:"pull_request"`
 }

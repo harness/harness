@@ -230,6 +230,7 @@ func convertPullHook(from *webhook, merge bool) *model.Build {
 		Author:  from.PullRequest.User.Login,
 		Avatar:  from.PullRequest.User.Avatar,
 		Title:   from.PullRequest.Title,
+		Remote:  from.PullRequest.Head.Repo.CloneURL,
 		Refspec: fmt.Sprintf(refspec,
 			from.PullRequest.Head.Ref,
 			from.PullRequest.Base.Ref,
