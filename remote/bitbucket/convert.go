@@ -149,10 +149,14 @@ func convertTeam(from *internal.Account) *model.Team {
 // hook to the Drone build struct holding commit information.
 func convertPullHook(from *internal.PullRequestHook) *model.Build {
 	return &model.Build{
-		Event:     model.EventPull,
-		Commit:    from.PullRequest.Dest.Commit.Hash,
-		Ref:       fmt.Sprintf("refs/heads/%s", from.PullRequest.Dest.Branch.Name),
-		Remote:    cloneLink(&from.PullRequest.Dest.Repo),
+		Event:  model.EventPull,
+		Commit: from.PullRequest.Dest.Commit.Hash,
+		Ref:    fmt.Sprintf("refs/heads/%s", from.PullRequest.Dest.Branch.Name),
+		Refspec: fmt.Sprintf("%s:%s",
+			from.PullRequest.Source.Branch.Name,
+			from.PullRequest.Dest.Branch.Name,
+		),
+		Remote:    fmt.Sprintf("https://bitbucket.org/%s", from.PullRequest.Source.Repo.FullName),
 		Link:      from.PullRequest.Links.Html.Href,
 		Branch:    from.PullRequest.Dest.Branch.Name,
 		Message:   from.PullRequest.Desc,
