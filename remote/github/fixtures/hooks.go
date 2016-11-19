@@ -70,6 +70,11 @@ const HookPullRequest = `
       "login": "baxterthehacker",
       "avatar_url": "https://avatars.githubusercontent.com/u/6752317?v=3"
     },
+    "base": {
+      "label": "baxterthehacker:master",
+      "ref": "master",
+      "sha": "9353195a19e45482665306e466c832c46560532d"
+    },
     "head": {
       "label": "baxterthehacker:changes",
       "ref": "changes",

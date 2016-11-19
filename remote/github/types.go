@@ -68,9 +68,13 @@ type webhook struct {
 			Avatar string `json:"avatar_url"`
 		} `json:"user"`
 
+		Base struct {
+			Ref string `json:"ref"`
+		} `json:"base"`
+
 		Head struct {
-			SHA string
-			Ref string
+			SHA string `json:"sha"`
+			Ref string `json:"ref"`
 		} `json:"head"`
 	} `json:"pull_request"`
 }

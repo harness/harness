@@ -172,7 +172,8 @@ func Test_helper(t *testing.T) {
 
 		g.It("should convert a pull request from webhook", func() {
 			from := &webhook{}
-			from.PullRequest.Head.Ref = "master"
+			from.PullRequest.Base.Ref = "master"
+			from.PullRequest.Head.Ref = "changes"
 			from.PullRequest.Head.SHA = "f72fc19"
 			from.PullRequest.HTMLURL = "https://github.com/octocat/hello-world/pulls/42"
 			from.PullRequest.Number = 42
@@ -184,6 +185,7 @@ func Test_helper(t *testing.T) {
 			g.Assert(build.Event).Equal(model.EventPull)
 			g.Assert(build.Branch).Equal(from.PullRequest.Head.Ref)
 			g.Assert(build.Ref).Equal("refs/pull/42/merge")
+			g.Assert(build.Refspec).Equal("changes:master")
 			g.Assert(build.Commit).Equal(from.PullRequest.Head.SHA)
 			g.Assert(build.Message).Equal(from.PullRequest.Title)
 			g.Assert(build.Title).Equal(from.PullRequest.Title)

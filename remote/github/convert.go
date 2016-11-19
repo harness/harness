@@ -28,6 +28,7 @@ const (
 const (
 	headRefs  = "refs/pull/%d/head"  // pull request unmerged
 	mergeRefs = "refs/pull/%d/merge" // pull request merged with base
+	refspec   = "%s:%s"
 )
 
 // convertStatus is a helper function used to convert a Drone status to a
@@ -229,6 +230,10 @@ func convertPullHook(from *webhook, merge bool) *model.Build {
 		Author:  from.PullRequest.User.Login,
 		Avatar:  from.PullRequest.User.Avatar,
 		Title:   from.PullRequest.Title,
+		Refspec: fmt.Sprintf(refspec,
+			from.PullRequest.Head.Ref,
+			from.PullRequest.Base.Ref,
+		),
 	}
 	if merge {
 		build.Ref = fmt.Sprintf(mergeRefs, from.PullRequest.Number)
