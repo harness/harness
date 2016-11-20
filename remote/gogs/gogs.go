@@ -126,6 +126,11 @@ func (c *client) Teams(u *model.User) ([]*model.Team, error) {
 	return teams, nil
 }
 
+// TeamPerm is not supported by the Gogs driver.
+func (c *client) TeamPerm(u *model.User, org string) (*model.Perm, error) {
+	return nil, nil
+}
+
 // Repo returns the named Gogs repository.
 func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	client := c.newClientToken(u.Token)
