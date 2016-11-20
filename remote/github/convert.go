@@ -225,7 +225,7 @@ func convertPullHook(from *webhook, merge bool) *model.Build {
 		Commit:  from.PullRequest.Head.SHA,
 		Link:    from.PullRequest.HTMLURL,
 		Ref:     fmt.Sprintf(headRefs, from.PullRequest.Number),
-		Branch:  from.PullRequest.Head.Ref,
+		Branch:  from.PullRequest.Base.Ref,
 		Message: from.PullRequest.Title,
 		Author:  from.PullRequest.User.Login,
 		Avatar:  from.PullRequest.User.Avatar,
