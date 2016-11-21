@@ -65,9 +65,9 @@ func MustTeamAdmin() gin.HandlerFunc {
 
 		if perm.Admin {
 			c.Next()
+		} else {
+			c.String(401, "User not authorized")
+			c.Abort()	
 		}
-
-		c.String(401, "User not authorized")
-		c.Abort()
 	}
 }
