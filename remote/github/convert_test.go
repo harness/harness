@@ -184,7 +184,7 @@ func Test_helper(t *testing.T) {
 
 			build := convertPullHook(from, true)
 			g.Assert(build.Event).Equal(model.EventPull)
-			g.Assert(build.Branch).Equal(from.PullRequest.Head.Ref)
+			g.Assert(build.Branch).Equal(from.PullRequest.Base.Ref)
 			g.Assert(build.Ref).Equal("refs/pull/42/merge")
 			g.Assert(build.Refspec).Equal("changes:master")
 			g.Assert(build.Remote).Equal("https://github.com/octocat/hello-world-fork")
