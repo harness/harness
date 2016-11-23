@@ -1,0 +1,13 @@
+FROM golang:1.6
+
+ENV GO15VENDOREXPERIMENT=1
+ENV GOPATH=/go
+ENV PATH=$PATH:$GOPATH/bin
+
+COPY . /go/src/github.com/drone/drone
+WORKDIR /go/src/github.com/drone/drone
+
+RUN make deps
+RUN make gen
+
+CMD ["make", "build"]

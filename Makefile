@@ -41,6 +41,17 @@ test_mysql:
 test_postgres:
 	DATABASE_DRIVER="postgres" DATABASE_CONFIG="host=127.0.0.1 user=postgres dbname=postgres sslmode=disable" go test github.com/drone/drone/store/datastore
 
+docker-build:
+	# Unfortunately there is no way to ignore a dockerignore file
+	mv .dockerignore .dockerignore.bak || true
+	echo "release" > .dockerignore
+	docker build -t drone_build -f Dockerfile.build .
+	id=$$(docker create drone_build); \
+		docker start $${id}; \
+		docker exec $${id} make build; \
+		docker cp $${id}:/go/src/github.com/drone/drone/release .; \
+		docker rm -f $${id}
+	mv .dockerignore.bak .dockerignore
 
 # build the release files
 build: build_static build_cross build_tar build_sha

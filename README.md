@@ -34,21 +34,12 @@ Please see our [installation guide](http://readme.drone.io/setup/overview) to in
 
 ### From Source
 
-Clone the repository to your Go workspace:
-
-```
-git clone git://github.com/drone/drone.git $GOPATH/src/github.com/drone/drone
-cd $GOPATH/src/github.com/drone/drone
-```
-
-Commands to build from source:
+Build from source (artifacts will be in `./release`):
 
 ```sh
-export GO15VENDOREXPERIMENT=1
-
-make deps    # Download required dependencies
-make gen     # Generate code
-make build   # Build the binary
+git clone git://github.com/drone/drone.git
+cd drone
+make docker-build
 ```
 
 If you are having trouble building this project please reference its `.drone.yml` file. Everything you need to know about building Drone is defined in that file.
