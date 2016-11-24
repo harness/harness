@@ -139,6 +139,8 @@ func Test_helper(t *testing.T) {
 			hook.PullRequest.Dest.Commit.Hash = "73f9c44d"
 			hook.PullRequest.Dest.Branch.Name = "master"
 			hook.PullRequest.Dest.Repo.Links.Html.Href = "https://bitbucket.org/foo/bar"
+			hook.PullRequest.Source.Branch.Name = "change"
+			hook.PullRequest.Source.Repo.FullName = "baz/bar"
 			hook.PullRequest.Links.Html.Href = "https://bitbucket.org/foo/bar/pulls/5"
 			hook.PullRequest.Desc = "updated README"
 			hook.PullRequest.Updated = time.Now()
@@ -151,6 +153,8 @@ func Test_helper(t *testing.T) {
 			g.Assert(build.Branch).Equal(hook.PullRequest.Dest.Branch.Name)
 			g.Assert(build.Link).Equal(hook.PullRequest.Links.Html.Href)
 			g.Assert(build.Ref).Equal("refs/heads/master")
+			g.Assert(build.Refspec).Equal("change:master")
+			g.Assert(build.Remote).Equal("https://bitbucket.org/baz/bar")
 			g.Assert(build.Message).Equal(hook.PullRequest.Desc)
 			g.Assert(build.Timestamp).Equal(hook.PullRequest.Updated.Unix())
 		})

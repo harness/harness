@@ -20,10 +20,9 @@ Drone documentation is organized into several categories:
 
 ### Documentation for 0.5 (unstable)
 
-If you are using the 0.5 unstable release (master branch) please see the updated documentation:
+If you are using the 0.5 unstable release (master branch) please see the updated [documentation](http://readme.drone.io/0.5).
 
-* [Setup Guide](http://readme.drone.io/0.5/installation/server/)
-* [Build Guide](http://readme.drone.io/0.5/usage/overview/)
+
 
 ### Community, Help
 

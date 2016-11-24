@@ -28,6 +28,7 @@ const (
 const (
 	headRefs  = "refs/pull/%d/head"  // pull request unmerged
 	mergeRefs = "refs/pull/%d/merge" // pull request merged with base
+	refspec   = "%s:%s"
 )
 
 // convertStatus is a helper function used to convert a Drone status to a
@@ -90,6 +91,18 @@ func convertPerm(from *github.Repository) *model.Perm {
 		Admin: (*from.Permissions)["admin"],
 		Push:  (*from.Permissions)["push"],
 		Pull:  (*from.Permissions)["pull"],
+	}
+}
+
+// convertTeamPerm is a helper function used to convert a GitHub organization
+// permissions to the common Drone permissions structure.
+func convertTeamPerm(from *github.Membership) *model.Perm {
+	admin := false
+	if *from.Role == "admin" {
+		admin = true
+	}
+	return &model.Perm{
+		Admin: admin,
 	}
 }
 
@@ -224,11 +237,16 @@ func convertPullHook(from *webhook, merge bool) *model.Build {
 		Commit:  from.PullRequest.Head.SHA,
 		Link:    from.PullRequest.HTMLURL,
 		Ref:     fmt.Sprintf(headRefs, from.PullRequest.Number),
-		Branch:  from.PullRequest.Head.Ref,
+		Branch:  from.PullRequest.Base.Ref,
 		Message: from.PullRequest.Title,
 		Author:  from.PullRequest.User.Login,
 		Avatar:  from.PullRequest.User.Avatar,
 		Title:   from.PullRequest.Title,
+		Remote:  from.PullRequest.Head.Repo.CloneURL,
+		Refspec: fmt.Sprintf(refspec,
+			from.PullRequest.Head.Ref,
+			from.PullRequest.Base.Ref,
+		),
 	}
 	if merge {
 		build.Ref = fmt.Sprintf(mergeRefs, from.PullRequest.Number)

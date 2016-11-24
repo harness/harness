@@ -194,6 +194,11 @@ func (g *Gitlab) Teams(u *model.User) ([]*model.Team, error) {
 	return teams, nil
 }
 
+// TeamPerm is not supported by the Gitlab driver.
+func (g *Gitlab) TeamPerm(u *model.User, org string) (*model.Perm, error) {
+	return nil, nil
+}
+
 // Repo fetches the named repository from the remote system.
 func (g *Gitlab) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	client := NewClient(g.URL, u.Token, g.SkipVerify)

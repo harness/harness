@@ -172,8 +172,10 @@ func Test_helper(t *testing.T) {
 
 		g.It("should convert a pull request from webhook", func() {
 			from := &webhook{}
-			from.PullRequest.Head.Ref = "master"
+			from.PullRequest.Base.Ref = "master"
+			from.PullRequest.Head.Ref = "changes"
 			from.PullRequest.Head.SHA = "f72fc19"
+			from.PullRequest.Head.Repo.CloneURL = "https://github.com/octocat/hello-world-fork"
 			from.PullRequest.HTMLURL = "https://github.com/octocat/hello-world/pulls/42"
 			from.PullRequest.Number = 42
 			from.PullRequest.Title = "Updated README.md"
@@ -182,8 +184,10 @@ func Test_helper(t *testing.T) {
 
 			build := convertPullHook(from, true)
 			g.Assert(build.Event).Equal(model.EventPull)
-			g.Assert(build.Branch).Equal(from.PullRequest.Head.Ref)
+			g.Assert(build.Branch).Equal(from.PullRequest.Base.Ref)
 			g.Assert(build.Ref).Equal("refs/pull/42/merge")
+			g.Assert(build.Refspec).Equal("changes:master")
+			g.Assert(build.Remote).Equal("https://github.com/octocat/hello-world-fork")
 			g.Assert(build.Commit).Equal(from.PullRequest.Head.SHA)
 			g.Assert(build.Message).Equal(from.PullRequest.Title)
 			g.Assert(build.Title).Equal(from.PullRequest.Title)

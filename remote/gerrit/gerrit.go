@@ -69,6 +69,11 @@ func (c *client) Teams(u *model.User) ([]*model.Team, error) {
 	return empty, nil
 }
 
+// TeamPerm is not supported by the Gerrit driver.
+func (c *client) TeamPerm(u *model.User, org string) (*model.Perm, error) {
+	return nil, nil
+}
+
 // Repo is not supported by the Gerrit driver.
 func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	return nil, nil
