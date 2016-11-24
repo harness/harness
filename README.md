@@ -32,14 +32,35 @@ Contributions, questions, and comments are welcomed and encouraged. Drone develo
 
 Please see our [installation guide](http://readme.drone.io/setup/overview) to install the official Docker image.
 
-### From Source
+#### From Source
 
-Build from source (artifacts will be in `./release`):
+Clone the repository to your Go workspace:
+
+```
+git clone git://github.com/drone/drone.git $GOPATH/src/github.com/drone/drone
+cd $GOPATH/src/github.com/drone/drone
+```
+
+Commands to build from source:
+
+```sh
+export GO15VENDOREXPERIMENT=1
+
+make deps    # Download required dependencies
+make gen     # Generate code
+make build   # Build the binary
+```
+
+If you are having trouble building this project please reference its `.drone.yml` file. Everything you need to know about building Drone is defined in that file.
+
+#### From Source via Docker
+
+If you have Docker locally, you can automatically run the build in a container. Upon finishing
+the build, the job will automatically copy artifacts to `release/`.
+
 
 ```sh
 git clone git://github.com/drone/drone.git
 cd drone
 make docker-build
 ```
-
-If you are having trouble building this project please reference its `.drone.yml` file. Everything you need to know about building Drone is defined in that file.

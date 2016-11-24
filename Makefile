@@ -43,7 +43,7 @@ test_postgres:
 
 docker-build:
 	# Unfortunately there is no way to ignore a dockerignore file
-	mv .dockerignore .dockerignore.bak || true
+	mv -n .dockerignore .dockerignore.bak || true
 	echo "release" > .dockerignore
 	docker build -t drone_build -f Dockerfile.build .
 	id=$$(docker create drone_build); \
