@@ -40,6 +40,15 @@ func ImageEscalate(conf *yaml.Config, patterns []string) error {
 	for _, c := range conf.Pipeline {
 		for _, pattern := range patterns {
 			if ok, _ := filepath.Match(pattern, c.Image); ok {
+				if c.Detached {
+					return fmt.Errorf("Detached mode disabled for the %s plugin", c.Image)
+				}
+				if len(c.Entrypoint) != 0 {
+					return fmt.Errorf("Custom entrypoint disabled for the %s plugin", c.Image)
+				}
+				if len(c.Command) != 0 {
+					return fmt.Errorf("Custom command disabled for the %s plugin", c.Image)
+				}
 				if len(c.Commands) != 0 {
 					return fmt.Errorf("Custom commands disabled for the %s plugin", c.Image)
 				}
