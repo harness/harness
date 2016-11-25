@@ -10,15 +10,17 @@ type pushHook struct {
 	Pusher struct {
 		Name     string `json:"name"`
 		Email    string `json:"email"`
+		Login    string `json:"login"`
 		Username string `json:"username"`
 	} `json:"pusher"`
 
 	Repo struct {
-		ID      int64  `json:"id"`
-		Name    string `json:"name"`
-		URL     string `json:"url"`
-		Private bool   `json:"private"`
-		Owner   struct {
+		ID       int64  `json:"id"`
+		Name     string `json:"name"`
+		FullName string `json:"full_name"`
+		URL      string `json:"html_url"`
+		Private  bool   `json:"private"`
+		Owner    struct {
 			Name     string `json:"name"`
 			Email    string `json:"email"`
 			Username string `json:"username"`
@@ -32,8 +34,9 @@ type pushHook struct {
 	} `json:"commits"`
 
 	Sender struct {
-		ID     int64  `json:"id"`
-		Login  string `json:"login"`
-		Avatar string `json:"avatar_url"`
+		ID       int64  `json:"id"`
+		Login    string `json:"login"`
+		Username string `json:"username"`
+		Avatar   string `json:"avatar_url"`
 	} `json:"sender"`
 }
