@@ -36,6 +36,9 @@ func Check(c *yaml.Config, trusted bool) error {
 // validate the plugin command and entrypoint and return an error
 // the user attempts to set or override these values.
 func CheckEntrypoint(c *yaml.Container) error {
+	if c.Detached {
+		return nil
+	}
 	if len(c.Entrypoint) != 0 {
 		return fmt.Errorf("Cannot set plugin Entrypoint")
 	}
