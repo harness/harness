@@ -166,6 +166,7 @@ func Test_helper(t *testing.T) {
 			change.New.Target.Links.Html.Href = "https://bitbucket.org/foo/bar/commits/73f9c44d"
 			change.New.Target.Message = "updated README"
 			change.New.Target.Date = time.Now()
+			change.New.Target.Author.Raw = "Test <test@domain.tld>"
 
 			hook := internal.PushHook{}
 			hook.Actor.Login = "octocat"
@@ -173,6 +174,7 @@ func Test_helper(t *testing.T) {
 
 			build := convertPushHook(&hook, &change)
 			g.Assert(build.Event).Equal(model.EventPush)
+			g.Assert(build.Email).Equal("test@domain.tld")
 			g.Assert(build.Author).Equal(hook.Actor.Login)
 			g.Assert(build.Avatar).Equal(hook.Actor.Links.Avatar.Href)
 			g.Assert(build.Commit).Equal(change.New.Target.Hash)

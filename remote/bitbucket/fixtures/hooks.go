@@ -33,6 +33,7 @@ const HookPush = `
             "type": "commit",
             "hash": "709d658dc5b6d6afcd46049c2f332ee3f515a67d",
             "author": {
+              "raw": "emmap1 <email@domain.tld>",
               "username": "emmap1",
               "links": {
                 "avatar": {
