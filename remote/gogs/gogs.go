@@ -138,6 +138,9 @@ func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	if err != nil {
 		return nil, err
 	}
+	if c.PrivateMode {
+		repo.Private = true
+	}
 	return toRepo(repo), nil
 }
 
