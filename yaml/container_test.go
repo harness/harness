@@ -27,6 +27,7 @@ func TestContainerNode(t *testing.T) {
 				g.Assert(c.Image).Equal("golang")
 				g.Assert(c.Build).Equal(".")
 				g.Assert(c.Pull).Equal(true)
+				g.Assert(c.Detached).Equal(true)
 				g.Assert(c.Privileged).Equal(true)
 				g.Assert(c.Entrypoint).Equal([]string{"/bin/sh"})
 				g.Assert(c.Command).Equal([]string{"yes"})
@@ -69,6 +70,7 @@ foo:
   image: golang
   build: .
   pull: true
+  detach: true
   privileged: true
   environment:
     FOO: BAR
