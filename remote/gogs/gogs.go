@@ -138,6 +138,9 @@ func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	if err != nil {
 		return nil, err
 	}
+	if c.PrivateMode {
+		repo.Private = true
+	}
 	return toRepo(repo), nil
 }
 
@@ -229,22 +232,7 @@ func (c *client) Deactivate(u *model.User, r *model.Repo, link string) error {
 // Hook parses the incoming Gogs hook and returns the Repository and Build
 // details. If the hook is unsupported nil values are returned.
 func (c *client) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
-	var (
-		err   error
-		repo  *model.Repo
-		build *model.Build
-	)
-
-	switch r.Header.Get("X-Gogs-Event") {
-	case "push":
-		var push *pushHook
-		push, err = parsePush(r.Body)
-		if err == nil && push.RefType != "branch" {
-			repo = repoFromPush(push)
-			build = buildFromPush(push)
-		}
-	}
-	return repo, build, err
+	return parseHook(r)
 }
 
 // helper function to return the Gogs client

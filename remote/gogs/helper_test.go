@@ -27,6 +27,7 @@ func Test_parse(t *testing.T) {
 			g.Assert(hook.Repo.Name).Equal("hello-world")
 			g.Assert(hook.Repo.URL).Equal("http://gogs.golang.org/gordon/hello-world")
 			g.Assert(hook.Repo.Owner.Name).Equal("gordon")
+			g.Assert(hook.Repo.FullName).Equal("gordon/hello-world")
 			g.Assert(hook.Repo.Owner.Email).Equal("gordon@golang.org")
 			g.Assert(hook.Repo.Owner.Username).Equal("gordon")
 			g.Assert(hook.Repo.Private).Equal(true)
@@ -35,6 +36,21 @@ func Test_parse(t *testing.T) {
 			g.Assert(hook.Pusher.Username).Equal("gordon")
 			g.Assert(hook.Sender.Login).Equal("gordon")
 			g.Assert(hook.Sender.Avatar).Equal("http://gogs.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87")
+		})
+
+		g.It("Should parse tag hook payload", func() {
+			buf := bytes.NewBufferString(fixtures.HookPushTag)
+			hook, err := parsePush(buf)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(hook.Ref).Equal("v1.0.0")
+			g.Assert(hook.Repo.Name).Equal("hello-world")
+			g.Assert(hook.Repo.URL).Equal("http://gogs.golang.org/gordon/hello-world")
+			g.Assert(hook.Repo.FullName).Equal("gordon/hello-world")
+			g.Assert(hook.Repo.Owner.Email).Equal("gordon@golang.org")
+			g.Assert(hook.Repo.Owner.Username).Equal("gordon")
+			g.Assert(hook.Repo.Private).Equal(true)
+			g.Assert(hook.Sender.Username).Equal("gordon")
+			g.Assert(hook.Sender.Avatar).Equal("https://secure.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87")
 		})
 
 		g.It("Should return a Build struct from a push hook", func() {

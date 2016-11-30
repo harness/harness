@@ -61,6 +61,7 @@ type container struct {
 	Image          string              `yaml:"image"`
 	Build          string              `yaml:"build"`
 	Pull           bool                `yaml:"pull"`
+	Detached       bool                `yaml:"detach"`
 	Privileged     bool                `yaml:"privileged"`
 	Environment    types.MapEqualSlice `yaml:"environment"`
 	Labels         types.MapEqualSlice `yaml:"labels"`
@@ -131,6 +132,7 @@ func (c *containerList) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			Image:          cc.Image,
 			Build:          cc.Build,
 			Pull:           cc.Pull,
+			Detached:       cc.Detached,
 			Privileged:     cc.Privileged,
 			Environment:    cc.Environment.Map(),
 			Labels:         cc.Labels.Map(),

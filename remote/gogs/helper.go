@@ -70,43 +70,54 @@ func buildFromPush(hook *pushHook) *model.Build {
 		hook.Repo.URL,
 		fixMalformedAvatar(hook.Sender.Avatar),
 	)
-
-	var eventType string
-	var message string
-
-	switch {
-	case hook.RefType == "tag":
-		eventType = model.EventTag
-		message = "Tag " + hook.Ref
-	default:
-		eventType = model.EventPush
-		message = hook.Commits[0].Message
+	author := hook.Sender.Login
+	if author == "" {
+		author = hook.Sender.Username
 	}
 
 	return &model.Build{
-		Event:     eventType,
+		Event:     model.EventPush,
 		Commit:    hook.After,
 		Ref:       hook.Ref,
 		Link:      hook.Compare,
 		Branch:    strings.TrimPrefix(hook.Ref, "refs/heads/"),
-		Message:   message,
+		Message:   hook.Commits[0].Message,
 		Avatar:    avatar,
-		Author:    hook.Sender.Login,
+		Author:    author,
+		Timestamp: time.Now().UTC().Unix(),
+	}
+}
+
+// helper function that extracts the Build data from a Gogs tag hook
+func buildFromTag(hook *pushHook) *model.Build {
+	avatar := expandAvatar(
+		hook.Repo.URL,
+		fixMalformedAvatar(hook.Sender.Avatar),
+	)
+	author := hook.Sender.Login
+	if author == "" {
+		author = hook.Sender.Username
+	}
+
+	return &model.Build{
+		Event:     model.EventTag,
+		Commit:    hook.After,
+		Ref:       fmt.Sprintf("refs/tags/%s", hook.Ref),
+		Link:      fmt.Sprintf("%s/src/%s", hook.Repo.URL, hook.Ref),
+		Branch:    fmt.Sprintf("refs/tags/%s", hook.Ref),
+		Message:   fmt.Sprintf("created tag %s", hook.Ref),
+		Avatar:    avatar,
+		Author:    author,
 		Timestamp: time.Now().UTC().Unix(),
 	}
 }
 
 // helper function that extracts the Repository data from a Gogs push hook
 func repoFromPush(hook *pushHook) *model.Repo {
-	fullName := fmt.Sprintf(
-		"%s/%s",
-		hook.Repo.Owner.Username,
-		hook.Repo.Name,
-	)
 	return &model.Repo{
 		Name:     hook.Repo.Name,
 		Owner:    hook.Repo.Owner.Username,
-		FullName: fullName,
+		FullName: hook.Repo.FullName,
 		Link:     hook.Repo.URL,
 	}
 }
