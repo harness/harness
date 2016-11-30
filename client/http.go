@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 )
@@ -53,7 +54,9 @@ func stream(client *http.Client, rawurl, method string, in, out interface{}) (io
 	}
 	if resp.StatusCode > http.StatusPartialContent {
 		defer resp.Body.Close()
-		return nil, fmt.Errorf("Error: %d %s.", resp.StatusCode, http.StatusText(resp.StatusCode))
+		out, _ := ioutil.ReadAll(resp.Body)
+
+		return nil, fmt.Errorf(string(out))
 	}
 	return resp.Body, nil
 }
