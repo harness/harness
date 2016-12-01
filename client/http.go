@@ -54,9 +54,12 @@ func stream(client *http.Client, rawurl, method string, in, out interface{}) (io
 	}
 	if resp.StatusCode > http.StatusPartialContent {
 		defer resp.Body.Close()
-		out, _ := ioutil.ReadAll(resp.Body)
+		out, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
 
-		return nil, fmt.Errorf(string(out))
+		return nil, fmt.Errorf("Client error %d: %s", resp.StatusCode, out)
 	}
 	return resp.Body, nil
 }
