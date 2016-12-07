@@ -251,6 +251,7 @@ func toEnv(w *model.Work) map[string]string {
 		"DRONE_REMOTE_URL":           w.Repo.Clone,
 		"DRONE_COMMIT_SHA":           w.Build.Commit,
 		"DRONE_COMMIT_REF":           w.Build.Ref,
+		"DRONE_COMMIT_REFSPEC":       w.Build.Refspec,
 		"DRONE_COMMIT_BRANCH":        w.Build.Branch,
 		"DRONE_COMMIT_LINK":          w.Build.Link,
 		"DRONE_COMMIT_MESSAGE":       w.Build.Message,
