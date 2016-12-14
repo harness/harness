@@ -114,7 +114,7 @@ func File(c context.Context, u *model.User, r *model.Repo, b *model.Build, f str
 		if err == nil {
 			return
 		}
-		time.Sleep(500*time.Millisecond)
+		time.Sleep(1*time.Second)
 	}
 	return
 }
