@@ -4,6 +4,7 @@ package remote
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/drone/drone/model"
 
@@ -107,8 +108,15 @@ func Perm(c context.Context, u *model.User, owner, repo string) (*model.Perm, er
 }
 
 // File fetches a file from the remote repository and returns in string format.
-func File(c context.Context, u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
-	return FromContext(c).File(u, r, b, f)
+func File(c context.Context, u *model.User, r *model.Repo, b *model.Build, f string) (out []byte, err error) {
+	for i:=0;i<5;i++ {
+		out, err = FromContext(c).File(u, r, b, f)
+		if err == nil {
+			return
+		}
+		time.Sleep(1*time.Second)
+	}
+	return
 }
 
 // Status sends the commit status to the remote system.
