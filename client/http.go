@@ -59,7 +59,7 @@ func stream(client *http.Client, rawurl, method string, in, out interface{}) (io
 			return nil, err
 		}
 
-		return nil, fmt.Errorf("Client error %d: %s", resp.StatusCode, out)
+		return nil, fmt.Errorf("client error %d: %s", resp.StatusCode, out)
 	}
 	return resp.Body, nil
 }
