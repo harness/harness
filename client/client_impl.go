@@ -9,9 +9,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 
 	"github.com/drone/drone/model"
+	"golang.org/x/net/proxy"
 	"golang.org/x/oauth2"
 )
 
@@ -76,9 +78,22 @@ func NewClientTokenTLS(uri, token string, c *tls.Config) Client {
 	auther := config.Client(oauth2.NoContext, &oauth2.Token{AccessToken: token})
 	if c != nil {
 		if trans, ok := auther.Transport.(*oauth2.Transport); ok {
-			trans.Base = &http.Transport{
-				TLSClientConfig: c,
-				Proxy:           http.ProxyFromEnvironment,
+			if os.Getenv("SOCKS_PROXY") != "" {
+				dialer, err := proxy.SOCKS5("tcp", os.Getenv("SOCKS_PROXY"), nil, proxy.Direct)
+				if err != nil {
+					fmt.Fprintln(os.Stderr, "can't connect to the proxy:", err)
+					os.Exit(1)
+				}
+				trans.Base = &http.Transport{
+					TLSClientConfig: c,
+					Proxy:           http.ProxyFromEnvironment,
+					Dial:            dialer.Dial,
+				}
+			} else {
+				trans.Base = &http.Transport{
+					TLSClientConfig: c,
+					Proxy:           http.ProxyFromEnvironment,
+				}
 			}
 		}
 	}
