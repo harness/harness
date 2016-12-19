@@ -2,6 +2,7 @@ package gitlab
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -113,6 +114,19 @@ func (g *Gitlab) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 	trans_ := &http.Transport{
 		Proxy:           http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: g.SkipVerify},
+	}
+
+	// get the OAuth errors
+	if err := req.FormValue("error"); err != "" {
+		description := req.FormValue("error_description")
+		if description != "" {
+			err += " " + description
+		}
+		uri := req.FormValue("error_uri")
+		if uri != "" {
+			err += " " + uri
+		}
+		return nil, errors.New(err)
 	}
 
 	// get the OAuth code

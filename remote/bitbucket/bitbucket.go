@@ -1,6 +1,7 @@
 package bitbucket
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -39,13 +40,27 @@ func New(client, secret string) remote.Remote {
 
 // Login authenticates an account with Bitbucket using the oauth2 protocol. The
 // Bitbucket account details are returned when the user is successfully authenticated.
-func (c *config) Login(w http.ResponseWriter, r *http.Request) (*model.User, error) {
-	redirect := httputil.GetURL(r)
+func (c *config) Login(w http.ResponseWriter, req *http.Request) (*model.User, error) {
+	redirect := httputil.GetURL(req)
 	config := c.newConfig(redirect)
 
-	code := r.FormValue("code")
+	// get the OAuth errors
+	if err := req.FormValue("error"); err != "" {
+		description := req.FormValue("error_description")
+		if description != "" {
+			err += " " + description
+		}
+		uri := req.FormValue("error_uri")
+		if uri != "" {
+			err += " " + uri
+		}
+		return nil, errors.New(err)
+	}
+
+	// get the OAuth code
+	code := req.FormValue("code")
 	if len(code) == 0 {
-		http.Redirect(w, r, config.AuthCodeURL("drone"), http.StatusSeeOther)
+		http.Redirect(w, req, config.AuthCodeURL("drone"), http.StatusSeeOther)
 		return nil, nil
 	}
 
@@ -237,8 +252,8 @@ func (c *config) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
 
 // Hook parses the incoming Bitbucket hook and returns the Repository and
 // Build details. If the hook is unsupported nil values are returned.
-func (c *config) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
-	return parseHook(r)
+func (c *config) Hook(req *http.Request) (*model.Repo, *model.Build, error) {
+	return parseHook(req)
 }
 
 // helper function to return the bitbucket oauth2 client
