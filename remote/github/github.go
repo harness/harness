@@ -2,7 +2,6 @@ package github
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -95,15 +94,11 @@ func (c *client) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 
 	// get the OAuth errors
 	if err := req.FormValue("error"); err != "" {
-		description := req.FormValue("error_description")
-		if description != "" {
-			err += " " + description
+		return nil, &remote.AuthError{
+			Err:         err,
+			Description: req.FormValue("error_description"),
+			URI:         req.FormValue("error_uri"),
 		}
-		uri := req.FormValue("error_uri")
-		if uri != "" {
-			err += " " + uri
-		}
-		return nil, errors.New(err)
 	}
 
 	// get the OAuth code
