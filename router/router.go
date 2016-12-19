@@ -153,6 +153,21 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		agents.GET("", server.GetAgents)
 	}
 
+	debug := e.Group("/api/debug")
+	{
+		debug.Use(session.MustAdmin())
+		debug.GET("/pprof/", server.IndexHandler())
+		debug.GET("/pprof/heap", server.HeapHandler())
+		debug.GET("/pprof/goroutine", server.GoroutineHandler())
+		debug.GET("/pprof/block", server.BlockHandler())
+		debug.GET("/pprof/threadcreate", server.ThreadCreateHandler())
+		debug.GET("/pprof/cmdline", server.CmdlineHandler())
+		debug.GET("/pprof/profile", server.ProfileHandler())
+		debug.GET("/pprof/symbol", server.SymbolHandler())
+		debug.POST("/pprof/symbol", server.SymbolHandler())
+		debug.GET("/pprof/trace", server.TraceHandler())
+	}
+
 	// DELETE THESE
 	// gitlab := e.Group("/gitlab/:owner/:name")
 	// {
