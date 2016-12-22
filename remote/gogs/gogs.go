@@ -177,13 +177,14 @@ func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 	client := c.newClientToken(u.Token)
 	buildRef := b.Commit
 	if buildRef == "" {
-		buildRef = b.Ref
-
 		// Remove refs/tags or refs/heads, Gogs needs a short ref
-		refPath := strings.SplitAfterN(b.Ref, "/", 3)
-		if len(refPath) > 0 {
-			buildRef = refPath[len(refPath)-1]
-		}
+		buildRef = strings.TrimPrefix(
+			strings.TrimPrefix(
+				b.Ref,
+				"refs/heads/",
+			),
+			"refs/tags/",
+		)
 	}
 	cfg, err := client.GetFile(r.Owner, r.Name, buildRef, f)
 	return cfg, err
