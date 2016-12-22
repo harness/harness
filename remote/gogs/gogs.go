@@ -6,7 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-  "strings"
+	"strings"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
