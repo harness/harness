@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
@@ -176,7 +177,14 @@ func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 	client := c.newClientToken(u.Token)
 	buildRef := b.Commit
 	if buildRef == "" {
-		buildRef = b.Ref
+		// Remove refs/tags or refs/heads, Gogs needs a short ref
+		buildRef = strings.TrimPrefix(
+			strings.TrimPrefix(
+				b.Ref,
+				"refs/heads/",
+			),
+			"refs/tags/",
+		)
 	}
 	cfg, err := client.GetFile(r.Owner, r.Name, buildRef, f)
 	return cfg, err

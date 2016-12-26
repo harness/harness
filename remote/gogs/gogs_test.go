@@ -128,6 +128,12 @@ func Test_gogs(t *testing.T) {
 			g.Assert(string(raw)).Equal("{ platform: linux/amd64 }")
 		})
 
+		g.It("Should return a repository file from a ref", func() {
+			raw, err := c.File(fakeUser, fakeRepo, fakeBuildWithRef, ".drone.yml")
+			g.Assert(err == nil).IsTrue()
+			g.Assert(string(raw)).Equal("{ platform: linux/amd64 }")
+		})
+
 		g.Describe("Given an authentication request", func() {
 			g.It("Should redirect to login form")
 			g.It("Should create an access token")
@@ -177,5 +183,9 @@ var (
 
 	fakeBuild = &model.Build{
 		Commit: "9ecad50",
+	}
+
+	fakeBuildWithRef = &model.Build{
+		Ref: "refs/tags/v1.0.0",
 	}
 )
