@@ -31,7 +31,7 @@ func Broker(cli *cli.Context) gin.HandlerFunc {
 
 	// setup broker logging.
 	log := redlog.New(os.Stderr)
-	log.SetLevel(0)
+	log.SetLevel(2)
 	logger.SetLogger(log)
 	if cli.Bool("broker-debug") {
 		log.SetLevel(1)
