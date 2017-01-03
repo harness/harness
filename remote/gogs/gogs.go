@@ -224,6 +224,7 @@ func (c *client) Activate(u *model.User, r *model.Repo, link string) error {
 	hook := gogs.CreateHookOption{
 		Type:   "gogs",
 		Config: config,
+		Events: []string{"push", "create", "pull_request"},
 		Active: true,
 	}
 
