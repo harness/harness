@@ -40,3 +40,85 @@ type pushHook struct {
 		Avatar   string `json:"avatar_url"`
 	} `json:"sender"`
 }
+
+type pullRequestHook struct {
+	Action      string `json:"action"`
+	Number      int64  `json:"number"`
+	PullRequest struct {
+		ID   int64 `json:"id"`
+		User struct {
+			ID       int64  `json:"id"`
+			Username string `json:"username"`
+			Name     string `json:"full_name"`
+			Email    string `json:"email"`
+			Avatar   string `json:"avatar_url"`
+		} `json:"user"`
+		Title     string   `json:"title"`
+		Body      string   `json:"body"`
+		Labels    []string `json:"labels"`
+		State     string   `json:"state"`
+		URL       string   `json:"html_url"`
+		Mergeable bool     `json:"mergeable"`
+		Merged    bool     `json:"merged"`
+		MergeBase string   `json:"merge_base"`
+		Base      struct {
+			Label string `json:"label"`
+			Ref   string `json:"ref"`
+			Sha   string `json:"sha"`
+			Repo  struct {
+				ID       int64  `json:"id"`
+				Name     string `json:"name"`
+				FullName string `json:"full_name"`
+				URL      string `json:"html_url"`
+				Private  bool   `json:"private"`
+				Owner    struct {
+					ID       int64  `json:"id"`
+					Username string `json:"username"`
+					Name     string `json:"full_name"`
+					Email    string `json:"email"`
+					Avatar   string `json:"avatar_url"`
+				} `json:"owner"`
+			} `json:"repo"`
+		} `json:"base"`
+		Head struct {
+			Label string `json:"label"`
+			Ref   string `json:"ref"`
+			Sha   string `json:"sha"`
+			Repo  struct {
+				ID       int64  `json:"id"`
+				Name     string `json:"name"`
+				FullName string `json:"full_name"`
+				URL      string `json:"html_url"`
+				Private  bool   `json:"private"`
+				Owner    struct {
+					ID       int64  `json:"id"`
+					Username string `json:"username"`
+					Name     string `json:"full_name"`
+					Email    string `json:"email"`
+					Avatar   string `json:"avatar_url"`
+				} `json:"owner"`
+			} `json:"repo"`
+		} `json:"head"`
+	} `json:"pull_request"`
+	Repo struct {
+		ID       int64  `json:"id"`
+		Name     string `json:"name"`
+		FullName string `json:"full_name"`
+		URL      string `json:"html_url"`
+		Private  bool   `json:"private"`
+		Owner    struct {
+			ID       int64  `json:"id"`
+			Username string `json:"username"`
+			Name     string `json:"full_name"`
+			Email    string `json:"email"`
+			Avatar   string `json:"avatar_url"`
+		} `json:"owner"`
+	} `json:"repository"`
+	Sender struct {
+		ID       int64  `json:"id"`
+		Username string `json:"username"`
+		Name     string `json:"full_name"`
+		Email    string `json:"email"`
+		Avatar   string `json:"avatar_url"`
+	} `json:"sender"`
+}

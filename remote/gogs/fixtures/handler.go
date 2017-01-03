@@ -30,12 +30,13 @@ func getRepo(c *gin.Context) {
 }
 
 func getRepoFile(c *gin.Context) {
-	switch c.Param("file") {
-	case "file_not_found":
+	if c.Param("file") == "file_not_found" {
 		c.String(404, "")
-	default:
+	}
+	if c.Param("commit") == "v1.0.0" || c.Param("commit") == "9ecad50" {
 		c.String(200, repoFilePayload)
 	}
+	c.String(404, "")
 }
 
 func createRepoHook(c *gin.Context) {
