@@ -83,3 +83,55 @@ var HookPushTag = `{
     "avatar_url": "https://secure.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
   }
 }`
+
+// HookPullRequest is a sample pull_request webhook payload
+var HookPullRequest = `{
+  "action": "opened",
+  "number": 1,
+  "pull_request": {
+    "html_url": "http://gogs.golang.org/gordon/hello-world/pull/1",
+    "state": "open",
+    "title": "Update the README with new information",
+    "body": "please merge",
+    "user": {
+      "id": 1,
+      "username": "gordon",
+      "full_name": "Gordon the Gopher",
+      "email": "gordon@golang.org",
+      "avatar_url": "http://gogs.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
+    },
+    "base": {
+      "label": "master",
+      "ref": "master",
+      "sha": "9353195a19e45482665306e466c832c46560532d"
+    },
+    "head": {
+      "label": "feature/changes",
+      "ref": "feature/changes",
+      "sha": "0d1a26e67d8f5eaf1f6ba5c57fc3c7d91ac0fd1c"
+    }
+  },
+  "repository": {
+    "id": 35129377,
+    "name": "hello-world",
+    "full_name": "gordon/hello-world",
+    "owner": {
+      "id": 1,
+      "username": "gordon",
+      "full_name": "Gordon the Gopher",
+      "email": "gordon@golang.org",
+      "avatar_url": "https://secure.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
+    },
+    "private": true,
+    "html_url": "http://gogs.golang.org/gordon/hello-world",
+    "clone_url": "https://gogs.golang.org/gordon/hello-world.git",
+    "default_branch": "master"
+  },
+  "sender": {
+      "id": 1,
+      "username": "gordon",
+      "full_name": "Gordon the Gopher",
+      "email": "gordon@golang.org",
+      "avatar_url": "https://secure.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
+    }
+}`

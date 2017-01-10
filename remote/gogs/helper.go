@@ -112,8 +112,42 @@ func buildFromTag(hook *pushHook) *model.Build {
 	}
 }
 
+// helper function that extracts the Build data from a Gogs pull_request hook
+func buildFromPullRequest(hook *pullRequestHook) *model.Build {
+	avatar := expandAvatar(
+		hook.Repo.URL,
+		fixMalformedAvatar(hook.PullRequest.User.Avatar),
+	)
+	build := &model.Build{
+		Event:   model.EventPull,
+		Commit:  hook.PullRequest.Head.Sha,
+		Link:    hook.PullRequest.URL,
+		Ref:     fmt.Sprintf("refs/pull/%d/head", hook.Number),
+		Branch:  hook.PullRequest.Base.Ref,
+		Message: hook.PullRequest.Title,
+		Author:  hook.PullRequest.User.Username,
+		Avatar:  avatar,
+		Title:   hook.PullRequest.Title,
+		Refspec: fmt.Sprintf("%s:%s",
+			hook.PullRequest.Head.Ref,
+			hook.PullRequest.Base.Ref,
+		),
+	}
+	return build
+}
+
 // helper function that extracts the Repository data from a Gogs push hook
 func repoFromPush(hook *pushHook) *model.Repo {
+	return &model.Repo{
+		Name:     hook.Repo.Name,
+		Owner:    hook.Repo.Owner.Username,
+		FullName: hook.Repo.FullName,
+		Link:     hook.Repo.URL,
+	}
+}
+
+// helper function that extracts the Repository data from a Gogs pull_request hook
+func repoFromPullRequest(hook *pullRequestHook) *model.Repo {
 	return &model.Repo{
 		Name:     hook.Repo.Name,
 		Owner:    hook.Repo.Owner.Username,
@@ -127,6 +161,12 @@ func parsePush(r io.Reader) (*pushHook, error) {
 	push := new(pushHook)
 	err := json.NewDecoder(r).Decode(push)
 	return push, err
+}
+
+func parsePullRequest(r io.Reader) (*pullRequestHook, error) {
+	pr := new(pullRequestHook)
+	err := json.NewDecoder(r).Decode(pr)
+	return pr, err
 }
 
 // fixMalformedAvatar is a helper function that fixes an avatar url if malformed

@@ -10,19 +10,7 @@ Drone's prime directive is to help teams [ship code like GitHub](https://github.
 
 ### Documentation
 
-Drone documentation is organized into several categories:
-
-* [Setup Guide](http://readme.drone.io/setup/overview)
-* [Build Guide](http://readme.drone.io/usage/overview)
-* [Plugin Guide](http://readme.drone.io/devs/plugins)
-* [CLI Reference](http://readme.drone.io/devs/cli/)
-* [API Reference](http://readme.drone.io/devs/api/builds)
-
-### Documentation for 0.5 (unstable)
-
-If you are using the 0.5 unstable release (master branch) please see the updated [documentation](http://readme.drone.io/0.5).
-
-
+Documentation is published to [readme.drone.io](http://readme.drone.io)
 
 ### Community, Help
 
@@ -30,7 +18,7 @@ Contributions, questions, and comments are welcomed and encouraged. Drone develo
 
 ### Installation
 
-Please see our [installation guide](http://readme.drone.io/setup/overview) to install the official Docker image.
+Please see our [installation guide](http://readme.drone.io/admin/) to install the official Docker image.
 
 ### From Source
 
