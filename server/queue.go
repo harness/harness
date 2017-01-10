@@ -145,8 +145,8 @@ func HandleUpdate(c context.Context, message *stomp.Message) {
 	}
 
 	defer func() {
-		client.Unsubscribe(sub)
 		client.Send(dest, []byte{}, stomp.WithRetain("remove"))
+		client.Unsubscribe(sub)
 	}()
 
 	select {
