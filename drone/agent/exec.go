@@ -19,6 +19,7 @@ type config struct {
 	pull       bool
 	logs       int64
 	timeout    time.Duration
+	extension  string
 }
 
 type pipeline struct {
@@ -47,6 +48,7 @@ func (r *pipeline) run(w *model.Work) {
 		Platform:  r.config.platform,
 		Namespace: r.config.namespace,
 		Escalate:  r.config.privileged,
+		Extension: r.config.extension,
 		Pull:      r.config.pull,
 	}
 
