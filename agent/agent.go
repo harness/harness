@@ -28,6 +28,7 @@ type Agent struct {
 	Timeout   time.Duration
 	Platform  string
 	Namespace string
+	Extension string
 	Disable   []string
 	Escalate  []string
 	Netrc     []string
@@ -169,6 +170,9 @@ func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 	}
 
 	transform.Pod(conf, a.Platform)
+	if err := transform.RemoteTransform(conf, a.Extension); err != nil {
+		return nil, err
+	}
 
 	return conf, nil
 }
