@@ -133,7 +133,7 @@ var AgentCmd = cli.Command{
 			Name:   "pull",
 			Usage:  "always pull latest plugin images",
 		},
-		cli.StringFlag{
+		cli.StringSliceFlag{
 			EnvVar: "DRONE_YAML_EXTENSION",
 			Name:   "extension",
 			Usage:  "custom plugin extension endpoint",
@@ -197,7 +197,7 @@ func start(c *cli.Context) {
 				privileged: c.StringSlice("privileged"),
 				pull:       c.BoolT("pull"),
 				logs:       int64(c.Int("max-log-size")) * 1000000,
-				extension:  c.String("extension"),
+				extension:  c.StringSlice("extension"),
 			},
 		}
 

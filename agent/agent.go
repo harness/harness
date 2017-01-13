@@ -28,7 +28,7 @@ type Agent struct {
 	Timeout   time.Duration
 	Platform  string
 	Namespace string
-	Extension string
+	Extension []string
 	Disable   []string
 	Escalate  []string
 	Netrc     []string

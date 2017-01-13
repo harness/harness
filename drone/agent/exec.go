@@ -19,7 +19,7 @@ type config struct {
 	pull       bool
 	logs       int64
 	timeout    time.Duration
-	extension  string
+	extension  []string
 }
 
 type pipeline struct {
