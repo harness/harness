@@ -10,12 +10,7 @@ import (
 	"github.com/drone/drone/yaml"
 )
 
-// RemoteTransform makes remote transform requests.
-func RemoteTransform(c *yaml.Config, url string) error {
-	if url == "" {
-		return nil
-	}
-
+func convertTransform(c *yaml.Config, url string) error {
 	var buf bytes.Buffer
 
 	// encode yaml in json format
@@ -40,4 +35,19 @@ func RemoteTransform(c *yaml.Config, url string) error {
 		return err
 	}
 	return fmt.Errorf(string(out))
+}
+
+// RemoteTransform makes remote transform requests.
+func RemoteTransform(c *yaml.Config, url []string) error {
+	if len(url) == 0 {
+		return nil
+	}
+
+	for _, u := range url {
+		if err := convertTransform(c, u); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
