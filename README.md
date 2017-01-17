@@ -6,7 +6,9 @@ Drone is a Continuous Integration platform built on container technology. Every 
 
 ### Goals
 
-Drone's prime directive is to help teams [ship code like GitHub](https://github.com/blog/1241-deploying-at-github#always-be-shipping). Drone is easy to install, setup and maintain and offers a powerful container-based plugin system. Drone aspires to be an industry-wide replacement for Jenkins.
+* Drone's prime directive is to help teams [ship code like GitHub](https://github.com/blog/1241-deploying-at-github#always-be-shipping).
+* Drone is easy to install, setup and maintain and offers a powerful container-based plugin system.
+* Drone aspires to be an industry-wide replacement for Jenkins.
 
 ### Documentation
 
@@ -20,7 +22,7 @@ Contributions, questions, and comments are welcomed and encouraged. Drone develo
 
 Please see our [installation guide](http://readme.drone.io/admin/) to install the official Docker image.
 
-### From Source
+### Building from Source
 
 Clone the repository to your Go workspace:
 
@@ -39,4 +41,4 @@ make gen     # Generate code
 make build   # Build the binary
 ```
 
-If you are having trouble building this project please reference its `.drone.yml` file. Everything you need to know about building Drone is defined in that file.
+If you are having trouble building this project, please refer its `.drone.yml` file. Everything you need to know about building this project is defined in that file.
