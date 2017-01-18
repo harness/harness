@@ -13,8 +13,8 @@ import (
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/version"
 	"github.com/drone/drone/yaml"
-	"github.com/drone/drone/yaml/expander"
 	"github.com/drone/drone/yaml/transform"
+	"github.com/drone/envsubst"
 )
 
 type Logger interface {
@@ -93,7 +93,14 @@ func (a *Agent) Run(payload *model.Work, cancel <-chan bool) error {
 func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 
 	envs := toEnv(w)
-	w.Yaml = expander.ExpandString(w.Yaml, envs)
+
+	var err error
+	w.Yaml, err = envsubst.Eval(w.Yaml, func(s string) string {
+		return envs[s]
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	// append secrets when verified or when a secret does not require
 	// verification
