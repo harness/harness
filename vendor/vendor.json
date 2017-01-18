@@ -261,6 +261,12 @@
 			"revisionTime": "2016-04-13T08:48:50+10:00"
 		},
 		{
+			"checksumSHA1": "LvdVRE0FqdR68SvVpRkHs1rxhcA=",
+			"path": "golang.org/x/net/proxy",
+			"revision": "468bac874d80e6ca892ecbb9bf09c72519b5b751",
+			"revisionTime": "2016-12-14T22:25:41Z"
+		},
+		{
 			"path": "golang.org/x/oauth2",
 			"revision": "8a57ed94ffd43444c0879fe75701732a38afc985",
 			"revisionTime": "2015-12-29T21:02:54-07:00"
