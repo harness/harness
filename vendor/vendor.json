@@ -60,6 +60,12 @@
 			"revisionTime": "2017-01-18T15:01:55Z"
 		},
 		{
+			"checksumSHA1": "LPKfsjm4AYVgCLVcAWnQdSpt5SA=",
+			"path": "github.com/drone/envsubst/parse",
+			"revision": "3e65ae5fd2d944d56fdf52cb3f887247498d50e9",
+			"revisionTime": "2017-01-18T15:01:55Z"
+		},
+		{
 			"path": "github.com/eknkc/amber",
 			"revision": "144da19a9994994c069f0693294a66dd310e14a4",
 			"revisionTime": "2015-08-30T00:43:03+03:00"
