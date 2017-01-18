@@ -81,7 +81,6 @@ func NewClientTokenTLS(uri, token string, c *tls.Config) (Client, error) {
 			if os.Getenv("SOCKS_PROXY") != "" {
 				dialer, err := proxy.SOCKS5("tcp", os.Getenv("SOCKS_PROXY"), nil, proxy.Direct)
 				if err != nil {
-					fmt.Fprintln(os.Stderr, "can't connect to the proxy:", err)
 					return nil, err
 				}
 				trans.Base = &http.Transport{
