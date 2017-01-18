@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -93,10 +94,24 @@ func (a *Agent) Run(payload *model.Work, cancel <-chan bool) error {
 func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 
 	envs := toEnv(w)
+	envSecrets := map[string]string{}
+	if os.Getenv("DRONE_INTERPOLATE_SECRETS") != "" {
+		for _, secret := range w.Secrets {
+			if w.Verified || secret.SkipVerify {
+				envSecrets[secret.Name] = secret.Value
+			}
+		}
+	}
 
 	var err error
 	w.Yaml, err = envsubst.Eval(w.Yaml, func(s string) string {
-		env := envs[s]
+		env, ok := envSecrets[s]
+		if !ok {
+			env, ok = envs[s]
+		}
+		if !ok {
+			return ""
+		}
 		if strings.Contains(env, "\n") {
 			env = fmt.Sprintf("%q", env)
 		}
