@@ -96,7 +96,11 @@ func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 
 	var err error
 	w.Yaml, err = envsubst.Eval(w.Yaml, func(s string) string {
-		return envs[s]
+		env := envs[s]
+		if strings.Contains(env, "\n") {
+			env = fmt.Sprintf("%q", env)
+		}
+		return env
 	})
 	if err != nil {
 		return nil, err
