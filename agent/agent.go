@@ -97,7 +97,7 @@ func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 	envSecrets := map[string]string{}
 	if os.Getenv("DRONE_INTERPOLATE_SECRETS") != "" {
 		for _, secret := range w.Secrets {
-			if w.Verified || secret.SkipVerify {
+			if (w.Verified || secret.SkipVerify) && secret.MatchEvent(w.Build.Event) {
 				envSecrets[secret.Name] = secret.Value
 			}
 		}
@@ -108,9 +108,6 @@ func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 		env, ok := envSecrets[s]
 		if !ok {
 			env, ok = envs[s]
-		}
-		if !ok {
-			return ""
 		}
 		if strings.Contains(env, "\n") {
 			env = fmt.Sprintf("%q", env)
