@@ -73,7 +73,7 @@ func NewClientToken(uri, token string) Client {
 
 // NewClientTokenTLS returns a client at the specified url that authenticates
 // all outbound requests with the given token and tls.Config if provided.
-func NewClientTokenTLS(uri, token string, c *tls.Config) Client {
+func NewClientTokenTLS(uri, token string, c *tls.Config) (Client, error) {
 	config := new(oauth2.Config)
 	auther := config.Client(oauth2.NoContext, &oauth2.Token{AccessToken: token})
 	if c != nil {
@@ -82,7 +82,7 @@ func NewClientTokenTLS(uri, token string, c *tls.Config) Client {
 				dialer, err := proxy.SOCKS5("tcp", os.Getenv("SOCKS_PROXY"), nil, proxy.Direct)
 				if err != nil {
 					fmt.Fprintln(os.Stderr, "can't connect to the proxy:", err)
-					os.Exit(1)
+					return nil, err
 				}
 				trans.Base = &http.Transport{
 					TLSClientConfig: c,
@@ -97,7 +97,7 @@ func NewClientTokenTLS(uri, token string, c *tls.Config) Client {
 			}
 		}
 	}
-	return &client{client: auther, base: uri, token: token}
+	return &client{client: auther, base: uri, token: token}, nil
 }
 
 // Self returns the currently authenticated user.
