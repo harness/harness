@@ -9,9 +9,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 
 	"github.com/drone/drone/model"
+	"golang.org/x/net/proxy"
 	"golang.org/x/oauth2"
 )
 
@@ -71,18 +73,30 @@ func NewClientToken(uri, token string) Client {
 
 // NewClientTokenTLS returns a client at the specified url that authenticates
 // all outbound requests with the given token and tls.Config if provided.
-func NewClientTokenTLS(uri, token string, c *tls.Config) Client {
+func NewClientTokenTLS(uri, token string, c *tls.Config) (Client, error) {
 	config := new(oauth2.Config)
 	auther := config.Client(oauth2.NoContext, &oauth2.Token{AccessToken: token})
 	if c != nil {
 		if trans, ok := auther.Transport.(*oauth2.Transport); ok {
-			trans.Base = &http.Transport{
-				TLSClientConfig: c,
-				Proxy:           http.ProxyFromEnvironment,
+			if os.Getenv("SOCKS_PROXY") != "" {
+				dialer, err := proxy.SOCKS5("tcp", os.Getenv("SOCKS_PROXY"), nil, proxy.Direct)
+				if err != nil {
+					return nil, err
+				}
+				trans.Base = &http.Transport{
+					TLSClientConfig: c,
+					Proxy:           http.ProxyFromEnvironment,
+					Dial:            dialer.Dial,
+				}
+			} else {
+				trans.Base = &http.Transport{
+					TLSClientConfig: c,
+					Proxy:           http.ProxyFromEnvironment,
+				}
 			}
 		}
 	}
-	return &client{client: auther, base: uri, token: token}
+	return &client{client: auther, base: uri, token: token}, nil
 }
 
 // Self returns the currently authenticated user.

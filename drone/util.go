@@ -31,7 +31,7 @@ func newClient(c *cli.Context) (client.Client, error) {
 	tlsConfig := &tls.Config{RootCAs: certs}
 
 	// create the drone client with TLS options
-	return client.NewClientTokenTLS(server, token, tlsConfig), nil
+	return client.NewClientTokenTLS(server, token, tlsConfig)
 }
 
 func parseRepo(str string) (user, repo string, err error) {
