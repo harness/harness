@@ -1,14 +1,15 @@
 package main
 
 import (
+	"crypto/tls"
 	"net/http"
 	"time"
 
-	"github.com/drone/drone/router"
-	"github.com/drone/drone/router/middleware"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/drone/drone/router"
+	"github.com/drone/drone/router/middleware"
+	"github.com/facebookgo/grace/gracehttp"
 	"github.com/gin-gonic/contrib/ginrus"
 )
 
@@ -302,17 +303,32 @@ func server(c *cli.Context) error {
 
 	// start the server with tls enabled
 	if c.String("server-cert") != "" {
-		return http.ListenAndServeTLS(
-			c.String("server-addr"),
-			c.String("server-cert"),
-			c.String("server-key"),
-			handler,
-		)
+		var err error
+
+		config := &tls.Config{
+			MinVersion: tls.VersionTLS10,
+		}
+
+		if config.NextProtos == nil {
+			config.NextProtos = []string{"http/1.1"}
+		}
+
+		config.Certificates = make([]tls.Certificate, 1)
+		config.Certificates[0], err = tls.LoadX509KeyPair(c.String("server-cert"), c.String("server-key"))
+		if err != nil {
+			return err
+		}
+
+		return gracehttp.Serve(&http.Server{
+			Addr:      c.String("server-addr"),
+			Handler:   handler,
+			TLSConfig: config,
+		})
 	}
 
 	// start the server without tls enabled
-	return http.ListenAndServe(
-		c.String("server-addr"),
-		handler,
-	)
+	return gracehttp.Serve(&http.Server{
+		Addr:    c.String("server-addr"),
+		Handler: handler,
+	})
 }
