@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -95,11 +94,11 @@ func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 
 	envs := toEnv(w)
 	envSecrets := map[string]string{}
-	if os.Getenv("DRONE_INTERPOLATE_SECRETS") != "" {
-		for _, secret := range w.Secrets {
-			if (w.Verified || secret.SkipVerify) && secret.MatchEvent(w.Build.Event) {
-				envSecrets[secret.Name] = secret.Value
-			}
+
+	// list of secrets to interpolate in the yaml
+	for _, secret := range w.Secrets {
+		if (w.Verified || secret.SkipVerify) && secret.MatchEvent(w.Build.Event) {
+			envSecrets[secret.Name] = secret.Value
 		}
 	}
 
@@ -107,7 +106,7 @@ func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 	w.Yaml, err = envsubst.Eval(w.Yaml, func(s string) string {
 		env, ok := envSecrets[s]
 		if !ok {
-			env, ok = envs[s]
+			env, _ = envs[s]
 		}
 		if strings.Contains(env, "\n") {
 			env = fmt.Sprintf("%q", env)

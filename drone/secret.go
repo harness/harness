@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -79,10 +78,6 @@ func secretParseCmd(name string, value string, c *cli.Context) (*model.Secret, e
 	secret.SkipVerify = c.Bool("skip-verify")
 	secret.Conceal = c.Bool("conceal")
 
-	if len(secret.Images) == 0 {
-		return nil, fmt.Errorf("Please specify the --image parameter")
-	}
-
 	// TODO(bradrydzewski) below we use an @ sybmol to denote that the secret
 	// value should be loaded from a file (inspired by curl). I'd prefer to use
 	// a --input flag to explicitly specify a filepath instead.
@@ -124,7 +119,6 @@ func secretDisplayList(secrets []*model.Secret, c *cli.Context) error {
 
 // template for secret list items
 var tmplSecretList = "\x1b[33m{{ .Name }} \x1b[0m" + `
-Images: {{ list .Images }}
 Events: {{ list .Events }}
 SkipVerify: {{ .SkipVerify }}
 Conceal: {{ .Conceal }}
