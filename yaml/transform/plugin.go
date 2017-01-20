@@ -1,27 +1,22 @@
 package transform
 
-import (
-	"path/filepath"
-
-	"github.com/drone/drone/yaml"
-)
+import "github.com/drone/drone/yaml"
 
 // PluginDisable is a transform function that alters the Yaml configuration to
 // disables plugins. This is intended for use when executing the pipeline
 // locally on your own computer.
-func PluginDisable(conf *yaml.Config, patterns []string) error {
+func PluginDisable(conf *yaml.Config, local bool) error {
 	for _, container := range conf.Pipeline {
-		if len(container.Commands) != 0 { // skip build steps
+		if len(container.Commands) != 0 || container.Detached { // skip build steps
 			continue
 		}
-		var match bool
-		for _, pattern := range patterns {
-			if ok, _ := filepath.Match(pattern, container.Name); ok {
-				match = true
-				break
-			}
+
+		if isClone(container) {
+			container.Disabled = true
+			continue
 		}
-		if !match {
+
+		if local && container.Constraints.Runtime.Match("cli") {
 			container.Disabled = true
 		}
 	}

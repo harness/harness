@@ -2,6 +2,7 @@ package transform
 
 import "github.com/drone/drone/yaml"
 
+// ImageVolume mounts a default volume (used for drone exec)
 func ImageVolume(conf *yaml.Config, volumes []string) error {
 
 	if len(volumes) == 0 {

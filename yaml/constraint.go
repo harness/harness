@@ -10,7 +10,7 @@ import (
 type Constraints struct {
 	Repo        Constraint
 	Ref         Constraint
-	Refspec     Constraint
+	Runtime     Constraint
 	Platform    Constraint
 	Environment Constraint
 	Event       Constraint

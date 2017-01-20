@@ -29,7 +29,6 @@ type Agent struct {
 	Platform  string
 	Namespace string
 	Extension []string
-	Disable   []string
 	Escalate  []string
 	Netrc     []string
 	Local     string
@@ -187,7 +186,7 @@ func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 	transform.PluginParams(conf)
 
 	if a.Local != "" {
-		transform.PluginDisable(conf, a.Disable)
+		transform.PluginDisable(conf, true)
 		transform.ImageVolume(conf, []string{a.Local + ":" + conf.Workspace.Path})
 	}
 
