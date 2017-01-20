@@ -140,6 +140,7 @@ func Test_github(t *testing.T) {
 			g.It("Should create an access token")
 			g.It("Should handle an access token error")
 			g.It("Should return the authenticated user")
+			g.It("Should handle authentication errors")
 		})
 	})
 }

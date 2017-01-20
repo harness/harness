@@ -92,6 +92,16 @@ type client struct {
 func (c *client) Login(res http.ResponseWriter, req *http.Request) (*model.User, error) {
 	config := c.newConfig(httputil.GetURL(req))
 
+	// get the OAuth errors
+	if err := req.FormValue("error"); err != "" {
+		return nil, &remote.AuthError{
+			Err:         err,
+			Description: req.FormValue("error_description"),
+			URI:         req.FormValue("error_uri"),
+		}
+	}
+
+	// get the OAuth code
 	code := req.FormValue("code")
 	if len(code) == 0 {
 		// TODO(bradrydzewski) we really should be using a random value here and
