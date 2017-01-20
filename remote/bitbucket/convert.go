@@ -2,6 +2,7 @@ package bitbucket
 
 import (
 	"fmt"
+	"regexp"
 	"net/url"
 	"strings"
 
@@ -186,5 +187,20 @@ func convertPushHook(hook *internal.PushHook, change *internal.Change) *model.Bu
 		build.Event = model.EventPush
 		build.Ref = fmt.Sprintf("refs/heads/%s", change.New.Name)
 	}
+	if len(change.New.Target.Author.Raw) != 0 {
+		build.Email = extractEmail(change.New.Target.Author.Raw)
+	}
 	return build
+}
+
+// regex for git author fields ("name <name@mail.tld>")
+var reGitMail = regexp.MustCompile("<(.*)>")
+
+// extracts the email from a git commit author string
+func extractEmail(gitauthor string) (author string) {
+    matches := reGitMail.FindAllStringSubmatch(gitauthor,-1)
+    if len(matches) == 1 {
+        author = matches[0][1]
+    }
+    return
 }
