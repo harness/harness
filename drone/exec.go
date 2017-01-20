@@ -95,7 +95,7 @@ var execCmd = cli.Command{
 		cli.StringFlag{
 			EnvVar: "DOCKER_HOST",
 			Name:   "docker-host",
-			Usage:  "docker deamon address",
+			Usage:  "docker daemon address",
 			Value:  "unix:///var/run/docker.sock",
 		},
 		cli.BoolFlag{
