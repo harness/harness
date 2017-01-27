@@ -18,7 +18,7 @@ func (s *StringOrSlice) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	err = unmarshal(&stringType)
 	if err == nil {
 		sliceType = make([]string, 0, 1)
-		s.parts = append(sliceType, string(stringType))
+		s.parts = append(sliceType, stringType)
 		return nil
 	}
 	return err

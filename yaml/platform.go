@@ -19,7 +19,7 @@ func ParsePlatformString(in string) string {
 
 // ParsePlatformDefault parses the platform section of the Yaml document.
 func ParsePlatformDefault(in []byte, platform string) string {
-	if p := ParsePlatform([]byte(in)); p != "" {
+	if p := ParsePlatform(in); p != "" {
 		return p
 	}
 	return platform
