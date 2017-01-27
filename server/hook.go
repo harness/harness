@@ -11,7 +11,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
-	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
 	"github.com/drone/drone/yaml"
@@ -197,7 +196,7 @@ func PostHook(c *gin.Context) {
 
 	c.JSON(200, build)
 
-	url := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, build.Number)
+	url := fmt.Sprintf("%s/%s/%d", GetSystemUrl(c), repo.FullName, build.Number)
 	err = remote_.Status(user, repo, build, url)
 	if err != nil {
 		log.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
@@ -234,7 +233,7 @@ func PostHook(c *gin.Context) {
 			Netrc:     netrc,
 			Yaml:      string(raw),
 			Secrets:   secs,
-			System:    &model.System{Link: httputil.GetURL(c.Request)},
+			System:    &model.System{Link: GetSystemUrl(c)},
 		},
 			stomp.WithHeader(
 				"platform",

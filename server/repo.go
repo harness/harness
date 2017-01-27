@@ -16,6 +16,25 @@ import (
 	"github.com/drone/drone/store"
 )
 
+func GetSystemUrl(c *gin.Context) string {
+	config := ToConfig(c)
+	if config.Url != "" {
+		return config.Url
+	}
+	return httputil.GetURL(c.Request)
+}
+
+func GetHookUrl(c *gin.Context) string {
+	config := ToConfig(c)
+	if config.HookUrl != "" {
+		return config.HookUrl
+	}
+	if config.Url != "" {
+		return config.Url
+	}
+	return httputil.GetURL(c.Request)
+}
+
 func PostRepo(c *gin.Context) {
 	remote := remote.FromContext(c)
 	user := session.User(c)
@@ -69,7 +88,7 @@ func PostRepo(c *gin.Context) {
 
 	link := fmt.Sprintf(
 		"%s/hook?access_token=%s",
-		httputil.GetURL(c.Request),
+		GetHookUrl(c),
 		sig,
 	)
 
@@ -164,6 +183,6 @@ func DeleteRepo(c *gin.Context) {
 		return
 	}
 
-	remote.Deactivate(user, repo, httputil.GetURL(c.Request))
+	remote.Deactivate(user, repo, GetHookUrl(c))
 	c.Writer.WriteHeader(http.StatusOK)
 }

@@ -9,7 +9,6 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/remote"
-	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
 	"github.com/drone/drone/yaml"
 	"github.com/gin-gonic/gin"
@@ -350,7 +349,7 @@ func PostBuild(c *gin.Context) {
 			Netrc:     netrc,
 			Yaml:      string(raw),
 			Secrets:   secs,
-			System:    &model.System{Link: httputil.GetURL(c.Request)},
+			System:    &model.System{Link: GetSystemUrl(c)},
 		},
 			stomp.WithHeader(
 				"platform",
