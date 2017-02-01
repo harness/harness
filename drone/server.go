@@ -263,8 +263,8 @@ var serverCmd = cli.Command{
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_STASH_CONSUMER_RSA_STRING",
-			Name: "stash-consumer-rsa-string",
-			Usage: "stash oauth1 private key string",
+			Name:   "stash-consumer-rsa-string",
+			Usage:  "stash oauth1 private key string",
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_STASH_GIT_USERNAME",

@@ -27,13 +27,13 @@ const (
 
 // Opts defines configuration options.
 type Opts struct {
-	URL         string // Stash server url.
-	Username    string // Git machine account username.
-	Password    string // Git machine account password.
-	ConsumerKey string // Oauth1 consumer key.
-	ConsumerRSA string // Oauth1 consumer key file.
+	URL               string // Stash server url.
+	Username          string // Git machine account username.
+	Password          string // Git machine account password.
+	ConsumerKey       string // Oauth1 consumer key.
+	ConsumerRSA       string // Oauth1 consumer key file.
 	ConsumerRSAString string
-	SkipVerify  bool   // Skip ssl verification.
+	SkipVerify        bool // Skip ssl verification.
 }
 
 type Config struct {
@@ -67,9 +67,9 @@ func New(opts Opts) (remote.Remote, error) {
 		return nil, fmt.Errorf("must have CONSUMER_RSA_KEY set to the path of a oauth1 consumer key file or CONSUMER_RSA_KEY_STRING set to the value of a oauth1 consumer key")
 	}
 
-	var keyFileBytes []byte;
+	var keyFileBytes []byte
 	if opts.ConsumerRSA != "" {
-		var err error;
+		var err error
 		keyFileBytes, err = ioutil.ReadFile(opts.ConsumerRSA)
 		if err != nil {
 			return nil, err
@@ -78,12 +78,11 @@ func New(opts Opts) (remote.Remote, error) {
 		keyFileBytes = []byte(opts.ConsumerRSAString)
 	}
 
-		block, _ := pem.Decode(keyFileBytes)
-		PrivateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-		if err != nil {
-			return nil, err
-		}
-
+	block, _ := pem.Decode(keyFileBytes)
+	PrivateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
 
 	config.Consumer = CreateConsumer(opts.URL, opts.ConsumerKey, PrivateKey)
 	return config, nil
@@ -166,7 +165,7 @@ func (c *Config) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 }
 
 // Status is not supported by the bitbucketserver driver.
-func (c *Config) Status(u *model.User,r *model.Repo,b *model.Build,link string) error {
+func (c *Config) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
 	status := internal.BuildStatus{
 		State: convertStatus(b.Status),
 		Desc:  convertDesc(b.Status),
