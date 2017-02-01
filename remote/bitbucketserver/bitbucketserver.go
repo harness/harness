@@ -32,6 +32,7 @@ type Opts struct {
 	Password    string // Git machine account password.
 	ConsumerKey string // Oauth1 consumer key.
 	ConsumerRSA string // Oauth1 consumer key file.
+	ConsumerRSAString string
 	SkipVerify  bool   // Skip ssl verification.
 }
 
@@ -60,19 +61,30 @@ func New(opts Opts) (remote.Remote, error) {
 		return nil, fmt.Errorf("Must have a git machine account password")
 	case opts.ConsumerKey == "":
 		return nil, fmt.Errorf("Must have a oauth1 consumer key")
-	case opts.ConsumerRSA == "":
-		return nil, fmt.Errorf("Must have a oauth1 consumer key file")
 	}
 
-	keyFile, err := ioutil.ReadFile(opts.ConsumerRSA)
-	if err != nil {
-		return nil, err
+	if opts.ConsumerRSA == "" && opts.ConsumerRSAString == "" {
+		return nil, fmt.Errorf("must have CONSUMER_RSA_KEY set to the path of a oauth1 consumer key file or CONSUMER_RSA_KEY_STRING set to the value of a oauth1 consumer key")
 	}
-	block, _ := pem.Decode(keyFile)
-	PrivateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, err
+
+	var keyFileBytes []byte;
+	if opts.ConsumerRSA != "" {
+		var err error;
+		keyFileBytes, err = ioutil.ReadFile(opts.ConsumerRSA)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		keyFileBytes = []byte(opts.ConsumerRSAString)
 	}
+
+		block, _ := pem.Decode(keyFileBytes)
+		PrivateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+
+
 	config.Consumer = CreateConsumer(opts.URL, opts.ConsumerKey, PrivateKey)
 	return config, nil
 }

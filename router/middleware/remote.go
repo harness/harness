@@ -71,6 +71,7 @@ func setupStash(c *cli.Context) (remote.Remote, error) {
 		Password:    c.String("stash-git-password"),
 		ConsumerKey: c.String("stash-consumer-key"),
 		ConsumerRSA: c.String("stash-consumer-rsa"),
+		ConsumerRSAString: c.String("stash-consumer-rsa-string"),
 		SkipVerify:  c.Bool("stash-skip-verify"),
 	})
 }
