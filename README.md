@@ -4,6 +4,8 @@
 
 Drone is a Continuous Integration platform built on container technology. Every build is executed inside an ephemeral Docker container, giving developers complete control over their build environment with guaranteed isolation.
 
+Browse the code at https://sourcegraph.com/github.com/drone/drone
+
 ### Goals
 
 Drone's prime directive is to help teams [ship code like GitHub](https://github.com/blog/1241-deploying-at-github#always-be-shipping). Drone is easy to install, setup and maintain and offers a powerful container-based plugin system. Drone aspires to eventually offer an industry-wide replacement for Jenkins.
