@@ -12,18 +12,20 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	"github.com/mrjones/oauth"
+	"strings"
 )
 
 const (
-	currentUserId   = "%s/plugins/servlet/applinks/whoami"
-	pathUser        = "%s/rest/api/1.0/users/%s"
-	pathRepo        = "%s/rest/api/1.0/projects/%s/repos/%s"
-	pathRepos       = "%s/rest/api/1.0/repos?start=%s&limit=%s"
-	pathHook        = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s"
-	pathSource      = "%s/projects/%s/repos/%s/browse/%s?at=%s&raw"
-	hookName        = "com.atlassian.stash.plugin.stash-web-post-receive-hooks-plugin:postReceiveHook"
-	pathHookEnabled = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s/enabled"
-	pathStatus      = "%s/rest/build-status/1.0/commits/%s"
+	currentUserId    = "%s/plugins/servlet/applinks/whoami"
+	pathUser         = "%s/rest/api/1.0/users/%s"
+	pathRepo         = "%s/rest/api/1.0/projects/%s/repos/%s"
+	pathRepos        = "%s/rest/api/1.0/repos?start=%s&limit=%s"
+	pathHook         = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s"
+	pathSource       = "%s/projects/%s/repos/%s/browse/%s?at=%s&raw"
+	hookName         = "com.atlassian.stash.plugin.stash-web-post-receive-hooks-plugin:postReceiveHook"
+	pathHookEnabled  = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s/enabled"
+	pathHookSettings = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s/settings"
+	pathStatus       = "%s/rest/build-status/1.0/commits/%s"
 )
 
 type Client struct {
@@ -129,9 +131,17 @@ func (c *Client) FindFileForRepo(owner string, repo string, fileName string, ref
 }
 
 func (c *Client) CreateHook(owner string, name string, callBackLink string) error {
-	// Set hook
-	//TODO: Check existing and add up to 5
-	hookBytes := []byte(fmt.Sprintf(`{"hook-url-0":"%s"}`, callBackLink))
+	hookSettings, err := c.GetHooks(owner, name)
+	if err != nil {
+		return err
+	}
+	hooks := hookSettingsToArray(hookSettings)
+
+	if !stringInSlice(callBackLink, hooks) {
+		hooks = append(hooks, callBackLink)
+	}
+	putHookSettings := arrayToHookSettings(hooks)
+	hookBytes, err := json.Marshal(putHookSettings)
 	return c.doPut(fmt.Sprintf(pathHookEnabled, c.base, owner, name, hookName), hookBytes)
 }
 
@@ -141,8 +151,34 @@ func (c *Client) CreateStatus(revision string, status *BuildStatus) error {
 }
 
 func (c *Client) DeleteHook(owner string, name string, link string) error {
-	//TODO: eventially should only delete the link callback
-	return c.doDelete(fmt.Sprintf(pathHookEnabled, c.base, owner, name, hookName))
+
+	hookSettings, err := c.GetHooks(owner, name)
+	if err != nil {
+		return err
+	}
+	putHooks := Filter(hookSettingsToArray(hookSettings), func(item string) bool {
+
+		return !strings.Contains(item, link)
+	})
+	putHookSettings := arrayToHookSettings(putHooks)
+	hookBytes, err := json.Marshal(putHookSettings)
+	return c.doPut(fmt.Sprintf(pathHookEnabled, c.base, owner, name, hookName), hookBytes)
+}
+
+func (c *Client) GetHooks(owner string, name string) (*HookSettings, error) {
+	urlString := fmt.Sprintf(pathHookSettings, c.base, owner, name, hookName)
+	response, err := c.client.Get(urlString)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+	contents, err := ioutil.ReadAll(response.Body)
+	hookSettings := HookSettings{}
+	err = json.Unmarshal(contents, &hookSettings)
+	if err != nil {
+		return nil, err
+	}
+	return &hookSettings, nil
 }
 
 //TODO: make these as as general do with the action
@@ -213,4 +249,143 @@ func (c *Client) paginatedRepos(start int) ([]*Repo, error) {
 		repoResponse.Values = append(repoResponse.Values, reposList...)
 	}
 	return repoResponse.Values, nil
+}
+
+func Filter(vs []string, f func(string) bool) []string {
+	vsf := make([]string, 0)
+	for _, v := range vs {
+		if f(v) {
+			vsf = append(vsf, v)
+		}
+	}
+	return vsf
+}
+
+//TODO: find a clean way of doing these next two methods- bitbucket server hooks only support 20 cb hooks
+func arrayToHookSettings(hooks []string) HookSettings {
+	hookSettings := HookSettings{}
+	for loc, value := range hooks {
+		switch loc {
+		case 0:
+			hookSettings.HookURL0 = value
+		case 1:
+			hookSettings.HookURL1 = value
+		case 2:
+			hookSettings.HookURL2 = value
+		case 3:
+			hookSettings.HookURL3 = value
+		case 4:
+			hookSettings.HookURL4 = value
+		case 5:
+			hookSettings.HookURL5 = value
+		case 6:
+			hookSettings.HookURL6 = value
+		case 7:
+			hookSettings.HookURL7 = value
+		case 8:
+			hookSettings.HookURL8 = value
+		case 9:
+			hookSettings.HookURL9 = value
+		case 10:
+			hookSettings.HookURL10 = value
+		case 11:
+			hookSettings.HookURL11 = value
+		case 12:
+			hookSettings.HookURL12 = value
+		case 13:
+			hookSettings.HookURL13 = value
+		case 14:
+			hookSettings.HookURL14 = value
+		case 15:
+			hookSettings.HookURL15 = value
+		case 16:
+			hookSettings.HookURL16 = value
+		case 17:
+			hookSettings.HookURL17 = value
+		case 18:
+			hookSettings.HookURL18 = value
+		case 19:
+			hookSettings.HookURL19 = value
+
+			//Since there's only 19 hooks it will add to the latest if it doesn't exist :/
+		default:
+			hookSettings.HookURL19 = value
+		}
+	}
+	return hookSettings
+}
+
+func hookSettingsToArray(hookSettings *HookSettings) []string {
+	hooks := make([]string, 0)
+
+	if hookSettings.HookURL0 != "" {
+		hooks = append(hooks, hookSettings.HookURL0)
+	}
+	if hookSettings.HookURL1 != "" {
+		hooks = append(hooks, hookSettings.HookURL1)
+	}
+	if hookSettings.HookURL2 != "" {
+		hooks = append(hooks, hookSettings.HookURL2)
+	}
+	if hookSettings.HookURL3 != "" {
+		hooks = append(hooks, hookSettings.HookURL3)
+	}
+	if hookSettings.HookURL4 != "" {
+		hooks = append(hooks, hookSettings.HookURL4)
+	}
+	if hookSettings.HookURL5 != "" {
+		hooks = append(hooks, hookSettings.HookURL5)
+	}
+	if hookSettings.HookURL6 != "" {
+		hooks = append(hooks, hookSettings.HookURL6)
+	}
+	if hookSettings.HookURL7 != "" {
+		hooks = append(hooks, hookSettings.HookURL7)
+	}
+	if hookSettings.HookURL8 != "" {
+		hooks = append(hooks, hookSettings.HookURL8)
+	}
+	if hookSettings.HookURL9 != "" {
+		hooks = append(hooks, hookSettings.HookURL9)
+	}
+	if hookSettings.HookURL10 != "" {
+		hooks = append(hooks, hookSettings.HookURL10)
+	}
+	if hookSettings.HookURL11 != "" {
+		hooks = append(hooks, hookSettings.HookURL11)
+	}
+	if hookSettings.HookURL12 != "" {
+		hooks = append(hooks, hookSettings.HookURL12)
+	}
+	if hookSettings.HookURL13 != "" {
+		hooks = append(hooks, hookSettings.HookURL13)
+	}
+	if hookSettings.HookURL14 != "" {
+		hooks = append(hooks, hookSettings.HookURL14)
+	}
+	if hookSettings.HookURL15 != "" {
+		hooks = append(hooks, hookSettings.HookURL15)
+	}
+	if hookSettings.HookURL16 != "" {
+		hooks = append(hooks, hookSettings.HookURL16)
+	}
+	if hookSettings.HookURL17 != "" {
+		hooks = append(hooks, hookSettings.HookURL17)
+	}
+	if hookSettings.HookURL18 != "" {
+		hooks = append(hooks, hookSettings.HookURL18)
+	}
+	if hookSettings.HookURL19 != "" {
+		hooks = append(hooks, hookSettings.HookURL19)
+	}
+	return hooks
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }

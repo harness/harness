@@ -169,3 +169,26 @@ type RefChange struct {
 	ToHash   string `json:"toHash"`
 	Type     string `json:"type"`
 }
+
+type HookSettings struct {
+	HookURL0  string `json:"hook-url-0,omitempty"`
+	HookURL1  string `json:"hook-url-1,omitempty"`
+	HookURL2  string `json:"hook-url-2,omitempty"`
+	HookURL3  string `json:"hook-url-3,omitempty"`
+	HookURL4  string `json:"hook-url-4,omitempty"`
+	HookURL5  string `json:"hook-url-5,omitempty"`
+	HookURL6  string `json:"hook-url-6,omitempty"`
+	HookURL7  string `json:"hook-url-7,omitempty"`
+	HookURL8  string `json:"hook-url-8,omitempty"`
+	HookURL9  string `json:"hook-url-9,omitempty"`
+	HookURL10 string `json:"hook-url-10,omitempty"`
+	HookURL11 string `json:"hook-url-11,omitempty"`
+	HookURL12 string `json:"hook-url-12,omitempty"`
+	HookURL13 string `json:"hook-url-13,omitempty"`
+	HookURL14 string `json:"hook-url-14,omitempty"`
+	HookURL15 string `json:"hook-url-15,omitempty"`
+	HookURL16 string `json:"hook-url-16,omitempty"`
+	HookURL17 string `json:"hook-url-17,omitempty"`
+	HookURL18 string `json:"hook-url-18,omitempty"`
+	HookURL19 string `json:"hook-url-19,omitempty"`
+}
