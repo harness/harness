@@ -24,10 +24,10 @@ deps_backend:
 gen: gen_template gen_migrations
 
 gen_template:
-	go generate server/template
+	go generate github.com/drone/drone/server/template
 
 gen_migrations:
-	go generate store/datastore/ddl
+	go generate github.com/drone/drone/store/datastore/ddl
 
 test:
 	go test -cover $(PACKAGES)
