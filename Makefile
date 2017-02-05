@@ -45,7 +45,7 @@ test_postgres:
 build: build_static build_cross build_tar build_sha
 
 build_static:
-	go install -ldflags '${EXTLDFLAGS}-X github.com/mrwill84/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' github.com/mrwill84/drone
+	go install -ldflags '${EXTLDFLAGS}-X github.com/mrwill84/drone/version.VersionDev=$(DRONE_BUILD_NUMBER)' github.com/mrwill84/drone/drone
 	mkdir -p release
 	cp $(GOPATH)/bin/drone release/
 
