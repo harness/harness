@@ -156,7 +156,7 @@ func (c *Client) DeleteHook(owner string, name string, link string) error {
 	if err != nil {
 		return err
 	}
-	putHooks := Filter(hookSettingsToArray(hookSettings), func(item string) bool {
+	putHooks := filter(hookSettingsToArray(hookSettings), func(item string) bool {
 
 		return !strings.Contains(item, link)
 	})
@@ -251,7 +251,7 @@ func (c *Client) paginatedRepos(start int) ([]*Repo, error) {
 	return repoResponse.Values, nil
 }
 
-func Filter(vs []string, f func(string) bool) []string {
+func filter(vs []string, f func(string) bool) []string {
 	vsf := make([]string, 0)
 	for _, v := range vs {
 		if f(v) {
