@@ -6,10 +6,10 @@ import (
 
 	"github.com/drone/drone/router"
 	"github.com/drone/drone/router/middleware"
-	"github.com/gin-gonic/contrib/ginrus"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/gin-gonic/contrib/ginrus"
 )
 
 var serverCmd = cli.Command{
@@ -25,6 +25,11 @@ var serverCmd = cli.Command{
 			EnvVar: "DRONE_DEBUG",
 			Name:   "debug",
 			Usage:  "start the server in debug mode",
+		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_BROKER_DEBUG",
+			Name:   "broker-debug",
+			Usage:  "start the broker in debug mode",
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_SERVER_ADDR",
@@ -64,8 +69,8 @@ var serverCmd = cli.Command{
 			Value:  ".drone.yml",
 		},
 		cli.DurationFlag{
-			EnvVar: "DRONE_CACHE_TTY",
-			Name:   "cache-tty",
+			EnvVar: "DRONE_CACHE_TTL",
+			Name:   "cache-ttl",
 			Usage:  "cache duration",
 			Value:  time.Minute * 15,
 		},
@@ -288,13 +293,11 @@ func server(c *cli.Context) error {
 		ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true),
 		middleware.Version,
 		middleware.Config(c),
-		middleware.Queue(c),
-		middleware.Stream(c),
-		middleware.Bus(c),
 		middleware.Cache(c),
 		middleware.Store(c),
 		middleware.Remote(c),
 		middleware.Agents(c),
+		middleware.Broker(c),
 	)
 
 	// start the server with tls enabled

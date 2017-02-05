@@ -36,6 +36,9 @@ func Check(c *yaml.Config, trusted bool) error {
 // validate the plugin command and entrypoint and return an error
 // the user attempts to set or override these values.
 func CheckEntrypoint(c *yaml.Container) error {
+	if c.Detached {
+		return nil
+	}
 	if len(c.Entrypoint) != 0 {
 		return fmt.Errorf("Cannot set plugin Entrypoint")
 	}
@@ -50,6 +53,9 @@ func CheckEntrypoint(c *yaml.Container) error {
 func CheckTrusted(c *yaml.Container) error {
 	if c.Privileged {
 		return fmt.Errorf("Insufficient privileges to use privileged mode")
+	}
+	if c.ShmSize != 0 {
+		return fmt.Errorf("Insufficient privileges to override shm_size")
 	}
 	if len(c.DNS) != 0 {
 		return fmt.Errorf("Insufficient privileges to use custom dns")

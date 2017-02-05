@@ -15,7 +15,7 @@ import (
 
 func newClient(c *cli.Context) (client.Client, error) {
 	var token = c.GlobalString("token")
-	var server = c.GlobalString("server")
+	var server = strings.TrimRight(c.GlobalString("server"), "/")
 
 	// if no server url is provided we can default
 	// to the hosted Drone service.
@@ -31,7 +31,7 @@ func newClient(c *cli.Context) (client.Client, error) {
 	tlsConfig := &tls.Config{RootCAs: certs}
 
 	// create the drone client with TLS options
-	return client.NewClientTokenTLS(server, token, tlsConfig), nil
+	return client.NewClientTokenTLS(server, token, tlsConfig)
 }
 
 func parseRepo(str string) (user, repo string, err error) {

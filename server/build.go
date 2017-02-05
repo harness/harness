@@ -1,22 +1,23 @@
 package server
 
 import (
+	"bufio"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/drone/drone/bus"
-	"github.com/drone/drone/queue"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
-	"github.com/drone/drone/stream"
+	"github.com/drone/drone/yaml"
 	"github.com/gin-gonic/gin"
 	"github.com/square/go-jose"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
+	"github.com/drone/mq/stomp"
 )
 
 func GetBuilds(c *gin.Context) {
@@ -112,7 +113,7 @@ func GetBuildLogs(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", "application/json")
-	stream.Copy(c.Writer, r)
+	copyLogs(c.Writer, r)
 }
 
 func DeleteBuild(c *gin.Context) {
@@ -148,7 +149,14 @@ func DeleteBuild(c *gin.Context) {
 	job.ExitCode = 137
 	store.UpdateBuildJob(c, build, job)
 
-	bus.Publish(c, bus.NewEvent(bus.Cancelled, repo, build, job))
+	client := stomp.MustFromContext(c)
+	client.SendJSON("/topic/cancel", model.Event{
+		Type:  model.Cancelled,
+		Repo:  *repo,
+		Build: *build,
+		Job:   *job,
+	}, stomp.WithHeader("job-id", strconv.FormatInt(job.ID, 10)))
+
 	c.String(204, "")
 }
 
@@ -228,6 +236,7 @@ func PostBuild(c *gin.Context) {
 	if forkit, _ := strconv.ParseBool(fork); forkit {
 		build.ID = 0
 		build.Number = 0
+		build.Parent = num
 		for _, job := range jobs {
 			job.ID = 0
 			job.NodeID = 0
@@ -293,7 +302,7 @@ func PostBuild(c *gin.Context) {
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
 	secs, err := store.GetMergedSecretList(c, repo)
 	if err != nil {
-		log.Errorf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
+		log.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
 	var signed bool
@@ -318,9 +327,19 @@ func PostBuild(c *gin.Context) {
 
 	log.Debugf(".drone.yml is signed=%v and verified=%v", signed, verified)
 
-	bus.Publish(c, bus.NewBuildEvent(bus.Enqueued, repo, build))
+	client := stomp.MustFromContext(c)
+	client.SendJSON("/topic/events", model.Event{
+		Type:  model.Enqueued,
+		Repo:  *repo,
+		Build: *build,
+	},
+		stomp.WithHeader("repo", repo.FullName),
+		stomp.WithHeader("private", strconv.FormatBool(repo.IsPrivate)),
+	)
+
 	for _, job := range jobs {
-		queue.Publish(c, &queue.Work{
+		broker, _ := stomp.FromContext(c)
+		broker.SendJSON("/queue/pending", &model.Work{
 			Signed:    signed,
 			Verified:  verified,
 			User:      user,
@@ -332,7 +351,15 @@ func PostBuild(c *gin.Context) {
 			Yaml:      string(raw),
 			Secrets:   secs,
 			System:    &model.System{Link: httputil.GetURL(c.Request)},
-		})
+		},
+			stomp.WithHeader(
+				"platform",
+				yaml.ParsePlatformDefault(raw, "linux/amd64"),
+			),
+			stomp.WithHeaders(
+				yaml.ParseLabel(raw),
+			),
+		)
 	}
 }
 
@@ -343,4 +370,21 @@ func GetBuildQueue(c *gin.Context) {
 		return
 	}
 	c.JSON(200, out)
+}
+
+// copyLogs copies the stream from the source to the destination in valid JSON
+// format. This converts the logs, which are per-line JSON objects, to a
+// proper JSON array.
+func copyLogs(dest io.Writer, src io.Reader) error {
+	io.WriteString(dest, "[")
+
+	scanner := bufio.NewScanner(src)
+	for scanner.Scan() {
+		io.WriteString(dest, scanner.Text())
+		io.WriteString(dest, ",\n")
+	}
+
+	io.WriteString(dest, "{}]")
+
+	return nil
 }

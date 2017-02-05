@@ -218,6 +218,9 @@ func (c *Config) AuthCodeURL(state string) string {
 	if err != nil {
 		panic("AuthURL malformed: " + err.Error())
 	}
+	if err := url_.Query().Get("error"); err != "" {
+		panic("AuthURL contains error: " + err)
+	}
 	q := url.Values{
 		"response_type":   {"code"},
 		"client_id":       {c.ClientId},

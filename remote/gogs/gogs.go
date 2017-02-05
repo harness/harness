@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
@@ -126,12 +127,20 @@ func (c *client) Teams(u *model.User) ([]*model.Team, error) {
 	return teams, nil
 }
 
+// TeamPerm is not supported by the Gogs driver.
+func (c *client) TeamPerm(u *model.User, org string) (*model.Perm, error) {
+	return nil, nil
+}
+
 // Repo returns the named Gogs repository.
 func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	client := c.newClientToken(u.Token)
 	repo, err := client.GetRepo(owner, name)
 	if err != nil {
 		return nil, err
+	}
+	if c.PrivateMode {
+		repo.Private = true
 	}
 	return toRepo(repo), nil
 }
@@ -166,7 +175,18 @@ func (c *client) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 // File fetches the file from the Gogs repository and returns its contents.
 func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
 	client := c.newClientToken(u.Token)
-	cfg, err := client.GetFile(r.Owner, r.Name, b.Commit, f)
+	buildRef := b.Commit
+	if buildRef == "" {
+		// Remove refs/tags or refs/heads, Gogs needs a short ref
+		buildRef = strings.TrimPrefix(
+			strings.TrimPrefix(
+				b.Ref,
+				"refs/heads/",
+			),
+			"refs/tags/",
+		)
+	}
+	cfg, err := client.GetFile(r.Owner, r.Name, buildRef, f)
 	return cfg, err
 }
 
@@ -204,6 +224,7 @@ func (c *client) Activate(u *model.User, r *model.Repo, link string) error {
 	hook := gogs.CreateHookOption{
 		Type:   "gogs",
 		Config: config,
+		Events: []string{"push", "create", "pull_request"},
 		Active: true,
 	}
 
@@ -220,22 +241,7 @@ func (c *client) Deactivate(u *model.User, r *model.Repo, link string) error {
 // Hook parses the incoming Gogs hook and returns the Repository and Build
 // details. If the hook is unsupported nil values are returned.
 func (c *client) Hook(r *http.Request) (*model.Repo, *model.Build, error) {
-	var (
-		err   error
-		repo  *model.Repo
-		build *model.Build
-	)
-
-	switch r.Header.Get("X-Gogs-Event") {
-	case "push":
-		var push *pushHook
-		push, err = parsePush(r.Body)
-		if err == nil {
-			repo = repoFromPush(push)
-			build = buildFromPush(push)
-		}
-	}
-	return repo, build, err
+	return parseHook(r)
 }
 
 // helper function to return the Gogs client

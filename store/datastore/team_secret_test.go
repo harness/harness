@@ -23,11 +23,13 @@ func TestTeamSecrets(t *testing.T) {
 
 		g.It("Should set and get a secret", func() {
 			secret := &model.TeamSecret{
-				Key:    "octocat",
-				Name:   "foo",
-				Value:  "bar",
-				Images: []string{"docker", "gcr"},
-				Events: []string{"push", "tag"},
+				Key:        "octocat",
+				Name:       "foo",
+				Value:      "bar",
+				Images:     []string{"docker", "gcr"},
+				Events:     []string{"push", "tag"},
+				SkipVerify: true,
+				Conceal:    true,
 			}
 			err := s.SetTeamSecret(secret)
 			g.Assert(err == nil).IsTrue()
@@ -39,6 +41,8 @@ func TestTeamSecrets(t *testing.T) {
 			g.Assert(got.Value).Equal(secret.Value)
 			g.Assert(got.Images).Equal(secret.Images)
 			g.Assert(got.Events).Equal(secret.Events)
+			g.Assert(got.SkipVerify).Equal(secret.SkipVerify)
+			g.Assert(got.Conceal).Equal(secret.Conceal)
 		})
 
 		g.It("Should update a secret", func() {

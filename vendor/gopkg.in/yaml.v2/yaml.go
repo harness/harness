@@ -76,9 +76,51 @@ type Marshaler interface {
 // See the documentation of Marshal for the format of tags and a list of
 // supported tag options.
 //
-func Unmarshal(in []byte, out interface{}) (err error) {
+func Unmarshal(in []byte, out interface{}) error {
+	return unmarshal(newDecoder(), in, out)
+}
+
+// Unmarshal decodes the first document found within the in byte slice
+// and assigns decoded values into the out value.
+//
+// Maps and pointers (to a struct, string, int, etc) are accepted as out
+// values. If an internal pointer within a struct is not initialized,
+// the yaml package will initialize it if necessary for unmarshalling
+// the provided data. The out parameter must not be nil.
+//
+// The type of the decoded values should be compatible with the respective
+// values in out. If one or more values cannot be decoded due to a type
+// mismatches, decoding continues partially until the end of the YAML
+// content, and a *yaml.TypeError is returned with details for all
+// missed values.
+//
+// Struct fields are only unmarshalled if they are exported (have an
+// upper case first letter), and are unmarshalled using the field name
+// lowercased as the default key. Custom keys may be defined via the
+// "yaml" name in the field tag: the content preceding the first comma
+// is used as the key, and the following comma-separated options are
+// used to tweak the marshalling process (see Marshal).
+// Conflicting names result in a runtime error.
+//
+// For example:
+//
+//     type T struct {
+//         F int `yaml:"a,omitempty"`
+//         B int
+//     }
+//     var t T
+//     d := yaml.NewDecoder()
+//     d.Unmarshal([]byte("a: 1\nb: 2"), &t)
+//
+// See the documentation of Marshal for the format of tags and a list of
+// supported tag options.
+//
+func (d *Decoder) Unmarshal(in []byte, out interface{}) error {
+	return unmarshal(d.decoder, in, out)
+}
+
+func unmarshal(d *decoder, in []byte, out interface{}) (err error) {
 	defer handleErr(&err)
-	d := newDecoder()
 	p := newParser(in)
 	defer p.destroy()
 	node := p.parse()
@@ -117,7 +159,7 @@ func Unmarshal(in []byte, out interface{}) (err error) {
 //                  Does not apply to zero valued structs.
 //
 //     flow         Marshal using a flow style (useful for structs,
-//                  sequences and maps.
+//                  sequences and maps).
 //
 //     inline       Inline the field, which must be a struct or a map,
 //                  causing all of its fields or keys to be processed as if
@@ -222,7 +264,7 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 	inlineMap := -1
 	for i := 0; i != n; i++ {
 		field := st.Field(i)
-		if field.PkgPath != "" {
+		if field.PkgPath != "" && !field.Anonymous {
 			continue // Private field
 		}
 
@@ -324,13 +366,15 @@ func isZero(v reflect.Value) bool {
 		return v.Len() == 0
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return v.Int() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		return v.Uint() == 0
 	case reflect.Bool:
 		return !v.Bool()
 	case reflect.Struct:
 		vt := v.Type()
-		for i := v.NumField()-1; i >= 0; i-- {
+		for i := v.NumField() - 1; i >= 0; i-- {
 			if vt.Field(i).PkgPath != "" {
 				continue // Private field
 			}

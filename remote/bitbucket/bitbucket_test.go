@@ -70,6 +70,11 @@ func Test_bitbucket(t *testing.T) {
 				_, err := c.Login(nil, r)
 				g.Assert(err != nil).IsTrue()
 			})
+			g.It("Should handle authentication errors", func() {
+				r, _ := http.NewRequest("GET", "?error=invalid_scope", nil)
+				_, err := c.Login(nil, r)
+				g.Assert(err != nil).IsTrue()
+			})
 		})
 
 		g.Describe("Given an access token", func() {

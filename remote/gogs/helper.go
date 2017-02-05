@@ -70,6 +70,11 @@ func buildFromPush(hook *pushHook) *model.Build {
 		hook.Repo.URL,
 		fixMalformedAvatar(hook.Sender.Avatar),
 	)
+	author := hook.Sender.Login
+	if author == "" {
+		author = hook.Sender.Username
+	}
+
 	return &model.Build{
 		Event:     model.EventPush,
 		Commit:    hook.After,
@@ -78,22 +83,75 @@ func buildFromPush(hook *pushHook) *model.Build {
 		Branch:    strings.TrimPrefix(hook.Ref, "refs/heads/"),
 		Message:   hook.Commits[0].Message,
 		Avatar:    avatar,
-		Author:    hook.Sender.Login,
+		Author:    author,
 		Timestamp: time.Now().UTC().Unix(),
 	}
 }
 
+// helper function that extracts the Build data from a Gogs tag hook
+func buildFromTag(hook *pushHook) *model.Build {
+	avatar := expandAvatar(
+		hook.Repo.URL,
+		fixMalformedAvatar(hook.Sender.Avatar),
+	)
+	author := hook.Sender.Login
+	if author == "" {
+		author = hook.Sender.Username
+	}
+
+	return &model.Build{
+		Event:     model.EventTag,
+		Commit:    hook.After,
+		Ref:       fmt.Sprintf("refs/tags/%s", hook.Ref),
+		Link:      fmt.Sprintf("%s/src/%s", hook.Repo.URL, hook.Ref),
+		Branch:    fmt.Sprintf("refs/tags/%s", hook.Ref),
+		Message:   fmt.Sprintf("created tag %s", hook.Ref),
+		Avatar:    avatar,
+		Author:    author,
+		Timestamp: time.Now().UTC().Unix(),
+	}
+}
+
+// helper function that extracts the Build data from a Gogs pull_request hook
+func buildFromPullRequest(hook *pullRequestHook) *model.Build {
+	avatar := expandAvatar(
+		hook.Repo.URL,
+		fixMalformedAvatar(hook.PullRequest.User.Avatar),
+	)
+	build := &model.Build{
+		Event:   model.EventPull,
+		Commit:  hook.PullRequest.Head.Sha,
+		Link:    hook.PullRequest.URL,
+		Ref:     fmt.Sprintf("refs/pull/%d/head", hook.Number),
+		Branch:  hook.PullRequest.Base.Ref,
+		Message: hook.PullRequest.Title,
+		Author:  hook.PullRequest.User.Username,
+		Avatar:  avatar,
+		Title:   hook.PullRequest.Title,
+		Refspec: fmt.Sprintf("%s:%s",
+			hook.PullRequest.Head.Ref,
+			hook.PullRequest.Base.Ref,
+		),
+	}
+	return build
+}
+
 // helper function that extracts the Repository data from a Gogs push hook
 func repoFromPush(hook *pushHook) *model.Repo {
-	fullName := fmt.Sprintf(
-		"%s/%s",
-		hook.Repo.Owner.Username,
-		hook.Repo.Name,
-	)
 	return &model.Repo{
 		Name:     hook.Repo.Name,
 		Owner:    hook.Repo.Owner.Username,
-		FullName: fullName,
+		FullName: hook.Repo.FullName,
+		Link:     hook.Repo.URL,
+	}
+}
+
+// helper function that extracts the Repository data from a Gogs pull_request hook
+func repoFromPullRequest(hook *pullRequestHook) *model.Repo {
+	return &model.Repo{
+		Name:     hook.Repo.Name,
+		Owner:    hook.Repo.Owner.Username,
+		FullName: hook.Repo.FullName,
 		Link:     hook.Repo.URL,
 	}
 }
@@ -103,6 +161,12 @@ func parsePush(r io.Reader) (*pushHook, error) {
 	push := new(pushHook)
 	err := json.NewDecoder(r).Decode(push)
 	return push, err
+}
+
+func parsePullRequest(r io.Reader) (*pullRequestHook, error) {
+	pr := new(pullRequestHook)
+	err := json.NewDecoder(r).Decode(pr)
+	return pr, err
 }
 
 // fixMalformedAvatar is a helper function that fixes an avatar url if malformed

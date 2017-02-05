@@ -18,6 +18,12 @@ type Secret struct {
 
 	// the secret is restricted to this list of events.
 	Events []string `json:"event,omitempty"`
+
+	// whether the secret requires verification
+	SkipVerify bool `json:"skip_verify"`
+
+	// whether the secret should be concealed in the build log
+	Conceal bool `json:"conceal"`
 }
 
 // Match returns true if an image and event match the restricted list.

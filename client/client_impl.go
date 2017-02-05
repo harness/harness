@@ -9,13 +9,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/queue"
-	"github.com/gorilla/websocket"
-	"golang.org/x/net/context"
-	"golang.org/x/net/context/ctxhttp"
+	"golang.org/x/net/proxy"
 	"golang.org/x/oauth2"
 )
 
@@ -28,28 +26,30 @@ const (
 	pathLogs     = "%s/api/queue/logs/%d"
 	pathLogsAuth = "%s/api/queue/logs/%d?access_token=%s"
 
-	pathSelf        = "%s/api/user"
-	pathFeed        = "%s/api/user/feed"
-	pathRepos       = "%s/api/user/repos"
-	pathRepo        = "%s/api/repos/%s/%s"
-	pathChown       = "%s/api/repos/%s/%s/chown"
-	pathEncrypt     = "%s/api/repos/%s/%s/encrypt"
-	pathBuilds      = "%s/api/repos/%s/%s/builds"
-	pathBuild       = "%s/api/repos/%s/%s/builds/%v"
-	pathJob         = "%s/api/repos/%s/%s/builds/%d/%d"
-	pathLog         = "%s/api/repos/%s/%s/logs/%d/%d"
-	pathKey         = "%s/api/repos/%s/%s/key"
-	pathSign        = "%s/api/repos/%s/%s/sign"
-	pathRepoSecrets = "%s/api/repos/%s/%s/secrets"
-	pathRepoSecret  = "%s/api/repos/%s/%s/secrets/%s"
-	pathTeamSecrets = "%s/api/teams/%s/secrets"
-	pathTeamSecret  = "%s/api/teams/%s/secrets/%s"
-	pathNodes       = "%s/api/nodes"
-	pathNode        = "%s/api/nodes/%d"
-	pathUsers       = "%s/api/users"
-	pathUser        = "%s/api/users/%s"
-	pathBuildQueue  = "%s/api/builds"
-	pathAgent       = "%s/api/agents"
+	pathSelf          = "%s/api/user"
+	pathFeed          = "%s/api/user/feed"
+	pathRepos         = "%s/api/user/repos"
+	pathRepo          = "%s/api/repos/%s/%s"
+	pathChown         = "%s/api/repos/%s/%s/chown"
+	pathEncrypt       = "%s/api/repos/%s/%s/encrypt"
+	pathBuilds        = "%s/api/repos/%s/%s/builds"
+	pathBuild         = "%s/api/repos/%s/%s/builds/%v"
+	pathJob           = "%s/api/repos/%s/%s/builds/%d/%d"
+	pathLog           = "%s/api/repos/%s/%s/logs/%d/%d"
+	pathKey           = "%s/api/repos/%s/%s/key"
+	pathSign          = "%s/api/repos/%s/%s/sign"
+	pathRepoSecrets   = "%s/api/repos/%s/%s/secrets"
+	pathRepoSecret    = "%s/api/repos/%s/%s/secrets/%s"
+	pathTeamSecrets   = "%s/api/teams/%s/secrets"
+	pathTeamSecret    = "%s/api/teams/%s/secrets/%s"
+	pathGlobalSecrets = "%s/api/global/secrets"
+	pathGlobalSecret  = "%s/api/global/secrets/%s"
+	pathNodes         = "%s/api/nodes"
+	pathNode          = "%s/api/nodes/%d"
+	pathUsers         = "%s/api/users"
+	pathUser          = "%s/api/users/%s"
+	pathBuildQueue    = "%s/api/builds"
+	pathAgent         = "%s/api/agents"
 )
 
 type client struct {
@@ -73,18 +73,30 @@ func NewClientToken(uri, token string) Client {
 
 // NewClientTokenTLS returns a client at the specified url that authenticates
 // all outbound requests with the given token and tls.Config if provided.
-func NewClientTokenTLS(uri, token string, c *tls.Config) Client {
+func NewClientTokenTLS(uri, token string, c *tls.Config) (Client, error) {
 	config := new(oauth2.Config)
 	auther := config.Client(oauth2.NoContext, &oauth2.Token{AccessToken: token})
 	if c != nil {
 		if trans, ok := auther.Transport.(*oauth2.Transport); ok {
-			trans.Base = &http.Transport{
-				TLSClientConfig: c,
-				Proxy:           http.ProxyFromEnvironment,
+			if os.Getenv("SOCKS_PROXY") != "" {
+				dialer, err := proxy.SOCKS5("tcp", os.Getenv("SOCKS_PROXY"), nil, proxy.Direct)
+				if err != nil {
+					return nil, err
+				}
+				trans.Base = &http.Transport{
+					TLSClientConfig: c,
+					Proxy:           http.ProxyFromEnvironment,
+					Dial:            dialer.Dial,
+				}
+			} else {
+				trans.Base = &http.Transport{
+					TLSClientConfig: c,
+					Proxy:           http.ProxyFromEnvironment,
+				}
 			}
 		}
 	}
-	return &client{client: auther, base: uri, token: token}
+	return &client{client: auther, base: uri, token: token}, nil
 }
 
 // Self returns the currently authenticated user.
@@ -284,7 +296,7 @@ func (c *client) SecretDel(owner, name, secret string) error {
 	return c.delete(uri)
 }
 
-// TeamSecretList returns a list of a repository secrets.
+// TeamSecretList returns a list of organizational secrets.
 func (c *client) TeamSecretList(team string) ([]*model.Secret, error) {
 	var out []*model.Secret
 	uri := fmt.Sprintf(pathTeamSecrets, c.base, team)
@@ -292,15 +304,35 @@ func (c *client) TeamSecretList(team string) ([]*model.Secret, error) {
 	return out, err
 }
 
-// TeamSecretPost create or updates a repository secret.
+// TeamSecretPost create or updates a organizational secret.
 func (c *client) TeamSecretPost(team string, secret *model.Secret) error {
 	uri := fmt.Sprintf(pathTeamSecrets, c.base, team)
 	return c.post(uri, secret, nil)
 }
 
-// TeamSecretDel deletes a named repository secret.
+// TeamSecretDel deletes a named orgainization secret.
 func (c *client) TeamSecretDel(team, secret string) error {
 	uri := fmt.Sprintf(pathTeamSecret, c.base, team, secret)
+	return c.delete(uri)
+}
+
+// GlobalSecretList returns a list of global secrets.
+func (c *client) GlobalSecretList() ([]*model.Secret, error) {
+	var out []*model.Secret
+	uri := fmt.Sprintf(pathGlobalSecrets, c.base)
+	err := c.get(uri, &out)
+	return out, err
+}
+
+// GlobalSecretPost create or updates a global secret.
+func (c *client) GlobalSecretPost(secret *model.Secret) error {
+	uri := fmt.Sprintf(pathGlobalSecrets, c.base)
+	return c.post(uri, secret, nil)
+}
+
+// GlobalSecretDel deletes a named global secret.
+func (c *client) GlobalSecretDel(secret string) error {
+	uri := fmt.Sprintf(pathGlobalSecret, c.base, secret)
 	return c.delete(uri)
 }
 
@@ -321,110 +353,6 @@ func (c *client) AgentList() ([]*model.Agent, error) {
 	uri := fmt.Sprintf(pathAgent, c.base)
 	err := c.get(uri, &out)
 	return out, err
-}
-
-//
-// below items for Queue (internal use only)
-//
-
-// Pull pulls work from the server queue.
-func (c *client) Pull(os, arch string) (*queue.Work, error) {
-	out := new(queue.Work)
-	uri := fmt.Sprintf(pathPull, c.base, os, arch)
-	err := c.post(uri, nil, out)
-	return out, err
-}
-
-// Push pushes an update to the server.
-func (c *client) Push(p *queue.Work) error {
-	uri := fmt.Sprintf(pathPush, c.base, p.Job.ID)
-	err := c.post(uri, p, nil)
-	return err
-}
-
-// Ping pings the server.
-func (c *client) Ping() error {
-	uri := fmt.Sprintf(pathPing, c.base)
-	err := c.post(uri, nil, nil)
-	return err
-}
-
-// Stream streams the build logs to the server.
-func (c *client) Stream(id int64, rc io.ReadCloser) error {
-	uri := fmt.Sprintf(pathStream, c.base, id)
-	err := c.post(uri, rc, nil)
-
-	return err
-}
-
-// LogPost sends the full build logs to the server.
-func (c *client) LogPost(id int64, rc io.ReadCloser) error {
-	uri := fmt.Sprintf(pathLogs, c.base, id)
-	return c.post(uri, rc, nil)
-}
-
-// StreamWriter implements a special writer for streaming log entries to the
-// central Drone server. The standard implementation is the gorilla.Connection.
-type StreamWriter interface {
-	Close() error
-	WriteJSON(interface{}) error
-}
-
-// LogStream streams the build logs to the server.
-func (c *client) LogStream(id int64) (StreamWriter, error) {
-	rawurl := fmt.Sprintf(pathLogsAuth, c.base, id, c.token)
-	uri, err := url.Parse(rawurl)
-	if err != nil {
-		return nil, err
-	}
-	if uri.Scheme == "https" {
-		uri.Scheme = "wss"
-	} else {
-		uri.Scheme = "ws"
-	}
-
-	// TODO need TLS client configuration
-
-	conn, _, err := websocket.DefaultDialer.Dial(uri.String(), nil)
-	return conn, err
-}
-
-// Wait watches and waits for the build to cancel or finish.
-func (c *client) Wait(id int64) *Wait {
-	ctx, cancel := context.WithCancel(context.Background())
-	return &Wait{id, c, ctx, cancel}
-}
-
-type Wait struct {
-	id     int64
-	client *client
-
-	ctx    context.Context
-	cancel context.CancelFunc
-}
-
-func (w *Wait) Done() (*model.Job, error) {
-	uri := fmt.Sprintf(pathWait, w.client.base, w.id)
-	req, err := w.client.createRequest(uri, "POST", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := ctxhttp.Do(w.ctx, w.client.client, req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-	job := &model.Job{}
-	err = json.NewDecoder(res.Body).Decode(&job)
-	if err != nil {
-		return nil, err
-	}
-	return job, nil
-}
-
-func (w *Wait) Cancel() {
-	w.cancel()
 }
 
 //

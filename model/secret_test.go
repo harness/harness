@@ -48,6 +48,11 @@ func TestSecret(t *testing.T) {
 			// image is only authorized for golang, not golang:1.4.2
 			g.Assert(secret.MatchImage("golang:1.4.2")).IsFalse()
 		})
+		g.It("should not match empty image", func() {
+			secret := Secret{}
+			secret.Images = []string{}
+			g.Assert(secret.MatchImage("node")).IsFalse()
+		})
 		g.It("should not match event", func() {
 			secret := Secret{}
 			secret.Events = []string{"pull_request"}

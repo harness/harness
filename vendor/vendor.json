@@ -54,6 +54,18 @@
 			"revisionTime": "2016-01-25T09:48:45-08:00"
 		},
 		{
+			"checksumSHA1": "7tosn2Sxlubl+7ElXSZ6Mz8tAjY=",
+			"path": "github.com/drone/envsubst",
+			"revision": "3e65ae5fd2d944d56fdf52cb3f887247498d50e9",
+			"revisionTime": "2017-01-18T15:01:55Z"
+		},
+		{
+			"checksumSHA1": "LPKfsjm4AYVgCLVcAWnQdSpt5SA=",
+			"path": "github.com/drone/envsubst/parse",
+			"revision": "3e65ae5fd2d944d56fdf52cb3f887247498d50e9",
+			"revisionTime": "2017-01-18T15:01:55Z"
+		},
+		{
 			"path": "github.com/eknkc/amber",
 			"revision": "144da19a9994994c069f0693294a66dd310e14a4",
 			"revisionTime": "2015-08-30T00:43:03+03:00"
@@ -208,7 +220,6 @@
 		},
 		{
 			"checksumSHA1": "+HvW+k8YkDaPKwF0Lwcz+Tf2A+E=",
-			"origin": "github.com/drone/drone/vendor/github.com/samalba/dockerclient",
 			"path": "github.com/samalba/dockerclient",
 			"revision": "91d7393ff85980ba3a8966405871a3d446ca28f2",
 			"revisionTime": "2016-04-14T17:47:13Z"
@@ -248,6 +259,12 @@
 			"path": "golang.org/x/net/context/ctxhttp",
 			"revision": "fb93926129b8ec0056f2f458b1f519654814edf0",
 			"revisionTime": "2016-04-13T08:48:50+10:00"
+		},
+		{
+			"checksumSHA1": "LvdVRE0FqdR68SvVpRkHs1rxhcA=",
+			"path": "golang.org/x/net/proxy",
+			"revision": "468bac874d80e6ca892ecbb9bf09c72519b5b751",
+			"revisionTime": "2016-12-14T22:25:41Z"
 		},
 		{
 			"path": "golang.org/x/oauth2",

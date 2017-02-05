@@ -1,14 +1,13 @@
 package agent
 
 import (
-	"bytes"
-	"io/ioutil"
 	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone/agent"
 	"github.com/drone/drone/build/docker"
-	"github.com/drone/drone/client"
+	"github.com/drone/drone/model"
+	"github.com/drone/mq/stomp"
 
 	"github.com/samalba/dockerclient"
 )
@@ -20,23 +19,20 @@ type config struct {
 	pull       bool
 	logs       int64
 	timeout    time.Duration
+	extension  []string
 }
 
 type pipeline struct {
-	drone  client.Client
+	drone  *stomp.Client
 	docker dockerclient.Client
 	config config
 }
 
-func (r *pipeline) run() error {
-	w, err := r.drone.Pull("linux", "amd64")
-	if err != nil {
-		return err
-	}
-	running.Add(1)
-	defer func() {
-		running.Done()
-	}()
+func (r *pipeline) run(w *model.Work) {
+
+	// defer func() {
+	// 	// r.drone.Ack(id, opts)
+	// }()
 
 	logrus.Infof("Starting build %s/%s#%d.%d",
 		w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)
@@ -44,53 +40,46 @@ func (r *pipeline) run() error {
 	cancel := make(chan bool, 1)
 	engine := docker.NewClient(r.docker)
 
-	// streaming the logs
-	// rc, wc := io.Pipe()
-	// defer func() {
-	// 	wc.Close()
-	// 	rc.Close()
-	// }()
-
-	var buf bytes.Buffer
-
-	stream, err := r.drone.LogStream(w.Job.ID)
-	if err != nil {
-		return err
-	}
-
 	a := agent.Agent{
-		Update: agent.NewClientUpdater(r.drone),
-		// Logger:    agent.NewClientLogger(r.drone, w.Job.ID, rc, wc, r.config.logs),
-		Logger:    agent.NewStreamLogger(stream, &buf, r.config.logs),
+		Update:    agent.NewClientUpdater(r.drone),
+		Logger:    agent.NewClientLogger(r.drone, w.Job.ID, r.config.logs),
 		Engine:    engine,
 		Timeout:   r.config.timeout,
 		Platform:  r.config.platform,
 		Namespace: r.config.namespace,
 		Escalate:  r.config.privileged,
+		Extension: r.config.extension,
 		Pull:      r.config.pull,
 	}
 
-	// signal for canceling the build.
-	wait := r.drone.Wait(w.Job.ID)
-	defer wait.Cancel()
-	go func() {
-		if _, err := wait.Done(); err == nil {
+	cancelFunc := func(m *stomp.Message) {
+		defer m.Release()
+
+		id := m.Header.GetInt64("job-id")
+		if id == w.Job.ID {
 			cancel <- true
 			logrus.Infof("Cancel build %s/%s#%d.%d",
 				w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)
 		}
+	}
+
+	// signal for canceling the build.
+	sub, err := r.drone.Subscribe("/topic/cancel", stomp.HandlerFunc(cancelFunc))
+	if err != nil {
+		logrus.Errorf("Error subscribing to /topic/cancel. %s", err)
+	}
+	defer func() {
+		r.drone.Unsubscribe(sub)
 	}()
 
 	a.Run(w, cancel)
 
-	if err := r.drone.LogPost(w.Job.ID, ioutil.NopCloser(&buf)); err != nil {
-		logrus.Errorf("Error sending logs for %s/%s#%d.%d",
-			w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)
-	}
-	stream.Close()
+	// if err := r.drone.LogPost(w.Job.ID, ioutil.NopCloser(&buf)); err != nil {
+	// 	logrus.Errorf("Error sending logs for %s/%s#%d.%d",
+	// 		w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)
+	// }
+	// stream.Close()
 
 	logrus.Infof("Finished build %s/%s#%d.%d",
 		w.Repo.Owner, w.Repo.Name, w.Build.Number, w.Job.Number)
-
-	return nil
 }

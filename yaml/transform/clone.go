@@ -6,8 +6,11 @@ const clone = "clone"
 
 // Clone transforms the Yaml to include a clone step.
 func Clone(c *yaml.Config, plugin string) error {
-	if plugin == "" {
-		plugin = "git"
+	switch plugin {
+	case "", "git":
+		plugin = "plugins/git:latest"
+	case "hg":
+		plugin = "plugins/hg:latest"
 	}
 
 	for _, p := range c.Pipeline {

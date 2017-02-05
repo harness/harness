@@ -146,6 +146,8 @@ type Store interface {
 	DeleteAgent(*model.Agent) error
 }
 
+const globalTeamName = "__global__"
+
 // GetUser gets a user by unique ID.
 func GetUser(c context.Context, id int64) (*model.User, error) {
 	return FromContext(c).GetUser(id)
@@ -246,28 +248,56 @@ func DeleteTeamSecret(c context.Context, s *model.TeamSecret) error {
 	return FromContext(c).DeleteTeamSecret(s)
 }
 
+func GetGlobalSecretList(c context.Context) ([]*model.TeamSecret, error) {
+	return GetTeamSecretList(c, globalTeamName)
+}
+
+func GetGlobalSecret(c context.Context, name string) (*model.TeamSecret, error) {
+	return GetTeamSecret(c, globalTeamName, name)
+}
+
+func SetGlobalSecret(c context.Context, s *model.TeamSecret) error {
+	s.Key = globalTeamName
+	return SetTeamSecret(c, s)
+}
+
+func DeleteGlobalSecret(c context.Context, s *model.TeamSecret) error {
+	s.Key = globalTeamName
+	return DeleteTeamSecret(c, s)
+}
+
 func GetMergedSecretList(c context.Context, r *model.Repo) ([]*model.Secret, error) {
 	var (
 		secrets []*model.Secret
 	)
 
-	repoSecs, err := FromContext(c).GetSecretList(r)
+	globalSecs, err := GetGlobalSecretList(c)
 
 	if err != nil {
 		return nil, err
 	}
 
-	for _, secret := range repoSecs {
+	for _, secret := range globalSecs {
 		secrets = append(secrets, secret.Secret())
 	}
 
-	teamSecs, err := FromContext(c).GetTeamSecretList(r.Owner)
+	teamSecs, err := GetTeamSecretList(c, r.Owner)
 
 	if err != nil {
 		return nil, err
 	}
 
 	for _, secret := range teamSecs {
+		secrets = append(secrets, secret.Secret())
+	}
+
+	repoSecs, err := GetSecretList(c, r)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, secret := range repoSecs {
 		secrets = append(secrets, secret.Secret())
 	}
 

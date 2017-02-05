@@ -2,6 +2,7 @@ package bitbucket
 
 import (
 	"fmt"
+	"regexp"
 	"net/url"
 	"strings"
 
@@ -149,10 +150,14 @@ func convertTeam(from *internal.Account) *model.Team {
 // hook to the Drone build struct holding commit information.
 func convertPullHook(from *internal.PullRequestHook) *model.Build {
 	return &model.Build{
-		Event:     model.EventPull,
-		Commit:    from.PullRequest.Dest.Commit.Hash,
-		Ref:       fmt.Sprintf("refs/heads/%s", from.PullRequest.Dest.Branch.Name),
-		Remote:    cloneLink(&from.PullRequest.Dest.Repo),
+		Event:  model.EventPull,
+		Commit: from.PullRequest.Dest.Commit.Hash,
+		Ref:    fmt.Sprintf("refs/heads/%s", from.PullRequest.Dest.Branch.Name),
+		Refspec: fmt.Sprintf("%s:%s",
+			from.PullRequest.Source.Branch.Name,
+			from.PullRequest.Dest.Branch.Name,
+		),
+		Remote:    fmt.Sprintf("https://bitbucket.org/%s", from.PullRequest.Source.Repo.FullName),
 		Link:      from.PullRequest.Links.Html.Href,
 		Branch:    from.PullRequest.Dest.Branch.Name,
 		Message:   from.PullRequest.Desc,
@@ -182,5 +187,20 @@ func convertPushHook(hook *internal.PushHook, change *internal.Change) *model.Bu
 		build.Event = model.EventPush
 		build.Ref = fmt.Sprintf("refs/heads/%s", change.New.Name)
 	}
+	if len(change.New.Target.Author.Raw) != 0 {
+		build.Email = extractEmail(change.New.Target.Author.Raw)
+	}
 	return build
+}
+
+// regex for git author fields ("name <name@mail.tld>")
+var reGitMail = regexp.MustCompile("<(.*)>")
+
+// extracts the email from a git commit author string
+func extractEmail(gitauthor string) (author string) {
+    matches := reGitMail.FindAllStringSubmatch(gitauthor,-1)
+    if len(matches) == 1 {
+        author = matches[0][1]
+    }
+    return
 }

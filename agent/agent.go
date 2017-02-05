@@ -11,11 +11,10 @@ import (
 
 	"github.com/drone/drone/build"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/queue"
 	"github.com/drone/drone/version"
 	"github.com/drone/drone/yaml"
-	"github.com/drone/drone/yaml/expander"
 	"github.com/drone/drone/yaml/transform"
+	"github.com/drone/envsubst"
 )
 
 type Logger interface {
@@ -29,6 +28,7 @@ type Agent struct {
 	Timeout   time.Duration
 	Platform  string
 	Namespace string
+	Extension []string
 	Disable   []string
 	Escalate  []string
 	Netrc     []string
@@ -48,7 +48,7 @@ func (a *Agent) Poll() error {
 	return nil
 }
 
-func (a *Agent) Run(payload *queue.Work, cancel <-chan bool) error {
+func (a *Agent) Run(payload *model.Work, cancel <-chan bool) error {
 
 	payload.Job.Status = model.StatusRunning
 	payload.Job.Started = time.Now().Unix()
@@ -90,18 +90,44 @@ func (a *Agent) Run(payload *queue.Work, cancel <-chan bool) error {
 	return err
 }
 
-func (a *Agent) prep(w *queue.Work) (*yaml.Config, error) {
+func (a *Agent) prep(w *model.Work) (*yaml.Config, error) {
 
 	envs := toEnv(w)
-	w.Yaml = expander.ExpandString(w.Yaml, envs)
+	envSecrets := map[string]string{}
+
+	// list of secrets to interpolate in the yaml
+	for _, secret := range w.Secrets {
+		if (w.Verified || secret.SkipVerify) && secret.MatchEvent(w.Build.Event) {
+			envSecrets[secret.Name] = secret.Value
+		}
+	}
+
+	var err error
+	w.Yaml, err = envsubst.Eval(w.Yaml, func(s string) string {
+		env, ok := envSecrets[s]
+		if !ok {
+			env, _ = envs[s]
+		}
+		if strings.Contains(env, "\n") {
+			env = fmt.Sprintf("%q", env)
+		}
+		return env
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// append secrets when verified or when a secret does not require
+	// verification
+	var secrets []*model.Secret
+	for _, secret := range w.Secrets {
+		if w.Verified || secret.SkipVerify {
+			secrets = append(secrets, secret)
+		}
+	}
 
 	// inject the netrc file into the clone plugin if the repository is
 	// private and requires authentication.
-	var secrets []*model.Secret
-	if w.Verified {
-		secrets = append(secrets, w.Secrets...)
-	}
-
 	if w.Repo.IsPrivate {
 		secrets = append(secrets, &model.Secret{
 			Name:   "DRONE_NETRC_USERNAME",
@@ -155,8 +181,6 @@ func (a *Agent) prep(w *queue.Work) (*yaml.Config, error) {
 	transform.CommandTransform(conf)
 	transform.ImagePull(conf, a.Pull)
 	transform.ImageTag(conf)
-	transform.ImageName(conf)
-	transform.ImageNamespace(conf, a.Namespace)
 	if err := transform.ImageEscalate(conf, a.Escalate); err != nil {
 		return nil, err
 	}
@@ -168,11 +192,14 @@ func (a *Agent) prep(w *queue.Work) (*yaml.Config, error) {
 	}
 
 	transform.Pod(conf, a.Platform)
+	if err := transform.RemoteTransform(conf, a.Extension); err != nil {
+		return nil, err
+	}
 
 	return conf, nil
 }
 
-func (a *Agent) exec(spec *yaml.Config, payload *queue.Work, cancel <-chan bool) error {
+func (a *Agent) exec(spec *yaml.Config, payload *model.Work, cancel <-chan bool) error {
 
 	conf := build.Config{
 		Engine: a.Engine,
@@ -187,6 +214,7 @@ func (a *Agent) exec(spec *yaml.Config, payload *queue.Work, cancel <-chan bool)
 		return err
 	}
 
+	replacer := NewSecretReplacer(payload.Secrets)
 	timeout := time.After(time.Duration(payload.Repo.Timeout) * time.Minute)
 
 	for {
@@ -226,12 +254,13 @@ func (a *Agent) exec(spec *yaml.Config, payload *queue.Work, cancel <-chan bool)
 				pipeline.Exec()
 			}
 		case line := <-pipeline.Pipe():
+			line.Out = replacer.Replace(line.Out)
 			a.Logger(line)
 		}
 	}
 }
 
-func toEnv(w *queue.Work) map[string]string {
+func toEnv(w *model.Work) map[string]string {
 	envs := map[string]string{
 		"CI":                         "drone",
 		"DRONE":                      "true",
@@ -248,6 +277,7 @@ func toEnv(w *queue.Work) map[string]string {
 		"DRONE_REMOTE_URL":           w.Repo.Clone,
 		"DRONE_COMMIT_SHA":           w.Build.Commit,
 		"DRONE_COMMIT_REF":           w.Build.Ref,
+		"DRONE_COMMIT_REFSPEC":       w.Build.Refspec,
 		"DRONE_COMMIT_BRANCH":        w.Build.Branch,
 		"DRONE_COMMIT_LINK":          w.Build.Link,
 		"DRONE_COMMIT_MESSAGE":       w.Build.Message,

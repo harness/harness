@@ -115,6 +115,15 @@ func (g *Gitlab) Login(res http.ResponseWriter, req *http.Request) (*model.User,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: g.SkipVerify},
 	}
 
+	// get the OAuth errors
+	if err := req.FormValue("error"); err != "" {
+		return nil, &remote.AuthError{
+			Err:         err,
+			Description: req.FormValue("error_description"),
+			URI:         req.FormValue("error_uri"),
+		}
+	}
+
 	// get the OAuth code
 	var code = req.FormValue("code")
 	if len(code) == 0 {
@@ -192,6 +201,11 @@ func (g *Gitlab) Teams(u *model.User) ([]*model.Team, error) {
 		})
 	}
 	return teams, nil
+}
+
+// TeamPerm is not supported by the Gitlab driver.
+func (g *Gitlab) TeamPerm(u *model.User, org string) (*model.Perm, error) {
+	return nil, nil
 }
 
 // Repo fetches the named repository from the remote system.

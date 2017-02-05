@@ -4,6 +4,7 @@ package remote
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/drone/drone/model"
 
@@ -21,6 +22,10 @@ type Remote interface {
 
 	// Teams fetches a list of team memberships from the remote system.
 	Teams(u *model.User) ([]*model.Team, error)
+
+	// TeamPerm fetches the named organization permissions from
+	// the remote system for the specified user.
+	TeamPerm(u *model.User, org string) (*model.Perm, error)
 
 	// Repo fetches the named repository from the remote system.
 	Repo(u *model.User, owner, repo string) (*model.Repo, error)
@@ -80,6 +85,12 @@ func Teams(c context.Context, u *model.User) ([]*model.Team, error) {
 	return FromContext(c).Teams(u)
 }
 
+// TeamPerm fetches the named organization permissions from
+// the remote system for the specified user.
+func TeamPerm(c context.Context, u *model.User, org string) (*model.Perm, error) {
+	return FromContext(c).TeamPerm(u, org)
+}
+
 // Repo fetches the named repository from the remote system.
 func Repo(c context.Context, u *model.User, owner, repo string) (*model.Repo, error) {
 	return FromContext(c).Repo(u, owner, repo)
@@ -97,8 +108,15 @@ func Perm(c context.Context, u *model.User, owner, repo string) (*model.Perm, er
 }
 
 // File fetches a file from the remote repository and returns in string format.
-func File(c context.Context, u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
-	return FromContext(c).File(u, r, b, f)
+func File(c context.Context, u *model.User, r *model.Repo, b *model.Build, f string) (out []byte, err error) {
+	for i:=0;i<5;i++ {
+		out, err = FromContext(c).File(u, r, b, f)
+		if err == nil {
+			return
+		}
+		time.Sleep(1*time.Second)
+	}
+	return
 }
 
 // Status sends the commit status to the remote system.

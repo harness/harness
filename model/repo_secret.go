@@ -20,25 +20,35 @@ type RepoSecret struct {
 
 	// the secret is restricted to this list of events.
 	Events []string `json:"event,omitempty" meddler:"secret_events,json"`
+
+	// whether the secret requires verification
+	SkipVerify bool `json:"skip_verify" meddler:"secret_skip_verify"`
+
+	// whether the secret should be concealed in the build log
+	Conceal bool `json:"conceal" meddler:"secret_conceal"`
 }
 
 // Secret transforms a repo secret into a simple secret.
 func (s *RepoSecret) Secret() *Secret {
 	return &Secret{
-		Name:   s.Name,
-		Value:  s.Value,
-		Images: s.Images,
-		Events: s.Events,
+		Name:       s.Name,
+		Value:      s.Value,
+		Images:     s.Images,
+		Events:     s.Events,
+		SkipVerify: s.SkipVerify,
+		Conceal:    s.Conceal,
 	}
 }
 
 // Clone provides a repo secrets clone without the value.
 func (s *RepoSecret) Clone() *RepoSecret {
 	return &RepoSecret{
-		ID:     s.ID,
-		Name:   s.Name,
-		Images: s.Images,
-		Events: s.Events,
+		ID:         s.ID,
+		Name:       s.Name,
+		Images:     s.Images,
+		Events:     s.Events,
+		SkipVerify: s.SkipVerify,
+		Conceal:    s.Conceal,
 	}
 }
 

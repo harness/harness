@@ -139,6 +139,8 @@ func Test_helper(t *testing.T) {
 			hook.PullRequest.Dest.Commit.Hash = "73f9c44d"
 			hook.PullRequest.Dest.Branch.Name = "master"
 			hook.PullRequest.Dest.Repo.Links.Html.Href = "https://bitbucket.org/foo/bar"
+			hook.PullRequest.Source.Branch.Name = "change"
+			hook.PullRequest.Source.Repo.FullName = "baz/bar"
 			hook.PullRequest.Links.Html.Href = "https://bitbucket.org/foo/bar/pulls/5"
 			hook.PullRequest.Desc = "updated README"
 			hook.PullRequest.Updated = time.Now()
@@ -151,6 +153,8 @@ func Test_helper(t *testing.T) {
 			g.Assert(build.Branch).Equal(hook.PullRequest.Dest.Branch.Name)
 			g.Assert(build.Link).Equal(hook.PullRequest.Links.Html.Href)
 			g.Assert(build.Ref).Equal("refs/heads/master")
+			g.Assert(build.Refspec).Equal("change:master")
+			g.Assert(build.Remote).Equal("https://bitbucket.org/baz/bar")
 			g.Assert(build.Message).Equal(hook.PullRequest.Desc)
 			g.Assert(build.Timestamp).Equal(hook.PullRequest.Updated.Unix())
 		})
@@ -162,6 +166,7 @@ func Test_helper(t *testing.T) {
 			change.New.Target.Links.Html.Href = "https://bitbucket.org/foo/bar/commits/73f9c44d"
 			change.New.Target.Message = "updated README"
 			change.New.Target.Date = time.Now()
+			change.New.Target.Author.Raw = "Test <test@domain.tld>"
 
 			hook := internal.PushHook{}
 			hook.Actor.Login = "octocat"
@@ -169,6 +174,7 @@ func Test_helper(t *testing.T) {
 
 			build := convertPushHook(&hook, &change)
 			g.Assert(build.Event).Equal(model.EventPush)
+			g.Assert(build.Email).Equal("test@domain.tld")
 			g.Assert(build.Author).Equal(hook.Actor.Login)
 			g.Assert(build.Avatar).Equal(hook.Actor.Links.Avatar.Href)
 			g.Assert(build.Commit).Equal(change.New.Target.Hash)

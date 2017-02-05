@@ -34,34 +34,21 @@ func ImageTag(conf *yaml.Config) error {
 	return nil
 }
 
-// ImageName transforms the Yaml to replace underscores with dashes.
-func ImageName(conf *yaml.Config) error {
-	for _, image := range conf.Pipeline {
-		image.Image = strings.Replace(image.Image, "_", "-", -1)
-	}
-	return nil
-}
-
-// ImageNamespace transforms the Yaml to use a default namepsace for plugins.
-func ImageNamespace(conf *yaml.Config, namespace string) error {
-	for _, image := range conf.Pipeline {
-		if strings.Contains(image.Image, "/") {
-			continue
-		}
-		if !isPlugin(image) {
-			continue
-		}
-		image.Image = filepath.Join(namespace, image.Image)
-	}
-	return nil
-}
-
 // ImageEscalate transforms the Yaml to automatically enable privileged mode
 // for a subset of white-listed plugins matching the given patterns.
 func ImageEscalate(conf *yaml.Config, patterns []string) error {
 	for _, c := range conf.Pipeline {
 		for _, pattern := range patterns {
 			if ok, _ := filepath.Match(pattern, c.Image); ok {
+				if c.Detached {
+					return fmt.Errorf("Detached mode disabled for the %s plugin", c.Image)
+				}
+				if len(c.Entrypoint) != 0 {
+					return fmt.Errorf("Custom entrypoint disabled for the %s plugin", c.Image)
+				}
+				if len(c.Command) != 0 {
+					return fmt.Errorf("Custom command disabled for the %s plugin", c.Image)
+				}
 				if len(c.Commands) != 0 {
 					return fmt.Errorf("Custom commands disabled for the %s plugin", c.Image)
 				}

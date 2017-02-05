@@ -3,7 +3,7 @@ workspace:
   path: src/github.com/drone/drone
 
 pipeline:
-  backend:
+  test:
     image: golang:1.6
     environment:
       - GO15VENDOREXPERIMENT=1
@@ -22,22 +22,33 @@ pipeline:
     when:
       event: push
 
-  publish:
-    image: s3
+  archive:
+    image: plugins/s3
     acl: public-read
     bucket: downloads.drone.io
     source: release/**/*.*
+    access_key: ${AWS_ACCESS_KEY_ID}
+    secret_key: ${AWS_SECRET_ACCESS_KEY}
     when:
       event: push
       branch: master
 
-  docker:
+  publish:
+    image: plugins/docker
     repo: drone/drone
-    tag: [ "0.5.0", "0.5" ]
-    storage_driver: overlay
+    username: ${DOCKER_USERNAME}
+    password: ${DOCKER_PASSWORD}
+    tag: [ "0.5", "0.5.0", "0.5.0-rc", "latest" ]
     when:
       branch: master
       event: push
+
+  notify:
+    image: plugins/gitter
+    webhook: ${GITTER_WEBHOOK}
+    when:
+      status: [ success, failure ]
+      event: [ push, pull_request ]
 
 services:
   postgres:

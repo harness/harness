@@ -64,7 +64,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 
 	teams := e.Group("/api/teams")
 	{
-		user.Use(session.MustTeamAdmin())
+		teams.Use(session.MustTeamAdmin())
 
 		team := teams.Group("/:team")
 		{
@@ -72,6 +72,15 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			team.POST("/secrets", server.PostTeamSecret)
 			team.DELETE("/secrets/:secret", server.DeleteTeamSecret)
 		}
+	}
+
+	global := e.Group("/api/global")
+	{
+		global.Use(session.MustAdmin())
+
+		global.GET("/secrets", server.GetGlobalSecrets)
+		global.POST("/secrets", server.PostGlobalSecret)
+		global.DELETE("/secrets/:secret", server.DeleteGlobalSecret)
 	}
 
 	repos := e.Group("/api/repos/:owner/:name")
@@ -113,17 +122,9 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.POST("/hook", server.PostHook)
 	e.POST("/api/hook", server.PostHook)
 
-	stream := e.Group("/api/stream")
-	{
-		stream.Use(session.SetRepo())
-		stream.Use(session.SetPerm())
-		stream.Use(session.MustPull)
-
-		stream.GET("/:owner/:name", server.GetRepoEvents)
-		stream.GET("/:owner/:name/:build/:number", server.GetStream)
-	}
 	ws := e.Group("/ws")
 	{
+		ws.GET("/broker", server.Broker)
 		ws.GET("/feed", server.EventStream)
 		ws.GET("/logs/:owner/:name/:build/:number",
 			session.SetRepo(),
@@ -152,18 +153,19 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		agents.GET("", server.GetAgents)
 	}
 
-	queue := e.Group("/api/queue")
+	debug := e.Group("/api/debug")
 	{
-		queue.Use(session.AuthorizeAgent)
-		queue.POST("/pull", server.Pull)
-		queue.POST("/pull/:os/:arch", server.Pull)
-		queue.POST("/wait/:id", server.Wait)
-		queue.POST("/stream/:id", server.Stream)
-		queue.POST("/status/:id", server.Update)
-		queue.POST("/ping", server.Ping)
-
-		queue.POST("/logs/:id", server.PostLogs)
-		queue.GET("/logs/:id", server.WriteLogs)
+		debug.Use(session.MustAdmin())
+		debug.GET("/pprof/", server.IndexHandler())
+		debug.GET("/pprof/heap", server.HeapHandler())
+		debug.GET("/pprof/goroutine", server.GoroutineHandler())
+		debug.GET("/pprof/block", server.BlockHandler())
+		debug.GET("/pprof/threadcreate", server.ThreadCreateHandler())
+		debug.GET("/pprof/cmdline", server.CmdlineHandler())
+		debug.GET("/pprof/profile", server.ProfileHandler())
+		debug.GET("/pprof/symbol", server.SymbolHandler())
+		debug.POST("/pprof/symbol", server.SymbolHandler())
+		debug.GET("/pprof/trace", server.TraceHandler())
 	}
 
 	// DELETE THESE

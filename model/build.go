@@ -5,6 +5,7 @@ type Build struct {
 	ID        int64  `json:"id"            meddler:"build_id,pk"`
 	RepoID    int64  `json:"-"             meddler:"build_repo_id"`
 	Number    int    `json:"number"        meddler:"build_number"`
+	Parent    int    `json:"parent"        meddler:"build_parent"`
 	Event     string `json:"event"         meddler:"build_event"`
 	Status    string `json:"status"        meddler:"build_status"`
 	Enqueued  int64  `json:"enqueued_at"   meddler:"build_enqueued"`
@@ -26,6 +27,7 @@ type Build struct {
 	Link      string `json:"link_url"      meddler:"build_link"`
 	Signed    bool   `json:"signed"        meddler:"build_signed"`
 	Verified  bool   `json:"verified"      meddler:"build_verified"`
+	Jobs      []*Job `json:"jobs,omitempty" meddler:"-"`
 }
 
 type BuildGroup struct {

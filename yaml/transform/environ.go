@@ -2,7 +2,6 @@ package transform
 
 import (
 	"os"
-	"strings"
 
 	"github.com/drone/drone/yaml"
 )
@@ -32,15 +31,15 @@ func Environ(c *yaml.Config, envs map[string]string) error {
 		}
 		if httpProxy != "" {
 			p.Environment["HTTP_PROXY"] = httpProxy
-			p.Environment["http_proxy"] = strings.ToUpper(httpProxy)
+			p.Environment["http_proxy"] = httpProxy
 		}
 		if httpsProxy != "" {
 			p.Environment["HTTPS_PROXY"] = httpsProxy
-			p.Environment["https_proxy"] = strings.ToUpper(httpsProxy)
+			p.Environment["https_proxy"] = httpsProxy
 		}
 		if noProxy != "" {
 			p.Environment["NO_PROXY"] = noProxy
-			p.Environment["no_proxy"] = strings.ToUpper(noProxy)
+			p.Environment["no_proxy"] = noProxy
 		}
 	}
 	return nil
