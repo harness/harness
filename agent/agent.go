@@ -312,6 +312,7 @@ func toEnv(w *model.Work) map[string]string {
 	}
 	if w.Build.Event == model.EventDeploy {
 		envs["DRONE_DEPLOY_TO"] = w.Build.Deploy
+		envs["DRONE_DEPLOY_FROM"] = fmt.Sprintf("%d", w.Build.Parent)
 	}
 
 	if w.BuildLast != nil {
