@@ -503,11 +503,7 @@ func mergeRequest(parsed *client.HookPayload, req *http.Request) (*model.Repo, *
 	build.Commit = lastCommit.Id
 	//build.Remote = parsed.ObjectAttributes.Source.HttpUrl
 
-	if obj.SourceProjectId == obj.TargetProjectId {
-		build.Ref = fmt.Sprintf("refs/heads/%s", obj.SourceBranch)
-	} else {
-		build.Ref = fmt.Sprintf("refs/merge-requests/%d/head", obj.IId)
-	}
+	build.Ref = fmt.Sprintf("refs/merge-requests/%d/head", obj.IId)
 
 	build.Branch = obj.SourceBranch
 
