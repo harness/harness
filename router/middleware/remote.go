@@ -66,12 +66,13 @@ func setupGogs(c *cli.Context) (remote.Remote, error) {
 // helper function to setup the Stash remote from the CLI arguments.
 func setupStash(c *cli.Context) (remote.Remote, error) {
 	return bitbucketserver.New(bitbucketserver.Opts{
-		URL:         c.String("stash-server"),
-		Username:    c.String("stash-git-username"),
-		Password:    c.String("stash-git-password"),
-		ConsumerKey: c.String("stash-consumer-key"),
-		ConsumerRSA: c.String("stash-consumer-rsa"),
-		SkipVerify:  c.Bool("stash-skip-verify"),
+		URL:               c.String("stash-server"),
+		Username:          c.String("stash-git-username"),
+		Password:          c.String("stash-git-password"),
+		ConsumerKey:       c.String("stash-consumer-key"),
+		ConsumerRSA:       c.String("stash-consumer-rsa"),
+		ConsumerRSAString: c.String("stash-consumer-rsa-string"),
+		SkipVerify:        c.Bool("stash-skip-verify"),
 	})
 }
 
