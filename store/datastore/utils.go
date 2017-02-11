@@ -61,11 +61,7 @@ func toList(listof []*model.RepoLite) (string, []interface{}) {
 // to a sql IN statement compatible with postgres.
 func toListPostgres(listof []*model.RepoLite) (string, []interface{}) {
 	var size = len(listof)
-	switch {
-	case meddler.Default == meddler.SQLite && size > 999:
-		size = 999
-		listof = listof[:999]
-	case size > 15000:
+	if size > 15000 {
 		size = 15000
 		listof = listof[:15000]
 	}
