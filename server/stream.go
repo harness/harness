@@ -65,15 +65,31 @@ func LogStream(c *gin.Context) {
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
-	logs := make(chan []byte)
+	logs := make(chan []byte, 1024)
 	done := make(chan bool)
 	dest := fmt.Sprintf("/topic/logs.%d", job.ID)
 	client, _ := stomp.FromContext(c)
 	sub, err := client.Subscribe(dest, stomp.HandlerFunc(func(m *stomp.Message) {
 		if m.Header.GetBool("eof") {
-			done <- true
+			logrus.Infof("sub func: %s: eof", dest)
+			select {
+			case _, ok := <- done:
+				if !ok {
+					return // closed channel
+				}
+			default:
+				// this *might* be required, not sure
+				done <- true
+			}
 		} else {
-			logs <- m.Body
+			select {
+			case _, ok := <- done:
+				if !ok {
+					return // closed channel
+				}
+			default:
+				logs <- m.Body
+			}
 		}
 		m.Release()
 	}))
@@ -82,9 +98,10 @@ func LogStream(c *gin.Context) {
 		return
 	}
 	defer func() {
-		client.Unsubscribe(sub)
 		close(done)
-		close(logs)
+		client.Unsubscribe(sub)
+		// Investigate a solution where we can close logs
+		// close(logs)
 	}()
 
 	for {
