@@ -247,14 +247,14 @@ var execCmd = cli.Command{
 			EnvVar: "DRONE_BUILD_LINK",
 		},
 		cli.StringFlag{
+			Name:   "build.parent",
+			Usage:  "build parent",
+			EnvVar: "DRONE_PARENT_BUILD_NUMBER",
+		},
+		cli.StringFlag{
 			Name:   "build.deploy",
 			Usage:  "build deployment target",
 			EnvVar: "DRONE_DEPLOY_TO",
-		},
-		cli.StringFlag{
-			Name:   "build.parent",
-			Usage:  "build deployment parent",
-			EnvVar: "DRONE_DEPLOY_FROM",
 		},
 		cli.BoolTFlag{
 			Name:   "yaml.verified",
