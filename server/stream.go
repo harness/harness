@@ -67,11 +67,15 @@ func LogStream(c *gin.Context) {
 
 	logs := make(chan []byte)
 	done := make(chan bool)
+	var eof bool
 	dest := fmt.Sprintf("/topic/logs.%d", job.ID)
 	client, _ := stomp.FromContext(c)
 	sub, err := client.Subscribe(dest, stomp.HandlerFunc(func(m *stomp.Message) {
 		if m.Header.GetBool("eof") {
+			eof = true
 			done <- true
+		} else if eof {
+			return
 		} else {
 			logs <- m.Body
 		}
