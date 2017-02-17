@@ -27,6 +27,8 @@ Please see our [installation guide](http://readme.drone.io/admin/) to install th
 Clone the repository to your Go workspace:
 
 ```
+export PATH=$PATH:$GOPATH/bin
+
 git clone git://github.com/drone/drone.git $GOPATH/src/github.com/drone/drone
 cd $GOPATH/src/github.com/drone/drone
 ```
