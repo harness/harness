@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/drone/drone/model"
 	"github.com/russross/meddler"
@@ -27,42 +28,76 @@ func (db *datastore) GetUserList() ([]*model.User, error) {
 
 func (db *datastore) GetUserFeed(listof []*model.RepoLite) ([]*model.Feed, error) {
 	var (
-		args []interface{}
-		stmt string
-		err  error
-
-		feed = []*model.Feed{}
+		err error
+		feed = feedHelper{}
+		total = len(listof)
+		toListRepoLite func([]*model.RepoLite) (string, []interface{})
 	)
+
+	if total == 0 {
+		return feed, nil
+	}
+
 	switch meddler.Default {
 	case meddler.PostgreSQL:
-		stmt, args = toListPosgres(listof)
+		toListRepoLite = toListPosgres
 	default:
-		stmt, args = toList(listof)
+		toListRepoLite = toList
 	}
-	if len(args) > 0 {
-		err = meddler.QueryAll(db, &feed, fmt.Sprintf(userFeedQuery, stmt), args...)
+
+	pages := calculatePagination(total, maxRepoPage)
+	for i := 0; i < pages; i++ {
+		stmt, args := toListRepoLite(resizeList(listof, i, maxRepoPage))
+
+		var tmpFeed []*model.Feed
+		err = meddler.QueryAll(db, &tmpFeed, fmt.Sprintf(userFeedQuery, stmt), args...)
+		if err != nil {
+			return nil, err
+		}
+
+		feed = append(feed, tmpFeed...)
 	}
-	return feed, err
+
+	if len(feed) <= 50 {
+		return feed, nil
+	}
+
+	sort.Sort(sort.Reverse(feed))
+
+	return feed[:50], nil
 }
 
 func (db *datastore) GetUserFeedLatest(listof []*model.RepoLite) ([]*model.Feed, error) {
 	var (
-		args []interface{}
-		stmt string
-		err  error
-
+		err error
 		feed = []*model.Feed{}
+		toListRepoLite func([]*model.RepoLite) (string, []interface{})
+		total = len(listof)
 	)
+
+	if total == 0 {
+		return feed, nil
+	}
+
 	switch meddler.Default {
 	case meddler.PostgreSQL:
-		stmt, args = toListPosgres(listof)
+		toListRepoLite = toListPosgres
 	default:
-		stmt, args = toList(listof)
+		toListRepoLite = toList
 	}
-	if len(args) > 0 {
-		err = meddler.QueryAll(db, &feed, fmt.Sprintf(userFeedLatest, stmt), args...)
+
+	pages := calculatePagination(total, maxRepoPage)
+	for i := 0; i < pages; i++ {
+		stmt, args := toListRepoLite(resizeList(listof, i, maxRepoPage))
+		var tmpFeed []*model.Feed
+		err = meddler.QueryAll(db, &tmpFeed, fmt.Sprintf(userFeedLatest, stmt), args...)
+		if err != nil {
+			return nil, err
+		}
+
+		feed = append(feed, tmpFeed...)
 	}
-	return feed, err
+	return feed, nil
 }
 
 func (db *datastore) GetUserCount() (int, error) {
