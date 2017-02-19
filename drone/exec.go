@@ -34,11 +34,6 @@ var execCmd = cli.Command{
 			EnvVar: "DRONE_LOCAL",
 		},
 		cli.StringSliceFlag{
-			Name:   "plugin",
-			Usage:  "plugin steps to enable",
-			EnvVar: "DRONE_PLUGIN_ENABLE",
-		},
-		cli.StringSliceFlag{
 			Name:   "secret",
 			Usage:  "build secrets in KEY=VALUE format",
 			EnvVar: "DRONE_SECRET",
@@ -69,12 +64,6 @@ var execCmd = cli.Command{
 			EnvVar: "DRONE_PLUGIN_PULL",
 			Name:   "pull",
 			Usage:  "always pull latest plugin images",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_PLUGIN_NAMESPACE",
-			Name:   "namespace",
-			Value:  "plugins",
-			Usage:  "default plugin image namespace",
 		},
 		cli.StringSliceFlag{
 			EnvVar: "DRONE_PLUGIN_PRIVILEGED",
@@ -157,7 +146,7 @@ var execCmd = cli.Command{
 			Usage:  "repository is private",
 			EnvVar: "DRONE_REPO_PRIVATE",
 		},
-		cli.BoolFlag{
+		cli.BoolTFlag{
 			Name:   "repo.trusted",
 			Usage:  "repository is trusted",
 			EnvVar: "DRONE_REPO_TRUSTED",
@@ -326,17 +315,15 @@ func exec(c *cli.Context) error {
 	}
 
 	a := agent.Agent{
-		Update:    agent.NoopUpdateFunc,
-		Logger:    agent.TermLoggerFunc,
-		Engine:    engine,
-		Timeout:   c.Duration("timeout.inactivity"),
-		Platform:  "linux/amd64",
-		Namespace: c.String("namespace"),
-		Disable:   c.StringSlice("plugin"),
-		Escalate:  c.StringSlice("privileged"),
-		Netrc:     []string{},
-		Local:     dir,
-		Pull:      c.Bool("pull"),
+		Update:   agent.NoopUpdateFunc,
+		Logger:   agent.TermLoggerFunc,
+		Engine:   engine,
+		Timeout:  c.Duration("timeout.inactivity"),
+		Platform: "linux/amd64",
+		Escalate: c.StringSlice("privileged"),
+		Netrc:    []string{},
+		Local:    dir,
+		Pull:     c.Bool("pull"),
 	}
 
 	payload := &model.Work{
@@ -353,7 +340,7 @@ func exec(c *cli.Context) error {
 			Avatar:    c.String("repo.avatar"),
 			Timeout:   int64(c.Duration("timeout").Minutes()),
 			IsPrivate: c.Bool("repo.private"),
-			IsTrusted: c.Bool("repo.trusted"),
+			IsTrusted: c.BoolT("repo.trusted"),
 			Clone:     c.String("remote.url"),
 		},
 		System: &model.System{

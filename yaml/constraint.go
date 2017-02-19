@@ -10,13 +10,13 @@ import (
 type Constraints struct {
 	Repo        Constraint
 	Ref         Constraint
-	Refspec     Constraint
 	Platform    Constraint
 	Environment Constraint
 	Event       Constraint
 	Branch      Constraint
 	Status      Constraint
 	Matrix      ConstraintMap
+	Local       types.BoolTrue
 }
 
 // Match returns true if all constraints match the given input. If a single constraint

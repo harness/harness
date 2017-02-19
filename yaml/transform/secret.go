@@ -5,6 +5,10 @@ import (
 	"github.com/drone/drone/yaml"
 )
 
+//
+// TODO remove
+//
+
 func ImageSecrets(c *yaml.Config, secrets []*model.Secret, event string) error {
 	var images []*yaml.Container
 	images = append(images, c.Pipeline...)

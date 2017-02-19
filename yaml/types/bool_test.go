@@ -40,7 +40,7 @@ func TestBoolTrue(t *testing.T) {
 				if err != nil {
 					g.Fail(err)
 				}
-				g.Assert(out.Bool()).Equal(false)
+				g.Assert(out.Bool()).Equal(true)
 			})
 
 			g.It("should throw error when invalid", func() {

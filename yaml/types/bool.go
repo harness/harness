@@ -15,14 +15,14 @@ func (b *BoolTrue) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 
-	b.value, err = strconv.ParseBool(s)
-	if err != nil {
-		b.value = true
+	value, err := strconv.ParseBool(s)
+	if err == nil {
+		b.value = !value
 	}
 	return nil
 }
 
 // Bool returns the bool value.
 func (b BoolTrue) Bool() bool {
-	return b.value
+	return !b.value
 }
