@@ -10,7 +10,7 @@ import (
 
 var infoCmd = cli.Command{
 	Name:  "info",
-	Usage: "should information about the current user",
+	Usage: "show information about the current user",
 	Action: func(c *cli.Context) {
 		if err := info(c); err != nil {
 			log.Fatalln(err)
