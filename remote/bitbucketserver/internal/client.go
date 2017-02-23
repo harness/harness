@@ -132,12 +132,12 @@ func (c *Client) FindFileForRepo(owner string, repo string, fileName string, ref
 }
 
 func (c *Client) CreateHook(owner string, name string, callBackLink string) error {
-	hookDetails , err := c.GetHookDetails(owner, name)
+	hookDetails, err := c.GetHookDetails(owner, name)
 	if err != nil {
 		return err
 	}
 	hooks := make([]string, 0)
-	if (hookDetails.Enabled) {
+	if hookDetails.Enabled {
 		hookSettings, err := c.GetHooks(owner, name)
 		if err != nil {
 			return err

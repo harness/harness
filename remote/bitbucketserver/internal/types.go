@@ -172,14 +172,14 @@ type RefChange struct {
 
 type HookPluginDetails struct {
 	Details struct {
-			Key string `json:"key"`
-			Name string `json:"name"`
-			Type string `json:"type"`
-			Description string `json:"description"`
-			Version string `json:"version"`
-			ConfigFormKey string `json:"configFormKey"`
-		} `json:"details"`
-	Enabled bool `json:"enabled"`
+		Key           string `json:"key"`
+		Name          string `json:"name"`
+		Type          string `json:"type"`
+		Description   string `json:"description"`
+		Version       string `json:"version"`
+		ConfigFormKey string `json:"configFormKey"`
+	} `json:"details"`
+	Enabled    bool `json:"enabled"`
 	Configured bool `json:"configured"`
 }
 
