@@ -23,6 +23,7 @@ const (
 	pathHook         = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s"
 	pathSource       = "%s/projects/%s/repos/%s/browse/%s?at=%s&raw"
 	hookName         = "com.atlassian.stash.plugin.stash-web-post-receive-hooks-plugin:postReceiveHook"
+	pathHookDetails  = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s"
 	pathHookEnabled  = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s/enabled"
 	pathHookSettings = "%s/rest/api/1.0/projects/%s/repos/%s/settings/hooks/%s/settings"
 	pathStatus       = "%s/rest/build-status/1.0/commits/%s"
@@ -131,15 +132,23 @@ func (c *Client) FindFileForRepo(owner string, repo string, fileName string, ref
 }
 
 func (c *Client) CreateHook(owner string, name string, callBackLink string) error {
-	hookSettings, err := c.GetHooks(owner, name)
+	hookDetails, err := c.GetHookDetails(owner, name)
 	if err != nil {
 		return err
 	}
-	hooks := hookSettingsToArray(hookSettings)
+	var hooks []string
+	if hookDetails.Enabled {
+		hookSettings, err := c.GetHooks(owner, name)
+		if err != nil {
+			return err
+		}
+		hooks = hookSettingsToArray(hookSettings)
 
+	}
 	if !stringInSlice(callBackLink, hooks) {
 		hooks = append(hooks, callBackLink)
 	}
+
 	putHookSettings := arrayToHookSettings(hooks)
 	hookBytes, err := json.Marshal(putHookSettings)
 	return c.doPut(fmt.Sprintf(pathHookEnabled, c.base, owner, name, hookName), hookBytes)
@@ -165,6 +174,18 @@ func (c *Client) DeleteHook(owner string, name string, link string) error {
 	return c.doPut(fmt.Sprintf(pathHookEnabled, c.base, owner, name, hookName), hookBytes)
 }
 
+func (c *Client) GetHookDetails(owner string, name string) (*HookPluginDetails, error) {
+	urlString := fmt.Sprintf(pathHookDetails, c.base, owner, name, hookName)
+	response, err := c.client.Get(urlString)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+	hookDetails := HookPluginDetails{}
+	err = json.NewDecoder(response.Body).Decode(&hookDetails)
+	return &hookDetails, err
+}
+
 func (c *Client) GetHooks(owner string, name string) (*HookSettings, error) {
 	urlString := fmt.Sprintf(pathHookSettings, c.base, owner, name, hookName)
 	response, err := c.client.Get(urlString)
@@ -172,13 +193,9 @@ func (c *Client) GetHooks(owner string, name string) (*HookSettings, error) {
 		return nil, err
 	}
 	defer response.Body.Close()
-	contents, err := ioutil.ReadAll(response.Body)
 	hookSettings := HookSettings{}
-	err = json.Unmarshal(contents, &hookSettings)
-	if err != nil {
-		return nil, err
-	}
-	return &hookSettings, nil
+	err = json.NewDecoder(response.Body).Decode(&hookSettings)
+	return &hookSettings, err
 }
 
 //TODO: make these as as general do with the action
@@ -252,7 +269,7 @@ func (c *Client) paginatedRepos(start int) ([]*Repo, error) {
 }
 
 func filter(vs []string, f func(string) bool) []string {
-	vsf := make([]string, 0)
+	var vsf []string
 	for _, v := range vs {
 		if f(v) {
 			vsf = append(vsf, v)
@@ -316,7 +333,7 @@ func arrayToHookSettings(hooks []string) HookSettings {
 }
 
 func hookSettingsToArray(hookSettings *HookSettings) []string {
-	hooks := make([]string, 0)
+	var hooks []string
 
 	if hookSettings.HookURL0 != "" {
 		hooks = append(hooks, hookSettings.HookURL0)

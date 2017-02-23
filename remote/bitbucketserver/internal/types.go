@@ -170,6 +170,19 @@ type RefChange struct {
 	Type     string `json:"type"`
 }
 
+type HookPluginDetails struct {
+	Details struct {
+		Key           string `json:"key"`
+		Name          string `json:"name"`
+		Type          string `json:"type"`
+		Description   string `json:"description"`
+		Version       string `json:"version"`
+		ConfigFormKey string `json:"configFormKey"`
+	} `json:"details"`
+	Enabled    bool `json:"enabled"`
+	Configured bool `json:"configured"`
+}
+
 type HookSettings struct {
 	HookURL0  string `json:"hook-url-0,omitempty"`
 	HookURL1  string `json:"hook-url-1,omitempty"`
