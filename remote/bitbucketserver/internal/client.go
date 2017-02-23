@@ -136,7 +136,7 @@ func (c *Client) CreateHook(owner string, name string, callBackLink string) erro
 	if err != nil {
 		return err
 	}
-	hooks := make([]string, 0)
+	var hooks []string
 	if hookDetails.Enabled {
 		hookSettings, err := c.GetHooks(owner, name)
 		if err != nil {
@@ -181,13 +181,9 @@ func (c *Client) GetHookDetails(owner string, name string) (*HookPluginDetails, 
 		return nil, err
 	}
 	defer response.Body.Close()
-	contents, err := ioutil.ReadAll(response.Body)
 	hookDetails := HookPluginDetails{}
-	err = json.Unmarshal(contents, &hookDetails)
-	if err != nil {
-		return nil, err
-	}
-	return &hookDetails, nil
+	err = json.NewDecoder(response.Body).Decode(&hookDetails)
+	return &hookDetails, err
 }
 
 func (c *Client) GetHooks(owner string, name string) (*HookSettings, error) {
@@ -197,13 +193,9 @@ func (c *Client) GetHooks(owner string, name string) (*HookSettings, error) {
 		return nil, err
 	}
 	defer response.Body.Close()
-	contents, err := ioutil.ReadAll(response.Body)
 	hookSettings := HookSettings{}
-	err = json.Unmarshal(contents, &hookSettings)
-	if err != nil {
-		return nil, err
-	}
-	return &hookSettings, nil
+	err = json.NewDecoder(response.Body).Decode(&hookSettings)
+	return &hookSettings, err
 }
 
 //TODO: make these as as general do with the action
@@ -277,7 +269,7 @@ func (c *Client) paginatedRepos(start int) ([]*Repo, error) {
 }
 
 func filter(vs []string, f func(string) bool) []string {
-	vsf := make([]string, 0)
+	var vsf []string
 	for _, v := range vs {
 		if f(v) {
 			vsf = append(vsf, v)
@@ -341,7 +333,7 @@ func arrayToHookSettings(hooks []string) HookSettings {
 }
 
 func hookSettingsToArray(hookSettings *HookSettings) []string {
-	hooks := make([]string, 0)
+	var hooks []string
 
 	if hookSettings.HookURL0 != "" {
 		hooks = append(hooks, hookSettings.HookURL0)
