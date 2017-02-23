@@ -35,7 +35,7 @@ func (db *datastore) GetUserFeed(listof []*model.RepoLite) ([]*model.Feed, error
 	)
 	switch meddler.Default {
 	case meddler.PostgreSQL:
-		stmt, args = toListPosgres(listof)
+		stmt, args = toListPostgres(listof)
 	default:
 		stmt, args = toList(listof)
 	}
@@ -55,7 +55,7 @@ func (db *datastore) GetUserFeedLatest(listof []*model.RepoLite) ([]*model.Feed,
 	)
 	switch meddler.Default {
 	case meddler.PostgreSQL:
-		stmt, args = toListPosgres(listof)
+		stmt, args = toListPostgres(listof)
 	default:
 		stmt, args = toList(listof)
 	}

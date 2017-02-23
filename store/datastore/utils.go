@@ -40,9 +40,13 @@ func rebind(query string) string {
 // to a sql IN statment.
 func toList(listof []*model.RepoLite) (string, []interface{}) {
 	var size = len(listof)
-	if size > 999 {
+	switch {
+	case meddler.Default == meddler.SQLite && size > 999:
 		size = 999
 		listof = listof[:999]
+	case size > 15000:
+		size = 15000
+		listof = listof[:15000]
 	}
 	var qs = make([]string, size, size)
 	var in = make([]interface{}, size, size)
@@ -55,11 +59,11 @@ func toList(listof []*model.RepoLite) (string, []interface{}) {
 
 // helper function that converts a simple repository list
 // to a sql IN statement compatible with postgres.
-func toListPosgres(listof []*model.RepoLite) (string, []interface{}) {
+func toListPostgres(listof []*model.RepoLite) (string, []interface{}) {
 	var size = len(listof)
-	if size > 999 {
-		size = 999
-		listof = listof[:999]
+	if size > 15000 {
+		size = 15000
+		listof = listof[:15000]
 	}
 	var qs = make([]string, size, size)
 	var in = make([]interface{}, size, size)
