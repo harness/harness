@@ -13,13 +13,13 @@ type webhook struct {
 
 		Author struct {
 			Name     string `json:"name"`
-			Email    string `json:"name"`
+			Email    string `json:"email"`
 			Username string `json:"username"`
 		} `json:"author"`
 
 		Committer struct {
 			Name     string `json:"name"`
-			Email    string `json:"name"`
+			Email    string `json:"email"`
 			Username string `json:"username"`
 		} `json:"committer"`
 	} `json:"head_commit"`
