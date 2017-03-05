@@ -52,8 +52,10 @@ func (s *Server) router(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 	switch req.Method {
 	case methodNext:
 		return s.next(ctx, req)
-	case methodNotify:
-		return s.notify(ctx, req)
+	case methodWait:
+		return s.wait(ctx, req)
+	case methodDone:
+		return s.done(ctx, req)
 	case methodExtend:
 		return s.extend(ctx, req)
 	case methodUpdate:
@@ -73,15 +75,26 @@ func (s *Server) next(ctx context.Context, req *jsonrpc2.Request) (interface{}, 
 	return s.peer.Next(ctx)
 }
 
-// notify unmarshals the rpc request parameters and invokes the peer.Notify
+// wait unmarshals the rpc request parameters and invokes the peer.Wait
 // procedure. The results are retuned and written to the rpc response.
-func (s *Server) notify(ctx context.Context, req *jsonrpc2.Request) (interface{}, error) {
+func (s *Server) wait(ctx context.Context, req *jsonrpc2.Request) (interface{}, error) {
 	var id string
 	err := json.Unmarshal([]byte(*req.Params), &id)
 	if err != nil {
 		return nil, err
 	}
-	return s.peer.Notify(ctx, id)
+	return nil, s.peer.Wait(ctx, id)
+}
+
+// done unmarshals the rpc request parameters and invokes the peer.Done
+// procedure. The results are retuned and written to the rpc response.
+func (s *Server) done(ctx context.Context, req *jsonrpc2.Request) (interface{}, error) {
+	var id string
+	err := json.Unmarshal([]byte(*req.Params), &id)
+	if err != nil {
+		return nil, err
+	}
+	return nil, s.peer.Done(ctx, id)
 }
 
 // extend unmarshals the rpc request parameters and invokes the peer.Extend
@@ -115,8 +128,6 @@ func (s *Server) log(req *jsonrpc2.Request) (interface{}, error) {
 	return nil, s.peer.Log(noContext, in.ID, in.Line)
 }
 
-// save unmarshals the rpc request parameters and invokes the peer.Save
-// procedure. The results are retuned and written to the rpc response.
 func (s *Server) save(req *jsonrpc2.Request) (interface{}, error) {
 	in := new(saveReq)
 	if err := json.Unmarshal([]byte(*req.Params), in); err != nil {

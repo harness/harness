@@ -91,10 +91,9 @@ func (s *RPC) Next(c context.Context) (*rpc.Pipeline, error) {
 	return pipeline, err
 }
 
-// Notify implements the rpc.Notify function
-func (s *RPC) Notify(c context.Context, id string) (bool, error) {
-	err := s.queue.Wait(c, id)
-	return (err == queue.ErrCancel), nil
+// Wait implements the rpc.Wait function
+func (s *RPC) Wait(c context.Context, id string) error {
+	return s.queue.Wait(c, id)
 }
 
 // Extend implements the rpc.Extend function
@@ -210,6 +209,9 @@ func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
 
 // Save implements the rpc.Save function
 func (s *RPC) Save(c context.Context, id, mime string, file io.Reader) error { return nil }
+
+// Done implements the rpc.Done function
+func (s *RPC) Done(c context.Context, id string) error { return nil }
 
 // Log implements the rpc.Log function
 func (s *RPC) Log(c context.Context, id string, line *rpc.Line) error {

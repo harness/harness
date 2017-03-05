@@ -2,12 +2,16 @@ package server
 
 import (
 	"bufio"
+	"context"
+	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/cncd/queue"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
@@ -149,14 +153,17 @@ func DeleteBuild(c *gin.Context) {
 	job.ExitCode = 137
 	store.UpdateBuildJob(c, build, job)
 
-	client := stomp.MustFromContext(c)
-	client.SendJSON("/topic/cancel", model.Event{
-		Type:  model.Cancelled,
-		Repo:  *repo,
-		Build: *build,
-		Job:   *job,
-	}, stomp.WithHeader("job-id", strconv.FormatInt(job.ID, 10)))
-
+	if os.Getenv("DRONE_CANARY") == "" {
+		client := stomp.MustFromContext(c)
+		client.SendJSON("/topic/cancel", model.Event{
+			Type:  model.Cancelled,
+			Repo:  *repo,
+			Build: *build,
+			Job:   *job,
+		}, stomp.WithHeader("job-id", strconv.FormatInt(job.ID, 10)))
+	} else {
+		config.queue.Error(context.Background(), fmt.Sprint(job.ID), queue.ErrCancel)
+	}
 	c.String(204, "")
 }
 
@@ -197,8 +204,8 @@ func PostBuild(c *gin.Context) {
 	}
 
 	// fetch the .drone.yml file from the database
-	config := ToConfig(c)
-	raw, err := remote_.File(user, repo, build, config.Yaml)
+	cfg := ToConfig(c)
+	raw, err := remote_.File(user, repo, build, cfg.Yaml)
 	if err != nil {
 		log.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
@@ -206,7 +213,7 @@ func PostBuild(c *gin.Context) {
 	}
 
 	// Fetch secrets file but don't exit on error as it's optional
-	sec, err := remote_.File(user, repo, build, config.Shasum)
+	sec, err := remote_.File(user, repo, build, cfg.Shasum)
 	if err != nil {
 		log.Debugf("cannot find build secrets for %s. %s", repo.FullName, err)
 	}

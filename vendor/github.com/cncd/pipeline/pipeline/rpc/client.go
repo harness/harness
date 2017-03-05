@@ -17,11 +17,12 @@ import (
 
 const (
 	methodNext   = "next"
-	methodNotify = "notify"
+	methodWait   = "wait"
+	methodDone   = "done"
 	methodExtend = "extend"
 	methodUpdate = "update"
-	methodLog    = "log"
 	methodSave   = "save"
+	methodLog    = "log"
 )
 
 type (
@@ -80,11 +81,18 @@ func (t *Client) Next(c context.Context) (*Pipeline, error) {
 	return res, err
 }
 
-// Notify returns true if the pipeline should be cancelled.
-func (t *Client) Notify(c context.Context, id string) (bool, error) {
-	out := false
-	err := t.call(c, methodNotify, id, &out)
-	return out, err
+// Wait blocks until the pipeline is complete.
+func (t *Client) Wait(c context.Context, id string) error {
+	// err := t.call(c, methodWait, id, nil)
+	// if err != nil && err.Error() == ErrCancelled.Error() {
+	// 	return ErrCancelled
+	// }
+	return t.call(c, methodWait, id, nil)
+}
+
+// Done signals the pipeline is complete.
+func (t *Client) Done(c context.Context, id string) error {
+	return t.call(c, methodDone, id, nil)
 }
 
 // Extend extends the pipeline deadline.

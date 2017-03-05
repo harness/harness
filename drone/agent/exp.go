@@ -103,10 +103,9 @@ func run(ctx context.Context, client rpc.Peer) error {
 
 	cancelled := abool.New()
 	go func() {
-		ok, _ := client.Notify(ctx, work.ID)
-		if ok {
+		if err := client.Wait(ctx, work.ID); err != nil {
 			cancelled.SetTo(true)
-			log.Printf("pipeline: cancel signal received: %s", work.ID)
+			log.Printf("pipeline: cancel signal received: %s: %s", work.ID, err)
 			cancel()
 		} else {
 			log.Printf("pipeline: cancel channel closed: %s", work.ID)
@@ -133,16 +132,19 @@ func run(ctx context.Context, client rpc.Peer) error {
 		log.Printf("pipeline: error updating pipeline status: %s: %s", work.ID, err)
 	}
 
+	var uploads sync.WaitGroup
 	defaultLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
 		part, rerr := rc.NextPart()
 		if rerr != nil {
 			return rerr
 		}
+		uploads.Add(1)
 		writer := rpc.NewLineWriter(client, work.ID, proc.Alias)
 		io.Copy(writer, part)
 
 		defer func() {
 			log.Printf("pipeline: finish uploading logs: %s: step %s", work.ID, proc.Alias)
+			uploads.Done()
 		}()
 
 		part, rerr = rc.NextPart()
@@ -174,7 +176,7 @@ func run(ctx context.Context, client rpc.Peer) error {
 			state.ExitCode = xerr.Code
 		}
 		if cancelled.IsSet() {
-			state.ExitCode = 130
+			state.ExitCode = 137
 		} else if state.ExitCode == 0 {
 			state.ExitCode = 1
 		}
@@ -182,6 +184,7 @@ func run(ctx context.Context, client rpc.Peer) error {
 
 	log.Printf("pipeline: execution complete: %s", work.ID)
 
+	uploads.Wait()
 	err = client.Update(context.Background(), work.ID, state)
 	if err != nil {
 		log.Printf("Pipeine: error updating pipeline status: %s: %s", work.ID, err)
