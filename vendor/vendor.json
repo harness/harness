@@ -1,6 +1,6 @@
 {
 	"comment": "",
-	"ignore": "test",
+	"ignore": "test github.com/drone/mq/ github.com/tidwall/redlog/ google.golang.org/appengine/ github.com/syndtr/goleveldb/ github.com/drone/drone-ui/",
 	"package": [
 		{
 			"path": "code.google.com/p/go.crypto/ssh",
@@ -16,6 +16,90 @@
 			"path": "github.com/cloudfoundry-incubator/candiedyaml",
 			"revision": "5cef21e2e4f0fd147973b558d4db7395176bcd95",
 			"revisionTime": "2016-03-22T13:50:45-07:00"
+		},
+		{
+			"checksumSHA1": "HhHyclewPAZ7sZQCsl2nMSe1T5s=",
+			"path": "github.com/cncd/logging",
+			"revision": "03b6463409fecbd23f04587adf9bc71da13796a2",
+			"revisionTime": "2017-03-05T07:05:34Z"
+		},
+		{
+			"checksumSHA1": "W3AuK8ocqHwlUajGmQLFvnRhTZE=",
+			"path": "github.com/cncd/pipeline/pipeline",
+			"revision": "b5457789534af0da2a05bd9fd0c0afe6fea391c6",
+			"revisionTime": "2017-03-04T04:47:59Z"
+		},
+		{
+			"checksumSHA1": "PSzh0ix/rlMrS/Cl3aH6GHGrJuo=",
+			"path": "github.com/cncd/pipeline/pipeline/backend",
+			"revision": "b5457789534af0da2a05bd9fd0c0afe6fea391c6",
+			"revisionTime": "2017-03-04T04:47:59Z"
+		},
+		{
+			"checksumSHA1": "0CGXRaYwZhJxGIrGhn8WGpkFqPo=",
+			"path": "github.com/cncd/pipeline/pipeline/backend/docker",
+			"revision": "b5457789534af0da2a05bd9fd0c0afe6fea391c6",
+			"revisionTime": "2017-03-04T04:47:59Z"
+		},
+		{
+			"checksumSHA1": "uUagpzha5ah/a3RO6IImvzHYFlY=",
+			"path": "github.com/cncd/pipeline/pipeline/frontend",
+			"revision": "b5457789534af0da2a05bd9fd0c0afe6fea391c6",
+			"revisionTime": "2017-03-04T04:47:59Z"
+		},
+		{
+			"checksumSHA1": "O0sulBQAHJeNLg3lO38Cq5uf/eg=",
+			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml",
+			"revision": "b5457789534af0da2a05bd9fd0c0afe6fea391c6",
+			"revisionTime": "2017-03-04T04:47:59Z"
+		},
+		{
+			"checksumSHA1": "e1lZWQdObXCKWqZOGlOeaeERQMc=",
+			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/compiler",
+			"revision": "b5457789534af0da2a05bd9fd0c0afe6fea391c6",
+			"revisionTime": "2017-03-04T04:47:59Z"
+		},
+		{
+			"checksumSHA1": "Q0GkNUFamVYIA1Fd8r0A5M6Gx54=",
+			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/linter",
+			"revision": "b5457789534af0da2a05bd9fd0c0afe6fea391c6",
+			"revisionTime": "2017-03-04T04:47:59Z"
+		},
+		{
+			"checksumSHA1": "kx2sPUIMozPC/g6E4w48h3FfH3k=",
+			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/matrix",
+			"revision": "b5457789534af0da2a05bd9fd0c0afe6fea391c6",
+			"revisionTime": "2017-03-04T04:47:59Z"
+		},
+		{
+			"checksumSHA1": "2/3f3oNmxXy5kcrRLCFa24Oc9O4=",
+			"path": "github.com/cncd/pipeline/pipeline/interrupt",
+			"revision": "b5457789534af0da2a05bd9fd0c0afe6fea391c6",
+			"revisionTime": "2017-03-04T04:47:59Z"
+		},
+		{
+			"checksumSHA1": "8eTwXZPM/Kp9uE/mnhpWDTiX7nY=",
+			"path": "github.com/cncd/pipeline/pipeline/multipart",
+			"revision": "b5457789534af0da2a05bd9fd0c0afe6fea391c6",
+			"revisionTime": "2017-03-04T04:47:59Z"
+		},
+		{
+			"checksumSHA1": "5axmtZsHaQ5uE/tuNQZygquNx8U=",
+			"path": "github.com/cncd/pipeline/pipeline/rpc",
+			"revision": "b5457789534af0da2a05bd9fd0c0afe6fea391c6",
+			"revisionTime": "2017-03-04T04:47:59Z"
+		},
+		{
+			"checksumSHA1": "7Qj1DK0ceAXkYztW0l3+L6sn+V8=",
+			"path": "github.com/cncd/pubsub",
+			"revision": "0691529ab100a0f3c4e2087407d2788a0787ad9c",
+			"revisionTime": "2017-03-03T07:06:35Z"
+		},
+		{
+			"checksumSHA1": "AG4M07wOZNTnSFHJIfdXT2ymnts=",
+			"path": "github.com/cncd/queue",
+			"revision": "1ce1ada7160f1eda015a16c1b7f9ea497fa36873",
+			"revisionTime": "2017-03-03T07:04:55Z"
 		},
 		{
 			"path": "github.com/codegangsta/cli",

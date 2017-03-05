@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 
@@ -119,19 +120,46 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		badges.GET("/cc.xml", server.GetCC)
 	}
 
-	e.POST("/hook", server.PostHook)
-	e.POST("/api/hook", server.PostHook)
+	if os.Getenv("DRONE_CANARY") == "" {
+		e.POST("/hook", server.PostHook)
+		e.POST("/api/hook", server.PostHook)
+	} else {
+		e.POST("/hook", server.PostHook2)
+		e.POST("/api/hook", server.PostHook2)
+	}
 
-	ws := e.Group("/ws")
-	{
-		ws.GET("/broker", server.Broker)
-		ws.GET("/feed", server.EventStream)
-		ws.GET("/logs/:owner/:name/:build/:number",
-			session.SetRepo(),
-			session.SetPerm(),
-			session.MustPull,
-			server.LogStream,
-		)
+	if os.Getenv("DRONE_CANARY") == "" {
+		ws := e.Group("/ws")
+		{
+			ws.GET("/broker", server.Broker)
+			ws.GET("/feed", server.EventStream)
+			ws.GET("/logs/:owner/:name/:build/:number",
+				session.SetRepo(),
+				session.SetPerm(),
+				session.MustPull,
+				server.LogStream,
+			)
+		}
+	} else {
+		ws := e.Group("/ws")
+		{
+			ws.GET("/broker", server.RPCHandler)
+			ws.GET("/rpc", server.RPCHandler)
+			ws.GET("/feed", server.EventStream2)
+			ws.GET("/logs/:owner/:name/:build/:number",
+				session.SetRepo(),
+				session.SetPerm(),
+				session.MustPull,
+				server.LogStream2,
+			)
+		}
+		info := e.Group("/api/info")
+		{
+			info.GET("/queue",
+				session.MustAdmin(),
+				server.GetQueueInfo,
+			)
+		}
 	}
 
 	auth := e.Group("/authorize")

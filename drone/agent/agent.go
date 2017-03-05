@@ -1,6 +1,8 @@
 package agent
 
 import (
+	"fmt"
+	"math"
 	"os"
 	"os/signal"
 	"strings"
@@ -60,7 +62,7 @@ var AgentCmd = cli.Command{
 			Value:  "amd64",
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_SERVER",
+			EnvVar: "DRONE_SERVER,DRONE_ENDPOINT",
 			Name:   "drone-server",
 			Usage:  "drone server address",
 			Value:  "ws://localhost:8000/ws/broker",
@@ -138,10 +140,54 @@ var AgentCmd = cli.Command{
 			Name:   "extension",
 			Usage:  "custom plugin extension endpoint",
 		},
+
+		//
+		//
+		//
+
+		cli.BoolFlag{
+			EnvVar: "DRONE_CANARY",
+			Name:   "canary",
+			Usage:  "enable experimental features at your own risk",
+		},
+
+		// cli.StringFlag{
+		// 	Name:   "endpoint",
+		// 	EnvVar: "DRONE_ENDPOINT,DRONE_SERVER",
+		// 	Value:  "ws://localhost:9999/ws/rpc",
+		// },
+		// cli.DurationFlag{
+		// 	Name:   "backoff",
+		// 	EnvVar: "DRONE_BACKOFF",
+		// 	Value:  time.Second * 15,
+		// },
+		cli.IntFlag{
+			Name:   "retry-limit",
+			EnvVar: "DRONE_RETRY_LIMIT",
+			Value:  math.MaxInt32,
+		},
+		cli.IntFlag{
+			Name:   "max-procs",
+			EnvVar: "DRONE_MAX_PROCS",
+			Value:  1,
+		},
+		cli.StringFlag{
+			Name:   "platform",
+			EnvVar: "DRONE_PLATFORM",
+			Value:  "linux/amd64",
+		},
 	},
 }
 
 func start(c *cli.Context) {
+
+	if c.Bool("canary") {
+		if err := loop(c); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		return
+	}
 
 	log := redlog.New(os.Stderr)
 	log.SetLevel(0)
@@ -187,7 +233,7 @@ func start(c *cli.Context) {
 			client.Ack(m.Ack)
 		}()
 
-		r := pipeline{
+		r := pipelinet{
 			drone:  client,
 			docker: docker,
 			config: config{

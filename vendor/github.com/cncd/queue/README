@@ -1,0 +1,6 @@
+Go package provides a common interface for working with task queues.
+
+Documentation:
+
+    http://godoc.org/github.com/cncd/queue
+    http://godoc.org/github.com/cncd/queue/gcp
