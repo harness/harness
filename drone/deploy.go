@@ -25,6 +25,21 @@ var deployCmd = cli.Command{
 			Usage: "format output",
 			Value: tmplDeployInfo,
 		},
+		cli.StringFlag{
+			Name:  "branch",
+			Usage: "branch filter",
+			Value: "master",
+		},
+		cli.StringFlag{
+			Name:  "event",
+			Usage: "event filter",
+			Value: model.EventPush,
+		},
+		cli.StringFlag{
+			Name:  "status",
+			Usage: "status filter",
+			Value: model.StatusSuccess,
+		},
 		cli.StringSliceFlag{
 			Name:  "param, p",
 			Usage: "custom parameters to be injected into the job environment. Format: KEY=value",
@@ -38,23 +53,48 @@ func deploy(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	number, err := strconv.Atoi(c.Args().Get(1))
-	if err != nil {
-		return err
-	}
 
 	client, err := newClient(c)
 	if err != nil {
 		return err
 	}
 
-	build, err := client.Build(owner, name, number)
-	if err != nil {
-		return err
+	branch := c.String("branch")
+	event := c.String("event")
+	status := c.String("status")
+
+	buildArg := c.Args().Get(1)
+	var number int
+	if buildArg == "last" {
+		// Fetch the build number from the last build
+		builds, err := client.BuildList(owner, name)
+		if err != nil {
+			return err
+		}
+		for _, build := range builds {
+			if branch != "" && build.Branch != branch {
+				continue
+			}
+			if event != "" && build.Event != event {
+				continue
+			}
+			if status != "" && build.Status != status {
+				continue
+			}
+			if build.Number > number {
+				number = build.Number
+			}
+		}
+		if number == 0 {
+			return fmt.Errorf("Cannot deploy failure build")
+		}
+	} else {
+		number, err = strconv.Atoi(buildArg)
+		if err != nil {
+			return err
+		}
 	}
-	if build.Event == model.EventPull {
-		return fmt.Errorf("Cannot deploy a pull request")
-	}
+
 	env := c.Args().Get(2)
 	if env == "" {
 		return fmt.Errorf("Please specify the target environment (ie production)")
