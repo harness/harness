@@ -1,7 +1,9 @@
 package compiler
 
 import (
+	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/cncd/pipeline/pipeline/frontend"
@@ -54,6 +56,17 @@ func WithWorkspace(base, path string) Option {
 		compiler.base = base
 		compiler.path = path
 	}
+}
+
+// WithWorkspaceFromURL configures the compiler with the workspace
+// base and path based on the repository url.
+func WithWorkspaceFromURL(base, link string) Option {
+	path := "src"
+	parsed, err := url.Parse(link)
+	if err == nil {
+		path = filepath.Join(path, parsed.Host, parsed.Path)
+	}
+	return WithWorkspace(base, path)
 }
 
 // WithEscalated configures the compiler to automatically execute

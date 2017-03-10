@@ -1,4 +1,4 @@
-package server
+package debug
 
 import (
 	"net/http/pprof"

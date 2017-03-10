@@ -8,6 +8,7 @@ type Build struct {
 	Parent    int    `json:"parent"        meddler:"build_parent"`
 	Event     string `json:"event"         meddler:"build_event"`
 	Status    string `json:"status"        meddler:"build_status"`
+	Error     string `json:"error"         meddler:"build_error"`
 	Enqueued  int64  `json:"enqueued_at"   meddler:"build_enqueued"`
 	Created   int64  `json:"created_at"    meddler:"build_created"`
 	Started   int64  `json:"started_at"    meddler:"build_started"`
