@@ -6,6 +6,7 @@ type (
 		Stages   []*Stage   `json:"pipeline"` // pipeline stages
 		Networks []*Network `json:"networks"` // network definitions
 		Volumes  []*Volume  `json:"volumes"`  // volume definitions
+		Secrets  []*Secret  `json:"secrets"`  // secret definitions
 	}
 
 	// Stage denotes a collection of one or more steps.
@@ -70,6 +71,14 @@ type (
 		Name       string            `json:"name,omitempty"`
 		Driver     string            `json:"driver,omitempty"`
 		DriverOpts map[string]string `json:"driver_opts,omitempty"`
+	}
+
+	// Secret defines a runtime secret
+	Secret struct {
+		Name  string `json:"name,omitempty"`
+		Value string `json:"value,omitempty"`
+		Mount string `json:"mount,omitempty"`
+		Mask  bool   `json:"mask,omitempty"`
 	}
 
 	// State defines a container state.

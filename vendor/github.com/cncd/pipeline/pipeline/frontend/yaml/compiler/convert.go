@@ -3,7 +3,6 @@ package compiler
 import (
 	"fmt"
 	"path"
-	"strings"
 
 	"github.com/cncd/pipeline/pipeline/backend"
 	"github.com/cncd/pipeline/pipeline/frontend/yaml"
@@ -55,12 +54,6 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 			continue
 		default:
 			environment[k] = v
-
-			// legacy code for drone plugins
-			if strings.HasPrefix(k, "CI_") {
-				p := strings.Replace(k, "CI_", "DRONE_", 1)
-				environment[p] = v
-			}
 		}
 	}
 

@@ -13,7 +13,8 @@ import (
 type (
 	// Filter defines filters for fetching items from the queue.
 	Filter struct {
-		Platform string `json:"platform"`
+		Labels map[string]string `json:"labels"`
+		Expr   string            `json:"expr"`
 	}
 
 	// State defines the pipeline state.
@@ -34,10 +35,13 @@ type (
 	}
 )
 
+// NoFilter is an empty filter.
+var NoFilter = Filter{}
+
 // Peer defines a peer-to-peer connection.
 type Peer interface {
 	// Next returns the next pipeline in the queue.
-	Next(c context.Context) (*Pipeline, error)
+	Next(c context.Context, f Filter) (*Pipeline, error)
 
 	// Wait blocks untilthe pipeline is complete.
 	Wait(c context.Context, id string) error
@@ -51,9 +55,8 @@ type Peer interface {
 	// Update updates the pipeline state.
 	Update(c context.Context, id string, state State) error
 
-	// Save saves the pipeline artifact.
-	// TODO rename to Upload
-	Save(c context.Context, id, mime string, file io.Reader) error
+	// Upload uploads the pipeline artifact.
+	Upload(c context.Context, id, mime string, file io.Reader) error
 
 	// Log writes the pipeline log entry.
 	Log(c context.Context, id string, line *Line) error

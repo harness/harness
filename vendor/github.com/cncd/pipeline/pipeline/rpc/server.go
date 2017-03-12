@@ -62,8 +62,8 @@ func (s *Server) router(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 		return s.update(req)
 	case methodLog:
 		return s.log(req)
-	case methodSave:
-		return s.save(req)
+	case methodUpload:
+		return s.upload(req)
 	default:
 		return nil, errNoSuchMethod
 	}
@@ -72,7 +72,11 @@ func (s *Server) router(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 // next unmarshals the rpc request parameters and invokes the peer.Next
 // procedure. The results are retuned and written to the rpc response.
 func (s *Server) next(ctx context.Context, req *jsonrpc2.Request) (interface{}, error) {
-	return s.peer.Next(ctx)
+	in := Filter{}
+	if err := json.Unmarshal([]byte(*req.Params), &in); err != nil {
+		return nil, err
+	}
+	return s.peer.Next(ctx, in)
 }
 
 // wait unmarshals the rpc request parameters and invokes the peer.Wait
@@ -128,10 +132,10 @@ func (s *Server) log(req *jsonrpc2.Request) (interface{}, error) {
 	return nil, s.peer.Log(noContext, in.ID, in.Line)
 }
 
-func (s *Server) save(req *jsonrpc2.Request) (interface{}, error) {
-	in := new(saveReq)
+func (s *Server) upload(req *jsonrpc2.Request) (interface{}, error) {
+	in := new(uploadReq)
 	if err := json.Unmarshal([]byte(*req.Params), in); err != nil {
 		return nil, err
 	}
-	return nil, s.peer.Save(noContext, in.ID, in.Mime, bytes.NewBuffer(in.Data))
+	return nil, s.peer.Upload(noContext, in.ID, in.Mime, bytes.NewBuffer(in.Data))
 }

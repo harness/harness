@@ -1,9 +1,9 @@
 package rpc
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -41,30 +41,55 @@ type LineWriter struct {
 	name string
 	num  int
 	now  time.Time
+	rep  *strings.Replacer
 }
 
 // NewLineWriter returns a new line reader.
-func NewLineWriter(peer Peer, id, name string) *LineWriter {
+func NewLineWriter(peer Peer, id, name string, secret ...string) *LineWriter {
 	w := new(LineWriter)
 	w.peer = peer
 	w.id = id
 	w.name = name
 	w.num = 0
 	w.now = time.Now().UTC()
+
+	var oldnew []string
+	for _, old := range secret {
+		oldnew = append(oldnew, old)
+		oldnew = append(oldnew, "********")
+	}
+	if len(oldnew) != 0 {
+		w.rep = strings.NewReplacer(oldnew...)
+	}
 	return w
 }
 
 func (w *LineWriter) Write(p []byte) (n int, err error) {
-	for _, part := range bytes.Split(p, []byte{'\n'}) {
-		line := &Line{
-			Out:  string(part),
-			Proc: w.name,
-			Pos:  w.num,
-			Time: int64(time.Since(w.now).Seconds()),
-			Type: LineStdout,
-		}
-		w.peer.Log(context.Background(), w.id, line)
-		w.num++
+	out := string(p)
+	if w.rep != nil {
+		out = w.rep.Replace(out)
 	}
+
+	line := &Line{
+		Out:  out,
+		Proc: w.name,
+		Pos:  w.num,
+		Time: int64(time.Since(w.now).Seconds()),
+		Type: LineStdout,
+	}
+	w.peer.Log(context.Background(), w.id, line)
+	w.num++
+
+	// for _, part := range bytes.Split(p, []byte{'\n'}) {
+	// 	line := &Line{
+	// 		Out:  string(part),
+	// 		Proc: w.name,
+	// 		Pos:  w.num,
+	// 		Time: int64(time.Since(w.now).Seconds()),
+	// 		Type: LineStdout,
+	// 	}
+	// 	w.peer.Log(context.Background(), w.id, line)
+	// 	w.num++
+	// }
 	return len(p), nil
 }

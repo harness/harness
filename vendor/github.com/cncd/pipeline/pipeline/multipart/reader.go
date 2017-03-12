@@ -8,30 +8,32 @@ import (
 	"net/textproto"
 )
 
-// Reader is an iterator over parts in a multipart log stream.
-type Reader interface {
-	// NextPart returns the next part in the multipart or
-	// an error. When there are no more parts, the error
-	// io.EOF is returned.
-	NextPart() (Part, error)
-}
+type (
+	// Reader is an iterator over parts in a multipart log stream.
+	Reader interface {
+		// NextPart returns the next part in the multipart or
+		// an error. When there are no more parts, the error
+		// io.EOF is returned.
+		NextPart() (Part, error)
+	}
 
-// A Part represents a single part in a multipart body.
-type Part interface {
-	io.Reader
+	// A Part represents a single part in a multipart body.
+	Part interface {
+		io.Reader
 
-	// Header returns the headers of the body with the
-	// keys canonicalized.
-	Header() textproto.MIMEHeader
+		// Header returns the headers of the body with the
+		// keys canonicalized.
+		Header() textproto.MIMEHeader
 
-	// FileName returns the filename parameter of the
-	// Content-Disposition header.
-	FileName() string
+		// FileName returns the filename parameter of the
+		// Content-Disposition header.
+		FileName() string
 
-	// FormName returns the name parameter if p has a
-	// Content-Disposition of type form-data.
-	FormName() string
-}
+		// FormName returns the name parameter if p has a
+		// Content-Disposition of type form-data.
+		FormName() string
+	}
+)
 
 // New returns a new multipart Reader.
 func New(r io.Reader) Reader {
@@ -49,7 +51,7 @@ func New(r io.Reader) Reader {
 }
 
 //
-//
+// wraps the stdlib multi-part reader
 //
 
 type multipartReader struct {
@@ -70,7 +72,7 @@ func (r *multipartReader) NextPart() (Part, error) {
 }
 
 //
-//
+// wraps a simple io.Reader to satisfy the multi-part interface
 //
 
 type textReader struct {
@@ -85,7 +87,6 @@ func (r *textReader) NextPart() (Part, error) {
 	r.done = true
 	p := new(part)
 	p.Reader = r.reader
-	p.filename = "terminal.log"
 	return p, nil
 }
 

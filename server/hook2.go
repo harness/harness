@@ -249,7 +249,7 @@ func PostHook2(c *gin.Context) {
 
 	for _, job := range jobs {
 
-		metadata := metadataFromStruct(repo, build, last, job, "linux/amd64")
+		metadata := metadataFromStruct(repo, build, last, job, httputil.GetURL(c.Request))
 		environ := metadata.Environ()
 
 		secrets := map[string]string{}
@@ -296,6 +296,7 @@ func PostHook2(c *gin.Context) {
 
 		ir := compiler.New(
 			compiler.WithEnviron(environ),
+			// TODO ability to customize the escalated plugins
 			compiler.WithEscalated("plugins/docker", "plugins/gcr", "plugins/ecr"),
 			compiler.WithLocal(false),
 			compiler.WithNetrc(netrc.Login, netrc.Password, netrc.Machine),
@@ -306,17 +307,46 @@ func PostHook2(c *gin.Context) {
 					time.Now().Unix(),
 				),
 			),
+			compiler.WithEnviron(job.Environment),
 			compiler.WithProxy(),
-			compiler.WithVolumes(), // todo set global volumes
+			// TODO ability to set global volumes for things like certs
+			compiler.WithVolumes(),
 			compiler.WithWorkspaceFromURL("/drone", repo.Link),
 		).Compile(parsed)
+
+		// TODO there is a chicken and egg problem here because
+		// the compiled yaml has a platform environment variable
+		// that is not correctly set, because we are just about
+		// to set it ....
+		// TODO maybe we remove platform from metadata and let
+		// the compiler set the value from the yaml itself.
+		if parsed.Platform == "" {
+			parsed.Platform = "linux/amd64"
+		}
+
+		for _, sec := range secs {
+			if !sec.MatchEvent(build.Event) {
+				continue
+			}
+			if build.Verified || sec.SkipVerify {
+				ir.Secrets = append(ir.Secrets, &backend.Secret{
+					Mask:  sec.Conceal,
+					Name:  sec.Name,
+					Value: sec.Value,
+				})
+			}
+		}
 
 		task := new(queue.Task)
 		task.ID = fmt.Sprint(job.ID)
 		task.Labels = map[string]string{}
-		task.Labels["platform"] = "linux/amd64"
-		// TODO set proper platform
-		// TODO set proper labels
+		task.Labels["platform"] = parsed.Platform
+		if parsed.Labels != nil {
+			for k, v := range parsed.Labels {
+				task.Labels[k] = v
+			}
+		}
+
 		task.Data, _ = json.Marshal(rpc.Pipeline{
 			ID:      fmt.Sprint(job.ID),
 			Config:  ir,

@@ -78,9 +78,16 @@ type RPC struct {
 }
 
 // Next implements the rpc.Next function
-func (s *RPC) Next(c context.Context) (*rpc.Pipeline, error) {
-	filter := func(*queue.Task) bool { return true }
-	task, err := s.queue.Poll(c, filter)
+func (s *RPC) Next(c context.Context, filter rpc.Filter) (*rpc.Pipeline, error) {
+	fn := func(task *queue.Task) bool {
+		for k, v := range filter.Labels {
+			if task.Labels[k] != v {
+				return false
+			}
+		}
+		return true
+	}
+	task, err := s.queue.Poll(c, fn)
 	if err != nil {
 		return nil, err
 	} else if task == nil {
@@ -207,8 +214,8 @@ func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
 	return nil
 }
 
-// Save implements the rpc.Save function
-func (s *RPC) Save(c context.Context, id, mime string, file io.Reader) error { return nil }
+// Upload implements the rpc.Upload function
+func (s *RPC) Upload(c context.Context, id, mime string, file io.Reader) error { return nil }
 
 // Done implements the rpc.Done function
 func (s *RPC) Done(c context.Context, id string) error { return nil }

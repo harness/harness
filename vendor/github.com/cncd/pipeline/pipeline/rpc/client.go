@@ -21,12 +21,12 @@ const (
 	methodDone   = "done"
 	methodExtend = "extend"
 	methodUpdate = "update"
-	methodSave   = "save"
+	methodUpload = "upload"
 	methodLog    = "log"
 )
 
 type (
-	saveReq struct {
+	uploadReq struct {
 		ID   string `json:"id"`
 		Mime string `json:"mime"`
 		Data []byte `json:"data"`
@@ -75,9 +75,9 @@ func NewClient(endpoint string, opts ...Option) (*Client, error) {
 }
 
 // Next returns the next pipeline in the queue.
-func (t *Client) Next(c context.Context) (*Pipeline, error) {
+func (t *Client) Next(c context.Context, f Filter) (*Pipeline, error) {
 	res := new(Pipeline)
-	err := t.call(c, methodNext, nil, res)
+	err := t.call(c, methodNext, f, res)
 	return res, err
 }
 
@@ -112,14 +112,14 @@ func (t *Client) Log(c context.Context, id string, line *Line) error {
 	return t.call(c, methodLog, &params, nil)
 }
 
-// Save saves the pipeline artifact.
-func (t *Client) Save(c context.Context, id, mime string, file io.Reader) error {
+// Upload uploads the pipeline artifact.
+func (t *Client) Upload(c context.Context, id, mime string, file io.Reader) error {
 	data, err := ioutil.ReadAll(file)
 	if err != nil {
 		return err
 	}
-	params := saveReq{id, mime, data}
-	return t.call(c, methodSave, params, nil)
+	params := uploadReq{id, mime, data}
+	return t.call(c, methodUpload, params, nil)
 }
 
 // Close closes the client connection.

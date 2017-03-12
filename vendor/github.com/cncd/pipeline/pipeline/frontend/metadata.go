@@ -1,6 +1,19 @@
 package frontend
 
-import "strconv"
+import (
+	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+)
+
+// Event types corresponding to scm hooks.
+const (
+	EventPush   = "push"
+	EventPull   = "pull_request"
+	EventTag    = "tag"
+	EventDeploy = "deployment"
+)
 
 type (
 	// Metadata defines runtime m.
@@ -15,10 +28,11 @@ type (
 
 	// Repo defines runtime metadata for a repository.
 	Repo struct {
-		Name    string `json:"name,omitempty"`
-		Link    string `json:"link,omitempty"`
-		Remote  string `json:"remote,omitempty"`
-		Private bool   `json:"private,omitempty"`
+		Name    string   `json:"name,omitempty"`
+		Link    string   `json:"link,omitempty"`
+		Remote  string   `json:"remote,omitempty"`
+		Private bool     `json:"private,omitempty"`
+		Secrets []Secret `json:"secrets,omitempty"`
 	}
 
 	// Build defines runtime metadata for a build.
@@ -59,18 +73,27 @@ type (
 		Matrix map[string]string `json:"matrix,omitempty"`
 	}
 
+	// Secret defines a runtime secret
+	Secret struct {
+		Name  string `json:"name,omitempty"`
+		Value string `json:"value,omitempty"`
+		Mount string `json:"mount,omitempty"`
+		Mask  bool   `json:"mask,omitempty"`
+	}
+
 	// System defines runtime metadata for a ci/cd system.
 	System struct {
-		Name string `json:"name,omitempty"`
-		Host string `json:"host,omitempty"`
-		Link string `json:"link,omitempty"`
-		Arch string `json:"arch,omitempty"`
+		Name    string `json:"name,omitempty"`
+		Host    string `json:"host,omitempty"`
+		Link    string `json:"link,omitempty"`
+		Arch    string `json:"arch,omitempty"`
+		Version string `json:"version,omitempty"`
 	}
 )
 
 // Environ returns the metadata as a map of environment variables.
 func (m *Metadata) Environ() map[string]string {
-	return map[string]string{
+	params := map[string]string{
 		"CI_REPO":                      m.Repo.Name,
 		"CI_REPO_NAME":                 m.Repo.Name,
 		"CI_REPO_LINK":                 m.Repo.Link,
@@ -116,6 +139,70 @@ func (m *Metadata) Environ() map[string]string {
 		"CI_SYSTEM_LINK":               m.Sys.Link,
 		"CI_SYSTEM_HOST":               m.Sys.Host,
 		"CI_SYSTEM_ARCH":               m.Sys.Arch,
+		"CI_SYSTEM_VERSION":            m.Sys.Version,
 		"CI":                           m.Sys.Name,
 	}
+	if m.Curr.Event == EventTag {
+		params["CI_TAG"] = strings.TrimPrefix(m.Curr.Commit.Ref, "refs/tags/")
+	}
+	if m.Curr.Event == EventPull {
+		params["CI_PULL_REQUEST"] = pullRegexp.FindString(m.Curr.Commit.Ref)
+	}
+	return params
 }
+
+// EnvironDrone returns metadata as a map of DRONE_ environment variables.
+// This is here for backward compatibility and will eventually be removed.
+func (m *Metadata) EnvironDrone() map[string]string {
+	// MISSING PARAMETERS
+	// * DRONE_REPO_TRUSTED
+	// * DRONE_YAML_VERIFIED
+	// * DRONE_YAML_VERIFIED
+	params := map[string]string{
+		"CI":                         "drone",
+		"DRONE":                      "true",
+		"DRONE_ARCH":                 "linux/amd64",
+		"DRONE_REPO":                 m.Repo.Name,
+		"DRONE_REPO_SCM":             "git",
+		"DRONE_REPO_OWNER":           strings.Split(m.Repo.Name, "/")[0],
+		"DRONE_REPO_NAME":            strings.Split(m.Repo.Name, "/")[0],
+		"DRONE_REPO_LINK":            m.Repo.Link,
+		"DRONE_REPO_BRANCH":          m.Curr.Commit.Branch,
+		"DRONE_REPO_PRIVATE":         fmt.Sprintf("%v", m.Repo.Private),
+		"DRONE_REPO_TRUSTED":         "false", // TODO should this be added?
+		"DRONE_REMOTE_URL":           m.Repo.Remote,
+		"DRONE_COMMIT_SHA":           m.Curr.Commit.Sha,
+		"DRONE_COMMIT_REF":           m.Curr.Commit.Ref,
+		"DRONE_COMMIT_REFSPEC":       m.Curr.Commit.Refspec,
+		"DRONE_COMMIT_BRANCH":        m.Curr.Commit.Branch,
+		"DRONE_COMMIT_LINK":          m.Curr.Link,
+		"DRONE_COMMIT_MESSAGE":       m.Curr.Commit.Message,
+		"DRONE_COMMIT_AUTHOR":        m.Curr.Commit.Author.Name,
+		"DRONE_COMMIT_AUTHOR_EMAIL":  m.Curr.Commit.Author.Email,
+		"DRONE_COMMIT_AUTHOR_AVATAR": m.Curr.Commit.Author.Avatar,
+		"DRONE_BUILD_NUMBER":         fmt.Sprintf("%d", m.Curr.Number),
+		"DRONE_BUILD_EVENT":          m.Curr.Event,
+		"DRONE_BUILD_LINK":           fmt.Sprintf("%s/%s/%d", m.Sys.Link, m.Repo.Name, m.Curr.Number),
+		"DRONE_BUILD_CREATED":        fmt.Sprintf("%d", m.Curr.Created),
+		"DRONE_BUILD_STARTED":        fmt.Sprintf("%d", m.Curr.Started),
+		"DRONE_BUILD_FINISHED":       fmt.Sprintf("%d", m.Curr.Finished),
+		"DRONE_JOB_NUMBER":           fmt.Sprintf("%d", m.Job.Number),
+		"DRONE_JOB_STARTED":          fmt.Sprintf("%d", m.Curr.Started), // ISSUE: no job started
+		"DRONE_BRANCH":               m.Curr.Commit.Branch,
+		"DRONE_COMMIT":               m.Curr.Commit.Sha,
+		"DRONE_VERSION":              m.Sys.Version,
+		"DRONE_DEPLOY_TO":            m.Curr.Target,
+		"DRONE_PREV_BUILD_STATUS":    m.Prev.Status,
+		"DRONE_PREV_BUILD_NUMBER":    fmt.Sprintf("%v", m.Prev.Number),
+		"DRONE_PREV_COMMIT_SHA":      m.Prev.Commit.Sha,
+	}
+	if m.Curr.Event == EventTag {
+		params["DRONE_TAG"] = strings.TrimPrefix(m.Curr.Commit.Ref, "refs/tags/")
+	}
+	if m.Curr.Event == EventPull {
+		params["DRONE_PULL_REQUEST"] = pullRegexp.FindString(m.Curr.Commit.Ref)
+	}
+	return params
+}
+
+var pullRegexp = regexp.MustCompile("\\d+")

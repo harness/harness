@@ -26,6 +26,11 @@ func loop(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	filter := rpc.Filter{
+		Labels: map[string]string{
+			"platform": c.String("platform"),
+		},
+	}
 
 	client, err := rpc.NewClient(
 		endpoint.String(),
@@ -62,7 +67,7 @@ func loop(c *cli.Context) error {
 				if sigterm.IsSet() {
 					return
 				}
-				if err := run(ctx, client); err != nil {
+				if err := run(ctx, client, filter); err != nil {
 					log.Printf("build runner encountered error: exiting: %s", err)
 					return
 				}
@@ -74,11 +79,16 @@ func loop(c *cli.Context) error {
 	return nil
 }
 
-func run(ctx context.Context, client rpc.Peer) error {
+const (
+	maxFileUpload = 5000000
+	maxLogsUpload = 5000000
+)
+
+func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	log.Println("pipeline: request next execution")
 
 	// get the next job from the queue
-	work, err := client.Next(ctx)
+	work, err := client.Next(ctx, filter)
 	if err != nil {
 		return err
 	}
@@ -103,9 +113,9 @@ func run(ctx context.Context, client rpc.Peer) error {
 
 	cancelled := abool.New()
 	go func() {
-		if err := client.Wait(ctx, work.ID); err != nil {
+		if werr := client.Wait(ctx, work.ID); err != nil {
 			cancelled.SetTo(true)
-			log.Printf("pipeline: cancel signal received: %s: %s", work.ID, err)
+			log.Printf("pipeline: cancel signal received: %s: %s", work.ID, werr)
 			cancel()
 		} else {
 			log.Printf("pipeline: cancel channel closed: %s", work.ID)
@@ -140,7 +150,8 @@ func run(ctx context.Context, client rpc.Peer) error {
 		}
 		uploads.Add(1)
 		writer := rpc.NewLineWriter(client, work.ID, proc.Alias)
-		io.Copy(writer, part)
+		rlimit := io.LimitReader(part, maxLogsUpload)
+		io.Copy(writer, rlimit)
 
 		defer func() {
 			log.Printf("pipeline: finish uploading logs: %s: step %s", work.ID, proc.Alias)
@@ -151,8 +162,9 @@ func run(ctx context.Context, client rpc.Peer) error {
 		if rerr != nil {
 			return nil
 		}
+		rlimit = io.LimitReader(part, maxFileUpload)
 		mime := part.Header().Get("Content-Type")
-		if serr := client.Save(context.Background(), work.ID, mime, part); serr != nil {
+		if serr := client.Upload(context.Background(), work.ID, mime, rlimit); serr != nil {
 			log.Printf("pipeline: cannot upload artifact: %s: %s: %s", work.ID, mime, serr)
 		}
 		return nil
