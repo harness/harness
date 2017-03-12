@@ -46,7 +46,7 @@ func New(r io.Reader) Reader {
 		}
 	}
 	return &textReader{
-		reader: r,
+		reader: buf,
 	}
 }
 
