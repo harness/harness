@@ -38,9 +38,9 @@ type (
 // New returns a new multipart Reader.
 func New(r io.Reader) Reader {
 	buf := bufio.NewReader(r)
-	out, _ := buf.Peek(4)
+	out, _ := buf.Peek(8)
 
-	if bytes.Equal(out, []byte("MIME")) {
+	if bytes.Equal(out, []byte("PIPELINE")) {
 		return &multipartReader{
 			reader: multipart.NewReader(buf, "boundary"),
 		}
