@@ -5,8 +5,6 @@ workspace:
 pipeline:
   test:
     image: golang:1.6
-    environment:
-      - GO15VENDOREXPERIMENT=1
     commands:
       - make deps gen
       - make test test_postgres test_mysql
@@ -14,7 +12,6 @@ pipeline:
   compile:
     image: golang:1.6
     environment:
-      - GO15VENDOREXPERIMENT=1
       - GOPATH=/go
     commands:
       - export PATH=$PATH:$GOPATH/bin
