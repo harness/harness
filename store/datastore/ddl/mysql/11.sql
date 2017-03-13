@@ -1,7 +1,7 @@
 -- +migrate Up
 
 ALTER TABLE builds ADD COLUMN build_error  VARCHAR(500);
-UPDATE builds SET build_error = '' WHERE job_error = null;
+UPDATE builds SET build_error = '';
 
 -- +migrate Down
 
