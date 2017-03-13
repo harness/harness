@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -10,6 +12,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 	"github.com/gin-gonic/contrib/ginrus"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 var serverCmd = cli.Command{
@@ -46,6 +49,17 @@ var serverCmd = cli.Command{
 			EnvVar: "DRONE_SERVER_KEY",
 			Name:   "server-key",
 			Usage:  "server ssl key",
+		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_LETS_ENCRYPT_ENABLED",
+			Name:   "lets-encrypt-enabled",
+			Usage:  "enable let's encrypt support",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_LETS_ENCRYPT_PATH",
+			Name:   "lets-encrypt-path",
+			Usage:  "let's encrypt cert storage path",
+			Value:  "/var/lib/drone/certs",
 		},
 		cli.StringSliceFlag{
 			EnvVar: "DRONE_ADMIN",
@@ -285,7 +299,6 @@ var serverCmd = cli.Command{
 }
 
 func server(c *cli.Context) error {
-
 	// debug level if requested by user
 	if c.Bool("debug") {
 		logrus.SetLevel(logrus.DebugLevel)
@@ -305,19 +318,79 @@ func server(c *cli.Context) error {
 		middleware.Broker(c),
 	)
 
-	// start the server with tls enabled
-	if c.String("server-cert") != "" {
-		return http.ListenAndServeTLS(
-			c.String("server-addr"),
-			c.String("server-cert"),
-			c.String("server-key"),
-			handler,
-		)
-	}
+	if c.Bool("lets-encrypt-enabled") || (c.String("server-cert") != "" && c.String("server-key") != "") {
+		// define proper accepted curves
+		curves := []tls.CurveID{
+			tls.CurveP521,
+			tls.CurveP384,
+			tls.CurveP256,
+		}
 
-	// start the server without tls enabled
-	return http.ListenAndServe(
-		c.String("server-addr"),
-		handler,
-	)
+		// define proper accepted ciphers
+		ciphers := []uint16{
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		}
+
+		cfg := &tls.Config{
+			PreferServerCipherSuites: true,
+			MinVersion:               tls.VersionTLS12,
+			CurvePreferences:         curves,
+			CipherSuites:             ciphers,
+		}
+
+		if c.Bool("lets-encrypt-enabled") {
+			if c.String("lets-encrypt-path") == "" {
+				return fmt.Errorf("No Let's Encrypt cert storage path defined")
+			}
+
+			certManager := autocert.Manager{
+				Prompt: autocert.AcceptTOS,
+				Cache:  autocert.DirCache(c.String("lets-encrypt-path")),
+			}
+
+			cfg.GetCertificate = certManager.GetCertificate
+		} else {
+			cert, err := tls.LoadX509KeyPair(
+				c.String("server-cert"),
+				c.String("server-key"),
+			)
+
+			if err != nil {
+				return fmt.Errorf("Failed to load SSL certificates. %s", err)
+			}
+
+			cfg.Certificates = []tls.Certificate{
+				cert,
+			}
+		}
+
+		// define the server configuration
+		server := &http.Server{
+			Addr:         c.String("server-addr"),
+			Handler:      handler,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			TLSConfig:    cfg,
+		}
+
+		// start the server with tls enabled
+		return server.ListenAndServeTLS(
+			"",
+			"",
+		)
+	} else {
+		// define the server configuration
+		server := &http.Server{
+			Addr:         c.String("server-addr"),
+			Handler:      handler,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+
+		// start the server without tls enabled
+		return server.ListenAndServe()
+	}
 }

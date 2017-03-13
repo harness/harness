@@ -21,6 +21,7 @@ deps_backend:
 	go get -u github.com/elazarl/go-bindata-assetfs/...
 	go get -u github.com/drone/mq/...
 	go get -u github.com/tidwall/redlog
+	go get -u golang.org/x/net/context
 
 gen: gen_template gen_migrations
 
