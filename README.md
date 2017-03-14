@@ -16,7 +16,7 @@ Documentation is published to [readme.drone.io](http://readme.drone.io)
 
 ### Community, Help
 
-Contributions, questions, and comments are welcomed and encouraged. Drone developers hang out in the [drone/drone](https://gitter.im/drone/drone) room on gitter. We ask that you please post your questions to [gitter](https://gitter.im/drone/drone) before creating an issue.
+Contributions, questions, and comments are welcomed and encouraged. We ask that you please post user support questions to the [community forum](http://discourse.drone.io/), before creating Github issues. Drone developers hang out in the [drone/drone](https://gitter.im/drone/drone) room on Gitter.
 
 ### Installation
 
