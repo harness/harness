@@ -223,7 +223,6 @@ func (s *RPC) Done(c context.Context, id string) error { return nil }
 func (s *RPC) Log(c context.Context, id string, line *rpc.Line) error {
 	entry := new(logging.Entry)
 	entry.Data, _ = json.Marshal(line)
-	fmt.Println(string(entry.Data))
 	s.logger.Write(c, id, entry)
 	return nil
 }
