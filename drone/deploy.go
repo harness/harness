@@ -91,7 +91,7 @@ func deploy(c *cli.Context) error {
 	} else {
 		number, err = strconv.Atoi(buildArg)
 		if err != nil {
-			return err
+			return fmt.Errorf("Please specify a valid build number (ie 78)")
 		}
 	}
 
