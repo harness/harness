@@ -51,7 +51,6 @@ func init() {
 
 func RPCHandler(c *gin.Context) {
 
-	fmt.Println(c.Request.Header.Write(os.Stdout))
 	if secret := c.Request.Header.Get("Authorization"); secret != "Bearer "+config.secret {
 		log.Printf("Unable to connect agent. Invalid authorization token %q does not match %q", secret, config.secret)
 		c.String(401, "Unable to connect agent. Invalid authorization token")

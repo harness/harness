@@ -113,7 +113,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 
 	cancelled := abool.New()
 	go func() {
-		if werr := client.Wait(ctx, work.ID); err != nil {
+		if werr := client.Wait(ctx, work.ID); werr != nil {
 			cancelled.SetTo(true)
 			log.Printf("pipeline: cancel signal received: %s: %s", work.ID, werr)
 			cancel()

@@ -64,6 +64,7 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 	// add default clone step
 	if c.local == false && len(conf.Clone.Containers) == 0 {
 		container := &yaml.Container{
+			Name:  "clone",
 			Image: "plugins/git:latest",
 			Vargs: map[string]interface{}{"depth": "0"},
 		}
