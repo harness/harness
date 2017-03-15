@@ -61,6 +61,16 @@ func toContainerConfig(c *yaml.Container) *dockerclient.ContainerConfig {
 		config.HostConfig.Binds = append(config.HostConfig.Binds, path)
 	}
 
+	config.HostConfig.Tmpfs = map[string]string{}
+	for _, path := range c.Tmpfs {
+		if strings.Index(path, ":") == -1 {
+			config.HostConfig.Tmpfs[path] = ""
+			continue
+		}
+		parts := strings.Split(path, ":")
+		config.HostConfig.Tmpfs[parts[0]] = parts[1]
+	}
+
 	for _, path := range c.Devices {
 		if strings.Index(path, ":") == -1 {
 			continue

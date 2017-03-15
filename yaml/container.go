@@ -34,6 +34,7 @@ type Container struct {
 	ExtraHosts     []string
 	Volumes        []string
 	VolumesFrom    []string
+	Tmpfs          []string
 	Devices        []string
 	Network        string
 	DNS            []string
@@ -72,6 +73,7 @@ type container struct {
 	Volumes        types.StringOrSlice `yaml:"volumes"`
 	VolumesFrom    types.StringOrSlice `yaml:"volumes_from"`
 	Devices        types.StringOrSlice `yaml:"devices"`
+	Tmpfs          types.StringOrSlice `yaml:"tmpfs"`
 	Network        string              `yaml:"network_mode"`
 	DNS            types.StringOrSlice `yaml:"dns"`
 	DNSSearch      types.StringOrSlice `yaml:"dns_search"`
@@ -142,6 +144,7 @@ func (c *containerList) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			ExtraHosts:     cc.ExtraHosts.Slice(),
 			Volumes:        cc.Volumes.Slice(),
 			VolumesFrom:    cc.VolumesFrom.Slice(),
+			Tmpfs:          cc.Tmpfs.Slice(),
 			Devices:        cc.Devices.Slice(),
 			Network:        cc.Network,
 			DNS:            cc.DNS.Slice(),
