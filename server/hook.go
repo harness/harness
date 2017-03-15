@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -17,8 +16,6 @@ import (
 	"github.com/drone/drone/yaml"
 	"github.com/drone/mq/stomp"
 )
-
-var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
 
 func PostHook(c *gin.Context) {
 	remote_ := remote.FromContext(c)
@@ -105,8 +102,8 @@ func PostHook(c *gin.Context) {
 	// a small number of people will probably be upset by this, I'm not sure
 	// it is actually that big of a deal.
 	if len(build.Email) == 0 {
-		author, err := store.GetUserLogin(c, build.Author)
-		if err == nil {
+		author, uerr := store.GetUserLogin(c, build.Author)
+		if uerr == nil {
 			build.Email = author.Email
 		}
 	}
@@ -164,9 +161,9 @@ func PostHook(c *gin.Context) {
 		log.Debugf("cannot parse .drone.yml.sig file. empty file")
 	} else {
 		build.Signed = true
-		output, err := signature.Verify([]byte(repo.Hash))
-		if err != nil {
-			log.Debugf("cannot verify .drone.yml.sig file. %s", err)
+		output, verr := signature.Verify([]byte(repo.Hash))
+		if verr != nil {
+			log.Debugf("cannot verify .drone.yml.sig file. %s", verr)
 		} else if string(output) != string(raw) {
 			log.Debugf("cannot verify .drone.yml.sig file. no match")
 		} else {
@@ -212,7 +209,7 @@ func PostHook(c *gin.Context) {
 	}
 
 	client := stomp.MustFromContext(c)
-	client.SendJSON("/topic/events", model.Event{
+	client.SendJSON("topic/events", model.Event{
 		Type:  model.Enqueued,
 		Repo:  *repo,
 		Build: *build,
@@ -245,5 +242,4 @@ func PostHook(c *gin.Context) {
 			),
 		)
 	}
-
 }

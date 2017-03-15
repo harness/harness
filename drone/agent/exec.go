@@ -22,13 +22,13 @@ type config struct {
 	extension  []string
 }
 
-type pipeline struct {
+type pipelinet struct {
 	drone  *stomp.Client
 	docker dockerclient.Client
 	config config
 }
 
-func (r *pipeline) run(w *model.Work) {
+func (r *pipelinet) run(w *model.Work) {
 
 	// defer func() {
 	// 	// r.drone.Ack(id, opts)

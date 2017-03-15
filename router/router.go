@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/router/middleware/token"
 	"github.com/drone/drone/server"
+	"github.com/drone/drone/server/debug"
 	"github.com/drone/drone/server/template"
 
 	"github.com/drone/drone-ui/dist"
@@ -119,19 +121,46 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		badges.GET("/cc.xml", server.GetCC)
 	}
 
-	e.POST("/hook", server.PostHook)
-	e.POST("/api/hook", server.PostHook)
+	if os.Getenv("DRONE_CANARY") == "" {
+		e.POST("/hook", server.PostHook)
+		e.POST("/api/hook", server.PostHook)
+	} else {
+		e.POST("/hook", server.PostHook2)
+		e.POST("/api/hook", server.PostHook2)
+	}
 
-	ws := e.Group("/ws")
-	{
-		ws.GET("/broker", server.Broker)
-		ws.GET("/feed", server.EventStream)
-		ws.GET("/logs/:owner/:name/:build/:number",
-			session.SetRepo(),
-			session.SetPerm(),
-			session.MustPull,
-			server.LogStream,
-		)
+	if os.Getenv("DRONE_CANARY") == "" {
+		ws := e.Group("/ws")
+		{
+			ws.GET("/broker", server.Broker)
+			ws.GET("/feed", server.EventStream)
+			ws.GET("/logs/:owner/:name/:build/:number",
+				session.SetRepo(),
+				session.SetPerm(),
+				session.MustPull,
+				server.LogStream,
+			)
+		}
+	} else {
+		ws := e.Group("/ws")
+		{
+			ws.GET("/broker", server.RPCHandler)
+			ws.GET("/rpc", server.RPCHandler)
+			ws.GET("/feed", server.EventStream2)
+			ws.GET("/logs/:owner/:name/:build/:number",
+				session.SetRepo(),
+				session.SetPerm(),
+				session.MustPull,
+				server.LogStream2,
+			)
+		}
+		info := e.Group("/api/info")
+		{
+			info.GET("/queue",
+				session.MustAdmin(),
+				server.GetQueueInfo,
+			)
+		}
 	}
 
 	auth := e.Group("/authorize")
@@ -147,40 +176,20 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		builds.GET("", server.GetBuildQueue)
 	}
 
-	agents := e.Group("/api/agents")
+	debugger := e.Group("/api/debug")
 	{
-		agents.Use(session.MustAdmin())
-		agents.GET("", server.GetAgents)
+		debugger.Use(session.MustAdmin())
+		debugger.GET("/pprof/", debug.IndexHandler())
+		debugger.GET("/pprof/heap", debug.HeapHandler())
+		debugger.GET("/pprof/goroutine", debug.GoroutineHandler())
+		debugger.GET("/pprof/block", debug.BlockHandler())
+		debugger.GET("/pprof/threadcreate", debug.ThreadCreateHandler())
+		debugger.GET("/pprof/cmdline", debug.CmdlineHandler())
+		debugger.GET("/pprof/profile", debug.ProfileHandler())
+		debugger.GET("/pprof/symbol", debug.SymbolHandler())
+		debugger.POST("/pprof/symbol", debug.SymbolHandler())
+		debugger.GET("/pprof/trace", debug.TraceHandler())
 	}
-
-	debug := e.Group("/api/debug")
-	{
-		debug.Use(session.MustAdmin())
-		debug.GET("/pprof/", server.IndexHandler())
-		debug.GET("/pprof/heap", server.HeapHandler())
-		debug.GET("/pprof/goroutine", server.GoroutineHandler())
-		debug.GET("/pprof/block", server.BlockHandler())
-		debug.GET("/pprof/threadcreate", server.ThreadCreateHandler())
-		debug.GET("/pprof/cmdline", server.CmdlineHandler())
-		debug.GET("/pprof/profile", server.ProfileHandler())
-		debug.GET("/pprof/symbol", server.SymbolHandler())
-		debug.POST("/pprof/symbol", server.SymbolHandler())
-		debug.GET("/pprof/trace", server.TraceHandler())
-	}
-
-	// DELETE THESE
-	// gitlab := e.Group("/gitlab/:owner/:name")
-	// {
-	// 	gitlab.Use(session.SetRepo())
-	// 	gitlab.GET("/commits/:sha", GetCommit)
-	// 	gitlab.GET("/pulls/:number", GetPullRequest)
-	//
-	// 	redirects := gitlab.Group("/redirect")
-	// 	{
-	// 		redirects.GET("/commits/:sha", RedirectSha)
-	// 		redirects.GET("/pulls/:number", RedirectPullRequest)
-	// 	}
-	// }
 
 	// bots := e.Group("/bots")
 	// {

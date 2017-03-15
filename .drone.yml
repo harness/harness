@@ -4,7 +4,7 @@ workspace:
 
 pipeline:
   test:
-    image: golang:1.6
+    image: golang:1.8
     environment:
       - GO15VENDOREXPERIMENT=1
     commands:
@@ -12,7 +12,7 @@ pipeline:
       - make test test_postgres test_mysql
 
   compile:
-    image: golang:1.6
+    image: golang:1.8
     environment:
       - GO15VENDOREXPERIMENT=1
       - GOPATH=/go
