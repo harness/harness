@@ -290,6 +290,7 @@ func toEnv(w *model.Work) map[string]string {
 		"DRONE_BUILD_CREATED":        fmt.Sprintf("%d", w.Build.Created),
 		"DRONE_BUILD_STARTED":        fmt.Sprintf("%d", w.Build.Started),
 		"DRONE_BUILD_FINISHED":       fmt.Sprintf("%d", w.Build.Finished),
+		"DRONE_PARENT_BUILD_NUMBER":  fmt.Sprintf("%d", w.Build.Parent),
 		"DRONE_JOB_NUMBER":           fmt.Sprintf("%d", w.Job.Number),
 		"DRONE_JOB_STATUS":           w.Job.Status,
 		"DRONE_JOB_ERROR":            w.Job.Error,
