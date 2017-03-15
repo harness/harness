@@ -91,6 +91,18 @@ var serverCmd = cli.Command{
 			Usage:  "database driver configuration string",
 			Value:  "drone.sqlite",
 		},
+		cli.StringFlag{
+			EnvVar: "DRONE_URL",
+			Name:   "url",
+			Usage:  "url for generating links to the system. If empty, autodetect.",
+			Value:  "",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_HOOK_URL",
+			Name:   "hook-url",
+			Usage:  "url to use for generating webhook links. If empty, use DRONE_URL or autodetect.",
+			Value:  "",
+		},
 		cli.BoolFlag{
 			EnvVar: "DRONE_GITHUB",
 			Name:   "github",
