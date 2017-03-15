@@ -22,23 +22,24 @@ pipeline:
     when:
       event: push
 
-  archive:
-    image: plugins/s3
-    acl: public-read
-    bucket: downloads.drone.io
-    source: release/**/*.*
-    access_key: ${AWS_ACCESS_KEY_ID}
-    secret_key: ${AWS_SECRET_ACCESS_KEY}
-    when:
-      event: push
-      branch: master
+
+  # archive:
+  #   image: plugins/s3
+  #   acl: public-read
+  #   bucket: downloads.drone.io
+  #   source: release/**/*.*
+  #   access_key: ${AWS_ACCESS_KEY_ID}
+  #   secret_key: ${AWS_SECRET_ACCESS_KEY}
+  #   when:
+  #     event: push
+  #     branch: master
 
   publish:
     image: plugins/docker
     repo: drone/drone
     username: ${DOCKER_USERNAME}
     password: ${DOCKER_PASSWORD}
-    tag: [ "0.5", "0.5.0", "0.5.0-rc", "latest" ]
+    tag: [ 0.6 ]
     when:
       branch: master
       event: push
