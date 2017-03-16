@@ -375,6 +375,14 @@ func PostBuild(c *gin.Context) {
 			stomp.WithHeaders(
 				yaml.ParseLabel(raw),
 			),
+			stomp.WithHeader(
+				"event",
+				build.Event,
+			),
+			stomp.WithHeader(
+				"deploy_to",
+				build.Deploy,
+			),
 		)
 	}
 }
