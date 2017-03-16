@@ -3,6 +3,7 @@ workspace:
   path: src/github.com/drone/drone
 
 pipeline:
+
   test:
     image: golang:1.8
     environment:
@@ -34,24 +35,22 @@ pipeline:
   #     event: push
   #     branch: master
 
-  publish:
+  publish_docker:
+    image: plugins/docker
+    repo: drone/drone
+    username: ${DOCKER_USERNAME}
+    password: ${DOCKER_PASSWORD}
+    tag: [ 0.6 ]
+    when:
+      branch: master
+      event: push
 
-    docker:
-      image: plugins/docker
-      repo: drone/drone
-      username: ${DOCKER_USERNAME}
-      password: ${DOCKER_PASSWORD}
-      tag: [ 0.6 ]
-      when:
-        branch: master
-        event: push
-
-    cli:
-      image: plugins/github-release
-      files: release/*/*/drone.tar.gz
-      checksum: [ sha256 ]
-      when:
-        event: tag
+  publish_cli:
+    image: plugins/github-release
+    files: release/*/*/drone.tar.gz
+    checksum: [ sha256 ]
+    when:
+      event: tag
 
   notify:
     image: plugins/gitter
