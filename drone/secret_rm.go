@@ -1,19 +1,11 @@
 package main
 
-import (
-	"log"
-
-	"github.com/codegangsta/cli"
-)
+import "github.com/urfave/cli"
 
 var secretRemoveCmd = cli.Command{
-	Name:  "rm",
-	Usage: "remove a secret",
-	Action: func(c *cli.Context) {
-		if err := secretRemove(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "rm",
+	Usage:  "remove a secret",
+	Action: secretRemove,
 }
 
 func secretRemove(c *cli.Context) error {

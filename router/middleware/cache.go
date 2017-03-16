@@ -3,8 +3,8 @@ package middleware
 import (
 	"github.com/drone/drone/cache"
 
-	"github.com/codegangsta/cli"
 	"github.com/gin-gonic/gin"
+	"github.com/urfave/cli"
 )
 
 // Cache is a middleware function that initializes the Cache and attaches to

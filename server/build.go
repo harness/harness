@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -18,13 +17,10 @@ import (
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
-	"github.com/drone/drone/yaml"
 	"github.com/gin-gonic/gin"
-	"github.com/square/go-jose"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
-	"github.com/drone/mq/stomp"
 )
 
 func GetBuilds(c *gin.Context) {
@@ -156,227 +152,8 @@ func DeleteBuild(c *gin.Context) {
 	job.ExitCode = 137
 	store.UpdateBuildJob(c, build, job)
 
-	if os.Getenv("DRONE_CANARY") == "" {
-		client := stomp.MustFromContext(c)
-		client.SendJSON("/topic/cancel", model.Event{
-			Type:  model.Cancelled,
-			Repo:  *repo,
-			Build: *build,
-			Job:   *job,
-		}, stomp.WithHeader("job-id", strconv.FormatInt(job.ID, 10)))
-	} else {
-		config.queue.Error(context.Background(), fmt.Sprint(job.ID), queue.ErrCancel)
-	}
+	config.queue.Error(context.Background(), fmt.Sprint(job.ID), queue.ErrCancel)
 	c.String(204, "")
-}
-
-func PostBuild(c *gin.Context) {
-
-	if os.Getenv("DRONE_CANARY") == "true" {
-		PostBuild2(c)
-		return
-	}
-
-	remote_ := remote.FromContext(c)
-	repo := session.Repo(c)
-	fork := c.DefaultQuery("fork", "false")
-
-	num, err := strconv.Atoi(c.Param("number"))
-	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
-
-	user, err := store.GetUser(c, repo.UserID)
-	if err != nil {
-		log.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
-		c.AbortWithError(500, err)
-		return
-	}
-
-	build, err := store.GetBuildNumber(c, repo, num)
-	if err != nil {
-		log.Errorf("failure to get build %d. %s", num, err)
-		c.AbortWithError(404, err)
-		return
-	}
-
-	// if the remote has a refresh token, the current access token
-	// may be stale. Therefore, we should refresh prior to dispatching
-	// the job.
-	if refresher, ok := remote_.(remote.Refresher); ok {
-		ok, _ := refresher.Refresh(user)
-		if ok {
-			store.UpdateUser(c, user)
-		}
-	}
-
-	// fetch the .drone.yml file from the database
-	cfg := ToConfig(c)
-	raw, err := remote_.File(user, repo, build, cfg.Yaml)
-	if err != nil {
-		log.Errorf("failure to get build config for %s. %s", repo.FullName, err)
-		c.AbortWithError(404, err)
-		return
-	}
-
-	// Fetch secrets file but don't exit on error as it's optional
-	sec, err := remote_.File(user, repo, build, cfg.Shasum)
-	if err != nil {
-		log.Debugf("cannot find build secrets for %s. %s", repo.FullName, err)
-	}
-
-	netrc, err := remote_.Netrc(user, repo)
-	if err != nil {
-		log.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
-		c.AbortWithError(500, err)
-		return
-	}
-
-	jobs, err := store.GetJobList(c, build)
-	if err != nil {
-		log.Errorf("failure to get build %d jobs. %s", build.Number, err)
-		c.AbortWithError(404, err)
-		return
-	}
-
-	// must not restart a running build
-	if build.Status == model.StatusPending || build.Status == model.StatusRunning {
-		c.String(409, "Cannot re-start a started build")
-		return
-	}
-
-	// forking the build creates a duplicate of the build
-	// and then executes. This retains prior build history.
-	if forkit, _ := strconv.ParseBool(fork); forkit {
-		build.ID = 0
-		build.Number = 0
-		build.Parent = num
-		for _, job := range jobs {
-			job.ID = 0
-			job.NodeID = 0
-		}
-		err := store.CreateBuild(c, build, jobs...)
-		if err != nil {
-			c.String(500, err.Error())
-			return
-		}
-
-		event := c.DefaultQuery("event", build.Event)
-		if event == model.EventPush ||
-			event == model.EventPull ||
-			event == model.EventTag ||
-			event == model.EventDeploy {
-			build.Event = event
-		}
-		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
-	}
-
-	// Read query string parameters into buildParams, exclude reserved params
-	var buildParams = map[string]string{}
-	for key, val := range c.Request.URL.Query() {
-		switch key {
-		case "fork", "event", "deploy_to":
-		default:
-			// We only accept string literals, because build parameters will be
-			// injected as environment variables
-			buildParams[key] = val[0]
-		}
-	}
-
-	// todo move this to database tier
-	// and wrap inside a transaction
-	build.Status = model.StatusPending
-	build.Started = 0
-	build.Finished = 0
-	build.Enqueued = time.Now().UTC().Unix()
-	build.Error = ""
-	for _, job := range jobs {
-		for k, v := range buildParams {
-			job.Environment[k] = v
-		}
-		job.Error = ""
-		job.Status = model.StatusPending
-		job.Started = 0
-		job.Finished = 0
-		job.ExitCode = 0
-		job.NodeID = 0
-		job.Enqueued = build.Enqueued
-		store.UpdateJob(c, job)
-	}
-
-	err = store.UpdateBuild(c, build)
-	if err != nil {
-		c.AbortWithStatus(500)
-		return
-	}
-
-	c.JSON(202, build)
-
-	// get the previous build so that we can send
-	// on status change notifications
-	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
-	secs, err := store.GetMergedSecretList(c, repo)
-	if err != nil {
-		log.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
-	}
-
-	var signed bool
-	var verified bool
-
-	signature, err := jose.ParseSigned(string(sec))
-	if err != nil {
-		log.Debugf("cannot parse .drone.yml.sig file. %s", err)
-	} else if len(sec) == 0 {
-		log.Debugf("cannot parse .drone.yml.sig file. empty file")
-	} else {
-		signed = true
-		output, err := signature.Verify([]byte(repo.Hash))
-		if err != nil {
-			log.Debugf("cannot verify .drone.yml.sig file. %s", err)
-		} else if string(output) != string(raw) {
-			log.Debugf("cannot verify .drone.yml.sig file. no match. %q <> %q", string(output), string(raw))
-		} else {
-			verified = true
-		}
-	}
-
-	log.Debugf(".drone.yml is signed=%v and verified=%v", signed, verified)
-
-	client := stomp.MustFromContext(c)
-	client.SendJSON("/topic/events", model.Event{
-		Type:  model.Enqueued,
-		Repo:  *repo,
-		Build: *build,
-	},
-		stomp.WithHeader("repo", repo.FullName),
-		stomp.WithHeader("private", strconv.FormatBool(repo.IsPrivate)),
-	)
-
-	for _, job := range jobs {
-		broker, _ := stomp.FromContext(c)
-		broker.SendJSON("/queue/pending", &model.Work{
-			Signed:    signed,
-			Verified:  verified,
-			User:      user,
-			Repo:      repo,
-			Build:     build,
-			BuildLast: last,
-			Job:       job,
-			Netrc:     netrc,
-			Yaml:      string(raw),
-			Secrets:   secs,
-			System:    &model.System{Link: httputil.GetURL(c.Request)},
-		},
-			stomp.WithHeader(
-				"platform",
-				yaml.ParsePlatformDefault(raw, "linux/amd64"),
-			),
-			stomp.WithHeaders(
-				yaml.ParseLabel(raw),
-			),
-		)
-	}
 }
 
 func GetBuildQueue(c *gin.Context) {
@@ -412,7 +189,7 @@ func copyLogs(dest io.Writer, src io.Reader) error {
 //
 //
 
-func PostBuild2(c *gin.Context) {
+func PostBuild(c *gin.Context) {
 
 	remote_ := remote.FromContext(c)
 	repo := session.Repo(c)

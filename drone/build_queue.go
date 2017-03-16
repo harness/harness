@@ -2,21 +2,16 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"text/template"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var buildQueueCmd = cli.Command{
-	Name:  "queue",
-	Usage: "show build queue",
-	Action: func(c *cli.Context) {
-		if err := buildQueue(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "queue",
+	Usage:  "show build queue",
+	Action: buildQueue,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "format",

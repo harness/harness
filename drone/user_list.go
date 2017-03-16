@@ -1,21 +1,16 @@
 package main
 
 import (
-	"log"
 	"os"
 	"text/template"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var userListCmd = cli.Command{
-	Name:  "ls",
-	Usage: "list all users",
-	Action: func(c *cli.Context) {
-		if err := userList(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "ls",
+	Usage:  "list all users",
+	Action: userList,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "format",

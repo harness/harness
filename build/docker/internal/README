@@ -1,1 +1,0 @@
-This is an internal copy of the Docker stdcopy package that removes the logrus debug logging. The original package is found at https://github.com/docker/docker/tree/master/pkg/stdcopy

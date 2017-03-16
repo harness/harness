@@ -2,7 +2,6 @@ package router
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 
@@ -40,8 +39,6 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.GET("/login/form", server.ShowLoginForm)
 	e.GET("/logout", server.GetLogout)
 	e.NoRoute(server.ShowIndex)
-
-	// TODO above will Go away with React UI
 
 	user := e.Group("/api/user")
 	{
@@ -121,46 +118,28 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		badges.GET("/cc.xml", server.GetCC)
 	}
 
-	if os.Getenv("DRONE_CANARY") == "" {
-		e.POST("/hook", server.PostHook)
-		e.POST("/api/hook", server.PostHook)
-	} else {
-		e.POST("/hook", server.PostHook2)
-		e.POST("/api/hook", server.PostHook2)
+	e.POST("/hook", server.PostHook)
+	e.POST("/api/hook", server.PostHook)
+
+	ws := e.Group("/ws")
+	{
+		ws.GET("/broker", server.RPCHandler)
+		ws.GET("/rpc", server.RPCHandler)
+		ws.GET("/feed", server.EventStream)
+		ws.GET("/logs/:owner/:name/:build/:number",
+			session.SetRepo(),
+			session.SetPerm(),
+			session.MustPull,
+			server.LogStream,
+		)
 	}
 
-	if os.Getenv("DRONE_CANARY") == "" {
-		ws := e.Group("/ws")
-		{
-			ws.GET("/broker", server.Broker)
-			ws.GET("/feed", server.EventStream)
-			ws.GET("/logs/:owner/:name/:build/:number",
-				session.SetRepo(),
-				session.SetPerm(),
-				session.MustPull,
-				server.LogStream,
-			)
-		}
-	} else {
-		ws := e.Group("/ws")
-		{
-			ws.GET("/broker", server.RPCHandler)
-			ws.GET("/rpc", server.RPCHandler)
-			ws.GET("/feed", server.EventStream2)
-			ws.GET("/logs/:owner/:name/:build/:number",
-				session.SetRepo(),
-				session.SetPerm(),
-				session.MustPull,
-				server.LogStream2,
-			)
-		}
-		info := e.Group("/api/info")
-		{
-			info.GET("/queue",
-				session.MustAdmin(),
-				server.GetQueueInfo,
-			)
-		}
+	info := e.Group("/api/info")
+	{
+		info.GET("/queue",
+			session.MustAdmin(),
+			server.GetQueueInfo,
+		)
 	}
 
 	auth := e.Group("/authorize")
@@ -190,13 +169,6 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		debugger.POST("/pprof/symbol", debug.SymbolHandler())
 		debugger.GET("/pprof/trace", debug.TraceHandler())
 	}
-
-	// bots := e.Group("/bots")
-	// {
-	// 	bots.Use(session.MustUser())
-	// 	bots.POST("/slack", Slack)
-	// 	bots.POST("/slack/:command", Slack)
-	// }
 
 	return e
 }

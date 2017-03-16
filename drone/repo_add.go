@@ -2,19 +2,14 @@ package main
 
 import (
 	"fmt"
-	"log"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var repoAddCmd = cli.Command{
-	Name:  "add",
-	Usage: "add a repository",
-	Action: func(c *cli.Context) {
-		if err := repoAdd(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "add",
+	Usage:  "add a repository",
+	Action: repoAdd,
 }
 
 func repoAdd(c *cli.Context) error {

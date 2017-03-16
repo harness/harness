@@ -9,8 +9,8 @@ import (
 
 	"github.com/drone/drone/client"
 
-	"github.com/codegangsta/cli"
 	"github.com/jackspirou/syscerts"
+	"github.com/urfave/cli"
 )
 
 func newClient(c *cli.Context) (client.Client, error) {

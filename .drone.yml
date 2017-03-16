@@ -22,17 +22,16 @@ pipeline:
     when:
       event: push
 
-
-  # archive:
-  #   image: plugins/s3
-  #   acl: public-read
-  #   bucket: downloads.drone.io
-  #   source: release/**/*.*
-  #   access_key: ${AWS_ACCESS_KEY_ID}
-  #   secret_key: ${AWS_SECRET_ACCESS_KEY}
-  #   when:
-  #     event: push
-  #     branch: master
+  archive:
+    image: plugins/s3
+    acl: public-read
+    bucket: downloads.drone.io
+    source: release/**/*.*
+    access_key: ${AWS_ACCESS_KEY_ID}
+    secret_key: ${AWS_SECRET_ACCESS_KEY}
+    when:
+      event: push
+      branch: master
 
   publish:
     image: plugins/docker

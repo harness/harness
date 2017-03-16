@@ -1,21 +1,16 @@
 package main
 
 import (
-	"log"
 	"os"
 	"text/template"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var infoCmd = cli.Command{
-	Name:  "info",
-	Usage: "show information about the current user",
-	Action: func(c *cli.Context) {
-		if err := info(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "info",
+	Usage:  "show information about the current user",
+	Action: info,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "format",

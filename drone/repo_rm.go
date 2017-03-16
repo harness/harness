@@ -2,19 +2,14 @@ package main
 
 import (
 	"fmt"
-	"log"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var repoRemoveCmd = cli.Command{
-	Name:  "rm",
-	Usage: "remove a repository",
-	Action: func(c *cli.Context) {
-		if err := repoRemove(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "rm",
+	Usage:  "remove a repository",
+	Action: repoRemove,
 }
 
 func repoRemove(c *cli.Context) error {
