@@ -45,6 +45,234 @@ func GetQueueInfo(c *gin.Context) {
 	)
 }
 
+func PostHook(c *gin.Context) {
+	remote_ := remote.FromContext(c)
+
+	tmprepo, build, err := remote_.Hook(c.Request)
+	if err != nil {
+		logrus.Errorf("failure to parse hook. %s", err)
+		c.AbortWithError(400, err)
+		return
+	}
+	if build == nil {
+		c.Writer.WriteHeader(200)
+		return
+	}
+	if tmprepo == nil {
+		logrus.Errorf("failure to ascertain repo from hook.")
+		c.Writer.WriteHeader(400)
+		return
+	}
+
+	// skip the build if any case-insensitive combination of the words "skip" and "ci"
+	// wrapped in square brackets appear in the commit message
+	skipMatch := skipRe.FindString(build.Message)
+	if len(skipMatch) > 0 {
+		logrus.Infof("ignoring hook. %s found in %s", skipMatch, build.Commit)
+		c.Writer.WriteHeader(204)
+		return
+	}
+
+	repo, err := store.GetRepoOwnerName(c, tmprepo.Owner, tmprepo.Name)
+	if err != nil {
+		logrus.Errorf("failure to find repo %s/%s from hook. %s", tmprepo.Owner, tmprepo.Name, err)
+		c.AbortWithError(404, err)
+		return
+	}
+
+	// get the token and verify the hook is authorized
+	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
+		return repo.Hash, nil
+	})
+	if err != nil {
+		logrus.Errorf("failure to parse token from hook for %s. %s", repo.FullName, err)
+		c.AbortWithError(400, err)
+		return
+	}
+	if parsed.Text != repo.FullName {
+		logrus.Errorf("failure to verify token from hook. Expected %s, got %s", repo.FullName, parsed.Text)
+		c.AbortWithStatus(403)
+		return
+	}
+
+	if repo.UserID == 0 {
+		logrus.Warnf("ignoring hook. repo %s has no owner.", repo.FullName)
+		c.Writer.WriteHeader(204)
+		return
+	}
+	var skipped = true
+	if (build.Event == model.EventPush && repo.AllowPush) ||
+		(build.Event == model.EventPull && repo.AllowPull) ||
+		(build.Event == model.EventDeploy && repo.AllowDeploy) ||
+		(build.Event == model.EventTag && repo.AllowTag) {
+		skipped = false
+	}
+
+	if skipped {
+		logrus.Infof("ignoring hook. repo %s is disabled for %s events.", repo.FullName, build.Event)
+		c.Writer.WriteHeader(204)
+		return
+	}
+
+	user, err := store.GetUser(c, repo.UserID)
+	if err != nil {
+		logrus.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
+		c.AbortWithError(500, err)
+		return
+	}
+
+	// if the remote has a refresh token, the current access token
+	// may be stale. Therefore, we should refresh prior to dispatching
+	// the job.
+	if refresher, ok := remote_.(remote.Refresher); ok {
+		ok, _ := refresher.Refresh(user)
+		if ok {
+			store.UpdateUser(c, user)
+		}
+	}
+
+	// fetch the build file from the database
+	cfg := ToConfig(c)
+	raw, err := remote_.File(user, repo, build, cfg.Yaml)
+	if err != nil {
+		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
+		c.AbortWithError(404, err)
+		return
+	}
+	sec, err := remote_.File(user, repo, build, cfg.Shasum)
+	if err != nil {
+		logrus.Debugf("cannot find yaml signature for %s. %s", repo.FullName, err)
+	}
+
+	netrc, err := remote_.Netrc(user, repo)
+	if err != nil {
+		c.String(500, "Failed to generate netrc file. %s", err)
+		return
+	}
+
+	// verify the branches can be built vs skipped
+	branches, err := yaml.ParseBytes(raw)
+	if err == nil {
+		if !branches.Branches.Match(build.Branch) && build.Event != model.EventTag && build.Event != model.EventDeploy {
+			c.String(200, "Branch does not match restrictions defined in yaml")
+			return
+		}
+	}
+
+	signature, err := jose.ParseSigned(string(sec))
+	if err != nil {
+		logrus.Debugf("cannot parse .drone.yml.sig file. %s", err)
+	} else if len(sec) == 0 {
+		logrus.Debugf("cannot parse .drone.yml.sig file. empty file")
+	} else {
+		build.Signed = true
+		output, verr := signature.Verify([]byte(repo.Hash))
+		if verr != nil {
+			logrus.Debugf("cannot verify .drone.yml.sig file. %s", verr)
+		} else if string(output) != string(raw) {
+			logrus.Debugf("cannot verify .drone.yml.sig file. no match")
+		} else {
+			build.Verified = true
+		}
+	}
+
+	// update some build fields
+	build.Status = model.StatusPending
+	build.RepoID = repo.ID
+
+	if err := store.CreateBuild(c, build, build.Jobs...); err != nil {
+		logrus.Errorf("failure to save commit for %s. %s", repo.FullName, err)
+		c.AbortWithError(500, err)
+		return
+	}
+
+	c.JSON(200, build)
+
+	// get the previous build so that we can send
+	// on status change notifications
+	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
+	secs, err := store.GetMergedSecretList(c, repo)
+	if err != nil {
+		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
+	}
+
+	//
+	// BELOW: NEW
+	//
+
+	defer func() {
+		uri := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, build.Number)
+		err = remote_.Status(user, repo, build, uri)
+		if err != nil {
+			logrus.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
+		}
+	}()
+
+	b := builder{
+		Repo:  repo,
+		Curr:  build,
+		Last:  last,
+		Netrc: netrc,
+		Secs:  secs,
+		Link:  httputil.GetURL(c.Request),
+		Yaml:  string(raw),
+	}
+	items, err := b.Build()
+	if err != nil {
+		build.Status = model.StatusError
+		build.Started = time.Now().Unix()
+		build.Finished = build.Started
+		build.Error = err.Error()
+		store.UpdateBuild(c, build)
+		return
+	}
+
+	for _, item := range items {
+		build.Jobs = append(build.Jobs, item.Job)
+		store.CreateJob(c, item.Job)
+		// TODO err
+	}
+
+	//
+	// publish topic
+	//
+	message := pubsub.Message{
+		Labels: map[string]string{
+			"repo":    repo.FullName,
+			"private": strconv.FormatBool(repo.IsPrivate),
+		},
+	}
+	message.Data, _ = json.Marshal(model.Event{
+		Type:  model.Enqueued,
+		Repo:  *repo,
+		Build: *build,
+	})
+	// TODO remove global reference
+	config.pubsub.Publish(c, "topic/events", message)
+	//
+	// end publish topic
+	//
+
+	for _, item := range items {
+		task := new(queue.Task)
+		task.ID = fmt.Sprint(item.Job.ID)
+		task.Labels = map[string]string{}
+		task.Labels["platform"] = item.Platform
+		for k, v := range item.Labels {
+			task.Labels[k] = v
+		}
+
+		task.Data, _ = json.Marshal(rpc.Pipeline{
+			ID:      fmt.Sprint(item.Job.ID),
+			Config:  item.Config,
+			Timeout: b.Repo.Timeout,
+		})
+
+		config.logger.Open(context.Background(), task.ID)
+		config.queue.Push(context.Background(), task)
+	}
+}
+
 // return the metadata from the cli context.
 func metadataFromStruct(repo *model.Repo, build, last *model.Build, job *model.Job, link string) frontend.Metadata {
 	return frontend.Metadata{
@@ -236,252 +464,4 @@ func (b *builder) Build() ([]*buildItem, error) {
 	}
 
 	return items, nil
-}
-
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
-func PostHook(c *gin.Context) {
-	remote_ := remote.FromContext(c)
-
-	tmprepo, build, err := remote_.Hook(c.Request)
-	if err != nil {
-		logrus.Errorf("failure to parse hook. %s", err)
-		c.AbortWithError(400, err)
-		return
-	}
-	if build == nil {
-		c.Writer.WriteHeader(200)
-		return
-	}
-	if tmprepo == nil {
-		logrus.Errorf("failure to ascertain repo from hook.")
-		c.Writer.WriteHeader(400)
-		return
-	}
-
-	// skip the build if any case-insensitive combination of the words "skip" and "ci"
-	// wrapped in square brackets appear in the commit message
-	skipMatch := skipRe.FindString(build.Message)
-	if len(skipMatch) > 0 {
-		logrus.Infof("ignoring hook. %s found in %s", skipMatch, build.Commit)
-		c.Writer.WriteHeader(204)
-		return
-	}
-
-	repo, err := store.GetRepoOwnerName(c, tmprepo.Owner, tmprepo.Name)
-	if err != nil {
-		logrus.Errorf("failure to find repo %s/%s from hook. %s", tmprepo.Owner, tmprepo.Name, err)
-		c.AbortWithError(404, err)
-		return
-	}
-
-	// get the token and verify the hook is authorized
-	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
-		return repo.Hash, nil
-	})
-	if err != nil {
-		logrus.Errorf("failure to parse token from hook for %s. %s", repo.FullName, err)
-		c.AbortWithError(400, err)
-		return
-	}
-	if parsed.Text != repo.FullName {
-		logrus.Errorf("failure to verify token from hook. Expected %s, got %s", repo.FullName, parsed.Text)
-		c.AbortWithStatus(403)
-		return
-	}
-
-	if repo.UserID == 0 {
-		logrus.Warnf("ignoring hook. repo %s has no owner.", repo.FullName)
-		c.Writer.WriteHeader(204)
-		return
-	}
-	var skipped = true
-	if (build.Event == model.EventPush && repo.AllowPush) ||
-		(build.Event == model.EventPull && repo.AllowPull) ||
-		(build.Event == model.EventDeploy && repo.AllowDeploy) ||
-		(build.Event == model.EventTag && repo.AllowTag) {
-		skipped = false
-	}
-
-	if skipped {
-		logrus.Infof("ignoring hook. repo %s is disabled for %s events.", repo.FullName, build.Event)
-		c.Writer.WriteHeader(204)
-		return
-	}
-
-	user, err := store.GetUser(c, repo.UserID)
-	if err != nil {
-		logrus.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
-		c.AbortWithError(500, err)
-		return
-	}
-
-	// if the remote has a refresh token, the current access token
-	// may be stale. Therefore, we should refresh prior to dispatching
-	// the job.
-	if refresher, ok := remote_.(remote.Refresher); ok {
-		ok, _ := refresher.Refresh(user)
-		if ok {
-			store.UpdateUser(c, user)
-		}
-	}
-
-	// fetch the build file from the database
-	cfg := ToConfig(c)
-	raw, err := remote_.File(user, repo, build, cfg.Yaml)
-	if err != nil {
-		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
-		c.AbortWithError(404, err)
-		return
-	}
-	sec, err := remote_.File(user, repo, build, cfg.Shasum)
-	if err != nil {
-		logrus.Debugf("cannot find yaml signature for %s. %s", repo.FullName, err)
-	}
-
-	netrc, err := remote_.Netrc(user, repo)
-	if err != nil {
-		c.String(500, "Failed to generate netrc file. %s", err)
-		return
-	}
-
-	// verify the branches can be built vs skipped
-	branches, err := yaml.ParseBytes(raw)
-	if err != nil {
-		c.String(500, "Failed to parse yaml file. %s", err)
-		return
-	}
-	if !branches.Branches.Match(build.Branch) && build.Event != model.EventTag && build.Event != model.EventDeploy {
-		c.String(200, "Branch does not match restrictions defined in yaml")
-		return
-	}
-
-	signature, err := jose.ParseSigned(string(sec))
-	if err != nil {
-		logrus.Debugf("cannot parse .drone.yml.sig file. %s", err)
-	} else if len(sec) == 0 {
-		logrus.Debugf("cannot parse .drone.yml.sig file. empty file")
-	} else {
-		build.Signed = true
-		output, verr := signature.Verify([]byte(repo.Hash))
-		if verr != nil {
-			logrus.Debugf("cannot verify .drone.yml.sig file. %s", verr)
-		} else if string(output) != string(raw) {
-			logrus.Debugf("cannot verify .drone.yml.sig file. no match")
-		} else {
-			build.Verified = true
-		}
-	}
-
-	// update some build fields
-	build.Status = model.StatusPending
-	build.RepoID = repo.ID
-
-	if err := store.CreateBuild(c, build, build.Jobs...); err != nil {
-		logrus.Errorf("failure to save commit for %s. %s", repo.FullName, err)
-		c.AbortWithError(500, err)
-		return
-	}
-
-	c.JSON(200, build)
-
-	// get the previous build so that we can send
-	// on status change notifications
-	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
-	secs, err := store.GetMergedSecretList(c, repo)
-	if err != nil {
-		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
-	}
-
-	//
-	// BELOW: NEW
-	//
-
-	defer func() {
-		uri := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, build.Number)
-		err = remote_.Status(user, repo, build, uri)
-		if err != nil {
-			logrus.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
-		}
-	}()
-
-	b := builder{
-		Repo:  repo,
-		Curr:  build,
-		Last:  last,
-		Netrc: netrc,
-		Secs:  secs,
-		Link:  httputil.GetURL(c.Request),
-		Yaml:  string(raw),
-	}
-	items, err := b.Build()
-	if err != nil {
-		build.Status = model.StatusError
-		build.Started = time.Now().Unix()
-		build.Finished = build.Started
-		build.Error = err.Error()
-		return
-	}
-
-	for _, item := range items {
-		build.Jobs = append(build.Jobs, item.Job)
-		store.CreateJob(c, item.Job)
-		// TODO err
-	}
-
-	//
-	// publish topic
-	//
-	message := pubsub.Message{
-		Labels: map[string]string{
-			"repo":    repo.FullName,
-			"private": strconv.FormatBool(repo.IsPrivate),
-		},
-	}
-	message.Data, _ = json.Marshal(model.Event{
-		Type:  model.Enqueued,
-		Repo:  *repo,
-		Build: *build,
-	})
-	// TODO remove global reference
-	config.pubsub.Publish(c, "topic/events", message)
-	//
-	// end publish topic
-	//
-
-	for _, item := range items {
-		task := new(queue.Task)
-		task.ID = fmt.Sprint(item.Job.ID)
-		task.Labels = map[string]string{}
-		task.Labels["platform"] = item.Platform
-		for k, v := range item.Labels {
-			task.Labels[k] = v
-		}
-
-		task.Data, _ = json.Marshal(rpc.Pipeline{
-			ID:      fmt.Sprint(item.Job.ID),
-			Config:  item.Config,
-			Timeout: b.Repo.Timeout,
-		})
-
-		config.logger.Open(context.Background(), task.ID)
-		config.queue.Push(context.Background(), task)
-	}
 }
