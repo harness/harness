@@ -1,21 +1,13 @@
 package main
 
-import (
-	"log"
-
-	"github.com/codegangsta/cli"
-)
+import "github.com/urfave/cli"
 
 var orgSecretAddCmd = cli.Command{
 	Name:      "add",
 	Usage:     "adds a secret",
 	ArgsUsage: "[org] [key] [value]",
-	Action: func(c *cli.Context) {
-		if err := orgSecretAdd(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
-	Flags: secretAddFlags(),
+	Action:    orgSecretAdd,
+	Flags:     secretAddFlags(),
 }
 
 func orgSecretAdd(c *cli.Context) error {

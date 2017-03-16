@@ -3,11 +3,6 @@
 	"ignore": "test github.com/drone/mq/ github.com/tidwall/redlog/ google.golang.org/appengine/ github.com/syndtr/goleveldb/ github.com/drone/drone-ui/",
 	"package": [
 		{
-			"path": "code.google.com/p/go.crypto/ssh",
-			"revision": "7aa593ce8cea",
-			"revisionTime": "2014-02-19T20:51:49+01:00"
-		},
-		{
 			"checksumSHA1": "zTn0jzjOiJlScR1px66MvrgrlLs=",
 			"origin": "github.com/docker/docker/vendor/github.com/Microsoft/go-winio",
 			"path": "github.com/Microsoft/go-winio",
@@ -109,30 +104,15 @@
 			"revisionTime": "2017-03-03T07:04:55Z"
 		},
 		{
-			"path": "github.com/codegangsta/cli",
-			"revision": "70e3fa51ebed95df8c0fbe1519c1c1f9bc16bb13",
-			"revisionTime": "2015-10-29T20:11:27-07:00"
-		},
-		{
 			"origin": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": "9f9027faeb0dad515336ed2f28317f9f8f527ab4",
 			"revisionTime": "2016-01-29T19:31:06Z"
 		},
 		{
-			"path": "github.com/dchest/uniuri",
-			"revision": "bc4af7603a3e0ce9d58009f82fca481555182e1c",
-			"revisionTime": "2013-12-23T09:21:49+01:00"
-		},
-		{
 			"path": "github.com/dgrijalva/jwt-go",
 			"revision": "c1da56349675b292d3200463e2c88b9aa5e02391",
 			"revisionTime": "2015-09-04T14:24:56-07:00"
-		},
-		{
-			"path": "github.com/djherbis/fscache",
-			"revision": "ffc728270b01f3906c396bbe796232b87750f24e",
-			"revisionTime": "2016-03-05T10:30:05-08:00"
 		},
 		{
 			"checksumSHA1": "rSxOx+SnSLAxR4ST8fSz9hhJLdk=",
@@ -317,21 +297,6 @@
 			"revisionTime": "2017-01-18T15:01:55Z"
 		},
 		{
-			"path": "github.com/eknkc/amber",
-			"revision": "144da19a9994994c069f0693294a66dd310e14a4",
-			"revisionTime": "2015-08-30T00:43:03+03:00"
-		},
-		{
-			"path": "github.com/eknkc/amber/parser",
-			"revision": "144da19a9994994c069f0693294a66dd310e14a4",
-			"revisionTime": "2015-08-30T00:43:03+03:00"
-		},
-		{
-			"path": "github.com/elazarl/go-bindata-assetfs",
-			"revision": "bea323321994103859d60197d229f1a94699dde3",
-			"revisionTime": "2015-04-14T21:44:09+03:00"
-		},
-		{
 			"checksumSHA1": "++oBqqmh8bt50iB6/I+BHnrzC80=",
 			"origin": "github.com/docker/libcompose/vendor/github.com/flynn/go-shlex",
 			"path": "github.com/flynn/go-shlex",
@@ -498,12 +463,6 @@
 			"revisionTime": "2013-09-19T15:23:15-06:00"
 		},
 		{
-			"checksumSHA1": "+HvW+k8YkDaPKwF0Lwcz+Tf2A+E=",
-			"path": "github.com/samalba/dockerclient",
-			"revision": "91d7393ff85980ba3a8966405871a3d446ca28f2",
-			"revisionTime": "2016-04-14T17:47:13Z"
-		},
-		{
 			"checksumSHA1": "LMgaBYB2FIEfqEAXkV6a2bEfrVs=",
 			"path": "github.com/sourcegraph/jsonrpc2",
 			"revision": "277d2464cfb1e458aa7f99de596077245a89626f",
@@ -546,6 +505,12 @@
 			"path": "github.com/tevino/abool",
 			"revision": "3c25f2fe7cd0ef3eabefce1d90efd69a65d35b12",
 			"revisionTime": "2016-06-28T10:11:33Z"
+		},
+		{
+			"checksumSHA1": "7cxwOBG3z8bcqlACknqxIV+jB/o=",
+			"path": "github.com/urfave/cli",
+			"revision": "f1be59ff3d239f0942b201619030d302bce912cc",
+			"revisionTime": "2016-11-19T21:37:11Z"
 		},
 		{
 			"path": "golang.org/x/net/context",
@@ -595,16 +560,6 @@
 			"path": "golang.org/x/sys/windows",
 			"revision": "f645ffca04abf2dd6c89ac9057a1eb7d2b0ac338",
 			"revisionTime": "2017-01-24T17:08:27Z"
-		},
-		{
-			"path": "gopkg.in/djherbis/atime.v1",
-			"revision": "8e47e0e01d08df8b9f840d74299c8ab70a024a30",
-			"revisionTime": "2015-08-29T00:19:25-07:00"
-		},
-		{
-			"path": "gopkg.in/djherbis/stream.v1",
-			"revision": "26a761059928627ca84837000dfb33447c66a146",
-			"revisionTime": "2016-02-03T22:24:40-08:00"
 		},
 		{
 			"path": "gopkg.in/go-playground/validator.v8",

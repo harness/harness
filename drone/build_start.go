@@ -2,21 +2,16 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 
-	"github.com/codegangsta/cli"
 	"github.com/drone/drone/model"
+	"github.com/urfave/cli"
 )
 
 var buildStartCmd = cli.Command{
-	Name:  "start",
-	Usage: "start a build",
-	Action: func(c *cli.Context) {
-		if err := buildStart(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "start",
+	Usage:  "start a build",
+	Action: buildStart,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name:  "fork",

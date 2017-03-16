@@ -2,19 +2,14 @@ package main
 
 import (
 	"fmt"
-	"log"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var repoChownCmd = cli.Command{
-	Name:  "chown",
-	Usage: "assume ownership of a repository",
-	Action: func(c *cli.Context) {
-		if err := repoChown(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "chown",
+	Usage:  "assume ownership of a repository",
+	Action: repoChown,
 }
 
 func repoChown(c *cli.Context) error {

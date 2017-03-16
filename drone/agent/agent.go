@@ -1,76 +1,36 @@
 package agent
 
 import (
-	"fmt"
+	"context"
+	"io"
+	"log"
 	"math"
-	"os"
-	"os/signal"
-	"strings"
+	"net/url"
 	"sync"
-	"syscall"
 	"time"
 
-	"github.com/drone/drone/model"
-	"github.com/drone/mq/logger"
-	"github.com/drone/mq/stomp"
-	"github.com/tidwall/redlog"
+	"github.com/cncd/pipeline/pipeline"
+	"github.com/cncd/pipeline/pipeline/backend"
+	"github.com/cncd/pipeline/pipeline/backend/docker"
+	"github.com/cncd/pipeline/pipeline/interrupt"
+	"github.com/cncd/pipeline/pipeline/multipart"
+	"github.com/cncd/pipeline/pipeline/rpc"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/codegangsta/cli"
-	"github.com/samalba/dockerclient"
+	"github.com/tevino/abool"
+	"github.com/urfave/cli"
 )
 
 // AgentCmd is the exported command for starting the drone agent.
 var AgentCmd = cli.Command{
 	Name:   "agent",
 	Usage:  "starts the drone agent",
-	Action: start,
+	Action: loop,
 	Flags: []cli.Flag{
-		cli.StringFlag{
-			EnvVar: "DOCKER_HOST",
-			Name:   "docker-host",
-			Usage:  "docker daemon address",
-			Value:  "unix:///var/run/docker.sock",
-		},
-		cli.BoolFlag{
-			EnvVar: "DOCKER_TLS_VERIFY",
-			Name:   "docker-tls-verify",
-			Usage:  "docker daemon supports tlsverify",
-		},
-		cli.StringFlag{
-			EnvVar: "DOCKER_CERT_PATH",
-			Name:   "docker-cert-path",
-			Usage:  "docker certificate directory",
-			Value:  "",
-		},
-		cli.IntFlag{
-			EnvVar: "DOCKER_MAX_PROCS",
-			Name:   "docker-max-procs",
-			Usage:  "limit number of running docker processes",
-			Value:  2,
-		},
-		cli.StringFlag{
-			EnvVar: "DOCKER_OS",
-			Name:   "docker-os",
-			Usage:  "docker operating system",
-			Value:  "linux",
-		},
-		cli.StringFlag{
-			EnvVar: "DOCKER_ARCH",
-			Name:   "docker-arch",
-			Usage:  "docker architecture system",
-			Value:  "amd64",
-		},
 		cli.StringFlag{
 			EnvVar: "DRONE_SERVER,DRONE_ENDPOINT",
 			Name:   "drone-server",
 			Usage:  "drone server address",
 			Value:  "ws://localhost:8000/ws/broker",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_TOKEN",
-			Name:   "drone-token",
-			Usage:  "drone authorization token",
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_SECRET,DRONE_AGENT_SECRET",
@@ -83,88 +43,20 @@ var AgentCmd = cli.Command{
 			Usage:  "drone server backoff interval",
 			Value:  time.Second * 15,
 		},
-		cli.DurationFlag{
-			EnvVar: "DRONE_PING",
-			Name:   "ping",
-			Usage:  "drone server ping frequency",
-			Value:  time.Minute * 5,
+		cli.IntFlag{
+			Name:   "retry-limit",
+			EnvVar: "DRONE_RETRY_LIMIT",
+			Value:  math.MaxInt32,
 		},
 		cli.BoolFlag{
 			EnvVar: "DRONE_DEBUG",
 			Name:   "debug",
 			Usage:  "start the agent in debug mode",
 		},
-		cli.DurationFlag{
-			EnvVar: "DRONE_TIMEOUT",
-			Name:   "timeout",
-			Usage:  "drone timeout due to log inactivity",
-			Value:  time.Minute * 15,
-		},
 		cli.StringFlag{
 			EnvVar: "DRONE_FILTER",
 			Name:   "filter",
 			Usage:  "filter jobs processed by this agent",
-		},
-		cli.IntFlag{
-			EnvVar: "DRONE_MAX_LOGS",
-			Name:   "max-log-size",
-			Usage:  "drone maximum log size in megabytes",
-			Value:  5,
-		},
-		cli.StringSliceFlag{
-			EnvVar: "DRONE_PLUGIN_PRIVILEGED",
-			Name:   "privileged",
-			Usage:  "plugins that require privileged mode",
-			Value: &cli.StringSlice{
-				"plugins/docker",
-				"plugins/docker:*",
-				"plugins/gcr",
-				"plugins/gcr:*",
-				"plugins/ecr",
-				"plugins/ecr:*",
-			},
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_PLUGIN_NAMESPACE",
-			Name:   "namespace",
-			Value:  "plugins",
-			Usage:  "default plugin image namespace",
-		},
-		cli.BoolTFlag{
-			EnvVar: "DRONE_PLUGIN_PULL",
-			Name:   "pull",
-			Usage:  "always pull latest plugin images",
-		},
-		cli.StringSliceFlag{
-			EnvVar: "DRONE_YAML_EXTENSION",
-			Name:   "extension",
-			Usage:  "custom plugin extension endpoint",
-		},
-
-		//
-		//
-		//
-
-		cli.BoolFlag{
-			EnvVar: "DRONE_CANARY",
-			Name:   "canary",
-			Usage:  "enable experimental features at your own risk",
-		},
-
-		// cli.StringFlag{
-		// 	Name:   "endpoint",
-		// 	EnvVar: "DRONE_ENDPOINT,DRONE_SERVER",
-		// 	Value:  "ws://localhost:9999/ws/rpc",
-		// },
-		// cli.DurationFlag{
-		// 	Name:   "backoff",
-		// 	EnvVar: "DRONE_BACKOFF",
-		// 	Value:  time.Second * 15,
-		// },
-		cli.IntFlag{
-			Name:   "retry-limit",
-			EnvVar: "DRONE_RETRY_LIMIT",
-			Value:  math.MaxInt32,
 		},
 		cli.IntFlag{
 			Name:   "max-procs",
@@ -179,139 +71,188 @@ var AgentCmd = cli.Command{
 	},
 }
 
-func start(c *cli.Context) {
-
-	if c.Bool("canary") {
-		if err := loop(c); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		return
-	}
-
-	log := redlog.New(os.Stderr)
-	log.SetLevel(0)
-	logger.SetLogger(log)
-
-	// debug level if requested by user
-	if c.Bool("debug") {
-		logrus.SetLevel(logrus.DebugLevel)
-
-		log.SetLevel(1)
-	} else {
-		logrus.SetLevel(logrus.WarnLevel)
-	}
-
-	var accessToken string
-	if c.String("drone-secret") != "" {
-		// secretToken := c.String("drone-secret")
-		accessToken = c.String("drone-secret")
-		// accessToken, _ = token.New(token.AgentToken, "").Sign(secretToken)
-	} else {
-		accessToken = c.String("drone-token")
-	}
-
-	logger.Noticef("connecting to server %s", c.String("drone-server"))
-
-	server := strings.TrimRight(c.String("drone-server"), "/")
-
-	tls, err := dockerclient.TLSConfigFromCertPath(c.String("docker-cert-path"))
-	if err == nil {
-		tls.InsecureSkipVerify = c.Bool("docker-tls-verify")
-	}
-	docker, err := dockerclient.NewDockerClient(c.String("docker-host"), tls)
+func loop(c *cli.Context) error {
+	endpoint, err := url.Parse(
+		c.String("drone-server"),
+	)
 	if err != nil {
-		logrus.Fatal(err)
+		return err
+	}
+	filter := rpc.Filter{
+		Labels: map[string]string{
+			"platform": c.String("platform"),
+		},
 	}
 
-	var client *stomp.Client
+	client, err := rpc.NewClient(
+		endpoint.String(),
+		rpc.WithRetryLimit(
+			c.Int("retry-limit"),
+		),
+		rpc.WithBackoff(
+			c.Duration("backoff"),
+		),
+		rpc.WithToken(
+			c.String("drone-secret"),
+		),
+	)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
 
-	handler := func(m *stomp.Message) {
-		running.Add(1)
-		defer func() {
-			running.Done()
-			client.Ack(m.Ack)
+	sigterm := abool.New()
+	ctx := context.Background()
+	ctx = interrupt.WithContextFunc(ctx, func() {
+		println("ctrl+c received, terminating process")
+		sigterm.Set()
+	})
+
+	var wg sync.WaitGroup
+	parallel := c.Int("max-procs")
+	wg.Add(parallel)
+
+	for i := 0; i < parallel; i++ {
+		go func() {
+			defer wg.Done()
+			for {
+				if sigterm.IsSet() {
+					return
+				}
+				if err := run(ctx, client, filter); err != nil {
+					log.Printf("build runner encountered error: exiting: %s", err)
+					return
+				}
+			}
 		}()
-
-		r := pipelinet{
-			drone:  client,
-			docker: docker,
-			config: config{
-				platform:   c.String("docker-os") + "/" + c.String("docker-arch"),
-				timeout:    c.Duration("timeout"),
-				namespace:  c.String("namespace"),
-				privileged: c.StringSlice("privileged"),
-				pull:       c.BoolT("pull"),
-				logs:       int64(c.Int("max-log-size")) * 1000000,
-				extension:  c.StringSlice("extension"),
-			},
-		}
-
-		work := new(model.Work)
-		m.Unmarshal(work)
-		r.run(work)
 	}
 
-	handleSignals()
-
-	backoff := c.Duration("backoff")
-
-	for {
-		// dial the drone server to establish a TCP connection.
-		client, err = stomp.Dial(server)
-		if err != nil {
-			logger.Warningf("connection failed, retry in %v. %s", backoff, err)
-			<-time.After(backoff)
-			continue
-		}
-		opts := []stomp.MessageOption{
-			stomp.WithCredentials("x-token", accessToken),
-		}
-
-		// initialize the stomp session and authenticate.
-		if err = client.Connect(opts...); err != nil {
-			logger.Warningf("session failed, retry in %v. %s", backoff, err)
-			<-time.After(backoff)
-			continue
-		}
-
-		opts = []stomp.MessageOption{
-			stomp.WithAck("client"),
-			stomp.WithPrefetch(
-				c.Int("docker-max-procs"),
-			),
-		}
-		if filter := c.String("filter"); filter != "" {
-			opts = append(opts, stomp.WithSelector(filter))
-		}
-
-		// subscribe to the pending build queue.
-		client.Subscribe("/queue/pending", stomp.HandlerFunc(func(m *stomp.Message) {
-			go handler(m) // HACK until we a channel based Subscribe implementation
-		}), opts...)
-
-		logger.Noticef("connection established, ready to process builds.")
-		<-client.Done()
-
-		logger.Warningf("connection interrupted, attempting to reconnect.")
-	}
+	wg.Wait()
+	return nil
 }
 
-// tracks running builds
-var running sync.WaitGroup
+const (
+	maxFileUpload = 5000000
+	maxLogsUpload = 5000000
+)
 
-func handleSignals() {
-	// Graceful shut-down on SIGINT/SIGTERM
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	signal.Notify(c, syscall.SIGTERM)
+func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
+	log.Println("pipeline: request next execution")
+
+	// get the next job from the queue
+	work, err := client.Next(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if work == nil {
+		return nil
+	}
+	log.Printf("pipeline: received next execution: %s", work.ID)
+
+	// new docker engine
+	engine, err := docker.NewEnv()
+	if err != nil {
+		return err
+	}
+
+	timeout := time.Hour
+	if minutes := work.Timeout; minutes != 0 {
+		timeout = time.Duration(minutes) * time.Minute
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	cancelled := abool.New()
+	go func() {
+		if werr := client.Wait(ctx, work.ID); werr != nil {
+			cancelled.SetTo(true)
+			log.Printf("pipeline: cancel signal received: %s: %s", work.ID, werr)
+			cancel()
+		} else {
+			log.Printf("pipeline: cancel channel closed: %s", work.ID)
+		}
+	}()
 
 	go func() {
-		<-c
-		logger.Warningf("SIGTERM received.")
-		logger.Warningf("wait for running builds to finish.")
-		running.Wait()
-		logger.Warningf("done.")
-		os.Exit(0)
+		for {
+			select {
+			case <-ctx.Done():
+				log.Printf("pipeline: cancel ping loop: %s", work.ID)
+				return
+			case <-time.After(time.Minute):
+				log.Printf("pipeline: ping queue: %s", work.ID)
+				client.Extend(ctx, work.ID)
+			}
+		}
 	}()
+
+	state := rpc.State{}
+	state.Started = time.Now().Unix()
+	err = client.Update(context.Background(), work.ID, state)
+	if err != nil {
+		log.Printf("pipeline: error updating pipeline status: %s: %s", work.ID, err)
+	}
+
+	var uploads sync.WaitGroup
+	defaultLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
+		part, rerr := rc.NextPart()
+		if rerr != nil {
+			return rerr
+		}
+		uploads.Add(1)
+		writer := rpc.NewLineWriter(client, work.ID, proc.Alias)
+		rlimit := io.LimitReader(part, maxLogsUpload)
+		io.Copy(writer, rlimit)
+
+		defer func() {
+			log.Printf("pipeline: finish uploading logs: %s: step %s", work.ID, proc.Alias)
+			uploads.Done()
+		}()
+
+		part, rerr = rc.NextPart()
+		if rerr != nil {
+			return nil
+		}
+		rlimit = io.LimitReader(part, maxFileUpload)
+		mime := part.Header().Get("Content-Type")
+		if serr := client.Upload(context.Background(), work.ID, mime, rlimit); serr != nil {
+			log.Printf("pipeline: cannot upload artifact: %s: %s: %s", work.ID, mime, serr)
+		}
+		return nil
+	})
+
+	err = pipeline.New(work.Config,
+		pipeline.WithContext(ctx),
+		pipeline.WithLogger(defaultLogger),
+		pipeline.WithTracer(pipeline.DefaultTracer),
+		pipeline.WithEngine(engine),
+	).Run()
+
+	state.Finished = time.Now().Unix()
+	state.Exited = true
+	if err != nil {
+		state.Error = err.Error()
+		if xerr, ok := err.(*pipeline.ExitError); ok {
+			state.ExitCode = xerr.Code
+		}
+		if xerr, ok := err.(*pipeline.OomError); ok {
+			state.ExitCode = xerr.Code
+		}
+		if cancelled.IsSet() {
+			state.ExitCode = 137
+		} else if state.ExitCode == 0 {
+			state.ExitCode = 1
+		}
+	}
+
+	log.Printf("pipeline: execution complete: %s", work.ID)
+
+	uploads.Wait()
+	err = client.Update(context.Background(), work.ID, state)
+	if err != nil {
+		log.Printf("Pipeine: error updating pipeline status: %s: %s", work.ID, err)
+	}
+
+	return nil
 }

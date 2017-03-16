@@ -3,8 +3,8 @@ package middleware
 import (
 	"github.com/drone/drone/model"
 
-	"github.com/codegangsta/cli"
 	"github.com/gin-gonic/gin"
+	"github.com/urfave/cli"
 )
 
 const configKey = "config"

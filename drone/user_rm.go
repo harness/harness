@@ -2,19 +2,14 @@ package main
 
 import (
 	"fmt"
-	"log"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var userRemoveCmd = cli.Command{
-	Name:  "rm",
-	Usage: "remove a user",
-	Action: func(c *cli.Context) {
-		if err := userRemove(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "rm",
+	Usage:  "remove a user",
+	Action: userRemove,
 }
 
 func userRemove(c *cli.Context) error {

@@ -1,21 +1,16 @@
 package main
 
 import (
-	"log"
 	"os"
 	"text/template"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var buildLastCmd = cli.Command{
-	Name:  "last",
-	Usage: "show latest build details",
-	Action: func(c *cli.Context) {
-		if err := buildLast(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "last",
+	Usage:  "show latest build details",
+	Action: buildLast,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "format",

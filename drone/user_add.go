@@ -2,20 +2,15 @@ package main
 
 import (
 	"fmt"
-	"log"
 
-	"github.com/codegangsta/cli"
 	"github.com/drone/drone/model"
+	"github.com/urfave/cli"
 )
 
 var userAddCmd = cli.Command{
-	Name:  "add",
-	Usage: "adds a user",
-	Action: func(c *cli.Context) {
-		if err := userAdd(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "add",
+	Usage:  "adds a user",
+	Action: userAdd,
 }
 
 func userAdd(c *cli.Context) error {

@@ -3,22 +3,17 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"os"
 	"strconv"
 
-	"github.com/codegangsta/cli"
 	"github.com/drone/drone/model"
+	"github.com/urfave/cli"
 )
 
 var deployCmd = cli.Command{
-	Name:  "deploy",
-	Usage: "deploy code",
-	Action: func(c *cli.Context) {
-		if err := deploy(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "deploy",
+	Usage:  "deploy code",
+	Action: deploy,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "format",

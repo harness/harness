@@ -2,19 +2,14 @@ package main
 
 import (
 	"io/ioutil"
-	"log"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var signCmd = cli.Command{
-	Name:  "sign",
-	Usage: "creates a secure yaml file",
-	Action: func(c *cli.Context) {
-		if err := sign(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "sign",
+	Usage:  "creates a secure yaml file",
+	Action: sign,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "in",

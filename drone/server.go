@@ -8,18 +8,14 @@ import (
 	"github.com/drone/drone/router/middleware"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/codegangsta/cli"
 	"github.com/gin-gonic/contrib/ginrus"
+	"github.com/urfave/cli"
 )
 
 var serverCmd = cli.Command{
-	Name:  "server",
-	Usage: "starts the drone server daemon",
-	Action: func(c *cli.Context) {
-		if err := server(c); err != nil {
-			logrus.Fatal(err)
-		}
-	},
+	Name:   "server",
+	Usage:  "starts the drone server daemon",
+	Action: server,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			EnvVar: "DRONE_DEBUG",
@@ -301,8 +297,6 @@ func server(c *cli.Context) error {
 		middleware.Cache(c),
 		middleware.Store(c),
 		middleware.Remote(c),
-		middleware.Agents(c),
-		middleware.Broker(c),
 	)
 
 	// start the server with tls enabled

@@ -1,21 +1,16 @@
 package main
 
 import (
-	"log"
 	"os"
 	"text/template"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var repoInfoCmd = cli.Command{
-	Name:  "info",
-	Usage: "show repository details",
-	Action: func(c *cli.Context) {
-		if err := repoInfo(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "info",
+	Usage:  "show repository details",
+	Action: repoInfo,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "format",

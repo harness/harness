@@ -1,22 +1,17 @@
 package main
 
 import (
-	"log"
 	"os"
 	"strconv"
 	"text/template"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var buildInfoCmd = cli.Command{
-	Name:  "info",
-	Usage: "show build details",
-	Action: func(c *cli.Context) {
-		if err := buildInfo(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "info",
+	Usage:  "show build details",
+	Action: buildInfo,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "format",

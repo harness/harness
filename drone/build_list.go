@@ -1,21 +1,16 @@
 package main
 
 import (
-	"log"
 	"os"
 	"text/template"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var buildListCmd = cli.Command{
-	Name:  "list",
-	Usage: "show build history",
-	Action: func(c *cli.Context) {
-		if err := buildList(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "list",
+	Usage:  "show build history",
+	Action: buildList,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "format",

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/codegangsta/cli"
+import "github.com/urfave/cli"
 
 var globalCmd = cli.Command{
 	Name:  "global",

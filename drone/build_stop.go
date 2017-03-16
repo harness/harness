@@ -2,20 +2,15 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var buildStopCmd = cli.Command{
-	Name:  "stop",
-	Usage: "stop a build",
-	Action: func(c *cli.Context) {
-		if err := buildStop(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "stop",
+	Usage:  "stop a build",
+	Action: buildStop,
 }
 
 func buildStop(c *cli.Context) (err error) {

@@ -1,21 +1,16 @@
 package main
 
 import (
-	"log"
 	"os"
 	"text/template"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli"
 )
 
 var repoListCmd = cli.Command{
-	Name:  "ls",
-	Usage: "list all repos",
-	Action: func(c *cli.Context) {
-		if err := repoList(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "ls",
+	Usage:  "list all repos",
+	Action: repoList,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "format",

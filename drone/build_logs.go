@@ -6,8 +6,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/codegangsta/cli"
-	"github.com/drone/drone/build"
+	"github.com/cncd/pipeline/pipeline/rpc"
+	"github.com/urfave/cli"
 )
 
 var buildLogsCmd = cli.Command{
@@ -61,7 +61,7 @@ func buildLogs(c *cli.Context) error {
 
 	dec := json.NewDecoder(r)
 	fmt.Printf("Logs for build %s/%s#%d.%d\n", owner, name, number, job)
-	var line build.Line
+	var line rpc.Line
 
 	_, err = dec.Token()
 	if err != nil {

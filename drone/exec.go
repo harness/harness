@@ -1,22 +1,26 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
+	"context"
+	"io"
 	"log"
 	"os"
-	"os/signal"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/drone/drone/agent"
-	"github.com/drone/drone/build/docker"
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/yaml"
+	"github.com/cncd/pipeline/pipeline"
+	"github.com/cncd/pipeline/pipeline/backend"
+	"github.com/cncd/pipeline/pipeline/backend/docker"
+	"github.com/cncd/pipeline/pipeline/frontend"
+	"github.com/cncd/pipeline/pipeline/frontend/yaml"
+	"github.com/cncd/pipeline/pipeline/frontend/yaml/compiler"
+	"github.com/cncd/pipeline/pipeline/interrupt"
+	"github.com/cncd/pipeline/pipeline/multipart"
+	"github.com/drone/envsubst"
 
-	"github.com/codegangsta/cli"
-	"github.com/joho/godotenv"
+	"github.com/urfave/cli"
 )
 
 var execCmd = cli.Command{
@@ -33,439 +37,387 @@ var execCmd = cli.Command{
 			Usage:  "build from local directory",
 			EnvVar: "DRONE_LOCAL",
 		},
-		cli.StringSliceFlag{
-			Name:   "secret",
-			Usage:  "build secrets in KEY=VALUE format",
-			EnvVar: "DRONE_SECRET",
-		},
-		cli.StringFlag{
-			Name:   "secrets-file",
-			Usage:  "build secrets file in KEY=VALUE format",
-			EnvVar: "DRONE_SECRETS_FILE",
-		},
-		cli.StringSliceFlag{
-			Name:   "matrix",
-			Usage:  "build matrix in KEY=VALUE format",
-			EnvVar: "DRONE_MATRIX",
-		},
 		cli.DurationFlag{
 			Name:   "timeout",
 			Usage:  "build timeout",
 			Value:  time.Hour,
 			EnvVar: "DRONE_TIMEOUT",
 		},
-		cli.DurationFlag{
-			Name:   "timeout.inactivity",
-			Usage:  "build timeout for inactivity",
-			Value:  time.Minute * 15,
-			EnvVar: "DRONE_TIMEOUT_INACTIVITY",
-		},
-		cli.BoolFlag{
-			EnvVar: "DRONE_PLUGIN_PULL",
-			Name:   "pull",
-			Usage:  "always pull latest plugin images",
+		cli.StringSliceFlag{
+			Name:   "volumes",
+			Usage:  "build volumes",
+			EnvVar: "DRONE_VOLUMES",
 		},
 		cli.StringSliceFlag{
-			EnvVar: "DRONE_PLUGIN_PRIVILEGED",
-			Name:   "privileged",
-			Usage:  "plugins that require privileged mode",
+			Name:  "privileged",
+			Usage: "privileged plugins",
 			Value: &cli.StringSlice{
 				"plugins/docker",
-				"plugins/docker:*",
 				"plugins/gcr",
-				"plugins/gcr:*",
 				"plugins/ecr",
-				"plugins/ecr:*",
 			},
 		},
 
-		// Docker daemon flags
-
-		cli.StringFlag{
-			EnvVar: "DOCKER_HOST",
-			Name:   "docker-host",
-			Usage:  "docker daemon address",
-			Value:  "unix:///var/run/docker.sock",
-		},
-		cli.BoolFlag{
-			EnvVar: "DOCKER_TLS_VERIFY",
-			Name:   "docker-tls-verify",
-			Usage:  "docker daemon supports tlsverify",
-		},
-		cli.StringFlag{
-			EnvVar: "DOCKER_CERT_PATH",
-			Name:   "docker-cert-path",
-			Usage:  "docker certificate directory",
-			Value:  "",
-		},
-
 		//
-		// Please note the below flags are mirrored in the plugin starter kit and
-		// should be kept synchronized.
-		// https://github.com/drone/drone-plugin-starter
+		// Please note the below flags are mirrored in the pipec and
+		// should be kept synchronized. Do not edit directly
+		// https://github.com/cncd/pipeline/pipec
 		//
 
+		//
+		// workspace default
+		//
 		cli.StringFlag{
-			Name:   "repo.fullname",
-			Usage:  "repository full name",
-			EnvVar: "DRONE_REPO",
-		},
-		cli.StringFlag{
-			Name:   "repo.owner",
-			Usage:  "repository owner",
-			EnvVar: "DRONE_REPO_OWNER",
+			Name:   "workspace-base",
+			Value:  "/pipeline",
+			EnvVar: "DRONE_WORKSPACE_BASE",
 		},
 		cli.StringFlag{
-			Name:   "repo.name",
-			Usage:  "repository name",
-			EnvVar: "DRONE_REPO_NAME",
+			Name:   "workspace-path",
+			Value:  "src",
+			EnvVar: "DRONE_WORKSPACE_PATH",
 		},
+		//
+		// netrc parameters
+		//
 		cli.StringFlag{
-			Name:   "repo.type",
-			Value:  "git",
-			Usage:  "repository type",
-			EnvVar: "DRONE_REPO_SCM",
-		},
-		cli.StringFlag{
-			Name:   "repo.link",
-			Usage:  "repository link",
-			EnvVar: "DRONE_REPO_LINK",
-		},
-		cli.StringFlag{
-			Name:   "repo.avatar",
-			Usage:  "repository avatar",
-			EnvVar: "DRONE_REPO_AVATAR",
-		},
-		cli.StringFlag{
-			Name:   "repo.branch",
-			Usage:  "repository default branch",
-			EnvVar: "DRONE_REPO_BRANCH",
-		},
-		cli.BoolFlag{
-			Name:   "repo.private",
-			Usage:  "repository is private",
-			EnvVar: "DRONE_REPO_PRIVATE",
-		},
-		cli.BoolTFlag{
-			Name:   "repo.trusted",
-			Usage:  "repository is trusted",
-			EnvVar: "DRONE_REPO_TRUSTED",
-		},
-		cli.StringFlag{
-			Name:   "remote.url",
-			Usage:  "git remote url",
-			EnvVar: "DRONE_REMOTE_URL",
-		},
-		cli.StringFlag{
-			Name:   "commit.sha",
-			Usage:  "git commit sha",
-			EnvVar: "DRONE_COMMIT_SHA",
-		},
-		cli.StringFlag{
-			Name:   "commit.ref",
-			Value:  "refs/heads/master",
-			Usage:  "git commit ref",
-			EnvVar: "DRONE_COMMIT_REF",
-		},
-		cli.StringFlag{
-			Name:   "commit.branch",
-			Value:  "master",
-			Usage:  "git commit branch",
-			EnvVar: "DRONE_COMMIT_BRANCH",
-		},
-		cli.StringFlag{
-			Name:   "commit.message",
-			Usage:  "git commit message",
-			EnvVar: "DRONE_COMMIT_MESSAGE",
-		},
-		cli.StringFlag{
-			Name:   "commit.link",
-			Usage:  "git commit link",
-			EnvVar: "DRONE_COMMIT_LINK",
-		},
-		cli.StringFlag{
-			Name:   "commit.author.name",
-			Usage:  "git author name",
-			EnvVar: "DRONE_COMMIT_AUTHOR",
-		},
-		cli.StringFlag{
-			Name:   "commit.author.email",
-			Usage:  "git author email",
-			EnvVar: "DRONE_COMMIT_AUTHOR_EMAIL",
-		},
-		cli.StringFlag{
-			Name:   "commit.author.avatar",
-			Usage:  "git author avatar",
-			EnvVar: "DRONE_COMMIT_AUTHOR_AVATAR",
-		},
-		cli.StringFlag{
-			Name:   "build.event",
-			Value:  "push",
-			Usage:  "build event",
-			EnvVar: "DRONE_BUILD_EVENT",
-		},
-		cli.IntFlag{
-			Name:   "build.number",
-			Usage:  "build number",
-			EnvVar: "DRONE_BUILD_NUMBER",
-		},
-		cli.IntFlag{
-			Name:   "build.created",
-			Usage:  "build created",
-			EnvVar: "DRONE_BUILD_CREATED",
-		},
-		cli.IntFlag{
-			Name:   "build.started",
-			Usage:  "build started",
-			EnvVar: "DRONE_BUILD_STARTED",
-		},
-		cli.IntFlag{
-			Name:   "build.finished",
-			Usage:  "build finished",
-			EnvVar: "DRONE_BUILD_FINISHED",
-		},
-		cli.StringFlag{
-			Name:   "build.status",
-			Usage:  "build status",
-			Value:  "success",
-			EnvVar: "DRONE_BUILD_STATUS",
-		},
-		cli.StringFlag{
-			Name:   "build.link",
-			Usage:  "build link",
-			EnvVar: "DRONE_BUILD_LINK",
-		},
-		cli.StringFlag{
-			Name:   "build.deploy",
-			Usage:  "build deployment target",
-			EnvVar: "DRONE_DEPLOY_TO",
-		},
-		cli.BoolTFlag{
-			Name:   "yaml.verified",
-			Usage:  "build yaml is verified",
-			EnvVar: "DRONE_YAML_VERIFIED",
-		},
-		cli.BoolTFlag{
-			Name:   "yaml.signed",
-			Usage:  "build yaml is signed",
-			EnvVar: "DRONE_YAML_SIGNED",
-		},
-		cli.IntFlag{
-			Name:   "prev.build.number",
-			Usage:  "previous build number",
-			EnvVar: "DRONE_PREV_BUILD_NUMBER",
-		},
-		cli.StringFlag{
-			Name:   "prev.build.status",
-			Usage:  "previous build status",
-			EnvVar: "DRONE_PREV_BUILD_STATUS",
-		},
-		cli.StringFlag{
-			Name:   "prev.commit.sha",
-			Usage:  "previous build sha",
-			EnvVar: "DRONE_PREV_COMMIT_SHA",
-		},
-
-		cli.StringFlag{
-			Name:   "netrc.username",
-			Usage:  "previous build sha",
+			Name:   "netrc-username",
 			EnvVar: "DRONE_NETRC_USERNAME",
 		},
 		cli.StringFlag{
-			Name:   "netrc.password",
-			Usage:  "previous build sha",
+			Name:   "netrc-password",
 			EnvVar: "DRONE_NETRC_PASSWORD",
 		},
 		cli.StringFlag{
-			Name:   "netrc.machine",
-			Usage:  "previous build sha",
+			Name:   "netrc-machine",
 			EnvVar: "DRONE_NETRC_MACHINE",
+		},
+		//
+		// metadata parameters
+		//
+		cli.StringFlag{
+			Name:   "system-arch",
+			Value:  "linux/amd64",
+			EnvVar: "DRONE_SYSTEM_ARCH",
+		},
+		cli.StringFlag{
+			Name:   "system-name",
+			Value:  "pipec",
+			EnvVar: "DRONE_SYSTEM_NAME",
+		},
+		cli.StringFlag{
+			Name:   "system-link",
+			Value:  "https://github.com/cncd/pipec",
+			EnvVar: "DRONE_SYSTEM_LINK",
+		},
+		cli.StringFlag{
+			Name:   "repo-name",
+			EnvVar: "DRONE_REPO_NAME",
+		},
+		cli.StringFlag{
+			Name:   "repo-link",
+			EnvVar: "DRONE_REPO_LINK",
+		},
+		cli.StringFlag{
+			Name:   "repo-remote-url",
+			EnvVar: "DRONE_REPO_REMOTE",
+		},
+		cli.StringFlag{
+			Name:   "repo-private",
+			EnvVar: "DRONE_REPO_PRIVATE",
+		},
+		cli.IntFlag{
+			Name:   "build-number",
+			EnvVar: "DRONE_BUILD_NUMBER",
+		},
+		cli.Int64Flag{
+			Name:   "build-created",
+			EnvVar: "DRONE_BUILD_CREATED",
+		},
+		cli.Int64Flag{
+			Name:   "build-started",
+			EnvVar: "DRONE_BUILD_STARTED",
+		},
+		cli.Int64Flag{
+			Name:   "build-finished",
+			EnvVar: "DRONE_BUILD_FINISHED",
+		},
+		cli.StringFlag{
+			Name:   "build-status",
+			EnvVar: "DRONE_BUILD_STATUS",
+		},
+		cli.StringFlag{
+			Name:   "build-event",
+			EnvVar: "DRONE_BUILD_EVENT",
+		},
+		cli.StringFlag{
+			Name:   "build-link",
+			EnvVar: "DRONE_BUILD_LINK",
+		},
+		cli.StringFlag{
+			Name:   "build-target",
+			EnvVar: "DRONE_BUILD_TARGET",
+		},
+		cli.StringFlag{
+			Name:   "commit-sha",
+			EnvVar: "DRONE_COMMIT_SHA",
+		},
+		cli.StringFlag{
+			Name:   "commit-ref",
+			EnvVar: "DRONE_COMMIT_REF",
+		},
+		cli.StringFlag{
+			Name:   "commit-refspec",
+			EnvVar: "DRONE_COMMIT_REFSPEC",
+		},
+		cli.StringFlag{
+			Name:   "commit-branch",
+			EnvVar: "DRONE_COMMIT_BRANCH",
+		},
+		cli.StringFlag{
+			Name:   "commit-message",
+			EnvVar: "DRONE_COMMIT_MESSAGE",
+		},
+		cli.StringFlag{
+			Name:   "commit-author-name",
+			EnvVar: "DRONE_COMMIT_AUTHOR_NAME",
+		},
+		cli.StringFlag{
+			Name:   "commit-author-avatar",
+			EnvVar: "DRONE_COMMIT_AUTHOR_AVATAR",
+		},
+		cli.StringFlag{
+			Name:   "commit-author-email",
+			EnvVar: "DRONE_COMMIT_AUTHOR_EMAIL",
+		},
+		cli.IntFlag{
+			Name:   "prev-build-number",
+			EnvVar: "DRONE_PREV_BUILD_NUMBER",
+		},
+		cli.Int64Flag{
+			Name:   "prev-build-created",
+			EnvVar: "DRONE_PREV_BUILD_CREATED",
+		},
+		cli.Int64Flag{
+			Name:   "prev-build-started",
+			EnvVar: "DRONE_PREV_BUILD_STARTED",
+		},
+		cli.Int64Flag{
+			Name:   "prev-build-finished",
+			EnvVar: "DRONE_PREV_BUILD_FINISHED",
+		},
+		cli.StringFlag{
+			Name:   "prev-build-status",
+			EnvVar: "DRONE_PREV_BUILD_STATUS",
+		},
+		cli.StringFlag{
+			Name:   "prev-build-event",
+			EnvVar: "DRONE_PREV_BUILD_EVENT",
+		},
+		cli.StringFlag{
+			Name:   "prev-build-link",
+			EnvVar: "DRONE_PREV_BUILD_LINK",
+		},
+		cli.StringFlag{
+			Name:   "prev-commit-sha",
+			EnvVar: "DRONE_PREV_COMMIT_SHA",
+		},
+		cli.StringFlag{
+			Name:   "prev-commit-ref",
+			EnvVar: "DRONE_PREV_COMMIT_REF",
+		},
+		cli.StringFlag{
+			Name:   "prev-commit-refspec",
+			EnvVar: "DRONE_PREV_COMMIT_REFSPEC",
+		},
+		cli.StringFlag{
+			Name:   "prev-commit-branch",
+			EnvVar: "DRONE_PREV_COMMIT_BRANCH",
+		},
+		cli.StringFlag{
+			Name:   "prev-commit-message",
+			EnvVar: "DRONE_PREV_COMMIT_MESSAGE",
+		},
+		cli.StringFlag{
+			Name:   "prev-commit-author-name",
+			EnvVar: "DRONE_PREV_COMMIT_AUTHOR_NAME",
+		},
+		cli.StringFlag{
+			Name:   "prev-commit-author-avatar",
+			EnvVar: "DRONE_PREV_COMMIT_AUTHOR_AVATAR",
+		},
+		cli.StringFlag{
+			Name:   "prev-commit-author-email",
+			EnvVar: "DRONE_PREV_COMMIT_AUTHOR_EMAIL",
+		},
+		cli.IntFlag{
+			Name:   "job-number",
+			EnvVar: "DRONE_JOB_NUMBER",
 		},
 	},
 }
 
 func exec(c *cli.Context) error {
-	sigterm := make(chan os.Signal, 1)
-	cancelc := make(chan bool, 1)
-	signal.Notify(sigterm, os.Interrupt)
-	go func() {
-		<-sigterm
-		cancelc <- true
-	}()
-
-	path := c.Args().First()
-	if path == "" {
-		path = ".drone.yml"
+	file := c.Args().First()
+	if file == "" {
+		file = ".drone.yml"
 	}
-	path, _ = filepath.Abs(path)
-	dir := filepath.Dir(path)
 
-	file, err := ioutil.ReadFile(path)
+	metadata := metadataFromContext(c)
+	environ := metadata.Environ()
+	for k, v := range metadata.EnvironDrone() {
+		environ[k] = v
+	}
+	for _, env := range os.Environ() {
+		k := strings.Split(env, "=")[0]
+		v := strings.Split(env, "=")[1]
+		environ[k] = v
+	}
+
+	tmpl, err := envsubst.ParseFile(file)
+	if err != nil {
+		return err
+	}
+	confstr, err := tmpl.Execute(func(name string) string {
+		return environ[name]
+	})
 	if err != nil {
 		return err
 	}
 
-	engine, err := docker.New(
-		c.String("docker-host"),
-		c.String("docker-cert-path"),
-		c.Bool("docker-tls-verify"),
-	)
+	conf, err := yaml.ParseString(confstr)
 	if err != nil {
 		return err
 	}
 
-	a := agent.Agent{
-		Update:   agent.NoopUpdateFunc,
-		Logger:   agent.TermLoggerFunc,
-		Engine:   engine,
-		Timeout:  c.Duration("timeout.inactivity"),
-		Platform: "linux/amd64",
-		Escalate: c.StringSlice("privileged"),
-		Netrc:    []string{},
-		Local:    dir,
-		Pull:     c.Bool("pull"),
-	}
-
-	payload := &model.Work{
-		Yaml:     string(file),
-		Verified: c.BoolT("yaml.verified"),
-		Signed:   c.BoolT("yaml.signed"),
-		Repo: &model.Repo{
-			FullName:  c.String("repo.fullname"),
-			Owner:     c.String("repo.owner"),
-			Name:      c.String("repo.name"),
-			Kind:      c.String("repo.type"),
-			Link:      c.String("repo.link"),
-			Branch:    c.String("repo.branch"),
-			Avatar:    c.String("repo.avatar"),
-			Timeout:   int64(c.Duration("timeout").Minutes()),
-			IsPrivate: c.Bool("repo.private"),
-			IsTrusted: c.BoolT("repo.trusted"),
-			Clone:     c.String("remote.url"),
-		},
-		System: &model.System{
-			Link: c.GlobalString("server"),
-		},
-		Secrets: getSecrets(c),
-		Netrc: &model.Netrc{
-			Login:    c.String("netrc.username"),
-			Password: c.String("netrc.password"),
-			Machine:  c.String("netrc.machine"),
-		},
-		Build: &model.Build{
-			Commit:  c.String("commit.sha"),
-			Branch:  c.String("commit.branch"),
-			Ref:     c.String("commit.ref"),
-			Link:    c.String("commit.link"),
-			Message: c.String("commit.message"),
-			Author:  c.String("commit.author.name"),
-			Email:   c.String("commit.author.email"),
-			Avatar:  c.String("commit.author.avatar"),
-			Number:  c.Int("build.number"),
-			Event:   c.String("build.event"),
-			Deploy:  c.String("build.deploy"),
-		},
-		BuildLast: &model.Build{
-			Number: c.Int("prev.build.number"),
-			Status: c.String("prev.build.status"),
-			Commit: c.String("prev.commit.sha"),
-		},
-	}
-
-	if len(c.StringSlice("matrix")) > 0 {
-		p := *payload
-		p.Job = &model.Job{
-			Environment: getMatrix(c),
+	// configure volumes for local execution
+	volumes := c.StringSlice("volumes")
+	if c.Bool("local") {
+		var (
+			workspaceBase = conf.Workspace.Base
+			workspacePath = conf.Workspace.Path
+		)
+		if workspaceBase == "" {
+			workspaceBase = c.String("workspace-base")
 		}
-		return a.Run(&p, cancelc)
+		if workspacePath == "" {
+			workspacePath = c.String("workspace-path")
+		}
+		dir, _ := filepath.Abs(filepath.Dir(file))
+		volumes = append(volumes, dir+":"+path.Join(workspaceBase, workspacePath))
 	}
 
-	axes, err := yaml.ParseMatrix(file)
+	// compiles the yaml file
+	compiled := compiler.New(
+		compiler.WithEscalated(
+			c.StringSlice("privileged")...,
+		),
+		compiler.WithVolumes(volumes...),
+		compiler.WithWorkspace(
+			c.String("workspace-base"),
+			c.String("workspace-path"),
+		),
+		compiler.WithPrefix(
+			c.String("prefix"),
+		),
+		compiler.WithProxy(),
+		compiler.WithLocal(
+			c.Bool("local"),
+		),
+		compiler.WithNetrc(
+			c.String("netrc-username"),
+			c.String("netrc-password"),
+			c.String("netrc-machine"),
+		),
+		compiler.WithMetadata(metadata),
+	).Compile(conf)
+
+	engine, err := docker.NewEnv()
 	if err != nil {
 		return err
 	}
 
-	if len(axes) == 0 {
-		axes = append(axes, yaml.Axis{})
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), c.Duration("timeout"))
+	defer cancel()
+	ctx = interrupt.WithContext(ctx)
 
-	var jobs []*model.Job
-	count := 0
-	for _, axis := range axes {
-		jobs = append(jobs, &model.Job{
-			Number:      count,
-			Environment: axis,
-		})
-		count++
-	}
-
-	for _, job := range jobs {
-		fmt.Printf("Running Matrix job #%d\n", job.Number)
-		p := *payload
-		p.Job = job
-		if err := a.Run(&p, cancelc); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return pipeline.New(compiled,
+		pipeline.WithContext(ctx),
+		pipeline.WithLogger(defaultLogger),
+		pipeline.WithTracer(pipeline.DefaultTracer),
+		pipeline.WithLogger(defaultLogger),
+		pipeline.WithEngine(engine),
+	).Run()
 }
 
-// helper function to retrieve matrix variables.
-func getMatrix(c *cli.Context) map[string]string {
-	envs := map[string]string{}
-	for _, s := range c.StringSlice("matrix") {
-		parts := strings.SplitN(s, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		k := parts[0]
-		v := parts[1]
-		envs[k] = v
-	}
-	return envs
-}
-
-// helper function to retrieve secret variables.
-func getSecrets(c *cli.Context) []*model.Secret {
-
-	var secrets []*model.Secret
-
-	if c.String("secrets-file") != "" {
-		envs, _ := godotenv.Read(c.String("secrets-file"))
-		for k, v := range envs {
-			secret := &model.Secret{
-				Name:  k,
-				Value: v,
-				Events: []string{
-					model.EventPull,
-					model.EventPush,
-					model.EventTag,
-					model.EventDeploy,
+// return the metadata from the cli context.
+func metadataFromContext(c *cli.Context) frontend.Metadata {
+	return frontend.Metadata{
+		Repo: frontend.Repo{
+			Name:    c.String("repo-name"),
+			Link:    c.String("repo-link"),
+			Remote:  c.String("repo-remote-url"),
+			Private: c.Bool("repo-private"),
+		},
+		Curr: frontend.Build{
+			Number:   c.Int("build-number"),
+			Created:  c.Int64("build-created"),
+			Started:  c.Int64("build-started"),
+			Finished: c.Int64("build-finished"),
+			Status:   c.String("build-status"),
+			Event:    c.String("build-event"),
+			Link:     c.String("build-link"),
+			Target:   c.String("build-target"),
+			Commit: frontend.Commit{
+				Sha:     c.String("commit-sha"),
+				Ref:     c.String("commit-ref"),
+				Refspec: c.String("commit-refspec"),
+				Branch:  c.String("commit-branch"),
+				Message: c.String("commit-message"),
+				Author: frontend.Author{
+					Name:   c.String("commit-author-name"),
+					Email:  c.String("commit-author-email"),
+					Avatar: c.String("commit-author-avatar"),
 				},
-				Images: []string{"*"},
-			}
-			secrets = append(secrets, secret)
-		}
-	}
-
-	for _, s := range c.StringSlice("secret") {
-		parts := strings.SplitN(s, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		secret := &model.Secret{
-			Name:  parts[0],
-			Value: parts[1],
-			Events: []string{
-				model.EventPull,
-				model.EventPush,
-				model.EventTag,
-				model.EventDeploy,
 			},
-			Images: []string{"*"},
-		}
-		secrets = append(secrets, secret)
+		},
+		Prev: frontend.Build{
+			Number:   c.Int("prev-build-number"),
+			Created:  c.Int64("prev-build-created"),
+			Started:  c.Int64("prev-build-started"),
+			Finished: c.Int64("prev-build-finished"),
+			Status:   c.String("prev-build-status"),
+			Event:    c.String("prev-build-event"),
+			Link:     c.String("prev-build-link"),
+			Commit: frontend.Commit{
+				Sha:     c.String("prev-commit-sha"),
+				Ref:     c.String("prev-commit-ref"),
+				Refspec: c.String("prev-commit-refspec"),
+				Branch:  c.String("prev-commit-branch"),
+				Message: c.String("prev-commit-message"),
+				Author: frontend.Author{
+					Name:   c.String("prev-commit-author-name"),
+					Email:  c.String("prev-commit-author-email"),
+					Avatar: c.String("prev-commit-author-avatar"),
+				},
+			},
+		},
+		Job: frontend.Job{
+			Number: c.Int("job-number"),
+		},
+		Sys: frontend.System{
+			Name: c.String("system-name"),
+			Link: c.String("system-link"),
+			Arch: c.String("system-arch"),
+		},
 	}
-	return secrets
 }
+
+var defaultLogger = pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
+	part, err := rc.NextPart()
+	if err != nil {
+		return err
+	}
+	io.Copy(os.Stderr, part)
+	return nil
+})

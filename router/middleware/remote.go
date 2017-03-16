@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/codegangsta/cli"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/remote/bitbucket"
 	"github.com/drone/drone/remote/bitbucketserver"
@@ -12,6 +11,7 @@ import (
 	"github.com/drone/drone/remote/gitlab"
 	"github.com/drone/drone/remote/gogs"
 	"github.com/gin-gonic/gin"
+	"github.com/urfave/cli"
 )
 
 // Remote is a middleware function that initializes the Remote and attaches to
