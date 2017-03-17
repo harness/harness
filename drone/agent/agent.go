@@ -232,17 +232,15 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	state.Finished = time.Now().Unix()
 	state.Exited = true
 	if err != nil {
-		state.Error = err.Error()
-		if xerr, ok := err.(*pipeline.ExitError); ok {
+		switch xerr := err.(type) {
+		case *pipeline.ExitError:
 			state.ExitCode = xerr.Code
-		}
-		if xerr, ok := err.(*pipeline.OomError); ok {
-			state.ExitCode = xerr.Code
+		default:
+			state.ExitCode = 1
+			state.Error = err.Error()
 		}
 		if cancelled.IsSet() {
 			state.ExitCode = 137
-		} else if state.ExitCode == 0 {
-			state.ExitCode = 1
 		}
 	}
 
