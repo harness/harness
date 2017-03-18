@@ -2,8 +2,8 @@ package bitbucket
 
 import (
 	"fmt"
-	"regexp"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/drone/drone/model"
@@ -19,17 +19,19 @@ const (
 )
 
 const (
-	descPending = "this build is pending"
-	descSuccess = "the build was successful"
-	descFailure = "the build failed"
-	descError   = "oops, something went wrong"
+	descPending  = "this build is pending"
+	descSuccess  = "the build was successful"
+	descFailure  = "the build failed"
+	descBlocked  = "the build requires approval"
+	descDeclined = "the build was rejected"
+	descError    = "oops, something went wrong"
 )
 
 // convertStatus is a helper function used to convert a Drone status to a
 // Bitbucket commit status.
 func convertStatus(status string) string {
 	switch status {
-	case model.StatusPending, model.StatusRunning:
+	case model.StatusPending, model.StatusRunning, model.StatusBlocked:
 		return statusPending
 	case model.StatusSuccess:
 		return statusSuccess
@@ -48,6 +50,10 @@ func convertDesc(status string) string {
 		return descSuccess
 	case model.StatusFailure:
 		return descFailure
+	case model.StatusBlocked:
+		return descBlocked
+	case model.StatusDeclined:
+		return descDeclined
 	default:
 		return descError
 	}
@@ -163,6 +169,7 @@ func convertPullHook(from *internal.PullRequestHook) *model.Build {
 		Message:   from.PullRequest.Desc,
 		Avatar:    from.Actor.Links.Avatar.Href,
 		Author:    from.Actor.Login,
+		Sender:    from.Actor.Login,
 		Timestamp: from.PullRequest.Updated.UTC().Unix(),
 	}
 }
@@ -177,6 +184,7 @@ func convertPushHook(hook *internal.PushHook, change *internal.Change) *model.Bu
 		Message:   change.New.Target.Message,
 		Avatar:    hook.Actor.Links.Avatar.Href,
 		Author:    hook.Actor.Login,
+		Sender:    hook.Actor.Login,
 		Timestamp: change.New.Target.Date.UTC().Unix(),
 	}
 	switch change.New.Type {
@@ -198,9 +206,9 @@ var reGitMail = regexp.MustCompile("<(.*)>")
 
 // extracts the email from a git commit author string
 func extractEmail(gitauthor string) (author string) {
-    matches := reGitMail.FindAllStringSubmatch(gitauthor,-1)
-    if len(matches) == 1 {
-        author = matches[0][1]
-    }
-    return
+	matches := reGitMail.FindAllStringSubmatch(gitauthor, -1)
+	if len(matches) == 1 {
+		author = matches[0][1]
+	}
+	return
 }

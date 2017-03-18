@@ -22,12 +22,15 @@ type Build struct {
 	Title     string `json:"title"         meddler:"build_title"`
 	Message   string `json:"message"       meddler:"build_message"`
 	Timestamp int64  `json:"timestamp"     meddler:"build_timestamp"`
+	Sender    string `json:"sender"        meddler:"build_sender"`
 	Author    string `json:"author"        meddler:"build_author"`
 	Avatar    string `json:"author_avatar" meddler:"build_avatar"`
 	Email     string `json:"author_email"  meddler:"build_email"`
 	Link      string `json:"link_url"      meddler:"build_link"`
-	Signed    bool   `json:"signed"        meddler:"build_signed"`
-	Verified  bool   `json:"verified"      meddler:"build_verified"`
+	Signed    bool   `json:"signed"        meddler:"build_signed"`   // deprecate
+	Verified  bool   `json:"verified"      meddler:"build_verified"` // deprecate
+	Reviewer  string `json:"reviewed_by"   meddler:"build_reviewer"`
+	Reviewed  int64  `json:"reviewed_at"   meddler:"build_reviewed"`
 	Jobs      []*Job `json:"jobs,omitempty" meddler:"-"`
 }
 

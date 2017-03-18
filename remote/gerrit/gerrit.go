@@ -94,6 +94,11 @@ func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 	return nil, nil
 }
 
+// File is not supported by the Gerrit driver.
+func (c *client) FileRef(u *model.User, r *model.Repo, ref, f string) ([]byte, error) {
+	return nil, nil
+}
+
 // Status is not supported by the Gogs driver.
 func (c *client) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
 	return nil

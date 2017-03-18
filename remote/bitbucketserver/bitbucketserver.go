@@ -9,14 +9,15 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/drone/drone/model"
-	"github.com/drone/drone/remote"
-	"github.com/drone/drone/remote/bitbucketserver/internal"
-	"github.com/mrjones/oauth"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote"
+	"github.com/drone/drone/remote/bitbucketserver/internal"
+	"github.com/mrjones/oauth"
 )
 
 const (
@@ -162,6 +163,12 @@ func (c *Config) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
 
 	return client.FindFileForRepo(r.Owner, r.Name, f, b.Ref)
+}
+
+func (c *Config) FileRef(u *model.User, r *model.Repo, ref, f string) ([]byte, error) {
+	client := internal.NewClientWithToken(c.URL, c.Consumer, u.Token)
+
+	return client.FindFileForRepo(r.Owner, r.Name, f, ref)
 }
 
 // Status is not supported by the bitbucketserver driver.

@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/cncd/pipeline/pipeline/rpc"
 	"github.com/cncd/pubsub"
 	"github.com/cncd/queue"
@@ -156,6 +156,178 @@ func DeleteBuild(c *gin.Context) {
 	c.String(204, "")
 }
 
+func PostApproval(c *gin.Context) {
+	var (
+		remote_ = remote.FromContext(c)
+		repo    = session.Repo(c)
+		user    = session.User(c)
+		num, _  = strconv.Atoi(
+			c.Params.ByName("number"),
+		)
+	)
+
+	build, err := store.GetBuildNumber(c, repo, num)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+	if build.Status != model.StatusBlocked {
+		c.String(500, "cannot decline a build with status %s", build.Status)
+		return
+	}
+	build.Status = model.StatusPending
+	build.Reviewed = time.Now().Unix()
+	build.Reviewer = user.Login
+
+	//
+	//
+	// This code is copied pasted until I have a chance
+	// to refactor into a proper function. Lots of changes
+	// and technical debt. No judgement please!
+	//
+	//
+
+	// fetch the build file from the database
+	cfg := ToConfig(c)
+	raw, err := remote_.File(user, repo, build, cfg.Yaml)
+	if err != nil {
+		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
+		c.AbortWithError(404, err)
+		return
+	}
+
+	netrc, err := remote_.Netrc(user, repo)
+	if err != nil {
+		c.String(500, "Failed to generate netrc file. %s", err)
+		return
+	}
+
+	if uerr := store.UpdateBuild(c, build); err != nil {
+		c.String(500, "error updating build. %s", uerr)
+		return
+	}
+
+	c.JSON(200, build)
+
+	// get the previous build so that we can send
+	// on status change notifications
+	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
+	secs, err := store.GetMergedSecretList(c, repo)
+	if err != nil {
+		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
+	}
+
+	defer func() {
+		uri := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, build.Number)
+		err = remote_.Status(user, repo, build, uri)
+		if err != nil {
+			logrus.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
+		}
+	}()
+
+	b := builder{
+		Repo:  repo,
+		Curr:  build,
+		Last:  last,
+		Netrc: netrc,
+		Secs:  secs,
+		Link:  httputil.GetURL(c.Request),
+		Yaml:  string(raw),
+	}
+	items, err := b.Build()
+	if err != nil {
+		build.Status = model.StatusError
+		build.Started = time.Now().Unix()
+		build.Finished = build.Started
+		build.Error = err.Error()
+		store.UpdateBuild(c, build)
+		return
+	}
+
+	for _, item := range items {
+		build.Jobs = append(build.Jobs, item.Job)
+		store.CreateJob(c, item.Job)
+		// TODO err
+	}
+
+	//
+	// publish topic
+	//
+	message := pubsub.Message{
+		Labels: map[string]string{
+			"repo":    repo.FullName,
+			"private": strconv.FormatBool(repo.IsPrivate),
+		},
+	}
+	message.Data, _ = json.Marshal(model.Event{
+		Type:  model.Enqueued,
+		Repo:  *repo,
+		Build: *build,
+	})
+	// TODO remove global reference
+	config.pubsub.Publish(c, "topic/events", message)
+	//
+	// end publish topic
+	//
+
+	for _, item := range items {
+		task := new(queue.Task)
+		task.ID = fmt.Sprint(item.Job.ID)
+		task.Labels = map[string]string{}
+		task.Labels["platform"] = item.Platform
+		for k, v := range item.Labels {
+			task.Labels[k] = v
+		}
+
+		task.Data, _ = json.Marshal(rpc.Pipeline{
+			ID:      fmt.Sprint(item.Job.ID),
+			Config:  item.Config,
+			Timeout: b.Repo.Timeout,
+		})
+
+		config.logger.Open(context.Background(), task.ID)
+		config.queue.Push(context.Background(), task)
+	}
+}
+
+func PostDecline(c *gin.Context) {
+	var (
+		remote_ = remote.FromContext(c)
+		repo    = session.Repo(c)
+		user    = session.User(c)
+		num, _  = strconv.Atoi(
+			c.Params.ByName("number"),
+		)
+	)
+
+	build, err := store.GetBuildNumber(c, repo, num)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+	if build.Status != model.StatusBlocked {
+		c.String(500, "cannot decline a build with status %s", build.Status)
+		return
+	}
+	build.Status = model.StatusDeclined
+	build.Reviewed = time.Now().Unix()
+	build.Reviewer = user.Login
+
+	err = store.UpdateBuild(c, build)
+	if err != nil {
+		c.String(500, "error updating build. %s", err)
+		return
+	}
+
+	uri := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, build.Number)
+	err = remote_.Status(user, repo, build, uri)
+	if err != nil {
+		logrus.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
+	}
+
+	c.JSON(200, build)
+}
+
 func GetBuildQueue(c *gin.Context) {
 	out, err := store.GetBuildQueue(c)
 	if err != nil {
@@ -203,14 +375,14 @@ func PostBuild(c *gin.Context) {
 
 	user, err := store.GetUser(c, repo.UserID)
 	if err != nil {
-		log.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
+		logrus.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)
 		return
 	}
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
-		log.Errorf("failure to get build %d. %s", num, err)
+		logrus.Errorf("failure to get build %d. %s", num, err)
 		c.AbortWithError(404, err)
 		return
 	}
@@ -229,21 +401,21 @@ func PostBuild(c *gin.Context) {
 	cfg := ToConfig(c)
 	raw, err := remote_.File(user, repo, build, cfg.Yaml)
 	if err != nil {
-		log.Errorf("failure to get build config for %s. %s", repo.FullName, err)
+		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
 		return
 	}
 
 	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
-		log.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
+		logrus.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)
 		return
 	}
 
 	jobs, err := store.GetJobList(c, build)
 	if err != nil {
-		log.Errorf("failure to get build %d jobs. %s", build.Number, err)
+		logrus.Errorf("failure to get build %d jobs. %s", build.Number, err)
 		c.AbortWithError(404, err)
 		return
 	}
@@ -326,7 +498,7 @@ func PostBuild(c *gin.Context) {
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
 	secs, err := store.GetMergedSecretList(c, repo)
 	if err != nil {
-		log.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
+		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
 	b := builder{

@@ -181,6 +181,7 @@ func Test_helper(t *testing.T) {
 			from.PullRequest.Title = "Updated README.md"
 			from.PullRequest.User.Login = "octocat"
 			from.PullRequest.User.Avatar = "https://avatars1.githubusercontent.com/u/583231"
+			from.Sender.Login = "octocat"
 
 			build := convertPullHook(from, true)
 			g.Assert(build.Event).Equal(model.EventPull)
@@ -193,6 +194,7 @@ func Test_helper(t *testing.T) {
 			g.Assert(build.Title).Equal(from.PullRequest.Title)
 			g.Assert(build.Author).Equal(from.PullRequest.User.Login)
 			g.Assert(build.Avatar).Equal(from.PullRequest.User.Avatar)
+			g.Assert(build.Sender).Equal(from.Sender.Login)
 		})
 
 		g.It("should convert a deployment from webhook", func() {

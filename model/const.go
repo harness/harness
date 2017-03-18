@@ -8,13 +8,15 @@ const (
 )
 
 const (
-	StatusSkipped = "skipped"
-	StatusPending = "pending"
-	StatusRunning = "running"
-	StatusSuccess = "success"
-	StatusFailure = "failure"
-	StatusKilled  = "killed"
-	StatusError   = "error"
+	StatusSkipped  = "skipped"
+	StatusPending  = "pending"
+	StatusRunning  = "running"
+	StatusSuccess  = "success"
+	StatusFailure  = "failure"
+	StatusKilled   = "killed"
+	StatusError    = "error"
+	StatusBlocked  = "blocked"
+	StatusDeclined = "declined"
 )
 
 const (

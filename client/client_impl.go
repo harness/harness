@@ -34,6 +34,8 @@ const (
 	pathEncrypt       = "%s/api/repos/%s/%s/encrypt"
 	pathBuilds        = "%s/api/repos/%s/%s/builds"
 	pathBuild         = "%s/api/repos/%s/%s/builds/%v"
+	pathApprove       = "%s/api/repos/%s/%s/builds/%d/approve"
+	pathDecline       = "%s/api/repos/%s/%s/builds/%d/decline"
 	pathJob           = "%s/api/repos/%s/%s/builds/%d/%d"
 	pathLog           = "%s/api/repos/%s/%s/logs/%d/%d"
 	pathKey           = "%s/api/repos/%s/%s/key"
@@ -254,6 +256,22 @@ func (c *client) BuildFork(owner, name string, num int, params map[string]string
 	val.Set("fork", "true")
 	uri := fmt.Sprintf(pathBuild, c.base, owner, name, num)
 	err := c.post(uri+"?"+val.Encode(), nil, out)
+	return out, err
+}
+
+// BuildApprove approves a blocked build.
+func (c *client) BuildApprove(owner, name string, num int) (*model.Build, error) {
+	out := new(model.Build)
+	uri := fmt.Sprintf(pathApprove, c.base, owner, name, num)
+	err := c.post(uri, nil, out)
+	return out, err
+}
+
+// BuildDecline declines a blocked build.
+func (c *client) BuildDecline(owner, name string, num int) (*model.Build, error) {
+	out := new(model.Build)
+	uri := fmt.Sprintf(pathDecline, c.base, owner, name, num)
+	err := c.post(uri, nil, out)
 	return out, err
 }
 

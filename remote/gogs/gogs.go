@@ -190,6 +190,11 @@ func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 	return cfg, err
 }
 
+// FileRef fetches the file from the Gogs repository and returns its contents.
+func (c *client) FileRef(u *model.User, r *model.Repo, ref, f string) ([]byte, error) {
+	return c.newClientToken(u.Token).GetFile(r.Owner, r.Name, ref, f)
+}
+
 // Status is not supported by the Gogs driver.
 func (c *client) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
 	return nil
