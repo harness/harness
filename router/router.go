@@ -108,6 +108,8 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.POST("/chown", session.MustRepoAdmin(), server.ChownRepo)
 
 			repo.POST("/builds/:number", session.MustPush, server.PostBuild)
+			repo.POST("/builds/:number/approve", session.MustPush, server.PostApproval)
+			repo.POST("/builds/:number/decline", session.MustPush, server.PostDecline)
 			repo.DELETE("/builds/:number/:job", session.MustPush, server.DeleteBuild)
 		}
 	}

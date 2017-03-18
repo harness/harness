@@ -19,10 +19,12 @@ const (
 )
 
 const (
-	descPending = "this build is pending"
-	descSuccess = "the build was successful"
-	descFailure = "the build failed"
-	descError   = "oops, something went wrong"
+	descPending  = "this build is pending"
+	descSuccess  = "the build was successful"
+	descFailure  = "the build failed"
+	descBlocked  = "the build requires approval"
+	descDeclined = "the build was rejected"
+	descError    = "oops, something went wrong"
 )
 
 const (
@@ -35,12 +37,12 @@ const (
 // GitHub commit status.
 func convertStatus(status string) string {
 	switch status {
-	case model.StatusPending, model.StatusRunning:
+	case model.StatusPending, model.StatusRunning, model.StatusBlocked:
 		return statusPending
+	case model.StatusFailure, model.StatusDeclined:
+		return statusFailure
 	case model.StatusSuccess:
 		return statusSuccess
-	case model.StatusFailure:
-		return statusFailure
 	default:
 		return statusError
 	}
@@ -56,6 +58,10 @@ func convertDesc(status string) string {
 		return descSuccess
 	case model.StatusFailure:
 		return descFailure
+	case model.StatusBlocked:
+		return descBlocked
+	case model.StatusDeclined:
+		return descDeclined
 	default:
 		return descError
 	}
@@ -185,6 +191,7 @@ func convertPushHook(from *webhook) *model.Build {
 		Avatar:  from.Sender.Avatar,
 		Author:  from.Sender.Login,
 		Remote:  from.Repo.CloneURL,
+		Sender:  from.Sender.Login,
 	}
 	if len(build.Author) == 0 {
 		build.Author = from.Head.Author.Username
@@ -213,6 +220,7 @@ func convertDeployHook(from *webhook) *model.Build {
 		Ref:     from.Deployment.Ref,
 		Branch:  from.Deployment.Ref,
 		Deploy:  from.Deployment.Env,
+		Sender:  from.Sender.Login,
 	}
 	// if the ref is a sha or short sha we need to manuallyconstruct the ref.
 	if strings.HasPrefix(build.Commit, build.Ref) || build.Commit == build.Ref {
@@ -242,6 +250,7 @@ func convertPullHook(from *webhook, merge bool) *model.Build {
 		Author:  from.PullRequest.User.Login,
 		Avatar:  from.PullRequest.User.Avatar,
 		Title:   from.PullRequest.Title,
+		Sender:  from.Sender.Login,
 		Remote:  from.PullRequest.Head.Repo.CloneURL,
 		Refspec: fmt.Sprintf(refspec,
 			from.PullRequest.Head.Ref,

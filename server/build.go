@@ -156,6 +156,69 @@ func DeleteBuild(c *gin.Context) {
 	c.String(204, "")
 }
 
+func PostApproval(c *gin.Context) {
+	var (
+		repo   = session.Repo(c)
+		user   = session.User(c)
+		num, _ = strconv.Atoi(
+			c.Params.ByName("number"),
+		)
+	)
+
+	build, err := store.GetBuildNumber(c, repo, num)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+	if build.Status != model.StatusBlocked {
+		c.String(500, "cannot decline a build with status %s", build.Status)
+		return
+	}
+	build.Status = model.StatusPending
+	build.Reviewed = time.Now().Unix()
+	build.Reviewer = user.Login
+
+	if err := store.UpdateBuild(c, build); err != nil {
+		c.String(500, "error updating build. %s", err)
+		return
+	}
+
+	//
+	// TODO start build
+	//
+
+	c.JSON(200, build)
+}
+
+func PostDecline(c *gin.Context) {
+	var (
+		repo   = session.Repo(c)
+		user   = session.User(c)
+		num, _ = strconv.Atoi(
+			c.Params.ByName("number"),
+		)
+	)
+
+	build, err := store.GetBuildNumber(c, repo, num)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+	if build.Status != model.StatusBlocked {
+		c.String(500, "cannot decline a build with status %s", build.Status)
+		return
+	}
+	build.Status = model.StatusDeclined
+	build.Reviewed = time.Now().Unix()
+	build.Reviewer = user.Login
+
+	if err := store.UpdateBuild(c, build); err != nil {
+		c.String(500, "error updating build. %s", err)
+		return
+	}
+	c.JSON(200, build)
+}
+
 func GetBuildQueue(c *gin.Context) {
 	out, err := store.GetBuildQueue(c)
 	if err != nil {

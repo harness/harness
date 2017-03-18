@@ -116,6 +116,7 @@ type pullRequestHook struct {
 	} `json:"repository"`
 	Sender struct {
 		ID       int64  `json:"id"`
+		Login    string `json:"login"`
 		Username string `json:"username"`
 		Name     string `json:"full_name"`
 		Email    string `json:"email"`

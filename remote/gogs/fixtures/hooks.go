@@ -129,6 +129,7 @@ var HookPullRequest = `{
   },
   "sender": {
       "id": 1,
+      "login": "gordon",
       "username": "gordon",
       "full_name": "Gordon the Gopher",
       "email": "gordon@golang.org",

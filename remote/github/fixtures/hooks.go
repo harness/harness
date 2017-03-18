@@ -95,7 +95,7 @@ const HookPullRequest = `
     "default_branch": "master"
   },
   "sender": {
-    "login": "baxterthehacker",
+    "login": "octocat",
     "avatar_url": "https://avatars.githubusercontent.com/u/6752317?v=3"
   }
 }

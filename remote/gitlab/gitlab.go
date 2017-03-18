@@ -629,18 +629,20 @@ const (
 )
 
 const (
-	DescPending  = "this build is pending"
-	DescRunning  = "this buils is running"
+	DescPending  = "the build is pending"
+	DescRunning  = "the buils is running"
 	DescSuccess  = "the build was successful"
 	DescFailure  = "the build failed"
 	DescCanceled = "the build canceled"
+	DescBlocked  = "the build is pending approval"
+	DescDeclined = "the build was rejected"
 )
 
 // getStatus is a helper functin that converts a Drone
 // status to a GitHub status.
 func getStatus(status string) string {
 	switch status {
-	case model.StatusPending:
+	case model.StatusPending, model.StatusBlocked:
 		return StatusPending
 	case model.StatusRunning:
 		return StatusRunning
@@ -669,6 +671,10 @@ func getDesc(status string) string {
 		return DescFailure
 	case model.StatusKilled:
 		return DescCanceled
+	case model.StatusBlocked:
+		return DescBlocked
+	case model.StatusDeclined:
+		return DescDeclined
 	default:
 		return DescFailure
 	}
