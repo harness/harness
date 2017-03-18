@@ -321,6 +321,21 @@ func (g *Gitlab) File(user *model.User, repo *model.Repo, build *model.Build, f 
 	return out, err
 }
 
+// FileRef fetches the file from the GitHub repository and returns its contents.
+func (g *Gitlab) FileRef(u *model.User, r *model.Repo, ref, f string) ([]byte, error) {
+	var client = NewClient(g.URL, u.Token, g.SkipVerify)
+	id, err := GetProjectId(g, client, r.Owner, r.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := client.RepoRawFileRef(id, ref, f)
+	if err != nil {
+		return nil, err
+	}
+	return out, err
+}
+
 // NOTE Currently gitlab doesn't support status for commits and events,
 //      also if we want get MR status in gitlab we need implement a special plugin for gitlab,
 //      gitlab uses API to fetch build status on client side. But for now we skip this.

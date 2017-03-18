@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/square/go-jose"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
@@ -139,10 +139,6 @@ func PostHook(c *gin.Context) {
 		c.AbortWithError(404, err)
 		return
 	}
-	sec, err := remote_.File(user, repo, build, cfg.Shasum)
-	if err != nil {
-		logrus.Debugf("cannot find yaml signature for %s. %s", repo.FullName, err)
-	}
 
 	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
@@ -159,26 +155,47 @@ func PostHook(c *gin.Context) {
 		}
 	}
 
-	signature, err := jose.ParseSigned(string(sec))
-	if err != nil {
-		logrus.Debugf("cannot parse .drone.yml.sig file. %s", err)
-	} else if len(sec) == 0 {
-		logrus.Debugf("cannot parse .drone.yml.sig file. empty file")
-	} else {
-		build.Signed = true
-		output, verr := signature.Verify([]byte(repo.Hash))
-		if verr != nil {
-			logrus.Debugf("cannot verify .drone.yml.sig file. %s", verr)
-		} else if string(output) != string(raw) {
-			logrus.Debugf("cannot verify .drone.yml.sig file. no match")
+	// TODO default logic should avoid the approval if all
+	// secrets have skip-verify flag
+
+	if build.Event == model.EventPull {
+		old, ferr := remote_.FileRef(user, repo, build.Ref, cfg.Yaml)
+		if ferr != nil {
+			build.Status = model.StatusBlocked
+		} else if bytes.Equal(old, raw) {
+			build.Status = model.StatusPending
 		} else {
-			build.Verified = true
+			// this block is executed if the target yaml file
+			// does not match the base yaml.
+
+			// TODO unfortunately we have no good way to get the
+			// sender repository permissions unless the user is
+			// a registered drone user.
+			sender, uerr := store.GetUserLogin(c, build.Sender)
+			if uerr != nil {
+				build.Status = model.StatusBlocked
+			} else {
+				if refresher, ok := remote_.(remote.Refresher); ok {
+					ok, _ := refresher.Refresh(sender)
+					if ok {
+						store.UpdateUser(c, sender)
+					}
+				}
+				// if the sender does not have push access to the
+				// repository the pull request should be blocked.
+				perm, perr := remote_.Perm(sender, repo.Owner, repo.Name)
+				if perr != nil || perm.Push == false {
+					build.Status = model.StatusBlocked
+				}
+			}
 		}
+	} else {
+		build.Status = model.StatusPending
 	}
 
 	// update some build fields
-	build.Status = model.StatusPending
 	build.RepoID = repo.ID
+	build.Verified = true
 
 	if err := store.CreateBuild(c, build, build.Jobs...); err != nil {
 		logrus.Errorf("failure to save commit for %s. %s", repo.FullName, err)
@@ -187,6 +204,10 @@ func PostHook(c *gin.Context) {
 	}
 
 	c.JSON(200, build)
+
+	if build.Status == model.StatusBlocked {
+		return
+	}
 
 	// get the previous build so that we can send
 	// on status change notifications

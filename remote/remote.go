@@ -41,6 +41,10 @@ type Remote interface {
 	// format.
 	File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error)
 
+	// FileRef fetches a file from the remote repository for the given ref
+	// and returns in string format.
+	FileRef(u *model.User, r *model.Repo, ref, f string) ([]byte, error)
+
 	// Status sends the commit status to the remote system.
 	// An example would be the GitHub pull request status.
 	Status(u *model.User, r *model.Repo, b *model.Build, link string) error
@@ -109,12 +113,12 @@ func Perm(c context.Context, u *model.User, owner, repo string) (*model.Perm, er
 
 // File fetches a file from the remote repository and returns in string format.
 func File(c context.Context, u *model.User, r *model.Repo, b *model.Build, f string) (out []byte, err error) {
-	for i:=0;i<5;i++ {
+	for i := 0; i < 5; i++ {
 		out, err = FromContext(c).File(u, r, b, f)
 		if err == nil {
 			return
 		}
-		time.Sleep(1*time.Second)
+		time.Sleep(1 * time.Second)
 	}
 	return
 }
