@@ -100,11 +100,13 @@ var HookPullRequest = `{
       "email": "gordon@golang.org",
       "avatar_url": "http://gogs.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
     },
+    "base_branch": "master",
     "base": {
       "label": "master",
       "ref": "master",
       "sha": "9353195a19e45482665306e466c832c46560532d"
     },
+    "head_branch": "feature/changes",
     "head": {
       "label": "feature/changes",
       "ref": "feature/changes",
