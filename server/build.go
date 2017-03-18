@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/cncd/pipeline/pipeline/rpc"
 	"github.com/cncd/pubsub"
 	"github.com/cncd/queue"
@@ -192,9 +192,10 @@ func PostApproval(c *gin.Context) {
 
 func PostDecline(c *gin.Context) {
 	var (
-		repo   = session.Repo(c)
-		user   = session.User(c)
-		num, _ = strconv.Atoi(
+		remote_ = remote.FromContext(c)
+		repo    = session.Repo(c)
+		user    = session.User(c)
+		num, _  = strconv.Atoi(
 			c.Params.ByName("number"),
 		)
 	)
@@ -212,10 +213,28 @@ func PostDecline(c *gin.Context) {
 	build.Reviewed = time.Now().Unix()
 	build.Reviewer = user.Login
 
-	if err := store.UpdateBuild(c, build); err != nil {
+	err = store.UpdateBuild(c, build)
+	if err != nil {
 		c.String(500, "error updating build. %s", err)
 		return
 	}
+
+	owner, err := store.GetUser(c, repo.UserID)
+	if err == nil {
+		if refresher, ok := remote_.(remote.Refresher); ok {
+			ok, _ := refresher.Refresh(user)
+			if ok {
+				store.UpdateUser(c, user)
+			}
+		}
+
+		uri := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, build.Number)
+		err = remote_.Status(owner, repo, build, uri)
+		if err != nil {
+			logrus.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
+		}
+	}
+
 	c.JSON(200, build)
 }
 
@@ -266,14 +285,14 @@ func PostBuild(c *gin.Context) {
 
 	user, err := store.GetUser(c, repo.UserID)
 	if err != nil {
-		log.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
+		logrus.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)
 		return
 	}
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
-		log.Errorf("failure to get build %d. %s", num, err)
+		logrus.Errorf("failure to get build %d. %s", num, err)
 		c.AbortWithError(404, err)
 		return
 	}
@@ -292,21 +311,21 @@ func PostBuild(c *gin.Context) {
 	cfg := ToConfig(c)
 	raw, err := remote_.File(user, repo, build, cfg.Yaml)
 	if err != nil {
-		log.Errorf("failure to get build config for %s. %s", repo.FullName, err)
+		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
 		return
 	}
 
 	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
-		log.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
+		logrus.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)
 		return
 	}
 
 	jobs, err := store.GetJobList(c, build)
 	if err != nil {
-		log.Errorf("failure to get build %d jobs. %s", build.Number, err)
+		logrus.Errorf("failure to get build %d jobs. %s", build.Number, err)
 		c.AbortWithError(404, err)
 		return
 	}
@@ -389,7 +408,7 @@ func PostBuild(c *gin.Context) {
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
 	secs, err := store.GetMergedSecretList(c, repo)
 	if err != nil {
-		log.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
+		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
 	b := builder{
