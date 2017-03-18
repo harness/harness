@@ -137,15 +137,15 @@ func buildFromPullRequest(hook *pullRequestHook) *model.Build {
 		Commit:  hook.PullRequest.Head.Sha,
 		Link:    hook.PullRequest.URL,
 		Ref:     fmt.Sprintf("refs/pull/%d/head", hook.Number),
-		Branch:  hook.PullRequest.Base.Ref,
+		Branch:  hook.PullRequest.BaseBranch,
 		Message: hook.PullRequest.Title,
 		Author:  hook.PullRequest.User.Username,
 		Avatar:  avatar,
 		Sender:  sender,
 		Title:   hook.PullRequest.Title,
 		Refspec: fmt.Sprintf("%s:%s",
-			hook.PullRequest.Head.Ref,
-			hook.PullRequest.Base.Ref,
+			hook.PullRequest.HeadBranch,
+			hook.PullRequest.BaseBranch,
 		),
 	}
 	return build

@@ -175,10 +175,16 @@ func (c *client) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 // File fetches the file from the Gogs repository and returns its contents.
 func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
 	client := c.newClientToken(u.Token)
-	buildRef := b.Commit
-	if buildRef == "" {
+	ref := b.Commit
+
+	// TODO gogs does not yet return a sha with the pull request
+	// so unfortunately we need to use the pull request branch.
+	if b.Event == model.EventPull {
+		ref = b.Branch
+	}
+	if ref == "" {
 		// Remove refs/tags or refs/heads, Gogs needs a short ref
-		buildRef = strings.TrimPrefix(
+		ref = strings.TrimPrefix(
 			strings.TrimPrefix(
 				b.Ref,
 				"refs/heads/",
@@ -186,7 +192,7 @@ func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 			"refs/tags/",
 		)
 	}
-	cfg, err := client.GetFile(r.Owner, r.Name, buildRef, f)
+	cfg, err := client.GetFile(r.Owner, r.Name, ref, f)
 	return cfg, err
 }
 

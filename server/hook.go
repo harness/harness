@@ -159,11 +159,13 @@ func PostHook(c *gin.Context) {
 	// secrets have skip-verify flag
 
 	if build.Event == model.EventPull {
-		old, ferr := remote_.FileRef(user, repo, build.Ref, cfg.Yaml)
+		old, ferr := remote_.FileRef(user, repo, build.Branch, cfg.Yaml)
 		if ferr != nil {
 			build.Status = model.StatusBlocked
+			logrus.Debugf("cannot fetch base yaml: status: blocked")
 		} else if bytes.Equal(old, raw) {
 			build.Status = model.StatusPending
+			logrus.Debugf("base yaml matches head yaml: status: accepted")
 		} else {
 			// this block is executed if the target yaml file
 			// does not match the base yaml.
@@ -174,6 +176,7 @@ func PostHook(c *gin.Context) {
 			sender, uerr := store.GetUserLogin(c, build.Sender)
 			if uerr != nil {
 				build.Status = model.StatusBlocked
+				logrus.Debugf("sender does not have a drone account: status: blocked")
 			} else {
 				if refresher, ok := remote_.(remote.Refresher); ok {
 					ok, _ := refresher.Refresh(sender)
@@ -184,8 +187,12 @@ func PostHook(c *gin.Context) {
 				// if the sender does not have push access to the
 				// repository the pull request should be blocked.
 				perm, perr := remote_.Perm(sender, repo.Owner, repo.Name)
-				if perr != nil || perm.Push == false {
+				if perr == nil && perm.Push == true {
+					build.Status = model.StatusPending
+					logrus.Debugf("sender %s has push access: status: accepted", sender.Login)
+				} else {
 					build.Status = model.StatusBlocked
+					logrus.Debugf("sender %s does not have push access: status: blocked", sender.Login)
 				}
 			}
 		}
