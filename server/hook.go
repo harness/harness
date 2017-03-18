@@ -155,10 +155,28 @@ func PostHook(c *gin.Context) {
 		}
 	}
 
-	// TODO default logic should avoid the approval if all
-	// secrets have skip-verify flag
+	secs, err := store.GetMergedSecretList(c, repo)
+	if err != nil {
+		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
+	}
 
+	var mustApprove bool
 	if build.Event == model.EventPull {
+		for _, sec := range secs {
+			if sec.SkipVerify {
+				continue
+			}
+			if sec.MatchEvent(model.EventPull) {
+				mustApprove = true
+				break
+			}
+		}
+		if !mustApprove {
+			logrus.Debugf("no secrets exposed to pull_request: status: accepted")
+		}
+	}
+
+	if build.Event == model.EventPull && mustApprove {
 		old, ferr := remote_.FileRef(user, repo, build.Branch, cfg.Yaml)
 		if ferr != nil {
 			build.Status = model.StatusBlocked
@@ -219,10 +237,6 @@ func PostHook(c *gin.Context) {
 	// get the previous build so that we can send
 	// on status change notifications
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
-	secs, err := store.GetMergedSecretList(c, repo)
-	if err != nil {
-		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
-	}
 
 	//
 	// BELOW: NEW
