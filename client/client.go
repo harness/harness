@@ -102,6 +102,12 @@ type Client interface {
 	// the prior history.
 	BuildFork(string, string, int, map[string]string) (*model.Build, error)
 
+	// BuildApprove approves a blocked build.
+	BuildApprove(string, string, int) (*model.Build, error)
+
+	// BuildDecline declines a blocked build.
+	BuildDecline(string, string, int) (*model.Build, error)
+
 	// BuildLogs returns the build logs for the specified job.
 	BuildLogs(string, string, int, int) (io.ReadCloser, error)
 

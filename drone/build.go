@@ -12,6 +12,8 @@ var buildCmd = cli.Command{
 		buildInfoCmd,
 		buildStopCmd,
 		buildStartCmd,
+		buildApproveCmd,
+		buildDeclineCmd,
 		buildQueueCmd,
 	},
 }
