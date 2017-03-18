@@ -105,7 +105,7 @@ func (c *Client) RepoRawFileRef(id, ref, filepath string) ([]byte, error) {
 		},
 		QMap{
 			"filepath": filepath,
-			"ref":      strings.TrimPrefix(ref, "refs/heads/"),
+			"ref":      ref,
 		},
 	)
 
