@@ -1,4 +1,4 @@
-package mocks
+package mock
 
 import (
 	"net/http"
