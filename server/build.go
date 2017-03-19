@@ -188,8 +188,7 @@ func PostApproval(c *gin.Context) {
 	//
 
 	// fetch the build file from the database
-	cfg := ToConfig(c)
-	raw, err := remote_.File(user, repo, build, cfg.Yaml)
+	raw, err := remote_.File(user, repo, build, repo.Config)
 	if err != nil {
 		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
@@ -398,8 +397,7 @@ func PostBuild(c *gin.Context) {
 	}
 
 	// fetch the .drone.yml file from the database
-	cfg := ToConfig(c)
-	raw, err := remote_.File(user, repo, build, cfg.Yaml)
+	raw, err := remote_.File(user, repo, build, repo.Config)
 	if err != nil {
 		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)

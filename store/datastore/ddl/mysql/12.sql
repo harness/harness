@@ -5,7 +5,7 @@ ALTER TABLE builds ADD COLUMN build_sender     VARCHAR(255);
 ALTER TABLE builds ADD COLUMN build_reviewer   VARCHAR(255);
 ALTER TABLE builds ADD COLUMN build_reviewed   INTEGER;
 
-UPDATE repos  SET repo_config_path = '';
+UPDATE repos  SET repo_config_path = '.drone.yml';
 UPDATE builds SET build_reviewer   = '';
 UPDATE builds SET build_reviewed   = 0;
 UPDATE builds SET build_sender     = '';

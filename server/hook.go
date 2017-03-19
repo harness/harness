@@ -132,8 +132,7 @@ func PostHook(c *gin.Context) {
 	}
 
 	// fetch the build file from the database
-	cfg := ToConfig(c)
-	raw, err := remote_.File(user, repo, build, cfg.Yaml)
+	raw, err := remote_.File(user, repo, build, repo.Config)
 	if err != nil {
 		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
@@ -177,7 +176,7 @@ func PostHook(c *gin.Context) {
 	}
 
 	if build.Event == model.EventPull && mustApprove {
-		old, ferr := remote_.FileRef(user, repo, build.Branch, cfg.Yaml)
+		old, ferr := remote_.FileRef(user, repo, build.Branch, repo.Config)
 		if ferr != nil {
 			build.Status = model.StatusBlocked
 			logrus.Debugf("cannot fetch base yaml: status: blocked")
