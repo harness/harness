@@ -464,7 +464,14 @@ func (b *builder) Build() ([]*buildItem, error) {
 			// TODO ability to customize the escalated plugins
 			compiler.WithEscalated("plugins/docker", "plugins/gcr", "plugins/ecr"),
 			compiler.WithLocal(false),
-			compiler.WithNetrc(b.Netrc.Login, b.Netrc.Password, b.Netrc.Machine),
+			compiler.WithOption(
+				compiler.WithNetrc(
+					b.Netrc.Login,
+					b.Netrc.Password,
+					b.Netrc.Machine,
+				),
+				b.Repo.IsPrivate,
+			),
 			compiler.WithPrefix(
 				fmt.Sprintf(
 					"%d_%d",

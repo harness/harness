@@ -28,9 +28,11 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 		},
 	}
 
-	volumes := []string{
-		workspace,
+	var volumes []string
+	if !c.local {
+		volumes = append(volumes, workspace)
 	}
+	volumes = append(volumes, c.volumes...)
 	for _, volume := range container.Volumes.Volumes {
 		volumes = append(volumes, volume.String())
 	}

@@ -12,6 +12,17 @@ import (
 // Option configures a compiler option.
 type Option func(*Compiler)
 
+// WithOption configures the compiler with the given option if
+// boolean b evaluates to true.
+func WithOption(option Option, b bool) Option {
+	switch {
+	case b:
+		return option
+	default:
+		return func(compiler *Compiler) {}
+	}
+}
+
 // WithVolumes configutes the compiler with default volumes that
 // are mounted to each container in the pipeline.
 func WithVolumes(volumes ...string) Option {
