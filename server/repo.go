@@ -54,6 +54,7 @@ func PostRepo(c *gin.Context) {
 	r.UserID = user.ID
 	r.AllowPush = true
 	r.AllowPull = true
+	r.Config = ".drone.yml"
 	r.Timeout = 60 // 1 hour default build time
 	r.Hash = base32.StdEncoding.EncodeToString(
 		securecookie.GenerateRandomKey(32),

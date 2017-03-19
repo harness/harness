@@ -3,8 +3,6 @@ package model
 // Config defines system configuration parameters.
 type Config struct {
 	Open   bool            // Enables open registration
-	Yaml   string          // Customize the Yaml configuration file name
-	Shasum string          // Customize the Yaml checksum file name
 	Secret string          // Secret token used to authenticate agents
 	Admins map[string]bool // Administrative users
 	Orgs   map[string]bool // Organization whitelist
