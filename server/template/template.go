@@ -24,6 +24,14 @@ func Load() *template.Template {
 	return tmpl
 }
 
+// Glob loads the templates matching the given pattern. This function
+// will not compile if go generate is not executed before.
+func Glob(pattern string) *template.Template {
+	return template.Must(
+		template.New("_").Funcs(template.FuncMap{"json": marshal}).ParseGlob(pattern),
+	)
+}
+
 // marshal is a helper function to render data as JSON inside the template.
 func marshal(v interface{}) template.JS {
 	a, _ := json.Marshal(v)

@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 
@@ -21,12 +22,20 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e := gin.New()
 	e.Use(gin.Recovery())
 
-	e.SetHTMLTemplate(template.Load())
+	if pattern := os.Getenv("DRONE_TEMPLATE_GLOB"); pattern == "" {
+		e.SetHTMLTemplate(template.Load())
+	} else {
+		e.SetHTMLTemplate(template.Glob(pattern))
+	}
 
-	fs := http.FileServer(dist.AssetFS())
-	e.GET("/static/*filepath", func(c *gin.Context) {
-		fs.ServeHTTP(c.Writer, c.Request)
-	})
+	if dir := os.Getenv("DRONE_STATIC_DIR"); dir == "" {
+		fs := http.FileServer(dist.AssetFS())
+		e.GET("/static/*filepath", func(c *gin.Context) {
+			fs.ServeHTTP(c.Writer, c.Request)
+		})
+	} else {
+		e.Static("/static", dir)
+	}
 
 	e.Use(header.NoCache)
 	e.Use(header.Options)
@@ -174,3 +183,10 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 
 	return e
 }
+
+// type FileHandler interface {
+// 	Index(res http.ResponseWriter, data interface{}) error
+// 	Login(res http.ResponseWriter, data interface{}) error
+// 	Error(res http.ResponseWriter, data interface{}) error
+// 	Asset(res http.ResponseWriter, req *http.Request)
+// }
