@@ -34,7 +34,7 @@ func buildLogs(c *cli.Context) error {
 
 	buildArg := c.Args().Get(1)
 	var number int
-	if buildArg == "last" {
+	if buildArg == "" {
 		// Fetch the build number from the last build
 		build, err := client.BuildLast(owner, name, "")
 		if err != nil {
@@ -44,7 +44,7 @@ func buildLogs(c *cli.Context) error {
 	} else {
 		number, err = strconv.Atoi(buildArg)
 		if err != nil {
-			return err
+			return fmt.Errorf("Error: Invalid number or missing job number. eg 100")
 		}
 	}
 
@@ -72,7 +72,7 @@ func buildLogs(c *cli.Context) error {
 		if err = dec.Decode(&line); err != nil {
 			return err
 		}
-		fmt.Printf("%s\n", line.Out)
+		fmt.Printf("%s", line.Out)
 	}
 
 	_, err = dec.Token()
