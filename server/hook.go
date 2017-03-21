@@ -422,6 +422,10 @@ func (b *builder) Build() ([]*buildItem, error) {
 			environ[k] = v
 		}
 
+		for k, v := range axis {
+			environ[k] = v
+		}
+
 		secrets := map[string]string{}
 		for _, sec := range b.Secs {
 			if !sec.MatchEvent(b.Curr.Event) {
@@ -439,9 +443,11 @@ func (b *builder) Build() ([]*buildItem, error) {
 		}
 
 		y := b.Yaml
-		if s, err := envsubst.Eval(y, sub); err != nil {
-			y = s
+		s, err := envsubst.Eval(y, sub)
+		if err != nil {
+			return nil, err
 		}
+		y = s
 
 		parsed, err := yaml.ParseString(y)
 		if err != nil {
