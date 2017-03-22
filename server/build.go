@@ -205,9 +205,9 @@ func PostBuild(c *gin.Context) {
 	}
 
 	// Fetch secrets file but don't exit on error as it's optional
-	sec, err := remote_.File(user, repo, build, config.Shasum)
+	_, err := remote_.File(user, repo, build, config.Shasum)
 	if err != nil {
-		log.Debugf("cannot find build secrets for %s. %s", repo.FullName, err)
+		log.Debugf("cannot find build rets for %s. %s", repo.FullName, err)
 	}
 
 	netrc, err := remote_.Netrc(user, repo)
