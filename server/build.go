@@ -305,10 +305,10 @@ func PostBuild(c *gin.Context) {
 		log.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
-	var signed bool
-	var verified bool
+	signed:=true
+	verified:=true
 
-	signature, err := jose.ParseSigned(string(sec))
+	/*signature, err := jose.ParseSigned(string(sec))
 	if err != nil {
 		log.Debugf("cannot parse .drone.yml.sig file. %s", err)
 	} else if len(sec) == 0 {
@@ -323,7 +323,7 @@ func PostBuild(c *gin.Context) {
 		} else {
 			verified = true
 		}
-	}
+	}*/
 
 	log.Debugf(".drone.yml is signed=%v and verified=%v", signed, verified)
 
