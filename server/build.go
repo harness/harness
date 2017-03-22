@@ -13,8 +13,7 @@ import (
 	"github.com/drone/drone/store"
 	"github.com/drone/drone/yaml"
 	"github.com/gin-gonic/gin"
-	"github.com/square/go-jose"
-
+	
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/mq/stomp"
