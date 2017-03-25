@@ -181,6 +181,11 @@ func (s *scanner) scanEscaped(r rune) bool {
 	if s.mode&scanEscape == 0 {
 		return false
 	}
+	if r == '$' {
+		if s.peek() == '$' {
+			return true
+		}
+	}
 	if r != '\\' {
 		return false
 	}

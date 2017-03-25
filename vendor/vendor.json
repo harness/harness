@@ -285,16 +285,16 @@
 			"revisionTime": "2017-02-10T18:43:46Z"
 		},
 		{
-			"checksumSHA1": "7tosn2Sxlubl+7ElXSZ6Mz8tAjY=",
+			"checksumSHA1": "pjMV8mwWcQ0Kk9cbLWweTGiqYPk=",
 			"path": "github.com/drone/envsubst",
-			"revision": "3e65ae5fd2d944d56fdf52cb3f887247498d50e9",
-			"revisionTime": "2017-01-18T15:01:55Z"
+			"revision": "523de92ea410a5756012669fb628fe42a3056b3e",
+			"revisionTime": "2017-03-25T05:49:59Z"
 		},
 		{
-			"checksumSHA1": "LPKfsjm4AYVgCLVcAWnQdSpt5SA=",
+			"checksumSHA1": "CVG/vocbXGLbGKRO//TOlicOBkw=",
 			"path": "github.com/drone/envsubst/parse",
-			"revision": "3e65ae5fd2d944d56fdf52cb3f887247498d50e9",
-			"revisionTime": "2017-01-18T15:01:55Z"
+			"revision": "523de92ea410a5756012669fb628fe42a3056b3e",
+			"revisionTime": "2017-03-25T05:49:59Z"
 		},
 		{
 			"checksumSHA1": "++oBqqmh8bt50iB6/I+BHnrzC80=",

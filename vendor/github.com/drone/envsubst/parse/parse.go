@@ -30,7 +30,7 @@ func (t *Tree) Parse(buf string) (tree *Tree, err error) {
 
 func (t *Tree) parseAny() (Node, error) {
 	t.scanner.accept = acceptRune
-	t.scanner.mode = scanIdent | scanLbrack
+	t.scanner.mode = scanIdent | scanLbrack | scanEscape
 
 	switch t.scanner.scan() {
 	case tokenIdent:
