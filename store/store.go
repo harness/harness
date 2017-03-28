@@ -144,6 +144,17 @@ type Store interface {
 	UpdateAgent(*model.Agent) error
 
 	DeleteAgent(*model.Agent) error
+
+	ProcFind(*model.Build, int) (*model.Proc, error)
+	ProcChild(*model.Build, int, string) (*model.Proc, error)
+	ProcList(*model.Build) ([]*model.Proc, error)
+	ProcCreate([]*model.Proc) error
+	ProcUpdate(*model.Proc) error
+
+	FileList(*model.Build) ([]*model.File, error)
+	FileFind(*model.Proc, string) (*model.File, error)
+	FileRead(*model.Proc, string) (io.ReadCloser, error)
+	FileCreate(*model.File, io.Reader) error
 }
 
 const globalTeamName = "__global__"
