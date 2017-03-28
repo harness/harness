@@ -9,10 +9,9 @@ import (
 )
 
 func TestFileFind(t *testing.T) {
-	db := openTest()
-	defer db.Close()
+	s := newTest()
+	defer s.Close()
 
-	s := From(db)
 	if err := s.FileCreate(
 		&model.File{
 			BuildID: 2,
@@ -63,10 +62,9 @@ func TestFileFind(t *testing.T) {
 }
 
 func TestFileList(t *testing.T) {
-	db := openTest()
-	defer db.Close()
+	s := newTest()
+	defer s.Close()
 
-	s := From(db)
 	s.FileCreate(
 		&model.File{
 			BuildID: 1,
@@ -100,10 +98,9 @@ func TestFileList(t *testing.T) {
 }
 
 func TestFileIndexes(t *testing.T) {
-	db := openTest()
-	defer db.Close()
+	s := newTest()
+	defer s.Close()
 
-	s := From(db)
 	if err := s.FileCreate(
 		&model.File{
 			BuildID: 1,
@@ -134,10 +131,10 @@ func TestFileIndexes(t *testing.T) {
 }
 
 // func TestFileCascade(t *testing.T) {
-// 	db := openTest()
-// 	defer db.Close()
+// 	s := newTest()
+// 	defer s.Close()
 //
-// 	s := From(db)
+//
 // 	err1 := s.ProcCreate([]*model.Proc{
 // 		{
 // 			BuildID: 1,

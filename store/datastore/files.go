@@ -12,21 +12,21 @@ import (
 )
 
 func (db *datastore) FileList(build *model.Build) ([]*model.File, error) {
-	stmt := sql.Lookup(sql.DriverMysql, "files-find-build")
+	stmt := sql.Lookup(db.driver, "files-find-build")
 	list := []*model.File{}
 	err := meddler.QueryAll(db, &list, stmt, build.ID)
 	return list, err
 }
 
 func (db *datastore) FileFind(proc *model.Proc, name string) (*model.File, error) {
-	stmt := sql.Lookup(sql.DriverMysql, "files-find-proc-name")
+	stmt := sql.Lookup(db.driver, "files-find-proc-name")
 	file := new(model.File)
 	err := meddler.QueryRow(db, file, stmt, proc.ID, name)
 	return file, err
 }
 
 func (db *datastore) FileRead(proc *model.Proc, name string) (io.ReadCloser, error) {
-	stmt := sql.Lookup(sql.DriverMysql, "files-find-proc-name-data")
+	stmt := sql.Lookup(db.driver, "files-find-proc-name-data")
 	file := new(fileData)
 	err := meddler.QueryRow(db, file, stmt, proc.ID, name)
 	buf := bytes.NewBuffer(file.Data)

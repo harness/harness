@@ -7,10 +7,9 @@ import (
 )
 
 func TestProcFind(t *testing.T) {
-	db := openTest()
-	defer db.Close()
+	s := newTest()
+	defer s.Close()
 
-	s := From(db)
 	err := s.ProcCreate([]*model.Proc{
 		{
 			BuildID:  1000,
@@ -57,10 +56,9 @@ func TestProcFind(t *testing.T) {
 }
 
 func TestProcChild(t *testing.T) {
-	db := openTest()
-	defer db.Close()
+	s := newTest()
+	defer s.Close()
 
-	s := From(db)
 	err := s.ProcCreate([]*model.Proc{
 		{
 			BuildID: 1,
@@ -97,10 +95,9 @@ func TestProcChild(t *testing.T) {
 }
 
 func TestProcList(t *testing.T) {
-	db := openTest()
-	defer db.Close()
+	s := newTest()
+	defer s.Close()
 
-	s := From(db)
 	err := s.ProcCreate([]*model.Proc{
 		{
 			BuildID: 2,
@@ -140,10 +137,9 @@ func TestProcList(t *testing.T) {
 }
 
 func TestProcUpdate(t *testing.T) {
-	db := openTest()
-	defer db.Close()
+	s := newTest()
+	defer s.Close()
 
-	s := From(db)
 	proc := &model.Proc{
 		BuildID:  1,
 		PID:      1,
@@ -177,10 +173,9 @@ func TestProcUpdate(t *testing.T) {
 }
 
 func TestProcIndexes(t *testing.T) {
-	db := openTest()
-	defer db.Close()
+	s := newTest()
+	defer s.Close()
 
-	s := From(db)
 	if err := s.ProcCreate([]*model.Proc{
 		{
 			BuildID: 1,

@@ -17,19 +17,24 @@ import (
 // of the sql/database driver with a relational database backend.
 type datastore struct {
 	*sql.DB
+
+	driver string
+	config string
 }
 
 // New creates a database connection for the given driver and datasource
 // and returns a new Store.
 func New(driver, config string) store.Store {
-	return From(
-		open(driver, config),
-	)
+	return &datastore{
+		DB:     open(driver, config),
+		driver: driver,
+		config: config,
+	}
 }
 
 // From returns a Store using an existing database connection.
 func From(db *sql.DB) store.Store {
-	return &datastore{db}
+	return &datastore{DB: db}
 }
 
 // open opens a new database connection with the specified
@@ -60,7 +65,7 @@ func open(driver, config string) *sql.DB {
 	return db
 }
 
-// OpenTest opens a new database connection for testing purposes.
+// openTest opens a new database connection for testing purposes.
 // The database driver and connection string are provided by
 // environment variables, with fallback to in-memory sqlite.
 func openTest() *sql.DB {
@@ -73,6 +78,25 @@ func openTest() *sql.DB {
 		config = os.Getenv("DATABASE_CONFIG")
 	}
 	return open(driver, config)
+}
+
+// newTest creates a new database connection for testing purposes.
+// The database driver and connection string are provided by
+// environment variables, with fallback to in-memory sqlite.
+func newTest() *datastore {
+	var (
+		driver = "sqlite3"
+		config = ":memory:"
+	)
+	if os.Getenv("DATABASE_DRIVER") != "" {
+		driver = os.Getenv("DATABASE_DRIVER")
+		config = os.Getenv("DATABASE_CONFIG")
+	}
+	return &datastore{
+		DB:     open(driver, config),
+		driver: driver,
+		config: config,
+	}
 }
 
 // helper function to ping the database with backoff to ensure
