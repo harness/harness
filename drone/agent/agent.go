@@ -6,12 +6,14 @@ import (
 	"log"
 	"math"
 	"net/url"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/cncd/pipeline/pipeline"
 	"github.com/cncd/pipeline/pipeline/backend"
 	"github.com/cncd/pipeline/pipeline/backend/docker"
+	"github.com/cncd/pipeline/pipeline/backend/native"
 	"github.com/cncd/pipeline/pipeline/interrupt"
 	"github.com/cncd/pipeline/pipeline/multipart"
 	"github.com/cncd/pipeline/pipeline/rpc"
@@ -53,6 +55,11 @@ var AgentCmd = cli.Command{
 			Name:   "debug",
 			Usage:  "start the agent in debug mode",
 		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_NATIVE",
+			Name:   "native",
+			Usage:  "start the agent in native execution mode - run CI commands on host",
+		},
 		cli.StringFlag{
 			EnvVar: "DRONE_FILTER",
 			Name:   "filter",
@@ -84,6 +91,7 @@ func loop(c *cli.Context) error {
 		},
 	}
 
+	//accessToken, _ := token.New(token.AgentToken, "").Sign(c.String("drone-secret"))
 	client, err := rpc.NewClient(
 		endpoint.String(),
 		rpc.WithRetryLimit(
@@ -119,7 +127,7 @@ func loop(c *cli.Context) error {
 				if sigterm.IsSet() {
 					return
 				}
-				if err := run(ctx, client, filter); err != nil {
+				if err := run(ctx, client, filter, c.Bool("native")); err != nil {
 					log.Printf("build runner encountered error: exiting: %s", err)
 					return
 				}
@@ -136,7 +144,7 @@ const (
 	maxLogsUpload = 5000000
 )
 
-func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
+func run(ctx context.Context, client rpc.Peer, filter rpc.Filter, nativeBackend bool) error {
 	log.Println("pipeline: request next execution")
 
 	// get the next job from the queue
@@ -149,8 +157,18 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	}
 	log.Printf("pipeline: received next execution: %s", work.ID)
 
-	// new docker engine
-	engine, err := docker.NewEnv()
+	var engine backend.Engine
+
+	if nativeBackend {
+		// new native engine
+		pwd, err := os.Getwd()
+		if err == nil {
+			engine, err = native.NewEnv(pwd)
+		}
+	} else {
+		// new docker engine
+		engine, err = docker.NewEnv()
+	}
 	if err != nil {
 		return err
 	}
