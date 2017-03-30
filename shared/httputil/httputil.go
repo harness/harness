@@ -29,18 +29,10 @@ func IsHttps(r *http.Request) bool {
 // using the X-Forwarded-Proto, if the original request was HTTPS
 // and routed through a reverse proxy with SSL termination.
 func GetScheme(r *http.Request) string {
-	switch {
-	case r.URL.Scheme == "https":
+	if IsHttps(r) {
 		return "https"
-	case r.TLS != nil:
-		return "https"
-	case strings.HasPrefix(r.Proto, "HTTPS"):
-		return "https"
-	case r.Header.Get("X-Forwarded-Proto") == "https":
-		return "https"
-	default:
-		return "http"
 	}
+	return "http"
 }
 
 // GetHost is a helper function that evaluates the http.Request
