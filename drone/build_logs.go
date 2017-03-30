@@ -72,7 +72,7 @@ func buildLogs(c *cli.Context) error {
 		if err = dec.Decode(&line); err != nil {
 			return err
 		}
-		fmt.Printf("%s", line.Out)
+		fmt.Printf("%s\n", line.Out)
 	}
 
 	_, err = dec.Token()
