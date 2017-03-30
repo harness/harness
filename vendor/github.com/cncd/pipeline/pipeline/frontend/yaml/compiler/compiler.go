@@ -69,7 +69,7 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 			Vargs: map[string]interface{}{"depth": "0"},
 		}
 		name := fmt.Sprintf("%s_clone", c.prefix)
-		step := c.createProcess(name, container)
+		step := c.createProcess(name, container, conf.Platform)
 
 		stage := new(backend.Stage)
 		stage.Name = name
@@ -87,7 +87,7 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 			stage.Alias = container.Name
 
 			name := fmt.Sprintf("%s_clone_%d", c.prefix, i)
-			step := c.createProcess(name, container)
+			step := c.createProcess(name, container, conf.Platform)
 			stage.Steps = append(stage.Steps, step)
 
 			config.Stages = append(config.Stages, stage)
@@ -106,7 +106,7 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 
 		for i, container := range conf.Services.Containers {
 			name := fmt.Sprintf("%s_services_%d", c.prefix, i)
-			step := c.createProcess(name, container)
+			step := c.createProcess(name, container, conf.Platform)
 			stage.Steps = append(stage.Steps, step)
 
 		}
@@ -131,7 +131,7 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 		}
 
 		name := fmt.Sprintf("%s_step_%d", c.prefix, i)
-		step := c.createProcess(name, container)
+		step := c.createProcess(name, container, conf.Platform)
 		stage.Steps = append(stage.Steps, step)
 	}
 

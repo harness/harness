@@ -8,7 +8,7 @@ import (
 	"github.com/cncd/pipeline/pipeline/frontend/yaml"
 )
 
-func (c *Compiler) createProcess(name string, container *yaml.Container) *backend.Step {
+func (c *Compiler) createProcess(name string, container *yaml.Container, platform string) *backend.Step {
 	var (
 		detached   bool
 		workingdir string
@@ -86,6 +86,19 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 		environment["CI_SCRIPT"] = generateScriptPosix(container.Commands)
 		environment["HOME"] = "/root"
 		environment["SHELL"] = "/bin/sh"
+
+		// If specified platform, assume we run on native host, without container
+		switch platform {
+		case "darwin/amd64":
+			// override base64 args for osx: osx base64 requires -D instead of -d
+			command = []string{"echo $CI_SCRIPT | base64 -D | /bin/sh -e"}
+		case "windows/amd64":
+			// override commands for windows
+			entrypoint = []string{"cmd.exe", "/c"}
+			command = []string{"%CI_SCRIPT_FILE%"}
+			environment["CI_SCRIPT"] = generateScriptWindows(container.Commands)
+			environment["CI_SCRIPT_FILE"] = "drone-tmp-" + name + ".cmd"
+		}
 	}
 
 	return &backend.Step{
