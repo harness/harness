@@ -9,6 +9,7 @@ var index = map[string]string{
 	"files-find-build":          filesFindBuild,
 	"files-find-proc-name":      filesFindProcName,
 	"files-find-proc-name-data": filesFindProcNameData,
+	"procs-find-id":             procsFindId,
 	"procs-find-build":          procsFindBuild,
 	"procs-find-build-pid":      procsFindBuildPid,
 	"procs-find-build-ppid":     procsFindBuildPpid,
@@ -54,6 +55,26 @@ SELECT
 FROM files
 WHERE file_proc_id = ?
   AND file_name    = ?
+`
+
+var procsFindId = `
+SELECT
+ proc_id
+,proc_build_id
+,proc_pid
+,proc_ppid
+,proc_pgid
+,proc_name
+,proc_state
+,proc_error
+,proc_exit_code
+,proc_started
+,proc_stopped
+,proc_machine
+,proc_platform
+,proc_environ
+FROM procs
+WHERE proc_id = ?
 `
 
 var procsFindBuild = `

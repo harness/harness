@@ -8,7 +8,10 @@ import (
 
 func TestProcFind(t *testing.T) {
 	s := newTest()
-	defer s.Close()
+	defer func() {
+		s.Exec("delete from procs")
+		s.Close()
+	}()
 
 	err := s.ProcCreate([]*model.Proc{
 		{
@@ -57,7 +60,10 @@ func TestProcFind(t *testing.T) {
 
 func TestProcChild(t *testing.T) {
 	s := newTest()
-	defer s.Close()
+	defer func() {
+		s.Exec("delete from procs")
+		s.Close()
+	}()
 
 	err := s.ProcCreate([]*model.Proc{
 		{
@@ -96,7 +102,10 @@ func TestProcChild(t *testing.T) {
 
 func TestProcList(t *testing.T) {
 	s := newTest()
-	defer s.Close()
+	defer func() {
+		s.Exec("delete from procs")
+		s.Close()
+	}()
 
 	err := s.ProcCreate([]*model.Proc{
 		{
@@ -138,7 +147,10 @@ func TestProcList(t *testing.T) {
 
 func TestProcUpdate(t *testing.T) {
 	s := newTest()
-	defer s.Close()
+	defer func() {
+		s.Exec("delete from procs")
+		s.Close()
+	}()
 
 	proc := &model.Proc{
 		BuildID:  1,
@@ -174,7 +186,10 @@ func TestProcUpdate(t *testing.T) {
 
 func TestProcIndexes(t *testing.T) {
 	s := newTest()
-	defer s.Close()
+	defer func() {
+		s.Exec("delete from procs")
+		s.Close()
+	}()
 
 	if err := s.ProcCreate([]*model.Proc{
 		{

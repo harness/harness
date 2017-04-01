@@ -145,6 +145,7 @@ type Store interface {
 
 	DeleteAgent(*model.Agent) error
 
+	ProcLoad(int64) (*model.Proc, error)
 	ProcFind(*model.Build, int) (*model.Proc, error)
 	ProcChild(*model.Build, int, string) (*model.Proc, error)
 	ProcList(*model.Build) ([]*model.Proc, error)

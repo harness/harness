@@ -490,6 +490,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 			// TODO ability to set global volumes for things like certs
 			compiler.WithVolumes(),
 			compiler.WithWorkspaceFromURL("/drone", b.Curr.Link),
+			compiler.WithMetadata(metadata),
 		).Compile(parsed)
 
 		for _, sec := range b.Secs {

@@ -1,3 +1,23 @@
+-- name: procs-find-id
+
+SELECT
+ proc_id
+,proc_build_id
+,proc_pid
+,proc_ppid
+,proc_pgid
+,proc_name
+,proc_state
+,proc_error
+,proc_exit_code
+,proc_started
+,proc_stopped
+,proc_machine
+,proc_platform
+,proc_environ
+FROM procs
+WHERE proc_id = $1
+
 -- name: procs-find-build
 
 SELECT

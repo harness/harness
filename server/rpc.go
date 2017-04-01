@@ -4,13 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
-	"io"
 	"log"
 	"os"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/cncd/logging"
 	"github.com/cncd/pipeline/pipeline/rpc"
 	"github.com/cncd/pubsub"
@@ -109,20 +106,20 @@ func (s *RPC) Extend(c context.Context, id string) error {
 
 // Update implements the rpc.Update function
 func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
-	jobID, err := strconv.ParseInt(id, 10, 64)
+	procID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return err
 	}
 
-	job, err := s.store.GetJob(jobID)
+	proc, err := s.store.ProcLoad(procID)
 	if err != nil {
-		log.Printf("error: cannot find job with id %d: %s", jobID, err)
+		log.Printf("error: rpc.update: cannot find proc with id %d: %s", procID, err)
 		return err
 	}
 
-	build, err := s.store.GetBuild(job.BuildID)
+	build, err := s.store.GetBuild(proc.BuildID)
 	if err != nil {
-		log.Printf("error: cannot find build with id %d: %s", job.BuildID, err)
+		log.Printf("error: cannot find build with id %d: %s", proc.BuildID, err)
 		return err
 	}
 
@@ -132,92 +129,209 @@ func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
 		return err
 	}
 
-	if build.Status != model.StatusRunning {
-
-	}
-
-	job.Started = state.Started
-	job.Finished = state.Finished
-	job.ExitCode = state.ExitCode
-	job.Status = model.StatusRunning
-	job.Error = state.Error
-
-	if build.Status == model.StatusPending {
-		build.Started = job.Started
-		build.Status = model.StatusRunning
-		s.store.UpdateBuild(build)
-	}
-
-	log.Printf("pipeline: update %s: exited=%v, exit_code=%d", id, state.Exited, state.ExitCode)
-
 	if state.Exited {
-
-		job.Status = model.StatusSuccess
-		if job.ExitCode != 0 || job.Error != "" {
-			job.Status = model.StatusFailure
-		}
-
-		// save the logs
-		var buf bytes.Buffer
-		if serr := s.logger.Snapshot(context.Background(), id, &buf); serr != nil {
-			log.Printf("error: snapshotting logs: %s", serr)
-		}
-		if werr := s.store.WriteLog(job, &buf); werr != nil {
-			log.Printf("error: persisting logs: %s", werr)
-		}
-
-		// close the logger
-		s.logger.Close(c, id)
-		s.queue.Done(c, id)
+		proc.Stopped = state.Finished
+		proc.ExitCode = state.ExitCode
+		proc.Error = state.Error
+	} else {
+		proc.Started = state.Started
+		proc.State = model.StatusRunning
 	}
 
-	// hackity hack
-	cc := context.WithValue(c, "store", s.store)
-	ok, uerr := store.UpdateBuildJob(cc, build, job)
-	if uerr != nil {
-		log.Printf("error: updating job: %s", uerr)
-	}
-	if ok {
-		// get the user because we transfer the user form the server to agent
-		// and back we lose the token which does not get serialized to json.
-		user, uerr := s.store.GetUser(repo.UserID)
-		if uerr != nil {
-			logrus.Errorf("Unable to find user. %s", err)
-		} else {
-			s.remote.Status(user, repo, build,
-				fmt.Sprintf("%s/%s/%d", s.host, repo.FullName, build.Number))
-		}
+	if err := s.store.ProcUpdate(proc); err != nil {
+		log.Printf("error: rpc.update: cannot update proc: %s", err)
 	}
 
-	message := pubsub.Message{}
+	build.Procs, _ = s.store.ProcList(build)
+	message := pubsub.Message{
+		Labels: map[string]string{
+			"repo":    repo.FullName,
+			"private": strconv.FormatBool(repo.IsPrivate),
+		},
+	}
 	message.Data, _ = json.Marshal(model.Event{
-		Type: func() model.EventType {
-			// HACK we don't even really care about the event type.
-			// so we should just simplify how events are triggered.
-			// WTF was this being used for?????????????????????????
-			if job.Status == model.StatusRunning {
-				return model.Started
-			}
-			return model.Finished
-		}(),
 		Repo:  *repo,
 		Build: *build,
-		Job:   *job,
 	})
-	message.Labels = map[string]string{
-		"repo":    repo.FullName,
-		"private": strconv.FormatBool(repo.IsPrivate),
-	}
 	s.pubsub.Publish(c, "topic/events", message)
-	log.Println("finish rpc.update")
+
 	return nil
 }
 
 // Upload implements the rpc.Upload function
-func (s *RPC) Upload(c context.Context, id, mime string, file io.Reader) error { return nil }
+func (s *RPC) Upload(c context.Context, id string, file *rpc.File) error {
+	procID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return err
+	}
+
+	proc, err := s.store.ProcLoad(procID)
+	if err != nil {
+		log.Printf("error: cannot find proc with id %d: %s", procID, err)
+		return err
+	}
+
+	return s.store.FileCreate(&model.File{
+		BuildID: proc.BuildID,
+		ProcID:  proc.ID,
+		Mime:    file.Mime,
+		Name:    file.Name,
+		Size:    file.Size,
+		Time:    file.Time,
+	},
+		bytes.NewBuffer(file.Data),
+	)
+}
+
+// Init implements the rpc.Init function
+func (s *RPC) Init(c context.Context, id string, state rpc.State) error {
+	procID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return err
+	}
+
+	proc, err := s.store.ProcLoad(procID)
+	if err != nil {
+		log.Printf("error: cannot find proc with id %d: %s", procID, err)
+		return err
+	}
+
+	build, err := s.store.GetBuild(proc.BuildID)
+	if err != nil {
+		log.Printf("error: cannot find build with id %d: %s", proc.BuildID, err)
+		return err
+	}
+
+	repo, err := s.store.GetRepo(build.RepoID)
+	if err != nil {
+		log.Printf("error: cannot find repo with id %d: %s", build.RepoID, err)
+		return err
+	}
+
+	if build.Status == model.StatusPending {
+		build.Status = model.StatusRunning
+		build.Started = state.Started
+		if err := s.store.UpdateBuild(build); err != nil {
+			log.Printf("error: init: cannot update build_id %d state: %s", build.ID, err)
+		}
+	}
+
+	defer func() {
+		build.Procs, _ = s.store.ProcList(build)
+		message := pubsub.Message{
+			Labels: map[string]string{
+				"repo":    repo.FullName,
+				"private": strconv.FormatBool(repo.IsPrivate),
+			},
+		}
+		message.Data, _ = json.Marshal(model.Event{
+			Repo:  *repo,
+			Build: *build,
+		})
+		s.pubsub.Publish(c, "topic/events", message)
+	}()
+
+	proc.Started = state.Started
+	proc.State = model.StatusRunning
+	return s.store.ProcUpdate(proc)
+}
 
 // Done implements the rpc.Done function
-func (s *RPC) Done(c context.Context, id string) error { return nil }
+func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
+	procID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return err
+	}
+
+	proc, err := s.store.ProcLoad(procID)
+	if err != nil {
+		log.Printf("error: cannot find proc with id %d: %s", procID, err)
+		return err
+	}
+
+	build, err := s.store.GetBuild(proc.BuildID)
+	if err != nil {
+		log.Printf("error: cannot find build with id %d: %s", proc.BuildID, err)
+		return err
+	}
+
+	repo, err := s.store.GetRepo(build.RepoID)
+	if err != nil {
+		log.Printf("error: cannot find repo with id %d: %s", build.RepoID, err)
+		return err
+	}
+
+	if build.Status == model.StatusPending {
+		build.Status = model.StatusRunning
+		build.Started = state.Started
+		if err := s.store.UpdateBuild(build); err != nil {
+			log.Printf("error: done: cannot update build_id %d state: %s", build.ID, err)
+		}
+	}
+
+	proc.Started = state.Started
+	proc.State = model.StatusRunning
+	proc.Stopped = state.Finished
+	proc.Error = state.Error
+	proc.ExitCode = state.ExitCode
+	if err := s.store.ProcUpdate(proc); err != nil {
+		log.Printf("error: done: cannot update proc_id %d state: %s", procID, err)
+	}
+
+	if err := s.queue.Done(c, id); err != nil {
+		log.Printf("error: done: cannot ack proc_id %d: %s", procID, err)
+	}
+
+	done := false
+	status := model.StatusSuccess
+	// TODO handle this error
+	procs, _ := s.store.ProcList(build)
+	for _, p := range procs {
+		if !proc.Running() && p.PPID == proc.PID {
+			p.State = model.StatusSkipped
+			if p.Started != 0 {
+				p.State = model.StatusKilled
+				p.Stopped = proc.Stopped
+			}
+			if err := s.store.ProcUpdate(p); err != nil {
+				log.Printf("error: done: cannot update proc_id %d child state: %s", p.ID, err)
+			}
+		}
+		if !proc.Running() && p.PPID == 0 {
+			done = true
+			if p.Failing() {
+				status = model.StatusFailure
+			}
+			continue
+		}
+	}
+	if done {
+		build.Status = status
+		build.Finished = proc.Stopped
+		if err := s.store.UpdateBuild(build); err != nil {
+			log.Printf("error: done: cannot update build_id %d final state: %s", build.ID, err)
+		}
+	}
+
+	if err := s.logger.Close(c, id); err != nil {
+		log.Printf("error: done: cannot close build_id %d logger: %s", proc.ID, err)
+	}
+
+	build.Procs = procs
+	message := pubsub.Message{
+		Labels: map[string]string{
+			"repo":    repo.FullName,
+			"private": strconv.FormatBool(repo.IsPrivate),
+		},
+	}
+	message.Data, _ = json.Marshal(model.Event{
+		Repo:  *repo,
+		Build: *build,
+	})
+	s.pubsub.Publish(c, "topic/events", message)
+
+	return nil
+}
 
 // Log implements the rpc.Log function
 func (s *RPC) Log(c context.Context, id string, line *rpc.Line) error {

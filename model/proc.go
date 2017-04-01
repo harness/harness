@@ -2,6 +2,7 @@ package model
 
 // ProcStore persists process information to storage.
 type ProcStore interface {
+	ProcLoad(int64) (*Proc, error)
 	ProcFind(*Build, int) (*Proc, error)
 	ProcChild(*Build, int, string) (*Proc, error)
 	ProcList(*Build) ([]*Proc, error)
@@ -10,6 +11,7 @@ type ProcStore interface {
 }
 
 // Proc represents a process in the build pipeline.
+// swagger:model proc
 type Proc struct {
 	ID       int64             `json:"id"                   meddler:"proc_id,pk"`
 	BuildID  int64             `json:"build_id"             meddler:"proc_build_id"`

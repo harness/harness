@@ -6,6 +6,13 @@ import (
 	"github.com/russross/meddler"
 )
 
+func (db *datastore) ProcLoad(id int64) (*model.Proc, error) {
+	stmt := sql.Lookup(db.driver, "procs-find-id")
+	proc := new(model.Proc)
+	err := meddler.QueryRow(db, proc, stmt, id)
+	return proc, err
+}
+
 func (db *datastore) ProcFind(build *model.Build, pid int) (*model.Proc, error) {
 	stmt := sql.Lookup(db.driver, "procs-find-build-pid")
 	proc := new(model.Proc)

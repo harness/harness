@@ -36,12 +36,13 @@ func (l *Line) String() string {
 
 // LineWriter sends logs to the client.
 type LineWriter struct {
-	peer Peer
-	id   string
-	name string
-	num  int
-	now  time.Time
-	rep  *strings.Replacer
+	peer  Peer
+	id    string
+	name  string
+	num   int
+	now   time.Time
+	rep   *strings.Replacer
+	lines []*Line
 }
 
 // NewLineWriter returns a new line reader.
@@ -91,5 +92,16 @@ func (w *LineWriter) Write(p []byte) (n int, err error) {
 	// 	w.peer.Log(context.Background(), w.id, line)
 	// 	w.num++
 	// }
+	w.lines = append(w.lines, line)
 	return len(p), nil
+}
+
+// Lines returns the line history
+func (w *LineWriter) Lines() []*Line {
+	return w.lines
+}
+
+// Clear clears the line history
+func (w *LineWriter) Clear() {
+	w.lines = w.lines[:0]
 }

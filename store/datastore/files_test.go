@@ -10,7 +10,10 @@ import (
 
 func TestFileFind(t *testing.T) {
 	s := newTest()
-	defer s.Close()
+	defer func() {
+		s.Exec("delete from files")
+		s.Close()
+	}()
 
 	if err := s.FileCreate(
 		&model.File{
@@ -63,7 +66,10 @@ func TestFileFind(t *testing.T) {
 
 func TestFileList(t *testing.T) {
 	s := newTest()
-	defer s.Close()
+	defer func() {
+		s.Exec("delete from files")
+		s.Close()
+	}()
 
 	s.FileCreate(
 		&model.File{
@@ -99,7 +105,10 @@ func TestFileList(t *testing.T) {
 
 func TestFileIndexes(t *testing.T) {
 	s := newTest()
-	defer s.Close()
+	defer func() {
+		s.Exec("delete from files")
+		s.Close()
+	}()
 
 	if err := s.FileCreate(
 		&model.File{
