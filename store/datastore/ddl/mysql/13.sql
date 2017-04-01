@@ -1,7 +1,7 @@
 -- +migrate Up
 
 CREATE TABLE procs (
- proc_id         INTEGER PRIMARY KEY AUTOINCREMENT
+ proc_id         INTEGER PRIMARY KEY AUTO_INCREMENT
 ,proc_build_id   INTEGER
 ,proc_pid        INTEGER
 ,proc_ppid       INTEGER
