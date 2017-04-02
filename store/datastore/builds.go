@@ -55,7 +55,7 @@ func (db *datastore) GetBuildQueue() ([]*model.Feed, error) {
 	return feed, err
 }
 
-func (db *datastore) CreateBuild(build *model.Build, jobs ...*model.Job) error {
+func (db *datastore) CreateBuild(build *model.Build, procs ...*model.Proc) error {
 	var number int
 	db.QueryRow(rebind(buildNumberLast), build.RepoID).Scan(&number)
 	build.Number = number + 1
@@ -65,11 +65,9 @@ func (db *datastore) CreateBuild(build *model.Build, jobs ...*model.Job) error {
 	if err != nil {
 		return err
 	}
-	for i, job := range jobs {
-		job.BuildID = build.ID
-		job.Number = i + 1
-		job.Enqueued = build.Created
-		err = meddler.Insert(db, jobTable, job)
+	for _, proc := range procs {
+		proc.BuildID = build.ID
+		err = meddler.Insert(db, "procs", proc)
 		if err != nil {
 			return err
 		}

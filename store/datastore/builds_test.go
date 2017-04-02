@@ -28,7 +28,7 @@ func TestBuilds(t *testing.T) {
 				Status: model.StatusSuccess,
 				Commit: "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
-			err := s.CreateBuild(&build, []*model.Job{}...)
+			err := s.CreateBuild(&build, []*model.Proc{}...)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(build.ID != 0).IsTrue()
 			g.Assert(build.Number).Equal(1)
@@ -42,7 +42,7 @@ func TestBuilds(t *testing.T) {
 				Status: model.StatusSuccess,
 				Commit: "85f8c029b902ed9400bc600bac301a0aadb144ac",
 			}
-			s.CreateBuild(&build, []*model.Job{}...)
+			s.CreateBuild(&build, []*model.Proc{}...)
 			build.Status = model.StatusRunning
 			err1 := s.UpdateBuild(&build)
 			getbuild, err2 := s.GetBuild(build.ID)
@@ -59,7 +59,7 @@ func TestBuilds(t *testing.T) {
 				RepoID: 1,
 				Status: model.StatusSuccess,
 			}
-			s.CreateBuild(&build, []*model.Job{}...)
+			s.CreateBuild(&build, []*model.Proc{}...)
 			getbuild, err := s.GetBuild(build.ID)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(build.ID).Equal(getbuild.ID)
@@ -76,8 +76,8 @@ func TestBuilds(t *testing.T) {
 				RepoID: 1,
 				Status: model.StatusPending,
 			}
-			err1 := s.CreateBuild(build1, []*model.Job{}...)
-			err2 := s.CreateBuild(build2, []*model.Job{}...)
+			err1 := s.CreateBuild(build1, []*model.Proc{}...)
+			err2 := s.CreateBuild(build2, []*model.Proc{}...)
 			getbuild, err3 := s.GetBuildNumber(&model.Repo{ID: 1}, build2.Number)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
@@ -98,8 +98,8 @@ func TestBuilds(t *testing.T) {
 				Status: model.StatusPending,
 				Ref:    "refs/pull/6",
 			}
-			err1 := s.CreateBuild(build1, []*model.Job{}...)
-			err2 := s.CreateBuild(build2, []*model.Job{}...)
+			err1 := s.CreateBuild(build1, []*model.Proc{}...)
+			err2 := s.CreateBuild(build2, []*model.Proc{}...)
 			getbuild, err3 := s.GetBuildRef(&model.Repo{ID: 1}, "refs/pull/6")
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
@@ -121,8 +121,8 @@ func TestBuilds(t *testing.T) {
 				Status: model.StatusPending,
 				Ref:    "refs/pull/6",
 			}
-			err1 := s.CreateBuild(build1, []*model.Job{}...)
-			err2 := s.CreateBuild(build2, []*model.Job{}...)
+			err1 := s.CreateBuild(build1, []*model.Proc{}...)
+			err2 := s.CreateBuild(build2, []*model.Proc{}...)
 			getbuild, err3 := s.GetBuildRef(&model.Repo{ID: 1}, "refs/pull/6")
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
@@ -146,8 +146,8 @@ func TestBuilds(t *testing.T) {
 				Branch: "dev",
 				Commit: "85f8c029b902ed9400bc600bac301a0aadb144aa",
 			}
-			err1 := s.CreateBuild(build1, []*model.Job{}...)
-			err2 := s.CreateBuild(build2, []*model.Job{}...)
+			err1 := s.CreateBuild(build1, []*model.Proc{}...)
+			err2 := s.CreateBuild(build2, []*model.Proc{}...)
 			getbuild, err3 := s.GetBuildCommit(&model.Repo{ID: 1}, build2.Commit, build2.Branch)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
@@ -174,8 +174,8 @@ func TestBuilds(t *testing.T) {
 				Commit: "85f8c029b902ed9400bc600bac301a0aadb144aa",
 				Event:  model.EventPush,
 			}
-			err1 := s.CreateBuild(build1, []*model.Job{}...)
-			err2 := s.CreateBuild(build2, []*model.Job{}...)
+			err1 := s.CreateBuild(build1, []*model.Proc{}...)
+			err2 := s.CreateBuild(build2, []*model.Proc{}...)
 			getbuild, err3 := s.GetBuildLast(&model.Repo{ID: 1}, build2.Branch)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
@@ -207,9 +207,9 @@ func TestBuilds(t *testing.T) {
 				Branch: "master",
 				Commit: "85f8c029b902ed9400bc600bac301a0aadb144aa",
 			}
-			err1 := s.CreateBuild(build1, []*model.Job{}...)
-			err2 := s.CreateBuild(build2, []*model.Job{}...)
-			err3 := s.CreateBuild(build3, []*model.Job{}...)
+			err1 := s.CreateBuild(build1, []*model.Proc{}...)
+			err2 := s.CreateBuild(build2, []*model.Proc{}...)
+			err3 := s.CreateBuild(build3, []*model.Proc{}...)
 			getbuild, err4 := s.GetBuildLastBefore(&model.Repo{ID: 1}, build3.Branch, build3.ID)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
@@ -232,8 +232,8 @@ func TestBuilds(t *testing.T) {
 				RepoID: 1,
 				Status: model.StatusSuccess,
 			}
-			s.CreateBuild(build1, []*model.Job{}...)
-			s.CreateBuild(build2, []*model.Job{}...)
+			s.CreateBuild(build1, []*model.Proc{}...)
+			s.CreateBuild(build2, []*model.Proc{}...)
 			builds, err := s.GetBuildList(&model.Repo{ID: 1})
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(builds)).Equal(2)

@@ -123,7 +123,7 @@ func PostHook(c *gin.Context) {
 
 	// if the remote has a refresh token, the current access token
 	// may be stale. Therefore, we should refresh prior to dispatching
-	// the job.
+	// the build.
 	if refresher, ok := remote_.(remote.Refresher); ok {
 		ok, _ := refresher.Refresh(user)
 		if ok {
@@ -221,7 +221,7 @@ func PostHook(c *gin.Context) {
 	build.RepoID = repo.ID
 	build.Verified = true
 
-	if err := store.CreateBuild(c, build, build.Jobs...); err != nil {
+	if err := store.CreateBuild(c, build, build.Procs...); err != nil {
 		logrus.Errorf("failure to save commit for %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)
 		return
@@ -268,11 +268,32 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
+	var pcounter = len(items)
+
 	for _, item := range items {
-		build.Jobs = append(build.Jobs, item.Job)
-		store.CreateJob(c, item.Job)
-		// TODO err
+		build.Procs = append(build.Procs, item.Proc)
+		item.Proc.BuildID = build.ID
+
+		for _, stage := range item.Config.Stages {
+			var gid int
+			for _, step := range stage.Steps {
+				pcounter++
+				if gid == 0 {
+					gid = pcounter
+				}
+				proc := &model.Proc{
+					BuildID: build.ID,
+					Name:    step.Alias,
+					PID:     pcounter,
+					PPID:    item.Proc.PID,
+					PGID:    gid,
+					State:   model.StatusPending,
+				}
+				build.Procs = append(build.Procs, proc)
+			}
+		}
 	}
+	store.FromContext(c).ProcCreate(build.Procs)
 
 	//
 	// publish topic
@@ -296,7 +317,7 @@ func PostHook(c *gin.Context) {
 
 	for _, item := range items {
 		task := new(queue.Task)
-		task.ID = fmt.Sprint(item.Job.ID)
+		task.ID = fmt.Sprint(item.Proc.ID)
 		task.Labels = map[string]string{}
 		task.Labels["platform"] = item.Platform
 		for k, v := range item.Labels {
@@ -304,7 +325,7 @@ func PostHook(c *gin.Context) {
 		}
 
 		task.Data, _ = json.Marshal(rpc.Pipeline{
-			ID:      fmt.Sprint(item.Job.ID),
+			ID:      fmt.Sprint(item.Proc.ID),
 			Config:  item.Config,
 			Timeout: b.Repo.Timeout,
 		})
@@ -315,7 +336,7 @@ func PostHook(c *gin.Context) {
 }
 
 // return the metadata from the cli context.
-func metadataFromStruct(repo *model.Repo, build, last *model.Build, job *model.Job, link string) frontend.Metadata {
+func metadataFromStruct(repo *model.Repo, build, last *model.Build, proc *model.Proc, link string) frontend.Metadata {
 	return frontend.Metadata{
 		Repo: frontend.Repo{
 			Name:    repo.Name,
@@ -368,8 +389,8 @@ func metadataFromStruct(repo *model.Repo, build, last *model.Build, job *model.J
 			},
 		},
 		Job: frontend.Job{
-			Number: job.Number,
-			Matrix: job.Environment,
+			Number: proc.PID,
+			Matrix: proc.Environ,
 		},
 		Sys: frontend.System{
 			Name: "drone",
@@ -390,7 +411,7 @@ type builder struct {
 }
 
 type buildItem struct {
-	Job      *model.Job
+	Proc     *model.Proc
 	Platform string
 	Labels   map[string]string
 	Config   *backend.Config
@@ -408,15 +429,15 @@ func (b *builder) Build() ([]*buildItem, error) {
 
 	var items []*buildItem
 	for i, axis := range axes {
-		job := &model.Job{
-			BuildID:     b.Curr.ID,
-			Number:      i + 1,
-			Status:      model.StatusPending,
-			Environment: axis,
-			Enqueued:    b.Curr.Created,
+		proc := &model.Proc{
+			BuildID: b.Curr.ID,
+			PID:     i + 1,
+			PGID:    i + 1,
+			State:   model.StatusPending,
+			Environ: axis,
 		}
 
-		metadata := metadataFromStruct(b.Repo, b.Curr, b.Last, job, b.Link)
+		metadata := metadataFromStruct(b.Repo, b.Curr, b.Last, proc, b.Link)
 		environ := metadata.Environ()
 		for k, v := range metadata.EnvironDrone() {
 			environ[k] = v
@@ -481,11 +502,11 @@ func (b *builder) Build() ([]*buildItem, error) {
 			compiler.WithPrefix(
 				fmt.Sprintf(
 					"%d_%d",
-					job.ID,
+					proc.ID,
 					time.Now().Unix(),
 				),
 			),
-			compiler.WithEnviron(job.Environment),
+			compiler.WithEnviron(proc.Environ),
 			compiler.WithProxy(),
 			// TODO ability to set global volumes for things like certs
 			compiler.WithVolumes(),
@@ -507,7 +528,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 		}
 
 		item := &buildItem{
-			Job:      job,
+			Proc:     proc,
 			Config:   ir,
 			Labels:   parsed.Labels,
 			Platform: metadata.Sys.Arch,

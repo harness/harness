@@ -107,31 +107,31 @@ type Store interface {
 	GetBuildQueue() ([]*model.Feed, error)
 
 	// CreateBuild creates a new build and jobs.
-	CreateBuild(*model.Build, ...*model.Job) error
+	CreateBuild(*model.Build, ...*model.Proc) error
 
 	// UpdateBuild updates a build.
 	UpdateBuild(*model.Build) error
 
-	// GetJob gets a job by unique ID.
-	GetJob(int64) (*model.Job, error)
-
-	// GetJobNumber gets a job by number.
-	GetJobNumber(*model.Build, int) (*model.Job, error)
-
-	// GetJobList gets a list of all users in the system.
-	GetJobList(*model.Build) ([]*model.Job, error)
-
-	// CreateJob creates a job.
-	CreateJob(*model.Job) error
-
-	// UpdateJob updates a job.
-	UpdateJob(*model.Job) error
-
-	// ReadLog reads the Job logs from the datastore.
-	ReadLog(*model.Job) (io.ReadCloser, error)
-
-	// WriteLog writes the job logs to the datastore.
-	WriteLog(*model.Job, io.Reader) error
+	// // GetJob gets a job by unique ID.
+	// GetJob(int64) (*model.Job, error)
+	//
+	// // GetJobNumber gets a job by number.
+	// GetJobNumber(*model.Build, int) (*model.Job, error)
+	//
+	// // GetJobList gets a list of all users in the system.
+	// GetJobList(*model.Build) ([]*model.Job, error)
+	//
+	// // CreateJob creates a job.
+	// CreateJob(*model.Job) error
+	//
+	// // UpdateJob updates a job.
+	// UpdateJob(*model.Job) error
+	//
+	// // ReadLog reads the Job logs from the datastore.
+	// ReadLog(*model.Job) (io.ReadCloser, error)
+	//
+	// // WriteLog writes the job logs to the datastore.
+	// WriteLog(*model.Job, io.Reader) error
 
 	GetAgent(int64) (*model.Agent, error)
 
@@ -348,82 +348,41 @@ func GetBuildQueue(c context.Context) ([]*model.Feed, error) {
 	return FromContext(c).GetBuildQueue()
 }
 
-func CreateBuild(c context.Context, build *model.Build, jobs ...*model.Job) error {
-	return FromContext(c).CreateBuild(build, jobs...)
+func CreateBuild(c context.Context, build *model.Build, procs ...*model.Proc) error {
+	return FromContext(c).CreateBuild(build, procs...)
 }
 
 func UpdateBuild(c context.Context, build *model.Build) error {
 	return FromContext(c).UpdateBuild(build)
 }
 
-func UpdateBuildJob(c context.Context, build *model.Build, job *model.Job) (bool, error) {
-	if err := UpdateJob(c, job); err != nil {
-		return false, err
-	}
-
-	// if the job is running or started we don't need to update the build
-	// status since.
-	if job.Status == model.StatusRunning || job.Status == model.StatusPending {
-		return false, nil
-	}
-
-	jobs, err := GetJobList(c, build)
-	if err != nil {
-		return false, err
-	}
-	// check to see if all jobs are finished for this build. If yes, we need to
-	// calcualte the overall build status and finish time.
-	status := model.StatusSuccess
-	finish := job.Finished
-	for _, job := range jobs {
-		if job.Finished > finish {
-			finish = job.Finished
-		}
-		switch job.Status {
-		case model.StatusSuccess:
-			// no-op
-		case model.StatusRunning, model.StatusPending:
-			return false, nil
-		default:
-			status = job.Status
-		}
-	}
-
-	build.Status = status
-	build.Finished = finish
-	if err := FromContext(c).UpdateBuild(build); err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-func GetJob(c context.Context, id int64) (*model.Job, error) {
-	return FromContext(c).GetJob(id)
-}
-
-func GetJobNumber(c context.Context, build *model.Build, num int) (*model.Job, error) {
-	return FromContext(c).GetJobNumber(build, num)
-}
-
-func GetJobList(c context.Context, build *model.Build) ([]*model.Job, error) {
-	return FromContext(c).GetJobList(build)
-}
-
-func CreateJob(c context.Context, job *model.Job) error {
-	return FromContext(c).CreateJob(job)
-}
-
-func UpdateJob(c context.Context, job *model.Job) error {
-	return FromContext(c).UpdateJob(job)
-}
-
-func ReadLog(c context.Context, job *model.Job) (io.ReadCloser, error) {
-	return FromContext(c).ReadLog(job)
-}
-
-func WriteLog(c context.Context, job *model.Job, r io.Reader) error {
-	return FromContext(c).WriteLog(job, r)
-}
+// func GetJob(c context.Context, id int64) (*model.Job, error) {
+// 	return FromContext(c).GetJob(id)
+// }
+//
+// func GetJobNumber(c context.Context, build *model.Build, num int) (*model.Job, error) {
+// 	return FromContext(c).GetJobNumber(build, num)
+// }
+//
+// func GetJobList(c context.Context, build *model.Build) ([]*model.Job, error) {
+// 	return FromContext(c).GetJobList(build)
+// }
+//
+// func CreateJob(c context.Context, job *model.Job) error {
+// 	return FromContext(c).CreateJob(job)
+// }
+//
+// func UpdateJob(c context.Context, job *model.Job) error {
+// 	return FromContext(c).UpdateJob(job)
+// }
+//
+// func ReadLog(c context.Context, job *model.Job) (io.ReadCloser, error) {
+// 	return FromContext(c).ReadLog(job)
+// }
+//
+// func WriteLog(c context.Context, job *model.Job, r io.Reader) error {
+// 	return FromContext(c).WriteLog(job, r)
+// }
 
 func GetAgent(c context.Context, id int64) (*model.Agent, error) {
 	return FromContext(c).GetAgent(id)

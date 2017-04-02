@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -51,14 +50,10 @@ func GetBuild(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	jobs, _ := store.GetJobList(c, build)
+	procs, _ := store.FromContext(c).ProcList(build)
+	build.Procs = model.Tree(procs)
 
-	out := struct {
-		*model.Build
-		Jobs []*model.Job `json:"jobs"`
-	}{build, jobs}
-
-	c.JSON(http.StatusOK, &out)
+	c.JSON(http.StatusOK, build)
 }
 
 func GetBuildLast(c *gin.Context) {
@@ -70,22 +65,14 @@ func GetBuildLast(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-	jobs, _ := store.GetJobList(c, build)
 
-	out := struct {
-		*model.Build
-		Jobs []*model.Job `json:"jobs"`
-	}{build, jobs}
-
-	c.JSON(http.StatusOK, &out)
+	procs, _ := store.FromContext(c).ProcList(build)
+	build.Procs = model.Tree(procs)
+	c.JSON(http.StatusOK, build)
 }
 
 func GetBuildLogs(c *gin.Context) {
 	repo := session.Repo(c)
-
-	// the user may specify to stream the full logs,
-	// or partial logs, capped at 2MB.
-	full, _ := strconv.ParseBool(c.DefaultQuery("full", "false"))
 
 	// parse the build number and job sequence number from
 	// the repquest parameter.
@@ -98,25 +85,22 @@ func GetBuildLogs(c *gin.Context) {
 		return
 	}
 
-	job, err := store.GetJobNumber(c, build, seq)
+	proc, err := store.FromContext(c).ProcFind(build, seq)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
-	r, err := store.ReadLog(c, job)
+	rc, err := store.FromContext(c).FileRead(proc, "logs.json")
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
-	defer r.Close()
-	if full {
-		// TODO implement limited streaming to avoid crashing the browser
-	}
+	defer rc.Close()
 
 	c.Header("Content-Type", "application/json")
-	copyLogs(c.Writer, r)
+	io.Copy(c.Writer, rc)
 }
 
 func DeleteBuild(c *gin.Context) {
@@ -133,26 +117,27 @@ func DeleteBuild(c *gin.Context) {
 		return
 	}
 
-	job, err := store.GetJobNumber(c, build, seq)
+	proc, err := store.FromContext(c).ProcFind(build, seq)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
-	if job.Status != model.StatusRunning {
+	if proc.State != model.StatusRunning {
 		c.String(400, "Cannot cancel a non-running build")
 		return
 	}
 
-	job.Status = model.StatusKilled
-	job.Finished = time.Now().Unix()
-	if job.Started == 0 {
-		job.Started = job.Finished
+	proc.State = model.StatusKilled
+	proc.Stopped = time.Now().Unix()
+	if proc.Started == 0 {
+		proc.Started = proc.Stopped
 	}
-	job.ExitCode = 137
-	store.UpdateBuildJob(c, build, job)
+	proc.ExitCode = 137
+	// TODO cancel child procs
+	store.FromContext(c).ProcUpdate(proc)
 
-	config.queue.Error(context.Background(), fmt.Sprint(job.ID), queue.ErrCancel)
+	config.queue.Error(context.Background(), fmt.Sprint(proc.ID), queue.ErrCancel)
 	c.String(204, "")
 }
 
@@ -243,11 +228,31 @@ func PostApproval(c *gin.Context) {
 		return
 	}
 
+	var pcounter = len(items)
 	for _, item := range items {
-		build.Jobs = append(build.Jobs, item.Job)
-		store.CreateJob(c, item.Job)
-		// TODO err
+		build.Procs = append(build.Procs, item.Proc)
+		item.Proc.BuildID = build.ID
+
+		for _, stage := range item.Config.Stages {
+			var gid int
+			for _, step := range stage.Steps {
+				pcounter++
+				if gid == 0 {
+					gid = pcounter
+				}
+				proc := &model.Proc{
+					BuildID: build.ID,
+					Name:    step.Alias,
+					PID:     pcounter,
+					PPID:    item.Proc.PID,
+					PGID:    gid,
+					State:   model.StatusPending,
+				}
+				build.Procs = append(build.Procs, proc)
+			}
+		}
 	}
+	store.FromContext(c).ProcCreate(build.Procs)
 
 	//
 	// publish topic
@@ -271,7 +276,7 @@ func PostApproval(c *gin.Context) {
 
 	for _, item := range items {
 		task := new(queue.Task)
-		task.ID = fmt.Sprint(item.Job.ID)
+		task.ID = fmt.Sprint(item.Proc.ID)
 		task.Labels = map[string]string{}
 		task.Labels["platform"] = item.Platform
 		for k, v := range item.Labels {
@@ -279,7 +284,7 @@ func PostApproval(c *gin.Context) {
 		}
 
 		task.Data, _ = json.Marshal(rpc.Pipeline{
-			ID:      fmt.Sprint(item.Job.ID),
+			ID:      fmt.Sprint(item.Proc.ID),
 			Config:  item.Config,
 			Timeout: b.Repo.Timeout,
 		})
@@ -334,23 +339,6 @@ func GetBuildQueue(c *gin.Context) {
 		return
 	}
 	c.JSON(200, out)
-}
-
-// copyLogs copies the stream from the source to the destination in valid JSON
-// format. This converts the logs, which are per-line JSON objects, to a
-// proper JSON array.
-func copyLogs(dest io.Writer, src io.Reader) error {
-	io.WriteString(dest, "[")
-
-	scanner := bufio.NewScanner(src)
-	for scanner.Scan() {
-		io.WriteString(dest, scanner.Text())
-		io.WriteString(dest, ",\n")
-	}
-
-	io.WriteString(dest, "{}]")
-
-	return nil
 }
 
 //
@@ -411,9 +399,9 @@ func PostBuild(c *gin.Context) {
 		return
 	}
 
-	jobs, err := store.GetJobList(c, build)
+	procs, err := store.FromContext(c).ProcList(build)
 	if err != nil {
-		logrus.Errorf("failure to get build %d jobs. %s", build.Number, err)
+		logrus.Errorf("failure to get build %d procs. %s", build.Number, err)
 		c.AbortWithError(404, err)
 		return
 	}
@@ -430,11 +418,11 @@ func PostBuild(c *gin.Context) {
 		build.ID = 0
 		build.Number = 0
 		build.Parent = num
-		for _, job := range jobs {
-			job.ID = 0
-			job.NodeID = 0
+		for _, proc := range procs {
+			proc.ID = 0
+			proc.BuildID = 0
 		}
-		err := store.CreateBuild(c, build, jobs...)
+		err := store.CreateBuild(c, build, procs...)
 		if err != nil {
 			c.String(500, err.Error())
 			return
@@ -469,18 +457,17 @@ func PostBuild(c *gin.Context) {
 	build.Finished = 0
 	build.Enqueued = time.Now().UTC().Unix()
 	build.Error = ""
-	for _, job := range jobs {
+	for _, proc := range procs {
 		for k, v := range buildParams {
-			job.Environment[k] = v
+			proc.Environ[k] = v
 		}
-		job.Error = ""
-		job.Status = model.StatusPending
-		job.Started = 0
-		job.Finished = 0
-		job.ExitCode = 0
-		job.NodeID = 0
-		job.Enqueued = build.Enqueued
-		store.UpdateJob(c, job)
+		proc.Error = ""
+		proc.State = model.StatusPending
+		proc.Started = 0
+		proc.Stopped = 0
+		proc.ExitCode = 0
+		proc.Machine = ""
+		store.FromContext(c).ProcUpdate(proc)
 	}
 
 	err = store.UpdateBuild(c, build)
@@ -519,9 +506,11 @@ func PostBuild(c *gin.Context) {
 
 	for i, item := range items {
 		// TODO prevent possible index out of bounds
-		item.Job.ID = jobs[i].ID
-		build.Jobs = append(build.Jobs, item.Job)
-		store.UpdateJob(c, item.Job)
+		item.Proc.ID = procs[i].ID
+		build.Procs = append(build.Procs, item.Proc)
+		store.FromContext(c).ProcUpdate(item.Proc)
+
+		// TODO update child procs too!
 	}
 
 	//
@@ -546,7 +535,7 @@ func PostBuild(c *gin.Context) {
 
 	for _, item := range items {
 		task := new(queue.Task)
-		task.ID = fmt.Sprint(item.Job.ID)
+		task.ID = fmt.Sprint(item.Proc.ID)
 		task.Labels = map[string]string{}
 		task.Labels["platform"] = item.Platform
 		for k, v := range item.Labels {
@@ -554,7 +543,7 @@ func PostBuild(c *gin.Context) {
 		}
 
 		task.Data, _ = json.Marshal(rpc.Pipeline{
-			ID:      fmt.Sprint(item.Job.ID),
+			ID:      fmt.Sprint(item.Proc.ID),
 			Config:  item.Config,
 			Timeout: b.Repo.Timeout,
 		})
