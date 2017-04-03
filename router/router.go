@@ -104,7 +104,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.GET("", server.GetRepo)
 			repo.GET("/builds", server.GetBuilds)
 			repo.GET("/builds/:number", server.GetBuild)
-			repo.GET("/logs/:number/:job", server.GetBuildLogs)
+			repo.GET("/logs/:number/:ppid/:proc", server.GetBuildLogs)
 			repo.POST("/sign", session.MustPush, server.Sign)
 
 			repo.GET("/secrets", session.MustPush, server.GetSecrets)

@@ -152,6 +152,9 @@ type Store interface {
 	ProcCreate([]*model.Proc) error
 	ProcUpdate(*model.Proc) error
 
+	LogFind(*model.Proc) (io.ReadCloser, error)
+	LogSave(*model.Proc, io.Reader) error
+
 	FileList(*model.Build) ([]*model.File, error)
 	FileFind(*model.Proc, string) (*model.File, error)
 	FileRead(*model.Proc, string) (io.ReadCloser, error)

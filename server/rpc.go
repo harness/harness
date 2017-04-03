@@ -111,15 +111,21 @@ func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
 		return err
 	}
 
-	proc, err := s.store.ProcLoad(procID)
+	pproc, err := s.store.ProcLoad(procID)
 	if err != nil {
-		log.Printf("error: rpc.update: cannot find proc with id %d: %s", procID, err)
+		log.Printf("error: rpc.update: cannot find pproc with id %d: %s", procID, err)
 		return err
 	}
 
-	build, err := s.store.GetBuild(proc.BuildID)
+	build, err := s.store.GetBuild(pproc.BuildID)
 	if err != nil {
-		log.Printf("error: cannot find build with id %d: %s", proc.BuildID, err)
+		log.Printf("error: cannot find build with id %d: %s", pproc.BuildID, err)
+		return err
+	}
+
+	proc, err := s.store.ProcChild(build, pproc.PID, state.Proc)
+	if err != nil {
+		log.Printf("error: cannot find proc with name %s: %s", state.Proc, err)
 		return err
 	}
 
@@ -133,6 +139,10 @@ func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
 		proc.Stopped = state.Finished
 		proc.ExitCode = state.ExitCode
 		proc.Error = state.Error
+		proc.State = model.StatusSuccess
+		if state.ExitCode != 0 || state.Error != "" {
+			proc.State = model.StatusFailure
+		}
 	} else {
 		proc.Started = state.Started
 		proc.State = model.StatusRunning
@@ -165,10 +175,29 @@ func (s *RPC) Upload(c context.Context, id string, file *rpc.File) error {
 		return err
 	}
 
-	proc, err := s.store.ProcLoad(procID)
+	pproc, err := s.store.ProcLoad(procID)
 	if err != nil {
-		log.Printf("error: cannot find proc with id %d: %s", procID, err)
+		log.Printf("error: cannot find parent proc with id %d: %s", procID, err)
 		return err
+	}
+
+	build, err := s.store.GetBuild(pproc.BuildID)
+	if err != nil {
+		log.Printf("error: cannot find build with id %d: %s", pproc.BuildID, err)
+		return err
+	}
+
+	proc, err := s.store.ProcChild(build, pproc.PID, file.Proc)
+	if err != nil {
+		log.Printf("error: cannot find child proc with name %s: %s", file.Proc, err)
+		return err
+	}
+
+	if file.Mime == "application/json+logs" {
+		return s.store.LogSave(
+			proc,
+			bytes.NewBuffer(file.Data),
+		)
 	}
 
 	return s.store.FileCreate(&model.File{
@@ -261,19 +290,13 @@ func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
 		return err
 	}
 
-	if build.Status == model.StatusPending {
-		build.Status = model.StatusRunning
-		build.Started = state.Started
-		if err := s.store.UpdateBuild(build); err != nil {
-			log.Printf("error: done: cannot update build_id %d state: %s", build.ID, err)
-		}
-	}
-
-	proc.Started = state.Started
-	proc.State = model.StatusRunning
 	proc.Stopped = state.Finished
 	proc.Error = state.Error
 	proc.ExitCode = state.ExitCode
+	proc.State = model.StatusSuccess
+	if proc.ExitCode != 0 || proc.Error != "" {
+		proc.State = model.StatusFailure
+	}
 	if err := s.store.ProcUpdate(proc); err != nil {
 		log.Printf("error: done: cannot update proc_id %d state: %s", procID, err)
 	}
@@ -287,7 +310,7 @@ func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
 	// TODO handle this error
 	procs, _ := s.store.ProcList(build)
 	for _, p := range procs {
-		if !proc.Running() && p.PPID == proc.PID {
+		if p.Running() && p.PPID == proc.PID {
 			p.State = model.StatusSkipped
 			if p.Started != 0 {
 				p.State = model.StatusKilled
@@ -297,12 +320,11 @@ func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
 				log.Printf("error: done: cannot update proc_id %d child state: %s", p.ID, err)
 			}
 		}
-		if !proc.Running() && p.PPID == 0 {
+		if !p.Running() && p.PPID == 0 {
 			done = true
 			if p.Failing() {
 				status = model.StatusFailure
 			}
-			continue
 		}
 	}
 	if done {

@@ -77,7 +77,8 @@ func GetBuildLogs(c *gin.Context) {
 	// parse the build number and job sequence number from
 	// the repquest parameter.
 	num, _ := strconv.Atoi(c.Params.ByName("number"))
-	seq, _ := strconv.Atoi(c.Params.ByName("job"))
+	ppid, _ := strconv.Atoi(c.Params.ByName("ppid"))
+	name := c.Params.ByName("proc")
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
@@ -85,13 +86,13 @@ func GetBuildLogs(c *gin.Context) {
 		return
 	}
 
-	proc, err := store.FromContext(c).ProcFind(build, seq)
+	proc, err := store.FromContext(c).ProcChild(build, ppid, name)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
-	rc, err := store.FromContext(c).FileRead(proc, "logs.json")
+	rc, err := store.FromContext(c).LogFind(proc)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
