@@ -153,6 +153,7 @@ func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
 	}
 
 	build.Procs, _ = s.store.ProcList(build)
+	build.Procs = model.Tree(build.Procs)
 	message := pubsub.Message{
 		Labels: map[string]string{
 			"repo":    repo.FullName,
@@ -305,29 +306,34 @@ func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
 		log.Printf("error: done: cannot ack proc_id %d: %s", procID, err)
 	}
 
-	done := false
-	status := model.StatusSuccess
 	// TODO handle this error
 	procs, _ := s.store.ProcList(build)
 	for _, p := range procs {
 		if p.Running() && p.PPID == proc.PID {
 			p.State = model.StatusSkipped
 			if p.Started != 0 {
-				p.State = model.StatusKilled
+				p.State = model.StatusSuccess // for deamons that are killed
 				p.Stopped = proc.Stopped
 			}
 			if err := s.store.ProcUpdate(p); err != nil {
 				log.Printf("error: done: cannot update proc_id %d child state: %s", p.ID, err)
 			}
 		}
-		if !p.Running() && p.PPID == 0 {
-			done = true
+	}
+
+	running := false
+	status := model.StatusSuccess
+	for _, p := range procs {
+		if p.PPID == 0 {
+			if p.Running() {
+				running = true
+			}
 			if p.Failing() {
-				status = model.StatusFailure
+				status = p.State
 			}
 		}
 	}
-	if done {
+	if !running {
 		build.Status = status
 		build.Finished = proc.Stopped
 		if err := s.store.UpdateBuild(build); err != nil {
@@ -339,7 +345,7 @@ func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
 		log.Printf("error: done: cannot close build_id %d logger: %s", proc.ID, err)
 	}
 
-	build.Procs = procs
+	build.Procs = model.Tree(procs)
 	message := pubsub.Message{
 		Labels: map[string]string{
 			"repo":    repo.FullName,

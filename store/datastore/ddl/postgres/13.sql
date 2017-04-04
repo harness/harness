@@ -17,7 +17,6 @@ CREATE TABLE procs (
 ,proc_environ    VARCHAR(2000)
 
 ,UNIQUE(proc_build_id, proc_pid)
-,UNIQUE(proc_build_id, proc_name)
 );
 
 CREATE INDEX proc_build_ix ON procs (proc_build_id);

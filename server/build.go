@@ -258,6 +258,8 @@ func PostApproval(c *gin.Context) {
 	//
 	// publish topic
 	//
+	buildCopy := *build
+	buildCopy.Procs = model.Tree(buildCopy.Procs)
 	message := pubsub.Message{
 		Labels: map[string]string{
 			"repo":    repo.FullName,
@@ -267,10 +269,11 @@ func PostApproval(c *gin.Context) {
 	message.Data, _ = json.Marshal(model.Event{
 		Type:  model.Enqueued,
 		Repo:  *repo,
-		Build: *build,
+		Build: buildCopy,
 	})
 	// TODO remove global reference
 	config.pubsub.Publish(c, "topic/events", message)
+
 	//
 	// end publish topic
 	//
@@ -517,6 +520,8 @@ func PostBuild(c *gin.Context) {
 	//
 	// publish topic
 	//
+	buildCopy := *build
+	buildCopy.Procs = model.Tree(buildCopy.Procs)
 	message := pubsub.Message{
 		Labels: map[string]string{
 			"repo":    repo.FullName,
@@ -526,7 +531,7 @@ func PostBuild(c *gin.Context) {
 	message.Data, _ = json.Marshal(model.Event{
 		Type:  model.Enqueued,
 		Repo:  *repo,
-		Build: *build,
+		Build: buildCopy,
 	})
 	// TODO remove global reference
 	config.pubsub.Publish(c, "topic/events", message)

@@ -293,7 +293,10 @@ func PostHook(c *gin.Context) {
 			}
 		}
 	}
-	store.FromContext(c).ProcCreate(build.Procs)
+	err = store.FromContext(c).ProcCreate(build.Procs)
+	if err != nil {
+		logrus.Errorf("error persisting procs %s/%d: %s", repo.FullName, build.Number, err)
+	}
 
 	//
 	// publish topic
@@ -304,10 +307,12 @@ func PostHook(c *gin.Context) {
 			"private": strconv.FormatBool(repo.IsPrivate),
 		},
 	}
+	buildCopy := *build
+	buildCopy.Procs = model.Tree(buildCopy.Procs)
 	message.Data, _ = json.Marshal(model.Event{
 		Type:  model.Enqueued,
 		Repo:  *repo,
-		Build: *build,
+		Build: buildCopy,
 	})
 	// TODO remove global reference
 	config.pubsub.Publish(c, "topic/events", message)

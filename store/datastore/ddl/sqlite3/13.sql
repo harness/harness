@@ -16,7 +16,6 @@ CREATE TABLE procs (
 ,proc_platform   TEXT
 ,proc_environ    TEXT
 ,UNIQUE(proc_build_id, proc_pid)
-,UNIQUE(proc_build_id, proc_name)
 );
 
 CREATE INDEX proc_build_ix ON procs (proc_build_id);
