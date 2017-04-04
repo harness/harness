@@ -39,3 +39,7 @@ SELECT
 FROM files
 WHERE file_proc_id = ?
   AND file_name    = ?
+
+-- name: files-delete-build
+
+DELETE FROM files WHERE file_build_id = ?

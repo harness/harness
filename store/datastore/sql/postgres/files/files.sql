@@ -39,3 +39,7 @@ SELECT
 FROM files
 WHERE file_proc_id = $1
   AND file_name    = $2
+
+-- name: files-delete-build
+
+DELETE FROM files WHERE file_build_id = $1

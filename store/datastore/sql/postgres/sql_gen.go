@@ -9,10 +9,12 @@ var index = map[string]string{
 	"files-find-build":          filesFindBuild,
 	"files-find-proc-name":      filesFindProcName,
 	"files-find-proc-name-data": filesFindProcNameData,
+	"files-delete-build":        filesDeleteBuild,
 	"procs-find-id":             procsFindId,
 	"procs-find-build":          procsFindBuild,
 	"procs-find-build-pid":      procsFindBuildPid,
 	"procs-find-build-ppid":     procsFindBuildPpid,
+	"procs-delete-build":        procsDeleteBuild,
 }
 
 var filesFindBuild = `
@@ -55,6 +57,10 @@ SELECT
 FROM files
 WHERE file_proc_id = $1
   AND file_name    = $2
+`
+
+var filesDeleteBuild = `
+DELETE FROM files WHERE file_build_id = $1
 `
 
 var procsFindId = `
@@ -138,4 +144,8 @@ FROM procs
 WHERE proc_build_id = $1
   AND proc_ppid = $2
   AND proc_name = $3
+`
+
+var procsDeleteBuild = `
+DELETE FROM procs WHERE proc_build_id = $1
 `

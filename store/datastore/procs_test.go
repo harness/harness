@@ -219,19 +219,19 @@ func TestProcIndexes(t *testing.T) {
 		t.Errorf("Unexpected error: dupliate pid")
 	}
 
-	// fail due to duplicate process name
-	if err := s.ProcCreate([]*model.Proc{
-		{
-			BuildID: 1,
-			PID:     2,
-			PPID:    1,
-			PGID:    1,
-			State:   "success",
-			Name:    "build",
-		},
-	}); err == nil {
-		t.Errorf("Unexpected error: dupliate name")
-	}
+	// // fail due to duplicate process name
+	// if err := s.ProcCreate([]*model.Proc{
+	// 	{
+	// 		BuildID: 1,
+	// 		PID:     2,
+	// 		PPID:    1,
+	// 		PGID:    1,
+	// 		State:   "success",
+	// 		Name:    "build",
+	// 	},
+	// }); err == nil {
+	// 	t.Errorf("Unexpected error: dupliate name")
+	// }
 }
 
 // func TestProcCascade(t *testing.T) {

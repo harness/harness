@@ -8,6 +8,7 @@ type ProcStore interface {
 	ProcList(*Build) ([]*Proc, error)
 	ProcCreate([]*Proc) error
 	ProcUpdate(*Proc) error
+	ProcClear(*Build) error
 }
 
 // Proc represents a process in the build pipeline.

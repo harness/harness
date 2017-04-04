@@ -403,13 +403,6 @@ func PostBuild(c *gin.Context) {
 		return
 	}
 
-	procs, err := store.FromContext(c).ProcList(build)
-	if err != nil {
-		logrus.Errorf("failure to get build %d procs. %s", build.Number, err)
-		c.AbortWithError(404, err)
-		return
-	}
-
 	// must not restart a running build
 	if build.Status == model.StatusPending || build.Status == model.StatusRunning {
 		c.String(409, "Cannot re-start a started build")
@@ -422,11 +415,12 @@ func PostBuild(c *gin.Context) {
 		build.ID = 0
 		build.Number = 0
 		build.Parent = num
-		for _, proc := range procs {
-			proc.ID = 0
-			proc.BuildID = 0
-		}
-		err := store.CreateBuild(c, build, procs...)
+		build.Status = model.StatusPending
+		build.Started = 0
+		build.Finished = 0
+		build.Enqueued = time.Now().UTC().Unix()
+		build.Error = ""
+		err = store.CreateBuild(c, build)
 		if err != nil {
 			c.String(500, err.Error())
 			return
@@ -440,6 +434,26 @@ func PostBuild(c *gin.Context) {
 			build.Event = event
 		}
 		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
+	} else {
+		// todo move this to database tier
+		// and wrap inside a transaction
+		build.Status = model.StatusPending
+		build.Started = 0
+		build.Finished = 0
+		build.Enqueued = time.Now().UTC().Unix()
+		build.Error = ""
+
+		err = store.FromContext(c).ProcClear(build)
+		if err != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+
+		err = store.UpdateBuild(c, build)
+		if err != nil {
+			c.AbortWithStatus(500)
+			return
+		}
 	}
 
 	// Read query string parameters into buildParams, exclude reserved params
@@ -453,34 +467,6 @@ func PostBuild(c *gin.Context) {
 			buildParams[key] = val[0]
 		}
 	}
-
-	// todo move this to database tier
-	// and wrap inside a transaction
-	build.Status = model.StatusPending
-	build.Started = 0
-	build.Finished = 0
-	build.Enqueued = time.Now().UTC().Unix()
-	build.Error = ""
-	for _, proc := range procs {
-		for k, v := range buildParams {
-			proc.Environ[k] = v
-		}
-		proc.Error = ""
-		proc.State = model.StatusPending
-		proc.Started = 0
-		proc.Stopped = 0
-		proc.ExitCode = 0
-		proc.Machine = ""
-		store.FromContext(c).ProcUpdate(proc)
-	}
-
-	err = store.UpdateBuild(c, build)
-	if err != nil {
-		c.AbortWithStatus(500)
-		return
-	}
-
-	c.JSON(202, build)
 
 	// get the previous build so that we can send
 	// on status change notifications
@@ -499,23 +485,54 @@ func PostBuild(c *gin.Context) {
 		Link:  httputil.GetURL(c.Request),
 		Yaml:  string(raw),
 	}
+	// TODO inject environment varibles !!!!!! buildParams
 	items, err := b.Build()
 	if err != nil {
 		build.Status = model.StatusError
 		build.Started = time.Now().Unix()
 		build.Finished = build.Started
 		build.Error = err.Error()
+		c.JSON(500, build)
 		return
 	}
 
-	for i, item := range items {
-		// TODO prevent possible index out of bounds
-		item.Proc.ID = procs[i].ID
+	var pcounter = len(items)
+	for _, item := range items {
 		build.Procs = append(build.Procs, item.Proc)
-		store.FromContext(c).ProcUpdate(item.Proc)
+		item.Proc.BuildID = build.ID
 
-		// TODO update child procs too!
+		for _, stage := range item.Config.Stages {
+			var gid int
+			for _, step := range stage.Steps {
+				pcounter++
+				if gid == 0 {
+					gid = pcounter
+				}
+				proc := &model.Proc{
+					BuildID: build.ID,
+					Name:    step.Alias,
+					PID:     pcounter,
+					PPID:    item.Proc.PID,
+					PGID:    gid,
+					State:   model.StatusPending,
+				}
+				build.Procs = append(build.Procs, proc)
+			}
+		}
 	}
+
+	err = store.FromContext(c).ProcCreate(build.Procs)
+	if err != nil {
+		logrus.Errorf("cannot restart %s#%d: %s", repo.FullName, build.Number, err)
+		build.Status = model.StatusError
+		build.Started = time.Now().Unix()
+		build.Finished = build.Started
+		build.Error = err.Error()
+		c.JSON(500, build)
+		return
+	}
+
+	c.JSON(202, build)
 
 	//
 	// publish topic

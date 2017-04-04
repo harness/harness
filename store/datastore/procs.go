@@ -46,3 +46,14 @@ func (db *datastore) ProcCreate(procs []*model.Proc) error {
 func (db *datastore) ProcUpdate(proc *model.Proc) error {
 	return meddler.Update(db, "procs", proc)
 }
+
+func (db *datastore) ProcClear(build *model.Build) (err error) {
+	stmt1 := sql.Lookup(db.driver, "files-delete-build")
+	stmt2 := sql.Lookup(db.driver, "procs-delete-build")
+	_, err = db.Exec(stmt1, build.ID)
+	if err != nil {
+		return
+	}
+	_, err = db.Exec(stmt2, build.ID)
+	return
+}

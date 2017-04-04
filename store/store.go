@@ -151,6 +151,7 @@ type Store interface {
 	ProcList(*model.Build) ([]*model.Proc, error)
 	ProcCreate([]*model.Proc) error
 	ProcUpdate(*model.Proc) error
+	ProcClear(*model.Build) error
 
 	LogFind(*model.Proc) (io.ReadCloser, error)
 	LogSave(*model.Proc, io.Reader) error

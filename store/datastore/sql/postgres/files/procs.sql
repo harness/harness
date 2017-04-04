@@ -80,3 +80,7 @@ FROM procs
 WHERE proc_build_id = $1
   AND proc_ppid = $2
   AND proc_name = $3
+
+-- name: procs-delete-build
+
+DELETE FROM procs WHERE proc_build_id = $1

@@ -80,3 +80,7 @@ FROM procs
 WHERE proc_build_id = ?
   AND proc_ppid = ?
   AND proc_name = ?
+
+-- name: procs-delete-build
+
+DELETE FROM procs WHERE proc_build_id = ?
