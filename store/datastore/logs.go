@@ -9,21 +9,27 @@ import (
 	"github.com/russross/meddler"
 )
 
-func (db *datastore) ReadLog(job *model.Job) (io.ReadCloser, error) {
-	var log = new(model.Log)
-	var err = meddler.QueryRow(db, log, rebind(logQuery), job.ID)
+func (db *datastore) LogFind(proc *model.Proc) (io.ReadCloser, error) {
+	var log = new(logData)
+	var err = meddler.QueryRow(db, log, rebind(logQuery), proc.ID)
 	var buf = bytes.NewBuffer(log.Data)
 	return ioutil.NopCloser(buf), err
 }
 
-func (db *datastore) WriteLog(job *model.Job, r io.Reader) error {
-	var log = new(model.Log)
-	var err = meddler.QueryRow(db, log, rebind(logQuery), job.ID)
+func (db *datastore) LogSave(proc *model.Proc, r io.Reader) error {
+	var log = new(logData)
+	var err = meddler.QueryRow(db, log, rebind(logQuery), proc.ID)
 	if err != nil {
-		log = &model.Log{JobID: job.ID}
+		log = &logData{ProcID: proc.ID}
 	}
 	log.Data, _ = ioutil.ReadAll(r)
 	return meddler.Save(db, logTable, log)
+}
+
+type logData struct {
+	ID     int64  `meddler:"log_id,pk"`
+	ProcID int64  `meddler:"log_job_id"`
+	Data   []byte `meddler:"log_data"`
 }
 
 const logTable = "logs"

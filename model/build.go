@@ -31,7 +31,8 @@ type Build struct {
 	Verified  bool   `json:"verified"      meddler:"build_verified"` // deprecate
 	Reviewer  string `json:"reviewed_by"   meddler:"build_reviewer"`
 	Reviewed  int64  `json:"reviewed_at"   meddler:"build_reviewed"`
-	Jobs      []*Job `json:"jobs,omitempty" meddler:"-"`
+	// Jobs      []*Job  `json:"jobs,omitempty"  meddler:"-"`
+	Procs []*Proc `json:"procs,omitempty" meddler:"-"`
 }
 
 type BuildGroup struct {

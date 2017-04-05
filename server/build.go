@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -51,14 +50,10 @@ func GetBuild(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	jobs, _ := store.GetJobList(c, build)
+	procs, _ := store.FromContext(c).ProcList(build)
+	build.Procs = model.Tree(procs)
 
-	out := struct {
-		*model.Build
-		Jobs []*model.Job `json:"jobs"`
-	}{build, jobs}
-
-	c.JSON(http.StatusOK, &out)
+	c.JSON(http.StatusOK, build)
 }
 
 func GetBuildLast(c *gin.Context) {
@@ -70,27 +65,20 @@ func GetBuildLast(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-	jobs, _ := store.GetJobList(c, build)
 
-	out := struct {
-		*model.Build
-		Jobs []*model.Job `json:"jobs"`
-	}{build, jobs}
-
-	c.JSON(http.StatusOK, &out)
+	procs, _ := store.FromContext(c).ProcList(build)
+	build.Procs = model.Tree(procs)
+	c.JSON(http.StatusOK, build)
 }
 
 func GetBuildLogs(c *gin.Context) {
 	repo := session.Repo(c)
 
-	// the user may specify to stream the full logs,
-	// or partial logs, capped at 2MB.
-	full, _ := strconv.ParseBool(c.DefaultQuery("full", "false"))
-
 	// parse the build number and job sequence number from
 	// the repquest parameter.
 	num, _ := strconv.Atoi(c.Params.ByName("number"))
-	seq, _ := strconv.Atoi(c.Params.ByName("job"))
+	ppid, _ := strconv.Atoi(c.Params.ByName("ppid"))
+	name := c.Params.ByName("proc")
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
@@ -98,25 +86,22 @@ func GetBuildLogs(c *gin.Context) {
 		return
 	}
 
-	job, err := store.GetJobNumber(c, build, seq)
+	proc, err := store.FromContext(c).ProcChild(build, ppid, name)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
-	r, err := store.ReadLog(c, job)
+	rc, err := store.FromContext(c).LogFind(proc)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
-	defer r.Close()
-	if full {
-		// TODO implement limited streaming to avoid crashing the browser
-	}
+	defer rc.Close()
 
 	c.Header("Content-Type", "application/json")
-	copyLogs(c.Writer, r)
+	io.Copy(c.Writer, rc)
 }
 
 func DeleteBuild(c *gin.Context) {
@@ -133,26 +118,27 @@ func DeleteBuild(c *gin.Context) {
 		return
 	}
 
-	job, err := store.GetJobNumber(c, build, seq)
+	proc, err := store.FromContext(c).ProcFind(build, seq)
 	if err != nil {
 		c.AbortWithError(404, err)
 		return
 	}
 
-	if job.Status != model.StatusRunning {
+	if proc.State != model.StatusRunning {
 		c.String(400, "Cannot cancel a non-running build")
 		return
 	}
 
-	job.Status = model.StatusKilled
-	job.Finished = time.Now().Unix()
-	if job.Started == 0 {
-		job.Started = job.Finished
+	proc.State = model.StatusKilled
+	proc.Stopped = time.Now().Unix()
+	if proc.Started == 0 {
+		proc.Started = proc.Stopped
 	}
-	job.ExitCode = 137
-	store.UpdateBuildJob(c, build, job)
+	proc.ExitCode = 137
+	// TODO cancel child procs
+	store.FromContext(c).ProcUpdate(proc)
 
-	config.queue.Error(context.Background(), fmt.Sprint(job.ID), queue.ErrCancel)
+	config.queue.Error(context.Background(), fmt.Sprint(proc.ID), queue.ErrCancel)
 	c.String(204, "")
 }
 
@@ -243,15 +229,37 @@ func PostApproval(c *gin.Context) {
 		return
 	}
 
+	var pcounter = len(items)
 	for _, item := range items {
-		build.Jobs = append(build.Jobs, item.Job)
-		store.CreateJob(c, item.Job)
-		// TODO err
+		build.Procs = append(build.Procs, item.Proc)
+		item.Proc.BuildID = build.ID
+
+		for _, stage := range item.Config.Stages {
+			var gid int
+			for _, step := range stage.Steps {
+				pcounter++
+				if gid == 0 {
+					gid = pcounter
+				}
+				proc := &model.Proc{
+					BuildID: build.ID,
+					Name:    step.Alias,
+					PID:     pcounter,
+					PPID:    item.Proc.PID,
+					PGID:    gid,
+					State:   model.StatusPending,
+				}
+				build.Procs = append(build.Procs, proc)
+			}
+		}
 	}
+	store.FromContext(c).ProcCreate(build.Procs)
 
 	//
 	// publish topic
 	//
+	buildCopy := *build
+	buildCopy.Procs = model.Tree(buildCopy.Procs)
 	message := pubsub.Message{
 		Labels: map[string]string{
 			"repo":    repo.FullName,
@@ -261,17 +269,18 @@ func PostApproval(c *gin.Context) {
 	message.Data, _ = json.Marshal(model.Event{
 		Type:  model.Enqueued,
 		Repo:  *repo,
-		Build: *build,
+		Build: buildCopy,
 	})
 	// TODO remove global reference
 	config.pubsub.Publish(c, "topic/events", message)
+
 	//
 	// end publish topic
 	//
 
 	for _, item := range items {
 		task := new(queue.Task)
-		task.ID = fmt.Sprint(item.Job.ID)
+		task.ID = fmt.Sprint(item.Proc.ID)
 		task.Labels = map[string]string{}
 		task.Labels["platform"] = item.Platform
 		for k, v := range item.Labels {
@@ -279,7 +288,7 @@ func PostApproval(c *gin.Context) {
 		}
 
 		task.Data, _ = json.Marshal(rpc.Pipeline{
-			ID:      fmt.Sprint(item.Job.ID),
+			ID:      fmt.Sprint(item.Proc.ID),
 			Config:  item.Config,
 			Timeout: b.Repo.Timeout,
 		})
@@ -334,23 +343,6 @@ func GetBuildQueue(c *gin.Context) {
 		return
 	}
 	c.JSON(200, out)
-}
-
-// copyLogs copies the stream from the source to the destination in valid JSON
-// format. This converts the logs, which are per-line JSON objects, to a
-// proper JSON array.
-func copyLogs(dest io.Writer, src io.Reader) error {
-	io.WriteString(dest, "[")
-
-	scanner := bufio.NewScanner(src)
-	for scanner.Scan() {
-		io.WriteString(dest, scanner.Text())
-		io.WriteString(dest, ",\n")
-	}
-
-	io.WriteString(dest, "{}]")
-
-	return nil
 }
 
 //
@@ -411,13 +403,6 @@ func PostBuild(c *gin.Context) {
 		return
 	}
 
-	jobs, err := store.GetJobList(c, build)
-	if err != nil {
-		logrus.Errorf("failure to get build %d jobs. %s", build.Number, err)
-		c.AbortWithError(404, err)
-		return
-	}
-
 	// must not restart a running build
 	if build.Status == model.StatusPending || build.Status == model.StatusRunning {
 		c.String(409, "Cannot re-start a started build")
@@ -430,11 +415,12 @@ func PostBuild(c *gin.Context) {
 		build.ID = 0
 		build.Number = 0
 		build.Parent = num
-		for _, job := range jobs {
-			job.ID = 0
-			job.NodeID = 0
-		}
-		err := store.CreateBuild(c, build, jobs...)
+		build.Status = model.StatusPending
+		build.Started = 0
+		build.Finished = 0
+		build.Enqueued = time.Now().UTC().Unix()
+		build.Error = ""
+		err = store.CreateBuild(c, build)
 		if err != nil {
 			c.String(500, err.Error())
 			return
@@ -448,6 +434,26 @@ func PostBuild(c *gin.Context) {
 			build.Event = event
 		}
 		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
+	} else {
+		// todo move this to database tier
+		// and wrap inside a transaction
+		build.Status = model.StatusPending
+		build.Started = 0
+		build.Finished = 0
+		build.Enqueued = time.Now().UTC().Unix()
+		build.Error = ""
+
+		err = store.FromContext(c).ProcClear(build)
+		if err != nil {
+			c.AbortWithStatus(500)
+			return
+		}
+
+		err = store.UpdateBuild(c, build)
+		if err != nil {
+			c.AbortWithStatus(500)
+			return
+		}
 	}
 
 	// Read query string parameters into buildParams, exclude reserved params
@@ -461,35 +467,6 @@ func PostBuild(c *gin.Context) {
 			buildParams[key] = val[0]
 		}
 	}
-
-	// todo move this to database tier
-	// and wrap inside a transaction
-	build.Status = model.StatusPending
-	build.Started = 0
-	build.Finished = 0
-	build.Enqueued = time.Now().UTC().Unix()
-	build.Error = ""
-	for _, job := range jobs {
-		for k, v := range buildParams {
-			job.Environment[k] = v
-		}
-		job.Error = ""
-		job.Status = model.StatusPending
-		job.Started = 0
-		job.Finished = 0
-		job.ExitCode = 0
-		job.NodeID = 0
-		job.Enqueued = build.Enqueued
-		store.UpdateJob(c, job)
-	}
-
-	err = store.UpdateBuild(c, build)
-	if err != nil {
-		c.AbortWithStatus(500)
-		return
-	}
-
-	c.JSON(202, build)
 
 	// get the previous build so that we can send
 	// on status change notifications
@@ -508,25 +485,60 @@ func PostBuild(c *gin.Context) {
 		Link:  httputil.GetURL(c.Request),
 		Yaml:  string(raw),
 	}
+	// TODO inject environment varibles !!!!!! buildParams
 	items, err := b.Build()
 	if err != nil {
 		build.Status = model.StatusError
 		build.Started = time.Now().Unix()
 		build.Finished = build.Started
 		build.Error = err.Error()
+		c.JSON(500, build)
 		return
 	}
 
-	for i, item := range items {
-		// TODO prevent possible index out of bounds
-		item.Job.ID = jobs[i].ID
-		build.Jobs = append(build.Jobs, item.Job)
-		store.UpdateJob(c, item.Job)
+	var pcounter = len(items)
+	for _, item := range items {
+		build.Procs = append(build.Procs, item.Proc)
+		item.Proc.BuildID = build.ID
+
+		for _, stage := range item.Config.Stages {
+			var gid int
+			for _, step := range stage.Steps {
+				pcounter++
+				if gid == 0 {
+					gid = pcounter
+				}
+				proc := &model.Proc{
+					BuildID: build.ID,
+					Name:    step.Alias,
+					PID:     pcounter,
+					PPID:    item.Proc.PID,
+					PGID:    gid,
+					State:   model.StatusPending,
+				}
+				build.Procs = append(build.Procs, proc)
+			}
+		}
 	}
+
+	err = store.FromContext(c).ProcCreate(build.Procs)
+	if err != nil {
+		logrus.Errorf("cannot restart %s#%d: %s", repo.FullName, build.Number, err)
+		build.Status = model.StatusError
+		build.Started = time.Now().Unix()
+		build.Finished = build.Started
+		build.Error = err.Error()
+		c.JSON(500, build)
+		return
+	}
+
+	c.JSON(202, build)
 
 	//
 	// publish topic
 	//
+	buildCopy := *build
+	buildCopy.Procs = model.Tree(buildCopy.Procs)
 	message := pubsub.Message{
 		Labels: map[string]string{
 			"repo":    repo.FullName,
@@ -536,7 +548,7 @@ func PostBuild(c *gin.Context) {
 	message.Data, _ = json.Marshal(model.Event{
 		Type:  model.Enqueued,
 		Repo:  *repo,
-		Build: *build,
+		Build: buildCopy,
 	})
 	// TODO remove global reference
 	config.pubsub.Publish(c, "topic/events", message)
@@ -546,7 +558,7 @@ func PostBuild(c *gin.Context) {
 
 	for _, item := range items {
 		task := new(queue.Task)
-		task.ID = fmt.Sprint(item.Job.ID)
+		task.ID = fmt.Sprint(item.Proc.ID)
 		task.Labels = map[string]string{}
 		task.Labels["platform"] = item.Platform
 		for k, v := range item.Labels {
@@ -554,7 +566,7 @@ func PostBuild(c *gin.Context) {
 		}
 
 		task.Data, _ = json.Marshal(rpc.Pipeline{
-			ID:      fmt.Sprint(item.Job.ID),
+			ID:      fmt.Sprint(item.Proc.ID),
 			Config:  item.Config,
 			Timeout: b.Repo.Timeout,
 		})

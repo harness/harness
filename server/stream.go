@@ -66,13 +66,13 @@ func LogStream(c *gin.Context) {
 		c.AbortWithError(404, err)
 		return
 	}
-	job, err := store.GetJobNumber(c, build, jobn)
+	proc, err := store.FromContext(c).ProcFind(build, jobn)
 	if err != nil {
-		logrus.Debugln("stream cannot get job number.", err)
+		logrus.Debugln("stream cannot get proc number.", err)
 		c.AbortWithError(404, err)
 		return
 	}
-	if job.Status != model.StatusRunning {
+	if proc.State != model.StatusRunning {
 		logrus.Debugln("stream not found.")
 		c.AbortWithStatus(404)
 		return
@@ -102,7 +102,7 @@ func LogStream(c *gin.Context) {
 
 	go func() {
 		// TODO remove global variable
-		config.logger.Tail(ctx, fmt.Sprint(job.ID), func(entries ...*logging.Entry) {
+		config.logger.Tail(ctx, fmt.Sprint(proc.ID), func(entries ...*logging.Entry) {
 			for _, entry := range entries {
 				select {
 				case <-ctx.Done():

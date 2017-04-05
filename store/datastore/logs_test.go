@@ -24,14 +24,14 @@ func TestLogs(t *testing.T) {
 		})
 
 		g.It("Should create a log", func() {
-			job := model.Job{
+			proc := model.Proc{
 				ID: 1,
 			}
 			buf := bytes.NewBufferString("echo hi")
-			err := s.WriteLog(&job, buf)
+			err := s.LogSave(&proc, buf)
 			g.Assert(err == nil).IsTrue()
 
-			rc, err := s.ReadLog(&job)
+			rc, err := s.LogFind(&proc)
 			g.Assert(err == nil).IsTrue()
 			defer rc.Close()
 			out, _ := ioutil.ReadAll(rc)
@@ -39,17 +39,17 @@ func TestLogs(t *testing.T) {
 		})
 
 		g.It("Should update a log", func() {
-			job := model.Job{
+			proc := model.Proc{
 				ID: 1,
 			}
 			buf1 := bytes.NewBufferString("echo hi")
 			buf2 := bytes.NewBufferString("echo allo?")
-			err1 := s.WriteLog(&job, buf1)
-			err2 := s.WriteLog(&job, buf2)
+			err1 := s.LogSave(&proc, buf1)
+			err2 := s.LogSave(&proc, buf2)
 			g.Assert(err1 == nil).IsTrue()
 			g.Assert(err2 == nil).IsTrue()
 
-			rc, err := s.ReadLog(&job)
+			rc, err := s.LogFind(&proc)
 			g.Assert(err == nil).IsTrue()
 			defer rc.Close()
 			out, _ := ioutil.ReadAll(rc)
