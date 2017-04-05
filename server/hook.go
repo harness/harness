@@ -515,6 +515,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 			compiler.WithProxy(),
 			// TODO ability to set global volumes for things like certs
 			compiler.WithVolumes(),
+			compiler.WithNetworks(),
 			compiler.WithWorkspaceFromURL("/drone", b.Curr.Link),
 			compiler.WithMetadata(metadata),
 		).Compile(parsed)
