@@ -15,6 +15,10 @@ var index = map[string]string{
 	"procs-find-build-pid":      procsFindBuildPid,
 	"procs-find-build-ppid":     procsFindBuildPpid,
 	"procs-delete-build":        procsDeleteBuild,
+	"registry-find-repo":        registryFindRepo,
+	"registry-find-repo-addr":   registryFindRepoAddr,
+	"registry-delete-repo":      registryDeleteRepo,
+	"registry-delete":           registryDelete,
 }
 
 var filesFindBuild = `
@@ -148,4 +152,39 @@ WHERE proc_build_id = $1
 
 var procsDeleteBuild = `
 DELETE FROM procs WHERE proc_build_id = $1
+`
+
+var registryFindRepo = `
+SELECT
+ registry_id
+,registry_repo_id
+,registry_addr
+,registry_username
+,registry_password
+,registry_email
+,registry_token
+FROM registry
+WHERE registry_repo_id = $1
+`
+
+var registryFindRepoAddr = `
+SELECT
+ registry_id
+,registry_repo_id
+,registry_addr
+,registry_username
+,registry_password
+,registry_email
+,registry_token
+FROM registry
+WHERE registry_repo_id = $1
+  AND registry_addr = $2
+`
+
+var registryDeleteRepo = `
+DELETE FROM registry WHERE registry_repo_id = $1
+`
+
+var registryDelete = `
+DELETE FROM registry WHERE registry_id = $1
 `

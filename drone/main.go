@@ -37,6 +37,7 @@ func main() {
 		deployCmd,
 		execCmd,
 		infoCmd,
+		registryCmd,
 		secretCmd,
 		serverCmd,
 		signCmd,

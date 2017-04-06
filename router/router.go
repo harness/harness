@@ -112,6 +112,13 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.DELETE("/secrets/:secret", session.MustPush, server.DeleteSecret)
 
 			// requires push permissions
+			repo.GET("/registry", session.MustPush, server.GetRegistryList)
+			repo.POST("/registry", session.MustPush, server.PostRegistry)
+			repo.GET("/registry/:address", session.MustPush, server.GetRegistry)
+			repo.PATCH("/registry/:address", session.MustPush, server.PatchRegistry)
+			repo.DELETE("/registry/:address", session.MustPush, server.DeleteRegistry)
+
+			// requires push permissions
 			repo.PATCH("", session.MustPush, server.PatchRepo)
 			repo.DELETE("", session.MustRepoAdmin(), server.DeleteRepo)
 			repo.POST("/chown", session.MustRepoAdmin(), server.ChownRepo)

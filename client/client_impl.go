@@ -26,32 +26,34 @@ const (
 	pathLogs     = "%s/api/queue/logs/%d"
 	pathLogsAuth = "%s/api/queue/logs/%d?access_token=%s"
 
-	pathSelf          = "%s/api/user"
-	pathFeed          = "%s/api/user/feed"
-	pathRepos         = "%s/api/user/repos"
-	pathRepo          = "%s/api/repos/%s/%s"
-	pathChown         = "%s/api/repos/%s/%s/chown"
-	pathEncrypt       = "%s/api/repos/%s/%s/encrypt"
-	pathBuilds        = "%s/api/repos/%s/%s/builds"
-	pathBuild         = "%s/api/repos/%s/%s/builds/%v"
-	pathApprove       = "%s/api/repos/%s/%s/builds/%d/approve"
-	pathDecline       = "%s/api/repos/%s/%s/builds/%d/decline"
-	pathJob           = "%s/api/repos/%s/%s/builds/%d/%d"
-	pathLog           = "%s/api/repos/%s/%s/logs/%d/%d"
-	pathKey           = "%s/api/repos/%s/%s/key"
-	pathSign          = "%s/api/repos/%s/%s/sign"
-	pathRepoSecrets   = "%s/api/repos/%s/%s/secrets"
-	pathRepoSecret    = "%s/api/repos/%s/%s/secrets/%s"
-	pathTeamSecrets   = "%s/api/teams/%s/secrets"
-	pathTeamSecret    = "%s/api/teams/%s/secrets/%s"
-	pathGlobalSecrets = "%s/api/global/secrets"
-	pathGlobalSecret  = "%s/api/global/secrets/%s"
-	pathNodes         = "%s/api/nodes"
-	pathNode          = "%s/api/nodes/%d"
-	pathUsers         = "%s/api/users"
-	pathUser          = "%s/api/users/%s"
-	pathBuildQueue    = "%s/api/builds"
-	pathAgent         = "%s/api/agents"
+	pathSelf           = "%s/api/user"
+	pathFeed           = "%s/api/user/feed"
+	pathRepos          = "%s/api/user/repos"
+	pathRepo           = "%s/api/repos/%s/%s"
+	pathChown          = "%s/api/repos/%s/%s/chown"
+	pathEncrypt        = "%s/api/repos/%s/%s/encrypt"
+	pathBuilds         = "%s/api/repos/%s/%s/builds"
+	pathBuild          = "%s/api/repos/%s/%s/builds/%v"
+	pathApprove        = "%s/api/repos/%s/%s/builds/%d/approve"
+	pathDecline        = "%s/api/repos/%s/%s/builds/%d/decline"
+	pathJob            = "%s/api/repos/%s/%s/builds/%d/%d"
+	pathLog            = "%s/api/repos/%s/%s/logs/%d/%d"
+	pathKey            = "%s/api/repos/%s/%s/key"
+	pathSign           = "%s/api/repos/%s/%s/sign"
+	pathRepoSecrets    = "%s/api/repos/%s/%s/secrets"
+	pathRepoSecret     = "%s/api/repos/%s/%s/secrets/%s"
+	pathRepoRegistries = "%s/api/repos/%s/%s/registry"
+	pathRepoRegistry   = "%s/api/repos/%s/%s/registry/%s"
+	pathTeamSecrets    = "%s/api/teams/%s/secrets"
+	pathTeamSecret     = "%s/api/teams/%s/secrets/%s"
+	pathGlobalSecrets  = "%s/api/global/secrets"
+	pathGlobalSecret   = "%s/api/global/secrets/%s"
+	pathNodes          = "%s/api/nodes"
+	pathNode           = "%s/api/nodes/%d"
+	pathUsers          = "%s/api/users"
+	pathUser           = "%s/api/users/%s"
+	pathBuildQueue     = "%s/api/builds"
+	pathAgent          = "%s/api/agents"
 )
 
 type client struct {
@@ -371,6 +373,44 @@ func (c *client) AgentList() ([]*model.Agent, error) {
 	uri := fmt.Sprintf(pathAgent, c.base)
 	err := c.get(uri, &out)
 	return out, err
+}
+
+// Registry returns a registry by hostname.
+func (c *client) Registry(owner, name, hostname string) (*model.Registry, error) {
+	out := new(model.Registry)
+	uri := fmt.Sprintf(pathRepoRegistry, c.base, owner, name, hostname)
+	err := c.get(uri, out)
+	return out, err
+}
+
+// RegistryList returns a list of all repository registries.
+func (c *client) RegistryList(owner string, name string) ([]*model.Registry, error) {
+	var out []*model.Registry
+	uri := fmt.Sprintf(pathRepoRegistries, c.base, owner, name)
+	err := c.get(uri, &out)
+	return out, err
+}
+
+// RegistryCreate creates a registry.
+func (c *client) RegistryCreate(owner, name string, in *model.Registry) (*model.Registry, error) {
+	out := new(model.Registry)
+	uri := fmt.Sprintf(pathRepoRegistries, c.base, owner, name)
+	err := c.post(uri, in, out)
+	return out, err
+}
+
+// RegistryUpdate updates a registry.
+func (c *client) RegistryUpdate(owner, name string, in *model.Registry) (*model.Registry, error) {
+	out := new(model.Registry)
+	uri := fmt.Sprintf(pathRepoRegistry, c.base, owner, name, in.Address)
+	err := c.patch(uri, in, out)
+	return out, err
+}
+
+// RegistryDelete deletes a registry.
+func (c *client) RegistryDelete(owner, name, hostname string) error {
+	uri := fmt.Sprintf(pathRepoRegistry, c.base, owner, name, hostname)
+	return c.delete(uri)
 }
 
 //
