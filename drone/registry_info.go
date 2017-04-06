@@ -19,7 +19,7 @@ var registryInfoCmd = cli.Command{
 		cli.StringFlag{
 			Name:  "hostname",
 			Usage: "registry hostname",
-			Value: "index.docker.io",
+			Value: "docker.io",
 		},
 		cli.StringFlag{
 			Name:   "format",

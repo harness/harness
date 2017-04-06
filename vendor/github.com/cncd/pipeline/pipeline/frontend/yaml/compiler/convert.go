@@ -88,6 +88,20 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 		environment["SHELL"] = "/bin/sh"
 	}
 
+	authConfig := backend.Auth{
+		Username: container.AuthConfig.Username,
+		Password: container.AuthConfig.Password,
+		Email:    container.AuthConfig.Email,
+	}
+	for _, registry := range c.registries {
+		if matchHostname(image, registry.Hostname) {
+			authConfig.Username = registry.Username
+			authConfig.Password = registry.Password
+			authConfig.Email = registry.Email
+			break
+		}
+	}
+
 	return &backend.Step{
 		Name:         name,
 		Alias:        container.Name,
@@ -112,12 +126,8 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 		CPUQuota:     int64(container.CPUQuota),
 		CPUShares:    int64(container.CPUShares),
 		CPUSet:       container.CPUSet,
-		AuthConfig: backend.Auth{
-			Username: container.AuthConfig.Username,
-			Password: container.AuthConfig.Password,
-			Email:    container.AuthConfig.Email,
-		},
-		OnSuccess: container.Constraints.Status.Match("success"),
+		AuthConfig:   authConfig,
+		OnSuccess:    container.Constraints.Status.Match("success"),
 		OnFailure: (len(container.Constraints.Status.Include)+
 			len(container.Constraints.Status.Exclude) != 0) &&
 			container.Constraints.Status.Match("failure"),

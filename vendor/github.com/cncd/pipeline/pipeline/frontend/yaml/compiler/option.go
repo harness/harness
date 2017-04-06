@@ -31,6 +31,14 @@ func WithVolumes(volumes ...string) Option {
 	}
 }
 
+// WithRegistry configures the compiler with registry credentials
+// that should be used to download images.
+func WithRegistry(registries ...Registry) Option {
+	return func(compiler *Compiler) {
+		compiler.registries = registries
+	}
+}
+
 // WithMetadata configutes the compiler with the repostiory, build
 // and system metadata. The metadata is used to remove steps from
 // the compiled pipeline configuration that should be skipped. The

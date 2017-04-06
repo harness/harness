@@ -34,3 +34,13 @@ func matchImage(from string, to ...string) bool {
 	}
 	return false
 }
+
+// matchHostname returns true if the image hostname
+// matches the specified hostname.
+func matchHostname(image, hostname string) bool {
+	ref, err := reference.ParseNamed(image)
+	if err != nil {
+		return false
+	}
+	return ref.Hostname() == hostname
+}

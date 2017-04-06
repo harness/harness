@@ -14,7 +14,7 @@ var registryDeleteCmd = cli.Command{
 		cli.StringFlag{
 			Name:  "hostname",
 			Usage: "registry hostname",
-			Value: "index.docker.io",
+			Value: "docker.io",
 		},
 	},
 }

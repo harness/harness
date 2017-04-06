@@ -159,6 +159,11 @@ func PostHook(c *gin.Context) {
 		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
+	regs, err := store.FromContext(c).RegistryList(repo)
+	if err != nil {
+		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
+	}
+
 	var mustApprove bool
 	if build.Event == model.EventPull {
 		for _, sec := range secs {
@@ -255,6 +260,7 @@ func PostHook(c *gin.Context) {
 		Last:  last,
 		Netrc: netrc,
 		Secs:  secs,
+		Regs:  regs,
 		Link:  httputil.GetURL(c.Request),
 		Yaml:  string(raw),
 	}
@@ -411,6 +417,7 @@ type builder struct {
 	Last  *model.Build
 	Netrc *model.Netrc
 	Secs  []*model.Secret
+	Regs  []*model.Registry
 	Link  string
 	Yaml  string
 }
@@ -491,6 +498,15 @@ func (b *builder) Build() ([]*buildItem, error) {
 			return nil, err
 		}
 
+		var registries []compiler.Registry
+		for _, reg := range b.Regs {
+			registries = append(registries, compiler.Registry{
+				Username: reg.Username,
+				Password: reg.Password,
+				Email:    reg.Email,
+			})
+		}
+
 		ir := compiler.New(
 			compiler.WithEnviron(environ),
 			// TODO ability to customize the escalated plugins
@@ -504,6 +520,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 				),
 				b.Repo.IsPrivate,
 			),
+			compiler.WithRegistry(registries...),
 			compiler.WithPrefix(
 				fmt.Sprintf(
 					"%d_%d",

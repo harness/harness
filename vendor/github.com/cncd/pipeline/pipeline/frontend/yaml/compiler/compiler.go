@@ -12,17 +12,26 @@ import (
 // TODO(bradrydzewski) compiler should handle user-defined volumes from YAML
 // TODO(bradrydzewski) compiler should handle user-defined networks from YAML
 
+type Registry struct {
+	Hostname string
+	Username string
+	Password string
+	Email    string
+	Token    string
+}
+
 // Compiler compiles the yaml
 type Compiler struct {
-	local     bool
-	escalated []string
-	prefix    string
-	volumes   []string
-	env       map[string]string
-	base      string
-	path      string
-	metadata  frontend.Metadata
-	aliases   []string
+	local      bool
+	escalated  []string
+	prefix     string
+	volumes    []string
+	env        map[string]string
+	base       string
+	path       string
+	metadata   frontend.Metadata
+	registries []Registry
+	aliases    []string
 }
 
 // New creates a new Compiler with options.

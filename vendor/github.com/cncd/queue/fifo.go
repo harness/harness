@@ -92,6 +92,23 @@ func (q *fifo) Error(c context.Context, id string, err error) error {
 	return nil
 }
 
+// Evict removes a pending task from the queue.
+func (q *fifo) Evict(c context.Context, id string) error {
+	q.Lock()
+	defer q.Unlock()
+
+	var next *list.Element
+	for e := q.pending.Front(); e != nil; e = next {
+		next = e.Next()
+		task, ok := e.Value.(*Task)
+		if ok && task.ID == id {
+			q.pending.Remove(e)
+			return nil
+		}
+	}
+	return ErrNotFound
+}
+
 // Wait waits until the item is done executing.
 func (q *fifo) Wait(c context.Context, id string) error {
 	q.Lock()

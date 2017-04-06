@@ -201,6 +201,10 @@ func PostApproval(c *gin.Context) {
 	if err != nil {
 		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
+	regs, err := store.FromContext(c).RegistryList(repo)
+	if err != nil {
+		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
+	}
 
 	defer func() {
 		uri := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, build.Number)
@@ -216,6 +220,7 @@ func PostApproval(c *gin.Context) {
 		Last:  last,
 		Netrc: netrc,
 		Secs:  secs,
+		Regs:  regs,
 		Link:  httputil.GetURL(c.Request),
 		Yaml:  string(raw),
 	}
@@ -475,6 +480,10 @@ func PostBuild(c *gin.Context) {
 	if err != nil {
 		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
+	regs, err := store.FromContext(c).RegistryList(repo)
+	if err != nil {
+		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
+	}
 
 	b := builder{
 		Repo:  repo,
@@ -482,6 +491,7 @@ func PostBuild(c *gin.Context) {
 		Last:  last,
 		Netrc: netrc,
 		Secs:  secs,
+		Regs:  regs,
 		Link:  httputil.GetURL(c.Request),
 		Yaml:  string(raw),
 	}
