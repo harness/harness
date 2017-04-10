@@ -33,6 +33,21 @@ git clone git://github.com/drone/drone.git $GOPATH/src/github.com/drone/drone
 cd $GOPATH/src/github.com/drone/drone
 ```
 
+Drone.io requires golang > 1.5.
+
+Drone.io requires the environmental variable GO15VENDOREXPERIMENT to be set:
+
+```
+export GO15VENDOREXPERIMENT=1
+```
+
+Drone.io requires the program go-bindata in order to generate templates and DDLs, go-bindata can be installed via the following command:
+
+```
+go get -u github.com/jteeuwen/go-bindata/...
+```
+
+
 Commands to build from source:
 
 ```sh
