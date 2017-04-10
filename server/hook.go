@@ -463,13 +463,11 @@ func (b *builder) Build() ([]*buildItem, error) {
 			if !sec.MatchEvent(b.Curr.Event) {
 				continue
 			}
-			if b.Curr.Verified || sec.SkipVerify {
-				secrets = append(secrets, compiler.Secret{
-					Name:  sec.Name,
-					Value: sec.Value,
-					Match: sec.Images,
-				})
-			}
+			secrets = append(secrets, compiler.Secret{
+				Name:  sec.Name,
+				Value: sec.Value,
+				Match: sec.Images,
+			})
 		}
 
 		y := b.Yaml

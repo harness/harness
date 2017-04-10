@@ -32,6 +32,7 @@ type Compiler struct {
 	escalated  []string
 	prefix     string
 	volumes    []string
+	networks   []string
 	env        map[string]string
 	base       string
 	path       string

@@ -25,11 +25,6 @@ func secretAddFlags() []cli.Flag {
 		cli.StringSliceFlag{
 			Name:  "event",
 			Usage: "inject the secret for these event types",
-			Value: &cli.StringSlice{
-				model.EventPush,
-				model.EventTag,
-				model.EventDeploy,
-			},
 		},
 		cli.StringSliceFlag{
 			Name:  "image",
@@ -77,6 +72,13 @@ func secretParseCmd(name string, value string, c *cli.Context) (*model.Secret, e
 	secret.Events = c.StringSlice("event")
 	secret.SkipVerify = c.Bool("skip-verify")
 	secret.Conceal = c.Bool("conceal")
+	if len(secret.Events) == 0 {
+		secret.Events = []string{
+			model.EventPush,
+			model.EventTag,
+			model.EventDeploy,
+		}
+	}
 
 	// TODO(bradrydzewski) below we use an @ sybmol to denote that the secret
 	// value should be loaded from a file (inspired by curl). I'd prefer to use

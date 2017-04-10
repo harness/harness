@@ -161,6 +161,14 @@ func WithProxy() Option {
 	)
 }
 
+// WithNetworks configures the compiler with additionnal networks
+// to be connected to build containers
+func WithNetworks(networks ...string) Option {
+	return func(compiler *Compiler) {
+		compiler.networks = networks
+	}
+}
+
 // TODO(bradrydzewski) consider an alternate approach to
 // WithProxy where the proxy strings are passed directly
 // to the function as named parameters.
