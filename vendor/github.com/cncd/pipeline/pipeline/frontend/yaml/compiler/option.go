@@ -39,6 +39,16 @@ func WithRegistry(registries ...Registry) Option {
 	}
 }
 
+// WithSecret configures the compiler with external secrets
+// to be injected into the container at runtime.
+func WithSecret(secrets ...Secret) Option {
+	return func(compiler *Compiler) {
+		for _, secret := range secrets {
+			compiler.secrets[strings.ToLower(secret.Name)] = secret
+		}
+	}
+}
+
 // WithMetadata configutes the compiler with the repostiory, build
 // and system metadata. The metadata is used to remove steps from
 // the compiled pipeline configuration that should be skipped. The

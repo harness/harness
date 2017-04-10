@@ -3,6 +3,7 @@ package compiler
 import (
 	"fmt"
 	"path"
+	"strings"
 
 	"github.com/cncd/pipeline/pipeline/backend"
 	"github.com/cncd/pipeline/pipeline/frontend/yaml"
@@ -73,7 +74,7 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 	if isPlugin(container) {
 		paramsToEnv(container.Vargs, environment)
 
-		if imageMatches(container.Image, c.escalated) {
+		if matchImage(container.Image, c.escalated...) {
 			privileged = true
 			entrypoint = []string{}
 			command = []string{}
@@ -99,6 +100,13 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 			authConfig.Password = registry.Password
 			authConfig.Email = registry.Email
 			break
+		}
+	}
+
+	for _, requested := range container.Secrets.Secrets {
+		secret, ok := c.secrets[strings.ToLower(requested.Source)]
+		if ok && (len(secret.Match) == 0 || matchImage(image, secret.Match...)) {
+			environment[strings.ToUpper(requested.Target)] = secret.Value
 		}
 	}
 
@@ -132,16 +140,6 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 			len(container.Constraints.Status.Exclude) != 0) &&
 			container.Constraints.Status.Match("failure"),
 	}
-}
-
-func imageMatches(image string, to []string) bool {
-	image = trimImage(image)
-	for _, i := range to {
-		if image == i {
-			return true
-		}
-	}
-	return false
 }
 
 func isPlugin(c *yaml.Container) bool {

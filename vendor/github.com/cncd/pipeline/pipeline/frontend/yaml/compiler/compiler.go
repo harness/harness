@@ -20,6 +20,12 @@ type Registry struct {
 	Token    string
 }
 
+type Secret struct {
+	Name  string
+	Value string
+	Match []string
+}
+
 // Compiler compiles the yaml
 type Compiler struct {
 	local      bool
@@ -31,13 +37,16 @@ type Compiler struct {
 	path       string
 	metadata   frontend.Metadata
 	registries []Registry
+	secrets    map[string]Secret
 	aliases    []string
 }
 
 // New creates a new Compiler with options.
 func New(opts ...Option) *Compiler {
-	compiler := new(Compiler)
-	compiler.env = map[string]string{}
+	compiler := &Compiler{
+		env:     map[string]string{},
+		secrets: map[string]Secret{},
+	}
 	for _, opt := range opts {
 		opt(compiler)
 	}

@@ -120,8 +120,11 @@ func secretDisplayList(secrets []*model.Secret, c *cli.Context) error {
 // template for secret list items
 var tmplSecretList = "\x1b[33m{{ .Name }} \x1b[0m" + `
 Events: {{ list .Events }}
-SkipVerify: {{ .SkipVerify }}
-Conceal: {{ .Conceal }}
+{{- if .Images }}
+Images: {{ list .Images }}
+{{- else }}
+Images: <any>
+{{- end }}
 `
 
 var secretFuncMap = template.FuncMap{

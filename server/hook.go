@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -164,67 +163,68 @@ func PostHook(c *gin.Context) {
 		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
-	var mustApprove bool
-	if build.Event == model.EventPull {
-		for _, sec := range secs {
-			if sec.SkipVerify {
-				continue
-			}
-			if sec.MatchEvent(model.EventPull) {
-				mustApprove = true
-				break
-			}
-		}
-		if !mustApprove {
-			logrus.Debugf("no secrets exposed to pull_request: status: accepted")
-		}
-	}
+	// var mustApprove bool
+	// if build.Event == model.EventPull {
+	// 	for _, sec := range secs {
+	// 		if sec.SkipVerify {
+	// 			continue
+	// 		}
+	// 		if sec.MatchEvent(model.EventPull) {
+	// 			mustApprove = true
+	// 			break
+	// 		}
+	// 	}
+	// 	if !mustApprove {
+	// 		logrus.Debugf("no secrets exposed to pull_request: status: accepted")
+	// 	}
+	// }
 
-	if build.Event == model.EventPull && mustApprove {
-		old, ferr := remote_.FileRef(user, repo, build.Branch, repo.Config)
-		if ferr != nil {
-			build.Status = model.StatusBlocked
-			logrus.Debugf("cannot fetch base yaml: status: blocked")
-		} else if bytes.Equal(old, raw) {
-			build.Status = model.StatusPending
-			logrus.Debugf("base yaml matches head yaml: status: accepted")
-		} else {
-			// this block is executed if the target yaml file
-			// does not match the base yaml.
-
-			// TODO unfortunately we have no good way to get the
-			// sender repository permissions unless the user is
-			// a registered drone user.
-			sender, uerr := store.GetUserLogin(c, build.Sender)
-			if uerr != nil {
-				build.Status = model.StatusBlocked
-				logrus.Debugf("sender does not have a drone account: status: blocked")
-			} else {
-				if refresher, ok := remote_.(remote.Refresher); ok {
-					ok, _ := refresher.Refresh(sender)
-					if ok {
-						store.UpdateUser(c, sender)
-					}
-				}
-				// if the sender does not have push access to the
-				// repository the pull request should be blocked.
-				perm, perr := remote_.Perm(sender, repo.Owner, repo.Name)
-				if perr == nil && perm.Push == true {
-					build.Status = model.StatusPending
-					logrus.Debugf("sender %s has push access: status: accepted", sender.Login)
-				} else {
-					build.Status = model.StatusBlocked
-					logrus.Debugf("sender %s does not have push access: status: blocked", sender.Login)
-				}
-			}
-		}
-	} else {
-		build.Status = model.StatusPending
-	}
+	// if build.Event == model.EventPull && mustApprove {
+	// 	old, ferr := remote_.FileRef(user, repo, build.Branch, repo.Config)
+	// 	if ferr != nil {
+	// 		build.Status = model.StatusBlocked
+	// 		logrus.Debugf("cannot fetch base yaml: status: blocked")
+	// 	} else if bytes.Equal(old, raw) {
+	// 		build.Status = model.StatusPending
+	// 		logrus.Debugf("base yaml matches head yaml: status: accepted")
+	// 	} else {
+	// 		// this block is executed if the target yaml file
+	// 		// does not match the base yaml.
+	//
+	// 		// TODO unfortunately we have no good way to get the
+	// 		// sender repository permissions unless the user is
+	// 		// a registered drone user.
+	// 		sender, uerr := store.GetUserLogin(c, build.Sender)
+	// 		if uerr != nil {
+	// 			build.Status = model.StatusBlocked
+	// 			logrus.Debugf("sender does not have a drone account: status: blocked")
+	// 		} else {
+	// 			if refresher, ok := remote_.(remote.Refresher); ok {
+	// 				ok, _ := refresher.Refresh(sender)
+	// 				if ok {
+	// 					store.UpdateUser(c, sender)
+	// 				}
+	// 			}
+	// 			// if the sender does not have push access to the
+	// 			// repository the pull request should be blocked.
+	// 			perm, perr := remote_.Perm(sender, repo.Owner, repo.Name)
+	// 			if perr == nil && perm.Push == true {
+	// 				build.Status = model.StatusPending
+	// 				logrus.Debugf("sender %s has push access: status: accepted", sender.Login)
+	// 			} else {
+	// 				build.Status = model.StatusBlocked
+	// 				logrus.Debugf("sender %s does not have push access: status: blocked", sender.Login)
+	// 			}
+	// 		}
+	// 	}
+	// } else {
+	// 	build.Status = model.StatusPending
+	// }
 
 	// update some build fields
 	build.RepoID = repo.ID
 	build.Verified = true
+	build.Status = model.StatusPending
 
 	if err := store.CreateBuild(c, build, build.Procs...); err != nil {
 		logrus.Errorf("failure to save commit for %s. %s", repo.FullName, err)
@@ -234,9 +234,9 @@ func PostHook(c *gin.Context) {
 
 	c.JSON(200, build)
 
-	if build.Status == model.StatusBlocked {
-		return
-	}
+	// if build.Status == model.StatusBlocked {
+	// 	return
+	// }
 
 	// get the previous build so that we can send
 	// on status change notifications
@@ -454,29 +454,28 @@ func (b *builder) Build() ([]*buildItem, error) {
 		for k, v := range metadata.EnvironDrone() {
 			environ[k] = v
 		}
-
 		for k, v := range axis {
 			environ[k] = v
 		}
 
-		secrets := map[string]string{}
+		var secrets []compiler.Secret
 		for _, sec := range b.Secs {
 			if !sec.MatchEvent(b.Curr.Event) {
 				continue
 			}
 			if b.Curr.Verified || sec.SkipVerify {
-				secrets[sec.Name] = sec.Value
+				secrets = append(secrets, compiler.Secret{
+					Name:  sec.Name,
+					Value: sec.Value,
+					Match: sec.Images,
+				})
 			}
-		}
-		sub := func(name string) string {
-			if v, ok := environ[name]; ok {
-				return v
-			}
-			return secrets[name]
 		}
 
 		y := b.Yaml
-		s, err := envsubst.Eval(y, sub)
+		s, err := envsubst.Eval(y, func(name string) string {
+			return environ[name]
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -521,6 +520,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 				b.Repo.IsPrivate,
 			),
 			compiler.WithRegistry(registries...),
+			compiler.WithSecret(secrets...),
 			compiler.WithPrefix(
 				fmt.Sprintf(
 					"%d_%d",
@@ -536,18 +536,18 @@ func (b *builder) Build() ([]*buildItem, error) {
 			compiler.WithMetadata(metadata),
 		).Compile(parsed)
 
-		for _, sec := range b.Secs {
-			if !sec.MatchEvent(b.Curr.Event) {
-				continue
-			}
-			if b.Curr.Verified || sec.SkipVerify {
-				ir.Secrets = append(ir.Secrets, &backend.Secret{
-					Mask:  sec.Conceal,
-					Name:  sec.Name,
-					Value: sec.Value,
-				})
-			}
-		}
+		// for _, sec := range b.Secs {
+		// 	if !sec.MatchEvent(b.Curr.Event) {
+		// 		continue
+		// 	}
+		// 	if b.Curr.Verified || sec.SkipVerify {
+		// 		ir.Secrets = append(ir.Secrets, &backend.Secret{
+		// 			Mask:  sec.Conceal,
+		// 			Name:  sec.Name,
+		// 			Value: sec.Value,
+		// 		})
+		// 	}
+		// }
 
 		item := &buildItem{
 			Proc:     proc,
