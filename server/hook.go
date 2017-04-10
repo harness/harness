@@ -527,7 +527,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 				b.Repo.IsPrivate,
 			),
 			compiler.WithRegistry(registries...),
-			compiler.WithSecrets(csecrets...),
+			compiler.WithSecret(csecrets...),
 			compiler.WithPrefix(
 				fmt.Sprintf(
 					"%d_%d",
