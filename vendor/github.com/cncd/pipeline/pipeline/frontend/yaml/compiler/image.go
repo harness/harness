@@ -28,7 +28,7 @@ func expandImage(name string) string {
 func matchImage(from string, to ...string) bool {
 	from = trimImage(from)
 	for _, match := range to {
-		if from == match {
+		if from == trimImage(match) {
 			return true
 		}
 	}

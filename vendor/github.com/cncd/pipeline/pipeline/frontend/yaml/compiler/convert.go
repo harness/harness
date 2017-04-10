@@ -28,6 +28,11 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 			Aliases: c.aliases,
 		},
 	}
+	for _, network := range c.networks {
+		networks = append(networks, backend.Conn{
+			Name: network,
+		})
+	}
 
 	var volumes []string
 	if !c.local {
