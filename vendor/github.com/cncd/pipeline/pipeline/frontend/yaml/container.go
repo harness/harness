@@ -52,6 +52,7 @@ type (
 		ShmSize       libcompose.MemStringorInt `yaml:"shm_size,omitempty"`
 		Ulimits       libcompose.Ulimits        `yaml:"ulimits,omitempty"`
 		Volumes       libcompose.Volumes        `yaml:"volumes,omitempty"`
+		Secrets       Secrets                   `yaml:"secrets,omitempty"`
 		Constraints   Constraints               `yaml:"when,omitempty"`
 		Vargs         map[string]interface{}    `yaml:",inline"`
 	}

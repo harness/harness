@@ -460,12 +460,18 @@ func (b *builder) Build() ([]*buildItem, error) {
 		}
 
 		secrets := map[string]string{}
+		var csecrets []compiler.Secret
 		for _, sec := range b.Secs {
 			if !sec.MatchEvent(b.Curr.Event) {
 				continue
 			}
 			if b.Curr.Verified || sec.SkipVerify {
 				secrets[sec.Name] = sec.Value
+				csecrets = append(csecrets, compiler.Secret{
+					Name:  sec.Name,
+					Value: sec.Value,
+					Match: sec.Images,
+				})
 			}
 		}
 		sub := func(name string) string {
@@ -521,6 +527,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 				b.Repo.IsPrivate,
 			),
 			compiler.WithRegistry(registries...),
+			compiler.WithSecrets(csecrets...),
 			compiler.WithPrefix(
 				fmt.Sprintf(
 					"%d_%d",

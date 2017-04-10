@@ -115,9 +115,6 @@ type Client interface {
 	// target environment.
 	Deploy(string, string, int, string, map[string]string) (*model.Build, error)
 
-	// AgentList returns a list of build agents.
-	AgentList() ([]*model.Agent, error)
-
 	// Registry returns a registry by hostname.
 	Registry(owner, name, hostname string) (*model.Registry, error)
 
