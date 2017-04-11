@@ -18,6 +18,7 @@ import (
 	"github.com/cncd/pipeline/pipeline/interrupt"
 	"github.com/cncd/pipeline/pipeline/multipart"
 	"github.com/cncd/pipeline/pipeline/rpc"
+	"github.com/drone/drone/version"
 
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
@@ -97,6 +98,10 @@ func loop(c *cli.Context) error {
 		),
 		rpc.WithToken(
 			c.String("drone-secret"),
+		),
+		rpc.WithHeader(
+			"X-Drone-Version",
+			version.Version,
 		),
 	)
 	if err != nil {

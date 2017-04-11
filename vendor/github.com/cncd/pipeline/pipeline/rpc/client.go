@@ -57,6 +57,7 @@ type Client struct {
 	backoff  time.Duration
 	endpoint string
 	token    string
+	headers  map[string][]string
 }
 
 // NewClient returns a new Client.
@@ -65,6 +66,7 @@ func NewClient(endpoint string, opts ...Option) (*Client, error) {
 		endpoint: endpoint,
 		retry:    defaultRetryClount,
 		backoff:  defaultBackoff,
+		headers:  map[string][]string{},
 	}
 	for _, opt := range opts {
 		opt(cli)
@@ -179,6 +181,9 @@ func (t *Client) open() error {
 	header := map[string][]string{
 		"Content-Type":  {"application/json-rpc"},
 		"Authorization": {"Bearer " + t.token},
+	}
+	for key, value := range t.headers {
+		header[key] = value
 	}
 	conn, _, err := websocket.DefaultDialer.Dial(t.endpoint, http.Header(header))
 	if err != nil {

@@ -27,3 +27,10 @@ func WithToken(t string) Option {
 		c.token = t
 	}
 }
+
+// WithHeader configures the client header.
+func WithHeader(key, value string) Option {
+	return func(c *Client) {
+		c.headers[key] = []string{value}
+	}
+}
