@@ -2,24 +2,37 @@ package main
 
 import "github.com/urfave/cli"
 
-var secretRemoveCmd = cli.Command{
+var secretDeleteCmd = cli.Command{
 	Name:   "rm",
 	Usage:  "remove a secret",
-	Action: secretRemove,
+	Action: secretDelete,
+	Flags: []cli.Flag{
+		cli.StringFlag{
+			Name:  "repository",
+			Usage: "repository name (e.g. octocat/hello-world)",
+		},
+		cli.StringFlag{
+			Name:  "name",
+			Usage: "secret name",
+		},
+	},
 }
 
-func secretRemove(c *cli.Context) error {
-	repo := c.Args().First()
-	owner, name, err := parseRepo(repo)
+func secretDelete(c *cli.Context) error {
+	var (
+		secret   = c.String("name")
+		reponame = c.String("repository")
+	)
+	if reponame == "" {
+		reponame = c.Args().First()
+	}
+	owner, name, err := parseRepo(reponame)
 	if err != nil {
 		return err
 	}
-
-	secret := c.Args().Get(1)
-
 	client, err := newClient(c)
 	if err != nil {
 		return err
 	}
-	return client.SecretDel(owner, name, secret)
+	return client.SecretDelete(owner, name, secret)
 }

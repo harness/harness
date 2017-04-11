@@ -5,7 +5,6 @@ import (
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
-	"github.com/drone/drone/store"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +16,7 @@ func GetRegistry(c *gin.Context) {
 		repo = session.Repo(c)
 		name = c.Param("registry")
 	)
-	registry, err := store.FromContext(c).RegistryFind(repo, name)
+	registry, err := Config.Services.Registries.RegistryFind(repo, name)
 	if err != nil {
 		c.String(404, "Error getting registry %q. %s", name, err)
 		return
@@ -46,7 +45,7 @@ func PostRegistry(c *gin.Context) {
 		c.String(400, "Error inserting registry. %s", err)
 		return
 	}
-	if err := store.FromContext(c).RegistryCreate(registry); err != nil {
+	if err := Config.Services.Registries.RegistryCreate(repo, registry); err != nil {
 		c.String(500, "Error inserting registry %q. %s", in.Address, err)
 		return
 	}
@@ -67,7 +66,7 @@ func PatchRegistry(c *gin.Context) {
 		return
 	}
 
-	registry, err := store.FromContext(c).RegistryFind(repo, name)
+	registry, err := Config.Services.Registries.RegistryFind(repo, name)
 	if err != nil {
 		c.String(404, "Error getting registry %q. %s", name, err)
 		return
@@ -89,7 +88,7 @@ func PatchRegistry(c *gin.Context) {
 		c.String(400, "Error updating registry. %s", err)
 		return
 	}
-	if err := store.FromContext(c).RegistryUpdate(registry); err != nil {
+	if err := Config.Services.Registries.RegistryUpdate(repo, registry); err != nil {
 		c.String(500, "Error updating registry %q. %s", in.Address, err)
 		return
 	}
@@ -100,7 +99,7 @@ func PatchRegistry(c *gin.Context) {
 // to the response in json format.
 func GetRegistryList(c *gin.Context) {
 	repo := session.Repo(c)
-	list, err := store.FromContext(c).RegistryList(repo)
+	list, err := Config.Services.Registries.RegistryList(repo)
 	if err != nil {
 		c.String(500, "Error getting registry list. %s", err)
 		return
@@ -119,13 +118,7 @@ func DeleteRegistry(c *gin.Context) {
 		repo = session.Repo(c)
 		name = c.Param("registry")
 	)
-	registry, err := store.FromContext(c).RegistryFind(repo, name)
-	if err != nil {
-		c.String(404, "Error getting registry %q. %s", name, err)
-		return
-	}
-	err = store.FromContext(c).RegistryDelete(registry)
-	if err != nil {
+	if err := Config.Services.Registries.RegistryDelete(repo, name); err != nil {
 		c.String(500, "Error deleting registry %q. %s", name, err)
 		return
 	}

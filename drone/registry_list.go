@@ -18,7 +18,7 @@ var registryListCmd = cli.Command{
 		},
 		cli.StringFlag{
 			Name:   "format",
-			Usage:  "repository name (e.g. octocat/hello-world)",
+			Usage:  "format output",
 			Value:  tmplRegistryList,
 			Hidden: true,
 		},
@@ -58,6 +58,5 @@ func registryList(c *cli.Context) error {
 // template for build list information
 var tmplRegistryList = "\x1b[33m{{ .Address }} \x1b[0m" + `
 Username: {{ .Username }}
-Password: ********
 Email: {{ .Email }}
 `

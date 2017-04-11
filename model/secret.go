@@ -1,50 +1,48 @@
 package model
 
 import (
+	"errors"
 	"path/filepath"
 )
 
+var (
+	errSecretNameInvalid  = errors.New("Invalid Secret Name")
+	errSecretValueInvalid = errors.New("Invalid Secret Value")
+)
+
+// SecretService defines a service for managing secrets.
+type SecretService interface {
+	SecretFind(*Repo, string) (*Secret, error)
+	SecretList(*Repo) ([]*Secret, error)
+	SecretCreate(*Repo, *Secret) error
+	SecretUpdate(*Repo, *Secret) error
+	SecretDelete(*Repo, string) error
+}
+
+// SecretStore persists secret information to storage.
+type SecretStore interface {
+	SecretFind(*Repo, string) (*Secret, error)
+	SecretList(*Repo) ([]*Secret, error)
+	SecretCreate(*Secret) error
+	SecretUpdate(*Secret) error
+	SecretDelete(*Secret) error
+}
+
+// Secret represents a secret variable, such as a password or token.
+// swagger:model registry
 type Secret struct {
-	// the name of the secret which will be used as the environment variable
-	// name at runtime.
-	Name string `json:"name"`
-
-	// the value of the secret which will be provided to the runtime environment
-	// as a named environment variable.
-	Value string `json:"value"`
-
-	// the secret is restricted to this list of images.
-	Images []string `json:"image,omitempty"`
-
-	// the secret is restricted to this list of events.
-	Events []string `json:"event,omitempty"`
-
-	// whether the secret requires verification
-	SkipVerify bool `json:"skip_verify"`
-
-	// whether the secret should be concealed in the build log
-	Conceal bool `json:"conceal"`
+	ID         int64    `json:"id"              meddler:"secret_id,pk"`
+	RepoID     int64    `json:"-"               meddler:"secret_repo_id"`
+	Name       string   `json:"name"            meddler:"secret_name"`
+	Value      string   `json:"value,omitempty" meddler:"secret_value"`
+	Images     []string `json:"image"           meddler:"secret_images,json"`
+	Events     []string `json:"event"           meddler:"secret_events,json"`
+	SkipVerify bool     `json:"-"               meddler:"secret_skip_verify"`
+	Conceal    bool     `json:"-"               meddler:"secret_conceal"`
 }
 
 // Match returns true if an image and event match the restricted list.
-func (s *Secret) Match(image, event string) bool {
-	return s.MatchImage(image) && s.MatchEvent(event)
-}
-
-// MatchImage returns true if an image matches the restricted list.
-func (s *Secret) MatchImage(image string) bool {
-	for _, pattern := range s.Images {
-		if match, _ := filepath.Match(pattern, image); match {
-			return true
-		} else if pattern == "*" {
-			return true
-		}
-	}
-	return false
-}
-
-// MatchEvent returns true if an event matches the restricted list.
-func (s *Secret) MatchEvent(event string) bool {
+func (s *Secret) Match(event string) bool {
 	for _, pattern := range s.Events {
 		if match, _ := filepath.Match(pattern, event); match {
 			return true
@@ -55,5 +53,23 @@ func (s *Secret) MatchEvent(event string) bool {
 
 // Validate validates the required fields and formats.
 func (s *Secret) Validate() error {
-	return nil
+	switch {
+	case len(s.Name) == 0:
+		return errSecretNameInvalid
+	case len(s.Value) == 0:
+		return errSecretValueInvalid
+	default:
+		return nil
+	}
+}
+
+// Copy makes a copy of the secret without the value.
+func (s *Secret) Copy() *Secret {
+	return &Secret{
+		ID:     s.ID,
+		RepoID: s.RepoID,
+		Name:   s.Name,
+		Images: s.Images,
+		Events: s.Events,
+	}
 }

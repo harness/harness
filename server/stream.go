@@ -102,7 +102,7 @@ func LogStream(c *gin.Context) {
 
 	go func() {
 		// TODO remove global variable
-		config.logger.Tail(ctx, fmt.Sprint(proc.ID), func(entries ...*logging.Entry) {
+		Config.Services.Logs.Tail(ctx, fmt.Sprint(proc.ID), func(entries ...*logging.Entry) {
 			for _, entry := range entries {
 				select {
 				case <-ctx.Done():
@@ -167,7 +167,7 @@ func EventStream(c *gin.Context) {
 
 	go func() {
 		// TODO remove this from global config
-		config.pubsub.Subscribe(c, "topic/events", func(m pubsub.Message) {
+		Config.Services.Pubsub.Subscribe(c, "topic/events", func(m pubsub.Message) {
 			name := m.Labels["repo"]
 			priv := m.Labels["private"]
 			if repo[name] || priv == "false" {

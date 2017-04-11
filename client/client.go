@@ -26,9 +26,6 @@ type Client interface {
 	// UserDel deletes a user account.
 	UserDel(string) error
 
-	// // UserFeed returns the user's activity feed.
-	// UserFeed() ([]*Activity, error)
-
 	// Repo returns a repository by name.
 	Repo(string, string) (*model.Repo, error)
 
@@ -47,36 +44,6 @@ type Client interface {
 
 	// RepoDel deletes a repository.
 	RepoDel(string, string) error
-
-	// Sign returns a cryptographic signature for the input string.
-	Sign(string, string, []byte) ([]byte, error)
-
-	// SecretList returns a list of all repository secrets.
-	SecretList(string, string) ([]*model.Secret, error)
-
-	// SecretPost create or updates a repository secret.
-	SecretPost(string, string, *model.Secret) error
-
-	// SecretDel deletes a named repository secret.
-	SecretDel(string, string, string) error
-
-	// TeamSecretList returns a list of all team secrets.
-	TeamSecretList(string) ([]*model.Secret, error)
-
-	// TeamSecretPost create or updates a team secret.
-	TeamSecretPost(string, *model.Secret) error
-
-	// TeamSecretDel deletes a named team secret.
-	TeamSecretDel(string, string) error
-
-	// GlobalSecretList returns a list of global secrets.
-	GlobalSecretList() ([]*model.Secret, error)
-
-	// GlobalSecretPost create or updates a global secret.
-	GlobalSecretPost(secret *model.Secret) error
-
-	// GlobalSecretDel deletes a named global secret.
-	GlobalSecretDel(secret string) error
 
 	// Build returns a repository build by number.
 	Build(string, string, int) (*model.Build, error)
@@ -129,4 +96,19 @@ type Client interface {
 
 	// RegistryDelete deletes a registry.
 	RegistryDelete(owner, name, hostname string) error
+
+	// Secret returns a secret by name.
+	Secret(owner, name, secret string) (*model.Secret, error)
+
+	// SecretList returns a list of all repository secrets.
+	SecretList(owner, name string) ([]*model.Secret, error)
+
+	// SecretCreate creates a registry.
+	SecretCreate(owner, name string, secret *model.Secret) (*model.Secret, error)
+
+	// SecretUpdate updates a registry.
+	SecretUpdate(owner, name string, secret *model.Secret) (*model.Secret, error)
+
+	// SecretDelete deletes a secret.
+	SecretDelete(owner, name, secret string) error
 }

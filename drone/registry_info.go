@@ -23,7 +23,7 @@ var registryInfoCmd = cli.Command{
 		},
 		cli.StringFlag{
 			Name:   "format",
-			Usage:  "repository name (e.g. octocat/hello-world)",
+			Usage:  "format output",
 			Value:  tmplRegistryList,
 			Hidden: true,
 		},

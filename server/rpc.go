@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"os"
 	"strconv"
 
 	"github.com/cncd/logging"
@@ -22,23 +21,57 @@ import (
 // This file is a complete disaster because I'm trying to wedge in some
 // experimental code. Please pardon our appearance during renovations.
 
-var config = struct {
-	pubsub pubsub.Publisher
-	queue  queue.Queue
-	logger logging.Log
-	secret string
-	host   string
-}{
-	pubsub.New(),
-	queue.New(),
-	logging.New(),
-	os.Getenv("DRONE_SECRET"),
-	os.Getenv("DRONE_HOST"),
-}
+// Config is an evil global configuration that will be used as we transition /
+// refactor the codebase to move away from storing these values in the Context.
+var Config = struct {
+	Services struct {
+		Pubsub     pubsub.Publisher
+		Queue      queue.Queue
+		Logs       logging.Log
+		Senders    model.SenderService
+		Secrets    model.SecretService
+		Registries model.RegistryService
+	}
+	Storage struct {
+		// Users  model.UserStore
+		// Repos  model.RepoStore
+		// Builds model.BuildStore
+		// Logs   model.LogStore
+		Files model.FileStore
+		Procs model.ProcStore
+		// Registries model.RegistryStore
+		// Secrets model.SecretStore
+	}
+	Server struct {
+		Key  string
+		Cert string
+		Host string
+		Port string
+		Pass string
+		// Open bool
+		// Orgs map[string]struct{}
+		// Admins map[string]struct{}
+	}
+	Pipeline struct {
+		Volumes    []string
+		Networks   []string
+		Privileged []string
+	}
+}{}
 
-func init() {
-	config.pubsub.Create(context.Background(), "topic/events")
-}
+// var config = struct {
+// 	pubsub pubsub.Publisher
+// 	queue  queue.Queue
+// 	logger logging.Log
+// 	secret string
+// 	host   string
+// }{
+// 	pubsub.New(),
+// 	queue.New(),
+// 	logging.New(),
+// 	os.Getenv("DRONE_SECRET"),
+// 	os.Getenv("DRONE_HOST"),
+// }
 
 // func SetupRPC() gin.HandlerFunc {
 // 	return func(c *gin.Context) {
@@ -48,18 +81,18 @@ func init() {
 
 func RPCHandler(c *gin.Context) {
 
-	if secret := c.Request.Header.Get("Authorization"); secret != "Bearer "+config.secret {
-		log.Printf("Unable to connect agent. Invalid authorization token %q does not match %q", secret, config.secret)
+	if secret := c.Request.Header.Get("Authorization"); secret != "Bearer "+Config.Server.Pass {
+		log.Printf("Unable to connect agent. Invalid authorization token %q does not match %q", secret, Config.Server.Pass)
 		c.String(401, "Unable to connect agent. Invalid authorization token")
 		return
 	}
 	peer := RPC{
 		remote: remote.FromContext(c),
 		store:  store.FromContext(c),
-		queue:  config.queue,
-		pubsub: config.pubsub,
-		logger: config.logger,
-		host:   config.host,
+		queue:  Config.Services.Queue,
+		pubsub: Config.Services.Pubsub,
+		logger: Config.Services.Logs,
+		host:   Config.Server.Host,
 	}
 	rpc.NewServer(&peer).ServeHTTP(c.Writer, c.Request)
 }
@@ -201,7 +234,7 @@ func (s *RPC) Upload(c context.Context, id string, file *rpc.File) error {
 		)
 	}
 
-	return s.store.FileCreate(&model.File{
+	return Config.Storage.Files.FileCreate(&model.File{
 		BuildID: proc.BuildID,
 		ProcID:  proc.ID,
 		Mime:    file.Mime,

@@ -8,6 +8,15 @@ var (
 	errRegistryPasswordInvalid = errors.New("Invalid Registry Password")
 )
 
+// RegistryService defines a service for managing registries.
+type RegistryService interface {
+	RegistryFind(*Repo, string) (*Registry, error)
+	RegistryList(*Repo) ([]*Registry, error)
+	RegistryCreate(*Repo, *Registry) error
+	RegistryUpdate(*Repo, *Registry) error
+	RegistryDelete(*Repo, string) error
+}
+
 // RegistryStore persists registry information to storage.
 type RegistryStore interface {
 	RegistryFind(*Repo, string) (*Registry, error)

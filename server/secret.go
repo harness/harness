@@ -5,173 +5,118 @@ import (
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
-	"github.com/drone/drone/store"
 
 	"github.com/gin-gonic/gin"
 )
 
-func GetGlobalSecrets(c *gin.Context) {
-	secrets, err := store.GetGlobalSecretList(c)
-
+// GetSecret gets the named secret from the database and writes
+// to the response in json format.
+func GetSecret(c *gin.Context) {
+	var (
+		repo = session.Repo(c)
+		name = c.Param("secret")
+	)
+	secret, err := Config.Services.Secrets.SecretFind(repo, name)
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.String(404, "Error getting secret %q. %s", name, err)
 		return
 	}
-
-	var list []*model.TeamSecret
-
-	for _, s := range secrets {
-		list = append(list, s.Clone())
-	}
-
-	c.JSON(http.StatusOK, list)
+	c.JSON(200, secret.Copy())
 }
 
-func PostGlobalSecret(c *gin.Context) {
-	in := &model.TeamSecret{}
-	err := c.Bind(in)
-	if err != nil {
-		c.String(http.StatusBadRequest, "Invalid JSON input. %s", err.Error())
-		return
-	}
-	in.ID = 0
-
-	err = store.SetGlobalSecret(c, in)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Unable to persist global secret. %s", err.Error())
-		return
-	}
-
-	c.String(http.StatusOK, "")
-}
-
-func DeleteGlobalSecret(c *gin.Context) {
-	name := c.Param("secret")
-
-	secret, err := store.GetGlobalSecret(c, name)
-	if err != nil {
-		c.String(http.StatusNotFound, "Cannot find secret %s.", name)
-		return
-	}
-	err = store.DeleteGlobalSecret(c, secret)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Unable to delete global secret. %s", err.Error())
-		return
-	}
-
-	c.String(http.StatusOK, "")
-}
-
-func GetSecrets(c *gin.Context) {
-	repo := session.Repo(c)
-	secrets, err := store.GetSecretList(c, repo)
-
-	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-
-	var list []*model.RepoSecret
-
-	for _, s := range secrets {
-		list = append(list, s.Clone())
-	}
-
-	c.JSON(http.StatusOK, list)
-}
-
+// PostSecret persists the secret to the database.
 func PostSecret(c *gin.Context) {
 	repo := session.Repo(c)
 
-	in := &model.RepoSecret{}
-	err := c.Bind(in)
-	if err != nil {
-		c.String(http.StatusBadRequest, "Invalid JSON input. %s", err.Error())
+	in := new(model.Secret)
+	if err := c.Bind(in); err != nil {
+		c.String(http.StatusBadRequest, "Error parsing secret. %s", err)
 		return
 	}
-	in.ID = 0
-	in.RepoID = repo.ID
-
-	err = store.SetSecret(c, in)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Unable to persist secret. %s", err.Error())
+	secret := &model.Secret{
+		RepoID: repo.ID,
+		Name:   in.Name,
+		Value:  in.Value,
+		Events: in.Events,
+		Images: in.Images,
+	}
+	if err := secret.Validate(); err != nil {
+		c.String(400, "Error inserting secret. %s", err)
 		return
 	}
-
-	c.String(http.StatusOK, "")
+	if err := Config.Services.Secrets.SecretCreate(repo, secret); err != nil {
+		c.String(500, "Error inserting secret %q. %s", in.Name, err)
+		return
+	}
+	c.JSON(200, secret.Copy())
 }
 
-func DeleteSecret(c *gin.Context) {
+// PatchSecret updates the secret in the database.
+func PatchSecret(c *gin.Context) {
+	var (
+		repo = session.Repo(c)
+		name = c.Param("secret")
+	)
+
+	in := new(model.Secret)
+	err := c.Bind(in)
+	if err != nil {
+		c.String(http.StatusBadRequest, "Error parsing secret. %s", err)
+		return
+	}
+
+	secret, err := Config.Services.Secrets.SecretFind(repo, name)
+	if err != nil {
+		c.String(404, "Error getting secret %q. %s", name, err)
+		return
+	}
+	if in.Value != "" {
+		secret.Value = in.Value
+	}
+	if len(in.Events) != 0 {
+		secret.Events = in.Events
+	}
+	if len(in.Images) != 0 {
+		secret.Images = in.Images
+	}
+
+	if err := secret.Validate(); err != nil {
+		c.String(400, "Error updating secret. %s", err)
+		return
+	}
+	if err := Config.Services.Secrets.SecretUpdate(repo, secret); err != nil {
+		c.String(500, "Error updating secret %q. %s", in.Name, err)
+		return
+	}
+	c.JSON(200, secret.Copy())
+}
+
+// GetSecretList gets the secret list from the database and writes
+// to the response in json format.
+func GetSecretList(c *gin.Context) {
 	repo := session.Repo(c)
-	name := c.Param("secret")
-
-	secret, err := store.GetSecret(c, repo, name)
+	list, err := Config.Services.Secrets.SecretList(repo)
 	if err != nil {
-		c.String(http.StatusNotFound, "Cannot find secret %s.", name)
+		c.String(500, "Error getting secret list. %s", err)
 		return
 	}
-	err = store.DeleteSecret(c, secret)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Unable to delete secret. %s", err.Error())
-		return
+	// copy the secret detail to remove the sensitive
+	// password and token fields.
+	for i, secret := range list {
+		list[i] = secret.Copy()
 	}
-
-	c.String(http.StatusOK, "")
+	c.JSON(200, list)
 }
 
-func GetTeamSecrets(c *gin.Context) {
-	team := c.Param("team")
-	secrets, err := store.GetTeamSecretList(c, team)
-
-	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+// DeleteSecret deletes the named secret from the database.
+func DeleteSecret(c *gin.Context) {
+	var (
+		repo = session.Repo(c)
+		name = c.Param("secret")
+	)
+	if err := Config.Services.Secrets.SecretDelete(repo, name); err != nil {
+		c.String(500, "Error deleting secret %q. %s", name, err)
 		return
 	}
-
-	var list []*model.TeamSecret
-
-	for _, s := range secrets {
-		list = append(list, s.Clone())
-	}
-
-	c.JSON(http.StatusOK, list)
-}
-
-func PostTeamSecret(c *gin.Context) {
-	team := c.Param("team")
-
-	in := &model.TeamSecret{}
-	err := c.Bind(in)
-	if err != nil {
-		c.String(http.StatusBadRequest, "Invalid JSON input. %s", err.Error())
-		return
-	}
-	in.ID = 0
-	in.Key = team
-
-	err = store.SetTeamSecret(c, in)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Unable to persist team secret. %s", err.Error())
-		return
-	}
-
-	c.String(http.StatusOK, "")
-}
-
-func DeleteTeamSecret(c *gin.Context) {
-	team := c.Param("team")
-	name := c.Param("secret")
-
-	secret, err := store.GetTeamSecret(c, team, name)
-	if err != nil {
-		c.String(http.StatusNotFound, "Cannot find secret %s.", name)
-		return
-	}
-	err = store.DeleteTeamSecret(c, secret)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Unable to delete team secret. %s", err.Error())
-		return
-	}
-
-	c.String(http.StatusOK, "")
+	c.String(204, "")
 }

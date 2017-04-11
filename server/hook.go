@@ -40,7 +40,7 @@ var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
 
 func GetQueueInfo(c *gin.Context) {
 	c.IndentedJSON(200,
-		config.queue.Info(c),
+		Config.Services.Queue.Info(c),
 	)
 }
 
@@ -153,80 +153,30 @@ func PostHook(c *gin.Context) {
 		}
 	}
 
-	secs, err := store.GetMergedSecretList(c, repo)
+	secs, err := Config.Services.Secrets.SecretList(repo)
 	if err != nil {
 		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
-	regs, err := store.FromContext(c).RegistryList(repo)
+	regs, err := Config.Services.Registries.RegistryList(repo)
 	if err != nil {
 		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
 	}
-
-	// var mustApprove bool
-	// if build.Event == model.EventPull {
-	// 	for _, sec := range secs {
-	// 		if sec.SkipVerify {
-	// 			continue
-	// 		}
-	// 		if sec.MatchEvent(model.EventPull) {
-	// 			mustApprove = true
-	// 			break
-	// 		}
-	// 	}
-	// 	if !mustApprove {
-	// 		logrus.Debugf("no secrets exposed to pull_request: status: accepted")
-	// 	}
-	// }
-
-	// if build.Event == model.EventPull && mustApprove {
-	// 	old, ferr := remote_.FileRef(user, repo, build.Branch, repo.Config)
-	// 	if ferr != nil {
-	// 		build.Status = model.StatusBlocked
-	// 		logrus.Debugf("cannot fetch base yaml: status: blocked")
-	// 	} else if bytes.Equal(old, raw) {
-	// 		build.Status = model.StatusPending
-	// 		logrus.Debugf("base yaml matches head yaml: status: accepted")
-	// 	} else {
-	// 		// this block is executed if the target yaml file
-	// 		// does not match the base yaml.
-	//
-	// 		// TODO unfortunately we have no good way to get the
-	// 		// sender repository permissions unless the user is
-	// 		// a registered drone user.
-	// 		sender, uerr := store.GetUserLogin(c, build.Sender)
-	// 		if uerr != nil {
-	// 			build.Status = model.StatusBlocked
-	// 			logrus.Debugf("sender does not have a drone account: status: blocked")
-	// 		} else {
-	// 			if refresher, ok := remote_.(remote.Refresher); ok {
-	// 				ok, _ := refresher.Refresh(sender)
-	// 				if ok {
-	// 					store.UpdateUser(c, sender)
-	// 				}
-	// 			}
-	// 			// if the sender does not have push access to the
-	// 			// repository the pull request should be blocked.
-	// 			perm, perr := remote_.Perm(sender, repo.Owner, repo.Name)
-	// 			if perr == nil && perm.Push == true {
-	// 				build.Status = model.StatusPending
-	// 				logrus.Debugf("sender %s has push access: status: accepted", sender.Login)
-	// 			} else {
-	// 				build.Status = model.StatusBlocked
-	// 				logrus.Debugf("sender %s does not have push access: status: blocked", sender.Login)
-	// 			}
-	// 		}
-	// 	}
-	// } else {
-	// 	build.Status = model.StatusPending
-	// }
 
 	// update some build fields
 	build.RepoID = repo.ID
 	build.Verified = true
 	build.Status = model.StatusPending
 
-	if err := store.CreateBuild(c, build, build.Procs...); err != nil {
+	if repo.IsGated {
+		allowed, _ := Config.Services.Senders.SenderAllowed(user, repo, build)
+		if !allowed {
+			build.Status = model.StatusBlocked
+		}
+	}
+
+	err = store.CreateBuild(c, build, build.Procs...)
+	if err != nil {
 		logrus.Errorf("failure to save commit for %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)
 		return
@@ -234,9 +184,9 @@ func PostHook(c *gin.Context) {
 
 	c.JSON(200, build)
 
-	// if build.Status == model.StatusBlocked {
-	// 	return
-	// }
+	if build.Status == model.StatusBlocked {
+		return
+	}
 
 	// get the previous build so that we can send
 	// on status change notifications
@@ -321,7 +271,7 @@ func PostHook(c *gin.Context) {
 		Build: buildCopy,
 	})
 	// TODO remove global reference
-	config.pubsub.Publish(c, "topic/events", message)
+	Config.Services.Pubsub.Publish(c, "topic/events", message)
 	//
 	// end publish topic
 	//
@@ -341,8 +291,8 @@ func PostHook(c *gin.Context) {
 			Timeout: b.Repo.Timeout,
 		})
 
-		config.logger.Open(context.Background(), task.ID)
-		config.queue.Push(context.Background(), task)
+		Config.Services.Logs.Open(context.Background(), task.ID)
+		Config.Services.Queue.Push(context.Background(), task)
 	}
 }
 
@@ -460,7 +410,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 
 		var secrets []compiler.Secret
 		for _, sec := range b.Secs {
-			if !sec.MatchEvent(b.Curr.Event) {
+			if !sec.Match(b.Curr.Event) {
 				continue
 			}
 			secrets = append(secrets, compiler.Secret{

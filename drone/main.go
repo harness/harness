@@ -40,11 +40,8 @@ func main() {
 		registryCmd,
 		secretCmd,
 		serverCmd,
-		signCmd,
 		repoCmd,
 		userCmd,
-		orgCmd,
-		globalCmd,
 	}
 
 	if err := app.Run(os.Args); err != nil {

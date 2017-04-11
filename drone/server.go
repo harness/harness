@@ -22,10 +22,10 @@ var serverCmd = cli.Command{
 			Name:   "debug",
 			Usage:  "start the server in debug mode",
 		},
-		cli.BoolFlag{
-			EnvVar: "DRONE_BROKER_DEBUG",
-			Name:   "broker-debug",
-			Usage:  "start the broker in debug mode",
+		cli.StringFlag{
+			EnvVar: "DRONE_SERVER_HOST",
+			Name:   "server-host",
+			Usage:  "server host",
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_SERVER_ADDR",
@@ -58,12 +58,6 @@ var serverCmd = cli.Command{
 			Name:   "open",
 			Usage:  "open user registration",
 		},
-		cli.StringFlag{
-			EnvVar: "DRONE_YAML",
-			Name:   "yaml",
-			Usage:  "build configuraton file name",
-			Value:  ".drone.yml",
-		},
 		cli.DurationFlag{
 			EnvVar: "DRONE_CACHE_TTL",
 			Name:   "cache-ttl",
@@ -74,6 +68,21 @@ var serverCmd = cli.Command{
 			EnvVar: "DRONE_AGENT_SECRET,DRONE_SECRET",
 			Name:   "agent-secret",
 			Usage:  "agent secret passcode",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_SECRET_ENDPOINT",
+			Name:   "secret-service",
+			Usage:  "secret plugin endpoint",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_REGISTRY_ENDPOINT",
+			Name:   "registry-service",
+			Usage:  "registry plugin endpoint",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GATEKEEPER_ENDPOINT",
+			Name:   "gating-service",
+			Usage:  "gated build endpoint",
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_DATABASE_DRIVER,DATABASE_DRIVER",

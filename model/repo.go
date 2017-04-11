@@ -25,6 +25,7 @@ type Repo struct {
 	IsPrivate   bool   `json:"private,omitempty"        meddler:"repo_private"`
 	IsTrusted   bool   `json:"trusted"                  meddler:"repo_trusted"`
 	IsStarred   bool   `json:"starred,omitempty"        meddler:"-"`
+	IsGated     bool   `json:"gated"                    meddler:"repo_gated"`
 	AllowPull   bool   `json:"allow_pr"                 meddler:"repo_allow_pr"`
 	AllowPush   bool   `json:"allow_push"               meddler:"repo_allow_push"`
 	AllowDeploy bool   `json:"allow_deploys"            meddler:"repo_allow_deploys"`

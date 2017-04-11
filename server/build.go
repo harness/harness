@@ -138,7 +138,7 @@ func DeleteBuild(c *gin.Context) {
 	// TODO cancel child procs
 	store.FromContext(c).ProcUpdate(proc)
 
-	config.queue.Error(context.Background(), fmt.Sprint(proc.ID), queue.ErrCancel)
+	Config.Services.Queue.Error(context.Background(), fmt.Sprint(proc.ID), queue.ErrCancel)
 	c.String(204, "")
 }
 
@@ -197,11 +197,11 @@ func PostApproval(c *gin.Context) {
 	// get the previous build so that we can send
 	// on status change notifications
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
-	secs, err := store.GetMergedSecretList(c, repo)
+	secs, err := Config.Services.Secrets.SecretList(repo)
 	if err != nil {
 		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
-	regs, err := store.FromContext(c).RegistryList(repo)
+	regs, err := Config.Services.Registries.RegistryList(repo)
 	if err != nil {
 		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
 	}
@@ -277,7 +277,7 @@ func PostApproval(c *gin.Context) {
 		Build: buildCopy,
 	})
 	// TODO remove global reference
-	config.pubsub.Publish(c, "topic/events", message)
+	Config.Services.Pubsub.Publish(c, "topic/events", message)
 
 	//
 	// end publish topic
@@ -298,8 +298,8 @@ func PostApproval(c *gin.Context) {
 			Timeout: b.Repo.Timeout,
 		})
 
-		config.logger.Open(context.Background(), task.ID)
-		config.queue.Push(context.Background(), task)
+		Config.Services.Logs.Open(context.Background(), task.ID)
+		Config.Services.Queue.Push(context.Background(), task)
 	}
 }
 
@@ -476,11 +476,11 @@ func PostBuild(c *gin.Context) {
 	// get the previous build so that we can send
 	// on status change notifications
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
-	secs, err := store.GetMergedSecretList(c, repo)
+	secs, err := Config.Services.Secrets.SecretList(repo)
 	if err != nil {
 		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
 	}
-	regs, err := store.FromContext(c).RegistryList(repo)
+	regs, err := Config.Services.Registries.RegistryList(repo)
 	if err != nil {
 		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
 	}
@@ -561,7 +561,7 @@ func PostBuild(c *gin.Context) {
 		Build: buildCopy,
 	})
 	// TODO remove global reference
-	config.pubsub.Publish(c, "topic/events", message)
+	Config.Services.Pubsub.Publish(c, "topic/events", message)
 	//
 	// end publish topic
 	//
@@ -581,7 +581,7 @@ func PostBuild(c *gin.Context) {
 			Timeout: b.Repo.Timeout,
 		})
 
-		config.logger.Open(context.Background(), task.ID)
-		config.queue.Push(context.Background(), task)
+		Config.Services.Logs.Open(context.Background(), task.ID)
+		Config.Services.Queue.Push(context.Background(), task)
 	}
 }

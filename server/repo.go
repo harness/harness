@@ -98,6 +98,7 @@ func PatchRepo(c *gin.Context) {
 
 	in := &struct {
 		IsTrusted   *bool  `json:"trusted,omitempty"`
+		IsGated     *bool  `json:"gated,omitempty"`
 		Timeout     *int64 `json:"timeout,omitempty"`
 		AllowPull   *bool  `json:"allow_pr,omitempty"`
 		AllowPush   *bool  `json:"allow_push,omitempty"`
@@ -106,6 +107,11 @@ func PatchRepo(c *gin.Context) {
 	}{}
 	if err := c.Bind(in); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	if (in.IsTrusted != nil || in.Timeout != nil) && !user.Admin {
+		c.String(403, "Insufficient privileges")
 		return
 	}
 
@@ -121,10 +127,13 @@ func PatchRepo(c *gin.Context) {
 	if in.AllowTag != nil {
 		repo.AllowTag = *in.AllowTag
 	}
-	if in.IsTrusted != nil && user.Admin {
+	if in.IsGated != nil {
+		repo.IsGated = *in.IsGated
+	}
+	if in.IsTrusted != nil {
 		repo.IsTrusted = *in.IsTrusted
 	}
-	if in.Timeout != nil && user.Admin {
+	if in.Timeout != nil {
 		repo.Timeout = *in.Timeout
 	}
 

@@ -23,13 +23,13 @@ func setupConfig(c *cli.Context) *model.Config {
 	return &model.Config{
 		Open:   c.Bool("open"),
 		Secret: c.String("agent-secret"),
-		Admins: sliceToMap(c.StringSlice("admin")),
-		Orgs:   sliceToMap(c.StringSlice("orgs")),
+		Admins: sliceToMap2(c.StringSlice("admin")),
+		Orgs:   sliceToMap2(c.StringSlice("orgs")),
 	}
 }
 
 // helper function to convert a string slice to a map.
-func sliceToMap(s []string) map[string]bool {
+func sliceToMap2(s []string) map[string]bool {
 	v := map[string]bool{}
 	for _, ss := range s {
 		v[ss] = true
