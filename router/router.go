@@ -70,27 +70,6 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		users.DELETE("/:login", server.DeleteUser)
 	}
 
-	teams := e.Group("/api/teams")
-	{
-		teams.Use(session.MustTeamAdmin())
-
-		team := teams.Group("/:team")
-		{
-			team.GET("/secrets", server.GetTeamSecrets)
-			team.POST("/secrets", server.PostTeamSecret)
-			team.DELETE("/secrets/:secret", server.DeleteTeamSecret)
-		}
-	}
-
-	global := e.Group("/api/global")
-	{
-		global.Use(session.MustAdmin())
-
-		global.GET("/secrets", server.GetGlobalSecrets)
-		global.POST("/secrets", server.PostGlobalSecret)
-		global.DELETE("/secrets/:secret", server.DeleteGlobalSecret)
-	}
-
 	repos := e.Group("/api/repos/:owner/:name")
 	{
 		repos.POST("", server.PostRepo)
@@ -107,8 +86,11 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.GET("/logs/:number/:ppid/:proc", server.GetBuildLogs)
 			repo.POST("/sign", session.MustPush, server.Sign)
 
-			repo.GET("/secrets", session.MustPush, server.GetSecrets)
+			// requires push permissions
+			repo.GET("/secrets", session.MustPush, server.GetSecretList)
 			repo.POST("/secrets", session.MustPush, server.PostSecret)
+			repo.GET("/secrets/:secret", session.MustPush, server.GetSecret)
+			repo.PATCH("/secrets/:secret", session.MustPush, server.PatchSecret)
 			repo.DELETE("/secrets/:secret", session.MustPush, server.DeleteSecret)
 
 			// requires push permissions

@@ -5,10 +5,10 @@ import (
 	"github.com/urfave/cli"
 )
 
-var secretCreateCmd = cli.Command{
-	Name:   "add",
-	Usage:  "adds a secret",
-	Action: secretCreate,
+var secretUpdateCmd = cli.Command{
+	Name:   "update",
+	Usage:  "update a secret",
+	Action: secretUpdate,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "repository",
@@ -33,7 +33,7 @@ var secretCreateCmd = cli.Command{
 	},
 }
 
-func secretCreate(c *cli.Context) error {
+func secretUpdate(c *cli.Context) error {
 	reponame := c.String("repository")
 	if reponame == "" {
 		reponame = c.Args().First()
@@ -52,15 +52,6 @@ func secretCreate(c *cli.Context) error {
 		Images: c.StringSlice("image"),
 		Events: c.StringSlice("events"),
 	}
-	if len(secret.Events) == 0 {
-		secret.Events = defaultSecretEvents
-	}
 	_, err = client.SecretUpdate(owner, name, secret)
 	return err
-}
-
-var defaultSecretEvents = []string{
-	model.EventPush,
-	model.EventTag,
-	model.EventDeploy,
 }

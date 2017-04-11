@@ -58,30 +58,6 @@ type Store interface {
 	// DeleteRepo deletes a user repository.
 	DeleteRepo(*model.Repo) error
 
-	// GetSecretList gets a list of repository secrets
-	GetSecretList(*model.Repo) ([]*model.RepoSecret, error)
-
-	// GetSecret gets the named repository secret.
-	GetSecret(*model.Repo, string) (*model.RepoSecret, error)
-
-	// SetSecret sets the named repository secret.
-	SetSecret(*model.RepoSecret) error
-
-	// DeleteSecret deletes the named repository secret.
-	DeleteSecret(*model.RepoSecret) error
-
-	// GetTeamSecretList gets a list of team secrets
-	GetTeamSecretList(string) ([]*model.TeamSecret, error)
-
-	// GetTeamSecret gets the named team secret.
-	GetTeamSecret(string, string) (*model.TeamSecret, error)
-
-	// SetTeamSecret sets the named team secret.
-	SetTeamSecret(*model.TeamSecret) error
-
-	// DeleteTeamSecret deletes the named team secret.
-	DeleteTeamSecret(*model.TeamSecret) error
-
 	// GetBuild gets a build by unique ID.
 	GetBuild(int64) (*model.Build, error)
 
@@ -112,38 +88,21 @@ type Store interface {
 	// UpdateBuild updates a build.
 	UpdateBuild(*model.Build) error
 
-	// // GetJob gets a job by unique ID.
-	// GetJob(int64) (*model.Job, error)
 	//
-	// // GetJobNumber gets a job by number.
-	// GetJobNumber(*model.Build, int) (*model.Job, error)
+	// new functions
 	//
-	// // GetJobList gets a list of all users in the system.
-	// GetJobList(*model.Build) ([]*model.Job, error)
-	//
-	// // CreateJob creates a job.
-	// CreateJob(*model.Job) error
-	//
-	// // UpdateJob updates a job.
-	// UpdateJob(*model.Job) error
-	//
-	// // ReadLog reads the Job logs from the datastore.
-	// ReadLog(*model.Job) (io.ReadCloser, error)
-	//
-	// // WriteLog writes the job logs to the datastore.
-	// WriteLog(*model.Job, io.Reader) error
 
-	// GetAgent(int64) (*model.Agent, error)
-	//
-	// GetAgentAddr(string) (*model.Agent, error)
-	//
-	// GetAgentList() ([]*model.Agent, error)
-	//
-	// CreateAgent(*model.Agent) error
-	//
-	// UpdateAgent(*model.Agent) error
-	//
-	// DeleteAgent(*model.Agent) error
+	SenderFind(*model.Repo, string) (*model.Sender, error)
+	SenderList(*model.Repo) ([]*model.Sender, error)
+	SenderCreate(*model.Sender) error
+	SenderUpdate(*model.Sender) error
+	SenderDelete(*model.Sender) error
+
+	SecretFind(*model.Repo, string) (*model.Secret, error)
+	SecretList(*model.Repo) ([]*model.Secret, error)
+	SecretCreate(*model.Secret) error
+	SecretUpdate(*model.Secret) error
+	SecretDelete(*model.Secret) error
 
 	RegistryFind(*model.Repo, string) (*model.Registry, error)
 	RegistryList(*model.Repo) ([]*model.Registry, error)
@@ -167,8 +126,6 @@ type Store interface {
 	FileRead(*model.Proc, string) (io.ReadCloser, error)
 	FileCreate(*model.File, io.Reader) error
 }
-
-const globalTeamName = "__global__"
 
 // GetUser gets a user by unique ID.
 func GetUser(c context.Context, id int64) (*model.User, error) {
@@ -238,94 +195,6 @@ func DeleteRepo(c context.Context, repo *model.Repo) error {
 	return FromContext(c).DeleteRepo(repo)
 }
 
-func GetSecretList(c context.Context, r *model.Repo) ([]*model.RepoSecret, error) {
-	return FromContext(c).GetSecretList(r)
-}
-
-func GetSecret(c context.Context, r *model.Repo, name string) (*model.RepoSecret, error) {
-	return FromContext(c).GetSecret(r, name)
-}
-
-func SetSecret(c context.Context, s *model.RepoSecret) error {
-	return FromContext(c).SetSecret(s)
-}
-
-func DeleteSecret(c context.Context, s *model.RepoSecret) error {
-	return FromContext(c).DeleteSecret(s)
-}
-
-func GetTeamSecretList(c context.Context, team string) ([]*model.TeamSecret, error) {
-	return FromContext(c).GetTeamSecretList(team)
-}
-
-func GetTeamSecret(c context.Context, team, name string) (*model.TeamSecret, error) {
-	return FromContext(c).GetTeamSecret(team, name)
-}
-
-func SetTeamSecret(c context.Context, s *model.TeamSecret) error {
-	return FromContext(c).SetTeamSecret(s)
-}
-
-func DeleteTeamSecret(c context.Context, s *model.TeamSecret) error {
-	return FromContext(c).DeleteTeamSecret(s)
-}
-
-func GetGlobalSecretList(c context.Context) ([]*model.TeamSecret, error) {
-	return GetTeamSecretList(c, globalTeamName)
-}
-
-func GetGlobalSecret(c context.Context, name string) (*model.TeamSecret, error) {
-	return GetTeamSecret(c, globalTeamName, name)
-}
-
-func SetGlobalSecret(c context.Context, s *model.TeamSecret) error {
-	s.Key = globalTeamName
-	return SetTeamSecret(c, s)
-}
-
-func DeleteGlobalSecret(c context.Context, s *model.TeamSecret) error {
-	s.Key = globalTeamName
-	return DeleteTeamSecret(c, s)
-}
-
-func GetMergedSecretList(c context.Context, r *model.Repo) ([]*model.Secret, error) {
-	var (
-		secrets []*model.Secret
-	)
-
-	globalSecs, err := GetGlobalSecretList(c)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, secret := range globalSecs {
-		secrets = append(secrets, secret.Secret())
-	}
-
-	teamSecs, err := GetTeamSecretList(c, r.Owner)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, secret := range teamSecs {
-		secrets = append(secrets, secret.Secret())
-	}
-
-	repoSecs, err := GetSecretList(c, r)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, secret := range repoSecs {
-		secrets = append(secrets, secret.Secret())
-	}
-
-	return secrets, nil
-}
-
 func GetBuild(c context.Context, id int64) (*model.Build, error) {
 	return FromContext(c).GetBuild(id)
 }
@@ -365,55 +234,3 @@ func CreateBuild(c context.Context, build *model.Build, procs ...*model.Proc) er
 func UpdateBuild(c context.Context, build *model.Build) error {
 	return FromContext(c).UpdateBuild(build)
 }
-
-// func GetJob(c context.Context, id int64) (*model.Job, error) {
-// 	return FromContext(c).GetJob(id)
-// }
-//
-// func GetJobNumber(c context.Context, build *model.Build, num int) (*model.Job, error) {
-// 	return FromContext(c).GetJobNumber(build, num)
-// }
-//
-// func GetJobList(c context.Context, build *model.Build) ([]*model.Job, error) {
-// 	return FromContext(c).GetJobList(build)
-// }
-//
-// func CreateJob(c context.Context, job *model.Job) error {
-// 	return FromContext(c).CreateJob(job)
-// }
-//
-// func UpdateJob(c context.Context, job *model.Job) error {
-// 	return FromContext(c).UpdateJob(job)
-// }
-//
-// func ReadLog(c context.Context, job *model.Job) (io.ReadCloser, error) {
-// 	return FromContext(c).ReadLog(job)
-// }
-//
-// func WriteLog(c context.Context, job *model.Job, r io.Reader) error {
-// 	return FromContext(c).WriteLog(job, r)
-// }
-
-// func GetAgent(c context.Context, id int64) (*model.Agent, error) {
-// 	return FromContext(c).GetAgent(id)
-// }
-//
-// func GetAgentAddr(c context.Context, addr string) (*model.Agent, error) {
-// 	return FromContext(c).GetAgentAddr(addr)
-// }
-//
-// func GetAgentList(c context.Context) ([]*model.Agent, error) {
-// 	return FromContext(c).GetAgentList()
-// }
-//
-// func CreateAgent(c context.Context, agent *model.Agent) error {
-// 	return FromContext(c).CreateAgent(agent)
-// }
-//
-// func UpdateAgent(c context.Context, agent *model.Agent) error {
-// 	return FromContext(c).UpdateAgent(agent)
-// }
-//
-// func DeleteAgent(c context.Context, agent *model.Agent) error {
-// 	return FromContext(c).DeleteAgent(agent)
-// }

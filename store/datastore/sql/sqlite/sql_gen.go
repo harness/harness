@@ -19,6 +19,13 @@ var index = map[string]string{
 	"registry-find-repo-addr":   registryFindRepoAddr,
 	"registry-delete-repo":      registryDeleteRepo,
 	"registry-delete":           registryDelete,
+	"secret-find-repo":          secretFindRepo,
+	"secret-find-repo-name":     secretFindRepoName,
+	"secret-delete":             secretDelete,
+	"sender-find-repo":          senderFindRepo,
+	"sender-find-repo-login":    senderFindRepoLogin,
+	"sender-delete-repo":        senderDeleteRepo,
+	"sender-delete":             senderDelete,
 }
 
 var filesFindBuild = `
@@ -187,4 +194,68 @@ DELETE FROM registry WHERE registry_repo_id = ?
 
 var registryDelete = `
 DELETE FROM registry WHERE registry_id = ?
+`
+
+var secretFindRepo = `
+SELECT
+ secret_id
+,secret_repo_id
+,secret_name
+,secret_value
+,secret_images
+,secret_events
+,secret_conceal
+,secret_skip_verify
+FROM secrets
+WHERE secret_repo_id = ?
+`
+
+var secretFindRepoName = `
+SELECT
+secret_id
+,secret_repo_id
+,secret_name
+,secret_value
+,secret_images
+,secret_events
+,secret_conceal
+,secret_skip_verify
+FROM secrets
+WHERE secret_repo_id = ?
+  AND secret_name = ?
+`
+
+var secretDelete = `
+DELETE FROM secrets WHERE secret_id = ?
+`
+
+var senderFindRepo = `
+SELECT
+ sender_id
+,sender_repo_id
+,sender_login
+,sender_allow
+,sender_block
+FROM senders
+WHERE sender_repo_id = ?
+`
+
+var senderFindRepoLogin = `
+SELECT
+ sender_id
+,sender_repo_id
+,sender_login
+,sender_allow
+,sender_block
+FROM senders
+WHERE sender_repo_id = ?
+  AND sender_login = ?
+`
+
+var senderDeleteRepo = `
+DELETE FROM senders WHERE sender_repo_id = ?
+`
+
+var senderDelete = `
+DELETE FROM senders WHERE sender_id = ?
 `

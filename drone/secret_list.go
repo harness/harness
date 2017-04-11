@@ -1,32 +1,73 @@
 package main
 
-import "github.com/urfave/cli"
+import (
+	"html/template"
+	"os"
+	"strings"
+
+	"github.com/urfave/cli"
+)
 
 var secretListCmd = cli.Command{
 	Name:   "ls",
-	Usage:  "list all secrets",
+	Usage:  "list secrets",
 	Action: secretList,
-	Flags:  secretListFlags(),
+	Flags: []cli.Flag{
+		cli.StringFlag{
+			Name:  "repository",
+			Usage: "repository name (e.g. octocat/hello-world)",
+		},
+		cli.StringFlag{
+			Name:   "format",
+			Usage:  "format output",
+			Value:  tmplSecretList,
+			Hidden: true,
+		},
+	},
 }
 
 func secretList(c *cli.Context) error {
-	owner, name, err := parseRepo(c.Args().First())
-
+	var (
+		format   = c.String("format") + "\n"
+		reponame = c.String("repository")
+	)
+	if reponame == "" {
+		reponame = c.Args().First()
+	}
+	owner, name, err := parseRepo(reponame)
 	if err != nil {
 		return err
 	}
-
 	client, err := newClient(c)
-
 	if err != nil {
 		return err
 	}
-
-	secrets, err := client.SecretList(owner, name)
-
-	if err != nil || len(secrets) == 0 {
+	list, err := client.SecretList(owner, name)
+	if err != nil {
 		return err
 	}
+	tmpl, err := template.New("_").Funcs(secretFuncMap).Parse(format)
+	if err != nil {
+		return err
+	}
+	for _, registry := range list {
+		tmpl.Execute(os.Stdout, registry)
+	}
+	return nil
+}
 
-	return secretDisplayList(secrets, c)
+// template for secret list items
+var tmplSecretList = "\x1b[33m{{ .Name }} \x1b[0m" + `
+Events: {{ list .Events }}
+{{- if .Images }}
+Images: {{ list .Images }}
+{{- else }}
+Images: <any>
+{{- end }}
+`
+
+var secretFuncMap = template.FuncMap{
+	"list": func(s []string) string {
+		return strings.Join(s, ", ")
+	},
 }

@@ -31,25 +31,16 @@ const (
 	pathRepos          = "%s/api/user/repos"
 	pathRepo           = "%s/api/repos/%s/%s"
 	pathChown          = "%s/api/repos/%s/%s/chown"
-	pathEncrypt        = "%s/api/repos/%s/%s/encrypt"
 	pathBuilds         = "%s/api/repos/%s/%s/builds"
 	pathBuild          = "%s/api/repos/%s/%s/builds/%v"
 	pathApprove        = "%s/api/repos/%s/%s/builds/%d/approve"
 	pathDecline        = "%s/api/repos/%s/%s/builds/%d/decline"
 	pathJob            = "%s/api/repos/%s/%s/builds/%d/%d"
 	pathLog            = "%s/api/repos/%s/%s/logs/%d/%d"
-	pathKey            = "%s/api/repos/%s/%s/key"
-	pathSign           = "%s/api/repos/%s/%s/sign"
 	pathRepoSecrets    = "%s/api/repos/%s/%s/secrets"
 	pathRepoSecret     = "%s/api/repos/%s/%s/secrets/%s"
 	pathRepoRegistries = "%s/api/repos/%s/%s/registry"
 	pathRepoRegistry   = "%s/api/repos/%s/%s/registry/%s"
-	pathTeamSecrets    = "%s/api/teams/%s/secrets"
-	pathTeamSecret     = "%s/api/teams/%s/secrets/%s"
-	pathGlobalSecrets  = "%s/api/global/secrets"
-	pathGlobalSecret   = "%s/api/global/secrets/%s"
-	pathNodes          = "%s/api/nodes"
-	pathNode           = "%s/api/nodes/%d"
 	pathUsers          = "%s/api/users"
 	pathUser           = "%s/api/users/%s"
 	pathBuildQueue     = "%s/api/builds"
@@ -295,77 +286,6 @@ func (c *client) Deploy(owner, name string, num int, env string, params map[stri
 	return out, err
 }
 
-// SecretList returns a list of a repository secrets.
-func (c *client) SecretList(owner, name string) ([]*model.Secret, error) {
-	var out []*model.Secret
-	uri := fmt.Sprintf(pathRepoSecrets, c.base, owner, name)
-	err := c.get(uri, &out)
-	return out, err
-}
-
-// SecretPost create or updates a repository secret.
-func (c *client) SecretPost(owner, name string, secret *model.Secret) error {
-	uri := fmt.Sprintf(pathRepoSecrets, c.base, owner, name)
-	return c.post(uri, secret, nil)
-}
-
-// SecretDel deletes a named repository secret.
-func (c *client) SecretDel(owner, name, secret string) error {
-	uri := fmt.Sprintf(pathRepoSecret, c.base, owner, name, secret)
-	return c.delete(uri)
-}
-
-// TeamSecretList returns a list of organizational secrets.
-func (c *client) TeamSecretList(team string) ([]*model.Secret, error) {
-	var out []*model.Secret
-	uri := fmt.Sprintf(pathTeamSecrets, c.base, team)
-	err := c.get(uri, &out)
-	return out, err
-}
-
-// TeamSecretPost create or updates a organizational secret.
-func (c *client) TeamSecretPost(team string, secret *model.Secret) error {
-	uri := fmt.Sprintf(pathTeamSecrets, c.base, team)
-	return c.post(uri, secret, nil)
-}
-
-// TeamSecretDel deletes a named orgainization secret.
-func (c *client) TeamSecretDel(team, secret string) error {
-	uri := fmt.Sprintf(pathTeamSecret, c.base, team, secret)
-	return c.delete(uri)
-}
-
-// GlobalSecretList returns a list of global secrets.
-func (c *client) GlobalSecretList() ([]*model.Secret, error) {
-	var out []*model.Secret
-	uri := fmt.Sprintf(pathGlobalSecrets, c.base)
-	err := c.get(uri, &out)
-	return out, err
-}
-
-// GlobalSecretPost create or updates a global secret.
-func (c *client) GlobalSecretPost(secret *model.Secret) error {
-	uri := fmt.Sprintf(pathGlobalSecrets, c.base)
-	return c.post(uri, secret, nil)
-}
-
-// GlobalSecretDel deletes a named global secret.
-func (c *client) GlobalSecretDel(secret string) error {
-	uri := fmt.Sprintf(pathGlobalSecret, c.base, secret)
-	return c.delete(uri)
-}
-
-// Sign returns a cryptographic signature for the input string.
-func (c *client) Sign(owner, name string, in []byte) ([]byte, error) {
-	uri := fmt.Sprintf(pathSign, c.base, owner, name)
-	rc, err := stream(c.client, uri, "POST", in, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer rc.Close()
-	return ioutil.ReadAll(rc)
-}
-
 // Registry returns a registry by hostname.
 func (c *client) Registry(owner, name, hostname string) (*model.Registry, error) {
 	out := new(model.Registry)
@@ -401,6 +321,44 @@ func (c *client) RegistryUpdate(owner, name string, in *model.Registry) (*model.
 // RegistryDelete deletes a registry.
 func (c *client) RegistryDelete(owner, name, hostname string) error {
 	uri := fmt.Sprintf(pathRepoRegistry, c.base, owner, name, hostname)
+	return c.delete(uri)
+}
+
+// Secret returns a secret by name.
+func (c *client) Secret(owner, name, secret string) (*model.Secret, error) {
+	out := new(model.Secret)
+	uri := fmt.Sprintf(pathRepoSecret, c.base, owner, name, secret)
+	err := c.get(uri, out)
+	return out, err
+}
+
+// SecretList returns a list of all repository secrets.
+func (c *client) SecretList(owner string, name string) ([]*model.Secret, error) {
+	var out []*model.Secret
+	uri := fmt.Sprintf(pathRepoSecrets, c.base, owner, name)
+	err := c.get(uri, &out)
+	return out, err
+}
+
+// SecretCreate creates a secret.
+func (c *client) SecretCreate(owner, name string, in *model.Secret) (*model.Secret, error) {
+	out := new(model.Secret)
+	uri := fmt.Sprintf(pathRepoSecrets, c.base, owner, name)
+	err := c.post(uri, in, out)
+	return out, err
+}
+
+// SecretUpdate updates a secret.
+func (c *client) SecretUpdate(owner, name string, in *model.Secret) (*model.Secret, error) {
+	out := new(model.Secret)
+	uri := fmt.Sprintf(pathRepoSecret, c.base, owner, name, in.Name)
+	err := c.patch(uri, in, out)
+	return out, err
+}
+
+// SecretDelete deletes a secret.
+func (c *client) SecretDelete(owner, name, secret string) error {
+	uri := fmt.Sprintf(pathRepoSecret, c.base, owner, name, secret)
 	return c.delete(uri)
 }
 
