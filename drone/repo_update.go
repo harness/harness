@@ -48,7 +48,7 @@ func repoUpdate(c *cli.Context) error {
 		config  = c.String("config")
 		timeout = c.Duration("timeout")
 		trusted = c.Bool("trusted")
-		gated   = c.Bool("trusted")
+		gated   = c.Bool("gated")
 	)
 
 	patch := new(model.RepoPatch)
