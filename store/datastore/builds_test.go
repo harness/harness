@@ -35,6 +35,21 @@ func TestBuilds(t *testing.T) {
 			g.Assert(build.Commit).Equal("85f8c029b902ed9400bc600bac301a0aadb144ac")
 		})
 
+		g.It("Should Post a Build with Emoji Title", func() {
+			build := model.Build{
+				RepoID: 1,
+				Status: model.StatusSuccess,
+				Commit: "85f8c029b902ed9400bc600bac301a0aadb144ac",
+				Title:  "Fancy Feature 🚀",
+			}
+			err := s.CreateBuild(&build, []*model.Job{}...)
+			g.Assert(err == nil).IsTrue()
+			g.Assert(build.ID != 0).IsTrue()
+			g.Assert(build.Number).Equal(1)
+			g.Assert(build.Commit).Equal("85f8c029b902ed9400bc600bac301a0aadb144ac")
+			g.Assert(build.Title).Equal("Fancy Feature 🚀")
+		})
+
 		g.It("Should Put a Build", func() {
 			build := model.Build{
 				RepoID: 1,

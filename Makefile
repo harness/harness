@@ -32,9 +32,9 @@ gen_migrations:
 test:
 	go test -cover $(PACKAGES)
 
-# docker run --publish=3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes  mysql:5.6.27
+# docker run --publish=3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes  mysql:5.6.27 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 test_mysql:
-	DATABASE_DRIVER="mysql" DATABASE_CONFIG="root@tcp(127.0.0.1:3306)/test?parseTime=true" go test github.com/drone/drone/store/datastore
+	DATABASE_DRIVER="mysql" DATABASE_CONFIG="root@tcp(127.0.0.1:3306)/test?parseTime=true&charset=utf8mb4" go test github.com/drone/drone/store/datastore
 
 # docker run --publish=5432:5432 postgres:9.4.5
 test_postgres:
