@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"strconv"
 
@@ -385,6 +386,22 @@ func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
 		build.Finished = proc.Stopped
 		if err := s.store.UpdateBuild(build); err != nil {
 			log.Printf("error: done: cannot update build_id %d final state: %s", build.ID, err)
+		}
+
+		// update the status
+		user, err := s.store.GetUser(repo.UserID)
+		if err == nil {
+			if refresher, ok := s.remote.(remote.Refresher); ok {
+				ok, _ := refresher.Refresh(user)
+				if ok {
+					s.store.UpdateUser(user)
+				}
+			}
+			uri := fmt.Sprintf("%s/%s/%d", s.host, repo.FullName, build.Number)
+			err = s.remote.Status(user, repo, build, uri)
+			if err != nil {
+				logrus.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
+			}
 		}
 	}
 
