@@ -23,8 +23,6 @@ pipeline:
     bucket: downloads.drone.io
     source: release/**/*.*
     target: /0.6.0/
-    access_key: ${AWS_ACCESS_KEY_ID}
-    secret_key: ${AWS_SECRET_ACCESS_KEY}
     secrets: [ aws_access_key_id, aws_secret_access_key ]
     when:
       event: push
@@ -33,8 +31,6 @@ pipeline:
   publish:
     image: plugins/docker
     repo: drone/drone
-    username: ${DOCKER_USERNAME}
-    password: ${DOCKER_PASSWORD}
     secrets: [ docker_username, docker_password ]
     tag: [ latest, 0.6, 0.6.0, 0.6.0-rc.1 ]
     when:
@@ -43,11 +39,10 @@ pipeline:
 
   notify:
     image: plugins/gitter
-    webhook: ${GITTER_WEBHOOK}
+    dummy: true # todo remove this
     secrets: [ gitter_webhook ]
     when:
       status: [ success, failure ]
-      event: [ push, pull_request ]
 
 services:
   postgres:
