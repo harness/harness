@@ -173,3 +173,33 @@ func DeleteRepo(c *gin.Context) {
 	remote.Deactivate(user, repo, httputil.GetURL(c.Request))
 	c.Writer.WriteHeader(http.StatusOK)
 }
+
+func RepairRepo(c *gin.Context) {
+	remote := remote.FromContext(c)
+	repo := session.Repo(c)
+	user := session.User(c)
+
+	// crates the jwt token used to verify the repository
+	t := token.New(token.HookToken, repo.FullName)
+	sig, err := t.Sign(repo.Hash)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	// reconstruct the link
+	host := httputil.GetURL(c.Request)
+	link := fmt.Sprintf(
+		"%s/hook?access_token=%s",
+		host,
+		sig,
+	)
+
+	remote.Deactivate(user, repo, host)
+	err = remote.Activate(user, repo, link)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+	c.Writer.WriteHeader(http.StatusOK)
+}

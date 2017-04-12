@@ -42,6 +42,9 @@ type Client interface {
 	// RepoChown updates a repository owner.
 	RepoChown(string, string) (*model.Repo, error)
 
+	// RepoRepair repairs the repository hooks.
+	RepoRepair(string, string) error
+
 	// RepoDel deletes a repository.
 	RepoDel(string, string) error
 

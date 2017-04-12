@@ -31,6 +31,7 @@ const (
 	pathRepos          = "%s/api/user/repos"
 	pathRepo           = "%s/api/repos/%s/%s"
 	pathChown          = "%s/api/repos/%s/%s/chown"
+	pathRepair         = "%s/api/repos/%s/%s/repair"
 	pathBuilds         = "%s/api/repos/%s/%s/builds"
 	pathBuild          = "%s/api/repos/%s/%s/builds/%v"
 	pathApprove        = "%s/api/repos/%s/%s/builds/%d/approve"
@@ -165,12 +166,18 @@ func (c *client) RepoPost(owner string, name string) (*model.Repo, error) {
 	return out, err
 }
 
-// RepoChow updates a repository owner.
+// RepoChown updates a repository owner.
 func (c *client) RepoChown(owner string, name string) (*model.Repo, error) {
 	out := new(model.Repo)
 	uri := fmt.Sprintf(pathChown, c.base, owner, name)
 	err := c.post(uri, nil, out)
 	return out, err
+}
+
+// RepoRepair repais the repository hooks.
+func (c *client) RepoRepair(owner string, name string) error {
+	uri := fmt.Sprintf(pathRepair, c.base, owner, name)
+	return c.post(uri, nil, nil)
 }
 
 // RepoPatch updates a repository.
