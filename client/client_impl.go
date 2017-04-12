@@ -174,9 +174,9 @@ func (c *client) RepoChown(owner string, name string) (*model.Repo, error) {
 }
 
 // RepoPatch updates a repository.
-func (c *client) RepoPatch(in *model.Repo) (*model.Repo, error) {
+func (c *client) RepoPatch(owner, name string, in *model.RepoPatch) (*model.Repo, error) {
 	out := new(model.Repo)
-	uri := fmt.Sprintf(pathRepo, c.base, in.Owner, in.Name)
+	uri := fmt.Sprintf(pathRepo, c.base, owner, name)
 	err := c.patch(uri, in, out)
 	return out, err
 }

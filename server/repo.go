@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/securecookie"
 
 	"github.com/drone/drone/cache"
+	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/httputil"
@@ -96,15 +97,7 @@ func PatchRepo(c *gin.Context) {
 	repo := session.Repo(c)
 	user := session.User(c)
 
-	in := &struct {
-		IsTrusted   *bool  `json:"trusted,omitempty"`
-		IsGated     *bool  `json:"gated,omitempty"`
-		Timeout     *int64 `json:"timeout,omitempty"`
-		AllowPull   *bool  `json:"allow_pr,omitempty"`
-		AllowPush   *bool  `json:"allow_push,omitempty"`
-		AllowDeploy *bool  `json:"allow_deploy,omitempty"`
-		AllowTag    *bool  `json:"allow_tag,omitempty"`
-	}{}
+	in := new(model.RepoPatch)
 	if err := c.Bind(in); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
@@ -135,6 +128,9 @@ func PatchRepo(c *gin.Context) {
 	}
 	if in.Timeout != nil {
 		repo.Timeout = *in.Timeout
+	}
+	if in.Config != nil {
+		repo.Config = *in.Config
 	}
 
 	err := store.UpdateRepo(c, repo)

@@ -48,6 +48,9 @@ func repoInfo(c *cli.Context) error {
 var tmplRepoInfo = `Owner: {{ .Owner }}
 Repo: {{ .Name }}
 Type: {{ .Kind }}
+Config: {{ .Config }}
 Private: {{ .IsPrivate }}
+Trusted: {{ .IsTrusted }}
+Gated: {{ .IsGated }}
 Remote: {{ .Clone }}
 `

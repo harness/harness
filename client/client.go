@@ -37,7 +37,7 @@ type Client interface {
 	RepoPost(string, string) (*model.Repo, error)
 
 	// RepoPatch updates a repository.
-	RepoPatch(*model.Repo) (*model.Repo, error)
+	RepoPatch(string, string, *model.RepoPatch) (*model.Repo, error)
 
 	// RepoChown updates a repository owner.
 	RepoChown(string, string) (*model.Repo, error)
