@@ -18,12 +18,11 @@ func NewRemote(endpoint string) model.SenderService {
 
 func (p *plugin) SenderAllowed(user *model.User, repo *model.Repo, build *model.Build) (bool, error) {
 	path := fmt.Sprintf("%s/sender/%s/%s/%s", p.endpoint, repo.Owner, repo.Name, build.Sender)
-	out := new(model.Sender)
-	err := internal.Send("POST", path, build, out)
+	err := internal.Send("POST", path, build, nil)
 	if err != nil {
 		return false, err
 	}
-	return out.Allow, nil
+	return true, err
 }
 
 func (p *plugin) SenderCreate(repo *model.Repo, sender *model.Sender) error {

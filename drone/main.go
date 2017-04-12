@@ -17,7 +17,7 @@ func main() {
 
 	app := cli.NewApp()
 	app.Name = "drone"
-	app.Version = version.Version
+	app.Version = version.Version.String()
 	app.Usage = "command line utility"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
