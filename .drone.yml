@@ -5,19 +5,14 @@ workspace:
 pipeline:
   test:
     image: golang:1.8
-    environment:
-      - GO15VENDOREXPERIMENT=1
     commands:
       - make deps gen
       - make test test_postgres test_mysql
 
   compile:
     image: golang:1.8
-    environment:
-      - GO15VENDOREXPERIMENT=1
-      - GOPATH=/go
     commands:
-      - export PATH=$PATH:$GOPATH/bin
+      - export PATH=$PATH:/go/bin
       - make build
     when:
       event: push
@@ -30,6 +25,7 @@ pipeline:
     target: /0.6.0/
     access_key: ${AWS_ACCESS_KEY_ID}
     secret_key: ${AWS_SECRET_ACCESS_KEY}
+    secrets: [ aws_access_key_id, aws_secret_access_key ]
     when:
       event: push
       branch: master
@@ -39,7 +35,8 @@ pipeline:
     repo: drone/drone
     username: ${DOCKER_USERNAME}
     password: ${DOCKER_PASSWORD}
-    tag: [ 0.6 ]
+    secrets: [ docker_username, docker_password ]
+    tag: [ latest, 0.6, 0.6.0, 0.6.0-rc.1 ]
     when:
       branch: master
       event: push
@@ -47,6 +44,7 @@ pipeline:
   notify:
     image: plugins/gitter
     webhook: ${GITTER_WEBHOOK}
+    secrets: [ gitter_webhook ]
     when:
       status: [ success, failure ]
       event: [ push, pull_request ]
