@@ -1,19 +1,23 @@
 package version
 
-import "fmt"
+import "github.com/coreos/go-semver/semver"
 
 var (
 	// VersionMajor is for an API incompatible changes
-	VersionMajor = 0
+	VersionMajor int64 = 0
 	// VersionMinor is for functionality in a backwards-compatible manner
-	VersionMinor = 6
+	VersionMinor int64 = 6
 	// VersionPatch is for backwards-compatible bug fixes
-	VersionPatch = 0
+	VersionPatch int64 = 0
 
 	// VersionDev indicates development branch. Releases will be empty string.
-	VersionDev = "dev"
+	VersionDev string
 )
 
 // Version is the specification version that the package types support.
-var Version = fmt.Sprintf("%d.%d.%d+%s",
-	VersionMajor, VersionMinor, VersionPatch, VersionDev)
+var Version = semver.Version{
+	Major:    VersionMajor,
+	Minor:    VersionMinor,
+	Patch:    VersionPatch,
+	Metadata: VersionDev,
+}

@@ -7,15 +7,18 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/cncd/logging"
 	"github.com/cncd/pipeline/pipeline/rpc"
 	"github.com/cncd/pubsub"
 	"github.com/cncd/queue"
+	"github.com/coreos/go-semver/semver"
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/store"
+	"github.com/drone/drone/version"
 )
 
 // This file is a complete disaster because I'm trying to wedge in some
@@ -86,6 +89,17 @@ func RPCHandler(c *gin.Context) {
 		c.String(401, "Unable to connect agent. Invalid authorization token")
 		return
 	}
+
+	agent := semver.New(
+		c.Request.Header.Get("X-Drone-Version"),
+	)
+	logrus.Debugf("agent connected: ip address %s: version %s", c.ClientIP(), agent)
+	if agent.LessThan(version.Version) {
+		logrus.Warnf("Version mismatch. Agent version %s < Server version %s", agent, version.Version)
+		c.String(409, "Version mismatch. Agent version %s < Server version %s", agent, version.Version)
+		return
+	}
+
 	peer := RPC{
 		remote: remote.FromContext(c),
 		store:  store.FromContext(c),

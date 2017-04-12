@@ -101,7 +101,7 @@ func loop(c *cli.Context) error {
 		),
 		rpc.WithHeader(
 			"X-Drone-Version",
-			version.Version,
+			version.Version.String(),
 		),
 	)
 	if err != nil {

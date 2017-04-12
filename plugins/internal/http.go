@@ -3,7 +3,6 @@ package internal
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -47,8 +46,14 @@ func Send(method, path string, in, out interface{}) error {
 	// if an error is encountered, parse and return the
 	// error response.
 	if resp.StatusCode > http.StatusPartialContent {
-		out, _ := ioutil.ReadAll(resp.Body)
-		return errors.New(string(out))
+		out, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return &Error{
+			code: resp.StatusCode,
+			text: string(out),
+		}
 	}
 
 	// if a json response is expected, parse and return
@@ -58,4 +63,20 @@ func Send(method, path string, in, out interface{}) error {
 	}
 
 	return nil
+}
+
+// Error represents a http error.
+type Error struct {
+	code int
+	text string
+}
+
+// Code returns the http error code.
+func (e *Error) Code() int {
+	return e.code
+}
+
+// Error returns the error message in string format.
+func (e *Error) Error() string {
+	return e.text
 }

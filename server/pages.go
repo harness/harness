@@ -28,6 +28,10 @@ func ShowIndex(c *gin.Context) {
 // ShowLogin is a legacy endpoint that now redirects to
 // initiliaze the oauth flow
 func ShowLogin(c *gin.Context) {
+	if err := c.Query("error"); err != "" {
+		c.HTML(500, "error.html", gin.H{"error": err})
+		return
+	}
 	c.Redirect(303, "/authorize")
 }
 
