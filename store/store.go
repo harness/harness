@@ -125,6 +125,10 @@ type Store interface {
 	FileFind(*model.Proc, string) (*model.File, error)
 	FileRead(*model.Proc, string) (io.ReadCloser, error)
 	FileCreate(*model.File, io.Reader) error
+
+	TaskList() ([]*model.Task, error)
+	TaskInsert(*model.Task) error
+	TaskDelete(string) error
 }
 
 // GetUser gets a user by unique ID.

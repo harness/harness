@@ -61,7 +61,6 @@ func open(driver, config string) *sql.DB {
 		logrus.Errorln(err)
 		logrus.Fatalln("migration failed")
 	}
-	cleanupDatabase(db)
 	return db
 }
 
@@ -124,13 +123,6 @@ func setupDatabase(driver string, db *sql.DB) error {
 	}
 	_, err := migrate.Exec(db, driver, migrations, migrate.Up)
 	return err
-}
-
-// helper function to avoid stuck jobs when Drone unexpectedly
-// restarts. This is a temp fix for https://github.com/drone/drone/issues/1195
-func cleanupDatabase(db *sql.DB) {
-	db.Exec("update builds set build_status = 'error' where build_status IN ('pending','running')")
-	db.Exec("update jobs set job_status = 'error' where job_status IN ('pending','running')")
 }
 
 // helper function to setup the meddler default driver
