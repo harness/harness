@@ -26,6 +26,8 @@ var index = map[string]string{
 	"sender-find-repo-login":    senderFindRepoLogin,
 	"sender-delete-repo":        senderDeleteRepo,
 	"sender-delete":             senderDelete,
+	"task-list":                 taskList,
+	"task-delete":               taskDelete,
 }
 
 var filesFindBuild = `
@@ -258,4 +260,16 @@ DELETE FROM senders WHERE sender_repo_id = ?
 
 var senderDelete = `
 DELETE FROM senders WHERE sender_id = ?
+`
+
+var taskList = `
+SELECT
+ task_id
+,task_data
+,task_labels
+FROM tasks
+`
+
+var taskDelete = `
+DELETE FROM tasks WHERE task_id = ?
 `

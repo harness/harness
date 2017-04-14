@@ -6,6 +6,7 @@ import (
 	"github.com/cncd/logging"
 	"github.com/cncd/pubsub"
 	"github.com/cncd/queue"
+	"github.com/drone/drone/model"
 	"github.com/drone/drone/plugins/registry"
 	"github.com/drone/drone/plugins/secrets"
 	"github.com/drone/drone/plugins/sender"
@@ -28,7 +29,7 @@ func Store(cli *cli.Context) gin.HandlerFunc {
 	server.Config.Storage.Files = v
 
 	// services
-	server.Config.Services.Queue = queue.New()
+	server.Config.Services.Queue = model.WithTaskStore(queue.New(), v)
 	server.Config.Services.Logs = logging.New()
 	server.Config.Services.Pubsub = pubsub.New()
 	server.Config.Services.Pubsub.Create(context.Background(), "topic/events")
