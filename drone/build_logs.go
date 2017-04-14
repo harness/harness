@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/cncd/pipeline/pipeline/rpc"
@@ -11,13 +10,13 @@ import (
 )
 
 var buildLogsCmd = cli.Command{
-	Name:  "logs",
-	Usage: "show build logs",
-	Action: func(c *cli.Context) {
-		if err := buildLogs(c); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Name:   "logs",
+	Usage:  "show build logs",
+	Action: buildLogsDisabled,
+}
+
+func buildLogsDisabled(c *cli.Context) error {
+	return fmt.Errorf("Command temporarily disabled. See https://github.com/drone/drone/issues/2005")
 }
 
 func buildLogs(c *cli.Context) error {
