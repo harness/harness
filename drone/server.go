@@ -64,6 +64,23 @@ var serverCmd = cli.Command{
 			Usage:  "cache duration",
 			Value:  time.Minute * 15,
 		},
+		cli.StringSliceFlag{
+			EnvVar: "DRONE_ESCALATE",
+			Name:   "escalate",
+			Value: &cli.StringSlice{
+				"plugins/docker",
+				"plugins/gcr",
+				"plugins/ecr",
+			},
+		},
+		cli.StringSliceFlag{
+			EnvVar: "DRONE_VOLUME",
+			Name:   "volume",
+		},
+		cli.StringSliceFlag{
+			EnvVar: "DRONE_NETWORK",
+			Name:   "network",
+		},
 		cli.StringFlag{
 			EnvVar: "DRONE_AGENT_SECRET,DRONE_SECRET",
 			Name:   "agent-secret",

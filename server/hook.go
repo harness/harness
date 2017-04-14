@@ -456,8 +456,9 @@ func (b *builder) Build() ([]*buildItem, error) {
 
 		ir := compiler.New(
 			compiler.WithEnviron(environ),
-			// TODO ability to customize the escalated plugins
-			compiler.WithEscalated("plugins/docker", "plugins/gcr", "plugins/ecr"),
+			compiler.WithEscalated(Config.Pipeline.Privileged...),
+			compiler.WithVolumes(Config.Pipeline.Volumes...),
+			compiler.WithNetworks(Config.Pipeline.Networks...),
 			compiler.WithLocal(false),
 			compiler.WithOption(
 				compiler.WithNetrc(
@@ -478,8 +479,6 @@ func (b *builder) Build() ([]*buildItem, error) {
 			),
 			compiler.WithEnviron(proc.Environ),
 			compiler.WithProxy(),
-			// TODO ability to set global volumes for things like certs
-			compiler.WithVolumes(),
 			compiler.WithWorkspaceFromURL("/drone", b.Curr.Link),
 			compiler.WithMetadata(metadata),
 		).Compile(parsed)
