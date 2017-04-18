@@ -50,7 +50,7 @@ func secretCreate(c *cli.Context) error {
 		Name:   c.String("name"),
 		Value:  c.String("value"),
 		Images: c.StringSlice("image"),
-		Events: c.StringSlice("events"),
+		Events: c.StringSlice("event"),
 	}
 	if len(secret.Events) == 0 {
 		secret.Events = defaultSecretEvents
