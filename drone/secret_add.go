@@ -55,7 +55,7 @@ func secretCreate(c *cli.Context) error {
 	if len(secret.Events) == 0 {
 		secret.Events = defaultSecretEvents
 	}
-	_, err = client.SecretUpdate(owner, name, secret)
+	_, err = client.SecretCreate(owner, name, secret)
 	return err
 }
 
