@@ -49,6 +49,18 @@ var execCmd = cli.Command{
 			EnvVar: "DRONE_VOLUMES",
 		},
 		cli.StringSliceFlag{
+			Name:   "network",
+			Usage:  "external networks",
+			EnvVar: "DRONE_NETWORKS",
+		},
+		cli.StringFlag{
+			Name:   "prefix",
+			Value:  "drone",
+			Usage:  "prefix containers created by drone",
+			EnvVar: "DRONE_DOCKER_PREFIX",
+			Hidden: true,
+		},
+		cli.StringSliceFlag{
 			Name:  "privileged",
 			Usage: "privileged plugins",
 			Value: &cli.StringSlice{
@@ -316,6 +328,9 @@ func exec(c *cli.Context) error {
 		compiler.WithWorkspace(
 			c.String("workspace-base"),
 			c.String("workspace-path"),
+		),
+		compiler.WithNetworks(
+			c.StringSlice("network")...,
 		),
 		compiler.WithPrefix(
 			c.String("prefix"),
