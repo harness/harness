@@ -1,6 +1,9 @@
 package main
 
 import (
+	"io/ioutil"
+	"strings"
+
 	"github.com/drone/drone/model"
 	"github.com/urfave/cli"
 )
@@ -52,6 +55,14 @@ func registryUpdate(c *cli.Context) error {
 		Address:  hostname,
 		Username: username,
 		Password: password,
+	}
+	if strings.HasPrefix(registry.Password, "@") {
+		path := strings.TrimPrefix(registry.Password, "@")
+		out, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		registry.Password = string(out)
 	}
 	_, err = client.RegistryUpdate(owner, name, registry)
 	if err != nil {

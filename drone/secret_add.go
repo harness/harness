@@ -1,6 +1,9 @@
 package main
 
 import (
+	"io/ioutil"
+	"strings"
+
 	"github.com/drone/drone/model"
 	"github.com/urfave/cli"
 )
@@ -54,6 +57,14 @@ func secretCreate(c *cli.Context) error {
 	}
 	if len(secret.Events) == 0 {
 		secret.Events = defaultSecretEvents
+	}
+	if strings.HasPrefix(secret.Value, "@") {
+		path := strings.TrimPrefix(secret.Value, "@")
+		out, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		secret.Value = string(out)
 	}
 	_, err = client.SecretCreate(owner, name, secret)
 	return err
