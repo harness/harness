@@ -23,7 +23,7 @@ var serverCmd = cli.Command{
 			Usage:  "start the server in debug mode",
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_SERVER_HOST",
+			EnvVar: "DRONE_SERVER_HOST,DRONE_HOST",
 			Name:   "server-host",
 			Usage:  "server host",
 		},

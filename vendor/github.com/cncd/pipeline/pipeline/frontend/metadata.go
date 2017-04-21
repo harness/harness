@@ -165,7 +165,7 @@ func (m *Metadata) EnvironDrone() map[string]string {
 		"DRONE_REPO":                 m.Repo.Name,
 		"DRONE_REPO_SCM":             "git",
 		"DRONE_REPO_OWNER":           strings.Split(m.Repo.Name, "/")[0],
-		"DRONE_REPO_NAME":            strings.Split(m.Repo.Name, "/")[0],
+		"DRONE_REPO_NAME":            strings.Split(m.Repo.Name, "/")[1],
 		"DRONE_REPO_LINK":            m.Repo.Link,
 		"DRONE_REPO_BRANCH":          m.Curr.Commit.Branch,
 		"DRONE_REPO_PRIVATE":         fmt.Sprintf("%v", m.Repo.Private),
