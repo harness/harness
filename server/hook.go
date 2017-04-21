@@ -300,7 +300,7 @@ func PostHook(c *gin.Context) {
 func metadataFromStruct(repo *model.Repo, build, last *model.Build, proc *model.Proc, link string) frontend.Metadata {
 	return frontend.Metadata{
 		Repo: frontend.Repo{
-			Name:    repo.Name,
+			Name:    repo.FullName,
 			Link:    repo.Link,
 			Remote:  repo.Clone,
 			Private: repo.IsPrivate,
