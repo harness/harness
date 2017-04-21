@@ -277,6 +277,7 @@ func exec(c *cli.Context) error {
 
 	metadata := metadataFromContext(c)
 	environ := metadata.Environ()
+	secrets := []compiler.Secret{}
 	for k, v := range metadata.EnvironDrone() {
 		environ[k] = v
 	}
@@ -284,6 +285,10 @@ func exec(c *cli.Context) error {
 		k := strings.Split(env, "=")[0]
 		v := strings.Split(env, "=")[1]
 		environ[k] = v
+		secrets = append(secrets, compiler.Secret{
+			Name:  k,
+			Value: v,
+		})
 	}
 
 	tmpl, err := envsubst.ParseFile(file)
@@ -345,6 +350,7 @@ func exec(c *cli.Context) error {
 			c.String("netrc-machine"),
 		),
 		compiler.WithMetadata(metadata),
+		compiler.WithSecret(secrets...),
 	).Compile(conf)
 
 	engine, err := docker.NewEnv()
