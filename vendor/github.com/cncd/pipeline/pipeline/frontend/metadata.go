@@ -158,14 +158,26 @@ func (m *Metadata) EnvironDrone() map[string]string {
 	// * DRONE_REPO_TRUSTED
 	// * DRONE_YAML_VERIFIED
 	// * DRONE_YAML_VERIFIED
+	var (
+		owner string
+		name  string
+
+		parts = strings.Split(m.Repo.Name, "/")
+	)
+	if len(parts) == 2 {
+		owner = strings.Split(m.Repo.Name, "/")[0]
+		name = strings.Split(m.Repo.Name, "/")[1]
+	} else {
+		name = m.Repo.Name
+	}
 	params := map[string]string{
 		"CI":                         "drone",
 		"DRONE":                      "true",
 		"DRONE_ARCH":                 "linux/amd64",
 		"DRONE_REPO":                 m.Repo.Name,
 		"DRONE_REPO_SCM":             "git",
-		"DRONE_REPO_OWNER":           strings.Split(m.Repo.Name, "/")[0],
-		"DRONE_REPO_NAME":            strings.Split(m.Repo.Name, "/")[1],
+		"DRONE_REPO_OWNER":           owner,
+		"DRONE_REPO_NAME":            name,
 		"DRONE_REPO_LINK":            m.Repo.Link,
 		"DRONE_REPO_BRANCH":          m.Curr.Commit.Branch,
 		"DRONE_REPO_PRIVATE":         fmt.Sprintf("%v", m.Repo.Private),
