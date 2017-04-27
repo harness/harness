@@ -7,8 +7,8 @@ import (
 )
 
 type CCProjects struct {
-	XMLName xml.Name   `xml:"Projects"`
-	Project *CCProject `xml:"Project"`
+	XMLName  xml.Name     `xml:"Projects"`
+	Projects []*CCProject `xml:"Project"`
 }
 
 type CCProject struct {
@@ -21,34 +21,48 @@ type CCProject struct {
 	WebURL          string   `xml:"webUrl,attr"`
 }
 
-func NewCC(r *Repo, b *Build, link string) *CCProjects {
-	proj := &CCProject{
-		Name:            r.FullName,
-		WebURL:          link,
-		Activity:        "Building",
-		LastBuildStatus: "Unknown",
-		LastBuildLabel:  "Unknown",
-	}
+func NewCC(r *Repo, bs []*Build, link string) *CCProjects {
+	projs := &CCProjects{Projects: []*CCProject{}}
 
-	// if the build is not currently running then
-	// we can return the latest build status.
-	if b.Status != StatusPending &&
-		b.Status != StatusRunning {
-		proj.Activity = "Sleeping"
-		proj.LastBuildTime = time.Unix(b.Started, 0).Format(time.RFC3339)
-		proj.LastBuildLabel = strconv.Itoa(b.Number)
-	}
+	branches := []string{}
 
-	// ensure the last build Status accepts a valid
-	// ccmenu enumeration
-	switch b.Status {
-	case StatusError, StatusKilled:
-		proj.LastBuildStatus = "Exception"
-	case StatusSuccess:
-		proj.LastBuildStatus = "Success"
-	case StatusFailure:
-		proj.LastBuildStatus = "Failure"
-	}
+BuildLoop:
+	for _, b := range bs {
+		for _, br := range branches {
+			if br == b.Branch {
+				continue BuildLoop
+			}
+		}
 
-	return &CCProjects{Project: proj}
+		proj := &CCProject{
+			Name:            r.FullName + " " + b.Branch,
+			WebURL:          link,
+			Activity:        "Building",
+			LastBuildStatus: "Unknown",
+			LastBuildLabel:  "Unknown",
+		}
+
+		// if the build is not currently running then
+		// we can return the latest build status.
+		if b.Status != StatusPending &&
+			b.Status != StatusRunning {
+			proj.Activity = "Sleeping"
+			proj.LastBuildTime = time.Unix(b.Started, 0).Format(time.RFC3339)
+			proj.LastBuildLabel = strconv.Itoa(b.Number)
+		}
+
+		// ensure the last build Status accepts a valid
+		// ccmenu enumeration
+		switch b.Status {
+		case StatusError, StatusKilled:
+			proj.LastBuildStatus = "Exception"
+		case StatusSuccess:
+			proj.LastBuildStatus = "Success"
+		case StatusFailure:
+			proj.LastBuildStatus = "Failure"
+		}
+
+		branches = append(branches, b.Branch)
+	}
+	return projs
 }
