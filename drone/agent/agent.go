@@ -24,8 +24,8 @@ import (
 	"github.com/urfave/cli"
 )
 
-// AgentCmd is the exported command for starting the drone agent.
-var AgentCmd = cli.Command{
+// Command exports the agent command.
+var Command = cli.Command{
 	Name:   "agent",
 	Usage:  "starts the drone agent",
 	Action: loop,
