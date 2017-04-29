@@ -2,7 +2,11 @@ package server
 
 import (
 	"net/http"
+	"net/url"
 	"time"
+
+	"golang.org/x/crypto/acme/autocert"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/drone/drone/router"
 	"github.com/drone/drone/router/middleware"
@@ -43,6 +47,11 @@ var Command = cli.Command{
 			EnvVar: "DRONE_SERVER_KEY",
 			Name:   "server-key",
 			Usage:  "server ssl key",
+		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_LETS_ENCRYPT",
+			Name:   "lets-encrypt",
+			Usage:  "lets encrypt enabled",
 		},
 		cli.StringSliceFlag{
 			EnvVar: "DRONE_ADMIN",
@@ -337,8 +346,27 @@ func server(c *cli.Context) error {
 	}
 
 	// start the server without tls enabled
-	return http.ListenAndServe(
-		c.String("server-addr"),
-		handler,
-	)
+	if !c.Bool("lets-encrypt") {
+		return http.ListenAndServe(
+			c.String("server-addr"),
+			handler,
+		)
+	}
+
+	// start the server with lets encrypt enabled
+	// listen on ports 443 and 80
+	var g errgroup.Group
+	g.Go(func() error {
+		return http.ListenAndServe(":http", handler)
+	})
+
+	g.Go(func() error {
+		address, err := url.Parse(c.String("server-host"))
+		if err != nil {
+			return err
+		}
+		return http.Serve(autocert.NewListener(address.Host), handler)
+	})
+
+	return g.Wait()
 }
