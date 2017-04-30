@@ -11,6 +11,7 @@ import (
 	"github.com/drone/drone/router/middleware/token"
 	"github.com/drone/drone/server"
 	"github.com/drone/drone/server/debug"
+	"github.com/drone/drone/server/metrics"
 	"github.com/drone/drone/server/template"
 
 	"github.com/drone/drone-ui/dist"
@@ -169,6 +170,14 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		debugger.GET("/pprof/symbol", debug.SymbolHandler())
 		debugger.POST("/pprof/symbol", debug.SymbolHandler())
 		debugger.GET("/pprof/trace", debug.TraceHandler())
+	}
+
+	monitor := e.Group("/metrics")
+	{
+		monitor.GET("",
+			session.MustAdmin(),
+			metrics.PromHandler(),
+		)
 	}
 
 	return e
