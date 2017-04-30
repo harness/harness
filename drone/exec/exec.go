@@ -280,7 +280,7 @@ var Command = cli.Command{
 func parseEnvVars(envs []string) (map[string]string, error) {
 	envVars := map[string]string{}
 	for _, env := range envs {
-		e := strings.Split(env, "=")
+		e := strings.SplitN(env, "=", 2)
 		if len(e) != 2 {
 			return nil, fmt.Errorf("failed to parse environment variable: %s", env)
 		}
