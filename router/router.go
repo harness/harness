@@ -172,9 +172,9 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		debugger.GET("/pprof/trace", debug.TraceHandler())
 	}
 
-	monitor := e.Group("/api/metrics")
+	monitor := e.Group("/metrics")
 	{
-		monitor.GET("/prometheus",
+		monitor.GET("",
 			session.MustAdmin(),
 			metrics.PromHandler(),
 		)
