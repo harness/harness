@@ -7,7 +7,7 @@ import (
 )
 
 // Handler returns an http.Handler that is capable of handling a variety of mock
-// Bitbucket requests and returning mock responses.
+// Gitea requests and returning mock responses.
 func Handler() http.Handler {
 	gin.SetMode(gin.TestMode)
 
