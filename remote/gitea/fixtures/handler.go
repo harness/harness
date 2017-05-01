@@ -79,7 +79,6 @@ const repoPayload = `
 {
   "owner": {
     "login": "test_name",
-    "username": "test_name",
     "email": "octocat@github.com",
     "avatar_url": "https:\/\/secure.gravatar.com\/avatar\/8c58a0be77ee441bb8f8595b7f1b4e87"
   },
@@ -102,7 +101,6 @@ const userRepoPayload = `
   {
     "owner": {
       "login": "test_name",
-      "username": "test_name",
       "email": "octocat@github.com",
       "avatar_url": "https:\/\/secure.gravatar.com\/avatar\/8c58a0be77ee441bb8f8595b7f1b4e87"
     },
