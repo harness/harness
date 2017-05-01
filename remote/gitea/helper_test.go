@@ -7,8 +7,8 @@ import (
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote/gitea/fixtures"
 
+	"code.gitea.io/sdk/gitea"
 	"github.com/franela/goblin"
-	"github.com/go-gitea/go-sdk/gitea"
 )
 
 func Test_parse(t *testing.T) {

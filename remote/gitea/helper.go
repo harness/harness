@@ -9,7 +9,8 @@ import (
 	"time"
 
 	"github.com/drone/drone/model"
-	"github.com/go-gitea/go-sdk/gitea"
+
+	"code.gitea.io/sdk/gitea"
 )
 
 // helper function that converts a Gitea repository to a Drone repository.

@@ -11,7 +11,7 @@ import (
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 
-	"github.com/go-gitea/go-sdk/gitea"
+	"code.gitea.io/sdk/gitea"
 )
 
 // Opts defines configuration options.
@@ -55,7 +55,7 @@ func getStatus(status string) gitea.StatusState {
 	case model.StatusFailure, model.StatusError:
 		return gitea.StatusFailure
 	case model.StatusKilled:
-		return gitea.StatusCanceled
+		return gitea.StatusFailure
 	default:
 		return gitea.StatusFailure
 	}

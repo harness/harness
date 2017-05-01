@@ -156,3 +156,9 @@ func (c *Client) MigrateRepo(opt MigrateRepoOption) (*Repository, error) {
 	repo := new(Repository)
 	return repo, c.getParsedResponse("POST", "/repos/migrate", jsonHeader, bytes.NewReader(body), repo)
 }
+
+// MirrorSync adds a mirrored repository to the mirror sync queue.
+func (c *Client) MirrorSync(owner, repo string) error {
+	_, err := c.getResponse("POST", fmt.Sprintf("/repos/%s/%s/mirror-sync", owner, repo), nil, nil)
+	return err
+}
