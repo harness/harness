@@ -23,9 +23,9 @@ func Test_parse(t *testing.T) {
 			g.Assert(hook.Ref).Equal("refs/heads/master")
 			g.Assert(hook.After).Equal("ef98532add3b2feb7a137426bba1248724367df5")
 			g.Assert(hook.Before).Equal("4b2626259b5a97b6b4eab5e6cca66adb986b672b")
-			g.Assert(hook.Compare).Equal("http://gogs.golang.org/gordon/hello-world/compare/4b2626259b5a97b6b4eab5e6cca66adb986b672b...ef98532add3b2feb7a137426bba1248724367df5")
+			g.Assert(hook.Compare).Equal("http://gitea.golang.org/gordon/hello-world/compare/4b2626259b5a97b6b4eab5e6cca66adb986b672b...ef98532add3b2feb7a137426bba1248724367df5")
 			g.Assert(hook.Repo.Name).Equal("hello-world")
-			g.Assert(hook.Repo.URL).Equal("http://gogs.golang.org/gordon/hello-world")
+			g.Assert(hook.Repo.URL).Equal("http://gitea.golang.org/gordon/hello-world")
 			g.Assert(hook.Repo.Owner.Name).Equal("gordon")
 			g.Assert(hook.Repo.FullName).Equal("gordon/hello-world")
 			g.Assert(hook.Repo.Owner.Email).Equal("gordon@golang.org")
@@ -35,7 +35,7 @@ func Test_parse(t *testing.T) {
 			g.Assert(hook.Pusher.Email).Equal("gordon@golang.org")
 			g.Assert(hook.Pusher.Username).Equal("gordon")
 			g.Assert(hook.Sender.Login).Equal("gordon")
-			g.Assert(hook.Sender.Avatar).Equal("http://gogs.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87")
+			g.Assert(hook.Sender.Avatar).Equal("http://gitea.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87")
 		})
 
 		g.It("Should parse tag hook payload", func() {
@@ -44,7 +44,7 @@ func Test_parse(t *testing.T) {
 			g.Assert(err == nil).IsTrue()
 			g.Assert(hook.Ref).Equal("v1.0.0")
 			g.Assert(hook.Repo.Name).Equal("hello-world")
-			g.Assert(hook.Repo.URL).Equal("http://gogs.golang.org/gordon/hello-world")
+			g.Assert(hook.Repo.URL).Equal("http://gitea.golang.org/gordon/hello-world")
 			g.Assert(hook.Repo.FullName).Equal("gordon/hello-world")
 			g.Assert(hook.Repo.Owner.Email).Equal("gordon@golang.org")
 			g.Assert(hook.Repo.Owner.Username).Equal("gordon")
@@ -61,7 +61,7 @@ func Test_parse(t *testing.T) {
 			g.Assert(hook.Number).Equal(int64(1))
 
 			g.Assert(hook.Repo.Name).Equal("hello-world")
-			g.Assert(hook.Repo.URL).Equal("http://gogs.golang.org/gordon/hello-world")
+			g.Assert(hook.Repo.URL).Equal("http://gitea.golang.org/gordon/hello-world")
 			g.Assert(hook.Repo.FullName).Equal("gordon/hello-world")
 			g.Assert(hook.Repo.Owner.Email).Equal("gordon@golang.org")
 			g.Assert(hook.Repo.Owner.Username).Equal("gordon")
@@ -129,14 +129,14 @@ func Test_parse(t *testing.T) {
 			g.Assert(repo.Link).Equal(hook.Repo.URL)
 		})
 
-		g.It("Should return a Perm struct from a Gogs Perm", func() {
-			perms := []gogs.Permission{
+		g.It("Should return a Perm struct from a Gitea Perm", func() {
+			perms := []gitea.Permission{
 				{true, true, true},
 				{true, true, false},
 				{true, false, false},
 			}
 			for _, from := range perms {
-				perm := toPerm(from)
+				perm := toPerm(&from)
 				g.Assert(perm.Pull).Equal(from.Pull)
 				g.Assert(perm.Push).Equal(from.Push)
 				g.Assert(perm.Admin).Equal(from.Admin)
@@ -144,9 +144,9 @@ func Test_parse(t *testing.T) {
 		})
 
 		g.It("Should return a Team struct from a Gogs Org", func() {
-			from := &gogs.Organization{
+			from := &gitea.Organization{
 				UserName:  "drone",
-				AvatarUrl: "/avatars/1",
+				AvatarURL: "/avatars/1",
 			}
 
 			to := toTeam(from, "http://localhost:80")
@@ -155,14 +155,14 @@ func Test_parse(t *testing.T) {
 		})
 
 		g.It("Should return a Repo struct from a Gogs Repo", func() {
-			from := gogs.Repository{
+			from := gitea.Repository{
 				FullName: "gophers/hello-world",
-				Owner: gogs.User{
+				Owner: &gitea.User{
 					UserName:  "gordon",
-					AvatarUrl: "http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
+					AvatarURL: "http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
 				},
-				CloneUrl: "http://gogs.golang.org/gophers/hello-world.git",
-				HtmlUrl:  "http://gogs.golang.org/gophers/hello-world",
+				CloneURL: "http://gitea.golang.org/gophers/hello-world.git",
+				HTMLURL:  "http://gitea.golang.org/gophers/hello-world",
 				Private:  true,
 			}
 			repo := toRepo(&from)
@@ -170,25 +170,25 @@ func Test_parse(t *testing.T) {
 			g.Assert(repo.Owner).Equal(from.Owner.UserName)
 			g.Assert(repo.Name).Equal("hello-world")
 			g.Assert(repo.Branch).Equal("master")
-			g.Assert(repo.Link).Equal(from.HtmlUrl)
-			g.Assert(repo.Clone).Equal(from.CloneUrl)
-			g.Assert(repo.Avatar).Equal(from.Owner.AvatarUrl)
+			g.Assert(repo.Link).Equal(from.HTMLURL)
+			g.Assert(repo.Clone).Equal(from.CloneURL)
+			g.Assert(repo.Avatar).Equal(from.Owner.AvatarURL)
 			g.Assert(repo.IsPrivate).Equal(from.Private)
 		})
 
 		g.It("Should return a RepoLite struct from a Gogs Repo", func() {
-			from := gogs.Repository{
+			from := gitea.Repository{
 				FullName: "gophers/hello-world",
-				Owner: gogs.User{
+				Owner: &gitea.User{
 					UserName:  "gordon",
-					AvatarUrl: "http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
+					AvatarURL: "http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
 				},
 			}
 			repo := toRepoLite(&from)
 			g.Assert(repo.FullName).Equal(from.FullName)
 			g.Assert(repo.Owner).Equal(from.Owner.UserName)
 			g.Assert(repo.Name).Equal("hello-world")
-			g.Assert(repo.Avatar).Equal(from.Owner.AvatarUrl)
+			g.Assert(repo.Avatar).Equal(from.Owner.AvatarURL)
 		})
 
 		g.It("Should correct a malformed avatar url", func() {
@@ -198,7 +198,7 @@ func Test_parse(t *testing.T) {
 				After  string
 			}{
 				{
-					"http://gogs.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
+					"http://gitea.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
 					"//1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
 				},
 				{
@@ -206,12 +206,12 @@ func Test_parse(t *testing.T) {
 					"//1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
 				},
 				{
-					"http://gogs.golang.org/avatars/1",
-					"http://gogs.golang.org/avatars/1",
+					"http://gitea.golang.org/avatars/1",
+					"http://gitea.golang.org/avatars/1",
 				},
 				{
-					"http://gogs.golang.org//avatars/1",
-					"http://gogs.golang.org/avatars/1",
+					"http://gitea.golang.org//avatars/1",
+					"http://gitea.golang.org/avatars/1",
 				},
 			}
 
@@ -228,7 +228,7 @@ func Test_parse(t *testing.T) {
 			}{
 				{
 					"/avatars/1",
-					"http://gogs.io/avatars/1",
+					"http://gitea.io/avatars/1",
 				},
 				{
 					"//1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
@@ -236,11 +236,11 @@ func Test_parse(t *testing.T) {
 				},
 				{
 					"/gogs/avatars/2",
-					"http://gogs.io/gogs/avatars/2",
+					"http://gitea.io/gogs/avatars/2",
 				},
 			}
 
-			var repo = "http://gogs.io/foo/bar"
+			var repo = "http://gitea.io/foo/bar"
 			for _, url := range urls {
 				got := expandAvatar(repo, url.Before)
 				g.Assert(got).Equal(url.After)

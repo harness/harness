@@ -6,12 +6,12 @@ var HookPush = `
   "ref": "refs/heads/master",
   "before": "4b2626259b5a97b6b4eab5e6cca66adb986b672b",
   "after": "ef98532add3b2feb7a137426bba1248724367df5",
-  "compare_url": "http://gogs.golang.org/gordon/hello-world/compare/4b2626259b5a97b6b4eab5e6cca66adb986b672b...ef98532add3b2feb7a137426bba1248724367df5",
+  "compare_url": "http://gitea.golang.org/gordon/hello-world/compare/4b2626259b5a97b6b4eab5e6cca66adb986b672b...ef98532add3b2feb7a137426bba1248724367df5",
   "commits": [
     {
       "id": "ef98532add3b2feb7a137426bba1248724367df5",
       "message": "bump\n",
-      "url": "http://gogs.golang.org/gordon/hello-world/commit/ef98532add3b2feb7a137426bba1248724367df5",
+      "url": "http://gitea.golang.org/gordon/hello-world/commit/ef98532add3b2feb7a137426bba1248724367df5",
       "author": {
         "name": "Gordon the Gopher",
         "email": "gordon@golang.org",
@@ -23,9 +23,9 @@ var HookPush = `
     "id": 1,
     "name": "hello-world",
     "full_name": "gordon/hello-world",
-    "html_url": "http://gogs.golang.org/gordon/hello-world",
-    "ssh_url": "git@gogs.golang.org:gordon/hello-world.git",
-    "clone_url": "http://gogs.golang.org/gordon/hello-world.git",
+    "html_url": "http://gitea.golang.org/gordon/hello-world",
+    "ssh_url": "git@gitea.golang.org:gordon/hello-world.git",
+    "clone_url": "http://gitea.golang.org/gordon/hello-world.git",
     "description": "",
     "website": "",
     "watchers": 1,
@@ -44,7 +44,7 @@ var HookPush = `
   "sender": {
     "login": "gordon",
     "id": 1,
-    "avatar_url": "http://gogs.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
+    "avatar_url": "http://gitea.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
   }
 }
 `
@@ -68,9 +68,9 @@ var HookPushTag = `{
     "description": "",
     "private": true,
     "fork": false,
-    "html_url": "http://gogs.golang.org/gordon/hello-world",
-    "ssh_url": "git@gogs.golang.org:gordon/hello-world.git",
-    "clone_url": "http://gogs.golang.org/gordon/hello-world.git",
+    "html_url": "http://gitea.golang.org/gordon/hello-world",
+    "ssh_url": "git@gitea.golang.org:gordon/hello-world.git",
+    "clone_url": "http://gitea.golang.org/gordon/hello-world.git",
     "default_branch": "master",
     "created_at": "2015-10-22T19:32:44Z",
     "updated_at": "2016-11-24T13:37:16Z"
@@ -89,7 +89,7 @@ var HookPullRequest = `{
   "action": "opened",
   "number": 1,
   "pull_request": {
-    "html_url": "http://gogs.golang.org/gordon/hello-world/pull/1",
+    "html_url": "http://gitea.golang.org/gordon/hello-world/pull/1",
     "state": "open",
     "title": "Update the README with new information",
     "body": "please merge",
@@ -98,7 +98,7 @@ var HookPullRequest = `{
       "username": "gordon",
       "full_name": "Gordon the Gopher",
       "email": "gordon@golang.org",
-      "avatar_url": "http://gogs.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
+      "avatar_url": "http://gitea.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
     },
     "base_branch": "master",
     "base": {
@@ -125,8 +125,8 @@ var HookPullRequest = `{
       "avatar_url": "https://secure.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
     },
     "private": true,
-    "html_url": "http://gogs.golang.org/gordon/hello-world",
-    "clone_url": "https://gogs.golang.org/gordon/hello-world.git",
+    "html_url": "http://gitea.golang.org/gordon/hello-world",
+    "clone_url": "https://gitea.golang.org/gordon/hello-world.git",
     "default_branch": "master"
   },
   "sender": {

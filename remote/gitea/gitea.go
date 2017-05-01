@@ -261,7 +261,7 @@ func (c *client) Status(u *model.User, r *model.Repo, b *model.Build, link strin
 	status := getStatus(b.Status)
 	desc := getDesc(b.Status)
 
-	client.CreateStatus(
+	_, err := client.CreateStatus(
 		r.Owner,
 		r.Name,
 		b.Commit,
@@ -273,7 +273,7 @@ func (c *client) Status(u *model.User, r *model.Repo, b *model.Build, link strin
 		},
 	)
 
-	return nil
+	return err
 }
 
 // Netrc returns a netrc file capable of authenticating Gitea requests and
