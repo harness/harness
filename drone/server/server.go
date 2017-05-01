@@ -226,6 +226,37 @@ var Command = cli.Command{
 			Usage:  "gogs skip ssl verification",
 		},
 		cli.BoolFlag{
+			EnvVar: "DRONE_GITEA",
+			Name:   "gitea",
+			Usage:  "gitea driver is enabled",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GITEA_URL",
+			Name:   "gitea-server",
+			Usage:  "gitea server address",
+			Value:  "https://github.com",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GITEA_GIT_USERNAME",
+			Name:   "gitea-git-username",
+			Usage:  "gitea service account username",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GITEA_GIT_PASSWORD",
+			Name:   "gitea-git-password",
+			Usage:  "gitea service account password",
+		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_GITEA_PRIVATE_MODE",
+			Name:   "gitea-private-mode",
+			Usage:  "gitea private mode enabled",
+		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_GITEA_SKIP_VERIFY",
+			Name:   "gitea-skip-verify",
+			Usage:  "gitea skip ssl verification",
+		},
+		cli.BoolFlag{
 			EnvVar: "DRONE_BITBUCKET",
 			Name:   "bitbucket",
 			Usage:  "bitbucket driver is enabled",
