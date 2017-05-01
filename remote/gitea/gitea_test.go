@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Test_gogs(t *testing.T) {
+func Test_gitea(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	s := httptest.NewServer(fixtures.Handler())
@@ -52,21 +52,21 @@ func Test_gogs(t *testing.T) {
 		g.Describe("Generating a netrc file", func() {
 			g.It("Should return a netrc with the user token", func() {
 				remote, _ := New(Opts{
-					URL: "http://gogs.com",
+					URL: "http://gitea.com",
 				})
 				netrc, _ := remote.Netrc(fakeUser, nil)
-				g.Assert(netrc.Machine).Equal("gogs.com")
+				g.Assert(netrc.Machine).Equal("gitea.com")
 				g.Assert(netrc.Login).Equal(fakeUser.Token)
 				g.Assert(netrc.Password).Equal("x-oauth-basic")
 			})
 			g.It("Should return a netrc with the machine account", func() {
 				remote, _ := New(Opts{
-					URL:      "http://gogs.com",
+					URL:      "http://gitea.com",
 					Username: "someuser",
 					Password: "password",
 				})
 				netrc, _ := remote.Netrc(nil, nil)
-				g.Assert(netrc.Machine).Equal("gogs.com")
+				g.Assert(netrc.Machine).Equal("gitea.com")
 				g.Assert(netrc.Login).Equal("someuser")
 				g.Assert(netrc.Password).Equal("password")
 			})

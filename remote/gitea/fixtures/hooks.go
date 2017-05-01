@@ -1,6 +1,6 @@
 package fixtures
 
-// Sample Gogs push hook
+// Sample Gitea push hook
 var HookPush = `
 {
   "ref": "refs/heads/master",
@@ -49,7 +49,7 @@ var HookPush = `
 }
 `
 
-// Sample Gogs tag hook
+// Sample Gitea tag hook
 var HookPushTag = `{
   "secret": "l26Un7G7HXogLAvsyf2hOA4EMARSTsR3",
   "ref": "v1.0.0",

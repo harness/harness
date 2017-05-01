@@ -12,7 +12,7 @@ import (
 	"github.com/go-gitea/go-sdk/gitea"
 )
 
-// helper function that converts a Gogs repository to a Drone repository.
+// helper function that converts a Gitea repository to a Drone repository.
 func toRepoLite(from *gitea.Repository) *model.RepoLite {
 	name := strings.Split(from.FullName, "/")[1]
 	avatar := expandAvatar(
@@ -27,7 +27,7 @@ func toRepoLite(from *gitea.Repository) *model.RepoLite {
 	}
 }
 
-// helper function that converts a Gogs repository to a Drone repository.
+// helper function that converts a Gitea repository to a Drone repository.
 func toRepo(from *gitea.Repository) *model.Repo {
 	name := strings.Split(from.FullName, "/")[1]
 	avatar := expandAvatar(
@@ -47,7 +47,7 @@ func toRepo(from *gitea.Repository) *model.Repo {
 	}
 }
 
-// helper function that converts a Gogs permission to a Drone permission.
+// helper function that converts a Gitea permission to a Drone permission.
 func toPerm(from *gitea.Permission) *model.Perm {
 	return &model.Perm{
 		Pull:  from.Pull,
@@ -56,7 +56,7 @@ func toPerm(from *gitea.Permission) *model.Perm {
 	}
 }
 
-// helper function that converts a Gogs team to a Drone team.
+// helper function that converts a Gitea team to a Drone team.
 func toTeam(from *gitea.Organization, link string) *model.Team {
 	return &model.Team{
 		Login:  from.UserName,
@@ -64,7 +64,7 @@ func toTeam(from *gitea.Organization, link string) *model.Team {
 	}
 }
 
-// helper function that extracts the Build data from a Gogs push hook
+// helper function that extracts the Build data from a Gitea push hook
 func buildFromPush(hook *pushHook) *model.Build {
 	avatar := expandAvatar(
 		hook.Repo.URL,
@@ -93,7 +93,7 @@ func buildFromPush(hook *pushHook) *model.Build {
 	}
 }
 
-// helper function that extracts the Build data from a Gogs tag hook
+// helper function that extracts the Build data from a Gitea tag hook
 func buildFromTag(hook *pushHook) *model.Build {
 	avatar := expandAvatar(
 		hook.Repo.URL,
@@ -122,7 +122,7 @@ func buildFromTag(hook *pushHook) *model.Build {
 	}
 }
 
-// helper function that extracts the Build data from a Gogs pull_request hook
+// helper function that extracts the Build data from a Gitea pull_request hook
 func buildFromPullRequest(hook *pullRequestHook) *model.Build {
 	avatar := expandAvatar(
 		hook.Repo.URL,
@@ -151,7 +151,7 @@ func buildFromPullRequest(hook *pullRequestHook) *model.Build {
 	return build
 }
 
-// helper function that extracts the Repository data from a Gogs push hook
+// helper function that extracts the Repository data from a Gitea push hook
 func repoFromPush(hook *pushHook) *model.Repo {
 	return &model.Repo{
 		Name:     hook.Repo.Name,
@@ -161,7 +161,7 @@ func repoFromPush(hook *pushHook) *model.Repo {
 	}
 }
 
-// helper function that extracts the Repository data from a Gogs pull_request hook
+// helper function that extracts the Repository data from a Gitea pull_request hook
 func repoFromPullRequest(hook *pullRequestHook) *model.Repo {
 	return &model.Repo{
 		Name:     hook.Repo.Name,

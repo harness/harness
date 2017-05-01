@@ -14,7 +14,7 @@ import (
 func Test_parse(t *testing.T) {
 
 	g := goblin.Goblin(t)
-	g.Describe("Gogs", func() {
+	g.Describe("Gitea", func() {
 
 		g.It("Should parse push hook payload", func() {
 			buf := bytes.NewBufferString(fixtures.HookPush)
@@ -143,7 +143,7 @@ func Test_parse(t *testing.T) {
 			}
 		})
 
-		g.It("Should return a Team struct from a Gogs Org", func() {
+		g.It("Should return a Team struct from a Gitea Org", func() {
 			from := &gitea.Organization{
 				UserName:  "drone",
 				AvatarURL: "/avatars/1",
@@ -154,7 +154,7 @@ func Test_parse(t *testing.T) {
 			g.Assert(to.Avatar).Equal("http://localhost:80/avatars/1")
 		})
 
-		g.It("Should return a Repo struct from a Gogs Repo", func() {
+		g.It("Should return a Repo struct from a Gitea Repo", func() {
 			from := gitea.Repository{
 				FullName: "gophers/hello-world",
 				Owner: &gitea.User{
@@ -176,7 +176,7 @@ func Test_parse(t *testing.T) {
 			g.Assert(repo.IsPrivate).Equal(from.Private)
 		})
 
-		g.It("Should return a RepoLite struct from a Gogs Repo", func() {
+		g.It("Should return a RepoLite struct from a Gitea Repo", func() {
 			from := gitea.Repository{
 				FullName: "gophers/hello-world",
 				Owner: &gitea.User{
@@ -235,8 +235,8 @@ func Test_parse(t *testing.T) {
 					"http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
 				},
 				{
-					"/gogs/avatars/2",
-					"http://gitea.io/gogs/avatars/2",
+					"/gitea/avatars/2",
+					"http://gitea.io/gitea/avatars/2",
 				},
 			}
 

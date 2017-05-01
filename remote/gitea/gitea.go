@@ -34,7 +34,7 @@ type client struct {
 
 const (
 	DescPending  = "the build is pending"
-	DescRunning  = "the buils is running"
+	DescRunning  = "the build is running"
 	DescSuccess  = "the build was successful"
 	DescFailure  = "the build failed"
 	DescCanceled = "the build canceled"
@@ -230,7 +230,7 @@ func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([
 	client := c.newClientToken(u.Token)
 	ref := b.Commit
 
-	// TODO gogs does not yet return a sha with the pull request
+	// TODO gitea does not yet return a sha with the pull request
 	// so unfortunately we need to use the pull request branch.
 	if b.Event == model.EventPull {
 		ref = b.Branch
