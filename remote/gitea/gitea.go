@@ -303,7 +303,7 @@ func (c *client) Activate(u *model.User, r *model.Repo, link string) error {
 		"content_type": "json",
 	}
 	hook := gitea.CreateHookOption{
-		Type:   "gogs",
+		Type:   "gitea",
 		Config: config,
 		Events: []string{"push", "create", "pull_request"},
 		Active: true,

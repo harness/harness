@@ -186,7 +186,7 @@ func parsePullRequest(r io.Reader) (*pullRequestHook, error) {
 }
 
 // fixMalformedAvatar is a helper function that fixes an avatar url if malformed
-// (currently a known bug with gogs)
+// (currently a known bug with gitea)
 func fixMalformedAvatar(url string) string {
 	index := strings.Index(url, "///")
 	if index != -1 {
