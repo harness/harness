@@ -134,6 +134,11 @@ func Test_gogs(t *testing.T) {
 			g.Assert(string(raw)).Equal("{ platform: linux/amd64 }")
 		})
 
+		g.It("Should return nil frome send build status", func() {
+			err := c.Status(fakeUser, fakeRepo, fakeBuild, "http://gitea.io")
+			g.Assert(err == nil).IsTrue()
+		})
+
 		g.Describe("Given an authentication request", func() {
 			g.It("Should redirect to login form")
 			g.It("Should create an access token")
@@ -147,14 +152,12 @@ func Test_gogs(t *testing.T) {
 			g.It("Should handle a parsing error")
 		})
 
-		// g.It("Should return no-op for usupporeted features", func() {
-		// 	_, err1 := c.Auth("octocat", "4vyW6b49Z")
-		// 	err2 := c.Status(fakeUser, fakeRepo, fakeBuild, "http://gitea.io")
-		// 	err3 := c.Deactivate(nil, nil, "")
-		// 	g.Assert(err1 != nil).IsTrue()
-		// 	g.Assert(err2 == nil).IsTrue()
-		// 	g.Assert(err3 == nil).IsTrue()
-		// })
+		g.It("Should return no-op for usupporeted features", func() {
+			_, err1 := c.Auth("octocat", "4vyW6b49Z")
+			err2 := c.Deactivate(nil, nil, "")
+			g.Assert(err1 != nil).IsTrue()
+			g.Assert(err2 == nil).IsTrue()
+		})
 	})
 }
 

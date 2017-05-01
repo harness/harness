@@ -15,6 +15,7 @@ func Handler() http.Handler {
 	e.GET("/api/v1/repos/:owner/:name", getRepo)
 	e.GET("/api/v1/repos/:owner/:name/raw/:commit/:file", getRepoFile)
 	e.POST("/api/v1/repos/:owner/:name/hooks", createRepoHook)
+	e.POST("/api/v1/repos/:owner/:name/statuses/:commit", createRepoCommitStatus)
 	e.GET("/api/v1/user/repos", getUserRepos)
 
 	return e
@@ -27,6 +28,13 @@ func getRepo(c *gin.Context) {
 	default:
 		c.String(200, repoPayload)
 	}
+}
+
+func createRepoCommitStatus(c *gin.Context) {
+	if c.Param("commit") == "v1.0.0" || c.Param("commit") == "9ecad50" {
+		c.String(200, repoPayload)
+	}
+	c.String(404, "")
 }
 
 func getRepoFile(c *gin.Context) {
@@ -70,6 +78,7 @@ func getUserRepos(c *gin.Context) {
 const repoPayload = `
 {
   "owner": {
+    "login": "test_name",
     "username": "test_name",
     "email": "octocat@github.com",
     "avatar_url": "https:\/\/secure.gravatar.com\/avatar\/8c58a0be77ee441bb8f8595b7f1b4e87"
@@ -92,6 +101,7 @@ const userRepoPayload = `
 [
   {
     "owner": {
+      "login": "test_name",
       "username": "test_name",
       "email": "octocat@github.com",
       "avatar_url": "https:\/\/secure.gravatar.com\/avatar\/8c58a0be77ee441bb8f8595b7f1b4e87"
