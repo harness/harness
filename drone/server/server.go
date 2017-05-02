@@ -234,7 +234,7 @@ var Command = cli.Command{
 			EnvVar: "DRONE_GITEA_URL",
 			Name:   "gitea-server",
 			Usage:  "gitea server address",
-			Value:  "https://github.com",
+			Value:  "https://try.gitea.io",
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_GITEA_GIT_USERNAME",

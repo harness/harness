@@ -8,10 +8,9 @@ import (
 	"net/url"
 	"strings"
 
+	"code.gitea.io/sdk/gitea"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
-
-	"code.gitea.io/sdk/gitea"
 )
 
 // Opts defines configuration options.
@@ -56,6 +55,8 @@ func getStatus(status string) gitea.StatusState {
 		return gitea.StatusFailure
 	case model.StatusKilled:
 		return gitea.StatusFailure
+	case model.StatusDeclined:
+		return gitea.StatusWarning
 	default:
 		return gitea.StatusFailure
 	}
@@ -165,7 +166,7 @@ func (c *client) Auth(token, secret string) (string, error) {
 	return "", fmt.Errorf("Not Implemented")
 }
 
-// Teams is not supported by the Gitea driver.
+// Teams is supported by the Gitea driver.
 func (c *client) Teams(u *model.User) ([]*model.Team, error) {
 	client := c.newClientToken(u.Token)
 	orgs, err := client.ListMyOrgs()
@@ -254,7 +255,7 @@ func (c *client) FileRef(u *model.User, r *model.Repo, ref, f string) ([]byte, e
 	return c.newClientToken(u.Token).GetFile(r.Owner, r.Name, ref, f)
 }
 
-// Status is not supported by the Gitea driver.
+// Status is supported by the Gitea driver.
 func (c *client) Status(u *model.User, r *model.Repo, b *model.Build, link string) error {
 	client := c.newClientToken(u.Token)
 
