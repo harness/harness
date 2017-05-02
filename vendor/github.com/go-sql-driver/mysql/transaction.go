@@ -14,7 +14,7 @@ type mysqlTx struct {
 
 func (tx *mysqlTx) Commit() (err error) {
 	if tx.mc == nil || tx.mc.netConn == nil {
-		return errInvalidConn
+		return ErrInvalidConn
 	}
 	err = tx.mc.exec("COMMIT")
 	tx.mc = nil
@@ -23,7 +23,7 @@ func (tx *mysqlTx) Commit() (err error) {
 
 func (tx *mysqlTx) Rollback() (err error) {
 	if tx.mc == nil || tx.mc.netConn == nil {
-		return errInvalidConn
+		return ErrInvalidConn
 	}
 	err = tx.mc.exec("ROLLBACK")
 	tx.mc = nil
