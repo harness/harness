@@ -1,6 +1,7 @@
 drone/drone
 *.sqlite
 *_gen.go
+*_ee.go
 !store/datastore/sql/sqlite/sql_gen.go
 !store/datastore/sql/mysql/sql_gen.go
 !store/datastore/sql/postgres/sql_gen.go

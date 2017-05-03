@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
@@ -8,8 +9,17 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/cncd/logging"
+	"github.com/cncd/pubsub"
+	"github.com/cncd/queue"
+	"github.com/drone/drone/model"
+	"github.com/drone/drone/plugins/registry"
+	"github.com/drone/drone/plugins/secrets"
+	"github.com/drone/drone/plugins/sender"
 	"github.com/drone/drone/router"
 	"github.com/drone/drone/router/middleware"
+	droneserver "github.com/drone/drone/server"
+	"github.com/drone/drone/store"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/contrib/ginrus"
@@ -325,13 +335,16 @@ func server(c *cli.Context) error {
 		logrus.SetLevel(logrus.WarnLevel)
 	}
 
+	s := setupStore(c)
+	setupEvilGlobals(c, s)
+
 	// setup the server and start the listener
 	handler := router.Load(
 		ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true),
 		middleware.Version,
 		middleware.Config(c),
 		middleware.Cache(c),
-		middleware.Store(c),
+		middleware.Store(c, s),
 		middleware.Remote(c),
 	)
 
@@ -369,4 +382,46 @@ func server(c *cli.Context) error {
 	})
 
 	return g.Wait()
+}
+
+// HACK please excuse the message during this period of heavy refactoring.
+// We are currently transitioning from storing services (ie database, queue)
+// in the gin.Context to storing them in a struct. We are also moving away
+// from gin to gorilla. We will temporarily use global during our refactoring
+// which will be removing in the final implementation.
+func setupEvilGlobals(c *cli.Context, v store.Store) {
+
+	// storage
+	droneserver.Config.Storage.Files = v
+
+	// services
+	droneserver.Config.Services.Queue = model.WithTaskStore(queue.New(), v)
+	droneserver.Config.Services.Logs = logging.New()
+	droneserver.Config.Services.Pubsub = pubsub.New()
+	droneserver.Config.Services.Pubsub.Create(context.Background(), "topic/events")
+	droneserver.Config.Services.Registries = registry.New(v)
+	droneserver.Config.Services.Secrets = secrets.New(v)
+	droneserver.Config.Services.Senders = sender.New(v)
+	if endpoint := c.String("registry-service"); endpoint != "" {
+		droneserver.Config.Services.Registries = registry.NewRemote(endpoint)
+	}
+	if endpoint := c.String("secret-service"); endpoint != "" {
+		droneserver.Config.Services.Secrets = secrets.NewRemote(endpoint)
+	}
+	if endpoint := c.String("gating-service"); endpoint != "" {
+		droneserver.Config.Services.Senders = sender.NewRemote(endpoint)
+	}
+
+	// server configuration
+	droneserver.Config.Server.Cert = c.String("server-cert")
+	droneserver.Config.Server.Key = c.String("server-key")
+	droneserver.Config.Server.Pass = c.String("agent-secret")
+	droneserver.Config.Server.Host = c.String("server-host")
+	droneserver.Config.Server.Port = c.String("server-addr")
+	droneserver.Config.Pipeline.Networks = c.StringSlice("network")
+	droneserver.Config.Pipeline.Volumes = c.StringSlice("volumes")
+	droneserver.Config.Pipeline.Privileged = c.StringSlice("escalate")
+	// droneserver.Config.Server.Open = cli.Bool("open")
+	// droneserver.Config.Server.Orgs = sliceToMap(cli.StringSlice("orgs"))
+	// droneserver.Config.Server.Admins = sliceToMap(cli.StringSlice("admin"))
 }

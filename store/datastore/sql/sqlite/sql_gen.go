@@ -6,6 +6,9 @@ func Lookup(name string) string {
 }
 
 var index = map[string]string{
+	"count-users":               countUsers,
+	"count-repos":               countRepos,
+	"count-builds":              countBuilds,
 	"files-find-build":          filesFindBuild,
 	"files-find-proc-name":      filesFindProcName,
 	"files-find-proc-name-data": filesFindProcNameData,
@@ -29,6 +32,21 @@ var index = map[string]string{
 	"task-list":                 taskList,
 	"task-delete":               taskDelete,
 }
+
+var countUsers = `
+SELECT count(1)
+FROM users
+`
+
+var countRepos = `
+SELECT count(1)
+FROM repos
+`
+
+var countBuilds = `
+SELECT count(1)
+FROM builds
+`
 
 var filesFindBuild = `
 SELECT

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/store/datastore/sql"
 	"github.com/russross/meddler"
 )
 
@@ -38,10 +39,10 @@ func (db *datastore) GetRepoListOf(listof []*model.RepoLite) ([]*model.Repo, err
 	return repos, err
 }
 
-func (db *datastore) GetRepoCount() (int, error) {
-	var count int
-	var err = db.QueryRow(rebind(repoCountQuery)).Scan(&count)
-	return count, err
+func (db *datastore) GetRepoCount() (count int, err error) {
+	stmt := sql.Lookup(db.driver, "count-repos")
+	err = meddler.QueryAll(db, &count, stmt)
+	return
 }
 
 func (db *datastore) CreateRepo(repo *model.Repo) error {

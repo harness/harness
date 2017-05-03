@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/store/datastore/sql"
 	"github.com/russross/meddler"
 )
 
@@ -65,10 +66,10 @@ func (db *datastore) GetUserFeedLatest(listof []*model.RepoLite) ([]*model.Feed,
 	return feed, err
 }
 
-func (db *datastore) GetUserCount() (int, error) {
-	var count int
-	var err = db.QueryRow(rebind(userCountQuery)).Scan(&count)
-	return count, err
+func (db *datastore) GetUserCount() (count int, err error) {
+	stmt := sql.Lookup(db.driver, "count-users")
+	err = meddler.QueryAll(db, &count, stmt)
+	return
 }
 
 func (db *datastore) CreateUser(user *model.User) error {
