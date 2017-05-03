@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"testing"
 
+	"code.gitea.io/sdk/gitea"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote/gitea/fixtures"
-
-	"code.gitea.io/sdk/gitea"
 	"github.com/franela/goblin"
 )
 

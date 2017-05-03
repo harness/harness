@@ -8,9 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drone/drone/model"
-
 	"code.gitea.io/sdk/gitea"
+	"github.com/drone/drone/model"
 )
 
 // helper function that converts a Gitea repository to a Drone repository.
