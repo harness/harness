@@ -22,7 +22,7 @@ const (
 	refTag    = "tag"
 )
 
-// parseHook parses a Bitbucket hook from an http.Request request and returns
+// parseHook parses a Gitea hook from an http.Request request and returns
 // Repo and Build detail. If a hook type is unsupported nil values are returned.
 func parseHook(r *http.Request) (*model.Repo, *model.Build, error) {
 	switch r.Header.Get(hookEvent) {

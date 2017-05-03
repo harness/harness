@@ -42,7 +42,7 @@ const (
 )
 
 // getStatus is a helper functin that converts a Drone
-// status to a GitHub status.
+// status to a Gitea status.
 func getStatus(status string) gitea.StatusState {
 	switch status {
 	case model.StatusPending, model.StatusBlocked:

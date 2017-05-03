@@ -117,7 +117,7 @@ func Test_gitea(t *testing.T) {
 			})
 		})
 
-		g.It("Should register repositroy hooks", func() {
+		g.It("Should register repository hooks", func() {
 			err := c.Activate(fakeUser, fakeRepo, "http://localhost")
 			g.Assert(err == nil).IsTrue()
 		})
@@ -134,7 +134,7 @@ func Test_gitea(t *testing.T) {
 			g.Assert(string(raw)).Equal("{ platform: linux/amd64 }")
 		})
 
-		g.It("Should return nil frome send build status", func() {
+		g.It("Should return nil from send build status", func() {
 			err := c.Status(fakeUser, fakeRepo, fakeBuild, "http://gitea.io")
 			g.Assert(err == nil).IsTrue()
 		})
