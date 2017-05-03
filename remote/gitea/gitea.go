@@ -41,7 +41,7 @@ const (
 	DescDeclined = "the build was rejected"
 )
 
-// getStatus is a helper functin that converts a Drone
+// getStatus is a helper function that converts a Drone
 // status to a Gitea status.
 func getStatus(status string) gitea.StatusState {
 	switch status {
