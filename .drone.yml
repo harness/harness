@@ -28,11 +28,12 @@ pipeline:
       event: push
       branch: master
 
-  publish:
-    image: plugins/docker
-    repo: drone/drone
-    secrets: [ docker_username, docker_password ]
-    tag: [ latest, 0.6, 0.6.0, 0.6.0-rc.1 ]
+  trigger:
+    image: plugins/downstream
+    server: https://beta.drone.io
+    fork: true
+    secrets: [ downstream_token ]
+    repositories: drone/drone-enterprise
     when:
       branch: master
       event: push

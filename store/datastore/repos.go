@@ -40,8 +40,9 @@ func (db *datastore) GetRepoListOf(listof []*model.RepoLite) ([]*model.Repo, err
 }
 
 func (db *datastore) GetRepoCount() (count int, err error) {
-	stmt := sql.Lookup(db.driver, "count-repos")
-	err = meddler.QueryAll(db, &count, stmt)
+	err = db.QueryRow(
+		sql.Lookup(db.driver, "count-repos"),
+	).Scan(&count)
 	return
 }
 

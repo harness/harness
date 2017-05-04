@@ -67,8 +67,9 @@ func (db *datastore) GetUserFeedLatest(listof []*model.RepoLite) ([]*model.Feed,
 }
 
 func (db *datastore) GetUserCount() (count int, err error) {
-	stmt := sql.Lookup(db.driver, "count-users")
-	err = meddler.QueryAll(db, &count, stmt)
+	err = db.QueryRow(
+		sql.Lookup(db.driver, "count-users"),
+	).Scan(&count)
 	return
 }
 

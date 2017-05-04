@@ -11,8 +11,6 @@ import (
 
 	"github.com/cncd/logging"
 	"github.com/cncd/pubsub"
-	"github.com/cncd/queue"
-	"github.com/drone/drone/model"
 	"github.com/drone/drone/plugins/registry"
 	"github.com/drone/drone/plugins/secrets"
 	"github.com/drone/drone/plugins/sender"
@@ -395,7 +393,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store) {
 	droneserver.Config.Storage.Files = v
 
 	// services
-	droneserver.Config.Services.Queue = model.WithTaskStore(queue.New(), v)
+	droneserver.Config.Services.Queue = setupQueue(c, v)
 	droneserver.Config.Services.Logs = logging.New()
 	droneserver.Config.Services.Pubsub = pubsub.New()
 	droneserver.Config.Services.Pubsub.Create(context.Background(), "topic/events")
