@@ -16,6 +16,7 @@ import (
 	"github.com/cncd/pipeline/pipeline/frontend"
 	"github.com/cncd/pipeline/pipeline/frontend/yaml"
 	"github.com/cncd/pipeline/pipeline/frontend/yaml/compiler"
+	"github.com/cncd/pipeline/pipeline/frontend/yaml/linter"
 	"github.com/cncd/pipeline/pipeline/interrupt"
 	"github.com/cncd/pipeline/pipeline/multipart"
 	"github.com/drone/envsubst"
@@ -323,6 +324,11 @@ func exec(c *cli.Context) error {
 		}
 		dir, _ := filepath.Abs(filepath.Dir(file))
 		volumes = append(volumes, dir+":"+path.Join(workspaceBase, workspacePath))
+	}
+
+	// lint the yaml file
+	if lerr := linter.New(linter.WithTrusted(true)).Lint(conf); lerr != nil {
+		return lerr
 	}
 
 	// compiles the yaml file
