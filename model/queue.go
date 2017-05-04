@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/cncd/queue"
 )
 
@@ -55,8 +56,13 @@ func (q *persistentQueue) Push(c context.Context, task *queue.Task) error {
 // Poll retrieves and removes a task head of this queue.
 func (q *persistentQueue) Poll(c context.Context, f queue.Filter) (*queue.Task, error) {
 	task, err := q.Queue.Poll(c, f)
-	if err == nil {
-		q.store.TaskDelete(task.ID)
+	if task != nil {
+		logrus.Debugf("pull queue item: %s: remove from backup", task.ID)
+		if derr := q.store.TaskDelete(task.ID); derr != nil {
+			logrus.Errorf("pull queue item: %s: failed to remove from backup: %s", task.ID, derr)
+		} else {
+			logrus.Errorf("pull queue item: %s: successfully removed from backup", task.ID)
+		}
 	}
 	return task, err
 }
