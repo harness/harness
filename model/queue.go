@@ -42,13 +42,14 @@ type persistentQueue struct {
 
 // Push pushes an task to the tail of this queue.
 func (q *persistentQueue) Push(c context.Context, task *queue.Task) error {
+	q.store.TaskInsert(&Task{
+		ID:     task.ID,
+		Data:   task.Data,
+		Labels: task.Labels,
+	})
 	err := q.Queue.Push(c, task)
-	if err == nil {
-		q.store.TaskInsert(&Task{
-			ID:     task.ID,
-			Data:   task.Data,
-			Labels: task.Labels,
-		})
+	if err != nil {
+		q.store.TaskDelete(task.ID)
 	}
 	return err
 }
