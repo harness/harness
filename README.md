@@ -41,4 +41,4 @@ make gen           # Generate code
 make build_static  # Build the binary
 ```
 
-If you are having trouble building this project please reference its `.drone.yml` file. Everything you need to know about building Drone is defined in that file.
+If you are having trouble building this project please reference its `.drone.yml` file. Everything you need to know about building Drone is defined in that file..
