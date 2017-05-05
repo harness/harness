@@ -6,15 +6,23 @@ import (
 
 type builtin struct {
 	store model.SenderStore
+	conf  model.ConfigStore
 }
 
 // New returns a new local gating service.
-func New(store model.SenderStore) model.SenderService {
-	return &builtin{store}
+func New(store model.SenderStore, conf model.ConfigStore) model.SenderService {
+	return &builtin{store, conf}
 }
 
-func (b *builtin) SenderAllowed(user *model.User, repo *model.Repo, build *model.Build) (bool, error) {
-	if repo.IsPrivate == false && build.Event == model.EventPull && build.Sender != user.Login {
+func (b *builtin) SenderAllowed(user *model.User, repo *model.Repo, build *model.Build, conf *model.Config) (bool, error) {
+	if build.Event == model.EventPull && build.Sender != user.Login {
+		// check to see if the configuration has already been used in an
+		// existing build. If yes it is considered approved.
+		if ok, _ := b.conf.ConfigFindApproved(conf); ok {
+			return true, nil
+		}
+		// else check to see if the configuration is sent from a user
+		// account that is a repositroy approver themselves.
 		sender, err := b.store.SenderFind(repo, build.Sender)
 		if err != nil || sender.Block {
 			return false, nil

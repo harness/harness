@@ -41,8 +41,9 @@ var Config = struct {
 		// Repos  model.RepoStore
 		// Builds model.BuildStore
 		// Logs   model.LogStore
-		Files model.FileStore
-		Procs model.ProcStore
+		Config model.ConfigStore
+		Files  model.FileStore
+		Procs  model.ProcStore
 		// Registries model.RegistryStore
 		// Secrets model.SecretStore
 	}

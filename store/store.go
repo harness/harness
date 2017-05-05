@@ -92,6 +92,11 @@ type Store interface {
 	// new functions
 	//
 
+	ConfigLoad(int64) (*model.Config, error)
+	ConfigFind(*model.Repo, string) (*model.Config, error)
+	ConfigFindApproved(*model.Config) (bool, error)
+	ConfigCreate(*model.Config) error
+
 	SenderFind(*model.Repo, string) (*model.Sender, error)
 	SenderList(*model.Repo) ([]*model.Sender, error)
 	SenderCreate(*model.Sender) error

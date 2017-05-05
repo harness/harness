@@ -1,7 +1,7 @@
 package model
 
 type SenderService interface {
-	SenderAllowed(*User, *Repo, *Build) (bool, error)
+	SenderAllowed(*User, *Repo, *Build, *Config) (bool, error)
 	SenderCreate(*Repo, *Sender) error
 	SenderUpdate(*Repo, *Sender) error
 	SenderDelete(*Repo, string) error

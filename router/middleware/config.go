@@ -19,8 +19,8 @@ func Config(cli *cli.Context) gin.HandlerFunc {
 }
 
 // helper function to create the configuration from the CLI context.
-func setupConfig(c *cli.Context) *model.Config {
-	return &model.Config{
+func setupConfig(c *cli.Context) *model.Settings {
+	return &model.Settings{
 		Open:   c.Bool("open"),
 		Secret: c.String("agent-secret"),
 		Admins: sliceToMap2(c.StringSlice("admin")),

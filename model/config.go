@@ -1,24 +1,17 @@
 package model
 
-// Config defines system configuration parameters.
+// ConfigStore persists pipeline configuration to storage.
+type ConfigStore interface {
+	ConfigLoad(int64) (*Config, error)
+	ConfigFind(*Repo, string) (*Config, error)
+	ConfigFindApproved(*Config) (bool, error)
+	ConfigCreate(*Config) error
+}
+
+// Config represents a pipeline configuration.
 type Config struct {
-	Open   bool            // Enables open registration
-	Secret string          // Secret token used to authenticate agents
-	Admins map[string]bool // Administrative users
-	Orgs   map[string]bool // Organization whitelist
-}
-
-// IsAdmin returns true if the user is a member of the administrator list.
-func (c *Config) IsAdmin(user *User) bool {
-	return c.Admins[user.Login]
-}
-
-// IsMember returns true if the user is a member of the whitelisted teams.
-func (c *Config) IsMember(teams []*Team) bool {
-	for _, team := range teams {
-		if c.Orgs[team.Login] {
-			return true
-		}
-	}
-	return false
+	ID     int64  `json:"-"    meddler:"config_id,pk"`
+	RepoID int64  `json:"-"    meddler:"config_repo_id"`
+	Data   string `json:"data" meddler:"config_data"`
+	Hash   string `json:"hash" meddler:"config_hash"`
 }
