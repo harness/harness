@@ -284,14 +284,22 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		state.Pipeline.Step.Environment["CI_BUILD_STATUS"] = "success"
 		state.Pipeline.Step.Environment["CI_BUILD_STARTED"] = strconv.FormatInt(state.Pipeline.Time, 10)
 		state.Pipeline.Step.Environment["CI_BUILD_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
+		state.Pipeline.Step.Environment["DRONE_BUILD_STATUS"] = "success"
+		state.Pipeline.Step.Environment["DRONE_BUILD_STARTED"] = strconv.FormatInt(state.Pipeline.Time, 10)
+		state.Pipeline.Step.Environment["DRONE_BUILD_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
 
 		state.Pipeline.Step.Environment["CI_JOB_STATUS"] = "success"
 		state.Pipeline.Step.Environment["CI_JOB_STARTED"] = strconv.FormatInt(state.Pipeline.Time, 10)
 		state.Pipeline.Step.Environment["CI_JOB_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
+		state.Pipeline.Step.Environment["DRONE_JOB_STATUS"] = "success"
+		state.Pipeline.Step.Environment["DRONE_JOB_STARTED"] = strconv.FormatInt(state.Pipeline.Time, 10)
+		state.Pipeline.Step.Environment["DRONE_JOB_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
 
 		if state.Pipeline.Error != nil {
 			state.Pipeline.Step.Environment["CI_BUILD_STATUS"] = "failure"
 			state.Pipeline.Step.Environment["CI_JOB_STATUS"] = "failure"
+			state.Pipeline.Step.Environment["DRONE_BUILD_STATUS"] = "failure"
+			state.Pipeline.Step.Environment["DRONE_JOB_STATUS"] = "failure"
 		}
 		return nil
 	})
