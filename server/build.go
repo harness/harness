@@ -180,10 +180,6 @@ func PostApproval(c *gin.Context) {
 		c.AbortWithError(404, err)
 		return
 	}
-	if !conf.Approved {
-		conf.Approved = true
-		Config.Storage.Config.ConfigUpdate(conf)
-	}
 
 	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
@@ -403,10 +399,6 @@ func PostBuild(c *gin.Context) {
 		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
 		return
-	}
-	if !conf.Approved {
-		conf.Approved = true
-		Config.Storage.Config.ConfigUpdate(conf)
 	}
 
 	netrc, err := remote_.Netrc(user, repo)

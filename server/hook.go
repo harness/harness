@@ -142,25 +142,15 @@ func PostHook(c *gin.Context) {
 	conf, err := Config.Storage.Config.ConfigFind(repo, sha)
 	if err != nil {
 		conf = &model.Config{
-			RepoID:   repo.ID,
-			Data:     string(confb),
-			Hash:     sha,
-			Approved: false,
+			RepoID: repo.ID,
+			Data:   string(confb),
+			Hash:   sha,
 		}
-		if user.Login == repo.Owner || build.Event != model.EventPull || repo.IsGated == false {
-			conf.Approved = true
-		}
-		err = Config.Storage.Config.ConfigInsert(conf)
+		err = Config.Storage.Config.ConfigCreate(conf)
 		if err != nil {
 			logrus.Errorf("failure to persist config for %s. %s", repo.FullName, err)
 			c.AbortWithError(500, err)
 			return
-		}
-	}
-	if !conf.Approved {
-		if user.Login == repo.Owner || build.Event != model.EventPull || repo.IsGated == false {
-			conf.Approved = true
-			Config.Storage.Config.ConfigUpdate(conf)
 		}
 	}
 	build.ConfigID = conf.ID

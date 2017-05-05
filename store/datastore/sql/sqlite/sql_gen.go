@@ -8,6 +8,7 @@ func Lookup(name string) string {
 var index = map[string]string{
 	"config-find-id":            configFindId,
 	"config-find-repo-hash":     configFindRepoHash,
+	"config-find-approved":      configFindApproved,
 	"count-users":               countUsers,
 	"count-repos":               countRepos,
 	"count-builds":              countBuilds,
@@ -41,7 +42,6 @@ SELECT
 ,config_repo_id
 ,config_hash
 ,config_data
-,config_approved
 FROM config
 WHERE config_id = ?
 `
@@ -52,10 +52,17 @@ SELECT
 ,config_repo_id
 ,config_hash
 ,config_data
-,config_approved
 FROM config
 WHERE config_repo_id = ?
   AND config_hash    = ?
+`
+
+var configFindApproved = `
+SELECT build_id FROM builds
+WHERE build_repo_id = ?
+AND build_config_id = ?
+AND build_status NOT IN ('blocked', 'pending')
+LIMIT 1
 `
 
 var countUsers = `

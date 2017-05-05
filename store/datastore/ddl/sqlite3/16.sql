@@ -5,7 +5,6 @@ CREATE TABLE config (
 ,config_repo_id  INTEGER
 ,config_hash     TEXT
 ,config_data     BLOB
-,config_approved BOOLEAN
 
 ,UNIQUE(config_hash, config_repo_id)
 );

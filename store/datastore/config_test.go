@@ -18,12 +18,11 @@ func TestConfig(t *testing.T) {
 		hash = "8d8647c9aa90d893bfb79dddbe901f03e258588121e5202632f8ae5738590b26"
 	)
 
-	if err := s.ConfigInsert(
+	if err := s.ConfigCreate(
 		&model.Config{
-			RepoID:   2,
-			Data:     data,
-			Hash:     hash,
-			Approved: false,
+			RepoID: 2,
+			Data:   data,
+			Hash:   hash,
 		},
 	); err != nil {
 		t.Errorf("Unexpected error: insert config: %s", err)
@@ -47,60 +46,102 @@ func TestConfig(t *testing.T) {
 	if got, want := config.Hash, hash; got != want {
 		t.Errorf("Want config hash %s, got %s", want, got)
 	}
-	if got, want := config.Approved, false; got != want {
-		t.Errorf("Want config approved %v, got %v", want, got)
-	}
 
-	config.Approved = true
-	err = s.ConfigUpdate(config)
+	loaded, err := s.ConfigLoad(config.ID)
 	if err != nil {
-		t.Errorf("Want config updated, got error %q", err)
+		t.Errorf("Want config by id, got error %q", err)
 		return
 	}
-
-	updated, err := s.ConfigFind(&model.Repo{ID: 2}, hash)
-	if err != nil {
-		t.Errorf("Want config find, got error %q", err)
-		return
-	}
-	if got, want := updated.Approved, true; got != want {
-		t.Errorf("Want config approved updated %v, got %v", want, got)
+	if got, want := loaded.ID, config.ID; got != want {
+		t.Errorf("Want config by id %d, got %d", want, got)
 	}
 }
 
-//
-// func TestConfigIndexes(t *testing.T) {
-// 	s := newTest()
-// 	defer func() {
-// 		s.Exec("delete from config")
-// 		s.Close()
-// 	}()
-//
-// 	if err := s.FileCreate(
-// 		&model.File{
-// 			BuildID: 1,
-// 			ProcID:  1,
-// 			Name:    "hello.txt",
-// 			Size:    11,
-// 			Mime:    "text/plain",
-// 		},
-// 		bytes.NewBufferString("hello world"),
-// 	); err != nil {
-// 		t.Errorf("Unexpected error: insert file: %s", err)
-// 		return
-// 	}
-//
-// 	// fail due to duplicate file name
-// 	if err := s.FileCreate(
-// 		&model.File{
-// 			BuildID: 1,
-// 			ProcID:  1,
-// 			Name:    "hello.txt",
-// 			Mime:    "text/plain",
-// 			Size:    11,
-// 		},
-// 		bytes.NewBufferString("hello world"),
-// 	); err == nil {
-// 		t.Errorf("Unexpected error: dupliate pid")
-// 	}
-// }
+func TestConfigApproved(t *testing.T) {
+	s := newTest()
+	defer func() {
+		s.Exec("delete from config")
+		s.Exec("delete from builds")
+		s.Close()
+	}()
+
+	var (
+		data = "pipeline: [ { image: golang, commands: [ go build, go test ] } ]"
+		hash = "8d8647c9aa90d893bfb79dddbe901f03e258588121e5202632f8ae5738590b26"
+		conf = &model.Config{
+			RepoID: 1,
+			Data:   data,
+			Hash:   hash,
+		}
+	)
+
+	if err := s.ConfigCreate(conf); err != nil {
+		t.Errorf("Unexpected error: insert config: %s", err)
+		return
+	}
+
+	s.CreateBuild(&model.Build{
+		RepoID:   1,
+		ConfigID: conf.ID,
+		Status:   model.StatusBlocked,
+		Commit:   "85f8c029b902ed9400bc600bac301a0aadb144ac",
+	})
+	s.CreateBuild(&model.Build{
+		RepoID:   1,
+		ConfigID: conf.ID,
+		Status:   model.StatusPending,
+		Commit:   "85f8c029b902ed9400bc600bac301a0aadb144ac",
+	})
+
+	if ok, _ := s.ConfigFindApproved(conf); ok == true {
+		t.Errorf("Want config not approved, when blocked or pending")
+		return
+	}
+
+	s.CreateBuild(&model.Build{
+		RepoID:   1,
+		ConfigID: conf.ID,
+		Status:   model.StatusRunning,
+		Commit:   "85f8c029b902ed9400bc600bac301a0aadb144ac",
+	})
+
+	if ok, _ := s.ConfigFindApproved(conf); ok == false {
+		t.Errorf("Want config approved, when running.")
+		return
+	}
+}
+
+func TestConfigIndexes(t *testing.T) {
+	s := newTest()
+	defer func() {
+		s.Exec("delete from config")
+		s.Close()
+	}()
+
+	var (
+		data = "pipeline: [ { image: golang, commands: [ go build, go test ] } ]"
+		hash = "8d8647c9aa90d893bfb79dddbe901f03e258588121e5202632f8ae5738590b26"
+	)
+
+	if err := s.ConfigCreate(
+		&model.Config{
+			RepoID: 2,
+			Data:   data,
+			Hash:   hash,
+		},
+	); err != nil {
+		t.Errorf("Unexpected error: insert config: %s", err)
+		return
+	}
+
+	// fail due to duplicate sha
+	if err := s.ConfigCreate(
+		&model.Config{
+			RepoID: 2,
+			Data:   data,
+			Hash:   hash,
+		},
+	); err == nil {
+		t.Errorf("Unexpected error: dupliate sha")
+	}
+}
