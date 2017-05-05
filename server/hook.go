@@ -448,6 +448,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 		var registries []compiler.Registry
 		for _, reg := range b.Regs {
 			registries = append(registries, compiler.Registry{
+				Hostname: reg.Address,
 				Username: reg.Username,
 				Password: reg.Password,
 				Email:    reg.Email,
