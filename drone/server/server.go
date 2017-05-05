@@ -391,6 +391,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store) {
 
 	// storage
 	droneserver.Config.Storage.Files = v
+	droneserver.Config.Storage.Config = v
 
 	// services
 	droneserver.Config.Services.Queue = setupQueue(c, v)

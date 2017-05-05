@@ -45,7 +45,7 @@ func SetUser() gin.HandlerFunc {
 		})
 		if err == nil {
 			confv := c.MustGet("config")
-			if conf, ok := confv.(*model.Config); ok {
+			if conf, ok := confv.(*model.Settings); ok {
 				user.Admin = conf.IsAdmin(user)
 			}
 			c.Set("user", user)

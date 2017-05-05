@@ -174,11 +174,15 @@ func PostApproval(c *gin.Context) {
 	//
 
 	// fetch the build file from the database
-	raw, err := remote_.File(user, repo, build, repo.Config)
+	conf, err := Config.Storage.Config.ConfigLoad(build.ConfigID)
 	if err != nil {
 		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
 		return
+	}
+	if !conf.Approved {
+		conf.Approved = true
+		Config.Storage.Config.ConfigUpdate(conf)
 	}
 
 	netrc, err := remote_.Netrc(user, repo)
@@ -222,7 +226,7 @@ func PostApproval(c *gin.Context) {
 		Secs:  secs,
 		Regs:  regs,
 		Link:  httputil.GetURL(c.Request),
-		Yaml:  string(raw),
+		Yaml:  conf.Data,
 	}
 	items, err := b.Build()
 	if err != nil {
@@ -394,11 +398,15 @@ func PostBuild(c *gin.Context) {
 	}
 
 	// fetch the .drone.yml file from the database
-	raw, err := remote_.File(user, repo, build, repo.Config)
+	conf, err := Config.Storage.Config.ConfigLoad(build.ConfigID)
 	if err != nil {
 		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
 		return
+	}
+	if !conf.Approved {
+		conf.Approved = true
+		Config.Storage.Config.ConfigUpdate(conf)
 	}
 
 	netrc, err := remote_.Netrc(user, repo)
@@ -493,7 +501,7 @@ func PostBuild(c *gin.Context) {
 		Secs:  secs,
 		Regs:  regs,
 		Link:  httputil.GetURL(c.Request),
-		Yaml:  string(raw),
+		Yaml:  conf.Data,
 	}
 	// TODO inject environment varibles !!!!!! buildParams
 	items, err := b.Build()

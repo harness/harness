@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -131,12 +132,38 @@ func PostHook(c *gin.Context) {
 	}
 
 	// fetch the build file from the database
-	raw, err := remote_.File(user, repo, build, repo.Config)
+	confb, err := remote_.File(user, repo, build, repo.Config)
 	if err != nil {
 		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
 		c.AbortWithError(404, err)
 		return
 	}
+	sha := shasum(confb)
+	conf, err := Config.Storage.Config.ConfigFind(repo, sha)
+	if err != nil {
+		conf = &model.Config{
+			RepoID:   repo.ID,
+			Data:     string(confb),
+			Hash:     sha,
+			Approved: false,
+		}
+		if user.Login == repo.Owner || build.Event != model.EventPull {
+			conf.Approved = true
+		}
+		err = Config.Storage.Config.ConfigInsert(conf)
+		if err != nil {
+			logrus.Errorf("failure to persist config for %s. %s", repo.FullName, err)
+			c.AbortWithError(500, err)
+			return
+		}
+	}
+	if !conf.Approved {
+		if user.Login == repo.Owner || build.Event != model.EventPull || !repo.IsGatedConf {
+			conf.Approved = true
+			Config.Storage.Config.ConfigUpdate(conf)
+		}
+	}
+	build.ConfigID = conf.ID
 
 	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
@@ -145,7 +172,7 @@ func PostHook(c *gin.Context) {
 	}
 
 	// verify the branches can be built vs skipped
-	branches, err := yaml.ParseBytes(raw)
+	branches, err := yaml.ParseString(conf.Data)
 	if err == nil {
 		if !branches.Branches.Match(build.Branch) && build.Event != model.EventTag && build.Event != model.EventDeploy {
 			c.String(200, "Branch does not match restrictions defined in yaml")
@@ -168,7 +195,7 @@ func PostHook(c *gin.Context) {
 	build.Verified = true
 	build.Status = model.StatusPending
 
-	if repo.IsGated {
+	if repo.IsGated || repo.IsGatedConf {
 		allowed, _ := Config.Services.Senders.SenderAllowed(user, repo, build)
 		if !allowed {
 			build.Status = model.StatusBlocked
@@ -212,7 +239,7 @@ func PostHook(c *gin.Context) {
 		Secs:  secs,
 		Regs:  regs,
 		Link:  httputil.GetURL(c.Request),
-		Yaml:  string(raw),
+		Yaml:  conf.Data,
 	}
 	items, err := b.Build()
 	if err != nil {
@@ -442,7 +469,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 			linter.WithTrusted(b.Repo.IsTrusted),
 		).Lint(parsed)
 		if lerr != nil {
-			return nil, err
+			return nil, lerr
 		}
 
 		var registries []compiler.Registry
@@ -510,4 +537,9 @@ func (b *builder) Build() ([]*buildItem, error) {
 	}
 
 	return items, nil
+}
+
+func shasum(raw []byte) string {
+	sum := sha256.Sum256(raw)
+	return fmt.Sprintf("%x", sum)
 }
