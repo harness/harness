@@ -31,14 +31,13 @@ type SecretStore interface {
 // Secret represents a secret variable, such as a password or token.
 // swagger:model registry
 type Secret struct {
-	ID         int64    `json:"id"              meddler:"secret_id,pk"`
-	RepoID     int64    `json:"-"               meddler:"secret_repo_id"`
-	Name       string   `json:"name"            meddler:"secret_name"`
-	Value      string   `json:"value,omitempty" meddler:"secret_value"`
-	Images     []string `json:"image"           meddler:"secret_images,json"`
-	Events     []string `json:"event"           meddler:"secret_events,json"`
-	SkipVerify bool     `json:"-"               meddler:"secret_skip_verify"`
-	Conceal    bool     `json:"-"               meddler:"secret_conceal"`
+	ID      int64    `json:"id"              meddler:"secret_id,pk"`
+	RepoID  int64    `json:"-"               meddler:"secret_repo_id"`
+	Name    string   `json:"name"            meddler:"secret_name"`
+	Value   string   `json:"value,omitempty" meddler:"secret_value"`
+	Images  []string `json:"image"           meddler:"secret_images,json"`
+	Events  []string `json:"event"           meddler:"secret_events,json"`
+	Conceal bool     `json:"-"               meddler:"secret_conceal"`
 }
 
 // Match returns true if an image and event match the restricted list.
