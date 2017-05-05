@@ -13,8 +13,8 @@ func New(store model.SenderStore) model.SenderService {
 	return &builtin{store}
 }
 
-func (b *builtin) SenderAllowed(user *model.User, repo *model.Repo, build *model.Build) (bool, error) {
-	if repo.IsPrivate == false && build.Event == model.EventPull && build.Sender != user.Login {
+func (b *builtin) SenderAllowed(user *model.User, repo *model.Repo, build *model.Build, conf *model.Config) (bool, error) {
+	if !conf.Approved {
 		sender, err := b.store.SenderFind(repo, build.Sender)
 		if err != nil || sender.Block {
 			return false, nil

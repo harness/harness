@@ -13,9 +13,6 @@ CREATE TABLE config (
 ALTER TABLE builds ADD COLUMN build_config_id INTEGER;
 UPDATE builds set build_config_id = 0;
 
-ALTER TABLE repos ADD COLUMN repo_gated_conf BOOLEAN;
-UPDATE repos SET repo_gated_conf = 0;
-
 -- +migrate Down
 
 DROP TABLE config;

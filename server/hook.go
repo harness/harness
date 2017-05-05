@@ -147,7 +147,7 @@ func PostHook(c *gin.Context) {
 			Hash:     sha,
 			Approved: false,
 		}
-		if user.Login == repo.Owner || build.Event != model.EventPull {
+		if user.Login == repo.Owner || build.Event != model.EventPull || repo.IsGated == false {
 			conf.Approved = true
 		}
 		err = Config.Storage.Config.ConfigInsert(conf)
@@ -158,7 +158,7 @@ func PostHook(c *gin.Context) {
 		}
 	}
 	if !conf.Approved {
-		if user.Login == repo.Owner || build.Event != model.EventPull || !repo.IsGatedConf {
+		if user.Login == repo.Owner || build.Event != model.EventPull || repo.IsGated == false {
 			conf.Approved = true
 			Config.Storage.Config.ConfigUpdate(conf)
 		}
@@ -195,8 +195,8 @@ func PostHook(c *gin.Context) {
 	build.Verified = true
 	build.Status = model.StatusPending
 
-	if repo.IsGated || repo.IsGatedConf {
-		allowed, _ := Config.Services.Senders.SenderAllowed(user, repo, build)
+	if repo.IsGated {
+		allowed, _ := Config.Services.Senders.SenderAllowed(user, repo, build, conf)
 		if !allowed {
 			build.Status = model.StatusBlocked
 		}

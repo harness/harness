@@ -16,7 +16,7 @@ func NewRemote(endpoint string) model.SenderService {
 	return &plugin{endpoint}
 }
 
-func (p *plugin) SenderAllowed(user *model.User, repo *model.Repo, build *model.Build) (bool, error) {
+func (p *plugin) SenderAllowed(user *model.User, repo *model.Repo, build *model.Build, conf *model.Config) (bool, error) {
 	path := fmt.Sprintf("%s/senders/%s/%s/%s/verify", p.endpoint, repo.Owner, repo.Name, build.Sender)
 	err := internal.Send("POST", path, build, nil)
 	if err != nil {
