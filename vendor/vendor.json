@@ -84,6 +84,12 @@
 			"revisionTime": "2017-05-06T00:17:19Z"
 		},
 		{
+			"checksumSHA1": "L7Q5qJmPITNmvFEEaj5MPwCWFRk=",
+			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/types",
+			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
+			"revisionTime": "2017-05-06T00:17:19Z"
+		},
+		{
 			"checksumSHA1": "2/3f3oNmxXy5kcrRLCFa24Oc9O4=",
 			"path": "github.com/cncd/pipeline/pipeline/interrupt",
 			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
