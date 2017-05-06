@@ -5,6 +5,7 @@ import (
 
 	"github.com/cncd/pipeline/pipeline/frontend"
 	libcompose "github.com/docker/libcompose/yaml"
+	"github.com/cncd/pipeline/pipeline/frontend/yaml/types"
 )
 
 type (
@@ -18,6 +19,7 @@ type (
 		Branch      Constraint
 		Status      Constraint
 		Matrix      ConstraintMap
+		Local       types.BoolTrue
 	}
 
 	// Constraint defines a runtime constraint.
