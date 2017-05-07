@@ -398,8 +398,8 @@ func setupEvilGlobals(c *cli.Context, v store.Store) {
 	droneserver.Config.Services.Logs = logging.New()
 	droneserver.Config.Services.Pubsub = pubsub.New()
 	droneserver.Config.Services.Pubsub.Create(context.Background(), "topic/events")
-	droneserver.Config.Services.Registries = registry.New(v)
-	droneserver.Config.Services.Secrets = secrets.New(v)
+	droneserver.Config.Services.Registries = setupRegistryService(c, v)
+	droneserver.Config.Services.Secrets = setupSecretService(c, v)
 	droneserver.Config.Services.Senders = sender.New(v, v)
 	if endpoint := c.String("registry-service"); endpoint != "" {
 		droneserver.Config.Services.Registries = registry.NewRemote(endpoint)
