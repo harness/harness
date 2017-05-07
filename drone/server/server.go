@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/acme/autocert"
@@ -415,7 +416,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store) {
 	droneserver.Config.Server.Cert = c.String("server-cert")
 	droneserver.Config.Server.Key = c.String("server-key")
 	droneserver.Config.Server.Pass = c.String("agent-secret")
-	droneserver.Config.Server.Host = c.String("server-host")
+	droneserver.Config.Server.Host = strings.TrimRight(c.String("server-host"), "/")
 	droneserver.Config.Server.Port = c.String("server-addr")
 	droneserver.Config.Pipeline.Networks = c.StringSlice("network")
 	droneserver.Config.Pipeline.Volumes = c.StringSlice("volumes")
