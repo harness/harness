@@ -14,7 +14,7 @@ pipeline:
     commands:
       - ./ci.sh
       - ./dist.sh
-    secrets: [ ssk_key ]
+    secrets: [ ssh_key ]
     when:
       event: push
 
