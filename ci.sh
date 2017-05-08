@@ -11,8 +11,10 @@ mkdir /root/.ssh
 echo -n "$SSH_KEY" > /root/.ssh/id_rsa
 chmod 600 /root/.ssh/id_rsa
 
-# write the ssh configuration.
-echo "SG9zdCAqDQpTdHJpY3RIb3N0S2V5Q2hlY2tpbmcgbm8gDQpVc2VyS25vd25Ib3N0c0ZpbGU9L2Rldi9udWxsIA==" | base64 -d > /root/.ssh/config
+# add github.com to our known hosts.
+touch /root/.ssh/known_hosts
+chmod 600 /root/.ssh/known_hosts
+ssh-keyscan -H github.com > /etc/ssh/ssh_known_hosts 2> /dev/null
 
 # clone the extras project.
 set -e

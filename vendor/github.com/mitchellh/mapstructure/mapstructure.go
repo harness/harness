@@ -1,5 +1,5 @@
-// The mapstructure package exposes functionality to convert an
-// abitrary map[string]interface{} into a native Go structure.
+// Package mapstructure exposes functionality to convert an arbitrary
+// map[string]interface{} into a native Go structure.
 //
 // The Go structure can be arbitrarily complex, containing slices,
 // other structs, etc. and the decoder will properly decode nested
@@ -32,7 +32,12 @@ import (
 // both.
 type DecodeHookFunc interface{}
 
+// DecodeHookFuncType is a DecodeHookFunc which has complete information about
+// the source and target types.
 type DecodeHookFuncType func(reflect.Type, reflect.Type, interface{}) (interface{}, error)
+
+// DecodeHookFuncKind is a DecodeHookFunc which knows only the Kinds of the
+// source and target types.
 type DecodeHookFuncKind func(reflect.Kind, reflect.Kind, interface{}) (interface{}, error)
 
 // DecoderConfig is the configuration that is used to create a new decoder
@@ -69,6 +74,9 @@ type DecoderConfig struct {
 	//   - empty array = empty map and vice versa
 	//   - negative numbers to overflowed uint values (base 10)
 	//   - slice of maps to a merged map
+	//   - single values are converted to slices if required. Each
+	//     element is weakly decoded. For example: "4" can become []int{4}
+	//     if the target type is an int slice.
 	//
 	WeaklyTypedInput bool
 
@@ -202,7 +210,7 @@ func (d *Decoder) decode(name string, data interface{}, val reflect.Value) error
 			d.config.DecodeHook,
 			dataVal.Type(), val.Type(), data)
 		if err != nil {
-			return err
+			return fmt.Errorf("error decoding '%s': %s", name, err)
 		}
 	}
 
@@ -229,6 +237,8 @@ func (d *Decoder) decode(name string, data interface{}, val reflect.Value) error
 		err = d.decodePtr(name, data, val)
 	case reflect.Slice:
 		err = d.decodeSlice(name, data, val)
+	case reflect.Func:
+		err = d.decodeFunc(name, data, val)
 	default:
 		// If we reached this point then we weren't able to decode it
 		return fmt.Errorf("%s: unsupported type: %s", name, dataKind)
@@ -431,7 +441,7 @@ func (d *Decoder) decodeFloat(name string, data interface{}, val reflect.Value) 
 	case dataKind == reflect.Uint:
 		val.SetFloat(float64(dataVal.Uint()))
 	case dataKind == reflect.Float32:
-		val.SetFloat(float64(dataVal.Float()))
+		val.SetFloat(dataVal.Float())
 	case dataKind == reflect.Bool && d.config.WeaklyTypedInput:
 		if dataVal.Bool() {
 			val.SetFloat(1)
@@ -546,12 +556,30 @@ func (d *Decoder) decodePtr(name string, data interface{}, val reflect.Value) er
 	// into that. Then set the value of the pointer to this type.
 	valType := val.Type()
 	valElemType := valType.Elem()
-	realVal := reflect.New(valElemType)
+
+	realVal := val
+	if realVal.IsNil() || d.config.ZeroFields {
+		realVal = reflect.New(valElemType)
+	}
+
 	if err := d.decode(name, data, reflect.Indirect(realVal)); err != nil {
 		return err
 	}
 
 	val.Set(realVal)
+	return nil
+}
+
+func (d *Decoder) decodeFunc(name string, data interface{}, val reflect.Value) error {
+	// Create an element of the concrete (non pointer) type and decode
+	// into that. Then set the value of the pointer to this type.
+	dataVal := reflect.Indirect(reflect.ValueOf(data))
+	if val.Type() != dataVal.Type() {
+		return fmt.Errorf(
+			"'%s' expected type '%s', got unconvertible type '%s'",
+			name, val.Type(), dataVal.Type())
+	}
+	val.Set(dataVal)
 	return nil
 }
 
@@ -562,26 +590,44 @@ func (d *Decoder) decodeSlice(name string, data interface{}, val reflect.Value) 
 	valElemType := valType.Elem()
 	sliceType := reflect.SliceOf(valElemType)
 
-	// Check input type
-	if dataValKind != reflect.Array && dataValKind != reflect.Slice {
-		// Accept empty map instead of array/slice in weakly typed mode
-		if d.config.WeaklyTypedInput && dataVal.Kind() == reflect.Map && dataVal.Len() == 0 {
-			val.Set(reflect.MakeSlice(sliceType, 0, 0))
-			return nil
-		} else {
+	valSlice := val
+	if valSlice.IsNil() || d.config.ZeroFields {
+		// Check input type
+		if dataValKind != reflect.Array && dataValKind != reflect.Slice {
+			if d.config.WeaklyTypedInput {
+				switch {
+				// Empty maps turn into empty slices
+				case dataValKind == reflect.Map:
+					if dataVal.Len() == 0 {
+						val.Set(reflect.MakeSlice(sliceType, 0, 0))
+						return nil
+					}
+
+				// All other types we try to convert to the slice type
+				// and "lift" it into it. i.e. a string becomes a string slice.
+				default:
+					// Just re-try this function with data as a slice.
+					return d.decodeSlice(name, []interface{}{data}, val)
+				}
+			}
+
 			return fmt.Errorf(
 				"'%s': source data must be an array or slice, got %s", name, dataValKind)
-		}
-	}
 
-	// Make a new slice to hold our result, same size as the original data.
-	valSlice := reflect.MakeSlice(sliceType, dataVal.Len(), dataVal.Len())
+		}
+
+		// Make a new slice to hold our result, same size as the original data.
+		valSlice = reflect.MakeSlice(sliceType, dataVal.Len(), dataVal.Len())
+	}
 
 	// Accumulate any errors
 	errors := make([]string, 0)
 
 	for i := 0; i < dataVal.Len(); i++ {
 		currentData := dataVal.Index(i).Interface()
+		for valSlice.Len() <= i {
+			valSlice = reflect.Append(valSlice, reflect.Zero(valElemType))
+		}
 		currentField := valSlice.Index(i)
 
 		fieldName := fmt.Sprintf("%s[%d]", name, i)
@@ -651,14 +697,6 @@ func (d *Decoder) decodeStruct(name string, data interface{}, val reflect.Value)
 			fieldType := structType.Field(i)
 			fieldKind := fieldType.Type.Kind()
 
-			if fieldType.Anonymous {
-				if fieldKind != reflect.Struct {
-					errors = appendErrors(errors,
-						fmt.Errorf("%s: unsupported type: %s", fieldType.Name, fieldKind))
-					continue
-				}
-			}
-
 			// If "squash" is specified in the tag, we squash the field down.
 			squash := false
 			tagParts := strings.Split(fieldType.Tag.Get(d.config.TagName), ",")
@@ -698,7 +736,7 @@ func (d *Decoder) decodeStruct(name string, data interface{}, val reflect.Value)
 		if !rawMapVal.IsValid() {
 			// Do a slower search by iterating over each key and
 			// doing case-insensitive search.
-			for dataValKey, _ := range dataValKeys {
+			for dataValKey := range dataValKeys {
 				mK, ok := dataValKey.Interface().(string)
 				if !ok {
 					// Not a string key
@@ -746,7 +784,7 @@ func (d *Decoder) decodeStruct(name string, data interface{}, val reflect.Value)
 
 	if d.config.ErrorUnused && len(dataValKeysUnused) > 0 {
 		keys := make([]string, 0, len(dataValKeysUnused))
-		for rawKey, _ := range dataValKeysUnused {
+		for rawKey := range dataValKeysUnused {
 			keys = append(keys, rawKey.(string))
 		}
 		sort.Strings(keys)
@@ -761,7 +799,7 @@ func (d *Decoder) decodeStruct(name string, data interface{}, val reflect.Value)
 
 	// Add the unused keys to the list of unused keys if we're tracking metadata
 	if d.config.Metadata != nil {
-		for rawKey, _ := range dataValKeysUnused {
+		for rawKey := range dataValKeysUnused {
 			key := rawKey.(string)
 			if name != "" {
 				key = fmt.Sprintf("%s.%s", name, key)
