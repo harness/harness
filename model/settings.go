@@ -6,6 +6,7 @@ type Settings struct {
 	Secret string          // Secret token used to authenticate agents
 	Admins map[string]bool // Administrative users
 	Orgs   map[string]bool // Organization whitelist
+	WhitelistOwners map[string]bool // Whitelisted owners
 }
 
 // IsAdmin returns true if the user is a member of the administrator list.
@@ -21,4 +22,11 @@ func (c *Settings) IsMember(teams []*Team) bool {
 		}
 	}
 	return false
+}
+
+func (c *Settings) IsWhitelistedOwner(owner string) bool {
+        if len(c.WhitelistOwners) == 0 {
+                return true
+        }
+        return c.WhitelistOwners[owner]
 }

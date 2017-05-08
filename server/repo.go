@@ -43,6 +43,15 @@ func PostRepo(c *gin.Context) {
 		return
 	}
 
+	// Check if Owner is whitelisted
+	confv := c.MustGet("config")
+	if conf, ok := confv.(*model.Settings); ok {
+		if ! conf.IsWhitelistedOwner(owner) {
+	                c.String(403, "Repository owner not whitelisted.")
+		        return
+		}
+	}
+
 	// error if the repository already exists
 	_, err = store.GetRepoOwnerName(c, owner, name)
 	if err == nil {

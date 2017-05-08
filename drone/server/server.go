@@ -99,6 +99,11 @@ var Command = cli.Command{
 			EnvVar: "DRONE_NETWORK",
 			Name:   "network",
 		},
+		cli.StringSliceFlag{
+			EnvVar: "DRONE_WHITELIST_OWNERS",
+			Name:	"whitelist-owners",
+			Usage:	"limit Drone CI to organizations and users",
+		},
 		cli.StringFlag{
 			EnvVar: "DRONE_AGENT_SECRET,DRONE_SECRET",
 			Name:   "agent-secret",
