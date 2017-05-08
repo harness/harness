@@ -14,7 +14,7 @@ chmod 600 /root/.ssh/id_rsa
 # clone the extras project.
 set -e
 set -x
-git clone git@github.com:drone/drone-enterprise.git extras
+GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone git@github.com:drone/drone-enterprise.git extras
 
 # build a static binary with the build number and extra features.
 go build -ldflags '-extldflags "-static" -X github.com/drone/drone/version.VersionDev=build.${DRONE_BUILD_NUMBER}' -tags extras -o release/drone github.com/drone/drone/drone
