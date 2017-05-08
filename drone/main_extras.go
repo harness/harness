@@ -1,4 +1,4 @@
-// +build !extras
+// +build extras
 
 package main
 
@@ -14,9 +14,10 @@ import (
 	"github.com/drone/drone/drone/registry"
 	"github.com/drone/drone/drone/repo"
 	"github.com/drone/drone/drone/secret"
-	"github.com/drone/drone/drone/server"
 	"github.com/drone/drone/drone/user"
 	"github.com/drone/drone/version"
+
+	"github.com/drone/drone/extras/cmd/drone/server"
 
 	"github.com/ianschenck/envflag"
 	_ "github.com/joho/godotenv/autoload"

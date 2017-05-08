@@ -9,11 +9,11 @@ pipeline:
       - make deps gen
       - make test test_postgres test_mysql
 
-  compile:
+  dist:
     image: golang:1.8
     commands:
-      - export PATH=$PATH:/go/bin
-      - make build
+      - ./ci.sh
+      - ./dist.sh
     when:
       event: push
 
@@ -28,19 +28,17 @@ pipeline:
       event: push
       branch: master
 
-  trigger:
-    image: plugins/downstream
-    server: https://beta.drone.io
-    fork: true
-    secrets: [ downstream_token ]
-    repositories: drone/drone-enterprise
+  publish:
+    image: plugins/docker
+    repo: drone/drone
+    secrets: [ docker_username, docker_password ]
+    tag: [ latest, 0.6, 0.6.0, 0.6.0-rc.2 ]
     when:
       branch: master
       event: push
 
   notify:
     image: plugins/gitter
-    dummy: true # todo remove this
     secrets: [ gitter_webhook ]
     when:
       status: [ success, failure ]
