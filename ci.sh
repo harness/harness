@@ -8,9 +8,9 @@ set -e
 [ -z $SSH_KEY ] && exit 1
 
 # write a netrc file for authorization.
-mkdir -p $HOME/.ssh
-echo -n "$SSH_KEY" > $HOME/.ssh/id_rsa
-chmod 600 $HOME/.netrc
+mkdir /root/.ssh
+echo -n "$SSH_KEY" > /root/.ssh/id_rsa
+chmod 600 /root/.ssh/id_rsa
 
 # clone the extras project.
 set +x
