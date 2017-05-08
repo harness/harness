@@ -394,6 +394,12 @@
 			"revisionTime": "2016-04-28T09:34:18-07:00"
 		},
 		{
+			"checksumSHA1": "8VOnoB0DNWtRNMFvfuA8AuYOLik=",
+			"path": "github.com/hashicorp/vault/api",
+			"revision": "92dd48be2efcf520c7eb1117e47b1a0eff997e88",
+			"revisionTime": "2017-05-05T23:40:26Z"
+		},
+		{
 			"path": "github.com/ianschenck/envflag",
 			"revision": "9111d830d133f952887a936367fb0211c3134f0d",
 			"revisionTime": "2014-07-20T15:03:42-06:00"
