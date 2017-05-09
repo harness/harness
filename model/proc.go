@@ -44,17 +44,16 @@ func (p *Proc) Failing() bool {
 // Tree creates a process tree from a flat process list.
 func Tree(procs []*Proc) []*Proc {
 	var (
-		nodes    []*Proc
-		parent   *Proc
-		children []*Proc
+		nodes  []*Proc
+		parent *Proc
 	)
 	for _, proc := range procs {
 		if proc.PPID == 0 {
 			nodes = append(nodes, proc)
 			parent = proc
-			parent.Children = children
+			continue
 		} else {
-			children = append(children, proc)
+			parent.Children = append(parent.Children, proc)
 		}
 	}
 	return nodes
