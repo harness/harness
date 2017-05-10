@@ -1,0 +1,16 @@
+FROM golang:1.6-alpine
+
+RUN apk add --no-cache make git gcc musl-dev
+
+WORKDIR /go/src/github.com/drone/drone
+
+# Only copy what is needed to run deps & gen so these images can cache
+COPY Makefile /go/src/github.com/drone/drone/
+COPY ./server /go/src/github.com/drone/drone/server
+COPY ./store /go/src/github.com/drone/drone/store
+RUN make deps
+RUN make gen
+
+COPY . /go/src/github.com/drone/drone
+
+CMD ["make", "build"]
