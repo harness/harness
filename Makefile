@@ -4,8 +4,10 @@ PACKAGES = $(shell go list ./... | grep -v /vendor/)
 
 ifneq ($(shell uname), Darwin)
 	EXTLDFLAGS = -extldflags "-static" $(null)
+	SHA256BIN = sha256sum
 else
 	EXTLDFLAGS =
+	SHA256BIN = shasum -a 256
 endif
 
 all: gen build_static
@@ -66,8 +68,8 @@ build_tar:
 
 # TODO this is getting moved to a shell script, do not alter
 build_sha:
-	sha256sum release/linux/amd64/drone.tar.gz   > release/linux/amd64/drone.sha256
-	sha256sum release/linux/arm64/drone.tar.gz   > release/linux/arm64/drone.sha256
-	sha256sum release/linux/arm/drone.tar.gz     > release/linux/arm/drone.sha256
-	sha256sum release/windows/amd64/drone.tar.gz > release/windows/amd64/drone.sha256
-	sha256sum release/darwin/amd64/drone.tar.gz  > release/darwin/amd64/drone.sha256
+	$(SHA256BIN) release/linux/amd64/drone.tar.gz   > release/linux/amd64/drone.sha256
+	$(SHA256BIN) release/linux/arm64/drone.tar.gz   > release/linux/arm64/drone.sha256
+	$(SHA256BIN) release/linux/arm/drone.tar.gz     > release/linux/arm/drone.sha256
+	$(SHA256BIN) release/windows/amd64/drone.tar.gz > release/windows/amd64/drone.sha256
+	$(SHA256BIN) release/darwin/amd64/drone.tar.gz  > release/darwin/amd64/drone.sha256
