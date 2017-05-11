@@ -1,39 +1,34 @@
-[![Build Status](http://beta.drone.io/api/badges/drone/drone/status.svg)](http://beta.drone.io/drone/drone)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/drone/drone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+Drone is a Continuous Delivery system built on container technology. Drone uses a simple yaml configuration file, a superset of docker-compose, to define and execute Pipelines inside Docker containers. 
 
-Drone is a Continuous Integration platform built on container technology. Every build is executed inside an ephemeral Docker container, giving developers complete control over their build environment with guaranteed isolation.
+<br/>
 
-Browse the code at https://sourcegraph.com/github.com/drone/drone
+<img src="https://github.com/drone/brand/blob/master/screenshots/screenshot_build_success.png" style="max-width:100px;" />
 
-### Documentation
-
-Documentation is published to [docs.drone.io](http://docs.drone.io)
-
-### Community, Help
-
-Contributions, questions, and comments are welcomed and encouraged. Drone developers hang out in the [drone/drone](https://gitter.im/drone/drone) room on gitter. We ask that you please post your questions to [gitter](https://gitter.im/drone/drone) before creating an issue.
-
-### Installation
-
-Please see our [installation guide](http://docs.drone.io/installation/) to install the official Docker image.
-
-### From Source
-
-Clone the repository to your Go workspace:
+Sample Pipeline Configuration:
 
 ```
-export PATH=$PATH:$GOPATH/bin
+pipeline:
+  backend:
+    image: golang
+    commands:
+      - go get
+      - go build
+      - go test
 
-git clone git://github.com/drone/drone.git $GOPATH/src/github.com/drone/drone
-cd $GOPATH/src/github.com/drone/drone
+  frontend:
+    image: node:6
+    commands:
+      - npm install
+      - npm test
+
+  notify:
+    image: plugins/slack
+    channel: developers
+    username: drone
 ```
 
-Commands to build from source:
+Documentation and Other Links:
 
-```sh
-make deps          # Download required dependencies
-make gen           # Generate code
-make build_static  # Build the binary
-```
-
-If you are having trouble building this project please reference its `.drone.yml` file. Everything you need to know about building Drone is defined in that file.
+* Setup Documentation [docs.drone.io/installation](http://docs.drone.io/installation/)
+* Usage Documentation [docs.drone.io/getting-started](http://docs.drone.io/getting-started/)
+* Getting Help [docs.drone.io/getting-help](http://docs.drone.io/getting-help/)
