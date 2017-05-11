@@ -418,7 +418,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store) {
 	droneserver.Config.Server.Host = c.String("server-host")
 	droneserver.Config.Server.Port = c.String("server-addr")
 	droneserver.Config.Pipeline.Networks = c.StringSlice("network")
-	droneserver.Config.Pipeline.Volumes = c.StringSlice("volumes")
+	droneserver.Config.Pipeline.Volumes = c.StringSlice("volume")
 	droneserver.Config.Pipeline.Privileged = c.StringSlice("escalate")
 	// droneserver.Config.Server.Open = cli.Bool("open")
 	// droneserver.Config.Server.Orgs = sliceToMap(cli.StringSlice("orgs"))
