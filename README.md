@@ -5,10 +5,6 @@ Drone is a Continuous Integration platform built on container technology. Every 
 
 Browse the code at https://sourcegraph.com/github.com/drone/drone
 
-### Goals
-
-Drone's goal is to help teams [ship code like GitHub](https://github.com/blog/1241-deploying-at-github#always-be-shipping). Drone is easy to install, setup and maintain and offers a powerful container-based plugin system.
-
 ### Documentation
 
 Documentation is published to [docs.drone.io](http://docs.drone.io)
