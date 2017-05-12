@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"regexp"
 	"strconv"
 	"time"
@@ -38,6 +39,10 @@ import (
 //
 
 var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func GetQueueInfo(c *gin.Context) {
 	c.IndentedJSON(200,
@@ -492,7 +497,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 				fmt.Sprintf(
 					"%d_%d",
 					proc.ID,
-					time.Now().Unix(),
+					rand.Int(),
 				),
 			),
 			compiler.WithEnviron(proc.Environ),
