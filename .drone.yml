@@ -16,7 +16,7 @@ pipeline:
       - ./dist.sh
     secrets: [ ssh_key ]
     when:
-      event: push
+      event: [ push, tag ]
 
   archive:
     image: plugins/s3
