@@ -4,6 +4,7 @@ drone/drone
 !store/datastore/sql/sqlite/sql_gen.go
 !store/datastore/sql/mysql/sql_gen.go
 !store/datastore/sql/postgres/sql_gen.go
+!server/template/template_gen.go
 #*.css
 *.txt
 *.zip

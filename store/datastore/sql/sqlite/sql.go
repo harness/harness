@@ -1,3 +1,3 @@
 package sqlite
 
-//go:generate sqlbin sql --package=sqlite
+//go:generate togo sql --package=sqlite

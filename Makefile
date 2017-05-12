@@ -20,10 +20,7 @@ deps_backend:
 	go get -u github.com/jteeuwen/go-bindata/...
 	go get -u github.com/elazarl/go-bindata-assetfs/...
 
-gen: gen_template gen_migrations
-
-gen_template:
-	go generate github.com/drone/drone/server/template
+gen: gen_migrations
 
 gen_migrations:
 	go generate github.com/drone/drone/store/datastore/ddl

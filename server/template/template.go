@@ -1,36 +1,13 @@
 package template
 
-//go:generate go-bindata -pkg template -o template_gen.go files/
+//go:generate togo tmpl -package template -func funcMap -format html -input files/*.html
 
 import (
 	"encoding/json"
 	"html/template"
-	"path/filepath"
 )
 
-// Load loads the templates from the embedded file map. This function will not
-// compile if go generate is not executed before.
-func Load() *template.Template {
-	dir, _ := AssetDir("files")
-	tmpl := template.New("_").Funcs(template.FuncMap{"json": marshal})
-	for _, name := range dir {
-		path := filepath.Join("files", name)
-		src := MustAsset(path)
-		tmpl = template.Must(
-			tmpl.New(name).Parse(string(src)),
-		)
-	}
-
-	return tmpl
-}
-
-// Glob loads the templates matching the given pattern. This function
-// will not compile if go generate is not executed before.
-func Glob(pattern string) *template.Template {
-	return template.Must(
-		template.New("_").Funcs(template.FuncMap{"json": marshal}).ParseGlob(pattern),
-	)
-}
+var funcMap = template.FuncMap{"json": marshal}
 
 // marshal is a helper function to render data as JSON inside the template.
 func marshal(v interface{}) template.JS {

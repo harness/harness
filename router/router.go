@@ -22,12 +22,7 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 
 	e := gin.New()
 	e.Use(gin.Recovery())
-
-	if pattern := os.Getenv("DRONE_TEMPLATE_GLOB"); pattern == "" {
-		e.SetHTMLTemplate(template.Load())
-	} else {
-		e.SetHTMLTemplate(template.Glob(pattern))
-	}
+	e.SetHTMLTemplate(template.T)
 
 	if dir := os.Getenv("DRONE_STATIC_DIR"); dir == "" {
 		fs := http.FileServer(dist.AssetFS())

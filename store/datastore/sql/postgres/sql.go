@@ -1,3 +1,3 @@
 package postgres
 
-//go:generate sqlbin sql --package=postgres
+//go:generate togo sql --package=postgres
