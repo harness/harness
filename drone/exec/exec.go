@@ -144,6 +144,10 @@ var Command = cli.Command{
 			Name:   "build-number",
 			EnvVar: "DRONE_BUILD_NUMBER",
 		},
+		cli.IntFlag{
+			Name:   "parent-build-number",
+			EnvVar: "DRONE_PARENT_BUILD_NUMBER",
+		},
 		cli.Int64Flag{
 			Name:   "build-created",
 			EnvVar: "DRONE_BUILD_CREATED",
@@ -389,6 +393,7 @@ func metadataFromContext(c *cli.Context) frontend.Metadata {
 		},
 		Curr: frontend.Build{
 			Number:   c.Int("build-number"),
+			Parent:   c.Int("parent-build-number"),
 			Created:  c.Int64("build-created"),
 			Started:  c.Int64("build-started"),
 			Finished: c.Int64("build-finished"),
