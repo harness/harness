@@ -25,11 +25,6 @@
 			"revisionTime": "2016-08-04T10:47:26Z"
 		},
 		{
-			"path": "github.com/cloudfoundry-incubator/candiedyaml",
-			"revision": "5cef21e2e4f0fd147973b558d4db7395176bcd95",
-			"revisionTime": "2016-03-22T13:50:45-07:00"
-		},
-		{
 			"checksumSHA1": "HhHyclewPAZ7sZQCsl2nMSe1T5s=",
 			"path": "github.com/cncd/logging",
 			"revision": "03b6463409fecbd23f04587adf9bc71da13796a2",
@@ -38,74 +33,74 @@
 		{
 			"checksumSHA1": "W3AuK8ocqHwlUajGmQLFvnRhTZE=",
 			"path": "github.com/cncd/pipeline/pipeline",
-			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
-			"revisionTime": "2017-05-06T00:17:19Z"
+			"revision": "7635f50f924ab593538fcff12ed3d33fe4e7777f",
+			"revisionTime": "2017-05-12T10:18:20Z"
 		},
 		{
 			"checksumSHA1": "Qu2FreqaMr8Yx2bW9O0cxAGgjr0=",
 			"path": "github.com/cncd/pipeline/pipeline/backend",
-			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
-			"revisionTime": "2017-05-06T00:17:19Z"
+			"revision": "7635f50f924ab593538fcff12ed3d33fe4e7777f",
+			"revisionTime": "2017-05-12T10:18:20Z"
 		},
 		{
 			"checksumSHA1": "0CGXRaYwZhJxGIrGhn8WGpkFqPo=",
 			"path": "github.com/cncd/pipeline/pipeline/backend/docker",
-			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
-			"revisionTime": "2017-05-06T00:17:19Z"
+			"revision": "7635f50f924ab593538fcff12ed3d33fe4e7777f",
+			"revisionTime": "2017-05-12T10:18:20Z"
 		},
 		{
-			"checksumSHA1": "NBMyXSWTkSz8fofoDD3WGIKICEw=",
+			"checksumSHA1": "8Hj/OZnYZyz5N2hqENCTTaGtkNQ=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend",
-			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
-			"revisionTime": "2017-05-06T00:17:19Z"
+			"revision": "7635f50f924ab593538fcff12ed3d33fe4e7777f",
+			"revisionTime": "2017-05-12T10:18:20Z"
 		},
 		{
 			"checksumSHA1": "9opqXFEPe4aCzLgE7WWmcT0luyI=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml",
-			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
-			"revisionTime": "2017-05-06T00:17:19Z"
+			"revision": "7635f50f924ab593538fcff12ed3d33fe4e7777f",
+			"revisionTime": "2017-05-12T10:18:20Z"
 		},
 		{
-			"checksumSHA1": "9v8iD2pXLuh5eV27+l9f5b7Zw4k=",
+			"checksumSHA1": "y6ZbQErpiByUj4rJAP0GVyIVSI0=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/compiler",
-			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
-			"revisionTime": "2017-05-06T00:17:19Z"
+			"revision": "7635f50f924ab593538fcff12ed3d33fe4e7777f",
+			"revisionTime": "2017-05-12T10:18:20Z"
 		},
 		{
 			"checksumSHA1": "Q0GkNUFamVYIA1Fd8r0A5M6Gx54=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/linter",
-			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
-			"revisionTime": "2017-05-06T00:17:19Z"
+			"revision": "7635f50f924ab593538fcff12ed3d33fe4e7777f",
+			"revisionTime": "2017-05-12T10:18:20Z"
 		},
 		{
 			"checksumSHA1": "kx2sPUIMozPC/g6E4w48h3FfH3k=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/matrix",
-			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
-			"revisionTime": "2017-05-06T00:17:19Z"
+			"revision": "7635f50f924ab593538fcff12ed3d33fe4e7777f",
+			"revisionTime": "2017-05-12T10:18:20Z"
 		},
 		{
 			"checksumSHA1": "L7Q5qJmPITNmvFEEaj5MPwCWFRk=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/types",
-			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
-			"revisionTime": "2017-05-06T00:17:19Z"
+			"revision": "7635f50f924ab593538fcff12ed3d33fe4e7777f",
+			"revisionTime": "2017-05-12T10:18:20Z"
 		},
 		{
 			"checksumSHA1": "2/3f3oNmxXy5kcrRLCFa24Oc9O4=",
 			"path": "github.com/cncd/pipeline/pipeline/interrupt",
-			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
-			"revisionTime": "2017-05-06T00:17:19Z"
+			"revision": "7635f50f924ab593538fcff12ed3d33fe4e7777f",
+			"revisionTime": "2017-05-12T10:18:20Z"
 		},
 		{
 			"checksumSHA1": "uOjTfke7Qxosrivgz/nVTHeIP5g=",
 			"path": "github.com/cncd/pipeline/pipeline/multipart",
-			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
-			"revisionTime": "2017-05-06T00:17:19Z"
+			"revision": "7635f50f924ab593538fcff12ed3d33fe4e7777f",
+			"revisionTime": "2017-05-12T10:18:20Z"
 		},
 		{
 			"checksumSHA1": "vWImaniGEUutEvLvNCzTpSRSArg=",
 			"path": "github.com/cncd/pipeline/pipeline/rpc",
-			"revision": "5cc866493ddb8e321050e061a926a9af0080d4de",
-			"revisionTime": "2017-05-06T00:17:19Z"
+			"revision": "7635f50f924ab593538fcff12ed3d33fe4e7777f",
+			"revisionTime": "2017-05-12T10:18:20Z"
 		},
 		{
 			"checksumSHA1": "7Qj1DK0ceAXkYztW0l3+L6sn+V8=",
@@ -337,9 +332,10 @@
 			"revisionTime": "2016-01-23T18:11:54-03:00"
 		},
 		{
+			"checksumSHA1": "muGVyM8mY3/gcap6kr4Ib3F5Xn4=",
 			"path": "github.com/ghodss/yaml",
-			"revision": "1a6f069841556a7bcaff4a397ca6e8328d266c2f",
-			"revisionTime": "2016-03-07T13:52:05-08:00"
+			"revision": "04f313413ffd65ce25f2541bfd2b2ceec5c0908c",
+			"revisionTime": "2016-12-07T00:33:20Z"
 		},
 		{
 			"path": "github.com/gin-gonic/contrib/ginrus",

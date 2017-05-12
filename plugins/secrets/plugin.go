@@ -30,6 +30,13 @@ func (p *plugin) SecretList(repo *model.Repo) ([]*model.Secret, error) {
 	return out, err
 }
 
+func (p *plugin) SecretListBuild(repo *model.Repo, build *model.Build) ([]*model.Secret, error) {
+	path := fmt.Sprintf("%s/secrets/%s/%s/%d", p.endpoint, repo.Owner, repo.Name, build.Number)
+	out := []*model.Secret{}
+	err := internal.Send("GET", path, nil, out)
+	return out, err
+}
+
 func (p *plugin) SecretCreate(repo *model.Repo, in *model.Secret) error {
 	path := fmt.Sprintf("%s/secrets/%s/%s", p.endpoint, repo.Owner, repo.Name)
 	return internal.Send("POST", path, in, nil)

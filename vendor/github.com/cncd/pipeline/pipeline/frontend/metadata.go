@@ -48,6 +48,7 @@ type (
 		Target   string `json:"target,omitempty"`
 		Trusted  bool   `json:"trusted,omitempty"`
 		Commit   Commit `json:"commit,omitempty"`
+		Parent   int    `json:"parent,omitempty"`
 	}
 
 	// Commit defines runtime metadata for a commit.
@@ -101,6 +102,7 @@ func (m *Metadata) Environ() map[string]string {
 		"CI_REMOTE_URL":                m.Repo.Remote,
 		"CI_REPO_PRIVATE":              strconv.FormatBool(m.Repo.Private),
 		"CI_BUILD_NUMBER":              strconv.Itoa(m.Curr.Number),
+		"CI_PARENT_BUILD_NUMBER":       strconv.Itoa(m.Curr.Parent),
 		"CI_BUILD_CREATED":             strconv.FormatInt(m.Curr.Created, 10),
 		"CI_BUILD_STARTED":             strconv.FormatInt(m.Curr.Started, 10),
 		"CI_BUILD_FINISHED":            strconv.FormatInt(m.Curr.Finished, 10),
@@ -152,7 +154,7 @@ func (m *Metadata) Environ() map[string]string {
 }
 
 // EnvironDrone returns metadata as a map of DRONE_ environment variables.
-// This is here for backward compatibility and will eventually be removed.
+// TODO: This is here for backward compatibility and will eventually be removed.
 func (m *Metadata) EnvironDrone() map[string]string {
 	// MISSING PARAMETERS
 	// * DRONE_REPO_TRUSTED
@@ -193,6 +195,7 @@ func (m *Metadata) EnvironDrone() map[string]string {
 		"DRONE_COMMIT_AUTHOR_EMAIL":  m.Curr.Commit.Author.Email,
 		"DRONE_COMMIT_AUTHOR_AVATAR": m.Curr.Commit.Author.Avatar,
 		"DRONE_BUILD_NUMBER":         fmt.Sprintf("%d", m.Curr.Number),
+		"DRONE_PARENT_BUILD_NUMBER":  fmt.Sprintf("%d", m.Curr.Parent),
 		"DRONE_BUILD_EVENT":          m.Curr.Event,
 		"DRONE_BUILD_LINK":           fmt.Sprintf("%s/%s/%d", m.Sys.Link, m.Repo.Name, m.Curr.Number),
 		"DRONE_BUILD_CREATED":        fmt.Sprintf("%d", m.Curr.Created),

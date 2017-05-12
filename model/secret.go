@@ -14,6 +14,7 @@ var (
 type SecretService interface {
 	SecretFind(*Repo, string) (*Secret, error)
 	SecretList(*Repo) ([]*Secret, error)
+	SecretListBuild(*Repo, *Build) ([]*Secret, error)
 	SecretCreate(*Repo, *Secret) error
 	SecretUpdate(*Repo, *Secret) error
 	SecretDelete(*Repo, string) error

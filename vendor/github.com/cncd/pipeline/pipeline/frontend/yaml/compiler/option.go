@@ -77,7 +77,7 @@ func WithNetrc(username, password, machine string) Option {
 			"CI_NETRC_PASSWORD": password,
 			"CI_NETRC_MACHINE":  machine,
 
-			// TODO this is present for backward compatibility and should
+			// TODO: This is present for backward compatibility and should
 			// be removed in a future version.
 			"DRONE_NETRC_USERNAME": username,
 			"DRONE_NETRC_PASSWORD": password,

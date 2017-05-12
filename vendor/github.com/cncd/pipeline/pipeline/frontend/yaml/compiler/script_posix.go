@@ -29,6 +29,8 @@ func generateScriptPosix(commands []string) string {
 
 // setupScript is a helper script this is added to the build to ensure
 // a minimum set of environment variables are set correctly.
+// TODO: Unsetting DRONE_* is present for backward compatibility and should
+// be removed in a future version.
 const setupScript = `
 if [ -n "$CI_NETRC_MACHINE" ]; then
 cat <<EOF > $HOME/.netrc
@@ -41,6 +43,8 @@ fi
 unset CI_NETRC_USERNAME
 unset CI_NETRC_PASSWORD
 unset CI_SCRIPT
+unset DRONE_NETRC_USERNAME
+unset DRONE_NETRC_PASSWORD
 %s
 `
 

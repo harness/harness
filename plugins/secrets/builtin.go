@@ -21,6 +21,10 @@ func (b *builtin) SecretList(repo *model.Repo) ([]*model.Secret, error) {
 	return b.store.SecretList(repo)
 }
 
+func (b *builtin) SecretListBuild(repo *model.Repo, build *model.Build) ([]*model.Secret, error) {
+	return b.store.SecretList(repo)
+}
+
 func (b *builtin) SecretCreate(repo *model.Repo, in *model.Secret) error {
 	return b.store.SecretCreate(in)
 }

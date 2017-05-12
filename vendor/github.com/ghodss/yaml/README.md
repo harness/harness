@@ -4,17 +4,17 @@
 
 ## Introduction
 
-A wrapper around [candiedyaml](https://github.com/cloudfoundry-incubator/candiedyaml) designed to enable a better way of handling YAML when marshaling to and from structs.
+A wrapper around [go-yaml](https://github.com/go-yaml/yaml) designed to enable a better way of handling YAML when marshaling to and from structs.
 
-In short, this library first converts YAML to JSON using candiedyaml and then uses `json.Marshal` and `json.Unmarshal` to convert to or from the struct. This means that it effectively reuses the JSON struct tags as well as the custom JSON methods `MarshalJSON` and `UnmarshalJSON` unlike candiedyaml. For a detailed overview of the rationale behind this method, [see this blog post](http://ghodss.com/2014/the-right-way-to-handle-yaml-in-golang/).
+In short, this library first converts YAML to JSON using go-yaml and then uses `json.Marshal` and `json.Unmarshal` to convert to or from the struct. This means that it effectively reuses the JSON struct tags as well as the custom JSON methods `MarshalJSON` and `UnmarshalJSON` unlike go-yaml. For a detailed overview of the rationale behind this method, [see this blog post](http://ghodss.com/2014/the-right-way-to-handle-yaml-in-golang/).
 
 ## Compatibility
 
-This package uses [candiedyaml](https://github.com/cloudfoundry-incubator/candiedyaml) and therefore supports [everything candiedyaml supports](https://github.com/cloudfoundry-incubator/candiedyaml#candiedyaml).
+This package uses [go-yaml](https://github.com/go-yaml/yaml) and therefore supports [everything go-yaml supports](https://github.com/go-yaml/yaml#compatibility).
 
 ## Caveats
 
-**Caveat #1:** When using `yaml.Marshal` and `yaml.Unmarshal`, binary data should NOT be preceded with the `!!binary` YAML tag. If you do, candiedyaml will convert the binary data from base64 to native binary data, which is not compatible with JSON. You can still use binary in your YAML files though - just store them without the `!!binary` tag and decode the base64 in your code (e.g. in the custom JSON methods `MarshalJSON` and `UnmarshalJSON`). This also has the benefit that your YAML and your JSON binary data will be decoded exactly the same way. As an example:
+**Caveat #1:** When using `yaml.Marshal` and `yaml.Unmarshal`, binary data should NOT be preceded with the `!!binary` YAML tag. If you do, go-yaml will convert the binary data from base64 to native binary data, which is not compatible with JSON. You can still use binary in your YAML files though - just store them without the `!!binary` tag and decode the base64 in your code (e.g. in the custom JSON methods `MarshalJSON` and `UnmarshalJSON`). This also has the benefit that your YAML and your JSON binary data will be decoded exactly the same way. As an example:
 
 ```
 BAD:
@@ -44,6 +44,8 @@ import "github.com/ghodss/yaml"
 Usage is very similar to the JSON library:
 
 ```go
+package main
+
 import (
 	"fmt"
 
@@ -52,7 +54,7 @@ import (
 
 type Person struct {
 	Name string `json:"name"`  // Affects YAML field names too.
-	Age int `json:"name"`
+	Age int `json:"age"`
 }
 
 func main() {
@@ -65,13 +67,13 @@ func main() {
 	}
 	fmt.Println(string(y))
 	/* Output:
-	name: John
 	age: 30
+	name: John
 	*/
 
 	// Unmarshal the YAML back into a Person struct.
 	var p2 Person
-	err := yaml.Unmarshal(y, &p2)
+	err = yaml.Unmarshal(y, &p2)
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
 		return
@@ -86,6 +88,8 @@ func main() {
 `yaml.YAMLToJSON` and `yaml.JSONToYAML` methods are also available:
 
 ```go
+package main
+
 import (
 	"fmt"
 

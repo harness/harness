@@ -66,6 +66,7 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 	}
 
 	environment["CI_WORKSPACE"] = path.Join(c.base, c.path)
+	// TODO: This is here for backward compatibility and will eventually be removed.
 	environment["DRONE_WORKSPACE"] = path.Join(c.base, c.path)
 
 	if !isService(container) {
