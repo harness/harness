@@ -6,10 +6,27 @@ pipeline:
   test:
     image: golang:1.8
     commands:
-      - make deps gen
-      - make test test_postgres test_mysql
+      - go get -u github.com/drone/drone-ui/dist
+      - go get -u golang.org/x/tools/cmd/cover
+      - go test -cover $(shell go list ./... | grep -v /vendor/)
 
-  dist:
+  test_postgres:
+    image: golang:1.8
+    environment:
+      - DATABASE_DRIVER=postgres
+      - DATABASE_CONFIG=host=postgres user=postgres dbname=postgres sslmode=disable
+    commands:
+      - go test github.com/drone/drone/store/datastore
+
+  test_mysql:
+    image: golang:1.8
+    environment:
+      - DATABASE_DRIVER=mysql
+      - DATABASE_CONFIG=root@tcp(mysql:3306)/test?parseTime=true
+    commands:
+      - go test github.com/drone/drone/store/datastore
+
+  build:
     image: golang:1.8
     commands:
       - ./ci.sh
