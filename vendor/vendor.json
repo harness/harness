@@ -637,16 +637,6 @@
 			"revisionTime": "2017-04-24T20:45:52Z"
 		},
 		{
-			"path": "github.com/rubenv/sql-migrate",
-			"revision": "53184e1edfb4f9655b0fa8dd2c23e7763f452bda",
-			"revisionTime": "2015-07-13T16:07:51+02:00"
-		},
-		{
-			"path": "github.com/rubenv/sql-migrate/sqlparse",
-			"revision": "53184e1edfb4f9655b0fa8dd2c23e7763f452bda",
-			"revisionTime": "2015-07-13T16:07:51+02:00"
-		},
-		{
 			"path": "github.com/russross/meddler",
 			"revision": "308c3d0e5e45f543a2eb6c787cbfe0db3880e220",
 			"revisionTime": "2013-09-19T15:23:15-06:00"
@@ -850,11 +840,6 @@
 			"path": "gopkg.in/go-playground/validator.v8",
 			"revision": "014792cf3e266caff1e916876be12282b33059e0",
 			"revisionTime": "2016-02-23T15:26:51-05:00"
-		},
-		{
-			"path": "gopkg.in/gorp.v1",
-			"revision": "c87af80f3cc5036b55b83d77171e156791085e2e",
-			"revisionTime": "2015-02-04T09:55:30+01:00"
 		},
 		{
 			"path": "gopkg.in/yaml.v2",
