@@ -6,87 +6,87 @@ import (
 
 var migrations = []struct {
 	name string
-	stmt []string
+	stmt string
 }{
 	{
-		name: "001_create_table_users.sql",
-		stmt: []string{
-			createTableUsers,
-		},
+		name: "create-table-users",
+		stmt: createTableUsers,
 	},
 	{
-		name: "002_create_table_repos.sql",
-		stmt: []string{
-			createTableRepos,
-		},
+		name: "create-table-repos",
+		stmt: createTableRepos,
 	},
 	{
-		name: "003_create_table_builds.sql",
-		stmt: []string{
-			createTableBuilds,
-			createIndexBuildsRepo,
-			createIndexBuildsAuthor,
-		},
+		name: "create-table-builds",
+		stmt: createTableBuilds,
 	},
 	{
-		name: "004_create_table_procs.sql",
-		stmt: []string{
-			createTableProcs,
-			createIndexProcsBuild,
-		},
+		name: "create-index-builds-repo",
+		stmt: createIndexBuildsRepo,
 	},
 	{
-		name: "005_create_table_logs.sql",
-		stmt: []string{
-			createTableLogs,
-		},
+		name: "create-index-builds-author",
+		stmt: createIndexBuildsAuthor,
 	},
 	{
-		name: "006_create_table_files.sql",
-		stmt: []string{
-			createTableFiles,
-			createIndexFilesBuilds,
-			createIndexFilesProcs,
-		},
+		name: "create-table-procs",
+		stmt: createTableProcs,
 	},
 	{
-		name: "007_create_table_secets.sql",
-		stmt: []string{
-			createTableSecrets,
-			createIndexSecretsRepo,
-		},
+		name: "create-index-procs-build",
+		stmt: createIndexProcsBuild,
 	},
 	{
-		name: "008_create_table_registry.sql",
-		stmt: []string{
-			createTableRegistry,
-			createIndexRegistryRepo,
-		},
+		name: "create-table-logs",
+		stmt: createTableLogs,
 	},
 	{
-		name: "009_create_table_config.sql",
-		stmt: []string{
-			createTableConfig,
-		},
+		name: "create-table-files",
+		stmt: createTableFiles,
 	},
 	{
-		name: "010_create_table_tasks.sql",
-		stmt: []string{
-			createTableTasks,
-		},
+		name: "create-index-files-builds",
+		stmt: createIndexFilesBuilds,
 	},
 	{
-		name: "011_create_table_agents.sql",
-		stmt: []string{
-			createTableAgents,
-		},
+		name: "create-index-files-procs",
+		stmt: createIndexFilesProcs,
 	},
 	{
-		name: "012_create_table_senders.sql",
-		stmt: []string{
-			createTableSenders,
-			createIndexSenderRepos,
-		},
+		name: "create-table-secrets",
+		stmt: createTableSecrets,
+	},
+	{
+		name: "create-index-secrets-repo",
+		stmt: createIndexSecretsRepo,
+	},
+	{
+		name: "create-table-registry",
+		stmt: createTableRegistry,
+	},
+	{
+		name: "create-index-registry-repo",
+		stmt: createIndexRegistryRepo,
+	},
+	{
+		name: "create-table-config",
+		stmt: createTableConfig,
+	},
+	{
+		name: "create-table-tasks",
+		stmt: createTableTasks,
+	},
+	{
+		name: "create-table-agents",
+		stmt: createTableAgents,
+	},
+	{
+		name: "create-table-senders",
+		stmt: createTableSenders,
+	},
+	{
+		name: "create-index-sender-repos",
+		stmt: createIndexSenderRepos,
 	},
 }
 
@@ -101,18 +101,18 @@ func Migrate(db *sql.DB) error {
 		return err
 	}
 	for _, migration := range migrations {
-		_, ok := completed[migration.name]
-		if ok {
+		if _, ok := completed[migration.name]; ok {
+
 			continue
 		}
-		for _, stmt := range migration.stmt {
-			if _, err := db.Exec(stmt); err != nil {
-				return err
-			}
+
+		if _, err := db.Exec(migration.stmt); err != nil {
+			return err
 		}
 		if err := insertMigration(db, migration.name); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
