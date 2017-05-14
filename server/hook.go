@@ -197,6 +197,7 @@ func PostHook(c *gin.Context) {
 		}
 	}
 
+	build.Trim()
 	err = store.CreateBuild(c, build, build.Procs...)
 	if err != nil {
 		logrus.Errorf("failure to save commit for %s. %s", repo.FullName, err)
