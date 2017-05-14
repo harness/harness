@@ -329,6 +329,7 @@ func metadataFromStruct(repo *model.Repo, build, last *model.Build, proc *model.
 		},
 		Curr: frontend.Build{
 			Number:   build.Number,
+			Parent:   build.Parent,
 			Created:  build.Created,
 			Started:  build.Started,
 			Finished: build.Finished,
