@@ -7,17 +7,17 @@ import (
 )
 
 func TestBuildTrim(t *testing.T) {
-	d := make([]byte, 1000)
+	d := make([]byte, 2000)
 	rand.Read(d)
 
 	b := Build{}
 	b.Message = fmt.Sprintf("%X", d)
 
-	if len(b.Message) != 2000 {
-		t.Errorf("Failed to generate 2000 byte test string")
+	if len(b.Message) != 4000 {
+		t.Errorf("Failed to generate 4000 byte test string")
 	}
 	b.Trim()
-	if len(b.Message) != 500 {
-		t.Errorf("Failed to trim text string to 500 bytes")
+	if len(b.Message) != 2000 {
+		t.Errorf("Failed to trim text string to 2000 bytes")
 	}
 }

@@ -38,10 +38,10 @@ type Build struct {
 // Trim trims string values that would otherwise exceed
 // the database column sizes and fail to insert.
 func (b *Build) Trim() {
-	if len(b.Title) > 500 {
-		b.Title = b.Title[:500]
+	if len(b.Title) > 1000 {
+		b.Title = b.Title[:1000]
 	}
-	if len(b.Message) > 500 {
-		b.Message = b.Message[:500]
+	if len(b.Message) > 2000 {
+		b.Message = b.Message[:2000]
 	}
 }
