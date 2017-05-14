@@ -74,7 +74,7 @@ LIMIT 1
 `
 
 var legacyMigrationsImport = `
-INSERT OR IGNORE INTO migrations (name) VALUES
+INSERT IGNORE INTO migrations (name) VALUES
  ('create-table-users')
 ,('create-table-repos')
 ,('create-table-builds')
