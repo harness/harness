@@ -120,10 +120,18 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 		stage.Alias = "services"
 
 		for _, container := range conf.Services.Containers {
+			if !container.Constraints.Match(c.metadata) {
+				continue
+			}
+
 			c.aliases = append(c.aliases, container.Name)
 		}
 
 		for i, container := range conf.Services.Containers {
+			if !container.Constraints.Match(c.metadata) {
+				continue
+			}
+
 			name := fmt.Sprintf("%s_services_%d", c.prefix, i)
 			step := c.createProcess(name, container)
 			stage.Steps = append(stage.Steps, step)
