@@ -7,7 +7,6 @@ import (
 
 	"github.com/drone/drone/store"
 	"github.com/drone/drone/store/datastore/ddl"
-	"github.com/rubenv/sql-migrate"
 	"github.com/russross/meddler"
 
 	"github.com/Sirupsen/logrus"
@@ -116,13 +115,7 @@ func pingDatabase(db *sql.DB) (err error) {
 // helper function to setup the databsae by performing
 // automated database migration steps.
 func setupDatabase(driver string, db *sql.DB) error {
-	var migrations = &migrate.AssetMigrationSource{
-		Asset:    ddl.Asset,
-		AssetDir: ddl.AssetDir,
-		Dir:      driver,
-	}
-	_, err := migrate.Exec(db, driver, migrations, migrate.Up)
-	return err
+	return ddl.Migrate(driver, db)
 }
 
 // helper function to setup the meddler default driver
