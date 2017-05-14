@@ -3,7 +3,7 @@
 PACKAGES = $(shell go list ./... | grep -v /vendor/)
 
 ifneq ($(shell uname), Darwin)
-	EXTLDFLAGS = -extldflags "-static" $(null)
+	EXTLDFLAGS = -extldflags "-static-libgcc -static-libstdc++" $(null)
 else
 	EXTLDFLAGS =
 endif
