@@ -25,7 +25,7 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 	networks := []backend.Conn{
 		backend.Conn{
 			Name:    fmt.Sprintf("%s_default", c.prefix),
-			Aliases: c.aliases,
+			Aliases: []string{container.Name},
 		},
 	}
 	for _, network := range c.networks {
@@ -42,14 +42,6 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 	for _, volume := range container.Volumes.Volumes {
 		volumes = append(volumes, volume.String())
 	}
-	// if network == "" {
-	// 	network = fmt.Sprintf("%s_default", c.prefix)
-	// 	for _, alias := range c.aliases {
-	// 		// if alias != container.Name {
-	// 		aliases = append(aliases, alias)
-	// 		// }
-	// 	}
-	// } // host, bridge, none, container:<name>, overlay
 
 	// append default environment variables
 	environment := map[string]string{}

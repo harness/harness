@@ -39,7 +39,6 @@ type Compiler struct {
 	metadata   frontend.Metadata
 	registries []Registry
 	secrets    map[string]Secret
-	aliases    []string
 }
 
 // New creates a new Compiler with options.
@@ -119,14 +118,6 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 		stage.Name = fmt.Sprintf("%s_services", c.prefix)
 		stage.Alias = "services"
 
-		for _, container := range conf.Services.Containers {
-			if !container.Constraints.Match(c.metadata) {
-				continue
-			}
-
-			c.aliases = append(c.aliases, container.Name)
-		}
-
 		for i, container := range conf.Services.Containers {
 			if !container.Constraints.Match(c.metadata) {
 				continue
@@ -169,32 +160,3 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 
 	return config
 }
-
-// func setupNetwork(step *backend.Step, network *libcompose.Network) {
-// 	step.Networks = append(step.Networks, backend.Conn{
-// 		Name: network.Name,
-// 		// Aliases:
-// 	})
-// }
-//
-// func setupVolume(step *backend.Step, volume *libcompose.Volume) {
-// 	step.Volumes = append(step.Volumes, volume.String())
-// }
-//
-// var (
-// 	// Default plugin used to clone the repository.
-// 	defaultCloneImage = "plugins/git:latest"
-//
-// 	// Default plugin settings used to clone the repository.
-// 	defaultCloneVargs = map[string]interface{}{
-// 		"depth": 0,
-// 	}
-// )
-//
-// // defaultClone returns the default step for cloning an image.
-// func defaultClone() *yaml.Container {
-// 	return &yaml.Container{
-// 		Image: defaultCloneImage,
-// 		Vargs: defaultCloneVargs,
-// 	}
-// }
