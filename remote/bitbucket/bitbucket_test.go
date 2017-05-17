@@ -58,6 +58,7 @@ func Test_bitbucket(t *testing.T) {
 				g.Assert(u.Login).Equal(fakeUser.Login)
 				g.Assert(u.Token).Equal("2YotnFZFEjr1zCsicMWpAA")
 				g.Assert(u.Secret).Equal("tGzv3JOkF0XG5Qx2TlKWIA")
+				g.Assert(u.Email).Equal(fakeUser.Email)
 			})
 			g.It("Should handle failure to exchange code", func() {
 				w := httptest.NewRecorder()
@@ -72,6 +73,16 @@ func Test_bitbucket(t *testing.T) {
 			})
 			g.It("Should handle authentication errors", func() {
 				r, _ := http.NewRequest("GET", "?error=invalid_scope", nil)
+				_, err := c.Login(nil, r)
+				g.Assert(err != nil).IsTrue()
+			})
+			g.It("Should handle failure if user don't have confirmed email", func() {
+				r, _ := http.NewRequest("GET", "?error=without_confirmed_email", nil)
+				_, err := c.Login(nil, r)
+				g.Assert(err != nil).IsTrue()
+			})
+			g.It("Should handle failure to request emails list", func() {
+				r, _ := http.NewRequest("GET", "?error=user_emails_failed", nil)
 				_, err := c.Login(nil, r)
 				g.Assert(err != nil).IsTrue()
 			})
@@ -291,6 +302,7 @@ var (
 	fakeUser = &model.User{
 		Login: "superman",
 		Token: "cfcd2084",
+		Email: "octocat@github.com",
 	}
 
 	fakeUserRefresh = &model.User{

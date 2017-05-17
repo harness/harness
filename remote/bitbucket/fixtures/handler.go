@@ -22,6 +22,7 @@ func Handler() http.Handler {
 	e.GET("/2.0/repositories/:owner", getUserRepos)
 	e.GET("/2.0/teams/", getUserTeams)
 	e.GET("/2.0/user/", getUser)
+	e.GET("/2.0/user/emails", getUserEmails)
 
 	return e
 }
@@ -151,6 +152,17 @@ func getUserRepos(c *gin.Context) {
 	}
 }
 
+func getUserEmails(c *gin.Context) {
+	switch c.PostForm("error") {
+	case "user_emails_failed":
+		c.String(500, "")
+	case "without_confirmed_email":
+		c.String(200, userWithoutConfirmedEmailPayload)
+	default:
+		c.String(200, userEmailsPayload)
+	}
+}
+
 const tokenPayload = `
 {
 	"access_token":"2YotnFZFEjr1zCsicMWpAA",
@@ -252,5 +264,35 @@ const userTeamPayload = `
       "type": "team"
     }
   ]
+}
+`
+
+const userEmailsPayload = `
+{
+   "pagelen": 10,
+   "values": [
+      {
+         "is_primary": true,
+         "is_confirmed": true,
+         "email": "octocat@github.com"
+      }
+   ],
+   "page": 1,
+   "size": 1
+}
+`
+
+const userWithoutConfirmedEmailPayload = `
+{
+   "pagelen": 10,
+   "values": [
+      {
+         "is_primary": true,
+         "is_confirmed": false,
+         "email": "octocat@github.com"
+      }
+   ],
+   "page": 1,
+   "size": 1
 }
 `

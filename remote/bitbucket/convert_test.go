@@ -94,13 +94,15 @@ func Test_helper(t *testing.T) {
 			}
 			user := &internal.Account{Login: "octocat"}
 			user.Links.Avatar.Href = "http://..."
+			email := &internal.Email{Email: "octocat@github.com"}
 
-			result := convertUser(user, token)
+			result := convertUser(user, email, token)
 			g.Assert(result.Avatar).Equal(user.Links.Avatar.Href)
 			g.Assert(result.Login).Equal(user.Login)
 			g.Assert(result.Token).Equal(token.AccessToken)
 			g.Assert(result.Secret).Equal(token.RefreshToken)
 			g.Assert(result.Expiry).Equal(token.Expiry.UTC().Unix())
+			g.Assert(result.Email).Equal(email.Email)
 		})
 
 		g.It("should use clone url", func() {

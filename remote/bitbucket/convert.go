@@ -112,13 +112,14 @@ func cloneLink(repo *internal.Repo) string {
 
 // convertUser is a helper function used to convert a Bitbucket user account
 // structure to the Drone User structure.
-func convertUser(from *internal.Account, token *oauth2.Token) *model.User {
+func convertUser(from *internal.Account, email *internal.Email, token *oauth2.Token) *model.User {
 	return &model.User{
 		Login:  from.Login,
 		Token:  token.AccessToken,
 		Secret: token.RefreshToken,
 		Expiry: token.Expiry.UTC().Unix(),
 		Avatar: from.Links.Avatar.Href,
+		Email:  email.Email,
 	}
 }
 
@@ -200,4 +201,13 @@ func extractEmail(gitauthor string) (author string) {
 		author = matches[0][1]
 	}
 	return
+}
+
+func matchingEmail(emails []*internal.Email) *internal.Email {
+	for _, email := range emails {
+		if email.IsPrimary && email.IsConfirmed {
+			return email
+		}
+	}
+	return nil
 }
