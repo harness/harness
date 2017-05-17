@@ -58,6 +58,7 @@ func Test_bitbucket(t *testing.T) {
 				g.Assert(u.Login).Equal(fakeUser.Login)
 				g.Assert(u.Token).Equal("2YotnFZFEjr1zCsicMWpAA")
 				g.Assert(u.Secret).Equal("tGzv3JOkF0XG5Qx2TlKWIA")
+				g.Assert(u.Email).Equal(fakeUser.Email)
 			})
 			g.It("Should handle failure to exchange code", func() {
 				w := httptest.NewRecorder()
@@ -75,6 +76,7 @@ func Test_bitbucket(t *testing.T) {
 				_, err := c.Login(nil, r)
 				g.Assert(err != nil).IsTrue()
 			})
+			// TODO(langovoi): don't know how to cover case when user doesn't have verified email and client.ListEmail failed
 		})
 
 		g.Describe("Given an access token", func() {
@@ -280,6 +282,7 @@ var (
 	fakeUser = &model.User{
 		Login: "superman",
 		Token: "cfcd2084",
+		Email: "octocat@github.com",
 	}
 
 	fakeUserRefresh = &model.User{

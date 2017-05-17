@@ -22,6 +22,7 @@ func Handler() http.Handler {
 	e.GET("/2.0/repositories/:owner", getUserRepos)
 	e.GET("/2.0/teams/", getUserTeams)
 	e.GET("/2.0/user/", getUser)
+	e.GET("/2.0/user/emails", getUserEmails)
 
 	return e
 }
@@ -130,6 +131,13 @@ func getUserRepos(c *gin.Context) {
 	}
 }
 
+func getUserEmails(c *gin.Context) {
+	switch c.Request.Header.Get("Authorization") {
+	default:
+		c.String(200, userEmailsPayload)
+	}
+}
+
 const tokenPayload = `
 {
 	"access_token":"2YotnFZFEjr1zCsicMWpAA",
@@ -222,5 +230,20 @@ const userTeamPayload = `
       "type": "team"
     }
   ]
+}
+`
+
+const userEmailsPayload = `
+{
+   "pagelen": 10,
+   "values": [
+      {
+         "is_primary": true,
+         "is_confirmed": true,
+         "email": "octocat@github.com"
+      }
+   ],
+   "page": 1,
+   "size": 1
 }
 `

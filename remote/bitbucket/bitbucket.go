@@ -69,7 +69,17 @@ func (c *config) Login(w http.ResponseWriter, req *http.Request) (*model.User, e
 	if err != nil {
 		return nil, err
 	}
-	return convertUser(curr, token), nil
+
+	emails, err := client.ListEmail()
+	if err != nil {
+		return nil, err
+	}
+	email := matchingEmail(emails.Values)
+	if email == nil {
+		return nil, fmt.Errorf("No verified Email address for Bitbucket account")
+	}
+
+	return convertUser(curr, email, token), nil
 }
 
 // Auth uses the Bitbucket oauth2 access token and refresh token to authenticate
