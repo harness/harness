@@ -175,16 +175,6 @@ func PostHook(c *gin.Context) {
 		}
 	}
 
-	secs, err := Config.Services.Secrets.SecretList(repo)
-	if err != nil {
-		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
-	}
-
-	regs, err := Config.Services.Registries.RegistryList(repo)
-	if err != nil {
-		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
-	}
-
 	// update some build fields
 	build.RepoID = repo.ID
 	build.Verified = true
@@ -209,6 +199,16 @@ func PostHook(c *gin.Context) {
 
 	if build.Status == model.StatusBlocked {
 		return
+	}
+
+	secs, err := Config.Services.Secrets.SecretListBuild(repo, build)
+	if err != nil {
+		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
+	}
+
+	regs, err := Config.Services.Registries.RegistryList(repo)
+	if err != nil {
+		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
 	}
 
 	// get the previous build so that we can send

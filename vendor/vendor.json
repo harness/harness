@@ -517,6 +517,18 @@
 			"revisionTime": "2014-09-12T11:56:02+03:00"
 		},
 		{
+			"checksumSHA1": "vbjzNeqTEIPV1W6wT5PB3OwN9Ns=",
+			"path": "github.com/kr/pretty",
+			"revision": "737b74a46c4bf788349f72cb256fed10aea4d0ac",
+			"revisionTime": "2016-07-08T21:57:48Z"
+		},
+		{
+			"checksumSHA1": "uulQHQ7IsRKqDudBC8Go9J0gtAc=",
+			"path": "github.com/kr/text",
+			"revision": "7cafcd837844e784b526369c9bce262804aebc60",
+			"revisionTime": "2016-05-04T02:26:26Z"
+		},
+		{
 			"path": "github.com/lib/pq",
 			"revision": "83c4f410d0aed80a0f44bac6a576a7f2435791f3",
 			"revisionTime": "2015-10-15T14:07:56-07:00"
