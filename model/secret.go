@@ -44,6 +44,9 @@ type Secret struct {
 
 // Match returns true if an image and event match the restricted list.
 func (s *Secret) Match(event string) bool {
+	if len(s.Events) == 0 {
+		return true
+	}
 	for _, pattern := range s.Events {
 		if match, _ := filepath.Match(pattern, event); match {
 			return true
