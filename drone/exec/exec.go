@@ -2,6 +2,7 @@ package exec
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -70,6 +71,10 @@ var Command = cli.Command{
 				"plugins/gcr",
 				"plugins/ecr",
 			},
+		},
+		cli.StringSliceFlag{
+			Name:  "env, e",
+			Usage: "environment variables",
 		},
 
 		//
@@ -275,6 +280,20 @@ var Command = cli.Command{
 	},
 }
 
+// parseEnvVars parses a list of envVars of the format 'NAME=value' into a
+// map[string]string.
+func parseEnvVars(envs []string) (map[string]string, error) {
+	envVars := map[string]string{}
+	for _, env := range envs {
+		e := strings.SplitN(env, "=", 2)
+		if len(e) != 2 {
+			return nil, fmt.Errorf("failed to parse environment variable: %s", env)
+		}
+		envVars[e[0]] = e[1]
+	}
+	return envVars, nil
+}
+
 func exec(c *cli.Context) error {
 	file := c.Args().First()
 	if file == "" {
@@ -295,6 +314,11 @@ func exec(c *cli.Context) error {
 			Name:  k,
 			Value: v,
 		})
+	}
+
+	envVars, err := parseEnvVars(c.StringSlice("env"))
+	if err != nil {
+		return err
 	}
 
 	tmpl, err := envsubst.ParseFile(file)
@@ -362,6 +386,7 @@ func exec(c *cli.Context) error {
 		),
 		compiler.WithMetadata(metadata),
 		compiler.WithSecret(secrets...),
+		compiler.WithEnviron(envVars),
 	).Compile(conf)
 
 	engine, err := docker.NewEnv()
