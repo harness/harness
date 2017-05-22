@@ -2,7 +2,6 @@ package session
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
@@ -79,7 +78,6 @@ func Perm(c *gin.Context) *model.Perm {
 }
 
 func SetPerm() gin.HandlerFunc {
-	PUBLIC_MODE := os.Getenv("PUBLIC_MODE")
 
 	return func(c *gin.Context) {
 		user := User(c)
@@ -87,49 +85,24 @@ func SetPerm() gin.HandlerFunc {
 		perm := &model.Perm{}
 
 		switch {
-		// if the user is not authenticated, and the
-		// repository is private, the user has NO permission
-		// to view the repository.
-		case user == nil && repo.IsPrivate == true:
-			perm.Pull = false
-			perm.Push = false
-			perm.Admin = false
-
-		// if the user is not authenticated, but the repository
-		// is public, the user has pull-rights only.
-		case user == nil && repo.IsPrivate == false:
-			perm.Pull = true
-			perm.Push = false
-			perm.Admin = false
-
-		case user.Admin:
+		case user != nil && user.Admin:
 			perm.Pull = true
 			perm.Push = true
 			perm.Admin = true
 
-		// otherwise if the user is authenticated we should
-		// check the remote system to get the users permissiosn.
-		default:
+		case user != nil:
 			var err error
 			perm, err = cache.GetPerms(c, user, repo.Owner, repo.Name)
 			if err != nil {
-				perm.Pull = false
-				perm.Push = false
-				perm.Admin = false
-
-				// debug
 				log.Errorf("Error fetching permission for %s %s",
 					user.Login, repo.FullName)
 			}
-			// if we couldn't fetch permissions, but the repository
-			// is public, we should grant the user pull access.
-			if err != nil && repo.IsPrivate == false {
-				perm.Pull = true
-			}
 		}
 
-		// all build logs are visible in public mode
-		if PUBLIC_MODE != "" {
+		switch {
+		case repo.Visibility == model.VisibilityPublic:
+			perm.Pull = true
+		case repo.Visibility == model.VisibilityInternal && user != nil:
 			perm.Pull = true
 		}
 

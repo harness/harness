@@ -41,6 +41,7 @@ type RepoPatch struct {
 	IsTrusted   *bool   `json:"trusted,omitempty"`
 	IsGated     *bool   `json:"gated,omitempty"`
 	Timeout     *int64  `json:"timeout,omitempty"`
+	Visibility  *string `json:"visibility,omitempty"`
 	AllowPull   *bool   `json:"allow_pr,omitempty"`
 	AllowPush   *bool   `json:"allow_push,omitempty"`
 	AllowDeploy *bool   `json:"allow_deploy,omitempty"`

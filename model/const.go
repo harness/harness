@@ -25,3 +25,9 @@ const (
 	RepoFossil   = "fossil"
 	RepoPerforce = "perforce"
 )
+
+const (
+	VisibilityPublic   = "public"
+	VisibilityPrivate  = "private"
+	VisibilityInternal = "internal"
+)
