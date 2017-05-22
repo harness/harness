@@ -22,6 +22,7 @@ type Repo struct {
 	Clone       string `json:"clone_url,omitempty"      meddler:"repo_clone"`
 	Branch      string `json:"default_branch,omitempty" meddler:"repo_branch"`
 	Timeout     int64  `json:"timeout,omitempty"        meddler:"repo_timeout"`
+	Visibility  string `json:"visibility"               meddler:"repo_visibility"`
 	IsPrivate   bool   `json:"private,omitempty"        meddler:"repo_private"`
 	IsTrusted   bool   `json:"trusted"                  meddler:"repo_trusted"`
 	IsStarred   bool   `json:"starred,omitempty"        meddler:"-"`
@@ -40,6 +41,7 @@ type RepoPatch struct {
 	IsTrusted   *bool   `json:"trusted,omitempty"`
 	IsGated     *bool   `json:"gated,omitempty"`
 	Timeout     *int64  `json:"timeout,omitempty"`
+	Visibility  *string `json:"visibility,omitempty"`
 	AllowPull   *bool   `json:"allow_pr,omitempty"`
 	AllowPush   *bool   `json:"allow_push,omitempty"`
 	AllowDeploy *bool   `json:"allow_deploy,omitempty"`

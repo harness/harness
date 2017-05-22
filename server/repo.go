@@ -55,11 +55,15 @@ func PostRepo(c *gin.Context) {
 	r.UserID = user.ID
 	r.AllowPush = true
 	r.AllowPull = true
+	r.Visibility = model.VisibilityPublic
 	r.Config = ".drone.yml"
 	r.Timeout = 60 // 1 hour default build time
 	r.Hash = base32.StdEncoding.EncodeToString(
 		securecookie.GenerateRandomKey(32),
 	)
+	if r.IsPrivate {
+		r.Visibility = model.VisibilityPrivate
+	}
 
 	// crates the jwt token used to verify the repository
 	t := token.New(token.HookToken, r.FullName)
@@ -131,6 +135,15 @@ func PatchRepo(c *gin.Context) {
 	}
 	if in.Config != nil {
 		repo.Config = *in.Config
+	}
+	if in.Visibility != nil {
+		switch *in.Visibility {
+		case model.VisibilityInternal, model.VisibilityPrivate, model.VisibilityPublic:
+			repo.Visibility = *in.Visibility
+		default:
+			c.String(400, "Invalid visibility type")
+			return
+		}
 	}
 
 	err := store.UpdateRepo(c, repo)
