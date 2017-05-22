@@ -457,7 +457,7 @@ CREATE INDEX IF NOT EXISTS sender_repo_ix ON senders (sender_repo_id);
 //
 
 var alterTableAddRepoVisibility = `
-ALTER TABLE repos ADD COLUMN repo_visibility INTEGER
+ALTER TABLE repos ADD COLUMN repo_visibility TEXT
 `
 
 var updateTableSetRepoVisibility = `

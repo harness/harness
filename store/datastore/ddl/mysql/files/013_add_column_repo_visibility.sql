@@ -1,6 +1,6 @@
 -- name: alter-table-add-repo-visibility
 
-ALTER TABLE repos ADD COLUMN repo_visibility INTEGER
+ALTER TABLE repos ADD COLUMN repo_visibility VARCHAR(50)
 
 -- name: update-table-set-repo-visibility
 

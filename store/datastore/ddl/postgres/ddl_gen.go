@@ -456,13 +456,13 @@ CREATE INDEX IF NOT EXISTS sender_repo_ix ON senders (sender_repo_id);
 //
 
 var alterTableAddRepoVisibility = `
-ALTER TABLE repos ADD COLUMN repo_visibility INTEGER
+ALTER TABLE repos ADD COLUMN repo_visibility VARCHAR(50)
 `
 
 var updateTableSetRepoVisibility = `
 UPDATE repos
 SET repo_visibility = (CASE
-  WHEN repo_private = 0 THEN 'public'
+  WHEN repo_private = true THEN 'public'
   ELSE 'private'
   END)
 `
