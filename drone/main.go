@@ -7,15 +7,7 @@ import (
 	"os"
 
 	"github.com/drone/drone/drone/agent"
-	"github.com/drone/drone/drone/build"
-	"github.com/drone/drone/drone/deploy"
-	"github.com/drone/drone/drone/exec"
-	"github.com/drone/drone/drone/info"
-	"github.com/drone/drone/drone/registry"
-	"github.com/drone/drone/drone/repo"
-	"github.com/drone/drone/drone/secret"
 	"github.com/drone/drone/drone/server"
-	"github.com/drone/drone/drone/user"
 	"github.com/drone/drone/version"
 
 	"github.com/ianschenck/envflag"
@@ -44,15 +36,7 @@ func main() {
 	}
 	app.Commands = []cli.Command{
 		agent.Command,
-		build.Command,
-		deploy.Command,
-		exec.Command,
-		info.Command,
-		registry.Command,
-		secret.Command,
 		server.Command,
-		repo.Command,
-		user.Command,
 	}
 
 	if err := app.Run(os.Args); err != nil {
