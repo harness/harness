@@ -127,12 +127,6 @@ func Test_gitea(t *testing.T) {
 			g.Assert(string(raw)).Equal("{ platform: linux/amd64 }")
 		})
 
-		g.It("Should return a repository file from a ref", func() {
-			raw, err := c.File(fakeUser, fakeRepo, fakeBuildWithRef, ".drone.yml")
-			g.Assert(err == nil).IsTrue()
-			g.Assert(string(raw)).Equal("{ platform: linux/amd64 }")
-		})
-
 		g.It("Should return nil from send build status", func() {
 			err := c.Status(fakeUser, fakeRepo, fakeBuild, "http://gitea.io")
 			g.Assert(err == nil).IsTrue()
@@ -185,9 +179,5 @@ var (
 
 	fakeBuild = &model.Build{
 		Commit: "9ecad50",
-	}
-
-	fakeBuildWithRef = &model.Build{
-		Ref: "refs/tags/v1.0.0",
 	}
 )
