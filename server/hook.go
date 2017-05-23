@@ -394,6 +394,7 @@ type builder struct {
 	Regs  []*model.Registry
 	Link  string
 	Yaml  string
+	Envs  map[string]string
 }
 
 type buildItem struct {
@@ -481,6 +482,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 
 		ir := compiler.New(
 			compiler.WithEnviron(environ),
+			compiler.WithEnviron(b.Envs),
 			compiler.WithEscalated(Config.Pipeline.Privileged...),
 			compiler.WithVolumes(Config.Pipeline.Volumes...),
 			compiler.WithNetworks(Config.Pipeline.Networks...),

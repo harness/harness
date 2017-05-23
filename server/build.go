@@ -494,8 +494,8 @@ func PostBuild(c *gin.Context) {
 		Regs:  regs,
 		Link:  httputil.GetURL(c.Request),
 		Yaml:  conf.Data,
+		Envs:  buildParams,
 	}
-	// TODO inject environment varibles !!!!!! buildParams
 	items, err := b.Build()
 	if err != nil {
 		build.Status = model.StatusError
