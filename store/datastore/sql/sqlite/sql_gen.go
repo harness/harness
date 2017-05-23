@@ -165,6 +165,7 @@ SELECT
 ,proc_environ
 FROM procs
 WHERE proc_build_id = ?
+ORDER BY proc_id ASC
 `
 
 var procsFindBuildPid = `

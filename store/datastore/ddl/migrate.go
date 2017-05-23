@@ -99,7 +99,7 @@ INSERT IGNORE INTO migrations (name) VALUES
 
 var createMigrationsTable = `
 CREATE TABLE IF NOT EXISTS migrations (
- name VARCHAR(512)
+ name VARCHAR(255)
 ,UNIQUE(name)
 )
 `

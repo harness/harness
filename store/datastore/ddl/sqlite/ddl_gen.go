@@ -93,6 +93,14 @@ var migrations = []struct {
 		stmt: createIndexSenderRepos,
 	},
 	{
+		name: "alter-table-add-repo-visibility",
+		stmt: alterTableAddRepoVisibility,
+	},
+	{
+		name: "update-table-set-repo-visibility",
+		stmt: updateTableSetRepoVisibility,
+	},
+	{
 		name: "alter-table-add-repo-seq",
 		stmt: alterTableAddRepoSeq,
 	},
@@ -450,6 +458,22 @@ CREATE TABLE IF NOT EXISTS senders (
 
 var createIndexSenderRepos = `
 CREATE INDEX IF NOT EXISTS sender_repo_ix ON senders (sender_repo_id);
+`
+
+//
+// 013_add_column_repo_visibility.sql
+//
+
+var alterTableAddRepoVisibility = `
+ALTER TABLE repos ADD COLUMN repo_visibility TEXT
+`
+
+var updateTableSetRepoVisibility = `
+UPDATE repos
+SET repo_visibility = CASE
+  WHEN repo_private = 0 THEN 'public'
+  ELSE 'private'
+  END
 `
 
 //

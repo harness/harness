@@ -89,6 +89,14 @@ var migrations = []struct {
 		stmt: createIndexSenderRepos,
 	},
 	{
+		name: "alter-table-add-repo-visibility",
+		stmt: alterTableAddRepoVisibility,
+	},
+	{
+		name: "update-table-set-repo-visibility",
+		stmt: updateTableSetRepoVisibility,
+	},
+	{
 		name: "alter-table-add-repo-seq",
 		stmt: alterTableAddRepoSeq,
 	},
@@ -376,7 +384,7 @@ CREATE TABLE IF NOT EXISTS registry (
 ,registry_addr      VARCHAR(250)
 ,registry_email     VARCHAR(500)
 ,registry_username  VARCHAR(2000)
-,registry_password  VARCHAR(2000)
+,registry_password  VARCHAR(8000)
 ,registry_token     VARCHAR(2000)
 
 ,UNIQUE(registry_addr, registry_repo_id)
@@ -449,6 +457,22 @@ CREATE TABLE IF NOT EXISTS senders (
 
 var createIndexSenderRepos = `
 CREATE INDEX IF NOT EXISTS sender_repo_ix ON senders (sender_repo_id);
+`
+
+//
+// 013_add_column_repo_visibility.sql
+//
+
+var alterTableAddRepoVisibility = `
+ALTER TABLE repos ADD COLUMN repo_visibility VARCHAR(50)
+`
+
+var updateTableSetRepoVisibility = `
+UPDATE repos
+SET repo_visibility = (CASE
+  WHEN repo_private = true THEN 'public'
+  ELSE 'private'
+  END)
 `
 
 //

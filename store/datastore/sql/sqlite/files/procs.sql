@@ -37,6 +37,7 @@ SELECT
 ,proc_environ
 FROM procs
 WHERE proc_build_id = ?
+ORDER BY proc_id ASC
 
 -- name: procs-find-build-pid
 
