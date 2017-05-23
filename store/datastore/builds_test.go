@@ -15,22 +15,24 @@ func TestBuilds(t *testing.T) {
 		Name:     "drone",
 	}
 
-	db := openTest()
-	defer db.Close()
+	s := newTest()
+	defer s.Close()
 
-	s := From(db)
 	g := goblin.Goblin(t)
 	g.Describe("Builds", func() {
 		g.Before(func() {
-			db.Exec("DELETE FROM repos")
+			s.Exec("DELETE FROM repos")
 			s.CreateRepo(repo)
+		})
+		g.After(func() {
+			s.Exec("DELETE FROM repos")
 		})
 
 		// before each test be sure to purge the package
 		// table data from the database.
 		g.BeforeEach(func() {
-			db.Exec("DELETE FROM builds")
-			db.Exec("DELETE FROM jobs")
+			s.Exec("DELETE FROM builds")
+			s.Exec("DELETE FROM jobs")
 		})
 
 		g.It("Should Post a Build", func() {
