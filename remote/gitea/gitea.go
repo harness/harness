@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"code.gitea.io/sdk/gitea"
 	"github.com/drone/drone/model"
@@ -229,24 +228,7 @@ func (c *client) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 // File fetches the file from the Gitea repository and returns its contents.
 func (c *client) File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error) {
 	client := c.newClientToken(u.Token)
-	ref := b.Commit
-
-	// TODO gitea does not yet return a sha with the pull request
-	// so unfortunately we need to use the pull request branch.
-	if b.Event == model.EventPull {
-		ref = b.Branch
-	}
-	if ref == "" {
-		// Remove refs/tags or refs/heads, Gitea needs a short ref
-		ref = strings.TrimPrefix(
-			strings.TrimPrefix(
-				b.Ref,
-				"refs/heads/",
-			),
-			"refs/tags/",
-		)
-	}
-	cfg, err := client.GetFile(r.Owner, r.Name, ref, f)
+	cfg, err := client.GetFile(r.Owner, r.Name, b.Commit, f)
 	return cfg, err
 }
 
