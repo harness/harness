@@ -79,7 +79,12 @@ func TestConfigApproved(t *testing.T) {
 		t.Errorf("Unexpected error: insert config: %s", err)
 		return
 	}
-
+	s.CreateRepo(&model.Repo{
+		UserID:   1,
+		FullName: "bradrydzewski/drone",
+		Owner:    "bradrydzewski",
+		Name:     "drone",
+	})
 	s.CreateBuild(&model.Build{
 		RepoID:   1,
 		ConfigID: conf.ID,

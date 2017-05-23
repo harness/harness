@@ -92,6 +92,14 @@ var migrations = []struct {
 		name: "create-index-sender-repos",
 		stmt: createIndexSenderRepos,
 	},
+	{
+		name: "alter-table-add-repo-seq",
+		stmt: alterTableAddRepoSeq,
+	},
+	{
+		name: "update-table-set-repo-seq",
+		stmt: updateTableSetRepoSeq,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -154,7 +162,7 @@ func selectCompleted(db *sql.DB) (map[string]struct{}, error) {
 
 var migrationTableCreate = `
 CREATE TABLE IF NOT EXISTS migrations (
- name VARCHAR(512)
+ name VARCHAR(255)
 ,UNIQUE(name)
 )
 `
@@ -442,4 +450,20 @@ CREATE TABLE IF NOT EXISTS senders (
 
 var createIndexSenderRepos = `
 CREATE INDEX IF NOT EXISTS sender_repo_ix ON senders (sender_repo_id);
+`
+
+//
+// 014_add_column_repo_seq.sql
+//
+
+var alterTableAddRepoSeq = `
+ALTER TABLE repos ADD COLUMN repo_counter INTEGER;
+`
+
+var updateTableSetRepoSeq = `
+UPDATE repos SET repo_counter = (
+  SELECT max(build_number)
+  FROM builds
+  WHERE builds.build_repo_id = repos.repo_id
+)
 `
