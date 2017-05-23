@@ -251,9 +251,9 @@ DELETE FROM registry WHERE registry_id = $1
 `
 
 var repoUpdateCounter = `
-UPDATE repos SET repo_counter = ?
-WHERE repo_counter = ?
-  AND repo_id = ?
+UPDATE repos SET repo_counter = $1
+WHERE repo_counter = $2
+  AND repo_id = $3
 `
 
 var secretFindRepo = `
