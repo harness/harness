@@ -8,9 +8,8 @@ import (
 )
 
 func TestUsers(t *testing.T) {
-	db := openTest()
-	defer db.Close()
-	s := From(db)
+	s := newTest()
+	defer s.Close()
 
 	g := goblin.Goblin(t)
 	g.Describe("User", func() {
@@ -18,10 +17,10 @@ func TestUsers(t *testing.T) {
 		// before each test be sure to purge the package
 		// table data from the database.
 		g.BeforeEach(func() {
-			db.Exec("DELETE FROM users")
-			db.Exec("DELETE FROM repos")
-			db.Exec("DELETE FROM builds")
-			db.Exec("DELETE FROM jobs")
+			s.Exec("DELETE FROM users")
+			s.Exec("DELETE FROM repos")
+			s.Exec("DELETE FROM builds")
+			s.Exec("DELETE FROM jobs")
 		})
 
 		g.It("Should Update a User", func() {
@@ -138,7 +137,11 @@ func TestUsers(t *testing.T) {
 			s.CreateUser(&user2)
 			count, err := s.GetUserCount()
 			g.Assert(err == nil).IsTrue()
-			g.Assert(count).Equal(2)
+			if s.driver != "postgres" {
+				// we have to skip this check for postgres because it uses
+				// an estimate which may not be updated.
+				g.Assert(count).Equal(2)
+			}
 		})
 
 		g.It("Should Get a User Count Zero", func() {

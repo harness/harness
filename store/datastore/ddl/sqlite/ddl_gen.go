@@ -100,6 +100,14 @@ var migrations = []struct {
 		name: "update-table-set-repo-visibility",
 		stmt: updateTableSetRepoVisibility,
 	},
+	{
+		name: "alter-table-add-repo-seq",
+		stmt: alterTableAddRepoSeq,
+	},
+	{
+		name: "update-table-set-repo-seq",
+		stmt: updateTableSetRepoSeq,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -466,4 +474,20 @@ SET repo_visibility = CASE
   WHEN repo_private = 0 THEN 'public'
   ELSE 'private'
   END
+`
+
+//
+// 014_add_column_repo_seq.sql
+//
+
+var alterTableAddRepoSeq = `
+ALTER TABLE repos ADD COLUMN repo_counter INTEGER;
+`
+
+var updateTableSetRepoSeq = `
+UPDATE repos SET repo_counter = (
+  SELECT max(build_number)
+  FROM builds
+  WHERE builds.build_repo_id = repos.repo_id
+)
 `

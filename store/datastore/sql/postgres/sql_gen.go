@@ -25,6 +25,7 @@ var index = map[string]string{
 	"registry-find-repo-addr":   registryFindRepoAddr,
 	"registry-delete-repo":      registryDeleteRepo,
 	"registry-delete":           registryDelete,
+	"repo-update-counter":       repoUpdateCounter,
 	"secret-find-repo":          secretFindRepo,
 	"secret-find-repo-name":     secretFindRepoName,
 	"secret-delete":             secretDelete,
@@ -247,6 +248,12 @@ DELETE FROM registry WHERE registry_repo_id = $1
 
 var registryDelete = `
 DELETE FROM registry WHERE registry_id = $1
+`
+
+var repoUpdateCounter = `
+UPDATE repos SET repo_counter = $1
+WHERE repo_counter = $2
+  AND repo_id = $3
 `
 
 var secretFindRepo = `

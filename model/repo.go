@@ -31,6 +31,7 @@ type Repo struct {
 	AllowPush   bool   `json:"allow_push"               meddler:"repo_allow_push"`
 	AllowDeploy bool   `json:"allow_deploys"            meddler:"repo_allow_deploys"`
 	AllowTag    bool   `json:"allow_tags"               meddler:"repo_allow_tags"`
+	Counter     int    `json:"last_build"               meddler:"repo_counter"`
 	Config      string `json:"config_file"              meddler:"repo_config_path"`
 	Hash        string `json:"-"                        meddler:"repo_hash"`
 }

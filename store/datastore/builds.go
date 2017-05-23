@@ -1,9 +1,11 @@
 package datastore
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/store/datastore/sql"
 	"github.com/russross/meddler"
 )
 
@@ -56,12 +58,14 @@ func (db *datastore) GetBuildQueue() ([]*model.Feed, error) {
 }
 
 func (db *datastore) CreateBuild(build *model.Build, procs ...*model.Proc) error {
-	var number int
-	db.QueryRow(rebind(buildNumberLast), build.RepoID).Scan(&number)
-	build.Number = number + 1
+	id, err := db.incrementRepoRetry(build.RepoID)
+	if err != nil {
+		return err
+	}
+	build.Number = id
 	build.Created = time.Now().UTC().Unix()
 	build.Enqueued = build.Created
-	err := meddler.Insert(db, buildTable, build)
+	err = meddler.Insert(db, buildTable, build)
 	if err != nil {
 		return err
 	}
@@ -73,6 +77,39 @@ func (db *datastore) CreateBuild(build *model.Build, procs ...*model.Proc) error
 		}
 	}
 	return nil
+}
+
+func (db *datastore) incrementRepoRetry(id int64) (int, error) {
+	repo, err := db.GetRepo(id)
+	if err != nil {
+		return 0, fmt.Errorf("database: cannot fetch repository: %s", err)
+	}
+	for i := 0; i < 10; i++ {
+		seq, err := db.incrementRepo(repo.ID, repo.Counter+i, repo.Counter+i+1)
+		if err != nil {
+			return 0, err
+		}
+		if seq == 0 {
+			continue
+		}
+		return seq, nil
+	}
+	return 0, fmt.Errorf("cannot increment next build number")
+}
+
+func (db *datastore) incrementRepo(id int64, old, new int) (int, error) {
+	results, err := db.Exec(sql.Lookup(db.driver, "repo-update-counter"), new, old, id)
+	if err != nil {
+		return 0, fmt.Errorf("database: update repository counter: %s", err)
+	}
+	updated, err := results.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("database: update repository counter: %s", err)
+	}
+	if updated == 0 {
+		return 0, nil
+	}
+	return new, nil
 }
 
 func (db *datastore) UpdateBuild(build *model.Build) error {
