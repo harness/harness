@@ -96,7 +96,16 @@ func RPCHandler(c *gin.Context) {
 		c.Request.Header.Get("X-Drone-Version"),
 	)
 	logrus.Debugf("agent connected: ip address %s: version %s", c.ClientIP(), agent)
-	if agent.LessThan(version.Version) {
+	// if agent.LessThan(version.Version) {
+	// 	logrus.Warnf("Version mismatch. Agent version %s < Server version %s", agent, version.Version)
+	// 	c.String(409, "Version mismatch. Agent version %s < Server version %s", agent, version.Version)
+	// 	return
+	// }
+
+	switch agent.Minor {
+	case 6, 7:
+		// these versions are ok
+	default:
 		logrus.Warnf("Version mismatch. Agent version %s < Server version %s", agent, version.Version)
 		c.String(409, "Version mismatch. Agent version %s < Server version %s", agent, version.Version)
 		return
