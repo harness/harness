@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	hookEvent       = "X-Gogs-Event"
+	hookEvent       = "X-Gitea-Event"
 	hookPush        = "push"
 	hookCreated     = "create"
 	hookPullRequest = "pull_request"
