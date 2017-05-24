@@ -7,6 +7,12 @@
 			"revision": ""
 		},
 		{
+			"checksumSHA1": "nLhT+bLMj8uLICP+EZbrdoQe6mM=",
+			"path": "code.gitea.io/sdk/gitea",
+			"revision": "8cff72208aa458f4efa8fdfbad29b03aee485b8c",
+			"revisionTime": "2017-05-06T01:37:21Z"
+		},
+		{
 			"checksumSHA1": "zTn0jzjOiJlScR1px66MvrgrlLs=",
 			"origin": "github.com/docker/docker/vendor/github.com/Microsoft/go-winio",
 			"path": "github.com/Microsoft/go-winio",

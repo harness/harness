@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/acme/autocert"
@@ -226,6 +227,37 @@ var Command = cli.Command{
 			Usage:  "gogs skip ssl verification",
 		},
 		cli.BoolFlag{
+			EnvVar: "DRONE_GITEA",
+			Name:   "gitea",
+			Usage:  "gitea driver is enabled",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GITEA_URL",
+			Name:   "gitea-server",
+			Usage:  "gitea server address",
+			Value:  "https://try.gitea.io",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GITEA_GIT_USERNAME",
+			Name:   "gitea-git-username",
+			Usage:  "gitea service account username",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GITEA_GIT_PASSWORD",
+			Name:   "gitea-git-password",
+			Usage:  "gitea service account password",
+		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_GITEA_PRIVATE_MODE",
+			Name:   "gitea-private-mode",
+			Usage:  "gitea private mode enabled",
+		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_GITEA_SKIP_VERIFY",
+			Name:   "gitea-skip-verify",
+			Usage:  "gitea skip ssl verification",
+		},
+		cli.BoolFlag{
 			EnvVar: "DRONE_BITBUCKET",
 			Name:   "bitbucket",
 			Usage:  "bitbucket driver is enabled",
@@ -415,7 +447,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store) {
 	droneserver.Config.Server.Cert = c.String("server-cert")
 	droneserver.Config.Server.Key = c.String("server-key")
 	droneserver.Config.Server.Pass = c.String("agent-secret")
-	droneserver.Config.Server.Host = c.String("server-host")
+	droneserver.Config.Server.Host = strings.TrimRight(c.String("server-host"), "/")
 	droneserver.Config.Server.Port = c.String("server-addr")
 	droneserver.Config.Pipeline.Networks = c.StringSlice("network")
 	droneserver.Config.Pipeline.Volumes = c.StringSlice("volume")

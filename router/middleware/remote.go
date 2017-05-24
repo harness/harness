@@ -7,6 +7,7 @@ import (
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/remote/bitbucket"
 	"github.com/drone/drone/remote/bitbucketserver"
+	"github.com/drone/drone/remote/gitea"
 	"github.com/drone/drone/remote/github"
 	"github.com/drone/drone/remote/gitlab"
 	"github.com/drone/drone/remote/gogs"
@@ -39,6 +40,8 @@ func setupRemote(c *cli.Context) (remote.Remote, error) {
 		return setupStash(c)
 	case c.Bool("gogs"):
 		return setupGogs(c)
+	case c.Bool("gitea"):
+		return setupGitea(c)
 	default:
 		return nil, fmt.Errorf("version control system not configured")
 	}
@@ -60,6 +63,17 @@ func setupGogs(c *cli.Context) (remote.Remote, error) {
 		Password:    c.String("gogs-git-password"),
 		PrivateMode: c.Bool("gogs-private-mode"),
 		SkipVerify:  c.Bool("gogs-skip-verify"),
+	})
+}
+
+// helper function to setup the Gitea remote from the CLI arguments.
+func setupGitea(c *cli.Context) (remote.Remote, error) {
+	return gitea.New(gitea.Opts{
+		URL:         c.String("gitea-server"),
+		Username:    c.String("gitea-git-username"),
+		Password:    c.String("gitea-git-password"),
+		PrivateMode: c.Bool("gitea-private-mode"),
+		SkipVerify:  c.Bool("gitea-skip-verify"),
 	})
 }
 
