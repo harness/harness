@@ -121,6 +121,11 @@ func Test_gitea(t *testing.T) {
 			g.Assert(err == nil).IsTrue()
 		})
 
+		g.It("Should remove repository hooks", func() {
+			err := c.Deactivate(fakeUser, fakeRepo, "http://localhost")
+			g.Assert(err == nil).IsTrue()
+		})
+
 		g.It("Should return a repository file", func() {
 			raw, err := c.File(fakeUser, fakeRepo, fakeBuild, ".drone.yml")
 			g.Assert(err == nil).IsTrue()
@@ -143,13 +148,6 @@ func Test_gitea(t *testing.T) {
 			g.It("Should skip non-push events")
 			g.It("Should return push details")
 			g.It("Should handle a parsing error")
-		})
-
-		g.It("Should return no-op for usupporeted features", func() {
-			_, err1 := c.Auth("octocat", "4vyW6b49Z")
-			err2 := c.Deactivate(nil, nil, "")
-			g.Assert(err1 != nil).IsTrue()
-			g.Assert(err2 == nil).IsTrue()
 		})
 	})
 }

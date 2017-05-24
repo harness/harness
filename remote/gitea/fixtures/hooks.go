@@ -1,7 +1,7 @@
 package fixtures
 
-// Sample Gitea push hook
-var HookPush = `
+// HookPush is a sample Gitea push hook
+const HookPush = `
 {
   "ref": "refs/heads/master",
   "before": "4b2626259b5a97b6b4eab5e6cca66adb986b672b",
@@ -49,8 +49,8 @@ var HookPush = `
 }
 `
 
-// Sample Gitea tag hook
-var HookPushTag = `{
+// HookPushTag is a sample Gitea tag hook
+const HookPushTag = `{
   "secret": "l26Un7G7HXogLAvsyf2hOA4EMARSTsR3",
   "ref": "v1.0.0",
   "ref_type": "tag",
@@ -85,7 +85,7 @@ var HookPushTag = `{
 }`
 
 // HookPullRequest is a sample pull_request webhook payload
-var HookPullRequest = `{
+const HookPullRequest = `{
   "action": "opened",
   "number": 1,
   "pull_request": {

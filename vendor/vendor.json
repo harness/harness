@@ -7,10 +7,10 @@
 			"revision": ""
 		},
 		{
-			"checksumSHA1": "Vrt1uoeOOk9fp1aa9d7huQhzexU=",
+			"checksumSHA1": "nLhT+bLMj8uLICP+EZbrdoQe6mM=",
 			"path": "code.gitea.io/sdk/gitea",
-			"revision": "e1c76d42f2b84aa49af5b7fc6564e4b5c2814f2f",
-			"revisionTime": "2017-05-02T15:01:11Z"
+			"revision": "8cff72208aa458f4efa8fdfbad29b03aee485b8c",
+			"revisionTime": "2017-05-06T01:37:21Z"
 		},
 		{
 			"checksumSHA1": "zTn0jzjOiJlScR1px66MvrgrlLs=",

@@ -15,10 +15,16 @@ func Handler() http.Handler {
 	e.GET("/api/v1/repos/:owner/:name", getRepo)
 	e.GET("/api/v1/repos/:owner/:name/raw/:commit/:file", getRepoFile)
 	e.POST("/api/v1/repos/:owner/:name/hooks", createRepoHook)
+	e.GET("/api/v1/repos/:owner/:name/hooks", listRepoHooks)
+	e.DELETE("/api/v1/repos/:owner/:name/hooks/:id", deleteRepoHook)
 	e.POST("/api/v1/repos/:owner/:name/statuses/:commit", createRepoCommitStatus)
 	e.GET("/api/v1/user/repos", getUserRepos)
 
 	return e
+}
+
+func listRepoHooks(c *gin.Context) {
+	c.String(200, listRepoHookPayloads)
 }
 
 func getRepo(c *gin.Context) {
@@ -66,6 +72,10 @@ func createRepoHook(c *gin.Context) {
 	c.String(200, "{}")
 }
 
+func deleteRepoHook(c *gin.Context) {
+	c.String(200, "{}")
+}
+
 func getUserRepos(c *gin.Context) {
 	switch c.Request.Header.Get("Authorization") {
 	case "token repos_not_found":
@@ -74,6 +84,19 @@ func getUserRepos(c *gin.Context) {
 		c.String(200, userRepoPayload)
 	}
 }
+
+const listRepoHookPayloads = `
+[
+  {
+    "id": 1,
+    "type": "gitea",
+    "config": {
+      "content_type": "json",
+      "url": "http:\/\/localhost\/hook?access_token=1234567890"
+    }
+  }
+]
+`
 
 const repoPayload = `
 {

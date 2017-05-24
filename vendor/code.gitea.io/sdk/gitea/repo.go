@@ -26,9 +26,12 @@ type Repository struct {
 	Name          string      `json:"name"`
 	FullName      string      `json:"full_name"`
 	Description   string      `json:"description"`
+	Empty         bool        `json:"empty"`
 	Private       bool        `json:"private"`
 	Fork          bool        `json:"fork"`
+	Parent        *Repository `json:"parent"`
 	Mirror        bool        `json:"mirror"`
+	Size          int         `json:"size"`
 	HTMLURL       string      `json:"html_url"`
 	SSHURL        string      `json:"ssh_url"`
 	CloneURL      string      `json:"clone_url"`

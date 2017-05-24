@@ -249,10 +249,10 @@ func (c *client) Status(u *model.User, r *model.Repo, b *model.Build, link strin
 		r.Name,
 		b.Commit,
 		gitea.CreateStatusOption{
-			status,
-			link,
-			desc,
-			"",
+			State:       status,
+			TargetURL:   link,
+			Description: desc,
+			Context:     "",
 		},
 	)
 
@@ -297,8 +297,21 @@ func (c *client) Activate(u *model.User, r *model.Repo, link string) error {
 	return err
 }
 
-// Deactivate is not supported by the Gitea driver.
+// Deactivate deactives the repository be removing repository push hooks from
+// the Gitea repository.
 func (c *client) Deactivate(u *model.User, r *model.Repo, link string) error {
+	client := c.newClientToken(u.Token)
+
+	hooks, err := client.ListRepoHooks(r.Owner, r.Name)
+	if err != nil {
+		return err
+	}
+
+	hook := matchingHooks(hooks, link)
+	if hook != nil {
+		return client.DeleteRepoHook(r.Owner, r.Name, hook.ID)
+	}
+
 	return nil
 }
 
@@ -324,4 +337,21 @@ func (c *client) newClientToken(token string) *gitea.Client {
 		client.SetHTTPClient(httpClient)
 	}
 	return client
+}
+
+// helper function to return matching hooks.
+func matchingHooks(hooks []*gitea.Hook, rawurl string) *gitea.Hook {
+	link, err := url.Parse(rawurl)
+	if err != nil {
+		return nil
+	}
+	for _, hook := range hooks {
+		if val, ok := hook.Config["url"]; ok {
+			hookurl, err := url.Parse(val)
+			if err == nil && hookurl.Host == link.Host {
+				return hook
+			}
+		}
+	}
+	return nil
 }
