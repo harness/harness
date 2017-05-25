@@ -104,6 +104,10 @@ var migrations = []struct {
 		name: "update-table-set-repo-seq",
 		stmt: updateTableSetRepoSeq,
 	},
+	{
+		name: "update-table-set-repo-seq-default",
+		stmt: updateTableSetRepoSeqDefault,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -489,4 +493,9 @@ UPDATE repos SET repo_counter = (
   FROM builds
   WHERE builds.build_repo_id = repos.repo_id
 )
+`
+
+var updateTableSetRepoSeqDefault = `
+UPDATE repos SET repo_counter = 0
+WHERE repo_counter IS NULL
 `
