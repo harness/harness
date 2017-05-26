@@ -413,28 +413,28 @@ func PostBuild(c *gin.Context) {
 		return
 	}
 
-  build.ID = 0
-  build.Number = 0
-  build.Parent = num
-  build.Status = model.StatusPending
-  build.Started = 0
-  build.Finished = 0
-  build.Enqueued = time.Now().UTC().Unix()
-  build.Error = ""
-  err = store.CreateBuild(c, build)
-  if err != nil {
-    c.String(500, err.Error())
-    return
-  }
+	build.ID = 0
+	build.Number = 0
+	build.Parent = num
+	build.Status = model.StatusPending
+	build.Started = 0
+	build.Finished = 0
+	build.Enqueued = time.Now().UTC().Unix()
+	build.Error = ""
+	err = store.CreateBuild(c, build)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
 
-  event := c.DefaultQuery("event", build.Event)
-  if event == model.EventPush ||
-    event == model.EventPull ||
-    event == model.EventTag ||
-    event == model.EventDeploy {
-    build.Event = event
-  }
-  build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
+	event := c.DefaultQuery("event", build.Event)
+	if event == model.EventPush ||
+		event == model.EventPull ||
+		event == model.EventTag ||
+		event == model.EventDeploy {
+		build.Event = event
+	}
+	build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
 
 	// Read query string parameters into buildParams, exclude reserved params
 	var buildParams = map[string]string{}
