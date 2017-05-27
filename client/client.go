@@ -68,10 +68,6 @@ type Client interface {
 	// BuildStop stops the specified running job for given build.
 	BuildStop(string, string, int, int) error
 
-	// BuildFork re-starts a stopped build with a new build number, preserving
-	// the prior history.
-	BuildFork(string, string, int, map[string]string) (*model.Build, error)
-
 	// BuildApprove approves a blocked build.
 	BuildApprove(string, string, int) (*model.Build, error)
 
