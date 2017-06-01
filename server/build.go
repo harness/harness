@@ -26,7 +26,7 @@ func GetBuilds(c *gin.Context) {
 	repo := session.Repo(c)
 	builds, err := store.GetBuildList(c, repo)
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, builds)
