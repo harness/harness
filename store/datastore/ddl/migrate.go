@@ -19,11 +19,11 @@ const (
 // Migrate performs the database migration. If the migration fails
 // and error is returned.
 func Migrate(driver string, db *sql.DB) error {
+	if err := checkPriorMigration(db); err != nil {
+		return err
+	}
 	switch driver {
 	case DriverMysql:
-		if err := checkPriorMigration(db); err != nil {
-			return err
-		}
 		return mysql.Migrate(db)
 	case DriverPostgres:
 		return postgres.Migrate(db)
