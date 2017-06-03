@@ -26,7 +26,7 @@ func (p *plugin) SecretFind(repo *model.Repo, name string) (*model.Secret, error
 func (p *plugin) SecretList(repo *model.Repo) ([]*model.Secret, error) {
 	path := fmt.Sprintf("%s/secrets/%s/%s", p.endpoint, repo.Owner, repo.Name)
 	out := []*model.Secret{}
-	err := internal.Send("GET", path, nil, out)
+	err := internal.Send("GET", path, nil, &out)
 	return out, err
 }
 

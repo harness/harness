@@ -26,7 +26,7 @@ func (p *plugin) RegistryFind(repo *model.Repo, name string) (*model.Registry, e
 func (p *plugin) RegistryList(repo *model.Repo) ([]*model.Registry, error) {
 	path := fmt.Sprintf("%s/registry/%s/%s", p.endpoint, repo.Owner, repo.Name)
 	out := []*model.Registry{}
-	err := internal.Send("GET", path, nil, out)
+	err := internal.Send("GET", path, nil, &out)
 	return out, err
 }
 
