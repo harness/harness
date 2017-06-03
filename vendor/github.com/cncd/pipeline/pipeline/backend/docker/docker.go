@@ -103,12 +103,14 @@ func (e *engine) Exec(proc *backend.Step) error {
 		return err
 	}
 
-	for _, net := range proc.Networks {
-		err = e.client.NetworkConnect(ctx, net.Name, proc.Name, &network.EndpointSettings{
-			Aliases: net.Aliases,
-		})
-		if err != nil {
-			return err
+	if len(proc.NetworkMode) == 0 {
+		for _, net := range proc.Networks {
+			err = e.client.NetworkConnect(ctx, net.Name, proc.Name, &network.EndpointSettings{
+				Aliases: net.Aliases,
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 

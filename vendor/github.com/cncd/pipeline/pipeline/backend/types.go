@@ -44,6 +44,7 @@ type (
 		OnFailure    bool              `json:"on_failure,omitempty"`
 		OnSuccess    bool              `json:"on_success,omitempty"`
 		AuthConfig   Auth              `json:"auth_config,omitempty"`
+		NetworkMode  string            `json:"network_mode,omitempty"`
 	}
 
 	// Auth defines registry authentication credentials.
