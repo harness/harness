@@ -32,7 +32,7 @@ func (p *plugin) RegistryList(repo *model.Repo) ([]*model.Registry, error) {
 
 func (p *plugin) RegistryCreate(repo *model.Repo, in *model.Registry) error {
 	path := fmt.Sprintf("%s/registry/%s/%s", p.endpoint, repo.Owner, repo.Name)
-	return internal.Send("PATCH", path, in, nil)
+	return internal.Send("POST", path, in, nil)
 }
 
 func (p *plugin) RegistryUpdate(repo *model.Repo, in *model.Registry) error {
