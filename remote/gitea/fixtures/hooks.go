@@ -46,7 +46,7 @@ const HookPush = `
     "login": "gordon",
     "id": 1,
     "username": "gordon",
-    "avatar_url": "https://secure.gravatar.com/avatar/265bcbb56e831266de7a9f9281aab57a"
+    "avatar_url": "http://gitea.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
   }
 }
 `
