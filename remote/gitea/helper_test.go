@@ -33,7 +33,9 @@ func Test_parse(t *testing.T) {
 			g.Assert(hook.Pusher.Name).Equal("gordon")
 			g.Assert(hook.Pusher.Email).Equal("gordon@golang.org")
 			g.Assert(hook.Pusher.Username).Equal("gordon")
+			g.Assert(hook.Pusher.Login).Equal("gordon")
 			g.Assert(hook.Sender.Login).Equal("gordon")
+			g.Assert(hook.Sender.Username).Equal("gordon")
 			g.Assert(hook.Sender.Avatar).Equal("http://gitea.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87")
 		})
 

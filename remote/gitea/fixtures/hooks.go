@@ -39,11 +39,13 @@ const HookPush = `
   "pusher": {
     "name": "gordon",
     "email": "gordon@golang.org",
-    "username": "gordon"
+    "username": "gordon",
+    "login": "gordon"
   },
   "sender": {
     "login": "gordon",
     "id": 1,
+    "username": "gordon",
     "avatar_url": "http://gitea.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
   }
 }
