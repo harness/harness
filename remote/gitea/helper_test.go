@@ -36,7 +36,7 @@ func Test_parse(t *testing.T) {
 			g.Assert(hook.Pusher.Login).Equal("gordon")
 			g.Assert(hook.Sender.Login).Equal("gordon")
 			g.Assert(hook.Sender.Username).Equal("gordon")
-			g.Assert(hook.Sender.Avatar).Equal("https://secure.gravatar.com/avatar/265bcbb56e831266de7a9f9281aab57a")
+			g.Assert(hook.Sender.Avatar).Equal("http://gitea.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87")
 		})
 
 		g.It("Should parse tag hook payload", func() {
