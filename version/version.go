@@ -8,7 +8,7 @@ var (
 	// VersionMinor is for functionality in a backwards-compatible manner
 	VersionMinor int64 = 7
 	// VersionPatch is for backwards-compatible bug fixes
-	VersionPatch int64 = 1
+	VersionPatch int64 = 2
 	// VersionPre indicates prerelease
 	VersionPre string
 	// VersionDev indicates development branch. Releases will be empty string.

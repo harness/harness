@@ -1,14 +1,13 @@
 <!-- PLEASE READ BEFORE DELETING
 
 Bugs or Issues? Please do not open a GitHub issue until you have
-discussed and verified on the mailing list:
+discussed and verified in our chatroom:
 
-    http://discourse.drone.io/
+    https://gitter.im/drone/drone
 
 Failing Builds? Please do not use GitHub issues for generic support
-questions. Instead use the mailing list or Stack Overflow:
+questions. Instead please use Stack Overflow:
 
-    http://discourse.drone.io/
     http://stackoverflow.com/questions/tagged/drone.io
 
 -->

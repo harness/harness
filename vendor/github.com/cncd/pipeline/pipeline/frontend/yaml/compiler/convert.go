@@ -109,6 +109,31 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 		}
 	}
 
+	memSwapLimit := int64(container.MemSwapLimit)
+	if c.reslimit.MemSwapLimit != 0 {
+		memSwapLimit = c.reslimit.MemSwapLimit
+	}
+	memLimit := int64(container.MemLimit)
+	if c.reslimit.MemLimit != 0 {
+		memLimit = c.reslimit.MemLimit
+	}
+	shmSize := int64(container.ShmSize)
+	if c.reslimit.ShmSize != 0 {
+		shmSize = c.reslimit.ShmSize
+	}
+	cpuQuota := int64(container.CPUQuota)
+	if c.reslimit.CPUQuota != 0 {
+		cpuQuota = c.reslimit.CPUQuota
+	}
+	cpuShares := int64(container.CPUShares)
+	if c.reslimit.CPUShares != 0 {
+		cpuShares = c.reslimit.CPUShares
+	}
+	cpuSet := container.CPUSet
+	if c.reslimit.CPUSet != "" {
+		cpuSet = c.reslimit.CPUSet
+	}
+
 	return &backend.Step{
 		Name:         name,
 		Alias:        container.Name,
@@ -127,12 +152,12 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 		Networks:     networks,
 		DNS:          container.DNS,
 		DNSSearch:    container.DNSSearch,
-		MemSwapLimit: int64(container.MemSwapLimit),
-		MemLimit:     int64(container.MemLimit),
-		ShmSize:      int64(container.ShmSize),
-		CPUQuota:     int64(container.CPUQuota),
-		CPUShares:    int64(container.CPUShares),
-		CPUSet:       container.CPUSet,
+		MemSwapLimit: memSwapLimit,
+		MemLimit:     memLimit,
+		ShmSize:      shmSize,
+		CPUQuota:     cpuQuota,
+		CPUShares:    cpuShares,
+		CPUSet:       cpuSet,
 		AuthConfig:   authConfig,
 		OnSuccess:    container.Constraints.Status.Match("success"),
 		OnFailure: (len(container.Constraints.Status.Include)+
