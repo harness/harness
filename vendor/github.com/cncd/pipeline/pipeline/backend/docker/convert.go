@@ -44,9 +44,13 @@ func toHostConfig(proc *backend.Step) *container.HostConfig {
 			Memory:     proc.MemLimit,
 			MemorySwap: proc.MemSwapLimit,
 		},
+		LogConfig: container.LogConfig{
+			Type: "json-file",
+		},
 		Privileged: proc.Privileged,
 		ShmSize:    proc.ShmSize,
 	}
+
 	// if len(proc.VolumesFrom) != 0 {
 	// 	config.VolumesFrom = proc.VolumesFrom
 	// }
