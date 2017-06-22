@@ -88,6 +88,7 @@ func buildFromPush(hook *pushHook) *model.Build {
 		Message:   hook.Commits[0].Message,
 		Avatar:    avatar,
 		Author:    author,
+		Email:     hook.Pusher.Email,
 		Timestamp: time.Now().UTC().Unix(),
 		Sender:    sender,
 	}
