@@ -484,6 +484,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 			compiler.WithEnviron(environ),
 			compiler.WithEnviron(b.Envs),
 			compiler.WithEscalated(Config.Pipeline.Privileged...),
+			compiler.WithResourceLimit(Config.Pipeline.Limits.MemSwapLimit, Config.Pipeline.Limits.MemLimit, Config.Pipeline.Limits.ShmSize, Config.Pipeline.Limits.CPUQuota, Config.Pipeline.Limits.CPUShares, Config.Pipeline.Limits.CPUSet),
 			compiler.WithVolumes(Config.Pipeline.Volumes...),
 			compiler.WithNetworks(Config.Pipeline.Networks...),
 			compiler.WithLocal(false),
