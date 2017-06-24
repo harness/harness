@@ -58,6 +58,7 @@ var Config = struct {
 		// Admins map[string]struct{}
 	}
 	Pipeline struct {
+		Limits     model.ResourceLimit
 		Volumes    []string
 		Networks   []string
 		Privileged []string

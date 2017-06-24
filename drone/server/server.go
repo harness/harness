@@ -132,6 +132,36 @@ var Command = cli.Command{
 			Usage:  "database driver configuration string",
 			Value:  "drone.sqlite",
 		},
+		//
+		// resource limit parameters
+		//
+		cli.Int64Flag{
+			Name:   "limit-mem-swap",
+			EnvVar: "DRONE_LIMIT_MEM_SWAP",
+		},
+		cli.Int64Flag{
+			Name:   "limit-mem",
+			EnvVar: "DRONE_LIMIT_MEM",
+		},
+		cli.Int64Flag{
+			Name:   "limit-shm-size",
+			EnvVar: "DRONE_LIMIT_SHM_SIZE",
+		},
+		cli.Int64Flag{
+			Name:   "limit-cpu-quota",
+			EnvVar: "DRONE_LIMIT_CPU_QUOTA",
+		},
+		cli.Int64Flag{
+			Name:   "limit-cpu-shares",
+			EnvVar: "DRONE_LIMIT_CPU_SHARES",
+		},
+		cli.StringFlag{
+			Name:   "limit-cpu-set",
+			EnvVar: "DRONE_LIMIT_CPU_SET",
+		},
+		//
+		// remote parameters
+		//
 		cli.BoolFlag{
 			EnvVar: "DRONE_GITHUB",
 			Name:   "github",
@@ -442,6 +472,14 @@ func setupEvilGlobals(c *cli.Context, v store.Store) {
 	if endpoint := c.String("gating-service"); endpoint != "" {
 		droneserver.Config.Services.Senders = sender.NewRemote(endpoint)
 	}
+
+	// limits
+	droneserver.Config.Pipeline.Limits.MemSwapLimit = c.Int64("limit-mem-swap")
+	droneserver.Config.Pipeline.Limits.MemLimit = c.Int64("limit-mem")
+	droneserver.Config.Pipeline.Limits.ShmSize = c.Int64("limit-shm-size")
+	droneserver.Config.Pipeline.Limits.CPUQuota = c.Int64("limit-cpu-quota")
+	droneserver.Config.Pipeline.Limits.CPUShares = c.Int64("limit-cpu-shares")
+	droneserver.Config.Pipeline.Limits.CPUSet = c.String("limit-cpu-set")
 
 	// server configuration
 	droneserver.Config.Server.Cert = c.String("server-cert")
