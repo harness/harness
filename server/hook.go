@@ -201,6 +201,14 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
+	envs := map[string]string{}
+	if Config.Services.Environ != nil {
+		globals, _ := Config.Services.Environ.EnvironList(repo)
+		for _, global := range globals {
+			envs[global.Name] = global.Value
+		}
+	}
+
 	secs, err := Config.Services.Secrets.SecretListBuild(repo, build)
 	if err != nil {
 		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
@@ -234,6 +242,7 @@ func PostHook(c *gin.Context) {
 		Netrc: netrc,
 		Secs:  secs,
 		Regs:  regs,
+		Envs:  envs,
 		Link:  httputil.GetURL(c.Request),
 		Yaml:  conf.Data,
 	}
