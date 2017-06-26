@@ -35,6 +35,7 @@ var Config = struct {
 		Senders    model.SenderService
 		Secrets    model.SecretService
 		Registries model.RegistryService
+		Environ    model.EnvironService
 	}
 	Storage struct {
 		// Users  model.UserStore

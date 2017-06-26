@@ -205,6 +205,13 @@ func PostApproval(c *gin.Context) {
 	if err != nil {
 		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
 	}
+	envs := map[string]string{}
+	if Config.Services.Environ != nil {
+		globals, _ := Config.Services.Environ.EnvironList(repo)
+		for _, global := range globals {
+			envs[global.Name] = global.Value
+		}
+	}
 
 	defer func() {
 		uri := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, build.Number)
@@ -223,6 +230,7 @@ func PostApproval(c *gin.Context) {
 		Regs:  regs,
 		Link:  httputil.GetURL(c.Request),
 		Yaml:  conf.Data,
+		Envs:  envs,
 	}
 	items, err := b.Build()
 	if err != nil {
@@ -483,6 +491,12 @@ func PostBuild(c *gin.Context) {
 	regs, err := Config.Services.Registries.RegistryList(repo)
 	if err != nil {
 		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
+	}
+	if Config.Services.Environ != nil {
+		globals, _ := Config.Services.Environ.EnvironList(repo)
+		for _, global := range globals {
+			buildParams[global.Name] = global.Value
+		}
 	}
 
 	b := builder{
