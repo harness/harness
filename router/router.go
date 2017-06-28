@@ -80,7 +80,6 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 			repo.GET("/builds", server.GetBuilds)
 			repo.GET("/builds/:number", server.GetBuild)
 			repo.GET("/logs/:number/:ppid/:proc", server.GetBuildLogs)
-			repo.POST("/sign", session.MustPush, server.Sign)
 
 			// requires push permissions
 			repo.GET("/secrets", session.MustPush, server.GetSecretList)
@@ -120,8 +119,6 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 
 	ws := e.Group("/ws")
 	{
-		ws.GET("/broker", server.RPCHandler)
-		ws.GET("/rpc", server.RPCHandler)
 		ws.GET("/feed", server.EventStream)
 		ws.GET("/logs/:owner/:name/:build/:number",
 			session.SetRepo(),

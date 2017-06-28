@@ -2,19 +2,24 @@ package server
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/cncd/logging"
+	"github.com/cncd/pipeline/pipeline/rpc/proto"
 	"github.com/cncd/pubsub"
 	"github.com/drone/drone/plugins/registry"
 	"github.com/drone/drone/plugins/secrets"
 	"github.com/drone/drone/plugins/sender"
+	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router"
 	"github.com/drone/drone/router/middleware"
 	droneserver "github.com/drone/drone/server"
@@ -395,8 +400,13 @@ func server(c *cli.Context) error {
 		logrus.SetLevel(logrus.WarnLevel)
 	}
 
-	s := setupStore(c)
-	setupEvilGlobals(c, s)
+	remote_, err := setupRemote(c)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	store_ := setupStore(c)
+	setupEvilGlobals(c, store_, remote_)
 
 	// setup the server and start the listener
 	handler := router.Load(
@@ -404,9 +414,37 @@ func server(c *cli.Context) error {
 		middleware.Version,
 		middleware.Config(c),
 		middleware.Cache(c),
-		middleware.Store(c, s),
-		middleware.Remote(c),
+		middleware.Store(c, store_),
+		middleware.Remote(remote_),
 	)
+
+	var g errgroup.Group
+
+	// start the grpc server
+	g.Go(func() error {
+
+		lis, err := net.Listen("tcp", ":9000")
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+		s := grpc.NewServer()
+		ss := new(droneserver.DroneServer)
+		ss.Queue = droneserver.Config.Services.Queue
+		ss.Logger = droneserver.Config.Services.Logs
+		ss.Pubsub = droneserver.Config.Services.Pubsub
+		ss.Remote = remote_
+		ss.Store = store_
+		ss.Host = droneserver.Config.Server.Host
+		proto.RegisterDroneServer(s, ss)
+
+		err = s.Serve(lis)
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+		return nil
+	})
 
 	// start the server with tls enabled
 	if c.String("server-cert") != "" {
@@ -428,7 +466,6 @@ func server(c *cli.Context) error {
 
 	// start the server with lets encrypt enabled
 	// listen on ports 443 and 80
-	var g errgroup.Group
 	g.Go(func() error {
 		return http.ListenAndServe(":http", handler)
 	})
@@ -449,7 +486,7 @@ func server(c *cli.Context) error {
 // in the gin.Context to storing them in a struct. We are also moving away
 // from gin to gorilla. We will temporarily use global during our refactoring
 // which will be removing in the final implementation.
-func setupEvilGlobals(c *cli.Context, v store.Store) {
+func setupEvilGlobals(c *cli.Context, v store.Store, r remote.Remote) {
 
 	// storage
 	droneserver.Config.Storage.Files = v
@@ -463,6 +500,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store) {
 	droneserver.Config.Services.Registries = setupRegistryService(c, v)
 	droneserver.Config.Services.Secrets = setupSecretService(c, v)
 	droneserver.Config.Services.Senders = sender.New(v, v)
+
 	if endpoint := c.String("registry-service"); endpoint != "" {
 		droneserver.Config.Services.Registries = registry.NewRemote(endpoint)
 	}

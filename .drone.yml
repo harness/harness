@@ -46,7 +46,7 @@ pipeline:
     image: plugins/docker
     repo: drone/drone
     secrets: [ docker_username, docker_password ]
-    tag: [ 0.7, 0.7.3 ]
+    tag: [ 0.8, 0.8.0, 0.8.0-rc.1 ]
     when:
       event: tag
 

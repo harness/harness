@@ -6,11 +6,11 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"math"
-	"net/url"
 	"strconv"
 	"sync"
 	"time"
+
+	"google.golang.org/grpc"
 
 	"github.com/cncd/pipeline/pipeline"
 	"github.com/cncd/pipeline/pipeline/backend"
@@ -18,7 +18,6 @@ import (
 	"github.com/cncd/pipeline/pipeline/interrupt"
 	"github.com/cncd/pipeline/pipeline/multipart"
 	"github.com/cncd/pipeline/pipeline/rpc"
-	"github.com/drone/drone/version"
 
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
@@ -31,26 +30,15 @@ var Command = cli.Command{
 	Action: loop,
 	Flags: []cli.Flag{
 		cli.StringFlag{
-			EnvVar: "DRONE_SERVER,DRONE_ENDPOINT",
-			Name:   "drone-server",
+			EnvVar: "DRONE_SERVER",
+			Name:   "server",
 			Usage:  "drone server address",
-			Value:  "ws://localhost:8000/ws/broker",
+			Value:  "localhost:9000",
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_SECRET,DRONE_AGENT_SECRET",
-			Name:   "drone-secret",
+			EnvVar: "DRONE_SECRET",
+			Name:   "secret",
 			Usage:  "drone agent secret",
-		},
-		cli.DurationFlag{
-			EnvVar: "DRONE_BACKOFF",
-			Name:   "backoff",
-			Usage:  "drone server backoff interval",
-			Value:  time.Second * 15,
-		},
-		cli.IntFlag{
-			Name:   "retry-limit",
-			EnvVar: "DRONE_RETRY_LIMIT",
-			Value:  math.MaxInt32,
 		},
 		cli.BoolFlag{
 			EnvVar: "DRONE_DEBUG",
@@ -58,56 +46,44 @@ var Command = cli.Command{
 			Usage:  "start the agent in debug mode",
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_FILTER",
-			Name:   "filter",
-			Usage:  "filter jobs processed by this agent",
+			EnvVar: "DRONE_PLATFORM",
+			Name:   "platform",
+			Value:  "linux/amd64",
 		},
 		cli.IntFlag{
-			Name:   "max-procs",
 			EnvVar: "DRONE_MAX_PROCS",
+			Name:   "max-procs",
 			Value:  1,
-		},
-		cli.StringFlag{
-			Name:   "platform",
-			EnvVar: "DRONE_PLATFORM",
-			Value:  "linux/amd64",
 		},
 	},
 }
 
 func loop(c *cli.Context) error {
-	endpoint, err := url.Parse(
-		c.String("drone-server"),
-	)
-	if err != nil {
-		return err
-	}
+	// endpoint, err := url.Parse(
+	// 	c.String("drone-server"),
+	// )
+	// if err != nil {
+	// 	return err
+	// }
 	filter := rpc.Filter{
 		Labels: map[string]string{
 			"platform": c.String("platform"),
 		},
 	}
 
-	client, err := rpc.NewClient(
-		endpoint.String(),
-		rpc.WithRetryLimit(
-			c.Int("retry-limit"),
-		),
-		rpc.WithBackoff(
-			c.Duration("backoff"),
-		),
-		rpc.WithToken(
-			c.String("drone-secret"),
-		),
-		rpc.WithHeader(
-			"X-Drone-Version",
-			version.Version.String(),
-		),
+	// TODO pass version information to grpc server
+	// TODO authenticate to grpc server
+
+	conn, err := grpc.Dial(
+		c.String("server"),
+		grpc.WithInsecure(),
 	)
 	if err != nil {
 		return err
 	}
-	defer client.Close()
+	defer conn.Close()
+
+	client := rpc.NewGrpcClient(conn)
 
 	sigterm := abool.New()
 	ctx := context.Background()
