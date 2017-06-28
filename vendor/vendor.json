@@ -383,17 +383,6 @@
 			"revisionTime": "2016-02-12T16:27:11-05:00"
 		},
 		{
-			"path": "github.com/golang/protobuf/proto",
-			"revision": "552c7b9542c194800fd493123b3798ef0a832032",
-			"revisionTime": "2016-02-26T12:45:00+11:00"
-		},
-		{
-			"checksumSHA1": "Z4RIWIXH05QItZqVbmbONO9mWig=",
-			"path": "github.com/golang/protobuf/ptypes/any",
-			"revision": "6a1fa9404c0aebf36c879bc50152edcc953910d2",
-			"revisionTime": "2017-06-22T20:25:51Z"
-		},
-		{
 			"path": "github.com/google/go-github/github",
 			"revision": "47f2593dad1971eec2f0a0971aa007fef5edbc50",
 			"revisionTime": "2015-11-20T13:11:25-08:00"
