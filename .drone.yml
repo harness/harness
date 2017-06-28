@@ -8,6 +8,8 @@ pipeline:
     commands:
       - go get -u github.com/drone/drone-ui/dist
       - go get -u golang.org/x/tools/cmd/cover
+      - go get -u golang.org/x/net/context
+      - go get -u golang.org/x/net/context/ctxhttp
       - go test -cover $(go list ./... | grep -v /vendor/)
 
   test_postgres:
