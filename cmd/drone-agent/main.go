@@ -24,9 +24,15 @@ func main() {
 			Value:  "localhost:9000",
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_SECRET",
-			Name:   "secret",
-			Usage:  "drone agent secret",
+			EnvVar: "DRONE_USERNAME",
+			Name:   "username",
+			Usage:  "drone auth username",
+			Value:  "x-oauth-basic",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_PASSWORD,DRONE_SECRET",
+			Name:   "password",
+			Usage:  "drone auth password",
 		},
 		cli.BoolFlag{
 			EnvVar: "DRONE_DEBUG",

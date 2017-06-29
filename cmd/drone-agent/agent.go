@@ -21,15 +21,10 @@ import (
 
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
+	oldcontext "golang.org/x/net/context"
 )
 
 func loop(c *cli.Context) error {
-	// endpoint, err := url.Parse(
-	// 	c.String("drone-server"),
-	// )
-	// if err != nil {
-	// 	return err
-	// }
 	filter := rpc.Filter{
 		Labels: map[string]string{
 			"platform": c.String("platform"),
@@ -39,9 +34,15 @@ func loop(c *cli.Context) error {
 	// TODO pass version information to grpc server
 	// TODO authenticate to grpc server
 
+	// grpc.Dial(target, ))
+
 	conn, err := grpc.Dial(
 		c.String("server"),
 		grpc.WithInsecure(),
+		grpc.WithPerRPCCredentials(&credentials{
+			username: c.String("username"),
+			password: c.String("password"),
+		}),
 	)
 	if err != nil {
 		return err
@@ -281,4 +282,20 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	}
 
 	return nil
+}
+
+type credentials struct {
+	username string
+	password string
+}
+
+func (c *credentials) GetRequestMetadata(oldcontext.Context, ...string) (map[string]string, error) {
+	return map[string]string{
+		"username": c.username,
+		"password": c.password,
+	}, nil
+}
+
+func (c *credentials) RequireTransportSecurity() bool {
+	return false
 }

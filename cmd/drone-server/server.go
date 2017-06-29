@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"net/url"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/sync/errgroup"
@@ -28,6 +30,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/urfave/cli"
+	oldcontext "golang.org/x/net/context"
 )
 
 var flags = []cli.Flag{
@@ -422,7 +425,13 @@ func server(c *cli.Context) error {
 			logrus.Error(err)
 			return err
 		}
-		s := grpc.NewServer()
+		auther := &authorizer{
+			password: c.String("agent-secret"),
+		}
+		s := grpc.NewServer(
+			grpc.StreamInterceptor(auther.streamInterceptor),
+			grpc.UnaryInterceptor(auther.unaryIntercaptor),
+		)
 		ss := new(droneserver.DroneServer)
 		ss.Queue = droneserver.Config.Services.Queue
 		ss.Logger = droneserver.Config.Services.Logs
@@ -526,4 +535,33 @@ func setupEvilGlobals(c *cli.Context, v store.Store, r remote.Remote) {
 	// droneserver.Config.Server.Open = cli.Bool("open")
 	// droneserver.Config.Server.Orgs = sliceToMap(cli.StringSlice("orgs"))
 	// droneserver.Config.Server.Admins = sliceToMap(cli.StringSlice("admin"))
+}
+
+type authorizer struct {
+	username string
+	password string
+}
+
+func (a *authorizer) streamInterceptor(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	if err := a.authorize(stream.Context()); err != nil {
+		return err
+	}
+	return handler(srv, stream)
+}
+
+func (a *authorizer) unaryIntercaptor(ctx oldcontext.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	if err := a.authorize(ctx); err != nil {
+		return nil, err
+	}
+	return handler(ctx, req)
+}
+
+func (a *authorizer) authorize(ctx context.Context) error {
+	if md, ok := metadata.FromContext(ctx); ok {
+		if len(md["password"]) > 0 && md["password"][0] == a.password {
+			return nil
+		}
+		return errors.New("invalid agent token")
+	}
+	return errors.New("missing agent token")
 }
