@@ -8,6 +8,10 @@ pipeline:
     commands:
       - go get -u github.com/drone/drone-ui/dist
       - go get -u golang.org/x/tools/cmd/cover
+      - go get -u golang.org/x/net/context
+      - go get -u golang.org/x/net/context/ctxhttp
+      - go get -u github.com/golang/protobuf/proto
+      - go get -u github.com/golang/protobuf/protoc-gen-go
       - go test -cover $(go list ./... | grep -v /vendor/)
 
   test_postgres:
@@ -33,7 +37,7 @@ pipeline:
     when:
       event: [ push, tag ]
 
-  publish:
+  publish_server:
     image: plugins/docker
     repo: drone/drone
     secrets: [ docker_username, docker_password ]
@@ -42,11 +46,30 @@ pipeline:
       branch: master
       event: push
 
-  release:
+  publish_agent:
+    image: plugins/docker
+    repo: drone/agent
+    dockerfile: Dockerfile.agent
+    secrets: [ docker_username, docker_password ]
+    tag: [ latest ]
+    when:
+      branch: master
+      event: push
+
+  release_server:
     image: plugins/docker
     repo: drone/drone
     secrets: [ docker_username, docker_password ]
-    tag: [ 0.7, 0.7.3 ]
+    tag: [ 0.8, 0.8.0, 0.8.0-rc.1 ]
+    when:
+      event: tag
+
+  release_agent:
+    image: plugins/docker
+    repo: drone/agent
+    dockerfile: Dockerfile.agent
+    secrets: [ docker_username, docker_password ]
+    tag: [ 0.8, 0.8.0, 0.8.0-rc.1 ]
     when:
       event: tag
 

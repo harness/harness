@@ -8,18 +8,18 @@ import (
 	"log"
 	"strconv"
 
+	oldcontext "golang.org/x/net/context"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/cncd/logging"
 	"github.com/cncd/pipeline/pipeline/rpc"
+	"github.com/cncd/pipeline/pipeline/rpc/proto"
 	"github.com/cncd/pubsub"
 	"github.com/cncd/queue"
-	"github.com/coreos/go-semver/semver"
-	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/store"
-	"github.com/drone/drone/version"
 )
 
 // This file is a complete disaster because I'm trying to wedge in some
@@ -65,64 +65,6 @@ var Config = struct {
 		Privileged []string
 	}
 }{}
-
-// var config = struct {
-// 	pubsub pubsub.Publisher
-// 	queue  queue.Queue
-// 	logger logging.Log
-// 	secret string
-// 	host   string
-// }{
-// 	pubsub.New(),
-// 	queue.New(),
-// 	logging.New(),
-// 	os.Getenv("DRONE_SECRET"),
-// 	os.Getenv("DRONE_HOST"),
-// }
-
-// func SetupRPC() gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		c.Next()
-// 	}
-// }
-
-func RPCHandler(c *gin.Context) {
-
-	if secret := c.Request.Header.Get("Authorization"); secret != "Bearer "+Config.Server.Pass {
-		log.Printf("Unable to connect agent. Invalid authorization token %q does not match %q", secret, Config.Server.Pass)
-		c.String(401, "Unable to connect agent. Invalid authorization token")
-		return
-	}
-
-	agent := semver.New(
-		c.Request.Header.Get("X-Drone-Version"),
-	)
-	logrus.Debugf("agent connected: ip address %s: version %s", c.ClientIP(), agent)
-	// if agent.LessThan(version.Version) {
-	// 	logrus.Warnf("Version mismatch. Agent version %s < Server version %s", agent, version.Version)
-	// 	c.String(409, "Version mismatch. Agent version %s < Server version %s", agent, version.Version)
-	// 	return
-	// }
-
-	switch agent.Minor {
-	case 6, 7:
-		// these versions are ok
-	default:
-		logrus.Warnf("Version mismatch. Agent version %s < Server version %s", agent, version.Version)
-		c.String(409, "Version mismatch. Agent version %s < Server version %s", agent, version.Version)
-		return
-	}
-
-	peer := RPC{
-		remote: remote.FromContext(c),
-		store:  store.FromContext(c),
-		queue:  Config.Services.Queue,
-		pubsub: Config.Services.Pubsub,
-		logger: Config.Services.Logs,
-		host:   Config.Server.Host,
-	}
-	rpc.NewServer(&peer).ServeHTTP(c.Writer, c.Request)
-}
 
 type RPC struct {
 	remote remote.Remote
@@ -469,4 +411,220 @@ func (s *RPC) checkCancelled(pipeline *rpc.Pipeline) (bool, error) {
 		return true, nil
 	}
 	return false, err
+}
+
+//
+//
+//
+
+// DroneServer is a grpc server implementation.
+type DroneServer struct {
+	Remote remote.Remote
+	Queue  queue.Queue
+	Pubsub pubsub.Publisher
+	Logger logging.Log
+	Store  store.Store
+	Host   string
+}
+
+func (s *DroneServer) Next(c oldcontext.Context, req *proto.NextRequest) (*proto.NextReply, error) {
+	peer := RPC{
+		remote: s.Remote,
+		store:  s.Store,
+		queue:  s.Queue,
+		pubsub: s.Pubsub,
+		logger: s.Logger,
+		host:   s.Host,
+	}
+	filter := rpc.Filter{
+		Labels: req.GetFilter().GetLabels(),
+	}
+
+	res := new(proto.NextReply)
+	pipeline, err := peer.Next(c, filter)
+	if err != nil {
+		return res, err
+	}
+	if pipeline == nil {
+		return res, err
+	}
+
+	res.Pipeline = new(proto.Pipeline)
+	res.Pipeline.Id = pipeline.ID
+	res.Pipeline.Timeout = pipeline.Timeout
+	res.Pipeline.Payload, _ = json.Marshal(pipeline.Config)
+
+	return res, err
+
+	// fn := func(task *queue.Task) bool {
+	// 	for k, v := range req.GetFilter().Labels {
+	// 		if task.Labels[k] != v {
+	// 			return false
+	// 		}
+	// 	}
+	// 	return true
+	// }
+	// task, err := s.Queue.Poll(c, fn)
+	// if err != nil {
+	// 	return nil, err
+	// } else if task == nil {
+	// 	return nil, nil
+	// }
+	//
+	// pipeline := new(rpc.Pipeline)
+	// json.Unmarshal(task.Data, pipeline)
+	//
+	// res := new(proto.NextReply)
+	// res.Pipeline = new(proto.Pipeline)
+	// res.Pipeline.Id = pipeline.ID
+	// res.Pipeline.Timeout = pipeline.Timeout
+	// res.Pipeline.Payload, _ = json.Marshal(pipeline.Config)
+	//
+	// // check if the process was previously cancelled
+	// // cancelled, _ := s.checkCancelled(pipeline)
+	// // if cancelled {
+	// // 	logrus.Debugf("ignore pid %v: cancelled by user", pipeline.ID)
+	// // 	if derr := s.queue.Done(c, pipeline.ID); derr != nil {
+	// // 		logrus.Errorf("error: done: cannot ack proc_id %v: %s", pipeline.ID, err)
+	// // 	}
+	// // 	return nil, nil
+	// // }
+	//
+	// return res, nil
+}
+
+func (s *DroneServer) Init(c oldcontext.Context, req *proto.InitRequest) (*proto.Empty, error) {
+	peer := RPC{
+		remote: s.Remote,
+		store:  s.Store,
+		queue:  s.Queue,
+		pubsub: s.Pubsub,
+		logger: s.Logger,
+		host:   s.Host,
+	}
+	state := rpc.State{
+		Error:    req.GetState().GetError(),
+		ExitCode: int(req.GetState().GetExitCode()),
+		Finished: req.GetState().GetFinished(),
+		Started:  req.GetState().GetStarted(),
+		Proc:     req.GetState().GetName(),
+		Exited:   req.GetState().GetExited(),
+	}
+	res := new(proto.Empty)
+	err := peer.Init(c, req.GetId(), state)
+	return res, err
+}
+
+func (s *DroneServer) Update(c oldcontext.Context, req *proto.UpdateRequest) (*proto.Empty, error) {
+	peer := RPC{
+		remote: s.Remote,
+		store:  s.Store,
+		queue:  s.Queue,
+		pubsub: s.Pubsub,
+		logger: s.Logger,
+		host:   s.Host,
+	}
+	state := rpc.State{
+		Error:    req.GetState().GetError(),
+		ExitCode: int(req.GetState().GetExitCode()),
+		Finished: req.GetState().GetFinished(),
+		Started:  req.GetState().GetStarted(),
+		Proc:     req.GetState().GetName(),
+		Exited:   req.GetState().GetExited(),
+	}
+	res := new(proto.Empty)
+	err := peer.Update(c, req.GetId(), state)
+	return res, err
+}
+
+func (s *DroneServer) Upload(c oldcontext.Context, req *proto.UploadRequest) (*proto.Empty, error) {
+	peer := RPC{
+		remote: s.Remote,
+		store:  s.Store,
+		queue:  s.Queue,
+		pubsub: s.Pubsub,
+		logger: s.Logger,
+		host:   s.Host,
+	}
+	file := &rpc.File{
+		Data: req.GetFile().GetData(),
+		Mime: req.GetFile().GetMime(),
+		Name: req.GetFile().GetName(),
+		Proc: req.GetFile().GetProc(),
+		Size: int(req.GetFile().GetSize()),
+		Time: req.GetFile().GetTime(),
+	}
+	res := new(proto.Empty)
+	err := peer.Upload(c, req.GetId(), file)
+	return res, err
+}
+
+func (s *DroneServer) Done(c oldcontext.Context, req *proto.DoneRequest) (*proto.Empty, error) {
+	peer := RPC{
+		remote: s.Remote,
+		store:  s.Store,
+		queue:  s.Queue,
+		pubsub: s.Pubsub,
+		logger: s.Logger,
+		host:   s.Host,
+	}
+	state := rpc.State{
+		Error:    req.GetState().GetError(),
+		ExitCode: int(req.GetState().GetExitCode()),
+		Finished: req.GetState().GetFinished(),
+		Started:  req.GetState().GetStarted(),
+		Proc:     req.GetState().GetName(),
+		Exited:   req.GetState().GetExited(),
+	}
+	res := new(proto.Empty)
+	err := peer.Done(c, req.GetId(), state)
+	return res, err
+}
+
+func (s *DroneServer) Wait(c oldcontext.Context, req *proto.WaitRequest) (*proto.Empty, error) {
+	peer := RPC{
+		remote: s.Remote,
+		store:  s.Store,
+		queue:  s.Queue,
+		pubsub: s.Pubsub,
+		logger: s.Logger,
+		host:   s.Host,
+	}
+	res := new(proto.Empty)
+	err := peer.Wait(c, req.GetId())
+	return res, err
+}
+
+func (s *DroneServer) Extend(c oldcontext.Context, req *proto.ExtendRequest) (*proto.Empty, error) {
+	peer := RPC{
+		remote: s.Remote,
+		store:  s.Store,
+		queue:  s.Queue,
+		pubsub: s.Pubsub,
+		logger: s.Logger,
+		host:   s.Host,
+	}
+	res := new(proto.Empty)
+	err := peer.Extend(c, req.GetId())
+	return res, err
+}
+
+func (s *DroneServer) Log(c oldcontext.Context, req *proto.LogRequest) (*proto.Empty, error) {
+	peer := RPC{
+		remote: s.Remote,
+		store:  s.Store,
+		queue:  s.Queue,
+		pubsub: s.Pubsub,
+		logger: s.Logger,
+		host:   s.Host,
+	}
+	line := &rpc.Line{
+		Out:  req.GetLine().GetOut(),
+		Pos:  int(req.GetLine().GetPos()),
+		Time: req.GetLine().GetTime(),
+		Proc: req.GetLine().GetProc(),
+	}
+	res := new(proto.Empty)
+	err := peer.Log(c, req.GetId(), line)
+	return res, err
 }

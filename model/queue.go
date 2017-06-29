@@ -62,7 +62,7 @@ func (q *persistentQueue) Poll(c context.Context, f queue.Filter) (*queue.Task, 
 		if derr := q.store.TaskDelete(task.ID); derr != nil {
 			logrus.Errorf("pull queue item: %s: failed to remove from backup: %s", task.ID, derr)
 		} else {
-			logrus.Errorf("pull queue item: %s: successfully removed from backup", task.ID)
+			logrus.Debugf("pull queue item: %s: successfully removed from backup", task.ID)
 		}
 	}
 	return task, err
