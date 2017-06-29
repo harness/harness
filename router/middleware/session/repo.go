@@ -130,11 +130,13 @@ func MustPull(c *gin.Context) {
 
 	// debugging
 	if user != nil {
-		c.AbortWithStatus(http.StatusNotFound)
+		c.String(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+		c.Abort()
 		log.Debugf("User %s denied read access to %s",
 			user.Login, c.Request.URL.Path)
 	} else {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.String(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+		c.Abort()
 		log.Debugf("Guest denied read access to %s %s",
 			c.Request.Method,
 			c.Request.URL.Path,
@@ -155,12 +157,14 @@ func MustPush(c *gin.Context) {
 
 	// debugging
 	if user != nil {
-		c.AbortWithStatus(http.StatusNotFound)
+		c.String(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+		c.Abort()
 		log.Debugf("User %s denied write access to %s",
 			user.Login, c.Request.URL.Path)
 
 	} else {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.String(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+		c.Abort()
 		log.Debugf("Guest denied write access to %s %s",
 			c.Request.Method,
 			c.Request.URL.Path,
