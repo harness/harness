@@ -9,7 +9,10 @@ import (
 	"github.com/cncd/pipeline/pipeline/rpc/proto"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
+
+var backoff = time.Second
 
 type client struct {
 	client proto.DroneClient
@@ -38,17 +41,13 @@ func (c *client) Next(ctx context.Context, f Filter) (*Pipeline, error) {
 	req.Filter.Labels = f.Labels
 	for {
 		res, err = c.client.Next(ctx, req)
-		//
-		// TODO error type
-		//
 		if err == nil {
 			break
 		}
-
-		println("error getting next execution. retry. " + err.Error())
-		select {
-		case <-time.After(1 * time.Second):
+		if grpc.Code(err) == codes.Unknown {
+			return nil, err
 		}
+		<-time.After(backoff)
 	}
 
 	if res.GetPipeline() == nil {
@@ -69,15 +68,13 @@ func (c *client) Wait(ctx context.Context, id string) (err error) {
 	req.Id = id
 	for {
 		_, err = c.client.Wait(ctx, req)
-		//
-		// TODO error type
-		//
 		if err == nil {
 			break
 		}
-		select {
-		case <-time.After(1 * time.Second):
+		if grpc.Code(err) == codes.Unknown {
+			return err
 		}
+		<-time.After(backoff)
 	}
 	return nil
 }
@@ -95,15 +92,13 @@ func (c *client) Init(ctx context.Context, id string, state State) (err error) {
 	req.State.Name = state.Proc
 	for {
 		_, err = c.client.Init(ctx, req)
-		//
-		// TODO error type
-		//
 		if err == nil {
 			break
 		}
-		select {
-		case <-time.After(1 * time.Second):
+		if grpc.Code(err) == codes.Unknown {
+			return err
 		}
+		<-time.After(backoff)
 	}
 	return nil
 }
@@ -121,15 +116,13 @@ func (c *client) Done(ctx context.Context, id string, state State) (err error) {
 	req.State.Name = state.Proc
 	for {
 		_, err = c.client.Done(ctx, req)
-		//
-		// TODO error type
-		//
 		if err == nil {
 			break
 		}
-		select {
-		case <-time.After(1 * time.Second):
+		if grpc.Code(err) == codes.Unknown {
+			return err
 		}
+		<-time.After(backoff)
 	}
 	return nil
 }
@@ -140,15 +133,13 @@ func (c *client) Extend(ctx context.Context, id string) (err error) {
 	req.Id = id
 	for {
 		_, err = c.client.Extend(ctx, req)
-		//
-		// TODO error type
-		//
 		if err == nil {
 			break
 		}
-		select {
-		case <-time.After(1 * time.Second):
+		if grpc.Code(err) == codes.Unknown {
+			return err
 		}
+		<-time.After(backoff)
 	}
 	return nil
 }
@@ -166,15 +157,13 @@ func (c *client) Update(ctx context.Context, id string, state State) (err error)
 	req.State.Name = state.Proc
 	for {
 		_, err = c.client.Update(ctx, req)
-		//
-		// TODO error type
-		//
 		if err == nil {
 			break
 		}
-		select {
-		case <-time.After(1 * time.Second):
+		if grpc.Code(err) == codes.Unknown {
+			return err
 		}
+		<-time.After(backoff)
 	}
 	return nil
 }
@@ -192,15 +181,13 @@ func (c *client) Upload(ctx context.Context, id string, file *File) (err error) 
 	req.File.Data = file.Data
 	for {
 		_, err = c.client.Upload(ctx, req)
-		//
-		// TODO error type
-		//
 		if err == nil {
 			break
 		}
-		select {
-		case <-time.After(1 * time.Second):
+		if grpc.Code(err) == codes.Unknown {
+			return err
 		}
+		<-time.After(backoff)
 	}
 	return nil
 }
@@ -216,15 +203,13 @@ func (c *client) Log(ctx context.Context, id string, line *Line) (err error) {
 	req.Line.Time = line.Time
 	for {
 		_, err = c.client.Log(ctx, req)
-		//
-		// TODO error type
-		//
 		if err == nil {
 			break
 		}
-		select {
-		case <-time.After(1 * time.Second):
+		if grpc.Code(err) == codes.Unknown {
+			return err
 		}
+		<-time.After(backoff)
 	}
 	return nil
 }
