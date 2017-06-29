@@ -306,9 +306,13 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 
 	uploads.Wait()
 
+	log.Printf("pipeline: logging complete: %s", work.ID)
+
 	err = client.Done(context.Background(), work.ID, state)
 	if err != nil {
 		log.Printf("Pipeine: error signaling pipeline done: %s: %s", work.ID, err)
+	} else {
+		log.Printf("pipeline: done: %s", work.ID)
 	}
 
 	return nil
