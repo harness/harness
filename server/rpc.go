@@ -89,7 +89,7 @@ var Config = struct {
 func RPCHandler(c *gin.Context) {
 
 	if secret := c.Request.Header.Get("Authorization"); secret != "Bearer "+Config.Server.Pass {
-		log.Printf("Unable to connect agent. Invalid authorization token %q does not match %q", secret, Config.Server.Pass)
+		log.Printf("Unable to connect agent (IP: %q). Invalid authorization token.", c.ClientIP())
 		c.String(401, "Unable to connect agent. Invalid authorization token")
 		return
 	}
