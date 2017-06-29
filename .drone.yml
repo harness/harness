@@ -37,7 +37,7 @@ pipeline:
     when:
       event: [ push, tag ]
 
-  publish:
+  publish_server:
     image: plugins/docker
     repo: drone/drone
     secrets: [ docker_username, docker_password ]
@@ -46,9 +46,28 @@ pipeline:
       branch: master
       event: push
 
-  release:
+  publish_agent:
+    image: plugins/docker
+    repo: drone/agent
+    dockerfile: Dockerfile.agent
+    secrets: [ docker_username, docker_password ]
+    tag: [ latest ]
+    when:
+      branch: master
+      event: push
+
+  release_server:
     image: plugins/docker
     repo: drone/drone
+    secrets: [ docker_username, docker_password ]
+    tag: [ 0.8, 0.8.0, 0.8.0-rc.1 ]
+    when:
+      event: tag
+
+  release_agent:
+    image: plugins/docker
+    repo: drone/agent
+    dockerfile: Dockerfile.agent
     secrets: [ docker_username, docker_password ]
     tag: [ 0.8, 0.8.0, 0.8.0-rc.1 ]
     when:

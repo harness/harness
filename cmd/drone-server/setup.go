@@ -1,6 +1,4 @@
-// +build !enterprise
-
-package server
+package main
 
 import (
 	"fmt"
@@ -41,12 +39,16 @@ func setupRegistryService(c *cli.Context, s store.Store) model.RegistryService {
 	return registry.New(s)
 }
 
+func setupEnvironService(c *cli.Context, s store.Store) model.EnvironService {
+	return nil
+}
+
 func setupPubsub(c *cli.Context)        {}
-func setupStream(c *cli.Command)        {}
-func setupGatingService(c *cli.Command) {}
+func setupStream(c *cli.Context)        {}
+func setupGatingService(c *cli.Context) {}
 
 // helper function to setup the remote from the CLI arguments.
-func setupRemote(c *cli.Context) (remote.Remote, error) {
+func SetupRemote(c *cli.Context) (remote.Remote, error) {
 	switch {
 	case c.Bool("github"):
 		return setupGithub(c)
@@ -136,3 +138,5 @@ func setupGithub(c *cli.Context) (remote.Remote, error) {
 		MergeRef:    c.BoolT("github-merge-ref"),
 	})
 }
+
+func before(c *cli.Context) error { return nil }

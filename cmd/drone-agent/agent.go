@@ -1,4 +1,4 @@
-package agent
+package main
 
 import (
 	"context"
@@ -22,41 +22,6 @@ import (
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
 )
-
-// Command exports the agent command.
-var Command = cli.Command{
-	Name:   "agent",
-	Usage:  "starts the drone agent",
-	Action: loop,
-	Flags: []cli.Flag{
-		cli.StringFlag{
-			EnvVar: "DRONE_SERVER",
-			Name:   "server",
-			Usage:  "drone server address",
-			Value:  "localhost:9000",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_SECRET",
-			Name:   "secret",
-			Usage:  "drone agent secret",
-		},
-		cli.BoolFlag{
-			EnvVar: "DRONE_DEBUG",
-			Name:   "debug",
-			Usage:  "start the agent in debug mode",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_PLATFORM",
-			Name:   "platform",
-			Value:  "linux/amd64",
-		},
-		cli.IntFlag{
-			EnvVar: "DRONE_MAX_PROCS",
-			Name:   "max-procs",
-			Value:  1,
-		},
-	},
-}
 
 func loop(c *cli.Context) error {
 	// endpoint, err := url.Parse(
