@@ -14,6 +14,9 @@ var files = []struct {
 		name: "index.html",
 		data: index,
 	}, {
+		name: "index_polymer.html",
+		data: indexpolymer,
+	}, {
 		name: "login.html",
 		data: login,
 	}, {
@@ -79,6 +82,42 @@ var index = `<!DOCTYPE html>
 </script>
 <script src="https://code.getmdl.io/1.1.3/material.min.js"></script>
 <script src="/static/app.js"></script>
+</body>
+</html>
+`
+
+// files/index_polymer.html
+var indexpolymer = `<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="author" content="bradrydzewski">
+	<meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+	<title></title>
+	<script>
+			window.ENV = {};
+			window.ENV.server = window.location.protocol+"//"+window.location.host;
+			{{ if .csrf }}window.ENV.csrf = "{{ .csrf }}"{{ end }}
+			{{ if .user }}
+			window.USER = {{ json .user }};
+			{{ end }}
+	</script>
+	<script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono">
+	<link rel="import" href="/src/drone/drone-app.html">
+
+	<style>
+		html, body {
+			padding:0px;
+			margin:0px;
+		}
+	</style>
+</head>
+<body>
+	<drone-app></drone-app>
 </body>
 </html>
 `

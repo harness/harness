@@ -2,7 +2,6 @@ package router
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 
@@ -13,8 +12,6 @@ import (
 	"github.com/drone/drone/server/debug"
 	"github.com/drone/drone/server/metrics"
 	"github.com/drone/drone/server/template"
-
-	"github.com/drone/drone-ui/dist"
 )
 
 // Load loads the router
@@ -24,13 +21,11 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(gin.Recovery())
 	e.SetHTMLTemplate(template.T)
 
-	if dir := os.Getenv("DRONE_STATIC_DIR"); dir == "" {
-		fs := http.FileServer(dist.AssetFS())
-		e.GET("/static/*filepath", func(c *gin.Context) {
-			fs.ServeHTTP(c.Writer, c.Request)
+	ui := server.NewWebsite()
+	for _, path := range ui.Routes() {
+		e.GET(path, func(c *gin.Context) {
+			ui.File(c.Writer, c.Request)
 		})
-	} else {
-		e.Static("/static", dir)
 	}
 
 	e.Use(header.NoCache)
@@ -40,10 +35,11 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(session.SetUser())
 	e.Use(token.Refresh)
 
-	e.GET("/login", server.ShowLogin)
-	e.GET("/login/form", server.ShowLoginForm)
 	e.GET("/logout", server.GetLogout)
-	e.NoRoute(server.ShowIndex)
+	e.NoRoute(func(c *gin.Context) {
+		u := session.User(c)
+		ui.Page(c.Writer, c.Request, u)
+	})
 
 	user := e.Group("/api/user")
 	{
