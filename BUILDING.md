@@ -2,9 +2,7 @@
 
 ## Install Go Dependencies
 
-    $ go get github.com/drone/drone-ui/dist
-    $ go get github.com/golang/protobuf/proto
-    $ go get golang.org/x/net/context
+    $ go get ./...
 
 ## Server
 

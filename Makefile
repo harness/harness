@@ -46,9 +46,7 @@ agent: fmt depend | $(BASE) ; $(info $(M) building agent executable…) @ ## Bui
 
 .PHONY: depend
 depend: $(BASE) ; $(info $(M) installing dependencies…) @ ## Install dependencies
-	@go get github.com/drone/drone-ui/dist
-	@go get github.com/golang/protobuf/proto
-	@go get golang.org/x/net/context
+	@go get ./...
 
 # Tools
 
