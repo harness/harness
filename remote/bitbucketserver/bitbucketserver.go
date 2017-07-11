@@ -233,6 +233,7 @@ func CreateConsumer(URL string, ConsumerKey string, PrivateKey *rsa.PrivateKey) 
 	consumer.HttpClient = &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			Proxy: http.ProxyFromEnvironment,
 		},
 	}
 	return consumer
