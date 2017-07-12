@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
+	"time"
 )
 
 // Permission represents a API permission.
@@ -20,14 +20,21 @@ type Permission struct {
 
 // Repository represents a API repository.
 type Repository struct {
-	Id          int64      `json:"id"`
-	Owner       User       `json:"owner"`
+	ID          int64      `json:"id"`
+	Owner       *User      `json:"owner"`
 	FullName    string     `json:"full_name"`
+	Description string     `json:"description"`
 	Private     bool       `json:"private"`
 	Fork        bool       `json:"fork"`
 	HtmlUrl     string     `json:"html_url"`
 	CloneUrl    string     `json:"clone_url"`
 	SshUrl      string     `json:"ssh_url"`
+	Stars       int        `json:"stars_count"`
+	Forks       int        `json:"forks_count"`
+	Watchers    int        `json:"watchers_count"`
+	OpenIssues  int        `json:"open_issues_count"`
+	Created     time.Time  `json:"created_at"`
+	Updated     time.Time  `json:"updated_at"`
 	Permissions Permission `json:"permissions"`
 }
 
@@ -54,8 +61,7 @@ func (c *Client) CreateRepo(opt CreateRepoOption) (*Repository, error) {
 		return nil, err
 	}
 	repo := new(Repository)
-	return repo, c.getParsedResponse("POST", "/user/repos",
-		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body), repo)
+	return repo, c.getParsedResponse("POST", "/user/repos", jsonHeader, bytes.NewReader(body), repo)
 }
 
 // CreateOrgRepo creates an organization repository for authenticated user.
@@ -65,8 +71,7 @@ func (c *Client) CreateOrgRepo(org string, opt CreateRepoOption) (*Repository, e
 		return nil, err
 	}
 	repo := new(Repository)
-	return repo, c.getParsedResponse("POST", fmt.Sprintf("/org/%s/repos", org),
-		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body), repo)
+	return repo, c.getParsedResponse("POST", fmt.Sprintf("/org/%s/repos", org), jsonHeader, bytes.NewReader(body), repo)
 }
 
 // GetRepo returns information of a repository of given owner.
@@ -103,6 +108,5 @@ func (c *Client) MigrateRepo(opt MigrateRepoOption) (*Repository, error) {
 		return nil, err
 	}
 	repo := new(Repository)
-	return repo, c.getParsedResponse("POST", "/repos/migrate",
-		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body), repo)
+	return repo, c.getParsedResponse("POST", "/repos/migrate", jsonHeader, bytes.NewReader(body), repo)
 }

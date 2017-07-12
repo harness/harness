@@ -378,9 +378,10 @@
 			"versionExact": "v1.3"
 		},
 		{
+			"checksumSHA1": "cYQ7oJoKebhdRTG1lz/H/tPxPjg=",
 			"path": "github.com/gogits/go-gogs-client",
-			"revision": "d584b1e0fb4d8ad0e8cf2fae2368838f2526b408",
-			"revisionTime": "2016-02-12T16:27:11-05:00"
+			"revision": "87e433464c1f5e98e7208123c15b78119776fb83",
+			"revisionTime": "2016-08-11T18:46:49Z"
 		},
 		{
 			"path": "github.com/google/go-github/github",

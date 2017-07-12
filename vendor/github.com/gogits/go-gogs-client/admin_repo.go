@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 )
 
 func (c *Client) AdminCreateRepo(user string, opt CreateRepoOption) (*Repository, error) {
@@ -18,5 +17,5 @@ func (c *Client) AdminCreateRepo(user string, opt CreateRepoOption) (*Repository
 	}
 	repo := new(Repository)
 	return repo, c.getParsedResponse("POST", fmt.Sprintf("/admin/users/%s/repos", user),
-		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body), repo)
+		jsonHeader, bytes.NewReader(body), repo)
 }

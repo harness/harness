@@ -246,6 +246,21 @@ func (c *client) Activate(u *model.User, r *model.Repo, link string) error {
 
 // Deactivate is not supported by the Gogs driver.
 func (c *client) Deactivate(u *model.User, r *model.Repo, link string) error {
+	client := c.newClientToken(u.Token)
+	hooks, err := client.ListRepoHooks(r.Owner, r.Name)
+	if err != nil {
+		return err
+	}
+	match := matchingHooks(hooks, link)
+	if match == nil {
+		return nil
+	}
+	if match != nil {
+
+		err := client.DeleteRepoHook(r.Owner, r.Name, match.ID)
+		fmt.Println(err)
+		return err
+	}
 	return nil
 }
 
@@ -271,4 +286,26 @@ func (c *client) newClientToken(token string) *gogs.Client {
 		client.SetHTTPClient(httpClient)
 	}
 	return client
+}
+
+// helper function to return matching hook.
+func matchingHooks(hooks []*gogs.Hook, rawurl string) *gogs.Hook {
+	link, err := url.Parse(rawurl)
+	if err != nil {
+		return nil
+	}
+	for _, hook := range hooks {
+		if hook.ID == 0 {
+			continue
+		}
+		v, ok := hook.Config["url"]
+		if !ok {
+			continue
+		}
+		hookurl, err := url.Parse(v)
+		if err == nil && hookurl.Host == link.Host {
+			return hook
+		}
+	}
+	return nil
 }

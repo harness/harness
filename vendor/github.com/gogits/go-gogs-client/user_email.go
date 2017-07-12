@@ -7,7 +7,6 @@ package gogs
 import (
 	"bytes"
 	"encoding/json"
-	"net/http"
 )
 
 type Email struct {
@@ -31,8 +30,7 @@ func (c *Client) AddEmail(opt CreateEmailOption) ([]*Email, error) {
 		return nil, err
 	}
 	emails := make([]*Email, 0, 3)
-	return emails, c.getParsedResponse("POST", "/user/emails",
-		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body), emails)
+	return emails, c.getParsedResponse("POST", "/user/emails", jsonHeader, bytes.NewReader(body), emails)
 }
 
 func (c *Client) DeleteEmail(opt CreateEmailOption) error {
@@ -40,7 +38,6 @@ func (c *Client) DeleteEmail(opt CreateEmailOption) error {
 	if err != nil {
 		return err
 	}
-	_, err = c.getResponse("DELETE", "/user/emails",
-		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body))
+	_, err = c.getResponse("DELETE", "/user/emails", jsonHeader, bytes.NewReader(body))
 	return err
 }

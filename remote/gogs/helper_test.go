@@ -157,7 +157,7 @@ func Test_parse(t *testing.T) {
 		g.It("Should return a Repo struct from a Gogs Repo", func() {
 			from := gogs.Repository{
 				FullName: "gophers/hello-world",
-				Owner: gogs.User{
+				Owner: &gogs.User{
 					UserName:  "gordon",
 					AvatarUrl: "http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
 				},
@@ -179,7 +179,7 @@ func Test_parse(t *testing.T) {
 		g.It("Should return a RepoLite struct from a Gogs Repo", func() {
 			from := gogs.Repository{
 				FullName: "gophers/hello-world",
-				Owner: gogs.User{
+				Owner: &gogs.User{
 					UserName:  "gordon",
 					AvatarUrl: "http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
 				},

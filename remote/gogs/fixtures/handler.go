@@ -14,7 +14,9 @@ func Handler() http.Handler {
 	e := gin.New()
 	e.GET("/api/v1/repos/:owner/:name", getRepo)
 	e.GET("/api/v1/repos/:owner/:name/raw/:commit/:file", getRepoFile)
+	e.GET("/api/v1/repos/:owner/:name/hooks", getRepoHooks)
 	e.POST("/api/v1/repos/:owner/:name/hooks", createRepoHook)
+	e.GET("/api/v1/repos/:owner/:name/hooks/:id", deleteRepoHook)
 	e.GET("/api/v1/user/repos", getUserRepos)
 
 	return e
@@ -39,23 +41,35 @@ func getRepoFile(c *gin.Context) {
 	c.String(404, "")
 }
 
-func createRepoHook(c *gin.Context) {
-	in := struct {
-		Type string `json:"type"`
-		Conf struct {
-			Type string `json:"content_type"`
-			URL  string `json:"url"`
-		} `json:"config"`
-	}{}
-	c.BindJSON(&in)
-	if in.Type != "gogs" ||
-		in.Conf.Type != "json" ||
-		in.Conf.URL != "http://localhost" {
-		c.String(500, "")
-		return
+func getRepoHooks(c *gin.Context) {
+	switch c.Param("name") {
+	case "hooks_not_found", "repo_no_hooks":
+		c.String(404, "")
+	case "hook_empty":
+		c.String(200, "{}")
+	default:
+		c.String(200, repoHookPayload)
 	}
+}
 
-	c.String(200, "{}")
+func createRepoHook(c *gin.Context) {
+	switch c.Param("name") {
+	case "hooks_not_found", "repo_no_hooks":
+		c.String(404, "")
+	case "hook_empty":
+		c.String(200, "{}")
+	default:
+		c.String(200, createRepoHookPayload)
+	}
+}
+
+func deleteRepoHook(c *gin.Context) {
+	switch c.Param("id") {
+	case "hook_not_found":
+		c.String(404, "")
+	default:
+		c.String(204, "")
+	}
 }
 
 func getUserRepos(c *gin.Context) {
@@ -66,6 +80,8 @@ func getUserRepos(c *gin.Context) {
 		c.String(200, userRepoPayload)
 	}
 }
+
+const repoFilePayload = `{ platform: linux/amd64 }`
 
 const repoPayload = `
 {
@@ -86,8 +102,6 @@ const repoPayload = `
 }
 `
 
-const repoFilePayload = `{ platform: linux/amd64 }`
-
 const userRepoPayload = `
 [
   {
@@ -107,4 +121,42 @@ const userRepoPayload = `
     }
   }
 ]
+`
+
+const repoHookPayload = `
+[
+  {
+    "id": 14,
+    "type": "gogs",
+    "events": [
+      "create",
+      "push"
+    ],
+    "active": true,
+    "config": {
+      "content_type": "json",
+      "url": "http:\/\/localhost\/test_name\/repo_name\/settings\/hooks\/14"
+    },
+    "updated_at": "2015-08-29T18:25:52+08:00",
+    "created_at": "2015-08-27T20:17:36+08:00"
+  }
+]
+`
+
+const createRepoHookPayload = `
+{
+  "id": 14,
+  "type": "gogs",
+  "events": [
+    "create",
+    "push"
+  ],
+  "active": true,
+  "config": {
+    "content_type": "json",
+    "url": "http:\/\/localhost\/test_name\/repo_name\/settings\/hooks\/14"
+  },
+  "updated_at": "2015-08-29T18:25:52+08:00",
+  "created_at": "2015-08-27T20:17:36+08:00"
+}
 `

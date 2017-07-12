@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 )
 
@@ -25,9 +24,9 @@ func (c *Client) ListPublicKeys(user string) ([]*PublicKey, error) {
 	return keys, c.getParsedResponse("GET", fmt.Sprintf("/users/%s/keys", user), nil, nil, &keys)
 }
 
-func (c *Client) ListMyPublicKeys(user string) ([]*PublicKey, error) {
+func (c *Client) ListMyPublicKeys() ([]*PublicKey, error) {
 	keys := make([]*PublicKey, 0, 10)
-	return keys, c.getParsedResponse("GET", fmt.Sprintf("/user/keys", user), nil, nil, &keys)
+	return keys, c.getParsedResponse("GET", "/user/keys", nil, nil, &keys)
 }
 
 func (c *Client) GetPublicKey(keyID int64) (*PublicKey, error) {
@@ -41,8 +40,7 @@ func (c *Client) CreatePublicKey(opt CreateKeyOption) (*PublicKey, error) {
 		return nil, err
 	}
 	key := new(PublicKey)
-	return key, c.getParsedResponse("POST", "/user/keys",
-		http.Header{"content-type": []string{"application/json"}}, bytes.NewReader(body), key)
+	return key, c.getParsedResponse("POST", "/user/keys", jsonHeader, bytes.NewReader(body), key)
 }
 
 func (c *Client) DeletePublicKey(keyID int64) error {
