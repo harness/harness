@@ -519,6 +519,12 @@
 			"revisionTime": "2015-09-07T11:02:28+10:00"
 		},
 		{
+			"checksumSHA1": "f+svTLsUm0KFNDl8cQqPy/M7qGg=",
+			"path": "github.com/jpillora/go-ogle-analytics",
+			"revision": "14b04e0594ef6a9fd943363b135656f0ec8c9d0e",
+			"revisionTime": "2016-12-13T08:58:24Z"
+		},
+		{
 			"path": "github.com/koding/cache",
 			"revision": "487fc0ca06f9aa1a02d796f5510784b47d5afae2",
 			"revisionTime": "2014-09-12T11:56:02+03:00"
