@@ -474,7 +474,7 @@ ALTER TABLE repos ADD COLUMN repo_visibility VARCHAR(50)
 var updateTableSetRepoVisibility = `
 UPDATE repos
 SET repo_visibility = (CASE
-  WHEN repo_private = true THEN 'public'
+  WHEN repo_private = false THEN 'public'
   ELSE 'private'
   END)
 `
