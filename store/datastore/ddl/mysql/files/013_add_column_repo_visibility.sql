@@ -6,6 +6,6 @@ ALTER TABLE repos ADD COLUMN repo_visibility VARCHAR(50)
 
 UPDATE repos
 SET repo_visibility = CASE
-  WHEN repo_private = 0 THEN 'public'
+  WHEN repo_private = false THEN 'public'
   ELSE 'private'
   END
