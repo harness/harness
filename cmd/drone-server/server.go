@@ -397,6 +397,11 @@ func server(c *cli.Context) error {
 		logrus.SetLevel(logrus.WarnLevel)
 	}
 
+	// must configure the drone_host variable
+	if c.String("server-host") == "" {
+		logrus.Fatalln("DRONE_HOST is not properly configured")
+	}
+
 	remote_, err := SetupRemote(c)
 	if err != nil {
 		logrus.Fatal(err)
