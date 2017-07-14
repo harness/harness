@@ -2,9 +2,10 @@ package session
 
 import (
 	"net/http"
+	"time"
 
-	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/remote"
 	"github.com/drone/drone/store"
 
 	log "github.com/Sirupsen/logrus"
@@ -92,10 +93,20 @@ func SetPerm() gin.HandlerFunc {
 
 		case user != nil:
 			var err error
-			perm, err = cache.GetPerms(c, user, repo.Owner, repo.Name)
+			perm, err = store.FromContext(c).PermFind(user, repo)
 			if err != nil {
-				log.Errorf("Error fetching permission for %s %s",
-					user.Login, repo.FullName)
+				log.Errorf("Error fetching permission for %s %s. %s",
+					user.Login, repo.FullName, err)
+			}
+			if time.Unix(perm.Synced, 0).Add(time.Hour).Before(time.Now()) {
+				perm, err = remote.FromContext(c).Perm(user, repo.Owner, repo.Name)
+				if err == nil {
+					log.Debugf("Synced user permission for %s %s", user.Login, repo.FullName)
+					perm.Repo = repo.FullName
+					perm.UserID = user.ID
+					perm.Synced = time.Now().Unix()
+					store.FromContext(c).PermUpsert(perm)
+				}
 			}
 		}
 

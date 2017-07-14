@@ -86,6 +86,13 @@ func (db *datastore) DeleteUser(user *model.User) error {
 	return err
 }
 
+func (db *datastore) UserFeed(user *model.User) ([]*model.Feed, error) {
+	stmt := sql.Lookup(db.driver, "feed")
+	data := []*model.Feed{}
+	err := meddler.QueryAll(db, &data, stmt, user.ID)
+	return data, err
+}
+
 const userTable = "users"
 
 const userLoginQuery = `

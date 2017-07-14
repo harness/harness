@@ -84,6 +84,11 @@ func PostHook(c *gin.Context) {
 		c.AbortWithError(404, err)
 		return
 	}
+	if !repo.IsActive {
+		logrus.Errorf("ignoring hook. %s/%s is inactive.", tmprepo.Owner, tmprepo.Name)
+		c.AbortWithError(204, err)
+		return
+	}
 
 	// get the token and verify the hook is authorized
 	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {

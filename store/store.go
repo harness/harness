@@ -92,6 +92,17 @@ type Store interface {
 	// new functions
 	//
 
+	UserFeed(*model.User) ([]*model.Feed, error)
+
+	RepoList(*model.User) ([]*model.Repo, error)
+	RepoListLatest(*model.User) ([]*model.Feed, error)
+	RepoBatch([]*model.Repo) error
+
+	PermFind(user *model.User, repo *model.Repo) (*model.Perm, error)
+	PermUpsert(perm *model.Perm) error
+	PermBatch(perms []*model.Perm) error
+	PermDelete(perm *model.Perm) error
+
 	ConfigLoad(int64) (*model.Config, error)
 	ConfigFind(*model.Repo, string) (*model.Config, error)
 	ConfigFindApproved(*model.Config) (bool, error)

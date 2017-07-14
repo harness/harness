@@ -6,35 +6,45 @@ func Lookup(name string) string {
 }
 
 var index = map[string]string{
-	"config-find-id":            configFindId,
-	"config-find-repo-hash":     configFindRepoHash,
-	"config-find-approved":      configFindApproved,
-	"count-users":               countUsers,
-	"count-repos":               countRepos,
-	"count-builds":              countBuilds,
-	"files-find-build":          filesFindBuild,
-	"files-find-proc-name":      filesFindProcName,
-	"files-find-proc-name-data": filesFindProcNameData,
-	"files-delete-build":        filesDeleteBuild,
-	"procs-find-id":             procsFindId,
-	"procs-find-build":          procsFindBuild,
-	"procs-find-build-pid":      procsFindBuildPid,
-	"procs-find-build-ppid":     procsFindBuildPpid,
-	"procs-delete-build":        procsDeleteBuild,
-	"registry-find-repo":        registryFindRepo,
-	"registry-find-repo-addr":   registryFindRepoAddr,
-	"registry-delete-repo":      registryDeleteRepo,
-	"registry-delete":           registryDelete,
-	"repo-update-counter":       repoUpdateCounter,
-	"secret-find-repo":          secretFindRepo,
-	"secret-find-repo-name":     secretFindRepoName,
-	"secret-delete":             secretDelete,
-	"sender-find-repo":          senderFindRepo,
-	"sender-find-repo-login":    senderFindRepoLogin,
-	"sender-delete-repo":        senderDeleteRepo,
-	"sender-delete":             senderDelete,
-	"task-list":                 taskList,
-	"task-delete":               taskDelete,
+	"config-find-id":              configFindId,
+	"config-find-repo-hash":       configFindRepoHash,
+	"config-find-approved":        configFindApproved,
+	"count-users":                 countUsers,
+	"count-repos":                 countRepos,
+	"count-builds":                countBuilds,
+	"feed-latest-build":           feedLatestBuild,
+	"feed":                        feed,
+	"files-find-build":            filesFindBuild,
+	"files-find-proc-name":        filesFindProcName,
+	"files-find-proc-name-data":   filesFindProcNameData,
+	"files-delete-build":          filesDeleteBuild,
+	"perms-find-user":             permsFindUser,
+	"perms-find-user-repo":        permsFindUserRepo,
+	"perms-insert-replace":        permsInsertReplace,
+	"perms-insert-replace-lookup": permsInsertReplaceLookup,
+	"perms-delete-user-repo":      permsDeleteUserRepo,
+	"perms-delete-user-date":      permsDeleteUserDate,
+	"procs-find-id":               procsFindId,
+	"procs-find-build":            procsFindBuild,
+	"procs-find-build-pid":        procsFindBuildPid,
+	"procs-find-build-ppid":       procsFindBuildPpid,
+	"procs-delete-build":          procsDeleteBuild,
+	"registry-find-repo":          registryFindRepo,
+	"registry-find-repo-addr":     registryFindRepoAddr,
+	"registry-delete-repo":        registryDeleteRepo,
+	"registry-delete":             registryDelete,
+	"repo-update-counter":         repoUpdateCounter,
+	"repo-find-user":              repoFindUser,
+	"repo-insert-ignore":          repoInsertIgnore,
+	"secret-find-repo":            secretFindRepo,
+	"secret-find-repo-name":       secretFindRepoName,
+	"secret-delete":               secretDelete,
+	"sender-find-repo":            senderFindRepo,
+	"sender-find-repo-login":      senderFindRepoLogin,
+	"sender-delete-repo":          senderDeleteRepo,
+	"sender-delete":               senderDelete,
+	"task-list":                   taskList,
+	"task-delete":                 taskDelete,
 }
 
 var configFindId = `
@@ -81,6 +91,68 @@ SELECT count(1)
 FROM builds
 `
 
+var feedLatestBuild = `
+SELECT
+ repo_owner
+,repo_name
+,repo_full_name
+,build_number
+,build_event
+,build_status
+,build_created
+,build_started
+,build_finished
+,build_commit
+,build_branch
+,build_ref
+,build_refspec
+,build_remote
+,build_title
+,build_message
+,build_author
+,build_email
+,build_avatar
+FROM repos LEFT OUTER JOIN builds ON build_id = (
+	SELECT build_id FROM builds
+	WHERE builds.build_repo_id = repos.repo_id
+	ORDER BY build_id DESC
+	LIMIT 1
+)
+INNER JOIN perms ON perms.perm_repo_id = repos.repo_id
+WHERE perms.perm_user_id = ?
+  AND repos.repo_active = 1
+ORDER BY repo_full_name ASC;
+`
+
+var feed = `
+SELECT
+ repo_owner
+,repo_name
+,repo_full_name
+,build_number
+,build_event
+,build_status
+,build_created
+,build_started
+,build_finished
+,build_commit
+,build_branch
+,build_ref
+,build_refspec
+,build_remote
+,build_title
+,build_message
+,build_author
+,build_email
+,build_avatar
+FROM repos
+INNER JOIN perms  ON perms.perm_repo_id   = repos.repo_id
+INNER JOIN builds ON builds.build_repo_id = repos.repo_id
+WHERE perms.perm_user_id = ?
+ORDER BY build_id DESC
+LIMIT 50
+`
+
 var filesFindBuild = `
 SELECT
  file_id
@@ -125,6 +197,65 @@ WHERE file_proc_id = ?
 
 var filesDeleteBuild = `
 DELETE FROM files WHERE file_build_id = ?
+`
+
+var permsFindUser = `
+SELECT
+ perm_user_id
+,perm_repo_id
+,perm_pull
+,perm_push
+,perm_admin
+,perm_date
+FROM perms
+WHERE perm_user_id = ?
+`
+
+var permsFindUserRepo = `
+SELECT
+ perm_user_id
+,perm_repo_id
+,perm_pull
+,perm_push
+,perm_admin
+,perm_synced
+FROM perms
+WHERE perm_user_id = ?
+  AND perm_repo_id = ?
+`
+
+var permsInsertReplace = `
+INSERT OR REPLACE INTO perms (
+ perm_user_id
+,perm_repo_id
+,perm_pull
+,perm_push
+,perm_admin
+,perm_synced
+) VALUES (?,?,?,?,?,?)
+`
+
+var permsInsertReplaceLookup = `
+INSERT OR REPLACE INTO perms (
+ perm_user_id
+,perm_repo_id
+,perm_pull
+,perm_push
+,perm_admin
+,perm_synced
+) VALUES (?,(SELECT repo_id FROM repos WHERE repo_full_name = ?),?,?,?,?)
+`
+
+var permsDeleteUserRepo = `
+DELETE FROM perms
+WHERE perm_user_id = ?
+  AND perm_repo_id = ?
+`
+
+var permsDeleteUserDate = `
+DELETE FROM perms
+WHERE perm_user_id = ?
+  AND perm_synced < ?
 `
 
 var procsFindId = `
@@ -254,6 +385,64 @@ var repoUpdateCounter = `
 UPDATE repos SET repo_counter = ?
 WHERE repo_counter = ?
   AND repo_id = ?
+`
+
+var repoFindUser = `
+SELECT
+ repo_id
+,repo_user_id
+,repo_owner
+,repo_name
+,repo_full_name
+,repo_avatar
+,repo_link
+,repo_clone
+,repo_branch
+,repo_timeout
+,repo_private
+,repo_trusted
+,repo_active
+,repo_allow_pr
+,repo_allow_push
+,repo_allow_deploys
+,repo_allow_tags
+,repo_hash
+,repo_scm
+,repo_config_path
+,repo_gated
+,repo_visibility
+,repo_counter
+FROM repos
+INNER JOIN perms ON perms.perm_repo_id = repos.repo_id
+WHERE perms.perm_user_id = ?
+ORDER BY repo_full_name ASC
+`
+
+var repoInsertIgnore = `
+INSERT OR IGNORE INTO repos (
+ repo_user_id
+,repo_owner
+,repo_name
+,repo_full_name
+,repo_avatar
+,repo_link
+,repo_clone
+,repo_branch
+,repo_timeout
+,repo_private
+,repo_trusted
+,repo_active
+,repo_allow_pr
+,repo_allow_push
+,repo_allow_deploys
+,repo_allow_tags
+,repo_hash
+,repo_scm
+,repo_config_path
+,repo_gated
+,repo_visibility
+,repo_counter
+) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 `
 
 var secretFindRepo = `

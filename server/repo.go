@@ -4,11 +4,11 @@ import (
 	"encoding/base32"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
 
-	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router/middleware/session"
@@ -20,54 +20,40 @@ import (
 func PostRepo(c *gin.Context) {
 	remote := remote.FromContext(c)
 	user := session.User(c)
-	owner := c.Param("owner")
-	name := c.Param("name")
+	repo := session.Repo(c)
 
-	if user == nil {
-		c.AbortWithStatus(403)
+	if repo.IsActive {
+		c.String(409, "Repository is already active.")
 		return
 	}
 
-	r, err := remote.Repo(user, owner, name)
-	if err != nil {
-		c.String(404, err.Error())
-		return
+	repo.IsActive = true
+	repo.UserID = user.ID
+	if !repo.AllowPush && !repo.AllowPull && !repo.AllowDeploy && !repo.AllowTag {
+		repo.AllowPush = true
+		repo.AllowPull = true
 	}
-	m, err := cache.GetPerms(c, user, owner, name)
-	if err != nil {
-		c.String(404, err.Error())
-		return
+	if repo.Visibility == "" {
+		repo.Visibility = model.VisibilityPublic
+		if repo.IsPrivate {
+			repo.Visibility = model.VisibilityPrivate
+		}
 	}
-	if !m.Admin {
-		c.String(403, "Administrative access is required.")
-		return
+	if repo.Config == "" {
+		repo.Config = ".drone.yml"
 	}
-
-	// error if the repository already exists
-	_, err = store.GetRepoOwnerName(c, owner, name)
-	if err == nil {
-		c.String(409, "Repository already exists.")
-		return
+	if repo.Timeout == 0 {
+		repo.Timeout = 60 // 1 hour default build time
 	}
-
-	// set the repository owner to the
-	// currently authenticated user.
-	r.UserID = user.ID
-	r.AllowPush = true
-	r.AllowPull = true
-	r.Visibility = model.VisibilityPublic
-	r.Config = ".drone.yml"
-	r.Timeout = 60 // 1 hour default build time
-	r.Hash = base32.StdEncoding.EncodeToString(
-		securecookie.GenerateRandomKey(32),
-	)
-	if r.IsPrivate {
-		r.Visibility = model.VisibilityPrivate
+	if repo.Hash == "" {
+		repo.Hash = base32.StdEncoding.EncodeToString(
+			securecookie.GenerateRandomKey(32),
+		)
 	}
 
-	// crates the jwt token used to verify the repository
-	t := token.New(token.HookToken, r.FullName)
-	sig, err := t.Sign(r.Hash)
+	// creates the jwt token used to verify the repository
+	t := token.New(token.HookToken, repo.FullName)
+	sig, err := t.Sign(repo.Hash)
 	if err != nil {
 		c.String(500, err.Error())
 		return
@@ -79,22 +65,19 @@ func PostRepo(c *gin.Context) {
 		sig,
 	)
 
-	// activate the repository before we make any
-	// local changes to the database.
-	err = remote.Activate(user, r, link)
+	err = remote.Activate(user, repo, link)
 	if err != nil {
 		c.String(500, err.Error())
 		return
 	}
 
-	// persist the repository
-	err = store.CreateRepo(c, r)
+	err = store.UpdateRepo(c, repo)
 	if err != nil {
 		c.String(500, err.Error())
 		return
 	}
 
-	c.JSON(200, r)
+	c.JSON(200, repo)
 }
 
 func PatchRepo(c *gin.Context) {
@@ -173,14 +156,26 @@ func GetRepo(c *gin.Context) {
 }
 
 func DeleteRepo(c *gin.Context) {
+	remove, _ := strconv.ParseBool(c.Query("remove"))
 	remote := remote.FromContext(c)
 	repo := session.Repo(c)
 	user := session.User(c)
 
-	err := store.DeleteRepo(c, repo)
+	repo.IsActive = false
+	repo.UserID = 0
+
+	err := store.UpdateRepo(c, repo)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
+	}
+
+	if remove {
+		err := store.DeleteRepo(c, repo)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
 	}
 
 	remote.Deactivate(user, repo, httputil.GetURL(c.Request))

@@ -27,6 +27,7 @@ type Repo struct {
 	IsTrusted   bool   `json:"trusted"                  meddler:"repo_trusted"`
 	IsStarred   bool   `json:"starred,omitempty"        meddler:"-"`
 	IsGated     bool   `json:"gated"                    meddler:"repo_gated"`
+	IsActive    bool   `json:"active,omitempty"         meddler:"repo_active"`
 	AllowPull   bool   `json:"allow_pr"                 meddler:"repo_allow_pr"`
 	AllowPush   bool   `json:"allow_push"               meddler:"repo_allow_push"`
 	AllowDeploy bool   `json:"allow_deploys"            meddler:"repo_allow_deploys"`
@@ -34,6 +35,7 @@ type Repo struct {
 	Counter     int    `json:"last_build"               meddler:"repo_counter"`
 	Config      string `json:"config_file"              meddler:"repo_config_path"`
 	Hash        string `json:"-"                        meddler:"repo_hash"`
+	Perm        *Perm  `json:"-"                        meddler:"-"`
 }
 
 // RepoPatch represents a repository patch object.

@@ -80,12 +80,6 @@ var flags = []cli.Flag{
 		Name:   "open",
 		Usage:  "open user registration",
 	},
-	cli.DurationFlag{
-		EnvVar: "DRONE_CACHE_TTL",
-		Name:   "cache-ttl",
-		Usage:  "cache duration",
-		Value:  time.Minute * 15,
-	},
 	cli.StringSliceFlag{
 		EnvVar: "DRONE_ESCALATE",
 		Name:   "escalate",
@@ -415,7 +409,6 @@ func server(c *cli.Context) error {
 		ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true),
 		middleware.Version,
 		middleware.Config(c),
-		middleware.Cache(c),
 		middleware.Store(c, store_),
 		middleware.Remote(remote_),
 	)

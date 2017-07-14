@@ -203,11 +203,6 @@ func (g *Gitlab) Teams(u *model.User) ([]*model.Team, error) {
 	return teams, nil
 }
 
-// TeamPerm is not supported by the Gitlab driver.
-func (g *Gitlab) TeamPerm(u *model.User, org string) (*model.Perm, error) {
-	return nil, nil
-}
-
 // Repo fetches the named repository from the remote system.
 func (g *Gitlab) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	client := NewClient(g.URL, u.Token, g.SkipVerify)
@@ -248,32 +243,40 @@ func (g *Gitlab) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 }
 
 // Repos fetches a list of repos from the remote system.
-func (g *Gitlab) Repos(u *model.User) ([]*model.RepoLite, error) {
+func (g *Gitlab) Repos(u *model.User) ([]*model.Repo, error) {
 	client := NewClient(g.URL, u.Token, g.SkipVerify)
 
-	var repos = []*model.RepoLite{}
+	var repos = []*model.Repo{}
 
 	all, err := client.AllProjects(g.HideArchives)
 	if err != nil {
 		return repos, err
 	}
 
-	for _, repo := range all {
-		var parts = strings.Split(repo.PathWithNamespace, "/")
+	for _, repo_ := range all {
+		var parts = strings.Split(repo_.PathWithNamespace, "/")
 		var owner = parts[0]
 		var name = parts[1]
-		var avatar = repo.AvatarUrl
 
-		if len(avatar) != 0 && !strings.HasPrefix(avatar, "http") {
-			avatar = fmt.Sprintf("%s/%s", g.URL, avatar)
+		repo := &model.Repo{}
+		repo.Owner = owner
+		repo.Name = name
+		repo.FullName = repo_.PathWithNamespace
+		repo.Link = repo_.Url
+		repo.Clone = repo_.HttpRepoUrl
+		repo.Branch = "master"
+
+		if repo_.DefaultBranch != "" {
+			repo.Branch = repo_.DefaultBranch
 		}
 
-		repos = append(repos, &model.RepoLite{
-			Owner:    owner,
-			Name:     name,
-			FullName: repo.PathWithNamespace,
-			Avatar:   avatar,
-		})
+		if g.PrivateMode {
+			repo.IsPrivate = true
+		} else {
+			repo.IsPrivate = !repo_.Public
+		}
+
+		repos = append(repos, repo)
 	}
 
 	return repos, err
@@ -295,7 +298,7 @@ func (g *Gitlab) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 
 	// repo owner is granted full access
 	if repo.Owner != nil && repo.Owner.Username == u.Login {
-		return &model.Perm{true, true, true}, nil
+		return &model.Perm{Push: true, Pull: true, Admin: true}, nil
 	}
 
 	// check permission for current user

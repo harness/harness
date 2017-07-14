@@ -59,6 +59,58 @@ func (db *datastore) DeleteRepo(repo *model.Repo) error {
 	return err
 }
 
+func (db *datastore) RepoList(user *model.User) ([]*model.Repo, error) {
+	stmt := sql.Lookup(db.driver, "repo-find-user")
+	data := []*model.Repo{}
+	err := meddler.QueryAll(db, &data, stmt, user.ID)
+	return data, err
+}
+
+func (db *datastore) RepoListLatest(user *model.User) ([]*model.Feed, error) {
+	stmt := sql.Lookup(db.driver, "feed-latest-build")
+	data := []*model.Feed{}
+	err := meddler.QueryAll(db, &data, stmt, user.ID)
+	return data, err
+}
+
+func (db *datastore) RepoBatch(repos []*model.Repo) error {
+	stmt := sql.Lookup(db.driver, "repo-insert-ignore")
+	for _, repo := range repos {
+		_, err := db.Exec(stmt,
+			repo.UserID,
+			repo.Owner,
+			repo.Name,
+			repo.FullName,
+			repo.Avatar,
+			repo.Link,
+			repo.Clone,
+			repo.Branch,
+			repo.Timeout,
+			repo.IsPrivate,
+			repo.IsTrusted,
+			repo.IsActive,
+			repo.AllowPull,
+			repo.AllowPush,
+			repo.AllowDeploy,
+			repo.AllowTag,
+			repo.Hash,
+			repo.Kind,
+			repo.Config,
+			repo.IsGated,
+			repo.Visibility,
+			repo.Counter,
+		)
+		if err != nil {
+			return err
+		}
+		// last, _ := res.LastInsertId()
+		// if last != 0 {
+		// 	repo.ID = last
+		// }
+	}
+	return nil
+}
+
 const repoTable = "repos"
 
 const repoNameQuery = `

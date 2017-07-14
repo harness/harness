@@ -174,3 +174,55 @@ func TestRepos(t *testing.T) {
 		})
 	})
 }
+
+func TestRepoBatch(t *testing.T) {
+	s := newTest()
+	defer func() {
+		s.Exec("delete from repos")
+		s.Close()
+	}()
+
+	repo := &model.Repo{
+		UserID:   1,
+		FullName: "foo/bar",
+		Owner:    "foo",
+		Name:     "bar",
+	}
+	err := s.CreateRepo(repo)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	err = s.RepoBatch(
+		[]*model.Repo{
+			{
+				UserID:   1,
+				FullName: "foo/bar",
+				Owner:    "foo",
+				Name:     "bar",
+			},
+			{
+				UserID:   1,
+				FullName: "bar/baz",
+				Owner:    "bar",
+				Name:     "baz",
+			},
+			{
+				UserID:   1,
+				FullName: "baz/qux",
+				Owner:    "baz",
+				Name:     "qux",
+			},
+		},
+	)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	count, _ := s.GetRepoCount()
+	if got, want := count, 3; got != want {
+		t.Errorf("Want %d repositories, got %d", want, got)
+	}
+}

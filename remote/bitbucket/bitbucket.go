@@ -114,11 +114,6 @@ func (c *config) Teams(u *model.User) ([]*model.Team, error) {
 	return convertTeamList(resp.Values), nil
 }
 
-// TeamPerm is not supported by the Bitbucket driver.
-func (c *config) TeamPerm(u *model.User, org string) (*model.Perm, error) {
-	return nil, nil
-}
-
 // Repo returns the named Bitbucket repository.
 func (c *config) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	repo, err := c.newClient(u).FindRepo(owner, name)
@@ -130,10 +125,10 @@ func (c *config) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 
 // Repos returns a list of all repositories for Bitbucket account, including
 // organization repositories.
-func (c *config) Repos(u *model.User) ([]*model.RepoLite, error) {
+func (c *config) Repos(u *model.User) ([]*model.Repo, error) {
 	client := c.newClient(u)
 
-	var all []*model.RepoLite
+	var all []*model.Repo
 
 	accounts := []string{u.Login}
 	resp, err := client.ListTeams(&internal.ListTeamOpts{
@@ -153,7 +148,7 @@ func (c *config) Repos(u *model.User) ([]*model.RepoLite, error) {
 			return all, err
 		}
 		for _, repo := range repos {
-			all = append(all, convertRepoLite(repo))
+			all = append(all, convertRepo(repo))
 		}
 	}
 	return all, nil
