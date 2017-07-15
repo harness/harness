@@ -37,7 +37,7 @@ ORDER BY repo_full_name ASC
 
 -- name: repo-insert-ignore
 
-INSERT OR IGNORE INTO repos (
+INSERT IGNORE INTO repos (
  repo_user_id
 ,repo_owner
 ,repo_name

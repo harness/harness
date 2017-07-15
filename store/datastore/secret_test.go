@@ -77,7 +77,7 @@ func TestSecretList(t *testing.T) {
 		return
 	}
 	if got, want := len(list), 2; got != want {
-		t.Errorf("Want %d registries, got %d", want, got)
+		t.Errorf("Want %d secrets, got %d", want, got)
 	}
 }
 
@@ -109,6 +109,34 @@ func TestSecretUpdate(t *testing.T) {
 	}
 	if got, want := updated.Value, "qux"; got != want {
 		t.Errorf("Want secret value %s, got %s", want, got)
+	}
+}
+
+func TestSecretDelete(t *testing.T) {
+	s := newTest()
+	defer func() {
+		s.Exec("delete from secrets")
+		s.Close()
+	}()
+
+	secret := &model.Secret{
+		RepoID: 1,
+		Name:   "foo",
+		Value:  "baz",
+	}
+	if err := s.SecretCreate(secret); err != nil {
+		t.Errorf("Unexpected error: insert secret: %s", err)
+		return
+	}
+
+	if err := s.SecretDelete(secret); err != nil {
+		t.Errorf("Unexpected error: delete secret: %s", err)
+		return
+	}
+	_, err := s.SecretFind(&model.Repo{ID: 1}, "foo")
+	if err == nil {
+		t.Errorf("Expect error: sql.ErrNoRows")
+		return
 	}
 }
 

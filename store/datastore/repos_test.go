@@ -84,76 +84,6 @@ func TestRepos(t *testing.T) {
 			g.Assert(repo.Name).Equal(getrepo.Name)
 		})
 
-		g.It("Should Get a Repo List", func() {
-			repo1 := &model.Repo{
-				UserID:   1,
-				Owner:    "bradrydzewski",
-				Name:     "drone",
-				FullName: "bradrydzewski/drone",
-			}
-			repo2 := &model.Repo{
-				UserID:   2,
-				Owner:    "drone",
-				Name:     "drone",
-				FullName: "drone/drone",
-			}
-			repo3 := &model.Repo{
-				UserID:   2,
-				Owner:    "octocat",
-				Name:     "hello-world",
-				FullName: "octocat/hello-world",
-			}
-			s.CreateRepo(repo1)
-			s.CreateRepo(repo2)
-			s.CreateRepo(repo3)
-
-			repos, err := s.GetRepoListOf([]*model.RepoLite{
-				{FullName: "bradrydzewski/drone"},
-				{FullName: "drone/drone"},
-			})
-			g.Assert(err == nil).IsTrue()
-			g.Assert(len(repos)).Equal(2)
-			g.Assert(repos[0].ID).Equal(repo1.ID)
-			g.Assert(repos[1].ID).Equal(repo2.ID)
-		})
-
-		g.It("Should Get a Repo List", func() {
-			repo1 := &model.Repo{
-				UserID:   1,
-				Owner:    "bradrydzewski",
-				Name:     "drone",
-				FullName: "bradrydzewski/drone",
-			}
-			repo2 := &model.Repo{
-				UserID:   2,
-				Owner:    "drone",
-				Name:     "drone",
-				FullName: "drone/drone",
-			}
-			s.CreateRepo(repo1)
-			s.CreateRepo(repo2)
-
-			count, err := s.GetRepoCount()
-			g.Assert(err == nil).IsTrue()
-			g.Assert(count).Equal(2)
-		})
-
-		g.It("Should Delete a Repo", func() {
-			repo := model.Repo{
-				UserID:   1,
-				FullName: "bradrydzewski/drone",
-				Owner:    "bradrydzewski",
-				Name:     "drone",
-			}
-			s.CreateRepo(&repo)
-			_, err1 := s.GetRepo(repo.ID)
-			err2 := s.DeleteRepo(&repo)
-			_, err3 := s.GetRepo(repo.ID)
-			g.Assert(err1 == nil).IsTrue()
-			g.Assert(err2 == nil).IsTrue()
-			g.Assert(err3 == nil).IsFalse()
-		})
-
 		g.It("Should Enforce Unique Repo Name", func() {
 			repo1 := model.Repo{
 				UserID:   1,
@@ -175,10 +105,187 @@ func TestRepos(t *testing.T) {
 	})
 }
 
+func TestRepoList(t *testing.T) {
+	s := newTest()
+	s.Exec("delete from repos")
+	s.Exec("delete from users")
+	s.Exec("delete from perms")
+
+	defer func() {
+		s.Exec("delete from repos")
+		s.Exec("delete from users")
+		s.Exec("delete from perms")
+		s.Close()
+	}()
+
+	user := &model.User{
+		Login: "joe",
+		Email: "foo@bar.com",
+		Token: "e42080dddf012c718e476da161d21ad5",
+	}
+	s.CreateUser(user)
+
+	repo1 := &model.Repo{
+		Owner:    "bradrydzewski",
+		Name:     "drone",
+		FullName: "bradrydzewski/drone",
+	}
+	repo2 := &model.Repo{
+		Owner:    "drone",
+		Name:     "drone",
+		FullName: "drone/drone",
+	}
+	repo3 := &model.Repo{
+		Owner:    "octocat",
+		Name:     "hello-world",
+		FullName: "octocat/hello-world",
+	}
+	s.CreateRepo(repo1)
+	s.CreateRepo(repo2)
+	s.CreateRepo(repo3)
+
+	s.PermBatch([]*model.Perm{
+		{UserID: user.ID, Repo: repo1.FullName},
+		{UserID: user.ID, Repo: repo2.FullName},
+	})
+
+	repos, err := s.RepoList(user)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if got, want := len(repos), 2; got != want {
+		t.Errorf("Want %d repositories, got %d", want, got)
+	}
+	if got, want := repos[0].ID, repo1.ID; got != want {
+		t.Errorf("Want repository id %d, got %d", want, got)
+	}
+	if got, want := repos[1].ID, repo2.ID; got != want {
+		t.Errorf("Want repository id %d, got %d", want, got)
+	}
+}
+
+func TestRepoListLatest(t *testing.T) {
+	s := newTest()
+	defer func() {
+		s.Exec("delete from repos")
+		s.Exec("delete from users")
+		s.Exec("delete from perms")
+		s.Close()
+	}()
+
+	user := &model.User{
+		Login: "joe",
+		Email: "foo@bar.com",
+		Token: "e42080dddf012c718e476da161d21ad5",
+	}
+	s.CreateUser(user)
+
+	repo1 := &model.Repo{
+		Owner:    "bradrydzewski",
+		Name:     "drone",
+		FullName: "bradrydzewski/drone",
+		IsActive: true,
+	}
+	repo2 := &model.Repo{
+		Owner:    "drone",
+		Name:     "drone",
+		FullName: "drone/drone",
+		IsActive: true,
+	}
+	repo3 := &model.Repo{
+		Owner:    "octocat",
+		Name:     "hello-world",
+		FullName: "octocat/hello-world",
+		IsActive: true,
+	}
+	s.CreateRepo(repo1)
+	s.CreateRepo(repo2)
+	s.CreateRepo(repo3)
+
+	s.PermBatch([]*model.Perm{
+		{UserID: user.ID, Repo: repo1.FullName},
+		{UserID: user.ID, Repo: repo2.FullName},
+	})
+
+	build1 := &model.Build{
+		RepoID: repo1.ID,
+		Status: model.StatusFailure,
+	}
+	build2 := &model.Build{
+		RepoID: repo1.ID,
+		Status: model.StatusRunning,
+	}
+	build3 := &model.Build{
+		RepoID: repo2.ID,
+		Status: model.StatusKilled,
+	}
+	build4 := &model.Build{
+		RepoID: repo3.ID,
+		Status: model.StatusError,
+	}
+	s.CreateBuild(build1)
+	s.CreateBuild(build2)
+	s.CreateBuild(build3)
+	s.CreateBuild(build4)
+
+	builds, err := s.RepoListLatest(user)
+	if err != nil {
+		t.Errorf("Unexpected error: repository list with latest build: %s", err)
+		return
+	}
+	if got, want := len(builds), 2; got != want {
+		t.Errorf("Want %d repositories, got %d", want, got)
+	}
+	if got, want := builds[0].Status, model.StatusRunning; want != got {
+		t.Errorf("Want repository status %s, got %s", want, got)
+	}
+	if got, want := builds[0].FullName, repo1.FullName; want != got {
+		t.Errorf("Want repository name %s, got %s", want, got)
+	}
+	if got, want := builds[1].Status, model.StatusKilled; want != got {
+		t.Errorf("Want repository status %s, got %s", want, got)
+	}
+	if got, want := builds[1].FullName, repo2.FullName; want != got {
+		t.Errorf("Want repository name %s, got %s", want, got)
+	}
+}
+
+func TestRepoCount(t *testing.T) {
+	s := newTest()
+	defer func() {
+		s.Exec("delete from repos")
+		s.Exec("delete from users")
+		s.Exec("delete from perms")
+		s.Close()
+	}()
+
+	repo1 := &model.Repo{
+		Owner:    "bradrydzewski",
+		Name:     "drone",
+		FullName: "bradrydzewski/drone",
+	}
+	repo2 := &model.Repo{
+		Owner:    "drone",
+		Name:     "drone",
+		FullName: "drone/drone",
+	}
+	s.CreateRepo(repo1)
+	s.CreateRepo(repo2)
+
+	s.Exec("ANALYZE")
+	count, _ := s.GetRepoCount()
+	if got, want := count, 2; got != want {
+		t.Errorf("Want %d repositories, got %d", want, got)
+	}
+}
+
 func TestRepoBatch(t *testing.T) {
 	s := newTest()
 	defer func() {
 		s.Exec("delete from repos")
+		s.Exec("delete from users")
+		s.Exec("delete from perms")
 		s.Close()
 	}()
 
@@ -221,8 +328,39 @@ func TestRepoBatch(t *testing.T) {
 		return
 	}
 
+	s.Exec("ANALYZE")
 	count, _ := s.GetRepoCount()
 	if got, want := count, 3; got != want {
 		t.Errorf("Want %d repositories, got %d", want, got)
+	}
+}
+
+func TestRepoCrud(t *testing.T) {
+	s := newTest()
+	defer func() {
+		s.Exec("delete from repos")
+		s.Exec("delete from users")
+		s.Exec("delete from perms")
+		s.Close()
+	}()
+
+	repo := model.Repo{
+		UserID:   1,
+		FullName: "bradrydzewski/drone",
+		Owner:    "bradrydzewski",
+		Name:     "drone",
+	}
+	s.CreateRepo(&repo)
+	_, err1 := s.GetRepo(repo.ID)
+	err2 := s.DeleteRepo(&repo)
+	_, err3 := s.GetRepo(repo.ID)
+	if err1 != nil {
+		t.Errorf("Unexpected error: select repository: %s", err1)
+	}
+	if err2 != nil {
+		t.Errorf("Unexpected error: delete repository: %s", err2)
+	}
+	if err3 == nil {
+		t.Errorf("Expected error: sql.ErrNoRows")
 	}
 }

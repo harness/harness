@@ -1,4 +1,4 @@
-package sqlite
+package mysql
 
 // Lookup returns the named statement.
 func Lookup(name string) string {
@@ -121,7 +121,7 @@ FROM repos LEFT OUTER JOIN builds ON build_id = (
 )
 INNER JOIN perms ON perms.perm_repo_id = repos.repo_id
 WHERE perms.perm_user_id = ?
-  AND repos.repo_active = 1
+  AND repos.repo_active = true
 ORDER BY repo_full_name ASC;
 `
 
@@ -420,7 +420,7 @@ ORDER BY repo_full_name ASC
 `
 
 var repoInsertIgnore = `
-INSERT OR IGNORE INTO repos (
+INSERT IGNORE INTO repos (
  repo_user_id
 ,repo_owner
 ,repo_name

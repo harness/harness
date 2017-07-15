@@ -108,6 +108,34 @@ var migrations = []struct {
 		name: "update-table-set-repo-seq-default",
 		stmt: updateTableSetRepoSeqDefault,
 	},
+	{
+		name: "alter-table-add-repo-active",
+		stmt: alterTableAddRepoActive,
+	},
+	{
+		name: "update-table-set-repo-active",
+		stmt: updateTableSetRepoActive,
+	},
+	{
+		name: "alter-table-add-user-synced",
+		stmt: alterTableAddUserSynced,
+	},
+	{
+		name: "update-table-set-user-synced",
+		stmt: updateTableSetUserSynced,
+	},
+	{
+		name: "create-table-perms",
+		stmt: createTablePerms,
+	},
+	{
+		name: "create-index-perms-repo",
+		stmt: createIndexPermsRepo,
+	},
+	{
+		name: "create-index-perms-user",
+		stmt: createIndexPermsUser,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -498,4 +526,52 @@ UPDATE repos SET repo_counter = (
 var updateTableSetRepoSeqDefault = `
 UPDATE repos SET repo_counter = 0
 WHERE repo_counter IS NULL
+`
+
+//
+// 015_add_column_repo_active.sql
+//
+
+var alterTableAddRepoActive = `
+ALTER TABLE repos ADD COLUMN repo_active BOOLEAN
+`
+
+var updateTableSetRepoActive = `
+UPDATE repos SET repo_active = true
+`
+
+//
+// 016_add_column_user_synced.sql
+//
+
+var alterTableAddUserSynced = `
+ALTER TABLE users ADD COLUMN user_synced INTEGER;
+`
+
+var updateTableSetUserSynced = `
+UPDATE users SET user_synced = 0
+`
+
+//
+// 017_create_table_perms.sql
+//
+
+var createTablePerms = `
+CREATE TABLE IF NOT EXISTS perms (
+ perm_user_id INTEGER NOT NULL
+,perm_repo_id INTEGER NOT NULL
+,perm_pull    BOOLEAN
+,perm_push    BOOLEAN
+,perm_admin   BOOLEAN
+,perm_synced  INTEGER
+,UNIQUE(perm_user_id, perm_repo_id)
+);
+`
+
+var createIndexPermsRepo = `
+CREATE INDEX ix_perms_repo ON perms (perm_repo_id);
+`
+
+var createIndexPermsUser = `
+CREATE INDEX ix_perms_user ON perms (perm_user_id);
 `
