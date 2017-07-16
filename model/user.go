@@ -34,6 +34,9 @@ type User struct {
 	// Activate indicates the user is active in the system.
 	Active bool `json:"active" meddler:"user_active"`
 
+	// Synced is the timestamp when the user was synced with the remote system.
+	Synced int64 `json:"synced" meddler:"user_synced"`
+
 	// Admin indicates the user is a system administrator.
 	//
 	// NOTE: This is sourced from the DRONE_ADMINS environment variable and is no

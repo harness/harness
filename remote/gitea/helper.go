@@ -13,21 +13,6 @@ import (
 )
 
 // helper function that converts a Gitea repository to a Drone repository.
-func toRepoLite(from *gitea.Repository) *model.RepoLite {
-	name := strings.Split(from.FullName, "/")[1]
-	avatar := expandAvatar(
-		from.HTMLURL,
-		from.Owner.AvatarURL,
-	)
-	return &model.RepoLite{
-		Name:     name,
-		Owner:    from.Owner.UserName,
-		FullName: from.FullName,
-		Avatar:   avatar,
-	}
-}
-
-// helper function that converts a Gitea repository to a Drone repository.
 func toRepo(from *gitea.Repository) *model.Repo {
 	name := strings.Split(from.FullName, "/")[1]
 	avatar := expandAvatar(

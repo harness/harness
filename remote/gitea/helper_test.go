@@ -177,21 +177,6 @@ func Test_parse(t *testing.T) {
 			g.Assert(repo.IsPrivate).Equal(from.Private)
 		})
 
-		g.It("Should return a RepoLite struct from a Gitea Repo", func() {
-			from := gitea.Repository{
-				FullName: "gophers/hello-world",
-				Owner: &gitea.User{
-					UserName:  "gordon",
-					AvatarURL: "http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87",
-				},
-			}
-			repo := toRepoLite(&from)
-			g.Assert(repo.FullName).Equal(from.FullName)
-			g.Assert(repo.Owner).Equal(from.Owner.UserName)
-			g.Assert(repo.Name).Equal("hello-world")
-			g.Assert(repo.Avatar).Equal(from.Owner.AvatarURL)
-		})
-
 		g.It("Should correct a malformed avatar url", func() {
 
 			var urls = []struct {

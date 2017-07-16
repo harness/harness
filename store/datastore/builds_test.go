@@ -32,7 +32,7 @@ func TestBuilds(t *testing.T) {
 		// table data from the database.
 		g.BeforeEach(func() {
 			s.Exec("DELETE FROM builds")
-			s.Exec("DELETE FROM jobs")
+			s.Exec("DELETE FROM procs")
 		})
 
 		g.It("Should Post a Build", func() {

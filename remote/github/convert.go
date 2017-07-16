@@ -80,6 +80,7 @@ func convertRepo(from *github.Repository, private bool) *model.Repo {
 		Avatar:    *from.Owner.AvatarURL,
 		Kind:      model.RepoGit,
 		Branch:    defaultBranch,
+		Perm:      convertPerm(from),
 	}
 	if from.DefaultBranch != nil {
 		repo.Branch = *from.DefaultBranch
@@ -114,24 +115,24 @@ func convertTeamPerm(from *github.Membership) *model.Perm {
 
 // convertRepoList is a helper function used to convert a GitHub repository
 // list to the common Drone repository structure.
-func convertRepoList(from []github.Repository) []*model.RepoLite {
-	var repos []*model.RepoLite
+func convertRepoList(from []github.Repository, private bool) []*model.Repo {
+	var repos []*model.Repo
 	for _, repo := range from {
-		repos = append(repos, convertRepoLite(repo))
+		repos = append(repos, convertRepo(&repo, private))
 	}
 	return repos
 }
 
-// convertRepoLite is a helper function used to convert a GitHub repository
-// structure to the common Drone repository structure.
-func convertRepoLite(from github.Repository) *model.RepoLite {
-	return &model.RepoLite{
-		Owner:    *from.Owner.Login,
-		Name:     *from.Name,
-		FullName: *from.FullName,
-		Avatar:   *from.Owner.AvatarURL,
-	}
-}
+// // convertRepoLite is a helper function used to convert a GitHub repository
+// // structure to the common Drone repository structure.
+// func convertRepoLite(from github.Repository) *model.RepoLite {
+// 	return &model.RepoLite{
+// 		Owner:    *from.Owner.Login,
+// 		Name:     *from.Name,
+// 		FullName: *from.FullName,
+// 		Avatar:   *from.Owner.AvatarURL,
+// 	}
+// }
 
 // convertTeamList is a helper function used to convert a GitHub team list to
 // the common Drone repository structure.

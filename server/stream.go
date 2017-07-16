@@ -9,7 +9,6 @@ import (
 
 	"github.com/cncd/logging"
 	"github.com/cncd/pubsub"
-	"github.com/drone/drone/cache"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/store"
@@ -149,7 +148,10 @@ func EventStream(c *gin.Context) {
 	user := session.User(c)
 	repo := map[string]bool{}
 	if user != nil {
-		repo, _ = cache.GetRepoMap(c, user)
+		repos, _ := store.FromContext(c).RepoList(user)
+		for _, r := range repos {
+			repo[r.FullName] = true
+		}
 	}
 
 	ticker := time.NewTicker(pingPeriod)

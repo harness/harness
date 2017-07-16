@@ -47,7 +47,6 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		user.GET("", server.GetSelf)
 		user.GET("/feed", server.GetFeed)
 		user.GET("/repos", server.GetRepos)
-		user.GET("/repos/remote", server.GetRemoteRepos)
 		user.POST("/token", server.PostToken)
 		user.DELETE("/token", server.DeleteToken)
 	}
@@ -62,46 +61,42 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		users.DELETE("/:login", server.DeleteUser)
 	}
 
-	repos := e.Group("/api/repos/:owner/:name")
+	repo := e.Group("/api/repos/:owner/:name")
 	{
-		repos.POST("", server.PostRepo)
+		repo.Use(session.SetRepo())
+		repo.Use(session.SetPerm())
+		repo.Use(session.MustPull)
 
-		repo := repos.Group("")
-		{
-			repo.Use(session.SetRepo())
-			repo.Use(session.SetPerm())
-			repo.Use(session.MustPull)
+		repo.POST("", session.MustRepoAdmin(), server.PostRepo)
+		repo.GET("", server.GetRepo)
+		repo.GET("/builds", server.GetBuilds)
+		repo.GET("/builds/:number", server.GetBuild)
+		repo.GET("/logs/:number/:ppid/:proc", server.GetBuildLogs)
 
-			repo.GET("", server.GetRepo)
-			repo.GET("/builds", server.GetBuilds)
-			repo.GET("/builds/:number", server.GetBuild)
-			repo.GET("/logs/:number/:ppid/:proc", server.GetBuildLogs)
+		// requires push permissions
+		repo.GET("/secrets", session.MustPush, server.GetSecretList)
+		repo.POST("/secrets", session.MustPush, server.PostSecret)
+		repo.GET("/secrets/:secret", session.MustPush, server.GetSecret)
+		repo.PATCH("/secrets/:secret", session.MustPush, server.PatchSecret)
+		repo.DELETE("/secrets/:secret", session.MustPush, server.DeleteSecret)
 
-			// requires push permissions
-			repo.GET("/secrets", session.MustPush, server.GetSecretList)
-			repo.POST("/secrets", session.MustPush, server.PostSecret)
-			repo.GET("/secrets/:secret", session.MustPush, server.GetSecret)
-			repo.PATCH("/secrets/:secret", session.MustPush, server.PatchSecret)
-			repo.DELETE("/secrets/:secret", session.MustPush, server.DeleteSecret)
+		// requires push permissions
+		repo.GET("/registry", session.MustPush, server.GetRegistryList)
+		repo.POST("/registry", session.MustPush, server.PostRegistry)
+		repo.GET("/registry/:registry", session.MustPush, server.GetRegistry)
+		repo.PATCH("/registry/:registry", session.MustPush, server.PatchRegistry)
+		repo.DELETE("/registry/:registry", session.MustPush, server.DeleteRegistry)
 
-			// requires push permissions
-			repo.GET("/registry", session.MustPush, server.GetRegistryList)
-			repo.POST("/registry", session.MustPush, server.PostRegistry)
-			repo.GET("/registry/:registry", session.MustPush, server.GetRegistry)
-			repo.PATCH("/registry/:registry", session.MustPush, server.PatchRegistry)
-			repo.DELETE("/registry/:registry", session.MustPush, server.DeleteRegistry)
+		// requires admin permissions
+		repo.PATCH("", session.MustRepoAdmin(), server.PatchRepo)
+		repo.DELETE("", session.MustRepoAdmin(), server.DeleteRepo)
+		repo.POST("/chown", session.MustRepoAdmin(), server.ChownRepo)
+		repo.POST("/repair", session.MustRepoAdmin(), server.RepairRepo)
 
-			// requires push permissions
-			repo.PATCH("", session.MustPush, server.PatchRepo)
-			repo.DELETE("", session.MustRepoAdmin(), server.DeleteRepo)
-			repo.POST("/chown", session.MustRepoAdmin(), server.ChownRepo)
-			repo.POST("/repair", session.MustRepoAdmin(), server.RepairRepo)
-
-			repo.POST("/builds/:number", session.MustPush, server.PostBuild)
-			repo.POST("/builds/:number/approve", session.MustPush, server.PostApproval)
-			repo.POST("/builds/:number/decline", session.MustPush, server.PostDecline)
-			repo.DELETE("/builds/:number/:job", session.MustPush, server.DeleteBuild)
-		}
+		repo.POST("/builds/:number", session.MustPush, server.PostBuild)
+		repo.POST("/builds/:number/approve", session.MustPush, server.PostApproval)
+		repo.POST("/builds/:number/decline", session.MustPush, server.PostDecline)
+		repo.DELETE("/builds/:number/:job", session.MustPush, server.DeleteBuild)
 	}
 
 	badges := e.Group("/api/badges/:owner/:name")

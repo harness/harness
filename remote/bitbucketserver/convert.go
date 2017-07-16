@@ -86,19 +86,6 @@ func convertRepo(from *internal.Repo) *model.Repo {
 
 }
 
-// convertRepoLite is a helper function used to convert a Bitbucket repository
-// structure to the simplified Drone repository structure.
-func convertRepoLite(from *internal.Repo) *model.RepoLite {
-	return &model.RepoLite{
-		Owner:    from.Project.Key,
-		Name:     from.Slug,
-		FullName: from.Project.Key + "/" + from.Slug,
-		//TODO: find the avatar for the repo
-		//Avatar: might need another ws call?
-	}
-
-}
-
 // convertPushHook is a helper function used to convert a Bitbucket push
 // hook to the Drone build struct holding commit information.
 func convertPushHook(hook *internal.PostHook, baseURL string) *model.Build {

@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"github.com/drone/drone/store/datastore/sql/mysql"
 	"github.com/drone/drone/store/datastore/sql/postgres"
 	"github.com/drone/drone/store/datastore/sql/sqlite"
 )
@@ -18,6 +19,8 @@ func Lookup(driver string, name string) string {
 	switch driver {
 	case DriverPostgres:
 		return postgres.Lookup(name)
+	case DriverMysql:
+		return mysql.Lookup(name)
 	default:
 		return sqlite.Lookup(name)
 	}
