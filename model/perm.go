@@ -6,7 +6,7 @@ type PermStore interface {
 	PermUpsert(perm *Perm) error
 	PermBatch(perms []*Perm) error
 	PermDelete(perm *Perm) error
-	// PermFlush(user *User) error
+	PermFlush(user *User, before int64) error
 }
 
 // Perm defines a repository permission for an individual user.

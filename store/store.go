@@ -92,6 +92,7 @@ type Store interface {
 	PermUpsert(perm *model.Perm) error
 	PermBatch(perms []*model.Perm) error
 	PermDelete(perm *model.Perm) error
+	PermFlush(user *model.User, before int64) error
 
 	ConfigLoad(int64) (*model.Config, error)
 	ConfigFind(*model.Repo, string) (*model.Config, error)

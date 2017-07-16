@@ -42,3 +42,9 @@ func (db *datastore) PermDelete(perm *model.Perm) error {
 	_, err := db.Exec(stmt, perm.UserID, perm.RepoID)
 	return err
 }
+
+func (db *datastore) PermFlush(user *model.User, before int64) error {
+	stmt := sql.Lookup(db.driver, "perms-delete-user-date")
+	_, err := db.Exec(stmt, user.ID, before)
+	return err
+}
