@@ -1,6 +1,6 @@
 {
 	"comment": "",
-	"ignore": "test github.com/drone/mq/ github.com/tidwall/redlog/ google.golang.org/appengine/ github.com/syndtr/goleveldb/ github.com/drone/drone-ui/",
+	"ignore": "test github.com/drone/mq/ github.com/tidwall/redlog/ google.golang.org/appengine/ github.com/syndtr/goleveldb/ github.com/drone/drone-ui/ github.com/golang/protobuf/proto github.com/golang/protobuf/ptypes/any golang.org/x/net/context golang.org/x/net/context/ctxhttp",
 	"package": [
 		{
 			"path": "appengine/cloudsql",
@@ -710,11 +710,6 @@
 			"revisionTime": "2017-04-25T18:31:00Z"
 		},
 		{
-			"path": "golang.org/x/net/context/ctxhttp",
-			"revision": "fb93926129b8ec0056f2f458b1f519654814edf0",
-			"revisionTime": "2016-04-13T08:48:50+10:00"
-		},
-		{
 			"checksumSHA1": "Oa5JBb27An4MwKwLQ2WMzqRexa8=",
 			"path": "golang.org/x/net/http2",
 			"revision": "feeb485667d1fdabe727840fe00adc22431bc86e",
@@ -792,26 +787,26 @@
 		{
 			"checksumSHA1": "faFDXp++cLjLBlvsr+izZ+go1WU=",
 			"path": "golang.org/x/text/secure/bidirule",
-			"revision": "470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4",
-			"revisionTime": "2017-04-25T18:31:26Z"
+			"revision": "6353ef0f924300eea566d3438817aa4d3374817e",
+			"revisionTime": "2017-06-22T08:56:05Z"
 		},
 		{
 			"checksumSHA1": "ziMb9+ANGRJSSIuxYdRbA+cDRBQ=",
 			"path": "golang.org/x/text/transform",
-			"revision": "470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4",
-			"revisionTime": "2017-04-25T18:31:26Z"
+			"revision": "6353ef0f924300eea566d3438817aa4d3374817e",
+			"revisionTime": "2017-06-22T08:56:05Z"
 		},
 		{
 			"checksumSHA1": "KG+XZAbxdkpBm3Fa3bJ3Ylq8CKI=",
 			"path": "golang.org/x/text/unicode/bidi",
-			"revision": "470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4",
-			"revisionTime": "2017-04-25T18:31:26Z"
+			"revision": "6353ef0f924300eea566d3438817aa4d3374817e",
+			"revisionTime": "2017-06-22T08:56:05Z"
 		},
 		{
 			"checksumSHA1": "Anof4bt0AU+Sa3R8Rq0KBnlpbaQ=",
 			"path": "golang.org/x/text/unicode/norm",
-			"revision": "470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4",
-			"revisionTime": "2017-04-25T18:31:26Z"
+			"revision": "6353ef0f924300eea566d3438817aa4d3374817e",
+			"revisionTime": "2017-06-22T08:56:05Z"
 		},
 		{
 			"checksumSHA1": "AvVpgwhxhJgjoSledwDtYrEKVE4=",
