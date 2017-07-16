@@ -23,12 +23,13 @@ type website struct {
 
 // NewWebsite returns a new website loader.
 func NewWebsite() Website {
+	// TODO change to DRONE_WEB_PATH and add DRONE_WEB_PROXY
 	path := os.Getenv("DRONE_WWW")
 	if path != "" {
 		return NewLocalWebsite(path)
 	}
 	return &website{
-		fs: http.FileServer(dist.AssetFS()),
+		fs: http.FileServer(dist.New()),
 	}
 }
 
@@ -38,14 +39,9 @@ func (w *website) Page(rw http.ResponseWriter, r *http.Request, u *model.User) {
 
 	path := r.URL.Path
 	switch path {
-	case "/login/form":
-		params := map[string]interface{}{}
-		template.T.ExecuteTemplate(rw, "login.html", params)
-
 	case "/login":
 		if err := r.FormValue("error"); err != "" {
-			params := map[string]interface{}{"error": err}
-			template.T.ExecuteTemplate(rw, "error.html", params)
+			// TODO login error
 		} else {
 			http.Redirect(rw, r, "/authorize", 303)
 		}
@@ -62,7 +58,8 @@ func (w *website) Page(rw http.ResponseWriter, r *http.Request, u *model.User) {
 			"user": u,
 			"csrf": csrf,
 		}
-		template.T.ExecuteTemplate(rw, "index.html", params)
+
+		template.T.ExecuteTemplate(rw, "index_polymer.html", params)
 	}
 }
 
@@ -73,6 +70,9 @@ func (w *website) File(rw http.ResponseWriter, r *http.Request) {
 
 func (w *website) Routes() []string {
 	return []string{
-		"/static/*filepath",
+		"/favicon-32x32.png",
+		"/favicon-16x16.png",
+		"/src/*filepath",
+		"/bower_components/*filepath",
 	}
 }
