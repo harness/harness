@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # only execute this script as part of the pipeline.
-[ -z "$CI" ] && echo "missing ci enviornment variable" && exit 2
+[ -z "$CI" ] && echo "missing ci environment variable" && exit 2
 
 # only execute the script when github token exists.
 [ -z "$SSH_KEY" ] && echo "missing ssh key" && exit 3
