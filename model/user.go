@@ -1,5 +1,15 @@
 package model
 
+import (
+	"errors"
+	"regexp"
+)
+
+// validate a username (e.g. from github)
+var reUsername = regexp.MustCompile("^[a-zA-Z0-9-_]+$")
+
+var errUserLoginInvalid = errors.New("Invalid User Login")
+
 // User represents a registered user.
 //
 // swagger:model user
@@ -48,4 +58,18 @@ type User struct {
 
 	// DEPRECATED Admin indicates the user is a system administrator.
 	XAdmin bool `json:"-" meddler:"user_admin"`
+}
+
+// Validate validates the required fields and formats.
+func (u *User) Validate() error {
+	switch {
+	case len(u.Login) == 0:
+		return errUserLoginInvalid
+	case len(u.Login) > 250:
+		return errUserLoginInvalid
+	case !reUsername.MatchString(u.Login):
+		return errUserLoginInvalid
+	default:
+		return nil
+	}
 }
