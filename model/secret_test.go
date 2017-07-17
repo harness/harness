@@ -25,10 +25,26 @@ func TestSecret(t *testing.T) {
 			secret := Secret{}
 			g.Assert(secret.Match("pull_request")).IsTrue()
 		})
-		g.It("should pass validation")
+		g.It("should pass validation", func() {
+			secret := Secret{}
+			secret.Name = "secretname"
+			secret.Value = "secretvalue"
+			err := secret.Validate()
+			g.Assert(err).Equal(nil)
+		})
 		g.Describe("should fail validation", func() {
-			g.It("when no image")
-			g.It("when no event")
+			g.It("when no name", func() {
+				secret := Secret{}
+				secret.Value = "secretvalue"
+				err := secret.Validate()
+				g.Assert(err != nil).IsTrue()
+			})
+			g.It("when no value", func() {
+				secret := Secret{}
+				secret.Name = "secretname"
+				err := secret.Validate()
+				g.Assert(err != nil).IsTrue()
+			})
 		})
 	})
 }
