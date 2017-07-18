@@ -60,6 +60,8 @@ func (w *local) File(rw http.ResponseWriter, r *http.Request) {
 
 func (w *local) Routes() []string {
 	return []string{
+		"/favicon-32x32.png",
+		"/favicon-16x16.png",
 		"/src/*filepath",
 		"/bower_components/*filepath",
 	}
