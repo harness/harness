@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -203,4 +204,73 @@ func EventStream(c *gin.Context) {
 		}
 	}()
 	reader(ws)
+}
+
+func EventStreamSSE(c *gin.Context) {
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+
+	rw := c.Writer
+
+	flusher, ok := rw.(http.Flusher)
+	if !ok {
+		c.String(500, "Streaming not supported")
+		return
+	}
+
+	logrus.Debugf("user feed: connection opened")
+
+	user := session.User(c)
+	repo := map[string]bool{}
+	if user != nil {
+		repos, _ := store.FromContext(c).RepoList(user)
+		for _, r := range repos {
+			repo[r.FullName] = true
+		}
+	}
+
+	eventc := make(chan []byte, 10)
+	ctx, cancel := context.WithCancel(
+		context.Background(),
+	)
+
+	defer func() {
+		cancel()
+		close(eventc)
+		logrus.Debugf("user feed: connection closed")
+	}()
+
+	go func() {
+		// TODO remove this from global config
+		Config.Services.Pubsub.Subscribe(c, "topic/events", func(m pubsub.Message) {
+			name := m.Labels["repo"]
+			priv := m.Labels["private"]
+			if repo[name] || priv == "false" {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					eventc <- m.Data
+				}
+			}
+		})
+		cancel()
+	}()
+
+	for {
+		select {
+		case <-rw.CloseNotify():
+			return
+		case <-ctx.Done():
+			return
+		case buf, ok := <-eventc:
+			if ok {
+				io.WriteString(rw, "data: ")
+				rw.Write(buf)
+				io.WriteString(rw, "\n\n")
+				flusher.Flush()
+			}
+		}
+	}
 }

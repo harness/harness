@@ -119,6 +119,11 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		)
 	}
 
+	sse := e.Group("/stream")
+	{
+		sse.GET("/events", server.EventStreamSSE)
+	}
+
 	info := e.Group("/api/info")
 	{
 		info.GET("/queue",
