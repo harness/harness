@@ -1,7 +1,10 @@
 package server
 
 import (
+	"bytes"
+	"io/ioutil"
 	"net/http"
+	"path/filepath"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/server/template"
@@ -49,7 +52,15 @@ func (w *local) Page(rw http.ResponseWriter, r *http.Request, u *model.User) {
 			"csrf": csrf,
 		}
 
-		template.T.ExecuteTemplate(rw, "index_polymer.html", params)
+		index, err := ioutil.ReadFile(filepath.Join(w.dir, "index.html"))
+		if err != nil {
+			rw.WriteHeader(404)
+			return
+		}
+		var buf bytes.Buffer
+		template.T.ExecuteTemplate(&buf, "script.html", params)
+		index = bytes.Replace(index, []byte("<!-- inject:js -->"), buf.Bytes(), 1)
+		rw.Write(index)
 	}
 }
 
@@ -64,5 +75,6 @@ func (w *local) Routes() []string {
 		"/favicon-16x16.png",
 		"/src/*filepath",
 		"/bower_components/*filepath",
+		"/static/*filepath",
 	}
 }
