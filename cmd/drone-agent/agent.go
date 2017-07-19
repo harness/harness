@@ -6,11 +6,13 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"strconv"
 	"sync"
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/cncd/pipeline/pipeline"
 	"github.com/cncd/pipeline/pipeline/backend"
@@ -31,6 +33,11 @@ func loop(c *cli.Context) error {
 		},
 	}
 
+	hostname := c.String("hostname")
+	if len(hostname) == 0 {
+		hostname, _ = os.Hostname()
+	}
+
 	// TODO pass version information to grpc server
 	// TODO authenticate to grpc server
 
@@ -44,6 +51,7 @@ func loop(c *cli.Context) error {
 			password: c.String("password"),
 		}),
 	)
+
 	if err != nil {
 		return err
 	}
@@ -52,7 +60,10 @@ func loop(c *cli.Context) error {
 	client := rpc.NewGrpcClient(conn)
 
 	sigterm := abool.New()
-	ctx := context.Background()
+	ctx := metadata.NewOutgoingContext(
+		context.Background(),
+		metadata.Pairs("hostname", hostname),
+	)
 	ctx = interrupt.WithContextFunc(ctx, func() {
 		println("ctrl+c received, terminating process")
 		sigterm.Set()
