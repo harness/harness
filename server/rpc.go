@@ -144,6 +144,14 @@ func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
 		return err
 	}
 
+	metadata, ok := metadata.FromContext(c)
+	if ok {
+		hostname, ok := metadata["hostname"]
+		if ok && len(hostname) != 0 {
+			proc.Machine = hostname[0]
+		}
+	}
+
 	repo, err := s.store.GetRepo(build.RepoID)
 	if err != nil {
 		log.Printf("error: cannot find repo with id %d: %s", build.RepoID, err)
@@ -207,14 +215,6 @@ func (s *RPC) Upload(c context.Context, id string, file *rpc.File) error {
 	if err != nil {
 		log.Printf("error: cannot find child proc with name %s: %s", file.Proc, err)
 		return err
-	}
-
-	metadata, ok := metadata.FromContext(c)
-	if ok {
-		hostname, ok := metadata["hostname"]
-		if ok && len(hostname) != 0 {
-			proc.Machine = hostname[0]
-		}
 	}
 
 	if file.Mime == "application/json+logs" {
