@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -461,7 +462,11 @@ func (b *builder) Build() ([]*buildItem, error) {
 
 		y := b.Yaml
 		s, err := envsubst.Eval(y, func(name string) string {
-			return environ[name]
+			env := environ[name]
+			if strings.Contains(env, "\n") {
+				env = fmt.Sprintf("%q", env)
+			}
+			return env
 		})
 		if err != nil {
 			return nil, err
