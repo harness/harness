@@ -79,6 +79,14 @@ type RPC struct {
 
 // Next implements the rpc.Next function
 func (s *RPC) Next(c context.Context, filter rpc.Filter) (*rpc.Pipeline, error) {
+	metadata, ok := metadata.FromContext(c)
+	if ok {
+		hostname, ok := metadata["hostname"]
+		if ok && len(hostname) != 0 {
+			logrus.Debugf("agent connected: %s: polling", hostname[0])
+		}
+	}
+
 	fn := func(task *queue.Task) bool {
 		for k, v := range filter.Labels {
 			if task.Labels[k] != v {

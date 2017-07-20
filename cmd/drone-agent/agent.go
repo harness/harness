@@ -100,6 +100,9 @@ const (
 func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	log.Println("pipeline: request next execution")
 
+	meta, _ := metadata.FromOutgoingContext(ctx)
+	ctxmeta := metadata.NewOutgoingContext(context.Background(), meta)
+
 	// get the next job from the queue
 	work, err := client.Next(ctx, filter)
 	if err != nil {
@@ -121,7 +124,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		timeout = time.Duration(minutes) * time.Minute
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(ctxmeta, timeout)
 	defer cancel()
 
 	cancelled := abool.New()
@@ -150,7 +153,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 
 	state := rpc.State{}
 	state.Started = time.Now().Unix()
-	err = client.Init(context.Background(), work.ID, state)
+	err = client.Init(ctxmeta, work.ID, state)
 	if err != nil {
 		log.Printf("pipeline: error signaling pipeline init: %s: %s", work.ID, err)
 	}
@@ -182,7 +185,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		file.Size = len(file.Data)
 		file.Time = time.Now().Unix()
 
-		if serr := client.Upload(context.Background(), work.ID, file); serr != nil {
+		if serr := client.Upload(ctxmeta, work.ID, file); serr != nil {
 			log.Printf("pipeline: cannot upload logs: %s: %s: %s", work.ID, file.Mime, serr)
 		} else {
 			log.Printf("pipeline: finish uploading logs: %s: step %s: %s", file.Mime, work.ID, proc.Alias)
@@ -207,7 +210,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		file.Size = len(file.Data)
 		file.Time = time.Now().Unix()
 
-		if serr := client.Upload(context.Background(), work.ID, file); serr != nil {
+		if serr := client.Upload(ctxmeta, work.ID, file); serr != nil {
 			log.Printf("pipeline: cannot upload artifact: %s: %s: %s", work.ID, file.Mime, serr)
 		} else {
 			log.Printf("pipeline: finish uploading artifact: %s: step %s: %s", file.Mime, work.ID, proc.Alias)
@@ -224,7 +227,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 			Finished: time.Now().Unix(),
 		}
 		defer func() {
-			if uerr := client.Update(context.Background(), work.ID, procState); uerr != nil {
+			if uerr := client.Update(ctxmeta, work.ID, procState); uerr != nil {
 				log.Printf("Pipeine: error updating pipeline step status: %s: %s: %s", work.ID, procState.Proc, uerr)
 			}
 		}()
@@ -285,7 +288,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 
 	log.Printf("pipeline: logging complete: %s", work.ID)
 
-	err = client.Done(context.Background(), work.ID, state)
+	err = client.Done(ctxmeta, work.ID, state)
 	if err != nil {
 		log.Printf("Pipeine: error signaling pipeline done: %s: %s", work.ID, err)
 	} else {

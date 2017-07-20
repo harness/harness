@@ -47,6 +47,9 @@ func (c *client) Next(ctx context.Context, f Filter) (*Pipeline, error) {
 		if grpc.Code(err) == codes.Unknown {
 			return nil, err
 		}
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
 		<-time.After(backoff)
 	}
 
