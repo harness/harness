@@ -10,6 +10,8 @@ import (
 
 	oldcontext "golang.org/x/net/context"
 
+	"google.golang.org/grpc/metadata"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/cncd/logging"
 	"github.com/cncd/pipeline/pipeline/rpc"
@@ -207,6 +209,14 @@ func (s *RPC) Upload(c context.Context, id string, file *rpc.File) error {
 		return err
 	}
 
+	metadata, ok := metadata.FromContext(c)
+	if ok {
+		hostname, ok := metadata["hostname"]
+		if ok && len(hostname) != 0 {
+			proc.Machine = hostname[0]
+		}
+	}
+
 	if file.Mime == "application/json+logs" {
 		return s.store.LogSave(
 			proc,
@@ -237,6 +247,13 @@ func (s *RPC) Init(c context.Context, id string, state rpc.State) error {
 	if err != nil {
 		log.Printf("error: cannot find proc with id %d: %s", procID, err)
 		return err
+	}
+	metadata, ok := metadata.FromContext(c)
+	if ok {
+		hostname, ok := metadata["hostname"]
+		if ok && len(hostname) != 0 {
+			proc.Machine = hostname[0]
+		}
 	}
 
 	build, err := s.store.GetBuild(proc.BuildID)

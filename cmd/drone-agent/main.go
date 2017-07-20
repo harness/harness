@@ -40,6 +40,10 @@ func main() {
 			Usage:  "start the agent in debug mode",
 		},
 		cli.StringFlag{
+			EnvVar: "DRONE_HOSTNAME,HOSTNAME",
+			Name:   "hostname",
+		},
+		cli.StringFlag{
 			EnvVar: "DRONE_PLATFORM",
 			Name:   "platform",
 			Value:  "linux/amd64",
