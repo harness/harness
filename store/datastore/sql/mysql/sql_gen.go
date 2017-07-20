@@ -18,6 +18,7 @@ var index = map[string]string{
 	"files-find-proc-name":        filesFindProcName,
 	"files-find-proc-name-data":   filesFindProcNameData,
 	"files-delete-build":          filesDeleteBuild,
+	"logs-find-proc":              logsFindProc,
 	"perms-find-user":             permsFindUser,
 	"perms-find-user-repo":        permsFindUserRepo,
 	"perms-insert-replace":        permsInsertReplace,
@@ -46,6 +47,10 @@ var index = map[string]string{
 	"sender-delete":               senderDelete,
 	"task-list":                   taskList,
 	"task-delete":                 taskDelete,
+	"user-find":                   userFind,
+	"user-find-login":             userFindLogin,
+	"user-update":                 userUpdate,
+	"user-delete":                 userDelete,
 }
 
 var configFindId = `
@@ -198,6 +203,16 @@ WHERE file_proc_id = ?
 
 var filesDeleteBuild = `
 DELETE FROM files WHERE file_build_id = ?
+`
+
+var logsFindProc = `
+SELECT
+ log_id
+,log_job_id
+,log_data
+FROM logs
+WHERE log_job_id = ?
+LIMIT 1
 `
 
 var permsFindUser = `
@@ -524,4 +539,58 @@ FROM tasks
 
 var taskDelete = `
 DELETE FROM tasks WHERE task_id = ?
+`
+
+var userFind = `
+SELECT
+ user_id
+,user_login
+,user_token
+,user_secret
+,user_expiry
+,user_email
+,user_avatar
+,user_active
+,user_synced
+,user_admin
+,user_hash
+FROM users
+ORDER BY user_login ASC
+`
+
+var userFindLogin = `
+SELECT
+ user_id
+,user_login
+,user_token
+,user_secret
+,user_expiry
+,user_email
+,user_avatar
+,user_active
+,user_synced
+,user_admin
+,user_hash
+FROM users
+WHERE user_login = ?
+LIMIT 1
+`
+
+var userUpdate = `
+UPDATE users
+SET
+,user_token  = ?
+,user_secret = ?
+,user_expiry = ?
+,user_email  = ?
+,user_avatar = ?
+,user_active = ?
+,user_synced = ?
+,user_admin  = ?
+,user_hash   = ?
+WHERE user_id = ?
+`
+
+var userDelete = `
+DELETE FROM users WHERE user_id = ?
 `

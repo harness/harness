@@ -6,55 +6,65 @@ import (
 	"testing"
 
 	"github.com/drone/drone/model"
-	"github.com/franela/goblin"
 )
 
-func TestLogs(t *testing.T) {
-	db := openTest()
-	defer db.Close()
+func TestLogCreateFind(t *testing.T) {
+	s := newTest()
+	defer func() {
+		s.Exec("delete from logs")
+		s.Close()
+	}()
 
-	s := From(db)
-	g := goblin.Goblin(t)
-	g.Describe("Logs", func() {
+	proc := model.Proc{
+		ID: 1,
+	}
+	buf := bytes.NewBufferString("echo hi")
+	err := s.LogSave(&proc, buf)
+	if err != nil {
+		t.Errorf("Unexpected error: log create: %s", err)
+	}
 
-		// before each test be sure to purge the package
-		// table data from the database.
-		g.BeforeEach(func() {
-			db.Exec("DELETE FROM logs")
-		})
+	rc, err := s.LogFind(&proc)
+	if err != nil {
+		t.Errorf("Unexpected error: log create: %s", err)
+	}
 
-		g.It("Should create a log", func() {
-			proc := model.Proc{
-				ID: 1,
-			}
-			buf := bytes.NewBufferString("echo hi")
-			err := s.LogSave(&proc, buf)
-			g.Assert(err == nil).IsTrue()
+	defer rc.Close()
+	out, _ := ioutil.ReadAll(rc)
+	if got, want := string(out), "echo hi"; got != want {
+		t.Errorf("Want log data %s, got %s", want, got)
+	}
+}
 
-			rc, err := s.LogFind(&proc)
-			g.Assert(err == nil).IsTrue()
-			defer rc.Close()
-			out, _ := ioutil.ReadAll(rc)
-			g.Assert(string(out)).Equal("echo hi")
-		})
+func TestLogUpdate(t *testing.T) {
+	s := newTest()
+	defer func() {
+		s.Exec("delete from logs")
+		s.Close()
+	}()
 
-		g.It("Should update a log", func() {
-			proc := model.Proc{
-				ID: 1,
-			}
-			buf1 := bytes.NewBufferString("echo hi")
-			buf2 := bytes.NewBufferString("echo allo?")
-			err1 := s.LogSave(&proc, buf1)
-			err2 := s.LogSave(&proc, buf2)
-			g.Assert(err1 == nil).IsTrue()
-			g.Assert(err2 == nil).IsTrue()
+	proc := model.Proc{
+		ID: 1,
+	}
+	buf1 := bytes.NewBufferString("echo hi")
+	buf2 := bytes.NewBufferString("echo allo?")
+	err1 := s.LogSave(&proc, buf1)
+	err2 := s.LogSave(&proc, buf2)
+	if err1 != nil {
+		t.Errorf("Unexpected error: log create: %s", err1)
+	}
+	if err2 != nil {
+		t.Errorf("Unexpected error: log update: %s", err2)
+	}
 
-			rc, err := s.LogFind(&proc)
-			g.Assert(err == nil).IsTrue()
-			defer rc.Close()
-			out, _ := ioutil.ReadAll(rc)
-			g.Assert(string(out)).Equal("echo allo?")
-		})
+	rc, err := s.LogFind(&proc)
+	if err != nil {
+		t.Errorf("Unexpected error: log create: %s", err)
+	}
 
-	})
+	defer rc.Close()
+	out, _ := ioutil.ReadAll(rc)
+	if got, want := string(out), "echo allo?"; got != want {
+		t.Errorf("Want log data %s, got %s", want, got)
+	}
 }
