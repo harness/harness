@@ -9,7 +9,7 @@ import (
 	"github.com/cncd/pipeline/pipeline/frontend/yaml"
 )
 
-func (c *Compiler) createProcess(name string, container *yaml.Container) *backend.Step {
+func (c *Compiler) createProcess(name string, container *yaml.Container, section string) *backend.Step {
 	var (
 		detached   bool
 		workingdir string
@@ -62,30 +62,30 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 	// TODO: This is here for backward compatibility and will eventually be removed.
 	environment["DRONE_WORKSPACE"] = path.Join(c.base, c.path)
 
-	if !isService(container) {
-		workingdir = path.Join(c.base, c.path)
-	}
-
-	if isService(container) {
+	if section == "services" || container.Detached {
 		detached = true
 	}
 
-	if isPlugin(container) {
-		paramsToEnv(container.Vargs, environment)
-
-		if matchImage(container.Image, c.escalated...) {
-			privileged = true
-			entrypoint = []string{}
-			command = []string{}
-		}
+	if detached == false || len(container.Commands) != 0 {
+		workingdir = path.Join(c.base, c.path)
 	}
 
-	if isShell(container) {
+	if detached == false {
+		paramsToEnv(container.Vargs, environment)
+	}
+
+	if len(container.Commands) != 0 {
 		entrypoint = []string{"/bin/sh", "-c"}
 		command = []string{"echo $CI_SCRIPT | base64 -d | /bin/sh -e"}
 		environment["CI_SCRIPT"] = generateScriptPosix(container.Commands)
 		environment["HOME"] = "/root"
 		environment["SHELL"] = "/bin/sh"
+	}
+
+	if matchImage(container.Image, c.escalated...) {
+		privileged = true
+		entrypoint = []string{}
+		command = []string{}
 	}
 
 	authConfig := backend.Auth{
@@ -165,16 +165,4 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 			container.Constraints.Status.Match("failure"),
 		NetworkMode: network_mode,
 	}
-}
-
-func isPlugin(c *yaml.Container) bool {
-	return len(c.Vargs) != 0
-}
-
-func isShell(c *yaml.Container) bool {
-	return len(c.Commands) != 0
-}
-
-func isService(c *yaml.Container) bool {
-	return c.Detached || (isPlugin(c) == false && isShell(c) == false)
 }
