@@ -103,7 +103,7 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 			container.Image = "plugins/git:linux-arm64"
 		}
 		name := fmt.Sprintf("%s_clone", c.prefix)
-		step := c.createProcess(name, container)
+		step := c.createProcess(name, container, "clone")
 
 		stage := new(backend.Stage)
 		stage.Name = name
@@ -121,7 +121,7 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 			stage.Alias = container.Name
 
 			name := fmt.Sprintf("%s_clone_%d", c.prefix, i)
-			step := c.createProcess(name, container)
+			step := c.createProcess(name, container, "clone")
 			stage.Steps = append(stage.Steps, step)
 
 			config.Stages = append(config.Stages, stage)
@@ -142,7 +142,7 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 			}
 
 			name := fmt.Sprintf("%s_services_%d", c.prefix, i)
-			step := c.createProcess(name, container)
+			step := c.createProcess(name, container, "services")
 			stage.Steps = append(stage.Steps, step)
 
 		}
@@ -172,7 +172,7 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 		}
 
 		name := fmt.Sprintf("%s_step_%d", c.prefix, i)
-		step := c.createProcess(name, container)
+		step := c.createProcess(name, container, "pipeline")
 		stage.Steps = append(stage.Steps, step)
 	}
 
@@ -188,7 +188,7 @@ func (c *Compiler) setupCache(conf *yaml.Config, ir *backend.Config) {
 
 	container := c.cacher.Restore(c.metadata.Repo.Name, c.metadata.Curr.Commit.Branch, conf.Cache)
 	name := fmt.Sprintf("%s_restore_cache", c.prefix)
-	step := c.createProcess(name, container)
+	step := c.createProcess(name, container, "cache")
 
 	stage := new(backend.Stage)
 	stage.Name = name
@@ -205,7 +205,7 @@ func (c *Compiler) setupCacheRebuild(conf *yaml.Config, ir *backend.Config) {
 	container := c.cacher.Rebuild(c.metadata.Repo.Name, c.metadata.Curr.Commit.Branch, conf.Cache)
 
 	name := fmt.Sprintf("%s_rebuild_cache", c.prefix)
-	step := c.createProcess(name, container)
+	step := c.createProcess(name, container, "cache")
 
 	stage := new(backend.Stage)
 	stage.Name = name

@@ -6,6 +6,12 @@ import (
 	"github.com/cncd/pipeline/pipeline/frontend/yaml"
 )
 
+const (
+	blockClone uint8 = iota
+	blockPipeline
+	blockServices
+)
+
 // A Linter lints a pipeline configuration.
 type Linter struct {
 	trusted bool
@@ -22,10 +28,22 @@ func New(opts ...Option) *Linter {
 
 // Lint lints the configuration.
 func (l *Linter) Lint(c *yaml.Config) error {
-	var containers []*yaml.Container
-	containers = append(containers, c.Pipeline.Containers...)
-	containers = append(containers, c.Services.Containers...)
+	if len(c.Pipeline.Containers) == 0 {
+		return fmt.Errorf("Invalid or missing pipeline section")
+	}
+	if err := l.lint(c.Clone.Containers, blockClone); err != nil {
+		return err
+	}
+	if err := l.lint(c.Pipeline.Containers, blockPipeline); err != nil {
+		return err
+	}
+	if err := l.lint(c.Services.Containers, blockServices); err != nil {
+		return err
+	}
+	return nil
+}
 
+func (l *Linter) lint(containers []*yaml.Container, block uint8) error {
 	for _, container := range containers {
 		if err := l.lintImage(container); err != nil {
 			return err
@@ -35,15 +53,14 @@ func (l *Linter) Lint(c *yaml.Config) error {
 				return err
 			}
 		}
-		if isService(container) == false {
+		if block != blockServices && !container.Detached {
 			if err := l.lintEntrypoint(container); err != nil {
 				return err
 			}
 		}
-	}
-
-	if len(c.Pipeline.Containers) == 0 {
-		return fmt.Errorf("Invalid or missing pipeline section")
+		if err := l.lintCommands(container); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -51,6 +68,26 @@ func (l *Linter) Lint(c *yaml.Config) error {
 func (l *Linter) lintImage(c *yaml.Container) error {
 	if len(c.Image) == 0 {
 		return fmt.Errorf("Invalid or missing image")
+	}
+	return nil
+}
+
+func (l *Linter) lintCommands(c *yaml.Container) error {
+	if len(c.Commands) == 0 {
+		return nil
+	}
+	if len(c.Vargs) != 0 {
+		var keys []string
+		for key := range c.Vargs {
+			keys = append(keys, key)
+		}
+		return fmt.Errorf("Cannot configure both commands and custom attributes %v", keys)
+	}
+	if len(c.Entrypoint) != 0 {
+		return fmt.Errorf("Cannot configure both commands and entrypoint attributes")
+	}
+	if len(c.Command) != 0 {
+		return fmt.Errorf("Cannot configure both commands and command attributes")
 	}
 	return nil
 }
@@ -94,16 +131,4 @@ func (l *Linter) lintTrusted(c *yaml.Container) error {
 		return fmt.Errorf("Insufficient privileges to use volumes")
 	}
 	return nil
-}
-
-func isService(c *yaml.Container) bool {
-	return !isScript(c) && !isPlugin(c)
-}
-
-func isScript(c *yaml.Container) bool {
-	return len(c.Commands) != 0
-}
-
-func isPlugin(c *yaml.Container) bool {
-	return len(c.Vargs) != 0
 }
