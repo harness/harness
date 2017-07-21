@@ -71,6 +71,11 @@ func PostRepo(c *gin.Context) {
 		return
 	}
 
+	from, err := remote.Repo(user, repo.Owner, repo.Name)
+	if err == nil {
+		repo.Update(from)
+	}
+
 	err = store.UpdateRepo(c, repo)
 	if err != nil {
 		c.String(500, err.Error())

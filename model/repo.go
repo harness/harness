@@ -23,11 +23,11 @@ type Repo struct {
 	Branch      string `json:"default_branch,omitempty" meddler:"repo_branch"`
 	Timeout     int64  `json:"timeout,omitempty"        meddler:"repo_timeout"`
 	Visibility  string `json:"visibility"               meddler:"repo_visibility"`
-	IsPrivate   bool   `json:"private,omitempty"        meddler:"repo_private"`
+	IsPrivate   bool   `json:"private"                  meddler:"repo_private"`
 	IsTrusted   bool   `json:"trusted"                  meddler:"repo_trusted"`
 	IsStarred   bool   `json:"starred,omitempty"        meddler:"-"`
 	IsGated     bool   `json:"gated"                    meddler:"repo_gated"`
-	IsActive    bool   `json:"active,omitempty"         meddler:"repo_active"`
+	IsActive    bool   `json:"active"                   meddler:"repo_active"`
 	AllowPull   bool   `json:"allow_pr"                 meddler:"repo_allow_pr"`
 	AllowPush   bool   `json:"allow_push"               meddler:"repo_allow_push"`
 	AllowDeploy bool   `json:"allow_deploys"            meddler:"repo_allow_deploys"`
@@ -36,6 +36,23 @@ type Repo struct {
 	Config      string `json:"config_file"              meddler:"repo_config_path"`
 	Hash        string `json:"-"                        meddler:"repo_hash"`
 	Perm        *Perm  `json:"-"                        meddler:"-"`
+}
+
+// Update updates the repository with values from the given Repo.
+func (r *Repo) Update(from *Repo) {
+	r.Avatar = from.Avatar
+	r.Link = from.Link
+	r.Kind = from.Kind
+	r.Clone = from.Clone
+	r.Branch = from.Branch
+	if from.IsPrivate != r.IsPrivate {
+		if from.IsPrivate {
+			r.Visibility = VisibilityPrivate
+		} else {
+			r.Visibility = VisibilityPublic
+		}
+	}
+	r.IsPrivate = from.IsPrivate
 }
 
 // RepoPatch represents a repository patch object.
