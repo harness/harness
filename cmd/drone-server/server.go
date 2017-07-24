@@ -18,8 +18,6 @@ import (
 	"github.com/cncd/logging"
 	"github.com/cncd/pipeline/pipeline/rpc/proto"
 	"github.com/cncd/pubsub"
-	"github.com/drone/drone/plugins/registry"
-	"github.com/drone/drone/plugins/secrets"
 	"github.com/drone/drone/plugins/sender"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/router"
@@ -555,12 +553,6 @@ func setupEvilGlobals(c *cli.Context, v store.Store, r remote.Remote) {
 	droneserver.Config.Services.Senders = sender.New(v, v)
 	droneserver.Config.Services.Environ = setupEnvironService(c, v)
 
-	if endpoint := c.String("registry-service"); endpoint != "" {
-		droneserver.Config.Services.Registries = registry.NewRemote(endpoint)
-	}
-	if endpoint := c.String("secret-service"); endpoint != "" {
-		droneserver.Config.Services.Secrets = secrets.NewRemote(endpoint)
-	}
 	if endpoint := c.String("gating-service"); endpoint != "" {
 		droneserver.Config.Services.Senders = sender.NewRemote(endpoint)
 	}
