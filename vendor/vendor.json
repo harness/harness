@@ -427,6 +427,18 @@
 			"revisionTime": "2016-05-03T14:34:40Z"
 		},
 		{
+			"checksumSHA1": "d9PxF1XQGLMJZRct2R8qVM/eYlE=",
+			"path": "github.com/hashicorp/golang-lru",
+			"revision": "0a025b7e63adc15a622f29b0b2c4c3848243bbf6",
+			"revisionTime": "2016-08-13T22:13:03Z"
+		},
+		{
+			"checksumSHA1": "9hffs0bAIU6CquiRhKQdzjHnKt0=",
+			"path": "github.com/hashicorp/golang-lru/simplelru",
+			"revision": "0a025b7e63adc15a622f29b0b2c4c3848243bbf6",
+			"revisionTime": "2016-08-13T22:13:03Z"
+		},
+		{
 			"checksumSHA1": "o3XZZdOnSnwQSpYw215QV75ZDeI=",
 			"path": "github.com/hashicorp/hcl",
 			"revision": "a4b07c25de5ff55ad3b8936cea69a79a3d95a855",
@@ -535,6 +547,90 @@
 			"path": "github.com/lib/pq/oid",
 			"revision": "83c4f410d0aed80a0f44bac6a576a7f2435791f3",
 			"revisionTime": "2015-10-15T14:07:56-07:00"
+		},
+		{
+			"checksumSHA1": "hUI9uYDnlXeOY+SEAPViyVpgq6I=",
+			"path": "github.com/lucas-clemente/aes12",
+			"revision": "25700e67be5c860bcc999137275b9ef8b65932bd",
+			"revisionTime": "2016-12-15T15:22:28Z"
+		},
+		{
+			"checksumSHA1": "ne1X+frkx5fJcpz9FaZPuUZ7amM=",
+			"path": "github.com/lucas-clemente/fnv128a",
+			"revision": "393af48d391698c6ae4219566bfbdfef67269997",
+			"revisionTime": "2016-05-04T15:23:51Z"
+		},
+		{
+			"checksumSHA1": "V0wA4WEUCYNPkjM0yC04mW6ovH8=",
+			"path": "github.com/lucas-clemente/quic-go",
+			"revision": "ab2bee400206427835e1bef6bcc36351905aabd6",
+			"revisionTime": "2017-07-24T16:14:30Z"
+		},
+		{
+			"checksumSHA1": "OA9E+y7g05x/mWJJHmA7oPxWKQo=",
+			"path": "github.com/lucas-clemente/quic-go-certificates",
+			"revision": "d2f86524cced5186554df90d92529757d22c1cb6",
+			"revisionTime": "2016-08-23T09:51:56Z"
+		},
+		{
+			"checksumSHA1": "quVHUmzDMdxO14W2xY1PizK1GME=",
+			"path": "github.com/lucas-clemente/quic-go/ackhandler",
+			"revision": "ab2bee400206427835e1bef6bcc36351905aabd6",
+			"revisionTime": "2017-07-24T16:14:30Z"
+		},
+		{
+			"checksumSHA1": "bHgFCrGrrdQLBrDN/iwhWnTY5c8=",
+			"path": "github.com/lucas-clemente/quic-go/congestion",
+			"revision": "ab2bee400206427835e1bef6bcc36351905aabd6",
+			"revisionTime": "2017-07-24T16:14:30Z"
+		},
+		{
+			"checksumSHA1": "mOdxhLhYusZpEUM4XYweq6/e7wc=",
+			"path": "github.com/lucas-clemente/quic-go/crypto",
+			"revision": "ab2bee400206427835e1bef6bcc36351905aabd6",
+			"revisionTime": "2017-07-24T16:14:30Z"
+		},
+		{
+			"checksumSHA1": "IjJn3XeLM+MZ0vWkl2RxK+8y7ac=",
+			"path": "github.com/lucas-clemente/quic-go/flowcontrol",
+			"revision": "ab2bee400206427835e1bef6bcc36351905aabd6",
+			"revisionTime": "2017-07-24T16:14:30Z"
+		},
+		{
+			"checksumSHA1": "BvjNmqw285B/O0u9CapEiOG6nNU=",
+			"path": "github.com/lucas-clemente/quic-go/frames",
+			"revision": "ab2bee400206427835e1bef6bcc36351905aabd6",
+			"revisionTime": "2017-07-24T16:14:30Z"
+		},
+		{
+			"checksumSHA1": "F591KFRIl18P1yI41Y3lhDW4WXI=",
+			"path": "github.com/lucas-clemente/quic-go/h2quic",
+			"revision": "ab2bee400206427835e1bef6bcc36351905aabd6",
+			"revisionTime": "2017-07-24T16:14:30Z"
+		},
+		{
+			"checksumSHA1": "dnDC7JMEhC/8UtQnkExChY+zIeY=",
+			"path": "github.com/lucas-clemente/quic-go/handshake",
+			"revision": "ab2bee400206427835e1bef6bcc36351905aabd6",
+			"revisionTime": "2017-07-24T16:14:30Z"
+		},
+		{
+			"checksumSHA1": "I106jIrBkNesQcoPrgUJ8e2JUNY=",
+			"path": "github.com/lucas-clemente/quic-go/internal/utils",
+			"revision": "ab2bee400206427835e1bef6bcc36351905aabd6",
+			"revisionTime": "2017-07-24T16:14:30Z"
+		},
+		{
+			"checksumSHA1": "UoLAi6qeJrVxnEWxEyRs7VKLp78=",
+			"path": "github.com/lucas-clemente/quic-go/protocol",
+			"revision": "ab2bee400206427835e1bef6bcc36351905aabd6",
+			"revisionTime": "2017-07-24T16:14:30Z"
+		},
+		{
+			"checksumSHA1": "RaG0jfP+lFzgedW98Bfp0Uri7EY=",
+			"path": "github.com/lucas-clemente/quic-go/qerr",
+			"revision": "ab2bee400206427835e1bef6bcc36351905aabd6",
+			"revisionTime": "2017-07-24T16:14:30Z"
 		},
 		{
 			"path": "github.com/manucorporat/sse",
@@ -708,6 +804,18 @@
 			"path": "golang.org/x/crypto/acme/autocert",
 			"revision": "c7af5bf2638a1164f2eb5467c39c6cffbd13a02e",
 			"revisionTime": "2017-04-25T18:31:00Z"
+		},
+		{
+			"checksumSHA1": "MlEHIE/60sB86Lmf0MPTIXHzKzE=",
+			"path": "golang.org/x/crypto/curve25519",
+			"revision": "6914964337150723782436d56b3f21610a74ce7b",
+			"revisionTime": "2017-07-20T17:50:53Z"
+		},
+		{
+			"checksumSHA1": "4D8hxMIaSDEW5pCQk22Xj4DcDh4=",
+			"path": "golang.org/x/crypto/hkdf",
+			"revision": "6914964337150723782436d56b3f21610a74ce7b",
+			"revisionTime": "2017-07-20T17:50:53Z"
 		},
 		{
 			"checksumSHA1": "Oa5JBb27An4MwKwLQ2WMzqRexa8=",

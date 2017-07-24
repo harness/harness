@@ -2,16 +2,20 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/lucas-clemente/quic-go/h2quic"
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/sync/errgroup"
 
@@ -62,6 +66,11 @@ var flags = []cli.Flag{
 		EnvVar: "DRONE_LETS_ENCRYPT",
 		Name:   "lets-encrypt",
 		Usage:  "lets encrypt enabled",
+	},
+	cli.BoolFlag{
+		EnvVar: "DRONE_QUIC",
+		Name:   "quic",
+		Usage:  "start the server with quic enabled",
 	},
 	cli.StringSliceFlag{
 		EnvVar: "DRONE_ADMIN",
@@ -526,6 +535,38 @@ func server(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		if c.Bool("quic") {
+			dir := cacheDir()
+			os.MkdirAll(dir, 0700)
+
+			manager := autocert.Manager{
+				Prompt:     autocert.AcceptTOS,
+				HostPolicy: autocert.HostWhitelist(address.Host),
+				Cache:      autocert.DirCache(dir),
+			}
+			httpServer := &http.Server{
+				Addr:      ":https",
+				TLSConfig: &tls.Config{GetCertificate: manager.GetCertificate},
+				Handler:   handler,
+			}
+			quicServer := &h2quic.Server{Server: httpServer}
+			quicServer.TLSConfig = httpServer.TLSConfig
+
+			httpServer.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				quicServer.SetQuicHeaders(w.Header())
+				handler.ServeHTTP(w, r)
+			})
+
+			addr, err := net.ResolveUDPAddr("udp", ":443")
+			if err != nil {
+				return err
+			}
+			conn, err := net.ListenUDP("udp", addr)
+			if err != nil {
+				return err
+			}
+			return quicServer.Serve(conn)
+		}
 		return http.Serve(autocert.NewListener(address.Host), handler)
 	})
 
@@ -606,4 +647,12 @@ func (a *authorizer) authorize(ctx context.Context) error {
 		return errors.New("invalid agent token")
 	}
 	return errors.New("missing agent token")
+}
+
+func cacheDir() string {
+	const base = "golang-autocert"
+	if xdg := os.Getenv("XDG_CACHE_HOME"); xdg != "" {
+		return filepath.Join(xdg, base)
+	}
+	return filepath.Join(os.Getenv("HOME"), ".cache", base)
 }
