@@ -122,6 +122,12 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	sse := e.Group("/stream")
 	{
 		sse.GET("/events", server.EventStreamSSE)
+		sse.GET("/logs/:owner/:name/:build/:number",
+			session.SetRepo(),
+			session.SetPerm(),
+			session.MustPull,
+			server.LogStreamSSE,
+		)
 	}
 
 	info := e.Group("/api/info")
