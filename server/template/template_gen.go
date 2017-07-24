@@ -123,6 +123,15 @@ var indexpolymer = `<!DOCTYPE html>
 			window.USER = {{ json .user }};
 			{{ end }}
 	</script>
+	<script>
+		// TODO load a polyfill for SSE for the Edge browser. Consider downloading
+		// with bower instead of loading from cndjs.
+		if (!window.EventSource) {
+			var ssePolyfill = document.createElement("script");
+			ssePolyfill.src = "https://cdnjs.cloudflare.com/ajax/libs/event-source-polyfill/0.0.9/eventsource.min.js";
+			document.body.appendChild(ssePolyfill);
+		}
+	</script>
 	<script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
 
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
