@@ -380,6 +380,58 @@ var flags = []cli.Flag{
 		Name:   "stash-skip-verify",
 		Usage:  "stash skip ssl verification",
 	},
+	cli.BoolFlag{
+		EnvVar: "DRONE_CODING",
+		Name:   "coding",
+		Usage:  "coding driver is enabled",
+	},
+	cli.StringFlag{
+		EnvVar: "DRONE_CODING_URL",
+		Name:   "coding-server",
+		Usage:  "coding server address",
+		Value:  "https://coding.net",
+	},
+	cli.StringFlag{
+		EnvVar: "DRONE_CODING_CLIENT",
+		Name:   "coding-client",
+		Usage:  "coding oauth2 client id",
+	},
+	cli.StringFlag{
+		EnvVar: "DRONE_CODING_SECRET",
+		Name:   "coding-secret",
+		Usage:  "coding oauth2 client secret",
+	},
+	cli.StringSliceFlag{
+		EnvVar: "DRONE_CODING_SCOPE",
+		Name:   "coding-scope",
+		Usage:  "coding oauth scope",
+		Value: &cli.StringSlice{
+			"user",
+			"project",
+			"project:depot",
+		},
+	},
+	cli.StringFlag{
+		EnvVar: "DRONE_CODING_GIT_MACHINE",
+		Name:   "coding-git-machine",
+		Usage:  "coding machine name",
+		Value:  "git.coding.net",
+	},
+	cli.StringFlag{
+		EnvVar: "DRONE_CODING_GIT_USERNAME",
+		Name:   "coding-git-username",
+		Usage:  "coding machine user username",
+	},
+	cli.StringFlag{
+		EnvVar: "DRONE_CODING_GIT_PASSWORD",
+		Name:   "coding-git-password",
+		Usage:  "coding machine user password",
+	},
+	cli.BoolFlag{
+		EnvVar: "DRONE_CODING_SKIP_VERIFY",
+		Name:   "coding-skip-verify",
+		Usage:  "coding skip ssl verification",
+	},
 }
 
 func server(c *cli.Context) error {
