@@ -7,7 +7,7 @@ FROM pg_class WHERE relname = 'users'
 
 SELECT count(1)
 FROM repos
-WHERE repo_active = 1
+WHERE repo_active = true
 
 -- name: count-builds
 

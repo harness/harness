@@ -90,7 +90,7 @@ FROM pg_class WHERE relname = 'users'
 var countRepos = `
 SELECT count(1)
 FROM repos
-WHERE repo_active = 1
+WHERE repo_active = true
 `
 
 var countBuilds = `
