@@ -7,6 +7,7 @@ FROM users
 
 SELECT count(1)
 FROM repos
+WHERE repo_active = true
 
 -- name: count-builds
 

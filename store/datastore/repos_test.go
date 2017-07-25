@@ -264,14 +264,23 @@ func TestRepoCount(t *testing.T) {
 		Owner:    "bradrydzewski",
 		Name:     "drone",
 		FullName: "bradrydzewski/drone",
+		IsActive: true,
 	}
 	repo2 := &model.Repo{
 		Owner:    "drone",
 		Name:     "drone",
 		FullName: "drone/drone",
+		IsActive: true,
+	}
+	repo3 := &model.Repo{
+		Owner:    "drone",
+		Name:     "drone-ui",
+		FullName: "drone/drone-ui",
+		IsActive: false,
 	}
 	s.CreateRepo(repo1)
 	s.CreateRepo(repo2)
+	s.CreateRepo(repo3)
 
 	s.Exec("ANALYZE")
 	count, _ := s.GetRepoCount()
@@ -294,6 +303,7 @@ func TestRepoBatch(t *testing.T) {
 		FullName: "foo/bar",
 		Owner:    "foo",
 		Name:     "bar",
+		IsActive: true,
 	}
 	err := s.CreateRepo(repo)
 	if err != nil {
@@ -308,18 +318,21 @@ func TestRepoBatch(t *testing.T) {
 				FullName: "foo/bar",
 				Owner:    "foo",
 				Name:     "bar",
+				IsActive: true,
 			},
 			{
 				UserID:   1,
 				FullName: "bar/baz",
 				Owner:    "bar",
 				Name:     "baz",
+				IsActive: true,
 			},
 			{
 				UserID:   1,
 				FullName: "baz/qux",
 				Owner:    "baz",
 				Name:     "qux",
+				IsActive: true,
 			},
 		},
 	)

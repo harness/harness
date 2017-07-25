@@ -10,7 +10,7 @@ var (
 	// VersionPatch is for backwards-compatible bug fixes
 	VersionPatch int64 = 0
 	// VersionPre indicates prerelease
-	VersionPre string = "rc.2"
+	VersionPre string
 	// VersionDev indicates development branch. Releases will be empty string.
 	VersionDev string
 )

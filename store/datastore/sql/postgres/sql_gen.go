@@ -84,17 +84,18 @@ LIMIT 1
 
 var countUsers = `
 SELECT reltuples
-FROM pg_class WHERE relname = 'users';
+FROM pg_class WHERE relname = 'users'
 `
 
 var countRepos = `
-SELECT reltuples
-FROM pg_class WHERE relname = 'repos';
+SELECT count(1)
+FROM repo
+WHERE repo_active = 1
 `
 
 var countBuilds = `
 SELECT reltuples
-FROM pg_class WHERE relname = 'builds';
+FROM pg_class WHERE relname = 'builds'
 `
 
 var feedLatestBuild = `

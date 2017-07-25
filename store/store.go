@@ -72,6 +72,9 @@ type Store interface {
 	// GetBuildQueue gets a list of build in queue.
 	GetBuildQueue() ([]*model.Feed, error)
 
+	// GetBuildCount gets a count of all builds in the system.
+	GetBuildCount() (int, error)
+
 	// CreateBuild creates a new build and jobs.
 	CreateBuild(*model.Build, ...*model.Proc) error
 

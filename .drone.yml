@@ -80,7 +80,7 @@ pipeline:
     image: plugins/docker
     repo: drone/drone
     secrets: [ docker_username, docker_password ]
-    tag: [ 0.8, 0.8.0, 0.8.0-rc.2 ]
+    tag: [ 0.8, 0.8.0 ]
     when:
       event: tag
 
@@ -89,7 +89,7 @@ pipeline:
     repo: drone/agent
     dockerfile: Dockerfile.agent
     secrets: [ docker_username, docker_password ]
-    tag: [ 0.8, 0.8.0, 0.8.0-rc.2 ]
+    tag: [ 0.8, 0.8.0 ]
     when:
       event: tag
 
