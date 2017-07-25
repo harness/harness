@@ -89,7 +89,7 @@ FROM pg_class WHERE relname = 'users'
 
 var countRepos = `
 SELECT count(1)
-FROM repo
+FROM repos
 WHERE repo_active = 1
 `
 
