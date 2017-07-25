@@ -545,27 +545,30 @@ func server(c *cli.Context) error {
 				Cache:      autocert.DirCache(dir),
 			}
 			httpServer := &http.Server{
-				Addr:      ":https",
-				TLSConfig: &tls.Config{GetCertificate: manager.GetCertificate},
-				Handler:   handler,
+				Addr:    ":443",
+				Handler: handler,
+				TLSConfig: &tls.Config{
+					GetCertificate: manager.GetCertificate,
+					NextProtos:     []string{"h2", "http/1.1"},
+				},
 			}
-			quicServer := &h2quic.Server{Server: httpServer}
-			quicServer.TLSConfig = httpServer.TLSConfig
+			quicServer := &h2quic.Server{
+				Server: httpServer,
+			}
 
-			httpServer.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			quicServer.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				quicServer.SetQuicHeaders(w.Header())
 				handler.ServeHTTP(w, r)
 			})
 
-			addr, err := net.ResolveUDPAddr("udp", ":443")
+			conn, err := net.ListenPacket("udp", ":443")
 			if err != nil {
 				return err
 			}
-			conn, err := net.ListenUDP("udp", addr)
-			if err != nil {
-				return err
-			}
-			return quicServer.Serve(conn)
+			g.Go(func() error {
+				return quicServer.Serve(conn)
+			})
+			return http.Serve(manager.Listener(), quicServer.Handler)
 		}
 		return http.Serve(autocert.NewListener(address.Host), handler)
 	})
