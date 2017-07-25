@@ -159,9 +159,13 @@ func PostHook(c *gin.Context) {
 		}
 		err = Config.Storage.Config.ConfigCreate(conf)
 		if err != nil {
-			logrus.Errorf("failure to persist config for %s. %s", repo.FullName, err)
-			c.AbortWithError(500, err)
-			return
+			// retry in case we receive two hooks at the same time
+			conf, err = Config.Storage.Config.ConfigFind(repo, sha)
+			if err != nil {
+				logrus.Errorf("failure to find or persist build config for %s. %s", repo.FullName, err)
+				c.AbortWithError(500, err)
+				return
+			}
 		}
 	}
 	build.ConfigID = conf.ID
