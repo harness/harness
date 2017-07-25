@@ -59,6 +59,7 @@ func (w *website) Page(rw http.ResponseWriter, r *http.Request, u *model.User) {
 			"csrf": csrf,
 		}
 
+		rw.Header().Set("Content-Type", "text/html; charset=UTF-8")
 		template.T.ExecuteTemplate(rw, "index_polymer.html", params)
 	}
 }
