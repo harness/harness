@@ -508,12 +508,18 @@ func server(c *cli.Context) error {
 
 	// start the server with tls enabled
 	if c.String("server-cert") != "" {
-		return http.ListenAndServeTLS(
-			c.String("server-addr"),
-			c.String("server-cert"),
-			c.String("server-key"),
-			handler,
-		)
+		g.Go(func() error {
+			return http.ListenAndServe(":http", handler)
+		})
+		g.Go(func() error {
+			return http.ListenAndServeTLS(
+				":https",
+				c.String("server-cert"),
+				c.String("server-key"),
+				handler,
+			)
+		})
+		return g.Wait()
 	}
 
 	// start the server without tls enabled
