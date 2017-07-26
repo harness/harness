@@ -50,8 +50,10 @@ func GetBuild(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
+	files, _ := store.FromContext(c).FileList(build)
 	procs, _ := store.FromContext(c).ProcList(build)
 	build.Procs = model.Tree(procs)
+	build.Files = files
 
 	c.JSON(http.StatusOK, build)
 }
