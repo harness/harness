@@ -73,6 +73,9 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		repo.GET("/builds/:number", server.GetBuild)
 		repo.GET("/logs/:number/:ppid/:proc", server.GetBuildLogs)
 
+		repo.GET("/files/:number", server.FileList)
+		repo.GET("/files/:number/:proc/*file", server.FileGet)
+
 		// requires push permissions
 		repo.GET("/secrets", session.MustPush, server.GetSecretList)
 		repo.POST("/secrets", session.MustPush, server.PostSecret)

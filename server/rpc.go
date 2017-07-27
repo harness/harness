@@ -235,6 +235,7 @@ func (s *RPC) Upload(c context.Context, id string, file *rpc.File) error {
 	return Config.Storage.Files.FileCreate(&model.File{
 		BuildID: proc.BuildID,
 		ProcID:  proc.ID,
+		PID:     proc.PID,
 		Mime:    file.Mime,
 		Name:    file.Name,
 		Size:    file.Size,
