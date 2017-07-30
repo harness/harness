@@ -42,6 +42,7 @@ func (db *datastore) FileCreate(file *model.File, r io.Reader) error {
 		ID:      file.ID,
 		BuildID: file.BuildID,
 		ProcID:  file.ProcID,
+		PID:     file.PID,
 		Name:    file.Name,
 		Size:    file.Size,
 		Mime:    file.Mime,
@@ -55,6 +56,7 @@ type fileData struct {
 	ID      int64  `meddler:"file_id,pk"`
 	BuildID int64  `meddler:"file_build_id"`
 	ProcID  int64  `meddler:"file_proc_id"`
+	PID     int    `meddler:"file_pid"`
 	Name    string `meddler:"file_name"`
 	Size    int    `meddler:"file_size"`
 	Mime    string `meddler:"file_mime"`

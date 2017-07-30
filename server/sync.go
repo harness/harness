@@ -20,7 +20,7 @@ type syncer struct {
 }
 
 func (s *syncer) Sync(user *model.User) error {
-	unix := time.Now().Unix() - 1 // force immediate expiration
+	unix := time.Now().Unix() - (3601) // force immediate expiration. note 1 hour expiration is hard coded at the moment
 	repos, err := s.remote.Repos(user)
 	if err != nil {
 		return err

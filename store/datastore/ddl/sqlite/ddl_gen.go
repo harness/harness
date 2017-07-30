@@ -140,6 +140,10 @@ var migrations = []struct {
 		name: "create-index-perms-user",
 		stmt: createIndexPermsUser,
 	},
+	{
+		name: "alter-table-add-file-pid",
+		stmt: alterTableAddFilePid,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -575,4 +579,12 @@ CREATE INDEX IF NOT EXISTS ix_perms_repo ON perms (perm_repo_id);
 
 var createIndexPermsUser = `
 CREATE INDEX IF NOT EXISTS ix_perms_user ON perms (perm_user_id);
+`
+
+//
+// 018_add_column_file_pid.sql
+//
+
+var alterTableAddFilePid = `
+ALTER TABLE files ADD COLUMN file_pid INTEGER
 `

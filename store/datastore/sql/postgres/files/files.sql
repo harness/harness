@@ -4,6 +4,7 @@ SELECT
  file_id
 ,file_build_id
 ,file_proc_id
+,file_pid
 ,file_name
 ,file_mime
 ,file_size
@@ -17,6 +18,7 @@ SELECT
  file_id
 ,file_build_id
 ,file_proc_id
+,file_pid
 ,file_name
 ,file_mime
 ,file_size
@@ -31,6 +33,7 @@ SELECT
  file_id
 ,file_build_id
 ,file_proc_id
+,file_pid
 ,file_name
 ,file_mime
 ,file_size
