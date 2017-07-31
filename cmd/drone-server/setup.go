@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cncd/queue"
+	"github.com/dimfeld/httptreemux"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/plugins/registry"
 	"github.com/drone/drone/plugins/secrets"
@@ -15,6 +16,7 @@ import (
 	"github.com/drone/drone/remote/github"
 	"github.com/drone/drone/remote/gitlab"
 	"github.com/drone/drone/remote/gogs"
+	"github.com/drone/drone/server/web"
 	"github.com/drone/drone/store"
 	"github.com/drone/drone/store/datastore"
 
@@ -154,6 +156,16 @@ func setupCoding(c *cli.Context) (remote.Remote, error) {
 		Password:   c.String("coding-git-password"),
 		SkipVerify: c.Bool("coding-skip-verify"),
 	})
+}
+
+func setupTree(c *cli.Context) *httptreemux.ContextMux {
+	tree := httptreemux.NewContextMux()
+	if path := c.String("www"); path == "" {
+		web.New().Register(tree)
+	} else {
+		web.FromPath(path).Register(tree)
+	}
+	return tree
 }
 
 func before(c *cli.Context) error { return nil }

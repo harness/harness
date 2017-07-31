@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 
+	"github.com/dimfeld/httptreemux"
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/router/middleware/header"
@@ -12,21 +13,22 @@ import (
 	"github.com/drone/drone/server/debug"
 	"github.com/drone/drone/server/metrics"
 	"github.com/drone/drone/server/template"
+	"github.com/drone/drone/server/web"
 )
 
 // Load loads the router
-func Load(middleware ...gin.HandlerFunc) http.Handler {
+func Load(mux *httptreemux.ContextMux, middleware ...gin.HandlerFunc) http.Handler {
 
 	e := gin.New()
 	e.Use(gin.Recovery())
 	e.SetHTMLTemplate(template.T)
 
-	ui := server.NewWebsite()
-	for _, path := range ui.Routes() {
-		e.GET(path, func(c *gin.Context) {
-			ui.File(c.Writer, c.Request)
-		})
-	}
+	// ui := server.NewWebsite()
+	// for _, path := range ui.Routes() {
+	// 	e.GET(path, func(c *gin.Context) {
+	// 		ui.File(c.Writer, c.Request)
+	// 	})
+	// }
 
 	e.Use(header.NoCache)
 	e.Use(header.Options)
@@ -35,11 +37,18 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(session.SetUser())
 	e.Use(token.Refresh)
 
-	e.GET("/logout", server.GetLogout)
 	e.NoRoute(func(c *gin.Context) {
-		u := session.User(c)
-		ui.Page(c.Writer, c.Request, u)
+		req := c.Request.WithContext(
+			web.WithUser(
+				c.Request.Context(),
+				session.User(c),
+			),
+		)
+		mux.ServeHTTP(c.Writer, req)
 	})
+
+	e.GET("/logout", server.GetLogout)
+	e.GET("/login", server.HandleLogin)
 
 	user := e.Group("/api/user")
 	{
@@ -143,8 +152,8 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 
 	auth := e.Group("/authorize")
 	{
-		auth.GET("", server.GetLogin)
-		auth.POST("", server.GetLogin)
+		auth.GET("", server.HandleAuth)
+		auth.POST("", server.HandleAuth)
 		auth.POST("/token", server.GetLoginToken)
 	}
 
