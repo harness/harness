@@ -16,7 +16,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetLogin(c *gin.Context) {
+func HandleLogin(c *gin.Context) {
+	var (
+		w = c.Writer
+		r = c.Request
+	)
+	if err := r.FormValue("error"); err != "" {
+		http.Redirect(w, r, "/login/error?code="+err, 303)
+	} else {
+		http.Redirect(w, r, "/authorize", 303)
+	}
+}
+
+func HandleAuth(c *gin.Context) {
 
 	// when dealing with redirects we may need to adjust the content type. I
 	// cannot, however, remember why, so need to revisit this line.

@@ -1,6 +1,6 @@
 {
 	"comment": "",
-	"ignore": "test github.com/drone/mq/ github.com/tidwall/redlog/ google.golang.org/appengine/ github.com/syndtr/goleveldb/ github.com/drone/drone-ui/ github.com/golang/protobuf/proto github.com/golang/protobuf/ptypes/any golang.org/x/net/context golang.org/x/net/context/ctxhttp",
+	"ignore": "test github.com/drone/mq/ github.com/tidwall/redlog/ google.golang.org/appengine/ github.com/syndtr/goleveldb/ github.com/drone/drone-ui/ github.com/bradrydzewski/drone-ui-unit/dist/ github.com/golang/protobuf/proto github.com/golang/protobuf/ptypes/any golang.org/x/net/context golang.org/x/net/context/ctxhttp",
 	"package": [
 		{
 			"path": "appengine/cloudsql",
@@ -142,6 +142,12 @@
 			"path": "github.com/dgrijalva/jwt-go",
 			"revision": "c1da56349675b292d3200463e2c88b9aa5e02391",
 			"revisionTime": "2015-09-04T14:24:56-07:00"
+		},
+		{
+			"checksumSHA1": "sJwmO9GIFKXj4Ld94n9iAGSg9Jw=",
+			"path": "github.com/dimfeld/httptreemux",
+			"revision": "4faa6bbd32f9d5bad5f76288fa1a9e86574f5d46",
+			"revisionTime": "2017-07-28T18:11:13Z"
 		},
 		{
 			"checksumSHA1": "rSxOx+SnSLAxR4ST8fSz9hhJLdk=",
