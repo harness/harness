@@ -144,6 +144,56 @@ func DeleteBuild(c *gin.Context) {
 	c.String(204, "")
 }
 
+// ZombieKill kills zombie processes stuck in an infinite pending
+// or running state. This can only be invoked by administrators and
+// may have negative effects.
+func ZombieKill(c *gin.Context) {
+	repo := session.Repo(c)
+
+	// parse the build number and job sequence number from
+	// the repquest parameter.
+	num, _ := strconv.Atoi(c.Params.ByName("number"))
+
+	build, err := store.GetBuildNumber(c, repo, num)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+
+	procs, err := store.FromContext(c).ProcList(build)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+
+	if build.Status != model.StatusRunning {
+		c.String(400, "Cannot force cancel a non-running build")
+		return
+	}
+
+	for _, proc := range procs {
+		if proc.Running() {
+			proc.State = model.StatusKilled
+			proc.ExitCode = 137
+			proc.Stopped = time.Now().Unix()
+			if proc.Started == 0 {
+				proc.Started = proc.Stopped
+			}
+		}
+	}
+
+	for _, proc := range procs {
+		store.FromContext(c).ProcUpdate(proc)
+		Config.Services.Queue.Error(context.Background(), fmt.Sprint(proc.ID), queue.ErrCancel)
+	}
+
+	build.Status = model.StatusKilled
+	build.Finished = time.Now().Unix()
+	store.FromContext(c).UpdateBuild(build)
+
+	c.String(204, "")
+}
+
 func PostApproval(c *gin.Context) {
 	var (
 		remote_ = remote.FromContext(c)
