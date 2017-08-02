@@ -26,7 +26,12 @@
 			document.body.appendChild(ssePolyfill);
 		}
 	</script>
-	<script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+	<script>
+		window.WebComponents = window.WebComponents || {};
+		window.WebComponents.root = '//cdnjs.cloudflare.com/ajax/libs/webcomponentsjs/1.0.4/';
+		// inline polymer loader
+		!function(){"use strict";window.WebComponents=window.WebComponents||{};var e="webcomponents-loader.js",t=[];if("import"in document.createElement("link")||t.push("hi"),(!("attachShadow"in Element.prototype&&"getRootNode"in Element.prototype)||window.ShadyDOM&&window.ShadyDOM.force)&&t.push("sd"),(!window.customElements||window.customElements.forcePolyfill)&&t.push("ce"),"content"in document.createElement("template")&&window.Promise&&Array.from&&document.createDocumentFragment().cloneNode()instanceof DocumentFragment||(t=["lite"]),t.length){var n,o="webcomponents-"+t.join("-")+".js";if(window.WebComponents.root)n=window.WebComponents.root+o;else{var c=document.querySelector('script[src*="'+e+'"]');n=c.src.replace(e,o)}var r=document.createElement("script");r.src=n,"loading"===document.readyState?document.write(r.outerHTML):document.head.appendChild(r)}else{var d=function(){requestAnimationFrame(function(){window.WebComponents.ready=!0,document.dispatchEvent(new CustomEvent("WebComponentsReady",{bubbles:!0}))})};"loading"!==document.readyState?d():document.addEventListener("readystatechange",function a(){d(),document.removeEventListener("readystatechange",a)})}}();
+	</script>
 
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono">
