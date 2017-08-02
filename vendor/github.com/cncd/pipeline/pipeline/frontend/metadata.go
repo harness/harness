@@ -211,7 +211,7 @@ func (m *Metadata) EnvironDrone() map[string]string {
 		"DRONE_PREV_BUILD_NUMBER":    fmt.Sprintf("%v", m.Prev.Number),
 		"DRONE_PREV_COMMIT_SHA":      m.Prev.Commit.Sha,
 	}
-	if m.Curr.Event == EventTag {
+	if m.Curr.Event == EventTag || strings.HasPrefix(m.Curr.Commit.Ref, "refs/tags/") {
 		params["DRONE_TAG"] = strings.TrimPrefix(m.Curr.Commit.Ref, "refs/tags/")
 	}
 	if m.Curr.Event == EventPull {

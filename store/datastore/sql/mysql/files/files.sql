@@ -9,6 +9,9 @@ SELECT
 ,file_mime
 ,file_size
 ,file_time
+,file_meta_passed
+,file_meta_failed
+,file_meta_skipped
 FROM files
 WHERE file_build_id = ?
 
@@ -23,6 +26,9 @@ SELECT
 ,file_mime
 ,file_size
 ,file_time
+,file_meta_passed
+,file_meta_failed
+,file_meta_skipped
 FROM files
 WHERE file_proc_id = ?
   AND file_name    = ?
@@ -38,6 +44,9 @@ SELECT
 ,file_mime
 ,file_size
 ,file_time
+,file_meta_passed
+,file_meta_failed
+,file_meta_skipped
 ,file_data
 FROM files
 WHERE file_proc_id = ?

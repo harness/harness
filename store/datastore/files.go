@@ -47,6 +47,9 @@ func (db *datastore) FileCreate(file *model.File, r io.Reader) error {
 		Size:    file.Size,
 		Mime:    file.Mime,
 		Time:    file.Time,
+		Passed:  file.Passed,
+		Failed:  file.Failed,
+		Skipped: file.Skipped,
 		Data:    d,
 	}
 	return meddler.Insert(db, "files", &f)
@@ -61,5 +64,8 @@ type fileData struct {
 	Size    int    `meddler:"file_size"`
 	Mime    string `meddler:"file_mime"`
 	Time    int64  `meddler:"file_time"`
+	Passed  int    `meddler:"file_meta_passed"`
+	Failed  int    `meddler:"file_meta_failed"`
+	Skipped int    `meddler:"file_meta_skipped"`
 	Data    []byte `meddler:"file_data"`
 }

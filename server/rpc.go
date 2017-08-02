@@ -232,7 +232,7 @@ func (s *RPC) Upload(c context.Context, id string, file *rpc.File) error {
 		)
 	}
 
-	return Config.Storage.Files.FileCreate(&model.File{
+	report := &model.File{
 		BuildID: proc.BuildID,
 		ProcID:  proc.ID,
 		PID:     proc.PID,
@@ -240,7 +240,35 @@ func (s *RPC) Upload(c context.Context, id string, file *rpc.File) error {
 		Name:    file.Name,
 		Size:    file.Size,
 		Time:    file.Time,
-	},
+	}
+	if d, ok := file.Meta["X-Tests-Passed"]; ok {
+		report.Passed, _ = strconv.Atoi(d)
+	}
+	if d, ok := file.Meta["X-Tests-Failed"]; ok {
+		report.Failed, _ = strconv.Atoi(d)
+	}
+	if d, ok := file.Meta["X-Tests-Skipped"]; ok {
+		report.Skipped, _ = strconv.Atoi(d)
+	}
+
+	if d, ok := file.Meta["X-Checks-Passed"]; ok {
+		report.Passed, _ = strconv.Atoi(d)
+	}
+	if d, ok := file.Meta["X-Checks-Failed"]; ok {
+		report.Failed, _ = strconv.Atoi(d)
+	}
+
+	if d, ok := file.Meta["X-Coverage-Lines"]; ok {
+		report.Passed, _ = strconv.Atoi(d)
+	}
+	if d, ok := file.Meta["X-Coverage-Total"]; ok {
+		if total, _ := strconv.Atoi(d); total != 0 {
+			report.Failed = total - report.Passed
+		}
+	}
+
+	return Config.Storage.Files.FileCreate(
+		report,
 		bytes.NewBuffer(file.Data),
 	)
 }
@@ -579,7 +607,9 @@ func (s *DroneServer) Upload(c oldcontext.Context, req *proto.UploadRequest) (*p
 		Proc: req.GetFile().GetProc(),
 		Size: int(req.GetFile().GetSize()),
 		Time: req.GetFile().GetTime(),
+		Meta: req.GetFile().GetMeta(),
 	}
+
 	res := new(proto.Empty)
 	err := peer.Upload(c, req.GetId(), file)
 	return res, err

@@ -144,6 +144,22 @@ var migrations = []struct {
 		name: "alter-table-add-file-pid",
 		stmt: alterTableAddFilePid,
 	},
+	{
+		name: "alter-table-add-file-meta-passed",
+		stmt: alterTableAddFileMetaPassed,
+	},
+	{
+		name: "alter-table-add-file-meta-failed",
+		stmt: alterTableAddFileMetaFailed,
+	},
+	{
+		name: "alter-table-add-file-meta-skipped",
+		stmt: alterTableAddFileMetaSkipped,
+	},
+	{
+		name: "alter-table-update-file-meta",
+		stmt: alterTableUpdateFileMeta,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -587,4 +603,23 @@ CREATE INDEX IF NOT EXISTS ix_perms_user ON perms (perm_user_id);
 
 var alterTableAddFilePid = `
 ALTER TABLE files ADD COLUMN file_pid INTEGER
+`
+
+var alterTableAddFileMetaPassed = `
+ALTER TABLE files ADD COLUMN file_meta_passed INTEGER
+`
+
+var alterTableAddFileMetaFailed = `
+ALTER TABLE files ADD COLUMN file_meta_failed INTEGER
+`
+
+var alterTableAddFileMetaSkipped = `
+ALTER TABLE files ADD COLUMN file_meta_skipped INTEGER
+`
+
+var alterTableUpdateFileMeta = `
+UPDATE files SET
+ file_meta_passed=0
+,file_meta_failed=0
+,file_meta_skipped=0
 `

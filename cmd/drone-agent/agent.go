@@ -209,6 +209,11 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		file.Data, _ = ioutil.ReadAll(limitedPart)
 		file.Size = len(file.Data)
 		file.Time = time.Now().Unix()
+		file.Meta = map[string]string{}
+
+		for key, value := range part.Header() {
+			file.Meta[key] = value[0]
+		}
 
 		if serr := client.Upload(ctxmeta, work.ID, file); serr != nil {
 			log.Printf("pipeline: cannot upload artifact: %s: %s: %s", work.ID, file.Mime, serr)
