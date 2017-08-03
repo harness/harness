@@ -9,6 +9,7 @@ message File {
   int64  time = 4;
   int32  size = 5;
   bytes  data = 6;
+  map<string, string> meta = 7;
 }
 
 message State {

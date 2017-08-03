@@ -12,6 +12,9 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
+// generate protobuffs
+//   protoc --go_out=plugins=grpc,import_path=proto:. *.proto
+
 var backoff = time.Second
 
 type client struct {
@@ -182,6 +185,7 @@ func (c *client) Upload(ctx context.Context, id string, file *File) (err error) 
 	req.File.Size = int32(file.Size)
 	req.File.Time = file.Time
 	req.File.Data = file.Data
+	req.File.Meta = file.Meta
 	for {
 		_, err = c.client.Upload(ctx, req)
 		if err == nil {
