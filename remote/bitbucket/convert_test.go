@@ -49,18 +49,6 @@ func Test_helper(t *testing.T) {
 			g.Assert(convertDesc(model.StatusError)).Equal(descError)
 		})
 
-		g.It("should convert repository lite", func() {
-			from := &internal.Repo{}
-			from.FullName = "octocat/hello-world"
-			from.Owner.Links.Avatar.Href = "http://..."
-
-			to := convertRepoLite(from)
-			g.Assert(to.Avatar).Equal(from.Owner.Links.Avatar.Href)
-			g.Assert(to.FullName).Equal(from.FullName)
-			g.Assert(to.Owner).Equal("octocat")
-			g.Assert(to.Name).Equal("hello-world")
-		})
-
 		g.It("should convert repository", func() {
 			from := &internal.Repo{
 				FullName:  "octocat/hello-world",

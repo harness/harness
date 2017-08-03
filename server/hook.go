@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -84,6 +85,11 @@ func PostHook(c *gin.Context) {
 		c.AbortWithError(404, err)
 		return
 	}
+	if !repo.IsActive {
+		logrus.Errorf("ignoring hook. %s/%s is inactive.", tmprepo.Owner, tmprepo.Name)
+		c.AbortWithError(204, err)
+		return
+	}
 
 	// get the token and verify the hook is authorized
 	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
@@ -139,7 +145,7 @@ func PostHook(c *gin.Context) {
 	// fetch the build file from the database
 	confb, err := remote_.File(user, repo, build, repo.Config)
 	if err != nil {
-		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
+		logrus.Errorf("error: %s: cannot find %s in %s: %s", repo.FullName, repo.Config, build.Ref, err)
 		c.AbortWithError(404, err)
 		return
 	}
@@ -153,9 +159,13 @@ func PostHook(c *gin.Context) {
 		}
 		err = Config.Storage.Config.ConfigCreate(conf)
 		if err != nil {
-			logrus.Errorf("failure to persist config for %s. %s", repo.FullName, err)
-			c.AbortWithError(500, err)
-			return
+			// retry in case we receive two hooks at the same time
+			conf, err = Config.Storage.Config.ConfigFind(repo, sha)
+			if err != nil {
+				logrus.Errorf("failure to find or persist build config for %s. %s", repo.FullName, err)
+				c.AbortWithError(500, err)
+				return
+			}
 		}
 	}
 	build.ConfigID = conf.ID
@@ -201,6 +211,14 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
+	envs := map[string]string{}
+	if Config.Services.Environ != nil {
+		globals, _ := Config.Services.Environ.EnvironList(repo)
+		for _, global := range globals {
+			envs[global.Name] = global.Value
+		}
+	}
+
 	secs, err := Config.Services.Secrets.SecretListBuild(repo, build)
 	if err != nil {
 		logrus.Debugf("Error getting secrets for %s#%d. %s", repo.FullName, build.Number, err)
@@ -234,6 +252,7 @@ func PostHook(c *gin.Context) {
 		Netrc: netrc,
 		Secs:  secs,
 		Regs:  regs,
+		Envs:  envs,
 		Link:  httputil.GetURL(c.Request),
 		Yaml:  conf.Data,
 	}
@@ -447,7 +466,11 @@ func (b *builder) Build() ([]*buildItem, error) {
 
 		y := b.Yaml
 		s, err := envsubst.Eval(y, func(name string) string {
-			return environ[name]
+			env := environ[name]
+			if strings.Contains(env, "\n") {
+				env = fmt.Sprintf("%q", env)
+			}
+			return env
 		})
 		if err != nil {
 			return nil, err
@@ -484,6 +507,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 			compiler.WithEnviron(environ),
 			compiler.WithEnviron(b.Envs),
 			compiler.WithEscalated(Config.Pipeline.Privileged...),
+			compiler.WithResourceLimit(Config.Pipeline.Limits.MemSwapLimit, Config.Pipeline.Limits.MemLimit, Config.Pipeline.Limits.ShmSize, Config.Pipeline.Limits.CPUQuota, Config.Pipeline.Limits.CPUShares, Config.Pipeline.Limits.CPUSet),
 			compiler.WithVolumes(Config.Pipeline.Volumes...),
 			compiler.WithNetworks(Config.Pipeline.Networks...),
 			compiler.WithLocal(false),

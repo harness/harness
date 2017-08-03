@@ -50,8 +50,10 @@ func GetBuild(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
+	files, _ := store.FromContext(c).FileList(build)
 	procs, _ := store.FromContext(c).ProcList(build)
 	build.Procs = model.Tree(procs)
+	build.Files = files
 
 	c.JSON(http.StatusOK, build)
 }
@@ -142,6 +144,56 @@ func DeleteBuild(c *gin.Context) {
 	c.String(204, "")
 }
 
+// ZombieKill kills zombie processes stuck in an infinite pending
+// or running state. This can only be invoked by administrators and
+// may have negative effects.
+func ZombieKill(c *gin.Context) {
+	repo := session.Repo(c)
+
+	// parse the build number and job sequence number from
+	// the repquest parameter.
+	num, _ := strconv.Atoi(c.Params.ByName("number"))
+
+	build, err := store.GetBuildNumber(c, repo, num)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+
+	procs, err := store.FromContext(c).ProcList(build)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+
+	if build.Status != model.StatusRunning {
+		c.String(400, "Cannot force cancel a non-running build")
+		return
+	}
+
+	for _, proc := range procs {
+		if proc.Running() {
+			proc.State = model.StatusKilled
+			proc.ExitCode = 137
+			proc.Stopped = time.Now().Unix()
+			if proc.Started == 0 {
+				proc.Started = proc.Stopped
+			}
+		}
+	}
+
+	for _, proc := range procs {
+		store.FromContext(c).ProcUpdate(proc)
+		Config.Services.Queue.Error(context.Background(), fmt.Sprint(proc.ID), queue.ErrCancel)
+	}
+
+	build.Status = model.StatusKilled
+	build.Finished = time.Now().Unix()
+	store.FromContext(c).UpdateBuild(build)
+
+	c.String(204, "")
+}
+
 func PostApproval(c *gin.Context) {
 	var (
 		remote_ = remote.FromContext(c)
@@ -205,6 +257,13 @@ func PostApproval(c *gin.Context) {
 	if err != nil {
 		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
 	}
+	envs := map[string]string{}
+	if Config.Services.Environ != nil {
+		globals, _ := Config.Services.Environ.EnvironList(repo)
+		for _, global := range globals {
+			envs[global.Name] = global.Value
+		}
+	}
 
 	defer func() {
 		uri := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, build.Number)
@@ -223,6 +282,7 @@ func PostApproval(c *gin.Context) {
 		Regs:  regs,
 		Link:  httputil.GetURL(c.Request),
 		Yaml:  conf.Data,
+		Envs:  envs,
 	}
 	items, err := b.Build()
 	if err != nil {
@@ -458,6 +518,12 @@ func PostBuild(c *gin.Context) {
 	regs, err := Config.Services.Registries.RegistryList(repo)
 	if err != nil {
 		logrus.Debugf("Error getting registry credentials for %s#%d. %s", repo.FullName, build.Number, err)
+	}
+	if Config.Services.Environ != nil {
+		globals, _ := Config.Services.Environ.EnvironList(repo)
+		for _, global := range globals {
+			buildParams[global.Name] = global.Value
+		}
 	}
 
 	b := builder{

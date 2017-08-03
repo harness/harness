@@ -2,8 +2,8 @@ package router
 
 import (
 	"net/http"
-	"os"
 
+	"github.com/dimfeld/httptreemux"
 	"github.com/gin-gonic/gin"
 
 	"github.com/drone/drone/router/middleware/header"
@@ -13,25 +13,22 @@ import (
 	"github.com/drone/drone/server/debug"
 	"github.com/drone/drone/server/metrics"
 	"github.com/drone/drone/server/template"
-
-	"github.com/drone/drone-ui/dist"
+	"github.com/drone/drone/server/web"
 )
 
 // Load loads the router
-func Load(middleware ...gin.HandlerFunc) http.Handler {
+func Load(mux *httptreemux.ContextMux, middleware ...gin.HandlerFunc) http.Handler {
 
 	e := gin.New()
 	e.Use(gin.Recovery())
 	e.SetHTMLTemplate(template.T)
 
-	if dir := os.Getenv("DRONE_STATIC_DIR"); dir == "" {
-		fs := http.FileServer(dist.AssetFS())
-		e.GET("/static/*filepath", func(c *gin.Context) {
-			fs.ServeHTTP(c.Writer, c.Request)
-		})
-	} else {
-		e.Static("/static", dir)
-	}
+	// ui := server.NewWebsite()
+	// for _, path := range ui.Routes() {
+	// 	e.GET(path, func(c *gin.Context) {
+	// 		ui.File(c.Writer, c.Request)
+	// 	})
+	// }
 
 	e.Use(header.NoCache)
 	e.Use(header.Options)
@@ -40,10 +37,18 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 	e.Use(session.SetUser())
 	e.Use(token.Refresh)
 
-	e.GET("/login", server.ShowLogin)
-	e.GET("/login/form", server.ShowLoginForm)
+	e.NoRoute(func(c *gin.Context) {
+		req := c.Request.WithContext(
+			web.WithUser(
+				c.Request.Context(),
+				session.User(c),
+			),
+		)
+		mux.ServeHTTP(c.Writer, req)
+	})
+
 	e.GET("/logout", server.GetLogout)
-	e.NoRoute(server.ShowIndex)
+	e.GET("/login", server.HandleLogin)
 
 	user := e.Group("/api/user")
 	{
@@ -51,7 +56,6 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		user.GET("", server.GetSelf)
 		user.GET("/feed", server.GetFeed)
 		user.GET("/repos", server.GetRepos)
-		user.GET("/repos/remote", server.GetRemoteRepos)
 		user.POST("/token", server.PostToken)
 		user.DELETE("/token", server.DeleteToken)
 	}
@@ -66,47 +70,46 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 		users.DELETE("/:login", server.DeleteUser)
 	}
 
-	repos := e.Group("/api/repos/:owner/:name")
+	repo := e.Group("/api/repos/:owner/:name")
 	{
-		repos.POST("", server.PostRepo)
+		repo.Use(session.SetRepo())
+		repo.Use(session.SetPerm())
+		repo.Use(session.MustPull)
 
-		repo := repos.Group("")
-		{
-			repo.Use(session.SetRepo())
-			repo.Use(session.SetPerm())
-			repo.Use(session.MustPull)
+		repo.POST("", session.MustRepoAdmin(), server.PostRepo)
+		repo.GET("", server.GetRepo)
+		repo.GET("/builds", server.GetBuilds)
+		repo.GET("/builds/:number", server.GetBuild)
+		repo.GET("/logs/:number/:ppid/:proc", server.GetBuildLogs)
 
-			repo.GET("", server.GetRepo)
-			repo.GET("/builds", server.GetBuilds)
-			repo.GET("/builds/:number", server.GetBuild)
-			repo.GET("/logs/:number/:ppid/:proc", server.GetBuildLogs)
-			repo.POST("/sign", session.MustPush, server.Sign)
+		repo.GET("/files/:number", server.FileList)
+		repo.GET("/files/:number/:proc/*file", server.FileGet)
 
-			// requires push permissions
-			repo.GET("/secrets", session.MustPush, server.GetSecretList)
-			repo.POST("/secrets", session.MustPush, server.PostSecret)
-			repo.GET("/secrets/:secret", session.MustPush, server.GetSecret)
-			repo.PATCH("/secrets/:secret", session.MustPush, server.PatchSecret)
-			repo.DELETE("/secrets/:secret", session.MustPush, server.DeleteSecret)
+		// requires push permissions
+		repo.GET("/secrets", session.MustPush, server.GetSecretList)
+		repo.POST("/secrets", session.MustPush, server.PostSecret)
+		repo.GET("/secrets/:secret", session.MustPush, server.GetSecret)
+		repo.PATCH("/secrets/:secret", session.MustPush, server.PatchSecret)
+		repo.DELETE("/secrets/:secret", session.MustPush, server.DeleteSecret)
 
-			// requires push permissions
-			repo.GET("/registry", session.MustPush, server.GetRegistryList)
-			repo.POST("/registry", session.MustPush, server.PostRegistry)
-			repo.GET("/registry/:registry", session.MustPush, server.GetRegistry)
-			repo.PATCH("/registry/:registry", session.MustPush, server.PatchRegistry)
-			repo.DELETE("/registry/:registry", session.MustPush, server.DeleteRegistry)
+		// requires push permissions
+		repo.GET("/registry", session.MustPush, server.GetRegistryList)
+		repo.POST("/registry", session.MustPush, server.PostRegistry)
+		repo.GET("/registry/:registry", session.MustPush, server.GetRegistry)
+		repo.PATCH("/registry/:registry", session.MustPush, server.PatchRegistry)
+		repo.DELETE("/registry/:registry", session.MustPush, server.DeleteRegistry)
 
-			// requires push permissions
-			repo.PATCH("", session.MustPush, server.PatchRepo)
-			repo.DELETE("", session.MustRepoAdmin(), server.DeleteRepo)
-			repo.POST("/chown", session.MustRepoAdmin(), server.ChownRepo)
-			repo.POST("/repair", session.MustRepoAdmin(), server.RepairRepo)
+		// requires admin permissions
+		repo.PATCH("", session.MustRepoAdmin(), server.PatchRepo)
+		repo.DELETE("", session.MustRepoAdmin(), server.DeleteRepo)
+		repo.POST("/chown", session.MustRepoAdmin(), server.ChownRepo)
+		repo.POST("/repair", session.MustRepoAdmin(), server.RepairRepo)
 
-			repo.POST("/builds/:number", session.MustPush, server.PostBuild)
-			repo.POST("/builds/:number/approve", session.MustPush, server.PostApproval)
-			repo.POST("/builds/:number/decline", session.MustPush, server.PostDecline)
-			repo.DELETE("/builds/:number/:job", session.MustPush, server.DeleteBuild)
-		}
+		repo.POST("/builds/:number", session.MustPush, server.PostBuild)
+		repo.DELETE("/builds/:number", session.MustAdmin(), server.ZombieKill)
+		repo.POST("/builds/:number/approve", session.MustPush, server.PostApproval)
+		repo.POST("/builds/:number/decline", session.MustPush, server.PostDecline)
+		repo.DELETE("/builds/:number/:job", session.MustPush, server.DeleteBuild)
 	}
 
 	badges := e.Group("/api/badges/:owner/:name")
@@ -120,14 +123,23 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 
 	ws := e.Group("/ws")
 	{
-		ws.GET("/broker", server.RPCHandler)
-		ws.GET("/rpc", server.RPCHandler)
 		ws.GET("/feed", server.EventStream)
 		ws.GET("/logs/:owner/:name/:build/:number",
 			session.SetRepo(),
 			session.SetPerm(),
 			session.MustPull,
 			server.LogStream,
+		)
+	}
+
+	sse := e.Group("/stream")
+	{
+		sse.GET("/events", server.EventStreamSSE)
+		sse.GET("/logs/:owner/:name/:build/:number",
+			session.SetRepo(),
+			session.SetPerm(),
+			session.MustPull,
+			server.LogStreamSSE,
 		)
 	}
 
@@ -141,8 +153,8 @@ func Load(middleware ...gin.HandlerFunc) http.Handler {
 
 	auth := e.Group("/authorize")
 	{
-		auth.GET("", server.GetLogin)
-		auth.POST("", server.GetLogin)
+		auth.GET("", server.HandleAuth)
+		auth.POST("", server.HandleAuth)
 		auth.POST("/token", server.GetLoginToken)
 	}
 

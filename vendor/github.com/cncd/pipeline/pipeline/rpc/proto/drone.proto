@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package proto;
+
+message File {
+  string name = 1;
+  string proc = 2;
+  string mime = 3;
+  int64  time = 4;
+  int32  size = 5;
+  bytes  data = 6;
+  map<string, string> meta = 7;
+}
+
+message State {
+  string name = 1;
+  bool   exited = 2;
+  int32  exit_code = 3;
+  int64  started = 4;
+  int64  finished = 5;
+  string error = 6;
+}
+
+message Line {
+  string proc = 1;
+  int64  time = 2;
+  int32  pos = 3;
+  string out = 4;
+}
+
+message Filter {
+  map<string, string> labels = 1;
+  string expr = 2;
+}
+
+message Pipeline {
+  string id = 1;
+  int64 timeout = 2;
+  bytes payload = 3;
+}
+
+service Drone {
+  rpc Next   (NextRequest)   returns (NextReply) {}
+  rpc Init   (InitRequest)   returns (Empty) {}
+  rpc Wait   (WaitRequest)   returns (Empty) {}
+  rpc Done   (DoneRequest)   returns (Empty) {}
+  rpc Extend (ExtendRequest) returns (Empty) {}
+  rpc Update (UpdateRequest) returns (Empty) {}
+  rpc Upload (UploadRequest) returns (Empty) {}
+  rpc Log    (LogRequest)    returns (Empty) {}
+}
+
+//
+// next
+//
+
+message NextRequest {
+  Filter filter = 1;
+}
+
+message NextReply {
+  Pipeline pipeline = 1;
+}
+
+message InitRequest {
+  string id    = 1;
+  State  state = 2;
+}
+
+message WaitRequest {
+  string id = 1;
+}
+
+message DoneRequest {
+  string id    = 1;
+  State  state = 2;
+}
+
+message ExtendRequest {
+  string id = 1;
+}
+
+message UploadRequest {
+  string id   = 1;
+  File   file = 2;
+}
+
+message UpdateRequest {
+  string id    = 1;
+  State  state = 2;
+}
+
+message LogRequest {
+  string id   = 1;
+  Line   line = 2;
+}
+
+message Empty {
+
+}

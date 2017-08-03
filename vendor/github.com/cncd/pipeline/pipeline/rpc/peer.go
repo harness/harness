@@ -35,12 +35,13 @@ type (
 
 	// File defines a pipeline artifact.
 	File struct {
-		Name string `json:"name"`
-		Proc string `json:"proc"`
-		Mime string `json:"mime"`
-		Time int64  `json:"time"`
-		Size int    `json:"size"`
-		Data []byte `json:"data"`
+		Name string            `json:"name"`
+		Proc string            `json:"proc"`
+		Mime string            `json:"mime"`
+		Time int64             `json:"time"`
+		Size int               `json:"size"`
+		Data []byte            `json:"data"`
+		Meta map[string]string `json:"meta"`
 	}
 )
 

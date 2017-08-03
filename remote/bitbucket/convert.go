@@ -110,17 +110,6 @@ func cloneLink(repo *internal.Repo) string {
 	return clone
 }
 
-// convertRepoLite is a helper function used to convert a Bitbucket repository
-// structure to the simplified Drone repository structure.
-func convertRepoLite(from *internal.Repo) *model.RepoLite {
-	return &model.RepoLite{
-		Owner:    strings.Split(from.FullName, "/")[0],
-		Name:     strings.Split(from.FullName, "/")[1],
-		FullName: from.FullName,
-		Avatar:   from.Owner.Links.Avatar.Href,
-	}
-}
-
 // convertUser is a helper function used to convert a Bitbucket user account
 // structure to the Drone User structure.
 func convertUser(from *internal.Account, token *oauth2.Token) *model.User {

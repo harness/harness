@@ -127,11 +127,6 @@ func (c *client) Teams(u *model.User) ([]*model.Team, error) {
 	return teams, nil
 }
 
-// TeamPerm is not supported by the Gogs driver.
-func (c *client) TeamPerm(u *model.User, org string) (*model.Perm, error) {
-	return nil, nil
-}
-
 // Repo returns the named Gogs repository.
 func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	client := c.newClientToken(u.Token)
@@ -147,8 +142,8 @@ func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 
 // Repos returns a list of all repositories for the Gogs account, including
 // organization repositories.
-func (c *client) Repos(u *model.User) ([]*model.RepoLite, error) {
-	repos := []*model.RepoLite{}
+func (c *client) Repos(u *model.User) ([]*model.Repo, error) {
+	repos := []*model.Repo{}
 
 	client := c.newClientToken(u.Token)
 	all, err := client.ListMyRepos()
@@ -157,7 +152,7 @@ func (c *client) Repos(u *model.User) ([]*model.RepoLite, error) {
 	}
 
 	for _, repo := range all {
-		repos = append(repos, toRepoLite(repo))
+		repos = append(repos, toRepo(repo))
 	}
 	return repos, err
 }

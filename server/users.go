@@ -69,6 +69,10 @@ func PostUser(c *gin.Context) {
 			securecookie.GenerateRandomKey(32),
 		),
 	}
+	if err = user.Validate(); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
 	if err = store.CreateUser(c, user); err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return

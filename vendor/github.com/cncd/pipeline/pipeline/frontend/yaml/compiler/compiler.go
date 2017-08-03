@@ -6,7 +6,6 @@ import (
 	"github.com/cncd/pipeline/pipeline/backend"
 	"github.com/cncd/pipeline/pipeline/frontend"
 	"github.com/cncd/pipeline/pipeline/frontend/yaml"
-	// libcompose "github.com/docker/libcompose/yaml"
 )
 
 // TODO(bradrydzewski) compiler should handle user-defined volumes from YAML
@@ -26,6 +25,15 @@ type Secret struct {
 	Match []string
 }
 
+type ResourceLimit struct {
+	MemSwapLimit int64
+	MemLimit     int64
+	ShmSize      int64
+	CPUQuota     int64
+	CPUShares    int64
+	CPUSet       string
+}
+
 // Compiler compiles the yaml
 type Compiler struct {
 	local      bool
@@ -39,6 +47,8 @@ type Compiler struct {
 	metadata   frontend.Metadata
 	registries []Registry
 	secrets    map[string]Secret
+	cacher     Cacher
+	reslimit   ResourceLimit
 }
 
 // New creates a new Compiler with options.
@@ -86,8 +96,14 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 			Image: "plugins/git:latest",
 			Vargs: map[string]interface{}{"depth": "0"},
 		}
+		switch c.metadata.Sys.Arch {
+		case "linux/arm":
+			container.Image = "plugins/git:linux-arm"
+		case "linux/arm64":
+			container.Image = "plugins/git:linux-arm64"
+		}
 		name := fmt.Sprintf("%s_clone", c.prefix)
-		step := c.createProcess(name, container)
+		step := c.createProcess(name, container, "clone")
 
 		stage := new(backend.Stage)
 		stage.Name = name
@@ -105,12 +121,14 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 			stage.Alias = container.Name
 
 			name := fmt.Sprintf("%s_clone_%d", c.prefix, i)
-			step := c.createProcess(name, container)
+			step := c.createProcess(name, container, "clone")
 			stage.Steps = append(stage.Steps, step)
 
 			config.Stages = append(config.Stages, stage)
 		}
 	}
+
+	c.setupCache(conf, config)
 
 	// add services steps
 	if len(conf.Services.Containers) != 0 {
@@ -124,7 +142,7 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 			}
 
 			name := fmt.Sprintf("%s_services_%d", c.prefix, i)
-			step := c.createProcess(name, container)
+			step := c.createProcess(name, container, "services")
 			stage.Steps = append(stage.Steps, step)
 
 		}
@@ -154,9 +172,45 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 		}
 
 		name := fmt.Sprintf("%s_step_%d", c.prefix, i)
-		step := c.createProcess(name, container)
+		step := c.createProcess(name, container, "pipeline")
 		stage.Steps = append(stage.Steps, step)
 	}
 
+	c.setupCacheRebuild(conf, config)
+
 	return config
+}
+
+func (c *Compiler) setupCache(conf *yaml.Config, ir *backend.Config) {
+	if c.local || len(conf.Cache) == 0 || c.cacher == nil {
+		return
+	}
+
+	container := c.cacher.Restore(c.metadata.Repo.Name, c.metadata.Curr.Commit.Branch, conf.Cache)
+	name := fmt.Sprintf("%s_restore_cache", c.prefix)
+	step := c.createProcess(name, container, "cache")
+
+	stage := new(backend.Stage)
+	stage.Name = name
+	stage.Alias = "restore_cache"
+	stage.Steps = append(stage.Steps, step)
+
+	ir.Stages = append(ir.Stages, stage)
+}
+
+func (c *Compiler) setupCacheRebuild(conf *yaml.Config, ir *backend.Config) {
+	if c.local || len(conf.Cache) == 0 || c.metadata.Curr.Event != "push" || c.cacher == nil {
+		return
+	}
+	container := c.cacher.Rebuild(c.metadata.Repo.Name, c.metadata.Curr.Commit.Branch, conf.Cache)
+
+	name := fmt.Sprintf("%s_rebuild_cache", c.prefix)
+	step := c.createProcess(name, container, "cache")
+
+	stage := new(backend.Stage)
+	stage.Name = name
+	stage.Alias = "rebuild_cache"
+	stage.Steps = append(stage.Steps, step)
+
+	ir.Stages = append(ir.Stages, stage)
 }

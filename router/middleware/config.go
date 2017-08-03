@@ -32,6 +32,9 @@ func setupConfig(c *cli.Context) *model.Settings {
 func sliceToMap2(s []string) map[string]bool {
 	v := map[string]bool{}
 	for _, ss := range s {
+		if ss == "" {
+			continue
+		}
 		v[ss] = true
 	}
 	return v

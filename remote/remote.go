@@ -23,15 +23,11 @@ type Remote interface {
 	// Teams fetches a list of team memberships from the remote system.
 	Teams(u *model.User) ([]*model.Team, error)
 
-	// TeamPerm fetches the named organization permissions from
-	// the remote system for the specified user.
-	TeamPerm(u *model.User, org string) (*model.Perm, error)
-
 	// Repo fetches the named repository from the remote system.
 	Repo(u *model.User, owner, repo string) (*model.Repo, error)
 
 	// Repos fetches a list of repos from the remote system.
-	Repos(u *model.User) ([]*model.RepoLite, error)
+	Repos(u *model.User) ([]*model.Repo, error)
 
 	// Perm fetches the named repository permissions from
 	// the remote system for the specified user.
@@ -89,19 +85,13 @@ func Teams(c context.Context, u *model.User) ([]*model.Team, error) {
 	return FromContext(c).Teams(u)
 }
 
-// TeamPerm fetches the named organization permissions from
-// the remote system for the specified user.
-func TeamPerm(c context.Context, u *model.User, org string) (*model.Perm, error) {
-	return FromContext(c).TeamPerm(u, org)
-}
-
 // Repo fetches the named repository from the remote system.
 func Repo(c context.Context, u *model.User, owner, repo string) (*model.Repo, error) {
 	return FromContext(c).Repo(u, owner, repo)
 }
 
 // Repos fetches a list of repos from the remote system.
-func Repos(c context.Context, u *model.User) ([]*model.RepoLite, error) {
+func Repos(c context.Context, u *model.User) ([]*model.Repo, error) {
 	return FromContext(c).Repos(u)
 }
 

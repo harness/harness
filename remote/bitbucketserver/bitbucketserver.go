@@ -140,14 +140,14 @@ func (c *Config) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	return convertRepo(repo), nil
 }
 
-func (c *Config) Repos(u *model.User) ([]*model.RepoLite, error) {
+func (c *Config) Repos(u *model.User) ([]*model.Repo, error) {
 	repos, err := internal.NewClientWithToken(c.URL, c.Consumer, u.Token).FindRepos()
 	if err != nil {
 		return nil, err
 	}
-	var all []*model.RepoLite
+	var all []*model.Repo
 	for _, repo := range repos {
-		all = append(all, convertRepoLite(repo))
+		all = append(all, convertRepo(repo))
 	}
 
 	return all, nil
@@ -233,6 +233,7 @@ func CreateConsumer(URL string, ConsumerKey string, PrivateKey *rsa.PrivateKey) 
 	consumer.HttpClient = &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			Proxy:           http.ProxyFromEnvironment,
 		},
 	}
 	return consumer
