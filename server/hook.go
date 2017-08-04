@@ -530,7 +530,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 			),
 			compiler.WithEnviron(proc.Environ),
 			compiler.WithProxy(),
-			compiler.WithWorkspaceFromURL("/drone", b.Curr.Link),
+			compiler.WithWorkspaceFromURL("/drone", b.Repo.Link),
 			compiler.WithMetadata(metadata),
 		).Compile(parsed)
 
