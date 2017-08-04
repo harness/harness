@@ -749,6 +749,24 @@
 			"revisionTime": "2017-04-24T20:45:52Z"
 		},
 		{
+			"checksumSHA1": "fGBeb3o1grSXGUNAjwptkBWfch0=",
+			"path": "github.com/rs/zerolog",
+			"revision": "89ff8dbc5f047ae9957523b07e627891079f7967",
+			"revisionTime": "2017-07-27T06:42:12Z"
+		},
+		{
+			"checksumSHA1": "AREhk6LKIp2I/4Njd756bqU6JSQ=",
+			"path": "github.com/rs/zerolog/internal/json",
+			"revision": "89ff8dbc5f047ae9957523b07e627891079f7967",
+			"revisionTime": "2017-07-27T06:42:12Z"
+		},
+		{
+			"checksumSHA1": "kolarHDX6fkauW+1KWx1SFqSF2o=",
+			"path": "github.com/rs/zerolog/log",
+			"revision": "89ff8dbc5f047ae9957523b07e627891079f7967",
+			"revisionTime": "2017-07-27T06:42:12Z"
+		},
+		{
 			"path": "github.com/russross/meddler",
 			"revision": "308c3d0e5e45f543a2eb6c787cbfe0db3880e220",
 			"revisionTime": "2013-09-19T15:23:15-06:00"

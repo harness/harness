@@ -34,7 +34,7 @@ func main() {
 			Name:   "password",
 			Usage:  "drone auth password",
 		},
-		cli.BoolFlag{
+		cli.BoolTFlag{
 			EnvVar: "DRONE_DEBUG",
 			Name:   "debug",
 			Usage:  "start the agent in debug mode",
