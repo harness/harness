@@ -136,3 +136,15 @@ type HookPayload struct {
 	ObjectKind        string       `json:"object_kind,omitempty"`
 	ObjectAttributes  *HookObjAttr `json:"object_attributes,omitempty"`
 }
+
+type FileRef struct {
+	FileName     string `json:"file_name,omitempty"`
+	FilePath     string `json:"file_path,omitempty"`
+	Size         int    `json:"size,omitempty"`
+	Encoding     string `json:"encoding,omitempty"`
+	Content      string `json:"content"`
+	Ref          string `json:"ref,omitempty"`
+	BlobId       string `json:"blob_id,omitempty"`
+	CommitId     string `json:"commit_id,omitempty"`
+	LastCommitId string `json:"last_commit_id,omitempty"`
+}
