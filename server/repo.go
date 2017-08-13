@@ -95,7 +95,7 @@ func PatchRepo(c *gin.Context) {
 		return
 	}
 
-	if (in.IsTrusted != nil || in.Timeout != nil) && !user.Admin {
+	if (in.IsTrusted != nil || in.Timeout != nil || in.BuildCounter != nil) && !user.Admin {
 		c.String(403, "Insufficient privileges")
 		return
 	}
@@ -132,6 +132,9 @@ func PatchRepo(c *gin.Context) {
 			c.String(400, "Invalid visibility type")
 			return
 		}
+	}
+	if in.BuildCounter != nil {
+		repo.Counter = *in.BuildCounter
 	}
 
 	err := store.UpdateRepo(c, repo)
