@@ -57,13 +57,14 @@ func (r *Repo) Update(from *Repo) {
 
 // RepoPatch represents a repository patch object.
 type RepoPatch struct {
-	Config      *string `json:"config_file,omitempty"`
-	IsTrusted   *bool   `json:"trusted,omitempty"`
-	IsGated     *bool   `json:"gated,omitempty"`
-	Timeout     *int64  `json:"timeout,omitempty"`
-	Visibility  *string `json:"visibility,omitempty"`
-	AllowPull   *bool   `json:"allow_pr,omitempty"`
-	AllowPush   *bool   `json:"allow_push,omitempty"`
-	AllowDeploy *bool   `json:"allow_deploy,omitempty"`
-	AllowTag    *bool   `json:"allow_tag,omitempty"`
+	Config       *string `json:"config_file,omitempty"`
+	IsTrusted    *bool   `json:"trusted,omitempty"`
+	IsGated      *bool   `json:"gated,omitempty"`
+	Timeout      *int64  `json:"timeout,omitempty"`
+	Visibility   *string `json:"visibility,omitempty"`
+	AllowPull    *bool   `json:"allow_pr,omitempty"`
+	AllowPush    *bool   `json:"allow_push,omitempty"`
+	AllowDeploy  *bool   `json:"allow_deploy,omitempty"`
+	AllowTag     *bool   `json:"allow_tag,omitempty"`
+	BuildCounter *int    `json:"build_counter,omitempty"`
 }
