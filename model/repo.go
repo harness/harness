@@ -67,4 +67,6 @@ type RepoPatch struct {
 	AllowDeploy  *bool   `json:"allow_deploy,omitempty"`
 	AllowTag     *bool   `json:"allow_tag,omitempty"`
 	BuildCounter *int    `json:"build_counter,omitempty"`
+	Name         *string `json:"name",omitempty`
+	Owner        *string `json:"owner,omitempty"`
 }

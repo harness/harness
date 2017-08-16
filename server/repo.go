@@ -88,6 +88,7 @@ func PostRepo(c *gin.Context) {
 func PatchRepo(c *gin.Context) {
 	repo := session.Repo(c)
 	user := session.User(c)
+	remote := remote.FromContext(c)
 
 	in := new(model.RepoPatch)
 	if err := c.Bind(in); err != nil {
@@ -95,7 +96,7 @@ func PatchRepo(c *gin.Context) {
 		return
 	}
 
-	if (in.IsTrusted != nil || in.Timeout != nil || in.BuildCounter != nil) && !user.Admin {
+	if (in.IsTrusted != nil || in.Timeout != nil || in.BuildCounter != nil || in.Owner != nil || in.Name != nil) && !user.Admin {
 		c.String(403, "Insufficient privileges")
 		return
 	}
@@ -135,6 +136,19 @@ func PatchRepo(c *gin.Context) {
 	}
 	if in.BuildCounter != nil {
 		repo.Counter = *in.BuildCounter
+	}
+
+	if in.Name != nil && in.Owner != nil {
+		from, err := remote.Repo(user, *in.Owner, *in.Name)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+		}
+		repo.Name = from.Name
+		repo.Owner = from.Owner
+		repo.FullName = from.FullName
+		repo.Avatar = from.Avatar
+		repo.Link = from.Link
+		repo.Clone = from.Clone
 	}
 
 	err := store.UpdateRepo(c, repo)
