@@ -22,6 +22,7 @@ import (
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/store"
+	"time"
 )
 
 // This file is a complete disaster because I'm trying to wedge in some
@@ -51,11 +52,12 @@ var Config = struct {
 		// Secrets model.SecretStore
 	}
 	Server struct {
-		Key  string
-		Cert string
-		Host string
-		Port string
-		Pass string
+		Key            string
+		Cert           string
+		Host           string
+		Port           string
+		Pass           string
+		SessionExpires time.Duration
 		// Open bool
 		// Orgs map[string]struct{}
 		// Admins map[string]struct{}

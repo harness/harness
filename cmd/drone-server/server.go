@@ -93,6 +93,12 @@ var flags = []cli.Flag{
 		Name:   "open",
 		Usage:  "open user registration",
 	},
+	cli.DurationFlag{
+		EnvVar: "DRONE_SESSION_EXPIRES",
+		Name:   "session-expires",
+		Usage:  "Set the session expiration time default 72h",
+		Value:  time.Hour * 72,
+	},
 	cli.StringSliceFlag{
 		EnvVar: "DRONE_ESCALATE",
 		Name:   "escalate",
@@ -632,6 +638,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store, r remote.Remote) {
 	droneserver.Config.Server.Pass = c.String("agent-secret")
 	droneserver.Config.Server.Host = strings.TrimRight(c.String("server-host"), "/")
 	droneserver.Config.Server.Port = c.String("server-addr")
+	droneserver.Config.Server.SessionExpires = c.Duration("session-expires")
 	droneserver.Config.Pipeline.Networks = c.StringSlice("network")
 	droneserver.Config.Pipeline.Volumes = c.StringSlice("volume")
 	droneserver.Config.Pipeline.Privileged = c.StringSlice("escalate")
