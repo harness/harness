@@ -258,7 +258,6 @@ func MoveRepo(c *gin.Context) {
 	if repo.IsPrivate != from.IsPrivate {
 		repo.ResetVisibility()
 	}
-	repo.Visibility = from.Visibility
 
 	errStore := store.UpdateRepo(c, repo)
 	if errStore != nil {
