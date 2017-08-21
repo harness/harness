@@ -15,6 +15,7 @@ import (
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
+	"strings"
 )
 
 func PostRepo(c *gin.Context) {
@@ -88,7 +89,6 @@ func PostRepo(c *gin.Context) {
 func PatchRepo(c *gin.Context) {
 	repo := session.Repo(c)
 	user := session.User(c)
-	remote := remote.FromContext(c)
 
 	in := new(model.RepoPatch)
 	if err := c.Bind(in); err != nil {
@@ -96,7 +96,7 @@ func PatchRepo(c *gin.Context) {
 		return
 	}
 
-	if (in.IsTrusted != nil || in.Timeout != nil || in.BuildCounter != nil || in.Owner != nil || in.Name != nil) && !user.Admin {
+	if (in.IsTrusted != nil || in.Timeout != nil || in.BuildCounter != nil) && !user.Admin {
 		c.String(403, "Insufficient privileges")
 		return
 	}
@@ -136,21 +136,6 @@ func PatchRepo(c *gin.Context) {
 	}
 	if in.BuildCounter != nil {
 		repo.Counter = *in.BuildCounter
-	}
-
-	if in.Name != nil && in.Owner != nil {
-		from, err := remote.Repo(user, *in.Owner, *in.Name)
-		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-		}
-		repo.Name = from.Name
-		repo.Owner = from.Owner
-		repo.FullName = from.FullName
-		repo.Avatar = from.Avatar
-		repo.Link = from.Link
-		repo.Clone = from.Clone
-		repo.IsPrivate = from.IsPrivate
-		repo.Visibility = from.Visibility
 	}
 
 	err := store.UpdateRepo(c, repo)
@@ -211,7 +196,7 @@ func RepairRepo(c *gin.Context) {
 	repo := session.Repo(c)
 	user := session.User(c)
 
-	// crates the jwt token used to verify the repository
+	// creates the jwt token used to verify the repository
 	t := token.New(token.HookToken, repo.FullName)
 	sig, err := t.Sign(repo.Hash)
 	if err != nil {
@@ -234,4 +219,54 @@ func RepairRepo(c *gin.Context) {
 		return
 	}
 	c.Writer.WriteHeader(http.StatusOK)
+}
+
+func MoveRepo(c *gin.Context) {
+	remote := remote.FromContext(c)
+	repo := session.Repo(c)
+	user := session.User(c)
+
+	to, exists := c.GetQuery("to")
+	if !exists {
+		err := fmt.Errorf("Missing required to query value")
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	owner, name, errParse := ParseRepo(to)
+	if errParse != nil {
+		c.AbortWithError(http.StatusInternalServerError, errParse)
+	}
+
+	from, err := remote.Repo(user, owner, name)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+	repo.Name = from.Name
+	repo.Owner = from.Owner
+	repo.FullName = from.FullName
+	repo.Avatar = from.Avatar
+	repo.Link = from.Link
+	repo.Clone = from.Clone
+	repo.IsPrivate = from.IsPrivate
+	repo.Visibility = from.Visibility
+
+	errStore := store.UpdateRepo(c, repo)
+	if errStore != nil {
+		c.AbortWithError(http.StatusInternalServerError, errStore)
+		return
+	}
+
+	RepairRepo(c)
+}
+
+// ParseRepo parses the repository owner and name from a string.
+func ParseRepo(str string) (user, repo string, err error) {
+	var parts = strings.Split(str, "/")
+	if len(parts) != 2 {
+		err = fmt.Errorf("Error: Invalid or missing repository. eg octocat/hello-world.")
+		return
+	}
+	user = parts[0]
+	repo = parts[1]
+	return
 }
