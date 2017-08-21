@@ -15,7 +15,6 @@ import (
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
-	"strings"
 )
 
 func PostRepo(c *gin.Context) {
@@ -230,17 +229,25 @@ func MoveRepo(c *gin.Context) {
 	if !exists {
 		err := fmt.Errorf("Missing required to query value")
 		c.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
 
-	owner, name, errParse := ParseRepo(to)
+	owner, name, errParse := model.ParseRepo(to)
 	if errParse != nil {
 		c.AbortWithError(http.StatusInternalServerError, errParse)
+		return
 	}
 
 	from, err := remote.Repo(user, owner, name)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
+	if !from.Perm.Admin {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
 	repo.Name = from.Name
 	repo.Owner = from.Owner
 	repo.FullName = from.FullName
@@ -248,6 +255,9 @@ func MoveRepo(c *gin.Context) {
 	repo.Link = from.Link
 	repo.Clone = from.Clone
 	repo.IsPrivate = from.IsPrivate
+	if repo.IsPrivate != from.IsPrivate {
+		repo.ResetVisibility()
+	}
 	repo.Visibility = from.Visibility
 
 	errStore := store.UpdateRepo(c, repo)
@@ -259,14 +269,3 @@ func MoveRepo(c *gin.Context) {
 	RepairRepo(c)
 }
 
-// ParseRepo parses the repository owner and name from a string.
-func ParseRepo(str string) (user, repo string, err error) {
-	var parts = strings.Split(str, "/")
-	if len(parts) != 2 {
-		err = fmt.Errorf("Error: Invalid or missing repository. eg octocat/hello-world.")
-		return
-	}
-	user = parts[0]
-	repo = parts[1]
-	return
-}
