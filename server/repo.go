@@ -149,6 +149,8 @@ func PatchRepo(c *gin.Context) {
 		repo.Avatar = from.Avatar
 		repo.Link = from.Link
 		repo.Clone = from.Clone
+		repo.IsPrivate = from.IsPrivate
+		repo.Visibility = from.Visibility
 	}
 
 	err := store.UpdateRepo(c, repo)
