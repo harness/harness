@@ -224,6 +224,10 @@ func EventStreamSSE(c *gin.Context) {
 		return
 	}
 
+	// ping the client
+	io.WriteString(rw, ": ping\n\n")
+	flusher.Flush()
+
 	logrus.Debugf("user feed: connection opened")
 
 	user := session.User(c)
@@ -269,6 +273,9 @@ func EventStreamSSE(c *gin.Context) {
 			return
 		case <-ctx.Done():
 			return
+		case <-time.After(time.Second * 30):
+			io.WriteString(rw, ": ping\n\n")
+			flusher.Flush()
 		case buf, ok := <-eventc:
 			if ok {
 				io.WriteString(rw, "data: ")
@@ -293,6 +300,9 @@ func LogStreamSSE(c *gin.Context) {
 		c.String(500, "Streaming not supported")
 		return
 	}
+
+	io.WriteString(rw, ": ping\n\n")
+	flusher.Flush()
 
 	// repo := session.Repo(c)
 	//
@@ -388,6 +398,9 @@ func LogStreamSSE(c *gin.Context) {
 			return
 		case <-ctx.Done():
 			return
+		case <-time.After(time.Second * 30):
+			io.WriteString(rw, ": ping\n\n")
+			flusher.Flush()
 		case buf, ok := <-logc:
 			if ok {
 				if id > last {
