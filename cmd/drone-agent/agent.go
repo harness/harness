@@ -414,8 +414,7 @@ func (c *credentials) RequireTransportSecurity() bool {
 
 // extract repository name from the configuration
 func extractRepositoryName(config *backend.Config) string {
-	return config.Stages[0].Steps[0].Environment["DRONE_REPO_NAME"] + "/" +
-		config.Stages[0].Steps[0].Environment["DRONE_REPO_NAME"]
+	return config.Stages[0].Steps[0].Environment["DRONE_REPO"]
 }
 
 // extract build number from the configuration
