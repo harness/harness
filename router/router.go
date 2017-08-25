@@ -80,7 +80,8 @@ func Load(mux *httptreemux.ContextMux, middleware ...gin.HandlerFunc) http.Handl
 		repo.GET("", server.GetRepo)
 		repo.GET("/builds", server.GetBuilds)
 		repo.GET("/builds/:number", server.GetBuild)
-		repo.GET("/logs/:number/:ppid/:proc", server.GetBuildLogs)
+		repo.GET("/logs/:number/:pid", server.GetProcLogs)
+		repo.GET("/logs/:number/:pid/:proc", server.GetBuildLogs)
 
 		repo.GET("/files/:number", server.FileList)
 		repo.GET("/files/:number/:proc/*file", server.FileGet)

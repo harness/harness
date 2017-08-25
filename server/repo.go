@@ -187,7 +187,7 @@ func DeleteRepo(c *gin.Context) {
 	}
 
 	remote.Deactivate(user, repo, httputil.GetURL(c.Request))
-	c.Writer.WriteHeader(http.StatusOK)
+	c.JSON(200, repo)
 }
 
 func RepairRepo(c *gin.Context) {
