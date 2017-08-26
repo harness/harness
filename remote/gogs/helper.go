@@ -13,12 +13,16 @@ import (
 )
 
 // helper function that converts a Gogs repository to a Drone repository.
-func toRepo(from *gogs.Repository) *model.Repo {
+func toRepo(from *gogs.Repository, privateMode bool) *model.Repo {
 	name := strings.Split(from.FullName, "/")[1]
 	avatar := expandAvatar(
 		from.HtmlUrl,
 		from.Owner.AvatarUrl,
 	)
+	private := from.Private
+	if privateMode {
+		private = true
+	}
 	return &model.Repo{
 		Kind:      model.RepoGit,
 		Name:      name,
@@ -26,7 +30,7 @@ func toRepo(from *gogs.Repository) *model.Repo {
 		FullName:  from.FullName,
 		Avatar:    avatar,
 		Link:      from.HtmlUrl,
-		IsPrivate: from.Private,
+		IsPrivate: private,
 		Clone:     from.CloneUrl,
 		Branch:    "master",
 	}

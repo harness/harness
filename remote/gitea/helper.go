@@ -13,12 +13,16 @@ import (
 )
 
 // helper function that converts a Gitea repository to a Drone repository.
-func toRepo(from *gitea.Repository) *model.Repo {
+func toRepo(from *gitea.Repository, privateMode bool) *model.Repo {
 	name := strings.Split(from.FullName, "/")[1]
 	avatar := expandAvatar(
 		from.HTMLURL,
 		from.Owner.AvatarURL,
 	)
+	private := from.Private
+	if privateMode {
+		private = true
+	}
 	return &model.Repo{
 		Kind:      model.RepoGit,
 		Name:      name,
@@ -26,7 +30,7 @@ func toRepo(from *gitea.Repository) *model.Repo {
 		FullName:  from.FullName,
 		Avatar:    avatar,
 		Link:      from.HTMLURL,
-		IsPrivate: from.Private,
+		IsPrivate: private,
 		Clone:     from.CloneURL,
 		Branch:    "master",
 	}

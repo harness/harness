@@ -166,7 +166,7 @@ func Test_parse(t *testing.T) {
 				HTMLURL:  "http://gitea.golang.org/gophers/hello-world",
 				Private:  true,
 			}
-			repo := toRepo(&from)
+			repo := toRepo(&from, false)
 			g.Assert(repo.FullName).Equal(from.FullName)
 			g.Assert(repo.Owner).Equal(from.Owner.UserName)
 			g.Assert(repo.Name).Equal("hello-world")

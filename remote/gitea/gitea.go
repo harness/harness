@@ -195,7 +195,7 @@ func (c *client) Repo(u *model.User, owner, name string) (*model.Repo, error) {
 	if c.PrivateMode {
 		repo.Private = true
 	}
-	return toRepo(repo), nil
+	return toRepo(repo, c.PrivateMode), nil
 }
 
 // Repos returns a list of all repositories for the Gitea account, including
@@ -210,7 +210,7 @@ func (c *client) Repos(u *model.User) ([]*model.Repo, error) {
 	}
 
 	for _, repo := range all {
-		repos = append(repos, toRepo(repo))
+		repos = append(repos, toRepo(repo, c.PrivateMode))
 	}
 	return repos, err
 }
