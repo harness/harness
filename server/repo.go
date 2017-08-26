@@ -195,7 +195,7 @@ func RepairRepo(c *gin.Context) {
 	repo := session.Repo(c)
 	user := session.User(c)
 
-	// crates the jwt token used to verify the repository
+	// creates the jwt token used to verify the repository
 	t := token.New(token.HookToken, repo.FullName)
 	sig, err := t.Sign(repo.Hash)
 	if err != nil {
@@ -219,3 +219,52 @@ func RepairRepo(c *gin.Context) {
 	}
 	c.Writer.WriteHeader(http.StatusOK)
 }
+
+func MoveRepo(c *gin.Context) {
+	remote := remote.FromContext(c)
+	repo := session.Repo(c)
+	user := session.User(c)
+
+	to, exists := c.GetQuery("to")
+	if !exists {
+		err := fmt.Errorf("Missing required to query value")
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	owner, name, errParse := model.ParseRepo(to)
+	if errParse != nil {
+		c.AbortWithError(http.StatusInternalServerError, errParse)
+		return
+	}
+
+	from, err := remote.Repo(user, owner, name)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	if !from.Perm.Admin {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	repo.Name = from.Name
+	repo.Owner = from.Owner
+	repo.FullName = from.FullName
+	repo.Avatar = from.Avatar
+	repo.Link = from.Link
+	repo.Clone = from.Clone
+	repo.IsPrivate = from.IsPrivate
+	if repo.IsPrivate != from.IsPrivate {
+		repo.ResetVisibility()
+	}
+
+	errStore := store.UpdateRepo(c, repo)
+	if errStore != nil {
+		c.AbortWithError(http.StatusInternalServerError, errStore)
+		return
+	}
+
+	RepairRepo(c)
+}
+

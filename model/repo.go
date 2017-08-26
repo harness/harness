@@ -1,5 +1,10 @@
 package model
 
+import (
+	"strings"
+	"fmt"
+)
+
 type RepoLite struct {
 	Owner    string `json:"owner"`
 	Name     string `json:"name"`
@@ -36,6 +41,25 @@ type Repo struct {
 	Config      string `json:"config_file"              meddler:"repo_config_path"`
 	Hash        string `json:"-"                        meddler:"repo_hash"`
 	Perm        *Perm  `json:"-"                        meddler:"-"`
+}
+
+func (r *Repo) ResetVisibility() {
+	r.Visibility = VisibilityPublic
+	if r.IsPrivate {
+		r.Visibility = VisibilityPrivate
+	}
+}
+
+// ParseRepo parses the repository owner and name from a string.
+func ParseRepo(str string) (user, repo string, err error) {
+	var parts = strings.Split(str, "/")
+	if len(parts) != 2 {
+		err = fmt.Errorf("Error: Invalid or missing repository. eg octocat/hello-world.")
+		return
+	}
+	user = parts[0]
+	repo = parts[1]
+	return
 }
 
 // Update updates the repository with values from the given Repo.

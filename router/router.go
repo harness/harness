@@ -105,6 +105,7 @@ func Load(mux *httptreemux.ContextMux, middleware ...gin.HandlerFunc) http.Handl
 		repo.DELETE("", session.MustRepoAdmin(), server.DeleteRepo)
 		repo.POST("/chown", session.MustRepoAdmin(), server.ChownRepo)
 		repo.POST("/repair", session.MustRepoAdmin(), server.RepairRepo)
+		repo.POST("/move", session.MustRepoAdmin(), server.MoveRepo)
 
 		repo.POST("/builds/:number", session.MustPush, server.PostBuild)
 		repo.DELETE("/builds/:number", session.MustAdmin(), server.ZombieKill)
