@@ -217,6 +217,22 @@ func RepairRepo(c *gin.Context) {
 		c.String(500, err.Error())
 		return
 	}
+
+	from, err := remote.Repo(user, repo.Owner, repo.Name)
+	if err == nil {
+		repo.Name = from.Name
+		repo.Owner = from.Owner
+		repo.FullName = from.FullName
+		repo.Avatar = from.Avatar
+		repo.Link = from.Link
+		repo.Clone = from.Clone
+		repo.IsPrivate = from.IsPrivate
+		if repo.IsPrivate != from.IsPrivate {
+			repo.ResetVisibility()
+		}
+		store.UpdateRepo(c, repo)
+	}
+
 	c.Writer.WriteHeader(http.StatusOK)
 }
 
@@ -265,6 +281,27 @@ func MoveRepo(c *gin.Context) {
 		return
 	}
 
-	RepairRepo(c)
-}
+	// creates the jwt token used to verify the repository
+	t := token.New(token.HookToken, repo.FullName)
+	sig, err := t.Sign(repo.Hash)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
 
+	// reconstruct the link
+	host := httputil.GetURL(c.Request)
+	link := fmt.Sprintf(
+		"%s/hook?access_token=%s",
+		host,
+		sig,
+	)
+
+	remote.Deactivate(user, repo, host)
+	err = remote.Activate(user, repo, link)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+	c.Writer.WriteHeader(http.StatusOK)
+}
