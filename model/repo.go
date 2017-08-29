@@ -1,8 +1,8 @@
 package model
 
 import (
-	"strings"
 	"fmt"
+	"strings"
 )
 
 type RepoLite struct {

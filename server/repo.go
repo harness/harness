@@ -275,7 +275,7 @@ func MoveRepo(c *gin.Context) {
 			return
 		}
 	}
-	registries, err :=Config.Services.Registries.RegistryList(currentRepo)
+	registries, err := Config.Services.Registries.RegistryList(currentRepo)
 	for _, element := range registries {
 		element.RepoID = destinationRepo.ID
 		registriesErr := Config.Services.Registries.RegistryUpdate(currentRepo, element)
@@ -308,7 +308,6 @@ func MoveRepo(c *gin.Context) {
 	destinationRepo.IsTrusted = currentRepo.IsTrusted
 	destinationRepo.IsGated = currentRepo.IsGated
 	destinationRepo.IsActive = currentRepo.IsActive
-
 
 	errStore := store.UpdateRepo(c, destinationRepo)
 	if errStore != nil {
