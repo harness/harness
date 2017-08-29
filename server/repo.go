@@ -238,9 +238,10 @@ func RepairRepo(c *gin.Context) {
 
 func MoveRepo(c *gin.Context) {
 	remote := remote.FromContext(c)
-	repo := session.Repo(c)
+	currentRepo := session.Repo(c)
 	user := session.User(c)
 
+	// verify desination repo query string "to" exists
 	to, exists := c.GetQuery("to")
 	if !exists {
 		err := fmt.Errorf("Missing required to query value")
@@ -248,42 +249,76 @@ func MoveRepo(c *gin.Context) {
 		return
 	}
 
-	owner, name, errParse := model.ParseRepo(to)
-	if errParse != nil {
-		c.AbortWithError(http.StatusInternalServerError, errParse)
-		return
-	}
-
-	from, err := remote.Repo(user, owner, name)
+	destinationRepo, err := store.GetRepoName(c, to)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	if !from.Perm.Admin {
+	perms, permErr := store.PermFind(c, user, destinationRepo)
+	if permErr != nil {
+		c.AbortWithError(http.StatusInternalServerError, permErr)
+		return
+	}
+	// verify user has admin rights on the destination repo and is an admin
+	if !perms.Admin || !user.Admin {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	repo.Name = from.Name
-	repo.Owner = from.Owner
-	repo.FullName = from.FullName
-	repo.Avatar = from.Avatar
-	repo.Link = from.Link
-	repo.Clone = from.Clone
-	repo.IsPrivate = from.IsPrivate
-	if repo.IsPrivate != from.IsPrivate {
-		repo.ResetVisibility()
+	// swap foreign keys out for builds, secrets, and registry
+	secrets, err := Config.Services.Secrets.SecretList(currentRepo)
+	for _, element := range secrets {
+		element.RepoID = destinationRepo.ID
+		secretsErr := Config.Services.Secrets.SecretUpdate(currentRepo, element)
+		if secretsErr != nil {
+			c.AbortWithError(http.StatusInternalServerError, secretsErr)
+			return
+		}
+	}
+	registries, err :=Config.Services.Registries.RegistryList(currentRepo)
+	for _, element := range registries {
+		element.RepoID = destinationRepo.ID
+		registriesErr := Config.Services.Registries.RegistryUpdate(currentRepo, element)
+		if registriesErr != nil {
+			c.AbortWithError(http.StatusInternalServerError, registriesErr)
+			return
+		}
+	}
+	builds, err := store.GetBuildList(c, currentRepo)
+	for _, element := range builds {
+		element.RepoID = destinationRepo.ID
+		buildsErr := store.UpdateBuild(c, element)
+		if buildsErr != nil {
+			c.AbortWithError(http.StatusInternalServerError, buildsErr)
+			return
+		}
 	}
 
-	errStore := store.UpdateRepo(c, repo)
+	// Update the destination repo to match current repo settings
+	destinationRepo.Timeout = currentRepo.Timeout
+	destinationRepo.Config = currentRepo.Config
+	if destinationRepo.IsPrivate != currentRepo.IsPrivate {
+		destinationRepo.ResetVisibility()
+	}
+	destinationRepo.Counter = currentRepo.Counter
+	destinationRepo.AllowDeploy = currentRepo.AllowDeploy
+	destinationRepo.AllowPull = currentRepo.AllowPull
+	destinationRepo.AllowPush = currentRepo.AllowPush
+	destinationRepo.AllowTag = currentRepo.AllowTag
+	destinationRepo.IsTrusted = currentRepo.IsTrusted
+	destinationRepo.IsGated = currentRepo.IsGated
+	destinationRepo.IsActive = currentRepo.IsActive
+
+
+	errStore := store.UpdateRepo(c, destinationRepo)
 	if errStore != nil {
 		c.AbortWithError(http.StatusInternalServerError, errStore)
 		return
 	}
 
 	// creates the jwt token used to verify the repository
-	t := token.New(token.HookToken, repo.FullName)
-	sig, err := t.Sign(repo.Hash)
+	t := token.New(token.HookToken, destinationRepo.FullName)
+	sig, err := t.Sign(currentRepo.Hash)
 	if err != nil {
 		c.String(500, err.Error())
 		return
@@ -297,8 +332,8 @@ func MoveRepo(c *gin.Context) {
 		sig,
 	)
 
-	remote.Deactivate(user, repo, host)
-	err = remote.Activate(user, repo, link)
+	remote.Deactivate(user, currentRepo, host)
+	err = remote.Activate(user, destinationRepo, link)
 	if err != nil {
 		c.String(500, err.Error())
 		return

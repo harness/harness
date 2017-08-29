@@ -236,3 +236,7 @@ func CreateBuild(c context.Context, build *model.Build, procs ...*model.Proc) er
 func UpdateBuild(c context.Context, build *model.Build) error {
 	return FromContext(c).UpdateBuild(build)
 }
+
+func PermFind(c context.Context, user *model.User, repo *model.Repo) (*model.Perm, error) {
+	return FromContext(c).PermFind(user, repo)
+}
