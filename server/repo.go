@@ -317,7 +317,7 @@ func MoveRepo(c *gin.Context) {
 
 	// creates the jwt token used to verify the repository
 	t := token.New(token.HookToken, destinationRepo.FullName)
-	sig, err := t.Sign(currentRepo.Hash)
+	sig, err := t.Sign(destinationRepo.Hash)
 	if err != nil {
 		c.String(500, err.Error())
 		return
