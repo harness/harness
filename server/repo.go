@@ -308,6 +308,7 @@ func MoveRepo(c *gin.Context) {
 	destinationRepo.IsTrusted = currentRepo.IsTrusted
 	destinationRepo.IsGated = currentRepo.IsGated
 	destinationRepo.IsActive = currentRepo.IsActive
+	destinationRepo.Hash = currentRepo.Hash
 
 	errStore := store.UpdateRepo(c, destinationRepo)
 	if errStore != nil {
