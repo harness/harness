@@ -5,6 +5,7 @@ import (
 
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/shared/token"
+	"github.com/drone/drone/version"
 )
 
 // ShowIndex serves the main Drone application page.
@@ -22,6 +23,7 @@ func ShowIndex(c *gin.Context) {
 	c.HTML(200, "index.html", gin.H{
 		"user": user,
 		"csrf": csrf,
+		"version": version.Version.String(),
 	})
 }
 

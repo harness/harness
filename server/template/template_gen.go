@@ -72,6 +72,10 @@ var index = `<!DOCTYPE html>
 	<meta name="author" content="bradrydzewski">
 	<meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
+	{{ if .user }}
+	<meta name="version" content="{{ .version }}">
+	{{ end }}
+
 	<link rel="shortcut icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 	<link rel="shortcut icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 
@@ -115,6 +119,10 @@ var indexpolymer = `<!DOCTYPE html>
 	<meta charset="utf-8">
 	<meta name="author" content="bradrydzewski">
 	<meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+	{{ if .user }}
+	<meta name="version" content="{{ .version }}">
+	{{ end }}
 
 	<link rel="shortcut icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 	<link rel="shortcut icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
