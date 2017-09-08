@@ -32,6 +32,7 @@ func loop(c *cli.Context) error {
 		Labels: map[string]string{
 			"platform": c.String("platform"),
 		},
+		Expr: c.String("drone-filter"),
 	}
 
 	hostname := c.String("hostname")
