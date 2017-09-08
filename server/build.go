@@ -517,11 +517,7 @@ func PostBuild(c *gin.Context) {
 		build.Finished = 0
 		build.Enqueued = time.Now().UTC().Unix()
 		build.Error = ""
-		err = store.CreateBuild(c, build)
-		if err != nil {
-			c.String(500, err.Error())
-			return
-		}
+		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
 
 		event := c.DefaultQuery("event", build.Event)
 		if event == model.EventPush ||
@@ -530,7 +526,12 @@ func PostBuild(c *gin.Context) {
 			event == model.EventDeploy {
 			build.Event = event
 		}
-		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
+
+		err = store.CreateBuild(c, build)
+		if err != nil {
+			c.String(500, err.Error())
+			return
+		}
 	} else {
 		// todo move this to database tier
 		// and wrap inside a transaction

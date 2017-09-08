@@ -1,9 +1,0 @@
-
-		<script>
-			window.ENV = {};
-			window.ENV.server = window.location.protocol+"//"+window.location.host;
-			{{ if .csrf }}window.ENV.csrf = "{{ .csrf }}"{{ end }}
-			{{ if .user }}
-			window.USER = {{ json .user }};
-			{{ end }}
-		</script>
