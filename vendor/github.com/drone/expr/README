@@ -1,0 +1,5 @@
+Go package for parsing and evaluating SQL expressions.
+
+Documentation:
+
+    http://godoc.org/github.com/drone/expr
