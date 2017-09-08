@@ -31,6 +31,7 @@ type (
 		Command      []string          `json:"command,omitempty"`
 		ExtraHosts   []string          `json:"extra_hosts,omitempty"`
 		Volumes      []string          `json:"volumes,omitempty"`
+		Tmpfs        []string          `json:"tmpfs,omitempty"`
 		Devices      []string          `json:"devices,omitempty"`
 		Networks     []Conn            `json:"networks,omitempty"`
 		DNS          []string          `json:"dns,omitempty"`
@@ -45,6 +46,7 @@ type (
 		OnSuccess    bool              `json:"on_success,omitempty"`
 		AuthConfig   Auth              `json:"auth_config,omitempty"`
 		NetworkMode  string            `json:"network_mode,omitempty"`
+		IpcMode      string            `json:"ipc_mode,omitempty"`
 	}
 
 	// Auth defines registry authentication credentials.
