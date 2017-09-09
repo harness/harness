@@ -12,6 +12,7 @@ pipeline:
       - go get -u golang.org/x/net/context/ctxhttp
       - go get -u github.com/golang/protobuf/proto
       - go get -u github.com/golang/protobuf/protoc-gen-go
+      - go get -u github.com/hyperhq/hyper-api
       - go test -cover $(go list ./... | grep -v /vendor/)
 
   test_postgres:
