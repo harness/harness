@@ -85,7 +85,7 @@ func LogStream(c *gin.Context) {
 		}
 		return
 	}
-	logrus.Debugf("Successfull upgraded websocket")
+	logrus.Debugf("Successfully upgraded websocket")
 
 	ticker := time.NewTicker(pingPeriod)
 	logc := make(chan []byte, 10)
@@ -144,7 +144,7 @@ func EventStream(c *gin.Context) {
 		}
 		return
 	}
-	logrus.Debugf("Successfull upgraded websocket")
+	logrus.Debugf("Successfully upgraded websocket")
 
 	user := session.User(c)
 	repo := map[string]bool{}
