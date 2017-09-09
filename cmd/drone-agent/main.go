@@ -58,6 +58,16 @@ func main() {
 			Name:   "max-procs",
 			Value:  1,
 		},
+		cli.StringFlag{
+			EnvVar: "HYPER_ACCESS_KEY",
+			Name:   "hyper-access-key",
+			Value:  "",
+		},
+		cli.StringFlag{
+			EnvVar: "HYPER_SECRET_KEY",
+			Name:   "hyper-secret-key",
+			Value:  "",
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
