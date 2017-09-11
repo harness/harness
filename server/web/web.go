@@ -122,32 +122,3 @@ func ToUser(c context.Context) (*model.User, bool) {
 type key int
 
 const userKey key = 0
-
-// var partials = templ
-// var templ = `
-// {{define "user"}}
-// <script>
-// 	{{ if .user }}
-// 	window.USER = {{ json .user }};
-// 	{{ end }}
-// </script>
-// {{end}}
-//
-// {{define "csrf"}}
-// <script>
-// 	{{ if .csrf }}window.DRONE_CSRF = "{{ .csrf }}"{{ end }}
-// </script>
-// {{end}}
-//
-// {{define "version"}}
-// 	<meta name="version" content="{{ .version }}">
-// {{end}}
-// `
-
-// var funcMap = template.FuncMap{"json": marshal}
-//
-// // marshal is a template helper function to render data as json.
-// func marshal(v interface{}) template.JS {
-// 	a, _ := json.Marshal(v)
-// 	return template.JS(a)
-// }

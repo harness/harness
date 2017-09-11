@@ -93,12 +93,6 @@ pipeline:
     when:
       event: tag
 
-  notify:
-    image: plugins/gitter
-    secrets: [ gitter_webhook ]
-    when:
-      status: [ success, failure ]
-
 services:
   postgres:
     image: postgres:9.6
