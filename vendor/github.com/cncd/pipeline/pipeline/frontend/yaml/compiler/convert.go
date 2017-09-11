@@ -21,6 +21,7 @@ func (c *Compiler) createProcess(name string, container *yaml.Container, section
 		image        = expandImage(container.Image)
 		network_mode = container.NetworkMode
 		ipc_mode     = container.IpcMode
+		size 		 = container.Size
 		// network    = container.Network
 	)
 
@@ -176,5 +177,6 @@ func (c *Compiler) createProcess(name string, container *yaml.Container, section
 			container.Constraints.Status.Match("failure"),
 		NetworkMode: network_mode,
 		IpcMode:     ipc_mode,
+		Size:          size,
 	}
 }

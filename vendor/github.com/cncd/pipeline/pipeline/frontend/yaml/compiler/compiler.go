@@ -173,6 +173,7 @@ func (c *Compiler) Compile(conf *yaml.Config) *backend.Config {
 
 		name := fmt.Sprintf("%s_step_%d", c.prefix, i)
 		step := c.createProcess(name, container, "pipeline")
+		step.Size = container.Size
 		stage.Steps = append(stage.Steps, step)
 	}
 

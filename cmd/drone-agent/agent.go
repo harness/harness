@@ -16,6 +16,7 @@ import (
 	"github.com/cncd/pipeline/pipeline"
 	"github.com/cncd/pipeline/pipeline/backend"
 	"github.com/cncd/pipeline/pipeline/backend/docker"
+	"github.com/cncd/pipeline/pipeline/backend/hyper"
 	"github.com/cncd/pipeline/pipeline/interrupt"
 	"github.com/cncd/pipeline/pipeline/multipart"
 	"github.com/cncd/pipeline/pipeline/rpc"
@@ -88,7 +89,7 @@ func loop(c *cli.Context) error {
 				if sigterm.IsSet() {
 					return
 				}
-				if err := run(ctx, client, filter); err != nil {
+				if err := run(ctx, client, filter, c); err != nil {
 					log.Error().Err(err).Msg("pipeline done with error")
 					return
 				}
@@ -105,7 +106,7 @@ const (
 	maxLogsUpload = 5000000
 )
 
-func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
+func run(ctx context.Context, client rpc.Peer, filter rpc.Filter, c *cli.Context) error {
 	log.Debug().
 		Msg("request next execution")
 
@@ -131,7 +132,12 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		Msg("received execution")
 
 	// new docker engine
-	engine, err := docker.NewEnv()
+	var engine backend.Engine
+	if c.Bool("hyper") {
+		engine, err = hyper.NewEnv(c.String("hyper-access-key"), c.String("hyper-secret-key"))
+	} else {
+		engine, err = docker.NewEnv()
+	}
 	if err != nil {
 		logger.Error().
 			Err(err).
