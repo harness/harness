@@ -197,6 +197,11 @@ func PostHook(c *gin.Context) {
 		}
 	}
 
+	if err = Config.Services.Limiter.LimitBuild(user, repo, build); err != nil {
+		c.String(403, "Build blocked by limiter")
+		return
+	}
+
 	build.Trim()
 	err = store.CreateBuild(c, build, build.Procs...)
 	if err != nil {

@@ -46,6 +46,10 @@ func setupEnvironService(c *cli.Context, s store.Store) model.EnvironService {
 	return nil
 }
 
+func setupLimiter(c *cli.Context, s store.Store) model.Limiter {
+	return new(model.NoLimit)
+}
+
 func setupPubsub(c *cli.Context)        {}
 func setupStream(c *cli.Context)        {}
 func setupGatingService(c *cli.Context) {}

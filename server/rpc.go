@@ -41,6 +41,7 @@ var Config = struct {
 		Secrets    model.SecretService
 		Registries model.RegistryService
 		Environ    model.EnvironService
+		Limiter    model.Limiter
 	}
 	Storage struct {
 		// Users  model.UserStore
