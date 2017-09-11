@@ -114,17 +114,6 @@ func Load(mux *httptreemux.ContextMux, middleware ...gin.HandlerFunc) http.Handl
 	e.POST("/hook", server.PostHook)
 	e.POST("/api/hook", server.PostHook)
 
-	ws := e.Group("/ws")
-	{
-		ws.GET("/feed", server.EventStream)
-		ws.GET("/logs/:owner/:name/:build/:number",
-			session.SetRepo(),
-			session.SetPerm(),
-			session.MustPull,
-			server.LogStream,
-		)
-	}
-
 	sse := e.Group("/stream")
 	{
 		sse.GET("/events", server.EventStreamSSE)
