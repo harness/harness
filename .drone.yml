@@ -112,12 +112,8 @@ services:
     image: postgres:9.6
     environment:
       - POSTGRES_USER=postgres
-    tmpfs:
-      - /var/lib/postgresql/data
   mysql:
     image: mysql:5.6.27
     environment:
       - MYSQL_DATABASE=test
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-    tmpfs:
-      - /var/lib/mysql
