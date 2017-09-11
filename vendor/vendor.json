@@ -43,16 +43,22 @@
 			"revisionTime": "2017-08-29T22:35:31Z"
 		},
 		{
-			"checksumSHA1": "gc+efbEPGdecp6I2ezd6J3+UL3o=",
+			"checksumSHA1": "6n97Acvunui4D2GPYmABC87/fE0=",
 			"path": "github.com/cncd/pipeline/pipeline/backend",
-			"revision": "84197192b579964d3caaaa0ec2328ebfe7cd19cc",
-			"revisionTime": "2017-08-29T22:35:31Z"
+			"revision": "a2f53aebdd4a9aebad28603ce2e9de592e2cc495",
+			"revisionTime": "2017-09-12T15:55:21Z"
 		},
 		{
 			"checksumSHA1": "IIuOItGMhYP6kLtlZWYBO+liSx4=",
 			"path": "github.com/cncd/pipeline/pipeline/backend/docker",
 			"revision": "84197192b579964d3caaaa0ec2328ebfe7cd19cc",
 			"revisionTime": "2017-08-29T22:35:31Z"
+		},
+		{
+			"checksumSHA1": "l3g5mXu2Sj68RMRIb3QDZlkgMeA=",
+			"path": "github.com/cncd/pipeline/pipeline/backend/hyper",
+			"revision": "a2f53aebdd4a9aebad28603ce2e9de592e2cc495",
+			"revisionTime": "2017-09-12T15:55:21Z"
 		},
 		{
 			"checksumSHA1": "2A3+CnkMfvvO4oRkjQKqi44no0g=",
