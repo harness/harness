@@ -48,6 +48,11 @@ func main() {
 			Name:   "platform",
 			Value:  "linux/amd64",
 		},
+		cli.StringFlag{
+			EnvVar: "DRONE_FILTER",
+			Name:   "drone-filter",
+			Usage:  "A filter expression used to restrict builds by label",
+		},
 		cli.IntFlag{
 			EnvVar: "DRONE_MAX_PROCS",
 			Name:   "max-procs",

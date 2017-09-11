@@ -332,6 +332,18 @@
 			"revisionTime": "2017-03-25T05:49:59Z"
 		},
 		{
+			"checksumSHA1": "AT++gcbYW/VQxkmbInFJk1Feg3o=",
+			"path": "github.com/drone/expr",
+			"revision": "72f4df4a266b7e1e15b75d4ab8e43e273fcbe1d7",
+			"revisionTime": "2017-09-09T01:06:28Z"
+		},
+		{
+			"checksumSHA1": "ndkZW2hZSw4AE5WQmWS8sPk79NY=",
+			"path": "github.com/drone/expr/parse",
+			"revision": "72f4df4a266b7e1e15b75d4ab8e43e273fcbe1d7",
+			"revisionTime": "2017-09-09T01:06:28Z"
+		},
+		{
 			"checksumSHA1": "40Ns85VYa4smQPcewZ7SOdfLnKU=",
 			"path": "github.com/fatih/structs",
 			"revision": "a720dfa8df582c51dee1b36feabb906bde1588bd",
