@@ -3,4 +3,7 @@ ENV GODEBUG=netdns=go
 ENV DRONE_PLATFORM=linux/arm64
 ADD release/linux/arm64/drone-agent /bin/
 
+EXPOSE 3000
+HEALTHCHECK CMD ["/bin/drone-agent", "ping"]
+
 ENTRYPOINT ["/bin/drone-agent"]
