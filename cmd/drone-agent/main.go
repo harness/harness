@@ -58,6 +58,20 @@ func main() {
 			Name:   "max-procs",
 			Value:  1,
 		},
+		cli.BoolFlag{
+			EnvVar: "CI_HYPER",
+			Name:   "hyper",
+		},
+		cli.StringFlag{
+			EnvVar: "CI_HYPER_ACCESS_KEY",
+			Name:   "hyper-access-key",
+			Value:  "",
+		},
+		cli.StringFlag{
+			EnvVar: "CI_HYPER_SECRET_KEY",
+			Name:   "hyper-secret-key",
+			Value:  "",
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
