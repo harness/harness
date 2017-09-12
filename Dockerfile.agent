@@ -1,7 +1,11 @@
-# docker build --rm -t drone/drone .
+# docker build --rm -f Dockerfile.agent -t drone/agent .
+
+EXPOSE 3000
 
 FROM centurylink/ca-certs
 ENV GODEBUG=netdns=go
 ADD release/drone-agent /bin/
+
+HEALTHCHECK CMD ["/bin/drone-agent", "ping"]
 
 ENTRYPOINT ["/bin/drone-agent"]

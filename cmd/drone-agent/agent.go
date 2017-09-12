@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 	"sync"
@@ -44,6 +45,22 @@ func loop(c *cli.Context) error {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	} else {
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	}
+
+	if c.Bool("pretty") {
+		log.Logger = log.Output(
+			zerolog.ConsoleWriter{
+				Out:     os.Stderr,
+				NoColor: c.BoolT("nocolor"),
+			},
+		)
+	}
+
+	counter.Polling = c.Int("max-procs")
+	counter.Running = 0
+
+	if c.BoolT("healthcheck") {
+		go http.ListenAndServe(":3000", nil)
 	}
 
 	// TODO pass version information to grpc server
@@ -124,9 +141,22 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		return nil
 	}
 
+	timeout := time.Hour
+	if minutes := work.Timeout; minutes != 0 {
+		timeout = time.Duration(minutes) * time.Minute
+	}
+
+	counter.Add(
+		work.ID,
+		timeout,
+		extractRepositoryName(work.Config), // hack
+		extractBuildNumber(work.Config),    // hack
+	)
+	defer counter.Done(work.ID)
+
 	logger := log.With().
-		Str("repo", extractRepositoryName(work.Config)).
-		Str("build", extractBuildNumber(work.Config)).
+		Str("repo", extractRepositoryName(work.Config)). // hack
+		Str("build", extractBuildNumber(work.Config)).   // hack
 		Str("id", work.ID).
 		Logger()
 
@@ -141,11 +171,6 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 			Msg("cannot create docker client")
 
 		return err
-	}
-
-	timeout := time.Hour
-	if minutes := work.Timeout; minutes != 0 {
-		timeout = time.Duration(minutes) * time.Minute
 	}
 
 	ctx, cancel := context.WithTimeout(ctxmeta, timeout)
