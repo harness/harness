@@ -100,9 +100,12 @@ func loop(c *cli.Context) error {
 	return nil
 }
 
+// NOTE we need to limit the size of the logs and files that we upload.
+// The maximum grpc payload size is 4194304. So until we implement streaming
+// for uploads, we need to set these limits below the maximum.
 const (
-	maxFileUpload = 5000000
-	maxLogsUpload = 5000000
+	maxLogsUpload = 2000000 // this is per step
+	maxFileUpload = 1000000
 )
 
 func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
