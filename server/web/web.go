@@ -96,18 +96,6 @@ func setupCache(h http.Handler) http.Handler {
 	)
 }
 
-func resetCache(h http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Del("Cache-Control")
-			w.Header().Del("Last-Updated")
-			w.Header().Del("Expires")
-			w.Header().Del("ETag")
-			h.ServeHTTP(w, r)
-		},
-	)
-}
-
 // WithUser returns a context with the current authenticated user.
 func WithUser(c context.Context, user *model.User) context.Context {
 	return context.WithValue(c, userKey, user)
