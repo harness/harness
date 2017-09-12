@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 	"sync"
@@ -44,6 +45,19 @@ func loop(c *cli.Context) error {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	} else {
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	}
+
+	if c.Bool("pretty") {
+		log.Logger = log.Output(
+			zerolog.ConsoleWriter{
+				Out:     os.Stderr,
+				NoColor: c.BoolT("nocolor"),
+			},
+		)
+	}
+
+	if c.BoolT("healthcheck") {
+		go http.ListenAndServe(":3000", nil)
 	}
 
 	// TODO pass version information to grpc server

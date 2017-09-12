@@ -16,6 +16,13 @@ func main() {
 	app.Version = version.Version.String()
 	app.Usage = "drone agent"
 	app.Action = loop
+	app.Commands = []cli.Command{
+		{
+			Name:   "ping",
+			Usage:  "ping the agent",
+			Action: pinger,
+		},
+	}
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			EnvVar: "DRONE_SERVER",
@@ -39,6 +46,16 @@ func main() {
 			Name:   "debug",
 			Usage:  "start the agent in debug mode",
 		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_DEBUG_PRETTY",
+			Name:   "pretty",
+			Usage:  "enable pretty-printed debug output",
+		},
+		cli.BoolTFlag{
+			EnvVar: "DRONE_DEBUG_NOCOLOR",
+			Name:   "nocolor",
+			Usage:  "disable colored debug output",
+		},
 		cli.StringFlag{
 			EnvVar: "DRONE_HOSTNAME,HOSTNAME",
 			Name:   "hostname",
@@ -50,13 +67,18 @@ func main() {
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_FILTER",
-			Name:   "drone-filter",
-			Usage:  "A filter expression used to restrict builds by label",
+			Name:   "filter",
+			Usage:  "filter expression used to restrict builds by label",
 		},
 		cli.IntFlag{
 			EnvVar: "DRONE_MAX_PROCS",
 			Name:   "max-procs",
 			Value:  1,
+		},
+		cli.BoolTFlag{
+			EnvVar: "DRONE_HEALTHCHECK",
+			Name:   "healthcheck",
+			Usage:  "enables the healthcheck endpoint",
 		},
 	}
 

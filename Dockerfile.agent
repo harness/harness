@@ -1,7 +1,9 @@
-# docker build --rm -t drone/drone .
+# docker build --rm -f Dockerfile.agent -t drone/agent .
 
 FROM centurylink/ca-certs
 ENV GODEBUG=netdns=go
 ADD release/drone-agent /bin/
 
 ENTRYPOINT ["/bin/drone-agent"]
+
+HEALTHCHECK CMD ["/bin/drone-agent", "ping"]
