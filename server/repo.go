@@ -45,7 +45,7 @@ func PostRepo(c *gin.Context) {
 		}
 	}
 	if repo.Config == "" {
-		repo.Config = ".drone.yml"
+		repo.Config = Config.Server.RepoConfig
 	}
 	if repo.Timeout == 0 {
 		repo.Timeout = 60 // 1 hour default build time
