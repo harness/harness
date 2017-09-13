@@ -15,7 +15,7 @@ func NewServer() *httptest.Server {
 		//println(r.URL.Path + "  " + r.Method)
 		// evaluate the path to serve a dummy data file
 		switch r.URL.Path {
-		case "/api/v3/projects":
+		case "/api/v4/projects":
 			if r.URL.Query().Get("archived") == "false" {
 				w.Write(notArchivedProjectsPayload)
 			} else {
@@ -23,13 +23,13 @@ func NewServer() *httptest.Server {
 			}
 
 			return
-		case "/api/v3/projects/diaspora/diaspora-client":
+		case "/api/v4/projects/diaspora/diaspora-client":
 			w.Write(project4Paylod)
 			return
-		case "/api/v3/projects/brightbox/puppet":
+		case "/api/v4/projects/brightbox/puppet":
 			w.Write(project6Paylod)
 			return
-		case "/api/v3/projects/diaspora/diaspora-client/services/drone-ci":
+		case "/api/v4/projects/diaspora/diaspora-client/services/drone-ci":
 			switch r.Method {
 			case "PUT":
 				if r.FormValue("token") == "" {
@@ -45,7 +45,7 @@ func NewServer() *httptest.Server {
 		case "/oauth/token":
 			w.Write(accessTokenPayload)
 			return
-		case "/api/v3/user":
+		case "/api/v4/user":
 			w.Write(currentUserPayload)
 			return
 		}

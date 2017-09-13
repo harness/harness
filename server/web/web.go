@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
+	"html/template"
+	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/drone/drone-ui/dist"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/server/template"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/version"
 
@@ -24,23 +26,42 @@ type Endpoint interface {
 
 // New returns the default website endpoint.
 func New() Endpoint {
-	return new(website)
+	return &website{
+		fs: dist.New(),
+		templ: mustCreateTemplate(
+			string(dist.MustLookup("/index.html")),
+		),
+	}
 }
 
-type website struct{}
+// FromPath returns the website endpoint that
+// serves the webpage form disk at path p.
+func FromPath(p string) Endpoint {
+	f := filepath.Join(p, "index.html")
+	b, err := ioutil.ReadFile(f)
+	if err != nil {
+		panic(err)
+	}
+	return &website{
+		fs:    http.Dir(p),
+		templ: mustCreateTemplate(string(b)),
+	}
+}
+
+type website struct {
+	fs    http.FileSystem
+	templ *template.Template
+}
 
 func (w *website) Register(mux *httptreemux.ContextMux) {
-	r := dist.New()
-	h := http.FileServer(r)
+	h := http.FileServer(w.fs)
 	h = setupCache(h)
-	mux.Handler("GET", "/favicon-32x32.png", h)
-	mux.Handler("GET", "/favicon-16x16.png", h)
-	mux.Handler("GET", "/src/*filepath", h)
-	mux.Handler("GET", "/bower_components/*filepath", h)
-	mux.NotFoundHandler = handleIndex
+	mux.Handler("GET", "/favicon.png", h)
+	mux.Handler("GET", "/static/*filepath", h)
+	mux.NotFoundHandler = w.handleIndex
 }
 
-func handleIndex(rw http.ResponseWriter, r *http.Request) {
+func (w *website) handleIndex(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(200)
 
 	var csrf string
@@ -57,7 +78,8 @@ func handleIndex(rw http.ResponseWriter, r *http.Request) {
 		"version": version.Version.String(),
 	}
 	rw.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	template.T.ExecuteTemplate(rw, "index_polymer.html", params)
+
+	w.templ.Execute(rw, params)
 }
 
 func setupCache(h http.Handler) http.Handler {
@@ -69,18 +91,6 @@ func setupCache(h http.Handler) http.Handler {
 			w.Header().Set("Cache-Control", "public, max-age=31536000")
 			w.Header().Del("Expires")
 			w.Header().Set("ETag", etag)
-			h.ServeHTTP(w, r)
-		},
-	)
-}
-
-func resetCache(h http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Del("Cache-Control")
-			w.Header().Del("Last-Updated")
-			w.Header().Del("Expires")
-			w.Header().Del("ETag")
 			h.ServeHTTP(w, r)
 		},
 	)

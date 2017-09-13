@@ -1,6 +1,6 @@
 # docker build --rm -t drone/drone .
 
-FROM centurylink/ca-certs
+FROM drone/ca-certs
 EXPOSE 8000 9000 80 443
 
 ENV DATABASE_DRIVER=sqlite3

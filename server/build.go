@@ -453,7 +453,6 @@ func PostBuild(c *gin.Context) {
 
 	remote_ := remote.FromContext(c)
 	repo := session.Repo(c)
-	fork := c.DefaultQuery("fork", "false")
 
 	num, err := strconv.Atoi(c.Param("number"))
 	if err != nil {
@@ -500,57 +499,28 @@ func PostBuild(c *gin.Context) {
 		return
 	}
 
-	// must not restart a running build
-	if build.Status == model.StatusPending || build.Status == model.StatusRunning {
-		c.String(409, "Cannot re-start a started build")
-		return
+	build.ID = 0
+	build.Number = 0
+	build.Parent = num
+	build.Status = model.StatusPending
+	build.Started = 0
+	build.Finished = 0
+	build.Enqueued = time.Now().UTC().Unix()
+	build.Error = ""
+	build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
+
+	event := c.DefaultQuery("event", build.Event)
+	if event == model.EventPush ||
+		event == model.EventPull ||
+		event == model.EventTag ||
+		event == model.EventDeploy {
+		build.Event = event
 	}
 
-	// forking the build creates a duplicate of the build
-	// and then executes. This retains prior build history.
-	if forkit, _ := strconv.ParseBool(fork); forkit {
-		build.ID = 0
-		build.Number = 0
-		build.Parent = num
-		build.Status = model.StatusPending
-		build.Started = 0
-		build.Finished = 0
-		build.Enqueued = time.Now().UTC().Unix()
-		build.Error = ""
-		err = store.CreateBuild(c, build)
-		if err != nil {
-			c.String(500, err.Error())
-			return
-		}
-
-		event := c.DefaultQuery("event", build.Event)
-		if event == model.EventPush ||
-			event == model.EventPull ||
-			event == model.EventTag ||
-			event == model.EventDeploy {
-			build.Event = event
-		}
-		build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
-	} else {
-		// todo move this to database tier
-		// and wrap inside a transaction
-		build.Status = model.StatusPending
-		build.Started = 0
-		build.Finished = 0
-		build.Enqueued = time.Now().UTC().Unix()
-		build.Error = ""
-
-		err = store.FromContext(c).ProcClear(build)
-		if err != nil {
-			c.AbortWithStatus(500)
-			return
-		}
-
-		err = store.UpdateBuild(c, build)
-		if err != nil {
-			c.AbortWithStatus(500)
-			return
-		}
+	err = store.CreateBuild(c, build)
+	if err != nil {
+		c.String(500, err.Error())
+		return
 	}
 
 	// Read query string parameters into buildParams, exclude reserved params

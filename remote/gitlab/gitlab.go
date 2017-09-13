@@ -311,17 +311,7 @@ func (g *Gitlab) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 
 // File fetches a file from the remote repository and returns in string format.
 func (g *Gitlab) File(user *model.User, repo *model.Repo, build *model.Build, f string) ([]byte, error) {
-	var client = NewClient(g.URL, user.Token, g.SkipVerify)
-	id, err := GetProjectId(g, client, repo.Owner, repo.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	out, err := client.RepoRawFile(id, build.Commit, f)
-	if err != nil {
-		return nil, err
-	}
-	return out, err
+	return g.FileRef(user, repo, build.Commit, f)
 }
 
 // FileRef fetches the file from the GitHub repository and returns its contents.

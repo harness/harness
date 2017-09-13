@@ -1,9 +1,9 @@
 <!-- PLEASE READ BEFORE DELETING
 
 Bugs or Issues? Please do not open a GitHub issue until you have
-discussed and verified in our chatroom:
+discussed and verified with community support:
 
-    https://gitter.im/drone/drone
+    https://discourse.drone.io/
 
 Failing Builds? Please do not use GitHub issues for generic support
 questions. Instead please use Stack Overflow:

@@ -104,7 +104,7 @@ func WithWorkspaceFromURL(base, link string) Option {
 	path := "src"
 	parsed, err := url.Parse(link)
 	if err == nil {
-		path = filepath.Join(path, parsed.Host, parsed.Path)
+		path = filepath.Join(path, parsed.Hostname(), parsed.Path)
 	}
 	return WithWorkspace(base, path)
 }

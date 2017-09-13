@@ -32,6 +32,7 @@ type (
 		CPUShares     libcompose.StringorInt    `yaml:"cpu_shares,omitempty"`
 		Detached      bool                      `yaml:"detach,omitempty"`
 		Devices       []string                  `yaml:"devices,omitempty"`
+		Tmpfs         []string                  `yaml:"tmpfs,omitempty"`
 		DNS           libcompose.Stringorslice  `yaml:"dns,omitempty"`
 		DNSSearch     libcompose.Stringorslice  `yaml:"dns_search,omitempty"`
 		Entrypoint    libcompose.Command        `yaml:"entrypoint,omitempty"`
@@ -46,6 +47,7 @@ type (
 		MemSwappiness libcompose.MemStringorInt `yaml:"mem_swappiness,omitempty"`
 		Name          string                    `yaml:"name,omitempty"`
 		NetworkMode   string                    `yaml:"network_mode,omitempty"`
+		IpcMode       string                    `yaml:"ipc_mode,omitempty"`
 		Networks      libcompose.Networks       `yaml:"networks,omitempty"`
 		Privileged    bool                      `yaml:"privileged,omitempty"`
 		Pull          bool                      `yaml:"pull,omitempty"`

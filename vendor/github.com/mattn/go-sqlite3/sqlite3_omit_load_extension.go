@@ -17,3 +17,7 @@ import (
 func (c *SQLiteConn) loadExtensions(extensions []string) error {
 	return errors.New("Extensions have been disabled for static builds")
 }
+
+func (c *SQLiteConn) LoadExtension(lib string, entry string) error {
+	return errors.New("Extensions have been disabled for static builds")
+}

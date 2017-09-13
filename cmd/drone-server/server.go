@@ -93,6 +93,12 @@ var flags = []cli.Flag{
 		Name:   "open",
 		Usage:  "open user registration",
 	},
+	cli.StringFlag{
+		EnvVar: "DRONE_REPO_CONFIG",
+		Name:   "repo-config",
+		Usage:  "file path for the drone config",
+		Value:  ".drone.yml",
+	},
 	cli.DurationFlag{
 		EnvVar: "DRONE_SESSION_EXPIRES",
 		Name:   "session-expires",
@@ -619,6 +625,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store, r remote.Remote) {
 	droneserver.Config.Services.Secrets = setupSecretService(c, v)
 	droneserver.Config.Services.Senders = sender.New(v, v)
 	droneserver.Config.Services.Environ = setupEnvironService(c, v)
+	droneserver.Config.Services.Limiter = setupLimiter(c, v)
 
 	if endpoint := c.String("gating-service"); endpoint != "" {
 		droneserver.Config.Services.Senders = sender.NewRemote(endpoint)
@@ -638,6 +645,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store, r remote.Remote) {
 	droneserver.Config.Server.Pass = c.String("agent-secret")
 	droneserver.Config.Server.Host = strings.TrimRight(c.String("server-host"), "/")
 	droneserver.Config.Server.Port = c.String("server-addr")
+	droneserver.Config.Server.RepoConfig = c.String("repo-config")
 	droneserver.Config.Server.SessionExpires = c.Duration("session-expires")
 	droneserver.Config.Pipeline.Networks = c.StringSlice("network")
 	droneserver.Config.Pipeline.Volumes = c.StringSlice("volume")

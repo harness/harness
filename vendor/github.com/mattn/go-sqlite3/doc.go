@@ -102,7 +102,7 @@ call RegisterFunction from ConnectHook.
 	sql.Register("sqlite3_with_go_func",
 			&sqlite3.SQLiteDriver{
 					ConnectHook: func(conn *sqlite3.SQLiteConn) error {
-						return conn.RegisterFunc("regex", regex, true)
+						return conn.RegisterFunc("regexp", regex, true)
 					},
 			})
 
