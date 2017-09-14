@@ -15,6 +15,7 @@ import (
 	"github.com/drone/drone/remote/gitea"
 	"github.com/drone/drone/remote/github"
 	"github.com/drone/drone/remote/gitlab"
+	"github.com/drone/drone/remote/gitlab3"
 	"github.com/drone/drone/remote/gogs"
 	"github.com/drone/drone/server/web"
 	"github.com/drone/drone/store"
@@ -121,6 +122,17 @@ func setupStash(c *cli.Context) (remote.Remote, error) {
 
 // helper function to setup the Gitlab remote from the CLI arguments.
 func setupGitlab(c *cli.Context) (remote.Remote, error) {
+	if c.Bool("gitlab-v3-api") {
+		return gitlab3.New(gitlab3.Opts{
+			URL:         c.String("gitlab-server"),
+			Client:      c.String("gitlab-client"),
+			Secret:      c.String("gitlab-secret"),
+			Username:    c.String("gitlab-git-username"),
+			Password:    c.String("gitlab-git-password"),
+			PrivateMode: c.Bool("gitlab-private-mode"),
+			SkipVerify:  c.Bool("gitlab-skip-verify"),
+		})
+	}
 	return gitlab.New(gitlab.Opts{
 		URL:         c.String("gitlab-server"),
 		Client:      c.String("gitlab-client"),

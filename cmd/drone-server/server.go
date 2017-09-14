@@ -366,6 +366,11 @@ var flags = []cli.Flag{
 		Usage:  "gitlab is running in private mode",
 	},
 	cli.BoolFlag{
+		EnvVar: "DRONE_GITLAB_V3_API",
+		Name:   "gitlab-v3-api",
+		Usage:  "gitlab is running the v3 api",
+	},
+	cli.BoolFlag{
 		EnvVar: "DRONE_STASH",
 		Name:   "stash",
 		Usage:  "stash driver is enabled",
