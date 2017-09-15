@@ -17,10 +17,10 @@ import (
 	"github.com/cncd/pipeline/pipeline"
 	"github.com/cncd/pipeline/pipeline/backend"
 	"github.com/cncd/pipeline/pipeline/backend/docker"
-	"github.com/cncd/pipeline/pipeline/interrupt"
 	"github.com/cncd/pipeline/pipeline/multipart"
 	"github.com/cncd/pipeline/pipeline/rpc"
 
+	"github.com/drone/signal"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/tevino/abool"
@@ -89,7 +89,7 @@ func loop(c *cli.Context) error {
 		context.Background(),
 		metadata.Pairs("hostname", hostname),
 	)
-	ctx = interrupt.WithContextFunc(ctx, func() {
+	ctx = signal.WithContextFunc(ctx, func() {
 		println("ctrl+c received, terminating process")
 		sigterm.Set()
 	})
