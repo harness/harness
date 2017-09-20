@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cncd/queue"
 	"github.com/dimfeld/httptreemux"
@@ -176,11 +177,10 @@ func setupCoding(c *cli.Context) (remote.Remote, error) {
 
 func setupTree(c *cli.Context) *httptreemux.ContextMux {
 	tree := httptreemux.NewContextMux()
-	if path := c.String("www"); path == "" {
-		web.New().Register(tree)
-	} else {
-		web.FromPath(path).Register(tree)
-	}
+	web.New(
+		web.WithDir(c.String("www")),
+		web.WithSync(time.Hour*72),
+	).Register(tree)
 	return tree
 }
 

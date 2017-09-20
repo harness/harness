@@ -25,32 +25,42 @@ type Endpoint interface {
 }
 
 // New returns the default website endpoint.
-func New() Endpoint {
+func New(opt ...Option) Endpoint {
+	opts := new(Options)
+	for _, f := range opt {
+		f(opts)
+	}
+
+	if opts.path != "" {
+		return fromPath(opts)
+	}
+
 	return &website{
-		fs: dist.New(),
-		templ: mustCreateTemplate(
+		fs:   dist.New(),
+		opts: opts,
+		tmpl: mustCreateTemplate(
 			string(dist.MustLookup("/index.html")),
 		),
 	}
 }
 
-// FromPath returns the website endpoint that
-// serves the webpage form disk at path p.
-func FromPath(p string) Endpoint {
-	f := filepath.Join(p, "index.html")
+func fromPath(opts *Options) *website {
+	f := filepath.Join(opts.path, "index.html")
 	b, err := ioutil.ReadFile(f)
 	if err != nil {
 		panic(err)
 	}
 	return &website{
-		fs:    http.Dir(p),
-		templ: mustCreateTemplate(string(b)),
+		fs:   http.Dir(opts.path),
+		tmpl: mustCreateTemplate(string(b)),
+		opts: opts,
 	}
 }
 
 type website struct {
-	fs    http.FileSystem
-	templ *template.Template
+	opts *Options
+	fs   http.FileSystem
+	tmpl *template.Template
 }
 
 func (w *website) Register(mux *httptreemux.ContextMux) {
@@ -72,14 +82,19 @@ func (w *website) handleIndex(rw http.ResponseWriter, r *http.Request) {
 			user.Login,
 		).Sign(user.Hash)
 	}
+	var syncing bool
+	if user != nil {
+		syncing = time.Unix(user.Synced, 0).Add(w.opts.sync).Before(time.Now())
+	}
 	params := map[string]interface{}{
 		"user":    user,
 		"csrf":    csrf,
+		"syncing": syncing,
 		"version": version.Version.String(),
 	}
 	rw.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
-	w.templ.Execute(rw, params)
+	w.tmpl.Execute(rw, params)
 }
 
 func setupCache(h http.Handler) http.Handler {
