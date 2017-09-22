@@ -91,8 +91,18 @@ func (e *engine) Tail(s *backend.Step) (io.ReadCloser, error) {
 
 // Destroy the pipeline environment.
 func (e *engine) Destroy(c *backend.Config) error {
+	var gracePeriodSeconds int64 = 0 // immediately
 
-	// delete job
+	for _, stage := range c.Stages {
+		for _, step := range stage.Steps {
+			e.client.CoreV1().Pods("default").Delete(step.Name, &metaV1.DeleteOptions{
+				GracePeriodSeconds: &gracePeriodSeconds,
+				PropagationPolicy:  &metaV1.DeletePropagationBackground,
+			})
+		}
+	}
+
+	// Delete PVC
 
 	return nil
 }
