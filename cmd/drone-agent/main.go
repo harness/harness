@@ -40,6 +40,11 @@ func main() {
 			Usage:  "enable pretty-printed debug output",
 		},
 		cli.StringFlag{
+			EnvVar: "DRONE_ENGINE",
+			Name:   "engine",
+			Value:  "docker",
+		},
+		cli.StringFlag{
 			EnvVar: "DRONE_FILTER",
 			Name:   "filter",
 			Usage:  "filter expression used to restrict builds by label",
@@ -52,6 +57,14 @@ func main() {
 		cli.StringFlag{
 			EnvVar: "DRONE_HOSTNAME,HOSTNAME",
 			Name:   "hostname",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_KUBERNETES_CONFIG",
+			Name:   "kubernetes-config",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_KUBERNETES_ENDPOINT",
+			Name:   "kubernetes-endpoint",
 		},
 		cli.IntFlag{
 			EnvVar: "DRONE_MAX_PROCS",
