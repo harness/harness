@@ -4,8 +4,10 @@ import (
 	"io"
 
 	"github.com/cncd/pipeline/pipeline/backend"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/api/core/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -53,9 +55,9 @@ func (e *engine) Exec(s *backend.Step) error {
 func (e *engine) Kill(s *backend.Step) error {
 	var gracePeriodSeconds int64 = 5
 
-	return e.client.CoreV1().Pods("default").Delete(s.Name, &v1.DeleteOptions{
+	return e.client.CoreV1().Pods("default").Delete(s.Name, &metaV1.DeleteOptions{
 		GracePeriodSeconds: &gracePeriodSeconds,
-		PropagationPolicy:  &v1.DeletePropagationBackground,
+		PropagationPolicy:  &metaV1.DeletePropagationBackground,
 	})
 }
 
@@ -71,11 +73,20 @@ func (e *engine) Wait(s *backend.Step) (*backend.State, error) {
 
 // Tail the pipeline step logs.
 func (e *engine) Tail(s *backend.Step) (io.ReadCloser, error) {
+	pod, err := e.client.CoreV1().Pods("default").Get(s.Name, metaV1.GetOptions{
+		IncludeUninitialized: true,
+	})
+	if err != nil {
+		return nil, err
+	}
 
-	// watch container logs
-
-	return nil, nil
-
+	return e.client.CoreV1().RESTClient().Get().
+		Namespace("default").
+		Name(pod.Name).
+		Resource("pods").
+		SubResource("log").
+		VersionedParams(&v1.PodLogOptions{}, scheme.ParameterCodec).
+		Stream()
 }
 
 // Destroy the pipeline environment.
