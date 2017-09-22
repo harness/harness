@@ -28,39 +28,57 @@ func New(endpoint string, kubeconfigPath string) (backend.Engine, error) {
 }
 
 // Setup the pipeline environment.
-func (e *engine) Setup(*backend.Config) error {
-	// POST /api/v1/namespaces
+func (e *engine) Setup(c *backend.Config) error {
+
+	// Create PVC
+
 	return nil
 }
 
 // Start the pipeline step.
-func (e *engine) Exec(*backend.Step) error {
-	// POST /api/v1/namespaces/{namespace}/pods
+func (e *engine) Exec(s *backend.Step) error {
+
+	// create job
+	//		bind volumes
+	//		set image
+	//		set entrypoint
+	//		set command
+
 	return nil
 }
 
 // DEPRECATED
 // Kill the pipeline step.
-func (e *engine) Kill(*backend.Step) error {
+func (e *engine) Kill(s *backend.Step) error {
+
+	// delete job
+
 	return nil
 }
 
 // Wait for the pipeline step to complete and returns
 // the completion results.
-func (e *engine) Wait(*backend.Step) (*backend.State, error) {
-	// GET /api/v1/watch/namespaces/{namespace}/pods
-	// GET /api/v1/watch/namespaces/{namespace}/pods/{name}
+func (e *engine) Wait(s *backend.Step) (*backend.State, error) {
+
+	// watch job
+	//	onComplete, build state and return
+
 	return nil, nil
 }
 
 // Tail the pipeline step logs.
-func (e *engine) Tail(*backend.Step) (io.ReadCloser, error) {
-	// GET /api/v1/namespaces/{namespace}/pods/{name}/log
+func (e *engine) Tail(s *backend.Step) (io.ReadCloser, error) {
+
+	// watch container logs
+
 	return nil, nil
+
 }
 
 // Destroy the pipeline environment.
-func (e *engine) Destroy(*backend.Config) error {
-	// DELETE /api/v1/namespaces/{name}
+func (e *engine) Destroy(c *backend.Config) error {
+
+	// delete job
+
 	return nil
 }
