@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/cncd/pipeline/pipeline/backend"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -50,10 +51,12 @@ func (e *engine) Exec(s *backend.Step) error {
 // DEPRECATED
 // Kill the pipeline step.
 func (e *engine) Kill(s *backend.Step) error {
+	var gracePeriodSeconds int64 = 5
 
-	// delete job
-
-	return nil
+	return e.client.CoreV1().Pods("default").Delete(s.Name, &v1.DeleteOptions{
+		GracePeriodSeconds: &gracePeriodSeconds,
+		PropagationPolicy:  &v1.DeletePropagationBackground,
+	})
 }
 
 // Wait for the pipeline step to complete and returns
