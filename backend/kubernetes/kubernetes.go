@@ -3,12 +3,16 @@ package kubernetes
 import (
 	"io"
 	"strings"
+	"time"
 
 	"github.com/cncd/pipeline/pipeline/backend"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -67,9 +71,9 @@ func (e *engine) Exec(s *backend.Step) error {
 				},
 			},
 			RestartPolicy: v1.RestartPolicyNever,
-			NodeSelector: map[string]string{
-				"key": "value",
-			},
+			// NodeSelector: map[string]string{
+			// 	"key": "value",
+			// },
 		},
 	})
 	if err != nil {
@@ -86,7 +90,7 @@ func (e *engine) Kill(s *backend.Step) error {
 
 	dpb := metav1.DeletePropagationBackground
 
-	return e.client.CoreV1().Pods("default").Delete(s.Name, &metav1.DeleteOptions{
+	return e.client.CoreV1().Pods("default").Delete(dnsName(s.Name), &metav1.DeleteOptions{
 		GracePeriodSeconds: &gracePeriodSeconds,
 		PropagationPolicy:  &dpb,
 	})
@@ -96,27 +100,73 @@ func (e *engine) Kill(s *backend.Step) error {
 // the completion results.
 func (e *engine) Wait(s *backend.Step) (*backend.State, error) {
 
-	// watch job
-	//	onComplete, build state and return
+	finished := make(chan bool)
 
-	return nil, nil
-}
+	var podUpdated = func(old interface{}, new interface{}) {
+		pod := new.(*v1.Pod)
+		if pod.Name == dnsName(s.Name) {
+			switch pod.Status.Phase {
+			case v1.PodSucceeded, v1.PodFailed:
+				finished <- true
+			}
+		}
+	}
 
-// Tail the pipeline step logs.
-func (e *engine) Tail(s *backend.Step) (io.ReadCloser, error) {
-	pod, err := e.client.CoreV1().Pods("default").Get(s.Name, metav1.GetOptions{
+	resyncPeriod := 5 * time.Minute
+	si := informers.NewSharedInformerFactory(e.client, resyncPeriod)
+	si.Core().V1().Pods().Informer().AddEventHandler(
+		cache.ResourceEventHandlerFuncs{
+			UpdateFunc: podUpdated,
+		},
+	)
+	si.Start(wait.NeverStop)
+
+	<-finished
+
+	pod, err := e.client.CoreV1().Pods("default").Get(dnsName(s.Name), metav1.GetOptions{
 		IncludeUninitialized: true,
 	})
 	if err != nil {
 		return nil, err
 	}
 
+	bs := &backend.State{
+		ExitCode:  int(pod.Status.ContainerStatuses[0].State.Terminated.ExitCode),
+		Exited:    true,
+		OOMKilled: false,
+	}
+
+	return bs, nil
+}
+
+// Tail the pipeline step logs.
+func (e *engine) Tail(s *backend.Step) (io.ReadCloser, error) {
+
+	var podReady = false
+
+	for !podReady {
+		pod, err := e.client.CoreV1().Pods("default").Get(dnsName(s.Name), metav1.GetOptions{
+			IncludeUninitialized: true,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		switch pod.Status.Phase {
+		case v1.PodPending, v1.PodUnknown:
+		default:
+			podReady = true
+		}
+	}
+
 	return e.client.CoreV1().RESTClient().Get().
 		Namespace("default").
-		Name(pod.Name).
+		Name(dnsName(s.Name)).
 		Resource("pods").
 		SubResource("log").
-		VersionedParams(&v1.PodLogOptions{}, scheme.ParameterCodec).
+		VersionedParams(&v1.PodLogOptions{
+			Follow: true,
+		}, scheme.ParameterCodec).
 		Stream()
 }
 
@@ -128,7 +178,7 @@ func (e *engine) Destroy(c *backend.Config) error {
 
 	for _, stage := range c.Stages {
 		for _, step := range stage.Steps {
-			e.client.CoreV1().Pods("default").Delete(step.Name, &metav1.DeleteOptions{
+			e.client.CoreV1().Pods("default").Delete(dnsName(step.Name), &metav1.DeleteOptions{
 				GracePeriodSeconds: &gracePeriodSeconds,
 				PropagationPolicy:  &dpb,
 			})
