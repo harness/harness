@@ -164,25 +164,33 @@ func (e *engine) Wait(s *backend.Step) (*backend.State, error) {
 
 // Tail the pipeline step logs.
 func (e *engine) Tail(s *backend.Step) (io.ReadCloser, error) {
-	var podReady = false
 
-	for !podReady {
-		pod, err := e.client.
-			CoreV1().
-			Pods(e.namespace).
-			Get(dnsName(s.Name), metav1.GetOptions{
-				IncludeUninitialized: true,
-			})
-		if err != nil {
-			return nil, err
-		}
+	up := make(chan bool)
 
-		switch pod.Status.Phase {
-		case v1.PodPending, v1.PodUnknown:
-		default:
-			podReady = true
+	var podUpdated = func(old interface{}, new interface{}) {
+		pod := new.(*v1.Pod)
+		if pod.Name == dnsName(s.Name) {
+			switch pod.Status.Phase {
+			case v1.PodRunning, v1.PodSucceeded, v1.PodFailed:
+				up <- true
+			}
 		}
 	}
+
+	resyncPeriod := 5 * time.Minute
+	si := informers.NewSharedInformerFactory(e.client, resyncPeriod)
+	si.Core().
+		V1().
+		Pods().
+		Informer().
+		AddEventHandler(
+			cache.ResourceEventHandlerFuncs{
+				UpdateFunc: podUpdated,
+			},
+		)
+	si.Start(wait.NeverStop)
+
+	<-up
 
 	return e.client.CoreV1().RESTClient().Get().
 		Namespace(e.namespace).
