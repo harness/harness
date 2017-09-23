@@ -254,7 +254,12 @@ func (e *engine) Destroy(c *backend.Config) error {
 		}
 	}
 
-	// Delete PVC
+	err := e.client.Core().
+		PersistentVolumeClaims(v1.NamespaceDefault).
+		Delete(volumeName(c.Volumes[0].Name), &metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
