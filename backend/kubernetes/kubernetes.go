@@ -7,6 +7,7 @@ import (
 
 	"github.com/cncd/pipeline/pipeline/backend"
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
@@ -19,7 +20,7 @@ import (
 type engine struct {
 	client       *kubernetes.Clientset
 	namespace    string
-	stroageClass string
+	storageClass string
 }
 
 // New returns a new Kubernetes Engine.
@@ -37,7 +38,7 @@ func New(endpoint, kubeconfigPath, namespace, storageClass string) (backend.Engi
 	return &engine{
 		client:       client,
 		namespace:    namespace,
-		stroageClass: storageClass,
+		storageClass: storageClass,
 	}, nil
 }
 
@@ -45,21 +46,40 @@ func New(endpoint, kubeconfigPath, namespace, storageClass string) (backend.Engi
 func (e *engine) Setup(c *backend.Config) error {
 
 	// Create PVC
-	e.client.Core().
+	_, err := e.client.Core().
 		PersistentVolumeClaims(v1.NamespaceDefault).
 		Create(&v1.PersistentVolumeClaim{
-			Name:      c.Volumes[0].Name,
-			Namespace: v1.NamespaceDefault,
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      volumeName(c.Volumes[0].Name),
+				Namespace: v1.NamespaceDefault,
+			},
 			Spec: v1.PersistentVolumeClaimSpec{
-				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteMany},
+				AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+				StorageClassName: &e.storageClass,
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceStorage: resource.MustParse("1G"),
+					},
+				},
 			},
 		})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 // Start the pipeline step.
 func (e *engine) Exec(s *backend.Step) error {
+
+	workingDir := s.WorkingDir
+
+	switch s.Alias {
+	case "clone":
+		workingDir = volumeMountPath(s.Volumes[0])
+	}
+
 	_, err := e.client.
 		Core().
 		Pods(metav1.NamespaceDefault).
@@ -73,18 +93,31 @@ func (e *engine) Exec(s *backend.Step) error {
 				},
 			},
 			Spec: v1.PodSpec{
-				// Volumes: []v1.Volume{
-				// 	v1.Volume{},
-				// },
+				Volumes: []v1.Volume{
+					v1.Volume{
+						Name: volumeName(s.Volumes[0]),
+						VolumeSource: v1.VolumeSource{
+							PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+								ClaimName: volumeName(s.Volumes[0]),
+								ReadOnly:  false,
+							},
+						},
+					},
+				},
 				Containers: []v1.Container{
 					v1.Container{
 						Name:       s.Alias,
 						Image:      s.Image,
 						Command:    s.Entrypoint,
 						Args:       s.Command,
-						WorkingDir: s.WorkingDir,
+						WorkingDir: workingDir,
 						Env:        mapToEnvVars(s.Environment),
-						//VolumeMounts: []v1.VolumeMount{},
+						VolumeMounts: []v1.VolumeMount{
+							v1.VolumeMount{
+								Name:      volumeName(s.Volumes[0]),
+								MountPath: volumeMountPath(s.Volumes[0]),
+							},
+						},
 					},
 				},
 				RestartPolicy: v1.RestartPolicyNever,
@@ -239,4 +272,12 @@ func mapToEnvVars(m map[string]string) []v1.EnvVar {
 
 func dnsName(i string) string {
 	return strings.Replace(i, "_", "-", -1)
+}
+
+func volumeName(i string) string {
+	return dnsName(strings.Split(i, ":")[0])
+}
+
+func volumeMountPath(i string) string {
+	return strings.Split(i, ":")[1]
 }
