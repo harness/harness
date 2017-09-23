@@ -45,43 +45,54 @@ func New(endpoint, kubeconfigPath, namespace, storageClass string) (backend.Engi
 func (e *engine) Setup(c *backend.Config) error {
 
 	// Create PVC
+	e.client.Core().
+		PersistentVolumeClaims(v1.NamespaceDefault).
+		Create(&v1.PersistentVolumeClaim{
+			Name:      c.Volumes[0].Name,
+			Namespace: v1.NamespaceDefault,
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteMany},
+			},
+		})
 
 	return nil
 }
 
 // Start the pipeline step.
 func (e *engine) Exec(s *backend.Step) error {
-
-	_, err := e.client.Core().Pods(metav1.NamespaceDefault).Create(&v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      dnsName(s.Name),
-			Namespace: metav1.NamespaceDefault,
-			Labels:    s.Labels,
-			Annotations: map[string]string{
-				"key": "value",
-			},
-		},
-		Spec: v1.PodSpec{
-			// Volumes: []v1.Volume{
-			// 	v1.Volume{},
-			// },
-			Containers: []v1.Container{
-				v1.Container{
-					Name:       s.Alias,
-					Image:      s.Image,
-					Command:    s.Entrypoint,
-					Args:       s.Command,
-					WorkingDir: s.WorkingDir,
-					Env:        mapToEnvVars(s.Environment),
-					//VolumeMounts: []v1.VolumeMount{},
+	_, err := e.client.
+		Core().
+		Pods(metav1.NamespaceDefault).
+		Create(&v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      dnsName(s.Name),
+				Namespace: metav1.NamespaceDefault,
+				Labels:    s.Labels,
+				Annotations: map[string]string{
+					"key": "value",
 				},
 			},
-			RestartPolicy: v1.RestartPolicyNever,
-			// NodeSelector: map[string]string{
-			// 	"key": "value",
-			// },
-		},
-	})
+			Spec: v1.PodSpec{
+				// Volumes: []v1.Volume{
+				// 	v1.Volume{},
+				// },
+				Containers: []v1.Container{
+					v1.Container{
+						Name:       s.Alias,
+						Image:      s.Image,
+						Command:    s.Entrypoint,
+						Args:       s.Command,
+						WorkingDir: s.WorkingDir,
+						Env:        mapToEnvVars(s.Environment),
+						//VolumeMounts: []v1.VolumeMount{},
+					},
+				},
+				RestartPolicy: v1.RestartPolicyNever,
+				// NodeSelector: map[string]string{
+				// 	"key": "value",
+				// },
+			},
+		})
 	if err != nil {
 		return err
 	}
@@ -96,16 +107,18 @@ func (e *engine) Kill(s *backend.Step) error {
 
 	dpb := metav1.DeletePropagationBackground
 
-	return e.client.CoreV1().Pods(e.namespace).Delete(dnsName(s.Name), &metav1.DeleteOptions{
-		GracePeriodSeconds: &gracePeriodSeconds,
-		PropagationPolicy:  &dpb,
-	})
+	return e.client.
+		CoreV1().
+		Pods(e.namespace).
+		Delete(dnsName(s.Name), &metav1.DeleteOptions{
+			GracePeriodSeconds: &gracePeriodSeconds,
+			PropagationPolicy:  &dpb,
+		})
 }
 
 // Wait for the pipeline step to complete and returns
 // the completion results.
 func (e *engine) Wait(s *backend.Step) (*backend.State, error) {
-
 	finished := make(chan bool)
 
 	var podUpdated = func(old interface{}, new interface{}) {
@@ -120,11 +133,15 @@ func (e *engine) Wait(s *backend.Step) (*backend.State, error) {
 
 	resyncPeriod := 5 * time.Minute
 	si := informers.NewSharedInformerFactory(e.client, resyncPeriod)
-	si.Core().V1().Pods().Informer().AddEventHandler(
-		cache.ResourceEventHandlerFuncs{
-			UpdateFunc: podUpdated,
-		},
-	)
+	si.Core().
+		V1().
+		Pods().
+		Informer().
+		AddEventHandler(
+			cache.ResourceEventHandlerFuncs{
+				UpdateFunc: podUpdated,
+			},
+		)
 	si.Start(wait.NeverStop)
 
 	<-finished
@@ -147,13 +164,15 @@ func (e *engine) Wait(s *backend.Step) (*backend.State, error) {
 
 // Tail the pipeline step logs.
 func (e *engine) Tail(s *backend.Step) (io.ReadCloser, error) {
-
 	var podReady = false
 
 	for !podReady {
-		pod, err := e.client.CoreV1().Pods(e.namespace).Get(dnsName(s.Name), metav1.GetOptions{
-			IncludeUninitialized: true,
-		})
+		pod, err := e.client.
+			CoreV1().
+			Pods(e.namespace).
+			Get(dnsName(s.Name), metav1.GetOptions{
+				IncludeUninitialized: true,
+			})
 		if err != nil {
 			return nil, err
 		}
@@ -184,10 +203,13 @@ func (e *engine) Destroy(c *backend.Config) error {
 
 	for _, stage := range c.Stages {
 		for _, step := range stage.Steps {
-			e.client.CoreV1().Pods(e.namespace).Delete(dnsName(step.Name), &metav1.DeleteOptions{
-				GracePeriodSeconds: &gracePeriodSeconds,
-				PropagationPolicy:  &dpb,
-			})
+			e.client.
+				CoreV1().
+				Pods(e.namespace).
+				Delete(dnsName(step.Name), &metav1.DeleteOptions{
+					GracePeriodSeconds: &gracePeriodSeconds,
+					PropagationPolicy:  &dpb,
+				})
 		}
 	}
 
@@ -197,18 +219,14 @@ func (e *engine) Destroy(c *backend.Config) error {
 }
 
 func mapToEnvVars(m map[string]string) []v1.EnvVar {
-
 	var ev []v1.EnvVar
-
 	for k, v := range m {
 		ev = append(ev, v1.EnvVar{
 			Name:  k,
 			Value: v,
 		})
 	}
-
 	return ev
-
 }
 
 func dnsName(i string) string {
