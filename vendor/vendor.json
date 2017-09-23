@@ -205,16 +205,22 @@
 			"revisionTime": "2017-03-05T07:05:34Z"
 		},
 		{
+			"checksumSHA1": "oS7snHl/ase15PYFvAMOH8kUHzs=",
+			"path": "github.com/cncd/pipeline",
+			"revision": "13517c07ce61fc96635bda3326923119a642be44",
+			"revisionTime": "2017-09-23T11:04:47Z"
+		},
+		{
 			"checksumSHA1": "W3AuK8ocqHwlUajGmQLFvnRhTZE=",
 			"path": "github.com/cncd/pipeline/pipeline",
 			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
 			"revisionTime": "2017-09-14T17:45:32Z"
 		},
 		{
-			"checksumSHA1": "gc+efbEPGdecp6I2ezd6J3+UL3o=",
+			"checksumSHA1": "Swnn2g3JKo72svO5OJ+eTpDrjPA=",
 			"path": "github.com/cncd/pipeline/pipeline/backend",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "13517c07ce61fc96635bda3326923119a642be44",
+			"revisionTime": "2017-09-23T11:04:47Z"
 		},
 		{
 			"checksumSHA1": "IIuOItGMhYP6kLtlZWYBO+liSx4=",
