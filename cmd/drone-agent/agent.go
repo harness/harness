@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -11,21 +12,20 @@ import (
 	"sync"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-
 	"github.com/cncd/pipeline/pipeline"
 	"github.com/cncd/pipeline/pipeline/backend"
 	"github.com/cncd/pipeline/pipeline/backend/docker"
 	"github.com/cncd/pipeline/pipeline/multipart"
 	"github.com/cncd/pipeline/pipeline/rpc"
-
+	"github.com/drone/drone/backend/kubernetes"
 	"github.com/drone/signal"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
 	oldcontext "golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 func loop(c *cli.Context) error {
@@ -94,6 +94,30 @@ func loop(c *cli.Context) error {
 		sigterm.Set()
 	})
 
+	var engine backend.Engine
+
+	engineName := c.String("engine")
+	switch engineName {
+	case "kubernetes":
+		endpoint := c.String("kubernetes-endpoint")
+		kubeconfig := c.String("kubernetes-config")
+		namespace := c.String("kubernetes-namespace")
+		storageClass := c.String("kubernetes-storage-class")
+
+		engine, err = kubernetes.New(endpoint, kubeconfig, namespace, storageClass)
+		if err != nil {
+			return err
+		}
+	case "docker":
+		// new docker engine
+		engine, err = docker.NewEnv()
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("can't find engine called: %s", engineName)
+	}
+
 	var wg sync.WaitGroup
 	parallel := c.Int("max-procs")
 	wg.Add(parallel)
@@ -109,6 +133,7 @@ func loop(c *cli.Context) error {
 					client:   client,
 					filter:   filter,
 					hostname: hostname,
+					engine:   engine,
 				}
 				if err := r.run(ctx); err != nil {
 					log.Error().Err(err).Msg("pipeline done with error")
@@ -134,6 +159,7 @@ type runner struct {
 	client   rpc.Peer
 	filter   rpc.Filter
 	hostname string
+	engine   backend.Engine
 }
 
 func (r *runner) run(ctx context.Context) error {
@@ -173,16 +199,6 @@ func (r *runner) run(ctx context.Context) error {
 
 	logger.Debug().
 		Msg("received execution")
-
-	// new docker engine
-	engine, err := docker.NewEnv()
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Msg("cannot create docker client")
-
-		return err
-	}
 
 	ctx, cancel := context.WithTimeout(ctxmeta, timeout)
 	defer cancel()
@@ -390,7 +406,7 @@ func (r *runner) run(ctx context.Context) error {
 		pipeline.WithContext(ctx),
 		pipeline.WithLogger(defaultLogger),
 		pipeline.WithTracer(defaultTracer),
-		pipeline.WithEngine(engine),
+		pipeline.WithEngine(r.engine),
 	).Run()
 
 	state.Finished = time.Now().Unix()

@@ -24,6 +24,72 @@ func main() {
 		},
 	}
 	app.Flags = []cli.Flag{
+		cli.BoolTFlag{
+			EnvVar: "DRONE_DEBUG",
+			Name:   "debug",
+			Usage:  "start the agent in debug mode",
+		},
+		cli.BoolTFlag{
+			EnvVar: "DRONE_DEBUG_NOCOLOR",
+			Name:   "nocolor",
+			Usage:  "disable colored debug output",
+		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_DEBUG_PRETTY",
+			Name:   "pretty",
+			Usage:  "enable pretty-printed debug output",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_ENGINE",
+			Name:   "engine",
+			Value:  "docker",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_FILTER",
+			Name:   "filter",
+			Usage:  "filter expression used to restrict builds by label",
+		},
+		cli.BoolTFlag{
+			EnvVar: "DRONE_HEALTHCHECK",
+			Name:   "healthcheck",
+			Usage:  "enables the healthcheck endpoint",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_HOSTNAME,HOSTNAME",
+			Name:   "hostname",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_KUBERNETES_CONFIG",
+			Name:   "kubernetes-config",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_KUBERNETES_ENDPOINT",
+			Name:   "kubernetes-endpoint",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_KUBERNETES_NAMESPACE",
+			Name:   "kubernetes-namespace",
+			Value:  "default",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_KUBERNETES_STORAGE_CLASS",
+			Name:   "kubernetes-storage-class",
+		},
+		cli.IntFlag{
+			EnvVar: "DRONE_MAX_PROCS",
+			Name:   "max-procs",
+			Value:  1,
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_PASSWORD,DRONE_SECRET",
+			Name:   "password",
+			Usage:  "drone auth password",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_PLATFORM",
+			Name:   "platform",
+			Value:  "linux/amd64",
+		},
 		cli.StringFlag{
 			EnvVar: "DRONE_SERVER",
 			Name:   "server",
@@ -35,50 +101,6 @@ func main() {
 			Name:   "username",
 			Usage:  "drone auth username",
 			Value:  "x-oauth-basic",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_PASSWORD,DRONE_SECRET",
-			Name:   "password",
-			Usage:  "drone auth password",
-		},
-		cli.BoolTFlag{
-			EnvVar: "DRONE_DEBUG",
-			Name:   "debug",
-			Usage:  "start the agent in debug mode",
-		},
-		cli.BoolFlag{
-			EnvVar: "DRONE_DEBUG_PRETTY",
-			Name:   "pretty",
-			Usage:  "enable pretty-printed debug output",
-		},
-		cli.BoolTFlag{
-			EnvVar: "DRONE_DEBUG_NOCOLOR",
-			Name:   "nocolor",
-			Usage:  "disable colored debug output",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_HOSTNAME,HOSTNAME",
-			Name:   "hostname",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_PLATFORM",
-			Name:   "platform",
-			Value:  "linux/amd64",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_FILTER",
-			Name:   "filter",
-			Usage:  "filter expression used to restrict builds by label",
-		},
-		cli.IntFlag{
-			EnvVar: "DRONE_MAX_PROCS",
-			Name:   "max-procs",
-			Value:  1,
-		},
-		cli.BoolTFlag{
-			EnvVar: "DRONE_HEALTHCHECK",
-			Name:   "healthcheck",
-			Usage:  "enables the healthcheck endpoint",
 		},
 	}
 
