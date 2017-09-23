@@ -101,7 +101,10 @@ func loop(c *cli.Context) error {
 	case "kubernetes":
 		endpoint := c.String("kubernetes-endpoint")
 		kubeconfig := c.String("kubernetes-config")
-		engine, err = kubernetes.New(endpoint, kubeconfig)
+		namespace := c.String("kubernetes-namespace")
+		storageClass := c.String("kubernetes-storage-class")
+
+		engine, err = kubernetes.New(endpoint, kubeconfig, namespace, storageClass)
 		if err != nil {
 			return err
 		}

@@ -17,11 +17,13 @@ import (
 )
 
 type engine struct {
-	client *kubernetes.Clientset
+	client       *kubernetes.Clientset
+	namespace    string
+	stroageClass string
 }
 
 // New returns a new Kubernetes Engine.
-func New(endpoint string, kubeconfigPath string) (backend.Engine, error) {
+func New(endpoint, kubeconfigPath, namespace, storageClass string) (backend.Engine, error) {
 	config, err := clientcmd.BuildConfigFromFlags(endpoint, kubeconfigPath)
 	if err != nil {
 		return nil, err
@@ -32,7 +34,11 @@ func New(endpoint string, kubeconfigPath string) (backend.Engine, error) {
 		return nil, err
 	}
 
-	return &engine{client: client}, nil
+	return &engine{
+		client:       client,
+		namespace:    namespace,
+		stroageClass: storageClass,
+	}, nil
 }
 
 // Setup the pipeline environment.
@@ -90,7 +96,7 @@ func (e *engine) Kill(s *backend.Step) error {
 
 	dpb := metav1.DeletePropagationBackground
 
-	return e.client.CoreV1().Pods("default").Delete(dnsName(s.Name), &metav1.DeleteOptions{
+	return e.client.CoreV1().Pods(e.namespace).Delete(dnsName(s.Name), &metav1.DeleteOptions{
 		GracePeriodSeconds: &gracePeriodSeconds,
 		PropagationPolicy:  &dpb,
 	})
@@ -123,7 +129,7 @@ func (e *engine) Wait(s *backend.Step) (*backend.State, error) {
 
 	<-finished
 
-	pod, err := e.client.CoreV1().Pods("default").Get(dnsName(s.Name), metav1.GetOptions{
+	pod, err := e.client.CoreV1().Pods(e.namespace).Get(dnsName(s.Name), metav1.GetOptions{
 		IncludeUninitialized: true,
 	})
 	if err != nil {
@@ -145,7 +151,7 @@ func (e *engine) Tail(s *backend.Step) (io.ReadCloser, error) {
 	var podReady = false
 
 	for !podReady {
-		pod, err := e.client.CoreV1().Pods("default").Get(dnsName(s.Name), metav1.GetOptions{
+		pod, err := e.client.CoreV1().Pods(e.namespace).Get(dnsName(s.Name), metav1.GetOptions{
 			IncludeUninitialized: true,
 		})
 		if err != nil {
@@ -160,7 +166,7 @@ func (e *engine) Tail(s *backend.Step) (io.ReadCloser, error) {
 	}
 
 	return e.client.CoreV1().RESTClient().Get().
-		Namespace("default").
+		Namespace(e.namespace).
 		Name(dnsName(s.Name)).
 		Resource("pods").
 		SubResource("log").
@@ -178,7 +184,7 @@ func (e *engine) Destroy(c *backend.Config) error {
 
 	for _, stage := range c.Stages {
 		for _, step := range stage.Steps {
-			e.client.CoreV1().Pods("default").Delete(dnsName(step.Name), &metav1.DeleteOptions{
+			e.client.CoreV1().Pods(e.namespace).Delete(dnsName(step.Name), &metav1.DeleteOptions{
 				GracePeriodSeconds: &gracePeriodSeconds,
 				PropagationPolicy:  &dpb,
 			})

@@ -66,6 +66,15 @@ func main() {
 			EnvVar: "DRONE_KUBERNETES_ENDPOINT",
 			Name:   "kubernetes-endpoint",
 		},
+		cli.StringFlag{
+			EnvVar: "DRONE_KUBERNETES_NAMESPACE",
+			Name:   "kubernetes-namespace",
+			Value:  "default",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_KUBERNETES_STORAGE_CLASS",
+			Name:   "kubernetes-storage-class",
+		},
 		cli.IntFlag{
 			EnvVar: "DRONE_MAX_PROCS",
 			Name:   "max-procs",
