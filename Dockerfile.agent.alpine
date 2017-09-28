@@ -1,6 +1,7 @@
-# docker build --rm -f Dockerfile.agent -t drone/agent .
+FROM alpine:3.6
 
-FROM drone/ca-certs
+RUN apk add -U --no-cache ca-certificates && rm -rf /var/cache/apk/*
+
 ENV GODEBUG=netdns=go
 ADD release/drone-agent /bin/
 
@@ -8,3 +9,4 @@ EXPOSE 3000
 HEALTHCHECK CMD ["/bin/drone-agent", "ping"]
 
 ENTRYPOINT ["/bin/drone-agent"]
+
