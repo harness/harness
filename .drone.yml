@@ -40,6 +40,7 @@ pipeline:
   publish_server_alpine:
     image: plugins/docker
     repo: drone/drone
+    dockerfile: Dockerfile.alpine
     secrets: [ docker_username, docker_password ]
     tag: [ alpine ]
     when:
@@ -94,6 +95,24 @@ pipeline:
     when:
       branch: master
       event: push
+
+  release_server_alpine:
+    image: plugins/docker
+    repo: drone/drone
+    dockerfile: Dockerfile.alpine
+    secrets: [ docker_username, docker_password ]
+    tag: [ 0.8-alpine ]
+    when:
+      event: tag
+
+  release_agent_alpine:
+    image: plugins/docker
+    repo: drone/agent
+    dockerfile: Dockerfile.agent.alpine
+    secrets: [ docker_username, docker_password ]
+    tag: [ 0.8-alpine ]
+    when:
+      event: tag
 
   release_server:
     image: plugins/docker

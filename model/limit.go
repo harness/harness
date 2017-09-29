@@ -6,6 +6,7 @@ package model
 type Limiter interface {
 	LimitUser(*User) error
 	LimitRepo(*User, *Repo) error
+	LimitRepos(*User, []*Repo) []*Repo
 	LimitBuild(*User, *Repo, *Build) error
 }
 
@@ -18,6 +19,9 @@ func (NoLimit) LimitUser(*User) error { return nil }
 
 // LimitRepo is a no-op for limiting repo creation.
 func (NoLimit) LimitRepo(*User, *Repo) error { return nil }
+
+// LimitRepos is a no-op for limiting repository listings.
+func (NoLimit) LimitRepos(user *User, repos []*Repo) []*Repo { return repos }
 
 // LimitBuild is a no-op for limiting build creation.
 func (NoLimit) LimitBuild(*User, *Repo, *Build) error { return nil }
