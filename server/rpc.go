@@ -184,6 +184,10 @@ func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
 		proc.State = model.StatusRunning
 	}
 
+	if proc.Started == 0 && proc.Stopped != 0 {
+		proc.Started = build.Started
+	}
+
 	if err := s.store.ProcUpdate(proc); err != nil {
 		log.Printf("error: rpc.update: cannot update proc: %s", err)
 	}
