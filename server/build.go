@@ -474,6 +474,16 @@ func PostBuild(c *gin.Context) {
 		return
 	}
 
+	switch build.Status {
+	case model.StatusPending,
+		model.StatusRunning,
+		model.StatusDeclined,
+		model.StatusBlocked,
+		model.StatusError:
+		c.String(500, "cannot restart a build with status %s", build.Status)
+		return
+	}
+
 	// if the remote has a refresh token, the current access token
 	// may be stale. Therefore, we should refresh prior to dispatching
 	// the job.

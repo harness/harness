@@ -176,9 +176,16 @@ func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
 		if state.ExitCode != 0 || state.Error != "" {
 			proc.State = model.StatusFailure
 		}
+		if state.ExitCode == 137 {
+			proc.State = model.StatusKilled
+		}
 	} else {
 		proc.Started = state.Started
 		proc.State = model.StatusRunning
+	}
+
+	if proc.Started == 0 && proc.Stopped != 0 {
+		proc.Started = build.Started
 	}
 
 	if err := s.store.ProcUpdate(proc); err != nil {

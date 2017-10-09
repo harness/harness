@@ -169,6 +169,9 @@ func Load(mux *httptreemux.ContextMux, middleware ...gin.HandlerFunc) http.Handl
 		)
 	}
 
+	e.GET("/version", server.Version)
+	e.GET("/healthz", server.Health)
+
 	return e
 }
 

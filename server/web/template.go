@@ -68,6 +68,7 @@ const partials = `
 {{ if .user }}
 <script>
 	window.DRONE_USER = {{ json .user }};
+	window.DRONE_SYNC = {{ .syncing }};
 </script>
 {{ end }}
 {{end}}
@@ -82,5 +83,13 @@ const partials = `
 
 {{define "version"}}
 	<meta name="version" content="{{ .version }}">
+{{end}}
+
+{{define "docs"}}
+{{ if .docs -}}
+<script>
+	window.DRONE_DOCS = "{{ .docs }}"
+</script>
+{{- end }}
 {{end}}
 `
