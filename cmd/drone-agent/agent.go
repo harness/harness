@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 	"sync"
@@ -16,10 +17,10 @@ import (
 	"github.com/cncd/pipeline/pipeline"
 	"github.com/cncd/pipeline/pipeline/backend"
 	"github.com/cncd/pipeline/pipeline/backend/docker"
-	"github.com/cncd/pipeline/pipeline/interrupt"
 	"github.com/cncd/pipeline/pipeline/multipart"
 	"github.com/cncd/pipeline/pipeline/rpc"
 
+	"github.com/drone/signal"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/tevino/abool"
@@ -32,6 +33,7 @@ func loop(c *cli.Context) error {
 		Labels: map[string]string{
 			"platform": c.String("platform"),
 		},
+		Expr: c.String("drone-filter"),
 	}
 
 	hostname := c.String("hostname")
@@ -43,6 +45,22 @@ func loop(c *cli.Context) error {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	} else {
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	}
+
+	if c.Bool("pretty") {
+		log.Logger = log.Output(
+			zerolog.ConsoleWriter{
+				Out:     os.Stderr,
+				NoColor: c.BoolT("nocolor"),
+			},
+		)
+	}
+
+	counter.Polling = c.Int("max-procs")
+	counter.Running = 0
+
+	if c.BoolT("healthcheck") {
+		go http.ListenAndServe(":3000", nil)
 	}
 
 	// TODO pass version information to grpc server
@@ -71,7 +89,7 @@ func loop(c *cli.Context) error {
 		context.Background(),
 		metadata.Pairs("hostname", hostname),
 	)
-	ctx = interrupt.WithContextFunc(ctx, func() {
+	ctx = signal.WithContextFunc(ctx, func() {
 		println("ctrl+c received, terminating process")
 		sigterm.Set()
 	})
@@ -87,7 +105,12 @@ func loop(c *cli.Context) error {
 				if sigterm.IsSet() {
 					return
 				}
-				if err := run(ctx, client, filter); err != nil {
+				r := runner{
+					client:   client,
+					filter:   filter,
+					hostname: hostname,
+				}
+				if err := r.run(ctx); err != nil {
 					log.Error().Err(err).Msg("pipeline done with error")
 					return
 				}
@@ -99,12 +122,21 @@ func loop(c *cli.Context) error {
 	return nil
 }
 
+// NOTE we need to limit the size of the logs and files that we upload.
+// The maximum grpc payload size is 4194304. So until we implement streaming
+// for uploads, we need to set these limits below the maximum.
 const (
-	maxFileUpload = 5000000
-	maxLogsUpload = 5000000
+	maxLogsUpload = 2000000 // this is per step
+	maxFileUpload = 1000000
 )
 
-func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
+type runner struct {
+	client   rpc.Peer
+	filter   rpc.Filter
+	hostname string
+}
+
+func (r *runner) run(ctx context.Context) error {
 	log.Debug().
 		Msg("request next execution")
 
@@ -112,7 +144,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	ctxmeta := metadata.NewOutgoingContext(context.Background(), meta)
 
 	// get the next job from the queue
-	work, err := client.Next(ctx, filter)
+	work, err := r.client.Next(ctx, r.filter)
 	if err != nil {
 		return err
 	}
@@ -120,9 +152,22 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		return nil
 	}
 
+	timeout := time.Hour
+	if minutes := work.Timeout; minutes != 0 {
+		timeout = time.Duration(minutes) * time.Minute
+	}
+
+	counter.Add(
+		work.ID,
+		timeout,
+		extractRepositoryName(work.Config), // hack
+		extractBuildNumber(work.Config),    // hack
+	)
+	defer counter.Done(work.ID)
+
 	logger := log.With().
-		Str("repo", extractRepositoryName(work.Config)).
-		Str("build", extractBuildNumber(work.Config)).
+		Str("repo", extractRepositoryName(work.Config)). // hack
+		Str("build", extractBuildNumber(work.Config)).   // hack
 		Str("id", work.ID).
 		Logger()
 
@@ -139,11 +184,6 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		return err
 	}
 
-	timeout := time.Hour
-	if minutes := work.Timeout; minutes != 0 {
-		timeout = time.Duration(minutes) * time.Minute
-	}
-
 	ctx, cancel := context.WithTimeout(ctxmeta, timeout)
 	defer cancel()
 
@@ -152,7 +192,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		logger.Debug().
 			Msg("listen for cancel signal")
 
-		if werr := client.Wait(ctx, work.ID); werr != nil {
+		if werr := r.client.Wait(ctx, work.ID); werr != nil {
 			cancelled.SetTo(true)
 			logger.Warn().
 				Err(werr).
@@ -177,7 +217,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 				logger.Debug().
 					Msg("pipeline lease renewed")
 
-				client.Extend(ctx, work.ID)
+				r.client.Extend(ctx, work.ID)
 			}
 		}
 	}()
@@ -185,7 +225,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	state := rpc.State{}
 	state.Started = time.Now().Unix()
 
-	err = client.Init(ctxmeta, work.ID, state)
+	err = r.client.Init(ctxmeta, work.ID, state)
 	if err != nil {
 		logger.Error().
 			Err(err).
@@ -216,7 +256,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		loglogger.Debug().Msg("log stream opened")
 
 		limitedPart := io.LimitReader(part, maxLogsUpload)
-		logstream := rpc.NewLineWriter(client, work.ID, proc.Alias, secrets...)
+		logstream := rpc.NewLineWriter(r.client, work.ID, proc.Alias, secrets...)
 		io.Copy(logstream, limitedPart)
 
 		loglogger.Debug().Msg("log stream copied")
@@ -232,7 +272,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		loglogger.Debug().
 			Msg("log stream uploading")
 
-		if serr := client.Upload(ctxmeta, work.ID, file); serr != nil {
+		if serr := r.client.Upload(ctxmeta, work.ID, file); serr != nil {
 			loglogger.Error().
 				Err(serr).
 				Msg("log stream upload error")
@@ -272,7 +312,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 			Str("mime", file.Mime).
 			Msg("file stream uploading")
 
-		if serr := client.Upload(ctxmeta, work.ID, file); serr != nil {
+		if serr := r.client.Upload(ctxmeta, work.ID, file); serr != nil {
 			loglogger.Error().
 				Err(serr).
 				Str("file", file.Name).
@@ -306,7 +346,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 			proclogger.Debug().
 				Msg("update step status")
 
-			if uerr := client.Update(ctxmeta, work.ID, procState); uerr != nil {
+			if uerr := r.client.Update(ctxmeta, work.ID, procState); uerr != nil {
 				proclogger.Debug().
 					Err(uerr).
 					Msg("update step status error")
@@ -321,6 +361,8 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		if state.Pipeline.Step.Environment == nil {
 			state.Pipeline.Step.Environment = map[string]string{}
 		}
+
+		state.Pipeline.Step.Environment["DRONE_MACHINE"] = r.hostname
 		state.Pipeline.Step.Environment["CI_BUILD_STATUS"] = "success"
 		state.Pipeline.Step.Environment["CI_BUILD_STARTED"] = strconv.FormatInt(state.Pipeline.Time, 10)
 		state.Pipeline.Step.Environment["CI_BUILD_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
@@ -384,7 +426,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		Int("exit_code", state.ExitCode).
 		Msg("updating pipeline status")
 
-	err = client.Done(ctxmeta, work.ID, state)
+	err = r.client.Done(ctxmeta, work.ID, state)
 	if err != nil {
 		logger.Error().Err(err).
 			Msg("updating pipeline status failed")

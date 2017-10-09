@@ -35,6 +35,10 @@ func TestUserValidate(t *testing.T) {
 			user: User{Login: "john_smith"},
 			err:  nil,
 		},
+		{
+			user: User{Login: "john.smith"},
+			err:  nil,
+		},
 	}
 
 	for _, test := range tests {

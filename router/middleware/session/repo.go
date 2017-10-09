@@ -83,14 +83,9 @@ func SetPerm() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := User(c)
 		repo := Repo(c)
-		perm := &model.Perm{}
+		perm := new(model.Perm)
 
 		switch {
-		case user != nil && user.Admin:
-			perm.Pull = true
-			perm.Push = true
-			perm.Admin = true
-
 		case user != nil:
 			var err error
 			perm, err = store.FromContext(c).PermFind(user, repo)
@@ -108,6 +103,16 @@ func SetPerm() gin.HandlerFunc {
 					store.FromContext(c).PermUpsert(perm)
 				}
 			}
+		}
+
+		if perm == nil {
+			perm = new(model.Perm)
+		}
+
+		if user != nil && user.Admin {
+			perm.Pull = true
+			perm.Push = true
+			perm.Admin = true
 		}
 
 		switch {

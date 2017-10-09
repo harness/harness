@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
+	"html/template"
+	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/drone/drone-ui/dist"
 	"github.com/drone/drone/model"
-	"github.com/drone/drone/server/template"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/version"
 
@@ -23,24 +25,53 @@ type Endpoint interface {
 }
 
 // New returns the default website endpoint.
-func New() Endpoint {
-	return new(website)
+func New(opt ...Option) Endpoint {
+	opts := new(Options)
+	for _, f := range opt {
+		f(opts)
+	}
+
+	if opts.path != "" {
+		return fromPath(opts)
+	}
+
+	return &website{
+		fs:   dist.New(),
+		opts: opts,
+		tmpl: mustCreateTemplate(
+			string(dist.MustLookup("/index.html")),
+		),
+	}
 }
 
-type website struct{}
+func fromPath(opts *Options) *website {
+	f := filepath.Join(opts.path, "index.html")
+	b, err := ioutil.ReadFile(f)
+	if err != nil {
+		panic(err)
+	}
+	return &website{
+		fs:   http.Dir(opts.path),
+		tmpl: mustCreateTemplate(string(b)),
+		opts: opts,
+	}
+}
+
+type website struct {
+	opts *Options
+	fs   http.FileSystem
+	tmpl *template.Template
+}
 
 func (w *website) Register(mux *httptreemux.ContextMux) {
-	r := dist.New()
-	h := http.FileServer(r)
+	h := http.FileServer(w.fs)
 	h = setupCache(h)
-	mux.Handler("GET", "/favicon-32x32.png", h)
-	mux.Handler("GET", "/favicon-16x16.png", h)
-	mux.Handler("GET", "/src/*filepath", h)
-	mux.Handler("GET", "/bower_components/*filepath", h)
-	mux.NotFoundHandler = handleIndex
+	mux.Handler("GET", "/favicon.png", h)
+	mux.Handler("GET", "/static/*filepath", h)
+	mux.NotFoundHandler = w.handleIndex
 }
 
-func handleIndex(rw http.ResponseWriter, r *http.Request) {
+func (w *website) handleIndex(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(200)
 
 	var csrf string
@@ -51,13 +82,19 @@ func handleIndex(rw http.ResponseWriter, r *http.Request) {
 			user.Login,
 		).Sign(user.Hash)
 	}
+	var syncing bool
+	if user != nil {
+		syncing = time.Unix(user.Synced, 0).Add(w.opts.sync).Before(time.Now())
+	}
 	params := map[string]interface{}{
 		"user":    user,
 		"csrf":    csrf,
+		"syncing": syncing,
 		"version": version.Version.String(),
 	}
 	rw.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	template.T.ExecuteTemplate(rw, "index_polymer.html", params)
+
+	w.tmpl.Execute(rw, params)
 }
 
 func setupCache(h http.Handler) http.Handler {
@@ -69,18 +106,6 @@ func setupCache(h http.Handler) http.Handler {
 			w.Header().Set("Cache-Control", "public, max-age=31536000")
 			w.Header().Del("Expires")
 			w.Header().Set("ETag", etag)
-			h.ServeHTTP(w, r)
-		},
-	)
-}
-
-func resetCache(h http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Del("Cache-Control")
-			w.Header().Del("Last-Updated")
-			w.Header().Del("Expires")
-			w.Header().Del("ETag")
 			h.ServeHTTP(w, r)
 		},
 	)

@@ -247,5 +247,25 @@ func Test_helper(t *testing.T) {
 			g.Assert(build.Event).Equal(model.EventTag)
 			g.Assert(build.Ref).Equal("refs/tags/v1.0.0")
 		})
+
+		g.It("should convert tag's base branch from webhook to build's branch ", func() {
+			from := &webhook{}
+			from.Ref = "refs/tags/v1.0.0"
+			from.BaseRef = "refs/heads/master"
+
+			build := convertPushHook(from)
+			g.Assert(build.Event).Equal(model.EventTag)
+			g.Assert(build.Branch).Equal("master")
+		})
+
+		g.It("should not convert tag's base_ref from webhook if not prefixed with 'ref/heads/'", func() {
+			from := &webhook{}
+			from.Ref = "refs/tags/v1.0.0"
+			from.BaseRef = "refs/refs/master"
+
+			build := convertPushHook(from)
+			g.Assert(build.Event).Equal(model.EventTag)
+			g.Assert(build.Branch).Equal("refs/tags/v1.0.0")
+		})
 	})
 }

@@ -124,11 +124,17 @@ func (l *Linter) lintTrusted(c *yaml.Container) error {
 	if len(c.NetworkMode) != 0 {
 		return fmt.Errorf("Insufficient privileges to use network_mode")
 	}
+	if len(c.IpcMode) != 0 {
+		return fmt.Errorf("Insufficient privileges to use ipc_mode")
+	}
 	if c.Networks.Networks != nil && len(c.Networks.Networks) != 0 {
 		return fmt.Errorf("Insufficient privileges to use networks")
 	}
 	if c.Volumes.Volumes != nil && len(c.Volumes.Volumes) != 0 {
 		return fmt.Errorf("Insufficient privileges to use volumes")
+	}
+	if len(c.Tmpfs) != 0 {
+		return fmt.Errorf("Insufficient privileges to use tmpfs")
 	}
 	return nil
 }

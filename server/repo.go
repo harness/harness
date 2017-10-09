@@ -27,6 +27,11 @@ func PostRepo(c *gin.Context) {
 		return
 	}
 
+	if err := Config.Services.Limiter.LimitRepo(user, repo); err != nil {
+		c.String(403, "Repository activation blocked by limiter")
+		return
+	}
+
 	repo.IsActive = true
 	repo.UserID = user.ID
 	if !repo.AllowPush && !repo.AllowPull && !repo.AllowDeploy && !repo.AllowTag {
@@ -40,7 +45,7 @@ func PostRepo(c *gin.Context) {
 		}
 	}
 	if repo.Config == "" {
-		repo.Config = ".drone.yml"
+		repo.Config = Config.Server.RepoConfig
 	}
 	if repo.Timeout == 0 {
 		repo.Timeout = 60 // 1 hour default build time

@@ -27,17 +27,20 @@ func GetFeed(c *gin.Context) {
 
 	if time.Unix(user.Synced, 0).Add(time.Hour * 72).Before(time.Now()) {
 		logrus.Debugf("sync begin: %s", user.Login)
+
+		user.Synced = time.Now().Unix()
+		store.FromContext(c).UpdateUser(user)
+
 		sync := syncer{
-			remote: remote.FromContext(c),
-			store:  store.FromContext(c),
-			perms:  store.FromContext(c),
+			remote:  remote.FromContext(c),
+			store:   store.FromContext(c),
+			perms:   store.FromContext(c),
+			limiter: Config.Services.Limiter,
 		}
 		if err := sync.Sync(user); err != nil {
 			logrus.Debugf("sync error: %s: %s", user.Login, err)
 		} else {
 			logrus.Debugf("sync complete: %s", user.Login)
-			user.Synced = time.Now().Unix()
-			store.FromContext(c).UpdateUser(user)
 		}
 	}
 
@@ -68,17 +71,19 @@ func GetRepos(c *gin.Context) {
 
 	if flush || time.Unix(user.Synced, 0).Add(time.Hour*72).Before(time.Now()) {
 		logrus.Debugf("sync begin: %s", user.Login)
+		user.Synced = time.Now().Unix()
+		store.FromContext(c).UpdateUser(user)
+
 		sync := syncer{
-			remote: remote.FromContext(c),
-			store:  store.FromContext(c),
-			perms:  store.FromContext(c),
+			remote:  remote.FromContext(c),
+			store:   store.FromContext(c),
+			perms:   store.FromContext(c),
+			limiter: Config.Services.Limiter,
 		}
 		if err := sync.Sync(user); err != nil {
 			logrus.Debugf("sync error: %s: %s", user.Login, err)
 		} else {
 			logrus.Debugf("sync complete: %s", user.Login)
-			user.Synced = time.Now().Unix()
-			store.FromContext(c).UpdateUser(user)
 		}
 	}
 

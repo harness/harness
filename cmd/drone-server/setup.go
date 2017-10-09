@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cncd/queue"
 	"github.com/dimfeld/httptreemux"
@@ -15,6 +16,7 @@ import (
 	"github.com/drone/drone/remote/gitea"
 	"github.com/drone/drone/remote/github"
 	"github.com/drone/drone/remote/gitlab"
+	"github.com/drone/drone/remote/gitlab3"
 	"github.com/drone/drone/remote/gogs"
 	"github.com/drone/drone/server/web"
 	"github.com/drone/drone/store"
@@ -44,6 +46,10 @@ func setupRegistryService(c *cli.Context, s store.Store) model.RegistryService {
 
 func setupEnvironService(c *cli.Context, s store.Store) model.EnvironService {
 	return nil
+}
+
+func setupLimiter(c *cli.Context, s store.Store) model.Limiter {
+	return new(model.NoLimit)
 }
 
 func setupPubsub(c *cli.Context)        {}
@@ -117,6 +123,17 @@ func setupStash(c *cli.Context) (remote.Remote, error) {
 
 // helper function to setup the Gitlab remote from the CLI arguments.
 func setupGitlab(c *cli.Context) (remote.Remote, error) {
+	if c.Bool("gitlab-v3-api") {
+		return gitlab3.New(gitlab3.Opts{
+			URL:         c.String("gitlab-server"),
+			Client:      c.String("gitlab-client"),
+			Secret:      c.String("gitlab-secret"),
+			Username:    c.String("gitlab-git-username"),
+			Password:    c.String("gitlab-git-password"),
+			PrivateMode: c.Bool("gitlab-private-mode"),
+			SkipVerify:  c.Bool("gitlab-skip-verify"),
+		})
+	}
 	return gitlab.New(gitlab.Opts{
 		URL:         c.String("gitlab-server"),
 		Client:      c.String("gitlab-client"),
@@ -160,11 +177,10 @@ func setupCoding(c *cli.Context) (remote.Remote, error) {
 
 func setupTree(c *cli.Context) *httptreemux.ContextMux {
 	tree := httptreemux.NewContextMux()
-	if path := c.String("www"); path == "" {
-		web.New().Register(tree)
-	} else {
-		web.FromPath(path).Register(tree)
-	}
+	web.New(
+		web.WithDir(c.String("www")),
+		web.WithSync(time.Hour*72),
+	).Register(tree)
 	return tree
 }
 

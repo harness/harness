@@ -62,17 +62,17 @@
 //
 // Sample logs:
 //
-//     sampled := log.Sample(10)
+//     sampled := log.Sample(&zerolog.BasicSampler{N: 10})
 //     sampled.Info().Msg("will be logged every 10 messages")
 //
 package zerolog
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"strconv"
-	"sync/atomic"
 
 	"github.com/rs/zerolog/internal/json"
 )
@@ -115,15 +115,6 @@ func (l Level) String() string {
 	return ""
 }
 
-const (
-	// Often samples log every 10 events.
-	Often = 10
-	// Sometimes samples log every 100 events.
-	Sometimes = 100
-	// Rarely samples log every 1000 events.
-	Rarely = 1000
-)
-
 var disabledEvent = newEvent(levelWriterAdapter{ioutil.Discard}, 0, false)
 
 // A Logger represents an active logging object that generates lines
@@ -134,8 +125,7 @@ var disabledEvent = newEvent(levelWriterAdapter{ioutil.Discard}, 0, false)
 type Logger struct {
 	w       LevelWriter
 	level   Level
-	sample  uint32
-	counter *uint32
+	sampler Sampler
 	context []byte
 }
 
@@ -162,6 +152,16 @@ func Nop() Logger {
 	return New(nil).Level(Disabled)
 }
 
+// Output duplicates the current logger and sets w as its output.
+func (l Logger) Output(w io.Writer) Logger {
+	l2 := New(w)
+	l2.level = l.level
+	l2.sampler = l.sampler
+	l2.context = make([]byte, len(l.context), cap(l.context))
+	copy(l2.context, l.context)
+	return l2
+}
+
 // With creates a child logger with the field added to its context.
 func (l Logger) With() Context {
 	context := l.context
@@ -175,34 +175,30 @@ func (l Logger) With() Context {
 	return Context{l}
 }
 
-// Level creates a child logger with the minimum accepted level set to level.
-func (l Logger) Level(lvl Level) Logger {
-	return Logger{
-		w:       l.w,
-		level:   lvl,
-		sample:  l.sample,
-		counter: l.counter,
-		context: l.context,
+// UpdateContext updates the internal logger's context.
+//
+// Use this method with caution. If unsure, prefer the With method.
+func (l *Logger) UpdateContext(update func(c Context) Context) {
+	if l == disabledLogger {
+		return
 	}
+	if cap(l.context) == 0 {
+		l.context = make([]byte, 1, 500) // first byte is timestamp flag
+	}
+	c := update(Context{*l})
+	l.context = c.l.context
 }
 
-// Sample returns a logger that only let one message out of every to pass thru.
-func (l Logger) Sample(every int) Logger {
-	if every == 0 {
-		// Create a child with no sampling.
-		return Logger{
-			w:       l.w,
-			level:   l.level,
-			context: l.context,
-		}
-	}
-	return Logger{
-		w:       l.w,
-		level:   l.level,
-		sample:  uint32(every),
-		counter: new(uint32),
-		context: l.context,
-	}
+// Level creates a child logger with the minimum accepted level set to level.
+func (l Logger) Level(lvl Level) Logger {
+	l.level = lvl
+	return l
+}
+
+// Sample returns a logger with the s sampler.
+func (l Logger) Sample(s Sampler) Logger {
+	l.sampler = s
+	return l
 }
 
 // Debug starts a new message with debug level.
@@ -283,6 +279,22 @@ func (l Logger) Log() *Event {
 	return l.newEvent(PanicLevel, false, nil)
 }
 
+// Print sends a log event using debug level and no extra field.
+// Arguments are handled in the manner of fmt.Print.
+func (l Logger) Print(v ...interface{}) {
+	if e := l.Debug(); e.Enabled() {
+		e.Msg(fmt.Sprint(v...))
+	}
+}
+
+// Printf sends a log event using debug level and no extra field.
+// Arguments are handled in the manner of fmt.Printf.
+func (l Logger) Printf(format string, v ...interface{}) {
+	if e := l.Debug(); e.Enabled() {
+		e.Msg(fmt.Sprintf(format, v...))
+	}
+}
+
 // Write implements the io.Writer interface. This is useful to set as a writer
 // for the standard library log.
 func (l Logger) Write(p []byte) (n int, err error) {
@@ -304,7 +316,7 @@ func (l Logger) newEvent(level Level, addLevelField bool, done func(string)) *Ev
 	if addLevelField {
 		lvl = level
 	}
-	e := newEvent(l.w, lvl, enabled)
+	e := newEvent(l.w, lvl, true)
 	e.done = done
 	if l.context != nil && len(l.context) > 0 && l.context[0] > 0 {
 		// first byte of context is ts flag
@@ -312,9 +324,6 @@ func (l Logger) newEvent(level Level, addLevelField bool, done func(string)) *Ev
 	}
 	if addLevelField {
 		e.Str(LevelFieldName, level.String())
-	}
-	if l.sample > 0 && SampleFieldName != "" {
-		e.Uint32(SampleFieldName, l.sample)
 	}
 	if l.context != nil && len(l.context) > 1 {
 		if len(e.buf) > 1 {
@@ -330,9 +339,8 @@ func (l Logger) should(lvl Level) bool {
 	if lvl < l.level || lvl < globalLevel() {
 		return false
 	}
-	if l.sample > 0 && l.counter != nil && !samplingDisabled() {
-		c := atomic.AddUint32(l.counter, 1)
-		return c%l.sample == 0
+	if l.sampler != nil && !samplingDisabled() {
+		return l.sampler.Sample(lvl)
 	}
 	return true
 }

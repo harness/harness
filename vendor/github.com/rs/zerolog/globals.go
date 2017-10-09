@@ -16,9 +16,6 @@ var (
 	// ErrorFieldName is the field name used for error fields.
 	ErrorFieldName = "error"
 
-	// SampleFieldName is the name of the field used to report sampling.
-	SampleFieldName = "sample"
-
 	// TimeFieldFormat defines the time format of the Time field type.
 	// If set to an empty string, the time is formatted as an UNIX timestamp
 	// as integer.

@@ -18,7 +18,7 @@ const (
 // NewClient is a helper function that returns a new GitHub
 // client using the provided OAuth token.
 func NewClient(url, accessToken string, skipVerify bool) *client.Client {
-	client := client.New(url, "/api/v3", accessToken, skipVerify)
+	client := client.New(url, "/api/v4", accessToken, skipVerify)
 	return client
 }
 

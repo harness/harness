@@ -12,7 +12,6 @@ import (
 	"github.com/drone/drone/server"
 	"github.com/drone/drone/server/debug"
 	"github.com/drone/drone/server/metrics"
-	"github.com/drone/drone/server/template"
 	"github.com/drone/drone/server/web"
 )
 
@@ -21,14 +20,6 @@ func Load(mux *httptreemux.ContextMux, middleware ...gin.HandlerFunc) http.Handl
 
 	e := gin.New()
 	e.Use(gin.Recovery())
-	e.SetHTMLTemplate(template.T)
-
-	// ui := server.NewWebsite()
-	// for _, path := range ui.Routes() {
-	// 	e.GET(path, func(c *gin.Context) {
-	// 		ui.File(c.Writer, c.Request)
-	// 	})
-	// }
 
 	e.Use(header.NoCache)
 	e.Use(header.Options)
@@ -123,17 +114,6 @@ func Load(mux *httptreemux.ContextMux, middleware ...gin.HandlerFunc) http.Handl
 	e.POST("/hook", server.PostHook)
 	e.POST("/api/hook", server.PostHook)
 
-	ws := e.Group("/ws")
-	{
-		ws.GET("/feed", server.EventStream)
-		ws.GET("/logs/:owner/:name/:build/:number",
-			session.SetRepo(),
-			session.SetPerm(),
-			session.MustPull,
-			server.LogStream,
-		)
-	}
-
 	sse := e.Group("/stream")
 	{
 		sse.GET("/events", server.EventStreamSSE)
@@ -188,6 +168,9 @@ func Load(mux *httptreemux.ContextMux, middleware ...gin.HandlerFunc) http.Handl
 			metrics.PromHandler(),
 		)
 	}
+
+	e.GET("/version", server.Version)
+	e.GET("/healthz", server.Health)
 
 	return e
 }

@@ -4,6 +4,7 @@ type webhook struct {
 	Ref     string `json:"ref"`
 	Action  string `json:"action"`
 	Deleted bool   `json:"deleted"`
+	BaseRef string `json:"base_ref"`
 
 	Head struct {
 		ID        string `json:"id"`
