@@ -34,14 +34,15 @@ import (
 // refactor the codebase to move away from storing these values in the Context.
 var Config = struct {
 	Services struct {
-		Pubsub     pubsub.Publisher
-		Queue      queue.Queue
-		Logs       logging.Log
-		Senders    model.SenderService
-		Secrets    model.SecretService
-		Registries model.RegistryService
-		Environ    model.EnvironService
-		Limiter    model.Limiter
+		Pubsub      pubsub.Publisher
+		Queue       queue.Queue
+		Logs        logging.Log
+		Senders     model.SenderService
+		Secrets     model.SecretService
+		Registries  model.RegistryService
+		Environ     model.EnvironService
+		Transformer model.TransformerService
+		Limiter     model.Limiter
 	}
 	Storage struct {
 		// Users  model.UserStore

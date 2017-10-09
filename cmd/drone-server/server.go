@@ -142,6 +142,11 @@ var flags = []cli.Flag{
 		Usage:  "gated build endpoint",
 	},
 	cli.StringFlag{
+		EnvVar: "DRONE_TRANSFORMER_ENDPOINT",
+		Name:   "transformer-service",
+		Usage:  "transformer endpoint",
+	},
+	cli.StringFlag{
 		EnvVar: "DRONE_DATABASE_DRIVER,DATABASE_DRIVER",
 		Name:   "driver",
 		Usage:  "database driver",
@@ -628,6 +633,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store, r remote.Remote) {
 	droneserver.Config.Services.Senders = sender.New(v, v)
 	droneserver.Config.Services.Environ = setupEnvironService(c, v)
 	droneserver.Config.Services.Limiter = setupLimiter(c, v)
+	droneserver.Config.Services.Transformer = setupTransformerService(c, v)
 
 	if endpoint := c.String("gating-service"); endpoint != "" {
 		droneserver.Config.Services.Senders = sender.NewRemote(endpoint)

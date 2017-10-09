@@ -9,6 +9,7 @@ import (
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/plugins/registry"
 	"github.com/drone/drone/plugins/secrets"
+	"github.com/drone/drone/plugins/transformer"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/remote/bitbucket"
 	"github.com/drone/drone/remote/bitbucketserver"
@@ -22,6 +23,7 @@ import (
 	"github.com/drone/drone/store"
 	"github.com/drone/drone/store/datastore"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -46,6 +48,15 @@ func setupRegistryService(c *cli.Context, s store.Store) model.RegistryService {
 
 func setupEnvironService(c *cli.Context, s store.Store) model.EnvironService {
 	return nil
+}
+
+func setupTransformerService(c *cli.Context, s store.Store) model.TransformerService {
+	if endpoint := c.String("transformer-service"); endpoint != "" {
+		logrus.Debugf("Setting up transformer service on '%s'", endpoint)
+		return transformer.NewHTTP(endpoint)
+	} else {
+		return nil
+	}
 }
 
 func setupLimiter(c *cli.Context, s store.Store) model.Limiter {
