@@ -271,8 +271,8 @@ func (c *client) Netrc(u *model.User, r *model.Repo) (*model.Netrc, error) {
 		}, nil
 	}
 	return &model.Netrc{
-		Login:    u.Token,
-		Password: "x-oauth-basic",
+		Login:    u.Login,
+		Password: u.Token,
 		Machine:  c.Machine,
 	}, nil
 }
