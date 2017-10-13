@@ -55,8 +55,8 @@ func Test_gitea(t *testing.T) {
 				})
 				netrc, _ := remote.Netrc(fakeUser, nil)
 				g.Assert(netrc.Machine).Equal("gitea.com")
-				g.Assert(netrc.Login).Equal(fakeUser.Token)
-				g.Assert(netrc.Password).Equal("x-oauth-basic")
+				g.Assert(netrc.Login).Equal(fakeUser.Login)
+				g.Assert(netrc.Password).Equal(fakeUser.Token)
 			})
 			g.It("Should return a netrc with the machine account", func() {
 				remote, _ := New(Opts{
