@@ -67,6 +67,7 @@ paths:
         - accessToken: []
       responses:
         200:
+          description: Detail of the repository.
           schema:
             $ref: "#/definitions/Repo"
         404:
@@ -107,6 +108,7 @@ paths:
         - accessToken: []
       responses:
         200:
+          description: The updated repository
           schema:
             $ref: "#/definitions/Repo"
         400:
@@ -134,6 +136,7 @@ paths:
         - accessToken: []
       responses:
         200:
+          description: The activated repository
           schema:
             $ref: "#/definitions/Repo"
         400:
@@ -230,6 +233,11 @@ paths:
           in: path
           type: string
           description: name of the repository
+        - name: page
+          in: query
+          type: number
+          description: pager used to fetch builds (batch with 50 builds)
+          required: false
       tags:
         - Builds
       summary: Get recent builds
@@ -278,7 +286,7 @@ paths:
             Unable to find the Repository or Build
 
 
-  /repos/{owner}/{name}/builds/{number}:
+  /repos/{owner}/{name}/builds/latest:
     get:
       parameters:
         - name: owner
@@ -294,10 +302,6 @@ paths:
           type: string
           description: name of the branch
           required: false
-        - name: number
-          in: path
-          type: integer
-          description: sequential build number
       tags:
         - Builds
       summary: Get the latest build
@@ -471,6 +475,7 @@ paths:
         - User
       responses:
         200:
+          description: The list of user repos
           schema:
             type: array
             items:
@@ -769,6 +774,7 @@ definitions:
         }
     properties:
       id:
+        description: The unique identifier for the build.
         type: integer
         format: int64
       number:
