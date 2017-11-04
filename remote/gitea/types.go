@@ -1,6 +1,7 @@
 package gitea
 
 type pushHook struct {
+	Sha     string `json:"sha"`
 	Ref     string `json:"ref"`
 	Before  string `json:"before"`
 	After   string `json:"after"`
