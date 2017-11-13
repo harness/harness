@@ -80,6 +80,11 @@ func main() {
 			Name:   "healthcheck",
 			Usage:  "enables the healthcheck endpoint",
 		},
+		cli.BoolTFlag{
+			EnvVar: "DRONE_GRPC_HEALTHCHECK",
+			Name:   "grpc-healthcheck",
+			Usage:  "enables the grpc healthcheck",
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {

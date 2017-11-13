@@ -98,6 +98,23 @@ func loop(c *cli.Context) error {
 	parallel := c.Int("max-procs")
 	wg.Add(parallel)
 
+	if c.Bool("grpc-healthcheck") {
+		client := rpc.NewGrpcHealthClient(conn)
+		go func(client rpc.Health) {
+			for {
+				ok, err := client.Check(context.Background())
+				if !ok || err != nil {
+					log.Printf("can't connect grpc server: %v, code: %v", err, grpc.Code(err))
+				} else {
+					log.Debug().
+						Msg("connect the grpc server successfully")
+				}
+
+				<-time.After(time.Second)
+			}
+		}(client)
+	}
+
 	for i := 0; i < parallel; i++ {
 		go func() {
 			defer wg.Done()

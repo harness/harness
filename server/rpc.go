@@ -7,11 +7,14 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 
 	oldcontext "golang.org/x/net/context"
 
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/cncd/logging"
@@ -506,6 +509,13 @@ func createFilterFunc(filter rpc.Filter) (queue.Filter, error) {
 //
 //
 
+// NewDroneServer returns a new Server.
+func NewDroneServer() *DroneServer {
+	return &DroneServer{
+		statusMap: make(map[string]proto.HealthCheckResponse_ServingStatus),
+	}
+}
+
 // DroneServer is a grpc server implementation.
 type DroneServer struct {
 	Remote remote.Remote
@@ -514,6 +524,27 @@ type DroneServer struct {
 	Logger logging.Log
 	Store  store.Store
 	Host   string
+	mu     sync.Mutex
+	// statusMap stores the serving status of the services this Server monitors.
+	statusMap map[string]proto.HealthCheckResponse_ServingStatus
+}
+
+// Check implements `service Health`.
+func (s *DroneServer) Check(ctx oldcontext.Context, in *proto.HealthCheckRequest) (*proto.HealthCheckResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if in.Service == "" {
+		// check the server overall health status.
+		return &proto.HealthCheckResponse{
+			Status: proto.HealthCheckResponse_SERVING,
+		}, nil
+	}
+	if status, ok := s.statusMap[in.Service]; ok {
+		return &proto.HealthCheckResponse{
+			Status: status,
+		}, nil
+	}
+	return nil, status.Error(codes.NotFound, "unknown service")
 }
 
 func (s *DroneServer) Next(c oldcontext.Context, req *proto.NextRequest) (*proto.NextReply, error) {
