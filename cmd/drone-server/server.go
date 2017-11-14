@@ -536,7 +536,7 @@ func server(c *cli.Context) error {
 	// start the server with tls enabled
 	if c.String("server-cert") != "" {
 		g.Go(func() error {
-			return http.ListenAndServe(":http", handler)
+			return http.ListenAndServe(":http", http.HandlerFunc(redirect))
 		})
 		g.Go(func() error {
 			serve := &http.Server{
@@ -673,6 +673,15 @@ func (a *authorizer) authorize(ctx context.Context) error {
 		return errors.New("invalid agent token")
 	}
 	return errors.New("missing agent token")
+}
+
+func redirect(w http.ResponseWriter, req *http.Request) {
+	var serverHost string = droneserver.Config.Server.Host
+	serverHost = strings.TrimPrefix(serverHost, "http://")
+	serverHost = strings.TrimPrefix(serverHost, "https://")
+	req.URL.Scheme = "https"
+	req.URL.Host = serverHost
+	http.Redirect(w, req, req.URL.String(), http.StatusMovedPermanently)
 }
 
 func cacheDir() string {
