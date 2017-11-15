@@ -100,9 +100,9 @@ func buildFromTag(hook *pushHook) *model.Build {
 
 	return &model.Build{
 		Event:     model.EventTag,
-		Commit:    hook.After,
+		Commit:    hook.Sha,
 		Ref:       fmt.Sprintf("refs/tags/%s", hook.Ref),
-		Link:      fmt.Sprintf("%s/src/%s", hook.Repo.URL, hook.Ref),
+		Link:      fmt.Sprintf("%s/src/tag/%s", hook.Repo.URL, hook.Ref),
 		Branch:    fmt.Sprintf("refs/tags/%s", hook.Ref),
 		Message:   fmt.Sprintf("created tag %s", hook.Ref),
 		Avatar:    avatar,

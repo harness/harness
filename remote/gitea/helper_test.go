@@ -44,6 +44,7 @@ func Test_parse(t *testing.T) {
 			hook, err := parsePush(buf)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(hook.Ref).Equal("v1.0.0")
+			g.Assert(hook.Sha).Equal("ef98532add3b2feb7a137426bba1248724367df5")
 			g.Assert(hook.Repo.Name).Equal("hello-world")
 			g.Assert(hook.Repo.URL).Equal("http://gitea.golang.org/gordon/hello-world")
 			g.Assert(hook.Repo.FullName).Equal("gordon/hello-world")
@@ -105,6 +106,18 @@ func Test_parse(t *testing.T) {
 			g.Assert(repo.Link).Equal(hook.Repo.URL)
 		})
 
+		g.It("Should return a Build struct from a tag hook", func() {
+			buf := bytes.NewBufferString(fixtures.HookPushTag)
+			hook, _ := parsePush(buf)
+			build := buildFromTag(hook)
+			g.Assert(build.Event).Equal(model.EventTag)
+			g.Assert(build.Commit).Equal(hook.Sha)
+			g.Assert(build.Ref).Equal("refs/tags/v1.0.0")
+			g.Assert(build.Branch).Equal("refs/tags/v1.0.0")
+			g.Assert(build.Link).Equal("http://gitea.golang.org/gordon/hello-world/src/tag/v1.0.0")
+			g.Assert(build.Message).Equal("created tag v1.0.0")
+		})
+
 		g.It("Should return a Build struct from a pull_request hook", func() {
 			buf := bytes.NewBufferString(fixtures.HookPullRequest)
 			hook, _ := parsePullRequest(buf)
@@ -132,9 +145,21 @@ func Test_parse(t *testing.T) {
 
 		g.It("Should return a Perm struct from a Gitea Perm", func() {
 			perms := []gitea.Permission{
-				{true, true, true},
-				{true, true, false},
-				{true, false, false},
+				{
+					Admin: true,
+					Push:  true,
+					Pull:  true,
+				},
+				{
+					Admin: true,
+					Push:  true,
+					Pull:  false,
+				},
+				{
+					Admin: true,
+					Push:  false,
+					Pull:  false,
+				},
 			}
 			for _, from := range perms {
 				perm := toPerm(&from)
