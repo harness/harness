@@ -211,10 +211,10 @@
 			"revisionTime": "2017-09-14T17:45:32Z"
 		},
 		{
-			"checksumSHA1": "2A3+CnkMfvvO4oRkjQKqi44no0g=",
+			"checksumSHA1": "HWV2BBLXS4gY5eLJeNIg7Z6nAOA=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "470dd572a108634dfa3c2a1212e8c4a02a22ed55",
+			"revisionTime": "2017-11-16T06:19:36Z"
 		},
 		{
 			"checksumSHA1": "VZEf4sUe0jVi3TPXE+gfjpKtXFA=",

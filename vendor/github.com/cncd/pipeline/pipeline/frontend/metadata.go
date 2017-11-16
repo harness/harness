@@ -33,6 +33,7 @@ type (
 		Remote  string   `json:"remote,omitempty"`
 		Private bool     `json:"private,omitempty"`
 		Secrets []Secret `json:"secrets,omitempty"`
+		Branch  string   `json:"default_branch,omitempty"`
 	}
 
 	// Build defines runtime metadata for a build.
@@ -181,7 +182,7 @@ func (m *Metadata) EnvironDrone() map[string]string {
 		"DRONE_REPO_OWNER":           owner,
 		"DRONE_REPO_NAME":            name,
 		"DRONE_REPO_LINK":            m.Repo.Link,
-		"DRONE_REPO_BRANCH":          m.Curr.Commit.Branch,
+		"DRONE_REPO_BRANCH":          m.Repo.Branch,
 		"DRONE_REPO_PRIVATE":         fmt.Sprintf("%v", m.Repo.Private),
 		"DRONE_REPO_TRUSTED":         "false", // TODO should this be added?
 		"DRONE_REMOTE_URL":           m.Repo.Remote,
