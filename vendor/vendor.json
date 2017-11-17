@@ -195,80 +195,80 @@
 		{
 			"checksumSHA1": "W3AuK8ocqHwlUajGmQLFvnRhTZE=",
 			"path": "github.com/cncd/pipeline/pipeline",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
-			"checksumSHA1": "gc+efbEPGdecp6I2ezd6J3+UL3o=",
+			"checksumSHA1": "iRKdpheRPBTP0DKTQH7zmE2PI34=",
 			"path": "github.com/cncd/pipeline/pipeline/backend",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
-			"checksumSHA1": "IIuOItGMhYP6kLtlZWYBO+liSx4=",
+			"checksumSHA1": "EHJGG1USUliP8nzNWV/axO5KLzw=",
 			"path": "github.com/cncd/pipeline/pipeline/backend/docker",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
-			"checksumSHA1": "2A3+CnkMfvvO4oRkjQKqi44no0g=",
+			"checksumSHA1": "HWV2BBLXS4gY5eLJeNIg7Z6nAOA=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
-			"checksumSHA1": "VZEf4sUe0jVi3TPXE+gfjpKtXFA=",
+			"checksumSHA1": "a31aG4R3OK0t87whuZ5IWbSD1uc=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
-			"checksumSHA1": "Bso8L5AC/YA4k+YVfIg+m2bMLmU=",
+			"checksumSHA1": "cdjOSSSS5Gzx7gRLNvObQvNJWYg=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/compiler",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
-			"checksumSHA1": "tExCYtVZoTnfEkEQL7r/megor8I=",
+			"checksumSHA1": "Sj2VYU+asWToYriIqcinav5MJZo=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/linter",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
 			"checksumSHA1": "kx2sPUIMozPC/g6E4w48h3FfH3k=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/matrix",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
 			"checksumSHA1": "L7Q5qJmPITNmvFEEaj5MPwCWFRk=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/types",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
 			"checksumSHA1": "2/3f3oNmxXy5kcrRLCFa24Oc9O4=",
 			"path": "github.com/cncd/pipeline/pipeline/interrupt",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
 			"checksumSHA1": "uOjTfke7Qxosrivgz/nVTHeIP5g=",
 			"path": "github.com/cncd/pipeline/pipeline/multipart",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
-			"checksumSHA1": "pyaqbQRdFkOGTE0mSNou27ikvfs=",
+			"checksumSHA1": "5oiGroE8hLXcj9hcZ+GGoBEm3o0=",
 			"path": "github.com/cncd/pipeline/pipeline/rpc",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
-			"checksumSHA1": "huYd+DhpBP/0kHMAC0mPZAZBmnw=",
+			"checksumSHA1": "N+3wNQ8hc/6yrh3FxbaxkEVwrkY=",
 			"path": "github.com/cncd/pipeline/pipeline/rpc/proto",
-			"revision": "b7427ae1fb86bb04e2997e5f3a1eec75c4b056ef",
-			"revisionTime": "2017-09-14T17:45:32Z"
+			"revision": "82706703c87f88a632674484e095e494c0e30e34",
+			"revisionTime": "2017-11-17T22:46:28Z"
 		},
 		{
 			"checksumSHA1": "7Qj1DK0ceAXkYztW0l3+L6sn+V8=",

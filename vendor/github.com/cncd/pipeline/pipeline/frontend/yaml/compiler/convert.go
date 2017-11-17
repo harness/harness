@@ -166,6 +166,7 @@ func (c *Compiler) createProcess(name string, container *yaml.Container, section
 		MemSwapLimit: memSwapLimit,
 		MemLimit:     memLimit,
 		ShmSize:      shmSize,
+		Sysctls:      container.Sysctls,
 		CPUQuota:     cpuQuota,
 		CPUShares:    cpuShares,
 		CPUSet:       cpuSet,

@@ -47,6 +47,7 @@ type (
 		AuthConfig   Auth              `json:"auth_config,omitempty"`
 		NetworkMode  string            `json:"network_mode,omitempty"`
 		IpcMode      string            `json:"ipc_mode,omitempty"`
+		Sysctls      map[string]string `json:"sysctls,omitempty"`
 	}
 
 	// Auth defines registry authentication credentials.
