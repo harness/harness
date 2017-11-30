@@ -106,7 +106,7 @@ func loop(c *cli.Context) error {
 					client:   client,
 					filter:   filter,
 					hostname: hostname,
-					plugin:   c.String("plugin"),
+					plugin:   c.String("runtime-plugin"),
 				}
 				if err := r.run(ctx); err != nil {
 					log.Error().Err(err).Msg("pipeline done with error")

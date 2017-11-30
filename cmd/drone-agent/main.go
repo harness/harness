@@ -81,8 +81,8 @@ func main() {
 			Usage:  "enables the healthcheck endpoint",
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_PLUGIN",
-			Name:   "plugin",
+			EnvVar: "DRONE_RUNTIME_PLUGIN",
+			Name:   "runtime-plugin",
 			Usage:  "path to a plugin used as engine",
 		},
 	}
