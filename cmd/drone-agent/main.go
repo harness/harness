@@ -80,6 +80,11 @@ func main() {
 			Name:   "healthcheck",
 			Usage:  "enables the healthcheck endpoint",
 		},
+		cli.StringFlag{
+			EnvVar: "DRONE_PLUGIN",
+			Name:   "plugin",
+			Usage:  "path to a plugin used as engine",
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
