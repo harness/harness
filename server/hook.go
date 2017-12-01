@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -346,6 +347,11 @@ func PostHook(c *gin.Context) {
 
 // return the metadata from the cli context.
 func metadataFromStruct(repo *model.Repo, build, last *model.Build, proc *model.Proc, link string) frontend.Metadata {
+	host := link
+	uri, err := url.Parse(link)
+	if err == nil {
+		host = uri.Host
+	}
 	return frontend.Metadata{
 		Repo: frontend.Repo{
 			Name:    repo.FullName,
@@ -405,6 +411,7 @@ func metadataFromStruct(repo *model.Repo, build, last *model.Build, proc *model.
 		Sys: frontend.System{
 			Name: "drone",
 			Link: link,
+			Host: host,
 			Arch: "linux/amd64",
 		},
 	}
