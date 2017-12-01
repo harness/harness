@@ -143,7 +143,7 @@ func PostHook(c *gin.Context) {
 	}
 
 	// fetch the build file from the database
-	confb, err := remote_.File(user, repo, build, repo.Config)
+	confb, err := remote.FileBackoff(remote_, user, repo, build, repo.Config)
 	if err != nil {
 		logrus.Errorf("error: %s: cannot find %s in %s: %s", repo.FullName, repo.Config, build.Ref, err)
 		c.AbortWithError(404, err)
