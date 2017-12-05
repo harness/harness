@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/drone/drone-runtime/engine"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
@@ -21,15 +22,15 @@ import (
 	"github.com/drone/drone/store"
 	"github.com/drone/envsubst"
 
-	"github.com/cncd/pipeline/pipeline/backend"
 	"github.com/cncd/pipeline/pipeline/frontend"
-	"github.com/cncd/pipeline/pipeline/frontend/yaml"
-	"github.com/cncd/pipeline/pipeline/frontend/yaml/compiler"
-	"github.com/cncd/pipeline/pipeline/frontend/yaml/linter"
-	"github.com/cncd/pipeline/pipeline/frontend/yaml/matrix"
 	"github.com/cncd/pipeline/pipeline/rpc"
 	"github.com/cncd/pubsub"
 	"github.com/cncd/queue"
+
+	yamlconfig "github.com/drone/drone-yaml-v1/config"
+	"github.com/drone/drone-yaml-v1/config/compiler"
+	"github.com/drone/drone-yaml-v1/config/linter"
+	"github.com/drone/drone-yaml-v1/matrix"
 )
 
 //
@@ -177,7 +178,7 @@ func PostHook(c *gin.Context) {
 	}
 
 	// verify the branches can be built vs skipped
-	branches, err := yaml.ParseString(conf.Data)
+	branches, err := yamlconfig.ParseString(conf.Data)
 	if err == nil {
 		if !branches.Branches.Match(build.Branch) && build.Event != model.EventTag && build.Event != model.EventDeploy {
 			c.String(200, "Branch does not match restrictions defined in yaml")
@@ -426,7 +427,7 @@ type buildItem struct {
 	Proc     *model.Proc
 	Platform string
 	Labels   map[string]string
-	Config   *backend.Config
+	Config   *engine.Config
 }
 
 func (b *builder) Build() ([]*buildItem, error) {
@@ -483,7 +484,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 		}
 		y = s
 
-		parsed, err := yaml.ParseString(y)
+		parsed, err := yamlconfig.ParseString(y)
 		if err != nil {
 			return nil, err
 		}
@@ -492,11 +493,8 @@ func (b *builder) Build() ([]*buildItem, error) {
 			metadata.Sys.Arch = "linux/amd64"
 		}
 
-		lerr := linter.New(
-			linter.WithTrusted(b.Repo.IsTrusted),
-		).Lint(parsed)
-		if lerr != nil {
-			return nil, lerr
+		if err := linter.NewDefault(b.Repo.IsTrusted).Lint(parsed); err != nil {
+			return nil, err
 		}
 
 		var registries []compiler.Registry
@@ -509,36 +507,85 @@ func (b *builder) Build() ([]*buildItem, error) {
 			})
 		}
 
-		ir := compiler.New(
+		var opts = []compiler.Option{
 			compiler.WithEnviron(environ),
 			compiler.WithEnviron(b.Envs),
-			compiler.WithEscalated(Config.Pipeline.Privileged...),
-			compiler.WithResourceLimit(Config.Pipeline.Limits.MemSwapLimit, Config.Pipeline.Limits.MemLimit, Config.Pipeline.Limits.ShmSize, Config.Pipeline.Limits.CPUQuota, Config.Pipeline.Limits.CPUShares, Config.Pipeline.Limits.CPUSet),
-			compiler.WithVolumes(Config.Pipeline.Volumes...),
+			compiler.WithLimits(
+				compiler.Resources{
+					CPUQuota:     Config.Pipeline.Limits.CPUQuota,
+					CPUShares:    Config.Pipeline.Limits.CPUShares,
+					CPUSet:       Config.Pipeline.Limits.CPUSet,
+					ShmSize:      Config.Pipeline.Limits.ShmSize,
+					MemLimit:     Config.Pipeline.Limits.MemLimit,
+					MemSwapLimit: Config.Pipeline.Limits.MemSwapLimit,
+				},
+			),
+			compiler.WithMetadata(
+				compiler.Metadata{
+					Branch:      b.Curr.Branch,
+					Event:       b.Curr.Event,
+					Ref:         b.Curr.Ref,
+					Repo:        b.Repo.FullName,
+					Platform:    metadata.Sys.Arch,
+					Environment: b.Curr.Deploy,
+					// TODO(bradrydzewski) add the instance
+					// Instance:    "",
+					Matrix: axis,
+				},
+			),
 			compiler.WithNetworks(Config.Pipeline.Networks...),
-			compiler.WithLocal(false),
-			compiler.WithOption(
+			compiler.WithPrivileged(Config.Pipeline.Privileged...),
+			compiler.WithRegistry(registries...),
+			compiler.WithSecret(secrets...),
+			compiler.WithVolumes(Config.Pipeline.Volumes...),
+			compiler.WithWorkspaceFromURL("/drone", b.Repo.Link),
+		}
+
+		if b.Repo.IsPrivate {
+			opts = append(opts,
 				compiler.WithNetrc(
 					b.Netrc.Login,
 					b.Netrc.Password,
 					b.Netrc.Machine,
 				),
-				b.Repo.IsPrivate,
-			),
-			compiler.WithRegistry(registries...),
-			compiler.WithSecret(secrets...),
-			compiler.WithPrefix(
-				fmt.Sprintf(
-					"%d_%d",
-					proc.ID,
-					rand.Int(),
-				),
-			),
-			compiler.WithEnviron(proc.Environ),
-			compiler.WithProxy(),
-			compiler.WithWorkspaceFromURL("/drone", b.Repo.Link),
-			compiler.WithMetadata(metadata),
-		).Compile(parsed)
+			)
+		}
+
+		ir, err := compiler.New(opts...).Compile(parsed)
+		if err != nil {
+			return nil, err
+		}
+
+		// ir := compiler.New(
+		// 	compiler.WithEnviron(environ),
+		// 	compiler.WithEnviron(b.Envs),
+		// 	compiler.WithEscalated(Config.Pipeline.Privileged...),
+		// 	compiler.WithResourceLimit(Config.Pipeline.Limits.MemSwapLimit, Config.Pipeline.Limits.MemLimit, Config.Pipeline.Limits.ShmSize, Config.Pipeline.Limits.CPUQuota, Config.Pipeline.Limits.CPUShares, Config.Pipeline.Limits.CPUSet),
+		// 	compiler.WithVolumes(Config.Pipeline.Volumes...),
+		// 	compiler.WithNetworks(Config.Pipeline.Networks...),
+		// 	compiler.WithLocal(false),
+		// 	compiler.WithOption(
+		// 		compiler.WithNetrc(
+		// 			b.Netrc.Login,
+		// 			b.Netrc.Password,
+		// 			b.Netrc.Machine,
+		// 		),
+		// 		b.Repo.IsPrivate,
+		// 	),
+		// 	compiler.WithRegistry(registries...),
+		// 	compiler.WithSecret(secrets...),
+		// 	compiler.WithPrefix(
+		// 		fmt.Sprintf(
+		// 			"%d_%d",
+		// 			proc.ID,
+		// 			rand.Int(),
+		// 		),
+		// 	),
+		// 	compiler.WithEnviron(proc.Environ),
+		// 	compiler.WithProxy(),
+		// 	compiler.WithWorkspaceFromURL("/drone", b.Repo.Link),
+		// 	compiler.WithMetadata(metadata),
+		// ).Compile(parsed)
 
 		// for _, sec := range b.Secs {
 		// 	if !sec.MatchEvent(b.Curr.Event) {
@@ -556,7 +603,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 		item := &buildItem{
 			Proc:     proc,
 			Config:   ir,
-			Labels:   parsed.Labels,
+			Labels:   parsed.Labels.Map,
 			Platform: metadata.Sys.Arch,
 		}
 		if item.Labels == nil {

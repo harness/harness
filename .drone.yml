@@ -2,6 +2,9 @@ workspace:
   base: /go
   path: src/github.com/drone/drone
 
+branches:
+  exclude: drone-runtime
+
 pipeline:
   test:
     image: golang:1.8
