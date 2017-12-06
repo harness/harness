@@ -358,6 +358,7 @@ func metadataFromStruct(repo *model.Repo, build, last *model.Build, proc *model.
 			Link:    repo.Link,
 			Remote:  repo.Clone,
 			Private: repo.IsPrivate,
+			Branch:  repo.Branch,
 		},
 		Curr: frontend.Build{
 			Number:   build.Number,
