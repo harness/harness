@@ -23,9 +23,9 @@ import (
 	"github.com/drone/envsubst"
 
 	"github.com/cncd/pipeline/pipeline/frontend"
-	"github.com/cncd/pipeline/pipeline/rpc"
 	"github.com/cncd/pubsub"
 	"github.com/cncd/queue"
+	"github.com/drone/drone/server/rpc"
 
 	yamlconfig "github.com/drone/drone-yaml-v1/config"
 	"github.com/drone/drone-yaml-v1/config/compiler"

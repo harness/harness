@@ -15,10 +15,10 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/cncd/logging"
-	"github.com/cncd/pipeline/pipeline/rpc"
-	"github.com/cncd/pipeline/pipeline/rpc/proto"
 	"github.com/cncd/pubsub"
 	"github.com/cncd/queue"
+	"github.com/drone/drone/server/rpc"
+	"github.com/drone/drone/server/rpc/proto"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"

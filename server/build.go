@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/cncd/pipeline/pipeline/rpc"
 	"github.com/cncd/pubsub"
 	"github.com/cncd/queue"
 	"github.com/drone/drone/remote"
+	"github.com/drone/drone/server/rpc"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
 	"github.com/gin-gonic/gin"
