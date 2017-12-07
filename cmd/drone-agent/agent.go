@@ -2,27 +2,29 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
-	"github.com/cncd/pipeline/pipeline/backend"
-	"github.com/cncd/pipeline/pipeline/rpc"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+
 	"github.com/drone/drone-runtime/engine"
 	"github.com/drone/drone-runtime/engine/docker"
 	"github.com/drone/drone-runtime/engine/plugin"
 	"github.com/drone/drone-runtime/runtime"
 	"github.com/drone/drone-runtime/runtime/chroot"
-	"github.com/drone/drone-runtime/runtime/term"
+	"github.com/drone/drone/server/rpc"
+
 	"github.com/drone/signal"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
 	oldcontext "golang.org/x/net/context"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 func loop(c *cli.Context) error {
@@ -53,17 +55,32 @@ func loop(c *cli.Context) error {
 		)
 	}
 
+	var err error
+	var eng engine.Engine
+	if pluginPath := c.String("runtime-plugin"); pluginPath == "" {
+		eng, err = docker.NewEnv()
+		if err != nil {
+			log.Error().
+				Err(err).
+				Msg("failed to create docker engine")
+			return err
+		}
+	} else {
+		eng, err = plugin.Open(pluginPath)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Msg("failed to open plugin as engine")
+			return err
+		}
+	}
+
 	counter.Polling = c.Int("max-procs")
 	counter.Running = 0
 
 	if c.BoolT("healthcheck") {
 		go http.ListenAndServe(":3000", nil)
 	}
-
-	// TODO pass version information to grpc server
-	// TODO authenticate to grpc server
-
-	// grpc.Dial(target, ))
 
 	conn, err := grpc.Dial(
 		c.String("server"),
@@ -106,7 +123,7 @@ func loop(c *cli.Context) error {
 					client:   client,
 					filter:   filter,
 					hostname: hostname,
-					plugin:   c.String("runtime-plugin"),
+					engine:   eng,
 				}
 				if err := r.run(ctx); err != nil {
 					log.Error().Err(err).Msg("pipeline done with error")
@@ -129,115 +146,292 @@ const (
 )
 
 type runner struct {
+	engine   engine.Engine
 	client   rpc.Peer
 	filter   rpc.Filter
 	hostname string
-	plugin   string
 }
 
 func (r *runner) run(ctx context.Context) error {
-	log.Debug().Msg("request next execution")
+	log.Debug().
+		Msg("request next execution")
 
 	meta, _ := metadata.FromOutgoingContext(ctx)
 	ctxmeta := metadata.NewOutgoingContext(context.Background(), meta)
 
-	// TODO: Change this to receive the actual new payload
 	// get the next job from the queue
-	_, err := r.client.Next(ctx, r.filter)
+	work, err := r.client.Next(ctx, r.filter)
 	if err != nil {
 		return err
 	}
-
-	// TODO: Remove this mocked config
-	config := &engine.Config{
-		Version: 1,
-		Stages: []*engine.Stage{{
-			Name:  "stage_0",
-			Alias: "stage_0",
-			Steps: []*engine.Step{{
-				Name:       "step_0",
-				Alias:      "step_0",
-				Image:      "alpine:3.6",
-				WorkingDir: "/",
-				Entrypoint: []string{
-					"/bin/sh",
-					"-c",
-				},
-				Command: []string{
-					"for i in $(seq 1 5); do date && sleep 1; done",
-				},
-				OnSuccess: true,
-			}},
-		}},
+	if work == nil {
+		return nil
 	}
 
 	timeout := time.Hour
-	//if minutes := work.Timeout; minutes != 0 {
-	//	timeout = time.Duration(minutes) * time.Minute
-	//}
+	if minutes := work.Timeout; minutes != 0 {
+		timeout = time.Duration(minutes) * time.Minute
+	}
 
-	//counter.Add(
-	//	work.ID,
-	//	timeout,
-	//	extractRepositoryName(work.Config), // hack
-	//	extractBuildNumber(work.Config),    // hack
-	//)
-	//defer counter.Done(work.ID)
-	//
+	counter.Add(
+		work.ID,
+		timeout,
+		extractRepositoryName(work.Config), // hack
+		extractBuildNumber(work.Config),    // hack
+	)
+	defer counter.Done(work.ID)
+
 	logger := log.With().
-		//Str("repo", extractRepositoryName(work.Config)). // hack
-		//Str("build", extractBuildNumber(work.Config)).   // hack
-		//Str("id", work.ID).
+		Str("repo", extractRepositoryName(work.Config)). // hack
+		Str("build", extractBuildNumber(work.Config)).   // hack
+		Str("id", work.ID).
 		Logger()
 
-	logger.Debug().Msg("received execution")
+	logger.Debug().
+		Msg("received execution")
 
-	var engine engine.Engine
-	if r.plugin == "" {
-		engine, err = docker.NewEnv()
-		if err != nil {
-			logger.Warn().Err(err).Msg("failed to create docker engine")
-			return err
+	hooks := runtime.Hook{}
+
+	//
+	// Send the full logs to the server on completion. The log
+	// stream is in-memory and volatile so we submit the full
+	// logs at the end of the build for guaranteed persistence.
+	//
+
+	hooks.GotLogs = func(state *runtime.State, lines []*runtime.Line) error {
+		loglogger := logger.With().
+			Str("image", state.Step.Image).
+			Str("stage", state.Step.Alias).
+			Logger()
+
+		file := &rpc.File{}
+		file.Mime = "application/json+logs"
+		file.Proc = state.Step.Alias
+		file.Name = "logs.json"
+		file.Data, _ = json.Marshal(lines)
+		file.Size = len(file.Data)
+		file.Time = time.Now().Unix()
+
+		loglogger.Debug().
+			Msg("log stream uploading")
+
+		if serr := r.client.Upload(ctxmeta, work.ID, file); serr != nil {
+			loglogger.Error().
+				Err(serr).
+				Msg("log stream upload error")
 		}
-	} else {
-		engine, err = plugin.Open(r.plugin)
-		if err != nil {
-			logger.Warn().Err(err).Msg("failed to open plugin as engine")
-			return err
-		}
+
+		loglogger.Debug().
+			Msg("log stream upload complete")
+		return nil
 	}
 
-	hooks := &runtime.Hook{}
-	hooks.GotLine = term.WriteLine(os.Stdout)
-	//if tty {
-	//	hooks.GotLine = term.WriteLinePretty(os.Stdout)
-	//}
+	//
+	// Send each line of logs to the server.
+	//
 
-	//var fs runtime.FileSystem
-	//if *b != "" {
-	fs, err := chroot.New("")
-	if err != nil {
-		logger.Warn().Err(err).Msg("failed to create runtime filesystem")
+	hooks.GotLine = func(state *runtime.State, line *runtime.Line) error {
+		// TODO we do not currently have any sort of log limit here.
+		l := &rpc.Line{
+			Out:  line.Message,
+			Proc: state.Step.Alias,
+			Pos:  line.Number,
+			// TODO we need to track the start time somewhere
+			// Time: int64(time.Since(w.now).Seconds()),
+			Type: rpc.LineStdout,
+		}
+		r.client.Log(context.Background(), work.ID, l)
+		return nil
 	}
-	//}
 
-	runtime := runtime.New(
-		runtime.WithFileSystem(fs),
-		runtime.WithEngine(engine),
-		runtime.WithConfig(config),
-		runtime.WithHooks(hooks),
-	)
+	//
+	// Update the server to signal the step is complete
+	//
+
+	hooks.AfterEach = func(state *runtime.State) error {
+		proclogger := logger.With().
+			Str("image", state.Step.Image).
+			Str("stage", state.Step.Alias).
+			Int("exit_code", state.State.ExitCode).
+			Bool("exited", state.State.Exited).
+			Logger()
+
+		procState := rpc.State{
+			Proc:     state.Step.Alias,
+			Exited:   state.State.Exited,
+			ExitCode: state.State.ExitCode,
+			Started:  time.Now().Unix(), // TODO FIX ME do not do this
+			Finished: time.Now().Unix(),
+		}
+
+		proclogger.Debug().
+			Msg("update step status")
+
+		if uerr := r.client.Update(ctxmeta, work.ID, procState); uerr != nil {
+			proclogger.Debug().
+				Err(uerr).
+				Msg("update step status error")
+		}
+
+		proclogger.Debug().
+			Msg("update step status complete")
+		return nil
+	}
+
+	//
+	// Update the server to signal the step is starting. Also
+	// update the step to set some dynamic runtime environment
+	// variables, such as start time and current status.
+	//
+
+	hooks.BeforeEach = func(state *runtime.State) error {
+		proclogger := logger.With().
+			Str("image", state.Step.Image).
+			Str("stage", state.Step.Alias).
+			Int("exit_code", state.State.ExitCode).
+			Bool("exited", state.State.Exited).
+			Logger()
+
+		procState := rpc.State{
+			Proc:     state.Step.Alias,
+			Exited:   state.State.Exited,
+			ExitCode: state.State.ExitCode,
+			Started:  time.Now().Unix(), // TODO FIX ME do not do this
+			Finished: time.Now().Unix(),
+		}
+
+		proclogger.Debug().
+			Msg("update step status")
+
+		if uerr := r.client.Update(ctxmeta, work.ID, procState); uerr != nil {
+			proclogger.Debug().
+				Err(uerr).
+				Msg("update step status error")
+		}
+
+		proclogger.Debug().
+			Msg("update step status complete")
+
+		if state.Step.Environment == nil {
+			state.Step.Environment = map[string]string{}
+		}
+
+		state.Step.Environment["DRONE_MACHINE"] = r.hostname
+		state.Step.Environment["CI_BUILD_STATUS"] = "success"
+		state.Step.Environment["CI_BUILD_STARTED"] = strconv.FormatInt(state.Runtime.Time, 10)
+		state.Step.Environment["CI_BUILD_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
+		state.Step.Environment["DRONE_BUILD_STATUS"] = "success"
+		state.Step.Environment["DRONE_BUILD_STARTED"] = strconv.FormatInt(state.Runtime.Time, 10)
+		state.Step.Environment["DRONE_BUILD_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
+
+		state.Step.Environment["CI_JOB_STATUS"] = "success"
+		state.Step.Environment["CI_JOB_STARTED"] = strconv.FormatInt(state.Runtime.Time, 10)
+		state.Step.Environment["CI_JOB_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
+		state.Step.Environment["DRONE_JOB_STATUS"] = "success"
+		state.Step.Environment["DRONE_JOB_STARTED"] = strconv.FormatInt(state.Runtime.Time, 10)
+		state.Step.Environment["DRONE_JOB_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
+
+		if state.Runtime.Error != nil {
+			state.Step.Environment["CI_BUILD_STATUS"] = "failure"
+			state.Step.Environment["CI_JOB_STATUS"] = "failure"
+			state.Step.Environment["DRONE_BUILD_STATUS"] = "failure"
+			state.Step.Environment["DRONE_JOB_STATUS"] = "failure"
+		}
+
+		return nil
+	}
 
 	ctx, cancel := context.WithTimeout(ctxmeta, timeout)
-	ctx = signal.WithContext(ctx)
 	defer cancel()
 
-	err = runtime.Run(ctx)
+	cancelled := abool.New()
+	go func() {
+		logger.Debug().
+			Msg("listen for cancel signal")
+
+		if werr := r.client.Wait(ctx, work.ID); werr != nil {
+			cancelled.SetTo(true)
+			logger.Warn().
+				Err(werr).
+				Msg("cancel signal received")
+
+			cancel()
+		} else {
+			logger.Debug().
+				Msg("stop listening for cancel signal")
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				logger.Debug().
+					Msg("pipeline done")
+
+				return
+			case <-time.After(time.Minute):
+				logger.Debug().
+					Msg("pipeline lease renewed")
+
+				r.client.Extend(ctx, work.ID)
+			}
+		}
+	}()
+
+	state := rpc.State{}
+	state.Started = time.Now().Unix()
+
+	err = r.client.Init(ctxmeta, work.ID, state)
 	if err != nil {
-		logger.Warn().Err(err).Msg("failed to run")
+		logger.Error().
+			Err(err).
+			Msg("pipeline initialization failed")
 	}
 
-	return err
+	fs, _ := chroot.New("/") // TODO this is bad. fix this
+	err = runtime.New(
+		runtime.WithEngine(r.engine),
+		runtime.WithConfig(work.Config),
+		runtime.WithFileSystem(fs),
+		runtime.WithHooks(&hooks),
+	).Run(ctx)
+
+	state.Finished = time.Now().Unix()
+	state.Exited = true
+	if err != nil {
+		switch xerr := err.(type) {
+		case *runtime.ExitError:
+			state.ExitCode = xerr.Code
+		default:
+			state.ExitCode = 1
+			state.Error = err.Error()
+		}
+		if cancelled.IsSet() {
+			state.ExitCode = 137
+		}
+	}
+
+	logger.Debug().
+		Str("error", state.Error).
+		Int("exit_code", state.ExitCode).
+		Msg("pipeline complete")
+
+	logger.Debug().
+		Str("error", state.Error).
+		Int("exit_code", state.ExitCode).
+		Msg("updating pipeline status")
+
+	err = r.client.Done(ctxmeta, work.ID, state)
+	if err != nil {
+		logger.Error().Err(err).
+			Msg("updating pipeline status failed")
+	} else {
+		logger.Debug().
+			Msg("updating pipeline status complete")
+	}
+
+	return nil
 }
 
 type credentials struct {
@@ -257,11 +451,11 @@ func (c *credentials) RequireTransportSecurity() bool {
 }
 
 // extract repository name from the configuration
-func extractRepositoryName(config *backend.Config) string {
+func extractRepositoryName(config *engine.Config) string {
 	return config.Stages[0].Steps[0].Environment["DRONE_REPO"]
 }
 
 // extract build number from the configuration
-func extractBuildNumber(config *backend.Config) string {
+func extractBuildNumber(config *engine.Config) string {
 	return config.Stages[0].Steps[0].Environment["DRONE_BUILD_NUMBER"]
 }
