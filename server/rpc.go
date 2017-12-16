@@ -425,7 +425,7 @@ func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
 					s.store.UpdateUser(user)
 				}
 			}
-			uri := fmt.Sprintf("%s/%s/%d", s.host, repo.FullName, build.Number)
+			uri := fmt.Sprintf("https://%s/%s/%d", s.host, repo.FullName, build.Number)
 			err = s.remote.Status(user, repo, build, uri)
 			if err != nil {
 				logrus.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
