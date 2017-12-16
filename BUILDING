@@ -9,5 +9,6 @@
 
 3. Install binaries to $GOPATH/bin
 
+    export CGO_ENABLED=0
     go install github.com/drone/drone/cmd/drone-agent
     go install github.com/drone/drone/cmd/drone-server
