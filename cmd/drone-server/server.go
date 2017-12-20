@@ -483,7 +483,7 @@ func server(c *cli.Context) error {
 		)
 	}
 
-	if !strings.HasSuffix(c.String("server-host"), "/") {
+	if strings.HasSuffix(c.String("server-host"), "/") {
 		logrus.Fatalln(
 			"DRONE_HOST must not have trailing slash",
 		)
