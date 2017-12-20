@@ -477,6 +477,18 @@ func server(c *cli.Context) error {
 		logrus.Fatalln("DRONE_HOST is not properly configured")
 	}
 
+	if !strings.Contains(c.String("server-host"), "://") {
+		logrus.Fatalln(
+			"DRONE_HOST must be <scheme>://<hostname> format",
+		)
+	}
+
+	if !strings.HasSuffix(c.String("server-host"), "/") {
+		logrus.Fatalln(
+			"DRONE_HOST must not have trailing slash",
+		)
+	}
+
 	remote_, err := SetupRemote(c)
 	if err != nil {
 		logrus.Fatal(err)
