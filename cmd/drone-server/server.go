@@ -52,6 +52,12 @@ var flags = []cli.Flag{
 		Value:  ":8000",
 	},
 	cli.StringFlag{
+		EnvVar: "DRONE_HOOK_HOST",
+		Name:   "hook-host",
+		Usage:  "for generating webhook links",
+		Value:  "",
+	},
+	cli.StringFlag{
 		EnvVar: "DRONE_SERVER_CERT",
 		Name:   "server-cert",
 		Usage:  "server ssl cert",
@@ -489,6 +495,12 @@ func server(c *cli.Context) error {
 		)
 	}
 
+	if c.String("hook-host") != "" && !strings.Contains(c.String("hook-host"), "://") {
+		logrus.Fatalln(
+			"HOOK_HOST must be <scheme>://<hostname> format",
+		)
+	}
+
 	remote_, err := SetupRemote(c)
 	if err != nil {
 		logrus.Fatal(err)
@@ -648,6 +660,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store, r remote.Remote) {
 	droneserver.Config.Server.Pass = c.String("agent-secret")
 	droneserver.Config.Server.Host = strings.TrimRight(c.String("server-host"), "/")
 	droneserver.Config.Server.Port = c.String("server-addr")
+	droneserver.Config.Server.HookHost = strings.TrimRight(c.String("hook-host"), "/")
 	droneserver.Config.Server.RepoConfig = c.String("repo-config")
 	droneserver.Config.Server.SessionExpires = c.Duration("session-expires")
 	droneserver.Config.Pipeline.Networks = c.StringSlice("network")
