@@ -17,6 +17,14 @@ import (
 	"github.com/drone/drone/store"
 )
 
+func getHookHost(r *http.Request) string {
+	if Config.Server.HookHost != "" {
+		return Config.Server.HookHost
+	}
+
+	return httputil.GetURL(r)
+}
+
 func PostRepo(c *gin.Context) {
 	remote := remote.FromContext(c)
 	user := session.User(c)
@@ -66,7 +74,7 @@ func PostRepo(c *gin.Context) {
 
 	link := fmt.Sprintf(
 		"%s/hook?access_token=%s",
-		httputil.GetURL(c.Request),
+		getHookHost(c.Request),
 		sig,
 	)
 
@@ -209,7 +217,7 @@ func RepairRepo(c *gin.Context) {
 	}
 
 	// reconstruct the link
-	host := httputil.GetURL(c.Request)
+	host := getHookHost(c.Request)
 	link := fmt.Sprintf(
 		"%s/hook?access_token=%s",
 		host,
@@ -295,7 +303,7 @@ func MoveRepo(c *gin.Context) {
 	}
 
 	// reconstruct the link
-	host := httputil.GetURL(c.Request)
+	host := getHookHost(c.Request)
 	link := fmt.Sprintf(
 		"%s/hook?access_token=%s",
 		host,

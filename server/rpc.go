@@ -62,6 +62,7 @@ var Config = struct {
 		Pass           string
 		RepoConfig     string
 		SessionExpires time.Duration
+		HookHost       string
 		// Open bool
 		// Orgs map[string]struct{}
 		// Admins map[string]struct{}
