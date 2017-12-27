@@ -528,7 +528,7 @@ func server(c *cli.Context) error {
 			grpc.StreamInterceptor(auther.streamInterceptor),
 			grpc.UnaryInterceptor(auther.unaryIntercaptor),
 		)
-		ss := new(droneserver.DroneServer)
+		ss := droneserver.NewDroneServer()
 		ss.Queue = droneserver.Config.Services.Queue
 		ss.Logger = droneserver.Config.Services.Logs
 		ss.Pubsub = droneserver.Config.Services.Pubsub
@@ -536,6 +536,7 @@ func server(c *cli.Context) error {
 		ss.Store = store_
 		ss.Host = droneserver.Config.Server.Host
 		proto.RegisterDroneServer(s, ss)
+		proto.RegisterHealthServer(s, ss)
 
 		err = s.Serve(lis)
 		if err != nil {
