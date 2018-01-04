@@ -152,13 +152,12 @@ func PostHook(c *gin.Context) {
 	}
 
 	if Config.Services.Transformer != nil {
-		confbTransformed, err := Config.Services.Transformer.Transform(repo, confb)
+		confb, err = Config.Services.Transformer.Transform(repo, confb)
 		if err != nil {
 			logrus.Errorf("error: cannot transform configuration: %s", err)
 			c.AbortWithError(500, err)
 			return
 		}
-		logrus.Debugf("transformed: %s", string(confbTransformed))
 	}
 
 	sha := shasum(confb)
