@@ -55,7 +55,7 @@ func GetBadge(c *gin.Context) {
 	case model.StatusPending, model.StatusRunning:
 		c.Redirect(302, badgeStartedUrl+"?"+queryString)
 	default:
-		c.String(302, badgeNoneUrl+"?"+queryString)
+		c.Redirect(302, badgeNoneUrl+"?"+queryString)
 	}
 }
 
