@@ -37,7 +37,8 @@ func GetBadge(c *gin.Context) {
 		branch = repo.Branch
 	}
 
-	queryString := c.Request.URL.RawQuery
+	repoUrl := fmt.Sprintf("%s/%s", httputil.GetURL(c.Request), repo.FullName)
+	queryString := fmt.Sprintf("link=%s&link=%s&%s", repoUrl, repoUrl, c.Request.URL.RawQuery)
 	build, err := store.GetBuildLast(c, repo, branch)
 	if err != nil {
 		log.Warning(err)
