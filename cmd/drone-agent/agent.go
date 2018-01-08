@@ -69,26 +69,6 @@ func loop(c *cli.Context) error {
 
 	// grpc.Dial(target, ))
 
-	agentKeepalive := keepalive.ClientParameters{}
-	if c.String("keepalive-time") != "" {
-		d, err := time.ParseDuration(c.String("keepalive-time"))
-
-		if err != nil {
-			return err
-		}
-
-		agentKeepalive.Time = d
-	}
-	if c.String("keepalive-timeout") != "" {
-		d, err := time.ParseDuration(c.String("keepalive-timeout"))
-
-		if err != nil {
-			return err
-		}
-
-		agentKeepalive.Timeout = d
-	}
-
 	conn, err := grpc.Dial(
 		c.String("server"),
 		grpc.WithInsecure(),
@@ -96,7 +76,10 @@ func loop(c *cli.Context) error {
 			username: c.String("username"),
 			password: c.String("password"),
 		}),
-		grpc.WithKeepaliveParams(agentKeepalive),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time: c.Duration("keepalive-time"),
+			Timeout: c.Duration("keepalive-timeout"),
+		}),
 	)
 
 	if err != nil {
