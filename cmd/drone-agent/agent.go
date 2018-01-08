@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/cncd/pipeline/pipeline"
@@ -68,6 +69,26 @@ func loop(c *cli.Context) error {
 
 	// grpc.Dial(target, ))
 
+	agentKeepalive := keepalive.ClientParameters{}
+	if c.String("keepalive-time") != "" {
+		d, err := time.ParseDuration(c.String("keepalive-time"))
+
+		if err != nil {
+			return err
+		}
+
+		agentKeepalive.Time = d
+	}
+	if c.String("keepalive-timeout") != "" {
+		d, err := time.ParseDuration(c.String("keepalive-timeout"))
+
+		if err != nil {
+			return err
+		}
+
+		agentKeepalive.Timeout = d
+	}
+
 	conn, err := grpc.Dial(
 		c.String("server"),
 		grpc.WithInsecure(),
@@ -75,6 +96,7 @@ func loop(c *cli.Context) error {
 			username: c.String("username"),
 			password: c.String("password"),
 		}),
+		grpc.WithKeepaliveParams(agentKeepalive),
 	)
 
 	if err != nil {
