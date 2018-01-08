@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 
 	"golang.org/x/crypto/acme/autocert"
@@ -461,6 +462,11 @@ var flags = []cli.Flag{
 		Name:   "coding-skip-verify",
 		Usage:  "coding skip ssl verification",
 	},
+	cli.DurationFlag{
+		EnvVar: "DRONE_KEEPALIVE_MIN_TIME",
+		Name:   "keepalive-min-time",
+		Usage:  "coding skip ssl verification",
+	},
 }
 
 func server(c *cli.Context) error {
@@ -527,6 +533,9 @@ func server(c *cli.Context) error {
 		s := grpc.NewServer(
 			grpc.StreamInterceptor(auther.streamInterceptor),
 			grpc.UnaryInterceptor(auther.unaryIntercaptor),
+			grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+				MinTime: c.Duration("keepalive-min-time"),
+			}),
 		)
 		ss := new(droneserver.DroneServer)
 		ss.Queue = droneserver.Config.Services.Queue
