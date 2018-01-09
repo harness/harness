@@ -54,7 +54,7 @@ var flags = []cli.Flag{
 	cli.StringFlag{
 		EnvVar: "DRONE_HOOK_HOST",
 		Name:   "hook-host",
-		Usage:  "for generating webhook links",
+		Usage:  "override hook host",
 		Value:  "",
 	},
 	cli.StringFlag{
