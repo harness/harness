@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"time"
+	"log"
 
 	"github.com/cncd/pipeline/pipeline/backend"
 	"github.com/cncd/pipeline/pipeline/rpc/proto"
@@ -46,6 +47,8 @@ func (c *client) Next(ctx context.Context, f Filter) (*Pipeline, error) {
 		res, err = c.client.Next(ctx, req)
 		if err == nil {
 			break
+		} else {
+			log.Printf("grpc error: done(): code: %v: %s", grpc.Code(err), err)
 		}
 		switch grpc.Code(err) {
 		case
@@ -84,6 +87,8 @@ func (c *client) Wait(ctx context.Context, id string) (err error) {
 		_, err = c.client.Wait(ctx, req)
 		if err == nil {
 			break
+		} else {
+			log.Printf("grpc error: wait(): code: %v: %s", grpc.Code(err), err)
 		}
 		switch grpc.Code(err) {
 		case
@@ -116,6 +121,8 @@ func (c *client) Init(ctx context.Context, id string, state State) (err error) {
 		_, err = c.client.Init(ctx, req)
 		if err == nil {
 			break
+		} else {
+			log.Printf("grpc error: init(): code: %v: %s", grpc.Code(err), err)
 		}
 		switch grpc.Code(err) {
 		case
@@ -148,6 +155,8 @@ func (c *client) Done(ctx context.Context, id string, state State) (err error) {
 		_, err = c.client.Done(ctx, req)
 		if err == nil {
 			break
+		} else {
+			log.Printf("grpc error: done(): code: %v: %s", grpc.Code(err), err)
 		}
 		switch grpc.Code(err) {
 		case
@@ -173,6 +182,8 @@ func (c *client) Extend(ctx context.Context, id string) (err error) {
 		_, err = c.client.Extend(ctx, req)
 		if err == nil {
 			break
+		} else {
+			log.Printf("grpc error: extend(): code: %v: %s", grpc.Code(err), err)
 		}
 		switch grpc.Code(err) {
 		case
@@ -205,6 +216,8 @@ func (c *client) Update(ctx context.Context, id string, state State) (err error)
 		_, err = c.client.Update(ctx, req)
 		if err == nil {
 			break
+		} else {
+			log.Printf("grpc error: update(): code: %v: %s", grpc.Code(err), err)
 		}
 		switch grpc.Code(err) {
 		case
@@ -238,6 +251,8 @@ func (c *client) Upload(ctx context.Context, id string, file *File) (err error) 
 		_, err = c.client.Upload(ctx, req)
 		if err == nil {
 			break
+		} else {
+			log.Printf("grpc error: upload(): code: %v: %s", grpc.Code(err), err)
 		}
 		switch grpc.Code(err) {
 		case
@@ -268,6 +283,8 @@ func (c *client) Log(ctx context.Context, id string, line *Line) (err error) {
 		_, err = c.client.Log(ctx, req)
 		if err == nil {
 			break
+		} else {
+			log.Printf("grpc error: log(): code: %v: %s", grpc.Code(err), err)
 		}
 		switch grpc.Code(err) {
 		case

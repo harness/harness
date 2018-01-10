@@ -195,80 +195,80 @@
 		{
 			"checksumSHA1": "W3AuK8ocqHwlUajGmQLFvnRhTZE=",
 			"path": "github.com/cncd/pipeline/pipeline",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
 			"checksumSHA1": "iRKdpheRPBTP0DKTQH7zmE2PI34=",
 			"path": "github.com/cncd/pipeline/pipeline/backend",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
 			"checksumSHA1": "EHJGG1USUliP8nzNWV/axO5KLzw=",
 			"path": "github.com/cncd/pipeline/pipeline/backend/docker",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
 			"checksumSHA1": "HWV2BBLXS4gY5eLJeNIg7Z6nAOA=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
 			"checksumSHA1": "ncGH2MfHDtM7/dNzj2i+lnXFnf4=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
 			"checksumSHA1": "cdjOSSSS5Gzx7gRLNvObQvNJWYg=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/compiler",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
 			"checksumSHA1": "Sj2VYU+asWToYriIqcinav5MJZo=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/linter",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
 			"checksumSHA1": "kx2sPUIMozPC/g6E4w48h3FfH3k=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/matrix",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
 			"checksumSHA1": "L7Q5qJmPITNmvFEEaj5MPwCWFRk=",
 			"path": "github.com/cncd/pipeline/pipeline/frontend/yaml/types",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
 			"checksumSHA1": "2/3f3oNmxXy5kcrRLCFa24Oc9O4=",
 			"path": "github.com/cncd/pipeline/pipeline/interrupt",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
 			"checksumSHA1": "uOjTfke7Qxosrivgz/nVTHeIP5g=",
 			"path": "github.com/cncd/pipeline/pipeline/multipart",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
-			"checksumSHA1": "5oiGroE8hLXcj9hcZ+GGoBEm3o0=",
+			"checksumSHA1": "mfWlnRAr5B4+RL13W3s0BQVBofM=",
 			"path": "github.com/cncd/pipeline/pipeline/rpc",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
 			"checksumSHA1": "N+3wNQ8hc/6yrh3FxbaxkEVwrkY=",
 			"path": "github.com/cncd/pipeline/pipeline/rpc/proto",
-			"revision": "f8c48fc9fb9fd113c6e7dd941d63bb9f86a623cb",
-			"revisionTime": "2017-12-01T21:30:15Z"
+			"revision": "3a09486affc9215ba52f55b1f6e10182458d1aba",
+			"revisionTime": "2018-01-10T21:28:38Z"
 		},
 		{
 			"checksumSHA1": "7Qj1DK0ceAXkYztW0l3+L6sn+V8=",
