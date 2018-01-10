@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/drone/drone/version"
 
@@ -89,6 +90,7 @@ func main() {
 			EnvVar: "DRONE_KEEPALIVE_TIMEOUT",
 			Name:   "keepalive-timeout",
 			Usage:  "after having pinged for keepalive check, the client waits for a duration of Timeout and if no activity is seen even after that the connection is closed.",
+			Value:  time.Second * 20,
 		},
 	}
 
