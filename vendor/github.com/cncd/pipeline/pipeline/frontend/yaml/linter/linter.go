@@ -127,6 +127,9 @@ func (l *Linter) lintTrusted(c *yaml.Container) error {
 	if len(c.IpcMode) != 0 {
 		return fmt.Errorf("Insufficient privileges to use ipc_mode")
 	}
+	if len(c.Sysctls) != 0 {
+		return fmt.Errorf("Insufficient privileges to use sysctls")
+	}
 	if c.Networks.Networks != nil && len(c.Networks.Networks) != 0 {
 		return fmt.Errorf("Insufficient privileges to use networks")
 	}

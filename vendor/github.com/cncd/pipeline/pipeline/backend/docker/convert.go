@@ -49,6 +49,7 @@ func toHostConfig(proc *backend.Step) *container.HostConfig {
 		},
 		Privileged: proc.Privileged,
 		ShmSize:    proc.ShmSize,
+		Sysctls:    proc.Sysctls,
 	}
 
 	// if len(proc.VolumesFrom) != 0 {

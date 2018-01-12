@@ -1,0 +1,13 @@
+1. Install go 1.9 or later
+2. Install dependencies
+
+    go get -u github.com/drone/drone-ui/dist
+    go get -u golang.org/x/net/context
+    go get -u golang.org/x/net/context/ctxhttp
+    go get -u github.com/golang/protobuf/proto
+    go get -u github.com/golang/protobuf/protoc-gen-go
+
+3. Install binaries to $GOPATH/bin
+
+    go install github.com/drone/drone/cmd/drone-agent
+    go install github.com/drone/drone/cmd/drone-server

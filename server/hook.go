@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -143,7 +144,7 @@ func PostHook(c *gin.Context) {
 	}
 
 	// fetch the build file from the database
-	confb, err := remote_.File(user, repo, build, repo.Config)
+	confb, err := remote.FileBackoff(remote_, user, repo, build, repo.Config)
 	if err != nil {
 		logrus.Errorf("error: %s: cannot find %s in %s: %s", repo.FullName, repo.Config, build.Ref, err)
 		c.AbortWithError(404, err)
@@ -246,7 +247,7 @@ func PostHook(c *gin.Context) {
 		uri := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, build.Number)
 		err = remote_.Status(user, repo, build, uri)
 		if err != nil {
-			logrus.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)
+			logrus.Errorf("error setting commit status for %s/%d: %v", repo.FullName, build.Number, err)
 		}
 	}()
 
@@ -346,12 +347,18 @@ func PostHook(c *gin.Context) {
 
 // return the metadata from the cli context.
 func metadataFromStruct(repo *model.Repo, build, last *model.Build, proc *model.Proc, link string) frontend.Metadata {
+	host := link
+	uri, err := url.Parse(link)
+	if err == nil {
+		host = uri.Host
+	}
 	return frontend.Metadata{
 		Repo: frontend.Repo{
 			Name:    repo.FullName,
 			Link:    repo.Link,
 			Remote:  repo.Clone,
 			Private: repo.IsPrivate,
+			Branch:  repo.Branch,
 		},
 		Curr: frontend.Build{
 			Number:   build.Number,
@@ -405,6 +412,7 @@ func metadataFromStruct(repo *model.Repo, build, last *model.Build, proc *model.
 		Sys: frontend.System{
 			Name: "drone",
 			Link: link,
+			Host: host,
 			Arch: "linux/amd64",
 		},
 	}

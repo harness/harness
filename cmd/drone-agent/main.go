@@ -80,6 +80,16 @@ func main() {
 			Name:   "healthcheck",
 			Usage:  "enables the healthcheck endpoint",
 		},
+		cli.DurationFlag{
+			EnvVar: "DRONE_KEEPALIVE_TIME",
+			Name:   "keepalive-time",
+			Usage:  "after a duration of this time if the agent doesn't see any activity it pings the server to see if the transport is still alive",
+		},
+		cli.DurationFlag{
+			EnvVar: "DRONE_KEEPALIVE_TIMEOUT",
+			Name:   "keepalive-timeout",
+			Usage:  "after having pinged for keepalive check, the client waits for a duration of Timeout and if no activity is seen even after that the connection is closed.",
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {

@@ -103,12 +103,12 @@ func Perm(c context.Context, u *model.User, owner, repo string) (*model.Perm, er
 
 // File fetches a file from the remote repository and returns in string format.
 func File(c context.Context, u *model.User, r *model.Repo, b *model.Build, f string) (out []byte, err error) {
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 12; i++ {
 		out, err = FromContext(c).File(u, r, b, f)
 		if err == nil {
 			return
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 	return
 }
@@ -153,4 +153,19 @@ func Refresh(c context.Context, u *model.User) (bool, error) {
 		return false, nil
 	}
 	return refresher.Refresh(u)
+}
+
+// FileBackoff fetches the file using an exponential backoff.
+// TODO replace this with a proper backoff
+func FileBackoff(remote Remote, u *model.User, r *model.Repo, b *model.Build, f string) (out []byte, err error) {
+	for i := 0; i < 5; i++ {
+		select {
+		case <-time.After(time.Second * time.Duration(i)):
+			out, err = remote.File(u, r, b, f)
+			if err == nil {
+				return
+			}
+		}
+	}
+	return
 }

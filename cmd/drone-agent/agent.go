@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/cncd/pipeline/pipeline"
@@ -74,6 +75,10 @@ func loop(c *cli.Context) error {
 		grpc.WithPerRPCCredentials(&credentials{
 			username: c.String("username"),
 			password: c.String("password"),
+		}),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time: c.Duration("keepalive-time"),
+			Timeout: c.Duration("keepalive-timeout"),
 		}),
 	)
 

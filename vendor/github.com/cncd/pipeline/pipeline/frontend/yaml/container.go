@@ -55,6 +55,7 @@ type (
 		Ulimits       libcompose.Ulimits        `yaml:"ulimits,omitempty"`
 		Volumes       libcompose.Volumes        `yaml:"volumes,omitempty"`
 		Secrets       Secrets                   `yaml:"secrets,omitempty"`
+		Sysctls       libcompose.SliceorMap     `yaml:"sysctls,omitempty"`
 		Constraints   Constraints               `yaml:"when,omitempty"`
 		Vargs         map[string]interface{}    `yaml:",inline"`
 	}

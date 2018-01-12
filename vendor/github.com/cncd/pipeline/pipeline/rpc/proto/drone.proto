@@ -39,6 +39,19 @@ message Pipeline {
   bytes payload = 3;
 }
 
+message HealthCheckRequest {
+  string service = 1;
+}
+
+message HealthCheckResponse {
+  enum ServingStatus {
+    UNKNOWN = 0;
+    SERVING = 1;
+    NOT_SERVING = 2;
+  }
+  ServingStatus status = 1;
+}
+
 service Drone {
   rpc Next   (NextRequest)   returns (NextReply) {}
   rpc Init   (InitRequest)   returns (Empty) {}
@@ -48,6 +61,10 @@ service Drone {
   rpc Update (UpdateRequest) returns (Empty) {}
   rpc Upload (UploadRequest) returns (Empty) {}
   rpc Log    (LogRequest)    returns (Empty) {}
+}
+
+service Health {
+  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
 }
 
 //
