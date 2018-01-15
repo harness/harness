@@ -14,7 +14,6 @@ import (
 	"github.com/cncd/pubsub"
 	"github.com/cncd/queue"
 	"github.com/drone/drone/remote"
-	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
 	"github.com/gin-gonic/gin"
 
@@ -312,7 +311,7 @@ func PostApproval(c *gin.Context) {
 		Netrc: netrc,
 		Secs:  secs,
 		Regs:  regs,
-		Link:  httputil.GetURL(c.Request),
+		Link:  Config.Server.Host,
 		Yaml:  conf.Data,
 		Envs:  envs,
 	}
@@ -570,7 +569,7 @@ func PostBuild(c *gin.Context) {
 		Netrc: netrc,
 		Secs:  secs,
 		Regs:  regs,
-		Link:  httputil.GetURL(c.Request),
+		Link:  Config.Server.Host,
 		Yaml:  conf.Data,
 		Envs:  buildParams,
 	}

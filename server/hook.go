@@ -17,7 +17,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
-	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
 	"github.com/drone/envsubst"
@@ -259,7 +258,7 @@ func PostHook(c *gin.Context) {
 		Secs:  secs,
 		Regs:  regs,
 		Envs:  envs,
-		Link:  httputil.GetURL(c.Request),
+		Link:  Config.Server.Host,
 		Yaml:  conf.Data,
 	}
 	items, err := b.Build()
