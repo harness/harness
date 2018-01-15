@@ -244,7 +244,7 @@ func PostHook(c *gin.Context) {
 	//
 
 	defer func() {
-		uri := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, build.Number)
+		uri := fmt.Sprintf("%s/%s/%d", Config.Server.Host, repo.FullName, build.Number)
 		err = remote_.Status(user, repo, build, uri)
 		if err != nil {
 			logrus.Errorf("error setting commit status for %s/%d", repo.FullName, build.Number)

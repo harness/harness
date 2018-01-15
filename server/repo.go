@@ -199,7 +199,7 @@ func DeleteRepo(c *gin.Context) {
 		}
 	}
 
-	remote.Deactivate(user, repo, httputil.GetURL(c.Request))
+	remote.Deactivate(user, repo, getHookHost(c.Request))
 	c.JSON(200, repo)
 }
 
