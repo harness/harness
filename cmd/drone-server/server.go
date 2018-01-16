@@ -576,24 +576,23 @@ func server(c *cli.Context) error {
 
 	// start the server with lets encrypt enabled
 	// listen on ports 443 and 80
+	address, err := url.Parse(c.String("server-host"))
+	if err != nil {
+		return err
+	}
+
+	dir := cacheDir()
+	os.MkdirAll(dir, 0700)
+
+	manager := autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist(address.Host),
+		Cache:      autocert.DirCache(dir),
+	}
 	g.Go(func() error {
-		return http.ListenAndServe(":http", http.HandlerFunc(redirect))
+		return http.ListenAndServe(":http", manager.HTTPHandler(http.HandlerFunc(redirect)))
 	})
-
 	g.Go(func() error {
-		address, err := url.Parse(c.String("server-host"))
-		if err != nil {
-			return err
-		}
-
-		dir := cacheDir()
-		os.MkdirAll(dir, 0700)
-
-		manager := autocert.Manager{
-			Prompt:     autocert.AcceptTOS,
-			HostPolicy: autocert.HostWhitelist(address.Host),
-			Cache:      autocert.DirCache(dir),
-		}
 		serve := &http.Server{
 			Addr:    ":https",
 			Handler: handler,

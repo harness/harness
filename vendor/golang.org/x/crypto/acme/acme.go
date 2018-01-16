@@ -51,38 +51,6 @@ const (
 	maxNonces = 100
 )
 
-// CertOption is an optional argument type for Client methods which manipulate
-// certificate data.
-type CertOption interface {
-	privateCertOpt()
-}
-
-// WithKey creates an option holding a private/public key pair.
-// The private part signs a certificate, and the public part represents the signee.
-func WithKey(key crypto.Signer) CertOption {
-	return &certOptKey{key}
-}
-
-type certOptKey struct {
-	key crypto.Signer
-}
-
-func (*certOptKey) privateCertOpt() {}
-
-// WithTemplate creates an option for specifying a certificate template.
-// See x509.CreateCertificate for template usage details.
-//
-// In TLSSNIxChallengeCert methods, the template is also used as parent,
-// resulting in a self-signed certificate.
-// The DNSNames field of t is always overwritten for tls-sni challenge certs.
-func WithTemplate(t *x509.Certificate) CertOption {
-	return (*certOptTemplate)(t)
-}
-
-type certOptTemplate x509.Certificate
-
-func (*certOptTemplate) privateCertOpt() {}
-
 // Client is an ACME client.
 // The only required field is Key. An example of creating a client with a new key
 // is as follows:
@@ -174,7 +142,7 @@ func (c *Client) Discover(ctx context.Context) (Directory, error) {
 //
 // In the case where CA server does not provide the issued certificate in the response,
 // CreateCert will poll certURL using c.FetchCert, which will result in additional round-trips.
-// In such scenario the caller can cancel the polling with ctx.
+// In such a scenario, the caller can cancel the polling with ctx.
 //
 // CreateCert returns an error if the CA's response or chain was unreasonably large.
 // Callers are encouraged to parse the returned value to ensure the certificate is valid and has the expected features.
@@ -289,7 +257,7 @@ func (c *Client) RevokeCert(ctx context.Context, key crypto.Signer, cert []byte,
 func AcceptTOS(tosURL string) bool { return true }
 
 // Register creates a new account registration by following the "new-reg" flow.
-// It returns registered account. The a argument is not modified.
+// It returns the registered account. The account is not modified.
 //
 // The registration may require the caller to agree to the CA's Terms of Service (TOS).
 // If so, and the account has not indicated the acceptance of the terms (see Account for details),
@@ -1027,6 +995,7 @@ func keyAuth(pub crypto.PublicKey, token string) (string, error) {
 
 // tlsChallengeCert creates a temporary certificate for TLS-SNI challenges
 // with the given SANs and auto-generated public/private key pair.
+// The Subject Common Name is set to the first SAN to aid debugging.
 // To create a cert with a custom key pair, specify WithKey option.
 func tlsChallengeCert(san []string, opt []CertOption) (tls.Certificate, error) {
 	var (
@@ -1065,6 +1034,9 @@ func tlsChallengeCert(san []string, opt []CertOption) (tls.Certificate, error) {
 		}
 	}
 	tmpl.DNSNames = san
+	if len(san) > 0 {
+		tmpl.Subject.CommonName = san[0]
+	}
 
 	der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, key.Public(), key)
 	if err != nil {
