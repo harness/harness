@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -663,3 +664,52 @@ func PostBuild(c *gin.Context) {
 		Config.Services.Queue.Push(context.Background(), task)
 	}
 }
+
+//
+///
+//
+
+func DeleteBuildLogs(c *gin.Context) {
+	repo := session.Repo(c)
+	num, _ := strconv.Atoi(c.Params.ByName("number"))
+
+	build, err := store.GetBuildNumber(c, repo, num)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+
+	procs, err := store.FromContext(c).ProcList(build)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+
+	switch build.Status {
+	case model.StatusRunning, model.StatusPending:
+		c.String(400, "Cannot delete logs for a pending or running build")
+		return
+	}
+
+	for _, proc := range procs {
+		buf := bytes.NewBufferString(fmt.Sprintf(deleteStr, proc.Name))
+		lerr := store.FromContext(c).LogSave(proc, buf)
+		if lerr != nil {
+			err = lerr
+		}
+	}
+	if err != nil {
+		c.String(400, "There was a problem deleting your logs. %s", err)
+		return
+	}
+
+	c.String(204, "")
+}
+
+var deleteStr = `[
+	{
+	  "proc": %q,
+	  "pos": 0,
+	  "out": "LOGS PURGED\n"
+	}
+]`
