@@ -584,7 +584,7 @@ func server(c *cli.Context) error {
 	dir := cacheDir()
 	os.MkdirAll(dir, 0700)
 
-	manager := autocert.Manager{
+	manager := &autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist(address.Host),
 		Cache:      autocert.DirCache(dir),
