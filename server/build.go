@@ -693,8 +693,8 @@ func DeleteBuildLogs(c *gin.Context) {
 	}
 
 	for _, proc := range procs {
-		t := time.Now()
-		buf := bytes.NewBufferString(fmt.Sprintf(deleteStr, proc.Name, user.Login, t.Format(time.RFC3339))
+		t := time.Now().UTC()
+		buf := bytes.NewBufferString(fmt.Sprintf(deleteStr, proc.Name, user.Login, t.Format(time.UnixDate)))
 		lerr := store.FromContext(c).LogSave(proc, buf)
 		if lerr != nil {
 			err = lerr
