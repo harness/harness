@@ -671,6 +671,7 @@ func PostBuild(c *gin.Context) {
 
 func DeleteBuildLogs(c *gin.Context) {
 	repo := session.Repo(c)
+	user := session.User(c)
 	num, _ := strconv.Atoi(c.Params.ByName("number"))
 
 	build, err := store.GetBuildNumber(c, repo, num)
@@ -692,7 +693,7 @@ func DeleteBuildLogs(c *gin.Context) {
 	}
 
 	for _, proc := range procs {
-		buf := bytes.NewBufferString(fmt.Sprintf(deleteStr, proc.Name))
+		buf := bytes.NewBufferString(fmt.Sprintf(deleteStr, proc.Name, user.Login))
 		lerr := store.FromContext(c).LogSave(proc, buf)
 		if lerr != nil {
 			err = lerr
@@ -710,6 +711,6 @@ var deleteStr = `[
 	{
 	  "proc": %q,
 	  "pos": 0,
-	  "out": "LOGS PURGED\n"
+	  "out": "logs purged by %s\n"
 	}
 ]`
