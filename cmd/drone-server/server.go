@@ -465,7 +465,7 @@ var flags = []cli.Flag{
 	cli.DurationFlag{
 		EnvVar: "DRONE_KEEPALIVE_MIN_TIME",
 		Name:   "keepalive-min-time",
-		Usage:  "coding skip ssl verification",
+		Usage:  "server-side enforcement policy on the minimum amount of time a client should wait before sending a keepalive ping.",
 	},
 }
 
