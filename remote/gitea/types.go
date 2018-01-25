@@ -38,6 +38,7 @@ type pushHook struct {
 		ID       int64  `json:"id"`
 		Login    string `json:"login"`
 		Username string `json:"username"`
+		Email    string `json:"email"`
 		Avatar   string `json:"avatar_url"`
 	} `json:"sender"`
 }
