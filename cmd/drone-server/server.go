@@ -38,12 +38,12 @@ var flags = []cli.Flag{
 	cli.BoolFlag{
 		EnvVar: "DRONE_DEBUG",
 		Name:   "debug",
-		Usage:  "start the server in debug mode",
+		Usage:  "enable server debug mode",
 	},
 	cli.StringFlag{
 		EnvVar: "DRONE_SERVER_HOST,DRONE_HOST",
 		Name:   "server-host",
-		Usage:  "server host",
+		Usage:  "server host (<scheme>://<hostname>)",
 	},
 	cli.StringFlag{
 		EnvVar: "DRONE_SERVER_ADDR",
@@ -54,22 +54,22 @@ var flags = []cli.Flag{
 	cli.StringFlag{
 		EnvVar: "DRONE_SERVER_CERT",
 		Name:   "server-cert",
-		Usage:  "server ssl cert",
+		Usage:  "server ssl cert path",
 	},
 	cli.StringFlag{
 		EnvVar: "DRONE_SERVER_KEY",
 		Name:   "server-key",
-		Usage:  "server ssl key",
+		Usage:  "server ssl key path",
 	},
 	cli.BoolFlag{
 		EnvVar: "DRONE_LETS_ENCRYPT",
 		Name:   "lets-encrypt",
-		Usage:  "lets encrypt enabled",
+		Usage:  "enable let's encrypt",
 	},
 	cli.BoolFlag{
 		EnvVar: "DRONE_QUIC",
 		Name:   "quic",
-		Usage:  "start the server with quic enabled",
+		Usage:  "enable quic",
 	},
 	cli.StringFlag{
 		EnvVar: "DRONE_WWW",
@@ -90,7 +90,7 @@ var flags = []cli.Flag{
 	cli.BoolFlag{
 		EnvVar: "DRONE_OPEN",
 		Name:   "open",
-		Usage:  "open user registration",
+		Usage:  "enable open user registration",
 	},
 	cli.StringFlag{
 		EnvVar: "DRONE_REPO_CONFIG",
@@ -101,12 +101,13 @@ var flags = []cli.Flag{
 	cli.DurationFlag{
 		EnvVar: "DRONE_SESSION_EXPIRES",
 		Name:   "session-expires",
-		Usage:  "Set the session expiration time default 72h",
+		Usage:  "set the session expiration time default 72h",
 		Value:  time.Hour * 72,
 	},
 	cli.StringSliceFlag{
 		EnvVar: "DRONE_ESCALATE",
 		Name:   "escalate",
+		Usage:  "images run in privileged mode",
 		Value: &cli.StringSlice{
 			"plugins/docker",
 			"plugins/gcr",
@@ -124,7 +125,7 @@ var flags = []cli.Flag{
 	cli.StringFlag{
 		EnvVar: "DRONE_AGENT_SECRET,DRONE_SECRET",
 		Name:   "agent-secret",
-		Usage:  "agent secret passcode",
+		Usage:  "drone server-agent shared password",
 	},
 	cli.StringFlag{
 		EnvVar: "DRONE_SECRET_ENDPOINT",
@@ -157,28 +158,32 @@ var flags = []cli.Flag{
 	// resource limit parameters
 	//
 	cli.Int64Flag{
-		Name:   "limit-mem-swap",
 		EnvVar: "DRONE_LIMIT_MEM_SWAP",
+		Name:   "limit-mem-swap",
+		Usage:  "maximum swappable memory allowed in bytes",
 	},
 	cli.Int64Flag{
-		Name:   "limit-mem",
 		EnvVar: "DRONE_LIMIT_MEM",
+		Name:   "limit-mem",
+		Usage:  "maximum memory allowed in bytes",
 	},
 	cli.Int64Flag{
-		Name:   "limit-shm-size",
 		EnvVar: "DRONE_LIMIT_SHM_SIZE",
+		Name:   "limit-shm-size",
 	},
 	cli.Int64Flag{
-		Name:   "limit-cpu-quota",
 		EnvVar: "DRONE_LIMIT_CPU_QUOTA",
+		Name:   "limit-cpu-quota",
+		Usage:  "impose a cpu quota",
 	},
 	cli.Int64Flag{
-		Name:   "limit-cpu-shares",
 		EnvVar: "DRONE_LIMIT_CPU_SHARES",
+		Name:   "limit-cpu-shares",
+		Usage:  "change the cpu shares",
 	},
 	cli.StringFlag{
-		Name:   "limit-cpu-set",
 		EnvVar: "DRONE_LIMIT_CPU_SET",
+		Name:   "limit-cpu-set",
 	},
 	//
 	// remote parameters
