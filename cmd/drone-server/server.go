@@ -125,7 +125,7 @@ var flags = []cli.Flag{
 	cli.StringFlag{
 		EnvVar: "DRONE_AGENT_SECRET,DRONE_SECRET",
 		Name:   "agent-secret",
-		Usage:  "drone server-agent shared password",
+		Usage:  "server-agent shared password",
 	},
 	cli.StringFlag{
 		EnvVar: "DRONE_SECRET_ENDPOINT",

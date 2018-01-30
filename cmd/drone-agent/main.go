@@ -40,7 +40,7 @@ func main() {
 		cli.StringFlag{
 			EnvVar: "DRONE_PASSWORD,DRONE_SECRET",
 			Name:   "password",
-			Usage:  "drone server-agent shared password",
+			Usage:  "server-agent shared password",
 		},
 		cli.BoolTFlag{
 			EnvVar: "DRONE_DEBUG",
