@@ -43,7 +43,7 @@ var flags = []cli.Flag{
 	cli.StringFlag{
 		EnvVar: "DRONE_SERVER_HOST,DRONE_HOST",
 		Name:   "server-host",
-		Usage:  "server host (<scheme>://<hostname>)",
+		Usage:  "server fully qualified url (<scheme>://<host>)",
 	},
 	cli.StringFlag{
 		EnvVar: "DRONE_SERVER_ADDR",
@@ -101,7 +101,7 @@ var flags = []cli.Flag{
 	cli.DurationFlag{
 		EnvVar: "DRONE_SESSION_EXPIRES",
 		Name:   "session-expires",
-		Usage:  "set the session expiration time default 72h",
+		Usage:  "session expiration time",
 		Value:  time.Hour * 72,
 	},
 	cli.StringSliceFlag{
@@ -170,6 +170,7 @@ var flags = []cli.Flag{
 	cli.Int64Flag{
 		EnvVar: "DRONE_LIMIT_SHM_SIZE",
 		Name:   "limit-shm-size",
+		Usage:  "docker compose /dev/shm allowed in bytes",
 	},
 	cli.Int64Flag{
 		EnvVar: "DRONE_LIMIT_CPU_QUOTA",
