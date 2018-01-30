@@ -107,7 +107,7 @@ var flags = []cli.Flag{
 	cli.StringSliceFlag{
 		EnvVar: "DRONE_ESCALATE",
 		Name:   "escalate",
-		Usage:  "images run in privileged mode",
+		Usage:  "images to run in privileged mode",
 		Value: &cli.StringSlice{
 			"plugins/docker",
 			"plugins/gcr",
