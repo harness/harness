@@ -136,6 +136,9 @@ type Store interface {
 	FileRead(*model.Proc, string) (io.ReadCloser, error)
 	FileCreate(*model.File, io.Reader) error
 
+	DeployEnvList(*model.Build) ([]*model.DeployEnv, error)
+	DeployEnvCreate([]*model.DeployEnv) error
+
 	TaskList() ([]*model.Task, error)
 	TaskInsert(*model.Task) error
 	TaskDelete(string) error

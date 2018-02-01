@@ -46,6 +46,18 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+func getDeployEnvList(pipeline yaml.Containers) []string {
+	ret := []string{}
+	for _, p := range pipeline.Containers {
+		constrains := p.Constraints
+		if constrains.Event.Match(model.EventDeploy) {
+			ret = append(ret, constrains.Environment.Include...)
+		}
+	}
+
+	return ret
+}
+
 func GetQueueInfo(c *gin.Context) {
 	c.IndentedJSON(200,
 		Config.Services.Queue.Info(c),
@@ -209,6 +221,19 @@ func PostHook(c *gin.Context) {
 		logrus.Errorf("failure to save commit for %s. %s", repo.FullName, err)
 		c.AbortWithError(500, err)
 		return
+	}
+
+	deploy_envs := getDeployEnvList(branches.Pipeline)
+	deployEnvs := []*model.DeployEnv{}
+	for _, env := range deploy_envs {
+		deployEnvs = append(deployEnvs, &model.DeployEnv{
+			BuildID: build.ID,
+			Name:    env,
+		})
+	}
+	err = store.FromContext(c).DeployEnvCreate(deployEnvs)
+	if err != nil {
+		logrus.Errorf("error persisting deploy envs %s/%d: %s", repo.FullName, build.Number, err)
 	}
 
 	c.JSON(200, build)

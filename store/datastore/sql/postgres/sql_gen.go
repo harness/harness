@@ -12,6 +12,7 @@ var index = map[string]string{
 	"count-users":                 countUsers,
 	"count-repos":                 countRepos,
 	"count-builds":                countBuilds,
+	"deploy_envs-find-build":      deployenvsFindBuild,
 	"feed-latest-build":           feedLatestBuild,
 	"feed":                        feed,
 	"files-find-build":            filesFindBuild,
@@ -96,6 +97,16 @@ WHERE repo_active = true
 var countBuilds = `
 SELECT reltuples
 FROM pg_class WHERE relname = 'builds'
+`
+
+var deployenvsFindBuild = `
+SELECT
+ deploy_env_id
+,deploy_env_build_id
+,deploy_env_name
+FROM deploy_envs
+WHERE deploy_env_build_id = $1
+ORDER BY deploy_env_id ASC
 `
 
 var feedLatestBuild = `
