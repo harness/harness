@@ -100,7 +100,7 @@ func PatchRepo(c *gin.Context) {
 		return
 	}
 
-	if (in.IsTrusted != nil || in.Timeout != nil || in.BuildCounter != nil) && !user.Admin {
+	if (in.IsTrusted != nil || in.Timeout != nil) && !user.Admin {
 		c.String(403, "Insufficient privileges")
 		return
 	}
