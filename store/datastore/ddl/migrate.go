@@ -91,6 +91,8 @@ INSERT INTO migrations (name) VALUES
 ,('create-table-agents')
 ,('create-table-senders')
 ,('create-index-sender-repos')
+,('create-table-deploy_envs')
+,('create-index-deploy_envs-build')
 `
 
 var createMigrationsTable = `

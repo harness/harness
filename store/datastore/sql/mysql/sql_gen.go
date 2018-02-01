@@ -12,6 +12,7 @@ var index = map[string]string{
 	"count-users":                 countUsers,
 	"count-repos":                 countRepos,
 	"count-builds":                countBuilds,
+	"deploy_envs-find-build":      deployenvsFindBuild,
 	"feed-latest-build":           feedLatestBuild,
 	"feed":                        feed,
 	"files-find-build":            filesFindBuild,
@@ -96,6 +97,16 @@ WHERE repo_active = true
 var countBuilds = `
 SELECT count(1)
 FROM builds
+`
+
+var deployenvsFindBuild = `
+SELECT
+ deploy_env_id
+,deploy_env_build_id
+,deploy_env_name
+FROM deploy_envs
+WHERE deploy_env_build_id = ?
+ORDER BY deploy_env_id ASC
 `
 
 var feedLatestBuild = `

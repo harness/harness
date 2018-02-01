@@ -53,8 +53,11 @@ func GetBuild(c *gin.Context) {
 	}
 	files, _ := store.FromContext(c).FileList(build)
 	procs, _ := store.FromContext(c).ProcList(build)
+
+	deploy_envs, _ := store.FromContext(c).DeployEnvList(build)
 	build.Procs = model.Tree(procs)
 	build.Files = files
+	build.DeployEnvs = deploy_envs
 
 	c.JSON(http.StatusOK, build)
 }
