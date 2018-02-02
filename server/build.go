@@ -25,7 +25,13 @@ import (
 
 func GetBuilds(c *gin.Context) {
 	repo := session.Repo(c)
-	builds, err := store.GetBuildList(c, repo)
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	builds, err := store.GetBuildList(c, repo, page)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return

@@ -72,7 +72,7 @@ func GetCC(c *gin.Context) {
 		return
 	}
 
-	builds, err := store.GetBuildList(c, repo)
+	builds, err := store.GetBuildList(c, repo, 1)
 	if err != nil || len(builds) == 0 {
 		c.AbortWithStatus(404)
 		return
