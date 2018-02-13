@@ -185,6 +185,7 @@ var flags = []cli.Flag{
 	cli.StringFlag{
 		EnvVar: "DRONE_LIMIT_CPU_SET",
 		Name:   "limit-cpu-set",
+		Usage:  "set the cpus allowed to execute containers",
 	},
 	//
 	// remote parameters
