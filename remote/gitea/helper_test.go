@@ -127,6 +127,7 @@ func Test_parse(t *testing.T) {
 			g.Assert(build.Ref).Equal("refs/pull/1/head")
 			g.Assert(build.Link).Equal(hook.PullRequest.URL)
 			g.Assert(build.Branch).Equal("master")
+			g.Assert(build.Refspec).Equal("feature/changes:master")
 			g.Assert(build.Message).Equal(hook.PullRequest.Title)
 			g.Assert(build.Avatar).Equal("http://1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87")
 			g.Assert(build.Author).Equal(hook.PullRequest.User.Username)
