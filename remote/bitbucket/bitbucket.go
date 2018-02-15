@@ -179,7 +179,7 @@ func (c *config) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 	resp := new(internal.RepoResp)
 
 	resp, err = client.ListRepos(owner, &internal.ListReposOpts{
-		Role: "contribute",
+		Role: "contributor",
 		Query: fmt.Sprintf("full_name = \"%s\"", repo.FullName),
 	})
 

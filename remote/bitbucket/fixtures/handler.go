@@ -135,14 +135,14 @@ func getUserRepos(c *gin.Context) {
 		}
 	case "Bearer admin_repo":
 		switch c.Query("role") {
-		case "contribute", "admin":
+		case "contributor", "admin":
 			c.String(200, userRepoPayload)
 		default:
 			c.String(200, userEmptyRepoPayload)
 		}
 	case "Bearer read_write_repo":
 		switch c.Query("role") {
-		case "contribute":
+		case "contributor":
 			c.String(200, userRepoPayload)
 		default:
 			c.String(200, userEmptyRepoPayload)
