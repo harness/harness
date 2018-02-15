@@ -11,7 +11,7 @@ import (
 )
 
 // IMPORTANT Gerrit support is not yet implemented. This file is a placeholder
-// for future implementaiton.
+// for future implementation.
 
 // Opts defines configuration options.
 type Opts struct {
@@ -52,7 +52,7 @@ func New(opts Opts) (remote.Remote, error) {
 	}, nil
 }
 
-// Login authenticates an account with Gerrit using oauth authenticaiton. The
+// Login authenticates an account with Gerrit using oauth authentication. The
 // Gerrit account details are returned when the user is successfully authenticated.
 func (c *client) Login(res http.ResponseWriter, req *http.Request) (*model.User, error) {
 	return nil, nil
