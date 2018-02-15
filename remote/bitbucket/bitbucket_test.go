@@ -146,18 +146,29 @@ func Test_bitbucket(t *testing.T) {
 			})
 			g.It("Should authorize read access", func() {
 				perm, err := c.Perm(
-					fakeUser,
-					fakeRepoNoHooks.Owner,
-					fakeRepoNoHooks.Name,
+					fakeUserReadOnly,
+					fakeRepo.Owner,
+					fakeRepo.Name,
 				)
 				g.Assert(err == nil).IsTrue()
 				g.Assert(perm.Pull).IsTrue()
 				g.Assert(perm.Push).IsFalse()
 				g.Assert(perm.Admin).IsFalse()
 			})
+			g.It("Should authorize read & write access", func() {
+				perm, err := c.Perm(
+					fakeUserReadWrite,
+					fakeRepo.Owner,
+					fakeRepo.Name,
+				)
+				g.Assert(err == nil).IsTrue()
+				g.Assert(perm.Pull).IsTrue()
+				g.Assert(perm.Push).IsTrue()
+				g.Assert(perm.Admin).IsFalse()
+			})
 			g.It("Should authorize admin access", func() {
 				perm, err := c.Perm(
-					fakeUser,
+					fakeUserAdmin,
 					fakeRepo.Owner,
 					fakeRepo.Name,
 				)
@@ -310,6 +321,21 @@ var (
 	fakeUserNoRepos = &model.User{
 		Login: "superman",
 		Token: "repos_not_found",
+	}
+
+	fakeUserReadOnly = &model.User{
+		Login: "superman",
+		Token: "read_only_repo",
+	}
+
+	fakeUserReadWrite = &model.User{
+		Login: "superman",
+		Token: "read_write_repo",
+	}
+
+	fakeUserAdmin = &model.User{
+		Login: "superman",
+		Token: "admin_repo",
 	}
 
 	fakeRepo = &model.Repo{

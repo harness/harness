@@ -200,6 +200,30 @@ func (o *ListTeamOpts) Encode() string {
 	return params.Encode()
 }
 
+type ListReposOpts struct {
+	Page    int
+	PageLen int
+	Role    string
+	Query	string
+}
+
+func (o *ListReposOpts) Encode() string {
+	params := url.Values{}
+	if o.Page != 0 {
+		params.Set("page", strconv.Itoa(o.Page))
+	}
+	if o.PageLen != 0 {
+		params.Set("pagelen", strconv.Itoa(o.PageLen))
+	}
+	if len(o.Role) != 0 {
+		params.Set("role", o.Role)
+	}
+	if len(o.Query) != 0 {
+		params.Set("q", o.Query)
+	}
+	return params.Encode()
+}
+
 type Error struct {
 	Status int
 	Body   struct {

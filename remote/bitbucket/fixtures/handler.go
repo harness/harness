@@ -125,6 +125,27 @@ func getUserRepos(c *gin.Context) {
 	switch c.Request.Header.Get("Authorization") {
 	case "Bearer repos_not_found", "Bearer 70efdf2e":
 		c.String(404, "")
+	case "Bearer read_only_repo":
+		switch c.Query("role") {
+		case "member":
+			c.String(200, userRepoPayload)
+		default:
+			c.String(200, userEmptyRepoPayload)
+		}
+	case "Bearer admin_repo":
+		switch c.Query("role") {
+		case "contribute", "admin":
+			c.String(200, userRepoPayload)
+		default:
+			c.String(200, userEmptyRepoPayload)
+		}
+	case "Bearer read_write_repo":
+		switch c.Query("role") {
+		case "contribute":
+			c.String(200, userRepoPayload)
+		default:
+			c.String(200, userEmptyRepoPayload)
+		}
 	default:
 		c.String(200, userRepoPayload)
 	}
@@ -205,6 +226,15 @@ const userRepoPayload = `
       "is_private": true
     }
   ]
+}
+`
+
+const userEmptyRepoPayload = `
+{
+  "page": 1,
+  "pagelen": 10,
+  "size": 0,
+  "values": []
 }
 `
 

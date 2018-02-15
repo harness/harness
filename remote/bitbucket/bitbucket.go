@@ -154,25 +154,38 @@ func (c *config) Repos(u *model.User) ([]*model.Repo, error) {
 	return all, nil
 }
 
-// Perm returns the user permissions for the named repository. Because Bitbucket
-// does not have an endpoint to access user permissions, we attempt to fetch
-// the repository hook list, which is restricted to administrators to calculate
-// administrative access to a repository.
+// Perm returns the user permissions for the named repository.
 func (c *config) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 	client := c.newClient(u)
 
 	perms := new(model.Perm)
-	_, err := client.FindRepo(owner, name)
+	repo, err := client.FindRepo(owner, name)
 	if err != nil {
 		return perms, err
 	}
 
-	_, err = client.ListHooks(owner, name, &internal.ListOpts{})
-	if err == nil {
+	perms.Pull = true
+
+	resp := new(internal.RepoResp)
+
+	resp, err = client.ListRepos(owner, &internal.ListReposOpts{
+		Role: "contribute",
+		Query: fmt.Sprintf("full_name = \"%s\"", repo.FullName),
+	})
+
+	if err == nil && resp.Size == 1 {
 		perms.Push = true
+	}
+
+	resp, err = client.ListRepos(owner, &internal.ListReposOpts{
+		Role: "admin",
+		Query: fmt.Sprintf("full_name = \"%s\"", repo.FullName),
+	})
+
+	if err == nil && resp.Size == 1 {
 		perms.Admin = true
 	}
-	perms.Pull = true
+
 	return perms, nil
 }
 

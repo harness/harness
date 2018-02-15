@@ -77,7 +77,7 @@ func (c *Client) FindRepo(owner, name string) (*Repo, error) {
 	return out, err
 }
 
-func (c *Client) ListRepos(account string, opts *ListOpts) (*RepoResp, error) {
+func (c *Client) ListRepos(account string, opts *ListReposOpts) (*RepoResp, error) {
 	out := new(RepoResp)
 	uri := fmt.Sprintf(pathRepos, c.base, account, opts.Encode())
 	err := c.do(uri, get, nil, out)
@@ -89,7 +89,7 @@ func (c *Client) ListReposAll(account string) ([]*Repo, error) {
 	var repos []*Repo
 
 	for {
-		resp, err := c.ListRepos(account, &ListOpts{Page: page, PageLen: 100})
+		resp, err := c.ListRepos(account, &ListReposOpts{Page: page, PageLen: 100})
 		if err != nil {
 			return repos, err
 		}
