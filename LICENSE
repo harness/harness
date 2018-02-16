@@ -1,17 +1,16 @@
-The Drone Community Edition (the "Community Edition") is licensed
-under the Apache License, Version 2.0 (the "Apache License"). You may
-obtain a copy of the Apache License at
+The Drone Community Edition (the "Community Edition") is licensed under the
+Apache License, Version 2.0 (the "Apache License"). You may obtain a copy of
+the Apache License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-The Drone Enterprise Edition (the "Enterprise Edition") is licensed
-under the Business Source License, Version 1.0 (the "BSL License"). A
-copy of the BSL License is provided below.
+The Drone Enterprise Edition (the "Enterprise Edition") is licensed under
+the Drone Enterprise License, Version 1.1 (the "Enterprise License"). A copy
+of the Enterprise License is provided below.
 
-The source files in this repository have a header indicating which
-license they are under. The BUILDING file provides instructions for
-creating the Community Edition distribution subject to the terms of
-the Apache License.
+The source files in this repository have a header indicating which license
+they are under. The BUILDING file provides instructions for creating the
+Community Edition distribution subject to the terms of the Apache License.
 
 -----------------------------------------------------------------------------
 
