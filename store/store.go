@@ -67,7 +67,7 @@ type Store interface {
 	GetBuildLastBefore(*model.Repo, string, int64) (*model.Build, error)
 
 	// GetBuildList gets a list of builds for the repository
-	GetBuildList(*model.Repo) ([]*model.Build, error)
+	GetBuildList(*model.Repo, int) ([]*model.Build, error)
 
 	// GetBuildQueue gets a list of build in queue.
 	GetBuildQueue() ([]*model.Feed, error)
@@ -223,8 +223,8 @@ func GetBuildLastBefore(c context.Context, repo *model.Repo, branch string, numb
 	return FromContext(c).GetBuildLastBefore(repo, branch, number)
 }
 
-func GetBuildList(c context.Context, repo *model.Repo) ([]*model.Build, error) {
-	return FromContext(c).GetBuildList(repo)
+func GetBuildList(c context.Context, repo *model.Repo, page int) ([]*model.Build, error) {
+	return FromContext(c).GetBuildList(repo, page)
 }
 
 func GetBuildQueue(c context.Context) ([]*model.Feed, error) {

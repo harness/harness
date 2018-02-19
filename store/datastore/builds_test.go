@@ -247,7 +247,7 @@ func TestBuilds(t *testing.T) {
 			}
 			s.CreateBuild(build1, []*model.Proc{}...)
 			s.CreateBuild(build2, []*model.Proc{}...)
-			builds, err := s.GetBuildList(&model.Repo{ID: 1})
+			builds, err := s.GetBuildList(&model.Repo{ID: 1}, 1)
 			g.Assert(err == nil).IsTrue()
 			g.Assert(len(builds)).Equal(2)
 			g.Assert(builds[0].ID).Equal(build2.ID)
