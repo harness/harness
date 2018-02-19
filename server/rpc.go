@@ -527,6 +527,7 @@ func (s *DroneServer) Next(c oldcontext.Context, req *proto.NextRequest) (*proto
 	}
 	filter := rpc.Filter{
 		Labels: req.GetFilter().GetLabels(),
+		Expr:   req.GetFilter().GetExpr(),
 	}
 
 	res := new(proto.NextReply)
