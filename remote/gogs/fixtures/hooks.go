@@ -44,6 +44,7 @@ var HookPush = `
   "sender": {
     "login": "gordon",
     "id": 1,
+    "email": "gordon@golang.org",
     "avatar_url": "http://gogs.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
   }
 }
