@@ -30,7 +30,7 @@ type User struct {
 	// Secret is the oauth2 token secret.
 	Secret string `json:"-" meddler:"user_secret"`
 
-	// Expiry is the token and secret expriation timestamp.
+	// Expiry is the token and secret expiration timestamp.
 	Expiry int64 `json:"-" meddler:"user_expiry"`
 
 	// Email is the email address for this user.

@@ -12,7 +12,7 @@ type Options struct {
 // Option configures the website handler.
 type Option func(*Options)
 
-// WithSync configures the website hanlder with the duration value
+// WithSync configures the website handler with the duration value
 // used to determine if the user account requires synchronization.
 func WithSync(d time.Duration) Option {
 	return func(o *Options) {
@@ -20,7 +20,7 @@ func WithSync(d time.Duration) Option {
 	}
 }
 
-// WithDir configures the website hanlder with the directory value
+// WithDir configures the website handler with the directory value
 // used to serve the website from the local filesystem.
 func WithDir(s string) Option {
 	return func(o *Options) {
@@ -28,7 +28,7 @@ func WithDir(s string) Option {
 	}
 }
 
-// WithDocs configures the website hanlder with the documentation
+// WithDocs configures the website handler with the documentation
 // website address, which should be included in the user interface.
 func WithDocs(s string) Option {
 	return func(o *Options) {

@@ -10,7 +10,7 @@ type Limiter interface {
 	LimitBuild(*User, *Repo, *Build) error
 }
 
-// NoLimit impliments the Limiter interface without enforcing any
+// NoLimit implements the Limiter interface without enforcing any
 // actual limits. All limiting functions are no-ops.
 type NoLimit struct{}
 
