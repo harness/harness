@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/drone/drone/extras/secrets"
 	"github.com/drone/drone/model"
+	"github.com/drone/drone/plugins/secrets"
 
 	"github.com/hashicorp/vault/api"
 	"gopkg.in/yaml.v2"
