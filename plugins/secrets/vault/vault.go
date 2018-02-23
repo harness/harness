@@ -92,16 +92,23 @@ func (v *vault) list(repo *model.Repo, build *model.Build) ([]*model.Secret, err
 			continue
 		}
 
+		logrus.Debugf("vault: read secret: %s", path)
+
 		vaultSecret, err := v.get(path)
 		if err != nil {
+			logrus.Debugf("vault: read secret failed: %s: %s", path, err)
 			return nil, err
 		}
 		if vaultSecret == nil {
+			logrus.Debugf("vault: read secret failed: %s: not found or empty value", path)
 			continue
 		}
 		if !vaultSecret.Match(repo.FullName) {
+			logrus.Debugf("vault: read secret: %s: restricted: %s", path, repo.FullName)
 			continue
 		}
+
+		logrus.Debugf("vault: read secret success: %s", err)
 
 		secrets = append(secrets, &model.Secret{
 			Name:   key,
@@ -133,7 +140,7 @@ func (v *vault) start() {
 	if v.done != nil {
 		close(v.done)
 	}
-	logrus.Debugf("vault: token renewal enabled: renew every %v", v.renew)
+	logrus.Infof("vault: token renewal enabled: renew every %v", v.renew)
 	v.done = make(chan struct{})
 	if v.renew != 0 {
 		go v.renewLoop()
