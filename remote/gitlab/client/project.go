@@ -17,6 +17,7 @@ package client
 import (
 	"encoding/base64"
 	"encoding/json"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -99,7 +100,7 @@ func (c *Client) RepoRawFileRef(id, ref, filepath string) ([]byte, error) {
 		repoUrlRawFileRef,
 		QMap{
 			":id":       id,
-			":filepath": filepath,
+			":filepath": url.QueryEscape(filepath),
 		},
 		QMap{
 			"ref": ref,
