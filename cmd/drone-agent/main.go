@@ -1,11 +1,11 @@
 // Copyright 2018 Drone.IO Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -108,6 +108,31 @@ func main() {
 			Name:   "keepalive-timeout",
 			Usage:  "after pinging for a keepalive check, the agent waits for a duration of this time before closing the connection if no activity",
 			Value:  time.Second * 20,
+		},
+		cli.BoolFlag{
+			EnvVar: "DRONE_GRPC_TLS_ENABLE",
+			Name:   "grpc-tls-enable",
+			Usage:  "enable grpc tls for server<>agent communication",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GRPC_CERT_FILE",
+			Name:   "grpc-cert-file",
+			Usage:  "cert file for grpc tls client verification",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GRPC_KEY_FILE",
+			Name:   "grpc-key-file",
+			Usage:  "key file for grpc tls client verification",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GRPC_CA_FILE",
+			Name:   "grpc-ca-file",
+			Usage:  "ca cert for grpc tls",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GRPC_SERVERNAME",
+			Name:   "grpc-servername",
+			Usage:  "force server name to something other then actual hostname (for testing)",
 		},
 	}
 
