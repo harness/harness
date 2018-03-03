@@ -1,3 +1,17 @@
+// Copyright 2018 Drone.IO Inc.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//      http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package fixtures
 
 // HookPush is a sample Gitea push hook
@@ -46,6 +60,7 @@ const HookPush = `
     "login": "gordon",
     "id": 1,
     "username": "gordon",
+    "email": "gordon@golang.org",
     "avatar_url": "http://gitea.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
   }
 }
@@ -103,13 +118,11 @@ const HookPullRequest = `{
       "email": "gordon@golang.org",
       "avatar_url": "http://gitea.golang.org///1.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
     },
-    "base_branch": "master",
     "base": {
       "label": "master",
       "ref": "master",
       "sha": "9353195a19e45482665306e466c832c46560532d"
     },
-    "head_branch": "feature/changes",
     "head": {
       "label": "feature/changes",
       "ref": "feature/changes",

@@ -1,6 +1,21 @@
+// Copyright 2018 Drone.IO Inc.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//      http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -24,7 +39,13 @@ import (
 
 func GetBuilds(c *gin.Context) {
 	repo := session.Repo(c)
-	builds, err := store.GetBuildList(c, repo)
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	builds, err := store.GetBuildList(c, repo, page)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -663,3 +684,54 @@ func PostBuild(c *gin.Context) {
 		Config.Services.Queue.Push(context.Background(), task)
 	}
 }
+
+//
+///
+//
+
+func DeleteBuildLogs(c *gin.Context) {
+	repo := session.Repo(c)
+	user := session.User(c)
+	num, _ := strconv.Atoi(c.Params.ByName("number"))
+
+	build, err := store.GetBuildNumber(c, repo, num)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+
+	procs, err := store.FromContext(c).ProcList(build)
+	if err != nil {
+		c.AbortWithError(404, err)
+		return
+	}
+
+	switch build.Status {
+	case model.StatusRunning, model.StatusPending:
+		c.String(400, "Cannot delete logs for a pending or running build")
+		return
+	}
+
+	for _, proc := range procs {
+		t := time.Now().UTC()
+		buf := bytes.NewBufferString(fmt.Sprintf(deleteStr, proc.Name, user.Login, t.Format(time.UnixDate)))
+		lerr := store.FromContext(c).LogSave(proc, buf)
+		if lerr != nil {
+			err = lerr
+		}
+	}
+	if err != nil {
+		c.String(400, "There was a problem deleting your logs. %s", err)
+		return
+	}
+
+	c.String(204, "")
+}
+
+var deleteStr = `[
+	{
+	  "proc": %q,
+	  "pos": 0,
+	  "out": "logs purged by %s on %s\n"
+	}
+]`

@@ -1,3 +1,17 @@
+// Copyright 2018 Drone.IO Inc.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//      http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package router
 
 import (
@@ -99,10 +113,11 @@ func Load(mux *httptreemux.ContextMux, middleware ...gin.HandlerFunc) http.Handl
 		repo.POST("/move", session.MustRepoAdmin(), server.MoveRepo)
 
 		repo.POST("/builds/:number", session.MustPush, server.PostBuild)
-		repo.DELETE("/builds/:number", session.MustAdmin(), server.ZombieKill)
+		repo.DELETE("/builds/:number", session.MustRepoAdmin(), server.ZombieKill)
 		repo.POST("/builds/:number/approve", session.MustPush, server.PostApproval)
 		repo.POST("/builds/:number/decline", session.MustPush, server.PostDecline)
 		repo.DELETE("/builds/:number/:job", session.MustPush, server.DeleteBuild)
+		repo.DELETE("/logs/:number", session.MustPush, server.DeleteBuildLogs)
 	}
 
 	badges := e.Group("/api/badges/:owner/:name")

@@ -1,8 +1,23 @@
+// Copyright 2018 Drone.IO Inc.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//      http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/drone/drone/version"
 
@@ -39,12 +54,12 @@ func main() {
 		cli.StringFlag{
 			EnvVar: "DRONE_PASSWORD,DRONE_SECRET",
 			Name:   "password",
-			Usage:  "drone auth password",
+			Usage:  "server-agent shared password",
 		},
 		cli.BoolTFlag{
 			EnvVar: "DRONE_DEBUG",
 			Name:   "debug",
-			Usage:  "start the agent in debug mode",
+			Usage:  "enable agent debug mode",
 		},
 		cli.BoolFlag{
 			EnvVar: "DRONE_DEBUG_PRETTY",
@@ -59,36 +74,40 @@ func main() {
 		cli.StringFlag{
 			EnvVar: "DRONE_HOSTNAME,HOSTNAME",
 			Name:   "hostname",
+			Usage:  "agent hostname",
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_PLATFORM",
 			Name:   "platform",
+			Usage:  "restrict builds by platform conditions",
 			Value:  "linux/amd64",
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_FILTER",
 			Name:   "filter",
-			Usage:  "filter expression used to restrict builds by label",
+			Usage:  "filter expression to restrict builds by label",
 		},
 		cli.IntFlag{
 			EnvVar: "DRONE_MAX_PROCS",
 			Name:   "max-procs",
+			Usage:  "agent parallel builds",
 			Value:  1,
 		},
 		cli.BoolTFlag{
 			EnvVar: "DRONE_HEALTHCHECK",
 			Name:   "healthcheck",
-			Usage:  "enables the healthcheck endpoint",
+			Usage:  "enable healthcheck endpoint",
 		},
 		cli.DurationFlag{
 			EnvVar: "DRONE_KEEPALIVE_TIME",
 			Name:   "keepalive-time",
-			Usage:  "after a duration of this time if the agent doesn't see any activity it pings the server to see if the transport is still alive",
+			Usage:  "after a duration of this time of no activity, the agent pings the server to check if the transport is still alive",
 		},
 		cli.DurationFlag{
 			EnvVar: "DRONE_KEEPALIVE_TIMEOUT",
 			Name:   "keepalive-timeout",
-			Usage:  "after having pinged for keepalive check, the client waits for a duration of Timeout and if no activity is seen even after that the connection is closed.",
+			Usage:  "after pinging for a keepalive check, the agent waits for a duration of this time before closing the connection if no activity",
+			Value:  time.Second * 20,
 		},
 	}
 
