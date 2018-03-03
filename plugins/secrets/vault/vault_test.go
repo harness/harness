@@ -9,30 +9,14 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/vault/api"
 	"github.com/kr/pretty"
 )
 
-// Use the following snippet to spin up a local vault
-// server for integration testing:
-//
-//    docker run --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=dummy' -p 8200:8200 vault
-//    export VAULT_ADDR=http://127.0.0.1:8200
-//    export VAULT_TOKEN=dummy
-
 func TestVaultGet(t *testing.T) {
-	if os.Getenv("VAULT_TOKEN") == "" {
-		t.SkipNow()
-		return
-	}
+	client, closer := TestServer(t, nil)
+	defer closer()
 
-	client, err := api.NewClient(nil)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	_, err = client.Logical().Write("secret/testing/drone/a", map[string]interface{}{
+	_, err := client.Logical().Write("secret/testing/drone/a", map[string]interface{}{
 		"value": "hello",
 		"image": "golang",
 		"event": "push,pull_request",
