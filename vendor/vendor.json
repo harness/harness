@@ -698,6 +698,18 @@
 			"revisionTime": "2017-05-05T23:40:26Z"
 		},
 		{
+			"checksumSHA1": "NYCovNzzcm4rK8+AJcGcuBWN2eI=",
+			"path": "github.com/hashicorp/vault/http",
+			"revision": "83a7d20b81206a3a4b090d4e0b3ee5e43d514828",
+			"revisionTime": "2018-03-02T23:01:13Z"
+		},
+		{
+			"checksumSHA1": "034LKEhCgtdnucoG8WHbJHfjI5w=",
+			"path": "github.com/hashicorp/vault/vault",
+			"revision": "83a7d20b81206a3a4b090d4e0b3ee5e43d514828",
+			"revisionTime": "2018-03-02T23:01:13Z"
+		},
+		{
 			"checksumSHA1": "0ZrwvB6KoGPj2PoDNSEJwxQ6Mog=",
 			"origin": "github.com/aws/aws-sdk-go/vendor/github.com/jmespath/go-jmespath",
 			"path": "github.com/jmespath/go-jmespath",
@@ -1242,5 +1254,5 @@
 			"revisionTime": "2015-01-19T16:55:52-02:00"
 		}
 	],
-	"rootPath": "github.com/drone/drone"
+	"rootPath": "github.com/usererror/drone"
 }

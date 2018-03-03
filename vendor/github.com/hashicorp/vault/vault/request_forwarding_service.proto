@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+import "github.com/hashicorp/vault/helper/forwarding/types.proto";
+
+package vault;
+
+message EchoRequest {
+	string message = 1;
+	// ClusterAddr is used to send up a standby node's address to the active
+	// node upon heartbeat
+	string cluster_addr = 2;
+	// ClusterAddrs is used to send up a list of cluster addresses to a dr
+	// primary from a dr secondary
+	repeated string cluster_addrs = 3;
+}
+
+message EchoReply {
+	string message = 1;
+	repeated string cluster_addrs = 2;
+	uint32 replication_state = 3;
+}
+
+service RequestForwarding {
+	rpc ForwardRequest(forwarding.Request) returns (forwarding.Response) {}
+	rpc Echo(EchoRequest) returns (EchoReply) {}
+}
