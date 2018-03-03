@@ -60,9 +60,22 @@ func enableBackends(t *testing.T, client *api.Client, conf *vaulttest.CoreConfig
 
 		if conf.AuditBackends != nil {
 			for k := range conf.AuditBackends {
-				err := client.Sys().EnableAuditWithOptions(k, &api.EnableAuditOptions{
+				opts := &api.EnableAuditOptions{
 					Type: k,
-				})
+				}
+
+				switch k {
+				case "file":
+					opts.Options = map[string]string{
+						"file_path": "/dev/null",
+					}
+				case "socket":
+					opts.Options = map[string]string{
+						"address": "127.0.0.1",
+					}
+				}
+
+				err := client.Sys().EnableAuditWithOptions(k, opts)
 				if err != nil {
 					t.Fatal(err)
 				}
