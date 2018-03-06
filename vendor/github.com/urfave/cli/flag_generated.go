@@ -13,6 +13,7 @@ type BoolFlag struct {
 	Name        string
 	Usage       string
 	EnvVar      string
+	FilePath    string
 	Hidden      bool
 	Destination *bool
 }
@@ -60,6 +61,7 @@ type BoolTFlag struct {
 	Name        string
 	Usage       string
 	EnvVar      string
+	FilePath    string
 	Hidden      bool
 	Destination *bool
 }
@@ -107,6 +109,7 @@ type DurationFlag struct {
 	Name        string
 	Usage       string
 	EnvVar      string
+	FilePath    string
 	Hidden      bool
 	Value       time.Duration
 	Destination *time.Duration
@@ -155,6 +158,7 @@ type Float64Flag struct {
 	Name        string
 	Usage       string
 	EnvVar      string
+	FilePath    string
 	Hidden      bool
 	Value       float64
 	Destination *float64
@@ -200,11 +204,12 @@ func lookupFloat64(name string, set *flag.FlagSet) float64 {
 
 // GenericFlag is a flag with type Generic
 type GenericFlag struct {
-	Name   string
-	Usage  string
-	EnvVar string
-	Hidden bool
-	Value  Generic
+	Name     string
+	Usage    string
+	EnvVar   string
+	FilePath string
+	Hidden   bool
+	Value    Generic
 }
 
 // String returns a readable representation of this value
@@ -250,6 +255,7 @@ type Int64Flag struct {
 	Name        string
 	Usage       string
 	EnvVar      string
+	FilePath    string
 	Hidden      bool
 	Value       int64
 	Destination *int64
@@ -298,6 +304,7 @@ type IntFlag struct {
 	Name        string
 	Usage       string
 	EnvVar      string
+	FilePath    string
 	Hidden      bool
 	Value       int
 	Destination *int
@@ -343,11 +350,12 @@ func lookupInt(name string, set *flag.FlagSet) int {
 
 // IntSliceFlag is a flag with type *IntSlice
 type IntSliceFlag struct {
-	Name   string
-	Usage  string
-	EnvVar string
-	Hidden bool
-	Value  *IntSlice
+	Name     string
+	Usage    string
+	EnvVar   string
+	FilePath string
+	Hidden   bool
+	Value    *IntSlice
 }
 
 // String returns a readable representation of this value
@@ -390,11 +398,12 @@ func lookupIntSlice(name string, set *flag.FlagSet) []int {
 
 // Int64SliceFlag is a flag with type *Int64Slice
 type Int64SliceFlag struct {
-	Name   string
-	Usage  string
-	EnvVar string
-	Hidden bool
-	Value  *Int64Slice
+	Name     string
+	Usage    string
+	EnvVar   string
+	FilePath string
+	Hidden   bool
+	Value    *Int64Slice
 }
 
 // String returns a readable representation of this value
@@ -440,6 +449,7 @@ type StringFlag struct {
 	Name        string
 	Usage       string
 	EnvVar      string
+	FilePath    string
 	Hidden      bool
 	Value       string
 	Destination *string
@@ -485,11 +495,12 @@ func lookupString(name string, set *flag.FlagSet) string {
 
 // StringSliceFlag is a flag with type *StringSlice
 type StringSliceFlag struct {
-	Name   string
-	Usage  string
-	EnvVar string
-	Hidden bool
-	Value  *StringSlice
+	Name     string
+	Usage    string
+	EnvVar   string
+	FilePath string
+	Hidden   bool
+	Value    *StringSlice
 }
 
 // String returns a readable representation of this value
@@ -535,6 +546,7 @@ type Uint64Flag struct {
 	Name        string
 	Usage       string
 	EnvVar      string
+	FilePath    string
 	Hidden      bool
 	Value       uint64
 	Destination *uint64
@@ -583,6 +595,7 @@ type UintFlag struct {
 	Name        string
 	Usage       string
 	EnvVar      string
+	FilePath    string
 	Hidden      bool
 	Value       uint
 	Destination *uint

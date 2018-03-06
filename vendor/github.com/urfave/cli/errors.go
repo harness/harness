@@ -97,15 +97,6 @@ func HandleExitCoder(err error) {
 		OsExiter(code)
 		return
 	}
-
-	if err.Error() != "" {
-		if _, ok := err.(ErrorFormatter); ok {
-			fmt.Fprintf(ErrWriter, "%+v\n", err)
-		} else {
-			fmt.Fprintln(ErrWriter, err)
-		}
-	}
-	OsExiter(1)
 }
 
 func handleMultiError(multiErr MultiError) int {

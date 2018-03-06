@@ -1001,10 +1001,10 @@
 			"revisionTime": "2016-06-28T10:11:33Z"
 		},
 		{
-			"checksumSHA1": "7cxwOBG3z8bcqlACknqxIV+jB/o=",
+			"checksumSHA1": "l8BBWZlYp/n2FAMBvIN53o+uRNw=",
 			"path": "github.com/urfave/cli",
-			"revision": "f1be59ff3d239f0942b201619030d302bce912cc",
-			"revisionTime": "2016-11-19T21:37:11Z"
+			"revision": "8e01ec4cd3e2d84ab2fe90d8210528ffbb06d8ff",
+			"revisionTime": "2018-02-26T03:02:53Z"
 		},
 		{
 			"checksumSHA1": "CSMVjFF7FnylAUUKW1e/4r+VFXA=",
