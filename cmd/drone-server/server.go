@@ -1,11 +1,11 @@
 // Copyright 2018 Drone.IO Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -138,9 +138,10 @@ var flags = []cli.Flag{
 		Name:   "network",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_AGENT_SECRET,DRONE_SECRET",
-		Name:   "agent-secret",
-		Usage:  "server-agent shared password",
+		EnvVar:   "DRONE_AGENT_SECRET,DRONE_SECRET",
+		FilePath: "/run/secrets/drone-secret",
+		Name:     "agent-secret",
+		Usage:    "server-agent shared password",
 	},
 	cli.StringFlag{
 		EnvVar: "DRONE_SECRET_ENDPOINT",
@@ -164,10 +165,11 @@ var flags = []cli.Flag{
 		Value:  "sqlite3",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_DATABASE_DATASOURCE,DATABASE_CONFIG",
-		Name:   "datasource",
-		Usage:  "database driver configuration string",
-		Value:  "drone.sqlite",
+		EnvVar:   "DRONE_DATABASE_DATASOURCE,DATABASE_CONFIG",
+		FilePath: "/run/secrets/drone-datasource",
+		Name:     "datasource",
+		Usage:    "database driver configuration string",
+		Value:    "drone.sqlite",
 	},
 	//
 	// resource limit parameters
@@ -223,14 +225,16 @@ var flags = []cli.Flag{
 		Value:  "continuous-integration/drone",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_GITHUB_CLIENT",
-		Name:   "github-client",
-		Usage:  "github oauth2 client id",
+		EnvVar:   "DRONE_GITHUB_CLIENT",
+		FilePath: "/run/secrets/drone-github-client",
+		Name:     "github-client",
+		Usage:    "github oauth2 client id",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_GITHUB_SECRET",
-		Name:   "github-secret",
-		Usage:  "github oauth2 client secret",
+		EnvVar:   "DRONE_GITHUB_SECRET",
+		FilePath: "/run/secrets/drone-github-secret",
+		Name:     "github-secret",
+		Usage:    "github oauth2 client secret",
 	},
 	cli.StringSliceFlag{
 		EnvVar: "DRONE_GITHUB_SCOPE",
@@ -244,14 +248,16 @@ var flags = []cli.Flag{
 		},
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_GITHUB_GIT_USERNAME",
-		Name:   "github-git-username",
-		Usage:  "github machine user username",
+		EnvVar:   "DRONE_GITHUB_GIT_USERNAME",
+		FilePath: "/run/secrets/drone-github-git-username",
+		Name:     "github-git-username",
+		Usage:    "github machine user username",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_GITHUB_GIT_PASSWORD",
-		Name:   "github-git-password",
-		Usage:  "github machine user password",
+		EnvVar:   "DRONE_GITHUB_GIT_PASSWORD",
+		FilePath: "/run/secrets/drone-github-git-password",
+		Name:     "github-git-password",
+		Usage:    "github machine user password",
 	},
 	cli.BoolTFlag{
 		EnvVar: "DRONE_GITHUB_MERGE_REF",
@@ -280,14 +286,16 @@ var flags = []cli.Flag{
 		Value:  "https://github.com",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_GOGS_GIT_USERNAME",
-		Name:   "gogs-git-username",
-		Usage:  "gogs service account username",
+		EnvVar:   "DRONE_GOGS_GIT_USERNAME",
+		FilePath: "/run/secrets/drone-gogs-git-username",
+		Name:     "gogs-git-username",
+		Usage:    "gogs service account username",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_GOGS_GIT_PASSWORD",
-		Name:   "gogs-git-password",
-		Usage:  "gogs service account password",
+		EnvVar:   "DRONE_GOGS_GIT_PASSWORD",
+		FilePath: "/run/secrets/drone-gogs-git-password",
+		Name:     "gogs-git-password",
+		Usage:    "gogs service account password",
 	},
 	cli.BoolFlag{
 		EnvVar: "DRONE_GOGS_PRIVATE_MODE",
@@ -311,14 +319,16 @@ var flags = []cli.Flag{
 		Value:  "https://try.gitea.io",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_GITEA_GIT_USERNAME",
-		Name:   "gitea-git-username",
-		Usage:  "gitea service account username",
+		EnvVar:   "DRONE_GITEA_GIT_USERNAME",
+		FilePath: "/run/secrets/drone-gitea-git-username",
+		Name:     "gitea-git-username",
+		Usage:    "gitea service account username",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_GITEA_GIT_PASSWORD",
-		Name:   "gitea-git-password",
-		Usage:  "gitea service account password",
+		EnvVar:   "DRONE_GITEA_GIT_PASSWORD",
+		FilePath: "/run/secrets/drone-gitea-git-password",
+		Name:     "gitea-git-password",
+		Usage:    "gitea service account password",
 	},
 	cli.BoolFlag{
 		EnvVar: "DRONE_GITEA_PRIVATE_MODE",
@@ -336,14 +346,16 @@ var flags = []cli.Flag{
 		Usage:  "bitbucket driver is enabled",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_BITBUCKET_CLIENT",
-		Name:   "bitbucket-client",
-		Usage:  "bitbucket oauth2 client id",
+		EnvVar:   "DRONE_BITBUCKET_CLIENT",
+		FilePath: "/run/secrets/drone-bitbucket-client",
+		Name:     "bitbucket-client",
+		Usage:    "bitbucket oauth2 client id",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_BITBUCKET_SECRET",
-		Name:   "bitbucket-secret",
-		Usage:  "bitbucket oauth2 client secret",
+		EnvVar:   "DRONE_BITBUCKET_SECRET",
+		FilePath: "/run/secrets/drone-bitbucket-secret",
+		Name:     "bitbucket-secret",
+		Usage:    "bitbucket oauth2 client secret",
 	},
 	cli.BoolFlag{
 		EnvVar: "DRONE_GITLAB",
@@ -357,24 +369,28 @@ var flags = []cli.Flag{
 		Value:  "https://gitlab.com",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_GITLAB_CLIENT",
-		Name:   "gitlab-client",
-		Usage:  "gitlab oauth2 client id",
+		EnvVar:   "DRONE_GITLAB_CLIENT",
+		FilePath: "/run/secrets/drone-gitlab-client",
+		Name:     "gitlab-client",
+		Usage:    "gitlab oauth2 client id",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_GITLAB_SECRET",
-		Name:   "gitlab-secret",
-		Usage:  "gitlab oauth2 client secret",
+		EnvVar:   "DRONE_GITLAB_SECRET",
+		FilePath: "/run/secrets/drone-gitlab-secret",
+		Name:     "gitlab-secret",
+		Usage:    "gitlab oauth2 client secret",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_GITLAB_GIT_USERNAME",
-		Name:   "gitlab-git-username",
-		Usage:  "gitlab service account username",
+		EnvVar:   "DRONE_GITLAB_GIT_USERNAME",
+		FilePath: "/run/secrets/drone-gitlab-git-username",
+		Name:     "gitlab-git-username",
+		Usage:    "gitlab service account username",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_GITLAB_GIT_PASSWORD",
-		Name:   "gitlab-git-password",
-		Usage:  "gitlab service account password",
+		EnvVar:   "DRONE_GITLAB_GIT_PASSWORD",
+		FilePath: "/run/secrets/drone-gitlab-git-password",
+		Name:     "gitlab-git-password",
+		Usage:    "gitlab service account password",
 	},
 	cli.BoolFlag{
 		EnvVar: "DRONE_GITLAB_SKIP_VERIFY",
@@ -417,14 +433,16 @@ var flags = []cli.Flag{
 		Usage:  "stash oauth1 private key string",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_STASH_GIT_USERNAME",
-		Name:   "stash-git-username",
-		Usage:  "stash service account username",
+		EnvVar:   "DRONE_STASH_GIT_USERNAME",
+		FilePath: "/run/secrets/drone-stash-git-username",
+		Name:     "stash-git-username",
+		Usage:    "stash service account username",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_STASH_GIT_PASSWORD",
-		Name:   "stash-git-password",
-		Usage:  "stash service account password",
+		EnvVar:   "DRONE_STASH_GIT_PASSWORD",
+		FilePath: "/run/secrets/drone-stash-git-password",
+		Name:     "stash-git-password",
+		Usage:    "stash service account password",
 	},
 	cli.BoolFlag{
 		EnvVar: "DRONE_STASH_SKIP_VERIFY",
@@ -443,14 +461,16 @@ var flags = []cli.Flag{
 		Value:  "https://coding.net",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_CODING_CLIENT",
-		Name:   "coding-client",
-		Usage:  "coding oauth2 client id",
+		EnvVar:   "DRONE_CODING_CLIENT",
+		FilePath: "/run/secrets/drone-coding-client",
+		Name:     "coding-client",
+		Usage:    "coding oauth2 client id",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_CODING_SECRET",
-		Name:   "coding-secret",
-		Usage:  "coding oauth2 client secret",
+		EnvVar:   "DRONE_CODING_SECRET",
+		FilePath: "/run/secrets/drone-coding-secret",
+		Name:     "coding-secret",
+		Usage:    "coding oauth2 client secret",
 	},
 	cli.StringSliceFlag{
 		EnvVar: "DRONE_CODING_SCOPE",
@@ -469,14 +489,16 @@ var flags = []cli.Flag{
 		Value:  "git.coding.net",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_CODING_GIT_USERNAME",
-		Name:   "coding-git-username",
-		Usage:  "coding machine user username",
+		EnvVar:   "DRONE_CODING_GIT_USERNAME",
+		FilePath: "/run/secrets/drone-coding-git-username",
+		Name:     "coding-git-username",
+		Usage:    "coding machine user username",
 	},
 	cli.StringFlag{
-		EnvVar: "DRONE_CODING_GIT_PASSWORD",
-		Name:   "coding-git-password",
-		Usage:  "coding machine user password",
+		EnvVar:   "DRONE_CODING_GIT_PASSWORD",
+		FilePath: "/run/secrets/drone-coding-git-password",
+		Name:     "coding-git-password",
+		Usage:    "coding machine user password",
 	},
 	cli.BoolFlag{
 		EnvVar: "DRONE_CODING_SKIP_VERIFY",
