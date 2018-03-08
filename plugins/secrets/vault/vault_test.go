@@ -34,6 +34,7 @@ func TestVaultGet(t *testing.T) {
 
 	_, err = client.Logical().Write("secret/testing/drone/a", map[string]interface{}{
 		"value": "hello",
+		"fr":    "bonjour",
 		"image": "golang",
 		"event": "push,pull_request",
 		"repo":  "octocat/hello-world,github/*",
@@ -44,17 +45,25 @@ func TestVaultGet(t *testing.T) {
 	}
 
 	plugin := vault{client: client}
-	secret, err := plugin.get("secret/testing/drone/a")
+	secret, err := plugin.get("secret/testing/drone/a", "value")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-
 	if got, want := secret.Value, "hello"; got != want {
 		t.Errorf("Expect secret value %s, got %s", want, got)
 	}
 
-	secret, err = plugin.get("secret/testing/drone/404")
+	secret, err = plugin.get("secret/testing/drone/a", "fr")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if got, want := secret.Value, "bonjour"; got != want {
+		t.Errorf("Expect secret value %s, got %s", want, got)
+	}
+
+	secret, err = plugin.get("secret/testing/drone/404", "value")
 	if err != nil {
 		t.Errorf("Expect silent failure when secret does not exist, got %s", err)
 	}
@@ -76,7 +85,7 @@ func TestVaultSecretParse(t *testing.T) {
 		Image: []string{"plugins/s3", "plugins/ec2"},
 		Repo:  []string{"octocat/hello-world", "github/*"},
 	}
-	got := parseVaultSecret(data)
+	got := parseVaultSecret(data, "value")
 	if !reflect.DeepEqual(want, *got) {
 		t.Errorf("Failed read Secret.Data")
 		pretty.Fdiff(os.Stderr, want, got)
