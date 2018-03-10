@@ -25,6 +25,12 @@
 			"revisionTime": "2016-03-17T14:11:10Z"
 		},
 		{
+			"checksumSHA1": "Qz62A5bUoyHQ65KxP7JURBakesI=",
+			"path": "github.com/asaskevich/govalidator",
+			"revision": "4b3d68f87f176641ffc147420296013aff66ea32",
+			"revisionTime": "2018-01-15T10:24:50Z"
+		},
+		{
 			"checksumSHA1": "8T5/VICBlflotzyTDRYH8l36E+U=",
 			"path": "github.com/aws/aws-sdk-go/aws",
 			"revision": "2b97862fa6fc93d15d5a64489e1e9dc6c2295f33",

@@ -14,7 +14,11 @@
 
 package model
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/asaskevich/govalidator"
+)
 
 var (
 	errRegistryAddressInvalid  = errors.New("Invalid Registry Address")
@@ -55,7 +59,7 @@ type Registry struct {
 // Validate validates the registry information.
 func (r *Registry) Validate() error {
 	switch {
-	case len(r.Address) == 0:
+	case !govalidator.IsHost(r.Address):
 		return errRegistryAddressInvalid
 	case len(r.Username) == 0:
 		return errRegistryUsernameInvalid
