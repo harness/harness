@@ -1,11 +1,11 @@
 // Copyright 2018 Drone.IO Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,12 +44,14 @@ func Test_gitea(t *testing.T) {
 			g.It("Should return client with specified options", func() {
 				remote, _ := New(Opts{
 					URL:         "http://localhost:8080",
+					Context:     "continuous-integration/test",
 					Username:    "someuser",
 					Password:    "password",
 					SkipVerify:  true,
 					PrivateMode: true,
 				})
 				g.Assert(remote.(*client).URL).Equal("http://localhost:8080")
+				g.Assert(remote.(*client).Context).Equal("continuous-integration/test")
 				g.Assert(remote.(*client).Machine).Equal("localhost")
 				g.Assert(remote.(*client).Username).Equal("someuser")
 				g.Assert(remote.(*client).Password).Equal("password")

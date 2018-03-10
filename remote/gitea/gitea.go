@@ -1,11 +1,11 @@
 // Copyright 2018 Drone.IO Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,6 +29,7 @@ import (
 // Opts defines configuration options.
 type Opts struct {
 	URL         string // Gitea server url.
+	Context     string // Context to display in status check
 	Username    string // Optional machine account username.
 	Password    string // Optional machine account password.
 	PrivateMode bool   // Gitea is running in private mode.
@@ -37,6 +38,7 @@ type Opts struct {
 
 type client struct {
 	URL         string
+	Context     string
 	Machine     string
 	Username    string
 	Password    string
@@ -111,6 +113,7 @@ func New(opts Opts) (remote.Remote, error) {
 	}
 	return &client{
 		URL:         opts.URL,
+		Context:     opts.Context,
 		Machine:     url.Host,
 		Username:    opts.Username,
 		Password:    opts.Password,
@@ -266,7 +269,7 @@ func (c *client) Status(u *model.User, r *model.Repo, b *model.Build, link strin
 			State:       status,
 			TargetURL:   link,
 			Description: desc,
-			Context:     "",
+			Context:     c.Context,
 		},
 	)
 
