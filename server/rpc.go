@@ -80,6 +80,9 @@ var Config = struct {
 		// Orgs map[string]struct{}
 		// Admins map[string]struct{}
 	}
+	Prometheus struct {
+		AuthToken string
+	}
 	Pipeline struct {
 		Limits     model.ResourceLimit
 		Volumes    []string
