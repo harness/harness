@@ -75,6 +75,7 @@ var Config = struct {
 		Port           string
 		Pass           string
 		RepoConfig     string
+		RepoConfigFallbackUrl string
 		SessionExpires time.Duration
 		// Open bool
 		// Orgs map[string]struct{}

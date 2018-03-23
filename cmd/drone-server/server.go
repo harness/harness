@@ -113,6 +113,11 @@ var flags = []cli.Flag{
 		Usage:  "file path for the drone config",
 		Value:  ".drone.yml",
 	},
+	cli.StringFlag{
+		EnvVar: "DRONE_REPO_CONFIG_FALLBACK_URL",
+		Name:   "repo-config-fallback-url",
+		Usage:  "fallback url for the drone config",
+	},
 	cli.DurationFlag{
 		EnvVar: "DRONE_SESSION_EXPIRES",
 		Name:   "session-expires",
@@ -690,6 +695,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store, r remote.Remote) {
 	droneserver.Config.Server.Host = strings.TrimRight(c.String("server-host"), "/")
 	droneserver.Config.Server.Port = c.String("server-addr")
 	droneserver.Config.Server.RepoConfig = c.String("repo-config")
+	droneserver.Config.Server.RepoConfigFallbackUrl = c.String("repo-config-fallback-url")
 	droneserver.Config.Server.SessionExpires = c.Duration("session-expires")
 	droneserver.Config.Pipeline.Networks = c.StringSlice("network")
 	droneserver.Config.Pipeline.Volumes = c.StringSlice("volume")
