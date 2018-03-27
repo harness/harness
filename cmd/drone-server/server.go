@@ -169,6 +169,12 @@ var flags = []cli.Flag{
 		Usage:  "database driver configuration string",
 		Value:  "drone.sqlite",
 	},
+	cli.StringFlag{
+		EnvVar: "DRONE_PROMETHEUS_AUTH_TOKEN",
+		Name:   "prometheus-auth-token",
+		Usage:  "token to secure prometheus metrics endpoint",
+		Value:  "",
+	},
 	//
 	// resource limit parameters
 	//
@@ -685,6 +691,9 @@ func setupEvilGlobals(c *cli.Context, v store.Store, r remote.Remote) {
 	// droneserver.Config.Server.Open = cli.Bool("open")
 	// droneserver.Config.Server.Orgs = sliceToMap(cli.StringSlice("orgs"))
 	// droneserver.Config.Server.Admins = sliceToMap(cli.StringSlice("admin"))
+
+	// prometheus
+	droneserver.Config.Prometheus.AuthToken = c.String("prometheus-auth-token")
 }
 
 type authorizer struct {

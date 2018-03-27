@@ -15,14 +15,45 @@
 package metrics
 
 import (
-	"github.com/gin-gonic/gin"
+	"errors"
+	"fmt"
 
+	"github.com/drone/drone/server"
+	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+var (
+	// errInvalidToken is returned when the api request token is invalid.
+	errInvalidToken = errors.New("Invalid or missing token")
 )
 
 // PromHandler will pass the call from /api/metrics/prometheus to prometheus
 func PromHandler() gin.HandlerFunc {
+	handler := promhttp.Handler()
+
 	return func(c *gin.Context) {
-		promhttp.Handler().ServeHTTP(c.Writer, c.Request)
+		token := server.Config.Prometheus.Token
+
+		if token == "" {
+			handler.ServeHTTP(c.Writer, c.Request)
+			return
+		}
+
+		header := c.Request.Header.Get("Authorization")
+
+		if header == "" {
+			c.String(401, errInvalidToken.Error())
+			return
+		}
+
+		bearer := fmt.Sprintf("Bearer %s", token)
+
+		if header != bearer {
+			c.String(401, errInvalidToken.Error())
+			return
+		}
+
+		handler.ServeHTTP(c.Writer, c.Request)
 	}
 }

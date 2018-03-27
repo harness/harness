@@ -178,10 +178,7 @@ func Load(mux *httptreemux.ContextMux, middleware ...gin.HandlerFunc) http.Handl
 
 	monitor := e.Group("/metrics")
 	{
-		monitor.GET("",
-			session.MustAdmin(),
-			metrics.PromHandler(),
-		)
+		monitor.GET("", metrics.PromHandler())
 	}
 
 	e.GET("/version", server.Version)
