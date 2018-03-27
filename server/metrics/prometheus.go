@@ -33,7 +33,7 @@ func PromHandler() gin.HandlerFunc {
 	handler := promhttp.Handler()
 
 	return func(c *gin.Context) {
-		token := server.Config.Prometheus.Token
+		token := server.Config.Prometheus.AuthToken
 
 		if token == "" {
 			handler.ServeHTTP(c.Writer, c.Request)
