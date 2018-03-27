@@ -1,11 +1,11 @@
 // Copyright 2018 Drone.IO Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -58,8 +58,8 @@ func (g *Client) AllProjects(hide_archives bool) ([]*Project, error) {
 // Get a list of projects owned by the authenticated user.
 func (c *Client) Projects(page int, per_page int, hide_archives bool) ([]*Project, error) {
 	projectsOptions := QMap{
-		"page":     strconv.Itoa(page),
-		"per_page": strconv.Itoa(per_page),
+		"page":       strconv.Itoa(page),
+		"per_page":   strconv.Itoa(per_page),
 		"membership": "true",
 	}
 
@@ -145,7 +145,7 @@ func (c *Client) SetStatus(id, sha, state, desc, ref, link string) error {
 func (c *Client) SearchProjectId(namespace string, name string) (id int, err error) {
 
 	url, opaque := c.ResourceUrl(projectsUrl, nil, QMap{
-		"query": strings.ToLower(name),
+		"query":      strings.ToLower(name),
 		"membership": "true",
 	})
 

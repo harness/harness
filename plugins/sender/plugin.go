@@ -19,7 +19,7 @@ func NewRemote(endpoint string) model.SenderService {
 func (p *plugin) SenderAllowed(user *model.User, repo *model.Repo, build *model.Build, conf *model.Config) (bool, error) {
 	path := fmt.Sprintf("%s/senders/%s/%s/%s/verify", p.endpoint, repo.Owner, repo.Name, build.Sender)
 	data := map[string]interface{}{
-		"build": build,
+		"build":  build,
 		"config": conf,
 	}
 	err := internal.Send("POST", path, &data, nil)
