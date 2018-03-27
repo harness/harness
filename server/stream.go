@@ -78,7 +78,7 @@ func EventStreamSSE(c *gin.Context) {
 
 	go func() {
 		// TODO remove this from global config
-		Config.Services.Pubsub.Subscribe(c, "topic/events", func(m pubsub.Message) {
+		Config.Services.Pubsub.Subscribe(ctx, "topic/events", func(m pubsub.Message) {
 			name := m.Labels["repo"]
 			priv := m.Labels["private"]
 			if repo[name] || priv == "false" {
