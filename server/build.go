@@ -539,6 +539,7 @@ func PostBuild(c *gin.Context) {
 	build.Enqueued = time.Now().UTC().Unix()
 	build.Error = ""
 	build.Deploy = c.DefaultQuery("deploy_to", build.Deploy)
+	build.Message = c.DefaultQuery("message", build.Message)
 
 	event := c.DefaultQuery("event", build.Event)
 	if event == model.EventPush ||
