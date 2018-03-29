@@ -20,9 +20,21 @@
 			"revisionTime": "2017-01-24T17:08:27Z"
 		},
 		{
+			"checksumSHA1": "gPowz5SHTxjYhSUi+vFq20ww4Zg=",
+			"path": "github.com/PuerkitoBio/goquery",
+			"revision": "2d2796f41742ece03e8086188fa4db16a3a0b458",
+			"revisionTime": "2018-11-15T20:42:34Z"
+		},
+		{
 			"path": "github.com/Sirupsen/logrus",
 			"revision": "4b6ea7319e214d98c938f12692336f7ca9348d6b",
 			"revisionTime": "2016-03-17T14:11:10Z"
+		},
+		{
+			"checksumSHA1": "7DQlhUmi8waYHuk3kvrWiTLVygM=",
+			"path": "github.com/andybalholm/cascadia",
+			"revision": "680b6a57bda4f657485ad44bdea42342ead737bc",
+			"revisionTime": "2018-10-12T15:44:24Z"
 		},
 		{
 			"checksumSHA1": "8T5/VICBlflotzyTDRYH8l36E+U=",
@@ -838,11 +850,13 @@
 			"revisionTime": "2016-01-26T19:01:36+01:00"
 		},
 		{
-			"checksumSHA1": "nwSNZJ3vawDOJytOB86EWGKXJ+U=",
+			"checksumSHA1": "mzgeQADADhrCGOAcDRnbV24p7H0=",
 			"path": "github.com/mattn/go-sqlite3",
-			"revision": "05548ff55570cdb9ac72ff4a25a3b5e77a6fb7e5",
-			"revisionTime": "2017-09-01T08:40:05Z",
-			"tree": true
+			"revision": "87ac1cb49789a0ef6b0d7be6b7aa458a9b90d7ae",
+			"revisionTime": "2018-12-18T03:04:05Z",
+			"tree": true,
+			"version": "master",
+			"versionExact": "master"
 		},
 		{
 			"checksumSHA1": "bKMZjd2wPw13VwoE7mBeSv5djFA=",
