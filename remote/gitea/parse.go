@@ -28,7 +28,7 @@ const (
 	hookPullRequest = "pull_request"
 
 	actionOpen = "opened"
-	actionSync = "synchronize"
+	actionSync = "synchronized"
 
 	stateOpen = "open"
 
