@@ -186,10 +186,3 @@ func Load(mux *httptreemux.ContextMux, middleware ...gin.HandlerFunc) http.Handl
 
 	return e
 }
-
-// type FileHandler interface {
-// 	Index(res http.ResponseWriter, data interface{}) error
-// 	Login(res http.ResponseWriter, data interface{}) error
-// 	Error(res http.ResponseWriter, data interface{}) error
-// 	Asset(res http.ResponseWriter, req *http.Request)
-// }
