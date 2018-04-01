@@ -35,7 +35,7 @@ func NewEnv() (backend.Engine, error) {
 	return New(cli), nil
 }
 
-func (e *engine) Setup(conf *backend.Config) error {
+func (e *engine) Setup(_ context.Context, conf *backend.Config) error {
 	for _, vol := range conf.Volumes {
 		_, err := e.client.VolumeCreate(noContext, volume.VolumesCreateBody{
 			Name:       vol.Name,
@@ -60,9 +60,7 @@ func (e *engine) Setup(conf *backend.Config) error {
 	return nil
 }
 
-func (e *engine) Exec(proc *backend.Step) error {
-	ctx := context.Background()
-
+func (e *engine) Exec(ctx context.Context, proc *backend.Step) error {
 	config := toConfig(proc)
 	hostConfig := toHostConfig(proc)
 
@@ -126,12 +124,12 @@ func (e *engine) Exec(proc *backend.Step) error {
 	return e.client.ContainerStart(ctx, proc.Name, startOpts)
 }
 
-func (e *engine) Kill(proc *backend.Step) error {
+func (e *engine) Kill(_ context.Context, proc *backend.Step) error {
 	return e.client.ContainerKill(noContext, proc.Name, "9")
 }
 
-func (e *engine) Wait(proc *backend.Step) (*backend.State, error) {
-	_, err := e.client.ContainerWait(noContext, proc.Name)
+func (e *engine) Wait(ctx context.Context, proc *backend.Step) (*backend.State, error) {
+	_, err := e.client.ContainerWait(ctx, proc.Name)
 	if err != nil {
 		// todo
 	}
@@ -151,8 +149,8 @@ func (e *engine) Wait(proc *backend.Step) (*backend.State, error) {
 	}, nil
 }
 
-func (e *engine) Tail(proc *backend.Step) (io.ReadCloser, error) {
-	logs, err := e.client.ContainerLogs(noContext, proc.Name, logsOpts)
+func (e *engine) Tail(ctx context.Context, proc *backend.Step) (io.ReadCloser, error) {
+	logs, err := e.client.ContainerLogs(ctx, proc.Name, logsOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +165,7 @@ func (e *engine) Tail(proc *backend.Step) (io.ReadCloser, error) {
 	return rc, nil
 }
 
-func (e *engine) Destroy(conf *backend.Config) error {
+func (e *engine) Destroy(_ context.Context, conf *backend.Config) error {
 	for _, stage := range conf.Stages {
 		for _, step := range stage.Steps {
 			e.client.ContainerKill(noContext, step.Name, "9")
