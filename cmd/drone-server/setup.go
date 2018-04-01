@@ -115,6 +115,7 @@ func setupGogs(c *cli.Context) (remote.Remote, error) {
 func setupGitea(c *cli.Context) (remote.Remote, error) {
 	return gitea.New(gitea.Opts{
 		URL:         c.String("gitea-server"),
+		Context:     c.String("gitea-context"),
 		Username:    c.String("gitea-git-username"),
 		Password:    c.String("gitea-git-password"),
 		PrivateMode: c.Bool("gitea-private-mode"),

@@ -317,6 +317,12 @@ var flags = []cli.Flag{
 		Value:  "https://try.gitea.io",
 	},
 	cli.StringFlag{
+		EnvVar: "DRONE_GITEA_CONTEXT",
+		Name:   "gitea-context",
+		Usage:  "gitea status context",
+		Value:  "continuous-integration/drone",
+	},
+	cli.StringFlag{
 		EnvVar: "DRONE_GITEA_GIT_USERNAME",
 		Name:   "gitea-git-username",
 		Usage:  "gitea service account username",
