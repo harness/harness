@@ -93,6 +93,6 @@ func GetCC(c *gin.Context) {
 	}
 
 	url := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, builds[0].Number)
-	cc := model.NewCC(repo, builds[0], url)
+	cc := model.NewCC(repo, builds, url)
 	c.XML(200, cc)
 }

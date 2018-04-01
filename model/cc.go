@@ -21,8 +21,8 @@ import (
 )
 
 type CCProjects struct {
-	XMLName xml.Name   `xml:"Projects"`
-	Project *CCProject `xml:"Project"`
+	XMLName  xml.Name     `xml:"Projects"`
+	Projects []*CCProject `xml:"Project"`
 }
 
 type CCProject struct {
@@ -35,15 +35,37 @@ type CCProject struct {
 	WebURL          string   `xml:"webUrl,attr"`
 }
 
-func NewCC(r *Repo, b *Build, link string) *CCProjects {
+func NewCC(r *Repo, bs []*Build, link string) *CCProjects {
+	projs := &CCProjects{Projects: []*CCProject{}}
+
+	pz := NewCCProject(r, bs[0], r.FullName, link)
+	projs.Projects = append(projs.Projects, pz)
+
+	branches := []string{}
+BuildLoop:
+	for _, b := range bs {
+		for _, br := range branches {
+			if br == b.Branch {
+				continue BuildLoop
+			}
+		}
+
+		p := NewCCProject(r, b, r.FullName+" "+b.Branch, link)
+
+		projs.Projects = append(projs.Projects, p)
+		branches = append(branches, b.Branch)
+	}
+	return projs
+}
+
+func NewCCProject(r *Repo, b *Build, name, link string) *CCProject {
 	proj := &CCProject{
-		Name:            r.FullName,
+		Name:            name,
 		WebURL:          link,
 		Activity:        "Building",
 		LastBuildStatus: "Unknown",
 		LastBuildLabel:  "Unknown",
 	}
-
 	// if the build is not currently running then
 	// we can return the latest build status.
 	if b.Status != StatusPending &&
@@ -52,7 +74,6 @@ func NewCC(r *Repo, b *Build, link string) *CCProjects {
 		proj.LastBuildTime = time.Unix(b.Started, 0).Format(time.RFC3339)
 		proj.LastBuildLabel = strconv.Itoa(b.Number)
 	}
-
 	// ensure the last build Status accepts a valid
 	// ccmenu enumeration
 	switch b.Status {
@@ -63,6 +84,5 @@ func NewCC(r *Repo, b *Build, link string) *CCProjects {
 	case StatusFailure:
 		proj.LastBuildStatus = "Failure"
 	}
-
-	return &CCProjects{Project: proj}
+	return proj
 }
