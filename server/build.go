@@ -496,11 +496,8 @@ func PostBuild(c *gin.Context) {
 	}
 
 	switch build.Status {
-	case model.StatusPending,
-		model.StatusRunning,
-		model.StatusDeclined,
-		model.StatusBlocked,
-		model.StatusError:
+	case model.StatusDeclined,
+		model.StatusBlocked:
 		c.String(500, "cannot restart a build with status %s", build.Status)
 		return
 	}
