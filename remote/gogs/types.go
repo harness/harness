@@ -140,3 +140,48 @@ type pullRequestHook struct {
 		Avatar   string `json:"avatar_url"`
 	} `json:"sender"`
 }
+
+type releaseHook struct {
+	Action  string `json:"action"`
+	Release struct {
+		ID              int    `json:"id"`
+		TagName         string `json:"tag_name"`
+		TargetCommitish string `json:"target_commitish"`
+		Name            string `json:"name"`
+		Body            string `json:"body"`
+		Draft           bool   `json:"draft"`
+		Prerelease      bool   `json:"prerelease"`
+		Author          struct {
+			ID        int    `json:"id"`
+			Login     string `json:"login"`
+			FullName  string `json:"full_name"`
+			Email     string `json:"email"`
+			AvatarURL string `json:"avatar_url"`
+			Username  string `json:"username"`
+		} `json:"author"`
+	} `json:"release"`
+	Repo struct {
+		ID    int `json:"id"`
+		Name        string `json:"name"`
+		FullName    string `json:"full_name"`
+		Private     bool   `json:"private"`
+		URL         string    `json:"html_url"`
+		Owner struct {
+			ID        int    `json:"id"`
+			Login     string `json:"login"`
+			FullName  string `json:"full_name"`
+			Email     string `json:"email"`
+			AvatarURL string `json:"avatar_url"`
+			Username  string `json:"username"`
+		} `json:"owner"`
+
+	} `json:"repository"`
+	Sender struct {
+		ID        int    `json:"id"`
+		Login     string `json:"login"`
+		FullName  string `json:"full_name"`
+		Email     string `json:"email"`
+		AvatarURL string `json:"avatar_url"`
+		Username  string `json:"username"`
+	} `json:"sender"`
+}

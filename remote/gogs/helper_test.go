@@ -143,6 +143,31 @@ func Test_parse(t *testing.T) {
 			g.Assert(repo.Link).Equal(hook.Repo.URL)
 		})
 
+		g.It("Should return a Build struct from a publish hook", func() {
+			buf := bytes.NewBufferString(fixtures.HookRelease)
+			hook, _ := parseRelease(buf)
+			build := buildFromRelease(hook)
+			g.Assert(build.Event).Equal(model.EventTag)
+			g.Assert(build.Commit).Equal("1.0.0")
+			g.Assert(build.Ref).Equal("refs/tags/1.0.0")
+			g.Assert(build.Link).Equal("http://gogs.golang.org/gordon/hello-world/src/1.0.0")
+			g.Assert(build.Branch).Equal("develop")
+			g.Assert(build.Message).Equal("publish develop/1.0.0",)
+			g.Assert(build.Avatar).Equal("https://secure.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87")
+			g.Assert(build.Author).Equal(hook.Sender.Login)
+
+		})
+
+		g.It("Should return a Repo struct from a publish hook", func() {
+			buf := bytes.NewBufferString(fixtures.HookRelease)
+			hook, _ := parseRelease(buf)
+			repo := repoFromRelease(hook)
+			g.Assert(repo.Name).Equal(hook.Repo.Name)
+			g.Assert(repo.Owner).Equal(hook.Repo.Owner.Username)
+			g.Assert(repo.FullName).Equal("gordon/hello-world")
+			g.Assert(repo.Link).Equal(hook.Repo.URL)
+		})
+
 		g.It("Should return a Perm struct from a Gogs Perm", func() {
 			perms := []gogs.Permission{
 				{true, true, true},

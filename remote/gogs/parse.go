@@ -26,6 +26,7 @@ const (
 	hookPush        = "push"
 	hookCreated     = "create"
 	hookPullRequest = "pull_request"
+	hookRelease     = "release"
 
 	actionOpen = "opened"
 	actionSync = "synchronized"
@@ -46,6 +47,8 @@ func parseHook(r *http.Request) (*model.Repo, *model.Build, error) {
 		return parseCreatedHook(r.Body)
 	case hookPullRequest:
 		return parsePullRequestHook(r.Body)
+	case hookRelease:
+		return parseReleaseHook(r.Body)
 	}
 	return nil, nil, nil
 }
@@ -117,5 +120,21 @@ func parsePullRequestHook(payload io.Reader) (*model.Repo, *model.Build, error) 
 
 	repo = repoFromPullRequest(pr)
 	build = buildFromPullRequest(pr)
+	return repo, build, err
+}
+
+func parseReleaseHook(payload io.Reader) (*model.Repo, *model.Build, error) {
+	var (
+		repo  *model.Repo
+		build *model.Build
+	)
+
+	pr, err := parseRelease(payload)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	repo = repoFromRelease(pr)
+	build = buildFromRelease(pr)
 	return repo, build, err
 }

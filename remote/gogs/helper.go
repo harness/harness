@@ -155,6 +155,36 @@ func buildFromPullRequest(hook *pullRequestHook) *model.Build {
 	return build
 }
 
+// helper function that extracts the Build data from a Gogs release hook
+func buildFromRelease(hook *releaseHook) *model.Build {
+	avatar := expandAvatar(
+		hook.Repo.URL,
+		fixMalformedAvatar(hook.Sender.AvatarURL),
+	)
+	author := hook.Sender.Login
+	if author == "" {
+		author = hook.Sender.Username
+	}
+	sender := hook.Sender.Username
+	if sender == "" {
+		sender = hook.Sender.Login
+	}
+
+	return &model.Build{
+		Event:     model.EventTag,
+		Commit:    hook.Release.TagName,
+		Ref:       fmt.Sprintf("refs/tags/%s", hook.Release.TagName),
+		Link:      fmt.Sprintf("%s/src/%s", hook.Repo.URL, hook.Release.TagName),
+		Branch:    strings.TrimPrefix(hook.Release.TargetCommitish, "refs/heads/"),
+		Message:   fmt.Sprintf("publish %s/%s", hook.Release.TargetCommitish, hook.Release.TagName),
+		Avatar:    avatar,
+		Author:    author,
+		Email:     hook.Sender.Email,
+		Timestamp: time.Now().UTC().Unix(),
+		Sender:    sender,
+	}
+}
+
 // helper function that extracts the Repository data from a Gogs push hook
 func repoFromPush(hook *pushHook) *model.Repo {
 	return &model.Repo{
@@ -175,6 +205,16 @@ func repoFromPullRequest(hook *pullRequestHook) *model.Repo {
 	}
 }
 
+// helper function that extracts the Repository data from a Gogs publish hook
+func repoFromRelease(hook *releaseHook) *model.Repo {
+	return &model.Repo{
+		Name:     hook.Repo.Name,
+		Owner:    hook.Repo.Owner.Username,
+		FullName: hook.Repo.FullName,
+		Link:     hook.Repo.URL,
+	}
+}
+
 // helper function that parses a push hook from a read closer.
 func parsePush(r io.Reader) (*pushHook, error) {
 	push := new(pushHook)
@@ -184,6 +224,12 @@ func parsePush(r io.Reader) (*pushHook, error) {
 
 func parsePullRequest(r io.Reader) (*pullRequestHook, error) {
 	pr := new(pullRequestHook)
+	err := json.NewDecoder(r).Decode(pr)
+	return pr, err
+}
+
+func parseRelease(r io.Reader) (*releaseHook, error) {
+	pr := new(releaseHook)
 	err := json.NewDecoder(r).Decode(pr)
 	return pr, err
 }
