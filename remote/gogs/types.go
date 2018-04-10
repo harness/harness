@@ -70,7 +70,6 @@ type pullRequestHook struct {
 		} `json:"user"`
 		Title      string   `json:"title"`
 		Body       string   `json:"body"`
-		Labels     []string `json:"labels"`
 		State      string   `json:"state"`
 		URL        string   `json:"html_url"`
 		Mergeable  bool     `json:"mergeable"`
