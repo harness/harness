@@ -156,6 +156,14 @@ var migrations = []struct {
 		name: "alter-table-update-file-meta",
 		stmt: alterTableUpdateFileMeta,
 	},
+	{
+		name: "create-table-deploy_envs",
+		stmt: createTableDeployenvs,
+	},
+	{
+		name: "create-index-deploy_envs-build",
+		stmt: createIndexDeployenvsBuild,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -621,4 +629,20 @@ UPDATE files SET
  file_meta_passed=0
 ,file_meta_failed=0
 ,file_meta_skipped=0
+`
+
+//
+// 019_create_table_deploy_envs.sql
+//
+
+var createTableDeployenvs = `
+CREATE TABLE IF NOT EXISTS deploy_envs (
+ deploy_env_id         SERIAL PRIMARY KEY
+,deploy_env_build_id   INTEGER
+,deploy_env_name       VARCHAR(250)
+);
+`
+
+var createIndexDeployenvsBuild = `
+CREATE INDEX IF NOT EXISTS deploy_env_build_ix ON deploy_envs (deploy_env_build_id);
 `
