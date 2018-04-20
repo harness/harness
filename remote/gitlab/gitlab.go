@@ -601,6 +601,7 @@ func push(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Bu
 
 	var head = parsed.Head()
 	build.Message = head.Message
+	build.Link = head.URL
 	// build.Timestamp = head.Timestamp
 
 	// extracts the commit author (ideally email)
