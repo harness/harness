@@ -523,6 +523,7 @@ func mergeRequest(parsed *client.HookPayload, req *http.Request) (*model.Repo, *
 
 	build.Message = lastCommit.Message
 	build.Commit = lastCommit.Id
+	build.Link = lastCommit.URL
 	//build.Remote = parsed.ObjectAttributes.Source.HttpUrl
 
 	build.Ref = fmt.Sprintf("refs/merge-requests/%d/head", obj.IId)
@@ -542,7 +543,6 @@ func mergeRequest(parsed *client.HookPayload, req *http.Request) (*model.Repo, *
 	}
 
 	build.Title = obj.Title
-	build.Link = obj.Url
 
 	return repo, build, nil
 }
@@ -601,6 +601,7 @@ func push(parsed *client.HookPayload, req *http.Request) (*model.Repo, *model.Bu
 
 	var head = parsed.Head()
 	build.Message = head.Message
+	build.Link = head.URL
 	// build.Timestamp = head.Timestamp
 
 	// extracts the commit author (ideally email)
