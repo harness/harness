@@ -43,5 +43,9 @@ func getKubernetesToken(addr, role, mountPoint, tokenFile string) (string, time.
 	}
 
 	ttl, err := time.ParseDuration(resp.Auth.Lease)
+	if err != nil {
+		return "", 0, err
+	}
+
 	return resp.Auth.Token, ttl, nil
 }
