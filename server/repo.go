@@ -303,13 +303,22 @@ func MoveRepo(c *gin.Context) {
 			return
 		}
 	}
-	builds, err := store.GetBuildList(c, currentRepo)
-	for _, element := range builds {
-		element.RepoID = destinationRepo.ID
-		buildsErr := store.UpdateBuild(c, element)
-		if buildsErr != nil {
-			c.AbortWithError(http.StatusInternalServerError, buildsErr)
+	// reassign all the builds to the new repo
+	pageSize := 50
+	numberOfPages := (currentRepo.Counter + pageSize - 1) / pageSize
+	for page := 1; page <= numberOfPages; page++ {
+		builds, err := store.GetBuildList(c, currentRepo, page)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
 			return
+		}
+		for _, element := range builds {
+			element.RepoID = destinationRepo.ID
+			buildsErr := store.UpdateBuild(c, element)
+			if buildsErr != nil {
+				c.AbortWithError(http.StatusInternalServerError, buildsErr)
+				return
+			}
 		}
 	}
 
