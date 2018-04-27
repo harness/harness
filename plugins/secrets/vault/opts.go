@@ -4,11 +4,7 @@
 
 package vault
 
-import (
-	"github.com/Sirupsen/logrus"
-	"os"
-	"time"
-)
+import "time"
 
 // Opts sets custom options for the vault client.
 type Opts func(v *vault)
@@ -29,20 +25,13 @@ func WithRenewal(d time.Duration) Opts {
 	}
 }
 
-func WithKubernetesAuth() Opts {
+// WithKubernetes returns an options that sets
+// kubernetes-auth parameters required to retrieve
+// an initial Vault token
+func WithKubernetesAuth(addr, role, mount string) Opts {
 	return func(v *vault) {
-		addr := os.Getenv("VAULT_ADDR")
-		role := os.Getenv("DRONE_VAULT_KUBERNETES_ROLE")
-		mount := os.Getenv("DRONE_VAULT_AUTH_MOUNT_POINT")
-		jwtFile := "/var/run/secrets/kubernetes.io/serviceaccount/token"
-		token, ttl, err := getKubernetesToken(addr, role, mount, jwtFile)
-		if err != nil {
-			logrus.Debugf("vault: failed to obtain token via kubernetes-auth backend: %s", err)
-			return
-		}
-
-		v.client.SetToken(token)
-		v.ttl = ttl
-		v.renew = ttl / 2
+		v.kubeAuth.addr = addr
+		v.kubeAuth.role = role
+		v.kubeAuth.mount = mount
 	}
 }

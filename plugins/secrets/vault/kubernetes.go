@@ -16,22 +16,22 @@ Vault JSON Response
   }
 }
 */
-type VaultAuth struct {
+type vaultAuth struct {
 	Token string `json:"client_token"`
 	Lease string `json:"lease_duration"`
 }
-type VaultResp struct {
-	Auth VaultAuth
+type vaultResp struct {
+	Auth vaultAuth
 }
 
-func getKubernetesToken(addr, role, mountPoint, tokenFile string) (string, time.Duration, error) {
+func getKubernetesToken(addr, role, mount, tokenFile string) (string, time.Duration, error) {
 	b, err := ioutil.ReadFile(tokenFile)
 	if err != nil {
 		return "", 0, err
 	}
 
-	var resp VaultResp
-	path := fmt.Sprintf("%s/v1/auth/%s/login", addr, mountPoint)
+	var resp vaultResp
+	path := fmt.Sprintf("%s/v1/auth/%s/login", addr, mount)
 	data := map[string]string{
 		"jwt":  string(b),
 		"role": role,
