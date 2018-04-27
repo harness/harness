@@ -7,3 +7,4 @@ extras/
 release/
 
 server/swagger/files/*.json
+.idea/

@@ -224,3 +224,13 @@ type Error struct {
 func (e Error) Error() string {
 	return e.Body.Message
 }
+
+type RepoPermResp struct {
+	Page   int         `json:"page"`
+	Pages  int         `json:"pagelen"`
+	Values []*RepoPerm `json:"values"`
+}
+
+type RepoPerm struct {
+	Permission string `json:"permission"`
+}
