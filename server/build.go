@@ -1,11 +1,11 @@
 // Copyright 2018 Drone.IO Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -496,11 +496,8 @@ func PostBuild(c *gin.Context) {
 	}
 
 	switch build.Status {
-	case model.StatusPending,
-		model.StatusRunning,
-		model.StatusDeclined,
-		model.StatusBlocked,
-		model.StatusError:
+	case model.StatusDeclined,
+		model.StatusBlocked:
 		c.String(500, "cannot restart a build with status %s", build.Status)
 		return
 	}

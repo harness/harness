@@ -27,9 +27,16 @@ import (
 //
 type vaultConfig struct {
 	Secrets map[string]struct {
+		Driver     string
+		DriverOpts struct {
+			Path string
+			Key  string
+		} `yaml:"driver_opts"`
+
+		// deprecated. do not use.
+		Vault string
 		Path  string
 		File  string
-		Vault string
 	}
 }
 
@@ -78,7 +85,7 @@ func (v *vault) list(repo *model.Repo, build *model.Build) ([]*model.Secret, err
 		return nil, err
 	}
 	for key, val := range out.Secrets {
-		var path string
+		var path, field string
 		switch {
 		case val.Path != "":
 			path = val.Path
@@ -86,6 +93,12 @@ func (v *vault) list(repo *model.Repo, build *model.Build) ([]*model.Secret, err
 			path = val.File
 		case val.Vault != "":
 			path = val.Vault
+		case val.DriverOpts.Path != "":
+			path = val.DriverOpts.Path
+			field = val.DriverOpts.Key
+		}
+		if field == "" {
+			field = "value"
 		}
 
 		if path == "" {
@@ -94,7 +107,7 @@ func (v *vault) list(repo *model.Repo, build *model.Build) ([]*model.Secret, err
 
 		logrus.Debugf("vault: read secret: %s", path)
 
-		vaultSecret, err := v.get(path)
+		vaultSecret, err := v.get(path, field)
 		if err != nil {
 			logrus.Debugf("vault: read secret failed: %s: %s", path, err)
 			return nil, err
@@ -120,7 +133,7 @@ func (v *vault) list(repo *model.Repo, build *model.Build) ([]*model.Secret, err
 	return secrets, nil
 }
 
-func (v *vault) get(path string) (*vaultSecret, error) {
+func (v *vault) get(path, key string) (*vaultSecret, error) {
 	secret, err := v.client.Logical().Read(path)
 	if err != nil {
 		return nil, err
@@ -128,7 +141,7 @@ func (v *vault) get(path string) (*vaultSecret, error) {
 	if secret == nil || secret.Data == nil {
 		return nil, nil
 	}
-	return parseVaultSecret(secret.Data), nil
+	return parseVaultSecret(secret.Data, key), nil
 }
 
 // start starts the renewal loop.
@@ -178,10 +191,10 @@ type vaultSecret struct {
 	Repo  []string
 }
 
-func parseVaultSecret(data map[string]interface{}) *vaultSecret {
+func parseVaultSecret(data map[string]interface{}, key string) *vaultSecret {
 	secret := new(vaultSecret)
 
-	if vvalue, ok := data["value"]; ok {
+	if vvalue, ok := data[key]; ok {
 		if svalue, ok := vvalue.(string); ok {
 			secret.Value = svalue
 		}

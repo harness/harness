@@ -55,11 +55,11 @@ func New(spec *backend.Config, opts ...Option) *Runtime {
 // Run starts the runtime and waits for it to complete.
 func (r *Runtime) Run() error {
 	defer func() {
-		r.engine.Destroy(r.spec)
+		r.engine.Destroy(r.ctx, r.spec)
 	}()
 
 	r.started = time.Now().Unix()
-	if err := r.engine.Setup(r.spec); err != nil {
+	if err := r.engine.Setup(r.ctx, r.spec); err != nil {
 		return err
 	}
 
@@ -124,12 +124,12 @@ func (r *Runtime) exec(proc *backend.Step) error {
 		}
 	}
 
-	if err := r.engine.Exec(proc); err != nil {
+	if err := r.engine.Exec(r.ctx, proc); err != nil {
 		return err
 	}
 
 	if r.logger != nil {
-		rc, err := r.engine.Tail(proc)
+		rc, err := r.engine.Tail(r.ctx, proc)
 		if err != nil {
 			return err
 		}
@@ -144,7 +144,7 @@ func (r *Runtime) exec(proc *backend.Step) error {
 		return nil
 	}
 
-	wait, err := r.engine.Wait(proc)
+	wait, err := r.engine.Wait(r.ctx, proc)
 	if err != nil {
 		return err
 	}
