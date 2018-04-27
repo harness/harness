@@ -26,3 +26,31 @@ func TestWithRenewal(t *testing.T) {
 		t.Errorf("Want renewal %v, got %v", want, got)
 	}
 }
+
+func TestWithAuth(t *testing.T) {
+	v := new(vault)
+	method := "kubernetes"
+	opt := WithAuth(method)
+	opt(v)
+	if got, want := v.auth, method; got != want {
+		t.Errorf("Want auth %v, got %v", want, got)
+	}
+}
+
+func TestWithKubernetesAuth(t *testing.T) {
+	v := new(vault)
+	addr := "https://address.fake"
+	role := "fakeRole"
+	mount := "kubernetes"
+	opt := WithKubernetesAuth(addr, role, mount)
+	opt(v)
+	if got, want := v.kubeAuth.addr, addr; got != want {
+		t.Errorf("Want addr %v, got %v", want, got)
+	}
+	if got, want := v.kubeAuth.role, role; got != want {
+		t.Errorf("Want role %v, got %v", want, got)
+	}
+	if got, want := v.kubeAuth.mount, mount; got != want {
+		t.Errorf("Want mount %v, got %v", want, got)
+	}
+}

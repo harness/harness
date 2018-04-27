@@ -41,11 +41,17 @@ type vaultConfig struct {
 }
 
 type vault struct {
-	store  model.ConfigStore
-	client *api.Client
-	ttl    time.Duration
-	renew  time.Duration
-	done   chan struct{}
+	store    model.ConfigStore
+	client   *api.Client
+	ttl      time.Duration
+	renew    time.Duration
+	auth     string
+	kubeAuth kubeAuth
+	done     chan struct{}
+}
+
+type kubeAuth struct {
+	addr, role, mount string
 }
 
 // New returns a new store with secrets loaded from vault.
@@ -61,8 +67,32 @@ func New(store model.ConfigStore, opts ...Opts) (secrets.Plugin, error) {
 	for _, opt := range opts {
 		opt(v)
 	}
+	if v.auth == "kubernetes" {
+		err = v.initKubernetes()
+		if err != nil {
+			return nil, err
+		}
+	}
 	v.start() // start the refresh process.
 	return v, nil
+}
+
+func (v *vault) initKubernetes() error {
+	token, ttl, err := getKubernetesToken(
+		v.kubeAuth.addr,
+		v.kubeAuth.role,
+		v.kubeAuth.mount,
+		"/var/run/secrets/kubernetes.io/serviceaccount/token",
+	)
+	if err != nil {
+		logrus.Debugf("vault: failed to obtain token via kubernetes-auth backend: %s", err)
+		return err
+	}
+
+	v.client.SetToken(token)
+	v.ttl = ttl
+	v.renew = ttl / 2
+	return nil
 }
 
 func (v *vault) SecretListBuild(repo *model.Repo, build *model.Build) ([]*model.Secret, error) {
