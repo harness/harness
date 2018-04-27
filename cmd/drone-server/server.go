@@ -179,7 +179,7 @@ var flags = []cli.Flag{
 		EnvVar: "DRONE_VAULT_AUTH_TYPE",
 		Name:   "drone-vault-auth-type",
 		Usage:  "auth backend type used for connecting to vault",
-		Value:  "token",
+		Value:  "",
 	},
 	cli.StringFlag{
 		EnvVar: "DRONE_VAULT_AUTH_MOUNT_POINT",

@@ -27,6 +27,16 @@ func TestWithRenewal(t *testing.T) {
 	}
 }
 
+func TestWithAuth(t *testing.T) {
+	v := new(vault)
+	method := "kubernetes"
+	opt := WithAuth(method)
+	opt(v)
+	if got, want := v.auth, method; got != want {
+		t.Errorf("Want auth %v, got %v", want, got)
+	}
+}
+
 func TestWithKubernetesAuth(t *testing.T) {
 	v := new(vault)
 	addr := "https://address.fake"
