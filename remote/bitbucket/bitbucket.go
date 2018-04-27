@@ -182,17 +182,21 @@ func (c *config) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 	}
 
 	perm, err := client.GetPermission(repo.FullName)
-
-	if err == nil {
-		switch perm.Permission {
-		case "admin":
-			perms.Push = true
-			perms.Admin = true
-		case "write":
-			perms.Push = true
-		}
+	if err != nil {
+		return perms, err
 	}
-	perms.Pull = true
+
+	switch perm.Permission {
+	case "admin":
+		perms.Admin = true
+		fallthrough
+	case "write":
+		perms.Push = true
+		fallthrough
+	default:
+		perms.Pull = true
+	}
+
 	return perms, nil
 }
 

@@ -15,6 +15,7 @@
 package fixtures
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -36,6 +37,7 @@ func Handler() http.Handler {
 	e.GET("/2.0/repositories/:owner", getUserRepos)
 	e.GET("/2.0/teams/", getUserTeams)
 	e.GET("/2.0/user/", getUser)
+	e.GET("/2.0/user/permissions/repositories", getPermissions)
 
 	return e
 }
@@ -70,6 +72,8 @@ func getRepo(c *gin.Context) {
 	switch c.Param("name") {
 	case "not_found", "repo_unknown", "repo_not_found":
 		c.String(404, "")
+	case "permission_read", "permission_write", "permission_admin":
+		c.String(200, fmt.Sprintf(permissionRepoPayload, c.Param("name")))
 	default:
 		c.String(200, repoPayload)
 	}
@@ -144,6 +148,24 @@ func getUserRepos(c *gin.Context) {
 	}
 }
 
+func permission(p string) string {
+	return fmt.Sprintf(permissionPayload, p)
+}
+
+func getPermissions(c *gin.Context) {
+	query := c.Request.URL.Query()["q"][0]
+	switch query {
+	case `repository.full_name="test_name/permission_read"`:
+		c.String(200, permission("read"))
+	case `repository.full_name="test_name/permission_write"`:
+		c.String(200, permission("write"))
+	case `repository.full_name="test_name/permission_admin"`:
+		c.String(200, permission("admin"))
+	default:
+		c.String(200, permission("read"))
+	}
+}
+
 const tokenPayload = `
 {
 	"access_token":"2YotnFZFEjr1zCsicMWpAA",
@@ -165,6 +187,14 @@ const tokenNotFoundPayload = `
 const repoPayload = `
 {
   "full_name": "test_name/repo_name",
+  "scm": "git",
+  "is_private": true
+}
+`
+
+const permissionRepoPayload = `
+{
+  "full_name": "test_name/%s",
   "scm": "git",
   "is_private": true
 }
@@ -236,5 +266,17 @@ const userTeamPayload = `
       "type": "team"
     }
   ]
+}
+`
+
+const permissionPayload = `
+{
+  "pagelen": 1,
+  "values": [
+    {
+      "permission": "%s"
+    }
+  ],
+  "page": 1
 }
 `
