@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/bitbucket"
 )
@@ -37,7 +36,7 @@ const (
 const (
 	pathUser        = "%s/2.0/user/"
 	pathEmails      = "%s/2.0/user/emails"
-	pathPermissions = "%s/2.0/user/permissions/repositories?q=repository.full_name=\"%s\""
+	pathPermissions = "%s/2.0/user/permissions/repositories?q=repository.full_name=%q"
 	pathTeams       = "%s/2.0/teams/?%s"
 	pathRepo        = "%s/2.0/repositories/%s/%s"
 	pathRepos       = "%s/2.0/repositories/%s?%s"
@@ -154,9 +153,9 @@ func (c *Client) CreateStatus(owner, name, revision string, status *BuildStatus)
 	return c.do(uri, post, status, nil)
 }
 
-func (c *Client) GetPermission(full_name string) (*RepoPerm, error) {
+func (c *Client) GetPermission(fullName string) (*RepoPerm, error) {
 	out := new(RepoPermResp)
-	uri := fmt.Sprintf(pathPermissions, c.base, full_name)
+	uri := fmt.Sprintf(pathPermissions, c.base, fullName)
 	err := c.do(uri, get, nil, out)
 
 	if err != nil {
@@ -164,8 +163,7 @@ func (c *Client) GetPermission(full_name string) (*RepoPerm, error) {
 	}
 
 	if len(out.Values) == 0 {
-		err = errors.New(fmt.Sprint("no permissions in repository ", full_name))
-		return nil, err
+		return nil, fmt.Errorf("no permissions in repository ", fullName)
 	} else {
 		return out.Values[0], nil
 	}
