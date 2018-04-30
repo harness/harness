@@ -34,15 +34,16 @@ const (
 )
 
 const (
-	pathUser   = "%s/2.0/user/"
-	pathEmails = "%s/2.0/user/emails"
-	pathTeams  = "%s/2.0/teams/?%s"
-	pathRepo   = "%s/2.0/repositories/%s/%s"
-	pathRepos  = "%s/2.0/repositories/%s?%s"
-	pathHook   = "%s/2.0/repositories/%s/%s/hooks/%s"
-	pathHooks  = "%s/2.0/repositories/%s/%s/hooks?%s"
-	pathSource = "%s/1.0/repositories/%s/%s/src/%s/%s"
-	pathStatus = "%s/2.0/repositories/%s/%s/commit/%s/statuses/build"
+	pathUser        = "%s/2.0/user/"
+	pathEmails      = "%s/2.0/user/emails"
+	pathPermissions = "%s/2.0/user/permissions/repositories?q=repository.full_name=%q"
+	pathTeams       = "%s/2.0/teams/?%s"
+	pathRepo        = "%s/2.0/repositories/%s/%s"
+	pathRepos       = "%s/2.0/repositories/%s?%s"
+	pathHook        = "%s/2.0/repositories/%s/%s/hooks/%s"
+	pathHooks       = "%s/2.0/repositories/%s/%s/hooks?%s"
+	pathSource      = "%s/1.0/repositories/%s/%s/src/%s/%s"
+	pathStatus      = "%s/2.0/repositories/%s/%s/commit/%s/statuses/build"
 )
 
 type Client struct {
@@ -150,6 +151,22 @@ func (c *Client) FindSource(owner, name, revision, path string) (*Source, error)
 func (c *Client) CreateStatus(owner, name, revision string, status *BuildStatus) error {
 	uri := fmt.Sprintf(pathStatus, c.base, owner, name, revision)
 	return c.do(uri, post, status, nil)
+}
+
+func (c *Client) GetPermission(fullName string) (*RepoPerm, error) {
+	out := new(RepoPermResp)
+	uri := fmt.Sprintf(pathPermissions, c.base, fullName)
+	err := c.do(uri, get, nil, out)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(out.Values) == 0 {
+		return nil, fmt.Errorf("no permissions in repository %s", fullName)
+	} else {
+		return out.Values[0], nil
+	}
 }
 
 func (c *Client) do(rawurl, method string, in, out interface{}) error {
