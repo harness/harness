@@ -176,17 +176,27 @@ func (c *config) Perm(u *model.User, owner, name string) (*model.Perm, error) {
 	client := c.newClient(u)
 
 	perms := new(model.Perm)
-	_, err := client.FindRepo(owner, name)
+	repo, err := client.FindRepo(owner, name)
 	if err != nil {
 		return perms, err
 	}
 
-	_, err = client.ListHooks(owner, name, &internal.ListOpts{})
-	if err == nil {
-		perms.Push = true
-		perms.Admin = true
+	perm, err := client.GetPermission(repo.FullName)
+	if err != nil {
+		return perms, err
 	}
-	perms.Pull = true
+
+	switch perm.Permission {
+	case "admin":
+		perms.Admin = true
+		fallthrough
+	case "write":
+		perms.Push = true
+		fallthrough
+	default:
+		perms.Pull = true
+	}
+
 	return perms, nil
 }
 
