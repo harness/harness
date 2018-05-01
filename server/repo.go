@@ -328,6 +328,7 @@ func MoveRepo(c *gin.Context) {
 	if destinationRepo.IsPrivate != currentRepo.IsPrivate {
 		destinationRepo.ResetVisibility()
 	}
+	destinationRepo.Owner = currentRepo.Owner
 	destinationRepo.Counter = currentRepo.Counter
 	destinationRepo.AllowDeploy = currentRepo.AllowDeploy
 	destinationRepo.AllowPull = currentRepo.AllowPull
