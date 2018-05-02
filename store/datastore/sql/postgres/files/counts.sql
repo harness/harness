@@ -11,5 +11,4 @@ WHERE repo_active = true
 
 -- name: count-builds
 
-SELECT reltuples
-FROM pg_class WHERE relname = 'builds'
+SELECT currval('builds_build_id_seq');

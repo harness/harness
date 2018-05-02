@@ -268,6 +268,12 @@ func TestBuilds(t *testing.T) {
 			g.Assert(builds[0].RepoID).Equal(build2.RepoID)
 			g.Assert(builds[0].Status).Equal(build2.Status)
 		})
+
+		g.It("Should count Builds", func() {
+			count, err := s.GetBuildCount()
+			g.Assert(err == nil).IsTrue()
+			g.Assert(count > 0).IsTrue()
+		})
 	})
 }
 
