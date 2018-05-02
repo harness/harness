@@ -175,24 +175,6 @@ var flags = []cli.Flag{
 		Usage:  "token to secure prometheus metrics endpoint",
 		Value:  "",
 	},
-	cli.StringFlag{
-		EnvVar: "DRONE_VAULT_AUTH_TYPE",
-		Name:   "drone-vault-auth-type",
-		Usage:  "auth backend type used for connecting to vault",
-		Value:  "",
-	},
-	cli.StringFlag{
-		EnvVar: "DRONE_VAULT_AUTH_MOUNT_POINT",
-		Name:   "drone-vault-auth-mount-point",
-		Usage:  "mount point for desired vault auth backend",
-		Value:  "",
-	},
-	cli.StringFlag{
-		EnvVar: "DRONE_VAULT_KUBERNETES_ROLE",
-		Name:   "drone-vault-kubernetes-role",
-		Usage:  "role to authenticate as for vault kubernetes auth",
-		Value:  "",
-	},
 	//
 	// resource limit parameters
 	//
