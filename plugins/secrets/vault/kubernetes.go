@@ -12,13 +12,13 @@ Vault JSON Response
 {
   "auth": {
     "client_token" = "token",
-    "lease_duration" = "1234s"
+    "lease_duration" = 1234
   }
 }
 */
 type vaultAuth struct {
 	Token string `json:"client_token"`
-	Lease string `json:"lease_duration"`
+	Lease int    `json:"lease_duration"`
 }
 type vaultResp struct {
 	Auth vaultAuth
@@ -42,10 +42,7 @@ func getKubernetesToken(addr, role, mount, tokenFile string) (string, time.Durat
 		return "", 0, err
 	}
 
-	ttl, err := time.ParseDuration(resp.Auth.Lease)
-	if err != nil {
-		return "", 0, err
-	}
+	ttl := time.Duration(resp.Auth.Lease) * time.Second
 
 	return resp.Auth.Token, ttl, nil
 }
