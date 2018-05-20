@@ -168,24 +168,30 @@ func PostHook(c *gin.Context) {
 	if err != nil {
 		// Check if we have a fallback in the server config
 		if len(Config.Server.RepoConfigFallbackUrl) > 0 {
+			// Generate the fallback URL with template
 			fallbackUrl := getFallbackUrl(Config.Server.RepoConfigFallbackUrl, repo, build, user)
-			// download it while passing basic arguments about the build
+
+			// Download it
 			resp, err := http.Get(fallbackUrl)
-			if err != nil {
-				logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
-				c.AbortWithError(404, err)
-				return
-			}
-
-			defer resp.Body.Close()
-			confb, err = ioutil.ReadAll(resp.Body)
-
 			if err != nil {
 				logrus.Errorf("failure to get fallback build config %s (%s) for %s. %s",
 					Config.Server.RepoConfigFallbackUrl, fallbackUrl, repo.FullName, err)
 				c.AbortWithError(404, err)
 				return
 			}
+			defer resp.Body.Close()
+			confb, err = ioutil.ReadAll(resp.Body)
+			if err != nil {
+				logrus.Errorf("failure to get fallback build config %s (%s) for %s. %s",
+					Config.Server.RepoConfigFallbackUrl, fallbackUrl, repo.FullName, err)
+				c.AbortWithError(404, err)
+				return
+			}
+		} else {
+			// No fallback setup, return original error
+			logrus.Errorf("error: %s: cannot find %s in %s: %s", repo.FullName, repo.Config, build.Ref, err)
+			c.AbortWithError(404, err)
+			return
 		}
 	}
 
