@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -176,17 +177,27 @@ func (r *runner) run(ctx context.Context) error {
 		timeout = time.Duration(minutes) * time.Minute
 	}
 
+	repoName, err := extractRepositoryName(work.Config)
+	if err != nil {
+		return nil
+	}
+
+	buildNumber, err := extractBuildNumber(work.Config)
+	if err != nil {
+		return nil
+	}
+
 	counter.Add(
 		work.ID,
 		timeout,
-		extractRepositoryName(work.Config), // hack
-		extractBuildNumber(work.Config),    // hack
+		repoName,    // hack
+		buildNumber, // hack
 	)
 	defer counter.Done(work.ID)
 
 	logger := log.With().
-		Str("repo", extractRepositoryName(work.Config)). // hack
-		Str("build", extractBuildNumber(work.Config)).   // hack
+		Str("repo", repoName).     // hack
+		Str("build", buildNumber). // hack
 		Str("id", work.ID).
 		Logger()
 
@@ -474,11 +485,23 @@ func (c *credentials) RequireTransportSecurity() bool {
 }
 
 // extract repository name from the configuration
-func extractRepositoryName(config *backend.Config) string {
-	return config.Stages[0].Steps[0].Environment["DRONE_REPO"]
+func extractRepositoryName(config *backend.Config) (string, error) {
+	if len(config.Stages) < 1 {
+		return "", errors.New("agent: Unable to get repo name, no stages in config.")
+	}
+	if len(config.Stages[0].Steps) < 1 {
+		return "", errors.New("agent: Unable to get repo name, no steps in stage.")
+	}
+	return config.Stages[0].Steps[0].Environment["DRONE_REPO"], nil
 }
 
 // extract build number from the configuration
-func extractBuildNumber(config *backend.Config) string {
-	return config.Stages[0].Steps[0].Environment["DRONE_BUILD_NUMBER"]
+func extractBuildNumber(config *backend.Config) (string, error) {
+	if len(config.Stages) < 1 {
+		return "", errors.New("agent: Unable to get build number, no stages in config.")
+	}
+	if len(config.Stages[0].Steps) < 1 {
+		return "", errors.New("agent: Unable to get build number, no steps in stage.")
+	}
+	return config.Stages[0].Steps[0].Environment["DRONE_BUILD_NUMBER"], nil
 }
