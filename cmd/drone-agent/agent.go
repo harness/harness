@@ -492,7 +492,12 @@ func extractRepositoryName(config *backend.Config) (string, error) {
 	if len(config.Stages[0].Steps) < 1 {
 		return "", errors.New("agent: Unable to get repo name, no steps in stage.")
 	}
-	return config.Stages[0].Steps[0].Environment["DRONE_REPO"], nil
+
+	if val, ok := config.Stages[0].Steps[0].Environment["DRONE_REPO"]; ok {
+		return val, nil
+	} else {
+		return val, errors.New("agent: DRONE_REPO environment variable does not exist.")
+	}
 }
 
 // extract build number from the configuration
@@ -503,5 +508,10 @@ func extractBuildNumber(config *backend.Config) (string, error) {
 	if len(config.Stages[0].Steps) < 1 {
 		return "", errors.New("agent: Unable to get build number, no steps in stage.")
 	}
-	return config.Stages[0].Steps[0].Environment["DRONE_BUILD_NUMBER"], nil
+
+	if val, ok := config.Stages[0].Steps[0].Environment["DRONE_BUILD_NUMBER"]; ok {
+		return val, nil
+	} else {
+		return val, errors.New("agent: DRONE_BUILD_NUMBER environment variable does not exist.")
+	}
 }
