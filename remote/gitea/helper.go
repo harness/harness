@@ -82,13 +82,18 @@ func buildFromPush(hook *pushHook) *model.Build {
 		sender = hook.Sender.Login
 	}
 
+	message := ""
+	if len(hook.Commits) > 0 {
+		message = hook.Commits[0].Message
+	}
+
 	return &model.Build{
 		Event:     model.EventPush,
 		Commit:    hook.After,
 		Ref:       hook.Ref,
 		Link:      hook.Compare,
 		Branch:    strings.TrimPrefix(hook.Ref, "refs/heads/"),
-		Message:   hook.Commits[0].Message,
+		Message:   message,
 		Avatar:    avatar,
 		Author:    author,
 		Email:     hook.Sender.Email,
