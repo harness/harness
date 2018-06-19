@@ -322,6 +322,7 @@ func PostHook(c *gin.Context) {
 	message := pubsub.Message{
 		Labels: map[string]string{
 			"repo":    repo.FullName,
+			"branch":  repo.Branch,
 			"private": strconv.FormatBool(repo.IsPrivate),
 		},
 	}
@@ -347,6 +348,7 @@ func PostHook(c *gin.Context) {
 		}
 		task.Labels["platform"] = item.Platform
 		task.Labels["repo"] = b.Repo.FullName
+		task.Labels["branch"] = b.Repo.Branch
 
 		task.Data, _ = json.Marshal(rpc.Pipeline{
 			ID:      fmt.Sprint(item.Proc.ID),
