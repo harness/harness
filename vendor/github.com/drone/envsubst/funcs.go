@@ -1,7 +1,6 @@
 package envsubst
 
 import (
-	"path"
 	"strconv"
 	"strings"
 	"unicode"
@@ -184,7 +183,7 @@ func trimLongestSuffix(s string, args ...string) string {
 func trimShortest(s, arg string) string {
 	var shortestMatch string
 	for i :=0 ; i < len(s); i++ {
-		match, err := path.Match(arg, s[0:len(s)-i])
+		match, err := Match(arg, s[0:len(s)-i])
 
 		if err != nil {
 			return s
@@ -204,7 +203,7 @@ func trimShortest(s, arg string) string {
 
 func trimLongest(s, arg string) string {
 	for i :=0 ; i < len(s); i++ {
-		match, err := path.Match(arg, s[0:len(s)-i])
+		match, err := Match(arg, s[0:len(s)-i])
 
 		if err != nil {
 			return s

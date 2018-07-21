@@ -476,10 +476,10 @@
 			"revisionTime": "2017-02-10T18:43:46Z"
 		},
 		{
-			"checksumSHA1": "pjMV8mwWcQ0Kk9cbLWweTGiqYPk=",
+			"checksumSHA1": "Jcl7kkf8UdqMh5AL79ndOwp6t4A=",
 			"path": "github.com/drone/envsubst",
-			"revision": "523de92ea410a5756012669fb628fe42a3056b3e",
-			"revisionTime": "2017-03-25T05:49:59Z"
+			"revision": "f4d1a8ef8670afc9eea1fb95ee09a979fd2763a3",
+			"revisionTime": "2017-10-16T18:40:23Z"
 		},
 		{
 			"checksumSHA1": "CVG/vocbXGLbGKRO//TOlicOBkw=",
