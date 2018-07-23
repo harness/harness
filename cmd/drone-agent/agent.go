@@ -274,17 +274,24 @@ func (r *runner) run(ctx context.Context) error {
 
 		loglogger.Debug().Msg("log stream opened")
 
-		limitedPart := io.LimitReader(part, maxLogsUpload)
 		logstream := rpc.NewLineWriter(r.client, work.ID, proc.Alias, secrets...)
-		io.Copy(logstream, limitedPart)
+		io.Copy(logstream, part)
 
 		loglogger.Debug().Msg("log stream copied")
+
+		// maxLogsUpload is now more accurate
+		// We want the end of the logs, not the beginning
+		logLines := logstream.Lines()
+		fileData, _ := json.Marshal(logLines)
+		for firstLine := 1; len(fileData) > maxLogsUpload; firstLine++ {
+			fileData, _ = json.Marshal(logLines[firstLine:])
+		}
 
 		file := &rpc.File{}
 		file.Mime = "application/json+logs"
 		file.Proc = proc.Alias
 		file.Name = "logs.json"
-		file.Data, _ = json.Marshal(logstream.Lines())
+		file.Data = fileData
 		file.Size = len(file.Data)
 		file.Time = time.Now().Unix()
 
@@ -312,7 +319,7 @@ func (r *runner) run(ctx context.Context) error {
 			return nil
 		}
 		// TODO should be configurable
-		limitedPart = io.LimitReader(part, maxFileUpload)
+		limitedPart := io.LimitReader(part, maxFileUpload)
 		file = &rpc.File{}
 		file.Mime = part.Header().Get("Content-Type")
 		file.Proc = proc.Alias
