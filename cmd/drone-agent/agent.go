@@ -145,7 +145,7 @@ func loop(c *cli.Context) error {
 // The maximum grpc payload size is 4194304. So until we implement streaming
 // for uploads, we need to set these limits below the maximum.
 const (
-	maxLogsUpload = 2000000 // this is per step
+	maxLogsUpload = 4000000 // this is per step
 	maxFileUpload = 1000000
 )
 
