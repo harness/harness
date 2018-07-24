@@ -37,99 +37,99 @@ pipeline:
     when:
       event: [ push, tag ]
 
-  publish_server_alpine:
-    image: plugins/docker
-    repo: drone/drone
-    dockerfile: Dockerfile.alpine
-    secrets: [ docker_username, docker_password ]
-    tag: [ alpine ]
-    when:
-      branch: master
-      event: push
+  #publish_server_alpine:
+  #  image: plugins/docker
+  #  repo: drone/drone
+  #  dockerfile: Dockerfile.alpine
+  #  secrets: [ docker_username, docker_password ]
+  #  tag: [ alpine ]
+  #  when:
+  #    branch: master
+  #    event: push
 
-  publish_server:
-    image: plugins/docker
-    repo: drone/drone
-    secrets: [ docker_username, docker_password ]
-    tag: [ latest ]
-    when:
-      branch: master
-      event: push
+  #publish_server:
+  #  image: plugins/docker
+  #  repo: drone/drone
+  #  secrets: [ docker_username, docker_password ]
+  #  tag: [ latest ]
+  #  when:
+  #    branch: master
+  #    event: push#
 
-  publish_agent_alpine:
-    image: plugins/docker
-    repo: drone/agent
-    dockerfile: Dockerfile.agent.alpine
-    secrets: [ docker_username, docker_password ]
-    tag: [ alpine ]
-    when:
-      branch: master
-      event: push
+  #publish_agent_alpine:
+  #  image: plugins/docker
+  #  repo: drone/agent
+  #  dockerfile: Dockerfile.agent.alpine
+  #  secrets: [ docker_username, docker_password ]
+  #  tag: [ alpine ]
+  #  when:
+  #    branch: master
+  #    event: push
 
-  publish_agent_arm:
-    image: plugins/docker
-    repo: drone/agent
-    dockerfile: Dockerfile.agent.linux.arm
-    secrets: [ docker_username, docker_password ]
-    tag: [ linux-arm ]
-    when:
-      branch: master
-      event: push
+  #publish_agent_arm:
+  #  image: plugins/docker
+  #  repo: drone/agent
+  #  dockerfile: Dockerfile.agent.linux.arm
+  #  secrets: [ docker_username, docker_password ]
+  #  tag: [ linux-arm ]
+  #  when:
+  #    branch: master
+  #    event: push
 
-  publish_agent_arm64:
-    image: plugins/docker
-    repo: drone/agent
-    dockerfile: Dockerfile.agent.linux.arm64
-    secrets: [ docker_username, docker_password ]
-    tag: [ linux-arm64 ]
-    when:
-      branch: master
-      event: push
+  #publish_agent_arm64:
+  #  image: plugins/docker
+  #  repo: drone/agent
+  #  dockerfile: Dockerfile.agent.linux.arm64
+  #  secrets: [ docker_username, docker_password ]
+  #  tag: [ linux-arm64 ]
+  #  when:
+  #    branch: master
+  #    event: push
 
-  publish_agent_amd64:
-    image: plugins/docker
-    repo: drone/agent
-    dockerfile: Dockerfile.agent
-    secrets: [ docker_username, docker_password ]
-    tag: [ latest ]
-    when:
-      branch: master
-      event: push
+  #publish_agent_amd64:
+  #  image: plugins/docker
+  #  repo: drone/agent
+  #  dockerfile: Dockerfile.agent
+  #  secrets: [ docker_username, docker_password ]
+  #  tag: [ latest ]
+  #  when:
+  #    branch: master
+  #    event: push
 
-  release_server_alpine:
-    image: plugins/docker
-    repo: drone/drone
-    dockerfile: Dockerfile.alpine
-    secrets: [ docker_username, docker_password ]
-    tag: [ 0.8-alpine ]
-    when:
-      event: tag
+  #release_server_alpine:
+  #  image: plugins/docker
+  #  repo: drone/drone
+  #  dockerfile: Dockerfile.alpine
+  #  secrets: [ docker_username, docker_password ]
+  #  tag: [ 0.8-alpine ]
+  #  when:
+  #    event: tag#
 
-  release_agent_alpine:
-    image: plugins/docker
-    repo: drone/agent
-    dockerfile: Dockerfile.agent.alpine
-    secrets: [ docker_username, docker_password ]
-    tag: [ 0.8-alpine ]
-    when:
-      event: tag
+  #release_agent_alpine:
+  #  image: plugins/docker
+  #  repo: drone/agent
+  #  dockerfile: Dockerfile.agent.alpine
+  #  secrets: [ docker_username, docker_password ]
+  #  tag: [ 0.8-alpine ]
+  #  when:
+  #    event: tag
 
-  release_server:
-    image: plugins/docker
-    repo: drone/drone
-    secrets: [ docker_username, docker_password ]
-    tag: [ 0.8, 0.8.5 ]
-    when:
-      event: tag
+  #release_server:
+  #  image: plugins/docker
+  #  repo: drone/drone
+  #  secrets: [ docker_username, docker_password ]
+  #  tag: [ 0.8, 0.8.5 ]
+  #  when:
+  #    event: tag#
 
-  release_agent:
-    image: plugins/docker
-    repo: drone/agent
-    dockerfile: Dockerfile.agent
-    secrets: [ docker_username, docker_password ]
-    tag: [ 0.8, 0.8.5 ]
-    when:
-      event: tag
+  #release_agent:
+  #  image: plugins/docker
+  #  repo: drone/agent
+  #  dockerfile: Dockerfile.agent
+  #  secrets: [ docker_username, docker_password ]
+  #  tag: [ 0.8, 0.8.5 ]
+  #  when:
+  #    event: tag
 
 services:
   postgres:
