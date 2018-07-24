@@ -36,18 +36,18 @@ pipeline:
 
   release_server:
     image: plugins/docker
-    repo: commure/drone-server
+    repo: commure/ci-server
     secrets: [ docker_username, docker_password ]
-    tags: "${DRONE_COMMIT_SHA}"
+    auto_tag: true
     when:
       branch: master
 
   release_agent:
     image: plugins/docker
-    repo: commure/drone-agent
+    repo: commure/ci-agent
     dockerfile: Dockerfile.agent
     secrets: [ docker_username, docker_password ]
-    tags: "${DRONE_COMMIT_SHA}"
+    auto_tag: true
     when:
       branch: master
 
