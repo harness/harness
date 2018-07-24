@@ -42,6 +42,7 @@ type (
 		CPUQuota     int64             `json:"cpu_quota,omitempty"`
 		CPUShares    int64             `json:"cpu_shares,omitempty"`
 		CPUSet       string            `json:"cpu_set,omitempty"`
+		ErrIgnore    bool              `json:"err_ignore,omitempty"`
 		OnFailure    bool              `json:"on_failure,omitempty"`
 		OnSuccess    bool              `json:"on_success,omitempty"`
 		AuthConfig   Auth              `json:"auth_config,omitempty"`
