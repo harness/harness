@@ -146,7 +146,7 @@ func (r *Runtime) exec(proc *backend.Step) error {
 
 	wait, err := r.engine.Wait(r.ctx, proc)
 
-	if proc.ErrIgnore && (err || wait.ExitCode != 0) {
+	if proc.ErrIgnore && (err != nil || wait.ExitCode != 0) {
 		return nil
 	}
 
