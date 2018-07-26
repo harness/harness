@@ -15,6 +15,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"io"
@@ -283,7 +284,17 @@ func (r *runner) run(ctx context.Context) error {
 		// We want the end of the logs, not the beginning
 		logLines := logstream.Lines()
 		fileData, _ := json.Marshal(logLines)
-		for firstLine := 1; len(fileData) > maxLogsUpload; firstLine++ {
+		fileBuffer := bytes.NewBuffer(fileData)
+		suffixBytes := []byte("\\\"},")
+		var firstLine uint = 0
+		for ; fileBuffer.Len() > maxLogsUpload; firstLine++ {
+			// read bytes until we find '"},' in the encoded JSON
+			for c, _ := fileBuffer.ReadBytes(','); bytes.HasSuffix(c, suffixBytes) || !bytes.HasSuffix(c, suffixBytes[1:]); {
+				c, _ = fileBuffer.ReadBytes(',')
+			}
+		}
+		fileData, _ = json.Marshal(logLines[firstLine:])
+		for ; len(fileData) > maxLogsUpload; firstLine++ {
 			fileData, _ = json.Marshal(logLines[firstLine:])
 		}
 
