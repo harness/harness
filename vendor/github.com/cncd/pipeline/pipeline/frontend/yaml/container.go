@@ -31,6 +31,7 @@ type (
 		CPUSet        string                    `yaml:"cpuset,omitempty"`
 		CPUShares     libcompose.StringorInt    `yaml:"cpu_shares,omitempty"`
 		Detached      bool                      `yaml:"detach,omitempty"`
+		ErrContinue   bool                      `yaml:"err_continue,omitempty"`
 		Devices       []string                  `yaml:"devices,omitempty"`
 		Tmpfs         []string                  `yaml:"tmpfs,omitempty"`
 		DNS           libcompose.Stringorslice  `yaml:"dns,omitempty"`

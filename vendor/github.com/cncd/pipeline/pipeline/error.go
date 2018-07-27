@@ -19,6 +19,7 @@ var (
 type ExitError struct {
 	Name string
 	Code int
+	Continue bool
 }
 
 // Error returns the error message in string format.

@@ -150,6 +150,7 @@ func (c *Compiler) createProcess(name string, container *yaml.Container, section
 		Image:        image,
 		Pull:         container.Pull,
 		Detached:     detached,
+		ErrContinue:  container.ErrContinue,
 		Privileged:   privileged,
 		WorkingDir:   workingdir,
 		Environment:  environment,

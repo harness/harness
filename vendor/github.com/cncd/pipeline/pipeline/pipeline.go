@@ -104,8 +104,17 @@ func (r *Runtime) execAll(procs []*backend.Step) <-chan error {
 //
 
 func (r *Runtime) exec(proc *backend.Step) error {
+
+	errContinue := false
+	if r.err != nil {
+		switch xerr := r.err.(type) {
+		case *ExitError:
+			errContinue = xerr.Continue
+		}
+	}
+
 	switch {
-	case r.err != nil && proc.OnFailure == false:
+	case r.err != nil && errContinue == false && proc.OnFailure == false:
 		return nil
 	case r.err == nil && proc.OnSuccess == false:
 		return nil
@@ -146,10 +155,6 @@ func (r *Runtime) exec(proc *backend.Step) error {
 
 	wait, err := r.engine.Wait(r.ctx, proc)
 
-	if proc.ErrIgnore && (err != nil || wait.ExitCode != 0) {
-		return nil
-	}
-
 	if err != nil {
 		return err
 	}
@@ -172,8 +177,9 @@ func (r *Runtime) exec(proc *backend.Step) error {
 		}
 	} else if wait.ExitCode != 0 {
 		return &ExitError{
-			Name: proc.Name,
-			Code: wait.ExitCode,
+			Name:     proc.Name,
+			Code:     wait.ExitCode,
+			Continue: proc.ErrContinue,
 		}
 	}
 	return nil
