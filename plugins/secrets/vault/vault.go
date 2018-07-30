@@ -5,6 +5,7 @@
 package vault
 
 import (
+	"errors"
 	"path"
 	"strings"
 	"time"
@@ -78,6 +79,9 @@ func New(store model.ConfigStore, opts ...Opts) (secrets.Plugin, error) {
 }
 
 func (v *vault) initKubernetes() error {
+	if v.renew == 0 {
+		return errors.New("vault: token renewal not configured")
+	}
 	token, ttl, err := getKubernetesToken(
 		v.kubeAuth.addr,
 		v.kubeAuth.role,
@@ -91,7 +95,6 @@ func (v *vault) initKubernetes() error {
 
 	v.client.SetToken(token)
 	v.ttl = ttl
-	v.renew = ttl / 2
 	return nil
 }
 
