@@ -55,6 +55,7 @@ import (
 //
 
 var skipRe = regexp.MustCompile(`\[(?i:ci *skip|skip *ci)\]`)
+var forceRe = regexp.MustCompile(`\[(?i:ci)\]`)
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
@@ -84,6 +85,8 @@ func PostHook(c *gin.Context) {
 		c.Writer.WriteHeader(400)
 		return
 	}
+
+	logrus.Debugf("hook build=%+v", build)
 
 	// skip the build if any case-insensitive combination of the words "skip" and "ci"
 	// wrapped in square brackets appear in the commit message
@@ -131,6 +134,17 @@ func PostHook(c *gin.Context) {
 		(build.Event == model.EventPull && repo.AllowPull) ||
 		(build.Event == model.EventDeploy && repo.AllowDeploy) ||
 		(build.Event == model.EventTag && repo.AllowTag) {
+		skipped = false
+	}
+
+	if build.Branch == "master" {
+		logrus.Infof("always build master")
+		skipped = false
+	}
+
+	forceBuild := forceRe.FindString(build.Message)
+	if len(forceBuild) > 0 {
+		logrus.Infof("found forcing build directive. %s found in %s", forceBuild, build.Commit)
 		skipped = false
 	}
 
