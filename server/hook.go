@@ -15,16 +15,20 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net/url"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+	"html/template"
 
 	"github.com/gin-gonic/gin"
 
@@ -157,13 +161,41 @@ func PostHook(c *gin.Context) {
 		}
 	}
 
-	// fetch the build file from the database
+	// fetch the build file from the database with fallback to remote
 	confb, err := remote.FileBackoff(remote_, user, repo, build, repo.Config)
+
+	// If anything went wrong
 	if err != nil {
-		logrus.Errorf("error: %s: cannot find %s in %s: %s", repo.FullName, repo.Config, build.Ref, err)
-		c.AbortWithError(404, err)
-		return
+		// Check if we have a fallback in the server config
+		if len(Config.Server.RepoConfigFallbackUrl) > 0 {
+			// Generate the fallback URL with template
+			fallbackUrl := getFallbackUrl(Config.Server.RepoConfigFallbackUrl, repo, build, user)
+
+			// Download it
+			resp, err := http.Get(fallbackUrl)
+			if err != nil {
+				logrus.Errorf("failure to get fallback build config %s (%s) for %s. %s",
+					Config.Server.RepoConfigFallbackUrl, fallbackUrl, repo.FullName, err)
+				c.AbortWithError(404, err)
+				return
+			}
+			defer resp.Body.Close()
+			confb, err = ioutil.ReadAll(resp.Body)
+			if err != nil {
+				logrus.Errorf("failure to get fallback build config %s (%s) for %s. %s",
+					Config.Server.RepoConfigFallbackUrl, fallbackUrl, repo.FullName, err)
+				c.AbortWithError(404, err)
+				return
+			}
+		} else {
+			// No fallback setup, return original error
+			logrus.Errorf("error: %s: cannot find %s in %s: %s", repo.FullName, repo.Config, build.Ref, err)
+			c.AbortWithError(404, err)
+			return
+		}
 	}
+
+	// fetch the build file from the database
 	sha := shasum(confb)
 	conf, err := Config.Storage.Config.ConfigFind(repo, sha)
 	if err != nil {
@@ -593,4 +625,25 @@ func (b *builder) Build() ([]*buildItem, error) {
 func shasum(raw []byte) string {
 	sum := sha256.Sum256(raw)
 	return fmt.Sprintf("%x", sum)
+}
+
+// Use template engine to create a fallback URL
+// Repo, Build and User are available for creating the result
+func getFallbackUrl(fallbackUrlTemplate string, repo *model.Repo, build *model.Build, user *model.User) string {
+	// New template from the configured fallback URL
+	t, err := template.New("foo").Parse(fallbackUrlTemplate)
+	if err != nil {
+		logrus.Errorf("Error parsing fallback URL template: %s , %s", fallbackUrlTemplate, err)
+	}
+	// Prepare return buffer
+	fallbackUrl := new(bytes.Buffer)
+	// Execute the template with all 3 objects referenced
+	t.Execute(fallbackUrl, struct {
+		Repo  *model.Repo
+		Build *model.Build
+		User  *model.User
+	}{repo, build, user})
+
+	// Return result
+	return fallbackUrl.String()
 }
