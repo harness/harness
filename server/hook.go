@@ -109,6 +109,16 @@ func PostHook(c *gin.Context) {
 		return
 	}
 
+	previous, err := store.GetBuildCommit(c, repo, build.Commit, build.Branch)
+	if err == nil {
+		logrus.Debugf("hook previous=%+v", previous)
+		if previous.Commit == build.Commit {
+			logrus.Infof("ignoring hook. previous build already in queued. event=%s commit=%s", build.Event, build.Commit)
+			c.Writer.WriteHeader(204)
+			return
+		}
+	}
+
 	// get the token and verify the hook is authorized
 	parsed, err := token.ParseRequest(c.Request, func(t *token.Token) (string, error) {
 		return repo.Hash, nil
