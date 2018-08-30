@@ -412,6 +412,7 @@ func (t *Transport) updateToken(tok *Token, v url.Values) error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.SetBasicAuth(t.ClientId, t.ClientSecret)
 	r, err := client.Do(req)
