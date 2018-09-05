@@ -155,19 +155,19 @@ func GetLoginToken(c *gin.Context) {
 	in := &tokenPayload{}
 	err := c.Bind(in)
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithError(400, err)
 		return
 	}
 
 	login, err := remote.Auth(c, in.Access, in.Refresh)
 	if err != nil {
-		c.AbortWithError(http.StatusUnauthorized, err)
+		c.AbortWithError(401, err)
 		return
 	}
 
 	user, err := store.GetUserLogin(c, login)
 	if err != nil {
-		c.AbortWithError(http.StatusNotFound, err)
+		c.AbortWithError(404, err)
 		return
 	}
 
@@ -175,11 +175,11 @@ func GetLoginToken(c *gin.Context) {
 	token := token.New(token.SessToken, user.Login)
 	tokenstr, err := token.SignExpires(user.Hash, exp)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, &tokenPayload{
+	c.JSON(200, &tokenPayload{
 		Access:  tokenstr,
 		Expires: exp - time.Now().Unix(),
 	})

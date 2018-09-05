@@ -16,7 +16,6 @@ package server
 
 import (
 	"encoding/base32"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -108,7 +107,7 @@ func GetRepos(c *gin.Context) {
 	}
 
 	if all {
-		c.JSON(http.StatusOK, repos)
+		c.JSON(200, repos)
 		return
 	}
 
@@ -118,7 +117,7 @@ func GetRepos(c *gin.Context) {
 			active = append(active, repo)
 		}
 	}
-	c.JSON(http.StatusOK, active)
+	c.JSON(200, active)
 }
 
 func PostToken(c *gin.Context) {
@@ -127,10 +126,10 @@ func PostToken(c *gin.Context) {
 	token := token.New(token.UserToken, user.Login)
 	tokenstr, err := token.Sign(user.Hash)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
-	c.String(http.StatusOK, tokenstr)
+	c.String(200, tokenstr)
 }
 
 func DeleteToken(c *gin.Context) {
@@ -146,8 +145,8 @@ func DeleteToken(c *gin.Context) {
 	token := token.New(token.UserToken, user.Login)
 	tokenstr, err := token.Sign(user.Hash)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
-	c.String(http.StatusOK, tokenstr)
+	c.String(200, tokenstr)
 }

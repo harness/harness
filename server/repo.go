@@ -17,7 +17,6 @@ package server
 import (
 	"encoding/base32"
 	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -110,7 +109,7 @@ func PatchRepo(c *gin.Context) {
 
 	in := new(model.RepoPatch)
 	if err := c.Bind(in); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithError(400, err)
 		return
 	}
 
@@ -158,11 +157,11 @@ func PatchRepo(c *gin.Context) {
 
 	err := store.UpdateRepo(c, repo)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, repo)
+	c.JSON(200, repo)
 }
 
 func ChownRepo(c *gin.Context) {
@@ -172,14 +171,14 @@ func ChownRepo(c *gin.Context) {
 
 	err := store.UpdateRepo(c, repo)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
-	c.JSON(http.StatusOK, repo)
+	c.JSON(200, repo)
 }
 
 func GetRepo(c *gin.Context) {
-	c.JSON(http.StatusOK, session.Repo(c))
+	c.JSON(200, session.Repo(c))
 }
 
 func DeleteRepo(c *gin.Context) {
@@ -193,14 +192,14 @@ func DeleteRepo(c *gin.Context) {
 
 	err := store.UpdateRepo(c, repo)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
 	if remove {
 		err := store.DeleteRepo(c, repo)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(500, err)
 			return
 		}
 	}
@@ -252,7 +251,7 @@ func RepairRepo(c *gin.Context) {
 		store.UpdateRepo(c, repo)
 	}
 
-	c.Writer.WriteHeader(http.StatusOK)
+	c.Writer.WriteHeader(200)
 }
 
 func MoveRepo(c *gin.Context) {
@@ -263,23 +262,23 @@ func MoveRepo(c *gin.Context) {
 	to, exists := c.GetQuery("to")
 	if !exists {
 		err := fmt.Errorf("Missing required to query value")
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
 	owner, name, errParse := model.ParseRepo(to)
 	if errParse != nil {
-		c.AbortWithError(http.StatusInternalServerError, errParse)
+		c.AbortWithError(500, errParse)
 		return
 	}
 
 	from, err := remote.Repo(user, owner, name)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
 	if !from.Perm.Admin {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.AbortWithStatus(401)
 		return
 	}
 
@@ -296,7 +295,7 @@ func MoveRepo(c *gin.Context) {
 
 	errStore := store.UpdateRepo(c, repo)
 	if errStore != nil {
-		c.AbortWithError(http.StatusInternalServerError, errStore)
+		c.AbortWithError(500, errStore)
 		return
 	}
 
@@ -322,5 +321,5 @@ func MoveRepo(c *gin.Context) {
 		c.String(500, err.Error())
 		return
 	}
-	c.Writer.WriteHeader(http.StatusOK)
+	c.Writer.WriteHeader(200)
 }

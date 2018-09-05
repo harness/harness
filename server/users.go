@@ -16,7 +16,6 @@ package server
 
 import (
 	"encoding/base32"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
@@ -47,31 +46,31 @@ func PatchUser(c *gin.Context) {
 	in := &model.User{}
 	err := c.Bind(in)
 	if err != nil {
-		c.AbortWithStatus(http.StatusBadRequest)
+		c.AbortWithStatus(400)
 		return
 	}
 
 	user, err := store.GetUserLogin(c, c.Param("login"))
 	if err != nil {
-		c.AbortWithStatus(http.StatusNotFound)
+		c.AbortWithStatus(404)
 		return
 	}
 	user.Active = in.Active
 
 	err = store.UpdateUser(c, user)
 	if err != nil {
-		c.AbortWithStatus(http.StatusConflict)
+		c.AbortWithStatus(409)
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(200, user)
 }
 
 func PostUser(c *gin.Context) {
 	in := &model.User{}
 	err := c.Bind(in)
 	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		c.String(400, err.Error())
 		return
 	}
 	user := &model.User{
@@ -84,14 +83,14 @@ func PostUser(c *gin.Context) {
 		),
 	}
 	if err = user.Validate(); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		c.String(400, err.Error())
 		return
 	}
 	if err = store.CreateUser(c, user); err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		c.String(500, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, user)
+	c.JSON(200, user)
 }
 
 func DeleteUser(c *gin.Context) {

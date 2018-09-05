@@ -15,8 +15,6 @@
 package server
 
 import (
-	"net/http"
-
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
 
@@ -44,7 +42,7 @@ func PostSecret(c *gin.Context) {
 
 	in := new(model.Secret)
 	if err := c.Bind(in); err != nil {
-		c.String(http.StatusBadRequest, "Error parsing secret. %s", err)
+		c.String(400, "Error parsing secret. %s", err)
 		return
 	}
 	secret := &model.Secret{
@@ -75,7 +73,7 @@ func PatchSecret(c *gin.Context) {
 	in := new(model.Secret)
 	err := c.Bind(in)
 	if err != nil {
-		c.String(http.StatusBadRequest, "Error parsing secret. %s", err)
+		c.String(400, "Error parsing secret. %s", err)
 		return
 	}
 

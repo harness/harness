@@ -15,8 +15,6 @@
 package server
 
 import (
-	"net/http"
-
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"
 
@@ -44,7 +42,7 @@ func PostRegistry(c *gin.Context) {
 
 	in := new(model.Registry)
 	if err := c.Bind(in); err != nil {
-		c.String(http.StatusBadRequest, "Error parsing request. %s", err)
+		c.String(400, "Error parsing request. %s", err)
 		return
 	}
 	registry := &model.Registry{
@@ -76,7 +74,7 @@ func PatchRegistry(c *gin.Context) {
 	in := new(model.Registry)
 	err := c.Bind(in)
 	if err != nil {
-		c.String(http.StatusBadRequest, "Error parsing request. %s", err)
+		c.String(400, "Error parsing request. %s", err)
 		return
 	}
 

@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -41,16 +40,16 @@ func GetBuilds(c *gin.Context) {
 	repo := session.Repo(c)
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithError(400, err)
 		return
 	}
 
 	builds, err := store.GetBuildList(c, repo, page)
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.AbortWithStatus(500)
 		return
 	}
-	c.JSON(http.StatusOK, builds)
+	c.JSON(200, builds)
 }
 
 func GetBuild(c *gin.Context) {
@@ -62,13 +61,13 @@ func GetBuild(c *gin.Context) {
 	repo := session.Repo(c)
 	num, err := strconv.Atoi(c.Param("number"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithError(400, err)
 		return
 	}
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
 	files, _ := store.FromContext(c).FileList(build)
@@ -76,7 +75,7 @@ func GetBuild(c *gin.Context) {
 	build.Procs = model.Tree(procs)
 	build.Files = files
 
-	c.JSON(http.StatusOK, build)
+	c.JSON(200, build)
 }
 
 func GetBuildLast(c *gin.Context) {
@@ -85,13 +84,13 @@ func GetBuildLast(c *gin.Context) {
 
 	build, err := store.GetBuildLast(c, repo, branch)
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		c.String(500, err.Error())
 		return
 	}
 
 	procs, _ := store.FromContext(c).ProcList(build)
 	build.Procs = model.Tree(procs)
-	c.JSON(http.StatusOK, build)
+	c.JSON(200, build)
 }
 
 func GetBuildLogs(c *gin.Context) {
@@ -477,7 +476,7 @@ func PostBuild(c *gin.Context) {
 
 	num, err := strconv.Atoi(c.Param("number"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithError(400, err)
 		return
 	}
 

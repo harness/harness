@@ -16,7 +16,6 @@ package server
 
 import (
 	"io"
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -29,20 +28,20 @@ import (
 func FileList(c *gin.Context) {
 	num, err := strconv.Atoi(c.Param("number"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithError(400, err)
 		return
 	}
 
 	repo := session.Repo(c)
 	build, err := store.FromContext(c).GetBuildNumber(repo, num)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
 	files, err := store.FromContext(c).FileList(build)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
@@ -61,25 +60,25 @@ func FileGet(c *gin.Context) {
 
 	num, err := strconv.Atoi(c.Param("number"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithError(400, err)
 		return
 	}
 
 	pid, err := strconv.Atoi(c.Param("proc"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithError(400, err)
 		return
 	}
 
 	build, err := store.FromContext(c).GetBuildNumber(repo, num)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
 	proc, err := store.FromContext(c).ProcFind(build, pid)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
