@@ -32,10 +32,10 @@ func GetSecret(c *gin.Context) {
 	)
 	secret, err := Config.Services.Secrets.SecretFind(repo, name)
 	if err != nil {
-		c.String(404, "Error getting secret %q. %s", name, err)
+		c.String(http.StatusNotFound, "Error getting secret %q. %s", name, err)
 		return
 	}
-	c.JSON(200, secret.Copy())
+	c.JSON(http.StatusOK, secret.Copy())
 }
 
 // PostSecret persists the secret to the database.
@@ -55,14 +55,14 @@ func PostSecret(c *gin.Context) {
 		Images: in.Images,
 	}
 	if err := secret.Validate(); err != nil {
-		c.String(400, "Error inserting secret. %s", err)
+		c.String(http.StatusBadRequest, "Error inserting secret. %s", err)
 		return
 	}
 	if err := Config.Services.Secrets.SecretCreate(repo, secret); err != nil {
-		c.String(500, "Error inserting secret %q. %s", in.Name, err)
+		c.String(http.StatusInternalServerError, "Error inserting secret %q. %s", in.Name, err)
 		return
 	}
-	c.JSON(200, secret.Copy())
+	c.JSON(http.StatusOK, secret.Copy())
 }
 
 // PatchSecret updates the secret in the database.
@@ -81,7 +81,7 @@ func PatchSecret(c *gin.Context) {
 
 	secret, err := Config.Services.Secrets.SecretFind(repo, name)
 	if err != nil {
-		c.String(404, "Error getting secret %q. %s", name, err)
+		c.String(http.StatusNotFound, "Error getting secret %q. %s", name, err)
 		return
 	}
 	if in.Value != "" {
@@ -95,14 +95,14 @@ func PatchSecret(c *gin.Context) {
 	}
 
 	if err := secret.Validate(); err != nil {
-		c.String(400, "Error updating secret. %s", err)
+		c.String(http.StatusBadRequest, "Error updating secret. %s", err)
 		return
 	}
 	if err := Config.Services.Secrets.SecretUpdate(repo, secret); err != nil {
-		c.String(500, "Error updating secret %q. %s", in.Name, err)
+		c.String(http.StatusInternalServerError, "Error updating secret %q. %s", in.Name, err)
 		return
 	}
-	c.JSON(200, secret.Copy())
+	c.JSON(http.StatusOK, secret.Copy())
 }
 
 // GetSecretList gets the secret list from the database and writes
@@ -111,7 +111,7 @@ func GetSecretList(c *gin.Context) {
 	repo := session.Repo(c)
 	list, err := Config.Services.Secrets.SecretList(repo)
 	if err != nil {
-		c.String(500, "Error getting secret list. %s", err)
+		c.String(http.StatusInternalServerError, "Error getting secret list. %s", err)
 		return
 	}
 	// copy the secret detail to remove the sensitive
@@ -119,7 +119,7 @@ func GetSecretList(c *gin.Context) {
 	for i, secret := range list {
 		list[i] = secret.Copy()
 	}
-	c.JSON(200, list)
+	c.JSON(http.StatusOK, list)
 }
 
 // DeleteSecret deletes the named secret from the database.
@@ -129,8 +129,8 @@ func DeleteSecret(c *gin.Context) {
 		name = c.Param("secret")
 	)
 	if err := Config.Services.Secrets.SecretDelete(repo, name); err != nil {
-		c.String(500, "Error deleting secret %q. %s", name, err)
+		c.String(http.StatusInternalServerError, "Error deleting secret %q. %s", name, err)
 		return
 	}
-	c.String(204, "")
+	c.String(http.StatusNoContent, "")
 }

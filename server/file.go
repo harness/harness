@@ -46,7 +46,7 @@ func FileList(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, files)
+	c.JSON(http.StatusOK, files)
 }
 
 // FileGet gets a file by process and name
@@ -85,18 +85,18 @@ func FileGet(c *gin.Context) {
 
 	file, err := store.FromContext(c).FileFind(proc, name)
 	if err != nil {
-		c.String(404, "Error getting file %q. %s", name, err)
+		c.String(http.StatusNotFound, "Error getting file %q. %s", name, err)
 		return
 	}
 
 	if !raw {
-		c.JSON(200, file)
+		c.JSON(http.StatusOK, file)
 		return
 	}
 
 	rc, err := store.FromContext(c).FileRead(proc, file.Name)
 	if err != nil {
-		c.String(404, "Error getting file stream %q. %s", name, err)
+		c.String(http.StatusNotFound, "Error getting file stream %q. %s", name, err)
 		return
 	}
 	defer rc.Close()

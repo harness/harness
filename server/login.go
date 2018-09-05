@@ -36,9 +36,9 @@ func HandleLogin(c *gin.Context) {
 		r = c.Request
 	)
 	if err := r.FormValue("error"); err != "" {
-		http.Redirect(w, r, "/login/error?code="+err, 303)
+		http.Redirect(w, r, "/login/error?code="+err, http.StatusSeeOther)
 	} else {
-		http.Redirect(w, r, "/authorize", 303)
+		http.Redirect(w, r, "/authorize", http.StatusSeeOther)
 	}
 }
 
@@ -51,7 +51,7 @@ func HandleAuth(c *gin.Context) {
 	tmpuser, err := remote.Login(c, c.Writer, c.Request)
 	if err != nil {
 		logrus.Errorf("cannot authenticate user. %s", err)
-		c.Redirect(303, "/login?error=oauth_error")
+		c.Redirect(http.StatusSeeOther, "/login?error=oauth_error")
 		return
 	}
 	// this will happen when the user is redirected by the remote provider as
@@ -68,7 +68,7 @@ func HandleAuth(c *gin.Context) {
 		// if self-registration is disabled we should return a not authorized error
 		if !config.Open && !config.IsAdmin(tmpuser) {
 			logrus.Errorf("cannot register %s. registration closed", tmpuser.Login)
-			c.Redirect(303, "/login?error=access_denied")
+			c.Redirect(http.StatusSeeOther, "/login?error=access_denied")
 			return
 		}
 
@@ -78,7 +78,7 @@ func HandleAuth(c *gin.Context) {
 			teams, terr := remote.Teams(c, tmpuser)
 			if terr != nil || config.IsMember(teams) == false {
 				logrus.Errorf("cannot verify team membership for %s.", u.Login)
-				c.Redirect(303, "/login?error=access_denied")
+				c.Redirect(http.StatusSeeOther, "/login?error=access_denied")
 				return
 			}
 		}
@@ -96,14 +96,14 @@ func HandleAuth(c *gin.Context) {
 		}
 
 		if err = Config.Services.Limiter.LimitUser(u); err != nil {
-			c.String(403, "User activation blocked by limiter")
+			c.String(http.StatusForbidden, "User activation blocked by limiter")
 			return
 		}
 
 		// insert the user into the database
 		if err := store.CreateUser(c, u); err != nil {
 			logrus.Errorf("cannot insert %s. %s", u.Login, err)
-			c.Redirect(303, "/login?error=internal_error")
+			c.Redirect(http.StatusSeeOther, "/login?error=internal_error")
 			return
 		}
 	}
@@ -120,14 +120,14 @@ func HandleAuth(c *gin.Context) {
 		teams, terr := remote.Teams(c, u)
 		if terr != nil || config.IsMember(teams) == false {
 			logrus.Errorf("cannot verify team membership for %s.", u.Login)
-			c.Redirect(303, "/login?error=access_denied")
+			c.Redirect(http.StatusSeeOther, "/login?error=access_denied")
 			return
 		}
 	}
 
 	if err := store.UpdateUser(c, u); err != nil {
 		logrus.Errorf("cannot update %s. %s", u.Login, err)
-		c.Redirect(303, "/login?error=internal_error")
+		c.Redirect(http.StatusSeeOther, "/login?error=internal_error")
 		return
 	}
 
@@ -136,19 +136,19 @@ func HandleAuth(c *gin.Context) {
 	tokenstr, err := token.SignExpires(u.Hash, exp)
 	if err != nil {
 		logrus.Errorf("cannot create token for %s. %s", u.Login, err)
-		c.Redirect(303, "/login?error=internal_error")
+		c.Redirect(http.StatusSeeOther, "/login?error=internal_error")
 		return
 	}
 
 	httputil.SetCookie(c.Writer, c.Request, "user_sess", tokenstr)
-	c.Redirect(303, "/")
+	c.Redirect(http.StatusSeeOther, "/")
 
 }
 
 func GetLogout(c *gin.Context) {
 	httputil.DelCookie(c.Writer, c.Request, "user_sess")
 	httputil.DelCookie(c.Writer, c.Request, "user_last")
-	c.Redirect(303, "/")
+	c.Redirect(http.StatusSeeOther, "/")
 }
 
 func GetLoginToken(c *gin.Context) {

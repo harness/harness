@@ -86,7 +86,7 @@ func (w *website) Register(mux *httptreemux.ContextMux) {
 }
 
 func (w *website) handleIndex(rw http.ResponseWriter, r *http.Request) {
-	rw.WriteHeader(200)
+	rw.WriteHeader(http.StatusOK)
 
 	var csrf string
 	var user, _ = ToUser(r.Context())

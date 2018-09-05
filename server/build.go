@@ -105,19 +105,19 @@ func GetBuildLogs(c *gin.Context) {
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	proc, err := store.FromContext(c).ProcChild(build, ppid, name)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	rc, err := store.FromContext(c).LogFind(proc)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
@@ -137,19 +137,19 @@ func GetProcLogs(c *gin.Context) {
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	proc, err := store.FromContext(c).ProcFind(build, pid)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	rc, err := store.FromContext(c).LogFind(proc)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
@@ -169,18 +169,18 @@ func DeleteBuild(c *gin.Context) {
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	proc, err := store.FromContext(c).ProcFind(build, seq)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	if proc.State != model.StatusRunning {
-		c.String(400, "Cannot cancel a non-running build")
+		c.String(http.StatusBadRequest, "Cannot cancel a non-running build")
 		return
 	}
 
@@ -194,7 +194,7 @@ func DeleteBuild(c *gin.Context) {
 	store.FromContext(c).ProcUpdate(proc)
 
 	Config.Services.Queue.Error(context.Background(), fmt.Sprint(proc.ID), queue.ErrCancel)
-	c.String(204, "")
+	c.String(http.StatusNoContent, "")
 }
 
 // ZombieKill kills zombie processes stuck in an infinite pending
@@ -209,18 +209,18 @@ func ZombieKill(c *gin.Context) {
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	procs, err := store.FromContext(c).ProcList(build)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	if build.Status != model.StatusRunning {
-		c.String(400, "Cannot force cancel a non-running build")
+		c.String(http.StatusBadRequest, "Cannot force cancel a non-running build")
 		return
 	}
 
@@ -244,7 +244,7 @@ func ZombieKill(c *gin.Context) {
 	build.Finished = time.Now().Unix()
 	store.FromContext(c).UpdateBuild(build)
 
-	c.String(204, "")
+	c.String(http.StatusNoContent, "")
 }
 
 func PostApproval(c *gin.Context) {
@@ -259,11 +259,11 @@ func PostApproval(c *gin.Context) {
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 	if build.Status != model.StatusBlocked {
-		c.String(500, "cannot decline a build with status %s", build.Status)
+		c.String(http.StatusInternalServerError, "cannot decline a build with status %s", build.Status)
 		return
 	}
 	build.Status = model.StatusPending
@@ -282,22 +282,22 @@ func PostApproval(c *gin.Context) {
 	conf, err := Config.Storage.Config.ConfigLoad(build.ConfigID)
 	if err != nil {
 		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
-		c.String(500, "Failed to generate netrc file. %s", err)
+		c.String(http.StatusInternalServerError, "Failed to generate netrc file. %s", err)
 		return
 	}
 
 	if uerr := store.UpdateBuild(c, build); err != nil {
-		c.String(500, "error updating build. %s", uerr)
+		c.String(http.StatusInternalServerError, "error updating build. %s", uerr)
 		return
 	}
 
-	c.JSON(200, build)
+	c.JSON(http.StatusOK, build)
 
 	// get the previous build so that we can send
 	// on status change notifications
@@ -428,11 +428,11 @@ func PostDecline(c *gin.Context) {
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 	if build.Status != model.StatusBlocked {
-		c.String(500, "cannot decline a build with status %s", build.Status)
+		c.String(http.StatusInternalServerError, "cannot decline a build with status %s", build.Status)
 		return
 	}
 	build.Status = model.StatusDeclined
@@ -441,7 +441,7 @@ func PostDecline(c *gin.Context) {
 
 	err = store.UpdateBuild(c, build)
 	if err != nil {
-		c.String(500, "error updating build. %s", err)
+		c.String(http.StatusInternalServerError, "error updating build. %s", err)
 		return
 	}
 
@@ -451,16 +451,16 @@ func PostDecline(c *gin.Context) {
 		logrus.Errorf("error setting commit status for %s/%d: %v", repo.FullName, build.Number, err)
 	}
 
-	c.JSON(200, build)
+	c.JSON(http.StatusOK, build)
 }
 
 func GetBuildQueue(c *gin.Context) {
 	out, err := store.GetBuildQueue(c)
 	if err != nil {
-		c.String(500, "Error getting build queue. %s", err)
+		c.String(http.StatusInternalServerError, "Error getting build queue. %s", err)
 		return
 	}
-	c.JSON(200, out)
+	c.JSON(http.StatusOK, out)
 }
 
 //
@@ -484,21 +484,21 @@ func PostBuild(c *gin.Context) {
 	user, err := store.GetUser(c, repo.UserID)
 	if err != nil {
 		logrus.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
-		c.AbortWithError(500, err)
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
 		logrus.Errorf("failure to get build %d. %s", num, err)
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	switch build.Status {
 	case model.StatusDeclined,
 		model.StatusBlocked:
-		c.String(500, "cannot restart a build with status %s", build.Status)
+		c.String(http.StatusInternalServerError, "cannot restart a build with status %s", build.Status)
 		return
 	}
 
@@ -516,14 +516,14 @@ func PostBuild(c *gin.Context) {
 	conf, err := Config.Storage.Config.ConfigLoad(build.ConfigID)
 	if err != nil {
 		logrus.Errorf("failure to get build config for %s. %s", repo.FullName, err)
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
 		logrus.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
-		c.AbortWithError(500, err)
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
@@ -547,7 +547,7 @@ func PostBuild(c *gin.Context) {
 
 	err = store.CreateBuild(c, build)
 	if err != nil {
-		c.String(500, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -598,7 +598,7 @@ func PostBuild(c *gin.Context) {
 		build.Started = time.Now().Unix()
 		build.Finished = build.Started
 		build.Error = err.Error()
-		c.JSON(500, build)
+		c.JSON(http.StatusInternalServerError, build)
 		return
 	}
 
@@ -634,11 +634,11 @@ func PostBuild(c *gin.Context) {
 		build.Started = time.Now().Unix()
 		build.Finished = build.Started
 		build.Error = err.Error()
-		c.JSON(500, build)
+		c.JSON(http.StatusInternalServerError, build)
 		return
 	}
 
-	c.JSON(202, build)
+	c.JSON(http.StatusAccepted, build)
 
 	//
 	// publish topic
@@ -693,19 +693,19 @@ func DeleteBuildLogs(c *gin.Context) {
 
 	build, err := store.GetBuildNumber(c, repo, num)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	procs, err := store.FromContext(c).ProcList(build)
 	if err != nil {
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
 	switch build.Status {
 	case model.StatusRunning, model.StatusPending:
-		c.String(400, "Cannot delete logs for a pending or running build")
+		c.String(http.StatusBadRequest, "Cannot delete logs for a pending or running build")
 		return
 	}
 
@@ -718,11 +718,11 @@ func DeleteBuildLogs(c *gin.Context) {
 		}
 	}
 	if err != nil {
-		c.String(400, "There was a problem deleting your logs. %s", err)
+		c.String(http.StatusBadRequest, "There was a problem deleting your logs. %s", err)
 		return
 	}
 
-	c.String(204, "")
+	c.String(http.StatusNoContent, "")
 }
 
 var deleteStr = `[

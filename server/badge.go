@@ -17,12 +17,13 @@ package server
 import (
 	"fmt"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/gin-gonic/gin"
+	"net/http"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
+	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -39,7 +40,7 @@ func GetBadge(c *gin.Context) {
 		c.Param("name"),
 	)
 	if err != nil {
-		c.AbortWithStatus(404)
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
@@ -58,21 +59,21 @@ func GetBadge(c *gin.Context) {
 	build, err := store.GetBuildLast(c, repo, branch)
 	if err != nil {
 		log.Warning(err)
-		c.String(200, badgeNone)
+		c.String(http.StatusOK, badgeNone)
 		return
 	}
 
 	switch build.Status {
 	case model.StatusSuccess:
-		c.String(200, badgeSuccess)
+		c.String(http.StatusOK, badgeSuccess)
 	case model.StatusFailure:
-		c.String(200, badgeFailure)
+		c.String(http.StatusOK, badgeFailure)
 	case model.StatusError, model.StatusKilled:
-		c.String(200, badgeError)
+		c.String(http.StatusOK, badgeError)
 	case model.StatusPending, model.StatusRunning:
-		c.String(200, badgeStarted)
+		c.String(http.StatusOK, badgeStarted)
 	default:
-		c.String(200, badgeNone)
+		c.String(http.StatusOK, badgeNone)
 	}
 }
 
@@ -82,17 +83,17 @@ func GetCC(c *gin.Context) {
 		c.Param("name"),
 	)
 	if err != nil {
-		c.AbortWithStatus(404)
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
 	builds, err := store.GetBuildList(c, repo, 1)
 	if err != nil || len(builds) == 0 {
-		c.AbortWithStatus(404)
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 
 	url := fmt.Sprintf("%s/%s/%d", httputil.GetURL(c.Request), repo.FullName, builds[0].Number)
 	cc := model.NewCC(repo, builds[0], url)
-	c.XML(200, cc)
+	c.XML(http.StatusOK, cc)
 }

@@ -42,7 +42,7 @@ func PostRepo(c *gin.Context) {
 	}
 
 	if err := Config.Services.Limiter.LimitRepo(user, repo); err != nil {
-		c.String(403, "Repository activation blocked by limiter")
+		c.String(http.StatusForbidden, "Repository activation blocked by limiter")
 		return
 	}
 
@@ -74,7 +74,7 @@ func PostRepo(c *gin.Context) {
 	t := token.New(token.HookToken, repo.FullName)
 	sig, err := t.Sign(repo.Hash)
 	if err != nil {
-		c.String(500, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -86,7 +86,7 @@ func PostRepo(c *gin.Context) {
 
 	err = remote.Activate(user, repo, link)
 	if err != nil {
-		c.String(500, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -97,11 +97,11 @@ func PostRepo(c *gin.Context) {
 
 	err = store.UpdateRepo(c, repo)
 	if err != nil {
-		c.String(500, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(200, repo)
+	c.JSON(http.StatusOK, repo)
 }
 
 func PatchRepo(c *gin.Context) {
@@ -115,7 +115,7 @@ func PatchRepo(c *gin.Context) {
 	}
 
 	if (in.IsTrusted != nil || in.Timeout != nil) && !user.Admin {
-		c.String(403, "Insufficient privileges")
+		c.String(http.StatusForbidden, "Insufficient privileges")
 		return
 	}
 
@@ -148,7 +148,7 @@ func PatchRepo(c *gin.Context) {
 		case model.VisibilityInternal, model.VisibilityPrivate, model.VisibilityPublic:
 			repo.Visibility = *in.Visibility
 		default:
-			c.String(400, "Invalid visibility type")
+			c.String(http.StatusBadRequest, "Invalid visibility type")
 			return
 		}
 	}
@@ -206,7 +206,7 @@ func DeleteRepo(c *gin.Context) {
 	}
 
 	remote.Deactivate(user, repo, httputil.GetURL(c.Request))
-	c.JSON(200, repo)
+	c.JSON(http.StatusOK, repo)
 }
 
 func RepairRepo(c *gin.Context) {
@@ -218,7 +218,7 @@ func RepairRepo(c *gin.Context) {
 	t := token.New(token.HookToken, repo.FullName)
 	sig, err := t.Sign(repo.Hash)
 	if err != nil {
-		c.String(500, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -233,7 +233,7 @@ func RepairRepo(c *gin.Context) {
 	remote.Deactivate(user, repo, host)
 	err = remote.Activate(user, repo, link)
 	if err != nil {
-		c.String(500, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -304,7 +304,7 @@ func MoveRepo(c *gin.Context) {
 	t := token.New(token.HookToken, repo.FullName)
 	sig, err := t.Sign(repo.Hash)
 	if err != nil {
-		c.String(500, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -319,7 +319,7 @@ func MoveRepo(c *gin.Context) {
 	remote.Deactivate(user, repo, host)
 	err = remote.Activate(user, repo, link)
 	if err != nil {
-		c.String(500, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 	c.Writer.WriteHeader(http.StatusOK)

@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -61,7 +62,7 @@ func init() {
 }
 
 func GetQueueInfo(c *gin.Context) {
-	c.IndentedJSON(200,
+	c.IndentedJSON(http.StatusOK,
 		Config.Services.Queue.Info(c),
 	)
 }
@@ -72,16 +73,16 @@ func PostHook(c *gin.Context) {
 	tmprepo, build, err := remote_.Hook(c.Request)
 	if err != nil {
 		logrus.Errorf("failure to parse hook. %s", err)
-		c.AbortWithError(400, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	if build == nil {
-		c.Writer.WriteHeader(200)
+		c.Writer.WriteHeader(http.StatusOK)
 		return
 	}
 	if tmprepo == nil {
 		logrus.Errorf("failure to ascertain repo from hook.")
-		c.Writer.WriteHeader(400)
+		c.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -90,19 +91,19 @@ func PostHook(c *gin.Context) {
 	skipMatch := skipRe.FindString(build.Message)
 	if len(skipMatch) > 0 {
 		logrus.Infof("ignoring hook. %s found in %s", skipMatch, build.Commit)
-		c.Writer.WriteHeader(204)
+		c.Writer.WriteHeader(http.StatusNoContent)
 		return
 	}
 
 	repo, err := store.GetRepoOwnerName(c, tmprepo.Owner, tmprepo.Name)
 	if err != nil {
 		logrus.Errorf("failure to find repo %s/%s from hook. %s", tmprepo.Owner, tmprepo.Name, err)
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 	if !repo.IsActive {
 		logrus.Errorf("ignoring hook. %s/%s is inactive.", tmprepo.Owner, tmprepo.Name)
-		c.AbortWithError(204, err)
+		c.AbortWithError(http.StatusNoContent, err)
 		return
 	}
 
@@ -112,18 +113,18 @@ func PostHook(c *gin.Context) {
 	})
 	if err != nil {
 		logrus.Errorf("failure to parse token from hook for %s. %s", repo.FullName, err)
-		c.AbortWithError(400, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	if parsed.Text != repo.FullName {
 		logrus.Errorf("failure to verify token from hook. Expected %s, got %s", repo.FullName, parsed.Text)
-		c.AbortWithStatus(403)
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if repo.UserID == 0 {
 		logrus.Warnf("ignoring hook. repo %s has no owner.", repo.FullName)
-		c.Writer.WriteHeader(204)
+		c.Writer.WriteHeader(http.StatusNoContent)
 		return
 	}
 	var skipped = true
@@ -136,14 +137,14 @@ func PostHook(c *gin.Context) {
 
 	if skipped {
 		logrus.Infof("ignoring hook. repo %s is disabled for %s events.", repo.FullName, build.Event)
-		c.Writer.WriteHeader(204)
+		c.Writer.WriteHeader(http.StatusNoContent)
 		return
 	}
 
 	user, err := store.GetUser(c, repo.UserID)
 	if err != nil {
 		logrus.Errorf("failure to find repo owner %s. %s", repo.FullName, err)
-		c.AbortWithError(500, err)
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
@@ -161,7 +162,7 @@ func PostHook(c *gin.Context) {
 	confb, err := remote.FileBackoff(remote_, user, repo, build, repo.Config)
 	if err != nil {
 		logrus.Errorf("error: %s: cannot find %s in %s: %s", repo.FullName, repo.Config, build.Ref, err)
-		c.AbortWithError(404, err)
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 	sha := shasum(confb)
@@ -178,7 +179,7 @@ func PostHook(c *gin.Context) {
 			conf, err = Config.Storage.Config.ConfigFind(repo, sha)
 			if err != nil {
 				logrus.Errorf("failure to find or persist build config for %s. %s", repo.FullName, err)
-				c.AbortWithError(500, err)
+				c.AbortWithError(http.StatusInternalServerError, err)
 				return
 			}
 		}
@@ -187,7 +188,7 @@ func PostHook(c *gin.Context) {
 
 	netrc, err := remote_.Netrc(user, repo)
 	if err != nil {
-		c.String(500, "Failed to generate netrc file. %s", err)
+		c.String(http.StatusInternalServerError, "Failed to generate netrc file. %s", err)
 		return
 	}
 
@@ -195,7 +196,7 @@ func PostHook(c *gin.Context) {
 	branches, err := yaml.ParseString(conf.Data)
 	if err == nil {
 		if !branches.Branches.Match(build.Branch) && build.Event != model.EventTag && build.Event != model.EventDeploy {
-			c.String(200, "Branch does not match restrictions defined in yaml")
+			c.String(http.StatusOK, "Branch does not match restrictions defined in yaml")
 			return
 		}
 	}
@@ -213,7 +214,7 @@ func PostHook(c *gin.Context) {
 	}
 
 	if err = Config.Services.Limiter.LimitBuild(user, repo, build); err != nil {
-		c.String(403, "Build blocked by limiter")
+		c.String(http.StatusForbidden, "Build blocked by limiter")
 		return
 	}
 
@@ -221,11 +222,11 @@ func PostHook(c *gin.Context) {
 	err = store.CreateBuild(c, build, build.Procs...)
 	if err != nil {
 		logrus.Errorf("failure to save commit for %s. %s", repo.FullName, err)
-		c.AbortWithError(500, err)
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	c.JSON(200, build)
+	c.JSON(http.StatusOK, build)
 
 	if build.Status == model.StatusBlocked {
 		return
