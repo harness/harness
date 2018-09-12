@@ -4,7 +4,7 @@ workspace:
 
 pipeline:
   test:
-    image: golang:1.8
+    image: golang:1.11
     commands:
       - go get -u github.com/drone/drone-ui/dist
       - go get -u golang.org/x/tools/cmd/cover
@@ -15,7 +15,7 @@ pipeline:
       - go test -cover $(go list ./... | grep -v /vendor/)
 
   test_postgres:
-    image: golang:1.8
+    image: golang:1.11
     environment:
       - DATABASE_DRIVER=postgres
       - DATABASE_CONFIG=host=postgres user=postgres dbname=postgres sslmode=disable
@@ -23,7 +23,7 @@ pipeline:
       - go test github.com/drone/drone/store/datastore
 
   test_mysql:
-    image: golang:1.8
+    image: golang:1.11
     environment:
       - DATABASE_DRIVER=mysql
       - DATABASE_CONFIG=root@tcp(mysql:3306)/test?parseTime=true
@@ -31,7 +31,7 @@ pipeline:
       - go test github.com/drone/drone/store/datastore
 
   build:
-    image: golang:1.8
+    image: golang:1.11
     commands: sh .drone.sh
     secrets: [ ssh_key ]
     when:
