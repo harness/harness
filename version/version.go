@@ -20,7 +20,7 @@ import (
 	"runtime"
 
 	"github.com/coreos/go-semver/semver"
-	"github.com/Sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -52,6 +52,6 @@ func PrintVersion(logOutput bool) {
 	if !logOutput {
 		fmt.Fprintf(os.Stderr, output)
 	} else {
-		logrus.Infof(output)
+		log.Info().Msg(output)
 	}
 }
