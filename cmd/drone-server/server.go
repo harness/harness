@@ -76,6 +76,12 @@ var flags = []cli.Flag{
 		Name:   "server-key",
 		Usage:  "server ssl key path",
 	},
+	cli.StringFlag{
+		EnvVar: "DRONE_GRPC_ADDR",
+		Name:   "server-grpc-addr",
+		Usage:  "server grpc address for agents",
+		Value:  ":9000",
+	},
 	cli.BoolFlag{
 		EnvVar: "DRONE_LETS_ENCRYPT",
 		Name:   "lets-encrypt",
@@ -555,7 +561,7 @@ func server(c *cli.Context) error {
 	// start the grpc server
 	g.Go(func() error {
 
-		lis, err := net.Listen("tcp", ":9000")
+		lis, err := net.Listen("tcp", c.String("server-grpc-addr"))
 		if err != nil {
 			logrus.Error(err)
 			return err
