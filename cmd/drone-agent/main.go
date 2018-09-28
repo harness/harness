@@ -42,8 +42,25 @@ func main() {
 		cli.StringFlag{
 			EnvVar: "DRONE_SERVER",
 			Name:   "server",
-			Usage:  "drone server address",
+			Usage:  "drone server address for gRPC",
 			Value:  "localhost:9000",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_GRPC_TLS",
+			Name:   "server-grpc-tls",
+			Usage:  "enable TLS on server gprc",
+			Value:  "0",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_SERVER_HTTPS",
+			Name:   "server-https",
+			Usage:  "drone server address for HTTPS server",
+			Value:  "localhost:443",
+		},
+		cli.StringFlag{
+			EnvVar: "DRONE_SERVER_CERT",
+			Name:   "server-cert",
+			Usage:  "server ssl cert path",
 		},
 		cli.StringFlag{
 			EnvVar: "DRONE_USERNAME",
