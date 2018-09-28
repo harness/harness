@@ -608,6 +608,10 @@ func server(c *cli.Context) error {
 				tlsOption = grpc.Creds(trans)
 			} else if c.Bool("lets-encrypt") {
 				tlsOption = grpc.Creds(grpcCredentials.NewTLS(tlsConfigLE))
+			} else {
+				logrus.Fatalln(
+					"Missing certificate. DRONE_LETS_ENCRYPT or DRONE_SERVER_CERT/DRONE_SERVER_KEY are required",
+				)
 			}
 			s = grpc.NewServer(
 				grpc.StreamInterceptor(auther.streamInterceptor),

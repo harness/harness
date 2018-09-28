@@ -52,12 +52,6 @@ func main() {
 			Value:  "0",
 		},
 		cli.StringFlag{
-			EnvVar: "DRONE_SERVER_HTTPS",
-			Name:   "server-https",
-			Usage:  "drone server address for HTTPS server",
-			Value:  "localhost:443",
-		},
-		cli.StringFlag{
 			EnvVar: "DRONE_SERVER_CERT",
 			Name:   "server-cert",
 			Usage:  "server ssl cert path",

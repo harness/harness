@@ -17,15 +17,12 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -99,11 +96,7 @@ func loop(c *cli.Context) error {
 			}
 			creds = grpc.WithTransportCredentials(transCred)
 		} else {
-			// Try a https call to obtain public key
-			transCred := grpcCredentials.NewTLS(&tls.Config{
-				GetConfigForClient: getConfigForClient(c.String("server-https")),
-			})
-			creds = grpc.WithTransportCredentials(transCred)
+			creds = grpc.WithTransportCredentials(grpcCredentials.NewTLS(&tls.Config{}))
 		}
 	}
 
@@ -505,40 +498,4 @@ func extractRepositoryName(config *backend.Config) string {
 // extract build number from the configuration
 func extractBuildNumber(config *backend.Config) string {
 	return config.Stages[0].Steps[0].Environment["DRONE_BUILD_NUMBER"]
-}
-
-func getConfigForClient(serverHost string) func(*tls.ClientHelloInfo) (*tls.Config, error) {
-	return func(*tls.ClientHelloInfo) (*tls.Config, error) {
-		serverHost = strings.TrimPrefix(serverHost, "http://")
-		serverHost = strings.TrimPrefix(serverHost, "https://")
-		req, err := http.NewRequest("GET", "https://"+serverHost, nil)
-		if err != nil {
-			return nil, err
-		}
-		req.URL.Path = "/"
-
-		client := &http.Client{
-			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-			},
-			Timeout: time.Second * 10,
-		}
-		response, err := client.Do(req)
-		if err != nil {
-			return nil, err
-		}
-
-		if response.TLS == nil {
-			return nil, fmt.Errorf("getConfigForClient: HTTPS connection is required")
-		}
-
-		cp := x509.NewCertPool()
-		if !cp.AppendCertsFromPEM(response.TLS.PeerCertificates[0].Raw) {
-			return nil, fmt.Errorf("getConfigForClient: failed to append certificates")
-		}
-
-		return &tls.Config{
-			RootCAs: cp,
-		}, nil
-	}
 }
