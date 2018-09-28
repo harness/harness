@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	grpcCredentials "google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 
@@ -65,6 +66,12 @@ var flags = []cli.Flag{
 		Name:   "server-addr",
 		Usage:  "server address",
 		Value:  ":8000",
+	},
+	cli.StringFlag{
+		EnvVar: "DRONE_GRPC_TLS",
+		Name:   "server-grpc-tls",
+		Usage:  "enable TLS on server gprc",
+		Value:  "0",
 	},
 	cli.StringFlag{
 		EnvVar: "DRONE_SERVER_CERT",
@@ -552,6 +559,31 @@ func server(c *cli.Context) error {
 
 	var g errgroup.Group
 
+	// start let's encrypt manager
+	var managerLE *autocert.Manager
+	var tlsConfigLE *tls.Config
+	if c.String("server-cert") == "" && c.Bool("lets-encrypt") {
+		// start the server with lets encrypt enabled
+		// listen on ports 443 and 80
+		address, err := url.Parse(c.String("server-host"))
+		if err != nil {
+			return err
+		}
+
+		dir := cacheDir()
+		os.MkdirAll(dir, 0700)
+
+		managerLE = &autocert.Manager{
+			Prompt:     autocert.AcceptTOS,
+			HostPolicy: autocert.HostWhitelist(address.Host),
+			Cache:      autocert.DirCache(dir),
+		}
+		tlsConfigLE = &tls.Config{
+			GetCertificate: managerLE.GetCertificate,
+			NextProtos:     []string{"http/1.1"}, // disable h2 because Safari :(
+		}
+	}
+
 	// start the grpc server
 	g.Go(func() error {
 
@@ -563,13 +595,41 @@ func server(c *cli.Context) error {
 		auther := &authorizer{
 			password: c.String("agent-secret"),
 		}
-		s := grpc.NewServer(
-			grpc.StreamInterceptor(auther.streamInterceptor),
-			grpc.UnaryInterceptor(auther.unaryIntercaptor),
-			grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
-				MinTime: c.Duration("keepalive-min-time"),
-			}),
-		)
+
+		var s *grpc.Server
+		if c.Bool("server-grpc-tls") {
+			var tlsOption grpc.ServerOption
+			if c.String("server-cert") != "" {
+				trans, err := grpcCredentials.NewServerTLSFromFile(c.String("server-cert"), c.String("server-key"))
+				if err != nil {
+					logrus.Error(err)
+					return err
+				}
+				tlsOption = grpc.Creds(trans)
+			} else if c.Bool("lets-encrypt") {
+				tlsOption = grpc.Creds(grpcCredentials.NewTLS(tlsConfigLE))
+			} else {
+				logrus.Fatalln(
+					"Missing certificate. DRONE_LETS_ENCRYPT or DRONE_SERVER_CERT/DRONE_SERVER_KEY are required",
+				)
+			}
+			s = grpc.NewServer(
+				grpc.StreamInterceptor(auther.streamInterceptor),
+				grpc.UnaryInterceptor(auther.unaryIntercaptor),
+				grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+					MinTime: c.Duration("keepalive-min-time"),
+				}),
+				tlsOption,
+			)
+		} else {
+			s = grpc.NewServer(
+				grpc.StreamInterceptor(auther.streamInterceptor),
+				grpc.UnaryInterceptor(auther.unaryIntercaptor),
+				grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+					MinTime: c.Duration("keepalive-min-time"),
+				}),
+			)
+		}
 		ss := new(droneserver.DroneServer)
 		ss.Queue = droneserver.Config.Services.Queue
 		ss.Logger = droneserver.Config.Services.Logs
@@ -616,32 +676,15 @@ func server(c *cli.Context) error {
 		)
 	}
 
-	// start the server with lets encrypt enabled
-	// listen on ports 443 and 80
-	address, err := url.Parse(c.String("server-host"))
-	if err != nil {
-		return err
-	}
-
-	dir := cacheDir()
-	os.MkdirAll(dir, 0700)
-
-	manager := &autocert.Manager{
-		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist(address.Host),
-		Cache:      autocert.DirCache(dir),
-	}
+	// Start https server with let's encrypt
 	g.Go(func() error {
-		return http.ListenAndServe(":http", manager.HTTPHandler(http.HandlerFunc(redirect)))
+		return http.ListenAndServe(":http", managerLE.HTTPHandler(http.HandlerFunc(redirect)))
 	})
 	g.Go(func() error {
 		serve := &http.Server{
-			Addr:    ":https",
-			Handler: handler,
-			TLSConfig: &tls.Config{
-				GetCertificate: manager.GetCertificate,
-				NextProtos:     []string{"http/1.1"}, // disable h2 because Safari :(
-			},
+			Addr:      ":https",
+			Handler:   handler,
+			TLSConfig: tlsConfigLE,
 		}
 		return serve.ListenAndServeTLS("", "")
 	})

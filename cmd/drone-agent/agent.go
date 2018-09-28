@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -26,6 +27,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	grpcCredentials "google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 
@@ -83,9 +85,24 @@ func loop(c *cli.Context) error {
 
 	// grpc.Dial(target, ))
 
+	var err error
+	creds := grpc.WithInsecure()
+	if c.Bool("server-grpc-tls") {
+		certFile := c.String("server-cert")
+		if certFile != "" {
+			transCred, err := grpcCredentials.NewClientTLSFromFile(certFile, "")
+			if err != nil {
+				return err
+			}
+			creds = grpc.WithTransportCredentials(transCred)
+		} else {
+			creds = grpc.WithTransportCredentials(grpcCredentials.NewTLS(&tls.Config{}))
+		}
+	}
+
 	conn, err := grpc.Dial(
 		c.String("server"),
-		grpc.WithInsecure(),
+		creds,
 		grpc.WithPerRPCCredentials(&credentials{
 			username: c.String("username"),
 			password: c.String("password"),
