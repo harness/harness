@@ -27,12 +27,12 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/cncd/logging"
 	"github.com/cncd/pipeline/pipeline/rpc"
 	"github.com/cncd/pipeline/pipeline/rpc/proto"
 	"github.com/cncd/pubsub"
 	"github.com/cncd/queue"
+	"github.com/sirupsen/logrus"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"

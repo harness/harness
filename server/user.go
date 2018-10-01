@@ -20,9 +20,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
+	"github.com/sirupsen/logrus"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"

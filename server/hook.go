@@ -28,13 +28,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/remote"
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/shared/token"
 	"github.com/drone/drone/store"
 	"github.com/drone/envsubst"
+	"github.com/sirupsen/logrus"
 
 	"github.com/cncd/pipeline/pipeline/backend"
 	"github.com/cncd/pipeline/pipeline/frontend"

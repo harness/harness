@@ -23,9 +23,9 @@ import (
 	"net/http"
 	"strconv"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	"github.com/mrjones/oauth"
+	log "github.com/sirupsen/logrus"
 	"strings"
 )
 

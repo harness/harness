@@ -43,8 +43,8 @@ import (
 	droneserver "github.com/drone/drone/server"
 	"github.com/drone/drone/store"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/contrib/ginrus"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	oldcontext "golang.org/x/net/context"
 )

@@ -26,8 +26,8 @@ import (
 	"github.com/drone/drone/store"
 	"github.com/gorilla/securecookie"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func HandleLogin(c *gin.Context) {

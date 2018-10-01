@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/plugins/secrets"
+	"github.com/sirupsen/logrus"
 
 	"github.com/hashicorp/vault/api"
 	"gopkg.in/yaml.v2"

@@ -17,8 +17,8 @@ package server
 import (
 	"fmt"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/shared/httputil"

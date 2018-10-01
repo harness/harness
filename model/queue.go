@@ -17,8 +17,8 @@ package model
 import (
 	"context"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/cncd/queue"
+	"github.com/sirupsen/logrus"
 )
 
 // Task defines scheduled pipeline Task.

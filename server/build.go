@@ -24,7 +24,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/cncd/pipeline/pipeline/rpc"
 	"github.com/cncd/pubsub"
 	"github.com/cncd/queue"
@@ -32,6 +31,7 @@ import (
 	"github.com/drone/drone/shared/httputil"
 	"github.com/drone/drone/store"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
 	"github.com/drone/drone/model"
 	"github.com/drone/drone/router/middleware/session"

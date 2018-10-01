@@ -21,8 +21,8 @@ import (
 	"github.com/drone/drone/router/middleware/session"
 	"github.com/drone/drone/store"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func Refresh(c *gin.Context) {
