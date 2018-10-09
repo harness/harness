@@ -35,7 +35,7 @@ pipeline:
 
 Documentation and Other Links:
 
-* Build instructions are in the BUILDING file next to this file
+* Build instructions are in the [BUILDING](BUILDING) file next to this file
 * Setup Documentation [docs.drone.io/installation](http://docs.drone.io/installation/)
 * Usage Documentation [docs.drone.io/getting-started](http://docs.drone.io/getting-started/)
 * Plugin Index [plugins.drone.io](http://plugins.drone.io/)
