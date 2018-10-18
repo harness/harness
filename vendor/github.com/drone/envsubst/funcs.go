@@ -1,11 +1,12 @@
 package envsubst
 
 import (
-	"path"
 	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/drone/envsubst/path"
 )
 
 // defines a parameter substitution function.
@@ -89,8 +90,8 @@ func toSubstr(s string, args ...string) string {
 
 	if pos+length >= len(s) {
 		// if the position exceeds the length of the
-		// string an empty string is returned
-		return ""
+		// string just return the rest of it like bash
+		return s[pos:]
 	}
 
 	return s[pos : pos+length]
@@ -183,7 +184,7 @@ func trimLongestSuffix(s string, args ...string) string {
 
 func trimShortest(s, arg string) string {
 	var shortestMatch string
-	for i :=0 ; i < len(s); i++ {
+	for i := 0; i < len(s); i++ {
 		match, err := path.Match(arg, s[0:len(s)-i])
 
 		if err != nil {
@@ -191,7 +192,7 @@ func trimShortest(s, arg string) string {
 		}
 
 		if match {
-			shortestMatch = s[0:len(s)-i]
+			shortestMatch = s[0 : len(s)-i]
 		}
 	}
 
@@ -203,7 +204,7 @@ func trimShortest(s, arg string) string {
 }
 
 func trimLongest(s, arg string) string {
-	for i :=0 ; i < len(s); i++ {
+	for i := 0; i < len(s); i++ {
 		match, err := path.Match(arg, s[0:len(s)-i])
 
 		if err != nil {

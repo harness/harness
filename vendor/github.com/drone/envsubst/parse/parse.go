@@ -174,10 +174,6 @@ func (t *Tree) parseSubstrFunc(name string) (Node, error) {
 	default:
 		return nil, ErrBadSubstitution
 	}
-	// err := t.consumeDelimiter(acceptColon, scanIdent|scanRbrack)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	// scan arg[2]
 	{
@@ -258,8 +254,15 @@ func (t *Tree) parseReplaceFunc(name string) (Node, error) {
 		return nil, ErrBadSubstitution
 	}
 
+	// check for blank string
+	switch t.scanner.peek() {
+	case '}':
+		return node, t.consumeRbrack()
+	}
+
+	// scan arg[2]
 	{
-		param, err := t.parseParam(acceptNotClosing, scanIdent)
+		param, err := t.parseParam(acceptNotClosing, scanIdent|scanEscape)
 		if err != nil {
 			return nil, err
 		}
