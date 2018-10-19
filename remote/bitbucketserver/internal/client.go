@@ -23,10 +23,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"strings"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/drone/drone/model"
 	"github.com/mrjones/oauth"
-	"strings"
 )
 
 const (
@@ -95,6 +96,9 @@ func (c *Client) FindCurrentUser() (*User, error) {
 func (c *Client) FindRepo(owner string, name string) (*Repo, error) {
 	urlString := fmt.Sprintf(pathRepo, c.base, owner, name)
 	response, err := c.client.Get(urlString)
+	if response != nil {
+		defer response.Body.Close()
+	}
 	if err != nil {
 		log.Error(err)
 	}
@@ -115,13 +119,19 @@ func (c *Client) FindRepos() ([]*Repo, error) {
 func (c *Client) FindRepoPerms(owner string, repo string) (*model.Perm, error) {
 	perms := new(model.Perm)
 	// If you don't have access return none right away
-	_, err := c.FindRepo(owner, repo)
+	resp, err := c.FindRepo(owner, repo)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return perms, err
 	}
 	// Must have admin to be able to list hooks. If have access the enable perms
-	_, err = c.client.Get(fmt.Sprintf(pathHook, c.base, owner, repo, hookName))
-	if err == nil {
+	resp2, err2 := c.client.Get(fmt.Sprintf(pathHook, c.base, owner, repo, hookName))
+	if resp2 != nil {
+		defer resp2.Body.Close()
+	}
+	if err2 == nil {
 		perms.Push = true
 		perms.Admin = true
 	}
