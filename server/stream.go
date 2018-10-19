@@ -188,6 +188,9 @@ func LogStreamSSE(c *gin.Context) {
 	go func() {
 		// TODO remove global variable
 		Config.Services.Logs.Tail(ctx, fmt.Sprint(proc.ID), func(entries ...*logging.Entry) {
+			defer func() {
+				recover() // fix #2480
+			}()
 			for _, entry := range entries {
 				select {
 				case <-ctx.Done():
