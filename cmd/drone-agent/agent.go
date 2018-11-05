@@ -211,6 +211,7 @@ func (r *runner) run(ctx context.Context) error {
 		logger.Debug().
 			Msg("listen for cancel signal")
 
+		ctx, cancel := context.WithTimeout(ctxmeta, timeout+1*time.Minute)
 		if werr := r.client.Wait(ctx, work.ID); werr != nil {
 			cancelled.SetTo(true)
 			logger.Warn().
