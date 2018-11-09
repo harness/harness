@@ -17,9 +17,9 @@ func TestGetKubernetesToken(t *testing.T) {
 	b, _ := ioutil.ReadFile(fakeJwtFile)
 	fakeJwt := string(b)
 	fakeClientToken := "fakeClientToken"
-	fakeLeaseMinutes := "10m"
-	fakeLeaseDuration, _ := time.ParseDuration(fakeLeaseMinutes)
-	fakeResp := fmt.Sprintf("{\"auth\": {\"client_token\": \"%s\", \"lease_duration\": \"%s\"}}", fakeClientToken, fakeLeaseMinutes)
+	fakeLeaseSeconds := 86400
+	fakeLeaseDuration := time.Duration(fakeLeaseSeconds) * time.Second
+	fakeResp := fmt.Sprintf("{\"auth\": {\"client_token\": \"%s\", \"lease_duration\": %d}}", fakeClientToken, fakeLeaseSeconds)
 	expectedPath := "/v1/auth/kubernetes/login"
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

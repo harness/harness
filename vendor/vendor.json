@@ -476,16 +476,22 @@
 			"revisionTime": "2017-02-10T18:43:46Z"
 		},
 		{
-			"checksumSHA1": "pjMV8mwWcQ0Kk9cbLWweTGiqYPk=",
+			"checksumSHA1": "oX91yMnimWNI17gVk7iQIE0p2pw=",
 			"path": "github.com/drone/envsubst",
-			"revision": "523de92ea410a5756012669fb628fe42a3056b3e",
-			"revisionTime": "2017-03-25T05:49:59Z"
+			"revision": "15e3f9b7e16332eee3bbdff9ef31f95d23c5da2c",
+			"revisionTime": "2018-10-18T14:46:17Z"
 		},
 		{
-			"checksumSHA1": "CVG/vocbXGLbGKRO//TOlicOBkw=",
+			"checksumSHA1": "CCV0ixQVgQNOsnUn8JlxGJ1v8c4=",
 			"path": "github.com/drone/envsubst/parse",
-			"revision": "523de92ea410a5756012669fb628fe42a3056b3e",
-			"revisionTime": "2017-03-25T05:49:59Z"
+			"revision": "15e3f9b7e16332eee3bbdff9ef31f95d23c5da2c",
+			"revisionTime": "2018-10-18T14:46:17Z"
+		},
+		{
+			"checksumSHA1": "k8a4yeccwcAfBwHgj16Da0F9iQE=",
+			"path": "github.com/drone/envsubst/path",
+			"revision": "15e3f9b7e16332eee3bbdff9ef31f95d23c5da2c",
+			"revisionTime": "2018-10-18T14:46:17Z"
 		},
 		{
 			"checksumSHA1": "AT++gcbYW/VQxkmbInFJk1Feg3o=",
