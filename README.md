@@ -35,7 +35,7 @@ pipeline:
 
 Documentation and Other Links:
 
-* Setup Documentation [docs.drone.io/installation](http://docs.drone.io/installation/)
+* Setup Documentation [docs.drone.io/install](https://docs.drone.io/install/)
 * Usage Documentation [docs.drone.io/getting-started](http://docs.drone.io/getting-started/)
 * Plugin Index [plugins.drone.io](http://plugins.drone.io/)
 * Getting Help [docs.drone.io/getting-help](http://docs.drone.io/getting-help/)
