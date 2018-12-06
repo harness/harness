@@ -206,6 +206,14 @@ func (v *vault) renewLoop() {
 
 			logrus.Debugf("vault: refreshing token: increment %v", v.ttl)
 			_, err := v.client.Auth().Token().RenewSelf(incr)
+			
+			// kubernetes tokens have a max age of 32 days. If the
+			// token cannot be refreshed we may need to generate a
+			// new token.
+			if err != nil && v.auth == "kubernetes" {
+				err = v.initKubernetes()
+			}
+			
 			if err != nil {
 				logrus.Errorf("vault: refreshing token failed: %s", err)
 			} else {
