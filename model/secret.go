@@ -17,6 +17,7 @@ package model
 import (
 	"errors"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -72,7 +73,7 @@ func (s *Secret) Match(event string) bool {
 // Validate validates the required fields and formats.
 func (s *Secret) Validate() error {
 	switch {
-	case len(s.Name) == 0:
+	case len(s.Name) == 0 || strings.ContainsAny(s.Name, "/"):
 		return errSecretNameInvalid
 	case len(s.Value) == 0:
 		return errSecretValueInvalid

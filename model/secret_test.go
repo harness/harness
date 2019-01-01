@@ -53,6 +53,13 @@ func TestSecret(t *testing.T) {
 				err := secret.Validate()
 				g.Assert(err != nil).IsTrue()
 			})
+			g.It("when name contains a forward slash", func() {
+				secret := Secret{}
+				secret.Name = "secret/name"
+				secret.Value = "secretvalue"
+				err := secret.Validate()
+				g.Assert(err != nil).IsTrue()
+			})
 			g.It("when no value", func() {
 				secret := Secret{}
 				secret.Name = "secretname"
