@@ -64,6 +64,6 @@ func TestGetKubernetesToken(t *testing.T) {
 		t.Errorf("Expected returned token to have value '%s', got: '%s'", fakeClientToken, token)
 	}
 	if ttl != fakeLeaseDuration {
-		t.Errorf("Expected TTL to have value '%s', got: '%s'", fakeLeaseDuration.Seconds(), ttl.Seconds())
+		t.Errorf("Expected TTL to have value '%f', got: '%f'", fakeLeaseDuration.Seconds(), ttl.Seconds())
 	}
 }
