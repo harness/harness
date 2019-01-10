@@ -108,6 +108,9 @@ func (c *Client) FindRepo(owner string, name string) (*Repo, error) {
 		log.Error(err)
 	}
 	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
 	repo := Repo{}
 	err = json.Unmarshal(contents, &repo)
 	if err != nil {
@@ -178,6 +181,9 @@ func (c *Client) CreateHook(owner string, name string, callBackLink string) erro
 
 	putHookSettings := arrayToHookSettings(hooks)
 	hookBytes, err := json.Marshal(putHookSettings)
+	if err != nil {
+		return err
+	}
 	return c.doPut(fmt.Sprintf(pathHookEnabled, c.base, owner, name, hookName), hookBytes)
 }
 
@@ -198,6 +204,9 @@ func (c *Client) DeleteHook(owner string, name string, link string) error {
 	})
 	putHookSettings := arrayToHookSettings(putHooks)
 	hookBytes, err := json.Marshal(putHookSettings)
+	if err != nil {
+		return err
+	}
 	return c.doPut(fmt.Sprintf(pathHookEnabled, c.base, owner, name, hookName), hookBytes)
 }
 
@@ -236,6 +245,9 @@ func (c *Client) GetHooks(owner string, name string) (*HookSettings, error) {
 //Helper function to help create the hook
 func (c *Client) doPut(url string, body []byte) error {
 	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
 	request.Header.Add("Content-Type", "application/json")
 	response, err := c.client.Do(request)
 	if response != nil {
@@ -259,6 +271,9 @@ func (c *Client) doPost(url string, status *BuildStatus) error {
 		}
 	}
 	request, err := http.NewRequest("POST", url, buf)
+	if err != nil {
+		return err
+	}
 	request.Header.Add("Content-Type", "application/json")
 	response, err := c.client.Do(request)
 	if response != nil {
@@ -270,6 +285,9 @@ func (c *Client) doPost(url string, status *BuildStatus) error {
 //Helper function to do delete on the hook
 func (c *Client) doDelete(url string) error {
 	request, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return err
+	}
 	response, err := c.client.Do(request)
 	if response != nil {
 		defer response.Body.Close()
