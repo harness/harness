@@ -328,6 +328,7 @@ func (s *RPC) Init(c context.Context, id string, state rpc.State) error {
 			Labels: map[string]string{
 				"repo":    repo.FullName,
 				"private": strconv.FormatBool(repo.IsPrivate),
+				"branch":  build.Branch,
 			},
 		}
 		message.Data, _ = json.Marshal(model.Event{
@@ -489,6 +490,7 @@ func createFilterFunc(filter rpc.Filter) (queue.Filter, error) {
 
 	return func(task *queue.Task) bool {
 		if st != nil {
+			fmt.Println("LABELS: ", task.Labels)
 			match, _ := st.Eval(expr.NewRow(task.Labels))
 			return match
 		}

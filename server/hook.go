@@ -238,6 +238,28 @@ func PostHook(c *gin.Context) {
 	// on status change notifications
 	last, _ := store.GetBuildLastBefore(c, repo, build.Branch, build.ID)
 
+	config := ToConfig(c)
+
+	// If we have enabled killing pending jobs for the same branch, look at the state
+	// of the last build, force killing in the same method a zombie proc would be cleaned up
+	if config.Experimental.AutoCancelPending && build.Branch != "master" {
+		if last.Status == model.StatusPending {
+			procs, err := store.FromContext(c).ProcList(last)
+			if err == nil {
+				forceKillBuild(c, last, procs)
+			}
+		}
+	}
+
+	// If we have enabled killing running jobs for the same branch, look at the state
+	// of the last build, killing it in the same method that cancelling build uses
+	if config.Experimental.AutoCancelRunning && build.Branch != "master" {
+		proc, err := store.FromContext(c).ProcFind(last, 1)
+		if err == nil && proc.State == model.StatusRunning {
+			killRunningBuild(c, proc)
+		}
+	}
+
 	//
 	// BELOW: NEW
 	//
@@ -308,6 +330,7 @@ func PostHook(c *gin.Context) {
 		Labels: map[string]string{
 			"repo":    repo.FullName,
 			"private": strconv.FormatBool(repo.IsPrivate),
+			"branch":  build.Branch,
 		},
 	}
 	buildCopy := *build
@@ -332,6 +355,7 @@ func PostHook(c *gin.Context) {
 		}
 		task.Labels["platform"] = item.Platform
 		task.Labels["repo"] = b.Repo.FullName
+		task.Labels["branch"] = build.Branch
 
 		task.Data, _ = json.Marshal(rpc.Pipeline{
 			ID:      fmt.Sprint(item.Proc.ID),

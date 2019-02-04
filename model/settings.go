@@ -2,10 +2,16 @@ package model
 
 // Settings defines system configuration parameters.
 type Settings struct {
-	Open   bool            // Enables open registration
-	Secret string          // Secret token used to authenticate agents
-	Admins map[string]bool // Administrative users
-	Orgs   map[string]bool // Organization whitelist
+	Open         bool            // Enables open registration
+	Secret       string          // Secret token used to authenticate agents
+	Admins       map[string]bool // Administrative users
+	Orgs         map[string]bool // Organization whitelist
+	Experimental Experimental    // Experimental settings
+}
+
+type Experimental struct {
+	AutoCancelPending bool // Automatically cancels pending builds for the same branch
+	AutoCancelRunning bool // Auto cancels running builds for the same branch
 }
 
 // IsAdmin returns true if the user is a member of the administrator list.

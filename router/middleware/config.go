@@ -25,6 +25,10 @@ func setupConfig(c *cli.Context) *model.Settings {
 		Secret: c.String("agent-secret"),
 		Admins: sliceToMap2(c.StringSlice("admin")),
 		Orgs:   sliceToMap2(c.StringSlice("orgs")),
+		Experimental: model.Experimental{
+			AutoCancelPending: c.Bool("experimental-auto-cancel-pending"),
+			AutoCancelRunning: c.Bool("experimental-auto-cancel-running"),
+		},
 	}
 }
 
