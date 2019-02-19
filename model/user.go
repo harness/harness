@@ -62,9 +62,6 @@ type User struct {
 	Synced int64 `json:"synced" meddler:"user_synced"`
 
 	// Admin indicates the user is a system administrator.
-	//
-	// NOTE: This is sourced from the DRONE_ADMINS environment variable and is no
-	// longer persisted in the database.
 	Admin bool `json:"admin,omitempty" meddler:"-"`
 
 	// Hash is a unique token used to sign tokens.
