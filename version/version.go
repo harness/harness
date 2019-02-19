@@ -1,4 +1,4 @@
-// Copyright 2018 Drone.IO Inc.
+// Copyright 2019 Drone IO, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,14 +17,18 @@ package version
 import "github.com/coreos/go-semver/semver"
 
 var (
+	// GitRepository is the git repository that was compiled
+	GitRepository string
+	// GitCommit is the git commit that was compiled
+	GitCommit string
 	// VersionMajor is for an API incompatible changes.
-	VersionMajor int64
+	VersionMajor int64 = 1
 	// VersionMinor is for functionality in a backwards-compatible manner.
-	VersionMinor int64 = 8
+	VersionMinor int64
 	// VersionPatch is for backwards-compatible bug fixes.
-	VersionPatch int64 = 9
+	VersionPatch int64
 	// VersionPre indicates prerelease.
-	VersionPre string
+	VersionPre = "rc.5"
 	// VersionDev indicates development branch. Releases will be empty string.
 	VersionDev string
 )

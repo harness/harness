@@ -1,0 +1,43 @@
+{
+    "Action": "opened",
+    "Repo": {
+        "ID": "4861503",
+        "Namespace": "sytses",
+        "Name": "hello-world",
+        "Perm": null,
+        "Branch": "master",
+        "Private": false,
+        "Clone": "https://gitlab.com/gitlab-org/hello-world.git",
+        "CloneSSH": "git@gitlab.com:gitlab-org/hello-world.git",
+        "Link": "https://gitlab.com/gitlab-org/hello-world",
+        "Created": "0001-01-01T00:00:00Z",
+        "Updated": "0001-01-01T00:00:00Z"
+    },
+    "PullRequest": {
+        "Number": 1,
+        "Title": "update readme",
+        "Body": "adding build instructions to readme",
+        "Sha": "c4c79227ed610f1151f05bbc5be33b4f340d39c8",
+        "Ref": "refs/merge-requests/1/head",
+        "Source": "feature",
+        "Target": "master",
+        "Fork": "sytses/hello-world",
+        "Link": "https://gitlab.com/gitlab-org/hello-world/merge_requests/1",
+        "Closed": false,
+        "Merged": false,
+        "Author": {
+            "Login": "sytses",
+            "Name": "Sid Sijbrandij",
+            "Email": "",
+            "Avatar": "https://secure.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87?s=80\u0026d=identicon"
+        },
+        "Created": "0001-01-01T00:00:00Z",
+        "Updated": "0001-01-01T00:00:00Z"
+    },
+    "Sender": {
+        "Login": "sytses",
+        "Name": "Sid Sijbrandij",
+        "Email": "",
+        "Avatar": "https://secure.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87?s=80\u0026d=identicon"
+    }
+}

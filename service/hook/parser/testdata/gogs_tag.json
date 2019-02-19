@@ -1,0 +1,26 @@
+{
+  "Ref": {
+    "Name": "v1.0.0",
+    "Sha": ""
+  },
+  "Repo": {
+    "ID": "61",
+    "Namespace": "gogits",
+    "Name": "hello-world",
+    "Perm": {},
+    "Branch": "master",
+    "Private": true,
+    "Clone": "http://try.gogs.io/gogits/hello-world.git",
+    "CloneSSH": "git@localhost:gogits/hello-world.git",
+    "Link": "",
+    "Created": "0001-01-01T00:00:00Z",
+    "Updated": "0001-01-01T00:00:00Z"
+  },
+  "Action": "created",
+  "Sender": {
+    "Login": "unknwon",
+    "Name": "",
+    "Email": "noreply@gogs.io",
+    "Avatar": "https://secure.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
+  }
+}

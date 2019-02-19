@@ -1,0 +1,7 @@
+{
+	"auths": {
+		"https://gcr.io": {
+			"auth": "b2N0b2NhdDpjb3JyZWN0LWhvcnNlLWJhdHRlcnktc3RhcGxl"
+		}
+	}
+}

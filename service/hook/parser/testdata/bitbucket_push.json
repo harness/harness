@@ -1,0 +1,41 @@
+{
+    "Ref": "refs/heads/master",
+    "Repo": {
+        "ID": "{bc771cbf-829e-4c4b-b71f-a0eb3ac2b860}",
+        "Namespace": "brydzewski",
+        "Name": "foo",
+        "Perm": null,
+        "Branch": "",
+        "Private": true,
+        "Clone": "https://bitbucket.org/brydzewski/foo.git",
+        "CloneSSH": "git@bitbucket.org:brydzewski/foo.git",
+        "Link": "https://bitbucket.org/brydzewski/foo",
+        "Created": "0001-01-01T00:00:00Z",
+        "Updated": "0001-01-01T00:00:00Z"
+    },
+    "Commit": {
+        "Sha": "141977fedf5cf35aa290ac87d4b5177ac4cd9de1",
+        "Message": "Update README\n",
+        "Author": {
+            "Name": "Brad Rydzewski",
+            "Email": "brad.rydzewski@gmail.com",
+            "Date": "2018-07-02T20:26:56Z",
+            "Login": "brydzewski",
+            "Avatar": "https://bitbucket.org/account/brydzewski/avatar/32/"
+        },
+        "Committer": {
+            "Name": "Brad Rydzewski",
+            "Email": "brad.rydzewski@gmail.com",
+            "Date": "2018-07-02T20:26:56Z",
+            "Login": "brydzewski",
+            "Avatar": "https://bitbucket.org/account/brydzewski/avatar/32/"
+        },
+        "Link": "https://bitbucket.org/brydzewski/foo/commits/141977fedf5cf35aa290ac87d4b5177ac4cd9de1"
+    },
+    "Sender": {
+        "Login": "brydzewski",
+        "Name": "Brad Rydzewski",
+        "Email": "",
+        "Avatar": "https://bitbucket.org/account/brydzewski/avatar/32/"
+    }
+}

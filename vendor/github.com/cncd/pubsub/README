@@ -1,6 +1,0 @@
-Go package provides a common interface for publish-subscriber messaging.
-
-Documentation:
-
-    http://godoc.org/github.com/cncd/pubsub
-    http://godoc.org/github.com/cncd/pubsub/gcp

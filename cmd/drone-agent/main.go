@@ -1,118 +1,123 @@
-// Copyright 2018 Drone.IO Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Copyright 2019 Drone.IO Inc. All rights reserved.
+// Use of this source code is governed by the Drone Non-Commercial License
+// that can be found in the LICENSE file.
 
 package main
 
 import (
-	"fmt"
-	"os"
-	"time"
+	"context"
 
-	"github.com/drone/drone/version"
+	"github.com/drone/drone-runtime/engine/docker"
+	"github.com/drone/drone/cmd/drone-agent/config"
+	"github.com/drone/drone/operator/manager/rpc"
+	"github.com/drone/drone/operator/runner"
+	"github.com/drone/drone/plugin/registry"
+	"github.com/drone/drone/plugin/secret"
+	"github.com/drone/signal"
+
+	"github.com/sirupsen/logrus"
 
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/urfave/cli"
 )
 
 func main() {
-	app := cli.NewApp()
-	app.Name = "drone-agent"
-	app.Version = version.Version.String()
-	app.Usage = "drone agent"
-	app.Action = loop
-	app.Commands = []cli.Command{
-		{
-			Name:   "ping",
-			Usage:  "ping the agent",
-			Action: pinger,
-		},
-	}
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			EnvVar: "DRONE_SERVER",
-			Name:   "server",
-			Usage:  "drone server address",
-			Value:  "localhost:9000",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_USERNAME",
-			Name:   "username",
-			Usage:  "drone auth username",
-			Value:  "x-oauth-basic",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_PASSWORD,DRONE_SECRET",
-			Name:   "password",
-			Usage:  "server-agent shared password",
-		},
-		cli.BoolTFlag{
-			EnvVar: "DRONE_DEBUG",
-			Name:   "debug",
-			Usage:  "enable agent debug mode",
-		},
-		cli.BoolFlag{
-			EnvVar: "DRONE_DEBUG_PRETTY",
-			Name:   "pretty",
-			Usage:  "enable pretty-printed debug output",
-		},
-		cli.BoolTFlag{
-			EnvVar: "DRONE_DEBUG_NOCOLOR",
-			Name:   "nocolor",
-			Usage:  "disable colored debug output",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_HOSTNAME,HOSTNAME",
-			Name:   "hostname",
-			Usage:  "agent hostname",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_PLATFORM",
-			Name:   "platform",
-			Usage:  "restrict builds by platform conditions",
-			Value:  "linux/amd64",
-		},
-		cli.StringFlag{
-			EnvVar: "DRONE_FILTER",
-			Name:   "filter",
-			Usage:  "filter expression to restrict builds by label",
-		},
-		cli.IntFlag{
-			EnvVar: "DRONE_MAX_PROCS",
-			Name:   "max-procs",
-			Usage:  "agent parallel builds",
-			Value:  1,
-		},
-		cli.BoolTFlag{
-			EnvVar: "DRONE_HEALTHCHECK",
-			Name:   "healthcheck",
-			Usage:  "enable healthcheck endpoint",
-		},
-		cli.DurationFlag{
-			EnvVar: "DRONE_KEEPALIVE_TIME",
-			Name:   "keepalive-time",
-			Usage:  "after a duration of this time of no activity, the agent pings the server to check if the transport is still alive",
-		},
-		cli.DurationFlag{
-			EnvVar: "DRONE_KEEPALIVE_TIMEOUT",
-			Name:   "keepalive-timeout",
-			Usage:  "after pinging for a keepalive check, the agent waits for a duration of this time before closing the connection if no activity",
-			Value:  time.Second * 20,
-		},
+	config, err := config.Environ()
+	if err != nil {
+		logrus.WithError(err).Fatalln("invalid configuration")
 	}
 
-	if err := app.Run(os.Args); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	initLogging(config)
+	ctx := signal.WithContext(
+		context.Background(),
+	)
+
+	secrets := secret.External(
+		config.Secrets.Endpoint,
+		config.Secrets.Password,
+		config.Secrets.SkipVerify,
+	)
+
+	auths := registry.Combine(
+		registry.External(
+			config.Secrets.Endpoint,
+			config.Secrets.Password,
+			config.Secrets.SkipVerify,
+		),
+		registry.FileSource(
+			config.Docker.Config,
+		),
+		registry.EndpointSource(
+			config.Registries.Endpoint,
+			config.Registries.Password,
+			config.Registries.SkipVerify,
+		),
+	)
+
+	manager := rpc.NewClient(
+		config.RPC.Proto+"://"+config.RPC.Host,
+		config.RPC.Secret,
+	)
+	if config.RPC.Debug {
+		manager.SetDebug(true)
+	}
+	if config.Logging.Trace {
+		manager.SetDebug(true)
+	}
+
+	engine, err := docker.NewEnv()
+	if err != nil {
+		logrus.WithError(err).
+			Fatalln("cannot load the docker engine")
+	}
+
+	r := &runner.Runner{
+		Platform:   config.Runner.Platform,
+		OS:         config.Runner.OS,
+		Arch:       config.Runner.Arch,
+		Kernel:     config.Runner.Kernel,
+		Variant:    config.Runner.Variant,
+		Engine:     engine,
+		Manager:    manager,
+		Registry:   auths,
+		Secrets:    secrets,
+		Volumes:    config.Runner.Volumes,
+		Networks:   config.Runner.Networks,
+		Devices:    config.Runner.Devices,
+		Privileged: config.Runner.Privileged,
+		Machine:    config.Runner.Machine,
+		Labels:     config.Runner.Labels,
+		Environ:    config.Runner.Environ,
+		Limits: runner.Limits{
+			MemSwapLimit: int64(config.Runner.Limits.MemSwapLimit),
+			MemLimit:     int64(config.Runner.Limits.MemLimit),
+			ShmSize:      int64(config.Runner.Limits.ShmSize),
+			CPUQuota:     config.Runner.Limits.CPUQuota,
+			CPUShares:    config.Runner.Limits.CPUShares,
+			CPUSet:       config.Runner.Limits.CPUSet,
+		},
+	}
+	if err := r.Start(ctx, config.Runner.Capacity); err != nil {
+		logrus.WithError(err).
+			Warnln("program terminated")
+	}
+}
+
+// helper funciton configures the logging.
+func initLogging(c config.Config) {
+	if c.Logging.Debug {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+	if c.Logging.Trace {
+		logrus.SetLevel(logrus.TraceLevel)
+	}
+	if c.Logging.Text {
+		logrus.SetFormatter(&logrus.TextFormatter{
+			ForceColors:   c.Logging.Color,
+			DisableColors: !c.Logging.Color,
+		})
+	} else {
+		logrus.SetFormatter(&logrus.JSONFormatter{
+			PrettyPrint: c.Logging.Pretty,
+		})
 	}
 }

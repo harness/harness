@@ -1,0 +1,41 @@
+{
+    "Ref": "refs/heads/master",
+    "Repo": {
+        "ID": "1",
+        "Namespace": "PRJ",
+        "Name": "my-repo",
+        "Perm": null,
+        "Branch": "master",
+        "Private": true,
+        "Clone": "",
+        "CloneSSH": "",
+        "Link": "",
+        "Created": "0001-01-01T00:00:00Z",
+        "Updated": "0001-01-01T00:00:00Z"
+    },
+    "Commit": {
+        "Sha": "823b2230a56056231c9425d63758fa87078a66b4",
+        "Message": "",
+        "Author": {
+            "Name": "Jane Citizen",
+            "Email": "jane@example.com",
+            "Date": "2018-07-05T18:22:00Z",
+            "Login": "jcitizen",
+            "Avatar": "https://www.gravatar.com/avatar/9e26471d35a78862c17e467d87cddedf.jpg"
+        },
+        "Committer": {
+            "Name": "Jane Citizen",
+            "Email": "jane@example.com",
+            "Date": "2018-07-05T18:22:00Z",
+            "Login": "jcitizen",
+            "Avatar": "https://www.gravatar.com/avatar/9e26471d35a78862c17e467d87cddedf.jpg"
+        },
+        "Link": ""
+    },
+    "Sender": {
+        "Login": "jcitizen",
+        "Name": "Jane Citizen",
+        "Email": "jane@example.com",
+        "Avatar": "https://www.gravatar.com/avatar/9e26471d35a78862c17e467d87cddedf.jpg"
+    }
+}

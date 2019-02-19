@@ -1,143 +1,306 @@
-workspace:
-  base: /go
-  path: src/github.com/drone/drone
+---
+kind: pipeline
+name: linux-amd64
 
-pipeline:
-  test:
-    image: golang:1.8
-    commands:
-      - go get -u github.com/drone/drone-ui/dist
-      - go get -u golang.org/x/tools/cmd/cover
-      - go get -u golang.org/x/net/context
-      - go get -u golang.org/x/net/context/ctxhttp
-      - go get -u github.com/golang/protobuf/proto
-      - go get -u github.com/golang/protobuf/protoc-gen-go
-      - go test -cover $(go list ./... | grep -v /vendor/)
+platform:
+  os: linux
+  arch: amd64
 
-  test_postgres:
-    image: golang:1.8
-    environment:
-      - DATABASE_DRIVER=postgres
-      - DATABASE_CONFIG=host=postgres user=postgres dbname=postgres sslmode=disable
-    commands:
-      - go test github.com/drone/drone/store/datastore
+steps:
+- name: test
+  image: golang:1.11
+  commands:
+  - go test -v ./...
+  volumes:
+  - name: gopath
+    path: /go
 
-  test_mysql:
-    image: golang:1.8
-    environment:
-      - DATABASE_DRIVER=mysql
-      - DATABASE_CONFIG=root@tcp(mysql:3306)/test?parseTime=true
-    commands:
-      - go test github.com/drone/drone/store/datastore
+- name: build
+  image: golang:1.11
+  commands:
+  - go build -o release/linux/amd64/drone-server
+  - go build -o release/linux/amd64/drone-agent
+  - go build -o release/linux/amd64/drone-controller
+  volumes:
+  - name: gopath
+    path: /go
+  when:
+    event:
+    - push
+    - tag
 
-  build:
-    image: golang:1.8
-    commands: sh .drone.sh
-    secrets: [ ssh_key ]
-    when:
-      event: [ push, tag ]
-
-  publish_server_alpine:
-    image: plugins/docker
-    repo: drone/drone
-    dockerfile: Dockerfile.alpine
-    secrets: [ docker_username, docker_password ]
-    tag: [ alpine ]
-    when:
-      branch: master
-      event: push
-
-  publish_server:
-    image: plugins/docker
-    repo: drone/drone
-    secrets: [ docker_username, docker_password ]
-    tag: [ latest ]
-    when:
-      branch: master
-      event: push
-
-  publish_agent_alpine:
-    image: plugins/docker
+- name: publish_agent
+  image: plugins/docker
+  settings:
+    auto_tag: true
+    auto_tag_suffix: linux-amd64
+    dockerfile: docker/Dockerfile.agent.linux.amd64
+    password:
+      from_secret: docker_password
     repo: drone/agent
-    dockerfile: Dockerfile.agent.alpine
-    secrets: [ docker_username, docker_password ]
-    tag: [ alpine ]
-    when:
-      branch: master
-      event: push
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
 
-  publish_agent_arm:
-    image: plugins/docker
+- name: publish_controller
+  image: plugins/docker
+  settings:
+    auto_tag: true
+    auto_tag_suffix: linux-amd64
+    dockerfile: docker/Dockerfile.controller.linux.amd64
+    password:
+      from_secret: docker_password
+    repo: drone/controller
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
+
+- name: publish_server
+  image: plugins/docker
+  settings:
+    auto_tag: true
+    auto_tag_suffix: linux-amd64
+    dockerfile: docker/Dockerfile.server.linux.amd64
+    password:
+      from_secret: docker_password
+    repo: drone/server
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
+
+volumes:
+- name: gopath
+  temp: {}
+
+---
+kind: pipeline
+name: linux-arm
+
+platform:
+  os: linux
+  arch: arm
+
+steps:
+- name: test
+  image: golang:1.11
+  commands:
+  - go test -v ./...
+  volumes:
+  - name: gopath
+    path: /go
+
+- name: build
+  image: golang:1.11
+  commands:
+  - go build -o release/linux/arm/drone-server
+  - go build -o release/linux/arm/drone-agent
+  - go build -o release/linux/arm/drone-controller
+  volumes:
+  - name: gopath
+    path: /go
+  when:
+    event:
+    - push
+    - tag
+
+- name: publish_agent
+  image: plugins/docker
+  settings:
+    auto_tag: true
+    auto_tag_suffix: linux-arm
+    dockerfile: docker/Dockerfile.agent.linux.arm
+    password:
+      from_secret: docker_password
     repo: drone/agent
-    dockerfile: Dockerfile.agent.linux.arm
-    secrets: [ docker_username, docker_password ]
-    tag: [ linux-arm ]
-    when:
-      branch: master
-      event: push
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
 
-  publish_agent_arm64:
-    image: plugins/docker
+- name: publish_controller
+  image: plugins/docker
+  settings:
+    auto_tag: true
+    auto_tag_suffix: linux-arm
+    dockerfile: docker/Dockerfile.controller.linux.arm
+    password:
+      from_secret: docker_password
+    repo: drone/controller
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
+
+- name: publish_server
+  image: plugins/docker
+  settings:
+    auto_tag: true
+    auto_tag_suffix: linux-arm
+    dockerfile: docker/Dockerfile.server.linux.arm
+    password:
+      from_secret: docker_password
+    repo: drone/server
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
+
+volumes:
+- name: gopath
+  temp: {}
+
+---
+kind: pipeline
+name: linux-arm64
+
+platform:
+  os: linux
+  arch: arm64
+
+steps:
+- name: test
+  image: golang:1.11
+  commands:
+  - go test -v ./...
+  volumes:
+  - name: gopath
+    path: /go
+
+- name: build
+  image: golang:1.11
+  commands:
+  - go build -o release/linux/arm64/drone-server
+  - go build -o release/linux/arm64/drone-agent
+  - go build -o release/linux/arm64/drone-controller
+  volumes:
+  - name: gopath
+    path: /go
+  when:
+    event:
+    - push
+    - tag
+
+- name: publish_agent
+  image: plugins/docker
+  settings:
+    auto_tag: true
+    auto_tag_suffix: linux-arm64
+    dockerfile: docker/Dockerfile.agent.linux.arm64
+    password:
+      from_secret: docker_password
     repo: drone/agent
-    dockerfile: Dockerfile.agent.linux.arm64
-    secrets: [ docker_username, docker_password ]
-    tag: [ linux-arm64 ]
-    when:
-      branch: master
-      event: push
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
 
-  publish_agent_amd64:
-    image: plugins/docker
-    repo: drone/agent
-    dockerfile: Dockerfile.agent
-    secrets: [ docker_username, docker_password ]
-    tag: [ latest ]
-    when:
-      branch: master
-      event: push
+- name: publish_controller
+  image: plugins/docker
+  settings:
+    auto_tag: true
+    auto_tag_suffix: linux-arm64
+    dockerfile: docker/Dockerfile.controller.linux.arm64
+    password:
+      from_secret: docker_password
+    repo: drone/controller
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
 
-  release_server_alpine:
-    image: plugins/docker
-    repo: drone/drone
-    dockerfile: Dockerfile.alpine
-    secrets: [ docker_username, docker_password ]
-    tag: [ 0.8-alpine ]
-    when:
-      event: tag
+- name: publish_server
+  image: plugins/docker
+  settings:
+    auto_tag: true
+    auto_tag_suffix: linux-arm64
+    dockerfile: docker/Dockerfile.server.linux.arm64
+    password:
+      from_secret: docker_password
+    repo: drone/server
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
 
-  release_agent_alpine:
-    image: plugins/docker
-    repo: drone/agent
-    dockerfile: Dockerfile.agent.alpine
-    secrets: [ docker_username, docker_password ]
-    tag: [ 0.8-alpine ]
-    when:
-      event: tag
+volumes:
+- name: gopath
+  temp: {}
 
-  release_server:
-    image: plugins/docker
-    repo: drone/drone
-    secrets: [ docker_username, docker_password ]
-    tag: [ 0.8, 0.8.9 ]
-    when:
-      event: tag
+---
+kind: pipeline
+name: manifest
 
-  release_agent:
-    image: plugins/docker
-    repo: drone/agent
-    dockerfile: Dockerfile.agent
-    secrets: [ docker_username, docker_password ]
-    tag: [ 0.8, 0.8.9 ]
-    when:
-      event: tag
+platform:
+  os: linux
+  arch: amd64
 
-services:
-  postgres:
-    image: postgres:9.6
-    environment:
-      - POSTGRES_USER=postgres
-  mysql:
-    image: mysql:5.6.27
-    environment:
-      - MYSQL_DATABASE=test
-      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+steps:
+- name: server
+  image: plugins/manifest:1
+  settings:
+    ignore_missing: true
+    password:
+      from_secret: docker_password
+    spec: docker/manifest.server.tmpl
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
+
+- name: agent
+  image: plugins/manifest:1
+  settings:
+    ignore_missing: true
+    password:
+      from_secret: docker_password
+    spec: docker/manifest.agent.tmpl
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
+
+- name: controller
+  image: plugins/manifest:1
+  settings:
+    ignore_missing: true
+    password:
+      from_secret: docker_password
+    spec: docker/manifest.controller.tmpl
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
+
+depends_on:
+- linux-amd64
+- linux-arm
+- linux-arm64
+
+...

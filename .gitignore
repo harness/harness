@@ -1,10 +1,8 @@
-drone/drone
+.vscode
 *.sqlite
 *.txt
 *.out
+*.key
 .env
-extras/
+.env.*
 release/
-
-server/swagger/files/*.json
-.idea/

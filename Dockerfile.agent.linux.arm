@@ -1,9 +1,0 @@
-FROM drone/ca-certs
-ENV GODEBUG=netdns=go
-ENV DRONE_PLATFORM=linux/arm
-ADD release/linux/arm/drone-agent /bin/
-
-EXPOSE 3000
-HEALTHCHECK CMD ["/bin/drone-agent", "ping"]
-
-ENTRYPOINT ["/bin/drone-agent"]

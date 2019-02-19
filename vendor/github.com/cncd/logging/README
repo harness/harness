@@ -1,6 +1,0 @@
-Go package provides a common interface for storing and streaming logs.
-
-Documentation:
-
-    http://godoc.org/github.com/cncd/logging
-    http://godoc.org/github.com/cncd/logging/gcp

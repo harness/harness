@@ -1,0 +1,41 @@
+{
+  "Ref": "refs/tags/v0.0.1",
+  "Repo": {
+    "ID": "13933572",
+    "Namespace": "bradrydzewski",
+    "Name": "drone-test-go",
+    "Perm": null,
+    "Branch": "master",
+    "Private": true,
+    "Clone": "https://github.com/bradrydzewski/drone-test-go.git",
+    "CloneSSH": "git@github.com:bradrydzewski/drone-test-go.git",
+    "Link": "https://github.com/bradrydzewski/drone-test-go",
+    "Created": "0001-01-01T00:00:00Z",
+    "Updated": "0001-01-01T00:00:00Z"
+  },
+  "Commit": {
+    "Sha": "d2b75aa7797ec26b088fa2dd527e9d2c052fcedd",
+    "Message": "Update .drone.yml",
+    "Author": {
+      "Name": "Brad Rydzewski",
+      "Email": "brad.rydzewski@gmail.com",
+      "Date": "0001-01-01T00:00:00Z",
+      "Login": "bradrydzewski",
+      "Avatar": ""
+    },
+    "Committer": {
+      "Name": "GitHub",
+      "Email": "noreply@github.com",
+      "Date": "0001-01-01T00:00:00Z",
+      "Login": "web-flow",
+      "Avatar": ""
+    },
+    "Link": "https://github.com/bradrydzewski/drone-test-go/compare/v0.0.1"
+  },
+  "Sender": {
+    "Login": "bradrydzewski",
+    "Name": "",
+    "Email": "",
+    "Avatar": "https://avatars1.githubusercontent.com/u/817538?v=4"
+  }
+}

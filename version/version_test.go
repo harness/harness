@@ -1,0 +1,13 @@
+// Copyright 2019 Drone.IO Inc. All rights reserved.
+// Use of this source code is governed by the Drone Non-Commercial License
+// that can be found in the LICENSE file.
+
+package version
+
+import "testing"
+
+func TestVersion(t *testing.T) {
+	if got, want := Version.String(), "1.0.0-rc.5"; got != want {
+		t.Errorf("Want version %s, got %s", want, got)
+	}
+}

@@ -1,0 +1,152 @@
+# https://taskfile.org
+
+version: '2'
+
+tasks:
+  install:
+    cmds:
+    - task: install-server
+    - task: install-agent
+    - task: install-controller
+  
+  install-server:
+    dir: cmd/drone-server
+    cmds: [ go install -v ]
+    env:
+      GO111MODULE: on
+
+  install-agent:
+    dir: cmd/drone-agent
+    cmds: [ go install ]
+    env:
+      GO111MODULE: 'on'
+
+  install-controller:
+    dir: cmd/drone-controller
+    cmds: [ go install ]
+    env:
+      GO111MODULE: on
+
+  build:
+    cmds:
+    - task: build-agent
+    - task: build-server
+    - task: build-controller
+
+  build-agent:
+    cmds:
+    - task: build-base
+      vars: { name: agent }
+
+  build-controller:
+    cmds:
+    - task: build-base
+      vars: { name: controller }
+
+  build-server:
+    cmds:
+    - task: build-base
+      vars: { name: server }
+
+  build-base:
+    env:
+      GOOS: linux
+      GOARCH: amd64
+      CGO_ENABLED: '0'
+      GO111MODULE: 'on'
+    cmds:
+    - cmd: >
+        go build -o release/linux/amd64/drone-{{.name}}
+        github.com/drone/drone/cmd/drone-{{.name}}
+
+  cleanup:
+    cmds:
+    - rm -rf release
+
+  docker:
+    cmds:
+    - task: docker-controller
+    - task: docker-agent
+    - task: docker-server
+
+  docker-agent:
+    cmds:
+    - task: docker-base
+      vars: { name: agent, image: drone/agent }
+
+  docker-controller:
+    cmds:
+    - task: docker-base
+      vars: { name: controller, image: drone/controller }
+
+  docker-server:
+    cmds:
+    - task: docker-base
+      vars: { name: server, image: drone/drone }
+
+  docker-base:
+    vars:
+      GIT_BRANCH:
+        sh: git rev-parse --abbrev-ref HEAD
+    cmds:
+    - cmd: docker rmi {{.image}}
+      ignore_error: true
+    - cmd: docker rmi {{.image}}:{{.GIT_BRANCH}}
+      ignore_error: true
+    - cmd: >
+        docker build --rm
+        -f docker/Dockerfile.{{.name}}.linux.amd64
+        -t {{.image}} .
+    - cmd: >
+        docker tag {{.image}} {{.image}}:{{.GIT_BRANCH}}
+
+  test:
+    cmds:
+    - go test ./...
+    env:
+      GO111MODULE: 'on'
+
+  test-mysql:
+    env:
+      DRONE_DATABASE_DRIVER: mysql
+      DRONE_DATABASE_DATASOURCE: root@tcp(localhost:3306)/test?parseTime=true
+      GO111MODULE: 'on'
+    cmds:
+      - cmd: docker kill mysql
+        silent: true
+        ignore_error: true
+      - cmd: >               
+          docker run
+          -p 3306:3306
+          --env MYSQL_DATABASE=test
+          --env MYSQL_ALLOW_EMPTY_PASSWORD=yes
+          --name mysql
+          --detach
+          --rm
+          mysql:8
+          --character-set-server=utf8mb4
+          --collation-server=utf8mb4_unicode_ci
+      - cmd: go test -count=1 github.com/drone/drone/store/...
+      - cmd: docker kill mysql
+
+  test-postgres:
+    env:
+      DRONE_DATABASE_DRIVER: postgres
+      DRONE_DATABASE_DATASOURCE: host=localhost user=postgres dbname=postgres sslmode=disable
+      GO111MODULE: 'on'
+    cmds:
+      - cmd: docker kill postgres
+        ignore_error: true
+        silent: true
+      - silent: true
+        cmd: >
+          docker run
+          -p 5432:5432
+          --env POSTGRES_USER=postgres
+          --name postgres
+          --detach
+          --rm
+          postgres:9-alpine
+      - cmd: go test -count=1 github.com/drone/drone/store/...
+      - cmd: docker kill postgres
+        silent: true

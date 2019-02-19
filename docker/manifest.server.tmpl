@@ -1,0 +1,25 @@
+image: drone/drone:{{#if build.tag}}{{trimPrefix build.tag "v"}}{{else}}latest{{/if}}
+{{#if build.tags}}
+tags:
+{{#each build.tags}}
+  - {{this}}
+{{/each}}
+{{/if}}
+manifests:
+  -
+    image: drone/drone:{{#if build.tag}}{{trimPrefix build.tag "v"}}-{{/if}}linux-amd64
+    platform:
+      architecture: amd64
+      os: linux
+  -
+    image: drone/drone:{{#if build.tag}}{{trimPrefix build.tag "v"}}-{{/if}}linux-arm64
+    platform:
+      architecture: arm64
+      os: linux
+      variant: v8
+  -
+    image: drone/drone:{{#if build.tag}}{{trimPrefix build.tag "v"}}-{{/if}}linux-arm
+    platform:
+      architecture: arm
+      os: linux
+      variant: v7
