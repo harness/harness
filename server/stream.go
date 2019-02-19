@@ -54,12 +54,13 @@ func EventStreamSSE(c *gin.Context) {
 	io.WriteString(rw, ": ping\n\n")
 	flusher.Flush()
 
-	logrus.Debugf("user feed: connection opened")
-
 	user := session.User(c)
 	repo := map[string]bool{}
 	if user != nil {
-		repos, _ := store.FromContext(c).RepoList(user)
+		repos, err := store.FromContext(c).RepoList(user)
+		if err != nil {
+			logrus.Debugf("user feed: error raised by the meddler: %+v", err)
+		}
 		for _, r := range repos {
 			repo[r.FullName] = true
 		}
@@ -70,7 +71,18 @@ func EventStreamSSE(c *gin.Context) {
 		context.Background(),
 	)
 
+	logrus.Debugf("user feed: connection opened")
+
+	// Initialise the timer and ticker outside of the select statement to prevent memory leaks
+	// https://golang.org/pkg/time/#Tick
+	const trd = time.Hour
+	const tkd = time.Second * 30
+	tr := time.NewTimer(trd)
+	tk := time.NewTicker(tkd)
+
 	defer func() {
+		tr.Stop()
+		tk.Stop()
 		cancel()
 		close(eventc)
 		logrus.Debugf("user feed: connection closed")
@@ -84,16 +96,15 @@ func EventStreamSSE(c *gin.Context) {
 			}()
 			name := m.Labels["repo"]
 			priv := m.Labels["private"]
-			if repo[name] || priv == "false" {
-				select {
-				case <-ctx.Done():
-					return
-				default:
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				if repo[name] || priv == "false" {
 					eventc <- m.Data
 				}
 			}
 		})
-		cancel()
 	}()
 
 	for {
@@ -102,11 +113,29 @@ func EventStreamSSE(c *gin.Context) {
 			return
 		case <-ctx.Done():
 			return
-		case <-time.After(time.Second * 30):
+		case <-c.Request.Context().Done():
+			logrus.Debugf("user feed: Client gave up")
+			return
+		case <-tr.C:
+			logrus.Debugf("user feed: Idle timeout triggered")
+			return
+		case <-tk.C:
+			logrus.Debugf("user feed: Pinging")
 			io.WriteString(rw, ": ping\n\n")
 			flusher.Flush()
+			// reset the ping timer
+			tk.Stop()
+			tk = time.NewTicker(tkd)
 		case buf, ok := <-eventc:
 			if ok {
+				// If the stream is active, reset the timers
+				if !tr.Stop() {
+					<-tr.C
+				}
+				tk.Stop()
+				tr = time.NewTimer(trd)
+				tk = time.NewTicker(tkd)
+
 				io.WriteString(rw, "data: ")
 				rw.Write(buf)
 				io.WriteString(rw, "\n\n")
@@ -133,26 +162,6 @@ func LogStreamSSE(c *gin.Context) {
 	io.WriteString(rw, ": ping\n\n")
 	flusher.Flush()
 
-	// repo := session.Repo(c)
-	//
-	// // parse the build number and job sequence number from
-	// // the repquest parameter.
-	// num, _ := strconv.Atoi(c.Params.ByName("number"))
-	// ppid, _ := strconv.Atoi(c.Params.ByName("ppid"))
-	// name := c.Params.ByName("proc")
-	//
-	// build, err := store.GetBuildNumber(c, repo, num)
-	// if err != nil {
-	// 	c.AbortWithError(404, err)
-	// 	return
-	// }
-	//
-	// proc, err := store.FromContext(c).ProcChild(build, ppid, name)
-	// if err != nil {
-	// 	c.AbortWithError(404, err)
-	// 	return
-	// }
-
 	repo := session.Repo(c)
 	buildn, _ := strconv.Atoi(c.Param("build"))
 	jobn, _ := strconv.Atoi(c.Param("number"))
@@ -163,12 +172,14 @@ func LogStreamSSE(c *gin.Context) {
 		io.WriteString(rw, "event: error\ndata: build not found\n\n")
 		return
 	}
+
 	proc, err := store.FromContext(c).ProcFind(build, jobn)
 	if err != nil {
 		logrus.Debugln("stream cannot get proc number.", err)
 		io.WriteString(rw, "event: error\ndata: process not found\n\n")
 		return
 	}
+
 	if proc.State != model.StatusRunning {
 		logrus.Debugln("stream not found.")
 		io.WriteString(rw, "event: error\ndata: stream not found\n\n")
@@ -182,7 +193,16 @@ func LogStreamSSE(c *gin.Context) {
 
 	logrus.Debugf("log stream: connection opened")
 
+	// Initialise the timer and ticker outside of the select statement to prevent memory leaks
+	// https://golang.org/pkg/time/#Tick
+	const trd = time.Hour
+	const tkd = time.Second * 30
+	tr := time.NewTimer(trd)
+	tk := time.NewTicker(tkd)
+
 	defer func() {
+		tr.Stop()
+		tk.Stop()
 		cancel()
 		close(logc)
 		logrus.Debugf("log stream: connection closed")
@@ -194,19 +214,17 @@ func LogStreamSSE(c *gin.Context) {
 			defer func() {
 				recover() // fix #2480
 			}()
-			for _, entry := range entries {
-				select {
-				case <-ctx.Done():
-					return
-				default:
+
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				for _, entry := range entries {
 					logc <- entry.Data
 				}
 			}
 		})
-
 		io.WriteString(rw, "event: error\ndata: eof\n\n")
-
-		cancel()
 	}()
 
 	id := 1
@@ -217,25 +235,36 @@ func LogStreamSSE(c *gin.Context) {
 		logrus.Debugf("log stream: reconnect: last-event-id: %d", last)
 	}
 
-	// retry: 10000\n
-
 	for {
 		select {
-		// after 1 hour of idle (no response) end the stream.
-		// this is more of a safety mechanism than anything,
-		// and can be removed once the code is more mature.
-		case <-time.After(time.Hour):
-			return
 		case <-rw.CloseNotify():
 			return
 		case <-ctx.Done():
 			return
-		case <-time.After(time.Second * 30):
+		case <-c.Request.Context().Done():
+			logrus.Debugf("user feed: Client gave up")
+			return
+		case <-tr.C:
+			logrus.Debugf("user feed: Idle timeout triggered")
+			return
+		case <-tk.C:
+			logrus.Debugf("user feed: Pinging")
 			io.WriteString(rw, ": ping\n\n")
 			flusher.Flush()
+			// reset the ping timer
+			tk.Stop()
+			tk = time.NewTicker(tkd)
 		case buf, ok := <-logc:
 			if ok {
 				if id > last {
+					// If the stream is active, reset the timers
+					if !tr.Stop() {
+						<-tr.C
+					}
+					tk.Stop()
+					tr = time.NewTimer(trd)
+					tk = time.NewTicker(tkd)
+
 					io.WriteString(rw, "id: "+strconv.Itoa(id))
 					io.WriteString(rw, "\n")
 					io.WriteString(rw, "data: ")
