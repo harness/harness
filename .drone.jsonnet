@@ -27,7 +27,7 @@ local docker(name, image, os, arch) = {
     name: "publish_" + name,
     image: "plugins/docker",
     settings: {
-        repo: "drone/" + image,
+        repo: "drone/" + if name == "server" then "drone" else name,
         auto_tag: true,
         auto_tag_suffix: os + "-" + arch,
         username: { from_secret: "docker_username" },
