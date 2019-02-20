@@ -18,9 +18,9 @@ steps:
 - name: build
   image: golang:1.11
   commands:
-  - go build -o release/linux/amd64/drone-server
-  - go build -o release/linux/amd64/drone-agent
-  - go build -o release/linux/amd64/drone-controller
+  - "go build -ldflags \"-extldflags \\\\\"-static\\\\\"\" -o release/linux/amd64/drone-server github.com/drone/drone/cmd/drone-server"
+  - CGO_ENABLED=0 go build -o release/linux/amd64/drone-agent github.com/drone/drone/cmd/drone-agent
+  - CGO_ENABLED=0 go build -o release/linux/amd64/drone-controller github.com/drone/drone/cmd/drone-controller
   volumes:
   - name: gopath
     path: /go
@@ -101,9 +101,9 @@ steps:
 - name: build
   image: golang:1.11
   commands:
-  - go build -o release/linux/arm/drone-server
-  - go build -o release/linux/arm/drone-agent
-  - go build -o release/linux/arm/drone-controller
+  - "go build -ldflags \"-extldflags \\\\\"-static\\\\\"\" -o release/linux/arm/drone-server github.com/drone/drone/cmd/drone-server"
+  - CGO_ENABLED=0 go build -o release/linux/arm/drone-agent github.com/drone/drone/cmd/drone-agent
+  - CGO_ENABLED=0 go build -o release/linux/arm/drone-controller github.com/drone/drone/cmd/drone-controller
   volumes:
   - name: gopath
     path: /go
@@ -184,9 +184,9 @@ steps:
 - name: build
   image: golang:1.11
   commands:
-  - go build -o release/linux/arm64/drone-server
-  - go build -o release/linux/arm64/drone-agent
-  - go build -o release/linux/arm64/drone-controller
+  - "go build -ldflags \"-extldflags \\\\\"-static\\\\\"\" -o release/linux/arm64/drone-server github.com/drone/drone/cmd/drone-server"
+  - CGO_ENABLED=0 go build -o release/linux/arm64/drone-agent github.com/drone/drone/cmd/drone-agent
+  - CGO_ENABLED=0 go build -o release/linux/arm64/drone-controller github.com/drone/drone/cmd/drone-controller
   volumes:
   - name: gopath
     path: /go

@@ -77,9 +77,9 @@ local pipeline(name, os, arch) = {
             image: golang,
             volumes: mounts,
             commands: [
-                "go build -o release/"+ os +"/" + arch + "/drone-server",
-                "go build -o release/"+ os +"/" + arch + "/drone-agent",
-                "go build -o release/"+ os +"/" + arch + "/drone-controller",
+                "go build -ldflags \"-extldflags \\\\\"-static\\\\\"\" -o release/"+ os +"/" + arch + "/drone-server github.com/drone/drone/cmd/drone-server",
+                "CGO_ENABLED=0 go build -o release/"+ os +"/" + arch + "/drone-agent github.com/drone/drone/cmd/drone-agent",
+                "CGO_ENABLED=0 go build -o release/"+ os +"/" + arch + "/drone-controller github.com/drone/drone/cmd/drone-controller",
             ],
             when: {
                 event: [ "push", "tag" ],
