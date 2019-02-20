@@ -22,6 +22,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/go-scm/scm"
@@ -317,7 +318,50 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 			SSHURL:    v.Repo.CloneSSH,
 		}
 		return hook, repo, nil
+	case *scm.DeployHook:
+		hook = &core.Hook{
+			Trigger:      core.TriggerHook,
+			Event:        core.EventPromote,
+			Link:         v.TargetURL,
+			Timestamp:    time.Now().Unix(),
+			Message:      v.Desc,
+			After:        v.Ref.Sha,
+			Ref:          v.Ref.Path,
+			Source:       v.Ref.Name,
+			Target:       v.Ref.Name,
+			Author:       v.Sender.Login,
+			AuthorName:   v.Sender.Name,
+			AuthorEmail:  v.Sender.Email,
+			AuthorAvatar: v.Sender.Avatar,
+			Sender:       v.Sender.Login,
+			Deployment:   v.Target,
+			Params:       toMap(v.Data),
+		}
+		repo = &core.Repository{
+			UID:       v.Repo.ID,
+			Namespace: v.Repo.Namespace,
+			Name:      v.Repo.Name,
+			Slug:      scm.Join(v.Repo.Namespace, v.Repo.Name),
+			Link:      v.Repo.Link,
+			Branch:    v.Repo.Branch,
+			Private:   v.Repo.Private,
+			HTTPURL:   v.Repo.Clone,
+			SSHURL:    v.Repo.CloneSSH,
+		}
+		return hook, repo, nil
 	default:
 		return nil, nil, nil
 	}
+}
+
+func toMap(src interface{}) map[string]string {
+	set, ok := src.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	dst := map[string]string{}
+	for k, v := range set {
+		dst[k] = fmt.Sprint(v)
+	}
+	return nil
 }
