@@ -17,6 +17,7 @@ package contents
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/go-scm/scm"
@@ -60,7 +61,7 @@ func (s *service) Find(ctx context.Context, user *core.User, repo, commit, ref, 
 		Token:   user.Token,
 		Refresh: user.Refresh,
 	})
-	content, _, err := s.client.Contents.Find(ctx, repo, path, commit)
+	content, err := s.findRetry(ctx, repo, path, commit)
 	if err != nil {
 		return nil, err
 	}
@@ -68,4 +69,22 @@ func (s *service) Find(ctx context.Context, user *core.User, repo, commit, ref, 
 		Data: content.Data,
 		Hash: []byte{},
 	}, nil
+}
+
+// helper function attempts to get the yaml configuration file
+// with backoff on failure. This may be required due to eventual
+// consistency issues with the github datastore.
+func (s *service) findRetry(ctx context.Context, repo, path, commit string) (content *scm.Content, err error) {
+	for i := 0; i < 3; i++ {
+		content, _, err = s.client.Contents.Find(ctx, repo, path, commit)
+		// if no error is returned we can exit immediately.
+		if err == nil {
+			return
+		}
+		// wait a few seconds before retry. according to github
+		// support 30 seconds total should be enough time. we
+		// try 3 x 15 seconds, giving a total of 45 seconds.
+		time.Sleep(time.Second * 15)
+	}
+	return
 }

@@ -12,23 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repos
+// +build oss
+
+package token
 
 import (
-	"net/http"
+	"context"
 
-	"github.com/drone/drone/handler/api/render"
-	"github.com/drone/drone/handler/api/request"
+	"github.com/drone/drone/core"
+
+	"github.com/drone/go-scm/scm/transport/oauth2"
 )
 
-// HandleFind returns an http.HandlerFunc that writes the
-// json-encoded repository details to the response body.
-func HandleFind() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		repo, _ := request.RepoFrom(ctx)
-		perm, _ := request.PermFrom(ctx)
-		repo.Perms = perm
-		render.JSON(w, repo, 200)
-	}
+type renewer struct {
+}
+
+// Renewer returns a new Renewer.
+func Renewer(refresh *oauth2.Refresher, store core.UserStore) core.Renewer {
+	return &renewer{}
+}
+
+func (r *renewer) Renew(ctx context.Context, user *core.User, force bool) error {
+	return nil // no-op
 }

@@ -23,11 +23,11 @@ local mounts = [
 
 # defines a pipeline step that builds and publishes
 # a docker image to a docker remote registry.
-local docker(name, os, arch) = {
+local docker(name, image, os, arch) = {
     name: "publish_" + name,
     image: "plugins/docker",
     settings: {
-        repo: "drone/" + name,
+        repo: "drone/" + image,
         auto_tag: true,
         auto_tag_suffix: os + "-" + arch,
         username: { from_secret: "docker_username" },
@@ -45,6 +45,7 @@ local manifest(name) = {
     name: name,
     image: "plugins/manifest:1",
     settings: {
+        auto_tag: true,
         ignore_missing: true,
         spec: "docker/manifest." + name + ".tmpl",
         username: { from_secret: "docker_username" },
@@ -85,9 +86,9 @@ local pipeline(name, os, arch) = {
                 event: [ "push", "tag" ],
             },
         },
-        docker("agent", os, arch),
-        docker("controller", os, arch),
-        docker("server", os, arch),
+        docker("agent", "agent", os, arch),
+        docker("controller", "controller", os, arch),
+        docker("server", "drone", os, arch),
     ],
 };
 
@@ -99,7 +100,7 @@ local pipeline(name, os, arch) = {
         kind: "pipeline",
         name: "manifest",
         steps: [
-            manifest("server"),
+            manifest("drone"),
             manifest("agent"),
             manifest("controller"),
         ],

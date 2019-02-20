@@ -69,7 +69,7 @@ steps:
     dockerfile: docker/Dockerfile.server.linux.amd64
     password:
       from_secret: docker_password
-    repo: drone/server
+    repo: drone/drone
     username:
       from_secret: docker_username
   when:
@@ -152,7 +152,7 @@ steps:
     dockerfile: docker/Dockerfile.server.linux.arm
     password:
       from_secret: docker_password
-    repo: drone/server
+    repo: drone/drone
     username:
       from_secret: docker_username
   when:
@@ -235,7 +235,7 @@ steps:
     dockerfile: docker/Dockerfile.server.linux.arm64
     password:
       from_secret: docker_password
-    repo: drone/server
+    repo: drone/drone
     username:
       from_secret: docker_username
   when:
@@ -256,13 +256,14 @@ platform:
   arch: amd64
 
 steps:
-- name: server
+- name: drone
   image: plugins/manifest:1
   settings:
+    auto_tag: true
     ignore_missing: true
     password:
       from_secret: docker_password
-    spec: docker/manifest.server.tmpl
+    spec: docker/manifest.drone.tmpl
     username:
       from_secret: docker_username
   when:
@@ -273,6 +274,7 @@ steps:
 - name: agent
   image: plugins/manifest:1
   settings:
+    auto_tag: true
     ignore_missing: true
     password:
       from_secret: docker_password
@@ -287,6 +289,7 @@ steps:
 - name: controller
   image: plugins/manifest:1
   settings:
+    auto_tag: true
     ignore_missing: true
     password:
       from_secret: docker_password

@@ -1,0 +1,110 @@
+def main():
+  return [
+      pipeline('linux-amd64', 'linux', 'amd64'),
+      pipeline('linux-arm64', 'linux', 'arm64'),
+      pipeline('linux-arm', 'linux', 'arm'),
+      manifest(),
+  ]
+
+# defines a pipeline step that builds and publishes a docker
+# image to a docker remote registry.
+def docker_step(name, os, arch):
+    repo = 'drone/%s' % name
+    if repo == 'server':
+      repo = 'drone/drone'
+    return {
+        'name': 'publish_%s' % name,
+        'image': 'plugins/docker',
+        'settings': {
+            'repo': repo,
+            'auto_tag': True,
+            'auto_tag_suffix': '%s-%s' % (os, arch),
+            'username': 'drone',
+            'password': { 'from_secret': 'docker_password' },
+            'dockerfile': 'docker/Dockerfile.%s.%s.%s' % (name, os, arch),
+        },
+        'when': {
+            'event': [ 'push', 'tag' ],
+        },
+    }
+
+
+# defines a pipeline step that creates and publishes
+# a docker manifest to a docker remote registry.
+def manifest_step(name):
+    return {
+        'name': 'publish_%s' % name,
+        'image': 'plugins/manifest:1',
+        'settings': {
+            'auto_tag': True,
+            'ignore_missing': True,
+            'spec': 'docker/manifest.%s.tmpl' % name,
+            'username': 'drone',
+            'password': { 'from_secret': 'docker_password' },
+        },
+        'when': {
+            'event': [ 'push', 'tag' ],
+        },
+    }
+
+# defines a pipeline step that executes the Go unit tests.
+# this will also download dependencies and cache in /go
+def test_step():
+    return {
+        'name': 'test',
+        'image': 'golang:1.11',
+        'commands': [
+            'go test ./...',
+        ],
+    }
+
+# defines a pipeline step that executes the Go unit tests.
+# this will also download dependencies and cache in /go
+def build_step(os, arch):
+  return {
+    'name': 'build',
+    'image': 'golang:1.11',
+    'commands': [
+        'go build -ldflags \"-extldflags \\\\\"-static\\\\\"\" -o release/%s/%s/drone-server github.com/drone/drone/cmd/drone-server' % (os, arch),
+        'CGO_ENABLED=0 go build -o release/%s/%s/drone-agent github.com/drone/drone/cmd/drone-agent' % (os, arch),
+        'CGO_ENABLED=0 go build -o release/%s/%s/drone-controller github.com/drone/drone/cmd/drone-controller' % (os, arch),
+    ]
+  }
+
+# defines a pipeline that builds, tests and publishes
+# docker images for the Drone agent, server and controller.
+def pipeline(name, os, arch):
+    return {
+        'kind': 'pipeline',
+        'name': 'default',
+        'platform': {
+            'os': os,
+            'arch': arch,
+        },
+        'steps': [
+            test_step(),
+            build_step(os, arch),
+            docker_step('drone', os, arch),
+            docker_step('agent', os, arch),
+            docker_step('controller', os, arch),
+        ],
+    }
+
+# defines a pipeline that updates the docker manifest
+# for the architecture-specific images previously published
+# to dockerhub.
+def manifest():
+    return {
+        'kind': 'pipeline',
+        'name': 'manifest',
+        'steps': [
+            manifest_step('server'),
+            manifest_step('agent'),
+            manifest_step('controller'),
+        ],
+        'depends_on': [
+            'linux-amd64',
+            'linux-arm64',
+            'linux-arm',
+        ],
+    }
