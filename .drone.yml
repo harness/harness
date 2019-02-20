@@ -69,7 +69,7 @@ steps:
     dockerfile: docker/Dockerfile.server.linux.amd64
     password:
       from_secret: docker_password
-    repo: drone/server
+    repo: drone/drone
     username:
       from_secret: docker_username
   when:
@@ -152,7 +152,7 @@ steps:
     dockerfile: docker/Dockerfile.server.linux.arm
     password:
       from_secret: docker_password
-    repo: drone/server
+    repo: drone/drone
     username:
       from_secret: docker_username
   when:
@@ -235,7 +235,7 @@ steps:
     dockerfile: docker/Dockerfile.server.linux.arm64
     password:
       from_secret: docker_password
-    repo: drone/server
+    repo: drone/drone
     username:
       from_secret: docker_username
   when:
