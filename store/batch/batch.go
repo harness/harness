@@ -188,6 +188,8 @@ const stmtInsertBase = `
 ,repo_timeout
 ,repo_trusted
 ,repo_protected
+,repo_no_forks
+,repo_no_pulls
 ,repo_synced
 ,repo_created
 ,repo_updated
@@ -213,6 +215,8 @@ const stmtInsertBase = `
 ,:repo_timeout
 ,:repo_trusted
 ,:repo_protected
+,:repo_no_forks
+,:repo_no_pulls
 ,:repo_synced
 ,:repo_created
 ,:repo_updated

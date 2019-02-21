@@ -17,6 +17,14 @@ var migrations = []struct {
 		stmt: createTableRepos,
 	},
 	{
+		name: "alter-table-repos-add-column-no-fork",
+		stmt: alterTableReposAddColumnNoFork,
+	},
+	{
+		name: "alter-table-repos-add-column-no-pulls",
+		stmt: alterTableReposAddColumnNoPulls,
+	},
+	{
 		name: "create-table-perms",
 		stmt: createTablePerms,
 	},
@@ -240,6 +248,14 @@ CREATE TABLE IF NOT EXISTS repos (
 ,UNIQUE(repo_slug)
 ,UNIQUE(repo_uid)
 );
+`
+
+var alterTableReposAddColumnNoFork = `
+ALTER TABLE repos ADD COLUMN repo_no_forks BOOLEAN NOT NULL DEFAULT false;
+`
+
+var alterTableReposAddColumnNoPulls = `
+ALTER TABLE repos ADD COLUMN repo_no_pulls BOOLEAN NOT NULL DEFAULT false;
 `
 
 //

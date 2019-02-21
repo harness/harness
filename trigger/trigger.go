@@ -7,6 +7,7 @@ package trigger
 import (
 	"context"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/drone/drone-yaml/yaml"
@@ -75,6 +76,14 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 
 	if skipMessage(base) {
 		logger.Infoln("trigger: skipping hook. found skip directive")
+		return nil, nil
+	}
+	if repo.IgnorePulls && base.Event == core.EventPullRequest {
+		logger.Infoln("trigger: skipping hook. project ignores pull requests")
+		return nil, nil
+	}
+	if repo.IgnoreForks && !strings.EqualFold(base.Fork, repo.Slug) {
+		logger.Infoln("trigger: skipping hook. project ignores forks")
 		return nil, nil
 	}
 

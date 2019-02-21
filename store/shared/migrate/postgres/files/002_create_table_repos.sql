@@ -29,3 +29,11 @@ CREATE TABLE IF NOT EXISTS repos (
 ,UNIQUE(repo_slug)
 ,UNIQUE(repo_uid)
 );
+
+-- name: alter-table-repos-add-column-no-fork
+
+ALTER TABLE repos ADD COLUMN repo_no_forks BOOLEAN NOT NULL DEFAULT false;
+
+-- name: alter-table-repos-add-column-no-pulls
+
+ALTER TABLE repos ADD COLUMN repo_no_pulls BOOLEAN NOT NULL DEFAULT false;

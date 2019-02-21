@@ -28,12 +28,14 @@ import (
 
 type (
 	repositoryInput struct {
-		Visibility *string `json:"visibility"`
-		Config     *string `json:"config_path"`
-		Trusted    *bool   `json:"trusted"`
-		Protected  *bool   `json:"protected"`
-		Timeout    *int64  `json:"timeout"`
-		Counter    *int64  `json:"counter"`
+		Visibility  *string `json:"visibility"`
+		Config      *string `json:"config_path"`
+		Trusted     *bool   `json:"trusted"`
+		Protected   *bool   `json:"protected"`
+		IgnoreForks *bool   `json:"ignore_forks"`
+		IgnorePulls *bool   `json:"ignore_pull_requests"`
+		Timeout     *int64  `json:"timeout"`
+		Counter     *int64  `json:"counter"`
 	}
 )
 
@@ -77,6 +79,12 @@ func HandleUpdate(repos core.RepositoryStore) http.HandlerFunc {
 		}
 		if in.Protected != nil {
 			repo.Protected = *in.Protected
+		}
+		if in.IgnoreForks != nil {
+			repo.IgnoreForks = *in.IgnoreForks
+		}
+		if in.IgnorePulls != nil {
+			repo.IgnorePulls = *in.IgnorePulls
 		}
 
 		//

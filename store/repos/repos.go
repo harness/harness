@@ -261,6 +261,8 @@ SELECT
 ,repo_timeout
 ,repo_trusted
 ,repo_protected
+,repo_no_forks
+,repo_no_pulls
 ,repo_synced
 ,repo_created
 ,repo_updated
@@ -344,6 +346,8 @@ INSERT INTO repos (
 ,repo_timeout
 ,repo_trusted
 ,repo_protected
+,repo_no_forks
+,repo_no_pulls
 ,repo_synced
 ,repo_created
 ,repo_updated
@@ -369,6 +373,8 @@ INSERT INTO repos (
 ,:repo_timeout
 ,:repo_trusted
 ,:repo_protected
+,:repo_no_forks
+,:repo_no_pulls
 ,:repo_synced
 ,:repo_created
 ,:repo_updated
@@ -412,6 +418,8 @@ UPDATE repos SET
 ,repo_config = :repo_config
 ,repo_trusted = :repo_trusted
 ,repo_protected = :repo_protected
+,repo_no_forks = :repo_no_forks
+,repo_no_pulls = :repo_no_pulls
 ,repo_timeout = :repo_timeout
 ,repo_counter = :repo_counter
 ,repo_synced = :repo_synced
