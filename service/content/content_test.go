@@ -8,9 +8,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/drone/drone/core"
 	"github.com/drone/drone/mock"
 	"github.com/drone/drone/mock/mockscm"
-	"github.com/drone/drone/core"
 	"github.com/drone/go-scm/scm"
 	"github.com/google/go-cmp/cmp"
 
@@ -68,8 +68,10 @@ func TestFind_Error(t *testing.T) {
 	client := new(scm.Client)
 	client.Contents = mockContents
 
-	service := New(client, mockRenewer)
-	_, err := service.Find(noContext, mockUser, "octocat/hello-world", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", "master", ".core.yml")
+	s := New(client, mockRenewer)
+	s.(*service).attempts = 1
+	s.(*service).wait = 0
+	_, err := s.Find(noContext, mockUser, "octocat/hello-world", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", "master", ".core.yml")
 	if err != scm.ErrNotFound {
 		t.Errorf("Expect not found error, got %s", err)
 	}

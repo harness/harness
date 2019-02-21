@@ -23,17 +23,27 @@ import (
 	"github.com/drone/go-scm/scm"
 )
 
+// default number of backoff attempts.
+var attempts = 3
+
+// default time to wait after failed attempt.
+var wait = time.Second * 15
+
 // New returns a new FileService.
 func New(client *scm.Client, renewer core.Renewer) core.FileService {
 	return &service{
-		client:  client,
-		renewer: renewer,
+		client:   client,
+		renewer:  renewer,
+		attempts: attempts,
+		wait:     wait,
 	}
 }
 
 type service struct {
-	renewer core.Renewer
-	client  *scm.Client
+	renewer  core.Renewer
+	client   *scm.Client
+	attempts int
+	wait     time.Duration
 }
 
 func (s *service) Find(ctx context.Context, user *core.User, repo, commit, ref, path string) (*core.File, error) {
@@ -75,7 +85,7 @@ func (s *service) Find(ctx context.Context, user *core.User, repo, commit, ref, 
 // with backoff on failure. This may be required due to eventual
 // consistency issues with the github datastore.
 func (s *service) findRetry(ctx context.Context, repo, path, commit string) (content *scm.Content, err error) {
-	for i := 0; i < 3; i++ {
+	for i := 0; i < s.attempts; i++ {
 		content, _, err = s.client.Contents.Find(ctx, repo, path, commit)
 		// if no error is returned we can exit immediately.
 		if err == nil {
@@ -84,7 +94,7 @@ func (s *service) findRetry(ctx context.Context, repo, path, commit string) (con
 		// wait a few seconds before retry. according to github
 		// support 30 seconds total should be enough time. we
 		// try 3 x 15 seconds, giving a total of 45 seconds.
-		time.Sleep(time.Second * 15)
+		time.Sleep(s.wait)
 	}
 	return
 }
