@@ -100,7 +100,7 @@ local pipeline(name, os, arch) = {
         kind: "pipeline",
         name: "manifest",
         steps: [
-            manifest("drone"),
+            manifest("server"),
             manifest("agent"),
             manifest("controller"),
         ],

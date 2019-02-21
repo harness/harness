@@ -256,14 +256,14 @@ platform:
   arch: amd64
 
 steps:
-- name: drone
+- name: server
   image: plugins/manifest:1
   settings:
     auto_tag: true
     ignore_missing: true
     password:
       from_secret: docker_password
-    spec: docker/manifest.drone.tmpl
+    spec: docker/manifest.server.tmpl
     username:
       from_secret: docker_username
   when:
