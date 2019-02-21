@@ -78,13 +78,15 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		logger.Infoln("trigger: skipping hook. found skip directive")
 		return nil, nil
 	}
-	if repo.IgnorePulls && base.Event == core.EventPullRequest {
-		logger.Infoln("trigger: skipping hook. project ignores pull requests")
-		return nil, nil
-	}
-	if repo.IgnoreForks && !strings.EqualFold(base.Fork, repo.Slug) {
-		logger.Infoln("trigger: skipping hook. project ignores forks")
-		return nil, nil
+	if base.Event == core.EventPullRequest {
+		if repo.IgnorePulls {
+			logger.Infoln("trigger: skipping hook. project ignores pull requests")
+			return nil, nil
+		}
+		if repo.IgnoreForks && !strings.EqualFold(base.Fork, repo.Slug) {
+			logger.Infoln("trigger: skipping hook. project ignores forks")
+			return nil, nil
+		}
 	}
 
 	user, err := t.users.Find(ctx, repo.UserID)
