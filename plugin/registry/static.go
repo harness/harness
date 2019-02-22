@@ -30,11 +30,11 @@ func (c *staticController) List(ctx context.Context, in *core.RegistryArgs) ([]*
 	var results []*core.Registry
 	for _, name := range in.Pipeline.PullSecrets {
 		logger := logger.FromContext(ctx).WithField("name", name)
-		logger.Trace("registry: image_pull_secret: find secret")
+		logger.Trace("registry: database: find secret")
 
 		secret, ok := static[name]
 		if !ok {
-			logger.Warn("registry: image_pull_secret: cannot find secret")
+			logger.Trace("registry: database: cannot find secret")
 			continue
 		}
 
@@ -43,14 +43,14 @@ func (c *staticController) List(ctx context.Context, in *core.RegistryArgs) ([]*
 		// empty results.
 		if secret.PullRequest == false &&
 			in.Build.Event == core.EventPullRequest {
-			logger.Trace("registry: image_pull_secret: pull_request access denied")
+			logger.Trace("registry: database: pull_request access denied")
 			continue
 		}
 
-		logger.Trace("registry: image_pull_secret: secret found")
+		logger.Trace("registry: database: secret found")
 		parsed, err := auths.ParseString(secret.Data)
 		if err != nil {
-			logger.WithError(err).Error("registry: image_pull_secret: parsing error")
+			logger.WithError(err).Error("registry: database: parsing error")
 			return nil, err
 		}
 

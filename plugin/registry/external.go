@@ -11,6 +11,7 @@ import (
 	"github.com/drone/drone-go/plugin/secret"
 	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/logger"
 	"github.com/drone/drone/plugin/registry/auths"
 
 	droneapi "github.com/drone/drone-go/drone"
@@ -18,7 +19,11 @@ import (
 
 // External returns a new external Secret controller.
 func External(endpoint, secret string, skipVerify bool) core.RegistryService {
-	return &externalController{}
+	return &externalController{
+		endpoint:   endpoint,
+		secret:     secret,
+		skipVerify: skipVerify,
+	}
 }
 
 type externalController struct {
@@ -30,15 +35,26 @@ type externalController struct {
 func (c *externalController) List(ctx context.Context, in *core.RegistryArgs) ([]*core.Registry, error) {
 	var results []*core.Registry
 
-	for _, name := range in.Pipeline.PullSecrets {
+	for _, match := range in.Pipeline.PullSecrets {
+		logger := logger.FromContext(ctx).
+			WithField("name", match).
+			WithField("kind", "secret").
+			WithField("secret", c.endpoint)
+		logger.Trace("image_pull_secrets: find secret")
+
 		// lookup the named secret in the manifest. If the
 		// secret does not exist, return a nil variable,
 		// allowing the next secret controller in the chain
 		// to be invoked.
-		path, name, ok := getExternal(in.Conf, name)
+		path, name, ok := getExternal(in.Conf, match)
 		if !ok {
+			logger.Trace("image_pull_secrets: no matching secret resource in yaml")
 			return nil, nil
 		}
+
+		logger = logger.
+			WithField("get.path", path).
+			WithField("get.name", name)
 
 		// include a timeout to prevent an API call from
 		// hanging the build process indefinitely. The
@@ -56,6 +72,7 @@ func (c *externalController) List(ctx context.Context, in *core.RegistryArgs) ([
 		client := secret.Client(c.endpoint, c.secret, c.skipVerify)
 		res, err := client.Find(ctx, req)
 		if err != nil {
+			logger.WithError(err).Trace("image_pull_secrets: cannot get secret")
 			return nil, err
 		}
 
@@ -71,6 +88,7 @@ func (c *externalController) List(ctx context.Context, in *core.RegistryArgs) ([
 		// empty results.
 		if (res.Pull == false && res.PullRequest == false) &&
 			in.Build.Event == core.EventPullRequest {
+			logger.WithError(err).Trace("image_pull_secrets: pull_request access denied")
 			return nil, nil
 		}
 
@@ -78,6 +96,8 @@ func (c *externalController) List(ctx context.Context, in *core.RegistryArgs) ([
 		if err != nil {
 			return nil, err
 		}
+
+		logger.Trace("image_pull_secrets: found secret")
 		results = append(results, parsed...)
 	}
 
