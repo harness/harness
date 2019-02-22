@@ -22,12 +22,14 @@ import (
 // s3gof3r as an alternate. github.com/rlmcpherson/s3gof3r
 
 // NewS3Env returns a new S3 log store.
-func NewS3Env(bucket, prefix string) core.LogStore {
+func NewS3Env(bucket, prefix, endpoint string) core.LogStore {
 	return &s3store{
 		bucket: bucket,
 		prefix: prefix,
 		session: session.Must(
-			session.NewSession(),
+			session.NewSession(&aws.Config{
+				Endpoint: aws.String(endpoint),
+			}),
 		),
 	}
 }
