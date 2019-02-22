@@ -12,13 +12,13 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/authcookie v0.0.0-20120917135355-fbdef6e99866
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
-	github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff
+	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/go-connections v0.3.0
 	github.com/docker/go-units v0.3.3
 	github.com/drone/drone-go v0.0.0-20190217024616-3e8b71333e59
-	github.com/drone/drone-runtime v0.0.0-20190123233515-16c002539b15
+	github.com/drone/drone-runtime v0.0.0-20190210191445-ad403a0ca24e
 	github.com/drone/drone-ui v0.0.0-20190212070020-c372640c766f
-	github.com/drone/drone-yaml v0.0.0-20190122234417-98eb77b4c58a
+	github.com/drone/drone-yaml v1.0.1-0.20190222030833-0e9ca9cdb963
 	github.com/drone/envsubst v1.0.1
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.3

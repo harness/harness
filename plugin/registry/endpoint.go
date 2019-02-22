@@ -9,6 +9,7 @@ import (
 
 	"github.com/drone/drone-go/plugin/registry"
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/logger"
 )
 
 // EndpointSource returns a registry credential provider
@@ -31,6 +32,9 @@ func (c *service) List(ctx context.Context, in *core.RegistryArgs) ([]*core.Regi
 	if c.endpoint == "" {
 		return nil, nil
 	}
+	logger := logger.FromContext(ctx)
+	logger.Trace("registry: plugin: get credentials")
+
 	req := &registry.Request{
 		Repo:  toRepo(in.Repo),
 		Build: toBuild(in.Build),
@@ -38,6 +42,7 @@ func (c *service) List(ctx context.Context, in *core.RegistryArgs) ([]*core.Regi
 	client := registry.Client(c.endpoint, c.secret, c.skipVerify)
 	res, err := client.List(ctx, req)
 	if err != nil {
+		logger.WithError(err).Warn("registry: plugin: cannot get credentials")
 		return nil, err
 	}
 
@@ -48,6 +53,8 @@ func (c *service) List(ctx context.Context, in *core.RegistryArgs) ([]*core.Regi
 			Username: registry.Username,
 			Password: registry.Password,
 		})
+		logger.WithField("address", registry.Address).
+			Trace("registry: plugin: found credentials")
 	}
 	return registries, nil
 }

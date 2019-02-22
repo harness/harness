@@ -121,7 +121,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	}
 
 	// // some tag hooks provide the tag but do not provide the sha.
-	// // this may be important if we want to fetch the .core.yml
+	// // this may be important if we want to fetch the .drone.yml
 	// if base.After == "" && base.Event == core.EventTag {
 	// 	tag, _, err := t.client.Git.FindTag(ctx, repo.Slug, base.Ref)
 	// 	if err != nil {

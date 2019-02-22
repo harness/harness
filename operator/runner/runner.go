@@ -261,9 +261,10 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 		transform.WithAuthsFunc(
 			func() []*engine.DockerAuth {
 				in := &core.RegistryArgs{
-					Build: m.Build,
-					Repo:  m.Repo,
-					Conf:  manifest,
+					Build:    m.Build,
+					Repo:     m.Repo,
+					Conf:     manifest,
+					Pipeline: pipeline,
 				}
 				out, err := registryService.List(ctx, in)
 				if err != nil {

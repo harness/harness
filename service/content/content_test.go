@@ -25,12 +25,12 @@ func TestFind(t *testing.T) {
 
 	mockUser := &core.User{}
 	mockFile := &scm.Content{
-		Path: ".core.yml",
+		Path: ".drone.yml",
 		Data: []byte("hello world"),
 	}
 
 	mockContents := mockscm.NewMockContentService(controller)
-	mockContents.EXPECT().Find(gomock.Any(), "octocat/hello-world", ".core.yml", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa").Return(mockFile, nil, nil)
+	mockContents.EXPECT().Find(gomock.Any(), "octocat/hello-world", ".drone.yml", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa").Return(mockFile, nil, nil)
 
 	mockRenewer := mock.NewMockRenewer(controller)
 	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false)
@@ -44,7 +44,7 @@ func TestFind(t *testing.T) {
 	}
 
 	service := New(client, mockRenewer)
-	got, err := service.Find(noContext, mockUser, "octocat/hello-world", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", "master", ".core.yml")
+	got, err := service.Find(noContext, mockUser, "octocat/hello-world", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", "master", ".drone.yml")
 	if err != nil {
 		t.Error(err)
 	}
@@ -60,7 +60,7 @@ func TestFind_Error(t *testing.T) {
 	mockUser := &core.User{}
 
 	mockContents := mockscm.NewMockContentService(controller)
-	mockContents.EXPECT().Find(gomock.Any(), "octocat/hello-world", ".core.yml", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa").Return(nil, nil, scm.ErrNotFound)
+	mockContents.EXPECT().Find(gomock.Any(), "octocat/hello-world", ".drone.yml", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa").Return(nil, nil, scm.ErrNotFound)
 
 	mockRenewer := mock.NewMockRenewer(controller)
 	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false)
@@ -71,7 +71,7 @@ func TestFind_Error(t *testing.T) {
 	s := New(client, mockRenewer)
 	s.(*service).attempts = 1
 	s.(*service).wait = 0
-	_, err := s.Find(noContext, mockUser, "octocat/hello-world", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", "master", ".core.yml")
+	_, err := s.Find(noContext, mockUser, "octocat/hello-world", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", "master", ".drone.yml")
 	if err != scm.ErrNotFound {
 		t.Errorf("Expect not found error, got %s", err)
 	}
@@ -89,7 +89,7 @@ func TestFind_RenewalError(t *testing.T) {
 	client := new(scm.Client)
 
 	service := New(client, mockRenewer)
-	_, err := service.Find(noContext, mockUser, "octocat/hello-world", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", "master", ".core.yml")
+	_, err := service.Find(noContext, mockUser, "octocat/hello-world", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", "master", ".drone.yml")
 	if err == nil {
 		t.Errorf("Expect error refreshing token")
 	}

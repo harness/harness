@@ -38,8 +38,8 @@ func provideRunner(
 	registry core.RegistryService,
 	config config.Config,
 ) *runner.Runner {
-	// the local runner is only created when the nomad or
-	// kubernetes scheduler are disabled
+	// the local runner is only created when the nomad scheduler,
+	// kubernetes scheduler, and remote agents are disabled
 	if config.Nomad.Enabled || config.Kube.Enabled || config.Agent.Enabled {
 		return nil
 	}

@@ -57,7 +57,7 @@ func provideDockerScheduler(config config.Config) core.Scheduler {
 // provideKubernetesScheduler is a Wire provider function that
 // returns a nomad kubernetes from the environment configuration.
 func provideKubernetesScheduler(config config.Config) core.Scheduler {
-	logrus.Info("main: kubernetes runtime enabled")
+	logrus.Info("main: kubernetes scheduler enabled")
 	sched, err := kube.FromConfig(kube.Config{
 		Namespace:       config.Kube.Namespace,
 		ServiceAccount:  config.Kube.ServiceAccountName,
@@ -95,7 +95,7 @@ func provideKubernetesScheduler(config config.Config) core.Scheduler {
 // provideNomadScheduler is a Wire provider function that returns
 // a nomad scheduler from the environment configuration.
 func provideNomadScheduler(config config.Config) core.Scheduler {
-	logrus.Info("main: nomad runtime enabled")
+	logrus.Info("main: nomad scheduler enabled")
 	sched, err := nomad.FromConfig(nomad.Config{
 		Datacenter:      config.Nomad.Datacenters,
 		Namespace:       config.Nomad.Namespace,
@@ -134,6 +134,6 @@ func provideNomadScheduler(config config.Config) core.Scheduler {
 // returns an in-memory scheduler for use by the built-in
 // docker runner, and by remote agents.
 func provideQueueScheduler(store core.StageStore, config config.Config) core.Scheduler {
-	logrus.Info("main: nomad runtime enabled")
+	logrus.Info("main: internal scheduler enabled")
 	return queue.New(store)
 }

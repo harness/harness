@@ -6,9 +6,9 @@ package registry
 
 import (
 	"context"
-	"strings"
 
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/logger"
 	"github.com/drone/drone/plugin/registry/auths"
 )
 
@@ -22,25 +22,39 @@ type staticController struct {
 }
 
 func (c *staticController) List(ctx context.Context, in *core.RegistryArgs) ([]*core.Registry, error) {
+	static := map[string]*core.Secret{}
 	for _, secret := range c.secrets {
-		if !isRegistrySecret(secret.Name) {
+		static[secret.Name] = secret
+	}
+
+	var results []*core.Registry
+	for _, name := range in.Pipeline.PullSecrets {
+		logger := logger.FromContext(ctx).WithField("name", name)
+		logger.Trace("registry: image_pull_secret: find secret")
+
+		secret, ok := static[name]
+		if !ok {
+			logger.Warn("registry: image_pull_secret: cannot find secret")
 			continue
 		}
+
 		// The secret can be restricted to non-pull request
 		// events. If the secret is restricted, return
 		// empty results.
 		if secret.PullRequest == false &&
 			in.Build.Event == core.EventPullRequest {
+			logger.Trace("registry: image_pull_secret: pull_request access denied")
 			continue
 		}
-		return auths.ParseString(secret.Data)
-	}
-	return nil, nil
-}
 
-func isRegistrySecret(name string) bool {
-	return strings.EqualFold(name, "docker_auth_config") ||
-		strings.EqualFold(name, ".dockerconfig") ||
-		strings.EqualFold(name, ".dockerconfigjson") ||
-		strings.EqualFold(name, "_docker")
+		logger.Trace("registry: image_pull_secret: secret found")
+		parsed, err := auths.ParseString(secret.Data)
+		if err != nil {
+			logger.WithError(err).Error("registry: image_pull_secret: parsing error")
+			return nil, err
+		}
+
+		results = append(results, parsed...)
+	}
+	return results, nil
 }

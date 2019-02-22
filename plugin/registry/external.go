@@ -6,7 +6,6 @@ package registry
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/drone/drone-go/plugin/secret"
@@ -29,73 +28,75 @@ type externalController struct {
 }
 
 func (c *externalController) List(ctx context.Context, in *core.RegistryArgs) ([]*core.Registry, error) {
-	// lookup the named secret in the manifest. If the
-	// secret does not exist, return a nil variable,
-	// allowing the next secret controller in the chain
-	// to be invoked.
-	path, name, ok := getExternal(in.Conf)
-	if !ok {
-		return nil, nil
+	var results []*core.Registry
+
+	for _, name := range in.Pipeline.PullSecrets {
+		// lookup the named secret in the manifest. If the
+		// secret does not exist, return a nil variable,
+		// allowing the next secret controller in the chain
+		// to be invoked.
+		path, name, ok := getExternal(in.Conf, name)
+		if !ok {
+			return nil, nil
+		}
+
+		// include a timeout to prevent an API call from
+		// hanging the build process indefinitely. The
+		// external service must return a request within
+		// one minute.
+		ctx, cancel := context.WithTimeout(ctx, time.Minute)
+		defer cancel()
+
+		req := &secret.Request{
+			Name:  name,
+			Path:  path,
+			Repo:  toRepo(in.Repo),
+			Build: toBuild(in.Build),
+		}
+		client := secret.Client(c.endpoint, c.secret, c.skipVerify)
+		res, err := client.Find(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		// if no error is returned and the secret is empty,
+		// this indicates the client returned No Content,
+		// and we should exit with no secret, but no error.
+		if res.Data == "" {
+			return nil, nil
+		}
+
+		// The secret can be restricted to non-pull request
+		// events. If the secret is restricted, return
+		// empty results.
+		if (res.Pull == false && res.PullRequest == false) &&
+			in.Build.Event == core.EventPullRequest {
+			return nil, nil
+		}
+
+		parsed, err := auths.ParseString(res.Data)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, parsed...)
 	}
 
-	// include a timeout to prevent an API call from
-	// hanging the build process indefinitely. The
-	// external service must return a request within
-	// one minute.
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
-
-	req := &secret.Request{
-		Name:  name,
-		Path:  path,
-		Repo:  toRepo(in.Repo),
-		Build: toBuild(in.Build),
-	}
-	client := secret.Client(c.endpoint, c.secret, c.skipVerify)
-	res, err := client.Find(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	// if no error is returned and the secret is empty,
-	// this indicates the client returned No Content,
-	// and we should exit with no secret, but no error.
-	if res.Data == "" {
-		return nil, nil
-	}
-
-	// The secret can be restricted to non-pull request
-	// events. If the secret is restricted, return
-	// empty results.
-	if (res.Pull == false && res.PullRequest == false) &&
-		in.Build.Event == core.EventPullRequest {
-		return nil, nil
-	}
-
-	return auths.ParseString(res.Data)
+	return results, nil
 }
 
-func getExternal(manifest *yaml.Manifest) (path, name string, ok bool) {
+func getExternal(manifest *yaml.Manifest, match string) (path, name string, ok bool) {
 	for _, resource := range manifest.Resources {
 		secret, ok := resource.(*yaml.Secret)
 		if !ok {
 			continue
 		}
-		if !strings.EqualFold(secret.Type, "docker") {
+		if secret.Name != match {
 			continue
 		}
-		value, ok := secret.External["docker_auth_config"]
-		if ok {
-			return value.Path, value.Name, ok
+		if secret.Get.Name == "" && secret.Get.Path == "" {
+			continue
 		}
-		value, ok = secret.External[".dockerconfig"]
-		if ok {
-			return value.Path, value.Name, ok
-		}
-		value, ok = secret.External[".dockerconfigjson"]
-		if ok {
-			return value.Path, value.Name, ok
-		}
+		return secret.Get.Path, secret.Get.Name, true
 	}
 	return
 }

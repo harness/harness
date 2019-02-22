@@ -445,7 +445,7 @@ var (
 		Counter:    42,
 		Secret:     "g9dMChy22QutQM5lrpbe0yCR3f15t1gv",
 		Signer:     "g9dMChy22QutQM5lrpbe0yCR3f15t1gv",
-		Config:     ".core.yml",
+		Config:     ".drone.yml",
 	}
 
 	dummyStage = &core.Stage{

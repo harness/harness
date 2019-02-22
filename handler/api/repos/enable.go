@@ -53,7 +53,7 @@ func HandleEnable(
 		repo.UserID = user.ID
 
 		if repo.Config == "" {
-			repo.Config = ".core.yml"
+			repo.Config = ".drone.yml"
 		}
 		if repo.Signer == "" {
 			repo.Signer = uniuri.NewLen(32)

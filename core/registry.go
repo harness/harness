@@ -45,9 +45,10 @@ type (
 	// RegistryArgs provides arguments for requesting
 	// registry credentials from the remote service.
 	RegistryArgs struct {
-		Repo  *Repository    `json:"repo,omitempty"`
-		Build *Build         `json:"build,omitempty"`
-		Conf  *yaml.Manifest `json:"-"`
+		Repo     *Repository    `json:"repo,omitempty"`
+		Build    *Build         `json:"build,omitempty"`
+		Conf     *yaml.Manifest `json:"-"`
+		Pipeline *yaml.Pipeline `json:"-"`
 	}
 
 	// RegistryService provides registry credentials from an

@@ -6,7 +6,6 @@ package secret
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/drone/drone-yaml/yaml"
@@ -86,20 +85,19 @@ func (c *externalController) Find(ctx context.Context, in *core.SecretArgs) (*co
 	}, nil
 }
 
-func getExternal(manifest *yaml.Manifest, named string) (path, name string, ok bool) {
+func getExternal(manifest *yaml.Manifest, match string) (path, name string, ok bool) {
 	for _, resource := range manifest.Resources {
 		secret, ok := resource.(*yaml.Secret)
 		if !ok {
 			continue
 		}
-		if secret.Type != "" &&
-			!strings.EqualFold(secret.Type, "general") {
+		if secret.Name != match {
 			continue
 		}
-		value, ok := secret.External[named]
-		if ok {
-			return value.Path, value.Name, ok
+		if secret.Get.Name == "" && secret.Get.Path == "" {
+			continue
 		}
+		return secret.Get.Path, secret.Get.Name, true
 	}
 	return
 }
