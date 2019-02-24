@@ -22,7 +22,7 @@ require (
 	github.com/drone/envsubst v1.0.1
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.3
-	github.com/drone/go-scm v1.1.0
+	github.com/drone/go-scm v1.2.0
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ghodss/yaml v1.0.0
