@@ -330,9 +330,10 @@ type (
 
 	// S3 provides the storage configuration.
 	S3 struct {
-		Bucket   string `envconfig:"DRONE_S3_BUCKET"`
-		Prefix   string `envconfig:"DRONE_S3_PREFIX"`
-		Endpoint string `envconfig:"DRONE_S3_ENDPOINT"`
+		Bucket    string `envconfig:"DRONE_S3_BUCKET"`
+		Prefix    string `envconfig:"DRONE_S3_PREFIX"`
+		Endpoint  string `envconfig:"DRONE_S3_ENDPOINT"`
+		PathStyle bool   `envconfig:"DRONE_S3_PATH_STYLE"`
 	}
 
 	// HTTP provides http configuration.
