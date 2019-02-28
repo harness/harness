@@ -1,10 +1,14 @@
 Copyright 2019 Drone.IO, Inc.
 
-Source code in this repository is variously licensed under the
-Apache License Version 2.0, an Apache compatible license, or the
-Drone Non-Commercial License. Source code in a given file is
-licensed under the Drone Non-Commercial License unless otherwise
-noted at the beginning of the file.
+The Drone Community Edition is licensed under the Apache License,
+Version 2.0 (the "Apache License"). You may obtain a copy of the
+Apache License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+The Drone Enterprise Edition is licensed under the Drone
+Non-Commercial License (the "Non-Commercial License"). A copy of
+the Non-Commercial License is provided below.
 
 -----------------------------------------------------------------
 

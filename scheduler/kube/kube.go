@@ -27,37 +27,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// Config is the configuration for the Kubernetes scheduler.
-type Config struct {
-	Namespace        string
-	ServiceAccount   string
-	ConfigURL        string
-	ConfigPath       string
-	TTL              int
-	Image            string
-	ImagePullPolicy  string
-	ImagePrivileged  []string
-	DockerHost       string
-	DockerHostWin    string
-	LimitMemory      int
-	LimitCompute     int
-	RequestMemory    int
-	RequestCompute   int
-	CallbackHost     string
-	CallbackProto    string
-	CallbackSecret   string
-	SecretToken      string
-	SecretEndpoint   string
-	SecretInsecure   bool
-	RegistryToken    string
-	RegistryEndpoint string
-	RegistryInsecure bool
-	LogDebug         bool
-	LogTrace         bool
-	LogPretty        bool
-	LogText          bool
-}
-
 type kubeScheduler struct {
 	client *kubernetes.Clientset
 	config Config

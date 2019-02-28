@@ -401,8 +401,8 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 			if ok {
 				step.Status = core.StatusPassing
 				step.Stopped = time.Now().Unix()
-				if s.State.ExitCode != 0 {
-					step.ExitCode = s.State.ExitCode
+				step.ExitCode = s.State.ExitCode
+				if s.State.ExitCode != 0 && s.State.ExitCode != 78 {
 					step.Status = core.StatusFailing
 				}
 			}
@@ -470,7 +470,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 	logger.Infoln("runner: start execution")
 
 	err = runner.Run(timeout)
-	if err != nil {
+	if err != nil && err != runtime.ErrInterrupt {
 		logger = logger.WithError(err)
 		logger.Infoln("runner: execution failed")
 		return r.handleError(ctx, m.Stage, err)

@@ -2,6 +2,8 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+// +build !oss
+
 package trigger
 
 import (
@@ -203,14 +205,17 @@ func Test_skipMessageEval(t *testing.T) {
 		{"foo [ci skip] bar", true},
 		{"foo [CI SKIP] bar", true},
 		{"foo [CI Skip] bar", true},
+		{"foo [CI SKIP]", true},
 		// test [SKIP CI]
 		{"foo [skip ci] bar", true},
 		{"foo [SKIP CI] bar", true},
 		{"foo [Skip CI] bar", true},
+		{"foo [SKIP CI]", true},
 		// test ***NO_CI***
 		{"foo ***NO_CI*** bar", true},
 		{"foo ***NO_CI*** bar", true},
 		{"foo ***NO_CI*** bar", true},
+		{"foo ***NO_CI***", true},
 	}
 	for _, test := range tests {
 		got, want := skipMessageEval(test.eval), test.want

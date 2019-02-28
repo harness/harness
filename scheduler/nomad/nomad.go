@@ -31,35 +31,6 @@ const (
 	dockerHostWindows = "////./pipe/docker_engine"
 )
 
-// Config is the configuration for the Nomad scheduler.
-type Config struct {
-	Datacenter       []string
-	Namespace        string
-	Region           string
-	DockerImage      string
-	DockerImagePull  bool
-	DockerImagePriv  []string
-	DockerHost       string
-	DockerHostWin    string
-	LimitMemory      int
-	LimitCompute     int
-	RequestMemory    int
-	RequestCompute   int
-	CallbackHost     string
-	CallbackProto    string
-	CallbackSecret   string
-	SecretToken      string
-	SecretEndpoint   string
-	SecretInsecure   bool
-	RegistryToken    string
-	RegistryEndpoint string
-	RegistryInsecure bool
-	LogDebug         bool
-	LogTrace         bool
-	LogPretty        bool
-	LogText          bool
-}
-
 type nomadScheduler struct {
 	client *api.Client
 	config Config

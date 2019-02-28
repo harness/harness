@@ -2,13 +2,15 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+// +build !oss
+
 package cron
 
 import (
 	"database/sql"
 
-	"github.com/drone/drone/store/shared/db"
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/store/shared/db"
 )
 
 // helper function converts the User structure to a set

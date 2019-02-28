@@ -2,6 +2,8 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+// +build !oss
+
 package cron
 
 import (
@@ -9,9 +11,9 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/drone/drone/store/shared/db/dbtest"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/repos"
+	"github.com/drone/drone/store/shared/db/dbtest"
 )
 
 var noContext = context.TODO()

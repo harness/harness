@@ -2,14 +2,16 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+// +build !oss
+
 package cron
 
 // NewCronStore returns a new CronStore.
 import (
 	"context"
 
-	"github.com/drone/drone/store/shared/db"
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/store/shared/db"
 )
 
 // New returns a new Cron database store.

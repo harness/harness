@@ -2,13 +2,15 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+// +build !oss
+
 package crons
 
 import (
 	"net/http"
 
-	"github.com/drone/drone/handler/api/render"
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/handler/api/render"
 
 	"github.com/go-chi/chi"
 )

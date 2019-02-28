@@ -2,13 +2,15 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+// +build !oss
+
 package metric
 
 import (
 	"testing"
 
-	"github.com/drone/drone/mock"
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/mock"
 
 	"github.com/golang/mock/gomock"
 	"github.com/prometheus/client_golang/prometheus"

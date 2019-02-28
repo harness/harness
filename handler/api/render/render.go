@@ -45,6 +45,9 @@ var (
 
 	// ErrNotFound is returned when a resource is not found.
 	ErrNotFound = errors.New("Not Found")
+
+	// ErrNotImplemented is returned when an endpoint is not implemented.
+	ErrNotImplemented = errors.New("Not Implemented")
 )
 
 // ErrorCode writes the json-encoded error message to the response.
@@ -62,6 +65,12 @@ func InternalError(w http.ResponseWriter, err error) {
 // with a 500 internal server error.
 func InternalErrorf(w http.ResponseWriter, format string, a ...interface{}) {
 	ErrorCode(w, fmt.Errorf(format, a...), 500)
+}
+
+// NotImplemented writes the json-encoded error message to the
+// response with a 501 not found status code.
+func NotImplemented(w http.ResponseWriter, err error) {
+	ErrorCode(w, err, 501)
 }
 
 // NotFound writes the json-encoded error message to the response

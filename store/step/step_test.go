@@ -2,17 +2,19 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+// +build !oss
+
 package step
 
 import (
 	"context"
 	"testing"
 
-	"github.com/drone/drone/store/shared/db"
-	"github.com/drone/drone/store/shared/db/dbtest"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/build"
 	"github.com/drone/drone/store/repos"
+	"github.com/drone/drone/store/shared/db"
+	"github.com/drone/drone/store/shared/db/dbtest"
 )
 
 var noContext = context.TODO()
