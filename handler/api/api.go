@@ -31,6 +31,7 @@ import (
 	"github.com/drone/drone/handler/api/repos/builds/stages"
 	"github.com/drone/drone/handler/api/repos/collabs"
 	"github.com/drone/drone/handler/api/repos/crons"
+	"github.com/drone/drone/handler/api/repos/encrypt"
 	"github.com/drone/drone/handler/api/repos/secrets"
 	"github.com/drone/drone/handler/api/repos/sign"
 	"github.com/drone/drone/handler/api/system"
@@ -212,6 +213,11 @@ func (s Server) Handler() http.Handler {
 		r.Route("/sign", func(r chi.Router) {
 			r.Use(acl.CheckWriteAccess())
 			r.Post("/", sign.HandleSign(s.Repos))
+		})
+
+		r.Route("/encrypt", func(r chi.Router) {
+			r.Use(acl.CheckWriteAccess())
+			r.Post("/", encrypt.Handler(s.Repos))
 		})
 
 		r.Route("/cron", func(r chi.Router) {

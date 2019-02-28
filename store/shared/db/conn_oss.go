@@ -12,6 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sqlite
+// +build oss
 
-//go:generate togo ddl -package sqlite -dialect sqlite3
+package db
+
+import (
+	"database/sql"
+	"sync"
+
+	"github.com/jmoiron/sqlx"
+
+	"github.com/drone/drone/store/shared/migrate/sqlite"
+)
+
+// Connect to an embedded sqlite database.
+func Connect(driver, datasource string) (*DB, error) {
+	db, err := sql.Open(driver, datasource)
+	if err != nil {
+		return nil, err
+	}
+	if err := sqlite.Migrate(db); err != nil {
+		return nil, err
+	}
+	return &DB{
+		conn:   sqlx.NewDb(db, driver),
+		lock:   &sync.RWMutex{},
+		driver: Sqlite,
+	}, nil
+}

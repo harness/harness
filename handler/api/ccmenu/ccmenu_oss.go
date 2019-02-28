@@ -12,6 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sqlite
+// +build oss
 
-//go:generate togo ddl -package sqlite -dialect sqlite3
+package ccmenu
+
+import (
+	"net/http"
+
+	"github.com/drone/drone/core"
+	"github.com/drone/drone/handler/api/render"
+)
+
+// Handler returns a no-op http.HandlerFunc.
+func Handler(core.RepositoryStore, core.BuildStore, string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		render.NotImplemented(w, render.ErrNotImplemented)
+	}
+}
