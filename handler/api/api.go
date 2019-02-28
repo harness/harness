@@ -24,6 +24,7 @@ import (
 	globalbuilds "github.com/drone/drone/handler/api/builds"
 	"github.com/drone/drone/handler/api/ccmenu"
 	"github.com/drone/drone/handler/api/events"
+	"github.com/drone/drone/handler/api/queue"
 	"github.com/drone/drone/handler/api/repos"
 	"github.com/drone/drone/handler/api/repos/builds"
 	"github.com/drone/drone/handler/api/repos/builds/logs"
@@ -239,12 +240,12 @@ func (s Server) Handler() http.Handler {
 		).Get("/cc.xml", ccmenu.Handler(s.Repos, s.Builds, s.System.Link))
 	})
 
-	// r.Route("/queue", func(r chi.Router) {
-	// 	r.Use(acl.AuthorizeAdmin)
-	// 	r.Get("/", queue.HandleItems(s.Stages))
-	// 	r.Post("/", queue.HandleResume(s.Queue))
-	// 	r.Delete("/", queue.HandlePause(s.Queue))
-	// })
+	r.Route("/queue", func(r chi.Router) {
+		r.Use(acl.AuthorizeAdmin)
+		r.Get("/", queue.HandleItems(s.Stages))
+		// r.Post("/", queue.HandleResume(s.Queue))
+		// r.Delete("/", queue.HandlePause(s.Queue))
+	})
 
 	r.Route("/user", func(r chi.Router) {
 		r.Use(acl.AuthorizeUser)

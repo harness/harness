@@ -86,6 +86,7 @@ func provideLogStore(db *db.DB, config config.Config) core.LogStore {
 		config.S3.Bucket,
 		config.S3.Prefix,
 		config.S3.Endpoint,
+		config.S3.PathStyle,
 	)
 }
 

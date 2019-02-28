@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"path"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -24,13 +25,21 @@ import (
 // s3gof3r as an alternate. github.com/rlmcpherson/s3gof3r
 
 // NewS3Env returns a new S3 log store.
-func NewS3Env(bucket, prefix, endpoint string) core.LogStore {
+func NewS3Env(bucket, prefix, endpoint string, pathStyle bool) core.LogStore {
+	disableSSL := false
+
+	if endpoint != "" {
+		disableSSL = !strings.HasPrefix(endpoint, "https://")
+	}
+
 	return &s3store{
 		bucket: bucket,
 		prefix: prefix,
 		session: session.Must(
 			session.NewSession(&aws.Config{
-				Endpoint: aws.String(endpoint),
+				Endpoint:         aws.String(endpoint),
+				DisableSSL:       aws.Bool(disableSSL),
+				S3ForcePathStyle: aws.Bool(pathStyle),
 			}),
 		),
 	}
