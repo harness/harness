@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admission
+package registry
 
 import (
 	"context"
@@ -20,20 +20,8 @@ import (
 	"github.com/drone/drone/core"
 )
 
-// Combine combines admission services.
-func Combine(service ...core.AdmissionService) core.AdmissionService {
-	return &combined{services: service}
-}
+type noop struct{}
 
-type combined struct {
-	services []core.AdmissionService
-}
-
-func (s *combined) Admit(ctx context.Context, user *core.User) error {
-	for _, service := range s.services {
-		if err := service.Admit(ctx, user); err != nil {
-			return err
-		}
-	}
-	return nil
+func (noop) List(context.Context, *core.RegistryArgs) ([]*core.Registry, error) {
+	return nil, nil
 }

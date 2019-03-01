@@ -2,6 +2,8 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+// +build !oss
+
 package secret
 
 import (
@@ -11,7 +13,7 @@ import (
 	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone/core"
 
-	droneapi "github.com/drone/drone-go/drone"
+	"github.com/drone/drone-go/drone"
 	"github.com/drone/drone-go/plugin/secret"
 )
 
@@ -102,8 +104,8 @@ func getExternal(manifest *yaml.Manifest, match string) (path, name string, ok b
 	return
 }
 
-func toRepo(from *core.Repository) droneapi.Repo {
-	return droneapi.Repo{
+func toRepo(from *core.Repository) drone.Repo {
+	return drone.Repo{
 		ID:         from.ID,
 		UID:        from.UID,
 		UserID:     from.UserID,
@@ -125,8 +127,8 @@ func toRepo(from *core.Repository) droneapi.Repo {
 	}
 }
 
-func toBuild(from *core.Build) droneapi.Build {
-	return droneapi.Build{
+func toBuild(from *core.Build) drone.Build {
+	return drone.Build{
 		ID:           from.ID,
 		RepoID:       from.RepoID,
 		Trigger:      from.Trigger,

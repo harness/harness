@@ -12,28 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admission
+// +build oss
 
-import (
-	"context"
+package registry
 
-	"github.com/drone/drone/core"
-)
+import "github.com/drone/drone/core"
 
-// Combine combines admission services.
-func Combine(service ...core.AdmissionService) core.AdmissionService {
-	return &combined{services: service}
-}
-
-type combined struct {
-	services []core.AdmissionService
-}
-
-func (s *combined) Admit(ctx context.Context, user *core.User) error {
-	for _, service := range s.services {
-		if err := service.Admit(ctx, user); err != nil {
-			return err
-		}
-	}
-	return nil
+// Endpoint returns a no-op registry credential provider.
+func Endpoint(string, string, bool) core.RegistryService {
+	return new(noop)
 }

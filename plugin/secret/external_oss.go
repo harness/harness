@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admission
+// +build oss
+
+package secret
 
 import (
 	"context"
@@ -20,20 +22,13 @@ import (
 	"github.com/drone/drone/core"
 )
 
-// Combine combines admission services.
-func Combine(service ...core.AdmissionService) core.AdmissionService {
-	return &combined{services: service}
+// External returns a no-op registry secret provider.
+func External(string, string, bool) core.SecretService {
+	return new(noop)
 }
 
-type combined struct {
-	services []core.AdmissionService
-}
+type noop struct{}
 
-func (s *combined) Admit(ctx context.Context, user *core.User) error {
-	for _, service := range s.services {
-		if err := service.Admit(ctx, user); err != nil {
-			return err
-		}
-	}
-	return nil
+func (noop) Find(context.Context, *core.SecretArgs) (*core.Secret, error) {
+	return nil, nil
 }

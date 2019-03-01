@@ -12,28 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// +build oss
+
 package admission
 
-import (
-	"context"
+import "github.com/drone/drone/core"
 
-	"github.com/drone/drone/core"
-)
-
-// Combine combines admission services.
-func Combine(service ...core.AdmissionService) core.AdmissionService {
-	return &combined{services: service}
-}
-
-type combined struct {
-	services []core.AdmissionService
-}
-
-func (s *combined) Admit(ctx context.Context, user *core.User) error {
-	for _, service := range s.services {
-		if err := service.Admit(ctx, user); err != nil {
-			return err
-		}
-	}
-	return nil
+// Nobot is a no-op admission controller
+func Nobot(string, string, bool) core.AdmissionService {
+	return new(noop)
 }

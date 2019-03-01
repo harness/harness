@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admission
+// +build oss
+
+package config
 
 import (
 	"context"
@@ -20,20 +22,13 @@ import (
 	"github.com/drone/drone/core"
 )
 
-// Combine combines admission services.
-func Combine(service ...core.AdmissionService) core.AdmissionService {
-	return &combined{services: service}
+// Global returns a no-op configuration service.
+func Global(string, string, bool) core.ConfigService {
+	return
 }
 
-type combined struct {
-	services []core.AdmissionService
-}
+type noop struct{}
 
-func (s *combined) Admit(ctx context.Context, user *core.User) error {
-	for _, service := range s.services {
-		if err := service.Admit(ctx, user); err != nil {
-			return err
-		}
-	}
-	return nil
+func (noop) Find(context.Context, *core.ConfigArgs) (*core.Config, error) {
+	return nil, nil
 }
