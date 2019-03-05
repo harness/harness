@@ -18,6 +18,7 @@ import (
 	"github.com/drone/drone/cmd/drone-server/config"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/livelog"
+	"github.com/drone/drone/metric/sink"
 	"github.com/drone/drone/pubsub"
 	"github.com/drone/drone/service/commit"
 	"github.com/drone/drone/service/content"
@@ -54,6 +55,7 @@ var serviceSet = wire.NewSet(
 	user.New,
 
 	provideContentService,
+	provideDatadog,
 	provideHookService,
 	provideNetrcService,
 	provideSession,
@@ -133,4 +135,25 @@ func provideSystem(config config.Config) *core.System {
 		Link:    config.Server.Addr,
 		Version: version.Version.String(),
 	}
+}
+
+// provideDatadog is a Wire provider function that returns the
+// datadog sink.
+func provideDatadog(
+	users core.UserStore,
+	repos core.RepositoryStore,
+	builds core.BuildStore,
+	system *core.System,
+	config config.Config,
+) *sink.Datadog {
+	return sink.New(
+		users,
+		repos,
+		builds,
+		*system,
+		sink.Config{
+			Endpoint: config.Datadog.Endpoint,
+			Token:    config.Datadog.Token,
+		},
+	)
 }

@@ -22,6 +22,7 @@ import (
 	"github.com/drone/drone/cmd/drone-server/bootstrap"
 	"github.com/drone/drone/cmd/drone-server/config"
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/metric/sink"
 	"github.com/drone/drone/operator/runner"
 	"github.com/drone/drone/server"
 	"github.com/drone/drone/trigger/cron"
@@ -92,6 +93,15 @@ func main() {
 		return app.server.ListenAndServe(ctx)
 	})
 
+	// launches the datadog sink in a goroutine. If the sink
+	// is disabled, the goroutine exits immediately without error.
+	g.Go(func() (err error) {
+		if !config.Datadog.Enabled {
+			return nil
+		}
+		return app.sink.Start(ctx)
+	})
+
 	// launches the cron runner in a goroutine. If the cron
 	// runner is disabled, the goroutine exits immediately
 	// without error.
@@ -144,6 +154,7 @@ func initLogging(c config.Config) {
 // application is the main struct for the Drone server.
 type application struct {
 	cron   *cron.Scheduler
+	sink   *sink.Datadog
 	runner *runner.Runner
 	server *server.Server
 	users  core.UserStore
@@ -152,12 +163,14 @@ type application struct {
 // newApplication creates a new application struct.
 func newApplication(
 	cron *cron.Scheduler,
+	sink *sink.Datadog,
 	runner *runner.Runner,
 	server *server.Server,
 	users core.UserStore) application {
 	return application{
 		users:  users,
 		cron:   cron,
+		sink:   sink,
 		server: server,
 		runner: runner,
 	}

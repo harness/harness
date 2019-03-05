@@ -51,6 +51,7 @@ type (
 		Cron     Cron
 		Cloning  Cloning
 		Database Database
+		Datadog  Datadog
 		Docker   Docker
 		HTTP     HTTP
 		Logging  Logging
@@ -106,6 +107,13 @@ type (
 	// Docker provides docker configuration
 	Docker struct {
 		Config string `envconfig:"DRONE_DOCKER_CONFIG"`
+	}
+
+	// Datadog provides datadog configuration
+	Datadog struct {
+		Enabled  bool   `envconfig:"DRONE_DATADOG_ENABLED"`
+		Endpoint string `envconfig:"DRONE_DATADOG_ENDPOINT"`
+		Token    string `envconfig:"DRONE_DATADOG_TOKEN"`
 	}
 
 	// Kubernetes provides kubernetes configuration

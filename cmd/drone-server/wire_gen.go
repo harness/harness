@@ -58,6 +58,8 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	webhookSender := provideWebhookPlugin(config2)
 	triggerer := trigger.New(configService, commitService, statusService, buildStore, scheduler, repositoryStore, userStore, webhookSender)
 	cronScheduler := cron2.New(commitService, cronStore, repositoryStore, userStore, triggerer)
+	system := provideSystem(config2)
+	datadog := provideDatadog(userStore, repositoryStore, buildStore, system, config2)
 	corePubsub := pubsub.New()
 	logStore := provideLogStore(db, config2)
 	logStream := livelog.New()
@@ -68,7 +70,6 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	}
 	secretStore := secret.New(db, encrypter)
 	stepStore := step.New(db)
-	system := provideSystem(config2)
 	buildManager := manager.New(buildStore, configService, corePubsub, logStore, logStream, netrcService, repositoryStore, scheduler, secretStore, statusService, stageStore, stepStore, system, userStore, webhookSender)
 	secretService := provideSecretPlugin(config2)
 	registryService := provideRegistryPlugin(config2)
@@ -93,6 +94,6 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	metricServer := metric.NewServer(session)
 	mux := provideRouter(server, webServer, handler, metricServer)
 	serverServer := provideServer(mux, config2)
-	mainApplication := newApplication(cronScheduler, runner, serverServer, userStore)
+	mainApplication := newApplication(cronScheduler, datadog, runner, serverServer, userStore)
 	return mainApplication, nil
 }
