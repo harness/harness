@@ -271,21 +271,6 @@ steps:
     - push
     - tag
 
-- name: agent
-  image: plugins/manifest
-  settings:
-    auto_tag: true
-    ignore_missing: true
-    password:
-      from_secret: docker_password
-    spec: docker/manifest.agent.tmpl
-    username:
-      from_secret: docker_username
-  when:
-    event:
-    - push
-    - tag
-
 - name: controller
   image: plugins/manifest
   settings:
@@ -294,6 +279,21 @@ steps:
     password:
       from_secret: docker_password
     spec: docker/manifest.controller.tmpl
+    username:
+      from_secret: docker_username
+  when:
+    event:
+    - push
+    - tag
+
+- name: agent
+  image: plugins/manifest
+  settings:
+    auto_tag: true
+    ignore_missing: true
+    password:
+      from_secret: docker_password
+    spec: docker/manifest.agent.tmpl
     username:
       from_secret: docker_username
   when:

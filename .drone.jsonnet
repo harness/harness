@@ -101,8 +101,8 @@ local pipeline(name, os, arch) = {
         name: "manifest",
         steps: [
             manifest("server"),
-            manifest("agent"),
             manifest("controller"),
+            manifest("agent"),
         ],
         depends_on: [
           "linux-amd64",
