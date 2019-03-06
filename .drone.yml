@@ -257,7 +257,7 @@ platform:
 
 steps:
 - name: server
-  image: plugins/manifest:1
+  image: plugins/manifest
   settings:
     auto_tag: true
     ignore_missing: true
@@ -272,7 +272,7 @@ steps:
     - tag
 
 - name: agent
-  image: plugins/manifest:1
+  image: plugins/manifest
   settings:
     auto_tag: true
     ignore_missing: true
@@ -287,7 +287,7 @@ steps:
     - tag
 
 - name: controller
-  image: plugins/manifest:1
+  image: plugins/manifest
   settings:
     auto_tag: true
     ignore_missing: true
