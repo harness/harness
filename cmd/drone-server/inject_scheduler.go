@@ -17,7 +17,6 @@ package main
 import (
 	"github.com/drone/drone/cmd/drone-server/config"
 	"github.com/drone/drone/core"
-	"github.com/drone/drone/scheduler/docker"
 	"github.com/drone/drone/scheduler/kube"
 	"github.com/drone/drone/scheduler/nomad"
 	"github.com/drone/drone/scheduler/queue"
@@ -43,15 +42,7 @@ func provideScheduler(store core.StageStore, config config.Config) core.Schedule
 		return provideNomadScheduler(config)
 	default:
 		return provideQueueScheduler(store, config)
-		// return provideDockerScheduler(config)
 	}
-}
-
-// provideDockerScheduler is a Wire provider function that
-// returns an in-memory Docker scheduler.
-func provideDockerScheduler(config config.Config) core.Scheduler {
-	logrus.Info("main: local docker runner enabled")
-	return docker.New()
 }
 
 // provideKubernetesScheduler is a Wire provider function that
