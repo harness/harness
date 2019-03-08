@@ -91,6 +91,15 @@ func provideGiteaLogin(config config.Config) login.Middleware {
 	if config.Gitea.Server == "" {
 		return nil
 	}
+	if config.Gitea.ClientID != "" {
+		return &gitea.Config {
+			ClientID:     config.Gitea.ClientID,
+			ClientSecret: config.Gitea.ClientSecret,
+			Server:       config.Gitea.Server,
+			Client:       defaultClient(config.Gitea.SkipVerify),
+			Logger:       logrus.StandardLogger(),
+		}
+	}
 	return &gogs.Config{
 		Label:  "drone",
 		Login:  "/login/form",
