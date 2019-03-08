@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS builds (
 ,build_source        VARCHAR(500)
 ,build_target        VARCHAR(500)
 ,build_author        VARCHAR(500)
-,build_author_name   VARCHAR(500)
+,build_author_name   VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 ,build_author_email  VARCHAR(500)
 ,build_author_avatar VARCHAR(1000)
 ,build_sender        VARCHAR(500)
