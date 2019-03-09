@@ -293,11 +293,12 @@ type (
 
 	// Gitea provides the gitea client configuration.
 	Gitea struct {
-		ClientID     string `envconfig:"DRONE_GITEA_CLIENT_ID"`
-		ClientSecret string `envconfig:"DRONE_GITEA_CLIENT_SECRET"`
-		Server       string `envconfig:"DRONE_GITEA_SERVER"`
-		SkipVerify   bool   `envconfig:"DRONE_GITEA_SKIP_VERIFY"`
-		Debug        bool   `envconfig:"DRONE_GITEA_DEBUG"`
+		Server       string   `envconfig:"DRONE_GITEA_SERVER" default:"https://try.gitea.io"`
+		ClientID     string   `envconfig:"DRONE_GITEA_CLIENT_ID"`
+		ClientSecret string   `envconfig:"DRONE_GITEA_CLIENT_SECRET"`
+		SkipVerify   bool     `envconfig:"DRONE_GITEA_SKIP_VERIFY"`
+		Scope        []string `envconfig:"DRONE_GITEA_SCOPE" default:"repo,repo:status,user:email,read:org"`
+		Debug        bool     `envconfig:"DRONE_GITEA_DEBUG"`
 	}
 
 	// Github provides the github client configuration.
