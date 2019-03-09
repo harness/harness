@@ -277,16 +277,16 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 		transform.WithEnviron(r.Environ),
 		transform.WithLables(
 			map[string]string{
-				"io.drone":               "true",
-				"io.core.build.number":   fmt.Sprint(m.Build.Number),
-				"io.core.repo.namespace": m.Repo.Namespace,
-				"io.core.repo.name":      m.Repo.Name,
-				"io.core.stage.name":     m.Stage.Name,
-				"io.core.stage.number":   fmt.Sprint(m.Stage.Number),
-				"io.core.ttl":            fmt.Sprint(time.Duration(m.Repo.Timeout) * time.Minute),
-				"io.core.expires":        fmt.Sprint(time.Now().Add(time.Duration(m.Repo.Timeout)*time.Minute + time.Hour).Unix()),
-				"io.core.created":        fmt.Sprint(time.Now().Unix()),
-				"io.core.protected":      "false",
+				"io.drone":                "true",
+				"io.drone.build.number":   fmt.Sprint(m.Build.Number),
+				"io.drone.repo.namespace": m.Repo.Namespace,
+				"io.drone.repo.name":      m.Repo.Name,
+				"io.drone.stage.name":     m.Stage.Name,
+				"io.drone.stage.number":   fmt.Sprint(m.Stage.Number),
+				"io.drone.ttl":            fmt.Sprint(time.Duration(m.Repo.Timeout) * time.Minute),
+				"io.drone.expires":        fmt.Sprint(time.Now().Add(time.Duration(m.Repo.Timeout)*time.Minute + time.Hour).Unix()),
+				"io.drone.created":        fmt.Sprint(time.Now().Unix()),
+				"io.drone.protected":      "false",
 			},
 		), // TODO append labels here
 		transform.WithLimits(

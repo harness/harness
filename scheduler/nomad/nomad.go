@@ -112,14 +112,14 @@ func (s *nomadScheduler) Schedule(ctx context.Context, stage *core.Stage) error 
 		},
 		Meta: map[string]string{
 			"io.drone":                "true",
-			"io.core.stage.created":   time.Unix(stage.Created, 0).String(),
-			"io.core.stage.scheduled": time.Now().String(),
-			"io.core.stage.id":        fmt.Sprint(stage.ID),
-			"io.core.stage.number":    fmt.Sprint(stage.Number),
-			"io.core.stage.os":        fmt.Sprint(stage.OS),
-			"io.core.stage.arch":      fmt.Sprint(stage.Arch),
-			"io.core.build.id":        fmt.Sprint(stage.BuildID),
-			"io.core.repo.id":         fmt.Sprint(stage.RepoID),
+			"io.drone.stage.created":   time.Unix(stage.Created, 0).String(),
+			"io.drone.stage.scheduled": time.Now().String(),
+			"io.drone.stage.id":        fmt.Sprint(stage.ID),
+			"io.drone.stage.number":    fmt.Sprint(stage.Number),
+			"io.drone.stage.os":        fmt.Sprint(stage.OS),
+			"io.drone.stage.arch":      fmt.Sprint(stage.Arch),
+			"io.drone.build.id":        fmt.Sprint(stage.BuildID),
+			"io.drone.repo.id":         fmt.Sprint(stage.RepoID),
 		},
 	}
 
