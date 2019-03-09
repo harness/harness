@@ -100,6 +100,7 @@ func provideGiteaLogin(config config.Config) login.Middleware {
 			Client:       defaultClient(config.Gitea.SkipVerify),
 			Logger:       logrus.StandardLogger(),
 			RedirectURL:  config.Server.Addr + "/login",
+			Scope:        config.Gitea.Scope,
 		}
 	}
 	return &gogs.Config{
