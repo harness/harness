@@ -293,7 +293,7 @@ type (
 
 	// Gitea provides the gitea client configuration.
 	Gitea struct {
-		Server       string   `envconfig:"DRONE_GITEA_SERVER" default:"https://try.gitea.io"`
+		Server       string   `envconfig:"DRONE_GITEA_SERVER"`
 		ClientID     string   `envconfig:"DRONE_GITEA_CLIENT_ID"`
 		ClientSecret string   `envconfig:"DRONE_GITEA_CLIENT_SECRET"`
 		SkipVerify   bool     `envconfig:"DRONE_GITEA_SKIP_VERIFY"`
