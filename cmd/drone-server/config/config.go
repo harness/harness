@@ -54,6 +54,7 @@ type (
 		Datadog  Datadog
 		Docker   Docker
 		HTTP     HTTP
+		Jsonnet  Jsonnet
 		Logging  Logging
 		// Prometheus Prometheus
 		Proxy        Proxy
@@ -114,6 +115,11 @@ type (
 		Enabled  bool   `envconfig:"DRONE_DATADOG_ENABLED"`
 		Endpoint string `envconfig:"DRONE_DATADOG_ENDPOINT"`
 		Token    string `envconfig:"DRONE_DATADOG_TOKEN"`
+	}
+
+	// Jsonnet configures the jsonnet plugin
+	Jsonnet struct {
+		Enabled bool `envconfig:"DRONE_JSONNET_ENABLED"`
 	}
 
 	// Kubernetes provides kubernetes configuration

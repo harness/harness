@@ -35,6 +35,7 @@ require (
 	github.com/golang/protobuf v1.2.0
 	github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c
 	github.com/google/go-cmp v0.2.0
+	github.com/google/go-jsonnet v0.12.1
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf
 	github.com/google/wire v0.2.1
 	github.com/googleapis/gnostic v0.2.0

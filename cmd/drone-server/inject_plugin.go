@@ -57,6 +57,7 @@ func provideConfigPlugin(client *scm.Client, contents core.FileService, conf spe
 			conf.Yaml.Secret,
 			conf.Yaml.SkipVerify,
 		),
+		config.Jsonnet(contents, conf.Jsonnet.Enabled),
 		config.Repository(contents),
 	)
 }
