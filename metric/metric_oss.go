@@ -14,15 +14,14 @@
 
 // +build oss
 
-package admission
+package metric
 
-import (
-	"time"
+import "github.com/drone/drone/core"
 
-	"github.com/drone/drone/core"
-)
-
-// Nobot is a no-op admission controller
-func Nobot(core.UserService, time.Duration) core.AdmissionService {
-	return new(noop)
-}
+func BuildCount(core.BuildStore)        {}
+func PendingBuildCount(core.BuildStore) {}
+func RunningBuildCount(core.BuildStore) {}
+func RunningJobCount(core.StageStore)   {}
+func PendingJobCount(core.StageStore)   {}
+func RepoCount(core.RepositoryStore)    {}
+func UserCount(core.UserStore)          {}

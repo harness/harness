@@ -383,6 +383,48 @@ func (c *Config) String() string {
 	return string(out)
 }
 
+// IsGitHub returns true if the GitHub integration
+// is activated.
+func (c *Config) IsGitHub() bool {
+	return c.Github.ClientID != ""
+}
+
+// IsGitHubEnterprise returns true if the GitHub
+// integration is activated.
+func (c *Config) IsGitHubEnterprise() bool {
+	return c.IsGitHub() && !strings.HasPrefix(c.Github.Server, "https://github.com")
+}
+
+// IsGitLab returns true if the GitLab integration
+// is activated.
+func (c *Config) IsGitLab() bool {
+	return c.GitLab.ClientID != ""
+}
+
+// IsGogs returns true if the Gogs integration
+// is activated.
+func (c *Config) IsGogs() bool {
+	return c.Gogs.Server != ""
+}
+
+// IsGitea returns true if the Gitea integration
+// is activated.
+func (c *Config) IsGitea() bool {
+	return c.Gitea.Server != ""
+}
+
+// IsBitbucket returns true if the Bitbucket Cloud
+// integration is activated.
+func (c *Config) IsBitbucket() bool {
+	return c.Bitbucket.ClientID != ""
+}
+
+// IsStash returns true if the Atlassian Stash
+// integration is activated.
+func (c *Config) IsStash() bool {
+	return c.Stash.Server != ""
+}
+
 func defaultAddress(c *Config) {
 	if c.Server.Key != "" || c.Server.Cert != "" || c.Server.Acme {
 		c.Server.Port = ":443"

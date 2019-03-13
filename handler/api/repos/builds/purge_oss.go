@@ -14,15 +14,15 @@
 
 // +build oss
 
-package admission
+package builds
 
 import (
-	"time"
+	"net/http"
 
 	"github.com/drone/drone/core"
 )
 
-// Nobot is a no-op admission controller
-func Nobot(core.UserService, time.Duration) core.AdmissionService {
-	return new(noop)
+// HandlePurge returns a non-op http.HandlerFunc.
+func HandlePurge(core.RepositoryStore, core.BuildStore) http.HandlerFunc {
+	return notImplemented
 }

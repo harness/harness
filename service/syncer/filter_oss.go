@@ -14,15 +14,20 @@
 
 // +build oss
 
-package admission
+package syncer
 
-import (
-	"time"
+import "github.com/drone/drone/core"
 
-	"github.com/drone/drone/core"
-)
+// FilterFunc can be used to filter which repositories are
+// synchronized with the local datastore.
+type FilterFunc func(*core.Repository) bool
 
-// Nobot is a no-op admission controller
-func Nobot(core.UserService, time.Duration) core.AdmissionService {
-	return new(noop)
+// NamespaceFilter is a no-op filter.
+func NamespaceFilter(namespaces []string) FilterFunc {
+	return noopFilter
+}
+
+// noopFilter is a filter function that always returns true.
+func noopFilter(*core.Repository) bool {
+	return true
 }

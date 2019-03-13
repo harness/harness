@@ -14,15 +14,22 @@
 
 // +build oss
 
-package admission
+package metric
 
 import (
-	"time"
+	"net/http"
 
 	"github.com/drone/drone/core"
 )
 
-// Nobot is a no-op admission controller
-func Nobot(core.UserService, time.Duration) core.AdmissionService {
-	return new(noop)
+// Server is a no-op http Metrics server.
+type Server struct {
 }
+
+// NewServer returns a new metrics server.
+func NewServer(session core.Session) *Server {
+	return new(Server)
+}
+
+// ServeHTTP is a no-op http handler.
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {}

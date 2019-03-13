@@ -4,4 +4,4 @@
 
 // +build !oss
 
-package rpc
+package builds

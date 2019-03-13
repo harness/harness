@@ -14,15 +14,32 @@
 
 // +build oss
 
-package admission
+package system
 
 import (
-	"time"
+	"net/http"
 
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/handler/api/render"
 )
 
-// Nobot is a no-op admission controller
-func Nobot(core.UserService, time.Duration) core.AdmissionService {
-	return new(noop)
+var notImplemented = func(w http.ResponseWriter, r *http.Request) {
+	render.NotImplemented(w, render.ErrNotImplemented)
+}
+
+// HandleLicense returns a no-op http.HandlerFunc.
+func HandleLicense(license core.License) http.HandlerFunc {
+	return notImplemented
+}
+
+// HandleStats returns a no-op http.HandlerFunc.
+func HandleStats(
+	core.BuildStore,
+	core.StageStore,
+	core.UserStore,
+	core.RepositoryStore,
+	core.Pubsub,
+	core.LogStream,
+) http.HandlerFunc {
+	return notImplemented
 }

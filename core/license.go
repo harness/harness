@@ -45,12 +45,14 @@ var ErrBuildLimit = errors.New("Build limit exceeded")
 type (
 	// License defines software license parameters.
 	License struct {
-		Expires time.Time `json:"expires_at,omitempty"`
-		Kind    string    `json:"kind,omitempty"`
-		Repos   int64     `json:"repos,omitempty"`
-		Users   int64     `json:"users,omitempty"`
-		Builds  int64     `json:"builds,omitempty"`
-		Nodes   int64     `json:"nodes,omitempty"`
+		Licensor     string    `json:"-"`
+		Subscription string    `json:"-"`
+		Expires      time.Time `json:"expires_at,omitempty"`
+		Kind         string    `json:"kind,omitempty"`
+		Repos        int64     `json:"repos,omitempty"`
+		Users        int64     `json:"users,omitempty"`
+		Builds       int64     `json:"builds,omitempty"`
+		Nodes        int64     `json:"nodes,omitempty"`
 	}
 
 	// LicenseService provides access to the license

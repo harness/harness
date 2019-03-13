@@ -94,6 +94,8 @@ func Load(path string) (*core.License, error) {
 
 	license := new(core.License)
 	license.Expires = decoded.Exp
+	license.Licensor = decoded.Cus
+	license.Subscription = decoded.Sub
 	err = json.Unmarshal(decoded.Dat, license)
 	if err != nil {
 		return nil, err

@@ -14,15 +14,11 @@
 
 // +build oss
 
-package admission
+package logs
 
-import (
-	"time"
+import "github.com/drone/drone/core"
 
-	"github.com/drone/drone/core"
-)
-
-// Nobot is a no-op admission controller
-func Nobot(core.UserService, time.Duration) core.AdmissionService {
-	return new(noop)
+// New returns a zero value LogStore.
+func NewS3Env(bucket, prefix, endpoint string, pathStyle bool) core.LogStore {
+	return nil
 }

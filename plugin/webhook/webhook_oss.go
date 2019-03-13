@@ -29,6 +29,6 @@ func New([]string, string) core.WebhookSender {
 
 type noop struct{}
 
-func (noop) Send(context.Context, *WebhookData) error {
+func (noop) Send(context.Context, *core.WebhookData) error {
 	return nil
 }

@@ -24,7 +24,7 @@ import (
 
 // Global returns a no-op configuration service.
 func Global(string, string, bool) core.ConfigService {
-	return
+	return new(noop)
 }
 
 type noop struct{}
