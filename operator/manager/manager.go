@@ -245,6 +245,13 @@ func (m *Manager) Details(ctx context.Context, id int64) (*Context, error) {
 		logger.Warnln("manager: cannot find build")
 		return nil, err
 	}
+	stages, err := m.Stages.List(ctx, stage.BuildID)
+	if err != nil {
+		logger = logger.WithError(err)
+		logger.Warnln("manager: cannot list stages")
+		return nil, err
+	}
+	build.Stages = stages
 	repo, err := m.Repos.Find(noContext, build.RepoID)
 	if err != nil {
 		logger = logger.WithError(err)

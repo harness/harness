@@ -37,10 +37,10 @@ CREATE TABLE IF NOT EXISTS builds (
 --,FOREIGN KEY(build_repo_id) REFERENCES repos(repo_id) ON DELETE CASCADE
 );
 
--- name: create-index-builds-in-progress
+-- name: create-index-builds-incomplete
 
-CREATE INDEX IF NOT EXISTS ix_build_in_progress ON builds (build_status)
- WHERE build_status IN ('pending', 'running');
+CREATE INDEX IF NOT EXISTS ix_build_incomplete ON builds (build_status)
+WHERE build_status IN ('pending', 'running');
 
 -- name: create-index-builds-repo
 
@@ -57,6 +57,3 @@ CREATE INDEX IF NOT EXISTS ix_build_sender ON builds (build_sender);
 -- name: create-index-builds-ref
 
 CREATE INDEX IF NOT EXISTS ix_build_ref ON builds (build_repo_id, build_ref);
-
-CREATE INDEX IF NOT EXISTS ix_build_incomplete ON builds (build_status)
-WHERE build_status IN ('pending', 'running');

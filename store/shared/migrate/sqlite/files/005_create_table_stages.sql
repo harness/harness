@@ -37,5 +37,5 @@ CREATE INDEX IF NOT EXISTS ix_stages_build ON stages (stage_build_id);
 
 -- name: create-index-stages-status
 
-CREATE INDEX IF NOT EXISTS ix_build_in_progress ON stages (stage_status)
+CREATE INDEX IF NOT EXISTS ix_stage_in_progress ON stages (stage_status)
 WHERE stage_status IN ('pending', 'running');
