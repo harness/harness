@@ -21,9 +21,6 @@ import (
 	"github.com/drone/drone/core"
 )
 
-// TODO(bradrydzewski) look into the possibility of using
-// s3gof3r as an alternate. github.com/rlmcpherson/s3gof3r
-
 // NewS3Env returns a new S3 log store.
 func NewS3Env(bucket, prefix, endpoint string, pathStyle bool) core.LogStore {
 	disableSSL := false

@@ -18,7 +18,7 @@ require (
 	github.com/drone/drone-go v0.0.0-20190217024616-3e8b71333e59
 	github.com/drone/drone-runtime v0.0.0-20190210191445-ad403a0ca24e
 	github.com/drone/drone-ui v0.0.0-20190223014501-189a4d227db5
-	github.com/drone/drone-yaml v1.0.1
+	github.com/drone/drone-yaml v1.0.2
 	github.com/drone/envsubst v1.0.1
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2
@@ -35,6 +35,7 @@ require (
 	github.com/golang/protobuf v1.2.0
 	github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c
 	github.com/google/go-cmp v0.2.0
+	github.com/google/go-jsonnet v0.12.1
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf
 	github.com/google/wire v0.2.1
 	github.com/googleapis/gnostic v0.2.0

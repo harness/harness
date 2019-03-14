@@ -46,6 +46,9 @@ func TestDo(t *testing.T) {
 	d.repos = repos
 	d.builds = builds
 	d.system.Host = "test.example.com"
+	d.config.License = "trial"
+	d.config.EnableGithub = true
+	d.config.EnableAgents = true
 	d.config.Endpoint = "https://api.datadoghq.com/api/v1/series"
 	d.do(noContext, 915148800)
 
@@ -60,19 +63,22 @@ var sample = `{
 			"metric": "drone.users",
 			"points": [[915148800, 10]],
 			"type": "gauge",
-			"host": "test.example.com"
+			"host": "test.example.com",
+			"tags": ["remote:github:cloud","scheduler:internal:agents","license:trial"]
 		},
 		{
 			"metric": "drone.repos",
 			"points": [[915148800, 20]],
 			"type": "gauge",
-			"host": "test.example.com"
+			"host": "test.example.com",
+			"tags": ["remote:github:cloud","scheduler:internal:agents","license:trial"]
 		},
 		{
 			"metric": "drone.builds",
 			"points": [[915148800, 30]],
 			"type": "gauge",
-			"host": "test.example.com"
+			"host": "test.example.com",
+			"tags": ["remote:github:cloud","scheduler:internal:agents","license:trial"]
 		}
     ]
 }`

@@ -2,15 +2,17 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+// +build !oss
+
 package rpc
 
 import (
 	"bytes"
 	"testing"
 
-	"github.com/drone/drone/store/shared/db"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/operator/manager"
+	"github.com/drone/drone/store/shared/db"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/h2non/gock"

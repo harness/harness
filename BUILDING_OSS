@@ -1,0 +1,11 @@
+1. Clone the repository
+2. Install go 1.11 or later with Go modules enabled
+3. Install binaries to $GOPATH/bin
+
+    go install -tags oss github.com/drone/drone/cmd/drone-server
+
+4. Start the server at localhost:8080
+
+    export DRONE_GITHUB_CLIENT_ID=...
+    export DRONE_GITHUB_CLIENT_SECRET=...
+    drone-server

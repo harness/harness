@@ -22,11 +22,11 @@ type payload struct {
 }
 
 type series struct {
-	Metric string            `json:"metric"`
-	Points [][]int64         `json:"points"`
-	Host   string            `json:"host"`
-	Type   string            `json:"type"`
-	Tags   map[string]string `json:"tags,omitempty"`
+	Metric string    `json:"metric"`
+	Points [][]int64 `json:"points"`
+	Host   string    `json:"host"`
+	Type   string    `json:"type"`
+	Tags   []string  `json:"tags,omitempty"`
 }
 
 // Datadog defines a no-op sink to datadog.
@@ -82,6 +82,7 @@ func (d *Datadog) do(ctx context.Context, unix int64) error {
 	if err != nil {
 		return err
 	}
+	tags := createTags(d.config)
 	data := new(payload)
 	data.Series = []series{
 		{
@@ -89,18 +90,21 @@ func (d *Datadog) do(ctx context.Context, unix int64) error {
 			Points: [][]int64{[]int64{unix, users}},
 			Type:   "gauge",
 			Host:   d.system.Host,
+			Tags:   tags,
 		},
 		{
 			Metric: "drone.repos",
 			Points: [][]int64{[]int64{unix, repos}},
 			Type:   "gauge",
 			Host:   d.system.Host,
+			Tags:   tags,
 		},
 		{
 			Metric: "drone.builds",
 			Points: [][]int64{[]int64{unix, builds}},
 			Type:   "gauge",
 			Host:   d.system.Host,
+			Tags:   tags,
 		},
 	}
 

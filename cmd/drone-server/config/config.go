@@ -54,6 +54,7 @@ type (
 		Datadog  Datadog
 		Docker   Docker
 		HTTP     HTTP
+		Jsonnet  Jsonnet
 		Logging  Logging
 		// Prometheus Prometheus
 		Proxy        Proxy
@@ -114,6 +115,11 @@ type (
 		Enabled  bool   `envconfig:"DRONE_DATADOG_ENABLED"`
 		Endpoint string `envconfig:"DRONE_DATADOG_ENDPOINT"`
 		Token    string `envconfig:"DRONE_DATADOG_TOKEN"`
+	}
+
+	// Jsonnet configures the jsonnet plugin
+	Jsonnet struct {
+		Enabled bool `envconfig:"DRONE_JSONNET_ENABLED"`
 	}
 
 	// Kubernetes provides kubernetes configuration
@@ -384,6 +390,48 @@ func Environ() (Config, error) {
 func (c *Config) String() string {
 	out, _ := yaml.Marshal(c)
 	return string(out)
+}
+
+// IsGitHub returns true if the GitHub integration
+// is activated.
+func (c *Config) IsGitHub() bool {
+	return c.Github.ClientID != ""
+}
+
+// IsGitHubEnterprise returns true if the GitHub
+// integration is activated.
+func (c *Config) IsGitHubEnterprise() bool {
+	return c.IsGitHub() && !strings.HasPrefix(c.Github.Server, "https://github.com")
+}
+
+// IsGitLab returns true if the GitLab integration
+// is activated.
+func (c *Config) IsGitLab() bool {
+	return c.GitLab.ClientID != ""
+}
+
+// IsGogs returns true if the Gogs integration
+// is activated.
+func (c *Config) IsGogs() bool {
+	return c.Gogs.Server != ""
+}
+
+// IsGitea returns true if the Gitea integration
+// is activated.
+func (c *Config) IsGitea() bool {
+	return c.Gitea.Server != ""
+}
+
+// IsBitbucket returns true if the Bitbucket Cloud
+// integration is activated.
+func (c *Config) IsBitbucket() bool {
+	return c.Bitbucket.ClientID != ""
+}
+
+// IsStash returns true if the Atlassian Stash
+// integration is activated.
+func (c *Config) IsStash() bool {
+	return c.Stash.Server != ""
 }
 
 func defaultAddress(c *Config) {

@@ -18,13 +18,21 @@ package sink
 
 import (
 	"context"
+
+	"github.com/drone/drone/core"
 )
 
 // Datadog defines a no-op sink to datadog.
 type Datadog struct{}
 
 // New returns a no-op sink.
-func New(Config) *Datadog {
+func New(
+	core.UserStore,
+	core.RepositoryStore,
+	core.BuildStore,
+	core.System,
+	Config,
+) *Datadog {
 	return new(Datadog)
 }
 

@@ -30,12 +30,14 @@ func New(
 	core.RepositoryStore,
 	core.UserStore,
 	core.Triggerer,
-) *noop {
-	return &noop{}
+) *Scheduler {
+	return &Scheduler{}
 }
 
-type noop struct{}
+// Schedule is a no-op cron scheduler.
+type Scheduler struct{}
 
-func (noop) Start(context.Context, time.Duration) error {
+// Start is a no-op.
+func (Scheduler) Start(context.Context, time.Duration) error {
 	return nil
 }

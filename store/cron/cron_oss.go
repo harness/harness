@@ -21,11 +21,10 @@ import (
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
-	"github.com/drone/drone/store/shared/encrypt"
 )
 
 // New returns a new Secret database store.
-func New(db *db.DB, enc encrypt.Encrypter) core.CronStore {
+func New(db *db.DB) core.CronStore {
 	return new(noop)
 }
 

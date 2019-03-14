@@ -16,9 +16,13 @@
 
 package admission
 
-import "github.com/drone/drone/core"
+import (
+	"time"
+
+	"github.com/drone/drone/core"
+)
 
 // Nobot is a no-op admission controller
-func Nobot(string, string, bool) core.AdmissionService {
+func Nobot(core.UserService, time.Duration) core.AdmissionService {
 	return new(noop)
 }

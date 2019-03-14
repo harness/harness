@@ -2,14 +2,16 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+// +build !oss
+
 package queue
 
 import (
 	"net/http"
 
+	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/render"
 	"github.com/drone/drone/logger"
-	"github.com/drone/drone/core"
 )
 
 // HandleItems returns an http.HandlerFunc that writes a

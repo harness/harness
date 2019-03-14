@@ -18,7 +18,7 @@ package registry
 
 import "github.com/drone/drone/core"
 
-// Endpoint returns a no-op registry credential provider.
-func Endpoint(string, string, bool) core.RegistryService {
+// EndpointSource returns a no-op registry credential provider.
+func EndpointSource(string, string, bool) core.RegistryService {
 	return new(noop)
 }

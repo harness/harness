@@ -26,14 +26,14 @@ type noop struct{}
 
 // FromConfig returns a no-op Kubernetes scheduler.
 func FromConfig(conf Config) (core.Scheduler, error) {
-	return new(noop)
+	return new(noop), nil
 }
 
 func (noop) Schedule(context.Context, *core.Stage) error {
 	return nil
 }
 
-func (noop) Request(context.Context, Filter) (*core.Stage, error) {
+func (noop) Request(context.Context, core.Filter) (*core.Stage, error) {
 	return nil, nil
 }
 

@@ -18,4 +18,18 @@ package sink
 type Config struct {
 	Endpoint string
 	Token    string
+
+	License          string
+	Licensor         string
+	Subscription     string
+	EnableGithub     bool
+	EnableGithubEnt  bool
+	EnableGitlab     bool
+	EnableBitbucket  bool
+	EnableStash      bool
+	EnableGogs       bool
+	EnableGitea      bool
+	EnableAgents     bool
+	EnableNomad      bool
+	EnableKubernetes bool
 }
