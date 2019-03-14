@@ -1,7 +1,7 @@
 -- name: create-table-repos
 
 CREATE TABLE IF NOT EXISTS repos (
- repo_id              SERIAL PRIMARY KEY
+ repo_id                    SERIAL PRIMARY KEY
 ,repo_uid                   VARCHAR(250)
 ,repo_user_id               INTEGER
 ,repo_namespace             VARCHAR(250)

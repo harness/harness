@@ -41,10 +41,6 @@ var migrations = []struct {
 		stmt: createTableBuilds,
 	},
 	{
-		name: "create-index-builds-in-progress",
-		stmt: createIndexBuildsInProgress,
-	},
-	{
 		name: "create-index-builds-repo",
 		stmt: createIndexBuildsRepo,
 	},
@@ -329,11 +325,6 @@ CREATE TABLE IF NOT EXISTS builds (
 );
 `
 
-var createIndexBuildsInProgress = `
-CREATE INDEX IF NOT EXISTS ix_build_in_progress ON builds (build_status)
-WHERE build_status IN ('pending', 'running');
-`
-
 var createIndexBuildsRepo = `
 CREATE INDEX IF NOT EXISTS ix_build_repo ON builds (build_repo_id);
 `
@@ -397,7 +388,7 @@ CREATE INDEX IF NOT EXISTS ix_stages_build ON stages (stage_build_id);
 `
 
 var createIndexStagesStatus = `
-CREATE INDEX IF NOT EXISTS ix_build_in_progress ON stages (stage_status)
+CREATE INDEX IF NOT EXISTS ix_stage_in_progress ON stages (stage_status)
 WHERE stage_status IN ('pending', 'running');
 `
 

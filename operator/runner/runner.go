@@ -372,12 +372,22 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 			s.Step.Envs["DRONE_JOB_STATUS"] = "success"
 			s.Step.Envs["DRONE_JOB_STARTED"] = strconv.FormatInt(s.Runtime.Time, 10)
 			s.Step.Envs["DRONE_JOB_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
+			s.Step.Envs["DRONE_STAGE_STATUS"] = "success"
+			s.Step.Envs["DRONE_STAGE_STARTED"] = strconv.FormatInt(s.Runtime.Time, 10)
+			s.Step.Envs["DRONE_STAGE_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
 
 			if s.Runtime.Error != nil {
 				s.Step.Envs["CI_BUILD_STATUS"] = "failure"
 				s.Step.Envs["CI_JOB_STATUS"] = "failure"
 				s.Step.Envs["DRONE_BUILD_STATUS"] = "failure"
+				s.Step.Envs["DRONE_STAGE_STATUS"] = "failure"
 				s.Step.Envs["DRONE_JOB_STATUS"] = "failure"
+			}
+			for _, stage := range m.Build.Stages {
+				if stage.IsFailed() {
+					s.Step.Envs["DRONE_BUILD_STATUS"] = "failure"
+					break
+				}
 			}
 
 			step, ok := steps[s.Step.Metadata.Name]

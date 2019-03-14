@@ -41,8 +41,8 @@ var migrations = []struct {
 		stmt: createTableBuilds,
 	},
 	{
-		name: "create-index-builds-in-progress",
-		stmt: createIndexBuildsInProgress,
+		name: "create-index-builds-incomplete",
+		stmt: createIndexBuildsIncomplete,
 	},
 	{
 		name: "create-index-builds-repo",
@@ -220,7 +220,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 var createTableRepos = `
 CREATE TABLE IF NOT EXISTS repos (
- repo_id              SERIAL PRIMARY KEY
+ repo_id                    SERIAL PRIMARY KEY
 ,repo_uid                   VARCHAR(250)
 ,repo_user_id               INTEGER
 ,repo_namespace             VARCHAR(250)
@@ -326,9 +326,9 @@ CREATE TABLE IF NOT EXISTS builds (
 );
 `
 
-var createIndexBuildsInProgress = `
-CREATE INDEX IF NOT EXISTS ix_build_in_progress ON builds (build_status)
- WHERE build_status IN ('pending', 'running');
+var createIndexBuildsIncomplete = `
+CREATE INDEX IF NOT EXISTS ix_build_incomplete ON builds (build_status)
+WHERE build_status IN ('pending', 'running');
 `
 
 var createIndexBuildsRepo = `
@@ -345,9 +345,6 @@ CREATE INDEX IF NOT EXISTS ix_build_sender ON builds (build_sender);
 
 var createIndexBuildsRef = `
 CREATE INDEX IF NOT EXISTS ix_build_ref ON builds (build_repo_id, build_ref);
-
-CREATE INDEX IF NOT EXISTS ix_build_incomplete ON builds (build_status)
-WHERE build_status IN ('pending', 'running');
 `
 
 //
@@ -391,7 +388,7 @@ CREATE INDEX IF NOT EXISTS ix_stages_build ON stages (stage_build_id);
 `
 
 var createIndexStagesStatus = `
-CREATE INDEX IF NOT EXISTS ix_build_in_progress ON stages (stage_status)
+CREATE INDEX IF NOT EXISTS ix_stage_in_progress ON stages (stage_status)
 WHERE stage_status IN ('pending', 'running');
 `
 
