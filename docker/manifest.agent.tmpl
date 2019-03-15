@@ -24,7 +24,13 @@ manifests:
       os: linux
       variant: v7
   -
-    image: drone/agent:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}windows-amd64
+    image: drone/agent:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}windows-1803
+    platform:
+      architecture: amd64
+      os: windows
+      variant: 1803
+  -
+    image: drone/agent:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}windows-1809
     platform:
       architecture: amd64
       os: windows
