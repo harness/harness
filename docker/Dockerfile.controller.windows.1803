@@ -8,5 +8,5 @@ ENV DRONE_RUNNER_PLATFORM=windows/amd64
 ENV DRONE_RUNNER_KERNEL=1803
 ENV DRONE_RUNNER_CAPACITY=1
 
-ADD release/windows/amd64/drone-controller.exe C:/drone-controller.exe
+ADD release/windows/1803/amd64/drone-controller.exe C:/drone-controller.exe
 ENTRYPOINT [ "C:\\drone-controller.exe" ]
