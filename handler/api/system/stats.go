@@ -167,19 +167,21 @@ const (
 	linuxAmd64
 	windows1709
 	windows1803
+	windows1809
 )
 
 // helper function returns a list of all platforms
 // and variants currently supported by core.
 func newPlatformList() []*platform {
-	platforms := [7]*platform{}
+	platforms := [8]*platform{}
 	platforms[linuxArm6] = &platform{OS: "linux", Arch: "arm", Variant: "v6"}
 	platforms[linuxArm7] = &platform{OS: "linux", Arch: "arm", Variant: "v7"}
 	platforms[linuxArm8] = &platform{OS: "linux", Arch: "arm64", Variant: "v8"}
 	platforms[linuxArm9] = &platform{OS: "linux", Arch: "arm", Variant: "v9"}
 	platforms[linuxAmd64] = &platform{OS: "linux", Arch: "amd64"}
-	platforms[windows1803] = &platform{OS: "windows", Arch: "arm", Kernel: "1803"}
-	platforms[windows1709] = &platform{OS: "windows", Arch: "arm", Kernel: "1709"}
+	platforms[windows1809] = &platform{OS: "windows", Arch: "arm64", Kernel: "1809"}
+	platforms[windows1803] = &platform{OS: "windows", Arch: "arm64", Kernel: "1803"}
+	platforms[windows1709] = &platform{OS: "windows", Arch: "arm64", Kernel: "1709"}
 	return platforms[:]
 }
 
@@ -193,9 +195,11 @@ func aggregatePlatformStats(platforms []*platform, stages []*core.Stage) {
 			index = windows1709
 		case stage.OS == "windows" && stage.Kernel == "1803":
 			index = windows1803
+		case stage.OS == "windows" && stage.Kernel == "1809":
+			index = windows1809
 		case stage.OS == "windows":
 			// default to 1803 when no variant specified
-			index = windows1803
+			index = windows1809
 		case stage.Arch == "arm" && stage.Variant == "v6":
 			index = linuxArm6
 		case stage.Arch == "arm" && stage.Variant == "v7":
