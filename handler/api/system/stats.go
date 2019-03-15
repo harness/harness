@@ -179,9 +179,9 @@ func newPlatformList() []*platform {
 	platforms[linuxArm8] = &platform{OS: "linux", Arch: "arm64", Variant: "v8"}
 	platforms[linuxArm9] = &platform{OS: "linux", Arch: "arm", Variant: "v9"}
 	platforms[linuxAmd64] = &platform{OS: "linux", Arch: "amd64"}
-	platforms[windows1809] = &platform{OS: "windows", Arch: "arm64", Kernel: "1809"}
-	platforms[windows1803] = &platform{OS: "windows", Arch: "arm64", Kernel: "1803"}
 	platforms[windows1709] = &platform{OS: "windows", Arch: "arm64", Kernel: "1709"}
+	platforms[windows1803] = &platform{OS: "windows", Arch: "arm64", Kernel: "1803"}
+	platforms[windows1809] = &platform{OS: "windows", Arch: "arm64", Kernel: "1809"}
 	return platforms[:]
 }
 
