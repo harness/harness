@@ -41,6 +41,8 @@ github.com/drone/drone-ui v0.0.0-20190212070020-c372640c766f h1:iNutUxLvlEY9rVB+
 github.com/drone/drone-ui v0.0.0-20190212070020-c372640c766f/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
 github.com/drone/drone-ui v0.0.0-20190223014501-189a4d227db5 h1:Il3QJ7J3TDIkuRddDr4oqt+A5uE/aFIg143rCKVT9oU=
 github.com/drone/drone-ui v0.0.0-20190223014501-189a4d227db5/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
+github.com/drone/drone-ui v0.0.0-20190315010942-1e9104f4212e h1:+JEJUCIvsnLlqDXaQf1sy77rgNUHrigbE8wcLAXJSyk=
+github.com/drone/drone-ui v0.0.0-20190315010942-1e9104f4212e/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
 github.com/drone/drone-ui v0.8.1 h1:I4WBAlnk/YQzCggQy/Qegb8Nu2T2R9KVzxso/lL98so=
 github.com/drone/drone-yaml v0.0.0-20190122234417-98eb77b4c58a h1:lkYg2gkLiuTtVgIUgBj5EX2EMj6sERIYfyM0RN1YzuY=
 github.com/drone/drone-yaml v0.0.0-20190122234417-98eb77b4c58a/go.mod h1:JclcdvMwnrxyy25H3YQRxVrsj2u4GdI6L6NgJpEIp00=
