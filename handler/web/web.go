@@ -127,6 +127,8 @@ func (s Server) Handler() http.Handler {
 	r.Handle("/favicon.png", h)
 	r.Handle("/js/*filepath", h)
 	r.Handle("/css/*filepath", h)
+	r.Handle("/img/*filepath", h)
+	r.Handle("/images/*filepath", h)
 	r.Handle("/static2/*filepath", h2)
 	r.NotFound(HandleIndex(s.Host, s.Session, s.Licenses))
 
