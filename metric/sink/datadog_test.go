@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/drone/drone/mock"
+	"github.com/drone/drone/version"
 	"github.com/golang/mock/gomock"
 	"github.com/h2non/gock"
 )
@@ -64,21 +65,21 @@ var sample = `{
 			"points": [[915148800, 10]],
 			"type": "gauge",
 			"host": "test.example.com",
-			"tags": ["remote:github:cloud","scheduler:internal:agents","license:trial"]
+			"tags": ["version:` + version.Version.String() + `","remote:github:cloud","scheduler:internal:agents","license:trial"]
 		},
 		{
 			"metric": "drone.repos",
 			"points": [[915148800, 20]],
 			"type": "gauge",
 			"host": "test.example.com",
-			"tags": ["remote:github:cloud","scheduler:internal:agents","license:trial"]
+			"tags": ["version:` + version.Version.String() + `","remote:github:cloud","scheduler:internal:agents","license:trial"]
 		},
 		{
 			"metric": "drone.builds",
 			"points": [[915148800, 30]],
 			"type": "gauge",
 			"host": "test.example.com",
-			"tags": ["remote:github:cloud","scheduler:internal:agents","license:trial"]
+			"tags": ["version:` + version.Version.String() + `","remote:github:cloud","scheduler:internal:agents","license:trial"]
 		}
     ]
 }`

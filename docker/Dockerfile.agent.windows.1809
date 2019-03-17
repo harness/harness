@@ -1,12 +1,12 @@
-FROM mcr.microsoft.com/windows/nanoserver:1803
+FROM mcr.microsoft.com/windows/nanoserver:1809
 USER ContainerAdministrator
 
 ENV GODEBUG=netdns=go
 ENV DRONE_RUNNER_OS=windows
 ENV DRONE_RUNNER_ARCH=amd64
 ENV DRONE_RUNNER_PLATFORM=windows/amd64
-ENV DRONE_RUNNER_KERNEL=1803
+ENV DRONE_RUNNER_KERNEL=1809
 ENV DRONE_RUNNER_CAPACITY=1
 
-ADD release/windows/1803/amd64/drone-agent.exe C:/drone-agent.exe
+ADD release/windows/1809/amd64/drone-agent.exe C:/drone-agent.exe
 ENTRYPOINT [ "C:\\drone-agent.exe" ]

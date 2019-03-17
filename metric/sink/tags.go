@@ -6,10 +6,17 @@
 
 package sink
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/drone/drone/version"
+)
 
 func createTags(config Config) []string {
-	var tags []string
+	tags := []string{
+		fmt.Sprintf("version:%s", version.Version),
+	}
+
 	switch {
 	case config.EnableBitbucket:
 		tags = append(tags, "remote:bitbucket:cloud")
