@@ -44,6 +44,14 @@ type Scheduler interface {
 	// returns true if the build has been cancelled.
 	Cancelled(context.Context, int64) (bool, error)
 
+	// Pause pauses the scheduler and prevents new pipelines
+	// from being scheduled for execution.
+	Pause(context.Context) error
+
+	// Resume unpauses the scheduler, allowing new pipelines
+	// to be scheduled for execution.
+	Resume(context.Context) error
+
 	// Stats provides statistics for underlying scheduler. The
 	// data format is scheduler-specific.
 	Stats(context.Context) (interface{}, error)

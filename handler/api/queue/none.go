@@ -30,3 +30,11 @@ var notImplemented = func(w http.ResponseWriter, r *http.Request) {
 func HandleItems(store core.StageStore) http.HandlerFunc {
 	return notImplemented
 }
+
+func HandlePause(core.Scheduler) http.HandlerFunc {
+	return notImplemented
+}
+
+func HandleResume(core.Scheduler) http.HandlerFunc {
+	return notImplemented
+}

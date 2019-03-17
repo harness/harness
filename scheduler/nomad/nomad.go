@@ -111,7 +111,7 @@ func (s *nomadScheduler) Schedule(ctx context.Context, stage *core.Stage) error 
 			},
 		},
 		Meta: map[string]string{
-			"io.drone":                "true",
+			"io.drone":                 "true",
 			"io.drone.stage.created":   time.Unix(stage.Created, 0).String(),
 			"io.drone.stage.scheduled": time.Now().String(),
 			"io.drone.stage.id":        fmt.Sprint(stage.ID),
@@ -204,6 +204,14 @@ func (s *nomadScheduler) Cancelled(context.Context, int64) (bool, error) {
 
 func (s *nomadScheduler) Stats(context.Context) (interface{}, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (s *nomadScheduler) Pause(context.Context) error {
+	return errors.New("not implemented")
+}
+
+func (s *nomadScheduler) Resume(context.Context) error {
+	return errors.New("not implemented")
 }
 
 // stringToPtr returns the pointer to a string
