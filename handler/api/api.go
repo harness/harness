@@ -218,6 +218,7 @@ func (s Server) Handler() http.Handler {
 		r.Route("/encrypt", func(r chi.Router) {
 			r.Use(acl.CheckWriteAccess())
 			r.Post("/", encrypt.Handler(s.Repos))
+			r.Post("/secret", encrypt.Handler(s.Repos))
 		})
 
 		r.Route("/cron", func(r chi.Router) {

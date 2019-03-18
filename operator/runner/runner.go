@@ -236,6 +236,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 	}
 
 	secretService := secret.Combine(
+		secret.Encrypted(),
 		secret.Static(m.Secrets),
 		r.Secrets,
 	)
