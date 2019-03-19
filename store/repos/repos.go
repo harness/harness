@@ -443,6 +443,12 @@ WHERE perms.perm_user_id = :user_id
 ORDER BY repo_slug ASC;
 `
 
+// OPTIMIZED QUERY:
+// FROM repos LEFT OUTER JOIN builds ON build_id = repo_counter
+// INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
+// WHERE perms.perm_user_id = 2
+// ORDER BY repo_slug ASC;
+
 const queryRepoWithBuildAll = queryColsBulds + `
 FROM repos
 INNER JOIN perms  ON perms.perm_repo_uid = repos.repo_uid
@@ -454,7 +460,6 @@ LIMIT 25;
 
 const queryRepoWithBuildIncomplete = queryColsBulds + `
 FROM repos
-INNER JOIN perms  ON perms.perm_repo_uid = repos.repo_uid
 INNER JOIN builds ON builds.build_repo_id = repos.repo_id
 WHERE EXISTS (
     SELECT stage_id
