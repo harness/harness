@@ -432,21 +432,21 @@ WHERE repo_id = :repo_id
 `
 
 const queryRepoWithBuild = queryColsBulds + `
-FROM repos LEFT OUTER JOIN builds ON build_id = (
-	SELECT build_id FROM builds
-	WHERE builds.build_repo_id = repos.repo_id
-	ORDER BY build_id DESC
-	LIMIT 1
-)
+FROM repos LEFT OUTER JOIN builds ON build_id = repo_counter
 INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
 WHERE perms.perm_user_id = :user_id
 ORDER BY repo_slug ASC;
 `
 
-// OPTIMIZED QUERY:
-// FROM repos LEFT OUTER JOIN builds ON build_id = repo_counter
+// const queryRepoWithBuild = queryColsBulds + `
+// FROM repos LEFT OUTER JOIN builds ON build_id = (
+// 	SELECT build_id FROM builds
+// 	WHERE builds.build_repo_id = repos.repo_id
+// 	ORDER BY build_id DESC
+// 	LIMIT 1
+// )
 // INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
-// WHERE perms.perm_user_id = 2
+// WHERE perms.perm_user_id = :user_id
 // ORDER BY repo_slug ASC;
 
 const queryRepoWithBuildAll = queryColsBulds + `
@@ -470,12 +470,3 @@ WHERE EXISTS (
 ORDER BY build_id DESC
 LIMIT 50;
 `
-
-// const queryRepoWithBuildIncompleteOld = queryColsBulds + `
-// FROM repos
-// INNER JOIN perms  ON perms.perm_repo_uid = repos.repo_uid
-// INNER JOIN builds ON builds.build_repo_id = repos.repo_id
-// WHERE builds.build_status IN ('pending', 'running')
-// ORDER BY build_id DESC
-// LIMIT 50;
-// `
