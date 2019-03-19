@@ -55,7 +55,11 @@ func (s *repoStore) ListLatest(ctx context.Context, id int64) ([]*core.Repositor
 			"user_id":     id,
 			"repo_active": true,
 		}
-		query, args, err := binder.BindNamed(queryRepoWithBuild, params)
+		stmt := queryRepoWithBuild
+		if s.db.Driver() == db.Postgres {
+			stmt = queryRepoWithBuildPostgres
+		}
+		query, args, err := binder.BindNamed(stmt, params)
 		if err != nil {
 			return err
 		}
@@ -432,22 +436,27 @@ WHERE repo_id = :repo_id
 `
 
 const queryRepoWithBuild = queryColsBulds + `
-FROM repos LEFT OUTER JOIN builds ON build_id = repo_counter
+FROM repos LEFT OUTER JOIN builds ON build_id = (
+	SELECT build_id FROM builds
+	WHERE builds.build_repo_id = repos.repo_id
+	ORDER BY build_id DESC
+	LIMIT 1
+)
 INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
 WHERE perms.perm_user_id = :user_id
-ORDER BY repo_slug ASC;
+ORDER BY repo_slug ASC
 `
 
-// const queryRepoWithBuild = queryColsBulds + `
-// FROM repos LEFT OUTER JOIN builds ON build_id = (
-// 	SELECT build_id FROM builds
-// 	WHERE builds.build_repo_id = repos.repo_id
-// 	ORDER BY build_id DESC
-// 	LIMIT 1
-// )
-// INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
-// WHERE perms.perm_user_id = :user_id
-// ORDER BY repo_slug ASC;
+const queryRepoWithBuildPostgres = queryColsBulds + `
+FROM repos LEFT OUTER JOIN builds ON build_id = (
+	SELECT DISTINCT ON (build_repo_id) build_id FROM builds
+	WHERE builds.build_repo_id = repos.repo_id
+	ORDER BY build_repo_id, build_id DESC
+)
+INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
+WHERE perms.perm_user_id = :user_id
+ORDER BY repo_slug ASC
+`
 
 const queryRepoWithBuildAll = queryColsBulds + `
 FROM repos
