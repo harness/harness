@@ -19,6 +19,7 @@ type Config struct {
 	Namespace        string
 	ServiceAccount   string
 	ConfigURL        string
+	Annotations      string
 	ConfigPath       string
 	TTL              int
 	Image            string

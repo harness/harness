@@ -21,7 +21,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	batchv1 "k8s.io/api/batch/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -52,6 +52,7 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 	env := toEnvironment(
 		map[string]string{
 			"DRONE_RUNNER_PRIVILEGED_IMAGES": strings.Join(s.config.ImagePrivileged, ","),
+			"DRONE_RUNNER_ANNOTATIONS":       s.config.Annotations,
 			"DRONE_LIMIT_MEM":                fmt.Sprint(s.config.LimitMemory),
 			"DRONE_LIMIT_CPU":                fmt.Sprint(s.config.LimitCompute),
 			"DRONE_STAGE_ID":                 fmt.Sprint(stage.ID),
@@ -180,7 +181,7 @@ func (s *kubeScheduler) Cancel(ctx context.Context, id int64) error {
 			continue
 		}
 		err = s.client.BatchV1().Jobs(job.Namespace).Delete(job.Name, &metav1.DeleteOptions{
-		// GracePeriodSeconds
+			// GracePeriodSeconds
 		})
 		if err != nil {
 			result = multierror.Append(result, err)

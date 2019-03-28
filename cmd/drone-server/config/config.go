@@ -197,22 +197,25 @@ type (
 
 	// Runner provides the runner configuration.
 	Runner struct {
-		Local      bool              `envconfig:"DRONE_RUNNER_LOCAL"`
-		Image      string            `envconfig:"DRONE_RUNNER_IMAGE"    default:"drone/controller:1.0.0"`
-		Platform   string            `envconfig:"DRONE_RUNNER_PLATFORM" default:"linux/amd64"`
-		OS         string            `envconfig:"DRONE_RUNNER_OS"`
-		Arch       string            `envconfig:"DRONE_RUNNER_ARCH"`
-		Kernel     string            `envconfig:"DRONE_RUNNER_KERNEL"`
-		Variant    string            `envconfig:"DRONE_RUNNER_VARIANT"`
-		Machine    string            `envconfig:"DRONE_RUNNER_NAME"`
-		Capacity   int               `envconfig:"DRONE_RUNNER_CAPACITY" default:"2"`
-		Labels     map[string]string `envconfig:"DRONE_RUNNER_LABELS"`
-		Volumes    []string          `envconfig:"DRONE_RUNNER_VOLUMES"`
-		Networks   []string          `envconfig:"DRONE_RUNNER_NETWORKS"`
-		Devices    []string          `envconfig:"DRONE_RUNNER_DEVICES"`
-		Privileged []string          `envconfig:"DRONE_RUNNER_PRIVILEGED_IMAGES"`
-		Environ    map[string]string `envconfig:"DRONE_RUNNER_ENVIRON"`
-		Limits     struct {
+		Local    bool   `envconfig:"DRONE_RUNNER_LOCAL"`
+		Image    string `envconfig:"DRONE_RUNNER_IMAGE"    default:"drone/controller:1.0.0"`
+		Platform string `envconfig:"DRONE_RUNNER_PLATFORM" default:"linux/amd64"`
+		OS       string `envconfig:"DRONE_RUNNER_OS"`
+		// Annotations is map[string]string, but will run through envconfig one more time
+		// before being converted. Keeping String here.
+		Annotations string            `envconfig:"DRONE_RUNNER_ANNOTATIONS"`
+		Arch        string            `envconfig:"DRONE_RUNNER_ARCH"`
+		Kernel      string            `envconfig:"DRONE_RUNNER_KERNEL"`
+		Variant     string            `envconfig:"DRONE_RUNNER_VARIANT"`
+		Machine     string            `envconfig:"DRONE_RUNNER_NAME"`
+		Capacity    int               `envconfig:"DRONE_RUNNER_CAPACITY" default:"2"`
+		Labels      map[string]string `envconfig:"DRONE_RUNNER_LABELS"`
+		Volumes     []string          `envconfig:"DRONE_RUNNER_VOLUMES"`
+		Networks    []string          `envconfig:"DRONE_RUNNER_NETWORKS"`
+		Devices     []string          `envconfig:"DRONE_RUNNER_DEVICES"`
+		Privileged  []string          `envconfig:"DRONE_RUNNER_PRIVILEGED_IMAGES"`
+		Environ     map[string]string `envconfig:"DRONE_RUNNER_ENVIRON"`
+		Limits      struct {
 			MemSwapLimit Bytes  `envconfig:"DRONE_LIMIT_MEM_SWAP"`
 			MemLimit     Bytes  `envconfig:"DRONE_LIMIT_MEM"`
 			ShmSize      Bytes  `envconfig:"DRONE_LIMIT_SHM_SIZE"`
