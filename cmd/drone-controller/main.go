@@ -73,7 +73,7 @@ func main() {
 	var engine engine.Engine
 
 	if isKubernetes() {
-		engine, err = kube.NewFile("", "", config.Runner.Machine)
+		engine, err = kube.NewFile("", "", config.Runner.Machine, config.Runner.Annotations)
 		if err != nil {
 			logrus.WithError(err).
 				Fatalln("cannot create the kubernetes client")
