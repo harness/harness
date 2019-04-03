@@ -16,8 +16,12 @@
 
 package license
 
-// DefaultLicense is an empty license with no restrictions.
-var DefaultLicense = &License{Kind: LicenseFoss}
+import (
+    "github.com/drone/drone/core"
+)
 
-func Trial(string) *License         { return nil }
-func Load(string) (*License, error) { return DefaultLicense, nil }
+// DefaultLicense is an empty license with no restrictions.
+var DefaultLicense = &core.License{Kind: core.LicenseFoss}
+
+func Trial(string) *core.License         { return nil }
+func Load(string) (*core.License, error) { return DefaultLicense, nil }
