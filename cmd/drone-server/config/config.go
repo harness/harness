@@ -132,6 +132,10 @@ type (
 		ServiceAccountName string `envconfig:"DRONE_KUBERNETES_SERVICE_ACCOUNT"`
 		PullPolicy         string `envconfig:"DRONE_KUBERNETES_IMAGE_PULL" default:"Always"`
 		Image              string `envconfig:"DRONE_KUBERNETES_IMAGE"`
+		JobCPULimit        string `envconfig:"DRONE_KUBERNETES_JOB_CPU_LIMIT"`
+		JobCPURequest      string `envconfig:"DRONE_KUBERNETES_JOB_CPU_REQUEST"`
+		JobMemoryLimit     string `envconfig:"DRONE_KUBERNETES_JOB_MEMORY_LIMIT"`
+		JobMemoryRequest   string `envconfig:"DRONE_KUBERNETES_JOB_MEMORY_REQUEST"`
 	}
 
 	// Nomad configuration.

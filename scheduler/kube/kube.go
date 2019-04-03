@@ -22,6 +22,7 @@ import (
 
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -49,6 +50,8 @@ var _ core.Scheduler = (*kubeScheduler)(nil)
 
 // Schedule schedules the stage for execution.
 func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
+	var err error
+
 	env := toEnvironment(
 		map[string]string{
 			"DRONE_RUNNER_PRIVILEGED_IMAGES": strings.Join(s.config.ImagePrivileged, ","),
@@ -104,6 +107,36 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 	rand := strings.ToLower(uniuri.NewLen(12))
 	name := fmt.Sprintf("drone-job-%d-%s", stage.ID, rand)
 
+	// @step: check each of the resources
+	resources := v1.ResourceRequirements{
+		Limits:   v1.ResourceList{},
+		Requests: v1.ResourceList{},
+	}
+	if s.config.JobLimitCompute != "" {
+		resources.Limits[v1.ResourceCPU], err = resource.ParseQuantity(s.config.JobLimitCompute)
+		if err != nil {
+			return err
+		}
+	}
+	if s.config.JobLimitMemory != "" {
+		resources.Limits[v1.ResourceMemory], err = resource.ParseQuantity(s.config.JobLimitMemory)
+		if err != nil {
+			return err
+		}
+	}
+	if s.config.JobRequestCompute != "" {
+		resources.Requests[v1.ResourceCPU], err = resource.ParseQuantity(s.config.JobRequestCompute)
+		if err != nil {
+			return err
+		}
+	}
+	if s.config.JobRequestMemory != "" {
+		resources.Requests[v1.ResourceMemory], err = resource.ParseQuantity(s.config.JobRequestMemory)
+		if err != nil {
+			return err
+		}
+	}
+
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: name,
@@ -131,6 +164,7 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 						Image:           internal.DefaultImage(s.config.Image),
 						ImagePullPolicy: pull,
 						Env:             env,
+						Resources:       resources,
 					}},
 				},
 			},
@@ -157,7 +191,7 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 	})
 
 	log.Debugf("kubernetes: creating job")
-	job, err := s.client.BatchV1().Jobs(s.namespace()).Create(job)
+	job, err = s.client.BatchV1().Jobs(s.namespace()).Create(job)
 	if err != nil {
 		logrus.WithError(err).Errorln("kubernetes: cannot create job")
 	} else {
