@@ -26,7 +26,7 @@
     "Closed": false,
     "Merged": false,
     "Author": {
-      "Login": "unknwon",
+      "Login": "unknown",
       "Name": "",
       "Email": "noreply@gogs.io",
       "Avatar": "https://secure.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
@@ -35,7 +35,7 @@
     "Updated": "0001-01-01T00:00:00Z"
   },
   "Sender": {
-    "Login": "unknwon",
+    "Login": "unknown",
     "Name": "",
     "Email": "noreply@gogs.io",
     "Avatar": "https://secure.gravatar.com/avatar/8c58a0be77ee441bb8f8595b7f1b4e87"
