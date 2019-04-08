@@ -267,8 +267,11 @@ ORDER BY stage_id ASC
 `
 
 const queryUnfinishedMysql = queryBase + `
+ JOIN builds
+   ON stages.stage_build_id = builds.build_id
 WHERE stage_id IN (SELECT stage_id FROM stages_unfinished)
   AND stage_status IN ('pending','running')
+  AND build_status <> 'killed'
 ORDER BY stage_id ASC
 `
 
