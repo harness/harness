@@ -16,13 +16,13 @@ require (
 	github.com/docker/go-connections v0.3.0
 	github.com/docker/go-units v0.3.3
 	github.com/drone/drone-go v0.0.0-20190217024616-3e8b71333e59
-	github.com/drone/drone-runtime v0.0.0-20190210191445-ad403a0ca24e
+	github.com/drone/drone-runtime v1.0.4
 	github.com/drone/drone-ui v0.0.0-20190318215801-d6c3d11a1c3f
 	github.com/drone/drone-yaml v1.0.6
 	github.com/drone/envsubst v1.0.1
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.3
-	github.com/drone/go-scm v1.2.0
+	github.com/drone/go-scm v1.3.0
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ghodss/yaml v1.0.0
@@ -80,14 +80,14 @@ require (
 	github.com/sirupsen/logrus v0.0.0-20181103062819-44067abb194b
 	github.com/spf13/pflag v1.0.3
 	github.com/unrolled/secure v0.0.0-20181022170031-4b6b7cf51606
-	golang.org/x/crypto v0.0.0-20181012144002-a92615f3c490
+	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
 	golang.org/x/net v0.0.0-20181011144130-49bb7cea24b1
 	golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890
 	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
 	golang.org/x/sys v0.0.0-20181011152604-fa43e7bc11ba
 	golang.org/x/text v0.3.0
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c
-	google.golang.org/appengine v1.2.0
+	google.golang.org/appengine v1.3.0
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v2 v2.2.2
