@@ -52,7 +52,7 @@ func (c *encrypted) Find(ctx context.Context, in *core.SecretArgs) (*core.Secret
 	// if the build event is a pull request and the source
 	// repository is a fork, the secret is not exposed to
 	// the pipeline, for security reasons.
-	if in.Repo.Private &&
+	if in.Repo.Private == false &&
 		in.Build.Event == core.EventPullRequest &&
 		in.Build.Fork != "" {
 		logger.Trace("secret: encrypted: restricted from forks")
