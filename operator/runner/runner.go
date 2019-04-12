@@ -184,23 +184,24 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 	// TODO mutate the yaml
 	//
 
-	y, err := envsubst.Eval(string(m.Config.Data), func(name string) string {
+	// this code is temporarily in place to detect and convert
+	// the legacy yaml configuration file to the new format.
+	y, err := converter.ConvertString(string(m.Config.Data), converter.Metadata{
+		Filename: m.Repo.Config,
+		Ref:      m.Build.Ref,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	y, err = envsubst.Eval(y, func(name string) string {
 		env := environ[name]
 		if strings.Contains(env, "\n") {
 			env = fmt.Sprintf("%q", env)
 		}
 		return env
 	})
-
-	// this code is temporarily in place to detect and convert
-	// the legacy yaml configuration file to the new format.
-	y, err = converter.ConvertString(y, converter.Metadata{
-		Filename: m.Repo.Config,
-		Ref:      m.Build.Ref,
-	})
-	if err != nil {
-		return err
-	}
 
 	manifest, err := yaml.ParseString(y)
 	if err != nil {
