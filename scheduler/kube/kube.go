@@ -109,7 +109,7 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 			GenerateName: name,
 			Namespace:    s.namespace(),
 			Annotations: map[string]string{
-				"io.drone":                "true",
+				"io.drone":                 "true",
 				"io.drone.stage.created":   time.Unix(stage.Created, 0).String(),
 				"io.drone.stage.scheduled": time.Now().String(),
 				"io.drone.stage.id":        fmt.Sprint(stage.ID),
@@ -199,6 +199,14 @@ func (s *kubeScheduler) Request(context.Context, core.Filter) (*core.Stage, erro
 
 func (s *kubeScheduler) Stats(_ context.Context) (interface{}, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (s *kubeScheduler) Pause(context.Context) error {
+	return errors.New("not implemented")
+}
+
+func (s *kubeScheduler) Resume(context.Context) error {
+	return errors.New("not implemented")
 }
 
 func (s *kubeScheduler) namespace() string {

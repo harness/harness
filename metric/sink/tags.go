@@ -41,7 +41,7 @@ func createTags(config Config) []string {
 		tags = append(tags, "scheduler:internal:agents")
 	case config.EnableKubernetes:
 		tags = append(tags, "scheduler:kubernetes")
-	case config.EnableGithub:
+	case config.EnableNomad:
 		tags = append(tags, "scheduler:nomad")
 	default:
 		tags = append(tags, "scheduler:internal:local")

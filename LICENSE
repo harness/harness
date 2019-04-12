@@ -59,6 +59,8 @@ legal claim.**
 
 -----------------------------------------------------------------
 
+Waiver: Small Business
+
 Contributor waives the terms of rule 1 for companies meeting all
 the following criteria, counting all subsidiaries and affiliated
 entities as one:
@@ -69,7 +71,18 @@ entities as one:
 2. less than $5 million US dollars in all-time aggregate debt and
    equity financing
 
-3. less than 15,000 total pipelines executed using this software
+Contributor will not revoke this waiver, but may change terms for
+future versions of the software.
+
+-----------------------------------------------------------------
+
+Waiver: Low Volume
+
+Contributor waives the terms of rule 1 for companies meeting all
+the following criteria, counting all subsidiaries and affiliated
+entities as one:
+
+1. less than 15,000 total pipelines executed using this software
    in the immediately preceding, year-long period
 
 Contributor will not revoke this waiver, but may change terms for

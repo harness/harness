@@ -1521,6 +1521,18 @@ func (mr *MockSchedulerMockRecorder) Cancelled(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cancelled", reflect.TypeOf((*MockScheduler)(nil).Cancelled), arg0, arg1)
 }
 
+// Pause mocks base method
+func (m *MockScheduler) Pause(arg0 context.Context) error {
+	ret := m.ctrl.Call(m, "Pause", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Pause indicates an expected call of Pause
+func (mr *MockSchedulerMockRecorder) Pause(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pause", reflect.TypeOf((*MockScheduler)(nil).Pause), arg0)
+}
+
 // Request mocks base method
 func (m *MockScheduler) Request(arg0 context.Context, arg1 core.Filter) (*core.Stage, error) {
 	ret := m.ctrl.Call(m, "Request", arg0, arg1)
@@ -1532,6 +1544,18 @@ func (m *MockScheduler) Request(arg0 context.Context, arg1 core.Filter) (*core.S
 // Request indicates an expected call of Request
 func (mr *MockSchedulerMockRecorder) Request(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Request", reflect.TypeOf((*MockScheduler)(nil).Request), arg0, arg1)
+}
+
+// Resume mocks base method
+func (m *MockScheduler) Resume(arg0 context.Context) error {
+	ret := m.ctrl.Call(m, "Resume", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Resume indicates an expected call of Resume
+func (mr *MockSchedulerMockRecorder) Resume(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Resume", reflect.TypeOf((*MockScheduler)(nil).Resume), arg0)
 }
 
 // Schedule mocks base method

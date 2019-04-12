@@ -198,7 +198,7 @@ type (
 	// Runner provides the runner configuration.
 	Runner struct {
 		Local      bool              `envconfig:"DRONE_RUNNER_LOCAL"`
-		Image      string            `envconfig:"DRONE_RUNNER_IMAGE"    default:"drone/controller:1.0.0-rc.6"`
+		Image      string            `envconfig:"DRONE_RUNNER_IMAGE"    default:"drone/controller:1.0.0"`
 		Platform   string            `envconfig:"DRONE_RUNNER_PLATFORM" default:"linux/amd64"`
 		OS         string            `envconfig:"DRONE_RUNNER_OS"`
 		Arch       string            `envconfig:"DRONE_RUNNER_ARCH"`

@@ -12,29 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build oss
-
-package queue
-
-import (
-	"net/http"
-
-	"github.com/drone/drone/core"
-	"github.com/drone/drone/handler/api/render"
-)
-
-var notImplemented = func(w http.ResponseWriter, r *http.Request) {
-	render.NotImplemented(w, render.ErrNotImplemented)
-}
-
-func HandleItems(store core.StageStore) http.HandlerFunc {
-	return notImplemented
-}
-
-func HandlePause(core.Scheduler) http.HandlerFunc {
-	return notImplemented
-}
-
-func HandleResume(core.Scheduler) http.HandlerFunc {
-	return notImplemented
-}
+package secret

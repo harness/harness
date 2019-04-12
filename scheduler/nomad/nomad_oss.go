@@ -48,3 +48,11 @@ func (noop) Cancelled(context.Context, int64) (bool, error) {
 func (noop) Stats(context.Context) (interface{}, error) {
 	return nil, nil
 }
+
+func (noop) Pause(context.Context) error {
+	return nil
+}
+
+func (noop) Resume(context.Context) error {
+	return nil
+}

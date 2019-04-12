@@ -218,6 +218,7 @@ func (s Server) Handler() http.Handler {
 		r.Route("/encrypt", func(r chi.Router) {
 			r.Use(acl.CheckWriteAccess())
 			r.Post("/", encrypt.Handler(s.Repos))
+			r.Post("/secret", encrypt.Handler(s.Repos))
 		})
 
 		r.Route("/cron", func(r chi.Router) {
@@ -249,8 +250,8 @@ func (s Server) Handler() http.Handler {
 	r.Route("/queue", func(r chi.Router) {
 		r.Use(acl.AuthorizeAdmin)
 		r.Get("/", queue.HandleItems(s.Stages))
-		// r.Post("/", queue.HandleResume(s.Queue))
-		// r.Delete("/", queue.HandlePause(s.Queue))
+		r.Post("/", queue.HandleResume(s.Scheduler))
+		r.Delete("/", queue.HandlePause(s.Scheduler))
 	})
 
 	r.Route("/user", func(r chi.Router) {

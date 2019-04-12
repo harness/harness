@@ -55,7 +55,11 @@ func (s *repoStore) ListLatest(ctx context.Context, id int64) ([]*core.Repositor
 			"user_id":     id,
 			"repo_active": true,
 		}
-		query, args, err := binder.BindNamed(queryRepoWithBuild, params)
+		stmt := queryRepoWithBuild
+		if s.db.Driver() == db.Postgres {
+			stmt = queryRepoWithBuildPostgres
+		}
+		query, args, err := binder.BindNamed(stmt, params)
 		if err != nil {
 			return err
 		}
@@ -431,6 +435,18 @@ WHERE repo_id = :repo_id
   AND repo_version = :repo_version_old
 `
 
+// TODO(bradrydzewski) this query needs performance tuning.
+// one approach that is promising is the ability to use the
+// repo_counter (latest build number) to join on the build
+// table.
+//
+//   FROM repos LEFT OUTER JOIN builds ON (
+//     repos.repo_id = builds.build_repo_id AND
+//     builds.build_number = repos.repo_counter
+//   )
+//   INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
+//
+
 const queryRepoWithBuild = queryColsBulds + `
 FROM repos LEFT OUTER JOIN builds ON build_id = (
 	SELECT build_id FROM builds
@@ -440,7 +456,18 @@ FROM repos LEFT OUTER JOIN builds ON build_id = (
 )
 INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
 WHERE perms.perm_user_id = :user_id
-ORDER BY repo_slug ASC;
+ORDER BY repo_slug ASC
+`
+
+const queryRepoWithBuildPostgres = queryColsBulds + `
+FROM repos LEFT OUTER JOIN builds ON build_id = (
+	SELECT DISTINCT ON (build_repo_id) build_id FROM builds
+	WHERE builds.build_repo_id = repos.repo_id
+	ORDER BY build_repo_id, build_id DESC
+)
+INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
+WHERE perms.perm_user_id = :user_id
+ORDER BY repo_slug ASC
 `
 
 const queryRepoWithBuildAll = queryColsBulds + `
@@ -454,7 +481,6 @@ LIMIT 25;
 
 const queryRepoWithBuildIncomplete = queryColsBulds + `
 FROM repos
-INNER JOIN perms  ON perms.perm_repo_uid = repos.repo_uid
 INNER JOIN builds ON builds.build_repo_id = repos.repo_id
 WHERE EXISTS (
     SELECT stage_id
@@ -465,12 +491,3 @@ WHERE EXISTS (
 ORDER BY build_id DESC
 LIMIT 50;
 `
-
-// const queryRepoWithBuildIncompleteOld = queryColsBulds + `
-// FROM repos
-// INNER JOIN perms  ON perms.perm_repo_uid = repos.repo_uid
-// INNER JOIN builds ON builds.build_repo_id = repos.repo_id
-// WHERE builds.build_status IN ('pending', 'running')
-// ORDER BY build_id DESC
-// LIMIT 50;
-// `

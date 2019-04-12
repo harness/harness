@@ -169,6 +169,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 		agentEnviron(r),
 		buildEnviron(m.Build),
 		repoEnviron(m.Repo),
+		stageEnviron(m.Stage),
 		systemEnviron(m.System),
 		linkEnviron(m.Repo, m.Build, m.System),
 		m.Build.Params,
@@ -236,6 +237,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 	}
 
 	secretService := secret.Combine(
+		secret.Encrypted(),
 		secret.Static(m.Secrets),
 		r.Secrets,
 	)
