@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"github.com/drone/drone-runtime/engine/docker"
 	"github.com/drone/drone/cmd/drone-agent/config"
@@ -70,6 +71,20 @@ func main() {
 	if err != nil {
 		logrus.WithError(err).
 			Fatalln("cannot load the docker engine")
+	}
+	for {
+		err := docker.Ping(ctx, engine)
+		if err == context.Canceled {
+			break
+		}
+		if err != nil {
+			logrus.WithError(err).
+				Errorln("cannot ping the docker daemon")
+			time.Sleep(time.Second)
+		} else {
+			logrus.Debugln("succussfully pinged the docker daemon")
+			break
+		}
 	}
 
 	r := &runner.Runner{
