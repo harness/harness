@@ -112,6 +112,10 @@ var migrations = []struct {
 		name: "create-table-nodes",
 		stmt: createTableNodes,
 	},
+	{
+		name: "alter-table-builds-add-column-cron",
+		stmt: alterTableBuildsAddColumnCron,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -521,4 +525,12 @@ CREATE TABLE IF NOT EXISTS nodes (
 
 ,UNIQUE(node_name)
 );
+`
+
+//
+// 011_add_column_builds_cron.sql
+//
+
+var alterTableBuildsAddColumnCron = `
+ALTER TABLE builds ADD COLUMN build_cron VARCHAR(50) NOT NULL DEFAULT '';
 `

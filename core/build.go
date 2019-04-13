@@ -43,6 +43,7 @@ type Build struct {
 	AuthorAvatar string            `db:"build_author_avatar"  json:"author_avatar"`
 	Sender       string            `db:"build_sender"         json:"sender"`
 	Params       map[string]string `db:"build_params"         json:"params,omitempty"`
+	Cron         string            `db:"build_cron"           json:"cron,omitempty"`
 	Deploy       string            `db:"build_deploy"         json:"deploy_to,omitempty"`
 	Started      int64             `db:"build_started"        json:"started"`
 	Finished     int64             `db:"build_finished"       json:"finished"`

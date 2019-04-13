@@ -178,6 +178,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 			AuthorEmail:  base.AuthorEmail,
 			AuthorAvatar: base.AuthorAvatar,
 			Params:       base.Params,
+			Cron:         base.Cron,
 			Deploy:       base.Deployment,
 			Sender:       base.Sender,
 			Created:      time.Now().Unix(),
@@ -267,6 +268,10 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		} else if skipTarget(pipeline, base.Deployment) {
 			logger = logger.WithField("pipeline", pipeline.Name)
 			logger.Infoln("trigger: skipping pipeline, does not match deploy target")
+			continue
+		} else if skipCron(pipeline, base.Cron) {
+			logger = logger.WithField("pipeline", pipeline.Name)
+			logger.Infoln("trigger: skipping pipeline, does not match cron job")
 			continue
 		} else {
 			matched = append(matched, pipeline)

@@ -63,6 +63,7 @@ github.com/drone/go-login v1.0.3 h1:YmZMUoWWd3QrgmobC1DcExFjW7w2ZEBO1R1VeeobIRU=
 github.com/drone/go-login v1.0.3/go.mod h1:FLxy9vRzLbyBxoCJYxGbG9R0WGn6OyuvBmAtYNt43uw=
 github.com/drone/go-login v1.0.4-0.20190308175602-213d1719faed h1:Y0qiKFf6gsgTRTQS1roMh7kKVyrx+HSQmFsIgcZsHsM=
 github.com/drone/go-login v1.0.4-0.20190308175602-213d1719faed/go.mod h1:FLxy9vRzLbyBxoCJYxGbG9R0WGn6OyuvBmAtYNt43uw=
+github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2/go.mod h1:FLxy9vRzLbyBxoCJYxGbG9R0WGn6OyuvBmAtYNt43uw=
 github.com/drone/go-scm v1.2.0 h1:ezb8xCvMHX99cSOf3WPI2bmYS6tDVTTap9BiPsPmmXg=
 github.com/drone/go-scm v1.2.0/go.mod h1:YT4FxQ3U/ltdCrBJR9B0tRpJ1bYA/PM3NyaLE/rYIvw=
 github.com/drone/go-scm v1.3.0 h1:XXg2X8GhSvJRr4RTu40t2o9XUa1WXK7BWzK0AVQHygM=

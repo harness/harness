@@ -300,6 +300,7 @@ const queryColsBulds = queryCols + `
 ,build_author_avatar
 ,build_sender
 ,build_params
+,build_cron
 ,build_deploy
 ,build_started
 ,build_finished

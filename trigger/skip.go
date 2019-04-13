@@ -45,6 +45,10 @@ func skipRepo(document *yaml.Pipeline, repo string) bool {
 	return !document.Trigger.Repo.Match(repo)
 }
 
+func skipCron(document *yaml.Pipeline, cron string) bool {
+	return !document.Trigger.Cron.Match(cron)
+}
+
 func skipMessage(hook *core.Hook) bool {
 	switch {
 	case hook.Event == core.EventTag:

@@ -325,6 +325,7 @@ SELECT
 ,build_author_avatar
 ,build_sender
 ,build_params
+,build_cron
 ,build_deploy
 ,build_started
 ,build_finished
@@ -424,6 +425,7 @@ UPDATE builds SET
 ,build_author_avatar = :build_author_avatar
 ,build_sender = :build_sender
 ,build_params = :build_params
+,build_cron = :build_cron
 ,build_deploy = :build_deploy
 ,build_started = :build_started
 ,build_finished = :build_finished
@@ -459,6 +461,7 @@ INSERT INTO builds (
 ,build_author_avatar
 ,build_sender
 ,build_params
+,build_cron
 ,build_deploy
 ,build_started
 ,build_finished
@@ -490,6 +493,7 @@ INSERT INTO builds (
 ,:build_author_avatar
 ,:build_sender
 ,:build_params
+,:build_cron
 ,:build_deploy
 ,:build_started
 ,:build_finished

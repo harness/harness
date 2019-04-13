@@ -460,6 +460,7 @@ var (
 		AuthorEmail:  "octocat@hello-world.com",
 		AuthorAvatar: "https://avatars3.githubusercontent.com/u/583231",
 		Sender:       "octocat",
+		Cron:         "nightly",
 		Trigger:      "@cron",
 	}
 

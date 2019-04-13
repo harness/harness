@@ -48,6 +48,7 @@ type Hook struct {
 	AuthorEmail  string            `json:"author_email"`
 	AuthorAvatar string            `json:"author_avatar"`
 	Deployment   string            `json:"deploy_to"`
+	Cron         string            `json:"cron"`
 	Sender       string            `json:"sender"`
 	Params       map[string]string `json:"params"`
 }

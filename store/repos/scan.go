@@ -164,6 +164,7 @@ func scanRowBuild(scanner db.Scanner, dest *core.Repository) error {
 		&build.AuthorAvatar,
 		&build.Sender,
 		&build.Params,
+		&build.Cron,
 		&build.Deploy,
 		&build.Started,
 		&build.Finished,

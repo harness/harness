@@ -50,6 +50,7 @@ type nullBuild struct {
 	AuthorAvatar sql.NullString
 	Sender       sql.NullString
 	Params       types.JSONText
+	Cron         sql.NullString
 	Deploy       sql.NullString
 	Started      sql.NullInt64
 	Finished     sql.NullInt64
@@ -88,6 +89,7 @@ func (b *nullBuild) value() *core.Build {
 		AuthorAvatar: b.AuthorAvatar.String,
 		Sender:       b.Sender.String,
 		Params:       params,
+		Cron:         b.Cron.String,
 		Deploy:       b.Deploy.String,
 		Started:      b.Started.Int64,
 		Finished:     b.Finished.Int64,

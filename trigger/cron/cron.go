@@ -155,6 +155,7 @@ func (s *Scheduler) run(ctx context.Context) error {
 			AuthorName:   commit.Author.Name,
 			AuthorEmail:  commit.Author.Email,
 			AuthorAvatar: commit.Author.Avatar,
+			Cron:         job.Name,
 			Sender:       commit.Author.Login,
 		}
 
