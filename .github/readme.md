@@ -38,4 +38,4 @@ Documentation and Other Links:
 * Setup Documentation [docs.drone.io/installation](http://docs.drone.io/installation/)
 * Usage Documentation [docs.drone.io/getting-started](http://docs.drone.io/getting-started/)
 * Plugin Index [plugins.drone.io](http://plugins.drone.io/)
-* Getting Help [docs.drone.io/getting-help](http://docs.drone.io/getting-help/)
+* Getting Help [discourse.drone.io](https://discourse.drone.io)
