@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - specify a user for the pipeline step, by [@bradrydzewski](https://github.com/bradrydzewski). [#2651](https://github.com/drone/drone/issues/2651).
 - update drone-yaml to version 1.0.7.
 - update drone-runtime to version 1.0.5.
+- add sign in with Gitea OAuth, by [@techknowlogick](https://github.com/techknowlogick). [#2622](https://github.com/drone/drone/pull/2622).
 
 ## [1.0.1] - 2019-04-10
 ### Added
