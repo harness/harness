@@ -55,6 +55,7 @@ var corsOpts = cors.Options{
 
 func New(
 	builds core.BuildStore,
+	commits core.CommitService,
 	cron core.CronStore,
 	events core.Pubsub,
 	hooks core.HookService,
@@ -80,6 +81,7 @@ func New(
 	return Server{
 		Builds:    builds,
 		Cron:      cron,
+		Commits:   commits,
 		Events:    events,
 		Hooks:     hooks,
 		Logs:      logs,
@@ -107,6 +109,7 @@ func New(
 type Server struct {
 	Builds    core.BuildStore
 	Cron      core.CronStore
+	Commits   core.CommitService
 	Events    core.Pubsub
 	Hooks     core.HookService
 	Logs      core.LogStore
@@ -163,6 +166,8 @@ func (s Server) Handler() http.Handler {
 
 		r.Route("/builds", func(r chi.Router) {
 			r.Get("/", builds.HandleList(s.Repos, s.Builds))
+			// TODO(bradrydzewski) temporarily disabled until we finalize the endpoint.
+			// r.Post("/", builds.HandleCreate(s.Repos, s.Commits, s.Triggerer))
 			r.Get("/latest", builds.HandleLast(s.Repos, s.Builds, s.Stages))
 			r.Get("/{number}", builds.HandleFind(s.Repos, s.Builds, s.Stages))
 			r.Get("/{number}/logs/{stage}/{step}", logs.HandleFind(s.Repos, s.Builds, s.Stages, s.Steps, s.Logs))
