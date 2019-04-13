@@ -18,6 +18,7 @@ import (
 	"github.com/drone/drone/cmd/drone-server/config"
 	"github.com/drone/go-login/login"
 	"github.com/drone/go-login/login/bitbucket"
+	"github.com/drone/go-login/login/gitea"
 	"github.com/drone/go-login/login/github"
 	"github.com/drone/go-login/login/gitlab"
 	"github.com/drone/go-login/login/gogs"
@@ -90,6 +91,17 @@ func provideGithubLogin(config config.Config) login.Middleware {
 func provideGiteaLogin(config config.Config) login.Middleware {
 	if config.Gitea.Server == "" {
 		return nil
+	}
+	if config.Gitea.ClientID != "" {
+		return &gitea.Config {
+			ClientID:     config.Gitea.ClientID,
+			ClientSecret: config.Gitea.ClientSecret,
+			Server:       config.Gitea.Server,
+			Client:       defaultClient(config.Gitea.SkipVerify),
+			Logger:       logrus.StandardLogger(),
+			RedirectURL:  config.Server.Addr + "/login",
+			Scope:        config.Gitea.Scope,
+		}
 	}
 	return &gogs.Config{
 		Label:  "drone",
