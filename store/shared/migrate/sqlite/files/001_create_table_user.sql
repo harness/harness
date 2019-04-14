@@ -2,7 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS users (
  user_id            INTEGER PRIMARY KEY AUTOINCREMENT
-,user_login         TEXT
+,user_login         TEXT COLLATE NOCASE
 ,user_email         TEXT
 ,user_admin         BOOLEAN
 ,user_machine       BOOLEAN
