@@ -58,9 +58,24 @@ func HandleDisable(
 			return
 		}
 
+		action := core.WebhookActionDisabled
+		if r.FormValue("remove") == "true" {
+			action = core.WebhookActionDeleted
+			err = repos.Delete(r.Context(), repo)
+			if err != nil {
+				render.InternalError(w, err)
+				logger.FromRequest(r).
+					WithError(err).
+					WithField("namespace", owner).
+					WithField("name", name).
+					Warnln("api: cannot delete repository")
+				return
+			}
+		}
+
 		err = sender.Send(r.Context(), &core.WebhookData{
 			Event:  core.WebhookEventRepo,
-			Action: core.WebhookActionDisabled,
+			Action: action,
 			Repo:   repo,
 		})
 		if err != nil {

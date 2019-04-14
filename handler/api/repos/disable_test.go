@@ -121,3 +121,43 @@ func TestDisable_InternalError(t *testing.T) {
 		t.Errorf(diff)
 	}
 }
+
+func TestDelete(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	repo := &core.Repository{
+		ID:        1,
+		Namespace: "octocat",
+		Name:      "hello-world",
+		Slug:      "octocat/hello-world",
+		Active:    true,
+	}
+
+	repos := mock.NewMockRepositoryStore(controller)
+	repos.EXPECT().FindName(gomock.Any(), gomock.Any(), repo.Name).Return(repo, nil)
+	repos.EXPECT().Update(gomock.Any(), repo).Return(nil)
+	repos.EXPECT().Delete(gomock.Any(), repo).Return(nil)
+
+	// a failed webhook should result in a warning message in the
+	// logs, but should not cause the endpoint to error.
+	webhook := mock.NewMockWebhookSender(controller)
+	webhook.EXPECT().Send(gomock.Any(), gomock.Any()).Return(io.EOF)
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("DELETE", "/api/repos/octocat/hello-world?remove=true", nil)
+
+	router := chi.NewRouter()
+	router.Delete("/api/repos/{owner}/{name}", HandleDisable(repos, webhook))
+	router.ServeHTTP(w, r)
+
+	if got, want := w.Code, 200; want != got {
+		t.Errorf("Want response code %d, got %d", want, got)
+	}
+
+	got, want := new(core.Repository), repo
+	json.NewDecoder(w.Body).Decode(got)
+	if diff := cmp.Diff(got, want); len(diff) != 0 {
+		t.Errorf(diff)
+	}
+}

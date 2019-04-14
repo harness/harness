@@ -9,11 +9,11 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/drone/drone/store/shared/db"
-	"github.com/drone/drone/store/shared/db/dbtest"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/perm"
 	"github.com/drone/drone/store/repos"
+	"github.com/drone/drone/store/shared/db"
+	"github.com/drone/drone/store/shared/db/dbtest"
 	"github.com/drone/drone/store/user"
 )
 
@@ -42,6 +42,7 @@ func TestBatch(t *testing.T) {
 	t.Run("Insert", testBatchInsert(batcher, repos, perms, user))
 	t.Run("Update", testBatchUpdate(batcher, repos, perms, user))
 	t.Run("Delete", testBatchDelete(batcher, repos, perms, user))
+	t.Run("DuplicateID", testBatchDuplicateID(batcher, repos, perms, user))
 }
 
 func testBatchInsert(
@@ -162,6 +163,74 @@ func testBatchDelete(
 		_, err = perms.Find(noContext, repo.UID, user.ID)
 		if err != sql.ErrNoRows {
 			t.Errorf("Want sql.ErrNoRows got %v", err)
+		}
+	}
+}
+
+func testBatchDuplicateID(
+	batcher core.Batcher,
+	repos core.RepositoryStore,
+	perms core.PermStore,
+	user *core.User,
+) func(t *testing.T) {
+	return func(t *testing.T) {
+		before, err := repos.FindName(noContext, "octocat", "hello-world")
+		if err != nil {
+			t.Errorf("Want repository, got error %q", err)
+		}
+
+		batch := &core.Batch{
+			Insert: []*core.Repository{
+				{
+					ID:        0,
+					UserID:    1,
+					UID:       "43", // Updated ID
+					Namespace: "octocat",
+					Name:      "hello-world",
+					Slug:      "octocat/hello-world",
+				},
+				{
+					ID:        0,
+					UserID:    1,
+					UID:       "43", // Updated ID
+					Namespace: "octocat",
+					Name:      "hello-world",
+					Slug:      "octocat/hello-world",
+				},
+				{
+					ID:        0,
+					UserID:    1,
+					UID:       "64778136",
+					Namespace: "octocat",
+					Name:      "linguist",
+					Slug:      "octocat/linguist",
+				},
+			},
+			Update: []*core.Repository{
+				{
+					ID:        before.ID,
+					UserID:    1,
+					UID:       "44", // Updated ID
+					Namespace: "octocat",
+					Name:      "hello-world",
+					Slug:      "octocat/hello-world",
+					Private:   true,
+				},
+			},
+		}
+
+		err = batcher.Batch(noContext, user, batch)
+		if err != nil {
+			t.Error(err)
+		}
+
+		added, err := repos.FindName(noContext, "octocat", "linguist")
+		if err != nil {
+			t.Errorf("Want repository, got error %q", err)
+		}
+
+		if got, want := added.UID, "64778136"; got != want {
+			t.Errorf("Want added repository UID %v, got %v", want, got)
 		}
 	}
 }
