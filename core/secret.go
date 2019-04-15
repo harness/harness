@@ -33,7 +33,9 @@ type (
 	Secret struct {
 		ID              int64  `json:"id,omitempty"`
 		RepoID          int64  `json:"repo_id,omitempty"`
+		Namespace       string `json:"repo_namespace,omitempty"`
 		Name            string `json:"name,omitempty"`
+		Type            string `json:"type,omitempty"`
 		Data            string `json:"data,omitempty"`
 		PullRequest     bool   `json:"pull_request,omitempty"`
 		PullRequestPush bool   `json:"pull_request_push,omitempty"`
@@ -69,6 +71,32 @@ type (
 		Delete(context.Context, *Secret) error
 	}
 
+	// GlobalSecretStore manages global secrets accessible to
+	// all repositories in the system.
+	GlobalSecretStore interface {
+		// List returns a secret list from the datastore.
+		List(ctx context.Context, namespace string) ([]*Secret, error)
+
+		// ListAll returns a secret list from the datastore
+		// for all namespaces.
+		ListAll(ctx context.Context) ([]*Secret, error)
+
+		// Find returns a secret from the datastore.
+		Find(ctx context.Context, id int64) (*Secret, error)
+
+		// FindName returns a secret from the datastore.
+		FindName(ctx context.Context, namespace, name string) (*Secret, error)
+
+		// Create persists a new secret to the datastore.
+		Create(ctx context.Context, secret *Secret) error
+
+		// Update persists an updated secret to the datastore.
+		Update(ctx context.Context, secret *Secret) error
+
+		// Delete deletes a secret from the datastore.
+		Delete(ctx context.Context, secret *Secret) error
+	}
+
 	// SecretService provides secrets from an external service.
 	SecretService interface {
 		// Find returns a named secret from the global remote service.
@@ -95,7 +123,9 @@ func (s *Secret) Copy() *Secret {
 	return &Secret{
 		ID:              s.ID,
 		RepoID:          s.RepoID,
+		Namespace:       s.Namespace,
 		Name:            s.Name,
+		Type:            s.Type,
 		PullRequest:     s.PullRequest,
 		PullRequestPush: s.PullRequestPush,
 	}

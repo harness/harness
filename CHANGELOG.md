@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for Cron job name in Yaml when block, by [@bradrydzewski](https://github.com/bradrydzewski). [#2628](https://github.com/drone/drone/issues/2628). 
 - sqlite username column changed to case-insensitive, by [@bradrydzewski](https://github.com/bradrydzewski).
 - endpoint to purge repository from database, by [@bradrydzewski](https://github.com/bradrydzewski).
+- support for per-organization secrets, by [@bradrydzewski](https://github.com/bradrydzewski).
 - update drone-yaml from version 1.0.6 to 1.0.8.
 - update drone-runtime from version 1.0.4 to 1.0.6.
 

@@ -34,6 +34,7 @@ import (
 	"github.com/drone/drone/handler/api/repos/encrypt"
 	"github.com/drone/drone/handler/api/repos/secrets"
 	"github.com/drone/drone/handler/api/repos/sign"
+	globalsecrets "github.com/drone/drone/handler/api/secrets"
 	"github.com/drone/drone/handler/api/system"
 	"github.com/drone/drone/handler/api/user"
 	"github.com/drone/drone/handler/api/users"
@@ -58,6 +59,7 @@ func New(
 	commits core.CommitService,
 	cron core.CronStore,
 	events core.Pubsub,
+	globals core.GlobalSecretStore,
 	hooks core.HookService,
 	logs core.LogStore,
 	license *core.License,
@@ -83,6 +85,7 @@ func New(
 		Cron:      cron,
 		Commits:   commits,
 		Events:    events,
+		Globals:   globals,
 		Hooks:     hooks,
 		Logs:      logs,
 		License:   license,
@@ -111,6 +114,7 @@ type Server struct {
 	Cron      core.CronStore
 	Commits   core.CommitService
 	Events    core.Pubsub
+	Globals   core.GlobalSecretStore
 	Hooks     core.HookService
 	Logs      core.LogStore
 	License   *core.License
@@ -296,6 +300,16 @@ func (s Server) Handler() http.Handler {
 	r.Route("/builds", func(r chi.Router) {
 		r.Use(acl.AuthorizeAdmin)
 		r.Get("/incomplete", globalbuilds.HandleIncomplete(s.Repos))
+	})
+
+	r.Route("/secrets", func(r chi.Router) {
+		r.Use(acl.AuthorizeAdmin)
+		r.Get("/", globalsecrets.HandleAll(s.Globals))
+		r.Get("/{namespace}", globalsecrets.HandleList(s.Globals))
+		r.Post("/{namespace}", globalsecrets.HandleCreate(s.Globals))
+		r.Get("/{namespace}/{name}", globalsecrets.HandleFind(s.Globals))
+		r.Patch("/{namespace}/{name}", globalsecrets.HandleUpdate(s.Globals))
+		r.Delete("/{namespace}/{name}", globalsecrets.HandleDelete(s.Globals))
 	})
 
 	r.Route("/system", func(r chi.Router) {

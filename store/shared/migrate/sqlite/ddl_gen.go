@@ -116,6 +116,10 @@ var migrations = []struct {
 		name: "alter-table-builds-add-column-cron",
 		stmt: alterTableBuildsAddColumnCron,
 	},
+	{
+		name: "create-table-org-secrets",
+		stmt: createTableOrgSecrets,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -535,4 +539,21 @@ CREATE TABLE IF NOT EXISTS nodes (
 
 var alterTableBuildsAddColumnCron = `
 ALTER TABLE builds ADD COLUMN build_cron TEXT NOT NULL DEFAULT '';
+`
+
+//
+// 012_create_table_org_secrets.sql
+//
+
+var createTableOrgSecrets = `
+CREATE TABLE IF NOT EXISTS orgsecrets (
+ secret_id                INTEGER PRIMARY KEY AUTOINCREMENT
+,secret_namespace         TEXT COLLATE NOCASE
+,secret_name              TEXT COLLATE NOCASE
+,secret_type              TEXT
+,secret_data              BLOB
+,secret_pull_request      BOOLEAN
+,secret_pull_request_push BOOLEAN
+,UNIQUE(secret_namespace, secret_name)
+);
 `

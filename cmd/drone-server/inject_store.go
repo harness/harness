@@ -25,6 +25,7 @@ import (
 	"github.com/drone/drone/store/perm"
 	"github.com/drone/drone/store/repos"
 	"github.com/drone/drone/store/secret"
+	"github.com/drone/drone/store/secret/global"
 	"github.com/drone/drone/store/shared/db"
 	"github.com/drone/drone/store/shared/encrypt"
 	"github.com/drone/drone/store/stage"
@@ -47,6 +48,7 @@ var storeSet = wire.NewSet(
 	cron.New,
 	perm.New,
 	secret.New,
+	global.New,
 	step.New,
 )
 

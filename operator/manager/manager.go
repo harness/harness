@@ -108,6 +108,7 @@ func New(
 	repos core.RepositoryStore,
 	scheduler core.Scheduler,
 	secrets core.SecretStore,
+	globals core.GlobalSecretStore,
 	status core.StatusService,
 	stages core.StageStore,
 	steps core.StepStore,
@@ -119,6 +120,7 @@ func New(
 		Builds:    builds,
 		Config:    config,
 		Events:    events,
+		Globals:   globals,
 		Logs:      logs,
 		Logz:      logz,
 		Netrcs:    netrcs,
@@ -140,6 +142,7 @@ type Manager struct {
 	Builds    core.BuildStore
 	Config    core.ConfigService
 	Events    core.Pubsub
+	Globals   core.GlobalSecretStore
 	Logs      core.LogStore
 	Logz      core.LogStream
 	Netrcs    core.NetrcService
@@ -287,10 +290,23 @@ func (m *Manager) Details(ctx context.Context, id int64) (*Context, error) {
 		logger.Warnln("manager: cannot list secrets")
 		return nil, err
 	}
+	tmpGlobalSecrets, err := m.Globals.List(noContext, repo.Namespace)
+	if err != nil {
+		logger = logger.WithError(err)
+		logger.Warnln("manager: cannot list global secrets")
+		return nil, err
+	}
 	// TODO(bradrydzewski) can we delegate filtering
 	// secrets to the agent? If not, we should add
 	// unit tests.
 	for _, secret := range tmpSecrets {
+		if secret.PullRequest == false &&
+			build.Event == core.EventPullRequest {
+			continue
+		}
+		secrets = append(secrets, secret)
+	}
+	for _, secret := range tmpGlobalSecrets {
 		if secret.PullRequest == false &&
 			build.Event == core.EventPullRequest {
 			continue

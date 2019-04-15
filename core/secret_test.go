@@ -47,6 +47,8 @@ func TestSecretSafeCopy(t *testing.T) {
 		ID:              1,
 		RepoID:          2,
 		Name:            "docker_password",
+		Namespace:       "octocat",
+		Type:            "",
 		Data:            "correct-horse-battery-staple",
 		PullRequest:     true,
 		PullRequestPush: true,
@@ -60,6 +62,9 @@ func TestSecretSafeCopy(t *testing.T) {
 	}
 	if got, want := after.Name, before.Name; got != want {
 		t.Errorf("Want secret Name %s, got %s", want, got)
+	}
+	if got, want := after.Namespace, before.Namespace; got != want {
+		t.Errorf("Want secret Namespace %s, got %s", want, got)
 	}
 	if got, want := after.PullRequest, before.PullRequest; got != want {
 		t.Errorf("Want secret PullRequest %v, got %v", want, got)

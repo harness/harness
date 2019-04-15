@@ -24,6 +24,7 @@ import (
 	"github.com/drone/drone/store/cron"
 	"github.com/drone/drone/store/perm"
 	"github.com/drone/drone/store/secret"
+	"github.com/drone/drone/store/secret/global"
 	"github.com/drone/drone/store/step"
 	"github.com/drone/drone/trigger"
 	cron2 "github.com/drone/drone/trigger/cron"
@@ -70,8 +71,9 @@ func InitializeApplication(config2 config.Config) (application, error) {
 		return application{}, err
 	}
 	secretStore := secret.New(db, encrypter)
+	globalSecretStore := global.New(db, encrypter)
 	stepStore := step.New(db)
-	buildManager := manager.New(buildStore, configService, corePubsub, logStore, logStream, netrcService, repositoryStore, scheduler, secretStore, statusService, stageStore, stepStore, system, userStore, webhookSender)
+	buildManager := manager.New(buildStore, configService, corePubsub, logStore, logStream, netrcService, repositoryStore, scheduler, secretStore, globalSecretStore, statusService, stageStore, stepStore, system, userStore, webhookSender)
 	secretService := provideSecretPlugin(config2)
 	registryService := provideRegistryPlugin(config2)
 	runner := provideRunner(buildManager, secretService, registryService, config2)
@@ -82,7 +84,7 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	session := provideSession(userStore, config2)
 	batcher := batch.New(db)
 	syncer := provideSyncer(repositoryService, repositoryStore, userStore, batcher, config2)
-	server := api.New(buildStore, commitService, cronStore, corePubsub, hookService, logStore, coreLicense, licenseService, permStore, repositoryStore, repositoryService, scheduler, secretStore, stageStore, stepStore, statusService, session, logStream, syncer, system, triggerer, userStore, webhookSender)
+	server := api.New(buildStore, commitService, cronStore, corePubsub, globalSecretStore, hookService, logStore, coreLicense, licenseService, permStore, repositoryStore, repositoryService, scheduler, secretStore, stageStore, stepStore, statusService, session, logStream, syncer, system, triggerer, userStore, webhookSender)
 	organizationService := orgs.New(client, renewer)
 	userService := user.New(client)
 	admissionService := provideAdmissionPlugin(client, organizationService, userService, config2)
