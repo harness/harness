@@ -33,7 +33,7 @@ type (
 	Secret struct {
 		ID              int64  `json:"id,omitempty"`
 		RepoID          int64  `json:"repo_id,omitempty"`
-		Namespace       string `json:"repo_namespace,omitempty"`
+		Namespace       string `json:"namespace,omitempty"`
 		Name            string `json:"name,omitempty"`
 		Type            string `json:"type,omitempty"`
 		Data            string `json:"data,omitempty"`
