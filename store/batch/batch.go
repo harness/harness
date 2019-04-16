@@ -77,10 +77,7 @@ func (b *batchUpdater) Batch(ctx context.Context, user *core.User, batch *core.B
 			}
 			_, err = execer.Exec(stmt, args...)
 			if err != nil {
-				return err
-			}
-			if err != nil {
-				return fmt.Errorf("Error inserting repositroy: %s", err)
+				return fmt.Errorf("Error inserting repository: %s", err)
 			}
 
 			//
@@ -120,10 +117,7 @@ func (b *batchUpdater) Batch(ctx context.Context, user *core.User, batch *core.B
 			}
 			_, err = execer.Exec(stmt, args...)
 			if err != nil {
-				return err
-			}
-			if err != nil {
-				return fmt.Errorf("Error updating repositroy: %s", err)
+				return fmt.Errorf("Error updating repository: %s", err)
 			}
 
 			stmt = permInsertIgnoreStmt
@@ -235,7 +229,7 @@ const repoInsertIgnoreStmtPostgres = `
 INSERT INTO repos ` + stmtInsertBase + ` ON CONFLICT DO NOTHING`
 
 const repoUpdateRemoteStmt = `
-UPDATE repos SET 
+UPDATE repos SET
  repo_namespace=:repo_namespace
 ,repo_name=:repo_name
 ,repo_slug=:repo_slug
@@ -249,7 +243,7 @@ WHERE repo_id=:repo_id
 `
 
 const repoUpdateRemoteStmtPostgres = `
-UPDATE repos SET 
+UPDATE repos SET
  repo_namespace=$1
 ,repo_name=$2
 ,repo_slug=$3
