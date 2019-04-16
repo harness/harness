@@ -141,7 +141,7 @@ func HandleLogin(
 			user.Expiry = tok.Expires.Unix()
 		}
 
-		// If the user account has never been synchrnoized we
+		// If the user account has never been synchronized we
 		// execute the synchonrization logic.
 		if time.Unix(user.Synced, 0).Add(syncPeriod).Before(time.Now()) {
 			user.Syncing = true

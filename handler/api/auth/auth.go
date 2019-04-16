@@ -22,7 +22,7 @@ import (
 	"github.com/drone/drone/logger"
 )
 
-// HandleAuthentication returns an http.HandlerFunc middlewrae that authenticates
+// HandleAuthentication returns an http.HandlerFunc middleware that authenticates
 // the http.Request and errors if the account cannot be authenticated.
 func HandleAuthentication(session core.Session) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
