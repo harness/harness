@@ -18,7 +18,7 @@ import (
 // user is a human being.
 var ErrCannotVerify = errors.New("Cannot verify user authenticity")
 
-// Nobot enfoces an admission policy that restricts access to
+// Nobot enforces an admission policy that restricts access to
 // users accounts that were recently created and may be bots.
 // The policy expects the source control management system will
 // identify and remove the bot accounts before they would be

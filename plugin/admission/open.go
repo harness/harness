@@ -25,7 +25,7 @@ import (
 // user account and admissions are closed.
 var ErrClosed = errors.New("User registration is disabled")
 
-// Open enfoces an open admission policy by default unless
+// Open enforces an open admission policy by default unless
 // disabled.
 func Open(disabled bool) core.AdmissionService {
 	return &closed{disabled: disabled}

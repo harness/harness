@@ -23,7 +23,7 @@ type Message struct {
 	Data       []byte
 }
 
-// Pubsub provides publish subscriber capablities, distributing
+// Pubsub provides publish subscriber capabilities, distributing
 // messages from multiple publishers to multiple subscribers.
 type Pubsub interface {
 	// Publish publishes the message to all subscribers.

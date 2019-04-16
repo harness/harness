@@ -55,7 +55,7 @@ func (s *Synchronizer) SetFilter(fn FilterFunc) {
 	s.match = fn
 }
 
-// Sync synchonrizes the user repository list in 6 easy steps.
+// Sync synchronizes the user repository list in 6 easy steps.
 func (s *Synchronizer) Sync(ctx context.Context, user *core.User) (*core.Batch, error) {
 	logger := logrus.WithField("login", user.Login)
 	logger.Debugln("syncer: begin repository sync")

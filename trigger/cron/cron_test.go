@@ -95,7 +95,7 @@ func TestCron_Cancel(t *testing.T) {
 
 // This unit tests demonstrates that if an error is encountered
 // when returning a list of ready cronjobs, the process exits
-// immadiately with an error message.
+// immediately with an error message.
 func TestCron_ErrorList(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()

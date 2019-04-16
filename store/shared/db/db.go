@@ -121,7 +121,7 @@ func (db *DB) Driver() Driver {
 	return db.driver
 }
 
-// Close cloes the database connection.
+// Close closes the database connection.
 func (db *DB) Close() error {
 	return db.conn.Close()
 }

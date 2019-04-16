@@ -26,7 +26,7 @@ import (
 
 // HandleRepair returns an http.HandlerFunc that processes http
 // requests to repair the repository hooks and sync the repository
-// deetails.
+// details.
 func HandleRepair(
 	hooks core.HookService,
 	repoz core.RepositoryService,

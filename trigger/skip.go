@@ -77,7 +77,7 @@ func skipMessageEval(str string) bool {
 // func skipPaths(document *config.Config, paths []string) bool {
 // 	switch {
 // 	// changed files are only returned for push and pull request
-// 	// events. If the list of changed files is empty the sytem will
+// 	// events. If the list of changed files is empty the system will
 // 	// force-run all pipelines and pipeline steps
 // 	case len(paths) == 0:
 // 		return false
