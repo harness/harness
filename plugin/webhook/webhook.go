@@ -32,29 +32,39 @@ var signer = httpsignatures.NewSigner(
 )
 
 // New returns a new Webhook sender.
-func New(endpoints []string, secret string) core.WebhookSender {
+func New(config Config) core.WebhookSender {
 	return &sender{
-		Endpoints: endpoints,
-		Secret:    secret,
+		Endpoints: config.Endpoint,
+		Secret:    config.Secret,
+		System:    config.System,
 	}
+}
+
+type payload struct {
+	*core.WebhookData
+	System *core.System `json:"system,omitempty"`
 }
 
 type sender struct {
 	Client    *http.Client
 	Endpoints []string
 	Secret    string
+	System    *core.System
 }
 
 // Send sends the JSON encoded webhook to the global
 // HTTP endpoints.
-func (s *sender) Send(ctx context.Context, payload *core.WebhookData) error {
+func (s *sender) Send(ctx context.Context, in *core.WebhookData) error {
 	if len(s.Endpoints) == 0 {
 		return nil
 	}
-
-	data, _ := json.Marshal(payload)
+	wrapper := payload{
+		WebhookData: in,
+		System:      s.System,
+	}
+	data, _ := json.Marshal(wrapper)
 	for _, endpoint := range s.Endpoints {
-		err := s.send(endpoint, s.Secret, payload.Event, data)
+		err := s.send(endpoint, s.Secret, in.Event, data)
 		if err != nil {
 			return err
 		}

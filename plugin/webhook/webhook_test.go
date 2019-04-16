@@ -46,7 +46,11 @@ func TestWebhook(t *testing.T) {
 		Reply(200).
 		Type("application/json")
 
-	sender := New([]string{"https://company.com/hooks"}, "GMEuUHQfmrMRsseWxi9YlIeBtn9lm6im")
+	config := Config{
+		Endpoint: []string{"https://company.com/hooks"},
+		Secret:   "GMEuUHQfmrMRsseWxi9YlIeBtn9lm6im",
+	}
+	sender := New(config)
 	err := sender.Send(noContext, webhook)
 	if err != nil {
 		t.Error(err)
@@ -77,7 +81,11 @@ func TestWebhook_NoEndpoints(t *testing.T) {
 		User:   &core.User{Login: "octocat"},
 	}
 
-	sender := New([]string{}, "correct-horse-battery-staple")
+	config := Config{
+		Endpoint: []string{},
+		Secret:   "correct-horse-battery-staple",
+	}
+	sender := New(config)
 	err := sender.Send(noContext, webhook)
 	if err != nil {
 		t.Error(err)

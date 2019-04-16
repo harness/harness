@@ -95,9 +95,10 @@ func provideSecretPlugin(config spec.Config) core.SecretService {
 
 // provideWebhookPlugin is a Wire provider function that returns
 // a webhook plugin based on the environment configuration.
-func provideWebhookPlugin(config spec.Config) core.WebhookSender {
-	return webhook.New(
-		config.Webhook.Endpoint,
-		config.Webhook.Secret,
-	)
+func provideWebhookPlugin(config spec.Config, system *core.System) core.WebhookSender {
+	return webhook.New(webhook.Config{
+		Endpoint: config.Webhook.Endpoint,
+		Secret:   config.Webhook.Secret,
+		System:   system,
+	})
 }

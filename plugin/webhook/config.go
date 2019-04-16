@@ -12,23 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build oss
-
 package webhook
 
-import (
-	"context"
+import "github.com/drone/drone/core"
 
-	"github.com/drone/drone/core"
-)
-
-// New returns a no-op Webhook sender.
-func New(Config) core.WebhookSender {
-	return new(noop)
-}
-
-type noop struct{}
-
-func (noop) Send(context.Context, *core.WebhookData) error {
-	return nil
+// Config provides the webhook configuration.
+type Config struct {
+	Endpoint []string
+	Secret   string
+	System   *core.System
 }
