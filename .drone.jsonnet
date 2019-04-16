@@ -4,7 +4,7 @@
 local golang = "golang:1.11";
 
 # defines a temporary volume so that the Go cache can
-# be shared with all pipeine steps.
+# be shared with all pipeline steps.
 local volumes = [
     {
         name: "gopath",

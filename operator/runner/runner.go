@@ -536,7 +536,7 @@ func (r *Runner) start(ctx context.Context) error {
 		default:
 			// This error is ignored on purpose. The system
 			// should not exit the runner on error. The run
-			// funciton logs all errors, which should be enough
+			// function logs all errors, which should be enough
 			// to surface potential issues to an administrator.
 			r.poll(ctx)
 		}

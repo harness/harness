@@ -131,7 +131,7 @@ func main() {
 	}
 }
 
-// helper funciton configures the logging.
+// helper function configures the logging.
 func initLogging(c config.Config) {
 	if c.Logging.Debug {
 		logrus.SetLevel(logrus.DebugLevel)
