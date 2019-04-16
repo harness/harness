@@ -39,7 +39,7 @@ func HandleSync(syncer core.Syncer, repos core.RepositoryStore) http.HandlerFunc
 				_, err := syncer.Sync(ctx, viewer)
 				if err != nil {
 					logger.FromContext(ctx).WithError(err).
-						Debugln("api: cannot synchrnoize account")
+						Debugln("api: cannot synchronize account")
 				}
 			}(ctx, viewer)
 			w.WriteHeader(204)
@@ -50,7 +50,7 @@ func HandleSync(syncer core.Syncer, repos core.RepositoryStore) http.HandlerFunc
 		if err != nil {
 			render.InternalError(w, err)
 			logger.FromRequest(r).WithError(err).
-				Warnln("api: cannot synchrnoize account")
+				Warnln("api: cannot synchronize account")
 			return
 		}
 		list, err := repos.List(r.Context(), viewer.ID)

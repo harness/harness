@@ -36,7 +36,7 @@ var loginSet = wire.NewSet(
 )
 
 // provideLogin is a Wire provider function that returns an
-// autenticator based on the environment configuration.
+// authenticator based on the environment configuration.
 func provideLogin(config config.Config) login.Middleware {
 	switch {
 	case config.Bitbucket.ClientID != "":
@@ -57,7 +57,7 @@ func provideLogin(config config.Config) login.Middleware {
 }
 
 // provideBitbucketLogin is a Wire provider function that
-// returns a Bitbucket Cloud autenticator based on the
+// returns a Bitbucket Cloud authenticator based on the
 // environment configuration.
 func provideBitbucketLogin(config config.Config) login.Middleware {
 	if config.Bitbucket.ClientID == "" {
@@ -71,7 +71,7 @@ func provideBitbucketLogin(config config.Config) login.Middleware {
 }
 
 // provideGithubLogin is a Wire provider function that returns
-// a GitHub autenticator based on the environment configuration.
+// a GitHub authenticator based on the environment configuration.
 func provideGithubLogin(config config.Config) login.Middleware {
 	if config.Github.ClientID == "" {
 		return nil
@@ -87,7 +87,7 @@ func provideGithubLogin(config config.Config) login.Middleware {
 }
 
 // provideGiteaLogin is a Wire provider function that returns
-// a Gitea autenticator based on the environment configuration.
+// a Gitea authenticator based on the environment configuration.
 func provideGiteaLogin(config config.Config) login.Middleware {
 	if config.Gitea.Server == "" {
 		return nil
@@ -112,7 +112,7 @@ func provideGiteaLogin(config config.Config) login.Middleware {
 }
 
 // provideGitlabLogin is a Wire provider function that returns
-// a GitLab autenticator based on the environment configuration.
+// a GitLab authenticator based on the environment configuration.
 func provideGitlabLogin(config config.Config) login.Middleware {
 	if config.GitLab.ClientID == "" {
 		return nil
@@ -127,7 +127,7 @@ func provideGitlabLogin(config config.Config) login.Middleware {
 }
 
 // provideGogsLogin is a Wire provider function that returns
-// a Gogs autenticator based on the environment configuration.
+// a Gogs authenticator based on the environment configuration.
 func provideGogsLogin(config config.Config) login.Middleware {
 	if config.Gogs.Server == "" {
 		return nil
@@ -141,7 +141,7 @@ func provideGogsLogin(config config.Config) login.Middleware {
 }
 
 // provideStashLogin is a Wire provider function that returns
-// a Stash autenticator based on the environment configuration.
+// a Stash authenticator based on the environment configuration.
 func provideStashLogin(config config.Config) login.Middleware {
 	if config.Stash.ConsumerKey == "" {
 		return nil

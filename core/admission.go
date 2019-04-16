@@ -18,7 +18,7 @@ import "context"
 
 // AdmissionService grants access to the system. The service can
 // be used to restrict access to authorized users, such as
-// members of an organiozation in your soruce control management
+// members of an organization in your source control management
 // system.
 type AdmissionService interface {
 	Admit(context.Context, *User) error

@@ -82,7 +82,7 @@ func main() {
 				Errorln("cannot ping the docker daemon")
 			time.Sleep(time.Second)
 		} else {
-			logrus.Debugln("succussfully pinged the docker daemon")
+			logrus.Debugln("successfully pinged the docker daemon")
 			break
 		}
 	}
@@ -119,7 +119,7 @@ func main() {
 	}
 }
 
-// helper funciton configures the logging.
+// helper function configures the logging.
 func initLogging(c config.Config) {
 	if c.Logging.Debug {
 		logrus.SetLevel(logrus.DebugLevel)

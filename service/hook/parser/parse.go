@@ -49,7 +49,7 @@ import (
 // TODO(bradrydzewski): gitea, push hook missing repository html url
 
 // TODO(bradrydzewski): bitbucket, pull request hook missing author email.
-// TODO(bradrydzewski): bitbucket, hooks missing defualt repository branch.
+// TODO(bradrydzewski): bitbucket, hooks missing default repository branch.
 
 // TODO(bradrydzewski): github, push hook timestamp is negative value.
 // TODO(bradrydzewski): github, pull request message is empty

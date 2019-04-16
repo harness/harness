@@ -47,7 +47,7 @@ type (
 	}
 
 	// PermStore defines operations for working with
-	// repostiory permissions.
+	// repository permissions.
 	PermStore interface {
 		// Find returns a project member from the
 		// datastore.

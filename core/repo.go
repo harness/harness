@@ -77,7 +77,7 @@ type (
 		ListRecent(context.Context, int64) ([]*Repository, error)
 
 		// ListIncomplete returns a non-unique repository list form
-		// the datastore with incmoplete builds.
+		// the datastore with incomplete builds.
 		ListIncomplete(context.Context) ([]*Repository, error)
 
 		// Find returns a repository from the datastore.

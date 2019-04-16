@@ -33,19 +33,19 @@ func TestTrigger(t *testing.T) {
 	defer controller.Finish()
 
 	checkBuild := func(_ context.Context, build *core.Build, stages []*core.Stage) {
-		if diff := cmp.Diff(build, dummyBuild, ignoreBuildFileds); diff != "" {
+		if diff := cmp.Diff(build, dummyBuild, ignoreBuildFields); diff != "" {
 			t.Errorf(diff)
 		}
-		if diff := cmp.Diff(stages, dummyStages, ignoreStageFileds); diff != "" {
+		if diff := cmp.Diff(stages, dummyStages, ignoreStageFields); diff != "" {
 			t.Errorf(diff)
 		}
 	}
 
 	checkStatus := func(_ context.Context, _ *core.User, req *core.StatusInput) error {
-		if diff := cmp.Diff(req.Build, dummyBuild, ignoreBuildFileds); diff != "" {
+		if diff := cmp.Diff(req.Build, dummyBuild, ignoreBuildFields); diff != "" {
 			t.Errorf(diff)
 		}
-		if diff := cmp.Diff(req.Repo, dummyRepo, ignoreStageFileds); diff != "" {
+		if diff := cmp.Diff(req.Repo, dummyRepo, ignoreStageFields); diff != "" {
 			t.Errorf(diff)
 		}
 		return nil
@@ -88,7 +88,7 @@ func TestTrigger(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	if diff := cmp.Diff(build, dummyBuild, ignoreBuildFileds); diff != "" {
+	if diff := cmp.Diff(build, dummyBuild, ignoreBuildFields); diff != "" {
 		t.Errorf(diff)
 	}
 }
@@ -487,9 +487,9 @@ var (
 		Data: "kind: pipeline\ntrigger: { event: { exclude: push } }",
 	}
 
-	ignoreBuildFileds = cmpopts.IgnoreFields(core.Build{},
+	ignoreBuildFields = cmpopts.IgnoreFields(core.Build{},
 		"Created", "Updated")
 
-	ignoreStageFileds = cmpopts.IgnoreFields(core.Stage{},
+	ignoreStageFields = cmpopts.IgnoreFields(core.Stage{},
 		"Created", "Updated")
 )

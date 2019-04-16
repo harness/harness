@@ -16,7 +16,7 @@ package core
 
 import "context"
 
-// Syncer synchonrizes the account repository list.
+// Syncer synchronizes the account repository list.
 type Syncer interface {
 	Sync(context.Context, *User) (*Batch, error)
 }

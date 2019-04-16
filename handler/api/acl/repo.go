@@ -125,7 +125,7 @@ func InjectRepository(
 				if err != nil {
 					log.WithError(err).Debugln("api: cannot cache repository permissions")
 				} else {
-					log.Debugln("api: repository permissions synchrnoized")
+					log.Debugln("api: repository permissions synchronized")
 				}
 			}
 

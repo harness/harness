@@ -517,7 +517,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 }
 
 // Start starts N build runner processes. Each process polls
-// the server for pednding builds to execute.
+// the server for pending builds to execute.
 func (r *Runner) Start(ctx context.Context, n int) error {
 	var g errgroup.Group
 	for i := 0; i < n; i++ {
@@ -536,7 +536,7 @@ func (r *Runner) start(ctx context.Context) error {
 		default:
 			// This error is ignored on purpose. The system
 			// should not exit the runner on error. The run
-			// funciton logs all errors, which should be enough
+			// function logs all errors, which should be enough
 			// to surface potential issues to an administrator.
 			r.poll(ctx)
 		}

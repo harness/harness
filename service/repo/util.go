@@ -38,7 +38,7 @@ func convertRepository(src *scm.Repository) *core.Repository {
 }
 
 // convertVisibility is a helper function that returns the
-// repository visibliity based on the privacy flag.
+// repository visibility based on the privacy flag.
 func convertVisibility(src *scm.Repository) string {
 	switch {
 	case src.Private == true:

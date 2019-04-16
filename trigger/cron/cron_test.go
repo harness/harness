@@ -35,9 +35,9 @@ func TestCron(t *testing.T) {
 	defer controller.Finish()
 
 	checkBuild := func(_ context.Context, _ *core.Repository, hook *core.Hook) {
-		ignoreHookFileds := cmpopts.IgnoreFields(core.Hook{},
+		ignoreHookFields := cmpopts.IgnoreFields(core.Hook{},
 			"Source", "Before")
-		if diff := cmp.Diff(hook, dummyHook, ignoreHookFileds); diff != "" {
+		if diff := cmp.Diff(hook, dummyHook, ignoreHookFields); diff != "" {
 			t.Errorf(diff)
 		}
 	}
@@ -95,7 +95,7 @@ func TestCron_Cancel(t *testing.T) {
 
 // This unit tests demonstrates that if an error is encountered
 // when returning a list of ready cronjobs, the process exits
-// immadiately with an error message.
+// immediately with an error message.
 func TestCron_ErrorList(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
@@ -484,6 +484,6 @@ var (
 		},
 	}
 
-	ignoreBuildFileds = cmpopts.IgnoreFields(core.Build{},
+	ignoreBuildFields = cmpopts.IgnoreFields(core.Build{},
 		"Created", "Updated")
 )

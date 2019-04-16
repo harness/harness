@@ -438,7 +438,7 @@ func (m *Manager) Netrc(ctx context.Context, id int64) (*core.Netrc, error) {
 	if err != nil {
 		logger = logger.WithError(err)
 		logger = logger.WithField("repo.name", repo.Slug)
-		logger.Warnln("manager: cannot gernerate netrc")
+		logger.Warnln("manager: cannot generate netrc")
 	}
 	return netrc, err
 }

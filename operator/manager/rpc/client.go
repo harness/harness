@@ -122,7 +122,7 @@ func (s *Client) Before(ctx context.Context, step *core.Step) error {
 	if err != nil {
 		return err
 	}
-	// the step ID and version (optomistic locking) are
+	// the step ID and version (optimistic locking) are
 	// updated when the step is created. Copy the updated
 	// values back to the original step object.
 	step.ID = out.ID
@@ -138,7 +138,7 @@ func (s *Client) After(ctx context.Context, step *core.Step) error {
 	if err != nil {
 		return err
 	}
-	// the step version (optomistic locking) is updated
+	// the step version (optimistic locking) is updated
 	// when the step is created. Copy the updated values
 	// back to the original step object.
 	step.Version = out.Version
@@ -173,7 +173,7 @@ func (s *Client) AfterAll(ctx context.Context, stage *core.Stage) error {
 	if err != nil {
 		return err
 	}
-	// the stage timestamps and version (optomistic locking)
+	// the stage timestamps and version (optimistic locking)
 	// are updated when the step is created. Copy the updated
 	// values back to the original step object.
 	stage.Version = out.Version
@@ -237,7 +237,7 @@ func (s *Client) send(ctx context.Context, path string, in, out interface{}) err
 	}
 
 	// Check the response for a 409 conflict. This indicates an
-	// optimtistic lock error, in which case multiple clients may
+	// optimistic lock error, in which case multiple clients may
 	// be attempting to update the same record. Convert this error
 	// code to a proper error.
 	if res.StatusCode == 409 {

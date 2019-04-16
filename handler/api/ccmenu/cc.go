@@ -29,7 +29,7 @@ type CCProject struct {
 	WebURL          string   `xml:"webUrl,attr"`
 }
 
-// New creates a new CCPojrect from the Repository and Build details.
+// New creates a new CCProject from the Repository and Build details.
 func New(r *core.Repository, b *core.Build, link string) *CCProjects {
 	proj := &CCProject{
 		Name:            r.Slug,

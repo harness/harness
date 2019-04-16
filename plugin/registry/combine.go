@@ -44,7 +44,7 @@ func (c *combined) List(ctx context.Context, req *core.RegistryArgs) ([]*core.Re
 	}
 	// if trace level debugging is enabled we print
 	// all registry credentials retrieved from the
-	// various registy sources.
+	// various registry sources.
 	logger := logger.FromContext(ctx)
 	if logrus.IsLevelEnabled(logrus.TraceLevel) {
 		if len(all) == 0 {

@@ -342,7 +342,7 @@ func TestAfterAll(t *testing.T) {
 	}
 }
 
-func TestBefore_OptomisticLock(t *testing.T) {
+func TestBefore_OptimisticLock(t *testing.T) {
 	defer gock.Off()
 
 	gock.New("http://drone.company.com").
@@ -353,14 +353,14 @@ func TestBefore_OptomisticLock(t *testing.T) {
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.Before(noContext, new(core.Step))
 	if err != db.ErrOptimisticLock {
-		t.Errorf("Want optomistic lock error")
+		t.Errorf("Want optimistic lock error")
 	}
 	if gock.IsPending() {
 		t.Errorf("Unfinished requests")
 	}
 }
 
-func TestAfter_OptomisticLock(t *testing.T) {
+func TestAfter_OptimisticLock(t *testing.T) {
 	defer gock.Off()
 
 	gock.New("http://drone.company.com").
@@ -371,14 +371,14 @@ func TestAfter_OptomisticLock(t *testing.T) {
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.After(noContext, new(core.Step))
 	if err != db.ErrOptimisticLock {
-		t.Errorf("Want optomistic lock error")
+		t.Errorf("Want optimistic lock error")
 	}
 	if gock.IsPending() {
 		t.Errorf("Unfinished requests")
 	}
 }
 
-func TestBeforeAll_OptomisticLock(t *testing.T) {
+func TestBeforeAll_OptimisticLock(t *testing.T) {
 	defer gock.Off()
 
 	gock.New("http://drone.company.com").
@@ -389,14 +389,14 @@ func TestBeforeAll_OptomisticLock(t *testing.T) {
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.BeforeAll(noContext, new(core.Stage))
 	if err != db.ErrOptimisticLock {
-		t.Errorf("Want optomistic lock error")
+		t.Errorf("Want optimistic lock error")
 	}
 	if gock.IsPending() {
 		t.Errorf("Unfinished requests")
 	}
 }
 
-func TestAfterAll_OptomisticLock(t *testing.T) {
+func TestAfterAll_OptimisticLock(t *testing.T) {
 	defer gock.Off()
 
 	gock.New("http://drone.company.com").
@@ -407,7 +407,7 @@ func TestAfterAll_OptomisticLock(t *testing.T) {
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.AfterAll(noContext, new(core.Stage))
 	if err != db.ErrOptimisticLock {
-		t.Errorf("Want optomistic lock error")
+		t.Errorf("Want optimistic lock error")
 	}
 	if gock.IsPending() {
 		t.Errorf("Unfinished requests")
