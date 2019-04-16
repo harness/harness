@@ -35,9 +35,9 @@ func TestCron(t *testing.T) {
 	defer controller.Finish()
 
 	checkBuild := func(_ context.Context, _ *core.Repository, hook *core.Hook) {
-		ignoreHookFileds := cmpopts.IgnoreFields(core.Hook{},
+		ignoreHookFields := cmpopts.IgnoreFields(core.Hook{},
 			"Source", "Before")
-		if diff := cmp.Diff(hook, dummyHook, ignoreHookFileds); diff != "" {
+		if diff := cmp.Diff(hook, dummyHook, ignoreHookFields); diff != "" {
 			t.Errorf(diff)
 		}
 	}
@@ -484,6 +484,6 @@ var (
 		},
 	}
 
-	ignoreBuildFileds = cmpopts.IgnoreFields(core.Build{},
+	ignoreBuildFields = cmpopts.IgnoreFields(core.Build{},
 		"Created", "Updated")
 )
