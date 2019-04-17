@@ -186,7 +186,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 
 	// this code is temporarily in place to detect and convert
 	// the legacy yaml configuration file to the new format.
-	y, err := converter.ConvertString(string(m.Config.Data), converter.Metadata{
+	y, err := converter.Convert(m.Config.Data, converter.Metadata{
 		Filename: m.Repo.Config,
 		Ref:      m.Build.Ref,
 	})
