@@ -1,7 +1,7 @@
 -- name: create-table-org-secrets
 
 CREATE TABLE IF NOT EXISTS orgsecrets (
- secret_id                INTEGER PRIMARY KEY AUTOINCREMENT
+ secret_id                INTEGER PRIMARY KEY AUTO_INCREMENT
 ,secret_namespace         VARCHAR(50)
 ,secret_name              VARCHAR(200)
 ,secret_type              VARCHAR(50)
