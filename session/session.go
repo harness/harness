@@ -28,6 +28,7 @@ import (
 func New(users core.UserStore, config Config) core.Session {
 	return &session{
 		secret:  []byte(config.Secret),
+		secure:  config.Secure,
 		timeout: config.Timeout,
 		users:   users,
 	}
@@ -36,6 +37,7 @@ func New(users core.UserStore, config Config) core.Session {
 type session struct {
 	users   core.UserStore
 	secret  []byte
+	secure  bool
 	timeout time.Duration
 
 	administrator string // administrator account
@@ -49,6 +51,7 @@ func (s *session) Create(w http.ResponseWriter, user *core.User) error {
 		Path:     "/",
 		MaxAge:   2147483647,
 		HttpOnly: true,
+		Secure:   s.secure,
 		Value: authcookie.NewSinceNow(
 			user.Login,
 			s.timeout,

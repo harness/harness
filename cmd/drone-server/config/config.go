@@ -256,6 +256,7 @@ type (
 	Session struct {
 		Timeout time.Duration `envconfig:"DRONE_COOKIE_TIMEOUT" default:"720h"`
 		Secret  string        `envconfig:"DRONE_COOKIE_SECRET"`
+		Secure  bool          `envconfig:"DRONE_COOKIE_SECURE"`
 	}
 
 	// Status provides status configurations.

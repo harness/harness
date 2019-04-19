@@ -36,7 +36,7 @@ func TestGet_Token_QueryParam(t *testing.T) {
 	users := mock.NewMockUserStore(controller)
 	users.EXPECT().FindToken(gomock.Any(), mockUser.Hash).Return(mockUser, nil)
 
-	session := New(users, NewConfig("correct-horse-battery-staple", time.Hour))
+	session := New(users, NewConfig("correct-horse-battery-staple", time.Hour, false))
 	r := httptest.NewRequest("GET", "/?access_token=ulSxuA0FKjNiOFIchk18NNvC6ygSxdtKjiOAS", nil)
 	user, _ := session.Get(r)
 	if user != mockUser {
@@ -58,7 +58,7 @@ func TestGet_Token_Header(t *testing.T) {
 	users := mock.NewMockUserStore(controller)
 	users.EXPECT().FindToken(gomock.Any(), mockUser.Hash).Return(mockUser, nil)
 
-	session := New(users, NewConfig("correct-horse-battery-staple", time.Hour))
+	session := New(users, NewConfig("correct-horse-battery-staple", time.Hour, false))
 	r := httptest.NewRequest("GET", "/", nil)
 	r.Header.Set("Authorization", "Bearer ulSxuA0FKjNiOFIchk18NNvC6ygSxdtKjiOAS")
 	user, _ := session.Get(r)
@@ -69,7 +69,7 @@ func TestGet_Token_Header(t *testing.T) {
 
 func TestGet_Token_NoSession(t *testing.T) {
 	r := httptest.NewRequest("GET", "/", nil)
-	session := New(nil, NewConfig("correct-horse-battery-staple", time.Hour))
+	session := New(nil, NewConfig("correct-horse-battery-staple", time.Hour, false))
 	user, _ := session.Get(r)
 	if user != nil {
 		t.Errorf("Expect empty session")
@@ -84,7 +84,7 @@ func TestGet_Token_UserNotFound(t *testing.T) {
 	users.EXPECT().FindToken(gomock.Any(), gomock.Any()).Return(nil, sql.ErrNoRows)
 
 	r := httptest.NewRequest("GET", "/?access_token=ulSxuA0FKjNiOFIchk18NNvC6ygSxdtKjiOAS", nil)
-	session := New(users, NewConfig("correct-horse-battery-staple", time.Hour))
+	session := New(users, NewConfig("correct-horse-battery-staple", time.Hour, false))
 	user, _ := session.Get(r)
 	if user != nil {
 		t.Errorf("Expect empty session")
@@ -111,7 +111,7 @@ func TestGet_Cookie(t *testing.T) {
 		Name:  "_session_",
 		Value: s,
 	})
-	session := New(users, Config{secret, time.Hour})
+	session := New(users, Config{false, secret, time.Hour})
 	user, err := session.Get(r)
 	if err != nil {
 		t.Error(err)
@@ -124,7 +124,7 @@ func TestGet_Cookie(t *testing.T) {
 
 func TestGet_Cookie_NoCookie(t *testing.T) {
 	r := httptest.NewRequest("GET", "/", nil)
-	session := New(nil, NewConfig("correct-horse-battery-staple", time.Hour))
+	session := New(nil, NewConfig("correct-horse-battery-staple", time.Hour, false))
 	user, _ := session.Get(r)
 	if user != nil {
 		t.Errorf("Expect nil user when no cookie")
@@ -140,7 +140,7 @@ func TestGet_Cookie_Expired(t *testing.T) {
 		Value: s,
 	})
 
-	session := New(nil, NewConfig("correct-horse-battery-staple", time.Hour))
+	session := New(nil, NewConfig("correct-horse-battery-staple", time.Hour, false))
 	user, _ := session.Get(r)
 	if user != nil {
 		t.Errorf("Expect nil user when no cookie")
@@ -162,7 +162,7 @@ func TestGet_Cookie_UserNotFound(t *testing.T) {
 		Value: s,
 	})
 
-	session := New(users, Config{secret, time.Hour})
+	session := New(users, Config{false, secret, time.Hour})
 	user, _ := session.Get(r)
 	if user != nil {
 		t.Errorf("Expect empty session")

@@ -16,9 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - endpoint to purge repository from database, by [@bradrydzewski](https://github.com/bradrydzewski).
 - support for per-organization secrets, by [@bradrydzewski](https://github.com/bradrydzewski).
 - include system metadata in global webhooks, by [@bradrydzewski](https://github.com/bradrydzewski).
+- ability to customize cookie secure flag, by [@bradrydzewski](https://github.com/bradrydzewski).
 - update drone-yaml from version 1.0.6 to 1.0.8.
 - update drone-runtime from version 1.0.4 to 1.0.6.
 - update go-scm from version 1.0.3 to 1.0.4.
+
+### Fixed
+
+- fixed error in mysql table creation syntax, from [@xuyang2](https://github.com/xuyang2). [#2677](https://github.com/drone/drone/pull/2677).
 
 ## [1.0.1] - 2019-04-10
 ### Added

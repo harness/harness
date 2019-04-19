@@ -95,7 +95,8 @@ func provideNetrcService(client *scm.Client, renewer core.Renewer, config config
 func provideSession(store core.UserStore, config config.Config) core.Session {
 	return session.New(store, session.NewConfig(
 		config.Session.Secret,
-		config.Session.Timeout),
+		config.Session.Timeout,
+		config.Session.Secure),
 	)
 }
 
