@@ -26,6 +26,7 @@ import (
 	"github.com/drone/drone-yaml/yaml/signer"
 
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/trigger/dag"
 
 	"github.com/sirupsen/logrus"
 )
@@ -234,6 +235,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	// }
 
 	var matched []*yaml.Pipeline
+	var dag = dag.New()
 	for _, document := range manifest.Resources {
 		pipeline, ok := document.(*yaml.Pipeline)
 		if !ok {
@@ -243,38 +245,34 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		// TODO add instance
 		// TODO add target
 		// TODO add ref
+		name := pipeline.Name
+		if name == "" {
+			name = "default"
+		}
+		node := dag.Add(pipeline.Name, pipeline.DependsOn...)
+		node.Skip = true
+
 		if skipBranch(pipeline, base.Target) {
 			logger = logger.WithField("pipeline", pipeline.Name)
 			logger.Infoln("trigger: skipping pipeline, does not match branch")
-			continue
 		} else if skipEvent(pipeline, base.Event) {
 			logger = logger.WithField("pipeline", pipeline.Name)
 			logger.Infoln("trigger: skipping pipeline, does not match event")
-			continue
-			// } else if skipPaths(pipeline, paths) {
-			// 	logger.Debug().
-			// 		Str("branch", base.Target).
-			// 		Str("pipeline", pipeline.Name).
-			// 		Msg("skipping pipeline. does not match changed paths")
-			// 	continue
 		} else if skipRef(pipeline, base.Ref) {
 			logger = logger.WithField("pipeline", pipeline.Name)
 			logger.Infoln("trigger: skipping pipeline, does not match ref")
-			continue
 		} else if skipRepo(pipeline, repo.Slug) {
 			logger = logger.WithField("pipeline", pipeline.Name)
 			logger.Infoln("trigger: skipping pipeline, does not match repo")
-			continue
 		} else if skipTarget(pipeline, base.Deployment) {
 			logger = logger.WithField("pipeline", pipeline.Name)
 			logger.Infoln("trigger: skipping pipeline, does not match deploy target")
-			continue
 		} else if skipCron(pipeline, base.Cron) {
 			logger = logger.WithField("pipeline", pipeline.Name)
 			logger.Infoln("trigger: skipping pipeline, does not match cron job")
-			continue
 		} else {
 			matched = append(matched, pipeline)
+			node.Skip = false
 		}
 	}
 
@@ -365,6 +363,15 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		stages[i] = stage
 	}
 
+	for _, stage := range stages {
+		if stage.Status != core.StatusWaiting {
+			continue
+		}
+		if deps := dag.Ancestors(stage.Name); len(deps) == 0 {
+			stage.Status = core.StatusPending
+		}
+	}
+
 	err = t.builds.Create(ctx, build, stages)
 	if err != nil {
 		logger = logger.WithError(err)
@@ -382,10 +389,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	}
 
 	for _, stage := range stages {
-		if len(stage.DependsOn) != 0 {
-			continue
-		}
-		if stage.Status == core.StatusBlocked {
+		if stage.Status != core.StatusPending {
 			continue
 		}
 		err = t.sched.Schedule(ctx, stage)
