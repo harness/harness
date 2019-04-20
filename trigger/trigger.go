@@ -276,6 +276,10 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		}
 	}
 
+	if dag.DetectCycles() {
+		return t.createBuildError(ctx, repo, base, "Error: Dependency cycle detected in Pipeline")
+	}
+
 	if len(matched) == 0 {
 		logger.Infoln("trigger: skipping build, no matching pipelines")
 		return nil, nil
