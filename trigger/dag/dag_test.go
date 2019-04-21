@@ -7,6 +7,7 @@
 package dag
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -137,5 +138,74 @@ func TestAncestors_Complex(t *testing.T) {
 	if got, want := len(ancestors), 3; got != want {
 		t.Errorf("Want %d ancestors, got %d", want, got)
 		return
+	}
+}
+
+func TestDependencies(t *testing.T) {
+	dag := New()
+	dag.Add("backend")
+	dag.Add("frontend")
+	dag.Add("publish", "backend", "frontend")
+
+	if deps := dag.Dependencies("backend"); len(deps) != 0 {
+		t.Errorf("Expect zero dependencies")
+	}
+	if deps := dag.Dependencies("frontend"); len(deps) != 0 {
+		t.Errorf("Expect zero dependencies")
+	}
+
+	got, want := dag.Dependencies("publish"), []string{"backend", "frontend"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Unexpected dependencies, got %v", got)
+	}
+}
+
+func TestDependencies_Skipped(t *testing.T) {
+	dag := New()
+	dag.Add("backend")
+	dag.Add("frontend").Skip = true
+	dag.Add("publish", "backend", "frontend")
+
+	if deps := dag.Dependencies("backend"); len(deps) != 0 {
+		t.Errorf("Expect zero dependencies")
+	}
+	if deps := dag.Dependencies("frontend"); len(deps) != 0 {
+		t.Errorf("Expect zero dependencies")
+	}
+
+	got, want := dag.Dependencies("publish"), []string{"backend"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Unexpected dependencies, got %v", got)
+	}
+}
+
+func TestDependencies_Complex(t *testing.T) {
+	dag := New()
+	dag.Add("clone")
+	dag.Add("backend")
+	dag.Add("frontend", "backend").Skip = true
+	dag.Add("publish", "frontend", "clone")
+	dag.Add("notify", "publish")
+
+	if deps := dag.Dependencies("clone"); len(deps) != 0 {
+		t.Errorf("Expect zero dependencies for clone")
+	}
+	if deps := dag.Dependencies("backend"); len(deps) != 0 {
+		t.Errorf("Expect zero dependencies for backend")
+	}
+
+	got, want := dag.Dependencies("frontend"), []string{"backend"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Unexpected dependencies for frontend, got %v", got)
+	}
+
+	got, want = dag.Dependencies("publish"), []string{"backend", "clone"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Unexpected dependencies for publish, got %v", got)
+	}
+
+	got, want = dag.Dependencies("notify"), []string{"publish"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Unexpected dependencies for notify, got %v", got)
 	}
 }

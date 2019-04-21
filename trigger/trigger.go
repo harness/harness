@@ -368,10 +368,16 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	}
 
 	for _, stage := range stages {
-		if stage.Status != core.StatusWaiting {
-			continue
-		}
-		if deps := dag.Ancestors(stage.Name); len(deps) == 0 {
+		// here we re-work the dependencies for the stage to
+		// account for the fact that some steps may be skipped
+		// and may otherwise break the dependnecy chain.
+		stage.DependsOn = dag.Dependencies(stage.Name)
+
+		// if the stage is pending dependencies, but those
+		// dependencies are skipped, the stage can be executed
+		// immediately.
+		if stage.Status == core.StatusWaiting &&
+			len(stage.DependsOn) == 0 {
 			stage.Status = core.StatusPending
 		}
 	}
