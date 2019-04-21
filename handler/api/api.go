@@ -308,6 +308,7 @@ func (s Server) Handler() http.Handler {
 		r.Get("/{namespace}", globalsecrets.HandleList(s.Globals))
 		r.Post("/{namespace}", globalsecrets.HandleCreate(s.Globals))
 		r.Get("/{namespace}/{name}", globalsecrets.HandleFind(s.Globals))
+		r.Post("/{namespace}/{name}", globalsecrets.HandleUpdate(s.Globals))
 		r.Patch("/{namespace}/{name}", globalsecrets.HandleUpdate(s.Globals))
 		r.Delete("/{namespace}/{name}", globalsecrets.HandleDelete(s.Globals))
 	})
