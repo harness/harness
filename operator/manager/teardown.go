@@ -93,14 +93,27 @@ func (t *teardown) do(ctx context.Context, stage *core.Stage) error {
 		return err
 	}
 
+	//
+	//
+	//
+
 	err = t.cancelDownstream(ctx, stages)
 	if err != nil {
+		logger.WithError(err).
+			Errorln("manager: cannot cancel downstream builds")
 		return err
 	}
+
 	err = t.scheduleDownstream(ctx, stage, stages)
 	if err != nil {
+		logger.WithError(err).
+			Errorln("manager: cannot schedule downstream builds")
 		return err
 	}
+
+	//
+	//
+	//
 
 	if isBuildComplete(stages) == false {
 		logger.Debugln("manager: build pending completion of additional stages")
@@ -138,12 +151,6 @@ func (t *teardown) do(ctx context.Context, stage *core.Stage) error {
 		return err
 	}
 
-	// err = t.Watcher.Complete(noContext, build.ID)
-	// if err != nil {
-	// 	logger.WithError(err).
-	// 		Warnln("manager: cannot remove the watcher")
-	// }
-
 	repo.Build = build
 	repo.Build.Stages = stages
 	data, _ := json.Marshal(repo)
@@ -161,7 +168,11 @@ func (t *teardown) do(ctx context.Context, stage *core.Stage) error {
 	if err != nil {
 		logger.WithError(err).
 			Warnln("manager: cannot find repository owner")
-		return err
+
+		// this error is insufficient to fail the function,
+		// however, execution of the function should be halted
+		// to prevent a nil pointer in subsequent operations.
+		return nil
 	}
 
 	req := &core.StatusInput{
@@ -195,10 +206,19 @@ func (t *teardown) cancelDownstream(
 		if s.Status != core.StatusWaiting {
 			continue
 		}
-		if failed == true && s.OnFailure == true {
+
+		var skip bool
+		if failed == true && s.OnFailure == false {
+			skip = true
+		}
+		if failed == false && s.OnSuccess == false {
+			skip = true
+		}
+		if skip == false {
 			continue
 		}
-		if failed == false && s.OnSuccess == true {
+
+		if areDepsComplete(s, stages) == false {
 			continue
 		}
 
@@ -217,7 +237,11 @@ func (t *teardown) cancelDownstream(
 		s.Started = time.Now().Unix()
 		s.Stopped = time.Now().Unix()
 		err := t.Stages.Update(noContext, s)
-		if err != nil && err != db.ErrOptimisticLock {
+		if err == db.ErrOptimisticLock {
+			t.resync(ctx, s)
+			continue
+		}
+		if err != nil {
 			logger.WithError(err).
 				Warnln("manager: cannot update stage status")
 			errs = multierror.Append(errs, err)
@@ -241,15 +265,18 @@ func (t *teardown) scheduleDownstream(
 			if len(sibling.DependsOn) == 0 {
 				continue
 			}
-			if isDep(stage, sibling) == false {
-				continue
-			}
+
+			// PROBLEM: isDep only checks the direct parent
+			// i think ....
+			// if isDep(stage, sibling) == false {
+			// 	continue
+			// }
 			if areDepsComplete(sibling, stages) == false {
 				continue
 			}
-			if isLastDep(stage, sibling, stages) == false {
-				continue
-			}
+			// if isLastDep(stage, sibling, stages) == false {
+			// 	continue
+			// }
 
 			logger := logrus.WithFields(
 				logrus.Fields{
@@ -263,6 +290,10 @@ func (t *teardown) scheduleDownstream(
 			sibling.Status = core.StatusPending
 			sibling.Updated = time.Now().Unix()
 			err := t.Stages.Update(noContext, sibling)
+			if err == db.ErrOptimisticLock {
+				t.resync(ctx, sibling)
+				continue
+			}
 			if err != nil {
 				logger.WithError(err).
 					Warnln("manager: cannot update stage status")
@@ -278,4 +309,24 @@ func (t *teardown) scheduleDownstream(
 		}
 	}
 	return errs
+}
+
+// resync updates the stage from the database. Note that it does
+// not update the Version field. This is by design. It prevents
+// the current go routine from updating a stage that has been
+// updated by another go routine.
+func (t *teardown) resync(ctx context.Context, stage *core.Stage) error {
+	updated, err := t.Stages.Find(ctx, stage.ID)
+	if err != nil {
+		return err
+	}
+	stage.Status = updated.Status
+	stage.Error = updated.Error
+	stage.ExitCode = updated.ExitCode
+	stage.Machine = updated.Machine
+	stage.Started = updated.Started
+	stage.Stopped = updated.Stopped
+	stage.Created = updated.Created
+	stage.Updated = updated.Updated
+	return nil
 }
