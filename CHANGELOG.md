@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - fixed error in mysql table creation syntax, from [@xuyang2](https://github.com/xuyang2). [#2677](https://github.com/drone/drone/pull/2677).
 - fixed stuck builds when upstream dependency is skipped, from [@bradrydzewski](https://github.com/bradrydzewski). [#2634](https://github.com/drone/drone/issues/2634).
+- fixed issue running steps with dependencies on failure, from [@bradrydzewski](https://github.com/bradrydzewski). [#2667](https://github.com/drone/drone/issues/2667).
 
 ## [1.0.1] - 2019-04-10
 ### Added
