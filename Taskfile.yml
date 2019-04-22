@@ -126,7 +126,17 @@ tasks:
           mysql:5.7
           --character-set-server=utf8mb4
           --collation-server=utf8mb4_unicode_ci
-      - cmd: go test -count=1 github.com/drone/drone/store/...
+      - cmd: go test -count=1 github.com/drone/drone/store/batch
+      - cmd: go test -count=1 github.com/drone/drone/store/build
+      - cmd: go test -count=1 github.com/drone/drone/store/cron
+      - cmd: go test -count=1 github.com/drone/drone/store/logs
+      - cmd: go test -count=1 github.com/drone/drone/store/perm
+      - cmd: go test -count=1 github.com/drone/drone/store/repos
+      - cmd: go test -count=1 github.com/drone/drone/store/secret
+      - cmd: go test -count=1 github.com/drone/drone/store/secret/global
+      - cmd: go test -count=1 github.com/drone/drone/store/stage
+      - cmd: go test -count=1 github.com/drone/drone/store/step
+      - cmd: go test -count=1 github.com/drone/drone/store/user
       - cmd: docker kill mysql
 
   test-postgres:
@@ -147,6 +157,16 @@ tasks:
           --detach
           --rm
           postgres:9-alpine
-      - cmd: go test -count=1 github.com/drone/drone/store/...
+      - cmd: go test -count=1 github.com/drone/drone/store/batch
+      - cmd: go test -count=1 github.com/drone/drone/store/build
+      - cmd: go test -count=1 github.com/drone/drone/store/cron
+      - cmd: go test -count=1 github.com/drone/drone/store/logs
+      - cmd: go test -count=1 github.com/drone/drone/store/perm
+      - cmd: go test -count=1 github.com/drone/drone/store/repos
+      - cmd: go test -count=1 github.com/drone/drone/store/secret
+      - cmd: go test -count=1 github.com/drone/drone/store/secret/global
+      - cmd: go test -count=1 github.com/drone/drone/store/stage
+      - cmd: go test -count=1 github.com/drone/drone/store/step
+      - cmd: go test -count=1 github.com/drone/drone/store/user
       - cmd: docker kill postgres
         silent: true
