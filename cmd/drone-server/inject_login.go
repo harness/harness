@@ -172,5 +172,13 @@ func provideRefresher(config config.Config) *oauth2.Refresher {
 			Source:       oauth2.ContextTokenSource(),
 		}
 	}
+	if config.Gitea.ClientID != "" {
+		return &oauth2.Refresher{
+			ClientID:     config.Gitea.ClientID,
+			ClientSecret: config.Gitea.ClientSecret,
+			Endpoint:     config.Server.Addr + "/login/oauth/access_token",
+			Source:       oauth2.ContextTokenSource(),
+		}
+	}
 	return nil
 }
