@@ -172,11 +172,11 @@ func provideRefresher(config config.Config) *oauth2.Refresher {
 			Endpoint:     "https://bitbucket.org/site/oauth2/access_token",
 			Source:       oauth2.ContextTokenSource(),
 		}
-	case config.Gitea.Server != "":
+	case config.Gitea.ClientID != "":
 		return &oauth2.Refresher{
 			ClientID:     config.Gitea.ClientID,
 			ClientSecret: config.Gitea.ClientSecret,
-			Endpoint:     config.Server.Addr + "/login/oauth/access_token",
+			Endpoint:     config.Gitea.Server + "/login/oauth/access_token",
 			Source:       oauth2.ContextTokenSource(),
 		}
 	}
