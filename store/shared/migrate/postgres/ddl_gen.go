@@ -545,7 +545,7 @@ ALTER TABLE builds ADD COLUMN build_cron VARCHAR(50) NOT NULL DEFAULT '';
 
 var createTableOrgSecrets = `
 CREATE TABLE IF NOT EXISTS orgsecrets (
- secret_id                INTEGER PRIMARY KEY AUTOINCREMENT
+ secret_id                SERIAL PRIMARY KEY
 ,secret_namespace         VARCHAR(50)
 ,secret_name              VARCHAR(200)
 ,secret_type              VARCHAR(50)

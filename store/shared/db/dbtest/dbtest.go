@@ -33,9 +33,9 @@ func Connect() (*db.DB, error) {
 		driver = "sqlite3"
 		config = ":memory:?_foreign_keys=1"
 	)
-	if os.Getenv("DATABASE_DRIVER") != "" {
-		driver = os.Getenv("DATABASE_DRIVER")
-		config = os.Getenv("DATABASE_CONFIG")
+	if os.Getenv("DRONE_DATABASE_DRIVER") != "" {
+		driver = os.Getenv("DRONE_DATABASE_DRIVER")
+		config = os.Getenv("DRONE_DATABASE_DATASOURCE")
 	}
 	return db.Connect(driver, config)
 }
@@ -51,6 +51,7 @@ func Reset(d *db.DB) {
 		tx.Exec("DELETE FROM perms")
 		tx.Exec("DELETE FROM repos")
 		tx.Exec("DELETE FROM users")
+		tx.Exec("DELETE FROM orgsecrets")
 		return nil
 	})
 }
