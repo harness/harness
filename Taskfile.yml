@@ -123,7 +123,7 @@ tasks:
           --name mysql
           --detach
           --rm
-          mysql:8
+          mysql:5.7
           --character-set-server=utf8mb4
           --collation-server=utf8mb4_unicode_ci
       - cmd: go test -count=1 github.com/drone/drone/store/...
