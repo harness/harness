@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 
+## [1.1.0] - 2019-04-23
+### Added
+
 - specify a user for the pipeline step, by [@bradrydzewski](https://github.com/bradrydzewski). [#2651](https://github.com/drone/drone/issues/2651).
 - support for Gitea oauth2, by [@techknowlogick](https://github.com/techknowlogick). [#2622](https://github.com/drone/drone/pull/2622).
 - ping the docker daemon before starting the agent, by [@bradrydzewski](https://github.com/bradrydzewski). [#2495](https://github.com/drone/drone/issues/2495).
@@ -17,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for per-organization secrets, by [@bradrydzewski](https://github.com/bradrydzewski).
 - include system metadata in global webhooks, by [@bradrydzewski](https://github.com/bradrydzewski).
 - ability to customize cookie secure flag, by [@bradrydzewski](https://github.com/bradrydzewski).
+- support for gitea oauth by [@techknowlogick](https://github.com/techknowlogick).
 - update drone-yaml from version 1.0.6 to 1.0.8.
 - update drone-runtime from version 1.0.4 to 1.0.6.
 - update go-scm from version 1.0.3 to 1.0.4.
