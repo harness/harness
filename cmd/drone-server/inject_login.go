@@ -162,13 +162,21 @@ func provideStashLogin(config config.Config) login.Middleware {
 }
 
 // provideRefresher is a Wire provider function that returns
-// an oauth token refresher for Bitbucket.
+// an oauth token refresher for Bitbucket and Gitea
 func provideRefresher(config config.Config) *oauth2.Refresher {
-	if config.Bitbucket.ClientID != "" {
+	switch {
+	case config.Bitbucket.ClientID != "":
 		return &oauth2.Refresher{
 			ClientID:     config.Bitbucket.ClientID,
 			ClientSecret: config.Bitbucket.ClientSecret,
 			Endpoint:     "https://bitbucket.org/site/oauth2/access_token",
+			Source:       oauth2.ContextTokenSource(),
+		}
+	case config.Gitea.ClientID != "":
+		return &oauth2.Refresher{
+			ClientID:     config.Gitea.ClientID,
+			ClientSecret: config.Gitea.ClientSecret,
+			Endpoint:     config.Gitea.Server + "/login/oauth/access_token",
 			Source:       oauth2.ContextTokenSource(),
 		}
 	}
