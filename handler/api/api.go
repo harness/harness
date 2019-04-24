@@ -169,9 +169,9 @@ func (s Server) Handler() http.Handler {
 		).Post("/repair", repos.HandleRepair(s.Hooks, s.Repoz, s.Repos, s.Users, s.System.Link))
 
 		r.Route("/builds", func(r chi.Router) {
-			r.Get("/", builds.HandleList(s.Repos, s.Builds))
-			// TODO(bradrydzewski) temporarily disabled until we finalize the endpoint.
-			// r.Post("/", builds.HandleCreate(s.Repos, s.Commits, s.Triggerer))
+			r.With(acl.CheckWriteAccess()).Get("/", builds.HandleList(s.Repos, s.Builds))
+			r.With(acl.CheckWriteAccess()).Post("/", builds.HandleCreate(s.Repos, s.Commits, s.Triggerer))
+
 			r.Get("/latest", builds.HandleLast(s.Repos, s.Builds, s.Stages))
 			r.Get("/{number}", builds.HandleFind(s.Repos, s.Builds, s.Stages))
 			r.Get("/{number}/logs/{stage}/{step}", logs.HandleFind(s.Repos, s.Builds, s.Stages, s.Steps, s.Logs))

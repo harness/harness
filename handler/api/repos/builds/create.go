@@ -15,7 +15,6 @@
 package builds
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/drone/drone/core"
@@ -25,13 +24,6 @@ import (
 
 	"github.com/go-chi/chi"
 )
-
-type createBuild struct {
-	Params map[string]string `json:"params"`
-	Commit *string           `json:"commit"`
-	Branch *string           `json:"branch"`
-	Ref    *string           `json:"ref"`
-}
 
 // HandleCreate returns an http.HandlerFunc that processes http
 // requests to create a build for the specified commit.
@@ -45,36 +37,29 @@ func HandleCreate(
 			ctx       = r.Context()
 			namespace = chi.URLParam(r, "owner")
 			name      = chi.URLParam(r, "name")
+			sha       = r.FormValue("commit")
+			branch    = r.FormValue("branch")
 			user, _   = request.UserFrom(ctx)
 		)
-		in := new(createBuild)
-		err := json.NewDecoder(r.Body).Decode(in)
-		if err != nil {
-			render.BadRequest(w, err)
-			return
-		}
-		if in.Ref == nil || in.Branch == nil {
-			render.BadRequestf(w, "Missing branch or ref")
-			return
-		}
-		if in.Params == nil {
-			// cannot remember if parameters must be non-nil,
-			// so we set the value to prevent a possible
-			// downstream nil pointer. just being overly cautious ...
-			in.Params = map[string]string{}
-		}
+
 		repo, err := repos.FindName(ctx, namespace, name)
 		if err != nil {
 			render.NotFound(w, err)
 			return
 		}
+
+		// if the user does not provide a branch, assume the
+		// default repository branch.
+		if branch == "" {
+			branch = repo.Branch
+		}
+		// expand the branch to a git reference.
+		ref := scm.ExpandRef(branch, "refs/heads")
+
 		var commit *core.Commit
-		if in.Commit == nil {
-			commit, err = commits.Find(ctx, user, repo.Slug, *in.Commit)
-		} else if in.Ref != nil {
-			commit, err = commits.FindRef(ctx, user, repo.Slug, *in.Ref)
-		} else if in.Branch != nil {
-			ref := scm.ExpandRef(*in.Branch, "refs/heads")
+		if sha != "" {
+			commit, err = commits.Find(ctx, user, repo.Slug, sha)
+		} else {
 			commit, err = commits.FindRef(ctx, user, repo.Slug, ref)
 		}
 		if err != nil {
@@ -89,26 +74,17 @@ func HandleCreate(
 			Timestamp:    commit.Author.Date,
 			Title:        "", // we expect this to be empty.
 			Message:      commit.Message,
-			Before:       "", // we expect this to be empty.
+			Before:       commit.Sha,
 			After:        commit.Sha,
-			Ref:          "", // set below
-			Source:       "", // set below
-			Target:       "", // set below
+			Ref:          ref,
+			Source:       branch,
+			Target:       branch,
 			Author:       commit.Author.Login,
 			AuthorName:   commit.Author.Name,
 			AuthorEmail:  commit.Author.Email,
 			AuthorAvatar: commit.Author.Avatar,
-			Sender:       "", // todo: what value should we use?
-			Params:       in.Params,
-		}
-		if in.Branch != nil {
-			hook.Source = *in.Branch
-			hook.Target = *in.Branch
-		}
-		if in.Ref != nil {
-			branch := scm.TrimRef(*in.Ref)
-			hook.Source = branch
-			hook.Target = branch
+			Sender:       user.Login,
+			Params:       map[string]string{}, // todo: popular from query parameters
 		}
 
 		result, err := triggerer.Trigger(r.Context(), repo, hook)
