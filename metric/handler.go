@@ -10,6 +10,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/drone/drone/cmd/drone-server/config"
 	"github.com/drone/drone/core"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -26,13 +27,15 @@ var errAccessDenied = errors.New("Access denied")
 type Server struct {
 	metrics http.Handler
 	session core.Session
+	config  config.Config
 }
 
 // NewServer returns a new metrics server.
-func NewServer(session core.Session) *Server {
+func NewServer(session core.Session, config config.Config) *Server {
 	return &Server{
 		metrics: promhttp.Handler(),
 		session: session,
+		config:  config,
 	}
 }
 
@@ -41,9 +44,9 @@ func NewServer(session core.Session) *Server {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	user, _ := s.session.Get(r)
 	switch {
-	case user == nil:
+	case !s.config.Prometheus.EnableAnonymousAccess && user == nil:
 		http.Error(w, errInvalidToken.Error(), 401)
-	case !user.Admin && !user.Machine:
+	case !s.config.Prometheus.EnableAnonymousAccess && !user.Admin && !user.Machine:
 		http.Error(w, errAccessDenied.Error(), 403)
 	default:
 		s.metrics.ServeHTTP(w, r)
