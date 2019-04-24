@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/cmd/drone-server/config"
+	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api"
 	"github.com/drone/drone/handler/web"
 	"github.com/drone/drone/metric"
@@ -33,9 +34,9 @@ import (
 // wire set for loading the server.
 var serverSet = wire.NewSet(
 	manager.New,
-	metric.NewServer,
 	api.New,
 	web.New,
+	provideMetric,
 	provideRouter,
 	provideRPC,
 	provideServer,
@@ -51,6 +52,12 @@ func provideRouter(api api.Server, web web.Server, rpc http.Handler, metrics *me
 	r.Mount("/rpc", rpc)
 	r.Mount("/", web.Handler())
 	return r
+}
+
+// provideMetric is a Wire provider function that returns the
+// metrics server exposing metrics in prometheus format.
+func provideMetric(session core.Session, config config.Config) *metric.Server {
+	return metric.NewServer(session, config.Prometheus.EnableAnonymousAccess)
 }
 
 // provideRPC is a Wire provider function that returns an rpc
