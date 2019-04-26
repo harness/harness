@@ -35,6 +35,13 @@ type Server struct {
 
 // ListenAndServe initializes a server to respond to HTTP network requests.
 func (s Server) ListenAndServe(ctx context.Context) error {
+	if s.Key != "" {
+		return s.listenAndServeTLS(ctx)
+	}
+	return s.listenAndServe(ctx)
+}
+
+func (s Server) listenAndServe(ctx context.Context) error {
 	var g errgroup.Group
 	s1 := &http.Server{
 		Addr:    s.Addr,
@@ -48,6 +55,36 @@ func (s Server) ListenAndServe(ctx context.Context) error {
 	})
 	g.Go(func() error {
 		return s1.ListenAndServe()
+	})
+	return g.Wait()
+}
+
+func (s Server) listenAndServeTLS(ctx context.Context) error {
+	var g errgroup.Group
+	s1 := &http.Server{
+		Addr:    ":http",
+		Handler: s.Handler,
+	}
+	s2 := &http.Server{
+		Addr:    ":https",
+		Handler: s.Handler,
+	}
+	g.Go(func() error {
+		return s1.ListenAndServe()
+	})
+	g.Go(func() error {
+		return s2.ListenAndServeTLS(
+			s.Cert,
+			s.Key,
+		)
+	})
+	g.Go(func() error {
+		select {
+		case <-ctx.Done():
+			s1.Shutdown(ctx)
+			s2.Shutdown(ctx)
+			return nil
+		}
 	})
 	return g.Wait()
 }
