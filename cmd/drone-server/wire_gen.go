@@ -10,7 +10,6 @@ import (
 	"github.com/drone/drone/handler/api"
 	"github.com/drone/drone/handler/web"
 	"github.com/drone/drone/livelog"
-	"github.com/drone/drone/metric"
 	"github.com/drone/drone/operator/manager"
 	"github.com/drone/drone/pubsub"
 	"github.com/drone/drone/service/commit"
@@ -93,7 +92,7 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	options := provideServerOptions(config2)
 	webServer := web.New(admissionService, buildStore, client, hookParser, coreLicense, licenseService, middleware, repositoryStore, session, syncer, triggerer, userStore, userService, webhookSender, options, system)
 	handler := provideRPC(buildManager, config2)
-	metricServer := metric.NewServer(session)
+	metricServer := provideMetric(session, config2)
 	mux := provideRouter(server, webServer, handler, metricServer)
 	serverServer := provideServer(mux, config2)
 	mainApplication := newApplication(cronScheduler, datadog, runner, serverServer, userStore)
