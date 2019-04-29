@@ -108,6 +108,9 @@ func (s *nomadScheduler) Schedule(ctx context.Context, stage *core.Stage) error 
 				RestartPolicy: &api.RestartPolicy{
 					Mode: stringToPtr("fail"),
 				},
+				EphemeralDisk: &api.EphemeralDisk{
+					SizeMB: intToPtr(s.config.EphemeralDisk),
+				},
 			},
 		},
 		Meta: map[string]string{

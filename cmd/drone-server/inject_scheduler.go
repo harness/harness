@@ -100,6 +100,7 @@ func provideNomadScheduler(config config.Config) core.Scheduler {
 		// LimitCompute:     config.Nomad.CPU,
 		RequestMemory:    config.Nomad.Memory,
 		RequestCompute:   config.Nomad.CPU,
+		EphemeralDisk:    config.Nomad.Disk,
 		CallbackHost:     config.RPC.Host,
 		CallbackProto:    config.RPC.Proto,
 		CallbackSecret:   config.RPC.Secret,

@@ -28,6 +28,7 @@ type Config struct {
 	LimitCompute     int
 	RequestMemory    int
 	RequestCompute   int
+	EphemeralDisk    int
 	CallbackHost     string
 	CallbackProto    string
 	CallbackSecret   string

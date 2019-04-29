@@ -145,6 +145,7 @@ type (
 		ImagePull   bool     `envconfig:"DRONE_NOMAD_IMAGE_PULL"`
 		Memory      int      `envconfig:"DRONE_NOMAD_DEFAULT_RAM" default:"1024"`
 		CPU         int      `envconfig:"DRONE_NOMAD_DEFAULT_CPU" default:"500"`
+		Disk        int      `envconfig:"DRONE_NOMAD_DEFAULT_DISK" default:"300"`
 	}
 
 	// License provides license configuration
