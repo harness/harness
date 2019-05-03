@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+        "path/filepath"
 	"strings"
 	"time"
 
@@ -104,6 +105,24 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 	rand := strings.ToLower(uniuri.NewLen(12))
 	name := fmt.Sprintf("drone-job-%d-%s", stage.ID, rand)
 
+	var mounts []v1.VolumeMount
+        mount := v1.VolumeMount{
+		Name:           "local",
+		MountPath:      filepath.Join("/tmp", "drone"),
+	}
+        mounts = append(mounts, mount)
+
+	var volumes []v1.Volume
+        source := v1.HostPathDirectoryOrCreate
+        volume := v1.Volume{
+		Name:            "local",
+	}
+	volume.HostPath = &v1.HostPathVolumeSource{
+		Path:           filepath.Join("/tmp", "drone"),
+		Type:           &source,
+        }
+        volumes = append(volumes, volume)
+
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: name,
@@ -131,7 +150,9 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 						Image:           internal.DefaultImage(s.config.Image),
 						ImagePullPolicy: pull,
 						Env:             env,
+						VolumeMounts:    mounts,
 					}},
+					Volumes: volumes,
 				},
 			},
 		},
