@@ -38,7 +38,7 @@ func (s Server) ListenAndServe(ctx context.Context) error {
 }
 
 func (s Server) listenAndServe(ctx context.Context) error {
-	var g errgroup.Group
+	g, ctx := errgroup.WithContext(ctx)
 	s1 := &http.Server{
 		Addr:    s.Addr,
 		Handler: s.Handler,

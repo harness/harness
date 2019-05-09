@@ -79,7 +79,7 @@ func main() {
 		logger.Fatalln("cannot bootstrap user account")
 	}
 
-	g := errgroup.Group{}
+	g, ctx := errgroup.WithContext(ctx)
 	g.Go(func() error {
 		logrus.WithFields(
 			logrus.Fields{
