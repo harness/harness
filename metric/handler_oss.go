@@ -27,7 +27,7 @@ type Server struct {
 }
 
 // NewServer returns a new metrics server.
-func NewServer(session core.Session) *Server {
+func NewServer(session core.Session, anonymous bool) *Server {
 	return new(Server)
 }
 
