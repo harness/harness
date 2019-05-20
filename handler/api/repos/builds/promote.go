@@ -63,6 +63,7 @@ func HandlePromote(
 			Before:       prev.Before,
 			After:        prev.After,
 			Ref:          prev.Ref,
+			Fork:         prev.Fork,
 			Source:       prev.Source,
 			Target:       prev.Target,
 			Author:       prev.Author,
