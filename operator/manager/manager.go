@@ -161,6 +161,8 @@ type Manager struct {
 func (m *Manager) Request(ctx context.Context, args *Request) (*core.Stage, error) {
 	logger := logrus.WithFields(
 		logrus.Fields{
+			"kind":    args.Kind,
+			"type":    args.Type,
 			"os":      args.OS,
 			"arch":    args.Arch,
 			"kernel":  args.Kernel,
