@@ -21,6 +21,7 @@ import "context"
 type Batch struct {
 	Insert []*Repository `json:"insert"`
 	Update []*Repository `json:"update"`
+	Rename []*Repository `json:"rename"`
 	Revoke []*Repository `json:"revoke"`
 }
 
