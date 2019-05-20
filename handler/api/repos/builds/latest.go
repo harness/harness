@@ -36,6 +36,7 @@ func HandleLast(
 			namespace = chi.URLParam(r, "owner")
 			name      = chi.URLParam(r, "name")
 			ref       = r.FormValue("ref")
+			branch    = r.FormValue("branch")
 		)
 		repo, err := repos.FindName(r.Context(), namespace, name)
 		if err != nil {
@@ -44,6 +45,9 @@ func HandleLast(
 		}
 		if ref == "" {
 			ref = fmt.Sprintf("refs/heads/%s", repo.Branch)
+		}
+		if branch != "" {
+			ref = fmt.Sprintf("refs/heads/%s", branch)
 		}
 		build, err := builds.FindRef(r.Context(), repo.ID, ref)
 		if err != nil {
