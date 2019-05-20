@@ -70,7 +70,7 @@ func HandleGlobal(
 				logger.Debugln("events: stream cancelled")
 				break L
 			case <-errc:
-				logger.Debugln("events: stream eror")
+				logger.Debugln("events: stream error")
 				break L
 			case <-time.After(time.Hour):
 				logger.Debugln("events: stream timeout")
