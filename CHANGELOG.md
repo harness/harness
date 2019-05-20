@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - endpoint to trigger new build for branch, by [@bradrydzewski](https://github.com/bradrydzewski). [#2679](https://github.com/drone/drone/issues/2679).
 - endpoint to trigger new build for branch and sha, by [@bradrydzewski](https://github.com/bradrydzewski). [#2679](https://github.com/drone/drone/issues/2679).
 
+### Fixed
+
+- copy the fork value when restarting a build, by [@bradrydzewski](https://github.com/bradrydzewski). [#2708](https://github.com/drone/drone/issues/2708).
+
 ## [1.1.0] - 2019-04-23
 ### Added
 
@@ -24,7 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for per-organization secrets, by [@bradrydzewski](https://github.com/bradrydzewski).
 - include system metadata in global webhooks, by [@bradrydzewski](https://github.com/bradrydzewski).
 - ability to customize cookie secure flag, by [@bradrydzewski](https://github.com/bradrydzewski).
-- support for gitea oauth by [@techknowlogick](https://github.com/techknowlogick).
 - update drone-yaml from version 1.0.6 to 1.0.8.
 - update drone-runtime from version 1.0.4 to 1.0.6.
 - update go-scm from version 1.0.3 to 1.0.4.
