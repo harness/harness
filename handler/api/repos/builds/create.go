@@ -84,7 +84,19 @@ func HandleCreate(
 			AuthorEmail:  commit.Author.Email,
 			AuthorAvatar: commit.Author.Avatar,
 			Sender:       user.Login,
-			Params:       map[string]string{}, // todo: popular from query parameters
+			Params:       map[string]string{},
+		}
+
+		for key, value := range r.URL.Query() {
+			if key == "access_token" ||
+				key == "commit" ||
+				key == "branch" {
+				continue
+			}
+			if len(value) == 0 {
+				continue
+			}
+			hook.Params[key] = value[0]
 		}
 
 		result, err := triggerer.Trigger(r.Context(), repo, hook)
