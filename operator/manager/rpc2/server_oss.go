@@ -14,22 +14,20 @@
 
 // +build oss
 
-package metric
+package rpc2
 
 import (
 	"net/http"
 
-	"github.com/drone/drone/core"
+	"github.com/drone/drone/operator/manager"
 )
 
-// Server is a no-op http Metrics server.
-type Server struct {
-}
+// Server wraps the chi Router in a custom type for wire
+// injection purposes.
+type Server http.Handler
 
-// NewServer returns a new metrics server.
-func NewServer(session core.Session, anonymous bool) *Server {
-	return new(Server)
+// NewServer returns a new rpc server that enables remote
+// interaction with the build controller using the http transport.
+func NewServer(manager manager.BuildManager, secret string) Server {
+	return Server(http.NotFoundHandler())
 }
-
-// ServeHTTP is a no-op http handler.
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {}

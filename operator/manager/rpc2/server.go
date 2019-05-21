@@ -4,18 +4,6 @@
 
 // +build !oss
 
-/*
-
-/stage                       POST  (request)
-/stage/{stage}?machine=      POST  (accept, details)
-/stage/{stage}               PUT   (beforeAll, afterAll)
-/stage/{stage}/steps/{step}  PUT   (before, after)
-/build/{build}/watch         POST  (watch)
-/stage/{stage}/logs/batch    POST  (batch)
-/stage/{stage}/logs/upload   POST  (upload)
-
-*/
-
 package rpc2
 
 import (
@@ -55,7 +43,11 @@ func NewServer(manager manager.BuildManager, secret string) Server {
 func authorization(token string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if token == r.Header.Get("X-Drone-Token") {
+			// prevents system administrators from accidentally
+			// exposing drone without credentials.
+			if token == "" {
+				w.WriteHeader(403)
+			} else if token == r.Header.Get("X-Drone-Token") {
 				next.ServeHTTP(w, r)
 			} else {
 				w.WriteHeader(401)

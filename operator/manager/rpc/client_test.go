@@ -69,7 +69,7 @@ func TestAccept(t *testing.T) {
 
 	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
 	gock.InterceptClient(client.client.HTTPClient)
-	err := client.Accept(noContext, 1, "localhost")
+	_, err := client.Accept(noContext, 1, "localhost")
 	if err != nil {
 		t.Error(err)
 	}

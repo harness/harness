@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	"github.com/drone/drone/cmd/drone-server/config"
+	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api"
 	"github.com/drone/drone/handler/web"
 	"github.com/drone/drone/metric"
@@ -31,12 +32,19 @@ import (
 	"github.com/unrolled/secure"
 )
 
+type (
+	healthzHandler http.Handler
+	metricsHandler http.Handler
+	rpcHandlerV1   http.Handler
+	rpcHandlerV2   http.Handler
+)
+
 // wire set for loading the server.
 var serverSet = wire.NewSet(
 	manager.New,
-	metric.NewServer,
 	api.New,
 	web.New,
+	provideMetric,
 	provideRouter,
 	provideRPC,
 	provideRPC2,
@@ -46,26 +54,34 @@ var serverSet = wire.NewSet(
 
 // provideRouter is a Wire provider function that returns a
 // router that is serves the provided handlers.
-func provideRouter(api api.Server, web web.Server, rpc http.Handler, rpcv2 rpc2.Server, metrics *metric.Server) *chi.Mux {
+func provideRouter(api api.Server, web web.Server, rpcv1 rpcHandlerV1, rpcv2 rpcHandlerV2, metrics *metric.Server) *chi.Mux {
 	r := chi.NewRouter()
 	r.Mount("/metrics", metrics)
 	r.Mount("/api", api.Handler())
 	r.Mount("/rpc/v2", rpcv2)
-	r.Mount("/rpc", rpc)
+	r.Mount("/rpc", rpcv1)
 	r.Mount("/", web.Handler())
 	return r
 }
 
+// provideMetric is a Wire provider function that returns the
+// metrics server exposing metrics in prometheus format.
+func provideMetric(session core.Session, config config.Config) *metric.Server {
+	return metric.NewServer(session, config.Prometheus.EnableAnonymousAccess)
+}
+
 // provideRPC is a Wire provider function that returns an rpc
 // handler that exposes the build manager to a remote agent.
-func provideRPC(m manager.BuildManager, config config.Config) http.Handler {
-	return rpc.NewServer(m, config.RPC.Secret)
+func provideRPC(m manager.BuildManager, config config.Config) rpcHandlerV1 {
+	v := rpc.NewServer(m, config.RPC.Secret)
+	return rpcHandlerV1(v)
 }
 
 // provideRPC2 is a Wire provider function that returns an rpc
 // handler that exposes the build manager to a remote agent.
-func provideRPC2(m manager.BuildManager, config config.Config) rpc2.Server {
-	return rpc2.NewServer(m, config.RPC.Secret)
+func provideRPC2(m manager.BuildManager, config config.Config) rpcHandlerV2 {
+	v := rpc2.NewServer(m, config.RPC.Secret)
+	return rpcHandlerV2(v)
 }
 
 // provideServer is a Wire provider function that returns an

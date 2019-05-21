@@ -261,7 +261,7 @@ func (s *Client) send(ctx context.Context, path string, in, out interface{}) err
 
 	// Check the response for a 204 no content. This indicates
 	// the response body is empty and should be discarded.
-	if res.StatusCode == 204 {
+	if res.StatusCode == 204 || out == nil {
 		return nil
 	}
 

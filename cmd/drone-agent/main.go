@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"time"
 
 	"github.com/drone/drone-runtime/engine/docker"
@@ -20,13 +21,20 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/joho/godotenv"
 	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
+	var envfile string
+	flag.StringVar(&envfile, "env-file", ".env", "Read in a file of environment variables")
+	flag.Parse()
+
+	godotenv.Load(envfile)
 	config, err := config.Environ()
 	if err != nil {
-		logrus.WithError(err).Fatalln("invalid configuration")
+		logger := logrus.WithError(err)
+		logger.Fatalln("invalid configuration")
 	}
 
 	initLogging(config)

@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - endpoint to trigger new build for default branch, by [@bradrydzewski](https://github.com/bradrydzewski). [#2679](https://github.com/drone/drone/issues/2679).
 - endpoint to trigger new build for branch, by [@bradrydzewski](https://github.com/bradrydzewski). [#2679](https://github.com/drone/drone/issues/2679).
 - endpoint to trigger new build for branch and sha, by [@bradrydzewski](https://github.com/bradrydzewski). [#2679](https://github.com/drone/drone/issues/2679).
+- enable optional prometheus metrics guest access, by [@janberktold](https://github.com/janberktold)
+
+### Fixed
+
+- retrieve latest build by branch, by [@tboerger](https://github.com/tboerger).
 
 ### Fixed
 
@@ -21,8 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - specify a user for the pipeline step, by [@bradrydzewski](https://github.com/bradrydzewski). [#2651](https://github.com/drone/drone/issues/2651).
 - support for Gitea oauth2, by [@techknowlogick](https://github.com/techknowlogick). [#2622](https://github.com/drone/drone/pull/2622).
 - ping the docker daemon before starting the agent, by [@bradrydzewski](https://github.com/bradrydzewski). [#2495](https://github.com/drone/drone/issues/2495).
-- support for Cron job name in Yaml trigger block, by [@bradrydzewski](https://github.com/bradrydzewski). [#2628](https://github.com/drone/drone/issues/2628). 
-- support for Cron job name in Yaml when block, by [@bradrydzewski](https://github.com/bradrydzewski). [#2628](https://github.com/drone/drone/issues/2628). 
+- support for Cron job name in Yaml trigger block, by [@bradrydzewski](https://github.com/bradrydzewski). [#2628](https://github.com/drone/drone/issues/2628).
+- support for Cron job name in Yaml when block, by [@bradrydzewski](https://github.com/bradrydzewski). [#2628](https://github.com/drone/drone/issues/2628).
 - sqlite username column changed to case-insensitive, by [@bradrydzewski](https://github.com/bradrydzewski).
 - endpoint to purge repository from database, by [@bradrydzewski](https://github.com/bradrydzewski).
 - support for per-organization secrets, by [@bradrydzewski](https://github.com/bradrydzewski).

@@ -24,15 +24,17 @@ var errAccessDenied = errors.New("Access denied")
 
 // Server is an http Metrics server.
 type Server struct {
-	metrics http.Handler
-	session core.Session
+	metrics   http.Handler
+	session   core.Session
+	anonymous bool
 }
 
 // NewServer returns a new metrics server.
-func NewServer(session core.Session) *Server {
+func NewServer(session core.Session, anonymous bool) *Server {
 	return &Server{
-		metrics: promhttp.Handler(),
-		session: session,
+		metrics:   promhttp.Handler(),
+		session:   session,
+		anonymous: anonymous,
 	}
 }
 
@@ -41,9 +43,9 @@ func NewServer(session core.Session) *Server {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	user, _ := s.session.Get(r)
 	switch {
-	case user == nil:
+	case !s.anonymous && user == nil:
 		http.Error(w, errInvalidToken.Error(), 401)
-	case !user.Admin && !user.Machine:
+	case !s.anonymous && !user.Admin && !user.Machine:
 		http.Error(w, errAccessDenied.Error(), 403)
 	default:
 		s.metrics.ServeHTTP(w, r)

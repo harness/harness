@@ -46,17 +46,17 @@ type (
 	Config struct {
 		License string `envconfig:"DRONE_LICENSE"`
 
-		Authn    Authentication
-		Agent    Agent
-		Cron     Cron
-		Cloning  Cloning
-		Database Database
-		Datadog  Datadog
-		Docker   Docker
-		HTTP     HTTP
-		Jsonnet  Jsonnet
-		Logging  Logging
-		// Prometheus Prometheus
+		Authn        Authentication
+		Agent        Agent
+		Cron         Cron
+		Cloning      Cloning
+		Database     Database
+		Datadog      Datadog
+		Docker       Docker
+		HTTP         HTTP
+		Jsonnet      Jsonnet
+		Logging      Logging
+		Prometheus   Prometheus
 		Proxy        Proxy
 		Registration Registration
 		Registries   Registries
@@ -160,6 +160,11 @@ type (
 		Color  bool `envconfig:"DRONE_LOGS_COLOR"`
 		Pretty bool `envconfig:"DRONE_LOGS_PRETTY"`
 		Text   bool `envconfig:"DRONE_LOGS_TEXT"`
+	}
+
+	// Prometheus provides the prometheus configuration.
+	Prometheus struct {
+		EnableAnonymousAccess bool `envconfig:"DRONE_PROMETHEUS_ANONYMOUS_ACCESS" default:"false"`
 	}
 
 	// Repository provides the repository configuration.
