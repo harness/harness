@@ -15,10 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - retrieve latest build by branch, by [@tboerger](https://github.com/tboerger).
-
-### Fixed
-
 - copy the fork value when restarting a build, by [@bradrydzewski](https://github.com/bradrydzewski). [#2708](https://github.com/drone/drone/issues/2708).
+- make healthz available without redirect, by [@bradrydzewski](https://github.com/bradrydzewski). [#2706](https://github.com/drone/drone/issues/2706).
 
 ## [1.1.0] - 2019-04-23
 ### Added
