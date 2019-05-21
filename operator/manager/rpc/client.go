@@ -86,9 +86,9 @@ func (s *Client) Request(ctx context.Context, args *manager.Request) (*core.Stag
 }
 
 // Accept accepts the build stage for execution.
-func (s *Client) Accept(ctx context.Context, stage int64, machine string) error {
+func (s *Client) Accept(ctx context.Context, stage int64, machine string) (*core.Stage, error) {
 	in := &acceptRequest{Stage: stage, Machine: machine}
-	return s.send(noContext, "/rpc/v1/accept", in, nil)
+	return nil, s.send(noContext, "/rpc/v1/accept", in, nil)
 }
 
 // Netrc returns a valid netrc for execution.

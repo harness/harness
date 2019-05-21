@@ -333,8 +333,8 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 			RepoID:    repo.ID,
 			Number:    i + 1,
 			Name:      match.Name,
-			Kind:      "",
-			Type:      "",
+			Kind:      match.Kind,
+			Type:      match.Type,
 			OS:        match.Platform.OS,
 			Arch:      match.Platform.Arch,
 			Variant:   match.Platform.Variant,
@@ -348,7 +348,9 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 			Created:   time.Now().Unix(),
 			Updated:   time.Now().Unix(),
 		}
-
+		if stage.Kind == "pipeline" && stage.Type == "" {
+			stage.Type = "docker"
+		}
 		if stage.OS == "" {
 			stage.OS = "linux"
 		}

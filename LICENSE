@@ -59,7 +59,7 @@ legal claim.**
 
 -----------------------------------------------------------------
 
-Waiver: Small Business
+Waiver: Individual and Small Business
 
 Contributor waives the terms of rule 1 for companies meeting all
 the following criteria, counting all subsidiaries and affiliated
@@ -76,13 +76,13 @@ future versions of the software.
 
 -----------------------------------------------------------------
 
-Waiver: Low Volume
+Waiver: Low Usage
 
 Contributor waives the terms of rule 1 for companies meeting all
 the following criteria, counting all subsidiaries and affiliated
 entities as one:
 
-1. less than 15,000 total pipelines executed using this software
+1. less than 5,000 total pipelines executed using this software
    in the immediately preceding, year-long period
 
 Contributor will not revoke this waiver, but may change terms for

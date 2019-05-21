@@ -575,7 +575,7 @@ func (r *Runner) poll(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = r.Manager.Accept(ctx, p.ID, r.Machine)
+	_, err = r.Manager.Accept(ctx, p.ID, r.Machine)
 	if err == db.ErrOptimisticLock {
 		return nil
 	} else if err != nil {

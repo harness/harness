@@ -103,12 +103,12 @@ func (s *Server) handleAccept(w http.ResponseWriter, r *http.Request) {
 		writeBadRequest(w, err)
 		return
 	}
-	err = s.manager.Accept(ctx, in.Stage, in.Machine)
+	out, err := s.manager.Accept(ctx, in.Stage, in.Machine)
 	if err != nil {
 		writeError(w, err)
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode(out)
 }
 
 func (s *Server) handleNetrc(w http.ResponseWriter, r *http.Request) {

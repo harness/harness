@@ -50,7 +50,7 @@ type (
 		Request(ctx context.Context, args *Request) (*core.Stage, error)
 
 		// Accept accepts the build stage for execution.
-		Accept(ctx context.Context, stage int64, machine string) error
+		Accept(ctx context.Context, stage int64, machine string) (*core.Stage, error)
 
 		// Netrc returns a valid netrc for execution.
 		Netrc(ctx context.Context, repo int64) (*core.Netrc, error)
@@ -196,7 +196,7 @@ func (m *Manager) Request(ctx context.Context, args *Request) (*core.Stage, erro
 // agents to pull the same stage from the queue. The system uses optimistic
 // locking at the database-level to prevent multiple agents from executing the
 // same stage.
-func (m *Manager) Accept(ctx context.Context, id int64, machine string) error {
+func (m *Manager) Accept(ctx context.Context, id int64, machine string) (*core.Stage, error) {
 	logger := logrus.WithFields(
 		logrus.Fields{
 			"stage-id": id,
@@ -209,11 +209,11 @@ func (m *Manager) Accept(ctx context.Context, id int64, machine string) error {
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("manager: cannot find stage")
-		return err
+		return nil, err
 	}
 	if stage.Machine != "" {
 		logger.Debugln("manager: stage already assigned. abort.")
-		return db.ErrOptimisticLock
+		return nil, db.ErrOptimisticLock
 	}
 
 	stage.Machine = machine
@@ -230,7 +230,7 @@ func (m *Manager) Accept(ctx context.Context, id int64, machine string) error {
 	} else {
 		logger.Debugln("manager: stage accepted")
 	}
-	return err
+	return stage, err
 }
 
 // Details fetches build details.

@@ -149,3 +149,41 @@ func TestWithinLimits(t *testing.T) {
 		}
 	}
 }
+
+func TestMatchResource(t *testing.T) {
+	tests := []struct {
+		kinda, typea, kindb, typeb string
+		want                       bool
+	}{
+		// unspecified in yaml, unspecified by agent
+		{"", "", "", "", true},
+
+		// unspecified in yaml, specified by agent
+		{"pipeline", "docker", "", "", true},
+		{"pipeline", "", "", "", true},
+		{"", "docker", "", "", true},
+
+		// specified in yaml, unspecified by agent
+		{"", "", "pipeline", "docker", true},
+		{"", "", "pipeline", "", true},
+		{"", "", "", "docker", true},
+
+		// specified in yaml, specified by agent
+		{"pipeline", "docker", "pipeline", "docker", true},
+		{"pipeline", "exec", "pipeline", "docker", false},
+		{"approval", "slack", "pipeline", "docker", false},
+
+		// misc
+		{"", "docker", "pipeline", "docker", true},
+		{"pipeline", "", "pipeline", "docker", true},
+		{"pipeline", "docker", "", "docker", true},
+		{"pipeline", "docker", "pipeline", "", true},
+	}
+
+	for i, test := range tests {
+		got, want := matchResource(test.kinda, test.typea, test.kindb, test.typeb), test.want
+		if got != want {
+			t.Errorf("Unexpectd results at index %d", i)
+		}
+	}
+}

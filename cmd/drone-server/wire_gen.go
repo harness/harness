@@ -93,8 +93,9 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	options := provideServerOptions(config2)
 	webServer := web.New(admissionService, buildStore, client, hookParser, coreLicense, licenseService, middleware, repositoryStore, session, syncer, triggerer, userStore, userService, webhookSender, options, system)
 	handler := provideRPC(buildManager, config2)
+	rpc2Server := provideRPC2(buildManager, config2)
 	metricServer := metric.NewServer(session)
-	mux := provideRouter(server, webServer, handler, metricServer)
+	mux := provideRouter(server, webServer, handler, rpc2Server, metricServer)
 	serverServer := provideServer(mux, config2)
 	mainApplication := newApplication(cronScheduler, datadog, runner, serverServer, userStore)
 	return mainApplication, nil

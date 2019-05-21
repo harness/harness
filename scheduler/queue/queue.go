@@ -82,6 +82,8 @@ func (q *queue) Resume(ctx context.Context) error {
 
 func (q *queue) Request(ctx context.Context, params core.Filter) (*core.Stage, error) {
 	w := &worker{
+		kind:    params.Kind,
+		typ:     params.Type,
 		os:      params.OS,
 		arch:    params.Arch,
 		kernel:  params.Kernel,
@@ -144,6 +146,11 @@ func (q *queue) signal(ctx context.Context) error {
 
 	loop:
 		for w := range q.workers {
+			// the worker must match the resource kind and type
+			if !matchResource(w.kind, w.typ, item.Kind, item.Type) {
+				continue
+			}
+
 			// the worker is platform-specific. check to ensure
 			// the queue item matches the worker platform.
 			if w.os != item.OS {
@@ -205,6 +212,8 @@ func (q *queue) start() error {
 }
 
 type worker struct {
+	kind    string
+	typ     string
 	os      string
 	arch    string
 	kernel  string
@@ -249,4 +258,21 @@ func withinLimits(stage *core.Stage, siblings []*core.Stage) bool {
 		}
 	}
 	return count < stage.Limit
+}
+
+// matchResource is a helper function that returns
+func matchResource(kinda, typea, kindb, typeb string) bool {
+	if kinda == "" {
+		kinda = "pipeline"
+	}
+	if kindb == "" {
+		kindb = "pipeline"
+	}
+	if typea == "" {
+		typea = "docker"
+	}
+	if typeb == "" {
+		typeb = "docker"
+	}
+	return kinda == kindb && typea == typeb
 }

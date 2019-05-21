@@ -451,6 +451,8 @@ var (
 	}
 
 	dummyStage = &core.Stage{
+		Kind:      "pipeline",
+		Type:      "docker",
 		RepoID:    1,
 		Name:      "default",
 		Number:    1,
