@@ -102,7 +102,6 @@ func (s Server) Handler() http.Handler {
 	})
 
 	r.Get("/version", HandleVersion)
-	r.Get("/healthz", HandleHealthz())
 	r.Get("/varz", HandleVarz(s.Client, s.License))
 
 	r.Handle("/login",

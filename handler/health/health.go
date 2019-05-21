@@ -12,19 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package web
+package health
 
 import (
 	"io"
 	"net/http"
+
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 )
 
-// HandleHealthz creates an http.HandlerFunc that performs system
+// New returns a new health check router.
+func New() http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.NoCache)
+	r.Handle("/", Handler())
+	return r
+}
+
+// Handler creates an http.HandlerFunc that performs system
 // healthchecks and returns 500 if the system is in an unhealthy state.
-func HandleHealthz() http.HandlerFunc {
+func Handler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		w.Header().Set("Content-Type", "text/plain")
 		io.WriteString(w, "OK")
 	}
 }
+

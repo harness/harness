@@ -20,6 +20,7 @@ import (
 	"github.com/drone/drone/cmd/drone-server/config"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api"
+	"github.com/drone/drone/handler/health"
 	"github.com/drone/drone/handler/web"
 	"github.com/drone/drone/metric"
 	"github.com/drone/drone/operator/manager"
@@ -44,6 +45,7 @@ var serverSet = wire.NewSet(
 	manager.New,
 	api.New,
 	web.New,
+	provideHealthz,
 	provideMetric,
 	provideRouter,
 	provideRPC,
@@ -54,14 +56,22 @@ var serverSet = wire.NewSet(
 
 // provideRouter is a Wire provider function that returns a
 // router that is serves the provided handlers.
-func provideRouter(api api.Server, web web.Server, rpcv1 rpcHandlerV1, rpcv2 rpcHandlerV2, metrics *metric.Server) *chi.Mux {
+func provideRouter(api api.Server, web web.Server, rpcv1 rpcHandlerV1, rpcv2 rpcHandlerV2, healthz healthzHandler, metrics *metric.Server) *chi.Mux {
 	r := chi.NewRouter()
+	r.Mount("/healthz", healthz)
 	r.Mount("/metrics", metrics)
 	r.Mount("/api", api.Handler())
 	r.Mount("/rpc/v2", rpcv2)
 	r.Mount("/rpc", rpcv1)
 	r.Mount("/", web.Handler())
 	return r
+}
+
+// provideMetric is a Wire provider function that returns the
+// healthcheck server.
+func provideHealthz() healthzHandler {
+	v := health.New()
+	return healthzHandler(v)
 }
 
 // provideMetric is a Wire provider function that returns the
