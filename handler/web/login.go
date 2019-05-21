@@ -159,7 +159,7 @@ func HandleLogin(
 		// since it is a long-running process and can take up
 		// to a few minutes.
 		if user.Syncing {
-			go synchornize(ctx, syncer, user)
+			go synchronize(ctx, syncer, user)
 		}
 
 		logger.Debugf("authentication successful")
@@ -169,7 +169,7 @@ func HandleLogin(
 	}
 }
 
-func synchornize(ctx context.Context, syncer core.Syncer, user *core.User) {
+func synchronize(ctx context.Context, syncer core.Syncer, user *core.User) {
 	log := logrus.WithField("login", user.Login)
 	log.Debugf("begin synchronization")
 
