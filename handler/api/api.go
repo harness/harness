@@ -169,7 +169,7 @@ func (s Server) Handler() http.Handler {
 		).Post("/repair", repos.HandleRepair(s.Hooks, s.Repoz, s.Repos, s.Users, s.System.Link))
 
 		r.Route("/builds", func(r chi.Router) {
-			r.With(acl.CheckWriteAccess()).Get("/", builds.HandleList(s.Repos, s.Builds))
+			r.Get("/", builds.HandleList(s.Repos, s.Builds))
 			r.With(acl.CheckWriteAccess()).Post("/", builds.HandleCreate(s.Repos, s.Commits, s.Triggerer))
 
 			r.Get("/latest", builds.HandleLast(s.Repos, s.Builds, s.Stages))

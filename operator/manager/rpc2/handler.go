@@ -44,7 +44,7 @@ var noContext = context.Background()
 // POST /rpc/v2/nodes/:machine
 func HandleJoin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200) // this is a no-op
+		writeOK(w) // this is a no-op
 	}
 }
 
@@ -54,7 +54,7 @@ func HandleJoin() http.HandlerFunc {
 // DELETE /rpc/v2/nodes/:machine
 func HandleLeave() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200) // this is a no-op
+		writeOK(w) // this is a no-op
 	}
 }
 
@@ -64,7 +64,7 @@ func HandleLeave() http.HandlerFunc {
 // GET /rpc/v2/ping
 func HandlePing() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
+		writeOK(w) // this is a no-op
 	}
 }
 
