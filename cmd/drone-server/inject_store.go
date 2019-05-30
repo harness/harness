@@ -84,12 +84,14 @@ func provideLogStore(db *db.DB, config config.Config) core.LogStore {
 	if config.S3.Bucket == "" {
 		return logs.New(db)
 	}
-	return logs.NewS3Env(
+	s := logs.New(db)
+	p := logs.NewS3Env(
 		config.S3.Bucket,
 		config.S3.Prefix,
 		config.S3.Endpoint,
 		config.S3.PathStyle,
 	)
+	return logs.NewCombined(p, s)
 }
 
 // provideStageStore is a Wire provider function that provides a
