@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 
+### Fixed
+
+## [1.2.0] - 2019-05-30
+### Added
+
 - endpoint to trigger new build for default branch, by [@bradrydzewski](https://github.com/bradrydzewski). [#2679](https://github.com/drone/drone/issues/2679).
 - endpoint to trigger new build for branch, by [@bradrydzewski](https://github.com/bradrydzewski). [#2679](https://github.com/drone/drone/issues/2679).
 - endpoint to trigger new build for branch and sha, by [@bradrydzewski](https://github.com/bradrydzewski). [#2679](https://github.com/drone/drone/issues/2679).
 - enable optional prometheus metrics guest access, by [@janberktold](https://github.com/janberktold)
 - fallback to database when logs not found in s3, by [@bradrydzewski](https://github.com/bradrydzewski). [#2689](https://github.com/drone/drone/issues/2689).
+- support for custom stage definitions and runners, by [@bradrydzewski](https://github.com/bradrydzewski). [#2680](https://github.com/drone/drone/issues/2680).
 - update drone-yaml to version 1.1.0
 
 ### Fixed
