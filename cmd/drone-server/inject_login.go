@@ -66,7 +66,7 @@ func provideBitbucketLogin(config config.Config) login.Middleware {
 	return &bitbucket.Config{
 		ClientID:     config.Bitbucket.ClientID,
 		ClientSecret: config.Bitbucket.ClientSecret,
-		RedirectURL:  config.Server.Addr + "/login",
+		RedirectURL:  config.Proxy.Addr + "/login",
 	}
 }
 
@@ -99,7 +99,7 @@ func provideGiteaLogin(config config.Config) login.Middleware {
 			Server:       config.Gitea.Server,
 			Client:       defaultClient(config.Gitea.SkipVerify),
 			Logger:       logrus.StandardLogger(),
-			RedirectURL:  config.Server.Addr + "/login",
+			RedirectURL:  config.Proxy.Addr + "/login",
 			Scope:        config.Gitea.Scope,
 		}
 	}
@@ -120,7 +120,7 @@ func provideGitlabLogin(config config.Config) login.Middleware {
 	return &gitlab.Config{
 		ClientID:     config.GitLab.ClientID,
 		ClientSecret: config.GitLab.ClientSecret,
-		RedirectURL:  config.Server.Addr + "/login",
+		RedirectURL:  config.Proxy.Addr + "/login",
 		Server:       config.GitLab.Server,
 		Client:       defaultClient(config.GitLab.SkipVerify),
 	}
@@ -156,7 +156,7 @@ func provideStashLogin(config config.Config) login.Middleware {
 		ConsumerKey:    config.Stash.ConsumerKey,
 		ConsumerSecret: config.Stash.ConsumerSecret,
 		PrivateKey:     privateKey,
-		CallbackURL:    config.Server.Addr + "/login",
+		CallbackURL:    config.Proxy.Addr + "/login",
 		Client:         defaultClient(config.Stash.SkipVerify),
 	}
 }

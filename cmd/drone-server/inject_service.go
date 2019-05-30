@@ -104,7 +104,7 @@ func provideSession(store core.UserStore, config config.Config) core.Session {
 // user service based on the environment configuration.
 func provideStatusService(client *scm.Client, renewer core.Renewer, config config.Config) core.StatusService {
 	return status.New(client, renewer, status.Config{
-		Base:     config.Server.Addr,
+		Base:     config.Proxy.Addr,
 		Name:     config.Status.Name,
 		Disabled: config.Status.Disabled,
 	})
@@ -133,7 +133,7 @@ func provideSystem(config config.Config) *core.System {
 	return &core.System{
 		Proto:   config.Server.Proto,
 		Host:    config.Server.Host,
-		Link:    config.Server.Addr,
+		Link:    config.Proxy.Addr,
 		Version: version.Version.String(),
 	}
 }
