@@ -259,9 +259,10 @@ type (
 
 	// Session provides the session configuration.
 	Session struct {
-		Timeout time.Duration `envconfig:"DRONE_COOKIE_TIMEOUT" default:"720h"`
-		Secret  string        `envconfig:"DRONE_COOKIE_SECRET"`
-		Secure  bool          `envconfig:"DRONE_COOKIE_SECURE"`
+		Timeout     time.Duration `envconfig:"DRONE_COOKIE_TIMEOUT" default:"720h"`
+		Secret      string        `envconfig:"DRONE_COOKIE_SECRET"`
+		Secure      bool          `envconfig:"DRONE_COOKIE_SECURE"`
+		MappingFile string        `envconfig:"DRONE_LEGACY_TOKEN_MAPPING_FILE"`
 	}
 
 	// Status provides status configurations.
