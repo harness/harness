@@ -12,6 +12,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/authcookie v0.0.0-20120917135355-fbdef6e99866
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/go-connections v0.3.0
 	github.com/docker/go-units v0.3.3
@@ -22,7 +23,7 @@ require (
 	github.com/drone/envsubst v1.0.1
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2
-	github.com/drone/go-scm v1.4.1-0.20190418181654-1e77204716f6
+	github.com/drone/go-scm v1.5.0
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ghodss/yaml v1.0.0
