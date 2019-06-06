@@ -64,7 +64,7 @@ func Handler(repos core.RepositoryStore) http.HandlerFunc {
 		// the encrypted secret is embedded in the yaml
 		// configuration file and is json-encoded for
 		// inclusion as a !binary attribute.
-		encoded := base64.URLEncoding.EncodeToString(encrypted)
+		encoded := base64.StdEncoding.EncodeToString(encrypted)
 
 		render.JSON(w, &respEncrypted{Data: encoded}, 200)
 	}
