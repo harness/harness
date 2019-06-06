@@ -185,7 +185,7 @@ func (s Server) Handler() http.Handler {
 			).Delete("/{number}", builds.HandleCancel(s.Users, s.Repos, s.Builds, s.Stages, s.Steps, s.Status, s.Scheduler, s.Webhook))
 
 			r.With(
-				acl.CheckAdminAccess(),
+				acl.CheckWriteAccess(),
 			).Post("/{number}/promote", builds.HandlePromote(s.Repos, s.Builds, s.Triggerer))
 
 			// r.With(
