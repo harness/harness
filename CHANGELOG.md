@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - support for legacy tokens to ease upgrade path, by [@bradrydzewski](https://github.com/bradrydzewski). [#2713](https://github.com/drone/drone/issues/2713).
+- include repository name and id in batch update error message, by [@bradrydzewski](https://github.com/bradrydzewski).
 
 ### Fixed
 
