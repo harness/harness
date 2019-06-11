@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix inconsistent base64 encoding and decoding of encrypted secrets, by [@bradrydzewski](https://github.com/bradrydzewski).
+- update drone-yaml to version 1.1.2 for improved 0.8 to 1.0 yaml marshal escaping.
+- update drone-yaml to version 1.1.3 for improved 0.8 to 1.0 workspace conversion.
 
 ## [1.2.0] - 2019-05-30
 ### Added
