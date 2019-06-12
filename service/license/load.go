@@ -101,5 +101,9 @@ func Load(path string) (*core.License, error) {
 		return nil, err
 	}
 
+	if license.Users == 0 && decoded.Lim > 0 {
+		license.Users = int64(decoded.Lim)
+	}
+
 	return license, err
 }
