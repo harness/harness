@@ -90,7 +90,6 @@ func Handler(
 				io.WriteString(w, badgeNone)
 				return
 			}
-
 		}
 
 		switch build.Status {
