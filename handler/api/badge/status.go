@@ -26,6 +26,7 @@ func Handler(
 	return func(w http.ResponseWriter, r *http.Request) {
 		namespace := chi.URLParam(r, "owner")
 		name := chi.URLParam(r, "name")
+		stageName := chi.URLParam(r, "stage")
 		ref := r.FormValue("ref")
 		branch := r.FormValue("branch")
 		if branch != "" {
@@ -53,6 +54,34 @@ func Handler(
 		if err != nil {
 			io.WriteString(w, badgeNone)
 			return
+		}
+
+		if stageName != "" {
+			stageID := -1
+			for k, stage := range build.Stages {
+
+				if stage.Name == stageName {
+					stageID = k
+					break
+				}
+			}
+
+			if stageID != -1 {
+				switch build.Stages[stageID].Status {
+				case core.StatusPending, core.StatusRunning, core.StatusBlocked:
+					io.WriteString(w, badgeStarted)
+				case core.StatusPassing:
+					io.WriteString(w, badgeSuccess)
+				case core.StatusError:
+					io.WriteString(w, badgeError)
+				default:
+					io.WriteString(w, badgeFailure)
+				}
+				return
+			} else {
+				io.WriteString(w, badgeNone)
+				return
+			}
 		}
 
 		switch build.Status {
