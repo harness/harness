@@ -22,13 +22,15 @@ import (
 func Handler(
 	repos core.RepositoryStore,
 	builds core.BuildStore,
+	stages core.StageStore,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		namespace := chi.URLParam(r, "owner")
 		name := chi.URLParam(r, "name")
-		stageName := chi.URLParam(r, "stage")
 		ref := r.FormValue("ref")
 		branch := r.FormValue("branch")
+		stepName := r.FormValue("step")
+
 		if branch != "" {
 			ref = "refs/heads/" + branch
 		}
@@ -56,18 +58,24 @@ func Handler(
 			return
 		}
 
-		if stageName != "" {
-			stageID := -1
-			for k, stage := range build.Stages {
+		if stepName != "" {
+			steps, err := stages.ListSteps(r.Context(), build.ID)
+			if err != nil {
+				io.WriteString(w, badgeNone)
+				return
+			}
 
-				if stage.Name == stageName {
-					stageID = k
+			// try to find the step by name
+			stepID := -1
+			for k, step := range steps {
+				if step.Name == stepName {
+					stepID = k
 					break
 				}
 			}
 
-			if stageID != -1 {
-				switch build.Stages[stageID].Status {
+			if stepID != -1 {
+				switch steps[stepID].Status {
 				case core.StatusPending, core.StatusRunning, core.StatusBlocked:
 					io.WriteString(w, badgeStarted)
 				case core.StatusPassing:
@@ -82,6 +90,7 @@ func Handler(
 				io.WriteString(w, badgeNone)
 				return
 			}
+
 		}
 
 		switch build.Status {
