@@ -282,9 +282,10 @@ func TestHandlerWithStage_Failing(t *testing.T) {
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
 	c.URLParams.Add("name", "hello-world")
+	c.URLParams.Add("step", "failure-stage")
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("GET", "/?ref=refs/heads/develop&step=failure-stage", nil)
+	r := httptest.NewRequest("GET", "/?ref=refs/heads/develop", nil)
 	r = r.WithContext(
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
@@ -311,9 +312,10 @@ func TestHandlerWithStage_Running(t *testing.T) {
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
 	c.URLParams.Add("name", "hello-world")
+	c.URLParams.Add("step", "running-stage")
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("GET", "/?ref=refs/heads/develop&step=running-stage", nil)
+	r := httptest.NewRequest("GET", "/?ref=refs/heads/develop", nil)
 	r = r.WithContext(
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
@@ -340,9 +342,10 @@ func TestHandlerWithStage_Error(t *testing.T) {
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
 	c.URLParams.Add("name", "hello-world")
+	c.URLParams.Add("step", "error-stage")
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest("GET", "/?ref=refs/heads/develop&step=error-stage", nil)
+	r := httptest.NewRequest("GET", "/?ref=refs/heads/develop", nil)
 	r = r.WithContext(
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)

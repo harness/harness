@@ -29,7 +29,7 @@ func Handler(
 		name := chi.URLParam(r, "name")
 		ref := r.FormValue("ref")
 		branch := r.FormValue("branch")
-		stepName := r.FormValue("step")
+		stepName := chi.URLParam(r, "step")
 
 		if branch != "" {
 			ref = "refs/heads/" + branch
