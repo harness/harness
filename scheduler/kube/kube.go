@@ -124,6 +124,10 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 		},
 	}
 	volumes = append(volumes, volume)
+	pullSecrets := make([]v1.LocalObjectReference, len(s.config.ImagePullSecrets))
+	for i, s := range s.config.ImagePullSecrets {
+		pullSecrets[i].Name = s
+	}
 
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -147,6 +151,7 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 				Spec: v1.PodSpec{
 					ServiceAccountName: s.config.ServiceAccount,
 					RestartPolicy:      v1.RestartPolicyNever,
+					ImagePullSecrets:   pullSecrets,
 					Containers: []v1.Container{{
 						Name:            "drone-controller",
 						Image:           internal.DefaultImage(s.config.Image),
