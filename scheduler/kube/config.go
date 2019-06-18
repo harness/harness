@@ -23,6 +23,7 @@ type Config struct {
 	TTL              int
 	Image            string
 	ImagePullPolicy  string
+	ImagePullSecrets []string
 	ImagePrivileged  []string
 	DockerHost       string
 	DockerHostWin    string
