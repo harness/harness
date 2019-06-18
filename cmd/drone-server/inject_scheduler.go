@@ -50,14 +50,15 @@ func provideScheduler(store core.StageStore, config config.Config) core.Schedule
 func provideKubernetesScheduler(config config.Config) core.Scheduler {
 	logrus.Info("main: kubernetes scheduler enabled")
 	sched, err := kube.FromConfig(kube.Config{
-		Namespace:       config.Kube.Namespace,
-		ServiceAccount:  config.Kube.ServiceAccountName,
-		ConfigURL:       config.Kube.URL,
-		ConfigPath:      config.Kube.Path,
-		TTL:             config.Kube.TTL,
-		Image:           config.Kube.Image,
-		ImagePullPolicy: config.Kube.PullPolicy,
-		ImagePrivileged: config.Runner.Privileged,
+		Namespace:        config.Kube.Namespace,
+		ServiceAccount:   config.Kube.ServiceAccountName,
+		ConfigURL:        config.Kube.URL,
+		ConfigPath:       config.Kube.Path,
+		TTL:              config.Kube.TTL,
+		Image:            config.Kube.Image,
+		ImagePullPolicy:  config.Kube.PullPolicy,
+		ImagePullSecrets: config.Kube.PullSecrets,
+		ImagePrivileged:  config.Runner.Privileged,
 		// LimitMemory:      config.Nomad.Memory,
 		// LimitCompute:     config.Nomad.CPU,
 		// RequestMemory:    config.Nomad.Memory,
