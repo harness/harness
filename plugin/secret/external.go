@@ -68,7 +68,7 @@ func (c *externalController) Find(ctx context.Context, in *core.SecretArgs) (*co
 	client := secret.Client(c.endpoint, c.secret, c.skipVerify)
 	res, err := client.Find(ctx, req)
 	if err != nil {
-		logger.Trace("secret: external: cannot get secret")
+		logger.WithError(err).Trace("secret: external: cannot get secret")
 		return nil, err
 	}
 
@@ -85,7 +85,7 @@ func (c *externalController) Find(ctx context.Context, in *core.SecretArgs) (*co
 	// empty results.
 	if (res.Pull == false && res.PullRequest == false) &&
 		in.Build.Event == core.EventPullRequest {
-			logger.Trace("secret: external: restricted from forks")
+		logger.Trace("secret: external: restricted from forks")
 		return nil, nil
 	}
 
