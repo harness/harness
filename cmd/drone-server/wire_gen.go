@@ -80,7 +80,10 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	licenseService := license.NewService(userStore, repositoryStore, buildStore, coreLicense)
 	permStore := perm.New(db)
 	repositoryService := repo.New(client, renewer)
-	session := provideSession(userStore, config2)
+	session, err := provideSession(userStore, config2)
+	if err != nil {
+		return application{}, err
+	}
 	batcher := batch.New(db)
 	syncer := provideSyncer(repositoryService, repositoryStore, userStore, batcher, config2)
 	server := api.New(buildStore, commitService, cronStore, corePubsub, globalSecretStore, hookService, logStore, coreLicense, licenseService, permStore, repositoryStore, repositoryService, scheduler, secretStore, stageStore, stepStore, statusService, session, logStream, syncer, system, triggerer, userStore, webhookSender)

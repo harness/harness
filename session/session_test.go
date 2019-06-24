@@ -111,7 +111,7 @@ func TestGet_Cookie(t *testing.T) {
 		Name:  "_session_",
 		Value: s,
 	})
-	session := New(users, Config{false, secret, time.Hour})
+	session := New(users, Config{Secure: false, Secret: secret, Timeout: time.Hour})
 	user, err := session.Get(r)
 	if err != nil {
 		t.Error(err)
@@ -162,7 +162,7 @@ func TestGet_Cookie_UserNotFound(t *testing.T) {
 		Value: s,
 	})
 
-	session := New(users, Config{false, secret, time.Hour})
+	session := New(users, Config{Secure: false, Secret: secret, Timeout: time.Hour})
 	user, _ := session.Get(r)
 	if user != nil {
 		t.Errorf("Expect empty session")

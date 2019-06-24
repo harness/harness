@@ -131,6 +131,8 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 				Message:      v.Commit.Message,
 				Before:       v.Before,
 				After:        v.Commit.Sha,
+				Source:       scm.TrimRef(v.BaseRef),
+				Target:       scm.TrimRef(v.BaseRef),
 				Ref:          v.Ref,
 				Author:       v.Commit.Author.Login,
 				AuthorName:   v.Commit.Author.Name,

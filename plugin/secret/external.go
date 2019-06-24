@@ -12,6 +12,7 @@ import (
 
 	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/logger"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/drone-go/plugin/secret"
@@ -37,12 +38,17 @@ func (c *externalController) Find(ctx context.Context, in *core.SecretArgs) (*co
 		return nil, nil
 	}
 
+	logger := logger.FromContext(ctx).
+		WithField("name", in.Name).
+		WithField("kind", "secret")
+
 	// lookup the named secret in the manifest. If the
 	// secret does not exist, return a nil variable,
 	// allowing the next secret controller in the chain
 	// to be invoked.
 	path, name, ok := getExternal(in.Conf, in.Name)
 	if !ok {
+		logger.Trace("secret: external: no matching secret")
 		return nil, nil
 	}
 
@@ -62,6 +68,7 @@ func (c *externalController) Find(ctx context.Context, in *core.SecretArgs) (*co
 	client := secret.Client(c.endpoint, c.secret, c.skipVerify)
 	res, err := client.Find(ctx, req)
 	if err != nil {
+		logger.WithError(err).Trace("secret: external: cannot get secret")
 		return nil, err
 	}
 
@@ -69,6 +76,7 @@ func (c *externalController) Find(ctx context.Context, in *core.SecretArgs) (*co
 	// this indicates the client returned No Content,
 	// and we should exit with no secret, but no error.
 	if res.Data == "" {
+		logger.Trace("secret: external: secret disabled for pull requests")
 		return nil, nil
 	}
 
@@ -77,8 +85,11 @@ func (c *externalController) Find(ctx context.Context, in *core.SecretArgs) (*co
 	// empty results.
 	if (res.Pull == false && res.PullRequest == false) &&
 		in.Build.Event == core.EventPullRequest {
+		logger.Trace("secret: external: restricted from forks")
 		return nil, nil
 	}
+
+	logger.Trace("secret: external: found matching secret")
 
 	return &core.Secret{
 		Name:        in.Name,

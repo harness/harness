@@ -92,12 +92,21 @@ func provideNetrcService(client *scm.Client, renewer core.Renewer, config config
 
 // provideSession is a Wire provider function that returns a
 // user session based on the environment configuration.
-func provideSession(store core.UserStore, config config.Config) core.Session {
+func provideSession(store core.UserStore, config config.Config) (core.Session, error) {
+	if config.Session.MappingFile != "" {
+		return session.Legacy(store, session.Config{
+			Secure:      config.Session.Secure,
+			Secret:      config.Session.Secret,
+			Timeout:     config.Session.Timeout,
+			MappingFile: config.Session.MappingFile,
+		})
+	}
+
 	return session.New(store, session.NewConfig(
 		config.Session.Secret,
 		config.Session.Timeout,
 		config.Session.Secure),
-	)
+	), nil
 }
 
 // provideUserService is a Wire provider function that returns a

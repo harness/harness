@@ -138,6 +138,9 @@ func (t *teardown) do(ctx context.Context, stage *core.Stage) error {
 			break
 		}
 	}
+	if build.Started == 0 {
+		build.Started = build.Finished
+	}
 
 	err = t.Builds.Update(noContext, build)
 	if err == db.ErrOptimisticLock {
