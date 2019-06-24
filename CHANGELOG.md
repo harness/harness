@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Removed
+- Support for basic auth as an option for Gitea, by [@techknowlogick](https://giteahub.com/techknowlogick). [#2721](https://github.com/drone/drone/issues/2721)
 
 ## [1.2.1] - 2019-06-11
 ### Added
