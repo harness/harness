@@ -246,7 +246,7 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 		hook = &core.Hook{
 			Trigger:      core.TriggerHook, // core.TriggerHook,
 			Event:        core.EventPullRequest,
-			Action:       core.ActionCreate,
+			Action:       v.Action.String(),
 			Link:         v.PullRequest.Link,
 			Timestamp:    v.PullRequest.Created.Unix(),
 			Title:        v.PullRequest.Title,
@@ -261,9 +261,6 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 			AuthorEmail:  v.PullRequest.Author.Email,
 			AuthorAvatar: v.PullRequest.Author.Avatar,
 			Sender:       v.Sender.Login,
-		}
-		if v.Action != scm.ActionSync {
-			hook.Action = core.ActionSync
 		}
 		// HACK this is a workaround for github. The pull
 		// request title is populated, but not the message.
