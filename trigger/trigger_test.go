@@ -482,11 +482,22 @@ var (
 	}
 
 	dummyYamlSkipBranch = &core.Config{
-		Data: "kind: pipeline\ntrigger: { branch: { exclude: master } }",
+		Data: `
+kind: pipeline
+trigger:
+  branch:
+    exclude:
+    - master`,
 	}
 
 	dummyYamlSkipEvent = &core.Config{
-		Data: "kind: pipeline\ntrigger: { event: { exclude: push } }",
+		Data: `
+kind: pipeline
+trigger:
+  event:
+    exclude:
+    - push`,
+	}
 	}
 
 	ignoreBuildFields = cmpopts.IgnoreFields(core.Build{},
