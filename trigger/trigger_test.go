@@ -296,7 +296,7 @@ func TestTrigger_SkipAction(t *testing.T) {
 
 	_, err := triggerer.Trigger(noContext, dummyRepo, dummyHook)
 	if err != nil {
-		t.Errorf("Expect build silenty skipped if event does not match")
+		t.Errorf("Expect build silenty skipped if action does not match")
 	}
 }
 
