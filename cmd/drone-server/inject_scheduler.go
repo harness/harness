@@ -57,6 +57,7 @@ func provideKubernetesScheduler(config config.Config) core.Scheduler {
 		TTL:             config.Kube.TTL,
 		Image:           config.Kube.Image,
 		ImagePullPolicy: config.Kube.PullPolicy,
+		HostAliases:     config.Kube.HostAliases,
 		ImagePrivileged: config.Runner.Privileged,
 		// LimitMemory:      config.Nomad.Memory,
 		// LimitCompute:     config.Nomad.CPU,

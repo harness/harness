@@ -132,6 +132,7 @@ type (
 		ServiceAccountName string `envconfig:"DRONE_KUBERNETES_SERVICE_ACCOUNT"`
 		PullPolicy         string `envconfig:"DRONE_KUBERNETES_IMAGE_PULL" default:"Always"`
 		Image              string `envconfig:"DRONE_KUBERNETES_IMAGE"`
+		HostAliases        string `envconfig:"DRONE_KUBERNETES_HOST_ALIASES"`
 	}
 
 	// Nomad configuration.

@@ -43,4 +43,5 @@ type Config struct {
 	LogTrace         bool
 	LogPretty        bool
 	LogText          bool
+	HostAliases      string
 }

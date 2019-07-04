@@ -8,6 +8,7 @@ package kube
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -22,7 +23,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	batchv1 "k8s.io/api/batch/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -107,24 +108,24 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 
 	var mounts []v1.VolumeMount
 	mount := v1.VolumeMount{
-		Name:           name + "-local",
-		MountPath:      filepath.Join("/tmp", "drone"),
+		Name:      name + "-local",
+		MountPath: filepath.Join("/tmp", "drone"),
 	}
 	mounts = append(mounts, mount)
 
 	var volumes []v1.Volume
 	source := v1.HostPathDirectoryOrCreate
 	volume := v1.Volume{
-		Name:           name + "-local",
-		VolumeSource:   v1.VolumeSource{
-			HostPath:   &v1.HostPathVolumeSource{
-			Path:           filepath.Join("/tmp", "drone"),
-			Type:           &source,
+		Name: name + "-local",
+		VolumeSource: v1.VolumeSource{
+			HostPath: &v1.HostPathVolumeSource{
+				Path: filepath.Join("/tmp", "drone"),
+				Type: &source,
 			},
 		},
 	}
 	volumes = append(volumes, volume)
-
+	hostAliases := parseHostAliases(s.config.HostAliases)
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: name,
@@ -147,6 +148,7 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 				Spec: v1.PodSpec{
 					ServiceAccountName: s.config.ServiceAccount,
 					RestartPolicy:      v1.RestartPolicyNever,
+					HostAliases:        hostAliases,
 					Containers: []v1.Container{{
 						Name:            "drone-controller",
 						Image:           internal.DefaultImage(s.config.Image),
@@ -203,7 +205,7 @@ func (s *kubeScheduler) Cancel(ctx context.Context, id int64) error {
 			continue
 		}
 		err = s.client.BatchV1().Jobs(job.Namespace).Delete(job.Name, &metav1.DeleteOptions{
-		// GracePeriodSeconds
+			// GracePeriodSeconds
 		})
 		if err != nil {
 			result = multierror.Append(result, err)
@@ -256,4 +258,13 @@ func toEnvironment(from map[string]string) []v1.EnvVar {
 		})
 	}
 	return to
+}
+
+func parseHostAliases(raw string) []v1.HostAlias {
+	var hostAliases []v1.HostAlias
+	err := json.Unmarshal([]byte(raw), &hostAliases)
+	if err != nil {
+		logrus.WithError(err).Errorln("invalid host aliases for scheduler")
+	}
+	return hostAliases
 }
