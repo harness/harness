@@ -124,14 +124,15 @@ type (
 
 	// Kubernetes provides kubernetes configuration
 	Kubernetes struct {
-		Enabled            bool   `envconfig:"DRONE_KUBERNETES_ENABLED"`
-		Namespace          string `envconfig:"DRONE_KUBERNETES_NAMESPACE"`
-		Path               string `envconfig:"DRONE_KUBERNETES_CONFIG_PATH"`
-		URL                string `envconfig:"DRONE_KUBERNETES_CONFIG_URL"`
-		TTL                int    `envconfig:"DRONE_KUBERNETES_TTL_AFTER_FINISHED" default:"300"`
-		ServiceAccountName string `envconfig:"DRONE_KUBERNETES_SERVICE_ACCOUNT"`
-		PullPolicy         string `envconfig:"DRONE_KUBERNETES_IMAGE_PULL" default:"Always"`
-		Image              string `envconfig:"DRONE_KUBERNETES_IMAGE"`
+		Enabled            bool              `envconfig:"DRONE_KUBERNETES_ENABLED"`
+		Labels             map[string]string `envconfig:"DRONE_KUBERNETES_LABELS"`
+		Namespace          string            `envconfig:"DRONE_KUBERNETES_NAMESPACE"`
+		Path               string            `envconfig:"DRONE_KUBERNETES_CONFIG_PATH"`
+		URL                string            `envconfig:"DRONE_KUBERNETES_CONFIG_URL"`
+		TTL                int               `envconfig:"DRONE_KUBERNETES_TTL_AFTER_FINISHED" default:"300"`
+		ServiceAccountName string            `envconfig:"DRONE_KUBERNETES_SERVICE_ACCOUNT"`
+		PullPolicy         string            `envconfig:"DRONE_KUBERNETES_IMAGE_PULL" default:"Always"`
+		Image              string            `envconfig:"DRONE_KUBERNETES_IMAGE"`
 	}
 
 	// Nomad configuration.
