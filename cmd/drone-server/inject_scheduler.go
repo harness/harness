@@ -54,6 +54,7 @@ func provideKubernetesScheduler(config config.Config) core.Scheduler {
 		ServiceAccount:  config.Kube.ServiceAccountName,
 		ConfigURL:       config.Kube.URL,
 		ConfigPath:      config.Kube.Path,
+		Labels:          config.Kube.Labels,
 		TTL:             config.Kube.TTL,
 		Image:           config.Kube.Image,
 		ImagePullPolicy: config.Kube.PullPolicy,
