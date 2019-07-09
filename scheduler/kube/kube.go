@@ -106,24 +106,22 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 	name := fmt.Sprintf("drone-job-%d-%s", stage.ID, rand)
 
 	var mounts []v1.VolumeMount
-	mount := v1.VolumeMount{
-		Name:           name + "-local",
-		MountPath:      filepath.Join("/tmp", "drone"),
-	}
-	mounts = append(mounts, mount)
+	mounts = append(mounts, v1.VolumeMount{
+		Name:      name + "-local",
+		MountPath: filepath.Join("/tmp", "drone"),
+	})
 
 	var volumes []v1.Volume
 	source := v1.HostPathDirectoryOrCreate
-	volume := v1.Volume{
-		Name:           name + "-local",
-		VolumeSource:   v1.VolumeSource{
-			HostPath:   &v1.HostPathVolumeSource{
-			Path:           filepath.Join("/tmp", "drone"),
-			Type:           &source,
+	volumes = append(volumes, v1.Volume{
+		Name: name + "-local",
+		VolumeSource: v1.VolumeSource{
+			HostPath: &v1.HostPathVolumeSource{
+				Path: filepath.Join("/tmp", "drone"),
+				Type: &source,
 			},
 		},
-	}
-	volumes = append(volumes, volume)
+	})
 
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -158,6 +156,9 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 				},
 			},
 		},
+	}
+	if len(s.config.Labels) > 0 {
+		job.Spec.Template.ObjectMeta.Labels = s.config.Labels
 	}
 
 	if len(stage.Labels) > 0 {
@@ -203,7 +204,7 @@ func (s *kubeScheduler) Cancel(ctx context.Context, id int64) error {
 			continue
 		}
 		err = s.client.BatchV1().Jobs(job.Namespace).Delete(job.Name, &metav1.DeleteOptions{
-		// GracePeriodSeconds
+			// GracePeriodSeconds
 		})
 		if err != nil {
 			result = multierror.Append(result, err)
