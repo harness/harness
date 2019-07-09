@@ -20,6 +20,7 @@ type Config struct {
 	ServiceAccount   string
 	ConfigURL        string
 	ConfigPath       string
+	Labels           map[string]string
 	TTL              int
 	Image            string
 	ImagePullPolicy  string
