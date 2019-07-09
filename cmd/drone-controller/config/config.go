@@ -34,6 +34,7 @@ type (
 	// Config provides the system configuration.
 	Config struct {
 		Docker     Docker
+		Kube       Kubernetes
 		Logging    Logging
 		Registries Registries
 		Runner     Runner
@@ -45,6 +46,12 @@ type (
 	// Docker provides docker configuration
 	Docker struct {
 		Config string `envconfig:"DRONE_DOCKER_CONFIG"`
+	}
+
+	// Kubernetes provides kubernetes configuration
+	Kubernetes struct {
+		Path string `envconfig:"DRONE_KUBERNETES_CONFIG_PATH"`
+		URL  string `envconfig:"DRONE_KUBERNETES_CONFIG_URL"`
 	}
 
 	// Logging provides the logging configuration.
