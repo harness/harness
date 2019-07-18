@@ -96,6 +96,8 @@ func buildEnviron(build *core.Build) map[string]string {
 		"DRONE_BUILD_STARTED":        fmt.Sprint(build.Started),
 		"DRONE_BUILD_FINISHED":       fmt.Sprint(build.Finished),
 		"DRONE_DEPLOY_TO":            build.Deploy,
+		// legacy
+		"CI_COMMIT_SHA": build.After,
 	}
 	if strings.HasPrefix(build.Ref, "refs/tags/") {
 		env["DRONE_TAG"] = strings.TrimPrefix(build.Ref, "refs/tags/")
