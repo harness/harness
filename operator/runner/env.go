@@ -56,6 +56,17 @@ func repoEnviron(repo *core.Repository) map[string]string {
 		"DRONE_GIT_SSH_URL":     repo.SSHURL,
 		"DRONE_REPO_VISIBILITY": repo.Visibility,
 		"DRONE_REPO_PRIVATE":    fmt.Sprint(repo.Private),
+
+		//
+		// these are legacy configuration parameters for backward
+		// compatibilty with drone 0.8.
+		//
+		"CI_REPO":         repo.Slug,
+		"CI_REPO_NAME":    repo.Slug,
+		"CI_REPO_LINK":    repo.Link,
+		"CI_REPO_REMOTE":  repo.HTTPURL,
+		"CI_REMOTE_URL":   repo.HTTPURL,
+		"CI_REPO_PRIVATE": fmt.Sprint(repo.Private),
 	}
 }
 
@@ -96,8 +107,28 @@ func buildEnviron(build *core.Build) map[string]string {
 		"DRONE_BUILD_STARTED":        fmt.Sprint(build.Started),
 		"DRONE_BUILD_FINISHED":       fmt.Sprint(build.Finished),
 		"DRONE_DEPLOY_TO":            build.Deploy,
-		// legacy
-		"CI_COMMIT_SHA": build.After,
+
+		//
+		// these are legacy configuration parameters for backward
+		// compatibilty with drone 0.8.
+		//
+		"CI_BUILD_NUMBER":              fmt.Sprint(build.Number),
+		"CI_PARENT_BUILD_NUMBER":       fmt.Sprint(build.Parent),
+		"CI_BUILD_CREATED":             fmt.Sprint(build.Created),
+		"CI_BUILD_STARTED":             fmt.Sprint(build.Started),
+		"CI_BUILD_FINISHED":            fmt.Sprint(build.Finished),
+		"CI_BUILD_STATUS":              build.Status,
+		"CI_BUILD_EVENT":               build.Event,
+		"CI_BUILD_LINK":                build.Link,
+		"CI_BUILD_TARGET":              build.Deploy,
+		"CI_COMMIT_SHA":                build.After,
+		"CI_COMMIT_REF":                build.Ref,
+		"CI_COMMIT_BRANCH":             build.Target,
+		"CI_COMMIT_MESSAGE":            build.Message,
+		"CI_COMMIT_AUTHOR":             build.Author,
+		"CI_COMMIT_AUTHOR_NAME":        build.AuthorName,
+		"CI_COMMIT_AUTHOR_EMAIL":       build.AuthorEmail,
+		"CI_COMMIT_AUTHOR_AVATAR":      build.AuthorAvatar,
 	}
 	if strings.HasPrefix(build.Ref, "refs/tags/") {
 		env["DRONE_TAG"] = strings.TrimPrefix(build.Ref, "refs/tags/")
