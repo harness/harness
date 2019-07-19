@@ -49,6 +49,7 @@ func (s *service) Create(ctx context.Context, user *core.User, repo *core.Reposi
 		Secret: repo.Signer,
 		Events: scm.HookEvents{
 			Branch:      true,
+			Deployment:  true,
 			PullRequest: true,
 			Push:        true,
 			Tag:         true,

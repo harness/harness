@@ -8,9 +8,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/drone/drone/core"
 	"github.com/drone/drone/mock"
 	"github.com/drone/drone/mock/mockscm"
-	"github.com/drone/drone/core"
 	"github.com/drone/go-scm/scm"
 
 	"github.com/golang/mock/gomock"
@@ -37,6 +37,7 @@ func TestCreate(t *testing.T) {
 		Secret: "abc123",
 		Events: scm.HookEvents{
 			Branch:      true,
+			Deployment:  true,
 			PullRequest: true,
 			Push:        true,
 			Tag:         true,
