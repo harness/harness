@@ -87,6 +87,10 @@ github.com/drone/drone-yaml v1.1.4-0.20190614011118-4889634ea9ae h1:CzpY1F9Ju46g
 github.com/drone/drone-yaml v1.1.4-0.20190614011118-4889634ea9ae/go.mod h1:l/ehbHx9TGs4jgzhRnP5d+M9tmRsAmWyBHWAFEOXrk4=
 github.com/drone/drone-yaml v1.2.1-0.20190717150947-d14ac477f983 h1:J59SqAC/DA1FuOXUvtGfYlhZSHegJL+AF9PnhXsxbKA=
 github.com/drone/drone-yaml v1.2.1-0.20190717150947-d14ac477f983/go.mod h1:l/ehbHx9TGs4jgzhRnP5d+M9tmRsAmWyBHWAFEOXrk4=
+github.com/drone/drone-yaml v1.2.2-0.20190719011530-e8b24d482cda h1:vPXJLgkyScZ0WnjzATIUcQbSRUjcP9BtnC+CMA1sSOk=
+github.com/drone/drone-yaml v1.2.2-0.20190719011530-e8b24d482cda/go.mod h1:l/ehbHx9TGs4jgzhRnP5d+M9tmRsAmWyBHWAFEOXrk4=
+github.com/drone/drone-yaml v1.2.2-0.20190719012529-c50000a465ee h1:/zyEkv56+T6JxLkYgYYwZAMLKBgEnHA3fwZXiVI9nuE=
+github.com/drone/drone-yaml v1.2.2-0.20190719012529-c50000a465ee/go.mod h1:l/ehbHx9TGs4jgzhRnP5d+M9tmRsAmWyBHWAFEOXrk4=
 github.com/drone/envsubst v1.0.1 h1:NOOStingM2sbBwsIUeQkKUz8ShwCUzmqMxWrpXItfPE=
 github.com/drone/envsubst v1.0.1/go.mod h1:bkZbnc/2vh1M12Ecn7EYScpI4YGYU0etwLJICOWi8Z0=
 github.com/drone/go-license v1.0.2 h1:7OwndfYk+Lp/cGHkxe4HUn/Ysrrw3WYH2pnd99yrkok=
