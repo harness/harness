@@ -41,7 +41,7 @@ func TestWebhook(t *testing.T) {
 		AddMatcher(matchSignature).
 		MatchHeader("X-Drone-Event", "user").
 		MatchHeader("Content-Type", "application/json").
-		MatchHeader("Digest", "SHA-256=Rro8edtwJUjLl6e\\/xB9m1ykaymiaC9YxFGb\\/XNuXzO4=").
+		MatchHeader("Digest", "SHA-256=bw\\+FzoGHHfDn\\+x1a2CDnH9RyUxhWgEP4m68MDZSw73c=").
 		JSON(webhook).
 		Reply(200).
 		Type("application/json")
