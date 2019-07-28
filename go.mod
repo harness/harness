@@ -16,7 +16,7 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/go-connections v0.3.0
 	github.com/docker/go-units v0.3.3
-	github.com/drone/drone-go v1.0.5-0.20190427184118-618e4496482e
+	github.com/drone/drone-go v1.0.5
 	github.com/drone/drone-runtime v1.0.6
 	github.com/drone/drone-ui v0.0.0-20190530175131-92ba3df1e0a9
 	github.com/drone/drone-yaml v1.2.2-0.20190719012529-c50000a465ee
@@ -35,7 +35,7 @@ require (
 	github.com/golang/mock v1.1.1
 	github.com/golang/protobuf v1.2.0
 	github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c
-	github.com/google/go-cmp v0.2.0
+	github.com/google/go-cmp v0.3.0
 	github.com/google/go-jsonnet v0.12.1
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf
 	github.com/google/wire v0.2.1
@@ -43,7 +43,7 @@ require (
 	github.com/gorhill/cronexpr v0.0.0-20140423231348-a557574d6c02
 	github.com/gosimple/slug v1.3.0
 	github.com/gregjones/httpcache v0.0.0-20181110185634-c63ab54fda8f
-	github.com/h2non/gock v1.0.10
+	github.com/h2non/gock v1.0.15
 	github.com/hashicorp/errwrap v1.0.0
 	github.com/hashicorp/go-cleanhttp v0.5.0
 	github.com/hashicorp/go-multierror v1.0.0
@@ -97,3 +97,5 @@ require (
 	k8s.io/klog v0.1.0
 	sigs.k8s.io/yaml v1.1.0
 )
+
+replace github.com/h2non/gock => gopkg.in/h2non/gock.v1 v1.0.14

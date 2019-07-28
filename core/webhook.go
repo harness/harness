@@ -44,7 +44,7 @@ type (
 
 	// WebhookData provides the webhook data.
 	WebhookData struct {
-		Event  string      `json:"-"`
+		Event  string      `json:"event"`
 		Action string      `json:"action"`
 		User   *User       `json:"user,omitempty"`
 		Repo   *Repository `json:"repo,omitempty"`

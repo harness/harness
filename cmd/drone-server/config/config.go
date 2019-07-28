@@ -280,6 +280,7 @@ type (
 
 	// Webhook provides the webhook configuration.
 	Webhook struct {
+		Events     []string `envconfig:"DRONE_WEBHOOK_EVENTS"`
 		Endpoint   []string `envconfig:"DRONE_WEBHOOK_ENDPOINT"`
 		Secret     string   `envconfig:"DRONE_WEBHOOK_SECRET"`
 		SkipVerify bool     `envconfig:"DRONE_WEBHOOK_SKIP_VERIFY"`

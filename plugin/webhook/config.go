@@ -18,6 +18,7 @@ import "github.com/drone/drone/core"
 
 // Config provides the webhook configuration.
 type Config struct {
+	Events   []string
 	Endpoint []string
 	Secret   string
 	System   *core.System
