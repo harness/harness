@@ -17,9 +17,9 @@ require (
 	github.com/docker/go-connections v0.3.0
 	github.com/docker/go-units v0.3.3
 	github.com/drone/drone-go v1.0.5
-	github.com/drone/drone-runtime v1.0.6
+	github.com/drone/drone-runtime v1.0.7
 	github.com/drone/drone-ui v0.0.0-20190530175131-92ba3df1e0a9
-	github.com/drone/drone-yaml v1.2.2-0.20190719012529-c50000a465ee
+	github.com/drone/drone-yaml v1.2.2
 	github.com/drone/envsubst v1.0.1
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2
