@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [1.2.2] - 2019-07-29
 ### Added
 
 - support for legacy environment variables
@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for github deployment hooks
 - provide base sha for github pull requests
 - option to filter webhooks by event and type
+- upgrade drone-yaml to v1.2.2
+- upgrade drone-runtime to v1.0.7
 
 ### Fixed
 
