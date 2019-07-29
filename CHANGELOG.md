@@ -6,11 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+
 - support for legacy environment variables
 - support for legacy workspace based on repository name
 - support for github deployment hooks
 - provide base sha for github pull requests
 - option to filter webhooks by event and type
+
+### Fixed
+
+- error when manually creating an empty user, by [@bradrydzewski](https://github.com/bradrydzewski). [#2738](https://github.com/drone/drone/issues/2738).
 
 ## [1.2.1] - 2019-06-11
 ### Added
