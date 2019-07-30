@@ -260,6 +260,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 	)
 	comp.SkipFunc = compiler.SkipFunc(
 		compiler.SkipData{
+			Action:   m.Build.Action,
 			Branch:   m.Build.Target,
 			Cron:     m.Build.Cron,
 			Event:    m.Build.Event,

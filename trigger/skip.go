@@ -33,6 +33,10 @@ func skipEvent(document *yaml.Pipeline, event string) bool {
 	return !document.Trigger.Event.Match(event)
 }
 
+func skipAction(document *yaml.Pipeline, action string) bool {
+	return !document.Trigger.Action.Match(action)
+}
+
 func skipInstance(document *yaml.Pipeline, instance string) bool {
 	return !document.Trigger.Instance.Match(instance)
 }

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - disable github status for cron jobs
+- support for action in conditionals, by [@bradrydzewski](https://github.com/bradrydzewski). [#2685](https://github.com/drone/drone/issues/2685).
 
 ### Fixed
 
