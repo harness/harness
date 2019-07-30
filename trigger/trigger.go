@@ -198,6 +198,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	// the legacy yaml configuration file to the new format.
 	raw.Data, err = converter.ConvertString(raw.Data, converter.Metadata{
 		Filename: repo.Config,
+		URL:      repo.Link,
 		Ref:      base.Ref,
 	})
 	if err != nil {

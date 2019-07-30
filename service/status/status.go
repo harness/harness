@@ -49,7 +49,7 @@ type service struct {
 }
 
 func (s *service) Send(ctx context.Context, user *core.User, req *core.StatusInput) error {
-	if s.disabled {
+	if s.disabled || req.Build.Trigger == core.TriggerCron {
 		return nil
 	}
 

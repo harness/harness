@@ -188,6 +188,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 	// the legacy yaml configuration file to the new format.
 	y, err := converter.ConvertString(string(m.Config.Data), converter.Metadata{
 		Filename: m.Repo.Config,
+		URL:      m.Repo.Link,
 		Ref:      m.Build.Ref,
 	})
 
@@ -259,6 +260,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 	)
 	comp.SkipFunc = compiler.SkipFunc(
 		compiler.SkipData{
+			Action:   m.Build.Action,
 			Branch:   m.Build.Target,
 			Cron:     m.Build.Cron,
 			Event:    m.Build.Event,

@@ -10,8 +10,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/drone/drone/handler/api/request"
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/handler/api/request"
 
 	"github.com/sirupsen/logrus"
 )
@@ -22,9 +22,17 @@ func init() {
 
 var (
 	mockUser = &core.User{
-		ID:    1,
-		Login: "octocat",
-		Admin: false,
+		ID:     1,
+		Login:  "octocat",
+		Admin:  false,
+		Active: true,
+	}
+
+	mockUserInactive = &core.User{
+		ID:     1,
+		Login:  "octocat",
+		Admin:  false,
+		Active: false,
 	}
 
 	mockRepo = &core.Repository{

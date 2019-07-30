@@ -251,6 +251,7 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 			Timestamp:    v.PullRequest.Created.Unix(),
 			Title:        v.PullRequest.Title,
 			Message:      v.PullRequest.Body,
+			Before:       v.PullRequest.Base.Sha,
 			After:        v.PullRequest.Sha,
 			Ref:          v.PullRequest.Ref,
 			Fork:         v.PullRequest.Fork,

@@ -16,8 +16,8 @@ your report. After the initial reply to your report, the security team will
 endeavor to keep you informed of the progress towards a fix and full
 announcement, and may ask for additional information or guidance.
 
-Report security bugs in third-party packages to the person or team maintaining
-the module.
+Report security bugs in third-party software to the person or team maintaining
+that software.
 
 ## Disclosure Policy
 
@@ -28,7 +28,7 @@ involving the following steps:
   * Confirm the problem and determine the affected versions.
   * Audit code to find any potential similar problems.
   * Prepare fixes for all releases still under maintenance. These fixes will be
-    released as fast as possible to npm.
+    released as fast as possible to DockerHub.
 
 ## Comments on this Policy
 

@@ -13,6 +13,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/drone/drone/core"
@@ -34,6 +35,7 @@ var signer = httpsignatures.NewSigner(
 // New returns a new Webhook sender.
 func New(config Config) core.WebhookSender {
 	return &sender{
+		Events:    config.Events,
 		Endpoints: config.Endpoint,
 		Secret:    config.Secret,
 		System:    config.System,
@@ -47,6 +49,7 @@ type payload struct {
 
 type sender struct {
 	Client    *http.Client
+	Events    []string
 	Endpoints []string
 	Secret    string
 	System    *core.System
@@ -56,6 +59,9 @@ type sender struct {
 // HTTP endpoints.
 func (s *sender) Send(ctx context.Context, in *core.WebhookData) error {
 	if len(s.Endpoints) == 0 {
+		return nil
+	}
+	if s.match(in.Event, in.Action) == false {
 		return nil
 	}
 	wrapper := payload{
@@ -94,6 +100,25 @@ func (s *sender) send(endpoint, secret, event string, data []byte) error {
 		res.Body.Close()
 	}
 	return err
+}
+
+func (s *sender) match(event, action string) bool {
+	if len(s.Events) == 0 {
+		return true
+	}
+	var name string
+	switch {
+	case action == "":
+		name = event
+	case action != "":
+		name = event + ":" + action
+	}
+	for _, pattern := range s.Events {
+		if ok, _ := filepath.Match(pattern, name); ok {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *sender) client() *http.Client {

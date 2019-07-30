@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/errors"
 	"github.com/drone/drone/handler/api/request"
-	"github.com/drone/drone/core"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/go-chi/chi"
@@ -380,6 +380,47 @@ func TestCheckWriteAccess(t *testing.T) {
 	}
 }
 
+// this test verifies the the next handler in the middleware
+// chain is not processed if the user has write access BUT
+// has been inactivated (e.g. blocked).
+func TestCheckWriteAccess_InactiveUser(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	writeAccess := &core.Perm{
+		Synced: time.Now().Unix(),
+		Read:   true,
+		Write:  true,
+		Admin:  false,
+	}
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/api/repos/octocat/hello-world", nil)
+	r = r.WithContext(
+		request.WithPerm(
+			request.WithUser(
+				request.WithRepo(noContext, mockRepo),
+				mockUserInactive,
+			),
+			writeAccess,
+		),
+	)
+
+	router := chi.NewRouter()
+	router.Route("/api/repos/{owner}/{name}", func(router chi.Router) {
+		router.Use(CheckWriteAccess())
+		router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			t.Error("should not invoke hanlder")
+		})
+	})
+
+	router.ServeHTTP(w, r)
+
+	if got, want := w.Code, http.StatusForbidden; got != want {
+		t.Errorf("Want status code %d, got %d", want, got)
+	}
+}
+
 // this test verifies that a 404 not found error is written to
 // the response if the user lacks write access to the repository.
 //
@@ -526,7 +567,7 @@ func TestCheckAdminAccess_SystemAdmin(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	user := &core.User{ID: 1, Admin: true}
+	user := &core.User{ID: 1, Admin: true, Active: true}
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/api/repos/octocat/hello-world", nil)

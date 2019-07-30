@@ -5,6 +5,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+
+- disable github status for cron jobs
+- support for action in conditionals, by [@bradrydzewski](https://github.com/bradrydzewski). [#2685](https://github.com/drone/drone/issues/2685).
+
+### Fixed
+
+- improve error when kubernetes malforms the port configuration, by [@bradrydzewski](https://github.com/bradrydzewski). [#2742](https://github.com/drone/drone/issues/2742).
+- copy parameters from parent build when promoting, by [@bradrydzewski](https://github.com/bradrydzewski). [#2748](https://github.com/drone/drone/issues/2748).
+
+## [1.2.2] - 2019-07-29
+### Added
+
+- support for legacy environment variables
+- support for legacy workspace based on repository name
+- support for github deployment hooks
+- provide base sha for github pull requests
+- option to filter webhooks by event and type
+- upgrade drone-yaml to v1.2.2
+- upgrade drone-runtime to v1.0.7
+
+### Fixed
+
+- error when manually creating an empty user, by [@bradrydzewski](https://github.com/bradrydzewski). [#2738](https://github.com/drone/drone/issues/2738).
 
 ## [1.2.1] - 2019-06-11
 ### Added
