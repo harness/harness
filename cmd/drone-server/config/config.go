@@ -15,6 +15,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -391,6 +392,9 @@ func Environ() (Config, error) {
 	defaultSession(&cfg)
 	defaultCallback(&cfg)
 	configureGithub(&cfg)
+	if err := kubernetesServiceConflict(&cfg); err != nil {
+		return cfg, err
+	}
 	return cfg, err
 }
 
@@ -497,6 +501,13 @@ func configureGithub(c *Config) {
 	} else {
 		c.Github.APIServer = strings.TrimSuffix(c.Github.Server, "/") + "/api/v3"
 	}
+}
+
+func kubernetesServiceConflict(c *Config) error {
+	if strings.HasPrefix(c.Server.Port, "tcp://") {
+		return errors.New("Invalid port configuration. See https://discourse.drone.io/t/drone-server-changing-ports-protocol/4144")
+	}
+	return nil
 }
 
 // Bytes stores number bytes (e.g. megabytes)
