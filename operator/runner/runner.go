@@ -268,7 +268,6 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 			Ref:      m.Build.Ref,
 			Repo:     m.Repo.Slug,
 			Target:   m.Build.Deploy,
-			Action:   m.Build.Action,
 		},
 	)
 	comp.TransformFunc = transform.Combine(
