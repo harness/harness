@@ -102,7 +102,7 @@ func TestStatus_RenewalError(t *testing.T) {
 	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false).Return(scm.ErrNotAuthorized)
 
 	service := New(nil, mockRenewer, Config{Base: "https://drone.company.com"})
-	err := service.Send(noContext, mockUser, nil)
+	err := service.Send(noContext, mockUser, &core.StatusInput{Build: &core.Build{}})
 	if err == nil {
 		t.Errorf("Expect error refreshing token")
 	}
