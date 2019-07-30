@@ -260,7 +260,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 			logger = logger.WithField("pipeline", pipeline.Name)
 			logger.Infoln("trigger: skipping pipeline, does not match event")
 		} else if skipAction(pipeline, base.Action) {
-			logger = logger.WithField("pipeline", pipeline.Name)
+			logger = logger.WithField("pipeline", pipeline.Name).WithField("action", base.Action)
 			logger.Infoln("trigger: skipping pipeline, does not match action")
 		} else if skipRef(pipeline, base.Ref) {
 			logger = logger.WithField("pipeline", pipeline.Name)
