@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - disable github status for cron jobs
 
+### Fixed
+
+- copy parameters from parent build when promoting, by [@bradrydzewski](https://github.com/bradrydzewski). [#2748](https://github.com/drone/drone/issues/2748), 
+
 ## [1.2.2] - 2019-07-29
 ### Added
 
