@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [1.2.3] - 2019-07-30
 ### Added
 
 - disable github status for cron jobs
@@ -12,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- improve cancel logic for dangling stages, by [@bradrydzewski](https://github.com/bradrydzewski).
 - improve error when kubernetes malforms the port configuration, by [@bradrydzewski](https://github.com/bradrydzewski). [#2742](https://github.com/drone/drone/issues/2742).
 - copy parameters from parent build when promoting, by [@bradrydzewski](https://github.com/bradrydzewski). [#2748](https://github.com/drone/drone/issues/2748).
 
