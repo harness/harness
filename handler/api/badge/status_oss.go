@@ -22,16 +22,48 @@ import (
 	"time"
 
 	"github.com/drone/drone/core"
+
+	"github.com/go-chi/chi"
 )
 
-// Handler returns a no-op http.HandlerFunc.
-func Handler(core.RepositoryStore, core.BuildStore) http.HandlerFunc {
+// Handler returns a http.HandlerFunc that responds with the build status in svg form.
+func Handler(repositoryStore core.RepositoryStore, buildStore core.BuildStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate, value")
 		w.Header().Set("Expires", "Thu, 01 Jan 1970 00:00:00 GMT")
 		w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
 		w.Header().Set("Content-Type", "image/svg+xml")
-		io.WriteString(w, badgeNone)
+
+		owner := chi.URLParam(r, "owner")
+		name := chi.URLParam(r, "name")
+		ref := r.FormValue("ref")
+
+		repo, err := repositoryStore.FindName(r.Context(), owner, name)
+		if err != nil {
+			io.WriteString(w, badgeNone)
+			return
+		}
+
+		if ref == "" {
+			ref = "refs/heads/" + repo.Branch
+		}
+
+		build, err := buildStore.FindRef(r.Context(), repo.ID, ref)
+		if err != nil {
+			io.WriteString(w, badgeNone)
+			return
+		}
+
+		switch build.Status {
+		case core.StatusPassing:
+			io.WriteString(w, badgeSuccess)
+		case core.StatusPending, core.StatusRunning, core.StatusWaiting:
+			io.WriteString(w, badgeStarted)
+		case core.StatusError:
+			io.WriteString(w, badgeError)
+		default:
+			io.WriteString(w, badgeFailure)
+		}
 	}
 }
