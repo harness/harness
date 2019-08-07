@@ -6,4 +6,4 @@
 .env
 .env.*
 release/
-scripts/
+scripts/*.go
