@@ -202,7 +202,7 @@ platform:
   os: windows
 
 server:
-  host: windows.1809.amd64.ssh.pipeline
+  host: windows.1809.amd64.ssh.pipeline.drone.ci
   password:
     from_secret: windows_password
   user:
@@ -237,7 +237,7 @@ platform:
   os: windows
 
 server:
-  host: windows.1903.amd64.ssh.pipeline
+  host: windows.1903.amd64.ssh.pipeline.drone.ci
   password:
     from_secret: windows_password
   user:
