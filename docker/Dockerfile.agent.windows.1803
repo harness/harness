@@ -10,5 +10,5 @@ ENV DRONE_RUNNER_CAPACITY=1
 
 LABEL com.centurylinklabs.watchtower.stop-signal="SIGINT"
 
-ADD release/windows/1803/amd64/drone-agent.exe C:/drone-agent.exe
+ADD release/windows/amd64/drone-agent.exe C:/drone-agent.exe
 ENTRYPOINT [ "C:\\drone-agent.exe" ]
