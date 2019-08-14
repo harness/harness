@@ -81,18 +81,8 @@ func provideBuildStore(db *db.DB) core.BuildStore {
 // provideLogStore is a Wire provider function that provides a
 // log datastore, configured from the environment.
 func provideLogStore(db *db.DB, config config.Config) core.LogStore {
-	if config.S3.Bucket == "" && config.AzureBlob.ContainerName == "" {
-		return logs.New(db)
-	} else if config.AzureBlob.ContainerName != "" {
-		s := logs.New(db)
-		p := logs.NewAzureBlobEnv(
-			config.AzureBlob.ContainerName,
-			config.AzureBlob.StorageAccountName,
-			config.AzureBlob.StorageAccessKey,
-		)
-		return logs.NewCombined(p, s)
-	} else {
-		s := logs.New(db)
+	s := logs.New(db)
+	if config.S3.Bucket == "" {
 		p := logs.NewS3Env(
 			config.S3.Bucket,
 			config.S3.Prefix,
@@ -101,6 +91,15 @@ func provideLogStore(db *db.DB, config config.Config) core.LogStore {
 		)
 		return logs.NewCombined(p, s)
 	}
+	if config.AzureBlob.ContainerName != "" {
+		p := logs.NewAzureBlobEnv(
+			config.AzureBlob.ContainerName,
+			config.AzureBlob.StorageAccountName,
+			config.AzureBlob.StorageAccessKey,
+		)
+		return logs.NewCombined(p, s)
+	}
+	return s
 }
 
 // provideStageStore is a Wire provider function that provides a
