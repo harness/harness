@@ -1,0 +1,21 @@
+kind: pipeline
+name: greeting
+
+steps:
+  - name: en
+    image: alpine
+    commands:
+      - echo hello
+      - echo world
+
+  - name: es
+    image: alpine
+    commands:
+      - echo hola
+      - echo mundo
+
+  - name: fr
+    image: alpine
+    commands:
+      - echo bonjour
+      - echo monde
