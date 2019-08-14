@@ -39,7 +39,7 @@ func (az *azureBlobStore) Find(ctx context.Context, step int64) (io.ReadCloser, 
 		return nil, err
 	}
 	blobURL := az.containerURL.NewBlockBlobURL(fmt.Sprintf("%d", step))
-	out, err := blobURL.Download(ctx, 0, 100, azblob.BlobAccessConditions{}, false)
+	out, err := blobURL.Download(ctx, 0, azblob.CountToEnd, azblob.BlobAccessConditions{}, false)
 	if err != nil {
 		return nil, err
 	}
