@@ -3,6 +3,9 @@ module github.com/drone/drone
 require (
 	docker.io/go-docker v1.0.0
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e
+	github.com/Azure/azure-pipeline-go v0.2.1
+	github.com/Azure/azure-storage-blob-go v0.7.0
+	github.com/Azure/go-autorest/autorest/adal v0.4.0 // indirect
 	github.com/Microsoft/go-winio v0.4.11
 	github.com/asaskevich/govalidator v0.0.0-20180315120708-ccb8e960c48f
 	github.com/aws/aws-sdk-go v1.15.57
@@ -31,8 +34,8 @@ require (
 	github.com/go-chi/cors v1.0.0
 	github.com/go-ini/ini v1.39.0
 	github.com/go-sql-driver/mysql v1.4.0
-	github.com/gogo/protobuf v0.0.0-20170307180453-100ba4e88506
-	github.com/golang/mock v1.1.1
+	github.com/gogo/protobuf v1.2.0
+	github.com/golang/mock v1.2.0
 	github.com/golang/protobuf v1.2.0
 	github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c
 	github.com/google/go-cmp v0.3.0
@@ -71,24 +74,24 @@ require (
 	github.com/petar/GoLLRB v0.0.0-20130427215148-53be0d36a84c
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.8.0
-	github.com/prometheus/client_golang v0.8.0
-	github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910
-	github.com/prometheus/common v0.0.0-20180801064454-c7de2306084e
-	github.com/prometheus/procfs v0.0.0-20181005140218-185b4288413d
+	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
+	github.com/prometheus/client_model v0.0.0-20190115171406-56726106282f
+	github.com/prometheus/common v0.2.0
+	github.com/prometheus/procfs v0.0.0-20190117184657-bf6a532e95b1
 	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
 	github.com/segmentio/ksuid v1.0.2
-	github.com/sirupsen/logrus v0.0.0-20181103062819-44067abb194b
+	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/pflag v1.0.3
 	github.com/unrolled/secure v0.0.0-20181022170031-4b6b7cf51606
-	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
-	golang.org/x/net v0.0.0-20181011144130-49bb7cea24b1
-	golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890
-	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
-	golang.org/x/sys v0.0.0-20181011152604-fa43e7bc11ba
+	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+	golang.org/x/net v0.0.0-20190311183353-d8887717615a
+	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
+	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6
+	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a
 	golang.org/x/text v0.3.0
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c
-	google.golang.org/appengine v1.3.0
+	google.golang.org/appengine v1.4.0
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20181130031204-d04500c8c3dd
