@@ -3,6 +3,7 @@ module github.com/drone/drone
 require (
 	docker.io/go-docker v1.0.0
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e
+	github.com/Azure/azure-storage-blob-go v0.7.0
 	github.com/Microsoft/go-winio v0.4.11
 	github.com/asaskevich/govalidator v0.0.0-20180315120708-ccb8e960c48f
 	github.com/aws/aws-sdk-go v1.15.57
