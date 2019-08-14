@@ -51,8 +51,12 @@ func (az *azureBlobStore) Create(ctx context.Context, step int64, r io.Reader) e
 	if err != nil {
 		return err
 	}
+	opts := &azblob.UploadStreamToBlockBlobOptions{
+		BufferSize: 4 * 1024 * 1024,
+		MaxBuffers: 5,
+	}
 	blobURL := az.containerURL.NewBlockBlobURL(fmt.Sprintf("%d", step))
-	_, err = azblob.UploadStreamToBlockBlob(ctx, r, blobURL, azblob.UploadStreamToBlockBlobOptions{})
+	_, err = azblob.UploadStreamToBlockBlob(ctx, r, blobURL, *opts)
 	return err
 }
 
