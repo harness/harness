@@ -82,7 +82,7 @@ func provideBuildStore(db *db.DB) core.BuildStore {
 // log datastore, configured from the environment.
 func provideLogStore(db *db.DB, config config.Config) core.LogStore {
 	s := logs.New(db)
-	if config.S3.Bucket == "" {
+	if config.S3.Bucket != "" {
 		p := logs.NewS3Env(
 			config.S3.Bucket,
 			config.S3.Prefix,
