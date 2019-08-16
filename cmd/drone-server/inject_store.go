@@ -81,17 +81,23 @@ func provideBuildStore(db *db.DB) core.BuildStore {
 // provideLogStore is a Wire provider function that provides a
 // log datastore, configured from the environment.
 func provideLogStore(db *db.DB, config config.Config) core.LogStore {
-	if config.S3.Bucket == "" {
-		return logs.New(db)
-	}
 	s := logs.New(db)
-	p := logs.NewS3Env(
-		config.S3.Bucket,
-		config.S3.Prefix,
-		config.S3.Endpoint,
-		config.S3.PathStyle,
-	)
-	return logs.NewCombined(p, s)
+	if config.S3.Bucket != "" {
+		p := logs.NewS3Env(
+			config.S3.Bucket,
+			config.S3.Prefix,
+			config.S3.Endpoint,
+			config.S3.PathStyle,
+		)
+		return logs.NewCombined(p, s)
+	}
+	if config.GCS.Bucket != "" {
+		p := logs.NewGCSEnv(
+			config.GCS.Bucket,
+		)
+		return logs.NewCombined(p, s)
+	}
+	return s
 }
 
 // provideStageStore is a Wire provider function that provides a

@@ -54,6 +54,7 @@ type (
 		Database     Database
 		Datadog      Datadog
 		Docker       Docker
+		GCS          GCS
 		HTTP         HTTP
 		Jsonnet      Jsonnet
 		Logging      Logging
@@ -360,6 +361,11 @@ type (
 		Prefix    string `envconfig:"DRONE_S3_PREFIX"`
 		Endpoint  string `envconfig:"DRONE_S3_ENDPOINT"`
 		PathStyle bool   `envconfig:"DRONE_S3_PATH_STYLE"`
+	}
+
+	// GCS provides the storage configuration.
+	GCS struct {
+		Bucket string `envconfig:"DRONE_GCS_BUCKET"`
 	}
 
 	// HTTP provides http configuration.
