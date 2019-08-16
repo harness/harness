@@ -1,6 +1,7 @@
 module github.com/drone/drone
 
 require (
+	cloud.google.com/go v0.44.3
 	docker.io/go-docker v1.0.0
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e
 	github.com/Microsoft/go-winio v0.4.11
@@ -32,9 +33,9 @@ require (
 	github.com/go-ini/ini v1.39.0
 	github.com/go-sql-driver/mysql v1.4.0
 	github.com/gogo/protobuf v0.0.0-20170307180453-100ba4e88506
-	github.com/golang/mock v1.1.1
-	github.com/golang/protobuf v1.2.0
-	github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c
+	github.com/golang/mock v1.3.1
+	github.com/golang/protobuf v1.3.2
+	github.com/google/btree v1.0.0
 	github.com/google/go-cmp v0.3.0
 	github.com/google/go-jsonnet v0.12.1
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf
@@ -49,7 +50,7 @@ require (
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-retryablehttp v0.0.0-20180718195005-e651d75abec6
 	github.com/hashicorp/go-rootcerts v1.0.0
-	github.com/hashicorp/golang-lru v0.5.0
+	github.com/hashicorp/golang-lru v0.5.1
 	github.com/hashicorp/nomad v0.0.0-20190125003214-134391155854
 	github.com/imdario/mergo v0.3.6
 	github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8
@@ -81,14 +82,14 @@ require (
 	github.com/sirupsen/logrus v0.0.0-20181103062819-44067abb194b
 	github.com/spf13/pflag v1.0.3
 	github.com/unrolled/secure v0.0.0-20181022170031-4b6b7cf51606
-	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
-	golang.org/x/net v0.0.0-20181011144130-49bb7cea24b1
-	golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890
-	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
-	golang.org/x/sys v0.0.0-20181011152604-fa43e7bc11ba
-	golang.org/x/text v0.3.0
-	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c
-	google.golang.org/appengine v1.3.0
+	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58
+	golang.org/x/sys v0.0.0-20190624142023-c5567b49c5d0
+	golang.org/x/text v0.3.2
+	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
+	google.golang.org/appengine v1.6.1
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20181130031204-d04500c8c3dd
