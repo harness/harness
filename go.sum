@@ -55,6 +55,8 @@ github.com/drone/drone-runtime v1.0.6/go.mod h1:+osgwGADc/nyl40J0fdsf8Z09bgcBZXv
 github.com/drone/drone-runtime v1.0.7-0.20190729202838-87c84080f4a1/go.mod h1:+osgwGADc/nyl40J0fdsf8Z09bgcBZXvXXnLOY48zYs=
 github.com/drone/drone-runtime v1.0.7 h1:qviHrNmEdT3aYfQW3NYOuClHw2IU6CECSOfrXe8QLvY=
 github.com/drone/drone-runtime v1.0.7/go.mod h1:+osgwGADc/nyl40J0fdsf8Z09bgcBZXvXXnLOY48zYs=
+github.com/drone/drone-runtime v1.1.0 h1:IsKbwiLY6+ViNBzX0F8PERJVZZcEJm9rgxEh3uZP5IE=
+github.com/drone/drone-runtime v1.1.0/go.mod h1:+osgwGADc/nyl40J0fdsf8Z09bgcBZXvXXnLOY48zYs=
 github.com/drone/drone-ui v0.0.0-20190318170755-1ca48466a158 h1:u80WYtaGkKWVmxj1BMX9SukAqTxILzGFIKvY5as9zAc=
 github.com/drone/drone-ui v0.0.0-20190318170755-1ca48466a158/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
 github.com/drone/drone-ui v0.0.0-20190318215801-d6c3d11a1c3f h1:yMdZ/2BZFKrfMbWlc0cNH2TCXdC8MsSR0pnu3Dq4UH4=
@@ -63,6 +65,8 @@ github.com/drone/drone-ui v0.0.0-20190423061913-b758d7bee2eb h1:hnCQP2OKc4Bt6rbA
 github.com/drone/drone-ui v0.0.0-20190423061913-b758d7bee2eb/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
 github.com/drone/drone-ui v0.0.0-20190530175131-92ba3df1e0a9 h1:a3TcWx6wQRzNGGpOZWNBn9LzmKAyr8NZS2lcdVyYhA8=
 github.com/drone/drone-ui v0.0.0-20190530175131-92ba3df1e0a9/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
+github.com/drone/drone-ui v0.0.0-20190820204852-c1b9c74995f2 h1:l0TUsupV8IfjzeTMFQWv9UTubyhGQU3xpmfd02we2Po=
+github.com/drone/drone-ui v0.0.0-20190820204852-c1b9c74995f2/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
 github.com/drone/drone-ui v0.8.1 h1:I4WBAlnk/YQzCggQy/Qegb8Nu2T2R9KVzxso/lL98so=
 github.com/drone/drone-yaml v1.0.4 h1:NYTEGhf/XJMiJT8CwGy+pMOxWC8C2vhhzEo6/gbT4tU=
 github.com/drone/drone-yaml v1.0.4/go.mod h1:eM365p3g9M5sroFBTR/najiGrZnd/GiIpWHC2UW8PoI=
@@ -124,6 +128,8 @@ github.com/drone/go-scm v1.5.1-0.20190714160251-dee92a80f783 h1:dA3FngN241oZKI+P
 github.com/drone/go-scm v1.5.1-0.20190714160251-dee92a80f783/go.mod h1:YT4FxQ3U/ltdCrBJR9B0tRpJ1bYA/PM3NyaLE/rYIvw=
 github.com/drone/go-scm v1.5.1-0.20190718235211-75d6480d5332 h1:QdYrRquj9e0sidvgjwYGdK4OB0WyQY6j5msjZ9sLUX8=
 github.com/drone/go-scm v1.5.1-0.20190718235211-75d6480d5332/go.mod h1:YT4FxQ3U/ltdCrBJR9B0tRpJ1bYA/PM3NyaLE/rYIvw=
+github.com/drone/go-scm v1.5.1-0.20190820185953-16026ee6136f h1:9XvpwHypYIs/6G2ptztTJhllO7t+siuGacN7GkXUtS0=
+github.com/drone/go-scm v1.5.1-0.20190820185953-16026ee6136f/go.mod h1:YT4FxQ3U/ltdCrBJR9B0tRpJ1bYA/PM3NyaLE/rYIvw=
 github.com/drone/signal v1.0.0 h1:NrnM2M/4yAuU/tXs6RP1a1ZfxnaHwYkd0kJurA1p6uI=
 github.com/drone/signal v1.0.0/go.mod h1:S8t92eFT0g4WUgEc/LxG+LCuiskpMNsG0ajAMGnyZpc=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
