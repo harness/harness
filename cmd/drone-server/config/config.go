@@ -49,6 +49,7 @@ type (
 
 		Authn        Authentication
 		Agent        Agent
+		AzureBlob    AzureBlob
 		Cron         Cron
 		Cloning      Cloning
 		Database     Database
@@ -366,6 +367,13 @@ type (
 	// GCS provides the storage configuration.
 	GCS struct {
 		Bucket string `envconfig:"DRONE_GCS_BUCKET"`
+  }
+
+	//AzureBlob providers the storage configuration.
+	AzureBlob struct {
+		ContainerName      string `envconfig:"DRONE_AZURE_BLOB_CONTAINER_NAME"`
+		StorageAccountName string `envconfig:"DRONE_AZURE_STORAGE_ACCOUNT_NAME"`
+		StorageAccessKey   string `envconfig:"DRONE_AZURE_STORAGE_ACCESS_KEY"`
 	}
 
 	// HTTP provides http configuration.
