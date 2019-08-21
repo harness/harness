@@ -367,7 +367,7 @@ type (
 	// GCS provides the storage configuration.
 	GCS struct {
 		Bucket string `envconfig:"DRONE_GCS_BUCKET"`
-  }
+	}
 
 	//AzureBlob providers the storage configuration.
 	AzureBlob struct {

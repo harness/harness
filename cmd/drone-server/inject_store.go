@@ -95,9 +95,9 @@ func provideLogStore(db *db.DB, config config.Config) core.LogStore {
 	if config.GCS.Bucket != "" {
 		p := logs.NewGCSEnv(
 			config.GCS.Bucket,
-    )
-    return logs.NewCombined(p, s)
-  }
+		)
+		return logs.NewCombined(p, s)
+	}
 
 	if config.AzureBlob.ContainerName != "" {
 		p := logs.NewAzureBlobEnv(
