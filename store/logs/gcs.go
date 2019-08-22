@@ -24,20 +24,20 @@ type gcsStore struct {
 }
 
 func (g *gcsStore) Find(ctx context.Context, step int64) (io.ReadCloser, error) {
-	err := g.getBucket(ctx)
+	bucket, err := g.getBucket(ctx)
 	if err != nil {
 		return nil, err
 	}
-	obj := g.bucket.Object(fmt.Sprintf("%d", step))
+	obj := bucket.Object(fmt.Sprintf("%d", step))
 	return obj.NewReader(ctx)
 }
 
 func (g *gcsStore) Create(ctx context.Context, step int64, r io.Reader) error {
-	err := g.getBucket(ctx)
+	bucket, err := g.getBucket(ctx)
 	if err != nil {
 		return err
 	}
-	obj := g.bucket.Object(fmt.Sprintf("%d", step))
+	obj := bucket.Object(fmt.Sprintf("%d", step))
 	w := obj.NewWriter(ctx)
 	buf, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -64,23 +64,23 @@ func (g *gcsStore) Update(ctx context.Context, step int64, r io.Reader) error {
 }
 
 func (g *gcsStore) Delete(ctx context.Context, step int64) error {
-	err := g.getBucket(ctx)
+	bucket, err := g.getBucket(ctx)
 	if err != nil {
 		return err
 	}
-	obj := g.bucket.Object(fmt.Sprintf("%d", step))
+	obj := bucket.Object(fmt.Sprintf("%d", step))
 	return obj.Delete(ctx)
 }
 
-func (g *gcsStore) getBucket(ctx context.Context) error {
+func (g *gcsStore) getBucket(ctx context.Context) (*storage.BucketHandle, error) {
 	if g.bucket != nil {
-		return nil
+		return g.bucket, nil
 	}
 	client, err := storage.NewClient(ctx)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 	g.bucket = client.Bucket(g.bucketName)
-	return nil
+	return g.bucket, nil
 }
