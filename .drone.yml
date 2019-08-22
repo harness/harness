@@ -270,7 +270,7 @@ name: manifest
 
 steps:
 - name: publish_server
-  image: plugins/manifest:1.1.0
+  image: plugins/manifest:1.2
   settings:
     auto_tag: true
     ignore_missing: true
@@ -281,7 +281,7 @@ steps:
       from_secret: docker_password
 
 - name: publish_agent
-  image: plugins/manifest:1.1.0
+  image: plugins/manifest:1.2
   settings:
     auto_tag: true
     ignore_missing: true
@@ -292,7 +292,7 @@ steps:
       from_secret: docker_password
 
 - name: publish_controller
-  image: plugins/manifest:1.1.0
+  image: plugins/manifest:1.2
   settings:
     auto_tag: true
     ignore_missing: true
