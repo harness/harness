@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - preserve whitespace in build logs, by [@geek1011](https://github.com/geek1011). [drone/drone-ui#294](https://github.com/drone/drone-ui/pull/294).
 - enable log file download on firefox, by [@bobmanary](https://github.com/bobmanary). [drone/drone-ui#303](https://github.com/drone/drone-ui/pull/303)
 
+### Security
+- upgraded to Go 1.12.9 due to CVE-2019-9512 and CVE-2019-9514
+
 ## [1.2.3] - 2019-07-30
 ### Added
 
