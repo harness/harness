@@ -55,9 +55,15 @@ func HandleCreate(users core.UserStore, sender core.WebhookSender) http.HandlerF
 		if user.Hash == "" {
 			user.Hash = uniuri.NewLen(32)
 		}
-		//
-		// TODO(bradrydzewski) validate the user.Login with a user.Validate() function
-		//
+
+		err = user.Validate()
+		if err != nil {
+			render.ErrorCode(w, err, 400)
+			logger.FromRequest(r).WithError(err).
+				Errorln("api: invlid username")
+			return
+		}
+
 		err = users.Create(r.Context(), user)
 		if err == core.ErrUserLimit {
 			render.ErrorCode(w, err, 402)

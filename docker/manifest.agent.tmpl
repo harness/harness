@@ -34,4 +34,10 @@ manifests:
     platform:
       architecture: amd64
       os: windows
-      variant: 1803
+      variant: 1809
+  -
+    image: drone/agent:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}windows-1903-amd64
+    platform:
+      architecture: amd64
+      os: windows
+      variant: 1903

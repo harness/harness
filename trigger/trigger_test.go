@@ -271,6 +271,35 @@ func TestTrigger_SkipEvent(t *testing.T) {
 	}
 }
 
+// this test verifies that no build should be scheduled if the
+// hook action does not match the actions defined in the yaml.
+func TestTrigger_SkipAction(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	mockUsers := mock.NewMockUserStore(controller)
+	mockUsers.EXPECT().Find(noContext, dummyRepo.UserID).Return(dummyUser, nil)
+
+	mockConfigService := mock.NewMockConfigService(controller)
+	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(dummyYamlSkipAction, nil)
+
+	triggerer := New(
+		mockConfigService,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		mockUsers,
+		nil,
+	)
+
+	_, err := triggerer.Trigger(noContext, dummyRepo, dummyHook)
+	if err != nil {
+		t.Errorf("Expect build silenty skipped if action does not match")
+	}
+}
+
 // this test verifies that if the system cannot increment the
 // build number, the function must exit with error and must not
 // schedule a new build.
@@ -407,6 +436,7 @@ var (
 		AuthorEmail:  "octocat@hello-world.com",
 		AuthorAvatar: "https://avatars3.githubusercontent.com/u/583231",
 		Sender:       "octocat",
+		Action:       "opened",
 	}
 
 	dummyBuild = &core.Build{
@@ -427,6 +457,7 @@ var (
 		AuthorEmail:  "octocat@hello-world.com",
 		AuthorAvatar: "https://avatars3.githubusercontent.com/u/583231",
 		Sender:       "octocat",
+		Action:       "opened",
 	}
 
 	dummyRepo = &core.Repository{
@@ -482,11 +513,30 @@ var (
 	}
 
 	dummyYamlSkipBranch = &core.Config{
-		Data: "kind: pipeline\ntrigger: { branch: { exclude: master } }",
+		Data: `
+kind: pipeline
+trigger:
+  branch:
+    exclude:
+    - master`,
 	}
 
 	dummyYamlSkipEvent = &core.Config{
-		Data: "kind: pipeline\ntrigger: { event: { exclude: push } }",
+		Data: `
+kind: pipeline
+trigger:
+  event:
+    exclude:
+    - push`,
+	}
+
+	dummyYamlSkipAction = &core.Config{
+		Data: `
+kind: pipeline
+trigger:
+  action:
+    exclude:
+    - opened`,
 	}
 
 	ignoreBuildFields = cmpopts.IgnoreFields(core.Build{},

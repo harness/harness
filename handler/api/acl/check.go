@@ -123,6 +123,9 @@ func CheckAccess(read, write, admin bool) func(http.Handler) http.Handler {
 			)
 
 			switch {
+			case user.Active == false:
+				render.Forbidden(w, errors.ErrForbidden)
+				log.Debugln("api: active account required")
 			case read == true && perm.Read == false:
 				render.NotFound(w, errors.ErrNotFound)
 				log.Debugln("api: read access required")

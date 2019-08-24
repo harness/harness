@@ -14,24 +14,11 @@
 
 // +build oss
 
-package token
+package logs
 
-import (
-	"context"
+import "github.com/drone/drone/core"
 
-	"github.com/drone/drone/core"
-
-	"github.com/drone/go-scm/scm/transport/oauth2"
-)
-
-type renewer struct {
-}
-
-// Renewer returns a new Renewer.
-func Renewer(refresh *oauth2.Refresher, store core.UserStore) core.Renewer {
-	return &renewer{}
-}
-
-func (r *renewer) Renew(ctx context.Context, user *core.User, force bool) error {
-	return nil // no-op
+// New returns a zero value LogStore.
+func NewAzureBlobEnv(containerName, storageAccountName, storageAccessKey string) core.LogStore {
+	return nil
 }

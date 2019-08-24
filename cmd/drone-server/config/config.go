@@ -15,6 +15,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -48,6 +49,7 @@ type (
 
 		Authn        Authentication
 		Agent        Agent
+		AzureBlob    AzureBlob
 		Cron         Cron
 		Cloning      Cloning
 		Database     Database
@@ -280,6 +282,7 @@ type (
 
 	// Webhook provides the webhook configuration.
 	Webhook struct {
+		Events     []string `envconfig:"DRONE_WEBHOOK_EVENTS"`
 		Endpoint   []string `envconfig:"DRONE_WEBHOOK_ENDPOINT"`
 		Secret     string   `envconfig:"DRONE_WEBHOOK_SECRET"`
 		SkipVerify bool     `envconfig:"DRONE_WEBHOOK_SKIP_VERIFY"`
@@ -360,6 +363,13 @@ type (
 		PathStyle bool   `envconfig:"DRONE_S3_PATH_STYLE"`
 	}
 
+	//AzureBlob providers the storage configuration.
+	AzureBlob struct {
+		ContainerName      string `envconfig:"DRONE_AZURE_BLOB_CONTAINER_NAME"`
+		StorageAccountName string `envconfig:"DRONE_AZURE_STORAGE_ACCOUNT_NAME"`
+		StorageAccessKey   string `envconfig:"DRONE_AZURE_STORAGE_ACCESS_KEY"`
+	}
+
 	// HTTP provides http configuration.
 	HTTP struct {
 		AllowedHosts          []string          `envconfig:"DRONE_HTTP_ALLOWED_HOSTS"`
@@ -390,6 +400,9 @@ func Environ() (Config, error) {
 	defaultSession(&cfg)
 	defaultCallback(&cfg)
 	configureGithub(&cfg)
+	if err := kubernetesServiceConflict(&cfg); err != nil {
+		return cfg, err
+	}
 	return cfg, err
 }
 
@@ -496,6 +509,13 @@ func configureGithub(c *Config) {
 	} else {
 		c.Github.APIServer = strings.TrimSuffix(c.Github.Server, "/") + "/api/v3"
 	}
+}
+
+func kubernetesServiceConflict(c *Config) error {
+	if strings.HasPrefix(c.Server.Port, "tcp://") {
+		return errors.New("Invalid port configuration. See https://discourse.drone.io/t/drone-server-changing-ports-protocol/4144")
+	}
+	return nil
 }
 
 // Bytes stores number bytes (e.g. megabytes)

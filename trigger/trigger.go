@@ -198,6 +198,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	// the legacy yaml configuration file to the new format.
 	raw.Data, err = converter.ConvertString(raw.Data, converter.Metadata{
 		Filename: repo.Config,
+		URL:      repo.Link,
 		Ref:      base.Ref,
 	})
 	if err != nil {
@@ -258,6 +259,9 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		} else if skipEvent(pipeline, base.Event) {
 			logger = logger.WithField("pipeline", pipeline.Name)
 			logger.Infoln("trigger: skipping pipeline, does not match event")
+		} else if skipAction(pipeline, base.Action) {
+			logger = logger.WithField("pipeline", pipeline.Name).WithField("action", base.Action)
+			logger.Infoln("trigger: skipping pipeline, does not match action")
 		} else if skipRef(pipeline, base.Ref) {
 			logger = logger.WithField("pipeline", pipeline.Name)
 			logger.Infoln("trigger: skipping pipeline, does not match ref")

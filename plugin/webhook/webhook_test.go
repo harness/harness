@@ -41,7 +41,7 @@ func TestWebhook(t *testing.T) {
 		AddMatcher(matchSignature).
 		MatchHeader("X-Drone-Event", "user").
 		MatchHeader("Content-Type", "application/json").
-		MatchHeader("Digest", "SHA-256=Rro8edtwJUjLl6e\\/xB9m1ykaymiaC9YxFGb\\/XNuXzO4=").
+		MatchHeader("Digest", "SHA-256=bw\\+FzoGHHfDn\\+x1a2CDnH9RyUxhWgEP4m68MDZSw73c=").
 		JSON(webhook).
 		Reply(200).
 		Type("application/json")
@@ -89,5 +89,75 @@ func TestWebhook_NoEndpoints(t *testing.T) {
 	err := sender.Send(noContext, webhook)
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestWebhook_NoMatch(t *testing.T) {
+	webhook := &core.WebhookData{
+		Event:  core.WebhookEventUser,
+		Action: core.WebhookActionCreated,
+		User:   &core.User{Login: "octocat"},
+	}
+
+	config := Config{
+		Events:   []string{"repo:disabled"},
+		Endpoint: []string{"https://localhost:1234"},
+		Secret:   "correct-horse-battery-staple",
+	}
+	sender := New(config)
+	err := sender.Send(noContext, webhook)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestWebhook_Match(t *testing.T) {
+	tests := []struct {
+		events  []string
+		event   string
+		action  string
+		matched bool
+	}{
+		{
+			event:   "repo",
+			action:  "enabled",
+			matched: true,
+		},
+		{
+			events:  []string{"user", "repo"},
+			event:   "repo",
+			matched: true,
+		},
+		{
+			events:  []string{"repo:disabled", "repo:enabled"},
+			event:   "repo",
+			action:  "enabled",
+			matched: true,
+		},
+		{
+			events:  []string{"repo:disabled", "repo:*"},
+			event:   "repo",
+			action:  "enabled",
+			matched: true,
+		},
+		{
+			events:  []string{"repo:disabled", "user:created"},
+			event:   "repo",
+			action:  "enabled",
+			matched: false,
+		},
+		{
+			events:  []string{"repo", "user"},
+			event:   "repo",
+			action:  "enabled",
+			matched: false,
+		},
+	}
+	for i, test := range tests {
+		s := new(sender)
+		s.Events = test.events
+		if s.match(test.event, test.action) != test.matched {
+			t.Errorf("Expect matched %v at index %d", test.matched, i)
+		}
 	}
 }

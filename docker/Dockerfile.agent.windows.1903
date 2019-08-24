@@ -1,11 +1,11 @@
-FROM mcr.microsoft.com/windows/nanoserver:1809
+FROM mcr.microsoft.com/windows/nanoserver:1903
 USER ContainerAdministrator
 
 ENV GODEBUG=netdns=go
 ENV DRONE_RUNNER_OS=windows
 ENV DRONE_RUNNER_ARCH=amd64
 ENV DRONE_RUNNER_PLATFORM=windows/amd64
-ENV DRONE_RUNNER_KERNEL=1809
+ENV DRONE_RUNNER_KERNEL=1903
 ENV DRONE_RUNNER_CAPACITY=1
 
 LABEL com.centurylinklabs.watchtower.stop-signal="SIGINT"

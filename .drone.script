@@ -1,8 +1,10 @@
-def main():
+def main(ctx):
   return [
       pipeline('linux-amd64', 'linux', 'amd64'),
       pipeline('linux-arm64', 'linux', 'arm64'),
       pipeline('linux-arm', 'linux', 'arm'),
+      pipeline_windows('1809'),
+      pipeline_windows('1903'),
       manifest(),
   ]
 
@@ -14,33 +16,14 @@ def docker_step(name, os, arch):
       repo = 'drone/drone'
     return {
         'name': 'publish_%s' % name,
-        'image': 'plugins/docker',
+        'image': 'plugins/docker:18',
         'settings': {
             'repo': repo,
             'auto_tag': True,
             'auto_tag_suffix': '%s-%s' % (os, arch),
-            'username': 'drone',
+            'username': { 'from_secret': 'docker_username' },
             'password': { 'from_secret': 'docker_password' },
             'dockerfile': 'docker/Dockerfile.%s.%s.%s' % (name, os, arch),
-        },
-        'when': {
-            'event': [ 'push', 'tag' ],
-        },
-    }
-
-
-# defines a pipeline step that creates and publishes
-# a docker manifest to a docker remote registry.
-def manifest_step(name):
-    return {
-        'name': 'publish_%s' % name,
-        'image': 'plugins/manifest:1',
-        'settings': {
-            'auto_tag': True,
-            'ignore_missing': True,
-            'spec': 'docker/manifest.%s.tmpl' % name,
-            'username': 'drone',
-            'password': { 'from_secret': 'docker_password' },
         },
         'when': {
             'event': [ 'push', 'tag' ],
@@ -52,7 +35,7 @@ def manifest_step(name):
 def test_step():
     return {
         'name': 'test',
-        'image': 'golang:1.11',
+        'image': 'golang:1.12',
         'commands': [
             'go test ./...',
         ],
@@ -61,14 +44,16 @@ def test_step():
 # defines a pipeline step that executes the Go unit tests.
 # this will also download dependencies and cache in /go
 def build_step(os, arch):
-  return {
-    'name': 'build',
-    'image': 'golang:1.11',
-    'commands': [
-        'go build -ldflags \"-extldflags \\\\\"-static\\\\\"\" -o release/%s/%s/drone-server github.com/drone/drone/cmd/drone-server' % (os, arch),
-        'CGO_ENABLED=0 go build -o release/%s/%s/drone-agent github.com/drone/drone/cmd/drone-agent' % (os, arch),
-        'CGO_ENABLED=0 go build -o release/%s/%s/drone-controller github.com/drone/drone/cmd/drone-controller' % (os, arch),
-    ]
+    return {
+        'name': 'build',
+        'image': 'golang:1.12',
+        'commands': [
+            'sh scripts/build.sh',
+        ],
+        'environment': {
+            'GOOS': os,
+            'GOARCH': arch,
+        },
   }
 
 # defines a pipeline that builds, tests and publishes
@@ -76,9 +61,10 @@ def build_step(os, arch):
 def pipeline(name, os, arch):
     return {
         'kind': 'pipeline',
-        'name': 'default',
+        'type': 'docker',
+        'name': 'linux-%s' % arch,
         'platform': {
-            'os': os,
+            'os': 'linux',
             'arch': arch,
         },
         'steps': [
@@ -90,21 +76,77 @@ def pipeline(name, os, arch):
         ],
     }
 
+# defines a pipeline that builds and publishes docker images
+# for the Drone agent for the Windows kernel.
+def pipeline_windows(version):
+  return {
+    'kind': 'pipeline',
+    'type': 'ssh',
+    'name': 'windows-%s-amd64' % version,
+    'platform': { 'os': 'windows' },
+    'server': {
+      'host':     { 'from_secret': 'windows_server_%s' % version },
+      'user':     { 'from_secret': 'windows_username' },
+      'password': { 'from_secret': 'windows_password' },
+    },
+    'steps': [
+      {
+        'name': 'build',
+        'environment': {
+          'USERNAME': { 'from_secret': 'docker_username' },
+          'PASSWORD': { 'from_secret': 'docker_password' },
+        },
+        # TODO these commands build and publish the latest
+        # docker tag regardless of git tag.
+        'commands': [
+          'powershell.exe scripts/build.ps1',
+          'docker login -u $env:USERNAME -p $env:PASSWORD',
+          'docker build -f docker/Dockerfile.agent.windows.%s -t drone/agent:windows-%s-amd64 .' % (version, version),
+          'docker push drone/agent:windows-%s-amd64' % version,
+        ],
+      },
+    ],
+    'trigger': {
+      'event': ['push']
+    }
+  }
+
 # defines a pipeline that updates the docker manifest
 # for the architecture-specific images previously published
 # to dockerhub.
 def manifest():
     return {
         'kind': 'pipeline',
+        'type': 'docker',
         'name': 'manifest',
         'steps': [
             manifest_step('server'),
             manifest_step('agent'),
             manifest_step('controller'),
         ],
+        'trigger': {
+            'event': [ 'push', 'tag' ],
+        },
         'depends_on': [
             'linux-amd64',
             'linux-arm64',
             'linux-arm',
+            'windows-1903-amd64',
+            'windows-1809-amd64',
         ],
+    }
+
+# defines a pipeline step that creates and publishes
+# a docker manifest to a docker remote registry.
+def manifest_step(name):
+    return {
+        'name': 'publish_%s' % name,
+        'image': 'plugins/manifest:1',
+        'settings': {
+            'auto_tag': True,
+            'ignore_missing': True,
+            'spec': 'docker/manifest.%s.tmpl' % name,
+            'username': { 'from_secret': 'docker_username' },
+            'password': { 'from_secret': 'docker_password' },
+        },
     }

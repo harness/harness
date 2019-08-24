@@ -50,7 +50,7 @@ func Trial(provider string) *core.License {
 			Kind:   core.LicenseTrial,
 			Repos:  0,
 			Users:  0,
-			Builds: 15000,
+			Builds: 10000,
 			Nodes:  0,
 		}
 	}

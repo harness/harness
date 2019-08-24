@@ -1,309 +1,314 @@
 ---
 kind: pipeline
+type: docker
 name: linux-amd64
 
 platform:
-  os: linux
   arch: amd64
+  os: linux
 
 steps:
 - name: test
-  image: golang:1.11
+  image: golang:1.12.9
   commands:
-  - go test -v ./...
-  volumes:
-  - name: gopath
-    path: /go
-
+  - go test ./...
+  
 - name: build
-  image: golang:1.11
+  image: golang:1.12.9
   commands:
-  - "go build -ldflags \"-extldflags \\\\\"-static\\\\\"\" -o release/linux/amd64/drone-server github.com/drone/drone/cmd/drone-server"
-  - CGO_ENABLED=0 go build -o release/linux/amd64/drone-agent github.com/drone/drone/cmd/drone-agent
-  - CGO_ENABLED=0 go build -o release/linux/amd64/drone-controller github.com/drone/drone/cmd/drone-controller
-  volumes:
-  - name: gopath
-    path: /go
-  when:
-    event:
-    - push
-    - tag
+  - sh scripts/build.sh
+  environment:
+    GOARCH: amd64
+    GOOS: linux
 
-- name: publish_agent
-  image: plugins/docker
-  settings:
-    auto_tag: true
-    auto_tag_suffix: linux-amd64
-    dockerfile: docker/Dockerfile.agent.linux.amd64
-    password:
-      from_secret: docker_password
-    repo: drone/agent
-    username:
-      from_secret: docker_username
-  when:
-    event:
-    - push
-    - tag
-
-- name: publish_controller
-  image: plugins/docker
-  settings:
-    auto_tag: true
-    auto_tag_suffix: linux-amd64
-    dockerfile: docker/Dockerfile.controller.linux.amd64
-    password:
-      from_secret: docker_password
-    repo: drone/controller
-    username:
-      from_secret: docker_username
-  when:
-    event:
-    - push
-    - tag
-
-- name: publish_server
-  image: plugins/docker
+- name: publish_drone
+  image: plugins/docker:18
   settings:
     auto_tag: true
     auto_tag_suffix: linux-amd64
     dockerfile: docker/Dockerfile.server.linux.amd64
-    password:
-      from_secret: docker_password
     repo: drone/drone
     username:
       from_secret: docker_username
-  when:
-    event:
-    - push
-    - tag
-
-volumes:
-- name: gopath
-  temp: {}
-
----
-kind: pipeline
-name: linux-arm
-
-platform:
-  os: linux
-  arch: arm
-
-steps:
-- name: test
-  image: golang:1.11
-  commands:
-  - go test -v ./...
-  volumes:
-  - name: gopath
-    path: /go
-
-- name: build
-  image: golang:1.11
-  commands:
-  - "go build -ldflags \"-extldflags \\\\\"-static\\\\\"\" -o release/linux/arm/drone-server github.com/drone/drone/cmd/drone-server"
-  - CGO_ENABLED=0 go build -o release/linux/arm/drone-agent github.com/drone/drone/cmd/drone-agent
-  - CGO_ENABLED=0 go build -o release/linux/arm/drone-controller github.com/drone/drone/cmd/drone-controller
-  volumes:
-  - name: gopath
-    path: /go
+    password:
+      from_secret: docker_password
   when:
     event:
     - push
     - tag
 
 - name: publish_agent
-  image: plugins/docker
+  image: plugins/docker:18
   settings:
     auto_tag: true
-    auto_tag_suffix: linux-arm
-    dockerfile: docker/Dockerfile.agent.linux.arm
-    password:
-      from_secret: docker_password
+    auto_tag_suffix: linux-amd64
+    dockerfile: docker/Dockerfile.agent.linux.amd64
     repo: drone/agent
     username:
       from_secret: docker_username
+    password:
+      from_secret: docker_password
   when:
     event:
     - push
     - tag
 
 - name: publish_controller
-  image: plugins/docker
+  image: plugins/docker:18
   settings:
     auto_tag: true
-    auto_tag_suffix: linux-arm
-    dockerfile: docker/Dockerfile.controller.linux.arm
-    password:
-      from_secret: docker_password
+    auto_tag_suffix: linux-amd64
+    dockerfile: docker/Dockerfile.controller.linux.amd64
     repo: drone/controller
     username:
       from_secret: docker_username
-  when:
-    event:
-    - push
-    - tag
-
-- name: publish_server
-  image: plugins/docker
-  settings:
-    auto_tag: true
-    auto_tag_suffix: linux-arm
-    dockerfile: docker/Dockerfile.server.linux.arm
     password:
       from_secret: docker_password
-    repo: drone/drone
-    username:
-      from_secret: docker_username
   when:
     event:
     - push
     - tag
-
-volumes:
-- name: gopath
-  temp: {}
 
 ---
 kind: pipeline
+type: docker
 name: linux-arm64
 
 platform:
-  os: linux
   arch: arm64
+  os: linux
 
 steps:
-- name: test
-  image: golang:1.11
-  commands:
-  - go test -v ./...
-  volumes:
-  - name: gopath
-    path: /go
-
 - name: build
-  image: golang:1.11
+  image: golang:1.12.9
   commands:
-  - "go build -ldflags \"-extldflags \\\\\"-static\\\\\"\" -o release/linux/arm64/drone-server github.com/drone/drone/cmd/drone-server"
-  - CGO_ENABLED=0 go build -o release/linux/arm64/drone-agent github.com/drone/drone/cmd/drone-agent
-  - CGO_ENABLED=0 go build -o release/linux/arm64/drone-controller github.com/drone/drone/cmd/drone-controller
-  volumes:
-  - name: gopath
-    path: /go
-  when:
-    event:
-    - push
-    - tag
+  - sh scripts/build.sh
+  environment:
+    GOARCH: arm64
+    GOOS: linux
 
-- name: publish_agent
-  image: plugins/docker
-  settings:
-    auto_tag: true
-    auto_tag_suffix: linux-arm64
-    dockerfile: docker/Dockerfile.agent.linux.arm64
-    password:
-      from_secret: docker_password
-    repo: drone/agent
-    username:
-      from_secret: docker_username
-  when:
-    event:
-    - push
-    - tag
-
-- name: publish_controller
-  image: plugins/docker
-  settings:
-    auto_tag: true
-    auto_tag_suffix: linux-arm64
-    dockerfile: docker/Dockerfile.controller.linux.arm64
-    password:
-      from_secret: docker_password
-    repo: drone/controller
-    username:
-      from_secret: docker_username
-  when:
-    event:
-    - push
-    - tag
-
-- name: publish_server
-  image: plugins/docker
+- name: publish_drone
+  image: plugins/docker:18
   settings:
     auto_tag: true
     auto_tag_suffix: linux-arm64
     dockerfile: docker/Dockerfile.server.linux.arm64
-    password:
-      from_secret: docker_password
     repo: drone/drone
     username:
       from_secret: docker_username
-  when:
-    event:
-    - push
-    - tag
-
-volumes:
-- name: gopath
-  temp: {}
-
----
-kind: pipeline
-name: manifest
-
-platform:
-  os: linux
-  arch: amd64
-
-steps:
-- name: server
-  image: plugins/manifest
-  settings:
-    auto_tag: true
-    ignore_missing: true
     password:
       from_secret: docker_password
-    spec: docker/manifest.server.tmpl
-    username:
-      from_secret: docker_username
-  when:
-    event:
-    - push
-    - tag
 
-- name: controller
-  image: plugins/manifest
+- name: publish_agent
+  image: plugins/docker:18
   settings:
     auto_tag: true
-    ignore_missing: true
-    password:
-      from_secret: docker_password
-    spec: docker/manifest.controller.tmpl
+    auto_tag_suffix: linux-arm64
+    dockerfile: docker/Dockerfile.agent.linux.arm64
+    repo: drone/agent
     username:
       from_secret: docker_username
-  when:
-    event:
-    - push
-    - tag
+    password:
+      from_secret: docker_password
 
-- name: agent
-  image: plugins/manifest
+- name: publish_controller
+  image: plugins/docker:18
   settings:
     auto_tag: true
-    ignore_missing: true
-    password:
-      from_secret: docker_password
-    spec: docker/manifest.agent.tmpl
+    auto_tag_suffix: linux-arm64
+    dockerfile: docker/Dockerfile.controller.linux.arm64
+    repo: drone/controller
     username:
       from_secret: docker_username
-  when:
-    event:
-    - push
-    - tag
+    password:
+      from_secret: docker_password
+
+trigger:
+  event:
+  - push
+  - tag
 
 depends_on:
 - linux-amd64
-- linux-arm
-- linux-arm64
 
-...
+---
+kind: pipeline
+type: docker
+name: linux-arm
+
+platform:
+  arch: arm
+  os: linux
+
+steps:
+- name: build
+  image: golang:1.12.9
+  commands:
+  - sh scripts/build.sh
+  environment:
+    GOARCH: arm
+    GOOS: linux
+
+- name: publish_drone
+  image: plugins/docker:18
+  settings:
+    auto_tag: true
+    auto_tag_suffix: linux-arm
+    dockerfile: docker/Dockerfile.server.linux.arm
+    repo: drone/drone
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+- name: publish_agent
+  image: plugins/docker:18
+  settings:
+    auto_tag: true
+    auto_tag_suffix: linux-arm
+    dockerfile: docker/Dockerfile.agent.linux.arm
+    repo: drone/agent
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+- name: publish_controller
+  image: plugins/docker:18
+  settings:
+    auto_tag: true
+    auto_tag_suffix: linux-arm
+    dockerfile: docker/Dockerfile.controller.linux.arm
+    repo: drone/controller
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+trigger:
+  event:
+  - push
+  - tag
+
+depends_on:
+- linux-amd64
+
+---
+kind: pipeline
+type: ssh
+name: windows-1809-amd64
+
+platform:
+  os: windows
+
+server:
+  host: windows.1809.amd64.ssh.pipeline.drone.ci
+  password:
+    from_secret: windows_password
+  user:
+    from_secret: windows_username
+
+steps:
+- name: build
+  commands:
+  - powershell.exe scripts/build.ps1
+  - docker login -u $env:USERNAME -p $env:PASSWORD
+  - docker build -f docker/Dockerfile.agent.windows.1809 -t drone/agent:windows-1809-amd64 .
+  - docker push drone/agent:windows-1809-amd64
+  environment:
+    PASSWORD:
+      from_secret: docker_password
+    USERNAME:
+      from_secret: docker_username
+
+trigger:
+  event:
+  - push
+
+depends_on:
+- linux-amd64
+
+---
+kind: pipeline
+type: ssh
+name: windows-1903-amd64
+
+platform:
+  os: windows
+
+server:
+  host: windows.1903.amd64.ssh.pipeline.drone.ci
+  password:
+    from_secret: windows_password
+  user:
+    from_secret: windows_username
+
+steps:
+- name: build
+  commands:
+  - powershell.exe scripts/build.ps1
+  - docker login -u $env:USERNAME -p $env:PASSWORD
+  - docker build -f docker/Dockerfile.agent.windows.1903 -t drone/agent:windows-1903-amd64 .
+  - docker push drone/agent:windows-1903-amd64
+  environment:
+    PASSWORD:
+      from_secret: docker_password
+    USERNAME:
+      from_secret: docker_username
+
+trigger:
+  event:
+  - push
+
+depends_on:
+- linux-amd64
+
+---
+kind: pipeline
+type: docker
+name: manifest
+
+steps:
+- name: publish_server
+  image: plugins/manifest:1.2
+  settings:
+    auto_tag: true
+    ignore_missing: true
+    spec: docker/manifest.server.tmpl
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+- name: publish_agent
+  image: plugins/manifest:1.2
+  settings:
+    auto_tag: true
+    ignore_missing: true
+    spec: docker/manifest.agent.tmpl
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+- name: publish_controller
+  image: plugins/manifest:1.2
+  settings:
+    auto_tag: true
+    ignore_missing: true
+    spec: docker/manifest.controller.tmpl
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+trigger:
+  event:
+  - push
+  - tag
+
+depends_on:
+- linux-arm64
+- linux-arm
+- windows-1903-amd64
+- windows-1809-amd64

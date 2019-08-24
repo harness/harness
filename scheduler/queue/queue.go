@@ -151,24 +151,27 @@ func (q *queue) signal(ctx context.Context) error {
 				continue
 			}
 
-			// the worker is platform-specific. check to ensure
-			// the queue item matches the worker platform.
-			if w.os != item.OS {
-				continue
+			if w.os != "" || w.arch != "" || w.variant != "" || w.kernel != "" {
+				// the worker is platform-specific. check to ensure
+				// the queue item matches the worker platform.
+				if w.os != item.OS {
+					continue
+				}
+				if w.arch != item.Arch {
+					continue
+				}
+				// if the pipeline defines a variant it must match
+				// the worker variant (e.g. arm6, arm7, etc).
+				if item.Variant != "" && item.Variant != w.variant {
+					continue
+				}
+				// if the pipeline defines a kernel version it must match
+				// the worker kernel version (e.g. 1709, 1803).
+				if item.Kernel != "" && item.Kernel != w.kernel {
+					continue
+				}
 			}
-			if w.arch != item.Arch {
-				continue
-			}
-			// if the pipeline defines a variant it must match
-			// the worker variant (e.g. arm6, arm7, etc).
-			if item.Variant != "" && item.Variant != w.variant {
-				continue
-			}
-			// if the pipeline defines a kernel version it must match
-			// the worker kernel version (e.g. 1709, 1803).
-			if item.Kernel != "" && item.Kernel != w.kernel {
-				continue
-			}
+
 			if len(item.Labels) > 0 || len(w.labels) > 0 {
 				if !checkLabels(item.Labels, w.labels) {
 					continue

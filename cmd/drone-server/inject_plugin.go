@@ -97,6 +97,7 @@ func provideSecretPlugin(config spec.Config) core.SecretService {
 // a webhook plugin based on the environment configuration.
 func provideWebhookPlugin(config spec.Config, system *core.System) core.WebhookSender {
 	return webhook.New(webhook.Config{
+		Events:   config.Webhook.Events,
 		Endpoint: config.Webhook.Endpoint,
 		Secret:   config.Webhook.Secret,
 		System:   system,
