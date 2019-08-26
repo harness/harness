@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Added
+
+- support for the GitHub deployment status API, by [@bradrydzewski](https://github.com/bradrydzewski).
+
 ## [1.3.0] - 2019-08-20
 ### Added
 - support for storing logs in Azure Cloud Storage, by [@Lucretius](https://github.com/Lucretius). [#2788](https://github.com/drone/drone/pull/2788)

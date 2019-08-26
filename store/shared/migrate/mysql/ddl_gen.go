@@ -124,6 +124,10 @@ var migrations = []struct {
 		name: "create-table-org-secrets",
 		stmt: createTableOrgSecrets,
 	},
+	{
+		name: "alter-table-builds-add-column-deploy-id",
+		stmt: alterTableBuildsAddColumnDeployId,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -576,4 +580,12 @@ CREATE TABLE IF NOT EXISTS orgsecrets (
 ,secret_pull_request_push BOOLEAN
 ,UNIQUE(secret_namespace, secret_name)
 );
+`
+
+//
+// 013_add_column_builds_deploy_id.sql
+//
+
+var alterTableBuildsAddColumnDeployId = `
+ALTER TABLE builds ADD COLUMN build_deploy_id INTEGER NOT NULL DEFAULT 0;
 `

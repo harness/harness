@@ -81,6 +81,8 @@ func HandleRetry(
 			AuthorName:   prev.AuthorName,
 			AuthorEmail:  prev.AuthorEmail,
 			AuthorAvatar: prev.AuthorAvatar,
+			Deployment:   prev.Deploy,
+			DeploymentID: prev.DeployID,
 			Sender:       prev.Sender,
 			Params:       map[string]string{},
 		}

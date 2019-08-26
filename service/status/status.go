@@ -20,6 +20,7 @@ import (
 
 	"github.com/drone/drone/core"
 	"github.com/drone/go-scm/scm"
+	"github.com/drone/go-scm/scm/driver/github"
 )
 
 // Config configures the Status service.
@@ -62,6 +63,23 @@ func (s *service) Send(ctx context.Context, user *core.User, req *core.StatusInp
 		Token:   user.Token,
 		Refresh: user.Refresh,
 	})
+
+	// HACK(bradrydzewski) provides support for the github deployment API
+	if req.Build.DeployID != 0 && s.client.Driver == scm.DriverGithub {
+		// TODO(bradrydzewski) only update the deployment status when the
+		// build completes.
+		if req.Build.Finished == 0 {
+			return nil
+		}
+		_, _, err = s.client.Repositories.(*github.RepositoryService).CreateDeployStatus(ctx, req.Repo.Slug, &scm.DeployStatus{
+			Number:      req.Build.DeployID,
+			Desc:        createDesc(req.Build.Status),
+			State:       convertStatus(req.Build.Status),
+			Target:      fmt.Sprintf("%s/%s/%d", s.base, req.Repo.Slug, req.Build.Number),
+			Environment: req.Build.Target,
+		})
+		return err
+	}
 
 	_, _, err = s.client.Repositories.CreateStatus(ctx, req.Repo.Slug, req.Build.After, &scm.StatusInput{
 		Desc:   createDesc(req.Build.Status),

@@ -19,12 +19,12 @@ require (
 	github.com/docker/go-units v0.3.3
 	github.com/drone/drone-go v1.0.5
 	github.com/drone/drone-runtime v1.1.0
-	github.com/drone/drone-ui v0.0.0-20190821232913-65807c0b23a3
+	github.com/drone/drone-ui v0.0.0-20190826173727-43d81f243ef3
 	github.com/drone/drone-yaml v1.2.3-0.20190807054305-a4a63fe917cb
 	github.com/drone/envsubst v1.0.1
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2
-	github.com/drone/go-scm v1.5.1-0.20190820185953-16026ee6136f
+	github.com/drone/go-scm v1.5.1-0.20190826160521-fda52b1e0829
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ghodss/yaml v1.0.0
@@ -49,6 +49,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.0
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-retryablehttp v0.0.0-20180718195005-e651d75abec6
+	github.com/hashicorp/go-rootcerts v1.0.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.0
 	github.com/hashicorp/nomad v0.0.0-20190125003214-134391155854
 	github.com/imdario/mergo v0.3.6
@@ -61,7 +62,7 @@ require (
 	github.com/lib/pq v1.0.0
 	github.com/mattn/go-sqlite3 v1.9.0
 	github.com/matttproud/golang_protobuf_extensions v1.0.1
-	github.com/mitchellh/go-homedir v1.0.0
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742
 	github.com/natessilva/dag v0.0.0-20180124060714-7194b8dcc5c4
