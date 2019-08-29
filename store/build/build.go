@@ -327,6 +327,7 @@ SELECT
 ,build_params
 ,build_cron
 ,build_deploy
+,build_deploy_id
 ,build_started
 ,build_finished
 ,build_created
@@ -463,6 +464,7 @@ INSERT INTO builds (
 ,build_params
 ,build_cron
 ,build_deploy
+,build_deploy_id
 ,build_started
 ,build_finished
 ,build_created
@@ -495,6 +497,7 @@ INSERT INTO builds (
 ,:build_params
 ,:build_cron
 ,:build_deploy
+,:build_deploy_id
 ,:build_started
 ,:build_finished
 ,:build_created

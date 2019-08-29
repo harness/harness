@@ -335,6 +335,7 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 			AuthorAvatar: v.Sender.Avatar,
 			Sender:       v.Sender.Login,
 			Deployment:   v.Target,
+			DeploymentID: v.Number,
 			Params:       toMap(v.Data),
 		}
 		repo = &core.Repository{

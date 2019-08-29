@@ -302,6 +302,7 @@ const queryColsBulds = queryCols + `
 ,build_params
 ,build_cron
 ,build_deploy
+,build_deploy_id
 ,build_started
 ,build_finished
 ,build_created
