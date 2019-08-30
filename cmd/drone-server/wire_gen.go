@@ -16,7 +16,6 @@ import (
 	"github.com/drone/drone/service/hook/parser"
 	"github.com/drone/drone/service/license"
 	"github.com/drone/drone/service/org"
-	"github.com/drone/drone/service/repo"
 	"github.com/drone/drone/service/token"
 	"github.com/drone/drone/service/user"
 	"github.com/drone/drone/store/batch"
@@ -79,7 +78,7 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	hookService := provideHookService(client, renewer, config2)
 	licenseService := license.NewService(userStore, repositoryStore, buildStore, coreLicense)
 	permStore := perm.New(db)
-	repositoryService := repo.New(client, renewer)
+	repositoryService := provideRepositoryService(client, renewer, config2)
 	session, err := provideSession(userStore, config2)
 	if err != nil {
 		return application{}, err

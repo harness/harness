@@ -231,13 +231,14 @@ type (
 
 	// Server provides the server configuration.
 	Server struct {
-		Addr  string `envconfig:"-"`
-		Host  string `envconfig:"DRONE_SERVER_HOST" default:"localhost:8080"`
-		Port  string `envconfig:"DRONE_SERVER_PORT" default:":8080"`
-		Proto string `envconfig:"DRONE_SERVER_PROTO" default:"http"`
-		Acme  bool   `envconfig:"DRONE_TLS_AUTOCERT"`
-		Cert  string `envconfig:"DRONE_TLS_CERT"`
-		Key   string `envconfig:"DRONE_TLS_KEY"`
+		Addr    string `envconfig:"-"`
+		Host    string `envconfig:"DRONE_SERVER_HOST" default:"localhost:8080"`
+		Port    string `envconfig:"DRONE_SERVER_PORT" default:":8080"`
+		Proto   string `envconfig:"DRONE_SERVER_PROTO" default:"http"`
+		Acme    bool   `envconfig:"DRONE_TLS_AUTOCERT"`
+		Cert    string `envconfig:"DRONE_TLS_CERT"`
+		Key     string `envconfig:"DRONE_TLS_KEY"`
+		Trusted bool   `envconfig:"DRONE_TRUSTED_ENVIRONMENT"`
 	}
 
 	// Proxy provides proxy server configuration.

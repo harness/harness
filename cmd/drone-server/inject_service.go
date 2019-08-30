@@ -49,7 +49,6 @@ var serviceSet = wire.NewSet(
 	orgs.New,
 	parser.New,
 	pubsub.New,
-	repo.New,
 	token.Renewer,
 	trigger.New,
 	user.New,
@@ -57,6 +56,7 @@ var serviceSet = wire.NewSet(
 	provideContentService,
 	provideDatadog,
 	provideHookService,
+	provideRepositoryService,
 	provideNetrcService,
 	provideSession,
 	provideStatusService,
@@ -76,6 +76,12 @@ func provideContentService(client *scm.Client, renewer core.Renewer) core.FileSe
 // hook service based on the environment configuration.
 func provideHookService(client *scm.Client, renewer core.Renewer, config config.Config) core.HookService {
 	return hook.New(client, config.Proxy.Addr, renewer)
+}
+
+// provideRepositoryService is a Wire provider function that returns a
+// repository service based on the environment configuration.
+func provideRepositoryService(client *scm.Client, renewer core.Renewer, config config.Config) core.RepositoryService {
+	return repo.New(client, renewer, config.Server.Trusted)
 }
 
 // provideNetrcService is a Wire provider function that returns
