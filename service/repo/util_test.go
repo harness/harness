@@ -36,7 +36,7 @@ func TestConvertRepository(t *testing.T) {
 		Branch:     "master",
 		Visibility: core.VisibilityPrivate,
 	}
-	got := convertRepository(from)
+	got := convertRepository(from, false)
 	if diff := cmp.Diff(want, got); len(diff) != 0 {
 		t.Errorf(diff)
 	}
