@@ -7,8 +7,10 @@ Drone is a Continuous Delivery system built on container technology. Drone uses 
 Sample Pipeline Configuration:
 
 ```yaml
-kind: pipeline
 name: default
+
+kind: pipeline
+type: docker
 
 steps:
 - name: backend
