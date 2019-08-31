@@ -7,28 +7,33 @@ Drone is a Continuous Delivery system built on container technology. Drone uses 
 Sample Pipeline Configuration:
 
 ```yaml
-pipeline:
-  backend:
-    image: golang
-    commands:
-      - go get
-      - go build
-      - go test
+kind: pipeline
+name: default
 
-  frontend:
-    image: node:6
-    commands:
-      - npm install
-      - npm test
+steps:
+- name: backend
+  image: golang
+  commands:
+    - go get
+    - go build
+    - go test
 
-  publish:
-    image: plugins/docker
+- name: frontend
+  image: node:6
+  commands:
+    - npm install
+    - npm test
+
+- name: publish
+  image: plugins/docker
+  settings:
     repo: octocat/hello-world
     tags: [ 1, 1.1, latest ]
     registry: index.docker.io
 
-  notify:
-    image: plugins/slack
+- name: notify
+  image: plugins/slack
+  settings:
     channel: developers
     username: drone
 ```
