@@ -101,6 +101,7 @@ type (
 func New(
 	builds core.BuildStore,
 	config core.ConfigService,
+	converter core.ConvertService,
 	events core.Pubsub,
 	logs core.LogStore,
 	logz core.LogStream,
@@ -119,6 +120,7 @@ func New(
 	return &Manager{
 		Builds:    builds,
 		Config:    config,
+		Converter: converter,
 		Events:    events,
 		Globals:   globals,
 		Logs:      logs,
@@ -141,6 +143,7 @@ func New(
 type Manager struct {
 	Builds    core.BuildStore
 	Config    core.ConfigService
+	Converter core.ConvertService
 	Events    core.Pubsub
 	Globals   core.GlobalSecretStore
 	Logs      core.LogStore
@@ -285,6 +288,12 @@ func (m *Manager) Details(ctx context.Context, id int64) (*Context, error) {
 		logger.Warnln("manager: cannot find configuration")
 		return nil, err
 	}
+	config, err = m.Converter.Convert(noContext, &core.ConvertArgs{
+		Build:  build,
+		Config: config,
+		Repo:   repo,
+		User:   user,
+	})
 	var secrets []*core.Secret
 	tmpSecrets, err := m.Secrets.List(noContext, repo.ID)
 	if err != nil {

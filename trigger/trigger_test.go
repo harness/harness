@@ -60,6 +60,9 @@ func TestTrigger(t *testing.T) {
 	mockConfigService := mock.NewMockConfigService(controller)
 	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(dummyYaml, nil)
 
+	mockConvertService := mock.NewMockConvertService(controller)
+	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(dummyYaml, nil)
+
 	mockStatus := mock.NewMockStatusService(controller)
 	mockStatus.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Do(checkStatus)
 
@@ -74,6 +77,7 @@ func TestTrigger(t *testing.T) {
 
 	triggerer := New(
 		mockConfigService,
+		mockConvertService,
 		nil,
 		mockStatus,
 		mockBuilds,
@@ -105,6 +109,7 @@ func TestTrigger_SkipCI(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 	dummyHookSkip := *dummyHook
 	dummyHookSkip.Message = "foo [CI SKIP] bar"
@@ -123,6 +128,7 @@ func TestTrigger_NoOwner(t *testing.T) {
 	mockUsers.EXPECT().Find(noContext, dummyRepo.UserID).Return(nil, sql.ErrNoRows)
 
 	triggerer := New(
+		nil,
 		nil,
 		nil,
 		nil,
@@ -158,6 +164,7 @@ func TestTrigger_MissingYaml(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 		mockUsers,
 		nil,
 	)
@@ -180,6 +187,9 @@ func TestTrigger_ErrorYaml(t *testing.T) {
 	mockConfigService := mock.NewMockConfigService(controller)
 	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(dummyYamlInvalid, nil)
 
+	mockConvertService := mock.NewMockConvertService(controller)
+	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(dummyYamlInvalid, nil)
+
 	mockRepos := mock.NewMockRepositoryStore(controller)
 	mockRepos.EXPECT().Increment(gomock.Any(), dummyRepo).Return(dummyRepo, nil)
 
@@ -188,6 +198,7 @@ func TestTrigger_ErrorYaml(t *testing.T) {
 
 	triggerer := New(
 		mockConfigService,
+		mockConvertService,
 		nil,
 		nil,
 		mockBuilds,
@@ -225,8 +236,12 @@ func TestTrigger_SkipBranch(t *testing.T) {
 	mockConfigService := mock.NewMockConfigService(controller)
 	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(dummyYamlSkipBranch, nil)
 
+	mockConvertService := mock.NewMockConvertService(controller)
+	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(dummyYamlSkipBranch, nil)
+
 	triggerer := New(
 		mockConfigService,
+		mockConvertService,
 		nil,
 		nil,
 		nil,
@@ -254,8 +269,12 @@ func TestTrigger_SkipEvent(t *testing.T) {
 	mockConfigService := mock.NewMockConfigService(controller)
 	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(dummyYamlSkipEvent, nil)
 
+	mockConvertService := mock.NewMockConvertService(controller)
+	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(dummyYamlSkipEvent, nil)
+
 	triggerer := New(
 		mockConfigService,
+		mockConvertService,
 		nil,
 		nil,
 		nil,
@@ -283,8 +302,12 @@ func TestTrigger_SkipAction(t *testing.T) {
 	mockConfigService := mock.NewMockConfigService(controller)
 	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(dummyYamlSkipAction, nil)
 
+	mockConvertService := mock.NewMockConvertService(controller)
+	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(dummyYamlSkipAction, nil)
+
 	triggerer := New(
 		mockConfigService,
+		mockConvertService,
 		nil,
 		nil,
 		nil,
@@ -316,8 +339,12 @@ func TestTrigger_ErrorIncrement(t *testing.T) {
 	mockConfigService := mock.NewMockConfigService(controller)
 	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(dummyYaml, nil)
 
+	mockConvertService := mock.NewMockConvertService(controller)
+	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(dummyYaml, nil)
+
 	triggerer := New(
 		mockConfigService,
+		mockConvertService,
 		nil,
 		nil,
 		nil,

@@ -19,8 +19,10 @@ import (
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/plugin/admission"
 	"github.com/drone/drone/plugin/config"
+	"github.com/drone/drone/plugin/converter"
 	"github.com/drone/drone/plugin/registry"
 	"github.com/drone/drone/plugin/secret"
+	"github.com/drone/drone/plugin/validator"
 	"github.com/drone/drone/plugin/webhook"
 	"github.com/drone/go-scm/scm"
 
@@ -31,8 +33,10 @@ import (
 var pluginSet = wire.NewSet(
 	provideAdmissionPlugin,
 	provideConfigPlugin,
+	provideConvertPlugin,
 	provideRegistryPlugin,
 	provideSecretPlugin,
+	provideValidatePlugin,
 	provideWebhookPlugin,
 )
 
@@ -57,8 +61,27 @@ func provideConfigPlugin(client *scm.Client, contents core.FileService, conf spe
 			conf.Yaml.Secret,
 			conf.Yaml.SkipVerify,
 		),
-		config.Jsonnet(contents, conf.Jsonnet.Enabled),
 		config.Repository(contents),
+	)
+}
+
+// provideConvertPlugin is a Wire provider function that returns
+// a yaml conversion plugin based on the environment
+// configuration.
+func provideConvertPlugin(client *scm.Client, conf spec.Config) core.ConvertService {
+	return converter.Combine(
+		converter.Legacy(false),
+		converter.Starlark(false),
+		converter.Jsonnet(
+			conf.Jsonnet.Enabled,
+		),
+		converter.Memoize(
+			converter.Remote(
+				conf.Convert.Endpoint,
+				conf.Convert.Secret,
+				conf.Convert.SkipVerify,
+			),
+		),
 	)
 }
 
@@ -68,9 +91,9 @@ func provideConfigPlugin(client *scm.Client, contents core.FileService, conf spe
 func provideRegistryPlugin(config spec.Config) core.RegistryService {
 	return registry.Combine(
 		registry.External(
-			config.Secrets.Endpoint,
-			config.Secrets.Password,
-			config.Secrets.SkipVerify,
+			config.Convert.Endpoint,
+			config.Convert.Secret,
+			config.Convert.SkipVerify,
 		),
 		registry.FileSource(
 			config.Docker.Config,
@@ -91,6 +114,13 @@ func provideSecretPlugin(config spec.Config) core.SecretService {
 		config.Secrets.Password,
 		config.Secrets.SkipVerify,
 	)
+}
+
+// provideValidatePlugin is a Wire provider function that
+// returns a yaml validation plugin based on the environment
+// configuration.
+func provideValidatePlugin(conf spec.Config) core.ValidateService {
+	return validator.Combine()
 }
 
 // provideWebhookPlugin is a Wire provider function that returns

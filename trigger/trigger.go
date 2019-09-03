@@ -33,6 +33,7 @@ import (
 
 type triggerer struct {
 	config  core.ConfigService
+	convert core.ConvertService
 	commits core.CommitService
 	status  core.StatusService
 	builds  core.BuildStore
@@ -45,6 +46,7 @@ type triggerer struct {
 // New returns a new build triggerer.
 func New(
 	config core.ConfigService,
+	convert core.ConvertService,
 	commits core.CommitService,
 	status core.StatusService,
 	builds core.BuildStore,
@@ -55,6 +57,7 @@ func New(
 ) core.Triggerer {
 	return &triggerer{
 		config:  config,
+		convert: convert,
 		commits: commits,
 		status:  status,
 		builds:  builds,
@@ -152,46 +155,57 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	// 		obj = base.Ref
 	// 	}
 	// }
-
+	tmpBuild := &core.Build{
+		RepoID:  repo.ID,
+		Trigger: base.Trigger,
+		Parent:  base.Parent,
+		Status:  core.StatusPending,
+		Event:   base.Event,
+		Action:  base.Action,
+		Link:    base.Link,
+		// Timestamp:    base.Timestamp,
+		Title:        base.Title,
+		Message:      base.Message,
+		Before:       base.Before,
+		After:        base.After,
+		Ref:          base.Ref,
+		Fork:         base.Fork,
+		Source:       base.Source,
+		Target:       base.Target,
+		Author:       base.Author,
+		AuthorName:   base.AuthorName,
+		AuthorEmail:  base.AuthorEmail,
+		AuthorAvatar: base.AuthorAvatar,
+		Params:       base.Params,
+		Cron:         base.Cron,
+		Deploy:       base.Deployment,
+		DeployID:     base.DeploymentID,
+		Sender:       base.Sender,
+		Created:      time.Now().Unix(),
+		Updated:      time.Now().Unix(),
+	}
 	req := &core.ConfigArgs{
-		User: user,
-		Repo: repo,
-		// TODO this is duplicated
-		Build: &core.Build{
-			RepoID:  repo.ID,
-			Trigger: base.Trigger,
-			Parent:  base.Parent,
-			Status:  core.StatusPending,
-			Event:   base.Event,
-			Action:  base.Action,
-			Link:    base.Link,
-			// Timestamp:    base.Timestamp,
-			Title:        base.Title,
-			Message:      base.Message,
-			Before:       base.Before,
-			After:        base.After,
-			Ref:          base.Ref,
-			Fork:         base.Fork,
-			Source:       base.Source,
-			Target:       base.Target,
-			Author:       base.Author,
-			AuthorName:   base.AuthorName,
-			AuthorEmail:  base.AuthorEmail,
-			AuthorAvatar: base.AuthorAvatar,
-			Params:       base.Params,
-			Cron:         base.Cron,
-			Deploy:       base.Deployment,
-			DeployID:     base.DeploymentID,
-			Sender:       base.Sender,
-			Created:      time.Now().Unix(),
-			Updated:      time.Now().Unix(),
-		},
+		User:  user,
+		Repo:  repo,
+		Build: tmpBuild,
 	}
 
 	raw, err := t.config.Find(ctx, req)
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("trigger: cannot find yaml")
+		return nil, err
+	}
+
+	raw, err = t.convert.Convert(ctx, &core.ConvertArgs{
+		User:   user,
+		Repo:   repo,
+		Build:  tmpBuild,
+		Config: raw,
+	})
+	if err != nil {
+		logger = logger.WithError(err)
+		logger.Warnln("trigger: cannot convert yaml")
 		return nil, err
 	}
 

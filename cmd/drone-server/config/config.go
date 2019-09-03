@@ -50,6 +50,7 @@ type (
 		Authn        Authentication
 		Agent        Agent
 		AzureBlob    AzureBlob
+		Convert      Convert
 		Cron         Cron
 		Cloning      Cloning
 		Database     Database
@@ -73,6 +74,7 @@ type (
 		Session      Session
 		Status       Status
 		Users        Users
+		Validate     Validate
 		Webhook      Webhook
 		Yaml         Yaml
 
@@ -293,6 +295,20 @@ type (
 		Endpoint   string `envconfig:"DRONE_YAML_ENDPOINT"`
 		Secret     string `envconfig:"DRONE_YAML_SECRET"`
 		SkipVerify bool   `envconfig:"DRONE_YAML_SKIP_VERIFY"`
+	}
+
+	// Convert provides the converter webhook configuration.
+	Convert struct {
+		Endpoint   string `envconfig:"DRONE_CONVERT_PLUGIN_ENDPOINT"`
+		Secret     string `envconfig:"DRONE_CONVERT_PLUGIN_SECRET"`
+		SkipVerify bool   `envconfig:"DRONE_CONVERT_PLUGIN_SKIP_VERIFY"`
+	}
+
+	// Validate provides the validation webhook configuration.
+	Validate struct {
+		Endpoint   string `envconfig:"DRONE_VALIDATE_PLUGIN_ENDPOINT"`
+		Secret     string `envconfig:"DRONE_VALIDATE_PLUGIN_SECRET"`
+		SkipVerify bool   `envconfig:"DRONE_VALIDATE_PLUGIN_SKIP_VERIFY"`
 	}
 
 	//

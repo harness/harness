@@ -17,10 +17,10 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/go-connections v0.3.0
 	github.com/docker/go-units v0.3.3
-	github.com/drone/drone-go v1.0.5
+	github.com/drone/drone-go v1.0.6
 	github.com/drone/drone-runtime v1.1.0
 	github.com/drone/drone-ui v0.0.0-20190826173727-43d81f243ef3
-	github.com/drone/drone-yaml v1.2.3-0.20190807054305-a4a63fe917cb
+	github.com/drone/drone-yaml v1.2.3-0.20190902155851-ad8ad9816fbf
 	github.com/drone/envsubst v1.0.1
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2
@@ -33,7 +33,7 @@ require (
 	github.com/go-ini/ini v1.39.0
 	github.com/go-sql-driver/mysql v1.4.0
 	github.com/gogo/protobuf v0.0.0-20170307180453-100ba4e88506
-	github.com/golang/mock v1.1.1
+	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.2.0
 	github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c
 	github.com/google/go-cmp v0.3.0
@@ -82,11 +82,11 @@ require (
 	github.com/sirupsen/logrus v0.0.0-20181103062819-44067abb194b
 	github.com/spf13/pflag v1.0.3
 	github.com/unrolled/secure v0.0.0-20181022170031-4b6b7cf51606
-	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
-	golang.org/x/net v0.0.0-20181011144130-49bb7cea24b1
+	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+	golang.org/x/net v0.0.0-20190311183353-d8887717615a
 	golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890
-	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
-	golang.org/x/sys v0.0.0-20181011152604-fa43e7bc11ba
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58
+	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a
 	golang.org/x/text v0.3.0
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c
 	google.golang.org/appengine v1.3.0
