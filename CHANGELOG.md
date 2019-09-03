@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Support for basic auth as an option for Gitea, by [@techknowlogick](https://giteahub.com/techknowlogick). [#2721](https://github.com/drone/drone/issues/2721)
 
+### Fixed
+- copy cron job name when restarting a cron job, by [@bradrydzewski](https://github.com/bradrydzewski). [#2760](https://github.com/drone/drone/issues/2760).
+
 ## [1.3.1] - 2019-08-26
 ### Added
 - support for the GitHub deployment status API, by [@bradrydzewski](https://github.com/bradrydzewski).
