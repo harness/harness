@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for configuration conversion plugins (e.g. convert from starlark)
 - moved native jsonnet to a conversion plugin
 
+### Removed
+- Support for basic auth as an option for Gitea, by [@techknowlogick](https://giteahub.com/techknowlogick). [#2721](https://github.com/drone/drone/issues/2721)
+
 ## [1.3.1] - 2019-08-26
 ### Added
-
 - support for the GitHub deployment status API, by [@bradrydzewski](https://github.com/bradrydzewski).
 
 ## [1.3.0] - 2019-08-20

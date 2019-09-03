@@ -117,16 +117,6 @@ func provideGiteaClient(config config.Config) *scm.Client {
 	if config.Gitea.Debug {
 		client.DumpResponse = httputil.DumpResponse
 	}
-	if config.Gitea.ClientID == "" {
-		client.Client = &http.Client{
-			Transport: &oauth2.Transport{
-				Scheme: oauth2.SchemeToken,
-				Source: oauth2.ContextTokenSource(),
-				Base:   defaultTransport(config.Gitea.SkipVerify),
-			},
-		}
-		return client
-	}
 	client.Client = &http.Client{
 		Transport: &oauth2.Transport{
 			Scheme: oauth2.SchemeBearer,
