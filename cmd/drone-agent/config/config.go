@@ -89,6 +89,7 @@ type (
 		Kernel     string            `envconfig:"DRONE_RUNNER_KERNEL"`
 		Variant    string            `envconfig:"DRONE_RUNNER_VARIANT"`
 		Machine    string            `envconfig:"DRONE_RUNNER_NAME"`
+		Trusted    bool              `envconfig:"DRONE_RUNNER_TRUST_ALWAYS"`
 		Capacity   int               `envconfig:"DRONE_RUNNER_CAPACITY" default:"2"`
 		Labels     map[string]string `envconfig:"DRONE_RUNNER_LABELS"`
 		Volumes    []string          `envconfig:"DRONE_RUNNER_VOLUMES"`

@@ -69,6 +69,7 @@ type Runner struct {
 	Privileged []string
 	Environ    map[string]string
 	Machine    string
+	Trusted    bool
 	Labels     map[string]string
 
 	Kind     string
@@ -230,8 +231,8 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 	}
 
 	logger = logger.WithField("pipeline", pipeline.Name)
-
-	err = linter.Lint(pipeline, m.Repo.Trusted)
+	trusted := m.Repo.Trusted || r.Trusted
+	err = linter.Lint(pipeline, trusted)
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("runner: yaml lint errors")

@@ -110,6 +110,7 @@ func main() {
 		Devices:    config.Runner.Devices,
 		Privileged: config.Runner.Privileged,
 		Machine:    config.Runner.Machine,
+		Trusted:    config.Runner.Trusted,
 		Labels:     config.Runner.Labels,
 		Environ:    config.Runner.Environ,
 		Limits: runner.Limits{
