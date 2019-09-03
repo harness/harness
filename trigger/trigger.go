@@ -32,15 +32,16 @@ import (
 )
 
 type triggerer struct {
-	config  core.ConfigService
-	convert core.ConvertService
-	commits core.CommitService
-	status  core.StatusService
-	builds  core.BuildStore
-	sched   core.Scheduler
-	repos   core.RepositoryStore
-	users   core.UserStore
-	hooks   core.WebhookSender
+	config   core.ConfigService
+	convert  core.ConvertService
+	commits  core.CommitService
+	status   core.StatusService
+	builds   core.BuildStore
+	sched    core.Scheduler
+	repos    core.RepositoryStore
+	users    core.UserStore
+	validate core.ValidateService
+	hooks    core.WebhookSender
 }
 
 // New returns a new build triggerer.
@@ -53,18 +54,20 @@ func New(
 	sched core.Scheduler,
 	repos core.RepositoryStore,
 	users core.UserStore,
+	validate core.ValidateService,
 	hooks core.WebhookSender,
 ) core.Triggerer {
 	return &triggerer{
-		config:  config,
-		convert: convert,
-		commits: commits,
-		status:  status,
-		builds:  builds,
-		sched:   sched,
-		repos:   repos,
-		users:   users,
-		hooks:   hooks,
+		config:   config,
+		convert:  convert,
+		commits:  commits,
+		status:   status,
+		builds:   builds,
+		sched:    sched,
+		repos:    repos,
+		users:    users,
+		validate: validate,
+		hooks:    hooks,
 	}
 }
 
@@ -189,7 +192,6 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		Repo:  repo,
 		Build: tmpBuild,
 	}
-
 	raw, err := t.config.Find(ctx, req)
 	if err != nil {
 		logger = logger.WithError(err)
@@ -226,6 +228,18 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("trigger: cannot parse yaml")
+		return t.createBuildError(ctx, repo, base, err.Error())
+	}
+
+	err = t.validate.Validate(ctx, &core.ValidateArgs{
+		User:   user,
+		Repo:   repo,
+		Build:  tmpBuild,
+		Config: raw,
+	})
+	if err != nil {
+		logger = logger.WithError(err)
+		logger.Warnln("trigger: yaml validation error")
 		return t.createBuildError(ctx, repo, base, err.Error())
 	}
 

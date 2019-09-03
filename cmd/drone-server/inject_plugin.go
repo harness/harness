@@ -120,7 +120,13 @@ func provideSecretPlugin(config spec.Config) core.SecretService {
 // returns a yaml validation plugin based on the environment
 // configuration.
 func provideValidatePlugin(conf spec.Config) core.ValidateService {
-	return validator.Combine()
+	return validator.Combine(
+		validator.Remote(
+			conf.Validate.Endpoint,
+			conf.Validate.Secret,
+			conf.Validate.SkipVerify,
+		),
+	)
 }
 
 // provideWebhookPlugin is a Wire provider function that returns
