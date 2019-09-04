@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for validation plugins, by [@bradrydzewski](https://github.com/bradrydzewski). [#2266](https://github.com/drone/drone/issues/2266).
 - support for conversion plugins, by [@bradrydzewski](https://github.com/bradrydzewski).
 - support for cron event type, by [@bradrydzewski](https://github.com/bradrydzewski). [#2705](https://github.com/drone/drone/issues/2705).
+- support for rollback event, by [@bradrydzewski](https://github.com/bradrydzewski). [#2695](https://github.com/drone/drone/issues/2695).
+- support for lets encrypt email, by [@bradrydzewski](https://github.com/bradrydzewski). [#2505](https://github.com/drone/drone/issues/2505).
 
 ### Removed
 - Support for basic auth as an option for Gitea, by [@techknowlogick](https://giteahub.com/techknowlogick). [#2721](https://github.com/drone/drone/issues/2721)

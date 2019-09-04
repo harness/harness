@@ -238,6 +238,7 @@ type (
 		Port  string `envconfig:"DRONE_SERVER_PORT" default:":8080"`
 		Proto string `envconfig:"DRONE_SERVER_PROTO" default:"http"`
 		Acme  bool   `envconfig:"DRONE_TLS_AUTOCERT"`
+		Email string `envconfig:"DRONE_TLS_EMAIL"`
 		Cert  string `envconfig:"DRONE_TLS_CERT"`
 		Key   string `envconfig:"DRONE_TLS_KEY"`
 	}

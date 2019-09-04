@@ -71,6 +71,7 @@ func HandlePromote(
 			AuthorEmail:  prev.AuthorEmail,
 			AuthorAvatar: prev.AuthorAvatar,
 			Deployment:   environ,
+			Cron:         prev.Cron,
 			Sender:       prev.Sender,
 			Params:       map[string]string{},
 		}

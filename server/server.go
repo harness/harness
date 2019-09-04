@@ -20,6 +20,7 @@ import (
 // A Server defines parameters for running an HTTP server.
 type Server struct {
 	Acme    bool
+	Email   string
 	Addr    string
 	Cert    string
 	Key     string
@@ -90,6 +91,7 @@ func (s Server) listenAndServeAcme(ctx context.Context) error {
 
 	c := cacheDir()
 	m := &autocert.Manager{
+		Email:      s.Email,
 		Cache:      autocert.DirCache(c),
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist(s.Host),
