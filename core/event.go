@@ -16,6 +16,7 @@ package core
 
 // Hook event constants.
 const (
+	EventCron        = "cron"
 	EventPush        = "push"
 	EventPullRequest = "pull_request"
 	EventTag         = "tag"

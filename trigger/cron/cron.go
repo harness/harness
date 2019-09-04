@@ -144,7 +144,7 @@ func (s *Scheduler) run(ctx context.Context) error {
 
 		hook := &core.Hook{
 			Trigger:      core.TriggerCron,
-			Event:        core.EventPush,
+			Event:        core.EventCron,
 			Link:         commit.Link,
 			Timestamp:    commit.Author.Date,
 			Message:      commit.Message,
