@@ -278,6 +278,7 @@ func (s Server) Handler() http.Handler {
 
 		// expose remote endpoints (e.g. to github)
 		r.Get("/remote/repos", remote.HandleRepos(s.Repoz))
+		r.Get("/remote/repos/{owner}/{name}", remote.HandleRepo(s.Repoz))
 	})
 
 	r.Route("/users", func(r chi.Router) {
