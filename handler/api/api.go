@@ -37,6 +37,7 @@ import (
 	globalsecrets "github.com/drone/drone/handler/api/secrets"
 	"github.com/drone/drone/handler/api/system"
 	"github.com/drone/drone/handler/api/user"
+	"github.com/drone/drone/handler/api/user/remote"
 	"github.com/drone/drone/handler/api/users"
 	"github.com/drone/drone/logger"
 
@@ -274,6 +275,9 @@ func (s Server) Handler() http.Handler {
 		// TODO(bradrydzewski) finalize the name for this endpoint.
 		r.Get("/builds", user.HandleRecent(s.Repos))
 		r.Get("/builds/recent", user.HandleRecent(s.Repos))
+
+		// expose remote endpoints (e.g. to github)
+		r.Get("/remote/repos", remote.HandleRepos(s.Repoz))
 	})
 
 	r.Route("/users", func(r chi.Router) {

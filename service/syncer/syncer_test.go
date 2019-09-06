@@ -27,6 +27,7 @@ var noContext = context.Background()
 
 func init() {
 	logrus.SetOutput(ioutil.Discard)
+	logrus.SetLevel(logrus.TraceLevel)
 }
 
 func TestSync(t *testing.T) {

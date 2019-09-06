@@ -104,6 +104,19 @@ func (s *Synchronizer) Sync(ctx context.Context, user *core.User) (*core.Batch, 
 		for _, repo := range repos {
 			if s.match(repo) {
 				remote[repo.UID] = repo
+				if logrus.GetLevel() == logrus.TraceLevel {
+					logger.WithField("namespace", repo.Namespace).
+						WithField("name", repo.Name).
+						WithField("uid", repo.UID).
+						Traceln("syncer: remote repository matches filter")
+				}
+			} else {
+				if logrus.GetLevel() == logrus.TraceLevel {
+					logger.WithField("namespace", repo.Namespace).
+						WithField("name", repo.Name).
+						WithField("uid", repo.UID).
+						Traceln("syncer: remote repository does not match filter")
+				}
 			}
 		}
 	}
@@ -141,11 +154,18 @@ func (s *Synchronizer) Sync(ctx context.Context, user *core.User) (*core.Batch, 
 		v.Updated = time.Now().Unix()
 		v.Version = 1
 		batch.Insert = append(batch.Insert, v)
+
+		if logrus.GetLevel() == logrus.TraceLevel {
+			logger.WithField("namespace", v.Namespace).
+				WithField("name", v.Name).
+				WithField("uid", v.UID).
+				Traceln("syncer: remote repository not in database")
+		}
 	}
 
 	//
 	// STEP4 find repos that exist in the remote system and
-	// in the local system, but with incorect data. Update.
+	// in the local system, but with incorrect data. Update.
 	//
 
 	for k, v := range local {
@@ -158,6 +178,13 @@ func (s *Synchronizer) Sync(ctx context.Context, user *core.User) (*core.Batch, 
 			v.Synced = time.Now().Unix()
 			v.Updated = time.Now().Unix()
 			batch.Update = append(batch.Update, v)
+
+			if logrus.GetLevel() == logrus.TraceLevel {
+				logger.WithField("namespace", v.Namespace).
+					WithField("name", v.Name).
+					WithField("uid", v.UID).
+					Traceln("syncer: repository requires update")
+			}
 		}
 	}
 
@@ -172,6 +199,13 @@ func (s *Synchronizer) Sync(ctx context.Context, user *core.User) (*core.Batch, 
 			continue
 		}
 		batch.Revoke = append(batch.Revoke, v)
+
+		if logrus.GetLevel() == logrus.TraceLevel {
+			logger.WithField("namespace", v.Namespace).
+				WithField("name", v.Name).
+				WithField("uid", v.UID).
+				Traceln("syncer: repository in database not in remote repository list")
+		}
 	}
 
 	//
