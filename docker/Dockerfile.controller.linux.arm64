@@ -9,6 +9,7 @@ ENV DRONE_RUNNER_PLATFORM=linux/arm64
 ENV DRONE_RUNNER_CAPACITY=1
 ENV DRONE_RUNNER_VARIANT=v8
 ADD release/linux/arm64/drone-controller /bin/
+ADD etc/nsswitch.conf /etc/
 
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 

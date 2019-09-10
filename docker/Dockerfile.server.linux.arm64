@@ -21,4 +21,5 @@ ENV DRONE_DATADOG_ENDPOINT=https://stats.drone.ci/api/v1/series
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 ADD release/linux/arm64/drone-server /bin/
+ADD etc/nsswitch.conf /etc/
 ENTRYPOINT ["/bin/drone-server"]
