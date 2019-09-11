@@ -46,3 +46,7 @@ Documentation and Other Links:
 * Usage Documentation [docs.drone.io/getting-started](http://docs.drone.io/getting-started/)
 * Plugin Index [plugins.drone.io](http://plugins.drone.io/)
 * Getting Help [discourse.drone.io](https://discourse.drone.io)
+* Build the Enterprise Edition [BUILDING](https://github.com/drone/drone/blob/master/BUILDING)
+* Build the Community Edition [BUILDING_OSS](https://github.com/drone/drone/blob/master/BUILDING_OSS)
+
+_Please note the official Docker images run the Drone Enterprise distribution. If you would like to run the Community Edition you can build from source by following the instructions in [BUILDING_OSS](https://github.com/drone/drone/blob/master/BUILDING_OSS)._
