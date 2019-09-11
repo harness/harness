@@ -173,7 +173,8 @@ type (
 
 	// Repository provides the repository configuration.
 	Repository struct {
-		Filter []string `envconfig:"DRONE_REPOSITORY_FILTER"`
+		Filter     []string `envconfig:"DRONE_REPOSITORY_FILTER"`
+		Visibility string   `envconfig:"DRONE_REPOSITORY_VISIBILITY"`
 	}
 
 	// Registries provides the registry configuration.

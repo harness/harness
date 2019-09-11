@@ -8,9 +8,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/drone/drone/core"
 	"github.com/drone/drone/mock"
 	"github.com/drone/drone/mock/mockscm"
-	"github.com/drone/drone/core"
 	"github.com/drone/go-scm/scm"
 	"github.com/google/go-cmp/cmp"
 
@@ -38,7 +38,7 @@ func TestFind(t *testing.T) {
 	client := new(scm.Client)
 	client.Repositories = mockRepoService
 
-	service := New(client, mockRenewer)
+	service := New(client, mockRenewer, "")
 
 	want := &core.Repository{
 		Namespace:  "octocat",
@@ -71,7 +71,7 @@ func TestFind_Err(t *testing.T) {
 	client := new(scm.Client)
 	client.Repositories = mockRepoService
 
-	service := New(client, mockRenewer)
+	service := New(client, mockRenewer, "")
 	_, err := service.Find(noContext, mockUser, "octocat/hello-world")
 	if err != scm.ErrNotFound {
 		t.Errorf("Expect not found error, got %v", err)
@@ -87,7 +87,7 @@ func TestFind_RefreshErr(t *testing.T) {
 	mockRenewer := mock.NewMockRenewer(controller)
 	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false).Return(scm.ErrNotAuthorized)
 
-	service := New(nil, mockRenewer)
+	service := New(nil, mockRenewer, "")
 	_, err := service.Find(noContext, mockUser, "octocat/hello-world")
 	if err == nil {
 		t.Errorf("Expect error refreshing token")
@@ -114,7 +114,7 @@ func TestFindPerm(t *testing.T) {
 	client := new(scm.Client)
 	client.Repositories = mockRepoService
 
-	service := New(client, mockRenewer)
+	service := New(client, mockRenewer, "")
 
 	want := &core.Perm{
 		Read:  true,
@@ -146,7 +146,7 @@ func TestFindPerm_Err(t *testing.T) {
 	client := new(scm.Client)
 	client.Repositories = mockRepoService
 
-	service := New(client, mockRenewer)
+	service := New(client, mockRenewer, "")
 	_, err := service.FindPerm(noContext, mockUser, "octocat/hello-world")
 	if err != scm.ErrNotFound {
 		t.Errorf("Expect not found error, got %v", err)
@@ -162,7 +162,7 @@ func TestFindPerm_RefreshErr(t *testing.T) {
 	mockRenewer := mock.NewMockRenewer(controller)
 	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false).Return(scm.ErrNotAuthorized)
 
-	service := New(nil, mockRenewer)
+	service := New(nil, mockRenewer, "")
 	_, err := service.FindPerm(noContext, mockUser, "octocat/hello-world")
 	if err == nil {
 		t.Errorf("Expect error refreshing token")
@@ -199,7 +199,7 @@ func TestList(t *testing.T) {
 		},
 	}
 
-	service := New(client, mockRenewer)
+	service := New(client, mockRenewer, "")
 	got, err := service.List(noContext, mockUser)
 	if err != nil {
 		t.Error(err)
@@ -224,7 +224,7 @@ func TestList_Err(t *testing.T) {
 	client := new(scm.Client)
 	client.Repositories = mockRepoService
 
-	service := New(client, mockRenewer)
+	service := New(client, mockRenewer, "")
 	_, err := service.List(noContext, mockUser)
 	if err != scm.ErrNotAuthorized {
 		t.Errorf("Want not authorized error, got %v", err)
@@ -240,7 +240,7 @@ func TestList_RefreshErr(t *testing.T) {
 	mockRenewer := mock.NewMockRenewer(controller)
 	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false).Return(scm.ErrNotAuthorized)
 
-	service := New(nil, mockRenewer)
+	service := New(nil, mockRenewer, "")
 	_, err := service.List(noContext, mockUser)
 	if err == nil {
 		t.Errorf("Expect error refreshing token")

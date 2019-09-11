@@ -49,11 +49,11 @@ var serviceSet = wire.NewSet(
 	orgs.New,
 	parser.New,
 	pubsub.New,
-	repo.New,
 	token.Renewer,
 	trigger.New,
 	user.New,
 
+	provideRepositoryService,
 	provideContentService,
 	provideDatadog,
 	provideHookService,
@@ -87,6 +87,16 @@ func provideNetrcService(client *scm.Client, renewer core.Renewer, config config
 		config.Cloning.AlwaysAuth,
 		config.Cloning.Username,
 		config.Cloning.Password,
+	)
+}
+
+// provideRepo is a Wire provider function that returns
+// a repo based on the environment configuration
+func provideRepositoryService(client *scm.Client, renewer core.Renewer, config config.Config) core.RepositoryService {
+	return repo.New(
+		client,
+		renewer,
+		config.Repository.Visibility,
 	)
 }
 
