@@ -36,7 +36,7 @@ func TestConvertRepository(t *testing.T) {
 		Branch:     "master",
 		Visibility: core.VisibilityPrivate,
 	}
-	got := convertRepository(from)
+	got := convertRepository(from, "")
 	if diff := cmp.Diff(want, got); len(diff) != 0 {
 		t.Errorf(diff)
 	}
@@ -58,8 +58,37 @@ func TestConvertVisibility(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		if got, want := convertVisibility(test.r), test.v; got != want {
+		if got, want := convertVisibility(test.r, ""), test.v; got != want {
 			t.Errorf("Want visibility %s, got %s for index %d", got, want, i)
 		}
+	}
+}
+
+func TestDefinedVisibility(t *testing.T) {
+	from := &scm.Repository{
+		ID:        "42",
+		Namespace: "octocat",
+		Name:      "hello-world",
+		Branch:    "master",
+		Private:   false,
+		Clone:     "https://github.com/octocat/hello-world.git",
+		CloneSSH:  "git@github.com:octocat/hello-world.git",
+		Link:      "https://github.com/octocat/hello-world",
+	}
+	want := &core.Repository{
+		UID:        "42",
+		Namespace:  "octocat",
+		Name:       "hello-world",
+		Slug:       "octocat/hello-world",
+		HTTPURL:    "https://github.com/octocat/hello-world.git",
+		SSHURL:     "git@github.com:octocat/hello-world.git",
+		Link:       "https://github.com/octocat/hello-world",
+		Private:    false,
+		Branch:     "master",
+		Visibility: core.VisibilityInternal,
+	}
+	got := convertRepository(from, "internal")
+	if diff := cmp.Diff(want, got); len(diff) != 0 {
+		t.Errorf(diff)
 	}
 }
