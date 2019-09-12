@@ -22,7 +22,7 @@ import (
 // convertRepository is a helper function that converts a
 // repository from the source code management system to the
 // local datastructure.
-func convertRepository(src *scm.Repository, visibility string) *core.Repository {
+func convertRepository(src *scm.Repository, visibility string, trusted bool) *core.Repository {
 	return &core.Repository{
 		UID:        src.ID,
 		Namespace:  src.Namespace,
@@ -34,6 +34,7 @@ func convertRepository(src *scm.Repository, visibility string) *core.Repository 
 		Private:    src.Private,
 		Visibility: convertVisibility(src, visibility),
 		Branch:     src.Branch,
+		Trusted:    trusted,
 	}
 }
 
