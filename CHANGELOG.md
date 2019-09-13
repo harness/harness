@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- upgrade to Go 1.13 to resolve arm segfault, by [@KN4CK3R](https://github.com/KN4CK3R). [#2823](https://github.com/drone/drone/issues/2823).
+- configure default visibility, by [@JordanSussman](https://github.com/JordanSussman). [#2824](https://github.com/drone/drone/issues/2824).
+- configure default trusted flag, by [@vyckou](https://github.com/vyckou).
 - support for validation plugins, by [@bradrydzewski](https://github.com/bradrydzewski). [#2266](https://github.com/drone/drone/issues/2266).
 - support for conversion plugins, by [@bradrydzewski](https://github.com/bradrydzewski).
 - support for cron event type, by [@bradrydzewski](https://github.com/bradrydzewski). [#2705](https://github.com/drone/drone/issues/2705).
