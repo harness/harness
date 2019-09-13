@@ -97,6 +97,7 @@ func provideRepositoryService(client *scm.Client, renewer core.Renewer, config c
 		client,
 		renewer,
 		config.Repository.Visibility,
+		config.Repository.Trusted,
 	)
 }
 

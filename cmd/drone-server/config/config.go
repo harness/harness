@@ -175,6 +175,7 @@ type (
 	Repository struct {
 		Filter     []string `envconfig:"DRONE_REPOSITORY_FILTER"`
 		Visibility string   `envconfig:"DRONE_REPOSITORY_VISIBILITY"`
+		Trusted    bool     `envconfig:"DRONE_REPOSITORY_TRUSTED"`
 	}
 
 	// Registries provides the registry configuration.

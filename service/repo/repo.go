@@ -25,15 +25,17 @@ type service struct {
 	renew      core.Renewer
 	client     *scm.Client
 	visibility string
+	trusted    bool
 }
 
 // New returns a new Repository service, providing access to the
 // repository information from the source code management system.
-func New(client *scm.Client, renewer core.Renewer, visibility string) core.RepositoryService {
+func New(client *scm.Client, renewer core.Renewer, visibility string, trusted bool) core.RepositoryService {
 	return &service{
 		renew:      renewer,
 		client:     client,
 		visibility: visibility,
+		trusted:    trusted,
 	}
 }
 
@@ -55,7 +57,7 @@ func (s *service) List(ctx context.Context, user *core.User) ([]*core.Repository
 			return nil, err
 		}
 		for _, src := range result {
-			repos = append(repos, convertRepository(src, s.visibility))
+			repos = append(repos, convertRepository(src, s.visibility, s.trusted))
 		}
 		opts.Page = meta.Page.Next
 		opts.URL = meta.Page.NextURL
@@ -81,7 +83,7 @@ func (s *service) Find(ctx context.Context, user *core.User, repo string) (*core
 	if err != nil {
 		return nil, err
 	}
-	return convertRepository(result, s.visibility), nil
+	return convertRepository(result, s.visibility, s.trusted), nil
 }
 
 func (s *service) FindPerm(ctx context.Context, user *core.User, repo string) (*core.Perm, error) {
