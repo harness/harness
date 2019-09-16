@@ -14,24 +14,16 @@
 
 // +build oss
 
-package builds
+package converter
 
 import (
-	"net/http"
-
 	"github.com/drone/drone/core"
-	"github.com/drone/drone/handler/api/render"
 )
 
-var rollbackNotImplemented = func(w http.ResponseWriter, r *http.Request) {
-	render.NotImplemented(w, render.ErrNotImplemented)
-}
-
-// HandleRollback returns a non-op http.HandlerFunc.
-func HandleRollback(
-	core.RepositoryStore,
-	core.BuildStore,
-	core.Triggerer,
-) http.HandlerFunc {
-	return rollbackNotImplemented
+// Memoize caches the conversion results for subsequent calls.
+// This micro-optimization is intended for multi-pipeline
+// projects that would otherwise covert the file for each
+// pipeline execution.
+func Memoize(base core.ConvertService) core.ConvertService {
+	return new(noop)
 }
