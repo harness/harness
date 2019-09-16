@@ -294,6 +294,11 @@ func (m *Manager) Details(ctx context.Context, id int64) (*Context, error) {
 		Repo:   repo,
 		User:   user,
 	})
+	if err != nil {
+		logger = logger.WithError(err)
+		logger.Warnln("manager: cannot convert configuration")
+		return nil, err
+	}
 	var secrets []*core.Secret
 	tmpSecrets, err := m.Secrets.List(noContext, repo.ID)
 	if err != nil {
