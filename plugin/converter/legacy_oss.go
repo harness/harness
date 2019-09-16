@@ -14,24 +14,14 @@
 
 // +build oss
 
-package builds
+package converter
 
 import (
-	"net/http"
-
 	"github.com/drone/drone/core"
-	"github.com/drone/drone/handler/api/render"
 )
 
-var rollbackNotImplemented = func(w http.ResponseWriter, r *http.Request) {
-	render.NotImplemented(w, render.ErrNotImplemented)
-}
-
-// HandleRollback returns a non-op http.HandlerFunc.
-func HandleRollback(
-	core.RepositoryStore,
-	core.BuildStore,
-	core.Triggerer,
-) http.HandlerFunc {
-	return rollbackNotImplemented
+// Legacy returns a conversion service that converts the
+// legacy 0.8 file to a yaml file.
+func Legacy(enabled bool) core.ConvertService {
+	return new(noop)
 }

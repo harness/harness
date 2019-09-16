@@ -24,4 +24,4 @@ import (
 
 type noop struct{}
 
-func (noop) Validate(context.Context, *core.ConvertArgs) error { return nil }
+func (noop) Validate(context.Context, *core.ValidateArgs) error { return nil }
