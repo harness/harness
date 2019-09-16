@@ -204,7 +204,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 		return env
 	})
 	if err != nil {
-		return err
+		return r.handleError(ctx, m.Stage, err)
 	}
 
 	manifest, err := yaml.ParseString(y)
