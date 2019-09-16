@@ -465,7 +465,7 @@ func (m *Manager) Watch(ctx context.Context, id int64) (bool, error) {
 	// the database to see if the stage is complete. If
 	// complete, return true.
 	stage, err := m.Stages.Find(ctx, id)
-	if err == nil {
+	if err != nil {
 		logger := logrus.WithError(err)
 		logger = logger.WithField("step-id", id)
 		logger.Warnln("manager: cannot find stage")

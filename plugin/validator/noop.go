@@ -14,7 +14,7 @@
 
 // +build oss
 
-package converter
+package validator
 
 import (
 	"context"
