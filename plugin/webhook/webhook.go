@@ -95,6 +95,9 @@ func (s *sender) send(endpoint, secret, event string, data []byte) error {
 	req.Header.Add("Digest", "SHA-256="+digest(data))
 	req.Header.Add("Date", time.Now().UTC().Format(http.TimeFormat))
 	err = signer.SignRequest("hmac-key", s.Secret, req)
+	if err != nil {
+		return err
+	}
 	res, err := s.client().Do(req)
 	if res != nil {
 		res.Body.Close()
