@@ -8,6 +8,7 @@ package converter
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/drone/drone-go/drone"
@@ -17,8 +18,9 @@ import (
 
 // Remote returns a conversion service that converts the
 // configuration file using a remote http service.
-func Remote(endpoint, signer string, skipVerify bool) core.ConvertService {
+func Remote(endpoint, signer, extension string, skipVerify bool) core.ConvertService {
 	return &remote{
+		extension:  extension,
 		endpoint:   endpoint,
 		secret:     signer,
 		skipVerify: skipVerify,
@@ -26,6 +28,7 @@ func Remote(endpoint, signer string, skipVerify bool) core.ConvertService {
 }
 
 type remote struct {
+	extension  string
 	endpoint   string
 	secret     string
 	skipVerify bool
@@ -34,6 +37,11 @@ type remote struct {
 func (g *remote) Convert(ctx context.Context, in *core.ConvertArgs) (*core.Config, error) {
 	if g.endpoint == "" {
 		return nil, nil
+	}
+	if g.extension != "" {
+		if !strings.HasSuffix(in.Repo.Config, g.extension) {
+			return nil, nil
+		}
 	}
 	// include a timeout to prevent an API call from
 	// hanging the build process indefinitely. The

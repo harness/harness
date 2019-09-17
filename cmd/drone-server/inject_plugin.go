@@ -79,6 +79,7 @@ func provideConvertPlugin(client *scm.Client, conf spec.Config) core.ConvertServ
 			converter.Remote(
 				conf.Convert.Endpoint,
 				conf.Convert.Secret,
+				conf.Convert.Extension,
 				conf.Convert.SkipVerify,
 			),
 		),
@@ -91,9 +92,9 @@ func provideConvertPlugin(client *scm.Client, conf spec.Config) core.ConvertServ
 func provideRegistryPlugin(config spec.Config) core.RegistryService {
 	return registry.Combine(
 		registry.External(
-			config.Convert.Endpoint,
-			config.Convert.Secret,
-			config.Convert.SkipVerify,
+			config.Secrets.Endpoint,
+			config.Secrets.Password,
+			config.Secrets.SkipVerify,
 		),
 		registry.FileSource(
 			config.Docker.Config,

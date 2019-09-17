@@ -302,6 +302,7 @@ type (
 
 	// Convert provides the converter webhook configuration.
 	Convert struct {
+		Extension  string `envconfig:"DRONE_CONVERT_PLUGIN_EXTENSION"`
 		Endpoint   string `envconfig:"DRONE_CONVERT_PLUGIN_ENDPOINT"`
 		Secret     string `envconfig:"DRONE_CONVERT_PLUGIN_SECRET"`
 		SkipVerify bool   `envconfig:"DRONE_CONVERT_PLUGIN_SKIP_VERIFY"`

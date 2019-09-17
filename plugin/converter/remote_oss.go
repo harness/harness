@@ -22,6 +22,6 @@ import (
 
 // Remote returns a conversion service that converts the
 // configuration file using a remote http service.
-func Remote(endpoint, signer string, skipVerify bool) core.ConvertService {
+func Remote(endpoint, signer, extension string, skipVerify bool) core.ConvertService {
 	return new(noop)
 }
