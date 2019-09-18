@@ -119,6 +119,7 @@ func (s Server) Handler() http.Handler {
 		),
 	)
 	r.Get("/logout", HandleLogout())
+	r.Post("/logout", HandleLogout())
 
 	h2 := http.FileServer(landingpage.New())
 	h := http.FileServer(dist.New())
