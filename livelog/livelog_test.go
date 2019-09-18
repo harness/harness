@@ -27,10 +27,8 @@ func TestStreamer(t *testing.T) {
 	}
 
 	w := sync.WaitGroup{}
-	w.Add(1)
-
+	w.Add(4)
 	go func() {
-		w.Add(3)
 		s.Write(context.Background(), 1, &core.Line{})
 		s.Write(context.Background(), 1, &core.Line{})
 		s.Write(context.Background(), 1, &core.Line{})

@@ -34,9 +34,8 @@ func TestStream(t *testing.T) {
 
 	stream, errc := s.subscribe(ctx)
 
-	w.Add(1)
+	w.Add(4)
 	go func() {
-		w.Add(3)
 		s.write(&core.Line{Number: 4})
 		s.write(&core.Line{Number: 5})
 		s.write(&core.Line{Number: 6})
