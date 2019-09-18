@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- endpoint point to execute a cron pipeline on-demand, by [@bradrydzewski](https://github.com/bradrydzewski). [#2781](https://github.com/drone/drone/issues/2781).
+- ignore skip comments when cron event, by [@bradrydzewski](https://github.com/bradrydzewski). [#2835](https://github.com/drone/drone/issues/2835). 
+
+### Fixed
+- fixed issue with missing cron job name in user interface, by [@bradrydzewski](https://github.com/bradrydzewski).
 
 ## [1.4.0] - 2019-09-12
 ### Added

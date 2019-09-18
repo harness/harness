@@ -236,6 +236,7 @@ func (s Server) Handler() http.Handler {
 			r.Post("/", crons.HandleCreate(s.Repos, s.Cron))
 			r.Get("/", crons.HandleList(s.Repos, s.Cron))
 			r.Get("/{cron}", crons.HandleFind(s.Repos, s.Cron))
+			r.Post("/{cron}", crons.HandleExec(s.Users, s.Repos, s.Cron, s.Commits, s.Triggerer))
 			r.Patch("/{cron}", crons.HandleUpdate(s.Repos, s.Cron))
 			r.Delete("/{cron}", crons.HandleDelete(s.Repos, s.Cron))
 		})

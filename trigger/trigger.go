@@ -351,6 +351,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		Deploy:       base.Deployment,
 		DeployID:     base.DeploymentID,
 		Sender:       base.Sender,
+		Cron:         base.Cron,
 		Created:      time.Now().Unix(),
 		Updated:      time.Now().Unix(),
 	}

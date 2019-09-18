@@ -46,3 +46,8 @@ func HandleFind(core.RepositoryStore, core.CronStore) http.HandlerFunc {
 func HandleList(core.RepositoryStore, core.CronStore) http.HandlerFunc {
 	return notImplemented
 }
+
+func HandleExec(core.UserStore, core.RepositoryStore, core.CronStore,
+	core.CommitService, core.Triggerer) http.HandlerFunc {
+	return notImplemented
+}
