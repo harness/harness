@@ -120,6 +120,13 @@ func HandleLogin(
 			writeLoginError(w, r, err)
 			logger.Errorf("cannot find user: %s", err)
 			return
+		} else {
+			err = admission.Admit(ctx, user)
+			if err != nil {
+				writeLoginError(w, r, err)
+				logger.Errorf("cannot admit user: %s", err)
+				return
+			}
 		}
 
 		if user.Machine {
