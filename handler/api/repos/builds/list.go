@@ -15,6 +15,7 @@
 package builds
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -35,6 +36,7 @@ func HandleList(
 		var (
 			namespace = chi.URLParam(r, "owner")
 			name      = chi.URLParam(r, "name")
+			branch    = r.FormValue("branch")
 			page      = r.FormValue("page")
 			perPage   = r.FormValue("per_page")
 		)
@@ -59,7 +61,15 @@ func HandleList(
 				Debugln("api: cannot find repository")
 			return
 		}
-		builds, err := builds.List(r.Context(), repo.ID, limit, offset)
+
+		var results []*core.Build
+		if branch != "" {
+			ref := fmt.Sprintf("refs/heads/%s", branch)
+			results, err = builds.ListRef(r.Context(), repo.ID, ref, limit, offset)
+		} else {
+			results, err = builds.List(r.Context(), repo.ID, limit, offset)
+		}
+
 		if err != nil {
 			render.InternalError(w, err)
 			logger.FromRequest(r).
@@ -68,7 +78,7 @@ func HandleList(
 				WithField("name", name).
 				Debugln("api: cannot list builds")
 		} else {
-			render.JSON(w, builds, 200)
+			render.JSON(w, results, 200)
 		}
 	}
 }
