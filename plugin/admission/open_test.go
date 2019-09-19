@@ -27,4 +27,10 @@ func TestOpen(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expect error when open admission is closed")
 	}
+
+	user.ID = 1
+	err = Open(true).Admit(noContext, user)
+	if err != nil {
+		t.Error(err)
+	}
 }

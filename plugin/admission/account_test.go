@@ -96,8 +96,12 @@ func TestOrganization_EmptyWhitelist(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
+	dummyUser := &core.User{
+		Login: "octocat",
+	}
+
 	service := Membership(nil, []string{})
-	err := service.Admit(noContext, nil)
+	err := service.Admit(noContext, dummyUser)
 	if err != nil {
 		t.Error(err)
 	}

@@ -50,7 +50,10 @@ func (c *external) Admit(ctx context.Context, user *core.User) error {
 		req.Event = admission.EventRegister
 	}
 	client := admission.Client(c.endpoint, c.secret, c.skipVerify)
-	_, err := client.Admit(ctx, req)
+	result, err := client.Admit(ctx, req)
+	if result != nil {
+		user.Admin = result.Admin
+	}
 	return err
 }
 

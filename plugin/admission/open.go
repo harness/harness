@@ -36,6 +36,12 @@ type closed struct {
 }
 
 func (s *closed) Admit(ctx context.Context, user *core.User) error {
+	// this admission policy is only enforced for
+	// new users. Existing users are always admitted.
+	if user.ID != 0 {
+		return nil
+	}
+
 	if s.disabled {
 		return ErrClosed
 	}

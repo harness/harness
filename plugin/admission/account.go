@@ -36,6 +36,12 @@ type membership struct {
 }
 
 func (s *membership) Admit(ctx context.Context, user *core.User) error {
+	// this admission policy is only enforced for
+	// new users. Existing users are always admitted.
+	if user.ID != 0 {
+		return nil
+	}
+
 	// if the membership whitelist is empty assume the system
 	// is open admission.
 	if len(s.account) == 0 {

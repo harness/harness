@@ -83,8 +83,12 @@ func TestNobot_SkipCheck(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
+	dummyUser := &core.User{
+		Login: "octocat",
+	}
+
 	admission := Nobot(nil, 0)
-	err := admission.Admit(noContext, nil)
+	err := admission.Admit(noContext, dummyUser)
 	if err != nil {
 		t.Error(err)
 	}

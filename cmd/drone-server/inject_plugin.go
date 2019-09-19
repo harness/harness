@@ -48,6 +48,11 @@ func provideAdmissionPlugin(client *scm.Client, orgs core.OrganizationService, u
 		admission.Membership(orgs, config.Users.Filter),
 		admission.Open(config.Registration.Closed),
 		admission.Nobot(users, config.Users.MinAge),
+		admission.External(
+			config.Authn.Endpoint,
+			config.Authn.Secret,
+			config.Authn.SkipVerify,
+		),
 	)
 }
 
