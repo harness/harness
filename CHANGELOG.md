@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
-- endpoint point to execute a cron pipeline on-demand, by [@bradrydzewski](https://github.com/bradrydzewski). [#2781](https://github.com/drone/drone/issues/2781).
+- endpoint to execute a cron pipeline on-demand, by [@bradrydzewski](https://github.com/bradrydzewski). [#2781](https://github.com/drone/drone/issues/2781).
+- endpoint to list builds by branch, by [@bradrydzewski](https://github.com/bradrydzewski). [#1495](https://github.com/drone/drone/issues/1495).
 - ignore skip comments when cron event, by [@bradrydzewski](https://github.com/bradrydzewski). [#2835](https://github.com/drone/drone/issues/2835). 
 
 ### Fixed
