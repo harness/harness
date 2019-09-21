@@ -13,7 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - endpoint to provide link to git resources, by [@bradrydzewski](https://github.com/bradrydzewski). [#1495](https://github.com/drone/drone/issues/1495).
 
 ### Fixed
-- fixed issue with missing cron job name in user interface, by [@bradrydzewski](https://github.com/bradrydzewski).
+- missing cron job name in user interface, by [@bradrydzewski](https://github.com/bradrydzewski).
+- log lines not properly wrapping in user interface, by [@bradrydzewski](https://github.com/bradrydzewski).
+$09](https://github.com/drone/drone-ui/issues/309).
 
 ## [1.4.0] - 2019-09-12
 ### Added
