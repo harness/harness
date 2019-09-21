@@ -32,9 +32,9 @@ type service struct {
 	client *scm.Client
 }
 
-func (s *service) Link(ctx context.Context, repo *core.Repository, build *core.Build) (string, error) {
-	return s.client.Linker.Resource(ctx, repo.Slug, scm.Reference{
-		Path: build.Ref,
-		Sha:  build.After,
+func (s *service) Link(ctx context.Context, repo, ref, sha string) (string, error) {
+	return s.client.Linker.Resource(ctx, repo, scm.Reference{
+		Path: ref,
+		Sha:  sha,
 	})
 }

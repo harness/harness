@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - endpoint to list builds by branch, by [@bradrydzewski](https://github.com/bradrydzewski). [#1495](https://github.com/drone/drone/issues/1495).
 - ignore skip comments when cron event, by [@bradrydzewski](https://github.com/bradrydzewski). [#2835](https://github.com/drone/drone/issues/2835).
 - support for admission extensions, by [@bradrydzewski](https://github.com/bradrydzewski). [#2043](https://github.com/drone/drone/issues/2043).
+- endpoint to provide link to git resources, by [@bradrydzewski](https://github.com/bradrydzewski). [#1495](https://github.com/drone/drone/issues/1495).
 
 ### Fixed
 - fixed issue with missing cron job name in user interface, by [@bradrydzewski](https://github.com/bradrydzewski).

@@ -20,6 +20,7 @@ import (
 	"github.com/drone/drone-ui/dist"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/web/landingpage"
+	"github.com/drone/drone/handler/web/link"
 	"github.com/drone/drone/logger"
 	"github.com/drone/go-login/login"
 	"github.com/drone/go-scm/scm"
@@ -36,6 +37,7 @@ func New(
 	hooks core.HookParser,
 	license *core.License,
 	licenses core.LicenseService,
+	linker core.Linker,
 	login login.Middleware,
 	repos core.RepositoryStore,
 	session core.Session,
@@ -54,6 +56,7 @@ func New(
 		Hooks:     hooks,
 		License:   license,
 		Licenses:  licenses,
+		Linker:    linker,
 		Login:     login,
 		Repos:     repos,
 		Session:   session,
@@ -75,6 +78,7 @@ type Server struct {
 	Hooks     core.HookParser
 	License   *core.License
 	Licenses  core.LicenseService
+	Linker    core.Linker
 	Login     login.Middleware
 	Repos     core.RepositoryStore
 	Session   core.Session
@@ -101,6 +105,9 @@ func (s Server) Handler() http.Handler {
 		r.Post("/", HandleHook(s.Repos, s.Builds, s.Triggerer, s.Hooks))
 	})
 
+	r.Get("/link/{namespace}/{name}/tree/*", link.HandleTree(s.Linker))
+	r.Get("/link/{namespace}/{name}/src/*", link.HandleTree(s.Linker))
+	r.Get("/link/{namespace}/{name}/commit/{commit}", link.HandleCommit(s.Linker))
 	r.Get("/version", HandleVersion)
 	r.Get("/varz", HandleVarz(s.Client, s.License))
 

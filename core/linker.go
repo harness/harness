@@ -19,5 +19,5 @@ import "context"
 // Linker provides a deep link to to a git resource in the
 // source control management system for a given build.
 type Linker interface {
-	Link(ctx context.Context, repo *Repository, build *Build) (string, error)
+	Link(ctx context.Context, repo, ref, sha string) (string, error)
 }

@@ -27,7 +27,6 @@ import (
 	"github.com/drone/drone/handler/api/queue"
 	"github.com/drone/drone/handler/api/repos"
 	"github.com/drone/drone/handler/api/repos/builds"
-	"github.com/drone/drone/handler/api/repos/builds/link"
 	"github.com/drone/drone/handler/api/repos/builds/logs"
 	"github.com/drone/drone/handler/api/repos/builds/stages"
 	"github.com/drone/drone/handler/api/repos/collabs"
@@ -66,7 +65,6 @@ func New(
 	logs core.LogStore,
 	license *core.License,
 	licenses core.LicenseService,
-	linker core.Linker,
 	perms core.PermStore,
 	repos core.RepositoryStore,
 	repoz core.RepositoryService,
@@ -93,7 +91,6 @@ func New(
 		Logs:      logs,
 		License:   license,
 		Licenses:  licenses,
-		Linker:    linker,
 		Perms:     perms,
 		Repos:     repos,
 		Repoz:     repoz,
@@ -123,7 +120,6 @@ type Server struct {
 	Logs      core.LogStore
 	License   *core.License
 	Licenses  core.LicenseService
-	Linker    core.Linker
 	Perms     core.PermStore
 	Repos     core.RepositoryStore
 	Repoz     core.RepositoryService
@@ -179,7 +175,6 @@ func (s Server) Handler() http.Handler {
 
 			r.Get("/latest", builds.HandleLast(s.Repos, s.Builds, s.Stages))
 			r.Get("/{number}", builds.HandleFind(s.Repos, s.Builds, s.Stages))
-			r.Get("/{number}/link", link.HandleLink(s.Repos, s.Builds, s.Linker))
 			r.Get("/{number}/logs/{stage}/{step}", logs.HandleFind(s.Repos, s.Builds, s.Stages, s.Steps, s.Logs))
 
 			r.With(
