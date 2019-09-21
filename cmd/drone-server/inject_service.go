@@ -21,12 +21,13 @@ import (
 	"github.com/drone/drone/metric/sink"
 	"github.com/drone/drone/pubsub"
 	"github.com/drone/drone/service/commit"
-	"github.com/drone/drone/service/content"
+	contents "github.com/drone/drone/service/content"
 	"github.com/drone/drone/service/content/cache"
 	"github.com/drone/drone/service/hook"
 	"github.com/drone/drone/service/hook/parser"
+	"github.com/drone/drone/service/linker"
 	"github.com/drone/drone/service/netrc"
-	"github.com/drone/drone/service/org"
+	orgs "github.com/drone/drone/service/org"
 	"github.com/drone/drone/service/repo"
 	"github.com/drone/drone/service/status"
 	"github.com/drone/drone/service/syncer"
@@ -47,6 +48,7 @@ var serviceSet = wire.NewSet(
 	cron.New,
 	livelog.New,
 	orgs.New,
+	linker.New,
 	parser.New,
 	pubsub.New,
 	token.Renewer,

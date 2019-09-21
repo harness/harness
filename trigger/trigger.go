@@ -208,7 +208,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("trigger: cannot convert yaml")
-		return nil, err
+		return t.createBuildError(ctx, repo, base, err.Error())
 	}
 
 	// this code is temporarily in place to detect and convert
@@ -221,7 +221,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("trigger: cannot convert yaml")
-		return nil, err
+		return t.createBuildError(ctx, repo, base, err.Error())
 	}
 
 	manifest, err := yaml.ParseString(raw.Data)
