@@ -203,7 +203,7 @@ type (
 	}
 
 	Agent struct {
-		Enabled bool `envconfig:"DRONE_AGENTS_ENABLED"`
+		Disabled bool `envconfig:"DRONE_AGENTS_DISABLED"`
 	}
 
 	// Runner provides the runner configuration.

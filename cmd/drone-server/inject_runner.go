@@ -40,7 +40,7 @@ func provideRunner(
 ) *runner.Runner {
 	// the local runner is only created when the nomad scheduler,
 	// kubernetes scheduler, and remote agents are disabled
-	if config.Nomad.Enabled || config.Kube.Enabled || config.Agent.Enabled {
+	if config.Nomad.Enabled || config.Kube.Enabled || (config.Agent.Disabled == false) {
 		return nil
 	}
 	engine, err := docker.NewEnv()

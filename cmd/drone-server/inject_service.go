@@ -188,7 +188,7 @@ func provideDatadog(
 			EnableStash:      config.IsStash(),
 			EnableGogs:       config.IsGogs(),
 			EnableGitea:      config.IsGitea(),
-			EnableAgents:     config.Agent.Enabled,
+			EnableAgents:     !config.Agent.Disabled,
 			EnableNomad:      config.Nomad.Enabled,
 			EnableKubernetes: config.Kube.Enabled,
 		},

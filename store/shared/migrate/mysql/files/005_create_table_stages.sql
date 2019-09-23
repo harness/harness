@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS stages (
 ,stage_repo_id     INTEGER
 ,stage_build_id    INTEGER
 ,stage_number      INTEGER
-,stage_name        VARCHAR(50)
+,stage_name        VARCHAR(100)
 ,stage_kind        VARCHAR(50)
 ,stage_type        VARCHAR(50)
 ,stage_status      VARCHAR(50)

@@ -16,6 +16,7 @@ package db
 
 import (
 	"database/sql"
+	"runtime/debug"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -98,7 +99,7 @@ func (db *DB) Lock(fn func(Execer, Binder) error) error {
 // transaction is committed. If an error is returned then the entire
 // transaction is rolled back. Any error that is returned from the function
 // or returned from the commit is returned from the Update() method.
-func (db *DB) Update(fn func(Execer, Binder) error) error {
+func (db *DB) Update(fn func(Execer, Binder) error) (err error) {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
@@ -107,13 +108,19 @@ func (db *DB) Update(fn func(Execer, Binder) error) error {
 		return err
 	}
 
-	err = fn(tx, db.conn)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
+	defer func() {
+		if p := recover(); p != nil {
+			err = tx.Rollback()
+			debug.PrintStack()
+		} else if err != nil {
+			tx.Rollback()
+		} else {
+			err = tx.Commit()
+		}
+	}()
 
-	return tx.Commit()
+	err = fn(tx, db.conn)
+	return err
 }
 
 // Driver returns the name of the SQL driver.

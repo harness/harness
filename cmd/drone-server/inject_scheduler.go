@@ -34,8 +34,6 @@ var schedulerSet = wire.NewSet(
 // scheduler based on the environment configuration.
 func provideScheduler(store core.StageStore, config config.Config) core.Scheduler {
 	switch {
-	case config.Agent.Enabled:
-		return provideQueueScheduler(store, config)
 	case config.Kube.Enabled:
 		return provideKubernetesScheduler(config)
 	case config.Nomad.Enabled:
