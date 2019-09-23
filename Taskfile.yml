@@ -127,6 +127,7 @@ tasks:
           --character-set-server=utf8mb4
           --collation-server=utf8mb4_unicode_ci
       - cmd: go test -count=1 github.com/drone/drone/store/batch
+      - cmd: go test -count=1 github.com/drone/drone/store/batch2
       - cmd: go test -count=1 github.com/drone/drone/store/build
       - cmd: go test -count=1 github.com/drone/drone/store/cron
       - cmd: go test -count=1 github.com/drone/drone/store/logs
@@ -158,6 +159,7 @@ tasks:
           --rm
           postgres:9-alpine
       - cmd: go test -count=1 github.com/drone/drone/store/batch
+      - cmd: go test -count=1 github.com/drone/drone/store/batch2
       - cmd: go test -count=1 github.com/drone/drone/store/build
       - cmd: go test -count=1 github.com/drone/drone/store/cron
       - cmd: go test -count=1 github.com/drone/drone/store/logs
