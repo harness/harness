@@ -19,6 +19,7 @@ import (
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/metric"
 	"github.com/drone/drone/store/batch"
+	"github.com/drone/drone/store/batch2"
 	"github.com/drone/drone/store/build"
 	"github.com/drone/drone/store/cron"
 	"github.com/drone/drone/store/logs"
@@ -44,7 +45,8 @@ var storeSet = wire.NewSet(
 	provideRepoStore,
 	provideStageStore,
 	provideUserStore,
-	batch.New,
+	provideBatchStore,
+	// batch.New,
 	cron.New,
 	perm.New,
 	secret.New,
@@ -128,4 +130,13 @@ func provideUserStore(db *db.DB) core.UserStore {
 	users := user.New(db)
 	metric.UserCount(users)
 	return users
+}
+
+// provideBatchStore is a Wire provider function that provides a
+// batcher. If the experimental batcher is enabled it is returned.
+func provideBatchStore(db *db.DB, config config.Config) core.BatchStore {
+	if config.Database.ExperimentalBatch {
+		return batch2.New(db)
+	}
+	return batch.New(db)
 }

@@ -107,6 +107,9 @@ type (
 		Driver     string `envconfig:"DRONE_DATABASE_DRIVER"     default:"sqlite3"`
 		Datasource string `envconfig:"DRONE_DATABASE_DATASOURCE" default:"core.sqlite"`
 		Secret     string `envconfig:"DRONE_DATABASE_SECRET"`
+
+		// Feature flag
+		ExperimentalBatch bool `envconfig:"DRONE_DATABASE_EXPERIMENTAL_BATCH"`
 	}
 
 	// Docker provides docker configuration
