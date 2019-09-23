@@ -134,7 +134,7 @@ func provideUserStore(db *db.DB) core.UserStore {
 
 // provideBatchStore is a Wire provider function that provides a
 // batcher. If the experimental batcher is enabled it is returned.
-func provideBatchStore(db *db.DB, config config.Config) core.BatchStore {
+func provideBatchStore(db *db.DB, config config.Config) core.Batcher {
 	if config.Database.ExperimentalBatch {
 		return batch2.New(db)
 	}
