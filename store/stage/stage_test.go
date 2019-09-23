@@ -197,8 +197,9 @@ func testStageLocking(store *stageStore, stage *core.Stage) func(t *testing.T) {
 func testStageListStatus(store *stageStore, build *core.Build) func(t *testing.T) {
 	return func(t *testing.T) {
 		store.db.Update(func(execer db.Execer, binder db.Binder) error {
-			_, err := execer.Exec("DELETE FROM stages")
-			return err
+			execer.Exec("DELETE FROM stages_unfinished")
+			execer.Exec("DELETE FROM stages")
+			return nil
 		})
 		store.Create(noContext, &core.Stage{Number: 1, BuildID: build.ID, Status: core.StatusPending})
 		store.Create(noContext, &core.Stage{Number: 2, BuildID: build.ID, Status: core.StatusRunning})
