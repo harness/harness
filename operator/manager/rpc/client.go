@@ -13,7 +13,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -291,34 +290,4 @@ func (s *Client) upload(ctx context.Context, path string, body interface{}) erro
 		}
 	}
 	return nil
-}
-
-// helper function returns true if the http.Request should be
-// retried based on error and http status code. This function
-// is used by the retryablehttp.Client.
-func retryFunc(ctx context.Context, resp *http.Response, err error) (bool, error) {
-	// do not retry on context.Canceled or context.DeadlineExceeded
-	if ctx.Err() != nil {
-		return false, ctx.Err()
-	}
-	if resp != nil {
-		// Check the path to prevent retries when writing to the log
-		// stream. This stream is temporary and ephemeral, and losing
-		// log lines will not negatively impact the final persisted
-		// log entries.
-		if resp != nil && resp.Request.URL.Path == "/rpc/v1/write" {
-			return false, err
-		}
-		// Check the response code. We retry on 500-range responses
-		// to allow the server time to recover, as 500's are typically
-		// not permanent errors and may relate to outages on the
-		// server side.
-		if resp.StatusCode >= 500 {
-			return true, nil
-		}
-	}
-	if err != nil {
-		return true, err
-	}
-	return false, nil
 }

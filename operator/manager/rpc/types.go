@@ -56,10 +56,6 @@ type buildContextToken struct {
 	Context *manager.Context
 }
 
-type errorWrapper struct {
-	Message string
-}
-
 var writePool = sync.Pool{
 	New: func() interface{} {
 		return &writeRequest{}

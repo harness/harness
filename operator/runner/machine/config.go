@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
-	"strings"
 )
 
 // Config provides the Docker machine configuration.
@@ -44,13 +43,6 @@ func parseReader(r io.Reader) (*Config, error) {
 	out := new(Config)
 	err := json.NewDecoder(r).Decode(out)
 	return out, err
-}
-
-// heper function parses the docker-machine configuration
-// from a json string.
-func parseString(s string) (*Config, error) {
-	r := strings.NewReader(s)
-	return parseReader(r)
 }
 
 // heper function parses the docker-machine configuration
