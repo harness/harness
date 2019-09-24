@@ -256,6 +256,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 		append(
 			r.Privileged,
 			"plugins/docker",
+			"plugins/acr",
 			"plugins/ecr",
 			"plugins/gcr",
 			"plugins/heroku",
