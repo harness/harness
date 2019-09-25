@@ -28,6 +28,7 @@ func TestStatus(t *testing.T) {
 	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false).Return(nil)
 
 	statusInput := &scm.StatusInput{
+		Title:  "Build #1",
 		State:  scm.StateSuccess,
 		Label:  "continuous-integration/drone/push",
 		Desc:   "Build is passing",
@@ -65,6 +66,7 @@ func TestStatus_ErrNotSupported(t *testing.T) {
 	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false).Return(nil)
 
 	statusInput := &scm.StatusInput{
+		Title:  "Build #1",
 		State:  scm.StateSuccess,
 		Label:  "continuous-integration/drone/push",
 		Desc:   "Build is passing",

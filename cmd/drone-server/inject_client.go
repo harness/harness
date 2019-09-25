@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"strings"
 
 	"github.com/drone/drone/cmd/drone-server/config"
 	"github.com/drone/go-scm/scm"
@@ -123,10 +124,10 @@ func provideGiteaClient(config config.Config) *scm.Client {
 			Source: &oauth2.Refresher{
 				ClientID:     config.Gitea.ClientID,
 				ClientSecret: config.Gitea.ClientSecret,
-				Endpoint:     config.Gitea.Server + "/login/oauth/access_token",
+				Endpoint:     strings.TrimSuffix(config.Gitea.Server, "/") + "/login/oauth/access_token",
 				Source:       oauth2.ContextTokenSource(),
 			},
-			Base:   defaultTransport(config.Gitea.SkipVerify),
+			Base: defaultTransport(config.Gitea.SkipVerify),
 		},
 	}
 	return client

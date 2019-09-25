@@ -124,6 +124,8 @@ github.com/drone/drone-yaml v1.2.3-0.20190807054305-a4a63fe917cb h1:YsuNqXQD8+Fb
 github.com/drone/drone-yaml v1.2.3-0.20190807054305-a4a63fe917cb/go.mod h1:QsqliFK8nG04AHFN9tTn9XJomRBQHD4wcejWW1uz/10=
 github.com/drone/drone-yaml v1.2.3-0.20190902155851-ad8ad9816fbf h1:/devrXEXhpmOrJpPxYxxz3PInxqNzqo6hzxDYVfmwJg=
 github.com/drone/drone-yaml v1.2.3-0.20190902155851-ad8ad9816fbf/go.mod h1:QsqliFK8nG04AHFN9tTn9XJomRBQHD4wcejWW1uz/10=
+github.com/drone/drone-yaml v1.2.3-0.20190924213155-be6b37e0b4cd h1:xbC7iwsybaLuCyjxv7Rf3L+OxqeqJgLDezeg0oTx3iw=
+github.com/drone/drone-yaml v1.2.3-0.20190924213155-be6b37e0b4cd/go.mod h1:QsqliFK8nG04AHFN9tTn9XJomRBQHD4wcejWW1uz/10=
 github.com/drone/envsubst v1.0.1 h1:NOOStingM2sbBwsIUeQkKUz8ShwCUzmqMxWrpXItfPE=
 github.com/drone/envsubst v1.0.1/go.mod h1:bkZbnc/2vh1M12Ecn7EYScpI4YGYU0etwLJICOWi8Z0=
 github.com/drone/go-license v1.0.2 h1:7OwndfYk+Lp/cGHkxe4HUn/Ysrrw3WYH2pnd99yrkok=
@@ -157,6 +159,8 @@ github.com/drone/go-scm v1.6.1-0.20190920225054-0d1ea63283ad h1:rVQW27ofuahCt6Vu
 github.com/drone/go-scm v1.6.1-0.20190920225054-0d1ea63283ad/go.mod h1:YT4FxQ3U/ltdCrBJR9B0tRpJ1bYA/PM3NyaLE/rYIvw=
 github.com/drone/go-scm v1.6.1-0.20190921005131-635e46e88c20 h1:/Ler+K1NlugcNoBPBLMCcWoN73rnPf+Fscdugb8KWYU=
 github.com/drone/go-scm v1.6.1-0.20190921005131-635e46e88c20/go.mod h1:YT4FxQ3U/ltdCrBJR9B0tRpJ1bYA/PM3NyaLE/rYIvw=
+github.com/drone/go-scm v1.6.1-0.20190925190122-ed2b9269c97d h1:mCRC22oGGXPra874ceoKQGIijnLKil4u2X/9klh+1mg=
+github.com/drone/go-scm v1.6.1-0.20190925190122-ed2b9269c97d/go.mod h1:YT4FxQ3U/ltdCrBJR9B0tRpJ1bYA/PM3NyaLE/rYIvw=
 github.com/drone/signal v1.0.0 h1:NrnM2M/4yAuU/tXs6RP1a1ZfxnaHwYkd0kJurA1p6uI=
 github.com/drone/signal v1.0.0/go.mod h1:S8t92eFT0g4WUgEc/LxG+LCuiskpMNsG0ajAMGnyZpc=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=

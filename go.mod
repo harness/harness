@@ -20,11 +20,11 @@ require (
 	github.com/drone/drone-go v1.0.6
 	github.com/drone/drone-runtime v1.1.0
 	github.com/drone/drone-ui v0.0.0-20190921185401-7346724427f2
-	github.com/drone/drone-yaml v1.2.3-0.20190902155851-ad8ad9816fbf
+	github.com/drone/drone-yaml v1.2.3-0.20190924213155-be6b37e0b4cd
 	github.com/drone/envsubst v1.0.1
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2
-	github.com/drone/go-scm v1.6.1-0.20190921005131-635e46e88c20
+	github.com/drone/go-scm v1.6.1-0.20190925190122-ed2b9269c97d
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ghodss/yaml v1.0.0
