@@ -521,6 +521,7 @@ func (t *triggerer) createBuildError(ctx context.Context, repo *core.Repository,
 		Sender:       base.Sender,
 		Created:      time.Now().Unix(),
 		Updated:      time.Now().Unix(),
+		Started:      time.Now().Unix(),
 		Finished:     time.Now().Unix(),
 	}
 
