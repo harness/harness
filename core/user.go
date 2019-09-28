@@ -79,6 +79,9 @@ type (
 	UserService interface {
 		// Find returns the authenticated user.
 		Find(ctx context.Context, access, refresh string) (*User, error)
+
+		// FindLogin returns a user by username.
+		FindLogin(ctx context.Context, user *User, login string) (*User, error)
 	}
 )
 

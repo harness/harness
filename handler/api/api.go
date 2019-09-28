@@ -79,6 +79,7 @@ func New(
 	system *core.System,
 	triggerer core.Triggerer,
 	users core.UserStore,
+	userz core.UserService,
 	webhook core.WebhookSender,
 ) Server {
 	return Server{
@@ -105,6 +106,7 @@ func New(
 		System:    system,
 		Triggerer: triggerer,
 		Users:     users,
+		Userz:     userz,
 		Webhook:   webhook,
 	}
 }
@@ -134,6 +136,7 @@ type Server struct {
 	System    *core.System
 	Triggerer core.Triggerer
 	Users     core.UserStore
+	Userz     core.UserService
 	Webhook   core.WebhookSender
 }
 
@@ -285,7 +288,7 @@ func (s Server) Handler() http.Handler {
 	r.Route("/users", func(r chi.Router) {
 		r.Use(acl.AuthorizeAdmin)
 		r.Get("/", users.HandleList(s.Users))
-		r.Post("/", users.HandleCreate(s.Users, s.Webhook))
+		r.Post("/", users.HandleCreate(s.Users, s.Userz, s.Webhook))
 		r.Get("/{user}", users.HandleFind(s.Users))
 		r.Patch("/{user}", users.HandleUpdate(s.Users))
 		r.Delete("/{user}", users.HandleDelete(s.Users, s.Webhook))

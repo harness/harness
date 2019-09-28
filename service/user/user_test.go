@@ -59,7 +59,7 @@ func TestFind(t *testing.T) {
 		Created: now.Unix(),
 		Updated: now.Unix(),
 	}
-	got, err := New(client).Find(noContext, "755bb80e5b", "e08f3fa43e")
+	got, err := New(client, nil).Find(noContext, "755bb80e5b", "e08f3fa43e")
 	if err != nil {
 		t.Error(err)
 	}
@@ -79,7 +79,7 @@ func TestFind_Error(t *testing.T) {
 	client := new(scm.Client)
 	client.Users = mockUsers
 
-	got, err := New(client).Find(noContext, "755bb80e5b", "e08f3fa43e")
+	got, err := New(client, nil).Find(noContext, "755bb80e5b", "e08f3fa43e")
 	if err == nil {
 		t.Errorf("Expect error finding user")
 	}

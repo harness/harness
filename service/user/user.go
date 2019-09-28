@@ -23,12 +23,13 @@ import (
 
 type service struct {
 	client *scm.Client
+	renew  core.Renewer
 }
 
 // New returns a new User service that provides access to
 // user data from the source code management system.
-func New(client *scm.Client) core.UserService {
-	return &service{client: client}
+func New(client *scm.Client, renew core.Renewer) core.UserService {
+	return &service{client: client, renew: renew}
 }
 
 func (s *service) Find(ctx context.Context, access, refresh string) (*core.User, error) {
@@ -40,6 +41,27 @@ func (s *service) Find(ctx context.Context, access, refresh string) (*core.User,
 	if err != nil {
 		return nil, err
 	}
+	return convert(src), nil
+}
+
+func (s *service) FindLogin(ctx context.Context, user *core.User, login string) (*core.User, error) {
+	err := s.renew.Renew(ctx, user, false)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx = context.WithValue(ctx, scm.TokenKey{}, &scm.Token{
+		Token:   user.Token,
+		Refresh: user.Refresh,
+	})
+	src, _, err := s.client.Users.FindLogin(ctx, login)
+	if err != nil {
+		return nil, err
+	}
+	return convert(src), nil
+}
+
+func convert(src *scm.User) *core.User {
 	dst := &core.User{
 		Login:  src.Login,
 		Email:  src.Email,
@@ -51,5 +73,5 @@ func (s *service) Find(ctx context.Context, access, refresh string) (*core.User,
 	if !src.Updated.IsZero() {
 		dst.Updated = src.Updated.Unix()
 	}
-	return dst, nil
+	return dst
 }

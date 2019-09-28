@@ -32,7 +32,7 @@ type userWithToken struct {
 
 // HandleCreate returns an http.HandlerFunc that processes an http.Request
 // to create the named user account in the system.
-func HandleCreate(users core.UserStore, sender core.WebhookSender) http.HandlerFunc {
+func HandleCreate(users core.UserStore, service core.UserService, sender core.WebhookSender) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		in := new(core.User)
 		err := json.NewDecoder(r.Body).Decode(in)
@@ -62,6 +62,21 @@ func HandleCreate(users core.UserStore, sender core.WebhookSender) http.HandlerF
 			logger.FromRequest(r).WithError(err).
 				Errorln("api: invlid username")
 			return
+		}
+
+		// if the user is not a machine account, we lookup
+		// the user in the remote system. We can then augment
+		// the user input with the remote system data.
+		if !user.Machine {
+			remote, err := service.FindLogin(r.Context(), nil, user.Login)
+			if err == nil {
+				if user.Login != remote.Login {
+					user.Login = remote.Login
+				}
+				if user.Email == "" {
+					user.Email = remote.Email
+				}
+			}
 		}
 
 		err = users.Create(r.Context(), user)

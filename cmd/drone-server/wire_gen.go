@@ -19,7 +19,6 @@ import (
 	"github.com/drone/drone/service/org"
 	"github.com/drone/drone/service/token"
 	"github.com/drone/drone/service/user"
-	"github.com/drone/drone/store/batch"
 	"github.com/drone/drone/store/cron"
 	"github.com/drone/drone/store/perm"
 	"github.com/drone/drone/store/secret"
@@ -86,11 +85,11 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	if err != nil {
 		return application{}, err
 	}
-	batcher := batch.New(db)
+	batcher := provideBatchStore(db, config2)
 	syncer := provideSyncer(repositoryService, repositoryStore, userStore, batcher, config2)
-	server := api.New(buildStore, commitService, cronStore, corePubsub, globalSecretStore, hookService, logStore, coreLicense, licenseService, permStore, repositoryStore, repositoryService, scheduler, secretStore, stageStore, stepStore, statusService, session, logStream, syncer, system, triggerer, userStore, webhookSender)
+	userService := user.New(client, renewer)
+	server := api.New(buildStore, commitService, cronStore, corePubsub, globalSecretStore, hookService, logStore, coreLicense, licenseService, permStore, repositoryStore, repositoryService, scheduler, secretStore, stageStore, stepStore, statusService, session, logStream, syncer, system, triggerer, userStore, userService, webhookSender)
 	organizationService := orgs.New(client, renewer)
-	userService := user.New(client)
 	admissionService := provideAdmissionPlugin(client, organizationService, userService, config2)
 	hookParser := parser.New(client)
 	coreLinker := linker.New(client)

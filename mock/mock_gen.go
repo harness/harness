@@ -240,6 +240,21 @@ func (mr *MockUserServiceMockRecorder) Find(arg0, arg1, arg2 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockUserService)(nil).Find), arg0, arg1, arg2)
 }
 
+// FindLogin mocks base method
+func (m *MockUserService) FindLogin(arg0 context.Context, arg1 *core.User, arg2 string) (*core.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindLogin", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*core.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindLogin indicates an expected call of FindLogin
+func (mr *MockUserServiceMockRecorder) FindLogin(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLogin", reflect.TypeOf((*MockUserService)(nil).FindLogin), arg0, arg1, arg2)
+}
+
 // MockRepositoryService is a mock of RepositoryService interface
 type MockRepositoryService struct {
 	ctrl     *gomock.Controller
