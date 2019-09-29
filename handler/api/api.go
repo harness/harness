@@ -65,6 +65,7 @@ func New(
 	logs core.LogStore,
 	license *core.License,
 	licenses core.LicenseService,
+	orgs core.OrganizationService,
 	perms core.PermStore,
 	repos core.RepositoryStore,
 	repoz core.RepositoryService,
@@ -92,6 +93,7 @@ func New(
 		Logs:      logs,
 		License:   license,
 		Licenses:  licenses,
+		Orgs:      orgs,
 		Perms:     perms,
 		Repos:     repos,
 		Repoz:     repoz,
@@ -122,6 +124,7 @@ type Server struct {
 	Logs      core.LogStore
 	License   *core.License
 	Licenses  core.LicenseService
+	Orgs      core.OrganizationService
 	Perms     core.PermStore
 	Repos     core.RepositoryStore
 	Repoz     core.RepositoryService
@@ -312,14 +315,13 @@ func (s Server) Handler() http.Handler {
 	})
 
 	r.Route("/secrets", func(r chi.Router) {
-		r.Use(acl.AuthorizeAdmin)
-		r.Get("/", globalsecrets.HandleAll(s.Globals))
-		r.Get("/{namespace}", globalsecrets.HandleList(s.Globals))
-		r.Post("/{namespace}", globalsecrets.HandleCreate(s.Globals))
-		r.Get("/{namespace}/{name}", globalsecrets.HandleFind(s.Globals))
-		r.Post("/{namespace}/{name}", globalsecrets.HandleUpdate(s.Globals))
-		r.Patch("/{namespace}/{name}", globalsecrets.HandleUpdate(s.Globals))
-		r.Delete("/{namespace}/{name}", globalsecrets.HandleDelete(s.Globals))
+		r.With(acl.AuthorizeAdmin).Get("/", globalsecrets.HandleAll(s.Globals))
+		r.With(acl.CheckMembership(s.Orgs, false)).Get("/{namespace}", globalsecrets.HandleList(s.Globals))
+		r.With(acl.CheckMembership(s.Orgs, true)).Post("/{namespace}", globalsecrets.HandleCreate(s.Globals))
+		r.With(acl.CheckMembership(s.Orgs, false)).Get("/{namespace}/{name}", globalsecrets.HandleFind(s.Globals))
+		r.With(acl.CheckMembership(s.Orgs, true)).Post("/{namespace}/{name}", globalsecrets.HandleUpdate(s.Globals))
+		r.With(acl.CheckMembership(s.Orgs, true)).Patch("/{namespace}/{name}", globalsecrets.HandleUpdate(s.Globals))
+		r.With(acl.CheckMembership(s.Orgs, true)).Delete("/{namespace}/{name}", globalsecrets.HandleDelete(s.Globals))
 	})
 
 	r.Route("/system", func(r chi.Router) {

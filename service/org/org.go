@@ -61,3 +61,32 @@ func (s *service) List(ctx context.Context, user *core.User) ([]*core.Organizati
 	}
 	return orgs, nil
 }
+
+func (s *service) Membership(ctx context.Context, user *core.User, name string) (bool, bool, error) {
+	err := s.renewer.Renew(ctx, user, false)
+	if err != nil {
+		return false, false, err
+	}
+	token := &scm.Token{
+		Token:   user.Token,
+		Refresh: user.Refresh,
+	}
+	if user.Expiry != 0 {
+		token.Expires = time.Unix(user.Expiry, 0)
+	}
+	ctx = context.WithValue(ctx, scm.TokenKey{}, token)
+	out, _, err := s.client.Organizations.FindMembership(ctx, name, user.Login)
+	if err != nil {
+		return false, false, err
+	}
+	switch {
+	case out.Active == false:
+		return false, false, nil
+	case out.Role == scm.RoleUndefined:
+		return false, false, nil
+	case out.Role == scm.RoleAdmin:
+		return true, true, nil
+	default:
+		return true, false, nil
+	}
+}

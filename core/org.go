@@ -27,5 +27,12 @@ type Organization struct {
 // team access in the external source code management system
 // (e.g. GitHub).
 type OrganizationService interface {
+	// List returns a list of organization to which the
+	// user is a member.
 	List(context.Context, *User) ([]*Organization, error)
+
+	// Membership returns true if the user is a member
+	// of the organization, and true if the user is an
+	// of the organization.
+	Membership(context.Context, *User, string) (bool, bool, error)
 }

@@ -28,6 +28,13 @@ var (
 		Active: true,
 	}
 
+	mockUserAdmin = &core.User{
+		ID:     1,
+		Login:  "octocat",
+		Admin:  true,
+		Active: true,
+	}
+
 	mockUserInactive = &core.User{
 		ID:     1,
 		Login:  "octocat",

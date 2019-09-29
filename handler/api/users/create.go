@@ -56,14 +56,6 @@ func HandleCreate(users core.UserStore, service core.UserService, sender core.We
 			user.Hash = uniuri.NewLen(32)
 		}
 
-		err = user.Validate()
-		if err != nil {
-			render.ErrorCode(w, err, 400)
-			logger.FromRequest(r).WithError(err).
-				Errorln("api: invlid username")
-			return
-		}
-
 		// if the user is not a machine account, we lookup
 		// the user in the remote system. We can then augment
 		// the user input with the remote system data.
@@ -77,6 +69,14 @@ func HandleCreate(users core.UserStore, service core.UserService, sender core.We
 					user.Email = remote.Email
 				}
 			}
+		}
+
+		err = user.Validate()
+		if err != nil {
+			render.ErrorCode(w, err, 400)
+			logger.FromRequest(r).WithError(err).
+				Errorln("api: invlid username")
+			return
 		}
 
 		err = users.Create(r.Context(), user)

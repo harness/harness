@@ -15,6 +15,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/drone/drone/cmd/drone-server/config"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/livelog"
@@ -47,7 +49,6 @@ var serviceSet = wire.NewSet(
 	commit.New,
 	cron.New,
 	livelog.New,
-	orgs.New,
 	linker.New,
 	parser.New,
 	pubsub.New,
@@ -60,6 +61,7 @@ var serviceSet = wire.NewSet(
 	provideDatadog,
 	provideHookService,
 	provideNetrcService,
+	provideOrgService,
 	provideSession,
 	provideStatusService,
 	provideSyncer,
@@ -90,6 +92,12 @@ func provideNetrcService(client *scm.Client, renewer core.Renewer, config config
 		config.Cloning.Username,
 		config.Cloning.Password,
 	)
+}
+
+// provideOrgService is a Wire provider function that
+// returns an organization service wrapped with a simple cache.
+func provideOrgService(client *scm.Client, renewer core.Renewer) core.OrganizationService {
+	return orgs.NewCache(orgs.New(client, renewer), 10, time.Minute*5)
 }
 
 // provideRepo is a Wire provider function that returns
