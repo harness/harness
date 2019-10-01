@@ -7,6 +7,8 @@ FROM alpine:3.9
 EXPOSE 80 443
 VOLUME /data
 
+RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
+
 ENV GODEBUG netdns=go
 ENV XDG_CACHE_HOME /data
 ENV DRONE_DATABASE_DRIVER sqlite3
