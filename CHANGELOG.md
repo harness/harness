@@ -32,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - log lines not properly wrapping in user interface, by [@bradrydzewski](https://github.com/bradrydzewski).
 [#309](https://github.com/drone/drone-ui/issues/309).
 
+### Breaking
+- the server now runs in multi-machine mode by default. In order to run the server in single-machine mode (agents disabled) you must set DRONE_AGENTS_DISABLED=true.
+
 ## [1.4.0] - 2019-09-12
 ### Added
 - upgrade to Go 1.13 to resolve arm segfault, by [@KN4CK3R](https://github.com/KN4CK3R). [#2823](https://github.com/drone/drone/issues/2823).
