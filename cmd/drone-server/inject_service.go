@@ -22,6 +22,7 @@ import (
 	"github.com/drone/drone/livelog"
 	"github.com/drone/drone/metric/sink"
 	"github.com/drone/drone/pubsub"
+	"github.com/drone/drone/service/canceler"
 	"github.com/drone/drone/service/commit"
 	contents "github.com/drone/drone/service/content"
 	"github.com/drone/drone/service/content/cache"
@@ -46,6 +47,7 @@ import (
 
 // wire set for loading the services.
 var serviceSet = wire.NewSet(
+	canceler.New,
 	commit.New,
 	cron.New,
 	livelog.New,

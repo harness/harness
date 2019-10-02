@@ -16,6 +16,7 @@ package canceler
 
 import (
 	"context"
+	"runtime/debug"
 	"time"
 
 	"github.com/drone/drone/core"
@@ -67,6 +68,19 @@ func (s *service) Cancel(ctx context.Context, repo *core.Repository, build *core
 // CancelPending cancels all pending builds of the same event
 // and reference with lower build numbers.
 func (s *service) CancelPending(ctx context.Context, repo *core.Repository, build *core.Build) error {
+	defer func() {
+		if err := recover(); err != nil {
+			debug.PrintStack()
+		}
+	}()
+
+	// switch {
+	// case repo.CancelPulls && build.Event == core.EventPullRequest:
+	// case repo.CancelPush && build.Event == core.EventPush:
+	// default:
+	// 	return nil
+	// }
+
 	switch build.Event {
 	// on the push and pull request builds can be automatically
 	// cancelled by the system.

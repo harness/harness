@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - added nsswitch to docker images
+- option to auto-cancel pending builds when newer build enqueued, by [@bradrydzewski](https://github.com/bradrydzewski). [#1980](https://github.com/drone/drone/issues/1980).
 
 ## [1.5.1] - 2019-09-30
 ### Added

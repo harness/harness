@@ -32,6 +32,7 @@ import (
 )
 
 type triggerer struct {
+	canceler core.Canceler
 	config   core.ConfigService
 	convert  core.ConvertService
 	commits  core.CommitService
@@ -46,6 +47,7 @@ type triggerer struct {
 
 // New returns a new build triggerer.
 func New(
+	canceler core.Canceler,
 	config core.ConfigService,
 	convert core.ConvertService,
 	commits core.CommitService,
@@ -58,6 +60,7 @@ func New(
 	hooks core.WebhookSender,
 ) core.Triggerer {
 	return &triggerer{
+		canceler: canceler,
 		config:   config,
 		convert:  convert,
 		commits:  commits,
@@ -459,6 +462,12 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		logger = logger.WithError(err)
 		logger.Warnln("trigger: cannot send webhook")
 	}
+
+	if repo.CancelPush && build.Event == core.EventPush ||
+		repo.CancelPulls && build.Event == core.EventPullRequest {
+		go t.canceler.CancelPending(ctx, repo, build)
+	}
+
 	// err = t.hooks.SendEndpoint(ctx, payload, repo.Endpoints.Webhook)
 	// if err != nil {
 	// 	logger.Warn().Err(err).

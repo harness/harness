@@ -12,6 +12,7 @@ import (
 	"github.com/drone/drone/livelog"
 	"github.com/drone/drone/operator/manager"
 	"github.com/drone/drone/pubsub"
+	"github.com/drone/drone/service/canceler"
 	"github.com/drone/drone/service/commit"
 	"github.com/drone/drone/service/hook/parser"
 	"github.com/drone/drone/service/license"
@@ -47,17 +48,19 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	commitService := commit.New(client, renewer)
 	cronStore := cron.New(db)
 	repositoryStore := provideRepoStore(db)
-	fileService := provideContentService(client, renewer)
-	configService := provideConfigPlugin(client, fileService, config2)
-	convertService := provideConvertPlugin(client, config2)
-	statusService := provideStatusService(client, renewer, config2)
 	buildStore := provideBuildStore(db)
 	stageStore := provideStageStore(db)
 	scheduler := provideScheduler(stageStore, config2)
-	validateService := provideValidatePlugin(config2)
+	statusService := provideStatusService(client, renewer, config2)
+	stepStore := step.New(db)
 	system := provideSystem(config2)
 	webhookSender := provideWebhookPlugin(config2, system)
-	triggerer := trigger.New(configService, convertService, commitService, statusService, buildStore, scheduler, repositoryStore, userStore, validateService, webhookSender)
+	coreCanceler := canceler.New(buildStore, repositoryStore, scheduler, stageStore, statusService, stepStore, userStore, webhookSender)
+	fileService := provideContentService(client, renewer)
+	configService := provideConfigPlugin(client, fileService, config2)
+	convertService := provideConvertPlugin(client, config2)
+	validateService := provideValidatePlugin(config2)
+	triggerer := trigger.New(coreCanceler, configService, convertService, commitService, statusService, buildStore, scheduler, repositoryStore, userStore, validateService, webhookSender)
 	cronScheduler := cron2.New(commitService, cronStore, repositoryStore, userStore, triggerer)
 	coreLicense := provideLicense(client, config2)
 	datadog := provideDatadog(userStore, repositoryStore, buildStore, system, coreLicense, config2)
@@ -71,7 +74,6 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	}
 	secretStore := secret.New(db, encrypter)
 	globalSecretStore := global.New(db, encrypter)
-	stepStore := step.New(db)
 	buildManager := manager.New(buildStore, configService, convertService, corePubsub, logStore, logStream, netrcService, repositoryStore, scheduler, secretStore, globalSecretStore, statusService, stageStore, stepStore, system, userStore, webhookSender)
 	secretService := provideSecretPlugin(config2)
 	registryService := provideRegistryPlugin(config2)

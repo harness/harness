@@ -34,6 +34,8 @@ type (
 		Protected   *bool   `json:"protected"`
 		IgnoreForks *bool   `json:"ignore_forks"`
 		IgnorePulls *bool   `json:"ignore_pull_requests"`
+		CancelPulls *bool   `json:"auto_cancel_pull_requests"`
+		CancelPush  *bool   `json:"auto_cancel_pushes"`
 		Timeout     *int64  `json:"timeout"`
 		Counter     *int64  `json:"counter"`
 	}
@@ -85,6 +87,12 @@ func HandleUpdate(repos core.RepositoryStore) http.HandlerFunc {
 		}
 		if in.IgnorePulls != nil {
 			repo.IgnorePulls = *in.IgnorePulls
+		}
+		if in.CancelPulls != nil {
+			repo.CancelPulls = *in.CancelPulls
+		}
+		if in.CancelPush != nil {
+			repo.CancelPush = *in.CancelPush
 		}
 
 		//

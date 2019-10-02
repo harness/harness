@@ -79,6 +79,7 @@ func TestTrigger(t *testing.T) {
 	mockWebhooks.EXPECT().Send(gomock.Any(), gomock.Any()).Return(nil)
 
 	triggerer := New(
+		nil,
 		mockConfigService,
 		mockConvertService,
 		nil,
@@ -115,6 +116,7 @@ func TestTrigger_SkipCI(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 	dummyHookSkip := *dummyHook
 	dummyHookSkip.Message = "foo [CI SKIP] bar"
@@ -133,6 +135,7 @@ func TestTrigger_NoOwner(t *testing.T) {
 	mockUsers.EXPECT().Find(noContext, dummyRepo.UserID).Return(nil, sql.ErrNoRows)
 
 	triggerer := New(
+		nil,
 		nil,
 		nil,
 		nil,
@@ -164,6 +167,7 @@ func TestTrigger_MissingYaml(t *testing.T) {
 	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(nil, io.EOF)
 
 	triggerer := New(
+		nil,
 		mockConfigService,
 		nil,
 		nil,
@@ -204,6 +208,7 @@ func TestTrigger_ErrorYaml(t *testing.T) {
 	mockBuilds.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil) // .Do(checkBuild).Return(nil)
 
 	triggerer := New(
+		nil,
 		mockConfigService,
 		mockConvertService,
 		nil,
@@ -251,6 +256,7 @@ func TestTrigger_SkipBranch(t *testing.T) {
 	mockValidateService.EXPECT().Validate(gomock.Any(), gomock.Any()).Return(nil)
 
 	triggerer := New(
+		nil,
 		mockConfigService,
 		mockConvertService,
 		nil,
@@ -288,6 +294,7 @@ func TestTrigger_SkipEvent(t *testing.T) {
 	mockValidateService.EXPECT().Validate(gomock.Any(), gomock.Any()).Return(nil)
 
 	triggerer := New(
+		nil,
 		mockConfigService,
 		mockConvertService,
 		nil,
@@ -325,6 +332,7 @@ func TestTrigger_SkipAction(t *testing.T) {
 	mockValidateService.EXPECT().Validate(gomock.Any(), gomock.Any()).Return(nil)
 
 	triggerer := New(
+		nil,
 		mockConfigService,
 		mockConvertService,
 		nil,
@@ -366,6 +374,7 @@ func TestTrigger_ErrorIncrement(t *testing.T) {
 	mockValidateService.EXPECT().Validate(gomock.Any(), gomock.Any()).Return(nil)
 
 	triggerer := New(
+		nil,
 		mockConfigService,
 		mockConvertService,
 		nil,
