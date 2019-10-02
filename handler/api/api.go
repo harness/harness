@@ -156,7 +156,7 @@ func (s Server) Handler() http.Handler {
 
 	r.Route("/repos", func(r chi.Router) {
 		r.With(
-			acl.CheckAdminAccess(),
+			acl.AuthorizeAdmin,
 		).Get("/", repos.HandleAll(s.Repos))
 
 		r.Route("/{owner}/{name}", func(r chi.Router) {
