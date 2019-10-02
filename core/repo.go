@@ -82,6 +82,10 @@ type (
 		// the datastore with incomplete builds.
 		ListIncomplete(context.Context) ([]*Repository, error)
 
+		// ListAll returns a paginated list of all repositories
+		// stored in the database, including disabled repositories.
+		ListAll(ctx context.Context, limit, offset int) ([]*Repository, error)
+
 		// Find returns a repository from the datastore.
 		Find(context.Context, int64) (*Repository, error)
 

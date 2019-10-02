@@ -154,67 +154,72 @@ func (s Server) Handler() http.Handler {
 	cors := cors.New(corsOpts)
 	r.Use(cors.Handler)
 
-	r.Route("/repos/{owner}/{name}", func(r chi.Router) {
-		r.Use(acl.InjectRepository(s.Repoz, s.Repos, s.Perms))
-		r.Use(acl.CheckReadAccess())
-
-		r.Get("/", repos.HandleFind())
+	r.Route("/repos", func(r chi.Router) {
 		r.With(
 			acl.CheckAdminAccess(),
-		).Patch("/", repos.HandleUpdate(s.Repos))
-		r.With(
-			acl.CheckAdminAccess(),
-		).Post("/", repos.HandleEnable(s.Hooks, s.Repos, s.Webhook))
-		r.With(
-			acl.CheckAdminAccess(),
-		).Delete("/", repos.HandleDisable(s.Repos, s.Webhook))
-		r.With(
-			acl.CheckAdminAccess(),
-		).Post("/chown", repos.HandleChown(s.Repos))
-		r.With(
-			acl.CheckAdminAccess(),
-		).Post("/repair", repos.HandleRepair(s.Hooks, s.Repoz, s.Repos, s.Users, s.System.Link))
+		).Get("/", repos.HandleAll(s.Repos))
 
-		r.Route("/builds", func(r chi.Router) {
-			r.Get("/", builds.HandleList(s.Repos, s.Builds))
-			r.With(acl.CheckWriteAccess()).Post("/", builds.HandleCreate(s.Repos, s.Commits, s.Triggerer))
+		r.Route("/{owner}/{name}", func(r chi.Router) {
+			r.Use(acl.InjectRepository(s.Repoz, s.Repos, s.Perms))
+			r.Use(acl.CheckReadAccess())
 
-			r.Get("/latest", builds.HandleLast(s.Repos, s.Builds, s.Stages))
-			r.Get("/{number}", builds.HandleFind(s.Repos, s.Builds, s.Stages))
-			r.Get("/{number}/logs/{stage}/{step}", logs.HandleFind(s.Repos, s.Builds, s.Stages, s.Steps, s.Logs))
-
-			r.With(
-				acl.CheckWriteAccess(),
-			).Post("/{number}", builds.HandleRetry(s.Repos, s.Builds, s.Triggerer))
-
-			r.With(
-				acl.CheckWriteAccess(),
-			).Delete("/{number}", builds.HandleCancel(s.Users, s.Repos, s.Builds, s.Stages, s.Steps, s.Status, s.Scheduler, s.Webhook))
-
-			r.With(
-				acl.CheckWriteAccess(),
-			).Post("/{number}/promote", builds.HandlePromote(s.Repos, s.Builds, s.Triggerer))
-
+			r.Get("/", repos.HandleFind())
 			r.With(
 				acl.CheckAdminAccess(),
-			).Post("/{number}/rollback", builds.HandleRollback(s.Repos, s.Builds, s.Triggerer))
-
+			).Patch("/", repos.HandleUpdate(s.Repos))
 			r.With(
 				acl.CheckAdminAccess(),
-			).Post("/{number}/decline/{stage}", stages.HandleDecline(s.Repos, s.Builds, s.Stages))
-
+			).Post("/", repos.HandleEnable(s.Hooks, s.Repos, s.Webhook))
 			r.With(
 				acl.CheckAdminAccess(),
-			).Post("/{number}/approve/{stage}", stages.HandleApprove(s.Repos, s.Builds, s.Stages, s.Scheduler))
-
+			).Delete("/", repos.HandleDisable(s.Repos, s.Webhook))
 			r.With(
 				acl.CheckAdminAccess(),
-			).Delete("/{number}/logs/{stage}/{step}", logs.HandleDelete(s.Repos, s.Builds, s.Stages, s.Steps, s.Logs))
-
+			).Post("/chown", repos.HandleChown(s.Repos))
 			r.With(
 				acl.CheckAdminAccess(),
-			).Delete("/", builds.HandlePurge(s.Repos, s.Builds))
+			).Post("/repair", repos.HandleRepair(s.Hooks, s.Repoz, s.Repos, s.Users, s.System.Link))
 
+			r.Route("/builds", func(r chi.Router) {
+				r.Get("/", builds.HandleList(s.Repos, s.Builds))
+				r.With(acl.CheckWriteAccess()).Post("/", builds.HandleCreate(s.Repos, s.Commits, s.Triggerer))
+
+				r.Get("/latest", builds.HandleLast(s.Repos, s.Builds, s.Stages))
+				r.Get("/{number}", builds.HandleFind(s.Repos, s.Builds, s.Stages))
+				r.Get("/{number}/logs/{stage}/{step}", logs.HandleFind(s.Repos, s.Builds, s.Stages, s.Steps, s.Logs))
+
+				r.With(
+					acl.CheckWriteAccess(),
+				).Post("/{number}", builds.HandleRetry(s.Repos, s.Builds, s.Triggerer))
+
+				r.With(
+					acl.CheckWriteAccess(),
+				).Delete("/{number}", builds.HandleCancel(s.Users, s.Repos, s.Builds, s.Stages, s.Steps, s.Status, s.Scheduler, s.Webhook))
+
+				r.With(
+					acl.CheckWriteAccess(),
+				).Post("/{number}/promote", builds.HandlePromote(s.Repos, s.Builds, s.Triggerer))
+
+				r.With(
+					acl.CheckAdminAccess(),
+				).Post("/{number}/rollback", builds.HandleRollback(s.Repos, s.Builds, s.Triggerer))
+
+				r.With(
+					acl.CheckAdminAccess(),
+				).Post("/{number}/decline/{stage}", stages.HandleDecline(s.Repos, s.Builds, s.Stages))
+
+				r.With(
+					acl.CheckAdminAccess(),
+				).Post("/{number}/approve/{stage}", stages.HandleApprove(s.Repos, s.Builds, s.Stages, s.Scheduler))
+
+				r.With(
+					acl.CheckAdminAccess(),
+				).Delete("/{number}/logs/{stage}/{step}", logs.HandleDelete(s.Repos, s.Builds, s.Stages, s.Steps, s.Logs))
+
+				r.With(
+					acl.CheckAdminAccess(),
+				).Delete("/", builds.HandlePurge(s.Repos, s.Builds))
+			})
 		})
 
 		r.Route("/secrets", func(r chi.Router) {
