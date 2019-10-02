@@ -51,6 +51,8 @@ type (
 		Protected   bool   `json:"protected"`
 		IgnoreForks bool   `json:"ignore_forks"`
 		IgnorePulls bool   `json:"ignore_pull_requests"`
+		CancelPulls bool   `json:"auto_cancel_pull_requests"`
+		CancelPush  bool   `json:"auto_cancel_branch"`
 		Timeout     int64  `json:"timeout"`
 		Counter     int64  `json:"counter"`
 		Synced      int64  `json:"synced"`

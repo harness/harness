@@ -41,7 +41,7 @@ func TestCreate(t *testing.T) {
 		if got, want := hook.Trigger, mockUser.Login; got != want {
 			t.Errorf("Want hook Trigger By %s, got %s", want, got)
 		}
-		if got, want := hook.Event, core.EventPush; got != want {
+		if got, want := hook.Event, core.EventCustom; got != want {
 			t.Errorf("Want hook Event %s, got %s", want, got)
 		}
 		if got, want := hook.Link, mockCommit.Link; got != want {

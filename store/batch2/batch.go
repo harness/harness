@@ -241,6 +241,8 @@ const stmtInsertBase = `
 ,repo_protected
 ,repo_no_forks
 ,repo_no_pulls
+,repo_cancel_pulls
+,repo_cancel_push
 ,repo_synced
 ,repo_created
 ,repo_updated
@@ -268,6 +270,8 @@ const stmtInsertBase = `
 ,:repo_protected
 ,:repo_no_forks
 ,:repo_no_pulls
+,:repo_cancel_pulls
+,:repo_cancel_push
 ,:repo_synced
 ,:repo_created
 ,:repo_updated

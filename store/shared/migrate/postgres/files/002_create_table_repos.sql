@@ -37,3 +37,11 @@ ALTER TABLE repos ADD COLUMN repo_no_forks BOOLEAN NOT NULL DEFAULT false;
 -- name: alter-table-repos-add-column-no-pulls
 
 ALTER TABLE repos ADD COLUMN repo_no_pulls BOOLEAN NOT NULL DEFAULT false;
+
+-- name: alter-table-repos-add-column-cancel-pulls
+
+ALTER TABLE repos ADD COLUMN repo_cancel_pulls BOOLEAN NOT NULL DEFAULT false;
+
+-- name: alter-table-repos-add-column-cancel-push
+
+ALTER TABLE repos ADD COLUMN repo_cancel_push BOOLEAN NOT NULL DEFAULT false;

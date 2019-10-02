@@ -14,13 +14,14 @@
 
 package core
 
-// Hook event constants.
-const (
-	EventCron        = "cron"
-	EventCustom      = "custom"
-	EventPush        = "push"
-	EventPullRequest = "pull_request"
-	EventTag         = "tag"
-	EventPromote     = "promote"
-	EventRollback    = "rollback"
-)
+import "context"
+
+// Canceler cancels a build.
+type Canceler interface {
+	// Cancel cancels the provided build.
+	Cancel(context.Context, *Repository, *Build) error
+
+	// CancelPending cancels all pending builds of the same
+	// type of as the provided build.
+	CancelPending(context.Context, *Repository, *Build) error
+}

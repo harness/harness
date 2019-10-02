@@ -69,7 +69,7 @@ func HandleCreate(
 
 		hook := &core.Hook{
 			Trigger:      user.Login,
-			Event:        core.EventPush,
+			Event:        core.EventCustom,
 			Link:         commit.Link,
 			Timestamp:    commit.Author.Date,
 			Title:        "", // we expect this to be empty.
