@@ -5,7 +5,6 @@
 package canceler
 
 import (
-	"context"
 	"testing"
 
 	"github.com/drone/drone/core"
@@ -14,8 +13,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 )
-
-var noContext = context.Background()
 
 func TestCancelPending_IgnoreEvent(t *testing.T) {
 	ignore := []string{
@@ -54,6 +51,9 @@ func TestCancel(t *testing.T) {
 
 	repos := mock.NewMockRepositoryStore(controller)
 
+	events := mock.NewMockPubsub(controller)
+	events.EXPECT().Publish(gomock.Any(), gomock.Any()).Return(nil)
+
 	builds := mock.NewMockBuildStore(controller)
 	builds.EXPECT().Update(gomock.Any(), mockBuildCopy).Return(nil)
 
@@ -81,7 +81,7 @@ func TestCancel(t *testing.T) {
 	c.URLParams.Add("name", "hello-world")
 	c.URLParams.Add("number", "1")
 
-	s := New(builds, repos, scheduler, stages, status, steps, users, webhook)
+	s := New(builds, events, repos, scheduler, stages, status, steps, users, webhook)
 	err := s.Cancel(noContext, mockRepo, mockBuildCopy)
 	if err != nil {
 		t.Error(err)

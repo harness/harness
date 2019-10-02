@@ -16,6 +16,7 @@ package canceler
 
 import (
 	"context"
+	"encoding/json"
 	"runtime/debug"
 	"time"
 
@@ -25,8 +26,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var noContext = context.Background()
+
 type service struct {
 	builds    core.BuildStore
+	events    core.Pubsub
 	repos     core.RepositoryStore
 	scheduler core.Scheduler
 	stages    core.StageStore
@@ -40,6 +44,7 @@ type service struct {
 // all cancellation operations.
 func New(
 	builds core.BuildStore,
+	events core.Pubsub,
 	repos core.RepositoryStore,
 	scheduler core.Scheduler,
 	stages core.StageStore,
@@ -50,6 +55,7 @@ func New(
 ) core.Canceler {
 	return &service{
 		builds:    builds,
+		events:    events,
 		repos:     repos,
 		scheduler: scheduler,
 		stages:    stages,
@@ -105,7 +111,7 @@ func (s *service) CancelPending(ctx context.Context, repo *core.Repository, buil
 			continue
 		}
 
-		err := s.cancel(ctx, repo, build, core.StatusSkipped)
+		err := s.cancel(ctx, repo, item.Build, core.StatusSkipped)
 		if err != nil {
 			result = multierror.Append(result, err)
 		}
@@ -146,7 +152,7 @@ func (s *service) cancel(ctx context.Context, repo *core.Repository, build *core
 	err := s.builds.Update(ctx, build)
 	if err != nil {
 		logger.WithError(err).
-			Warnln("api: cannot update build status to cancelled")
+			Warnln("canceler: cannot update build status to cancelled")
 		return err
 	}
 
@@ -156,7 +162,7 @@ func (s *service) cancel(ctx context.Context, repo *core.Repository, build *core
 	err = s.scheduler.Cancel(ctx, build.ID)
 	if err != nil {
 		logger.WithError(err).
-			Warnln("api: cannot signal cancelled build is complete")
+			Warnln("canceler: cannot signal cancelled build is complete")
 	}
 
 	// update the commit status in the remote source
@@ -169,14 +175,14 @@ func (s *service) cancel(ctx context.Context, repo *core.Repository, build *core
 		})
 		if err != nil {
 			logger.WithError(err).
-				Debugln("api: cannot set status")
+				Debugln("canceler: cannot set status")
 		}
 	}
 
 	stages, err := s.stages.ListSteps(ctx, build.ID)
 	if err != nil {
 		logger.WithError(err).
-			Debugln("api: cannot list build stages")
+			Debugln("canceler: cannot list build stages")
 	}
 
 	// update the status of all steps to indicate they
@@ -196,7 +202,7 @@ func (s *service) cancel(ctx context.Context, repo *core.Repository, build *core
 		if err != nil {
 			logger.WithError(err).
 				WithField("stage", stage.Number).
-				Debugln("api: cannot update stage status")
+				Debugln("canceler: cannot update stage status")
 		}
 
 		// update the status of all steps to indicate they
@@ -218,15 +224,33 @@ func (s *service) cancel(ctx context.Context, repo *core.Repository, build *core
 				logger.WithError(err).
 					WithField("stage", stage.Number).
 					WithField("step", step.Number).
-					Debugln("api: cannot update step status")
+					Debugln("canceler: cannot update step status")
 			}
 		}
 	}
 
 	logger.WithError(err).
-		Debugln("api: successfully cancelled build")
+		Debugln("canceler: successfully cancelled build")
 
 	build.Stages = stages
+
+	// trigger a pubsub event to notify subscribers that
+	// the build was cancelled. Specifically, this should
+	// live update the user interface.
+	repoCopy := new(core.Repository)
+	*repoCopy = *repo
+	repoCopy.Build = build
+	repoCopy.Build.Stages = stages
+	data, _ := json.Marshal(repoCopy)
+	err = s.events.Publish(noContext, &core.Message{
+		Repository: repo.Slug,
+		Visibility: repo.Visibility,
+		Data:       data,
+	})
+	if err != nil {
+		logger.WithError(err).
+			Warnln("canceler: cannot publish cancel event")
+	}
 
 	// trigger a webhook to notify subscribing systems that
 	// the build was cancelled.
