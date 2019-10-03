@@ -109,7 +109,7 @@ type (
 		Secret     string `envconfig:"DRONE_DATABASE_SECRET"`
 
 		// Feature flag
-		ExperimentalBatch bool `envconfig:"DRONE_DATABASE_EXPERIMENTAL_BATCH"`
+		LegacyBatch bool `envconfig:"DRONE_DATABASE_LEGACY_BATCH"`
 	}
 
 	// Docker provides docker configuration

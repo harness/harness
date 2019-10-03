@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - option to auto-cancel pending builds when newer build enqueued, by [@bradrydzewski](https://github.com/bradrydzewski). [#1980](https://github.com/drone/drone/issues/1980).
 - endpoint to list all repositories in the database, by [@bradrydzewski](https://github.com/bradrydzewski). [#2785](https://github.com/drone/drone/issues/2785).
 
+### Fixed
+- improve sync to handle duplicate repository names with different unique identifiers, by [@bradrydzewski](https://github.com/bradrydzewski). [#2658](https://github.com/drone/drone/issues/2658). _You can revert to the previous sync logic with DRONE_DATABASE_LEGACY_BATCH=true_.
+
 ## [1.5.1] - 2019-09-30
 ### Added
 - allow organization admins access to organization secret endpoints, by [@bradrydzewski](https://github.com/bradrydzewski). [#2838](https://github.com/drone/drone/issues/2838).
