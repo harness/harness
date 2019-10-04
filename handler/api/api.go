@@ -220,44 +220,44 @@ func (s Server) Handler() http.Handler {
 					acl.CheckAdminAccess(),
 				).Delete("/", builds.HandlePurge(s.Repos, s.Builds))
 			})
-		})
 
-		r.Route("/secrets", func(r chi.Router) {
-			r.Use(acl.CheckWriteAccess())
-			r.Get("/", secrets.HandleList(s.Repos, s.Secrets))
-			r.Post("/", secrets.HandleCreate(s.Repos, s.Secrets))
-			r.Get("/{secret}", secrets.HandleFind(s.Repos, s.Secrets))
-			r.Patch("/{secret}", secrets.HandleUpdate(s.Repos, s.Secrets))
-			r.Delete("/{secret}", secrets.HandleDelete(s.Repos, s.Secrets))
-		})
+			r.Route("/secrets", func(r chi.Router) {
+				r.Use(acl.CheckWriteAccess())
+				r.Get("/", secrets.HandleList(s.Repos, s.Secrets))
+				r.Post("/", secrets.HandleCreate(s.Repos, s.Secrets))
+				r.Get("/{secret}", secrets.HandleFind(s.Repos, s.Secrets))
+				r.Patch("/{secret}", secrets.HandleUpdate(s.Repos, s.Secrets))
+				r.Delete("/{secret}", secrets.HandleDelete(s.Repos, s.Secrets))
+			})
 
-		r.Route("/sign", func(r chi.Router) {
-			r.Use(acl.CheckWriteAccess())
-			r.Post("/", sign.HandleSign(s.Repos))
-		})
+			r.Route("/sign", func(r chi.Router) {
+				r.Use(acl.CheckWriteAccess())
+				r.Post("/", sign.HandleSign(s.Repos))
+			})
 
-		r.Route("/encrypt", func(r chi.Router) {
-			r.Use(acl.CheckWriteAccess())
-			r.Post("/", encrypt.Handler(s.Repos))
-			r.Post("/secret", encrypt.Handler(s.Repos))
-		})
+			r.Route("/encrypt", func(r chi.Router) {
+				r.Use(acl.CheckWriteAccess())
+				r.Post("/", encrypt.Handler(s.Repos))
+				r.Post("/secret", encrypt.Handler(s.Repos))
+			})
 
-		r.Route("/cron", func(r chi.Router) {
-			r.Use(acl.CheckWriteAccess())
-			r.Post("/", crons.HandleCreate(s.Repos, s.Cron))
-			r.Get("/", crons.HandleList(s.Repos, s.Cron))
-			r.Get("/{cron}", crons.HandleFind(s.Repos, s.Cron))
-			r.Post("/{cron}", crons.HandleExec(s.Users, s.Repos, s.Cron, s.Commits, s.Triggerer))
-			r.Patch("/{cron}", crons.HandleUpdate(s.Repos, s.Cron))
-			r.Delete("/{cron}", crons.HandleDelete(s.Repos, s.Cron))
-		})
+			r.Route("/cron", func(r chi.Router) {
+				r.Use(acl.CheckWriteAccess())
+				r.Post("/", crons.HandleCreate(s.Repos, s.Cron))
+				r.Get("/", crons.HandleList(s.Repos, s.Cron))
+				r.Get("/{cron}", crons.HandleFind(s.Repos, s.Cron))
+				r.Post("/{cron}", crons.HandleExec(s.Users, s.Repos, s.Cron, s.Commits, s.Triggerer))
+				r.Patch("/{cron}", crons.HandleUpdate(s.Repos, s.Cron))
+				r.Delete("/{cron}", crons.HandleDelete(s.Repos, s.Cron))
+			})
 
-		r.Route("/collaborators", func(r chi.Router) {
-			r.Get("/", collabs.HandleList(s.Repos, s.Perms))
-			r.Get("/{member}", collabs.HandleFind(s.Users, s.Repos, s.Perms))
-			r.With(
-				acl.CheckAdminAccess(),
-			).Delete("/{member}", collabs.HandleDelete(s.Users, s.Repos, s.Perms))
+			r.Route("/collaborators", func(r chi.Router) {
+				r.Get("/", collabs.HandleList(s.Repos, s.Perms))
+				r.Get("/{member}", collabs.HandleFind(s.Users, s.Repos, s.Perms))
+				r.With(
+					acl.CheckAdminAccess(),
+				).Delete("/{member}", collabs.HandleDelete(s.Users, s.Repos, s.Perms))
+			})
 		})
 	})
 
