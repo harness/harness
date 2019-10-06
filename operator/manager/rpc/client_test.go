@@ -42,7 +42,7 @@ func TestRequest(t *testing.T) {
 		Version:  1,
 	}
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	got, err := client.Request(noContext, &manager.Request{OS: "linux", Arch: "amd64"})
 	if err != nil {
@@ -67,7 +67,7 @@ func TestAccept(t *testing.T) {
 		BodyString(`{"Stage":1,"Machine":"localhost"}`).
 		Reply(204)
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	_, err := client.Accept(noContext, 1, "localhost")
 	if err != nil {
@@ -90,7 +90,7 @@ func TestNetrc(t *testing.T) {
 		Type("application/json").
 		BodyString(`{"machine":"github.com","login":"octocat","password":"12345"}`)
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	got, err := client.Netrc(noContext, 1)
 	if err != nil {
@@ -125,7 +125,7 @@ func TestDetails(t *testing.T) {
 	// TODO(bradrydzewski) return a mock core.BuildContext
 	// and validate the unmarshaled results.
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	out, err := client.Details(noContext, 1)
 	if err != nil {
@@ -163,7 +163,7 @@ func TestBefore(t *testing.T) {
 		Version:  1,
 	}
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.Before(noContext, before)
 	if err != nil {
@@ -210,7 +210,7 @@ func TestAfter(t *testing.T) {
 		Version:  2,
 	}
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.After(noContext, before)
 	if err != nil {
@@ -260,7 +260,7 @@ func TestBeforeAll(t *testing.T) {
 		Version:  1,
 	}
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.BeforeAll(noContext, before)
 	if err != nil {
@@ -313,7 +313,7 @@ func TestAfterAll(t *testing.T) {
 		Version:  1,
 	}
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.AfterAll(noContext, before)
 	if err != nil {
@@ -349,7 +349,7 @@ func TestBefore_OptimisticLock(t *testing.T) {
 		Post("/rpc/v1/before").
 		Reply(409)
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.Before(noContext, new(core.Step))
 	if err != db.ErrOptimisticLock {
@@ -367,7 +367,7 @@ func TestAfter_OptimisticLock(t *testing.T) {
 		Post("/rpc/v1/after").
 		Reply(409)
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.After(noContext, new(core.Step))
 	if err != db.ErrOptimisticLock {
@@ -385,7 +385,7 @@ func TestBeforeAll_OptimisticLock(t *testing.T) {
 		Post("/rpc/v1/beforeAll").
 		Reply(409)
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.BeforeAll(noContext, new(core.Stage))
 	if err != db.ErrOptimisticLock {
@@ -403,7 +403,7 @@ func TestAfterAll_OptimisticLock(t *testing.T) {
 		Post("/rpc/v1/afterAll").
 		Reply(409)
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.AfterAll(noContext, new(core.Stage))
 	if err != db.ErrOptimisticLock {
@@ -425,7 +425,7 @@ func TestWatch(t *testing.T) {
 		Type("application/json").
 		BodyString(`{"Done":true}`)
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	done, err := client.Watch(noContext, 1)
 	if err != nil {
@@ -450,7 +450,7 @@ func TestWrite(t *testing.T) {
 		BodyString(`{"pos":1,"out":"whoami","time":0}`).
 		Reply(204)
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.Write(noContext, 1, &core.Line{Number: 1, Message: "whoami", Timestamp: 0})
 	if err != nil {
@@ -474,7 +474,7 @@ func TestUpload(t *testing.T) {
 		BodyString(`[{"pos":1,"out":"whoami","time":0}]`).
 		Reply(200)
 
-	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
+	client := NewClient("http://drone.company.com", "correct-horse-battery-staple", false)
 	gock.InterceptClient(client.client.HTTPClient)
 	err := client.Upload(noContext, 1, buf)
 	if err != nil {

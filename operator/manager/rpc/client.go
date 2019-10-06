@@ -8,6 +8,7 @@ package rpc
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -41,12 +42,13 @@ type Client struct {
 // NewClient returns a new rpc client that is able to
 // interact with a remote build controller using the
 // http transport.
-func NewClient(server, token string) *Client {
+func NewClient(server, token string, skipVerify bool) *Client {
 	client := retryablehttp.NewClient()
 	client.RetryMax = 30
 	client.RetryWaitMax = time.Second * 10
 	client.RetryWaitMin = time.Second * 1
 	client.Logger = nil
+	client.HTTPClient.Transport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: skipVerify}
 	return &Client{
 		client: client,
 		server: strings.TrimSuffix(server, "/"),
