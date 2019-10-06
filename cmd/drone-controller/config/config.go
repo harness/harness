@@ -72,11 +72,12 @@ type (
 
 	// RPC provides the rpc configuration.
 	RPC struct {
-		Server string `envconfig:"DRONE_RPC_SERVER"`
-		Secret string `envconfig:"DRONE_RPC_SECRET"`
-		Debug  bool   `envconfig:"DRONE_RPC_DEBUG"`
-		Host   string `envconfig:"DRONE_RPC_HOST"`
-		Proto  string `envconfig:"DRONE_RPC_PROTO"`
+		Server     string `envconfig:"DRONE_RPC_SERVER"`
+		Secret     string `envconfig:"DRONE_RPC_SECRET"`
+		Debug      bool   `envconfig:"DRONE_RPC_DEBUG"`
+		Host       string `envconfig:"DRONE_RPC_HOST"`
+		Proto      string `envconfig:"DRONE_RPC_PROTO"`
+		SkipVerify bool   `envconfig:"DRONE_RPC_SKIP_VERIFY"`
 		// Hosts  map[string]string `envconfig:"DRONE_RPC_EXTRA_HOSTS"`
 	}
 

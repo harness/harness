@@ -62,6 +62,7 @@ func main() {
 	manager := rpc.NewClient(
 		config.RPC.Proto+"://"+config.RPC.Host,
 		config.RPC.Secret,
+		config.RPC.SkipVerify,
 	)
 	if config.RPC.Debug {
 		manager.SetDebug(true)
