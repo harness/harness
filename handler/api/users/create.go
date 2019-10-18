@@ -22,6 +22,7 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/render"
+	"github.com/drone/drone/handler/api/request"
 	"github.com/drone/drone/logger"
 )
 
@@ -60,9 +61,10 @@ func HandleCreate(users core.UserStore, service core.UserService, sender core.We
 		// the user in the remote system. We can then augment
 		// the user input with the remote system data.
 		if !user.Machine {
-			remote, err := service.FindLogin(r.Context(), nil, user.Login)
+			viewer, _ := request.UserFrom(r.Context())
+			remote, err := service.FindLogin(r.Context(), viewer, user.Login)
 			if err == nil {
-				if user.Login != remote.Login {
+				if user.Login != remote.Login && remote.Login != "" {
 					user.Login = remote.Login
 				}
 				if user.Email == "" {
