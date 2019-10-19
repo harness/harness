@@ -92,7 +92,7 @@ func provideGiteaLogin(config config.Config) login.Middleware {
 	if config.Gitea.Server == "" {
 		return nil
 	}
-	return &gitea.Config {
+	return &gitea.Config{
 		ClientID:     config.Gitea.ClientID,
 		ClientSecret: config.Gitea.ClientSecret,
 		Server:       config.Gitea.Server,
