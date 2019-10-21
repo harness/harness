@@ -410,7 +410,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	for _, stage := range stages {
 		// here we re-work the dependencies for the stage to
 		// account for the fact that some steps may be skipped
-		// and may otherwise break the dependnecy chain.
+		// and may otherwise break the dependency chain.
 		stage.DependsOn = dag.Dependencies(stage.Name)
 
 		// if the stage is pending dependencies, but those
