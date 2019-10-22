@@ -99,7 +99,7 @@ func (s *setup) do(ctx context.Context, stage *core.Stage) error {
 
 	updated, err := s.updateBuild(ctx, build)
 	if err != nil {
-		logger.WithError(err).Warnln("manager: cannot bupdate the build")
+		logger.WithError(err).Warnln("manager: cannot update the build")
 		return err
 	}
 
