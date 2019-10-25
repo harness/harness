@@ -100,7 +100,7 @@ func buildEnviron(build *core.Build) map[string]string {
 		"DRONE_COMMIT_AUTHOR_EMAIL":  build.AuthorEmail,
 		"DRONE_COMMIT_AUTHOR_AVATAR": build.AuthorAvatar,
 		"DRONE_COMMIT_AUTHOR_NAME":   build.AuthorName,
-		"DRONE_COMMIT_TIMESTAMP":     build.Timestamp,
+		"DRONE_COMMIT_TIMESTAMP":     fmt.Sprint(build.Timestamp),
 		"DRONE_BUILD_NUMBER":         fmt.Sprint(build.Number),
 		"DRONE_BUILD_EVENT":          build.Event,
 		"DRONE_BUILD_ACTION":         build.Action,
