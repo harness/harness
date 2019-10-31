@@ -20,7 +20,7 @@ type Dag struct {
 	graph map[string]*Vertex
 }
 
-// Vertex is a vetex in the graph.
+// Vertex is a vertex in the graph.
 type Vertex struct {
 	Name  string
 	Skip  bool
@@ -28,7 +28,7 @@ type Vertex struct {
 }
 
 // New creates a new directed acyclic graph (dag) that can
-// determinte if a stage has dependencies.
+// determinate if a stage has dependencies.
 func New() *Dag {
 	return &Dag{
 		graph: make(map[string]*Vertex),
@@ -58,7 +58,7 @@ func (d *Dag) Dependencies(name string) []string {
 	return d.dependencies(vertex)
 }
 
-// Ancestors returns the acentors of the vertex.
+// Ancestors returns the ancestors of the vertex.
 func (d *Dag) Ancestors(name string) []*Vertex {
 	vertex := d.graph[name]
 	return d.ancestors(vertex)
