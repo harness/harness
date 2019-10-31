@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - updated autocert library in support of acme v2 protocol, by [@bradrydzewski](https://github.com/bradrydzewski).
 
+### Fixed
+- fixed nil pointer when manually adding user from api, by [@bradrydzewski](https://github.com/bradrydzewski).
+
 ## [1.6.0] - 2019-10-04
 ### Added
 - added nsswitch to docker images
