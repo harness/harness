@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/go-license/license"
@@ -63,7 +64,13 @@ func Load(path string) (*core.License, error) {
 		return nil, err
 	}
 
-	decoded, err := license.DecodeFile(path, pub)
+	var decoded *license.License
+	if strings.HasPrefix(path, "-----BEGIN LICENSE KEY-----") {
+		decoded, err = license.Decode([]byte(path), pub)
+	} else {
+		decoded, err = license.DecodeFile(path, pub)
+	}
+
 	if err != nil {
 		return nil, err
 	}
