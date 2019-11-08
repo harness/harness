@@ -4,13 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.6.1] -2019-11-08
+## [1.6.2] -2019-11-08
+### Added
+- support for loading license contents from env, by [@bradrydzewski](https://github.com/bradrydzewski).
+
+### Fixed
+- regression not converting legacy pipeline when using new runners, by [@bradrydzewski](https://github.com/bradrydzewski).
+
+## [1.6.1] -2019-10-17
 ### Added
 - updated autocert library in support of acme v2 protocol, by [@bradrydzewski](https://github.com/bradrydzewski).
 
 ### Fixed
 - fixed nil pointer when manually adding user from api, by [@bradrydzewski](https://github.com/bradrydzewski).
-- regression not converting legacy pipeline when using new runners, by [@bradrydzewski](https://github.com/bradrydzewski).
 
 ## [1.6.0] - 2019-10-04
 ### Added
