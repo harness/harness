@@ -20,6 +20,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/drone/drone-yaml/yaml/converter"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
 
@@ -288,6 +289,15 @@ func (m *Manager) Details(ctx context.Context, id int64) (*Context, error) {
 		logger.Warnln("manager: cannot find configuration")
 		return nil, err
 	}
+
+	// this code is temporarily in place to detect and convert
+	// the legacy yaml configuration file to the new format.
+	config.Data, _ = converter.ConvertString(config.Data, converter.Metadata{
+		Filename: repo.Config,
+		URL:      repo.Link,
+		Ref:      build.Ref,
+	})
+
 	config, err = m.Converter.Convert(noContext, &core.ConvertArgs{
 		Build:  build,
 		Config: config,
