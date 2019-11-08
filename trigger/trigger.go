@@ -193,6 +193,15 @@ func trunc(s string, i int) string {
 }
 
 func (t *triggerer) createBuild(logger *logrus.Entry, user *core.User, repo *core.Repository, base *core.Hook, build *core.Build) {
+	defer func() {
+		// taking the paranoid approach to recover from
+		// a panic that should absolutely never happen.
+		if r := recover(); r != nil {
+			logger.Errorf("runner: unexpected panic: %s", r)
+			debug.PrintStack()
+		}
+	}()
+
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
 		time.Duration(repo.Timeout)*time.Minute,
