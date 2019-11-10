@@ -163,6 +163,7 @@ func provideRefresher(config config.Config) *oauth2.Refresher {
 			ClientSecret: config.Bitbucket.ClientSecret,
 			Endpoint:     "https://bitbucket.org/site/oauth2/access_token",
 			Source:       oauth2.ContextTokenSource(),
+			Client:       defaultClient(config.Bitbucket.SkipVerify),
 		}
 	case config.Gitea.ClientID != "":
 		return &oauth2.Refresher{
@@ -170,6 +171,7 @@ func provideRefresher(config config.Config) *oauth2.Refresher {
 			ClientSecret: config.Gitea.ClientSecret,
 			Endpoint:     config.Gitea.Server + "/login/oauth/access_token",
 			Source:       oauth2.ContextTokenSource(),
+			Client:       defaultClient(config.Gitea.SkipVerify),
 		}
 	}
 	return nil
