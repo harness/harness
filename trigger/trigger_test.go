@@ -271,7 +271,7 @@ func TestTrigger_SkipBranch(t *testing.T) {
 
 	_, err := triggerer.Trigger(noContext, dummyRepo, dummyHook)
 	if err != nil {
-		t.Errorf("Expect build silenty skipped if branch does not match")
+		t.Errorf("Expect build silently skipped if branch does not match")
 	}
 }
 
@@ -309,7 +309,7 @@ func TestTrigger_SkipEvent(t *testing.T) {
 
 	_, err := triggerer.Trigger(noContext, dummyRepo, dummyHook)
 	if err != nil {
-		t.Errorf("Expect build silenty skipped if event does not match")
+		t.Errorf("Expect build silently skipped if event does not match")
 	}
 }
 
@@ -347,7 +347,7 @@ func TestTrigger_SkipAction(t *testing.T) {
 
 	_, err := triggerer.Trigger(noContext, dummyRepo, dummyHook)
 	if err != nil {
-		t.Errorf("Expect build silenty skipped if action does not match")
+		t.Errorf("Expect build silently skipped if action does not match")
 	}
 }
 
