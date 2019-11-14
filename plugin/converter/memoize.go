@@ -26,8 +26,8 @@ import (
 )
 
 // cache key pattern used in the cache, comprised of the
-// repository slug and commit sha.
-const keyf = "%d/%s"
+// repository slug and commit sha and event's type.
+const keyf = "%d/%s/%s"
 
 // Memoize caches the conversion results for subsequent calls.
 // This micro-optimization is intended for multi-pipeline
@@ -53,13 +53,13 @@ func (c *memoize) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Con
 	}
 
 	// generate the key used to cache the converted file.
-	key := fmt.Sprintf(keyf, req.Repo.ID, req.Build.After)
+	key := fmt.Sprintf(keyf, req.Repo.ID, req.Build.After, req.Build.Event)
 
 	// some source control management systems (gogs) do not provide
 	// the commit sha for tag webhooks. If no commit sha is available
 	// the ref is used.
 	if req.Build.After == "" {
-		key = fmt.Sprintf(keyf, req.Repo.ID, req.Build.Ref)
+		key = fmt.Sprintf(keyf, req.Repo.ID, req.Build.Ref, req.Build.Event)
 	}
 
 	// check the cache for the file and return if exists.
