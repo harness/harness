@@ -140,7 +140,7 @@ func (d *Datadog) Client() *http.Client {
 	return d.client
 }
 
-// calculate the differene between now and midnight.
+// calculate the differences between now and midnight.
 func midnightDiff() time.Duration {
 	a := time.Now()
 	b := time.Date(a.Year(), a.Month(), a.Day()+1, 0, 0, 0, 0, a.Location())
