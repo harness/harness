@@ -80,13 +80,11 @@ func provideConvertPlugin(client *scm.Client, conf spec.Config) core.ConvertServ
 		converter.Jsonnet(
 			conf.Jsonnet.Enabled,
 		),
-		converter.Memoize(
-			converter.Remote(
-				conf.Convert.Endpoint,
-				conf.Convert.Secret,
-				conf.Convert.Extension,
-				conf.Convert.SkipVerify,
-			),
+		converter.Remote(
+			conf.Convert.Endpoint,
+			conf.Convert.Secret,
+			conf.Convert.Extension,
+			conf.Convert.SkipVerify,
 		),
 	)
 }
