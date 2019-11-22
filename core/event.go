@@ -16,11 +16,12 @@ package core
 
 // Hook event constants.
 const (
-	EventCron        = "cron"
-	EventCustom      = "custom"
-	EventPush        = "push"
-	EventPullRequest = "pull_request"
-	EventTag         = "tag"
-	EventPromote     = "promote"
-	EventRollback    = "rollback"
+	EventCron             = "cron"
+	EventCustom           = "custom"
+	EventPush             = "push"
+	EventPullRequest      = "pull_request"
+	EventClosePullRequest = "close_pull_request"
+	EventTag              = "tag"
+	EventPromote          = "promote"
+	EventRollback         = "rollback"
 )
