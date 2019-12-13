@@ -6,16 +6,7 @@
 
 package internal
 
-import (
-	"fmt"
-
-	"github.com/drone/drone/version"
-)
-
-var defaultImage = fmt.Sprintf(
-	"drone/controller:%s",
-	version.Version.String(),
-)
+var defaultImage = "drone/controller:1"
 
 // DefaultImage returns the default dispatch image if none
 // is specified.
