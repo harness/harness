@@ -30,12 +30,14 @@ import (
 	"github.com/google/wire"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/unrolled/secure"
 )
 
 type (
 	healthzHandler http.Handler
 	metricsHandler http.Handler
+	pprofHandler   http.Handler
 	rpcHandlerV1   http.Handler
 	rpcHandlerV2   http.Handler
 )
@@ -47,6 +49,7 @@ var serverSet = wire.NewSet(
 	web.New,
 	provideHealthz,
 	provideMetric,
+	providePprof,
 	provideRouter,
 	provideRPC,
 	provideRPC2,
@@ -56,7 +59,7 @@ var serverSet = wire.NewSet(
 
 // provideRouter is a Wire provider function that returns a
 // router that is serves the provided handlers.
-func provideRouter(api api.Server, web web.Server, rpcv1 rpcHandlerV1, rpcv2 rpcHandlerV2, healthz healthzHandler, metrics *metric.Server) *chi.Mux {
+func provideRouter(api api.Server, web web.Server, rpcv1 rpcHandlerV1, rpcv2 rpcHandlerV2, healthz healthzHandler, metrics *metric.Server, pprof pprofHandler) *chi.Mux {
 	r := chi.NewRouter()
 	r.Mount("/healthz", healthz)
 	r.Mount("/metrics", metrics)
@@ -64,6 +67,7 @@ func provideRouter(api api.Server, web web.Server, rpcv1 rpcHandlerV1, rpcv2 rpc
 	r.Mount("/rpc/v2", rpcv2)
 	r.Mount("/rpc", rpcv1)
 	r.Mount("/", web.Handler())
+	r.Mount("/debug", pprof)
 	return r
 }
 
@@ -78,6 +82,19 @@ func provideHealthz() healthzHandler {
 // metrics server exposing metrics in prometheus format.
 func provideMetric(session core.Session, config config.Config) *metric.Server {
 	return metric.NewServer(session, config.Prometheus.EnableAnonymousAccess)
+}
+
+// providePprof is a Wire provider function that returns the
+// pprof server endpoints.
+func providePprof(config config.Config) pprofHandler {
+	if config.Server.Pprof == false {
+		return pprofHandler(
+			http.NotFoundHandler(),
+		)
+	}
+	return pprofHandler(
+		middleware.Profiler(),
+	)
 }
 
 // provideRPC is a Wire provider function that returns an rpc

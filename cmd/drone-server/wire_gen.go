@@ -101,7 +101,8 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	mainRpcHandlerV2 := provideRPC2(buildManager, config2)
 	mainHealthzHandler := provideHealthz()
 	metricServer := provideMetric(session, config2)
-	mux := provideRouter(server, webServer, mainRpcHandlerV1, mainRpcHandlerV2, mainHealthzHandler, metricServer)
+	mainPprofHandler := providePprof(config2)
+	mux := provideRouter(server, webServer, mainRpcHandlerV1, mainRpcHandlerV2, mainHealthzHandler, metricServer, mainPprofHandler)
 	serverServer := provideServer(mux, config2)
 	mainApplication := newApplication(cronScheduler, datadog, runner, serverServer, userStore)
 	return mainApplication, nil
