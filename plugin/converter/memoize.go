@@ -48,7 +48,7 @@ type memoize struct {
 func (c *memoize) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Config, error) {
 	// this is a minor optimization that prevents caching if the
 	// base converter is a remote converter and is disabled.
-	if remote, ok := c.base.(*remote); ok == true && remote.endpoint == "" {
+	if remote, ok := c.base.(*remote); ok == true && remote.client == nil {
 		return nil, nil
 	}
 

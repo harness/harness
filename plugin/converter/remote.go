@@ -19,23 +19,26 @@ import (
 // Remote returns a conversion service that converts the
 // configuration file using a remote http service.
 func Remote(endpoint, signer, extension string, skipVerify bool) core.ConvertService {
+	if endpoint == "" {
+		return new(remote)
+	}
 	return &remote{
-		extension:  extension,
-		endpoint:   endpoint,
-		secret:     signer,
-		skipVerify: skipVerify,
+		extension: extension,
+		client: converter.Client(
+			endpoint,
+			signer,
+			skipVerify,
+		),
 	}
 }
 
 type remote struct {
-	extension  string
-	endpoint   string
-	secret     string
-	skipVerify bool
+	client    converter.Plugin
+	extension string
 }
 
 func (g *remote) Convert(ctx context.Context, in *core.ConvertArgs) (*core.Config, error) {
-	if g.endpoint == "" {
+	if g.client == nil {
 		return nil, nil
 	}
 	if g.extension != "" {
@@ -57,8 +60,8 @@ func (g *remote) Convert(ctx context.Context, in *core.ConvertArgs) (*core.Confi
 			Data: in.Config.Data,
 		},
 	}
-	client := converter.Client(g.endpoint, g.secret, g.skipVerify)
-	res, err := client.Convert(ctx, req)
+
+	res, err := g.client.Convert(ctx, req)
 	if err != nil {
 		return nil, err
 	}
