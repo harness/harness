@@ -159,9 +159,29 @@ func (s *userStore) Count(ctx context.Context) (int64, error) {
 	return out, err
 }
 
+// Count returns a count of active human users.
+func (s *userStore) CountHuman(ctx context.Context) (int64, error) {
+	var out int64
+	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
+		params := toParams(&core.User{Machine: false})
+		stmt, args, err := binder.BindNamed(queryCountHuman, params)
+		if err != nil {
+			return err
+		}
+		return queryer.QueryRow(stmt, args...).Scan(&out)
+	})
+	return out, err
+}
+
 const queryCount = `
 SELECT COUNT(*)
 FROM users
+`
+
+const queryCountHuman = `
+SELECT COUNT(*)
+FROM users
+WHERE user_machine = :user_machine
 `
 
 const queryBase = `

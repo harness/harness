@@ -66,6 +66,14 @@ func testUserCount(users *userStore) func(t *testing.T) {
 		if got, want := count, int64(1); got != want {
 			t.Errorf("Want user table count %d, got %d", want, got)
 		}
+
+		count, err = users.CountHuman(noContext)
+		if err != nil {
+			t.Error(err)
+		}
+		if got, want := count, int64(1); got != want {
+			t.Errorf("Want user table count %d, got %d", want, got)
+		}
 	}
 }
 

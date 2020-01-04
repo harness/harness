@@ -1880,6 +1880,21 @@ func (mr *MockUserStoreMockRecorder) Count(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockUserStore)(nil).Count), arg0)
 }
 
+// CountHuman mocks base method
+func (m *MockUserStore) CountHuman(arg0 context.Context) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountHuman", arg0)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountHuman indicates an expected call of CountHuman
+func (mr *MockUserStoreMockRecorder) CountHuman(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountHuman", reflect.TypeOf((*MockUserStore)(nil).CountHuman), arg0)
+}
+
 // Create mocks base method
 func (m *MockUserStore) Create(arg0 context.Context, arg1 *core.User) error {
 	m.ctrl.T.Helper()
