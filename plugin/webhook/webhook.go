@@ -19,6 +19,7 @@ import (
 	"github.com/drone/drone/core"
 
 	"github.com/99designs/httpsignatures-go"
+	"github.com/sirupsen/logrus"
 )
 
 // required http headers
@@ -64,6 +65,21 @@ func (s *sender) Send(ctx context.Context, in *core.WebhookData) error {
 	if s.match(in.Event, in.Action) == false {
 		return nil
 	}
+
+	logger := logrus.
+		WithField("event", in.Event).
+		WithField("action", in.Action)
+	if in.Repo != nil {
+		logger = logger.WithField("repo", in.Repo.Name)
+	}
+	if in.Build != nil {
+		logger = logger.
+			WithField("build.id", in.Build.ID).
+			WithField("build.number", in.Build.Number).
+			WithField("build.status", in.Build.Status)
+	}
+	logger.Debugln("webhook: sending global webhook")
+
 	wrapper := payload{
 		WebhookData: in,
 		System:      s.System,
