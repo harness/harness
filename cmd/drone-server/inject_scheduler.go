@@ -87,6 +87,7 @@ func provideNomadScheduler(config config.Config) core.Scheduler {
 	logrus.Info("main: nomad scheduler enabled")
 	sched, err := nomad.FromConfig(nomad.Config{
 		Datacenter:      config.Nomad.Datacenters,
+		Labels:          config.Nomad.Labels,
 		Namespace:       config.Nomad.Namespace,
 		Region:          config.Nomad.Region,
 		DockerImage:     config.Nomad.Image,
