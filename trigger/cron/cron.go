@@ -46,11 +46,14 @@ type Scheduler struct {
 
 // Start starts the cron scheduler.
 func (s *Scheduler) Start(ctx context.Context, dur time.Duration) error {
+	ticker := time.NewTicker(dur)
+	defer ticker.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-time.After(dur):
+		case <-ticker.C:
 			s.run(ctx)
 		}
 	}
