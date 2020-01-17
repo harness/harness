@@ -37,6 +37,7 @@ type teardown struct {
 	Status    core.StatusService
 	Stages    core.StageStore
 	Users     core.UserStore
+	Webhook   core.WebhookSender
 }
 
 func (t *teardown) do(ctx context.Context, stage *core.Stage) error {
@@ -165,6 +166,17 @@ func (t *teardown) do(ctx context.Context, stage *core.Stage) error {
 	if err != nil {
 		logger.WithError(err).
 			Warnln("manager: cannot publish build event")
+	}
+
+	payload := &core.WebhookData{
+		Event:  core.WebhookEventBuild,
+		Action: core.WebhookActionUpdated,
+		Repo:   repo,
+		Build:  build,
+	}
+	err = t.Webhook.Send(noContext, payload)
+	if err != nil {
+		logger.WithError(err).Warnln("manager: cannot send global webhook")
 	}
 
 	user, err := t.Users.Find(noContext, repo.UserID)

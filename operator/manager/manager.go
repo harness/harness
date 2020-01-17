@@ -437,6 +437,7 @@ func (m *Manager) AfterAll(ctx context.Context, stage *core.Stage) error {
 		Stages:    m.Stages,
 		Status:    m.Status,
 		Users:     m.Users,
+		Webhook:   m.Webhook,
 	}
 	return t.do(ctx, stage)
 }
