@@ -16,6 +16,7 @@ package trigger
 
 import (
 	"context"
+	"fmt"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -287,25 +288,25 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 
 		if skipBranch(pipeline, base.Target) {
 			logger = logger.WithField("pipeline", pipeline.Name)
-			logger.Infoln("trigger: skipping pipeline, does not match branch")
+			logger.Infoln(fmt.Sprintf("trigger: skipping pipeline, does not match branch '%s'", base.Target))
 		} else if skipEvent(pipeline, base.Event) {
 			logger = logger.WithField("pipeline", pipeline.Name)
-			logger.Infoln("trigger: skipping pipeline, does not match event")
+			logger.Infoln(fmt.Sprintf("trigger: skipping pipeline, does not match event '%s'", base.Event))
 		} else if skipAction(pipeline, base.Action) {
 			logger = logger.WithField("pipeline", pipeline.Name).WithField("action", base.Action)
-			logger.Infoln("trigger: skipping pipeline, does not match action")
+			logger.Infoln(fmt.Sprintf("trigger: skipping pipeline, does not match action '%s'", base.Action))
 		} else if skipRef(pipeline, base.Ref) {
 			logger = logger.WithField("pipeline", pipeline.Name)
-			logger.Infoln("trigger: skipping pipeline, does not match ref")
+			logger.Infoln(fmt.Sprintf("trigger: skipping pipeline, does not match ref '%s'", pipeline.Name))
 		} else if skipRepo(pipeline, repo.Slug) {
 			logger = logger.WithField("pipeline", pipeline.Name)
-			logger.Infoln("trigger: skipping pipeline, does not match repo")
+			logger.Infoln(fmt.Sprintf("trigger: skipping pipeline, does not match repo '%s'", pipeline.Name))
 		} else if skipTarget(pipeline, base.Deployment) {
 			logger = logger.WithField("pipeline", pipeline.Name)
-			logger.Infoln("trigger: skipping pipeline, does not match deploy target")
+			logger.Infoln(fmt.Sprintf("trigger: skipping pipeline, does not match deploy target '%s'", pipeline.Name))
 		} else if skipCron(pipeline, base.Cron) {
 			logger = logger.WithField("pipeline", pipeline.Name)
-			logger.Infoln("trigger: skipping pipeline, does not match cron job")
+			logger.Infoln(fmt.Sprintf("trigger: skipping pipeline, does not match cron job '%s'", pipeline.Name))
 		} else {
 			matched = append(matched, pipeline)
 			node.Skip = false
