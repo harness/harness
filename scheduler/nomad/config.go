@@ -17,6 +17,7 @@ package nomad
 // Config is the configuration for the Nomad scheduler.
 type Config struct {
 	Datacenter       []string
+	Labels           map[string]string
 	Namespace        string
 	Region           string
 	DockerImage      string
