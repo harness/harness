@@ -14,7 +14,7 @@
     "visibility": "internal",
     "active": true,
     "config_path": ".drone.yml",
-    "coverage_parsing": "Total",
+    "coverage_parsing": "\\(statements\\).*\\d+.\\d+%",
     "trusted": true,
     "timeout": 900,
     "counter": 22,
