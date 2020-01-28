@@ -17,6 +17,9 @@ package manager
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
+	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/drone/drone/core"
@@ -29,6 +32,7 @@ import (
 
 type teardown struct {
 	Builds    core.BuildStore
+	LogStore  core.LogStore
 	Events    core.Pubsub
 	Logs      core.LogStream
 	Scheduler core.Scheduler
@@ -143,6 +147,9 @@ func (t *teardown) do(ctx context.Context, stage *core.Stage) error {
 		build.Started = build.Finished
 	}
 
+	if build.Status == core.StatusPassing {
+		build.Coverage = t.resolveCoverage(ctx, stages, repo.CoverageParsing)
+	}
 	err = t.Builds.Update(noContext, build)
 	if err == db.ErrOptimisticLock {
 		logger.WithError(err).
@@ -344,4 +351,25 @@ func (t *teardown) resync(ctx context.Context, stage *core.Stage) error {
 	stage.Created = updated.Created
 	stage.Updated = updated.Updated
 	return nil
+}
+
+// resolveCoverage search the logs of each stage for the regular
+// expression configured to extract the code coverage of the unit tests
+func (t *teardown) resolveCoverage(ctx context.Context, stages []*core.Stage, cvrgRgxStr string) float32 {
+	cvrgExRgx := regexp.MustCompile(`\d+.\d`)
+	cvrg := float32(0.0)
+	if cvrgRgx, err := regexp.Compile(cvrgRgxStr); err == nil {
+		for _, stage := range stages {
+			if rc, err := t.LogStore.Find(ctx, stage.ID); err == nil {
+				if rcBytes, err := ioutil.ReadAll(rc); err == nil && cvrgRgx.Match(rcBytes) {
+					cvrgLnMatch := cvrgRgx.Find(rcBytes)
+					coverageText := string(cvrgExRgx.Find(cvrgLnMatch))
+					if coverageValue, err := strconv.ParseFloat(coverageText, 32); err == nil {
+						cvrg = float32(coverageValue)
+					}
+				}
+			}
+		}
+	}
+	return cvrg
 }

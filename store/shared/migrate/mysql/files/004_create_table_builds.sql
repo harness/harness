@@ -52,3 +52,7 @@ CREATE INDEX ix_build_sender ON builds (build_sender);
 -- name: create-index-builds-ref
 
 CREATE INDEX ix_build_ref ON builds (build_repo_id, build_ref);
+
+-- name: alter-table-builds-add-column-build-coverage
+
+ALTER TABLE builds ADD COLUMN build_coverage DECIMAL(3,2) NOT NULL DEFAULT 0.00;

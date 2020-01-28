@@ -55,6 +55,7 @@ var corsOpts = cors.Options{
 	MaxAge:           300,
 }
 
+// New server
 func New(
 	builds core.BuildStore,
 	commits core.CommitService,
@@ -263,6 +264,7 @@ func (s Server) Handler() http.Handler {
 
 	r.Route("/badges/{owner}/{name}", func(r chi.Router) {
 		r.Get("/status.svg", badge.Handler(s.Repos, s.Builds))
+		r.Get("/coverage.svg", badge.HandlerCoverage(s.Repos, s.Builds))
 		r.With(
 			acl.InjectRepository(s.Repoz, s.Repos, s.Perms),
 			acl.CheckReadAccess(),

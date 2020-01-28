@@ -33,6 +33,10 @@ var migrations = []struct {
 		stmt: alterTableReposAddColumnCancelPush,
 	},
 	{
+		name: "alter-table-repos-add-column-coverage-parsing",
+		stmt: alterTableReposAddColumnCoverageParsing,
+	},
+	{
 		name: "create-table-perms",
 		stmt: createTablePerms,
 	},
@@ -67,6 +71,10 @@ var migrations = []struct {
 	{
 		name: "create-index-builds-ref",
 		stmt: createIndexBuildsRef,
+	},
+	{
+		name: "alter-table-builds-add-column-build-coverage",
+		stmt: alterTableBuildsAddColumnBuildCoverage,
 	},
 	{
 		name: "create-table-stages",
@@ -286,6 +294,10 @@ var alterTableReposAddColumnCancelPush = `
 ALTER TABLE repos ADD COLUMN repo_cancel_push BOOLEAN NOT NULL DEFAULT false;
 `
 
+var alterTableReposAddColumnCoverageParsing = `
+ALTER TABLE repos ADD COLUMN repo_coverage_parsing VARCHAR(50) NOT NULL DEFAULT '';
+`
+
 //
 // 003_create_table_perms.sql
 //
@@ -373,6 +385,10 @@ CREATE INDEX IF NOT EXISTS ix_build_sender ON builds (build_sender);
 
 var createIndexBuildsRef = `
 CREATE INDEX IF NOT EXISTS ix_build_ref ON builds (build_repo_id, build_ref);
+`
+
+var alterTableBuildsAddColumnBuildCoverage = `
+ALTER TABLE builds ADD COLUMN build_coverage NUMERIC(3,2) NOT NULL DEFAULT 0.00;
 `
 
 //

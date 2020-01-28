@@ -306,6 +306,7 @@ SELECT
 ,build_number
 ,build_parent
 ,build_status
+,build_coverage
 ,build_error
 ,build_event
 ,build_action
@@ -407,6 +408,7 @@ const stmtUpdate = `
 UPDATE builds SET
  build_parent = :build_parent
 ,build_status = :build_status
+,build_coverage = :build_coverage
 ,build_error = :build_error
 ,build_event = :build_event
 ,build_action = :build_action
@@ -443,6 +445,7 @@ INSERT INTO builds (
 ,build_number
 ,build_parent
 ,build_status
+,build_coverage
 ,build_error
 ,build_event
 ,build_action
@@ -476,6 +479,7 @@ INSERT INTO builds (
 ,:build_number
 ,:build_parent
 ,:build_status
+,:build_coverage
 ,:build_error
 ,:build_event
 ,:build_action

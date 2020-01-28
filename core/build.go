@@ -24,6 +24,7 @@ type Build struct {
 	Number       int64             `db:"build_number"         json:"number"`
 	Parent       int64             `db:"build_parent"         json:"parent,omitempty"`
 	Status       string            `db:"build_status"         json:"status"`
+	Coverage     float32           `db:"build_coverage"       json:"coverage"`
 	Error        string            `db:"build_error"          json:"error,omitempty"`
 	Event        string            `db:"build_event"          json:"event"`
 	Action       string            `db:"build_action"         json:"action"`

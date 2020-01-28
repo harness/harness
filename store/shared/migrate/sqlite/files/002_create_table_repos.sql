@@ -45,3 +45,7 @@ ALTER TABLE repos ADD COLUMN repo_cancel_pulls BOOLEAN NOT NULL DEFAULT 0;
 -- name: alter-table-repos-add-column-cancel-push
 
 ALTER TABLE repos ADD COLUMN repo_cancel_push BOOLEAN NOT NULL DEFAULT 0;
+
+-- name: alter-table-repos-add-column-coverage-parsing
+
+ALTER TABLE repos ADD COLUMN repo_coverage_parsing TEXT NOT NULL DEFAULT '';

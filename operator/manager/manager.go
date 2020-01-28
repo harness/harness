@@ -429,6 +429,7 @@ func (m *Manager) BeforeAll(ctx context.Context, stage *core.Stage) error {
 func (m *Manager) AfterAll(ctx context.Context, stage *core.Stage) error {
 	t := &teardown{
 		Builds:    m.Builds,
+		LogStore:  m.Logs,
 		Events:    m.Events,
 		Logs:      m.Logz,
 		Repos:     m.Repos,

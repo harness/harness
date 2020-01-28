@@ -282,6 +282,7 @@ SELECT
 ,repo_branch
 ,repo_counter
 ,repo_config
+,repo_coverage_parsing
 ,repo_timeout
 ,repo_trusted
 ,repo_protected
@@ -376,6 +377,7 @@ INSERT INTO repos (
 ,repo_branch
 ,repo_counter
 ,repo_config
+,repo_coverage_parsing
 ,repo_timeout
 ,repo_trusted
 ,repo_protected
@@ -405,6 +407,7 @@ INSERT INTO repos (
 ,:repo_branch
 ,:repo_counter
 ,:repo_config
+,:repo_coverage_parsing
 ,:repo_timeout
 ,:repo_trusted
 ,:repo_protected
@@ -453,6 +456,7 @@ UPDATE repos SET
 ,repo_visibility = :repo_visibility
 ,repo_active = :repo_active
 ,repo_config = :repo_config
+,repo_coverage_parsing = :repo_coverage_parsing
 ,repo_trusted = :repo_trusted
 ,repo_protected = :repo_protected
 ,repo_no_forks = :repo_no_forks
