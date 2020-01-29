@@ -24,7 +24,7 @@ require (
 	github.com/drone/envsubst v1.0.1
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2
-	github.com/drone/go-scm v1.6.1-0.20190930172114-d8fff5ce7761
+	github.com/drone/go-scm v1.6.1-0.20200129164755-ee0770ce7ae6
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ghodss/yaml v1.0.0
