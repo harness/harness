@@ -1,7 +1,7 @@
-FROM alpine:3.9 as alpine
+FROM alpine:3.11 as alpine
 RUN apk add -U --no-cache ca-certificates
 
-FROM alpine:3.9
+FROM alpine:3.11
 ENV GODEBUG=netdns=go
 ENV DRONE_RUNNER_OS=linux
 ENV DRONE_RUNNER_ARCH=arm64
