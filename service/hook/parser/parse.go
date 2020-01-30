@@ -364,5 +364,5 @@ func toMap(src interface{}) map[string]string {
 	for k, v := range set {
 		dst[k] = fmt.Sprint(v)
 	}
-	return nil
+	return dst
 }
