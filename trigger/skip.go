@@ -43,7 +43,7 @@ func skipAction(document *yaml.Pipeline, action string) bool {
 func skipEventAction(document *yaml.Pipeline, event string, action string) bool {
 	switch event {
 	case core.EventPullRequest:
-		return skipPullRequestEval(document, action)
+		return skipPullRequestEval(&document.Trigger.Action, action)
 	}
 
 	return false
@@ -96,20 +96,29 @@ func skipMessageEval(str string) bool {
 
 // skipPullRequestEval determines whether or not to skip pull requests.
 //
-// Pull requests have a special behaviour in that if the event type is unspecified the yaml, the "open" and "sync"
-// events should be propagated but the "close" event should not.
-func skipPullRequestEval(document *yaml.Pipeline, action string) bool {
-	// If the trigger event is explicit the check is handled by `skipEvent`.
-	if len(document.Trigger.Action.Include) > 0 || len(document.Trigger.Action.Exclude) > 0 {
+// Pull requests have a special behaviour in that unless the "close" event is deliberately opted in to via "include"
+// it should not be included. This allows users to consume this event class, but does not break BC with users who
+// have pipelines defined before this event was introduced.
+func skipPullRequestEval(condition *yaml.Condition, action string) bool {
+	// If there are conditions and those conditions include this action, allow the pipeline to continue.
+	if len(condition.Include) > 0 && condition.Includes(action) {
 		return false
 	}
 
-	// The default behaviour of the pull request
-	switch action {
-	case scm.ActionOpen.String(), scm.ActionSync.String():
-		return false
+	// Verify the event is not deliberately excluded
+	if condition.Excludes(action) {
+		return true
 	}
 
+	// If there are no includes and execludes for this event, see if it matches the defaults:
+	if len(condition.Include) == 0 {
+		switch action {
+		case scm.ActionOpen.String(), scm.ActionSync.String():
+			return false
+		}
+	}
+
+	// If there are still conditions but they do not match this action, the pipeline should be skipped.
 	return true
 }
 
