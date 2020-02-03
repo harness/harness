@@ -37,6 +37,17 @@ func skipAction(document *yaml.Pipeline, action string) bool {
 	return !document.Trigger.Action.Match(action)
 }
 
+// skipEventAction implements event specific logic where the standard "subscribe to all" event logic is not
+// appropriate.
+func skipEventAction(document *yaml.Pipeline, event string, action string) bool {
+	switch event {
+	case core.EventPullRequest:
+		return skipPullRequestEval(document, action)
+	}
+
+	return false
+}
+
 func skipInstance(document *yaml.Pipeline, instance string) bool {
 	return !document.Trigger.Instance.Match(instance)
 }
@@ -80,6 +91,26 @@ func skipMessageEval(str string) bool {
 	default:
 		return false
 	}
+}
+
+// skipPullRequestEval determines whether or not to skip pull requests.
+//
+// Pull requests have a special behaviour in that if the event type is unspecified the yaml, the "open" and "sync"
+// events should be propagated but the "close" event should not.
+func skipPullRequestEval(document *yaml.Pipeline, action string) bool {
+	// If the trigger event is explicit the check is handled by `skipEvent`.
+	if len(document.Trigger.Action.Include) > 0 {
+		return false
+	}
+
+	// The default behaviour of the pull request
+	switch action {
+	case core.ActionSync:
+	case core.ActionOpen:
+		return false
+	}
+
+	return true
 }
 
 // func skipPaths(document *config.Config, paths []string) bool {
