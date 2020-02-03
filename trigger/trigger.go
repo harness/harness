@@ -28,8 +28,6 @@ import (
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/trigger/dag"
 
-	"github.com/drone/go-scm/scm"
-
 	"github.com/sirupsen/logrus"
 )
 
@@ -296,24 +294,9 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		// TODO add target
 		// TODO add ref
 
-		// Insert Defaults
 		name := pipeline.Name
 		if name == "" {
 			name = "default"
-		}
-
-		// With the introduction of the "close" event in drone the default behaviour changes from "opt in to opens
-		// only" to "opt in to all".
-		//
-		// So as to preserve BC, this polyfills the previous design of "open" and "sync" events being included, but
-		// "exclude" events not. This allows users to "opt in" to the exclude behaviour.
-		if pipeline.Trigger.Event.Match(core.EventPullRequest) &&
-			len(pipeline.Trigger.Action.Include) == 0 {
-			pipeline.Trigger.Action.Include = append(
-				pipeline.Trigger.Action.Include,
-				scm.ActionOpen.String(),
-				scm.ActionSync.String(),
-			)
 		}
 
 		node := dag.Add(pipeline.Name, pipeline.DependsOn...)

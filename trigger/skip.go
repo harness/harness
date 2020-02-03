@@ -19,6 +19,7 @@ import (
 
 	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone/core"
+	"github.com/drone/go-scm/scm"
 )
 
 func skipBranch(document *yaml.Pipeline, branch string) bool {
@@ -99,14 +100,13 @@ func skipMessageEval(str string) bool {
 // events should be propagated but the "close" event should not.
 func skipPullRequestEval(document *yaml.Pipeline, action string) bool {
 	// If the trigger event is explicit the check is handled by `skipEvent`.
-	if len(document.Trigger.Action.Include) > 0 {
+	if len(document.Trigger.Action.Include) > 0 || len(document.Trigger.Action.Exclude) > 0 {
 		return false
 	}
 
 	// The default behaviour of the pull request
 	switch action {
-	case core.ActionSync:
-	case core.ActionOpen:
+	case scm.ActionOpen.String(), scm.ActionSync.String():
 		return false
 	}
 
