@@ -300,6 +300,7 @@ func (s Server) Handler() http.Handler {
 		r.Get("/{user}", users.HandleFind(s.Users))
 		r.Patch("/{user}", users.HandleUpdate(s.Users))
 		r.Delete("/{user}", users.HandleDelete(s.Users, s.Webhook))
+		r.Get("/{user}/repos", users.HandleRepoList(s.Users, s.Repos))
 	})
 
 	r.Route("/stream", func(r chi.Router) {
