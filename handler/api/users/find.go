@@ -16,6 +16,7 @@ package users
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/render"
@@ -32,6 +33,17 @@ func HandleFind(users core.UserStore) http.HandlerFunc {
 
 		user, err := users.FindLogin(r.Context(), login)
 		if err != nil {
+			// the client can make a user request by providing
+			// the user id as opposed to the username. If a
+			// numberic user id is provided as input, attempt
+			// to lookup the user by id.
+			if id, _ := strconv.ParseInt(login, 10, 64); id != 0 {
+				user, err = users.Find(r.Context(), id)
+				if err == nil {
+					render.JSON(w, user, 200)
+					return
+				}
+			}
 			render.NotFound(w, err)
 			logger.FromRequest(r).Debugln("api: cannot find user")
 		} else {
