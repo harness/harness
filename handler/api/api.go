@@ -17,6 +17,7 @@ package api
 import (
 	"net/http"
 
+	"github.com/drone/drone/cmd/drone-server/config"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/acl"
 	"github.com/drone/drone/handler/api/auth"
@@ -58,6 +59,7 @@ var corsOpts = cors.Options{
 func New(
 	builds core.BuildStore,
 	commits core.CommitService,
+	config config.Config,
 	cron core.CronStore,
 	events core.Pubsub,
 	globals core.GlobalSecretStore,
@@ -87,6 +89,7 @@ func New(
 		Builds:    builds,
 		Cron:      cron,
 		Commits:   commits,
+		Config:    config,
 		Events:    events,
 		Globals:   globals,
 		Hooks:     hooks,
@@ -118,6 +121,7 @@ type Server struct {
 	Builds    core.BuildStore
 	Cron      core.CronStore
 	Commits   core.CommitService
+	Config    config.Config
 	Events    core.Pubsub
 	Globals   core.GlobalSecretStore
 	Hooks     core.HookService
@@ -169,7 +173,7 @@ func (s Server) Handler() http.Handler {
 			).Patch("/", repos.HandleUpdate(s.Repos))
 			r.With(
 				acl.CheckAdminAccess(),
-			).Post("/", repos.HandleEnable(s.Hooks, s.Repos, s.Webhook))
+			).Post("/", repos.HandleEnable(s.Hooks, s.Repos, s.Webhook, s.Config.Yaml.File))
 			r.With(
 				acl.CheckAdminAccess(),
 			).Delete("/", repos.HandleDisable(s.Repos, s.Webhook))

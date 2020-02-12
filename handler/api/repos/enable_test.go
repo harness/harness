@@ -23,6 +23,8 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
+const defaultConfig = ".drone.yml"
+
 func TestEnable(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
@@ -56,7 +58,7 @@ func TestEnable(t *testing.T) {
 		context.WithValue(request.WithUser(r.Context(), &core.User{ID: 1}), chi.RouteCtxKey, c),
 	)
 
-	HandleEnable(service, repos, webhook)(w, r)
+	HandleEnable(service, repos, webhook, defaultConfig)(w, r)
 	if got, want := w.Code, 200; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -90,7 +92,7 @@ func TestEnable_RepoNotFound(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleEnable(nil, repos, nil)(w, r)
+	HandleEnable(nil, repos, nil, defaultConfig)(w, r)
 	if got, want := w.Code, 404; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -129,7 +131,7 @@ func TestEnable_HookError(t *testing.T) {
 		context.WithValue(request.WithUser(r.Context(), &core.User{ID: 1}), chi.RouteCtxKey, c),
 	)
 
-	HandleEnable(service, repos, nil)(w, r)
+	HandleEnable(service, repos, nil, defaultConfig)(w, r)
 	if got, want := w.Code, http.StatusInternalServerError; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -168,7 +170,7 @@ func TestEnable_ActivateError(t *testing.T) {
 		context.WithValue(request.WithUser(r.Context(), &core.User{ID: 1}), chi.RouteCtxKey, c),
 	)
 
-	HandleEnable(service, repos, nil)(w, r)
+	HandleEnable(service, repos, nil, defaultConfig)(w, r)
 	if got, want := w.Code, http.StatusInternalServerError; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}

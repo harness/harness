@@ -32,6 +32,7 @@ func HandleEnable(
 	hooks core.HookService,
 	repos core.RepositoryStore,
 	sender core.WebhookSender,
+	defaultConfig string,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
@@ -53,7 +54,7 @@ func HandleEnable(
 		repo.UserID = user.ID
 
 		if repo.Config == "" {
-			repo.Config = ".drone.yml"
+			repo.Config = defaultConfig
 		}
 		if repo.Signer == "" {
 			repo.Signer = uniuri.NewLen(32)

@@ -300,6 +300,7 @@ type (
 
 	// Yaml provides the yaml webhook configuration.
 	Yaml struct {
+		File       string `envconfig:"DRONE_YAML_FILE" default:".drone.yml"`
 		Endpoint   string `envconfig:"DRONE_YAML_ENDPOINT"`
 		Secret     string `envconfig:"DRONE_YAML_SECRET"`
 		SkipVerify bool   `envconfig:"DRONE_YAML_SKIP_VERIFY"`

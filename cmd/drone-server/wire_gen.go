@@ -90,7 +90,7 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	batcher := provideBatchStore(db, config2)
 	syncer := provideSyncer(repositoryService, repositoryStore, userStore, batcher, config2)
 	userService := user.New(client, renewer)
-	server := api.New(buildStore, commitService, cronStore, corePubsub, globalSecretStore, hookService, logStore, coreLicense, licenseService, organizationService, permStore, repositoryStore, repositoryService, scheduler, secretStore, stageStore, stepStore, statusService, session, logStream, syncer, system, triggerer, userStore, userService, webhookSender)
+	server := api.New(buildStore, commitService, config2, cronStore, corePubsub, globalSecretStore, hookService, logStore, coreLicense, licenseService, organizationService, permStore, repositoryStore, repositoryService, scheduler, secretStore, stageStore, stepStore, statusService, session, logStream, syncer, system, triggerer, userStore, userService, webhookSender)
 	admissionService := provideAdmissionPlugin(client, organizationService, userService, config2)
 	hookParser := parser.New(client)
 	coreLinker := linker.New(client)
