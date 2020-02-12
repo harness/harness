@@ -33,7 +33,7 @@ func HandleSync(syncer core.Syncer, repos core.RepositoryStore) http.HandlerFunc
 		// performs asyncrhonous account synchronization.
 		// this requires long polling to determine when the
 		// sync is complete.
-		if r.Header.Get("async") == "true" {
+		if r.FormValue("async") == "true" {
 			ctx := r.Context()
 			go func(ctx context.Context, viewer *core.User) {
 				_, err := syncer.Sync(ctx, viewer)
