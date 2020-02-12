@@ -34,7 +34,7 @@ func HandleSync(syncer core.Syncer, repos core.RepositoryStore) http.HandlerFunc
 		// this requires long polling to determine when the
 		// sync is complete.
 		if r.FormValue("async") == "true" {
-			ctx := r.Context()
+			ctx := context.Background()
 			go func(ctx context.Context, viewer *core.User) {
 				_, err := syncer.Sync(ctx, viewer)
 				if err != nil {
