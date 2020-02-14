@@ -169,7 +169,7 @@ func provideRefresher(config config.Config) *oauth2.Refresher {
 		return &oauth2.Refresher{
 			ClientID:     config.Gitea.ClientID,
 			ClientSecret: config.Gitea.ClientSecret,
-			Endpoint:     config.Gitea.Server + "/login/oauth/access_token",
+			Endpoint:     strings.TrimSuffix(config.Gitea.Server, "/") + "/login/oauth/access_token",
 			Source:       oauth2.ContextTokenSource(),
 			Client:       defaultClient(config.Gitea.SkipVerify),
 		}
