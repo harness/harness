@@ -24,6 +24,7 @@ import (
 	"github.com/drone/go-login/login/gogs"
 	"github.com/drone/go-login/login/stash"
 	"github.com/drone/go-scm/scm/transport/oauth2"
+	"strings"
 
 	"github.com/google/wire"
 	"github.com/sirupsen/logrus"
