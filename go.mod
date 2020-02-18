@@ -59,7 +59,7 @@ require (
 	github.com/json-iterator/go v1.1.5
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1
-	github.com/lib/pq v1.0.0
+	github.com/lib/pq v1.1.0
 	github.com/mattn/go-sqlite3 v1.9.0
 	github.com/matttproud/golang_protobuf_extensions v1.0.1
 	github.com/mitchellh/go-homedir v1.1.0
