@@ -259,7 +259,7 @@ func TestSync_Revoke(t *testing.T) {
 // this test verifies that we invoke the batch update even
 // if there are no batch updates to make. This is important
 // because the batcher resets permissions and forces Drone
-// to re-synchrnoize.
+// to re-synchronize.
 func TestSync_EmptyBatch(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
@@ -385,5 +385,52 @@ func TestSync_BatchError(t *testing.T) {
 	_, err := s.Sync(context.Background(), user)
 	if got, want := err, sql.ErrNoRows; got != want {
 		t.Errorf("Want error %s, got %s", want, got)
+	}
+}
+
+// this test verifies that sub-repositories are skipped. They
+// are unsupported by Drone and should not be ignored.
+func TestSync_SkipSubrepo(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	user := &core.User{ID: 1}
+
+	userStore := mock.NewMockUserStore(controller)
+	userStore.EXPECT().Update(gomock.Any(), user).Return(nil)
+	userStore.EXPECT().Update(gomock.Any(), user).Return(nil)
+
+	batcher := mock.NewMockBatcher(controller)
+	batcher.EXPECT().Batch(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+	repoStore := mock.NewMockRepositoryStore(controller)
+	repoStore.EXPECT().List(gomock.Any(), gomock.Any()).Return([]*core.Repository{}, nil)
+
+	repoService := mock.NewMockRepositoryService(controller)
+	repoService.EXPECT().List(gomock.Any(), user).Return([]*core.Repository{
+		{
+			UID:        "1",
+			Slug:       "octocat/hello/world",
+			Namespace:  "octocat",
+			Name:       "hello-world",
+			Private:    false,
+			Visibility: core.VisibilityPublic,
+		},
+	}, nil)
+
+	s := New(
+		repoService,
+		repoStore,
+		userStore,
+		batcher,
+	)
+	got, err := s.Sync(context.Background(), user)
+	if err != nil {
+		t.Error(err)
+	}
+
+	want := &core.Batch{}
+	if diff := cmp.Diff(got, want); len(diff) != 0 {
+		t.Errorf(diff)
 	}
 }
