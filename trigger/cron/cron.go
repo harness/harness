@@ -131,6 +131,11 @@ func (s *Scheduler) run(ctx context.Context) error {
 			continue
 		}
 
+		if repo.Active == false {
+			logger.Traceln("cron: skip inactive repository")
+			continue
+		}
+
 		// TODO(bradrydzewski) we may actually need to query the branch
 		// first to get the sha, and then query the commit. This works fine
 		// with github and gitlab, but may not work with other providers.
