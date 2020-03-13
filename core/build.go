@@ -79,6 +79,10 @@ type BuildStore interface {
 	// datastore by pull requeset.
 	LatestPulls(context.Context, int64) ([]*Build, error)
 
+	// LatestDeploys returns the latest builds from the
+	// datastore by deployment target.
+	LatestDeploys(context.Context, int64) ([]*Build, error)
+
 	// Pending returns a list of pending builds from the
 	// datastore by repository id (DEPRECATED).
 	Pending(context.Context) ([]*Build, error)

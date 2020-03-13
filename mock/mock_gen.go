@@ -839,6 +839,21 @@ func (mr *MockBuildStoreMockRecorder) LatestBranches(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LatestBranches", reflect.TypeOf((*MockBuildStore)(nil).LatestBranches), arg0, arg1)
 }
 
+// LatestDeploys mocks base method
+func (m *MockBuildStore) LatestDeploys(arg0 context.Context, arg1 int64) ([]*core.Build, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LatestDeploys", arg0, arg1)
+	ret0, _ := ret[0].([]*core.Build)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LatestDeploys indicates an expected call of LatestDeploys
+func (mr *MockBuildStoreMockRecorder) LatestDeploys(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LatestDeploys", reflect.TypeOf((*MockBuildStore)(nil).LatestDeploys), arg0, arg1)
+}
+
 // LatestPulls mocks base method
 func (m *MockBuildStore) LatestPulls(arg0 context.Context, arg1 int64) ([]*core.Build, error) {
 	m.ctrl.T.Helper()

@@ -8,8 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - endpoint to display the latest build by branch. [#2940](https://github.com/drone/drone/pull/2940).
 - endpoint to display the latest build by pull request. [#2940](https://github.com/drone/drone/pull/2940).
+- endpoint to display the latest build by environment. [#2940](https://github.com/drone/drone/pull/2940).
 - endpoint to delete a branch from the index. [#2940](https://github.com/drone/drone/pull/2940).
 - endpoint to delete a pull request from the index. [#2940](https://github.com/drone/drone/pull/2940).
+- endpoint to delete an environment from the index. [#2940](https://github.com/drone/drone/pull/2940).
 
 ### Fixed
 - do not execute cron job for disabled repositories. [#2931](https://github.com/drone/drone/issues/2931).
