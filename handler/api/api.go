@@ -27,7 +27,9 @@ import (
 	"github.com/drone/drone/handler/api/queue"
 	"github.com/drone/drone/handler/api/repos"
 	"github.com/drone/drone/handler/api/repos/builds"
+	"github.com/drone/drone/handler/api/repos/builds/branches"
 	"github.com/drone/drone/handler/api/repos/builds/logs"
+	"github.com/drone/drone/handler/api/repos/builds/pulls"
 	"github.com/drone/drone/handler/api/repos/builds/stages"
 	"github.com/drone/drone/handler/api/repos/collabs"
 	"github.com/drone/drone/handler/api/repos/crons"
@@ -183,6 +185,12 @@ func (s Server) Handler() http.Handler {
 			r.Route("/builds", func(r chi.Router) {
 				r.Get("/", builds.HandleList(s.Repos, s.Builds))
 				r.With(acl.CheckWriteAccess()).Post("/", builds.HandleCreate(s.Repos, s.Commits, s.Triggerer))
+
+				r.Get("/branches", branches.HandleList(s.Repos, s.Builds))
+				r.With(acl.CheckWriteAccess()).Delete("/branches/*", branches.HandleDelete(s.Repos, s.Builds))
+
+				r.Get("/pulls", pulls.HandleList(s.Repos, s.Builds))
+				r.With(acl.CheckWriteAccess()).Delete("/pulls/{pull}", pulls.HandleDelete(s.Repos, s.Builds))
 
 				r.Get("/latest", builds.HandleLast(s.Repos, s.Builds, s.Stages))
 				r.Get("/{number}", builds.HandleFind(s.Repos, s.Builds, s.Stages))

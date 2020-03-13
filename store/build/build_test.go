@@ -9,8 +9,8 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/drone/drone/store/shared/db"
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/store/shared/db"
 
 	"github.com/drone/drone/store/shared/db/dbtest"
 )
@@ -34,6 +34,7 @@ func TestBuild(t *testing.T) {
 	t.Run("Count", testBuildCount(store))
 	t.Run("Pending", testBuildPending(store))
 	t.Run("Running", testBuildRunning(store))
+	t.Run("Latest", testBuildLatest(store))
 }
 
 func testBuildCreate(store *buildStore) func(t *testing.T) {
@@ -41,7 +42,9 @@ func testBuildCreate(store *buildStore) func(t *testing.T) {
 		build := &core.Build{
 			RepoID: 1,
 			Number: 99,
+			Event:  core.EventPush,
 			Ref:    "refs/heads/master",
+			Target: "master",
 		}
 		stage := &core.Stage{
 			RepoID: 42,
@@ -303,6 +306,113 @@ func testBuildRunning(store *buildStore) func(t *testing.T) {
 			t.Error(err)
 		} else if got, want := len(list), 2; got != want {
 			t.Errorf("Want list count %d, got %d", want, got)
+		}
+	}
+}
+
+func testBuildLatest(store *buildStore) func(t *testing.T) {
+	return func(t *testing.T) {
+		store.db.Update(func(execer db.Execer, binder db.Binder) error {
+			execer.Exec("DELETE FROM stages")
+			execer.Exec("DELETE FROM latest")
+			execer.Exec("DELETE FROM builds")
+			return nil
+		})
+
+		//
+		// step 1: insert the initial builds
+		//
+
+		build := &core.Build{
+			RepoID: 1,
+			Number: 99,
+			Event:  core.EventPush,
+			Ref:    "refs/heads/master",
+			Target: "master",
+		}
+
+		err := store.Create(noContext, build, []*core.Stage{})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		develop := &core.Build{
+			RepoID: 1,
+			Number: 100,
+			Event:  core.EventPush,
+			Ref:    "refs/heads/develop",
+			Target: "develop",
+		}
+		err = store.Create(noContext, develop, []*core.Stage{})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		err = store.Create(noContext, &core.Build{
+			RepoID: 1,
+			Number: 999,
+			Event:  core.EventPullRequest,
+			Ref:    "refs/pulls/10/head",
+			Source: "develop",
+			Target: "master",
+		}, []*core.Stage{})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		//
+		// step 2: verify the latest build number was captured
+		//
+
+		latest, _ := store.LatestBranches(noContext, build.RepoID)
+		if len(latest) != 2 {
+			t.Errorf("Expect latest branch list == 1, got %d", len(latest))
+			return
+		}
+		if got, want := latest[0].Number, build.Number; got != want {
+			t.Errorf("Expected latest master build number %d, got %d", want, got)
+		}
+		if got, want := latest[1].Number, develop.Number; got != want {
+			t.Errorf("Expected latest develop build number %d, got %d", want, got)
+			return
+		}
+
+		build = &core.Build{
+			RepoID: 1,
+			Number: 101,
+			Event:  core.EventPush,
+			Ref:    "refs/heads/master",
+			Target: "master",
+		}
+		err = store.Create(noContext, build, []*core.Stage{})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		latest, _ = store.LatestBranches(noContext, build.RepoID)
+		if len(latest) != 2 {
+			t.Errorf("Expect latest branch list == 1")
+			return
+		}
+		if got, want := latest[1].Number, build.Number; got != want {
+			t.Errorf("Expected latest build number %d, got %d", want, got)
+			return
+		}
+
+		err = store.DeleteBranch(noContext, build.RepoID, build.Target)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		latest, _ = store.LatestBranches(noContext, build.RepoID)
+		if len(latest) != 1 {
+			t.Errorf("Expect latest branch list == 1 after delete")
+			return
 		}
 	}
 }

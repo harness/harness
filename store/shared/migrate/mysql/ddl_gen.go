@@ -136,6 +136,14 @@ var migrations = []struct {
 		name: "alter-table-builds-add-column-deploy-id",
 		stmt: alterTableBuildsAddColumnDeployId,
 	},
+	{
+		name: "create-table-latest",
+		stmt: createTableLatest,
+	},
+	{
+		name: "create-index-latest-repo",
+		stmt: createIndexLatestRepo,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -604,4 +612,25 @@ CREATE TABLE IF NOT EXISTS orgsecrets (
 
 var alterTableBuildsAddColumnDeployId = `
 ALTER TABLE builds ADD COLUMN build_deploy_id INTEGER NOT NULL DEFAULT 0;
+`
+
+//
+// 014_create_table_refs.sql
+//
+
+var createTableLatest = `
+CREATE TABLE IF NOT EXISTS latest (
+ latest_repo_id  INTEGER
+,latest_build_id INTEGER
+,latest_type     VARCHAR(50)
+,latest_name     VARCHAR(500)
+,latest_created  INTEGER
+,latest_updated  INTEGER
+,latest_deleted  INTEGER
+,PRIMARY KEY(latest_repo_id, latest_type, latest_name)
+);
+`
+
+var createIndexLatestRepo = `
+CREATE INDEX ix_latest_repo ON latest (latest_repo_id);
 `

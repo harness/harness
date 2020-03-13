@@ -737,6 +737,48 @@ func (mr *MockBuildStoreMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockBuildStore)(nil).Delete), arg0, arg1)
 }
 
+// DeleteBranch mocks base method
+func (m *MockBuildStore) DeleteBranch(arg0 context.Context, arg1 int64, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteBranch", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteBranch indicates an expected call of DeleteBranch
+func (mr *MockBuildStoreMockRecorder) DeleteBranch(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteBranch", reflect.TypeOf((*MockBuildStore)(nil).DeleteBranch), arg0, arg1, arg2)
+}
+
+// DeleteDeploy mocks base method
+func (m *MockBuildStore) DeleteDeploy(arg0 context.Context, arg1 int64, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteDeploy", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteDeploy indicates an expected call of DeleteDeploy
+func (mr *MockBuildStoreMockRecorder) DeleteDeploy(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteDeploy", reflect.TypeOf((*MockBuildStore)(nil).DeleteDeploy), arg0, arg1, arg2)
+}
+
+// DeletePull mocks base method
+func (m *MockBuildStore) DeletePull(arg0 context.Context, arg1 int64, arg2 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePull", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePull indicates an expected call of DeletePull
+func (mr *MockBuildStoreMockRecorder) DeletePull(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePull", reflect.TypeOf((*MockBuildStore)(nil).DeletePull), arg0, arg1, arg2)
+}
+
 // Find mocks base method
 func (m *MockBuildStore) Find(arg0 context.Context, arg1 int64) (*core.Build, error) {
 	m.ctrl.T.Helper()
@@ -780,6 +822,36 @@ func (m *MockBuildStore) FindRef(arg0 context.Context, arg1 int64, arg2 string) 
 func (mr *MockBuildStoreMockRecorder) FindRef(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindRef", reflect.TypeOf((*MockBuildStore)(nil).FindRef), arg0, arg1, arg2)
+}
+
+// LatestBranches mocks base method
+func (m *MockBuildStore) LatestBranches(arg0 context.Context, arg1 int64) ([]*core.Build, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LatestBranches", arg0, arg1)
+	ret0, _ := ret[0].([]*core.Build)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LatestBranches indicates an expected call of LatestBranches
+func (mr *MockBuildStoreMockRecorder) LatestBranches(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LatestBranches", reflect.TypeOf((*MockBuildStore)(nil).LatestBranches), arg0, arg1)
+}
+
+// LatestPulls mocks base method
+func (m *MockBuildStore) LatestPulls(arg0 context.Context, arg1 int64) ([]*core.Build, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LatestPulls", arg0, arg1)
+	ret0, _ := ret[0].([]*core.Build)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LatestPulls indicates an expected call of LatestPulls
+func (mr *MockBuildStoreMockRecorder) LatestPulls(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LatestPulls", reflect.TypeOf((*MockBuildStore)(nil).LatestPulls), arg0, arg1)
 }
 
 // List mocks base method

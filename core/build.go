@@ -71,6 +71,14 @@ type BuildStore interface {
 	// ListRef returns a list of builds from the datastore by ref.
 	ListRef(context.Context, int64, string, int, int) ([]*Build, error)
 
+	// LatestBranches returns the latest builds from the
+	// datastore by branch.
+	LatestBranches(context.Context, int64) ([]*Build, error)
+
+	// LatestPulls returns the latest builds from the
+	// datastore by pull requeset.
+	LatestPulls(context.Context, int64) ([]*Build, error)
+
 	// Pending returns a list of pending builds from the
 	// datastore by repository id (DEPRECATED).
 	Pending(context.Context) ([]*Build, error)
@@ -87,6 +95,15 @@ type BuildStore interface {
 
 	// Delete deletes a build from the datastore.
 	Delete(context.Context, *Build) error
+
+	// DeletePull deletes a pull request index from the datastore.
+	DeletePull(context.Context, int64, int) error
+
+	// DeleteBranch deletes a branch index from the datastore.
+	DeleteBranch(context.Context, int64, string) error
+
+	// DeleteDeploy deletes a deploy index from the datastore.
+	DeleteDeploy(context.Context, int64, string) error
 
 	// Purge deletes builds from the database where the build number is less than n.
 	Purge(context.Context, int64, int64) error

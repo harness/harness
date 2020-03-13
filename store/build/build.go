@@ -16,10 +16,17 @@ package build
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"time"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
 )
+
+// regular expression to extract the pull request number
+// from the git ref (e.g. refs/pulls/{d}/head)
+var pr = regexp.MustCompile("\\d+")
 
 // New returns a new Buildcore.
 func New(db *db.DB) core.BuildStore {
@@ -122,6 +129,42 @@ func (s *buildStore) ListRef(ctx context.Context, repo int64, ref string, limit,
 	return out, err
 }
 
+// LatestBranches returns a list of the latest build by branch.
+func (s *buildStore) LatestBranches(ctx context.Context, repo int64) ([]*core.Build, error) {
+	return s.latest(ctx, repo, "branch")
+}
+
+// LatestPulls returns a list of the latest builds by pull requests.
+func (s *buildStore) LatestPulls(ctx context.Context, repo int64) ([]*core.Build, error) {
+	return s.latest(ctx, repo, "pull_request")
+}
+
+// LatestDeploys returns a list of the latest builds by target deploy.
+func (s *buildStore) LatestDeploys(ctx context.Context, repo int64) ([]*core.Build, error) {
+	return s.latest(ctx, repo, "deployment")
+}
+
+func (s *buildStore) latest(ctx context.Context, repo int64, event string) ([]*core.Build, error) {
+	var out []*core.Build
+	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
+		params := map[string]interface{}{
+			"latest_repo_id": repo,
+			"latest_type":    event,
+		}
+		stmt, args, err := binder.BindNamed(queryLatestList, params)
+		if err != nil {
+			return err
+		}
+		rows, err := queryer.Query(stmt, args...)
+		if err != nil {
+			return err
+		}
+		out, err = scanRows(rows)
+		return err
+	})
+	return out, err
+}
+
 // Pending returns a list of pending builds from the datastore by repository id.
 func (s *buildStore) Pending(ctx context.Context) ([]*core.Build, error) {
 	var out []*core.Build
@@ -152,10 +195,31 @@ func (s *buildStore) Running(ctx context.Context) ([]*core.Build, error) {
 
 // Create persists a build to the datacore.
 func (s *buildStore) Create(ctx context.Context, build *core.Build, stages []*core.Stage) error {
-	if s.db.Driver() == db.Postgres {
-		return s.createPostgres(ctx, build, stages)
+	var err error
+	switch s.db.Driver() {
+	case db.Postgres:
+		err = s.createPostgres(ctx, build, stages)
+	default:
+		err = s.create(ctx, build, stages)
 	}
-	return s.create(ctx, build, stages)
+	if err != nil {
+		return err
+	}
+	var event, name string
+	switch build.Event {
+	case core.EventPullRequest:
+		event = "pull_request"
+		name = pr.FindString(build.Ref)
+	case core.EventPush:
+		event = "branch"
+		name = build.Target
+	case core.EventPromote, core.EventRollback:
+		event = "deployment"
+		name = build.Deploy
+	default:
+		return nil
+	}
+	return s.index(ctx, build.ID, build.RepoID, event, name)
 }
 
 func (s *buildStore) create(ctx context.Context, build *core.Build, stages []*core.Stage) error {
@@ -255,11 +319,89 @@ func (s *buildStore) Update(ctx context.Context, build *core.Build) error {
 	return err
 }
 
+func (s *buildStore) index(ctx context.Context, build, repo int64, event, name string) error {
+	return s.db.Lock(func(execer db.Execer, binder db.Binder) error {
+		params := map[string]interface{}{
+			"latest_repo_id":  repo,
+			"latest_build_id": build,
+			"latest_type":     event,
+			"latest_name":     name,
+			"latest_created":  time.Now().Unix(),
+			"latest_updated":  time.Now().Unix(),
+			"latest_deleted":  time.Now().Unix(),
+		}
+		stmtInsert := stmtInsertLatest
+		switch s.db.Driver() {
+		case db.Postgres:
+			stmtInsert = stmtInsertLatestPg
+		case db.Mysql:
+			stmtInsert = stmtInsertLatestMysql
+		}
+		stmt, args, err := binder.BindNamed(stmtInsert, params)
+		if err != nil {
+			return err
+		}
+		_, err = execer.Exec(stmt, args...)
+		return err
+	})
+}
+
 // Delete deletes a build from the datacore.
 func (s *buildStore) Delete(ctx context.Context, build *core.Build) error {
 	return s.db.Lock(func(execer db.Execer, binder db.Binder) error {
 		params := toParams(build)
 		stmt, args, err := binder.BindNamed(stmtDelete, params)
+		if err != nil {
+			return err
+		}
+		_, err = execer.Exec(stmt, args...)
+		return err
+	})
+}
+
+// DeletePull deletes a pull request index from the datastore.
+func (s *buildStore) DeletePull(ctx context.Context, repo int64, number int) error {
+	return s.db.Lock(func(execer db.Execer, binder db.Binder) error {
+		params := map[string]interface{}{
+			"latest_repo_id": repo,
+			"latest_name":    fmt.Sprint(number),
+			"latest_type":    "pull_request",
+		}
+		stmt, args, err := binder.BindNamed(stmtDeleteLatest, params)
+		if err != nil {
+			return err
+		}
+		_, err = execer.Exec(stmt, args...)
+		return err
+	})
+}
+
+// DeleteBranch deletes a branch index from the datastore.
+func (s *buildStore) DeleteBranch(ctx context.Context, repo int64, branch string) error {
+	return s.db.Lock(func(execer db.Execer, binder db.Binder) error {
+		params := map[string]interface{}{
+			"latest_repo_id": repo,
+			"latest_name":    branch,
+			"latest_type":    "branch",
+		}
+		stmt, args, err := binder.BindNamed(stmtDeleteLatest, params)
+		if err != nil {
+			return err
+		}
+		_, err = execer.Exec(stmt, args...)
+		return err
+	})
+}
+
+// DeleteDeploy deletes a deploy index from the datastore.
+func (s *buildStore) DeleteDeploy(ctx context.Context, repo int64, environment string) error {
+	return s.db.Lock(func(execer db.Execer, binder db.Binder) error {
+		params := map[string]interface{}{
+			"latest_repo_id": repo,
+			"latest_name":    environment,
+			"latest_type":    "deployment",
+		}
+		stmt, args, err := binder.BindNamed(stmtDeleteLatest, params)
 		if err != nil {
 			return err
 		}
@@ -579,4 +721,87 @@ const stmtPurge = `
 DELETE FROM builds
 WHERE build_repo_id = :build_repo_id
 AND build_number < :build_number
+`
+
+//
+// latest builds index
+//
+
+const stmtInsertLatest = `
+INSERT INTO latest (
+ latest_repo_id
+,latest_build_id
+,latest_type
+,latest_name
+,latest_created
+,latest_updated
+,latest_deleted
+) VALUES (
+ :latest_repo_id
+,:latest_build_id
+,:latest_type
+,:latest_name
+,:latest_created
+,:latest_updated
+,:latest_deleted
+) ON CONFLICT (latest_repo_id, latest_type, latest_name)
+DO UPDATE SET latest_build_id = EXCLUDED.latest_build_id
+`
+
+const stmtInsertLatestPg = `
+INSERT INTO latest (
+ latest_repo_id
+,latest_build_id
+,latest_type
+,latest_name
+,latest_created
+,latest_updated
+,latest_deleted
+) VALUES (
+ :latest_repo_id
+,:latest_build_id
+,:latest_type
+,:latest_name
+,:latest_created
+,:latest_updated
+,:latest_deleted
+) ON CONFLICT (latest_repo_id, latest_type, latest_name)
+DO UPDATE SET latest_build_id = EXCLUDED.latest_build_id
+`
+
+const stmtInsertLatestMysql = `
+INSERT INTO latest (
+ latest_repo_id
+,latest_build_id
+,latest_type
+,latest_name
+,latest_created
+,latest_updated
+,latest_deleted
+) VALUES (
+ :latest_repo_id
+,:latest_build_id
+,:latest_type
+,:latest_name
+,:latest_created
+,:latest_updated
+,:latest_deleted
+) ON DUPLICATE KEY UPDATE latest_build_id = :latest_build_id
+`
+
+const stmtDeleteLatest = `
+DELETE FROM latest
+WHERE latest_repo_id  = :latest_repo_id
+  AND latest_type     = :latest_type
+  AND latest_name     = :latest_name
+`
+
+const queryLatestList = queryBase + `
+FROM builds
+WHERE build_id IN (
+	SELECT latest_build_id
+	FROM latest
+	WHERE latest_repo_id  = :latest_repo_id
+	  AND latest_type     = :latest_type
+)
 `

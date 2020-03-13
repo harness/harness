@@ -143,16 +143,17 @@ tasks:
   test-postgres:
     env:
       DRONE_DATABASE_DRIVER: postgres
-      DRONE_DATABASE_DATASOURCE: host=localhost user=postgres dbname=postgres sslmode=disable
+      DRONE_DATABASE_DATASOURCE: host=localhost user=postgres password=postgres dbname=postgres sslmode=disable
       GO111MODULE: 'on'
     cmds:
       - cmd: docker kill postgres
         ignore_error: true
-        silent: true
-      - silent: true
+        silent: false
+      - silent: false
         cmd: >
           docker run
           -p 5432:5432
+          --env POSTGRES_PASSWORD=postgres
           --env POSTGRES_USER=postgres
           --name postgres
           --detach
