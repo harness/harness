@@ -77,6 +77,7 @@ type (
 		Validate     Validate
 		Webhook      Webhook
 		Yaml         Yaml
+		Trigger      Trigger
 
 		// Remote configurations
 		Bitbucket Bitbucket
@@ -143,16 +144,16 @@ type (
 
 	// Nomad configuration.
 	Nomad struct {
-		Enabled     bool                `envconfig:"DRONE_NOMAD_ENABLED"`
-		Datacenters []string            `envconfig:"DRONE_NOMAD_DATACENTER" default:"dc1"`
-		Namespace   string              `envconfig:"DRONE_NOMAD_NAMESPACE"`
-		Region      string              `envconfig:"DRONE_NOMAD_REGION"`
-		Prefix      string              `envconfig:"DRONE_NOMAD_JOB_PREFIX" default:"drone-job-"`
-		Image       string              `envconfig:"DRONE_NOMAD_IMAGE"`
-		ImagePull   bool                `envconfig:"DRONE_NOMAD_IMAGE_PULL"`
-		Memory      int                 `envconfig:"DRONE_NOMAD_DEFAULT_RAM" default:"1024"`
-		Labels      map[string]string   `envconfig:"DRONE_NOMAD_LABELS"`
-		CPU         int                 `envconfig:"DRONE_NOMAD_DEFAULT_CPU" default:"500"`
+		Enabled     bool              `envconfig:"DRONE_NOMAD_ENABLED"`
+		Datacenters []string          `envconfig:"DRONE_NOMAD_DATACENTER" default:"dc1"`
+		Namespace   string            `envconfig:"DRONE_NOMAD_NAMESPACE"`
+		Region      string            `envconfig:"DRONE_NOMAD_REGION"`
+		Prefix      string            `envconfig:"DRONE_NOMAD_JOB_PREFIX" default:"drone-job-"`
+		Image       string            `envconfig:"DRONE_NOMAD_IMAGE"`
+		ImagePull   bool              `envconfig:"DRONE_NOMAD_IMAGE_PULL"`
+		Memory      int               `envconfig:"DRONE_NOMAD_DEFAULT_RAM" default:"1024"`
+		Labels      map[string]string `envconfig:"DRONE_NOMAD_LABELS"`
+		CPU         int               `envconfig:"DRONE_NOMAD_DEFAULT_CPU" default:"500"`
 	}
 
 	// License provides license configuration
@@ -303,6 +304,11 @@ type (
 		Endpoint   string `envconfig:"DRONE_YAML_ENDPOINT"`
 		Secret     string `envconfig:"DRONE_YAML_SECRET"`
 		SkipVerify bool   `envconfig:"DRONE_YAML_SKIP_VERIFY"`
+	}
+
+	// Trigger provides the trigger configuration.
+	Trigger struct {
+		EventActionAllow string `envconfig:"DRONE_TRIGGER_ALLOW"`
 	}
 
 	// Convert provides the converter webhook configuration.
