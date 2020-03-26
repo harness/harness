@@ -16,6 +16,7 @@ package api
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/acl"
@@ -144,6 +145,7 @@ type Server struct {
 	Users     core.UserStore
 	Userz     core.UserService
 	Webhook   core.WebhookSender
+	Private   bool
 }
 
 // Handler returns an http.Handler
@@ -158,6 +160,12 @@ func (s Server) Handler() http.Handler {
 	r.Use(cors.Handler)
 
 	r.Route("/repos", func(r chi.Router) {
+		// temporary workaround to enable private mode
+		// for the drone server.
+		if os.Getenv("DRONE_SERVER_PRIVATE_MODE") == "true" {
+			r.Use(acl.AuthorizeUser)
+		}
+
 		r.With(
 			acl.AuthorizeAdmin,
 		).Get("/", repos.HandleAll(s.Repos))
