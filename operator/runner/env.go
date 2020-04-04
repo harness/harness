@@ -59,7 +59,7 @@ func repoEnviron(repo *core.Repository) map[string]string {
 
 		//
 		// these are legacy configuration parameters for backward
-		// compatibilty with drone 0.8.
+		// compatibility with drone 0.8.
 		//
 		"CI_REPO":         repo.Slug,
 		"CI_REPO_NAME":    repo.Slug,
@@ -110,7 +110,7 @@ func buildEnviron(build *core.Build) map[string]string {
 
 		//
 		// these are legacy configuration parameters for backward
-		// compatibilty with drone 0.8.
+		// compatibility with drone 0.8.
 		//
 		"CI_BUILD_NUMBER":              fmt.Sprint(build.Number),
 		"CI_PARENT_BUILD_NUMBER":       fmt.Sprint(build.Parent),
