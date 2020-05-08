@@ -180,7 +180,7 @@ func (s *kubeScheduler) Schedule(ctx context.Context, stage *core.Stage) error {
 	})
 
 	log.Debugf("kubernetes: creating job")
-	job, err := s.client.BatchV1().Jobs(s.namespace()).Create(job)
+	_, err := s.client.BatchV1().Jobs(s.namespace()).Create(job)
 	if err != nil {
 		logrus.WithError(err).Errorln("kubernetes: cannot create job")
 	} else {
