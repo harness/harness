@@ -186,7 +186,6 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 		// information, so we choose to use the push hook and
 		// ignore the native tag hook.
 		if p.client.Driver == scm.DriverGithub ||
-			p.client.Driver == scm.DriverGitea ||
 			p.client.Driver == scm.DriverGitlab {
 			return nil, nil, nil
 		}
