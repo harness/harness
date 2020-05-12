@@ -122,6 +122,14 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 		// push hook contains more information than the tag hook,
 		// so we choose to use the push hook for tags.
 		if strings.HasPrefix(v.Ref, "refs/tags/") {
+			// gitea versions < 1.12 used to send both push and tag
+			// webhook, however only tag is sent from 1.12 onwards.
+			// ignore push event here so that older versions don't
+			// cause duplicated jobs.
+			if p.client.Driver == scm.DriverGitea {
+				return nil, nil, nil
+			}
+			
 			hook = &core.Hook{
 				Trigger:      core.TriggerHook, // core.TriggerHook
 				Event:        core.EventTag,
