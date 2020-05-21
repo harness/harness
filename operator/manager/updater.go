@@ -41,6 +41,9 @@ func (u *updater) do(ctx context.Context, step *core.Step) error {
 		},
 	)
 
+	if len(step.Error) > 500 {
+		step.Error = step.Error[:500]
+	}
 	err := u.Steps.Update(noContext, step)
 	if err != nil {
 		logger.WithError(err).Warnln("manager: cannot update step")

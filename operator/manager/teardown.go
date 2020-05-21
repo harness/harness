@@ -65,6 +65,9 @@ func (t *teardown) do(ctx context.Context, stage *core.Stage) error {
 	}
 
 	for _, step := range stage.Steps {
+		if len(step.Error) > 500 {
+			step.Error = step.Error[:500]
+		}
 		err := t.Steps.Update(noContext, step)
 		if err != nil {
 			logger.WithError(err).
@@ -74,6 +77,10 @@ func (t *teardown) do(ctx context.Context, stage *core.Stage) error {
 				Warnln("manager: cannot persist the step")
 			return err
 		}
+	}
+
+	if len(stage.Error) > 500 {
+		stage.Error = stage.Error[:500]
 	}
 
 	stage.Updated = time.Now().Unix()
