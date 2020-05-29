@@ -79,6 +79,8 @@ func (s *Scheduler) run(ctx context.Context) error {
 		return err
 	}
 
+	logrus.Debugf("cron: found %d pending jobs", len(jobs))
+
 	for _, job := range jobs {
 		// jobs can be manually disabled in the user interface,
 		// and should be skipped.
@@ -129,6 +131,11 @@ func (s *Scheduler) run(ctx context.Context) error {
 			continue
 		}
 
+		if repo.Active == false {
+			logger.Traceln("cron: skip inactive repository")
+			continue
+		}
+
 		// TODO(bradrydzewski) we may actually need to query the branch
 		// first to get the sha, and then query the commit. This works fine
 		// with github and gitlab, but may not work with other providers.
@@ -161,6 +168,14 @@ func (s *Scheduler) run(ctx context.Context) error {
 			Cron:         job.Name,
 			Sender:       commit.Author.Login,
 		}
+
+		logger.WithFields(
+			logrus.Fields{
+				"cron":   job.Name,
+				"repo":   repo.Slug,
+				"branch": repo.Branch,
+				"sha":    commit.Sha,
+			}).Warnln("cron: trigger build")
 
 		_, err = s.trigger.Trigger(ctx, repo, hook)
 		if err != nil {

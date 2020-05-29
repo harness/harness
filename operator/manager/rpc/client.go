@@ -306,7 +306,7 @@ func retryFunc(ctx context.Context, resp *http.Response, err error) (bool, error
 		// stream. This stream is temporary and ephemeral, and losing
 		// log lines will not negatively impact the final persisted
 		// log entries.
-		if resp != nil && resp.Request.URL.Path == "/rpc/v1/write" {
+		if resp.Request.URL.Path == "/rpc/v1/write" {
 			return false, err
 		}
 		// Check the response code. We retry on 500-range responses

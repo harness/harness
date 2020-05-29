@@ -16,6 +16,7 @@ package api
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/acl"
@@ -27,7 +28,10 @@ import (
 	"github.com/drone/drone/handler/api/queue"
 	"github.com/drone/drone/handler/api/repos"
 	"github.com/drone/drone/handler/api/repos/builds"
+	"github.com/drone/drone/handler/api/repos/builds/branches"
+	"github.com/drone/drone/handler/api/repos/builds/deploys"
 	"github.com/drone/drone/handler/api/repos/builds/logs"
+	"github.com/drone/drone/handler/api/repos/builds/pulls"
 	"github.com/drone/drone/handler/api/repos/builds/stages"
 	"github.com/drone/drone/handler/api/repos/collabs"
 	"github.com/drone/drone/handler/api/repos/crons"
@@ -141,6 +145,7 @@ type Server struct {
 	Users     core.UserStore
 	Userz     core.UserService
 	Webhook   core.WebhookSender
+	Private   bool
 }
 
 // Handler returns an http.Handler
@@ -155,6 +160,12 @@ func (s Server) Handler() http.Handler {
 	r.Use(cors.Handler)
 
 	r.Route("/repos", func(r chi.Router) {
+		// temporary workaround to enable private mode
+		// for the drone server.
+		if os.Getenv("DRONE_SERVER_PRIVATE_MODE") == "true" {
+			r.Use(acl.AuthorizeUser)
+		}
+
 		r.With(
 			acl.AuthorizeAdmin,
 		).Get("/", repos.HandleAll(s.Repos))
@@ -183,6 +194,15 @@ func (s Server) Handler() http.Handler {
 			r.Route("/builds", func(r chi.Router) {
 				r.Get("/", builds.HandleList(s.Repos, s.Builds))
 				r.With(acl.CheckWriteAccess()).Post("/", builds.HandleCreate(s.Repos, s.Commits, s.Triggerer))
+
+				r.Get("/branches", branches.HandleList(s.Repos, s.Builds))
+				r.With(acl.CheckWriteAccess()).Delete("/branches/*", branches.HandleDelete(s.Repos, s.Builds))
+
+				r.Get("/pulls", pulls.HandleList(s.Repos, s.Builds))
+				r.With(acl.CheckWriteAccess()).Delete("/pulls/{pull}", pulls.HandleDelete(s.Repos, s.Builds))
+
+				r.Get("/deployments", deploys.HandleList(s.Repos, s.Builds))
+				r.With(acl.CheckWriteAccess()).Delete("/deployments/*", deploys.HandleDelete(s.Repos, s.Builds))
 
 				r.Get("/latest", builds.HandleLast(s.Repos, s.Builds, s.Stages))
 				r.Get("/{number}", builds.HandleFind(s.Repos, s.Builds, s.Stages))

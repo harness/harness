@@ -47,6 +47,7 @@ func Reset(d *db.DB) {
 		tx.Exec("DELETE FROM logs")
 		tx.Exec("DELETE FROM steps")
 		tx.Exec("DELETE FROM stages")
+		tx.Exec("DELETE FROM latest")
 		tx.Exec("DELETE FROM builds")
 		tx.Exec("DELETE FROM perms")
 		tx.Exec("DELETE FROM repos")

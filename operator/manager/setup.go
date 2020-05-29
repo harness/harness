@@ -76,6 +76,9 @@ func (s *setup) do(ctx context.Context, stage *core.Stage) error {
 	// 	return err
 	// }
 
+	if len(stage.Error) > 500 {
+		stage.Error = stage.Error[:500]
+	}
 	stage.Updated = time.Now().Unix()
 	err = s.Stages.Update(noContext, stage)
 	if err != nil {
@@ -86,6 +89,9 @@ func (s *setup) do(ctx context.Context, stage *core.Stage) error {
 	}
 
 	for _, step := range stage.Steps {
+		if len(step.Error) > 500 {
+			step.Error = step.Error[:500]
+		}
 		err := s.Steps.Create(noContext, step)
 		if err != nil {
 			logger.WithError(err).

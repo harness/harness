@@ -41,7 +41,7 @@ func (p *starlarkPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 		return nil, nil
 	}
 
-	// convert the jsonnet file to yaml
+	// convert the starlark file to yaml
 	buf := new(bytes.Buffer)
 
 	return &core.Config{

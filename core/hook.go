@@ -22,6 +22,7 @@ import (
 // Hook action constants.
 const (
 	ActionOpen   = "open"
+	ActionClose  = "close"
 	ActionCreate = "create"
 	ActionDelete = "delete"
 	ActionSync   = "sync"

@@ -410,7 +410,7 @@ func TestCheckWriteAccess_InactiveUser(t *testing.T) {
 	router.Route("/api/repos/{owner}/{name}", func(router chi.Router) {
 		router.Use(CheckWriteAccess())
 		router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			t.Error("should not invoke hanlder")
+			t.Error("should not invoke handler")
 		})
 	})
 
