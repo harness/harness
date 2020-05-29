@@ -6,5 +6,6 @@
 .env
 .env.*
 release/
+.idea/
 scripts/*.go
 TODO*
