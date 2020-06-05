@@ -5,8 +5,8 @@
 package reaper
 
 import (
-	"time"
 	"testing"
+	"time"
 )
 
 func TestIsExceeded(t *testing.T) {
@@ -16,45 +16,45 @@ func TestIsExceeded(t *testing.T) {
 	now = func() time.Time {
 		return mustParse("2006-01-02T15:00:00")
 	}
-	var tests = []struct{
-		unix int64
-		timeout time.Duration
-		buffer  time.Duration
+	var tests = []struct {
+		unix     int64
+		timeout  time.Duration
+		buffer   time.Duration
 		exceeded bool
 	}{
 		// timestamp equal to current time, not expired
 		{
-			unix: mustParse("2006-01-02T15:00:00").Unix(),
-			timeout: time.Minute*60,
-			buffer: time.Minute*5,
+			unix:     mustParse("2006-01-02T15:00:00").Unix(),
+			timeout:  time.Minute * 60,
+			buffer:   time.Minute * 5,
 			exceeded: false,
 		},
 		// timestamp is not gt current time - timeout, not expired
 		{
-			unix: mustParse("2006-01-02T14:00:00").Unix(),
-			timeout: time.Minute*60,
-			buffer: 0,
+			unix:     mustParse("2006-01-02T14:00:00").Unix(),
+			timeout:  time.Minute * 60,
+			buffer:   0,
 			exceeded: false,
 		},
 		// timestamp is gt current time - timeout, expired
 		{
-			unix: mustParse("2006-01-02T13:59:00").Unix(),
-			timeout: time.Minute*60,
-			buffer: 0,
+			unix:     mustParse("2006-01-02T13:59:00").Unix(),
+			timeout:  time.Minute * 60,
+			buffer:   0,
 			exceeded: true,
 		},
 		// timestamp is not gt current time - timeout - buffer, not expired
 		{
-			unix: mustParse("2006-01-02T13:59:00").Unix(),
-			timeout: time.Minute*60,
-			buffer: time.Minute*5,
+			unix:     mustParse("2006-01-02T13:59:00").Unix(),
+			timeout:  time.Minute * 60,
+			buffer:   time.Minute * 5,
 			exceeded: false,
 		},
 		// timestamp is gt current time - timeout - buffer, expired
 		{
-			unix: mustParse("2006-01-02T13:04:05").Unix(),
-			timeout: time.Minute*60,
-			buffer: time.Minute*5,
+			unix:     mustParse("2006-01-02T13:04:05").Unix(),
+			timeout:  time.Minute * 60,
+			buffer:   time.Minute * 5,
 			exceeded: true,
 		},
 	}

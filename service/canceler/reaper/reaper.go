@@ -28,14 +28,54 @@ type Reaper struct {
 	Builds   core.BuildStore
 	Stages   core.StageStore
 	Canceler core.Canceler
+	Pending  time.Duration // Pending is the pending pipeline deadline
+	Running  time.Duration // Running is the running pipeline deadline
+}
+
+// New returns a new Reaper.
+func New(
+	repos core.RepositoryStore,
+	builds core.BuildStore,
+	stages core.StageStore,
+	canceler core.Canceler,
+	running time.Duration,
+	pending time.Duration,
+) *Reaper {
+	if running == 0 {
+		running = time.Hour * 24
+	}
+	if pending == 0 {
+		pending = time.Hour * 24
+	}
+	return &Reaper{
+		Repos:    repos,
+		Builds:   builds,
+		Stages:   stages,
+		Canceler: canceler,
+		Pending:  pending,
+		Running:  running,
+	}
 }
 
 // TODO use multierror to aggregate errors encountered
 // TODO use trace logging
 
-func (r *Reaper) reap(ctx context.Context) error {
-	ttl := time.Hour*24
+// Start starts the reaper.
+func (r *Reaper) Start(ctx context.Context, dur time.Duration) error {
+	ticker := time.NewTicker(dur)
+	defer ticker.Stop()
 
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			r.reap(ctx)
+		}
+	}
+}
+
+func (r *Reaper) reap(ctx context.Context) error {
 	pending, err := r.Builds.Pending(ctx)
 	if err != nil {
 		return err
@@ -43,7 +83,7 @@ func (r *Reaper) reap(ctx context.Context) error {
 	for _, build := range pending {
 		// if a build is pending for longer than the maximum
 		// pending time limit, the build is maybe cancelled.
-		if isExceeded(build.Created, ttl, buffer) {
+		if isExceeded(build.Created, r.Pending, buffer) {
 			err = r.reapMaybe(ctx, build)
 			if err != nil {
 				return err
@@ -58,7 +98,7 @@ func (r *Reaper) reap(ctx context.Context) error {
 	for _, build := range running {
 		// if a build is running for longer than the maximum
 		// running time limit, the build is maybe cancelled.
-		if isExceeded(build.Started, ttl, buffer) {
+		if isExceeded(build.Started, r.Running, buffer) {
 			err = r.reapMaybe(ctx, build)
 			if err != nil {
 				return err
@@ -91,7 +131,7 @@ func (r *Reaper) reapMaybe(ctx context.Context, build *core.Build) error {
 		if stage.IsDone() {
 			continue
 		}
-		if stage.Started > started  {
+		if stage.Started > started {
 			started = stage.Started
 		}
 	}
