@@ -16,9 +16,12 @@ package reaper
 
 import (
 	"context"
+	"runtime/debug"
 	"time"
 
 	"github.com/drone/drone/core"
+
+	"github.com/sirupsen/logrus"
 )
 
 // Reaper finds and kills zombie jobs that are permanently
@@ -57,9 +60,6 @@ func New(
 	}
 }
 
-// TODO use multierror to aggregate errors encountered
-// TODO use trace logging
-
 // Start starts the reaper.
 func (r *Reaper) Start(ctx context.Context, dur time.Duration) error {
 	ticker := time.NewTicker(dur)
@@ -76,33 +76,59 @@ func (r *Reaper) Start(ctx context.Context, dur time.Duration) error {
 }
 
 func (r *Reaper) reap(ctx context.Context) error {
+	defer func() {
+		// taking the paranoid approach to recover from
+		// a panic that should absolutely never happen.
+		if r := recover(); r != nil {
+			logrus.Errorf("reaper: unexpected panic: %s", r)
+			debug.PrintStack()
+		}
+	}()
+
+	// TODO debug log entry
+	// TODO use multierror
+
 	pending, err := r.Builds.Pending(ctx)
 	if err != nil {
+		logrus.WithError(err).
+			Errorf("reaper: cannot get pending builds")
 		return err
 	}
 	for _, build := range pending {
 		// if a build is pending for longer than the maximum
 		// pending time limit, the build is maybe cancelled.
 		if isExceeded(build.Created, r.Pending, buffer) {
+			// TODO debug log entry
 			err = r.reapMaybe(ctx, build)
 			if err != nil {
+				// TODO error log entry
 				return err
 			}
+			// TODO debug log entry
+		} else {
+			// TODO trace log entry
 		}
 	}
 
 	running, err := r.Builds.Running(ctx)
 	if err != nil {
+		logrus.WithError(err).
+			Errorf("reaper: cannot get running builds")
 		return err
 	}
 	for _, build := range running {
 		// if a build is running for longer than the maximum
 		// running time limit, the build is maybe cancelled.
 		if isExceeded(build.Started, r.Running, buffer) {
+			// TODO debug log entry
 			err = r.reapMaybe(ctx, build)
 			if err != nil {
+				// TODO error log entry
 				return err
 			}
+			// TODO debug log entry
+		} else {
+			// TODO trace log entry
 		}
 	}
 
@@ -118,6 +144,7 @@ func (r *Reaper) reapMaybe(ctx context.Context, build *core.Build) error {
 	// if the build status is pending we can immediately
 	// cancel the build and all build stages.
 	if build.Status == core.StatusPending {
+		// TODO trace log entry
 		return r.Canceler.Cancel(ctx, repo, build)
 	}
 
@@ -139,13 +166,17 @@ func (r *Reaper) reapMaybe(ctx context.Context, build *core.Build) error {
 	// if the build stages are all pending we can immediately
 	// cancel the build.
 	if started == 0 {
+		// TODO trace log entry
 		return r.Canceler.Cancel(ctx, repo, build)
 	}
 
 	// if the build stage has exceeded the timeout by a reasonable
 	// margin cancel the build and all build stages, else ignore.
 	if isExceeded(started, time.Duration(repo.Timeout)*time.Minute, buffer) {
+		// TODO trace log entry
 		return r.Canceler.Cancel(ctx, repo, build)
 	}
+
+	// TODO trace log entry
 	return nil
 }
