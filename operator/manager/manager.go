@@ -473,21 +473,33 @@ func (m *Manager) Netrc(ctx context.Context, id int64) (*core.Netrc, error) {
 // Watch watches for build cancellation requests.
 func (m *Manager) Watch(ctx context.Context, id int64) (bool, error) {
 	ok, err := m.Scheduler.Cancelled(ctx, id)
+	// we expect a context cancel error here which
+	// indicates a polling timeout. The subscribing
+	// client should look for the context cancel error
+	// and resume polling.
 	if err != nil {
 		return ok, err
 	}
 
-	// if a not found error is returned we should check
-	// the database to see if the stage is complete. If
+	// // TODO (bradrydzewski) we should be able to return
+	// // immediately if Cancelled returns true. This requires
+	// // some more testing but would avoid the extra database
+	// // call.
+	// if ok {
+	// 	return ok, err
+	// }
+
+	// if no error is returned we should check
+	// the database to see if the build is complete. If
 	// complete, return true.
-	stage, err := m.Stages.Find(ctx, id)
+	build, err := m.Builds.Find(ctx, id)
 	if err != nil {
 		logger := logrus.WithError(err)
-		logger = logger.WithField("step-id", id)
-		logger.Warnln("manager: cannot find stage")
+		logger = logger.WithField("build-id", id)
+		logger.Warnln("manager: cannot find build")
 		return ok, err
 	}
-	return stage.IsDone(), nil
+	return build.IsDone(), nil
 }
 
 // Write writes a line to the build logs.

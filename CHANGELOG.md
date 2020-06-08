@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Added
+- re-assigned repository ownership when deactivating a user.
+- re-assigned repository ownership when deleting a user.
+- de-activate a repository when deleting a user if re-assignment fails.
+- de-activate a repository when deactivating a user if re-assignment fails.
+- routine to cleanup builds stuck in a pending state.
+- routine to cleanup builds stuck in a running state.
+- private mode setting requires authentication to view public repositories.
+
+### Fixed
+- issue with sq.ErrNoRows error when canceling a build.
+
+### Changed
+- upgraded Go toolchain to version 1.14.4.
+
 ## [1.7.0] - 2020-03-27
 ### Added
 - endpoint to display the latest build by branch. [#2940](https://github.com/drone/drone/pull/2940).

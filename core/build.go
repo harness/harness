@@ -115,3 +115,28 @@ type BuildStore interface {
 	// Count returns a count of builds.
 	Count(context.Context) (int64, error)
 }
+
+// IsDone returns true if the build has a completed state.
+func (b *Build) IsDone() bool {
+	switch b.Status {
+	case StatusWaiting,
+		StatusPending,
+		StatusRunning,
+		StatusBlocked:
+		return false
+	default:
+		return true
+	}
+}
+
+// IsFailed returns true if the build has failed
+func (b *Build) IsFailed() bool {
+	switch b.Status {
+	case StatusFailing,
+		StatusKilled,
+		StatusError:
+		return true
+	default:
+		return false
+	}
+}
