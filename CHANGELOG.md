@@ -15,7 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - private mode setting requires authentication to view public repositories.
 
 ### Fixed
-- issue with sq.ErrNoRows error when canceling a build.
+- canceling a build emits a sql.ErrNoRows error.
+- custom token is ignored when creating a user account via the API.
+- machine accounts with sufficient permissions can create builds via the API.
 
 ### Changed
 - upgraded Go toolchain to version 1.14.4.
