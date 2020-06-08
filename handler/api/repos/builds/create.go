@@ -28,6 +28,7 @@ import (
 // HandleCreate returns an http.HandlerFunc that processes http
 // requests to create a build for the specified commit.
 func HandleCreate(
+	users core.UserStore,
 	repos core.RepositoryStore,
 	commits core.CommitService,
 	triggerer core.Triggerer,
@@ -48,6 +49,12 @@ func HandleCreate(
 			return
 		}
 
+		owner, err := users.Find(ctx, repo.UserID)
+		if err != nil {
+			render.NotFound(w, err)
+			return
+		}
+
 		// if the user does not provide a branch, assume the
 		// default repository branch.
 		if branch == "" {
@@ -58,9 +65,9 @@ func HandleCreate(
 
 		var commit *core.Commit
 		if sha != "" {
-			commit, err = commits.Find(ctx, user, repo.Slug, sha)
+			commit, err = commits.Find(ctx, owner, repo.Slug, sha)
 		} else {
-			commit, err = commits.FindRef(ctx, user, repo.Slug, ref)
+			commit, err = commits.FindRef(ctx, owner, repo.Slug, ref)
 		}
 		if err != nil {
 			render.NotFound(w, err)

@@ -83,6 +83,9 @@ func TestCreate(t *testing.T) {
 		return nil
 	}
 
+	users := mock.NewMockUserStore(controller)
+	users.EXPECT().Find(gomock.Any(), mockRepo.UserID).Return(mockUser, nil)
+
 	repos := mock.NewMockRepositoryStore(controller)
 	repos.EXPECT().FindName(gomock.Any(), gomock.Any(), mockRepo.Name).Return(mockRepo, nil)
 
@@ -106,7 +109,7 @@ func TestCreate(t *testing.T) {
 		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
-	HandleCreate(repos, commits, triggerer)(w, r)
+	HandleCreate(users, repos, commits, triggerer)(w, r)
 	if got, want := w.Code, 200; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -135,6 +138,9 @@ func TestCreate_FromHead(t *testing.T) {
 		},
 	}
 
+	users := mock.NewMockUserStore(controller)
+	users.EXPECT().Find(gomock.Any(), mockRepo.UserID).Return(mockUser, nil)
+
 	repos := mock.NewMockRepositoryStore(controller)
 	repos.EXPECT().FindName(gomock.Any(), gomock.Any(), mockRepo.Name).Return(mockRepo, nil)
 
@@ -154,7 +160,7 @@ func TestCreate_FromHead(t *testing.T) {
 		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
-	HandleCreate(repos, commits, triggerer)(w, r)
+	HandleCreate(users, repos, commits, triggerer)(w, r)
 	if got, want := w.Code, 200; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}

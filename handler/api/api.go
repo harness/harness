@@ -196,7 +196,7 @@ func (s Server) Handler() http.Handler {
 
 			r.Route("/builds", func(r chi.Router) {
 				r.Get("/", builds.HandleList(s.Repos, s.Builds))
-				r.With(acl.CheckWriteAccess()).Post("/", builds.HandleCreate(s.Repos, s.Commits, s.Triggerer))
+				r.With(acl.CheckWriteAccess()).Post("/", builds.HandleCreate(s.Users, s.Repos, s.Commits, s.Triggerer))
 
 				r.Get("/branches", branches.HandleList(s.Repos, s.Builds))
 				r.With(acl.CheckWriteAccess()).Delete("/branches/*", branches.HandleDelete(s.Repos, s.Builds))

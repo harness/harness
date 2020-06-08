@@ -51,7 +51,7 @@ func HandleCreate(users core.UserStore, service core.UserService, sender core.We
 			Machine: in.Machine,
 			Created: time.Now().Unix(),
 			Updated: time.Now().Unix(),
-			Hash:    in.Hash,
+			Hash:    in.Token,
 		}
 		if user.Hash == "" {
 			user.Hash = uniuri.NewLen(32)
