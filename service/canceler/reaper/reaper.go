@@ -21,6 +21,7 @@ import (
 
 	"github.com/drone/drone/core"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 )
 
@@ -85,28 +86,35 @@ func (r *Reaper) reap(ctx context.Context) error {
 		}
 	}()
 
-	// TODO debug log entry
-	// TODO use multierror
+	logrus.Traceln("reaper: finding zombie builds")
 
+	var result error
 	pending, err := r.Builds.Pending(ctx)
 	if err != nil {
 		logrus.WithError(err).
 			Errorf("reaper: cannot get pending builds")
-		return err
+		result = multierror.Append(result, err)
 	}
 	for _, build := range pending {
+		logger := logrus.
+			WithField("build.id", build.ID).
+			WithField("build.number", build.Number).
+			WithField("build.repo_id", build.RepoID).
+			WithField("build.status", build.Status).
+			WithField("build.created", build.Created)
+
 		// if a build is pending for longer than the maximum
 		// pending time limit, the build is maybe cancelled.
 		if isExceeded(build.Created, r.Pending, buffer) {
-			// TODO debug log entry
+			logger.Traceln("reaper: cancel build: time limit exceeded")
 			err = r.reapMaybe(ctx, build)
 			if err != nil {
-				// TODO error log entry
-				return err
+				logger.WithError(err).
+					Errorln("reaper: cannot cancel build")
+				result = multierror.Append(result, err)
 			}
-			// TODO debug log entry
 		} else {
-			// TODO trace log entry
+			logger.Traceln("reaper: ignore build: time limit not exceeded")
 		}
 	}
 
@@ -114,25 +122,33 @@ func (r *Reaper) reap(ctx context.Context) error {
 	if err != nil {
 		logrus.WithError(err).
 			Errorf("reaper: cannot get running builds")
-		return err
+		result = multierror.Append(result, err)
 	}
 	for _, build := range running {
+		logger := logrus.
+			WithField("build.id", build.ID).
+			WithField("build.number", build.Number).
+			WithField("build.repo_id", build.RepoID).
+			WithField("build.status", build.Status).
+			WithField("build.created", build.Created)
+
 		// if a build is running for longer than the maximum
 		// running time limit, the build is maybe cancelled.
 		if isExceeded(build.Started, r.Running, buffer) {
-			// TODO debug log entry
+			logger.Traceln("reaper: cancel build: time limit exceeded")
+
 			err = r.reapMaybe(ctx, build)
 			if err != nil {
-				// TODO error log entry
-				return err
+				logger.WithError(err).
+					Errorln("reaper: cannot cancel build")
+				result = multierror.Append(result, err)
 			}
-			// TODO debug log entry
 		} else {
-			// TODO trace log entry
+			logger.Traceln("reaper: ignore build: time limit not exceeded")
 		}
 	}
 
-	return nil
+	return result
 }
 
 func (r *Reaper) reapMaybe(ctx context.Context, build *core.Build) error {
