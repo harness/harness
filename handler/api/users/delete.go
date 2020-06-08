@@ -15,6 +15,7 @@
 package users
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/drone/drone/core"
@@ -28,6 +29,7 @@ import (
 // to delete the named user account from the system.
 func HandleDelete(
 	users core.UserStore,
+	transferer core.Transferer,
 	sender core.WebhookSender,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +40,12 @@ func HandleDelete(
 			logger.FromRequest(r).WithError(err).
 				Debugln("api: cannot find user")
 			return
+		}
+
+		err = transferer.Transfer(context.Background(), user)
+		if err != nil {
+			logger.FromRequest(r).WithError(err).
+				Warnln("api: cannot transfer repository ownership")
 		}
 
 		err = users.Delete(r.Context(), user)

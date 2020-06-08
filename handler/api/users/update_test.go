@@ -13,9 +13,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/errors"
 	"github.com/drone/drone/mock"
-	"github.com/drone/drone/core"
 
 	"github.com/go-chi/chi"
 	"github.com/golang/mock/gomock"
@@ -39,6 +39,9 @@ func TestUpdate(t *testing.T) {
 	users.EXPECT().FindLogin(gomock.Any(), user.Login).Return(user, nil)
 	users.EXPECT().Update(gomock.Any(), user)
 
+	transferer := mock.NewMockTransferer(controller)
+	transferer.EXPECT().Transfer(gomock.Any(), user).Return(nil)
+
 	c := new(chi.Context)
 	c.URLParams.Add("user", "octocat")
 
@@ -50,7 +53,7 @@ func TestUpdate(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleUpdate(users)(w, r)
+	HandleUpdate(users, transferer)(w, r)
 	if got, want := w.Code, 200; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -82,7 +85,7 @@ func TestUpdate_BadRequest(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleUpdate(users)(w, r)
+	HandleUpdate(users, nil)(w, r)
 	if got, want := w.Code, 400; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -112,7 +115,7 @@ func TestUpdate_NotFound(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleUpdate(users)(w, r)
+	HandleUpdate(users, nil)(w, r)
 	if got, want := w.Code, 404; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -152,7 +155,7 @@ func TestUpdate_UpdateFailed(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleUpdate(users)(w, r)
+	HandleUpdate(users, nil)(w, r)
 	if got, want := w.Code, http.StatusInternalServerError; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}

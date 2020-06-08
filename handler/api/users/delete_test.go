@@ -25,6 +25,9 @@ func TestUserDelete(t *testing.T) {
 	users.EXPECT().FindLogin(gomock.Any(), mockUser.Login).Return(mockUser, nil)
 	users.EXPECT().Delete(gomock.Any(), mockUser).Return(nil)
 
+	transferer := mock.NewMockTransferer(controller)
+	transferer.EXPECT().Transfer(gomock.Any(), mockUser).Return(nil)
+
 	webhook := mock.NewMockWebhookSender(controller)
 	webhook.EXPECT().Send(gomock.Any(), gomock.Any()).Return(nil)
 
@@ -37,7 +40,7 @@ func TestUserDelete(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleDelete(users, webhook)(w, r)
+	HandleDelete(users, transferer, webhook)(w, r)
 	if got, want := w.Body.Len(), 0; want != got {
 		t.Errorf("Want response body size %d, got %d", want, got)
 	}
@@ -64,7 +67,7 @@ func TestUserDelete_NotFound(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleDelete(users, webhook)(w, r)
+	HandleDelete(users, nil, webhook)(w, r)
 	if got, want := w.Code, 404; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -78,6 +81,9 @@ func TestUserDelete_InternalError(t *testing.T) {
 	users.EXPECT().FindLogin(gomock.Any(), mockUser.Login).Return(mockUser, nil)
 	users.EXPECT().Delete(gomock.Any(), mockUser).Return(sql.ErrConnDone)
 
+	transferer := mock.NewMockTransferer(controller)
+	transferer.EXPECT().Transfer(gomock.Any(), mockUser).Return(nil)
+
 	webhook := mock.NewMockWebhookSender(controller)
 
 	c := new(chi.Context)
@@ -89,7 +95,7 @@ func TestUserDelete_InternalError(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleDelete(users, webhook)(w, r)
+	HandleDelete(users, transferer, webhook)(w, r)
 	if got, want := w.Code, http.StatusInternalServerError; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}

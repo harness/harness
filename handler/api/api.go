@@ -82,70 +82,73 @@ func New(
 	stream core.LogStream,
 	syncer core.Syncer,
 	system *core.System,
+	transferer core.Transferer,
 	triggerer core.Triggerer,
 	users core.UserStore,
 	userz core.UserService,
 	webhook core.WebhookSender,
 ) Server {
 	return Server{
-		Builds:    builds,
-		Cron:      cron,
-		Commits:   commits,
-		Events:    events,
-		Globals:   globals,
-		Hooks:     hooks,
-		Logs:      logs,
-		License:   license,
-		Licenses:  licenses,
-		Orgs:      orgs,
-		Perms:     perms,
-		Repos:     repos,
-		Repoz:     repoz,
-		Scheduler: scheduler,
-		Secrets:   secrets,
-		Stages:    stages,
-		Steps:     steps,
-		Status:    status,
-		Session:   session,
-		Stream:    stream,
-		Syncer:    syncer,
-		System:    system,
-		Triggerer: triggerer,
-		Users:     users,
-		Userz:     userz,
-		Webhook:   webhook,
+		Builds:     builds,
+		Cron:       cron,
+		Commits:    commits,
+		Events:     events,
+		Globals:    globals,
+		Hooks:      hooks,
+		Logs:       logs,
+		License:    license,
+		Licenses:   licenses,
+		Orgs:       orgs,
+		Perms:      perms,
+		Repos:      repos,
+		Repoz:      repoz,
+		Scheduler:  scheduler,
+		Secrets:    secrets,
+		Stages:     stages,
+		Steps:      steps,
+		Status:     status,
+		Session:    session,
+		Stream:     stream,
+		Syncer:     syncer,
+		System:     system,
+		Transferer: transferer,
+		Triggerer:  triggerer,
+		Users:      users,
+		Userz:      userz,
+		Webhook:    webhook,
 	}
 }
 
 // Server is a http.Handler which exposes drone functionality over HTTP.
 type Server struct {
-	Builds    core.BuildStore
-	Cron      core.CronStore
-	Commits   core.CommitService
-	Events    core.Pubsub
-	Globals   core.GlobalSecretStore
-	Hooks     core.HookService
-	Logs      core.LogStore
-	License   *core.License
-	Licenses  core.LicenseService
-	Orgs      core.OrganizationService
-	Perms     core.PermStore
-	Repos     core.RepositoryStore
-	Repoz     core.RepositoryService
-	Scheduler core.Scheduler
-	Secrets   core.SecretStore
-	Stages    core.StageStore
-	Steps     core.StepStore
-	Status    core.StatusService
-	Session   core.Session
-	Stream    core.LogStream
-	Syncer    core.Syncer
-	System    *core.System
-	Triggerer core.Triggerer
-	Users     core.UserStore
-	Userz     core.UserService
-	Webhook   core.WebhookSender
-	Private   bool
+	Builds     core.BuildStore
+	Cron       core.CronStore
+	Commits    core.CommitService
+	Events     core.Pubsub
+	Globals    core.GlobalSecretStore
+	Hooks      core.HookService
+	Logs       core.LogStore
+	License    *core.License
+	Licenses   core.LicenseService
+	Orgs       core.OrganizationService
+	Perms      core.PermStore
+	Repos      core.RepositoryStore
+	Repoz      core.RepositoryService
+	Scheduler  core.Scheduler
+	Secrets    core.SecretStore
+	Stages     core.StageStore
+	Steps      core.StepStore
+	Status     core.StatusService
+	Session    core.Session
+	Stream     core.LogStream
+	Syncer     core.Syncer
+	System     *core.System
+	Transferer core.Transferer
+	Triggerer  core.Triggerer
+	Users      core.UserStore
+	Userz      core.UserService
+	Webhook    core.WebhookSender
+	Private    bool
 }
 
 // Handler returns an http.Handler
@@ -318,8 +321,8 @@ func (s Server) Handler() http.Handler {
 		r.Get("/", users.HandleList(s.Users))
 		r.Post("/", users.HandleCreate(s.Users, s.Userz, s.Webhook))
 		r.Get("/{user}", users.HandleFind(s.Users))
-		r.Patch("/{user}", users.HandleUpdate(s.Users))
-		r.Delete("/{user}", users.HandleDelete(s.Users, s.Webhook))
+		r.Patch("/{user}", users.HandleUpdate(s.Users, s.Transferer))
+		r.Delete("/{user}", users.HandleDelete(s.Users, s.Transferer, s.Webhook))
 		r.Get("/{user}/repos", users.HandleRepoList(s.Users, s.Repos))
 	})
 

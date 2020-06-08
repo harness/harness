@@ -15,6 +15,7 @@
 package users
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -32,7 +33,7 @@ type userInput struct {
 
 // HandleUpdate returns an http.HandlerFunc that processes an http.Request
 // to update a user account.
-func HandleUpdate(users core.UserStore) http.HandlerFunc {
+func HandleUpdate(users core.UserStore, transferer core.Transferer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		login := chi.URLParam(r, "user")
 
@@ -72,6 +73,16 @@ func HandleUpdate(users core.UserStore) http.HandlerFunc {
 				Warnln("api: cannot update user")
 		} else {
 			render.JSON(w, user, 200)
+		}
+
+		if user.Active {
+			return
+		}
+
+		err = transferer.Transfer(context.Background(), user)
+		if err != nil {
+			logger.FromRequest(r).WithError(err).
+				Warnln("api: cannot transfer repository ownership")
 		}
 	}
 }

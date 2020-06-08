@@ -36,6 +36,7 @@ import (
 	"github.com/drone/drone/service/status"
 	"github.com/drone/drone/service/syncer"
 	"github.com/drone/drone/service/token"
+	"github.com/drone/drone/service/transfer"
 	"github.com/drone/drone/service/user"
 	"github.com/drone/drone/session"
 	"github.com/drone/drone/trigger"
@@ -56,6 +57,7 @@ var serviceSet = wire.NewSet(
 	parser.New,
 	pubsub.New,
 	token.Renewer,
+	transfer.New,
 	trigger.New,
 	user.New,
 
