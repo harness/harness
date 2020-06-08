@@ -63,6 +63,7 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	validateService := provideValidatePlugin(config2)
 	triggerer := trigger.New(coreCanceler, configService, convertService, commitService, statusService, buildStore, scheduler, repositoryStore, userStore, validateService, webhookSender)
 	cronScheduler := cron2.New(commitService, cronStore, repositoryStore, userStore, triggerer)
+	reaper := provideReaper(repositoryStore, buildStore, stageStore, coreCanceler, config2)
 	coreLicense := provideLicense(client, config2)
 	datadog := provideDatadog(userStore, repositoryStore, buildStore, system, coreLicense, config2)
 	logStore := provideLogStore(db, config2)
@@ -104,6 +105,6 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	mainPprofHandler := providePprof(config2)
 	mux := provideRouter(server, webServer, mainRpcHandlerV1, mainRpcHandlerV2, mainHealthzHandler, metricServer, mainPprofHandler)
 	serverServer := provideServer(mux, config2)
-	mainApplication := newApplication(cronScheduler, datadog, runner, serverServer, userStore)
+	mainApplication := newApplication(cronScheduler, reaper, datadog, runner, serverServer, userStore)
 	return mainApplication, nil
 }

@@ -24,6 +24,7 @@ import (
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/metric/sink"
 	"github.com/drone/drone/operator/runner"
+	"github.com/drone/drone/service/canceler/reaper"
 	"github.com/drone/drone/server"
 	"github.com/drone/drone/trigger/cron"
 	"github.com/drone/signal"
@@ -114,6 +115,18 @@ func main() {
 		return app.cron.Start(ctx, config.Cron.Interval)
 	})
 
+	// launches the reaper in a goroutine. If the reaper
+	// is disabled, the goroutine exits immediately
+	// without error.
+	g.Go(func() (err error) {
+		if config.Cleanup.Disabled {
+			return nil
+		}
+		logrus.WithField("interval", config.Cleanup.Interval.String()).
+			Infoln("starting the zombie build reaper")
+		return app.reaper.Start(ctx, config.Cleanup.Interval)
+	})
+
 	// launches the build runner in a goroutine. If the local
 	// runner is disabled (because nomad or kubernetes is enabled)
 	// then the goroutine exits immediately without error.
@@ -154,6 +167,7 @@ func initLogging(c config.Config) {
 // application is the main struct for the Drone server.
 type application struct {
 	cron   *cron.Scheduler
+	reaper *reaper.Reaper
 	sink   *sink.Datadog
 	runner *runner.Runner
 	server *server.Server
@@ -163,6 +177,7 @@ type application struct {
 // newApplication creates a new application struct.
 func newApplication(
 	cron *cron.Scheduler,
+	reaper *reaper.Reaper,
 	sink *sink.Datadog,
 	runner *runner.Runner,
 	server *server.Server,
@@ -173,5 +188,6 @@ func newApplication(
 		sink:   sink,
 		server: server,
 		runner: runner,
+		reaper: reaper,
 	}
 }
