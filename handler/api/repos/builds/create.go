@@ -15,6 +15,9 @@
 package builds
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/drone/drone/core"
@@ -104,6 +107,23 @@ func HandleCreate(
 				continue
 			}
 			hook.Params[key] = value[0]
+		}
+
+		if r.Body == http.NoBody {
+			b, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				render.InternalError(w, err)
+			}
+			var body map[string]interface{}
+
+			err = json.Unmarshal(b, &body)
+			if err != nil {
+				render.InternalError(w, err)
+			} else {
+				for key, value := range body {
+					hook.Params[key] = fmt.Sprintf("%v", value)
+				}
+			}
 		}
 
 		result, err := triggerer.Trigger(r.Context(), repo, hook)
