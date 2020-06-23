@@ -184,6 +184,9 @@ github.com/drone/go-scm v1.6.1-0.20200129164755-ee0770ce7ae6 h1:sAYHkuyeyl10Fi9X
 github.com/drone/go-scm v1.6.1-0.20200129164755-ee0770ce7ae6/go.mod h1:lXwfbyrIJwFFME5TpzavkwO2T5X8yBK6t6cve7g91x0=
 github.com/drone/go-scm v1.6.1-0.20200417160414-b3466885f965 h1:fo+eAUffUR4+2fPgdm/wi8qVeeFvzyYW4ZATKRRCUKc=
 github.com/drone/go-scm v1.6.1-0.20200417160414-b3466885f965/go.mod h1:lXwfbyrIJwFFME5TpzavkwO2T5X8yBK6t6cve7g91x0=
+github.com/drone/go-scm v1.7.0 h1:KUf9gEaCDzhsE/V7hpFz7nmTisuR0gXJz3+D946ggLk=
+github.com/drone/go-scm v1.7.1-0.20200621203823-3731ec1f1136 h1:RKSqrIGBdttX999GgY7J2n1zIJ3QVXH8coI4ObTBB9E=
+github.com/drone/go-scm v1.7.1-0.20200621203823-3731ec1f1136/go.mod h1:lXwfbyrIJwFFME5TpzavkwO2T5X8yBK6t6cve7g91x0=
 github.com/drone/signal v1.0.0 h1:NrnM2M/4yAuU/tXs6RP1a1ZfxnaHwYkd0kJurA1p6uI=
 github.com/drone/signal v1.0.0/go.mod h1:S8t92eFT0g4WUgEc/LxG+LCuiskpMNsG0ajAMGnyZpc=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
