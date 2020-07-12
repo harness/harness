@@ -51,17 +51,6 @@ func HandleDisable(
 		}
 		repo.Active = false
 
-		err = hooks.Delete(r.Context(), user, repo)
-		if err != nil {
-			render.InternalError(w, err)
-			logger.FromRequest(r).
-				WithError(err).
-				WithField("namespace", owner).
-				WithField("name", name).
-				Debugln("api: cannot delete hook")
-			return
-		}
-
 		err = repos.Update(r.Context(), repo)
 		if err != nil {
 			render.InternalError(w, err)
@@ -71,6 +60,15 @@ func HandleDisable(
 				WithField("name", name).
 				Warnln("api: cannot update repository")
 			return
+		}
+
+		err = hooks.Delete(r.Context(), user, repo)
+		if err != nil {
+			logger.FromRequest(r).
+				WithError(err).
+				WithField("namespace", owner).
+				WithField("name", name).
+				Warnln("api: cannot delete hook")
 		}
 
 		action := core.WebhookActionDisabled

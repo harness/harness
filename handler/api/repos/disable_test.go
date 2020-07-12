@@ -104,7 +104,6 @@ func TestDisable_InternalError(t *testing.T) {
 	}
 
 	service := mock.NewMockHookService(controller)
-	service.EXPECT().Delete(gomock.Any(), gomock.Any(), repo).Return(nil)
 
 	repos := mock.NewMockRepositoryStore(controller)
 	repos.EXPECT().FindName(gomock.Any(), gomock.Any(), repo.Name).Return(repo, nil)
