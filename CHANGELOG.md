@@ -8,9 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - ui support for deployment list and summary.
 - ui support for promoting and rolling back builds.
+- feature flag to use static secret when signing webhooks, from @chiraggadasc.
 
 ### Fixed
 - ui branch list improperly capped.
+
+### Changed
+- upgrade drone/envsubst dependency
+- upgrade drone/go-scm dependency
 
 ## [1.8.1] - 2020-06-23
 ### Fixed
