@@ -18,7 +18,7 @@ import (
 
 // Remote returns a conversion service that converts the
 // configuration file using a remote http service.
-func Remote(endpoint, signer, extension string, skipVerify bool) core.ConvertService {
+func Remote(endpoint, signer, extension string, skipVerify bool, timeout time.Duration) core.ConvertService {
 	if endpoint == "" {
 		return new(remote)
 	}
@@ -29,12 +29,14 @@ func Remote(endpoint, signer, extension string, skipVerify bool) core.ConvertSer
 			signer,
 			skipVerify,
 		),
+		timeout: timeout,
 	}
 }
 
 type remote struct {
 	client    converter.Plugin
 	extension string
+	timeout time.Duration
 }
 
 func (g *remote) Convert(ctx context.Context, in *core.ConvertArgs) (*core.Config, error) {
@@ -48,9 +50,9 @@ func (g *remote) Convert(ctx context.Context, in *core.ConvertArgs) (*core.Confi
 	}
 	// include a timeout to prevent an API call from
 	// hanging the build process indefinitely. The
-	// external service must return a request within
-	// one minute.
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	// external service must return a response within
+	// the configured timeout (default 1m).
+	ctx, cancel := context.WithTimeout(ctx, g.timeout)
 	defer cancel()
 
 	req := &converter.Request{

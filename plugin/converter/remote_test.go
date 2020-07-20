@@ -9,6 +9,7 @@ package converter
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/drone/drone/core"
 	"github.com/h2non/gock"
@@ -35,7 +36,8 @@ func TestConvert(t *testing.T) {
 		},
 	}
 
-	service := Remote("https://company.com/convert", "GMEuUHQfmrMRsseWxi9YlIeBtn9lm6im", "", false)
+	service := Remote("https://company.com/convert", "GMEuUHQfmrMRsseWxi9YlIeBtn9lm6im", "",
+		false, time.Minute)
 	result, err := service.Convert(context.Background(), args)
 	if err != nil {
 		t.Error(err)

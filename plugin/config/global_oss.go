@@ -18,12 +18,13 @@ package config
 
 import (
 	"context"
+	"time"
 
 	"github.com/drone/drone/core"
 )
 
 // Global returns a no-op configuration service.
-func Global(string, string, bool) core.ConfigService {
+func Global(string, string, bool, time.Duration) core.ConfigService {
 	return new(noop)
 }
 
