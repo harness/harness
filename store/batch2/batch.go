@@ -121,6 +121,9 @@ func (b *batchUpdater) Batch(ctx context.Context, user *core.User, batch *core.B
 			_, err = execer.Exec(stmt,
 				user.ID,
 				repo.UID,
+				1,
+				0,
+				0,
 				now,
 				now,
 			)
@@ -189,6 +192,9 @@ func (b *batchUpdater) Batch(ctx context.Context, user *core.User, batch *core.B
 			_, err = execer.Exec(stmt,
 				user.ID,
 				repo.UID,
+				repo.Perms.Read,
+				repo.Perms.Write,
+				repo.Perms.Admin,
 				now,
 				now,
 			)
@@ -353,9 +359,9 @@ INSERT IGNORE INTO perms (
 ) values (
  ?
 ,?
-,1
-,0
-,0
+,?
+,?
+,?
 ,0
 ,?
 ,?
@@ -375,12 +381,12 @@ INSERT INTO perms (
 ) values (
  $1
 ,$2
-,true
-,false
-,false
-,0
 ,$3
 ,$4
+,$5
+,0
+,$6
+,$7
 ) ON CONFLICT DO NOTHING
 `
 
