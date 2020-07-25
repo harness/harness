@@ -20,6 +20,14 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+var (
+
+	mockUser = &core.User{
+		ID:    1,
+		Login: "octocat",
+	}
+)
+
 func TestDisable(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
@@ -31,6 +39,9 @@ func TestDisable(t *testing.T) {
 		Slug:      "octocat/hello-world",
 		Active:    true,
 	}
+
+	users := mock.NewMockUserStore(controller)
+	users.EXPECT().Find(gomock.Any(), mockRepo.UserID).Return(mockUser, nil)
 
 	service := mock.NewMockHookService(controller)
 	service.EXPECT().Delete(gomock.Any(), gomock.Any(), repo).Return(nil)
@@ -48,7 +59,7 @@ func TestDisable(t *testing.T) {
 	r := httptest.NewRequest("DELETE", "/api/repos/octocat/hello-world", nil)
 
 	router := chi.NewRouter()
-	router.Delete("/api/repos/{owner}/{name}", HandleDisable(service, repos, webhook))
+	router.Delete("/api/repos/{owner}/{name}", HandleDisable(users, service, repos, webhook))
 	router.ServeHTTP(w, r)
 
 	if got, want := w.Code, 200; want != got {
@@ -77,7 +88,7 @@ func TestDisable_NotFound(t *testing.T) {
 	r := httptest.NewRequest("DELETE", "/api/repos/octocat/hello-world", nil)
 
 	router := chi.NewRouter()
-	router.Delete("/api/repos/{owner}/{name}", HandleDisable(nil, repos, nil))
+	router.Delete("/api/repos/{owner}/{name}", HandleDisable(nil, nil, repos, nil))
 	router.ServeHTTP(w, r)
 
 	if got, want := w.Code, 404; want != got {
@@ -104,6 +115,8 @@ func TestDisable_InternalError(t *testing.T) {
 	}
 
 	service := mock.NewMockHookService(controller)
+	users := mock.NewMockUserStore(controller)
+	users.EXPECT().Find(gomock.Any(), mockRepo.UserID).Return(mockUser, nil)
 
 	repos := mock.NewMockRepositoryStore(controller)
 	repos.EXPECT().FindName(gomock.Any(), gomock.Any(), repo.Name).Return(repo, nil)
@@ -113,7 +126,7 @@ func TestDisable_InternalError(t *testing.T) {
 	r := httptest.NewRequest("DELETE", "/api/repos/octocat/hello-world", nil)
 
 	router := chi.NewRouter()
-	router.Delete("/api/repos/{owner}/{name}", HandleDisable(service, repos, nil))
+	router.Delete("/api/repos/{owner}/{name}", HandleDisable(users, service, repos, nil))
 	router.ServeHTTP(w, r)
 
 	if got, want := w.Code, http.StatusInternalServerError; want != got {
@@ -142,6 +155,9 @@ func TestDelete(t *testing.T) {
 	service := mock.NewMockHookService(controller)
 	service.EXPECT().Delete(gomock.Any(), gomock.Any(), repo).Return(nil)
 
+	users := mock.NewMockUserStore(controller)
+	users.EXPECT().Find(gomock.Any(), mockRepo.UserID).Return(mockUser, nil)
+
 	repos := mock.NewMockRepositoryStore(controller)
 	repos.EXPECT().FindName(gomock.Any(), gomock.Any(), repo.Name).Return(repo, nil)
 	repos.EXPECT().Update(gomock.Any(), repo).Return(nil)
@@ -156,7 +172,7 @@ func TestDelete(t *testing.T) {
 	r := httptest.NewRequest("DELETE", "/api/repos/octocat/hello-world?remove=true", nil)
 
 	router := chi.NewRouter()
-	router.Delete("/api/repos/{owner}/{name}", HandleDisable(service, repos, webhook))
+	router.Delete("/api/repos/{owner}/{name}", HandleDisable(users, service, repos, webhook))
 	router.ServeHTTP(w, r)
 
 	if got, want := w.Code, 200; want != got {

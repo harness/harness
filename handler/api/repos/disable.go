@@ -28,6 +28,7 @@ import (
 // HandleDisable returns an http.HandlerFunc that processes http
 // requests to disable a repository in the system.
 func HandleDisable(
+	users core.UserStore,
 	hooks core.HookService,
 	repos core.RepositoryStore,
 	sender core.WebhookSender,
@@ -50,6 +51,12 @@ func HandleDisable(
 			return
 		}
 		repo.Active = false
+
+		_, err = users.Find(r.Context(), repo.UserID)
+		if err != nil {
+			render.NotFound(w, err)
+			return
+		}
 
 		err = repos.Update(r.Context(), repo)
 		if err != nil {
