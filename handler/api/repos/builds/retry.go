@@ -97,6 +97,9 @@ func HandleRetry(
 			}
 			hook.Params[key] = value[0]
 		}
+		for key, value := range prev.Params {
+			hook.Params[key] = value
+		}
 
 		result, err := triggerer.Trigger(r.Context(), repo, hook)
 		if err != nil {
