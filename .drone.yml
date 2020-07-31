@@ -1,7 +1,7 @@
 ---
 kind: pipeline
 type: docker
-name: linux-amd64
+name: lin-amd64
 
 platform:
   arch: amd64
