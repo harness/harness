@@ -29,16 +29,16 @@ type Line struct {
 // LogStore persists build output to storage.
 type LogStore interface {
 	// Find returns a log stream from the datastore.
-	Find(ctx context.Context, stage int64) (io.ReadCloser, error)
+	Find(ctx context.Context, step int64) (io.ReadCloser, error)
 
 	// Create writes copies the log stream from Reader r to the datastore.
-	Create(ctx context.Context, stage int64, r io.Reader) error
+	Create(ctx context.Context, step int64, r io.Reader) error
 
 	// Update writes copies the log stream from Reader r to the datastore.
-	Update(ctx context.Context, stage int64, r io.Reader) error
+	Update(ctx context.Context, step int64, r io.Reader) error
 
 	// Delete purges the log stream from the datastore.
-	Delete(ctx context.Context, stage int64) error
+	Delete(ctx context.Context, step int64) error
 }
 
 // LogStream manages a live stream of logs.
