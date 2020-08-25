@@ -224,7 +224,7 @@ func (s Server) Handler() http.Handler {
 				).Post("/{number}/promote", builds.HandlePromote(s.Repos, s.Builds, s.Triggerer))
 
 				r.With(
-					acl.CheckAdminAccess(),
+					acl.CheckWriteAccess(),
 				).Post("/{number}/rollback", builds.HandleRollback(s.Repos, s.Builds, s.Triggerer))
 
 				r.With(
