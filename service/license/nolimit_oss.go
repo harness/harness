@@ -12,7 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build !nolimit
-// +build !oss
+// +build nolimit
+// +build oss
 
 package license
+
+import (
+	"github.com/drone/drone/core"
+)
+
+// DefaultLicense is an empty license with no restrictions.
+var DefaultLicense = &core.License{Kind: core.LicenseFoss}
+
+func Trial(string) *core.License         { return DefaultLicense }
+func Load(string) (*core.License, error) { return DefaultLicense, nil }

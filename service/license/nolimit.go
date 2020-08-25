@@ -13,6 +13,7 @@
 // limitations under the License.
 
 // +build nolimit
+// +build !oss
 
 package license
 
@@ -21,7 +22,7 @@ import (
 )
 
 // DefaultLicense is an empty license with no restrictions.
-var DefaultLicense = &core.License{Kind: core.LicenseFoss}
+var DefaultLicense = &core.License{Kind: core.LicenseFree}
 
 func Trial(string) *core.License         { return DefaultLicense }
 func Load(string) (*core.License, error) { return DefaultLicense, nil }

@@ -23,7 +23,8 @@ import (
 // License types.
 const (
 	LicenseFoss     = "foss"
-	LicensePersonal  = "personal"
+	LicenseFree     = "free"
+	LicensePersonal = "personal"
 	LicenseStandard = "standard"
 	LicenseTrial    = "trial"
 )
