@@ -242,8 +242,9 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	})
 	switch verr {
 	case core.ErrValidatorBlock:
+		logger.Debugln("trigger: yaml validation error: block pipeline")
 	case core.ErrValidatorSkip:
-		logger.Warnln("trigger: yaml validation error: skip pipeline")
+		logger.Debugln("trigger: yaml validation error: skip pipeline")
 		return nil, nil
 	default:
 		if verr != nil {
