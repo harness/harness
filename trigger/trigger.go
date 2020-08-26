@@ -234,16 +234,23 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		return t.createBuildError(ctx, repo, base, err.Error())
 	}
 
-	err = t.validate.Validate(ctx, &core.ValidateArgs{
+	verr := t.validate.Validate(ctx, &core.ValidateArgs{
 		User:   user,
 		Repo:   repo,
 		Build:  tmpBuild,
 		Config: raw,
 	})
-	if err != nil {
-		logger = logger.WithError(err)
-		logger.Warnln("trigger: yaml validation error")
-		return t.createBuildError(ctx, repo, base, err.Error())
+	switch verr {
+	case core.ErrValidatorBlock:
+	case core.ErrValidatorSkip:
+		logger.Warnln("trigger: yaml validation error: skip pipeline")
+		return nil, nil
+	default:
+		if verr != nil {
+			logger = logger.WithError(err)
+			logger.Warnln("trigger: yaml validation error")
+			return t.createBuildError(ctx, repo, base, verr.Error())
+		}
 	}
 
 	err = linter.Manifest(manifest, repo.Trusted)
@@ -258,6 +265,12 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		key := signer.KeyString(repo.Secret)
 		val := []byte(raw.Data)
 		verified, _ = signer.Verify(val, key)
+	}
+	// if pipeline validation failed with a block error, the
+	// pipeline verification should be set to false, which will
+	// force manual review and approval.
+	if verr == core.ErrValidatorBlock {
+		verified = false
 	}
 
 	// var paths []string

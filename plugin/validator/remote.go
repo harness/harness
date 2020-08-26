@@ -50,7 +50,15 @@ func (g *remote) Validate(ctx context.Context, in *core.ValidateArgs) error {
 		},
 	}
 	client := validator.Client(g.endpoint, g.secret, g.skipVerify)
-	return client.Validate(ctx, req)
+	err := client.Validate(ctx, req)
+	switch err {
+	case validator.ErrBlock:
+		return core.ErrValidatorBlock
+	case validator.ErrSkip:
+		return core.ErrValidatorSkip
+	default:
+		return err
+	}
 }
 
 func toRepo(from *core.Repository) drone.Repo {

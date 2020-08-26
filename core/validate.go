@@ -14,7 +14,22 @@
 
 package core
 
-import "context"
+import (
+	"context"
+	"errors"
+)
+
+var (
+	// ErrValidatorSkip is returned if the pipeline
+	// validation fails, but the pipeline should be skipped
+	// and silently ignored instead of erroring.
+	ErrValidatorSkip = errors.New("validation failed: skip pipeline")
+
+	// ErrValidatorBlock is returned if the pipeline
+	// validation fails, but the pipeline should be blocked
+	// pending manual approval instead of erroring.
+	ErrValidatorBlock = errors.New("validation failed: block pipeline")
+)
 
 type (
 	// ValidateArgs represents a request to the pipeline
