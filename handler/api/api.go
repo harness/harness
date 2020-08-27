@@ -247,10 +247,16 @@ func (s Server) Handler() http.Handler {
 			r.Route("/secrets", func(r chi.Router) {
 				r.Use(acl.CheckWriteAccess())
 				r.Get("/", secrets.HandleList(s.Repos, s.Secrets))
-				r.Post("/", secrets.HandleCreate(s.Repos, s.Secrets))
+				r.With(
+					acl.CheckAdminAccess(),
+				).Post("/", secrets.HandleCreate(s.Repos, s.Secrets))
 				r.Get("/{secret}", secrets.HandleFind(s.Repos, s.Secrets))
-				r.Patch("/{secret}", secrets.HandleUpdate(s.Repos, s.Secrets))
-				r.Delete("/{secret}", secrets.HandleDelete(s.Repos, s.Secrets))
+				r.With(
+					acl.CheckAdminAccess(),
+				).Patch("/{secret}", secrets.HandleUpdate(s.Repos, s.Secrets))
+				r.With(
+					acl.CheckAdminAccess(),
+				).Delete("/{secret}", secrets.HandleDelete(s.Repos, s.Secrets))
 			})
 
 			r.Route("/sign", func(r chi.Router) {
