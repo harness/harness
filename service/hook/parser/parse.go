@@ -89,7 +89,11 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 	// payload signature for authenticity.
 	fn := func(webhook scm.Webhook) (string, error) {
 		if webhook == nil {
-			return "", errors.New("Invalid or malformed webhook")
+			// HACK(bradrydzewski) if the incoming webhook is nil
+			// we assume it is an unknown event or action. A more
+			// permanent fix is to update go-scm to return an
+			// scm.ErrUnknownAction error.
+			return "", scm.ErrUnknownEvent
 		}
 		repo := webhook.Repository()
 		slug := scm.Join(repo.Namespace, repo.Name)
