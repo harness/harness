@@ -17,11 +17,13 @@
 package converter
 
 import (
+	"time"
+
 	"github.com/drone/drone/core"
 )
 
 // Remote returns a conversion service that converts the
 // configuration file using a remote http service.
-func Remote(endpoint, signer, extension string, skipVerify bool) core.ConvertService {
+func Remote(endpoint, signer, extension string, skipVerify bool, timeout time.Duration) core.ConvertService {
 	return new(noop)
 }

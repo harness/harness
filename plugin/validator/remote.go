@@ -17,11 +17,12 @@ import (
 
 // Remote returns a conversion service that converts the
 // configuration file using a remote http service.
-func Remote(endpoint, signer string, skipVerify bool) core.ValidateService {
+func Remote(endpoint, signer string, skipVerify bool, timeout time.Duration) core.ValidateService {
 	return &remote{
 		endpoint:   endpoint,
 		secret:     signer,
 		skipVerify: skipVerify,
+		timeout:    timeout,
 	}
 }
 
@@ -29,6 +30,7 @@ type remote struct {
 	endpoint   string
 	secret     string
 	skipVerify bool
+	timeout    time.Duration
 }
 
 func (g *remote) Validate(ctx context.Context, in *core.ValidateArgs) error {
@@ -37,9 +39,9 @@ func (g *remote) Validate(ctx context.Context, in *core.ValidateArgs) error {
 	}
 	// include a timeout to prevent an API call from
 	// hanging the build process indefinitely. The
-	// external service must return a request within
-	// one minute.
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	// external service must return a response within
+	// the configured timeout (default 1m).
+	ctx, cancel := context.WithTimeout(ctx, g.timeout)
 	defer cancel()
 
 	req := &validator.Request{

@@ -65,6 +65,7 @@ func provideConfigPlugin(client *scm.Client, contents core.FileService, conf spe
 			conf.Yaml.Endpoint,
 			conf.Yaml.Secret,
 			conf.Yaml.SkipVerify,
+			conf.Yaml.Timeout,
 		),
 		config.Repository(contents),
 	)
@@ -85,6 +86,7 @@ func provideConvertPlugin(client *scm.Client, conf spec.Config) core.ConvertServ
 			conf.Convert.Secret,
 			conf.Convert.Extension,
 			conf.Convert.SkipVerify,
+			conf.Convert.Timeout,
 		),
 	)
 }
@@ -129,6 +131,7 @@ func provideValidatePlugin(conf spec.Config) core.ValidateService {
 			conf.Validate.Endpoint,
 			conf.Validate.Secret,
 			conf.Validate.SkipVerify,
+			conf.Validate.Timeout,
 		),
 	)
 }

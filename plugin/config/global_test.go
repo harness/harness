@@ -8,6 +8,7 @@ package config
 
 import (
 	"testing"
+	"time"
 
 	"github.com/drone/drone/core"
 	"github.com/h2non/gock"
@@ -31,7 +32,8 @@ func TestGlobal(t *testing.T) {
 		Build: &core.Build{After: "6d144de7"},
 	}
 
-	service := Global("https://company.com/config", "GMEuUHQfmrMRsseWxi9YlIeBtn9lm6im", false)
+	service := Global("https://company.com/config", "GMEuUHQfmrMRsseWxi9YlIeBtn9lm6im",
+		false, time.Minute)
 	result, err := service.Find(noContext, args)
 	if err != nil {
 		t.Error(err)
@@ -65,7 +67,8 @@ func TestGlobalErr(t *testing.T) {
 		Build: &core.Build{After: "6d144de7"},
 	}
 
-	service := Global("https://company.com/config", "GMEuUHQfmrMRsseWxi9YlIeBtn9lm6im", false)
+	service := Global("https://company.com/config", "GMEuUHQfmrMRsseWxi9YlIeBtn9lm6im",
+		false, time.Minute)
 	_, err := service.Find(noContext, args)
 	if err == nil {
 		t.Errorf("Expect http.Reponse error")
@@ -95,7 +98,8 @@ func TestGlobalEmpty(t *testing.T) {
 		Build: &core.Build{After: "6d144de7"},
 	}
 
-	service := Global("https://company.com/config", "GMEuUHQfmrMRsseWxi9YlIeBtn9lm6im", false)
+	service := Global("https://company.com/config", "GMEuUHQfmrMRsseWxi9YlIeBtn9lm6im",
+		false, time.Minute)
 	result, err := service.Find(noContext, args)
 	if err != nil {
 		t.Error(err)
@@ -112,7 +116,7 @@ func TestGlobalEmpty(t *testing.T) {
 }
 
 func TestGlobalDisabled(t *testing.T) {
-	res, err := Global("", "", false).Find(noContext, nil)
+	res, err := Global("", "", false, time.Minute).Find(noContext, nil)
 	if err != nil {
 		t.Error(err)
 	}
