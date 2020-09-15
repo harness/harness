@@ -312,24 +312,27 @@ type (
 
 	// Yaml provides the yaml webhook configuration.
 	Yaml struct {
-		Endpoint   string `envconfig:"DRONE_YAML_ENDPOINT"`
-		Secret     string `envconfig:"DRONE_YAML_SECRET"`
-		SkipVerify bool   `envconfig:"DRONE_YAML_SKIP_VERIFY"`
+		Endpoint   string        `envconfig:"DRONE_YAML_ENDPOINT"`
+		Secret     string        `envconfig:"DRONE_YAML_SECRET"`
+		SkipVerify bool          `envconfig:"DRONE_YAML_SKIP_VERIFY"`
+		Timeout    time.Duration `envconfig:"DRONE_YAML_TIMEOUT" default:"1m"`
 	}
 
 	// Convert provides the converter webhook configuration.
 	Convert struct {
-		Extension  string `envconfig:"DRONE_CONVERT_PLUGIN_EXTENSION"`
-		Endpoint   string `envconfig:"DRONE_CONVERT_PLUGIN_ENDPOINT"`
-		Secret     string `envconfig:"DRONE_CONVERT_PLUGIN_SECRET"`
-		SkipVerify bool   `envconfig:"DRONE_CONVERT_PLUGIN_SKIP_VERIFY"`
+		Extension  string        `envconfig:"DRONE_CONVERT_PLUGIN_EXTENSION"`
+		Endpoint   string        `envconfig:"DRONE_CONVERT_PLUGIN_ENDPOINT"`
+		Secret     string        `envconfig:"DRONE_CONVERT_PLUGIN_SECRET"`
+		SkipVerify bool          `envconfig:"DRONE_CONVERT_PLUGIN_SKIP_VERIFY"`
+		Timeout    time.Duration `envconfig:"DRONE_CONVERT_TIMEOUT" default:"1m"`
 	}
 
 	// Validate provides the validation webhook configuration.
 	Validate struct {
-		Endpoint   string `envconfig:"DRONE_VALIDATE_PLUGIN_ENDPOINT"`
-		Secret     string `envconfig:"DRONE_VALIDATE_PLUGIN_SECRET"`
-		SkipVerify bool   `envconfig:"DRONE_VALIDATE_PLUGIN_SKIP_VERIFY"`
+		Endpoint   string        `envconfig:"DRONE_VALIDATE_PLUGIN_ENDPOINT"`
+		Secret     string        `envconfig:"DRONE_VALIDATE_PLUGIN_SECRET"`
+		SkipVerify bool          `envconfig:"DRONE_VALIDATE_PLUGIN_SKIP_VERIFY"`
+		Timeout    time.Duration `envconfig:"DRONE_VALIDATE_TIMEOUT" default:"1m"`
 	}
 
 	//

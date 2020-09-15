@@ -17,11 +17,13 @@
 package validator
 
 import (
+	"time"
+
 	"github.com/drone/drone/core"
 )
 
 // Remote returns a conversion service that converts the
 // configuration file using a remote http service.
-func Remote(endpoint, signer string, skipVerify bool) core.ValidateService {
+func Remote(endpoint, signer string, skipVerify bool, timeout time.Duration) core.ValidateService {
 	return new(noop)
 }
