@@ -98,7 +98,7 @@ type (
 	}
 
 	Cleanup struct {
-		Disabled  bool         `envconfig:"DRONE_CLEANUP_DISABLED"`
+		Disabled bool          `envconfig:"DRONE_CLEANUP_DISABLED"`
 		Interval time.Duration `envconfig:"DRONE_CLEANUP_INTERVAL"         default:"24h"`
 		Running  time.Duration `envconfig:"DRONE_CLEANUP_DEADLINE_RUNNING" default:"24h"`
 		Pending  time.Duration `envconfig:"DRONE_CLEANUP_DEADLINE_PENDING" default:"24h"`
@@ -188,6 +188,10 @@ type (
 		Filter     []string `envconfig:"DRONE_REPOSITORY_FILTER"`
 		Visibility string   `envconfig:"DRONE_REPOSITORY_VISIBILITY"`
 		Trusted    bool     `envconfig:"DRONE_REPOSITORY_TRUSTED"`
+
+		// THIS SETTING IS INTERNAL USE ONLY AND SHOULD
+		// NOT BE USED OR RELIED UPON IN PRODUCTION.
+		Ignore []string `envconfig:"DRONE_REPOSITORY_IGNORE"`
 	}
 
 	// Registries provides the registry configuration.
