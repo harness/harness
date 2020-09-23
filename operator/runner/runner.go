@@ -114,6 +114,7 @@ func (r *Runner) handleError(ctx context.Context, stage *core.Stage, err error) 
 // removes some code. this is for testing purposes only.
 //
 
+// Run ..
 func (r *Runner) Run(ctx context.Context, id int64) error {
 	logger := logrus.WithFields(
 		logrus.Fields{
