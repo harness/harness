@@ -29,7 +29,7 @@ require (
 	github.com/go-sql-driver/mysql v1.4.0
 	github.com/golang/mock v1.3.1
 	github.com/google/go-cmp v0.4.0
-	github.com/google/go-jsonnet v0.12.1
+	github.com/google/go-jsonnet v0.16.0
 	github.com/google/wire v0.2.1
 	github.com/gorhill/cronexpr v0.0.0-20140423231348-a557574d6c02 // indirect
 	github.com/gosimple/slug v1.3.0
