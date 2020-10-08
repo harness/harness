@@ -28,7 +28,7 @@ import (
 
 // cache key pattern used in the cache, comprised of the
 // repository slug and commit sha.
-const keyf = "%d|%s|%s|%s|%s|%s"
+const keyf = "%d|%d|%s|%s|%s|%s|%s"
 
 // Memoize caches the conversion results for subsequent calls.
 // This micro-optimization is intended for multi-pipeline
@@ -56,6 +56,7 @@ func (c *memoize) Find(ctx context.Context, req *core.ConfigArgs) (*core.Config,
 	// generate the key used to cache the converted file.
 	key := fmt.Sprintf(keyf,
 		req.Repo.ID,
+		req.Build.Created,
 		req.Build.Event,
 		req.Build.Action,
 		req.Build.Ref,
