@@ -24,6 +24,6 @@ import (
 // This micro-optimization is intended for multi-pipeline
 // projects that would otherwise covert the file for each
 // pipeline execution.
-func Memoize(base core.ConvertService) core.ConvertService {
+func Memoize(base core.ConfigService) core.ConfigService {
 	return new(noop)
 }
