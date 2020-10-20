@@ -178,8 +178,7 @@ nav .login {
 
 nav svg {
     fill: #FFF;
-    width: 32px;
-    height:32px;
+    height: 40px;
 }
 
 /*
@@ -437,16 +436,19 @@ div.logos {
  */
 
 .thanks-packet {
-    background-color: #e9fafa;
+    background-color: #eff3f5;
     padding: 0px;
     margin: 0px;
     padding-top: 40px;
 }
 
 .thanks-packet .center > div:first-of-type {
-    background: url("/static2/packet-mascot.jpg") no-repeat center center;
-    background-size: contain;
     height: 400px;
+}
+
+.thanks-packet svg {
+    max-width: 300px;
+    margin-top: 45px;
 }
 
 .thanks-packet .center > div:last-of-type {
@@ -598,6 +600,10 @@ footer {
     .thanks-packet .center > div:last-of-type > div {
         text-align: center;
         padding-top:20px;
+    }
+
+    .thanks-packet svg {
+        display: none;
     }
 
     .columns-3.cards .center {
