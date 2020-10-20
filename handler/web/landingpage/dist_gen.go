@@ -140,8 +140,8 @@ var files = map[string]file{
 		data: file0,
 		FileInfo: &fileInfo{
 			name:    "index.html",
-			size:    22741,
-			modTime: time.Unix(1603223527, 0),
+			size:    22737,
+			modTime: time.Unix(1603224939, 0),
 		},
 	},
 	"/static2/style.css": {
@@ -354,7 +354,7 @@ var file0 = []byte(`<!DOCTYPE html>
                 </div>
                 <div>
                     <h3>Thank you to our Infrastructure Sponsor</h3>
-                    <p>Drone Cloud is powered by donated infrastructure from Equinix Metal (<a href="https://metal.equinix.com/">metal.equinix.com</a>), the leading bare metal cloud for developers. With 18+ datacenters around the world, and a powerful API driven experience, Equinix is well known for bringing the experience of the cloud to bare metal.</p>
+                    <p>Drone Cloud is powered by donated infrastructure from Equinix Metal (<a href="https://metal.equinix.com/">metal.equinix.com</a>), the leading bare metal cloud for developers. With datacenters around the world, and a powerful API driven experience, Equinix is well known for bringing the experience of the cloud to bare metal.</p>
                     <p>Want to run Drone on bare metal, but without the hassle? Equinix can help! <em>Use code "DRONE100" to get started with a $100 credit</em></p>
                     <div><a class="button" href="https://metal.equinix.com/">Learn more about Equinix Metal</a></div>
                 </div>
