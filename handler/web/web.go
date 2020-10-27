@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	"github.com/drone/drone-ui/dist"
+	"github.com/drone/drone/cmd/drone-server/config"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/web/landingpage"
 	"github.com/drone/drone/handler/web/link"
@@ -31,6 +32,7 @@ import (
 )
 
 func New(
+	config config.Config,
 	admitter core.AdmissionService,
 	builds core.BuildStore,
 	client *scm.Client,
@@ -50,6 +52,7 @@ func New(
 	system *core.System,
 ) Server {
 	return Server{
+		Config:    config,
 		Admitter:  admitter,
 		Builds:    builds,
 		Client:    client,
@@ -72,6 +75,7 @@ func New(
 
 // Server is a http.Handler which exposes drone functionality over HTTP.
 type Server struct {
+	Config    config.Config
 	Admitter  core.AdmissionService
 	Builds    core.BuildStore
 	Client    *scm.Client
@@ -115,6 +119,7 @@ func (s Server) Handler() http.Handler {
 		s.Login.Handler(
 			http.HandlerFunc(
 				HandleLogin(
+					s.Config.Server.Addr,
 					s.Users,
 					s.Userz,
 					s.Syncer,
@@ -125,8 +130,8 @@ func (s Server) Handler() http.Handler {
 			),
 		),
 	)
-	r.Get("/logout", HandleLogout())
-	r.Post("/logout", HandleLogout())
+	r.Get("/logout", HandleLogout(s.Config.Server.Addr))
+	r.Post("/logout", HandleLogout(s.Config.Server.Addr))
 
 	h2 := http.FileServer(landingpage.New())
 	h := http.FileServer(dist.New())
@@ -137,7 +142,7 @@ func (s Server) Handler() http.Handler {
 	r.Handle("/img/*filepath", h)
 	r.Handle("/images/*filepath", h)
 	r.Handle("/static2/*filepath", h2)
-	r.NotFound(HandleIndex(s.Host, s.Session, s.Licenses))
+	r.NotFound(HandleIndex(s.Config.Server.Addr, s.Host, s.Session, s.Licenses))
 
 	return r
 }

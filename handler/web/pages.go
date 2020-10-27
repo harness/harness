@@ -26,7 +26,7 @@ import (
 	"github.com/drone/drone/handler/web/landingpage"
 )
 
-func HandleIndex(host string, session core.Session, license core.LicenseService) http.HandlerFunc {
+func HandleIndex(baseURL string, host string, session core.Session, license core.LicenseService) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		user, _ := session.Get(r)
 		if user == nil && host == "cloud.drone.io" && r.URL.Path == "/" {
@@ -43,6 +43,10 @@ func HandleIndex(host string, session core.Session, license core.LicenseService)
 		} else if license.Expired(ctx) {
 			out = bytes.Replace(out, head, expired, -1)
 		}
+
+		// Inject `window.BASE_URL`
+		out = bytes.Replace(out, head, []byte(fmt.Sprintf(`<head><script>window.BASE_URL="%s/"</script>`, baseURL)), -1)
+
 		rw.Header().Set("Content-Type", "text/html; charset=UTF-8")
 		rw.Write(out)
 	}

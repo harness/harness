@@ -252,9 +252,10 @@ type (
 	// Server provides the server configuration.
 	Server struct {
 		Addr  string `envconfig:"-"`
-		Host  string `envconfig:"DRONE_SERVER_HOST" default:"localhost:8080"`
+		Host  string `envconfig:"DRONE_SERVER_HOST" default:"localhost"`
 		Port  string `envconfig:"DRONE_SERVER_PORT" default:":8080"`
 		Proto string `envconfig:"DRONE_SERVER_PROTO" default:"http"`
+		Path  string `envconfig:"DRONE_SERVER_PATH" default:"/"`
 		Pprof bool   `envconfig:"DRONE_PPROF_ENABLED"`
 		Acme  bool   `envconfig:"DRONE_TLS_AUTOCERT"`
 		Email string `envconfig:"DRONE_TLS_EMAIL"`
@@ -499,7 +500,13 @@ func defaultAddress(c *Config) {
 		c.Server.Port = ":443"
 		c.Server.Proto = "https"
 	}
-	c.Server.Addr = c.Server.Proto + "://" + c.Server.Host
+	c.Server.Addr = strings.TrimRight(fmt.Sprintf(
+		"%s://%s%s%s",
+		c.Server.Proto,
+		c.Server.Host,
+		c.Server.Port,
+		c.Server.Path,
+	), "/")
 }
 
 func defaultProxy(c *Config) {

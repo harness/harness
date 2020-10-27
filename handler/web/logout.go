@@ -16,18 +16,14 @@ package web
 
 import (
 	"net/http"
-
-	"github.com/drone/drone-ui/dist"
 )
 
 // HandleLogout creates an http.HandlerFunc that handles
 // session termination.
-func HandleLogout() http.HandlerFunc {
+func HandleLogout(baseURL string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Set-Cookie", "_session_=deleted; Path=/; Max-Age=0")
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-		w.Write(
-			dist.MustLookup("/index.html"),
-		)
+		http.Redirect(w, r, baseURL+"/", 303)
 	}
 }

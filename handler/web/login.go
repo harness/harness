@@ -40,6 +40,7 @@ var syncTimeout = time.Minute * 30
 // HandleLogin creates and http.HandlerFunc that handles user
 // authentication and session initialization.
 func HandleLogin(
+	baseURL string,
 	users core.UserStore,
 	userz core.UserService,
 	syncer core.Syncer,
@@ -172,7 +173,7 @@ func HandleLogin(
 		logger.Debugf("authentication successful")
 
 		session.Create(w, user)
-		http.Redirect(w, r, "/", 303)
+		http.Redirect(w, r, baseURL+"/", 303)
 	}
 }
 

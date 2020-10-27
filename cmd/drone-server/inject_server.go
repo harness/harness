@@ -59,15 +59,15 @@ var serverSet = wire.NewSet(
 
 // provideRouter is a Wire provider function that returns a
 // router that is serves the provided handlers.
-func provideRouter(api api.Server, web web.Server, rpcv1 rpcHandlerV1, rpcv2 rpcHandlerV2, healthz healthzHandler, metrics *metric.Server, pprof pprofHandler) *chi.Mux {
+func provideRouter(config config.Config, api api.Server, web web.Server, rpcv1 rpcHandlerV1, rpcv2 rpcHandlerV2, healthz healthzHandler, metrics *metric.Server, pprof pprofHandler) *chi.Mux {
 	r := chi.NewRouter()
-	r.Mount("/healthz", healthz)
-	r.Mount("/metrics", metrics)
-	r.Mount("/api", api.Handler())
-	r.Mount("/rpc/v2", rpcv2)
-	r.Mount("/rpc", rpcv1)
-	r.Mount("/", web.Handler())
-	r.Mount("/debug", pprof)
+	r.Mount(config.Server.Path+"healthz", http.StripPrefix(config.Server.Path, healthz))
+	r.Mount(config.Server.Path+"metrics", http.StripPrefix(config.Server.Path, metrics))
+	r.Mount(config.Server.Path+"api", http.StripPrefix(config.Server.Path, api.Handler()))
+	r.Mount(config.Server.Path+"rpc/v2", http.StripPrefix(config.Server.Path, rpcv2))
+	r.Mount(config.Server.Path+"rpc", http.StripPrefix(config.Server.Path, rpcv1))
+	r.Mount(config.Server.Path+"", http.StripPrefix(config.Server.Path, web.Handler()))
+	r.Mount(config.Server.Path+"debug", http.StripPrefix(config.Server.Path, pprof))
 	return r
 }
 

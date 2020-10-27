@@ -13,9 +13,9 @@ func TestLogout(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/logout", nil)
 
-	HandleLogout().ServeHTTP(w, r)
+	HandleLogout("").ServeHTTP(w, r)
 
-	if got, want := w.Code, 200; want != got {
+	if got, want := w.Code, 303; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 
