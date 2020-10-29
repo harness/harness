@@ -20,7 +20,7 @@ require (
 	github.com/drone/envsubst v1.0.3-0.20200709231038-aa43e1c1a629
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2
-	github.com/drone/go-scm v1.7.1-0.20200621203823-3731ec1f1136
+	github.com/drone/go-scm v1.7.2-0.20201028160627-427b8a85897c
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-chi/chi v3.3.3+incompatible

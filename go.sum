@@ -93,6 +93,10 @@ github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2 h1:RGpgNkowJc5LAV
 github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2/go.mod h1:FLxy9vRzLbyBxoCJYxGbG9R0WGn6OyuvBmAtYNt43uw=
 github.com/drone/go-scm v1.7.1-0.20200621203823-3731ec1f1136 h1:RKSqrIGBdttX999GgY7J2n1zIJ3QVXH8coI4ObTBB9E=
 github.com/drone/go-scm v1.7.1-0.20200621203823-3731ec1f1136/go.mod h1:lXwfbyrIJwFFME5TpzavkwO2T5X8yBK6t6cve7g91x0=
+github.com/drone/go-scm v1.7.2-0.20201015134822-a014bb19b1df h1:CzwzLwv6h9HMJSph4hC9pJzcaPhExUUOf7s3KEu9lRw=
+github.com/drone/go-scm v1.7.2-0.20201015134822-a014bb19b1df/go.mod h1:lXwfbyrIJwFFME5TpzavkwO2T5X8yBK6t6cve7g91x0=
+github.com/drone/go-scm v1.7.2-0.20201028160627-427b8a85897c h1:3Dv6guONE4nry6fvwEvFz/+pnC0tsMudkrz6CwRO3KM=
+github.com/drone/go-scm v1.7.2-0.20201028160627-427b8a85897c/go.mod h1:lXwfbyrIJwFFME5TpzavkwO2T5X8yBK6t6cve7g91x0=
 github.com/drone/signal v1.0.0 h1:NrnM2M/4yAuU/tXs6RP1a1ZfxnaHwYkd0kJurA1p6uI=
 github.com/drone/signal v1.0.0/go.mod h1:S8t92eFT0g4WUgEc/LxG+LCuiskpMNsG0ajAMGnyZpc=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
