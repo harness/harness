@@ -46,6 +46,7 @@ type Build struct {
 	Cron         string            `db:"build_cron"           json:"cron,omitempty"`
 	Deploy       string            `db:"build_deploy"         json:"deploy_to,omitempty"`
 	DeployID     int64             `db:"build_deploy_id"      json:"deploy_id,omitempty"`
+	Debug        bool              `db:"build_debug"          json:"debug,omitempty"`
 	Started      int64             `db:"build_started"        json:"started"`
 	Finished     int64             `db:"build_finished"       json:"finished"`
 	Created      int64             `db:"build_created"        json:"created"`

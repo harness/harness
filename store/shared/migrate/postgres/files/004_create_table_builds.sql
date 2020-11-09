@@ -57,3 +57,7 @@ CREATE INDEX IF NOT EXISTS ix_build_sender ON builds (build_sender);
 -- name: create-index-builds-ref
 
 CREATE INDEX IF NOT EXISTS ix_build_ref ON builds (build_repo_id, build_ref);
+
+-- name: alter-table-builds-add-column-debug
+
+ALTER TABLE builds ADD COLUMN build_debug BOOLEAN NOT NULL DEFAULT false;

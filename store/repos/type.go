@@ -53,6 +53,7 @@ type nullBuild struct {
 	Cron         sql.NullString
 	Deploy       sql.NullString
 	DeployID     sql.NullInt64
+	Debug        sql.NullBool
 	Started      sql.NullInt64
 	Finished     sql.NullInt64
 	Created      sql.NullInt64
@@ -93,6 +94,7 @@ func (b *nullBuild) value() *core.Build {
 		Cron:         b.Cron.String,
 		Deploy:       b.Deploy.String,
 		DeployID:     b.DeployID.Int64,
+		Debug:        b.Debug.Bool,
 		Started:      b.Started.Int64,
 		Finished:     b.Finished.Int64,
 		Created:      b.Created.Int64,

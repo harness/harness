@@ -83,6 +83,7 @@ func HandleRetry(
 			AuthorAvatar: prev.AuthorAvatar,
 			Deployment:   prev.Deploy,
 			DeploymentID: prev.DeployID,
+			Debug:        r.FormValue("debug") == "true",
 			Cron:         prev.Cron,
 			Sender:       prev.Sender,
 			Params:       map[string]string{},
@@ -90,6 +91,9 @@ func HandleRetry(
 
 		for key, value := range r.URL.Query() {
 			if key == "access_token" {
+				continue
+			}
+			if key == "debug" {
 				continue
 			}
 			if len(value) == 0 {

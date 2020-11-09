@@ -56,3 +56,7 @@ CREATE INDEX IF NOT EXISTS ix_build_ref ON builds (build_repo_id, build_ref);
 
 CREATE INDEX IF NOT EXISTS ix_build_incomplete ON builds (build_status)
 WHERE build_status IN ('pending', 'running');
+
+-- name: alter-table-builds-add-column-debug
+
+ALTER TABLE builds ADD COLUMN build_debug BOOLEAN NOT NULL DEFAULT 0;

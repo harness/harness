@@ -173,6 +173,7 @@ func scanRowBuild(scanner db.Scanner, dest *core.Repository) error {
 		&build.Cron,
 		&build.Deploy,
 		&build.DeployID,
+		&build.Debug,
 		&build.Started,
 		&build.Finished,
 		&build.Created,

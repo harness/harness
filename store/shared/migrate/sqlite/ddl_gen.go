@@ -69,6 +69,10 @@ var migrations = []struct {
 		stmt: createIndexBuildIncomplete,
 	},
 	{
+		name: "alter-table-builds-add-column-debug",
+		stmt: alterTableBuildsAddColumnDebug,
+	},
+	{
 		name: "create-table-stages",
 		stmt: createTableStages,
 	},
@@ -380,6 +384,10 @@ CREATE INDEX IF NOT EXISTS ix_build_ref ON builds (build_repo_id, build_ref);
 var createIndexBuildIncomplete = `
 CREATE INDEX IF NOT EXISTS ix_build_incomplete ON builds (build_status)
 WHERE build_status IN ('pending', 'running');
+`
+
+var alterTableBuildsAddColumnDebug = `
+ALTER TABLE builds ADD COLUMN build_debug BOOLEAN NOT NULL DEFAULT 0;
 `
 
 //

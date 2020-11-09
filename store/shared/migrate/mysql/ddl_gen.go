@@ -65,6 +65,10 @@ var migrations = []struct {
 		stmt: createIndexBuildsRef,
 	},
 	{
+		name: "alter-table-builds-add-column-debug",
+		stmt: alterTableBuildsAddColumnDebug,
+	},
+	{
 		name: "create-table-stages",
 		stmt: createTableStages,
 	},
@@ -380,6 +384,10 @@ CREATE INDEX ix_build_sender ON builds (build_sender);
 
 var createIndexBuildsRef = `
 CREATE INDEX ix_build_ref ON builds (build_repo_id, build_ref);
+`
+
+var alterTableBuildsAddColumnDebug = `
+ALTER TABLE builds ADD COLUMN build_debug BOOLEAN NOT NULL DEFAULT false;
 `
 
 //
