@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+    gitea:
+        image: gitea/gitea:latest
+        container_name: gitea
+        environment:
+        - USER_UID=1000
+        - USER_GID=1000
+        - ROOT_URL=http://gitea:3000
+        networks:
+        - gitea
+        volumes:
+        - ./data:/data
+        ports:
+        - "3000:3000"
+        - "3022:22"
+
+networks:
+  gitea:
+    name: gitea
+    external: false

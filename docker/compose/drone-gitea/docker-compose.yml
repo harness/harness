@@ -1,0 +1,40 @@
+version: "3.8"
+services:
+    drone:
+        image: drone/drone:latest
+        ports:
+        - "9000:80"
+        environment:
+        - DRONE_SERVER_HOST=localhost:9000
+        - DRONE_SERVER_PROTO=http
+        - DRONE_RPC_SECRET=bea26a2221fd8090ea38720fc445eca6
+        - DRONE_COOKIE_SECRET=e8206356c843d81e05ab6735e7ebf075
+        - DRONE_COOKIE_TIMEOUT=720h
+        - DRONE_GITEA_CLIENT_ID=${DRONE_GITEA_CLIENT_ID}
+        - DRONE_GITEA_CLIENT_SECRET=${DRONE_GITEA_CLIENT_SECRET}
+        - DRONE_GITEA_SERVER=http://gitea:3000
+        - DRONE_LOGS_DEBUG=true
+        - DRONE_CRON_DISABLED=true
+        volumes:
+        - ./data:/data
+        networks:
+        - default
+        - gitea
+    runner:
+        image: drone/drone-runner-docker:latest
+        environment:
+        - DRONE_RPC_HOST=drone
+        - DRONE_RPC_PROTO=http
+        - DRONE_RPC_SECRET=bea26a2221fd8090ea38720fc445eca6
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        networks:
+        - default
+        - gitea
+
+networks:
+    default:
+        external: false
+    gitea:
+        external:
+            name: gitea

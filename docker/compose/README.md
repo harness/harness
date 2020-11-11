@@ -1,0 +1,1 @@
+This directory contains docker compose files used by the core development team for local development and testing purposes only. These are not part of the core distribution, and are not intended for use outside of the core development team. We are not currently accepting changes or additions to these files.

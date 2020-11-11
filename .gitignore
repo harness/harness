@@ -7,4 +7,5 @@
 .env.*
 release/
 scripts/*.go
+docker/**/data
 TODO*
