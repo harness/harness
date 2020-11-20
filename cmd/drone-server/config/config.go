@@ -59,6 +59,7 @@ type (
 		Docker       Docker
 		HTTP         HTTP
 		Jsonnet      Jsonnet
+		Starlark     Starlark
 		Logging      Logging
 		Prometheus   Prometheus
 		Proxy        Proxy
@@ -135,6 +136,11 @@ type (
 	// Jsonnet configures the jsonnet plugin
 	Jsonnet struct {
 		Enabled bool `envconfig:"DRONE_JSONNET_ENABLED"`
+	}
+
+	// Starlark configures the starlark plugin
+	Starlark struct {
+		Enabled bool `envconfig:"DRONE_STARLARK_ENABLED"`
 	}
 
 	// Kubernetes provides kubernetes configuration

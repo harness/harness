@@ -20,7 +20,7 @@ require (
 	github.com/drone/envsubst v1.0.3-0.20200709231038-aa43e1c1a629
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2
-	github.com/drone/go-scm v1.7.2-0.20201028160627-427b8a85897c
+	github.com/drone/go-scm v1.7.2-0.20201111225713-c0438b46084b
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-chi/chi v3.3.3+incompatible
@@ -62,6 +62,7 @@ require (
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/ugorji/go v1.1.7 // indirect
 	github.com/unrolled/secure v0.0.0-20181022170031-4b6b7cf51606
+	go.starlark.net v0.0.0-20201118183435-e55f603d8c79
 	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	gopkg.in/ini.v1 v1.57.0 // indirect
