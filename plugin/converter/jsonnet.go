@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/drone/drone/core"
-
+	"github.com/drone/drone/operator/runner"
 	"github.com/google/go-jsonnet"
 )
 
@@ -47,6 +47,12 @@ func (p *jsonnetPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*co
 	vm.MaxStack = 500
 	vm.StringOutput = false
 	vm.ErrorFormatter.SetMaxStackTraceSize(20)
+
+	if req.Build != nil {
+		for key, val := range runner.BuildEnviron(req.Build) {
+			vm.ExtVar(key, val)
+		}
+	}
 
 	// convert the jsonnet file to yaml
 	buf := new(bytes.Buffer)

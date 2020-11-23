@@ -167,7 +167,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 
 	environ := combineEnviron(
 		agentEnviron(r),
-		buildEnviron(m.Build),
+		BuildEnviron(m.Build),
 		repoEnviron(m.Repo),
 		stageEnviron(m.Stage),
 		systemEnviron(m.System),
