@@ -36,6 +36,7 @@ type (
 		Variant   string            `json:"variant,omitempty"`
 		Kernel    string            `json:"kernel,omitempty"`
 		Limit     int               `json:"limit,omitempty"`
+		LimitRepo int               `json:"throttle,omitempty"`
 		Started   int64             `json:"started"`
 		Stopped   int64             `json:"stopped"`
 		Created   int64             `json:"created"`

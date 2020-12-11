@@ -37,6 +37,7 @@ type (
 		CancelPulls *bool   `json:"auto_cancel_pull_requests"`
 		CancelPush  *bool   `json:"auto_cancel_pushes"`
 		Timeout     *int64  `json:"timeout"`
+		Throttle    *int64  `json:"throttle"`
 		Counter     *int64  `json:"counter"`
 	}
 )
@@ -104,6 +105,9 @@ func HandleUpdate(repos core.RepositoryStore) http.HandlerFunc {
 			}
 			if in.Timeout != nil {
 				repo.Timeout = *in.Timeout
+			}
+			if in.Throttle != nil {
+				repo.Throttle = *in.Throttle
 			}
 			if in.Counter != nil {
 				repo.Counter = *in.Counter

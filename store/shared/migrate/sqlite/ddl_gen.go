@@ -33,6 +33,10 @@ var migrations = []struct {
 		stmt: alterTableReposAddColumnCancelPush,
 	},
 	{
+		name: "alter-table-repos-add-column-throttle",
+		stmt: alterTableReposAddColumnThrottle,
+	},
+	{
 		name: "create-table-perms",
 		stmt: createTablePerms,
 	},
@@ -83,6 +87,10 @@ var migrations = []struct {
 	{
 		name: "create-index-stages-status",
 		stmt: createIndexStagesStatus,
+	},
+	{
+		name: "alter-table-stages-add-column-limit-repos",
+		stmt: alterTableStagesAddColumnLimitRepos,
 	},
 	{
 		name: "create-table-steps",
@@ -298,6 +306,10 @@ var alterTableReposAddColumnCancelPush = `
 ALTER TABLE repos ADD COLUMN repo_cancel_push BOOLEAN NOT NULL DEFAULT 0;
 `
 
+var alterTableReposAddColumnThrottle = `
+ALTER TABLE repos ADD COLUMN repo_throttle INTEGER NOT NULL DEFAULT 0;
+`
+
 //
 // 003_create_table_perms.sql
 //
@@ -434,6 +446,10 @@ CREATE INDEX IF NOT EXISTS ix_stages_build ON stages (stage_build_id);
 var createIndexStagesStatus = `
 CREATE INDEX IF NOT EXISTS ix_stage_in_progress ON stages (stage_status)
 WHERE stage_status IN ('pending', 'running');
+`
+
+var alterTableStagesAddColumnLimitRepos = `
+ALTER TABLE stages ADD COLUMN stage_limit_repo INTEGER NOT NULL DEFAULT 0;
 `
 
 //

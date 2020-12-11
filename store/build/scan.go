@@ -81,6 +81,7 @@ func toStageParams(stage *core.Stage) map[string]interface{} {
 		"stage_errignore":  stage.ErrIgnore,
 		"stage_exit_code":  stage.ExitCode,
 		"stage_limit":      stage.Limit,
+		"stage_limit_repo": stage.LimitRepo,
 		"stage_os":         stage.OS,
 		"stage_arch":       stage.Arch,
 		"stage_variant":    stage.Variant,

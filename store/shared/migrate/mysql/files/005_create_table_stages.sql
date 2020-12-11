@@ -61,3 +61,7 @@ BEGIN
     DELETE FROM stages_unfinished WHERE stage_id = OLD.stage_id;
   END IF;
 END;
+
+-- name: alter-table-stages-add-column-limit-repos
+
+ALTER TABLE stages ADD COLUMN stage_limit_repo INTEGER NOT NULL DEFAULT 0;

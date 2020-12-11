@@ -54,6 +54,7 @@ type (
 		CancelPulls bool   `json:"auto_cancel_pull_requests"`
 		CancelPush  bool   `json:"auto_cancel_pushes"`
 		Timeout     int64  `json:"timeout"`
+		Throttle    int64  `json:"-"`
 		Counter     int64  `json:"counter"`
 		Synced      int64  `json:"synced"`
 		Created     int64  `json:"created"`

@@ -283,6 +283,7 @@ SELECT
 ,repo_counter
 ,repo_config
 ,repo_timeout
+,repo_throttle
 ,repo_trusted
 ,repo_protected
 ,repo_no_forks
@@ -378,6 +379,7 @@ INSERT INTO repos (
 ,repo_counter
 ,repo_config
 ,repo_timeout
+,repo_throttle
 ,repo_trusted
 ,repo_protected
 ,repo_no_forks
@@ -407,6 +409,7 @@ INSERT INTO repos (
 ,:repo_counter
 ,:repo_config
 ,:repo_timeout
+,:repo_throttle
 ,:repo_trusted
 ,:repo_protected
 ,:repo_no_forks
@@ -461,6 +464,7 @@ UPDATE repos SET
 ,repo_cancel_pulls = :repo_cancel_pulls
 ,repo_cancel_push = :repo_cancel_push
 ,repo_timeout = :repo_timeout
+,repo_throttle = :repo_throttle
 ,repo_counter = :repo_counter
 ,repo_synced = :repo_synced
 ,repo_created = :repo_created

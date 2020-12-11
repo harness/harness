@@ -668,6 +668,7 @@ INSERT INTO stages (
 ,stage_errignore
 ,stage_exit_code
 ,stage_limit
+,stage_limit_repo
 ,stage_os
 ,stage_arch
 ,stage_variant
@@ -694,6 +695,7 @@ INSERT INTO stages (
 ,:stage_errignore
 ,:stage_exit_code
 ,:stage_limit
+,:stage_limit_repo
 ,:stage_os
 ,:stage_arch
 ,:stage_variant

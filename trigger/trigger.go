@@ -394,6 +394,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 			Variant:   match.Platform.Variant,
 			Kernel:    match.Platform.Version,
 			Limit:     match.Concurrency.Limit,
+			LimitRepo: int(repo.Throttle),
 			Status:    core.StatusWaiting,
 			DependsOn: match.DependsOn,
 			OnSuccess: onSuccess,

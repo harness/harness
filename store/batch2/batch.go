@@ -237,6 +237,7 @@ const stmtInsertBase = `
 ,repo_counter
 ,repo_config
 ,repo_timeout
+,repo_throttle
 ,repo_trusted
 ,repo_protected
 ,repo_no_forks
@@ -266,6 +267,7 @@ const stmtInsertBase = `
 ,:repo_counter
 ,:repo_config
 ,:repo_timeout
+,:repo_throttle
 ,:repo_trusted
 ,:repo_protected
 ,:repo_no_forks

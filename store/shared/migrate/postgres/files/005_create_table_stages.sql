@@ -38,3 +38,7 @@ CREATE INDEX IF NOT EXISTS ix_stages_build ON stages (stage_build_id);
 
 CREATE INDEX IF NOT EXISTS ix_stage_in_progress ON stages (stage_status)
 WHERE stage_status IN ('pending', 'running');
+
+-- name: alter-table-stages-add-column-limit-repos
+
+ALTER TABLE stages ADD COLUMN stage_limit_repo INTEGER NOT NULL DEFAULT 0;

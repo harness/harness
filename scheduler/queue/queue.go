@@ -19,6 +19,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/drone/drone-go/drone"
+
 	"github.com/drone/drone/core"
 )
 
@@ -28,6 +30,7 @@ type queue struct {
 	ready    chan struct{}
 	paused   bool
 	interval time.Duration
+	throttle int
 	store    core.StageStore
 	workers  map[*worker]struct{}
 	ctx      context.Context
@@ -141,6 +144,13 @@ func (q *queue) signal(ctx context.Context) error {
 		// need to make sure those limits are not exceeded
 		// before proceeding.
 		if withinLimits(item, items) == false {
+			continue
+		}
+
+		// if the system defines concurrencly limits
+		// per repository we need to make sure those limits
+		// are not exceeded before proceeding.
+		if shouldThrottle(item, items, item.LimitRepo) == true {
 			continue
 		}
 
@@ -261,6 +271,38 @@ func withinLimits(stage *core.Stage, siblings []*core.Stage) bool {
 		}
 	}
 	return count < stage.Limit
+}
+
+func shouldThrottle(stage *core.Stage, siblings []*core.Stage, limit int) bool {
+	// if no throttle limit is defined (defualt) then
+	// return false to indicate no throttling is needed.
+	if limit == 0 {
+		return false
+	}
+	// if the repository is running it is too late
+	// to skip and we can exit
+	if stage.Status == drone.StatusRunning {
+		return false
+	}
+
+	count := 0
+	// loop through running stages to count number of
+	// running stages for the parent repository.
+	for _, sibling := range siblings {
+		// ignore stages from other repository.
+		if sibling.RepoID != stage.RepoID {
+			continue
+		}
+		// ignore this stage and stages that were
+		// scheduled after this stage.
+		if sibling.ID >= stage.ID {
+			continue
+		}
+		count++
+	}
+	// if the count of running stages exceeds the
+	// throttle limit return true.
+	return count >= limit
 }
 
 // matchResource is a helper function that returns

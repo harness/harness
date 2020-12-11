@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/mock"
 
@@ -183,6 +184,51 @@ func TestMatchResource(t *testing.T) {
 	for i, test := range tests {
 		got, want := matchResource(test.kinda, test.typea, test.kindb, test.typeb), test.want
 		if got != want {
+			t.Errorf("Unexpectd results at index %d", i)
+		}
+	}
+}
+
+func TestShouldThrottle(t *testing.T) {
+	tests := []struct {
+		ID     int64
+		RepoID int64
+		Status string
+		Limit  int
+		Want   bool
+	}{
+		// repo 1: 2 running, 1 pending
+		{Want: false, ID: 1, RepoID: 1, Status: drone.StatusRunning, Limit: 2},
+		{Want: false, ID: 2, RepoID: 1, Status: drone.StatusRunning, Limit: 2},
+		{Want: true, ID: 3, RepoID: 1, Status: drone.StatusPending, Limit: 2},
+
+		// repo 2: 1 running, 1 pending
+		{Want: false, ID: 4, RepoID: 2, Status: drone.StatusRunning, Limit: 2},
+		{Want: false, ID: 5, RepoID: 2, Status: drone.StatusPending, Limit: 2},
+
+		// repo 3: 3 running, 1 pending
+		{Want: false, ID: 6, RepoID: 3, Status: drone.StatusRunning, Limit: 2},
+		{Want: false, ID: 7, RepoID: 3, Status: drone.StatusRunning, Limit: 2},
+		{Want: false, ID: 8, RepoID: 3, Status: drone.StatusRunning, Limit: 2},
+		{Want: true, ID: 9, RepoID: 3, Status: drone.StatusPending, Limit: 2},
+
+		// repo 4: 2 running, 1 pending, no limit
+		{Want: false, ID: 10, RepoID: 4, Status: drone.StatusRunning, Limit: 0},
+		{Want: false, ID: 11, RepoID: 4, Status: drone.StatusRunning, Limit: 0},
+		{Want: false, ID: 12, RepoID: 4, Status: drone.StatusPending, Limit: 0},
+	}
+	var stages []*core.Stage
+	for _, test := range tests {
+		stages = append(stages, &core.Stage{
+			ID:        test.ID,
+			RepoID:    test.RepoID,
+			Status:    test.Status,
+			LimitRepo: test.Limit,
+		})
+	}
+	for i, test := range tests {
+		stage := stages[i]
+		if got, want := shouldThrottle(stage, stages, stage.LimitRepo), test.Want; got != want {
 			t.Errorf("Unexpectd results at index %d", i)
 		}
 	}
