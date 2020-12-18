@@ -55,6 +55,10 @@ func TestConvertVisibility(t *testing.T) {
 			r: &scm.Repository{Private: true},
 			v: core.VisibilityPrivate,
 		},
+		{
+			r: &scm.Repository{Private: true, Visibility: scm.VisibilityInternal},
+			v: core.VisibilityInternal,
+		},
 	}
 
 	for i, test := range tests {

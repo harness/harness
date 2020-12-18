@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [unreleased]
 ### Added
 - support for repository-level concurrency limits.
+- support for gitlab and github internal visibility on initial sync.
 
 ## [1.10.0]
 ### Added

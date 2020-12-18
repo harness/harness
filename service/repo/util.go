@@ -41,6 +41,12 @@ func convertRepository(src *scm.Repository, visibility string, trusted bool) *co
 // convertVisibility is a helper function that returns the
 // repository visibility based on the privacy flag.
 func convertVisibility(src *scm.Repository, visibility string) string {
+	// if the visibility is set to internal (github enterprise and gitlab)
+	// and the global visibility is empty, automatically set to internal.
+	if visibility == "" && src.Visibility == scm.VisibilityInternal {
+		return core.VisibilityInternal
+	}
+
 	switch {
 	case src.Private == true:
 		return core.VisibilityPrivate
