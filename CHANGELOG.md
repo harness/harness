@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for repository-level concurrency limits.
 - support for gitlab and github internal visibility on initial sync.
 
+### Fixed
+- create machine user with a custom API token.
+
 ## [1.10.0]
 ### Added
 - support for starlark scripts in core.
