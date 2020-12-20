@@ -23,7 +23,7 @@ require (
 	github.com/drone/go-scm v1.8.0
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
-	github.com/go-chi/chi v3.3.3+incompatible
+	github.com/go-chi/chi v1.5.1
 	github.com/go-chi/cors v1.0.0
 	github.com/go-ini/ini v1.39.0 // indirect
 	github.com/go-sql-driver/mysql v1.4.0
