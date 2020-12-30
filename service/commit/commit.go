@@ -78,7 +78,7 @@ func (s *service) FindRef(ctx context.Context, user *core.User, repo, ref string
 	})
 
 	switch s.client.Driver {
-	case scm.DriverBitbucket:
+	case scm.DriverBitbucket, scm.DriverStash:
 		ref = scm.TrimRef(ref)
 		branch, _, err := s.client.Git.FindBranch(ctx, repo, ref) // wont work for a Tag
 		if err != nil {
