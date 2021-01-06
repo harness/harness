@@ -1,3 +1,5 @@
+[![Build Status](http://drone.vinai-systems.com/api/badges/thomph/drone/status.svg)](http://drone.vinai-systems.com/thomph/drone). 
+
 Drone is a Continuous Delivery system built on container technology. Drone uses a simple YAML configuration file, a superset of docker-compose, to define and execute Pipelines inside Docker containers. 
 
 <br/>
