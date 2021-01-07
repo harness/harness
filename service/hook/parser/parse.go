@@ -163,6 +163,10 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 				Sender:       v.Sender.Login,
 			}
 		}
+		// When pushing to a new branch, the SHA of the most recent commit is empty
+		if v.Before == emptyCommit {
+			hook.Action = core.ActionCreate
+		}
 		repo = &core.Repository{
 			UID:       v.Repo.ID,
 			Namespace: v.Repo.Namespace,
@@ -331,6 +335,7 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 		hook = &core.Hook{
 			Trigger:      core.TriggerHook, // core.TriggerHook,
 			Event:        core.EventPush,
+			Action:       core.ActionCreate,
 			Link:         "",
 			Timestamp:    0,
 			Message:      "",
