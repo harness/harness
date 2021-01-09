@@ -321,6 +321,9 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		} else if skipCron(pipeline, base.Cron) {
 			logger = logger.WithField("pipeline", pipeline.Name)
 			logger.Infoln("trigger: skipping pipeline, does not match cron job")
+		} else if skipKeyword(pipeline, base.Message, base.Title) {
+			logger = logger.WithField("pipeline", pipeline.Name)
+			logger.Infoln("trigger: skipping pipeline, does not match keywords")
 		} else {
 			matched = append(matched, pipeline)
 			node.Skip = false

@@ -53,6 +53,10 @@ func skipCron(document *yaml.Pipeline, cron string) bool {
 	return !document.Trigger.Cron.Match(cron)
 }
 
+func skipKeyword(document *yaml.Pipeline, message string, title string) bool {
+	return !(document.Trigger.Keyword.Match(message) || document.Trigger.Keyword.Match(title))
+}
+
 func skipMessage(hook *core.Hook) bool {
 	switch {
 	case hook.Event == core.EventTag:
