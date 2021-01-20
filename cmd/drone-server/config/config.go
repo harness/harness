@@ -67,8 +67,6 @@ type (
 		Registries   Registries
 		Repository   Repository
 		Runner       Runner
-		Nomad        Nomad
-		Kube         Kubernetes
 		RPC          RPC
 		S3           S3
 		Secrets      Secrets
@@ -141,32 +139,6 @@ type (
 	// Starlark configures the starlark plugin
 	Starlark struct {
 		Enabled bool `envconfig:"DRONE_STARLARK_ENABLED"`
-	}
-
-	// Kubernetes provides kubernetes configuration
-	Kubernetes struct {
-		Enabled            bool   `envconfig:"DRONE_KUBERNETES_ENABLED"`
-		Namespace          string `envconfig:"DRONE_KUBERNETES_NAMESPACE"`
-		Path               string `envconfig:"DRONE_KUBERNETES_CONFIG_PATH"`
-		URL                string `envconfig:"DRONE_KUBERNETES_CONFIG_URL"`
-		TTL                int    `envconfig:"DRONE_KUBERNETES_TTL_AFTER_FINISHED" default:"300"`
-		ServiceAccountName string `envconfig:"DRONE_KUBERNETES_SERVICE_ACCOUNT"`
-		PullPolicy         string `envconfig:"DRONE_KUBERNETES_IMAGE_PULL" default:"Always"`
-		Image              string `envconfig:"DRONE_KUBERNETES_IMAGE"`
-	}
-
-	// Nomad configuration.
-	Nomad struct {
-		Enabled     bool              `envconfig:"DRONE_NOMAD_ENABLED"`
-		Datacenters []string          `envconfig:"DRONE_NOMAD_DATACENTER" default:"dc1"`
-		Namespace   string            `envconfig:"DRONE_NOMAD_NAMESPACE"`
-		Region      string            `envconfig:"DRONE_NOMAD_REGION"`
-		Prefix      string            `envconfig:"DRONE_NOMAD_JOB_PREFIX" default:"drone-job-"`
-		Image       string            `envconfig:"DRONE_NOMAD_IMAGE"`
-		ImagePull   bool              `envconfig:"DRONE_NOMAD_IMAGE_PULL"`
-		Memory      int               `envconfig:"DRONE_NOMAD_DEFAULT_RAM" default:"1024"`
-		Labels      map[string]string `envconfig:"DRONE_NOMAD_LABELS"`
-		CPU         int               `envconfig:"DRONE_NOMAD_DEFAULT_CPU" default:"500"`
 	}
 
 	// License provides license configuration
