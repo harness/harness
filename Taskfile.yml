@@ -4,46 +4,12 @@ version: '2'
 
 tasks:
   install:
-    cmds:
-    - task: install-server
-    - task: install-agent
-    - task: install-controller
-  
-  install-server:
     dir: cmd/drone-server
     cmds: [ go install -v ]
     env:
       GO111MODULE: on
 
-  install-agent:
-    dir: cmd/drone-agent
-    cmds: [ go install ]
-    env:
-      GO111MODULE: 'on'
-
-  install-controller:
-    dir: cmd/drone-controller
-    cmds: [ go install ]
-    env:
-      GO111MODULE: on
-
   build:
-    cmds:
-    - task: build-agent
-    - task: build-server
-    - task: build-controller
-
-  build-agent:
-    cmds:
-    - task: build-base
-      vars: { name: agent }
-
-  build-controller:
-    cmds:
-    - task: build-base
-      vars: { name: controller }
-
-  build-server:
     cmds:
     - task: build-base
       vars: { name: server }
@@ -64,22 +30,6 @@ tasks:
     - rm -rf release
 
   docker:
-    cmds:
-    - task: docker-controller
-    - task: docker-agent
-    - task: docker-server
-
-  docker-agent:
-    cmds:
-    - task: docker-base
-      vars: { name: agent, image: drone/agent }
-
-  docker-controller:
-    cmds:
-    - task: docker-base
-      vars: { name: controller, image: drone/controller }
-
-  docker-server:
     cmds:
     - task: docker-base
       vars: { name: server, image: drone/drone }
