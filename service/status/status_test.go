@@ -56,6 +56,43 @@ func TestStatus(t *testing.T) {
 	}
 }
 
+func TestStatus_GitlabStatusExist(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	mockUser := &core.User{}
+
+	mockRenewer := mock.NewMockRenewer(controller)
+	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false).Return(nil)
+
+	listStatus := []*scm.Status{
+		&scm.Status{
+			State: scm.StatePending,
+		},
+	}
+
+	mockRepos := mockscm.NewMockRepositoryService(controller)
+	mockRepos.EXPECT().ListStatus(gomock.Any(), "octocat/hello-world", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", scm.ListOptions{}).Return(listStatus, nil, nil)
+
+	client := new(scm.Client)
+	client.Repositories = mockRepos
+	client.Driver = scm.DriverGitlab
+
+	service := New(client, mockRenewer, Config{Base: "https://drone.company.com"})
+	err := service.Send(noContext, mockUser, &core.StatusInput{
+		Repo: &core.Repository{Slug: "octocat/hello-world"},
+		Build: &core.Build{
+			Number: 1,
+			Event:  core.EventPush,
+			Status: core.StatusPending,
+			After:  "a6586b3db244fb6b1198f2b25c213ded5b44f9fa",
+		},
+	})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestStatus_ErrNotSupported(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()

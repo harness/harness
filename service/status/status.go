@@ -81,6 +81,26 @@ func (s *service) Send(ctx context.Context, user *core.User, req *core.StatusInp
 		return err
 	}
 
+	if s.client.Driver == scm.DriverGitlab {
+		/*
+		NOTE:
+			Gitlab statuses may transition in their CI
+			in case if status is already set Gitlab will return err
+		*/
+		got, _, err := s.client.Repositories.ListStatus(ctx, req.Repo.Slug, req.Build.After, scm.ListOptions{});
+
+		if err == scm.ErrNotSupported {
+			return nil
+		}
+
+		if err != nil {
+			return err;
+		}
+
+		if len(got) > 0 && got[0].State == convertStatus(req.Build.Status) {
+			return nil
+		}
+	}
 	_, _, err = s.client.Repositories.CreateStatus(ctx, req.Repo.Slug, req.Build.After, &scm.StatusInput{
 		Title:  fmt.Sprintf("Build #%d", req.Build.Number),
 		Desc:   createDesc(req.Build.Status),
