@@ -266,7 +266,8 @@ func withinLimits(stage *core.Stage, siblings []*core.Stage) bool {
 		if sibling.Name != stage.Name {
 			continue
 		}
-		if sibling.ID < stage.ID {
+		if sibling.ID < stage.ID ||
+			sibling.Status == core.StatusRunning {
 			count++
 		}
 	}
