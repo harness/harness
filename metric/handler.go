@@ -44,9 +44,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	user, _ := s.session.Get(r)
 	switch {
 	case !s.anonymous && user == nil:
-		http.Error(w, errInvalidToken.Error(), 401)
+		http.Error(w, errInvalidToken.Error(), http.StatusUnauthorized)
 	case !s.anonymous && !user.Admin && !user.Machine:
-		http.Error(w, errAccessDenied.Error(), 403)
+		http.Error(w, errAccessDenied.Error(), http.StatusForbidden)
 	default:
 		s.metrics.ServeHTTP(w, r)
 	}

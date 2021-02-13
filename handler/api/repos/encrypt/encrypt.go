@@ -71,7 +71,7 @@ func Handler(repos core.RepositoryStore) http.HandlerFunc {
 }
 
 func encrypt(plaintext, key []byte) (ciphertext []byte, err error) {
-	block, err := aes.NewCipher(key[:])
+	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
