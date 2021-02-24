@@ -164,6 +164,18 @@ var migrations = []struct {
 		name: "create-index-template-namespace",
 		stmt: createIndexTemplateNamespace,
 	},
+	{
+		name: "alter-table-steps-add-column-step-depends-on",
+		stmt: alterTableStepsAddColumnStepDependsOn,
+	},
+	{
+		name: "alter-table-steps-add-column-step-image",
+		stmt: alterTableStepsAddColumnStepImage,
+	},
+	{
+		name: "alter-table-steps-add-column-step-detached",
+		stmt: alterTableStepsAddColumnStepDetached,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -685,4 +697,20 @@ CREATE TABLE IF NOT EXISTS templates (
 
 var createIndexTemplateNamespace = `
 CREATE INDEX ix_template_namespace ON templates (template_namespace);
+`
+
+//
+// 016_add_columns_steps.sql
+//
+
+var alterTableStepsAddColumnStepDependsOn = `
+ALTER TABLE steps ADD COLUMN step_depends_on TEXT NULL;
+`
+
+var alterTableStepsAddColumnStepImage = `
+ALTER TABLE steps ADD COLUMN step_image VARCHAR(1000) NOT NULL DEFAULT '';
+`
+
+var alterTableStepsAddColumnStepDetached = `
+ALTER TABLE steps ADD COLUMN step_detached BOOLEAN NOT NULL DEFAULT FALSE;
 `
