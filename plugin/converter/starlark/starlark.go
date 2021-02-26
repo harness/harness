@@ -53,6 +53,9 @@ var (
 	// ErrCannotLoad indicates the starlark script is attempting to
 	// load an external file which is currently restricted.
 	ErrCannotLoad = errors.New("starlark: cannot load external scripts")
+
+	// ErrLoadCycle indicates the starlark strip has a cyclic dependency
+	ErrLoadCycle = errors.New("starlark: cycle in load dependency graph")
 )
 
 // New returns a conversion service that converts the
@@ -82,9 +85,17 @@ func (p *starlarkPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 		return nil, nil
 	}
 
+	// if we're in a trusted repo, we can load relative files
+	var load func (_ *starlark.Thread, module string) (starlark.StringDict, error)
+	if req.Repo.Trusted {
+		load = makeLoad()
+	} else {
+		load = noLoad
+	}
+
 	thread := &starlark.Thread{
 		Name: "drone",
-		Load: noLoad,
+		Load: load,
 		Print: func(_ *starlark.Thread, msg string) {
 			logrus.WithFields(logrus.Fields{
 				"namespace": req.Repo.Namespace,
@@ -156,4 +167,38 @@ func (p *starlarkPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 
 func noLoad(_ *starlark.Thread, _ string) (starlark.StringDict, error) {
 	return nil, ErrCannotLoad
+}
+
+
+// originally: https://github.com/google/starlark-go/blob/4eb76950c5f02ec5bcfd3ca898231a6543942fd9/repl/repl.go#L175
+// shared here: https://github.com/drone/drone-cli/blob/master/drone/starlark/starlark.go#L304
+func makeLoad() func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
+	type entry struct {
+		globals starlark.StringDict
+		err     error
+	}
+
+	var cache = make(map[string]*entry)
+
+	return func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
+		e, ok := cache[module]
+		if e == nil {
+			if ok {
+				// request for package whose loading is in progress
+				return nil, ErrLoadCycle
+			}
+
+			// Add a placeholder to indicate "load in progress".
+			cache[module] = nil
+
+			// Load it.
+			thread := &starlark.Thread{Name: "exec " + module, Load: thread.Load}
+			globals, err := starlark.ExecFile(thread, module, nil, nil)
+			e = &entry{globals, err}
+
+			// Update the cache.
+			cache[module] = e
+		}
+		return e.globals, e.err
+	}
 }

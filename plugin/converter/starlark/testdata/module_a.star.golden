@@ -1,0 +1,4 @@
+---
+{"kind": "pipeline", "type": "docker", "name": "default"}
+---
+{"kind": "pipeline", "type": "docker", "name": "default"}

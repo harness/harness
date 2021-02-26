@@ -158,3 +158,57 @@ func TestConvert_SkipYaml(t *testing.T) {
 		t.Errorf("Expect nil config returned for non-starlark files")
 	}
 }
+
+
+// this test verifies that module loading works when the repository
+// is trusted.
+func TestConvert_Modules(t *testing.T) {
+	plugin := New(true)
+
+	req := &core.ConvertArgs{
+		Build: &core.Build{
+			After: "3d21ec53a331a6f037a91c368710b99387d012c1",
+		},
+		Repo: &core.Repository{
+			Slug:   "octocat/hello-world",
+			Config: ".drone.yml",
+		},
+		Config: &core.Config{},
+	}
+
+	before, err := ioutil.ReadFile("testdata/module_a.star")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	after, err := ioutil.ReadFile("testdata/module_a.star.golden")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	req.Repo.Config = "testdata/module_a.star"
+	req.Config.Data = string(before)
+	config, err := plugin.Convert(noContext, req)
+	want := "cannot load testdata/module_b.star: starlark: cannot load external scripts"
+	if err == nil && want != err.Error(){
+		t.Error(err)
+		return
+	}
+
+	// only load when trusted
+	req.Repo.Trusted = true
+	config, err = plugin.Convert(noContext, req)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if config == nil {
+		t.Error("Want non-nil configuration")
+		return
+	}
+
+	if want, got := config.Data, string(after); want != got {
+		t.Errorf("Want %q got %q", want, got)
+	}
+} 
