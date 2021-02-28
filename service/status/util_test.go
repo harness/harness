@@ -66,7 +66,7 @@ func TestCreateDesc(t *testing.T) {
 		},
 		{
 			status: core.StatusFailing,
-			desc:   "Build is failing",
+			desc:   "Build has failed",
 		},
 		{
 			status: core.StatusKilled,
@@ -74,7 +74,7 @@ func TestCreateDesc(t *testing.T) {
 		},
 		{
 			status: core.StatusPassing,
-			desc:   "Build is passing",
+			desc:   "Build has passed",
 		},
 		{
 			status: core.StatusWaiting,

@@ -31,7 +31,7 @@ func TestStatus(t *testing.T) {
 		Title:  "Build #1",
 		State:  scm.StateSuccess,
 		Label:  "continuous-integration/drone/push",
-		Desc:   "Build is passing",
+		Desc:   "Build has passed",
 		Target: "https://drone.company.com/octocat/hello-world/1",
 	}
 
@@ -69,7 +69,7 @@ func TestStatus_ErrNotSupported(t *testing.T) {
 		Title:  "Build #1",
 		State:  scm.StateSuccess,
 		Label:  "continuous-integration/drone/push",
-		Desc:   "Build is passing",
+		Desc:   "Build has passed",
 		Target: "https://drone.company.com/octocat/hello-world/1",
 	}
 
