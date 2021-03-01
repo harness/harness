@@ -254,7 +254,7 @@ func (s Server) Handler() http.Handler {
 			})
 
 			r.Route("/sign", func(r chi.Router) {
-				r.Use(acl.CheckWriteAccess())
+				r.Use(acl.CheckAdminAccess())
 				r.Post("/", sign.HandleSign(s.Repos))
 			})
 
