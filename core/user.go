@@ -94,7 +94,7 @@ func (u *User) Validate() error {
 	switch {
 	case !govalidator.IsByteLength(u.Login, 1, 50):
 		return errUsernameLen
-	case !govalidator.Matches(u.Login, "^[a-zA-Z0-9_-]+$"):
+	case !govalidator.Matches(u.Login, "^[.a-zA-Z0-9_-]+$"):
 		return errUsernameChar
 	default:
 		return nil
