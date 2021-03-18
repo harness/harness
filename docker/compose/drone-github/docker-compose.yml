@@ -24,5 +24,6 @@ services:
         - DRONE_RPC_HOST=drone
         - DRONE_RPC_PROTO=http
         - DRONE_RPC_SECRET=bea26a2221fd8090ea38720fc445eca6
+        - DRONE_TMATE_ENABLED=true
         volumes:
         - /var/run/docker.sock:/var/run/docker.sock
