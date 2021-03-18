@@ -191,6 +191,16 @@ func Test_skipMessage(t *testing.T) {
 			want:  false,
 		},
 		{
+			event:   "promote",
+			message: "update readme",
+			want:    false,
+		},
+		{
+			event:   "promote",
+			message: "update readme [CI SKIP]",
+			want:    false,
+		},
+		{
 			event: "custom",
 			title: "update readme [CI SKIP]",
 			want:  false,
