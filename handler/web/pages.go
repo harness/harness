@@ -23,15 +23,13 @@ import (
 
 	"github.com/drone/drone-ui/dist"
 	"github.com/drone/drone/core"
-	"github.com/drone/drone/handler/web/landingpage"
 )
 
 func HandleIndex(host string, session core.Session, license core.LicenseService) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		user, _ := session.Get(r)
-		if user == nil && host == "cloud.drone.io" && r.URL.Path == "/" {
-			rw.Header().Set("Content-Type", "text/html; charset=UTF-8")
-			rw.Write(landingpage.MustLookup("/index.html"))
+		if user == nil && r.URL.Path == "/" {
+			http.Redirect(rw, r, "/welcome", 303)
 			return
 		}
 
