@@ -19,6 +19,8 @@ type Config struct {
 	Endpoint string
 	Token    string
 
+	Contact1        string
+	Contact2        string
 	License         string
 	Licensor        string
 	Subscription    string

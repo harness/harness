@@ -211,6 +211,7 @@ func provideDatadog(
 		sink.Config{
 			Endpoint:        config.Datadog.Endpoint,
 			Token:           config.Datadog.Token,
+			Contact2:        config.Server.Email,
 			License:         license.Kind,
 			Licensor:        license.Licensor,
 			Subscription:    license.Subscription,

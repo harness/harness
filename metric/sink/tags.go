@@ -68,5 +68,14 @@ func createTags(config Config) []string {
 		tag := fmt.Sprintf("license:%s", config.License)
 		tags = append(tags, tag)
 	}
+
+	if config.Contact1 != "" {
+		tag := fmt.Sprintf("contact1:%s", config.Contact1)
+		tags = append(tags, tag)
+	}
+	if config.Contact2 != "" {
+		tag := fmt.Sprintf("contact2:%s", config.Contact2)
+		tags = append(tags, tag)
+	}
 	return tags
 }
