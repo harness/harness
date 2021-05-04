@@ -9,9 +9,10 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/drone/drone/store/shared/db/dbtest"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/repos"
+	"github.com/drone/drone/store/shared/db/dbtest"
+	"github.com/drone/drone/store/shared/encrypt"
 	"github.com/drone/drone/store/user"
 )
 
@@ -28,9 +29,12 @@ func TestPerms(t *testing.T) {
 		dbtest.Disconnect(conn)
 	}()
 
+	// no-op encrypter
+	enc, _ := encrypt.New("")
+
 	// seeds the database with a dummy user account.
 	auser := &core.User{Login: "spaceghost"}
-	users := user.New(conn)
+	users := user.New(conn, enc)
 	err = users.Create(noContext, auser)
 	if err != nil {
 		t.Error(err)

@@ -43,5 +43,5 @@ func New(key string) (Encrypter, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &aesgcm{block: block}, nil
+	return &Aesgcm{block: block}, nil
 }

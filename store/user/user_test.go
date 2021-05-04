@@ -12,6 +12,7 @@ import (
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db/dbtest"
+	"github.com/drone/drone/store/shared/encrypt"
 )
 
 var noContext = context.TODO()
@@ -27,17 +28,20 @@ func TestUser(t *testing.T) {
 		dbtest.Disconnect(conn)
 	}()
 
-	store := New(conn).(*userStore)
+	store := New(conn, nil).(*userStore)
+	store.enc, _ = encrypt.New("fb4b4d6267c8a5ce8231f8b186dbca92")
 	t.Run("Create", testUserCreate(store))
 }
 
 func testUserCreate(store *userStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		user := &core.User{
-			Login:  "octocat",
-			Email:  "octocat@github.com",
-			Avatar: "https://avatars3.githubusercontent.com/u/583231?v=4",
-			Hash:   "MjAxOC0wOC0xMVQxNTo1ODowN1o",
+			Login:   "octocat",
+			Email:   "octocat@github.com",
+			Avatar:  "https://avatars3.githubusercontent.com/u/583231?v=4",
+			Hash:    "MjAxOC0wOC0xMVQxNTo1ODowN1o",
+			Token:   "9595fe015ca9b98c41ebf4e7d4e004ee",
+			Refresh: "268ef49df64ea8ff79ef11e995d41aed",
 		}
 		err := store.Create(noContext, user)
 		if err != nil {
@@ -72,7 +76,7 @@ func testUserCount(users *userStore) func(t *testing.T) {
 			t.Error(err)
 		}
 		if got, want := count, int64(1); got != want {
-			t.Errorf("Want user table count %d, got %d", want, got)
+			t.Errorf("Want user table count %d for humans, got %d", want, got)
 		}
 	}
 }
@@ -181,5 +185,61 @@ func testUser(user *core.User) func(t *testing.T) {
 		if got, want := user.Avatar, "https://avatars3.githubusercontent.com/u/583231?v=4"; got != want {
 			t.Errorf("Want user Avatar %q, got %q", want, got)
 		}
+		if got, want := user.Token, "9595fe015ca9b98c41ebf4e7d4e004ee"; got != want {
+			t.Errorf("Want user Access Token %q, got %q", want, got)
+		}
+		if got, want := user.Refresh, "268ef49df64ea8ff79ef11e995d41aed"; got != want {
+			t.Errorf("Want user Refresh Token %q, got %q", want, got)
+		}
+	}
+}
+
+// The purpose of this unit test is to ensure that plaintext
+// data can still be read from the database if encryption is
+// added at a later time.
+func TestUserCryptoCompat(t *testing.T) {
+	conn, err := dbtest.Connect()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer func() {
+		dbtest.Reset(conn)
+		dbtest.Disconnect(conn)
+	}()
+
+	store := New(conn, nil).(*userStore)
+	store.enc, _ = encrypt.New("")
+
+	item := &core.User{
+		Login:   "octocat",
+		Email:   "octocat@github.com",
+		Avatar:  "https://avatars3.githubusercontent.com/u/583231?v=4",
+		Hash:    "MjAxOC0wOC0xMVQxNTo1ODowN1o",
+		Token:   "9595fe015ca9b98c41ebf4e7d4e004ee",
+		Refresh: "268ef49df64ea8ff79ef11e995d41aed",
+	}
+
+	// create the secret with the secret value stored as plaintext
+	err = store.Create(noContext, item)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if item.ID == 0 {
+		t.Errorf("Want secret ID assigned, got %d", item.ID)
+		return
+	}
+
+	// update the store to use encryption
+	store.enc, _ = encrypt.New("fb4b4d6267c8a5ce8231f8b186dbca92")
+	store.enc.(*encrypt.Aesgcm).Compat = true
+
+	// fetch the secret from the database
+	got, err := store.Find(noContext, item.ID)
+	if err != nil {
+		t.Errorf("cannot retrieve user from database: %s", err)
+	} else {
+		t.Run("Fields", testUser(got))
 	}
 }

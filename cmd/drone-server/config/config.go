@@ -117,6 +117,10 @@ type (
 
 		// Feature flag
 		LegacyBatch bool `envconfig:"DRONE_DATABASE_LEGACY_BATCH"`
+
+		// Feature flag
+		EncryptUserTable    bool `envconfig:"DRONE_DATABASE_ENCRYPT_USER_TABLE"`
+		EncryptMixedContent bool `envconfig:"DRONE_DATABASE_ENCRYPT_MIXED_MODE"`
 	}
 
 	// Docker provides docker configuration

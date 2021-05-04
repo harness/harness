@@ -182,3 +182,57 @@ func testSecret(item *core.Secret) func(t *testing.T) {
 		}
 	}
 }
+
+// The purpose of this unit test is to ensure that plaintext
+// data can still be read from the database if encryption is
+// added at a later time.
+func TestSecretCryptoChange(t *testing.T) {
+	conn, err := dbtest.Connect()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer func() {
+		dbtest.Reset(conn)
+		dbtest.Disconnect(conn)
+	}()
+
+	// seeds the database with a dummy repository.
+	repo := &core.Repository{UID: "1", Slug: "octocat/hello-world"}
+	repos := repos.New(conn)
+	if err := repos.Create(noContext, repo); err != nil {
+		t.Error(err)
+	}
+
+	store := New(conn, nil).(*secretStore)
+	store.enc, _ = encrypt.New("")
+
+	item := &core.Secret{
+		RepoID: repo.ID,
+		Name:   "password",
+		Data:   "correct-horse-battery-staple",
+	}
+
+	// create the secret with the secret value stored as plaintext
+	err = store.Create(noContext, item)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if item.ID == 0 {
+		t.Errorf("Want secret ID assigned, got %d", item.ID)
+		return
+	}
+
+	// update the store to use encryption
+	store.enc, _ = encrypt.New("fb4b4d6267c8a5ce8231f8b186dbca92")
+	store.enc.(*encrypt.Aesgcm).Compat = true
+
+	// fetch the secret from the database
+	got, err := store.Find(noContext, item.ID)
+	if err != nil {
+		t.Error(err)
+	} else {
+		t.Run("Fields", testSecret(got))
+	}
+}

@@ -19,28 +19,30 @@ import (
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
+	"github.com/drone/drone/store/shared/encrypt"
 )
 
 // New returns a new UserStore.
-func New(db *db.DB) core.UserStore {
-	return &userStore{db}
+func New(db *db.DB, enc encrypt.Encrypter) core.UserStore {
+	return &userStore{db, enc}
 }
 
 type userStore struct {
-	db *db.DB
+	db  *db.DB
+	enc encrypt.Encrypter
 }
 
 // Find returns a user from the datastore.
 func (s *userStore) Find(ctx context.Context, id int64) (*core.User, error) {
 	out := &core.User{ID: id}
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
-		params := toParams(out)
+		params := map[string]interface{}{"user_id": id}
 		query, args, err := binder.BindNamed(queryKey, params)
 		if err != nil {
 			return err
 		}
 		row := queryer.QueryRow(query, args...)
-		return scanRow(row, out)
+		return scanRow(s.enc, row, out)
 	})
 	return out, err
 }
@@ -49,13 +51,13 @@ func (s *userStore) Find(ctx context.Context, id int64) (*core.User, error) {
 func (s *userStore) FindLogin(ctx context.Context, login string) (*core.User, error) {
 	out := &core.User{Login: login}
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
-		params := toParams(out)
+		params := map[string]interface{}{"user_login": login}
 		query, args, err := binder.BindNamed(queryLogin, params)
 		if err != nil {
 			return err
 		}
 		row := queryer.QueryRow(query, args...)
-		return scanRow(row, out)
+		return scanRow(s.enc, row, out)
 	})
 	return out, err
 }
@@ -64,13 +66,13 @@ func (s *userStore) FindLogin(ctx context.Context, login string) (*core.User, er
 func (s *userStore) FindToken(ctx context.Context, token string) (*core.User, error) {
 	out := &core.User{Hash: token}
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
-		params := toParams(out)
+		params := map[string]interface{}{"user_hash": token}
 		query, args, err := binder.BindNamed(queryToken, params)
 		if err != nil {
 			return err
 		}
 		row := queryer.QueryRow(query, args...)
-		return scanRow(row, out)
+		return scanRow(s.enc, row, out)
 	})
 	return out, err
 }
@@ -83,7 +85,7 @@ func (s *userStore) List(ctx context.Context) ([]*core.User, error) {
 		if err != nil {
 			return err
 		}
-		out, err = scanRows(rows)
+		out, err = scanRows(s.enc, rows)
 		return err
 	})
 	return out, err
@@ -99,7 +101,10 @@ func (s *userStore) Create(ctx context.Context, user *core.User) error {
 
 func (s *userStore) create(ctx context.Context, user *core.User) error {
 	return s.db.Lock(func(execer db.Execer, binder db.Binder) error {
-		params := toParams(user)
+		params, err := toParams(s.enc, user)
+		if err != nil {
+			return err
+		}
 		stmt, args, err := binder.BindNamed(stmtInsert, params)
 		if err != nil {
 			return err
@@ -115,7 +120,10 @@ func (s *userStore) create(ctx context.Context, user *core.User) error {
 
 func (s *userStore) createPostgres(ctx context.Context, user *core.User) error {
 	return s.db.Lock(func(execer db.Execer, binder db.Binder) error {
-		params := toParams(user)
+		params, err := toParams(s.enc, user)
+		if err != nil {
+			return err
+		}
 		stmt, args, err := binder.BindNamed(stmtInsertPg, params)
 		if err != nil {
 			return err
@@ -127,7 +135,10 @@ func (s *userStore) createPostgres(ctx context.Context, user *core.User) error {
 // Update persists an updated user to the datastore.
 func (s *userStore) Update(ctx context.Context, user *core.User) error {
 	return s.db.Lock(func(execer db.Execer, binder db.Binder) error {
-		params := toParams(user)
+		params, err := toParams(s.enc, user)
+		if err != nil {
+			return err
+		}
 		stmt, args, err := binder.BindNamed(stmtUpdate, params)
 		if err != nil {
 			return err
@@ -140,7 +151,7 @@ func (s *userStore) Update(ctx context.Context, user *core.User) error {
 // Delete deletes a user from the datastore.
 func (s *userStore) Delete(ctx context.Context, user *core.User) error {
 	return s.db.Lock(func(execer db.Execer, binder db.Binder) error {
-		params := toParams(user)
+		params := map[string]interface{}{"user_id": user.ID}
 		stmt, args, err := binder.BindNamed(stmtDelete, params)
 		if err != nil {
 			return err
@@ -163,7 +174,7 @@ func (s *userStore) Count(ctx context.Context) (int64, error) {
 func (s *userStore) CountHuman(ctx context.Context) (int64, error) {
 	var out int64
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
-		params := toParams(&core.User{Machine: false})
+		params := map[string]interface{}{"user_machine": false}
 		stmt, args, err := binder.BindNamed(queryCountHuman, params)
 		if err != nil {
 			return err

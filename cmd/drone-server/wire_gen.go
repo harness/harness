@@ -44,7 +44,11 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	if err != nil {
 		return application{}, err
 	}
-	userStore := provideUserStore(db)
+	encrypter, err := provideEncrypter(config2)
+	if err != nil {
+		return application{}, err
+	}
+	userStore := provideUserStore(db, encrypter, config2)
 	renewer := token.Renewer(refresher, userStore)
 	commitService := commit.New(client, renewer)
 	cronStore := cron.New(db)
@@ -70,10 +74,6 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	logStore := provideLogStore(db, config2)
 	logStream := livelog.New()
 	netrcService := provideNetrcService(client, renewer, config2)
-	encrypter, err := provideEncrypter(config2)
-	if err != nil {
-		return application{}, err
-	}
 	secretStore := secret.New(db, encrypter)
 	globalSecretStore := global.New(db, encrypter)
 	buildManager := manager.New(buildStore, configService, convertService, corePubsub, logStore, logStream, netrcService, repositoryStore, scheduler, secretStore, globalSecretStore, statusService, stageStore, stepStore, system, userStore, webhookSender)

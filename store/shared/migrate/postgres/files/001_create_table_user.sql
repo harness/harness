@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS users (
 ,user_created       INTEGER
 ,user_updated       INTEGER
 ,user_last_login    INTEGER
-,user_oauth_token   VARCHAR(500)
-,user_oauth_refresh VARCHAR(500)
+,user_oauth_token   BYTEA
+,user_oauth_refresh BYTEA
 ,user_oauth_expiry  INTEGER
 ,user_hash          VARCHAR(500)
 ,UNIQUE(user_login)
