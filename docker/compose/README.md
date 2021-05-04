@@ -43,7 +43,7 @@ Forwarding    http://c834c33asdde.ngrok.io -> http://localhost:8080
 ``` bash
 DRONE_SERVER_PROXY_HOST=${DRONE_SERVER_PROXY_HOST} # taken from Ngrok
 DRONE_GITHUB_CLIENT_ID=${DRONE_GITHUB_CLIENT_ID}   # taken from your Github oauth application
-DRONE_GITHUB_CLIENT_ID=${DRONE_GITHUB_CLIENT_ID}   # taken from your Github oauth application
+DRONE_GITHUB_CLIENT_SECRET=${DRONE_GITHUB_CLIENT_SECRET}   # taken from your Github oauth application
 ```
 
 NB for `DRONE_SERVER_PROXY_HOST` do not include http/https.
