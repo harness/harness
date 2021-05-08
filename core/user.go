@@ -44,7 +44,7 @@ type (
 		Token     string `json:"-"`
 		Refresh   string `json:"-"`
 		Expiry    int64  `json:"-"`
-		Hash      string `json:"-"`
+		Hash      string `json:"token"`
 	}
 
 	// UserStore defines operations for working with users.
