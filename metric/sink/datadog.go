@@ -90,6 +90,11 @@ func (d *Datadog) do(ctx context.Context, unix int64) error {
 	if err != nil {
 		return err
 	}
+	userList, _ := d.users.ListRange(ctx, core.UserParams{
+		Sort: false,
+		Page: 1,
+		Size: 5,
+	})
 	tags := createTags(d.config)
 	data := new(payload)
 	data.Series = []series{
@@ -98,7 +103,7 @@ func (d *Datadog) do(ctx context.Context, unix int64) error {
 			Points: [][]int64{[]int64{unix, users}},
 			Type:   "gauge",
 			Host:   d.system.Host,
-			Tags:   tags,
+			Tags:   append(tags, createInstallerTags(userList)...),
 		},
 		{
 			Metric: "drone.repos",

@@ -2070,6 +2070,21 @@ func (mr *MockUserStoreMockRecorder) List(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockUserStore)(nil).List), arg0)
 }
 
+// ListRange mocks base method
+func (m *MockUserStore) ListRange(arg0 context.Context, arg1 core.UserParams) ([]*core.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListRange", arg0, arg1)
+	ret0, _ := ret[0].([]*core.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListRange indicates an expected call of ListRange
+func (mr *MockUserStoreMockRecorder) ListRange(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRange", reflect.TypeOf((*MockUserStore)(nil).ListRange), arg0, arg1)
+}
+
 // Update mocks base method
 func (m *MockUserStore) Update(arg0 context.Context, arg1 *core.User) error {
 	m.ctrl.T.Helper()

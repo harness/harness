@@ -16,6 +16,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
@@ -82,6 +83,31 @@ func (s *userStore) List(ctx context.Context) ([]*core.User, error) {
 	var out []*core.User
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
 		rows, err := queryer.Query(queryAll)
+		if err != nil {
+			return err
+		}
+		out, err = scanRows(s.enc, rows)
+		return err
+	})
+	return out, err
+}
+
+// ListRange returns a list of users from the datastore.
+func (s *userStore) ListRange(ctx context.Context, params core.UserParams) ([]*core.User, error) {
+	var out []*core.User
+	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
+		// this query breaks a rule and uses sprintf to inject parameters
+		// into the query. Normally this should be avoided, however, in this
+		// case the parameters are set by the internal system and can
+		// be considered safe.
+		query := queryRange
+		switch {
+		case params.Sort:
+			query = fmt.Sprintf(query, "user_login", params.Size, params.Page)
+		default:
+			query = fmt.Sprintf(query, "user_id", params.Size, params.Page)
+		}
+		rows, err := queryer.Query(query)
 		if err != nil {
 			return err
 		}
@@ -233,6 +259,13 @@ WHERE user_hash = :user_hash
 const queryAll = queryBase + `
 FROM users
 ORDER BY user_login
+`
+
+const queryRange = queryBase + `
+FROM users
+ORDER BY %s
+LIMIT %d
+OFFSET %d
 `
 
 const stmtUpdate = `

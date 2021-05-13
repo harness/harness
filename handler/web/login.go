@@ -70,11 +70,13 @@ func HandleLogin(
 		logger := logrus.WithField("login", account.Login)
 		logger.Debugf("attempting authentication")
 
+		redirect := "/"
 		user, err := users.FindLogin(ctx, account.Login)
 		if err == sql.ErrNoRows {
+			redirect = "/register"
+
 			user = &core.User{
 				Login:     account.Login,
-				Email:     account.Email,
 				Avatar:    account.Avatar,
 				Admin:     false,
 				Machine:   false,
@@ -140,7 +142,6 @@ func HandleLogin(
 		}
 
 		user.Avatar = account.Avatar
-		user.Email = account.Email
 		user.Token = tok.Access
 		user.Refresh = tok.Refresh
 		user.LastLogin = time.Now().Unix()
@@ -169,10 +170,16 @@ func HandleLogin(
 			go synchronize(ctx, syncer, user)
 		}
 
+		// If the user account has not completed registration,
+		// redirect to the registration form.
+		if len(user.Email) == 0 && user.Created > 1619841600 {
+			redirect = "/register"
+		}
+
 		logger.Debugf("authentication successful")
 
 		session.Create(w, user)
-		http.Redirect(w, r, "/", 303)
+		http.Redirect(w, r, redirect, 303)
 	}
 }
 
