@@ -94,6 +94,7 @@ func provideConvertPlugin(client *scm.Client, conf spec.Config) core.ConvertServ
 				conf.Convert.SkipVerify,
 				conf.Convert.Timeout,
 			),
+			conf.Convert.CacheSize,
 		),
 	)
 }

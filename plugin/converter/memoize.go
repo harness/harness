@@ -34,16 +34,17 @@ const keyf = "%d|%s|%s|%s|%s|%s"
 // This micro-optimization is intended for multi-pipeline
 // projects that would otherwise covert the file for each
 // pipeline execution.
-func Memoize(base core.ConvertService) core.ConvertService {
+func Memoize(base core.ConvertService, size int) core.ConvertService {
 	// simple cache prevents the same yaml file from being
 	// requested multiple times in a short period.
 	cache, _ := lru.New(10)
-	return &memoize{base: base, cache: cache}
+	return &memoize{base: base, cache: cache, size: size}
 }
 
 type memoize struct {
 	base  core.ConvertService
 	cache *lru.Cache
+	size  int
 }
 
 func (c *memoize) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Config, error) {
@@ -51,6 +52,11 @@ func (c *memoize) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Con
 	// base converter is a remote converter and is disabled.
 	if remote, ok := c.base.(*remote); ok == true && remote.client == nil {
 		return nil, nil
+	}
+
+	// the client can optionally disable cacheing.
+	if c.size == 0 {
+		return c.base.Convert(ctx, req)
 	}
 
 	// generate the key used to cache the converted file.

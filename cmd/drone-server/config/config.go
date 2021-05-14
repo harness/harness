@@ -306,6 +306,7 @@ type (
 		Endpoint   string        `envconfig:"DRONE_CONVERT_PLUGIN_ENDPOINT"`
 		Secret     string        `envconfig:"DRONE_CONVERT_PLUGIN_SECRET"`
 		SkipVerify bool          `envconfig:"DRONE_CONVERT_PLUGIN_SKIP_VERIFY"`
+		CacheSize  int           `envconfig:"DRONE_CONVERT_PLUGIN_CACHE_SIZE" default:"10"`
 		Timeout    time.Duration `envconfig:"DRONE_CONVERT_TIMEOUT" default:"1m"`
 	}
 

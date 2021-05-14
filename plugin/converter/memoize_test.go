@@ -30,7 +30,7 @@ func TestMemoize(t *testing.T) {
 	base := mock.NewMockConvertService(controller)
 	base.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(args.Config, nil)
 
-	service := Memoize(base).(*memoize)
+	service := Memoize(base, 10).(*memoize)
 	_, err := service.Convert(noContext, args)
 	if err != nil {
 		t.Error(err)
@@ -69,7 +69,7 @@ func TestMemoize_Tag(t *testing.T) {
 	base := mock.NewMockConvertService(controller)
 	base.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(args.Config, nil)
 
-	service := Memoize(base).(*memoize)
+	service := Memoize(base, 10).(*memoize)
 	res, err := service.Convert(noContext, args)
 	if err != nil {
 		t.Error(err)
@@ -93,7 +93,7 @@ func TestMemoize_Empty(t *testing.T) {
 	base := mock.NewMockConvertService(controller)
 	base.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(args.Config, nil)
 
-	service := Memoize(base).(*memoize)
+	service := Memoize(base, 10).(*memoize)
 	res, err := service.Convert(noContext, args)
 	if err != nil {
 		t.Error(err)
@@ -120,7 +120,7 @@ func TestMemoize_Nil(t *testing.T) {
 	base := mock.NewMockConvertService(controller)
 	base.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(args.Config, nil)
 
-	service := Memoize(base).(*memoize)
+	service := Memoize(base, 10).(*memoize)
 	res, err := service.Convert(noContext, args)
 	if err != nil {
 		t.Error(err)
@@ -147,7 +147,7 @@ func TestMemoize_Error(t *testing.T) {
 	base := mock.NewMockConvertService(controller)
 	base.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(nil, want)
 
-	service := Memoize(base).(*memoize)
+	service := Memoize(base, 10).(*memoize)
 	_, err := service.Convert(noContext, args)
 	if err == nil {
 		t.Errorf("Expect error from base returned to caller")
