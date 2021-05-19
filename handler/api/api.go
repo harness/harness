@@ -83,7 +83,7 @@ func New(
 	stream core.LogStream,
 	syncer core.Syncer,
 	system *core.System,
-	templates core.TemplateStore,
+	template core.TemplateStore,
 	transferer core.Transferer,
 	triggerer core.Triggerer,
 	users core.UserStore,
@@ -113,7 +113,7 @@ func New(
 		Stream:     stream,
 		Syncer:     syncer,
 		System:     system,
-		Templates:  templates,
+		Template:   template,
 		Transferer: transferer,
 		Triggerer:  triggerer,
 		Users:      users,
@@ -146,7 +146,7 @@ type Server struct {
 	Stream     core.LogStream
 	Syncer     core.Syncer
 	System     *core.System
-	Templates  core.TemplateStore
+	Template   core.TemplateStore
 	Transferer core.Transferer
 	Triggerer  core.Triggerer
 	Users      core.UserStore
@@ -259,11 +259,11 @@ func (s Server) Handler() http.Handler {
 
 			r.Route("/templates", func(r chi.Router) {
 				r.Use(acl.CheckWriteAccess())
-				r.Get("/", template.HandleList(s.Templates))
-				r.Post("/", template.HandleCreate(s.Templates))
-				r.Get("/{name}", template.HandleFind(s.Templates))
-				r.Patch("/{name}", template.HandleUpdate(s.Templates))
-				r.Delete("/{name}", template.HandleDelete(s.Templates))
+				r.Get("/", template.HandleList(s.Template))
+				r.Post("/", template.HandleCreate(s.Template))
+				r.Get("/{name}", template.HandleFind(s.Template))
+				r.Patch("/{name}", template.HandleUpdate(s.Template))
+				r.Delete("/{name}", template.HandleDelete(s.Template))
 			})
 
 			r.Route("/sign", func(r chi.Router) {
