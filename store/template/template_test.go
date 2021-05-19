@@ -10,7 +10,6 @@ import (
 	"context"
 	"database/sql"
 	"github.com/drone/drone/core"
-	"github.com/drone/drone/store/repos"
 	"github.com/drone/drone/store/shared/db/dbtest"
 	"testing"
 )
@@ -28,21 +27,14 @@ func TestTemplate(t *testing.T) {
 		dbtest.Disconnect(conn)
 	}()
 
-	// seeds the database with a dummy repository.
-	repo := &core.Repository{UID: "1", Slug: "octocat/hello-world"}
-	repos := repos.New(conn)
-	if err := repos.Create(noContext, repo); err != nil {
-		t.Error(err)
-	}
-
 	store := New(conn).(*templateStore)
-	t.Run("Create", testTemplateCreate(store, repos, repo))
+	t.Run("Create", testTemplateCreate(store))
 }
 
-func testTemplateCreate(store *templateStore, repos core.RepositoryStore, repo *core.Repository) func(t *testing.T) {
+func testTemplateCreate(store *templateStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		item := &core.Template{
-			Id:      repo.ID,
+			Id:      1,
 			Name:    "my_template",
 			Data:    "some_template_data",
 			Created: 1,
@@ -57,10 +49,10 @@ func testTemplateCreate(store *templateStore, repos core.RepositoryStore, repo *
 		}
 
 		t.Run("Find", testTemplateFind(store, item))
-		t.Run("FindName", testTemplateFindName(store, repo))
-		t.Run("List", testTemplateList(store, repo))
-		t.Run("Update", testTemplateUpdate(store, repo))
-		t.Run("Delete", testTemplateDelete(store, repo))
+		t.Run("FindName", testTemplateFindName(store))
+		t.Run("ListAll", testTemplateListAll(store))
+		t.Run("Update", testTemplateUpdate(store))
+		t.Run("Delete", testTemplateDelete(store))
 	}
 }
 
@@ -75,9 +67,9 @@ func testTemplateFind(store *templateStore, template *core.Template) func(t *tes
 	}
 }
 
-func testTemplateFindName(store *templateStore, repo *core.Repository) func(t *testing.T) {
+func testTemplateFindName(store *templateStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		item, err := store.FindName(noContext, repo.ID, "my_template")
+		item, err := store.FindName(noContext, "my_template")
 		if err != nil {
 			t.Error(err)
 		} else {
@@ -97,9 +89,9 @@ func testTemplate(item *core.Template) func(t *testing.T) {
 	}
 }
 
-func testTemplateList(store *templateStore, repo *core.Repository) func(t *testing.T) {
+func testTemplateListAll(store *templateStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		list, err := store.List(noContext, repo.ID)
+		list, err := store.ListAll(noContext)
 		if err != nil {
 			t.Error(err)
 			return
@@ -112,9 +104,9 @@ func testTemplateList(store *templateStore, repo *core.Repository) func(t *testi
 	}
 }
 
-func testTemplateUpdate(store *templateStore, repo *core.Repository) func(t *testing.T) {
+func testTemplateUpdate(store *templateStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		before, err := store.FindName(noContext, repo.ID, "my_template")
+		before, err := store.FindName(noContext, "my_template")
 		if err != nil {
 			t.Error(err)
 			return
@@ -135,9 +127,9 @@ func testTemplateUpdate(store *templateStore, repo *core.Repository) func(t *tes
 	}
 }
 
-func testTemplateDelete(store *templateStore, repo *core.Repository) func(t *testing.T) {
+func testTemplateDelete(store *templateStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		secret, err := store.FindName(noContext, repo.ID, "my_template")
+		secret, err := store.FindName(noContext, "my_template")
 		if err != nil {
 			t.Error(err)
 			return

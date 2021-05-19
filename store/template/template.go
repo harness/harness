@@ -24,11 +24,11 @@ type templateStore struct {
 	db *db.DB
 }
 
-func (s *templateStore) List(ctx context.Context, id int64) ([]*core.Template, error) {
+func (s *templateStore) ListAll(ctx context.Context) ([]*core.Template, error) {
 	var out []*core.Template
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
-		params := map[string]interface{}{"template_id": id}
-		stmt, args, err := binder.BindNamed(queryRepo, params)
+		params := map[string]interface{}{}
+		stmt, args, err := binder.BindNamed(queryAll, params)
 		if err != nil {
 			return err
 		}
@@ -59,8 +59,8 @@ func (s *templateStore) Find(ctx context.Context, id int64) (*core.Template, err
 	return out, err
 }
 
-func (s *templateStore) FindName(ctx context.Context, id int64, name string) (*core.Template, error) {
-	out := &core.Template{Name: name, Id: id}
+func (s *templateStore) FindName(ctx context.Context, name string) (*core.Template, error) {
+	out := &core.Template{Name: name}
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
 		params, err := toParams(out)
 		if err != nil {
@@ -161,11 +161,11 @@ SELECT
 ,template_updated
 `
 
-const queryRepo = queryBase + `
+const queryAll = queryBase + `
 FROM template
-WHERE template_id = :template_id
 ORDER BY template_name
 `
+
 const stmtInsert = `
 INSERT INTO template (
  template_id
@@ -197,7 +197,6 @@ WHERE template_id = :template_id
 const queryName = queryBase + `
 FROM template
 WHERE template_name = :template_name
-  AND template_id = :template_id
 LIMIT 1
 `
 
