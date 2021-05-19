@@ -40,6 +40,7 @@ import (
 	"github.com/drone/drone/handler/api/repos/sign"
 	globalsecrets "github.com/drone/drone/handler/api/secrets"
 	"github.com/drone/drone/handler/api/system"
+	"github.com/drone/drone/handler/api/template"
 	"github.com/drone/drone/handler/api/user"
 	"github.com/drone/drone/handler/api/user/remote"
 	"github.com/drone/drone/handler/api/users"
@@ -82,6 +83,7 @@ func New(
 	stream core.LogStream,
 	syncer core.Syncer,
 	system *core.System,
+	templates core.TemplateStore,
 	transferer core.Transferer,
 	triggerer core.Triggerer,
 	users core.UserStore,
@@ -111,6 +113,7 @@ func New(
 		Stream:     stream,
 		Syncer:     syncer,
 		System:     system,
+		Templates:  templates,
 		Transferer: transferer,
 		Triggerer:  triggerer,
 		Users:      users,
@@ -143,6 +146,7 @@ type Server struct {
 	Stream     core.LogStream
 	Syncer     core.Syncer
 	System     *core.System
+	Templates  core.TemplateStore
 	Transferer core.Transferer
 	Triggerer  core.Triggerer
 	Users      core.UserStore
@@ -251,6 +255,15 @@ func (s Server) Handler() http.Handler {
 				r.Get("/{secret}", secrets.HandleFind(s.Repos, s.Secrets))
 				r.Patch("/{secret}", secrets.HandleUpdate(s.Repos, s.Secrets))
 				r.Delete("/{secret}", secrets.HandleDelete(s.Repos, s.Secrets))
+			})
+
+			r.Route("/templates", func(r chi.Router) {
+				r.Use(acl.CheckWriteAccess())
+				r.Get("/", template.HandleList(s.Templates))
+				r.Post("/", template.HandleCreate(s.Templates))
+				r.Get("/{name}", template.HandleFind(s.Templates))
+				r.Patch("/{name}", template.HandleUpdate(s.Templates))
+				r.Delete("/{name}", template.HandleDelete(s.Templates))
 			})
 
 			r.Route("/sign", func(r chi.Router) {

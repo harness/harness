@@ -1,0 +1,80 @@
+// Copyright 2019 Drone IO, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package core
+
+import (
+	"context"
+	"github.com/drone/drone/handler/api/errors"
+)
+
+var (
+	errTemplateNameInvalid    = errors.New("Invalid Template Name")
+	errTemplateDataInvalid    = errors.New("Invalid Template Data")
+	errTemplateCreatedInvalid = errors.New("Invalid Template Created Value")
+	errTemplateUpdatedInvalid = errors.New("Invalid Template Updated Value")
+)
+
+type (
+	TemplateArgs struct {
+		Kind string
+		Load string
+		Data map[string]interface{}
+	}
+
+	Template struct {
+		Id      int64  `json:"id,omitempty"`
+		Name    string `json:"name,omitempty"`
+		Data    string `json:"data,omitempty"`
+		Created int64  `json:"created,omitempty"`
+		Updated int64  `json:"updated,omitempty"`
+	}
+
+	// TemplateStore manages repository templates.
+	TemplateStore interface {
+		// ListAll returns templates list from the datastore.
+		ListAll(ctx context.Context) ([]*Template, error)
+
+		// Find returns a template from the datastore.
+		Find(ctx context.Context, id int64) (*Template, error)
+
+		// FindName returns a template from the datastore by name
+		FindName(ctx context.Context, name string) (*Template, error)
+
+		// Create persists a new template to the datastore.
+		Create(ctx context.Context, template *Template) error
+
+		// Update persists an updated template to the datastore.
+		Update(ctx context.Context, template *Template) error
+
+		// Delete deletes a template from the datastore.
+		Delete(ctx context.Context, template *Template) error
+	}
+)
+
+// Validate validates the required fields and formats.
+func (s *Template) Validate() error {
+	switch {
+	case len(s.Name) == 0:
+		return errTemplateNameInvalid
+	case len(s.Data) == 0:
+		return errTemplateDataInvalid
+	case s.Created == 0:
+		return errTemplateCreatedInvalid
+	case s.Updated == 0:
+		return errTemplateUpdatedInvalid
+	default:
+		return nil
+	}
+}
