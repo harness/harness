@@ -152,6 +152,10 @@ var migrations = []struct {
 		name: "create-index-latest-repo",
 		stmt: createIndexLatestRepo,
 	},
+	{
+		name: "create-table-template",
+		stmt: createTableTemplate,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -635,4 +639,18 @@ CREATE TABLE IF NOT EXISTS latest (
 
 var createIndexLatestRepo = `
 CREATE INDEX IF NOT EXISTS ix_latest_repo ON latest (latest_repo_id);
+`
+
+//
+// 016_create_template_table.sql
+//
+
+var createTableTemplate = `
+CREATE TABLE IF NOT EXISTS template (
+    template_id       SERIAL PRIMARY KEY
+    ,template_name    TEXT UNIQUE
+    ,template_data    BYTEA
+    ,template_created INTEGER
+    ,template_updated INTEGER
+);
 `
