@@ -121,7 +121,7 @@ func TestHandleUpdate_UpdateError(t *testing.T) {
 	c.URLParams.Add("name", "my_template")
 
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(&core.Template{Data: "my_data"})
+	json.NewEncoder(in).Encode(&core.Template{Data: []byte("my_data")})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", in)

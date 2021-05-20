@@ -7,6 +7,7 @@
 package template
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"github.com/drone/drone/core"
@@ -36,7 +37,7 @@ func testTemplateCreate(store *templateStore) func(t *testing.T) {
 		item := &core.Template{
 			Id:      1,
 			Name:    "my_template",
-			Data:    "some_template_data",
+			Data:    []byte("some_template_data"),
 			Created: 1,
 			Updated: 2,
 		}
@@ -83,7 +84,7 @@ func testTemplate(item *core.Template) func(t *testing.T) {
 		if got, want := item.Name, "my_template"; got != want {
 			t.Errorf("Want template name %q, got %q", want, got)
 		}
-		if got, want := item.Data, "some_template_data"; got != want {
+		if got, want := item.Data, []byte("some_template_data"); bytes.Compare(got, want) != 0 {
 			t.Errorf("Want template data %q, got %q", want, got)
 		}
 	}

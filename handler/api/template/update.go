@@ -13,7 +13,7 @@ import (
 )
 
 type templateUpdate struct {
-	Data    *string `json:"data"`
+	Data    *[]byte `json:"data"`
 	Updated *int64  `json:"Updated"`
 }
 

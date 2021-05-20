@@ -8,7 +8,6 @@ package template
 
 import (
 	"context"
-
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
 )
@@ -168,14 +167,12 @@ ORDER BY template_name
 
 const stmtInsert = `
 INSERT INTO template (
- template_id
-,template_name
+ template_name
 ,template_data
 ,template_created
 ,template_updated
 ) VALUES (
- :template_id
-,:template_name
+ :template_name
 ,:template_data
 ,:template_created
 ,:template_updated

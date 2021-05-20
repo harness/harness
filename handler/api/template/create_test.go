@@ -51,7 +51,7 @@ func TestHandleCreate_ValidationErrorName(t *testing.T) {
 
 	c := new(chi.Context)
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(&core.Template{Name: "", Data: "my_data"})
+	json.NewEncoder(in).Encode(&core.Template{Name: "", Data: []byte("my_data")})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", in)
@@ -77,7 +77,7 @@ func TestHandleCreate_ValidationErrorData(t *testing.T) {
 
 	c := new(chi.Context)
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(&core.Template{Name: "my_template", Data: ""})
+	json.NewEncoder(in).Encode(&core.Template{Name: "my_template", Data: nil})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", in)
