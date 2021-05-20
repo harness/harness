@@ -15,6 +15,7 @@
 package api
 
 import (
+	"github.com/drone/drone/handler/api/template"
 	"net/http"
 	"os"
 
@@ -40,7 +41,6 @@ import (
 	"github.com/drone/drone/handler/api/repos/sign"
 	globalsecrets "github.com/drone/drone/handler/api/secrets"
 	"github.com/drone/drone/handler/api/system"
-	"github.com/drone/drone/handler/api/template"
 	"github.com/drone/drone/handler/api/user"
 	"github.com/drone/drone/handler/api/user/remote"
 	"github.com/drone/drone/handler/api/users"
@@ -257,15 +257,6 @@ func (s Server) Handler() http.Handler {
 				r.Delete("/{secret}", secrets.HandleDelete(s.Repos, s.Secrets))
 			})
 
-			r.Route("/templates", func(r chi.Router) {
-				r.Use(acl.CheckWriteAccess())
-				r.Get("/", template.HandleList(s.Template))
-				r.Post("/", template.HandleCreate(s.Template))
-				r.Get("/{name}", template.HandleFind(s.Template))
-				r.Patch("/{name}", template.HandleUpdate(s.Template))
-				r.Delete("/{name}", template.HandleDelete(s.Template))
-			})
-
 			r.Route("/sign", func(r chi.Router) {
 				r.Use(acl.CheckWriteAccess())
 				r.Post("/", sign.HandleSign(s.Repos))
@@ -364,6 +355,16 @@ func (s Server) Handler() http.Handler {
 		r.With(acl.CheckMembership(s.Orgs, true)).Post("/{namespace}/{name}", globalsecrets.HandleUpdate(s.Globals))
 		r.With(acl.CheckMembership(s.Orgs, true)).Patch("/{namespace}/{name}", globalsecrets.HandleUpdate(s.Globals))
 		r.With(acl.CheckMembership(s.Orgs, true)).Delete("/{namespace}/{name}", globalsecrets.HandleDelete(s.Globals))
+	})
+
+	r.Route("/templates", func(r chi.Router) {
+		r.With(acl.AuthorizeAdmin).Get("/", template.HandleAll(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, false)).Get("/{namespace}", template.HandleList(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, true)).Post("/{namespace}", template.HandleCreate(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, false)).Get("/{namespace}/{name}", template.HandleFind(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, true)).Post("/{namespace}/{name}", template.HandleUpdate(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, true)).Patch("/{namespace}/{name}", template.HandleUpdate(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, true)).Delete("/{namespace}/{name}", template.HandleDelete(s.Template))
 	})
 
 	r.Route("/system", func(r chi.Router) {

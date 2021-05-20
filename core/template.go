@@ -20,10 +20,10 @@ import (
 )
 
 var (
-	errTemplateNameInvalid    = errors.New("Invalid Template Name")
-	errTemplateDataInvalid    = errors.New("Invalid Template Data")
-	errTemplateCreatedInvalid = errors.New("Invalid Template Created Value")
-	errTemplateUpdatedInvalid = errors.New("Invalid Template Updated Value")
+	errTemplateNameInvalid = errors.New("No Template Name Provided")
+	errTemplateDataInvalid = errors.New("No Template Data Provided")
+	//errTemplateCreatedInvalid = errors.New("Invalid Template Created Value")
+	//errTemplateUpdatedInvalid = errors.New("Invalid Template Updated Value")
 )
 
 type (
@@ -70,10 +70,10 @@ func (s *Template) Validate() error {
 		return errTemplateNameInvalid
 	case len(s.Data) == 0:
 		return errTemplateDataInvalid
-	case s.Created == 0:
-		return errTemplateCreatedInvalid
-	case s.Updated == 0:
-		return errTemplateUpdatedInvalid
+	//case s.Created == 0:
+	//	return errTemplateCreatedInvalid
+	//case s.Updated == 0:
+	//	return errTemplateUpdatedInvalid
 	default:
 		return nil
 	}

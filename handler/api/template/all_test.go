@@ -6,24 +6,26 @@
 
 package template
 
-//func TestHandleAll(t *testing.T) {
-//	controller := gomock.NewController(t)
-//	defer controller.Finish()
-//
-//	secrets := mock.NewMockGlobalSecretStore(controller)
-//	secrets.EXPECT().ListAll(gomock.Any()).Return(dummySecretList, nil)
-//
-//	w := httptest.NewRecorder()
-//	r := httptest.NewRequest("GET", "/", nil)
-//
-//	HandleAll(secrets).ServeHTTP(w, r)
-//	if got, want := w.Code, http.StatusOK; want != got {
-//		t.Errorf("Want response code %d, got %d", want, got)
-//	}
-//
-//	got, want := []*core.Secret{}, dummySecretListScrubbed
-//	json.NewDecoder(w.Body).Decode(&got)
-//	if diff := cmp.Diff(got, want); len(diff) != 0 {
-//		t.Errorf(diff)
-//	}
-//}
+import (
+	"github.com/drone/drone/mock"
+	"github.com/golang/mock/gomock"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
+func TestHandleAll(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	templates := mock.NewMockTemplateStore(controller)
+	templates.EXPECT().ListAll(gomock.Any()).Return(dummyTemplateList, nil)
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/", nil)
+
+	HandleAll(templates).ServeHTTP(w, r)
+	if got, want := w.Code, http.StatusOK; want != got {
+		t.Errorf("Want response code %d, got %d", want, got)
+	}
+}
