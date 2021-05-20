@@ -359,12 +359,12 @@ func (s Server) Handler() http.Handler {
 
 	r.Route("/templates", func(r chi.Router) {
 		r.With(acl.AuthorizeAdmin).Get("/", template.HandleAll(s.Template))
-		r.With(acl.CheckMembership(s.Orgs, false)).Get("/{namespace}", template.HandleList(s.Template))
-		r.With(acl.CheckMembership(s.Orgs, true)).Post("/{namespace}", template.HandleCreate(s.Template))
-		r.With(acl.CheckMembership(s.Orgs, false)).Get("/{namespace}/{name}", template.HandleFind(s.Template))
-		r.With(acl.CheckMembership(s.Orgs, true)).Post("/{namespace}/{name}", template.HandleUpdate(s.Template))
-		r.With(acl.CheckMembership(s.Orgs, true)).Patch("/{namespace}/{name}", template.HandleUpdate(s.Template))
-		r.With(acl.CheckMembership(s.Orgs, true)).Delete("/{namespace}/{name}", template.HandleDelete(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, false)).Get("/", template.HandleList(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, true)).Post("/", template.HandleCreate(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, false)).Get("/{name}", template.HandleFind(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, true)).Put("/{name}", template.HandleUpdate(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, true)).Patch("/{name}", template.HandleUpdate(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, true)).Delete("/{name}", template.HandleDelete(s.Template))
 	})
 
 	r.Route("/system", func(r chi.Router) {
