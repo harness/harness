@@ -45,7 +45,7 @@ func scanRow(scanner db.Scanner, dst *core.Template) error {
 func scanRows(rows *sql.Rows) ([]*core.Template, error) {
 	defer rows.Close()
 
-	var template []*core.Template
+	template := []*core.Template{}
 	for rows.Next() {
 		tem := new(core.Template)
 		err := scanRow(rows, tem)
