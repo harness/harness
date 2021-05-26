@@ -88,7 +88,7 @@ func TestCron_Cancel(t *testing.T) {
 
 	s := new(Scheduler)
 	err := s.Start(ctx, time.Minute)
-	if err != context.Canceled {
+	if err != nil {
 		t.Errorf("Expect cron scheduler exits when context is canceled")
 	}
 }
