@@ -52,7 +52,7 @@ func (s *Scheduler) Start(ctx context.Context, dur time.Duration) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil
 		case <-ticker.C:
 			s.run(ctx)
 		}

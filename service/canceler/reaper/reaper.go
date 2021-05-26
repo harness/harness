@@ -69,7 +69,7 @@ func (r *Reaper) Start(ctx context.Context, dur time.Duration) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil
 		case <-ticker.C:
 			r.reap(ctx)
 		}

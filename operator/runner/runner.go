@@ -539,7 +539,7 @@ func (r *Runner) start(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil
 		default:
 			// This error is ignored on purpose. The system
 			// should not exit the runner on error. The run
