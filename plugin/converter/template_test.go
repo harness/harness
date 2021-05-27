@@ -38,7 +38,7 @@ func TestTemplatePluginConvert(t *testing.T) {
 	templates := mock.NewMockTemplateStore(controller)
 	templates.EXPECT().FindName(gomock.Any(), template.Name).Return(template, nil)
 
-	plugin := TemplateConverter(templates)
+	plugin := Template(templates)
 	req := &core.ConvertArgs{
 		Build: &core.Build{
 			After: "3d21ec53a331a6f037a91c368710b99387d012c1",
@@ -70,7 +70,7 @@ func TestTemplatePluginConvert(t *testing.T) {
 
 func TestTemplatePluginConvertNotYamlFile(t *testing.T) {
 
-	plugin := TemplateConverter(nil)
+	plugin := Template(nil)
 	req := &core.ConvertArgs{
 		Build: &core.Build{
 			After: "3d21ec53a331a6f037a91c368710b99387d012c1",
@@ -98,7 +98,7 @@ func TestTemplatePluginConvertDroneFileTypePipeline(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	plugin := TemplateConverter(nil)
+	plugin := Template(nil)
 	req := &core.ConvertArgs{
 		Build: &core.Build{
 			After: "3d21ec53a331a6f037a91c368710b99387d012c1",
@@ -138,7 +138,7 @@ func TestTemplatePluginConvertTemplateNotFound(t *testing.T) {
 		return
 	}
 
-	plugin := TemplateConverter(templates)
+	plugin := Template(templates)
 	req := &core.ConvertArgs{
 		Build: &core.Build{
 			After: "3d21ec53a331a6f037a91c368710b99387d012c1",

@@ -19,7 +19,7 @@ var (
 	ErrTemplateSyntaxErrors = errors.New("template converter: there is a problem with the yaml file provided")
 )
 
-func TemplateConverter(templateStore core.TemplateStore) core.ConvertService {
+func Template(templateStore core.TemplateStore) core.ConvertService {
 	return &templatePlugin{
 		templateStore: templateStore,
 	}
