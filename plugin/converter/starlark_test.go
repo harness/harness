@@ -12,19 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package starlark
+package converter
 
 import (
-	"context"
 	"io/ioutil"
 	"testing"
 
 	"github.com/drone/drone/core"
 )
 
-var noContext = context.Background()
-
-func TestConvert(t *testing.T) {
+func TestStarlarkConvert(t *testing.T) {
 	plugin := New(true)
 
 	req := &core.ConvertArgs{

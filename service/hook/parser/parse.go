@@ -84,7 +84,7 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 		os.Stderr.Write(out)
 	}
 
-	// callback function provides the webhook parser with
+	// callback function provides the webhook parsers with
 	// a per-repository secret key used to verify the webhook
 	// payload signature for authenticity.
 	fn := func(webhook scm.Webhook) (string, error) {

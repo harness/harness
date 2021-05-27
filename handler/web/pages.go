@@ -87,7 +87,7 @@ func setupCache(h http.Handler) http.Handler {
 // 	string(dist.MustLookup("/index.html")),
 // )
 
-// // default func map with json parser.
+// // default func map with json parsers.
 // var funcMap = template.FuncMap{
 // 	"json": func(v interface{}) template.JS {
 // 		a, _ := json.Marshal(v)

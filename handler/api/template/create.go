@@ -20,7 +20,7 @@ type templateInput struct {
 
 // HandleCreate returns an http.HandlerFunc that processes http
 // requests to create a new template.
-func HandleCreate(secrets core.TemplateStore) http.HandlerFunc {
+func HandleCreate(templateStore core.TemplateStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		in := new(templateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
@@ -40,7 +40,7 @@ func HandleCreate(secrets core.TemplateStore) http.HandlerFunc {
 			return
 		}
 
-		err = secrets.Create(r.Context(), t)
+		err = templateStore.Create(r.Context(), t)
 		if err != nil {
 			render.InternalError(w, err)
 			return

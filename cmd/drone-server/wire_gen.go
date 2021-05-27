@@ -65,7 +65,8 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	coreCanceler := canceler.New(buildStore, corePubsub, repositoryStore, scheduler, stageStore, statusService, stepStore, userStore, webhookSender)
 	fileService := provideContentService(client, renewer)
 	configService := provideConfigPlugin(client, fileService, config2)
-	convertService := provideConvertPlugin(client, config2)
+	templateStore := template.New(db)
+	convertService := provideConvertPlugin(client, config2, templateStore)
 	validateService := provideValidatePlugin(config2)
 	triggerer := trigger.New(coreCanceler, configService, convertService, commitService, statusService, buildStore, scheduler, repositoryStore, userStore, validateService, webhookSender)
 	cronScheduler := cron2.New(commitService, cronStore, repositoryStore, userStore, triggerer)
@@ -92,7 +93,6 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	}
 	batcher := provideBatchStore(db, config2)
 	syncer := provideSyncer(repositoryService, repositoryStore, userStore, batcher, config2)
-	templateStore := template.New(db)
 	transferer := transfer.New(repositoryStore, permStore)
 	userService := user.New(client, renewer)
 	server := api.New(buildStore, commitService, cronStore, corePubsub, globalSecretStore, hookService, logStore, coreLicense, licenseService, organizationService, permStore, repositoryStore, repositoryService, scheduler, secretStore, stageStore, stepStore, statusService, session, logStream, syncer, system, templateStore, transferer, triggerer, userStore, userService, webhookSender)
