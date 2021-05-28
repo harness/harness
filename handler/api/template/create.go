@@ -14,8 +14,9 @@ import (
 )
 
 type templateInput struct {
-	Name string `json:"name"`
-	Data []byte `json:"data"`
+	Name      string `json:"name"`
+	Data      string `json:"data"`
+	Namespace string `json:"namespace"`
 }
 
 // HandleCreate returns an http.HandlerFunc that processes http
@@ -30,8 +31,9 @@ func HandleCreate(templateStore core.TemplateStore) http.HandlerFunc {
 		}
 
 		t := &core.Template{
-			Name: in.Name,
-			Data: in.Data,
+			Name:      in.Name,
+			Data:      in.Data,
+			Namespace: in.Namespace,
 		}
 
 		err = t.Validate()

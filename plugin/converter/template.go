@@ -1,15 +1,31 @@
+// Copyright 2019 Drone IO, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package converter
 
 import (
 	"context"
 	"errors"
+
 	"github.com/drone/drone/core"
 
-	"github.com/drone/drone/plugin/converter/parser"
+	"github.com/drone/drone/plugin/converter/starlark"
 
-	"gopkg.in/yaml.v2"
 	"regexp"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -45,7 +61,7 @@ func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 		return nil, ErrTemplateSyntaxErrors
 	}
 	// get template from db
-	template, err := p.templateStore.FindName(ctx, templateArgs.Load)
+	template, err := p.templateStore.FindName(ctx, templateArgs.Load, req.Repo.Namespace)
 	if err != nil {
 		return nil, nil
 	}
@@ -57,7 +73,7 @@ func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 		strings.HasSuffix(templateArgs.Load, ".star") ||
 		strings.HasSuffix(templateArgs.Load, ".starlark") {
 
-		file, err := parser.ParseStarlark(req, template, templateArgs.Data)
+		file, err := starlark.Parse(req, template, templateArgs.Data)
 		if err != nil {
 			return nil, err
 		}

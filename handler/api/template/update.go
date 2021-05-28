@@ -13,8 +13,8 @@ import (
 )
 
 type templateUpdate struct {
-	Data    *[]byte `json:"data"`
-	Updated *int64  `json:"Updated"`
+	Data      *string `json:"data"`
+	Namespace *string `json:"namespace"`
 }
 
 // HandleUpdate returns an http.HandlerFunc that processes http
@@ -22,7 +22,8 @@ type templateUpdate struct {
 func HandleUpdate(templateStore core.TemplateStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
-			name = chi.URLParam(r, "name")
+			name      = chi.URLParam(r, "name")
+			namespace = chi.URLParam(r, "namespace")
 		)
 
 		in := new(templateUpdate)
@@ -32,7 +33,7 @@ func HandleUpdate(templateStore core.TemplateStore) http.HandlerFunc {
 			return
 		}
 
-		s, err := templateStore.FindName(r.Context(), name)
+		s, err := templateStore.FindName(r.Context(), name, namespace)
 		if err != nil {
 			render.NotFound(w, err)
 			return
@@ -41,8 +42,8 @@ func HandleUpdate(templateStore core.TemplateStore) http.HandlerFunc {
 		if in.Data != nil {
 			s.Data = *in.Data
 		}
-		if in.Updated != nil {
-			s.Updated = *in.Updated
+		if in.Namespace != nil {
+			s.Namespace = *in.Namespace
 		}
 
 		err = s.Validate()

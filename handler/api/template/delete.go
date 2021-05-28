@@ -18,9 +18,10 @@ import (
 func HandleDelete(template core.TemplateStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
-			name = chi.URLParam(r, "name")
+			name      = chi.URLParam(r, "name")
+			namespace = chi.URLParam(r, "namespace")
 		)
-		s, err := template.FindName(r.Context(), name)
+		s, err := template.FindName(r.Context(), name, namespace)
 		if err != nil {
 			render.NotFound(w, err)
 			return

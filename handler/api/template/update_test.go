@@ -26,11 +26,12 @@ func TestHandleUpdate(t *testing.T) {
 	defer controller.Finish()
 
 	template := mock.NewMockTemplateStore(controller)
-	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name).Return(dummyTemplate, nil)
+	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(dummyTemplate, nil)
 	template.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
 
 	c := new(chi.Context)
 	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("namespace", "my_org")
 
 	in := new(bytes.Buffer)
 	json.NewEncoder(in).Encode(dummyTemplate)
@@ -52,10 +53,11 @@ func TestHandleUpdate_ValidationErrorData(t *testing.T) {
 	defer controller.Finish()
 
 	template := mock.NewMockTemplateStore(controller)
-	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name).Return(&core.Template{Name: "my_template"}, nil)
+	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(&core.Template{Name: "my_template"}, nil)
 
 	c := new(chi.Context)
 	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("namespace", "my_org")
 
 	in := new(bytes.Buffer)
 	json.NewEncoder(in).Encode(&core.Secret{Data: ""})
@@ -83,10 +85,11 @@ func TestHandleUpdate_TemplateNotFound(t *testing.T) {
 	defer controller.Finish()
 
 	template := mock.NewMockTemplateStore(controller)
-	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name).Return(nil, errors.ErrNotFound)
+	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(nil, errors.ErrNotFound)
 
 	c := new(chi.Context)
 	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("namespace", "my_org")
 
 	in := new(bytes.Buffer)
 	json.NewEncoder(in).Encode(&core.Secret{})
@@ -114,14 +117,15 @@ func TestHandleUpdate_UpdateError(t *testing.T) {
 	defer controller.Finish()
 
 	template := mock.NewMockTemplateStore(controller)
-	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name).Return(&core.Template{Name: "my_template"}, nil)
+	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(&core.Template{Name: "my_template"}, nil)
 	template.EXPECT().Update(gomock.Any(), gomock.Any()).Return(errors.ErrNotFound)
 
 	c := new(chi.Context)
 	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("namespace", "my_org")
 
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(&core.Template{Data: []byte("my_data")})
+	json.NewEncoder(in).Encode(&core.Template{Data: "my_data"})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", in)

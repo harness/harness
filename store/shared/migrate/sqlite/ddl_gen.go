@@ -644,13 +644,14 @@ CREATE INDEX IF NOT EXISTS ix_latest_repo ON latest (latest_repo_id);
 `
 
 //
-// 015_create_template_table.sql
+// 015_create_template_tables.sql
 //
 
 var createTableTemplate = `
-CREATE TABLE IF NOT EXISTS template (
-    template_id       INTEGER PRIMARY KEY AUTOINCREMENT
+CREATE TABLE IF NOT EXISTS templates (
+     template_id      INTEGER PRIMARY KEY AUTOINCREMENT
     ,template_name    TEXT UNIQUE
+    ,template_namespace TEXT COLLATE NOCASE
     ,template_data    BLOB
     ,template_created INTEGER
     ,template_updated INTEGER

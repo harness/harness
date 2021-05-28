@@ -7,7 +7,6 @@
 package template
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"github.com/drone/drone/core"
@@ -35,11 +34,12 @@ func TestTemplate(t *testing.T) {
 func testTemplateCreate(store *templateStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		item := &core.Template{
-			Id:      1,
-			Name:    "my_template",
-			Data:    []byte("some_template_data"),
-			Created: 1,
-			Updated: 2,
+			Id:        1,
+			Name:      "my_template",
+			Namespace: "my_org",
+			Data:      "some_template_data",
+			Created:   1,
+			Updated:   2,
 		}
 		err := store.Create(noContext, item)
 		if err != nil {
@@ -52,6 +52,7 @@ func testTemplateCreate(store *templateStore) func(t *testing.T) {
 		t.Run("Find", testTemplateFind(store, item))
 		t.Run("FindName", testTemplateFindName(store))
 		t.Run("ListAll", testTemplateListAll(store))
+		t.Run("List", testTemplateList(store))
 		t.Run("Update", testTemplateUpdate(store))
 		t.Run("Delete", testTemplateDelete(store))
 	}
@@ -70,7 +71,7 @@ func testTemplateFind(store *templateStore, template *core.Template) func(t *tes
 
 func testTemplateFindName(store *templateStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		item, err := store.FindName(noContext, "my_template")
+		item, err := store.FindName(noContext, "my_template", "my_org")
 		if err != nil {
 			t.Error(err)
 		} else {
@@ -84,8 +85,11 @@ func testTemplate(item *core.Template) func(t *testing.T) {
 		if got, want := item.Name, "my_template"; got != want {
 			t.Errorf("Want template name %q, got %q", want, got)
 		}
-		if got, want := item.Data, []byte("some_template_data"); bytes.Compare(got, want) != 0 {
+		if got, want := item.Data, "some_template_data"; got != want {
 			t.Errorf("Want template data %q, got %q", want, got)
+		}
+		if got, want := item.Namespace, "my_org"; got != want {
+			t.Errorf("Want template org %q, got %q", want, got)
 		}
 	}
 }
@@ -105,9 +109,24 @@ func testTemplateListAll(store *templateStore) func(t *testing.T) {
 	}
 }
 
+func testTemplateList(store *templateStore) func(t *testing.T) {
+	return func(t *testing.T) {
+		list, err := store.List(noContext, "my_org")
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if got, want := len(list), 1; got != want {
+			t.Errorf("Want count %d, got %d", want, got)
+		} else {
+			t.Run("Fields", testTemplate(list[0]))
+		}
+	}
+}
+
 func testTemplateUpdate(store *templateStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		before, err := store.FindName(noContext, "my_template")
+		before, err := store.FindName(noContext, "my_template", "my_org")
 		if err != nil {
 			t.Error(err)
 			return
@@ -130,7 +149,7 @@ func testTemplateUpdate(store *templateStore) func(t *testing.T) {
 
 func testTemplateDelete(store *templateStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		secret, err := store.FindName(noContext, "my_template")
+		secret, err := store.FindName(noContext, "my_template", "my_org")
 		if err != nil {
 			t.Error(err)
 			return

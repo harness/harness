@@ -8,6 +8,7 @@ package template
 
 import (
 	"database/sql"
+
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
 )
@@ -16,11 +17,12 @@ import (
 // of named query parameters.
 func toParams(template *core.Template) (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"template_id":      template.Id,
-		"template_name":    template.Name,
-		"template_data":    template.Data,
-		"template_created": template.Created,
-		"template_updated": template.Updated,
+		"template_id":        template.Id,
+		"template_name":      template.Name,
+		"template_namespace": template.Namespace,
+		"template_data":      template.Data,
+		"template_created":   template.Created,
+		"template_updated":   template.Updated,
 	}, nil
 }
 
@@ -30,6 +32,7 @@ func scanRow(scanner db.Scanner, dst *core.Template) error {
 	err := scanner.Scan(
 		&dst.Id,
 		&dst.Name,
+		&dst.Namespace,
 		&dst.Data,
 		&dst.Created,
 		&dst.Updated,

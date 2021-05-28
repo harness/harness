@@ -9,23 +9,18 @@ package template
 import (
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/render"
-	"github.com/go-chi/chi"
 	"net/http"
 )
 
-// HandleFind returns an http.HandlerFunc that writes json-encoded
-// template details to the the response body.
-func HandleFind(templateStore core.TemplateStore) http.HandlerFunc {
+// HandleListAll returns an http.HandlerFunc that writes a json-encoded
+// list of templates to the response body.
+func HandleListAll(templateStore core.TemplateStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var (
-			name      = chi.URLParam(r, "name")
-			namespace = chi.URLParam(r, "namespace")
-		)
-		template, err := templateStore.FindName(r.Context(), name, namespace)
+		list, err := templateStore.ListAll(r.Context())
 		if err != nil {
 			render.NotFound(w, err)
 			return
 		}
-		render.JSON(w, template, 200)
+		render.JSON(w, list, 200)
 	}
 }

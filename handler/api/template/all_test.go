@@ -1,12 +1,15 @@
-package template
-
 // Copyright 2019 Drone.IO Inc. All rights reserved.
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+// +build !oss
+
+package template
+
 import (
 	"context"
 	"encoding/json"
+	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/errors"
 	"github.com/drone/drone/mock"
 	"github.com/go-chi/chi"
@@ -17,15 +20,27 @@ import (
 	"testing"
 )
 
-func TestHandleList(t *testing.T) {
+var (
+	dummyTemplate = &core.Template{
+		Name:      "my_template",
+		Data:      "my_data",
+		Created:   1,
+		Updated:   2,
+		Namespace: "my_org",
+	}
+	dummyTemplateList = []*core.Template{
+		dummyTemplate,
+	}
+)
+
+func TestHandleAll(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
 	templates := mock.NewMockTemplateStore(controller)
-	templates.EXPECT().List(gomock.Any(), dummyTemplate.Namespace).Return(dummyTemplateList, nil)
+	templates.EXPECT().ListAll(gomock.Any()).Return(dummyTemplateList, nil)
 
 	c := new(chi.Context)
-	c.URLParams.Add("namespace", "my_org")
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
@@ -33,21 +48,20 @@ func TestHandleList(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleList(templates).ServeHTTP(w, r)
+	HandleListAll(templates).ServeHTTP(w, r)
 	if got, want := w.Code, http.StatusOK; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 }
 
-func TestHandleList_TemplateListErr(t *testing.T) {
+func TestHandleAll_TemplateListErr(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
 	templates := mock.NewMockTemplateStore(controller)
-	templates.EXPECT().List(gomock.Any(), dummyTemplate.Namespace).Return(nil, errors.ErrNotFound)
+	templates.EXPECT().ListAll(gomock.Any()).Return(nil, errors.ErrNotFound)
 
 	c := new(chi.Context)
-	c.URLParams.Add("namespace", "my_org")
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
@@ -55,7 +69,7 @@ func TestHandleList_TemplateListErr(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleList(templates).ServeHTTP(w, r)
+	HandleListAll(templates).ServeHTTP(w, r)
 	if got, want := w.Code, http.StatusNotFound; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}

@@ -1,4 +1,18 @@
-package parser
+// Copyright 2019 Drone IO, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package starlark
 
 import (
 	"bytes"
@@ -38,7 +52,7 @@ var (
 	ErrCannotLoad = errors.New("starlark: cannot load external scripts")
 )
 
-func ParseStarlark(req *core.ConvertArgs, template *core.Template, templateData map[string]interface{}) (file *string, err error) {
+func Parse(req *core.ConvertArgs, template *core.Template, templateData map[string]interface{}) (file *string, err error) {
 	thread := &starlark.Thread{
 		Name: "drone",
 		Load: noLoad,
@@ -49,13 +63,13 @@ func ParseStarlark(req *core.ConvertArgs, template *core.Template, templateData 
 			}).Traceln(msg)
 		},
 	}
-	var starlarkFile []byte
+	var starlarkFile string
 	var starlarkFileName string
 	if template != nil {
 		starlarkFile = template.Data
 		starlarkFileName = template.Name
 	} else {
-		starlarkFile = []byte(req.Config.Data)
+		starlarkFile = req.Config.Data
 		starlarkFileName = req.Repo.Config
 	}
 

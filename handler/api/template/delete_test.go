@@ -24,11 +24,12 @@ func TestHandleDelete(t *testing.T) {
 	defer controller.Finish()
 
 	template := mock.NewMockTemplateStore(controller)
-	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name).Return(dummyTemplate, nil)
+	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(dummyTemplate, nil)
 	template.EXPECT().Delete(gomock.Any(), dummyTemplate).Return(nil)
 
 	c := new(chi.Context)
 	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("namespace", "my_org")
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
@@ -47,10 +48,11 @@ func TestHandleDelete_TemplateNotFound(t *testing.T) {
 	defer controller.Finish()
 
 	template := mock.NewMockTemplateStore(controller)
-	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name).Return(nil, errors.ErrNotFound)
+	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(nil, errors.ErrNotFound)
 
 	c := new(chi.Context)
 	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("namespace", "my_org")
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
@@ -75,11 +77,12 @@ func TestHandleDelete_DeleteError(t *testing.T) {
 	defer controller.Finish()
 
 	template := mock.NewMockTemplateStore(controller)
-	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name).Return(dummyTemplate, nil)
+	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(dummyTemplate, nil)
 	template.EXPECT().Delete(gomock.Any(), dummyTemplate).Return(errors.ErrNotFound)
 
 	c := new(chi.Context)
 	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("namespace", "my_org")
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)

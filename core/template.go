@@ -32,23 +32,27 @@ type (
 	}
 
 	Template struct {
-		Id      int64  `json:"id,omitempty"`
-		Name    string `json:"name,omitempty"`
-		Data    []byte `json:"data,omitempty"`
-		Created int64  `json:"created,omitempty"`
-		Updated int64  `json:"updated,omitempty"`
+		Id        int64  `json:"id,omitempty"`
+		Name      string `json:"name,omitempty"`
+		Namespace string `json:"namespace,omitempty"`
+		Data      string `json:"data,omitempty"`
+		Created   int64  `json:"created,omitempty"`
+		Updated   int64  `json:"updated,omitempty"`
 	}
 
 	// TemplateStore manages repository templates.
 	TemplateStore interface {
+		// List returns template list at org level
+		List(ctx context.Context, namespace string) ([]*Template, error)
+
 		// ListAll returns templates list from the datastore.
 		ListAll(ctx context.Context) ([]*Template, error)
 
 		// Find returns a template from the datastore.
 		Find(ctx context.Context, id int64) (*Template, error)
 
-		// FindName returns a template from the datastore by name
-		FindName(ctx context.Context, name string) (*Template, error)
+		// FindName returns a template from the data store
+		FindName(ctx context.Context, name string, namespace string) (*Template, error)
 
 		// Create persists a new template to the datastore.
 		Create(ctx context.Context, template *Template) error

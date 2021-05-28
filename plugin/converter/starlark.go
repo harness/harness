@@ -17,7 +17,7 @@ package converter
 import (
 	"context"
 	"github.com/drone/drone/core"
-	"github.com/drone/drone/plugin/converter/parser"
+	"github.com/drone/drone/plugin/converter/starlark"
 	"strings"
 )
 
@@ -48,7 +48,7 @@ func (p *starlarkPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 		return nil, nil
 	}
 
-	file, _ := parser.ParseStarlark(req, nil, nil)
+	file, _ := starlark.Parse(req, nil, nil)
 	return &core.Config{
 		Data: *file,
 	}, nil

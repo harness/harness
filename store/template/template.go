@@ -23,6 +23,24 @@ type templateStore struct {
 	db *db.DB
 }
 
+func (s *templateStore) List(ctx context.Context, namespace string) ([]*core.Template, error) {
+	var out []*core.Template
+	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
+		params := map[string]interface{}{"template_namespace": namespace}
+		stmt, args, err := binder.BindNamed(queryNamespace, params)
+		if err != nil {
+			return err
+		}
+		rows, err := queryer.Query(stmt, args...)
+		if err != nil {
+			return err
+		}
+		out, err = scanRows(rows)
+		return err
+	})
+	return out, err
+}
+
 func (s *templateStore) ListAll(ctx context.Context) ([]*core.Template, error) {
 	var out []*core.Template
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
@@ -58,14 +76,16 @@ func (s *templateStore) Find(ctx context.Context, id int64) (*core.Template, err
 	return out, err
 }
 
-func (s *templateStore) FindName(ctx context.Context, name string) (*core.Template, error) {
-	out := &core.Template{Name: name}
+func (s *templateStore) FindName(ctx context.Context, name string, namespace string) (*core.Template, error) {
+	out := &core.Template{Name: name, Namespace: namespace}
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
 		params, err := toParams(out)
 		if err != nil {
 			return err
 		}
+
 		query, args, err := binder.BindNamed(queryName, params)
+
 		if err != nil {
 			return err
 		}
@@ -146,7 +166,7 @@ func (s *templateStore) Delete(ctx context.Context, template *core.Template) err
 }
 
 const queryKey = queryBase + `
-FROM template
+FROM templates
 WHERE template_id = :template_id
 LIMIT 1
 `
@@ -155,24 +175,33 @@ const queryBase = `
 SELECT
  template_id
 ,template_name
+,template_namespace
 ,template_data
 ,template_created
 ,template_updated
 `
 
 const queryAll = queryBase + `
-FROM template
+FROM templates
+ORDER BY template_name
+`
+
+const queryNamespace = queryBase + `
+FROM templates
+WHERE template_namespace = :template_namespace
 ORDER BY template_name
 `
 
 const stmtInsert = `
-INSERT INTO template (
+INSERT INTO templates (
  template_name
+,template_namespace
 ,template_data
 ,template_created
 ,template_updated
 ) VALUES (
  :template_name
+,:template_namespace
 ,:template_data
 ,:template_created
 ,:template_updated
@@ -180,20 +209,22 @@ INSERT INTO template (
 `
 
 const stmtUpdate = `
-UPDATE template SET
+UPDATE templates SET
 template_name = :template_name
+,template_namespace = :template_namespace
 ,template_data = :template_data
 ,template_updated = :template_updated
 WHERE template_id = :template_id
 `
 
 const stmtDelete = `
-DELETE FROM template
+DELETE FROM templates
 WHERE template_id = :template_id
 `
 const queryName = queryBase + `
-FROM template
+FROM templates
 WHERE template_name = :template_name
+AND template_namespace = :template_namespace
 LIMIT 1
 `
 
