@@ -22,7 +22,7 @@ import (
 )
 
 func TestStarlarkConvert(t *testing.T) {
-	plugin := New(true)
+	plugin := Starlark(true)
 
 	req := &core.ConvertArgs{
 		Build: &core.Build{
@@ -100,7 +100,7 @@ func TestConvert_Multi(t *testing.T) {
 		},
 	}
 
-	plugin := New(true)
+	plugin := Starlark(true)
 	config, err := plugin.Convert(noContext, req)
 	if err != nil {
 		t.Error(err)
@@ -125,7 +125,7 @@ func TestConvert_Multi(t *testing.T) {
 // this test verifies the plugin is skipped when it has
 // not been explicitly enabled.
 func TestConvert_Skip(t *testing.T) {
-	plugin := New(false)
+	plugin := Starlark(false)
 	config, err := plugin.Convert(noContext, nil)
 	if err != nil {
 		t.Error(err)
@@ -145,7 +145,7 @@ func TestConvert_SkipYaml(t *testing.T) {
 		},
 	}
 
-	plugin := New(true)
+	plugin := Starlark(true)
 	config, err := plugin.Convert(noContext, req)
 	if err != nil {
 		t.Error(err)

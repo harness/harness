@@ -22,9 +22,9 @@ import (
 	"github.com/drone/drone/plugin/converter/starlark"
 )
 
-// New returns a conversion service that converts the
+// Starlark returns a conversion service that converts the
 // starlark file to a yaml file.
-func New(enabled bool) core.ConvertService {
+func Starlark(enabled bool) core.ConvertService {
 	return &starlarkPlugin{
 		enabled: enabled,
 	}

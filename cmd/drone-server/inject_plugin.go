@@ -79,7 +79,7 @@ func provideConfigPlugin(client *scm.Client, contents core.FileService, conf spe
 func provideConvertPlugin(client *scm.Client, conf spec.Config, templateStore core.TemplateStore) core.ConvertService {
 	return converter.Combine(
 		converter.Legacy(false),
-		converter.New(
+		converter.Starlark(
 			conf.Starlark.Enabled,
 		),
 		converter.Jsonnet(
