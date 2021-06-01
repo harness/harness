@@ -6,10 +6,11 @@ package template
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/render"
 	"github.com/go-chi/chi"
-	"net/http"
 )
 
 type templateUpdate struct {

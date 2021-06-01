@@ -16,6 +16,7 @@ package core
 
 import (
 	"context"
+
 	"github.com/drone/drone/handler/api/errors"
 )
 

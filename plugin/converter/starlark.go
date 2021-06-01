@@ -16,9 +16,10 @@ package converter
 
 import (
 	"context"
+	"strings"
+
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/plugin/converter/starlark"
-	"strings"
 )
 
 // New returns a conversion service that converts the

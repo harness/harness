@@ -15,11 +15,12 @@
 package converter
 
 import (
+	"io/ioutil"
+	"testing"
+
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/mock"
 	"github.com/golang/mock/gomock"
-	"io/ioutil"
-	"testing"
 )
 
 func TestTemplatePluginConvert(t *testing.T) {

@@ -8,9 +8,10 @@ package template
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/render"
-	"net/http"
 )
 
 type templateInput struct {

@@ -7,9 +7,10 @@
 package template
 
 import (
+	"net/http"
+
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/render"
-	"net/http"
 )
 
 // HandleListAll returns an http.HandlerFunc that writes a json-encoded
