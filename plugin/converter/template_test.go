@@ -57,8 +57,9 @@ func TestTemplatePluginConvert(t *testing.T) {
 	}
 
 	template := &core.Template{
-		Name: "plugin.starlark",
-		Data: string(beforeInput),
+		Name:      "plugin.starlark",
+		Data:      string(beforeInput),
+		Namespace: "octocat",
 	}
 
 	controller := gomock.NewController(t)
