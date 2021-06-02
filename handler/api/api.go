@@ -18,8 +18,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/drone/drone/handler/api/template"
-
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/acl"
 	"github.com/drone/drone/handler/api/auth"
@@ -42,6 +40,7 @@ import (
 	"github.com/drone/drone/handler/api/repos/sign"
 	globalsecrets "github.com/drone/drone/handler/api/secrets"
 	"github.com/drone/drone/handler/api/system"
+	"github.com/drone/drone/handler/api/template"
 	"github.com/drone/drone/handler/api/user"
 	"github.com/drone/drone/handler/api/user/remote"
 	"github.com/drone/drone/handler/api/users"
