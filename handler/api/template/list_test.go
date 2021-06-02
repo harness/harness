@@ -13,6 +13,7 @@ import (
 
 	"github.com/drone/drone/handler/api/errors"
 	"github.com/drone/drone/mock"
+
 	"github.com/go-chi/chi"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
