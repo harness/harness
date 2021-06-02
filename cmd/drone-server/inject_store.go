@@ -31,6 +31,7 @@ import (
 	"github.com/drone/drone/store/shared/encrypt"
 	"github.com/drone/drone/store/stage"
 	"github.com/drone/drone/store/step"
+	"github.com/drone/drone/store/template"
 	"github.com/drone/drone/store/user"
 
 	"github.com/google/wire"
@@ -53,6 +54,7 @@ var storeSet = wire.NewSet(
 	secret.New,
 	global.New,
 	step.New,
+	template.New,
 )
 
 // provideDatabase is a Wire provider function that provides a

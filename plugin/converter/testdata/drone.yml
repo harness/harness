@@ -1,0 +1,6 @@
+kind: pipeline
+load: plugin.starlark
+data:
+  stepName: my_step
+  image: my_image
+  commands: my_command

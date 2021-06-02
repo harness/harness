@@ -20,7 +20,6 @@ import (
 	"github.com/drone/drone/plugin/admission"
 	"github.com/drone/drone/plugin/config"
 	"github.com/drone/drone/plugin/converter"
-	"github.com/drone/drone/plugin/converter/starlark"
 	"github.com/drone/drone/plugin/registry"
 	"github.com/drone/drone/plugin/secret"
 	"github.com/drone/drone/plugin/validator"
@@ -77,14 +76,17 @@ func provideConfigPlugin(client *scm.Client, contents core.FileService, conf spe
 // provideConvertPlugin is a Wire provider function that returns
 // a yaml conversion plugin based on the environment
 // configuration.
-func provideConvertPlugin(client *scm.Client, conf spec.Config) core.ConvertService {
+func provideConvertPlugin(client *scm.Client, conf spec.Config, templateStore core.TemplateStore) core.ConvertService {
 	return converter.Combine(
 		converter.Legacy(false),
-		starlark.New(
+		converter.Starlark(
 			conf.Starlark.Enabled,
 		),
 		converter.Jsonnet(
 			conf.Jsonnet.Enabled,
+		),
+		converter.Template(
+			templateStore,
 		),
 		converter.Memoize(
 			converter.Remote(

@@ -38,16 +38,27 @@ import (
 // TODO(bradrydzewski) add build parent
 // TODO(bradrydzewski) add build timestamp
 
-func createArgs(repo *core.Repository, build *core.Build) []starlark.Value {
+func createArgs(repo *core.Repository, build *core.Build, input map[string]interface{}) []starlark.Value {
 	return []starlark.Value{
 		starlarkstruct.FromStringDict(
 			starlark.String("context"),
 			starlark.StringDict{
 				"repo":  starlarkstruct.FromStringDict(starlark.String("repo"), fromRepo(repo)),
 				"build": starlarkstruct.FromStringDict(starlark.String("build"), fromBuild(build)),
+				"input": starlarkstruct.FromStringDict(starlark.String("input"), fromInput(input)),
 			},
 		),
 	}
+}
+
+func fromInput(input map[string]interface{}) starlark.StringDict {
+	out := map[string]starlark.Value{}
+	for k, v := range input {
+		if s, ok := v.(string); ok {
+			out[k] = starlark.String(s)
+		}
+	}
+	return out
 }
 
 func fromBuild(v *core.Build) starlark.StringDict {
