@@ -10,4 +10,6 @@ CREATE TABLE IF NOT EXISTS templates (
     ,UNIQUE(template_name, template_namespace)
     );
 
-CREATE INDEX IF NOT EXISTS ix_template_namespace ON templates (template_namespace);
+-- name: create-index-template-namespace
+
+CREATE INDEX ix_template_namespace ON templates (template_namespace);

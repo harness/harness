@@ -160,6 +160,10 @@ var migrations = []struct {
 		name: "create-table-template",
 		stmt: createTableTemplate,
 	},
+	{
+		name: "create-index-template-namespace",
+		stmt: createIndexTemplateNamespace,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -677,6 +681,8 @@ CREATE TABLE IF NOT EXISTS templates (
     ,template_updated INTEGER
     ,UNIQUE(template_name, template_namespace)
     );
+`
 
-CREATE INDEX IF NOT EXISTS ix_template_namespace ON templates (template_namespace);
+var createIndexTemplateNamespace = `
+CREATE INDEX ix_template_namespace ON templates (template_namespace);
 `
