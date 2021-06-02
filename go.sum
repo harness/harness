@@ -118,6 +118,8 @@ github.com/drone/drone-ui v0.0.0-20210505020539-1b93fc25c7d8 h1:mIFBOdP8Tif/4li4
 github.com/drone/drone-ui v0.0.0-20210505020539-1b93fc25c7d8/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
 github.com/drone/drone-ui v0.0.0-20210512200715-d96f1e26d448 h1:skfTTwMRWSSi3Dv5NrpU8mJn7faccG5q+lqiBQikLiw=
 github.com/drone/drone-ui v0.0.0-20210512200715-d96f1e26d448/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
+github.com/drone/drone-ui v0.0.0-20210602131102-d9e6fc7e8e68 h1:MFiB2sySRfQfdGyzCw6ii45IVgNXS1Ho+YmKxdmp9eU=
+github.com/drone/drone-ui v0.0.0-20210602131102-d9e6fc7e8e68/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
 github.com/drone/drone-yaml v1.2.4-0.20200326192514-6f4d6dfb39e4 h1:XsstoCeXC2t8lA9OLTdoFwckaptqahxwjCWsenySfX8=
 github.com/drone/drone-yaml v1.2.4-0.20200326192514-6f4d6dfb39e4/go.mod h1:QsqliFK8nG04AHFN9tTn9XJomRBQHD4wcejWW1uz/10=
 github.com/drone/envsubst v1.0.3-0.20200709231038-aa43e1c1a629 h1:rIaZZalMGGPb2cU/+ypuggZ8aMlpa17RUlJUtsMv8pw=
