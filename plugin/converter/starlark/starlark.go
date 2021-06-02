@@ -19,6 +19,7 @@ import (
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/errors"
+
 	"github.com/sirupsen/logrus"
 	"go.starlark.net/starlark"
 )
@@ -53,7 +54,7 @@ var (
 	ErrCannotLoad = errors.New("starlark: cannot load external scripts")
 )
 
-func Parse(req *core.ConvertArgs, template *core.Template, templateData map[string]interface{}) (file *string, err error) {
+func Parse(req *core.ConvertArgs, template *core.Template, templateData map[string]interface{}) (string, error) {
 	thread := &starlark.Thread{
 		Name: "drone",
 		Load: noLoad,
@@ -76,7 +77,7 @@ func Parse(req *core.ConvertArgs, template *core.Template, templateData map[stri
 
 	globals, err := starlark.ExecFile(thread, starlarkFileName, starlarkFile, nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// find the main method in the starlark script and
@@ -84,11 +85,11 @@ func Parse(req *core.ConvertArgs, template *core.Template, templateData map[stri
 	// is invalid.
 	mainVal, ok := globals["main"]
 	if !ok {
-		return nil, ErrMainMissing
+		return "", ErrMainMissing
 	}
 	main, ok := mainVal.(starlark.Callable)
 	if !ok {
-		return nil, ErrMainInvalid
+		return "", ErrMainInvalid
 	}
 
 	// create the input args and invoke the main method
@@ -102,7 +103,7 @@ func Parse(req *core.ConvertArgs, template *core.Template, templateData map[stri
 	// execute the main method in the script.
 	mainVal, err = starlark.Call(thread, main, args, nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	buf := new(bytes.Buffer)
@@ -113,25 +114,24 @@ func Parse(req *core.ConvertArgs, template *core.Template, templateData map[stri
 			buf.WriteString(separator)
 			buf.WriteString(newline)
 			if err := write(buf, item); err != nil {
-				return nil, err
+				return "", err
 			}
 			buf.WriteString(newline)
 		}
 	case *starlark.Dict:
 		if err := write(buf, v); err != nil {
-			return nil, err
+			return "", err
 		}
 	default:
-		return nil, ErrMainReturn
+		return "", ErrMainReturn
 	}
 
 	// this is a temporary workaround until we
 	// implement a LimitWriter.
 	if b := buf.Bytes(); len(b) > limit {
-		return nil, nil
+		return "", ErrMaximumSize
 	}
-	parsedFile := buf.String()
-	return &parsedFile, nil
+	return buf.String(), nil
 }
 
 func noLoad(_ *starlark.Thread, _ string) (starlark.StringDict, error) {

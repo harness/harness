@@ -153,8 +153,8 @@ var migrations = []struct {
 		stmt: createIndexLatestRepo,
 	},
 	{
-		name: "create-table-template",
-		stmt: createTableTemplate,
+		name: "create-table-templates",
+		stmt: createTableTemplates,
 	},
 }
 
@@ -647,7 +647,7 @@ CREATE INDEX IF NOT EXISTS ix_latest_repo ON latest (latest_repo_id);
 // 015_create_template_tables.sql
 //
 
-var createTableTemplate = `
+var createTableTemplates = `
 CREATE TABLE IF NOT EXISTS templates (
      template_id      INTEGER PRIMARY KEY AUTOINCREMENT
     ,template_name    TEXT UNIQUE
@@ -655,5 +655,8 @@ CREATE TABLE IF NOT EXISTS templates (
     ,template_data    BLOB
     ,template_created INTEGER
     ,template_updated INTEGER
+,UNIQUE(template_name, template_namespace)
 );
+
+CREATE INDEX IF NOT EXISTS ix_template_namespace ON templates (template_namespace);
 `

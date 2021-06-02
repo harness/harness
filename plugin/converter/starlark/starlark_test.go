@@ -15,9 +15,10 @@
 package starlark
 
 import (
-	"github.com/drone/drone/core"
 	"io/ioutil"
 	"testing"
+
+	"github.com/drone/drone/core"
 )
 
 func TestParseStarlark(t *testing.T) {
@@ -62,7 +63,7 @@ func TestParseStarlark(t *testing.T) {
 		return
 	}
 
-	if want, got := *parsedFile, string(after); want != got {
+	if want, got := parsedFile, string(after); want != got {
 		t.Errorf("Want %q got %q", want, got)
 	}
 }
@@ -100,7 +101,7 @@ func TestParseStarlarkNotTemplateFile(t *testing.T) {
 		return
 	}
 
-	if want, got := *parsedFile, string(after); want != got {
+	if want, got := parsedFile, string(after); want != got {
 		t.Errorf("Want %q got %q", want, got)
 	}
 }

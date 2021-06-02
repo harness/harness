@@ -49,8 +49,11 @@ func (p *starlarkPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 		return nil, nil
 	}
 
-	file, _ := starlark.Parse(req, nil, nil)
+	file, err := starlark.Parse(req, nil, nil)
+	if err != nil {
+		return nil, err
+	}
 	return &core.Config{
-		Data: *file,
+		Data: file,
 	}, nil
 }

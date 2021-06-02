@@ -19,7 +19,6 @@ import (
 	"errors"
 
 	"github.com/drone/drone/core"
-
 	"github.com/drone/drone/plugin/converter/starlark"
 
 	"regexp"
@@ -78,7 +77,7 @@ func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 			return nil, err
 		}
 		return &core.Config{
-			Data: *file,
+			Data: file,
 		}, nil
 	}
 	return nil, nil

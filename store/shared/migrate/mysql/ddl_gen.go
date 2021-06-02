@@ -675,6 +675,8 @@ CREATE TABLE IF NOT EXISTS templates (
     ,template_data    BLOB
     ,template_created INTEGER
     ,template_updated INTEGER
-    ,UNIQUE(template_name)
+    ,UNIQUE(template_name, template_namespace)
     );
+
+CREATE INDEX IF NOT EXISTS ix_template_namespace ON templates (template_namespace);
 `
