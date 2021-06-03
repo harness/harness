@@ -2,6 +2,7 @@ package jsonnet
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/drone/drone/core"
 
@@ -27,11 +28,9 @@ func Parse(req *core.ConvertArgs, template *core.Template, templateData map[stri
 	// map external inputs
 	if len(templateData) != 0 {
 		for k, v := range templateData {
-			if s, ok := v.(string); ok {
-				key := "input." + k
-				vm.ExtVar(key, s)
-			}
-
+			key := fmt.Sprintf("input." + k)
+			val := fmt.Sprint(v)
+			vm.ExtVar(key, val)
 		}
 	}
 	// convert the jsonnet file to yaml
