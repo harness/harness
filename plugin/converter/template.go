@@ -17,13 +17,12 @@ package converter
 import (
 	"context"
 	"errors"
+	"regexp"
+	"strings"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/plugin/converter/jsonnet"
 	"github.com/drone/drone/plugin/converter/starlark"
-
-	"regexp"
-	"strings"
 
 	"gopkg.in/yaml.v2"
 )
