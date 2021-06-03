@@ -1,9 +1,10 @@
 package jsonnet
 
 import (
-	"github.com/drone/drone/core"
 	"io/ioutil"
 	"testing"
+
+	"github.com/drone/drone/core"
 )
 
 func TestParse(t *testing.T) {

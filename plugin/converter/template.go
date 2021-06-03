@@ -17,9 +17,9 @@ package converter
 import (
 	"context"
 	"errors"
-	"github.com/drone/drone/plugin/converter/jsonnet"
 
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/plugin/converter/jsonnet"
 	"github.com/drone/drone/plugin/converter/starlark"
 
 	"regexp"
