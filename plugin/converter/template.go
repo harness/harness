@@ -17,6 +17,7 @@ package converter
 import (
 	"context"
 	"errors"
+	"github.com/drone/drone/plugin/converter/jsonnet"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/plugin/converter/starlark"
@@ -67,7 +68,7 @@ func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 	if template == nil {
 		return nil, ErrTemplateNotFound
 	}
-	// Check if file is Starlark
+	// Check if file is of type Starlark
 	if strings.HasSuffix(templateArgs.Load, ".script") ||
 		strings.HasSuffix(templateArgs.Load, ".star") ||
 		strings.HasSuffix(templateArgs.Load, ".starlark") {
@@ -80,5 +81,16 @@ func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 			Data: file,
 		}, nil
 	}
+	// Check if the file is of type Jsonnet
+	if strings.HasSuffix(templateArgs.Load, ".jsonnet") {
+		file, err := jsonnet.Parse(req, template, templateArgs.Data)
+		if err != nil {
+			return nil, err
+		}
+		return &core.Config{
+			Data: file,
+		}, nil
+	}
+
 	return nil, nil
 }
