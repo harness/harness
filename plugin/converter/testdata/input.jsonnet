@@ -1,6 +1,6 @@
-local stepName = std.extVar("input.my_step");
-local image = std.extVar("input.my_image");
-local commands = std.extVar("input.my_command");
+local stepName = std.extVar("input.stepName");
+local image = std.extVar("input.image");
+local commands = std.extVar("input.commands");
 
 {
   "kind": "pipeline",
