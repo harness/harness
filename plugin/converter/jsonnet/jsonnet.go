@@ -21,8 +21,12 @@ func Parse(req *core.ConvertArgs, template *core.Template, templateData map[stri
 	vm.ErrorFormatter.SetMaxStackTraceSize(20)
 
 	//map build/repo parameters
-	mapBuild(req.Build, vm)
-	mapRepo(req.Repo, vm)
+	if req.Build != nil {
+		mapBuild(req.Build, vm)
+	}
+	if req.Repo != nil {
+		mapRepo(req.Repo, vm)
+	}
 
 	var jsonnetFile string
 	var jsonentFileName string
