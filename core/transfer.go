@@ -16,7 +16,7 @@ package core
 
 import "context"
 
-// Transferer handles transfering repository ownership from one
+// Transferer handles transferring repository ownership from one
 // user to another user account.
 type Transferer interface {
 	Transfer(ctx context.Context, user *User) error

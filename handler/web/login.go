@@ -150,7 +150,7 @@ func HandleLogin(
 		}
 
 		// If the user account has never been synchronized we
-		// execute the synchonrization logic.
+		// execute the synchronization logic.
 		if time.Unix(user.Synced, 0).Add(syncPeriod).Before(time.Now()) {
 			user.Syncing = true
 		}
@@ -163,7 +163,7 @@ func HandleLogin(
 			logger.Errorf("cannot update user: %s", err)
 		}
 
-		// launch the synchrnoization process in a go-routine,
+		// launch the synchronization process in a go-routine,
 		// since it is a long-running process and can take up
 		// to a few minutes.
 		if user.Syncing {

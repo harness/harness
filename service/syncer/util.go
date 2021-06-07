@@ -19,7 +19,7 @@ import (
 	"github.com/drone/go-scm/scm"
 )
 
-// merge is a helper function that mergest a subset of
+// merge is a helper function that merges a subset of
 // values from the source to the destination repository.
 func merge(dst, src *core.Repository) {
 	dst.Namespace = src.Namespace

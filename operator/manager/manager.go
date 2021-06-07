@@ -44,7 +44,7 @@ type (
 		System  *core.System     `json:"system"`
 	}
 
-	// BuildManager encapsulets complex build operations and provides
+	// BuildManager encapsulates complex build operations and provides
 	// a simplified interface for build runners.
 	BuildManager interface {
 		// Request requests the next available build stage for execution.
@@ -60,13 +60,13 @@ type (
 		Details(ctx context.Context, stage int64) (*Context, error)
 
 		// Before signals the build step is about to start.
-		Before(ctxt context.Context, step *core.Step) error
+		Before(ctx context.Context, step *core.Step) error
 
 		// After signals the build step is complete.
 		After(ctx context.Context, step *core.Step) error
 
 		// Before signals the build stage is about to start.
-		BeforeAll(ctxt context.Context, stage *core.Stage) error
+		BeforeAll(ctx context.Context, stage *core.Stage) error
 
 		// After signals the build stage is complete.
 		AfterAll(ctx context.Context, stage *core.Stage) error
@@ -84,7 +84,7 @@ type (
 		UploadBytes(ctx context.Context, step int64, b []byte) error
 	}
 
-	// Request provildes filters when requesting a pending
+	// Request provides filters when requesting a pending
 	// build from the queue. This allows an agent, for example,
 	// to request a build that matches its architecture and kernel.
 	Request struct {

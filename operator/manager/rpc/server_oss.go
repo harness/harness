@@ -58,7 +58,7 @@ func (Server) Details(ctx context.Context, stage int64) (*manager.Context, error
 }
 
 // Before signals the build step is about to start.
-func (Server) Before(ctxt context.Context, step *core.Step) error {
+func (Server) Before(ctx context.Context, step *core.Step) error {
 	return errors.New("not implemented")
 }
 
@@ -68,7 +68,7 @@ func (Server) After(ctx context.Context, step *core.Step) error {
 }
 
 // Before signals the build stage is about to start.
-func (Server) BeforeAll(ctxt context.Context, stage *core.Stage) error {
+func (Server) BeforeAll(ctx context.Context, stage *core.Stage) error {
 	return errors.New("not implemented")
 }
 

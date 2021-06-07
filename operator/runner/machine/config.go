@@ -38,7 +38,7 @@ type Config struct {
 	}
 }
 
-// heper function reads and unmarshales the docker-machine
+// helper function reads and unmarshalls the docker-machine
 // configuration from a reader.
 func parseReader(r io.Reader) (*Config, error) {
 	out := new(Config)

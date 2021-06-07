@@ -101,7 +101,7 @@ type (
 	}
 )
 
-// Validate valides the user and returns an error if the
+// Validate validates the user and returns an error if the
 // validation fails.
 func (u *User) Validate() error {
 	switch {
