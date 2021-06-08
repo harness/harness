@@ -1,4 +1,5 @@
 .vscode
+__debug_bin
 *.sqlite
 *.txt
 *.out

@@ -63,6 +63,7 @@ func provideDatabase(config config.Config) (*db.DB, error) {
 	return db.Connect(
 		config.Database.Driver,
 		config.Database.Datasource,
+		config.Database.MaxConnections,
 	)
 }
 
