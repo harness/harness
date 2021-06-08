@@ -111,9 +111,10 @@ type (
 
 	// Database provides the database configuration.
 	Database struct {
-		Driver     string `envconfig:"DRONE_DATABASE_DRIVER"     default:"sqlite3"`
-		Datasource string `envconfig:"DRONE_DATABASE_DATASOURCE" default:"core.sqlite"`
-		Secret     string `envconfig:"DRONE_DATABASE_SECRET"`
+		Driver         string `envconfig:"DRONE_DATABASE_DRIVER"          default:"sqlite3"`
+		Datasource     string `envconfig:"DRONE_DATABASE_DATASOURCE"      default:"core.sqlite"`
+		Secret         string `envconfig:"DRONE_DATABASE_SECRET"`
+		MaxConnections int    `envconfig:"DRONE_DATABASE_MAX_CONNECTIONS" default:"0"`
 
 		// Feature flag
 		LegacyBatch bool `envconfig:"DRONE_DATABASE_LEGACY_BATCH"`
