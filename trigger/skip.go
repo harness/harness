@@ -61,6 +61,10 @@ func skipMessage(hook *core.Hook) bool {
 		return false
 	case hook.Event == core.EventCustom:
 		return false
+	case hook.Event == core.EventPromote:
+		return false
+	case hook.Event == core.EventRollback:
+		return false
 	case skipMessageEval(hook.Message):
 		return true
 	case skipMessageEval(hook.Title):
