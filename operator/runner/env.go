@@ -30,6 +30,7 @@ func systemEnviron(system *core.System) map[string]string {
 		"DRONE_SYSTEM_HOST":     system.Host,
 		"DRONE_SYSTEM_HOSTNAME": system.Host,
 		"DRONE_SYSTEM_VERSION":  fmt.Sprint(system.Version),
+		"DEBIAN_FRONTEND":       "noninteractive",
 	}
 }
 
