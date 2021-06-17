@@ -37,6 +37,8 @@ type Server struct {
 	Handler http.Handler
 }
 
+const timeoutGracefulShutdown = 5 * time.Second
+
 // ListenAndServe initializes a server to respond to HTTP network requests.
 func (s Server) ListenAndServe(ctx context.Context) error {
 	if s.Acme {
@@ -60,7 +62,7 @@ func (s Server) listenAndServe(ctx context.Context) error {
 	g.Go(func() error {
 		<-ctx.Done()
 
-		ctxShutdown, cancelFunc := context.WithTimeout(context.Background(), time.Minute)
+		ctxShutdown, cancelFunc := context.WithTimeout(context.Background(), timeoutGracefulShutdown)
 		defer cancelFunc()
 
 		return s1.Shutdown(ctxShutdown)
@@ -94,7 +96,7 @@ func (s Server) listenAndServeTLS(ctx context.Context) error {
 		<-ctx.Done()
 
 		var gShutdown errgroup.Group
-		ctxShutdown, cancelFunc := context.WithTimeout(context.Background(), time.Minute)
+		ctxShutdown, cancelFunc := context.WithTimeout(context.Background(), timeoutGracefulShutdown)
 		defer cancelFunc()
 
 		gShutdown.Go(func() error {
@@ -142,7 +144,7 @@ func (s Server) listenAndServeAcme(ctx context.Context) error {
 		<-ctx.Done()
 
 		var gShutdown errgroup.Group
-		ctxShutdown, cancelFunc := context.WithTimeout(context.Background(), time.Minute)
+		ctxShutdown, cancelFunc := context.WithTimeout(context.Background(), timeoutGracefulShutdown)
 		defer cancelFunc()
 
 		gShutdown.Go(func() error {
