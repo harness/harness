@@ -18,6 +18,7 @@ package converter
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"regexp"
 	"strings"
@@ -63,11 +64,11 @@ func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 	}
 	// get template from db
 	template, err := p.templateStore.FindName(ctx, templateArgs.Load, req.Repo.Namespace)
-	if err != nil {
-		return nil, nil
-	}
-	if template == nil {
+	if err == sql.ErrNoRows {
 		return nil, ErrTemplateNotFound
+	}
+	if err != nil {
+		return nil, err
 	}
 	// Check if file is of type Starlark
 	if strings.HasSuffix(templateArgs.Load, ".script") ||
