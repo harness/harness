@@ -71,7 +71,7 @@ func TestGlobalErr(t *testing.T) {
 		false, time.Minute)
 	_, err := service.Find(noContext, args)
 	if err == nil {
-		t.Errorf("Expect http.Reponse error")
+		t.Errorf("Expect http.Response error")
 	} else if err.Error() != "Not Found" {
 		t.Errorf("Expect Not Found error")
 	}

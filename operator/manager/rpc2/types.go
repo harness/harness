@@ -16,12 +16,12 @@ import (
 type details struct {
 	*manager.Context
 	Netrc *core.Netrc `json:"netrc"`
-	Repo  *repositroy `json:"repository"`
+	Repo  *repository `json:"repository"`
 }
 
 // repository wraps a repository object to include the secret
 // when the repository is marshaled to json.
-type repositroy struct {
+type repository struct {
 	*core.Repository
 	Secret string `json:"secret"`
 }

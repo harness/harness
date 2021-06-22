@@ -29,13 +29,13 @@ func Parse(req *core.ConvertArgs, template *core.Template, templateData map[stri
 	}
 
 	var jsonnetFile string
-	var jsonentFileName string
+	var jsonnetFileName string
 	if template != nil {
 		jsonnetFile = template.Data
-		jsonentFileName = template.Name
+		jsonnetFileName = template.Name
 	} else {
 		jsonnetFile = req.Config.Data
-		jsonentFileName = req.Repo.Config
+		jsonnetFileName = req.Repo.Config
 	}
 	// map external inputs
 	if len(templateData) != 0 {
@@ -48,9 +48,9 @@ func Parse(req *core.ConvertArgs, template *core.Template, templateData map[stri
 
 	// convert the jsonnet file to yaml
 	buf := new(bytes.Buffer)
-	docs, err := vm.EvaluateSnippetStream(jsonentFileName, jsonnetFile)
+	docs, err := vm.EvaluateSnippetStream(jsonnetFileName, jsonnetFile)
 	if err != nil {
-		doc, err2 := vm.EvaluateSnippet(jsonentFileName, jsonnetFile)
+		doc, err2 := vm.EvaluateSnippet(jsonnetFileName, jsonnetFile)
 		if err2 != nil {
 			return "", err
 		}

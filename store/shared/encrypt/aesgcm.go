@@ -21,8 +21,8 @@ import (
 	"io"
 )
 
-// Aesgcm provides an encryper that uses the aesgcm encryption
-// alogirthm.
+// Aesgcm provides an encrypter that uses the aesgcm encryption
+// algorithm.
 type Aesgcm struct {
 	block  cipher.Block
 	Compat bool
@@ -56,7 +56,7 @@ func (e *Aesgcm) Decrypt(ciphertext []byte) (string, error) {
 		// mode, it will return the ciphertext as plain text if
 		// decryption fails. This should be used when running the
 		// database in mixed-mode, where there is a mix of encrypted
-		// and unecrypted content.
+		// and unencrypted content.
 		if e.Compat {
 			return string(ciphertext), nil
 		}
@@ -72,7 +72,7 @@ func (e *Aesgcm) Decrypt(ciphertext []byte) (string, error) {
 	// mode, it will return the ciphertext as plain text if
 	// decryption fails. This should be used when running the
 	// database in mixed-mode, where there is a mix of encrypted
-	// and unecrypted content.
+	// and unencrypted content.
 	if err != nil && e.Compat {
 		return string(ciphertext), nil
 	}

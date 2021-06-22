@@ -77,7 +77,7 @@ type BuildStore interface {
 	LatestBranches(context.Context, int64) ([]*Build, error)
 
 	// LatestPulls returns the latest builds from the
-	// datastore by pull requeset.
+	// datastore by pull request.
 	LatestPulls(context.Context, int64) ([]*Build, error)
 
 	// LatestDeploys returns the latest builds from the

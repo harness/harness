@@ -94,13 +94,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - page to view the latest build per branch.
 
 ### Fixed
-- sync routine not executing asyncronously, being cancelled by http context.
+- sync routine not executing asynchronously, being cancelled by http context.
 - sync routine should ignore gitlab subrepositories
 - convert deploy events in 0.8 yaml to promote events.
 - do not execute cron job for disabled repositories. [#2931](https://github.com/drone/drone/issues/2931).
 - remove trailing slash from gitea url to prevent oauth2 token refresh errors, by [@cmj0121](https://github.com/cmj0121). [#2920](https://github.com/drone/drone/issues/2920). 
 - disable font ligatures in build log output. [drone/drone-ui#322](https://github.com/drone/drone-ui/pull/322).
-- missing am/pm in timstamps
+- missing am/pm in timestamps
 
 ## [1.6.5] - 2020-01-29
 ### Changed
