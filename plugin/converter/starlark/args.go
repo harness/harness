@@ -83,6 +83,7 @@ func fromBuild(v *core.Build) starlark.StringDict {
 		"author_email":  starlark.String(v.AuthorEmail),
 		"author_avatar": starlark.String(v.AuthorAvatar),
 		"sender":        starlark.String(v.Sender),
+		"debug":         starlark.Bool(v.Debug),
 		"params":        fromMap(v.Params),
 	}
 }
