@@ -16,33 +16,44 @@ package step
 
 import (
 	"database/sql"
+	"encoding/json"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
+	"github.com/jmoiron/sqlx/types"
 )
 
 // helper function converts the Step structure to a set
 // of named query parameters.
 func toParams(from *core.Step) map[string]interface{} {
 	return map[string]interface{}{
-		"step_id":        from.ID,
-		"step_stage_id":  from.StageID,
-		"step_number":    from.Number,
-		"step_name":      from.Name,
-		"step_status":    from.Status,
-		"step_error":     from.Error,
-		"step_errignore": from.ErrIgnore,
-		"step_exit_code": from.ExitCode,
-		"step_started":   from.Started,
-		"step_stopped":   from.Stopped,
-		"step_version":   from.Version,
+		"step_id":         from.ID,
+		"step_stage_id":   from.StageID,
+		"step_number":     from.Number,
+		"step_name":       from.Name,
+		"step_status":     from.Status,
+		"step_error":      from.Error,
+		"step_errignore":  from.ErrIgnore,
+		"step_exit_code":  from.ExitCode,
+		"step_started":    from.Started,
+		"step_stopped":    from.Stopped,
+		"step_version":    from.Version,
+		"step_depends_on": encodeSlice(from.DependsOn),
+		"step_image":      from.Image,
+		"step_detached":   from.Detached,
 	}
+}
+
+func encodeSlice(v []string) types.JSONText {
+	raw, _ := json.Marshal(v)
+	return types.JSONText(raw)
 }
 
 // helper function scans the sql.Row and copies the column
 // values to the destination object.
 func scanRow(scanner db.Scanner, dest *core.Step) error {
-	return scanner.Scan(
+	depJSON := types.JSONText{}
+	err := scanner.Scan(
 		&dest.ID,
 		&dest.StageID,
 		&dest.Number,
@@ -54,7 +65,12 @@ func scanRow(scanner db.Scanner, dest *core.Step) error {
 		&dest.Started,
 		&dest.Stopped,
 		&dest.Version,
+		&depJSON,
+		&dest.Image,
+		&dest.Detached,
 	)
+	json.Unmarshal(depJSON, &dest.DependsOn)
+	return err
 }
 
 // helper function scans the sql.Row and copies the column
