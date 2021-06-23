@@ -66,7 +66,7 @@ func TestAncestors(t *testing.T) {
 	}
 
 	if v := dag.Ancestors("backend"); len(v) != 0 {
-		t.Errorf("Expect vertexes with no dependences has zero ancestors")
+		t.Errorf("Expect vertexes with no dependencies has zero ancestors")
 	}
 }
 

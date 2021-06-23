@@ -148,7 +148,7 @@ func TestMatchResource(t *testing.T) {
 	for i, test := range tests {
 		got, want := matchResource(test.kinda, test.typea, test.kindb, test.typeb), test.want
 		if got != want {
-			t.Errorf("Unexpectd results at index %d", i)
+			t.Errorf("Unexpected results at index %d", i)
 		}
 	}
 }
@@ -193,7 +193,7 @@ func TestShouldThrottle(t *testing.T) {
 	for i, test := range tests {
 		stage := stages[i]
 		if got, want := shouldThrottle(stage, stages, stage.LimitRepo), test.Want; got != want {
-			t.Errorf("Unexpectd results at index %d", i)
+			t.Errorf("Unexpected results at index %d", i)
 		}
 	}
 }
@@ -219,7 +219,7 @@ func TestWithinLimits(t *testing.T) {
 		},
 
 		// stage with concurrency 1, no existing stages
-		// exist for same repositroy id. expect true.
+		// exist for same repository id. expect true.
 		{
 			result: true,
 			stage: &core.Stage{
@@ -316,7 +316,7 @@ func TestWithinLimits(t *testing.T) {
 
 	for i, test := range tests {
 		if got, want := withinLimits(test.stage, test.stages), test.result; got != want {
-			t.Errorf("Unexpectd results at index %d", i)
+			t.Errorf("Unexpected results at index %d", i)
 		}
 	}
 }
@@ -352,7 +352,7 @@ func TestWithinLimits_Old(t *testing.T) {
 	for i, test := range tests {
 		stage := stages[i]
 		if got, want := withinLimits(stage, stages), test.Want; got != want {
-			t.Errorf("Unexpectd results at index %d", i)
+			t.Errorf("Unexpected results at index %d", i)
 		}
 	}
 }

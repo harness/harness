@@ -30,7 +30,7 @@ func TestCreate(t *testing.T) {
 			t.Errorf("Want user login %s, got %s", want, got)
 		}
 		if in.Hash == "" {
-			t.Errorf("Expect user secert generated")
+			t.Errorf("Expect user secret generated")
 		}
 		return nil
 	})

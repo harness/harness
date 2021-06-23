@@ -69,7 +69,7 @@ func HandlePing() http.HandlerFunc {
 }
 
 // HandleRequest returns an http.HandlerFunc that processes an
-// http.Request to reqeust a stage from the queue for execution.
+// http.Request to request a stage from the queue for execution.
 //
 // POST /rpc/v2/stage
 func HandleRequest(m manager.BuildManager) http.HandlerFunc {
@@ -135,7 +135,7 @@ func HandleInfo(m manager.BuildManager) http.HandlerFunc {
 		writeJSON(w, &details{
 			Context: res,
 			Netrc:   netrc,
-			Repo: &repositroy{
+			Repo: &repository{
 				Repository: res.Repo,
 				Secret:     res.Repo.Secret,
 			},

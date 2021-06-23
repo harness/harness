@@ -67,7 +67,7 @@ func TestEndpointSource_Err(t *testing.T) {
 	service := EndpointSource("https://company.com/auths", "GMEuUHQfmrMRsseWxi9YlIeBtn9lm6im", false)
 	_, err := service.List(noContext, &core.RegistryArgs{Repo: &core.Repository{}, Build: &core.Build{}})
 	if err == nil {
-		t.Errorf("Expect http.Reponse error")
+		t.Errorf("Expect http.Response error")
 	} else if err.Error() != "Not Found" {
 		t.Errorf("Expect Not Found error")
 	}

@@ -35,7 +35,7 @@ func HandleFind(users core.UserStore) http.HandlerFunc {
 		if err != nil {
 			// the client can make a user request by providing
 			// the user id as opposed to the username. If a
-			// numberic user id is provided as input, attempt
+			// numeric user id is provided as input, attempt
 			// to lookup the user by id.
 			if id, _ := strconv.ParseInt(login, 10, 64); id != 0 {
 				user, err = users.Find(r.Context(), id)

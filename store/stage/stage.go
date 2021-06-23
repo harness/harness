@@ -323,6 +323,9 @@ SELECT
 ,step_started
 ,step_stopped
 ,step_version
+,step_depends_on
+,step_image
+,step_detached
 FROM stages
   LEFT JOIN steps
 	ON stages.stage_id=steps.step_stage_id
@@ -431,6 +434,9 @@ INSERT INTO steps (
 ,step_started
 ,step_stopped
 ,step_version
+,step_depends_on
+,step_image
+,step_detached
 ) VALUES (
  :step_stage_id
 ,:step_number
@@ -442,5 +448,8 @@ INSERT INTO steps (
 ,:step_started
 ,:step_stopped
 ,:step_version
+,:step_depends_on
+,:step_image
+,:step_detached
 )
 `

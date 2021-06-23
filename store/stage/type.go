@@ -16,8 +16,10 @@ package stage
 
 import (
 	"database/sql"
+	"encoding/json"
 
 	"github.com/drone/drone/core"
+	"github.com/jmoiron/sqlx/types"
 )
 
 type nullStep struct {
@@ -32,10 +34,16 @@ type nullStep struct {
 	Started   sql.NullInt64
 	Stopped   sql.NullInt64
 	Version   sql.NullInt64
+	DependsOn types.JSONText
+	Image     sql.NullString
+	Detached  sql.NullBool
 }
 
 func (s *nullStep) value() *core.Step {
-	return &core.Step{
+	var dependsOn []string
+	json.Unmarshal(s.DependsOn, &dependsOn)
+
+	step := &core.Step{
 		ID:        s.ID.Int64,
 		StageID:   s.StageID.Int64,
 		Number:    int(s.Number.Int64),
@@ -47,5 +55,10 @@ func (s *nullStep) value() *core.Step {
 		Started:   s.Started.Int64,
 		Stopped:   s.Stopped.Int64,
 		Version:   s.Version.Int64,
+		DependsOn: dependsOn,
+		Image:     s.Image.String,
+		Detached:  s.Detached.Bool,
 	}
+
+	return step
 }
