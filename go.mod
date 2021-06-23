@@ -15,7 +15,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/drone/drone-go v1.4.1-0.20201109202657-b9e58bbbcf27
 	github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d
-	github.com/drone/drone-ui v0.0.0-20210616023721-d11e2b9d4c32
+	github.com/drone/drone-ui v0.0.0-20210623224836-9a5c77ebfdb7
 	github.com/drone/drone-yaml v1.2.4-0.20200326192514-6f4d6dfb39e4
 	github.com/drone/envsubst v1.0.3-0.20200709231038-aa43e1c1a629
 	github.com/drone/go-license v1.0.2
