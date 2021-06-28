@@ -26,11 +26,14 @@ import (
 )
 
 // Connect to an embedded sqlite database.
-func Connect(driver, datasource string) (*DB, error) {
+func Connect(driver, datasource string, maxOpenConnections int) (*DB, error) {
 	db, err := sql.Open(driver, datasource)
 	if err != nil {
 		return nil, err
 	}
+
+	db.SetMaxOpenConns(maxOpenConnections)
+
 	if err := sqlite.Migrate(db); err != nil {
 		return nil, err
 	}
