@@ -41,7 +41,7 @@ func TestQueue(t *testing.T) {
 			return
 		}
 		if got, want := next, item; got != want {
-			t.Errorf("Want build %d, got %d", item.ID, item.ID)
+			t.Errorf("Want build %d, got %d", want.ID, got.ID)
 		}
 	}
 }
