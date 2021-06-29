@@ -67,9 +67,7 @@ func (s Server) listenAndServe(ctx context.Context) error {
 
 		return s1.Shutdown(ctxShutdown)
 	})
-	g.Go(func() error {
-		return s1.ListenAndServe()
-	})
+	g.Go(s1.ListenAndServe)
 	return g.Wait()
 }
 
@@ -83,9 +81,7 @@ func (s Server) listenAndServeTLS(ctx context.Context) error {
 		Addr:    ":https",
 		Handler: s.Handler,
 	}
-	g.Go(func() error {
-		return s1.ListenAndServe()
-	})
+	g.Go(s1.ListenAndServe)
 	g.Go(func() error {
 		return s2.ListenAndServeTLS(
 			s.Cert,
@@ -134,9 +130,7 @@ func (s Server) listenAndServeAcme(ctx context.Context) error {
 			MinVersion:     tls.VersionTLS12,
 		},
 	}
-	g.Go(func() error {
-		return s1.ListenAndServe()
-	})
+	g.Go(s1.ListenAndServe)
 	g.Go(func() error {
 		return s2.ListenAndServeTLS("", "")
 	})

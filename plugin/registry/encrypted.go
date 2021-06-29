@@ -99,7 +99,7 @@ func getEncrypted(manifest *yaml.Manifest, match string) (data string, ok bool) 
 }
 
 func decrypt(ciphertext []byte, key []byte) (plaintext []byte, err error) {
-	block, err := aes.NewCipher(key[:])
+	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}

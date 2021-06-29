@@ -179,7 +179,7 @@ func HandleLogin(
 		logger.Debugf("authentication successful")
 
 		session.Create(w, user)
-		http.Redirect(w, r, redirect, 303)
+		http.Redirect(w, r, redirect, http.StatusSeeOther)
 	}
 }
 
@@ -199,7 +199,7 @@ func synchronize(ctx context.Context, syncer core.Syncer, user *core.User) {
 }
 
 func writeLoginError(w http.ResponseWriter, r *http.Request, err error) {
-	http.Redirect(w, r, "/login/error?message="+err.Error(), 303)
+	http.Redirect(w, r, "/login/error?message="+err.Error(), http.StatusSeeOther)
 }
 
 func writeLoginErrorStr(w http.ResponseWriter, r *http.Request, s string) {
