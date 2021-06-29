@@ -77,7 +77,7 @@ func HandleCreate(users core.UserStore, service core.UserService, sender core.We
 		if err != nil {
 			render.ErrorCode(w, err, 400)
 			logger.FromRequest(r).WithError(err).
-				Errorln("api: invlid username")
+				Errorln("api: invalid username")
 			return
 		}
 

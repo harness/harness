@@ -19,7 +19,7 @@ import (
 )
 
 // Connect to a database and verify with a ping.
-func Connect(driver, datasource string) (*DB, error) {
+func Connect(driver, datasource string, maxOpenConnections int) (*DB, error) {
 	db, err := sql.Open(driver, datasource)
 	if err != nil {
 		return nil, err
@@ -34,6 +34,8 @@ func Connect(driver, datasource string) (*DB, error) {
 	if err := setupDatabase(db, driver); err != nil {
 		return nil, err
 	}
+	// generally set to 0, user configured for larger installs
+	db.SetMaxOpenConns(maxOpenConnections)
 
 	var engine Driver
 	var locker Locker
@@ -70,7 +72,7 @@ func pingDatabase(db *sql.DB) (err error) {
 	return
 }
 
-// helper function to setup the databsae by performing automated
+// helper function to setup the database by performing automated
 // database migration steps.
 func setupDatabase(db *sql.DB, driver string) error {
 	switch driver {

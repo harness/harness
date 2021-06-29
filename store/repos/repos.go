@@ -298,7 +298,7 @@ SELECT
 ,repo_secret
 `
 
-const queryColsBulds = queryCols + `
+const queryColsBuilds = queryCols + `
 ,build_id
 ,build_repo_id
 ,build_trigger
@@ -488,7 +488,7 @@ WHERE repo_id = :repo_id
 //   INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
 //
 
-const queryRepoWithBuild = queryColsBulds + `
+const queryRepoWithBuild = queryColsBuilds + `
 FROM repos LEFT OUTER JOIN builds ON build_id = (
 	SELECT build_id FROM builds
 	WHERE builds.build_repo_id = repos.repo_id
@@ -500,7 +500,7 @@ WHERE perms.perm_user_id = :user_id
 ORDER BY repo_slug ASC
 `
 
-const queryRepoWithBuildPostgres = queryColsBulds + `
+const queryRepoWithBuildPostgres = queryColsBuilds + `
 FROM repos LEFT OUTER JOIN builds ON build_id = (
 	SELECT DISTINCT ON (build_repo_id) build_id FROM builds
 	WHERE builds.build_repo_id = repos.repo_id
@@ -511,7 +511,7 @@ WHERE perms.perm_user_id = :user_id
 ORDER BY repo_slug ASC
 `
 
-const queryRepoWithBuildAll = queryColsBulds + `
+const queryRepoWithBuildAll = queryColsBuilds + `
 FROM repos
 INNER JOIN perms  ON perms.perm_repo_uid = repos.repo_uid
 INNER JOIN builds ON builds.build_repo_id = repos.repo_id
@@ -520,7 +520,7 @@ ORDER BY build_id DESC
 LIMIT 25;
 `
 
-const queryRepoWithBuildIncomplete = queryColsBulds + `
+const queryRepoWithBuildIncomplete = queryColsBuilds + `
 FROM repos
 INNER JOIN builds ON builds.build_repo_id = repos.repo_id
 WHERE EXISTS (

@@ -40,6 +40,10 @@ func TestValidateUser(t *testing.T) {
 			err:  nil,
 		},
 		{
+			user: &User{Login: "octocat.with.dot"},
+			err:  nil,
+		},
+		{
 			user: &User{Login: "OctO-Cat_01"},
 			err:  nil,
 		},

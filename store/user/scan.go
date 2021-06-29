@@ -19,11 +19,20 @@ import (
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
+	"github.com/drone/drone/store/shared/encrypt"
 )
 
 // helper function converts the User structure to a set
 // of named query parameters.
-func toParams(u *core.User) map[string]interface{} {
+func toParams(encrypt encrypt.Encrypter, u *core.User) (map[string]interface{}, error) {
+	token, err := encrypt.Encrypt(u.Token)
+	if err != nil {
+		return nil, err
+	}
+	refresh, err := encrypt.Encrypt(u.Refresh)
+	if err != nil {
+		return nil, err
+	}
 	return map[string]interface{}{
 		"user_id":            u.ID,
 		"user_login":         u.Login,
@@ -37,17 +46,18 @@ func toParams(u *core.User) map[string]interface{} {
 		"user_created":       u.Created,
 		"user_updated":       u.Updated,
 		"user_last_login":    u.LastLogin,
-		"user_oauth_token":   u.Token,
-		"user_oauth_refresh": u.Refresh,
+		"user_oauth_token":   token,
+		"user_oauth_refresh": refresh,
 		"user_oauth_expiry":  u.Expiry,
 		"user_hash":          u.Hash,
-	}
+	}, nil
 }
 
 // helper function scans the sql.Row and copies the column
 // values to the destination object.
-func scanRow(scanner db.Scanner, dest *core.User) error {
-	return scanner.Scan(
+func scanRow(encrypt encrypt.Encrypter, scanner db.Scanner, dest *core.User) error {
+	var token, refresh []byte
+	err := scanner.Scan(
 		&dest.ID,
 		&dest.Login,
 		&dest.Email,
@@ -60,22 +70,34 @@ func scanRow(scanner db.Scanner, dest *core.User) error {
 		&dest.Created,
 		&dest.Updated,
 		&dest.LastLogin,
-		&dest.Token,
-		&dest.Refresh,
+		&token,
+		&refresh,
 		&dest.Expiry,
 		&dest.Hash,
 	)
+	if err != nil {
+		return err
+	}
+	dest.Token, err = encrypt.Decrypt(token)
+	if err != nil {
+		return err
+	}
+	dest.Refresh, err = encrypt.Decrypt(refresh)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // helper function scans the sql.Row and copies the column
 // values to the destination object.
-func scanRows(rows *sql.Rows) ([]*core.User, error) {
+func scanRows(encrypt encrypt.Encrypter, rows *sql.Rows) ([]*core.User, error) {
 	defer rows.Close()
 
 	users := []*core.User{}
 	for rows.Next() {
 		user := new(core.User)
-		err := scanRow(rows, user)
+		err := scanRow(encrypt, rows, user)
 		if err != nil {
 			return nil, err
 		}

@@ -16,11 +16,10 @@ package starlark
 
 import (
 	"bytes"
-	"context"
-	"errors"
-	"strings"
 
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/handler/api/errors"
+
 	"github.com/sirupsen/logrus"
 	"go.starlark.net/starlark"
 )
@@ -55,33 +54,7 @@ var (
 	ErrCannotLoad = errors.New("starlark: cannot load external scripts")
 )
 
-// New returns a conversion service that converts the
-// starlark file to a yaml file.
-func New(enabled bool) core.ConvertService {
-	return &starlarkPlugin{
-		enabled: enabled,
-	}
-}
-
-type starlarkPlugin struct {
-	enabled bool
-}
-
-func (p *starlarkPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Config, error) {
-	if p.enabled == false {
-		return nil, nil
-	}
-
-	// if the file extension is not jsonnet we can
-	// skip this plugin by returning zero values.
-	switch {
-	case strings.HasSuffix(req.Repo.Config, ".script"):
-	case strings.HasSuffix(req.Repo.Config, ".star"):
-	case strings.HasSuffix(req.Repo.Config, ".starlark"):
-	default:
-		return nil, nil
-	}
-
+func Parse(req *core.ConvertArgs, template *core.Template, templateData map[string]interface{}) (string, error) {
 	thread := &starlark.Thread{
 		Name: "drone",
 		Load: noLoad,
@@ -92,9 +65,19 @@ func (p *starlarkPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 			}).Traceln(msg)
 		},
 	}
-	globals, err := starlark.ExecFile(thread, req.Repo.Config, []byte(req.Config.Data), nil)
+	var starlarkFile string
+	var starlarkFileName string
+	if template != nil {
+		starlarkFile = template.Data
+		starlarkFileName = template.Name
+	} else {
+		starlarkFile = req.Config.Data
+		starlarkFileName = req.Repo.Config
+	}
+
+	globals, err := starlark.ExecFile(thread, starlarkFileName, starlarkFile, nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// find the main method in the starlark script and
@@ -102,16 +85,16 @@ func (p *starlarkPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 	// is invalid.
 	mainVal, ok := globals["main"]
 	if !ok {
-		return nil, ErrMainMissing
+		return "", ErrMainMissing
 	}
 	main, ok := mainVal.(starlark.Callable)
 	if !ok {
-		return nil, ErrMainInvalid
+		return "", ErrMainInvalid
 	}
 
 	// create the input args and invoke the main method
 	// using the input args.
-	args := createArgs(req.Repo, req.Build)
+	args := createArgs(req.Repo, req.Build, templateData)
 
 	// set the maximum number of operations in the script. this
 	// mitigates long running scripts.
@@ -120,7 +103,7 @@ func (p *starlarkPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 	// execute the main method in the script.
 	mainVal, err = starlark.Call(thread, main, args, nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	buf := new(bytes.Buffer)
@@ -131,27 +114,24 @@ func (p *starlarkPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 			buf.WriteString(separator)
 			buf.WriteString(newline)
 			if err := write(buf, item); err != nil {
-				return nil, err
+				return "", err
 			}
 			buf.WriteString(newline)
 		}
 	case *starlark.Dict:
 		if err := write(buf, v); err != nil {
-			return nil, err
+			return "", err
 		}
 	default:
-		return nil, ErrMainReturn
+		return "", ErrMainReturn
 	}
 
 	// this is a temporary workaround until we
 	// implement a LimitWriter.
 	if b := buf.Bytes(); len(b) > limit {
-		return nil, ErrMaximumSize
+		return "", ErrMaximumSize
 	}
-
-	return &core.Config{
-		Data: buf.String(),
-	}, nil
+	return buf.String(), nil
 }
 
 func noLoad(_ *starlark.Thread, _ string) (starlark.StringDict, error) {

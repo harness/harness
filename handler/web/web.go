@@ -18,8 +18,8 @@ import (
 	"net/http"
 
 	"github.com/drone/drone-ui/dist"
+
 	"github.com/drone/drone/core"
-	"github.com/drone/drone/handler/web/landingpage"
 	"github.com/drone/drone/handler/web/link"
 	"github.com/drone/drone/logger"
 	"github.com/drone/go-login/login"
@@ -128,15 +128,12 @@ func (s Server) Handler() http.Handler {
 	r.Get("/logout", HandleLogout())
 	r.Post("/logout", HandleLogout())
 
-	h2 := http.FileServer(landingpage.New())
 	h := http.FileServer(dist.New())
 	h = setupCache(h)
 	r.Handle("/favicon.png", h)
-	r.Handle("/js/*filepath", h)
-	r.Handle("/css/*filepath", h)
-	r.Handle("/img/*filepath", h)
-	r.Handle("/images/*filepath", h)
-	r.Handle("/static2/*filepath", h2)
+	r.Handle("/manifest.json", h)
+	r.Handle("/asset-manifest.json", h)
+	r.Handle("/static/*filepath", h)
 	r.NotFound(HandleIndex(s.Host, s.Session, s.Licenses))
 
 	return r

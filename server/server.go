@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/sync/errgroup"
@@ -36,6 +37,8 @@ type Server struct {
 	Handler http.Handler
 }
 
+const timeoutGracefulShutdown = 5 * time.Second
+
 // ListenAndServe initializes a server to respond to HTTP network requests.
 func (s Server) ListenAndServe(ctx context.Context) error {
 	if s.Acme {
@@ -43,7 +46,11 @@ func (s Server) ListenAndServe(ctx context.Context) error {
 	} else if s.Key != "" {
 		return s.listenAndServeTLS(ctx)
 	}
-	return s.listenAndServe(ctx)
+	err := s.listenAndServe(ctx)
+	if err == http.ErrServerClosed {
+		err = nil
+	}
+	return err
 }
 
 func (s Server) listenAndServe(ctx context.Context) error {
@@ -53,10 +60,12 @@ func (s Server) listenAndServe(ctx context.Context) error {
 		Handler: s.Handler,
 	}
 	g.Go(func() error {
-		select {
-		case <-ctx.Done():
-			return s1.Shutdown(ctx)
-		}
+		<-ctx.Done()
+
+		ctxShutdown, cancelFunc := context.WithTimeout(context.Background(), timeoutGracefulShutdown)
+		defer cancelFunc()
+
+		return s1.Shutdown(ctxShutdown)
 	})
 	g.Go(s1.ListenAndServe)
 	return g.Wait()
@@ -80,12 +89,20 @@ func (s Server) listenAndServeTLS(ctx context.Context) error {
 		)
 	})
 	g.Go(func() error {
-		select {
-		case <-ctx.Done():
-			s1.Shutdown(ctx)
-			s2.Shutdown(ctx)
-			return nil
-		}
+		<-ctx.Done()
+
+		var gShutdown errgroup.Group
+		ctxShutdown, cancelFunc := context.WithTimeout(context.Background(), timeoutGracefulShutdown)
+		defer cancelFunc()
+
+		gShutdown.Go(func() error {
+			return s1.Shutdown(ctxShutdown)
+		})
+		gShutdown.Go(func() error {
+			return s2.Shutdown(ctxShutdown)
+		})
+
+		return gShutdown.Wait()
 	})
 	return g.Wait()
 }
@@ -118,12 +135,20 @@ func (s Server) listenAndServeAcme(ctx context.Context) error {
 		return s2.ListenAndServeTLS("", "")
 	})
 	g.Go(func() error {
-		select {
-		case <-ctx.Done():
-			s1.Shutdown(ctx)
-			s2.Shutdown(ctx)
-			return nil
-		}
+		<-ctx.Done()
+
+		var gShutdown errgroup.Group
+		ctxShutdown, cancelFunc := context.WithTimeout(context.Background(), timeoutGracefulShutdown)
+		defer cancelFunc()
+
+		gShutdown.Go(func() error {
+			return s1.Shutdown(ctxShutdown)
+		})
+		gShutdown.Go(func() error {
+			return s2.Shutdown(ctxShutdown)
+		})
+
+		return gShutdown.Wait()
 	})
 	return g.Wait()
 }

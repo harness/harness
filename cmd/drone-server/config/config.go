@@ -111,12 +111,17 @@ type (
 
 	// Database provides the database configuration.
 	Database struct {
-		Driver     string `envconfig:"DRONE_DATABASE_DRIVER"     default:"sqlite3"`
-		Datasource string `envconfig:"DRONE_DATABASE_DATASOURCE" default:"core.sqlite"`
-		Secret     string `envconfig:"DRONE_DATABASE_SECRET"`
+		Driver         string `envconfig:"DRONE_DATABASE_DRIVER"          default:"sqlite3"`
+		Datasource     string `envconfig:"DRONE_DATABASE_DATASOURCE"      default:"core.sqlite"`
+		Secret         string `envconfig:"DRONE_DATABASE_SECRET"`
+		MaxConnections int    `envconfig:"DRONE_DATABASE_MAX_CONNECTIONS" default:"0"`
 
 		// Feature flag
 		LegacyBatch bool `envconfig:"DRONE_DATABASE_LEGACY_BATCH"`
+
+		// Feature flag
+		EncryptUserTable    bool `envconfig:"DRONE_DATABASE_ENCRYPT_USER_TABLE"`
+		EncryptMixedContent bool `envconfig:"DRONE_DATABASE_ENCRYPT_MIXED_MODE"`
 	}
 
 	// Docker provides docker configuration
@@ -302,6 +307,7 @@ type (
 		Endpoint   string        `envconfig:"DRONE_CONVERT_PLUGIN_ENDPOINT"`
 		Secret     string        `envconfig:"DRONE_CONVERT_PLUGIN_SECRET"`
 		SkipVerify bool          `envconfig:"DRONE_CONVERT_PLUGIN_SKIP_VERIFY"`
+		CacheSize  int           `envconfig:"DRONE_CONVERT_PLUGIN_CACHE_SIZE" default:"10"`
 		Timeout    time.Duration `envconfig:"DRONE_CONVERT_TIMEOUT" default:"1m"`
 	}
 

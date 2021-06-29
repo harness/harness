@@ -15,17 +15,24 @@
 package starlark
 
 import (
-	"context"
 	"io/ioutil"
 	"testing"
 
 	"github.com/drone/drone/core"
 )
 
-var noContext = context.Background()
+func TestParseStarlark(t *testing.T) {
+	before, err := ioutil.ReadFile("../testdata/starlark.input.star")
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
-func TestConvert(t *testing.T) {
-	plugin := New(true)
+	after, err := ioutil.ReadFile("../testdata/starlark.input.star.golden")
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	req := &core.ConvertArgs{
 		Build: &core.Build{
@@ -37,54 +44,38 @@ func TestConvert(t *testing.T) {
 		},
 		Config: &core.Config{},
 	}
-
-	config, err := plugin.Convert(noContext, req)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if config != nil {
-		t.Error("Want nil config when configuration is not starlark file")
-		return
+	template := &core.Template{
+		Name: "my_template.star",
+		Data: string(before),
 	}
 
-	before, err := ioutil.ReadFile("testdata/single.star")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	after, err := ioutil.ReadFile("testdata/single.star.golden")
-	if err != nil {
-		t.Error(err)
-		return
+	templateData := map[string]interface{}{
+		"stepName": "my_step",
+		"image":    "my_image",
+		"commands": "my_command",
 	}
 
-	req.Repo.Config = "single.star"
 	req.Config.Data = string(before)
-	config, err = plugin.Convert(noContext, req)
+
+	parsedFile, err := Parse(req, template, templateData)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	if config == nil {
-		t.Error("Want non-nil configuration")
-		return
-	}
 
-	if want, got := config.Data, string(after); want != got {
+	if want, got := parsedFile, string(after); want != got {
 		t.Errorf("Want %q got %q", want, got)
 	}
 }
 
-// this test verifies the starlark file can generate a multi-document
-// yaml file that defines multiple pipelines.
-func TestConvert_Multi(t *testing.T) {
-	before, err := ioutil.ReadFile("testdata/multi.star")
+func TestParseStarlarkNotTemplateFile(t *testing.T) {
+	before, err := ioutil.ReadFile("../testdata/single.star")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	after, err := ioutil.ReadFile("testdata/multi.star.golden")
+
+	after, err := ioutil.ReadFile("../testdata/single.star.golden")
 	if err != nil {
 		t.Error(err)
 		return
@@ -98,63 +89,19 @@ func TestConvert_Multi(t *testing.T) {
 			Slug:   "octocat/hello-world",
 			Config: ".drone.star",
 		},
-		Config: &core.Config{
-			Data: string(before),
-		},
+		Config: &core.Config{},
 	}
 
-	plugin := New(true)
-	config, err := plugin.Convert(noContext, req)
+	req.Repo.Config = "plugin.starlark.star"
+	req.Config.Data = string(before)
+
+	parsedFile, err := Parse(req, nil, nil)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	config, err = plugin.Convert(noContext, req)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if config == nil {
-		t.Error("Want non-nil configuration")
-		return
-	}
-
-	if want, got := config.Data, string(after); want != got {
+	if want, got := parsedFile, string(after); want != got {
 		t.Errorf("Want %q got %q", want, got)
-	}
-}
-
-// this test verifies the plugin is skipped when it has
-// not been explicitly enabled.
-func TestConvert_Skip(t *testing.T) {
-	plugin := New(false)
-	config, err := plugin.Convert(noContext, nil)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if config != nil {
-		t.Errorf("Expect nil config returned when plugin disabled")
-	}
-}
-
-// this test verifies the plugin is skipped when the config
-// file extension is not a starlark extension.
-func TestConvert_SkipYaml(t *testing.T) {
-	req := &core.ConvertArgs{
-		Repo: &core.Repository{
-			Config: ".drone.yaml",
-		},
-	}
-
-	plugin := New(true)
-	config, err := plugin.Convert(noContext, req)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if config != nil {
-		t.Errorf("Expect nil config returned for non-starlark files")
 	}
 }

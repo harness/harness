@@ -28,7 +28,7 @@ import (
 )
 
 // Encrypted returns a new encrypted registry credentials
-// provider that sournces credentials from the encrypted strings
+// provider that sources credentials from the encrypted strings
 // in the yaml file.
 func Encrypted() core.RegistryService {
 	return new(encrypted)

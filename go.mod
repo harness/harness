@@ -15,12 +15,12 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/drone/drone-go v1.4.1-0.20201109202657-b9e58bbbcf27
 	github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d
-	github.com/drone/drone-ui v0.0.0-20201110214517-ac1349fcc19c
+	github.com/drone/drone-ui v0.0.0-20210623224836-9a5c77ebfdb7
 	github.com/drone/drone-yaml v1.2.4-0.20200326192514-6f4d6dfb39e4
 	github.com/drone/envsubst v1.0.3-0.20200709231038-aa43e1c1a629
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2
-	github.com/drone/go-scm v1.8.0
+	github.com/drone/go-scm v1.15.1
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-chi/chi v3.3.3+incompatible
@@ -29,7 +29,7 @@ require (
 	github.com/go-sql-driver/mysql v1.4.0
 	github.com/golang/mock v1.3.1
 	github.com/google/go-cmp v0.4.0
-	github.com/google/go-jsonnet v0.16.0
+	github.com/google/go-jsonnet v0.17.0
 	github.com/google/wire v0.2.1
 	github.com/gorhill/cronexpr v0.0.0-20140423231348-a557574d6c02 // indirect
 	github.com/gosimple/slug v1.3.0

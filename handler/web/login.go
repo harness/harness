@@ -70,11 +70,13 @@ func HandleLogin(
 		logger := logrus.WithField("login", account.Login)
 		logger.Debugf("attempting authentication")
 
+		redirect := "/"
 		user, err := users.FindLogin(ctx, account.Login)
 		if err == sql.ErrNoRows {
+			redirect = "/register"
+
 			user = &core.User{
 				Login:     account.Login,
-				Email:     account.Email,
 				Avatar:    account.Avatar,
 				Admin:     false,
 				Machine:   false,
@@ -140,7 +142,6 @@ func HandleLogin(
 		}
 
 		user.Avatar = account.Avatar
-		user.Email = account.Email
 		user.Token = tok.Access
 		user.Refresh = tok.Refresh
 		user.LastLogin = time.Now().Unix()
@@ -149,7 +150,7 @@ func HandleLogin(
 		}
 
 		// If the user account has never been synchronized we
-		// execute the synchonrization logic.
+		// execute the synchronization logic.
 		if time.Unix(user.Synced, 0).Add(syncPeriod).Before(time.Now()) {
 			user.Syncing = true
 		}
@@ -162,17 +163,23 @@ func HandleLogin(
 			logger.Errorf("cannot update user: %s", err)
 		}
 
-		// launch the synchrnoization process in a go-routine,
+		// launch the synchronization process in a go-routine,
 		// since it is a long-running process and can take up
 		// to a few minutes.
 		if user.Syncing {
 			go synchronize(ctx, syncer, user)
 		}
 
+		// If the user account has not completed registration,
+		// redirect to the registration form.
+		if len(user.Email) == 0 && user.Created > 1619841600 {
+			redirect = "/register"
+		}
+
 		logger.Debugf("authentication successful")
 
 		session.Create(w, user)
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, redirect, http.StatusSeeOther)
 	}
 }
 

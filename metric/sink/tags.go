@@ -17,6 +17,7 @@ package sink
 import (
 	"fmt"
 
+	"github.com/drone/drone/core"
 	"github.com/drone/drone/version"
 )
 
@@ -67,6 +68,22 @@ func createTags(config Config) []string {
 	} else {
 		tag := fmt.Sprintf("license:%s", config.License)
 		tags = append(tags, tag)
+	}
+	return tags
+}
+
+func createInstallerTags(users []*core.User) []string {
+	var tags []string
+	for _, user := range users {
+		if user.Machine {
+			continue
+		}
+		if len(user.Email) == 0 {
+			continue
+		}
+		tag := fmt.Sprintf("installer:%s", user.Email)
+		tags = append(tags, tag)
+		break
 	}
 	return tags
 }

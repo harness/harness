@@ -49,7 +49,7 @@ type service struct {
 func (s *service) Find(ctx context.Context, user *core.User, repo, commit, ref, path string) (*core.File, error) {
 	// TODO(gogs) ability to fetch a yaml by pull request ref.
 	// it is not currently possible to fetch the yaml
-	// configuation file from a pull request sha. This
+	// configuration file from a pull request sha. This
 	// workaround defaults to master.
 	if s.client.Driver == scm.DriverGogs &&
 		strings.HasPrefix(ref, "refs/pull") {

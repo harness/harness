@@ -45,7 +45,7 @@ func TestGet_Token_QueryParam(t *testing.T) {
 }
 
 // This test verifies that a user is returned when a valid
-// authorization token included in the Authorzation header.
+// authorization token included in the Authorization header.
 func TestGet_Token_Header(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()

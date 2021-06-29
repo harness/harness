@@ -7,13 +7,11 @@
 package converter
 
 import (
-	"bytes"
 	"context"
 	"strings"
 
 	"github.com/drone/drone/core"
-
-	"github.com/google/go-jsonnet"
+	"github.com/drone/drone/plugin/converter/jsonnet"
 )
 
 // TODO(bradrydzewski) handle jsonnet imports
@@ -42,32 +40,12 @@ func (p *jsonnetPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*co
 		return nil, nil
 	}
 
-	// create the jsonnet vm
-	vm := jsonnet.MakeVM()
-	vm.MaxStack = 500
-	vm.StringOutput = false
-	vm.ErrorFormatter.SetMaxStackTraceSize(20)
+	file, err := jsonnet.Parse(req, nil, nil)
 
-	// convert the jsonnet file to yaml
-	buf := new(bytes.Buffer)
-	docs, err := vm.EvaluateSnippetStream(req.Repo.Config, req.Config.Data)
 	if err != nil {
-		doc, err2 := vm.EvaluateSnippet(req.Repo.Config, req.Config.Data)
-		if err2 != nil {
-			return nil, err
-		}
-		docs = append(docs, doc)
+		return nil, err
 	}
-
-	// the jsonnet vm returns a stream of yaml documents
-	// that need to be combined into a single yaml file.
-	for _, doc := range docs {
-		buf.WriteString("---")
-		buf.WriteString("\n")
-		buf.WriteString(doc)
-	}
-
 	return &core.Config{
-		Data: buf.String(),
+		Data: file,
 	}, nil
 }

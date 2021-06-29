@@ -61,6 +61,10 @@ func skipMessage(hook *core.Hook) bool {
 		return false
 	case hook.Event == core.EventCustom:
 		return false
+	case hook.Event == core.EventPromote:
+		return false
+	case hook.Event == core.EventRollback:
+		return false
 	case skipMessageEval(hook.Message):
 		return true
 	case skipMessageEval(hook.Title):
@@ -90,7 +94,7 @@ func skipMessageEval(str string) bool {
 // 	case len(paths) == 0:
 // 		return false
 // 	// github returns a maximum of 300 changed files from the
-// 	// api response. If there are 300+ chagned files the system
+// 	// api response. If there are 300+ changed files the system
 // 	// will force-run all pipelines and pipeline steps.
 // 	case len(paths) >= 300:
 // 		return false

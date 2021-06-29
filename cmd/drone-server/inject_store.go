@@ -31,9 +31,11 @@ import (
 	"github.com/drone/drone/store/shared/encrypt"
 	"github.com/drone/drone/store/stage"
 	"github.com/drone/drone/store/step"
+	"github.com/drone/drone/store/template"
 	"github.com/drone/drone/store/user"
 
 	"github.com/google/wire"
+	"github.com/sirupsen/logrus"
 )
 
 // wire set for loading the stores.
@@ -52,6 +54,7 @@ var storeSet = wire.NewSet(
 	secret.New,
 	global.New,
 	step.New,
+	template.New,
 )
 
 // provideDatabase is a Wire provider function that provides a
@@ -60,13 +63,27 @@ func provideDatabase(config config.Config) (*db.DB, error) {
 	return db.Connect(
 		config.Database.Driver,
 		config.Database.Datasource,
+		config.Database.MaxConnections,
 	)
 }
 
 // provideEncrypter is a Wire provider function that provides a
 // database encrypter, configured from the environment.
 func provideEncrypter(config config.Config) (encrypt.Encrypter, error) {
-	return encrypt.New(config.Database.Secret)
+	enc, err := encrypt.New(config.Database.Secret)
+	// mixed-content mode should be set to true if the database
+	// originally had encryption disabled and therefore has
+	// plaintext entries. This prevents Drone from returning an
+	// error if decryption fails; on failure, the ciphertext is
+	// returned as-is and the error is ignored.
+	if aesgcm, ok := enc.(*encrypt.Aesgcm); ok {
+		logrus.Debugln("main: database encryption enabled")
+		if config.Database.EncryptMixedContent {
+			logrus.Debugln("main: database encryption mixed-mode enabled")
+			aesgcm.Compat = true
+		}
+	}
+	return enc, err
 }
 
 // provideBuildStore is a Wire provider function that provides a
@@ -123,15 +140,6 @@ func provideRepoStore(db *db.DB) core.RepositoryStore {
 	return repos
 }
 
-// provideUserStore is a Wire provider function that provides a
-// user datastore, configured from the environment, with metrics
-// enabled.
-func provideUserStore(db *db.DB) core.UserStore {
-	users := user.New(db)
-	metric.UserCount(users)
-	return users
-}
-
 // provideBatchStore is a Wire provider function that provides a
 // batcher. If the experimental batcher is enabled it is returned.
 func provideBatchStore(db *db.DB, config config.Config) core.Batcher {
@@ -139,4 +147,33 @@ func provideBatchStore(db *db.DB, config config.Config) core.Batcher {
 		return batch.New(db)
 	}
 	return batch2.New(db)
+}
+
+// provideUserStore is a Wire provider function that provides a
+// user datastore, configured from the environment, with metrics
+// enabled.
+func provideUserStore(db *db.DB, enc encrypt.Encrypter, config config.Config) core.UserStore {
+	// create the user store with encryption iff the user
+	// encryption feature flag is enabled.
+	//
+	// why not enable by default?  because the user table is
+	// accessed on every http request and we are unsure what,
+	// if any performance implications user table encryption
+	// may have on the system.
+	//
+	// it is very possible there are zero material performance
+	// implications, however, if there is a performance regression
+	// we could look at implementing in-memory lru caching, which
+	// we already employ in other areas of the software.
+	if config.Database.EncryptUserTable {
+		logrus.Debugln("main: database encryption enabled for user table")
+		users := user.New(db, enc)
+		metric.UserCount(users)
+		return users
+	}
+
+	noenc, _ := encrypt.New("")
+	users := user.New(db, noenc)
+	metric.UserCount(users)
+	return users
 }

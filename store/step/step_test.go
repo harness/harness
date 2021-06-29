@@ -51,13 +51,16 @@ func TestStep(t *testing.T) {
 func testStepCreate(store *stepStore, stage *core.Stage) func(t *testing.T) {
 	return func(t *testing.T) {
 		item := &core.Step{
-			StageID:  stage.ID,
-			Number:   2,
-			Name:     "clone",
-			Status:   core.StatusRunning,
-			ExitCode: 0,
-			Started:  1522878684,
-			Stopped:  0,
+			StageID:   stage.ID,
+			Number:    2,
+			Name:      "clone",
+			Status:    core.StatusRunning,
+			ExitCode:  0,
+			Started:   1522878684,
+			Stopped:   0,
+			DependsOn: []string{"backend", "frontend"},
+			Image:     "ubuntu",
+			Detached:  false,
 		}
 		err := store.Create(noContext, item)
 		if err != nil {

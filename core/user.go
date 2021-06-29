@@ -47,6 +47,16 @@ type (
 		Hash      string `json:"-"`
 	}
 
+	// UserParams defines user query parameters.
+	UserParams struct {
+		// Sort instructs the system to sort by Login if true,
+		// else sort by primary key.
+		Sort bool
+
+		Page int64
+		Size int64
+	}
+
 	// UserStore defines operations for working with users.
 	UserStore interface {
 		// Find returns a user from the datastore.
@@ -60,6 +70,9 @@ type (
 
 		// List returns a list of users from the datastore.
 		List(context.Context) ([]*User, error)
+
+		// ListRange returns a range of users from the datastore.
+		ListRange(context.Context, UserParams) ([]*User, error)
 
 		// Create persists a new user to the datastore.
 		Create(context.Context, *User) error
@@ -88,13 +101,13 @@ type (
 	}
 )
 
-// Validate valides the user and returns an error if the
+// Validate validates the user and returns an error if the
 // validation fails.
 func (u *User) Validate() error {
 	switch {
 	case !govalidator.IsByteLength(u.Login, 1, 50):
 		return errUsernameLen
-	case !govalidator.Matches(u.Login, "^[a-zA-Z0-9_-]+$"):
+	case !govalidator.Matches(u.Login, "^[.a-zA-Z0-9_-]+$"):
 		return errUsernameChar
 	default:
 		return nil

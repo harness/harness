@@ -25,7 +25,7 @@ func init() {
 	logrus.SetOutput(ioutil.Discard)
 }
 
-func TestResitoryList(t *testing.T) {
+func TestRepositoryList(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
@@ -63,7 +63,7 @@ func TestResitoryList(t *testing.T) {
 	}
 }
 
-func TestResitoryListErr(t *testing.T) {
+func TestRepositoryListErr(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 

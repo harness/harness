@@ -147,7 +147,7 @@ func (q *queue) signal(ctx context.Context) error {
 			continue
 		}
 
-		// if the system defines concurrencly limits
+		// if the system defines concurrency limits
 		// per repository we need to make sure those limits
 		// are not exceeded before proceeding.
 		if shouldThrottle(item, items, item.LimitRepo) == true {
@@ -266,7 +266,8 @@ func withinLimits(stage *core.Stage, siblings []*core.Stage) bool {
 		if sibling.Name != stage.Name {
 			continue
 		}
-		if sibling.ID < stage.ID {
+		if sibling.ID < stage.ID ||
+			sibling.Status == core.StatusRunning {
 			count++
 		}
 	}
@@ -274,7 +275,7 @@ func withinLimits(stage *core.Stage, siblings []*core.Stage) bool {
 }
 
 func shouldThrottle(stage *core.Stage, siblings []*core.Stage, limit int) bool {
-	// if no throttle limit is defined (defualt) then
+	// if no throttle limit is defined (default) then
 	// return false to indicate no throttling is needed.
 	if limit == 0 {
 		return false

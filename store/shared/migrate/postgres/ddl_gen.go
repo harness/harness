@@ -152,6 +152,22 @@ var migrations = []struct {
 		name: "create-index-latest-repo",
 		stmt: createIndexLatestRepo,
 	},
+	{
+		name: "create-table-template",
+		stmt: createTableTemplate,
+	},
+	{
+		name: "alter-table-steps-add-column-step-depends-on",
+		stmt: alterTableStepsAddColumnStepDependsOn,
+	},
+	{
+		name: "alter-table-steps-add-column-step-image",
+		stmt: alterTableStepsAddColumnStepImage,
+	},
+	{
+		name: "alter-table-steps-add-column-step-detached",
+		stmt: alterTableStepsAddColumnStepDetached,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -245,8 +261,8 @@ CREATE TABLE IF NOT EXISTS users (
 ,user_created       INTEGER
 ,user_updated       INTEGER
 ,user_last_login    INTEGER
-,user_oauth_token   VARCHAR(500)
-,user_oauth_refresh VARCHAR(500)
+,user_oauth_token   BYTEA
+,user_oauth_refresh BYTEA
 ,user_oauth_expiry  INTEGER
 ,user_hash          VARCHAR(500)
 ,UNIQUE(user_login)
@@ -635,4 +651,38 @@ CREATE TABLE IF NOT EXISTS latest (
 
 var createIndexLatestRepo = `
 CREATE INDEX IF NOT EXISTS ix_latest_repo ON latest (latest_repo_id);
+`
+
+//
+// 016_create_template_tables.sql
+//
+
+var createTableTemplate = `
+CREATE TABLE IF NOT EXISTS templates (
+    template_id       SERIAL PRIMARY KEY
+    ,template_name    TEXT UNIQUE
+    ,template_namespace VARCHAR(50)
+    ,template_data    BYTEA
+    ,template_created INTEGER
+    ,template_updated INTEGER
+,UNIQUE(template_name, template_namespace)
+);
+
+CREATE INDEX IF NOT EXISTS ix_template_namespace ON templates (template_namespace);
+`
+
+//
+// 017_add_columns_steps.sql
+//
+
+var alterTableStepsAddColumnStepDependsOn = `
+ALTER TABLE steps ADD COLUMN step_depends_on TEXT NOT NULL DEFAULT '';
+`
+
+var alterTableStepsAddColumnStepImage = `
+ALTER TABLE steps ADD COLUMN step_image VARCHAR(1000) NOT NULL DEFAULT '';
+`
+
+var alterTableStepsAddColumnStepDetached = `
+ALTER TABLE steps ADD COLUMN step_detached BOOLEAN NOT NULL DEFAULT FALSE;
 `

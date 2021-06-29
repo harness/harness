@@ -14,6 +14,7 @@ import (
 	"github.com/drone/drone/store/repos"
 	"github.com/drone/drone/store/shared/db"
 	"github.com/drone/drone/store/shared/db/dbtest"
+	"github.com/drone/drone/store/shared/encrypt"
 	"github.com/drone/drone/store/user"
 )
 
@@ -389,7 +390,8 @@ func testBatchDuplicateRename(
 }
 
 func seedUser(db *db.DB) (*core.User, error) {
+	enc, _ := encrypt.New("")
 	out := &core.User{Login: "octocat"}
-	err := user.New(db).Create(noContext, out)
+	err := user.New(db, enc).Create(noContext, out)
 	return out, err
 }

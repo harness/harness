@@ -12,6 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package landingpage
+// +build oss
 
-//go:generate togo http -package landingpage -output dist_gen.go
+package converter
+
+import (
+	"context"
+
+	"github.com/drone/drone/core"
+)
+
+func Template(templateStore core.TemplateStore) core.ConvertService {
+	return &templatePlugin{
+		templateStore: templateStore,
+	}
+}
+
+type templatePlugin struct {
+	templateStore core.TemplateStore
+}
+
+func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Config, error) {
+	return nil, nil
+}

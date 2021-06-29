@@ -87,6 +87,7 @@ tasks:
       - cmd: go test -count=1 github.com/drone/drone/store/secret/global
       - cmd: go test -count=1 github.com/drone/drone/store/stage
       - cmd: go test -count=1 github.com/drone/drone/store/step
+      - cmd: go test -count=1 github.com/drone/drone/store/template
       - cmd: go test -count=1 github.com/drone/drone/store/user
       - cmd: docker kill mysql
 
@@ -120,6 +121,7 @@ tasks:
       - cmd: go test -count=1 github.com/drone/drone/store/secret/global
       - cmd: go test -count=1 github.com/drone/drone/store/stage
       - cmd: go test -count=1 github.com/drone/drone/store/step
+      - cmd: go test -count=1 github.com/drone/drone/store/template
       - cmd: go test -count=1 github.com/drone/drone/store/user
       - cmd: docker kill postgres
         silent: true

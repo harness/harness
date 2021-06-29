@@ -37,7 +37,7 @@ func Load(home, match string) ([]*Config, error) {
 		if err != nil {
 			return nil, err
 		}
-		// If no match logic is defined, the matchine is
+		// If no match logic is defined, the machine is
 		// automatically used as a build machine.
 		if match == "" {
 			machines = append(machines, conf)
