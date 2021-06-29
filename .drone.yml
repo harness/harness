@@ -9,12 +9,12 @@ platform:
 
 steps:
 - name: test
-  image: golang:1.14.4
+  image: golang:1.14.15
   commands:
   - go test ./...
   
 - name: build
-  image: golang:1.14.4
+  image: golang:1.14.15
   commands:
   - sh scripts/build.sh
   environment:
@@ -48,7 +48,7 @@ platform:
 
 steps:
 - name: build
-  image: golang:1.14.4
+  image: golang:1.14.15
   commands:
   - sh scripts/build.sh
   environment:
@@ -86,7 +86,7 @@ platform:
 
 steps:
 - name: build
-  image: golang:1.14.4
+  image: golang:1.14.15
   commands:
   - sh scripts/build.sh
   environment:
