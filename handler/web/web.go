@@ -97,6 +97,7 @@ func (s Server) Handler() http.Handler {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.NoCache)
 	r.Use(logger.Middleware)
+	r.Use(middleware.RedirectSlashes)
 
 	sec := secure.New(s.Options)
 	r.Use(sec.Handler)
