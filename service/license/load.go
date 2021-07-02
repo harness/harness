@@ -18,6 +18,7 @@
 package license
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/drone/drone/core"
@@ -77,5 +78,12 @@ func Load(path string) (*core.License, error) {
 	license.Licensor = decoded.Cus
 	license.Subscription = decoded.Sub
 	license.Users = int64(decoded.Lim)
+
+	if decoded.Dat != nil {
+		dat := new(core.License)
+		json.Unmarshal(decoded.Dat, dat)
+		license.Repos = dat.Repos
+	}
+
 	return license, err
 }
