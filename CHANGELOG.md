@@ -5,6 +5,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+## [2.0.3]
+### Fixed
+- dron-91 bug fix for double slashes in url. [#3009](https://github.com/drone/drone/pull/3099).
+
+## [2.0.2]
+### Added
+- Merge remote-tracking branch 'origin/master'
+- prevent repository list short circuit in UI
+- remove deprecated steps from building file [#3097](https://github.com/drone/drone/pull/3097)
+- adding depends_on, image and detached fields to step [#3072](https://github.com/drone/drone/pull/3072)
+- Add ctx.build.debug boolean [#3082](https://github.com/drone/drone/pull/3082)
+- Bump github.com/google/go-jsonnet to v0.17.0 [#3084](https://github.com/drone/drone/pull/3084)
+- bump go-scm v1.15.1 [#3096](https://github.com/drone/drone/pull/3096)
+- bitbucket server build issue [#3092](https://github.com/drone/drone/pull/3092)
+- update scm version [#3091](https://github.com/drone/drone/pull/3091)  
+- Limit graceful shutdown duration [#3093](https://github.com/drone/drone/pull/3093)  
+- bump user interface  
+- bump ui version
+- ignore skip directive for promote and rollback events
+- new feature: maximum open DB connections is configurable[#3089](https://github.com/drone/drone/pull/3089) 
+- jsonnet additional parameters [#3087](https://github.com/drone/drone/pull/3087)
+- hide login button if user already authenticated  
+- new feature: configuration templates [#3081](https://github.com/drone/drone/pull/3081)
+
+### Fixed
+- various typos [#3088](https://github.com/drone/drone/pull/3088)
+- handle error properly if template doesn't exist [#3095](https://github.com/drone/drone/pull/3093)
+- oss build issue [#3086](https://github.com/drone/drone/pull/3086)
+- graceful shutdown [#3083](https://github.com/drone/drone/pull/3083)
 
 ## [2.0.1]
 ### Added
