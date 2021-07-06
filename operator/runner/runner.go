@@ -222,6 +222,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 		}
 		if v.Name == m.Stage.Name {
 			pipeline = v
+			break
 		}
 	}
 	if pipeline == nil {
