@@ -5,9 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [2.0.4]
+### Fixed
+- DRON-97 remove use of request animation frame to prevent high CPU on tab refocus events.
+
 ## [2.0.3]
 ### Fixed
-- dron-91 bug fix for double slashes in url. [#3009](https://github.com/drone/drone/pull/3099).
+- DONE-91 handle extra slashes in url. [#3009](https://github.com/drone/drone/pull/3099).
 
 ## [2.0.2]
 ### Added
