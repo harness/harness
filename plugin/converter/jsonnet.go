@@ -19,14 +19,18 @@ import (
 
 // Jsonnet returns a conversion service that converts the
 // jsonnet file to a yaml file.
-func Jsonnet(enabled bool) core.ConvertService {
+func Jsonnet(enabled bool, limit int, fileService core.FileService) core.ConvertService {
 	return &jsonnetPlugin{
-		enabled: enabled,
+		enabled:     enabled,
+		limit:       limit,
+		fileService: fileService,
 	}
 }
 
 type jsonnetPlugin struct {
-	enabled bool
+	enabled     bool
+	limit       int
+	fileService core.FileService
 }
 
 func (p *jsonnetPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Config, error) {
@@ -40,7 +44,7 @@ func (p *jsonnetPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*co
 		return nil, nil
 	}
 
-	file, err := jsonnet.Parse(req, nil, nil)
+	file, err := jsonnet.Parse(req, p.fileService, p.limit, nil, nil)
 
 	if err != nil {
 		return nil, err

@@ -70,7 +70,7 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	fileService := provideContentService(client, renewer)
 	configService := provideConfigPlugin(client, fileService, config2)
 	templateStore := template.New(db)
-	convertService := provideConvertPlugin(client, config2, templateStore)
+	convertService := provideConvertPlugin(client, fileService, config2, templateStore)
 	validateService := provideValidatePlugin(config2)
 	triggerer := trigger.New(coreCanceler, configService, convertService, commitService, statusService, buildStore, scheduler, repositoryStore, userStore, validateService, webhookSender)
 	cronScheduler := cron2.New(commitService, cronStore, repositoryStore, userStore, triggerer)

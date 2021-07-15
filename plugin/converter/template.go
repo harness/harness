@@ -112,7 +112,7 @@ func parseYaml(req *core.ConvertArgs, template *core.Template, templateArgs core
 }
 
 func parseJsonnet(req *core.ConvertArgs, template *core.Template, templateArgs core.TemplateArgs) (*core.Config, error) {
-	file, err := jsonnet.Parse(req, template, templateArgs.Data)
+	file, err := jsonnet.Parse(req, nil, 0, template, templateArgs.Data)
 	if err != nil {
 		return nil, err
 	}
