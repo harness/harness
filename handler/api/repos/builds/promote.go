@@ -76,10 +76,6 @@ func HandlePromote(
 			Params:       map[string]string{},
 		}
 
-		for k, v := range prev.Params {
-			hook.Params[k] = v
-		}
-
 		for key, value := range r.URL.Query() {
 			if key == "access_token" {
 				continue
