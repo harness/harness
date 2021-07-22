@@ -18,7 +18,7 @@ func TestBus(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	p := New()
+	p := newHub()
 	events, errc := p.Subscribe(ctx)
 
 	if got, want := p.Subscribers(), 1; got != want {
