@@ -55,7 +55,14 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	cronStore := cron.New(db)
 	repositoryStore := provideRepoStore(db)
 	buildStore := provideBuildStore(db)
-	corePubsub := pubsub.New()
+	redisClient, err := provideRedisClient(config2)
+	if err != nil {
+		return application{}, err
+	}
+	corePubsub, err := pubsub.New(redisClient)
+	if err != nil {
+		return application{}, err
+	}
 	stageStore := provideStageStore(db)
 	scheduler := provideScheduler(stageStore, config2)
 	statusService := provideStatusService(client, renewer, config2)

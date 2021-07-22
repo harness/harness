@@ -63,6 +63,7 @@ type (
 		Logging      Logging
 		Prometheus   Prometheus
 		Proxy        Proxy
+		Redis        Redis
 		Registration Registration
 		Registries   Registries
 		Repository   Repository
@@ -164,6 +165,11 @@ type (
 	// Prometheus provides the prometheus configuration.
 	Prometheus struct {
 		EnableAnonymousAccess bool `envconfig:"DRONE_PROMETHEUS_ANONYMOUS_ACCESS" default:"false"`
+	}
+
+	// Redis provides the redis configuration.
+	Redis struct {
+		ConnectionString string `envconfig:"DRONE_REDIS_CONNECTION"`
 	}
 
 	// Repository provides the repository configuration.

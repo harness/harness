@@ -27,8 +27,8 @@ type hub struct {
 	subs map[*subscriber]struct{}
 }
 
-// New creates a new publish subscriber.
-func New() core.Pubsub {
+// newHub creates a new publish subscriber.
+func newHub() core.Pubsub {
 	return &hub{
 		subs: map[*subscriber]struct{}{},
 	}
