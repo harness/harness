@@ -21,7 +21,13 @@ func TestBus(t *testing.T) {
 	p := newHub()
 	events, errc := p.Subscribe(ctx)
 
-	if got, want := p.Subscribers(), 1; got != want {
+	got, err := p.Subscribers()
+	if err != nil {
+		t.Errorf("Test failed with an error: %s", err.Error())
+		return
+	}
+
+	if want := 1; got != want {
 		t.Errorf("Want %d subscribers, got %d", want, got)
 	}
 

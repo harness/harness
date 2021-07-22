@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/drone/drone/core"
@@ -68,18 +69,22 @@ func (h *hubRedis) Subscribe(ctx context.Context) (<-chan *core.Message, <-chan 
 		for {
 			select {
 			case m, ok := <-ch:
-				if ok {
-					message := &core.Message{}
-					err = json.Unmarshal([]byte(m.Payload), message)
-					if err != nil {
-						fmt.Printf("error@pubsub: failed to unmarshal a message. %s\n", err)
-						continue
-					}
-					messageCh <- message
-				} else {
+				if !ok {
 					errCh <- fmt.Errorf("redis pubsub channel=%s closed", channelPubSub)
 					return
 				}
+
+				message := &core.Message{}
+				err = json.Unmarshal([]byte(m.Payload), message)
+				if err != nil {
+					// This is a "should not happen" situation,
+					// because messages are encoded as json above in Publish().
+					_, _ = fmt.Fprintf(os.Stderr, "error@pubsub: failed to unmarshal a message. %s\n", err)
+					continue
+				}
+
+				messageCh <- message
+
 			case <-ctx.Done():
 				return
 			}
@@ -89,26 +94,39 @@ func (h *hubRedis) Subscribe(ctx context.Context) (<-chan *core.Message, <-chan 
 	return messageCh, errCh
 }
 
-func (h *hubRedis) Subscribers() int {
+func (h *hubRedis) Subscribers() (int, error) {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFunc()
 
 	v, err := h.rdb.Do(ctx, "pubsub", "numsub", channelPubSub).Result()
 	if err != nil {
-		fmt.Printf("error@pubsub: failed to get number of subscribers. %s\n", err)
-		return -1
+		err = fmt.Errorf("error@pubsub: failed to get number of subscribers. %w", err)
+		return 0, err
 	}
 
-	values, ok := v.([]interface{}) // the result should be: [<channel name, string>, <subscriber count, int64>]
+	values, ok := v.([]interface{}) // the result should be: [<channel_name:string>, <subscriber_count:int64>]
 	if !ok || len(values) != 2 {
-		return 0
+		err = fmt.Errorf("error@pubsub: failed to extarct number of subscribers from: %v", values)
+		return 0, err
 	}
 
-	if subscriberCount, ok := values[1].(int64); ok {
-		return int(subscriberCount)
+	switch n := values[1].(type) {
+	case int:
+		return n, nil
+	case uint:
+		return int(n), nil
+	case int32:
+		return int(n), nil
+	case uint32:
+		return int(n), nil
+	case int64:
+		return int(n), nil
+	case uint64:
+		return int(n), nil
+	default:
+		err = fmt.Errorf("error@pubsub: unsupported type for number of subscribers: %T", values[1])
+		return 0, err
 	}
-
-	return 0
 }
 
 func newRedis(rdb *redis.Client) (ps core.Pubsub, err error) {
