@@ -94,7 +94,10 @@ func Parse(req *core.ConvertArgs, template *core.Template, templateData map[stri
 
 	// create the input args and invoke the main method
 	// using the input args.
-	args := createArgs(req.Repo, req.Build, templateData)
+	args, err := createArgs(req.Repo, req.Build, templateData)
+	if err != nil {
+		return "", err
+	}
 
 	// set the maximum number of operations in the script. this
 	// mitigates long running scripts.
