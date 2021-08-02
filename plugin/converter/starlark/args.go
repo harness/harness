@@ -25,12 +25,6 @@ import (
 	"go.starlark.net/starlarkstruct"
 )
 
-type GoSlice struct {
-	v      reflect.Value
-	numIt  int
-	frozen bool
-}
-
 func createArgs(repo *core.Repository, build *core.Build, input map[string]interface{}) ([]starlark.Value, error) {
 	inputArgs, err := fromInput(input)
 	if err != nil {
