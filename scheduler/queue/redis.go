@@ -64,13 +64,11 @@ func (c *redisCanceller) Cancelled(ctx context.Context, id int64) (isCancelled b
 
 	result, err := c.rdb.Get(ctx, redisCancelValuePrefix+ids).Result()
 	if err != nil && err != redis.Nil {
-		fmt.Println("GOT AN ERROR", err.Error()) //////////////////////////////////////////////////////
 		return
 	}
 
 	isCancelled = err != redis.Nil && result == redisCancelValue
 	if isCancelled {
-		fmt.Println("BUILD IS CANCELED", result) ////////////////////////////////////////////////
 		return
 	}
 
@@ -109,11 +107,8 @@ func (c *redisCanceller) Cancelled(ctx context.Context, id int64) (isCancelled b
 				}
 
 				if id == idMessage {
-					fmt.Println("BUILD HAS JUST BEEN CANCELED", m.Payload) ////////////////////////////////////////////////
 					chResult <- true
-				} else { //////////////////////
-					fmt.Println("SOMETHING ELSE IS CANCELLED", m.Payload) ////////////////////////////////////////////////
-				} /////////////////////////////
+				}
 
 			case <-ctx.Done():
 				return
