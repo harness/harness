@@ -16,10 +16,9 @@ package starlark
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/drone/drone/core"
-
-	"reflect"
 
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
