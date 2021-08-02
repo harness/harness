@@ -59,10 +59,7 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	if err != nil {
 		return application{}, err
 	}
-	corePubsub, err := pubsub.New(redisClient)
-	if err != nil {
-		return application{}, err
-	}
+	corePubsub := pubsub.New(redisClient)
 	stageStore := provideStageStore(db)
 	scheduler := provideScheduler(stageStore, config2)
 	statusService := provideStatusService(client, renewer, config2)
@@ -81,7 +78,7 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	coreLicense := provideLicense(client, config2)
 	datadog := provideDatadog(userStore, repositoryStore, buildStore, system, coreLicense, config2)
 	logStore := provideLogStore(db, config2)
-	logStream := livelog.New()
+	logStream := livelog.New(redisClient)
 	netrcService := provideNetrcService(client, renewer, config2)
 	secretStore := secret.New(db, encrypter)
 	globalSecretStore := global.New(db, encrypter)

@@ -26,6 +26,12 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+func newRedis(rdb *redis.Client) core.Pubsub {
+	return &hubRedis{
+		rdb: rdb,
+	}
+}
+
 const channelPubSub = "drone-events"
 
 type hubRedis struct {
@@ -70,7 +76,7 @@ func (h *hubRedis) Subscribe(ctx context.Context) (<-chan *core.Message, <-chan 
 			select {
 			case m, ok := <-ch:
 				if !ok {
-					errCh <- fmt.Errorf("redis pubsub channel=%s closed", channelPubSub)
+					errCh <- fmt.Errorf("pubsub/redis: channel=%s closed", channelPubSub)
 					return
 				}
 
@@ -79,7 +85,7 @@ func (h *hubRedis) Subscribe(ctx context.Context) (<-chan *core.Message, <-chan 
 				if err != nil {
 					// This is a "should not happen" situation,
 					// because messages are encoded as json above in Publish().
-					_, _ = fmt.Fprintf(os.Stderr, "error@pubsub: failed to unmarshal a message. %s\n", err)
+					_, _ = fmt.Fprintf(os.Stderr, "pubsub/redis: failed to unmarshal a message. %s\n", err)
 					continue
 				}
 
@@ -100,13 +106,13 @@ func (h *hubRedis) Subscribers() (int, error) {
 
 	v, err := h.rdb.Do(ctx, "pubsub", "numsub", channelPubSub).Result()
 	if err != nil {
-		err = fmt.Errorf("error@pubsub: failed to get number of subscribers. %w", err)
+		err = fmt.Errorf("pubsub/redis: failed to get number of subscribers. %w", err)
 		return 0, err
 	}
 
 	values, ok := v.([]interface{}) // the result should be: [<channel_name:string>, <subscriber_count:int64>]
 	if !ok || len(values) != 2 {
-		err = fmt.Errorf("error@pubsub: failed to extarct number of subscribers from: %v", values)
+		err = fmt.Errorf("pubsub/redis: failed to extarct number of subscribers from: %v", values)
 		return 0, err
 	}
 
@@ -124,21 +130,7 @@ func (h *hubRedis) Subscribers() (int, error) {
 	case uint64:
 		return int(n), nil
 	default:
-		err = fmt.Errorf("error@pubsub: unsupported type for number of subscribers: %T", values[1])
+		err = fmt.Errorf("pubsub/redis: unsupported type for number of subscribers: %T", values[1])
 		return 0, err
 	}
-}
-
-func newRedis(rdb *redis.Client) (ps core.Pubsub, err error) {
-	_, err = rdb.Ping(context.Background()).Result()
-	if err != nil {
-		err = fmt.Errorf("redis not accessibe: %w", err)
-		return
-	}
-
-	ps = &hubRedis{
-		rdb: rdb,
-	}
-
-	return
 }

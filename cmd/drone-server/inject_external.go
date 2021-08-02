@@ -12,20 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pubsub
+package main
 
 import (
-	"github.com/drone/drone/core"
+	"context"
+	"fmt"
+
+	"github.com/drone/drone/cmd/drone-server/config"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/google/wire"
 )
 
-// New creates a new publish subscriber. If Redis client passed as parameter is not nil it uses
-// a Redis implementation, otherwise it uses an in-memory implementation.
-func New(rdb *redis.Client) core.Pubsub {
-	if rdb != nil {
-		return newRedis(rdb)
+// wire set for loading the external services.
+var externalSet = wire.NewSet(
+	provideRedisClient,
+)
+
+func provideRedisClient(config config.Config) (rdb *redis.Client, err error) {
+	if config.Redis.ConnectionString == "" {
+		return
 	}
 
-	return newHub()
+	options, err := redis.ParseURL(config.Redis.ConnectionString)
+	if err != nil {
+		return
+	}
+
+	rdb = redis.NewClient(options)
+
+	_, err = rdb.Ping(context.Background()).Result()
+	if err != nil {
+		err = fmt.Errorf("redis not accessibe: %w", err)
+		return
+	}
+
+	return
 }

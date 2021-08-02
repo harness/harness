@@ -34,7 +34,6 @@ import (
 	"github.com/drone/drone/store/template"
 	"github.com/drone/drone/store/user"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 	"github.com/sirupsen/logrus"
 )
@@ -56,7 +55,6 @@ var storeSet = wire.NewSet(
 	global.New,
 	step.New,
 	template.New,
-	provideRedisClient,
 )
 
 // provideDatabase is a Wire provider function that provides a
@@ -178,19 +176,4 @@ func provideUserStore(db *db.DB, enc encrypt.Encrypter, config config.Config) co
 	users := user.New(db, noenc)
 	metric.UserCount(users)
 	return users
-}
-
-func provideRedisClient(config config.Config) (rdb *redis.Client, err error) {
-	if config.Redis.ConnectionString == "" {
-		return
-	}
-
-	options, err := redis.ParseURL(config.Redis.ConnectionString)
-	if err != nil {
-		return
-	}
-
-	rdb = redis.NewClient(options)
-
-	return
 }

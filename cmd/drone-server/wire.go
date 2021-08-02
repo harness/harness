@@ -32,6 +32,7 @@ func InitializeApplication(config config.Config) (application, error) {
 		serverSet,
 		serviceSet,
 		storeSet,
+		externalSet,
 		newApplication,
 	)
 	return application{}, nil
