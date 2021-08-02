@@ -237,3 +237,65 @@ func TestTemplatePluginConvertJsonnet(t *testing.T) {
 		t.Errorf("Want %q got %q", want, got)
 	}
 }
+
+func TestTemplateNestedValuesPluginConvertStarlark(t *testing.T) {
+	templateArgs, err := ioutil.ReadFile("testdata/starlark-nested.template.yml")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	req := &core.ConvertArgs{
+		Build: &core.Build{
+			After: "3d21ec53a331a6f037a91c368710b99387d012c1",
+		},
+		Repo: &core.Repository{
+			Slug:      "octocat/hello-world",
+			Config:    ".drone.yml",
+			Namespace: "octocat",
+		},
+		Config: &core.Config{
+			Data: string(templateArgs),
+		},
+	}
+
+	beforeInput, err := ioutil.ReadFile("testdata/starlark.input-nested.star")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	after, err := ioutil.ReadFile("testdata/starlark.input-nested.star.golden")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	template := &core.Template{
+		Name:      "test.nested.starlark",
+		Data:      string(beforeInput),
+		Namespace: "octocat",
+	}
+
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	templates := mock.NewMockTemplateStore(controller)
+	templates.EXPECT().FindName(gomock.Any(), template.Name, req.Repo.Namespace).Return(template, nil)
+
+	plugin := Template(templates)
+	config, err := plugin.Convert(noContext, req)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if config == nil {
+		t.Error("Want non-nil configuration")
+		return
+	}
+
+	if want, got := config.Data, string(after); want != got {
+		t.Errorf("Want %q got %q", want, got)
+	}
+}

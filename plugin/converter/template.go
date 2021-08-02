@@ -70,6 +70,7 @@ func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 	if err != nil {
 		return nil, err
 	}
+
 	// Check if file is of type Starlark
 	if strings.HasSuffix(templateArgs.Load, ".script") ||
 		strings.HasSuffix(templateArgs.Load, ".star") ||
