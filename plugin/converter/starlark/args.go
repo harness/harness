@@ -25,6 +25,23 @@ import (
 	"go.starlark.net/starlarkstruct"
 )
 
+// TODO(bradrydzewski) add repository id
+// TODO(bradrydzewski) add repository timeout
+// TODO(bradrydzewski) add repository counter
+// TODO(bradrydzewski) add repository created
+// TODO(bradrydzewski) add repository updated
+// TODO(bradrydzewski) add repository synced
+// TODO(bradrydzewski) add repository version
+
+// TODO(bradrydzewski) add build id, will always be zero value
+// TODO(bradrydzewski) add build number, will always be zero value
+// TODO(bradrydzewski) add build started, will always be zero value
+// TODO(bradrydzewski) add build finished, will always be zero value
+// TODO(bradrydzewski) add build created, will always be zero value
+// TODO(bradrydzewski) add build updated, will always be zero value
+// TODO(bradrydzewski) add build parent
+// TODO(bradrydzewski) add build timestamp
+
 func createArgs(repo *core.Repository, build *core.Build, input map[string]interface{}) ([]starlark.Value, error) {
 	inputArgs, err := fromInput(input)
 	if err != nil {
