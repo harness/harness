@@ -15,10 +15,10 @@
 package main
 
 import (
-	"github.com/drone/drone/cmd/drone-server/config"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/scheduler/queue"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 )
 
@@ -29,6 +29,6 @@ var schedulerSet = wire.NewSet(
 
 // provideScheduler is a Wire provider function that returns a
 // scheduler based on the environment configuration.
-func provideScheduler(store core.StageStore, config config.Config) core.Scheduler {
-	return queue.New(store)
+func provideScheduler(store core.StageStore, rdb *redis.Client) core.Scheduler {
+	return queue.New(store, rdb)
 }

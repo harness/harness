@@ -61,7 +61,7 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	}
 	corePubsub := pubsub.New(redisClient)
 	stageStore := provideStageStore(db)
-	scheduler := provideScheduler(stageStore, config2)
+	scheduler := provideScheduler(stageStore, redisClient)
 	statusService := provideStatusService(client, renewer, config2)
 	stepStore := step.New(db)
 	system := provideSystem(config2)

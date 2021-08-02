@@ -27,12 +27,10 @@ import (
 )
 
 func newRedis(rdb *redis.Client) core.Pubsub {
-	return &hubRedis{
-		rdb: rdb,
-	}
+	return &hubRedis{rdb: rdb}
 }
 
-const channelPubSub = "drone-events"
+const redisPubSubEvents = "drone-events"
 
 type hubRedis struct {
 	rdb *redis.Client
@@ -44,7 +42,7 @@ func (h *hubRedis) Publish(ctx context.Context, e *core.Message) (err error) {
 		return
 	}
 
-	_, err = h.rdb.Publish(ctx, channelPubSub, data).Result()
+	_, err = h.rdb.Publish(ctx, redisPubSubEvents, data).Result()
 	if err != nil {
 		return
 	}
@@ -53,22 +51,22 @@ func (h *hubRedis) Publish(ctx context.Context, e *core.Message) (err error) {
 }
 
 func (h *hubRedis) Subscribe(ctx context.Context) (<-chan *core.Message, <-chan error) {
-	messageCh := make(chan *core.Message, 100)
-	errCh := make(chan error)
+	chMessage := make(chan *core.Message, 100)
+	chErr := make(chan error)
 
 	go func() {
-		pubsub := h.rdb.Subscribe(ctx, channelPubSub)
+		pubsub := h.rdb.Subscribe(ctx, redisPubSubEvents)
 		ch := pubsub.Channel(redis.WithChannelSize(100))
 
 		defer func() {
 			_ = pubsub.Close()
-			close(messageCh)
-			close(errCh)
+			close(chMessage)
+			close(chErr)
 		}()
 
 		err := pubsub.Ping(ctx)
 		if err != nil {
-			errCh <- err
+			chErr <- err
 			return
 		}
 
@@ -76,7 +74,7 @@ func (h *hubRedis) Subscribe(ctx context.Context) (<-chan *core.Message, <-chan 
 			select {
 			case m, ok := <-ch:
 				if !ok {
-					errCh <- fmt.Errorf("pubsub/redis: channel=%s closed", channelPubSub)
+					chErr <- fmt.Errorf("pubsub/redis: channel=%s closed", redisPubSubEvents)
 					return
 				}
 
@@ -89,7 +87,7 @@ func (h *hubRedis) Subscribe(ctx context.Context) (<-chan *core.Message, <-chan 
 					continue
 				}
 
-				messageCh <- message
+				chMessage <- message
 
 			case <-ctx.Done():
 				return
@@ -97,14 +95,14 @@ func (h *hubRedis) Subscribe(ctx context.Context) (<-chan *core.Message, <-chan 
 		}
 	}()
 
-	return messageCh, errCh
+	return chMessage, chErr
 }
 
 func (h *hubRedis) Subscribers() (int, error) {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFunc()
 
-	v, err := h.rdb.Do(ctx, "pubsub", "numsub", channelPubSub).Result()
+	v, err := h.rdb.Do(ctx, "pubsub", "numsub", redisPubSubEvents).Result()
 	if err != nil {
 		err = fmt.Errorf("pubsub/redis: failed to get number of subscribers. %w", err)
 		return 0, err
