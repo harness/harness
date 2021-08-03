@@ -15,6 +15,7 @@
 package converter
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"testing"
 
@@ -239,6 +240,16 @@ func TestTemplatePluginConvertJsonnet(t *testing.T) {
 }
 
 func TestTemplateNestedValuesPluginConvertStarlark(t *testing.T) {
+	type Pipeline struct {
+		Kind  string `json:"kind"`
+		Name  string `json:"name"`
+		Steps []struct {
+			Name     string   `json:"name"`
+			Image    string   `json:"image"`
+			Commands []string `json:"commands"`
+		} `json:"steps"`
+	}
+
 	templateArgs, err := ioutil.ReadFile("testdata/starlark-nested.template.yml")
 	if err != nil {
 		t.Error(err)
@@ -294,8 +305,24 @@ func TestTemplateNestedValuesPluginConvertStarlark(t *testing.T) {
 		t.Error("Want non-nil configuration")
 		return
 	}
+	result := Pipeline{}
+	err = json.Unmarshal(after, &result)
+	beforeConfig := Pipeline{}
+	err = json.Unmarshal([]byte(config.Data), &beforeConfig)
 
-	if want, got := config.Data, string(after); want != got {
+	if want, got := beforeConfig.Name, result.Name; want != got {
+		t.Errorf("Want %q got %q", want, got)
+	}
+	if want, got := beforeConfig.Kind, result.Kind; want != got {
+		t.Errorf("Want %q got %q", want, got)
+	}
+	if want, got := beforeConfig.Steps[0].Name, result.Steps[0].Name; want != got {
+		t.Errorf("Want %q got %q", want, got)
+	}
+	if want, got := beforeConfig.Steps[0].Commands[0], result.Steps[0].Commands[0]; want != got {
+		t.Errorf("Want %q got %q", want, got)
+	}
+	if want, got := beforeConfig.Steps[0].Image, result.Steps[0].Image; want != got {
 		t.Errorf("Want %q got %q", want, got)
 	}
 }
