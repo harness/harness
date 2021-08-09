@@ -12,19 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// +build !oss
+
 package pubsub
 
 import (
 	"github.com/drone/drone/core"
-
-	"github.com/go-redis/redis/v8"
+	"github.com/drone/drone/service/redisdb"
 )
 
 // New creates a new publish subscriber. If Redis client passed as parameter is not nil it uses
 // a Redis implementation, otherwise it uses an in-memory implementation.
-func New(rdb *redis.Client) core.Pubsub {
-	if rdb != nil {
-		return newRedis(rdb)
+func New(r redisdb.RedisDB) core.Pubsub {
+	if r != nil {
+		return newHubRedis(r)
 	}
 
 	return newHub()

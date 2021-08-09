@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// +build !oss
+
 package livelog
 
 import (
@@ -22,13 +24,14 @@ import (
 	"time"
 
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/service/redisdb"
 
 	"github.com/go-redis/redis/v8"
 )
 
-func newRedis(rdb *redis.Client) core.LogStream {
-	return &redisStream{
-		client: rdb,
+func newStreamRedis(r redisdb.RedisDB) core.LogStream {
+	return streamRedis{
+		rdb: r,
 	}
 }
 
@@ -40,18 +43,20 @@ const (
 	redisStreamPrefix  = "drone-log-"
 )
 
-type redisStream struct {
-	client redis.Cmdable
+type streamRedis struct {
+	rdb redisdb.RedisDB
 }
 
 // Create creates a redis stream and sets an expiry on it.
-func (r *redisStream) Create(ctx context.Context, id int64) error {
+func (r streamRedis) Create(ctx context.Context, id int64) error {
 	// Delete if a stream already exists with the same key
 	_ = r.Delete(ctx, id)
 
+	client := r.rdb.Client()
+
 	key := redisStreamPrefix + strconv.FormatInt(id, 10)
 
-	addResp := r.client.XAdd(ctx, &redis.XAddArgs{
+	addResp := client.XAdd(ctx, &redis.XAddArgs{
 		Stream: key,
 		ID:     "*", // auto-generate a unique incremental ID
 		MaxLen: bufferSize,
@@ -62,7 +67,7 @@ func (r *redisStream) Create(ctx context.Context, id int64) error {
 		return fmt.Errorf("livelog/redis: could not create stream with key %s", key)
 	}
 
-	res := r.client.Expire(ctx, key, redisKeyExpiryTime)
+	res := client.Expire(ctx, key, redisKeyExpiryTime)
 	if err := res.Err(); err != nil {
 		return fmt.Errorf("livelog/redis: could not set expiry for key %s", key)
 	}
@@ -71,14 +76,16 @@ func (r *redisStream) Create(ctx context.Context, id int64) error {
 }
 
 // Delete deletes a stream
-func (r *redisStream) Delete(ctx context.Context, id int64) error {
+func (r streamRedis) Delete(ctx context.Context, id int64) error {
+	client := r.rdb.Client()
+
 	key := redisStreamPrefix + strconv.FormatInt(id, 10)
 
 	if err := r._exists(ctx, key); err != nil {
 		return err
 	}
 
-	deleteResp := r.client.Del(ctx, key)
+	deleteResp := client.Del(ctx, key)
 	if err := deleteResp.Err(); err != nil {
 		return fmt.Errorf("livelog/redis: could not delete stream for step %d", id)
 	}
@@ -87,7 +94,9 @@ func (r *redisStream) Delete(ctx context.Context, id int64) error {
 }
 
 // Write writes information into the Redis stream
-func (r *redisStream) Write(ctx context.Context, id int64, line *core.Line) error {
+func (r streamRedis) Write(ctx context.Context, id int64, line *core.Line) error {
+	client := r.rdb.Client()
+
 	key := redisStreamPrefix + strconv.FormatInt(id, 10)
 
 	if err := r._exists(ctx, key); err != nil {
@@ -95,7 +104,7 @@ func (r *redisStream) Write(ctx context.Context, id int64, line *core.Line) erro
 	}
 
 	lineJsonData, _ := json.Marshal(line)
-	addResp := r.client.XAdd(ctx, &redis.XAddArgs{
+	addResp := client.XAdd(ctx, &redis.XAddArgs{
 		Stream: key,
 		ID:     "*", // auto-generate a unique incremental ID
 		MaxLen: bufferSize,
@@ -110,7 +119,9 @@ func (r *redisStream) Write(ctx context.Context, id int64, line *core.Line) erro
 }
 
 // Tail returns back all the lines in the stream.
-func (r *redisStream) Tail(ctx context.Context, id int64) (<-chan *core.Line, <-chan error) {
+func (r streamRedis) Tail(ctx context.Context, id int64) (<-chan *core.Line, <-chan error) {
+	client := r.rdb.Client()
+
 	key := redisStreamPrefix + strconv.FormatInt(id, 10)
 
 	if err := r._exists(ctx, key); err != nil {
@@ -135,7 +146,7 @@ func (r *redisStream) Tail(ctx context.Context, id int64) (<-chan *core.Line, <-
 			case <-timeout:
 				return
 			default:
-				readResp := r.client.XRead(ctx, &redis.XReadArgs{
+				readResp := client.XRead(ctx, &redis.XReadArgs{
 					Streams: append([]string{key}, lastID),
 					Block:   redisPollTime, // periodically check for ctx.Done
 				})
@@ -171,12 +182,14 @@ func (r *redisStream) Tail(ctx context.Context, id int64) (<-chan *core.Line, <-
 }
 
 // Info returns info about log streams present in redis
-func (r *redisStream) Info(ctx context.Context) (info *core.LogStreamInfo) {
+func (r streamRedis) Info(ctx context.Context) (info *core.LogStreamInfo) {
+	client := r.rdb.Client()
+
 	info = &core.LogStreamInfo{
 		Streams: make(map[int64]int),
 	}
 
-	keysResp := r.client.Keys(ctx, redisStreamPrefix+"*")
+	keysResp := client.Keys(ctx, redisStreamPrefix+"*")
 	if err := keysResp.Err(); err != nil {
 		return
 	}
@@ -188,7 +201,7 @@ func (r *redisStream) Info(ctx context.Context) (info *core.LogStreamInfo) {
 			continue
 		}
 
-		lenResp := r.client.XLen(ctx, key)
+		lenResp := client.XLen(ctx, key)
 		if err := lenResp.Err(); err != nil {
 			continue
 		}
@@ -201,8 +214,10 @@ func (r *redisStream) Info(ctx context.Context) (info *core.LogStreamInfo) {
 	return
 }
 
-func (r *redisStream) _exists(ctx context.Context, key string) error {
-	exists := r.client.Exists(ctx, key)
+func (r streamRedis) _exists(ctx context.Context, key string) error {
+	client := r.rdb.Client()
+
+	exists := client.Exists(ctx, key)
 	if exists.Err() != nil || exists.Val() == 0 {
 		return fmt.Errorf("livelog/redis: log stream %s not found", key)
 	}

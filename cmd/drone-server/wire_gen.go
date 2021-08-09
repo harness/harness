@@ -55,13 +55,13 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	cronStore := cron.New(db)
 	repositoryStore := provideRepoStore(db)
 	buildStore := provideBuildStore(db)
-	redisClient, err := provideRedisClient(config2)
+	redisDB, err := provideRedisClient(config2)
 	if err != nil {
 		return application{}, err
 	}
-	corePubsub := pubsub.New(redisClient)
+	corePubsub := pubsub.New(redisDB)
 	stageStore := provideStageStore(db)
-	scheduler := provideScheduler(stageStore, redisClient)
+	scheduler := provideScheduler(stageStore, redisDB)
 	statusService := provideStatusService(client, renewer, config2)
 	stepStore := step.New(db)
 	system := provideSystem(config2)
@@ -78,7 +78,7 @@ func InitializeApplication(config2 config.Config) (application, error) {
 	coreLicense := provideLicense(client, config2)
 	datadog := provideDatadog(userStore, repositoryStore, buildStore, system, coreLicense, config2)
 	logStore := provideLogStore(db, config2)
-	logStream := livelog.New(redisClient)
+	logStream := livelog.New(redisDB)
 	netrcService := provideNetrcService(client, renewer, config2)
 	secretStore := secret.New(db, encrypter)
 	globalSecretStore := global.New(db, encrypter)

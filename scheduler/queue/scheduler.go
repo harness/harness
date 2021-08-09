@@ -1,4 +1,4 @@
-// Copyright 2019 Drone IO, Inc.
+// Copyright 2021 Drone IO, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,6 @@ package queue
 import (
 	"context"
 	"errors"
-
-	"github.com/drone/drone/core"
-
-	"github.com/go-redis/redis/v8"
 )
 
 type scheduler struct {
@@ -28,30 +24,6 @@ type scheduler struct {
 	*canceller
 }
 
-type redisScheduler struct {
-	*queue
-	*redisCanceller
-}
-
-// New creates a new scheduler.
-func New(store core.StageStore, rdb *redis.Client) core.Scheduler {
-	if rdb != nil {
-		return redisScheduler{
-			queue:          newQueue(store),
-			redisCanceller: newRedisCanceller(rdb),
-		}
-	}
-
-	return scheduler{
-		queue:     newQueue(store),
-		canceller: newCanceller(),
-	}
-}
-
 func (d scheduler) Stats(context.Context) (interface{}, error) {
-	return nil, errors.New("not implemented")
-}
-
-func (d redisScheduler) Stats(context.Context) (interface{}, error) {
 	return nil, errors.New("not implemented")
 }

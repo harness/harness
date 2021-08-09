@@ -15,12 +15,9 @@
 package main
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/drone/drone/cmd/drone-server/config"
+	"github.com/drone/drone/service/redisdb"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 )
 
@@ -29,23 +26,6 @@ var externalSet = wire.NewSet(
 	provideRedisClient,
 )
 
-func provideRedisClient(config config.Config) (rdb *redis.Client, err error) {
-	if config.Redis.ConnectionString == "" {
-		return
-	}
-
-	options, err := redis.ParseURL(config.Redis.ConnectionString)
-	if err != nil {
-		return
-	}
-
-	rdb = redis.NewClient(options)
-
-	_, err = rdb.Ping(context.Background()).Result()
-	if err != nil {
-		err = fmt.Errorf("redis not accessibe: %w", err)
-		return
-	}
-
-	return
+func provideRedisClient(config config.Config) (rdb redisdb.RedisDB, err error) {
+	return redisdb.New(config)
 }
