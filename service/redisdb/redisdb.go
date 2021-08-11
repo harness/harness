@@ -26,12 +26,20 @@ import (
 )
 
 func New(config config.Config) (srv RedisDB, err error) {
-	if config.Redis.ConnectionString == "" {
-		return
-	}
+	var options *redis.Options
 
-	options, err := redis.ParseURL(config.Redis.ConnectionString)
-	if err != nil {
+	if config.Redis.ConnectionString != "" {
+		options, err = redis.ParseURL(config.Redis.ConnectionString)
+		if err != nil {
+			return
+		}
+	} else if config.Redis.Addr != "" {
+		options = &redis.Options{
+			Addr:     config.Redis.Addr,
+			Password: config.Redis.Password,
+			DB:       config.Redis.DB,
+		}
+	} else {
 		return
 	}
 

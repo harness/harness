@@ -170,6 +170,9 @@ type (
 	// Redis provides the redis configuration.
 	Redis struct {
 		ConnectionString string `envconfig:"DRONE_REDIS_CONNECTION"`
+		Addr             string `envconfig:"DRONE_REDIS_ADDR"`
+		Password         string `envconfig:"DRONE_REDIS_PASSWORD"`
+		DB               int    `envconfig:"DRONE_REDIS_DB"`
 	}
 
 	// Repository provides the repository configuration.
