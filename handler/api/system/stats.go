@@ -145,7 +145,13 @@ func HandleStats(
 		// Event Stats
 		//
 
-		stats.Events.Subscribers = bus.Subscribers()
+		stats.Events.Subscribers, err = bus.Subscribers()
+		if err != nil {
+			render.InternalError(w, err)
+			logger.FromRequest(r).WithError(err).
+				Warnln("stats: cannot get number of subscribers")
+			return
+		}
 
 		//
 		// Stream Stats
