@@ -92,7 +92,7 @@ func (q *queue) Request(ctx context.Context, params core.Filter) (*core.Stage, e
 		kernel:  params.Kernel,
 		variant: params.Variant,
 		labels:  params.Labels,
-		channel: make(chan *core.Stage),
+		channel: make(chan *core.Stage, 1),
 	}
 	q.Lock()
 	q.workers[w] = struct{}{}
