@@ -17,6 +17,7 @@
 
 **Merged pull requests:**
 
+- release 2.0.5 [\#3117](https://github.com/drone/drone/pull/3117) ([eoinmcafee00](https://github.com/eoinmcafee00))
 - Update pull\_request\_template.md [\#3107](https://github.com/drone/drone/pull/3107) ([tphoney](https://github.com/tphoney))
 
 All notable changes to this project will be documented in this file.
