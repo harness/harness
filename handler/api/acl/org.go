@@ -51,6 +51,11 @@ func CheckMembership(service core.OrganizationService, admin bool) func(http.Han
 				return
 			}
 
+			if user.Login == namespace {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			isMember, isAdmin, err := service.Membership(ctx, user, namespace)
 			if err != nil {
 				render.Unauthorized(w, errors.ErrNotFound)
