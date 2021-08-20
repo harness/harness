@@ -58,7 +58,7 @@ func CheckMembership(service core.OrganizationService, admin bool) func(http.Han
 
 			isMember, isAdmin, err := service.Membership(ctx, user, namespace)
 			if err != nil {
-				render.Unauthorized(w, errors.ErrNotFound)
+				render.Unauthorized(w, errors.ErrForbidden)
 				log.Debugln("api: organization membership not found")
 				return
 			}
@@ -68,13 +68,13 @@ func CheckMembership(service core.OrganizationService, admin bool) func(http.Han
 				WithField("organization.admin", isAdmin)
 
 			if isMember == false {
-				render.Unauthorized(w, errors.ErrNotFound)
+				render.Unauthorized(w, errors.ErrForbidden)
 				log.Debugln("api: organization membership is required")
 				return
 			}
 
 			if isAdmin == false && admin == true {
-				render.Unauthorized(w, errors.ErrNotFound)
+				render.Unauthorized(w, errors.ErrForbidden)
 				log.Debugln("api: organization administrator is required")
 				return
 			}
