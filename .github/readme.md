@@ -64,7 +64,7 @@ You can generate a token by logging into your GitHub account and going to Settin
 
 Next we tag the PR's with the fixes or enhancements labels. If the PR does not fufil the requirements, do not add a label.
 
-** Before moving on make sure to update the version file `version/version.go`. **
+**Before moving on make sure to update the version file `version/version.go && version/version_test.go`.**
 
 Run the changelog generator again with the future version according to semver.
 
