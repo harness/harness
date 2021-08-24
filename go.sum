@@ -86,6 +86,10 @@ github.com/drone/drone-yaml v1.2.4-0.20200326192514-6f4d6dfb39e4 h1:XsstoCeXC2t8
 github.com/drone/drone-yaml v1.2.4-0.20200326192514-6f4d6dfb39e4/go.mod h1:QsqliFK8nG04AHFN9tTn9XJomRBQHD4wcejWW1uz/10=
 github.com/drone/envsubst v1.0.3-0.20200709231038-aa43e1c1a629 h1:rIaZZalMGGPb2cU/+ypuggZ8aMlpa17RUlJUtsMv8pw=
 github.com/drone/envsubst v1.0.3-0.20200709231038-aa43e1c1a629/go.mod h1:N2jZmlMufstn1KEqvbHjw40h1KyTmnVzHcSc9bFiJ2g=
+github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d h1:/IO7UVVu191Jc0DajV4cDVoO+91cuppvgxg2MZl+AXI=
+github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d/go.mod h1:Hph0/pT6ZxbujnE1Z6/08p5I0XXuOsppqF6NQlGOK0E=
+github.com/drone/funcmap v0.0.0-20210823160631-9e9dec149056 h1:SCJwMR0FMA0aKwAntCBh02YmtHEnU40zaDzeeCvIRug=
+github.com/drone/funcmap v0.0.0-20210823160631-9e9dec149056/go.mod h1:Hph0/pT6ZxbujnE1Z6/08p5I0XXuOsppqF6NQlGOK0E=
 github.com/drone/go-license v1.0.2 h1:7OwndfYk+Lp/cGHkxe4HUn/Ysrrw3WYH2pnd99yrkok=
 github.com/drone/go-license v1.0.2/go.mod h1:fGRHf+F1cEaw3YVYiJ6js3G3dVhcxyS617RnNRUMsms=
 github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2 h1:RGpgNkowJc5LAVn/ZONx70qmnaTA0z/3hHPzTBdAEO8=
