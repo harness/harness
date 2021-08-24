@@ -18,6 +18,7 @@ require (
 	github.com/drone/drone-ui v2.0.1+incompatible
 	github.com/drone/drone-yaml v1.2.4-0.20200326192514-6f4d6dfb39e4
 	github.com/drone/envsubst v1.0.3-0.20200709231038-aa43e1c1a629
+	github.com/drone/funcmap v0.0.0-20210823160631-9e9dec149056 // indirect
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2
 	github.com/drone/go-scm v1.15.2

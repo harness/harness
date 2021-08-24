@@ -1,0 +1,8 @@
+kind: pipeline
+type: docker
+name: defaults
+steps:
+  - name:  MY_STEP
+    image: my_image
+    commands:
+      - my_command
