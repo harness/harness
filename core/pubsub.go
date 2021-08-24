@@ -33,5 +33,5 @@ type Pubsub interface {
 	Subscribe(context.Context) (<-chan *Message, <-chan error)
 
 	// Subscribers returns a count of subscribers.
-	Subscribers() int
+	Subscribers() (int, error)
 }

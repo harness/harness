@@ -359,7 +359,7 @@ func (s Server) Handler() http.Handler {
 
 	r.Route("/templates", func(r chi.Router) {
 		r.With(acl.CheckMembership(s.Orgs, false)).Get("/", template.HandleListAll(s.Template))
-		r.With(acl.CheckMembership(s.Orgs, true)).Post("/", template.HandleCreate(s.Template))
+		r.With(acl.CheckMembership(s.Orgs, true)).Post("/{namespace}", template.HandleCreate(s.Template))
 		r.With(acl.CheckMembership(s.Orgs, false)).Get("/{namespace}", template.HandleList(s.Template))
 		r.With(acl.CheckMembership(s.Orgs, false)).Get("/{namespace}/{name}", template.HandleFind(s.Template))
 		r.With(acl.CheckMembership(s.Orgs, true)).Put("/{namespace}/{name}", template.HandleUpdate(s.Template))

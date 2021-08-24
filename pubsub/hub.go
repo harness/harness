@@ -27,8 +27,8 @@ type hub struct {
 	subs map[*subscriber]struct{}
 }
 
-// New creates a new publish subscriber.
-func New() core.Pubsub {
+// newHub creates a new publish subscriber.
+func newHub() core.Pubsub {
 	return &hub{
 		subs: map[*subscriber]struct{}{},
 	}
@@ -65,9 +65,9 @@ func (h *hub) Subscribe(ctx context.Context) (<-chan *core.Message, <-chan error
 	return s.handler, errc
 }
 
-func (h *hub) Subscribers() int {
+func (h *hub) Subscribers() (int, error) {
 	h.Lock()
 	c := len(h.subs)
 	h.Unlock()
-	return c
+	return c, nil
 }

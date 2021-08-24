@@ -8,6 +8,7 @@ package template
 
 import (
 	"encoding/json"
+	"github.com/go-chi/chi"
 	"net/http"
 
 	"github.com/drone/drone/core"
@@ -17,13 +18,13 @@ import (
 type templateInput struct {
 	Name      string `json:"name"`
 	Data      string `json:"data"`
-	Namespace string `json:"namespace"`
 }
 
 // HandleCreate returns an http.HandlerFunc that processes http
 // requests to create a new template.
 func HandleCreate(templateStore core.TemplateStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		namespace := chi.URLParam(r, "namespace")
 		in := new(templateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
@@ -34,7 +35,7 @@ func HandleCreate(templateStore core.TemplateStore) http.HandlerFunc {
 		t := &core.Template{
 			Name:      in.Name,
 			Data:      in.Data,
-			Namespace: in.Namespace,
+			Namespace: namespace,
 		}
 
 		err = t.Validate()

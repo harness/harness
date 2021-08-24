@@ -1,4 +1,4 @@
-// Copyright 2019 Drone IO, Inc.
+// Copyright 2021 Drone IO, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,23 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+// +build oss
+
+package queue
 
 import (
 	"github.com/drone/drone/core"
-	"github.com/drone/drone/scheduler/queue"
 	"github.com/drone/drone/service/redisdb"
-
-	"github.com/google/wire"
 )
 
-// wire set for loading the scheduler.
-var schedulerSet = wire.NewSet(
-	provideScheduler,
-)
-
-// provideScheduler is a Wire provider function that returns a
-// scheduler based on the environment configuration.
-func provideScheduler(store core.StageStore, r redisdb.RedisDB) core.Scheduler {
-	return queue.New(store, r)
+// New creates a new scheduler.
+func New(store core.StageStore, r redisdb.RedisDB) core.Scheduler {
+	return scheduler{
+		queue:     newQueue(store),
+		canceller: newCanceller(),
+	}
 }

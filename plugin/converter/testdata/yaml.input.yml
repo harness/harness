@@ -1,0 +1,8 @@
+kind: pipeline
+type: docker
+name: defaults
+steps:
+  - name:  {{ upper .input.stepName }}
+    image: {{ .input.image }}
+    commands:
+      - {{ .input.commands }}

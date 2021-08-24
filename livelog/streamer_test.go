@@ -17,7 +17,7 @@ import (
 )
 
 func TestStreamer(t *testing.T) {
-	s := New().(*streamer)
+	s := newStreamer().(*streamer)
 	err := s.Create(context.Background(), 1)
 	if err != nil {
 		t.Error(err)
@@ -57,7 +57,7 @@ func TestStreamer(t *testing.T) {
 }
 
 func TestStreamerDelete(t *testing.T) {
-	s := New().(*streamer)
+	s := newStreamer().(*streamer)
 	err := s.Create(context.Background(), 1)
 	if err != nil {
 		t.Error(err)
@@ -75,7 +75,7 @@ func TestStreamerDelete(t *testing.T) {
 }
 
 func TestStreamerDeleteErr(t *testing.T) {
-	s := New()
+	s := newStreamer()
 	err := s.Delete(context.Background(), 1)
 	if err != errStreamNotFound {
 		t.Errorf("Want errStreamNotFound")
@@ -83,7 +83,7 @@ func TestStreamerDeleteErr(t *testing.T) {
 }
 
 func TestStreamerWriteErr(t *testing.T) {
-	s := New()
+	s := newStreamer()
 	err := s.Write(context.Background(), 1, &core.Line{})
 	if err != errStreamNotFound {
 		t.Errorf("Want errStreamNotFound")
@@ -91,7 +91,7 @@ func TestStreamerWriteErr(t *testing.T) {
 }
 
 func TestStreamTailNotFound(t *testing.T) {
-	s := New()
+	s := newStreamer()
 	outc, errc := s.Tail(context.Background(), 0)
 	if outc != nil && errc != nil {
 		t.Errorf("Expect nil channel when stream not found")
@@ -99,7 +99,7 @@ func TestStreamTailNotFound(t *testing.T) {
 }
 
 func TestStreamerInfo(t *testing.T) {
-	s := New().(*streamer)
+	s := newStreamer().(*streamer)
 	s.streams[1] = &stream{list: map[*subscriber]struct{}{{}: struct{}{}, {}: struct{}{}}}
 	s.streams[2] = &stream{list: map[*subscriber]struct{}{{}: struct{}{}}}
 	s.streams[3] = &stream{list: map[*subscriber]struct{}{}}

@@ -15,6 +15,9 @@
 package starlark
 
 import (
+	"fmt"
+	"reflect"
+
 	"github.com/drone/drone/core"
 
 	"go.starlark.net/starlark"
@@ -38,27 +41,82 @@ import (
 // TODO(bradrydzewski) add build parent
 // TODO(bradrydzewski) add build timestamp
 
-func createArgs(repo *core.Repository, build *core.Build, input map[string]interface{}) []starlark.Value {
-	return []starlark.Value{
+func createArgs(repo *core.Repository, build *core.Build, input map[string]interface{}) ([]starlark.Value, error) {
+	inputArgs, err := fromInput(input)
+	if err != nil {
+		return nil, err
+	}
+	args := []starlark.Value{
 		starlarkstruct.FromStringDict(
 			starlark.String("context"),
 			starlark.StringDict{
 				"repo":  starlarkstruct.FromStringDict(starlark.String("repo"), fromRepo(repo)),
 				"build": starlarkstruct.FromStringDict(starlark.String("build"), fromBuild(build)),
-				"input": starlarkstruct.FromStringDict(starlark.String("input"), fromInput(input)),
+				"input": starlarkstruct.FromStringDict(starlark.String("input"), inputArgs),
 			},
 		),
 	}
+	return args, nil
 }
 
-func fromInput(input map[string]interface{}) starlark.StringDict {
+func fromInput(input map[string]interface{}) (starlark.StringDict, error) {
 	out := map[string]starlark.Value{}
-	for k, v := range input {
-		if s, ok := v.(string); ok {
-			out[k] = starlark.String(s)
+	for key, value := range input {
+		v := reflect.ValueOf(value)
+		result, err := toValue(v)
+		if err != nil {
+			return nil, err
 		}
+		out[key] = result
 	}
-	return out
+	return out, nil
+}
+
+func toValue(val reflect.Value) (starlark.Value, error) {
+	kind := val.Kind()
+	if kind == reflect.Ptr {
+		kind = val.Elem().Kind()
+	}
+	switch kind {
+	case reflect.Bool:
+		return starlark.Bool(val.Bool()), nil
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return starlark.MakeInt64(val.Int()), nil
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return starlark.MakeUint64(val.Uint()), nil
+	case reflect.Float32, reflect.Float64:
+		return starlark.Float(val.Float()), nil
+	case reflect.Map:
+		dict := new(starlark.Dict)
+		for _, key := range val.MapKeys() {
+			value := val.MapIndex(key)
+			getValue, err := toValue(reflect.ValueOf(value.Interface()))
+			if err != nil {
+				return nil, err
+			}
+			dict.SetKey(
+				starlark.String(fmt.Sprint(key)),
+				getValue,
+			)
+		}
+		return dict, nil
+	case reflect.String:
+		return starlark.String(val.String()), nil
+	case reflect.Slice, reflect.Array:
+		list := new(starlark.List)
+		for i := 0; i < val.Len(); i++ {
+			keyValue := val.Index(i).Interface()
+			vOf := reflect.ValueOf(keyValue)
+			result, err := toValue(vOf)
+			if err != nil {
+				return nil, err
+			}
+			list.Append(result)
+		}
+		return list, nil
+	}
+
+	return nil, fmt.Errorf("type %T is not a supported starlark type", val.Interface())
 }
 
 func fromBuild(v *core.Build) starlark.StringDict {

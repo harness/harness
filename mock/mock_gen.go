@@ -67,11 +67,12 @@ func (mr *MockPubsubMockRecorder) Subscribe(arg0 interface{}) *gomock.Call {
 }
 
 // Subscribers mocks base method.
-func (m *MockPubsub) Subscribers() int {
+func (m *MockPubsub) Subscribers() (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Subscribers")
 	ret0, _ := ret[0].(int)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Subscribers indicates an expected call of Subscribers.
