@@ -1,5 +1,28 @@
 # Changelog
 
+## [v2.1.0](https://github.com/drone/drone/tree/v2.1.0) (2021-08-24)
+
+[Full Changelog](https://github.com/drone/drone/compare/v2.0.6...v2.1.0)
+
+**Implemented enhancements:**
+
+- \(maint\) ui version v2.0.1. - https://github.com/drone/drone-ui/blob/main/CHANGELOG.md [\#3123](https://github.com/drone/drone/pull/3123) ([d1wilko](https://github.com/d1wilko))
+- add support for yaml templates [\#3120](https://github.com/drone/drone/pull/3120) ([eoinmcafee00](https://github.com/eoinmcafee00))
+
+**Fixed bugs:**
+
+- Update error message to forbidden if user membership doesn't exist on repo [\#3122](https://github.com/drone/drone/pull/3122) ([eoinmcafee00](https://github.com/eoinmcafee00))
+- update create template path to have namespace, instead of inside the payload [\#3121](https://github.com/drone/drone/pull/3121) ([eoinmcafee00](https://github.com/eoinmcafee00))
+- update dependency drone/go-scm to 1.15.2 to fix gitea build problem [\#3118](https://github.com/drone/drone/pull/3118) ([sesky4](https://github.com/sesky4))
+
+## [v2.0.6](https://github.com/drone/drone/tree/v2.0.6) (2021-08-17)
+
+[Full Changelog](https://github.com/drone/drone/compare/v2.0.5...v2.0.6)
+
+**Merged pull requests:**
+
+- \(maint\) v2.0.6 release prep [\#3119](https://github.com/drone/drone/pull/3119) ([tphoney](https://github.com/tphoney))
+
 ## [v2.0.5](https://github.com/drone/drone/tree/v2.0.5) (2021-08-17)
 
 [Full Changelog](https://github.com/drone/drone/compare/v2.0.4...v2.0.5)
