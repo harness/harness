@@ -12,11 +12,11 @@ Drone is a continuous delivery system built on container technology. Drone uses 
 - [Community](#community)
 - [Contributing](#contributing)
 - [Code of Conduct](#code-of-conduct)
-- [Core Team](#core-team)
 - [Setup Documentation](#setup-documentation)
 - [Usage Documentation](#usage-documentation)
-- [Sample Pipeline Configuration](#sample-pipeline-configuration)
+- [Example `.drone.yml` build file](#example-drone.yml-build-file)
 - [Plugin Index](#plugin-index)
+- [Documentation and Other Links](#documentation-and-Other-Links)
 
 ## Community
 
@@ -83,7 +83,7 @@ steps:
     username: drone
 ```
 
-Documentation and Other Links:
+## Documentation and Other Links
 
 * Setup Documentation [docs.drone.io/installation](http://docs.drone.io/installation/)
 * Usage Documentation [docs.drone.io/getting-started](http://docs.drone.io/getting-started/)
@@ -91,8 +91,6 @@ Documentation and Other Links:
 * Getting Help [discourse.drone.io](https://discourse.drone.io)
 * Build the Enterprise Edition [BUILDING](https://github.com/drone/drone/blob/master/BUILDING)
 * Build the Community Edition [BUILDING_OSS](https://github.com/drone/drone/blob/master/BUILDING_OSS)
-
-_Please note the official Docker images run the Drone Enterprise distribution. If you would like to run the Community Edition you can build from source by following the instructions in [BUILDING_OSS](https://github.com/drone/drone/blob/master/BUILDING_OSS)._
 
 ## Building from source
 
