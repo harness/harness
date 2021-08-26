@@ -3,9 +3,7 @@
 
 
 ## What is Drone?
-Drone is a continuous delivery system built on container technology. Drone uses a simple YAML configuration file, a superset of docker-compose, to define and execute Pipelines inside Docker containers. we have two versions available: the [Enterprise Edition](https://github.com/drone/drone/blob/master/BUILDING) and the [Community Edition](https://github.com/drone/drone/blob/master/BUILDING_OSS)
-
-_Please note the official Docker images run the Drone Enterprise distribution. If you would like to run the Community Edition you can build from source by following the instructions in [BUILDING_OSS](https://github.com/drone/drone/blob/master/BUILDING_OSS)._
+Drone is a continuous delivery system built on container technology. Drone uses a simple YAML build file, to define and execute build pipelines inside Docker containers. 
  
 ## Table of Contents
 
@@ -22,25 +20,15 @@ _Please note the official Docker images run the Drone Enterprise distribution. I
 
 ## Community
 
-We have a place to voice your ideas, have discussion on features, or get help with any issue you may have, please visit the community on our [Discourse](https://discourse.drone.io/) as well as our [Slack](https://join.slack.com/t/harnesscommunity/shared_invite/zt-90wb0w6u-OATJvUBkSDR3W9oYX7D~4A).
-
+You can visit us at [Discourse](https://discourse.drone.io/) as well as our [Slack](https://join.slack.com/t/harnesscommunity/shared_invite/zt-90wb0w6u-OATJvUBkSDR3W9oYX7D~4A).
 
 ## Contributing
 
-We encourage you to contribute to Drone! Please check out our [Proposing Changes Guide](https://github.com/drone/proposal).
+We encourage you to contribute to Drone! whether thats joining in on the community slack or discourse, or contributing pull requests / documentation changes or raising issues.
 
 ## Code of Conduct
 
 Drone follows the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md).
-
-## Core Team
-
-- Brad Rydzewski
-- TP Honey
-- Marko Gacesa
-- Eoin McAfee
-- Dan Wilson
-- Marie Antons
 
 ### Setup Documentation
 
@@ -48,17 +36,18 @@ This section of the [documentation](http://docs.drone.io/installation/) will hel
 
 ### Usage Documentation
 
-Pipelines help you automate steps in your software delivery process, such as initiating code builds, running automated tests, and deploying to a staging or production environment. Our [documentation](http://docs.drone.io/getting-started/) can help you get started with the different types of pipelines. Each optimized for different use cases and runtime environments.
-
+Our [documentation](http://docs.drone.io/getting-started/) can help you get started with the different types of pipelines/builds. There are different runners / plugins / extensions designed for different use cases to help make an efficent and simple build pipeline
 
 ### Plugin Index
 
-We have an extensive registry of community plugins to customize your continuous delivery pipeline, you can find those [here](http://plugins.drone.io/).
+Plugins are used in build steps to perform actions, eg send a message to slack or push a container to a registry. We have an extensive list of community plugins to customize your build pipeline, you can find those [here](http://plugins.drone.io/).
 
 <br>
 <img src="https://github.com/drone/brand/blob/master/screenshots/screenshot_build_success.png" style="max-width:100px;" />
 
-### Sample Pipeline Configuration
+### Example `.drone.yml` build file. 
+
+This build file contains a single pipeline (you can have multiple pipelines too) that builds a go application. The front end with npm. Publishes the docker container to a registry and announces the results to a slack room.
 
 ```yaml
 name: default
@@ -105,6 +94,9 @@ Documentation and Other Links:
 
 _Please note the official Docker images run the Drone Enterprise distribution. If you would like to run the Community Edition you can build from source by following the instructions in [BUILDING_OSS](https://github.com/drone/drone/blob/master/BUILDING_OSS)._
 
+## Building from source
+
+We have two versions available: the [Enterprise Edition](https://github.com/drone/drone/blob/master/BUILDING) and the [Community Edition](https://github.com/drone/drone/blob/master/BUILDING_OSS)
 
 ## Release procedure
 
