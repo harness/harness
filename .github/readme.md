@@ -42,9 +42,6 @@ Our [documentation](http://docs.drone.io/getting-started/) can help you get star
 
 Plugins are used in build steps to perform actions, eg send a message to slack or push a container to a registry. We have an extensive list of community plugins to customize your build pipeline, you can find those [here](http://plugins.drone.io/).
 
-<br>
-<img src="https://github.com/drone/brand/blob/master/screenshots/screenshot_build_success.png" style="max-width:100px;" />
-
 ### Example `.drone.yml` build file. 
 
 This build file contains a single pipeline (you can have multiple pipelines too) that builds a go application. The front end with npm. Publishes the docker container to a registry and announces the results to a slack room.
