@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/errors"
 	"github.com/drone/drone/mock"
-	"github.com/drone/drone/core"
 
 	"github.com/go-chi/chi"
 	"github.com/golang/mock/gomock"
@@ -41,6 +41,7 @@ func TestUpdate(t *testing.T) {
 
 	repoInput := &core.Repository{
 		Visibility: core.VisibilityPublic,
+		CancelRunning: true,
 	}
 
 	checkUpdate := func(_ context.Context, updated *core.Repository) error {
@@ -83,6 +84,7 @@ func TestUpdate(t *testing.T) {
 		HTTPURL:    "https://github.com/octocat/hello-world.git",
 		SSHURL:     "git@github.com:octocat/hello-world.git",
 		Link:       "https://github.com/octocat/hello-world",
+		CancelRunning: true,
 	}
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) > 0 {

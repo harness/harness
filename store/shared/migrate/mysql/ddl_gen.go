@@ -37,6 +37,10 @@ var migrations = []struct {
 		stmt: alterTableReposAddColumnThrottle,
 	},
 	{
+		name: "alter-table-repos-add-column-cancel-running",
+		stmt: alterTableReposAddColumnCancelRunning,
+	},
+	{
 		name: "create-table-perms",
 		stmt: createTablePerms,
 	},
@@ -332,6 +336,10 @@ ALTER TABLE repos ADD COLUMN repo_cancel_push BOOLEAN NOT NULL DEFAULT false;
 
 var alterTableReposAddColumnThrottle = `
 ALTER TABLE repos ADD COLUMN repo_throttle INTEGER NOT NULL DEFAULT 0;
+`
+
+var alterTableReposAddColumnCancelRunning = `
+ALTER TABLE repos ADD COLUMN repo_cancel_running BOOLEAN NOT NULL DEFAULT false;
 `
 
 //
