@@ -28,18 +28,18 @@ import (
 
 type (
 	repositoryInput struct {
-		Visibility    *string `json:"visibility"`
-		Config        *string `json:"config_path"`
-		Trusted       *bool   `json:"trusted"`
-		Protected     *bool   `json:"protected"`
-		IgnoreForks   *bool   `json:"ignore_forks"`
-		IgnorePulls   *bool   `json:"ignore_pull_requests"`
-		CancelPulls   *bool   `json:"auto_cancel_pull_requests"`
-		CancelPush    *bool   `json:"auto_cancel_pushes"`
-		CancelRunning *bool   `json:"auto_cancel_running"`
-		Timeout       *int64  `json:"timeout"`
-		Throttle      *int64  `json:"throttle"`
-		Counter       *int64  `json:"counter"`
+		Visibility    string `json:"visibility"`
+		Config        string `json:"config_path"`
+		Trusted       *bool  `json:"trusted"`
+		Protected     *bool  `json:"protected"`
+		IgnoreForks   *bool  `json:"ignore_forks"`
+		IgnorePulls   *bool  `json:"ignore_pull_requests"`
+		CancelPulls   *bool  `json:"auto_cancel_pull_requests"`
+		CancelPush    *bool  `json:"auto_cancel_pushes"`
+		CancelRunning *bool  `json:"auto_cancel_running"`
+		Timeout       *int64 `json:"timeout"`
+		Throttle      *int64 `json:"throttle"`
+		Counter       *int64 `json:"counter"`
 	}
 )
 
@@ -75,11 +75,11 @@ func HandleUpdate(repos core.RepositoryStore) http.HandlerFunc {
 			return
 		}
 
-		if in.Visibility != nil {
-			repo.Visibility = *in.Visibility
+		if in.Visibility != "" {
+			repo.Visibility = in.Visibility
 		}
-		if in.Config != nil {
-			repo.Config = *in.Config
+		if in.Config != "" {
+			repo.Config = in.Config
 		}
 		if in.Protected != nil {
 			repo.Protected = *in.Protected

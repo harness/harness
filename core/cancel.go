@@ -21,7 +21,7 @@ type Canceler interface {
 	// Cancel cancels the provided build.
 	Cancel(context.Context, *Repository, *Build) error
 
-	// CancelByStatus cancels all builds by a status, passed to the function
-	// and reference with lower build numbers.
+	// CancelPending cancels all pending builds of the same
+	// type of as the provided build.
 	CancelPending(context.Context, *Repository, *Build) error
 }
