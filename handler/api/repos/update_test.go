@@ -242,6 +242,7 @@ func TestUpdateAutoCancelRunning(t *testing.T) {
 
 	repoInput := &core.Repository{
 		CancelRunning: true,
+		Visibility: core.VisibilityPrivate,
 	}
 
 	shouldBeValue := true
