@@ -31,6 +31,23 @@ func TestCancelPending_IgnoreEvent(t *testing.T) {
 	}
 }
 
+func TestCancelRunning_IgnoreEvent(t *testing.T) {
+	ignore := []string{
+		core.EventCron,
+		core.EventCustom,
+		core.EventPromote,
+		core.EventRollback,
+		core.EventTag,
+	}
+	for _, event := range ignore {
+		s := new(service)
+		err := s.CancelPending(noContext, nil, &core.Build{Event: event})
+		if err != nil {
+			t.Errorf("Expect cancel skipped for event type %s", event)
+		}
+	}
+}
+
 func TestCancel(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()

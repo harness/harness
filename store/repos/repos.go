@@ -290,6 +290,7 @@ SELECT
 ,repo_no_pulls
 ,repo_cancel_pulls
 ,repo_cancel_push
+,repo_cancel_running
 ,repo_synced
 ,repo_created
 ,repo_updated
@@ -386,6 +387,7 @@ INSERT INTO repos (
 ,repo_no_pulls
 ,repo_cancel_pulls
 ,repo_cancel_push
+,repo_cancel_running
 ,repo_synced
 ,repo_created
 ,repo_updated
@@ -416,6 +418,7 @@ INSERT INTO repos (
 ,:repo_no_pulls
 ,:repo_cancel_pulls
 ,:repo_cancel_push
+,:repo_cancel_running
 ,:repo_synced
 ,:repo_created
 ,:repo_updated
@@ -463,6 +466,7 @@ UPDATE repos SET
 ,repo_no_pulls = :repo_no_pulls
 ,repo_cancel_pulls = :repo_cancel_pulls
 ,repo_cancel_push = :repo_cancel_push
+,repo_cancel_running = :repo_cancel_running
 ,repo_timeout = :repo_timeout
 ,repo_throttle = :repo_throttle
 ,repo_counter = :repo_counter

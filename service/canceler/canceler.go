@@ -105,8 +105,7 @@ func (s *service) CancelPending(ctx context.Context, repo *core.Repository, buil
 	var result error
 	for _, item := range incomplete {
 		// ignore incomplete items in the list that do
-		// not match the repository or build, are already
-		// running, or are newer than the current build.
+		// not match the repository or build
 		if !match(build, item) {
 			continue
 		}

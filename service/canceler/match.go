@@ -27,11 +27,17 @@ func match(build *core.Build, with *core.Repository) bool {
 	if with.Build.Number >= build.Number {
 		return false
 	}
-	// filter out builds that are not in a
-	// pending state.
-	if with.Build.Status != core.StatusPending {
-		return false
+
+	if with.CancelRunning == true {
+		if with.Build.Status != core.StatusRunning && with.Build.Status != core.StatusPending {
+			return false
+		}
+	} else {
+		if with.Build.Status != core.StatusPending {
+			return false
+		}
 	}
+
 	// filter out builds that do not match
 	// the same event type.
 	if with.Build.Event != build.Event {
