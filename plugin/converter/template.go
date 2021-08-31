@@ -36,9 +36,9 @@ import (
 
 var (
 	// TemplateFileRE regex to verifying kind is template.
-	TemplateFileRE          = regexp.MustCompile("^kind:\\s+template+\\n")
-	ErrTemplateNotFound     = errors.New("template converter: template name given not found")
-	ErrTemplateSyntaxErrors = errors.New("template converter: there is a problem with the yaml file provided")
+	TemplateFileRE              = regexp.MustCompile("^kind:\\s+template+\\n")
+	ErrTemplateNotFound         = errors.New("template converter: template name given not found")
+	ErrTemplateSyntaxErrors     = errors.New("template converter: there is a problem with the yaml file provided")
 	errTemplateExtensionInvalid = errors.New("template extension invalid. must be yaml, starlark or jsonnet")
 )
 
