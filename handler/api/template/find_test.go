@@ -29,7 +29,7 @@ func TestHandleFind(t *testing.T) {
 	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(dummyTemplate, nil)
 
 	c := new(chi.Context)
-	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("name", "my_template.yml")
 	c.URLParams.Add("namespace", "my_org")
 
 	w := httptest.NewRecorder()
@@ -52,7 +52,7 @@ func TestHandleFind_TemplateNotFound(t *testing.T) {
 	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(nil, errors.ErrNotFound)
 
 	c := new(chi.Context)
-	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("name", "my_template.yml")
 	c.URLParams.Add("namespace", "my_org")
 
 	w := httptest.NewRecorder()

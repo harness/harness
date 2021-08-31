@@ -30,7 +30,7 @@ func TestHandleDelete(t *testing.T) {
 	template.EXPECT().Delete(gomock.Any(), dummyTemplate).Return(nil)
 
 	c := new(chi.Context)
-	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("name", "my_template.yml")
 	c.URLParams.Add("namespace", "my_org")
 
 	w := httptest.NewRecorder()
@@ -53,7 +53,7 @@ func TestHandleDelete_TemplateNotFound(t *testing.T) {
 	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(nil, errors.ErrNotFound)
 
 	c := new(chi.Context)
-	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("name", "my_template.yml")
 	c.URLParams.Add("namespace", "my_org")
 
 	w := httptest.NewRecorder()
@@ -83,7 +83,7 @@ func TestHandleDelete_DeleteError(t *testing.T) {
 	template.EXPECT().Delete(gomock.Any(), dummyTemplate).Return(errors.ErrNotFound)
 
 	c := new(chi.Context)
-	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("name", "my_template.yml")
 	c.URLParams.Add("namespace", "my_org")
 
 	w := httptest.NewRecorder()

@@ -32,7 +32,7 @@ func TestHandleUpdate(t *testing.T) {
 	template.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
 
 	c := new(chi.Context)
-	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("name", "my_template.yml")
 	c.URLParams.Add("namespace", "my_org")
 
 	in := new(bytes.Buffer)
@@ -55,10 +55,10 @@ func TestHandleUpdate_ValidationErrorData(t *testing.T) {
 	defer controller.Finish()
 
 	template := mock.NewMockTemplateStore(controller)
-	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(&core.Template{Name: "my_template"}, nil)
+	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(&core.Template{Name: "my_template.yml"}, nil)
 
 	c := new(chi.Context)
-	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("name", "my_template.yml")
 	c.URLParams.Add("namespace", "my_org")
 
 	in := new(bytes.Buffer)
@@ -90,7 +90,7 @@ func TestHandleUpdate_TemplateNotFound(t *testing.T) {
 	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(nil, errors.ErrNotFound)
 
 	c := new(chi.Context)
-	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("name", "my_template.yml")
 	c.URLParams.Add("namespace", "my_org")
 
 	in := new(bytes.Buffer)
@@ -119,11 +119,11 @@ func TestHandleUpdate_UpdateError(t *testing.T) {
 	defer controller.Finish()
 
 	template := mock.NewMockTemplateStore(controller)
-	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(&core.Template{Name: "my_template"}, nil)
+	template.EXPECT().FindName(gomock.Any(), dummyTemplate.Name, dummyTemplate.Namespace).Return(&core.Template{Name: "my_template.yml"}, nil)
 	template.EXPECT().Update(gomock.Any(), gomock.Any()).Return(errors.ErrNotFound)
 
 	c := new(chi.Context)
-	c.URLParams.Add("name", "my_template")
+	c.URLParams.Add("name", "my_template.yml")
 	c.URLParams.Add("namespace", "my_org")
 
 	in := new(bytes.Buffer)
