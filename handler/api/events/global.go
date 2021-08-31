@@ -63,7 +63,7 @@ func HandleGlobal(
 		events, errc := events.Subscribe(ctx)
 		logger.Debugln("events: stream opened")
 
-		timeoutChan := time.After(time.Hour)
+		timeoutChan := time.After(24 * time.Hour)
 	L:
 		for {
 			select {
