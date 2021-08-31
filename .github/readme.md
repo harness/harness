@@ -1,10 +1,50 @@
-Drone is a Continuous Delivery system built on container technology. Drone uses a simple YAML configuration file, a superset of docker-compose, to define and execute Pipelines inside Docker containers. 
+# [Drone](https://www.drone.io/) <img src="https://github.com/drone/brand/blob/master/screenshots/screenshot_build_success.png" style="max-width:100px;" />
+**Welcome to the Drone codebase, we are thrilled to have you here!** 
 
-<br/>
 
-<img src="https://github.com/drone/brand/blob/master/screenshots/screenshot_build_success.png" style="max-width:100px;" />
+## What is Drone?
+Drone is a continuous delivery system built on container technology. Drone uses a simple YAML build file, to define and execute build pipelines inside Docker containers. 
+ 
+## Table of Contents
 
-Sample Pipeline Configuration:
+- [What is Drone?](#what-is-drone)
+- [Table of Contents](#table-of-contents)
+- [Community](#community)
+- [Contributing](#contributing)
+- [Code of Conduct](#code-of-conduct)
+- [Setup Documentation](#setup-documentation)
+- [Usage Documentation](#usage-documentation)
+- [Example `.drone.yml` build file](#example-drone.yml-build-file)
+- [Plugin Index](#plugin-index)
+- [Documentation and Other Links](#documentation-and-Other-Links)
+
+## Community
+
+You can visit us at [Discourse](https://discourse.drone.io/) as well as our [Slack](https://join.slack.com/t/harnesscommunity/shared_invite/zt-90wb0w6u-OATJvUBkSDR3W9oYX7D~4A).
+
+## Contributing
+
+We encourage you to contribute to Drone! whether thats joining in on the community slack or discourse, or contributing pull requests / documentation changes or raising issues.
+
+## Code of Conduct
+
+Drone follows the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md).
+
+### Setup Documentation
+
+This section of the [documentation](http://docs.drone.io/installation/) will help you install and configure the Drone Server and one or many Runners. A runner is a standalone daemon that polls the server for pending pipelines to execute.
+
+### Usage Documentation
+
+Our [documentation](http://docs.drone.io/getting-started/) can help you get started with the different types of pipelines/builds. There are different runners / plugins / extensions designed for different use cases to help make an efficent and simple build pipeline
+
+### Plugin Index
+
+Plugins are used in build steps to perform actions, eg send a message to slack or push a container to a registry. We have an extensive list of community plugins to customize your build pipeline, you can find those [here](http://plugins.drone.io/).
+
+### Example `.drone.yml` build file. 
+
+This build file contains a single pipeline (you can have multiple pipelines too) that builds a go application. The front end with npm. Publishes the docker container to a registry and announces the results to a slack room.
 
 ```yaml
 name: default
@@ -40,7 +80,7 @@ steps:
     username: drone
 ```
 
-Documentation and Other Links:
+## Documentation and Other Links
 
 * Setup Documentation [docs.drone.io/installation](http://docs.drone.io/installation/)
 * Usage Documentation [docs.drone.io/getting-started](http://docs.drone.io/getting-started/)
@@ -49,8 +89,9 @@ Documentation and Other Links:
 * Build the Enterprise Edition [BUILDING](https://github.com/drone/drone/blob/master/BUILDING)
 * Build the Community Edition [BUILDING_OSS](https://github.com/drone/drone/blob/master/BUILDING_OSS)
 
-_Please note the official Docker images run the Drone Enterprise distribution. If you would like to run the Community Edition you can build from source by following the instructions in [BUILDING_OSS](https://github.com/drone/drone/blob/master/BUILDING_OSS)._
+## Building from source
 
+We have two versions available: the [Enterprise Edition](https://github.com/drone/drone/blob/master/BUILDING) and the [Community Edition](https://github.com/drone/drone/blob/master/BUILDING_OSS)
 
 ## Release procedure
 
@@ -73,3 +114,5 @@ docker run -it --rm -v "$(pwd)":/usr/local/src/your-app githubchangeloggenerator
 ```
 
 Create your pull request for the release. Get it merged then tag the release.
+
+[⬆ Back to Top](#table-of-contents)
