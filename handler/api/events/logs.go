@@ -102,6 +102,7 @@ func HandleLogStream(
 			return
 		}
 
+		timeoutChan := time.After(24 * time.Hour)
 	L:
 		for {
 			select {
@@ -109,7 +110,7 @@ func HandleLogStream(
 				break L
 			case <-errc:
 				break L
-			case <-time.After(time.Hour):
+			case <-timeoutChan:
 				break L
 			case <-time.After(pingInterval):
 				io.WriteString(w, ": ping\n\n")

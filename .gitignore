@@ -10,3 +10,4 @@ release/
 scripts/*.go
 docker/**/data
 TODO*
+.idea

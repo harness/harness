@@ -63,6 +63,7 @@ func HandleGlobal(
 		events, errc := events.Subscribe(ctx)
 		logger.Debugln("events: stream opened")
 
+		timeoutChan := time.After(24 * time.Hour)
 	L:
 		for {
 			select {
@@ -72,7 +73,7 @@ func HandleGlobal(
 			case <-errc:
 				logger.Debugln("events: stream error")
 				break L
-			case <-time.After(time.Hour):
+			case <-timeoutChan:
 				logger.Debugln("events: stream timeout")
 				break L
 			case <-time.After(pingInterval):
