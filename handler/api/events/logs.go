@@ -102,7 +102,7 @@ func HandleLogStream(
 			return
 		}
 
-		timeoutChan := time.After(time.Hour)
+		timeoutChan := time.After(24 * time.Hour)
 	L:
 		for {
 			select {
