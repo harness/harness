@@ -35,10 +35,10 @@ import (
 )
 
 var (
-	// TemplateFileRE regex to verifying kind is template.
-	TemplateFileRE              = regexp.MustCompile("^kind:\\s+template+\\n")
-	ErrTemplateNotFound         = errors.New("template converter: template name given not found")
-	ErrTemplateSyntaxErrors     = errors.New("template converter: there is a problem with the yaml file provided")
+	// templateFileRE regex to verifying kind is template.
+	templateFileRE              = regexp.MustCompile("^kind:\\s+template+\\n")
+	errTemplateNotFound         = errors.New("template converter: template name given not found")
+	errTemplateSyntaxErrors     = errors.New("template converter: there is a problem with the yaml file provided")
 	errTemplateExtensionInvalid = errors.New("template extension invalid. must be yaml, starlark or jsonnet")
 )
 
@@ -59,19 +59,19 @@ func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 	}
 
 	// check kind is template
-	if TemplateFileRE.MatchString(req.Config.Data) == false {
+	if templateFileRE.MatchString(req.Config.Data) == false {
 		return nil, nil
 	}
 	// map to templateArgs
 	var templateArgs core.TemplateArgs
 	err := yaml.Unmarshal([]byte(req.Config.Data), &templateArgs)
 	if err != nil {
-		return nil, ErrTemplateSyntaxErrors
+		return nil, errTemplateSyntaxErrors
 	}
 	// get template from db
 	template, err := p.templateStore.FindName(ctx, templateArgs.Load, req.Repo.Namespace)
 	if err == sql.ErrNoRows {
-		return nil, ErrTemplateNotFound
+		return nil, errTemplateNotFound
 	}
 	if err != nil {
 		return nil, err
