@@ -12,33 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build !oss
-
-package queue
+package redisdb
 
 import (
-	"time"
-
-	"github.com/drone/drone/core"
-	"github.com/drone/drone/service/redisdb"
+	"context"
 )
 
-// New creates a new scheduler.
-func New(store core.StageStore, r redisdb.RedisDB) core.Scheduler {
-	if r == nil {
-		return scheduler{
-			queue:     newQueue(store),
-			canceller: newCanceller(),
-		}
-	}
-
-	sched := schedulerRedis{
-		queue:          newQueue(store),
-		cancellerRedis: newCancellerRedis(r),
-	}
-
-	const globalMutexExpiryTime = 10 * time.Second
-	sched.globMx = r.NewMutex("drone-scheduler-mx", globalMutexExpiryTime)
-
-	return sched
+// LockErr is an interface with lock and unlock functions that return an error.
+// Method names are chosen so that redsync.Mutex implements the interface.
+type LockErr interface {
+	LockContext(context.Context) error
+	UnlockContext(context.Context) (bool, error)
 }
+
+// LockErrNoOp is a dummy no-op locker
+type LockErrNoOp struct{}
+
+func (l LockErrNoOp) LockContext(context.Context) error           { return nil }
+func (l LockErrNoOp) UnlockContext(context.Context) (bool, error) { return false, nil }

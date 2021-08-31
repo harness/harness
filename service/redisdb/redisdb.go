@@ -19,6 +19,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-redsync/redsync/v4"
+	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
+
 	"github.com/drone/drone/cmd/drone-server/config"
 
 	"github.com/go-redis/redis/v8"
@@ -51,8 +54,11 @@ func New(config config.Config) (srv RedisDB, err error) {
 		return
 	}
 
+	rs := redsync.New(goredis.NewPool(rdb))
+
 	srv = redisService{
-		rdb: rdb,
+		rdb:      rdb,
+		mutexGen: rs,
 	}
 
 	return
@@ -61,10 +67,12 @@ func New(config config.Config) (srv RedisDB, err error) {
 type RedisDB interface {
 	Client() redis.Cmdable
 	Subscribe(ctx context.Context, channelName string, channelSize int, proc PubSubProcessor)
+	NewMutex(name string, expiry time.Duration) LockErr
 }
 
 type redisService struct {
-	rdb *redis.Client
+	rdb      *redis.Client
+	mutexGen *redsync.Redsync
 }
 
 // Client exposes redis.Cmdable interface
@@ -166,4 +174,13 @@ func (r redisService) Subscribe(ctx context.Context, channelName string, channel
 			connectTry++
 		}
 	}
+}
+
+func (r redisService) NewMutex(name string, expiry time.Duration) LockErr {
+	var options []redsync.Option
+	if expiry > 0 {
+		options = append(options, redsync.WithExpiry(expiry))
+	}
+
+	return r.mutexGen.NewMutex(name, options...)
 }

@@ -27,6 +27,7 @@ require (
 	github.com/go-chi/chi v3.3.3+incompatible
 	github.com/go-chi/cors v1.0.0
 	github.com/go-redis/redis/v8 v8.11.0
+	github.com/go-redsync/redsync/v4 v4.3.0
 	github.com/go-sql-driver/mysql v1.4.0
 	github.com/golang/mock v1.3.1
 	github.com/google/go-cmp v0.5.6
@@ -35,7 +36,7 @@ require (
 	github.com/gosimple/slug v1.3.0
 	github.com/h2non/gock v1.0.15
 	github.com/hashicorp/go-cleanhttp v0.5.1 // indirect
-	github.com/hashicorp/go-multierror v1.0.0
+	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/go-retryablehttp v0.5.4
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/jmoiron/sqlx v0.0.0-20180614180643-0dae4fefe7c0
