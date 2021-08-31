@@ -48,13 +48,13 @@ func TestHandleCreate(t *testing.T) {
 	}
 }
 
-func TestHandleCreate_ValidationErrorName(t *testing.T) {
+func TestHandleCreate_NotValidTemplateExtensionName(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
 	c := new(chi.Context)
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(&core.Template{Name: "", Data: "my_data"})
+	json.NewEncoder(in).Encode(&core.Template{Name: "my_template", Data: "my_data"})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", in)
@@ -67,7 +67,7 @@ func TestHandleCreate_ValidationErrorName(t *testing.T) {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 
-	got, want := &errors.Error{}, &errors.Error{Message: "No Template Name Provided"}
+	got, want := &errors.Error{}, &errors.Error{Message: "Template extension invalid. Must be yaml, starlark or jsonnet"}
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
 		t.Errorf(diff)
@@ -80,7 +80,7 @@ func TestHandleCreate_ValidationErrorData(t *testing.T) {
 
 	c := new(chi.Context)
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(&core.Template{Name: "my_template", Data: ""})
+	json.NewEncoder(in).Encode(&core.Template{Name: "my_template.yml", Data: ""})
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", in)

@@ -24,7 +24,7 @@ import (
 
 var (
 	dummyTemplate = &core.Template{
-		Name:      "my_template",
+		Name:      "my_template.yml",
 		Data:      "my_data",
 		Created:   1,
 		Updated:   2,

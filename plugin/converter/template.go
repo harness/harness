@@ -39,6 +39,7 @@ var (
 	TemplateFileRE          = regexp.MustCompile("^kind:\\s+template+\\n")
 	ErrTemplateNotFound     = errors.New("template converter: template name given not found")
 	ErrTemplateSyntaxErrors = errors.New("template converter: there is a problem with the yaml file provided")
+	errTemplateExtensionInvalid = errors.New("template extension invalid. must be yaml, starlark or jsonnet")
 )
 
 func Template(templateStore core.TemplateStore) core.ConvertService {
@@ -84,9 +85,8 @@ func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 	case ".jsonnet":
 		return parseJsonnet(req, template, templateArgs)
 	default:
+		return nil, errTemplateExtensionInvalid
 	}
-
-	return nil, nil
 }
 
 func parseYaml(req *core.ConvertArgs, template *core.Template, templateArgs core.TemplateArgs) (*core.Config, error) {

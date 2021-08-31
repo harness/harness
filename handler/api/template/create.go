@@ -8,16 +8,23 @@ package template
 
 import (
 	"encoding/json"
-	"github.com/go-chi/chi"
 	"net/http"
+	"path/filepath"
 
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/handler/api/errors"
 	"github.com/drone/drone/handler/api/render"
+
+	"github.com/go-chi/chi"
+)
+
+var (
+	errTemplateExtensionInvalid = errors.New("Template extension invalid. Must be yaml, starlark or jsonnet")
 )
 
 type templateInput struct {
-	Name      string `json:"name"`
-	Data      string `json:"data"`
+	Name string `json:"name"`
+	Data string `json:"data"`
 }
 
 // HandleCreate returns an http.HandlerFunc that processes http
@@ -29,6 +36,16 @@ func HandleCreate(templateStore core.TemplateStore) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequest(w, err)
+			return
+		}
+
+		// check valid template extension type
+		switch filepath.Ext(in.Name) {
+		case ".yml", ".yaml":
+		case ".star", ".starlark", ".script":
+		case ".jsonnet":
+		default:
+			render.BadRequest(w, errTemplateExtensionInvalid)
 			return
 		}
 

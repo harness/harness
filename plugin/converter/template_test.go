@@ -388,3 +388,51 @@ func TestTemplatePluginConvertYaml(t *testing.T) {
 		t.Errorf("Want %q got %q", want, got)
 	}
 }
+// tests to check error is thrown if user has already loaded a template file of invalid extension
+// and refers to it in the drone.yml file
+func TestTemplatePluginConvertInvalidTemplateExtension(t *testing.T) {
+	// reads yml input file which refers to a template file of invalid extensions
+	templateArgs, err := ioutil.ReadFile("testdata/yaml.template.invalid.yml")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	req := &core.ConvertArgs{
+		Build: &core.Build{
+			After: "3d21ec53a331a6f037a91c368710b99387d012c1",
+		},
+		Repo: &core.Repository{
+			Slug:      "octocat/hello-world",
+			Config:    ".drone.yml",
+			Namespace: "octocat",
+		},
+		Config: &core.Config{
+			Data: string(templateArgs),
+		},
+	}
+	// reads the template drone.yml
+	beforeInput, err := ioutil.ReadFile("testdata/yaml.input.yml")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	template := &core.Template{
+		Name:      "plugin.txt",
+		Data:      string(beforeInput),
+		Namespace: "octocat",
+	}
+
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	templates := mock.NewMockTemplateStore(controller)
+	templates.EXPECT().FindName(gomock.Any(), template.Name, req.Repo.Namespace).Return(template, nil)
+
+	plugin := Template(templates)
+	config, err := plugin.Convert(noContext, req)
+	if config != nil {
+		t.Errorf("template extension invalid. must be yaml, starlark or jsonnet")
+	}
+}
