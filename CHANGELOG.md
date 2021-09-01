@@ -1,5 +1,25 @@
 # Changelog
 
+## [v2.2.0](https://github.com/drone/drone/tree/v2.2.0) (2021-09-01)
+
+[Full Changelog](https://github.com/drone/drone/compare/v2.1.0...v2.2.0)
+
+**Implemented enhancements:**
+
+- \(maint\) ui version v2.1.0 - https://github.com/drone/drone-ui/blob/main/CHANGELOG.md [\#3132](https://github.com/drone/drone/pull/3132) ([d1wilko](https://github.com/d1wilko))
+- Ability to cancel running builds, if a new commit is pushed [\#3126](https://github.com/drone/drone/pull/3126) ([eoinmcafee00](https://github.com/eoinmcafee00))
+
+**Fixed bugs:**
+
+- fix templating reg expression to match if .drone.yml contains --- characters  [\#3131](https://github.com/drone/drone/pull/3131) ([eoinmcafee00](https://github.com/eoinmcafee00))
+- add check on template extension type - throw error if invalid [\#3128](https://github.com/drone/drone/pull/3128) ([eoinmcafee00](https://github.com/eoinmcafee00))
+
+**Merged pull requests:**
+
+- Rename files with camelCase name to use snake\_case convention [\#3127](https://github.com/drone/drone/pull/3127) ([marko-gacesa](https://github.com/marko-gacesa))
+- event-stream supports timeout [\#3125](https://github.com/drone/drone/pull/3125) ([zc2638](https://github.com/zc2638))
+- \(maint\) Readme update Add Contributor Section  [\#3111](https://github.com/drone/drone/pull/3111) ([mrsantons](https://github.com/mrsantons))
+
 ## [v2.1.0](https://github.com/drone/drone/tree/v2.1.0) (2021-08-24)
 
 [Full Changelog](https://github.com/drone/drone/compare/v2.0.6...v2.1.0)
@@ -14,6 +34,10 @@
 - Update error message to forbidden if user membership doesn't exist on repo [\#3122](https://github.com/drone/drone/pull/3122) ([eoinmcafee00](https://github.com/eoinmcafee00))
 - update create template path to have namespace, instead of inside the payload [\#3121](https://github.com/drone/drone/pull/3121) ([eoinmcafee00](https://github.com/eoinmcafee00))
 - update dependency drone/go-scm to 1.15.2 to fix gitea build problem [\#3118](https://github.com/drone/drone/pull/3118) ([sesky4](https://github.com/sesky4))
+
+**Merged pull requests:**
+
+- \(maint\) v2.1.0 release prep [\#3124](https://github.com/drone/drone/pull/3124) ([d1wilko](https://github.com/d1wilko))
 
 ## [v2.0.6](https://github.com/drone/drone/tree/v2.0.6) (2021-08-17)
 
