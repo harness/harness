@@ -1,3 +1,4 @@
+---
 kind: template
 load: plugin.starlark
 data:
