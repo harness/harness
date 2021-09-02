@@ -145,6 +145,7 @@ type (
 	// Starlark configures the starlark plugin
 	Starlark struct {
 		Enabled bool `envconfig:"DRONE_STARLARK_ENABLED"`
+		StepLimit uint64 `envconfig:"DRONE_STARLARK_STEP_LIMIT"`
 	}
 
 	// License provides license configuration

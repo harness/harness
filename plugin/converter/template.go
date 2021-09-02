@@ -42,14 +42,16 @@ var (
 	errTemplateExtensionInvalid = errors.New("template extension invalid. must be yaml, starlark or jsonnet")
 )
 
-func Template(templateStore core.TemplateStore) core.ConvertService {
+func Template(templateStore core.TemplateStore, stepLimit uint64) core.ConvertService {
 	return &templatePlugin{
 		templateStore: templateStore,
+		stepLimit: stepLimit,
 	}
 }
 
 type templatePlugin struct {
 	templateStore core.TemplateStore
+	stepLimit uint64
 }
 
 func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Config, error) {
@@ -81,7 +83,7 @@ func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 	case ".yml", ".yaml":
 		return parseYaml(req, template, templateArgs)
 	case ".star", ".starlark", ".script":
-		return parseStarlark(req, template, templateArgs)
+		return parseStarlark(req, template, templateArgs, p.stepLimit)
 	case ".jsonnet":
 		return parseJsonnet(req, template, templateArgs)
 	default:
@@ -119,8 +121,8 @@ func parseJsonnet(req *core.ConvertArgs, template *core.Template, templateArgs c
 	}, nil
 }
 
-func parseStarlark(req *core.ConvertArgs, template *core.Template, templateArgs core.TemplateArgs) (*core.Config, error) {
-	file, err := starlark.Parse(req, template, templateArgs.Data)
+func parseStarlark(req *core.ConvertArgs, template *core.Template, templateArgs core.TemplateArgs, stepLimit uint64) (*core.Config, error) {
+	file, err := starlark.Parse(req, template, templateArgs.Data, stepLimit)
 	if err != nil {
 		return nil, err
 	}

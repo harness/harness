@@ -81,12 +81,14 @@ func provideConvertPlugin(client *scm.Client, conf spec.Config, templateStore co
 		converter.Legacy(false),
 		converter.Starlark(
 			conf.Starlark.Enabled,
+			conf.Starlark.StepLimit,
 		),
 		converter.Jsonnet(
 			conf.Jsonnet.Enabled,
 		),
 		converter.Template(
 			templateStore,
+			conf.Starlark.StepLimit,
 		),
 		converter.Memoize(
 			converter.Remote(
