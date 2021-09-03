@@ -70,7 +70,7 @@ func TestTemplatePluginConvertStarlark(t *testing.T) {
 	templates := mock.NewMockTemplateStore(controller)
 	templates.EXPECT().FindName(gomock.Any(), template.Name, req.Repo.Namespace).Return(template, nil)
 
-	plugin := Template(templates)
+	plugin := Template(templates, 0)
 	config, err := plugin.Convert(noContext, req)
 	if err != nil {
 		t.Error(err)
@@ -89,7 +89,7 @@ func TestTemplatePluginConvertStarlark(t *testing.T) {
 
 func TestTemplatePluginConvertNotYamlFile(t *testing.T) {
 
-	plugin := Template(nil)
+	plugin := Template(nil, 0)
 	req := &core.ConvertArgs{
 		Build: &core.Build{
 			After: "3d21ec53a331a6f037a91c368710b99387d012c1",
@@ -117,7 +117,7 @@ func TestTemplatePluginConvertDroneFileTypePipeline(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	plugin := Template(nil)
+	plugin := Template(nil, 0)
 	req := &core.ConvertArgs{
 		Build: &core.Build{
 			After: "3d21ec53a331a6f037a91c368710b99387d012c1",
@@ -169,7 +169,7 @@ func TestTemplatePluginConvertTemplateNotFound(t *testing.T) {
 	templates := mock.NewMockTemplateStore(controller)
 	templates.EXPECT().FindName(gomock.Any(), template.Name, req.Repo.Namespace).Return(nil, nil)
 
-	plugin := Template(templates)
+	plugin := Template(templates, 0)
 
 	config, err := plugin.Convert(noContext, req)
 	if config != nil {
@@ -222,7 +222,7 @@ func TestTemplatePluginConvertJsonnet(t *testing.T) {
 	templates := mock.NewMockTemplateStore(controller)
 	templates.EXPECT().FindName(gomock.Any(), template.Name, req.Repo.Namespace).Return(template, nil)
 
-	plugin := Template(templates)
+	plugin := Template(templates, 0)
 	config, err := plugin.Convert(noContext, req)
 	if err != nil {
 		t.Error(err)
@@ -294,7 +294,7 @@ func TestTemplateNestedValuesPluginConvertStarlark(t *testing.T) {
 	templates := mock.NewMockTemplateStore(controller)
 	templates.EXPECT().FindName(gomock.Any(), template.Name, req.Repo.Namespace).Return(template, nil)
 
-	plugin := Template(templates)
+	plugin := Template(templates, 0)
 	config, err := plugin.Convert(noContext, req)
 	if err != nil {
 		t.Error(err)
@@ -372,7 +372,7 @@ func TestTemplatePluginConvertYaml(t *testing.T) {
 	templates := mock.NewMockTemplateStore(controller)
 	templates.EXPECT().FindName(gomock.Any(), template.Name, req.Repo.Namespace).Return(template, nil)
 
-	plugin := Template(templates)
+	plugin := Template(templates, 0)
 	config, err := plugin.Convert(noContext, req)
 	if err != nil {
 		t.Error(err)
@@ -430,7 +430,7 @@ func TestTemplatePluginConvertInvalidTemplateExtension(t *testing.T) {
 	templates := mock.NewMockTemplateStore(controller)
 	templates.EXPECT().FindName(gomock.Any(), template.Name, req.Repo.Namespace).Return(template, nil)
 
-	plugin := Template(templates)
+	plugin := Template(templates, 0)
 	config, err := plugin.Convert(noContext, req)
 	if config != nil {
 		t.Errorf("template extension invalid. must be yaml, starlark or jsonnet")

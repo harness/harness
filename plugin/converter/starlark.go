@@ -26,14 +26,16 @@ import (
 
 // Starlark returns a conversion service that converts the
 // starlark file to a yaml file.
-func Starlark(enabled bool) core.ConvertService {
+func Starlark(enabled bool, stepLimit uint64) core.ConvertService {
 	return &starlarkPlugin{
 		enabled: enabled,
+		stepLimit: stepLimit,
 	}
 }
 
 type starlarkPlugin struct {
 	enabled bool
+	stepLimit uint64
 }
 
 func (p *starlarkPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Config, error) {
@@ -51,7 +53,7 @@ func (p *starlarkPlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 		return nil, nil
 	}
 
-	file, err := starlark.Parse(req, nil, nil)
+	file, err := starlark.Parse(req, nil, nil, p.stepLimit)
 	if err != nil {
 		return nil, err
 	}
