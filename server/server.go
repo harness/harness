@@ -54,11 +54,12 @@ func (s Server) ListenAndServe(ctx context.Context) error {
 }
 
 func (s Server) listenAndServe(ctx context.Context) error {
-	var g errgroup.Group
 	s1 := &http.Server{
 		Addr:    s.Addr,
 		Handler: s.Handler,
 	}
+
+	g, ctx := errgroup.WithContext(ctx)
 	g.Go(func() error {
 		<-ctx.Done()
 
@@ -72,7 +73,6 @@ func (s Server) listenAndServe(ctx context.Context) error {
 }
 
 func (s Server) listenAndServeTLS(ctx context.Context) error {
-	var g errgroup.Group
 	s1 := &http.Server{
 		Addr:    ":http",
 		Handler: http.HandlerFunc(redirect),
@@ -81,6 +81,8 @@ func (s Server) listenAndServeTLS(ctx context.Context) error {
 		Addr:    ":https",
 		Handler: s.Handler,
 	}
+
+	g, ctx := errgroup.WithContext(ctx)
 	g.Go(s1.ListenAndServe)
 	g.Go(func() error {
 		return s2.ListenAndServeTLS(
@@ -108,8 +110,6 @@ func (s Server) listenAndServeTLS(ctx context.Context) error {
 }
 
 func (s Server) listenAndServeAcme(ctx context.Context) error {
-	var g errgroup.Group
-
 	c := cacheDir()
 	m := &autocert.Manager{
 		Email:      s.Email,
@@ -130,6 +130,8 @@ func (s Server) listenAndServeAcme(ctx context.Context) error {
 			MinVersion:     tls.VersionTLS12,
 		},
 	}
+
+	g, ctx := errgroup.WithContext(ctx)
 	g.Go(s1.ListenAndServe)
 	g.Go(func() error {
 		return s2.ListenAndServeTLS("", "")
