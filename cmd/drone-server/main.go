@@ -24,8 +24,8 @@ import (
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/metric/sink"
 	"github.com/drone/drone/operator/runner"
-	"github.com/drone/drone/service/canceler/reaper"
 	"github.com/drone/drone/server"
+	"github.com/drone/drone/service/canceler/reaper"
 	"github.com/drone/drone/trigger/cron"
 	"github.com/drone/signal"
 
@@ -80,7 +80,7 @@ func main() {
 		logger.Fatalln("cannot bootstrap user account")
 	}
 
-	g := errgroup.Group{}
+	g, ctx := errgroup.WithContext(ctx)
 	g.Go(func() error {
 		logrus.WithFields(
 			logrus.Fields{
