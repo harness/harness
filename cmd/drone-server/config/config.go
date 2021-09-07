@@ -144,7 +144,7 @@ type (
 
 	// Starlark configures the starlark plugin
 	Starlark struct {
-		Enabled bool `envconfig:"DRONE_STARLARK_ENABLED"`
+		Enabled   bool   `envconfig:"DRONE_STARLARK_ENABLED"`
 		StepLimit uint64 `envconfig:"DRONE_STARLARK_STEP_LIMIT"`
 	}
 
@@ -488,17 +488,28 @@ func (c *Config) IsStash() bool {
 	return c.Stash.Server != ""
 }
 
+func cleanHostname(hostname string) string {
+	hostname = strings.ToLower(hostname)
+	hostname = strings.TrimPrefix(hostname, "http://")
+	hostname = strings.TrimPrefix(hostname, "https://")
+
+	return hostname
+}
+
 func defaultAddress(c *Config) {
 	if c.Server.Key != "" || c.Server.Cert != "" || c.Server.Acme {
 		c.Server.Port = ":443"
 		c.Server.Proto = "https"
 	}
+	c.Server.Host = cleanHostname(c.Server.Host)
 	c.Server.Addr = c.Server.Proto + "://" + c.Server.Host
 }
 
 func defaultProxy(c *Config) {
 	if c.Proxy.Host == "" {
 		c.Proxy.Host = c.Server.Host
+	} else {
+		c.Proxy.Host = cleanHostname(c.Proxy.Host)
 	}
 	if c.Proxy.Proto == "" {
 		c.Proxy.Proto = c.Server.Proto
