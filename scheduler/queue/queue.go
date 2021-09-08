@@ -19,13 +19,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/drone/drone-go/drone"
-
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/service/redisdb"
+
+	"github.com/drone/drone-go/drone"
 )
 
 type queue struct {
 	sync.Mutex
+	globMx redisdb.LockErr
 
 	ready    chan struct{}
 	paused   bool
@@ -40,6 +42,7 @@ type queue struct {
 func newQueue(store core.StageStore) *queue {
 	q := &queue{
 		store:    store,
+		globMx:   redisdb.LockErrNoOp{},
 		ready:    make(chan struct{}, 1),
 		workers:  map[*worker]struct{}{},
 		interval: time.Minute,
@@ -115,6 +118,11 @@ func (q *queue) Request(ctx context.Context, params core.Filter) (*core.Stage, e
 }
 
 func (q *queue) signal(ctx context.Context) error {
+	if err := q.globMx.LockContext(ctx); err != nil {
+		return err
+	}
+	defer q.globMx.UnlockContext(ctx)
+
 	q.Lock()
 	count := len(q.workers)
 	pause := q.paused
