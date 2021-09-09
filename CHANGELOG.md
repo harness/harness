@@ -1,5 +1,13 @@
 # Changelog
 
+## [v2.3.1](https://github.com/drone/drone/tree/v2.3.1) (2021-09-09)
+
+[Full Changelog](https://github.com/drone/drone/compare/v2.3.0...v2.3.1)
+
+**Merged pull requests:**
+
+- bump ui to v2.2.1 - https://github.com/drone/drone-ui/blob/main/CHANGELOG.md [\#3138](https://github.com/drone/drone/pull/3138) ([d1wilko](https://github.com/d1wilko))
+
 ## [v2.3.0](https://github.com/drone/drone/tree/v2.3.0) (2021-09-09)
 
 [Full Changelog](https://github.com/drone/drone/compare/v2.2.0...v2.3.0)
