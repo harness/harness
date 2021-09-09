@@ -1,5 +1,20 @@
 # Changelog
 
+## [v2.3.0](https://github.com/drone/drone/tree/v2.3.0) (2021-09-09)
+
+[Full Changelog](https://github.com/drone/drone/compare/v2.2.0...v2.3.0)
+
+**Implemented enhancements:**
+
+- bump ui to v2.2.0 - https://github.com/drone/drone-ui/blob/main/CHANGELOG.md [\#3137](https://github.com/drone/drone/pull/3137) ([d1wilko](https://github.com/d1wilko))
+- Make starlark step limit configurable [\#3134](https://github.com/drone/drone/pull/3134) ([phil-davis](https://github.com/phil-davis))
+- \(feat\) drone h/a: wrapped scheduler's signal func with redis mutex [\#3130](https://github.com/drone/drone/pull/3130) ([marko-gacesa](https://github.com/marko-gacesa))
+
+**Fixed bugs:**
+
+- \(fix\) trim http/s prefixes from config hostnames [\#3136](https://github.com/drone/drone/pull/3136) ([tphoney](https://github.com/tphoney))
+- \(fix\) remove unused jwt-go library [\#3129](https://github.com/drone/drone/pull/3129) ([tphoney](https://github.com/tphoney))
+
 ## [v2.2.0](https://github.com/drone/drone/tree/v2.2.0) (2021-09-01)
 
 [Full Changelog](https://github.com/drone/drone/compare/v2.1.0...v2.2.0)
@@ -16,6 +31,7 @@
 
 **Merged pull requests:**
 
+- \(maint\)-release 2.2.0 [\#3133](https://github.com/drone/drone/pull/3133) ([eoinmcafee00](https://github.com/eoinmcafee00))
 - Rename files with camelCase name to use snake\_case convention [\#3127](https://github.com/drone/drone/pull/3127) ([marko-gacesa](https://github.com/marko-gacesa))
 - event-stream supports timeout [\#3125](https://github.com/drone/drone/pull/3125) ([zc2638](https://github.com/zc2638))
 - \(maint\) Readme update Add Contributor Section  [\#3111](https://github.com/drone/drone/pull/3111) ([mrsantons](https://github.com/mrsantons))
