@@ -92,7 +92,7 @@ func (d *Datadog) do(ctx context.Context, unix int64) error {
 	}
 	userList, _ := d.users.ListRange(ctx, core.UserParams{
 		Sort: false,
-		Page: 1,
+		Page: 0,
 		Size: 5,
 	})
 	tags := createTags(d.config)

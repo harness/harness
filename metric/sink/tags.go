@@ -16,6 +16,7 @@ package sink
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/version"
@@ -81,8 +82,9 @@ func createInstallerTags(users []*core.User) []string {
 		if len(user.Email) == 0 {
 			continue
 		}
-		tag := fmt.Sprintf("installer:%s", user.Email)
-		tags = append(tags, tag)
+		tag1 := fmt.Sprintf("installer:%s", user.Email)
+		tag2 := fmt.Sprintf("installed:%s", time.Unix(user.Created, 0).UTC().Format(time.RFC3339Nano))
+		tags = append(tags, tag1, tag2)
 		break
 	}
 	return tags

@@ -39,7 +39,7 @@ func TestDo(t *testing.T) {
 
 	users := mock.NewMockUserStore(controller)
 	users.EXPECT().Count(gomock.Any()).Return(int64(10), nil)
-	users.EXPECT().ListRange(gomock.Any(), gomock.Any()).Return([]*core.User{{Email: "jane@acme.com"}}, nil)
+	users.EXPECT().ListRange(gomock.Any(), gomock.Any()).Return([]*core.User{{Email: "jane@acme.com", Created: 1257894000}}, nil)
 
 	repos := mock.NewMockRepositoryStore(controller)
 	repos.EXPECT().Count(gomock.Any()).Return(int64(20), nil)
@@ -75,7 +75,7 @@ var sample = `{
 			"points": [[915148800, 10]],
 			"type": "gauge",
 			"host": "test.example.com",
-			"tags": ["version:` + version.Version.String() + `","remote:github:cloud","scheduler:internal:agents","license:trial","installer:jane@acme.com"]
+			"tags": ["version:` + version.Version.String() + `","remote:github:cloud","scheduler:internal:agents","license:trial","installer:jane@acme.com","installed:2009-11-10T23:00:00Z"]
 		},
 		{
 			"metric": "drone.repos",
