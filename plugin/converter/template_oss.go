@@ -22,7 +22,7 @@ import (
 	"github.com/drone/drone/core"
 )
 
-func Template(templateStore core.TemplateStore) core.ConvertService {
+func Template(templateStore core.TemplateStore, stepLimit uint64) core.ConvertService {
 	return &templatePlugin{
 		templateStore: templateStore,
 	}
