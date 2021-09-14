@@ -208,3 +208,52 @@ func scanRowsBuild(rows *sql.Rows) ([]*core.Repository, error) {
 	}
 	return repos, nil
 }
+
+// helper function scans the sql.Row and copies the column values to the destination object.
+func repoBuildStageRowBuild(scanner db.Scanner, dest *core.RepoBuildStage) error {
+	err := scanner.Scan(
+		&dest.RepoNamespace,
+		&dest.RepoName,
+		&dest.RepoSlug,
+		&dest.BuildNumber,
+		&dest.BuildAuthor,
+		&dest.BuildAuthorName,
+		&dest.BuildAuthorEmail,
+		&dest.BuildAuthorAvatar,
+		&dest.BuildSender,
+		&dest.BuildStarted,
+		&dest.BuildFinished,
+		&dest.BuildCreated,
+		&dest.BuildUpdated,
+		&dest.StageName,
+		&dest.StageKind,
+		&dest.StageType,
+		&dest.StageStatus,
+		&dest.StageMachine,
+		&dest.StageOS,
+		&dest.StageArch,
+		&dest.StageVariant,
+		&dest.StageKernel,
+		&dest.StageLimit,
+		&dest.StageLimitRepo,
+		&dest.StageStarted,
+		&dest.StageStopped,
+	)
+	return err
+}
+
+// helper function scans the sql.Row and copies the column values to the destination object.
+func repoBuildStageRowsBuild(rows *sql.Rows) ([]*core.RepoBuildStage, error) {
+	defer rows.Close()
+
+	slices := []*core.RepoBuildStage{}
+	for rows.Next() {
+		row := new(core.RepoBuildStage)
+		err := repoBuildStageRowBuild(rows, row)
+		if err != nil {
+			return nil, err
+		}
+		slices = append(slices, row)
+	}
+	return slices, nil
+}

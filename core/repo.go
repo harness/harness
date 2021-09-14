@@ -67,6 +67,35 @@ type (
 		Perms         *Perm  `json:"permissions,omitempty"`
 	}
 
+	RepoBuildStage struct {
+		RepoNamespace     string `json:"repo_namespace"`
+		RepoName          string `json:"repo_name"`
+		RepoSlug          string `json:"repo_slug"`
+		BuildNumber       int64  `json:"build_number"`
+		BuildAuthor       string `json:"build_author"`
+		BuildAuthorName   string `json:"build_author_name"`
+		BuildAuthorEmail  string `json:"build_author_email"`
+		BuildAuthorAvatar string `json:"build_author_avatar"`
+		BuildSender       string `json:"build_sender"`
+		BuildStarted      int64  `json:"build_started"`
+		BuildFinished     int64  `json:"build_finished"`
+		BuildCreated      int64  `json:"build_created"`
+		BuildUpdated      int64  `json:"build_updated"`
+		StageName         string `json:"stage_name"`
+		StageKind         string `json:"stage_kind"`
+		StageType         string `json:"stage_type"`
+		StageStatus       string `json:"stage_status"`
+		StageMachine      string `json:"stage_machine"`
+		StageOS           string `json:"stage_os"`
+		StageArch         string `json:"stage_arch"`
+		StageVariant      string `json:"stage_variant"`
+		StageKernel       string `json:"stage_kernel"`
+		StageLimit        string `json:"stage_limit"`
+		StageLimitRepo    string `json:"stage_limit_repo"`
+		StageStarted      int64  `json:"stage_started"`
+		StageStopped      int64  `json:"stage_stopped"`
+	}
+
 	// RepositoryStore defines operations for working with repositories.
 	RepositoryStore interface {
 		// List returns a repository list from the datastore.
@@ -83,6 +112,9 @@ type (
 		// ListIncomplete returns a non-unique repository list form
 		// the datastore with incomplete builds.
 		ListIncomplete(context.Context) ([]*Repository, error)
+
+		// ListRunningStatus returns a list of build / repository /stage information for builds that are incomplete.
+		ListRunningStatus(context.Context) ([]*RepoBuildStage, error)
 
 		// ListAll returns a paginated list of all repositories
 		// stored in the database, including disabled repositories.

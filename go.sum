@@ -78,12 +78,6 @@ github.com/drone/drone-go v1.4.1-0.20201109202657-b9e58bbbcf27/go.mod h1:fxCf9jA
 github.com/drone/drone-runtime v1.0.7-0.20190729202838-87c84080f4a1/go.mod h1:+osgwGADc/nyl40J0fdsf8Z09bgcBZXvXXnLOY48zYs=
 github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d h1:P5HI/Y9hARTZ3F3EKs0kYijhjXZWQRQHYn1neTi0pWM=
 github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d/go.mod h1:4/2QToW5+HGD0y1sTw7X35W1f7YINS14UfDY4isggT8=
-github.com/drone/drone-ui v2.0.1+incompatible h1:p+cFE2xB5zlQKaEDWXNe2SGzbzyy0oAcmQE2oe8h/xw=
-github.com/drone/drone-ui v2.0.1+incompatible/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
-github.com/drone/drone-ui v2.1.0+incompatible h1:mxRP0Oauq4M+HiDIxSiI3P2/hkmyxR+2JRLQ9EihqBU=
-github.com/drone/drone-ui v2.1.0+incompatible/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
-github.com/drone/drone-ui v2.2.0+incompatible h1:De3m4tFw/hg7/6Bap6t8x9M31dByavmvwpJlqUJdKvY=
-github.com/drone/drone-ui v2.2.0+incompatible/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
 github.com/drone/drone-ui v2.2.1+incompatible h1:j5Py26SOjyPHCp294qmVCASeCQ+Q8l/fBNw8UqBPyNU=
 github.com/drone/drone-ui v2.2.1+incompatible/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
 github.com/drone/drone-ui v2.3.0+incompatible h1:iFNrvqF/huhKCmGFH80FapiIF4JscNkCfT9lSnm4+Is=
