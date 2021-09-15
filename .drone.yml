@@ -12,6 +12,8 @@ steps:
   image: golang:1.14.15
   commands:
   - go test ./...
+  - go build -o /dev/null github.com/drone/drone/cmd/drone-server
+  - go build -o /dev/null -tags "oss nolimit" github.com/drone/drone/cmd/drone-server
   
 - name: build
   image: golang:1.14.15
