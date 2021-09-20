@@ -124,6 +124,7 @@ func fromBuild(v *core.Build) starlark.StringDict {
 		"event":         starlark.String(v.Event),
 		"action":        starlark.String(v.Action),
 		"cron":          starlark.String(v.Cron),
+		"number":        starlark.MakeInt64(v.Number),
 		"environment":   starlark.String(v.Deploy),
 		"link":          starlark.String(v.Link),
 		"branch":        starlark.String(v.Target),

@@ -45,13 +45,13 @@ var (
 func Template(templateStore core.TemplateStore, stepLimit uint64) core.ConvertService {
 	return &templatePlugin{
 		templateStore: templateStore,
-		stepLimit: stepLimit,
+		stepLimit:     stepLimit,
 	}
 }
 
 type templatePlugin struct {
 	templateStore core.TemplateStore
-	stepLimit uint64
+	stepLimit     uint64
 }
 
 func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Config, error) {

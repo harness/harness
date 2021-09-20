@@ -71,6 +71,7 @@ func Parse(req *core.ConvertArgs, template *core.Template, templateData map[stri
 func mapBuild(v *core.Build, vm *jsonnet.VM) {
 	vm.ExtVar(build+"event", v.Event)
 	vm.ExtVar(build+"action", v.Action)
+	vm.ExtVar(build+"action", strconv.FormatInt(v.Number, 10))
 	vm.ExtVar(build+"environment", v.Deploy)
 	vm.ExtVar(build+"link", v.Link)
 	vm.ExtVar(build+"branch", v.Target)

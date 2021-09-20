@@ -36,7 +36,7 @@ func Remote(endpoint, signer, extension string, skipVerify bool, timeout time.Du
 type remote struct {
 	client    converter.Plugin
 	extension string
-	timeout time.Duration
+	timeout   time.Duration
 }
 
 func (g *remote) Convert(ctx context.Context, in *core.ConvertArgs) (*core.Config, error) {
