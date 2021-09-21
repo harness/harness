@@ -139,7 +139,8 @@ type (
 
 	// Jsonnet configures the jsonnet plugin
 	Jsonnet struct {
-		Enabled bool `envconfig:"DRONE_JSONNET_ENABLED"`
+		Enabled     bool `envconfig:"DRONE_JSONNET_ENABLED"`
+		ImportLimit int  `envconfig:"DRONE_JSONNET_IMPORT_LIMIT" default:"0"`
 	}
 
 	// Starlark configures the starlark plugin

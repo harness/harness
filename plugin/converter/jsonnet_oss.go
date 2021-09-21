@@ -22,6 +22,6 @@ import (
 
 // Jsonnet returns a conversion service that converts the
 // jsonnet file to a yaml file.
-func Jsonnet(enabled bool) core.ConvertService {
+func Jsonnet(enabled bool, limit int, fileService core.FileService) core.ConvertService {
 	return new(noop)
 }

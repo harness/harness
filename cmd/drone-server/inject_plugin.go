@@ -76,7 +76,7 @@ func provideConfigPlugin(client *scm.Client, contents core.FileService, conf spe
 // provideConvertPlugin is a Wire provider function that returns
 // a yaml conversion plugin based on the environment
 // configuration.
-func provideConvertPlugin(client *scm.Client, conf spec.Config, templateStore core.TemplateStore) core.ConvertService {
+func provideConvertPlugin(client *scm.Client, fileService core.FileService, conf spec.Config, templateStore core.TemplateStore) core.ConvertService {
 	return converter.Combine(
 		converter.Legacy(false),
 		converter.Starlark(
@@ -85,6 +85,8 @@ func provideConvertPlugin(client *scm.Client, conf spec.Config, templateStore co
 		),
 		converter.Jsonnet(
 			conf.Jsonnet.Enabled,
+			conf.Jsonnet.ImportLimit,
+			fileService,
 		),
 		converter.Template(
 			templateStore,
