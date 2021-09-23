@@ -1,12 +1,35 @@
 # Changelog
 
+## [v2.4.0](https://github.com/drone/drone/tree/v2.4.0) (2021-09-23)
+
+[Full Changelog](https://github.com/drone/drone/compare/v2.3.1...v2.4.0)
+
+**Implemented enhancements:**
+
+- bump ui version to v2.3.0 [\#3146](https://github.com/drone/drone/pull/3146) ([d1wilko](https://github.com/d1wilko))
+- verify if the application is buildable [\#3144](https://github.com/drone/drone/pull/3144) ([marko-gacesa](https://github.com/marko-gacesa))
+
+**Fixed bugs:**
+
+- fixes build issue with bitbucket cloud [\#3147](https://github.com/drone/drone/pull/3147) ([eoinmcafee00](https://github.com/eoinmcafee00))
+- Fix stepLimit param in Starlark and Template OSS code [\#3141](https://github.com/drone/drone/pull/3141) ([phil-davis](https://github.com/phil-davis))
+- fix a broken link in readme [\#3140](https://github.com/drone/drone/pull/3140) ([empire](https://github.com/empire))
+
+**Merged pull requests:**
+
+- Allow jsonnet imports in pipeline configuration [\#3105](https://github.com/drone/drone/pull/3105) ([hhamalai](https://github.com/hhamalai))
+
 ## [v2.3.1](https://github.com/drone/drone/tree/v2.3.1) (2021-09-09)
 
 [Full Changelog](https://github.com/drone/drone/compare/v2.3.0...v2.3.1)
 
-**Merged pull requests:**
+**Implemented enhancements:**
 
 - bump ui to v2.2.1 - https://github.com/drone/drone-ui/blob/main/CHANGELOG.md [\#3138](https://github.com/drone/drone/pull/3138) ([d1wilko](https://github.com/d1wilko))
+
+**Merged pull requests:**
+
+- \(maint\)-release 2.3.1 [\#3139](https://github.com/drone/drone/pull/3139) ([d1wilko](https://github.com/d1wilko))
 
 ## [v2.3.0](https://github.com/drone/drone/tree/v2.3.0) (2021-09-09)
 
@@ -97,8 +120,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-### Added
-- Allow jsonnet imports in pipeline configuration
 
 ## [2.0.4]
 ### Fixed
