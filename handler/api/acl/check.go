@@ -15,7 +15,10 @@
 package acl
 
 import (
+	"github.com/dchest/authcookie"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/errors"
@@ -46,6 +49,36 @@ func CheckWriteAccess() func(http.Handler) http.Handler {
 // handler in the chain.
 func CheckAdminAccess() func(http.Handler) http.Handler {
 	return CheckAccess(true, true, true)
+}
+
+func CheckInternalAccess() func(http.Handler) http.Handler {
+	return checkIAccess()
+}
+
+// CheckIAccess returns an http.Handler middleware that authorizes only
+// allows plugins to communicate with the server
+func checkIAccess() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var (
+				owner = chi.URLParam(r, "owner")
+				name  = chi.URLParam(r, "name")
+			)
+			log := logger.FromRequest(r).
+				WithField("namespace", owner).
+				WithField("name", name)
+
+			secret := []byte(os.Getenv("DRONE_INTERNAL_AUTH_SECRET"))
+			login := authcookie.Login(extractToken(r), secret)
+			if login != "" {
+				log.Debug("api: access granted")
+				next.ServeHTTP(w, r)
+			}
+			render.Unauthorized(w, errors.ErrUnauthorized)
+			log.Debugln("api: authentication required for access")
+			return
+		})
+	}
 }
 
 // CheckAccess returns an http.Handler middleware that authorizes only
@@ -143,4 +176,12 @@ func CheckAccess(read, write, admin bool) func(http.Handler) http.Handler {
 			}
 		})
 	}
+}
+
+func extractToken(r *http.Request) string {
+	bearer := r.Header.Get("Authorization")
+	if bearer == "" {
+		bearer = r.FormValue("access_token")
+	}
+	return strings.TrimPrefix(bearer, "Bearer ")
 }

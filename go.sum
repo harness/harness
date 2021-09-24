@@ -58,6 +58,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dchest/authcookie v0.0.0-20120917135355-fbdef6e99866 h1:98WJ4YCdjmB7uyrdT3P4A2Oa1hiRPKoa/0zInG6UnfQ=
 github.com/dchest/authcookie v0.0.0-20120917135355-fbdef6e99866/go.mod h1:x7AK2h2QzaXVEFi1tbMYMDuvHcCEr1QdMDrg3hkW24Q=
+github.com/dchest/authcookie v0.0.0-20190824115100-f900d2294c8e h1:xizeG5ksKSdyNaom2//2Bow4hLWqXkCql36nrL9iEUI=
+github.com/dchest/authcookie v0.0.0-20190824115100-f900d2294c8e/go.mod h1:x7AK2h2QzaXVEFi1tbMYMDuvHcCEr1QdMDrg3hkW24Q=
 github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9 h1:74lLNRzvsdIlkTgfDSMuaPjBr4cf6k7pwQQANm/yLKU=
 github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9/go.mod h1:GgB8SF9nRG+GqaDtLcwJZsQFhcogVCJ79j4EdT0c2V4=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=

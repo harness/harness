@@ -79,6 +79,7 @@ tasks:
       - cmd: go test -count=1 github.com/drone/drone/store/batch
       - cmd: go test -count=1 github.com/drone/drone/store/batch2
       - cmd: go test -count=1 github.com/drone/drone/store/build
+      - cmd: go test -count=1 github.com/drone/drone/store/card
       - cmd: go test -count=1 github.com/drone/drone/store/cron
       - cmd: go test -count=1 github.com/drone/drone/store/logs
       - cmd: go test -count=1 github.com/drone/drone/store/perm
@@ -113,6 +114,7 @@ tasks:
       - cmd: go test -count=1 github.com/drone/drone/store/batch
       - cmd: go test -count=1 github.com/drone/drone/store/batch2
       - cmd: go test -count=1 github.com/drone/drone/store/build
+      - cmd: go test -count=1 github.com/drone/drone/store/card
       - cmd: go test -count=1 github.com/drone/drone/store/cron
       - cmd: go test -count=1 github.com/drone/drone/store/logs
       - cmd: go test -count=1 github.com/drone/drone/store/perm

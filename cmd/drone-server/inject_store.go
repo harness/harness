@@ -21,6 +21,7 @@ import (
 	"github.com/drone/drone/store/batch"
 	"github.com/drone/drone/store/batch2"
 	"github.com/drone/drone/store/build"
+	"github.com/drone/drone/store/card"
 	"github.com/drone/drone/store/cron"
 	"github.com/drone/drone/store/logs"
 	"github.com/drone/drone/store/perm"
@@ -50,6 +51,7 @@ var storeSet = wire.NewSet(
 	provideBatchStore,
 	// batch.New,
 	cron.New,
+	card.New,
 	perm.New,
 	secret.New,
 	global.New,
