@@ -38,7 +38,7 @@ func (noop) FindCard(ctx context.Context, step int64) (*core.Card, error) {
 	return nil, nil
 }
 
-func (noop) FindCardData(ctx context.Context, id int64) (io.Reader, error) {
+func (noop) FindCardData(ctx context.Context, id int64) (io.ReadCloser, error) {
 	return nil, nil
 }
 
