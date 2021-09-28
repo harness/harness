@@ -45,7 +45,7 @@ var (
 	}
 	dummyCreateCard = &core.CreateCard{
 		Schema: "https://myschema.com",
-		Data:   "{\"type\": \"AdaptiveCard\"}",
+		Data:   []byte("{\"type\": \"AdaptiveCard\"}"),
 	}
 	dummyCard = &core.Card{
 		Id:     1,

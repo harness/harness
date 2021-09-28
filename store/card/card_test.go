@@ -52,7 +52,7 @@ func testCardCreate(store *cardStore) func(t *testing.T) {
 			Stage:  2,
 			Step:   3,
 			Schema: "https://myschema.com",
-			Data:   "{\"type\": \"AdaptiveCard\"}",
+			Data:   []byte("{\"type\": \"AdaptiveCard\"}"),
 		}
 		err := store.CreateCard(noContext, item)
 		if err != nil {

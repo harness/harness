@@ -2962,10 +2962,10 @@ func (mr *MockCardStoreMockRecorder) FindCardByBuild(arg0, arg1 interface{}) *go
 }
 
 // FindCardData mocks base method.
-func (m *MockCardStore) FindCardData(arg0 context.Context, arg1 int64) (io.Reader, error) {
+func (m *MockCardStore) FindCardData(arg0 context.Context, arg1 int64) (io.ReadCloser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindCardData", arg0, arg1)
-	ret0, _ := ret[0].(io.Reader)
+	ret0, _ := ret[0].(io.ReadCloser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
