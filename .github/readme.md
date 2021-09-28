@@ -36,7 +36,7 @@ This section of the [documentation](http://docs.drone.io/installation/) will hel
 
 ### Usage Documentation
 
-Our [documentation](http://docs.drone.io/getting-started/) can help you get started with the different types of pipelines/builds. There are different runners / plugins / extensions designed for different use cases to help make an efficent and simple build pipeline
+Our [documentation](http://docs.drone.io/getting-started/) can help you get started with the different types of pipelines/builds. There are different runners / plugins / extensions designed for different use cases to help make an efficient and simple build pipeline
 
 ### Plugin Index
 
