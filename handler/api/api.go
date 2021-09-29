@@ -296,6 +296,9 @@ func (s Server) Handler() http.Handler {
 				r.Get("/{build}/{stage}/{step}/json", card.HandleFindData(s.Builds, s.Card, s.Stages, s.Steps, s.Repos))
 				r.With(
 					acl.CheckAdminAccess(),
+				).Post("/{build}/{stage}/{step}", card.HandleCreate(s.Builds, s.Card, s.Stages, s.Steps, s.Repos))
+				r.With(
+					acl.CheckAdminAccess(),
 				).Delete("/{build}/{stage}/{step}", card.HandleDelete(s.Builds, s.Card, s.Stages, s.Steps, s.Repos))
 			})
 		})
