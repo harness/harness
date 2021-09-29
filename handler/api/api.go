@@ -345,6 +345,7 @@ func (s Server) Handler() http.Handler {
 	r.Route("/builds", func(r chi.Router) {
 		r.Use(acl.AuthorizeAdmin)
 		r.Get("/incomplete", globalbuilds.HandleIncomplete(s.Repos))
+		r.Get("/incomplete/v2", globalbuilds.HandleRunningStatus(s.Repos))
 	})
 
 	r.Route("/secrets", func(r chi.Router) {

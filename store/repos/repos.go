@@ -104,6 +104,19 @@ func (s *repoStore) ListIncomplete(ctx context.Context) ([]*core.Repository, err
 	return out, err
 }
 
+func (s *repoStore) ListRunningStatus(ctx context.Context) ([]*core.RepoBuildStage, error) {
+	var out []*core.RepoBuildStage
+	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
+		rows, err := queryer.Query(queryReposRunningStatus)
+		if err != nil {
+			return err
+		}
+		out, err = repoBuildStageRowsBuild(rows)
+		return err
+	})
+	return out, err
+}
+
 func (s *repoStore) ListAll(ctx context.Context, limit, offset int) ([]*core.Repository, error) {
 	var out []*core.Repository
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
@@ -535,4 +548,38 @@ WHERE EXISTS (
 )
 ORDER BY build_id DESC
 LIMIT 50;
+`
+const queryReposRunningStatus = `
+SELECT
+repo_namespace
+,repo_name
+,repo_slug
+,build_number
+,build_author
+,build_author_name
+,build_author_email
+,build_author_avatar
+,build_sender
+,build_started
+,build_finished
+,build_created
+,build_updated
+,stage_name
+,stage_kind
+,stage_type
+,stage_status
+,stage_machine
+,stage_os
+,stage_arch
+,stage_variant
+,stage_kernel
+,stage_limit
+,stage_limit_repo
+,stage_started
+,stage_stopped
+FROM repos
+INNER JOIN builds ON builds.build_repo_id = repos.repo_id
+inner join stages on stages.stage_build_id = builds.build_id
+where stages.stage_status IN ('pending', 'running')
+ORDER BY build_id DESC;
 `

@@ -28,3 +28,16 @@ func HandleIncomplete(repos core.RepositoryStore) http.HandlerFunc {
 		}
 	}
 }
+
+func HandleRunningStatus(repos core.RepositoryStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		list, err := repos.ListRunningStatus(r.Context())
+		if err != nil {
+			render.InternalError(w, err)
+			logger.FromRequest(r).WithError(err).
+				Debugln("api: cannot list incomplete builds")
+		} else {
+			render.JSON(w, list, 200)
+		}
+	}
+}

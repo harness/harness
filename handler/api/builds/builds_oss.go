@@ -31,3 +31,7 @@ var notImplemented = func(w http.ResponseWriter, r *http.Request) {
 func HandleIncomplete(repos core.RepositoryStore) http.HandlerFunc {
 	return notImplemented
 }
+
+func HandleRunningStatus(repos core.RepositoryStore) http.HandlerFunc {
+	return notImplemented
+}
