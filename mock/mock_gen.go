@@ -2904,17 +2904,17 @@ func (m *MockCardStore) EXPECT() *MockCardStoreMockRecorder {
 }
 
 // CreateCard mocks base method.
-func (m *MockCardStore) CreateCard(arg0 context.Context, arg1 *core.CreateCard) error {
+func (m *MockCardStore) CreateCard(arg0 context.Context, arg1 *core.Card, arg2 io.ReadCloser) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateCard", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateCard", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateCard indicates an expected call of CreateCard.
-func (mr *MockCardStoreMockRecorder) CreateCard(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockCardStoreMockRecorder) CreateCard(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCard", reflect.TypeOf((*MockCardStore)(nil).CreateCard), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCard", reflect.TypeOf((*MockCardStore)(nil).CreateCard), arg0, arg1, arg2)
 }
 
 // DeleteCard mocks base method.
