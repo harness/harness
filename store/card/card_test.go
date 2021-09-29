@@ -47,7 +47,7 @@ func testCard(item *core.Card) func(t *testing.T) {
 
 func testCardCreate(store *cardStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		item := &core.CreateCard{
+		item := &core.Card{
 			Id:     1,
 			Build:  1,
 			Stage:  2,

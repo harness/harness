@@ -27,7 +27,7 @@ func toParams(card *core.Card) (map[string]interface{}, error) {
 
 // helper function converts the card structure to a set
 // of named query parameters.
-func toSaveCardParams(card *core.CreateCard, data []byte) (map[string]interface{}, error) {
+func toSaveCardParams(card *core.Card, data []byte) (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"card_id":     card.Id,
 		"card_build":  card.Build,
