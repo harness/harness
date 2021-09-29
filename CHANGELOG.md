@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased](https://github.com/drone/drone/tree/HEAD)
+
+[Full Changelog](https://github.com/drone/drone/compare/v2.4.0...HEAD)
+
+**Implemented enhancements:**
+
+- \(DRON-124\) adding new status endpoint [\#3143](https://github.com/drone/drone/pull/3143) ([tphoney](https://github.com/tphoney))
+
+**Fixed bugs:**
+
+- fix a typo in readme [\#3150](https://github.com/drone/drone/pull/3150) ([nothatDinger](https://github.com/nothatDinger))
+
 ## [v2.4.0](https://github.com/drone/drone/tree/v2.4.0) (2021-09-23)
 
 [Full Changelog](https://github.com/drone/drone/compare/v2.3.1...v2.4.0)
@@ -17,6 +29,7 @@
 
 **Merged pull requests:**
 
+- \(maint\)-release 2.4.0 [\#3148](https://github.com/drone/drone/pull/3148) ([d1wilko](https://github.com/d1wilko))
 - Allow jsonnet imports in pipeline configuration [\#3105](https://github.com/drone/drone/pull/3105) ([hhamalai](https://github.com/hhamalai))
 
 ## [v2.3.1](https://github.com/drone/drone/tree/v2.3.1) (2021-09-09)
