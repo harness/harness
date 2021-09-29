@@ -81,16 +81,20 @@ func (c cardStore) FindCardData(ctx context.Context, id int64) (io.ReadCloser, e
 	), err
 }
 
-func (c cardStore) CreateCard(ctx context.Context, card *core.CreateCard) error {
+func (c cardStore) CreateCard(ctx context.Context, card *core.Card, data io.ReadCloser) error {
 	if c.db.Driver() == db.Postgres {
-		return c.createPostgres(ctx, card)
+		return c.createPostgres(ctx, card, data)
 	}
-	return c.create(ctx, card)
+	return c.create(ctx, card, data)
 }
 
-func (c *cardStore) create(ctx context.Context, card *core.CreateCard) error {
+func (c *cardStore) create(ctx context.Context, card *core.Card, data io.ReadCloser) error {
 	return c.db.Lock(func(execer db.Execer, binder db.Binder) error {
-		params, err := toSaveCardParams(card)
+		cardData, err := ioutil.ReadAll(data)
+		if err != nil {
+			return err
+		}
+		params, err := toSaveCardParams(card, cardData)
 		if err != nil {
 			return err
 		}
@@ -107,9 +111,13 @@ func (c *cardStore) create(ctx context.Context, card *core.CreateCard) error {
 	})
 }
 
-func (c *cardStore) createPostgres(ctx context.Context, card *core.CreateCard) error {
+func (c *cardStore) createPostgres(ctx context.Context, card *core.Card, data io.ReadCloser) error {
 	return c.db.Lock(func(execer db.Execer, binder db.Binder) error {
-		params, err := toSaveCardParams(card)
+		cardData, err := ioutil.ReadAll(data)
+		if err != nil {
+			return err
+		}
+		params, err := toSaveCardParams(card, cardData)
 		if err != nil {
 			return err
 		}

@@ -1,6 +1,7 @@
 package card
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"io/ioutil"
@@ -52,9 +53,11 @@ func testCardCreate(store *cardStore) func(t *testing.T) {
 			Stage:  2,
 			Step:   3,
 			Schema: "https://myschema.com",
-			Data:   []byte("{\"type\": \"AdaptiveCard\"}"),
 		}
-		err := store.CreateCard(noContext, item)
+		buf := ioutil.NopCloser(
+			bytes.NewBuffer([]byte("{\"type\": \"AdaptiveCard\"}")),
+		)
+		err := store.CreateCard(noContext, item, buf)
 		if err != nil {
 			t.Error(err)
 		}

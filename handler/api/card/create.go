@@ -7,7 +7,9 @@
 package card
 
 import (
+	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -83,12 +85,11 @@ func HandleCreate(
 			return
 		}
 
-		c := &core.CreateCard{
+		c := &core.Card{
 			Build:  build.ID,
 			Stage:  stage.ID,
 			Step:   step.ID,
 			Schema: in.Schema,
-			Data:   in.Data,
 		}
 
 		err = c.Validate()
@@ -97,7 +98,11 @@ func HandleCreate(
 			return
 		}
 
-		err = cardStore.CreateCard(r.Context(), c)
+		data := ioutil.NopCloser(
+			bytes.NewBuffer([]byte(in.Data)),
+		)
+
+		err = cardStore.CreateCard(r.Context(), c, data)
 		if err != nil {
 			render.InternalError(w, err)
 			return

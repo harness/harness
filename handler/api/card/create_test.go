@@ -43,9 +43,8 @@ var (
 		ID:      1,
 		StageID: 1,
 	}
-	dummyCreateCard = &core.CreateCard{
+	dummyCreateCard = &core.Card{
 		Schema: "https://myschema.com",
-		Data:   []byte("{\"type\": \"AdaptiveCard\"}"),
 	}
 	dummyCard = &core.Card{
 		Id:     1,
@@ -54,14 +53,14 @@ var (
 		Step:   1,
 		Schema: "https://myschema.com",
 	}
-	dummyCardNoData = &core.CreateCard{
+	dummyCardNoData = &core.Card{
 		Schema: "https://myschema.com",
 	}
 	dummyCardList = []*core.Card{
 		dummyCard,
 	}
 	dummyCardData = ioutil.NopCloser(
-		bytes.NewBuffer([]byte(dummyCreateCard.Data)),
+		bytes.NewBuffer([]byte("{\"type\": \"AdaptiveCard\"}")),
 	)
 )
 
@@ -82,7 +81,7 @@ func TestHandleCreate(t *testing.T) {
 	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
 
 	card := mock.NewMockCardStore(controller)
-	card.EXPECT().CreateCard(gomock.Any(), gomock.Any()).Return(nil)
+	card.EXPECT().CreateCard(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
@@ -103,52 +102,6 @@ func TestHandleCreate(t *testing.T) {
 	HandleCreate(build, card, stage, step, repos).ServeHTTP(w, r)
 	if got, want := w.Code, http.StatusOK; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
-	}
-}
-
-func TestHandleCreate_ValidationErrorData(t *testing.T) {
-	controller := gomock.NewController(t)
-	defer controller.Finish()
-
-	repos := mock.NewMockRepositoryStore(controller)
-	repos.EXPECT().FindName(gomock.Any(), "octocat", "hello-world").Return(dummyRepo, nil)
-
-	build := mock.NewMockBuildStore(controller)
-	build.EXPECT().FindNumber(gomock.Any(), dummyBuild.ID, gomock.Any()).Return(dummyBuild, nil)
-
-	stage := mock.NewMockStageStore(controller)
-	stage.EXPECT().FindNumber(gomock.Any(), dummyBuild.ID, gomock.Any()).Return(dummyStage, nil)
-
-	step := mock.NewMockStepStore(controller)
-	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
-
-	card := mock.NewMockCardStore(controller)
-
-	c := new(chi.Context)
-	c.URLParams.Add("owner", "octocat")
-	c.URLParams.Add("name", "hello-world")
-	c.URLParams.Add("build", "1")
-	c.URLParams.Add("stage", "1")
-	c.URLParams.Add("step", "1")
-
-	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(dummyCardNoData)
-
-	w := httptest.NewRecorder()
-	r := httptest.NewRequest("POST", "/", in)
-	r = r.WithContext(
-		context.WithValue(context.Background(), chi.RouteCtxKey, c),
-	)
-
-	HandleCreate(build, card, stage, step, repos).ServeHTTP(w, r)
-	if got, want := w.Code, http.StatusBadRequest; want != got {
-		t.Errorf("Want response code %d, got %d", want, got)
-	}
-
-	got, want := &errors.Error{}, &errors.Error{Message: "No Card Data Has Been Provided"}
-	json.NewDecoder(w.Body).Decode(got)
-	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
 	}
 }
 
@@ -194,7 +147,7 @@ func TestHandleCreate_CreateError(t *testing.T) {
 	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
 
 	card := mock.NewMockCardStore(controller)
-	card.EXPECT().CreateCard(gomock.Any(), gomock.Any()).Return(errors.ErrNotFound)
+	card.EXPECT().CreateCard(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.ErrNotFound)
 
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")

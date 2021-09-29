@@ -170,11 +170,6 @@ func (s Server) Handler() http.Handler {
 	cors := cors.New(corsOpts)
 	r.Use(cors.Handler)
 
-	r.Route("/internal/{owner}/{name}", func(r chi.Router) {
-		r.With(
-			acl.CheckInternalAccess(),
-		).Post("/cards/{build}/{stage}/{step}", card.HandleCreate(s.Builds, s.Card, s.Stages, s.Steps, s.Repos))
-	})
 	r.Route("/repos", func(r chi.Router) {
 		// temporary workaround to enable private mode
 		// for the drone server.
@@ -300,7 +295,6 @@ func (s Server) Handler() http.Handler {
 				r.Get("/{build}/{stage}/{step}", card.HandleFind(s.Builds, s.Card, s.Stages, s.Steps, s.Repos))
 				r.Get("/{build}/{stage}/{step}/json", card.HandleFindData(s.Builds, s.Card, s.Stages, s.Steps, s.Repos))
 				r.With(
-					acl.AuthorizeAdmin,
 					acl.CheckAdminAccess(),
 				).Delete("/{build}/{stage}/{step}", card.HandleDelete(s.Builds, s.Card, s.Stages, s.Steps, s.Repos))
 			})
