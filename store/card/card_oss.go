@@ -42,7 +42,7 @@ func (noop) FindCardData(ctx context.Context, id int64) (io.ReadCloser, error) {
 	return nil, nil
 }
 
-func (noop) CreateCard(ctx context.Context, card *core.CreateCard) error {
+func (noop) CreateCard(ctx context.Context, card *core.Card, data io.ReadCloser) error {
 	return nil
 }
 
