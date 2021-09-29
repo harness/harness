@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go v1.37.3
 	github.com/codegangsta/negroni v1.0.0 // indirect
 	github.com/coreos/go-semver v0.2.0
-	github.com/dchest/authcookie v0.0.0-20190824115100-f900d2294c8e
+	github.com/dchest/authcookie v0.0.0-20120917135355-fbdef6e99866
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/drone/drone-go v1.4.1-0.20201109202657-b9e58bbbcf27
 	github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d
