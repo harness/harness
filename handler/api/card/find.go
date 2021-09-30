@@ -69,7 +69,7 @@ func HandleFind(
 			return
 		}
 
-		card, err := cardStore.FindCard(r.Context(), step.ID)
+		card, err := cardStore.Find(r.Context(), step.ID)
 		if err != nil {
 			render.NotFound(w, err)
 			return

@@ -102,7 +102,7 @@ func HandleCreate(
 			bytes.NewBuffer([]byte(in.Data)),
 		)
 
-		err = cardStore.CreateCard(r.Context(), c, data)
+		err = cardStore.Create(r.Context(), c, data)
 		if err != nil {
 			render.InternalError(w, err)
 			return

@@ -53,9 +53,6 @@ var (
 		Step:   1,
 		Schema: "https://myschema.com",
 	}
-	dummyCardNoData = &core.Card{
-		Schema: "https://myschema.com",
-	}
 	dummyCardList = []*core.Card{
 		dummyCard,
 	}

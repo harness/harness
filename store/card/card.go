@@ -26,7 +26,7 @@ type cardStore struct {
 	db *db.DB
 }
 
-func (c *cardStore) FindCardByBuild(ctx context.Context, build int64) ([]*core.Card, error) {
+func (c *cardStore) FindByBuild(ctx context.Context, build int64) ([]*core.Card, error) {
 	var out []*core.Card
 	err := c.db.View(func(queryer db.Queryer, binder db.Binder) error {
 		params := map[string]interface{}{
@@ -46,7 +46,7 @@ func (c *cardStore) FindCardByBuild(ctx context.Context, build int64) ([]*core.C
 	return out, err
 }
 
-func (c cardStore) FindCard(ctx context.Context, step int64) (*core.Card, error) {
+func (c cardStore) Find(ctx context.Context, step int64) (*core.Card, error) {
 	out := &core.Card{Step: step}
 	err := c.db.View(func(queryer db.Queryer, binder db.Binder) error {
 		params, err := toParams(out)
@@ -63,7 +63,7 @@ func (c cardStore) FindCard(ctx context.Context, step int64) (*core.Card, error)
 	return out, err
 }
 
-func (c cardStore) FindCardData(ctx context.Context, id int64) (io.ReadCloser, error) {
+func (c cardStore) FindData(ctx context.Context, id int64) (io.ReadCloser, error) {
 	out := &core.CardData{}
 	err := c.db.View(func(queryer db.Queryer, binder db.Binder) error {
 		params := map[string]interface{}{
@@ -81,7 +81,7 @@ func (c cardStore) FindCardData(ctx context.Context, id int64) (io.ReadCloser, e
 	), err
 }
 
-func (c cardStore) CreateCard(ctx context.Context, card *core.Card, data io.ReadCloser) error {
+func (c cardStore) Create(ctx context.Context, card *core.Card, data io.ReadCloser) error {
 	if c.db.Driver() == db.Postgres {
 		return c.createPostgres(ctx, card, data)
 	}
@@ -129,7 +129,7 @@ func (c *cardStore) createPostgres(ctx context.Context, card *core.Card, data io
 	})
 }
 
-func (c cardStore) DeleteCard(ctx context.Context, id int64) error {
+func (c cardStore) Delete(ctx context.Context, id int64) error {
 	return c.db.Lock(func(execer db.Execer, binder db.Binder) error {
 		params := map[string]interface{}{
 			"card_id": id,

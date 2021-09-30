@@ -70,12 +70,12 @@ func HandleFindData(
 			return
 		}
 
-		card, err := cardStore.FindCard(r.Context(), step.ID)
+		card, err := cardStore.Find(r.Context(), step.ID)
 		if err != nil {
 			render.NotFound(w, err)
 			return
 		}
-		cardData, err := cardStore.FindCardData(r.Context(), card.Id)
+		cardData, err := cardStore.FindData(r.Context(), card.Id)
 		if err != nil {
 			render.NotFound(w, err)
 			return

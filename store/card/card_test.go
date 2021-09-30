@@ -57,7 +57,7 @@ func testCardCreate(store *cardStore) func(t *testing.T) {
 		buf := ioutil.NopCloser(
 			bytes.NewBuffer([]byte("{\"type\": \"AdaptiveCard\"}")),
 		)
-		err := store.CreateCard(noContext, item, buf)
+		err := store.Create(noContext, item, buf)
 		if err != nil {
 			t.Error(err)
 		}
@@ -66,15 +66,15 @@ func testCardCreate(store *cardStore) func(t *testing.T) {
 		}
 
 		t.Run("FindByBuild", testFindCardByBuild(store))
-		t.Run("FindCard", testFindCard(store))
-		t.Run("FindCardData", testFindCardData(store))
+		t.Run("Find", testFindCard(store))
+		t.Run("FindData", testFindCardData(store))
 		t.Run("Delete", testCardDelete(store))
 	}
 }
 
 func testFindCardByBuild(card *cardStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		item, err := card.FindCardByBuild(noContext, 1)
+		item, err := card.FindByBuild(noContext, 1)
 		if err != nil {
 			t.Error(err)
 		} else {
@@ -85,7 +85,7 @@ func testFindCardByBuild(card *cardStore) func(t *testing.T) {
 
 func testFindCard(card *cardStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		item, err := card.FindCard(noContext, 3)
+		item, err := card.Find(noContext, 3)
 		if err != nil {
 			t.Error(err)
 		} else {
@@ -96,7 +96,7 @@ func testFindCard(card *cardStore) func(t *testing.T) {
 
 func testFindCardData(card *cardStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		r, err := card.FindCardData(noContext, 1)
+		r, err := card.FindData(noContext, 1)
 		if err != nil {
 			t.Error(err)
 		} else {
@@ -114,17 +114,17 @@ func testFindCardData(card *cardStore) func(t *testing.T) {
 
 func testCardDelete(store *cardStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		card, err := store.FindCard(noContext, 3)
+		card, err := store.Find(noContext, 3)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		err = store.DeleteCard(noContext, card.Id)
+		err = store.Delete(noContext, card.Id)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		_, err = store.FindCard(noContext, card.Step)
+		_, err = store.Find(noContext, card.Step)
 		if got, want := sql.ErrNoRows, err; got != want {
 			t.Errorf("Want sql.ErrNoRows, got %v", got)
 			return

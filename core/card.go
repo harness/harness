@@ -42,11 +42,11 @@ type CardData struct {
 
 // CardStore manages repository cards.
 type CardStore interface {
-	FindCardByBuild(ctx context.Context, build int64) ([]*Card, error)
-	FindCard(ctx context.Context, step int64) (*Card, error)
-	FindCardData(ctx context.Context, id int64) (io.ReadCloser, error)
-	CreateCard(ctx context.Context, card *Card, data io.ReadCloser) error
-	DeleteCard(ctx context.Context, id int64) error
+	FindByBuild(ctx context.Context, build int64) ([]*Card, error)
+	Find(ctx context.Context, step int64) (*Card, error)
+	FindData(ctx context.Context, id int64) (io.ReadCloser, error)
+	Create(ctx context.Context, card *Card, data io.ReadCloser) error
+	Delete(ctx context.Context, id int64) error
 }
 
 // Validate validates the required fields and formats.

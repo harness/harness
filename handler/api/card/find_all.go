@@ -45,7 +45,7 @@ func HandleFindAll(
 			return
 		}
 
-		list, err := cardStore.FindCardByBuild(r.Context(), build.ID)
+		list, err := cardStore.FindByBuild(r.Context(), build.ID)
 		if err != nil {
 			render.NotFound(w, err)
 			return

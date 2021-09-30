@@ -13,4 +13,4 @@ CREATE TABLE IF NOT EXISTS cards (
 CREATE INDEX IF NOT EXISTS  ix_cards_build ON cards (card_build);
 
 -- name: create-index-cards-card_step
-CREATE INDEX IF NOT EXISTS  ix_cards_step ON cards (card_step);
+CREATE UNIQUE INDEX IF NOT EXISTS  ix_cards_step ON cards (card_step);
