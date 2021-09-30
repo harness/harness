@@ -2903,75 +2903,75 @@ func (m *MockCardStore) EXPECT() *MockCardStoreMockRecorder {
 	return m.recorder
 }
 
-// CreateCard mocks base method.
-func (m *MockCardStore) CreateCard(arg0 context.Context, arg1 *core.Card, arg2 io.ReadCloser) error {
+// Create mocks base method.
+func (m *MockCardStore) Create(arg0 context.Context, arg1 *core.Card, arg2 io.ReadCloser) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateCard", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateCard indicates an expected call of CreateCard.
-func (mr *MockCardStoreMockRecorder) CreateCard(arg0, arg1, arg2 interface{}) *gomock.Call {
+// Create indicates an expected call of Create.
+func (mr *MockCardStoreMockRecorder) Create(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCard", reflect.TypeOf((*MockCardStore)(nil).CreateCard), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockCardStore)(nil).Create), arg0, arg1, arg2)
 }
 
-// DeleteCard mocks base method.
-func (m *MockCardStore) DeleteCard(arg0 context.Context, arg1 int64) error {
+// Delete mocks base method.
+func (m *MockCardStore) Delete(arg0 context.Context, arg1 int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteCard", arg0, arg1)
+	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteCard indicates an expected call of DeleteCard.
-func (mr *MockCardStoreMockRecorder) DeleteCard(arg0, arg1 interface{}) *gomock.Call {
+// Delete indicates an expected call of Delete.
+func (mr *MockCardStoreMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCard", reflect.TypeOf((*MockCardStore)(nil).DeleteCard), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockCardStore)(nil).Delete), arg0, arg1)
 }
 
-// FindCard mocks base method.
-func (m *MockCardStore) FindCard(arg0 context.Context, arg1 int64) (*core.Card, error) {
+// Find mocks base method.
+func (m *MockCardStore) Find(arg0 context.Context, arg1 int64) (*core.Card, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindCard", arg0, arg1)
+	ret := m.ctrl.Call(m, "Find", arg0, arg1)
 	ret0, _ := ret[0].(*core.Card)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindCard indicates an expected call of FindCard.
-func (mr *MockCardStoreMockRecorder) FindCard(arg0, arg1 interface{}) *gomock.Call {
+// Find indicates an expected call of Find.
+func (mr *MockCardStoreMockRecorder) Find(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCard", reflect.TypeOf((*MockCardStore)(nil).FindCard), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockCardStore)(nil).Find), arg0, arg1)
 }
 
-// FindCardByBuild mocks base method.
-func (m *MockCardStore) FindCardByBuild(arg0 context.Context, arg1 int64) ([]*core.Card, error) {
+// FindByBuild mocks base method.
+func (m *MockCardStore) FindByBuild(arg0 context.Context, arg1 int64) ([]*core.Card, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindCardByBuild", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindByBuild", arg0, arg1)
 	ret0, _ := ret[0].([]*core.Card)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindCardByBuild indicates an expected call of FindCardByBuild.
-func (mr *MockCardStoreMockRecorder) FindCardByBuild(arg0, arg1 interface{}) *gomock.Call {
+// FindByBuild indicates an expected call of FindByBuild.
+func (mr *MockCardStoreMockRecorder) FindByBuild(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCardByBuild", reflect.TypeOf((*MockCardStore)(nil).FindCardByBuild), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByBuild", reflect.TypeOf((*MockCardStore)(nil).FindByBuild), arg0, arg1)
 }
 
-// FindCardData mocks base method.
-func (m *MockCardStore) FindCardData(arg0 context.Context, arg1 int64) (io.ReadCloser, error) {
+// FindData mocks base method.
+func (m *MockCardStore) FindData(arg0 context.Context, arg1 int64) (io.ReadCloser, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindCardData", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindData", arg0, arg1)
 	ret0, _ := ret[0].(io.ReadCloser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindCardData indicates an expected call of FindCardData.
-func (mr *MockCardStoreMockRecorder) FindCardData(arg0, arg1 interface{}) *gomock.Call {
+// FindData indicates an expected call of FindData.
+func (mr *MockCardStoreMockRecorder) FindData(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCardData", reflect.TypeOf((*MockCardStore)(nil).FindCardData), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindData", reflect.TypeOf((*MockCardStore)(nil).FindData), arg0, arg1)
 }
