@@ -33,7 +33,7 @@ func TestHandleFindAll(t *testing.T) {
 	build.EXPECT().FindNumber(gomock.Any(), dummyBuild.ID, gomock.Any()).Return(dummyBuild, nil)
 
 	card := mock.NewMockCardStore(controller)
-	card.EXPECT().FindCardByBuild(gomock.Any(), dummyBuild.ID).Return(dummyCardList, nil)
+	card.EXPECT().FindByBuild(gomock.Any(), dummyBuild.ID).Return(dummyCardList, nil)
 
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
@@ -66,7 +66,7 @@ func TestHandleFindAll_CardsNotFound(t *testing.T) {
 	build.EXPECT().FindNumber(gomock.Any(), dummyBuild.ID, gomock.Any()).Return(dummyBuild, nil)
 
 	card := mock.NewMockCardStore(controller)
-	card.EXPECT().FindCardByBuild(gomock.Any(), dummyBuild.ID).Return(nil, errors.ErrNotFound)
+	card.EXPECT().FindByBuild(gomock.Any(), dummyBuild.ID).Return(nil, errors.ErrNotFound)
 
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")

@@ -78,7 +78,7 @@ func TestHandleCreate(t *testing.T) {
 	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
 
 	card := mock.NewMockCardStore(controller)
-	card.EXPECT().CreateCard(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	card.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
@@ -144,7 +144,7 @@ func TestHandleCreate_CreateError(t *testing.T) {
 	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
 
 	card := mock.NewMockCardStore(controller)
-	card.EXPECT().CreateCard(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.ErrNotFound)
+	card.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.ErrNotFound)
 
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")

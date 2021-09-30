@@ -37,8 +37,8 @@ func TestHandleFindCardData(t *testing.T) {
 	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
 
 	card := mock.NewMockCardStore(controller)
-	card.EXPECT().FindCard(gomock.Any(), dummyStep.ID).Return(dummyCard, nil)
-	card.EXPECT().FindCardData(gomock.Any(), dummyCard.Id).Return(dummyCardData, nil)
+	card.EXPECT().Find(gomock.Any(), dummyStep.ID).Return(dummyCard, nil)
+	card.EXPECT().FindData(gomock.Any(), dummyCard.Id).Return(dummyCardData, nil)
 
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
