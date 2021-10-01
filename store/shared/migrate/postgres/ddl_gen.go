@@ -172,6 +172,14 @@ var migrations = []struct {
 		name: "alter-table-steps-add-column-step-detached",
 		stmt: alterTableStepsAddColumnStepDetached,
 	},
+	{
+		name: "create-table-cards",
+		stmt: createTableCards,
+	},
+	{
+		name: "create-index-cards-card_build",
+		stmt: createIndexCardsCardbuild,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -693,4 +701,23 @@ ALTER TABLE steps ADD COLUMN step_image VARCHAR(1000) NOT NULL DEFAULT '';
 
 var alterTableStepsAddColumnStepDetached = `
 ALTER TABLE steps ADD COLUMN step_detached BOOLEAN NOT NULL DEFAULT FALSE;
+`
+
+//
+// 018_create_table_cards.sql
+//
+
+var createTableCards = `
+CREATE TABLE IF NOT EXISTS cards (
+     card_id         SERIAL PRIMARY KEY
+    ,card_build      INTEGER
+    ,card_stage      INTEGER
+    ,card_step       INTEGER
+    ,card_schema     TEXT
+    ,card_data       TEXT
+);
+`
+
+var createIndexCardsCardbuild = `
+CREATE INDEX IF NOT EXISTS  ix_cards_build ON cards (card_build);
 `
