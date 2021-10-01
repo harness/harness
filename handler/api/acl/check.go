@@ -16,7 +16,6 @@ package acl
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/errors"
@@ -144,12 +143,4 @@ func CheckAccess(read, write, admin bool) func(http.Handler) http.Handler {
 			}
 		})
 	}
-}
-
-func extractToken(r *http.Request) string {
-	bearer := r.Header.Get("Authorization")
-	if bearer == "" {
-		bearer = r.FormValue("access_token")
-	}
-	return strings.TrimPrefix(bearer, "Bearer ")
 }
