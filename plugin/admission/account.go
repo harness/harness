@@ -61,7 +61,7 @@ func (s *membership) Admit(ctx context.Context, user *core.User) error {
 		return err
 	}
 	// if the user is a member of an organization in the
-	// organization whitelist we can admit the user.
+	// account whitelist we can admit the user.
 	for _, org := range orgs {
 		_, ok := s.account[strings.ToLower(org.Name)]
 		if ok {
