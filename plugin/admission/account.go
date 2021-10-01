@@ -54,15 +54,20 @@ func (s *membership) Admit(ctx context.Context, user *core.User) error {
 	if ok {
 		return nil
 	}
+	// make an API call to retrive the list of organizations
+	// to which the user belongs.
 	orgs, err := s.service.List(ctx, user)
 	if err != nil {
 		return err
 	}
+	// if the user is a member of an organization in the
+	// organization whitelist we can admit the user.
 	for _, org := range orgs {
 		_, ok := s.account[strings.ToLower(org.Name)]
 		if ok {
 			return nil
 		}
 	}
+	// else deny access
 	return ErrMembership
 }
