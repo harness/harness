@@ -9,6 +9,7 @@ package rpc
 import (
 	"sync"
 
+	dronetypes "github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/operator/manager"
 )
@@ -35,7 +36,7 @@ type stageRequest struct {
 }
 
 type stepRequest struct {
-	Step *core.Step
+	Step *dronetypes.Step
 }
 
 type writeRequest struct {

@@ -7,6 +7,7 @@ package canceler
 import (
 	"testing"
 
+	dronetypes "github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/mock"
 	"github.com/go-chi/chi"
@@ -56,7 +57,7 @@ func TestCancel(t *testing.T) {
 		{Status: core.StatusPassing},
 		{
 			Status: core.StatusPending,
-			Steps: []*core.Step{
+			Steps: []*dronetypes.Step{
 				{Status: core.StatusPassing},
 				{Status: core.StatusPending},
 			},

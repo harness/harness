@@ -11,10 +11,11 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/drone/drone/store/shared/db/dbtest"
+	dronetypes "github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/build"
 	"github.com/drone/drone/store/repos"
+	"github.com/drone/drone/store/shared/db/dbtest"
 	"github.com/drone/drone/store/step"
 )
 
@@ -46,7 +47,7 @@ func TestLogs(t *testing.T) {
 	builds.Create(noContext, abuild, stages)
 
 	// seed with a dummy step
-	astep := &core.Step{Number: 1, StageID: stage.ID}
+	astep := &dronetypes.Step{Number: 1, StageID: stage.ID}
 	steps := step.New(conn)
 	steps.Create(noContext, astep)
 
@@ -57,7 +58,7 @@ func TestLogs(t *testing.T) {
 	t.Run("Delete", testLogsDelete(store, astep))
 }
 
-func testLogsCreate(store *logStore, step *core.Step) func(t *testing.T) {
+func testLogsCreate(store *logStore, step *dronetypes.Step) func(t *testing.T) {
 	return func(t *testing.T) {
 		buf := bytes.NewBufferString("hello world")
 		err := store.Create(noContext, step.ID, buf)
@@ -67,7 +68,7 @@ func testLogsCreate(store *logStore, step *core.Step) func(t *testing.T) {
 	}
 }
 
-func testLogsFind(store *logStore, step *core.Step) func(t *testing.T) {
+func testLogsFind(store *logStore, step *dronetypes.Step) func(t *testing.T) {
 	return func(t *testing.T) {
 		r, err := store.Find(noContext, step.ID)
 		if err != nil {
@@ -85,7 +86,7 @@ func testLogsFind(store *logStore, step *core.Step) func(t *testing.T) {
 	}
 }
 
-func testLogsUpdate(store *logStore, step *core.Step) func(t *testing.T) {
+func testLogsUpdate(store *logStore, step *dronetypes.Step) func(t *testing.T) {
 	return func(t *testing.T) {
 		buf := bytes.NewBufferString("hola mundo")
 		err := store.Update(noContext, step.ID, buf)
@@ -109,7 +110,7 @@ func testLogsUpdate(store *logStore, step *core.Step) func(t *testing.T) {
 	}
 }
 
-func testLogsDelete(store *logStore, step *core.Step) func(t *testing.T) {
+func testLogsDelete(store *logStore, step *dronetypes.Step) func(t *testing.T) {
 	return func(t *testing.T) {
 		err := store.Delete(noContext, step.ID)
 		if err != nil {

@@ -165,7 +165,7 @@ func HandleCancel(
 			}
 
 			for _, step := range stage.Steps {
-				if step.IsDone() {
+				if core.StepIsDone(step) {
 					continue
 				}
 				if step.Started != 0 {

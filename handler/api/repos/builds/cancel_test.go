@@ -12,6 +12,7 @@ import (
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/mock"
 
+	dronetypes "github.com/drone/drone-go/drone"
 	"github.com/go-chi/chi"
 	"github.com/golang/mock/gomock"
 )
@@ -24,7 +25,7 @@ func TestCancel(t *testing.T) {
 		{Status: core.StatusPassing},
 		{
 			Status: core.StatusPending,
-			Steps: []*core.Step{
+			Steps: []*dronetypes.Step{
 				{Status: core.StatusPassing},
 				{Status: core.StatusPending},
 			},

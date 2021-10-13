@@ -17,6 +17,7 @@ package step
 import (
 	"context"
 
+	dronetypes "github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
 )
@@ -30,8 +31,8 @@ type stepStore struct {
 	db *db.DB
 }
 
-func (s *stepStore) List(ctx context.Context, id int64) ([]*core.Step, error) {
-	var out []*core.Step
+func (s *stepStore) List(ctx context.Context, id int64) ([]*dronetypes.Step, error) {
+	var out []*dronetypes.Step
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
 		params := map[string]interface{}{"step_stage_id": id}
 		stmt, args, err := binder.BindNamed(queryStage, params)
@@ -48,8 +49,8 @@ func (s *stepStore) List(ctx context.Context, id int64) ([]*core.Step, error) {
 	return out, err
 }
 
-func (s *stepStore) Find(ctx context.Context, id int64) (*core.Step, error) {
-	out := &core.Step{ID: id}
+func (s *stepStore) Find(ctx context.Context, id int64) (*dronetypes.Step, error) {
+	out := &dronetypes.Step{ID: id}
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
 		params := toParams(out)
 		query, args, err := binder.BindNamed(queryKey, params)
@@ -62,8 +63,8 @@ func (s *stepStore) Find(ctx context.Context, id int64) (*core.Step, error) {
 	return out, err
 }
 
-func (s *stepStore) FindNumber(ctx context.Context, id int64, number int) (*core.Step, error) {
-	out := &core.Step{StageID: id, Number: number}
+func (s *stepStore) FindNumber(ctx context.Context, id int64, number int) (*dronetypes.Step, error) {
+	out := &dronetypes.Step{StageID: id, Number: number}
 	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
 		params := toParams(out)
 		query, args, err := binder.BindNamed(queryNumber, params)
@@ -76,14 +77,14 @@ func (s *stepStore) FindNumber(ctx context.Context, id int64, number int) (*core
 	return out, err
 }
 
-func (s *stepStore) Create(ctx context.Context, step *core.Step) error {
+func (s *stepStore) Create(ctx context.Context, step *dronetypes.Step) error {
 	if s.db.Driver() == db.Postgres {
 		return s.createPostgres(ctx, step)
 	}
 	return s.create(ctx, step)
 }
 
-func (s *stepStore) create(ctx context.Context, step *core.Step) error {
+func (s *stepStore) create(ctx context.Context, step *dronetypes.Step) error {
 	step.Version = 1
 	return s.db.Lock(func(execer db.Execer, binder db.Binder) error {
 		params := toParams(step)
@@ -100,7 +101,7 @@ func (s *stepStore) create(ctx context.Context, step *core.Step) error {
 	})
 }
 
-func (s *stepStore) createPostgres(ctx context.Context, step *core.Step) error {
+func (s *stepStore) createPostgres(ctx context.Context, step *dronetypes.Step) error {
 	step.Version = 1
 	return s.db.Lock(func(execer db.Execer, binder db.Binder) error {
 		params := toParams(step)
@@ -112,7 +113,7 @@ func (s *stepStore) createPostgres(ctx context.Context, step *core.Step) error {
 	})
 }
 
-func (s *stepStore) Update(ctx context.Context, step *core.Step) error {
+func (s *stepStore) Update(ctx context.Context, step *dronetypes.Step) error {
 	versionNew := step.Version + 1
 	versionOld := step.Version
 

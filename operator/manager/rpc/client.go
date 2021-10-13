@@ -18,11 +18,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drone/drone/operator/manager"
-
+	dronetypes "github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/operator/manager"
 	"github.com/drone/drone/store/shared/db"
-
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/oxtoacart/bpool"
 )
@@ -115,9 +114,9 @@ func (s *Client) Details(ctx context.Context, stage int64) (*manager.Context, er
 }
 
 // Before signals the build step is about to start.
-func (s *Client) Before(ctx context.Context, step *core.Step) error {
+func (s *Client) Before(ctx context.Context, step *dronetypes.Step) error {
 	in := &stepRequest{Step: step}
-	out := &core.Step{}
+	out := &dronetypes.Step{}
 	err := s.send(noContext, "/rpc/v1/before", in, out)
 	if err != nil {
 		return err
@@ -131,9 +130,9 @@ func (s *Client) Before(ctx context.Context, step *core.Step) error {
 }
 
 // After signals the build step is complete.
-func (s *Client) After(ctx context.Context, step *core.Step) error {
+func (s *Client) After(ctx context.Context, step *dronetypes.Step) error {
 	in := &stepRequest{Step: step}
-	out := &core.Step{}
+	out := &dronetypes.Step{}
 	err := s.send(noContext, "/rpc/v1/after", in, out)
 	if err != nil {
 		return err

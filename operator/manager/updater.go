@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 
+	dronetypes "github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
 
 	"github.com/sirupsen/logrus"
@@ -32,7 +33,7 @@ type updater struct {
 	Webhook core.WebhookSender
 }
 
-func (u *updater) do(ctx context.Context, step *core.Step) error {
+func (u *updater) do(ctx context.Context, step *dronetypes.Step) error {
 	logger := logrus.WithFields(
 		logrus.Fields{
 			"step.status": step.Status,

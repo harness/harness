@@ -207,7 +207,7 @@ func (s *service) cancel(ctx context.Context, repo *core.Repository, build *core
 		// update the status of all steps to indicate they
 		// were killed or skipped.
 		for _, step := range stage.Steps {
-			if step.IsDone() {
+			if core.StepIsDone(step) {
 				continue
 			}
 			if step.Started != 0 {

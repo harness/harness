@@ -12,7 +12,7 @@ require (
 	github.com/coreos/go-semver v0.2.0
 	github.com/dchest/authcookie v0.0.0-20120917135355-fbdef6e99866
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
-	github.com/drone/drone-go v1.4.1-0.20201109202657-b9e58bbbcf27
+	github.com/drone/drone-go v1.7.0
 	github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d
 	github.com/drone/drone-ui v2.3.1+incompatible
 	github.com/drone/drone-yaml v1.2.4-0.20200326192514-6f4d6dfb39e4

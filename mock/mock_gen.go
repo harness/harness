@@ -10,6 +10,7 @@ import (
 	http "net/http"
 	reflect "reflect"
 
+	drone "github.com/drone/drone-go/drone"
 	core "github.com/drone/drone/core"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -1645,7 +1646,7 @@ func (m *MockStepStore) EXPECT() *MockStepStoreMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockStepStore) Create(arg0 context.Context, arg1 *core.Step) error {
+func (m *MockStepStore) Create(arg0 context.Context, arg1 *drone.Step) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -1659,10 +1660,10 @@ func (mr *MockStepStoreMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call
 }
 
 // Find mocks base method.
-func (m *MockStepStore) Find(arg0 context.Context, arg1 int64) (*core.Step, error) {
+func (m *MockStepStore) Find(arg0 context.Context, arg1 int64) (*drone.Step, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Find", arg0, arg1)
-	ret0, _ := ret[0].(*core.Step)
+	ret0, _ := ret[0].(*drone.Step)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1674,10 +1675,10 @@ func (mr *MockStepStoreMockRecorder) Find(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // FindNumber mocks base method.
-func (m *MockStepStore) FindNumber(arg0 context.Context, arg1 int64, arg2 int) (*core.Step, error) {
+func (m *MockStepStore) FindNumber(arg0 context.Context, arg1 int64, arg2 int) (*drone.Step, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindNumber", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*core.Step)
+	ret0, _ := ret[0].(*drone.Step)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1689,10 +1690,10 @@ func (mr *MockStepStoreMockRecorder) FindNumber(arg0, arg1, arg2 interface{}) *g
 }
 
 // List mocks base method.
-func (m *MockStepStore) List(arg0 context.Context, arg1 int64) ([]*core.Step, error) {
+func (m *MockStepStore) List(arg0 context.Context, arg1 int64) ([]*drone.Step, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]*core.Step)
+	ret0, _ := ret[0].([]*drone.Step)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1704,7 +1705,7 @@ func (mr *MockStepStoreMockRecorder) List(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockStepStore) Update(arg0 context.Context, arg1 *core.Step) error {
+func (m *MockStepStore) Update(arg0 context.Context, arg1 *drone.Step) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0, arg1)
 	ret0, _ := ret[0].(error)
