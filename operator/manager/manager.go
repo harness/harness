@@ -20,6 +20,7 @@ import (
 	"io"
 	"time"
 
+	types "github.com/drone/drone-go/drone"
 	"github.com/drone/drone-yaml/yaml/converter"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
@@ -60,15 +61,15 @@ type (
 		Details(ctx context.Context, stage int64) (*Context, error)
 
 		// Before signals the build step is about to start.
-		Before(ctx context.Context, step *core.Step) error
+		Before(ctx context.Context, step *types.Step) error
 
 		// After signals the build step is complete.
-		After(ctx context.Context, step *core.Step) error
+		After(ctx context.Context, step *types.Step) error
 
-		// Before signals the build stage is about to start.
+		// BeforeAll signals the build stage is about to start.
 		BeforeAll(ctx context.Context, stage *core.Stage) error
 
-		// After signals the build stage is complete.
+		// AfterAll signals the build stage is complete.
 		AfterAll(ctx context.Context, stage *core.Stage) error
 
 		// Watch watches for build cancellation requests.
@@ -350,7 +351,7 @@ func (m *Manager) Details(ctx context.Context, id int64) (*Context, error) {
 }
 
 // Before signals the build step is about to start.
-func (m *Manager) Before(ctx context.Context, step *core.Step) error {
+func (m *Manager) Before(ctx context.Context, step *types.Step) error {
 	logger := logrus.WithFields(
 		logrus.Fields{
 			"step.status": step.Status,
@@ -378,7 +379,7 @@ func (m *Manager) Before(ctx context.Context, step *core.Step) error {
 }
 
 // After signals the build step is complete.
-func (m *Manager) After(ctx context.Context, step *core.Step) error {
+func (m *Manager) After(ctx context.Context, step *types.Step) error {
 	logger := logrus.WithFields(
 		logrus.Fields{
 			"step.status": step.Status,

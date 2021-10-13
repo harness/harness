@@ -14,7 +14,11 @@
 
 package core
 
-import "context"
+import (
+	"context"
+
+	types "github.com/drone/drone-go/drone"
+)
 
 type (
 	// Stage represents a stage of build execution.
@@ -46,7 +50,7 @@ type (
 		OnFailure bool              `json:"on_failure"`
 		DependsOn []string          `json:"depends_on,omitempty"`
 		Labels    map[string]string `json:"labels,omitempty"`
-		Steps     []*Step           `json:"steps,omitempty"`
+		Steps     []*types.Step     `json:"steps,omitempty"`
 	}
 
 	// StageStore persists build stage information to storage.
@@ -54,7 +58,7 @@ type (
 		// List returns a build stage list from the datastore.
 		List(context.Context, int64) ([]*Stage, error)
 
-		// List returns a build stage list from the datastore
+		// ListIncomplete returns a build stage list from the datastore
 		// where the stage is incomplete (pending or running).
 		ListIncomplete(ctx context.Context) ([]*Stage, error)
 

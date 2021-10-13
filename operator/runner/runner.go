@@ -25,6 +25,7 @@ import (
 	"sync"
 	"time"
 
+	types "github.com/drone/drone-go/drone"
 	"github.com/drone/drone-runtime/engine"
 	"github.com/drone/drone-runtime/runtime"
 	"github.com/drone/drone-yaml/yaml"
@@ -348,14 +349,14 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 	)
 	ir := comp.Compile(pipeline)
 
-	steps := map[string]*core.Step{}
+	steps := map[string]*types.Step{}
 	i := 0
 	for _, s := range ir.Steps {
 		if s.RunPolicy == engine.RunNever {
 			continue
 		}
 		i++
-		dst := &core.Step{
+		dst := &types.Step{
 			Number:    i,
 			Name:      s.Metadata.Name,
 			StageID:   m.Stage.ID,
@@ -410,7 +411,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 				s.Step.Envs["DRONE_STEP_NUMBER"] = fmt.Sprint(step.Number)
 			}
 
-			stepClone := new(core.Step)
+			stepClone := new(types.Step)
 			*stepClone = *step
 			r.Unlock()
 
@@ -437,7 +438,7 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 					step.Status = core.StatusFailing
 				}
 			}
-			stepClone := new(core.Step)
+			stepClone := new(types.Step)
 			*stepClone = *step
 			r.Unlock()
 

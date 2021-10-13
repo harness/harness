@@ -12,7 +12,7 @@ require (
 	github.com/coreos/go-semver v0.2.0
 	github.com/dchest/authcookie v0.0.0-20120917135355-fbdef6e99866
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
-	github.com/drone/drone-go v1.4.1-0.20201109202657-b9e58bbbcf27
+	github.com/drone/drone-go v1.7.0
 	github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d
 	github.com/drone/drone-ui v2.3.0+incompatible
 	github.com/drone/drone-yaml v1.2.4-0.20200326192514-6f4d6dfb39e4
@@ -27,7 +27,7 @@ require (
 	github.com/go-chi/cors v1.0.0
 	github.com/go-redis/redis/v8 v8.11.0
 	github.com/go-redsync/redsync/v4 v4.3.0
-	github.com/go-sql-driver/mysql v1.4.0
+	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/mock v1.3.1
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-jsonnet v0.17.0
@@ -38,12 +38,12 @@ require (
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/go-retryablehttp v0.5.4
 	github.com/hashicorp/golang-lru v0.5.1
-	github.com/jmoiron/sqlx v0.0.0-20180614180643-0dae4fefe7c0
+	github.com/jmoiron/sqlx v1.3.4
 	github.com/joho/godotenv v1.3.0
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/kr/pretty v0.2.0 // indirect
-	github.com/lib/pq v1.1.0
-	github.com/mattn/go-sqlite3 v1.9.0
+	github.com/lib/pq v1.10.3
+	github.com/mattn/go-sqlite3 v1.14.8
 	github.com/oxtoacart/bpool v0.0.0-20150712133111-4e1c5567d7c2
 	github.com/prometheus/client_golang v0.9.2
 	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect

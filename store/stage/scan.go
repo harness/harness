@@ -18,9 +18,9 @@ import (
 	"database/sql"
 	"encoding/json"
 
+	droneTypes "github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
-
 	"github.com/jmoiron/sqlx/types"
 )
 
@@ -109,7 +109,7 @@ func scanRow(scanner db.Scanner, dest *core.Stage) error {
 
 // helper function scans the sql.Row and copies the column
 // values to the destination object.
-func scanRowStep(scanner db.Scanner, stage *core.Stage, step *nullStep) error {
+func scanRowStep(scanner db.Scanner, stage *core.Stage, step *droneTypes.NullStep) error {
 	depJSON := types.JSONText{}
 	labJSON := types.JSONText{}
 	stepDepJSON := types.JSONText{}
@@ -188,7 +188,7 @@ func scanRowsWithSteps(rows *sql.Rows) ([]*core.Stage, error) {
 	var curr *core.Stage
 	for rows.Next() {
 		stage := new(core.Stage)
-		step := new(nullStep)
+		step := new(droneTypes.NullStep)
 		err := scanRowStep(rows, stage, step)
 		if err != nil {
 			return nil, err
@@ -198,7 +198,7 @@ func scanRowsWithSteps(rows *sql.Rows) ([]*core.Stage, error) {
 			stages = append(stages, stage)
 		}
 		if step.ID.Int64 != 0 {
-			curr.Steps = append(curr.Steps, step.value())
+			curr.Steps = append(curr.Steps, step.Value())
 		}
 	}
 	return stages, nil
