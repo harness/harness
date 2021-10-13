@@ -58,6 +58,12 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 )
 
-replace github.com/h2non/gock => gopkg.in/h2non/gock.v1 v1.0.14
+replace (
+	// TODO It needs to be modified after publishing drone/go-login new version
+	github.com/drone/go-login => ../drone-go-login-dev
+	// TODO It needs to be modified after merging go-scm PR(gitee provider) and publishing a new version
+	github.com/drone/go-scm => ../go-scm
+	github.com/h2non/gock => gopkg.in/h2non/gock.v1 v1.0.14
+)
 
 go 1.13

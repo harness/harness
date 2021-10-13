@@ -19,6 +19,7 @@ import (
 	"github.com/drone/go-login/login"
 	"github.com/drone/go-login/login/bitbucket"
 	"github.com/drone/go-login/login/gitea"
+	"github.com/drone/go-login/login/gitee"
 	"github.com/drone/go-login/login/github"
 	"github.com/drone/go-login/login/gitlab"
 	"github.com/drone/go-login/login/gogs"
@@ -44,6 +45,8 @@ func provideLogin(config config.Config) login.Middleware {
 		return provideBitbucketLogin(config)
 	case config.Github.ClientID != "":
 		return provideGithubLogin(config)
+	case config.Gitee.ClientID != "":
+		return provideGiteeLogin(config)
 	case config.Gitea.Server != "":
 		return provideGiteaLogin(config)
 	case config.GitLab.ClientID != "":
@@ -84,6 +87,22 @@ func provideGithubLogin(config config.Config) login.Middleware {
 		Server:       config.Github.Server,
 		Client:       defaultClient(config.Github.SkipVerify),
 		Logger:       logrus.StandardLogger(),
+	}
+}
+
+// provideGiteeLogin is a Wire provider function that returns
+// a Gitee authenticator based on the environment configuration.
+func provideGiteeLogin(config config.Config) login.Middleware {
+	if config.Gitee.ClientID == "" {
+		return nil
+	}
+	return &gitee.Config{
+		ClientID:     config.Gitee.ClientID,
+		ClientSecret: config.Gitee.ClientSecret,
+		RedirectURL:  config.Gitee.RedirectURL,
+		Server:       config.Gitee.Server,
+		Scope:        config.Gitee.Scope,
+		Client:       defaultClient(config.Gitee.SkipVerify),
 	}
 }
 
