@@ -20,6 +20,7 @@ import (
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
+
 	"github.com/jmoiron/sqlx/types"
 )
 
@@ -41,6 +42,7 @@ func toParams(from *core.Step) map[string]interface{} {
 		"step_depends_on": encodeSlice(from.DependsOn),
 		"step_image":      from.Image,
 		"step_detached":   from.Detached,
+		"step_schema":     from.Schema,
 	}
 }
 
@@ -68,6 +70,7 @@ func scanRow(scanner db.Scanner, dest *core.Step) error {
 		&depJSON,
 		&dest.Image,
 		&dest.Detached,
+		&dest.Schema,
 	)
 	json.Unmarshal(depJSON, &dest.DependsOn)
 	return err

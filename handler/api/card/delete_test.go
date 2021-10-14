@@ -7,8 +7,10 @@
 package card
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -38,7 +40,9 @@ func TestHandleDelete(t *testing.T) {
 	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
 
 	card := mock.NewMockCardStore(controller)
-	card.EXPECT().Find(gomock.Any(), dummyStep.ID).Return(dummyCard, nil)
+	card.EXPECT().Find(gomock.Any(), dummyStep.ID).Return(ioutil.NopCloser(
+		bytes.NewBuffer(dummyCard.Data),
+	), nil)
 	card.EXPECT().Delete(gomock.Any(), dummyCard.Id).Return(nil)
 
 	c := new(chi.Context)
@@ -121,7 +125,9 @@ func TestHandleDelete_DeleteError(t *testing.T) {
 	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
 
 	card := mock.NewMockCardStore(controller)
-	card.EXPECT().Find(gomock.Any(), dummyStep.ID).Return(dummyCard, nil)
+	card.EXPECT().Find(gomock.Any(), dummyStep.ID).Return(ioutil.NopCloser(
+		bytes.NewBuffer(dummyCard.Data),
+	), nil)
 	card.EXPECT().Delete(gomock.Any(), dummyCard.Id).Return(errors.ErrNotFound)
 
 	c := new(chi.Context)

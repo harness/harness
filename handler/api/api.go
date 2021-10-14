@@ -291,9 +291,7 @@ func (s Server) Handler() http.Handler {
 			})
 
 			r.Route("/cards", func(r chi.Router) {
-				r.Get("/{build}", card.HandleFindAll(s.Builds, s.Card, s.Repos))
 				r.Get("/{build}/{stage}/{step}", card.HandleFind(s.Builds, s.Card, s.Stages, s.Steps, s.Repos))
-				r.Get("/{build}/{stage}/{step}/json", card.HandleFindData(s.Builds, s.Card, s.Stages, s.Steps, s.Repos))
 				r.With(
 					acl.CheckAdminAccess(),
 				).Post("/{build}/{stage}/{step}", card.HandleCreate(s.Builds, s.Card, s.Stages, s.Steps, s.Repos))
