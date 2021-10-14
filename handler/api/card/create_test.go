@@ -23,6 +23,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+type card struct {
+	Id   int64  `json:"id,omitempty"`
+	Data []byte `json:"card_data"`
+}
+
 var (
 	dummyRepo = &core.Repository{
 		ID:     1,
@@ -43,7 +48,7 @@ var (
 		StageID: 1,
 		Schema:  "https://myschema.com",
 	}
-	dummyCard = &core.Card{
+	dummyCard = &card{
 		Id:   dummyStep.ID,
 		Data: []byte("{\"type\": \"AdaptiveCard\"}"),
 	}

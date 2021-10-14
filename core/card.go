@@ -19,11 +19,6 @@ import (
 	"io"
 )
 
-type Card struct {
-	Id   int64  `json:"id,omitempty"`
-	Data []byte `json:"card_data"`
-}
-
 // CardStore manages repository cards.
 type CardStore interface {
 	// Find returns a card data stream from the datastore.

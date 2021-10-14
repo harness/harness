@@ -26,8 +26,13 @@ type cardStore struct {
 	db *db.DB
 }
 
+type card struct {
+	Id   int64  `json:"id,omitempty"`
+	Data []byte `json:"card_data"`
+}
+
 func (c cardStore) Find(ctx context.Context, step int64) (io.ReadCloser, error) {
-	out := &core.Card{Id: step}
+	out := &card{Id: step}
 	err := c.db.View(func(queryer db.Queryer, binder db.Binder) error {
 		params, err := toParams(out)
 		if err != nil {
@@ -47,48 +52,22 @@ func (c cardStore) Find(ctx context.Context, step int64) (io.ReadCloser, error) 
 }
 
 func (c cardStore) Create(ctx context.Context, step int64, r io.Reader) error {
-	in := &core.Card{Id: step}
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return err
 	}
-	in.Data = data
-	if c.db.Driver() == db.Postgres {
-		return c.createPostgres(ctx, in)
-	}
-	return c.create(ctx, in)
-}
-
-func (c *cardStore) create(ctx context.Context, card *core.Card) error {
 	return c.db.Lock(func(execer db.Execer, binder db.Binder) error {
-		params, err := toParams(card)
-		if err != nil {
-			return err
+		in := &card{
+			Id:   step,
+			Data: data,
 		}
+		params, err := toParams(in)
 		stmt, args, err := binder.BindNamed(stmtInsert, params)
 		if err != nil {
 			return err
 		}
-		res, err := execer.Exec(stmt, args...)
-		if err != nil {
-			return err
-		}
-		card.Id, err = res.LastInsertId()
+		_, err = execer.Exec(stmt, args...)
 		return err
-	})
-}
-
-func (c *cardStore) createPostgres(ctx context.Context, card *core.Card) error {
-	return c.db.Lock(func(execer db.Execer, binder db.Binder) error {
-		params, err := toParams(card)
-		if err != nil {
-			return err
-		}
-		stmt, args, err := binder.BindNamed(stmtInsertPostgres, params)
-		if err != nil {
-			return err
-		}
-		return execer.QueryRow(stmt, args...).Scan(&card.Id)
 	})
 }
 
@@ -98,7 +77,7 @@ func (c *cardStore) Update(ctx context.Context, step int64, r io.Reader) error {
 		return err
 	}
 	return c.db.Lock(func(execer db.Execer, binder db.Binder) error {
-		card := &core.Card{
+		card := &card{
 			Id:   step,
 			Data: data,
 		}
@@ -117,7 +96,7 @@ func (c *cardStore) Update(ctx context.Context, step int64, r io.Reader) error {
 
 func (c cardStore) Delete(ctx context.Context, step int64) error {
 	return c.db.Lock(func(execer db.Execer, binder db.Binder) error {
-		params := &core.Card{
+		params := &card{
 			Id: step,
 		}
 		stmt, args, err := binder.BindNamed(stmtDelete, params)

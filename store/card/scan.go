@@ -7,13 +7,12 @@
 package card
 
 import (
-	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
 )
 
 // helper function converts the card structure to a set
 // of named query parameters.
-func toParams(card *core.Card) (map[string]interface{}, error) {
+func toParams(card *card) (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"card_id":   card.Id,
 		"card_data": card.Data,
@@ -22,7 +21,7 @@ func toParams(card *core.Card) (map[string]interface{}, error) {
 
 // helper function scans the sql.Row and copies the column
 // values to the destination object.
-func scanRow(scanner db.Scanner, dst *core.Card) error {
+func scanRow(scanner db.Scanner, dst *card) error {
 	err := scanner.Scan(
 		&dst.Id,
 		&dst.Data,
