@@ -10,7 +10,7 @@ import (
 	"context"
 	"testing"
 
-	dronetypes "github.com/drone/drone-go/drone"
+	"github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/build"
 	"github.com/drone/drone/store/repos"
@@ -51,7 +51,7 @@ func TestStep(t *testing.T) {
 
 func testStepCreate(store *stepStore, stage *core.Stage) func(t *testing.T) {
 	return func(t *testing.T) {
-		item := &dronetypes.Step{
+		item := &drone.Step{
 			StageID:   stage.ID,
 			Number:    2,
 			Name:      "clone",
@@ -82,7 +82,7 @@ func testStepCreate(store *stepStore, stage *core.Stage) func(t *testing.T) {
 	}
 }
 
-func testStepFind(store *stepStore, step *dronetypes.Step) func(t *testing.T) {
+func testStepFind(store *stepStore, step *drone.Step) func(t *testing.T) {
 	return func(t *testing.T) {
 		result, err := store.Find(noContext, step.ID)
 		if err != nil {
@@ -93,7 +93,7 @@ func testStepFind(store *stepStore, step *dronetypes.Step) func(t *testing.T) {
 	}
 }
 
-func testStepFindNumber(store *stepStore, step *dronetypes.Step) func(t *testing.T) {
+func testStepFindNumber(store *stepStore, step *drone.Step) func(t *testing.T) {
 	return func(t *testing.T) {
 		result, err := store.FindNumber(noContext, step.StageID, step.Number)
 		if err != nil {
@@ -119,9 +119,9 @@ func testStepList(store *stepStore, stage *core.Stage) func(t *testing.T) {
 	}
 }
 
-func testStepUpdate(store *stepStore, step *dronetypes.Step) func(t *testing.T) {
+func testStepUpdate(store *stepStore, step *drone.Step) func(t *testing.T) {
 	return func(t *testing.T) {
-		before := &dronetypes.Step{
+		before := &drone.Step{
 			ID:       step.ID,
 			StageID:  step.StageID,
 			Number:   2,
@@ -160,9 +160,9 @@ func testStepUpdate(store *stepStore, step *dronetypes.Step) func(t *testing.T) 
 	}
 }
 
-func testStepLocking(store *stepStore, step *dronetypes.Step) func(t *testing.T) {
+func testStepLocking(store *stepStore, step *drone.Step) func(t *testing.T) {
 	return func(t *testing.T) {
-		before := &dronetypes.Step{
+		before := &drone.Step{
 			ID:       step.ID,
 			StageID:  step.StageID,
 			Number:   2,
@@ -182,7 +182,7 @@ func testStepLocking(store *stepStore, step *dronetypes.Step) func(t *testing.T)
 	}
 }
 
-func testStep(item *dronetypes.Step) func(t *testing.T) {
+func testStep(item *drone.Step) func(t *testing.T) {
 	return func(t *testing.T) {
 		if got, want := item.Name, "clone"; got != want {
 			t.Errorf("Want Name %q, got %q", want, got)

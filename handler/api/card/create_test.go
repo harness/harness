@@ -15,7 +15,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	dronetypes "github.com/drone/drone-go/drone"
+	"github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/errors"
 	"github.com/drone/drone/mock"
@@ -39,7 +39,7 @@ var (
 		ID:      1,
 		BuildID: 1,
 	}
-	dummyStep = &dronetypes.Step{
+	dummyStep = &drone.Step{
 		ID:      1,
 		StageID: 1,
 	}

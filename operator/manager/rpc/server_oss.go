@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/operator/manager"
 )
@@ -58,12 +59,12 @@ func (Server) Details(ctx context.Context, stage int64) (*manager.Context, error
 }
 
 // Before signals the build step is about to start.
-func (Server) Before(ctx context.Context, step *core.Step) error {
+func (Server) Before(ctx context.Context, step *drone.Step) error {
 	return errors.New("not implemented")
 }
 
 // After signals the build step is complete.
-func (Server) After(ctx context.Context, step *core.Step) error {
+func (Server) After(ctx context.Context, step *drone.Step) error {
 	return errors.New("not implemented")
 }
 

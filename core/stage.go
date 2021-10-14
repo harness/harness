@@ -17,40 +17,40 @@ package core
 import (
 	"context"
 
-	dronetypes "github.com/drone/drone-go/drone"
+	"github.com/drone/drone-go/drone"
 )
 
 type (
 	// Stage represents a stage of build execution.
 	Stage struct {
-		ID        int64              `json:"id"`
-		RepoID    int64              `json:"repo_id"`
-		BuildID   int64              `json:"build_id"`
-		Number    int                `json:"number"`
-		Name      string             `json:"name"`
-		Kind      string             `json:"kind,omitempty"`
-		Type      string             `json:"type,omitempty"`
-		Status    string             `json:"status"`
-		Error     string             `json:"error,omitempty"`
-		ErrIgnore bool               `json:"errignore"`
-		ExitCode  int                `json:"exit_code"`
-		Machine   string             `json:"machine,omitempty"`
-		OS        string             `json:"os"`
-		Arch      string             `json:"arch"`
-		Variant   string             `json:"variant,omitempty"`
-		Kernel    string             `json:"kernel,omitempty"`
-		Limit     int                `json:"limit,omitempty"`
-		LimitRepo int                `json:"throttle,omitempty"`
-		Started   int64              `json:"started"`
-		Stopped   int64              `json:"stopped"`
-		Created   int64              `json:"created"`
-		Updated   int64              `json:"updated"`
-		Version   int64              `json:"version"`
-		OnSuccess bool               `json:"on_success"`
-		OnFailure bool               `json:"on_failure"`
-		DependsOn []string           `json:"depends_on,omitempty"`
-		Labels    map[string]string  `json:"labels,omitempty"`
-		Steps     []*dronetypes.Step `json:"steps,omitempty"`
+		ID        int64             `json:"id"`
+		RepoID    int64             `json:"repo_id"`
+		BuildID   int64             `json:"build_id"`
+		Number    int               `json:"number"`
+		Name      string            `json:"name"`
+		Kind      string            `json:"kind,omitempty"`
+		Type      string            `json:"type,omitempty"`
+		Status    string            `json:"status"`
+		Error     string            `json:"error,omitempty"`
+		ErrIgnore bool              `json:"errignore"`
+		ExitCode  int               `json:"exit_code"`
+		Machine   string            `json:"machine,omitempty"`
+		OS        string            `json:"os"`
+		Arch      string            `json:"arch"`
+		Variant   string            `json:"variant,omitempty"`
+		Kernel    string            `json:"kernel,omitempty"`
+		Limit     int               `json:"limit,omitempty"`
+		LimitRepo int               `json:"throttle,omitempty"`
+		Started   int64             `json:"started"`
+		Stopped   int64             `json:"stopped"`
+		Created   int64             `json:"created"`
+		Updated   int64             `json:"updated"`
+		Version   int64             `json:"version"`
+		OnSuccess bool              `json:"on_success"`
+		OnFailure bool              `json:"on_failure"`
+		DependsOn []string          `json:"depends_on,omitempty"`
+		Labels    map[string]string `json:"labels,omitempty"`
+		Steps     []*drone.Step     `json:"steps,omitempty"`
 	}
 
 	// StageStore persists build stage information to storage.

@@ -18,14 +18,14 @@ import (
 	"database/sql"
 	"encoding/json"
 
-	dronetypes "github.com/drone/drone-go/drone"
+	"github.com/drone/drone-go/drone"
 	"github.com/drone/drone/store/shared/db"
 	"github.com/jmoiron/sqlx/types"
 )
 
 // helper function converts the Step structure to a set
 // of named query parameters.
-func toParams(from *dronetypes.Step) map[string]interface{} {
+func toParams(from *drone.Step) map[string]interface{} {
 	return map[string]interface{}{
 		"step_id":         from.ID,
 		"step_stage_id":   from.StageID,
@@ -51,7 +51,7 @@ func encodeSlice(v []string) types.JSONText {
 
 // helper function scans the sql.Row and copies the column
 // values to the destination object.
-func scanRow(scanner db.Scanner, dest *dronetypes.Step) error {
+func scanRow(scanner db.Scanner, dest *drone.Step) error {
 	depJSON := types.JSONText{}
 	err := scanner.Scan(
 		&dest.ID,
@@ -75,12 +75,12 @@ func scanRow(scanner db.Scanner, dest *dronetypes.Step) error {
 
 // helper function scans the sql.Row and copies the column
 // values to the destination object.
-func scanRows(rows *sql.Rows) ([]*dronetypes.Step, error) {
+func scanRows(rows *sql.Rows) ([]*drone.Step, error) {
 	defer rows.Close()
 
-	steps := []*dronetypes.Step{}
+	steps := []*drone.Step{}
 	for rows.Next() {
-		step := new(dronetypes.Step)
+		step := new(drone.Step)
 		err := scanRow(rows, step)
 		if err != nil {
 			return nil, err

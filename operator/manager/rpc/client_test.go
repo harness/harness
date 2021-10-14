@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"testing"
 
-	dronetypes "github.com/drone/drone-go/drone"
+	"github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/operator/manager"
 	"github.com/drone/drone/store/shared/db"
@@ -154,7 +154,7 @@ func TestBefore(t *testing.T) {
 		Type("application/json").
 		BodyString(`{"id":1,"step_id":2,"number":3,"name":"build","status":"pending","exit_code":0,"version":2}`)
 
-	before := &dronetypes.Step{
+	before := &drone.Step{
 		ID:       1,
 		StageID:  2,
 		Number:   3,
@@ -171,7 +171,7 @@ func TestBefore(t *testing.T) {
 		t.Error(err)
 	}
 
-	after := &dronetypes.Step{
+	after := &drone.Step{
 		ID:       1,
 		StageID:  2,
 		Number:   3,
@@ -201,7 +201,7 @@ func TestAfter(t *testing.T) {
 		Type("application/json").
 		BodyString(`{"id":1,"step_id":2,"number":3,"name":"build","status":"failure","exit_code":1,"version":3}`)
 
-	before := &dronetypes.Step{
+	before := &drone.Step{
 		ID:       1,
 		StageID:  2,
 		Number:   3,
@@ -218,7 +218,7 @@ func TestAfter(t *testing.T) {
 		t.Error(err)
 	}
 
-	after := &dronetypes.Step{
+	after := &drone.Step{
 		ID:       1,
 		StageID:  2,
 		Number:   3,
@@ -352,7 +352,7 @@ func TestBefore_OptimisticLock(t *testing.T) {
 
 	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
 	gock.InterceptClient(client.client.HTTPClient)
-	err := client.Before(noContext, new(dronetypes.Step))
+	err := client.Before(noContext, new(drone.Step))
 	if err != db.ErrOptimisticLock {
 		t.Errorf("Want optimistic lock error")
 	}
@@ -370,7 +370,7 @@ func TestAfter_OptimisticLock(t *testing.T) {
 
 	client := NewClient("http://drone.company.com", "correct-horse-battery-staple")
 	gock.InterceptClient(client.client.HTTPClient)
-	err := client.After(noContext, new(dronetypes.Step))
+	err := client.After(noContext, new(drone.Step))
 	if err != db.ErrOptimisticLock {
 		t.Errorf("Want optimistic lock error")
 	}

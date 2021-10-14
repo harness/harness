@@ -17,7 +17,7 @@ package core
 import (
 	"context"
 
-	dronetypes "github.com/drone/drone-go/drone"
+	"github.com/drone/drone-go/drone"
 )
 
 type (
@@ -25,24 +25,24 @@ type (
 	// StepStore persists build step information to storage.
 	StepStore interface {
 		// List returns a build stage list from the datastore.
-		List(context.Context, int64) ([]*dronetypes.Step, error)
+		List(context.Context, int64) ([]*drone.Step, error)
 
 		// Find returns a build stage from the datastore by ID.
-		Find(context.Context, int64) (*dronetypes.Step, error)
+		Find(context.Context, int64) (*drone.Step, error)
 
 		// FindNumber returns a stage from the datastore by number.
-		FindNumber(context.Context, int64, int) (*dronetypes.Step, error)
+		FindNumber(context.Context, int64, int) (*drone.Step, error)
 
 		// Create persists a new stage to the datastore.
-		Create(context.Context, *dronetypes.Step) error
+		Create(context.Context, *drone.Step) error
 
 		// Update persists an updated stage to the datastore.
-		Update(context.Context, *dronetypes.Step) error
+		Update(context.Context, *drone.Step) error
 	}
 )
 
 // StepIsDone returns true if the step has a completed state.
-func StepIsDone(s *dronetypes.Step) bool {
+func StepIsDone(s *drone.Step) bool {
 	switch s.Status {
 	case StatusWaiting,
 		StatusPending,

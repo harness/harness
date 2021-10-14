@@ -28,7 +28,7 @@ import (
 
 	"github.com/go-chi/chi"
 
-	dronetypes "github.com/drone/drone-go/drone"
+	"github.com/drone/drone-go/drone"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/operator/manager"
 	"github.com/drone/drone/store/shared/db"
@@ -178,7 +178,7 @@ func HandleUpdateStage(m manager.BuildManager) http.HandlerFunc {
 // POST /rpc/v2/step/{step}
 func HandleUpdateStep(m manager.BuildManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		dst := new(dronetypes.Step)
+		dst := new(drone.Step)
 		err := json.NewDecoder(r.Body).Decode(dst)
 		if err != nil {
 			writeError(w, err)

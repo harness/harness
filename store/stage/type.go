@@ -18,7 +18,7 @@ import (
 	"database/sql"
 	"encoding/json"
 
-	dronetypes "github.com/drone/drone-go/drone"
+	"github.com/drone/drone-go/drone"
 	"github.com/jmoiron/sqlx/types"
 )
 
@@ -39,11 +39,11 @@ type nullStep struct {
 	Detached  sql.NullBool
 }
 
-func (s *nullStep) value() *dronetypes.Step {
+func (s *nullStep) value() *drone.Step {
 	var dependsOn []string
 	json.Unmarshal(s.DependsOn, &dependsOn)
 
-	step := &dronetypes.Step{
+	step := &drone.Step{
 		ID:        s.ID.Int64,
 		StageID:   s.StageID.Int64,
 		Number:    int(s.Number.Int64),

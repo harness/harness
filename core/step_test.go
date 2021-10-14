@@ -9,19 +9,19 @@ package core
 import (
 	"testing"
 
-	dronetypes "github.com/drone/drone-go/drone"
+	"github.com/drone/drone-go/drone"
 )
 
 func TestStepIsDone(t *testing.T) {
 	for _, status := range statusDone {
-		v := dronetypes.Step{Status: status}
+		v := drone.Step{Status: status}
 		if StepIsDone(&v) == false {
 			t.Errorf("Expect status %s is done", status)
 		}
 	}
 
 	for _, status := range statusNotDone {
-		v := dronetypes.Step{Status: status}
+		v := drone.Step{Status: status}
 		if StepIsDone(&v) == true {
 			t.Errorf("Expect status %s is not done", status)
 		}
