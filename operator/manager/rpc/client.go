@@ -38,7 +38,7 @@ type Client struct {
 	client *retryablehttp.Client
 }
 
-func (s *Client) HandleCard(ctx context.Context, r *http.Request, login string) error {
+func (s *Client) UploadCard(ctx context.Context, step int64, input *core.CardInput) error {
 	return nil
 }
 
