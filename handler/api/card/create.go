@@ -84,14 +84,6 @@ func HandleCreate(
 			bytes.NewBuffer(in.Data),
 		)
 
-		// add schema
-		step.Schema = in.Schema
-		err = stepStore.Update(r.Context(), step)
-		if err != nil {
-			render.InternalError(w, err)
-			return
-		}
-
 		/// create card
 		err = cardStore.Create(r.Context(), step.ID, data)
 		if err != nil {
@@ -99,6 +91,13 @@ func HandleCreate(
 			return
 		}
 
+		// add schema
+		step.Schema = in.Schema
+		err = stepStore.Update(r.Context(), step)
+		if err != nil {
+			render.InternalError(w, err)
+			return
+		}
 		render.JSON(w, step.ID, 200)
 	}
 }

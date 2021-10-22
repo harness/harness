@@ -134,12 +134,11 @@ func TestHandleCreate_CreateError(t *testing.T) {
 	stage := mock.NewMockStageStore(controller)
 	stage.EXPECT().FindNumber(gomock.Any(), dummyBuild.ID, gomock.Any()).Return(dummyStage, nil)
 
-	step := mock.NewMockStepStore(controller)
-	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
-	step.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
-
 	card := mock.NewMockCardStore(controller)
 	card.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.ErrNotFound)
+
+	step := mock.NewMockStepStore(controller)
+	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
 
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
