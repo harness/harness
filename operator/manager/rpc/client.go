@@ -38,6 +38,10 @@ type Client struct {
 	client *retryablehttp.Client
 }
 
+func (s *Client) HandleCard(ctx context.Context, r *http.Request, login string) error {
+	return nil
+}
+
 // NewClient returns a new rpc client that is able to
 // interact with a remote build controller using the
 // http transport.

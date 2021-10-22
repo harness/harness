@@ -17,7 +17,12 @@ package manager
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/drone/drone-yaml/yaml/converter"
@@ -42,6 +47,11 @@ type (
 		Config  *core.File       `json:"config"`
 		Secrets []*core.Secret   `json:"secrets"`
 		System  *core.System     `json:"system"`
+	}
+
+	cardInput struct {
+		Schema string          `json:"schema"`
+		Data   json.RawMessage `json:"data"`
 	}
 
 	// BuildManager encapsulates complex build operations and provides
@@ -82,6 +92,9 @@ type (
 
 		// UploadBytes uploads the full logs
 		UploadBytes(ctx context.Context, step int64, b []byte) error
+
+		// HandleCard creates a new card
+		HandleCard(ctx context.Context, r *http.Request, login string) error
 	}
 
 	// Request provides filters when requesting a pending
@@ -101,6 +114,7 @@ type (
 // New returns a new Manager.
 func New(
 	builds core.BuildStore,
+	cards core.CardStore,
 	config core.ConfigService,
 	converter core.ConvertService,
 	events core.Pubsub,
@@ -120,6 +134,7 @@ func New(
 ) BuildManager {
 	return &Manager{
 		Builds:    builds,
+		Cards:     cards,
 		Config:    config,
 		Converter: converter,
 		Events:    events,
@@ -143,6 +158,7 @@ func New(
 // can more easily interact with the server.
 type Manager struct {
 	Builds    core.BuildStore
+	Cards     core.CardStore
 	Config    core.ConfigService
 	Converter core.ConvertService
 	Events    core.Pubsub
@@ -532,6 +548,41 @@ func (m *Manager) UploadBytes(ctx context.Context, step int64, data []byte) erro
 		logger := logrus.WithError(err)
 		logger = logger.WithField("step-id", step)
 		logger.Warnln("manager: cannot upload complete logs")
+	}
+	return err
+}
+
+func (m *Manager) HandleCard(ctx context.Context, r *http.Request, login string) error {
+	in := new(cardInput)
+	err := json.NewDecoder(r.Body).Decode(in)
+	if err != nil {
+		logger := logrus.WithError(err)
+		logger.Warnln("manager: cannot decode card input")
+	}
+	params := strings.Split(login, "|")
+	buildId, err := strconv.ParseInt(params[1], 10, 64)
+	if err != nil {
+		logger := logrus.WithError(err)
+		logger.Warnln("manager: can not parse build Id")
+	}
+	stageId, err := strconv.ParseInt(params[1], 10, 64)
+	if err != nil {
+		logger := logrus.WithError(err)
+		logger.Warnln("manager: can not parse stage Id")
+	}
+	c := &core.Card{
+		Build:  buildId,
+		Stage:  stageId,
+		Step:   3,
+		Schema: in.Schema,
+	}
+	data := ioutil.NopCloser(
+		bytes.NewBuffer(in.Data),
+	)
+	err = m.Cards.Create(r.Context(), c, data)
+	if err != nil {
+		logger := logrus.WithError(err)
+		logger.Warnln("manager: cannot create card")
 	}
 	return err
 }
