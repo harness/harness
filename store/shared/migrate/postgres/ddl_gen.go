@@ -752,7 +752,7 @@ DROP TABLE IF EXISTS cards;
 
 var alterTableStepsAddColumnStepschema = `
 ALTER TABLE steps
-    ADD COLUMN step_schema TEXT NOT NULL DEFAULT '';
+    ADD COLUMN step_schema VARCHAR(2000) NOT NULL DEFAULT '';
 `
 
 var createNewTableCards = `
