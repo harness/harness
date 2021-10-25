@@ -9,6 +9,7 @@ package rpc
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -39,7 +40,7 @@ type Client struct {
 }
 
 func (s *Client) UploadCard(ctx context.Context, step int64, input *core.CardInput) error {
-	return nil
+	return errors.New("rpc upload card not supported")
 }
 
 // NewClient returns a new rpc client that is able to
