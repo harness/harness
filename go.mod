@@ -59,10 +59,10 @@ require (
 )
 
 replace (
-	// TODO It needs to be modified after publishing drone/go-login new version
-	github.com/drone/go-login => ../drone-go-login-dev
-	// TODO It needs to be modified after merging go-scm PR(gitee provider) and publishing a new version
-	github.com/drone/go-scm => ../go-scm
+	// TODO require drone/go-login supports gitee
+	github.com/drone/go-login => github.com/kit101/go-login v1.0.4-gitee
+	// TODO require drone/go-scm supports gitee
+	github.com/drone/go-scm => github.com/kit101/go-scm v1.15.2-gitee
 	github.com/h2non/gock => gopkg.in/h2non/gock.v1 v1.0.14
 )
 

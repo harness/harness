@@ -364,15 +364,15 @@ type (
 		Debug        bool     `envconfig:"DRONE_GITHUB_DEBUG"`
 	}
 
+	// Gitee providers the gitee client configuration.
 	Gitee struct {
 		Server       string   `envconfig:"DRONE_GITEE_SERVER" default:"https://gitee.com"`
-		APIServer    string   `envconfig:"DRONE_GITEE_API_SERVER"`
+		APIServer    string   `envconfig:"DRONE_GITEE_API_SERVER" default:"https://gitee.com/api/v5"`
 		ClientID     string   `envconfig:"DRONE_GITEE_CLIENT_ID"`
 		ClientSecret string   `envconfig:"DRONE_GITEE_CLIENT_SECRET"`
 		RedirectURL  string   `envconfig:"DRONE_GITEE_REDIRECT_URL"`
 		SkipVerify   bool     `envconfig:"DRONE_GITEE_SKIP_VERIFY"`
 		Scope        []string `envconfig:"DRONE_GITEE_SCOPE" default:"user_info,projects,pull_requests,hook"`
-		RateLimit    int      `envconfig:"DRONE_GITEE_USER_RATELIMIT"`
 		Debug        bool     `envconfig:"DRONE_GITEE_DEBUG"`
 	}
 
