@@ -553,16 +553,5 @@ func (m *Manager) UploadCard(ctx context.Context, stepId int64, input *core.Card
 		logger := logrus.WithError(err)
 		logger.Warnln("manager: cannot create card")
 	}
-	step, err := m.Steps.Find(ctx, stepId)
-	if err != nil {
-		logger := logrus.WithError(err)
-		logger.Warnln("manager: step not found when creating card")
-	}
-	step.Schema = input.Schema
-	err = m.Steps.Update(ctx, step)
-	if err != nil {
-		logger := logrus.WithError(err)
-		logger.Warnln("manager: step failed to update with schema")
-	}
 	return nil
 }

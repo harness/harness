@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS cards;
 -- name: alter-table-steps-add-column-step_schema
 
 ALTER TABLE steps
-    ADD COLUMN step_schema VARCHAR(200) NOT NULL DEFAULT '';
+    ADD COLUMN step_schema VARCHAR(2000) NOT NULL DEFAULT '';
 
 -- name: create-new-table-cards
 CREATE TABLE IF NOT EXISTS cards
