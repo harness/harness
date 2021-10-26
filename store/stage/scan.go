@@ -155,6 +155,7 @@ func scanRowStep(scanner db.Scanner, stage *core.Stage, step *nullStep) error {
 		&stepDepJSON,
 		&step.Image,
 		&step.Detached,
+		&step.Schema,
 	)
 	json.Unmarshal(depJSON, &stage.DependsOn)
 	json.Unmarshal(labJSON, &stage.Labels)

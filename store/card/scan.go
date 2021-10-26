@@ -7,73 +7,27 @@
 package card
 
 import (
-	"database/sql"
-
-	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/shared/db"
 )
 
 // helper function converts the card structure to a set
 // of named query parameters.
-func toParams(card *core.Card) (map[string]interface{}, error) {
+func toParams(card *card) (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"card_id":     card.Id,
-		"card_build":  card.Build,
-		"card_stage":  card.Stage,
-		"card_step":   card.Step,
-		"card_schema": card.Schema,
-	}, nil
-}
-
-// helper function converts the card structure to a set
-// of named query parameters.
-func toSaveCardParams(card *core.Card, data []byte) (map[string]interface{}, error) {
-	return map[string]interface{}{
-		"card_id":     card.Id,
-		"card_build":  card.Build,
-		"card_stage":  card.Stage,
-		"card_step":   card.Step,
-		"card_schema": card.Schema,
-		"card_data":   data,
+		"card_id":   card.Id,
+		"card_data": card.Data,
 	}, nil
 }
 
 // helper function scans the sql.Row and copies the column
 // values to the destination object.
-func scanRow(scanner db.Scanner, dst *core.Card) error {
+func scanRow(scanner db.Scanner, dst *card) error {
 	err := scanner.Scan(
 		&dst.Id,
-		&dst.Build,
-		&dst.Stage,
-		&dst.Step,
-		&dst.Schema,
+		&dst.Data,
 	)
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-func scanRowCardDataOnly(scanner db.Scanner, dst *core.CardData) error {
-	return scanner.Scan(
-		&dst.Id,
-		&dst.Data,
-	)
-}
-
-// helper function scans the sql.Row and copies the column
-// values to the destination object.
-func scanRows(rows *sql.Rows) ([]*core.Card, error) {
-	defer rows.Close()
-
-	card := []*core.Card{}
-	for rows.Next() {
-		tem := new(core.Card)
-		err := scanRow(rows, tem)
-		if err != nil {
-			return nil, err
-		}
-		card = append(card, tem)
-	}
-	return card, nil
 }

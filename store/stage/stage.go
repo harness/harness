@@ -326,6 +326,7 @@ SELECT
 ,step_depends_on
 ,step_image
 ,step_detached
+,step_schema
 FROM stages
   LEFT JOIN steps
 	ON stages.stage_id=steps.step_stage_id

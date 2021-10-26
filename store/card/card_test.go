@@ -8,7 +8,10 @@ import (
 	"testing"
 
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/store/build"
+	"github.com/drone/drone/store/repos"
 	"github.com/drone/drone/store/shared/db/dbtest"
+	"github.com/drone/drone/store/step"
 )
 
 var noContext = context.TODO()
@@ -24,79 +27,46 @@ func TestCard(t *testing.T) {
 		dbtest.Disconnect(conn)
 	}()
 
+	// seed with a dummy repository
+	dummyRepo := &core.Repository{UID: "1", Slug: "octocat/hello-world"}
+	repos := repos.New(conn)
+	repos.Create(noContext, dummyRepo)
+
+	// seed with a dummy stage
+	stage := &core.Stage{Number: 1}
+	stages := []*core.Stage{stage}
+
+	// seed with a dummy build
+	dummyBuild := &core.Build{Number: 1, RepoID: dummyRepo.ID}
+	builds := build.New(conn)
+	builds.Create(noContext, dummyBuild, stages)
+
+	// seed with a dummy step
+	dummyStep := &core.Step{Number: 1, StageID: stage.ID}
+	steps := step.New(conn)
+	steps.Create(noContext, dummyStep)
+
 	store := New(conn).(*cardStore)
-	t.Run("Create", testCardCreate(store))
+	t.Run("Create", testCardCreate(store, dummyStep))
+	t.Run("Find", testFindCard(store, dummyStep))
+	t.Run("Update", testLogsUpdate(store, dummyStep))
 }
 
-func testCard(item *core.Card) func(t *testing.T) {
+func testCardCreate(store *cardStore, step *core.Step) func(t *testing.T) {
 	return func(t *testing.T) {
-		if got, want := item.Schema, "https://myschema.com"; got != want {
-			t.Errorf("Want card schema %q, got %q", want, got)
-		}
-		if got, want := item.Build, int64(1); got != want {
-			t.Errorf("Want card build number %q, got %q", want, got)
-		}
-		if got, want := item.Stage, int64(2); got != want {
-			t.Errorf("Want card stage number %q, got %q", want, got)
-		}
-		if got, want := item.Step, int64(3); got != want {
-			t.Errorf("Want card step number %q, got %q", want, got)
-		}
-	}
-}
-
-func testCardCreate(store *cardStore) func(t *testing.T) {
-	return func(t *testing.T) {
-		item := &core.Card{
-			Id:     1,
-			Build:  1,
-			Stage:  2,
-			Step:   3,
-			Schema: "https://myschema.com",
-		}
 		buf := ioutil.NopCloser(
 			bytes.NewBuffer([]byte("{\"type\": \"AdaptiveCard\"}")),
 		)
-		err := store.Create(noContext, item, buf)
+		err := store.Create(noContext, step.ID, buf)
 		if err != nil {
 			t.Error(err)
-		}
-		if item.Id == 0 {
-			t.Errorf("Want card Id assigned, got %d", item.Id)
-		}
-
-		t.Run("FindByBuild", testFindCardByBuild(store))
-		t.Run("Find", testFindCard(store))
-		t.Run("FindData", testFindCardData(store))
-		t.Run("Delete", testCardDelete(store))
-	}
-}
-
-func testFindCardByBuild(card *cardStore) func(t *testing.T) {
-	return func(t *testing.T) {
-		item, err := card.FindByBuild(noContext, 1)
-		if err != nil {
-			t.Error(err)
-		} else {
-			t.Run("Fields", testCard(item[0]))
 		}
 	}
 }
 
-func testFindCard(card *cardStore) func(t *testing.T) {
+func testFindCard(card *cardStore, step *core.Step) func(t *testing.T) {
 	return func(t *testing.T) {
-		item, err := card.Find(noContext, 3)
-		if err != nil {
-			t.Error(err)
-		} else {
-			t.Run("Fields", testCard(item))
-		}
-	}
-}
-
-func testFindCardData(card *cardStore) func(t *testing.T) {
-	return func(t *testing.T) {
-		r, err := card.FindData(noContext, 1)
+		r, err := card.Find(noContext, step.ID)
 		if err != nil {
 			t.Error(err)
 		} else {
@@ -112,19 +82,38 @@ func testFindCardData(card *cardStore) func(t *testing.T) {
 	}
 }
 
-func testCardDelete(store *cardStore) func(t *testing.T) {
+func testLogsUpdate(store *cardStore, step *core.Step) func(t *testing.T) {
 	return func(t *testing.T) {
-		card, err := store.Find(noContext, 3)
+		buf := bytes.NewBufferString("hola mundo")
+		err := store.Update(noContext, step.ID, buf)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		err = store.Delete(noContext, card.Id)
+		r, err := store.Find(noContext, step.ID)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		_, err = store.Find(noContext, card.Step)
+		data, err := ioutil.ReadAll(r)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if got, want := string(data), "hola mundo"; got != want {
+			t.Errorf("Want updated log output stream %q, got %q", want, got)
+		}
+	}
+}
+
+func testLogsDelete(store *cardStore, step *core.Step) func(t *testing.T) {
+	return func(t *testing.T) {
+		err := store.Delete(noContext, step.ID)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		_, err = store.Find(noContext, step.ID)
 		if got, want := sql.ErrNoRows, err; got != want {
 			t.Errorf("Want sql.ErrNoRows, got %v", got)
 			return

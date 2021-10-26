@@ -71,12 +71,12 @@ func HandleDelete(
 			return
 		}
 
-		card, err := cardStore.Find(r.Context(), step.ID)
+		_, err = cardStore.Find(r.Context(), step.ID)
 		if err != nil {
 			render.NotFound(w, err)
 			return
 		}
-		err = cardStore.Delete(r.Context(), card.Id)
+		err = cardStore.Delete(r.Context(), step.ID)
 		if err != nil {
 			render.InternalError(w, err)
 			return

@@ -17,48 +17,19 @@ package core
 import (
 	"context"
 	"io"
-
-	"github.com/drone/drone/handler/api/errors"
 )
-
-var (
-	errCardStepInvalid   = errors.New("No Step ID Provided")
-	errCardBuildInvalid  = errors.New("No Build ID Provided")
-	errCardSchemaInvalid = errors.New("No Card Schema Has Been Provided")
-)
-
-type Card struct {
-	Id     int64  `json:"id,omitempty"`
-	Build  int64  `json:"build,omitempty"`
-	Stage  int64  `json:"stage,omitempty"`
-	Step   int64  `json:"step,omitempty"`
-	Schema string `json:"schema,omitempty"`
-}
-
-type CardData struct {
-	Id   int64  `json:"id,omitempty"`
-	Data []byte `json:"card_data"`
-}
 
 // CardStore manages repository cards.
 type CardStore interface {
-	FindByBuild(ctx context.Context, build int64) ([]*Card, error)
-	Find(ctx context.Context, step int64) (*Card, error)
-	FindData(ctx context.Context, id int64) (io.ReadCloser, error)
-	Create(ctx context.Context, card *Card, data io.ReadCloser) error
-	Delete(ctx context.Context, id int64) error
-}
+	// Find returns a card data stream from the datastore.
+	Find(ctx context.Context, step int64) (io.ReadCloser, error)
 
-// Validate validates the required fields and formats.
-func (c *Card) Validate() error {
-	switch {
-	case c.Step == 0:
-		return errCardStepInvalid
-	case c.Build == 0:
-		return errCardBuildInvalid
-	case len(c.Schema) == 0:
-		return errCardSchemaInvalid
-	default:
-		return nil
-	}
+	// Create copies the card stream from Reader r to the datastore.
+	Create(ctx context.Context, step int64, r io.Reader) error
+
+	// Update copies the card stream from Reader r to the datastore.
+	Update(ctx context.Context, step int64, r io.Reader) error
+
+	// Delete purges the card data from the datastore.
+	Delete(ctx context.Context, step int64) error
 }

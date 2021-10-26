@@ -180,6 +180,22 @@ var migrations = []struct {
 		name: "create-index-cards-card_build",
 		stmt: createIndexCardsCardbuild,
 	},
+	{
+		name: "create-index-cards-card_step",
+		stmt: createIndexCardsCardstep,
+	},
+	{
+		name: "drop-table-cards",
+		stmt: dropTableCards,
+	},
+	{
+		name: "alter-table-steps-add-column-step_schema",
+		stmt: alterTableStepsAddColumnStepschema,
+	},
+	{
+		name: "create-new-table-cards",
+		stmt: createNewTableCards,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -720,4 +736,30 @@ CREATE TABLE IF NOT EXISTS cards (
 
 var createIndexCardsCardbuild = `
 CREATE INDEX IF NOT EXISTS  ix_cards_build ON cards (card_build);
+`
+
+var createIndexCardsCardstep = `
+CREATE UNIQUE INDEX IF NOT EXISTS  ix_cards_step ON cards (card_step);
+`
+
+//
+// 019_amend_table_cards.sql
+//
+
+var dropTableCards = `
+DROP TABLE IF EXISTS cards;
+`
+
+var alterTableStepsAddColumnStepschema = `
+ALTER TABLE steps
+    ADD COLUMN step_schema VARCHAR(2000) NOT NULL DEFAULT '';
+`
+
+var createNewTableCards = `
+CREATE TABLE IF NOT EXISTS cards
+(
+    card_id SERIAL PRIMARY KEY,
+    card_data BYTEA,
+    FOREIGN KEY (card_id) REFERENCES steps (step_id) ON DELETE CASCADE
+);
 `

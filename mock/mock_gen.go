@@ -2919,7 +2919,7 @@ func (m *MockCardStore) EXPECT() *MockCardStoreMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockCardStore) Create(arg0 context.Context, arg1 *core.Card, arg2 io.ReadCloser) error {
+func (m *MockCardStore) Create(arg0 context.Context, arg1 int64, arg2 io.Reader) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -2947,10 +2947,10 @@ func (mr *MockCardStoreMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call
 }
 
 // Find mocks base method.
-func (m *MockCardStore) Find(arg0 context.Context, arg1 int64) (*core.Card, error) {
+func (m *MockCardStore) Find(arg0 context.Context, arg1 int64) (io.ReadCloser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Find", arg0, arg1)
-	ret0, _ := ret[0].(*core.Card)
+	ret0, _ := ret[0].(io.ReadCloser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2961,32 +2961,16 @@ func (mr *MockCardStoreMockRecorder) Find(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockCardStore)(nil).Find), arg0, arg1)
 }
 
-// FindByBuild mocks base method.
-func (m *MockCardStore) FindByBuild(arg0 context.Context, arg1 int64) ([]*core.Card, error) {
+// Update mocks base method.
+func (m *MockCardStore) Update(arg0 context.Context, arg1 int64, arg2 io.Reader) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByBuild", arg0, arg1)
-	ret0, _ := ret[0].([]*core.Card)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "Update", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// FindByBuild indicates an expected call of FindByBuild.
-func (mr *MockCardStoreMockRecorder) FindByBuild(arg0, arg1 interface{}) *gomock.Call {
+// Update indicates an expected call of Update.
+func (mr *MockCardStoreMockRecorder) Update(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByBuild", reflect.TypeOf((*MockCardStore)(nil).FindByBuild), arg0, arg1)
-}
-
-// FindData mocks base method.
-func (m *MockCardStore) FindData(arg0 context.Context, arg1 int64) (io.ReadCloser, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindData", arg0, arg1)
-	ret0, _ := ret[0].(io.ReadCloser)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindData indicates an expected call of FindData.
-func (mr *MockCardStoreMockRecorder) FindData(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindData", reflect.TypeOf((*MockCardStore)(nil).FindData), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockCardStore)(nil).Update), arg0, arg1, arg2)
 }

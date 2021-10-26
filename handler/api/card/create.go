@@ -85,29 +85,24 @@ func HandleCreate(
 			return
 		}
 
-		c := &core.Card{
-			Build:  build.ID,
-			Stage:  stage.ID,
-			Step:   step.ID,
-			Schema: in.Schema,
-		}
-
-		err = c.Validate()
-		if err != nil {
-			render.BadRequest(w, err)
-			return
-		}
-
 		data := ioutil.NopCloser(
-			bytes.NewBuffer([]byte(in.Data)),
+			bytes.NewBuffer(in.Data),
 		)
 
-		err = cardStore.Create(r.Context(), c, data)
+		/// create card
+		err = cardStore.Create(r.Context(), step.ID, data)
 		if err != nil {
 			render.InternalError(w, err)
 			return
 		}
 
-		render.JSON(w, c, 200)
+		// add schema
+		step.Schema = in.Schema
+		err = stepStore.Update(r.Context(), step)
+		if err != nil {
+			render.InternalError(w, err)
+			return
+		}
+		render.JSON(w, step.ID, 200)
 	}
 }

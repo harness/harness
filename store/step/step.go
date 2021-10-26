@@ -159,6 +159,7 @@ SELECT
 ,step_depends_on
 ,step_image
 ,step_detached
+,step_schema
 `
 
 const queryKey = queryBase + `
@@ -191,6 +192,7 @@ SET
 ,step_depends_on = :step_depends_on
 ,step_image = :step_image
 ,step_detached = :step_detached
+,step_schema = :step_schema
 WHERE step_id = :step_id
   AND step_version = :step_version_old
 `
@@ -210,6 +212,7 @@ INSERT INTO steps (
 ,step_depends_on
 ,step_image
 ,step_detached
+,step_schema
 ) VALUES (
  :step_stage_id
 ,:step_number
@@ -224,6 +227,7 @@ INSERT INTO steps (
 ,:step_depends_on
 ,:step_image
 ,:step_detached
+,:step_schema
 )
 `
 

@@ -7,6 +7,7 @@
 package card
 
 import (
+	"io"
 	"net/http"
 	"strconv"
 
@@ -69,11 +70,13 @@ func HandleFind(
 			return
 		}
 
-		card, err := cardStore.Find(r.Context(), step.ID)
+		cardData, err := cardStore.Find(r.Context(), step.ID)
 		if err != nil {
 			render.NotFound(w, err)
 			return
 		}
-		render.JSON(w, card, 200)
+		w.Header().Set("Content-Type", "application/json")
+		io.Copy(w, cardData)
+		cardData.Close()
 	}
 }

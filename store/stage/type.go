@@ -37,6 +37,7 @@ type nullStep struct {
 	DependsOn types.JSONText
 	Image     sql.NullString
 	Detached  sql.NullBool
+	Schema    sql.NullString
 }
 
 func (s *nullStep) value() *core.Step {
@@ -58,6 +59,7 @@ func (s *nullStep) value() *core.Step {
 		DependsOn: dependsOn,
 		Image:     s.Image.String,
 		Detached:  s.Detached.Bool,
+		Schema:    s.Schema.String,
 	}
 
 	return step

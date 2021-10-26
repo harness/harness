@@ -30,22 +30,18 @@ func New(db *db.DB) core.CardStore {
 
 type noop struct{}
 
-func (noop) FindByBuild(ctx context.Context, build int64) ([]*core.Card, error) {
+func (noop) Find(ctx context.Context, step int64) (io.ReadCloser, error) {
 	return nil, nil
 }
 
-func (noop) Find(ctx context.Context, step int64) (*core.Card, error) {
-	return nil, nil
-}
-
-func (noop) FindData(ctx context.Context, id int64) (io.ReadCloser, error) {
-	return nil, nil
-}
-
-func (noop) Create(ctx context.Context, card *core.Card, data io.ReadCloser) error {
+func (noop) Create(ctx context.Context, step int64, r io.Reader) error {
 	return nil
 }
 
-func (noop) Delete(ctx context.Context, id int64) error {
+func (noop) Update(ctx context.Context, step int64, r io.Reader) error {
+	return nil
+}
+
+func (noop) Delete(ctx context.Context, step int64) error {
 	return nil
 }

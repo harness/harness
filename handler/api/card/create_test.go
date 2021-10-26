@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,6 +22,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 )
+
+type card struct {
+	Id   int64  `json:"id,omitempty"`
+	Data []byte `json:"card_data"`
+}
 
 var (
 	dummyRepo = &core.Repository{
@@ -42,23 +46,12 @@ var (
 	dummyStep = &core.Step{
 		ID:      1,
 		StageID: 1,
+		Schema:  "https://myschema.com",
 	}
-	dummyCreateCard = &core.Card{
-		Schema: "https://myschema.com",
+	dummyCard = &card{
+		Id:   dummyStep.ID,
+		Data: []byte("{\"type\": \"AdaptiveCard\"}"),
 	}
-	dummyCard = &core.Card{
-		Id:     1,
-		Build:  1,
-		Stage:  1,
-		Step:   1,
-		Schema: "https://myschema.com",
-	}
-	dummyCardList = []*core.Card{
-		dummyCard,
-	}
-	dummyCardData = ioutil.NopCloser(
-		bytes.NewBuffer([]byte("{\"type\": \"AdaptiveCard\"}")),
-	)
 )
 
 func TestHandleCreate(t *testing.T) {
@@ -76,6 +69,7 @@ func TestHandleCreate(t *testing.T) {
 
 	step := mock.NewMockStepStore(controller)
 	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
+	step.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
 
 	card := mock.NewMockCardStore(controller)
 	card.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -88,7 +82,7 @@ func TestHandleCreate(t *testing.T) {
 	c.URLParams.Add("step", "1")
 
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(dummyCreateCard)
+	json.NewEncoder(in).Encode(dummyCard)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("POST", "/", in)
@@ -140,11 +134,11 @@ func TestHandleCreate_CreateError(t *testing.T) {
 	stage := mock.NewMockStageStore(controller)
 	stage.EXPECT().FindNumber(gomock.Any(), dummyBuild.ID, gomock.Any()).Return(dummyStage, nil)
 
-	step := mock.NewMockStepStore(controller)
-	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
-
 	card := mock.NewMockCardStore(controller)
 	card.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.ErrNotFound)
+
+	step := mock.NewMockStepStore(controller)
+	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
 
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
@@ -153,7 +147,7 @@ func TestHandleCreate_CreateError(t *testing.T) {
 	c.URLParams.Add("stage", "1")
 	c.URLParams.Add("step", "1")
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(dummyCreateCard)
+	json.NewEncoder(in).Encode(dummyCard)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", in)

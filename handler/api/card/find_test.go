@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -39,7 +40,9 @@ func TestHandleFind(t *testing.T) {
 	step.EXPECT().FindNumber(gomock.Any(), dummyStage.ID, gomock.Any()).Return(dummyStep, nil)
 
 	card := mock.NewMockCardStore(controller)
-	card.EXPECT().Find(gomock.Any(), dummyStep.ID).Return(dummyCard, nil)
+	card.EXPECT().Find(gomock.Any(), dummyStep.ID).Return(ioutil.NopCloser(
+		bytes.NewBuffer(dummyCard.Data),
+	), nil)
 
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
@@ -49,7 +52,7 @@ func TestHandleFind(t *testing.T) {
 	c.URLParams.Add("step", "1")
 
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(dummyCreateCard)
+	json.NewEncoder(in).Encode(dummyCard)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", in)
@@ -90,7 +93,7 @@ func TestHandleFind_CardNotFound(t *testing.T) {
 	c.URLParams.Add("step", "1")
 
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(dummyCreateCard)
+	json.NewEncoder(in).Encode(dummyCard)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", in)
