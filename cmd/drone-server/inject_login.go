@@ -96,10 +96,14 @@ func provideGiteeLogin(config config.Config) login.Middleware {
 	if config.Gitee.ClientID == "" {
 		return nil
 	}
+	redirectURL := config.Gitee.RedirectURL
+	if redirectURL == "" {
+		redirectURL = config.Server.Addr + "/login"
+	}
 	return &gitee.Config{
 		ClientID:     config.Gitee.ClientID,
 		ClientSecret: config.Gitee.ClientSecret,
-		RedirectURL:  config.Gitee.RedirectURL,
+		RedirectURL:  redirectURL,
 		Server:       config.Gitee.Server,
 		Scope:        config.Gitee.Scope,
 		Client:       defaultClient(config.Gitee.SkipVerify),

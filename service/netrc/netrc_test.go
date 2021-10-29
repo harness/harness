@@ -141,7 +141,7 @@ func TestNetrc_Bitbucket(t *testing.T) {
 	}
 }
 
-func TestNetrc_Gitee(t *testing.T)  {
+func TestNetrc_Gitee(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
