@@ -16,8 +16,14 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 )
+
+type CardInput struct {
+	Schema string          `json:"schema"`
+	Data   json.RawMessage `json:"data"`
+}
 
 // CardStore manages repository cards.
 type CardStore interface {

@@ -37,6 +37,7 @@ func NewServer(manager manager.BuildManager, secret string) Server {
 	r.Post("/build/{build}/watch", HandleWatch(manager))
 	r.Post("/step/{step}/logs/batch", HandleLogBatch(manager))
 	r.Post("/step/{step}/logs/upload", HandleLogUpload(manager))
+	r.Post("/step/{step}/card", HandleCardUpload(manager))
 	return Server(r)
 }
 
@@ -55,4 +56,3 @@ func authorization(token string) func(http.Handler) http.Handler {
 		})
 	}
 }
-

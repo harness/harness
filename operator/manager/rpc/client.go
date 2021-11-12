@@ -9,6 +9,7 @@ package rpc
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -206,6 +207,10 @@ func (s *Client) Upload(ctx context.Context, step int64, r io.Reader) error {
 func (s *Client) UploadBytes(ctx context.Context, step int64, data []byte) error {
 	endpoint := "/rpc/v1/upload?id=" + fmt.Sprint(step)
 	return s.upload(noContext, endpoint, data)
+}
+
+func (s *Client) UploadCard(ctx context.Context, step int64, input *core.CardInput) error {
+	return errors.New("rpc upload card not supported")
 }
 
 func (s *Client) send(ctx context.Context, path string, in, out interface{}) error {

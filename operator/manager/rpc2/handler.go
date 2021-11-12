@@ -29,6 +29,7 @@ import (
 	"github.com/go-chi/chi"
 
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/handler/api/render"
 	"github.com/drone/drone/operator/manager"
 	"github.com/drone/drone/store/shared/db"
 )
@@ -262,6 +263,31 @@ func HandleLogUpload(m manager.BuildManager) http.HandlerFunc {
 			chi.URLParam(r, "step"), 10, 64)
 
 		err := m.Upload(noContext, step, r.Body)
+		if err != nil {
+			writeError(w, err)
+		} else {
+			writeOK(w)
+		}
+	}
+}
+
+// HandleCardUpload returns an http.HandlerFunc that accepts an
+// http.Request to upload and persist a card for a pipeline step.
+//
+// POST /rpc/v2/step/{step}/card
+func HandleCardUpload(m manager.BuildManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		step, _ := strconv.ParseInt(
+			chi.URLParam(r, "step"), 10, 64)
+
+		in := new(core.CardInput)
+		err := json.NewDecoder(r.Body).Decode(in)
+		if err != nil {
+			render.BadRequest(w, err)
+			return
+		}
+
+		err = m.UploadCard(noContext, step, in)
 		if err != nil {
 			writeError(w, err)
 		} else {

@@ -19,11 +19,6 @@ import (
 	"github.com/go-chi/chi"
 )
 
-type cardInput struct {
-	Schema string          `json:"schema"`
-	Data   json.RawMessage `json:"data"`
-}
-
 // HandleCreate returns an http.HandlerFunc that processes http
 // requests to create a new card.
 func HandleCreate(
@@ -57,7 +52,7 @@ func HandleCreate(
 			return
 		}
 
-		in := new(cardInput)
+		in := new(core.CardInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequest(w, err)

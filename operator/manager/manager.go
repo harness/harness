@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"time"
 
 	"github.com/drone/drone-yaml/yaml/converter"
@@ -65,10 +66,10 @@ type (
 		// After signals the build step is complete.
 		After(ctx context.Context, step *core.Step) error
 
-		// Before signals the build stage is about to start.
+		// BeforeAll signals the build stage is about to start.
 		BeforeAll(ctx context.Context, stage *core.Stage) error
 
-		// After signals the build stage is complete.
+		// AfterAll signals the build stage is complete.
 		AfterAll(ctx context.Context, stage *core.Stage) error
 
 		// Watch watches for build cancellation requests.
@@ -82,6 +83,9 @@ type (
 
 		// UploadBytes uploads the full logs
 		UploadBytes(ctx context.Context, step int64, b []byte) error
+
+		// UploadCard creates a new card
+		UploadCard(ctx context.Context, step int64, input *core.CardInput) error
 	}
 
 	// Request provides filters when requesting a pending
@@ -101,6 +105,7 @@ type (
 // New returns a new Manager.
 func New(
 	builds core.BuildStore,
+	cards core.CardStore,
 	config core.ConfigService,
 	converter core.ConvertService,
 	events core.Pubsub,
@@ -120,6 +125,7 @@ func New(
 ) BuildManager {
 	return &Manager{
 		Builds:    builds,
+		Cards:     cards,
 		Config:    config,
 		Converter: converter,
 		Events:    events,
@@ -143,6 +149,7 @@ func New(
 // can more easily interact with the server.
 type Manager struct {
 	Builds    core.BuildStore
+	Cards     core.CardStore
 	Config    core.ConfigService
 	Converter core.ConvertService
 	Events    core.Pubsub
@@ -534,4 +541,17 @@ func (m *Manager) UploadBytes(ctx context.Context, step int64, data []byte) erro
 		logger.Warnln("manager: cannot upload complete logs")
 	}
 	return err
+}
+
+// UploadCard creates card for step.
+func (m *Manager) UploadCard(ctx context.Context, stepId int64, input *core.CardInput) error {
+	data := ioutil.NopCloser(
+		bytes.NewBuffer(input.Data),
+	)
+	err := m.Cards.Create(ctx, stepId, data)
+	if err != nil {
+		logger := logrus.WithError(err)
+		logger.Warnln("manager: cannot create card")
+	}
+	return nil
 }
