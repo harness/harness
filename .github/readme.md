@@ -45,7 +45,7 @@ Plugins are used in build steps to perform actions, eg send a message to slack o
 
 This build file contains a single pipeline (you can have multiple pipelines too) that builds a go application. The front end with npm. Publishes the docker container to a registry and announces the results to a slack room.
 
-```yaml
+```YAML
 name: default
 
 kind: pipeline
