@@ -366,7 +366,7 @@ func (p *parser) Parse(req *http.Request, secretFunc func(string) string) (*core
 			After:        v.Ref.Sha,
 			Ref:          v.Ref.Path,
 			Source:       v.Ref.Name,
-			Target:       v.Ref.Name,
+			Target:       v.Target,
 			Author:       v.Sender.Login,
 			AuthorName:   v.Sender.Name,
 			AuthorEmail:  v.Sender.Email,
