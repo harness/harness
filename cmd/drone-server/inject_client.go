@@ -28,6 +28,7 @@ import (
 	"github.com/drone/go-scm/scm"
 	"github.com/drone/go-scm/scm/driver/bitbucket"
 	"github.com/drone/go-scm/scm/driver/gitea"
+	"github.com/drone/go-scm/scm/driver/gitee"
 	"github.com/drone/go-scm/scm/driver/github"
 	"github.com/drone/go-scm/scm/driver/gitlab"
 	"github.com/drone/go-scm/scm/driver/gogs"
@@ -53,6 +54,8 @@ func provideClient(config config.Config) *scm.Client {
 		return provideBitbucketClient(config)
 	case config.Github.ClientID != "":
 		return provideGithubClient(config)
+	case config.Gitee.ClientID != "":
+		return provideGiteeClient(config)
 	case config.Gitea.Server != "":
 		return provideGiteaClient(config)
 	case config.GitLab.ClientID != "":
@@ -102,6 +105,26 @@ func provideGithubClient(config config.Config) *scm.Client {
 		Transport: &oauth2.Transport{
 			Source: oauth2.ContextTokenSource(),
 			Base:   defaultTransport(config.Github.SkipVerify),
+		},
+	}
+	return client
+}
+
+// provideGiteeClient is a Wire provider function that returns
+// a Gitee client based on the environment configuration.
+func provideGiteeClient(config config.Config) *scm.Client {
+	client, err := gitee.New(config.Gitee.APIServer)
+	if err != nil {
+		logrus.WithError(err).
+			Fatalln("main: cannot create the Gitee client")
+	}
+	if config.Gitee.Debug {
+		client.DumpResponse = httputil.DumpResponse
+	}
+	client.Client = &http.Client{
+		Transport: &oauth2.Transport{
+			Source: oauth2.ContextTokenSource(),
+			Base:   defaultTransport(config.Gitee.SkipVerify),
 		},
 	}
 	return client

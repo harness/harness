@@ -77,7 +77,7 @@ func (s *Service) Create(ctx context.Context, user *core.User, repo *core.Reposi
 	}
 
 	switch s.client.Driver {
-	case scm.DriverGitlab:
+	case scm.DriverGitlab, scm.DriverGitee:
 		netrc.Login = "oauth2"
 		netrc.Password = user.Token
 	case scm.DriverBitbucket:

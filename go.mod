@@ -19,8 +19,8 @@ require (
 	github.com/drone/envsubst v1.0.3-0.20200709231038-aa43e1c1a629
 	github.com/drone/funcmap v0.0.0-20210823160631-9e9dec149056
 	github.com/drone/go-license v1.0.2
-	github.com/drone/go-login v1.0.4-0.20190311170324-2a4df4f242a2
-	github.com/drone/go-scm v1.15.2
+	github.com/drone/go-login v1.1.0
+	github.com/drone/go-scm v1.16.1
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-chi/chi v3.3.3+incompatible

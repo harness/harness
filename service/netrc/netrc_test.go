@@ -141,6 +141,37 @@ func TestNetrc_Bitbucket(t *testing.T) {
 	}
 }
 
+func TestNetrc_Gitee(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	mockRepo := &core.Repository{Private: true, HTTPURL: "https://gitee.com/kit101/drone-yml-test"}
+	mockUser := &core.User{
+		Token:   "755bb80e5b",
+		Refresh: "e08f3fa43e",
+	}
+	mockRenewer := mock.NewMockRenewer(controller)
+	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, true)
+
+	s := Service{
+		renewer: mockRenewer,
+		client:  &scm.Client{Driver: scm.DriverGitee},
+	}
+	got, err := s.Create(noContext, mockUser, mockRepo)
+	if err != nil {
+		t.Error(err)
+	}
+
+	want := &core.Netrc{
+		Machine:  "gitee.com",
+		Login:    "oauth2",
+		Password: "755bb80e5b",
+	}
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf(diff)
+	}
+}
+
 func TestNetrc_Nil(t *testing.T) {
 	s := Service{
 		private: false,
