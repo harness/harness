@@ -1,6 +1,14 @@
 # Changelog
 
-## [v2.5.0](https://github.com/harness/drone/tree/v2.5.0) (2021-11-16)
+## [v2.6.0](https://github.com/harness/drone/tree/v2.6.0) (2021-11-30)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.5.0...v2.6.0)
+
+**Implemented enhancements:**
+
+- Feat: implemented gitee client [\#3156](https://github.com/harness/drone/pull/3156) ([kit101](https://github.com/kit101))
+
+## [v2.5.0](https://github.com/harness/drone/tree/v2.5.0) (2021-11-17)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.4.0...v2.5.0)
 
@@ -16,6 +24,10 @@
 **Fixed bugs:**
 
 - fix a typo in readme [\#3150](https://github.com/harness/drone/pull/3150) ([nothatDinger](https://github.com/nothatDinger))
+
+**Merged pull requests:**
+
+- release prep for v2.5.0 [\#3161](https://github.com/harness/drone/pull/3161) ([eoinmcafee00](https://github.com/eoinmcafee00))
 
 ## [v2.4.0](https://github.com/harness/drone/tree/v2.4.0) (2021-09-23)
 
