@@ -105,7 +105,6 @@ func TestCreateDesc(t *testing.T) {
 }
 
 func TestConvertStatus(t *testing.T) {
-
 	tests := []struct {
 		from string
 		to   scm.State
