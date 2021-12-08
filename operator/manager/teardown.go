@@ -212,14 +212,25 @@ func (t *teardown) do(ctx context.Context, stage *core.Stage) error {
 // cancelDownstream is a helper function that tests for
 // downstream stages and cancels them based on the overall
 // pipeline state.
+
+func depFailed(listOne, listTwo []string) bool {
+	for _, i := range listOne {
+		for _, j := range listTwo {
+			if i == j {
+				return true
+			}
+		}
+	}
+	return false
+}
 func (t *teardown) cancelDownstream(
 	ctx context.Context,
 	stages []*core.Stage,
 ) error {
-	failed := false
+	failedStages := []string{}
 	for _, s := range stages {
 		if s.IsFailed() {
-			failed = true
+			failedStages = append(failedStages, s.Name)
 		}
 	}
 
@@ -230,10 +241,10 @@ func (t *teardown) cancelDownstream(
 		}
 
 		var skip bool
-		if failed == true && s.OnFailure == false {
+		if depFailed(s.DependsOn, failedStages) == true && s.OnFailure == false {
 			skip = true
 		}
-		if failed == false && s.OnSuccess == false {
+		if depFailed(s.DependsOn, failedStages) == false && s.OnSuccess == false {
 			skip = true
 		}
 		if skip == false {
@@ -249,7 +260,7 @@ func (t *teardown) cancelDownstream(
 				"stage.id":         s.ID,
 				"stage.on_success": s.OnSuccess,
 				"stage.on_failure": s.OnFailure,
-				"stage.is_failure": failed,
+				"stage.is_failure": failedStages,
 				"stage.depends_on": s.DependsOn,
 			},
 		)
