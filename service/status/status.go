@@ -76,7 +76,7 @@ func (s *service) Send(ctx context.Context, user *core.User, req *core.StatusInp
 			Desc:        createDesc(req.Build.Status),
 			State:       convertStatus(req.Build.Status),
 			Target:      fmt.Sprintf("%s/%s/%d", s.base, req.Repo.Slug, req.Build.Number),
-			Environment: req.Build.Target,
+			Environment: req.Build.Deploy,
 		})
 		return err
 	}
