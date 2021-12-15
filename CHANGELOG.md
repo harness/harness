@@ -1,5 +1,17 @@
 # Changelog
 
+## [v2.7.0](https://github.com/harness/drone/tree/v2.7.0) (2021-12-15)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.6.0...v2.7.0)
+
+**Implemented enhancements:**
+
+- bump UI to v2.4.1 [\#3167](https://github.com/harness/drone/pull/3167) ([d1wilko](https://github.com/d1wilko))
+
+**Fixed bugs:**
+
+- \(DRON-157\) use deploy string in deployment [\#3165](https://github.com/harness/drone/pull/3165) ([tphoney](https://github.com/tphoney))
+
 ## [v2.6.0](https://github.com/harness/drone/tree/v2.6.0) (2021-11-30)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.5.0...v2.6.0)
@@ -7,6 +19,10 @@
 **Implemented enhancements:**
 
 - Feat: implemented gitee client [\#3156](https://github.com/harness/drone/pull/3156) ([kit101](https://github.com/kit101))
+
+**Merged pull requests:**
+
+- release prep for v2.6.0 [\#3163](https://github.com/harness/drone/pull/3163) ([tphoney](https://github.com/tphoney))
 
 ## [v2.5.0](https://github.com/harness/drone/tree/v2.5.0) (2021-11-17)
 
