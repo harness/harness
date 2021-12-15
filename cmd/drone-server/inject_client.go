@@ -123,8 +123,14 @@ func provideGiteeClient(config config.Config) *scm.Client {
 	}
 	client.Client = &http.Client{
 		Transport: &oauth2.Transport{
-			Source: oauth2.ContextTokenSource(),
-			Base:   defaultTransport(config.Gitee.SkipVerify),
+			Scheme: oauth2.SchemeBearer,
+			Source: &oauth2.Refresher{
+				ClientID:     config.Gitee.ClientID,
+				ClientSecret: config.Gitee.ClientSecret,
+				Endpoint:     strings.TrimSuffix(config.Gitee.Server, "/") + "/oauth/token",
+				Source:       oauth2.ContextTokenSource(),
+			},
+			Base: defaultTransport(config.Gitee.SkipVerify),
 		},
 	}
 	return client
