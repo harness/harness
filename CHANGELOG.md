@@ -1,5 +1,13 @@
 # Changelog
 
+## [v2.7.1](https://github.com/harness/drone/tree/v2.7.1) (2021-12-17)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.7.0...v2.7.1)
+
+**Fixed bugs:**
+
+- fixes issue with redirects on double slashes in url [\#3170](https://github.com/harness/drone/pull/3170) ([eoinmcafee00](https://github.com/eoinmcafee00))
+
 ## [v2.7.0](https://github.com/harness/drone/tree/v2.7.0) (2021-12-15)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.6.0...v2.7.0)
@@ -11,6 +19,10 @@
 **Fixed bugs:**
 
 - \(DRON-157\) use deploy string in deployment [\#3165](https://github.com/harness/drone/pull/3165) ([tphoney](https://github.com/tphoney))
+
+**Merged pull requests:**
+
+- release v2.7.0 [\#3166](https://github.com/harness/drone/pull/3166) ([d1wilko](https://github.com/d1wilko))
 
 ## [v2.6.0](https://github.com/harness/drone/tree/v2.6.0) (2021-11-30)
 
