@@ -1,5 +1,17 @@
 # Changelog
 
+## [v2.7.2](https://github.com/harness/drone/tree/v2.7.2) (2021-12-19)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.7.1...v2.7.2)
+
+**Implemented enhancements:**
+
+- bump go-scm to v1.16.2 [\#3169](https://github.com/harness/drone/pull/3169) ([kit101](https://github.com/kit101))
+
+**Fixed bugs:**
+
+- fixbug gitee provide refresher [\#3168](https://github.com/harness/drone/pull/3168) ([kit101](https://github.com/kit101))
+
 ## [v2.7.1](https://github.com/harness/drone/tree/v2.7.1) (2021-12-17)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.7.0...v2.7.1)
@@ -7,6 +19,10 @@
 **Fixed bugs:**
 
 - fixes issue with redirects on double slashes in url [\#3170](https://github.com/harness/drone/pull/3170) ([eoinmcafee00](https://github.com/eoinmcafee00))
+
+**Merged pull requests:**
+
+- release prep v2.7.1 [\#3171](https://github.com/harness/drone/pull/3171) ([eoinmcafee00](https://github.com/eoinmcafee00))
 
 ## [v2.7.0](https://github.com/harness/drone/tree/v2.7.0) (2021-12-15)
 
