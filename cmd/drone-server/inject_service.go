@@ -212,6 +212,7 @@ func provideDatadog(
 			EnableStash:     config.IsStash(),
 			EnableGogs:      config.IsGogs(),
 			EnableGitea:     config.IsGitea(),
+			EnableGitee:	 config.IsGitee(),
 			EnableAgents:    !config.Agent.Disabled,
 		},
 	)

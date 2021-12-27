@@ -29,5 +29,6 @@ type Config struct {
 	EnableStash     bool
 	EnableGogs      bool
 	EnableGitea     bool
+	EnableGitee 	bool
 	EnableAgents    bool
 }

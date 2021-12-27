@@ -489,6 +489,12 @@ func (c *Config) IsGitea() bool {
 	return c.Gitea.Server != ""
 }
 
+// IsGitee returns true if the Gitee integration
+// is activated.
+func (c *Config) IsGitee() bool {
+	return c.Gitee.ClientID != ""
+}
+
 // IsBitbucket returns true if the Bitbucket Cloud
 // integration is activated.
 func (c *Config) IsBitbucket() bool {

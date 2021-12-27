@@ -42,6 +42,8 @@ func createTags(config Config) []string {
 		tags = append(tags, "remote:gogs")
 	case config.EnableGitea:
 		tags = append(tags, "remote:gitea")
+	case config.EnableGitee:
+		tags = append(tags, "remote:gitee")
 	default:
 		tags = append(tags, "remote:undefined")
 	}
