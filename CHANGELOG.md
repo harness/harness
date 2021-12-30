@@ -1,5 +1,13 @@
 # Changelog
 
+## [v2.7.3](https://github.com/harness/drone/tree/v2.7.3) (2021-12-30)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.7.2...v2.7.3)
+
+**Fixed bugs:**
+
+- bump go-scm to v1.16.3 [\#3175](https://github.com/harness/drone/pull/3175) ([eoinmcafee00](https://github.com/eoinmcafee00))
+
 ## [v2.7.2](https://github.com/harness/drone/tree/v2.7.2) (2021-12-19)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.7.1...v2.7.2)
@@ -11,6 +19,10 @@
 **Fixed bugs:**
 
 - fixbug gitee provide refresher [\#3168](https://github.com/harness/drone/pull/3168) ([kit101](https://github.com/kit101))
+
+**Merged pull requests:**
+
+- release prep 2.7.2 [\#3172](https://github.com/harness/drone/pull/3172) ([eoinmcafee00](https://github.com/eoinmcafee00))
 
 ## [v2.7.1](https://github.com/harness/drone/tree/v2.7.1) (2021-12-17)
 
