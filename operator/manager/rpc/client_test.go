@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package rpc
@@ -148,10 +149,10 @@ func TestBefore(t *testing.T) {
 	gock.New("http://drone.company.com").
 		Post("/rpc/v1/before").
 		MatchHeader("X-Drone-Token", "correct-horse-battery-staple").
-		BodyString(`{"id":1,"step_id":2,"number":3,"name":"build","status":"pending","exit_code":0,"version":1}`).
+		BodyString(`{"id":1,"stage_id":2,"number":3,"name":"build","status":"pending","exit_code":0,"version":1}`).
 		Reply(200).
 		Type("application/json").
-		BodyString(`{"id":1,"step_id":2,"number":3,"name":"build","status":"pending","exit_code":0,"version":2}`)
+		BodyString(`{"id":1,"stage_id":2,"number":3,"name":"build","status":"pending","exit_code":0,"version":2}`)
 
 	before := &core.Step{
 		ID:       1,
@@ -195,10 +196,10 @@ func TestAfter(t *testing.T) {
 	gock.New("http://drone.company.com").
 		Post("/rpc/v1/after").
 		MatchHeader("X-Drone-Token", "correct-horse-battery-staple").
-		BodyString(`{"id":1,"step_id":2,"number":3,"name":"build","status":"failure","exit_code":1,"version":2}`).
+		BodyString(`{"id":1,"stage_id":2,"number":3,"name":"build","status":"failure","exit_code":1,"version":2}`).
 		Reply(200).
 		Type("application/json").
-		BodyString(`{"id":1,"step_id":2,"number":3,"name":"build","status":"failure","exit_code":1,"version":3}`)
+		BodyString(`{"id":1,"stage_id":2,"number":3,"name":"build","status":"failure","exit_code":1,"version":3}`)
 
 	before := &core.Step{
 		ID:       1,

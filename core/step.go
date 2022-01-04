@@ -20,7 +20,7 @@ type (
 	// Step represents an individual step in the stage.
 	Step struct {
 		ID        int64    `json:"id"`
-		StageID   int64    `json:"step_id"`
+		StageID   int64    `json:"stage_id"`
 		Number    int      `json:"number"`
 		Name      string   `json:"name"`
 		Status    string   `json:"status"`
