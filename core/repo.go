@@ -65,6 +65,7 @@ type (
 		Secret        string `json:"-"`
 		Build         *Build `json:"build,omitempty"`
 		Perms         *Perm  `json:"permissions,omitempty"`
+		Archived      bool   `json:"archived"`
 	}
 
 	RepoBuildStage struct {

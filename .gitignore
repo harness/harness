@@ -11,3 +11,4 @@ scripts/*.go
 docker/**/data
 TODO*
 .idea
+/cmd/drone-server/drone-server

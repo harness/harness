@@ -434,3 +434,52 @@ func TestSync_SkipSubrepo(t *testing.T) {
 		t.Errorf(diff)
 	}
 }
+
+func TestSyncArchive(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	user := &core.User{ID: 1}
+
+	userStore := mock.NewMockUserStore(controller)
+	userStore.EXPECT().Update(gomock.Any(), user).Return(nil)
+	userStore.EXPECT().Update(gomock.Any(), user).Return(nil)
+
+	batcher := mock.NewMockBatcher(controller)
+	batcher.EXPECT().Batch(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+	repoStore := mock.NewMockRepositoryStore(controller)
+	repoStore.EXPECT().List(gomock.Any(), gomock.Any()).Return([]*core.Repository{}, nil)
+
+	repoService := mock.NewMockRepositoryService(controller)
+	repoService.EXPECT().List(gomock.Any(), user).Return([]*core.Repository{
+		{
+			UID:        "1",
+			Slug:       "octocat/hello-world",
+			Namespace:  "octocat",
+			Name:       "hello-world",
+			Private:    false,
+			Visibility: core.VisibilityPublic,
+			Archived:   true,
+		},
+	}, nil)
+
+	s := New(
+		repoService,
+		repoStore,
+		userStore,
+		batcher,
+	)
+	got, err := s.Sync(context.Background(), user)
+	if err != nil {
+		t.Error(err)
+	}
+
+	want := &core.Batch{}
+
+	ignore := cmpopts.IgnoreFields(core.Repository{},
+		"Synced", "Created", "Updated")
+	if diff := cmp.Diff(got, want, ignore); len(diff) != 0 {
+		t.Errorf(diff)
+	}
+}
