@@ -35,6 +35,7 @@ func convertRepository(src *scm.Repository, visibility string, trusted bool) *co
 		Visibility: convertVisibility(src, visibility),
 		Branch:     src.Branch,
 		Trusted:    trusted,
+		Archived:   src.Archived,
 	}
 }
 

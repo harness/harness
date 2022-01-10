@@ -110,6 +110,13 @@ func (s *Synchronizer) Sync(ctx context.Context, user *core.User) (*core.Batch, 
 						WithField("uid", repo.UID).
 						Traceln("syncer: skipping subrepositories")
 				}
+			} else if repo.Archived {
+				if logrus.GetLevel() == logrus.TraceLevel {
+					logger.WithField("namespace", repo.Namespace).
+						WithField("name", repo.Name).
+						WithField("uid", repo.UID).
+						Traceln("syncer: skipping archived repositories")
+				}
 			} else if s.match(repo) {
 				remote[repo.UID] = repo
 				if logrus.GetLevel() == logrus.TraceLevel {
