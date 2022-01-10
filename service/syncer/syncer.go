@@ -115,7 +115,7 @@ func (s *Synchronizer) Sync(ctx context.Context, user *core.User) (*core.Batch, 
 					logger.WithField("namespace", repo.Namespace).
 						WithField("name", repo.Name).
 						WithField("uid", repo.UID).
-						Traceln("syncer: skipping archived repsotories")
+						Traceln("syncer: skipping archived repositories")
 				}
 			} else if s.match(repo) {
 				remote[repo.UID] = repo
