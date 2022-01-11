@@ -1,5 +1,20 @@
 # Changelog
 
+## [v2.8.0](https://github.com/harness/drone/tree/v2.8.0) (2022-01-11)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.7.3...v2.8.0)
+
+**Implemented enhancements:**
+
+- bump UI to v2.5.0 [\#3180](https://github.com/harness/drone/pull/3180) ([eoinmcafee00](https://github.com/eoinmcafee00))
+- \(feat\) ignore archive repos on sync [\#3178](https://github.com/harness/drone/pull/3178) ([eoinmcafee00](https://github.com/eoinmcafee00))
+- Datadog add the tag of 'remote:gitee' [\#3174](https://github.com/harness/drone/pull/3174) ([kit101](https://github.com/kit101))
+- Add tag filter when call build list endpoint [\#3173](https://github.com/harness/drone/pull/3173) ([michelangelomo](https://github.com/michelangelomo))
+
+**Fixed bugs:**
+
+- \(maint\) add warning around typo for stage\_id in step struct [\#3179](https://github.com/harness/drone/pull/3179) ([tphoney](https://github.com/tphoney))
+
 ## [v2.7.3](https://github.com/harness/drone/tree/v2.7.3) (2021-12-30)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.7.2...v2.7.3)
@@ -7,6 +22,10 @@
 **Fixed bugs:**
 
 - bump go-scm to v1.16.3 [\#3175](https://github.com/harness/drone/pull/3175) ([eoinmcafee00](https://github.com/eoinmcafee00))
+
+**Merged pull requests:**
+
+- release prep v2.7.3 [\#3176](https://github.com/harness/drone/pull/3176) ([eoinmcafee00](https://github.com/eoinmcafee00))
 
 ## [v2.7.2](https://github.com/harness/drone/tree/v2.7.2) (2021-12-19)
 
