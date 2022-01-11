@@ -139,6 +139,38 @@ func TestListBranch(t *testing.T) {
 	}
 }
 
+func TestListTag(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	repos := mock.NewMockRepositoryStore(controller)
+	repos.EXPECT().FindName(gomock.Any(), gomock.Any(), mockRepo.Name).Return(mockRepo, nil)
+
+	builds := mock.NewMockBuildStore(controller)
+	builds.EXPECT().ListRef(gomock.Any(), mockRepo.ID, "refs/tags/1.33.7", 25, 0).Return(mockBuilds, nil)
+
+	c := new(chi.Context)
+	c.URLParams.Add("owner", "octocat")
+	c.URLParams.Add("name", "hello-world")
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/?tag=1.33.7", nil)
+	r = r.WithContext(
+		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+	)
+
+	HandleList(repos, builds)(w, r)
+	if got, want := w.Code, 200; want != got {
+		t.Errorf("Want response code %d, got %d", want, got)
+	}
+
+	got, want := []*core.Build{}, mockBuilds
+	json.NewDecoder(w.Body).Decode(&got)
+	if diff := cmp.Diff(got, want); len(diff) != 0 {
+		t.Errorf(diff)
+	}
+}
+
 func TestList_RepositoryNotFound(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
