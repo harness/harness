@@ -89,6 +89,10 @@ func HandleRetry(
 			Params:       map[string]string{},
 		}
 
+		for key, value := range prev.Params {
+			hook.Params[key] = value
+		}
+		
 		for key, value := range r.URL.Query() {
 			if key == "access_token" {
 				continue
@@ -100,9 +104,6 @@ func HandleRetry(
 				continue
 			}
 			hook.Params[key] = value[0]
-		}
-		for key, value := range prev.Params {
-			hook.Params[key] = value
 		}
 
 		result, err := triggerer.Trigger(r.Context(), repo, hook)
