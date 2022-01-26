@@ -1,5 +1,13 @@
 # Changelog
 
+## [v2.9.0](https://github.com/harness/drone/tree/v2.9.0) (2022-01-26)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.8.0...v2.9.0)
+
+**Implemented enhancements:**
+
+- bump ui to v2.6.0 [\#3183](https://github.com/harness/drone/pull/3183) ([eoinmcafee00](https://github.com/eoinmcafee00))
+
 ## [v2.8.0](https://github.com/harness/drone/tree/v2.8.0) (2022-01-11)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.7.3...v2.8.0)
@@ -14,6 +22,10 @@
 **Fixed bugs:**
 
 - \(maint\) add warning around typo for stage\_id in step struct [\#3179](https://github.com/harness/drone/pull/3179) ([tphoney](https://github.com/tphoney))
+
+**Merged pull requests:**
+
+- release prep v2.8.0 [\#3181](https://github.com/harness/drone/pull/3181) ([eoinmcafee00](https://github.com/eoinmcafee00))
 
 ## [v2.7.3](https://github.com/harness/drone/tree/v2.7.3) (2021-12-30)
 
