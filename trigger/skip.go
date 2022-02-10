@@ -17,39 +17,38 @@ package trigger
 import (
 	"strings"
 
-	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone/core"
 )
 
-func skipBranch(document *yaml.Pipeline, branch string) bool {
+func skipBranch(document *core.Pipeline, branch string) bool {
 	return !document.Trigger.Branch.Match(branch)
 }
 
-func skipRef(document *yaml.Pipeline, ref string) bool {
+func skipRef(document *core.Pipeline, ref string) bool {
 	return !document.Trigger.Ref.Match(ref)
 }
 
-func skipEvent(document *yaml.Pipeline, event string) bool {
+func skipEvent(document *core.Pipeline, event string) bool {
 	return !document.Trigger.Event.Match(event)
 }
 
-func skipAction(document *yaml.Pipeline, action string) bool {
+func skipAction(document *core.Pipeline, action string) bool {
 	return !document.Trigger.Action.Match(action)
 }
 
-func skipInstance(document *yaml.Pipeline, instance string) bool {
+func skipInstance(document *core.Pipeline, instance string) bool {
 	return !document.Trigger.Instance.Match(instance)
 }
 
-func skipTarget(document *yaml.Pipeline, env string) bool {
+func skipTarget(document *core.Pipeline, env string) bool {
 	return !document.Trigger.Target.Match(env)
 }
 
-func skipRepo(document *yaml.Pipeline, repo string) bool {
+func skipRepo(document *core.Pipeline, repo string) bool {
 	return !document.Trigger.Repo.Match(repo)
 }
 
-func skipCron(document *yaml.Pipeline, cron string) bool {
+func skipCron(document *core.Pipeline, cron string) bool {
 	return !document.Trigger.Cron.Match(cron)
 }
 

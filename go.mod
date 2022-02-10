@@ -9,10 +9,10 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20180315120708-ccb8e960c48f
 	github.com/aws/aws-sdk-go v1.37.3
 	github.com/codegangsta/negroni v1.0.0 // indirect
-	github.com/coreos/go-semver v0.2.0
+	github.com/coreos/go-semver v0.3.0
 	github.com/dchest/authcookie v0.0.0-20120917135355-fbdef6e99866
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
-	github.com/drone/drone-go v1.4.1-0.20201109202657-b9e58bbbcf27
+	github.com/drone/drone-go v1.7.1
 	github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d
 	github.com/drone/drone-ui v2.6.1+incompatible
 	github.com/drone/drone-yaml v1.2.4-0.20200326192514-6f4d6dfb39e4
@@ -21,6 +21,7 @@ require (
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.1.0
 	github.com/drone/go-scm v1.17.0
+	github.com/drone/runner-go v1.12.0
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-chi/chi v3.3.3+incompatible

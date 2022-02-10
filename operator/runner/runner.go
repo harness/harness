@@ -27,7 +27,6 @@ import (
 
 	"github.com/drone/drone-runtime/engine"
 	"github.com/drone/drone-runtime/runtime"
-	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone-yaml/yaml/compiler"
 	"github.com/drone/drone-yaml/yaml/compiler/transform"
 	"github.com/drone/drone-yaml/yaml/converter"
@@ -38,6 +37,7 @@ import (
 	"github.com/drone/drone/plugin/secret"
 	"github.com/drone/drone/store/shared/db"
 	"github.com/drone/envsubst"
+	"github.com/drone/runner-go/manifest"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/sirupsen/logrus"
@@ -207,16 +207,16 @@ func (r *Runner) Run(ctx context.Context, id int64) error {
 		return r.handleError(ctx, m.Stage, err)
 	}
 
-	manifest, err := yaml.ParseString(y)
+	manifest, err := manifest.ParseString(y)
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("runner: cannot parse yaml")
 		return r.handleError(ctx, m.Stage, err)
 	}
 
-	var pipeline *yaml.Pipeline
+	var pipeline *core.Pipeline
 	for _, resource := range manifest.Resources {
-		v, ok := resource.(*yaml.Pipeline)
+		v, ok := resource.(*core.Pipeline)
 		if !ok {
 			continue
 		}

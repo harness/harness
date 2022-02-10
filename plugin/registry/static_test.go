@@ -7,8 +7,8 @@ package registry
 import (
 	"testing"
 
-	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone/core"
+	"github.com/drone/runner-go/manifest"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -28,7 +28,7 @@ func TestStatic(t *testing.T) {
 		},
 	}
 
-	manifest, err := yaml.ParseString("kind: pipeline\nimage_pull_secrets: [ dockerhub ]")
+	manifest, err := manifest.ParseString("kind: pipeline\nimage_pull_secrets: [ dockerhub ]")
 	if err != nil {
 		t.Error(err)
 		return
@@ -37,7 +37,7 @@ func TestStatic(t *testing.T) {
 	args := &core.RegistryArgs{
 		Build:    &core.Build{Event: core.EventPush},
 		Conf:     manifest,
-		Pipeline: manifest.Resources[0].(*yaml.Pipeline),
+		Pipeline: manifest.Resources[0].(*core.Pipeline),
 	}
 	service := Static(secrets)
 	got, err := service.List(noContext, args)
@@ -67,7 +67,7 @@ func TestStatic_NoMatch(t *testing.T) {
 		},
 	}
 
-	manifest, err := yaml.ParseString("kind: pipeline\nimage_pull_secrets: [ unknown ]")
+	manifest, err := manifest.ParseString("kind: pipeline\nimage_pull_secrets: [ unknown ]")
 	if err != nil {
 		t.Error(err)
 		return
@@ -76,7 +76,7 @@ func TestStatic_NoMatch(t *testing.T) {
 	args := &core.RegistryArgs{
 		Build:    &core.Build{Event: core.EventPush},
 		Conf:     manifest,
-		Pipeline: manifest.Resources[0].(*yaml.Pipeline),
+		Pipeline: manifest.Resources[0].(*core.Pipeline),
 	}
 	service := Static(secrets)
 	got, err := service.List(noContext, args)
@@ -98,7 +98,7 @@ func TestStatic_DisablePullRequest(t *testing.T) {
 		},
 	}
 
-	manifest, err := yaml.ParseString("kind: pipeline\nimage_pull_secrets: [ dockerhub ]")
+	manifest, err := manifest.ParseString("kind: pipeline\nimage_pull_secrets: [ dockerhub ]")
 	if err != nil {
 		t.Error(err)
 		return
@@ -107,7 +107,7 @@ func TestStatic_DisablePullRequest(t *testing.T) {
 	args := &core.RegistryArgs{
 		Build:    &core.Build{Event: core.EventPullRequest},
 		Conf:     manifest,
-		Pipeline: manifest.Resources[0].(*yaml.Pipeline),
+		Pipeline: manifest.Resources[0].(*core.Pipeline),
 	}
 	service := Static(secrets)
 	got, err := service.List(noContext, args)

@@ -25,6 +25,7 @@ import (
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/logger"
 	"github.com/drone/drone/plugin/registry/auths"
+	"github.com/drone/runner-go/manifest"
 )
 
 // Encrypted returns a new encrypted registry credentials
@@ -81,7 +82,7 @@ func (c *encrypted) List(ctx context.Context, in *core.RegistryArgs) ([]*core.Re
 	return results, nil
 }
 
-func getEncrypted(manifest *yaml.Manifest, match string) (data string, ok bool) {
+func getEncrypted(manifest *manifest.Manifest, match string) (data string, ok bool) {
 	for _, resource := range manifest.Resources {
 		secret, ok := resource.(*yaml.Secret)
 		if !ok {

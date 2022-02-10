@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package trigger
@@ -9,8 +10,8 @@ package trigger
 import (
 	"testing"
 
-	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone/core"
+	"github.com/drone/runner-go/manifest"
 )
 
 func Test_skipBranch(t *testing.T) {
@@ -36,11 +37,11 @@ func Test_skipBranch(t *testing.T) {
 		},
 	}
 	for i, test := range tests {
-		manifest, err := yaml.ParseString(test.config)
+		manifest, err := manifest.ParseString(test.config)
 		if err != nil {
 			t.Error(err)
 		}
-		pipeline := manifest.Resources[0].(*yaml.Pipeline)
+		pipeline := manifest.Resources[0].(*core.Pipeline)
 		got, want := skipBranch(pipeline, test.branch), test.want
 		if got != want {
 			t.Errorf("Want test %d to return %v", i, want)
@@ -71,11 +72,11 @@ func Test_skipEvent(t *testing.T) {
 		},
 	}
 	for i, test := range tests {
-		manifest, err := yaml.ParseString(test.config)
+		manifest, err := manifest.ParseString(test.config)
 		if err != nil {
 			t.Error(err)
 		}
-		pipeline := manifest.Resources[0].(*yaml.Pipeline)
+		pipeline := manifest.Resources[0].(*core.Pipeline)
 		got, want := skipEvent(pipeline, test.event), test.want
 		if got != want {
 			t.Errorf("Want test %d to return %v", i, want)

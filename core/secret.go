@@ -19,7 +19,7 @@ import (
 	"errors"
 	"regexp"
 
-	"github.com/drone/drone-yaml/yaml"
+	"github.com/drone/runner-go/manifest"
 )
 
 var (
@@ -44,10 +44,10 @@ type (
 	// SecretArgs provides arguments for requesting secrets
 	// from the remote service.
 	SecretArgs struct {
-		Name  string         `json:"name"`
-		Repo  *Repository    `json:"repo,omitempty"`
-		Build *Build         `json:"build,omitempty"`
-		Conf  *yaml.Manifest `json:"-"`
+		Name  string             `json:"name"`
+		Repo  *Repository        `json:"repo,omitempty"`
+		Build *Build             `json:"build,omitempty"`
+		Conf  *manifest.Manifest `json:"-"`
 	}
 
 	// SecretStore manages repository secrets.

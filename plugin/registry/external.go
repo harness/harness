@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package registry
@@ -15,6 +16,7 @@ import (
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/logger"
 	"github.com/drone/drone/plugin/registry/auths"
+	"github.com/drone/runner-go/manifest"
 
 	droneapi "github.com/drone/drone-go/drone"
 )
@@ -106,7 +108,7 @@ func (c *externalController) List(ctx context.Context, in *core.RegistryArgs) ([
 	return results, nil
 }
 
-func getExternal(manifest *yaml.Manifest, match string) (path, name string, ok bool) {
+func getExternal(manifest *manifest.Manifest, match string) (path, name string, ok bool) {
 	for _, resource := range manifest.Resources {
 		secret, ok := resource.(*yaml.Secret)
 		if !ok {

@@ -282,10 +282,10 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 	// 		Msg("cannot fetch changeset")
 	// }
 
-	var matched []*yaml.Pipeline
+	var matched []*core.Pipeline
 	var dag = dag.New()
 	for _, document := range manifest.Resources {
-		pipeline, ok := document.(*yaml.Pipeline)
+		pipeline, ok := document.(*core.Pipeline)
 		if !ok {
 			continue
 		}

@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package secret
@@ -13,6 +14,7 @@ import (
 	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/logger"
+	"github.com/drone/runner-go/manifest"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/drone-go/plugin/secret"
@@ -98,7 +100,7 @@ func (c *externalController) Find(ctx context.Context, in *core.SecretArgs) (*co
 	}, nil
 }
 
-func getExternal(manifest *yaml.Manifest, match string) (path, name string, ok bool) {
+func getExternal(manifest *manifest.Manifest, match string) (path, name string, ok bool) {
 	for _, resource := range manifest.Resources {
 		secret, ok := resource.(*yaml.Secret)
 		if !ok {
