@@ -40,6 +40,23 @@ func TestParse(t *testing.T) {
 		"stepName": "my_step",
 		"image":    "my_image",
 		"commands": "my_command",
+		"additionalSteps": []map[string]interface{}{
+			{
+				"name":  "my_second_step",
+				"image": "my_second_image",
+				"commands": []string{
+					"my_second_command1",
+					"my_second_command2",
+				},
+			},
+			{
+				"name":  "my_third_step",
+				"image": "my_third_image",
+				"commands": []string{
+					"my_third_command",
+				},
+			},
+		},
 	}
 
 	req.Config.Data = string(before)

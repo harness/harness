@@ -4,3 +4,13 @@ data:
   stepName: my_step
   image: my_image
   commands: my_command
+  additionalSteps:
+    - name: my_second_step
+      image: my_second_image
+      commands:
+        - my_second_command1
+        - my_second_command2
+    - name: my_third_step
+      image: my_third_image
+      commands:
+        - my_third_command
