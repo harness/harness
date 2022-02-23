@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"path"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -125,7 +127,17 @@ func Parse(req *core.ConvertArgs, fileService core.FileService, limit int, templ
 	if len(templateData) != 0 {
 		for k, v := range templateData {
 			key := fmt.Sprintf("input." + k)
-			val := fmt.Sprint(v)
+			var val string
+			switch reflect.TypeOf(v).Kind() {
+			case reflect.Slice, reflect.Map:
+				data, err := yaml.Marshal(v)
+				if err != nil {
+					return "", err
+				}
+				val = string(data)
+			default:
+				val = fmt.Sprint(v)
+			}
 			vm.ExtVar(key, val)
 		}
 	}
