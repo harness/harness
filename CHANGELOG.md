@@ -1,5 +1,14 @@
 # Changelog
 
+## [v2.10.0](https://github.com/harness/drone/tree/v2.10.0) (2022-03-03)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.9.1...v2.10.0)
+
+**Implemented enhancements:**
+
+- bump UI version to v2.7.0 [\#3190](https://github.com/harness/drone/pull/3190) ([d1wilko](https://github.com/d1wilko))
+- bump UI version to v2.6.2 [\#3188](https://github.com/harness/drone/pull/3188) ([d1wilko](https://github.com/d1wilko))
+
 ## [v2.9.1](https://github.com/harness/drone/tree/v2.9.1) (2022-01-27)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.9.0...v2.9.1)
@@ -7,6 +16,10 @@
 **Fixed bugs:**
 
 - bump ui version 2.6.1 [\#3185](https://github.com/harness/drone/pull/3185) ([d1wilko](https://github.com/d1wilko))
+
+**Merged pull requests:**
+
+- \(maint\) release prep for 2.9.1 [\#3186](https://github.com/harness/drone/pull/3186) ([tphoney](https://github.com/tphoney))
 
 ## [v2.9.0](https://github.com/harness/drone/tree/v2.9.0) (2022-01-26)
 
