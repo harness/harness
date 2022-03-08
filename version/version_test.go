@@ -10,7 +10,7 @@ package version
 import "testing"
 
 func TestVersion(t *testing.T) {
-	if got, want := Version.String(), "2.10.0"; got != want {
+	if got, want := Version.String(), "2.11.0"; got != want {
 		t.Errorf("Want version %s, got %s", want, got)
 	}
 }
