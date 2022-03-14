@@ -246,3 +246,44 @@ func TestList_RefreshErr(t *testing.T) {
 		t.Errorf("Expect error refreshing token")
 	}
 }
+
+func TestListWithNilRepo(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	mockUser := &core.User{}
+	mockRepos := []*scm.Repository{
+		{
+			Namespace: "octocat",
+			Name:      "hello-world",
+		},
+		nil,
+	}
+
+	mockRepoService := mockscm.NewMockRepositoryService(controller)
+	mockRepoService.EXPECT().List(gomock.Any(), gomock.Any()).Return(mockRepos, &scm.Response{}, nil)
+
+	mockRenewer := mock.NewMockRenewer(controller)
+	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false)
+
+	client := new(scm.Client)
+	client.Repositories = mockRepoService
+
+	want := []*core.Repository{
+		{
+			Namespace:  "octocat",
+			Name:       "hello-world",
+			Slug:       "octocat/hello-world",
+			Visibility: "public",
+		},
+	}
+
+	service := New(client, mockRenewer, "", false)
+	got, err := service.List(noContext, mockUser)
+	if err != nil {
+		t.Error(err)
+	}
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf(diff)
+	}
+}

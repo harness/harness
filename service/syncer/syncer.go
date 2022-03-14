@@ -16,6 +16,7 @@ package syncer
 
 import (
 	"context"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -67,6 +68,7 @@ func (s *Synchronizer) Sync(ctx context.Context, user *core.User) (*core.Batch, 
 		if err := recover(); err != nil {
 			logger = logger.WithField("error", err)
 			logger.Errorln("syncer: unexpected panic")
+			debug.PrintStack()
 		}
 
 		// when the synchronization process is complete

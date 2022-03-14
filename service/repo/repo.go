@@ -57,7 +57,9 @@ func (s *service) List(ctx context.Context, user *core.User) ([]*core.Repository
 			return nil, err
 		}
 		for _, src := range result {
-			repos = append(repos, convertRepository(src, s.visibility, s.trusted))
+			if src != nil {
+				repos = append(repos, convertRepository(src, s.visibility, s.trusted))
+			}
 		}
 		opts.Page = meta.Page.Next
 		opts.URL = meta.Page.NextURL
