@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package config
@@ -33,7 +34,7 @@ func Global(endpoint, signer string, skipVerify bool, timeout time.Duration) cor
 }
 
 type global struct {
-	client config.Plugin
+	client  config.Plugin
 	timeout time.Duration
 }
 
@@ -51,6 +52,10 @@ func (g *global) Find(ctx context.Context, in *core.ConfigArgs) (*core.Config, e
 	req := &config.Request{
 		Repo:  toRepo(in.Repo),
 		Build: toBuild(in.Build),
+		Token: drone.Token{
+			Access:  in.User.Token,
+			Refresh: in.User.Refresh,
+		},
 	}
 
 	res, err := g.client.Find(ctx, req)

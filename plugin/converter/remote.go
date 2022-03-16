@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package converter
@@ -36,7 +37,7 @@ func Remote(endpoint, signer, extension string, skipVerify bool, timeout time.Du
 type remote struct {
 	client    converter.Plugin
 	extension string
-	timeout time.Duration
+	timeout   time.Duration
 }
 
 func (g *remote) Convert(ctx context.Context, in *core.ConvertArgs) (*core.Config, error) {
@@ -60,6 +61,10 @@ func (g *remote) Convert(ctx context.Context, in *core.ConvertArgs) (*core.Confi
 		Build: toBuild(in.Build),
 		Config: drone.Config{
 			Data: in.Config.Data,
+		},
+		Token: drone.Token{
+			Access:  in.User.Token,
+			Refresh: in.User.Refresh,
 		},
 	}
 
