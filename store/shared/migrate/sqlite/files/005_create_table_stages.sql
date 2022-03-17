@@ -57,8 +57,6 @@ CREATE TABLE IF NOT EXISTS stages
     TEXT,
     stage_labels
     TEXT,
-    stage_approved_by
-    TEXT,
     UNIQUE
 (
     stage_build_id,

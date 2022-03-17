@@ -420,7 +420,7 @@ INSERT INTO stages (
 ,:stage_on_failure
 ,:stage_depends_on
 ,:stage_labels
-,:stage_approved_by,
+,:stage_approved_by
 )
 `
 

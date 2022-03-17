@@ -463,35 +463,77 @@ ALTER TABLE builds ADD COLUMN build_debug BOOLEAN NOT NULL DEFAULT false;
 //
 
 var createTableStages = `
-CREATE TABLE IF NOT EXISTS stages (
-                                      stage_id          INTEGER PRIMARY KEY AUTO_INCREMENT
-    ,stage_repo_id     INTEGER
-    ,stage_build_id    INTEGER
-    ,stage_number      INTEGER
-    ,stage_name        VARCHAR(100)
-    ,stage_kind        VARCHAR(50)
-    ,stage_type        VARCHAR(50)
-    ,stage_status      VARCHAR(50)
-    ,stage_error       VARCHAR(500)
-    ,stage_errignore   BOOLEAN
-    ,stage_exit_code   INTEGER
-    ,stage_limit       INTEGER
-    ,stage_os          VARCHAR(50)
-    ,stage_arch        VARCHAR(50)
-    ,stage_variant     VARCHAR(10)
-    ,stage_kernel      VARCHAR(50)
-    ,stage_machine     VARCHAR(500)
-    ,stage_started     INTEGER
-    ,stage_stopped     INTEGER
-    ,stage_created     INTEGER
-    ,stage_updated     INTEGER
-    ,stage_version     INTEGER
-    ,stage_on_success  BOOLEAN
-    ,stage_on_failure  BOOLEAN
-    ,stage_depends_on  TEXT
-    ,stage_labels      TEXT
-    ,stage_approved_by TEXT
-    ,UNIQUE(stage_build_id, stage_number)
+CREATE TABLE IF NOT EXISTS stages
+(
+    stage_id
+    INTEGER
+    PRIMARY
+    KEY
+    AUTO_INCREMENT,
+    stage_repo_id
+    INTEGER,
+    stage_build_id
+    INTEGER,
+    stage_number
+    INTEGER,
+    stage_name
+    VARCHAR
+(
+    100
+)
+    ,stage_kind VARCHAR
+(
+    50
+)
+    ,stage_type VARCHAR
+(
+    50
+)
+    ,stage_status VARCHAR
+(
+    50
+)
+    ,stage_error VARCHAR
+(
+    500
+)
+    ,stage_errignore BOOLEAN
+    ,stage_exit_code INTEGER
+    ,stage_limit INTEGER
+    ,stage_os VARCHAR
+(
+    50
+)
+    ,stage_arch VARCHAR
+(
+    50
+)
+    ,stage_variant VARCHAR
+(
+    10
+)
+    ,stage_kernel VARCHAR
+(
+    50
+)
+    ,stage_machine VARCHAR
+(
+    500
+)
+    ,stage_started INTEGER
+    ,stage_stopped INTEGER
+    ,stage_created INTEGER
+    ,stage_updated INTEGER
+    ,stage_version INTEGER
+    ,stage_on_success BOOLEAN
+    ,stage_on_failure BOOLEAN
+    ,stage_depends_on TEXT
+    ,stage_labels TEXT
+    , UNIQUE
+(
+    stage_build_id,
+    stage_number
+)
     );
 `
 
@@ -500,13 +542,16 @@ CREATE INDEX ix_stages_build ON stages (stage_build_id);
 `
 
 var createTableUnfinished = `
-CREATE TABLE IF NOT EXISTS stages_unfinished (
+CREATE TABLE IF NOT EXISTS stages_unfinished
+(
     stage_id INTEGER PRIMARY KEY
 );
 `
 
 var createTriggerStageInsert = `
-CREATE TRIGGER stage_insert AFTER INSERT ON stages
+CREATE TRIGGER stage_insert
+    AFTER INSERT
+    ON stages
     FOR EACH ROW
 BEGIN
     IF NEW.stage_status IN ('pending','running') THEN
@@ -516,7 +561,9 @@ END;
 `
 
 var createTriggerStageUpdate = `
-CREATE TRIGGER stage_update AFTER UPDATE ON stages
+CREATE TRIGGER stage_update
+    AFTER UPDATE
+    ON stages
     FOR EACH ROW
 BEGIN
     IF NEW.stage_status IN ('pending','running') THEN
@@ -528,7 +575,8 @@ END;
 `
 
 var alterTableStagesAddColumnLimitRepos = `
-ALTER TABLE stages ADD COLUMN stage_limit_repo INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE stages
+    ADD COLUMN stage_limit_repo INTEGER NOT NULL DEFAULT 0;
 `
 
 //
@@ -802,5 +850,6 @@ CREATE TABLE IF NOT EXISTS cards
 //
 
 var alterTableStagesAddColumnApprovedBy = `
-ALTER TABLE stages ADD COLUMN stage_approved_by TEXT NOT NULL DEFAULT '';
+ALTER TABLE stages
+    ADD COLUMN stage_approved_by TEXT NOT NULL DEFAULT '';
 `

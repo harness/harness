@@ -66,7 +66,6 @@ CREATE TABLE IF NOT EXISTS stages
     ,stage_on_failure BOOLEAN
     ,stage_depends_on TEXT
     ,stage_labels TEXT
-    ,stage_approved_by TEXT
     , UNIQUE
 (
     stage_build_id,
