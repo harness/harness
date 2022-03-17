@@ -320,6 +320,10 @@ type (
 		SkipVerify bool          `envconfig:"DRONE_CONVERT_PLUGIN_SKIP_VERIFY"`
 		CacheSize  int           `envconfig:"DRONE_CONVERT_PLUGIN_CACHE_SIZE" default:"10"`
 		Timeout    time.Duration `envconfig:"DRONE_CONVERT_TIMEOUT" default:"1m"`
+
+		// this flag can be removed once we solve for
+		// https://github.com/harness/drone/pull/2994#issuecomment-795955312
+		Multi bool `envconfig:"DRONE_CONVERT_MULTI" default:"1m"`
 	}
 
 	// Validate provides the validation webhook configuration.

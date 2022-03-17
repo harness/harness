@@ -39,7 +39,7 @@ func TestCombine(t *testing.T) {
 	service := mock.NewMockConvertService(controller)
 	service.EXPECT().Convert(noContext, args).Return(resp, nil)
 
-	result, err := Combine(service).Convert(noContext, args)
+	result, err := Combine(false, service).Convert(noContext, args)
 	if err != nil {
 		t.Error(err)
 		return
@@ -58,7 +58,7 @@ func TestCombineErr(t *testing.T) {
 	service := mock.NewMockConvertService(controller)
 	service.EXPECT().Convert(noContext, nil).Return(nil, resp)
 
-	_, err := Combine(service).Convert(noContext, nil)
+	_, err := Combine(false, service).Convert(noContext, nil)
 	if err != resp {
 		t.Errorf("expected convert service error")
 	}
@@ -85,7 +85,7 @@ func TestCombineNoConfig(t *testing.T) {
 	service3 := mock.NewMockConvertService(controller)
 	service3.EXPECT().Convert(noContext, args).Return(resp, nil)
 
-	result, err := Combine(service1, service2, service3).Convert(noContext, args)
+	result, err := Combine(false, service1, service2, service3).Convert(noContext, args)
 	if err != nil {
 		t.Error(err)
 		return
@@ -110,7 +110,7 @@ func TestCombineEmptyConfig(t *testing.T) {
 	service1 := mock.NewMockConvertService(controller)
 	service1.EXPECT().Convert(noContext, args).Return(nil, nil)
 
-	result, err := Combine(service1).Convert(noContext, args)
+	result, err := Combine(false, service1).Convert(noContext, args)
 	if err != nil {
 		t.Error(err)
 		return

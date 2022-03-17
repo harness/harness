@@ -22,12 +22,16 @@ import (
 
 // Combine combines the conversion services, provision support
 // for multiple conversion utilities.
-func Combine(services ...core.ConvertService) core.ConvertService {
-	return &combined{services}
+func Combine(multi bool, services ...core.ConvertService) core.ConvertService {
+	return &combined{multi: multi, sources: services}
 }
 
 type combined struct {
 	sources []core.ConvertService
+
+	// this feature flag can be removed once we solve for
+	// https://github.com/harness/drone/pull/2994#issuecomment-795955312
+	multi bool
 }
 
 func (c *combined) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Config, error) {
@@ -42,7 +46,11 @@ func (c *combined) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Co
 		if config.Data == "" {
 			continue
 		}
-		return config, nil
+		if c.multi {
+			req.Config = config
+		} else {
+			return config, nil
+		}
 	}
 	return req.Config, nil
 }
