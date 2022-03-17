@@ -323,7 +323,7 @@ type (
 
 		// this flag can be removed once we solve for
 		// https://github.com/harness/drone/pull/2994#issuecomment-795955312
-		Multi bool `envconfig:"DRONE_CONVERT_MULTI" default:"1m"`
+		Multi bool `envconfig:"DRONE_CONVERT_MULTI"`
 	}
 
 	// Validate provides the validation webhook configuration.
