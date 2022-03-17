@@ -196,6 +196,10 @@ var migrations = []struct {
 		name: "create-new-table-cards",
 		stmt: createNewTableCards,
 	},
+	{
+		name: "alter-table-stages-add-column-approved-by",
+		stmt: alterTableStagesAddColumnApprovedBy,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -482,6 +486,7 @@ CREATE TABLE IF NOT EXISTS stages (
 ,stage_on_failure  BOOLEAN
 ,stage_depends_on  TEXT
 ,stage_labels      TEXT
+,stage_approved_by TEXT
 ,UNIQUE(stage_build_id, stage_number)
 ,FOREIGN KEY(stage_build_id) REFERENCES builds(build_id) ON DELETE CASCADE
 );
@@ -764,4 +769,12 @@ CREATE TABLE IF NOT EXISTS cards
     card_data BLOB,
     FOREIGN KEY (card_id) REFERENCES steps (step_id) ON DELETE CASCADE
 );
+`
+
+//
+// 019_add_column_stages_approved_by.sql
+//
+
+var alterTableStagesAddColumnApprovedBy = `
+ALTER TABLE stages ADD COLUMN stage_approved_by TEXT NOT NULL DEFAULT '';
 `

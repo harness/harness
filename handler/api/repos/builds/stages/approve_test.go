@@ -8,17 +8,25 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"github.com/drone/drone/handler/api/request"
 	"io"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/errors"
 	"github.com/drone/drone/mock"
-	"github.com/drone/drone/core"
 
 	"github.com/go-chi/chi"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
+)
+
+var (
+	mockUser = &core.User{
+		ID:    1,
+		Login: "octocat",
+	}
 )
 
 func TestApprove(t *testing.T) {
@@ -71,7 +79,7 @@ func TestApprove(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
 	r = r.WithContext(
-		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
 	HandleApprove(repos, builds, stages, sched)(w, r)
@@ -122,7 +130,7 @@ func TestApprove_InvalidStatus(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
 	r = r.WithContext(
-		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
 	HandleApprove(repos, builds, stages, nil)(w, r)
@@ -150,7 +158,7 @@ func TestApprove_InvalidBuildNumber(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
 	r = r.WithContext(
-		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
 	HandleApprove(nil, nil, nil, nil)(w, r)
@@ -178,7 +186,7 @@ func TestApprove_InvalidStageNumber(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
 	r = r.WithContext(
-		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
 	HandleApprove(nil, nil, nil, nil)(w, r)
@@ -228,7 +236,7 @@ func TestApprove_StageNotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
 	r = r.WithContext(
-		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
 	HandleApprove(repos, builds, stages, nil)(w, r)
@@ -270,7 +278,7 @@ func TestApprove_BuildNotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
 	r = r.WithContext(
-		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
 	HandleApprove(repos, builds, nil, nil)(w, r)
@@ -309,7 +317,7 @@ func TestApprove_RepoNotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
 	r = r.WithContext(
-		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
 	HandleApprove(repos, nil, nil, nil)(w, r)
@@ -367,7 +375,7 @@ func TestApprove_CannotSaveStage(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
 	r = r.WithContext(
-		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
 	HandleApprove(repos, builds, stages, nil)(w, r)
@@ -428,7 +436,7 @@ func TestApprove_CannotEnqueue(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
 	r = r.WithContext(
-		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
 	HandleApprove(repos, builds, stages, sched)(w, r)

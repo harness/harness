@@ -16,6 +16,9 @@ package stages
 
 import (
 	"context"
+	"github.com/drone/drone/handler/api/request"
+	"github.com/drone/drone/logger"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 
@@ -39,6 +42,7 @@ func HandleApprove(
 		var (
 			namespace = chi.URLParam(r, "owner")
 			name      = chi.URLParam(r, "name")
+			user, _   = request.UserFrom(r.Context())
 		)
 		buildNumber, err := strconv.ParseInt(chi.URLParam(r, "number"), 10, 64)
 		if err != nil {
@@ -69,7 +73,9 @@ func HandleApprove(
 			render.BadRequestf(w, "Cannot approve a Pipeline with Status %q", stage.Status)
 			return
 		}
+		logger.FromRequest(r).WithFields(logrus.Fields{"user": user.Login}).Info("approve: build approved")
 		stage.Status = core.StatusPending
+		stage.ApprovedBy = user.Login
 		err = stages.Update(r.Context(), stage)
 		if err != nil {
 			render.InternalErrorf(w, "There was a problem approving the Pipeline")

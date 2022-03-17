@@ -244,6 +244,7 @@ SELECT
 ,stage_on_failure
 ,stage_depends_on
 ,stage_labels
+,stage_approved_by
 FROM stages
 `
 
@@ -327,6 +328,7 @@ SELECT
 ,step_image
 ,step_detached
 ,step_schema
+,stage_approved_by
 FROM stages
   LEFT JOIN steps
 	ON stages.stage_id=steps.step_stage_id
@@ -357,6 +359,7 @@ SET
 ,stage_on_failure = :stage_on_failure
 ,stage_depends_on = :stage_depends_on
 ,stage_labels = :stage_labels
+,stage_approved_by = :stage_approved_by
 WHERE stage_id = :stage_id
   AND stage_version = :stage_version_old
 `
@@ -389,6 +392,7 @@ INSERT INTO stages (
 ,stage_on_failure
 ,stage_depends_on
 ,stage_labels
+,stage_approved_by
 ) VALUES (
  :stage_repo_id
 ,:stage_build_id
@@ -416,6 +420,7 @@ INSERT INTO stages (
 ,:stage_on_failure
 ,:stage_depends_on
 ,:stage_labels
+,:stage_approved_by,
 )
 `
 
