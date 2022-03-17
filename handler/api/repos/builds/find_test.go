@@ -179,3 +179,47 @@ func TestFind_StagesNotFound(t *testing.T) {
 		t.Errorf(diff)
 	}
 }
+
+func TestFind_ApprovedBuild(t *testing.T) {
+	var approvedMockStage = mockStages
+
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	repos := mock.NewMockRepositoryStore(controller)
+	repos.EXPECT().FindName(gomock.Any(), gomock.Any(), mockRepo.Name).Return(mockRepo, nil)
+
+	builds := mock.NewMockBuildStore(controller)
+	builds.EXPECT().FindNumber(gomock.Any(), mockRepo.ID, mockBuild.Number).Return(mockBuild, nil)
+
+	stages := mock.NewMockStageStore(controller)
+	approvedMockStage[0].ApprovedBy = mockUser.Login
+	stages.EXPECT().ListSteps(gomock.Any(), mockBuild.ID).Return(mockStages, nil)
+
+	c := new(chi.Context)
+	c.URLParams.Add("owner", "octocat")
+	c.URLParams.Add("name", "hello-world")
+	c.URLParams.Add("number", "1")
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/", nil)
+	r = r.WithContext(
+		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+	)
+
+	HandleFind(repos, builds, stages)(w, r)
+
+	if got, want := w.Code, 200; want != got {
+		t.Errorf("Want response code %d, got %d", want, got)
+	}
+
+	got, want := &buildWithStages{}, &buildWithStages{mockBuild, mockStages}
+	json.NewDecoder(w.Body).Decode(got)
+	if diff := cmp.Diff(got, want); len(diff) != 0 {
+		t.Errorf(diff)
+	}
+
+	if got.Stages[0].ApprovedBy != mockUser.Login {
+		t.Errorf("Expected got.Stages[0].ApprovedBy to be %s but got %s", mockUser.Login, got.Stages[0].ApprovedBy)
+	}
+}
