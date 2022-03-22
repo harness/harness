@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	json "github.com/ghodss/yaml"
 	"gopkg.in/yaml.v2"
 	"path"
 	"reflect"
@@ -130,7 +131,8 @@ func Parse(req *core.ConvertArgs, fileService core.FileService, limit int, templ
 			var val string
 			switch reflect.TypeOf(v).Kind() {
 			case reflect.Slice, reflect.Map:
-				data, err := yaml.Marshal(v)
+				yml, _ := yaml.Marshal(v)
+				data, err := json.YAMLToJSON(yml)
 				if err != nil {
 					return "", err
 				}
