@@ -8,7 +8,7 @@ Drone is a continuous delivery system built on container technology. Drone uses 
 
 - [What is Drone?](#what-is-drone)
 - [Table of Contents](#table-of-contents)
-- [Community](#community)
+- [Community and Support](#community-and-support)
 - [Contributing](#contributing)
 - [Code of Conduct](#code-of-conduct)
 - [Setup Documentation](#setup-documentation)
@@ -17,9 +17,14 @@ Drone is a continuous delivery system built on container technology. Drone uses 
 - [Plugin Index](#plugin-index)
 - [Documentation and Other Links](#documentation-and-Other-Links)
 
-## Community
-
-You can visit us at [Discourse](https://discourse.drone.io/) as well as our [Slack](https://join.slack.com/t/harnesscommunity/shared_invite/zt-90wb0w6u-OATJvUBkSDR3W9oYX7D~4A).
+## Community and Support
+[Harness Community Slack](https://join.slack.com/t/harnesscommunity/shared_invite/zt-y4hdqh7p-RVuEQyIl5Hcx4Ck8VCvzBw) - Join the #drone slack channel to connect with our engineers and other users running Drone CI.
+</br>
+[Harness Community Forum](https://community.harness.io/) - Ask questions, find answers, and help other users.
+</br>
+[Report A Bug](https://community.harness.io/c/bugs/17) - Find a bug? Please report in our forum under Drone Bugs. Please provide screenshots and steps to reproduce. 
+</br>
+[Events](https://www.meetup.com/harness/) - Keep up to date with Drone events and check out previous events [here](https://www.youtube.com/watch?v=Oq34ImUGcHA&list=PLXsYHFsLmqf3zwelQDAKoVNmLeqcVsD9o).
 
 ## Contributing
 
