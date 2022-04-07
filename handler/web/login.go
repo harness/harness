@@ -142,6 +142,7 @@ func HandleLogin(
 		}
 
 		user.Avatar = account.Avatar
+		user.Email = account.Email
 		user.Token = tok.Access
 		user.Refresh = tok.Refresh
 		user.LastLogin = time.Now().Unix()
