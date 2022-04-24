@@ -104,14 +104,7 @@ func (s *Synchronizer) Sync(ctx context.Context, user *core.User) (*core.Batch, 
 			return nil, err
 		}
 		for _, repo := range repos {
-			if strings.Count(repo.Slug, "/") > 1 {
-				if logrus.GetLevel() == logrus.TraceLevel {
-					logger.WithField("namespace", repo.Namespace).
-						WithField("name", repo.Name).
-						WithField("uid", repo.UID).
-						Traceln("syncer: skipping subrepositories")
-				}
-			} else if repo.Archived {
+			if repo.Archived {
 				if logrus.GetLevel() == logrus.TraceLevel {
 					logger.WithField("namespace", repo.Namespace).
 						WithField("name", repo.Name).
@@ -119,6 +112,15 @@ func (s *Synchronizer) Sync(ctx context.Context, user *core.User) (*core.Batch, 
 						Traceln("syncer: skipping archived repositories")
 				}
 			} else if s.match(repo) {
+				if strings.Count(repo.Slug, "/") > 1 {
+					repo.Namespace = strings.ReplaceAll(repo.Namespace, "/", "%2F")
+					if logrus.GetLevel() == logrus.TraceLevel {
+						logger.WithField("namespace", repo.Namespace).
+							WithField("name", repo.Name).
+							WithField("uid", repo.UID).
+							Traceln("syncer: modifying subrepositories path to url encoded")
+					}
+				}
 				remote[repo.UID] = repo
 				if logrus.GetLevel() == logrus.TraceLevel {
 					logger.WithField("namespace", repo.Namespace).
