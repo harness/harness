@@ -56,7 +56,7 @@ func (s Server) ListenAndServe(ctx context.Context) error {
 func (s Server) listenAndServe(ctx context.Context) error {
 	var g errgroup.Group
 	s1 := &http.Server{
-		Addr:    s.Addr,
+		Addr:    s.Host,
 		Handler: s.Handler,
 	}
 	g.Go(func() error {

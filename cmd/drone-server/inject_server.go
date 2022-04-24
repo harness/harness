@@ -116,7 +116,7 @@ func provideRPC2(m manager.BuildManager, config config.Config) rpcHandlerV2 {
 func provideServer(handler *chi.Mux, config config.Config) *server.Server {
 	return &server.Server{
 		Acme:    config.Server.Acme,
-		Addr:    config.Server.Port,
+		Addr:    config.Server.Addr,
 		Cert:    config.Server.Cert,
 		Key:     config.Server.Key,
 		Host:    config.Server.Host,
