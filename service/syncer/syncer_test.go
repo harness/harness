@@ -390,7 +390,7 @@ func TestSync_BatchError(t *testing.T) {
 
 // this test verifies that sub-repositories are skipped. They
 // are unsupported by Drone and should not be ignored.
-func TestSync_SkipSubrepo(t *testing.T) {
+func TestSync_Subrepo(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
@@ -429,8 +429,21 @@ func TestSync_SkipSubrepo(t *testing.T) {
 		t.Error(err)
 	}
 
-	want := &core.Batch{}
-	if diff := cmp.Diff(got, want); len(diff) != 0 {
+	want := &core.Batch{
+		Insert: []*core.Repository{
+			{
+				UID:        "1",
+				Namespace:  "octocat",
+				Name:       "hello-world",
+				Slug:       "octocat/hello/world",
+				Visibility: "public",
+			},
+		},
+	}
+
+	ignore := cmpopts.IgnoreFields(core.Repository{},
+		"Synced", "Created", "Updated", "Version")
+	if diff := cmp.Diff(got, want, ignore); len(diff) != 0 {
 		t.Errorf(diff)
 	}
 }
