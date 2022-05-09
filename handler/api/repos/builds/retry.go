@@ -64,6 +64,7 @@ func HandleRetry(
 		}
 
 		hook := &core.Hook{
+			Parent:       prev.Number,
 			Trigger:      user.Login,
 			Event:        prev.Event,
 			Action:       prev.Action,
