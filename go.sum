@@ -73,10 +73,6 @@ github.com/docker/go-connections v0.3.0 h1:3lOnM9cSzgGwx8VfK/NGOW5fLQ0GjIlCkaktF
 github.com/docker/go-connections v0.3.0/go.mod h1:Gbd7IOopHjR8Iph03tsViu4nIes5XhDvyHbTtUxmeec=
 github.com/docker/go-units v0.3.3 h1:Xk8S3Xj5sLGlG5g67hJmYMmUgXv5N4PhkjJHHqrwnTk=
 github.com/docker/go-units v0.3.3/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
-github.com/drone/drone-go v1.4.1-0.20201109202657-b9e58bbbcf27 h1:58xKlW/Kwp/Apz+R5qNGzBUIzfq1Z57L7Udz1B6bgWE=
-github.com/drone/drone-go v1.4.1-0.20201109202657-b9e58bbbcf27/go.mod h1:fxCf9jAnXDZV1yDr0ckTuWd1intvcQwfJmTRpTZ1mXg=
-github.com/drone/drone-go v1.7.1 h1:ZX+3Rs8YHUSUQ5mkuMLmm1zr1ttiiE2YGNxF3AnyDKw=
-github.com/drone/drone-go v1.7.1/go.mod h1:fxCf9jAnXDZV1yDr0ckTuWd1intvcQwfJmTRpTZ1mXg=
 github.com/drone/drone-go v1.7.2-0.20220308165842-f9e4fe31c2af h1:I+xfWPZLMaskFvfFO5fEJ6tVI1Q9bWR9tuORZeaCTPo=
 github.com/drone/drone-go v1.7.2-0.20220308165842-f9e4fe31c2af/go.mod h1:fxCf9jAnXDZV1yDr0ckTuWd1intvcQwfJmTRpTZ1mXg=
 github.com/drone/drone-runtime v1.0.7-0.20190729202838-87c84080f4a1/go.mod h1:+osgwGADc/nyl40J0fdsf8Z09bgcBZXvXXnLOY48zYs=
@@ -84,6 +80,8 @@ github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d h1:P5HI/Y9hA
 github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d/go.mod h1:4/2QToW5+HGD0y1sTw7X35W1f7YINS14UfDY4isggT8=
 github.com/drone/drone-ui v2.8.1+incompatible h1:pV2B/7JP17HeNKSrchytBUAEZtjC6l+hMeiezL6aiYY=
 github.com/drone/drone-ui v2.8.1+incompatible/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
+github.com/drone/drone-ui v2.8.2+incompatible h1:7F/MlcSEIZVi5VND/qmOnDDwQOkgqwsCVOQOsGJ2HJc=
+github.com/drone/drone-ui v2.8.2+incompatible/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
 github.com/drone/drone-yaml v1.2.4-0.20200326192514-6f4d6dfb39e4 h1:XsstoCeXC2t8lA9OLTdoFwckaptqahxwjCWsenySfX8=
 github.com/drone/drone-yaml v1.2.4-0.20200326192514-6f4d6dfb39e4/go.mod h1:QsqliFK8nG04AHFN9tTn9XJomRBQHD4wcejWW1uz/10=
 github.com/drone/envsubst v1.0.3-0.20200709231038-aa43e1c1a629 h1:rIaZZalMGGPb2cU/+ypuggZ8aMlpa17RUlJUtsMv8pw=
