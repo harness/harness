@@ -1,5 +1,24 @@
 # Changelog
 
+## [v2.12.0](https://github.com/harness/drone/tree/v2.12.0) (2022-05-13)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.11.1...v2.12.0)
+
+**Implemented enhancements:**
+
+- bump SCM version to v1.21.1 [\#3204](https://github.com/harness/drone/pull/3204) ([d1wilko](https://github.com/d1wilko))
+- bump ui version [\#3202](https://github.com/harness/drone/pull/3202) ([d1wilko](https://github.com/d1wilko))
+
+**Fixed bugs:**
+
+- \(fix\) update drone ui to 2.8.2 [\#3211](https://github.com/harness/drone/pull/3211) ([tphoney](https://github.com/tphoney))
+- \(dron-267\) correctly set parent for promotion retry [\#3210](https://github.com/harness/drone/pull/3210) ([tphoney](https://github.com/tphoney))
+
+**Merged pull requests:**
+
+- fixing URL [\#3208](https://github.com/harness/drone/pull/3208) ([dnielsen](https://github.com/dnielsen))
+- update community information with updated links [\#3199](https://github.com/harness/drone/pull/3199) ([mrsantons](https://github.com/mrsantons))
+
 ## [v2.11.1](https://github.com/harness/drone/tree/v2.11.1) (2022-03-15)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.11.0...v2.11.1)
@@ -7,6 +26,10 @@
 **Fixed bugs:**
 
 - ignore nil repos in list and add better debugging [\#3196](https://github.com/harness/drone/pull/3196) ([d1wilko](https://github.com/d1wilko))
+
+**Merged pull requests:**
+
+- \(maint\) release prep for 2.11.1 [\#3197](https://github.com/harness/drone/pull/3197) ([d1wilko](https://github.com/d1wilko))
 
 ## [v2.11.0](https://github.com/harness/drone/tree/v2.11.0) (2022-03-08)
 
