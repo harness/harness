@@ -197,6 +197,14 @@ func provideRefresher(config config.Config) *oauth2.Refresher {
 			Source:       oauth2.ContextTokenSource(),
 			Client:       defaultClient(config.Gitea.SkipVerify),
 		}
+	case config.GitLab.ClientID != "":
+		return &oauth2.Refresher{
+			ClientID:     config.GitLab.ClientID,
+			ClientSecret: config.GitLab.ClientSecret,
+			Endpoint:     strings.TrimSuffix(config.GitLab.Server, "/") + "/oauth/token",
+			Source:       oauth2.ContextTokenSource(),
+			Client:       defaultClient(config.GitLab.SkipVerify),
+		}
 	case config.Gitee.ClientID != "":
 		return &oauth2.Refresher{
 			ClientID:     config.Gitee.ClientID,

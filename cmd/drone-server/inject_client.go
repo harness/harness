@@ -180,7 +180,13 @@ func provideGitlabClient(config config.Config) *scm.Client {
 	}
 	client.Client = &http.Client{
 		Transport: &oauth2.Transport{
-			Source: oauth2.ContextTokenSource(),
+			Scheme: oauth2.SchemeBearer,
+			Source: &oauth2.Refresher{
+				ClientID:     config.GitLab.ClientID,
+				ClientSecret: config.GitLab.ClientSecret,
+				Endpoint:     strings.TrimSuffix(config.GitLab.Server, "/") + "/oauth/token",
+				Source:       oauth2.ContextTokenSource(),
+			},
 			Base:   defaultTransport(config.GitLab.SkipVerify),
 		},
 	}
