@@ -1,0 +1,8 @@
+---
+# this is a comment
+kind: template
+load: plugin.yaml
+data:
+  stepName: my_step
+  image: my_image
+  commands: my_command
