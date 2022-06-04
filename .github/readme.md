@@ -28,7 +28,7 @@ Drone is a continuous delivery system built on container technology. Drone uses 
 
 ## Contributing
 
-We encourage you to contribute to Drone! whether thats joining in on the community slack or discourse, or contributing pull requests / documentation changes or raising issues.
+We encourage you to contribute to Drone! Whether that's joining in on the community slack or discourse, or contributing pull requests / documentation changes or raising issues.
 
 ## Code of Conduct
 
@@ -107,7 +107,7 @@ docker run -it --rm -v "$(pwd)":/usr/local/src/your-app githubchangeloggenerator
 
 You can generate a token by logging into your GitHub account and going to Settings -> Personal access tokens.
 
-Next we tag the PR's with the fixes or enhancements labels. If the PR does not fufil the requirements, do not add a label.
+Next we tag the PR's with the fixes or enhancements labels. If the PR does not fulfill the requirements, do not add a label.
 
 **Before moving on make sure to update the version file `version/version.go && version/version_test.go`.**
 
