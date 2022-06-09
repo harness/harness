@@ -197,8 +197,8 @@ var migrations = []struct {
 		stmt: createNewTableCards,
 	},
 	{
-		name: "amend",
-		stmt: amend,
+		name: "amend-table-templates",
+		stmt: amendTableTemplates,
 	},
 }
 
@@ -772,7 +772,7 @@ CREATE TABLE IF NOT EXISTS cards
 // 020_amend_table_templates.sql
 //
 
-var amend = `
+var amendTableTemplates = `
 ALTER TABLE templates
 DROP CONSTRAINT  templates_template_name_key;
 `
