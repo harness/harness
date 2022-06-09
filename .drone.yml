@@ -1,4 +1,5 @@
 ---
+
 kind: pipeline
 type: docker
 name: linux-amd64
