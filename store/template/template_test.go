@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package template
@@ -29,7 +30,7 @@ func TestTemplate(t *testing.T) {
 	}()
 
 	store := New(conn).(*templateStore)
-	t.Run("Create", testTemplateCreate(store))
+	t.Run("TestTemplates", testTemplateCreate(store))
 }
 
 func testTemplateCreate(store *templateStore) func(t *testing.T) {
@@ -50,12 +51,51 @@ func testTemplateCreate(store *templateStore) func(t *testing.T) {
 			t.Errorf("Want template Id assigned, got %d", item.Id)
 		}
 
+		t.Run("CreateSameNameDiffOrg", testCreateWithSameNameDiffOrg(store))
+		t.Run("CreateSameNameSameOrgShouldError", testCreateSameNameSameOrgShouldError(store))
 		t.Run("Find", testTemplateFind(store, item))
 		t.Run("FindName", testTemplateFindName(store))
 		t.Run("ListAll", testTemplateListAll(store))
 		t.Run("List", testTemplateList(store))
 		t.Run("Update", testTemplateUpdate(store))
 		t.Run("Delete", testTemplateDelete(store))
+	}
+}
+
+func testCreateWithSameNameDiffOrg(store *templateStore) func(t *testing.T) {
+	return func(t *testing.T) {
+		item := &core.Template{
+			Id:        1,
+			Name:      "my_template",
+			Namespace: "my_org2",
+			Data:      "some_template_data",
+			Created:   1,
+			Updated:   2,
+		}
+		err := store.Create(noContext, item)
+		if err != nil {
+			t.Error(err)
+		}
+		if item.Id == 0 {
+			t.Errorf("Want template Id assigned, got %d", item.Id)
+		}
+	}
+}
+
+func testCreateSameNameSameOrgShouldError(store *templateStore) func(t *testing.T) {
+	return func(t *testing.T) {
+		item := &core.Template{
+			Id:        3,
+			Name:      "my_template",
+			Namespace: "my_org2",
+			Data:      "some_template_data",
+			Created:   1,
+			Updated:   2,
+		}
+		err := store.Create(noContext, item)
+		if err == nil {
+			t.Error(err)
+		}
 	}
 }
 
@@ -95,6 +135,20 @@ func testTemplate(item *core.Template) func(t *testing.T) {
 	}
 }
 
+func testTemplate2(item *core.Template) func(t *testing.T) {
+	return func(t *testing.T) {
+		if got, want := item.Name, "my_template"; got != want {
+			t.Errorf("Want template name %q, got %q", want, got)
+		}
+		if got, want := item.Data, "some_template_data"; got != want {
+			t.Errorf("Want template data %q, got %q", want, got)
+		}
+		if got, want := item.Namespace, "my_org2"; got != want {
+			t.Errorf("Want template org %q, got %q", want, got)
+		}
+	}
+}
+
 func testTemplateListAll(store *templateStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		list, err := store.ListAll(noContext)
@@ -102,10 +156,11 @@ func testTemplateListAll(store *templateStore) func(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		if got, want := len(list), 1; got != want {
+		if got, want := len(list), 2; got != want {
 			t.Errorf("Want count %d, got %d", want, got)
 		} else {
 			t.Run("Fields", testTemplate(list[0]))
+			t.Run("Fields", testTemplate2(list[1]))
 		}
 	}
 }

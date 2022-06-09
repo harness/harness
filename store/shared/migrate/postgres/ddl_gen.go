@@ -196,6 +196,10 @@ var migrations = []struct {
 		name: "create-new-table-cards",
 		stmt: createNewTableCards,
 	},
+	{
+		name: "amend",
+		stmt: amend,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -762,4 +766,13 @@ CREATE TABLE IF NOT EXISTS cards
     card_data BYTEA,
     FOREIGN KEY (card_id) REFERENCES steps (step_id) ON DELETE CASCADE
 );
+`
+
+//
+// 020_amend_table_templates.sql
+//
+
+var amend = `
+ALTER TABLE templates
+DROP CONSTRAINT  templates_template_name_key;
 `
