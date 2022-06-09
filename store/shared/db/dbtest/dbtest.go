@@ -48,6 +48,7 @@ func Connect() (*db.DB, error) {
 func Reset(d *db.DB) {
 	d.Lock(func(tx db.Execer, _ db.Binder) error {
 		tx.Exec("DELETE FROM cron")
+		tx.Exec("DELETE FROM cards")
 		tx.Exec("DELETE FROM logs")
 		tx.Exec("DELETE FROM steps")
 		tx.Exec("DELETE FROM stages")
@@ -56,6 +57,7 @@ func Reset(d *db.DB) {
 		tx.Exec("DELETE FROM perms")
 		tx.Exec("DELETE FROM repos")
 		tx.Exec("DELETE FROM users")
+		tx.Exec("DELETE FROM templates")
 		tx.Exec("DELETE FROM orgsecrets")
 		return nil
 	})
