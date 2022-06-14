@@ -17,6 +17,8 @@ package converter
 import (
 	"encoding/json"
 	"io/ioutil"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/drone/drone/core"
@@ -234,7 +236,14 @@ func TestTemplatePluginConvertJsonnet(t *testing.T) {
 		return
 	}
 
-	if want, got := config.Data, string(after); want != got {
+	want := string(after)
+	// on windows line endings are \r\n, lets change them to linux for comparison
+	if runtime.GOOS == "windows" {
+		want = strings.Replace(want, "\r\n", "\n", -1)
+	}
+
+	got := config.Data
+	if want != got {
 		t.Errorf("Want %q got %q", want, got)
 	}
 }
