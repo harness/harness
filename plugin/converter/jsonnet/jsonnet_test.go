@@ -46,13 +46,19 @@ func TestParse(t *testing.T) {
 
 	req.Config.Data = string(before)
 
-	parsedFile, err := Parse(req, nil, 0, template, templateData)
+	got, err := Parse(req, nil, 0, template, templateData)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if want, got := parsedFile, string(after); want != got {
+	want := string(after)
+	// on windows line endings are \r\n, lets change them to linux for comparison
+	if runtime.GOOS == "windows" {
+		want = strings.Replace(want, "\r\n", "\n", -1)
+	}
+
+	if want != got {
 		t.Errorf("Want %q got %q", want, got)
 	}
 }
