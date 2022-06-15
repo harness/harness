@@ -1,6 +1,28 @@
 # Changelog
 
-## [v2.12.0](https://github.com/harness/drone/tree/v2.12.0) (2022-05-13)
+## [v2.12.2](https://github.com/harness/drone/tree/v2.12.2) (2022-06-15)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.12.1...v2.12.2)
+
+**Fixed bugs:**
+
+- \(bug\) - fix original template scripts & remove amend scripts [\#3229](https://github.com/harness/drone/pull/3229) ([eoinmcafee00](https://github.com/eoinmcafee00))
+- \(bug\) - remove unique index on template name [\#3226](https://github.com/harness/drone/pull/3226) ([eoinmcafee00](https://github.com/eoinmcafee00))
+- Added OAuth2 token refresher for Gitlab [\#3215](https://github.com/harness/drone/pull/3215) ([EndymionWight](https://github.com/EndymionWight))
+
+**Merged pull requests:**
+
+- \(maint\) fix starlark test on windows [\#3230](https://github.com/harness/drone/pull/3230) ([tphoney](https://github.com/tphoney))
+- \(maint\) fix unit tests so they pass on windows [\#3228](https://github.com/harness/drone/pull/3228) ([tphoney](https://github.com/tphoney))
+- Update Readme to Fix Typo [\#3223](https://github.com/harness/drone/pull/3223) ([hrittikhere](https://github.com/hrittikhere))
+- \(bug\) add unit test for comments in template file [\#3221](https://github.com/harness/drone/pull/3221) ([eoinmcafee00](https://github.com/eoinmcafee00))
+- Bump scm version to v1.24.0 [\#3219](https://github.com/harness/drone/pull/3219) ([kit101](https://github.com/kit101))
+
+## [v2.12.1](https://github.com/harness/drone/tree/v2.12.1) (2022-05-16)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.12.0...v2.12.1)
+
+## [v2.12.0](https://github.com/harness/drone/tree/v2.12.0) (2022-05-16)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.11.1...v2.12.0)
 
@@ -16,6 +38,7 @@
 
 **Merged pull requests:**
 
+- release prep v2.12.0 [\#3214](https://github.com/harness/drone/pull/3214) ([tphoney](https://github.com/tphoney))
 - fixing URL [\#3208](https://github.com/harness/drone/pull/3208) ([dnielsen](https://github.com/dnielsen))
 - update community information with updated links [\#3199](https://github.com/harness/drone/pull/3199) ([mrsantons](https://github.com/mrsantons))
 
