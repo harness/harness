@@ -1,8 +1,8 @@
 # Changelog
 
-## [v2.12.2](https://github.com/harness/drone/tree/v2.12.2) (2022-06-15)
+## [v2.12.1](https://github.com/harness/drone/tree/v2.12.1) (2022-06-15)
 
-[Full Changelog](https://github.com/harness/drone/compare/v2.12.1...v2.12.2)
+[Full Changelog](https://github.com/harness/drone/compare/v2.12.0...v2.12.1)
 
 **Fixed bugs:**
 
@@ -17,10 +17,6 @@
 - Update Readme to Fix Typo [\#3223](https://github.com/harness/drone/pull/3223) ([hrittikhere](https://github.com/hrittikhere))
 - \(bug\) add unit test for comments in template file [\#3221](https://github.com/harness/drone/pull/3221) ([eoinmcafee00](https://github.com/eoinmcafee00))
 - Bump scm version to v1.24.0 [\#3219](https://github.com/harness/drone/pull/3219) ([kit101](https://github.com/kit101))
-
-## [v2.12.1](https://github.com/harness/drone/tree/v2.12.1) (2022-05-16)
-
-[Full Changelog](https://github.com/harness/drone/compare/v2.12.0...v2.12.1)
 
 ## [v2.12.0](https://github.com/harness/drone/tree/v2.12.0) (2022-05-16)
 
