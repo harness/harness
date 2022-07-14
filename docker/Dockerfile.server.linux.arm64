@@ -1,7 +1,7 @@
 # docker build --rm -f docker/Dockerfile -t drone/drone .
 
 FROM alpine:3.11 as alpine
-RUN apk add -U --no-cache ca-certificates
+RUN apk add -U --no-cache ca-certificates tzdata
 
 FROM alpine:3.11
 EXPOSE 80 443
@@ -21,6 +21,7 @@ ENV DRONE_DATADOG_ENABLED=true
 ENV DRONE_DATADOG_ENDPOINT=https://stats.drone.ci/api/v1/series
 
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=alpine /usr/share/zoneinfo /usr/share/zoneinfo
 
 ADD release/linux/arm64/drone-server /bin/
 ENTRYPOINT ["/bin/drone-server"]
