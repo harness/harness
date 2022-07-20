@@ -16,6 +16,7 @@ package converter
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"runtime"
 	"strings"
@@ -138,6 +139,48 @@ func TestTemplatePluginConvertDroneFileTypePipeline(t *testing.T) {
 	}
 	if config != nil {
 		t.Errorf("Expect nil config returned for non-starlark files")
+	}
+}
+
+// Test makes sure that we don't skip templating for neither the "yml" or "yaml" extension.
+func TestTemplatePluginConvertDroneFileYamlExtensions(t *testing.T) {
+	extensions := []string{"yml", "yaml"}
+	dummyErr := errors.New("dummy-error")
+
+	for _, extension := range extensions {
+		t.Run(extension, func(t *testing.T) {
+			args, err := ioutil.ReadFile("testdata/yaml.template.yml")
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			controller := gomock.NewController(t)
+			defer controller.Finish()
+
+			templates := mock.NewMockTemplateStore(controller)
+			templates.EXPECT().FindName(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, dummyErr)
+
+			plugin := Template(templates, 0)
+			req := &core.ConvertArgs{
+				Build: &core.Build{
+					After: "3d21ec53a331a6f037a91c368710b99387d012c1",
+				},
+				Repo: &core.Repository{
+					Slug:   "octocat/hello-world",
+					Config: ".drone." + extension,
+				},
+				Config: &core.Config{Data: string(args)},
+			}
+
+			_, err = plugin.Convert(noContext, req)
+			if err != nil && err != dummyErr {
+				t.Error(err)
+			}
+			if err == nil {
+				t.Errorf("Templating was skipped")
+			}
+		})
 	}
 }
 
