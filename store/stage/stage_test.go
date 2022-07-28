@@ -44,7 +44,6 @@ func TestStage(t *testing.T) {
 	store := New(conn).(*stageStore)
 	t.Run("Create", testStageCreate(store, abuild))
 	t.Run("ListState", testStageListStatus(store, abuild))
-	t.Run("Purge", testStagePurge(store, abuild))
 }
 
 func testStageCreate(store *stageStore, abuild *core.Build) func(t *testing.T) {
@@ -231,47 +230,6 @@ func testStageListStatus(store *stageStore, abuild *core.Build) func(t *testing.
 				}
 				return nil
 			})
-		}
-	}
-}
-
-func testStagePurge(store *stageStore, abuild *core.Build) func(t *testing.T) {
-	return func(t *testing.T) {
-		_ = store.db.Update(func(execer db.Execer, binder db.Binder) error {
-			_, _ = execer.Exec("DELETE FROM stages")
-			return nil
-		})
-		_ = store.Create(noContext, &core.Stage{Number: 1, BuildID: abuild.ID, Status: core.StatusPending})
-		_ = store.Create(noContext, &core.Stage{Number: 2, BuildID: abuild.ID, Status: core.StatusRunning})
-		err := store.Create(noContext, &core.Stage{Number: 2, BuildID: 27, Status: core.StatusRunning})
-		if err != nil {
-			if store.db.Driver() == db.Sqlite {
-				return // sqlite prevents writing a state with no corresponding build
-			}
-		}
-
-		var countOfStages int
-		_ = store.db.View(func(queryer db.Queryer, binder db.Binder) error {
-			return queryer.QueryRow("SELECT count(*) FROM stages").Scan(&countOfStages)
-		})
-
-		want := 3
-
-		if want != countOfStages {
-			t.Errorf("Want stage count %d, got %d", want, countOfStages)
-		}
-		// purge
-		err = store.Purge(noContext)
-		if err != nil {
-			t.Error(err)
-		}
-		// check we removed one orphan stage
-		_ = store.db.View(func(queryer db.Queryer, binder db.Binder) error {
-			return queryer.QueryRow("SELECT count(*) FROM stages").Scan(&countOfStages)
-		})
-		want = 2
-		if want != countOfStages {
-			t.Errorf("Want stage count %d, got %d", want, countOfStages)
 		}
 	}
 }

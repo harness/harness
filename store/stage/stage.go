@@ -215,18 +215,6 @@ func (s *stageStore) Update(ctx context.Context, stage *core.Stage) error {
 	return err
 }
 
-func (s *stageStore) Purge(ctx context.Context) error {
-	// we only need to perform this operation if we are using a postgres or mysql
-	if s.db.Driver() == db.Postgres || s.db.Driver() == db.Mysql {
-		err := s.db.Update(func(execer db.Execer, binder db.Binder) error {
-			_, err := execer.Exec(stmtPurge)
-			return err
-		})
-		return err
-	}
-	return nil
-}
-
 const queryBase = `
 SELECT
  stage_id
@@ -434,9 +422,3 @@ INSERT INTO stages (
 const stmtInsertPg = stmtInsert + `
 RETURNING stage_id
 `
-
-const stmtPurge = `
-DELETE FROM stages
-WHERE stage_build_id NOT IN (
-	SELECT build_id FROM builds
-)`

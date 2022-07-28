@@ -249,7 +249,7 @@ func (s Server) Handler() http.Handler {
 
 				r.With(
 					acl.CheckAdminAccess(),
-				).Delete("/", builds.HandlePurge(s.Repos, s.Builds, s.Stages))
+				).Delete("/", builds.HandlePurge(s.Repos, s.Builds))
 			})
 
 			r.Route("/secrets", func(r chi.Router) {

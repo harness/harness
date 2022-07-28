@@ -77,9 +77,6 @@ type (
 
 		// Update persists an updated stage to the datastore.
 		Update(context.Context, *Stage) error
-
-		// Purge removes orpaned stages from the datastore.
-		Purge(context.Context) error
 	}
 )
 

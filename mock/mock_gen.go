@@ -1607,20 +1607,6 @@ func (mr *MockStageStoreMockRecorder) ListSteps(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSteps", reflect.TypeOf((*MockStageStore)(nil).ListSteps), arg0, arg1)
 }
 
-// Purge mocks base method.
-func (m *MockStageStore) Purge(arg0 context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Purge", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Purge indicates an expected call of Purge.
-func (mr *MockStageStoreMockRecorder) Purge(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Purge", reflect.TypeOf((*MockStageStore)(nil).Purge), arg0)
-}
-
 // Update mocks base method.
 func (m *MockStageStore) Update(arg0 context.Context, arg1 *core.Stage) error {
 	m.ctrl.T.Helper()
