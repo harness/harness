@@ -798,7 +798,7 @@ func (mr *MockUserServiceMockRecorder) FindLogin(arg0, arg1 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLogin", reflect.TypeOf((*MockUserService)(nil).FindLogin), arg0, arg1)
 }
 
-// ListEmail mocks base method
+// ListEmail mocks base method.
 func (m *MockUserService) ListEmail(arg0 context.Context, arg1 scm.ListOptions) ([]*scm.Email, *scm.Response, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListEmail", arg0, arg1)

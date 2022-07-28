@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package builds
@@ -31,6 +32,9 @@ func TestPurge(t *testing.T) {
 	builds := mock.NewMockBuildStore(controller)
 	builds.EXPECT().Purge(gomock.Any(), mockRepo.ID, int64(50)).Return(nil)
 
+	stages := mock.NewMockStageStore(controller)
+	stages.EXPECT().Purge(gomock.Any()).Return(nil)
+
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
 	c.URLParams.Add("name", "hello-world")
@@ -41,7 +45,7 @@ func TestPurge(t *testing.T) {
 		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
-	HandlePurge(repos, builds)(w, r)
+	HandlePurge(repos, builds, stages)(w, r)
 	if got, want := w.Code, http.StatusNoContent; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -66,7 +70,7 @@ func TestPurge_NotFound(t *testing.T) {
 		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
-	HandlePurge(repos, nil)(w, r)
+	HandlePurge(repos, nil, nil)(w, r)
 	if got, want := w.Code, 404; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -95,7 +99,7 @@ func TestPurge_BadRequest(t *testing.T) {
 		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
-	HandlePurge(nil, nil)(w, r)
+	HandlePurge(nil, nil, nil)(w, r)
 	if got, want := w.Code, 400; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -121,6 +125,9 @@ func TestPurge_InternalError(t *testing.T) {
 	builds := mock.NewMockBuildStore(controller)
 	builds.EXPECT().Purge(gomock.Any(), mockRepo.ID, int64(50)).Return(errors.ErrNotFound)
 
+	stages := mock.NewMockStageStore(controller)
+	stages.EXPECT().Purge(gomock.Any()).Return(nil)
+
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
 	c.URLParams.Add("name", "hello-world")
@@ -131,7 +138,7 @@ func TestPurge_InternalError(t *testing.T) {
 		context.WithValue(request.WithUser(r.Context(), mockUser), chi.RouteCtxKey, c),
 	)
 
-	HandlePurge(repos, builds)(w, r)
+	HandlePurge(repos, builds, stages)(w, r)
 	if got, want := w.Code, http.StatusInternalServerError; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}

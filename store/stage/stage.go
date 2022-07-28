@@ -22,8 +22,8 @@ import (
 )
 
 // New returns a new StageStore.
-func New(db *db.DB) core.StageStore {
-	return &stageStore{db}
+func New(database *db.DB) core.StageStore {
+	return &stageStore{database}
 }
 
 type stageStore struct {
@@ -213,6 +213,18 @@ func (s *stageStore) Update(ctx context.Context, stage *core.Stage) error {
 		stage.Version = versionNew
 	}
 	return err
+}
+
+func (s *stageStore) Purge(ctx context.Context) error {
+	// we only need to perform this operation if we are using a postgres or mysql
+	if s.db.Driver() == db.Postgres || s.db.Driver() == db.Mysql {
+		err := s.db.Update(func(execer db.Execer, binder db.Binder) error {
+			_, err := execer.Exec(stmtPurge)
+			return err
+		})
+		return err
+	}
+	return nil
 }
 
 const queryBase = `
@@ -423,34 +435,8 @@ const stmtInsertPg = stmtInsert + `
 RETURNING stage_id
 `
 
-const stmtInsertStep = `
-INSERT INTO steps (
- step_stage_id
-,step_number
-,step_name
-,step_status
-,step_error
-,step_errignore
-,step_exit_code
-,step_started
-,step_stopped
-,step_version
-,step_depends_on
-,step_image
-,step_detached
-) VALUES (
- :step_stage_id
-,:step_number
-,:step_name
-,:step_status
-,:step_error
-,:step_errignore
-,:step_exit_code
-,:step_started
-,:step_stopped
-,:step_version
-,:step_depends_on
-,:step_image
-,:step_detached
-)
-`
+const stmtPurge = `
+DELETE FROM stages
+WHERE stage_build_id NOT IN (
+	SELECT build_id FROM builds
+)`

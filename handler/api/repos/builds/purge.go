@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package builds
@@ -18,7 +19,7 @@ import (
 
 // HandlePurge returns an http.HandlerFunc that purges the
 // build history. If successful a 204 status code is returned.
-func HandlePurge(repos core.RepositoryStore, builds core.BuildStore) http.HandlerFunc {
+func HandlePurge(repos core.RepositoryStore, builds core.BuildStore, stages core.StageStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			namespace = chi.URLParam(r, "owner")
@@ -36,6 +37,12 @@ func HandlePurge(repos core.RepositoryStore, builds core.BuildStore) http.Handle
 			return
 		}
 		err = builds.Purge(r.Context(), repo.ID, number)
+		if err != nil {
+			render.InternalError(w, err)
+			return
+		}
+		// cascade the purge to the stage table
+		err = stages.Purge(r.Context())
 		if err != nil {
 			render.InternalError(w, err)
 			return
