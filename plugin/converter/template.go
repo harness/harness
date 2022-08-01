@@ -23,7 +23,6 @@ import (
 	"errors"
 	"path/filepath"
 	"regexp"
-	"strings"
 	templating "text/template"
 
 	"github.com/drone/drone/core"
@@ -56,7 +55,9 @@ type templatePlugin struct {
 
 func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*core.Config, error) {
 	// check type is yaml
-	if strings.HasSuffix(req.Repo.Config, ".yml") == false {
+	configExt := filepath.Ext(req.Repo.Config)
+
+	if configExt != ".yml" && configExt != ".yaml" {
 		return nil, nil
 	}
 
