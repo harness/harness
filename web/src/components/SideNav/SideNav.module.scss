@@ -1,0 +1,40 @@
+.root {
+  display: flex;
+}
+
+.sideNav {
+  width: 184px !important;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: #07182b !important;
+}
+
+.link {
+  display: block;
+  margin-left: var(--spacing-medium);
+  padding: var(--spacing-small) var(--spacing-medium);
+  opacity: 0.8;
+  z-index: 1;
+
+  &:hover {
+    text-decoration: none;
+    opacity: 1;
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+    background-color: rgba(2, 120, 213, 0.5);
+  }
+
+  &.selected {
+    background-color: rgba(2, 120, 213, 0.8);
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+    opacity: 1;
+  }
+
+  .text {
+    color: var(--white) !important;
+    font-size: 13px !important;
+  }
+}

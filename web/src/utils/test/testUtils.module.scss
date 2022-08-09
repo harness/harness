@@ -1,0 +1,34 @@
+.browser {
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  min-height: 300px;
+  overflow: auto;
+
+  .browser-header {
+    background-color: #cccccc;
+    padding: 8px 16px;
+    display: flex;
+  }
+
+  .browser-path {
+    display: block;
+    border: none;
+    line-height: 14px;
+    font-size: 12px;
+    color: #444444;
+    border-radius: 9px;
+    min-width: 100px;
+    padding: 2px 8px;
+    flex: 1 1 auto;
+    border: 1px solid transparent;
+
+    &:focus {
+      border-color: rgb(30, 167, 253);
+      outline: none;
+    }
+  }
+
+  .browser-content {
+    padding: 8px;
+  }
+}

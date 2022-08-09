@@ -1,0 +1,8 @@
+{
+  "title": "Something went wrong...",
+  "subtitle": "This error has been reported and we are looking into it with high priority.",
+  "stackTrace": "Stack Trace",
+  "refresh": "refresh",
+  "please": "Please ",
+  "continue": " your browser to continue."
+}

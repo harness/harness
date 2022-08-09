@@ -1,0 +1,176 @@
+{
+  "name": "sample-module",
+  "description": "Harness Inc",
+  "version": "0.0.1",
+  "author": "Harness Inc",
+  "license": "Harness Inc",
+  "private": true,
+  "homepage": "http://harness.io/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/drone/sample-module.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sample-module/sample-module/issues"
+  },
+  "keywords": [],
+  "scripts": {
+    "dev": "NODE_ENV=development webpack serve --progress",
+    "test": "jest src --silent",
+    "test:watch": "jest --watch",
+    "lint": "eslint  --rulesdir ./scripts/eslint-rules --ext .ts --ext .tsx src",
+    "typecheck": "tsc",
+    "clean": "rm -rf dist && rm -rf node_modules/.cache",
+    "services": "npm-run-all services:*",
+    "services:pm": "restful-react import --config restful-react.config.js pm",
+    "postservices": "prettier --write src/services/**/*.tsx",
+    "build": "npm run clean; webpack --mode production",
+    "coverage": "npm test --coverage",
+    "setup-github-registry": "sh scripts/setup-github-registry.sh",
+    "strings": "npm-run-all strings:*",
+    "strings:genTypes": "node scripts/strings/generateTypesCli.mjs",
+    "fmt": "prettier --write \"./src/**/*.{ts,tsx,css,scss}\"",
+    "micro:watch": "nodemon --watch 'src/**/*' -e ts,tsx,html,scss,svg,yaml --exec 'npm-run-all' -- micro:build micro:serve",
+    "micro:build": "webpack --mode production",
+    "micro:serve": "serve ./dist -l 3000"
+  },
+  "dependencies": {
+    "@blueprintjs/core": "3.26.1",
+    "@blueprintjs/datetime": "3.13.0",
+    "@blueprintjs/select": "3.12.3",
+    "@harness/uicore": "^1.23.0",
+    "anser": "^2.1.0",
+    "classnames": "^2.3.1",
+    "clipboard-copy": "^3.1.0",
+    "formik": "1.5.8",
+    "immer": "^9.0.6",
+    "lodash-es": "^4.17.15",
+    "marked": "^3.0.8",
+    "masonry-layout": "^4.2.2",
+    "moment": "^2.25.3",
+    "monaco-editor": "^0.19.2",
+    "qs": "^6.9.4",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-draggable": "^4.4.2",
+    "react-router-dom": "5.2.0",
+    "react-table": "^7.1.0",
+    "restful-react": "15.6.0",
+    "swr": "^0.5.4",
+    "yaml": "^1.10.0"
+  },
+  "devDependencies": {
+    "@harness/css-types-loader": "^3.1.0",
+    "@harness/jarvis": "0.12.0",
+    "@testing-library/jest-dom": "^5.12.0",
+    "@testing-library/react": "^10.0.3",
+    "@testing-library/react-hooks": "5",
+    "@testing-library/user-event": "^10.3.1",
+    "@types/classnames": "^2.2.10",
+    "@types/lodash-es": "^4.17.3",
+    "@types/mustache": "^4.0.1",
+    "@types/path-to-regexp": "^1.7.0",
+    "@types/qs": "^6.9.4",
+    "@types/react": "^17.0.3",
+    "@types/react-dom": "^17.0.3",
+    "@types/react-router-dom": "^5.1.7",
+    "@types/react-table": "^7.0.18",
+    "@types/testing-library__react-hooks": "^3.2.0",
+    "@typescript-eslint/eslint-plugin": "^4.22.0",
+    "@typescript-eslint/parser": "^4.22.0",
+    "case": "^1.6.3",
+    "circular-dependency-plugin": "^5.2.2",
+    "css-loader": "^6.3.0",
+    "dotenv": "^10.0.0",
+    "eslint": "^7.27.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-import-resolver-typescript": "^2.4.0",
+    "eslint-plugin-import": "^2.23.3",
+    "eslint-plugin-jest": "^24.3.6",
+    "eslint-plugin-react": "^7.23.2",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "fast-json-stable-stringify": "^2.1.0",
+    "file-loader": "^6.2.0",
+    "fork-ts-checker-webpack-plugin": "^6.2.1",
+    "glob": "^7.1.6",
+    "html-webpack-plugin": "^5.3.1",
+    "jest": "^26.2.0",
+    "lighthouse": "^6.5.0",
+    "lint-staged": "^11.0.0",
+    "mini-css-extract-plugin": "^2.4.2",
+    "monaco-editor-webpack-plugin": "1.8.*",
+    "mustache": "^4.0.1",
+    "nodemon": "^2.0.15",
+    "npm-run-all": "^4.1.5",
+    "path-to-regexp": "^6.1.0",
+    "prettier": "^2.3.2",
+    "react-test-renderer": "^17.0.2",
+    "sass": "^1.32.8",
+    "sass-loader": "^12.1.0",
+    "serve": "^13.0.2",
+    "style-loader": "^3.3.0",
+    "ts-jest": "^26.5.5",
+    "ts-loader": "^9.2.6",
+    "tsconfig-paths-webpack-plugin": "^3.5.1",
+    "typescript": "^4.2.4",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.58.0",
+    "webpack-bundle-analyzer": "^4.4.0",
+    "webpack-cli": "^4.9.1",
+    "webpack-dev-server": "^4.6.0",
+    "yaml-loader": "^0.6.0"
+  },
+  "resolutions": {
+    "@types/react": "^17.0.3",
+    "@types/react-dom": "^17.0.3",
+    "@types/testing-library__react": "^10.0.0",
+    "@types/testing-library__dom": "^7.0.0",
+    "anser": "2.0.1",
+    "create-react-context": "0.3.0"
+  },
+  "engines": {
+    "node": ">=14.16.0"
+  },
+  "nodemonConfig": {
+    "verbose": true,
+    "ignore": [
+      "dist/*",
+      "__tests__/*",
+      ".vscode/*",
+      "coverage/*",
+      "scripts/*",
+      "**/*.d.ts",
+      "src/framework/strings/stringTypes.ts"
+    ],
+    "delay": 2500
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --rulesdir ./scripts/eslint-rules --resolve-plugins-relative-to",
+      "sh scripts/typecheck-staged.sh",
+      "prettier --check"
+    ],
+    "*.scss": [
+      "prettier --check"
+    ],
+    "strings.*.yaml": [
+      "npm strings:check"
+    ],
+    "webpack.devServerProxy.config.js": [
+      "exit 1"
+    ]
+  },
+  "i18nSettings": {
+    "extensionToLanguageMap": {
+      "es": [
+        "es"
+      ],
+      "en": [
+        "en",
+        "en-US",
+        "en-IN",
+        "en-UK"
+      ]
+    }
+  }
+}

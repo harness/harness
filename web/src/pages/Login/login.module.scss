@@ -1,0 +1,62 @@
+.layout {
+  // Signup card widths
+  --min-width: 540px;
+  --max-width: 35%;
+  display: grid;
+  grid-template-columns: minmax(var(--min-width), var(--max-width)) auto;
+  grid-template-rows: 100vh;
+
+  .cardColumn {
+    overflow-y: auto;
+  }
+
+  .card {
+    padding: 85px 40px;
+    overflow-x: hidden;
+    width: var(--min-width);
+    margin: 0 auto;
+  }
+}
+
+.imageColumn {
+  overflow-y: hidden;
+  background-color: #07182b;
+  padding-left: 40px;
+
+  .image {
+    object-fit: contain;
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.loginPage {
+  height: 100vh;
+  background: var(--primary-7);
+  display: flex;
+
+  .card {
+    width: 420px;
+    margin: auto;
+  }
+}
+
+@media (max-width: 1280px) {
+  .layout {
+    display: flex;
+    justify-content: center;
+    width: 100vw;
+  }
+
+  .imageColumn {
+    display: none;
+  }
+}
+
+// Firefox has a bug where padding-bottom is ignored when overflow occurs
+// https://bugzilla.mozilla.org/show_bug.cgi?id=748518
+@-moz-document url-prefix() {
+  .disclaimer {
+    margin-bottom: 85px !important;
+  }
+}

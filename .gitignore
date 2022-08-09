@@ -1,0 +1,9 @@
+NOTES*
+_research
+.env
+*.sqlite
+*.sqlite3
+web/node_modules
+web/dist/files
+release
+my-app

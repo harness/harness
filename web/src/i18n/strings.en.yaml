@@ -1,0 +1,34 @@
+signin: Sign In
+signUp: Sign Up
+logout: Logout
+password: Password
+pageNotFound: Page Not Found
+common:
+  save: Save
+  edit: Edit
+  name: Name
+  email: Email
+  namePlaceholder: Enter Name
+  description: Description
+  descriptionPlaceholder: Enter Description
+  tagsLabel: Tags
+  optionalField: '{{name}} (optional)'
+  delete: Delete
+  deleteConfirm: Are you sure you want to delete this?
+  itemDeleted: Item Deleted
+  itemUpdated: Item Updated
+  itemCreated: Item Created
+  cancel: Cancel
+  accountDetails: Account Details
+  accountOverview: Account Overview
+  token: Token
+pipelines: Pipelines
+pipelineSettings: Pipeline Settings
+account: Account
+settings: Settings
+executions: Executions
+addExecution: Add New Execution
+slug: Slug
+created: Created
+noAccount: No account?
+existingAccount: Already have an account?

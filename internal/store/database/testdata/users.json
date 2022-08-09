@@ -1,0 +1,24 @@
+[
+    {
+        "id": 0,
+        "email": "jane@example.com",
+        "name": "jane",
+        "company": "acme",
+        "admin": true,
+        "blocked": false,
+        "created": 0,
+        "updated": 0,
+        "authed": 0
+    },
+    {
+        "id": 0,
+        "email": "john@example.com",
+        "name": "john",
+        "company": "acme",
+        "admin": false,
+        "blocked": false,
+        "created": 0,
+        "updated": 0,
+        "authed": 0
+    }
+]

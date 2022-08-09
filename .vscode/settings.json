@@ -1,0 +1,3 @@
+{
+    "go.testTags": "sqlite_fts5"
+}

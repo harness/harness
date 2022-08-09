@@ -1,0 +1,24 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  flex: 1 auto;
+}
+
+.container {
+  box-shadow: var(--card-shadow);
+}
+
+.minWidth {
+  min-width: 400px;
+}
+
+.input {
+  margin-bottom: unset !important;
+}
+
+.pre {
+  background: var(--theme-dark-canvas-dot);
+  color: #fff;
+  width: 300px;
+  height: auto;
+}

@@ -1,0 +1,75 @@
+// Copyright 2021 Harness Inc. All rights reserved.
+// Use of this source code is governed by the Polyform Free Trial License
+// that can be found in the LICENSE.md file for this repository.
+
+package account
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/bradrydzewski/my-app/internal/api/render"
+	"github.com/bradrydzewski/my-app/internal/store"
+	"github.com/bradrydzewski/my-app/internal/token"
+	"github.com/bradrydzewski/my-app/types"
+
+	"github.com/rs/zerolog/hlog"
+	"golang.org/x/crypto/bcrypt"
+)
+
+// HandleLogin returns an http.HandlerFunc that authenticates
+// the user and returns an authentication token on success.
+func HandleLogin(users store.UserStore, system store.SystemStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log := hlog.FromRequest(r)
+
+		username := r.FormValue("username")
+		password := r.FormValue("password")
+		user, err := users.FindEmail(ctx, username)
+		if err != nil {
+			render.NotFoundf(w, "Invalid email or password")
+			log.Debug().Err(err).
+				Str("user", username).
+				Msg("cannot find user")
+			return
+		}
+
+		err = bcrypt.CompareHashAndPassword(
+			[]byte(user.Password),
+			[]byte(password),
+		)
+		if err != nil {
+			render.NotFoundf(w, "Invalid email or password")
+			log.Debug().Err(err).
+				Str("user", username).
+				Msg("invalid password")
+			return
+		}
+
+		expires := time.Now().Add(system.Config(ctx).Token.Expire)
+		token_, err := token.GenerateExp(user, expires.Unix(), user.Salt)
+		if err != nil {
+			render.InternalErrorf(w, "Failed to create session")
+			log.Debug().Err(err).
+				Str("user", username).
+				Msg("failed to generate token")
+			return
+		}
+
+		// return the token if the with_user boolean
+		// query parameter is set to true.
+		if r.FormValue("return_user") == "true" {
+			render.JSON(w, &types.UserToken{
+				User: user,
+				Token: &types.Token{
+					Value:   token_,
+					Expires: expires.UTC(),
+				},
+			}, 200)
+		} else {
+			// else return the token only.
+			render.JSON(w, &types.Token{Value: token_}, 200)
+		}
+	}
+}

@@ -1,0 +1,61 @@
+.main {
+  max-width: 785px;
+  margin-bottom: var(--spacing-medium) !important;
+
+  :global(.bp3-input) {
+    &:disabled {
+      background-color: var(--grey-100);
+    }
+  }
+  div[class*='collapse'] {
+    margin-left: 0;
+  }
+
+  & div[class*='Collapse'] {
+    border-top: none;
+    padding: 0;
+
+    // spacing for adjacent collapsible
+    + div[class*='Collapse'][class*='main'] {
+      margin-top: var(--spacing-medium);
+    }
+
+    div[class*='CollapseHeader'] {
+      padding-top: 0 !important;
+    }
+
+    span[data-icon='main-chevron-down'] {
+      color: var(--primary-7);
+    }
+  }
+
+  textarea {
+    min-height: 50px;
+    resize: vertical;
+  }
+  :global {
+    .TextInput--main {
+      margin: 0;
+      .bp3-form-group {
+        margin: 0;
+      }
+      margin-bottom: var(--spacing-medium);
+    }
+  }
+}
+
+.editOpen {
+  cursor: pointer;
+  margin-left: 8px !important;
+  position: relative;
+  top: -2px;
+
+  &:hover {
+    color: var(--primary-7) !important;
+  }
+}
+.descriptionLabel {
+  margin-bottom: var(--spacing-xsmall) !important;
+  display: flex !important;
+  align-items: center;
+}
