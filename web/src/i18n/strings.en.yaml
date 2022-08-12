@@ -1,34 +1,152 @@
-signin: Sign In
-signUp: Sign Up
-logout: Logout
-password: Password
-pageNotFound: Page Not Found
+failed: Failed
+status: Status
+success: Success
+details: Details
+overview: Overview
+back: Back
+finish: Finish
+delete: Delete
+apply: Apply
+cancel: Cancel
+continue: Continue
+type: Type
+name: Name
+action: Action
+edit: Edit
+executionsText: Executions
+outputLabel: Output
+description: Description
+optionalField: '{{name}} (optional)'
+descriptionPlaceholder: Enter Description
+tagsLabel: Tags
+yes: Yes
+no: No
+source: Source
 common:
-  save: Save
-  edit: Edit
-  name: Name
-  email: Email
   namePlaceholder: Enter Name
-  description: Description
-  descriptionPlaceholder: Enter Description
-  tagsLabel: Tags
-  optionalField: '{{name}} (optional)'
-  delete: Delete
-  deleteConfirm: Are you sure you want to delete this?
-  itemDeleted: Item Deleted
-  itemUpdated: Item Updated
-  itemCreated: Item Created
-  cancel: Cancel
-  accountDetails: Account Details
-  accountOverview: Account Overview
-  token: Token
-pipelines: Pipelines
-pipelineSettings: Pipeline Settings
-account: Account
-settings: Settings
-executions: Executions
-addExecution: Add New Execution
-slug: Slug
-created: Created
-noAccount: No account?
-existingAccount: Already have an account?
+  policies: 'Policies'
+  policy:
+    policysets: Policy Sets
+    newPolicy: New Policy
+    evaluations: Evaluations
+    policySearch: Search Policy by name
+    noPolicy: A Harness policy is an OPA rule that can be enforced on your Harness software delivery processes to ensure governance and compliance.
+    noPolicyTitle: You have no policies
+    noPolicyResult: No policies found
+    noPolicyEvalResultTitle: You have no policy evaluations
+    noPolicyEvalResult: Policy evaluations are created when policy sets are enforced on your Harness entities.
+    noSelectInput: Select appropriate options
+    permission:
+      noEdit: You do not have permission to edit a Policy
+    table:
+      name: Policy
+      lastModified: Last Modified
+      createdAt: Created At
+  policiesSets:
+    newPolicyset: New Policy Set
+    noPolicySets: No Policy Sets evaluated
+    evaluationCriteria: Policy evaluation criteria
+    policySetSearch: Search Policy Set by name
+    noPolicySetTitle: Create a Policy Set to apply Policies
+    noPolicySet: A harness policy set allows you to group policies and configure where they will be enforced.
+    noPolicySetResult: No Policy Sets found
+    noPolicySetDescription: No Policy Set Description
+    stepOne:
+      validName: '{{$.validation.nameRequired}}'
+      validId: '{{$.validation.identifierRequired}}'
+      validIdRegex: '{{$.common.validation.formatMustBeAlphanumeric}}'
+    table:
+      name: Policy Set
+      enforced: Enforced
+      entityType: Entity Type {{name}}
+    event: Event
+    scope: Scope
+    entity: Entity Type
+    enforced: Enforced
+    created: Created
+    updated: Updated
+governance:
+  policyAccountCount: Account ({{count}})
+  policyOrgCount: Organization ({{count}})
+  policyProjectCount: Project ({{count}})
+  viewPolicy: View Policy
+  editPolicy: Edit Policy
+  editPolicyMetadataTitle: Policy Name
+  formatInput: Format Input
+  selectInput: Select Input
+  clearOutput: Clear Output
+  inputFailedEvaluation: Input failed Policy Evaluation
+  inputSuccededEvaluation: Input succeeded Policy Evaluation
+  warning: warning
+  evaluatedTime: 'Evaluated {{time}}'
+  failureHeading: Pipeline execution could not proceed due to the Policy Evaluation failures.
+  warningHeading: Pipeline execution has Policy Evaluation warnings.
+  failureHeadingEvaluationDetail: Policy Evaluation failed.
+  warningHeadingEvaluationDetail: Policy Evaluation contains warnings.
+  successHeading: All policies are passed.
+  policySets: 'Policy Sets ({{count}})'
+  evaluations: Evaluations {{count}}
+  policySetName: 'Policy Set: {{name}}'
+  emptyPolicySet: This Policy Set does not have any policies attached to it.
+  failureModalTitle: Policy Set Evaluations
+  policySetsApplied: '{{pipelineName}}: Policy Sets applied'
+  warn: warning {{count}}
+  event: Pipeline Event
+  evaluatedOn: Evaluated On
+  onRun: On Run
+  onSave: On Save
+  onCreate: On Create
+  onStep: On Step
+  policyName: 'Policy Name: {{name}}'
+  policyIdentifier: 'Policy Identifier: {{policyIdentifier}}'
+  policyDescription: 'Policy Desctiption: {{policyDescription}}'
+  deleteTitle: Delete Policy
+  deleteConfirmation: Are you sure you want to delete Policy "{{name}}"? This action cannot be undone.
+  deleteDone: Policy "{{name}}" deleted.
+  deletePolicySetTitle: Delete Policy Set
+  deletePolicySetConfirmation: Are you sure you want to delete Policy Set "{{name}}"? This action cannot be undone.
+  deletePolicySetDone: Policy Set "{{name}}" deleted.
+  selectSamplePolicy: Select a Policy example
+  evaluationEmpty: No Policy is linked for this evaluation.
+  noPolicySetForPipeline: No Policy Set applied for this pipeline.
+  noEvaluationForPipeline: No Evaluation found for this pipeline.
+  wizard:
+    policyToEval: Policy to Evaluate
+    fieldArray: Applies to Pipeline on the following events
+    policySelector:
+      selectPolicy: Select Policy
+      account: Account
+      org: Org {{name}}
+  policySetGroup: Policy Set Group
+  policySetGroupAccount: Account {{name}}
+  policySetGroupOrg: Organization {{name}}
+  policySetGroupProject: Project {{name}}
+validation:
+  identifierIsRequired: '{{$.validation.identifierRequired}}'
+  validIdRegex: Identifier must start with an letter or _ and can then be followed by alphanumerics, _, or $
+  thisIsARequiredField: This setting is required
+  nameRequired: Name is required
+  identifierRequired: Identifier is required
+  policySaveButtonMessage: '{{type}} is required'
+lastUpdated: Last Updated
+AZ09: A - Z, 0 - 9
+ZA90: Z - A, 9 - 0
+evaluation:
+  onePolicyEvaluated: 1 Policy Evaluated
+  evaluatedPoliciesCount: '{{count}} Policies Evaluated'
+all: All
+entity: Entity
+fileOverwrite: File Overwrite
+saveOverwrite: Are you sure you want to overwrite this file? Your unsaved work will be lost.
+confirm: Confirm
+useSample: Use This Sample
+samplePolicies: Sample Policies
+search: Search
+input: Input
+navigationCheckText: 'You have unsaved changes. Are you sure you want to leave this page without saving?'
+navigationCheckTitle: 'Close without saving?'
+noSearchResultsFound: No search results found for '{{searchTerm}}'.
+clearFilter: Clear Filter
+banner:
+  expired: expired {{ days }} days ago
+  expiryCountdown: expires in {{ days }} days

@@ -1,18 +1,19 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { RestfulProvider } from 'restful-react'
-import { TooltipContextProvider, ModalProvider } from '@harness/uicore'
+import { TooltipContextProvider } from '@harness/uicore'
+import { ModalProvider } from '@harness/use-modal'
 import { FocusStyleManager } from '@blueprintjs/core'
+import { tooltipDictionary } from '@harness/ng-tooltip'
 import AppErrorBoundary from 'framework/AppErrorBoundary/AppErrorBoundary'
-import { useAPIToken } from 'hooks/useAPIToken'
 import { AppContextProvider } from 'AppContext'
 import { setBaseRouteInfo } from 'RouteUtils'
 import type { AppProps } from 'AppProps'
 import { buildResfulReactRequestOptions, handle401 } from 'AppUtils'
 import { RouteDestinations } from 'RouteDestinations'
+import { useAPIToken } from 'hooks/useAPIToken'
 import { languageLoader } from './framework/strings/languageLoader'
 import type { LanguageRecord } from './framework/strings/languageLoader'
 import { StringsContextProvider } from './framework/strings/StringsContextProvider'
-import './App.scss'
 
 FocusStyleManager.onlyShowFocusOnTabs()
 
@@ -31,8 +32,8 @@ const App: React.FC<AppProps> = props => {
   const [strings, setStrings] = useState<LanguageRecord>()
   const [token, setToken] = useAPIToken(apiToken)
   const getRequestOptions = useCallback((): Partial<RequestInit> => {
-    return buildResfulReactRequestOptions(token)
-  }, [token])
+    return buildResfulReactRequestOptions(hooks.useGetToken?.() || apiToken || 'default')
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   setBaseRouteInfo(accountId, baseRoutePath)
 
   useEffect(() => {
@@ -48,7 +49,7 @@ const App: React.FC<AppProps> = props => {
   return strings ? (
     <StringsContextProvider initialStrings={strings}>
       <AppErrorBoundary>
-        <AppContextProvider value={{ standalone, baseRoutePath, accountId, lang, apiToken, on401, hooks, components }}>
+        <AppContextProvider value={{ standalone, baseRoutePath, accountId, lang, on401, hooks, components }}>
           <RestfulProvider
             base="/"
             requestOptions={getRequestOptions}
@@ -59,7 +60,7 @@ const App: React.FC<AppProps> = props => {
                 on401()
               }
             }}>
-            <TooltipContextProvider initialTooltipDictionary={{}}>
+            <TooltipContextProvider initialTooltipDictionary={tooltipDictionary}>
               <ModalProvider>{children ? children : <RouteDestinations standalone={standalone} />}</ModalProvider>
             </TooltipContextProvider>
           </RestfulProvider>
