@@ -17,6 +17,7 @@ package repo
 import (
 	"github.com/drone/drone/core"
 	"github.com/drone/go-scm/scm"
+	"strings"
 )
 
 // convertRepository is a helper function that converts a
@@ -26,8 +27,8 @@ func convertRepository(src *scm.Repository, visibility string, trusted bool) *co
 	return &core.Repository{
 		UID:        src.ID,
 		Namespace:  src.Namespace,
-		Name:       src.Name,
-		Slug:       scm.Join(src.Namespace, src.Name),
+		Name:       convertName(src),
+		Slug:       convertSlug(src),
 		HTTPURL:    src.Clone,
 		SSHURL:     src.CloneSSH,
 		Link:       src.Link,
@@ -56,4 +57,20 @@ func convertVisibility(src *scm.Repository, visibility string) string {
 	default:
 		return core.VisibilityPublic
 	}
+}
+
+func convertName(src *scm.Repository) string {
+	if src.Clone != "" {
+		s := strings.SplitN(src.Clone, "/", 5)
+		name := strings.SplitN(s[4], ".", 2)[0]
+		if src.Name != name {
+			return name
+		}
+	}
+	return src.Name
+}
+
+func convertSlug(src *scm.Repository) string {
+	name := convertName(src)
+	return scm.Join(src.Namespace, name)
 }

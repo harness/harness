@@ -96,3 +96,39 @@ func TestDefinedVisibility(t *testing.T) {
 		t.Errorf(diff)
 	}
 }
+
+func TestConvertName(t *testing.T) {
+	from := &scm.Repository{
+		ID:        "42",
+		Namespace: "octocat",
+		Name:      "hello-world",
+		Branch:    "master",
+		Private:   false,
+		Clone:     "https://github.com/octocat/hello-world.git",
+		CloneSSH:  "git@github.com:octocat/hello-world.git",
+		Link:      "https://github.com/octocat/hello-world",
+	}
+	want := "hello-world"
+	got := convertName(from)
+	if diff := cmp.Diff(want, got); len(diff) != 0 {
+		t.Errorf(diff)
+	}
+}
+
+func TestConvertSlug(t *testing.T) {
+	from := &scm.Repository{
+		ID:        "42",
+		Namespace: "octocat",
+		Name:      "hello world",
+		Branch:    "master",
+		Private:   false,
+		Clone:     "https://github.com/octocat/hello-world.git",
+		CloneSSH:  "git@github.com:octocat/hello-world.git",
+		Link:      "https://github.com/octocat/hello-world",
+	}
+	want := "octocat/hello-world"
+	got := convertSlug(from)
+	if diff := cmp.Diff(want, got); len(diff) != 0 {
+		t.Errorf(diff)
+	}
+}
