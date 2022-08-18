@@ -8,8 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	types "github.com/harness/scm/types"
 	gomock "github.com/golang/mock/gomock"
+	types "github.com/harness/scm/types"
 )
 
 // MockExecutionStore is a mock of ExecutionStore interface.

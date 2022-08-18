@@ -7,8 +7,8 @@ package mocks
 import (
 	reflect "reflect"
 
-	types "github.com/harness/scm/types"
 	gomock "github.com/golang/mock/gomock"
+	types "github.com/harness/scm/types"
 )
 
 // MockClient is a mock of Client interface.
