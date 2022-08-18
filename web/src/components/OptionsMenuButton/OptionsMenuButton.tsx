@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react'
-import { Classes, Menu } from '@blueprintjs/core'
+import { Classes, IMenuItemProps, Menu } from '@blueprintjs/core'
 import { Button, ButtonProps } from '@harness/uicore'
 import type { PopoverProps } from '@harness/uicore/dist/components/Popover/Popover'
 
@@ -23,7 +23,7 @@ export const OptionsMenuButton = ({ items, ...props }: OptionsMenuButtonProps): 
                 <Menu.Item
                   key={(item as React.ComponentProps<typeof Menu.Item>)?.text as string}
                   className={Classes.POPOVER_DISMISS}
-                  {...item}
+                  {...(item as IMenuItemProps & React.AnchorHTMLAttributes<HTMLAnchorElement>)}
                 />
               )
           )}

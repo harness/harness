@@ -6,7 +6,7 @@ import './App.scss'
 // This flag is used in services/config.ts to customize API path when app is run
 // in multiple modes (standalone vs. embedded).
 // Also being used in when generating proper URLs inside the app.
-window.STRIP_PM_PREFIX = true
+window.STRIP_SCM_PREFIX = true
 
 ReactDOM.render(
   <App

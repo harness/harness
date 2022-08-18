@@ -34,7 +34,7 @@ export const SignIn: React.FC = () => {
 
   return (
     <Layout.Vertical>
-      <h1>{getString('signin')}</h1>
+      <h1>{getString('signIn')}</h1>
       <Container>
         <Layout.Horizontal>
           <Text>Username</Text>
@@ -55,7 +55,7 @@ export const SignIn: React.FC = () => {
         </Layout.Horizontal>
       </Container>
       <Container>
-        <Button text={getString('signin')} onClick={() => onLogin()} />
+        <Button text={getString('signIn')} onClick={() => onLogin()} />
       </Container>
     </Layout.Vertical>
   )

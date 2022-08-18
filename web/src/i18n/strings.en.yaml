@@ -1,3 +1,10 @@
+pageNotFound: Page Not Found
+signIn: Sign In
+signUp: Sign Up
+email: Email
+password: Password
+noAccount: No Account
+existingAccount: Existing Account
 failed: Failed
 status: Status
 success: Success

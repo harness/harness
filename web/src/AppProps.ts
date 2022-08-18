@@ -1,7 +1,6 @@
 import type React from 'react'
 import type * as History from 'history'
 import type { PermissionOptionsMenuButtonProps } from 'components/Permissions/PermissionsOptionsMenuButton'
-import type { OverviewChartsWithToggleProps } from 'components/OverviewChartsWithToggle/OverviewChartsWithToggle'
 import type { LangLocale } from './framework/strings/languageLoader'
 import type { FeatureFlagMap, GitFiltersProps } from './utils/GovernanceUtils'
 
@@ -106,5 +105,4 @@ export interface AppPropsComponent {
     navigate: (path: string) => void
     shouldBlockNavigation?: (location: History.Location) => boolean
   }>
-  OverviewChartsWithToggle: React.FC<OverviewChartsWithToggleProps>
 }

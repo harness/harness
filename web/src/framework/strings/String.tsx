@@ -1,7 +1,6 @@
 import React from 'react'
 import mustache from 'mustache'
 import { get } from 'lodash-es'
-
 import { useStringsContext, StringKeys } from './StringsContext'
 
 export interface UseStringsReturn {
@@ -46,9 +45,9 @@ export function String(props: StringProps): React.ReactElement | null {
     const text = getString(stringID, vars)
 
     return useRichText ? (
-      <Tag {...(rest as unknown)} dangerouslySetInnerHTML={{ __html: text }} />
+      <Tag {...(rest as unknown as {})} dangerouslySetInnerHTML={{ __html: text }} />
     ) : (
-      <Tag {...(rest as unknown)}>{text}</Tag>
+      <Tag {...(rest as unknown as {})}>{text}</Tag>
     )
   } catch (e) {
     if (process.env.NODE_ENV !== 'production') {

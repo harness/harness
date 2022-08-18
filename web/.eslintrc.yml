@@ -35,6 +35,12 @@ settings:
     typescript:
       alwaysTryTypes: true
 rules:
+  '@typescript-eslint/ban-types':
+    - error
+    - extendDefaults: true
+      types:
+        '{}': false
+
   # custom rules
   no-document-body-snapshot: 2
   duplicate-data-tooltip-id: 'warn'

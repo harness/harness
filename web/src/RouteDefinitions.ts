@@ -3,12 +3,14 @@ import type { AppPathProps } from 'AppProps'
 
 export enum RoutePath {
   SIGNIN = '/signin',
+  SIGNUP = '/signup',
+  REGISTER = '/register',
   POLICY_DASHBOARD = '/dashboard',
   POLICY_LISTING = '/policies',
   POLICY_NEW = '/policies/new',
   POLICY_VIEW = '/policies/view/:policyIdentifier',
   //POLICY_EDIT = '/policies/edit/:policyIdentifier',
-  POLICY_EDIT= '/policies/edit/:policyIdentifier/:repo?/:branch?',
+  POLICY_EDIT = '/policies/edit/:policyIdentifier/:repo?/:branch?',
   POLICY_SETS_LISTING = '/policy-sets',
   POLICY_SETS_DETAIL = '/policy-sets/:policySetIdentifier',
   POLICY_EVALUATIONS_LISTING = '/policy-evaluations',
@@ -17,10 +19,12 @@ export enum RoutePath {
 
 export default {
   toSignIn: (): string => toRouteURL(RoutePath.SIGNIN),
+  toSignUp: (): string => toRouteURL(RoutePath.SIGNUP),
+  toRegister: (): string => toRouteURL(RoutePath.REGISTER),
   toPolicyDashboard: (): string => toRouteURL(RoutePath.POLICY_DASHBOARD),
   toPolicyListing: (): string => toRouteURL(RoutePath.POLICY_LISTING),
   toPolicyNew: (): string => toRouteURL(RoutePath.POLICY_NEW),
-  toPolicyView: ({ policyIdentifier }: Required<Pick<AppPathProps, 'policyIdentifier'>>): string => 
+  toPolicyView: ({ policyIdentifier }: Required<Pick<AppPathProps, 'policyIdentifier'>>): string =>
     toRouteURL(RoutePath.POLICY_VIEW, { policyIdentifier }),
   toPolicyEdit: ({ policyIdentifier }: Required<Pick<AppPathProps, 'policyIdentifier'>>): string =>
     toRouteURL(RoutePath.POLICY_EDIT, { policyIdentifier }),

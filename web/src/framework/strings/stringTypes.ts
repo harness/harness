@@ -56,10 +56,12 @@ export interface StringsMap {
   descriptionPlaceholder: string
   details: string
   edit: string
+  email: string
   entity: string
   'evaluation.evaluatedPoliciesCount': string
   'evaluation.onePolicyEvaluated': string
   executionsText: string
+  existingAccount: string
   failed: string
   fileOverwrite: string
   finish: string
@@ -122,13 +124,18 @@ export interface StringsMap {
   navigationCheckText: string
   navigationCheckTitle: string
   no: string
+  noAccount: string
   noSearchResultsFound: string
   optionalField: string
   outputLabel: string
   overview: string
+  pageNotFound: string
+  password: string
   samplePolicies: string
   saveOverwrite: string
   search: string
+  signIn: string
+  signUp: string
   source: string
   status: string
   success: string
