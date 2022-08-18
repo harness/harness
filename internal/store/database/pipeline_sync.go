@@ -7,9 +7,9 @@ package database
 import (
 	"context"
 
-	"github.com/bradrydzewski/my-app/internal/store"
-	"github.com/bradrydzewski/my-app/internal/store/database/mutex"
-	"github.com/bradrydzewski/my-app/types"
+	"github.com/harness/scm/internal/store"
+	"github.com/harness/scm/internal/store/database/mutex"
+	"github.com/harness/scm/types"
 )
 
 var _ store.PipelineStore = (*PipelineStoreSync)(nil)

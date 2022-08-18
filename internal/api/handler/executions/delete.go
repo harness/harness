@@ -7,8 +7,8 @@ package executions
 import (
 	"net/http"
 
-	"github.com/bradrydzewski/my-app/internal/api/render"
-	"github.com/bradrydzewski/my-app/internal/store"
+	"github.com/harness/scm/internal/api/render"
+	"github.com/harness/scm/internal/store"
 
 	"github.com/go-chi/chi"
 	"github.com/rs/zerolog/hlog"

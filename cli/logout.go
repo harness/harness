@@ -7,7 +7,7 @@ package cli
 import (
 	"os"
 
-	"github.com/bradrydzewski/my-app/cli/util"
+	"github.com/harness/scm/cli/util"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )

@@ -8,8 +8,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/bradrydzewski/my-app/types"
-	"github.com/bradrydzewski/my-app/version"
+	"github.com/harness/scm/types"
+	"github.com/harness/scm/version"
 
 	"github.com/joho/godotenv"
 	"github.com/mattn/go-isatty"

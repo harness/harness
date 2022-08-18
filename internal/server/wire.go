@@ -7,7 +7,7 @@ package server
 import (
 	"net/http"
 
-	"github.com/bradrydzewski/my-app/types"
+	"github.com/harness/scm/types"
 
 	"github.com/google/wire"
 )

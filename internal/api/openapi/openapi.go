@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/bradrydzewski/my-app/version"
+	"github.com/harness/scm/version"
 
 	"github.com/swaggest/openapi-go/openapi3"
 )

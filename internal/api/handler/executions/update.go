@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bradrydzewski/my-app/internal/api/render"
-	"github.com/bradrydzewski/my-app/internal/store"
-	"github.com/bradrydzewski/my-app/types"
-	"github.com/bradrydzewski/my-app/types/check"
+	"github.com/harness/scm/internal/api/render"
+	"github.com/harness/scm/internal/store"
+	"github.com/harness/scm/types"
+	"github.com/harness/scm/types/check"
 
 	"github.com/go-chi/chi"
 	"github.com/gotidy/ptr"

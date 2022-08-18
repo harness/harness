@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/bradrydzewski/my-app/types"
-	"github.com/bradrydzewski/my-app/types/enum"
+	"github.com/harness/scm/types"
+	"github.com/harness/scm/types/enum"
 )
 
 // ParsePage extracts the page parameter from the url.

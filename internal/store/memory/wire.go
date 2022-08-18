@@ -5,8 +5,8 @@
 package memory
 
 import (
-	"github.com/bradrydzewski/my-app/internal/store"
 	"github.com/google/wire"
+	"github.com/harness/scm/internal/store"
 )
 
 // WireSet provides a wire set for this package

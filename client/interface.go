@@ -4,7 +4,7 @@
 
 package client
 
-import "github.com/bradrydzewski/my-app/types"
+import "github.com/harness/scm/types"
 
 // Client to access the remote APIs.
 type Client interface {

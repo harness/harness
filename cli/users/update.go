@@ -10,8 +10,8 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/bradrydzewski/my-app/cli/util"
-	"github.com/bradrydzewski/my-app/types"
+	"github.com/harness/scm/cli/util"
+	"github.com/harness/scm/types"
 
 	"github.com/dchest/uniuri"
 	"github.com/drone/funcmap"
