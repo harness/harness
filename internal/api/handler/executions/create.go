@@ -9,13 +9,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bradrydzewski/my-app/internal/api/render"
-	"github.com/bradrydzewski/my-app/internal/store"
-	"github.com/bradrydzewski/my-app/types"
-	"github.com/bradrydzewski/my-app/types/check"
 	"github.com/go-chi/chi"
 	"github.com/gosimple/slug"
 	"github.com/gotidy/ptr"
+	"github.com/harness/scm/internal/api/render"
+	"github.com/harness/scm/internal/store"
+	"github.com/harness/scm/types"
+	"github.com/harness/scm/types/check"
 	"github.com/rs/zerolog/hlog"
 )
 

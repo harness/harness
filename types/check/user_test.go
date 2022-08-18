@@ -7,7 +7,7 @@ package check
 import (
 	"testing"
 
-	"github.com/bradrydzewski/my-app/types"
+	"github.com/harness/scm/types"
 )
 
 func TestUser(t *testing.T) {

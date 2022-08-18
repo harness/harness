@@ -16,8 +16,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bradrydzewski/my-app/client"
-	"github.com/bradrydzewski/my-app/types"
+	"github.com/harness/scm/client"
+	"github.com/harness/scm/types"
 
 	"github.com/adrg/xdg"
 	"golang.org/x/crypto/ssh/terminal"

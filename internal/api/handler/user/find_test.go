@@ -9,8 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/bradrydzewski/my-app/internal/api/request"
-	"github.com/bradrydzewski/my-app/types"
+	"github.com/harness/scm/internal/api/request"
+	"github.com/harness/scm/types"
 
 	"github.com/google/go-cmp/cmp"
 )

@@ -7,7 +7,7 @@ package check
 import (
 	"errors"
 
-	"github.com/bradrydzewski/my-app/types"
+	"github.com/harness/scm/types"
 
 	"github.com/gosimple/slug"
 )

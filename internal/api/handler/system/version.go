@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bradrydzewski/my-app/version"
+	"github.com/harness/scm/version"
 )
 
 // HandleVersion writes the server version number

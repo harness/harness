@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bradrydzewski/my-app/internal/api/render"
-	"github.com/bradrydzewski/my-app/internal/api/request"
-	"github.com/bradrydzewski/my-app/internal/store"
-	"github.com/bradrydzewski/my-app/internal/token"
-	"github.com/bradrydzewski/my-app/types"
+	"github.com/harness/scm/internal/api/render"
+	"github.com/harness/scm/internal/api/request"
+	"github.com/harness/scm/internal/store"
+	"github.com/harness/scm/internal/token"
+	"github.com/harness/scm/types"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/rs/zerolog"

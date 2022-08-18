@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bradrydzewski/my-app/types"
+	"github.com/harness/scm/types"
 
 	"github.com/dgrijalva/jwt-go"
 )

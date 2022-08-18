@@ -5,41 +5,41 @@ items:
   kind: Deployment
   metadata:
     labels:
-      app: my-app
-    name: my-app
+      app: scm-app
+    name: scm-app
   spec:
     replicas: 1
     selector:
       matchLabels:
-        app: my-app
+        app: scm-app
     template:
       metadata:
         labels:
-          app: my-app
+          app: scm-app
       spec:
         containers:
-        - image: gcr.io/XXXXX-XXXXXXX/my-app
+        - image: gcr.io/XXXXX-XXXXXXX/scm-app
           imagePullPolicy: Never
-          name: my-app
+          name: scm-app
       
 - apiVersion: v1
   kind: Service
   metadata:
     labels:
-      app: my-app
-    name: my-app
+      app: scm-app
+    name: scm-app
   spec:
     ports:
     - port: 3000
       protocol: TCP
       targetPort: 3000
     selector:
-      app: my-app
+      app: scm-app
 
 - apiVersion: networking.k8s.io/v1beta1
   kind: Ingress
   metadata:
-    name: my-app
+    name: scm-app
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /$1
       kubernetes.io/ingress.class: "nginx"
@@ -49,7 +49,7 @@ items:
         paths:
         - path: /pm/(.*)
           backend:
-            serviceName: my-app
+            serviceName: scm-app
             servicePort: 3000
 
 kind: List

@@ -8,8 +8,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/bradrydzewski/my-app/internal/api/render"
-	"github.com/bradrydzewski/my-app/internal/api/request"
+	"github.com/harness/scm/internal/api/render"
+	"github.com/harness/scm/internal/api/request"
 )
 
 // SystemAdmin returns an http.HandlerFunc middleware that authorizes

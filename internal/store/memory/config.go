@@ -8,7 +8,7 @@ package memory
 import (
 	"context"
 
-	"github.com/bradrydzewski/my-app/types"
+	"github.com/harness/scm/types"
 )
 
 // New returns a new system configuration store.

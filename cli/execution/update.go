@@ -9,9 +9,9 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/bradrydzewski/my-app/cli/util"
-	"github.com/bradrydzewski/my-app/types"
 	"github.com/gotidy/ptr"
+	"github.com/harness/scm/cli/util"
+	"github.com/harness/scm/types"
 
 	"github.com/drone/funcmap"
 	"gopkg.in/alecthomas/kingpin.v2"

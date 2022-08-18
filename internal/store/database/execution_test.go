@@ -8,10 +8,10 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/bradrydzewski/my-app/internal/store"
-	"github.com/bradrydzewski/my-app/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/harness/scm/internal/store"
+	"github.com/harness/scm/types"
 	"github.com/jmoiron/sqlx"
 )
 

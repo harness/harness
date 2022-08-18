@@ -22,7 +22,7 @@ Build the server and command line tools:
 
 ```text
 $ go generate ./...
-$ go build -o release/my-app
+$ go build -o release/scm-app
 ```
 
 # Test
@@ -41,7 +41,7 @@ This project supports all operating systems and architectures supported by Go.  
 Start the server at `localhost:3000`
 
 ```text
-$ release/my-app server
+$ release/scm-app server
 ```
 
 # User Interface
@@ -59,53 +59,53 @@ This project includes simple command line tools for interacting with the system.
 Register a new user:
 
 ```text
-$ release/my-app register
+$ release/scm-app register
 ```
 
 Login to the application:
 
 ```text
-$ release/my-app login
+$ release/scm-app login
 ```
 
 Logout from the application:
 
 ```text
-$ release/my-app logout
+$ release/scm-app logout
 ```
 
 View your account details:
 
 ```text
-$ release/my-app account
+$ release/scm-app account
 ```
 
 Generate a peronsal access token:
 
 ```text
-$ release/my-app token
+$ release/scm-app token
 ```
 
 Create a pipeline:
 
 ```text
-$ release/my-app pipeline create <name>
+$ release/scm-app pipeline create <name>
 ```
 
 List pipelines:
 
 ```text
-$ release/my-app pipeline ls
+$ release/scm-app pipeline ls
 ```
 
 Debug and output http responses from the server:
 
 ```text
-$ DEBUG=true release/my-app pipeline ls
+$ DEBUG=true release/scm-app pipeline ls
 ```
 
 View all commands:
 
 ```text
-$ release/my-app --help
+$ release/scm-app --help
 ```

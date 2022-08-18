@@ -7,8 +7,8 @@ package projects
 import (
 	"net/http"
 
-	"github.com/bradrydzewski/my-app/internal/api/render/platform"
-	"github.com/bradrydzewski/my-app/types"
+	"github.com/harness/scm/internal/api/render/platform"
+	"github.com/harness/scm/types"
 )
 
 // standalone version of the product uses a single,

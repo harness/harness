@@ -7,9 +7,9 @@ package user
 import (
 	"net/http"
 
-	"github.com/bradrydzewski/my-app/internal/api/render"
-	"github.com/bradrydzewski/my-app/internal/api/render/platform"
-	"github.com/bradrydzewski/my-app/internal/api/request"
+	"github.com/harness/scm/internal/api/render"
+	"github.com/harness/scm/internal/api/render/platform"
+	"github.com/harness/scm/internal/api/request"
 )
 
 // HandleFind returns an http.HandlerFunc that writes json-encoded

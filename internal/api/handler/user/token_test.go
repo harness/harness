@@ -9,9 +9,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/bradrydzewski/my-app/internal/api/request"
-	"github.com/bradrydzewski/my-app/types"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/harness/scm/internal/api/request"
+	"github.com/harness/scm/types"
 
 	"github.com/golang/mock/gomock"
 )
