@@ -1,5 +1,8 @@
 import type React from 'react'
+import type * as History from 'history'
+import type { PermissionOptionsMenuButtonProps } from 'components/Permissions/PermissionsOptionsMenuButton'
 import type { LangLocale } from './framework/strings/languageLoader'
+import type { FeatureFlagMap, GitFiltersProps } from './utils/GovernanceUtils'
 
 /**
  * AppProps defines an interface for host (parent) and
@@ -7,7 +10,6 @@ import type { LangLocale } from './framework/strings/languageLoader'
  * of the child app to be customized from the parent app.
  *
  * Areas of customization:
- *
  *  - API token
  *  - Active user
  *  - Active locale (i18n)
@@ -59,15 +61,27 @@ export interface AppPathProps {
   policyIdentifier?: string
   policySetIdentifier?: string
   evaluationId?: string
-  pipeline?: string
-  execution?: string
+  repo?: string
+  branch?: string
 }
 
 /**
  * AppPropsHook defines a collection of React Hooks that application receives from
  * Platform integration.
  */
-export interface AppPropsHook {} // eslint-disable-line  @typescript-eslint/no-empty-interface
+export interface AppPropsHook {
+  usePermission(permissionRequest: any, deps?: Array<any>): Array<boolean>
+  useGetSchemaYaml(params: any, deps?: Array<any>): Record<string, any>
+  useFeatureFlags(): FeatureFlagMap
+  useGetToken(): any
+  useAppStore(): any
+  useGitSyncStore(): any
+  useSaveToGitDialog(props: { onSuccess: any; onClose: any; onProgessOverlayClose: any }): any
+  useGetListOfBranchesWithStatus(props: any): any
+  useAnyEnterpriseLicense(): boolean
+  useCurrentEnterpriseLicense(): boolean
+  useLicenseStore(): any
+} // eslint-disable-line  @typescript-eslint/no-empty-interface
 
 /**
  * AppPropsComponent defines a collection of React Components that application receives from
@@ -75,4 +89,20 @@ export interface AppPropsHook {} // eslint-disable-line  @typescript-eslint/no-e
  */
 export interface AppPropsComponent {
   NGBreadcrumbs: React.FC
+  RbacButton: React.FC
+  RbacOptionsMenuButton: React.FC<PermissionOptionsMenuButtonProps>
+  GitFilters: React.FC<GitFiltersProps>
+  GitSyncStoreProvider: React.FC
+  GitContextForm: React.FC<any>
+  NavigationCheck: React.FC<{
+    when?: boolean
+    textProps?: {
+      contentText?: string
+      titleText?: string
+      confirmButtonText?: string
+      cancelButtonText?: string
+    }
+    navigate: (path: string) => void
+    shouldBlockNavigation?: (location: History.Location) => boolean
+  }>
 }

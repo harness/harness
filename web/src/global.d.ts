@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare const __DEV__: boolean
-declare const __ON_PREM__: boolean
+declare const __ON_PREM__: booelan
 
 declare module '*.png' {
   const value: string
@@ -45,7 +45,7 @@ declare module '*.gql' {
 declare interface Window {
   apiUrl: string
   bugsnagClient?: any
-  APP_RUN_IN_STANDALONE_MODE?: boolean
+  STRIP_SCM_PREFIX?: boolean
 }
 
 declare const monaco: any

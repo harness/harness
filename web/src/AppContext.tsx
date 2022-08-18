@@ -13,7 +13,10 @@ const AppContext = React.createContext<AppContextProps>({
   components: {}
 })
 
-export const AppContextProvider: React.FC<{ value: AppProps }> = ({ value: initialValue, children }) => {
+export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(function AppContextProvider({
+  value: initialValue,
+  children
+}) {
   const [appStates, setAppStates] = useState<AppProps>(initialValue)
 
   return (
@@ -27,6 +30,6 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = ({ value: initi
       {children}
     </AppContext.Provider>
   )
-}
+})
 
 export const useAppContext: () => AppContextProps = () => useContext(AppContext)

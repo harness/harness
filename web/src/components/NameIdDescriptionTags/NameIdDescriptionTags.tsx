@@ -38,7 +38,7 @@ interface NameIdProps {
 
 export const NameId = (props: NameIdProps): JSX.Element => {
   const { getString } = useStrings()
-  const { identifierProps, nameLabel = getString('common.name'), inputGroupProps = {} } = props
+  const { identifierProps, nameLabel = getString('name'), inputGroupProps = {} } = props
   const newInputGroupProps = { placeholder: getString('common.namePlaceholder'), ...inputGroupProps }
   return (
     <FormInput.InputWithIdentifier inputLabel={nameLabel} inputGroupProps={newInputGroupProps} {...identifierProps} />
@@ -55,9 +55,7 @@ export const Description = (props: DescriptionComponentProps): JSX.Element => {
   return (
     <Container style={{ marginBottom: isDescriptionOpen ? '0' : 'var(--spacing-medium)' }}>
       <Label className={cx(Classes.LABEL, css.descriptionLabel)} data-tooltip-id={props.dataTooltipId}>
-        {isOptional
-          ? getString('common.optionalField', { name: getString('common.description') })
-          : getString('common.description')}
+        {isOptional ? getString('optionalField', { name: getString('description') }) : getString('description')}
         {props.dataTooltipId ? <HarnessDocTooltip useStandAlone={true} tooltipId={props.dataTooltipId} /> : null}
         {!isDescriptionOpen && (
           <Icon
@@ -79,7 +77,7 @@ export const Description = (props: DescriptionComponentProps): JSX.Element => {
           disabled={disabled}
           autoFocus={isDescriptionFocus}
           name="description"
-          placeholder={getString('common.descriptionPlaceholder')}
+          placeholder={getString('descriptionPlaceholder')}
           {...restDescriptionProps}
         />
       )}
@@ -95,9 +93,7 @@ export const Tags = (props: TagsComponentProps): JSX.Element => {
   return (
     <Container>
       <Label className={cx(Classes.LABEL, css.descriptionLabel)} data-tooltip-id={props.dataTooltipId}>
-        {isOptional
-          ? getString('common.optionalField', { name: getString('common.tagsLabel') })
-          : getString('common.tagsLabel')}
+        {isOptional ? getString('optionalField', { name: getString('tagsLabel') }) : getString('tagsLabel')}
         {props.dataTooltipId ? <HarnessDocTooltip useStandAlone={true} tooltipId={props.dataTooltipId} /> : null}
         {!isTagsOpen && (
           <Icon
@@ -125,7 +121,7 @@ function TagsDeprecated(props: TagsDeprecatedComponentProps): JSX.Element {
   return (
     <Container>
       <Label className={cx(Classes.LABEL, css.descriptionLabel)}>
-        {getString('common.tagsLabel')}
+        {getString('tagsLabel')}
         {!isTagsOpen && (
           <Icon
             className={css.editOpen}
@@ -159,15 +155,7 @@ function TagsDeprecated(props: TagsDeprecatedComponentProps): JSX.Element {
 
 export function NameIdDescriptionTags(props: NameIdDescriptionTagsProps): JSX.Element {
   const { getString } = useStrings()
-  const {
-    className,
-    identifierProps,
-    descriptionProps,
-    tagsProps,
-    formikProps,
-    inputGroupProps = {},
-    tooltipProps
-  } = props
+  const { className, identifierProps, descriptionProps, formikProps, inputGroupProps = {}, tooltipProps } = props
   const newInputGroupProps = { placeholder: getString('common.namePlaceholder'), ...inputGroupProps }
   return (
     <Container className={cx(css.main, className)}>
@@ -176,12 +164,6 @@ export function NameIdDescriptionTags(props: NameIdDescriptionTagsProps): JSX.El
         descriptionProps={descriptionProps}
         hasValue={!!formikProps?.values.description}
         dataTooltipId={tooltipProps?.dataTooltipId ? `${tooltipProps.dataTooltipId}_description` : undefined}
-      />
-      <Tags
-        tagsProps={tagsProps}
-        isOptional={tagsProps?.isOption}
-        hasValue={!isEmpty(formikProps?.values.tags)}
-        dataTooltipId={tooltipProps?.dataTooltipId ? `${tooltipProps.dataTooltipId}_tags` : undefined}
       />
     </Container>
   )

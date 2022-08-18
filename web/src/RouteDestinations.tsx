@@ -1,68 +1,69 @@
-import React from 'react'
-import { HashRouter, Route, Switch } from 'react-router-dom'
-import type { AppProps } from 'AppProps'
+/* eslint-disable react/display-name */
+import React, { useCallback } from 'react'
+import { HashRouter, Route, Switch, Redirect } from 'react-router-dom'
+// import { SignInPage } from 'pages/signin/SignInPage'
 import { NotFoundPage } from 'pages/404/NotFoundPage'
-import { routePath } from 'RouteUtils'
-import { RoutePath } from 'RouteDefinitions'
+import { SignIn } from 'pages/SignIn/SignIn'
+import { Register } from 'pages/Register/Register'
+import { routePath, standaloneRoutePath } from './RouteUtils'
+import { RoutePath } from './RouteDefinitions'
 
-import { Login } from './pages/Login/Login'
-import { Home } from './pages/Pipelines/Pipelines'
-import { Executions } from './pages/Executions/Executions'
-import { ExecutionSettings } from './pages/Execution/Settings'
-import { PipelineSettings } from './pages/Pipeline/Settings'
-import { Account } from './pages/Account/Account'
-import { SideNav } from './components/SideNav/SideNav'
+export const RouteDestinations: React.FC<{ standalone: boolean }> = React.memo(({ standalone }) => {
+  const Destinations: React.FC = useCallback(
+    () => (
+      <Switch>
+        {standalone && (
+          <>
+            <Route path={routePath(RoutePath.SIGNIN)}>
+              <SignIn />
+            </Route>
+            <Route path={routePath(RoutePath.SIGNUP)}>
+              <SignIn />
+            </Route>
+            <Route path={routePath(RoutePath.REGISTER)}>
+              <Register />
+            </Route>
+          </>
+        )}
 
-export const RouteDestinations: React.FC<Pick<AppProps, 'standalone'>> = ({ standalone }) => {
-  // TODO: Add a generic Auth Wrapper
-
-  const Destinations: React.FC = () => (
-    <Switch>
-      {standalone && (
-        <Route path={routePath(RoutePath.REGISTER)}>
-          <Login />
+        <Route path={routePath(RoutePath.POLICY_DASHBOARD)}>
+          <h1>Overview</h1>
         </Route>
-      )}
-      {standalone && (
-        <Route path={routePath(RoutePath.LOGIN)}>
-          <Login />
+
+        <Route path={routePath(RoutePath.POLICY_NEW)}>
+          <h1>New</h1>
         </Route>
-      )}
 
-      <Route exact path={routePath(RoutePath.PIPELINES)}>
-        <SideNav>
-          <Home />
-        </SideNav>
-      </Route>
+        <Route path={routePath(RoutePath.POLICY_VIEW)}>
+          <h1>View</h1>
+        </Route>
 
-      <Route exact path={routePath(RoutePath.PIPELINE)}>
-        <SideNav>
-          <Executions />
-        </SideNav>
-      </Route>
+        <Route exact path={routePath(RoutePath.POLICY_EDIT)}>
+          <h1>Edit</h1>
+        </Route>
 
-      <Route exact path={routePath(RoutePath.PIPELINE_SETTINGS)}>
-        <SideNav>
-          <PipelineSettings />
-        </SideNav>
-      </Route>
+        <Route path={routePath(RoutePath.POLICY_LISTING)}>
+          <h1>Listing</h1>
+        </Route>
 
-      <Route exact path={routePath(RoutePath.PIPELINE_EXECUTION_SETTINGS)}>
-        <SideNav>
-          <ExecutionSettings />
-        </SideNav>
-      </Route>
+        <Route exact path={routePath(RoutePath.POLICY_SETS_LISTING)}>
+          <h1>Listing 2</h1>
+        </Route>
 
-      <Route exact path={routePath(RoutePath.ACCOUNT)}>
-        <SideNav>
-          <Account />
-        </SideNav>
-      </Route>
+        <Route path={routePath(RoutePath.POLICY_SETS_DETAIL)}>
+          <h1>Detail 1</h1>
+        </Route>
 
-      <Route path="/">
-        <NotFoundPage />
-      </Route>
-    </Switch>
+        <Route path={routePath(RoutePath.POLICY_EVALUATION_DETAIL)}>
+          <h1>Detail 2</h1>
+        </Route>
+
+        <Route path="/">
+          {standalone ? <Redirect to={standaloneRoutePath(RoutePath.POLICY_DASHBOARD)} /> : <NotFoundPage />}
+        </Route>
+      </Switch>
+    ),
+    [standalone]
   )
 
   return standalone ? (
@@ -72,4 +73,4 @@ export const RouteDestinations: React.FC<Pick<AppProps, 'standalone'>> = ({ stan
   ) : (
     <Destinations />
   )
-}
+})

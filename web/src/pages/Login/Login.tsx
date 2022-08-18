@@ -12,7 +12,7 @@ import {
   Layout,
   useToaster
 } from '@harness/uicore'
-import { get } from 'lodash'
+import { get } from 'lodash-es'
 import { useAPIToken } from 'hooks/useAPIToken'
 import { useOnLogin, useOnRegister } from 'services/pm'
 import { useStrings } from 'framework/strings'
@@ -43,23 +43,21 @@ export const Login: React.FC = () => {
 
     if (pathname === '/login') {
       mutate(formData as unknown as void)
-        .then(data => {
-          setToken(get(data, 'access_token' as string))
-          history.replace(routes.toPipelines())
+        .then(_data => {
+          setToken(get(_data, 'access_token' as string))
+          history.replace(routes.toPolicyDashboard())
         })
         .catch(error => {
           showError(`Error: ${error}`)
-          console.error({ error })
         })
     } else {
       mutateRegister(formData as unknown as void)
-        .then(data => {
-          setToken(get(data, 'access_token' as string))
-          history.replace(routes.toPipelines())
+        .then(_data => {
+          setToken(get(_data, 'access_token' as string))
+          history.replace(routes.toPolicyDashboard())
         })
         .catch(error => {
           showError(`Error: ${error}`)
-          console.error({ error })
         })
     }
   }
@@ -76,7 +74,7 @@ export const Login: React.FC = () => {
             <HarnessLogo height={25} />
           </Container>
           <Text font={{ size: 'large', weight: 'bold' }} color={Color.BLACK}>
-            {pathname === '/login' ? getString('signin') : getString('signUp')}
+            {pathname === '/login' ? getString('signIn') : getString('signUp')}
           </Text>
           <Text font={{ size: 'medium' }} color={Color.BLACK} margin={{ top: 'xsmall' }}>
             and get ship done.
@@ -88,10 +86,10 @@ export const Login: React.FC = () => {
               formName="loginPageForm"
               onSubmit={handleSubmit}>
               <FormikForm>
-                <FormInput.Text name="email" label={getString('common.email')} />
+                <FormInput.Text name="email" label={getString('email')} />
                 <FormInput.Text name="password" label={getString('password')} inputGroup={{ type: 'password' }} />
                 <Button type="submit" intent="primary" width="100%">
-                  {pathname === '/login' ? getString('signin') : getString('signUp')}
+                  {pathname === '/login' ? getString('signIn') : getString('signUp')}
                 </Button>
               </FormikForm>
             </Formik>
@@ -99,8 +97,8 @@ export const Login: React.FC = () => {
 
           <Layout.Horizontal margin={{ top: 'xxxlarge' }} spacing="xsmall">
             <Text>{pathname === '/login' ? getString('noAccount') : getString('existingAccount')}</Text>
-            <Link to={pathname === '/login' ? routes.toRegister() : routes.toLogin()}>
-              {pathname === '/login' ? getString('signUp') : getString('signin')}
+            <Link to={pathname === '/login' ? routes.toRegister() : routes.toSignIn()}>
+              {pathname === '/login' ? getString('signUp') : getString('signIn')}
             </Link>
           </Layout.Horizontal>
         </div>
