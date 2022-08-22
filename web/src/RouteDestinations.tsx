@@ -7,8 +7,6 @@ import { routePath } from './RouteUtils'
 import { RoutePath } from './RouteDefinitions'
 
 export const RouteDestinations: React.FC<{ standalone: boolean }> = React.memo(({ standalone }) => {
-  // console.log({ standalone, signin: routePath(standalone, RoutePath.DASHBOARD) })
-
   const Destinations: React.FC = useCallback(
     () => (
       <Switch>

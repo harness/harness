@@ -16,18 +16,16 @@ import { StringsContextProvider } from './framework/strings/StringsContextProvid
 
 FocusStyleManager.onlyShowFocusOnTabs()
 
-const App: React.FC<AppProps> = props => {
-  const {
-    standalone = false,
-    accountId = '',
-    baseRoutePath = '',
-    lang = 'en',
-    apiToken,
-    on401 = handle401,
-    children,
-    hooks = {},
-    components = {}
-  } = props
+const App: React.FC<AppProps> = ({
+  standalone = false,
+  accountId = '',
+  lang = 'en',
+  apiToken,
+  on401 = handle401,
+  children,
+  hooks = {},
+  components = {}
+}) => {
   const [strings, setStrings] = useState<LanguageRecord>()
   const [token, setToken] = useAPIToken(apiToken)
   const getRequestOptions = useCallback((): Partial<RequestInit> => {
@@ -47,7 +45,7 @@ const App: React.FC<AppProps> = props => {
   return strings ? (
     <StringsContextProvider initialStrings={strings}>
       <AppErrorBoundary>
-        <AppContextProvider value={{ standalone, baseRoutePath, accountId, lang, on401, hooks, components }}>
+        <AppContextProvider value={{ standalone, accountId, lang, on401, hooks, components }}>
           <RestfulProvider
             base="/"
             requestOptions={getRequestOptions}

@@ -27,9 +27,6 @@ export interface AppProps {
   /** App children. When provided, children is a remote view which will be mounted under App contexts */
   children?: React.ReactNode
 
-  /** Base Route information where app is mounted */
-  baseRoutePath?: string
-
   /** Active account id when app is embedded */
   accountId?: string
 
