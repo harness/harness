@@ -9,13 +9,6 @@ import './App.scss'
 window.STRIP_SCM_PREFIX = true
 
 ReactDOM.render(
-  <App
-    standalone
-    accountId="default"
-    apiToken="default"
-    baseRoutePath="/account/default/settings/governance"
-    hooks={{}}
-    components={{}}
-  />,
+  <App standalone accountId="default" apiToken="default" hooks={{}} components={{}} />,
   document.getElementById('react-root')
 )
