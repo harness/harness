@@ -6,7 +6,6 @@ import { FocusStyleManager } from '@blueprintjs/core'
 import { tooltipDictionary } from '@harness/ng-tooltip'
 import AppErrorBoundary from 'framework/AppErrorBoundary/AppErrorBoundary'
 import { AppContextProvider } from 'AppContext'
-import { setBaseRouteInfo } from 'RouteUtils'
 import type { AppProps } from 'AppProps'
 import { buildResfulReactRequestOptions, handle401 } from 'AppUtils'
 import { RouteDestinations } from 'RouteDestinations'
@@ -34,7 +33,6 @@ const App: React.FC<AppProps> = props => {
   const getRequestOptions = useCallback((): Partial<RequestInit> => {
     return buildResfulReactRequestOptions(hooks.useGetToken?.() || apiToken || 'default')
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  setBaseRouteInfo(accountId, baseRoutePath)
 
   useEffect(() => {
     languageLoader(lang).then(setStrings)

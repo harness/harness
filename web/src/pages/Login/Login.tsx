@@ -45,7 +45,7 @@ export const Login: React.FC = () => {
       mutate(formData as unknown as void)
         .then(_data => {
           setToken(get(_data, 'access_token' as string))
-          history.replace(routes.toPolicyDashboard())
+          history.replace(routes.toDashboard())
         })
         .catch(error => {
           showError(`Error: ${error}`)
@@ -54,7 +54,7 @@ export const Login: React.FC = () => {
       mutateRegister(formData as unknown as void)
         .then(_data => {
           setToken(get(_data, 'access_token' as string))
-          history.replace(routes.toPolicyDashboard())
+          history.replace(routes.toDashboard())
         })
         .catch(error => {
           showError(`Error: ${error}`)
@@ -89,16 +89,16 @@ export const Login: React.FC = () => {
                 <FormInput.Text name="email" label={getString('email')} />
                 <FormInput.Text name="password" label={getString('password')} inputGroup={{ type: 'password' }} />
                 <Button type="submit" intent="primary" width="100%">
-                  {pathname === '/login' ? getString('signIn') : getString('signUp')}
+                  {pathname === '/signin' ? getString('signIn') : getString('signUp')}
                 </Button>
               </FormikForm>
             </Formik>
           </Container>
 
           <Layout.Horizontal margin={{ top: 'xxxlarge' }} spacing="xsmall">
-            <Text>{pathname === '/login' ? getString('noAccount') : getString('existingAccount')}</Text>
-            <Link to={pathname === '/login' ? routes.toRegister() : routes.toSignIn()}>
-              {pathname === '/login' ? getString('signUp') : getString('signIn')}
+            <Text>{pathname === '/signin' ? getString('noAccount') : getString('existingAccount')}</Text>
+            <Link to={pathname === '/signin' ? routes.toSignUp() : routes.toSignIn()}>
+              {pathname === '/signin' ? getString('signUp') : getString('signIn')}
             </Link>
           </Layout.Horizontal>
         </div>

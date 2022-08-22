@@ -2,7 +2,6 @@ import type React from 'react'
 import type * as History from 'history'
 import type { PermissionOptionsMenuButtonProps } from 'components/Permissions/PermissionsOptionsMenuButton'
 import type { LangLocale } from './framework/strings/languageLoader'
-import type { FeatureFlagMap, GitFiltersProps } from './utils/GovernanceUtils'
 
 /**
  * AppProps defines an interface for host (parent) and
@@ -72,7 +71,6 @@ export interface AppPathProps {
 export interface AppPropsHook {
   usePermission(permissionRequest: any, deps?: Array<any>): Array<boolean>
   useGetSchemaYaml(params: any, deps?: Array<any>): Record<string, any>
-  useFeatureFlags(): FeatureFlagMap
   useGetToken(): any
   useAppStore(): any
   useGitSyncStore(): any
@@ -91,7 +89,6 @@ export interface AppPropsComponent {
   NGBreadcrumbs: React.FC
   RbacButton: React.FC
   RbacOptionsMenuButton: React.FC<PermissionOptionsMenuButtonProps>
-  GitFilters: React.FC<GitFiltersProps>
   GitSyncStoreProvider: React.FC
   GitContextForm: React.FC<any>
   NavigationCheck: React.FC<{
