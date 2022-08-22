@@ -3,7 +3,7 @@ import cx from 'classnames'
 import moment from 'moment'
 import { Container, Icon, Text } from '@harness/uicore'
 import { Color } from '@harness/design-system'
-import { useGetTrialInfo } from 'utils/GovernanceUtils'
+import { useGetTrialInfo } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import css from './TrialBanner.module.scss'
 

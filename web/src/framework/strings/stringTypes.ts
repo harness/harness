@@ -3,53 +3,12 @@
  * Use the command `yarn strings` to regenerate this file.
  */
 export interface StringsMap {
-  AZ09: string
-  ZA90: string
   action: string
-  all: string
   apply: string
   back: string
   'banner.expired': string
   'banner.expiryCountdown': string
   cancel: string
-  clearFilter: string
-  'common.namePlaceholder': string
-  'common.policies': string
-  'common.policiesSets.created': string
-  'common.policiesSets.enforced': string
-  'common.policiesSets.entity': string
-  'common.policiesSets.evaluationCriteria': string
-  'common.policiesSets.event': string
-  'common.policiesSets.newPolicyset': string
-  'common.policiesSets.noPolicySet': string
-  'common.policiesSets.noPolicySetDescription': string
-  'common.policiesSets.noPolicySetResult': string
-  'common.policiesSets.noPolicySetTitle': string
-  'common.policiesSets.noPolicySets': string
-  'common.policiesSets.policySetSearch': string
-  'common.policiesSets.scope': string
-  'common.policiesSets.stepOne.validId': string
-  'common.policiesSets.stepOne.validIdRegex': string
-  'common.policiesSets.stepOne.validName': string
-  'common.policiesSets.table.enforced': string
-  'common.policiesSets.table.entityType': string
-  'common.policiesSets.table.name': string
-  'common.policiesSets.updated': string
-  'common.policy.evaluations': string
-  'common.policy.newPolicy': string
-  'common.policy.noPolicy': string
-  'common.policy.noPolicyEvalResult': string
-  'common.policy.noPolicyEvalResultTitle': string
-  'common.policy.noPolicyResult': string
-  'common.policy.noPolicyTitle': string
-  'common.policy.noSelectInput': string
-  'common.policy.permission.noEdit': string
-  'common.policy.policySearch': string
-  'common.policy.policysets': string
-  'common.policy.table.createdAt': string
-  'common.policy.table.lastModified': string
-  'common.policy.table.name': string
-  confirm: string
   continue: string
   delete: string
   description: string
@@ -57,83 +16,19 @@ export interface StringsMap {
   details: string
   edit: string
   email: string
-  entity: string
-  'evaluation.evaluatedPoliciesCount': string
-  'evaluation.onePolicyEvaluated': string
   executionsText: string
   existingAccount: string
   failed: string
-  fileOverwrite: string
   finish: string
-  'governance.clearOutput': string
-  'governance.deleteConfirmation': string
-  'governance.deleteDone': string
-  'governance.deletePolicySetConfirmation': string
-  'governance.deletePolicySetDone': string
-  'governance.deletePolicySetTitle': string
-  'governance.deleteTitle': string
-  'governance.editPolicy': string
-  'governance.editPolicyMetadataTitle': string
-  'governance.emptyPolicySet': string
-  'governance.evaluatedOn': string
-  'governance.evaluatedTime': string
-  'governance.evaluationEmpty': string
-  'governance.evaluations': string
-  'governance.event': string
-  'governance.failureHeading': string
-  'governance.failureHeadingEvaluationDetail': string
-  'governance.failureModalTitle': string
-  'governance.formatInput': string
-  'governance.inputFailedEvaluation': string
-  'governance.inputSuccededEvaluation': string
-  'governance.noEvaluationForPipeline': string
-  'governance.noPolicySetForPipeline': string
-  'governance.onCreate': string
-  'governance.onRun': string
-  'governance.onSave': string
-  'governance.onStep': string
-  'governance.policyAccountCount': string
-  'governance.policyDescription': string
-  'governance.policyIdentifier': string
-  'governance.policyName': string
-  'governance.policyOrgCount': string
-  'governance.policyProjectCount': string
-  'governance.policySetGroup': string
-  'governance.policySetGroupAccount': string
-  'governance.policySetGroupOrg': string
-  'governance.policySetGroupProject': string
-  'governance.policySetName': string
-  'governance.policySets': string
-  'governance.policySetsApplied': string
-  'governance.selectInput': string
-  'governance.selectSamplePolicy': string
-  'governance.successHeading': string
-  'governance.viewPolicy': string
-  'governance.warn': string
-  'governance.warning': string
-  'governance.warningHeading': string
-  'governance.warningHeadingEvaluationDetail': string
-  'governance.wizard.fieldArray': string
-  'governance.wizard.policySelector.account': string
-  'governance.wizard.policySelector.org': string
-  'governance.wizard.policySelector.selectPolicy': string
-  'governance.wizard.policyToEval': string
-  input: string
-  lastUpdated: string
   name: string
-  navigationCheckText: string
-  navigationCheckTitle: string
+  namePlaceholder: string
   no: string
   noAccount: string
-  noSearchResultsFound: string
   optionalField: string
   outputLabel: string
   overview: string
   pageNotFound: string
   password: string
-  samplePolicies: string
-  saveOverwrite: string
-  search: string
   signIn: string
   signUp: string
   source: string
@@ -141,12 +36,5 @@ export interface StringsMap {
   success: string
   tagsLabel: string
   type: string
-  useSample: string
-  'validation.identifierIsRequired': string
-  'validation.identifierRequired': string
-  'validation.nameRequired': string
-  'validation.policySaveButtonMessage': string
-  'validation.thisIsARequiredField': string
-  'validation.validIdRegex': string
   yes: string
 }

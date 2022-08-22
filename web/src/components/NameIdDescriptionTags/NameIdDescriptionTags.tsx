@@ -39,7 +39,7 @@ interface NameIdProps {
 export const NameId = (props: NameIdProps): JSX.Element => {
   const { getString } = useStrings()
   const { identifierProps, nameLabel = getString('name'), inputGroupProps = {} } = props
-  const newInputGroupProps = { placeholder: getString('common.namePlaceholder'), ...inputGroupProps }
+  const newInputGroupProps = { placeholder: getString('namePlaceholder'), ...inputGroupProps }
   return (
     <FormInput.InputWithIdentifier inputLabel={nameLabel} inputGroupProps={newInputGroupProps} {...identifierProps} />
   )
@@ -156,7 +156,7 @@ function TagsDeprecated(props: TagsDeprecatedComponentProps): JSX.Element {
 export function NameIdDescriptionTags(props: NameIdDescriptionTagsProps): JSX.Element {
   const { getString } = useStrings()
   const { className, identifierProps, descriptionProps, formikProps, inputGroupProps = {}, tooltipProps } = props
-  const newInputGroupProps = { placeholder: getString('common.namePlaceholder'), ...inputGroupProps }
+  const newInputGroupProps = { placeholder: getString('namePlaceholder'), ...inputGroupProps }
   return (
     <Container className={cx(css.main, className)}>
       <NameId identifierProps={identifierProps} inputGroupProps={newInputGroupProps} />
@@ -184,7 +184,7 @@ export function NameIdDescriptionTagsDeprecated<T>(props: NameIdDescriptionTagsD
 export function NameIdDescription(props: NameIdDescriptionProps): JSX.Element {
   const { getString } = useStrings()
   const { className, identifierProps, descriptionProps, formikProps, inputGroupProps = {} } = props
-  const newInputGroupProps = { placeholder: getString('common.namePlaceholder'), ...inputGroupProps }
+  const newInputGroupProps = { placeholder: getString('namePlaceholder'), ...inputGroupProps }
 
   return (
     <Container className={cx(css.main, className)}>
