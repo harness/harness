@@ -6,7 +6,9 @@ import { SignUp } from 'pages/SignUp/SignUp'
 import { routePath } from './RouteUtils'
 import { RoutePath } from './RouteDefinitions'
 
-export const RouteDestinations: React.FC<{ standalone: boolean }> = React.memo(({ standalone }) => {
+export const RouteDestinations: React.FC<{ standalone: boolean }> = React.memo(function RouteDestinations({
+  standalone
+}) {
   const Destinations: React.FC = useCallback(
     () => (
       <Switch>

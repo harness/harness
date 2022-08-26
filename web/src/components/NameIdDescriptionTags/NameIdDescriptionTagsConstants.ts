@@ -2,6 +2,7 @@ import type { TagInputProps } from '@harness/uicore'
 import type { ITagInputProps, IInputGroupProps } from '@blueprintjs/core'
 import type { InputWithIdentifierProps } from '@harness/uicore/dist/components/InputWithIdentifier/InputWithIdentifier'
 import type { FormikProps } from 'formik'
+import type { Unknown } from 'utils/Utils'
 
 export interface DescriptionProps {
   placeholder?: string
@@ -34,7 +35,7 @@ export interface NameIdDescriptionTagsDeprecatedProps<T> {
   identifierProps?: Omit<InputWithIdentifierProps, 'formik'>
   descriptionProps?: DescriptionProps
   tagInputProps?: TagInputProps<T>
-  formikProps: FormikProps<any>
+  formikProps: FormikProps<Unknown>
   className?: string
 }
 
@@ -43,5 +44,5 @@ export interface NameIdDescriptionProps {
   inputGroupProps?: IInputGroupProps
   descriptionProps?: DescriptionProps
   className?: string
-  formikProps: Omit<FormikProps<any>, 'tags'>
+  formikProps: Omit<FormikProps<Unknown>, 'tags'>
 }

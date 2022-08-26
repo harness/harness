@@ -6,6 +6,7 @@ import { Classes, IInputGroupProps, ITagInputProps } from '@blueprintjs/core'
 import cx from 'classnames'
 import type { FormikProps } from 'formik'
 import { useStrings } from 'framework/strings'
+import type { Unknown } from 'utils/Utils'
 import type {
   DescriptionComponentProps,
   DescriptionProps,
@@ -23,7 +24,7 @@ export interface NameIdDescriptionTagsProps {
   tagsProps?: Partial<ITagInputProps> & {
     isOption?: boolean
   }
-  formikProps: FormikProps<any>
+  formikProps: FormikProps<Unknown>
   className?: string
   tooltipProps?: DataTooltipInterface
 }

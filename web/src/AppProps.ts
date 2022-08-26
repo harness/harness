@@ -1,6 +1,7 @@
 import type React from 'react'
 import type * as History from 'history'
 import type { PermissionOptionsMenuButtonProps } from 'components/Permissions/PermissionsOptionsMenuButton'
+import type { Unknown } from 'utils/Utils'
 import type { LangLocale } from './framework/strings/languageLoader'
 
 /**
@@ -66,16 +67,16 @@ export interface AppPathProps {
  * Platform integration.
  */
 export interface AppPropsHook {
-  usePermission(permissionRequest: any, deps?: Array<any>): Array<boolean>
-  useGetSchemaYaml(params: any, deps?: Array<any>): Record<string, any>
-  useGetToken(): any
-  useAppStore(): any
-  useGitSyncStore(): any
-  useSaveToGitDialog(props: { onSuccess: any; onClose: any; onProgessOverlayClose: any }): any
-  useGetListOfBranchesWithStatus(props: any): any
+  usePermission(permissionRequest: Unknown, deps?: Array<Unknown>): Array<boolean>
+  useGetSchemaYaml(params: Unknown, deps?: Array<Unknown>): Record<string, Unknown>
+  useGetToken(): Unknown
+  useAppStore(): Unknown
+  useGitSyncStore(): Unknown
+  useSaveToGitDialog(props: { onSuccess: Unknown; onClose: Unknown; onProgessOverlayClose: Unknown }): Unknown
+  useGetListOfBranchesWithStatus(props: Unknown): Unknown
   useAnyEnterpriseLicense(): boolean
   useCurrentEnterpriseLicense(): boolean
-  useLicenseStore(): any
+  useLicenseStore(): Unknown
 } // eslint-disable-line  @typescript-eslint/no-empty-interface
 
 /**
@@ -87,7 +88,7 @@ export interface AppPropsComponent {
   RbacButton: React.FC
   RbacOptionsMenuButton: React.FC<PermissionOptionsMenuButtonProps>
   GitSyncStoreProvider: React.FC
-  GitContextForm: React.FC<any>
+  GitContextForm: React.FC<Unknown>
   NavigationCheck: React.FC<{
     when?: boolean
     textProps?: {

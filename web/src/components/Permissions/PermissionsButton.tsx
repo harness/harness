@@ -1,9 +1,10 @@
 import React from 'react'
 import { Button, ButtonProps } from '@harness/uicore'
 import { useAppContext } from 'AppContext'
+import type { Unknown } from 'utils/Utils'
 
 interface PermissionButtonProps extends ButtonProps {
-  permission?: any
+  permission?: Unknown
 }
 
 export const PermissionsButton: React.FC<PermissionButtonProps> = (props: PermissionButtonProps) => {
