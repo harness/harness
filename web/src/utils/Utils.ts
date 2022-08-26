@@ -5,6 +5,8 @@ import moment from 'moment'
 import { useEffect } from 'react'
 import { useAppContext } from 'AppContext'
 
+export type Unknown = any // eslint-disable-line @typescript-eslint/no-explicit-any
+
 /** This utility shows a toaster without being bound to any component.
  * It's useful to show cross-page/component messages */
 export function showToaster(message: string, props?: Partial<IToastProps>): IToaster {
@@ -99,7 +101,7 @@ export const useAnyTrialLicense = (): boolean => {
   return !!anyTrialEntitlements
 }
 
-export const useGetTrialInfo = (): any => {
+export const useGetTrialInfo = (): Unknown => {
   const {
     hooks: { useLicenseStore = () => ({}) }
   } = useAppContext()

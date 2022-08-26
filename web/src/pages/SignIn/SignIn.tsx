@@ -1,4 +1,4 @@
-import { useHistory } from 'react-router-dom'
+// import { useHistory } from 'react-router-dom'
 import React, { useCallback, useState } from 'react'
 // import { get } from 'lodash-es'
 import { Button, Container, Layout, Text, TextInput } from '@harness/uicore'
@@ -9,7 +9,7 @@ import { useOnLogin } from 'services/pm'
 
 export const SignIn: React.FC = () => {
   const { getString } = useStrings()
-  const history = useHistory()
+  // const history = useHistory()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   // const [, setToken] = useAPIToken()
@@ -30,7 +30,7 @@ export const SignIn: React.FC = () => {
         // eslint-disable-next-line no-console
         console.error({ error })
       })
-  }, [mutate, username, password, history])
+  }, [mutate, username, password])
 
   return (
     <Layout.Vertical>
