@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/harness/scm/internal/api/render"
+	"github.com/harness/gitness/internal/api/render"
 )
 
 // RenderResource is a helper function that renders a single

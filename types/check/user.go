@@ -7,7 +7,7 @@ package check
 import (
 	"errors"
 
-	"github.com/harness/scm/types"
+	"github.com/harness/gitness/types"
 )
 
 var (

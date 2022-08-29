@@ -7,7 +7,7 @@ package server
 import (
 	"os"
 
-	"github.com/harness/scm/types"
+	"github.com/harness/gitness/types"
 
 	"github.com/kelseyhightower/envconfig"
 )

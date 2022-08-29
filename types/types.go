@@ -8,7 +8,7 @@ package types
 import (
 	"time"
 
-	"github.com/harness/scm/types/enum"
+	"github.com/harness/gitness/types/enum"
 )
 
 type (

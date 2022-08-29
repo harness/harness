@@ -26,7 +26,7 @@ tasks:
           --detach
           --rm
           postgres:9-alpine
-      - cmd: go test -v -cover github.com/harness/scm/internal/store/database
+      - cmd: go test -v -cover github.com/harness/gitness/internal/store/database
       - cmd: docker kill postgres
         silent: true
 
@@ -45,16 +45,16 @@ tasks:
     - rm -rf web/node_modules
     - rm -rf web/.env.development.local
     - rm -rf web/swagger.yaml
-    - rm -rf scm-app
+    - rm -rf gitness
     - rm -rf database.sqlite3
     - rm -rf .env
 
   docker-build:
     cmds:
-    - docker build -t harness/scm:linux-amd64 -f docker/Dockerfile .
+    - docker build -t harness/gitness:linux-amd64 -f docker/Dockerfile .
 
   docker-build-all:
     cmds:
-    - docker build -t harness/scm:linux-amd64 -f docker/Dockerfile .
-    - docker build -t harness/scm:linux-arm64 -f docker/Dockerfile.linux.arm64 .
-    - docker build -t harness/scm:linux-arm   -f docker/Dockerfile.linux.arm .
+    - docker build -t harness/gitness:linux-amd64 -f docker/Dockerfile .
+    - docker build -t harness/gitness:linux-arm64 -f docker/Dockerfile.linux.arm64 .
+    - docker build -t harness/gitness:linux-arm   -f docker/Dockerfile.linux.arm .

@@ -1,4 +1,4 @@
-module github.com/harness/scm
+module github.com/harness/gitness
 
 go 1.17
 

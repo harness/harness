@@ -7,8 +7,8 @@ package openapi
 import (
 	"net/http"
 
-	"github.com/harness/scm/internal/api/render"
-	"github.com/harness/scm/types"
+	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/types"
 
 	"github.com/swaggest/openapi-go/openapi3"
 )

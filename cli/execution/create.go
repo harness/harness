@@ -9,8 +9,8 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/harness/scm/cli/util"
-	"github.com/harness/scm/types"
+	"github.com/harness/gitness/cli/util"
+	"github.com/harness/gitness/types"
 
 	"github.com/drone/funcmap"
 	"gopkg.in/alecthomas/kingpin.v2"

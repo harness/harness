@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/harness/scm/internal/api/openapi"
+	"github.com/harness/gitness/internal/api/openapi"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

@@ -8,5 +8,5 @@ EXPOSE 443
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 ENV GODEBUG netdns=go
-ADD release/linux/amd64/scm-app /bin/
-ENTRYPOINT ["/bin/scm-app", "server"]
+ADD release/linux/amd64/gitness /bin/
+ENTRYPOINT ["/bin/gitness", "server"]

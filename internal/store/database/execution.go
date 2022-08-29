@@ -7,8 +7,8 @@ package database
 import (
 	"context"
 
-	"github.com/harness/scm/internal/store"
-	"github.com/harness/scm/types"
+	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 
 	"github.com/jmoiron/sqlx"
 )

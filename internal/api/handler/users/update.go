@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/gotidy/ptr"
-	"github.com/harness/scm/internal/api/render"
-	"github.com/harness/scm/internal/store"
-	"github.com/harness/scm/types"
-	"github.com/harness/scm/types/check"
+	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/rs/zerolog/hlog"
 
 	"github.com/go-chi/chi"

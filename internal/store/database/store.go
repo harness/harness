@@ -10,7 +10,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/harness/scm/internal/store/database/migrate"
+	"github.com/harness/gitness/internal/store/database/migrate"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"

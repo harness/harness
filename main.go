@@ -5,7 +5,7 @@
 package main
 
 import (
-	"github.com/harness/scm/cli"
+	"github.com/harness/gitness/cli"
 
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"

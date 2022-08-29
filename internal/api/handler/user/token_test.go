@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/harness/scm/internal/api/request"
-	"github.com/harness/scm/types"
+	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/types"
 
 	"github.com/golang/mock/gomock"
 )

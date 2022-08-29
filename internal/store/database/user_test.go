@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/harness/scm/internal/store"
-	"github.com/harness/scm/types"
+	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
