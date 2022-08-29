@@ -5,7 +5,7 @@ export const getConfig = (str: string): string => {
   // NOTE: Replace /^pm\// with your service prefixes when running in standalone mode
   // I.e: 'pm/api/v1' -> 'api/v1' (standalone)
   //                  -> 'pm/api/v1' (embedded inside Harness platform)
-  if (window.STRIP_SCM_PREFIX) {
+  if (window.STRIP_GITNESS_PREFIX) {
     str = str.replace(/^pm\//, '')
   }
 
