@@ -6,7 +6,7 @@ package memory
 
 import (
 	"github.com/google/wire"
-	"github.com/harness/scm/internal/store"
+	"github.com/harness/gitness/internal/store"
 )
 
 // WireSet provides a wire set for this package

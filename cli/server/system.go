@@ -5,8 +5,8 @@
 package server
 
 import (
-	"github.com/harness/scm/internal/cron"
-	"github.com/harness/scm/internal/server"
+	"github.com/harness/gitness/internal/cron"
+	"github.com/harness/gitness/internal/server"
 )
 
 // system stores high level system sub-routines.

@@ -5,41 +5,41 @@ items:
   kind: Deployment
   metadata:
     labels:
-      app: scm-app
-    name: scm-app
+      app: gitness
+    name: gitness
   spec:
     replicas: 1
     selector:
       matchLabels:
-        app: scm-app
+        app: gitness
     template:
       metadata:
         labels:
-          app: scm-app
+          app: gitness
       spec:
         containers:
-        - image: gcr.io/XXXXX-XXXXXXX/scm-app
+        - image: gcr.io/XXXXX-XXXXXXX/gitness
           imagePullPolicy: Never
-          name: scm-app
+          name: gitness
       
 - apiVersion: v1
   kind: Service
   metadata:
     labels:
-      app: scm-app
-    name: scm-app
+      app: gitness
+    name: gitness
   spec:
     ports:
     - port: 3000
       protocol: TCP
       targetPort: 3000
     selector:
-      app: scm-app
+      app: gitness
 
 - apiVersion: networking.k8s.io/v1beta1
   kind: Ingress
   metadata:
-    name: scm-app
+    name: gitness
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /$1
       kubernetes.io/ingress.class: "nginx"
@@ -49,7 +49,7 @@ items:
         paths:
         - path: /pm/(.*)
           backend:
-            serviceName: scm-app
+            serviceName: gitness
             servicePort: 3000
 
 kind: List

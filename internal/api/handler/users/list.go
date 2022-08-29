@@ -7,10 +7,10 @@ package users
 import (
 	"net/http"
 
-	"github.com/harness/scm/internal/api/render"
-	"github.com/harness/scm/internal/api/request"
-	"github.com/harness/scm/internal/store"
-	"github.com/harness/scm/types/enum"
+	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/hlog"
 )
 

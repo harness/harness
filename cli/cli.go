@@ -8,13 +8,13 @@ import (
 	"context"
 	"os"
 
-	"github.com/harness/scm/cli/execution"
-	"github.com/harness/scm/cli/pipeline"
-	"github.com/harness/scm/cli/server"
-	"github.com/harness/scm/cli/token"
-	"github.com/harness/scm/cli/user"
-	"github.com/harness/scm/cli/users"
-	"github.com/harness/scm/version"
+	"github.com/harness/gitness/cli/execution"
+	"github.com/harness/gitness/cli/pipeline"
+	"github.com/harness/gitness/cli/server"
+	"github.com/harness/gitness/cli/token"
+	"github.com/harness/gitness/cli/user"
+	"github.com/harness/gitness/cli/users"
+	"github.com/harness/gitness/version"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -23,7 +23,7 @@ import (
 var nocontext = context.Background()
 
 // application name
-var application = "scm-app"
+var application = "gitness"
 
 // application description
 var description = "description goes here" // TODO edit this application description

@@ -8,7 +8,7 @@ package store
 import (
 	"context"
 
-	"github.com/harness/scm/types"
+	"github.com/harness/gitness/types"
 )
 
 type (

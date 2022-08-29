@@ -8,9 +8,9 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/harness/scm/internal/store"
-	"github.com/harness/scm/types"
-	"github.com/harness/scm/types/enum"
+	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/jmoiron/sqlx"
 )

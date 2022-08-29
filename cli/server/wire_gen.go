@@ -7,12 +7,12 @@
 package server
 
 import (
-	"github.com/harness/scm/internal/cron"
-	"github.com/harness/scm/internal/router"
-	"github.com/harness/scm/internal/server"
-	"github.com/harness/scm/internal/store/database"
-	"github.com/harness/scm/internal/store/memory"
-	"github.com/harness/scm/types"
+	"github.com/harness/gitness/internal/cron"
+	"github.com/harness/gitness/internal/router"
+	"github.com/harness/gitness/internal/server"
+	"github.com/harness/gitness/internal/store/database"
+	"github.com/harness/gitness/internal/store/memory"
+	"github.com/harness/gitness/types"
 )
 
 // Injectors from wire.go:

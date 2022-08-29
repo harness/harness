@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/harness/scm/cli/util"
-	"github.com/harness/scm/client"
+	"github.com/harness/gitness/cli/util"
+	"github.com/harness/gitness/client"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

@@ -22,7 +22,7 @@ Build the server and command line tools:
 
 ```text
 $ go generate ./...
-$ go build -o release/scm-app
+$ go build -o release/gitness
 ```
 
 # Test
@@ -41,7 +41,7 @@ This project supports all operating systems and architectures supported by Go.  
 Start the server at `localhost:3000`
 
 ```text
-$ release/scm-app server
+$ release/gitness server
 ```
 
 # User Interface
@@ -59,53 +59,53 @@ This project includes simple command line tools for interacting with the system.
 Register a new user:
 
 ```text
-$ release/scm-app register
+$ release/gitness register
 ```
 
 Login to the application:
 
 ```text
-$ release/scm-app login
+$ release/gitness login
 ```
 
 Logout from the application:
 
 ```text
-$ release/scm-app logout
+$ release/gitness logout
 ```
 
 View your account details:
 
 ```text
-$ release/scm-app account
+$ release/gitness account
 ```
 
 Generate a peronsal access token:
 
 ```text
-$ release/scm-app token
+$ release/gitness token
 ```
 
 Create a pipeline:
 
 ```text
-$ release/scm-app pipeline create <name>
+$ release/gitness pipeline create <name>
 ```
 
 List pipelines:
 
 ```text
-$ release/scm-app pipeline ls
+$ release/gitness pipeline ls
 ```
 
 Debug and output http responses from the server:
 
 ```text
-$ DEBUG=true release/scm-app pipeline ls
+$ DEBUG=true release/gitness pipeline ls
 ```
 
 View all commands:
 
 ```text
-$ release/scm-app --help
+$ release/gitness --help
 ```

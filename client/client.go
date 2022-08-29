@@ -13,8 +13,8 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/harness/scm/types"
-	"github.com/harness/scm/version"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/version"
 )
 
 // ensure HTTPClient implements Client interface.

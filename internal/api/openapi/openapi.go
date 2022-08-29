@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/harness/scm/version"
+	"github.com/harness/gitness/version"
 
 	"github.com/swaggest/openapi-go/openapi3"
 )

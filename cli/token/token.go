@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/harness/scm/cli/util"
+	"github.com/harness/gitness/cli/util"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
