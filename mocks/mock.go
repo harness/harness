@@ -5,5 +5,5 @@
 // Package mocks provides mock interfaces.
 package mocks
 
-//go:generate mockgen -package=mocks -destination=mock_store.go github.com/harness/gitness/internal/store ExecutionStore,PipelineStore,SystemStore,UserStore
+//go:generate mockgen -package=mocks -destination=mock_store.go github.com/harness/gitness/internal/store SystemStore,UserStore
 //go:generate mockgen -package=mocks -destination=mock_client.go github.com/harness/gitness/client Client

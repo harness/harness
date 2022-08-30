@@ -8,8 +8,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/harness/gitness/cli/execution"
-	"github.com/harness/gitness/cli/pipeline"
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/cli/token"
 	"github.com/harness/gitness/cli/user"
@@ -34,8 +32,6 @@ func Command() {
 	app := kingpin.New(application, description)
 	server.Register(app)
 	user.Register(app)
-	pipeline.Register(app)
-	execution.Register(app)
 	users.Register(app)
 	token.Register(app)
 	registerLogin(app)

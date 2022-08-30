@@ -11,9 +11,6 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/handler/account"
-	"github.com/harness/gitness/internal/api/handler/executions"
-	"github.com/harness/gitness/internal/api/handler/pipelines"
-	"github.com/harness/gitness/internal/api/handler/projects"
 	"github.com/harness/gitness/internal/api/handler/system"
 	"github.com/harness/gitness/internal/api/handler/user"
 	"github.com/harness/gitness/internal/api/handler/users"
@@ -39,8 +36,6 @@ var nocontext = context.Background()
 // New returns a new http.Handler that routes traffic
 // to the appropriate http.Handlers.
 func New(
-	executionStore store.ExecutionStore,
-	pipelineStore store.PipelineStore,
 	userStore store.UserStore,
 	systemStore store.SystemStore,
 ) http.Handler {
@@ -89,28 +84,6 @@ func New(
 		r.Use(cors.Handler)
 
 		r.Route("/v1", func(r chi.Router) {
-			// pipeline endpoints
-			r.Route("/pipelines", func(r chi.Router) {
-				r.Use(auth)
-				r.Get("/", pipelines.HandleList(pipelineStore))
-				r.Post("/", pipelines.HandleCreate(pipelineStore))
-
-				// pipeline endpoints
-				r.Route("/{pipeline}", func(r chi.Router) {
-					r.Get("/", pipelines.HandleFind(pipelineStore))
-					r.Patch("/", pipelines.HandleUpdate(pipelineStore))
-					r.Delete("/", pipelines.HandleDelete(pipelineStore))
-
-					// execution endpoints
-					r.Route("/executions", func(r chi.Router) {
-						r.Get("/", executions.HandleList(pipelineStore, executionStore))
-						r.Post("/", executions.HandleCreate(pipelineStore, executionStore))
-						r.Get("/{execution}", executions.HandleFind(pipelineStore, executionStore))
-						r.Patch("/{execution}", executions.HandleUpdate(pipelineStore, executionStore))
-						r.Delete("/{execution}", executions.HandleDelete(pipelineStore, executionStore))
-					})
-				})
-			})
 
 			// authenticated user endpoints
 			r.Route("/user", func(r chi.Router) {
@@ -153,16 +126,9 @@ func New(
 		})
 
 		// harness platform project endpoints
-		r.Route("/projects", func(r chi.Router) {
-			r.Use(auth)
-			r.Get("/{project}", projects.HandleFind())
-		})
-
-		// harness platform project endpoints
 		r.Route("/user", func(r chi.Router) {
 			r.Use(auth)
 			r.Get("/currentUser", user.HandleCurrent())
-			r.Get("/projects", projects.HandleList())
 		})
 	})
 

@@ -22,11 +22,9 @@ func initSystem(config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	executionStore := database.ProvideExecutionStore(db)
-	pipelineStore := database.ProvidePipelineStore(db)
 	userStore := database.ProvideUserStore(db)
 	systemStore := memory.New(config)
-	handler := router.New(executionStore, pipelineStore, userStore, systemStore)
+	handler := router.New(userStore, systemStore)
 	serverServer := server.ProvideServer(config, handler)
 	nightly := cron.NewNightly()
 	serverSystem := newSystem(serverServer, nightly)

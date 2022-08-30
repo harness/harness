@@ -12,51 +12,6 @@ import (
 )
 
 type (
-	// ExecutionStore defines execution data storage.
-	ExecutionStore interface {
-		// Find finds the execution by id.
-		Find(ctx context.Context, id int64) (*types.Execution, error)
-
-		// FindSlug finds the execution by pipeline id and slug.
-		FindSlug(ctx context.Context, id int64, slug string) (*types.Execution, error)
-
-		// List returns a list of executions by pipeline id.
-		List(ctx context.Context, id int64, params types.Params) ([]*types.Execution, error)
-
-		// Create saves the execution details.
-		Create(ctx context.Context, execution *types.Execution) error
-
-		// Update updates the execution details.
-		Update(ctx context.Context, execution *types.Execution) error
-
-		// Delete deletes the execution.
-		Delete(ctx context.Context, execution *types.Execution) error
-	}
-
-	// PipelineStore defines pipeline data storage.
-	PipelineStore interface {
-		// Find finds the pipeline by id.
-		Find(ctx context.Context, id int64) (*types.Pipeline, error)
-
-		// FindToken finds the pipeline by token.
-		FindToken(ctx context.Context, token string) (*types.Pipeline, error)
-
-		// FindSlug finds the user unique name.
-		FindSlug(ctx context.Context, key string) (*types.Pipeline, error)
-
-		// List returns a list of pipelines by user.
-		List(ctx context.Context, user int64, params types.Params) ([]*types.Pipeline, error)
-
-		// Create saves the pipeline details.
-		Create(ctx context.Context, pipeline *types.Pipeline) error
-
-		// Update updates the pipeline details.
-		Update(ctx context.Context, pipeline *types.Pipeline) error
-
-		// Delete deletes the pipeline.
-		Delete(ctx context.Context, pipeline *types.Pipeline) error
-	}
-
 	// UserStore defines user data storage.
 	UserStore interface {
 		// Find finds the user by id.

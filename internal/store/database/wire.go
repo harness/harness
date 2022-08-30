@@ -16,8 +16,6 @@ import (
 var WireSet = wire.NewSet(
 	ProvideDatabase,
 	ProvideUserStore,
-	ProvidePipelineStore,
-	ProvideExecutionStore,
 )
 
 // ProvideDatabase provides a database connection.
@@ -36,30 +34,6 @@ func ProvideUserStore(db *sqlx.DB) store.UserStore {
 	default:
 		return NewUserStoreSync(
 			NewUserStore(db),
-		)
-	}
-}
-
-// ProvidePipelineStore provides a pipeline store.
-func ProvidePipelineStore(db *sqlx.DB) store.PipelineStore {
-	switch db.DriverName() {
-	case "postgres":
-		return NewPipelineStore(db)
-	default:
-		return NewPipelineStoreSync(
-			NewPipelineStore(db),
-		)
-	}
-}
-
-// ProvideExecutionStore provides a execution store.
-func ProvideExecutionStore(db *sqlx.DB) store.ExecutionStore {
-	switch db.DriverName() {
-	case "postgres":
-		return NewExecutionStore(db)
-	default:
-		return NewExecutionStoreSync(
-			NewExecutionStore(db),
 		)
 	}
 }

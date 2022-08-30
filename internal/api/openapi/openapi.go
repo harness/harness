@@ -76,11 +76,8 @@ func Generate() *openapi3.Spec {
 	//
 
 	buildAccount(&reflector)
-	buildPipeline(&reflector)
-	buildExecution(&reflector)
 	buildUser(&reflector)
 	buildUsers(&reflector)
-	buildProjects(&reflector)
 
 	//
 	// define security scheme
