@@ -142,11 +142,11 @@ func HandleLogin(
 		}
 
 		user.Avatar = account.Avatar
-		user.Token = tok.Access
-		user.Refresh = tok.Refresh
+		user.Token = account.Token
+		user.Refresh = account.Refresh
 		user.LastLogin = time.Now().Unix()
 		if !tok.Expires.IsZero() {
-			user.Expiry = tok.Expires.Unix()
+			user.Expiry = account.Expiry
 		}
 
 		// If the user account has never been synchronized we

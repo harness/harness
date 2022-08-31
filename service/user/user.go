@@ -16,6 +16,7 @@ package user
 
 import (
 	"context"
+	"time"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/go-scm/scm"
@@ -36,12 +37,17 @@ func (s *service) Find(ctx context.Context, access, refresh string) (*core.User,
 	ctx = context.WithValue(ctx, scm.TokenKey{}, &scm.Token{
 		Token:   access,
 		Refresh: refresh,
+		Expires: time.Now(),
 	})
 	src, _, err := s.client.Users.Find(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return convert(src), nil
+	coreUser := convert(src)
+	coreUser.Token = ctx.Value(scm.TokenKey{}).(*scm.Token).Token
+	coreUser.Refresh = ctx.Value(scm.TokenKey{}).(*scm.Token).Refresh
+	coreUser.Expiry = ctx.Value(scm.TokenKey{}).(*scm.Token).Expires.Unix()
+	return coreUser, nil // stop here and look at the token
 }
 
 func (s *service) FindLogin(ctx context.Context, user *core.User, login string) (*core.User, error) {
