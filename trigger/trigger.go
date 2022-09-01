@@ -17,6 +17,7 @@ package trigger
 import (
 	"context"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/drone/drone-yaml/yaml"
@@ -138,6 +139,7 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 			return nil, nil
 		}
 	}
+
 	// // some tag hooks provide the tag but do not provide the sha.
 	// // this may be important if we want to fetch the .drone.yml
 	// if base.After == "" && base.Event == core.EventTag {
