@@ -2,7 +2,7 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package authz
+package harness
 
 import (
 	"bytes"
@@ -12,15 +12,21 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-type HarnessAuthorizer struct {
+var _ authz.Authorizer = (*Authorizer)(nil)
+
+type Authorizer struct {
 	client      *http.Client
 	aclEndpoint string
 	authToken   string
 }
 
-func NewHarnessAuthorizer(aclEndpoint, authToken string) (*HarnessAuthorizer, error) {
+func NewAuthorizer(aclEndpoint, authToken string) (authz.Authorizer, error) {
 	// build http client - could be injected, too
 	tr := &http.Transport{
 		// TODO: expose InsecureSkipVerify in config
@@ -28,20 +34,20 @@ func NewHarnessAuthorizer(aclEndpoint, authToken string) (*HarnessAuthorizer, er
 	}
 	client := &http.Client{Transport: tr}
 
-	return &HarnessAuthorizer{
+	return &Authorizer{
 		client:      client,
 		aclEndpoint: aclEndpoint,
 		authToken:   authToken,
 	}, nil
 }
 
-func (this *HarnessAuthorizer) CheckForAccess(principalType PrincipalType, principalId string, resource Resource, permission Permission) error {
-	return this.CheckForAccessAll(principalType, principalId, &PermissionCheck{Resource: resource, Permission: permission})
+func (a *Authorizer) Check(principalType enum.PrincipalType, principalId string, resource types.Resource, permission enum.Permission) error {
+	return a.CheckAll(principalType, principalId, &types.PermissionCheck{Resource: resource, Permission: permission})
 }
 
-func (this *HarnessAuthorizer) CheckForAccessAll(principalType PrincipalType, principalId string, permissionChecks ...*PermissionCheck) error {
+func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...*types.PermissionCheck) error {
 	if len(permissionChecks) == 0 {
-		fmt.Errorf("No permission checks provided.")
+		return fmt.Errorf("No permission checks provided.")
 	}
 
 	requestDto, err := createAclRequest(principalType, principalId, permissionChecks)
@@ -51,7 +57,7 @@ func (this *HarnessAuthorizer) CheckForAccessAll(principalType PrincipalType, pr
 	}
 
 	// TODO: accountId might be different!
-	url := this.aclEndpoint + "?routingId=" + requestDto.Permissions[0].ResourceScope.AccountIdentifier
+	url := a.aclEndpoint + "?routingId=" + requestDto.Permissions[0].ResourceScope.AccountIdentifier
 	httpRequest, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(byt))
 	if err != nil {
 		return err
@@ -59,10 +65,10 @@ func (this *HarnessAuthorizer) CheckForAccessAll(principalType PrincipalType, pr
 
 	httpRequest.Header = http.Header{
 		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"Bearer " + this.authToken},
+		"Authorization": []string{"Bearer " + a.authToken},
 	}
 
-	httpResponse, err := this.client.Do(httpRequest)
+	httpResponse, err := a.client.Do(httpRequest)
 	if err != nil {
 		return err
 	}
@@ -85,9 +91,9 @@ func (this *HarnessAuthorizer) CheckForAccessAll(principalType PrincipalType, pr
 	return checkAclResponse(permissionChecks, responseDto)
 }
 
-func createAclRequest(principalType PrincipalType, principalId string, permissionChecks []*PermissionCheck) (*aclRequest, error) {
-	// Generate ACL request
-	request := aclRequest{
+func createAclRequest(principalType enum.PrincipalType, principalId string, permissionChecks []*types.PermissionCheck) (*aclRequest, error) {
+	// Generate ACL req
+	req := aclRequest{
 		Permissions: []aclPermission{},
 		Principal: aclPrincipal{
 			PrincipalIdentifier: principalId,
@@ -96,28 +102,28 @@ func createAclRequest(principalType PrincipalType, principalId string, permissio
 	}
 
 	// map all permissionchecks to ACL permission checks
-	for _, pCheck := range permissionChecks {
-		mappedPermission, err := mapToHarnessResourcePermission(pCheck.Permission)
+	for _, c := range permissionChecks {
+		mappedPermission, err := mapPermission(c.Permission)
 		if err != nil {
 			return nil, err
 		}
-		mappedResourceScope, mappedResourceIdentifier, err := mapResourceIdentifierToHarnessResourceScopeAndIdentifier(pCheck.Resource.Identifier)
+		mappedResourceScope, mappedResourceIdentifier, err := mapResourceIdentifier(c.Resource.Identifier)
 		if err != nil {
 			return nil, err
 		}
 
-		request.Permissions = append(request.Permissions, aclPermission{
+		req.Permissions = append(req.Permissions, aclPermission{
 			Permission:         mappedPermission,
 			ResourceScope:      *mappedResourceScope,
-			ResourceType:       string(pCheck.Resource.Type),
+			ResourceType:       string(c.Resource.Type),
 			ResourceIdentifier: mappedResourceIdentifier,
 		})
 	}
 
-	return &request, nil
+	return &req, nil
 }
 
-func checkAclResponse(permissionChecks []*PermissionCheck, responseDto aclResponse) error {
+func checkAclResponse(permissionChecks []*types.PermissionCheck, responseDto aclResponse) error {
 	/*
 	 * We are assuming two things:
 	 *  - All permission checks were made for the same principal.
@@ -127,10 +133,10 @@ func checkAclResponse(permissionChecks []*PermissionCheck, responseDto aclRespon
 	 * Now we just have to ensure that all permissions are allowed
 	 */
 
-	for _, pCheck := range permissionChecks {
+	for _, check := range permissionChecks {
 		permissionPermitted := false
-		for _, accessControlElement := range responseDto.Data.AccessControlList {
-			if string(pCheck.Permission) == accessControlElement.Permission && accessControlElement.Permitted {
+		for _, ace := range responseDto.Data.AccessControlList {
+			if string(check.Permission) == ace.Permission && ace.Permitted {
 				permissionPermitted = true
 				break
 			}
@@ -139,7 +145,7 @@ func checkAclResponse(permissionChecks []*PermissionCheck, responseDto aclRespon
 		if !permissionPermitted {
 			return fmt.Errorf(
 				"Permission '%s' is not permitted according to ACL (correlationId: '%s').",
-				pCheck.Permission,
+				check.Permission,
 				responseDto.CorrelationID)
 		}
 	}
@@ -147,7 +153,7 @@ func checkAclResponse(permissionChecks []*PermissionCheck, responseDto aclRespon
 	return nil
 }
 
-func mapResourceIdentifierToHarnessResourceScopeAndIdentifier(identifier string) (*aclResourceScope, string, error) {
+func mapResourceIdentifier(identifier string) (*aclResourceScope, string, error) {
 
 	/*
 	 * For now we assume only repository access to be managed by ACL.
@@ -174,45 +180,7 @@ func mapResourceIdentifierToHarnessResourceScopeAndIdentifier(identifier string)
 	return &scope, harnessIdentifiers[3], nil
 }
 
-func mapToHarnessResourcePermission(permission Permission) (string, error) {
+func mapPermission(permission enum.Permission) (string, error) {
 	// harness has multiple modules - add scm prefix
 	return "scm_" + string(permission), nil
-}
-
-/*
- * Classes required for harness acl.
- */
-type aclRequest struct {
-	Principal   aclPrincipal    `json:"principal"`
-	Permissions []aclPermission `json:"permissions"`
-}
-type aclResponse struct {
-	Status        string          `json:"status"`
-	CorrelationID string          `json:"correlationId"`
-	Data          aclResponseData `json:"data"`
-}
-type aclResponseData struct {
-	Principal         aclPrincipal        `json:"principal"`
-	AccessControlList []aclControlElement `json:"accessControlList"`
-}
-type aclControlElement struct {
-	Permission    string           `json:"permission"`
-	ResourceScope aclResourceScope `json:"resourceScope,omitempty"`
-	ResourceType  string           `json:"resourceType"`
-	Permitted     bool             `json:"permitted"`
-}
-type aclResourceScope struct {
-	AccountIdentifier string `json:"accountIdentifier"`
-	OrgIdentifier     string `json:"orgIdentifier,omitempty"`
-	ProjectIdentifier string `json:"projectIdentifier,omitempty"`
-}
-type aclPermission struct {
-	ResourceScope      aclResourceScope `json:"resourceScope,omitempty"`
-	ResourceType       string           `json:"resourceType"`
-	ResourceIdentifier string           `json:"resourceIdentifier"`
-	Permission         string           `json:"permission"`
-}
-type aclPrincipal struct {
-	PrincipalIdentifier string `json:"principalIdentifier"`
-	PrincipalType       string `json:"principalType"`
 }

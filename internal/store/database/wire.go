@@ -16,6 +16,7 @@ import (
 var WireSet = wire.NewSet(
 	ProvideDatabase,
 	ProvideUserStore,
+	ProvideSpaceStore,
 )
 
 // ProvideDatabase provides a database connection.
@@ -34,6 +35,18 @@ func ProvideUserStore(db *sqlx.DB) store.UserStore {
 	default:
 		return NewUserStoreSync(
 			NewUserStore(db),
+		)
+	}
+}
+
+// ProvideSpaceStore provides a space store.
+func ProvideSpaceStore(db *sqlx.DB) store.SpaceStore {
+	switch db.DriverName() {
+	case "postgres":
+		return NewSpaceStore(db)
+	default:
+		return NewSpaceStoreSync(
+			NewSpaceStore(db),
 		)
 	}
 }

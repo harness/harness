@@ -6,9 +6,10 @@ package authn
 
 import (
 	"net/http"
-	"os/user"
+
+	"github.com/harness/gitness/types"
 )
 
 type Authenticator interface {
-	Authenticate(r *http.Request) (user.User, error)
+	Authenticate(r *http.Request) (*types.User, error)
 }

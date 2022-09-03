@@ -7,6 +7,8 @@
 package server
 
 import (
+	"github.com/harness/gitness/internal/auth/authn"
+	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/cron"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
@@ -18,13 +20,19 @@ import (
 // Injectors from wire.go:
 
 func initSystem(config *types.Config) (*system, error) {
+	systemStore := memory.New(config)
 	db, err := database.ProvideDatabase(config)
 	if err != nil {
 		return nil, err
 	}
 	userStore := database.ProvideUserStore(db)
-	systemStore := memory.New(config)
-	handler := router.New(userStore, systemStore)
+	spaceStore := database.ProvideSpaceStore(db)
+	authenticator := authn.NewTokenAuthenticator(userStore)
+	authorizer := authz.NewUnsafeAuthorizer()
+	handler, err := router.New(systemStore, userStore, spaceStore, authenticator, authorizer)
+	if err != nil {
+		return nil, err
+	}
 	serverServer := server.ProvideServer(config, handler)
 	nightly := cron.NewNightly()
 	serverSystem := newSystem(serverServer, nightly)
