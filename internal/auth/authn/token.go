@@ -6,6 +6,7 @@ package authn
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -37,7 +38,7 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*types.User, error) 
 	str := extractToken(r)
 
 	if len(str) == 0 {
-		return nil, errors.New("Requires authentication")
+		return nil, nil
 	}
 
 	var user *types.User
@@ -54,7 +55,7 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*types.User, error) 
 				Error().Err(err).
 				Int64("user", id).
 				Msg("cannot find user")
-			return nil, err
+			return nil, fmt.Errorf("Failed to get user info: %s", err)
 		}
 		return []byte(user.Salt), nil
 	})

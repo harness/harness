@@ -19,11 +19,12 @@ import (
 func HandleUpdate(guard *guard.Guard) http.HandlerFunc {
 	return guard.Space(
 		enum.PermissionSpaceEdit,
+		false,
 		func(w http.ResponseWriter, r *http.Request) {
 			/*
 			 * TO-DO: Add support for updating an existing space.
 			 * 		  Requires Solving:
-			 *			- Update all FQSNs of child spaces (or change design)
+			 *			- Update all FQNs of child spaces (or change design)
 			 *			- Update all acl permissions? (or change design)
 			 */
 			render.BadRequest(w, errors.New("Updating an existing space is not supported."))

@@ -17,9 +17,9 @@ import (
 )
 
 /*
- * Writes json-encoded list of child spaces in the request body.
+ * Writes json-encoded list of repos in the request body.
  */
-func HandleList(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
+func HandleListRepos(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
 	return guard.Space(
 		enum.PermissionSpaceView,
 		true,
@@ -27,44 +27,45 @@ func HandleList(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			ctx := r.Context()
 			s, _ := request.SpaceFrom(ctx)
 
-			params := request.ParseSpaceFilter(r)
+			params := request.ParseRepoFilter(r)
 			if params.Order == enum.OrderDefault {
 				params.Order = enum.OrderAsc
 			}
 
-			count, err := spaces.Count(ctx, s.ID)
+			count, err := repos.Count(ctx, s.ID)
 			if err != nil {
 				render.InternalError(w, err)
 				log.Error().Err(err).
-					Msgf("Failed to retrieve count of spaces under '%s'.", s.Fqn)
+					Msgf("Failed to retrieve count of repos under '%s'.", s.Fqn)
 				return
 			}
 
-			allSpaces, err := spaces.List(ctx, s.ID, params)
+			allRepos, err := repos.List(ctx, s.ID, params)
 			if err != nil {
 				render.InternalError(w, err)
 				log.Error().Err(err).
-					Msgf("Failed to retrieve list of spaces under '%s'.", s.Fqn)
+					Msgf("Failed to retrieve list of repos under '%s'.", s.Fqn)
 				return
 			}
 
 			/*
-			 * Only list spaces that are either public or can be accessed by the user
+			 * Only list repos that are either public or can be accessed by the user
 			 *
-			 * TODO: optimize by making a single auth check for all spaces at once.
+			 * TODO: optimize by making a single auth check for all repos at once.
 			 */
-			result := make([]*types.Space, 0, len(allSpaces))
-			for _, cs := range allSpaces {
-				if !cs.IsPublic {
-					err := guard.CheckSpace(r, enum.PermissionSpaceView, cs.Fqn)
+			result := make([]*types.Repository, 0, len(allRepos))
+			for _, rep := range allRepos {
+				if !rep.IsPublic {
+					err := guard.CheckRepo(r, enum.PermissionRepoView, rep.Fqn)
 					if err != nil {
 						log.Debug().Err(err).
-							Msgf("Skip space '%s' in output.", cs.Fqn)
+							Msgf("Skip repo '%s' in output.", rep.Fqn)
+
 						continue
 					}
 				}
 
-				result = append(result, cs)
+				result = append(result, rep)
 			}
 
 			render.Pagination(r, w, params.Page, params.Size, int(count))

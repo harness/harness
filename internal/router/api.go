@@ -4,22 +4,26 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/harness/gitness/internal/api"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/handler/account"
+	handler_repo "github.com/harness/gitness/internal/api/handler/repo"
 	handler_space "github.com/harness/gitness/internal/api/handler/space"
 	"github.com/harness/gitness/internal/api/handler/system"
 	"github.com/harness/gitness/internal/api/handler/user"
-	"github.com/harness/gitness/internal/api/middleware/admin"
 	middleware_authn "github.com/harness/gitness/internal/api/middleware/authn"
-	"github.com/harness/gitness/internal/api/space"
+	"github.com/harness/gitness/internal/api/middleware/encode"
+	"github.com/harness/gitness/internal/api/middleware/repo"
+	"github.com/harness/gitness/internal/api/middleware/space"
+	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 	"github.com/rs/zerolog/hlog"
+	"github.com/rs/zerolog/log"
 )
 
 /*
@@ -31,25 +35,44 @@ func newApiHandler(
 	systemStore store.SystemStore,
 	userStore store.UserStore,
 	spaceStore store.SpaceStore,
+	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer) (http.Handler, error) {
-	// User go-chi router for inner routing
-	r := chi.NewRouter()
 
-	// register all routes under mountPath
+	config := systemStore.Config(nocontext)
+
+	// User go-chi router for inner routing (restricted to mountPath!)
+	r := chi.NewRouter()
 	r.Route(mountPath, func(r chi.Router) {
 
 		// Apply common api middleware
 		r.Use(middleware.NoCache)
+		r.Use(middleware.Recoverer)
 
 		// configure logging middleware.
-		// TODO: r.Use(hlog.NewHandler(log.Logger))
+		r.Use(hlog.NewHandler(log.Logger))
 		r.Use(hlog.URLHandler("path"))
 		r.Use(hlog.MethodHandler("method"))
 		r.Use(hlog.RequestIDHandler("request", "Request-Id"))
 
+		// configure cors middleware
+		cors := cors.New(
+			cors.Options{
+				AllowedOrigins:   config.Cors.AllowedOrigins,
+				AllowedMethods:   config.Cors.AllowedMethods,
+				AllowedHeaders:   config.Cors.AllowedHeaders,
+				ExposedHeaders:   config.Cors.ExposedHeaders,
+				AllowCredentials: config.Cors.AllowCredentials,
+				MaxAge:           config.Cors.MaxAge,
+			},
+		)
+		r.Use(cors.Handler)
+
+		// for now always attempt auth - enforced per operation
+		r.Use(middleware_authn.Attempt(authenticator))
+
 		r.Route("/v1", func(r chi.Router) {
-			setupRoutesV1(r, systemStore, userStore, spaceStore, authenticator, authorizer)
+			setupRoutesV1(r, systemStore, userStore, spaceStore, repoStore, authenticator, authorizer)
 		})
 	})
 
@@ -59,12 +82,7 @@ func newApiHandler(
 		mountPath + "/v1/repos",
 	}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		// ensure we encode all terminated FQNs.
-		req, _ = api.EncodeTerminatedFQNs(req, terminatedFQNPrefixes)
-
-		r.ServeHTTP(w, req)
-	}), nil
+	return encode.TerminatedFqnBefore(terminatedFQNPrefixes, r.ServeHTTP), nil
 }
 
 func setupRoutesV1(
@@ -72,59 +90,60 @@ func setupRoutesV1(
 	systemStore store.SystemStore,
 	userStore store.UserStore,
 	spaceStore store.SpaceStore,
+	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer) {
 
 	// Create singleton middlewares for later usage
-	auth := middleware_authn.Enforce(authenticator)
 	guard := guard.New(spaceStore, authorizer)
 
 	// SPACES
 	r.Route("/spaces", func(r chi.Router) {
-		// enforce auth
-		r.Use(auth)
+		r.Route(fmt.Sprintf("/{%s}", request.SpaceRefParamName), func(r chi.Router) {
 
-		// TODO: Handle public spaces?
-		r.Route(fmt.Sprintf("/{%s}", space.RefParamName), func(r chi.Router) {
-			// space level operations
-			r.Get("/", handler_space.HandleFind(guard, spaceStore))
+			// Create doesn't require space itself to exist
 			r.Post("/", handler_space.HandleCreate(guard, spaceStore))
-			r.Put("/", handler_space.HandleUpdate(guard))
-			r.Delete("/", handler_space.HandleDelete(guard, spaceStore))
 
-			// space sub operations
-			r.Get("/spaces", handler_space.HandleList(guard, spaceStore))
+			// Anything else requires the space to exist - group for middleware
+			r.Group(func(r chi.Router) {
+				// resolves the space and stores in the context
+				r.Use(space.Required(spaceStore))
+
+				// space level operations
+				r.Get("/", handler_space.HandleFind(guard, spaceStore))
+				r.Put("/", handler_space.HandleUpdate(guard))
+				r.Delete("/", handler_space.HandleDelete(guard, spaceStore))
+
+				// space sub operations
+				r.Get("/spaces", handler_space.HandleList(guard, spaceStore))
+				r.Get("/repos", handler_space.HandleListRepos(guard, repoStore))
+			})
 		})
 	})
 
 	// REPOS
 	r.Route("/repos", func(r chi.Router) {
-		// enforce auth
-		r.Use(auth)
+		r.Route(fmt.Sprintf("/{%s}", request.RepoRefParamName), func(r chi.Router) {
+			// Create doesn't require repo itself to exist
+			r.Post("/", handler_repo.HandleCreate(guard, spaceStore, repoStore))
 
-		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("List repositories"))
-		})
+			// Anything else requires the repo to exist - group for middleware
+			r.Group(func(r chi.Router) {
+				// resolves the repo and stores in the context
+				r.Use(repo.Required(repoStore))
 
-		r.Route("/{rref}", func(r chi.Router) {
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				w.Write([]byte(fmt.Sprintf("Get repository '%s'", chi.URLParam(r, "rref"))))
-			})
-			r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-				w.Write([]byte(fmt.Sprintf("Create repository '%s'", chi.URLParam(r, "rref"))))
-			})
-			r.Put("/", func(w http.ResponseWriter, r *http.Request) {
-				w.Write([]byte(fmt.Sprintf("Update repository '%s'", chi.URLParam(r, "rref"))))
-			})
-			r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
-				w.Write([]byte(fmt.Sprintf("Delete repository '%s'", chi.URLParam(r, "rref"))))
+				// repo level operations
+				r.Get("/", handler_repo.HandleFind(guard, repoStore))
+				r.Put("/", handler_repo.HandleUpdate(guard))
+				r.Delete("/", handler_repo.HandleDelete(guard, repoStore))
 			})
 		})
 	})
 
 	// USER - SELF OPERATIONS
 	r.Route("/user", func(r chi.Router) {
-		r.Use(auth)
+		// enforce user authenticated
+		r.Use(guard.EnforceAuthenticated)
 
 		r.Get("/", user.HandleFind())
 		r.Patch("/", user.HandleUpdate(userStore))
@@ -133,9 +152,8 @@ func setupRoutesV1(
 
 	// USERS - ADMIN OPERATIONS
 	r.Route("/users", func(r chi.Router) {
-		// enforce auth + sytem admin
-		r.Use(auth)
-		r.Use(admin.Encorce)
+		// enforce system admin
+		r.Use(guard.EnforceAdmin)
 
 		r.Route("/{user}", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {

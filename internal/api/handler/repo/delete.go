@@ -2,7 +2,7 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package space
+package repo
 
 import (
 	"net/http"
@@ -16,25 +16,25 @@ import (
 )
 
 /*
- * Deletes a space.
+ * Deletes a repository.
  */
-func HandleDelete(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
-	return guard.Space(
-		enum.PermissionSpaceDelete,
+func HandleDelete(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
+	return guard.Repo(
+		enum.PermissionRepoDelete,
 		false,
 		func(w http.ResponseWriter, r *http.Request) {
-			// TODO: return 200 if space confirmed doesn't exist
+			// TODO: return 200 if repo confirmed doesn't exist
 
 			ctx := r.Context()
-			s, _ := request.SpaceFrom(ctx)
+			rep, _ := request.RepoFrom(ctx)
 
-			err := spaces.Delete(r.Context(), s.ID)
+			err := repos.Delete(r.Context(), rep.ID)
 			if err != nil {
 				render.InternalError(w, err)
 				log.Error().Err(err).
-					Int64("space_id", s.ID).
-					Str("space_fqn", s.Fqn).
-					Msg("Failed to delete space.")
+					Int64("repo_id", rep.ID).
+					Str("repo_fqn", rep.Fqn).
+					Msg("Failed to delete repository.")
 				return
 
 			}

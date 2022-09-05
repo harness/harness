@@ -11,7 +11,6 @@ import (
 
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/api/space"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
@@ -28,73 +27,86 @@ func New(spaces store.SpaceStore, authorizer authz.Authorizer) *Guard {
 }
 
 /*
- * Returns a middleware that guards space related handlers from being executed.
- * Only principals that are authorized are able to execute the handler, everyone else is forbidden.
+ * EnforceAdmin is a middleware that enforces that the user is authenticated and an admin.
  */
-func (e *Guard) ForSpace(requiredPermission enum.Permission) func(http.Handler) http.Handler {
-	return func(h http.Handler) http.Handler {
-		return e.Space(requiredPermission, h.ServeHTTP)
-	}
+func (g *Guard) EnforceAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		user, ok := request.UserFrom(ctx)
+		if !ok {
+			render.Unauthorized(w, errors.New("Requires authentication"))
+			return
+		}
+
+		if !user.Admin {
+			render.Forbidden(w, errors.New("Requires admin privileges."))
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 /*
- * Returns an http.HandlerFunc that guards a space related http.HandlerFunc from being executed.
- * Only principals that are authorized are able to execute the handler, everyone else is forbidden.
+ * EnforceAuthenticated is a middleware that enforces that the user is authenticated.
  */
-func (e *Guard) Space(requiredPermission enum.Permission, guarded http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		s, _, err := space.UsingRefParam(r, e.spaces)
-		if err != nil {
-			render.Forbidden(w, err)
+func (g *Guard) EnforceAuthenticated(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		_, ok := request.UserFrom(ctx)
+		if !ok {
+			render.Unauthorized(w, errors.New("Requires authentication"))
 			return
 		}
 
-		u, present := request.UserFrom(r.Context())
-		if !present {
-			render.InternalError(w, errors.New("Unexpectetly didn't find a user."))
-			return
-		}
-
-		err = e.authorizer.Check(
-			enum.PrincipalTypeUser,
-			fmt.Sprint(u.ID),
-			types.Resource{
-				Type:       enum.ResourceTypeSpace,
-				Identifier: s.Fqsn,
-			},
-			requiredPermission)
-		if err != nil {
-			render.Forbidden(w, err)
-			return
-		}
-
-		guarded(w, r)
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
 /*
- * Checks whether the principal executing the request has the requested permission on the space.
- * Returns true if the user is permitted to execute the action, otherwise renders an error and returns false.
+ * Enforces that the executing principal has requested permission on the resource.
+ * returns true if it's the case, otherwise renders the appropriate error and returns false.
  */
-func (e *Guard) CheckSpace(w http.ResponseWriter, r *http.Request, requiredPermission enum.Permission, fqsn string) bool {
+func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, resourceType enum.ResourceType, resourceId string, permission enum.Permission) bool {
+	err := g.Check(r, resourceType, resourceId, permission)
+
+	if IsNotAuthenticatedError(err) {
+		render.Unauthorized(w, err)
+	} else if IsNotAuthorizedError(err) {
+		render.Forbidden(w, err)
+	} else if err != nil {
+		render.InternalError(w, err)
+	}
+
+	return err == nil
+}
+
+/*
+ * Checks whether the principal executing the request has the requested permission on the resource.
+ * Returns nil if the user is confirmed to be permitted to execute the action, otherwise returns errors
+ * NotAuthenticated, NotAuthorized, or any unerlaying error.
+ */
+func (g *Guard) Check(r *http.Request, resourceType enum.ResourceType, resourceId string, permission enum.Permission) error {
 	u, present := request.UserFrom(r.Context())
 	if !present {
-		render.InternalError(w, errors.New("Unexpectetly didn't find a user."))
-		return false
+		return newNotAuthenticatedError(permission, resourceType, resourceId)
 	}
 
-	err := e.authorizer.Check(
+	authorized, err := g.authorizer.Check(
 		enum.PrincipalTypeUser,
 		fmt.Sprint(u.ID),
 		types.Resource{
-			Type:       enum.ResourceTypeSpace,
-			Identifier: fqsn,
+			Type:       resourceType,
+			Identifier: resourceId,
 		},
-		requiredPermission)
+		permission)
 	if err != nil {
-		render.Forbidden(w, err)
-		return false
+		return err
 	}
 
-	return true
+	if !authorized {
+		return newNotAuthorizedError(u, permission, resourceType, resourceId)
+	}
+
+	return nil
 }

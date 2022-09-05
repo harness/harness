@@ -27,9 +27,10 @@ func initSystem(config *types.Config) (*system, error) {
 	}
 	userStore := database.ProvideUserStore(db)
 	spaceStore := database.ProvideSpaceStore(db)
+	repoStore := database.ProvideRepoStore(db)
 	authenticator := authn.NewTokenAuthenticator(userStore)
 	authorizer := authz.NewUnsafeAuthorizer()
-	handler, err := router.New(systemStore, userStore, spaceStore, authenticator, authorizer)
+	handler, err := router.New(systemStore, userStore, spaceStore, repoStore, authenticator, authorizer)
 	if err != nil {
 		return nil, err
 	}

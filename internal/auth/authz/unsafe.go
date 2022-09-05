@@ -19,7 +19,7 @@ func NewUnsafeAuthorizer() Authorizer {
 
 type UnsafeAuthorizer struct{}
 
-func (a *UnsafeAuthorizer) Check(principalType enum.PrincipalType, principalId string, resource types.Resource, permission enum.Permission) error {
+func (a *UnsafeAuthorizer) Check(principalType enum.PrincipalType, principalId string, resource types.Resource, permission enum.Permission) (bool, error) {
 	fmt.Printf(
 		"[Authz] %s '%s' requests %s for %s '%s'\n",
 		principalType,
@@ -29,12 +29,12 @@ func (a *UnsafeAuthorizer) Check(principalType enum.PrincipalType, principalId s
 		resource.Identifier,
 	)
 
-	return nil
+	return true, nil
 }
-func (a *UnsafeAuthorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...*types.PermissionCheck) error {
+func (a *UnsafeAuthorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...*types.PermissionCheck) (bool, error) {
 	for _, p := range permissionChecks {
 		a.Check(principalType, principalId, p.Resource, p.Permission)
 	}
 
-	return nil
+	return true, nil
 }

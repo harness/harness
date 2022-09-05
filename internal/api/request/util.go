@@ -53,9 +53,16 @@ func ParseSortUser(r *http.Request) enum.UserAttr {
 	)
 }
 
-// ParseSpaceUser extracts the space sort parameter from the url.
-func ParseSpaceUser(r *http.Request) enum.SpaceAttr {
+// ParseSortSpace extracts the space sort parameter from the url.
+func ParseSortSpace(r *http.Request) enum.SpaceAttr {
 	return enum.ParseSpaceAttr(
+		r.FormValue("sort"),
+	)
+}
+
+// ParseSortRepo extracts the repo sort parameter from the url.
+func ParseSortRepo(r *http.Request) enum.RepoAttr {
+	return enum.ParseRepoAtrr(
 		r.FormValue("sort"),
 	)
 }
@@ -85,7 +92,17 @@ func ParseSpaceFilter(r *http.Request) types.SpaceFilter {
 	return types.SpaceFilter{
 		Order: ParseOrder(r),
 		Page:  ParsePage(r),
-		Sort:  ParseSpaceUser(r),
+		Sort:  ParseSortSpace(r),
+		Size:  ParseSize(r),
+	}
+}
+
+// ParseRepoFilter extracts the user query parameter from the url.
+func ParseRepoFilter(r *http.Request) types.RepoFilter {
+	return types.RepoFilter{
+		Order: ParseOrder(r),
+		Page:  ParsePage(r),
+		Sort:  ParseSortRepo(r),
 		Size:  ParseSize(r),
 	}
 }

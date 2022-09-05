@@ -36,50 +36,9 @@ func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
 }
 
 // Finds the space by the full qualified space name.
-func (s *SpaceStore) FindFqsn(ctx context.Context, fqsn string) (*types.Space, error) {
+func (s *SpaceStore) FindFqn(ctx context.Context, fqn string) (*types.Space, error) {
 	dst := new(types.Space)
-	err := s.db.Get(dst, spaceSelectFqsn, fqsn)
-	return dst, err
-}
-
-// List returns a list of spaces under the parent space.
-func (s *SpaceStore) List(ctx context.Context, id int64, opts types.SpaceFilter) ([]*types.Space, error) {
-	dst := []*types.Space{}
-
-	// if the user does not provide any customer filter
-	// or sorting we use the default select statement.
-	if opts.Sort == enum.SpaceAttrNone {
-		err := s.db.Select(&dst, spaceSelect, id, limit(opts.Size), offset(opts.Page, opts.Size))
-		return dst, err
-	}
-
-	// else we construct the sql statement.
-	stmt := builder.Select("*").From("spaces").Where("space_parentId = " + fmt.Sprint(id))
-	stmt = stmt.Limit(uint64(limit(opts.Size)))
-	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
-
-	switch opts.Sort {
-	case enum.SpaceAttrCreated:
-		// NOTE: string concatination is safe because the
-		// order attribute is an enum and is not user-defined,
-		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("space_created " + opts.Order.String())
-	case enum.SpaceAttrUpdated:
-		stmt = stmt.OrderBy("space_updated " + opts.Order.String())
-	case enum.SpaceAttrId:
-		stmt = stmt.OrderBy("space_id " + opts.Order.String())
-	case enum.SpaceAttrName:
-		stmt = stmt.OrderBy("space_name " + opts.Order.String())
-	case enum.SpaceAttrFqsn:
-		stmt = stmt.OrderBy("space_fqsn " + opts.Order.String())
-	}
-
-	sql, _, err := stmt.ToSql()
-	if err != nil {
-		return dst, err
-	}
-
-	err = s.db.Select(&dst, sql)
+	err := s.db.Get(dst, spaceSelectFqn, fqn)
 	return dst, err
 }
 
@@ -127,6 +86,47 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 	return tx.Commit()
 }
 
+// List returns a list of spaces under the parent space.
+func (s *SpaceStore) List(ctx context.Context, id int64, opts types.SpaceFilter) ([]*types.Space, error) {
+	dst := []*types.Space{}
+
+	// if the user does not provide any customer filter
+	// or sorting we use the default select statement.
+	if opts.Sort == enum.SpaceAttrNone {
+		err := s.db.Select(&dst, spaceSelect, id, limit(opts.Size), offset(opts.Page, opts.Size))
+		return dst, err
+	}
+
+	// else we construct the sql statement.
+	stmt := builder.Select("*").From("spaces").Where("space_parentId = " + fmt.Sprint(id))
+	stmt = stmt.Limit(uint64(limit(opts.Size)))
+	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
+
+	switch opts.Sort {
+	case enum.SpaceAttrCreated:
+		// NOTE: string concatination is safe because the
+		// order attribute is an enum and is not user-defined,
+		// and is therefore not subject to injection attacks.
+		stmt = stmt.OrderBy("space_created " + opts.Order.String())
+	case enum.SpaceAttrUpdated:
+		stmt = stmt.OrderBy("space_updated " + opts.Order.String())
+	case enum.SpaceAttrId:
+		stmt = stmt.OrderBy("space_id " + opts.Order.String())
+	case enum.SpaceAttrName:
+		stmt = stmt.OrderBy("space_name " + opts.Order.String())
+	case enum.SpaceAttrFqn:
+		stmt = stmt.OrderBy("space_fqn " + opts.Order.String())
+	}
+
+	sql, _, err := stmt.ToSql()
+	if err != nil {
+		return dst, err
+	}
+
+	err = s.db.Select(&dst, sql)
+	return dst, err
+}
+
 // Count the child spaces of a space.
 func (s *SpaceStore) Count(ctx context.Context, id int64) (int64, error) {
 	var count int64
@@ -138,9 +138,12 @@ const spaceBase = `
 SELECT
  space_id
 ,space_name
-,space_fqsn
+,space_fqn
 ,space_parentId
+,space_displayName
 ,space_description
+,space_isPublic
+,space_createdBy
 ,space_created
 ,space_updated
 FROM spaces
@@ -148,7 +151,7 @@ FROM spaces
 
 const spaceSelect = spaceBase + `
 WHERE space_parentId = $1
-ORDER BY space_fqsn ASC
+ORDER BY space_fqn ASC
 LIMIT $2 OFFSET $3
 `
 
@@ -162,8 +165,8 @@ const spaceSelectID = spaceBase + `
 WHERE space_id = $1
 `
 
-const spaceSelectFqsn = spaceBase + `
-WHERE space_fqsn = $1
+const spaceSelectFqn = spaceBase + `
+WHERE space_fqn = $1
 `
 
 const spaceDelete = `
@@ -174,16 +177,22 @@ WHERE space_id = $1
 const spaceInsert = `
 INSERT INTO spaces (
 	space_name
-   ,space_fqsn
+   ,space_fqn
    ,space_parentId
+   ,space_displayName
    ,space_description
+   ,space_isPublic
+   ,space_createdBy
    ,space_created
    ,space_updated
 ) values (
    :space_name
-   ,:space_fqsn
+   ,:space_fqn
    ,:space_parentId
+   ,:space_displayName
    ,:space_description
+   ,:space_isPublic
+   ,:space_createdBy
    ,:space_created
    ,:space_updated
    )RETURNING space_id
@@ -192,7 +201,9 @@ INSERT INTO spaces (
 const spaceUpdate = `
 UPDATE spaces
 SET
+space_displayName   = :space_displayName
 ,space_description  = :space_description
+,space_isPublic     = :space_isPublic
 ,space_updated      = :space_updated
 WHERE space_id = :space_id
 `

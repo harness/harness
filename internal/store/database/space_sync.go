@@ -34,17 +34,10 @@ func (s *SpaceStoreSync) Find(ctx context.Context, id int64) (*types.Space, erro
 }
 
 // Finds the space by the full qualified space name.
-func (s *SpaceStoreSync) FindFqsn(ctx context.Context, fqsn string) (*types.Space, error) {
+func (s *SpaceStoreSync) FindFqn(ctx context.Context, fqn string) (*types.Space, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.FindFqsn(ctx, fqsn)
-}
-
-// List returns a list of spaces under the parent space.
-func (s *SpaceStoreSync) List(ctx context.Context, id int64, opts types.SpaceFilter) ([]*types.Space, error) {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	return s.base.List(ctx, id, opts)
+	return s.base.FindFqn(ctx, fqn)
 }
 
 // Creates a new space
@@ -66,6 +59,13 @@ func (s *SpaceStoreSync) Delete(ctx context.Context, id int64) error {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.Delete(ctx, id)
+}
+
+// List returns a list of spaces under the parent space.
+func (s *SpaceStoreSync) List(ctx context.Context, id int64, opts types.SpaceFilter) ([]*types.Space, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return s.base.List(ctx, id, opts)
 }
 
 // Count the child spaces of a space.

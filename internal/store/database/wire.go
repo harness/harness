@@ -17,6 +17,7 @@ var WireSet = wire.NewSet(
 	ProvideDatabase,
 	ProvideUserStore,
 	ProvideSpaceStore,
+	ProvideRepoStore,
 )
 
 // ProvideDatabase provides a database connection.
@@ -47,6 +48,18 @@ func ProvideSpaceStore(db *sqlx.DB) store.SpaceStore {
 	default:
 		return NewSpaceStoreSync(
 			NewSpaceStore(db),
+		)
+	}
+}
+
+// ProvideRepoStore provides a repo store.
+func ProvideRepoStore(db *sqlx.DB) store.RepoStore {
+	switch db.DriverName() {
+	case "postgres":
+		return NewRepoStore(db)
+	default:
+		return NewRepoStoreSync(
+			NewRepoStore(db),
 		)
 	}
 }

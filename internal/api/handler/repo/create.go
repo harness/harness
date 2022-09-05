@@ -2,7 +2,7 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package space
+package repo
 
 import (
 	"encoding/json"
@@ -21,22 +21,23 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
-type spaceCreateInput struct {
+type repoCreateInput struct {
 	DisplayName string `json:"displayName"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"isPublic"`
+	ForkId      int64  `json:"forkId"`
 }
 
 /*
- * HandleCreate returns an http.HandlerFunc that creates a new space.
+ * HandleCreate returns an http.HandlerFunc that creates a new repository.
  */
-func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
+func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
 
-		// get fqn (requires parent if child space)
-		sref, err := request.GetSpaceRef(r)
+		// get fqn (requires parent of repo)
+		rref, err := request.GetRepoRef(r)
 		if err != nil {
 			render.BadRequest(w, err)
 			log.Debug().
@@ -45,33 +46,37 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			return
 		}
 
-		// Assume sref is fqn and disect (if it's ID validation will fail later)
-		parentFqn, name, err := types.DisectFqn(sref)
+		// Assume rref is fqn and disect (if it's ID validation will fail later)
+		parentFqn, name, err := types.DisectFqn(rref)
 		if err != nil {
 			render.BadRequest(w, err)
 			log.Debug().
 				Err(err).
-				Msgf("Failed to desict sref '%s'.", sref)
+				Msgf("Failed to desict rref '%s'.", rref)
+			return
+		} else if parentFqn == "" {
+			render.BadRequest(w, errors.New("A repository has to be created within a space."))
 			return
 		}
 
-		// get current user
-		usr, _ := request.UserFrom(ctx)
+		// get the id of the parent space (and fail if it doesn't exist)
+		parentSpace, err := spaces.FindFqn(ctx, parentFqn)
+		if err != nil {
+			render.BadRequest(w, err)
+			log.Debug().
+				Err(err).
+				Msgf("Parent space '%s' doesn't exist.", parentFqn)
+			return
+		}
 
 		/*
-		 * AUTHORIZATION
-		 * Can only be done once we know the parent space
-		 *
-		 * TODO: Restrict top level space creation.
+		 * AUTHORIZATION - has to be done on parent space!
 		 */
-		if parentFqn == "" && usr == nil {
-			render.Unauthorized(w, errors.New("Authentication required."))
-			return
-		} else if !guard.EnforceSpace(w, r, enum.PermissionRepoCreate, parentFqn) {
+		if !guard.EnforceSpace(w, r, enum.PermissionRepoCreate, parentFqn) {
 			return
 		}
 
-		in := new(spaceCreateInput)
+		in := new(repoCreateInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequest(w, err)
@@ -80,47 +85,38 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			return
 		}
 
-		// get parentId if needed
-		parentId := int64(-1)
-		if parentFqn != "" {
-			parentSpace, err := spaces.FindFqn(ctx, parentFqn)
-			if err != nil {
-				render.BadRequest(w, err)
-				log.Debug().
-					Err(err).
-					Msgf("Parent space '%s' doesn't exist.", parentFqn)
-				return
-			}
+		// get current user
+		usr, _ := request.UserFrom(ctx)
 
-			parentId = parentSpace.ID
-		}
-
-		space := &types.Space{
+		// create repo
+		repo := &types.Repository{
 			Name:        strings.ToLower(name),
-			ParentId:    parentId,
-			Fqn:         strings.ToLower(sref),
+			SpaceId:     parentSpace.ID,
+			Fqn:         strings.ToLower(rref),
 			DisplayName: in.DisplayName,
 			Description: in.Description,
 			IsPublic:    in.IsPublic,
 			CreatedBy:   usr.ID,
 			Created:     time.Now().UnixMilli(),
 			Updated:     time.Now().UnixMilli(),
+			ForkId:      in.ForkId,
 		}
 
-		if ok, err := check.Space(space); !ok {
+		if ok, err := check.Repo(repo); !ok {
 			render.BadRequest(w, err)
 			log.Debug().Err(err).
-				Msg("Space validation failed.")
+				Msg("Repository validation failed.")
 			return
 		}
 
-		err = spaces.Create(ctx, space)
+		// TODO: Ensure forkId exists!
+		err = repos.Create(ctx, repo)
 		if err != nil {
 			render.InternalError(w, err)
 			log.Error().Err(err).
-				Msg("Space creation failed")
+				Msg("Repository creation failed")
 		} else {
-			render.JSON(w, space, 200)
+			render.JSON(w, repo, 200)
 		}
 	}
 }

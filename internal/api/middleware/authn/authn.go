@@ -16,15 +16,18 @@ import (
 )
 
 /*
- * Enforce returns an http.HandlerFunc middleware that authenticates
- * the http.Request and errors if the account cannot be authenticated.
+ * Attempt returns an http.HandlerFunc middleware that authenticates
+ * the http.Request if authentication payload is available.
  */
-func Enforce(authenticator authn.Authenticator) func(http.Handler) http.Handler {
+func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			user, err := authenticator.Authenticate(r)
 			if err != nil {
 				render.Unauthorized(w, err)
+				return
+			} else if user == nil {
+				next.ServeHTTP(w, r)
 				return
 			}
 

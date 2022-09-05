@@ -29,12 +29,27 @@ func DisectFqn(fqn string) (string, string, error) {
 	return fqn[:i], fqn[i+1:], nil
 }
 
+/*
+ * Represents a space.
+ * There isn't a one-solves-all hierarchical data structure for DBs,
+ * so for now we are using a mix of materialized paths and adjacency list,
+ * meaning any space stores its full qualified space name as well as the id of its parent.
+ * 	PRO: Quick lookup of childs, quick lookup based on fqdn (apis)
+ *  CON: Changing a space name requires changing all its ancestors' FQNs.
+ *
+ * Interesting reads:
+ *    https://stackoverflow.com/questions/4048151/what-are-the-options-for-storing-hierarchical-data-in-a-relational-database
+ *	  https://www.slideshare.net/billkarwin/models-for-hierarchical-data
+ */
 type Space struct {
 	ID          int64  `db:"space_id"              json:"id"`
 	Name        string `db:"space_name"            json:"name"`
-	Fqsn        string `db:"space_fqsn"            json:"fqsn"`
+	Fqn         string `db:"space_fqn"             json:"fqn"`
 	ParentId    int64  `db:"space_parentId"        json:"parentId"`
+	DisplayName string `db:"space_displayName"     json:"displayName"`
 	Description string `db:"space_description"     json:"description"`
+	IsPublic    bool   `db:"space_isPublic"        json:"isPublic"`
+	CreatedBy   int64  `db:"space_createdBy"       json:"createdBy"`
 	Created     int64  `db:"space_created"         json:"created"`
 	Updated     int64  `db:"space_updated"         json:"updated"`
 }

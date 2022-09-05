@@ -41,26 +41,26 @@ func NewAuthorizer(aclEndpoint, authToken string) (authz.Authorizer, error) {
 	}, nil
 }
 
-func (a *Authorizer) Check(principalType enum.PrincipalType, principalId string, resource types.Resource, permission enum.Permission) error {
+func (a *Authorizer) Check(principalType enum.PrincipalType, principalId string, resource types.Resource, permission enum.Permission) (bool, error) {
 	return a.CheckAll(principalType, principalId, &types.PermissionCheck{Resource: resource, Permission: permission})
 }
 
-func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...*types.PermissionCheck) error {
+func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...*types.PermissionCheck) (bool, error) {
 	if len(permissionChecks) == 0 {
-		return fmt.Errorf("No permission checks provided.")
+		return false, fmt.Errorf("No permission checks provided.")
 	}
 
 	requestDto, err := createAclRequest(principalType, principalId, permissionChecks)
 	byt, err := json.Marshal(requestDto)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// TODO: accountId might be different!
 	url := a.aclEndpoint + "?routingId=" + requestDto.Permissions[0].ResourceScope.AccountIdentifier
 	httpRequest, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(byt))
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	httpRequest.Header = http.Header{
@@ -70,22 +70,22 @@ func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId stri
 
 	httpResponse, err := a.client.Do(httpRequest)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if httpResponse.StatusCode != 200 {
-		return fmt.Errorf("Got unexpected status code '%d' - assume unauthorized.", httpResponse.StatusCode)
+		return false, fmt.Errorf("Got unexpected status code '%d' - assume unauthorized.", httpResponse.StatusCode)
 	}
 
 	bodyByte, err := ioutil.ReadAll(httpResponse.Body)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	var responseDto aclResponse
 	err = json.Unmarshal(bodyByte, &responseDto)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	return checkAclResponse(permissionChecks, responseDto)
@@ -123,7 +123,7 @@ func createAclRequest(principalType enum.PrincipalType, principalId string, perm
 	return &req, nil
 }
 
-func checkAclResponse(permissionChecks []*types.PermissionCheck, responseDto aclResponse) error {
+func checkAclResponse(permissionChecks []*types.PermissionCheck, responseDto aclResponse) (bool, error) {
 	/*
 	 * We are assuming two things:
 	 *  - All permission checks were made for the same principal.
@@ -143,14 +143,14 @@ func checkAclResponse(permissionChecks []*types.PermissionCheck, responseDto acl
 		}
 
 		if !permissionPermitted {
-			return fmt.Errorf(
+			return false, fmt.Errorf(
 				"Permission '%s' is not permitted according to ACL (correlationId: '%s').",
 				check.Permission,
 				responseDto.CorrelationID)
 		}
 	}
 
-	return nil
+	return true, nil
 }
 
 func mapResourceIdentifier(identifier string) (*aclResourceScope, string, error) {
