@@ -26,7 +26,7 @@ var (
 	ErrRepoNameLength = errors.New(fmt.Sprintf("Repository name has to be between %d and %d in length.", minRepoNameLength, maxRepoNameLength))
 	ErrRepoNameRegex  = errors.New("Repository name has start with a letter and only contain the following [a-z0-9-_].")
 
-	ErrRepoDisplayNameLength = errors.New(fmt.Sprintf("Repository name has to be between %d and %d in length.", minRepoDisplayNameLength, maxRepoDisplayNameLength))
+	ErrRepoDisplayNameLength = errors.New(fmt.Sprintf("Repository display name has to be between %d and %d in length.", minRepoDisplayNameLength, maxRepoDisplayNameLength))
 	ErrRepoDisplayNameRegex  = errors.New("Repository display name has start with a letter and only contain the following [a-zA-Z0-9-_ ].")
 )
 

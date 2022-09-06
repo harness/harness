@@ -16,9 +16,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
-	"github.com/rs/zerolog/log"
 )
 
 var _ Authenticator = (*TokenAuthenticator)(nil)
@@ -80,10 +78,6 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*types.User, error) 
 			}
 		}
 	}
-
-	log.Ctx(ctx).UpdateContext(func(c zerolog.Context) zerolog.Context {
-		return c.Str("session_email", user.Email).Bool("session_admin", user.Admin)
-	})
 
 	return user, nil
 }

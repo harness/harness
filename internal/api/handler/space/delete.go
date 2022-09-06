@@ -32,7 +32,6 @@ func HandleDelete(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			if err != nil {
 				render.InternalError(w, err)
 				log.Error().Err(err).
-					Int64("space_id", s.ID).
 					Str("space_fqn", s.Fqn).
 					Msg("Failed to delete space.")
 				return

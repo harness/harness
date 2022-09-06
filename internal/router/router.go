@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	restMount = "/api/"
+	restMount          = "/api"
+	gitUserAgentPrefix = "git/"
 )
 
 // empty context
@@ -39,7 +40,7 @@ func New(
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer,
 ) (http.Handler, error) {
-	api, err := newApiHandler("/api", systemStore, userStore, spaceStore, repoStore, authenticator, authorizer)
+	api, err := newApiHandler(restMount, systemStore, userStore, spaceStore, repoStore, authenticator, authorizer)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +69,8 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	 * This can collide with other API endpoints and thus has to be checked first.
 	 * To avoid any false positives, we use the user-agent header to identify git agents.
 	 */
-	a := req.Header.Get("user-agent")
-	if strings.HasPrefix(a, "git/") {
+	ua := req.Header.Get("user-agent")
+	if strings.HasPrefix(ua, gitUserAgentPrefix) {
 		r.git.ServeHTTP(w, req)
 		return
 	}

@@ -31,7 +31,7 @@ func WithUser(parent context.Context, v *types.User) context.Context {
 // context.
 func UserFrom(ctx context.Context) (*types.User, bool) {
 	v, ok := ctx.Value(userKey).(*types.User)
-	return v, ok
+	return v, ok && v != nil
 }
 
 // WithSpace returns a copy of parent in which the space value is set

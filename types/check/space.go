@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/harness/gitness/types"
 )
@@ -26,8 +27,11 @@ var (
 	ErrSpaceNameLength = errors.New(fmt.Sprintf("Space name has to be between %d and %d in length.", minSpaceNameLength, maxSpaceNameLength))
 	ErrSpaceNameRegex  = errors.New("Space name has start with a letter and only contain the following [a-z0-9-_].")
 
-	ErrSpaceDisplayNameLength = errors.New(fmt.Sprintf("Space name has to be between %d and %d in length.", minSpaceDisplayNameLength, maxSpaceDisplayNameLength))
+	ErrSpaceDisplayNameLength = errors.New(fmt.Sprintf("Space display name has to be between %d and %d in length.", minSpaceDisplayNameLength, maxSpaceDisplayNameLength))
 	ErrSpaceDisplayNameRegex  = errors.New("Space display name has start with a letter and only contain the following [a-zA-Z0-9-_ ].")
+
+	illegalRootSpaceNames      = []string{"api"}
+	ErrRootSpaceNameNotAllowed = errors.New(fmt.Sprintf("The following names are not allowed for a root space: %v", illegalRootSpaceNames))
 )
 
 // User returns true if the User if valid.
@@ -48,6 +52,15 @@ func Space(space *types.Space) (bool, error) {
 
 	if ok, _ := regexp.Match(spaceDisplayNameRegex, []byte(space.DisplayName)); !ok {
 		return false, ErrSpaceDisplayNameRegex
+	}
+
+	// root space specific validations
+	if space.ParentId <= 0 {
+		for _, p := range illegalRootSpaceNames {
+			if strings.HasPrefix(space.Name, p) {
+				return false, ErrRootSpaceNameNotAllowed
+			}
+		}
 	}
 
 	return true, nil

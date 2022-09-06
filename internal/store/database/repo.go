@@ -199,7 +199,7 @@ INSERT INTO repositories (
 	,:repo_numPulls
 	,:repo_numClosedPulls
 	,:repo_numOpenPulls
-   )RETURNING repo_id
+) RETURNING repo_id
 `
 
 const repoUpdate = `

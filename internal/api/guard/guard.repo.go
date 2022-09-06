@@ -42,8 +42,8 @@ func (g *Guard) Repo(permission enum.Permission, orPublic bool, guarded http.Han
 			return
 		}
 
-		// Enforce permission
-		if (!orPublic || !rep.IsPublic) && !g.EnforceRepo(w, r, permission, rep.Fqn) {
+		// Enforce permission (renders error)
+		if !(orPublic && rep.IsPublic) && !g.EnforceRepo(w, r, permission, rep.Fqn) {
 			return
 		}
 

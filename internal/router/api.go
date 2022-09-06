@@ -27,7 +27,7 @@ import (
 )
 
 /*
- * Mounts the Rest API Router under mountPath.
+ * Mounts the Rest API Router under mountPath (path has to end with ).
  * The handler is wrapped within a layer that handles encoding terminated FQNs.
  */
 func newApiHandler(
@@ -40,8 +40,9 @@ func newApiHandler(
 	authorizer authz.Authorizer) (http.Handler, error) {
 
 	config := systemStore.Config(nocontext)
+	guard := guard.New(authorizer)
 
-	// User go-chi router for inner routing (restricted to mountPath!)
+	// Use go-chi router for inner routing (restricted to mountPath!)
 	r := chi.NewRouter()
 	r.Route(mountPath, func(r chi.Router) {
 
@@ -72,7 +73,7 @@ func newApiHandler(
 		r.Use(middleware_authn.Attempt(authenticator))
 
 		r.Route("/v1", func(r chi.Router) {
-			setupRoutesV1(r, systemStore, userStore, spaceStore, repoStore, authenticator, authorizer)
+			setupRoutesV1(r, systemStore, userStore, spaceStore, repoStore, authenticator, guard)
 		})
 	})
 
@@ -92,10 +93,7 @@ func setupRoutesV1(
 	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
-	authorizer authz.Authorizer) {
-
-	// Create singleton middlewares for later usage
-	guard := guard.New(spaceStore, authorizer)
+	guard *guard.Guard) {
 
 	// SPACES
 	r.Route("/spaces", func(r chi.Router) {

@@ -22,7 +22,7 @@ func newWebHandler(
 
 	config := systemStore.Config(nocontext)
 
-	// User go-chi router for inner routing (restricted to mountPath!)
+	// Use go-chi router for inner routing (restricted to mountPath!)
 	r := chi.NewRouter()
 	r.Route(mountPath, func(r chi.Router) {
 

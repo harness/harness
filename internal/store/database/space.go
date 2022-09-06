@@ -176,7 +176,7 @@ WHERE space_id = $1
 
 const spaceInsert = `
 INSERT INTO spaces (
-	space_name
+    space_name
    ,space_fqn
    ,space_parentId
    ,space_displayName
@@ -195,7 +195,7 @@ INSERT INTO spaces (
    ,:space_createdBy
    ,:space_created
    ,:space_updated
-   )RETURNING space_id
+) RETURNING space_id
 `
 
 const spaceUpdate = `

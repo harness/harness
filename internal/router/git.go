@@ -12,6 +12,7 @@ import (
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -32,12 +33,11 @@ func newGitHandler(
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer) (http.Handler, error) {
 
-	// User go-chi router for inner routing (restricted to mountPath!)
+	guard := guard.New(authorizer)
+
+	// Use go-chi router for inner routing (restricted to mountPath!)
 	r := chi.NewRouter()
 	r.Route(mountPath, func(r chi.Router) {
-
-		// Create singleton middlewares for later usage
-		guard := guard.New(spaceStore, authorizer)
 
 		// Apply common api middleware
 		r.Use(middleware.NoCache)
@@ -56,15 +56,19 @@ func newGitHandler(
 			// resolves the repo and stores in the context
 			r.Use(repo.Required(repoStore))
 
-			// Operations that require auth (write)
+			// Write operations (need auth)
 			r.Group(func(r chi.Router) {
-				r.Use(guard.EnforceAuthenticated)
+				// TODO: specific permission for pushing code?
+				r.Use(guard.ForRepo(enum.PermissionRepoEdit, false))
 
 				r.Handle("/git-upload-pack", http.HandlerFunc(stubGitHandler))
 			})
 
-			// Operations that not always require auth (read)
+			// Read operations (only need of it not public)
 			r.Group(func(r chi.Router) {
+
+				r.Use(guard.ForRepo(enum.PermissionRepoView, true))
+
 				r.Post("/git-receive-pack", stubGitHandler)
 				r.Get("/info/refs", stubGitHandler)
 				r.Get("/HEAD", stubGitHandler)
@@ -88,7 +92,7 @@ func stubGitHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusForbidden)
 	w.Write([]byte(fmt.Sprintf(
-		"Work in progress ... \n"+
+		"Oooops, seems you hit a major construction site ... \n"+
 			"  Repo: '%s' (%s)\n"+
 			"  Method: '%s'\n"+
 			"  Path: '%s'\n"+

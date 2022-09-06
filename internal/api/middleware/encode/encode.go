@@ -14,7 +14,7 @@ import (
  */
 func GitFqnBefore(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		r, _ = encodeFQNWithCustomMarker(r, "", ".git", false)
+		r, _ = encodeFQNWithMarker(r, "", ".git", false)
 		h.ServeHTTP(w, r)
 	}
 }
@@ -27,8 +27,9 @@ func GitFqnBefore(h http.HandlerFunc) http.HandlerFunc {
 func TerminatedFqnBefore(prefixes []string, h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for _, p := range prefixes {
+			// IMPORTANT: define changed separately to avoid overshadowing r
 			changed := false
-			if r, changed = encodeFQNWithCustomMarker(r, p, "/+", false); changed {
+			if r, changed = encodeFQNWithMarker(r, p, "/+", false); changed {
 				break
 			}
 		}
@@ -44,10 +45,10 @@ func TerminatedFqnBefore(prefixes []string, h http.HandlerFunc) http.HandlerFunc
  *
  * Examples:
  *   Prefix: "" Path: "/space1/space2/+" => "/space1%2Fspace2"
- *   Prefix: "" Path: "/space1/space2.git" => "/space1%2Fspace2.git"
+ *   Prefix: "" Path: "/space1/space2.git" => "/space1%2Fspace2"
  *   Prefix: "/spaces" Path: "/spaces/space1/space2/+/authToken" => "/spaces/space1%2Fspace2/authToken"
  */
-func encodeFQNWithCustomMarker(r *http.Request, prefix string, marker string, keepMarker bool) (*http.Request, bool) {
+func encodeFQNWithMarker(r *http.Request, prefix string, marker string, keepMarker bool) (*http.Request, bool) {
 	// In case path doesn't start with prefix - nothing to encode
 	if len(r.URL.Path) < len(prefix) || r.URL.Path[0:len(prefix)] != prefix {
 		return r, false
@@ -58,11 +59,12 @@ func encodeFQNWithCustomMarker(r *http.Request, prefix string, marker string, ke
 
 	// If we don't find a marker - nothing to encode
 	if !found {
+		fmt.Println("what")
 		return r, false
 	}
 
-	// if marker was found - convert to escaped version
-	escapedFqn := "/" + strings.Replace(fqn[1:], "/", "%2F", -1)
+	// if marker was found - convert to escaped version (skip first character in case path starts with '/')
+	escapedFqn := fqn[0:1] + strings.Replace(fqn[1:], "/", "%2F", -1)
 	if keepMarker {
 		escapedFqn += marker
 	}

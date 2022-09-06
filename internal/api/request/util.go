@@ -87,7 +87,7 @@ func ParseUserFilter(r *http.Request) types.UserFilter {
 	}
 }
 
-// ParseSpaceFilter extracts the user query parameter from the url.
+// ParseSpaceFilter extracts the space query parameter from the url.
 func ParseSpaceFilter(r *http.Request) types.SpaceFilter {
 	return types.SpaceFilter{
 		Order: ParseOrder(r),
@@ -97,7 +97,7 @@ func ParseSpaceFilter(r *http.Request) types.SpaceFilter {
 	}
 }
 
-// ParseRepoFilter extracts the user query parameter from the url.
+// ParseRepoFilter extracts the repository query parameter from the url.
 func ParseRepoFilter(r *http.Request) types.RepoFilter {
 	return types.RepoFilter{
 		Order: ParseOrder(r),

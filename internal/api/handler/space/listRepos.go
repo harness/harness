@@ -36,7 +36,8 @@ func HandleListRepos(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc
 			if err != nil {
 				render.InternalError(w, err)
 				log.Error().Err(err).
-					Msgf("Failed to retrieve count of repos under '%s'.", s.Fqn)
+					Str("space_fqn", s.Fqn).
+					Msg("Failed to retrieve count of repos.")
 				return
 			}
 
@@ -44,7 +45,8 @@ func HandleListRepos(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc
 			if err != nil {
 				render.InternalError(w, err)
 				log.Error().Err(err).
-					Msgf("Failed to retrieve list of repos under '%s'.", s.Fqn)
+					Str("space_fqn", s.Fqn).
+					Msg("Failed to retrieve list of repos.")
 				return
 			}
 

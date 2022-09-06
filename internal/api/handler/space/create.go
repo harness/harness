@@ -35,7 +35,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
 
-		// get fqn (requires parent if child space)
+		// get fqn (requires parent of child space)
 		sref, err := request.GetSpaceRef(r)
 		if err != nil {
 			render.BadRequest(w, err)
@@ -81,7 +81,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		}
 
 		// get parentId if needed
-		parentId := int64(-1)
+		parentId := int64(0)
 		if parentFqn != "" {
 			parentSpace, err := spaces.FindFqn(ctx, parentFqn)
 			if err != nil {

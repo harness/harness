@@ -6,7 +6,6 @@ package guard
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/render"
@@ -43,10 +42,8 @@ func (g *Guard) Space(permission enum.Permission, orPublic bool, guarded http.Ha
 			return
 		}
 
-		fmt.Printf("check for space '%s'", s.Fqn)
-
 		// Enforce permission (renders error)
-		if (!orPublic || !s.IsPublic) && !g.EnforceSpace(w, r, permission, s.Fqn) {
+		if !(orPublic && s.IsPublic) && !g.EnforceSpace(w, r, permission, s.Fqn) {
 			return
 		}
 

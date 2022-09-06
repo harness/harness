@@ -26,11 +26,15 @@ func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler 
 			if err != nil {
 				render.Unauthorized(w, err)
 				return
-			} else if user == nil {
+			}
+
+			// if there was no auth info - continue as is
+			if user == nil {
 				next.ServeHTTP(w, r)
 				return
 			}
 
+			// otherwise update the logging context and inject user in context
 			ctx := r.Context()
 			log.Ctx(ctx).UpdateContext(func(c zerolog.Context) zerolog.Context {
 				return c.Str("session_email", user.Email).Bool("session_admin", user.Admin)

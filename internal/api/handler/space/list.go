@@ -36,7 +36,8 @@ func HandleList(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			if err != nil {
 				render.InternalError(w, err)
 				log.Error().Err(err).
-					Msgf("Failed to retrieve count of spaces under '%s'.", s.Fqn)
+					Str("space_fqn", s.Fqn).
+					Msg("Failed to retrieve count of child spaces.")
 				return
 			}
 
@@ -44,7 +45,8 @@ func HandleList(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			if err != nil {
 				render.InternalError(w, err)
 				log.Error().Err(err).
-					Msgf("Failed to retrieve list of spaces under '%s'.", s.Fqn)
+					Str("space_fqn", s.Fqn).
+					Msg("Failed to retrieve list of child spaces.")
 				return
 			}
 

@@ -72,7 +72,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 		/*
 		 * AUTHORIZATION - has to be done on parent space!
 		 */
-		if !guard.EnforceSpace(w, r, enum.PermissionRepoCreate, parentFqn) {
+		if !guard.EnforceRepo(w, r, enum.PermissionRepoCreate, parentFqn) {
 			return
 		}
 

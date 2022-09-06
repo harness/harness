@@ -12,18 +12,16 @@ import (
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authz"
-	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 type Guard struct {
 	authorizer authz.Authorizer
-	spaces     store.SpaceStore
 }
 
-func New(spaces store.SpaceStore, authorizer authz.Authorizer) *Guard {
-	return &Guard{authorizer: authorizer, spaces: spaces}
+func New(authorizer authz.Authorizer) *Guard {
+	return &Guard{authorizer: authorizer}
 }
 
 /*
