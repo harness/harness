@@ -12,14 +12,6 @@ import (
 )
 
 type (
-	// Scope defines the data scope.
-	Scope struct {
-		Account      string
-		Organization string
-		Project      string
-		Redirect     string
-	}
-
 	// Params stores query parameters.
 	Params struct {
 		Page  int        `json:"page"`

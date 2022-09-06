@@ -41,8 +41,8 @@ func NewAuthorizer(aclEndpoint, authToken string) (authz.Authorizer, error) {
 	}, nil
 }
 
-func (a *Authorizer) Check(principalType enum.PrincipalType, principalId string, resource types.Resource, permission enum.Permission) (bool, error) {
-	return a.CheckAll(principalType, principalId, &types.PermissionCheck{Resource: resource, Permission: permission})
+func (a *Authorizer) Check(principalType enum.PrincipalType, principalId string, scope *types.Scope, resource *types.Resource, permission enum.Permission) (bool, error) {
+	return a.CheckAll(principalType, principalId, &types.PermissionCheck{Scope: *scope, Resource: *resource, Permission: permission})
 }
 
 func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...*types.PermissionCheck) (bool, error) {
@@ -107,7 +107,7 @@ func createAclRequest(principalType enum.PrincipalType, principalId string, perm
 		if err != nil {
 			return nil, err
 		}
-		mappedResourceScope, mappedResourceIdentifier, err := mapResourceIdentifier(c.Resource.Identifier)
+		mappedResourceScope, err := mapScope(c.Scope)
 		if err != nil {
 			return nil, err
 		}
@@ -116,7 +116,7 @@ func createAclRequest(principalType enum.PrincipalType, principalId string, perm
 			Permission:         mappedPermission,
 			ResourceScope:      *mappedResourceScope,
 			ResourceType:       string(c.Resource.Type),
-			ResourceIdentifier: mappedResourceIdentifier,
+			ResourceIdentifier: c.Resource.Name,
 		})
 	}
 
@@ -153,31 +153,41 @@ func checkAclResponse(permissionChecks []*types.PermissionCheck, responseDto acl
 	return true, nil
 }
 
-func mapResourceIdentifier(identifier string) (*aclResourceScope, string, error) {
+func mapScope(scope types.Scope) (*aclResourceScope, error) {
 
 	/*
-	 * For now we assume only repository access to be managed by ACL.
-	 * Thus, the identifier is expected to be restricted to:
-	 *      {Account}/{Organization}/{Project}/{Repository}
-	 * which will lead to the following output:
-	 *   - AclScope: {Account} {Organization} {Project}
-	 *   - AclId: {Respository}
+	 * ASSUMPTION:
+	 *	Harness embeded structure is mapped to the following scm space:
+	 *      {Account}/{Organization}/{Project}
 	 *
-	 * TODO: Extend once account / org / project level SCM resources are available (like accesstoken, ...)
+	 * We can use that assumption to translate back from scope.spaceFqn to harness scope.
+	 * However, this only works as long as resources exist within spaces only.
+	 * For controlling access to any child resources of a repository, harness doesn't have a matching
+	 * structure out of the box (e.g. branches, ...)
+	 *
+	 * IMPORTANT:
+	 * 		For now harness embedded doesn't support scope.Repository (has to be configured on space level ...)
+	 *
+	 * TODO: Handle scope.Repository in harness embedded mode
 	 */
 
-	harnessIdentifiers := strings.Split(identifier, "/")
-	if len(harnessIdentifiers) != 4 {
-		return nil, "", fmt.Errorf("Unable to convert '%s' to harness resource scope (expected {Account}/{Organization}/{Project}/{Repository}).", identifier)
+	harnessIdentifiers := strings.Split(scope.SpaceFqn, "/")
+	if len(harnessIdentifiers) > 3 {
+		return nil, fmt.Errorf("Unable to convert '%s' to harness resource scope (expected {Account}/{Organization}/{Project} or a sub scope).", scope.SpaceFqn)
 	}
 
-	scope := aclResourceScope{
-		AccountIdentifier: harnessIdentifiers[0],
-		OrgIdentifier:     harnessIdentifiers[1],
-		ProjectIdentifier: harnessIdentifiers[2],
+	aclScope := &aclResourceScope{}
+	if len(harnessIdentifiers) > 0 {
+		aclScope.AccountIdentifier = harnessIdentifiers[0]
+	}
+	if len(harnessIdentifiers) > 1 {
+		aclScope.OrgIdentifier = harnessIdentifiers[1]
+	}
+	if len(harnessIdentifiers) > 2 {
+		aclScope.ProjectIdentifier = harnessIdentifiers[2]
 	}
 
-	return &scope, harnessIdentifiers[3], nil
+	return aclScope, nil
 }
 
 func mapPermission(permission enum.Permission) (string, error) {

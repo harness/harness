@@ -48,7 +48,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		// Assume sref is fqn and disect (if it's ID validation will fail later)
 		parentFqn, name, err := types.DisectFqn(sref)
 		if err != nil {
-			render.BadRequest(w, err)
+			render.InternalError(w, err)
 			log.Debug().
 				Err(err).
 				Msgf("Failed to desict sref '%s'.", sref)
@@ -64,11 +64,21 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		 *
 		 * TODO: Restrict top level space creation.
 		 */
-		if parentFqn == "" && usr == nil {
-			render.Unauthorized(w, errors.New("Authentication required."))
-			return
-		} else if !guard.EnforceSpace(w, r, enum.PermissionRepoCreate, parentFqn) {
-			return
+		if parentFqn == "" {
+			if usr == nil {
+				render.Unauthorized(w, errors.New("Authentication required."))
+				return
+			}
+		} else {
+			// Create is a special case - check permission without specific resource
+			scope := &types.Scope{SpaceFqn: parentFqn}
+			resource := &types.Resource{
+				Type: enum.ResourceTypeSpace,
+				Name: "",
+			}
+			if !guard.Enforce(w, r, scope, resource, enum.PermissionSpaceCreate) {
+				return
+			}
 		}
 
 		in := new(spaceCreateInput)

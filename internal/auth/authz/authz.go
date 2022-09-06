@@ -10,6 +10,6 @@ import (
 )
 
 type Authorizer interface {
-	Check(principalType enum.PrincipalType, principalId string, resource types.Resource, permission enum.Permission) (bool, error)
+	Check(principalType enum.PrincipalType, principalId string, scope *types.Scope, resource *types.Resource, permission enum.Permission) (bool, error)
 	CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...*types.PermissionCheck) (bool, error)
 }

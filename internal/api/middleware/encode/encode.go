@@ -59,7 +59,6 @@ func encodeFQNWithMarker(r *http.Request, prefix string, marker string, keepMark
 
 	// If we don't find a marker - nothing to encode
 	if !found {
-		fmt.Println("what")
 		return r, false
 	}
 
@@ -72,7 +71,7 @@ func encodeFQNWithMarker(r *http.Request, prefix string, marker string, keepMark
 
 	// TODO: Proper Logging
 	fmt.Printf(
-		"Encoding FQN: prefix: '%s', marker: '%s', original: '%s', updated: '%s'.\n",
+		"[Encode] prefix: '%s', marker: '%s', original: '%s', updated: '%s'.\n",
 		prefix,
 		marker,
 		originalSubPath,

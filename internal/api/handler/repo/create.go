@@ -49,7 +49,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 		// Assume rref is fqn and disect (if it's ID validation will fail later)
 		parentFqn, name, err := types.DisectFqn(rref)
 		if err != nil {
-			render.BadRequest(w, err)
+			render.InternalError(w, err)
 			log.Debug().
 				Err(err).
 				Msgf("Failed to desict rref '%s'.", rref)
@@ -70,9 +70,15 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 		}
 
 		/*
-		 * AUTHORIZATION - has to be done on parent space!
+		 * AUTHORIZATION
+		 * Create is a special case - check permission without specific resource
 		 */
-		if !guard.EnforceRepo(w, r, enum.PermissionRepoCreate, parentFqn) {
+		scope := &types.Scope{SpaceFqn: parentFqn}
+		resource := &types.Resource{
+			Type: enum.ResourceTypeRepo,
+			Name: "",
+		}
+		if !guard.Enforce(w, r, scope, resource, enum.PermissionRepoCreate) {
 			return
 		}
 

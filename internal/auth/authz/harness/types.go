@@ -6,6 +6,8 @@ package harness
 
 /*
  * Classes required for harness ACL.
+ * For now keep it here, as it shouldn't even be part of the code base in the first place
+ * (should be in its own harness wide client library).
  */
 type aclRequest struct {
 	Principal   aclPrincipal    `json:"principal"`

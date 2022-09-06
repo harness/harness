@@ -65,8 +65,8 @@ func (g *Guard) EnforceAuthenticated(next http.Handler) http.Handler {
  * Enforces that the executing principal has requested permission on the resource.
  * returns true if it's the case, otherwise renders the appropriate error and returns false.
  */
-func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, resourceType enum.ResourceType, resourceId string, permission enum.Permission) bool {
-	err := g.Check(r, resourceType, resourceId, permission)
+func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, scope *types.Scope, resource *types.Resource, permission enum.Permission) bool {
+	err := g.Check(r, scope, resource, permission)
 
 	if IsNotAuthenticatedError(err) {
 		render.Unauthorized(w, err)
@@ -84,26 +84,25 @@ func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, resourceType enu
  * Returns nil if the user is confirmed to be permitted to execute the action, otherwise returns errors
  * NotAuthenticated, NotAuthorized, or any unerlaying error.
  */
-func (g *Guard) Check(r *http.Request, resourceType enum.ResourceType, resourceId string, permission enum.Permission) error {
+func (g *Guard) Check(r *http.Request, scope *types.Scope, resource *types.Resource, permission enum.Permission) error {
 	u, present := request.UserFrom(r.Context())
 	if !present {
-		return newNotAuthenticatedError(permission, resourceType, resourceId)
+		return newNotAuthenticatedError(permission, resource)
 	}
 
+	// TODO: don't hardcode principal type USER
 	authorized, err := g.authorizer.Check(
 		enum.PrincipalTypeUser,
 		fmt.Sprint(u.ID),
-		types.Resource{
-			Type:       resourceType,
-			Identifier: resourceId,
-		},
+		scope,
+		resource,
 		permission)
 	if err != nil {
 		return err
 	}
 
 	if !authorized {
-		return newNotAuthorizedError(u, permission, resourceType, resourceId)
+		return newNotAuthorizedError(u, scope, resource, permission)
 	}
 
 	return nil

@@ -6,10 +6,12 @@ package guard
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -54,10 +56,22 @@ func (g *Guard) Repo(permission enum.Permission, orPublic bool, guarded http.Han
 
 /*
  * Enforces that the executing principal has requested permission on the repository.
- * returns true if it's the case, otherwise renders the appropriate error and returns false.
+ * Returns true if that is the case, otherwise renders the appropriate error and returns false.
  */
 func (g *Guard) EnforceRepo(w http.ResponseWriter, r *http.Request, permission enum.Permission, fqn string) bool {
-	return g.Enforce(w, r, enum.ResourceTypeRepo, fqn, permission)
+	parentSpace, name, err := types.DisectFqn(fqn)
+	if err != nil {
+		render.InternalError(w, errors.New(fmt.Sprintf("Failed to disect fqn '%s' into scope: %s", fqn, err)))
+		return false
+	}
+
+	scope := &types.Scope{SpaceFqn: parentSpace}
+	resource := &types.Resource{
+		Type: enum.ResourceTypeRepo,
+		Name: name,
+	}
+
+	return g.Enforce(w, r, scope, resource, permission)
 }
 
 /*
@@ -66,5 +80,16 @@ func (g *Guard) EnforceRepo(w http.ResponseWriter, r *http.Request, permission e
  * NotAuthenticated, NotAuthorized, or any unerlaying error.
  */
 func (g *Guard) CheckRepo(r *http.Request, permission enum.Permission, fqn string) error {
-	return g.Check(r, enum.ResourceTypeRepo, fqn, permission)
+	parentSpace, name, err := types.DisectFqn(fqn)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to disect fqn '%s' into scope: %s", fqn, err))
+	}
+
+	scope := &types.Scope{SpaceFqn: parentSpace}
+	resource := &types.Resource{
+		Type: enum.ResourceTypeRepo,
+		Name: name,
+	}
+
+	return g.Check(r, scope, resource, permission)
 }

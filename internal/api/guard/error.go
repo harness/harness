@@ -20,9 +20,9 @@ func IsNotAuthenticatedError(err error) bool {
 	return ok
 }
 
-func newNotAuthenticatedError(permission enum.Permission, resourceType enum.ResourceType, resourceId string) *notAuthenticatedError {
+func newNotAuthenticatedError(permission enum.Permission, resource *types.Resource) *notAuthenticatedError {
 	return &notAuthenticatedError{
-		msg: fmt.Sprintf("Operation %s on %s '%s' requires authentication.", permission, resourceType, resourceId),
+		msg: fmt.Sprintf("Operation %s on resource %v requires authentication.", permission, resource),
 	}
 }
 
@@ -39,9 +39,15 @@ func IsNotAuthorizedError(err error) bool {
 	return ok
 }
 
-func newNotAuthorizedError(user *types.User, permission enum.Permission, resourceType enum.ResourceType, resourceId string) *notAuthorizedError {
+func newNotAuthorizedError(user *types.User, scope *types.Scope, resource *types.Resource, permission enum.Permission) *notAuthorizedError {
 	return &notAuthorizedError{
-		msg: fmt.Sprintf("User '%s' is not authorized to execute %s on %s '%s.", user.Email, permission, resourceType, resourceId),
+		msg: fmt.Sprintf(
+			"User '%s' (%s) is not authorized to execute %s on resource %v in scope %v.",
+			user.Name,
+			user.Email,
+			permission,
+			resource,
+			scope),
 	}
 }
 
