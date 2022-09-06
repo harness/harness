@@ -12,45 +12,38 @@ import (
 )
 
 type notAuthenticatedError struct {
-	msg string
-}
-
-func IsNotAuthenticatedError(err error) bool {
-	_, ok := err.(*notAuthenticatedError)
-	return ok
-}
-
-func newNotAuthenticatedError(permission enum.Permission, resource *types.Resource) *notAuthenticatedError {
-	return &notAuthenticatedError{
-		msg: fmt.Sprintf("Operation %s on resource %v requires authentication.", permission, resource),
-	}
+	resource   *types.Resource
+	permission enum.Permission
 }
 
 func (e *notAuthenticatedError) Error() string {
-	return e.msg
+	return fmt.Sprintf("Operation %s on resource %v requires authentication.", e.permission, e.resource)
 }
 
-type notAuthorizedError struct {
-	msg string
-}
-
-func IsNotAuthorizedError(err error) bool {
-	_, ok := err.(*notAuthorizedError)
+func (e *notAuthenticatedError) Is(target error) bool {
+	_, ok := target.(*notAuthenticatedError)
 	return ok
 }
 
-func newNotAuthorizedError(user *types.User, scope *types.Scope, resource *types.Resource, permission enum.Permission) *notAuthorizedError {
-	return &notAuthorizedError{
-		msg: fmt.Sprintf(
-			"User '%s' (%s) is not authorized to execute %s on resource %v in scope %v.",
-			user.Name,
-			user.Email,
-			permission,
-			resource,
-			scope),
-	}
+type notAuthorizedError struct {
+	user       *types.User
+	scope      *types.Scope
+	resource   *types.Resource
+	permission enum.Permission
 }
 
 func (e *notAuthorizedError) Error() string {
-	return e.msg
+	// ASSUMPTION: user is never nil at this point (type is not exported)
+	return fmt.Sprintf(
+		"User '%s' (%s) is not authorized to execute %s on resource %v in scope %v.",
+		e.user.Name,
+		e.user.Email,
+		e.permission,
+		e.resource,
+		e.scope)
+}
+
+func (e *notAuthorizedError) Is(target error) bool {
+	_, ok := target.(*notAuthorizedError)
+	return ok
 }

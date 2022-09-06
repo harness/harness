@@ -68,9 +68,9 @@ func (g *Guard) EnforceAuthenticated(next http.Handler) http.Handler {
 func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, scope *types.Scope, resource *types.Resource, permission enum.Permission) bool {
 	err := g.Check(r, scope, resource, permission)
 
-	if IsNotAuthenticatedError(err) {
+	if errors.Is(err, &notAuthenticatedError{}) {
 		render.Unauthorized(w, err)
-	} else if IsNotAuthorizedError(err) {
+	} else if errors.Is(err, &notAuthorizedError{}) {
 		render.Forbidden(w, err)
 	} else if err != nil {
 		render.InternalError(w, err)
@@ -87,7 +87,7 @@ func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, scope *types.Sco
 func (g *Guard) Check(r *http.Request, scope *types.Scope, resource *types.Resource, permission enum.Permission) error {
 	u, present := request.UserFrom(r.Context())
 	if !present {
-		return newNotAuthenticatedError(permission, resource)
+		return &notAuthenticatedError{resource, permission}
 	}
 
 	// TODO: don't hardcode principal type USER
@@ -102,7 +102,7 @@ func (g *Guard) Check(r *http.Request, scope *types.Scope, resource *types.Resou
 	}
 
 	if !authorized {
-		return newNotAuthorizedError(u, scope, resource, permission)
+		return &notAuthorizedError{u, scope, resource, permission}
 	}
 
 	return nil
