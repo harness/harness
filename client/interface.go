@@ -35,36 +35,6 @@ type Client interface {
 
 	// UserDelete deletes a user account by ID or email.
 	UserDelete(key string) error
-
-	// Pipeline returns a pipeline by slug.
-	Pipeline(slug string) (*types.Pipeline, error)
-
-	// PipelineList returns a list of all pipelines.
-	PipelineList(params types.Params) ([]*types.Pipeline, error)
-
-	// PipelineCreate creates a new pipeline.
-	PipelineCreate(user *types.Pipeline) (*types.Pipeline, error)
-
-	// PipelineUpdate updates a pipeline.
-	PipelineUpdate(slug string, input *types.PipelineInput) (*types.Pipeline, error)
-
-	// PipelineDelete deletes a pipeline.
-	PipelineDelete(slug string) error
-
-	// Execution returns a execution by pipeline and slug.
-	Execution(pipeline, slug string) (*types.Execution, error)
-
-	// ExecutionList returns a list of all executions by pipeline slug.
-	ExecutionList(pipeline string, params types.Params) ([]*types.Execution, error)
-
-	// ExecutionCreate creates a new execution.
-	ExecutionCreate(pipeline string, execution *types.Execution) (*types.Execution, error)
-
-	// ExecutionUpdate updates a execution.
-	ExecutionUpdate(pipeline, slug string, input *types.ExecutionInput) (*types.Execution, error)
-
-	// ExecutionDelete deletes a execution.
-	ExecutionDelete(pipeline, slug string) error
 }
 
 // remoteError store the error payload returned

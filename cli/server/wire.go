@@ -8,6 +8,8 @@
 package server
 
 import (
+	"github.com/harness/gitness/internal/auth/authn"
+	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/cron"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
@@ -26,6 +28,8 @@ func initSystem(config *types.Config) (*system, error) {
 		server.WireSet,
 		cron.WireSet,
 		newSystem,
+		authn.WireSet,
+		authz.WireSet,
 	)
 	return &system{}, nil
 }

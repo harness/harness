@@ -17,7 +17,8 @@ type key int
 
 const (
 	userKey key = iota
-	projKey
+	spaceKey
+	repoKey
 )
 
 // WithUser returns a copy of parent in which the user
@@ -30,5 +31,29 @@ func WithUser(parent context.Context, v *types.User) context.Context {
 // context.
 func UserFrom(ctx context.Context) (*types.User, bool) {
 	v, ok := ctx.Value(userKey).(*types.User)
-	return v, ok
+	return v, ok && v != nil
+}
+
+// WithSpace returns a copy of parent in which the space value is set
+func WithSpace(parent context.Context, v *types.Space) context.Context {
+	return context.WithValue(parent, spaceKey, v)
+}
+
+// SpaceFrom returns the value of the space key on the
+// context - ok is true iff a non-nile value existed.
+func SpaceFrom(ctx context.Context) (*types.Space, bool) {
+	v, ok := ctx.Value(spaceKey).(*types.Space)
+	return v, ok && v != nil
+}
+
+// WithRepo returns a copy of parent in which the repo value is set
+func WithRepo(parent context.Context, v *types.Repository) context.Context {
+	return context.WithValue(parent, repoKey, v)
+}
+
+// RepoFrom returns the value of the repo key on the
+// context - ok is true iff a non-nile value existed.
+func RepoFrom(ctx context.Context) (*types.Repository, bool) {
+	v, ok := ctx.Value(repoKey).(*types.Repository)
+	return v, ok && v != nil
 }

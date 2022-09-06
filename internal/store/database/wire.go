@@ -16,8 +16,8 @@ import (
 var WireSet = wire.NewSet(
 	ProvideDatabase,
 	ProvideUserStore,
-	ProvidePipelineStore,
-	ProvideExecutionStore,
+	ProvideSpaceStore,
+	ProvideRepoStore,
 )
 
 // ProvideDatabase provides a database connection.
@@ -40,26 +40,26 @@ func ProvideUserStore(db *sqlx.DB) store.UserStore {
 	}
 }
 
-// ProvidePipelineStore provides a pipeline store.
-func ProvidePipelineStore(db *sqlx.DB) store.PipelineStore {
+// ProvideSpaceStore provides a space store.
+func ProvideSpaceStore(db *sqlx.DB) store.SpaceStore {
 	switch db.DriverName() {
 	case "postgres":
-		return NewPipelineStore(db)
+		return NewSpaceStore(db)
 	default:
-		return NewPipelineStoreSync(
-			NewPipelineStore(db),
+		return NewSpaceStoreSync(
+			NewSpaceStore(db),
 		)
 	}
 }
 
-// ProvideExecutionStore provides a execution store.
-func ProvideExecutionStore(db *sqlx.DB) store.ExecutionStore {
+// ProvideRepoStore provides a repo store.
+func ProvideRepoStore(db *sqlx.DB) store.RepoStore {
 	switch db.DriverName() {
 	case "postgres":
-		return NewExecutionStore(db)
+		return NewRepoStore(db)
 	default:
-		return NewExecutionStoreSync(
-			NewExecutionStore(db),
+		return NewRepoStoreSync(
+			NewRepoStore(db),
 		)
 	}
 }

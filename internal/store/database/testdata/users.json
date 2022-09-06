@@ -1,6 +1,6 @@
 [
     {
-        "id": 0,
+        "id": 1,
         "email": "jane@example.com",
         "name": "jane",
         "company": "acme",
@@ -11,7 +11,7 @@
         "authed": 0
     },
     {
-        "id": 0,
+        "id": 2,
         "email": "john@example.com",
         "name": "john",
         "company": "acme",

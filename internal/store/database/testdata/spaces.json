@@ -1,0 +1,26 @@
+[
+    {
+        "id": 1,
+        "name": "space1",
+        "fqn": "space1",
+        "parentId": 0,
+        "displayName": "Space 1",
+        "description": "Some space.",
+        "isPublic": true,
+        "createdBy": 1,
+        "created": 1662427417128,
+        "updated": 1662427417128
+    },
+    {
+        "id": 2,
+        "name": "space2",
+        "fqn": "space1/space2",
+        "parentId": 1,
+        "displayName": "Space 2",
+        "description": "Some subspace.",
+        "isPublic": true,
+        "createdBy": 1,
+        "created": 1662427428536,
+        "updated": 1662427428536
+    }
+]

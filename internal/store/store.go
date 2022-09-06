@@ -12,52 +12,7 @@ import (
 )
 
 type (
-	// ExecutionStore defines execution data storage.
-	ExecutionStore interface {
-		// Find finds the execution by id.
-		Find(ctx context.Context, id int64) (*types.Execution, error)
-
-		// FindSlug finds the execution by pipeline id and slug.
-		FindSlug(ctx context.Context, id int64, slug string) (*types.Execution, error)
-
-		// List returns a list of executions by pipeline id.
-		List(ctx context.Context, id int64, params types.Params) ([]*types.Execution, error)
-
-		// Create saves the execution details.
-		Create(ctx context.Context, execution *types.Execution) error
-
-		// Update updates the execution details.
-		Update(ctx context.Context, execution *types.Execution) error
-
-		// Delete deletes the execution.
-		Delete(ctx context.Context, execution *types.Execution) error
-	}
-
-	// PipelineStore defines pipeline data storage.
-	PipelineStore interface {
-		// Find finds the pipeline by id.
-		Find(ctx context.Context, id int64) (*types.Pipeline, error)
-
-		// FindToken finds the pipeline by token.
-		FindToken(ctx context.Context, token string) (*types.Pipeline, error)
-
-		// FindSlug finds the user unique name.
-		FindSlug(ctx context.Context, key string) (*types.Pipeline, error)
-
-		// List returns a list of pipelines by user.
-		List(ctx context.Context, user int64, params types.Params) ([]*types.Pipeline, error)
-
-		// Create saves the pipeline details.
-		Create(ctx context.Context, pipeline *types.Pipeline) error
-
-		// Update updates the pipeline details.
-		Update(ctx context.Context, pipeline *types.Pipeline) error
-
-		// Delete deletes the pipeline.
-		Delete(ctx context.Context, pipeline *types.Pipeline) error
-	}
-
-	// UserStore defines user data storage.
+	// UserStore defines the user data storage.
 	UserStore interface {
 		// Find finds the user by id.
 		Find(ctx context.Context, id int64) (*types.User, error)
@@ -84,7 +39,55 @@ type (
 		Count(ctx context.Context) (int64, error)
 	}
 
-	// SystemStore defines insternal system metadata storage.
+	// SpaceStore defines the space data storage.
+	SpaceStore interface {
+		// Finds the space by id.
+		Find(ctx context.Context, id int64) (*types.Space, error)
+
+		// Finds the space by the full qualified space name.
+		FindFqn(ctx context.Context, fqn string) (*types.Space, error)
+
+		// Creates a new space
+		Create(ctx context.Context, space *types.Space) error
+
+		// Updates the space details.
+		Update(ctx context.Context, space *types.Space) error
+
+		// Deletes the space.
+		Delete(ctx context.Context, id int64) error
+
+		// List returns a list of child spaces in a space.
+		List(ctx context.Context, id int64, opts types.SpaceFilter) ([]*types.Space, error)
+
+		// Count the child spaces of a space.
+		Count(ctx context.Context, id int64) (int64, error)
+	}
+
+	// RepoStore defines the repository data storage.
+	RepoStore interface {
+		// Finds the repo by id.
+		Find(ctx context.Context, id int64) (*types.Repository, error)
+
+		// Finds the repo by the full qualified space name.
+		FindFqn(ctx context.Context, fqn string) (*types.Repository, error)
+
+		// Creates a new repo
+		Create(ctx context.Context, repo *types.Repository) error
+
+		// Updates the repo details.
+		Update(ctx context.Context, repo *types.Repository) error
+
+		// Deletes the repo.
+		Delete(ctx context.Context, id int64) error
+
+		// List returns a list of repos in a space.
+		List(ctx context.Context, spaceId int64, opts types.RepoFilter) ([]*types.Repository, error)
+
+		// Count of repos in a space.
+		Count(ctx context.Context, spaceId int64) (int64, error)
+	}
+
+	// SystemStore defines internal system metadata storage.
 	SystemStore interface {
 		// Config returns the system configuration.
 		Config(ctx context.Context) *types.Config
