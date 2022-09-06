@@ -26,10 +26,11 @@ type aclResponseData struct {
 }
 
 type aclControlElement struct {
-	Permission    string           `json:"permission"`
-	ResourceScope aclResourceScope `json:"resourceScope,omitempty"`
-	ResourceType  string           `json:"resourceType"`
-	Permitted     bool             `json:"permitted"`
+	Permission         string           `json:"permission"`
+	ResourceScope      aclResourceScope `json:"resourceScope,omitempty"`
+	ResourceType       string           `json:"resourceType"`
+	ResourceIdentifier string           `json:"resourceIdentifier"`
+	Permitted          bool             `json:"permitted"`
 }
 
 type aclResourceScope struct {

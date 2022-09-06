@@ -128,9 +128,13 @@ func checkAclResponse(permissionChecks []*types.PermissionCheck, responseDto acl
 	 * We are assuming two things:
 	 *  - All permission checks were made for the same principal.
 	 *  - Permissions inherit down the hierarchy (Account -> Organization -> Project -> Repository)
+	 *	- No two checks are for the same permission - is similar to ff implementation:
+	 *		https://github.com/wings-software/ff-server/blob/master/pkg/rbac/client.go#L88
 	 *
 	 * Based on that, if there's any permitted result for a permission check the permission is allowed.
 	 * Now we just have to ensure that all permissions are allowed
+	 *
+	 * TODO: Use resource name + scope for verifying results.
 	 */
 
 	for _, check := range permissionChecks {
