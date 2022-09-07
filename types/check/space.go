@@ -32,6 +32,8 @@ var (
 
 	illegalRootSpaceNames      = []string{"api"}
 	ErrRootSpaceNameNotAllowed = errors.New(fmt.Sprintf("The following names are not allowed for a root space: %v", illegalRootSpaceNames))
+
+	ErrInvalidParentSpaceId = errors.New("Parent space ID has to be either zero for a root space or greater than zero for a child space.")
 )
 
 // User returns true if the User if valid.
@@ -54,8 +56,12 @@ func Space(space *types.Space) (bool, error) {
 		return false, ErrSpaceDisplayNameRegex
 	}
 
+	if space.ParentId < 0 {
+		return false, ErrInvalidParentSpaceId
+	}
+
 	// root space specific validations
-	if space.ParentId <= 0 {
+	if space.ParentId == 0 {
 		for _, p := range illegalRootSpaceNames {
 			if strings.HasPrefix(space.Name, p) {
 				return false, ErrRootSpaceNameNotAllowed

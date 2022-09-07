@@ -22,6 +22,8 @@ import (
 )
 
 type spaceCreateInput struct {
+	Name        string `json:"name"`
+	ParentId    int64  `json:"parentId"`
 	DisplayName string `json:"displayName"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"isPublic"`
@@ -35,36 +37,43 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
 
-		// get fqn (requires parent of child space)
-		sref, err := request.GetSpaceRef(r)
+		in := new(spaceCreateInput)
+		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequest(w, err)
-			log.Debug().
-				Err(err).
-				Msgf("Failed to get the fqn.")
+			log.Debug().Err(err).
+				Msg("Decoding json body failed.")
 			return
 		}
 
-		// Assume sref is fqn and disect (if it's ID validation will fail later)
-		parentFqn, name, err := types.DisectFqn(sref)
-		if err != nil {
-			render.InternalError(w, err)
-			log.Debug().
-				Err(err).
-				Msgf("Failed to desict sref '%s'.", sref)
-			return
+		// Get fqn and parentFqn
+		parentFqn := ""
+		fqn := in.Name
+		if in.ParentId > 0 {
+			parentSpace, err := spaces.Find(ctx, in.ParentId)
+			if err != nil {
+				render.BadRequest(w, err)
+				log.Debug().
+					Err(err).
+					Msgf("Parent space '%s' doesn't exist.", parentFqn)
+
+				return
+			}
+
+			// parentFqn is assumed to be valid, in.Name gets validated in check.Space function
+			parentFqn = parentSpace.Fqn
+			fqn = parentFqn + "/" + in.Name
 		}
 
-		// get current user
+		// get current user (will be enforced to not be nil via explicit check or guard.Enforce)
 		usr, _ := request.UserFrom(ctx)
 
 		/*
 		 * AUTHORIZATION
 		 * Can only be done once we know the parent space
-		 *
-		 * TODO: Restrict top level space creation.
 		 */
-		if parentFqn == "" {
+		if in.ParentId <= 0 {
+			// TODO: Restrict top level space creation.
 			if usr == nil {
 				render.Unauthorized(w, errors.New("Authentication required."))
 				return
@@ -81,34 +90,10 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			}
 		}
 
-		in := new(spaceCreateInput)
-		err = json.NewDecoder(r.Body).Decode(in)
-		if err != nil {
-			render.BadRequest(w, err)
-			log.Debug().Err(err).
-				Msg("Decoding json body failed.")
-			return
-		}
-
-		// get parentId if needed
-		parentId := int64(0)
-		if parentFqn != "" {
-			parentSpace, err := spaces.FindFqn(ctx, parentFqn)
-			if err != nil {
-				render.BadRequest(w, err)
-				log.Debug().
-					Err(err).
-					Msgf("Parent space '%s' doesn't exist.", parentFqn)
-				return
-			}
-
-			parentId = parentSpace.ID
-		}
-
 		space := &types.Space{
-			Name:        strings.ToLower(name),
-			ParentId:    parentId,
-			Fqn:         strings.ToLower(sref),
+			Name:        strings.ToLower(in.Name),
+			ParentId:    in.ParentId,
+			Fqn:         strings.ToLower(fqn),
 			DisplayName: in.DisplayName,
 			Description: in.Description,
 			IsPublic:    in.IsPublic,

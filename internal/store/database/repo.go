@@ -44,6 +44,7 @@ func (s *RepoStore) FindFqn(ctx context.Context, fqn string) (*types.Repository,
 // Creates a new repo
 func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 	// TODO: Ensure parent exists!!
+	// TODO: Ensure forkId exists!
 	query, arg, err := s.db.BindNamed(repoInsert, repo)
 	if err != nil {
 		return err

@@ -97,44 +97,37 @@ func setupRoutesV1(
 
 	// SPACES
 	r.Route("/spaces", func(r chi.Router) {
+		// Create takes fqn and parentId via body, not uri
+		r.Post("/", handler_space.HandleCreate(guard, spaceStore))
+
 		r.Route(fmt.Sprintf("/{%s}", request.SpaceRefParamName), func(r chi.Router) {
+			// resolves the space and stores in the context
+			r.Use(space.Required(spaceStore))
 
-			// Create doesn't require space itself to exist
-			r.Post("/", handler_space.HandleCreate(guard, spaceStore))
+			// space level operations
+			r.Get("/", handler_space.HandleFind(guard, spaceStore))
+			r.Put("/", handler_space.HandleUpdate(guard))
+			r.Delete("/", handler_space.HandleDelete(guard, spaceStore))
 
-			// Anything else requires the space to exist - group for middleware
-			r.Group(func(r chi.Router) {
-				// resolves the space and stores in the context
-				r.Use(space.Required(spaceStore))
-
-				// space level operations
-				r.Get("/", handler_space.HandleFind(guard, spaceStore))
-				r.Put("/", handler_space.HandleUpdate(guard))
-				r.Delete("/", handler_space.HandleDelete(guard, spaceStore))
-
-				// space sub operations
-				r.Get("/spaces", handler_space.HandleList(guard, spaceStore))
-				r.Get("/repos", handler_space.HandleListRepos(guard, repoStore))
-			})
+			// space sub operations
+			r.Get("/spaces", handler_space.HandleList(guard, spaceStore))
+			r.Get("/repos", handler_space.HandleListRepos(guard, repoStore))
 		})
 	})
 
 	// REPOS
 	r.Route("/repos", func(r chi.Router) {
+		// Create takes fqn and parentId via body, not uri
+		r.Post("/", handler_repo.HandleCreate(guard, spaceStore, repoStore))
+
 		r.Route(fmt.Sprintf("/{%s}", request.RepoRefParamName), func(r chi.Router) {
-			// Create doesn't require repo itself to exist
-			r.Post("/", handler_repo.HandleCreate(guard, spaceStore, repoStore))
+			// resolves the repo and stores in the context
+			r.Use(repo.Required(repoStore))
 
-			// Anything else requires the repo to exist - group for middleware
-			r.Group(func(r chi.Router) {
-				// resolves the repo and stores in the context
-				r.Use(repo.Required(repoStore))
-
-				// repo level operations
-				r.Get("/", handler_repo.HandleFind(guard, repoStore))
-				r.Put("/", handler_repo.HandleUpdate(guard))
-				r.Delete("/", handler_repo.HandleDelete(guard, repoStore))
-			})
+			// repo level operations
+			r.Get("/", handler_repo.HandleFind(guard, repoStore))
+			r.Put("/", handler_repo.HandleUpdate(guard))
+			r.Delete("/", handler_repo.HandleDelete(guard, repoStore))
 		})
 	})
 

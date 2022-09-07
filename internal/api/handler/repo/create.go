@@ -22,6 +22,8 @@ import (
 )
 
 type repoCreateInput struct {
+	Name        string `json:"name"`
+	SpaceId     int64  `json:"spaceId"`
 	DisplayName string `json:"displayName"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"isPublic"`
@@ -36,38 +38,36 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
 
-		// get fqn (requires parent of repo)
-		rref, err := request.GetRepoRef(r)
+		in := new(repoCreateInput)
+		err := json.NewDecoder(r.Body).Decode(in)
+		if err != nil {
+			render.BadRequest(w, err)
+			log.Debug().Err(err).
+				Msg("Decoding json body failed.")
+			return
+		}
+
+		// ensure we reference a space
+		if in.SpaceId <= 0 {
+			render.BadRequest(w, errors.New("A repository can only be created within a space."))
+			log.Debug().
+				Msg("No space was provided.")
+			return
+		}
+
+		parentSpace, err := spaces.Find(ctx, in.SpaceId)
 		if err != nil {
 			render.BadRequest(w, err)
 			log.Debug().
 				Err(err).
-				Msgf("Failed to get the fqn.")
+				Msgf("Parent space with id '%s' doesn't exist.", in.SpaceId)
+
 			return
 		}
 
-		// Assume rref is fqn and disect (if it's ID validation will fail later)
-		parentFqn, name, err := types.DisectFqn(rref)
-		if err != nil {
-			render.InternalError(w, err)
-			log.Debug().
-				Err(err).
-				Msgf("Failed to desict rref '%s'.", rref)
-			return
-		} else if parentFqn == "" {
-			render.BadRequest(w, errors.New("A repository has to be created within a space."))
-			return
-		}
-
-		// get the id of the parent space (and fail if it doesn't exist)
-		parentSpace, err := spaces.FindFqn(ctx, parentFqn)
-		if err != nil {
-			render.BadRequest(w, err)
-			log.Debug().
-				Err(err).
-				Msgf("Parent space '%s' doesn't exist.", parentFqn)
-			return
-		}
+		// parentFqn is assumed to be valid, in.Name gets validated in check.Repo function
+		parentFqn := parentSpace.Fqn
+		fqn := parentFqn + "/" + in.Name
 
 		/*
 		 * AUTHORIZATION
@@ -82,23 +82,14 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 			return
 		}
 
-		in := new(repoCreateInput)
-		err = json.NewDecoder(r.Body).Decode(in)
-		if err != nil {
-			render.BadRequest(w, err)
-			log.Debug().Err(err).
-				Msg("Decoding json body failed.")
-			return
-		}
-
-		// get current user
+		// get current user (safe to be there, or enforce would fail)
 		usr, _ := request.UserFrom(ctx)
 
 		// create repo
 		repo := &types.Repository{
-			Name:        strings.ToLower(name),
-			SpaceId:     parentSpace.ID,
-			Fqn:         strings.ToLower(rref),
+			Name:        strings.ToLower(in.Name),
+			SpaceId:     in.SpaceId,
+			Fqn:         strings.ToLower(fqn),
 			DisplayName: in.DisplayName,
 			Description: in.Description,
 			IsPublic:    in.IsPublic,
@@ -115,7 +106,6 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 			return
 		}
 
-		// TODO: Ensure forkId exists!
 		err = repos.Create(ctx, repo)
 		if err != nil {
 			render.InternalError(w, err)
