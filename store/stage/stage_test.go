@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package stage
@@ -45,11 +46,11 @@ func TestStage(t *testing.T) {
 	t.Run("ListState", testStageListStatus(store, abuild))
 }
 
-func testStageCreate(store *stageStore, build *core.Build) func(t *testing.T) {
+func testStageCreate(store *stageStore, abuild *core.Build) func(t *testing.T) {
 	return func(t *testing.T) {
 		item := &core.Stage{
 			RepoID:   42,
-			BuildID:  build.ID,
+			BuildID:  abuild.ID,
 			Number:   2,
 			Name:     "clone",
 			Status:   core.StatusRunning,
@@ -194,16 +195,16 @@ func testStageLocking(store *stageStore, stage *core.Stage) func(t *testing.T) {
 	}
 }
 
-func testStageListStatus(store *stageStore, build *core.Build) func(t *testing.T) {
+func testStageListStatus(store *stageStore, abuild *core.Build) func(t *testing.T) {
 	return func(t *testing.T) {
-		store.db.Update(func(execer db.Execer, binder db.Binder) error {
-			execer.Exec("DELETE FROM stages_unfinished")
-			execer.Exec("DELETE FROM stages")
+		_ = store.db.Update(func(execer db.Execer, binder db.Binder) error {
+			_, _ = execer.Exec("DELETE FROM stages_unfinished")
+			_, _ = execer.Exec("DELETE FROM stages")
 			return nil
 		})
-		store.Create(noContext, &core.Stage{Number: 1, BuildID: build.ID, Status: core.StatusPending})
-		store.Create(noContext, &core.Stage{Number: 2, BuildID: build.ID, Status: core.StatusRunning})
-		store.Create(noContext, &core.Stage{Number: 3, BuildID: build.ID, Status: core.StatusFailing})
+		_ = store.Create(noContext, &core.Stage{Number: 1, BuildID: abuild.ID, Status: core.StatusPending})
+		_ = store.Create(noContext, &core.Stage{Number: 2, BuildID: abuild.ID, Status: core.StatusRunning})
+		_ = store.Create(noContext, &core.Stage{Number: 3, BuildID: abuild.ID, Status: core.StatusFailing})
 		list, err := store.ListState(noContext, core.StatusPending)
 		if err != nil {
 			t.Error(err)

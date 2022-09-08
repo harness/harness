@@ -22,8 +22,8 @@ import (
 )
 
 // New returns a new StageStore.
-func New(db *db.DB) core.StageStore {
-	return &stageStore{db}
+func New(database *db.DB) core.StageStore {
+	return &stageStore{database}
 }
 
 type stageStore struct {
@@ -421,36 +421,4 @@ INSERT INTO stages (
 
 const stmtInsertPg = stmtInsert + `
 RETURNING stage_id
-`
-
-const stmtInsertStep = `
-INSERT INTO steps (
- step_stage_id
-,step_number
-,step_name
-,step_status
-,step_error
-,step_errignore
-,step_exit_code
-,step_started
-,step_stopped
-,step_version
-,step_depends_on
-,step_image
-,step_detached
-) VALUES (
- :step_stage_id
-,:step_number
-,:step_name
-,:step_status
-,:step_error
-,:step_errignore
-,:step_exit_code
-,:step_started
-,:step_stopped
-,:step_version
-,:step_depends_on
-,:step_image
-,:step_detached
-)
 `

@@ -416,7 +416,7 @@ func (s *buildStore) Purge(ctx context.Context, repo, number int64) error {
 		RepoID: repo,
 		Number: number,
 	}
-	return s.db.Lock(func(execer db.Execer, binder db.Binder) error {
+	stageErr := s.db.Lock(func(execer db.Execer, binder db.Binder) error {
 		params := toParams(build)
 		stmt, args, err := binder.BindNamed(stmtPurge, params)
 		if err != nil {
@@ -425,6 +425,26 @@ func (s *buildStore) Purge(ctx context.Context, repo, number int64) error {
 		_, err = execer.Exec(stmt, args...)
 		return err
 	})
+	if stageErr != nil {
+		return stageErr
+	}
+	if s.db.Driver() == db.Postgres || s.db.Driver() == db.Mysql {
+		// purge orphaned stages
+		err := s.db.Update(func(execer db.Execer, binder db.Binder) error {
+			_, err := execer.Exec(stmtStagePurge)
+			return err
+		})
+		if err != nil {
+			return err
+		}
+		// purge orphaned steps
+		err = s.db.Update(func(execer db.Execer, binder db.Binder) error {
+			_, err := execer.Exec(stmtStepPurge)
+			return err
+		})
+		return err
+	}
+	return nil
 }
 
 // Count returns a count of builds.
@@ -727,6 +747,17 @@ DELETE FROM builds
 WHERE build_repo_id = :build_repo_id
 AND build_number < :build_number
 `
+const stmtStagePurge = `
+DELETE FROM stages
+WHERE stage_build_id NOT IN (
+	SELECT build_id FROM builds
+)`
+
+const stmtStepPurge = `
+DELETE FROM steps
+WHERE step_stage_id NOT IN (
+	SELECT stage_id FROM stages
+)`
 
 //
 // latest builds index
