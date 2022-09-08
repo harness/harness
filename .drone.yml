@@ -77,43 +77,43 @@ trigger:
 depends_on:
 - linux-amd64
 
----
-kind: pipeline
-type: docker
-name: linux-arm
+# ---
+# kind: pipeline
+# type: docker
+# name: linux-arm
 
-platform:
-  arch: arm
-  os: linux
+# platform:
+#   arch: arm
+#   os: linux
 
-steps:
-- name: build
-  image: golang:1.14.15
-  commands:
-  - sh scripts/build.sh
-  environment:
-    GOARCH: arm
-    GOOS: linux
+# steps:
+# - name: build
+#   image: golang:1.14.15
+#   commands:
+#   - sh scripts/build.sh
+#   environment:
+#     GOARCH: arm
+#     GOOS: linux
 
-- name: publish
-  image: plugins/docker:18
-  settings:
-    auto_tag: true
-    auto_tag_suffix: linux-arm
-    dockerfile: docker/Dockerfile.server.linux.arm
-    repo: drone/drone
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
+# - name: publish
+#   image: plugins/docker:18
+#   settings:
+#     auto_tag: true
+#     auto_tag_suffix: linux-arm
+#     dockerfile: docker/Dockerfile.server.linux.arm
+#     repo: drone/drone
+#     username:
+#       from_secret: docker_username
+#     password:
+#       from_secret: docker_password
 
-trigger:
-  event:
-  - push
-  - tag
+# trigger:
+#   event:
+#   - push
+#   - tag
 
-depends_on:
-- linux-amd64
+# depends_on:
+# - linux-amd64
 
 ---
 kind: pipeline
@@ -139,4 +139,4 @@ trigger:
 
 depends_on:
 - linux-arm64
-- linux-arm
+# - linux-arm
