@@ -9,11 +9,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -49,7 +50,7 @@ func Required(repos store.RepoStore) func(http.Handler) http.Handler {
 			} else if err != nil {
 				log.Err(err).Msgf("Failed to get repo using ref '%s'.", ref)
 
-				render.InternalError(w, errs.Internal)
+				render.InternalErrorf(w, comms.Internal)
 				return
 			}
 

@@ -10,15 +10,16 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -79,7 +80,7 @@ func HandleMove(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 					log.Err(err).
 						Msgf("Failed to get target space with id %d for the move.", *in.ParentId)
 
-					render.InternalError(w, errs.Internal)
+					render.InternalErrorf(w, comms.Internal)
 					return
 				}
 
@@ -93,7 +94,7 @@ func HandleMove(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 				}
 
 				/*
-				 * Validate path (Due to racing conditions we can't be 100% sure on the path here, but that's okay)
+				 * Validate path (Due to racing conditions we can't be 100% sure on the path here only best effort to avoid big transaction failure)
 				 * Only needed if we actually change the parent (and can skip top level, as we already validate the name)
 				 */
 				path := paths.Concatinate(newParent.Path, *in.Name)
@@ -110,11 +111,17 @@ func HandleMove(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 
 				render.BadRequestf(w, "Unable to move the space as the destination path is already taken.")
 				return
+			} else if errors.Is(err, errs.PathTooLong) {
+				log.Warn().Err(err).
+					Msg("Failed to move the space as a path was too long.")
+
+				render.BadRequestf(w, "Unable to move the space as the destination path of the space or one of its child resources was too long.")
+				return
 			} else if err != nil {
 				log.Error().Err(err).
 					Msg("Failed to move the space.")
 
-				render.InternalError(w, errs.Internal)
+				render.InternalErrorf(w, comms.Internal)
 				return
 			}
 

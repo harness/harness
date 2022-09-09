@@ -8,9 +8,10 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 
 	"github.com/go-chi/chi"
@@ -31,7 +32,7 @@ func HandleFind(users store.UserStore) http.HandlerFunc {
 		} else if err != nil {
 			log.Err(err).Msgf("Failed to get user using key '%s'.", key)
 
-			render.InternalError(w, errs.Internal)
+			render.InternalErrorf(w, comms.Internal)
 			return
 		}
 

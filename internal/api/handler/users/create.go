@@ -9,11 +9,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 	"golang.org/x/crypto/bcrypt"
 
@@ -46,7 +46,7 @@ func HandleCreate(users store.UserStore) http.HandlerFunc {
 				Str("email", in.Username).
 				Msg("Failed to hash password")
 
-			render.InternalError(w, errs.Internal)
+			render.InternalErrorf(w, comms.Internal)
 			return
 		}
 
@@ -74,7 +74,7 @@ func HandleCreate(users store.UserStore) http.HandlerFunc {
 				Str("email", user.Email).
 				Msg("failed to create user")
 
-			render.InternalError(w, errs.Internal)
+			render.InternalErrorf(w, comms.Internal)
 			return
 		}
 

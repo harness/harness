@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 	"github.com/pkg/errors"
 
 	"github.com/jmoiron/sqlx"

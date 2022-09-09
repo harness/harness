@@ -13,6 +13,7 @@ var (
 	// Indicates that a requested resource wasn't found.
 	ResourceNotFound error = &dynamicError{0, "Resource not found", nil}
 	Duplicate        error = &dynamicError{1, "Resource is a duplicate", nil}
+	PathTooLong      error = &dynamicError{2, "The path is too long", nil}
 )
 
 // Wrappers
@@ -21,6 +22,9 @@ func WrapInResourceNotFound(inner error) error {
 }
 func WrapInDuplicate(inner error) error {
 	return cloneWithNewInner(Duplicate.(*dynamicError), inner)
+}
+func WrapInPathTooLongf(format string, args ...interface{}) error {
+	return cloneWithNewMsg(PathTooLong.(*dynamicError), fmt.Sprintf(format, args...))
 }
 
 // Error type (on purpose not using explicit definitions and iota, to make overhead as small as possible)

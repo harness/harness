@@ -7,12 +7,12 @@ package space
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -37,7 +37,7 @@ func HandleListPaths(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFu
 			if err != nil {
 				log.Err(err).Msgf("Failed to get list of space paths.")
 
-				render.InternalError(w, errs.Internal)
+				render.InternalErrorf(w, comms.Internal)
 				return
 			}
 

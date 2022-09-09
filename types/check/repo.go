@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	RepositoryRequiresSpaceIdError = fmt.Errorf("SpaceId required - Repositories don't exist outside of a space.")
+	ErrRepositoryRequiresSpaceId = fmt.Errorf("SpaceId required - Repositories don't exist outside of a space.")
 )
 
 // Repo checks the provided repository and returns an error in it isn't valid.
@@ -28,7 +28,7 @@ func Repo(repo *types.Repository) error {
 
 	// validate repo within a space
 	if repo.SpaceId <= 0 {
-		return RepositoryRequiresSpaceIdError
+		return ErrRepositoryRequiresSpaceId
 	}
 
 	return nil

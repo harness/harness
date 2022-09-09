@@ -11,15 +11,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/handler/common"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -68,7 +69,7 @@ func HandleCreatePath(guard *guard.Guard, repos store.RepoStore) http.HandlerFun
 				log.Error().Err(err).
 					Msg("Failed to create path for repo.")
 
-				render.InternalError(w, errs.Internal)
+				render.InternalErrorf(w, comms.Internal)
 				return
 			}
 

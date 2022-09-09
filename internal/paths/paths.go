@@ -7,8 +7,8 @@ package paths
 import (
 	"strings"
 
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/errs"
 )
 
 /*

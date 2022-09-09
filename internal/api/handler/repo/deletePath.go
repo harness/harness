@@ -8,12 +8,13 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -46,7 +47,7 @@ func HandleDeletePath(guard *guard.Guard, repos store.RepoStore) http.HandlerFun
 				log.Err(err).Int64("path_id", pathId).
 					Msgf("Failed to delete repo path.")
 
-				render.InternalError(w, errs.Internal)
+				render.InternalErrorf(w, comms.Internal)
 				return
 			}
 

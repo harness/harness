@@ -7,7 +7,7 @@ package database
 import (
 	"database/sql"
 
-	"github.com/harness/gitness/types/errs"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 )

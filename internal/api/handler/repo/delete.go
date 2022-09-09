@@ -8,12 +8,13 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -36,7 +37,7 @@ func HandleDelete(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
 			} else if err != nil {
 				log.Err(err).Msgf("Failed to delete the Repository.")
 
-				render.InternalError(w, errs.Internal)
+				render.InternalErrorf(w, comms.Internal)
 				return
 			}
 

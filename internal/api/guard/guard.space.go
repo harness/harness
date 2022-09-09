@@ -7,12 +7,12 @@ package guard
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"
@@ -68,7 +68,7 @@ func (g *Guard) EnforceSpace(w http.ResponseWriter, r *http.Request, permission 
 		hlog.FromRequest(r)
 		log.Err(err).Msgf("Failed to disect path '%s'.", path)
 
-		render.InternalError(w, errs.Internal)
+		render.InternalErrorf(w, comms.Internal)
 		return false
 	}
 

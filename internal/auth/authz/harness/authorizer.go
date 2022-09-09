@@ -14,9 +14,9 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 )
 
 var _ authz.Authorizer = (*Authorizer)(nil)

@@ -11,11 +11,12 @@ import (
 	"time"
 
 	"github.com/gotidy/ptr"
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 
 	"github.com/go-chi/chi"
@@ -41,7 +42,7 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 		} else if err != nil {
 			log.Err(err).Msgf("Failed to get user using key '%s'.", key)
 
-			render.InternalError(w, errs.Internal)
+			render.InternalErrorf(w, comms.Internal)
 			return
 		}
 
@@ -59,7 +60,7 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 					Str("user_email", user.Email).
 					Msg("Failed to hash password")
 
-				render.InternalError(w, errs.Internal)
+				render.InternalErrorf(w, comms.Internal)
 				return
 			}
 			user.Password = string(hash)
@@ -86,7 +87,7 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 					Str("user_email", user.Email).
 					Msg("Failed to hash password")
 
-				render.InternalError(w, errs.Internal)
+				render.InternalErrorf(w, comms.Internal)
 				return
 			}
 			user.Password = string(hash)
@@ -111,7 +112,7 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 				Str("user_email", user.Email).
 				Msg("Failed to update the usser")
 
-			render.InternalError(w, errs.Internal)
+			render.InternalErrorf(w, comms.Internal)
 			return
 		}
 

@@ -8,18 +8,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/hlog"
-)
-
-const (
-	actionRequiresAuthentication = "Action requires authentication."
 )
 
 type Guard struct {
@@ -38,7 +35,7 @@ func (g *Guard) EnforceAdmin(next http.Handler) http.Handler {
 		ctx := r.Context()
 		user, ok := request.UserFrom(ctx)
 		if !ok {
-			render.Unauthorizedf(w, actionRequiresAuthentication)
+			render.Unauthorizedf(w, comms.AuthenticationRequired)
 			return
 		}
 
@@ -59,7 +56,7 @@ func (g *Guard) EnforceAuthenticated(next http.Handler) http.Handler {
 		ctx := r.Context()
 		_, ok := request.UserFrom(ctx)
 		if !ok {
-			render.Unauthorizedf(w, actionRequiresAuthentication)
+			render.Unauthorizedf(w, comms.AuthenticationRequired)
 			return
 		}
 
@@ -77,7 +74,7 @@ func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, scope *types.Sco
 
 	// render error if needed
 	if errors.Is(err, errs.NotAuthenticated) {
-		render.Unauthorizedf(w, actionRequiresAuthentication)
+		render.Unauthorizedf(w, comms.AuthenticationRequired)
 	} else if errors.Is(err, errs.NotAuthorized) {
 		render.Forbiddenf(w, "User not authorized to perform %s on resource %v in scope %v",
 			permission,
@@ -88,7 +85,7 @@ func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, scope *types.Sco
 		log := hlog.FromRequest(r)
 		log.Err(err).Msg("Encountered unexpected error while enforcing permission.")
 
-		render.InternalError(w, errs.Internal)
+		render.InternalErrorf(w, comms.Internal)
 	}
 
 	return err == nil

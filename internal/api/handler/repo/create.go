@@ -11,15 +11,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -63,7 +64,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 		} else if err != nil {
 			log.Err(err).Msgf("Failed to get space with id '%s'.", in.SpaceId)
 
-			render.InternalError(w, errs.Internal)
+			render.InternalErrorf(w, comms.Internal)
 			return
 		}
 
@@ -105,26 +106,19 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 			return
 		}
 
-		// validate path (Due to racing conditions we can't be 100% sure on the path here, but that's okay)
-		path := paths.Concatinate(parentPath, repo.Name)
-		if err = check.PathParams(path, false); err != nil {
-			render.BadRequest(w, err)
-			return
-		}
-
 		// create in store
 		err = repos.Create(ctx, repo)
 		if errors.Is(err, errs.Duplicate) {
 			log.Warn().Err(err).
 				Msg("Repository creation failed as a duplicate was detected.")
 
-			render.BadRequestf(w, "Path '%s' already exists.", path)
+			render.BadRequestf(w, "Path '%s' already exists.", paths.Concatinate(parentPath, repo.Name))
 			return
 		} else if err != nil {
 			log.Error().Err(err).
 				Msg("Repository creation failed.")
 
-			render.InternalError(w, errs.Internal)
+			render.InternalErrorf(w, comms.Internal)
 			return
 		}
 

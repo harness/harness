@@ -7,12 +7,12 @@ package user
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -28,7 +28,7 @@ func HandleToken(users store.UserStore) http.HandlerFunc {
 			log.Err(err).
 				Msg("failed to generate token")
 
-			render.InternalError(w, errs.Internal)
+			render.InternalErrorf(w, comms.Internal)
 			return
 		}
 

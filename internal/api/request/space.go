@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi"
-	"github.com/harness/gitness/types/errs"
+	"github.com/harness/gitness/internal/errs"
 )
 
 const (

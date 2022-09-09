@@ -10,15 +10,15 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/paths"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -67,7 +67,7 @@ func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceSto
 				render.BadRequest(w, errs.NoChangeInRequestedMove)
 				return
 			} else if *in.SpaceId <= 0 {
-				render.BadRequest(w, check.RepositoryRequiresSpaceIdError)
+				render.BadRequest(w, check.ErrRepositoryRequiresSpaceId)
 				return
 			}
 
@@ -81,7 +81,7 @@ func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceSto
 					log.Err(err).
 						Msgf("Failed to get target space with id %d for the move.", *in.SpaceId)
 
-					render.InternalError(w, errs.Internal)
+					render.InternalErrorf(w, comms.Internal)
 					return
 				}
 
@@ -92,16 +92,6 @@ func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceSto
 					Name: "",
 				}
 				if !guard.Enforce(w, r, scope, resource, enum.PermissionRepoCreate) {
-					return
-				}
-
-				/*
-				 * Validate path (Due to racing conditions we can't be 100% sure on the path here, but that's okay)
-				 * Only needed if we actually change the parent (for move to top level we already validate the name)
-				 */
-				path := paths.Concatinate(newSpace.Path, *in.Name)
-				if err = check.PathParams(path, false); err != nil {
-					render.BadRequest(w, err)
 					return
 				}
 			}
@@ -117,7 +107,7 @@ func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceSto
 				log.Error().Err(err).
 					Msg("Failed to move the repository.")
 
-				render.InternalError(w, errs.Internal)
+				render.InternalErrorf(w, comms.Internal)
 				return
 			}
 

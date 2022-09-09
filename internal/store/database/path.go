@@ -8,16 +8,22 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
 // Creates a new path
 func CreatePath(ctx context.Context, db *sqlx.DB, path *types.Path) error {
+
+	// ensure path length is okay
+	if check.PathTooLong(path.Value, path.TargetType == enum.PathTargetTypeSpace) {
+		return errs.WrapInPathTooLongf("Path '%s' is too long.", path.Value)
+	}
 
 	// In case it's not an alias, ensure there are no duplicates
 	if !path.IsAlias {
@@ -42,6 +48,11 @@ func CreatePath(ctx context.Context, db *sqlx.DB, path *types.Path) error {
 
 // Creates a new path as part of a transaction
 func CreatePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Path) error {
+
+	// ensure path length is okay
+	if check.PathTooLong(path.Value, path.TargetType == enum.PathTargetTypeSpace) {
+		return errs.WrapInPathTooLongf("Path '%s' is too long.", path.Value)
+	}
 
 	// In case it's not an alias, ensure there are no duplicates
 	if !path.IsAlias {
@@ -90,6 +101,11 @@ func ReplacePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Pa
 		return errs.PrimaryPathRequired
 	}
 
+	// ensure new path length is okay
+	if check.PathTooLong(path.Value, path.TargetType == enum.PathTargetTypeSpace) {
+		return errs.WrapInPathTooLongf("Path '%s' is too long.", path.Value)
+	}
+
 	// existing is always non-alias (as query filters for IsAlias=0)
 	existing := new(types.Path)
 	err := tx.GetContext(ctx, existing, pathSelectPrimaryForTarget, string(path.TargetType), fmt.Sprint(path.TargetId))
@@ -115,6 +131,11 @@ func ReplacePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Pa
 			updatedChild.Updated = path.Updated
 			updatedChild.CreatedBy = path.CreatedBy
 			updatedChild.Value = path.Value + updatedChild.Value[len(existing.Value):]
+
+			// ensure new child path length is okay
+			if check.PathTooLong(updatedChild.Value, path.TargetType == enum.PathTargetTypeSpace) {
+				return errs.WrapInPathTooLongf("Path '%s' is too long.", updatedChild.Value)
+			}
 
 			query, arg, err := db.BindNamed(pathInsert, updatedChild)
 			if err != nil {

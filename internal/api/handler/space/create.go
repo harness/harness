@@ -11,15 +11,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
-	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -59,7 +60,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		if in.ParentId <= 0 {
 			// TODO: Restrict top level space creation.
 			if usr == nil {
-				render.Unauthorized(w, errs.NotAuthenticated)
+				render.Unauthorizedf(w, comms.AuthenticationRequired)
 				return
 			}
 		} else {
@@ -71,7 +72,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			} else if err != nil {
 				log.Err(err).Msgf("Failed to get space with id '%s'.", in.ParentId)
 
-				render.InternalError(w, errs.Internal)
+				render.InternalErrorf(w, comms.Internal)
 				return
 			}
 
@@ -105,7 +106,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			return
 		}
 
-		// validate path (Due to racing conditions we can't be 100% sure on the path here, but that's okay)
+		// Validate path (Due to racing conditions we can't be 100% sure on the path here only best effort to store failure)
 		path := paths.Concatinate(parentPath, space.Name)
 		if err = check.PathParams(path, true); err != nil {
 			render.BadRequest(w, err)
@@ -120,11 +121,17 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 
 			render.BadRequestf(w, "Path '%s' already exists.", path)
 			return
+		} else if errors.Is(err, errs.PathTooLong) {
+			log.Warn().Err(err).
+				Msg("Failed to move the space as its path was too long.")
+
+			render.BadRequestf(w, "Unable to move the space as the destination path of the space was too long.")
+			return
 		} else if err != nil {
 			log.Error().Err(err).
 				Msg("Space creation failed.")
 
-			render.InternalError(w, errs.Internal)
+			render.InternalErrorf(w, comms.Internal)
 			return
 		}
 

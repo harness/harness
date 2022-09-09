@@ -8,12 +8,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
-	"github.com/harness/gitness/types/errs"
 
 	"github.com/dchest/uniuri"
 	"github.com/rs/zerolog/hlog"
@@ -36,7 +37,7 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 				Str("email", username).
 				Msg("Failed to hash password")
 
-			render.InternalError(w, errs.Internal)
+			render.InternalErrorf(w, comms.Internal)
 			return
 		}
 

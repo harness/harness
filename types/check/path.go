@@ -59,3 +59,13 @@ func PathParams(path string, isSpace bool) error {
 
 	return nil
 }
+
+/*
+ * Checks if the provided path is too long.
+ *
+ * NOTE: A repository path can be one deeper than a space path (as otherwise the space would be useless)
+ */
+func PathTooLong(path string, isSpace bool) bool {
+	l := strings.Count(path, types.PathSeparator) + 1
+	return (isSpace == false && l > maxPathSegments) || (isSpace && l > maxPathSegmentsForSpace)
+}

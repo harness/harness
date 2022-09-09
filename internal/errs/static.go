@@ -7,7 +7,6 @@ package errs
 import "errors"
 
 var (
-	Internal                        = errors.New("Internal error occured - Please contact operator for more information.")
 	NotAuthenticated                = errors.New("Not authenticated.")
 	NotAuthorized                   = errors.New("Not authorized.")
 	RepositoryRequired              = errors.New("The operation requires a repository.")
