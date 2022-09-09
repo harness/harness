@@ -5,10 +5,12 @@
 package users
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 
 	"github.com/go-chi/chi"
@@ -23,13 +25,16 @@ func HandleFind(users store.UserStore) http.HandlerFunc {
 
 		key := chi.URLParam(r, "user")
 		user, err := users.FindKey(ctx, key)
-		if err != nil {
-			render.NotFound(w, err)
-			log.Debug().Err(err).
-				Str("user_key", key).
-				Msg("cannot find user")
-		} else {
-			render.JSON(w, user, 200)
+		if errors.Is(err, errs.ResourceNotFound) {
+			render.NotFoundf(w, "User doesn't exist.")
+			return
+		} else if err != nil {
+			log.Err(err).Msgf("Failed to get user using key '%s'.", key)
+
+			render.InternalError(w, errs.Internal)
+			return
 		}
+
+		render.JSON(w, user, 200)
 	}
 }

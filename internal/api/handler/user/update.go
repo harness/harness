@@ -28,45 +28,42 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
-		viewer, _ := request.UserFrom(ctx)
+		user, _ := request.UserFrom(ctx)
 
 		in := new(types.UserInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequest(w, err)
-			log.Error().Err(err).
-				Str("email", viewer.Email).
-				Msg("cannot unmarshal request")
+			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
 		}
 
 		if in.Password != nil {
 			hash, err := hashPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
 			if err != nil {
+				log.Err(err).Msg("Failed to hash password.")
+
 				render.InternalError(w, err)
-				log.Debug().Err(err).
-					Msg("cannot hash password")
 				return
 			}
-			viewer.Password = string(hash)
+			user.Password = string(hash)
 		}
 
 		if in.Name != nil {
-			viewer.Name = ptr.ToString(in.Name)
+			user.Name = ptr.ToString(in.Name)
 		}
 
 		if in.Company != nil {
-			viewer.Company = ptr.ToString(in.Company)
+			user.Company = ptr.ToString(in.Company)
 		}
 
-		err = users.Update(ctx, viewer)
+		err = users.Update(ctx, user)
 		if err != nil {
+			log.Err(err).Msg("Failed to update the user.")
+
 			render.InternalError(w, err)
-			log.Error().Err(err).
-				Str("email", viewer.Email).
-				Msg("cannot update user")
-		} else {
-			render.JSON(w, viewer, 200)
+			return
 		}
+
+		render.JSON(w, user, 200)
 	}
 }

@@ -14,7 +14,7 @@ import (
 
 /*
  * Mounts the WEB Router under mountPath.
- * The handler is wrapped within a layer that handles encoding FQNS.
+ * The handler is wrapped within a layer that handles encoding Paths.
  */
 func newWebHandler(
 	mountPath string,
@@ -61,6 +61,6 @@ func newWebHandler(
 		)
 	})
 
-	// web doesn't have any prefixes for terminated fqns
-	return encode.TerminatedFqnBefore([]string{""}, r.ServeHTTP), nil
+	// web doesn't have any prefixes for terminated paths
+	return encode.TerminatedPathBefore([]string{""}, r.ServeHTTP), nil
 }

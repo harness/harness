@@ -21,6 +21,10 @@ import (
 
 var _ Authenticator = (*TokenAuthenticator)(nil)
 
+/*
+ * Authenticates a user by checking for an access token in the
+ * "Authorization" header or the "access_token" form value.
+ */
 type TokenAuthenticator struct {
 	users store.UserStore
 }

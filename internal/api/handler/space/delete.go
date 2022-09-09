@@ -5,6 +5,7 @@
 package space
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/guard"
@@ -12,7 +13,8 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/log"
+	"github.com/harness/gitness/types/errs"
+	"github.com/rs/zerolog/hlog"
 )
 
 /*
@@ -23,19 +25,19 @@ func HandleDelete(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		enum.PermissionSpaceDelete,
 		false,
 		func(w http.ResponseWriter, r *http.Request) {
-			// TODO: return 200 if space confirmed doesn't exist
-
 			ctx := r.Context()
+			log := hlog.FromRequest(r)
 			s, _ := request.SpaceFrom(ctx)
 
 			err := spaces.Delete(r.Context(), s.ID)
-			if err != nil {
-				render.InternalError(w, err)
-				log.Error().Err(err).
-					Str("space_fqn", s.Fqn).
-					Msg("Failed to delete space.")
+			if errors.Is(err, errs.ResourceNotFound) {
+				render.NotFoundf(w, "Space not found.")
 				return
+			} else if err != nil {
+				log.Err(err).Msgf("Failed to delete the space.")
 
+				render.InternalError(w, errs.Internal)
+				return
 			}
 
 			w.WriteHeader(http.StatusNoContent)

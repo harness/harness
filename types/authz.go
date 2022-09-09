@@ -28,10 +28,10 @@ type Resource struct {
  * Represents the scope of a permission check.
  * Notes:
  *		- In case the permission check is for resource REPO, keep repo empty (repo is resource, not scope)
- *		- In case the permission check is for resource SPACE, spaceFqn is an ancestor of the space (space is resource, not scope)
+ *		- In case the permission check is for resource SPACE, SpacePath is an ancestor of the space (space is resource, not scope)
  *		- Repo isn't use as of now (will be useful once we add access control for repo child resources, e.g. branches)
  */
 type Scope struct {
-	SpaceFqn string
-	Repo     string
+	SpacePath string
+	Repo      string
 }

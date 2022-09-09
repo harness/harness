@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
+	"github.com/harness/gitness/types/errs"
 
 	"github.com/dchest/uniuri"
 	"github.com/rs/zerolog/hlog"
@@ -31,13 +32,15 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 
 		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
-			render.InternalError(w, err)
-			log.Debug().Err(err).
+			log.Err(err).
 				Str("email", username).
-				Msg("cannot hash password")
+				Msg("Failed to hash password")
+
+			render.InternalError(w, errs.Internal)
 			return
 		}
 
+		// TODO: allow to provide email and name separately ...
 		user := &types.User{
 			Name:     username,
 			Email:    username,
@@ -48,18 +51,20 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 		}
 
 		if ok, err := check.User(user); !ok {
-			render.BadRequest(w, err)
 			log.Debug().Err(err).
 				Str("email", username).
 				Msg("invalid user input")
+
+			render.BadRequest(w, err)
 			return
 		}
 
 		if err := users.Create(ctx, user); err != nil {
-			render.InternalError(w, err)
-			log.Error().Err(err).
+			log.Err(err).
 				Str("email", username).
-				Msg("cannot create user")
+				Msg("Failed to create user")
+
+			render.InternalError(w, errs.Internal)
 			return
 		}
 
@@ -69,19 +74,25 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 		if user.ID == 1 {
 			user.Admin = true
 			if err := users.Update(ctx, user); err != nil {
-				log.Error().Err(err).
+				log.Err(err).
 					Str("email", username).
-					Msg("cannot enable admin user")
+					Int64("user_id", user.ID).
+					Msg("Failed to enable admin user")
+
+				render.InternalError(w, errs.Internal)
+				return
 			}
 		}
 
 		expires := time.Now().Add(system.Config(ctx).Token.Expire)
 		token_, err := token.GenerateExp(user, expires.Unix(), user.Salt)
 		if err != nil {
-			render.InternalErrorf(w, "Failed to create session")
-			log.Error().Err(err).
+			log.Err(err).
 				Str("email", username).
-				Msg("failed to generate token")
+				Int64("user_id", user.ID).
+				Msg("Failed to generate token")
+
+			render.InternalError(w, errs.Internal)
 			return
 		}
 

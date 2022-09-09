@@ -2,7 +2,6 @@
     {
         "id": 1,
         "name": "space1",
-        "fqn": "space1",
         "parentId": 0,
         "displayName": "Space 1",
         "description": "Some space.",
@@ -14,7 +13,6 @@
     {
         "id": 2,
         "name": "space2",
-        "fqn": "space1/space2",
         "parentId": 1,
         "displayName": "Space 2",
         "description": "Some subspace.",

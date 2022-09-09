@@ -14,7 +14,7 @@ const (
 	SpaceAttrNone SpaceAttr = iota
 	SpaceAttrId
 	SpaceAttrName
-	SpaceAttrFqn
+	SpaceAttrPath
 	SpaceAttrDisplayName
 	SpaceAttrCreated
 	SpaceAttrUpdated
@@ -28,9 +28,9 @@ func ParseSpaceAttr(s string) SpaceAttr {
 		return SpaceAttrId
 	case "name":
 		return SpaceAttrName
-	case "fqn":
-		return SpaceAttrFqn
-	case "displayName":
+	case "path":
+		return SpaceAttrPath
+	case "displayname", "display_name":
 		return SpaceAttrDisplayName
 	case "created", "created_at":
 		return SpaceAttrCreated

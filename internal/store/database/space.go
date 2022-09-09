@@ -6,12 +6,16 @@ package database
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"strings"
+	"time"
 
+	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/types/errs"
+	"github.com/pkg/errors"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -31,74 +35,233 @@ type SpaceStore struct {
 // Finds the space by id.
 func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
 	dst := new(types.Space)
-	err := s.db.Get(dst, spaceSelectID, id)
-	return dst, err
+	if err := s.db.GetContext(ctx, dst, spaceSelectById, id); err != nil {
+		return nil, wrapSqlErrorf(err, "Select query failed")
+	}
+	return dst, nil
 }
 
-// Finds the space by the full qualified space name.
-func (s *SpaceStore) FindFqn(ctx context.Context, fqn string) (*types.Space, error) {
+// Finds the space by path.
+func (s *SpaceStore) FindByPath(ctx context.Context, path string) (*types.Space, error) {
 	dst := new(types.Space)
-	err := s.db.Get(dst, spaceSelectFqn, fqn)
-	return dst, err
+	if err := s.db.GetContext(ctx, dst, spaceSelectByPath, path); err != nil {
+		return nil, wrapSqlErrorf(err, "Select query failed")
+	}
+	return dst, nil
 }
 
 // Creates a new space
 func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
-	// TODO: Ensure parent exists!!
+	tx, err := s.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return wrapSqlErrorf(err, "Failed to start a new transaction")
+	}
+	defer tx.Rollback()
+
+	// insert space first so we get id
 	query, arg, err := s.db.BindNamed(spaceInsert, space)
 	if err != nil {
-		return err
+		return wrapSqlErrorf(err, "Failed to bind space object")
 	}
-	return s.db.QueryRow(query, arg...).Scan(&space.ID)
+
+	if err = tx.QueryRow(query, arg...).Scan(&space.ID); err != nil {
+		return wrapSqlErrorf(err, "Insert query failed")
+	}
+
+	// Get path (get parent if needed)
+	path := space.Name
+	if space.ParentId > 0 {
+		parentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, space.ParentId)
+		if err != nil {
+			return errors.Wrap(err, "Failed to find path of parent space")
+		}
+
+		// all existing paths are valid, space name is assumed to be valid.
+		path = paths.Concatinate(parentPath.Value, space.Name)
+	}
+
+	// create path only once we know the id of the space
+	p := &types.Path{
+		TargetType: enum.PathTargetTypeSpace,
+		TargetId:   space.ID,
+		IsAlias:    false,
+		Value:      path,
+		CreatedBy:  space.CreatedBy,
+		Created:    space.Created,
+		Updated:    space.Updated,
+	}
+	err = CreatePathTx(ctx, s.db, tx, p)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create primary path of space")
+	}
+
+	// commit
+	if err = tx.Commit(); err != nil {
+		return wrapSqlErrorf(err, "Failed to commit transaction")
+	}
+
+	// update path in space object
+	space.Path = p.Value
+
+	return nil
+}
+
+// Moves an existing space.
+func (s *SpaceStore) Move(ctx context.Context, userId int64, spaceId int64, newParentId int64, newName string, keepAsAlias bool) (*types.Space, error) {
+	tx, err := s.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return nil, wrapSqlErrorf(err, "Failed to start a new transaction")
+	}
+	defer tx.Rollback()
+
+	// always get currentpath (either it didn't change or we need to for validation)
+	currentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, spaceId)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to find the primary path of the space")
+	}
+
+	// get path of new parent if needed
+	newPath := newName
+	if newParentId > 0 {
+		// get path of new parent space
+		spacePath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, newParentId)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to find the primary path of the new parent space")
+		}
+
+		newPath = paths.Concatinate(spacePath.Value, newName)
+	}
+
+	/*
+	 * IMPORTANT
+	 *   To avoid cycles in the primary graph, we have to ensure that the old path isn't a prefix of the new path.
+	 */
+	if newPath == currentPath.Value {
+		return nil, errs.NoChangeInRequestedMove
+	} else if strings.HasPrefix(newPath, currentPath.Value) {
+		return nil, errs.IllegalMoveCyclicHierarchy
+	}
+
+	p := &types.Path{
+		TargetType: enum.PathTargetTypeSpace,
+		TargetId:   spaceId,
+		IsAlias:    false,
+		Value:      newPath,
+		CreatedBy:  userId,
+		Created:    time.Now().UnixMilli(),
+		Updated:    time.Now().UnixMilli(),
+	}
+
+	// replace the primary path (also updates all child primary paths)
+	if err = ReplacePathTx(ctx, s.db, tx, p, keepAsAlias); err != nil {
+		return nil, errors.Wrap(err, "Failed to update the primary path of the space")
+	}
+
+	// Update the space itself
+	if _, err := tx.ExecContext(ctx, spaceUpdateNameAndParentId, newName, newParentId, spaceId); err != nil {
+		return nil, wrapSqlErrorf(err, "Query for renaming and updating the parent id failed")
+	}
+
+	// TODO: return space as part of rename operation
+	dst := new(types.Space)
+	if err = tx.GetContext(ctx, dst, spaceSelectById, spaceId); err != nil {
+		return nil, wrapSqlErrorf(err, "Select query to get the space's latest state failed")
+	}
+
+	// commit
+	if err = tx.Commit(); err != nil {
+		return nil, wrapSqlErrorf(err, "Failed to commit transaction")
+	}
+
+	return dst, nil
 }
 
 // Updates the space details.
 func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 	query, arg, err := s.db.BindNamed(spaceUpdate, space)
 	if err != nil {
-		return err
+		return wrapSqlErrorf(err, "Failed to bind space object")
 	}
-	_, err = s.db.Exec(query, arg...)
-	return err
+
+	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
+		wrapSqlErrorf(err, "Update query failed")
+	}
+
+	return nil
 }
 
 // Deletes the space.
 func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
-	tx, err := s.db.BeginTx(ctx, nil)
+	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return err
+		return wrapSqlErrorf(err, "Failed to start a new transaction")
 	}
 	defer tx.Rollback()
 
-	// ensure there are no child spaces
-	var count int64
+	// get primary path
+	path, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, id)
+	if err != nil {
+		return errors.Wrap(err, "Failed to find the primary path of the space")
+	}
+
+	// Get child count and ensure there are none
+	count, err := CountPrimaryChildPathsTx(ctx, tx, path.Value)
 	if err := tx.QueryRow(spaceCount, id).Scan(&count); err != nil {
-		return err
+		return errors.Wrap(err, "Failed to count the child paths of the space")
 	} else if count > 0 {
 		// TODO: still returns 500
-		return errors.New(fmt.Sprintf("Space still contains %d child space(s).", count))
+		return errs.SpaceWithChildsCantBeDeleted
+	}
+
+	// delete all paths
+	err = DeleteAllPaths(ctx, tx, enum.PathTargetTypeSpace, id)
+	if err != nil {
+		return errors.Wrap(err, "Failed to delete all paths of the space")
 	}
 
 	// delete the space
 	if _, err := tx.Exec(spaceDelete, id); err != nil {
-		return err
+		return wrapSqlErrorf(err, "The delete query failed")
 	}
-	return tx.Commit()
+
+	if err = tx.Commit(); err != nil {
+		return wrapSqlErrorf(err, "Failed to commit transaction")
+	}
+
+	return nil
+}
+
+// Count the child spaces of a space.
+func (s *SpaceStore) Count(ctx context.Context, id int64) (int64, error) {
+	var count int64
+	err := s.db.QueryRowContext(ctx, spaceCount, id).Scan(&count)
+	if err != nil {
+		return 0, wrapSqlErrorf(err, "Failed executing count query")
+	}
+	return count, nil
 }
 
 // List returns a list of spaces under the parent space.
-func (s *SpaceStore) List(ctx context.Context, id int64, opts types.SpaceFilter) ([]*types.Space, error) {
+// TODO: speed up list - for some reason is 200ms for 1 space as well as 1000
+func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error) {
 	dst := []*types.Space{}
 
 	// if the user does not provide any customer filter
 	// or sorting we use the default select statement.
 	if opts.Sort == enum.SpaceAttrNone {
-		err := s.db.Select(&dst, spaceSelect, id, limit(opts.Size), offset(opts.Page, opts.Size))
-		return dst, err
+		err := s.db.SelectContext(ctx, &dst, spaceSelect, id, limit(opts.Size), offset(opts.Page, opts.Size))
+		if err != nil {
+			return nil, wrapSqlErrorf(err, "Failed executing default list query")
+		}
+		return dst, nil
 	}
 
 	// else we construct the sql statement.
-	stmt := builder.Select("*").From("spaces").Where("space_parentId = " + fmt.Sprint(id))
+	stmt := builder.
+		Select("spaces.*,path_value AS space_path").
+		From("spaces").
+		InnerJoin("paths ON spaces.space_id=paths.path_targetId AND paths.path_targetType='space' AND paths.path_isAlias=0").
+		Where("space_parentId = " + fmt.Sprint(id))
 	stmt = stmt.Limit(uint64(limit(opts.Size)))
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
@@ -114,31 +277,54 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts types.SpaceFilter)
 		stmt = stmt.OrderBy("space_id " + opts.Order.String())
 	case enum.SpaceAttrName:
 		stmt = stmt.OrderBy("space_name " + opts.Order.String())
-	case enum.SpaceAttrFqn:
-		stmt = stmt.OrderBy("space_fqn " + opts.Order.String())
+	case enum.SpaceAttrPath:
+		stmt = stmt.OrderBy("space_path " + opts.Order.String())
 	}
 
 	sql, _, err := stmt.ToSql()
 	if err != nil {
-		return dst, err
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
 
-	err = s.db.Select(&dst, sql)
-	return dst, err
+	if err = s.db.SelectContext(ctx, &dst, sql); err != nil {
+		return nil, wrapSqlErrorf(err, "Failed executing custom list query")
+	}
+
+	return dst, nil
 }
 
-// Count the child spaces of a space.
-func (s *SpaceStore) Count(ctx context.Context, id int64) (int64, error) {
-	var count int64
-	err := s.db.QueryRow(spaceCount, id).Scan(&count)
-	return count, err
+// List returns a list of all paths of a space.
+func (s *SpaceStore) ListAllPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
+	return ListPaths(ctx, s.db, enum.PathTargetTypeSpace, id, opts)
 }
 
-const spaceBase = `
+// Create an alias for a space.
+func (s *SpaceStore) CreatePath(ctx context.Context, spaceId int64, params *types.PathParams) (*types.Path, error) {
+	p := &types.Path{
+		TargetType: enum.PathTargetTypeSpace,
+		TargetId:   spaceId,
+		IsAlias:    true,
+
+		// get remaining infor from params
+		Value:     params.Path,
+		CreatedBy: params.CreatedBy,
+		Created:   params.Created,
+		Updated:   params.Updated,
+	}
+
+	return p, CreatePath(ctx, s.db, p)
+}
+
+// Delete an alias of a space.
+func (s *SpaceStore) DeletePath(ctx context.Context, spaceId int64, pathId int64) error {
+	return DeletePath(ctx, s.db, pathId)
+}
+
+const spaceSelectBase = `
 SELECT
  space_id
 ,space_name
-,space_fqn
+,paths.path_value AS space_path
 ,space_parentId
 ,space_displayName
 ,space_description
@@ -146,12 +332,17 @@ SELECT
 ,space_createdBy
 ,space_created
 ,space_updated
-FROM spaces
 `
 
-const spaceSelect = spaceBase + `
+const spaceSelectBaseWithJoin = spaceSelectBase + `
+FROM spaces
+INNER JOIN paths
+ON spaces.space_id=paths.path_targetId AND paths.path_targetType='space' AND paths.path_isAlias=0
+`
+
+const spaceSelect = spaceSelectBaseWithJoin + `
 WHERE space_parentId = $1
-ORDER BY space_fqn ASC
+ORDER BY space_name ASC
 LIMIT $2 OFFSET $3
 `
 
@@ -161,12 +352,14 @@ FROM spaces
 WHERE space_parentId = $1
 `
 
-const spaceSelectID = spaceBase + `
+const spaceSelectById = spaceSelectBaseWithJoin + `
 WHERE space_id = $1
 `
 
-const spaceSelectFqn = spaceBase + `
-WHERE space_fqn = $1
+const spaceSelectByPath = spaceSelectBase + `
+FROM paths paths1
+INNER JOIN spaces ON spaces.space_id=paths1.path_targetId AND paths1.path_targetType='space' AND paths1.path_value = $1
+INNER JOIN paths ON spaces.space_id=paths.path_targetId AND paths.path_targetType='space' AND paths.path_isAlias=0
 `
 
 const spaceDelete = `
@@ -177,7 +370,6 @@ WHERE space_id = $1
 const spaceInsert = `
 INSERT INTO spaces (
     space_name
-   ,space_fqn
    ,space_parentId
    ,space_displayName
    ,space_description
@@ -187,7 +379,6 @@ INSERT INTO spaces (
    ,space_updated
 ) values (
    :space_name
-   ,:space_fqn
    ,:space_parentId
    ,:space_displayName
    ,:space_description
@@ -206,4 +397,12 @@ space_displayName   = :space_displayName
 ,space_isPublic     = :space_isPublic
 ,space_updated      = :space_updated
 WHERE space_id = :space_id
+`
+
+const spaceUpdateNameAndParentId = `
+UPDATE spaces
+SET
+space_name = $1
+,space_parentId = $2
+WHERE space_id = $3
 `

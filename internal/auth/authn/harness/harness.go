@@ -13,6 +13,9 @@ import (
 
 var _ authn.Authenticator = (*Authenticator)(nil)
 
+/*
+ * An authenticator that validates access token provided by harness SAAS.
+ */
 type Authenticator struct {
 	// some config to validate jwt
 }

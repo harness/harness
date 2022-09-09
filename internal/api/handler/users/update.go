@@ -6,6 +6,7 @@ package users
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
+	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 
 	"github.com/go-chi/chi"
@@ -33,32 +35,31 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 
 		key := chi.URLParam(r, "user")
 		user, err := users.FindKey(ctx, key)
-		if err != nil {
-			render.NotFound(w, err)
-			log.Debug().Err(err).
-				Str("user_key", key).
-				Msg("cannot find user")
+		if errors.Is(err, errs.ResourceNotFound) {
+			render.NotFoundf(w, "User not found.")
+			return
+		} else if err != nil {
+			log.Err(err).Msgf("Failed to get user using key '%s'.", key)
+
+			render.InternalError(w, errs.Internal)
 			return
 		}
 
 		in := new(types.UserInput)
 		if err := json.NewDecoder(r.Body).Decode(in); err != nil {
-			render.BadRequest(w, err)
-			log.Debug().Err(err).
-				Int64("user_id", user.ID).
-				Str("user_email", user.Email).
-				Msg("cannot unmarshal request")
+			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
 		}
 
 		if in.Password != nil {
 			hash, err := hashPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
 			if err != nil {
-				render.InternalError(w, err)
-				log.Debug().Err(err).
+				log.Err(err).
 					Int64("user_id", user.ID).
 					Str("user_email", user.Email).
-					Msg("cannot hash password")
+					Msg("Failed to hash password")
+
+				render.InternalError(w, errs.Internal)
 				return
 			}
 			user.Password = string(hash)
@@ -76,23 +77,28 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 			user.Admin = ptr.ToBool(in.Admin)
 		}
 
+		// TODO: why are we overwriting the password twice?
 		if in.Password != nil {
 			hash, err := bcrypt.GenerateFromPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
 			if err != nil {
-				render.InternalError(w, err)
-				log.Debug().Err(err).
-					Msg("cannot hash password")
+				log.Err(err).
+					Int64("user_id", user.ID).
+					Str("user_email", user.Email).
+					Msg("Failed to hash password")
+
+				render.InternalError(w, errs.Internal)
 				return
 			}
 			user.Password = string(hash)
 		}
 
 		if ok, err := check.User(user); !ok {
-			render.BadRequest(w, err)
 			log.Debug().Err(err).
 				Int64("user_id", user.ID).
 				Str("user_email", user.Email).
-				Msg("cannot update user")
+				Msg("invalid user input")
+
+			render.BadRequest(w, err)
 			return
 		}
 
@@ -100,13 +106,15 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 
 		err = users.Update(ctx, user)
 		if err != nil {
-			render.InternalError(w, err)
-			log.Error().Err(err).
+			log.Err(err).
 				Int64("user_id", user.ID).
 				Str("user_email", user.Email).
-				Msg("cannot update user")
-		} else {
-			render.JSON(w, user, 200)
+				Msg("Failed to update the usser")
+
+			render.InternalError(w, errs.Internal)
+			return
 		}
+
+		render.JSON(w, user, 200)
 	}
 }

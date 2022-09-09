@@ -34,10 +34,10 @@ func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler 
 				return
 			}
 
-			// otherwise update the logging context and inject user in context
+			// Update the logging context and inject user in context
 			ctx := r.Context()
 			log.Ctx(ctx).UpdateContext(func(c zerolog.Context) zerolog.Context {
-				return c.Str("session_email", user.Email).Bool("session_admin", user.Admin)
+				return c.Int64("user_id", user.ID).Bool("user_admin", user.Admin)
 			})
 
 			next.ServeHTTP(w, r.WithContext(

@@ -14,7 +14,7 @@ const (
 	RepoAttrNone RepoAttr = iota
 	RepoAttrId
 	RepoAttrName
-	RepoAttrFqn
+	RepoAttrPath
 	RepoAttrDisplayName
 	RepoAttrCreated
 	RepoAttrUpdated
@@ -28,8 +28,8 @@ func ParseRepoAtrr(s string) RepoAttr {
 		return RepoAttrId
 	case "name":
 		return RepoAttrName
-	case "fqn":
-		return RepoAttrFqn
+	case "path":
+		return RepoAttrPath
 	case "displayName":
 		return RepoAttrDisplayName
 	case "created", "created_at":

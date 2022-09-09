@@ -13,7 +13,8 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/log"
+	"github.com/harness/gitness/types/errs"
+	"github.com/rs/zerolog/hlog"
 )
 
 /*
@@ -25,28 +26,27 @@ func HandleList(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 		true,
 		func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			s, _ := request.SpaceFrom(ctx)
+			log := hlog.FromRequest(r)
+			space, _ := request.SpaceFrom(ctx)
 
 			params := request.ParseSpaceFilter(r)
 			if params.Order == enum.OrderDefault {
 				params.Order = enum.OrderAsc
 			}
 
-			count, err := spaces.Count(ctx, s.ID)
+			count, err := spaces.Count(ctx, space.ID)
 			if err != nil {
-				render.InternalError(w, err)
-				log.Error().Err(err).
-					Str("space_fqn", s.Fqn).
-					Msg("Failed to retrieve count of child spaces.")
+				log.Err(err).Msgf("Failed to count child spaces.")
+
+				render.InternalError(w, errs.Internal)
 				return
 			}
 
-			allSpaces, err := spaces.List(ctx, s.ID, params)
+			allSpaces, err := spaces.List(ctx, space.ID, params)
 			if err != nil {
-				render.InternalError(w, err)
-				log.Error().Err(err).
-					Str("space_fqn", s.Fqn).
-					Msg("Failed to retrieve list of child spaces.")
+				log.Err(err).Msgf("Failed to list child spaces.")
+
+				render.InternalError(w, errs.Internal)
 				return
 			}
 
@@ -58,10 +58,10 @@ func HandleList(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			result := make([]*types.Space, 0, len(allSpaces))
 			for _, cs := range allSpaces {
 				if !cs.IsPublic {
-					err := guard.CheckSpace(r, enum.PermissionSpaceView, cs.Fqn)
+					err := guard.CheckSpace(r, enum.PermissionSpaceView, cs.Path)
 					if err != nil {
 						log.Debug().Err(err).
-							Msgf("Skip space '%s' in output.", cs.Fqn)
+							Msgf("Skip space '%s' in output.", cs.Path)
 						continue
 					}
 				}

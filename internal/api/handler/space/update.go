@@ -5,28 +5,73 @@
 package space
 
 import (
-	"errors"
+	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/types/errs"
+	"github.com/rs/zerolog/log"
 )
+
+type spaceUpdateRequest struct {
+	DisplayName *string `json:"displayName"`
+	Description *string `json:"description"`
+	IsPublic    *bool   `json:"isPublic"`
+}
 
 /*
  * Updates an existing space.
  */
-func HandleUpdate(guard *guard.Guard) http.HandlerFunc {
+func HandleUpdate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 	return guard.Space(
 		enum.PermissionSpaceEdit,
 		false,
 		func(w http.ResponseWriter, r *http.Request) {
-			/*
-			 * TO-DO: Add support for updating an existing space.
-			 * 		  Requires Solving:
-			 *			- Update all FQNs of child spaces (or change design)
-			 *			- Update all acl permissions? (or change design)
-			 */
-			render.BadRequest(w, errors.New("Updating an existing space is not supported."))
+			ctx := r.Context()
+			space, _ := request.SpaceFrom(ctx)
+
+			in := new(spaceUpdateRequest)
+			err := json.NewDecoder(r.Body).Decode(in)
+			if err != nil {
+				render.BadRequestf(w, "Invalid request body: %s.", err)
+				return
+			}
+
+			// update values only if provided
+			if in.DisplayName != nil {
+				space.DisplayName = *in.DisplayName
+			}
+			if in.Description != nil {
+				space.Description = *in.Description
+			}
+			if in.IsPublic != nil {
+				space.IsPublic = *in.IsPublic
+			}
+
+			// always update time
+			space.Updated = time.Now().UnixMilli()
+
+			// ensure provided values are valid
+			if err := check.Space(space); err != nil {
+				render.BadRequest(w, err)
+				return
+			}
+
+			err = spaces.Update(ctx, space)
+			if err != nil {
+				log.Error().Err(err).
+					Msg("Space update failed.")
+
+				render.InternalError(w, errs.Internal)
+				return
+			}
+
+			render.JSON(w, space, http.StatusOK)
 		})
 }

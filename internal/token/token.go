@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/types"
+	"github.com/pkg/errors"
 
 	"github.com/dgrijalva/jwt-go"
 )
@@ -29,7 +30,13 @@ func Generate(user *types.User, secret string) (string, error) {
 			IssuedAt: time.Now().Unix(),
 		},
 	})
-	return token.SignedString([]byte(secret))
+
+	res, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to sign token")
+	}
+
+	return res, nil
 }
 
 // GenerateExp generates a token with an expiration date.
@@ -42,5 +49,11 @@ func GenerateExp(user *types.User, exp int64, secret string) (string, error) {
 			IssuedAt:  time.Now().Unix(),
 		},
 	})
-	return token.SignedString([]byte(secret))
+
+	res, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to sign token")
+	}
+
+	return res, nil
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
+	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 	"golang.org/x/crypto/bcrypt"
 
@@ -35,17 +36,17 @@ func HandleCreate(users store.UserStore) http.HandlerFunc {
 		in := new(userCreateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequest(w, err)
-			log.Debug().Err(err).
-				Msg("cannot unmarshal json request")
+			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
 		}
 
 		hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
 		if err != nil {
-			render.InternalError(w, err)
-			log.Debug().Err(err).
-				Msg("cannot hash password")
+			log.Err(err).
+				Str("email", in.Username).
+				Msg("Failed to hash password")
+
+			render.InternalError(w, errs.Internal)
 			return
 		}
 
@@ -59,22 +60,24 @@ func HandleCreate(users store.UserStore) http.HandlerFunc {
 		}
 
 		if ok, err := check.User(user); !ok {
-			render.BadRequest(w, err)
 			log.Debug().Err(err).
-				Str("user_email", user.Email).
-				Msg("cannot validate user")
+				Str("email", user.Email).
+				Msg("invalid user input")
+
+			render.BadRequest(w, err)
 			return
 		}
 
 		err = users.Create(ctx, user)
 		if err != nil {
-			render.InternalError(w, err)
-			log.Error().Err(err).
-				Int64("user_id", user.ID).
-				Str("user_email", user.Email).
-				Msg("cannot create user")
-		} else {
-			render.JSON(w, user, 200)
+			log.Err(err).
+				Str("email", user.Email).
+				Msg("failed to create user")
+
+			render.InternalError(w, errs.Internal)
+			return
 		}
+
+		render.JSON(w, user, 200)
 	}
 }

@@ -4,6 +4,14 @@
 
 package database
 
+import (
+	"database/sql"
+
+	"github.com/harness/gitness/types/errs"
+	"github.com/mattn/go-sqlite3"
+	"github.com/pkg/errors"
+)
+
 // default query range limit.
 const defaultLimit = 100
 
@@ -25,4 +33,19 @@ func offset(page, size int) int {
 	}
 	page = page - 1
 	return page * size
+}
+
+func wrapSqlErrorf(original error, format string, args ...interface{}) error {
+	if original == sql.ErrNoRows {
+		original = errs.WrapInResourceNotFound(original)
+	} else if isSqlUniqueConstraintError(original) {
+		original = errs.WrapInDuplicate(original)
+	}
+
+	return errors.Wrapf(original, format, args...)
+}
+
+func isSqlUniqueConstraintError(original error) bool {
+	o3, ok := original.(sqlite3.Error)
+	return ok && errors.Is(o3.ExtendedCode, sqlite3.ErrConstraintUnique)
 }

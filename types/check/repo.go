@@ -5,50 +5,31 @@
 package check
 
 import (
-	"errors"
 	"fmt"
-	"regexp"
 
 	"github.com/harness/gitness/types"
 )
 
-const (
-	minRepoNameLength = 1
-	maxRepoNameLength = 64
-	repoNameRegex     = "^[a-z][a-z0-9\\-\\_]*$"
-
-	minRepoDisplayNameLength = 1
-	maxRepoDisplayNameLength = 256
-	repoDisplayNameRegex     = "^[a-zA-Z][a-zA-Z0-9\\-\\_ ]*$"
-)
-
 var (
-	ErrRepoNameLength = errors.New(fmt.Sprintf("Repository name has to be between %d and %d in length.", minRepoNameLength, maxRepoNameLength))
-	ErrRepoNameRegex  = errors.New("Repository name has start with a letter and only contain the following [a-z0-9-_].")
-
-	ErrRepoDisplayNameLength = errors.New(fmt.Sprintf("Repository display name has to be between %d and %d in length.", minRepoDisplayNameLength, maxRepoDisplayNameLength))
-	ErrRepoDisplayNameRegex  = errors.New("Repository display name has start with a letter and only contain the following [a-zA-Z0-9-_ ].")
+	RepositoryRequiresSpaceIdError = fmt.Errorf("SpaceId required - Repositories don't exist outside of a space.")
 )
 
-// Repo returns true if the Repo if valid.
-func Repo(repo *types.Repository) (bool, error) {
-	l := len(repo.Name)
-	if l < minRepoNameLength || l > maxRepoNameLength {
-		return false, ErrRepoNameLength
+// Repo checks the provided repository and returns an error in it isn't valid.
+func Repo(repo *types.Repository) error {
+	// validate name
+	if err := Name(repo.Name); err != nil {
+		return err
 	}
 
-	if ok, _ := regexp.Match(repoNameRegex, []byte(repo.Name)); !ok {
-		return false, ErrRepoNameRegex
+	// validate display name
+	if err := DisplayName(repo.DisplayName); err != nil {
+		return err
 	}
 
-	l = len(repo.DisplayName)
-	if l < minRepoDisplayNameLength || l > maxRepoDisplayNameLength {
-		return false, ErrRepoDisplayNameLength
+	// validate repo within a space
+	if repo.SpaceId <= 0 {
+		return RepositoryRequiresSpaceIdError
 	}
 
-	if ok, _ := regexp.Match(repoDisplayNameRegex, []byte(repo.DisplayName)); !ok {
-		return false, ErrRepoDisplayNameRegex
-	}
-
-	return true, nil
+	return nil
 }

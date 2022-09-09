@@ -161,7 +161,7 @@ func (mr *MockUserStoreMockRecorder) FindKey(arg0, arg1 interface{}) *gomock.Cal
 }
 
 // List mocks base method.
-func (m *MockUserStore) List(arg0 context.Context, arg1 types.UserFilter) ([]*types.User, error) {
+func (m *MockUserStore) List(arg0 context.Context, arg1 *types.UserFilter) ([]*types.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
 	ret0, _ := ret[0].([]*types.User)
@@ -241,6 +241,21 @@ func (mr *MockSpaceStoreMockRecorder) Create(arg0, arg1 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockSpaceStore)(nil).Create), arg0, arg1)
 }
 
+// CreatePath mocks base method.
+func (m *MockSpaceStore) CreatePath(arg0 context.Context, arg1 int64, arg2 *types.PathParams) (*types.Path, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePath", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*types.Path)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreatePath indicates an expected call of CreatePath.
+func (mr *MockSpaceStoreMockRecorder) CreatePath(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePath", reflect.TypeOf((*MockSpaceStore)(nil).CreatePath), arg0, arg1, arg2)
+}
+
 // Delete mocks base method.
 func (m *MockSpaceStore) Delete(arg0 context.Context, arg1 int64) error {
 	m.ctrl.T.Helper()
@@ -253,6 +268,20 @@ func (m *MockSpaceStore) Delete(arg0 context.Context, arg1 int64) error {
 func (mr *MockSpaceStoreMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockSpaceStore)(nil).Delete), arg0, arg1)
+}
+
+// DeletePath mocks base method.
+func (m *MockSpaceStore) DeletePath(arg0 context.Context, arg1, arg2 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePath", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePath indicates an expected call of DeletePath.
+func (mr *MockSpaceStoreMockRecorder) DeletePath(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePath", reflect.TypeOf((*MockSpaceStore)(nil).DeletePath), arg0, arg1, arg2)
 }
 
 // Find mocks base method.
@@ -270,23 +299,23 @@ func (mr *MockSpaceStoreMockRecorder) Find(arg0, arg1 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockSpaceStore)(nil).Find), arg0, arg1)
 }
 
-// FindFqn mocks base method.
-func (m *MockSpaceStore) FindFqn(arg0 context.Context, arg1 string) (*types.Space, error) {
+// FindByPath mocks base method.
+func (m *MockSpaceStore) FindByPath(arg0 context.Context, arg1 string) (*types.Space, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindFqn", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindByPath", arg0, arg1)
 	ret0, _ := ret[0].(*types.Space)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindFqn indicates an expected call of FindFqn.
-func (mr *MockSpaceStoreMockRecorder) FindFqn(arg0, arg1 interface{}) *gomock.Call {
+// FindByPath indicates an expected call of FindByPath.
+func (mr *MockSpaceStoreMockRecorder) FindByPath(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindFqn", reflect.TypeOf((*MockSpaceStore)(nil).FindFqn), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByPath", reflect.TypeOf((*MockSpaceStore)(nil).FindByPath), arg0, arg1)
 }
 
 // List mocks base method.
-func (m *MockSpaceStore) List(arg0 context.Context, arg1 int64, arg2 types.SpaceFilter) ([]*types.Space, error) {
+func (m *MockSpaceStore) List(arg0 context.Context, arg1 int64, arg2 *types.SpaceFilter) ([]*types.Space, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*types.Space)
@@ -298,6 +327,36 @@ func (m *MockSpaceStore) List(arg0 context.Context, arg1 int64, arg2 types.Space
 func (mr *MockSpaceStoreMockRecorder) List(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockSpaceStore)(nil).List), arg0, arg1, arg2)
+}
+
+// ListAllPaths mocks base method.
+func (m *MockSpaceStore) ListAllPaths(arg0 context.Context, arg1 int64, arg2 *types.PathFilter) ([]*types.Path, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAllPaths", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]*types.Path)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAllPaths indicates an expected call of ListAllPaths.
+func (mr *MockSpaceStoreMockRecorder) ListAllPaths(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllPaths", reflect.TypeOf((*MockSpaceStore)(nil).ListAllPaths), arg0, arg1, arg2)
+}
+
+// Move mocks base method.
+func (m *MockSpaceStore) Move(arg0 context.Context, arg1, arg2, arg3 int64, arg4 string, arg5 bool) (*types.Space, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Move", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].(*types.Space)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Move indicates an expected call of Move.
+func (mr *MockSpaceStoreMockRecorder) Move(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Move", reflect.TypeOf((*MockSpaceStore)(nil).Move), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // Update mocks base method.
@@ -366,6 +425,21 @@ func (mr *MockRepoStoreMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockRepoStore)(nil).Create), arg0, arg1)
 }
 
+// CreatePath mocks base method.
+func (m *MockRepoStore) CreatePath(arg0 context.Context, arg1 int64, arg2 *types.PathParams) (*types.Path, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePath", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*types.Path)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreatePath indicates an expected call of CreatePath.
+func (mr *MockRepoStoreMockRecorder) CreatePath(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePath", reflect.TypeOf((*MockRepoStore)(nil).CreatePath), arg0, arg1, arg2)
+}
+
 // Delete mocks base method.
 func (m *MockRepoStore) Delete(arg0 context.Context, arg1 int64) error {
 	m.ctrl.T.Helper()
@@ -378,6 +452,20 @@ func (m *MockRepoStore) Delete(arg0 context.Context, arg1 int64) error {
 func (mr *MockRepoStoreMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockRepoStore)(nil).Delete), arg0, arg1)
+}
+
+// DeletePath mocks base method.
+func (m *MockRepoStore) DeletePath(arg0 context.Context, arg1, arg2 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePath", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePath indicates an expected call of DeletePath.
+func (mr *MockRepoStoreMockRecorder) DeletePath(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePath", reflect.TypeOf((*MockRepoStore)(nil).DeletePath), arg0, arg1, arg2)
 }
 
 // Find mocks base method.
@@ -395,23 +483,23 @@ func (mr *MockRepoStoreMockRecorder) Find(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockRepoStore)(nil).Find), arg0, arg1)
 }
 
-// FindFqn mocks base method.
-func (m *MockRepoStore) FindFqn(arg0 context.Context, arg1 string) (*types.Repository, error) {
+// FindByPath mocks base method.
+func (m *MockRepoStore) FindByPath(arg0 context.Context, arg1 string) (*types.Repository, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindFqn", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindByPath", arg0, arg1)
 	ret0, _ := ret[0].(*types.Repository)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindFqn indicates an expected call of FindFqn.
-func (mr *MockRepoStoreMockRecorder) FindFqn(arg0, arg1 interface{}) *gomock.Call {
+// FindByPath indicates an expected call of FindByPath.
+func (mr *MockRepoStoreMockRecorder) FindByPath(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindFqn", reflect.TypeOf((*MockRepoStore)(nil).FindFqn), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByPath", reflect.TypeOf((*MockRepoStore)(nil).FindByPath), arg0, arg1)
 }
 
 // List mocks base method.
-func (m *MockRepoStore) List(arg0 context.Context, arg1 int64, arg2 types.RepoFilter) ([]*types.Repository, error) {
+func (m *MockRepoStore) List(arg0 context.Context, arg1 int64, arg2 *types.RepoFilter) ([]*types.Repository, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*types.Repository)
@@ -423,6 +511,36 @@ func (m *MockRepoStore) List(arg0 context.Context, arg1 int64, arg2 types.RepoFi
 func (mr *MockRepoStoreMockRecorder) List(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockRepoStore)(nil).List), arg0, arg1, arg2)
+}
+
+// ListAllPaths mocks base method.
+func (m *MockRepoStore) ListAllPaths(arg0 context.Context, arg1 int64, arg2 *types.PathFilter) ([]*types.Path, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAllPaths", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]*types.Path)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAllPaths indicates an expected call of ListAllPaths.
+func (mr *MockRepoStoreMockRecorder) ListAllPaths(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllPaths", reflect.TypeOf((*MockRepoStore)(nil).ListAllPaths), arg0, arg1, arg2)
+}
+
+// Move mocks base method.
+func (m *MockRepoStore) Move(arg0 context.Context, arg1, arg2, arg3 int64, arg4 string, arg5 bool) (*types.Repository, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Move", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].(*types.Repository)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Move indicates an expected call of Move.
+func (mr *MockRepoStoreMockRecorder) Move(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Move", reflect.TypeOf((*MockRepoStore)(nil).Move), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // Update mocks base method.

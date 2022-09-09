@@ -5,6 +5,7 @@
 package repo
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -12,6 +13,9 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/errs"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 /*
@@ -29,24 +33,33 @@ func Required(repos store.RepoStore) func(http.Handler) http.Handler {
 			}
 
 			ctx := r.Context()
-			var rep *types.Repository
+			var repo *types.Repository
 
 			// check if ref is repoId - ASSUMPTION: digit only is no valid repo name
 			id, err := strconv.ParseInt(ref, 10, 64)
 			if err == nil {
-				rep, err = repos.Find(ctx, id)
+				repo, err = repos.Find(ctx, id)
 			} else {
-				rep, err = repos.FindFqn(ctx, ref)
+				repo, err = repos.FindByPath(ctx, ref)
 			}
 
-			if err != nil {
-				// TODO: what about errors that aren't notfound?
-				render.NotFoundf(w, "Resolving repository reference '%s' failed: %s", ref, err)
+			if errors.Is(err, errs.ResourceNotFound) {
+				render.NotFoundf(w, "Repository doesn't exist.")
+				return
+			} else if err != nil {
+				log.Err(err).Msgf("Failed to get repo using ref '%s'.", ref)
+
+				render.InternalError(w, errs.Internal)
 				return
 			}
 
+			// Update the logging context and inject repo in context
+			log.Ctx(ctx).UpdateContext(func(c zerolog.Context) zerolog.Context {
+				return c.Int64("repo_id", repo.ID).Str("repo_path", repo.Path)
+			})
+
 			next.ServeHTTP(w, r.WithContext(
-				request.WithRepo(ctx, rep),
+				request.WithRepo(ctx, repo),
 			))
 		})
 	}

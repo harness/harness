@@ -14,14 +14,16 @@ import (
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 )
 
-type spaceCreateInput struct {
+type spaceCreateRequest struct {
 	Name        string `json:"name"`
 	ParentId    int64  `json:"parentId"`
 	DisplayName string `json:"displayName"`
@@ -37,36 +39,18 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
 
-		in := new(spaceCreateInput)
+		in := new(spaceCreateRequest)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequest(w, err)
-			log.Debug().Err(err).
-				Msg("Decoding json body failed.")
+			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
-		}
-
-		// Get fqn and parentFqn
-		parentFqn := ""
-		fqn := in.Name
-		if in.ParentId > 0 {
-			parentSpace, err := spaces.Find(ctx, in.ParentId)
-			if err != nil {
-				render.BadRequest(w, err)
-				log.Debug().
-					Err(err).
-					Msgf("Parent space '%s' doesn't exist.", parentFqn)
-
-				return
-			}
-
-			// parentFqn is assumed to be valid, in.Name gets validated in check.Space function
-			parentFqn = parentSpace.Fqn
-			fqn = parentFqn + "/" + in.Name
 		}
 
 		// get current user (will be enforced to not be nil via explicit check or guard.Enforce)
 		usr, _ := request.UserFrom(ctx)
+
+		// Collect parent path along the way - needed for duplicate error message
+		parentPath := ""
 
 		/*
 		 * AUTHORIZATION
@@ -75,12 +59,23 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		if in.ParentId <= 0 {
 			// TODO: Restrict top level space creation.
 			if usr == nil {
-				render.Unauthorized(w, errors.New("Authentication required."))
+				render.Unauthorized(w, errs.NotAuthenticated)
 				return
 			}
 		} else {
-			// Create is a special case - check permission without specific resource
-			scope := &types.Scope{SpaceFqn: parentFqn}
+			// Create is a special case - we need the parent path
+			parent, err := spaces.Find(ctx, in.ParentId)
+			if errors.Is(err, errs.ResourceNotFound) {
+				render.NotFoundf(w, "Provided parent space wasn't found.")
+				return
+			} else if err != nil {
+				log.Err(err).Msgf("Failed to get space with id '%s'.", in.ParentId)
+
+				render.InternalError(w, errs.Internal)
+				return
+			}
+
+			scope := &types.Scope{SpacePath: parent.Path}
 			resource := &types.Resource{
 				Type: enum.ResourceTypeSpace,
 				Name: "",
@@ -88,12 +83,14 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			if !guard.Enforce(w, r, scope, resource, enum.PermissionSpaceCreate) {
 				return
 			}
+
+			parentPath = parent.Path
 		}
 
+		// create new space object
 		space := &types.Space{
 			Name:        strings.ToLower(in.Name),
 			ParentId:    in.ParentId,
-			Fqn:         strings.ToLower(fqn),
 			DisplayName: in.DisplayName,
 			Description: in.Description,
 			IsPublic:    in.IsPublic,
@@ -102,20 +99,35 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			Updated:     time.Now().UnixMilli(),
 		}
 
-		if ok, err := check.Space(space); !ok {
+		// validate space
+		if err := check.Space(space); err != nil {
 			render.BadRequest(w, err)
-			log.Debug().Err(err).
-				Msg("Space validation failed.")
 			return
 		}
 
-		err = spaces.Create(ctx, space)
-		if err != nil {
-			render.InternalError(w, err)
-			log.Error().Err(err).
-				Msg("Space creation failed")
-		} else {
-			render.JSON(w, space, 200)
+		// validate path (Due to racing conditions we can't be 100% sure on the path here, but that's okay)
+		path := paths.Concatinate(parentPath, space.Name)
+		if err = check.PathParams(path, true); err != nil {
+			render.BadRequest(w, err)
+			return
 		}
+
+		// create in store
+		err = spaces.Create(ctx, space)
+		if errors.Is(err, errs.Duplicate) {
+			log.Warn().Err(err).
+				Msg("Space creation failed as a duplicate was detected.")
+
+			render.BadRequestf(w, "Path '%s' already exists.", path)
+			return
+		} else if err != nil {
+			log.Error().Err(err).
+				Msg("Space creation failed.")
+
+			render.InternalError(w, errs.Internal)
+			return
+		}
+
+		render.JSON(w, space, 200)
 	}
 }

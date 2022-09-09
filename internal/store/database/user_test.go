@@ -194,7 +194,7 @@ func testUserList(store store.UserStore) func(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		got, err := store.List(noContext, types.UserFilter{Page: 0, Size: 100})
+		got, err := store.List(noContext, &types.UserFilter{Page: 0, Size: 100})
 		if err != nil {
 			t.Error(err)
 			return

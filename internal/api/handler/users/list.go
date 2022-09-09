@@ -18,10 +18,8 @@ import (
 // list of all registered system users to the response body.
 func HandleList(users store.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var (
-			ctx = r.Context()
-			log = hlog.FromRequest(r)
-		)
+		ctx := r.Context()
+		log := hlog.FromRequest(r)
 
 		params := request.ParseUserFilter(r)
 		if params.Order == enum.OrderDefault {
@@ -30,15 +28,16 @@ func HandleList(users store.UserStore) http.HandlerFunc {
 
 		count, err := users.Count(ctx)
 		if err != nil {
-			log.Error().Err(err).
-				Msg("cannot retrieve user count")
+			log.Err(err).
+				Msg("Failed to retrieve user count")
 		}
 
 		list, err := users.List(ctx, params)
 		if err != nil {
+			log.Err(err).
+				Msg("Failed to retrieve user list")
+
 			render.InternalError(w, err)
-			log.Error().Err(err).
-				Msg("cannot retrieve user list")
 			return
 		}
 

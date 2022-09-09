@@ -5,14 +5,17 @@
 package guard
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/types/errs"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/hlog"
+	"github.com/rs/zerolog/log"
 )
 
 /*
@@ -40,12 +43,17 @@ func (g *Guard) Repo(permission enum.Permission, orPublic bool, guarded http.Han
 		ctx := r.Context()
 		rep, ok := request.RepoFrom(ctx)
 		if !ok {
-			render.InternalError(w, errors.New("Expected repository to be available."))
+			// log error for debugging
+			log := hlog.FromRequest(r)
+			log.Error().Msg("Method expects the repository to be availabe in the request context, but it wasnt.")
+
+			render.InternalError(w, errs.Internal)
+
 			return
 		}
 
 		// Enforce permission (renders error)
-		if !(orPublic && rep.IsPublic) && !g.EnforceRepo(w, r, permission, rep.Fqn) {
+		if !(orPublic && rep.IsPublic) && !g.EnforceRepo(w, r, permission, rep.Path) {
 			return
 		}
 
@@ -58,14 +66,18 @@ func (g *Guard) Repo(permission enum.Permission, orPublic bool, guarded http.Han
  * Enforces that the executing principal has requested permission on the repository.
  * Returns true if that is the case, otherwise renders the appropriate error and returns false.
  */
-func (g *Guard) EnforceRepo(w http.ResponseWriter, r *http.Request, permission enum.Permission, fqn string) bool {
-	parentSpace, name, err := types.DisectFqn(fqn)
+func (g *Guard) EnforceRepo(w http.ResponseWriter, r *http.Request, permission enum.Permission, path string) bool {
+	spacePath, name, err := paths.Disect(path)
 	if err != nil {
-		render.InternalError(w, errors.New(fmt.Sprintf("Failed to disect fqn '%s' into scope: %s", fqn, err)))
+		// log error for debugging
+		hlog.FromRequest(r)
+		log.Err(err).Msgf("Failed to disect path '%s'.", path)
+
+		render.InternalError(w, errs.Internal)
 		return false
 	}
 
-	scope := &types.Scope{SpaceFqn: parentSpace}
+	scope := &types.Scope{SpacePath: spacePath}
 	resource := &types.Resource{
 		Type: enum.ResourceTypeRepo,
 		Name: name,
@@ -79,13 +91,13 @@ func (g *Guard) EnforceRepo(w http.ResponseWriter, r *http.Request, permission e
  * Returns nil if the user is confirmed to be permitted to execute the action, otherwise returns errors
  * NotAuthenticated, NotAuthorized, or any unerlaying error.
  */
-func (g *Guard) CheckRepo(r *http.Request, permission enum.Permission, fqn string) error {
-	parentSpace, name, err := types.DisectFqn(fqn)
+func (g *Guard) CheckRepo(r *http.Request, permission enum.Permission, path string) error {
+	parentSpace, name, err := paths.Disect(path)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to disect fqn '%s' into scope: %s", fqn, err))
+		return errors.Wrapf(err, "Failed to disect path '%s'", path)
 	}
 
-	scope := &types.Scope{SpaceFqn: parentSpace}
+	scope := &types.Scope{SpacePath: parentSpace}
 	resource := &types.Resource{
 		Type: enum.ResourceTypeRepo,
 		Name: name,

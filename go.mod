@@ -14,7 +14,6 @@ require (
 	github.com/golang/mock v1.5.0
 	github.com/google/go-cmp v0.5.5
 	github.com/google/wire v0.5.0
-	github.com/gosimple/slug v1.11.2
 	github.com/gotidy/ptr v1.3.0
 	github.com/jmoiron/sqlx v1.3.1
 	github.com/joho/godotenv v1.3.0
@@ -23,6 +22,7 @@ require (
 	github.com/maragudk/migrate v0.4.1
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-sqlite3 v1.14.10-0.20211026011849-85436841b33e
+	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.26.0
 	github.com/swaggest/openapi-go v0.2.13
 	github.com/swaggest/swgui v1.4.2
@@ -36,7 +36,6 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15 // indirect
 	github.com/google/subcommands v1.0.1 // indirect
-	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

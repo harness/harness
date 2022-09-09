@@ -1,12 +1,12 @@
 package request
 
 import (
-	"errors"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/go-chi/chi"
+	"github.com/harness/gitness/types/errs"
 )
 
 const (
@@ -16,10 +16,10 @@ const (
 func GetRepoRef(r *http.Request) (string, error) {
 	rawRef := chi.URLParam(r, RepoRefParamName)
 	if rawRef == "" {
-		return "", errors.New("Repository ref parameter not found in request.")
+		return "", errs.RepoReferenceNotFoundInRequest
 	}
 
-	// fqns are unescaped and lower
+	// paths are unescaped and lower
 	ref, err := url.PathUnescape(rawRef)
 	return strings.ToLower(ref), err
 }

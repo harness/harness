@@ -11,6 +11,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/pkg/errors"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -31,15 +32,19 @@ type UserStore struct {
 // Find finds the user by id.
 func (s *UserStore) Find(ctx context.Context, id int64) (*types.User, error) {
 	dst := new(types.User)
-	err := s.db.Get(dst, userSelectID, id)
-	return dst, err
+	if err := s.db.GetContext(ctx, dst, userSelectID, id); err != nil {
+		return nil, wrapSqlErrorf(err, "Select by id query failed")
+	}
+	return dst, nil
 }
 
 // FindEmail finds the user by email.
 func (s *UserStore) FindEmail(ctx context.Context, email string) (*types.User, error) {
 	dst := new(types.User)
-	err := s.db.Get(dst, userSelectEmail, email)
-	return dst, err
+	if err := s.db.GetContext(ctx, dst, userSelectEmail, email); err != nil {
+		return nil, wrapSqlErrorf(err, "Select by email query failed")
+	}
+	return dst, nil
 }
 
 // FindKey finds the user unique key (email or id).
@@ -53,14 +58,17 @@ func (s *UserStore) FindKey(ctx context.Context, key string) (*types.User, error
 }
 
 // List returns a list of users.
-func (s *UserStore) List(ctx context.Context, opts types.UserFilter) ([]*types.User, error) {
+func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.User, error) {
 	dst := []*types.User{}
 
 	// if the user does not provide any customer filter
 	// or sorting we use the default select statement.
 	if opts.Sort == enum.UserAttrNone {
-		err := s.db.Select(&dst, userSelect, limit(opts.Size), offset(opts.Page, opts.Size))
-		return dst, err
+		err := s.db.SelectContext(ctx, &dst, userSelect, limit(opts.Size), offset(opts.Page, opts.Size))
+		if err != nil {
+			return nil, wrapSqlErrorf(err, "Failed executing default list query")
+		}
+		return dst, nil
 	}
 
 	// else we construct the sql statement.
@@ -84,29 +92,41 @@ func (s *UserStore) List(ctx context.Context, opts types.UserFilter) ([]*types.U
 
 	sql, _, err := stmt.ToSql()
 	if err != nil {
-		return dst, err
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
 
-	err = s.db.Select(&dst, sql)
-	return dst, err
+	if err = s.db.SelectContext(ctx, &dst, sql); err != nil {
+		return nil, wrapSqlErrorf(err, "Failed executing custom list query")
+	}
+
+	return dst, nil
 }
 
 // Create saves the user details.
 func (s *UserStore) Create(ctx context.Context, user *types.User) error {
 	query, arg, err := s.db.BindNamed(userInsert, user)
 	if err != nil {
-		return err
+		return wrapSqlErrorf(err, "Failed to bind user object")
 	}
-	return s.db.QueryRow(query, arg...).Scan(&user.ID)
+
+	if err = s.db.QueryRowContext(ctx, query, arg...).Scan(&user.ID); err != nil {
+		return wrapSqlErrorf(err, "Insert query failed")
+	}
+
+	return nil
 }
 
 // Update updates the user details.
 func (s *UserStore) Update(ctx context.Context, user *types.User) error {
 	query, arg, err := s.db.BindNamed(userUpdate, user)
 	if err != nil {
-		return err
+		return wrapSqlErrorf(err, "Failed to bind user object")
 	}
-	_, err = s.db.Exec(query, arg...)
+
+	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
+		return wrapSqlErrorf(err, "Update query failed")
+	}
+
 	return err
 }
 
@@ -114,21 +134,24 @@ func (s *UserStore) Update(ctx context.Context, user *types.User) error {
 func (s *UserStore) Delete(ctx context.Context, user *types.User) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return wrapSqlErrorf(err, "Failed to start a new transaction")
 	}
 	defer tx.Rollback()
 	// delete the user
-	if _, err := tx.Exec(userDelete, user.ID); err != nil {
-		return err
+	if _, err := tx.ExecContext(ctx, userDelete, user.ID); err != nil {
+		return wrapSqlErrorf(err, "The delete query failed")
 	}
 	return tx.Commit()
 }
 
 // Count returns a count of users.
-func (s *UserStore) Count(context.Context) (int64, error) {
+func (s *UserStore) Count(ctx context.Context) (int64, error) {
 	var count int64
-	err := s.db.QueryRow(userCount).Scan(&count)
-	return count, err
+	err := s.db.QueryRowContext(ctx, userCount).Scan(&count)
+	if err != nil {
+		return 0, wrapSqlErrorf(err, "Failed executing count query")
+	}
+	return count, nil
 }
 
 const userCount = `

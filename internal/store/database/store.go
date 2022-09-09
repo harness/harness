@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/internal/store/database/migrate"
+	"github.com/pkg/errors"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -24,14 +25,14 @@ var builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 func Connect(driver, datasource string) (*sqlx.DB, error) {
 	db, err := sql.Open(driver, datasource)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to open the db")
 	}
 	dbx := sqlx.NewDb(db, driver)
 	if err := pingDatabase(dbx); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to ping the db")
 	}
 	if err := setupDatabase(dbx); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to setup the db")
 	}
 	return dbx, nil
 }

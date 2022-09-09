@@ -10,6 +10,17 @@ import (
 	"github.com/harness/gitness/types"
 )
 
+/*
+ * An abstraction of an entity thats responsible for authenticating users
+ * that are making calls via HTTP.
+ */
 type Authenticator interface {
+	/*
+	 * Tries to authenticate a user if credentials are available.
+	 * Returns:
+	 *		(user, nil) - request contained auth data and user was verified
+	 *		(nil, err)  - request contained auth data but verification failed
+	 *		(nil, nil)	- request didn't contain any auth data
+	 */
 	Authenticate(r *http.Request) (*types.User, error)
 }

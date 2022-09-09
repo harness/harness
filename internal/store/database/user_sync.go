@@ -46,7 +46,7 @@ func (s *UserStoreSync) FindKey(ctx context.Context, key string) (*types.User, e
 }
 
 // List returns a list of users.
-func (s *UserStoreSync) List(ctx context.Context, opts types.UserFilter) ([]*types.User, error) {
+func (s *UserStoreSync) List(ctx context.Context, opts *types.UserFilter) ([]*types.User, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.List(ctx, opts)

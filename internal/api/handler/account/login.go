@@ -28,10 +28,12 @@ func HandleLogin(users store.UserStore, system store.SystemStore) http.HandlerFu
 		password := r.FormValue("password")
 		user, err := users.FindEmail(ctx, username)
 		if err != nil {
-			render.NotFoundf(w, "Invalid email or password")
 			log.Debug().Err(err).
 				Str("user", username).
 				Msg("cannot find user")
+
+			// always give not found error as extra security measurement.
+			render.NotFoundf(w, "Invalid email or password")
 			return
 		}
 
@@ -40,20 +42,22 @@ func HandleLogin(users store.UserStore, system store.SystemStore) http.HandlerFu
 			[]byte(password),
 		)
 		if err != nil {
-			render.NotFoundf(w, "Invalid email or password")
 			log.Debug().Err(err).
 				Str("user", username).
 				Msg("invalid password")
+
+			render.NotFoundf(w, "Invalid email or password")
 			return
 		}
 
 		expires := time.Now().Add(system.Config(ctx).Token.Expire)
 		token_, err := token.GenerateExp(user, expires.Unix(), user.Salt)
 		if err != nil {
-			render.InternalErrorf(w, "Failed to create session")
-			log.Debug().Err(err).
+			log.Err(err).
 				Str("user", username).
 				Msg("failed to generate token")
+
+			render.InternalErrorf(w, "Failed to create session")
 			return
 		}
 

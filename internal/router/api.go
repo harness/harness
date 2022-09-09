@@ -28,7 +28,7 @@ import (
 
 /*
  * Mounts the Rest API Router under mountPath (path has to end with ).
- * The handler is wrapped within a layer that handles encoding terminated FQNs.
+ * The handler is wrapped within a layer that handles encoding terminated Paths.
  */
 func newApiHandler(
 	mountPath string,
@@ -77,13 +77,13 @@ func newApiHandler(
 		})
 	})
 
-	// Generate list of all path prefixes that expect terminated FQNs
-	terminatedFQNPrefixes := []string{
+	// Generate list of all path prefixes that expect terminated Paths
+	terminatedPathPrefixes := []string{
 		mountPath + "/v1/spaces",
 		mountPath + "/v1/repos",
 	}
 
-	return encode.TerminatedFqnBefore(terminatedFQNPrefixes, r.ServeHTTP), nil
+	return encode.TerminatedPathBefore(terminatedPathPrefixes, r.ServeHTTP), nil
 }
 
 func setupRoutesV1(
@@ -97,27 +97,38 @@ func setupRoutesV1(
 
 	// SPACES
 	r.Route("/spaces", func(r chi.Router) {
-		// Create takes fqn and parentId via body, not uri
+		// Create takes path and parentId via body, not uri
 		r.Post("/", handler_space.HandleCreate(guard, spaceStore))
 
 		r.Route(fmt.Sprintf("/{%s}", request.SpaceRefParamName), func(r chi.Router) {
 			// resolves the space and stores in the context
 			r.Use(space.Required(spaceStore))
 
-			// space level operations
+			// space operations
 			r.Get("/", handler_space.HandleFind(guard, spaceStore))
-			r.Put("/", handler_space.HandleUpdate(guard))
+			r.Put("/", handler_space.HandleUpdate(guard, spaceStore))
 			r.Delete("/", handler_space.HandleDelete(guard, spaceStore))
 
-			// space sub operations
+			r.Post("/move", handler_space.HandleMove(guard, spaceStore))
 			r.Get("/spaces", handler_space.HandleList(guard, spaceStore))
 			r.Get("/repos", handler_space.HandleListRepos(guard, repoStore))
+
+			// Child collections
+			r.Route("/paths", func(r chi.Router) {
+				r.Get("/", handler_space.HandleListPaths(guard, spaceStore))
+				r.Post("/", handler_space.HandleCreatePath(guard, spaceStore))
+
+				// per path operations
+				r.Route(fmt.Sprintf("/{%s}", request.PathIdParamName), func(r chi.Router) {
+					r.Delete("/", handler_space.HandleDeletePath(guard, spaceStore))
+				})
+			})
 		})
 	})
 
 	// REPOS
 	r.Route("/repos", func(r chi.Router) {
-		// Create takes fqn and parentId via body, not uri
+		// Create takes path and parentId via body, not uri
 		r.Post("/", handler_repo.HandleCreate(guard, spaceStore, repoStore))
 
 		r.Route(fmt.Sprintf("/{%s}", request.RepoRefParamName), func(r chi.Router) {
@@ -126,8 +137,21 @@ func setupRoutesV1(
 
 			// repo level operations
 			r.Get("/", handler_repo.HandleFind(guard, repoStore))
-			r.Put("/", handler_repo.HandleUpdate(guard))
+			r.Put("/", handler_repo.HandleUpdate(guard, repoStore))
 			r.Delete("/", handler_repo.HandleDelete(guard, repoStore))
+
+			r.Post("/move", handler_repo.HandleMove(guard, repoStore, spaceStore))
+
+			// Child collections
+			r.Route("/paths", func(r chi.Router) {
+				r.Get("/", handler_repo.HandleListPaths(guard, repoStore))
+				r.Post("/", handler_repo.HandleCreatePath(guard, repoStore))
+
+				// per path operations
+				r.Route(fmt.Sprintf("/{%s}", request.PathIdParamName), func(r chi.Router) {
+					r.Delete("/", handler_repo.HandleDeletePath(guard, repoStore))
+				})
+			})
 		})
 	})
 

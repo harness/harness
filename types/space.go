@@ -5,37 +5,16 @@
 package types
 
 import (
-	"errors"
-	"strings"
-
 	"github.com/harness/gitness/types/enum"
 )
 
 /*
- * Splits an FQN into the parent and the leave.
- * e.g. /space1/space2/space3 -> (/space1/space2, space3, nil)
- * TODO: move to better locaion
- */
-func DisectFqn(fqn string) (string, string, error) {
-	if fqn == "" {
-		return "", "", errors.New("Can't disect empty fqn.")
-	}
-
-	i := strings.LastIndex(fqn, "/")
-	if i == -1 {
-		return "", fqn, nil
-	}
-
-	return fqn[:i], fqn[i+1:], nil
-}
-
-/*
  * Represents a space.
  * There isn't a one-solves-all hierarchical data structure for DBs,
- * so for now we are using a mix of materialized paths and adjacency list,
- * meaning any space stores its full qualified space name as well as the id of its parent.
- * 	PRO: Quick lookup of childs, quick lookup based on fqdn (apis)
- *  CON: Changing a space name requires changing all its ancestors' FQNs.
+ * so for now we are using a mix of materialized paths and adjacency list.
+ * Every space stores its parent, and a space's path is stored in a separate table.
+ * 		PRO: Quick lookup of childs, quick lookup based on fqdn (apis)
+ *  	CON: Changing a space name requires changing all its ancestors' Paths.
  *
  * Interesting reads:
  *    https://stackoverflow.com/questions/4048151/what-are-the-options-for-storing-hierarchical-data-in-a-relational-database
@@ -44,7 +23,7 @@ func DisectFqn(fqn string) (string, string, error) {
 type Space struct {
 	ID          int64  `db:"space_id"              json:"id"`
 	Name        string `db:"space_name"            json:"name"`
-	Fqn         string `db:"space_fqn"             json:"fqn"`
+	Path        string `db:"space_path"             json:"path"`
 	ParentId    int64  `db:"space_parentId"        json:"parentId"`
 	DisplayName string `db:"space_displayName"     json:"displayName"`
 	Description string `db:"space_description"     json:"description"`

@@ -4,6 +4,7 @@
 
 package enum
 
+// Represents the different types of resources that can be guarded with permissions.
 type ResourceType string
 
 const (
@@ -12,6 +13,7 @@ const (
 	//   ResourceType_Branch ResourceType = "BRANCH"
 )
 
+// Represents the available permissions
 type Permission string
 
 const (
@@ -34,9 +36,13 @@ const (
 	// PermissionBranchDelete Permission = "branch_delete"
 )
 
+// Represents the type of the entity requesting permission
 type PrincipalType string
 
 const (
-	PrincipalTypeUser   PrincipalType = "USER"
+	// Represents actions executed by a loged-in user
+	PrincipalTypeUser PrincipalType = "USER"
+
+	// Represents actions executed by an entity with an api key
 	PrincipalTypeApiKey PrincipalType = "API_KEY"
 )

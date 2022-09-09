@@ -17,8 +17,8 @@ import (
 func HandleFind() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		viewer, _ := request.UserFrom(ctx)
-		render.JSON(w, viewer, 200)
+		user, _ := request.UserFrom(ctx)
+		render.JSON(w, user, 200)
 	}
 }
 
@@ -28,7 +28,7 @@ func HandleFind() http.HandlerFunc {
 func HandleCurrent() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		viewer, _ := request.UserFrom(ctx)
-		platform.RenderResource(w, viewer, 200)
+		user, _ := request.UserFrom(ctx)
+		platform.RenderResource(w, user, 200)
 	}
 }

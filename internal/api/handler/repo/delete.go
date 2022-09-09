@@ -5,6 +5,7 @@
 package repo
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/guard"
@@ -12,7 +13,8 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/log"
+	"github.com/harness/gitness/types/errs"
+	"github.com/rs/zerolog/hlog"
 )
 
 /*
@@ -23,20 +25,19 @@ func HandleDelete(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
 		enum.PermissionRepoDelete,
 		false,
 		func(w http.ResponseWriter, r *http.Request) {
-			// TODO: return 200 if repo confirmed doesn't exist
-
 			ctx := r.Context()
-			rep, _ := request.RepoFrom(ctx)
+			log := hlog.FromRequest(r)
+			repo, _ := request.RepoFrom(ctx)
 
-			err := repos.Delete(r.Context(), rep.ID)
-			if err != nil {
-				render.InternalError(w, err)
-				log.Error().Err(err).
-					Int64("repo_id", rep.ID).
-					Str("repo_fqn", rep.Fqn).
-					Msg("Failed to delete repository.")
+			err := repos.Delete(r.Context(), repo.ID)
+			if errors.Is(err, errs.ResourceNotFound) {
+				render.NotFoundf(w, "Repository doesn't exist.")
 				return
+			} else if err != nil {
+				log.Err(err).Msgf("Failed to delete the Repository.")
 
+				render.InternalError(w, errs.Internal)
+				return
 			}
 
 			w.WriteHeader(http.StatusNoContent)

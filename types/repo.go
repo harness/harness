@@ -8,12 +8,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+// Represents a code repository
 type Repository struct {
 	// Core properties
 	ID          int64  `db:"repo_id"              json:"id"`
 	Name        string `db:"repo_name"            json:"name"`
 	SpaceId     int64  `db:"repo_spaceId"         json:"spaceId"`
-	Fqn         string `db:"repo_fqn"             json:"fqn"`
+	Path        string `db:"repo_path"             json:"path"`
 	DisplayName string `db:"repo_displayName"     json:"displayName"`
 	Description string `db:"repo_description"     json:"description"`
 	IsPublic    bool   `db:"repo_isPublic"        json:"isPublic"`

@@ -16,6 +16,7 @@ import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/types/errs"
 )
 
 var _ authz.Authorizer = (*Authorizer)(nil)
@@ -47,7 +48,7 @@ func (a *Authorizer) Check(principalType enum.PrincipalType, principalId string,
 
 func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...*types.PermissionCheck) (bool, error) {
 	if len(permissionChecks) == 0 {
-		return false, fmt.Errorf("No permission checks provided.")
+		return false, errs.NoPermissionCheckProvided
 	}
 
 	requestDto, err := createAclRequest(principalType, principalId, permissionChecks)
@@ -147,8 +148,7 @@ func checkAclResponse(permissionChecks []*types.PermissionCheck, responseDto acl
 		}
 
 		if !permissionPermitted {
-			return false, fmt.Errorf(
-				"Permission '%s' is not permitted according to ACL (correlationId: '%s').",
+			return false, fmt.Errorf("Permission '%s' is not permitted according to ACL (correlationId: '%s')",
 				check.Permission,
 				responseDto.CorrelationID)
 		}
@@ -164,7 +164,7 @@ func mapScope(scope types.Scope) (*aclResourceScope, error) {
 	 *	Harness embeded structure is mapped to the following scm space:
 	 *      {Account}/{Organization}/{Project}
 	 *
-	 * We can use that assumption to translate back from scope.spaceFqn to harness scope.
+	 * We can use that assumption to translate back from scope.spacePath to harness scope.
 	 * However, this only works as long as resources exist within spaces only.
 	 * For controlling access to any child resources of a repository, harness doesn't have a matching
 	 * structure out of the box (e.g. branches, ...)
@@ -175,9 +175,9 @@ func mapScope(scope types.Scope) (*aclResourceScope, error) {
 	 * TODO: Handle scope.Repository in harness embedded mode
 	 */
 
-	harnessIdentifiers := strings.Split(scope.SpaceFqn, "/")
+	harnessIdentifiers := strings.Split(scope.SpacePath, "/")
 	if len(harnessIdentifiers) > 3 {
-		return nil, fmt.Errorf("Unable to convert '%s' to harness resource scope (expected {Account}/{Organization}/{Project} or a sub scope).", scope.SpaceFqn)
+		return nil, fmt.Errorf("Unable to convert '%s' to harness resource scope (expected {Account}/{Organization}/{Project} or a sub scope).", scope.SpacePath)
 	}
 
 	aclScope := &aclResourceScope{}

@@ -5,31 +5,33 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/harness/gitness/types"
 )
 
 /*
- * Wraps an http.HandlerFunc in a layer that encodes FQNs coming as part of the GIT api
+ * Wraps an http.HandlerFunc in a layer that encodes Paths coming as part of the GIT api
  * (e.g. "space1/repo.git") before executing the provided http.HandlerFunc.
  * The first prefix that matches the URL.Path will be used during encoding.
  */
-func GitFqnBefore(h http.HandlerFunc) http.HandlerFunc {
+func GitPathBefore(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		r, _ = encodeFQNWithMarker(r, "", ".git", false)
+		r, _ = pathTerminatedWithMarker(r, "", ".git", false)
 		h.ServeHTTP(w, r)
 	}
 }
 
 /*
- * Wraps an http.HandlerFunc in a layer that encodes a terminated FQN (e.g. "/space1/space2/+")
+ * Wraps an http.HandlerFunc in a layer that encodes a terminated path (e.g. "/space1/space2/+")
  * before executing the provided http.HandlerFunc.
  * The first prefix that matches the URL.Path will be used during encoding.
  */
-func TerminatedFqnBefore(prefixes []string, h http.HandlerFunc) http.HandlerFunc {
+func TerminatedPathBefore(prefixes []string, h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for _, p := range prefixes {
 			// IMPORTANT: define changed separately to avoid overshadowing r
 			changed := false
-			if r, changed = encodeFQNWithMarker(r, p, "/+", false); changed {
+			if r, changed = pathTerminatedWithMarker(r, p, "/+", false); changed {
 				break
 			}
 		}
@@ -39,7 +41,7 @@ func TerminatedFqnBefore(prefixes []string, h http.HandlerFunc) http.HandlerFunc
 }
 
 /*
- * This function encodes an FQN followed by a custom marker and returns a request with an updated URL.Path.
+ * This function encodes a path followed by a custom marker and returns a request with an updated URL.Path.
  * A non-empty prefix can be provided to encode encode only after the prefix.
  * It allows our Rest API to handle paths of the form "/spaces/space1/space2/+/authToken"
  *
@@ -48,14 +50,14 @@ func TerminatedFqnBefore(prefixes []string, h http.HandlerFunc) http.HandlerFunc
  *   Prefix: "" Path: "/space1/space2.git" => "/space1%2Fspace2"
  *   Prefix: "/spaces" Path: "/spaces/space1/space2/+/authToken" => "/spaces/space1%2Fspace2/authToken"
  */
-func encodeFQNWithMarker(r *http.Request, prefix string, marker string, keepMarker bool) (*http.Request, bool) {
+func pathTerminatedWithMarker(r *http.Request, prefix string, marker string, keepMarker bool) (*http.Request, bool) {
 	// In case path doesn't start with prefix - nothing to encode
 	if len(r.URL.Path) < len(prefix) || r.URL.Path[0:len(prefix)] != prefix {
 		return r, false
 	}
 
 	originalSubPath := r.URL.Path[len(prefix):]
-	fqn, suffix, found := strings.Cut(originalSubPath, marker)
+	path, suffix, found := strings.Cut(originalSubPath, marker)
 
 	// If we don't find a marker - nothing to encode
 	if !found {
@@ -63,11 +65,11 @@ func encodeFQNWithMarker(r *http.Request, prefix string, marker string, keepMark
 	}
 
 	// if marker was found - convert to escaped version (skip first character in case path starts with '/')
-	escapedFqn := fqn[0:1] + strings.Replace(fqn[1:], "/", "%2F", -1)
+	escapedPath := path[0:1] + strings.Replace(path[1:], types.PathSeparator, "%2F", -1)
 	if keepMarker {
-		escapedFqn += marker
+		escapedPath += marker
 	}
-	updatedSubPath := escapedFqn + suffix
+	updatedSubPath := escapedPath + suffix
 
 	// TODO: Proper Logging
 	fmt.Printf(

@@ -22,7 +22,7 @@ import (
 
 /*
  * Mounts the GIT Router under mountPath.
- * The handler is wrapped within a layer that handles encoding FQNS.
+ * The handler is wrapped within a layer that handles encoding Paths.
  */
 func newGitHandler(
 	mountPath string,
@@ -84,7 +84,7 @@ func newGitHandler(
 		})
 	})
 
-	return encode.GitFqnBefore(r.ServeHTTP), nil
+	return encode.GitPathBefore(r.ServeHTTP), nil
 }
 
 func stubGitHandler(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +97,7 @@ func stubGitHandler(w http.ResponseWriter, r *http.Request) {
 			"  Method: '%s'\n"+
 			"  Path: '%s'\n"+
 			"  Query: '%s'",
-		rep.DisplayName, rep.Fqn,
+		rep.DisplayName, rep.Path,
 		r.Method,
 		r.URL.Path,
 		r.URL.RawQuery,

@@ -12,6 +12,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/errs"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -19,15 +20,15 @@ import (
 // writes a json-encoded token to the http.Response body.
 func HandleToken(users store.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		viewer, _ := request.UserFrom(r.Context())
+		log := hlog.FromRequest(r)
+		user, _ := request.UserFrom(r.Context())
 
-		token, err := token.Generate(viewer, viewer.Salt)
+		token, err := token.Generate(user, user.Salt)
 		if err != nil {
-			render.InternalErrorf(w, "Failed to generate token")
-			hlog.FromRequest(r).
-				Error().Err(err).
-				Str("user", viewer.Email).
+			log.Err(err).
 				Msg("failed to generate token")
+
+			render.InternalError(w, errs.Internal)
 			return
 		}
 

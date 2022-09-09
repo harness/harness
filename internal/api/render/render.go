@@ -56,10 +56,22 @@ func Unauthorized(w http.ResponseWriter, err error) {
 	ErrorCode(w, err, 401)
 }
 
+// Unauthorizedf writes the json-encoded error message to the response
+// with a 401 unauthorized status code.
+func Unauthorizedf(w http.ResponseWriter, format string, a ...interface{}) {
+	ErrorCode(w, fmt.Errorf(format, a...), 401)
+}
+
 // Forbidden writes the json-encoded error message to the response
 // with a 403 forbidden status code.
 func Forbidden(w http.ResponseWriter, err error) {
 	ErrorCode(w, err, 403)
+}
+
+// Forbiddenf writes the json-encoded error message to the response
+// with a 403 forbidden status code.
+func Forbiddenf(w http.ResponseWriter, format string, a ...interface{}) {
+	ErrorCode(w, fmt.Errorf(format, a...), 403)
 }
 
 // BadRequest writes the json-encoded error message to the response

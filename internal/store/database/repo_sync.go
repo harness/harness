@@ -33,11 +33,11 @@ func (s *RepoStoreSync) Find(ctx context.Context, id int64) (*types.Repository, 
 	return s.base.Find(ctx, id)
 }
 
-// Finds the repo by the full qualified repo name.
-func (s *RepoStoreSync) FindFqn(ctx context.Context, fqn string) (*types.Repository, error) {
+// Finds the repo by path.
+func (s *RepoStoreSync) FindByPath(ctx context.Context, path string) (*types.Repository, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.FindFqn(ctx, fqn)
+	return s.base.FindByPath(ctx, path)
 }
 
 // Creates a new repo
@@ -45,6 +45,13 @@ func (s *RepoStoreSync) Create(ctx context.Context, repo *types.Repository) erro
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.Create(ctx, repo)
+}
+
+// Moves an existing repo.
+func (s *RepoStoreSync) Move(ctx context.Context, userId int64, repoId int64, newSpaceId int64, newName string, keepAsAlias bool) (*types.Repository, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return s.base.Move(ctx, userId, repoId, newSpaceId, newName, keepAsAlias)
 }
 
 // Updates the repo details.
@@ -61,16 +68,35 @@ func (s *RepoStoreSync) Delete(ctx context.Context, id int64) error {
 	return s.base.Delete(ctx, id)
 }
 
-// List returns a list of repos in a space.
-func (s *RepoStoreSync) List(ctx context.Context, spaceId int64, opts types.RepoFilter) ([]*types.Repository, error) {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	return s.base.List(ctx, spaceId, opts)
-}
-
 // Count of repos in a space.
 func (s *RepoStoreSync) Count(ctx context.Context, spaceId int64) (int64, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.Count(ctx, spaceId)
+}
+
+// List returns a list of repos in a space.
+func (s *RepoStoreSync) List(ctx context.Context, spaceId int64, opts *types.RepoFilter) ([]*types.Repository, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return s.base.List(ctx, spaceId, opts)
+}
+
+// List returns a list of all paths of a repo.
+func (s *RepoStoreSync) ListAllPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
+	return s.base.ListAllPaths(ctx, id, opts)
+}
+
+// Create an alias for a repo
+func (s *RepoStoreSync) CreatePath(ctx context.Context, repoId int64, params *types.PathParams) (*types.Path, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return s.base.CreatePath(ctx, repoId, params)
+}
+
+// Delete an alias of a repo
+func (s *RepoStoreSync) DeletePath(ctx context.Context, repoId int64, pathId int64) error {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return s.base.DeletePath(ctx, repoId, pathId)
 }

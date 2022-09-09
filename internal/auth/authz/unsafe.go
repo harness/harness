@@ -13,11 +13,14 @@ import (
 
 var _ Authorizer = (*UnsafeAuthorizer)(nil)
 
+/*
+ * An unsafe authorizer that gives permits any action and simply logs the permission request.
+ */
+type UnsafeAuthorizer struct{}
+
 func NewUnsafeAuthorizer() Authorizer {
 	return &UnsafeAuthorizer{}
 }
-
-type UnsafeAuthorizer struct{}
 
 func (a *UnsafeAuthorizer) Check(principalType enum.PrincipalType, principalId string, scope *types.Scope, resource *types.Resource, permission enum.Permission) (bool, error) {
 	fmt.Printf(

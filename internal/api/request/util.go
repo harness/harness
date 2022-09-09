@@ -67,6 +67,13 @@ func ParseSortRepo(r *http.Request) enum.RepoAttr {
 	)
 }
 
+// ParseSortPath extracts the path sort parameter from the url.
+func ParseSortPath(r *http.Request) enum.PathAttr {
+	return enum.ParsePathAttr(
+		r.FormValue("sort"),
+	)
+}
+
 // ParseParams extracts the query parameter from the url.
 func ParseParams(r *http.Request) types.Params {
 	return types.Params{
@@ -78,8 +85,8 @@ func ParseParams(r *http.Request) types.Params {
 }
 
 // ParseUserFilter extracts the user query parameter from the url.
-func ParseUserFilter(r *http.Request) types.UserFilter {
-	return types.UserFilter{
+func ParseUserFilter(r *http.Request) *types.UserFilter {
+	return &types.UserFilter{
 		Order: ParseOrder(r),
 		Page:  ParsePage(r),
 		Sort:  ParseSortUser(r),
@@ -88,8 +95,8 @@ func ParseUserFilter(r *http.Request) types.UserFilter {
 }
 
 // ParseSpaceFilter extracts the space query parameter from the url.
-func ParseSpaceFilter(r *http.Request) types.SpaceFilter {
-	return types.SpaceFilter{
+func ParseSpaceFilter(r *http.Request) *types.SpaceFilter {
+	return &types.SpaceFilter{
 		Order: ParseOrder(r),
 		Page:  ParsePage(r),
 		Sort:  ParseSortSpace(r),
@@ -98,11 +105,21 @@ func ParseSpaceFilter(r *http.Request) types.SpaceFilter {
 }
 
 // ParseRepoFilter extracts the repository query parameter from the url.
-func ParseRepoFilter(r *http.Request) types.RepoFilter {
-	return types.RepoFilter{
+func ParseRepoFilter(r *http.Request) *types.RepoFilter {
+	return &types.RepoFilter{
 		Order: ParseOrder(r),
 		Page:  ParsePage(r),
 		Sort:  ParseSortRepo(r),
+		Size:  ParseSize(r),
+	}
+}
+
+// ParsePathFilter extracts the path query parameter from the url.
+func ParsePathFilter(r *http.Request) *types.PathFilter {
+	return &types.PathFilter{
+		Order: ParseOrder(r),
+		Page:  ParsePage(r),
+		Sort:  ParseSortPath(r),
 		Size:  ParseSize(r),
 	}
 }
