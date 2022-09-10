@@ -8,39 +8,35 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/paths"
+	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
-// Creates a new path
-func CreatePath(ctx context.Context, db *sqlx.DB, path *types.Path) error {
+// Creates a new alias path (Don't call this for new path creation!)
+func CreateAliasPath(ctx context.Context, db *sqlx.DB, path *types.Path) error {
+	if !path.IsAlias {
+		return store.ErrAliasPathRequired
+	}
 
 	// ensure path length is okay
 	if check.PathTooLong(path.Value, path.TargetType == enum.PathTargetTypeSpace) {
-		return errs.WrapInPathTooLongf("Path '%s' is too long.", path.Value)
-	}
-
-	// In case it's not an alias, ensure there are no duplicates
-	if !path.IsAlias {
-		if cnt, err := CountPaths(ctx, db, path.TargetType, path.TargetId); err != nil {
-			return err
-		} else if cnt > 0 {
-			return errs.PrimaryPathAlreadyExists
-		}
+		log.Warn().Msgf("Path '%s' is too long.", path.Value)
+		return store.ErrPathTooLong
 	}
 
 	query, arg, err := db.BindNamed(pathInsert, path)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to bind path object")
+		return processSqlErrorf(err, "Failed to bind path object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&path.ID); err != nil {
-		return wrapSqlErrorf(err, "Insert query failed")
+		return processSqlErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -51,7 +47,8 @@ func CreatePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Pat
 
 	// ensure path length is okay
 	if check.PathTooLong(path.Value, path.TargetType == enum.PathTargetTypeSpace) {
-		return errs.WrapInPathTooLongf("Path '%s' is too long.", path.Value)
+		log.Warn().Msgf("Path '%s' is too long.", path.Value)
+		return store.ErrPathTooLong
 	}
 
 	// In case it's not an alias, ensure there are no duplicates
@@ -59,17 +56,17 @@ func CreatePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Pat
 		if cnt, err := CountPathsTx(ctx, tx, path.TargetType, path.TargetId); err != nil {
 			return err
 		} else if cnt > 0 {
-			return errs.PrimaryPathAlreadyExists
+			return store.ErrPrimaryPathAlreadyExists
 		}
 	}
 
 	query, arg, err := db.BindNamed(pathInsert, path)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to bind path object")
+		return processSqlErrorf(err, "Failed to bind path object")
 	}
 
 	if err = tx.QueryRowContext(ctx, query, arg...).Scan(&path.ID); err != nil {
-		return wrapSqlErrorf(err, "Insert query failed")
+		return processSqlErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -79,7 +76,7 @@ func CountPrimaryChildPathsTx(ctx context.Context, tx *sqlx.Tx, prefix string) (
 	var count int64
 	err := tx.QueryRowContext(ctx, pathCountPrimaryForPrefix, paths.Concatinate(prefix, "%")).Scan(&count)
 	if err != nil {
-		return 0, wrapSqlErrorf(err, "Count query failed")
+		return 0, processSqlErrorf(err, "Count query failed")
 	}
 	return count, nil
 }
@@ -88,7 +85,7 @@ func ListPrimaryChildPathsTx(ctx context.Context, tx *sqlx.Tx, prefix string) ([
 	childs := []*types.Path{}
 
 	if err := tx.SelectContext(ctx, &childs, pathSelectPrimaryForPrefix, paths.Concatinate(prefix, "%")); err != nil {
-		return nil, wrapSqlErrorf(err, "Select query failed")
+		return nil, processSqlErrorf(err, "Select query failed")
 	}
 
 	return childs, nil
@@ -98,19 +95,20 @@ func ListPrimaryChildPathsTx(ctx context.Context, tx *sqlx.Tx, prefix string) ([
 func ReplacePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Path, keepAsAlias bool) error {
 
 	if path.IsAlias {
-		return errs.PrimaryPathRequired
+		return store.ErrPrimaryPathRequired
 	}
 
 	// ensure new path length is okay
 	if check.PathTooLong(path.Value, path.TargetType == enum.PathTargetTypeSpace) {
-		return errs.WrapInPathTooLongf("Path '%s' is too long.", path.Value)
+		log.Warn().Msgf("Path '%s' is too long.", path.Value)
+		return store.ErrPathTooLong
 	}
 
 	// existing is always non-alias (as query filters for IsAlias=0)
 	existing := new(types.Path)
 	err := tx.GetContext(ctx, existing, pathSelectPrimaryForTarget, string(path.TargetType), fmt.Sprint(path.TargetId))
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to get the existing primary path")
+		return processSqlErrorf(err, "Failed to get the existing primary path")
 	}
 
 	// Only look for childs if the type can have childs
@@ -134,17 +132,18 @@ func ReplacePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Pa
 
 			// ensure new child path length is okay
 			if check.PathTooLong(updatedChild.Value, path.TargetType == enum.PathTargetTypeSpace) {
-				return errs.WrapInPathTooLongf("Path '%s' is too long.", updatedChild.Value)
+				log.Warn().Msgf("Path '%s' is too long.", path.Value)
+				return store.ErrPathTooLong
 			}
 
 			query, arg, err := db.BindNamed(pathInsert, updatedChild)
 			if err != nil {
-				return wrapSqlErrorf(err, "Failed to bind path object")
+				return processSqlErrorf(err, "Failed to bind path object")
 			}
 
 			_, err = tx.ExecContext(ctx, query, arg...)
 			if err != nil {
-				return wrapSqlErrorf(err, "Failed to create new primary child path '%s'", updatedChild.Value)
+				return processSqlErrorf(err, "Failed to create new primary child path '%s'", updatedChild.Value)
 			}
 
 			// make current child an alias or delete it
@@ -154,7 +153,7 @@ func ReplacePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Pa
 				_, err = tx.ExecContext(ctx, pathDeleteId, child.ID)
 			}
 			if err != nil {
-				return wrapSqlErrorf(err, "Failed to mark existing child path '%s' as alias", updatedChild.Value)
+				return processSqlErrorf(err, "Failed to mark existing child path '%s' as alias", updatedChild.Value)
 			}
 		}
 	}
@@ -162,12 +161,12 @@ func ReplacePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Pa
 	// insert the new Path
 	query, arg, err := db.BindNamed(pathInsert, path)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to bind path object")
+		return processSqlErrorf(err, "Failed to bind path object")
 	}
 
 	_, err = tx.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to create new primary path '%s'", path.Value)
+		return processSqlErrorf(err, "Failed to create new primary path '%s'", path.Value)
 	}
 
 	// make existing an alias
@@ -177,7 +176,7 @@ func ReplacePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Pa
 		_, err = tx.ExecContext(ctx, pathDeleteId, existing.ID)
 	}
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to mark existing path '%s' as alias", existing.Value)
+		return processSqlErrorf(err, "Failed to mark existing path '%s' as alias", existing.Value)
 	}
 
 	return nil
@@ -188,7 +187,7 @@ func FindPathTx(ctx context.Context, tx *sqlx.Tx, targetType enum.PathTargetType
 	dst := new(types.Path)
 	err := tx.GetContext(ctx, dst, pathSelectPrimaryForTarget, string(targetType), fmt.Sprint(targetId))
 	if err != nil {
-		return nil, wrapSqlErrorf(err, "Select query failed")
+		return nil, processSqlErrorf(err, "Select query failed")
 	}
 
 	return dst, nil
@@ -198,7 +197,7 @@ func FindPathTx(ctx context.Context, tx *sqlx.Tx, targetType enum.PathTargetType
 func DeletePath(ctx context.Context, db *sqlx.DB, id int64) error {
 	tx, err := db.BeginTxx(ctx, nil)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to start a new transaction")
+		return processSqlErrorf(err, "Failed to start a new transaction")
 	}
 	defer tx.Rollback()
 
@@ -206,18 +205,18 @@ func DeletePath(ctx context.Context, db *sqlx.DB, id int64) error {
 	dst := new(types.Path)
 	err = tx.GetContext(ctx, dst, pathSelectId, id)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to find path with id %d", id)
+		return processSqlErrorf(err, "Failed to find path with id %d", id)
 	} else if dst.IsAlias == false {
-		return errs.PrimaryPathCantBeDeleted
+		return store.ErrPrimaryPathCantBeDeleted
 	}
 
 	// delete the path
 	if _, err = tx.ExecContext(ctx, pathDeleteId, id); err != nil {
-		return wrapSqlErrorf(err, "Delete query failed", id)
+		return processSqlErrorf(err, "Delete query failed")
 	}
 
 	if err = tx.Commit(); err != nil {
-		return wrapSqlErrorf(err, "Failed to commit transaction")
+		return processSqlErrorf(err, "Failed to commit transaction")
 	}
 
 	return nil
@@ -227,7 +226,7 @@ func DeletePath(ctx context.Context, db *sqlx.DB, id int64) error {
 func DeleteAllPaths(ctx context.Context, tx *sqlx.Tx, targetType enum.PathTargetType, targetId int64) error {
 	// delete all entries for the target
 	if _, err := tx.ExecContext(ctx, pathDeleteTarget, string(targetType), fmt.Sprint(targetId)); err != nil {
-		return wrapSqlErrorf(err, "Query for deleting all pahts failed")
+		return processSqlErrorf(err, "Query for deleting all pahts failed")
 	}
 	return nil
 }
@@ -241,7 +240,7 @@ func ListPaths(ctx context.Context, db *sqlx.DB, targetType enum.PathTargetType,
 	if opts.Sort == enum.PathAttrNone {
 		err := db.SelectContext(ctx, &dst, pathSelect, string(targetType), fmt.Sprint(targetId), limit(opts.Size), offset(opts.Page, opts.Size))
 		if err != nil {
-			return nil, wrapSqlErrorf(err, "Default select query failed")
+			return nil, processSqlErrorf(err, "Default select query failed")
 		}
 
 		return dst, nil
@@ -272,7 +271,7 @@ func ListPaths(ctx context.Context, db *sqlx.DB, targetType enum.PathTargetType,
 	}
 
 	if err = db.SelectContext(ctx, &dst, sql); err != nil {
-		return nil, wrapSqlErrorf(err, "Customer select query failed")
+		return nil, processSqlErrorf(err, "Customer select query failed")
 	}
 
 	return dst, nil
@@ -283,7 +282,7 @@ func CountPaths(ctx context.Context, db *sqlx.DB, targetType enum.PathTargetType
 	var count int64
 	err := db.QueryRowContext(ctx, pathCount, string(targetType), fmt.Sprint(targetId)).Scan(&count)
 	if err != nil {
-		return 0, wrapSqlErrorf(err, "Query failed")
+		return 0, processSqlErrorf(err, "Query failed")
 	}
 	return count, nil
 }
@@ -293,7 +292,7 @@ func CountPathsTx(ctx context.Context, tx *sqlx.Tx, targetType enum.PathTargetTy
 	var count int64
 	err := tx.QueryRowContext(ctx, pathCount, string(targetType), fmt.Sprint(targetId)).Scan(&count)
 	if err != nil {
-		return 0, wrapSqlErrorf(err, "Query failed")
+		return 0, processSqlErrorf(err, "Query failed")
 	}
 	return count, nil
 }

@@ -8,9 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
@@ -37,7 +35,7 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 				Str("email", username).
 				Msg("Failed to hash password")
 
-			render.InternalErrorf(w, comms.Internal)
+			render.InternalError(w)
 			return
 		}
 
@@ -56,7 +54,7 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 				Str("email", username).
 				Msg("invalid user input")
 
-			render.BadRequest(w, err)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
@@ -65,7 +63,7 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 				Str("email", username).
 				Msg("Failed to create user")
 
-			render.InternalError(w, errs.Internal)
+			render.InternalError(w)
 			return
 		}
 
@@ -80,7 +78,7 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 					Int64("user_id", user.ID).
 					Msg("Failed to enable admin user")
 
-				render.InternalError(w, errs.Internal)
+				render.InternalError(w)
 				return
 			}
 		}
@@ -93,23 +91,23 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 				Int64("user_id", user.ID).
 				Msg("Failed to generate token")
 
-			render.InternalError(w, errs.Internal)
+			render.InternalError(w)
 			return
 		}
 
 		// return the token if the with_user boolean
 		// query parameter is set to true.
 		if r.FormValue("return_user") == "true" {
-			render.JSON(w, &types.UserToken{
+			render.JSON(w, http.StatusOK, &types.UserToken{
 				User: user,
 				Token: &types.Token{
 					Value:   token_,
 					Expires: expires.UTC(),
 				},
-			}, 200)
+			})
 		} else {
 			// else return the token only.
-			render.JSON(w, &types.Token{Value: token_}, 200)
+			render.JSON(w, http.StatusOK, &types.Token{Value: token_})
 		}
 	}
 }

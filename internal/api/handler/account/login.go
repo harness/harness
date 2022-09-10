@@ -33,7 +33,7 @@ func HandleLogin(users store.UserStore, system store.SystemStore) http.HandlerFu
 				Msg("cannot find user")
 
 			// always give not found error as extra security measurement.
-			render.NotFoundf(w, "Invalid email or password")
+			render.NotFound(w)
 			return
 		}
 
@@ -46,7 +46,7 @@ func HandleLogin(users store.UserStore, system store.SystemStore) http.HandlerFu
 				Str("user", username).
 				Msg("invalid password")
 
-			render.NotFoundf(w, "Invalid email or password")
+			render.NotFound(w)
 			return
 		}
 
@@ -57,23 +57,24 @@ func HandleLogin(users store.UserStore, system store.SystemStore) http.HandlerFu
 				Str("user", username).
 				Msg("failed to generate token")
 
-			render.InternalErrorf(w, "Failed to create session")
+			render.InternalError(w)
 			return
 		}
 
 		// return the token if the with_user boolean
 		// query parameter is set to true.
 		if r.FormValue("return_user") == "true" {
-			render.JSON(w, &types.UserToken{
-				User: user,
-				Token: &types.Token{
-					Value:   token_,
-					Expires: expires.UTC(),
-				},
-			}, 200)
+			render.JSON(w, http.StatusOK,
+				&types.UserToken{
+					User: user,
+					Token: &types.Token{
+						Value:   token_,
+						Expires: expires.UTC(),
+					},
+				})
 		} else {
 			// else return the token only.
-			render.JSON(w, &types.Token{Value: token_}, 200)
+			render.JSON(w, http.StatusOK, &types.Token{Value: token_})
 		}
 	}
 }

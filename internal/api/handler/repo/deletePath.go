@@ -5,14 +5,11 @@
 package repo
 
 import (
-	"errors"
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/hlog"
@@ -32,23 +29,16 @@ func HandleDeletePath(guard *guard.Guard, repos store.RepoStore) http.HandlerFun
 
 			pathId, err := request.GetPathId(r)
 			if err != nil {
-				render.BadRequest(w, err)
+				render.BadRequest(w)
 				return
 			}
 
 			err = repos.DeletePath(ctx, repo.ID, pathId)
-			if errors.Is(err, errs.ResourceNotFound) {
-				render.NotFoundf(w, "Path doesn't exist.")
-				return
-			} else if errors.Is(err, errs.PrimaryPathCantBeDeleted) {
-				render.BadRequestf(w, "Deleting a primary path is not allowed.")
-				return
-			} else if err != nil {
+			if err != nil {
 				log.Err(err).Int64("path_id", pathId).
 					Msgf("Failed to delete repo path.")
 
-				render.InternalErrorf(w, comms.Internal)
-				return
+				render.UserfiedErrorOrInternal(w, err)
 			}
 
 			w.WriteHeader(http.StatusNoContent)

@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
@@ -35,7 +34,7 @@ type RepoStore struct {
 func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, error) {
 	dst := new(types.Repository)
 	if err := s.db.GetContext(ctx, dst, repoSelectById, id); err != nil {
-		return nil, wrapSqlErrorf(err, "Select query failed")
+		return nil, processSqlErrorf(err, "Select query failed")
 	}
 	return dst, nil
 }
@@ -44,7 +43,7 @@ func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, erro
 func (s *RepoStore) FindByPath(ctx context.Context, path string) (*types.Repository, error) {
 	dst := new(types.Repository)
 	if err := s.db.GetContext(ctx, dst, repoSelectByPath, path); err != nil {
-		return nil, wrapSqlErrorf(err, "Select query failed")
+		return nil, processSqlErrorf(err, "Select query failed")
 	}
 	return dst, nil
 }
@@ -53,18 +52,18 @@ func (s *RepoStore) FindByPath(ctx context.Context, path string) (*types.Reposit
 func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to start a new transaction")
+		return processSqlErrorf(err, "Failed to start a new transaction")
 	}
 	defer tx.Rollback()
 
 	// insert repo first so we get id
 	query, arg, err := s.db.BindNamed(repoInsert, repo)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to bind repo object")
+		return processSqlErrorf(err, "Failed to bind repo object")
 	}
 
 	if err = tx.QueryRow(query, arg...).Scan(&repo.ID); err != nil {
-		return wrapSqlErrorf(err, "Insert query failed")
+		return processSqlErrorf(err, "Insert query failed")
 	}
 
 	// Get parent path (repo always has a parent)
@@ -93,7 +92,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 
 	// commit
 	if err = tx.Commit(); err != nil {
-		return wrapSqlErrorf(err, "Failed to commit transaction")
+		return processSqlErrorf(err, "Failed to commit transaction")
 	}
 
 	// update path in repo object
@@ -106,7 +105,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 func (s *RepoStore) Move(ctx context.Context, userId int64, repoId int64, newSpaceId int64, newName string, keepAsAlias bool) (*types.Repository, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return nil, wrapSqlErrorf(err, "Failed to start a new transaction")
+		return nil, processSqlErrorf(err, "Failed to start a new transaction")
 	}
 	defer tx.Rollback()
 
@@ -124,7 +123,7 @@ func (s *RepoStore) Move(ctx context.Context, userId int64, repoId int64, newSpa
 	newPath := paths.Concatinate(spacePath.Value, newName)
 
 	if newPath == currentPath.Value {
-		return nil, errs.NoChangeInRequestedMove
+		return nil, store.ErrNoChangeInRequestedMove
 	}
 
 	p := &types.Path{
@@ -144,18 +143,18 @@ func (s *RepoStore) Move(ctx context.Context, userId int64, repoId int64, newSpa
 
 	// Rename the repo itself
 	if _, err := tx.ExecContext(ctx, repoUpdateNameAndSpaceId, newName, newSpaceId, repoId); err != nil {
-		return nil, wrapSqlErrorf(err, "Query for renaming and updating the space id failed")
+		return nil, processSqlErrorf(err, "Query for renaming and updating the space id failed")
 	}
 
 	// TODO: return repo as part of rename db operation?
 	dst := new(types.Repository)
 	if err = tx.GetContext(ctx, dst, repoSelectById, repoId); err != nil {
-		return nil, wrapSqlErrorf(err, "Select query to get the repo's latest state failed")
+		return nil, processSqlErrorf(err, "Select query to get the repo's latest state failed")
 	}
 
 	// commit
 	if err = tx.Commit(); err != nil {
-		return nil, wrapSqlErrorf(err, "Failed to commit transaction")
+		return nil, processSqlErrorf(err, "Failed to commit transaction")
 	}
 
 	return dst, nil
@@ -165,11 +164,11 @@ func (s *RepoStore) Move(ctx context.Context, userId int64, repoId int64, newSpa
 func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 	query, arg, err := s.db.BindNamed(repoUpdate, repo)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to bind repo object")
+		return processSqlErrorf(err, "Failed to bind repo object")
 	}
 
 	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
-		wrapSqlErrorf(err, "Update query failed")
+		processSqlErrorf(err, "Update query failed")
 	}
 
 	return nil
@@ -179,7 +178,7 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 func (s *RepoStore) Delete(ctx context.Context, id int64) error {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to start a new transaction")
+		return processSqlErrorf(err, "Failed to start a new transaction")
 	}
 	defer tx.Rollback()
 
@@ -191,11 +190,11 @@ func (s *RepoStore) Delete(ctx context.Context, id int64) error {
 
 	// delete the repo
 	if _, err := tx.ExecContext(ctx, repoDelete, id); err != nil {
-		return wrapSqlErrorf(err, "The delete query failed")
+		return processSqlErrorf(err, "The delete query failed")
 	}
 
 	if err = tx.Commit(); err != nil {
-		return wrapSqlErrorf(err, "Failed to commit transaction")
+		return processSqlErrorf(err, "Failed to commit transaction")
 	}
 
 	return nil
@@ -206,7 +205,7 @@ func (s *RepoStore) Count(ctx context.Context, spaceId int64) (int64, error) {
 	var count int64
 	err := s.db.QueryRow(repoCount, spaceId).Scan(&count)
 	if err != nil {
-		return 0, wrapSqlErrorf(err, "Failed executing count query")
+		return 0, processSqlErrorf(err, "Failed executing count query")
 	}
 	return count, nil
 }
@@ -221,7 +220,7 @@ func (s *RepoStore) List(ctx context.Context, spaceId int64, opts *types.RepoFil
 	if opts.Sort == enum.RepoAttrNone {
 		err := s.db.SelectContext(ctx, &dst, repoSelect, spaceId, limit(opts.Size), offset(opts.Page, opts.Size))
 		if err != nil {
-			return nil, wrapSqlErrorf(err, "Failed executing default list query")
+			return nil, processSqlErrorf(err, "Failed executing default list query")
 		}
 		return dst, nil
 	}
@@ -259,7 +258,7 @@ func (s *RepoStore) List(ctx context.Context, spaceId int64, opts *types.RepoFil
 	}
 
 	if err = s.db.SelectContext(ctx, &dst, sql); err != nil {
-		return nil, wrapSqlErrorf(err, "Failed executing custom list query")
+		return nil, processSqlErrorf(err, "Failed executing custom list query")
 	}
 
 	return dst, nil
@@ -284,7 +283,7 @@ func (s *RepoStore) CreatePath(ctx context.Context, repoId int64, params *types.
 		Updated:   params.Updated,
 	}
 
-	return p, CreatePath(ctx, s.db, p)
+	return p, CreateAliasPath(ctx, s.db, p)
 }
 
 // Delete an alias of a repo

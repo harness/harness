@@ -5,18 +5,15 @@
 package repo
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/hlog"
 )
 
 /*
@@ -27,13 +24,15 @@ import (
 func Required(repos store.RepoStore) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			log := hlog.FromRequest(r)
+
 			ref, err := request.GetRepoRef(r)
 			if err != nil {
-				render.BadRequest(w, err)
+				render.BadRequest(w)
 				return
 			}
 
-			ctx := r.Context()
 			var repo *types.Repository
 
 			// check if ref is repoId - ASSUMPTION: digit only is no valid repo name
@@ -44,18 +43,15 @@ func Required(repos store.RepoStore) func(http.Handler) http.Handler {
 				repo, err = repos.FindByPath(ctx, ref)
 			}
 
-			if errors.Is(err, errs.ResourceNotFound) {
-				render.NotFoundf(w, "Repository doesn't exist.")
-				return
-			} else if err != nil {
-				log.Err(err).Msgf("Failed to get repo using ref '%s'.", ref)
+			if err != nil {
+				log.Debug().Err(err).Msgf("Failed to get repo using ref '%s'.", ref)
 
-				render.InternalErrorf(w, comms.Internal)
+				render.UserfiedErrorOrInternal(w, err)
 				return
 			}
 
 			// Update the logging context and inject repo in context
-			log.Ctx(ctx).UpdateContext(func(c zerolog.Context) zerolog.Context {
+			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
 				return c.Int64("repo_id", repo.ID).Str("repo_path", repo.Path)
 			})
 

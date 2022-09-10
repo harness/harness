@@ -33,7 +33,7 @@ type UserStore struct {
 func (s *UserStore) Find(ctx context.Context, id int64) (*types.User, error) {
 	dst := new(types.User)
 	if err := s.db.GetContext(ctx, dst, userSelectID, id); err != nil {
-		return nil, wrapSqlErrorf(err, "Select by id query failed")
+		return nil, processSqlErrorf(err, "Select by id query failed")
 	}
 	return dst, nil
 }
@@ -42,7 +42,7 @@ func (s *UserStore) Find(ctx context.Context, id int64) (*types.User, error) {
 func (s *UserStore) FindEmail(ctx context.Context, email string) (*types.User, error) {
 	dst := new(types.User)
 	if err := s.db.GetContext(ctx, dst, userSelectEmail, email); err != nil {
-		return nil, wrapSqlErrorf(err, "Select by email query failed")
+		return nil, processSqlErrorf(err, "Select by email query failed")
 	}
 	return dst, nil
 }
@@ -66,7 +66,7 @@ func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.
 	if opts.Sort == enum.UserAttrNone {
 		err := s.db.SelectContext(ctx, &dst, userSelect, limit(opts.Size), offset(opts.Page, opts.Size))
 		if err != nil {
-			return nil, wrapSqlErrorf(err, "Failed executing default list query")
+			return nil, processSqlErrorf(err, "Failed executing default list query")
 		}
 		return dst, nil
 	}
@@ -96,7 +96,7 @@ func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.
 	}
 
 	if err = s.db.SelectContext(ctx, &dst, sql); err != nil {
-		return nil, wrapSqlErrorf(err, "Failed executing custom list query")
+		return nil, processSqlErrorf(err, "Failed executing custom list query")
 	}
 
 	return dst, nil
@@ -106,11 +106,11 @@ func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.
 func (s *UserStore) Create(ctx context.Context, user *types.User) error {
 	query, arg, err := s.db.BindNamed(userInsert, user)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to bind user object")
+		return processSqlErrorf(err, "Failed to bind user object")
 	}
 
 	if err = s.db.QueryRowContext(ctx, query, arg...).Scan(&user.ID); err != nil {
-		return wrapSqlErrorf(err, "Insert query failed")
+		return processSqlErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -120,11 +120,11 @@ func (s *UserStore) Create(ctx context.Context, user *types.User) error {
 func (s *UserStore) Update(ctx context.Context, user *types.User) error {
 	query, arg, err := s.db.BindNamed(userUpdate, user)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to bind user object")
+		return processSqlErrorf(err, "Failed to bind user object")
 	}
 
 	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
-		return wrapSqlErrorf(err, "Update query failed")
+		return processSqlErrorf(err, "Update query failed")
 	}
 
 	return err
@@ -134,12 +134,12 @@ func (s *UserStore) Update(ctx context.Context, user *types.User) error {
 func (s *UserStore) Delete(ctx context.Context, user *types.User) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to start a new transaction")
+		return processSqlErrorf(err, "Failed to start a new transaction")
 	}
 	defer tx.Rollback()
 	// delete the user
 	if _, err := tx.ExecContext(ctx, userDelete, user.ID); err != nil {
-		return wrapSqlErrorf(err, "The delete query failed")
+		return processSqlErrorf(err, "The delete query failed")
 	}
 	return tx.Commit()
 }
@@ -149,7 +149,7 @@ func (s *UserStore) Count(ctx context.Context) (int64, error) {
 	var count int64
 	err := s.db.QueryRowContext(ctx, userCount).Scan(&count)
 	if err != nil {
-		return 0, wrapSqlErrorf(err, "Failed executing count query")
+		return 0, processSqlErrorf(err, "Failed executing count query")
 	}
 	return count, nil
 }

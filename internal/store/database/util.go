@@ -6,10 +6,12 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 
-	"github.com/harness/gitness/internal/errs"
+	"github.com/harness/gitness/internal/store"
 	"github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 // default query range limit.
@@ -35,14 +37,19 @@ func offset(page, size int) int {
 	return page * size
 }
 
-func wrapSqlErrorf(original error, format string, args ...interface{}) error {
-	if original == sql.ErrNoRows {
-		original = errs.WrapInResourceNotFound(original)
-	} else if isSqlUniqueConstraintError(original) {
-		original = errs.WrapInDuplicate(original)
+// Logs the error and message, returns either the original error or a store equivalent if possible.
+func processSqlErrorf(err error, format string, args ...interface{}) error {
+	// always log DB error (print formated message)
+	log.Warn().Msgf("%s %s", fmt.Sprintf(format, args...), err)
+
+	// If it's a known error, return converted error instead.
+	if err == sql.ErrNoRows {
+		return store.ErrResourceNotFound
+	} else if isSqlUniqueConstraintError(err) {
+		return store.ErrDuplicate
 	}
 
-	return errors.Wrapf(original, format, args...)
+	return err
 }
 
 func isSqlUniqueConstraintError(original error) bool {

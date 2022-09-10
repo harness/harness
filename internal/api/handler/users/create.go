@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
@@ -46,7 +45,7 @@ func HandleCreate(users store.UserStore) http.HandlerFunc {
 				Str("email", in.Username).
 				Msg("Failed to hash password")
 
-			render.InternalErrorf(w, comms.Internal)
+			render.InternalError(w)
 			return
 		}
 
@@ -64,7 +63,7 @@ func HandleCreate(users store.UserStore) http.HandlerFunc {
 				Str("email", user.Email).
 				Msg("invalid user input")
 
-			render.BadRequest(w, err)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
@@ -74,10 +73,10 @@ func HandleCreate(users store.UserStore) http.HandlerFunc {
 				Str("email", user.Email).
 				Msg("failed to create user")
 
-			render.InternalErrorf(w, comms.Internal)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
-		render.JSON(w, user, 200)
+		render.JSON(w, http.StatusOK, user)
 	}
 }

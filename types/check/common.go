@@ -20,11 +20,11 @@ const (
 )
 
 var (
-	ErrNameLength = fmt.Errorf("Name has to be between %d and %d in length.", minNameLength, maxNameLength)
-	ErrNameRegex  = fmt.Errorf("Name has start with a letter and only contain the following [a-z0-9-_].")
+	ErrNameLength = &CheckError{fmt.Sprintf("Name has to be between %d and %d in length.", minNameLength, maxNameLength)}
+	ErrNameRegex  = &CheckError{fmt.Sprintf("Name has start with a letter and only contain the following [a-z0-9-_].")}
 
-	ErrDisplayNameLength = fmt.Errorf("Display name has to be between %d and %d in length.", minDisplayNameLength, maxDisplayNameLength)
-	ErrDisplayNameRegex  = fmt.Errorf("Display name has start with a letter and only contain the following [a-zA-Z0-9-_ ].")
+	ErrDisplayNameLength = &CheckError{fmt.Sprintf("Display name has to be between %d and %d in length.", minDisplayNameLength, maxDisplayNameLength)}
+	ErrDisplayNameRegex  = &CheckError{fmt.Sprintf("Display name has start with a letter and only contain the following [a-zA-Z0-9-_ ].")}
 )
 
 // Name checks the provided name and returns an error in it isn't valid.

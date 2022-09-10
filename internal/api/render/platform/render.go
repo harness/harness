@@ -9,7 +9,7 @@ import (
 
 // RenderResource is a helper function that renders a single
 // resource, wrapped in the harness payload envelope.
-func RenderResource(w http.ResponseWriter, v interface{}, code int) {
+func RenderResource(w http.ResponseWriter, code int, v interface{}) {
 	payload := new(wrapper)
 	payload.Status = "SUCCESS"
 	payload.Data, _ = json.Marshal(v)
@@ -18,7 +18,7 @@ func RenderResource(w http.ResponseWriter, v interface{}, code int) {
 	} else if code > 299 {
 		payload.Status = "FAILURE"
 	}
-	render.JSON(w, payload, code)
+	render.JSON(w, code, payload)
 }
 
 // wrapper defines the payload wrapper.

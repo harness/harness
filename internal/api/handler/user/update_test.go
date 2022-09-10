@@ -120,9 +120,9 @@ func TestUpdate_HashError(t *testing.T) {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 
-	got, want := new(render.Error), &render.Error{Message: bcrypt.ErrHashTooShort.Error()}
+	got := new(render.Error)
 	json.NewDecoder(w.Body).Decode(got)
-	if diff := cmp.Diff(got, want); len(diff) != 0 {
+	if diff := cmp.Diff(got.Message, render.ErrInternal.Message); len(diff) != 0 {
 		t.Errorf(diff)
 	}
 }
@@ -151,9 +151,9 @@ func TestUpdate_BadRequest(t *testing.T) {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 
-	got, want := new(render.Error), &render.Error{Message: "EOF"}
+	got := new(render.Error)
 	json.NewDecoder(w.Body).Decode(got)
-	if diff := cmp.Diff(got, want); len(diff) != 0 {
+	if diff := cmp.Diff(got.Message, "Invalid request body: EOF."); len(diff) != 0 {
 		t.Errorf(diff)
 	}
 }
@@ -188,7 +188,7 @@ func TestUpdate_ServerError(t *testing.T) {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 
-	got, want := new(render.Error), render.ErrNotFound
+	got, want := new(render.Error), render.ErrInternal
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
 		t.Errorf(diff)

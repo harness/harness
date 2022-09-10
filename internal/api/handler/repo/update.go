@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
@@ -59,19 +58,18 @@ func HandleUpdate(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
 
 			// ensure provided values are valid
 			if err := check.Repo(repo); err != nil {
-				render.BadRequest(w, err)
+				render.UserfiedErrorOrInternal(w, err)
 				return
 			}
 
 			err = repos.Update(ctx, repo)
 			if err != nil {
-				log.Error().Err(err).
-					Msg("Repository update failed.")
+				log.Error().Err(err).Msg("Repository update failed.")
 
-				render.InternalErrorf(w, comms.Internal)
+				render.UserfiedErrorOrInternal(w, err)
 				return
 			}
 
-			render.JSON(w, repo, http.StatusOK)
+			render.JSON(w, http.StatusOK, repo)
 		})
 }

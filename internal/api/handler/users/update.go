@@ -6,14 +6,11 @@ package users
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"time"
 
 	"github.com/gotidy/ptr"
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -36,13 +33,10 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 
 		key := chi.URLParam(r, "user")
 		user, err := users.FindKey(ctx, key)
-		if errors.Is(err, errs.ResourceNotFound) {
-			render.NotFoundf(w, "User not found.")
-			return
-		} else if err != nil {
-			log.Err(err).Msgf("Failed to get user using key '%s'.", key)
+		if err != nil {
+			log.Debug().Err(err).Msgf("Failed to get user using key '%s'.", key)
 
-			render.InternalErrorf(w, comms.Internal)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
@@ -60,7 +54,7 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 					Str("user_email", user.Email).
 					Msg("Failed to hash password")
 
-				render.InternalErrorf(w, comms.Internal)
+				render.InternalError(w)
 				return
 			}
 			user.Password = string(hash)
@@ -87,7 +81,7 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 					Str("user_email", user.Email).
 					Msg("Failed to hash password")
 
-				render.InternalErrorf(w, comms.Internal)
+				render.InternalError(w)
 				return
 			}
 			user.Password = string(hash)
@@ -99,7 +93,7 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 				Str("user_email", user.Email).
 				Msg("invalid user input")
 
-			render.BadRequest(w, err)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
@@ -112,10 +106,10 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 				Str("user_email", user.Email).
 				Msg("Failed to update the usser")
 
-			render.InternalErrorf(w, comms.Internal)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
-		render.JSON(w, user, 200)
+		render.JSON(w, http.StatusOK, user)
 	}
 }

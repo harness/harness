@@ -8,15 +8,18 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authz"
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/hlog"
+)
+
+var (
+	ErrNotAuthenticated = errors.New("Not authenticated.")
+	ErrNotAuthorized    = errors.New("Not authorized.")
 )
 
 type Guard struct {
@@ -35,12 +38,12 @@ func (g *Guard) EnforceAdmin(next http.Handler) http.Handler {
 		ctx := r.Context()
 		user, ok := request.UserFrom(ctx)
 		if !ok {
-			render.Unauthorizedf(w, comms.AuthenticationRequired)
+			render.Unauthorized(w)
 			return
 		}
 
 		if !user.Admin {
-			render.Forbiddenf(w, "Action requires admin privileges.")
+			render.Forbidden(w)
 			return
 		}
 
@@ -56,7 +59,7 @@ func (g *Guard) EnforceAuthenticated(next http.Handler) http.Handler {
 		ctx := r.Context()
 		_, ok := request.UserFrom(ctx)
 		if !ok {
-			render.Unauthorizedf(w, comms.AuthenticationRequired)
+			render.Unauthorized(w)
 			return
 		}
 
@@ -73,19 +76,21 @@ func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, scope *types.Sco
 	err := g.Check(r, scope, resource, permission)
 
 	// render error if needed
-	if errors.Is(err, errs.NotAuthenticated) {
-		render.Unauthorizedf(w, comms.AuthenticationRequired)
-	} else if errors.Is(err, errs.NotAuthorized) {
-		render.Forbiddenf(w, "User not authorized to perform %s on resource %v in scope %v",
+	if errors.Is(err, ErrNotAuthenticated) {
+		render.ErrorObject(w, http.StatusUnauthorized, render.ErrUnauthorized)
+	} else if errors.Is(err, ErrNotAuthorized) {
+		// log error for debugging.
+		hlog.FromRequest(r).Debug().Msgf("User not authorized to perform %s on resource %v in scope %v",
 			permission,
 			resource,
 			scope)
+
+		render.Forbidden(w)
 	} else if err != nil {
 		// log err for debugging
-		log := hlog.FromRequest(r)
-		log.Err(err).Msg("Encountered unexpected error while enforcing permission.")
+		hlog.FromRequest(r).Err(err).Msg("Encountered unexpected error while enforcing permission.")
 
-		render.InternalErrorf(w, comms.Internal)
+		render.InternalError(w)
 	}
 
 	return err == nil
@@ -99,7 +104,7 @@ func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, scope *types.Sco
 func (g *Guard) Check(r *http.Request, scope *types.Scope, resource *types.Resource, permission enum.Permission) error {
 	u, present := request.UserFrom(r.Context())
 	if !present {
-		return errs.NotAuthenticated
+		return ErrNotAuthenticated
 	}
 
 	// TODO: don't hardcode principal type USER
@@ -110,11 +115,11 @@ func (g *Guard) Check(r *http.Request, scope *types.Scope, resource *types.Resou
 		resource,
 		permission)
 	if err != nil {
-		return errors.Wrap(err, "Authorization check failed")
+		return err
 	}
 
 	if !authorized {
-		return errs.NotAuthorized
+		return ErrNotAuthorized
 	}
 
 	return nil

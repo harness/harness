@@ -5,8 +5,15 @@
 package authz
 
 import (
+	"errors"
+
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+)
+
+var (
+	// An error that is thrown if no permission checks are provided
+	ErrNoPermissionCheckProvided = errors.New("No permission checks provided")
 )
 
 /*

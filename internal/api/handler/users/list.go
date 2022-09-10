@@ -37,12 +37,11 @@ func HandleList(users store.UserStore) http.HandlerFunc {
 			log.Err(err).
 				Msg("Failed to retrieve user list")
 
-			render.InternalError(w, err)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
 		render.Pagination(r, w, params.Page, params.Size, int(count))
-		render.JSON(w, list, 200)
-
+		render.JSON(w, http.StatusOK, list)
 	}
 }

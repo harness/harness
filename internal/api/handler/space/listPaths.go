@@ -7,7 +7,6 @@ package space
 import (
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
@@ -37,11 +36,11 @@ func HandleListPaths(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFu
 			if err != nil {
 				log.Err(err).Msgf("Failed to get list of space paths.")
 
-				render.InternalErrorf(w, comms.Internal)
+				render.UserfiedErrorOrInternal(w, err)
 				return
 			}
 
 			// TODO: do we need pagination? we should block that many paths in the first place.
-			render.JSON(w, paths, 200)
+			render.JSON(w, http.StatusOK, paths)
 		})
 }

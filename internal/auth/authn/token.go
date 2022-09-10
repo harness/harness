@@ -40,7 +40,7 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*types.User, error) 
 	str := extractToken(r)
 
 	if len(str) == 0 {
-		return nil, nil
+		return nil, ErrNoAuthData
 	}
 
 	var user *types.User

@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/internal/auth/authz"
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -48,7 +47,7 @@ func (a *Authorizer) Check(principalType enum.PrincipalType, principalId string,
 
 func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...*types.PermissionCheck) (bool, error) {
 	if len(permissionChecks) == 0 {
-		return false, errs.NoPermissionCheckProvided
+		return false, authz.ErrNoPermissionCheckProvided
 	}
 
 	requestDto, err := createAclRequest(principalType, principalId, permissionChecks)

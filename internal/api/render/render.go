@@ -6,10 +6,14 @@ package render
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types/check"
 )
 
 // indent the json-encoded API responses
@@ -21,77 +25,86 @@ func init() {
 	)
 }
 
-// ErrorCode writes the json-encoded error message to the response.
-func ErrorCode(w http.ResponseWriter, err error, status int) {
-	JSON(w, &Error{Message: err.Error()}, status)
+/*
+ * UserfiedErrorOrInternal renders the appropriate user facing message for the provided error.
+ * If the error is unknown, an internal error is rendered.
+ */
+func UserfiedErrorOrInternal(w http.ResponseWriter, err error) {
+
+	if errors.Is(err, check.ErrAny) {
+		ErrorObject(w, http.StatusBadRequest, &Error{err.Error()})
+	} else if errors.Is(err, store.ErrResourceNotFound) {
+		ErrorObject(w, http.StatusNotFound, ErrNotFound)
+	} else if errors.Is(err, store.ErrDuplicate) {
+		ErrorObject(w, http.StatusBadRequest, ErrDuplicate)
+	} else if errors.Is(err, store.ErrPrimaryPathCantBeDeleted) {
+		ErrorObject(w, http.StatusBadRequest, ErrPrimaryPathCantBeDeleted)
+	} else if errors.Is(err, store.ErrPathTooLong) {
+		ErrorObject(w, http.StatusBadRequest, ErrPathTooLong)
+	} else if errors.Is(err, store.ErrNoChangeInRequestedMove) {
+		ErrorObject(w, http.StatusBadRequest, ErrNoChange)
+	} else if errors.Is(err, store.ErrIllegalMoveCyclicHierarchy) {
+		ErrorObject(w, http.StatusBadRequest, ErrCyclicHierarchy)
+	} else if errors.Is(err, store.ErrSpaceWithChildsCantBeDeleted) {
+		ErrorObject(w, http.StatusBadRequest, ErrSpaceWithChildsCantBeDeleted)
+	} else {
+		// nothing found - render internal error
+		fmt.Println(err)
+		InternalError(w)
+	}
 }
 
-// InternalError writes the json-encoded error message to the response
-// with a 500 internal server error.
-func InternalError(w http.ResponseWriter, err error) {
-	ErrorCode(w, err, 500)
+// NotFound writes the json-encoded message for a not found error.
+func NotFound(w http.ResponseWriter) {
+	ErrorObject(w, http.StatusNotFound, ErrNotFound)
 }
 
-// InternalErrorf writes the json-encoded error message to the response
-// with a 500 internal server error.
-func InternalErrorf(w http.ResponseWriter, format string, a ...interface{}) {
-	ErrorCode(w, fmt.Errorf(format, a...), 500)
+// Unauthorized writes the json-encoded message for an unauthorized error.
+func Unauthorized(w http.ResponseWriter) {
+	ErrorObject(w, http.StatusUnauthorized, ErrUnauthorized)
 }
 
-// NotFound writes the json-encoded error message to the response
-// with a 404 not found status code.
-func NotFound(w http.ResponseWriter, err error) {
-	ErrorCode(w, err, 404)
+// Forbidden writes the json-encoded message for a forbidden error.
+func Forbidden(w http.ResponseWriter) {
+	ErrorObject(w, http.StatusForbidden, ErrForbidden)
 }
 
-// NotFoundf writes the json-encoded error message to the response
-// with a 404 not found status code.
-func NotFoundf(w http.ResponseWriter, format string, a ...interface{}) {
-	ErrorCode(w, fmt.Errorf(format, a...), 404)
+// BadRequest writes the json-encoded message for a bad request error.
+func BadRequest(w http.ResponseWriter) {
+	ErrorObject(w, http.StatusBadRequest, ErrBadRequest)
 }
 
-// Unauthorized writes the json-encoded error message to the response
-// with a 401 unauthorized status code.
-func Unauthorized(w http.ResponseWriter, err error) {
-	ErrorCode(w, err, 401)
+// BadRequestError writes the json-encoded error with a bad request status code.
+func BadRequestError(w http.ResponseWriter, err *Error) {
+	ErrorObject(w, http.StatusBadRequest, err)
 }
 
-// Unauthorizedf writes the json-encoded error message to the response
-// with a 401 unauthorized status code.
-func Unauthorizedf(w http.ResponseWriter, format string, a ...interface{}) {
-	ErrorCode(w, fmt.Errorf(format, a...), 401)
+// BadRequest writes the json-encoded message with a bad request status code.
+func BadRequestf(w http.ResponseWriter, format string, args ...interface{}) {
+	ErrorMessagef(w, http.StatusBadRequest, format, args...)
 }
 
-// Forbidden writes the json-encoded error message to the response
-// with a 403 forbidden status code.
-func Forbidden(w http.ResponseWriter, err error) {
-	ErrorCode(w, err, 403)
+// InternalError writes the json-encoded message for an internal error.
+func InternalError(w http.ResponseWriter) {
+	ErrorObject(w, http.StatusInternalServerError, ErrInternal)
 }
 
-// Forbiddenf writes the json-encoded error message to the response
-// with a 403 forbidden status code.
-func Forbiddenf(w http.ResponseWriter, format string, a ...interface{}) {
-	ErrorCode(w, fmt.Errorf(format, a...), 403)
+// ErrorMessagef writes the json-encoded, formated error message.
+func ErrorMessagef(w http.ResponseWriter, code int, format string, args ...interface{}) {
+	JSON(w, code, &Error{Message: fmt.Sprintf(format, args...)})
 }
 
-// BadRequest writes the json-encoded error message to the response
-// with a 400 bad request status code.
-func BadRequest(w http.ResponseWriter, err error) {
-	ErrorCode(w, err, 400)
+// ErrorMessagef writes the json-encoded, formated error message.
+func ErrorObject(w http.ResponseWriter, code int, err *Error) {
+	JSON(w, code, err)
 }
 
-// BadRequestf writes the json-encoded error message to the response
-// with a 400 bad request status code.
-func BadRequestf(w http.ResponseWriter, format string, a ...interface{}) {
-	ErrorCode(w, fmt.Errorf(format, a...), 400)
-}
-
-// JSON writes the json-encoded error message to the response
-// with a 400 bad request status code.
-func JSON(w http.ResponseWriter, v interface{}, status int) {
+// JSON writes the json-encoded value to the response
+// with the provides status
+func JSON(w http.ResponseWriter, code int, v interface{}) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(status)
+	w.WriteHeader(code)
 	enc := json.NewEncoder(w)
 	if indent {
 		enc.SetIndent("", "  ")

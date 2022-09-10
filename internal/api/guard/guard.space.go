@@ -7,7 +7,6 @@ package guard
 import (
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/paths"
@@ -43,7 +42,10 @@ func (g *Guard) Space(permission enum.Permission, orPublic bool, guarded http.Ha
 		ctx := r.Context()
 		s, ok := request.SpaceFrom(ctx)
 		if !ok {
-			render.InternalError(w, errors.New("Expected space to be available"))
+			// log error for debugging
+			hlog.FromRequest(r).Error().Msg("Method expects the space to be availabe in the request context, but it wasnt.")
+
+			render.InternalError(w)
 			return
 		}
 
@@ -68,7 +70,7 @@ func (g *Guard) EnforceSpace(w http.ResponseWriter, r *http.Request, permission 
 		hlog.FromRequest(r)
 		log.Err(err).Msgf("Failed to disect path '%s'.", path)
 
-		render.InternalErrorf(w, comms.Internal)
+		render.InternalError(w)
 		return false
 	}
 

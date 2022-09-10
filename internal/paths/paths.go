@@ -5,10 +5,14 @@
 package paths
 
 import (
+	"errors"
 	"strings"
 
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/types"
+)
+
+var (
+	ErrPathEmpty = errors.New("Path is empty.")
 )
 
 /*
@@ -17,7 +21,7 @@ import (
  */
 func Disect(path string) (string, string, error) {
 	if path == "" {
-		return "", "", errs.PathEmpty
+		return "", "", ErrPathEmpty
 	}
 
 	i := strings.LastIndex(path, types.PathSeparator)

@@ -18,7 +18,7 @@ func HandleFind() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		user, _ := request.UserFrom(ctx)
-		render.JSON(w, user, 200)
+		render.JSON(w, http.StatusOK, user)
 	}
 }
 
@@ -29,6 +29,6 @@ func HandleCurrent() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		user, _ := request.UserFrom(ctx)
-		platform.RenderResource(w, user, 200)
+		platform.RenderResource(w, http.StatusOK, user)
 	}
 }

@@ -14,8 +14,8 @@ import (
 var (
 	illegalRootSpaceNames = []string{"api"}
 
-	ErrRootSpaceNameNotAllowed = fmt.Errorf("The following names are not allowed for a root space: %v", illegalRootSpaceNames)
-	ErrInvalidParentSpaceId    = fmt.Errorf("Parent space ID has to be either zero for a root space or greater than zero for a child space.")
+	ErrRootSpaceNameNotAllowed = &CheckError{fmt.Sprintf("The following names are not allowed for a root space: %v", illegalRootSpaceNames)}
+	ErrInvalidParentSpaceId    = &CheckError{"Parent space ID has to be either zero for a root space or greater than zero for a child space."}
 )
 
 // Repo checks the provided space and returns an error in it isn't valid.

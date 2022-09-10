@@ -18,7 +18,7 @@ const (
 var (
 	// ErrEmailLen  is returned when the email address
 	// exceeds the maximum number of characters.
-	ErrEmailLen = fmt.Errorf("Email address has to be within %d and %d characters", minEmailLength, maxEmailLength)
+	ErrEmailLen = &CheckError{fmt.Sprintf("Email address has to be within %d and %d characters", minEmailLength, maxEmailLength)}
 )
 
 // User returns true if the User if valid.

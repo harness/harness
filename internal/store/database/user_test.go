@@ -5,7 +5,6 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
@@ -237,18 +236,18 @@ func testUserUpdate(store store.UserStore) func(t *testing.T) {
 // this test deletes an user from the database and then confirms
 // subsequent attempts to fetch the deleted user result in
 // a sql.ErrNoRows error.
-func testUserDelete(store store.UserStore) func(t *testing.T) {
+func testUserDelete(s store.UserStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		v, err := store.Find(noContext, 1)
+		v, err := s.Find(noContext, 1)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		if err := store.Delete(noContext, v); err != nil {
+		if err := s.Delete(noContext, v); err != nil {
 			t.Error(err)
 			return
 		}
-		if _, err := store.Find(noContext, 1); err != sql.ErrNoRows {
+		if _, err := s.Find(noContext, 1); err != store.ErrResourceNotFound {
 			t.Errorf("Expected sql.ErrNoRows got %s", err)
 		}
 	}

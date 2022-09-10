@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/guard"
+	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	middleware_authn "github.com/harness/gitness/internal/api/middleware/authn"
 	"github.com/harness/gitness/internal/api/middleware/encode"
 	"github.com/harness/gitness/internal/api/middleware/repo"
@@ -48,6 +49,7 @@ func newGitHandler(
 		r.Use(hlog.URLHandler("path"))
 		r.Use(hlog.MethodHandler("method"))
 		r.Use(hlog.RequestIDHandler("request", "Request-Id"))
+		r.Use(accesslog.HlogHandler())
 
 		// for now always attempt auth - enforced per operation
 		r.Use(middleware_authn.Attempt(authenticator))
@@ -80,7 +82,6 @@ func newGitHandler(
 				r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.pack", stubGitHandler)
 				r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.idx", stubGitHandler)
 			})
-
 		})
 	})
 
@@ -90,7 +91,7 @@ func newGitHandler(
 func stubGitHandler(w http.ResponseWriter, r *http.Request) {
 	rep, _ := request.RepoFrom(r.Context())
 
-	w.WriteHeader(http.StatusForbidden)
+	w.WriteHeader(http.StatusTeapot)
 	w.Write([]byte(fmt.Sprintf(
 		"Oooops, seems you hit a major construction site ... \n"+
 			"  Repo: '%s' (%s)\n"+

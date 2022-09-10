@@ -42,7 +42,7 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 			if err != nil {
 				log.Err(err).Msg("Failed to hash password.")
 
-				render.InternalError(w, err)
+				render.InternalError(w)
 				return
 			}
 			user.Password = string(hash)
@@ -60,10 +60,10 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 		if err != nil {
 			log.Err(err).Msg("Failed to update the user.")
 
-			render.InternalError(w, err)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
-		render.JSON(w, user, 200)
+		render.JSON(w, http.StatusOK, user)
 	}
 }

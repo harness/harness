@@ -2,7 +2,6 @@ CREATE TABLE IF NOT EXISTS repositories (
  repo_id                SERIAL PRIMARY KEY
 ,repo_name              TEXT
 ,repo_spaceId           INTEGER
-,repo_path              TEXT
 ,repo_displayName       TEXT
 ,repo_description       TEXT
 ,repo_isPublic          BOOLEAN
@@ -14,5 +13,4 @@ CREATE TABLE IF NOT EXISTS repositories (
 ,repo_numPulls          INTEGER
 ,repo_numClosedPulls    INTEGER
 ,repo_numOpenPulls      INTEGER
-,UNIQUE(repo_path)
 );

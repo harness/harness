@@ -10,6 +10,7 @@ import (
 	handler_space "github.com/harness/gitness/internal/api/handler/space"
 	"github.com/harness/gitness/internal/api/handler/system"
 	"github.com/harness/gitness/internal/api/handler/user"
+	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	middleware_authn "github.com/harness/gitness/internal/api/middleware/authn"
 	"github.com/harness/gitness/internal/api/middleware/encode"
 	"github.com/harness/gitness/internal/api/middleware/repo"
@@ -55,6 +56,7 @@ func newApiHandler(
 		r.Use(hlog.URLHandler("path"))
 		r.Use(hlog.MethodHandler("method"))
 		r.Use(hlog.RequestIDHandler("request", "Request-Id"))
+		r.Use(accesslog.HlogHandler())
 
 		// configure cors middleware
 		cors := cors.New(

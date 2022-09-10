@@ -6,17 +6,13 @@ package repo
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/errs"
-	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -58,13 +54,10 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 		}
 
 		parentSpace, err := spaces.Find(ctx, in.SpaceId)
-		if errors.Is(err, errs.ResourceNotFound) {
-			render.NotFoundf(w, "Provided space wasn't found.")
-			return
-		} else if err != nil {
-			log.Err(err).Msgf("Failed to get space with id '%s'.", in.SpaceId)
+		if err != nil {
+			log.Err(err).Msgf("Failed to get space with id '%d'.", in.SpaceId)
 
-			render.InternalErrorf(w, comms.Internal)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
@@ -102,26 +95,20 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 
 		// validate repo
 		if err := check.Repo(repo); err != nil {
-			render.BadRequest(w, err)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
 		// create in store
 		err = repos.Create(ctx, repo)
-		if errors.Is(err, errs.Duplicate) {
-			log.Warn().Err(err).
-				Msg("Repository creation failed as a duplicate was detected.")
-
-			render.BadRequestf(w, "Path '%s' already exists.", paths.Concatinate(parentPath, repo.Name))
-			return
-		} else if err != nil {
+		if err != nil {
 			log.Error().Err(err).
 				Msg("Repository creation failed.")
 
-			render.InternalErrorf(w, comms.Internal)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
-		render.JSON(w, repo, 200)
+		render.JSON(w, http.StatusOK, repo)
 	}
 }

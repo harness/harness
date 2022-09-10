@@ -7,7 +7,7 @@ package render
 import "testing"
 
 func TestError(t *testing.T) {
-	got, want := ErrNotFound.Error(), ErrNotFound.(*Error).Message
+	got, want := ErrNotFound.Message, ErrNotFound.Message
 	if got != want {
 		t.Errorf("Want error string %q, got %q", got, want)
 	}

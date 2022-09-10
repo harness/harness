@@ -11,27 +11,11 @@ import (
 	"testing"
 )
 
-func TestWriteError(t *testing.T) {
-	w := httptest.NewRecorder()
-
-	err := New("pc load letter")
-	InternalError(w, err)
-
-	if got, want := w.Code, 500; want != got {
-		t.Errorf("Want response code %d, got %d", want, got)
-	}
-
-	errjson := &Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
-	if got, want := errjson.Message, err.Error(); got != want {
-		t.Errorf("Want error message %s, got %s", want, got)
-	}
-}
-
 func TestWriteErrorf(t *testing.T) {
 	w := httptest.NewRecorder()
 
-	InternalErrorf(w, "pc load letter")
+	e := New("abc")
+	ErrorObject(w, 500, e)
 
 	if got, want := w.Code, 500; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
@@ -39,7 +23,7 @@ func TestWriteErrorf(t *testing.T) {
 
 	errjson := &Error{}
 	json.NewDecoder(w.Body).Decode(errjson)
-	if got, want := errjson.Message, "pc load letter"; got != want {
+	if got, want := errjson.Message, e.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
 }
@@ -47,8 +31,7 @@ func TestWriteErrorf(t *testing.T) {
 func TestWriteErrorCode(t *testing.T) {
 	w := httptest.NewRecorder()
 
-	err := New("pc load letter")
-	ErrorCode(w, err, 418)
+	ErrorMessagef(w, 418, "pc load letter %d", 1)
 
 	if got, want := w.Code, 418; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
@@ -56,7 +39,7 @@ func TestWriteErrorCode(t *testing.T) {
 
 	errjson := &Error{}
 	json.NewDecoder(w.Body).Decode(errjson)
-	if got, want := errjson.Message, err.Error(); got != want {
+	if got, want := errjson.Message, "pc load letter 1"; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
 }
@@ -64,8 +47,7 @@ func TestWriteErrorCode(t *testing.T) {
 func TestWriteNotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 
-	err := New("pc load letter")
-	NotFound(w, err)
+	NotFound(w)
 
 	if got, want := w.Code, 404; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
@@ -73,23 +55,7 @@ func TestWriteNotFound(t *testing.T) {
 
 	errjson := &Error{}
 	json.NewDecoder(w.Body).Decode(errjson)
-	if got, want := errjson.Message, err.Error(); got != want {
-		t.Errorf("Want error message %s, got %s", want, got)
-	}
-}
-
-func TestWriteNotFoundf(t *testing.T) {
-	w := httptest.NewRecorder()
-
-	NotFoundf(w, "pc load letter")
-
-	if got, want := w.Code, 404; want != got {
-		t.Errorf("Want response code %d, got %d", want, got)
-	}
-
-	errjson := &Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
-	if got, want := errjson.Message, "pc load letter"; got != want {
+	if got, want := errjson.Message, ErrNotFound.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
 }
@@ -97,8 +63,7 @@ func TestWriteNotFoundf(t *testing.T) {
 func TestWriteUnauthorized(t *testing.T) {
 	w := httptest.NewRecorder()
 
-	err := New("pc load letter")
-	Unauthorized(w, err)
+	Unauthorized(w)
 
 	if got, want := w.Code, 401; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
@@ -106,7 +71,7 @@ func TestWriteUnauthorized(t *testing.T) {
 
 	errjson := &Error{}
 	json.NewDecoder(w.Body).Decode(errjson)
-	if got, want := errjson.Message, err.Error(); got != want {
+	if got, want := errjson.Message, ErrUnauthorized.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
 }
@@ -114,8 +79,7 @@ func TestWriteUnauthorized(t *testing.T) {
 func TestWriteForbidden(t *testing.T) {
 	w := httptest.NewRecorder()
 
-	err := New("pc load letter")
-	Forbidden(w, err)
+	Forbidden(w)
 
 	if got, want := w.Code, 403; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
@@ -123,7 +87,7 @@ func TestWriteForbidden(t *testing.T) {
 
 	errjson := &Error{}
 	json.NewDecoder(w.Body).Decode(errjson)
-	if got, want := errjson.Message, err.Error(); got != want {
+	if got, want := errjson.Message, ErrForbidden.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
 }
@@ -131,8 +95,7 @@ func TestWriteForbidden(t *testing.T) {
 func TestWriteBadRequest(t *testing.T) {
 	w := httptest.NewRecorder()
 
-	err := New("pc load letter")
-	BadRequest(w, err)
+	BadRequest(w)
 
 	if got, want := w.Code, 400; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
@@ -140,23 +103,7 @@ func TestWriteBadRequest(t *testing.T) {
 
 	errjson := &Error{}
 	json.NewDecoder(w.Body).Decode(errjson)
-	if got, want := errjson.Message, err.Error(); got != want {
-		t.Errorf("Want error message %s, got %s", want, got)
-	}
-}
-
-func TestWriteBadRequestf(t *testing.T) {
-	w := httptest.NewRecorder()
-
-	BadRequestf(w, "pc load letter")
-
-	if got, want := w.Code, 400; want != got {
-		t.Errorf("Want response code %d, got %d", want, got)
-	}
-
-	errjson := &Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
-	if got, want := errjson.Message, "pc load letter"; got != want {
+	if got, want := errjson.Message, ErrBadRequest.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
 }
@@ -165,7 +112,7 @@ func TestWriteJSON(t *testing.T) {
 	// without indent
 	{
 		w := httptest.NewRecorder()
-		JSON(w, map[string]string{"hello": "world"}, http.StatusTeapot)
+		JSON(w, http.StatusTeapot, map[string]string{"hello": "world"})
 		if got, want := w.Body.String(), "{\"hello\":\"world\"}\n"; got != want {
 			t.Errorf("Want JSON body %q, got %q", want, got)
 		}
@@ -183,7 +130,7 @@ func TestWriteJSON(t *testing.T) {
 			indent = false
 		}()
 		w := httptest.NewRecorder()
-		JSON(w, map[string]string{"hello": "world"}, http.StatusTeapot)
+		JSON(w, http.StatusTeapot, map[string]string{"hello": "world"})
 		if got, want := w.Body.String(), "{\n  \"hello\": \"world\"\n}\n"; got != want {
 			t.Errorf("Want JSON body %q, got %q", want, got)
 		}

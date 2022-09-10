@@ -7,7 +7,6 @@ package repo
 import (
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
@@ -37,10 +36,11 @@ func HandleListPaths(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc
 			if err != nil {
 				log.Err(err).Msgf("Failed to get list of repo paths.")
 
-				render.InternalErrorf(w, comms.Internal)
+				render.InternalError(w)
 				return
 			}
 
-			render.JSON(w, paths, 200)
+			// TODO: do we need pagination? we should block that many paths in the first place.
+			render.JSON(w, http.StatusOK, paths)
 		})
 }

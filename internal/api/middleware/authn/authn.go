@@ -5,6 +5,7 @@
 package authn
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/render"
@@ -12,7 +13,7 @@ import (
 	"github.com/harness/gitness/internal/auth/authn"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/hlog"
 )
 
 /*
@@ -22,21 +23,29 @@ import (
 func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			user, err := authenticator.Authenticate(r)
-			if err != nil {
-				render.Unauthorized(w, err)
-				return
-			}
+			ctx := r.Context()
+			log := hlog.FromRequest(r)
 
-			// if there was no auth info - continue as is
-			if user == nil {
+			user, err := authenticator.Authenticate(r)
+
+			if errors.Is(err, authn.ErrNoAuthData) {
+				// if there was no auth data in the request - continue as is
 				next.ServeHTTP(w, r)
+				return
+			} else if err != nil {
+				// for any other error we fail
+				render.Unauthorized(w)
+				return
+			} else if user == nil {
+				// when err == nil user should never be nil!
+				log.Error().Msg("User is nil eventhough the authenticator didn't return any error!")
+
+				render.InternalError(w)
 				return
 			}
 
 			// Update the logging context and inject user in context
-			ctx := r.Context()
-			log.Ctx(ctx).UpdateContext(func(c zerolog.Context) zerolog.Context {
+			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
 				return c.Int64("user_id", user.ID).Bool("user_admin", user.Admin)
 			})
 

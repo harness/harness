@@ -5,13 +5,11 @@
 package check
 
 import (
-	"fmt"
-
 	"github.com/harness/gitness/types"
 )
 
 var (
-	ErrRepositoryRequiresSpaceId = fmt.Errorf("SpaceId required - Repositories don't exist outside of a space.")
+	ErrRepositoryRequiresSpaceId = &CheckError{"SpaceId required - Repositories don't exist outside of a space."}
 )
 
 // Repo checks the provided repository and returns an error in it isn't valid.

@@ -7,7 +7,6 @@ package guard
 import (
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/paths"
@@ -15,7 +14,6 @@ import (
 	"github.com/harness/gitness/types/enum"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/hlog"
-	"github.com/rs/zerolog/log"
 )
 
 /*
@@ -44,11 +42,9 @@ func (g *Guard) Repo(permission enum.Permission, orPublic bool, guarded http.Han
 		rep, ok := request.RepoFrom(ctx)
 		if !ok {
 			// log error for debugging
-			log := hlog.FromRequest(r)
-			log.Error().Msg("Method expects the repository to be availabe in the request context, but it wasnt.")
+			hlog.FromRequest(r).Error().Msg("Method expects the repository to be availabe in the request context, but it wasnt.")
 
-			render.InternalErrorf(w, comms.Internal)
-
+			render.InternalError(w)
 			return
 		}
 
@@ -70,10 +66,9 @@ func (g *Guard) EnforceRepo(w http.ResponseWriter, r *http.Request, permission e
 	spacePath, name, err := paths.Disect(path)
 	if err != nil {
 		// log error for debugging
-		hlog.FromRequest(r)
-		log.Err(err).Msgf("Failed to disect path '%s'.", path)
+		hlog.FromRequest(r).Err(err).Msgf("Failed to disect path '%s'.", path)
 
-		render.InternalErrorf(w, comms.Internal)
+		render.InternalError(w)
 		return false
 	}
 

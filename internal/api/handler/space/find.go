@@ -25,6 +25,6 @@ func HandleFind(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			ctx := r.Context()
 			s, _ := request.SpaceFrom(ctx)
 
-			render.JSON(w, s, 200)
+			render.JSON(w, http.StatusOK, s)
 		})
 }

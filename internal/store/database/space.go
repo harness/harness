@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
@@ -36,7 +35,7 @@ type SpaceStore struct {
 func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
 	dst := new(types.Space)
 	if err := s.db.GetContext(ctx, dst, spaceSelectById, id); err != nil {
-		return nil, wrapSqlErrorf(err, "Select query failed")
+		return nil, processSqlErrorf(err, "Select query failed")
 	}
 	return dst, nil
 }
@@ -45,7 +44,7 @@ func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
 func (s *SpaceStore) FindByPath(ctx context.Context, path string) (*types.Space, error) {
 	dst := new(types.Space)
 	if err := s.db.GetContext(ctx, dst, spaceSelectByPath, path); err != nil {
-		return nil, wrapSqlErrorf(err, "Select query failed")
+		return nil, processSqlErrorf(err, "Select query failed")
 	}
 	return dst, nil
 }
@@ -54,18 +53,18 @@ func (s *SpaceStore) FindByPath(ctx context.Context, path string) (*types.Space,
 func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to start a new transaction")
+		return processSqlErrorf(err, "Failed to start a new transaction")
 	}
 	defer tx.Rollback()
 
 	// insert space first so we get id
 	query, arg, err := s.db.BindNamed(spaceInsert, space)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to bind space object")
+		return processSqlErrorf(err, "Failed to bind space object")
 	}
 
 	if err = tx.QueryRow(query, arg...).Scan(&space.ID); err != nil {
-		return wrapSqlErrorf(err, "Insert query failed")
+		return processSqlErrorf(err, "Insert query failed")
 	}
 
 	// Get path (get parent if needed)
@@ -97,7 +96,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 
 	// commit
 	if err = tx.Commit(); err != nil {
-		return wrapSqlErrorf(err, "Failed to commit transaction")
+		return processSqlErrorf(err, "Failed to commit transaction")
 	}
 
 	// update path in space object
@@ -110,7 +109,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 func (s *SpaceStore) Move(ctx context.Context, userId int64, spaceId int64, newParentId int64, newName string, keepAsAlias bool) (*types.Space, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return nil, wrapSqlErrorf(err, "Failed to start a new transaction")
+		return nil, processSqlErrorf(err, "Failed to start a new transaction")
 	}
 	defer tx.Rollback()
 
@@ -137,9 +136,9 @@ func (s *SpaceStore) Move(ctx context.Context, userId int64, spaceId int64, newP
 	 *   To avoid cycles in the primary graph, we have to ensure that the old path isn't a prefix of the new path.
 	 */
 	if newPath == currentPath.Value {
-		return nil, errs.NoChangeInRequestedMove
+		return nil, store.ErrNoChangeInRequestedMove
 	} else if strings.HasPrefix(newPath, currentPath.Value) {
-		return nil, errs.IllegalMoveCyclicHierarchy
+		return nil, store.ErrIllegalMoveCyclicHierarchy
 	}
 
 	p := &types.Path{
@@ -159,18 +158,18 @@ func (s *SpaceStore) Move(ctx context.Context, userId int64, spaceId int64, newP
 
 	// Update the space itself
 	if _, err := tx.ExecContext(ctx, spaceUpdateNameAndParentId, newName, newParentId, spaceId); err != nil {
-		return nil, wrapSqlErrorf(err, "Query for renaming and updating the parent id failed")
+		return nil, processSqlErrorf(err, "Query for renaming and updating the parent id failed")
 	}
 
 	// TODO: return space as part of rename operation
 	dst := new(types.Space)
 	if err = tx.GetContext(ctx, dst, spaceSelectById, spaceId); err != nil {
-		return nil, wrapSqlErrorf(err, "Select query to get the space's latest state failed")
+		return nil, processSqlErrorf(err, "Select query to get the space's latest state failed")
 	}
 
 	// commit
 	if err = tx.Commit(); err != nil {
-		return nil, wrapSqlErrorf(err, "Failed to commit transaction")
+		return nil, processSqlErrorf(err, "Failed to commit transaction")
 	}
 
 	return dst, nil
@@ -180,11 +179,11 @@ func (s *SpaceStore) Move(ctx context.Context, userId int64, spaceId int64, newP
 func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 	query, arg, err := s.db.BindNamed(spaceUpdate, space)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to bind space object")
+		return processSqlErrorf(err, "Failed to bind space object")
 	}
 
 	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
-		wrapSqlErrorf(err, "Update query failed")
+		processSqlErrorf(err, "Update query failed")
 	}
 
 	return nil
@@ -194,7 +193,7 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return wrapSqlErrorf(err, "Failed to start a new transaction")
+		return processSqlErrorf(err, "Failed to start a new transaction")
 	}
 	defer tx.Rollback()
 
@@ -210,7 +209,7 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 		return errors.Wrap(err, "Failed to count the child paths of the space")
 	} else if count > 0 {
 		// TODO: still returns 500
-		return errs.SpaceWithChildsCantBeDeleted
+		return store.ErrSpaceWithChildsCantBeDeleted
 	}
 
 	// delete all paths
@@ -221,11 +220,11 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 
 	// delete the space
 	if _, err := tx.Exec(spaceDelete, id); err != nil {
-		return wrapSqlErrorf(err, "The delete query failed")
+		return processSqlErrorf(err, "The delete query failed")
 	}
 
 	if err = tx.Commit(); err != nil {
-		return wrapSqlErrorf(err, "Failed to commit transaction")
+		return processSqlErrorf(err, "Failed to commit transaction")
 	}
 
 	return nil
@@ -236,7 +235,7 @@ func (s *SpaceStore) Count(ctx context.Context, id int64) (int64, error) {
 	var count int64
 	err := s.db.QueryRowContext(ctx, spaceCount, id).Scan(&count)
 	if err != nil {
-		return 0, wrapSqlErrorf(err, "Failed executing count query")
+		return 0, processSqlErrorf(err, "Failed executing count query")
 	}
 	return count, nil
 }
@@ -251,7 +250,7 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 	if opts.Sort == enum.SpaceAttrNone {
 		err := s.db.SelectContext(ctx, &dst, spaceSelect, id, limit(opts.Size), offset(opts.Page, opts.Size))
 		if err != nil {
-			return nil, wrapSqlErrorf(err, "Failed executing default list query")
+			return nil, processSqlErrorf(err, "Failed executing default list query")
 		}
 		return dst, nil
 	}
@@ -287,7 +286,7 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 	}
 
 	if err = s.db.SelectContext(ctx, &dst, sql); err != nil {
-		return nil, wrapSqlErrorf(err, "Failed executing custom list query")
+		return nil, processSqlErrorf(err, "Failed executing custom list query")
 	}
 
 	return dst, nil
@@ -312,7 +311,7 @@ func (s *SpaceStore) CreatePath(ctx context.Context, spaceId int64, params *type
 		Updated:   params.Updated,
 	}
 
-	return p, CreatePath(ctx, s.db, p)
+	return p, CreateAliasPath(ctx, s.db, p)
 }
 
 // Delete an alias of a space.

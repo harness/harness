@@ -5,9 +5,15 @@
 package authn
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/harness/gitness/types"
+)
+
+var (
+	// An error that is returned if the authorizer doesn't find any data in the request that can be used for auth.
+	ErrNoAuthData = errors.New("The request doesn't contain any auth data that can be used by the Authorizer.")
 )
 
 /*
@@ -18,9 +24,9 @@ type Authenticator interface {
 	/*
 	 * Tries to authenticate a user if credentials are available.
 	 * Returns:
-	 *		(user, nil) - request contained auth data and user was verified
-	 *		(nil, err)  - request contained auth data but verification failed
-	 *		(nil, nil)	- request didn't contain any auth data
+	 *		(user, nil) 			- request contains auth data and user was verified
+	 *		(nil, ErrNoAuthData)	- request doesn't contain any auth data
+	 *		(nil, err)  			- request contains auth data but verification failed
 	 */
 	Authenticate(r *http.Request) (*types.User, error)
 }

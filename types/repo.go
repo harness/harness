@@ -14,7 +14,7 @@ type Repository struct {
 	ID          int64  `db:"repo_id"              json:"id"`
 	Name        string `db:"repo_name"            json:"name"`
 	SpaceId     int64  `db:"repo_spaceId"         json:"spaceId"`
-	Path        string `db:"repo_path"             json:"path"`
+	Path        string `db:"repo_path"            json:"path"`
 	DisplayName string `db:"repo_displayName"     json:"displayName"`
 	Description string `db:"repo_description"     json:"description"`
 	IsPublic    bool   `db:"repo_isPublic"        json:"isPublic"`

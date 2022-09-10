@@ -6,16 +6,13 @@ package space
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
@@ -60,19 +57,16 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		if in.ParentId <= 0 {
 			// TODO: Restrict top level space creation.
 			if usr == nil {
-				render.Unauthorizedf(w, comms.AuthenticationRequired)
+				render.Unauthorized(w)
 				return
 			}
 		} else {
 			// Create is a special case - we need the parent path
 			parent, err := spaces.Find(ctx, in.ParentId)
-			if errors.Is(err, errs.ResourceNotFound) {
-				render.NotFoundf(w, "Provided parent space wasn't found.")
-				return
-			} else if err != nil {
-				log.Err(err).Msgf("Failed to get space with id '%s'.", in.ParentId)
+			if err != nil {
+				log.Err(err).Msgf("Failed to get space with id '%d'.", in.ParentId)
 
-				render.InternalErrorf(w, comms.Internal)
+				render.UserfiedErrorOrInternal(w, err)
 				return
 			}
 
@@ -102,39 +96,27 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 
 		// validate space
 		if err := check.Space(space); err != nil {
-			render.BadRequest(w, err)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
-		// Validate path (Due to racing conditions we can't be 100% sure on the path here only best effort to store failure)
+		// Validate path length (Due to racing conditions we can't be 100% sure on the path here only best effort to have a quick failure)
 		path := paths.Concatinate(parentPath, space.Name)
-		if err = check.PathParams(path, true); err != nil {
-			render.BadRequest(w, err)
+		if err = check.Path(path, true); err != nil {
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
 		// create in store
 		err = spaces.Create(ctx, space)
-		if errors.Is(err, errs.Duplicate) {
-			log.Warn().Err(err).
-				Msg("Space creation failed as a duplicate was detected.")
-
-			render.BadRequestf(w, "Path '%s' already exists.", path)
-			return
-		} else if errors.Is(err, errs.PathTooLong) {
-			log.Warn().Err(err).
-				Msg("Failed to move the space as its path was too long.")
-
-			render.BadRequestf(w, "Unable to move the space as the destination path of the space was too long.")
-			return
-		} else if err != nil {
+		if err != nil {
 			log.Error().Err(err).
 				Msg("Space creation failed.")
 
-			render.InternalErrorf(w, comms.Internal)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
-		render.JSON(w, space, 200)
+		render.JSON(w, http.StatusOK, space)
 	}
 }

@@ -7,7 +7,6 @@ package space
 import (
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
@@ -38,7 +37,7 @@ func HandleList(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			if err != nil {
 				log.Err(err).Msgf("Failed to count child spaces.")
 
-				render.InternalErrorf(w, comms.Internal)
+				render.UserfiedErrorOrInternal(w, err)
 				return
 			}
 
@@ -46,7 +45,7 @@ func HandleList(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			if err != nil {
 				log.Err(err).Msgf("Failed to list child spaces.")
 
-				render.InternalErrorf(w, comms.Internal)
+				render.UserfiedErrorOrInternal(w, err)
 				return
 			}
 
@@ -54,6 +53,8 @@ func HandleList(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			 * Only list spaces that are either public or can be accessed by the user
 			 *
 			 * TODO: optimize by making a single auth check for all spaces at once.
+			 * TODO: maybe ommit permission check for performance.
+			 * TODO: count is off in case not all repos are accessible.
 			 */
 			result := make([]*types.Space, 0, len(allSpaces))
 			for _, cs := range allSpaces {
@@ -70,6 +71,6 @@ func HandleList(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			}
 
 			render.Pagination(r, w, params.Page, params.Size, int(count))
-			render.JSON(w, result, 200)
+			render.JSON(w, http.StatusOK, result)
 		})
 }

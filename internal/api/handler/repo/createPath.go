@@ -6,17 +6,14 @@ package repo
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/handler/common"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -52,27 +49,21 @@ func HandleCreatePath(guard *guard.Guard, repos store.RepoStore) http.HandlerFun
 			}
 
 			// validate path
-			if err = check.PathParams(params.Path, false); err != nil {
-				render.BadRequest(w, err)
+			if err = check.PathParams(params, repo.Path, false); err != nil {
+				render.UserfiedErrorOrInternal(w, err)
 				return
 			}
 
 			// TODO: ensure user is authorized to create a path pointing to in.Path
 			path, err := repos.CreatePath(ctx, repo.ID, params)
-			if errors.Is(err, errs.Duplicate) {
-				log.Warn().Err(err).
-					Msg("Failed to create path for repo as a duplicate was detected.")
-
-				render.BadRequestf(w, "Path '%s' already exists.", params.Path)
-				return
-			} else if err != nil {
+			if err != nil {
 				log.Error().Err(err).
 					Msg("Failed to create path for repo.")
 
-				render.InternalErrorf(w, comms.Internal)
+				render.UserfiedErrorOrInternal(w, err)
 				return
 			}
 
-			render.JSON(w, path, 200)
+			render.JSON(w, http.StatusOK, path)
 		})
 }

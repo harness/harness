@@ -5,12 +5,9 @@
 package users
 
 import (
-	"errors"
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/comms"
 	"github.com/harness/gitness/internal/api/render"
-	"github.com/harness/gitness/internal/errs"
 	"github.com/harness/gitness/internal/store"
 	"github.com/rs/zerolog/hlog"
 
@@ -26,13 +23,10 @@ func HandleDelete(users store.UserStore) http.HandlerFunc {
 
 		key := chi.URLParam(r, "user")
 		user, err := users.FindKey(ctx, key)
-		if errors.Is(err, errs.ResourceNotFound) {
-			render.NotFoundf(w, "User not found.")
-			return
-		} else if err != nil {
+		if err != nil {
 			log.Err(err).Msgf("Failed to get user using key '%s'.", key)
 
-			render.InternalErrorf(w, comms.Internal)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
@@ -43,7 +37,7 @@ func HandleDelete(users store.UserStore) http.HandlerFunc {
 				Str("user_email", user.Email).
 				Msg("failed to delete user")
 
-			render.InternalError(w, err)
+			render.UserfiedErrorOrInternal(w, err)
 			return
 
 		}

@@ -25,6 +25,6 @@ func HandleFind(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
 			ctx := r.Context()
 			repo, _ := request.RepoFrom(ctx)
 
-			render.JSON(w, repo, 200)
+			render.JSON(w, http.StatusOK, repo)
 		})
 }
