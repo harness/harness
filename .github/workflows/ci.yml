@@ -21,13 +21,14 @@ jobs:
           go-version: 1.17
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
-        working-directory: ./web
         with:
           node-version: 16
           cache: 'npm'
-        run: |
-          yarn install
-          yarn build
+      - run: |
+        pushd web
+        yarn install
+        yarn build
+        popd
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
