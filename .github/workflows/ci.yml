@@ -25,10 +25,10 @@ jobs:
           node-version: 16
           cache: 'npm'
       - run: |
-        pushd web
+        cd web
         yarn install
         yarn build
-        popd
+        cd ..
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
