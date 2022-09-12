@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 16
           cache: 'npm'
-      - name: install required node packages
+      - name: install and build web app
         working-directory: web
         run: |
           yarn install
