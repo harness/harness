@@ -199,14 +199,15 @@ func DeletePath(ctx context.Context, db *sqlx.DB, id int64) error {
 	if err != nil {
 		return processSqlErrorf(err, "Failed to start a new transaction")
 	}
-	defer tx.Rollback()
+	defer func(tx *sqlx.Tx) {
+		_ = tx.Rollback()
+	}(tx)
 
 	// ensure path is an alias
 	dst := new(types.Path)
-	err = tx.GetContext(ctx, dst, pathSelectId, id)
-	if err != nil {
+	if err = tx.GetContext(ctx, dst, pathSelectId, id); err != nil {
 		return processSqlErrorf(err, "Failed to find path with id %d", id)
-	} else if dst.IsAlias == false {
+	} else if !dst.IsAlias {
 		return store.ErrPrimaryPathCantBeDeleted
 	}
 
@@ -358,10 +359,6 @@ INSERT INTO paths (
 
 const pathSelectId = pathBase + `
 WHERE path_id = $1
-`
-
-const pathSelectPath = pathBase + `
-WHERE path_value = $1
 `
 
 const pathDeleteId = `

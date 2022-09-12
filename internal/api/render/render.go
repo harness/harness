@@ -104,10 +104,12 @@ func ErrorObject(w http.ResponseWriter, code int, err *Error) {
 func JSON(w http.ResponseWriter, code int, v interface{}) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(code)
 	enc := json.NewEncoder(w)
-	if indent {
+	if indent { // is this necessary? it will affect performance
 		enc.SetIndent("", "  ")
 	}
-	enc.Encode(v)
+	if err := enc.Encode(v); err != nil {
+		code = http.StatusInternalServerError
+	}
+	w.WriteHeader(code)
 }

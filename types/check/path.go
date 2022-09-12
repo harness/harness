@@ -46,7 +46,7 @@ func Path(path string, isSpace bool) error {
 	// ensure path is not too deep
 	segments := strings.Split(path, types.PathSeparator)
 	l := len(segments)
-	if l < minPathSegments || (isSpace == false && l > maxPathSegments) || (isSpace && l > maxPathSegmentsForSpace) {
+	if l < minPathSegments || (!isSpace && l > maxPathSegments) || (isSpace && l > maxPathSegmentsForSpace) {
 		return ErrPathInvalidSize
 	}
 
@@ -100,5 +100,5 @@ func PathParams(path *types.PathParams, currentPath string, isSpace bool) error 
  */
 func PathTooLong(path string, isSpace bool) bool {
 	l := strings.Count(path, types.PathSeparator) + 1
-	return (isSpace == false && l > maxPathSegments) || (isSpace && l > maxPathSegmentsForSpace)
+	return (!isSpace && l > maxPathSegments) || (isSpace && l > maxPathSegmentsForSpace)
 }

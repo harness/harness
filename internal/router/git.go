@@ -92,7 +92,7 @@ func stubGitHandler(w http.ResponseWriter, r *http.Request) {
 	rep, _ := request.RepoFrom(r.Context())
 
 	w.WriteHeader(http.StatusTeapot)
-	w.Write([]byte(fmt.Sprintf(
+	_, _ = w.Write([]byte(fmt.Sprintf(
 		"Oooops, seems you hit a major construction site ... \n"+
 			"  Repo: '%s' (%s)\n"+
 			"  Method: '%s'\n"+

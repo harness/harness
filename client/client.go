@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
 	"net/http/httputil"
@@ -150,11 +151,6 @@ func (c *HTTPClient) post(rawurl string, in, out interface{}) error {
 	return c.do(rawurl, "POST", in, out)
 }
 
-// helper function for making an http PUT request.
-func (c *HTTPClient) put(rawurl string, in, out interface{}) error {
-	return c.do(rawurl, "PUT", in, out)
-}
-
 // helper function for making an http PATCH request.
 func (c *HTTPClient) patch(rawurl string, in, out interface{}) error {
 	return c.do(rawurl, "PATCH", in, out)
@@ -199,7 +195,9 @@ func (c *HTTPClient) stream(rawurl, method string, in, out interface{}) (io.Read
 		buf = new(bytes.Buffer)
 		// if posting form data, encode the form values.
 		if form, ok := in.(*url.Values); ok {
-			io.WriteString(buf, form.Encode())
+			if _, err := io.WriteString(buf, form.Encode()); err != nil {
+				log.Err(err).Msg("in stream method")
+			}
 		} else {
 			if err := json.NewEncoder(buf).Encode(in); err != nil {
 				return nil, err
@@ -239,7 +237,9 @@ func (c *HTTPClient) stream(rawurl, method string, in, out interface{}) (io.Read
 	if resp.StatusCode > 299 {
 		defer resp.Body.Close()
 		err := new(remoteError)
-		json.NewDecoder(resp.Body).Decode(err)
+		if decodeErr := json.NewDecoder(resp.Body).Decode(err); decodeErr != nil {
+			return nil, decodeErr
+		}
 		return nil, err
 	}
 	return resp.Body, nil

@@ -33,7 +33,9 @@ func TestFind(t *testing.T) {
 	}
 
 	got, want := &types.User{}, mockUser
-	json.NewDecoder(w.Body).Decode(got)
+	if err := json.NewDecoder(w.Body).Decode(got); err != nil {
+		t.Error(err)
+	}
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
 		t.Errorf(diff)
 	}

@@ -35,9 +35,11 @@ func (a *UnsafeAuthorizer) Check(principalType enum.PrincipalType, principalId s
 
 	return true, nil
 }
-func (a *UnsafeAuthorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...*types.PermissionCheck) (bool, error) {
+func (a *UnsafeAuthorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...types.PermissionCheck) (bool, error) {
 	for _, p := range permissionChecks {
-		a.Check(principalType, principalId, &p.Scope, &p.Resource, p.Permission)
+		if _, err := a.Check(principalType, principalId, &p.Scope, &p.Resource, p.Permission); err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil

@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"golang.org/x/term"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -20,7 +21,6 @@ import (
 	"github.com/harness/gitness/types"
 
 	"github.com/adrg/xdg"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 // Client returns a client that is configured from file.
@@ -72,7 +72,7 @@ func Username() string {
 // Password returns the password from stdin.
 func Password() string {
 	fmt.Print("Enter Password: ")
-	passwordb, _ := terminal.ReadPassword(int(syscall.Stdin))
+	passwordb, _ := term.ReadPassword(int(syscall.Stdin))
 	password := string(passwordb)
 
 	return strings.TrimSpace(password)

@@ -42,15 +42,18 @@ func NewAuthorizer(aclEndpoint, authToken string) (authz.Authorizer, error) {
 }
 
 func (a *Authorizer) Check(principalType enum.PrincipalType, principalId string, scope *types.Scope, resource *types.Resource, permission enum.Permission) (bool, error) {
-	return a.CheckAll(principalType, principalId, &types.PermissionCheck{Scope: *scope, Resource: *resource, Permission: permission})
+	return a.CheckAll(principalType, principalId, types.PermissionCheck{Scope: *scope, Resource: *resource, Permission: permission})
 }
 
-func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...*types.PermissionCheck) (bool, error) {
+func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...types.PermissionCheck) (bool, error) {
 	if len(permissionChecks) == 0 {
 		return false, authz.ErrNoPermissionCheckProvided
 	}
 
 	requestDto, err := createAclRequest(principalType, principalId, permissionChecks)
+	if err != nil {
+		return false, err
+	}
 	byt, err := json.Marshal(requestDto)
 	if err != nil {
 		return false, err
@@ -91,7 +94,7 @@ func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId stri
 	return checkAclResponse(permissionChecks, responseDto)
 }
 
-func createAclRequest(principalType enum.PrincipalType, principalId string, permissionChecks []*types.PermissionCheck) (*aclRequest, error) {
+func createAclRequest(principalType enum.PrincipalType, principalId string, permissionChecks []types.PermissionCheck) (*aclRequest, error) {
 	// Generate ACL req
 	req := aclRequest{
 		Permissions: []aclPermission{},
@@ -123,7 +126,7 @@ func createAclRequest(principalType enum.PrincipalType, principalId string, perm
 	return &req, nil
 }
 
-func checkAclResponse(permissionChecks []*types.PermissionCheck, responseDto aclResponse) (bool, error) {
+func checkAclResponse(permissionChecks []types.PermissionCheck, responseDto aclResponse) (bool, error) {
 	/*
 	 * We are assuming two things:
 	 *  - All permission checks were made for the same principal.

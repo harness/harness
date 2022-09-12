@@ -55,7 +55,9 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 	if err != nil {
 		return processSqlErrorf(err, "Failed to start a new transaction")
 	}
-	defer tx.Rollback()
+	defer func(tx *sqlx.Tx) {
+		_ = tx.Rollback()
+	}(tx)
 
 	// insert space first so we get id
 	query, arg, err := s.db.BindNamed(spaceInsert, space)
@@ -111,7 +113,9 @@ func (s *SpaceStore) Move(ctx context.Context, userId int64, spaceId int64, newP
 	if err != nil {
 		return nil, processSqlErrorf(err, "Failed to start a new transaction")
 	}
-	defer tx.Rollback()
+	defer func(tx *sqlx.Tx) {
+		_ = tx.Rollback()
+	}(tx)
 
 	// always get currentpath (either it didn't change or we need to for validation)
 	currentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, spaceId)
@@ -183,7 +187,7 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 	}
 
 	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
-		processSqlErrorf(err, "Update query failed")
+		return processSqlErrorf(err, "Update query failed")
 	}
 
 	return nil
@@ -195,7 +199,9 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 	if err != nil {
 		return processSqlErrorf(err, "Failed to start a new transaction")
 	}
-	defer tx.Rollback()
+	defer func(tx *sqlx.Tx) {
+		_ = tx.Rollback()
+	}(tx)
 
 	// get primary path
 	path, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, id)
@@ -205,9 +211,10 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 
 	// Get child count and ensure there are none
 	count, err := CountPrimaryChildPathsTx(ctx, tx, path.Value)
-	if err := tx.QueryRow(spaceCount, id).Scan(&count); err != nil {
-		return errors.Wrap(err, "Failed to count the child paths of the space")
-	} else if count > 0 {
+	if err != nil {
+		return fmt.Errorf("child count error: %w", err)
+	}
+	if count > 0 {
 		// TODO: still returns 500
 		return store.ErrSpaceWithChildsCantBeDeleted
 	}
@@ -219,7 +226,7 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 	}
 
 	// delete the space
-	if _, err := tx.Exec(spaceDelete, id); err != nil {
+	if _, err = tx.Exec(spaceDelete, id); err != nil {
 		return processSqlErrorf(err, "The delete query failed")
 	}
 

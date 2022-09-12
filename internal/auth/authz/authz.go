@@ -36,5 +36,5 @@ type Authorizer interface {
 	 *		(false, nil)  - the principal does not have permission to perform all the actions (at least one is not allowed)
 	 *		(false, err)  - an error occured while performing the permission check and all actions should be denied
 	 */
-	CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...*types.PermissionCheck) (bool, error)
+	CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...types.PermissionCheck) (bool, error)
 }

@@ -6,6 +6,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"strconv"
 
 	"github.com/harness/gitness/internal/store"
@@ -136,7 +137,9 @@ func (s *UserStore) Delete(ctx context.Context, user *types.User) error {
 	if err != nil {
 		return processSqlErrorf(err, "Failed to start a new transaction")
 	}
-	defer tx.Rollback()
+	defer func(tx *sql.Tx) {
+		_ = tx.Rollback()
+	}(tx)
 	// delete the user
 	if _, err := tx.ExecContext(ctx, userDelete, user.ID); err != nil {
 		return processSqlErrorf(err, "The delete query failed")
@@ -186,10 +189,6 @@ WHERE user_id = $1
 
 const userSelectEmail = userBase + `
 WHERE user_email = $1
-`
-
-const userSelectToken = userBase + `
-WHERE user_salt = $1
 `
 
 const userDelete = `

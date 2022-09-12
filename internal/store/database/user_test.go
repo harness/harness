@@ -15,7 +15,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/jmoiron/sqlx"
 )
 
 // user fields to ignore in test comparisons
@@ -251,21 +250,4 @@ func testUserDelete(s store.UserStore) func(t *testing.T) {
 			t.Errorf("Expected sql.ErrNoRows got %s", err)
 		}
 	}
-}
-
-// helper function that returns an user store that is seeded
-// with user data loaded from a json file.
-func newUserStoreSeeded(db *sqlx.DB) (store.UserStore, error) {
-	store := NewUserStoreSync(NewUserStore(db))
-	vv := []*types.User{}
-	if err := unmarshal("testdata/users.json", &vv); err != nil {
-		return nil, err
-	}
-	for _, v := range vv {
-		v.Salt = fmt.Sprintf("%x", v.Email)
-		if err := store.Create(noContext, v); err != nil {
-			return nil, err
-		}
-	}
-	return store, nil
 }

@@ -5,14 +5,11 @@
 package database
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/jmoiron/sqlx"
 	"io/ioutil"
 	"os"
-	"testing"
-
-	"github.com/jmoiron/sqlx"
 
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -35,12 +32,12 @@ func connect() (*sqlx.DB, error) {
 
 // seed seed the database state.
 func seed(db *sqlx.DB) error {
-	db.Exec("DELETE FROM executions")
-	db.Exec("DELETE FROM pipelines")
-	db.Exec("DELETE FROM users")
-	db.Exec("ALTER SEQUENCE users_user_id_seq RESTART WITH 1")
-	db.Exec("ALTER SEQUENCE pipelines_pipeline_id_seq RESTART WITH 1")
-	db.Exec("ALTER SEQUENCE executions_execution_id_seq RESTART WITH 1")
+	_, _ = db.Exec("DELETE FROM executions")
+	_, _ = db.Exec("DELETE FROM pipelines")
+	_, _ = db.Exec("DELETE FROM users")
+	_, _ = db.Exec("ALTER SEQUENCE users_user_id_seq RESTART WITH 1")
+	_, _ = db.Exec("ALTER SEQUENCE pipelines_pipeline_id_seq RESTART WITH 1")
+	_, _ = db.Exec("ALTER SEQUENCE executions_execution_id_seq RESTART WITH 1")
 	return nil
 }
 
@@ -51,13 +48,4 @@ func unmarshal(path string, v interface{}) error {
 		return err
 	}
 	return json.Unmarshal(out, v)
-}
-
-// dump json data to the test logs.
-func debug(t *testing.T, v interface{}) {
-	buf := new(bytes.Buffer)
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "  ")
-	enc.Encode(v)
-	t.Log(buf.String())
 }
