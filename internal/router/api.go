@@ -174,16 +174,16 @@ func setupRoutesV1(
 
 		r.Route("/{user}", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				w.Write([]byte(fmt.Sprintf("Get user '%s'", chi.URLParam(r, "rref"))))
+				_, _ = w.Write([]byte(fmt.Sprintf("Get user '%s'", chi.URLParam(r, "rref"))))
 			})
 			r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-				w.Write([]byte(fmt.Sprintf("Create user '%s'", chi.URLParam(r, "rref"))))
+				_, _ = w.Write([]byte(fmt.Sprintf("Create user '%s'", chi.URLParam(r, "rref"))))
 			})
 			r.Put("/", func(w http.ResponseWriter, r *http.Request) {
-				w.Write([]byte(fmt.Sprintf("Update user '%s'", chi.URLParam(r, "rref"))))
+				_, _ = w.Write([]byte(fmt.Sprintf("Update user '%s'", chi.URLParam(r, "rref"))))
 			})
 			r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
-				w.Write([]byte(fmt.Sprintf("Delete user '%s'", chi.URLParam(r, "rref"))))
+				_, _ = w.Write([]byte(fmt.Sprintf("Delete user '%s'", chi.URLParam(r, "rref"))))
 			})
 		})
 	})

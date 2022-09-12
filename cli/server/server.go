@@ -25,7 +25,10 @@ type command struct {
 
 func (c *command) run(*kingpin.ParseContext) error {
 	// load environment variables from file.
-	godotenv.Load(c.envfile)
+	err := godotenv.Load(c.envfile)
+	if err != nil {
+		return err
+	}
 
 	// create the system configuration store by loading
 	// data from the environment.

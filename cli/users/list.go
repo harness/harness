@@ -51,7 +51,9 @@ func (c *listCommand) run(*kingpin.ParseContext) error {
 		return enc.Encode(list)
 	}
 	for _, item := range list {
-		tmpl.Execute(os.Stdout, item)
+		if err = tmpl.Execute(os.Stdout, item); err != nil {
+			return err
+		}
 	}
 	return nil
 }

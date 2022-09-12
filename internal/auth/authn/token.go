@@ -64,7 +64,7 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*types.User, error) 
 	if err != nil {
 		return nil, err
 	}
-	if parsed.Valid == false {
+	if !parsed.Valid {
 		return nil, errors.New("Invalid token")
 	}
 

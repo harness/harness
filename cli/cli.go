@@ -5,7 +5,6 @@
 package cli
 
 import (
-	"context"
 	"os"
 
 	"github.com/harness/gitness/cli/server"
@@ -16,9 +15,6 @@ import (
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
-
-// empty context
-var nocontext = context.Background()
 
 // application name
 var application = "gitness"

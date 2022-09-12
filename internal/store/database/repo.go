@@ -54,7 +54,9 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 	if err != nil {
 		return processSqlErrorf(err, "Failed to start a new transaction")
 	}
-	defer tx.Rollback()
+	defer func(tx *sqlx.Tx) {
+		_ = tx.Rollback()
+	}(tx)
 
 	// insert repo first so we get id
 	query, arg, err := s.db.BindNamed(repoInsert, repo)
@@ -107,7 +109,9 @@ func (s *RepoStore) Move(ctx context.Context, userId int64, repoId int64, newSpa
 	if err != nil {
 		return nil, processSqlErrorf(err, "Failed to start a new transaction")
 	}
-	defer tx.Rollback()
+	defer func(tx *sqlx.Tx) {
+		_ = tx.Rollback() // should we take care about rollbacks errors?
+	}(tx)
 
 	// get current path of repo
 	currentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeRepo, repoId)
@@ -168,7 +172,7 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 	}
 
 	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
-		processSqlErrorf(err, "Update query failed")
+		return processSqlErrorf(err, "Update query failed")
 	}
 
 	return nil
@@ -180,7 +184,9 @@ func (s *RepoStore) Delete(ctx context.Context, id int64) error {
 	if err != nil {
 		return processSqlErrorf(err, "Failed to start a new transaction")
 	}
-	defer tx.Rollback()
+	defer func(tx *sqlx.Tx) {
+		_ = tx.Rollback()
+	}(tx)
 
 	// delete all paths
 	err = DeleteAllPaths(ctx, tx, enum.PathTargetTypeRepo, id)

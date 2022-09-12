@@ -22,7 +22,9 @@ func TestWriteErrorf(t *testing.T) {
 	}
 
 	errjson := &Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
+	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
+		t.Error(err)
+	}
 	if got, want := errjson.Message, e.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
@@ -38,7 +40,9 @@ func TestWriteErrorCode(t *testing.T) {
 	}
 
 	errjson := &Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
+	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
+		t.Error(err)
+	}
 	if got, want := errjson.Message, "pc load letter 1"; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
@@ -54,7 +58,9 @@ func TestWriteNotFound(t *testing.T) {
 	}
 
 	errjson := &Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
+	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
+		t.Error(err)
+	}
 	if got, want := errjson.Message, ErrNotFound.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
@@ -70,7 +76,9 @@ func TestWriteUnauthorized(t *testing.T) {
 	}
 
 	errjson := &Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
+	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
+		t.Error(err)
+	}
 	if got, want := errjson.Message, ErrUnauthorized.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
@@ -86,7 +94,9 @@ func TestWriteForbidden(t *testing.T) {
 	}
 
 	errjson := &Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
+	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
+		t.Error(err)
+	}
 	if got, want := errjson.Message, ErrForbidden.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
@@ -102,7 +112,9 @@ func TestWriteBadRequest(t *testing.T) {
 	}
 
 	errjson := &Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
+	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
+		t.Error(err)
+	}
 	if got, want := errjson.Message, ErrBadRequest.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
@@ -116,7 +128,7 @@ func TestWriteJSON(t *testing.T) {
 		if got, want := w.Body.String(), "{\"hello\":\"world\"}\n"; got != want {
 			t.Errorf("Want JSON body %q, got %q", want, got)
 		}
-		if got, want := w.HeaderMap.Get("Content-Type"), "application/json; charset=utf-8"; got != want {
+		if got, want := w.Header().Get("Content-Type"), "application/json; charset=utf-8"; got != want {
 			t.Errorf("Want Content-Type %q, got %q", want, got)
 		}
 		if got, want := w.Code, http.StatusTeapot; got != want {

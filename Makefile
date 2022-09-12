@@ -35,7 +35,7 @@ tools: $(tools) ## Install tools required for the build
 mocks: $(mocks)
 	@echo "Generating Test Mocks"
 
-generate: $(mocks) wire_gen.go mocks/mock_client.go
+generate: $(mocks) cli/server/wire_gen.go mocks/mock_client.go
 	@echo "Generating Code"
 
 build: generate ## Build the gitness service binary
@@ -114,7 +114,7 @@ lint: tools generate # lint the golang code
 # Some code generation can be slow, so we only run it if
 # the source file has changed.
 ###########################################
-wire_gen.go: cli/server/wire.go	## Update the wire dependency injection if wire.go has changed.
+cli/server/wire_gen.go: cli/server/wire.go	## Update the wire dependency injection if wire.go has changed.
 	@echo "Updating wire_gen.go"
 	go generate ./cli/server/wire_gen.go
 

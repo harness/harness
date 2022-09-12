@@ -11,9 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// helper function returns the current time.
-var now = time.Now
-
 // Nightly is a sub-routine that periodically purges historical data.
 type Nightly struct {
 	// Inject required stores here

@@ -38,7 +38,9 @@ func TestToken(t *testing.T) {
 	}
 
 	result := &types.Token{}
-	json.NewDecoder(w.Body).Decode(&result)
+	if err := json.NewDecoder(w.Body).Decode(&result); err != nil {
+		t.Error(err)
+	}
 
 	_, err := jwt.Parse(result.Value, func(token *jwt.Token) (interface{}, error) {
 		return []byte(mockUser.Salt), nil

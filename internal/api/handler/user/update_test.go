@@ -56,7 +56,7 @@ func TestUpdate(t *testing.T) {
 	users.EXPECT().Update(gomock.Any(), before)
 
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(userInput)
+	_ = json.NewEncoder(in).Encode(userInput)
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("PATCH", "/api/v1/user", in)
 	r = r.WithContext(
@@ -81,7 +81,9 @@ func TestUpdate(t *testing.T) {
 		// Password hash is not exposecd to JSON
 	}
 	got, want := new(types.User), after
-	json.NewDecoder(w.Body).Decode(got)
+	if err := json.NewDecoder(w.Body).Decode(got); err != nil {
+		t.Error(err)
+	}
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
 		t.Errorf(diff)
 	}
@@ -108,7 +110,7 @@ func TestUpdate_HashError(t *testing.T) {
 	}
 
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(userInput)
+	_ = json.NewEncoder(in).Encode(userInput)
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("PATCH", "/api/v1/user", in)
 	r = r.WithContext(
@@ -121,7 +123,9 @@ func TestUpdate_HashError(t *testing.T) {
 	}
 
 	got := new(render.Error)
-	json.NewDecoder(w.Body).Decode(got)
+	if err := json.NewDecoder(w.Body).Decode(got); err != nil {
+		t.Error(err)
+	}
 	if diff := cmp.Diff(got.Message, render.ErrInternal.Message); len(diff) != 0 {
 		t.Errorf(diff)
 	}
@@ -152,7 +156,9 @@ func TestUpdate_BadRequest(t *testing.T) {
 	}
 
 	got := new(render.Error)
-	json.NewDecoder(w.Body).Decode(got)
+	if err := json.NewDecoder(w.Body).Decode(got); err != nil {
+		t.Error(err)
+	}
 	if diff := cmp.Diff(got.Message, "Invalid request body: EOF."); len(diff) != 0 {
 		t.Errorf(diff)
 	}
@@ -176,7 +182,7 @@ func TestUpdate_ServerError(t *testing.T) {
 	users.EXPECT().Update(gomock.Any(), user).Return(render.ErrNotFound)
 
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(userInput)
+	_ = json.NewEncoder(in).Encode(userInput)
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("PATCH", "/api/v1/user", in)
 	r = r.WithContext(
@@ -189,7 +195,9 @@ func TestUpdate_ServerError(t *testing.T) {
 	}
 
 	got, want := new(render.Error), render.ErrInternal
-	json.NewDecoder(w.Body).Decode(got)
+	if err := json.NewDecoder(w.Body).Decode(got); err != nil {
+		t.Error(err)
+	}
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
 		t.Errorf(diff)
 	}
