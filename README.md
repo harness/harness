@@ -1,4 +1,6 @@
 [![CI pipeline](https://github.com/harness/gitness/actions/workflows/ci.yml/badge.svg)](https://github.com/harness/gitness/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/harness/gitness/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/harness/gitness/actions/workflows/codeql-analysis.yml)
+[![](https://img.shields.io/badge/go-%3E%3D%201.17-green)](#)
 # Pre-Requisites
 
 Install the latest stable version of Node and Go version 1.17 or higher, and then install the below Go programs. Ensure the GOPATH [bin directory](https://go.dev/doc/gopath_code#GOPATH) is added to your PATH.
