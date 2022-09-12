@@ -2,25 +2,24 @@
 
 Install the latest stable version of Node and Go version 1.17 or higher, and then install the below Go programs. Ensure the GOPATH [bin directory](https://go.dev/doc/gopath_code#GOPATH) is added to your PATH.
 
-```text
-$ go install github.com/golang/mock/mockgen@latest
-$ go install github.com/google/wire/cmd/wire@latest
+```bash
+$ make all
 ```
 
 # Build
 
 Build the user interface:
 
-```text
+```bash
 $ pushd web
-$ npm install
-$ npm run build
+$ yarn install
+$ yarn run build
 $ popd
 ```
 
 Build the server and command line tools:
 
-```text
+```bash
 $ go generate ./...
 $ go build -o release/gitness
 ```
@@ -29,9 +28,8 @@ $ go build -o release/gitness
 
 Execute the unit tests:
 
-```text
-$ go generate ./...
-$ go test -v -cover ./...
+```bash
+$ make test
 ```
 
 # Run
@@ -40,7 +38,7 @@ This project supports all operating systems and architectures supported by Go.  
 
 Start the server at `localhost:3000`
 
-```text
+```bash
 $ release/gitness server
 ```
 
@@ -58,54 +56,54 @@ This project includes simple command line tools for interacting with the system.
 
 Register a new user:
 
-```text
+```bash
 $ release/gitness register
 ```
 
 Login to the application:
 
-```text
+```bash
 $ release/gitness login
 ```
 
 Logout from the application:
 
-```text
+```bash
 $ release/gitness logout
 ```
 
 View your account details:
 
-```text
+```bash
 $ release/gitness account
 ```
 
-Generate a peronsal access token:
+Generate a personal access token:
 
-```text
+```bash
 $ release/gitness token
 ```
 
 Create a pipeline:
 
-```text
+```bash
 $ release/gitness pipeline create <name>
 ```
 
 List pipelines:
 
-```text
+```bash
 $ release/gitness pipeline ls
 ```
 
 Debug and output http responses from the server:
 
-```text
+```bash
 $ DEBUG=true release/gitness pipeline ls
 ```
 
 View all commands:
 
-```text
+```bash
 $ release/gitness --help
 ```

@@ -12,23 +12,23 @@ var (
 	GitRepository string
 	// GitCommit is the git commit that was compiled
 	GitCommit string
-	// VersionMajor is for an API incompatible changes.
-	VersionMajor int64 = 1
-	// VersionMinor is for functionality in a backwards-compatible manner.
-	VersionMinor int64
-	// VersionPatch is for backwards-compatible bug fixes.
-	VersionPatch int64
-	// VersionPre indicates prerelease.
-	VersionPre = ""
-	// VersionDev indicates development branch. Releases will be empty string.
-	VersionDev string
+	// Major is for an API incompatible changes.
+	Major int64 = 1
+	// Minor is for functionality in a backwards-compatible manner.
+	Minor int64
+	// Patch is for backwards-compatible bug fixes.
+	Patch int64
+	// Pre indicates prerelease.
+	Pre = ""
+	// Dev indicates development branch. Releases will be empty string.
+	Dev string
 )
 
 // Version is the specification version that the package types support.
 var Version = semver.Version{
-	Major:      VersionMajor,
-	Minor:      VersionMinor,
-	Patch:      VersionPatch,
-	PreRelease: semver.PreRelease(VersionPre),
-	Metadata:   VersionDev,
+	Major:      Major,
+	Minor:      Minor,
+	Patch:      Patch,
+	PreRelease: semver.PreRelease(Pre),
+	Metadata:   Dev,
 }
