@@ -23,7 +23,8 @@ func NewNightly() *Nightly {
 
 // Run runs the purge sub-routine.
 func (n *Nightly) Run(ctx context.Context) {
-	ticker := time.NewTicker(time.Hour * 24)
+	const hoursPerDay = 24
+	ticker := time.NewTicker(hoursPerDay * time.Hour)
 	logger := log.Ctx(ctx)
 	for {
 		select {

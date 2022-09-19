@@ -38,7 +38,8 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 		}
 
 		if in.Password != nil {
-			hash, err := hashPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
+			var hash []byte
+			hash, err = hashPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
 			if err != nil {
 				log.Err(err).Msg("Failed to hash password.")
 

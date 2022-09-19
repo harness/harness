@@ -25,6 +25,7 @@ fi
 # The files are then git-added
 FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep .go | sed 's| |\\ |g')
 if [ -n "$FILES" ]; then
+  make format
 	make lint
 	if [ $? -ne 0 ]; then
     		echo "Error running make check - please fix before committing"

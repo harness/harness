@@ -21,7 +21,6 @@ type currentUserResponse struct {
 // helper function that constructs the openapi specification
 // for user account resources.
 func buildUser(reflector *openapi3.Reflector) {
-
 	opFind := openapi3.Operation{}
 	opFind.WithTags("user")
 	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "getUser"})

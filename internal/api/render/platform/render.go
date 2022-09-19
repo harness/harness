@@ -13,9 +13,9 @@ func RenderResource(w http.ResponseWriter, code int, v interface{}) {
 	payload := new(wrapper)
 	payload.Status = "SUCCESS"
 	payload.Data, _ = json.Marshal(v)
-	if code > 399 {
+	if code >= http.StatusBadRequest {
 		payload.Status = "ERROR"
-	} else if code > 299 {
+	} else if code >= http.StatusMultipleChoices {
 		payload.Status = "FAILURE"
 	}
 	render.JSON(w, code, payload)

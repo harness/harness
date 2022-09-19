@@ -5,7 +5,9 @@
 package authz
 
 import (
-	"fmt"
+	"context"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -22,11 +24,12 @@ func NewUnsafeAuthorizer() Authorizer {
 	return &UnsafeAuthorizer{}
 }
 
-func (a *UnsafeAuthorizer) Check(principalType enum.PrincipalType, principalId string, scope *types.Scope, resource *types.Resource, permission enum.Permission) (bool, error) {
-	fmt.Printf(
+func (a *UnsafeAuthorizer) Check(ctx context.Context, principalType enum.PrincipalType, principalID string,
+	scope *types.Scope, resource *types.Resource, permission enum.Permission) (bool, error) {
+	log.Debug().Msgf(
 		"[Authz] %s '%s' requests %s for %s '%s' in scope %v\n",
 		principalType,
-		principalId,
+		principalID,
 		permission,
 		resource.Type,
 		resource.Name,
@@ -35,9 +38,10 @@ func (a *UnsafeAuthorizer) Check(principalType enum.PrincipalType, principalId s
 
 	return true, nil
 }
-func (a *UnsafeAuthorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...types.PermissionCheck) (bool, error) {
+func (a *UnsafeAuthorizer) CheckAll(ctx context.Context, principalType enum.PrincipalType, principalID string,
+	permissionChecks ...types.PermissionCheck) (bool, error) {
 	for _, p := range permissionChecks {
-		if _, err := a.Check(principalType, principalId, &p.Scope, &p.Resource, p.Permission); err != nil {
+		if _, err := a.Check(ctx, principalType, principalID, &p.Scope, &p.Resource, p.Permission); err != nil {
 			return false, err
 		}
 	}

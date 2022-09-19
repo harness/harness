@@ -12,10 +12,10 @@ import (
 	"github.com/google/wire"
 )
 
-// WireSet provides a wire set for this package
+// WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(ProvideServer)
 
-// ProvideServer provides a server instance
+// ProvideServer provides a server instance.
 func ProvideServer(config *types.Config, handler http.Handler) *Server {
 	return &Server{
 		Acme:    config.Server.Acme.Enabled,

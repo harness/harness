@@ -6,6 +6,7 @@ package harness
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -30,7 +31,10 @@ func NewAuthorizer(aclEndpoint, authToken string) (authz.Authorizer, error) {
 	// build http client - could be injected, too
 	tr := &http.Transport{
 		// TODO: expose InsecureSkipVerify in config
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{
+			//nolint:gosec // accept any host cert
+			InsecureSkipVerify: true,
+		},
 	}
 	client := &http.Client{Transport: tr}
 
@@ -41,16 +45,22 @@ func NewAuthorizer(aclEndpoint, authToken string) (authz.Authorizer, error) {
 	}, nil
 }
 
-func (a *Authorizer) Check(principalType enum.PrincipalType, principalId string, scope *types.Scope, resource *types.Resource, permission enum.Permission) (bool, error) {
-	return a.CheckAll(principalType, principalId, types.PermissionCheck{Scope: *scope, Resource: *resource, Permission: permission})
+func (a *Authorizer) Check(ctx context.Context, principalType enum.PrincipalType, principalID string,
+	scope *types.Scope, resource *types.Resource, permission enum.Permission) (bool, error) {
+	return a.CheckAll(ctx, principalType, principalID, types.PermissionCheck{
+		Scope:      *scope,
+		Resource:   *resource,
+		Permission: permission,
+	})
 }
 
-func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId string, permissionChecks ...types.PermissionCheck) (bool, error) {
+func (a *Authorizer) CheckAll(ctx context.Context, principalType enum.PrincipalType, principalID string,
+	permissionChecks ...types.PermissionCheck) (bool, error) {
 	if len(permissionChecks) == 0 {
 		return false, authz.ErrNoPermissionCheckProvided
 	}
 
-	requestDto, err := createAclRequest(principalType, principalId, permissionChecks)
+	requestDto, err := createACLRequest(principalType, principalID, permissionChecks)
 	if err != nil {
 		return false, err
 	}
@@ -61,7 +71,7 @@ func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId stri
 
 	// TODO: accountId might be different!
 	url := a.aclEndpoint + "?routingId=" + requestDto.Permissions[0].ResourceScope.AccountIdentifier
-	httpRequest, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(byt))
+	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(byt))
 	if err != nil {
 		return false, err
 	}
@@ -71,16 +81,19 @@ func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId stri
 		"Authorization": []string{"Bearer " + a.authToken},
 	}
 
-	httpResponse, err := a.client.Do(httpRequest)
+	response, err := a.client.Do(httpRequest)
+	if response != nil {
+		defer response.Body.Close()
+	}
 	if err != nil {
 		return false, err
 	}
 
-	if httpResponse.StatusCode != 200 {
-		return false, fmt.Errorf("Got unexpected status code '%d' - assume unauthorized.", httpResponse.StatusCode)
+	if response.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("got unexpected status code '%d' - assume unauthorized", response.StatusCode)
 	}
 
-	bodyByte, err := ioutil.ReadAll(httpResponse.Body)
+	bodyByte, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return false, err
 	}
@@ -91,25 +104,23 @@ func (a *Authorizer) CheckAll(principalType enum.PrincipalType, principalId stri
 		return false, err
 	}
 
-	return checkAclResponse(permissionChecks, responseDto)
+	return checkACLResponse(permissionChecks, responseDto)
 }
 
-func createAclRequest(principalType enum.PrincipalType, principalId string, permissionChecks []types.PermissionCheck) (*aclRequest, error) {
+func createACLRequest(principalType enum.PrincipalType, principalID string,
+	permissionChecks []types.PermissionCheck) (*aclRequest, error) {
 	// Generate ACL req
 	req := aclRequest{
 		Permissions: []aclPermission{},
 		Principal: aclPrincipal{
-			PrincipalIdentifier: principalId,
+			PrincipalIdentifier: principalID,
 			PrincipalType:       string(principalType),
 		},
 	}
 
 	// map all permissionchecks to ACL permission checks
 	for _, c := range permissionChecks {
-		mappedPermission, err := mapPermission(c.Permission)
-		if err != nil {
-			return nil, err
-		}
+		mappedPermission := mapPermission(c.Permission)
 		mappedResourceScope, err := mapScope(c.Scope)
 		if err != nil {
 			return nil, err
@@ -126,7 +137,7 @@ func createAclRequest(principalType enum.PrincipalType, principalId string, perm
 	return &req, nil
 }
 
-func checkAclResponse(permissionChecks []types.PermissionCheck, responseDto aclResponse) (bool, error) {
+func checkACLResponse(permissionChecks []types.PermissionCheck, responseDto aclResponse) (bool, error) {
 	/*
 	 * We are assuming two things:
 	 *  - All permission checks were made for the same principal.
@@ -150,7 +161,7 @@ func checkAclResponse(permissionChecks []types.PermissionCheck, responseDto aclR
 		}
 
 		if !permissionPermitted {
-			return false, fmt.Errorf("Permission '%s' is not permitted according to ACL (correlationId: '%s')",
+			return false, fmt.Errorf("permission '%s' is not permitted according to ACL (correlationId: '%s')",
 				check.Permission,
 				responseDto.CorrelationID)
 		}
@@ -160,7 +171,6 @@ func checkAclResponse(permissionChecks []types.PermissionCheck, responseDto aclR
 }
 
 func mapScope(scope types.Scope) (*aclResourceScope, error) {
-
 	/*
 	 * ASSUMPTION:
 	 *	Harness embeded structure is mapped to the following scm space:
@@ -177,26 +187,34 @@ func mapScope(scope types.Scope) (*aclResourceScope, error) {
 	 * TODO: Handle scope.Repository in harness embedded mode
 	 */
 
+	const (
+		accIndex     = 0
+		orgIndex     = 1
+		projectIndex = 2
+		scopes       = 3
+	)
+
 	harnessIdentifiers := strings.Split(scope.SpacePath, "/")
-	if len(harnessIdentifiers) > 3 {
-		return nil, fmt.Errorf("Unable to convert '%s' to harness resource scope (expected {Account}/{Organization}/{Project} or a sub scope).", scope.SpacePath)
+	if len(harnessIdentifiers) > scopes {
+		return nil, fmt.Errorf("unable to convert '%s' to harness resource scope "+
+			"(expected {Account}/{Organization}/{Project} or a sub scope)", scope.SpacePath)
 	}
 
 	aclScope := &aclResourceScope{}
-	if len(harnessIdentifiers) > 0 {
-		aclScope.AccountIdentifier = harnessIdentifiers[0]
+	if len(harnessIdentifiers) > accIndex {
+		aclScope.AccountIdentifier = harnessIdentifiers[accIndex]
 	}
-	if len(harnessIdentifiers) > 1 {
-		aclScope.OrgIdentifier = harnessIdentifiers[1]
+	if len(harnessIdentifiers) > orgIndex {
+		aclScope.OrgIdentifier = harnessIdentifiers[orgIndex]
 	}
-	if len(harnessIdentifiers) > 2 {
-		aclScope.ProjectIdentifier = harnessIdentifiers[2]
+	if len(harnessIdentifiers) > projectIndex {
+		aclScope.ProjectIdentifier = harnessIdentifiers[projectIndex]
 	}
 
 	return aclScope, nil
 }
 
-func mapPermission(permission enum.Permission) (string, error) {
+func mapPermission(permission enum.Permission) string {
 	// harness has multiple modules - add scm prefix
-	return "scm_" + string(permission), nil
+	return "scm_" + string(permission)
 }

@@ -16,10 +16,8 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
-/*
- * Attempt returns an http.HandlerFunc middleware that authenticates
- * the http.Request if authentication payload is available.
- */
+// Attempt returns an http.HandlerFunc middleware that authenticates
+// the http.Request if authentication payload is available.
 func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -32,11 +30,15 @@ func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler 
 				// if there was no auth data in the request - continue as is
 				next.ServeHTTP(w, r)
 				return
-			} else if err != nil {
+			}
+
+			if err != nil {
 				// for any other error we fail
 				render.Unauthorized(w)
 				return
-			} else if user == nil {
+			}
+
+			if user == nil {
 				// when err == nil user should never be nil!
 				log.Error().Msg("User is nil eventhough the authenticator didn't return any error!")
 

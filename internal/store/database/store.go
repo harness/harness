@@ -27,13 +27,16 @@ func Connect(driver, datasource string) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to open the db")
 	}
+
 	dbx := sqlx.NewDb(db, driver)
-	if err := pingDatabase(dbx); err != nil {
+	if err = pingDatabase(dbx); err != nil {
 		return nil, errors.Wrap(err, "Failed to ping the db")
 	}
-	if err := setupDatabase(dbx); err != nil {
+
+	if err = setupDatabase(dbx); err != nil {
 		return nil, errors.Wrap(err, "Failed to setup the db")
 	}
+
 	return dbx, nil
 }
 
@@ -49,18 +52,18 @@ func Must(db *sqlx.DB, err error) *sqlx.DB {
 // helper function to ping the database with backoff to ensure
 // a connection can be established before we proceed with the
 // database setup and migration.
-func pingDatabase(db *sqlx.DB) (err error) {
+func pingDatabase(db *sqlx.DB) error {
 	for i := 0; i < 30; i++ {
-		err = db.Ping()
-		if err == nil {
-			return
+		err := db.Ping()
+		if err != nil {
+			return err
 		}
 		time.Sleep(time.Second)
 	}
-	return
+	return nil
 }
 
-// helper function to setup the databsae by performing automated
+// helper function to setup the database by performing automated
 // database migration steps.
 func setupDatabase(db *sqlx.DB) error {
 	return migrate.Migrate(db)

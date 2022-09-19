@@ -7,7 +7,6 @@
 package router
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
@@ -20,9 +19,6 @@ const (
 	restMount          = "/api"
 	gitUserAgentPrefix = "git/"
 )
-
-// empty context
-var nocontext = context.Background()
 
 type Router struct {
 	api http.Handler
@@ -40,18 +36,9 @@ func New(
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer,
 ) (http.Handler, error) {
-	api, err := newApiHandler(restMount, systemStore, userStore, spaceStore, repoStore, authenticator, authorizer)
-	if err != nil {
-		return nil, err
-	}
-	git, err := newGitHandler("/", systemStore, userStore, spaceStore, repoStore, authenticator, authorizer)
-	if err != nil {
-		return nil, err
-	}
-	web, err := newWebHandler("/", systemStore)
-	if err != nil {
-		return nil, err
-	}
+	api := newAPIHandler(restMount, systemStore, userStore, spaceStore, repoStore, authenticator, authorizer)
+	git := newGitHandler("/", systemStore, userStore, spaceStore, repoStore, authenticator, authorizer)
+	web := newWebHandler("/", systemStore)
 
 	return &Router{
 		api: api,
@@ -61,7 +48,6 @@ func New(
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-
 	/*
 	 * 1. GIT
 	 *

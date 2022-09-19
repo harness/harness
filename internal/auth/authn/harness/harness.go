@@ -13,9 +13,7 @@ import (
 
 var _ authn.Authenticator = (*Authenticator)(nil)
 
-/*
- * An authenticator that validates access token provided by harness SAAS.
- */
+// Authenticator that validates access token provided by harness SAAS.
 type Authenticator struct {
 	// some config to validate jwt
 }
@@ -24,6 +22,6 @@ func NewAuthenticator() (authn.Authenticator, error) {
 	return &Authenticator{}, nil
 }
 
-func (this *Authenticator) Authenticate(r *http.Request) (*types.User, error) {
+func (a *Authenticator) Authenticate(r *http.Request) (*types.User, error) {
 	return &types.User{}, nil
 }

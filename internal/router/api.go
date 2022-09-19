@@ -1,8 +1,11 @@
 package router
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+
+	"github.com/harness/gitness/types"
 
 	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/handler/account"
@@ -31,22 +34,21 @@ import (
  * Mounts the Rest API Router under mountPath (path has to end with ).
  * The handler is wrapped within a layer that handles encoding terminated Paths.
  */
-func newApiHandler(
+func newAPIHandler(
 	mountPath string,
 	systemStore store.SystemStore,
 	userStore store.UserStore,
 	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
-	authorizer authz.Authorizer) (http.Handler, error) {
-
-	config := systemStore.Config(nocontext)
-	guard := guard.New(authorizer)
+	authorizer authz.Authorizer) http.Handler {
+	//
+	config := systemStore.Config(context.Background())
+	g := guard.New(authorizer)
 
 	// Use go-chi router for inner routing (restricted to mountPath!)
 	r := chi.NewRouter()
 	r.Route(mountPath, func(r chi.Router) {
-
 		// Apply common api middleware
 		r.Use(middleware.NoCache)
 		r.Use(middleware.Recoverer)
@@ -59,23 +61,13 @@ func newApiHandler(
 		r.Use(accesslog.HlogHandler())
 
 		// configure cors middleware
-		cors := cors.New(
-			cors.Options{
-				AllowedOrigins:   config.Cors.AllowedOrigins,
-				AllowedMethods:   config.Cors.AllowedMethods,
-				AllowedHeaders:   config.Cors.AllowedHeaders,
-				ExposedHeaders:   config.Cors.ExposedHeaders,
-				AllowCredentials: config.Cors.AllowCredentials,
-				MaxAge:           config.Cors.MaxAge,
-			},
-		)
-		r.Use(cors.Handler)
+		r.Use(corsHandler(config))
 
 		// for now always attempt auth - enforced per operation
 		r.Use(middleware_authn.Attempt(authenticator))
 
 		r.Route("/v1", func(r chi.Router) {
-			setupRoutesV1(r, systemStore, userStore, spaceStore, repoStore, authenticator, guard)
+			setupRoutesV1(r, systemStore, userStore, spaceStore, repoStore, authenticator, g)
 		})
 	})
 
@@ -85,7 +77,20 @@ func newApiHandler(
 		mountPath + "/v1/repos",
 	}
 
-	return encode.TerminatedPathBefore(terminatedPathPrefixes, r.ServeHTTP), nil
+	return encode.TerminatedPathBefore(terminatedPathPrefixes, r.ServeHTTP)
+}
+
+func corsHandler(config *types.Config) func(http.Handler) http.Handler {
+	return cors.New(
+		cors.Options{
+			AllowedOrigins:   config.Cors.AllowedOrigins,
+			AllowedMethods:   config.Cors.AllowedMethods,
+			AllowedHeaders:   config.Cors.AllowedHeaders,
+			ExposedHeaders:   config.Cors.ExposedHeaders,
+			AllowCredentials: config.Cors.AllowCredentials,
+			MaxAge:           config.Cors.MaxAge,
+		},
+	).Handler
 }
 
 func setupRoutesV1(
@@ -94,9 +99,8 @@ func setupRoutesV1(
 	userStore store.UserStore,
 	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
-	authenticator authn.Authenticator,
+	_ authn.Authenticator,
 	guard *guard.Guard) {
-
 	// SPACES
 	r.Route("/spaces", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
@@ -121,7 +125,7 @@ func setupRoutesV1(
 				r.Post("/", handler_space.HandleCreatePath(guard, spaceStore))
 
 				// per path operations
-				r.Route(fmt.Sprintf("/{%s}", request.PathIdParamName), func(r chi.Router) {
+				r.Route(fmt.Sprintf("/{%s}", request.PathIDParamName), func(r chi.Router) {
 					r.Delete("/", handler_space.HandleDeletePath(guard, spaceStore))
 				})
 			})
@@ -150,7 +154,7 @@ func setupRoutesV1(
 				r.Post("/", handler_repo.HandleCreatePath(guard, repoStore))
 
 				// per path operations
-				r.Route(fmt.Sprintf("/{%s}", request.PathIdParamName), func(r chi.Router) {
+				r.Route(fmt.Sprintf("/{%s}", request.PathIDParamName), func(r chi.Router) {
 					r.Delete("/", handler_repo.HandleDeletePath(guard, repoStore))
 				})
 			})

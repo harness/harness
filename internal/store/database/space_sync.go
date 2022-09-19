@@ -14,54 +14,55 @@ import (
 
 var _ store.SpaceStore = (*SpaceStoreSync)(nil)
 
-// Returns a new SpaceStore.
+// NewSpaceStoreSync returns a new SpaceStore.
 func NewSpaceStoreSync(base *SpaceStore) *SpaceStoreSync {
 	return &SpaceStoreSync{base}
 }
 
-// SpaceStoreSync synronizes read and write access to the
+// SpaceStoreSync synchronizes read and write access to the
 // space store. This prevents race conditions when the database
 // type is sqlite3.
 type SpaceStoreSync struct {
 	base *SpaceStore
 }
 
-// Finds the space by id.
+// Find the space by id.
 func (s *SpaceStoreSync) Find(ctx context.Context, id int64) (*types.Space, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.Find(ctx, id)
 }
 
-// Finds the space by path.
+// FindByPath find the space by path.
 func (s *SpaceStoreSync) FindByPath(ctx context.Context, path string) (*types.Space, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.FindByPath(ctx, path)
 }
 
-// Creates a new space
+// Create a new space.
 func (s *SpaceStoreSync) Create(ctx context.Context, space *types.Space) error {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.Create(ctx, space)
 }
 
-// Moves an existing space.
-func (s *SpaceStoreSync) Move(ctx context.Context, userId int64, spaceId int64, newParentId int64, newName string, keepAsAlias bool) (*types.Space, error) {
+// Move moves an existing space.
+func (s *SpaceStoreSync) Move(ctx context.Context, userID int64, spaceID int64, newParentID int64, newName string,
+	keepAsAlias bool) (*types.Space, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.Move(ctx, userId, spaceId, newParentId, newName, keepAsAlias)
+	return s.base.Move(ctx, userID, spaceID, newParentID, newName, keepAsAlias)
 }
 
-// Updates the space details.
+// Update the space details.
 func (s *SpaceStoreSync) Update(ctx context.Context, space *types.Space) error {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.Update(ctx, space)
 }
 
-// Deletes the space.
+// Delete the space.
 func (s *SpaceStoreSync) Delete(ctx context.Context, id int64) error {
 	mutex.RLock()
 	defer mutex.RUnlock()
@@ -82,21 +83,21 @@ func (s *SpaceStoreSync) List(ctx context.Context, id int64, opts *types.SpaceFi
 	return s.base.List(ctx, id, opts)
 }
 
-// List returns a list of all paths of a space.
+// ListAllPaths returns a list of all paths of a space.
 func (s *SpaceStoreSync) ListAllPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
 	return s.base.ListAllPaths(ctx, id, opts)
 }
 
-// Create a path for a space.
-func (s *SpaceStoreSync) CreatePath(ctx context.Context, spaceId int64, params *types.PathParams) (*types.Path, error) {
+// CreatePath a path for a space.
+func (s *SpaceStoreSync) CreatePath(ctx context.Context, spaceID int64, params *types.PathParams) (*types.Path, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.CreatePath(ctx, spaceId, params)
+	return s.base.CreatePath(ctx, spaceID, params)
 }
 
-// Delete a path of a space.
-func (s *SpaceStoreSync) DeletePath(ctx context.Context, spaceId int64, pathId int64) error {
+// DeletePath a path of a space.
+func (s *SpaceStoreSync) DeletePath(ctx context.Context, spaceID int64, pathID int64) error {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.DeletePath(ctx, spaceId, pathId)
+	return s.base.DeletePath(ctx, spaceID, pathID)
 }

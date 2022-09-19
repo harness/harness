@@ -39,7 +39,6 @@ func HandleDelete(users store.UserStore) http.HandlerFunc {
 
 			render.UserfiedErrorOrInternal(w, err)
 			return
-
 		}
 
 		w.WriteHeader(http.StatusNoContent)

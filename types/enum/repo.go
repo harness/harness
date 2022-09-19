@@ -12,7 +12,7 @@ type RepoAttr int
 // Order enumeration.
 const (
 	RepoAttrNone RepoAttr = iota
-	RepoAttrId
+	RepoAttrID
 	RepoAttrName
 	RepoAttrPath
 	RepoAttrDisplayName
@@ -25,7 +25,7 @@ const (
 func ParseRepoAtrr(s string) RepoAttr {
 	switch strings.ToLower(s) {
 	case "id":
-		return RepoAttrId
+		return RepoAttrID
 	case "name":
 		return RepoAttrName
 	case "path":

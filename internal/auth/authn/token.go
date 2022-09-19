@@ -57,7 +57,7 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*types.User, error) 
 				Error().Err(err).
 				Int64("user", id).
 				Msg("cannot find user")
-			return nil, fmt.Errorf("Failed to get user info: %s", err)
+			return nil, fmt.Errorf("failed to get user info: %w", err)
 		}
 		return []byte(user.Salt), nil
 	})
@@ -65,11 +65,11 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*types.User, error) 
 		return nil, err
 	}
 	if !parsed.Valid {
-		return nil, errors.New("Invalid token")
+		return nil, errors.New("invalid token")
 	}
 
 	if _, ok := parsed.Method.(*jwt.SigningMethodHMAC); !ok {
-		return nil, errors.New("Invalid token")
+		return nil, errors.New("invalid token")
 	}
 
 	// this code should be deprecated, since the jwt.ParseWithClaims
@@ -78,7 +78,7 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*types.User, error) 
 	if claims, ok := parsed.Claims.(*token.Claims); ok {
 		if claims.ExpiresAt > 0 {
 			if time.Now().Unix() > claims.ExpiresAt {
-				return nil, errors.New("Expired token")
+				return nil, errors.New("expired token")
 			}
 		}
 	}

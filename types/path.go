@@ -18,13 +18,13 @@ type Path struct {
 	Value      string              `db:"path_value"           json:"value"`
 	IsAlias    bool                `db:"path_isAlias"         json:"isAlias"`
 	TargetType enum.PathTargetType `db:"path_targetType"      json:"targetType"`
-	TargetId   int64               `db:"path_targetId"        json:"targetId"`
+	TargetID   int64               `db:"path_targetId"        json:"targetId"`
 	CreatedBy  int64               `db:"path_createdBy"       json:"createdBy"`
 	Created    int64               `db:"path_created"         json:"created"`
 	Updated    int64               `db:"path_updated"         json:"updated"`
 }
 
-// Used for creating paths (alias or rename)
+// PathParams used for creating paths (alias or rename).
 type PathParams struct {
 	Path      string
 	CreatedBy int64
@@ -32,7 +32,7 @@ type PathParams struct {
 	Updated   int64
 }
 
-// Stores path query parameters.
+// PathFilter stores path query parameters.
 type PathFilter struct {
 	Page  int           `json:"page"`
 	Size  int           `json:"size"`

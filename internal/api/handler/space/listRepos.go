@@ -16,9 +16,7 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
-/*
- * Writes json-encoded list of repos in the request body.
- */
+// HandleListRepos writes json-encoded list of repos in the request body.
 func HandleListRepos(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
 	return guard.Space(
 		enum.PermissionSpaceView,
@@ -59,7 +57,7 @@ func HandleListRepos(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc
 			result := make([]*types.Repository, 0, len(allRepos))
 			for _, rep := range allRepos {
 				if !rep.IsPublic {
-					err := guard.CheckRepo(r, enum.PermissionRepoView, rep.Path)
+					err = guard.CheckRepo(r, enum.PermissionRepoView, rep.Path)
 					if err != nil {
 						log.Debug().Err(err).
 							Msgf("Skip repo '%s' in output.", rep.Path)

@@ -5,9 +5,11 @@
 package users
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/drone/funcmap"
 	"github.com/harness/gitness/cli/util"
@@ -34,7 +36,9 @@ func (c *listCommand) run(*kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	list, err := client.UserList(types.Params{
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	list, err := client.UserList(ctx, types.Params{
 		Size: c.size,
 		Page: c.page,
 	})
@@ -58,7 +62,7 @@ func (c *listCommand) run(*kingpin.ParseContext) error {
 	return nil
 }
 
-// helper function registers the user list command
+// helper function registers the user list command.
 func registerList(app *kingpin.CmdClause) {
 	c := new(listCommand)
 

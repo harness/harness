@@ -21,7 +21,6 @@ var legacy = map[string]string{
 // load returns the system configuration from the
 // host environment.
 func load() (*types.Config, error) {
-
 	// loop through legacy environment variable and, if set
 	// rewrite to the new variable name.
 	for k, v := range legacy {

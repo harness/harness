@@ -27,15 +27,15 @@ func HandleDeletePath(guard *guard.Guard, spaces store.SpaceStore) http.HandlerF
 			log := hlog.FromRequest(r)
 			space, _ := request.SpaceFrom(ctx)
 
-			pathId, err := request.GetPathId(r)
+			pathID, err := request.GetPathID(r)
 			if err != nil {
 				render.BadRequest(w)
 				return
 			}
 
-			err = spaces.DeletePath(ctx, space.ID, pathId)
+			err = spaces.DeletePath(ctx, space.ID, pathID)
 			if err != nil {
-				log.Err(err).Int64("path_id", pathId).
+				log.Err(err).Int64("path_id", pathID).
 					Msgf("Failed to delete space path.")
 
 				render.UserfiedErrorOrInternal(w, err)

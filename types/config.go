@@ -40,7 +40,7 @@ type Config struct {
 	Cors struct {
 		AllowedOrigins   []string `envconfig:"APP_CORS_ALLOWED_ORIGINS"   default:"*"`
 		AllowedMethods   []string `envconfig:"APP_CORS_ALLOWED_METHODS"   default:"GET,POST,PATCH,PUT,DELETE,OPTIONS"`
-		AllowedHeaders   []string `envconfig:"APP_CORS_ALLOWED_HEADERS"   default:"Origin,Accept,Accept-Language,Authorization,Content-Type,Content-Language,X-Requested-With,X-Request-Id"`
+		AllowedHeaders   []string `envconfig:"APP_CORS_ALLOWED_HEADERS"   default:"Origin,Accept,Accept-Language,Authorization,Content-Type,Content-Language,X-Requested-With,X-Request-Id"` //nolint:lll // struct tags can't be multiline
 		ExposedHeaders   []string `envconfig:"APP_CORS_EXPOSED_HEADERS"   default:"Link"`
 		AllowCredentials bool     `envconfig:"APP_CORS_ALLOW_CREDENTIALS" default:"true"`
 		MaxAge           int      `envconfig:"APP_CORS_MAX_AGE"           default:"300"`

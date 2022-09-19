@@ -22,7 +22,7 @@ const (
 )
 
 // WithUser returns a copy of parent in which the user
-// value is set
+// value is set.
 func WithUser(parent context.Context, v *types.User) context.Context {
 	return context.WithValue(parent, userKey, v)
 }
@@ -34,7 +34,7 @@ func UserFrom(ctx context.Context) (*types.User, bool) {
 	return v, ok && v != nil
 }
 
-// WithSpace returns a copy of parent in which the space value is set
+// WithSpace returns a copy of parent in which the space value is set.
 func WithSpace(parent context.Context, v *types.Space) context.Context {
 	return context.WithValue(parent, spaceKey, v)
 }
@@ -46,7 +46,7 @@ func SpaceFrom(ctx context.Context) (*types.Space, bool) {
 	return v, ok && v != nil
 }
 
-// WithRepo returns a copy of parent in which the repo value is set
+// WithRepo returns a copy of parent in which the repo value is set.
 func WithRepo(parent context.Context, v *types.Repository) context.Context {
 	return context.WithValue(parent, repoKey, v)
 }

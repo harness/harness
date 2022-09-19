@@ -57,8 +57,7 @@ func HandleCreate(users store.UserStore) http.HandlerFunc {
 			Created:  time.Now().UnixMilli(),
 			Updated:  time.Now().UnixMilli(),
 		}
-
-		if ok, err := check.User(user); !ok {
+		if err = check.User(user); err != nil {
 			log.Debug().Err(err).
 				Str("email", user.Email).
 				Msg("invalid user input")

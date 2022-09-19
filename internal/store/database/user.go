@@ -34,7 +34,7 @@ type UserStore struct {
 func (s *UserStore) Find(ctx context.Context, id int64) (*types.User, error) {
 	dst := new(types.User)
 	if err := s.db.GetContext(ctx, dst, userSelectID, id); err != nil {
-		return nil, processSqlErrorf(err, "Select by id query failed")
+		return nil, processSQLErrorf(err, "Select by id query failed")
 	}
 	return dst, nil
 }
@@ -43,7 +43,7 @@ func (s *UserStore) Find(ctx context.Context, id int64) (*types.User, error) {
 func (s *UserStore) FindEmail(ctx context.Context, email string) (*types.User, error) {
 	dst := new(types.User)
 	if err := s.db.GetContext(ctx, dst, userSelectEmail, email); err != nil {
-		return nil, processSqlErrorf(err, "Select by email query failed")
+		return nil, processSQLErrorf(err, "Select by email query failed")
 	}
 	return dst, nil
 }
@@ -53,9 +53,8 @@ func (s *UserStore) FindKey(ctx context.Context, key string) (*types.User, error
 	id, err := strconv.ParseInt(key, 10, 64)
 	if err == nil {
 		return s.Find(ctx, id)
-	} else {
-		return s.FindEmail(ctx, key)
 	}
+	return s.FindEmail(ctx, key)
 }
 
 // List returns a list of users.
@@ -67,7 +66,7 @@ func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.
 	if opts.Sort == enum.UserAttrNone {
 		err := s.db.SelectContext(ctx, &dst, userSelect, limit(opts.Size), offset(opts.Page, opts.Size))
 		if err != nil {
-			return nil, processSqlErrorf(err, "Failed executing default list query")
+			return nil, processSQLErrorf(err, "Failed executing default list query")
 		}
 		return dst, nil
 	}
@@ -79,7 +78,7 @@ func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.
 
 	switch opts.Sort {
 	case enum.UserAttrCreated:
-		// NOTE: string concatination is safe because the
+		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
 		stmt = stmt.OrderBy("user_id " + opts.Order.String())
@@ -87,7 +86,7 @@ func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.
 		stmt = stmt.OrderBy("user_updated " + opts.Order.String())
 	case enum.UserAttrEmail:
 		stmt = stmt.OrderBy("user_email " + opts.Order.String())
-	case enum.UserAttrId:
+	case enum.UserAttrID:
 		stmt = stmt.OrderBy("user_id " + opts.Order.String())
 	}
 
@@ -97,7 +96,7 @@ func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.
 	}
 
 	if err = s.db.SelectContext(ctx, &dst, sql); err != nil {
-		return nil, processSqlErrorf(err, "Failed executing custom list query")
+		return nil, processSQLErrorf(err, "Failed executing custom list query")
 	}
 
 	return dst, nil
@@ -107,11 +106,11 @@ func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.
 func (s *UserStore) Create(ctx context.Context, user *types.User) error {
 	query, arg, err := s.db.BindNamed(userInsert, user)
 	if err != nil {
-		return processSqlErrorf(err, "Failed to bind user object")
+		return processSQLErrorf(err, "Failed to bind user object")
 	}
 
 	if err = s.db.QueryRowContext(ctx, query, arg...).Scan(&user.ID); err != nil {
-		return processSqlErrorf(err, "Insert query failed")
+		return processSQLErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -121,11 +120,11 @@ func (s *UserStore) Create(ctx context.Context, user *types.User) error {
 func (s *UserStore) Update(ctx context.Context, user *types.User) error {
 	query, arg, err := s.db.BindNamed(userUpdate, user)
 	if err != nil {
-		return processSqlErrorf(err, "Failed to bind user object")
+		return processSQLErrorf(err, "Failed to bind user object")
 	}
 
 	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
-		return processSqlErrorf(err, "Update query failed")
+		return processSQLErrorf(err, "Update query failed")
 	}
 
 	return err
@@ -135,14 +134,14 @@ func (s *UserStore) Update(ctx context.Context, user *types.User) error {
 func (s *UserStore) Delete(ctx context.Context, user *types.User) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		return processSqlErrorf(err, "Failed to start a new transaction")
+		return processSQLErrorf(err, "Failed to start a new transaction")
 	}
 	defer func(tx *sql.Tx) {
 		_ = tx.Rollback()
 	}(tx)
 	// delete the user
-	if _, err := tx.ExecContext(ctx, userDelete, user.ID); err != nil {
-		return processSqlErrorf(err, "The delete query failed")
+	if _, err = tx.ExecContext(ctx, userDelete, user.ID); err != nil {
+		return processSQLErrorf(err, "The delete query failed")
 	}
 	return tx.Commit()
 }
@@ -152,7 +151,7 @@ func (s *UserStore) Count(ctx context.Context) (int64, error) {
 	var count int64
 	err := s.db.QueryRowContext(ctx, userCount).Scan(&count)
 	if err != nil {
-		return 0, processSqlErrorf(err, "Failed executing count query")
+		return 0, processSQLErrorf(err, "Failed executing count query")
 	}
 	return count, nil
 }

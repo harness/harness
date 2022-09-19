@@ -22,13 +22,11 @@ import (
 
 type spaceMoveRequest struct {
 	Name        *string `json:"name"`
-	ParentId    *int64  `json:"parentId"`
+	ParentID    *int64  `json:"parentId"`
 	KeepAsAlias bool    `json:"keepAsAlias"`
 }
 
-/*
- * Moves an existing space.
- */
+// HandleMove moves an existing space.
 func HandleMove(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 	return guard.Space(
 		enum.PermissionSpaceEdit,
@@ -50,8 +48,8 @@ func HandleMove(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			if in.Name == nil {
 				in.Name = &space.Name
 			}
-			if in.ParentId == nil {
-				in.ParentId = &space.ParentId
+			if in.ParentID == nil {
+				in.ParentID = &space.ParentID
 			}
 
 			// convert name to lower case for easy of api use
@@ -61,18 +59,19 @@ func HandleMove(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			if err = check.Name(*in.Name); err != nil {
 				render.UserfiedErrorOrInternal(w, err)
 				return
-			} else if *in.ParentId == space.ParentId && *in.Name == space.Name {
+			} else if *in.ParentID == space.ParentID && *in.Name == space.Name {
 				render.BadRequestError(w, render.ErrNoChange)
 				return
 			}
 
 			// TODO: restrict top level move
 			// Ensure we can create spaces within the target space (using parent space as scope, similar to create)
-			if *in.ParentId > 0 && *in.ParentId != space.ParentId {
-				newParent, err := spaces.Find(ctx, *in.ParentId)
+			if *in.ParentID > 0 && *in.ParentID != space.ParentID {
+				var newParent *types.Space
+				newParent, err = spaces.Find(ctx, *in.ParentID)
 				if err != nil {
 					log.Err(err).
-						Msgf("Failed to get target space with id %d for the move.", *in.ParentId)
+						Msgf("Failed to get target space with id %d for the move.", *in.ParentID)
 
 					render.UserfiedErrorOrInternal(w, err)
 					return
@@ -88,7 +87,8 @@ func HandleMove(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 				}
 
 				/*
-				 * Validate path length (Due to racing conditions we can't be 100% sure on the path here only best effort to avoid big transaction failure)
+				 * Validate path length (Due to racing conditions we can't be 100% sure on the path here only best
+				 * effort to avoid big transaction failure)
 				 * Only needed if we actually change the parent (and can skip top level, as we already validate the name)
 				 */
 				path := paths.Concatinate(newParent.Path, *in.Name)
@@ -98,7 +98,7 @@ func HandleMove(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 				}
 			}
 
-			res, err := spaces.Move(ctx, usr.ID, space.ID, *in.ParentId, *in.Name, in.KeepAsAlias)
+			res, err := spaces.Move(ctx, usr.ID, space.ID, *in.ParentID, *in.Name, in.KeepAsAlias)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to move the space.")
 

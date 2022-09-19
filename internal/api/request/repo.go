@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	ErrRepoReferenceNotFound = errors.New("No repository reference found in request.")
+	ErrRepoReferenceNotFound = errors.New("no repository reference found in request")
 )
 
 func GetRepoRef(r *http.Request) (string, error) {

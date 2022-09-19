@@ -21,39 +21,39 @@ import (
 
 var _ store.SpaceStore = (*SpaceStore)(nil)
 
-// Returns a new SpaceStore.
+// NewSpaceStore returns a new SpaceStore.
 func NewSpaceStore(db *sqlx.DB) *SpaceStore {
 	return &SpaceStore{db}
 }
 
-// Implements a SpaceStore backed by a relational database.
+// SpaceStore implements a SpaceStore backed by a relational database.
 type SpaceStore struct {
 	db *sqlx.DB
 }
 
-// Finds the space by id.
+// Find the space by id.
 func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
 	dst := new(types.Space)
-	if err := s.db.GetContext(ctx, dst, spaceSelectById, id); err != nil {
-		return nil, processSqlErrorf(err, "Select query failed")
+	if err := s.db.GetContext(ctx, dst, spaceSelectByID, id); err != nil {
+		return nil, processSQLErrorf(err, "Select query failed")
 	}
 	return dst, nil
 }
 
-// Finds the space by path.
+// FindByPath finds the space by path.
 func (s *SpaceStore) FindByPath(ctx context.Context, path string) (*types.Space, error) {
 	dst := new(types.Space)
 	if err := s.db.GetContext(ctx, dst, spaceSelectByPath, path); err != nil {
-		return nil, processSqlErrorf(err, "Select query failed")
+		return nil, processSQLErrorf(err, "Select query failed")
 	}
 	return dst, nil
 }
 
-// Creates a new space
+// Create a new space.
 func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return processSqlErrorf(err, "Failed to start a new transaction")
+		return processSQLErrorf(err, "Failed to start a new transaction")
 	}
 	defer func(tx *sqlx.Tx) {
 		_ = tx.Rollback()
@@ -62,17 +62,18 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 	// insert space first so we get id
 	query, arg, err := s.db.BindNamed(spaceInsert, space)
 	if err != nil {
-		return processSqlErrorf(err, "Failed to bind space object")
+		return processSQLErrorf(err, "Failed to bind space object")
 	}
 
 	if err = tx.QueryRow(query, arg...).Scan(&space.ID); err != nil {
-		return processSqlErrorf(err, "Insert query failed")
+		return processSQLErrorf(err, "Insert query failed")
 	}
 
 	// Get path (get parent if needed)
 	path := space.Name
-	if space.ParentId > 0 {
-		parentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, space.ParentId)
+	if space.ParentID > 0 {
+		var parentPath *types.Path
+		parentPath, err = FindPathTx(ctx, tx, enum.PathTargetTypeSpace, space.ParentID)
 		if err != nil {
 			return errors.Wrap(err, "Failed to find path of parent space")
 		}
@@ -84,7 +85,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 	// create path only once we know the id of the space
 	p := &types.Path{
 		TargetType: enum.PathTargetTypeSpace,
-		TargetId:   space.ID,
+		TargetID:   space.ID,
 		IsAlias:    false,
 		Value:      path,
 		CreatedBy:  space.CreatedBy,
@@ -98,7 +99,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 
 	// commit
 	if err = tx.Commit(); err != nil {
-		return processSqlErrorf(err, "Failed to commit transaction")
+		return processSQLErrorf(err, "Failed to commit transaction")
 	}
 
 	// update path in space object
@@ -107,27 +108,29 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 	return nil
 }
 
-// Moves an existing space.
-func (s *SpaceStore) Move(ctx context.Context, userId int64, spaceId int64, newParentId int64, newName string, keepAsAlias bool) (*types.Space, error) {
+// Move moves an existing space.
+func (s *SpaceStore) Move(ctx context.Context, userID int64, spaceID int64, newParentID int64, newName string,
+	keepAsAlias bool) (*types.Space, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return nil, processSqlErrorf(err, "Failed to start a new transaction")
+		return nil, processSQLErrorf(err, "Failed to start a new transaction")
 	}
 	defer func(tx *sqlx.Tx) {
 		_ = tx.Rollback()
 	}(tx)
 
 	// always get currentpath (either it didn't change or we need to for validation)
-	currentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, spaceId)
+	currentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, spaceID)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to find the primary path of the space")
 	}
 
 	// get path of new parent if needed
 	newPath := newName
-	if newParentId > 0 {
+	if newParentID > 0 {
 		// get path of new parent space
-		spacePath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, newParentId)
+		var spacePath *types.Path
+		spacePath, err = FindPathTx(ctx, tx, enum.PathTargetTypeSpace, newParentID)
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to find the primary path of the new parent space")
 		}
@@ -147,10 +150,10 @@ func (s *SpaceStore) Move(ctx context.Context, userId int64, spaceId int64, newP
 
 	p := &types.Path{
 		TargetType: enum.PathTargetTypeSpace,
-		TargetId:   spaceId,
+		TargetID:   spaceID,
 		IsAlias:    false,
 		Value:      newPath,
-		CreatedBy:  userId,
+		CreatedBy:  userID,
 		Created:    time.Now().UnixMilli(),
 		Updated:    time.Now().UnixMilli(),
 	}
@@ -161,19 +164,19 @@ func (s *SpaceStore) Move(ctx context.Context, userId int64, spaceId int64, newP
 	}
 
 	// Update the space itself
-	if _, err := tx.ExecContext(ctx, spaceUpdateNameAndParentId, newName, newParentId, spaceId); err != nil {
-		return nil, processSqlErrorf(err, "Query for renaming and updating the parent id failed")
+	if _, err = tx.ExecContext(ctx, spaceUpdateNameAndParentID, newName, newParentID, spaceID); err != nil {
+		return nil, processSQLErrorf(err, "Query for renaming and updating the parent id failed")
 	}
 
 	// TODO: return space as part of rename operation
 	dst := new(types.Space)
-	if err = tx.GetContext(ctx, dst, spaceSelectById, spaceId); err != nil {
-		return nil, processSqlErrorf(err, "Select query to get the space's latest state failed")
+	if err = tx.GetContext(ctx, dst, spaceSelectByID, spaceID); err != nil {
+		return nil, processSQLErrorf(err, "Select query to get the space's latest state failed")
 	}
 
 	// commit
 	if err = tx.Commit(); err != nil {
-		return nil, processSqlErrorf(err, "Failed to commit transaction")
+		return nil, processSQLErrorf(err, "Failed to commit transaction")
 	}
 
 	return dst, nil
@@ -183,11 +186,11 @@ func (s *SpaceStore) Move(ctx context.Context, userId int64, spaceId int64, newP
 func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 	query, arg, err := s.db.BindNamed(spaceUpdate, space)
 	if err != nil {
-		return processSqlErrorf(err, "Failed to bind space object")
+		return processSQLErrorf(err, "Failed to bind space object")
 	}
 
 	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
-		return processSqlErrorf(err, "Update query failed")
+		return processSQLErrorf(err, "Update query failed")
 	}
 
 	return nil
@@ -197,7 +200,7 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return processSqlErrorf(err, "Failed to start a new transaction")
+		return processSQLErrorf(err, "Failed to start a new transaction")
 	}
 	defer func(tx *sqlx.Tx) {
 		_ = tx.Rollback()
@@ -227,11 +230,11 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 
 	// delete the space
 	if _, err = tx.Exec(spaceDelete, id); err != nil {
-		return processSqlErrorf(err, "The delete query failed")
+		return processSQLErrorf(err, "The delete query failed")
 	}
 
 	if err = tx.Commit(); err != nil {
-		return processSqlErrorf(err, "Failed to commit transaction")
+		return processSQLErrorf(err, "Failed to commit transaction")
 	}
 
 	return nil
@@ -242,7 +245,7 @@ func (s *SpaceStore) Count(ctx context.Context, id int64) (int64, error) {
 	var count int64
 	err := s.db.QueryRowContext(ctx, spaceCount, id).Scan(&count)
 	if err != nil {
-		return 0, processSqlErrorf(err, "Failed executing count query")
+		return 0, processSQLErrorf(err, "Failed executing count query")
 	}
 	return count, nil
 }
@@ -257,7 +260,7 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 	if opts.Sort == enum.SpaceAttrNone {
 		err := s.db.SelectContext(ctx, &dst, spaceSelect, id, limit(opts.Size), offset(opts.Page, opts.Size))
 		if err != nil {
-			return nil, processSqlErrorf(err, "Failed executing default list query")
+			return nil, processSQLErrorf(err, "Failed executing default list query")
 		}
 		return dst, nil
 	}
@@ -279,7 +282,7 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 		stmt = stmt.OrderBy("space_created " + opts.Order.String())
 	case enum.SpaceAttrUpdated:
 		stmt = stmt.OrderBy("space_updated " + opts.Order.String())
-	case enum.SpaceAttrId:
+	case enum.SpaceAttrID:
 		stmt = stmt.OrderBy("space_id " + opts.Order.String())
 	case enum.SpaceAttrName:
 		stmt = stmt.OrderBy("space_name " + opts.Order.String())
@@ -293,22 +296,22 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 	}
 
 	if err = s.db.SelectContext(ctx, &dst, sql); err != nil {
-		return nil, processSqlErrorf(err, "Failed executing custom list query")
+		return nil, processSQLErrorf(err, "Failed executing custom list query")
 	}
 
 	return dst, nil
 }
 
-// List returns a list of all paths of a space.
+// ListAllPaths returns a list of all paths of a space.
 func (s *SpaceStore) ListAllPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
 	return ListPaths(ctx, s.db, enum.PathTargetTypeSpace, id, opts)
 }
 
-// Create an alias for a space.
-func (s *SpaceStore) CreatePath(ctx context.Context, spaceId int64, params *types.PathParams) (*types.Path, error) {
+// CreatePath creates an alias for a space.
+func (s *SpaceStore) CreatePath(ctx context.Context, spaceID int64, params *types.PathParams) (*types.Path, error) {
 	p := &types.Path{
 		TargetType: enum.PathTargetTypeSpace,
-		TargetId:   spaceId,
+		TargetID:   spaceID,
 		IsAlias:    true,
 
 		// get remaining infor from params
@@ -321,9 +324,9 @@ func (s *SpaceStore) CreatePath(ctx context.Context, spaceId int64, params *type
 	return p, CreateAliasPath(ctx, s.db, p)
 }
 
-// Delete an alias of a space.
-func (s *SpaceStore) DeletePath(ctx context.Context, spaceId int64, pathId int64) error {
-	return DeletePath(ctx, s.db, pathId)
+// DeletePath an alias of a space.
+func (s *SpaceStore) DeletePath(ctx context.Context, spaceID int64, pathID int64) error {
+	return DeletePath(ctx, s.db, pathID)
 }
 
 const spaceSelectBase = `
@@ -358,7 +361,7 @@ FROM spaces
 WHERE space_parentId = $1
 `
 
-const spaceSelectById = spaceSelectBaseWithJoin + `
+const spaceSelectByID = spaceSelectBaseWithJoin + `
 WHERE space_id = $1
 `
 
@@ -405,7 +408,7 @@ space_displayName   = :space_displayName
 WHERE space_id = :space_id
 `
 
-const spaceUpdateNameAndParentId = `
+const spaceUpdateNameAndParentID = `
 UPDATE spaces
 SET
 space_name = $1

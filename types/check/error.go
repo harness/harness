@@ -4,34 +4,34 @@
 
 package check
 
+import "errors"
+
 var (
-	ErrAny = &CheckError{}
+	ErrAny = &ValidationError{}
 )
 
-/*
- * An error returned by check methods for any validation errors
- * WARNING: This error will be printed to the user as is!
- */
-type CheckError struct {
+// ValidationError is error returned by check methods for any validation errors
+// WARNING: This error will be printed to the user as is!
+type ValidationError struct {
 	msg string
 }
 
-func (e *CheckError) Error() string {
+func (e *ValidationError) Error() string {
 	return e.msg
 }
 
-func (e *CheckError) Is(target error) bool {
-	// If the caller is checking for any CheckError, return true
-	if target == ErrAny {
+func (e *ValidationError) Is(target error) bool {
+	// If the caller is checking for any ValidationError, return true
+	if errors.Is(target, ErrAny) {
 		return true
 	}
 
 	// ensure it's the correct type
-	v, ok := target.(*CheckError)
-	if !ok {
+	err := &ValidationError{}
+	if !errors.As(target, &err) {
 		return false
 	}
 
 	// only the same if the message is the same
-	return e.msg == v.msg
+	return e.msg == err.msg
 }

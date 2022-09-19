@@ -57,7 +57,7 @@ func HandleUpdate(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
 			repo.Updated = time.Now().UnixMilli()
 
 			// ensure provided values are valid
-			if err := check.Repo(repo); err != nil {
+			if err = check.Repo(repo); err != nil {
 				render.UserfiedErrorOrInternal(w, err)
 				return
 			}

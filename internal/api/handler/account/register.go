@@ -49,7 +49,7 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 			Updated:  time.Now().UnixMilli(),
 		}
 
-		if ok, err := check.User(user); !ok {
+		if err = check.User(user); err != nil {
 			log.Debug().Err(err).
 				Str("email", username).
 				Msg("invalid user input")
@@ -58,7 +58,7 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 			return
 		}
 
-		if err := users.Create(ctx, user); err != nil {
+		if err = users.Create(ctx, user); err != nil {
 			log.Err(err).
 				Str("email", username).
 				Msg("Failed to create user")
@@ -72,7 +72,7 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 		// user system admin access.
 		if user.ID == 1 {
 			user.Admin = true
-			if err := users.Update(ctx, user); err != nil {
+			if err = users.Update(ctx, user); err != nil {
 				log.Err(err).
 					Str("email", username).
 					Int64("user_id", user.ID).
@@ -84,7 +84,7 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 		}
 
 		expires := time.Now().Add(system.Config(ctx).Token.Expire)
-		token_, err := token.GenerateExp(user, expires.Unix(), user.Salt)
+		token, err := token.GenerateExp(user, expires.Unix(), user.Salt)
 		if err != nil {
 			log.Err(err).
 				Str("email", username).
@@ -101,13 +101,13 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 			render.JSON(w, http.StatusOK, &types.UserToken{
 				User: user,
 				Token: &types.Token{
-					Value:   token_,
+					Value:   token,
 					Expires: expires.UTC(),
 				},
 			})
 		} else {
 			// else return the token only.
-			render.JSON(w, http.StatusOK, &types.Token{Value: token_})
+			render.JSON(w, http.StatusOK, &types.Token{Value: token})
 		}
 	}
 }

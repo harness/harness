@@ -12,7 +12,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// WireSet provides a wire set for this package
+const (
+	postgres = "postgres"
+)
+
+// WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
 	ProvideDatabase,
 	ProvideUserStore,
@@ -31,7 +35,7 @@ func ProvideDatabase(config *types.Config) (*sqlx.DB, error) {
 // ProvideUserStore provides a user store.
 func ProvideUserStore(db *sqlx.DB) store.UserStore {
 	switch db.DriverName() {
-	case "postgres":
+	case postgres:
 		return NewUserStore(db)
 	default:
 		return NewUserStoreSync(
@@ -43,7 +47,7 @@ func ProvideUserStore(db *sqlx.DB) store.UserStore {
 // ProvideSpaceStore provides a space store.
 func ProvideSpaceStore(db *sqlx.DB) store.SpaceStore {
 	switch db.DriverName() {
-	case "postgres":
+	case postgres:
 		return NewSpaceStore(db)
 	default:
 		return NewSpaceStoreSync(
@@ -55,7 +59,7 @@ func ProvideSpaceStore(db *sqlx.DB) store.SpaceStore {
 // ProvideRepoStore provides a repo store.
 func ProvideRepoStore(db *sqlx.DB) store.RepoStore {
 	switch db.DriverName() {
-	case "postgres":
+	case postgres:
 		return NewRepoStore(db)
 	default:
 		return NewRepoStoreSync(

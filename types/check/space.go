@@ -14,11 +14,15 @@ import (
 var (
 	illegalRootSpaceNames = []string{"api"}
 
-	ErrRootSpaceNameNotAllowed = &CheckError{fmt.Sprintf("The following names are not allowed for a root space: %v", illegalRootSpaceNames)}
-	ErrInvalidParentSpaceId    = &CheckError{"Parent space ID has to be either zero for a root space or greater than zero for a child space."}
+	ErrRootSpaceNameNotAllowed = &ValidationError{
+		fmt.Sprintf("The following names are not allowed for a root space: %v", illegalRootSpaceNames),
+	}
+	ErrInvalidParentSpaceID = &ValidationError{
+		"Parent space ID has to be either zero for a root space or greater than zero for a child space.",
+	}
 )
 
-// Repo checks the provided space and returns an error in it isn't valid.
+// Space checks the provided space and returns an error in it isn't valid.
 func Space(space *types.Space) error {
 	// validate name
 	if err := Name(space.Name); err != nil {
@@ -30,12 +34,12 @@ func Space(space *types.Space) error {
 		return err
 	}
 
-	if space.ParentId < 0 {
-		return ErrInvalidParentSpaceId
+	if space.ParentID < 0 {
+		return ErrInvalidParentSpaceID
 	}
 
 	// root space specific validations
-	if space.ParentId == 0 {
+	if space.ParentID == 0 {
 		for _, p := range illegalRootSpaceNames {
 			if strings.HasPrefix(space.Name, p) {
 				return ErrRootSpaceNameNotAllowed

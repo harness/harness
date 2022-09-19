@@ -6,5 +6,5 @@ package cron
 
 import "github.com/google/wire"
 
-// WireSet provides a wire set for this package
+// WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(NewNightly)

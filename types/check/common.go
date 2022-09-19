@@ -20,11 +20,18 @@ const (
 )
 
 var (
-	ErrNameLength = &CheckError{fmt.Sprintf("Name has to be between %d and %d in length.", minNameLength, maxNameLength)}
-	ErrNameRegex  = &CheckError{"Name has start with a letter and only contain the following [a-z0-9-_]."}
+	ErrNameLength = &ValidationError{
+		fmt.Sprintf("Name has to be between %d and %d in length.", minNameLength, maxNameLength),
+	}
+	ErrNameRegex = &ValidationError{"Name has start with a letter and only contain the following [a-z0-9-_]."}
 
-	ErrDisplayNameLength = &CheckError{fmt.Sprintf("Display name has to be between %d and %d in length.", minDisplayNameLength, maxDisplayNameLength)}
-	ErrDisplayNameRegex  = &CheckError{"Display name has start with a letter and only contain the following [a-zA-Z0-9-_ ]."}
+	ErrDisplayNameLength = &ValidationError{
+		fmt.Sprintf("Display name has to be between %d and %d in length.",
+			minDisplayNameLength, maxDisplayNameLength),
+	}
+	ErrDisplayNameRegex = &ValidationError{
+		"Display name has start with a letter and only contain the following [a-zA-Z0-9-_ ].",
+	}
 )
 
 // Name checks the provided name and returns an error in it isn't valid.

@@ -16,11 +16,10 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-// application name
-var application = "gitness"
-
-// application description
-var description = "description goes here" // TODO edit this application description
+const (
+	application = "gitness"
+	description = "description goes here" // TODO edit this application description
+)
 
 // Command parses the command line arguments and then executes a
 // subcommand program.

@@ -18,15 +18,17 @@ const (
 var (
 	// ErrEmailLen  is returned when the email address
 	// exceeds the maximum number of characters.
-	ErrEmailLen = &CheckError{fmt.Sprintf("Email address has to be within %d and %d characters", minEmailLength, maxEmailLength)}
+	ErrEmailLen = &ValidationError{
+		fmt.Sprintf("Email address has to be within %d and %d characters", minEmailLength, maxEmailLength),
+	}
 )
 
 // User returns true if the User if valid.
-func User(user *types.User) (bool, error) {
+func User(user *types.User) error {
 	// validate email
 	l := len(user.Email)
 	if l < minEmailLength || l > maxEmailLength {
-		return false, ErrEmailLen
+		return ErrEmailLen
 	}
-	return true, nil
+	return nil
 }

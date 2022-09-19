@@ -33,8 +33,8 @@ type RepoStore struct {
 // Finds the repo by id.
 func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, error) {
 	dst := new(types.Repository)
-	if err := s.db.GetContext(ctx, dst, repoSelectById, id); err != nil {
-		return nil, processSqlErrorf(err, "Select query failed")
+	if err := s.db.GetContext(ctx, dst, repoSelectByID, id); err != nil {
+		return nil, processSQLErrorf(err, "Select query failed")
 	}
 	return dst, nil
 }
@@ -43,16 +43,16 @@ func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, erro
 func (s *RepoStore) FindByPath(ctx context.Context, path string) (*types.Repository, error) {
 	dst := new(types.Repository)
 	if err := s.db.GetContext(ctx, dst, repoSelectByPath, path); err != nil {
-		return nil, processSqlErrorf(err, "Select query failed")
+		return nil, processSQLErrorf(err, "Select query failed")
 	}
 	return dst, nil
 }
 
-// Creates a new repo
+// Create creates a new repository.
 func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return processSqlErrorf(err, "Failed to start a new transaction")
+		return processSQLErrorf(err, "Failed to start a new transaction")
 	}
 	defer func(tx *sqlx.Tx) {
 		_ = tx.Rollback()
@@ -61,15 +61,15 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 	// insert repo first so we get id
 	query, arg, err := s.db.BindNamed(repoInsert, repo)
 	if err != nil {
-		return processSqlErrorf(err, "Failed to bind repo object")
+		return processSQLErrorf(err, "Failed to bind repo object")
 	}
 
 	if err = tx.QueryRow(query, arg...).Scan(&repo.ID); err != nil {
-		return processSqlErrorf(err, "Insert query failed")
+		return processSQLErrorf(err, "Insert query failed")
 	}
 
 	// Get parent path (repo always has a parent)
-	parentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, repo.SpaceId)
+	parentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, repo.SpaceID)
 	if err != nil {
 		return errors.Wrap(err, "Failed to find path of parent space")
 	}
@@ -80,7 +80,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 	// create path only once we know the id of the repo
 	p := &types.Path{
 		TargetType: enum.PathTargetTypeRepo,
-		TargetId:   repo.ID,
+		TargetID:   repo.ID,
 		IsAlias:    false,
 		Value:      path,
 		CreatedBy:  repo.CreatedBy,
@@ -94,7 +94,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 
 	// commit
 	if err = tx.Commit(); err != nil {
-		return processSqlErrorf(err, "Failed to commit transaction")
+		return processSQLErrorf(err, "Failed to commit transaction")
 	}
 
 	// update path in repo object
@@ -103,24 +103,25 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 	return nil
 }
 
-// Moves an existing space.
-func (s *RepoStore) Move(ctx context.Context, userId int64, repoId int64, newSpaceId int64, newName string, keepAsAlias bool) (*types.Repository, error) {
+// Move moves an existing space.
+func (s *RepoStore) Move(ctx context.Context, userID int64, repoID int64, newSpaceID int64, newName string,
+	keepAsAlias bool) (*types.Repository, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return nil, processSqlErrorf(err, "Failed to start a new transaction")
+		return nil, processSQLErrorf(err, "Failed to start a new transaction")
 	}
 	defer func(tx *sqlx.Tx) {
 		_ = tx.Rollback() // should we take care about rollbacks errors?
 	}(tx)
 
 	// get current path of repo
-	currentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeRepo, repoId)
+	currentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeRepo, repoID)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to find the primary path of the repo")
 	}
 
 	// get path of new parent space
-	spacePath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, newSpaceId)
+	spacePath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, newSpaceID)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to find the primary path of the new space")
 	}
@@ -132,10 +133,10 @@ func (s *RepoStore) Move(ctx context.Context, userId int64, repoId int64, newSpa
 
 	p := &types.Path{
 		TargetType: enum.PathTargetTypeRepo,
-		TargetId:   repoId,
+		TargetID:   repoID,
 		IsAlias:    false,
 		Value:      newPath,
-		CreatedBy:  userId,
+		CreatedBy:  userID,
 		Created:    time.Now().UnixMilli(),
 		Updated:    time.Now().UnixMilli(),
 	}
@@ -146,19 +147,19 @@ func (s *RepoStore) Move(ctx context.Context, userId int64, repoId int64, newSpa
 	}
 
 	// Rename the repo itself
-	if _, err := tx.ExecContext(ctx, repoUpdateNameAndSpaceId, newName, newSpaceId, repoId); err != nil {
-		return nil, processSqlErrorf(err, "Query for renaming and updating the space id failed")
+	if _, err = tx.ExecContext(ctx, repoUpdateNameAndSpaceID, newName, newSpaceID, repoID); err != nil {
+		return nil, processSQLErrorf(err, "Query for renaming and updating the space id failed")
 	}
 
 	// TODO: return repo as part of rename db operation?
 	dst := new(types.Repository)
-	if err = tx.GetContext(ctx, dst, repoSelectById, repoId); err != nil {
-		return nil, processSqlErrorf(err, "Select query to get the repo's latest state failed")
+	if err = tx.GetContext(ctx, dst, repoSelectByID, repoID); err != nil {
+		return nil, processSQLErrorf(err, "Select query to get the repo's latest state failed")
 	}
 
 	// commit
 	if err = tx.Commit(); err != nil {
-		return nil, processSqlErrorf(err, "Failed to commit transaction")
+		return nil, processSQLErrorf(err, "Failed to commit transaction")
 	}
 
 	return dst, nil
@@ -168,21 +169,21 @@ func (s *RepoStore) Move(ctx context.Context, userId int64, repoId int64, newSpa
 func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 	query, arg, err := s.db.BindNamed(repoUpdate, repo)
 	if err != nil {
-		return processSqlErrorf(err, "Failed to bind repo object")
+		return processSQLErrorf(err, "Failed to bind repo object")
 	}
 
 	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
-		return processSqlErrorf(err, "Update query failed")
+		return processSQLErrorf(err, "Update query failed")
 	}
 
 	return nil
 }
 
-// Deletes the repo.
+// Delete the repository.
 func (s *RepoStore) Delete(ctx context.Context, id int64) error {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return processSqlErrorf(err, "Failed to start a new transaction")
+		return processSQLErrorf(err, "Failed to start a new transaction")
 	}
 	defer func(tx *sqlx.Tx) {
 		_ = tx.Rollback()
@@ -195,38 +196,38 @@ func (s *RepoStore) Delete(ctx context.Context, id int64) error {
 	}
 
 	// delete the repo
-	if _, err := tx.ExecContext(ctx, repoDelete, id); err != nil {
-		return processSqlErrorf(err, "The delete query failed")
+	if _, err = tx.ExecContext(ctx, repoDelete, id); err != nil {
+		return processSQLErrorf(err, "The delete query failed")
 	}
 
 	if err = tx.Commit(); err != nil {
-		return processSqlErrorf(err, "Failed to commit transaction")
+		return processSQLErrorf(err, "Failed to commit transaction")
 	}
 
 	return nil
 }
 
 // Count of repos in a space.
-func (s *RepoStore) Count(ctx context.Context, spaceId int64) (int64, error) {
+func (s *RepoStore) Count(ctx context.Context, spaceID int64) (int64, error) {
 	var count int64
-	err := s.db.QueryRow(repoCount, spaceId).Scan(&count)
+	err := s.db.QueryRow(repoCount, spaceID).Scan(&count)
 	if err != nil {
-		return 0, processSqlErrorf(err, "Failed executing count query")
+		return 0, processSQLErrorf(err, "Failed executing count query")
 	}
 	return count, nil
 }
 
 // List returns a list of repos in a space.
 // TODO: speed up list - for some reason is 200ms for 1 repo as well as 1000
-func (s *RepoStore) List(ctx context.Context, spaceId int64, opts *types.RepoFilter) ([]*types.Repository, error) {
+func (s *RepoStore) List(ctx context.Context, spaceID int64, opts *types.RepoFilter) ([]*types.Repository, error) {
 	dst := []*types.Repository{}
 
 	// if the user does not provide any customer filter
 	// or sorting we use the default select statement.
 	if opts.Sort == enum.RepoAttrNone {
-		err := s.db.SelectContext(ctx, &dst, repoSelect, spaceId, limit(opts.Size), offset(opts.Page, opts.Size))
+		err := s.db.SelectContext(ctx, &dst, repoSelect, spaceID, limit(opts.Size), offset(opts.Page, opts.Size))
 		if err != nil {
-			return nil, processSqlErrorf(err, "Failed executing default list query")
+			return nil, processSQLErrorf(err, "Failed executing default list query")
 		}
 		return dst, nil
 	}
@@ -235,20 +236,21 @@ func (s *RepoStore) List(ctx context.Context, spaceId int64, opts *types.RepoFil
 	stmt := builder.
 		Select("repositories.*,path_value AS repo_path").
 		From("repositories").
-		InnerJoin("paths ON repositories.repo_id=paths.path_targetId AND paths.path_targetType='repo' AND paths.path_isAlias=0").
-		Where("repo_spaceId = " + fmt.Sprint(spaceId))
+		InnerJoin("paths ON repositories.repo_id=paths.path_targetId AND paths.path_targetType='repo' " +
+			"AND paths.path_isAlias=0").
+		Where("repo_spaceId = " + fmt.Sprint(spaceID))
 	stmt = stmt.Limit(uint64(limit(opts.Size)))
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
 	switch opts.Sort {
 	case enum.RepoAttrCreated:
-		// NOTE: string concatination is safe because the
+		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
 		stmt = stmt.OrderBy("repo_created " + opts.Order.String())
 	case enum.RepoAttrUpdated:
 		stmt = stmt.OrderBy("repo_updated " + opts.Order.String())
-	case enum.RepoAttrId:
+	case enum.RepoAttrID:
 		stmt = stmt.OrderBy("repo_id " + opts.Order.String())
 	case enum.RepoAttrName:
 		stmt = stmt.OrderBy("repo_name " + opts.Order.String())
@@ -264,22 +266,22 @@ func (s *RepoStore) List(ctx context.Context, spaceId int64, opts *types.RepoFil
 	}
 
 	if err = s.db.SelectContext(ctx, &dst, sql); err != nil {
-		return nil, processSqlErrorf(err, "Failed executing custom list query")
+		return nil, processSQLErrorf(err, "Failed executing custom list query")
 	}
 
 	return dst, nil
 }
 
-// List returns a list of all paths of a repo.
+// ListAllPaths returns a list of all paths of a repo.
 func (s *RepoStore) ListAllPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
 	return ListPaths(ctx, s.db, enum.PathTargetTypeRepo, id, opts)
 }
 
-// Create an alias for a repo
-func (s *RepoStore) CreatePath(ctx context.Context, repoId int64, params *types.PathParams) (*types.Path, error) {
+// CreatePath creates an alias for a repository.
+func (s *RepoStore) CreatePath(ctx context.Context, repoID int64, params *types.PathParams) (*types.Path, error) {
 	p := &types.Path{
 		TargetType: enum.PathTargetTypeRepo,
-		TargetId:   repoId,
+		TargetID:   repoID,
 		IsAlias:    true,
 
 		// get remaining infor from params
@@ -292,9 +294,9 @@ func (s *RepoStore) CreatePath(ctx context.Context, repoId int64, params *types.
 	return p, CreateAliasPath(ctx, s.db, p)
 }
 
-// Delete an alias of a repo
-func (s *RepoStore) DeletePath(ctx context.Context, repoId int64, pathId int64) error {
-	return DeletePath(ctx, s.db, pathId)
+// DeletePath an alias of a repository.
+func (s *RepoStore) DeletePath(ctx context.Context, repoID int64, pathID int64) error {
+	return DeletePath(ctx, s.db, pathID)
 }
 
 const repoSelectBase = `
@@ -334,13 +336,14 @@ FROM repositories
 WHERE repo_spaceId = $1
 `
 
-const repoSelectById = repoSelectBaseWithJoin + `
+const repoSelectByID = repoSelectBaseWithJoin + `
 WHERE repo_id = $1
 `
 
 const repoSelectByPath = repoSelectBase + `
 FROM paths paths1
-INNER JOIN repositories ON repositories.repo_id=paths1.path_targetId AND paths1.path_targetType='repo' AND paths1.path_value = $1
+INNER JOIN repositories ON repositories.repo_id=paths1.path_targetId AND paths1.path_targetType='repo' 
+AND paths1.path_value = $1
 INNER JOIN paths ON repositories.repo_id=paths.path_targetId AND paths.path_targetType='repo' AND paths.path_isAlias=0
 `
 
@@ -395,7 +398,7 @@ SET
 WHERE repo_id = :repo_id
 `
 
-const repoUpdateNameAndSpaceId = `
+const repoUpdateNameAndSpaceID = `
 UPDATE repositories
 SET
 repo_name = $1

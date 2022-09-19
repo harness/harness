@@ -28,7 +28,6 @@ type registerRequest struct {
 // helper function that constructs the openapi specification
 // for the account registration and login endpoints.
 func buildAccount(reflector *openapi3.Reflector) {
-
 	onLogin := openapi3.Operation{}
 	onLogin.WithTags("account")
 	onLogin.WithMapOfAnything(map[string]interface{}{"operationId": "onLogin"})

@@ -15,14 +15,14 @@ func TestTokenGate(t *testing.T) {
 
 // this unit test ensures routes that require pipeline access
 // return a 403 forbidden if the user does not have acess
-// to the pipeline
+// to the pipeline.
 func TestPipelineGate(t *testing.T) {
 	t.Skip()
 }
 
 // this unit test ensures routes that require system access
 // return a 403 forbidden if the user does not have acess
-// to the pipeline
+// to the pipeline.
 func TestSystemGate(t *testing.T) {
 	t.Skip()
 }

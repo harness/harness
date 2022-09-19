@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -35,135 +36,135 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 }
 
 // Login mocks base method.
-func (m *MockClient) Login(arg0, arg1 string) (*types.Token, error) {
+func (m *MockClient) Login(arg0 context.Context, arg1, arg2 string) (*types.Token, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Login", arg0, arg1)
+	ret := m.ctrl.Call(m, "Login", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*types.Token)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Login indicates an expected call of Login.
-func (mr *MockClientMockRecorder) Login(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) Login(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockClient)(nil).Login), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockClient)(nil).Login), arg0, arg1, arg2)
 }
 
 // Register mocks base method.
-func (m *MockClient) Register(arg0, arg1 string) (*types.Token, error) {
+func (m *MockClient) Register(arg0 context.Context, arg1, arg2 string) (*types.Token, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Register", arg0, arg1)
+	ret := m.ctrl.Call(m, "Register", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*types.Token)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Register indicates an expected call of Register.
-func (mr *MockClientMockRecorder) Register(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) Register(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockClient)(nil).Register), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockClient)(nil).Register), arg0, arg1, arg2)
 }
 
 // Self mocks base method.
-func (m *MockClient) Self() (*types.User, error) {
+func (m *MockClient) Self(arg0 context.Context) (*types.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Self")
+	ret := m.ctrl.Call(m, "Self", arg0)
 	ret0, _ := ret[0].(*types.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Self indicates an expected call of Self.
-func (mr *MockClientMockRecorder) Self() *gomock.Call {
+func (mr *MockClientMockRecorder) Self(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Self", reflect.TypeOf((*MockClient)(nil).Self))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Self", reflect.TypeOf((*MockClient)(nil).Self), arg0)
 }
 
 // Token mocks base method.
-func (m *MockClient) Token() (*types.Token, error) {
+func (m *MockClient) Token(arg0 context.Context) (*types.Token, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Token")
+	ret := m.ctrl.Call(m, "Token", arg0)
 	ret0, _ := ret[0].(*types.Token)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Token indicates an expected call of Token.
-func (mr *MockClientMockRecorder) Token() *gomock.Call {
+func (mr *MockClientMockRecorder) Token(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Token", reflect.TypeOf((*MockClient)(nil).Token))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Token", reflect.TypeOf((*MockClient)(nil).Token), arg0)
 }
 
 // User mocks base method.
-func (m *MockClient) User(arg0 string) (*types.User, error) {
+func (m *MockClient) User(arg0 context.Context, arg1 string) (*types.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "User", arg0)
+	ret := m.ctrl.Call(m, "User", arg0, arg1)
 	ret0, _ := ret[0].(*types.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // User indicates an expected call of User.
-func (mr *MockClientMockRecorder) User(arg0 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) User(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "User", reflect.TypeOf((*MockClient)(nil).User), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "User", reflect.TypeOf((*MockClient)(nil).User), arg0, arg1)
 }
 
 // UserCreate mocks base method.
-func (m *MockClient) UserCreate(arg0 *types.User) (*types.User, error) {
+func (m *MockClient) UserCreate(arg0 context.Context, arg1 *types.User) (*types.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UserCreate", arg0)
+	ret := m.ctrl.Call(m, "UserCreate", arg0, arg1)
 	ret0, _ := ret[0].(*types.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UserCreate indicates an expected call of UserCreate.
-func (mr *MockClientMockRecorder) UserCreate(arg0 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) UserCreate(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserCreate", reflect.TypeOf((*MockClient)(nil).UserCreate), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserCreate", reflect.TypeOf((*MockClient)(nil).UserCreate), arg0, arg1)
 }
 
 // UserDelete mocks base method.
-func (m *MockClient) UserDelete(arg0 string) error {
+func (m *MockClient) UserDelete(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UserDelete", arg0)
+	ret := m.ctrl.Call(m, "UserDelete", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UserDelete indicates an expected call of UserDelete.
-func (mr *MockClientMockRecorder) UserDelete(arg0 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) UserDelete(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserDelete", reflect.TypeOf((*MockClient)(nil).UserDelete), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserDelete", reflect.TypeOf((*MockClient)(nil).UserDelete), arg0, arg1)
 }
 
 // UserList mocks base method.
-func (m *MockClient) UserList(arg0 types.Params) ([]*types.User, error) {
+func (m *MockClient) UserList(arg0 context.Context, arg1 types.Params) ([]types.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UserList", arg0)
-	ret0, _ := ret[0].([]*types.User)
+	ret := m.ctrl.Call(m, "UserList", arg0, arg1)
+	ret0, _ := ret[0].([]types.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UserList indicates an expected call of UserList.
-func (mr *MockClientMockRecorder) UserList(arg0 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) UserList(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserList", reflect.TypeOf((*MockClient)(nil).UserList), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserList", reflect.TypeOf((*MockClient)(nil).UserList), arg0, arg1)
 }
 
 // UserUpdate mocks base method.
-func (m *MockClient) UserUpdate(arg0 string, arg1 *types.UserInput) (*types.User, error) {
+func (m *MockClient) UserUpdate(arg0 context.Context, arg1 string, arg2 *types.UserInput) (*types.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UserUpdate", arg0, arg1)
+	ret := m.ctrl.Call(m, "UserUpdate", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*types.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UserUpdate indicates an expected call of UserUpdate.
-func (mr *MockClientMockRecorder) UserUpdate(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) UserUpdate(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserUpdate", reflect.TypeOf((*MockClient)(nil).UserUpdate), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserUpdate", reflect.TypeOf((*MockClient)(nil).UserUpdate), arg0, arg1, arg2)
 }

@@ -27,15 +27,15 @@ func HandleDeletePath(guard *guard.Guard, repos store.RepoStore) http.HandlerFun
 			log := hlog.FromRequest(r)
 			repo, _ := request.RepoFrom(ctx)
 
-			pathId, err := request.GetPathId(r)
+			pathID, err := request.GetPathID(r)
 			if err != nil {
 				render.BadRequest(w)
 				return
 			}
 
-			err = repos.DeletePath(ctx, repo.ID, pathId)
+			err = repos.DeletePath(ctx, repo.ID, pathID)
 			if err != nil {
-				log.Err(err).Int64("path_id", pathId).
+				log.Err(err).Int64("path_id", pathID).
 					Msgf("Failed to delete repo path.")
 
 				render.UserfiedErrorOrInternal(w, err)

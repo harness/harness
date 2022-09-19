@@ -57,7 +57,7 @@ func HandleUpdate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			space.Updated = time.Now().UnixMilli()
 
 			// ensure provided values are valid
-			if err := check.Space(space); err != nil {
+			if err = check.Space(space); err != nil {
 				render.UserfiedErrorOrInternal(w, err)
 				return
 			}

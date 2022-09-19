@@ -41,22 +41,23 @@ type (
 
 	// SpaceStore defines the space data storage.
 	SpaceStore interface {
-		// Finds the space by id.
+		// Find the space by id.
 		Find(ctx context.Context, id int64) (*types.Space, error)
 
-		// Finds the space by its path.
+		// FindByPath the space by its path.
 		FindByPath(ctx context.Context, path string) (*types.Space, error)
 
-		// Creates a new space
+		// Create creates a new space
 		Create(ctx context.Context, space *types.Space) error
 
-		// Moves an existing space.
-		Move(ctx context.Context, userId int64, spaceId int64, newParentId int64, newName string, keepAsAlias bool) (*types.Space, error)
+		// Move moves an existing space.
+		Move(ctx context.Context, userID int64, spaceID int64, newParentID int64, newName string,
+			keepAsAlias bool) (*types.Space, error)
 
-		// Updates the space details.
+		// Update updates the space details.
 		Update(ctx context.Context, space *types.Space) error
 
-		// Deletes the space.
+		// Delete deletes the space.
 		Delete(ctx context.Context, id int64) error
 
 		// Count the child spaces of a space.
@@ -65,50 +66,51 @@ type (
 		// List returns a list of child spaces in a space.
 		List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error)
 
-		// List returns a list of all paths of a space.
+		// ListAllPaths returns a list of all paths of a space.
 		ListAllPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error)
 
-		// Create an alias for a space
-		CreatePath(ctx context.Context, spaceId int64, params *types.PathParams) (*types.Path, error)
+		// CreatePath create an alias for a space
+		CreatePath(ctx context.Context, spaceID int64, params *types.PathParams) (*types.Path, error)
 
-		// Delete an alias of a space
-		DeletePath(ctx context.Context, spaceId int64, pathId int64) error
+		// DeletePath delete an alias of a space
+		DeletePath(ctx context.Context, spaceID int64, pathID int64) error
 	}
 
 	// RepoStore defines the repository data storage.
 	RepoStore interface {
-		// Finds the repo by id.
+		// Find the repo by id.
 		Find(ctx context.Context, id int64) (*types.Repository, error)
 
-		// Finds the repo by path.
+		// FindByPath the repo by path.
 		FindByPath(ctx context.Context, path string) (*types.Repository, error)
 
-		// Creates a new repo
+		// Create a new repo
 		Create(ctx context.Context, repo *types.Repository) error
 
-		// Moves an existing repo.
-		Move(ctx context.Context, userId int64, repoId int64, newSpaceId int64, newName string, keepAsAlias bool) (*types.Repository, error)
+		// Move moves an existing repo.
+		Move(ctx context.Context, userID int64, repoID int64, newSpaceID int64, newName string,
+			keepAsAlias bool) (*types.Repository, error)
 
-		// Updates the repo details.
+		// Update the repo details.
 		Update(ctx context.Context, repo *types.Repository) error
 
-		// Deletes the repo.
+		// Delete the repo.
 		Delete(ctx context.Context, id int64) error
 
 		// Count of repos in a space.
-		Count(ctx context.Context, spaceId int64) (int64, error)
+		Count(ctx context.Context, spaceID int64) (int64, error)
 
 		// List returns a list of repos in a space.
-		List(ctx context.Context, spaceId int64, opts *types.RepoFilter) ([]*types.Repository, error)
+		List(ctx context.Context, spaceID int64, opts *types.RepoFilter) ([]*types.Repository, error)
 
-		// List returns a list of all alias paths of a repo.
+		// ListAllPaths returns a list of all alias paths of a repo.
 		ListAllPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error)
 
-		// Create an alias for a repo
-		CreatePath(ctx context.Context, repoId int64, params *types.PathParams) (*types.Path, error)
+		// CreatePath an alias for a repo
+		CreatePath(ctx context.Context, repoID int64, params *types.PathParams) (*types.Path, error)
 
-		// Delete an alias of a repo
-		DeletePath(ctx context.Context, repoId int64, pathId int64) error
+		// DeletePath delete an alias of a repo
+		DeletePath(ctx context.Context, repoID int64, pathID int64) error
 	}
 
 	// SystemStore defines internal system metadata storage.

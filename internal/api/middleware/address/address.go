@@ -43,15 +43,16 @@ func Handler(scheme, host string) func(http.Handler) http.Handler {
 // using the X-Forwarded-Proto, if the original request was HTTPS
 // and routed through a reverse proxy with SSL termination.
 func resolveScheme(r *http.Request) string {
+	const https = "https"
 	switch {
-	case r.URL.Scheme == "https":
-		return "https"
+	case r.URL.Scheme == https:
+		return https
 	case r.TLS != nil:
-		return "https"
+		return https
 	case strings.HasPrefix(r.Proto, "HTTPS"):
-		return "https"
-	case r.Header.Get("X-Forwarded-Proto") == "https":
-		return "https"
+		return https
+	case r.Header.Get("X-Forwarded-Proto") == https:
+		return https
 	default:
 		return "http"
 	}

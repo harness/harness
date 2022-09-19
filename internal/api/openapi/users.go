@@ -40,7 +40,6 @@ type (
 // helper function that constructs the openapi specification
 // for user resources.
 func buildUsers(reflector *openapi3.Reflector) {
-
 	opFind := openapi3.Operation{}
 	opFind.WithTags("users")
 	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "getUserEmail"})

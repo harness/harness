@@ -16,9 +16,7 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
-/*
- * Writes json-encoded list of child spaces in the request body.
- */
+// HandleList writes json-encoded list of child spaces in the request body.
 func HandleList(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 	return guard.Space(
 		enum.PermissionSpaceView,
@@ -59,7 +57,7 @@ func HandleList(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			result := make([]*types.Space, 0, len(allSpaces))
 			for _, cs := range allSpaces {
 				if !cs.IsPublic {
-					err := guard.CheckSpace(r, enum.PermissionSpaceView, cs.Path)
+					err = guard.CheckSpace(r, enum.PermissionSpaceView, cs.Path)
 					if err != nil {
 						log.Debug().Err(err).
 							Msgf("Skip space '%s' in output.", cs.Path)

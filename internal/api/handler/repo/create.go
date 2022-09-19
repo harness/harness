@@ -22,11 +22,11 @@ import (
 
 type repoCreateInput struct {
 	Name        string `json:"name"`
-	SpaceId     int64  `json:"spaceId"`
+	SpaceID     int64  `json:"spaceId"`
 	DisplayName string `json:"displayName"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"isPublic"`
-	ForkId      int64  `json:"forkId"`
+	ForkID      int64  `json:"forkId"`
 }
 
 /*
@@ -48,14 +48,14 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 		}
 
 		// ensure we reference a space
-		if in.SpaceId <= 0 {
+		if in.SpaceID <= 0 {
 			render.BadRequestf(w, "A repository can only be created within a space.")
 			return
 		}
 
-		parentSpace, err := spaces.Find(ctx, in.SpaceId)
+		parentSpace, err := spaces.Find(ctx, in.SpaceID)
 		if err != nil {
-			log.Err(err).Msgf("Failed to get space with id '%d'.", in.SpaceId)
+			log.Err(err).Msgf("Failed to get space with id '%d'.", in.SpaceID)
 
 			render.UserfiedErrorOrInternal(w, err)
 			return
@@ -83,18 +83,18 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 		// create new repo object
 		repo := &types.Repository{
 			Name:        strings.ToLower(in.Name),
-			SpaceId:     in.SpaceId,
+			SpaceID:     in.SpaceID,
 			DisplayName: in.DisplayName,
 			Description: in.Description,
 			IsPublic:    in.IsPublic,
 			CreatedBy:   usr.ID,
 			Created:     time.Now().UnixMilli(),
 			Updated:     time.Now().UnixMilli(),
-			ForkId:      in.ForkId,
+			ForkID:      in.ForkID,
 		}
 
 		// validate repo
-		if err := check.Repo(repo); err != nil {
+		if err = check.Repo(repo); err != nil {
 			render.UserfiedErrorOrInternal(w, err)
 			return
 		}

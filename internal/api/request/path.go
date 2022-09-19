@@ -9,16 +9,16 @@ import (
 )
 
 const (
-	PathIdParamName = "pathId"
+	PathIDParamName = "pathId"
 )
 
-func GetPathId(r *http.Request) (int64, error) {
-	rawId := chi.URLParam(r, PathIdParamName)
-	if rawId == "" {
-		return 0, errors.New("Path id parameter not found in request.")
+func GetPathID(r *http.Request) (int64, error) {
+	rawID := chi.URLParam(r, PathIDParamName)
+	if rawID == "" {
+		return 0, errors.New("path id parameter not found in request")
 	}
 
-	id, err := strconv.ParseInt(rawId, 10, 64)
+	id, err := strconv.ParseInt(rawID, 10, 64)
 	if err != nil {
 		return 0, err
 	}

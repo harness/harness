@@ -23,7 +23,7 @@ import (
 
 type spaceCreateRequest struct {
 	Name        string `json:"name"`
-	ParentId    int64  `json:"parentId"`
+	ParentID    int64  `json:"parentId"`
 	DisplayName string `json:"displayName"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"isPublic"`
@@ -54,7 +54,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		 * AUTHORIZATION
 		 * Can only be done once we know the parent space
 		 */
-		if in.ParentId <= 0 {
+		if in.ParentID <= 0 {
 			// TODO: Restrict top level space creation.
 			if usr == nil {
 				render.Unauthorized(w)
@@ -62,9 +62,10 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			}
 		} else {
 			// Create is a special case - we need the parent path
-			parent, err := spaces.Find(ctx, in.ParentId)
+			var parent *types.Space
+			parent, err = spaces.Find(ctx, in.ParentID)
 			if err != nil {
-				log.Err(err).Msgf("Failed to get space with id '%d'.", in.ParentId)
+				log.Err(err).Msgf("Failed to get space with id '%d'.", in.ParentID)
 
 				render.UserfiedErrorOrInternal(w, err)
 				return
@@ -85,7 +86,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		// create new space object
 		space := &types.Space{
 			Name:        strings.ToLower(in.Name),
-			ParentId:    in.ParentId,
+			ParentID:    in.ParentID,
 			DisplayName: in.DisplayName,
 			Description: in.Description,
 			IsPublic:    in.IsPublic,
@@ -95,12 +96,13 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		}
 
 		// validate space
-		if err := check.Space(space); err != nil {
+		if err = check.Space(space); err != nil {
 			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
-		// Validate path length (Due to racing conditions we can't be 100% sure on the path here only best effort to have a quick failure)
+		// Validate path length (Due to racing conditions we can't be 100% sure on the path here only best effort
+		// to have a quick failure)
 		path := paths.Concatinate(parentPath, space.Name)
 		if err = check.Path(path, true); err != nil {
 			render.UserfiedErrorOrInternal(w, err)

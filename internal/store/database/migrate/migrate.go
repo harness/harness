@@ -15,7 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// background context
+// noContext is simple background context.
 var noContext = context.Background()
 
 //go:embed postgres/*.sql

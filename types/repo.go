@@ -8,12 +8,12 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// Represents a code repository
+// Repository represents a code repository.
 type Repository struct {
 	// Core properties
 	ID          int64  `db:"repo_id"              json:"id"`
 	Name        string `db:"repo_name"            json:"name"`
-	SpaceId     int64  `db:"repo_spaceId"         json:"spaceId"`
+	SpaceID     int64  `db:"repo_spaceId"         json:"spaceId"`
 	Path        string `db:"repo_path"            json:"path"`
 	DisplayName string `db:"repo_displayName"     json:"displayName"`
 	Description string `db:"repo_description"     json:"description"`
@@ -22,8 +22,8 @@ type Repository struct {
 	Created     int64  `db:"repo_created"         json:"created"`
 	Updated     int64  `db:"repo_updated"         json:"updated"`
 
-	// Forking (omit isFork ... ForkId <= 0 is giving the same information)
-	ForkId int64 `db:"repo_forkId"             json:"forkId"`
+	// Forking (omit isFork ... ForkID <= 0 is giving the same information)
+	ForkID int64 `db:"repo_forkId"             json:"forkId"`
 
 	// TODO: Check if we want to keep those values here
 	NumForks       int `db:"repo_numForks"             json:"numForks"`
@@ -32,7 +32,7 @@ type Repository struct {
 	NumOpenPulls   int `db:"repo_numOpenPulls"         json:"numOpenPulls"`
 }
 
-// Stores repo query parameters.
+// RepoFilter stores repo query parameters.
 type RepoFilter struct {
 	Page  int           `json:"page"`
 	Size  int           `json:"size"`

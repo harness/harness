@@ -5,8 +5,10 @@
 package token
 
 import (
+	"context"
 	"encoding/json"
 	"os"
+	"time"
 
 	"github.com/harness/gitness/cli/util"
 
@@ -22,7 +24,9 @@ func (c *command) run(*kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	token, err := client.Token()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	token, err := client.Token(ctx)
 	if err != nil {
 		return err
 	}
@@ -44,5 +48,4 @@ func Register(app *kingpin.Application) {
 
 	cmd.Flag("json", "json encode the output").
 		BoolVar(&c.json)
-
 }

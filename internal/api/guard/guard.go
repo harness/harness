@@ -8,18 +8,19 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/rs/zerolog/hlog"
+
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/hlog"
 )
 
 var (
-	ErrNotAuthenticated = errors.New("Not authenticated.")
-	ErrNotAuthorized    = errors.New("Not authorized.")
+	ErrNotAuthenticated = errors.New("not authenticated")
+	ErrNotAuthorized    = errors.New("not authorized")
 )
 
 type Guard struct {
@@ -30,9 +31,7 @@ func New(authorizer authz.Authorizer) *Guard {
 	return &Guard{authorizer: authorizer}
 }
 
-/*
- * EnforceAdmin is a middleware that enforces that the user is authenticated and an admin.
- */
+// EnforceAdmin is a middleware that enforces that the user is authenticated and an admin.
 func (g *Guard) EnforceAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -51,9 +50,7 @@ func (g *Guard) EnforceAdmin(next http.Handler) http.Handler {
 	})
 }
 
-/*
- * EnforceAuthenticated is a middleware that enforces that the user is authenticated.
- */
+// EnforceAuthenticated is a middleware that enforces that the user is authenticated.
 func (g *Guard) EnforceAuthenticated(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -67,18 +64,16 @@ func (g *Guard) EnforceAuthenticated(next http.Handler) http.Handler {
 	})
 }
 
-/*
- * Enforces that the executing principal has requested permission on the resource.
- * returns true if it's the case, otherwise renders the appropriate error and returns false.
- */
-func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, scope *types.Scope, resource *types.Resource, permission enum.Permission) bool {
-
+// Enforce that the executing principal has requested permission on the resource
+// returns true if it's the case, otherwise renders the appropriate error and returns false.
+func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, scope *types.Scope, resource *types.Resource,
+	permission enum.Permission) bool {
 	err := g.Check(r, scope, resource, permission)
-
 	// render error if needed
-	if errors.Is(err, ErrNotAuthenticated) {
+	switch {
+	case errors.Is(err, ErrNotAuthenticated):
 		render.ErrorObject(w, http.StatusUnauthorized, render.ErrUnauthorized)
-	} else if errors.Is(err, ErrNotAuthorized) {
+	case errors.Is(err, ErrNotAuthorized):
 		// log error for debugging.
 		hlog.FromRequest(r).Debug().Msgf("User not authorized to perform %s on resource %v in scope %v",
 			permission,
@@ -86,21 +81,17 @@ func (g *Guard) Enforce(w http.ResponseWriter, r *http.Request, scope *types.Sco
 			scope)
 
 		render.Forbidden(w)
-	} else if err != nil {
+	case err != nil:
 		// log err for debugging
 		hlog.FromRequest(r).Err(err).Msg("Encountered unexpected error while enforcing permission.")
-
 		render.InternalError(w)
 	}
-
 	return err == nil
 }
 
-/*
- * Checks whether the principal executing the request has the requested permission on the resource.
- * Returns nil if the user is confirmed to be permitted to execute the action, otherwise returns errors
- * NotAuthenticated, NotAuthorized, or any unerlaying error.
- */
+// Check whether the principal executing the request has the requested permission on the resource.
+// Returns nil if the user is confirmed to be permitted to execute the action, otherwise returns errors
+// NotAuthenticated, NotAuthorized, or any unerlaying error.
 func (g *Guard) Check(r *http.Request, scope *types.Scope, resource *types.Resource, permission enum.Permission) error {
 	u, present := request.UserFrom(r.Context())
 	if !present {
@@ -109,6 +100,7 @@ func (g *Guard) Check(r *http.Request, scope *types.Scope, resource *types.Resou
 
 	// TODO: don't hardcode principal type USER
 	authorized, err := g.authorizer.Check(
+		r.Context(),
 		enum.PrincipalTypeUser,
 		fmt.Sprint(u.ID),
 		scope,

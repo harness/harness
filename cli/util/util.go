@@ -9,13 +9,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"golang.org/x/term"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
+
+	"golang.org/x/term"
 
 	"github.com/harness/gitness/client"
 	"github.com/harness/gitness/types"
@@ -34,7 +35,7 @@ func Client() (*client.HTTPClient, error) {
 		return nil, err
 	}
 	token := new(types.Token)
-	if err := json.Unmarshal(data, token); err != nil {
+	if err = json.Unmarshal(data, token); err != nil {
 		return nil, err
 	}
 	if time.Now().Unix() > token.Expires.Unix() {
@@ -72,7 +73,7 @@ func Username() string {
 // Password returns the password from stdin.
 func Password() string {
 	fmt.Print("Enter Password: ")
-	passwordb, _ := term.ReadPassword(int(syscall.Stdin))
+	passwordb, _ := term.ReadPassword(syscall.Stdin)
 	password := string(passwordb)
 
 	return strings.TrimSpace(password)

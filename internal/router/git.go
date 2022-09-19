@@ -27,19 +27,16 @@ import (
  */
 func newGitHandler(
 	mountPath string,
-	systemStore store.SystemStore,
-	userStore store.UserStore,
-	spaceStore store.SpaceStore,
+	_ store.SystemStore,
+	_ store.UserStore,
+	_ store.SpaceStore,
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
-	authorizer authz.Authorizer) (http.Handler, error) {
-
+	authorizer authz.Authorizer) http.Handler {
 	guard := guard.New(authorizer)
-
 	// Use go-chi router for inner routing (restricted to mountPath!)
 	r := chi.NewRouter()
 	r.Route(mountPath, func(r chi.Router) {
-
 		// Apply common api middleware
 		r.Use(middleware.NoCache)
 		r.Use(middleware.Recoverer)
@@ -68,9 +65,9 @@ func newGitHandler(
 
 			// Read operations (only need of it not public)
 			r.Group(func(r chi.Router) {
-
+				// middlewares
 				r.Use(guard.ForRepo(enum.PermissionRepoView, true))
-
+				// handlers
 				r.Post("/git-receive-pack", stubGitHandler)
 				r.Get("/info/refs", stubGitHandler)
 				r.Get("/HEAD", stubGitHandler)
@@ -85,7 +82,7 @@ func newGitHandler(
 		})
 	})
 
-	return encode.GitPathBefore(r.ServeHTTP), nil
+	return encode.GitPathBefore(r.ServeHTTP)
 }
 
 func stubGitHandler(w http.ResponseWriter, r *http.Request) {

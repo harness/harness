@@ -5,9 +5,11 @@
 package users
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/harness/gitness/cli/util"
 	"github.com/harness/gitness/types"
@@ -33,7 +35,9 @@ func (c *createCommand) run(*kingpin.ParseContext) error {
 		Email:    c.email,
 		Password: util.Password(),
 	}
-	user, err := client.UserCreate(in)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	user, err := client.UserCreate(ctx, in)
 	if err != nil {
 		return err
 	}
@@ -49,7 +53,7 @@ func (c *createCommand) run(*kingpin.ParseContext) error {
 	return tmpl.Execute(os.Stdout, user)
 }
 
-// helper function registers the user create command
+// helper function registers the user create command.
 func registerCreate(app *kingpin.CmdClause) {
 	c := new(createCommand)
 

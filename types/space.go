@@ -9,22 +9,22 @@ import (
 )
 
 /*
- * Represents a space.
- * There isn't a one-solves-all hierarchical data structure for DBs,
- * so for now we are using a mix of materialized paths and adjacency list.
- * Every space stores its parent, and a space's path is stored in a separate table.
- * 		PRO: Quick lookup of childs, quick lookup based on fqdn (apis)
- *  	CON: Changing a space name requires changing all its ancestors' Paths.
- *
- * Interesting reads:
- *    https://stackoverflow.com/questions/4048151/what-are-the-options-for-storing-hierarchical-data-in-a-relational-database
- *	  https://www.slideshare.net/billkarwin/models-for-hierarchical-data
- */
+Space represents a space.
+There isn't a one-solves-all hierarchical data structure for DBs,
+so for now we are using a mix of materialized paths and adjacency list.
+Every space stores its parent, and a space's path is stored in a separate table.
+PRO: Quick lookup of childs, quick lookup based on fqdn (apis)
+CON: Changing a space name requires changing all its ancestors' Paths.
+
+Interesting reads:
+https://stackoverflow.com/questions/4048151/what-are-the-options-for-storing-hierarchical-data-in-a-relational-database
+https://www.slideshare.net/billkarwin/models-for-hierarchical-data
+*/
 type Space struct {
 	ID          int64  `db:"space_id"              json:"id"`
 	Name        string `db:"space_name"            json:"name"`
 	Path        string `db:"space_path"             json:"path"`
-	ParentId    int64  `db:"space_parentId"        json:"parentId"`
+	ParentID    int64  `db:"space_parentId"        json:"parentId"`
 	DisplayName string `db:"space_displayName"     json:"displayName"`
 	Description string `db:"space_description"     json:"description"`
 	IsPublic    bool   `db:"space_isPublic"        json:"isPublic"`

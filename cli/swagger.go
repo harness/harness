@@ -23,7 +23,7 @@ func (c *swaggerCommand) run(*kingpin.ParseContext) error {
 		os.Stdout.Write(data)
 		return nil
 	}
-	return ioutil.WriteFile(c.path, data, 0600)
+	return ioutil.WriteFile(c.path, data, OwnerReadWrite)
 }
 
 // helper function to register the swagger command.

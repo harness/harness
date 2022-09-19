@@ -5,9 +5,11 @@
 package user
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/harness/gitness/cli/util"
 
@@ -30,7 +32,9 @@ func (c *command) run(*kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	user, err := client.Self()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	user, err := client.Self(ctx)
 	if err != nil {
 		return err
 	}

@@ -5,17 +5,15 @@
 package database
 
 import (
-	"context"
 	"encoding/json"
-	"github.com/jmoiron/sqlx"
 	"io/ioutil"
 	"os"
+
+	"github.com/jmoiron/sqlx"
 
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
-
-var noContext = context.Background()
 
 // connect opens a new test database connection.
 func connect() (*sqlx.DB, error) {
@@ -32,13 +30,28 @@ func connect() (*sqlx.DB, error) {
 
 // seed seed the database state.
 func seed(db *sqlx.DB) error {
-	_, _ = db.Exec("DELETE FROM executions")
-	_, _ = db.Exec("DELETE FROM pipelines")
-	_, _ = db.Exec("DELETE FROM users")
-	_, _ = db.Exec("ALTER SEQUENCE users_user_id_seq RESTART WITH 1")
-	_, _ = db.Exec("ALTER SEQUENCE pipelines_pipeline_id_seq RESTART WITH 1")
-	_, _ = db.Exec("ALTER SEQUENCE executions_execution_id_seq RESTART WITH 1")
-	return nil
+	_, err := db.Exec("DELETE FROM executions")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("DELETE FROM pipelines")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("DELETE FROM users")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("ALTER SEQUENCE users_user_id_seq RESTART WITH 1")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("ALTER SEQUENCE pipelines_pipeline_id_seq RESTART WITH 1")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("ALTER SEQUENCE executions_execution_id_seq RESTART WITH 1")
+	return err
 }
 
 // unmarshal a testdata file.

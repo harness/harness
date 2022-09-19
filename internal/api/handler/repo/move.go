@@ -21,13 +21,11 @@ import (
 
 type repoMoveRequest struct {
 	Name        *string `json:"name"`
-	SpaceId     *int64  `json:"spaceId"`
+	SpaceID     *int64  `json:"spaceId"`
 	KeepAsAlias bool    `json:"keepAsAlias"`
 }
 
-/*
- * Moves an existing repo.
- */
+// HandleMove moves an existing repo.
 func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceStore) http.HandlerFunc {
 	return guard.Repo(
 		enum.PermissionRepoEdit,
@@ -49,8 +47,8 @@ func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceSto
 			if in.Name == nil {
 				in.Name = &repo.Name
 			}
-			if in.SpaceId == nil {
-				in.SpaceId = &repo.SpaceId
+			if in.SpaceID == nil {
+				in.SpaceID = &repo.SpaceID
 			}
 
 			// convert name to lower case for easy of api use
@@ -60,19 +58,22 @@ func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceSto
 			if err = check.Name(*in.Name); err != nil {
 				render.UserfiedErrorOrInternal(w, err)
 				return
-			} else if *in.SpaceId == repo.SpaceId && *in.Name == repo.Name {
+			}
+			if *in.SpaceID == repo.SpaceID && *in.Name == repo.Name {
 				render.BadRequestError(w, render.ErrNoChange)
 				return
-			} else if *in.SpaceId <= 0 {
-				render.UserfiedErrorOrInternal(w, check.ErrRepositoryRequiresSpaceId)
+			}
+			if *in.SpaceID <= 0 {
+				render.UserfiedErrorOrInternal(w, check.ErrRepositoryRequiresSpaceID)
 				return
 			}
 
 			// Ensure we have access to the target space (if its a space move)
-			if *in.SpaceId != repo.SpaceId {
-				newSpace, err := spaces.Find(ctx, *in.SpaceId)
+			if *in.SpaceID != repo.SpaceID {
+				var newSpace *types.Space
+				newSpace, err = spaces.Find(ctx, *in.SpaceID)
 				if err != nil {
-					log.Err(err).Msgf("Failed to get target space with id %d for the move.", *in.SpaceId)
+					log.Err(err).Msgf("Failed to get target space with id %d for the move.", *in.SpaceID)
 
 					render.UserfiedErrorOrInternal(w, err)
 					return
@@ -89,7 +90,7 @@ func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceSto
 				}
 			}
 
-			res, err := repos.Move(ctx, usr.ID, repo.ID, *in.SpaceId, *in.Name, in.KeepAsAlias)
+			res, err := repos.Move(ctx, usr.ID, repo.ID, *in.SpaceID, *in.Name, in.KeepAsAlias)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to move the repository.")
 

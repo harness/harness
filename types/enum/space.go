@@ -6,13 +6,13 @@ package enum
 
 import "strings"
 
-// Defines space attributes that can be used for sorting and filtering.
+// SpaceAttr defines space attributes that can be used for sorting and filtering.
 type SpaceAttr int
 
 // Order enumeration.
 const (
 	SpaceAttrNone SpaceAttr = iota
-	SpaceAttrId
+	SpaceAttrID
 	SpaceAttrName
 	SpaceAttrPath
 	SpaceAttrDisplayName
@@ -25,7 +25,7 @@ const (
 func ParseSpaceAttr(s string) SpaceAttr {
 	switch strings.ToLower(s) {
 	case "id":
-		return SpaceAttrId
+		return SpaceAttrID
 	case "name":
 		return SpaceAttrName
 	case "path":

@@ -7,14 +7,16 @@ package store
 import "errors"
 
 var (
-	ErrResourceNotFound             = errors.New("Resource not found")
-	ErrDuplicate                    = errors.New("Resource is a duplicate")
-	ErrPathTooLong                  = errors.New("The path is too long")
-	ErrPrimaryPathAlreadyExists     = errors.New("Primary path already exists for resource.")
-	ErrPrimaryPathRequired          = errors.New("Path has to be primary.")
-	ErrAliasPathRequired            = errors.New("Path has to be an alias.")
-	ErrPrimaryPathCantBeDeleted     = errors.New("Primary path can't be deleted.")
-	ErrNoChangeInRequestedMove      = errors.New(("The requested move doesn't change anything."))
-	ErrIllegalMoveCyclicHierarchy   = errors.New(("The requested move is not permitted as it would cause a cyclic depdency."))
-	ErrSpaceWithChildsCantBeDeleted = errors.New("The space can't be deleted as it still contains spaces or repos.")
+	ErrResourceNotFound           = errors.New("resource not found")
+	ErrDuplicate                  = errors.New("resource is a duplicate")
+	ErrPathTooLong                = errors.New("the path is too long")
+	ErrPrimaryPathAlreadyExists   = errors.New("primary path already exists for resource")
+	ErrPrimaryPathRequired        = errors.New("path has to be primary")
+	ErrAliasPathRequired          = errors.New("path has to be an alias")
+	ErrPrimaryPathCantBeDeleted   = errors.New("primary path can't be deleted")
+	ErrNoChangeInRequestedMove    = errors.New("the requested move doesn't change anything")
+	ErrIllegalMoveCyclicHierarchy = errors.New("the requested move is not permitted as it would cause a " +
+		"cyclic depdency")
+	ErrSpaceWithChildsCantBeDeleted = errors.New("the space can't be deleted as it still contains " +
+		"spaces or repos")
 )

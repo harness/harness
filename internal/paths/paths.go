@@ -12,13 +12,11 @@ import (
 )
 
 var (
-	ErrPathEmpty = errors.New("Path is empty.")
+	ErrPathEmpty = errors.New("path is empty")
 )
 
-/*
- * Splits a path into its parent path and the leaf name.
- * e.g. /space1/space2/space3 -> (/space1/space2, space3, nil)
- */
+// Disect splits a path into its parent path and the leaf name
+// e.g. /space1/space2/space3 -> (/space1/space2, space3, nil).
 func Disect(path string) (string, string, error) {
 	if path == "" {
 		return "", "", ErrPathEmpty

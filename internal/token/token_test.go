@@ -80,7 +80,7 @@ func TestTokenNotExpired(t *testing.T) {
 		return
 	}
 
-	token_, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		sub := token.Claims.(*Claims).Subject
 		id, _ := strconv.ParseInt(sub, 10, 64)
 		if id != 42 {
@@ -93,15 +93,14 @@ func TestTokenNotExpired(t *testing.T) {
 		return
 	}
 
-	if claims, ok := token_.Claims.(*Claims); ok {
-		if claims.ExpiresAt > 0 {
-			if time.Now().Unix() > claims.ExpiresAt {
-				t.Errorf("expect token not expired")
-			}
-		} else {
-			t.Errorf("expect token expiration greater than zero")
-		}
-	} else {
+	claims, ok := token.Claims.(*Claims)
+	if !ok {
 		t.Errorf("expect token claims from token")
+		return
+	}
+
+	if claims.ExpiresAt > 0 && time.Now().Unix() > claims.ExpiresAt {
+		t.Errorf("expect token not expired")
+		return
 	}
 }

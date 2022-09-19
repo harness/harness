@@ -12,14 +12,12 @@ import (
 )
 
 var (
-	// An error that is returned if the authorizer doesn't find any data in the request that can be used for auth.
-	ErrNoAuthData = errors.New("The request doesn't contain any auth data that can be used by the Authorizer.")
+	// ErrNoAuthData that is returned if the authorizer doesn't find any data in the request that can be used for auth.
+	ErrNoAuthData = errors.New("the request doesn't contain any auth data that can be used by the Authorizer")
 )
 
-/*
- * An abstraction of an entity thats responsible for authenticating users
- * that are making calls via HTTP.
- */
+// Authenticator is abstraction of an entity that's responsible for authenticating users
+// that are making calls via HTTP.
 type Authenticator interface {
 	/*
 	 * Tries to authenticate a user if credentials are available.

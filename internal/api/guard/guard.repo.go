@@ -23,9 +23,9 @@ import (
  *
  * Assumes the repository is already available in the request context.
  */
-func (e *Guard) ForRepo(requiredPermission enum.Permission, orPublic bool) func(http.Handler) http.Handler {
+func (g *Guard) ForRepo(requiredPermission enum.Permission, orPublic bool) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
-		return e.Repo(requiredPermission, orPublic, h.ServeHTTP)
+		return g.Repo(requiredPermission, orPublic, h.ServeHTTP)
 	}
 }
 

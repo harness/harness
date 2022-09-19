@@ -5,10 +5,12 @@
 package users
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/harness/gitness/cli/util"
 	"github.com/harness/gitness/types"
@@ -50,12 +52,16 @@ func (c *updateCommand) run(*kingpin.ParseContext) error {
 		in.Admin = ptr.Bool(false)
 	}
 	if c.passgen {
-		v := uniuri.NewLen(8)
+		const maxRandomChars = 8
+		v := uniuri.NewLen(maxRandomChars)
 		in.Password = ptr.String(v)
 		fmt.Printf("generated temporary password: %s\n", v)
 	}
 
-	user, err := client.UserUpdate(c.id, in)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	user, err := client.UserUpdate(ctx, c.id, in)
 	if err != nil {
 		return err
 	}
@@ -71,7 +77,7 @@ func (c *updateCommand) run(*kingpin.ParseContext) error {
 	return tmpl.Execute(os.Stdout, user)
 }
 
-// helper function registers the user update command
+// helper function registers the user update command.
 func registerUpdate(app *kingpin.CmdClause) {
 	c := new(updateCommand)
 

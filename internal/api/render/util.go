@@ -18,22 +18,21 @@ func pagelen(size, total int) int {
 	}
 }
 
-// max returns the larger of x or y.
+// max returns the largest of x or y.
 func max(x, y int) int {
 	if x > y {
 		return x
-	} else {
-		return y
 	}
+	return y
 }
 
 // max returns the smaller of x or y.
 func min(x, y int) int {
 	if y == 0 {
 		return x
-	} else if x < y {
-		return x
-	} else {
-		return y
 	}
+	if x < y {
+		return x
+	}
+	return y
 }

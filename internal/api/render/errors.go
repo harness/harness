@@ -35,10 +35,11 @@ var (
 	// ErrPathTooLong is returned if user action would lead to a path that is too long.
 	ErrPathTooLong = New("The resource path is too long")
 
-	// ErrCyclicHierarchy is returned if the user action would create a cyclic dependency between spaces
-	ErrCyclicHierarchy = New(("Unable to perform the action as it would lead to a cyclic dependency."))
+	// ErrCyclicHierarchy is returned if the user action would create a cyclic dependency between spaces.
+	ErrCyclicHierarchy = New("Unable to perform the action as it would lead to a cyclic dependency.")
 
-	// ErrSpaceWithChildsCantBeDeleted is returned if the user is trying to delete a space that still has child resources
+	// ErrSpaceWithChildsCantBeDeleted is returned if the user is trying to delete a space that
+	// still has child resources.
 	ErrSpaceWithChildsCantBeDeleted = New("Space can't be deleted as it still contains child resources.")
 )
 

@@ -5,6 +5,9 @@
 package users
 
 import (
+	"context"
+	"time"
+
 	"github.com/harness/gitness/cli/util"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -19,10 +22,12 @@ func (c *deleteCommand) run(*kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	return client.UserDelete(c.email)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	return client.UserDelete(ctx, c.email)
 }
 
-// helper function registers the user delete command
+// helper function registers the user delete command.
 func registerDelete(app *kingpin.CmdClause) {
 	c := new(deleteCommand)
 

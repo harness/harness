@@ -33,26 +33,27 @@ func offset(page, size int) int {
 	if size == 0 {
 		size = defaultLimit
 	}
-	page = page - 1
+	page--
 	return page * size
 }
 
 // Logs the error and message, returns either the original error or a store equivalent if possible.
-func processSqlErrorf(err error, format string, args ...interface{}) error {
+func processSQLErrorf(err error, format string, args ...interface{}) error {
 	// always log DB error (print formated message)
 	log.Warn().Msgf("%s %s", fmt.Sprintf(format, args...), err)
 
 	// If it's a known error, return converted error instead.
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return store.ErrResourceNotFound
-	} else if isSqlUniqueConstraintError(err) {
+	} else if isSQLUniqueConstraintError(err) {
 		return store.ErrDuplicate
 	}
 
 	return err
 }
 
-func isSqlUniqueConstraintError(original error) bool {
-	o3, ok := original.(sqlite3.Error)
-	return ok && errors.Is(o3.ExtendedCode, sqlite3.ErrConstraintUnique)
+func isSQLUniqueConstraintError(original error) bool {
+	err := sqlite3.Error{}
+	ok := errors.As(original, &err)
+	return ok && errors.Is(err.ExtendedCode, sqlite3.ErrConstraintUnique)
 }

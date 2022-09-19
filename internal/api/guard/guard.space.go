@@ -24,9 +24,9 @@ import (
  *
  * Assumes the space is already available in the request context.
  */
-func (e *Guard) ForSpace(requiredPermission enum.Permission, orPublic bool) func(http.Handler) http.Handler {
+func (g *Guard) ForSpace(requiredPermission enum.Permission, orPublic bool) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
-		return e.Space(requiredPermission, orPublic, h.ServeHTTP)
+		return g.Space(requiredPermission, orPublic, h.ServeHTTP)
 	}
 }
 

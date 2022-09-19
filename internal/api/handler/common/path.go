@@ -4,7 +4,7 @@
 
 package common
 
-// Used for path creation apis
+// CreatePathRequest used for path creation apis.
 type CreatePathRequest struct {
 	Path string
 }

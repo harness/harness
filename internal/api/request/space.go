@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	ErrSpaceReferenceNotFound = errors.New("No space reference found in request.")
+	ErrSpaceReferenceNotFound = errors.New("no space reference found in request")
 )
 
 func GetSpaceRef(r *http.Request) (string, error) {

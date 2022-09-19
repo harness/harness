@@ -5,9 +5,11 @@
 package users
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/harness/gitness/cli/util"
 
@@ -26,7 +28,9 @@ func (c *findCommand) run(*kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	user, err := client.User(c.email)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	user, err := client.User(ctx, c.email)
 	if err != nil {
 		return err
 	}
@@ -42,7 +46,7 @@ func (c *findCommand) run(*kingpin.ParseContext) error {
 	return tmpl.Execute(os.Stdout, user)
 }
 
-// helper function registers the user find command
+// helper function registers the user find command.
 func registerFind(app *kingpin.CmdClause) {
 	c := new(findCommand)
 

@@ -5,8 +5,10 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
+	"time"
 
 	"github.com/harness/gitness/cli/util"
 	"github.com/harness/gitness/client"
@@ -19,8 +21,10 @@ type registerCommand struct {
 
 func (c *registerCommand) run(*kingpin.ParseContext) error {
 	username, password := util.Credentials()
-	client := client.New(c.server)
-	token, err := client.Register(username, password)
+	httpClient := client.New(c.server)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	token, err := httpClient.Register(ctx, username, password)
 	if err != nil {
 		return err
 	}
@@ -33,7 +37,7 @@ func (c *registerCommand) run(*kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path, data, 0600)
+	return ioutil.WriteFile(path, data, OwnerReadWrite)
 }
 
 // helper function to register the register command.

@@ -51,7 +51,7 @@ func HandleLogin(users store.UserStore, system store.SystemStore) http.HandlerFu
 		}
 
 		expires := time.Now().Add(system.Config(ctx).Token.Expire)
-		token_, err := token.GenerateExp(user, expires.Unix(), user.Salt)
+		token, err := token.GenerateExp(user, expires.Unix(), user.Salt)
 		if err != nil {
 			log.Err(err).
 				Str("user", username).
@@ -68,13 +68,13 @@ func HandleLogin(users store.UserStore, system store.SystemStore) http.HandlerFu
 				&types.UserToken{
 					User: user,
 					Token: &types.Token{
-						Value:   token_,
+						Value:   token,
 						Expires: expires.UTC(),
 					},
 				})
 		} else {
 			// else return the token only.
-			render.JSON(w, http.StatusOK, &types.Token{Value: token_})
+			render.JSON(w, http.StatusOK, &types.Token{Value: token})
 		}
 	}
 }

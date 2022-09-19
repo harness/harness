@@ -6,7 +6,7 @@ package enum
 
 import "strings"
 
-// Defines the type of the target of a path
+// PathTargetType defines the type of the target of a path.
 type PathTargetType string
 
 const (
@@ -26,13 +26,13 @@ const (
 // 	PathTypePrimary PathTargetType = "primary"
 // )
 
-// Defines path attributes that can be used for sorting and filtering.
+// PathAttr defines path attributes that can be used for sorting and filtering.
 type PathAttr int
 
 // Order enumeration.
 const (
 	PathAttrNone PathAttr = iota
-	PathAttrId
+	PathAttrID
 	PathAttrPath
 	PathAttrCreated
 	PathAttrUpdated
@@ -43,7 +43,7 @@ const (
 func ParsePathAttr(s string) PathAttr {
 	switch strings.ToLower(s) {
 	case "id":
-		return PathAttrId
+		return PathAttrID
 	case "path":
 		return PathAttrPath
 	case "created", "created_at":

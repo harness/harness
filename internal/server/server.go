@@ -9,6 +9,7 @@ import (
 	"context"
 	"crypto/tls"
 	"net/http"
+	"time"
 
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/sync/errgroup"
@@ -37,8 +38,9 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 func (s *Server) listenAndServe(ctx context.Context) error {
 	var g errgroup.Group
 	s1 := &http.Server{
-		Addr:    s.Addr,
-		Handler: s.Handler,
+		Addr:              s.Addr,
+		ReadHeaderTimeout: 2 * time.Second,
+		Handler:           s.Handler,
 	}
 	g.Go(func() error {
 		<-ctx.Done()
@@ -53,12 +55,14 @@ func (s *Server) listenAndServe(ctx context.Context) error {
 func (s *Server) listenAndServeTLS(ctx context.Context) error {
 	var g errgroup.Group
 	s1 := &http.Server{
-		Addr:    ":http",
-		Handler: http.HandlerFunc(redirect),
+		Addr:              ":http",
+		ReadHeaderTimeout: 2 * time.Second,
+		Handler:           http.HandlerFunc(redirect),
 	}
 	s2 := &http.Server{
-		Addr:    ":https",
-		Handler: s.Handler,
+		Addr:              ":https",
+		ReadHeaderTimeout: 2 * time.Second,
+		Handler:           s.Handler,
 	}
 	g.Go(func() error {
 		return s1.ListenAndServe()
@@ -90,13 +94,16 @@ func (s Server) listenAndServeAcme(ctx context.Context) error {
 		HostPolicy: autocert.HostWhitelist(s.Host),
 	}
 	s1 := &http.Server{
-		Addr:    ":http",
-		Handler: m.HTTPHandler(nil),
+		Addr:              ":http",
+		ReadHeaderTimeout: 2 * time.Second,
+		Handler:           m.HTTPHandler(nil),
 	}
 	s2 := &http.Server{
-		Addr:    ":https",
-		Handler: s.Handler,
+		Addr:              ":https",
+		Handler:           s.Handler,
+		ReadHeaderTimeout: 2 * time.Second,
 		TLSConfig: &tls.Config{
+			MinVersion:     tls.VersionTLS12,
 			GetCertificate: m.GetCertificate,
 			NextProtos:     []string{"h2", "http/1.1"},
 		},

@@ -5,10 +5,14 @@
 package database
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
@@ -17,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-// user fields to ignore in test comparisons
+// user fields to ignore in test comparisons.
 var userIgnore = cmpopts.IgnoreFields(types.User{},
 	"ID", "Salt", "Created", "Updated")
 
@@ -27,26 +31,29 @@ func TestUser(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	defer db.Close()
-	if err := seed(db); err != nil {
+	defer func(db *sqlx.DB) {
+		_ = db.Close()
+	}(db)
+	if err = seed(db); err != nil {
 		t.Error(err)
 		return
 	}
 
-	store := NewUserStoreSync(NewUserStore(db))
-	t.Run("create", testUserCreate(store))
-	t.Run("duplicate", testUserDuplicate(store))
-	t.Run("count", testUserCount(store))
-	t.Run("find", testUserFind(store))
-	t.Run("list", testUserList(store))
-	t.Run("update", testUserUpdate(store))
-	t.Run("delete", testUserDelete(store))
+	userStoreSync := NewUserStoreSync(NewUserStore(db))
+	t.Run("create", testUserCreate(userStoreSync))
+	t.Run("duplicate", testUserDuplicate(userStoreSync))
+	t.Run("count", testUserCount(userStoreSync))
+	t.Run("find", testUserFind(userStoreSync))
+	t.Run("list", testUserList(userStoreSync))
+	t.Run("update", testUserUpdate(userStoreSync))
+	t.Run("delete", testUserDelete(userStoreSync))
 }
 
 // this test creates entries in the database and confirms
 // the primary keys were auto-incremented.
 func testUserCreate(store store.UserStore) func(t *testing.T) {
 	return func(t *testing.T) {
+		ctx := context.Background()
 		vv := []*types.User{}
 		if err := unmarshal("testdata/users.json", &vv); err != nil {
 			t.Error(err)
@@ -57,7 +64,7 @@ func testUserCreate(store store.UserStore) func(t *testing.T) {
 		// generate a deterministic token for each
 		// entry based on the hash of the email.
 		v.Salt = fmt.Sprintf("%x", v.Email)
-		if err := store.Create(noContext, v); err != nil {
+		if err := store.Create(ctx, v); err != nil {
 			t.Error(err)
 			return
 		}
@@ -67,7 +74,7 @@ func testUserCreate(store store.UserStore) func(t *testing.T) {
 		// create row 2
 		v = vv[1]
 		v.Salt = fmt.Sprintf("%x", v.Email)
-		if err := store.Create(noContext, v); err != nil {
+		if err := store.Create(ctx, v); err != nil {
 			t.Error(err)
 			return
 		}
@@ -87,7 +94,7 @@ func testUserDuplicate(store store.UserStore) func(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		if err := store.Create(noContext, vv[0]); err == nil {
+		if err := store.Create(context.Background(), vv[0]); err == nil {
 			t.Errorf("Expect unique index violation")
 		}
 	}
@@ -97,7 +104,7 @@ func testUserDuplicate(store store.UserStore) func(t *testing.T) {
 // and compares to the expected count.
 func testUserCount(store store.UserStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		got, err := store.Count(noContext)
+		got, err := store.Count(context.Background())
 		if err != nil {
 			t.Error(err)
 			return
@@ -113,6 +120,7 @@ func testUserCount(store store.UserStore) func(t *testing.T) {
 // to ensure all columns are correctly mapped.
 func testUserFind(store store.UserStore) func(t *testing.T) {
 	return func(t *testing.T) {
+		ctx := context.Background()
 		vv := []*types.User{}
 		if err := unmarshal("testdata/users.json", &vv); err != nil {
 			t.Error(err)
@@ -121,7 +129,7 @@ func testUserFind(store store.UserStore) func(t *testing.T) {
 		want := vv[0]
 
 		t.Run("id", func(t *testing.T) {
-			got, err := store.Find(noContext, 1)
+			got, err := store.Find(ctx, 1)
 			if err != nil {
 				t.Error(err)
 				return
@@ -133,7 +141,7 @@ func testUserFind(store store.UserStore) func(t *testing.T) {
 		})
 
 		t.Run("email", func(t *testing.T) {
-			got, err := store.FindEmail(noContext, want.Email)
+			got, err := store.FindEmail(ctx, want.Email)
 			if err != nil {
 				t.Error(err)
 				return
@@ -145,7 +153,7 @@ func testUserFind(store store.UserStore) func(t *testing.T) {
 		})
 
 		t.Run("email/nocase", func(t *testing.T) {
-			got, err := store.FindEmail(noContext, strings.ToUpper(want.Email))
+			got, err := store.FindEmail(ctx, strings.ToUpper(want.Email))
 			if err != nil {
 				t.Error(err)
 				return
@@ -157,7 +165,7 @@ func testUserFind(store store.UserStore) func(t *testing.T) {
 		})
 
 		t.Run("key/id", func(t *testing.T) {
-			got, err := store.FindKey(noContext, "1")
+			got, err := store.FindKey(ctx, "1")
 			if err != nil {
 				t.Error(err)
 				return
@@ -169,7 +177,7 @@ func testUserFind(store store.UserStore) func(t *testing.T) {
 		})
 
 		t.Run("key/email", func(t *testing.T) {
-			got, err := store.FindKey(noContext, want.Email)
+			got, err := store.FindKey(ctx, want.Email)
 			if err != nil {
 				t.Error(err)
 				return
@@ -192,7 +200,7 @@ func testUserList(store store.UserStore) func(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		got, err := store.List(noContext, &types.UserFilter{Page: 0, Size: 100})
+		got, err := store.List(context.Background(), &types.UserFilter{Page: 0, Size: 100})
 		if err != nil {
 			t.Error(err)
 			return
@@ -208,18 +216,19 @@ func testUserList(store store.UserStore) func(t *testing.T) {
 // the user and confirms the column was updated as expected.
 func testUserUpdate(store store.UserStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		before, err := store.Find(noContext, 1)
+		ctx := context.Background()
+		before, err := store.Find(ctx, 1)
 		if err != nil {
 			t.Error(err)
 			return
 		}
 		before.Updated = time.Now().Unix()
 		before.Authed = time.Now().Unix()
-		if err := store.Update(noContext, before); err != nil {
+		if err = store.Update(ctx, before); err != nil {
 			t.Error(err)
 			return
 		}
-		after, err := store.Find(noContext, 1)
+		after, err := store.Find(ctx, 1)
 		if err != nil {
 			t.Error(err)
 			return
@@ -237,16 +246,17 @@ func testUserUpdate(store store.UserStore) func(t *testing.T) {
 // a sql.ErrNoRows error.
 func testUserDelete(s store.UserStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		v, err := s.Find(noContext, 1)
+		ctx := context.Background()
+		v, err := s.Find(ctx, 1)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		if err := s.Delete(noContext, v); err != nil {
+		if err = s.Delete(ctx, v); err != nil {
 			t.Error(err)
 			return
 		}
-		if _, err := s.Find(noContext, 1); err != store.ErrResourceNotFound {
+		if _, err = s.Find(ctx, 1); errors.Is(err, store.ErrResourceNotFound) {
 			t.Errorf("Expected sql.ErrNoRows got %s", err)
 		}
 	}

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/middleware/encode"
@@ -18,14 +19,13 @@ import (
  */
 func newWebHandler(
 	mountPath string,
-	systemStore store.SystemStore) (http.Handler, error) {
-
-	config := systemStore.Config(nocontext)
+	systemStore store.SystemStore) http.Handler {
+	//
+	config := systemStore.Config(context.Background())
 
 	// Use go-chi router for inner routing (restricted to mountPath!)
 	r := chi.NewRouter()
 	r.Route(mountPath, func(r chi.Router) {
-
 		// create middleware to enforce security best practices for
 		// the user interface. note that theis middleware is only used
 		// when serving the user interface (not found handler, below).
@@ -62,5 +62,5 @@ func newWebHandler(
 	})
 
 	// web doesn't have any prefixes for terminated paths
-	return encode.TerminatedPathBefore([]string{""}, r.ServeHTTP), nil
+	return encode.TerminatedPathBefore([]string{""}, r.ServeHTTP)
 }

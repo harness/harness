@@ -24,12 +24,13 @@ func ParsePage(r *http.Request) int {
 
 // ParseSize extracts the size parameter from the url.
 func ParseSize(r *http.Request) int {
+	const itemsPerPage = 100
 	s := r.FormValue("per_page")
 	i, _ := strconv.Atoi(s)
 	if i == 0 {
-		i = 100
-	} else if i > 100 {
-		i = 100
+		i = itemsPerPage
+	} else if i > itemsPerPage {
+		i = itemsPerPage
 	}
 	return i
 }
@@ -42,7 +43,7 @@ func ParseOrder(r *http.Request) enum.Order {
 }
 
 // ParseSort extracts the sort parameter from the url.
-func ParseSort(r *http.Request) (s string) {
+func ParseSort(r *http.Request) string {
 	return r.FormValue("sort")
 }
 

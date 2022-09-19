@@ -6,7 +6,7 @@ package enum
 
 import "strings"
 
-// Order defines the sorder order.
+// Order defines the sort order.
 type Order int
 
 // Order enumeration.
@@ -17,15 +17,11 @@ const (
 )
 
 // String returns the Order as a string.
-func (e Order) String() (s string) {
-	switch e {
-	case OrderAsc:
-		return "asc"
-	case OrderDesc:
+func (e Order) String() string {
+	if e == OrderDesc {
 		return "desc"
-	default:
-		return "asc" // ascending by default?
 	}
+	return "asc"
 }
 
 // ParseOrder parses the order string and returns

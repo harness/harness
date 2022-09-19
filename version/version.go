@@ -8,9 +8,9 @@ package version
 import "github.com/coreos/go-semver/semver"
 
 var (
-	// GitRepository is the git repository that was compiled
+	// GitRepository is the git repository that was compiled.
 	GitRepository string
-	// GitCommit is the git commit that was compiled
+	// GitCommit is the git commit that was compiled.
 	GitCommit string
 	// Major is for an API incompatible changes.
 	Major int64 = 1

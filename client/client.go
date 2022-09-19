@@ -6,13 +6,15 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
@@ -56,24 +58,24 @@ func (c *HTTPClient) SetDebug(debug bool) {
 }
 
 // Login authenticates the user and returns a JWT token.
-func (c *HTTPClient) Login(username, password string) (*types.Token, error) {
+func (c *HTTPClient) Login(ctx context.Context, username, password string) (*types.Token, error) {
 	form := &url.Values{}
 	form.Add("username", username)
 	form.Add("password", password)
 	out := new(types.UserToken)
 	uri := fmt.Sprintf("%s/api/v1/login?return_user=true", c.base)
-	err := c.post(uri, form, out)
+	err := c.post(ctx, uri, form, out)
 	return out.Token, err
 }
 
 // Register registers a new  user and returns a JWT token.
-func (c *HTTPClient) Register(username, password string) (*types.Token, error) {
+func (c *HTTPClient) Register(ctx context.Context, username, password string) (*types.Token, error) {
 	form := &url.Values{}
 	form.Add("username", username)
 	form.Add("password", password)
 	out := new(types.UserToken)
 	uri := fmt.Sprintf("%s/api/v1/register?return_user=true", c.base)
-	err := c.post(uri, form, out)
+	err := c.post(ctx, uri, form, out)
 	return out.Token, err
 }
 
@@ -82,58 +84,58 @@ func (c *HTTPClient) Register(username, password string) (*types.Token, error) {
 //
 
 // Self returns the currently authenticated user.
-func (c *HTTPClient) Self() (*types.User, error) {
+func (c *HTTPClient) Self(ctx context.Context) (*types.User, error) {
 	out := new(types.User)
 	uri := fmt.Sprintf("%s/api/v1/user", c.base)
-	err := c.get(uri, out)
+	err := c.get(ctx, uri, out)
 	return out, err
 }
 
 // Token returns an oauth2 bearer token for the currently
 // authenticated user.
-func (c *HTTPClient) Token() (*types.Token, error) {
+func (c *HTTPClient) Token(ctx context.Context) (*types.Token, error) {
 	out := new(types.Token)
 	uri := fmt.Sprintf("%s/api/v1/user/token", c.base)
-	err := c.post(uri, nil, out)
+	err := c.post(ctx, uri, nil, out)
 	return out, err
 }
 
 // User returns a user by ID or email.
-func (c *HTTPClient) User(key string) (*types.User, error) {
+func (c *HTTPClient) User(ctx context.Context, key string) (*types.User, error) {
 	out := new(types.User)
 	uri := fmt.Sprintf("%s/api/v1/users/%s", c.base, key)
-	err := c.get(uri, out)
+	err := c.get(ctx, uri, out)
 	return out, err
 }
 
 // UserList returns a list of all registered users.
-func (c *HTTPClient) UserList(params types.Params) ([]*types.User, error) {
-	out := []*types.User{}
+func (c *HTTPClient) UserList(ctx context.Context, params types.Params) ([]types.User, error) {
+	out := []types.User{}
 	uri := fmt.Sprintf("%s/api/v1/users?page=%d&per_page=%d", c.base, params.Page, params.Size)
-	err := c.get(uri, &out)
+	err := c.get(ctx, uri, &out)
 	return out, err
 }
 
 // UserCreate creates a new user account.
-func (c *HTTPClient) UserCreate(user *types.User) (*types.User, error) {
+func (c *HTTPClient) UserCreate(ctx context.Context, user *types.User) (*types.User, error) {
 	out := new(types.User)
 	uri := fmt.Sprintf("%s/api/v1/users", c.base)
-	err := c.post(uri, user, out)
+	err := c.post(ctx, uri, user, out)
 	return out, err
 }
 
 // UserUpdate updates a user account by ID or email.
-func (c *HTTPClient) UserUpdate(key string, user *types.UserInput) (*types.User, error) {
+func (c *HTTPClient) UserUpdate(ctx context.Context, key string, user *types.UserInput) (*types.User, error) {
 	out := new(types.User)
 	uri := fmt.Sprintf("%s/api/v1/users/%s", c.base, key)
-	err := c.patch(uri, user, out)
+	err := c.patch(ctx, uri, user, out)
 	return out, err
 }
 
 // UserDelete deletes a user account by ID or email.
-func (c *HTTPClient) UserDelete(key string) error {
+func (c *HTTPClient) UserDelete(ctx context.Context, key string) error {
 	uri := fmt.Sprintf("%s/api/v1/users/%s", c.base, key)
-	err := c.delete(uri)
+	err := c.delete(ctx, uri)
 	return err
 }
 
@@ -142,32 +144,34 @@ func (c *HTTPClient) UserDelete(key string) error {
 //
 
 // helper function for making an http GET request.
-func (c *HTTPClient) get(rawurl string, out interface{}) error {
-	return c.do(rawurl, "GET", nil, out)
+func (c *HTTPClient) get(ctx context.Context, rawurl string, out interface{}) error {
+	return c.do(ctx, rawurl, "GET", nil, out)
 }
 
 // helper function for making an http POST request.
-func (c *HTTPClient) post(rawurl string, in, out interface{}) error {
-	return c.do(rawurl, "POST", in, out)
+func (c *HTTPClient) post(ctx context.Context, rawurl string, in, out interface{}) error {
+	return c.do(ctx, rawurl, "POST", in, out)
 }
 
 // helper function for making an http PATCH request.
-func (c *HTTPClient) patch(rawurl string, in, out interface{}) error {
-	return c.do(rawurl, "PATCH", in, out)
+func (c *HTTPClient) patch(ctx context.Context, rawurl string, in, out interface{}) error {
+	return c.do(ctx, rawurl, "PATCH", in, out)
 }
 
 // helper function for making an http DELETE request.
-func (c *HTTPClient) delete(rawurl string) error {
-	return c.do(rawurl, "DELETE", nil, nil)
+func (c *HTTPClient) delete(ctx context.Context, rawurl string) error {
+	return c.do(ctx, rawurl, "DELETE", nil, nil)
 }
 
-// helper function to make an http request
-func (c *HTTPClient) do(rawurl, method string, in, out interface{}) error {
+// helper function to make an http request.
+func (c *HTTPClient) do(ctx context.Context, rawurl, method string, in, out interface{}) error {
 	// executes the http request and returns the body as
 	// and io.ReadCloser
-	body, err := c.stream(rawurl, method, in, out)
+	body, err := c.stream(ctx, rawurl, method, in, out)
 	if body != nil {
-		defer body.Close()
+		defer func(body io.ReadCloser) {
+			_ = body.Close()
+		}(body)
 	}
 	if err != nil {
 		return err
@@ -181,8 +185,8 @@ func (c *HTTPClient) do(rawurl, method string, in, out interface{}) error {
 	return nil
 }
 
-// helper function to stream an http request
-func (c *HTTPClient) stream(rawurl, method string, in, out interface{}) (io.ReadCloser, error) {
+// helper function to stream a http request.
+func (c *HTTPClient) stream(ctx context.Context, rawurl, method string, in, _ interface{}) (io.ReadCloser, error) {
 	uri, err := url.Parse(rawurl)
 	if err != nil {
 		return nil, err
@@ -192,21 +196,19 @@ func (c *HTTPClient) stream(rawurl, method string, in, out interface{}) (io.Read
 	// write it to the body of the request.
 	var buf io.ReadWriter
 	if in != nil {
-		buf = new(bytes.Buffer)
+		buf = &bytes.Buffer{}
 		// if posting form data, encode the form values.
 		if form, ok := in.(*url.Values); ok {
-			if _, err := io.WriteString(buf, form.Encode()); err != nil {
+			if _, err = io.WriteString(buf, form.Encode()); err != nil {
 				log.Err(err).Msg("in stream method")
 			}
-		} else {
-			if err := json.NewEncoder(buf).Encode(in); err != nil {
-				return nil, err
-			}
+		} else if err = json.NewEncoder(buf).Encode(in); err != nil {
+			return nil, err
 		}
 	}
 
 	// creates a new http request.
-	req, err := http.NewRequest(method, uri.String(), buf)
+	req, err := http.NewRequestWithContext(ctx, method, uri.String(), buf)
 	if err != nil {
 		return nil, err
 	}
@@ -231,12 +233,14 @@ func (c *HTTPClient) stream(rawurl, method string, in, out interface{}) (io.Read
 	}
 	if c.debug {
 		dump, _ := httputil.DumpResponse(resp, true)
-		fmt.Println(method, rawurl)
-		fmt.Println(string(dump))
+		log.Debug().Msgf("method %s, url %s", method, rawurl)
+		log.Debug().Msg(string(dump))
 	}
-	if resp.StatusCode > 299 {
-		defer resp.Body.Close()
-		err := new(remoteError)
+	if resp.StatusCode >= http.StatusMultipleChoices {
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(resp.Body)
+		err = &remoteError{}
 		if decodeErr := json.NewDecoder(resp.Body).Decode(err); decodeErr != nil {
 			return nil, decodeErr
 		}

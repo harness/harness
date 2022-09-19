@@ -24,7 +24,7 @@ import (
 // password at the given cost.
 var hashPassword = bcrypt.GenerateFromPassword
 
-// HandleUpdate returns an http.HandlerFunc that processes an http.Request
+// HandleUpdate returns a http.HandlerFunc that processes an http.Request
 // to update a user account.
 func HandleUpdate(users store.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -41,13 +41,14 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 		}
 
 		in := new(types.UserInput)
-		if err := json.NewDecoder(r.Body).Decode(in); err != nil {
+		if err = json.NewDecoder(r.Body).Decode(in); err != nil {
 			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
 		}
 
 		if in.Password != nil {
-			hash, err := hashPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
+			var hash []byte
+			hash, err = hashPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
 			if err != nil {
 				log.Err(err).
 					Int64("user_id", user.ID).
@@ -74,7 +75,8 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 
 		// TODO: why are we overwriting the password twice?
 		if in.Password != nil {
-			hash, err := bcrypt.GenerateFromPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
+			var hash []byte
+			hash, err = bcrypt.GenerateFromPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
 			if err != nil {
 				log.Err(err).
 					Int64("user_id", user.ID).
@@ -86,8 +88,7 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 			}
 			user.Password = string(hash)
 		}
-
-		if ok, err := check.User(user); !ok {
+		if err = check.User(user); err != nil {
 			log.Debug().Err(err).
 				Int64("user_id", user.ID).
 				Str("user_email", user.Email).

@@ -12,11 +12,13 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/check"
 )
 
-// indent the json-encoded API responses
+// indent the json-encoded API responses.
 var indent bool
 
 func init() {
@@ -25,31 +27,29 @@ func init() {
 	)
 }
 
-/*
- * UserfiedErrorOrInternal renders the appropriate user facing message for the provided error.
- * If the error is unknown, an internal error is rendered.
- */
+// UserfiedErrorOrInternal renders the appropriate user facing message for the provided error.
+// If the error is unknown, an internal error is rendered.
 func UserfiedErrorOrInternal(w http.ResponseWriter, err error) {
-
-	if errors.Is(err, check.ErrAny) {
+	switch {
+	case errors.Is(err, check.ErrAny):
 		ErrorObject(w, http.StatusBadRequest, &Error{err.Error()})
-	} else if errors.Is(err, store.ErrResourceNotFound) {
+	case errors.Is(err, store.ErrResourceNotFound):
 		ErrorObject(w, http.StatusNotFound, ErrNotFound)
-	} else if errors.Is(err, store.ErrDuplicate) {
+	case errors.Is(err, store.ErrDuplicate):
 		ErrorObject(w, http.StatusBadRequest, ErrDuplicate)
-	} else if errors.Is(err, store.ErrPrimaryPathCantBeDeleted) {
+	case errors.Is(err, store.ErrPrimaryPathCantBeDeleted):
 		ErrorObject(w, http.StatusBadRequest, ErrPrimaryPathCantBeDeleted)
-	} else if errors.Is(err, store.ErrPathTooLong) {
+	case errors.Is(err, store.ErrPathTooLong):
 		ErrorObject(w, http.StatusBadRequest, ErrPathTooLong)
-	} else if errors.Is(err, store.ErrNoChangeInRequestedMove) {
+	case errors.Is(err, store.ErrNoChangeInRequestedMove):
 		ErrorObject(w, http.StatusBadRequest, ErrNoChange)
-	} else if errors.Is(err, store.ErrIllegalMoveCyclicHierarchy) {
+	case errors.Is(err, store.ErrIllegalMoveCyclicHierarchy):
 		ErrorObject(w, http.StatusBadRequest, ErrCyclicHierarchy)
-	} else if errors.Is(err, store.ErrSpaceWithChildsCantBeDeleted) {
+	case errors.Is(err, store.ErrSpaceWithChildsCantBeDeleted):
 		ErrorObject(w, http.StatusBadRequest, ErrSpaceWithChildsCantBeDeleted)
-	} else {
+	default:
 		// nothing found - render internal error
-		fmt.Println(err)
+		log.Err(err)
 		InternalError(w)
 	}
 }
@@ -100,7 +100,7 @@ func ErrorObject(w http.ResponseWriter, code int, err *Error) {
 }
 
 // JSON writes the json-encoded value to the response
-// with the provides status
+// with the provides status.
 func JSON(w http.ResponseWriter, code int, v interface{}) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")

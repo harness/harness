@@ -9,7 +9,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 )
 
-// WireSet provides a wire set for this package
+// WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
 	New,
 	wire.Bind(new(store.SystemStore), new(*SystemStore)),
