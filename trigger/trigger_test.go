@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package trigger
@@ -192,8 +193,30 @@ func TestTrigger_ErrorYaml(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
+	checkBuild := func(_ context.Context, build *core.Build, stages []*core.Stage) {
+		if diff := cmp.Diff(build, dummyErrorBuild, ignoreBuildFields); diff != "" {
+			t.Errorf(diff)
+		}
+		if diff := cmp.Diff(stages, []*core.Stage(nil), ignoreStageFields); diff != "" {
+			t.Errorf(diff)
+		}
+	}
+
+	checkStatus := func(_ context.Context, _ *core.User, req *core.StatusInput) error {
+		if diff := cmp.Diff(req.Build, dummyErrorBuild, ignoreBuildFields); diff != "" {
+			t.Errorf(diff)
+		}
+		if diff := cmp.Diff(req.Repo, dummyRepo, ignoreStageFields); diff != "" {
+			t.Errorf(diff)
+		}
+		return nil
+	}
+
 	mockUsers := mock.NewMockUserStore(controller)
-	mockUsers.EXPECT().Find(noContext, dummyRepo.UserID).Return(dummyUser, nil)
+	mockUsers.EXPECT().Find(noContext, dummyRepo.UserID).Return(dummyUser, nil).MaxTimes(3)
+
+	mockRepos := mock.NewMockRepositoryStore(controller)
+	mockRepos.EXPECT().Increment(gomock.Any(), dummyRepo).Return(dummyRepo, nil)
 
 	mockConfigService := mock.NewMockConfigService(controller)
 	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(dummyYamlInvalid, nil)
@@ -201,24 +224,27 @@ func TestTrigger_ErrorYaml(t *testing.T) {
 	mockConvertService := mock.NewMockConvertService(controller)
 	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(dummyYamlInvalid, nil)
 
-	mockRepos := mock.NewMockRepositoryStore(controller)
-	mockRepos.EXPECT().Increment(gomock.Any(), dummyRepo).Return(dummyRepo, nil)
+	mockStatus := mock.NewMockStatusService(controller)
+	mockStatus.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Do(checkStatus)
 
 	mockBuilds := mock.NewMockBuildStore(controller)
-	mockBuilds.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil) // .Do(checkBuild).Return(nil)
+	mockBuilds.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Do(checkBuild).Return(nil)
+
+	mockWebhooks := mock.NewMockWebhookSender(controller)
+	mockWebhooks.EXPECT().Send(gomock.Any(), gomock.Any()).Return(nil)
 
 	triggerer := New(
 		nil,
 		mockConfigService,
 		mockConvertService,
 		nil,
-		nil,
+		mockStatus,
 		mockBuilds,
 		nil,
 		mockRepos,
 		mockUsers,
 		nil,
-		nil,
+		mockWebhooks,
 	)
 
 	build, err := triggerer.Trigger(noContext, dummyRepo, dummyHook)
@@ -520,6 +546,28 @@ var (
 		Action:       "opened",
 	}
 
+	dummyErrorBuild = &core.Build{
+		Number: dummyRepo.Counter,
+		RepoID: dummyRepo.ID,
+		Status: core.StatusError,
+		Error:  "yaml: found unknown directive name",
+		Event:  core.EventPush,
+		Link:   "https://github.com/octocat/Hello-World/commit/7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+		// Timestamp:    1299283200,
+		Message:      "first commit",
+		Before:       "553c2077f0edc3d5dc5d17262f6aa498e69d6f8e",
+		After:        "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+		Ref:          "refs/heads/master",
+		Source:       "master",
+		Target:       "master",
+		Author:       "octocat",
+		AuthorName:   "The Octocat",
+		AuthorEmail:  "octocat@hello-world.com",
+		AuthorAvatar: "https://avatars3.githubusercontent.com/u/583231",
+		Sender:       "octocat",
+		Action:       "opened",
+	}
+
 	dummyRepo = &core.Repository{
 		ID:         1,
 		UID:        "1296269",
@@ -555,6 +603,10 @@ var (
 	}
 
 	dummyStages = []*core.Stage{
+		dummyStage,
+	}
+
+	dummyErrorStages = []*core.Stage{
 		dummyStage,
 	}
 
@@ -600,7 +652,7 @@ trigger:
 	}
 
 	ignoreBuildFields = cmpopts.IgnoreFields(core.Build{},
-		"Created", "Updated")
+		"Created", "Updated", "Started", "Finished")
 
 	ignoreStageFields = cmpopts.IgnoreFields(core.Stage{},
 		"Created", "Updated")
