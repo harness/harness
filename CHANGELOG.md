@@ -1,5 +1,25 @@
 # Changelog
 
+## [v2.13.0](https://github.com/harness/drone/tree/v2.13.0) (2022-09-21)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.12.1...v2.13.0)
+
+**Implemented enhancements:**
+
+- feat: update drone-yaml module [\#3249](https://github.com/harness/drone/pull/3249) ([jimsheldon](https://github.com/jimsheldon))
+- support time zone [\#3241](https://github.com/harness/drone/pull/3241) ([zc2638](https://github.com/zc2638))
+
+**Fixed bugs:**
+
+- update discourse.drone.io to community.harness.io [\#3261](https://github.com/harness/drone/pull/3261) ([kit101](https://github.com/kit101))
+- \(DRON-392\) cascade deletes on purge [\#3243](https://github.com/harness/drone/pull/3243) ([tphoney](https://github.com/tphoney))
+- Template converter, don't skip .yaml extension. [\#3242](https://github.com/harness/drone/pull/3242) ([staffanselander](https://github.com/staffanselander))
+
+**Merged pull requests:**
+
+- \(maint\) disable arm builds [\#3262](https://github.com/harness/drone/pull/3262) ([tphoney](https://github.com/tphoney))
+- Update links to discourse in issue template [\#3233](https://github.com/harness/drone/pull/3233) ([alikhil](https://github.com/alikhil))
+
 ## [v2.12.1](https://github.com/harness/drone/tree/v2.12.1) (2022-06-15)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.12.0...v2.12.1)
@@ -12,6 +32,7 @@
 
 **Merged pull requests:**
 
+- release prep for v2.12.1 [\#3232](https://github.com/harness/drone/pull/3232) ([eoinmcafee00](https://github.com/eoinmcafee00))
 - \(maint\) fix starlark test on windows [\#3230](https://github.com/harness/drone/pull/3230) ([tphoney](https://github.com/tphoney))
 - \(maint\) fix unit tests so they pass on windows [\#3228](https://github.com/harness/drone/pull/3228) ([tphoney](https://github.com/tphoney))
 - Update Readme to Fix Typo [\#3223](https://github.com/harness/drone/pull/3223) ([hrittikhere](https://github.com/hrittikhere))
