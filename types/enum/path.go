@@ -38,17 +38,27 @@ const (
 	PathAttrUpdated
 )
 
+const (
+	id        = "id"
+	path      = "path"
+	name      = "name"
+	created   = "created"
+	createdAt = "created_at"
+	updated   = "updated"
+	updatedAt = "updated_at"
+)
+
 // ParsePathAttr parses the path attribute string
 // and returns the equivalent enumeration.
 func ParsePathAttr(s string) PathAttr {
 	switch strings.ToLower(s) {
-	case "id":
+	case id:
 		return PathAttrID
-	case "path":
+	case path:
 		return PathAttrPath
-	case "created", "created_at":
+	case created, createdAt:
 		return PathAttrCreated
-	case "updated", "updated_at":
+	case updated, updatedAt:
 		return PathAttrUpdated
 	default:
 		return PathAttrNone

@@ -31,7 +31,7 @@ func Disect(path string) (string, string, error) {
 }
 
 /*
- * Concatinates two paths together (takes care of leading / trailing '/')
+ * Concatinate two paths together (takes care of leading / trailing '/')
  * e.g. (space1/, /space2/) -> space1/space2
  *
  * NOTE: "//" is not a valid path, so all '/' will be trimmed.

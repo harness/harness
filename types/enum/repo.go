@@ -24,17 +24,17 @@ const (
 // and returns the equivalent enumeration.
 func ParseRepoAtrr(s string) RepoAttr {
 	switch strings.ToLower(s) {
-	case "id":
+	case id:
 		return RepoAttrID
-	case "name":
+	case name:
 		return RepoAttrName
-	case "path":
+	case path:
 		return RepoAttrPath
 	case "displayName":
 		return RepoAttrDisplayName
-	case "created", "created_at":
+	case created, createdAt:
 		return RepoAttrCreated
-	case "updated", "updated_at":
+	case updated, updatedAt:
 		return RepoAttrUpdated
 	default:
 		return RepoAttrNone

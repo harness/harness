@@ -258,6 +258,8 @@ func (s *RepoStore) List(ctx context.Context, spaceID int64, opts *types.RepoFil
 		stmt = stmt.OrderBy("repo_displayName " + opts.Order.String())
 	case enum.RepoAttrPath:
 		stmt = stmt.OrderBy("repo_path " + opts.Order.String())
+	case enum.RepoAttrNone:
+		// no order need here
 	}
 
 	sql, _, err := stmt.ToSql()

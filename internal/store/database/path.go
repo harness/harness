@@ -269,6 +269,8 @@ func ListPaths(ctx context.Context, db *sqlx.DB, targetType enum.PathTargetType,
 		stmt = stmt.OrderBy("path_id " + opts.Order.String())
 	case enum.PathAttrPath:
 		stmt = stmt.OrderBy("path_value" + opts.Order.String())
+	case enum.PathAttrNone:
+		// no sorting required
 	}
 
 	sql, _, err := stmt.ToSql()
