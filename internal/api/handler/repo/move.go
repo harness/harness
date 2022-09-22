@@ -68,7 +68,7 @@ func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceSto
 				return
 			}
 
-			// Ensure we have access to the target space (if its a space move)
+			// Ensure we have access to the target space (if it's a space move)
 			if *in.SpaceID != repo.SpaceID {
 				var newSpace *types.Space
 				newSpace, err = spaces.Find(ctx, *in.SpaceID)

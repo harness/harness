@@ -106,7 +106,7 @@ sec:
 
 lint: tools generate # lint the golang code
 	@echo "Linting $(1)"
-	@golangci-lint run
+	@golangci-lint run --timeout=3m --verbose
 
 ###########################################
 # Code Generation

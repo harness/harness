@@ -59,7 +59,9 @@ func HandleMove(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
 			if err = check.Name(*in.Name); err != nil {
 				render.UserfiedErrorOrInternal(w, err)
 				return
-			} else if *in.ParentID == space.ParentID && *in.Name == space.Name {
+			}
+
+			if *in.ParentID == space.ParentID && *in.Name == space.Name {
 				render.BadRequestError(w, render.ErrNoChange)
 				return
 			}

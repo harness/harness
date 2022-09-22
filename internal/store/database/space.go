@@ -276,7 +276,7 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 
 	switch opts.Sort {
 	case enum.SpaceAttrCreated:
-		// NOTE: string concatination is safe because the
+		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
 		stmt = stmt.OrderBy("space_created " + opts.Order.String())
