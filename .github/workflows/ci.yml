@@ -27,6 +27,9 @@ jobs:
       - name: install and build web app
         working-directory: web
         run: |
+          echo "@harness:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${{ secrets.GH_TOKEN }}
+          always-auth=true" >> ~/.npmrc
           yarn install
           yarn build
       - name: golangci-lint
