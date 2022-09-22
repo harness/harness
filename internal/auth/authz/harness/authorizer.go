@@ -10,7 +10,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -93,7 +93,7 @@ func (a *Authorizer) CheckAll(ctx context.Context, principalType enum.PrincipalT
 		return false, fmt.Errorf("got unexpected status code '%d' - assume unauthorized", response.StatusCode)
 	}
 
-	bodyByte, err := ioutil.ReadAll(response.Body)
+	bodyByte, err := io.ReadAll(response.Body)
 	if err != nil {
 		return false, err
 	}

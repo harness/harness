@@ -5,7 +5,6 @@
 package cli
 
 import (
-	"io/ioutil"
 	"os"
 
 	"github.com/harness/gitness/internal/api/openapi"
@@ -23,7 +22,7 @@ func (c *swaggerCommand) run(*kingpin.ParseContext) error {
 		os.Stdout.Write(data)
 		return nil
 	}
-	return ioutil.WriteFile(c.path, data, OwnerReadWrite)
+	return os.WriteFile(c.path, data, OwnerReadWrite)
 }
 
 // helper function to register the swagger command.

@@ -40,7 +40,7 @@ generate: $(mocks) cli/server/wire_gen.go mocks/mock_client.go
 
 build: generate ## Build the gitness service binary
 	@echo "Building Gitness Server"
-	CGO_ENABLED=0 go build -ldflags="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.Version=${GITNESS_VERSION}"  -o ./gitness .
+	go build -ldflags="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.Version.Major=${GITNESS_VERSION}" -o ./gitness .
 
 test: generate  ## Run the go tests
 	@echo "Running tests"

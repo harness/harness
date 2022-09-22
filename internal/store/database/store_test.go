@@ -6,7 +6,6 @@ package database
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 
 	"github.com/jmoiron/sqlx"
@@ -56,7 +55,7 @@ func seed(db *sqlx.DB) error {
 
 // unmarshal a testdata file.
 func unmarshal(path string, v interface{}) error {
-	out, err := ioutil.ReadFile(path)
+	out, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}

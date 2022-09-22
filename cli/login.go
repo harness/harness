@@ -7,7 +7,7 @@ package cli
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/harness/gitness/cli/util"
@@ -38,7 +38,7 @@ func (c *loginCommand) run(*kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path, data, OwnerReadWrite)
+	return os.WriteFile(path, data, OwnerReadWrite)
 }
 
 // helper function to register the logout command.
