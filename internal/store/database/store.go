@@ -12,6 +12,7 @@ import (
 
 	"github.com/harness/gitness/internal/store/database/migrate"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -53,14 +54,21 @@ func Must(db *sqlx.DB, err error) *sqlx.DB {
 // a connection can be established before we proceed with the
 // database setup and migration.
 func pingDatabase(db *sqlx.DB) error {
+	var err error
 	for i := 0; i < 30; i++ {
-		err := db.Ping()
-		if err != nil {
-			return err
+		err = db.Ping()
+
+		// We can complete on first successful ping
+		if err == nil {
+			return nil
 		}
+
+		log.Err(err).Msgf("Ping attempt #%d failed", i+1)
+
 		time.Sleep(time.Second)
 	}
-	return nil
+
+	return err
 }
 
 // helper function to setup the database by performing automated
